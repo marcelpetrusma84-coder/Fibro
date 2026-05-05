@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fibro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+:root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:rgba(243,232,255,0.5); }
+body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); max-width:480px; margin:0 auto; min-height:100vh; }
+.top-bar { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:rgba(0,0,0,0.35); border-bottom:0.5px solid var(--border); position:sticky; top:0; z-index:10; }
+.top-title { font-family:'Playfair Display',serif; font-style:italic; font-size:18px; color:var(--accent); }
+.top-icons { display:flex; gap:12px; align-items:center; }
+.eigenaar-badge { font-size:10px; padding:3px 10px; border-radius:20px; background:rgba(192,132,252,0.15); border:0.5px solid var(--accent); color:var(--accent); cursor:pointer; }
+.theme-bar { display:flex; gap:8px; padding:10px 16px; border-bottom:0.5px solid var(--border); align-items:center; }
+.theme-dot { width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid transparent; }
+.theme-dot.active { border-color:var(--text); }
+.t1 { background:linear-gradient(135deg,#c084fc,#818cf8); }
+.t2 { background:linear-gradient(135deg,#f59e4a,#a3522a); }
+.t3 { background:linear-gradient(135deg,#38bdf8,#1e3a5f); }
+.t4 { background:linear-gradient(135deg,#f472b6,#c026d3); }
+.profile-hero { padding:20px 16px 14px; display:flex; gap:14px; align-items:flex-start; }
+.avatar-ring { width:64px; height:64px; border-radius:50%; padding:2.5px; background:linear-gradient(135deg,var(--accent),var(--accent2)); flex-shrink:0; cursor:pointer; }
+.avatar-inner { width:100%; height:100%; border-radius:50%; background:var(--bg); display:flex; align-items:center; justify-content:center; font-size:26px; }
+.p-name { font-family:'Playfair Display',serif; font-size:20px; font-weight:600; cursor:pointer; }
+.p-bio { font-size:12px; color:var(--muted); margin-top:3px; cursor:pointer; }
+.p-tags { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+.tag { font-size:10px; padding:3px 9px; border-radius:20px; border:0.5px solid var(--accent); color:var(--accent); }
+.edit-vak { background:var(--card); border:0.5px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px; }
+.edit-field { width:100%; background:rgba(255,255,255,0.05); border:0.5px solid var(--accent); border-radius:8px; padding:7px 10px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; outline:none; margin-bottom:8px; display:block; }
+.edit-label { font-size:10px; color:var(--muted); margin-bottom:4px; display:block; text-transform:uppercase; letter-spacing:0.08em; }
+.save-btn { font-size:11px; padding:6px 14px; border-radius:20px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-weight:500; }
+.cancel-btn { font-size:11px; padding:6px 14px; border-radius:20px; background:var(--card); color:var(--muted); border:0.5px solid var(--border); cursor:pointer; margin-left:6px; }
+.emoji-picker { display:flex; flex-wrap:wrap; gap:8px; padding:10px; background:var(--card); border:0.5px solid var(--border); border-radius:12px; margin:0 16px 10px; }
+.emoji-opt { font-size:24px; cursor:pointer; padding:4px; border-radius:8px; }
+.nav-tabs { display:flex; padding:0 16px; border-bottom:0.5px solid var(--border); }
+.nav-tab { font-size:12px; padding:9px 12px; color:var(--muted); border-bottom:2px solid transparent; cursor:pointer; }
+.nav-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.blocks { padding:12px 14px; display:flex; flex-direction:column; gap:10px; }
+.block { background:var(--card); border:0.5px solid var(--border); border-radius:14px; padding:13px 14px; }
+.block-title { font-size:11px; font-weight:500; color:var(--accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px; }
+.gb-entry { display:flex; gap:9px; padding:7px 0; border-bottom:0.5px solid var(--border); }
+.gb-entry:last-child { border-bottom:none; }
+.gb-av { width:28px; height:28px; border-radius:50%; background:rgba(192,132,252,0.15); border:0.5px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
+.gb-name { font-size:11px; font-weight:500; }
+.gb-msg { font-size:11px; color:var(--muted); margin-top:2px; }
+.gb-time { font-size:9px; color:var(--muted); opacity:0.6; margin-top:2px; }
+.gb-input { display:flex; gap:8px; margin-top:10px; }
+.gb-field { flex:1; background:rgba(255,255,255,0.05); border:0.5px solid var(--border); border-radius:20px; padding:7px 14px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:12px; outline:none; }
+.gb-send { padding:7px 14px; border-radius:20px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-size:12px; font-weight:500; }
+.photo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; }
+.photo-cell { aspect-ratio:1; border-radius:8px; background:rgba(192,132,252,0.1); border:0.5px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:22px; }
+.music-row { display:flex; align-items:center; gap:10px; }
+.music-icon { width:38px; height:38px; border-radius:8px; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.music-title { font-size:13px; font-weight:500; }
+.music-artist { font-size:11px; color:var(--muted); }
+.music-bar { height:3px; background:var(--border); border-radius:2px; margin-top:6px; overflow:hidden; }
+.music-progress { height:100%; width:40%; background:var(--accent); border-radius:2px; }
+.mood-row { display:flex; align-items:center; gap:10px; }
+.mood-emoji { font-size:28px; }
+.mood-text { font-size:13px; font-weight:500; }
+.mood-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+.invite-row { display:flex; align-items:center; justify-content:space-between; }
+.invite-code { font-family:monospace; font-size:13px; color:var(--accent2); background:rgba(0,0,0,0.3); padding:5px 10px; border-radius:8px; border:0.5px solid var(--border); letter-spacing:0.1em; }
+.invite-btn { font-size:11px; padding:6px 14px; border-radius:20px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-weight:500; }
+.chat-btn { width:100%; padding:11px; border-radius:12px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; margin-top:10px; }
+.bottom-nav { display:flex; justify-content:space-around; padding:12px 0; border-top:0.5px solid var(--border); background:rgba(0,0,0,0.3); position:sticky; bottom:0; }
+.nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; color:var(--muted); cursor:pointer; padding:4px 12px; }
+.nav-item.active { color:var(--accent); }
+.nav-icon { font-size:20px; }
+.fibro-logo { font-family:'Playfair Display',serif; font-style:italic; font-size:12px; color:var(--accent); text-align:center; padding:12px; opacity:0.5; }
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <span class="top-title">Fibro</span>
+  <div class="top-icons">
+    <span class="eigenaar-badge" onclick="toggleEigenaar()" id="eigenaarBadge">Bezoeker</span>
+    <span style="cursor:pointer;font-size:18px" onclick="toggleMusic()" id="musicBtn">🎵</span>
+  </div>
+</div>
+<div id="themaBalk" style="display:none">
+  <div class="theme-bar">
+    <div class="theme-dot t1 active" onclick="setTheme('purple',this)"></div>
+    <div class="theme-dot t2" onclick="setTheme('cottage',this)"></div>
+    <div class="theme-dot t3" onclick="setTheme('space',this)"></div>
+    <div class="theme-dot t4" onclick="setTheme('kawaii',this)"></div>
+    <span style="font-size:10px;color:var(--muted);margin-left:4px">thema kiezen</span>
+  </div>
+</div>
+<div class="profile-hero">
+  <div class="avatar-ring" onclick="openAvatarPicker()">
+    <div class="avatar-inner" id="avatarEmoji">🌿</div>
+  </div>
+  <div style="flex:1">
+    <div id="profielWeergave">
+      <div class="p-name" id="profielNaam" onclick="openBewerk()">Skye's Page</div>
+      <div class="p-bio" id="profielBio" onclick="openBewerk()">Nature Lover & Photographer</div>
+      <div class="p-tags" id="profielTags">
+        <span class="tag">natuur</span>
+        <span class="tag">fotografie</span>
+        <span class="tag">rustig</span>
+      </div>
+    </div>
+    <div id="profielBewerk" style="display:none">
+      <div class="edit-vak">
+        <label class="edit-label">Naam</label>
+        <input class="edit-field" id="editNaam" placeholder="Jouw naam">
+        <label class="edit-label">Bio</label>
+        <input class="edit-field" id="editBio" placeholder="Korte bio">
+        <label class="edit-label">Tags</label>
+        <input class="edit-field" id="editTags" placeholder="natuur, fotografie, rustig">
+        <button class="save-btn" onclick="slaProfielOp()">Opslaan</button>
+        <button class="cancel-btn" onclick="annuleerBewerk()">Annuleer</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="avatarPickerWrap" style="display:none">
+  <div class="emoji-picker" id="emojiPicker"></div>
+</div>
+<div class="nav-tabs">
+  <div class="nav-tab active">Profiel</div>
+  <div class="nav-tab">Fotos</div>
+  <div class="nav-tab">Vrienden</div>
+  <div class="nav-tab">Themas</div>
+</div>
+<div class="blocks">
+  <div class="block">
+    <div class="block-title">Gastenboek</div>
+    <div id="gbEntries">
+      <div class="gb-entry"><div class="gb-av">E</div><div><div class="gb-name">Evan</div><div class="gb-msg">Love the new photos!</div><div class="gb-time">1 minuut geleden</div></div></div>
+      <div class="gb-entry"><div class="gb-av">Z</div><div><div class="gb-name">Zoe</div><div class="gb-msg">Miss our adventure</div><div class="gb-time">3 dagen geleden</div></div></div>
+    </div>
+    <div class="gb-input">
+      <input class="gb-field" id="gbInput" placeholder="Laat een berichtje achter...">
+      <button class="gb-send" onclick="sendGb()">Stuur</button>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-title">Fotos</div>
+    <div class="photo-grid">
+      <div class="photo-cell">🌄</div><div class="photo-cell">🌿</div><div class="photo-cell">🦋</div>
+      <div class="photo-cell">🌊</div><div class="photo-cell">🍂</div><div class="photo-cell">⛰️</div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-title">Muziek</div>
+    <div class="music-row">
+      <div class="music-icon">♪</div>
+      <div style="flex:1"><div class="music-title">Forest Rain</div><div class="music-artist">Ambient Dreams</div><div class="music-bar"><div class="music-progress"></div></div></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-title">Mood</div>
+    <div class="mood-row"><div class="mood-emoji">🌙</div><div><div class="mood-text">Peaceful & Creative</div><div class="mood-sub">Feeling inspired today</div></div></div>
+  </div>
+  <div class="block">
+    <div class="block-title">Invite</div>
+    <div class="invite-row">
+      <div class="invite-code">FIBRO-SKYE</div>
+      <button class="invite-btn">QR genereren</button>
+    </div>
+  </div>
+  <button class="chat-btn" onclick="window.location.href='http://localhost:4000/chat.html'">Stuur een bericht</button>
+</div>
+<div class="fibro-logo">Fibro - jouw ruimte</div>
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="window.location.href='http://localhost:4000/index.html'"><div class="nav-icon">🏠</div>Home</div>
+  <div class="nav-item" onclick="window.location.href='http://localhost:4000/vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
+  <div class="nav-item" onclick="window.location.href='http://localhost:4000/chat.html'"><div class="nav-icon">💬</div>Chat</div>
+  <div class="nav-item" onclick="window.location.href='http://localhost:4000/login.html'"><div class="nav-icon">👤</div>Profiel</div>
+</div>
+<script>
+var isEigenaar = false;
+var emojis = ["🌿","🌸","🎸","📷","🚀","🌙","🦋","🎨","🌊","🍂","⭐","🎵","🌺","🦊","🐱","🌈","🎮","📚","🌻","🍀"];
+
+function laadProfiel() {
+  var naam = localStorage.getItem("fibro_naam");
+  var bio = localStorage.getItem("fibro_bio");
+  var tags = localStorage.getItem("fibro_tags");
+  var emoji = localStorage.getItem("fibro_emoji");
+  if (naam) document.getElementById("profielNaam").textContent = naam;
+  if (bio) document.getElementById("profielBio").textContent = bio;
+  if (emoji) document.getElementById("avatarEmoji").textContent = emoji;
+  if (tags) {
+    var tagEl = document.getElementById("profielTags");
+    tagEl.innerHTML = "";
+    tags.split(",").forEach(function(t) {
+      var span = document.createElement("span");
+      span.className = "tag";
+      span.textContent = t.trim();
+      tagEl.appendChild(span);
+    });
+  }
+}
+
+function toggleEigenaar() {
+  isEigenaar = !isEigenaar;
+  var badge = document.getElementById("eigenaarBadge");
+  var balk = document.getElementById("themaBalk");
+  if (isEigenaar) {
+    badge.textContent = "Eigenaar";
+    badge.style.color = "var(--accent2)";
+    badge.style.borderColor = "var(--accent2)";
+    balk.style.display = "block";
+  } else {
+    badge.textContent = "Bezoeker";
+    badge.style.color = "var(--accent)";
+    badge.style.borderColor = "var(--accent)";
+    balk.style.display = "none";
+    annuleerBewerk();
+    document.getElementById("avatarPickerWrap").style.display = "none";
+  }
+}
+
+function openBewerk() {
+  if (!isEigenaar) return;
+  document.getElementById("editNaam").value = document.getElementById("profielNaam").textContent;
+  document.getElementById("editBio").value = document.getElementById("profielBio").textContent;
+  var tags = [];
+  document.querySelectorAll("#profielTags .tag").forEach(function(t) { tags.push(t.textContent); });
+  document.getElementById("editTags").value = tags.join(", ");
+  document.getElementById("profielWeergave").style.display = "none";
+  document.getElementById("profielBewerk").style.display = "block";
+}
+
+function slaProfielOp() {
+  var naam = document.getElementById("editNaam").value.trim();
+  var bio = document.getElementById("editBio").value.trim();
+  var tags = document.getElementById("editTags").value.trim();
+  if (naam) { document.getElementById("profielNaam").textContent = naam; localStorage.setItem("fibro_naam", naam); }
+  if (bio) { document.getElementById("profielBio").textContent = bio; localStorage.setItem("fibro_bio", bio); }
+  if (tags) {
+    localStorage.setItem("fibro_tags", tags);
+    var tagEl = document.getElementById("profielTags");
+    tagEl.innerHTML = "";
+    tags.split(",").forEach(function(t) {
+      var span = document.createElement("span");
+      span.className = "tag";
+      span.textContent = t.trim();
+      tagEl.appendChild(span);
+    });
+  }
+  document.getElementById("profielBewerk").style.display = "none";
+  document.getElementById("profielWeergave").style.display = "block";
+}
+
+function annuleerBewerk() {
+  document.getElementById("profielBewerk").style.display = "none";
+  document.getElementById("profielWeergave").style.display = "block";
+}
+
+function openAvatarPicker() {
+  if (!isEigenaar) return;
+  var wrap = document.getElementById("avatarPickerWrap");
+  if (wrap.style.display !== "none") { wrap.style.display = "none"; return; }
+  var picker = document.getElementById("emojiPicker");
+  picker.innerHTML = "";
+  emojis.forEach(function(e) {
+    var span = document.createElement("span");
+    span.className = "emoji-opt";
+    span.textContent = e;
+    span.onclick = function() {
+      document.getElementById("avatarEmoji").textContent = e;
+      localStorage.setItem("fibro_emoji", e);
+      wrap.style.display = "none";
+    };
+    picker.appendChild(span);
+  });
+  wrap.style.display = "block";
+}
+
+var themes = {
+  purple:{bg:"#1a0a2e",accent:"#c084fc",accent2:"#f0abfc"},
+  cottage:{bg:"#2d1f14",accent:"#f59e4a",accent2:"#fcd34d"},
+  space:{bg:"#030712",accent:"#38bdf8",accent2:"#7dd3fc"},
+  kawaii:{bg:"#2a0a3e",accent:"#f472b6",accent2:"#e879f9"},
+};
+
+function setTheme(name, dot) {
+  var t = themes[name];
+  document.documentElement.style.setProperty("--bg", t.bg);
+  document.documentElement.style.setProperty("--accent", t.accent);
+  document.documentElement.style.setProperty("--accent2", t.accent2);
+  document.querySelectorAll(".theme-dot").forEach(function(d) { d.classList.remove("active"); });
+  dot.classList.add("active");
+}
+
+var musicOn = false;
+function toggleMusic() {
+  musicOn = !musicOn;
+  document.getElementById("musicBtn").textContent = musicOn ? "🔇" : "🎵";
+}
+
+function sendGb() {
+  var input = document.getElementById("gbInput");
+  var text = input.value.trim();
+  if (!text) return;
+  var entries = document.getElementById("gbEntries");
+  var div = document.createElement("div");
+  div.className = "gb-entry";
+  div.innerHTML = '<div class="gb-av">J</div><div><div class="gb-name">Jij</div><div class="gb-msg">' + text + '</div><div class="gb-time">Zojuist</div></div>';
+  entries.appendChild(div);
+  input.value = "";
+}
+
+laadProfiel();
+</script>
+</body>
+</html>

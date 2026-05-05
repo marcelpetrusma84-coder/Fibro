@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fibro — Inloggen</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+:root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:rgba(243,232,255,0.5); }
+body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
+.glow { position:fixed; top:-100px; left:-100px; width:400px; height:400px; background:radial-gradient(circle,rgba(192,132,252,0.15),transparent 70%); pointer-events:none; }
+.wrap { width:100%; max-width:360px; display:flex; flex-direction:column; align-items:center; }
+.logo { font-family:'Playfair Display',serif; font-style:italic; font-size:52px; color:var(--accent); margin-bottom:6px; }
+.tagline { font-size:13px; color:var(--muted); margin-bottom:36px; text-align:center; line-height:1.6; }
+.card { background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:24px; width:100%; margin-bottom:12px; }
+.card-title { font-family:'Playfair Display',serif; font-size:17px; margin-bottom:6px; }
+.card-sub { font-size:11px; color:var(--muted); margin-bottom:18px; line-height:1.6; }
+.screen { display:none; width:100%; }
+.screen.active { display:flex; flex-direction:column; align-items:center; }
+.choice-btn { width:100%; padding:13px; border-radius:12px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; cursor:pointer; margin-bottom:10px; display:flex; align-items:center; gap:10px; }
+.choice-btn.primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; }
+.choice-btn.secondary { background:var(--card); border:0.5px solid var(--border); color:var(--text); }
+.choice-icon { font-size:18px; }
+.field-label { font-size:11px; color:var(--muted); margin-bottom:6px; display:block; }
+.field { width:100%; background:rgba(255,255,255,0.05); border:0.5px solid var(--border); border-radius:10px; padding:10px 14px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; outline:none; margin-bottom:14px; }
+.field:focus { border-color:var(--accent); }
+.field::placeholder { color:var(--muted); }
+.submit-btn { width:100%; padding:12px; border-radius:12px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; margin-top:4px; }
+.back-link { font-size:11px; color:var(--muted); cursor:pointer; margin-top:14px; text-align:center; }
+.seed-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:12px 0; }
+.seed-word { background:rgba(0,0,0,0.3); border:0.5px solid var(--border); border-radius:8px; padding:6px 8px; font-size:11px; text-align:center; }
+.seed-num { font-size:9px; color:var(--muted); display:block; margin-bottom:2px; }
+.seed-txt { color:var(--accent2); font-weight:500; }
+.warning-box { background:rgba(251,191,36,0.1); border:0.5px solid rgba(251,191,36,0.3); border-radius:10px; padding:10px 12px; font-size:11px; color:#fbbf24; margin-bottom:14px; line-height:1.6; }
+.success-icon { font-size:52px; margin-bottom:12px; }
+.success-title { font-family:'Playfair Display',serif; font-size:22px; margin-bottom:8px; text-align:center; }
+.success-sub { font-size:12px; color:var(--muted); text-align:center; line-height:1.6; margin-bottom:24px; }
+.divider { display:flex; align-items:center; gap:10px; margin:4px 0 14px; width:100%; }
+.divider-line { flex:1; height:0.5px; background:var(--border); }
+.divider-text { font-size:10px; color:var(--muted); }
+.fibro-logo { font-family:'Playfair Display',serif; font-style:italic; font-size:11px; color:var(--accent); opacity:0.4; margin-top:20px; }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="wrap">
+  <div class="logo">Fibro</div>
+  <div class="tagline">Jouw ruimte. Jouw data. Jouw netwerk.<br>Alleen voor wie je uitnodigt.</div>
+  <div class="screen active" id="screenKeuze">
+    <div class="card" style="width:100%">
+      <div class="card-title">Welkom bij Fibro</div>
+      <div class="card-sub">Fibro is invite-only. Je hebt een persoonlijke uitnodiging nodig om lid te worden.</div>
+      <button class="choice-btn primary" onclick="showScreen('screenQR')"><span class="choice-icon">📱</span> QR code scannen</button>
+      <button class="choice-btn secondary" onclick="showScreen('screenCode')"><span class="choice-icon">🔑</span> Invite code invoeren</button>
+    </div>
+    <div class="divider"><div class="divider-line"></div><div class="divider-text">al een account?</div><div class="divider-line"></div></div>
+    <div class="card" style="width:100%">
+      <div class="card-title">Inloggen</div>
+      <div class="card-sub">Welkom terug op jouw ruimte.</div>
+      <button class="choice-btn primary" onclick="showScreen('screenLogin')"><span class="choice-icon">🌿</span> Inloggen</button>
+    </div>
+  </div>
+  <div class="screen" id="screenQR">
+    <div class="card" style="width:100%">
+      <div class="card-title">📱 QR code scannen</div>
+      <div class="card-sub">Vraag de persoon die jou uitnodigt om zijn QR code te tonen. Eenmalig geldig, vervalt na 20 minuten.</div>
+      <div style="text-align:center">
+        <div style="display:inline-block;padding:12px;background:white;border-radius:12px;margin:10px 0 16px">
+          <svg width="140" height="140" viewBox="0 0 140 140">
+            <rect width="140" height="140" fill="white"/>
+            <g fill="#1a0a2e">
+              <rect x="10" y="10" width="50" height="50" rx="4"/>
+              <rect x="16" y="16" width="38" height="38" rx="2" fill="white"/>
+              <rect x="22" y="22" width="26" height="26" rx="1"/>
+              <rect x="80" y="10" width="50" height="50" rx="4"/>
+              <rect x="86" y="16" width="38" height="38" rx="2" fill="white"/>
+              <rect x="92" y="22" width="26" height="26" rx="1"/>
+              <rect x="10" y="80" width="50" height="50" rx="4"/>
+              <rect x="16" y="86" width="38" height="38" rx="2" fill="white"/>
+              <rect x="22" y="92" width="26" height="26" rx="1"/>
+              <rect x="80" y="80" width="10" height="10"/><rect x="96" y="80" width="10" height="10"/>
+              <rect x="112" y="80" width="18" height="10"/><rect x="80" y="96" width="18" height="10"/>
+              <rect x="104" y="96" width="10" height="10"/><rect x="120" y="96" width="10" height="10"/>
+              <rect x="80" y="112" width="10" height="18"/><rect x="96" y="108" width="10" height="10"/>
+              <rect x="112" y="108" width="18" height="22"/>
+            </g>
+          </svg>
+        </div>
+        <button class="submit-btn" onclick="showScreen('screenAccount')">✓ Simuleer scan (demo)</button>
+      </div>
+    </div>
+    <div class="back-link" onclick="showScreen('screenKeuze')">← terug</div>
+  </div>
+  <div class="screen" id="screenCode">
+    <div class="card" style="width:100%">
+      <div class="card-title">🔑 Invite code</div>
+      <div class="card-sub">Voer de invite code in die je persoonlijk ontvangen hebt.</div>
+      <label class="field-label">Jouw invite code</label>
+      <input class="field" id="inviteCode" placeholder="FIBRO-XXXX" style="text-transform:uppercase;letter-spacing:0.1em">
+      <button class="submit-btn" onclick="checkCode()">Code controleren →</button>
+    </div>
+    <div class="back-link" onclick="showScreen('screenKeuze')">← terug</div>
+  </div>
+  <div class="screen" id="screenAccount">
+    <div class="card" style="width:100%">
+      <div class="card-title">Account aanmaken</div>
+      <div class="card-sub">Uitnodiging geaccepteerd ✓ — maak nu jouw Fibro account aan.</div>
+      <label class="field-label">Gebruikersnaam</label>
+      <input class="field" id="username" placeholder="jouw naam op Fibro">
+      <label class="field-label">E-mailadres</label>
+      <input class="field" id="email" placeholder="jouw@email.nl" type="email">
+      <label class="field-label">Wachtwoord</label>
+      <input class="field" id="password" placeholder="minimaal 8 tekens" type="password">
+      <button class="submit-btn" onclick="createAccount()">Verder →</button>
+    </div>
+    <div class="back-link" onclick="showScreen('screenKeuze')">← terug</div>
+  </div>
+  <div class="screen" id="screenSleutel">
+    <div class="card" style="width:100%">
+      <div class="card-title">🔐 Jouw herstelsleutel</div>
+      <div class="card-sub">Schrijf deze 12 woorden op en bewaar ze veilig.</div>
+      <div class="warning-box">⚠️ Fibro heeft geen toegang tot deze sleutel. Als je hem verliest is jouw account niet herstelbaar.</div>
+      <div class="seed-grid" id="seedGrid"></div>
+      <button class="submit-btn" onclick="showScreen('screenSuccess')">Ik heb de sleutel opgeschreven →</button>
+    </div>
+  </div>
+  <div class="screen" id="screenSuccess">
+    <div style="text-align:center">
+      <div class="success-icon">🌿</div>
+      <div class="success-title">Welkom op Fibro</div>
+      <div class="success-sub">Jouw ruimte is klaar.<br>Kalm, privé, en helemaal van jou.</div>
+      <button class="submit-btn" onclick="window.location.href='http://localhost:4000/index.html'" style="max-width:280px;margin:0 auto">Naar mijn profiel →</button>
+    </div>
+  </div>
+  <div class="screen" id="screenLogin">
+    <div class="card" style="width:100%">
+      <div class="card-title">Inloggen</div>
+      <div class="card-sub">Welkom terug op jouw ruimte.</div>
+      <label class="field-label">E-mailadres</label>
+      <input class="field" placeholder="jouw@email.nl" type="email">
+      <label class="field-label">Wachtwoord</label>
+      <input class="field" placeholder="jouw wachtwoord" type="password">
+      <button class="submit-btn" onclick="window.location.href='http://localhost:4000/index.html'">Inloggen →</button>
+    </div>
+    <div class="back-link" onclick="showScreen('screenKeuze')">← terug</div>
+  </div>
+  <div class="fibro-logo">Fibro — alleen voor wie je uitnodigt</div>
+</div>
+<script>
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+function checkCode(){const code=document.getElementById('inviteCode').value.trim().toUpperCase();if(code.startsWith('FIBRO-')&&code.length>=8){showScreen('screenAccount');}else{alert('Ongeldige of verlopen invite code.');}}
+function createAccount(){const u=document.getElementById('username').value.trim();const e=document.getElementById('email').value.trim();const p=document.getElementById('password').value;if(!u||!e||!p){alert('Vul alle velden in.');return;}if(p.length<8){alert('Wachtwoord moet minimaal 8 tekens zijn.');return;}generateSeedWords();showScreen('screenSleutel');}
+const wordList=['appel','brood','cirkel','droom','eiland','fluit','gouden','haven','ijzer','jungle','kracht','lente','maan','nacht','oceaan','parel','regen','sterre','toren','uniek','vrede','water','yacht','zomer'];
+function generateSeedWords(){const grid=document.getElementById('seedGrid');grid.innerHTML='';for(let i=0;i<12;i++){const word=wordList[Math.floor(Math.random()*wordList.length)];grid.innerHTML+='<div class="seed-word"><span class="seed-num">'+(i+1)+'</span><span class="seed-txt">'+word+'</span></div>';}}
+</script>
+</body>
+</html>
+EOFls ~/fibro-web/
+xdg-open http://localhost:4000/index.html
+cat > vrienden.html << 'EOF'
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fibro — Vrienden</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+:root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:rgba(243,232,255,0.5); }
+body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); max-width:480px; margin:0 auto; min-height:100vh; }
+.top-bar { display:flex; align-items:center; gap:10px; padding:12px 16px; background:rgba(0,0,0,0.35); border-bottom:0.5px solid var(--border); position:sticky; top:0; z-index:10; }
+.top-title { font-family:'Playfair Display',serif; font-style:italic; font-size:18px; color:var(--accent); flex:1; }
+.invite-btn { font-size:11px; padding:5px 12px; border-radius:20px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:500; }
+.search-bar { padding:10px 14px; border-bottom:0.5px solid var(--border); }
+.search-input { width:100%; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:12px; outline:none; }
+.search-input::placeholder { color:var(--muted); }
+.search-input:focus { border-color:var(--accent); }
+.section-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; padding:12px 16px 6px; }
+.friend-row { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:0.5px solid var(--border); cursor:pointer; transition:background 0.2s; }
+.friend-row:hover { background:rgba(255,255,255,0.04); }
+.f-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; border:1.5px solid var(--border); position:relative; }
+.f-avatar.purple { border-color:rgba(192,132,252,0.4); background:rgba(192,132,252,0.1); }
+.f-avatar.blue { border-color:rgba(56,189,248,0.4); background:rgba(56,189,248,0.1); }
+.f-avatar.pink { border-color:rgba(244,114,182,0.4); background:rgba(244,114,182,0.1); }
+.f-avatar.orange { border-color:rgba(245,158,74,0.4); background:rgba(245,158,74,0.1); }
+.online-dot { width:10px; height:10px; border-radius:50%; background:#4ade80; border:2px solid var(--bg); position:absolute; bottom:1px; right:1px; }
+.online-dot.off { background:var(--muted); }
+.f-info { flex:1; }
+.f-name { font-size:14px; font-weight:500; }
+.f-bio { font-size:11px; color:var(--muted); margin-top:2px; }
+.f-status { font-size:10px; margin-top:3px; }
+.f-status.on { color:#4ade80; }
+.f-status.off { color:var(--muted); }
+.f-arrow { color:var(--muted); font-size:16px; }
+.f-actions { display:flex; gap:6px; }
+.f-btn { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--card); border:0.5px solid var(--border); cursor:pointer; font-size:14px; }
+.empty-state { text-align:center; padding:40px 20px; color:var(--muted); }
+.empty-icon { font-size:40px; margin-bottom:12px; }
+.bottom-nav { display:flex; justify-content:space-around; padding:12px 0; border-top:0.5px solid var(--border); background:rgba(0,0,0,0.3); position:sticky; bottom:0; }
+.nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; color:var(--muted); cursor:pointer; padding:4px 12px; }
+.nav-item.active { color:var(--accent); }
+.nav-icon { font-size:20px; }
+.fibro-logo { font-family:'Playfair Display',serif; font-style:italic; font-size:11px; color:var(--accent); text-align:center; padding:12px; opacity:0.5; }
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <span class="top-title">Vrienden</span>
+  <button class="invite-btn" onclick="window.location.href='http://localhost:4000/login.html'">+ Uitnodigen</button>
+</div>
+<div class="search-bar">
+  <input class="search-input" id="searchInput" placeholder="🔍 Zoek een vriend..." oninput="filterVrienden()">
+</div>
+<div id="vriendenLijst">
+  <div class="section-label">Online</div>
+  <div class="friend-row" onclick="window.location.href='http://localhost:4000/index.html'">
+    <div class="f-avatar pink">🌸<div class="online-dot"></div></div>
+    <div class="f-info"><div class="f-name">Zoë</div><div class="f-bio">Anime & Gaming Fan</div><div class="f-status on">● online</div></div>
+    <div class="f-actions"><div class="f-btn" onclick="event.stopPropagation();window.location.href='http://localhost:4000/chat.html'">💬</div></div>
+    <div class="f-arrow">›</div>
+  </div>
+  <div class="friend-row" onclick="window.location.href='http://localhost:4000/index.html'">
+    <div class="f-avatar blue">🎸<div class="online-dot"></div></div>
+    <div class="f-info"><div class="f-name">Evan</div><div class="f-bio">Guitarist & Music Lover</div><div class="f-status on">● online</div></div>
+    <div class="f-actions"><div class="f-btn" onclick="event.stopPropagation();window.location.href='http://localhost:4000/chat.html'">💬</div></div>
+    <div class="f-arrow">›</div>
+  </div>
+  <div class="section-label">Offline</div>
+  <div class="friend-row" onclick="window.location.href='http://localhost:4000/index.html'">
+    <div class="f-avatar orange">📷<div class="online-dot off"></div></div>
+    <div class="f-info"><div class="f-name">Lucas</div><div class="f-bio">Street Photographer</div><div class="f-status off">verborgen</div></div>
+    <div class="f-actions"><div class="f-btn" onclick="event.stopPropagation();window.location.href='http://localhost:4000/chat.html'">💬</div></div>
+    <div class="f-arrow">›</div>
+  </div>
+  <div class="friend-row" onclick="window.location.href='http://localhost:4000/index.html'">
+    <div class="f-avatar purple">🌙<div class="online-dot off"></div></div>
+    <div class="f-info"><div class="f-name">Mia</div><div class="f-bio">Photographer & Traveller</div><div class="f-status off">● 2 uur geleden</div></div>
+    <div class="f-actions"><div class="f-btn" onclick="event.stopPropagation();window.location.href='http://localhost:4000/chat.html'">💬</div></div>
+    <div class="f-arrow">›</div>
+  </div>
+</div>
+<div id="leegScherm" class="empty-state" style="display:none">
+  <div class="empty-icon">🔍</div>
+  <div class="empty-text">Geen vrienden gevonden</div>
+</div>
+<div class="fibro-logo">Fibro — jouw netwerk</div>
+<div class="bottom-nav">
+  <div class="nav-item" onclick="window.location.href='http://localhost:4000/index.html'"><div class="nav-icon">🏠</div>Home</div>
+  <div class="nav-item active"><div class="nav-icon">👥</div>Vrienden</div>
+  <div class="nav-item" onclick="window.location.href='http://localhost:4000/chat.html'"><div class="nav-icon">💬</div>Chat</div>
+  <div class="nav-item" onclick="window.location.href='http://localhost:4000/login.html'"><div class="nav-icon">👤</div>Profiel</div>
+</div>
+<script>
+function filterVrienden(){
+  const query=document.getElementById('searchInput').value.toLowerCase();
+  const rows=document.querySelectorAll('.friend-row');
+  let zichtbaar=0;
+  rows.forEach(row=>{
+    const naam=row.querySelector('.f-name').textContent.toLowerCase();
+    const bio=row.querySelector('.f-bio').textContent.toLowerCase();
+    if(naam.includes(query)||bio.includes(query)){row.style.display='flex';zichtbaar++;}
+    else{row.style.display='none';}
+  });
+  document.getElementById('leegScherm').style.display=zichtbaar===0?'block':'none';
+  document.querySelectorAll('.section-label').forEach(l=>l.style.display=query?'none':'block');
+}
+</script>
+</body>
+</html>

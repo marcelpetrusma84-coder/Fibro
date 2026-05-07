@@ -21,6 +21,17 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .banner-timer { margin-left:auto; font-weight:500; color:var(--accent); }
 .privacy-bar { background:rgba(248,113,113,0.08); border-bottom:0.5px solid rgba(248,113,113,0.2); padding:6px 14px; font-size:10px; color:#f87171; display:none; align-items:center; gap:6px; }
 .privacy-bar.show { display:flex; }
+
+/* Vrienden selectie scherm */
+.vriend-selectie { flex:1; padding:16px; }
+.vriend-selectie h3 { font-family:'Playfair Display',serif; font-style:italic; font-size:16px; color:var(--accent); margin-bottom:14px; }
+.vriend-item { display:flex; align-items:center; gap:12px; padding:12px; border:0.5px solid var(--border); border-radius:12px; margin-bottom:8px; cursor:pointer; background:var(--card); transition:border-color 0.2s; }
+.vriend-item:hover { border-color:var(--accent); }
+.vriend-av { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:18px; }
+.vriend-naam { font-size:14px; font-weight:500; }
+.vriend-username { font-size:11px; color:var(--muted); margin-top:2px; }
+.geen-vrienden { text-align:center; padding:40px 20px; color:var(--muted); font-size:13px; line-height:1.6; }
+
 .messages { flex:1; padding:12px 14px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; min-height:360px; padding-bottom:20px; }
 .msg-row { display:flex; gap:8px; align-items:flex-end; }
 .msg-row.out { flex-direction:row-reverse; }
@@ -37,8 +48,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .msg-input { flex:1; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:12px; outline:none; }
 .msg-input::placeholder { color:var(--muted); }
 .msg-input:focus { border-color:var(--accent); }
-.emoji-toggle { width:36px; height:36px; border-radius:50%; background:var(--card); border:0.5px solid var(--border); cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.2s; }
-.emoji-toggle:hover { border-color:var(--accent); }
+.emoji-toggle { width:36px; height:36px; border-radius:50%; background:var(--card); border:0.5px solid var(--border); cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .send-btn { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.75); display:none; align-items:center; justify-content:center; z-index:20; padding:20px; }
 .modal-bg.show { display:flex; }
@@ -54,42 +64,54 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; color:var(--muted); cursor:pointer; padding:4px 12px; }
 .nav-item.active { color:var(--accent); }
 .nav-icon { font-size:20px; }
+.laden { text-align:center; padding:20px; color:var(--muted); font-size:12px; }
 </style>
 </head>
 <body>
+
 <div class="top-bar">
-  <button class="back-btn" onclick="window.location.href='http://localhost:4000/index.html'">← profiel</button>
-  <div class="chat-av">🌸</div>
+  <button class="back-btn" onclick="gaTerug()">← terug</button>
+  <div class="chat-av" id="chatAv">💬</div>
   <div class="chat-info">
-    <div class="chat-name">Zoë</div>
-    <div class="chat-status">● online</div>
+    <div class="chat-name" id="chatNaam">Selecteer een vriend</div>
+    <div class="chat-status" id="chatStatus">Kies hieronder met wie je wilt chatten</div>
   </div>
   <button class="lock-btn" onclick="showScreenshotModal()">🔒 Screenshot</button>
 </div>
+
 <div class="screenshot-banner" id="screenshotBanner">
   📸 Screenshots toegestaan voor <span class="banner-timer" id="bannerTimer">20:00</span>
   <span style="cursor:pointer;color:var(--muted)" onclick="revokeScreenshot()">✕</span>
 </div>
-<div class="privacy-bar" id="privacyBar">⚠️ Screenshot poging gedetecteerd — zonder toestemming</div>
-<div class="messages" id="messages">
-  <div class="sys-msg">Gesprek met Zoë · alleen jullie twee · end-to-end versleuteld</div>
-  <div class="msg-row"><div class="msg-av-sm">Z</div><div class="bubble in">Hey! Eindelijk op Fibro 🌸<div class="bubble-time">09:41 ✓✓</div></div></div>
-  <div class="msg-row out"><div class="msg-av-sm">S</div><div class="bubble out">Ja! Vind het echt mooi hier 😊<div class="bubble-time">09:42 ✓✓</div></div></div>
-  <div class="msg-row"><div class="msg-av-sm">Z</div><div class="bubble in">Zo rustig vergeleken met Instagram 🙌<div class="bubble-time">09:43 ✓✓</div></div></div>
-  <div class="sys-msg">Berichten verdwijnen na 30 dagen</div>
+<div class="privacy-bar" id="privacyBar">⚠ Screenshot poging gedetecteerd — zonder toestemming</div>
+
+<!-- Vrienden selectie -->
+<div id="vriendenSelectie" class="vriend-selectie">
+  <h3>Met wie wil je chatten?</h3>
+  <div id="vriendenLijst"><div class="laden">Vrienden laden...</div></div>
 </div>
-<div class="emoji-grid" id="emojiGrid" style="display:none"></div>
-<div class="input-area">
-  <button class="emoji-toggle" onclick="toggleEmojiPicker()">😊</button>
-  <input class="msg-input" id="msgInput" placeholder="Stuur een bericht..." onkeydown="if(event.key==='Enter')sendMsg()">
-  <button class="send-btn" onclick="sendMsg()">➤</button>
+
+<!-- Chat scherm -->
+<div id="chatScherm" style="display:none; flex:1; flex-direction:column;">
+  <div class="messages" id="messages">
+    <div class="sys-msg" id="chatSysBericht">End-to-end versleuteld gesprek</div>
+  </div>
+  <div class="emoji-grid" id="emojiGrid" style="display:none"></div>
+  <div class="input-area">
+    <button class="emoji-toggle" onclick="toggleEmojiPicker()">😊</button>
+    <input class="msg-input" id="msgInput" placeholder="Stuur een bericht..." onkeydown="if(event.key==='Enter')sendMsg()">
+    <button class="send-btn" onclick="sendMsg()">➤</button>
+  </div>
 </div>
+
 <div class="bottom-nav">
   <div class="nav-item" onclick="window.location.href='http://localhost:4000/index.html'"><div class="nav-icon">🏠</div>Home</div>
   <div class="nav-item" onclick="window.location.href='http://localhost:4000/vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
   <div class="nav-item active"><div class="nav-icon">💬</div>Chat</div>
   <div class="nav-item" onclick="window.location.href='http://localhost:4000/login.html'"><div class="nav-icon">👤</div>Profiel</div>
 </div>
+
+<!-- Screenshot modal -->
 <div class="modal-bg" id="screenshotModal">
   <div class="modal">
     <div class="modal-icon">📸</div>
@@ -101,6 +123,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
     </div>
   </div>
 </div>
+
 <div class="modal-bg" id="blockedModal">
   <div class="modal">
     <div class="modal-icon">🚫</div>
@@ -111,118 +134,322 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
     </div>
   </div>
 </div>
-<script>
-var screenshotAllowed = false;
-var bannerSeconds = 1200;
-var bannerInterval = null;
-var emojiOpen = false;
-var emojiList = ["😊","😂","❤️","🔥","👍","🎉","😍","🤔","😢","😎","🌿","🌸","✨","🎵","🙌","💬","🦋","🌙","⭐","🍀","🎮","🐱","🌈","🎨","🍀"];
-var replies = ["Haha ja! 🌸","Zo fijn hier 😊","Geen algoritme = rust 🙌","Precies! 🌿","Wanneer gaan we weer op pad? 🍂","Skardew vanavond? 🎮","Top idee! ✨","❤️","😂","🎉"];
 
-function getTime() {
-  var n = new Date();
-  return String(n.getHours()).padStart(2,"0") + ":" + String(n.getMinutes()).padStart(2,"0");
-}
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-function toggleEmojiPicker() {
-  emojiOpen = !emojiOpen;
-  var grid = document.getElementById("emojiGrid");
-  if (emojiOpen) {
-    grid.innerHTML = "";
-    emojiList.forEach(function(e) {
-      var span = document.createElement("span");
-      span.className = "e-opt";
-      span.textContent = e;
-      span.onclick = function() {
-        document.getElementById("msgInput").value += e;
-        document.getElementById("msgInput").focus();
-      };
-      grid.appendChild(span);
-    });
-    grid.style.display = "flex";
-  } else {
-    grid.style.display = "none";
+  const supabase = createClient(
+    'https://qmgatbphiplrfxrljtbe.supabase.co',
+    'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
+  )
+
+  var huidigeUser = null
+  var huidigProfiel = null
+  var geselecteerdeVriend = null
+  var realtimeKanaal = null
+  var screenshotAllowed = false
+  var bannerSeconds = 1200
+  var bannerInterval = null
+  var emojiOpen = false
+  var emojiList = ["😊","😂","❤","🔥","👍","🎉","😍","🤔","😢","😎","🌿","🌸","✨","🎵","🙌","💬","🦋","🌙","⭐","🍀","🎮","🐱","🌈","🎨"]
+
+  // ========================
+  // OPSTARTEN
+  // ========================
+  async function init() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { window.location.href = 'login.html'; return }
+
+    huidigeUser = session.user
+
+    // Profiel ophalen
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', huidigeUser.id)
+      .single()
+
+    huidigProfiel = data
+
+    await laadVrienden()
   }
-}
 
-function sendMsg() {
-  var input = document.getElementById("msgInput");
-  var text = input.value.trim();
-  if (!text) return;
-  var msgs = document.getElementById("messages");
-  var row = document.createElement("div");
-  row.className = "msg-row out";
-  row.innerHTML = '<div class="msg-av-sm">S</div><div class="bubble out">' + text + '<div class="bubble-time">' + getTime() + ' ✓✓</div></div>';
-  msgs.appendChild(row);
-  input.value = "";
-  msgs.scrollTop = msgs.scrollHeight;
-  document.getElementById("emojiGrid").style.display = "none";
-  emojiOpen = false;
-  setTimeout(function() {
-    var reply = replies[Math.floor(Math.random() * replies.length)];
-    var r = document.createElement("div");
-    r.className = "msg-row";
-    r.innerHTML = '<div class="msg-av-sm">Z</div><div class="bubble in">' + reply + '<div class="bubble-time">' + getTime() + ' ✓✓</div></div>';
-    msgs.appendChild(r);
-    msgs.scrollTop = msgs.scrollHeight;
-  }, 1000);
-}
+  // ========================
+  // VRIENDEN LADEN
+  // ========================
+  async function laadVrienden() {
+    // Haal alle profielen op behalve jezelf (voor nu — later echte vriendenlijst)
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .neq('id', huidigeUser.id)
 
-function showScreenshotModal() {
-  if (screenshotAllowed) {
-    document.getElementById("privacyBar").classList.add("show");
-    setTimeout(function() { document.getElementById("privacyBar").classList.remove("show"); }, 3000);
-    return;
-  }
-  document.getElementById("screenshotModal").classList.add("show");
-}
+    const container = document.getElementById('vriendenLijst')
 
-function closeModal() {
-  document.getElementById("screenshotModal").classList.remove("show");
-  document.getElementById("blockedModal").classList.add("show");
-}
-
-function closeBlockedModal() {
-  document.getElementById("blockedModal").classList.remove("show");
-}
-
-function grantScreenshot() {
-  document.getElementById("screenshotModal").classList.remove("show");
-  screenshotAllowed = true;
-  bannerSeconds = 1200;
-  document.getElementById("screenshotBanner").classList.add("show");
-  if (bannerInterval) clearInterval(bannerInterval);
-  bannerInterval = setInterval(function() {
-    bannerSeconds--;
-    if (bannerSeconds <= 0) {
-      screenshotAllowed = false;
-      document.getElementById("screenshotBanner").classList.remove("show");
-      clearInterval(bannerInterval);
-      addSysMsg("Screenshot toestemming verlopen");
-      return;
+    if (error || !data || data.length === 0) {
+      container.innerHTML = `
+        <div class="geen-vrienden">
+          😔 Nog geen andere gebruikers gevonden.<br><br>
+          Nodig vrienden uit via de <strong>Vrienden</strong> pagina!
+        </div>
+      `
+      return
     }
-    var m = Math.floor(bannerSeconds / 60);
-    var s = bannerSeconds % 60;
-    document.getElementById("bannerTimer").textContent = String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
-  }, 1000);
-  addSysMsg("Screenshots toegestaan voor 20 minuten");
-}
 
-function revokeScreenshot() {
-  screenshotAllowed = false;
-  document.getElementById("screenshotBanner").classList.remove("show");
-  if (bannerInterval) clearInterval(bannerInterval);
-  addSysMsg("Screenshot toestemming ingetrokken");
-}
+    container.innerHTML = data.map(vriend => `
+      <div class="vriend-item" onclick="openChat('${vriend.id}', '${vriend.display_name || vriend.username}', '${vriend.avatar_url || '👤'}')">
+        <div class="vriend-av">${vriend.avatar_url || '👤'}</div>
+        <div>
+          <div class="vriend-naam">${vriend.display_name || vriend.username}</div>
+          <div class="vriend-username">@${vriend.username}</div>
+        </div>
+      </div>
+    `).join('')
+  }
 
-function addSysMsg(text) {
-  var msgs = document.getElementById("messages");
-  var div = document.createElement("div");
-  div.className = "sys-msg";
-  div.textContent = text;
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-}
+  // ========================
+  // CHAT OPENEN
+  // ========================
+  window.openChat = async function(vriendId, vriendNaam, vriendAvatar) {
+    geselecteerdeVriend = { id: vriendId, naam: vriendNaam, avatar: vriendAvatar }
+
+    // UI updaten
+    document.getElementById('chatAv').textContent = vriendAvatar
+    document.getElementById('chatNaam').textContent = vriendNaam
+    document.getElementById('chatStatus').textContent = '● actief'
+    document.getElementById('chatSysBericht').textContent =
+      `Gesprek met ${vriendNaam} · alleen jullie twee · end-to-end versleuteld`
+
+    // Schermen wisselen
+    document.getElementById('vriendenSelectie').style.display = 'none'
+    const chatScherm = document.getElementById('chatScherm')
+    chatScherm.style.display = 'flex'
+    chatScherm.style.flexDirection = 'column'
+
+    // Berichten laden
+    await laadBerichten()
+
+    // Realtime luisteren
+    startRealtime()
+  }
+
+  // ========================
+  // BERICHTEN LADEN
+  // ========================
+  async function laadBerichten() {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .or(
+        `and(sender_id.eq.${huidigeUser.id},receiver_id.eq.${geselecteerdeVriend.id}),` +
+        `and(sender_id.eq.${geselecteerdeVriend.id},receiver_id.eq.${huidigeUser.id})`
+      )
+      .order('created_at', { ascending: true })
+      .limit(50)
+
+    const container = document.getElementById('messages')
+
+    // Verwijder oude berichten maar bewaar sys bericht
+    const sysBericht = document.getElementById('chatSysBericht')
+    container.innerHTML = ''
+    container.appendChild(sysBericht)
+
+    if (error || !data || data.length === 0) {
+      voegSysBericht('Stuur je eerste bericht! 👋')
+      return
+    }
+
+    data.forEach(bericht => voegBerichtToe(bericht))
+    scrollNaarOnder()
+  }
+
+  // ========================
+  // BERICHT TOEVOEGEN AAN UI
+  // ========================
+  function voegBerichtToe(bericht) {
+    const isMijn = bericht.sender_id === huidigeUser.id
+    const container = document.getElementById('messages')
+    const tijd = new Date(bericht.created_at).toLocaleTimeString('nl-NL', { hour:'2-digit', minute:'2-digit' })
+    const avatar = isMijn ? (huidigProfiel?.avatar_url || '👤') : geselecteerdeVriend.avatar
+
+    const row = document.createElement('div')
+    row.className = `msg-row ${isMijn ? 'out' : ''}`
+    row.innerHTML = `
+      <div class="msg-av-sm">${avatar}</div>
+      <div class="bubble ${isMijn ? 'out' : 'in'}">
+        ${bericht.content}
+        <div class="bubble-time">${tijd} ${isMijn ? '✓✓' : ''}</div>
+      </div>
+    `
+    container.appendChild(row)
+  }
+
+  // ========================
+  // BERICHT VERSTUREN
+  // ========================
+  window.sendMsg = async function() {
+    if (!geselecteerdeVriend) return
+    const input = document.getElementById('msgInput')
+    const tekst = input.value.trim()
+    if (!tekst) return
+
+    input.value = ''
+
+    const { error } = await supabase
+      .from('messages')
+      .insert({
+        sender_id: huidigeUser.id,
+        receiver_id: geselecteerdeVriend.id,
+        content: tekst,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      })
+
+    if (error) {
+      console.error('Versturen mislukt:', error)
+    }
+
+    document.getElementById('emojiGrid').style.display = 'none'
+    emojiOpen = false
+  }
+
+  // ========================
+  // REALTIME BERICHTEN
+  // ========================
+  function startRealtime() {
+    if (realtimeKanaal) supabase.removeChannel(realtimeKanaal)
+
+    realtimeKanaal = supabase
+      .channel('berichten-' + huidigeUser.id)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages'
+      }, (payload) => {
+        const msg = payload.new
+        const isRelevant = (
+          (msg.sender_id === huidigeUser.id && msg.receiver_id === geselecteerdeVriend?.id) ||
+          (msg.sender_id === geselecteerdeVriend?.id && msg.receiver_id === huidigeUser.id)
+        )
+        if (isRelevant) {
+          voegBerichtToe(msg)
+          scrollNaarOnder()
+        }
+      })
+      .subscribe()
+  }
+
+  // ========================
+  // TERUG NAAR VRIENDENSELECTIE
+  // ========================
+  window.gaTerug = function() {
+    if (geselecteerdeVriend) {
+      geselecteerdeVriend = null
+      document.getElementById('chatScherm').style.display = 'none'
+      document.getElementById('vriendenSelectie').style.display = 'block'
+      document.getElementById('chatNaam').textContent = 'Selecteer een vriend'
+      document.getElementById('chatStatus').textContent = 'Kies hieronder met wie je wilt chatten'
+      document.getElementById('chatAv').textContent = '💬'
+      if (realtimeKanaal) supabase.removeChannel(realtimeKanaal)
+    } else {
+      window.location.href = 'index.html'
+    }
+  }
+
+  // ========================
+  // EMOJI PICKER
+  // ========================
+  window.toggleEmojiPicker = function() {
+    emojiOpen = !emojiOpen
+    const grid = document.getElementById('emojiGrid')
+    if (emojiOpen) {
+      grid.innerHTML = ''
+      emojiList.forEach(e => {
+        const span = document.createElement('span')
+        span.className = 'e-opt'
+        span.textContent = e
+        span.onclick = () => {
+          document.getElementById('msgInput').value += e
+          document.getElementById('msgInput').focus()
+        }
+        grid.appendChild(span)
+      })
+      grid.style.display = 'flex'
+    } else {
+      grid.style.display = 'none'
+    }
+  }
+
+  // ========================
+  // SCREENSHOT BEVEILIGING
+  // ========================
+  window.showScreenshotModal = function() {
+    if (screenshotAllowed) {
+      document.getElementById('privacyBar').classList.add('show')
+      setTimeout(() => document.getElementById('privacyBar').classList.remove('show'), 3000)
+      return
+    }
+    document.getElementById('screenshotModal').classList.add('show')
+  }
+
+  window.closeModal = function() {
+    document.getElementById('screenshotModal').classList.remove('show')
+    document.getElementById('blockedModal').classList.add('show')
+  }
+
+  window.closeBlockedModal = function() {
+    document.getElementById('blockedModal').classList.remove('show')
+  }
+
+  window.grantScreenshot = function() {
+    document.getElementById('screenshotModal').classList.remove('show')
+    screenshotAllowed = true
+    bannerSeconds = 1200
+    document.getElementById('screenshotBanner').classList.add('show')
+    if (bannerInterval) clearInterval(bannerInterval)
+    bannerInterval = setInterval(() => {
+      bannerSeconds--
+      if (bannerSeconds <= 0) {
+        screenshotAllowed = false
+        document.getElementById('screenshotBanner').classList.remove('show')
+        clearInterval(bannerInterval)
+        voegSysBericht('Screenshot toestemming verlopen')
+        return
+      }
+      const m = Math.floor(bannerSeconds / 60)
+      const s = bannerSeconds % 60
+      document.getElementById('bannerTimer').textContent =
+        String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0')
+    }, 1000)
+    voegSysBericht('Screenshots toegestaan voor 20 minuten')
+  }
+
+  window.revokeScreenshot = function() {
+    screenshotAllowed = false
+    document.getElementById('screenshotBanner').classList.remove('show')
+    if (bannerInterval) clearInterval(bannerInterval)
+    voegSysBericht('Screenshot toestemming ingetrokken')
+  }
+
+  // ========================
+  // HULPFUNCTIES
+  // ========================
+  function voegSysBericht(tekst) {
+    const container = document.getElementById('messages')
+    const div = document.createElement('div')
+    div.className = 'sys-msg'
+    div.textContent = tekst
+    container.appendChild(div)
+    scrollNaarOnder()
+  }
+
+  function scrollNaarOnder() {
+    const msgs = document.getElementById('messages')
+    msgs.scrollTop = msgs.scrollHeight
+  }
+
+  // Start
+  init()
 </script>
+
 </body>
 </html>

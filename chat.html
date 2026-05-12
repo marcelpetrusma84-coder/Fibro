@@ -96,10 +96,33 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
   <div class="messages" id="messages">
     <div class="sys-msg" id="chatSysBericht">End-to-end versleuteld gesprek</div>
   </div>
-  <div class="emoji-grid" id="emojiGrid" style="display:none"></div>
+  <div class="emoji-grid" id="stickerGrid" style="display:none; flex-wrap:wrap; gap:8px; padding:10px 14px; background:rgba(0,0,0,0.3); border-top:0.5px solid var(--border);">
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌸')">🌸</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌿')">🌿</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🦋')">🦋</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌙')">🌙</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('⭐')">⭐</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎨')">🎨</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌊')">🌊</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🍂')">🍂</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎵')">🎵</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌺')">🌺</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🦊')">🦊</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🐱')">🐱</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌈')">🌈</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎮')">🎮</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('📚')">📚</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌻')">🌻</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🍀')">🍀</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🚀')">🚀</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('📷')">📷</span>
+  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎸')">🎸</span>
+</div>
+<div class="emoji-grid" id="emojiGrid" style="display:none"></div>
   <div class="input-area">
     <button class="emoji-toggle" onclick="toggleEmojiPicker()">😊</button>
     <input class="msg-input" id="msgInput" placeholder="Stuur een bericht..." onkeydown="if(event.key==='Enter')sendMsg()">
+    <button class="emoji-toggle" onclick="toggleStickers()" title="Sticker">🎨</button>
     <button class="send-btn" onclick="sendMsg()">➤</button>
   </div>
 </div>
@@ -276,19 +299,52 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 
     const row = document.createElement('div')
     row.className = `msg-row ${isMijn ? 'out' : ''}`
-    row.innerHTML = `
-      <div class="msg-av-sm">${avatar}</div>
-      <div class="bubble ${isMijn ? 'out' : 'in'}">
-        ${bericht.content}
-        <div class="bubble-time">${tijd} ${isMijn ? '✓✓' : ''}</div>
-      </div>
-    `
+    const isSticker = bericht.content.startsWith('sticker:')
+    if (isSticker) {
+      const stickerEmoji = bericht.content.replace('sticker:', '')
+      row.innerHTML = `
+        <div class="msg-av-sm">${avatar}</div>
+        <div style="font-size:52px;line-height:1;padding:4px;filter:drop-shadow(0 2px 8px rgba(192,132,252,0.3));">${stickerEmoji}
+          <div style="font-size:9px;color:var(--muted);margin-top:2px;">${tijd}</div>
+        </div>
+      `
+    } else {
+      row.innerHTML = `
+        <div class="msg-av-sm">${avatar}</div>
+        <div class="bubble ${isMijn ? 'out' : 'in'}">
+          ${bericht.content}
+          <div class="bubble-time">${tijd} ${isMijn ? '✓✓' : ''}</div>
+        </div>
+      `
+    }
     container.appendChild(row)
   }
 
   // ========================
   // BERICHT VERSTUREN
   // ========================
+  window.toggleStickers = function() {
+    const grid = document.getElementById('stickerGrid')
+    const emojiGrid = document.getElementById('emojiGrid')
+    if (grid.style.display === 'none') {
+      grid.style.display = 'flex'
+      emojiGrid.style.display = 'none'
+    } else {
+      grid.style.display = 'none'
+    }
+  }
+
+  window.sendSticker = async function(emoji) {
+    if (!geselecteerdeVriend) return
+    document.getElementById('stickerGrid').style.display = 'none'
+    await supabase.from('messages').insert({
+      sender_id: huidigeUser.id,
+      receiver_id: geselecteerdeVriend.id,
+      content: 'sticker:' + emoji,
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    })
+  }
+
   window.sendMsg = async function() {
     if (!geselecteerdeVriend) return
     const input = document.getElementById('msgInput')

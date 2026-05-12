@@ -80,26 +80,18 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .laden { text-align:center; padding:40px; color:var(--muted); font-size:13px; }
 </style>
 </head>
-<body>
+<body style="visibility:hidden"><script>setTimeout(()=>document.body.style.visibility="visible",800)</script>
 
 <div class="top-bar">
   <span class="top-title">Fibro</span>
   <div class="top-icons">
-    <span class="eigenaar-badge" onclick="toggleEigenaar()" id="eigenaarBadge">Laden...</span>
+    
     <button class="uitlog-btn" onclick="uitloggen()">Uitloggen</button>
     <span style="cursor:pointer;font-size:18px" onclick="toggleMusic()" id="musicBtn">🎵</span>
   </div>
 </div>
 
-<div id="themaBalk" style="display:none">
-  <div class="theme-bar">
-    <div class="theme-dot t1 active" onclick="setTheme('purple',this)"></div>
-    <div class="theme-dot t2" onclick="setTheme('cottage',this)"></div>
-    <div class="theme-dot t3" onclick="setTheme('space',this)"></div>
-    <div class="theme-dot t4" onclick="setTheme('kawaii',this)"></div>
-    <span style="font-size:10px;color:var(--muted);margin-left:4px">thema kiezen</span>
-  </div>
-</div>
+
 
 <div class="profile-hero">
   <div class="avatar-ring" onclick="openAvatarPicker()">
@@ -190,10 +182,11 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
   <div class="nav-item active" onclick="window.location.href='http://localhost:4000/index.html'"><div class="nav-icon">🏠</div>Home</div>
   <div class="nav-item" onclick="window.location.href='http://localhost:4000/vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
   <div class="nav-item" onclick="window.location.href='http://localhost:4000/chat.html'"><div class="nav-icon">💬</div>Chat</div>
-  <div class="nav-item" onclick="window.location.href='http://localhost:4000/login.html'"><div class="nav-icon">👤</div>Profiel</div>
+  <div class="nav-item" onclick="window.location.href='profiel.html'"><div class="nav-icon">👤</div>Profiel</div>
 </div>
 
 <script type="module">
+  import { laadThema } from './thema.js'
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
   const supabase = createClient(
@@ -208,8 +201,8 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 
   // ========================
   // OPSTARTEN
-  // ========================
-  async function init() {
+async function init() {
+    laadThema()
     const { data: { session } } = await supabase.auth.getSession()
 
     if (!session) {

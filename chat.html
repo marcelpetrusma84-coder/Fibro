@@ -67,7 +67,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .laden { text-align:center; padding:20px; color:var(--muted); font-size:12px; }
 </style>
 </head>
-<body>
+<body style="visibility:hidden"><script>setTimeout(()=>document.body.style.visibility="visible",800)</script>
 
 <div class="top-bar">
   <button class="back-btn" onclick="gaTerug()">← terug</button>
@@ -108,7 +108,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
   <div class="nav-item" onclick="window.location.href='http://localhost:4000/index.html'"><div class="nav-icon">🏠</div>Home</div>
   <div class="nav-item" onclick="window.location.href='http://localhost:4000/vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
   <div class="nav-item active"><div class="nav-icon">💬</div>Chat</div>
-  <div class="nav-item" onclick="window.location.href='http://localhost:4000/login.html'"><div class="nav-icon">👤</div>Profiel</div>
+  <div class="nav-item" onclick="window.location.href='profiel.html'"><div class="nav-icon">👤</div>Profiel</div>
 </div>
 
 <!-- Screenshot modal -->
@@ -136,6 +136,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 </div>
 
 <script type="module">
+  import { laadThema } from './thema.js'
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
   const supabase = createClient(
@@ -157,6 +158,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
   // OPSTARTEN
   // ========================
   async function init() {
+    laadThema()
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) { window.location.href = 'login.html'; return }
 

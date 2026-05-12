@@ -586,11 +586,25 @@
       return
     }
 
-    // Invite token markeren als gebruikt
+    // Invite token markeren als gebruikt + vriendschap aanmaken
+    const { data: tokenData } = await supabase
+      .from('invite_tokens')
+      .select('created_by')
+      .eq('token', token)
+      .single()
+
     await supabase
       .from('invite_tokens')
-      .update({ is_used: true, used_at: new Date().toISOString() })
+      .update({ is_used: true, used_at: new Date().toISOString(), used_by: data.user.id })
       .eq('token', token)
+
+    // Vriendschap aanmaken als de invite door iemand anders is aangemaakt
+    if (tokenData?.created_by && tokenData.created_by !== data.user.id) {
+      await supabase.from('friendships').insert([
+        { user_id: data.user.id, friend_id: tokenData.created_by, status: 'accepted' },
+        { user_id: tokenData.created_by, friend_id: data.user.id, status: 'accepted' }
+      ])
+    }
 
     toonBericht(msg, 'success', '🎉 Account aangemaakt! Controleer je e-mail om te bevestigen.')
     btn.textContent = 'Account aangemaakt ✓'

@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fibro — Profiel aanpassen</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fibro">
+<meta name="theme-color" content="#c084fc">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400;500&family=Raleway:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:wght@300;400;700&family=Bebas+Neue&family=Oswald:wght@300;400;500&family=Pacifico&family=Dancing+Script:wght@400;600&family=Great+Vibes&family=Space+Mono:wght@400;700&family=Courier+Prime:wght@400;700&family=Quicksand:wght@300;400;500&family=Nunito:wght@300;400;500&family=Righteous&family=Comfortaa:wght@300;400;500&family=Cinzel:wght@400;600&family=Satisfy&family=Lobster&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -117,7 +122,25 @@ input[type="color"]{width:40px;height:40px;border:none;background:none;cursor:po
       </div>
     </div>
     <div id="avatarPickerWrap" style="display:none;">
-      <div class="emoji-grid" id="avatarPicker"></div>
+      <div style="padding:10px 0 6px;display:flex;gap:8px;">
+        <button onclick="switchAvatarTab('emoji')" id="tabEmoji" style="flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:11px;cursor:pointer;">😊 Emoji</button>
+        <button onclick="switchAvatarTab('foto')" id="tabFoto" style="flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;">📷 Foto</button>
+      </div>
+      <div id="avatarEmojiTab">
+        <div class="emoji-grid" id="avatarPicker"></div>
+      </div>
+      <div id="avatarFotoTab" style="display:none;">
+        <div class="upload-zone" onclick="document.getElementById('fotoInput').click()">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text">Klik om een foto te kiezen</div>
+          <div class="upload-formats">JPG, PNG, GIF — max 2MB</div>
+        </div>
+        <input type="file" id="fotoInput" accept="image/*" style="display:none;" onchange="verwerkFoto(event)">
+        <div id="fotoPreviewWrap" style="display:none;text-align:center;margin-top:8px;">
+          <img id="fotoPreview" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);">
+          <div style="font-size:11px;color:var(--accent);margin-top:6px;cursor:pointer;" onclick="bevestigFoto()">✓ Gebruik deze foto</div>
+        </div>
+      </div>
     </div>
   </div>
   <div class="section">
@@ -384,6 +407,52 @@ function bouwAvatarPicker(){
   const picker=document.getElementById('avatarPicker');picker.innerHTML=''
   avatarEmojis.forEach(e=>{const span=document.createElement('span');span.className='emoji-opt';span.textContent=e;span.onclick=()=>{document.getElementById('avatarEmoji').textContent=e;document.getElementById('previewAvatar').textContent=e;document.getElementById('avatarPickerWrap').style.display='none'};picker.appendChild(span)})
 }
+window.switchAvatarTab = function(tab) {
+  if (tab === 'emoji') {
+    document.getElementById('avatarEmojiTab').style.display = 'block'
+    document.getElementById('avatarFotoTab').style.display = 'none'
+    document.getElementById('tabEmoji').style.background = 'rgba(192,132,252,0.2)'
+    document.getElementById('tabEmoji').style.borderColor = 'var(--accent)'
+    document.getElementById('tabEmoji').style.color = 'var(--accent)'
+    document.getElementById('tabFoto').style.background = 'var(--card)'
+    document.getElementById('tabFoto').style.borderColor = 'var(--border)'
+    document.getElementById('tabFoto').style.color = 'var(--muted)'
+  } else {
+    document.getElementById('avatarEmojiTab').style.display = 'none'
+    document.getElementById('avatarFotoTab').style.display = 'block'
+    document.getElementById('tabFoto').style.background = 'rgba(192,132,252,0.2)'
+    document.getElementById('tabFoto').style.borderColor = 'var(--accent)'
+    document.getElementById('tabFoto').style.color = 'var(--accent)'
+    document.getElementById('tabEmoji').style.background = 'var(--card)'
+    document.getElementById('tabEmoji').style.borderColor = 'var(--border)'
+    document.getElementById('tabEmoji').style.color = 'var(--muted)'
+  }
+}
+
+window.verwerkFoto = function(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  if (file.size > 2 * 1024 * 1024) {
+    alert('Foto is te groot! Max 2MB.')
+    return
+  }
+  const reader = new FileReader()
+  reader.onload = function(e) {
+    const base64 = e.target.result
+    document.getElementById('fotoPreview').src = base64
+    document.getElementById('fotoPreviewWrap').style.display = 'block'
+  }
+  reader.readAsDataURL(file)
+}
+
+window.bevestigFoto = function() {
+  const src = document.getElementById('fotoPreview').src
+  document.getElementById('avatarEmoji').innerHTML = `<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+  document.getElementById('previewAvatar').innerHTML = `<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+  document.getElementById('avatarPickerWrap').style.display = 'none'
+  window._fotoAvatar = src
+}
+
 window.toggleAvatarPicker=function(){const w=document.getElementById('avatarPickerWrap');w.style.display=w.style.display==='none'?'block':'none'}
 window.setAchtergrondType=function(type){
   document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'))
@@ -447,7 +516,7 @@ window.slaAllesOp=async function(){
   const accentKleur=document.getElementById('accentHex').value
   const accentKleur2=document.getElementById('accent2Hex').value
   const bgKleur=document.getElementById('bgKleurHex').value
-  const{error}=await supabase.from('profiles').upsert({id:huidigeUser.id,username:profiel?.username||huidigeUser.email.split('@')[0],display_name:naam,bio:bio,mood:mood,avatar_url:avatar,accent_kleur:accentKleur,accent_kleur2:accentKleur2,achtergrond_kleur:bgKleur,animatie:huidigeAnimatie,widgets:actieveWidgets,stickers:actieveStickers,updated_at:new Date().toISOString()})
+  const{error}=await supabase.from('profiles').upsert({id:huidigeUser.id,username:profiel?.username||huidigeUser.email.split('@')[0],display_name:naam,bio:bio,mood:mood,avatar_url:window._fotoAvatar||avatar,accent_kleur:accentKleur,accent_kleur2:accentKleur2,achtergrond_kleur:bgKleur,animatie:huidigeAnimatie,widgets:actieveWidgets,stickers:actieveStickers,updated_at:new Date().toISOString()})
   const msg=document.getElementById('statusMsg')
   if(error){msg.className='status-msg error';msg.textContent='✗ Opslaan mislukt: '+error.message}
   else{msg.className='status-msg success';msg.textContent='✓ Profiel opgeslagen!';setTimeout(()=>msg.className='status-msg',2000)}

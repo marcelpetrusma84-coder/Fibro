@@ -193,6 +193,24 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 
 <script type="module">
   import { laadThema } from './thema.js'
+
+  // IndexedDB
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open('FibroDB', 1)
+      req.onupgradeneeded = e => e.target.result.createObjectStore('fotos', { keyPath: 'id' })
+      req.onsuccess = e => resolve(e.target.result)
+      req.onerror = () => reject('DB fout')
+    })
+  }
+  async function laadFotoUitDB(id) {
+    const db = await openDB()
+    return new Promise((resolve) => {
+      const req = db.transaction('fotos').objectStore('fotos').get(id)
+      req.onsuccess = e => resolve(e.target.result?.data || null)
+      req.onerror = () => resolve(null)
+    })
+  }
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
   const supabase = createClient(
@@ -247,7 +265,13 @@ async function init() {
     // Vul profiel in
     document.getElementById('profielNaam').textContent = data.display_name || data.username || 'Naamloos'
     document.getElementById('profielBio').textContent = data.bio || 'Klik om je bio in te stellen'
-    document.getElementById('avatarEmoji').textContent = data.avatar_url || '🌿'
+    const userId = session.user.id
+    const opgeslagenFoto = await laadFotoUitDB('avatar_thumbnail_' + userId)
+    if (opgeslagenFoto) {
+      document.getElementById('avatarEmoji').innerHTML = `<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+    } else {
+      document.getElementById('avatarEmoji').textContent = data.avatar_url || '🌿'
+    }
     document.getElementById('moodTekst').textContent = data.mood || 'Geen mood ingesteld'
     document.getElementById('eigenaarBadge').textContent = 'Eigenaar'
     isEigenaar = true

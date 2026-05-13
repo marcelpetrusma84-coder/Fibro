@@ -6,12 +6,10 @@ const supabase = createClient(
 )
 
 export async function laadThema() {
-  document.documentElement.style.visibility = 'hidden'
 
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) {
-    document.documentElement.style.visibility = 'visible'
-    return
+      return
   }
 
   const { data } = await supabase
@@ -21,13 +19,11 @@ export async function laadThema() {
     .single()
 
   if (!data) {
-    document.documentElement.style.visibility = 'visible'
-    return
+      return
   }
 
   if (data.achtergrond_kleur) document.documentElement.style.setProperty('--bg', data.achtergrond_kleur)
   if (data.accent_kleur) document.documentElement.style.setProperty('--accent', data.accent_kleur)
   if (data.accent_kleur2) document.documentElement.style.setProperty('--accent2', data.accent_kleur2)
   if (data.lettertype) document.body.style.fontFamily = data.lettertype
-  document.documentElement.style.visibility = 'visible'
 }

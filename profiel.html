@@ -395,6 +395,7 @@ async function init(){
     if(profiel.accent_kleur2)updateAccent2(profiel.accent_kleur2)
     if(profiel.achtergrond_kleur)updateBgKleur(profiel.achtergrond_kleur)
     if(profiel.animatie){huidigeAnimatie=profiel.animatie;updateAnimatieUI()}
+    if(profiel.lettertype){huidigLettertype=profiel.lettertype;document.body.style.fontFamily=profiel.lettertype}
     if(profiel.widgets)actieveWidgets=profiel.widgets
     if(profiel.stickers)actieveStickers=profiel.stickers
   }
@@ -560,7 +561,7 @@ function startAnimatiePreview(){
 function stopAnimatiePreview(){if(animFrame){cancelAnimationFrame(animFrame);animFrame=null}}
 function bouwFontGrid(){
   const grid=document.getElementById('fontGrid');grid.innerHTML=''
-  fonts.forEach(f=>{const div=document.createElement('div');div.className='font-item';div.innerHTML=`<div><div class="font-preview" style="font-family:${f.familie};">${f.naam}</div><div class="font-name">${f.stijl}</div></div><div style="font-size:10px;color:var(--muted);">Aa</div>`;div.onclick=()=>{document.querySelectorAll('.font-item').forEach(i=>i.classList.remove('selected'));div.classList.add('selected');document.body.style.fontFamily=f.familie};grid.appendChild(div)})
+  fonts.forEach(f=>{const div=document.createElement('div');div.className='font-item';div.innerHTML=`<div><div class="font-preview" style="font-family:${f.familie};">${f.naam}</div><div class="font-name">${f.stijl}</div></div><div style="font-size:10px;color:var(--muted);">Aa</div>`;div.onclick=()=>{document.querySelectorAll('.font-item').forEach(i=>i.classList.remove('selected'));div.classList.add('selected');document.body.style.fontFamily=f.familie;huidigLettertype=f.familie};grid.appendChild(div)})
 }
 window.updateAccent=function(k){document.getElementById('accentPicker').value=k;document.getElementById('accentHex').value=k;document.documentElement.style.setProperty('--accent',k)}
 window.updateAccentHex=function(v){if(/^#[0-9a-f]{6}$/i.test(v))updateAccent(v)}
@@ -582,7 +583,7 @@ window.slaAllesOp=async function(){
   const accentKleur=document.getElementById('accentHex').value
   const accentKleur2=document.getElementById('accent2Hex').value
   const bgKleur=document.getElementById('bgKleurHex').value
-  const{error}=await supabase.from('profiles').upsert({id:huidigeUser.id,username:profiel?.username||huidigeUser.email.split('@')[0],display_name:naam,bio:bio,mood:mood,avatar_url:window._fotoAvatar||avatar,accent_kleur:accentKleur,accent_kleur2:accentKleur2,achtergrond_kleur:bgKleur,animatie:huidigeAnimatie,widgets:actieveWidgets,stickers:actieveStickers,updated_at:new Date().toISOString()})
+  const{error}=await supabase.from('profiles').upsert({id:huidigeUser.id,username:profiel?.username||huidigeUser.email.split('@')[0],display_name:naam,bio:bio,mood:mood,avatar_url:window._fotoAvatar||avatar,accent_kleur:accentKleur,accent_kleur2:accentKleur2,achtergrond_kleur:bgKleur,animatie:huidigeAnimatie,lettertype:huidigLettertype,widgets:actieveWidgets,stickers:actieveStickers,updated_at:new Date().toISOString()})
   const msg=document.getElementById('statusMsg')
   if(error){msg.className='status-msg error';msg.textContent='✗ Opslaan mislukt: '+error.message}
   else{msg.className='status-msg success';msg.textContent='✓ Profiel opgeslagen!';setTimeout(()=>msg.className='status-msg',2000)}

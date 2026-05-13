@@ -379,8 +379,16 @@ async function init(){
     document.getElementById('editUsername').value=profiel.username||''
     document.getElementById('editBio').value=profiel.bio||''
     document.getElementById('editMood').value=profiel.mood||''
-    document.getElementById('avatarEmoji').textContent=profiel.avatar_url||'🌿'
-    document.getElementById('previewAvatar').textContent=profiel.avatar_url||'🌿'
+    // Laad foto uit IndexedDB
+    const userId = huidigeUser?.id || 'lokaal'
+    const opgeslagenFoto = await laadFotoUitDB('avatar_thumbnail_' + userId)
+    if (opgeslagenFoto) {
+      document.getElementById('avatarEmoji').innerHTML = `<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+      document.getElementById('previewAvatar').innerHTML = `<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+    } else {
+      document.getElementById('avatarEmoji').textContent = profiel.avatar_url || '🌿'
+      document.getElementById('previewAvatar').textContent = profiel.avatar_url || '🌿'
+    }
     document.getElementById('previewNaam').textContent=profiel.display_name||profiel.username||'Jouw naam'
     document.getElementById('previewBio').textContent=profiel.bio||'Jouw bio verschijnt hier'
     if(profiel.accent_kleur)updateAccent(profiel.accent_kleur)
@@ -504,7 +512,8 @@ window.verwerkFoto = async function(event) {
 
 window.bevestigFoto = function() {
   const src = window._fotoThumbnail || document.getElementById('fotoPreview').src
-  document.getElementById('avatarEmoji').innerHTML = `<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+  const thumbSrc = window._fotoThumbnail || src
+  document.getElementById('avatarEmoji').innerHTML = `<img src="${thumbSrc}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
   document.getElementById('previewAvatar').innerHTML = `<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
   document.getElementById('avatarPickerWrap').style.display = 'none'
   window._fotoAvatar = src

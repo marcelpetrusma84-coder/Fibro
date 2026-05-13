@@ -430,24 +430,80 @@ window.switchAvatarTab = function(tab) {
   }
 }
 
-window.verwerkFoto = function(event) {
+// ========================
+// INDEXEDDB SETUP
+// ========================
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('FibroDB', 1)
+    req.onupgradeneeded = e => e.target.result.createObjectStore('fotos', { keyPath: 'id' })
+    req.onsuccess = e => resolve(e.target.result)
+    req.onerror = () => reject('DB fout')
+  })
+}
+
+async function slaFotoOp(id, data) {
+  const db = await openDB()
+  return new Promise((resolve) => {
+    const tx = db.transaction('fotos', 'readwrite')
+    tx.objectStore('fotos').put({ id, data })
+    tx.oncomplete = resolve
+  })
+}
+
+async function laadFotoUitDB(id) {
+  const db = await openDB()
+  return new Promise((resolve) => {
+    const req = db.transaction('fotos').objectStore('fotos').get(id)
+    req.onsuccess = e => resolve(e.target.result?.data || null)
+  })
+}
+
+function comprimeerFoto(file, maxBreedte, kwaliteit) {
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = function(e) {
+      const img = new Image()
+      img.onload = function() {
+        const canvas = document.createElement('canvas')
+        let w = img.width, h = img.height
+        if (w > maxBreedte) { h = h * maxBreedte / w; w = maxBreedte }
+        if (h > maxBreedte) { w = w * maxBreedte / h; h = maxBreedte }
+        canvas.width = w; canvas.height = h
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+        resolve(canvas.toDataURL('image/jpeg', kwaliteit))
+      }
+      img.src = e.target.result
+    }
+    reader.readAsDataURL(file)
+  })
+}
+
+window.verwerkFoto = async function(event) {
   const file = event.target.files[0]
   if (!file) return
-  if (file.size > 2 * 1024 * 1024) {
-    alert('Foto is te groot! Max 2MB.')
+  if (file.size > 10 * 1024 * 1024) {
+    alert('Foto is te groot! Max 10MB.')
     return
   }
-  const reader = new FileReader()
-  reader.onload = function(e) {
-    const base64 = e.target.result
-    document.getElementById('fotoPreview').src = base64
-    document.getElementById('fotoPreviewWrap').style.display = 'block'
-  }
-  reader.readAsDataURL(file)
+  // Comprimeer naar volledig (400x400, 80% kwaliteit)
+  const volledig = await comprimeerFoto(file, 400, 0.80)
+  // Comprimeer naar thumbnail (80x80, 80% kwaliteit)
+  const thumbnail = await comprimeerFoto(file, 80, 0.80)
+  
+  // Sla op in IndexedDB
+  const userId = huidigeUser?.id || 'lokaal'
+  await slaFotoOp('avatar_volledig_' + userId, volledig)
+  await slaFotoOp('avatar_thumbnail_' + userId, thumbnail)
+  
+  document.getElementById('fotoPreview').src = volledig
+  document.getElementById('fotoPreviewWrap').style.display = 'block'
+  window._fotoVolledig = volledig
+  window._fotoThumbnail = thumbnail
 }
 
 window.bevestigFoto = function() {
-  const src = document.getElementById('fotoPreview').src
+  const src = window._fotoThumbnail || document.getElementById('fotoPreview').src
   document.getElementById('avatarEmoji').innerHTML = `<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
   document.getElementById('previewAvatar').innerHTML = `<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
   document.getElementById('avatarPickerWrap').style.display = 'none'

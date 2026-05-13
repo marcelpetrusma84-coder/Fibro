@@ -265,7 +265,7 @@ async function init() {
     // Vul profiel in
     document.getElementById('profielNaam').textContent = data.display_name || data.username || 'Naamloos'
     document.getElementById('profielBio').textContent = data.bio || 'Klik om je bio in te stellen'
-    const userId = session.user.id
+    const userId = huidigeUser?.id || 'lokaal'
     const opgeslagenFoto = await laadFotoUitDB('avatar_thumbnail_' + userId)
     if (opgeslagenFoto) {
       document.getElementById('avatarEmoji').innerHTML = `<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`

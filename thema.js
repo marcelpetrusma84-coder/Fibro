@@ -11,12 +11,12 @@ async function laadWallpaper(userId){
     document.body.style.backgroundAttachment='fixed'
     document.body.style.backgroundRepeat='no-repeat'
     document.documentElement.style.setProperty('--bg','transparent')
-    document.documentElement.style.setProperty('--card','rgba(0,0,0,0.55)')
+    document.documentElement.style.setProperty('--card','rgba(0,0,0,0.70)')
     document.documentElement.style.setProperty('--border','rgba(255,255,255,0.15)')
     const topBar=document.querySelector('.top-bar')
-    if(topBar)topBar.style.background='rgba(0,0,0,0.6)'
+    if(topBar)topBar.style.background='rgba(0,0,0,0.75)'
     const bottomNav=document.querySelector('.bottom-nav')
-    if(bottomNav)bottomNav.style.background='rgba(0,0,0,0.6)'
+    if(bottomNav)bottomNav.style.background='rgba(0,0,0,0.75)'
   }else{
     document.body.style.backgroundImage=''
     document.body.style.backgroundSize=''

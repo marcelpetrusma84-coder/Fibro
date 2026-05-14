@@ -226,7 +226,6 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
   // ========================
   // OPSTARTEN
 async function init() {
-    await laadThema()
     const { data: { session } } = await supabase.auth.getSession()
 
     if (!session) {

@@ -234,6 +234,7 @@ async function init() {
     }
 
     huidigeUser = session.user
+    await laadThema()
     await laadProfiel()
     await laadGastenboek()
   }

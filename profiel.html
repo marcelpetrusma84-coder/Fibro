@@ -367,6 +367,7 @@ input[type="color"]{width:40px;height:40px;border:none;background:none;cursor:po
 </div>
 <script type="module">
 import{createClient}from'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+import{laadThema}from'./thema.js'
 const supabase=createClient('https://qmgatbphiplrfxrljtbe.supabase.co','sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf')
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
@@ -380,6 +381,7 @@ async function init(){
   const{data:{session}}=await supabase.auth.getSession()
   if(!session){window.location.href='login.html';return}
   huidigeUser=session.user
+  await laadThema()
   const{data}=await supabase.from('profiles').select('*').eq('id',huidigeUser.id).single()
   profiel=data
   if(profiel){

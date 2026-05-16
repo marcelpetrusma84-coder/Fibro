@@ -38,7 +38,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .vriend-username { font-size:11px; color:var(--muted); margin-top:2px; }
 .geen-vrienden { text-align:center; padding:40px 20px; color:var(--muted); font-size:13px; line-height:1.6; }
 
-.messages { flex:1; padding:12px 14px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; min-height:360px; padding-bottom:20px; }
+.messages { flex:1; padding:12px 14px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; min-height:360px; padding-bottom:130px; }
 .msg-row { display:flex; gap:8px; align-items:flex-end; }
 .msg-row.out { flex-direction:row-reverse; }
 .msg-av-sm { width:26px; height:26px; border-radius:50%; background:var(--card); border:0.5px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
@@ -50,7 +50,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .emoji-grid { display:flex; flex-wrap:wrap; gap:6px; padding:10px 14px; background:rgba(0,0,0,0.3); border-top:0.5px solid var(--border); }
 .e-opt { font-size:22px; cursor:pointer; padding:4px; border-radius:8px; transition:background 0.2s; }
 .e-opt:hover { background:rgba(192,132,252,0.2); }
-.input-area { padding:10px 14px; border-top:0.5px solid var(--border); display:flex; gap:8px; align-items:center; background:rgba(0,0,0,0.2); position:sticky; bottom:0; }
+.input-area { padding:10px 14px; border-top:0.5px solid var(--border); display:flex; gap:8px; align-items:center; background:rgba(0,0,0,0.2); position:fixed; bottom:60px; width:100%; max-width:480px; z-index:9; }
 .msg-input { flex:1; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:12px; outline:none; }
 .msg-input::placeholder { color:var(--muted); }
 .msg-input:focus { border-color:var(--accent); }

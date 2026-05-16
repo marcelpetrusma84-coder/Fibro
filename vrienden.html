@@ -393,8 +393,10 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 
     // Maak QR code
     document.getElementById('qr-container').innerHTML = ''
+    const inviteLink = 'https://marcelpetrusma84-coder.github.io/Fibro/login.html?invite=' + token
+    document.getElementById('token-display').textContent = inviteLink
     new QRCode(document.getElementById('qr-container'), {
-      text: token,
+      text: inviteLink,
       width: 200,
       height: 200,
       colorDark: '#1a0a2e',

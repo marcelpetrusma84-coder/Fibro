@@ -453,6 +453,18 @@
   // INVITE TOKEN CHECK
   // ========================
   let inviteGeldig = false
+
+  // Automatisch invite code invullen vanuit URL
+  const urlParams = new URLSearchParams(window.location.search)
+  const inviteParam = urlParams.get('invite')
+  if (inviteParam) {
+    const inviteVeld = document.getElementById('invite-token')
+    if (inviteVeld) {
+      inviteVeld.value = inviteParam
+      // Automatisch valideren
+      setTimeout(() => controleerInvite(inviteParam), 500)
+    }
+  }
   let checkTimeout = null
 
   window.checkInviteToken = function(token) {

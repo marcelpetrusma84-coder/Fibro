@@ -78,7 +78,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 
     const { data, error } = await supabase
       .from('invite_tokens')
-      .select('*, profiles!invite_tokens_used_by_fkey(display_name, username, avatar_url)')
+      .select('*, profiles!invite_tokens_created_by_fkey(display_name, username, avatar_url)')
       .eq('token', token)
       .eq('is_used', false)
       .single()

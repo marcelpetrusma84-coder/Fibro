@@ -557,7 +557,7 @@ async function init() {
         r.onerror = () => res(null)
       })
       if (data) {
-        document.body.style.backgroundImage = 'url(' + data + ')'
+        document.body.style.backgroundImage = 'url(' + data + ')'; document.body.classList.add('heeft-wallpaper')
         document.body.style.backgroundAttachment = 'fixed'
         document.body.style.backgroundSize = 'cover'
         document.body.style.backgroundPosition = 'center'

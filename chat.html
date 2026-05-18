@@ -20,12 +20,12 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .chat-av { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
 .chat-info { flex:1; }
 .chat-name { font-size:14px; font-weight:500; }
-.chat-status { font-size:10px; color:var(--muted); margin-top:2px; }
-.lock-btn { font-size:11px; padding:4px 10px; border-radius:20px; border:0.5px solid var(--border); background:none; color:var(--muted); cursor:pointer; font-family:'DM Sans',sans-serif; }
-.screenshot-banner { background:rgba(192,132,252,0.12); border-bottom:0.5px solid rgba(192,132,252,0.25); padding:7px 14px; font-size:11px; color:var(--accent2); display:none; align-items:center; gap:8px; }
+.chat-status { font-size:15px; color:var(--muted); margin-top:2px; }
+.lock-btn { font-size:14px; padding:4px 10px; border-radius:20px; border:0.5px solid var(--border); background:none; color:var(--muted); cursor:pointer; font-family:'DM Sans',sans-serif; }
+.screenshot-banner { background:rgba(192,132,252,0.12); border-bottom:0.5px solid rgba(192,132,252,0.25); padding:7px 14px; font-size:14px; color:var(--accent2); display:none; align-items:center; gap:8px; }
 .screenshot-banner.show { display:flex; }
 .banner-timer { margin-left:auto; font-weight:500; color:var(--accent); }
-.privacy-bar { background:rgba(248,113,113,0.08); border-bottom:0.5px solid rgba(248,113,113,0.2); padding:6px 14px; font-size:10px; color:#f87171; display:none; align-items:center; gap:6px; }
+.privacy-bar { background:rgba(248,113,113,0.08); border-bottom:0.5px solid rgba(248,113,113,0.2); padding:6px 14px; font-size:15px; color:#f87171; display:none; align-items:center; gap:6px; }
 .privacy-bar.show { display:flex; }
 
 /* Vrienden selectie scherm */
@@ -35,8 +35,8 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .vriend-item:hover { border-color:var(--accent); }
 .vriend-av { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:18px; }
 .vriend-naam { font-size:14px; font-weight:500; }
-.vriend-username { font-size:11px; color:var(--muted); margin-top:2px; }
-.geen-vrienden { text-align:center; padding:40px 20px; color:var(--muted); font-size:13px; line-height:1.6; }
+.vriend-username { font-size:14px; color:var(--muted); margin-top:2px; }
+.geen-vrienden { text-align:center; padding:40px 20px; color:var(--muted); font-size:15px; line-height:1.6; }
 
 .messages { flex:1; padding:12px 14px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; min-height:360px; padding-bottom:130px; }
 .msg-row { display:flex; gap:8px; align-items:flex-end; }
@@ -45,8 +45,8 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .bubble { max-width:70%; padding:8px 12px; border-radius:14px; font-size:12px; line-height:1.5; }
 .bubble.in { background:rgba(0,0,0,0.55); border:0.5px solid var(--border); border-bottom-left-radius:4px; }
 .bubble.out { background:rgba(139,79,192,0.65); border:0.5px solid rgba(192,132,252,0.4); border-bottom-right-radius:4px; }
-.bubble-time { font-size:9px; color:var(--muted); margin-top:4px; text-align:right; }
-.sys-msg { text-align:center; font-size:10px; color:var(--muted); padding:3px 12px; background:var(--card); border-radius:20px; align-self:center; border:0.5px solid var(--border); }
+.bubble-time { font-size:12px; color:var(--muted); margin-top:4px; text-align:right; }
+.sys-msg { text-align:center; font-size:15px; color:var(--muted); padding:3px 12px; background:var(--card); border-radius:20px; align-self:center; border:0.5px solid var(--border); }
 .emoji-grid { display:flex; flex-wrap:wrap; gap:6px; padding:10px 14px; background:rgba(0,0,0,0.3); border-top:0.5px solid var(--border); }
 .e-opt { font-size:22px; cursor:pointer; padding:4px; border-radius:8px; transition:background 0.2s; }
 .e-opt:hover { background:rgba(192,132,252,0.2); }
@@ -61,13 +61,13 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .modal { background:#1e0d35; border:0.5px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:300px; text-align:center; }
 .modal-icon { font-size:32px; margin-bottom:10px; }
 .modal-title { font-family:'Playfair Display',serif; font-size:16px; margin-bottom:6px; }
-.modal-sub { font-size:11px; color:var(--muted); line-height:1.6; margin-bottom:16px; }
+.modal-sub { font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; }
 .modal-btns { display:flex; gap:8px; }
 .modal-btn { flex:1; padding:9px; border-radius:10px; font-size:12px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; border:none; }
 .modal-btn.cancel { background:var(--card); color:var(--muted); border:0.5px solid var(--border); }
 .modal-btn.confirm { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; }
 .bottom-nav { display:flex; justify-content:space-around; padding:12px 0; border-top:0.5px solid var(--border); background:rgba(0,0,0,0.3); position:fixed; bottom:0; width:100%; max-width:480px; z-index:10; }
-.nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; color:#ffffff; cursor:pointer; padding:4px 12px; text-shadow:0 1px 4px rgba(0,0,0,0.9); }
+.nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:15px; color:#ffffff; cursor:pointer; padding:4px 12px; text-shadow:0 1px 4px rgba(0,0,0,0.9); }
 .nav-item.active { color:var(--accent); }
 .nav-icon { font-size:20px; }
 .laden { text-align:center; padding:20px; color:var(--muted); font-size:12px; }
@@ -345,7 +345,7 @@ async function init() {
       row.innerHTML = `
         <div class="msg-av-sm">${avatar}</div>
         <div style="font-size:52px;line-height:1;padding:4px;filter:drop-shadow(0 2px 8px rgba(192,132,252,0.3));">${stickerEmoji}
-          <div style="font-size:9px;color:var(--muted);margin-top:2px;">${tijd}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">${tijd}</div>
         </div>
       `
     } else {

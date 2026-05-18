@@ -18,10 +18,10 @@
 body { background:var(--bg); background-attachment:fixed; background-size:cover; background-position:center; font-family:"DM Sans",sans-serif; color:var(--text); max-width:480px; margin:0 auto; min-height:100vh; padding-bottom:70px; }
 .top-bar { display:flex; align-items:center; gap:10px; padding:12px 16px; background:rgba(0,0,0,0.35); border-bottom:0.5px solid var(--border); position:sticky; top:0; z-index:10; }
 .top-title { font-family:"Playfair Display",serif; font-style:italic; font-size:18px; color:var(--accent); flex:1; }
-.invite-btn { font-size:11px; padding:5px 12px; border-radius:20px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-weight:500; }
+.invite-btn { font-size:14px; padding:5px 12px; border-radius:20px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-weight:500; }
 .search-bar { padding:10px 14px; border-bottom:0.5px solid var(--border); }
 .search-input { width:100%; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-size:12px; outline:none; }
-.section-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; padding:12px 16px 6px; }
+.section-label { font-size:15px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; padding:12px 16px 6px; }
 .friend-row { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:0.5px solid var(--border); cursor:pointer; }
 .f-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; border:1.5px solid var(--border); position:relative; }
 .f-avatar.purple { border-color:rgba(192,132,252,0.4); background:rgba(192,132,252,0.1); }
@@ -32,17 +32,17 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .online-dot.off { background:var(--muted); }
 .f-info { flex:1; }
 .f-name { font-size:14px; font-weight:500; }
-.f-bio { font-size:11px; color:var(--muted); margin-top:2px; }
-.f-status { font-size:10px; margin-top:3px; }
+.f-bio { font-size:14px; color:var(--muted); margin-top:2px; }
+.f-status { font-size:15px; margin-top:3px; }
 .f-status.on { color:#4ade80; }
 .f-status.off { color:var(--muted); }
 .f-arrow { color:var(--muted); font-size:16px; }
 .f-btn { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--card); border:0.5px solid var(--border); cursor:pointer; font-size:14px; }
 .bottom-nav { display:flex; justify-content:space-around; padding:12px 0; border-top:0.5px solid var(--border); background:rgba(0,0,0,0.3); position:fixed; bottom:0; width:100%; max-width:480px; z-index:10; }
-.nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; color:#ffffff; cursor:pointer; padding:4px 12px; text-shadow:0 1px 4px rgba(0,0,0,0.9); }
+.nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:15px; color:#ffffff; cursor:pointer; padding:4px 12px; text-shadow:0 1px 4px rgba(0,0,0,0.9); }
 .nav-item.active { color:var(--accent); }
 .nav-icon { font-size:20px; }
-.fibro-logo { font-family:"Playfair Display",serif; font-style:italic; font-size:11px; color:var(--accent); text-align:center; padding:12px; opacity:0.5; }
+.fibro-logo { font-family:"Playfair Display",serif; font-style:italic; font-size:14px; color:var(--accent); text-align:center; padding:12px; opacity:0.5; }
 
 /* ======================== */
 /* QR MODAL */
@@ -110,7 +110,7 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 }
 
 .timer-text {
-  font-size:13px;
+  font-size:15px;
   color:var(--muted);
 }
 
@@ -148,7 +148,7 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
   border:1px dashed rgba(192,132,252,0.3);
   border-radius:8px;
   padding:10px;
-  font-size:11px;
+  font-size:14px;
   color:var(--accent);
   letter-spacing:1px;
   margin-bottom:20px;
@@ -162,7 +162,7 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
   border:none;
   border-radius:10px;
   font-family:"DM Sans",sans-serif;
-  font-size:13px;
+  font-size:15px;
   cursor:pointer;
   margin-bottom:8px;
   transition:all 0.2s;
@@ -271,7 +271,7 @@ input, textarea { font-size:16px !important; }
     </div>
 
     <!-- Laden staat -->
-    <div id="qr-laden" style="padding:20px 0; color:var(--muted); font-size:13px;">
+    <div id="qr-laden" style="padding:20px 0; color:var(--muted); font-size:15px;">
       Even laden...
     </div>
 
@@ -317,7 +317,7 @@ import { laadWallpaper } from './wallpaper.js'
 
     if (error || !data || data.length === 0) {
       container.innerHTML = `
-        <div style="padding:40px 20px; text-align:center; color:var(--muted); font-size:13px; line-height:1.8;">
+        <div style="padding:40px 20px; text-align:center; color:var(--muted); font-size:15px; line-height:1.8;">
           👥 Nog geen vrienden.<br>
           Klik op <strong style="color:var(--accent)">+ Uitnodigen</strong> om iemand uit te nodigen!
         </div>

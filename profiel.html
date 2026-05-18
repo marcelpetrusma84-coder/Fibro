@@ -18,17 +18,17 @@
 body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:80px;}
 .top-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(0,0,0,0.35);border-bottom:0.5px solid var(--border);position:sticky;top:0;z-index:10;}
 .top-title{font-family:'Playfair Display',serif;font-style:italic;font-size:18px;color:var(--accent);flex:1;}
-.save-top-btn{font-size:11px;padding:5px 14px;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;border:none;cursor:pointer;font-weight:600;}
+.save-top-btn{font-size:14px;padding:5px 14px;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;border:none;cursor:pointer;font-weight:600;}
 .main-tabs{display:flex;border-bottom:0.5px solid var(--border);background:rgba(0,0,0,0.2);overflow-x:auto;}
-.main-tab{font-size:11px;padding:10px 14px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.main-tab{font-size:14px;padding:10px 14px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;flex-shrink:0;}
 .main-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
 .panel{display:none;padding:14px;}
 .panel.active{display:block;}
 .section{margin-bottom:20px;}
-.section-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;}
+.section-label{font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;}
 .card{background:var(--card);border:0.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;}
-.field-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;}
-.field{width:100%;background:rgba(0,0,0,0.3);border:0.5px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;margin-bottom:10px;}
+.field-label{font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;}
+.field{width:100%;background:rgba(0,0,0,0.3);border:0.5px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:10px;}
 .field:focus{border-color:var(--accent);}
 textarea.field{min-height:70px;resize:vertical;}
 .avatar-ring{width:64px;height:64px;border-radius:50%;padding:2px;background:linear-gradient(135deg,var(--accent),var(--accent2));flex-shrink:0;cursor:pointer;}
@@ -40,21 +40,21 @@ textarea.field{min-height:70px;resize:vertical;}
 input[type="color"]{width:40px;height:40px;border:none;background:none;cursor:pointer;padding:0;border-radius:8px;}
 .gradient-preview{width:100%;height:50px;border-radius:10px;margin-bottom:10px;border:0.5px solid var(--border);}
 .type-btns{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
-.type-btn{font-size:11px;padding:6px 14px;border-radius:20px;border:0.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;}
+.type-btn{font-size:14px;padding:6px 14px;border-radius:20px;border:0.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;}
 .type-btn.active{background:rgba(192,132,252,0.15);border-color:var(--accent);color:var(--accent);}
 .wallpaper-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;}
 .wallpaper-cell{aspect-ratio:16/10;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;position:relative;}
 .wallpaper-cell.selected{border-color:var(--accent);}
-.wallpaper-label{position:absolute;bottom:4px;left:6px;font-size:9px;color:white;text-shadow:0 1px 3px rgba(0,0,0,0.8);}
+.wallpaper-label{position:absolute;bottom:4px;left:6px;font-size:12px;color:white;text-shadow:0 1px 3px rgba(0,0,0,0.8);}
 .upload-zone{border:1px dashed rgba(192,132,252,0.4);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;}
 .upload-icon{font-size:28px;margin-bottom:8px;}
 .upload-text{font-size:12px;color:var(--muted);line-height:1.5;}
-.upload-formats{font-size:10px;color:rgba(243,232,255,0.3);margin-top:4px;}
+.upload-formats{font-size:15px;color:rgba(243,232,255,0.3);margin-top:4px;}
 .anim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
 .anim-cell{background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;}
 .anim-cell.selected{border-color:var(--accent);background:rgba(192,132,252,0.1);}
 .anim-icon{font-size:22px;margin-bottom:4px;}
-.anim-name{font-size:10px;color:var(--muted);}
+.anim-name{font-size:15px;color:var(--muted);}
 .anim-cell.selected .anim-name{color:var(--accent);}
 .anim-preview{width:100%;height:120px;border-radius:12px;background:#0a0015;border:0.5px solid var(--border);margin-bottom:10px;overflow:hidden;}
 #previewCanvas{width:100%;height:100%;}
@@ -62,7 +62,7 @@ input[type="color"]{width:40px;height:40px;border:none;background:none;cursor:po
 .font-item{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
 .font-item.selected{border-color:var(--accent);background:rgba(192,132,252,0.08);}
 .font-preview{font-size:16px;color:var(--text);}
-.font-name{font-size:10px;color:var(--muted);}
+.font-name{font-size:15px;color:var(--muted);}
 .swatches{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
 .swatch{width:32px;height:32px;border-radius:50%;cursor:pointer;border:2px solid transparent;}
 .swatch.selected{border-color:white;transform:scale(1.1);}
@@ -70,8 +70,8 @@ input[type="color"]{width:40px;height:40px;border:none;background:none;cursor:po
 .widget-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--card);border:0.5px solid var(--border);border-radius:12px;}
 .widget-info{display:flex;align-items:center;gap:10px;}
 .widget-icon{font-size:18px;}
-.widget-name{font-size:13px;}
-.widget-desc{font-size:10px;color:var(--muted);margin-top:2px;}
+.widget-name{font-size:15px;}
+.widget-desc{font-size:15px;color:var(--muted);margin-top:2px;}
 .toggle{width:36px;height:20px;border-radius:10px;position:relative;cursor:pointer;flex-shrink:0;transition:background 0.2s;}
 .toggle.on{background:var(--accent);}
 .toggle.off{background:rgba(255,255,255,0.15);}
@@ -82,14 +82,14 @@ input[type="color"]{width:40px;height:40px;border:none;background:none;cursor:po
 .sticker-item{aspect-ratio:1;background:var(--card);border:0.5px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;}
 .sticker-item.selected{border-color:var(--accent);background:rgba(192,132,252,0.1);}
 .profiel-preview{background:rgba(0,0,0,0.3);border-radius:14px;padding:14px;margin-bottom:14px;border:0.5px solid var(--border);}
-.preview-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.preview-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
 .status-msg{font-size:12px;padding:10px 14px;border-radius:10px;margin:10px 14px;display:none;}
 .status-msg.success{background:rgba(192,132,252,0.1);border:0.5px solid rgba(192,132,252,0.3);color:var(--accent);display:block;}
 .status-msg.error{background:rgba(255,92,92,0.1);border:0.5px solid rgba(255,92,92,0.3);color:#ff5c5c;display:block;}
-.save-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:12px;color:#1a0a2e;font-size:13px;font-weight:600;cursor:pointer;margin-top:10px;font-family:'DM Sans',sans-serif;}
+.save-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:12px;color:#1a0a2e;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px;font-family:'DM Sans',sans-serif;}
 .uitlog-btn{width:100%;padding:11px;background:transparent;border:0.5px solid var(--border);border-radius:12px;color:var(--muted);font-size:12px;cursor:pointer;margin-top:8px;font-family:'DM Sans',sans-serif;}
 .bottom-nav{display:flex;justify-content:space-around;padding:12px 0;border-top:0.5px solid var(--border);background:rgba(0,0,0,0.3);position:fixed;bottom:0;width:100%;max-width:480px;}
-.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px;color:#ffffff;cursor:pointer;padding:4px 12px;text-shadow:0 2px 6px rgba(0,0,0,1);}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:15px;color:#ffffff;cursor:pointer;padding:4px 12px;text-shadow:0 2px 6px rgba(0,0,0,1);}
 .nav-item.active{color:var(--accent);}
 .nav-icon{font-size:20px;}
 body::before{content:'';position:fixed;inset:0;background:rgba(0,0,0,0.38);z-index:0;pointer-events:none;display:none;}body.heeft-wallpaper::before{display:block;}body.heeft-wallpaper{background-size:cover;background-position:center;background-attachment:fixed;}.block,.edit-vak,.bottom-nav,.top-bar,.bubble,.vriend-item,.modal{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}.p-name,.p-bio,.block-title,.gb-name,.gb-msg,.music-title,.music-artist,.mood-text,.nav-item,.chat-name,.vriend-naam,.chat-status{text-shadow:0 1px 4px rgba(0,0,0,0.9);}button,.save-btn,.cancel-btn,.send-btn,.back-btn,.lock-btn,.gb-send,.chat-btn,.modal-btn{min-height:44px;min-width:44px;}.bottom-nav{padding-bottom:env(safe-area-inset-bottom,12px);}
@@ -127,14 +127,14 @@ input, textarea { font-size:16px !important; }
         <div class="avatar-inner" id="avatarEmoji">🌿</div>
       </div>
       <div>
-        <div style="font-size:13px;">Klik op je avatar om te wijzigen</div>
-        <div style="font-size:11px;color:var(--muted);">Emoji of eigen foto</div>
+        <div style="font-size:15px;">Klik op je avatar om te wijzigen</div>
+        <div style="font-size:14px;color:var(--muted);">Emoji of eigen foto</div>
       </div>
     </div>
     <div id="avatarPickerWrap" style="display:none;">
       <div style="display:flex;gap:8px;margin-bottom:10px;">
-        <button onclick="switchAvatarTab('emoji')" id="tabEmoji" style="flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:11px;cursor:pointer;">😊 Emoji</button>
-        <button onclick="switchAvatarTab('foto')" id="tabFoto" style="flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;">📷 Foto</button>
+        <button onclick="switchAvatarTab('emoji')" id="tabEmoji" style="flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;">😊 Emoji</button>
+        <button onclick="switchAvatarTab('foto')" id="tabFoto" style="flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;">📷 Foto</button>
       </div>
       <div id="avatarEmojiTab">
         <div class="emoji-grid" id="avatarPicker"></div>
@@ -148,7 +148,7 @@ input, textarea { font-size:16px !important; }
         <input type="file" id="fotoInput" accept="image/*" style="display:none;" onchange="verwerkFoto(event)">
         <div id="fotoPreviewWrap" style="display:none;text-align:center;margin-top:8px;">
           <img id="fotoPreview" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);">
-          <div style="font-size:11px;color:var(--accent);margin-top:6px;cursor:pointer;" onclick="bevestigFoto()">✓ Gebruik deze foto</div>
+          <div style="font-size:14px;color:var(--accent);margin-top:6px;cursor:pointer;" onclick="bevestigFoto()">✓ Gebruik deze foto</div>
         </div>
       </div>
     </div>
@@ -174,7 +174,7 @@ input, textarea { font-size:16px !important; }
         <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;" id="previewAvatar">🌿</div>
         <div>
           <div style="font-size:18px;color:var(--text);" id="previewNaam">Jouw naam</div>
-          <div style="font-size:11px;color:var(--muted);" id="previewBio">Jouw bio verschijnt hier</div>
+          <div style="font-size:14px;color:var(--muted);" id="previewBio">Jouw bio verschijnt hier</div>
         </div>
       </div>
     </div>
@@ -244,16 +244,16 @@ input, textarea { font-size:16px !important; }
       <div style="font-size:52px;margin-bottom:12px;">🖼️</div>
       <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;">Kies een afbeelding</div>
       <div style="font-size:12px;color:var(--muted);line-height:1.6;">Wordt gebruikt als wallpaper op je home pagina</div>
-      <div style="font-size:11px;color:rgba(243,232,255,0.3);margin-top:8px;">JPG · PNG · WEBP · GIF — max 10MB</div>
+      <div style="font-size:14px;color:rgba(243,232,255,0.3);margin-top:8px;">JPG · PNG · WEBP · GIF — max 10MB</div>
     </div>
     <input type="file" id="bgUpload" accept="image/*,video/mp4" style="display:none" onchange="uploadAchtergrond(this)"/>
     <div id="uploadPreview" style="display:none;margin-top:4px;">
       <div class="section-label">Huidige wallpaper</div>
       <div style="position:relative;border-radius:14px;overflow:hidden;border:1.5px solid var(--accent);">
         <div id="uploadedWallpaper" style="width:100%;aspect-ratio:16/9;"></div>
-        <button onclick="verwijderWallpaper()" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.65);border:0.5px solid rgba(255,255,255,0.2);color:white;border-radius:20px;padding:6px 14px;font-size:11px;cursor:pointer;backdrop-filter:blur(6px);">✕ Verwijderen</button>
+        <button onclick="verwijderWallpaper()" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.65);border:0.5px solid rgba(255,255,255,0.2);color:white;border-radius:20px;padding:6px 14px;font-size:14px;cursor:pointer;backdrop-filter:blur(6px);">✕ Verwijderen</button>
       </div>
-      <div style="font-size:11px;color:var(--accent);text-align:center;margin-top:8px;">✓ Actief als wallpaper op home</div>
+      <div style="font-size:14px;color:var(--accent);text-align:center;margin-top:8px;">✓ Actief als wallpaper op home</div>
     </div>
   </div>
 </div>
@@ -325,7 +325,7 @@ input, textarea { font-size:16px !important; }
     <div class="card">
       <div style="display:flex;gap:10px;align-items:center;">
         <div style="width:44px;height:44px;border-radius:50%;padding:2px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:20px;">🌿</div>
-        <div><div style="font-size:14px;color:var(--accent);font-weight:500;">Jouw naam</div><div style="font-size:11px;color:var(--muted);">Jouw bio hier</div></div>
+        <div><div style="font-size:14px;color:var(--accent);font-weight:500;">Jouw naam</div><div style="font-size:14px;color:var(--muted);">Jouw bio hier</div></div>
       </div>
       <div style="margin-top:10px;padding:8px 14px;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;font-size:12px;font-weight:600;text-align:center;">Knop voorbeeld</div>
     </div>
@@ -422,7 +422,7 @@ async function init(){
 function updatePreview(){document.getElementById('previewNaam').textContent=document.getElementById('editNaam').value||'Jouw naam';document.getElementById('previewBio').textContent=document.getElementById('editBio').value||'Jouw bio verschijnt hier'}
 window.switchTab=function(tab){document.querySelectorAll('.main-tab').forEach((t,i)=>{const tabs=['profiel','achtergrond','animatie','lettertype','kleur','widgets','stickers'];t.classList.toggle('active',tabs[i]===tab)});document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('panel-'+tab).classList.add('active');if(tab==='animatie')startAnimatiePreview();else stopAnimatiePreview()}
 function bouwAvatarPicker(){const picker=document.getElementById('avatarPicker');picker.innerHTML='';avatarEmojis.forEach(e=>{const span=document.createElement('span');span.className='emoji-opt';span.textContent=e;span.onclick=()=>{document.getElementById('avatarEmoji').textContent=e;document.getElementById('previewAvatar').textContent=e;document.getElementById('avatarPickerWrap').style.display='none'};picker.appendChild(span)})}
-window.switchAvatarTab=function(tab){if(tab==='emoji'){document.getElementById('avatarEmojiTab').style.display='block';document.getElementById('avatarFotoTab').style.display='none';document.getElementById('tabEmoji').style.cssText='flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:11px;cursor:pointer;';document.getElementById('tabFoto').style.cssText='flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;'}else{document.getElementById('avatarEmojiTab').style.display='none';document.getElementById('avatarFotoTab').style.display='block';document.getElementById('tabFoto').style.cssText='flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:11px;cursor:pointer;';document.getElementById('tabEmoji').style.cssText='flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;'}}
+window.switchAvatarTab=function(tab){if(tab==='emoji'){document.getElementById('avatarEmojiTab').style.display='block';document.getElementById('avatarFotoTab').style.display='none';document.getElementById('tabEmoji').style.cssText='flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;';document.getElementById('tabFoto').style.cssText='flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;'}else{document.getElementById('avatarEmojiTab').style.display='none';document.getElementById('avatarFotoTab').style.display='block';document.getElementById('tabFoto').style.cssText='flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;';document.getElementById('tabEmoji').style.cssText='flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;'}}
 window.verwerkFoto=async function(event){const file=event.target.files[0];if(!file)return;const volledig=await comprimeerFoto(file,400,0.80);const thumbnail=await comprimeerFoto(file,80,0.80);const userId=huidigeUser.id;await slaFotoOp('avatar_volledig_'+userId,volledig);await slaFotoOp('avatar_thumbnail_'+userId,thumbnail);document.getElementById('fotoPreview').src=volledig;document.getElementById('fotoPreviewWrap').style.display='block';window._fotoVolledig=volledig;window._fotoThumbnail=thumbnail}
 window.bevestigFoto=function(){const src=window._fotoThumbnail;document.getElementById('avatarEmoji').innerHTML=`<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;document.getElementById('previewAvatar').innerHTML=`<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;document.getElementById('avatarPickerWrap').style.display='none';window._fotoAvatar=src}
 window.toggleAvatarPicker=function(){const w=document.getElementById('avatarPickerWrap');w.style.display=w.style.display==='none'?'block':'none'}
@@ -438,7 +438,7 @@ window.selectAnimatie=function(naam){huidigeAnimatie=naam;updateAnimatieUI();sta
 function updateAnimatieUI(){document.querySelectorAll('.anim-cell').forEach(c=>c.classList.remove('selected'));const el=document.getElementById('anim-'+huidigeAnimatie);if(el)el.classList.add('selected')}
 function startAnimatiePreview(){stopAnimatiePreview();const canvas=document.getElementById('previewCanvas');if(!canvas)return;const ctx=canvas.getContext('2d');canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;if(huidigeAnimatie==='geen'){ctx.clearRect(0,0,canvas.width,canvas.height);return};deeltjes=[];for(let i=0;i<60;i++)deeltjes.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*0.5,vy:Math.random()*0.8+0.2,grootte:Math.random()*3+1,alpha:Math.random(),kleur:huidigeAnimatie==='confetti'?`hsl(${Math.random()*360},80%,60%)`:'white'});function teken(){ctx.clearRect(0,0,canvas.width,canvas.height);deeltjes.forEach(d=>{ctx.globalAlpha=d.alpha;ctx.fillStyle=d.kleur;if(huidigeAnimatie==='sterren'||huidigeAnimatie==='vuurvliegjes'){ctx.beginPath();ctx.arc(d.x,d.y,d.grootte,0,Math.PI*2);ctx.fill();d.alpha=0.3+Math.sin(Date.now()*0.003+d.x)*0.7}else if(huidigeAnimatie==='sneeuw'||huidigeAnimatie==='bubbels'){ctx.beginPath();ctx.arc(d.x,d.y,d.grootte+1,0,Math.PI*2);ctx.fill();d.y+=d.vy*0.5;d.x+=Math.sin(Date.now()*0.001+d.y)*0.3}else if(huidigeAnimatie==='regen'){ctx.fillRect(d.x,d.y,1,d.grootte*4);d.y+=d.vy*3;d.x+=0.5}else{ctx.fillRect(d.x,d.y,d.grootte*2,d.grootte);d.y+=d.vy;d.x+=Math.sin(Date.now()*0.002+d.y)*0.8};if(d.y>canvas.height)d.y=-10;if(d.x>canvas.width)d.x=0;if(d.x<0)d.x=canvas.width});ctx.globalAlpha=1;animFrame=requestAnimationFrame(teken)};teken()}
 function stopAnimatiePreview(){if(animFrame){cancelAnimationFrame(animFrame);animFrame=null}}
-function bouwFontGrid(){const grid=document.getElementById('fontGrid');grid.innerHTML='';fonts.forEach(f=>{const div=document.createElement('div');div.className='font-item';div.innerHTML=`<div><div class="font-preview" style="font-family:${f.familie};">${f.naam}</div><div class="font-name">${f.stijl}</div></div><div style="font-size:10px;color:var(--muted);">Aa</div>`;div.onclick=()=>{document.querySelectorAll('.font-item').forEach(i=>i.classList.remove('selected'));div.classList.add('selected');document.body.style.fontFamily=f.familie;huidigLettertype=f.familie};grid.appendChild(div)})}
+function bouwFontGrid(){const grid=document.getElementById('fontGrid');grid.innerHTML='';fonts.forEach(f=>{const div=document.createElement('div');div.className='font-item';div.innerHTML=`<div><div class="font-preview" style="font-family:${f.familie};">${f.naam}</div><div class="font-name">${f.stijl}</div></div><div style="font-size:15px;color:var(--muted);">Aa</div>`;div.onclick=()=>{document.querySelectorAll('.font-item').forEach(i=>i.classList.remove('selected'));div.classList.add('selected');document.body.style.fontFamily=f.familie;huidigLettertype=f.familie};grid.appendChild(div)})}
 window.updateAccent=function(k){document.getElementById('accentPicker').value=k;document.getElementById('accentHex').value=k;document.documentElement.style.setProperty('--accent',k)}
 window.updateAccentHex=function(v){if(/^#[0-9a-f]{6}$/i.test(v))updateAccent(v)}
 window.updateAccent2=function(k){document.getElementById('accent2Picker').value=k;document.getElementById('accent2Hex').value=k;document.documentElement.style.setProperty('--accent2',k)}

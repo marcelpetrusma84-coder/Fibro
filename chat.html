@@ -246,12 +246,7 @@ async function init() {
     const container = document.getElementById('vriendenLijst')
 
     if (error || !data || data.length === 0) {
-      container.innerHTML = `
-        <div class="geen-vrienden">
-          😔 Nog geen andere gebruikers gevonden.<br><br>
-          Nodig vrienden uit via de <strong>Vrienden</strong> pagina!
-        </div>
-      `
+      container.innerHTML = `<div class="geen-vrienden">Fout: ${error?.message || "geen data"} | user: ${huidigeUser?.id}</div>`
       return
     }
 

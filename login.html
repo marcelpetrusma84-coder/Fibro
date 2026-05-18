@@ -376,24 +376,7 @@
       <div class="message" id="reg-msg"></div>
 
       <!-- Invite token check -->
-      <div class="invite-check">
-        <div class="invite-status" id="invite-status">
-          <div class="dot"></div>
-          <span>Voer je invite code in om te beginnen</span>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Invite code</label>
-        <input
-          type="text"
-          id="invite-token"
-          placeholder="Plak hier je invite code"
-          oninput="checkInviteToken(this.value)"
-        />
-      </div>
-
-      <div id="reg-form" style="display:none;">
+      <div id="reg-form">
         <div class="field">
           <label>Gebruikersnaam</label>
           <input type="text" id="reg-username" placeholder="jouwuniekename" autocomplete="username" />

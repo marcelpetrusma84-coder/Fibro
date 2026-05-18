@@ -676,6 +676,30 @@
       window.location.href = 'index.html'
     }
   })
+
+  // Wallpaper laden
+  async function laadWallpaper() {
+    try {
+      const db = await new Promise((res,rej) => {
+        const r = indexedDB.open('FibroDB',1)
+        r.onsuccess = e => res(e.target.result)
+        r.onerror = () => rej()
+      })
+      const data = await new Promise((res) => {
+        const r = db.transaction('fotos').objectStore('fotos').get('wallpaper')
+        r.onsuccess = e => res(e.target.result?.data || null)
+        r.onerror = () => res(null)
+      })
+      if (data) {
+        document.body.style.backgroundImage = 'url(' + data + ')'
+        document.body.style.backgroundAttachment = 'fixed'
+        document.body.style.backgroundSize = 'cover'
+        document.body.style.backgroundPosition = 'center'
+      }
+    } catch(e) {}
+  }
+  laadWallpaper()
+
 </script>
 
 </body>

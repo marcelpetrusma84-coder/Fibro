@@ -21,11 +21,15 @@ export async function laadWallpaper() {
       r.onerror = () => res(null)
     })
     if (data) {
-      document.body.style.backgroundImage = 'url(' + data + ')'
-      document.body.style.backgroundAttachment = 'fixed'
-      document.body.style.backgroundSize = 'cover'
-      document.body.style.backgroundPosition = 'center'
+      let bg = document.getElementById('wallpaper-bg')
+      if (!bg) {
+        bg = document.createElement('div')
+        bg.id = 'wallpaper-bg'
+        bg.style.cssText = 'position:fixed;inset:0;z-index:-1;background-size:cover;background-position:center;background-repeat:no-repeat;'
+        document.body.prepend(bg)
+      }
+      bg.style.backgroundImage = 'url(' + data + ')'
       document.body.classList.add('heeft-wallpaper')
     }
-  } catch(e) {}
+  } catch(e) { console.error('wallpaper fout:', e) }
 }

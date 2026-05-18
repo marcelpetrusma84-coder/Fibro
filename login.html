@@ -325,6 +325,7 @@
     <div class="tabs">
       <button class="tab active" onclick="switchTab('inloggen')">Inloggen</button>
       <button class="tab" onclick="switchTab('registreren')">Registreren</button>
+      <button class="tab" onclick="switchTab('uitgenodigd')">Uitgenodigd</button>
       <button class="tab" onclick="switchTab('herstellen')">Herstel</button>
     </div>
 
@@ -350,6 +351,25 @@
     </div>
 
     <!-- ======================== -->
+
+    <div class="panel" id="panel-uitgenodigd">
+      <div class="invite-check">
+        <div class="invite-status" id="invite-status-2">
+          <span>Voer je invite code in om te beginnen</span>
+        </div>
+        <input class="input" type="text"
+          id="invite-token-2"
+          placeholder="Plak hier je invite code"
+          oninput="controleerInvite2(this.value)">
+      </div>
+      <input class="input" type="email" id="reg-email-2" placeholder="E-mailadres">
+      <input class="input" type="password" id="reg-ww-2" placeholder="Wachtwoord (min. 8 tekens)">
+      <input class="input" type="text" id="reg-naam-2" placeholder="Gebruikersnaam">
+      <button class="btn btn-primary" onclick="registrerenMetInvite()" id="reg-btn-2">
+        Account aanmaken
+      </button>
+    </div>
+
     <!-- REGISTREREN (via invite) -->
     <!-- ======================== -->
     <div class="panel" id="panel-registreren">
@@ -442,7 +462,7 @@
   // ========================
   window.switchTab = function(tab) {
     document.querySelectorAll('.tab').forEach((t, i) => {
-      const names = ['inloggen', 'registreren', 'herstellen']
+      const names = ['inloggen', 'registreren', 'uitgenodigd', 'herstellen']
       t.classList.toggle('active', names[i] === tab)
     })
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'))

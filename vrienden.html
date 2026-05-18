@@ -260,7 +260,7 @@ input, textarea { font-size:16px !important; }
         <div class="progress-fill" id="progress-fill"></div>
       </div>
 
-      <div class="token-code" id="token-display"></div>
+      <div class="token-code" id="token-display"></div><button onclick="kopieerLink()" style="margin-top:10px;width:100%;padding:10px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;border:none;cursor:pointer;font-size:15px;font-weight:600;">📋 Kopieer link</button>
 
       <!-- Verlopen staat -->
       <div class="expired-overlay" id="expired-overlay">
@@ -457,6 +457,11 @@ import { laadWallpaper } from './wallpaper.js'
   // ========================
   // NIEUWE INVITE
   // ========================
+  window.kopieerLink = function() {
+    const link = document.getElementById("token-display").textContent
+    navigator.clipboard.writeText(link).then(() => {
+    })
+  }
   window.nieuweInvite = async function() {
     await genereerInvite()
   }

@@ -84,7 +84,16 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 
 /* Laden overlay */
 .laden { text-align:center; padding:40px; color:var(--muted); font-size:13px; }
-body::before{content:'';position:fixed;inset:0;background:rgba(0,0,0,0.38);z-index:0;pointer-events:none;display:none;}body.heeft-wallpaper::before{display:block;}body.heeft-wallpaper{background-size:cover;background-position:center;background-attachment:fixed;}.block,.edit-vak,.bottom-nav,.top-bar{backdrop-filter:blur(12px)}.p-name,.p-bio,.block-title,.mood-text{text-shadow:0 1px 4px rgba(0,0,0,0.9)}</style>
+body::before{content:'';position:fixed;inset:0;background:rgba(0,0,0,0.38);z-index:0;pointer-events:none;display:none;}body.heeft-wallpaper::before{display:block;}body.heeft-wallpaper{background-size:cover;background-position:center;background-attachment:fixed;}.block,.edit-vak,.bottom-nav,.top-bar{backdrop-filter:blur(12px)}.p-name,.p-bio,.block-title,.mood-text{text-shadow:0 1px 4px rgba(0,0,0,0.9)}
+.wallpaper-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+</style>
 </head>
 <body>
 

@@ -78,7 +78,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 
     const { data, error } = await supabase
       .from('invite_tokens')
-      .select('*, profiles!invite_tokens_created_by_fkey(display_name, username, avatar_url)')
+      .select('created_by, is_used')
       .eq('token', token)
       .eq('is_used', false)
       .single()
@@ -86,7 +86,11 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
     if (error || !data) { toonFout(); return }
 
     uitnodigerData = data
-    const profiel = data.profiles
+    const { data: profiel } = await supabase
+      .from('profiles')
+      .select('display_name, username, avatar_url')
+      .eq('id', data.created_by)
+      .single()
     document.getElementById('uitnodigerNaam').textContent = profiel?.display_name || profiel?.username || 'Iemand'
     document.getElementById('uitnodigerAvatar').textContent = profiel?.avatar_url || '👤'
     document.getElementById('laadScherm').style.display = 'none'

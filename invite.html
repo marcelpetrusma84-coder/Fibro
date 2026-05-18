@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="nl" style="background:#1a0a2e;">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fibro — Uitnodiging</title>
+<meta name="theme-color" content="#c084fc">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+:root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:#ffffff; }
+body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
+.kaart { background:rgba(0,0,0,0.5); border:0.5px solid var(--border); border-radius:20px; padding:30px 24px; width:100%; text-align:center; backdrop-filter:blur(16px); }
+.fibro-logo { font-family:'Playfair Display',serif; font-style:italic; font-size:24px; color:var(--accent); margin-bottom:20px; }
+.avatar { width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:36px; margin:0 auto 16px; }
+.uitnodiger { font-family:'Playfair Display',serif; font-size:20px; font-weight:600; margin-bottom:6px; }
+.uitnodiger-sub { font-size:15px; color:var(--muted); margin-bottom:24px; }
+.divider { border:none; border-top:0.5px solid var(--border); margin:20px 0; }
+.field { margin-bottom:14px; text-align:left; }
+.field label { font-size:14px; color:var(--muted); display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.08em; }
+.input { width:100%; background:rgba(255,255,255,0.05); border:0.5px solid var(--border); border-radius:10px; padding:12px 14px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:16px; outline:none; }
+.input:focus { border-color:var(--accent); }
+.btn { width:100%; padding:14px; border-radius:12px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:16px; font-weight:600; margin-top:8px; }
+.msg { font-size:14px; padding:10px 14px; border-radius:10px; margin-bottom:14px; display:none; }
+.msg.success { background:rgba(34,197,94,0.15); border:0.5px solid #22c55e; color:#22c55e; display:block; }
+.msg.error { background:rgba(248,113,113,0.15); border:0.5px solid #f87171; color:#f87171; display:block; }
+.laden { font-size:15px; color:var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="kaart">
+  <div class="fibro-logo">Fibro</div>
+  <div id="laadScherm" class="laden">Uitnodiging laden...</div>
+
+  <div id="uitnodigingScherm" style="display:none">
+    <div class="avatar" id="uitnodigerAvatar">👤</div>
+    <div class="uitnodiger" id="uitnodigerNaam">...</div>
+    <div class="uitnodiger-sub">nodigt je uit op Fibro ✨</div>
+    <hr class="divider">
+    <div class="msg" id="bericht"></div>
+    <div class="field">
+      <label>Gebruikersnaam</label>
+      <input class="input" type="text" id="gebruikersnaam" placeholder="jouwuniekename">
+    </div>
+    <div class="field">
+      <label>E-mailadres</label>
+      <input class="input" type="email" id="email" placeholder="jouw@email.nl">
+    </div>
+    <div class="field">
+      <label>Wachtwoord</label>
+      <input class="input" type="password" id="wachtwoord" placeholder="Minimaal 8 tekens">
+    </div>
+    <button class="btn" onclick="registreren()" id="regBtn">Account aanmaken 🌸</button>
+  </div>
+
+  <div id="foutScherm" style="display:none">
+    <div style="font-size:40px;margin-bottom:16px;">😔</div>
+    <div style="font-size:18px;margin-bottom:8px;">Ongeldige uitnodiging</div>
+    <div style="font-size:15px;color:var(--muted);">Deze invite link is verlopen of al gebruikt.</div>
+  </div>
+</div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+  const supabase = createClient(
+    'https://qmgatbphiplrfxrljtbe.supabase.co',
+    'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
+  )
+
+  const urlParams = new URLSearchParams(window.location.search)
+  const token = urlParams.get('token')
+  var uitnodigerData = null
+
+  async function init() {
+    if (!token) { toonFout(); return }
+
+    const { data, error } = await supabase
+      .from('invite_tokens')
+      .select('*, profiles!invite_tokens_created_by_fkey(display_name, username, avatar_url)')
+      .eq('token', token)
+      .eq('is_used', false)
+      .single()
+
+    if (error || !data) { toonFout(); return }
+
+    uitnodigerData = data
+    const profiel = data.profiles
+    document.getElementById('uitnodigerNaam').textContent = profiel?.display_name || profiel?.username || 'Iemand'
+    document.getElementById('uitnodigerAvatar').textContent = profiel?.avatar_url || '👤'
+    document.getElementById('laadScherm').style.display = 'none'
+    document.getElementById('uitnodigingScherm').style.display = 'block'
+  }
+
+  function toonFout() {
+    document.getElementById('laadScherm').style.display = 'none'
+    document.getElementById('foutScherm').style.display = 'block'
+  }
+
+  window.registreren = async function() {
+    const naam = document.getElementById('gebruikersnaam').value.trim()
+    const email = document.getElementById('email').value.trim()
+    const ww = document.getElementById('wachtwoord').value.trim()
+    const msg = document.getElementById('bericht')
+    const btn = document.getElementById('regBtn')
+
+    if (!naam || !email || !ww) {
+      msg.className = 'msg error'
+      msg.textContent = 'Vul alle velden in.'
+      return
+    }
+    if (ww.length < 8) {
+      msg.className = 'msg error'
+      msg.textContent = 'Wachtwoord minimaal 8 tekens.'
+      return
+    }
+
+    btn.textContent = 'Account aanmaken...'
+    btn.disabled = true
+
+    const { data, error } = await supabase.auth.signUp({ email, password: ww })
+
+    if (error) {
+      msg.className = 'msg error'
+      msg.textContent = error.message
+      btn.textContent = 'Account aanmaken 🌸'
+      btn.disabled = false
+      return
+    }
+
+    await supabase.from('profiles').upsert({
+      id: data.user.id,
+      username: naam,
+      display_name: naam,
+      updated_at: new Date().toISOString()
+    })
+
+    await supabase.from('invite_tokens')
+      .update({ is_used: true, used_at: new Date().toISOString(), used_by: data.user.id })
+      .eq('token', token)
+
+    if (uitnodigerData?.created_by && uitnodigerData.created_by !== data.user.id) {
+      await supabase.from('friendships').insert([
+        { user_id: data.user.id, friend_id: uitnodigerData.created_by, status: 'accepted' },
+        { user_id: uitnodigerData.created_by, friend_id: data.user.id, status: 'accepted' }
+      ])
+    }
+
+    msg.className = 'msg success'
+    msg.textContent = 'Account aangemaakt! Controleer je e-mail en log daarna in.'
+    btn.textContent = 'Naar inloggen'
+    btn.disabled = false
+    btn.onclick = () => window.location.href = 'login.html'
+  }
+
+  init()
+</script>
+</body>
+</html>

@@ -399,7 +399,7 @@ import { laadWallpaper } from './wallpaper.js'
 
     // Maak QR code
     document.getElementById('qr-container').innerHTML = ''
-    const inviteLink = 'https://marcelpetrusma84-coder.github.io/Fibro/login.html?invite=' + token
+    const inviteLink = 'https://marcelpetrusma84-coder.github.io/Fibro/invite.html?token=' + token
     document.getElementById('token-display').textContent = inviteLink
     new QRCode(document.getElementById('qr-container'), {
       text: inviteLink,

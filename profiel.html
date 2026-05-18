@@ -36,7 +36,7 @@ textarea.field{min-height:70px;resize:vertical;}
 .emoji-grid{display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:rgba(0,0,0,0.3);border-radius:10px;margin-bottom:10px;}
 .emoji-opt{font-size:24px;cursor:pointer;padding:4px;border-radius:8px;}
 .color-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.color-input{flex:1;background:rgba(0,0,0,0.3);border:0.5px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:12px;font-family:'DM Mono',monospace;outline:none;}
+.color-input{flex:1;background:rgba(0,0,0,0.3);border:0.5px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:15px;font-family:'DM Mono',monospace;outline:none;}
 input[type="color"]{width:40px;height:40px;border:none;background:none;cursor:pointer;padding:0;border-radius:8px;}
 .gradient-preview{width:100%;height:50px;border-radius:10px;margin-bottom:10px;border:0.5px solid var(--border);}
 .type-btns{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
@@ -45,10 +45,10 @@ input[type="color"]{width:40px;height:40px;border:none;background:none;cursor:po
 .wallpaper-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;}
 .wallpaper-cell{aspect-ratio:16/10;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;position:relative;}
 .wallpaper-cell.selected{border-color:var(--accent);}
-.wallpaper-label{position:absolute;bottom:4px;left:6px;font-size:12px;color:white;text-shadow:0 1px 3px rgba(0,0,0,0.8);}
+.wallpaper-label{position:absolute;bottom:4px;left:6px;font-size:15px;color:white;text-shadow:0 1px 3px rgba(0,0,0,0.8);}
 .upload-zone{border:1px dashed rgba(192,132,252,0.4);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;}
 .upload-icon{font-size:28px;margin-bottom:8px;}
-.upload-text{font-size:12px;color:var(--muted);line-height:1.5;}
+.upload-text{font-size:15px;color:var(--muted);line-height:1.5;}
 .upload-formats{font-size:15px;color:rgba(243,232,255,0.3);margin-top:4px;}
 .anim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
 .anim-cell{background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;}
@@ -82,12 +82,12 @@ input[type="color"]{width:40px;height:40px;border:none;background:none;cursor:po
 .sticker-item{aspect-ratio:1;background:var(--card);border:0.5px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;}
 .sticker-item.selected{border-color:var(--accent);background:rgba(192,132,252,0.1);}
 .profiel-preview{background:rgba(0,0,0,0.3);border-radius:14px;padding:14px;margin-bottom:14px;border:0.5px solid var(--border);}
-.preview-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
-.status-msg{font-size:12px;padding:10px 14px;border-radius:10px;margin:10px 14px;display:none;}
+.preview-label{font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.status-msg{font-size:15px;padding:10px 14px;border-radius:10px;margin:10px 14px;display:none;}
 .status-msg.success{background:rgba(192,132,252,0.1);border:0.5px solid rgba(192,132,252,0.3);color:var(--accent);display:block;}
 .status-msg.error{background:rgba(255,92,92,0.1);border:0.5px solid rgba(255,92,92,0.3);color:#ff5c5c;display:block;}
 .save-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:12px;color:#1a0a2e;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px;font-family:'DM Sans',sans-serif;}
-.uitlog-btn{width:100%;padding:11px;background:transparent;border:0.5px solid var(--border);border-radius:12px;color:var(--muted);font-size:12px;cursor:pointer;margin-top:8px;font-family:'DM Sans',sans-serif;}
+.uitlog-btn{width:100%;padding:11px;background:transparent;border:0.5px solid var(--border);border-radius:12px;color:var(--muted);font-size:15px;cursor:pointer;margin-top:8px;font-family:'DM Sans',sans-serif;}
 .bottom-nav{display:flex;justify-content:space-around;padding:12px 0;border-top:0.5px solid var(--border);background:rgba(0,0,0,0.3);position:fixed;bottom:0;width:100%;max-width:480px;}
 .nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:15px;color:#ffffff;cursor:pointer;padding:4px 12px;text-shadow:0 2px 6px rgba(0,0,0,1);}
 .nav-item.active{color:var(--accent);}
@@ -243,7 +243,7 @@ input, textarea { font-size:16px !important; }
     <div onclick="document.getElementById('bgUpload').click()" style="border:2px dashed rgba(192,132,252,0.5);border-radius:16px;padding:40px 20px;text-align:center;cursor:pointer;margin-bottom:14px;background:rgba(192,132,252,0.04);">
       <div style="font-size:52px;margin-bottom:12px;">🖼️</div>
       <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;">Kies een afbeelding</div>
-      <div style="font-size:12px;color:var(--muted);line-height:1.6;">Wordt gebruikt als wallpaper op je home pagina</div>
+      <div style="font-size:15px;color:var(--muted);line-height:1.6;">Wordt gebruikt als wallpaper op je home pagina</div>
       <div style="font-size:14px;color:rgba(243,232,255,0.3);margin-top:8px;">JPG · PNG · WEBP · GIF — max 10MB</div>
     </div>
     <input type="file" id="bgUpload" accept="image/*,video/mp4" style="display:none" onchange="uploadAchtergrond(this)"/>
@@ -327,7 +327,7 @@ input, textarea { font-size:16px !important; }
         <div style="width:44px;height:44px;border-radius:50%;padding:2px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:20px;">🌿</div>
         <div><div style="font-size:14px;color:var(--accent);font-weight:500;">Jouw naam</div><div style="font-size:14px;color:var(--muted);">Jouw bio hier</div></div>
       </div>
-      <div style="margin-top:10px;padding:8px 14px;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;font-size:12px;font-weight:600;text-align:center;">Knop voorbeeld</div>
+      <div style="margin-top:10px;padding:8px 14px;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;font-size:15px;font-weight:600;text-align:center;">Knop voorbeeld</div>
     </div>
   </div>
 </div>
@@ -447,7 +447,7 @@ window.toggleWidget=function(naam){const toggle=document.getElementById('widget-
 function updateWidgetToggles(){actieveWidgets.forEach(w=>{const el=document.getElementById('widget-'+w);if(el){el.classList.remove('off');el.classList.add('on')}})}
 function bouwStickerGrids(){bouwStickerGrid('stickerNatuur',stickers.natuur);bouwStickerGrid('stickerMagie',stickers.magie);bouwStickerGrid('stickerKunst',stickers.kunst);bouwStickerGrid('stickerDieren',stickers.dieren)}
 function bouwStickerGrid(id,lijst){const grid=document.getElementById(id);grid.innerHTML='';lijst.forEach(s=>{const div=document.createElement('div');div.className='sticker-item'+(actieveStickers.includes(s)?' selected':'');div.textContent=s;div.onclick=()=>{if(actieveStickers.includes(s)){actieveStickers=actieveStickers.filter(x=>x!==s);div.classList.remove('selected')}else{actieveStickers.push(s);div.classList.add('selected')};updateActieveStickers()};grid.appendChild(div)})}
-function updateActieveStickers(){const grid=document.getElementById('actieveStickers');grid.innerHTML='';if(actieveStickers.length===0){grid.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px;">Nog geen stickers gekozen</div>';return};actieveStickers.forEach(s=>{const div=document.createElement('div');div.className='sticker-item selected';div.textContent=s;grid.appendChild(div)})}
+function updateActieveStickers(){const grid=document.getElementById('actieveStickers');grid.innerHTML='';if(actieveStickers.length===0){grid.innerHTML='<div style="font-size:15px;color:var(--muted);padding:8px;">Nog geen stickers gekozen</div>';return};actieveStickers.forEach(s=>{const div=document.createElement('div');div.className='sticker-item selected';div.textContent=s;grid.appendChild(div)})}
 window.slaAllesOp=async function(){const naam=document.getElementById('editNaam').value.trim();const bio=document.getElementById('editBio').value.trim();const mood=document.getElementById('editMood').value.trim();const avatar=document.getElementById('avatarEmoji').textContent;const accentKleur=document.getElementById('accentHex').value;const accentKleur2=document.getElementById('accent2Hex').value;const bgKleur=document.getElementById('bgKleurHex').value;const{error}=await supabase.from('profiles').upsert({id:huidigeUser.id,username:profiel?.username||huidigeUser.email.split('@')[0],display_name:naam,bio:bio,mood:mood,avatar_url:window._fotoAvatar||avatar,accent_kleur:accentKleur,accent_kleur2:accentKleur2,achtergrond_kleur:bgKleur,animatie:huidigeAnimatie,lettertype:huidigLettertype,widgets:actieveWidgets,stickers:actieveStickers,updated_at:new Date().toISOString()});const msg=document.getElementById('statusMsg');if(error){msg.className='status-msg error';msg.textContent='✗ Opslaan mislukt: '+error.message}else{msg.className='status-msg success';msg.textContent='✓ Profiel opgeslagen!';setTimeout(()=>msg.className='status-msg',2000)};window.scrollTo(0,0)}
 window.uitloggen=async function(){await supabase.auth.signOut();window.location.href='login.html'}
 init()

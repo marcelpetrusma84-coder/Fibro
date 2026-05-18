@@ -549,40 +549,6 @@ async function init() {
   init()
 
   // Wallpaper laden
-  
-
-
-  
-  async function laadWallpaper() {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const userId = session.user.id
-      const db = await new Promise((res, rej) => {
-        const r = indexedDB.open('FibroDB', 1)
-        r.onsuccess = e => res(e.target.result)
-        r.onerror = () => rej()
-      })
-      const data = await new Promise(res => {
-        const r = db.transaction('fotos').objectStore('fotos').get('bg_wallpaper_' + userId)
-        r.onsuccess = e => res(e.target.result?.data || null)
-        r.onerror = () => res(null)
-      })
-      if (data) {
-        let bg = document.getElementById('wallpaper-bg')
-          bg = document.createElement('div')
-          bg.id = 'wallpaper-bg'
-          bg.className = 'wallpaper-bg'
-          document.body.prepend(bg)
-        }
-        bg.style.backgroundImage = 'url(' + data + ')'
-        document.body.classList.add('heeft-wallpaper')
-        document.body.style.background = 'transparent'
-      }
-    } catch(e) { console.error(e) }
-  }
-
-  laadWallpaper()
-
 </script>
 
 </body>

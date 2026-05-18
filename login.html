@@ -678,6 +678,9 @@
   })
 
   // Wallpaper laden
+  
+
+
   async function laadWallpaper() {
     try {
       const db = await new Promise((res,rej) => {
@@ -685,16 +688,29 @@
         r.onsuccess = e => res(e.target.result)
         r.onerror = () => rej()
       })
-      const data = await new Promise((res) => {
-        const r = db.transaction('fotos').objectStore('fotos').get('wallpaper')
+      const store = db.transaction('fotos').objectStore('fotos')
+      const keys = await new Promise(res => {
+        const r = store.getAllKeys()
+        r.onsuccess = e => res(e.target.result)
+        r.onerror = () => res([])
+      })
+      const wallpaperKey = keys.find(k => k.startsWith('bg_wallpaper_'))
+      const db2 = await new Promise((res,rej) => {
+        const r = indexedDB.open('FibroDB',1)
+        r.onsuccess = e => res(e.target.result)
+        r.onerror = () => rej()
+      })
+      const data = await new Promise(res => {
+        const r = db2.transaction('fotos').objectStore('fotos').get(wallpaperKey)
         r.onsuccess = e => res(e.target.result?.data || null)
         r.onerror = () => res(null)
       })
       if (data) {
-        document.body.style.backgroundImage = 'url(' + data + ')'; document.body.classList.add('heeft-wallpaper')
+        document.body.style.backgroundImage = 'url(' + data + ')'
         document.body.style.backgroundAttachment = 'fixed'
         document.body.style.backgroundSize = 'cover'
         document.body.style.backgroundPosition = 'center'
+        document.body.classList.add('heeft-wallpaper')
       }
     } catch(e) {}
   }

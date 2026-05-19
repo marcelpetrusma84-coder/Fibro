@@ -127,7 +127,16 @@ window.registreren = async function() {
   btn.textContent = 'Account aanmaken...'
   btn.disabled = true
 
-  const { data, error } = await supabase.auth.signUp({ email, password: ww })
+  const { data, error } = await supabase.auth.signUp({
+  email,
+  password: ww,
+  options: {
+    data: {
+      username: naam,
+      display_name: naam
+    }
+  }
+})
 
   console.log('signUp data:', JSON.stringify(data))
   console.log('signUp error:', JSON.stringify(error))

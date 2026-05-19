@@ -62,110 +62,115 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 </div>
 
 <script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+ <script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-  const supabase = createClient(
-    'https://qmgatbphiplrfxrljtbe.supabase.co',
-    'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
-  )
+const supabase = createClient(
+  'https://qmgatbphiplrfxrljtbe.supabase.co',
+  'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
+)
 
-  const urlParams = new URLSearchParams(window.location.search)
-  const token = urlParams.get('token')
-  var uitnodigerData = null
+const urlParams = new URLSearchParams(window.location.search)
+const token = urlParams.get('token')
 
-  async function init() {
-    if (!token) { toonFout(); return }
+var uitnodigerData = null
 
-    const { data, error } = await supabase
-      .from('invite_tokens')
-      .select('created_by, is_used')
-      .eq('token', token)
-      .eq('is_used', false)
-      .single()
+async function init() {
+  if (!token) { toonFout(); return }
 
-    if (error || !data) { toonFout(); return }
+  const { data, error } = await supabase
+    .from('invite_tokens')
+    .select('created_by, is_used')
+    .eq('token', token)
+    .eq('is_used', false)
+    .single()
 
-    uitnodigerData = data
-    const { data: profiel } = await supabase
-      .from('profiles')
-      .select('display_name, username, avatar_url')
-      .eq('id', data.created_by)
-      .single()
-    document.getElementById('uitnodigerNaam').textContent = profiel?.display_name || profiel?.username || 'Iemand'
-    document.getElementById('uitnodigerAvatar').textContent = profiel?.avatar_url || '👤'
-    document.getElementById('laadScherm').style.display = 'none'
-    document.getElementById('uitnodigingScherm').style.display = 'block'
-  }
+  if (error || !data) { toonFout(); return }
 
-  function toonFout() {
-    document.getElementById('laadScherm').style.display = 'none'
-    document.getElementById('foutScherm').style.display = 'block'
-  }
+  uitnodigerData = data
 
-  window.registreren = async function() {
-    const naam = document.getElementById('gebruikersnaam').value.trim()
-    const email = document.getElementById('email').value.trim()
-    const ww = document.getElementById('wachtwoord').value.trim()
-    const msg = document.getElementById('bericht')
-    const btn = document.getElementById('regBtn')
+  const { data: profiel } = await supabase
+    .from('profiles')
+    .select('display_name, username, avatar_url')
+    .eq('id', data.created_by)
+    .single()
 
-    if (!naam || !email || !ww) {
-      msg.className = 'msg error'
-      msg.textContent = 'Vul alle velden in.'
-      return
-    }
-    if (ww.length < 8) {
-      msg.className = 'msg error'
-      msg.textContent = 'Wachtwoord minimaal 8 tekens.'
-      return
-    }
-
-    btn.textContent = 'Account aanmaken...'
-    btn.disabled = true
-
-    const { data, error } = await supabase.auth.signUp(const { data, error } = await supabase.auth.signUp({ email, password: ww })
-
-if (error) {
-  msg.className = 'msg error'
-  msg.textContent = error.message
-  btn.textContent = 'Account aanmaken 🌸'
-  btn.disabled = false
-  return
+  document.getElementById('uitnodigerNaam').textContent = profiel?.display_name || profiel?.username || 'Iemand'
+  document.getElementById('uitnodigerAvatar').textContent = profiel?.avatar_url || '👤'
+  document.getElementById('laadScherm').style.display = 'none'
+  document.getElementById('uitnodigingScherm').style.display = 'block'
 }
 
-if (!data.user) {
+function toonFout() {
+  document.getElementById('laadScherm').style.display = 'none'
+  document.getElementById('foutScherm').style.display = 'block'
+}
+
+window.registreren = async function() {
+  const naam = document.getElementById('gebruikersnaam').value.trim()
+  const email = document.getElementById('email').value.trim()
+  const ww = document.getElementById('wachtwoord').value.trim()
+  const msg = document.getElementById('bericht')
+  const btn = document.getElementById('regBtn')
+
+  if (!naam || !email || !ww) {
+    msg.className = 'msg error'
+    msg.textContent = 'Vul alle velden in.'
+    return
+  }
+
+  if (ww.length < 8) {
+    msg.className = 'msg error'
+    msg.textContent = 'Wachtwoord minimaal 8 tekens.'
+    return
+  }
+
+  btn.textContent = 'Account aanmaken...'
+  btn.disabled = true
+
+  const { data, error } = await supabase.auth.signUp({ email, password: ww })
+
+  if (error) {
+    msg.className = 'msg error'
+    msg.textContent = error.message
+    btn.textContent = 'Account aanmaken 🌸'
+    btn.disabled = false
+    return
+  }
+
+  if (!data.user) {
+    msg.className = 'msg success'
+    msg.textContent = 'Controleer je e-mail en bevestig je account. Daarna kun je inloggen.'
+    btn.textContent = 'Naar inloggen'
+    btn.disabled = false
+    btn.onclick = () => window.location.href = 'login.html'
+    return
+  }
+
+  await supabase.from('profiles').upsert({
+    id: data.user.id,
+    username: naam,
+    display_name: naam,
+    updated_at: new Date().toISOString()
+  })
+
+  await supabase.from('invite_tokens')
+    .update({ is_used: true, used_at: new Date().toISOString(), used_by: data.user.id })
+    .eq('token', token)
+
+  if (uitnodigerData?.created_by && uitnodigerData.created_by !== data.user.id) {
+    await supabase.from('friendships').insert([
+      { user_id: data.user.id, friend_id: uitnodigerData.created_by, status: 'accepted' },
+      { user_id: uitnodigerData.created_by, friend_id: data.user.id, status: 'accepted' }
+    ])
+  }
+
   msg.className = 'msg success'
-  msg.textContent = 'Controleer je e-mail en bevestig je account. Daarna kun je inloggen.'
+  msg.textContent = 'Account aangemaakt! Controleer je e-mail en log daarna in.'
   btn.textContent = 'Naar inloggen'
   btn.disabled = false
   btn.onclick = () => window.location.href = 'login.html'
-  return
 }
 
-await supabase.from('profiles').upsert({
-  id: data.user.id,
-  username: naam,
-  display_name: naam,
-  updated_at: new Date().toISOString()
-})
-
-await supabase.from('invite_tokens')
-  .update({ is_used: true, used_at: new Date().toISOString(), used_by: data.user.id })
-  .eq('token', token)
-
-if (uitnodigerData?.created_by && uitnodigerData.created_by !== data.user.id) {
-  await supabase.from('friendships').insert([
-    { user_id: data.user.id, friend_id: uitnodigerData.created_by, status: 'accepted' },
-    { user_id: uitnodigerData.created_by, friend_id: data.user.id, status: 'accepted' }
-  ])
-}
-
-msg.className = 'msg success'
-msg.textContent = 'Account aangemaakt! Controleer je e-mail en log daarna in.'
-btn.textContent = 'Naar inloggen'
-btn.disabled = false
-btn.onclick = () => window.location.href = 'login.html'
-  init()
+init()
 </script>
-</body>
-</html>

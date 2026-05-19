@@ -129,6 +129,9 @@ window.registreren = async function() {
 
   const { data, error } = await supabase.auth.signUp({ email, password: ww })
 
+  console.log('signUp data:', JSON.stringify(data))
+  console.log('signUp error:', JSON.stringify(error))
+
   if (error) {
     msg.className = 'msg error'
     msg.textContent = error.message

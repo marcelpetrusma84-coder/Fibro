@@ -123,41 +123,48 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
     btn.textContent = 'Account aanmaken...'
     btn.disabled = true
 
-    const { data, error } = await supabase.auth.signUp({ email, password: ww })
+    const { data, error } = await supabase.auth.signUp(const { data, error } = await supabase.auth.signUp({ email, password: ww })
 
-    if (error) {
-      msg.className = 'msg error'
-      msg.textContent = error.message
-      btn.textContent = 'Account aanmaken 🌸'
-      btn.disabled = false
-      return
-    }
+if (error) {
+  msg.className = 'msg error'
+  msg.textContent = error.message
+  btn.textContent = 'Account aanmaken 🌸'
+  btn.disabled = false
+  return
+}
 
-    await supabase.from('profiles').upsert({
-      id: data.user.id,
-      username: naam,
-      display_name: naam,
-      updated_at: new Date().toISOString()
-    })
+if (!data.user) {
+  msg.className = 'msg success'
+  msg.textContent = 'Controleer je e-mail en bevestig je account. Daarna kun je inloggen.'
+  btn.textContent = 'Naar inloggen'
+  btn.disabled = false
+  btn.onclick = () => window.location.href = 'login.html'
+  return
+}
 
-    await supabase.from('invite_tokens')
-      .update({ is_used: true, used_at: new Date().toISOString(), used_by: data.user.id })
-      .eq('token', token)
+await supabase.from('profiles').upsert({
+  id: data.user.id,
+  username: naam,
+  display_name: naam,
+  updated_at: new Date().toISOString()
+})
 
-    if (uitnodigerData?.created_by && uitnodigerData.created_by !== data.user.id) {
-      await supabase.from('friendships').insert([
-        { user_id: data.user.id, friend_id: uitnodigerData.created_by, status: 'accepted' },
-        { user_id: uitnodigerData.created_by, friend_id: data.user.id, status: 'accepted' }
-      ])
-    }
+await supabase.from('invite_tokens')
+  .update({ is_used: true, used_at: new Date().toISOString(), used_by: data.user.id })
+  .eq('token', token)
 
-    msg.className = 'msg success'
-    msg.textContent = 'Account aangemaakt! Controleer je e-mail en log daarna in.'
-    btn.textContent = 'Naar inloggen'
-    btn.disabled = false
-    btn.onclick = () => window.location.href = 'login.html'
-  }
+if (uitnodigerData?.created_by && uitnodigerData.created_by !== data.user.id) {
+  await supabase.from('friendships').insert([
+    { user_id: data.user.id, friend_id: uitnodigerData.created_by, status: 'accepted' },
+    { user_id: uitnodigerData.created_by, friend_id: data.user.id, status: 'accepted' }
+  ])
+}
 
+msg.className = 'msg success'
+msg.textContent = 'Account aangemaakt! Controleer je e-mail en log daarna in.'
+btn.textContent = 'Naar inloggen'
+btn.disabled = false
+btn.onclick = () => window.location.href = 'login.html'
   init()
 </script>
 </body>

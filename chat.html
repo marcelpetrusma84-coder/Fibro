@@ -10,11 +10,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Fibro">
 <meta name="theme-color" content="#c084fc">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400;500&family=Raleway:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:wght@300;400;700&family=Bebas+Neue&family=Oswald:wght@300;400;500&family=Pacifico&family=Dancing+Script:wght@400;600&family=Great+Vibes&family=Space+Mono:wght@400;700&family=Courier+Prime:wght@400;700&family=Quicksand:wght@300;400;500&family=Nunito:wght@300;400;500&family=Righteous&family=Comfortaa:wght@300;400;500&family=Cinzel:wght@400;600&family=Satisfy&family=Lobster&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
 :root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:#ffffff; }
-body { background:var(--bg); background-attachment:fixed; background-size:cover; background-position:center; background-attachment:fixed; background-size:cover; background-position:center; font-family:'DM Sans',sans-serif; color:var(--text); max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; }
+body { background:var(--bg); background-attachment:fixed; background-size:cover; background-position:center; font-family:'DM Sans',sans-serif; color:var(--text); max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; }
 .top-bar { display:flex; align-items:center; gap:10px; padding:10px 14px; background:rgba(0,0,0,0.35); border-bottom:0.5px solid var(--border); position:sticky; top:0; z-index:10; }
 .back-btn { font-size:12px; color:var(--muted); cursor:pointer; padding:4px 10px; border:0.5px solid var(--border); border-radius:20px; background:none; font-family:'DM Sans',sans-serif; }
 .chat-av { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
@@ -27,8 +27,6 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .banner-timer { margin-left:auto; font-weight:500; color:var(--accent); }
 .privacy-bar { background:rgba(248,113,113,0.08); border-bottom:0.5px solid rgba(248,113,113,0.2); padding:6px 14px; font-size:15px; color:#f87171; display:none; align-items:center; gap:6px; }
 .privacy-bar.show { display:flex; }
-
-/* Vrienden selectie scherm */
 .vriend-selectie { flex:1; padding:16px; }
 .vriend-selectie h3 { font-family:'Playfair Display',serif; font-style:italic; font-size:16px; color:var(--accent); margin-bottom:14px; }
 .vriend-item { display:flex; align-items:center; gap:12px; padding:12px; border:0.5px solid var(--border); border-radius:12px; margin-bottom:8px; cursor:pointer; background:var(--card); transition:border-color 0.2s; }
@@ -37,7 +35,6 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .vriend-naam { font-size:14px; font-weight:500; }
 .vriend-username { font-size:14px; color:var(--muted); margin-top:2px; }
 .geen-vrienden { text-align:center; padding:40px 20px; color:var(--muted); font-size:15px; line-height:1.6; }
-
 .messages { flex:1; padding:12px 14px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; min-height:360px; padding-bottom:130px; }
 .msg-row { display:flex; gap:8px; align-items:flex-end; }
 .msg-row.out { flex-direction:row-reverse; }
@@ -50,8 +47,10 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .emoji-grid { display:flex; flex-wrap:wrap; gap:6px; padding:10px 14px; background:rgba(0,0,0,0.3); border-top:0.5px solid var(--border); }
 .e-opt { font-size:22px; cursor:pointer; padding:4px; border-radius:8px; transition:background 0.2s; }
 .e-opt:hover { background:rgba(192,132,252,0.2); }
-.input-area { padding:10px 14px; border-top:0.5px solid var(--border); display:flex; gap:8px; align-items:center; background:rgba(0,0,0,0.2); position:fixed; bottom:60px; width:100%; max-width:480px; z-index:9; } .emoji-grid { position:fixed; bottom:104px; width:100%; max-width:480px; z-index:9; background:rgba(0,0,0,0.85); } #stickerGrid { position:fixed; bottom:104px; width:100%; max-width:480px; z-index:9; background:rgba(0,0,0,0.85); }
-.msg-input { flex:1; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:12px; outline:none; }
+.input-area { padding:10px 14px; border-top:0.5px solid var(--border); display:flex; gap:8px; align-items:center; background:rgba(0,0,0,0.2); position:fixed; bottom:60px; width:100%; max-width:480px; z-index:9; }
+.emoji-grid { position:fixed; bottom:104px; width:100%; max-width:480px; z-index:9; background:rgba(0,0,0,0.85); }
+#stickerGrid { position:fixed; bottom:104px; width:100%; max-width:480px; z-index:9; background:rgba(0,0,0,0.85); }
+.msg-input { flex:1; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:16px !important; outline:none; }
 .msg-input::placeholder { color:var(--muted); }
 .msg-input:focus { border-color:var(--accent); }
 .emoji-toggle { width:36px; height:36px; border-radius:50%; background:var(--card); border:0.5px solid var(--border); cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -63,24 +62,20 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .modal-title { font-family:'Playfair Display',serif; font-size:16px; margin-bottom:6px; }
 .modal-sub { font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; }
 .modal-btns { display:flex; gap:8px; }
-.modal-btn { flex:1; padding:9px; border-radius:10px; font-size:12px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; border:none; }
+.modal-btn { flex:1; padding:9px; border-radius:10px; font-size:12px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; border:none; min-height:44px; }
 .modal-btn.cancel { background:var(--card); color:var(--muted); border:0.5px solid var(--border); }
 .modal-btn.confirm { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; }
-.bottom-nav { display:flex; justify-content:space-around; padding:12px 0; border-top:0.5px solid var(--border); background:rgba(0,0,0,0.3); position:fixed; bottom:0; width:100%; max-width:480px; z-index:10; }
-.nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:15px; color:#ffffff; cursor:pointer; padding:4px 12px; text-shadow:0 1px 4px rgba(0,0,0,0.9); }
+.bottom-nav { display:flex; justify-content:space-around; padding:12px 0; border-top:0.5px solid var(--border); background:rgba(0,0,0,0.3); position:fixed; bottom:0; width:100%; max-width:480px; z-index:10; padding-bottom:env(safe-area-inset-bottom,12px); }
+.nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:15px; color:#ffffff; cursor:pointer; padding:4px 12px; text-shadow:0 1px 4px rgba(0,0,0,0.9); min-height:44px; }
 .nav-item.active { color:var(--accent); }
 .nav-icon { font-size:20px; }
 .laden { text-align:center; padding:20px; color:var(--muted); font-size:12px; }
-body::before{content:'';position:fixed;inset:0;background:rgba(0,0,0,0.38);z-index:0;pointer-events:none;display:none;}body.heeft-wallpaper::before{display:block;}body.heeft-wallpaper{background-size:cover;background-position:center;background-attachment:fixed;}.block,.edit-vak,.bottom-nav,.top-bar,.bubble,.vriend-item,.modal{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}.p-name,.p-bio,.block-title,.gb-name,.gb-msg,.music-title,.music-artist,.mood-text,.nav-item,.chat-name,.vriend-naam,.chat-status{text-shadow:0 1px 4px rgba(0,0,0,0.9);}button,.save-btn,.cancel-btn,.send-btn,.back-btn,.lock-btn,.gb-send,.chat-btn,.modal-btn{min-height:44px;min-width:44px;}.bottom-nav{padding-bottom:env(safe-area-inset-bottom,12px);}
-.wallpaper-bg {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-input, textarea { font-size:16px !important; }
+body::before { content:''; position:fixed; inset:0; background:rgba(0,0,0,0.38); z-index:0; pointer-events:none; display:none; }
+body.heeft-wallpaper::before { display:block; }
+body.heeft-wallpaper { background-size:cover; background-position:center; background-attachment:fixed; }
+.block,.edit-vak,.bottom-nav,.top-bar,.bubble,.vriend-item,.modal { backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+.p-name,.p-bio,.block-title,.nav-item,.chat-name,.vriend-naam,.chat-status { text-shadow:0 1px 4px rgba(0,0,0,0.9); }
+button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44px; }
 </style>
 </head>
 <body>
@@ -101,56 +96,53 @@ input, textarea { font-size:16px !important; }
 </div>
 <div class="privacy-bar" id="privacyBar">⚠ Screenshot poging gedetecteerd — zonder toestemming</div>
 
-<!-- Vrienden selectie -->
 <div id="vriendenSelectie" class="vriend-selectie">
   <h3>Met wie wil je chatten?</h3>
   <div id="vriendenLijst"><div class="laden">Vrienden laden...</div></div>
 </div>
 
-<!-- Chat scherm -->
 <div id="chatScherm" style="display:none; flex:1; flex-direction:column;">
   <div class="messages" id="messages">
     <div class="sys-msg" id="chatSysBericht">End-to-end versleuteld gesprek</div>
   </div>
-  <div class="emoji-grid" id="stickerGrid" style="display:flex; flex-wrap:wrap; gap:8px; padding:10px 14px; background:rgba(0,0,0,0.3); border-top:0.5px solid var(--border);">
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌸')">🌸</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌿')">🌿</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🦋')">🦋</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌙')">🌙</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('⭐')">⭐</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎨')">🎨</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌊')">🌊</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🍂')">🍂</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎵')">🎵</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌺')">🌺</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🦊')">🦊</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🐱')">🐱</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌈')">🌈</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎮')">🎮</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('📚')">📚</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌻')">🌻</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🍀')">🍀</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🚀')">🚀</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('📷')">📷</span>
-  <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎸')">🎸</span>
-</div>
-<div class="emoji-grid" id="emojiGrid" style="display:none"></div>
+  <div id="stickerGrid" style="display:flex; flex-wrap:wrap; gap:8px; padding:10px 14px;">
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌸')">🌸</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌿')">🌿</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🦋')">🦋</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌙')">🌙</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('⭐')">⭐</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎨')">🎨</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌊')">🌊</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🍂')">🍂</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎵')">🎵</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌺')">🌺</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🦊')">🦊</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🐱')">🐱</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌈')">🌈</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎮')">🎮</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('📚')">📚</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌻')">🌻</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🍀')">🍀</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🚀')">🚀</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('📷')">📷</span>
+    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎸')">🎸</span>
+  </div>
+  <div class="emoji-grid" id="emojiGrid" style="display:none"></div>
   <div class="input-area">
     <button class="emoji-toggle" onclick="toggleEmojiPicker()">😊</button>
     <input class="msg-input" id="msgInput" placeholder="Stuur een bericht..." onkeydown="if(event.key==='Enter')sendMsg()">
-    <button class="emoji-toggle" onclick="toggleStickers()" title="Sticker">🎨</button>
+    <button class="emoji-toggle" onclick="toggleStickers()">🎨</button>
     <button class="send-btn" onclick="sendMsg()">➤</button>
   </div>
 </div>
 
 <div class="bottom-nav">
-  <div class="nav-item" onclick="window.location.href='https://marcelpetrusma84-coder.github.io/Fibro/index.html'"><div class="nav-icon">🏠</div>Home</div>
-  <div class="nav-item" onclick="window.location.href='https://marcelpetrusma84-coder.github.io/Fibro/vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
+  <div class="nav-item" onclick="window.location.href='index.html'"><div class="nav-icon">🏠</div>Home</div>
+  <div class="nav-item" onclick="window.location.href='vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
   <div class="nav-item active"><div class="nav-icon">💬</div>Chat</div>
   <div class="nav-item" onclick="window.location.href='profiel.html'"><div class="nav-icon">👤</div>Profiel</div>
 </div>
 
-<!-- Screenshot modal -->
 <div class="modal-bg" id="screenshotModal">
   <div class="modal">
     <div class="modal-icon">📸</div>
@@ -176,7 +168,7 @@ input, textarea { font-size:16px !important; }
 
 <script type="module">
   import { laadThema } from './thema.js'
-import { laadWallpaper } from './wallpaper.js'
+  import { laadWallpaper } from './wallpaper.js'
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
   const supabase = createClient(
@@ -194,44 +186,36 @@ import { laadWallpaper } from './wallpaper.js'
   var emojiOpen = false
   var emojiList = ["😊","😂","❤","🔥","👍","🎉","😍","🤔","😢","😎","🌿","🌸","✨","🎵","🙌","💬","🦋","🌙","⭐","🍀","🎮","🐱","🌈","🎨"]
 
-  // ========================
-  // OPSTARTEN
-  // ========================
-  // ========================
-// GELUID
-// ========================
-function speelPlop(richting) {
-  const ctx = new (window.AudioContext || window.webkitAudioContext)()
-  const osc = ctx.createOscillator()
-  const gain = ctx.createGain()
-  osc.connect(gain)
-  gain.connect(ctx.destination)
-
-  if (richting === 'uit') {
-    // Versturen: plop omhoog
-    osc.frequency.setValueAtTime(300, ctx.currentTime)
-    osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.08)
-  } else {
-    // Ontvangen: plop omlaag
-    osc.frequency.setValueAtTime(500, ctx.currentTime)
-    osc.frequency.exponentialRampToValueAtTime(250, ctx.currentTime + 0.1)
+  function speelPlop(richting) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      if (richting === 'uit') {
+        osc.frequency.setValueAtTime(300, ctx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.08)
+      } else {
+        osc.frequency.setValueAtTime(500, ctx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(250, ctx.currentTime + 0.1)
+      }
+      osc.type = 'sine'
+      gain.gain.setValueAtTime(0.3, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15)
+      osc.start(ctx.currentTime)
+      osc.stop(ctx.currentTime + 0.15)
+    } catch(e) {}
   }
 
-  osc.type = 'sine'
-  gain.gain.setValueAtTime(0.3, ctx.currentTime)
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15)
-  osc.start(ctx.currentTime)
-  osc.stop(ctx.currentTime + 0.15)
-}
-
-async function init() {
+  async function init() {
     await laadThema()
+    await laadWallpaper()
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) { window.location.href = 'login.html'; return }
 
     huidigeUser = session.user
 
-    // Profiel ophalen
     const { data } = await supabase
       .from('profiles')
       .select('*')
@@ -239,82 +223,63 @@ async function init() {
       .single()
 
     huidigProfiel = data
-
     await laadVrienden()
   }
 
-  // ========================
-  // VRIENDEN LADEN
-  // ========================
- async function laadVrienden() {
-  const { data: friendships, error } = await supabase
-    .from('friendships')
-    .select('user_id, friend_id')
-    .or(`user_id.eq.${huidigeUser.id},friend_id.eq.${huidigeUser.id}`)
-    .eq('status', 'accepted')
+  async function laadVrienden() {
+    const { data: friendships, error } = await supabase
+      .from('friendships')
+      .select('user_id, friend_id')
+      .or(`user_id.eq.${huidigeUser.id},friend_id.eq.${huidigeUser.id}`)
+      .eq('status', 'accepted')
 
-  const container = document.getElementById('vriendenLijst')
+    const container = document.getElementById('vriendenLijst')
 
-  if (error || !friendships || friendships.length === 0) {
-    container.innerHTML = `<div class="geen-vrienden">Nog geen vrienden. Nodig iemand uit via je profiel!</div>`
-    return
-  }
+    if (error || !friendships || friendships.length === 0) {
+      container.innerHTML = `<div class="geen-vrienden">Nog geen vrienden. Nodig iemand uit via je profiel!</div>`
+      return
+    }
 
-  const vriendIds = friendships.map(f =>
-    f.user_id === huidigeUser.id ? f.friend_id : f.user_id
-  )
+    const vriendIds = friendships.map(f =>
+      f.user_id === huidigeUser.id ? f.friend_id : f.user_id
+    )
 
-  const { data, error: profError } = await supabase
-    .from('profiles')
-    .select('*')
-    .in('id', vriendIds)
+    const { data, error: profError } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('id', vriendIds)
 
-  if (profError || !data || data.length === 0) {
-    container.innerHTML = `<div class="geen-vrienden">Vrienden niet gevonden.</div>`
-    return
-  }
+    if (profError || !data || data.length === 0) {
+      container.innerHTML = `<div class="geen-vrienden">Vrienden niet gevonden.</div>`
+      return
+    }
 
-  container.innerHTML = data.map(vriend => `
-    <div class="vriend-item" onclick="openChat('${vriend.id}', '${vriend.display_name || vriend.username}', '${vriend.avatar_url || '👤'}')">
-      <div class="vriend-av">${vriend.avatar_url || '👤'}</div>
-      <div>
-        <div class="vriend-naam">${vriend.display_name || vriend.username}</div>
-        <div class="vriend-username">@${vriend.username}</div>
+    container.innerHTML = data.map(vriend => `
+      <div class="vriend-item" onclick="openChat('${vriend.id}', '${vriend.display_name || vriend.username}', '${vriend.avatar_url || '👤'}')">
+        <div class="vriend-av">${vriend.avatar_url || '👤'}</div>
+        <div>
+          <div class="vriend-naam">${vriend.display_name || vriend.username}</div>
+          <div class="vriend-username">@${vriend.username}</div>
+        </div>
       </div>
-    </div>
-  `).join('')
-}
+    `).join('')
   }
 
-  // ========================
-  // CHAT OPENEN
-  // ========================
   window.openChat = async function(vriendId, vriendNaam, vriendAvatar) {
     geselecteerdeVriend = { id: vriendId, naam: vriendNaam, avatar: vriendAvatar }
-
-    // UI updaten
     document.getElementById('chatAv').textContent = vriendAvatar
     document.getElementById('chatNaam').textContent = vriendNaam
     document.getElementById('chatStatus').textContent = '● actief'
     document.getElementById('chatSysBericht').textContent =
       `Gesprek met ${vriendNaam} · alleen jullie twee · end-to-end versleuteld`
-
-    // Schermen wisselen
     document.getElementById('vriendenSelectie').style.display = 'none'
     const chatScherm = document.getElementById('chatScherm')
     chatScherm.style.display = 'flex'
     chatScherm.style.flexDirection = 'column'
-
-    // Berichten laden
     await laadBerichten()
-
-    // Realtime luisteren
     startRealtime()
   }
 
-  // ========================
-  // BERICHTEN LADEN
-  // ========================
   async function laadBerichten() {
     const { data, error } = await supabase
       .from('messages')
@@ -327,9 +292,6 @@ async function init() {
       .limit(50)
 
     const container = document.getElementById('messages')
-    if (data && data.length > 0) speelPlop('in')
-
-    // Verwijder oude berichten maar bewaar sys bericht
     const sysBericht = document.getElementById('chatSysBericht')
     container.innerHTML = ''
     container.appendChild(sysBericht)
@@ -343,9 +305,6 @@ async function init() {
     scrollNaarOnder()
   }
 
-  // ========================
-  // BERICHT TOEVOEGEN AAN UI
-  // ========================
   function voegBerichtToe(bericht) {
     const isMijn = bericht.sender_id === huidigeUser.id
     const container = document.getElementById('messages')
@@ -354,12 +313,13 @@ async function init() {
 
     const row = document.createElement('div')
     row.className = `msg-row ${isMijn ? 'out' : ''}`
-    const isSticker = bericht.content.startsWith('sticker:')
-    if (isSticker) {
+
+    if (bericht.content.startsWith('sticker:')) {
       const stickerEmoji = bericht.content.replace('sticker:', '')
       row.innerHTML = `
         <div class="msg-av-sm">${avatar}</div>
-        <div style="font-size:52px;line-height:1;padding:4px;filter:drop-shadow(0 2px 8px rgba(192,132,252,0.3));">${stickerEmoji}
+        <div style="font-size:52px;line-height:1;padding:4px;filter:drop-shadow(0 2px 8px rgba(192,132,252,0.3));">
+          ${stickerEmoji}
           <div style="font-size:12px;color:var(--muted);margin-top:2px;">${tijd}</div>
         </div>
       `
@@ -375,9 +335,6 @@ async function init() {
     container.appendChild(row)
   }
 
-  // ========================
-  // BERICHT VERSTUREN
-  // ========================
   window.toggleStickers = function() {
     const grid = document.getElementById('stickerGrid')
     const emojiGrid = document.getElementById('emojiGrid')
@@ -401,50 +358,35 @@ async function init() {
   }
 
   window.sendMsg = async function() {
-    speelPlop('uit')
     if (!geselecteerdeVriend) return
     const input = document.getElementById('msgInput')
     const tekst = input.value.trim()
     if (!tekst) return
-
+    speelPlop('uit')
     input.value = ''
-
-    const { error } = await supabase
-      .from('messages')
-      .insert({
-        sender_id: huidigeUser.id,
-        receiver_id: geselecteerdeVriend.id,
-        content: tekst,
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-      })
-
-    if (error) {
-      console.error('Versturen mislukt:', error)
-    }
-
+    const { error } = await supabase.from('messages').insert({
+      sender_id: huidigeUser.id,
+      receiver_id: geselecteerdeVriend.id,
+      content: tekst,
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    })
+    if (error) console.error('Versturen mislukt:', error)
     document.getElementById('emojiGrid').style.display = 'none'
     emojiOpen = false
   }
 
-  // ========================
-  // REALTIME BERICHTEN
-  // ========================
   function startRealtime() {
     if (realtimeKanaal) supabase.removeChannel(realtimeKanaal)
-
     realtimeKanaal = supabase
       .channel('berichten-' + huidigeUser.id)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages'
-      }, (payload) => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
         const msg = payload.new
         const isRelevant = (
           (msg.sender_id === huidigeUser.id && msg.receiver_id === geselecteerdeVriend?.id) ||
           (msg.sender_id === geselecteerdeVriend?.id && msg.receiver_id === huidigeUser.id)
         )
         if (isRelevant) {
+          speelPlop('in')
           voegBerichtToe(msg)
           scrollNaarOnder()
         }
@@ -452,9 +394,6 @@ async function init() {
       .subscribe()
   }
 
-  // ========================
-  // TERUG NAAR VRIENDENSELECTIE
-  // ========================
   window.gaTerug = function() {
     if (geselecteerdeVriend) {
       geselecteerdeVriend = null
@@ -469,9 +408,6 @@ async function init() {
     }
   }
 
-  // ========================
-  // EMOJI PICKER
-  // ========================
   window.toggleEmojiPicker = function() {
     emojiOpen = !emojiOpen
     const grid = document.getElementById('emojiGrid')
@@ -488,14 +424,12 @@ async function init() {
         grid.appendChild(span)
       })
       grid.style.display = 'flex'
+      document.getElementById('stickerGrid').style.display = 'none'
     } else {
       grid.style.display = 'none'
     }
   }
 
-  // ========================
-  // SCREENSHOT BEVEILIGING
-  // ========================
   window.showScreenshotModal = function() {
     if (screenshotAllowed) {
       document.getElementById('privacyBar').classList.add('show')
@@ -544,9 +478,6 @@ async function init() {
     voegSysBericht('Screenshot toestemming ingetrokken')
   }
 
-  // ========================
-  // HULPFUNCTIES
-  // ========================
   function voegSysBericht(tekst) {
     const container = document.getElementById('messages')
     const div = document.createElement('div')
@@ -561,10 +492,7 @@ async function init() {
     msgs.scrollTop = msgs.scrollHeight
   }
 
-  // Start
   init()
-
-  // Wallpaper laden
 </script>
 
 </body>

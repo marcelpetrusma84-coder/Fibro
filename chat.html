@@ -246,7 +246,7 @@ async function init() {
   // ========================
   // VRIENDEN LADEN
   // ========================
-  async function laadVrienden() {
+ async function laadVrienden() {
   const { data: friendships, error } = await supabase
     .from('friendships')
     .select('user_id, friend_id')
@@ -284,28 +284,6 @@ async function init() {
     </div>
   `).join('')
 }
-    // Haal alle profielen op behalve jezelf (voor nu — later echte vriendenlijst)
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .neq('id', huidigeUser.id)
-
-    const container = document.getElementById('vriendenLijst')
-
-    if (error || !data || data.length === 0) {
-      container.innerHTML = `<div class="geen-vrienden">Fout: ${error?.message || "geen data"} | user: ${huidigeUser?.id}</div>`
-      return
-    }
-
-    container.innerHTML = data.map(vriend => `
-      <div class="vriend-item" onclick="openChat('${vriend.id}', '${vriend.display_name || vriend.username}', '${vriend.avatar_url || '👤'}')">
-        <div class="vriend-av">${vriend.avatar_url || '👤'}</div>
-        <div>
-          <div class="vriend-naam">${vriend.display_name || vriend.username}</div>
-          <div class="vriend-username">@${vriend.username}</div>
-        </div>
-      </div>
-    `).join('')
   }
 
   // ========================

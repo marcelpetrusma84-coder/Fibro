@@ -540,7 +540,7 @@
 
     btn.disabled = true
     btn.innerHTML = '<span class="spinner"></span>Inloggen...'
-
+await supabase.auth.signOut()
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: wachtwoord })
 
     if (error) {
@@ -551,7 +551,8 @@
     }
 
     toonBericht(msg, 'success', 'Ingelogd! Even laden...')
-    setTimeout(() => { window.location.href = 'index.html' }, 800)
+    await supabase.auth.signOut()
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: wachtwoord })
   }
 
   // ========================
@@ -675,6 +676,12 @@
   // CHECK: AL INGELOGD?
   // ========================
   supabase.auth.getSession().then(({ data: { session } }) => {
+  // Alleen doorsturen als er geen ?logout=true in de URL staat
+  const params = new URLSearchParams(window.location.search)
+  if (session && !params.get('logout')) {
+    window.location.href = 'index.html'
+  }
+})(({ data: { session } }) => {
     if (session) {
       window.location.href = 'index.html'
     }

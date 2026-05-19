@@ -33,7 +33,6 @@
       overflow: hidden;
     }
 
-    /* Achtergrond grain effect */
     body::before {
       content: '';
       position: fixed;
@@ -48,260 +47,6 @@
       max-width: 420px;
       position: relative;
       z-index: 1;
-    }
-
-    /* Logo */
-    .logo {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .logo h1 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 48px;
-      letter-spacing: -1px;
-      color: var(--text);
-    }
-
-    .logo h1 span {
-      color: var(--accent);
-    }
-
-    .logo p {
-      font-size: 11px;
-      color: var(--text-muted);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-top: 6px;
-    }
-
-    /* Card */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 32px;
-    }
-
-    /* Tabs */
-    .tabs {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 28px;
-      background: var(--bg);
-      padding: 4px;
-      border-radius: 8px;
-    }
-
-    .tab {
-      flex: 1;
-      padding: 8px;
-      border: none;
-      background: transparent;
-      color: var(--text-muted);
-      font-family: 'DM Mono', monospace;
-      font-size: 12px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      cursor: pointer;
-      border-radius: 6px;
-      transition: all 0.2s;
-    }
-
-    .tab.active {
-      background: var(--surface);
-      color: var(--accent);
-      border: 1px solid var(--border);
-    }
-
-    /* Panels */
-    .panel { display: none; }
-    .panel.active { display: block; }
-
-    /* Form */
-    .field {
-      margin-bottom: 16px;
-    }
-
-    label {
-      display: block;
-      font-size: 11px;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-
-    input {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 16px;
-      color: var(--text);
-      font-family: 'DM Mono', monospace;
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    input:focus {
-      border-color: var(--accent);
-    }
-
-    input::placeholder {
-      color: var(--text-muted);
-    }
-
-    /* Buttons */
-    .btn {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 8px;
-      font-family: 'DM Mono', monospace;
-      font-size: 13px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.2s;
-      margin-top: 8px;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #0d0d0f;
-      font-weight: 500;
-    }
-
-    .btn-primary:hover {
-      background: #d4ff6e;
-      transform: translateY(-1px);
-    }
-
-    .btn-primary:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .btn-ghost {
-      background: transparent;
-      color: var(--text-muted);
-      border: 1px solid var(--border);
-      margin-top: 12px;
-    }
-
-    .btn-ghost:hover {
-      border-color: var(--text-muted);
-      color: var(--text);
-    }
-
-    /* Status berichten */
-    .message {
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-size: 13px;
-      margin-bottom: 16px;
-      display: none;
-    }
-
-    .message.error {
-      background: rgba(255, 92, 92, 0.1);
-      border: 1px solid rgba(255, 92, 92, 0.3);
-      color: var(--danger);
-      display: block;
-    }
-
-    .message.success {
-      background: rgba(200, 245, 99, 0.1);
-      border: 1px solid rgba(200, 245, 99, 0.3);
-      color: var(--accent);
-      display: block;
-    }
-
-    /* Invite token sectie */
-    .invite-check {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 20px;
-      font-size: 12px;
-    }
-
-    .invite-check .invite-status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--text-muted);
-    }
-
-    .invite-check .invite-status.valid {
-      color: var(--accent);
-    }
-
-    .invite-check .invite-status.invalid {
-      color: var(--danger);
-    }
-
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: currentColor;
-      flex-shrink: 0;
-    }
-
-    /* Divider */
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 20px 0;
-      color: var(--text-muted);
-      font-size: 11px;
-      letter-spacing: 1px;
-    }
-
-    .divider::before,
-    .divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
-
-    /* Herstelsleutel */
-    .herstelsleutel-info {
-      font-size: 12px;
-      color: var(--text-muted);
-      line-height: 1.6;
-      margin-top: 16px;
-      padding: 12px;
-      border: 1px dashed var(--border);
-      border-radius: 8px;
-    }
-
-    /* Loading spinner */
-    .spinner {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      border: 2px solid rgba(13,13,15,0.3);
-      border-top-color: #0d0d0f;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      margin-right: 8px;
-      vertical-align: middle;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* Fade in animatie */
-    .container {
       animation: fadeUp 0.4s ease both;
     }
 
@@ -309,126 +54,118 @@
       from { opacity: 0; transform: translateY(16px); }
       to { opacity: 1; transform: translateY(0); }
     }
-  body::before{content:'';position:fixed;inset:0;background:rgba(0,0,0,0.38);z-index:0;pointer-events:none;display:none;}body.heeft-wallpaper::before{display:block;}body.heeft-wallpaper{background-size:cover;background-position:center;background-attachment:fixed;}.block,.edit-vak,.bottom-nav,.top-bar,.bubble,.vriend-item,.modal{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}.p-name,.p-bio,.block-title,.gb-name,.gb-msg,.music-title,.music-artist,.mood-text,.nav-item,.chat-name,.vriend-naam,.chat-status{text-shadow:0 1px 4px rgba(0,0,0,0.9);}button,.save-btn,.cancel-btn,.send-btn,.back-btn,.lock-btn,.gb-send,.chat-btn,.modal-btn{min-height:44px;min-width:44px;}.bottom-nav{padding-bottom:env(safe-area-inset-bottom,12px);}input, textarea { font-size:16px !important; }</style>
+
+    .logo { text-align: center; margin-bottom: 40px; }
+    .logo h1 { font-family: 'DM Serif Display', serif; font-size: 48px; letter-spacing: -1px; color: var(--text); }
+    .logo h1 span { color: var(--accent); }
+    .logo p { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 6px; }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; }
+
+    .tabs { display: flex; gap: 4px; margin-bottom: 28px; background: var(--bg); padding: 4px; border-radius: 8px; }
+    .tab { flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-muted); font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
+    .tab.active { background: var(--surface); color: var(--accent); border: 1px solid var(--border); }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .field { margin-bottom: 16px; }
+    label { display: block; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+
+    input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 16px !important; outline: none; transition: border-color 0.2s; }
+    input:focus { border-color: var(--accent); }
+    input::placeholder { color: var(--text-muted); }
+
+    .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; margin-top: 8px; min-height: 44px; }
+    .btn-primary { background: var(--accent); color: #0d0d0f; font-weight: 500; }
+    .btn-primary:hover { background: #d4ff6e; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); margin-top: 12px; }
+    .btn-ghost:hover { border-color: var(--text-muted); color: var(--text); }
+
+    .message { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: none; }
+    .message.error { background: rgba(255,92,92,0.1); border: 1px solid rgba(255,92,92,0.3); color: var(--danger); display: block; }
+    .message.success { background: rgba(200,245,99,0.1); border: 1px solid rgba(200,245,99,0.3); color: var(--accent); display: block; }
+
+    .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--text-muted); font-size: 11px; letter-spacing: 1px; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .herstelsleutel-info { font-size: 12px; color: var(--text-muted); line-height: 1.6; margin-top: 16px; padding: 12px; border: 1px dashed var(--border); border-radius: 8px; }
+
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(13,13,15,0.3); border-top-color: #0d0d0f; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    body.heeft-wallpaper::before { display: block; background: rgba(0,0,0,0.38); }
+    body.heeft-wallpaper { background-size: cover; background-position: center; background-attachment: fixed; }
+  </style>
 </head>
 <body>
 
 <div class="container">
-
   <div class="logo">
     <h1>Fi<span>b</span>ro</h1>
     <p>Jouw persoonlijke ruimte</p>
   </div>
 
   <div class="card">
-
     <div class="tabs">
       <button class="tab active" onclick="switchTab('inloggen')">Inloggen</button>
       <button class="tab" onclick="switchTab('registreren')">Registreren</button>
-      
       <button class="tab" onclick="switchTab('herstellen')">Herstel</button>
     </div>
 
-    <!-- ======================== -->
     <!-- INLOGGEN -->
-    <!-- ======================== -->
     <div class="panel active" id="panel-inloggen">
       <div class="message" id="login-msg"></div>
-
       <div class="field">
         <label>E-mailadres</label>
         <input type="email" id="login-email" placeholder="jouw@email.nl" autocomplete="email" />
       </div>
-
       <div class="field">
         <label>Wachtwoord</label>
         <input type="password" id="login-wachtwoord" placeholder="••••••••" autocomplete="current-password" />
       </div>
-
-      <button class="btn btn-primary" onclick="inloggen()" id="login-btn">
-        Inloggen
-      </button>
+      <button class="btn btn-primary" onclick="inloggen()" id="login-btn">Inloggen</button>
     </div>
 
-    <!-- ======================== -->
-
-    <div class="panel" id="panel-uitgenodigd">
-      <div class="invite-check">
-        <div class="invite-status" id="invite-status-2">
-          <span>Voer je invite code in om te beginnen</span>
-        </div>
-        <input class="input" type="text"
-          id="invite-token-2"
-          placeholder="Plak hier je invite code"
-          oninput="controleerInvite2(this.value)">
-      </div>
-      <input class="input" type="email" id="reg-email-2" placeholder="E-mailadres">
-      <input class="input" type="password" id="reg-ww-2" placeholder="Wachtwoord (min. 8 tekens)">
-      <input class="input" type="text" id="reg-naam-2" placeholder="Gebruikersnaam">
-      <button class="btn btn-primary" onclick="registrerenMetInvite()" id="reg-btn-2">
-        Account aanmaken
-      </button>
-    </div>
-
-    <!-- REGISTREREN (via invite) -->
-    <!-- ======================== -->
+    <!-- REGISTREREN -->
     <div class="panel" id="panel-registreren">
       <div class="message" id="reg-msg"></div>
-
-      <!-- Invite token check -->
       <div id="reg-form">
         <div class="field">
           <label>Gebruikersnaam</label>
           <input type="text" id="reg-username" placeholder="jouwuniekename" autocomplete="username" />
         </div>
-
         <div class="field">
           <label>E-mailadres</label>
           <input type="email" id="reg-email" placeholder="jouw@email.nl" autocomplete="email" />
         </div>
-
         <div class="field">
           <label>Wachtwoord</label>
           <input type="password" id="reg-wachtwoord" placeholder="Minimaal 8 tekens" autocomplete="new-password" />
         </div>
-
-        <button class="btn btn-primary" onclick="registreren()" id="reg-btn">
-          Account aanmaken
-        </button>
-
+        <button class="btn btn-primary" onclick="registreren()" id="reg-btn">Account aanmaken</button>
         <div class="herstelsleutel-info">
           💡 Na registratie ontvang je een herstelsleutel. Bewaar deze goed — zonder deze sleutel kun je je account niet herstellen als je je wachtwoord vergeet.
         </div>
       </div>
     </div>
 
-    <!-- ======================== -->
-    <!-- HERSTELSLEUTEL -->
-    <!-- ======================== -->
+    <!-- HERSTEL -->
     <div class="panel" id="panel-herstellen">
       <div class="message" id="herstel-msg"></div>
-
       <div class="field">
         <label>E-mailadres</label>
         <input type="email" id="herstel-email" placeholder="jouw@email.nl" />
       </div>
-
-      <button class="btn btn-primary" onclick="stuurHerstelmail()">
-        Stuur herstelmail
-      </button>
-
+      <button class="btn btn-primary" onclick="stuurHerstelmail()">Stuur herstelmail</button>
       <div class="divider">of</div>
-
       <div class="field">
         <label>Herstelsleutel (24 woorden)</label>
         <input type="text" id="herstelsleutel-input" placeholder="woord1 woord2 woord3 ..." />
       </div>
-
-      <button class="btn btn-ghost" onclick="herstelMetSleutel()">
-        Herstel via sleutel
-      </button>
+      <button class="btn btn-ghost" onclick="herstelMetSleutel()">Herstel via sleutel</button>
     </div>
-
   </div>
 </div>
 
@@ -440,93 +177,15 @@
     'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
   )
 
-  // ========================
-  // TAB WISSELEN
-  // ========================
   window.switchTab = function(tab) {
     document.querySelectorAll('.tab').forEach((t, i) => {
-      const names = ['inloggen', 'registreren', 'uitgenodigd', 'herstellen']
+      const names = ['inloggen', 'registreren', 'herstellen']
       t.classList.toggle('active', names[i] === tab)
     })
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'))
     document.getElementById('panel-' + tab).classList.add('active')
   }
 
-  // ========================
-  // INVITE TOKEN CHECK
-  // ========================
-  let inviteGeldig = false
-
-  // Automatisch invite code invullen vanuit URL
-  const urlParams = new URLSearchParams(window.location.search)
-  const inviteParam = urlParams.get('invite')
-  if (inviteParam) {
-    const inviteVeld = document.getElementById('invite-token')
-    if (inviteVeld) {
-      inviteVeld.value = inviteParam
-      // Automatisch valideren
-      setTimeout(() => controleerInvite(inviteParam), 500)
-    }
-  }
-  let checkTimeout = null
-
-  window.checkInviteToken = function(token) {
-    clearTimeout(checkTimeout)
-    const status = document.getElementById('invite-status')
-    const regForm = document.getElementById('reg-form')
-
-    if (token.length < 10) {
-      status.className = 'invite-status'
-      status.innerHTML = '<div class="dot"></div><span>Voer je invite code in om te beginnen</span>'
-      regForm.style.display = 'none'
-      inviteGeldig = false
-      return
-    }
-
-    status.innerHTML = '<div class="dot"></div><span>Controleren...</span>'
-
-    checkTimeout = setTimeout(async () => {
-      const { data, error } = await supabase
-        .from('invite_tokens')
-        .select('id, expires_at, is_used')
-        .eq('token', token.trim())
-        .single()
-
-      if (error || !data) {
-        status.className = 'invite-status invalid'
-        status.innerHTML = '<div class="dot"></div><span>Ongeldige invite code</span>'
-        regForm.style.display = 'none'
-        inviteGeldig = false
-        return
-      }
-
-      if (data.is_used) {
-        status.className = 'invite-status invalid'
-        status.innerHTML = '<div class="dot"></div><span>Deze invite is al gebruikt</span>'
-        regForm.style.display = 'none'
-        inviteGeldig = false
-        return
-      }
-
-      if (new Date(data.expires_at) < new Date()) {
-        status.className = 'invite-status invalid'
-        status.innerHTML = '<div class="dot"></div><span>Deze invite is verlopen</span>'
-        regForm.style.display = 'none'
-        inviteGeldig = false
-        return
-      }
-
-      status.className = 'invite-status valid'
-      status.innerHTML = '<div class="dot"></div><span>Invite geldig ✓ — Maak je account aan</span>'
-      regForm.style.display = 'block'
-      inviteGeldig = true
-
-    }, 500)
-  }
-
-  // ========================
-  // INLOGGEN
-  // ========================
   window.inloggen = async function() {
     const email = document.getElementById('login-email').value.trim()
     const wachtwoord = document.getElementById('login-wachtwoord').value
@@ -540,7 +199,8 @@
 
     btn.disabled = true
     btn.innerHTML = '<span class="spinner"></span>Inloggen...'
-await supabase.auth.signOut()
+
+    await supabase.auth.signOut()
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: wachtwoord })
 
     if (error) {
@@ -551,17 +211,10 @@ await supabase.auth.signOut()
     }
 
     toonBericht(msg, 'success', 'Ingelogd! Even laden...')
-    await supabase.auth.signOut()
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password: wachtwoord })
+    setTimeout(() => { window.location.href = 'index.html' }, 800)
   }
 
-  // ========================
-  // REGISTREREN
-  // ========================
   window.registreren = async function() {
-    if (!inviteGeldig) return
-
-    const token = document.getElementById('invite-token').value.trim()
     const username = document.getElementById('reg-username').value.trim()
     const email = document.getElementById('reg-email').value.trim()
     const wachtwoord = document.getElementById('reg-wachtwoord').value
@@ -586,7 +239,6 @@ await supabase.auth.signOut()
     btn.disabled = true
     btn.innerHTML = '<span class="spinner"></span>Account aanmaken...'
 
-    // Account aanmaken bij Supabase
     const { data, error } = await supabase.auth.signUp({
       email,
       password: wachtwoord,
@@ -602,33 +254,10 @@ await supabase.auth.signOut()
       return
     }
 
-    // Invite token markeren als gebruikt + vriendschap aanmaken
-    const { data: tokenData } = await supabase
-      .from('invite_tokens')
-      .select('created_by')
-      .eq('token', token)
-      .single()
-
-    await supabase
-      .from('invite_tokens')
-      .update({ is_used: true, used_at: new Date().toISOString(), used_by: data.user.id })
-      .eq('token', token)
-
-    // Vriendschap aanmaken als de invite door iemand anders is aangemaakt
-    if (tokenData?.created_by && tokenData.created_by !== data.user.id) {
-      await supabase.from('friendships').insert([
-        { user_id: data.user.id, friend_id: tokenData.created_by, status: 'accepted' },
-        { user_id: tokenData.created_by, friend_id: data.user.id, status: 'accepted' }
-      ])
-    }
-
-    toonBericht(msg, 'success', '🎉 Account aangemaakt! Controleer je e-mail om te bevestigen.')
+    toonBericht(msg, 'success', '🎉 Account aangemaakt! Log nu in.')
     btn.textContent = 'Account aangemaakt ✓'
   }
 
-  // ========================
-  // HERSTELMAIL STUREN
-  // ========================
   window.stuurHerstelmail = async function() {
     const email = document.getElementById('herstel-email').value.trim()
     const msg = document.getElementById('herstel-msg')
@@ -648,9 +277,6 @@ await supabase.auth.signOut()
     toonBericht(msg, 'success', 'Herstelmail verstuurd! Controleer je inbox.')
   }
 
-  // ========================
-  // HERSTEL VIA SLEUTEL
-  // ========================
   window.herstelMetSleutel = function() {
     const sleutel = document.getElementById('herstelsleutel-input').value.trim()
     const msg = document.getElementById('herstel-msg')
@@ -660,58 +286,37 @@ await supabase.auth.signOut()
       return
     }
 
-    // TODO: herstelsleutel logica implementeren
     toonBericht(msg, 'error', 'Herstel via sleutel komt binnenkort.')
   }
 
-  // ========================
-  // HULPFUNCTIE: BERICHT TONEN
-  // ========================
   function toonBericht(el, type, tekst) {
     el.className = 'message ' + type
     el.textContent = tekst
   }
 
-  // ========================
-  // CHECK: AL INGELOGD?
-  // ========================
   supabase.auth.getSession().then(({ data: { session } }) => {
-  // Alleen doorsturen als er geen ?logout=true in de URL staat
-  const params = new URLSearchParams(window.location.search)
-  if (session && !params.get('logout')) {
-    window.location.href = 'index.html'
-  }
-})(({ data: { session } }) => {
-    if (session) {
+    const params = new URLSearchParams(window.location.search)
+    if (session && !params.get('logout')) {
       window.location.href = 'index.html'
     }
   })
 
-  // Wallpaper laden
-  
-
-
   async function laadWallpaper() {
     try {
-      const db = await new Promise((res,rej) => {
-        const r = indexedDB.open('FibroDB',1)
+      const db = await new Promise((res, rej) => {
+        const r = indexedDB.open('FibroDB', 1)
         r.onsuccess = e => res(e.target.result)
         r.onerror = () => rej()
       })
-      const store = db.transaction('fotos').objectStore('fotos')
       const keys = await new Promise(res => {
-        const r = store.getAllKeys()
+        const r = db.transaction('fotos').objectStore('fotos').getAllKeys()
         r.onsuccess = e => res(e.target.result)
         r.onerror = () => res([])
       })
       const wallpaperKey = keys.find(k => k.startsWith('bg_wallpaper_'))
-      const db2 = await new Promise((res,rej) => {
-        const r = indexedDB.open('FibroDB',1)
-        r.onsuccess = e => res(e.target.result)
-        r.onerror = () => rej()
-      })
+      if (!wallpaperKey) return
       const data = await new Promise(res => {
-        const r = db2.transaction('fotos').objectStore('fotos').get(wallpaperKey)
+        const r = db.transaction('fotos').objectStore('fotos').get(wallpaperKey)
         r.onsuccess = e => res(e.target.result?.data || null)
         r.onerror = () => res(null)
       })
@@ -725,7 +330,6 @@ await supabase.auth.signOut()
     } catch(e) {}
   }
   laadWallpaper()
-
 </script>
 
 </body>

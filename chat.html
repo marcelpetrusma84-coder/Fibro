@@ -50,7 +50,7 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .input-area { padding:10px 14px; border-top:0.5px solid var(--border); display:flex; gap:8px; align-items:center; background:rgba(0,0,0,0.2); position:fixed; bottom:60px; width:100%; max-width:480px; z-index:9; }
 .emoji-grid { position:fixed; bottom:104px; width:100%; max-width:480px; z-index:9; background:rgba(0,0,0,0.85); }
 #stickerGrid { position:fixed; bottom:104px; width:100%; max-width:480px; z-index:9; background:rgba(0,0,0,0.85); }
-.msg-input { flex:1; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:16px !important; outline:none; }
+.msg-input { flex:1; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-family:inherit; font-size:16px !important; outline:none; }
 .msg-input::placeholder { color:var(--muted); }
 .msg-input:focus { border-color:var(--accent); }
 .emoji-toggle { width:36px; height:36px; border-radius:50%; background:var(--card); border:0.5px solid var(--border); cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -62,7 +62,7 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .modal-title { font-family:'Playfair Display',serif; font-size:16px; margin-bottom:6px; }
 .modal-sub { font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; }
 .modal-btns { display:flex; gap:8px; }
-.modal-btn { flex:1; padding:9px; border-radius:10px; font-size:12px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; border:none; min-height:44px; }
+.modal-btn { flex:1; padding:9px; border-radius:10px; font-size:12px; font-weight:500; font-family:inherit; cursor:pointer; border:none; min-height:44px; }
 .modal-btn.cancel { background:var(--card); color:var(--muted); border:0.5px solid var(--border); }
 .modal-btn.confirm { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; }
 .bottom-nav { display:flex; justify-content:space-around; padding:12px 0; border-top:0.5px solid var(--border); background:rgba(0,0,0,0.3); position:fixed; bottom:0; width:100%; max-width:480px; z-index:10; padding-bottom:env(safe-area-inset-bottom,12px); }

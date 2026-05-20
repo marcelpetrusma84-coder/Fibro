@@ -169,12 +169,9 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 <script type="module">
   import { laadThema } from './thema.js'
   import { laadWallpaper } from './wallpaper.js'
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+  import { supabase } from './supabase.js'
 
-  const supabase = createClient(
-    'https://qmgatbphiplrfxrljtbe.supabase.co',
-    'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
-  )
+
 
   var huidigeUser = null
   var huidigProfiel = null

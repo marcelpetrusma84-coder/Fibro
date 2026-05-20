@@ -59,7 +59,13 @@ export async function laadThema() {
   if (!data) return
   if (data.accent_kleur) document.documentElement.style.setProperty('--accent', data.accent_kleur)
   if (data.accent_kleur2) document.documentElement.style.setProperty('--accent2', data.accent_kleur2)
-  if (data.lettertype) document.body.style.fontFamily = data.lettertype
+  if (data.lettertype) {
+  document.body.style.fontFamily = data.lettertype
+  document.documentElement.style.fontFamily = data.lettertype
+  const style = document.createElement('style')
+  style.textContent = `* { font-family: ${data.lettertype} !important; }`
+  document.head.appendChild(style)
+}
   await laadWallpaper(session.user.id)
   const wallpaper = await laadFotoUitDB('bg_wallpaper_' + session.user.id)
   if (!wallpaper && data.achtergrond_kleur) {

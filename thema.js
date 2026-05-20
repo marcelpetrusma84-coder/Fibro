@@ -26,9 +26,7 @@ async function laadFotoUitDB(id) {
   } catch {
     return null
   }
-}
-
-async function laadWallpaper(userId) {
+}async function laadWallpaper(userId) {
   const wallpaper = await laadFotoUitDB('bg_wallpaper_' + userId)
   if (wallpaper) {
     document.body.style.backgroundImage = 'url(' + wallpaper + ')'

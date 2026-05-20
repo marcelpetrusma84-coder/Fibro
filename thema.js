@@ -34,4 +34,37 @@ async function laadWallpaper(userId) {
     document.body.style.backgroundImage = 'url(' + wallpaper + ')'
     document.body.style.backgroundSize = 'cover'
     document.body.style.backgroundPosition = 'center'
-    document.body.style.backgroundAttachment =
+    document.body.style.backgroundAttachment = 'fixed'
+    document.body.style.backgroundRepeat = 'no-repeat'
+    document.documentElement.style.setProperty('--bg', 'transparent')
+    document.documentElement.style.setProperty('--card', 'rgba(0,0,0,0.70)')
+    document.documentElement.style.setProperty('--border', 'rgba(255,255,255,0.15)')
+    const topBar = document.querySelector('.top-bar')
+    if (topBar) topBar.style.background = 'rgba(0,0,0,0.75)'
+    const bottomNav = document.querySelector('.bottom-nav')
+    if (bottomNav) bottomNav.style.background = 'rgba(0,0,0,0.75)'
+  } else {
+    document.body.style.backgroundImage = ''
+    document.documentElement.style.setProperty('--card', 'rgba(255,255,255,0.06)')
+    document.documentElement.style.setProperty('--border', 'rgba(255,255,255,0.12)')
+  }
+}
+
+export async function laadThema() {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) return
+  const { data } = await supabase
+    .from('profiles')
+    .select('achtergrond_kleur,accent_kleur,accent_kleur2,lettertype,animatie')
+    .eq('id', session.user.id)
+    .single()
+  if (!data) return
+  if (data.accent_kleur) document.documentElement.style.setProperty('--accent', data.accent_kleur)
+  if (data.accent_kleur2) document.documentElement.style.setProperty('--accent2', data.accent_kleur2)
+  if (data.lettertype) document.body.style.fontFamily = data.lettertype
+  await laadWallpaper(session.user.id)
+  const wallpaper = await laadFotoUitDB('bg_wallpaper_' + session.user.id)
+  if (!wallpaper && data.achtergrond_kleur) {
+    document.documentElement.style.setProperty('--bg', data.achtergrond_kleur)
+  }
+}

@@ -22,7 +22,9 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .search-bar { padding:10px 14px; border-bottom:0.5px solid var(--border); }
 .search-input { width:100%; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-size:12px; outline:none; }
 .section-label { font-size:15px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; padding:12px 16px 6px; }
-.friend-row { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:0.5px solid var(--border); cursor:pointer; }
+.friend-row { display:flex; align-items:center; gap:12px; padding:14px 16px; margin:8px 14px; border:0.5px solid var(--border); border-radius:16px; cursor:pointer; background:var(--card); backdrop-filter:blur(12px); transition:border-color 0.2s; }
+.friend-row:hover { border-color:var(--accent); }
+.friend-mood { font-size:12px; color:var(--accent2); margin-top:3px; font-style:italic; } display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:0.5px solid var(--border); cursor:pointer; }
 .f-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; border:1.5px solid var(--border); position:relative; }
 .f-avatar.purple { border-color:rgba(192,132,252,0.4); background:rgba(192,132,252,0.1); }
 .f-avatar.blue { border-color:rgba(56,189,248,0.4); background:rgba(56,189,248,0.1); }
@@ -330,7 +332,20 @@ import { laadWallpaper } from './wallpaper.js'
       const avatar = p.avatar_url || '👤'
       const naam = p.display_name || p.username
       const bio = p.bio || ''
+      const mood = p.mood || ''
       return `
+        <div class="friend-row" onclick="window.location.href='https://marcelpetrusma84-coder.github.io/Fibro/chat.html'">
+          <div class="f-avatar purple">${avatar}</div>
+          <div class="f-info">
+            <div class="f-name">${naam}</div>
+            <div class="f-bio">${bio}</div>
+            ${mood ? `<div class="friend-mood">💭 ${mood}</div>` : ''}
+          </div>
+          <div class="f-btn" onclick="event.stopPropagation();window.location.href='https://marcelpetrusma84-coder.github.io/Fibro/chat.html'">💬</div>
+          <div class="f-arrow">&#8250;</div>
+        </div>
+      `
+      return 
         <div class="friend-row" onclick="window.location.href='https://marcelpetrusma84-coder.github.io/Fibro/chat.html'">
           <div class="f-avatar purple">${avatar}</div>
           <div class="f-info">

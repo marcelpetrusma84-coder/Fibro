@@ -154,7 +154,7 @@ input, textarea { font-size:16px !important; }
       const bio = p.bio || ''
       const mood = p.mood || ''
       return `
-        <div class="friend-row" onclick="window.location.href='chat.html'">
+        <div class="friend-row" onclick="window.location.href='vriend-profiel.html?id=' + '${p.id}'">
           <div class="f-avatar">${avatar}</div>
           <div class="f-info">
             <div class="f-name">${naam}</div>

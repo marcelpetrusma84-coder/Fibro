@@ -99,7 +99,7 @@ body.heeft-wallpaper::before { display:block; }
   var huidigeUser = null
 
   async function init() {
-    await laadThema()
+   
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) { window.location.href = 'login.html'; return }
     huidigeUser = session.user

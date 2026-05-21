@@ -49,4 +49,149 @@ body::before { content:''; position:fixed; inset:0; background:rgba(0,0,0,0.38);
 body.heeft-wallpaper::before { display:block; }
 </style>
 </head>
-<body>
+<body><div class="top-bar">
+  <button class="back-btn" onclick="history.back()">← terug</button>
+  <span class="top-title" id="paginaTitel">Profiel</span>
+</div>
+
+<div class="profile-hero">
+  <div class="avatar-ring">
+    <div class="avatar-inner" id="avatarEmoji">⏳</div>
+  </div>
+  <div style="flex:1">
+    <div class="p-name" id="profielNaam">Laden...</div>
+    <div class="p-username" id="profielUsername">@...</div>
+    <div class="p-bio" id="profielBio"></div>
+  </div>
+</div>
+
+<div class="blocks">
+  <button class="chat-btn" onclick="naarChat()">💬 Stuur een bericht</button>
+
+  <div class="block">
+    <div class="block-title">Mood</div>
+    <div class="mood-row">
+      <div class="mood-emoji">💭</div>
+      <div class="mood-text" id="moodTekst">Laden...</div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-title">Gastenboek</div>
+    <div id="gbEntries"><div class="laden">Laden...</div></div>
+    <div class="gb-input">
+      <input class="gb-field" id="gbInput" placeholder="Laat een berichtje achter...">
+      <button class="gb-send" onclick="sendGb()">Stuur</button>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <div class="nav-item" onclick="window.location.href='index.html'"><div class="nav-icon">🏠</div>Home</div>
+  <div class="nav-item active" onclick="window.location.href='vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
+  <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
+  <div class="nav-item" onclick="window.location.href='profiel.html'"><div class="nav-icon">👤</div>Profiel</div>
+</div><script type="module">
+  import { laadThema } from './thema.js'
+  import { supabase } from './supabase.js'
+
+  var vriendId = null
+  var huidigeUser = null
+
+  async function init() {
+    await laadThema()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { window.location.href = 'login.html'; return }
+    huidigeUser = session.user
+
+    const params = new URLSearchParams(window.location.search)
+    vriendId = params.get('id')
+    if (!vriendId) { window.location.href = 'vrienden.html'; return }
+
+    await laadProfiel()
+    await laadGastenboek()
+  }
+
+  async function laadProfiel() {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', vriendId)
+      .single()
+
+    if (error || !data) return
+
+    document.getElementById('profielNaam').textContent = data.display_name || data.username || 'Naamloos'
+    document.getElementById('profielUsername').textContent = '@' + (data.username || '')
+    document.getElementById('profielBio').textContent = data.bio || ''
+    document.getElementById('avatarEmoji').textContent = data.avatar_url || '👤'
+    document.getElementById('moodTekst').textContent = data.mood || 'Geen mood ingesteld'
+    document.getElementById('paginaTitel').textContent = data.display_name || data.username || 'Profiel'
+
+    if (data.accent_kleur) document.documentElement.style.setProperty('--accent', data.accent_kleur)
+    if (data.accent_kleur2) document.documentElement.style.setProperty('--accent2', data.accent_kleur2)
+  }
+
+  async function laadGastenboek() {
+    const { data, error } = await supabase
+      .from('guestbook_entries')
+      .select('*, author:author_id(username, avatar_url)')
+      .eq('profile_id', vriendId)
+      .order('created_at', { ascending: false })
+      .limit(10)
+
+    const container = document.getElementById('gbEntries')
+
+    if (error || !data || data.length === 0) {
+      container.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0;">Nog geen berichten.</div>'
+      return
+    }
+
+    container.innerHTML = data.map(entry => {
+      const avatar = entry.author?.avatar_url || '👤'
+      const tijd = tijdGeleden(entry.created_at)
+      return `
+        <div class="gb-entry">
+          <div class="gb-av">${avatar}</div>
+          <div>
+            <div class="gb-name">${entry.author?.username || 'Onbekend'}</div>
+            <div class="gb-msg">${entry.content}</div>
+            <div class="gb-time">${tijd}</div>
+          </div>
+        </div>
+      `
+    }).join('')
+  }
+
+  window.sendGb = async function() {
+    const input = document.getElementById('gbInput')
+    const tekst = input.value.trim()
+    if (!tekst) return
+    const { error } = await supabase.from('guestbook_entries').insert({
+      profile_id: vriendId,
+      author_id: huidigeUser.id,
+      content: tekst
+    })
+    if (!error) {
+      input.value = ''
+      await laadGastenboek()
+    }
+  }
+
+  window.naarChat = function() {
+    window.location.href = 'chat.html'
+  }
+
+  function tijdGeleden(datum) {
+    const diff = Math.floor((new Date() - new Date(datum)) / 1000)
+    if (diff < 60) return 'Zojuist'
+    if (diff < 3600) return Math.floor(diff/60) + ' minuten geleden'
+    if (diff < 86400) return Math.floor(diff/3600) + ' uur geleden'
+    return Math.floor(diff/86400) + ' dagen geleden'
+  }
+
+  init()
+</script>
+
+</body>
+</html>

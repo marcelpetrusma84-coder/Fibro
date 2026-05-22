@@ -1,9 +1,12 @@
 import { supabase } from './supabase.js'
 
+// ========================
+// INDEXEDDB
+// ========================
 function openDB() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open('FibroDB', 1)
-    req.onupgradeneeded = e => { 
+    req.onupgradeneeded = e => {
       const db = e.target.result
       if (!db.objectStoreNames.contains('fotos')) {
         db.createObjectStore('fotos', { keyPath: 'id' })
@@ -26,7 +29,12 @@ async function laadFotoUitDB(id) {
   } catch {
     return null
   }
-}async function laadWallpaper(userId) {
+}
+
+// ========================
+// WALLPAPER
+// ========================
+async function laadWallpaper(userId) {
   const wallpaper = await laadFotoUitDB('bg_wallpaper_' + userId)
   if (wallpaper) {
     document.body.style.backgroundImage = 'url(' + wallpaper + ')'
@@ -48,6 +56,26 @@ async function laadFotoUitDB(id) {
   }
 }
 
+// ========================
+// LETTERTYPE TOEPASSEN
+// ========================
+function pasLettertypeToe(lettertype) {
+  if (!lettertype) return
+  // Sla op voor snelle herlaad
+  try { localStorage.setItem('fibro_font', lettertype) } catch(e) {}
+  // Verwijder oude lettertype stijl als die er al is
+  const oud = document.getElementById('fibro-font-style')
+  if (oud) oud.remove()
+  // Voeg nieuwe stijl toe
+  const style = document.createElement('style')
+  style.id = 'fibro-font-style'
+  style.textContent = `* { font-family: ${lettertype} !important; }`
+  document.head.appendChild(style)
+}
+
+// ========================
+// THEMA LADEN
+// ========================
 export async function laadThema() {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return
@@ -59,14 +87,7 @@ export async function laadThema() {
   if (!data) return
   if (data.accent_kleur) document.documentElement.style.setProperty('--accent', data.accent_kleur)
   if (data.accent_kleur2) document.documentElement.style.setProperty('--accent2', data.accent_kleur2)
-  if (data.lettertype) {
-  document.body.style.fontFamily = data.lettertype
-  document.documentElement.style.fontFamily = data.lettertype
-    localStorage.setItem('fibro_font', data.lettertype)
-  const style = document.createElement('style')
-  style.textContent = `* { font-family: ${data.lettertype} !important; }`
-  document.head.appendChild(style)
-}
+  if (data.lettertype) pasLettertypeToe(data.lettertype)
   await laadWallpaper(session.user.id)
   const wallpaper = await laadFotoUitDB('bg_wallpaper_' + session.user.id)
   if (!wallpaper && data.achtergrond_kleur) {

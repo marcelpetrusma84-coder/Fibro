@@ -129,7 +129,8 @@ body.heeft-wallpaper::before { display:block; }
     document.getElementById('paginaTitel').textContent = data.display_name || data.username || 'Profiel'
 
     if (data.accent_kleur) document.documentElement.style.setProperty('--accent', data.accent_kleur)
- if (data.accent_kleur2) document.documentElement.style.setProperty('--accent2', data.accent_kleur2)     if (data.achtergrond_kleur) document.documentElement.style.setProperty('--bg', data.achtergrond_kleur)   }
+ if (data.accent_kleur2) document.documentElement.style.setProperty('--accent2', data.accent_kleur2)     
+   if (data.achtergrond_kleur) document.documentElement.style.setProperty('--bg', data.achtergrond_kleur)   }
   }
 
   async function laadGastenboek() {

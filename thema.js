@@ -3,7 +3,7 @@ import { supabase } from './supabase.js'
 function openDB() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open('FibroDB', 1)
-    req.onupgradeneeded = e => {
+    req.onupgradeneeded = e => { 
       const db = e.target.result
       if (!db.objectStoreNames.contains('fotos')) {
         db.createObjectStore('fotos', { keyPath: 'id' })
@@ -62,6 +62,7 @@ export async function laadThema() {
   if (data.lettertype) {
   document.body.style.fontFamily = data.lettertype
   document.documentElement.style.fontFamily = data.lettertype
+    localStorage.setItem('fibro_font', data.lettertype)
   const style = document.createElement('style')
   style.textContent = `* { font-family: ${data.lettertype} !important; }`
   document.head.appendChild(style)

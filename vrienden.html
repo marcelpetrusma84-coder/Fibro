@@ -10,13 +10,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Fibro">
 <meta name="theme-color" content="#c084fc">
+  <meta name="theme-color" content="#c084fc">
 <script>
   try {
     const f = localStorage.getItem('fibro_font')
     if (f) document.write('<style>*{font-family:' + f + ' !important}</style>')
   } catch(e) {}
 </script>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=Lobster&family=Pacifico&family=Dancing+Script:wght@400;600&family=Great+Vibes&family=Raleway:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:wght@300;400;700&family=Bebas+Neue&family=Oswald:wght@300;400;500&family=Space+Mono:wght@400;700&family=Courier+Prime:wght@400;700&family=Quicksand:wght@300;400;500&family=Nunito:wght@300;400;500&family=Righteous&family=Comfortaa:wght@300;400;500&family=Cinzel:wght@400;600&family=Satisfy&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400;500&family=Raleway:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:wght@300;400;700&family=Bebas+Neue&family=Oswald:wght@300;400;500&family=Pacifico&family=Dancing+Script:wght@400;600&family=Great+Vibes&family=Space+Mono:wght@400;700&family=Courier+Prime:wght@400;700&family=Quicksand:wght@300;400;500&family=Nunito:wght@300;400;500&family=Righteous&family=Comfortaa:wght@300;400;500&family=Cinzel:wght@400;600&family=Satisfy&family=Lobster&display=swap" rel="stylesheet">:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
@@ -68,7 +69,9 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 body::before { content:''; position:fixed; inset:0; background:rgba(0,0,0,0.38); z-index:0; pointer-events:none; display:none; }
 body.heeft-wallpaper::before { display:block; }
 input, textarea { font-size:16px !important; }
-  <div class="top-bar">
+</style>
+</head>
+<body><div class="top-bar">
   <span class="top-title">Vrienden</span>
   <button class="invite-btn" onclick="openInviteModal()">+ Uitnodigen</button>
 </div>
@@ -84,7 +87,7 @@ input, textarea { font-size:16px !important; }
 <div class="fibro-logo">Fibro - jouw netwerk</div>
 
 <div class="modal-overlay" id="inviteModal" onclick="sluitModalBuiten(event)">
-  <div class="modal">
+  <div class="modal"> 
     <h2>Vriend uitnodigen</h2>
     <p>Genereer een QR code. Je vriend heeft 20 minuten om zich te registreren.</p>
     <div class="modal-status" id="modal-status"></div>
@@ -113,13 +116,9 @@ input, textarea { font-size:16px !important; }
 <div class="bottom-nav">
   <div class="nav-item" onclick="window.location.href='index.html'"><div class="nav-icon">🏠</div>Home</div>
   <div class="nav-item active"><div class="nav-icon">👥</div>Vrienden</div>
-  <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
+  <div class="nav-item" onclick="window.location.href='vriend-profiel.html?id=${p.id}'"><div class="nav-icon">💬</div>Chat</div>
   <div class="nav-item" onclick="window.location.href='profiel.html'"><div class="nav-icon">👤</div>Profiel</div>
-</div>
-</style>
-</head>
-<body>
-  <script type="module">
+</div><script type="module">
   import { laadThema } from './thema.js'
   import { laadWallpaper } from './wallpaper.js'
   import { supabase } from './supabase.js'
@@ -262,7 +261,7 @@ input, textarea { font-size:16px !important; }
     navigator.clipboard.writeText(document.getElementById('token-display').textContent)
   }
 
-  window.nieuweInvite = async function() {
+  window.nieuweInvite = async function() { 
     await genereerInvite()
   }
 

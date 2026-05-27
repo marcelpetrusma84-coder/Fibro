@@ -57,7 +57,14 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .emoji-toggle-row { display:flex; gap:8px; padding:6px 14px 0; }
 .input-area { padding:6px 14px 10px; display:flex; gap:8px; align-items:center; }
 .emoji-grid { width:100%; background:rgba(0,0,0,0.85); border-top:0.5px solid var(--border); display:none; }
-#stickerGrid { width:100%; background:rgba(0,0,0,0.85); border-top:0.5px solid var(--border); }
+#stickerGrid { width:100%; background:rgba(0,0,0,0.85); border-top:0.5px solid var(--border); max-height:220px; overflow-y:auto; }
+.sticker-tab-row { display:flex; gap:0; border-bottom:0.5px solid var(--border); }
+.sticker-tab { flex:1; padding:7px 4px; font-size:11px; text-align:center; cursor:pointer; color:var(--muted); border:none; background:transparent; border-bottom:2px solid transparent; transition:all 0.2s; }
+.sticker-tab.actief { color:var(--accent); border-bottom-color:var(--accent); }
+.sticker-sectie { display:none; flex-wrap:wrap; gap:6px; padding:10px 12px; }
+.sticker-sectie.actief { display:flex; }
+.sticker-knop { font-size:28px; cursor:pointer; padding:4px 6px; border-radius:10px; transition:transform 0.1s; background:transparent; border:none; }
+.sticker-knop:active { transform:scale(0.85); }
 .msg-input { flex:1; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-family:inherit; font-size:16px !important; outline:none; }
 .msg-input::placeholder { color:var(--muted); }
 .msg-input:focus { border-color:var(--accent); }
@@ -136,27 +143,72 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   </div>
   <div class="input-wrap">
     <div class="emoji-grid" id="emojiGrid"></div>
-    <div id="stickerGrid" style="display:none; flex-wrap:wrap; gap:8px; padding:10px 14px;">
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌸')">🌸</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌿')">🌿</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🦋')">🦋</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌙')">🌙</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('⭐')">⭐</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎨')">🎨</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌊')">🌊</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🍂')">🍂</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎵')">🎵</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌺')">🌺</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🦊')">🦊</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🐱')">🐱</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌈')">🌈</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎮')">🎮</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('📚')">📚</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌻')">🌻</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🍀')">🍀</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🚀')">🚀</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('📷')">📷</span>
-      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎸')">🎸</span>
+    <div id="stickerGrid" style="display:none;">
+      <div class="sticker-tab-row">
+        <button class="sticker-tab actief" onclick="toonStickerTab('blij')">😊 Blij</button>
+        <button class="sticker-tab" onclick="toonStickerTab('verdriet')">😢 Verdriet</button>
+        <button class="sticker-tab" onclick="toonStickerTab('liefde')">❤️ Liefde</button>
+        <button class="sticker-tab" onclick="toonStickerTab('grappig')">😂 Grappig</button>
+        <button class="sticker-tab" onclick="toonStickerTab('eigen')">⭐ Eigen</button>
+      </div>
+      <div class="sticker-sectie actief" id="sticker-blij">
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('😊','blij')">😊</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('😁','blij')">😁</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🥳','feest')">🥳</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('😄','blij')">😄</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🤩','wow')">🤩</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('😎','cool')">😎</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🙌','yes')">🙌</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('✨','sparkle')">✨</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🎉','feest')">🎉</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🌈','blij')">🌈</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('☀️','blij')">☀️</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🌸','zacht')">🌸</button>
+      </div>
+      <div class="sticker-sectie" id="sticker-verdriet">
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('😢','verdriet')">😢</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('😭','verdriet')">😭</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('😔','stil')">😔</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('😞','stil')">😞</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🥺','zacht')">🥺</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('😟','stil')">😟</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('💔','verdriet')">💔</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🌧️','regen')">🌧️</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('😪','stil')">😪</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🫂','zacht')">🫂</button>
+      </div>
+      <div class="sticker-sectie" id="sticker-liefde">
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('❤️','hart')">❤️</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🥰','hart')">🥰</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('😍','hart')">😍</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('💕','hart')">💕</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('💖','hart')">💖</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('💗','hart')">💗</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('💝','hart')">💝</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🌹','zacht')">🌹</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('💌','hart')">💌</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🫶','hart')">🫶</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('😘','kus')">😘</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('💋','kus')">💋</button>
+      </div>
+      <div class="sticker-sectie" id="sticker-grappig">
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('😂','lach')">😂</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🤣','lach')">🤣</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('😜','grappig')">😜</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🤪','grappig')">🤪</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('😝','grappig')">😝</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🤡','grappig')">🤡</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('💨','pruttel')">💨</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🙈','pop')">🙈</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🫠','boing')">🫠</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🤓','pop')">🤓</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('👻','grappig')">👻</button>
+        <button class="sticker-knop" onclick="sendStickerMetGeluid('🫣','pop')">🫣</button>
+      </div>
+      <div class="sticker-sectie" id="sticker-eigen">
+        <div id="eigenStickerWrap" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+        <button style="font-size:24px;padding:6px;background:rgba(192,132,252,0.1);border:1.5px dashed var(--accent);border-radius:10px;cursor:pointer;" onclick="openStickerUpload()">➕</button>
+      </div>
     </div>
     <div class="emoji-toggle-row">
       <button class="emoji-toggle" onclick="toggleEmojiPicker()">😊</button>
@@ -361,7 +413,10 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       } catch(e) {}
     }
     if (bericht.content.startsWith('sticker:')) {
-      const stickerEmoji = bericht.content.replace('sticker:', '')
+      const delen = bericht.content.split(':')
+      const stickerEmoji = delen[1] || bericht.content.replace('sticker:','')
+      const emotieId = delen[2] || null
+      if (!isMijn && emotieId) speelEmotieGeluid(emotieId)
       row.innerHTML = `
         <div class="msg-av-sm">${avatar}</div>
         <div style="font-size:52px;line-height:1;padding:4px;filter:drop-shadow(0 2px 8px rgba(192,132,252,0.3));">
@@ -569,6 +624,88 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   init()
 
   // ─── Geluidsbibliotheek ───
+  // Emotie → geluid mapping
+  const EMOTIE_GELUID = {
+    blij:    (ctx,t) => { speelToonCtx(ctx,t,[[523,0.12,0.15,'sine'],[659,0.1,0.2,'sine']]) },
+    feest:   (ctx,t) => { speelToonCtx(ctx,t,[[784,0.15,0.08,'sine'],[1047,0.12,0.12,'sine'],[1319,0.1,0.18,'sine']]) },
+    wow:     (ctx,t) => { speelSweepCtx(ctx,t,300,900,0.3,'sine') },
+    cool:    (ctx,t) => { speelSweepCtx(ctx,t,600,300,0.2,'sine') },
+    yes:     (ctx,t) => { speelToonCtx(ctx,t,[[440,0.1,0.1,'sine'],[554,0.1,0.1,'sine'],[659,0.15,0.2,'sine']]) },
+    sparkle: (ctx,t) => { speelToonCtx(ctx,t,[[1200,0.06,0.15,'sine'],[1600,0.05,0.2,'sine'],[2000,0.04,0.25,'sine']]) },
+    zacht:   (ctx,t) => { speelToonCtx(ctx,t,[[440,0.08,0.4,'sine']]) },
+    verdriet:(ctx,t) => { speelSweepCtx(ctx,t,400,200,0.5,'sine') },
+    stil:    (ctx,t) => { speelToonCtx(ctx,t,[[330,0.06,0.6,'sine']]) },
+    regen:   (ctx,t) => { speelNoiseCtx(ctx,t,0.4,false) },
+    hart:    (ctx,t) => { speelToonCtx(ctx,t,[[440,0.12,0.15,'sine'],[554,0.1,0.2,'sine']]) },
+    kus:     (ctx,t) => { speelToonCtx(ctx,t,[[600,0.15,0.05,'sine'],[400,0.1,0.12,'sine']]) },
+    lach:    (ctx,t) => { [0,0.12,0.24,0.36,0.48].forEach(o => speelToonCtx(ctx,t+o,[[400,0.1,0.08,'sine']])) },
+    grappig: (ctx,t) => { speelSweepCtx(ctx,t,150,600,0.2,'sawtooth') },
+    pruttel: (ctx,t) => { speelNoiseCtx(ctx,t,0.25,true) },
+    pop:     (ctx,t) => { speelToonCtx(ctx,t,[[800,0.2,0.08,'sine']]) },
+    boing:   (ctx,t) => { speelSweepCtx(ctx,t,150,600,0.3,'sine') },
+  }
+
+  function maakAudioCtx() {
+    return new (window.AudioContext||window.webkitAudioContext)()
+  }
+  function speelToonCtx(ctx,t,noten) {
+    noten.forEach(([freq,vol,dur,type]) => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain()
+      osc.connect(gain); gain.connect(ctx.destination)
+      osc.type = type; osc.frequency.value = freq
+      gain.gain.setValueAtTime(vol, t)
+      gain.gain.exponentialRampToValueAtTime(0.001, t+dur)
+      osc.start(t); osc.stop(t+dur)
+    })
+  }
+  function speelSweepCtx(ctx,t,van,naar,dur,type) {
+    const osc = ctx.createOscillator(), gain = ctx.createGain()
+    osc.connect(gain); gain.connect(ctx.destination)
+    osc.type = type
+    osc.frequency.setValueAtTime(van,t)
+    osc.frequency.exponentialRampToValueAtTime(naar,t+dur)
+    gain.gain.setValueAtTime(0.2,t)
+    gain.gain.exponentialRampToValueAtTime(0.001,t+dur)
+    osc.start(t); osc.stop(t+dur)
+  }
+  function speelNoiseCtx(ctx,t,dur,laag) {
+    const buf = ctx.createBuffer(1,ctx.sampleRate*dur,ctx.sampleRate)
+    const data = buf.getChannelData(0)
+    for(let i=0;i<data.length;i++) data[i]=Math.random()*2-1
+    const src = ctx.createBufferSource(), filter = ctx.createBiquadFilter(), gain = ctx.createGain()
+    src.buffer = buf; filter.type = laag?'lowpass':'highpass'; filter.frequency.value = laag?200:1000
+    src.connect(filter); filter.connect(gain); gain.connect(ctx.destination)
+    gain.gain.setValueAtTime(0.3,t); gain.gain.exponentialRampToValueAtTime(0.001,t+dur)
+    src.start(t); src.stop(t+dur)
+  }
+
+  function speelEmotieGeluid(emotieId) {
+    try {
+      const ctx = maakAudioCtx()
+      const fn = EMOTIE_GELUID[emotieId]
+      if (fn) fn(ctx, ctx.currentTime)
+    } catch(e) {}
+  }
+
+  window.sendStickerMetGeluid = async function(emoji, emotieId) {
+    if (!geselecteerdeVriend) return
+    speelEmotieGeluid(emotieId)
+    document.getElementById('stickerGrid').style.display = 'none'
+    await supabase.from('messages').insert({
+      sender_id: huidigeUser.id,
+      receiver_id: geselecteerdeVriend.id,
+      content: 'sticker:' + emoji + ':' + emotieId,
+      expires_at: new Date(Date.now() + 24*60*60*1000).toISOString()
+    })
+  }
+
+  window.toonStickerTab = function(tabId) {
+    document.querySelectorAll('.sticker-tab').forEach(t => t.classList.remove('actief'))
+    document.querySelectorAll('.sticker-sectie').forEach(s => s.classList.remove('actief'))
+    document.querySelector(`.sticker-tab[onclick*="${tabId}"]`).classList.add('actief')
+    document.getElementById('sticker-' + tabId).classList.add('actief')
+  }
+
   const GELUIDEN = [
     { id:'pop',     naam:'Pop',        icon:'🫧', speel: () => speelToon([[800,0.1,0.08,'sine']]) },
     { id:'klingel', naam:'Klingel',    icon:'🔔', speel: () => speelToon([[1200,0.06,0.3,'sine'],[1600,0.04,0.25,'sine']]) },
@@ -723,6 +860,8 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     const grid = document.getElementById('stickerGrid')
     // Verwijder bestaande custom stickers
     grid.querySelectorAll('.custom-sticker-wrap').forEach(el => el.remove())
+    const eigenWrap = document.getElementById('eigenStickerWrap')
+    if (eigenWrap) eigenWrap.innerHTML = ''
     stickers.forEach((s, i) => {
       const wrap = document.createElement('span')
       wrap.className = 'custom-sticker-wrap'
@@ -731,7 +870,8 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       img.className = 'custom-sticker'
       img.onclick = () => sendCustomSticker(s)
       wrap.appendChild(img)
-      grid.appendChild(wrap)
+      if (eigenWrap) eigenWrap.appendChild(wrap)
+      else grid.appendChild(wrap)
     })
   }
 

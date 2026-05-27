@@ -94,6 +94,17 @@ body.heeft-wallpaper { background-size:cover; background-position:center; backgr
 .block,.edit-vak,.bottom-nav,.top-bar,.bubble,.vriend-item,.modal { backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
 .p-name,.p-bio,.block-title,.nav-item,.chat-name,.vriend-naam,.chat-status { text-shadow:0 1px 4px rgba(0,0,0,0.9); }
 button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44px; }
+
+.sticker-upload-btn { width:44px; height:44px; border-radius:50%; background:var(--card); border:0.5px solid var(--accent); cursor:pointer; font-size:20px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.geluidsbib-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:4px 0; }
+.geluid-item { background:var(--card); border:1.5px solid var(--border); border-radius:12px; padding:10px 6px; cursor:pointer; text-align:center; transition:border-color 0.2s; }
+.geluid-item.actief { border-color:var(--accent); background:rgba(192,132,252,0.12); }
+.geluid-item .geluid-icon { font-size:22px; margin-bottom:4px; }
+.geluid-item .geluid-naam { font-size:11px; color:var(--muted); }
+.sticker-preview-groot { font-size:64px; text-align:center; padding:10px; }
+.sticker-preview-img { width:80px; height:80px; object-fit:cover; border-radius:12px; display:block; margin:0 auto 8px; }
+.custom-sticker { width:44px; height:44px; object-fit:cover; border-radius:10px; cursor:pointer; border:1.5px solid var(--border); }
+.custom-sticker:hover { border-color:var(--accent); }
 </style>
 </head>
 <body>
@@ -334,6 +345,21 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     const row = document.createElement('div')
     row.className = `msg-row ${isMijn ? 'out' : ''}`
 
+    if (bericht.content.startsWith('customsticker:')) {
+      try {
+        const data = JSON.parse(bericht.content.replace('customsticker:', ''))
+        if (!isMijn && data.geluid) speelGeluidById(data.geluid)
+        row.innerHTML = `
+          <div class="msg-av-sm">${avatar}</div>
+          <div style="padding:4px;">
+            <img src="${data.image}" style="width:80px;height:80px;object-fit:cover;border-radius:12px;display:block;">
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;text-align:right;">${tijd}</div>
+          </div>
+        `
+        container.appendChild(row)
+        return
+      } catch(e) {}
+    }
     if (bericht.content.startsWith('sticker:')) {
       const stickerEmoji = bericht.content.replace('sticker:', '')
       row.innerHTML = `
@@ -541,6 +567,175 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   }
 
   init()
+
+  // ─── Geluidsbibliotheek ───
+  const GELUIDEN = [
+    { id:'pop',     naam:'Pop',        icon:'🫧', speel: () => speelToon([[800,0.1,0.08,'sine']]) },
+    { id:'klingel', naam:'Klingel',    icon:'🔔', speel: () => speelToon([[1200,0.06,0.3,'sine'],[1600,0.04,0.25,'sine']]) },
+    { id:'boing',   naam:'Boing',      icon:'🎈', speel: () => speelSweep(200,600,0.3,'sine') },
+    { id:'plop',    naam:'Plop',       icon:'💧', speel: () => speelToon([[300,0.3,0.12,'sine']]) },
+    { id:'sparkle', naam:'Sparkle',    icon:'✨', speel: () => speelToon([[1000,0.05,0.15,'sine'],[1500,0.04,0.2,'sine'],[2000,0.03,0.25,'sine']]) },
+    { id:'drum',    naam:'Drum',       icon:'🥁', speel: () => speelNoise(0.15) },
+    { id:'sweep',   naam:'Swoosh',     icon:'💨', speel: () => speelSweep(600,100,0.25,'sawtooth') },
+    { id:'chime',   naam:'Chime',      icon:'🎵', speel: () => speelToon([[523,0.1,0.4,'sine'],[659,0.08,0.5,'sine'],[784,0.06,0.6,'sine']]) },
+    { id:'wow',     naam:'Wow',        icon:'😮', speel: () => speelSweep(200,800,0.4,'square') },
+    { id:'heart',   naam:'Hartje',     icon:'❤️', speel: () => speelToon([[440,0.1,0.2,'sine'],[554,0.08,0.3,'sine']]) },
+    { id:'fart',    naam:'Pruttel',    icon:'💨', speel: () => speelNoise(0.3,true) },
+    { id:'ding',    naam:'Ding',       icon:'🔔', speel: () => speelToon([[880,0.15,0.5,'sine']]) },
+  ]
+
+  function speelToon(noten) {
+    try {
+      const ctx = new (window.AudioContext||window.webkitAudioContext)()
+      noten.forEach(([freq,vol,dur,type]) => {
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.connect(gain); gain.connect(ctx.destination)
+        osc.type = type; osc.frequency.value = freq
+        gain.gain.setValueAtTime(vol, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur)
+        osc.start(); osc.stop(ctx.currentTime + dur)
+      })
+    } catch(e) {}
+  }
+
+  function speelSweep(van, naar, dur, type) {
+    try {
+      const ctx = new (window.AudioContext||window.webkitAudioContext)()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain); gain.connect(ctx.destination)
+      osc.type = type
+      osc.frequency.setValueAtTime(van, ctx.currentTime)
+      osc.frequency.exponentialRampToValueAtTime(naar, ctx.currentTime + dur)
+      gain.gain.setValueAtTime(0.2, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur)
+      osc.start(); osc.stop(ctx.currentTime + dur)
+    } catch(e) {}
+  }
+
+  function speelNoise(dur, laag=false) {
+    try {
+      const ctx = new (window.AudioContext||window.webkitAudioContext)()
+      const bufSize = ctx.sampleRate * dur
+      const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate)
+      const data = buf.getChannelData(0)
+      for (let i=0; i<bufSize; i++) data[i] = (Math.random()*2-1)
+      const src = ctx.createBufferSource()
+      src.buffer = buf
+      const filter = ctx.createBiquadFilter()
+      filter.type = laag ? 'lowpass' : 'highpass'
+      filter.frequency.value = laag ? 200 : 1000
+      const gain = ctx.createGain()
+      src.connect(filter); filter.connect(gain); gain.connect(ctx.destination)
+      gain.gain.setValueAtTime(0.4, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur)
+      src.start(); src.stop(ctx.currentTime + dur)
+    } catch(e) {}
+  }
+
+  function speelGeluidById(id) {
+    const g = GELUIDEN.find(g => g.id === id)
+    if (g) g.speel()
+  }
+
+  // ─── Sticker upload ───
+  let geselecteerdGeluid = null
+  let stickerImageData = null
+
+  window.openStickerUpload = function() {
+    geselecteerdGeluid = null
+    stickerImageData = null
+    document.getElementById('stickerPreviewWrap').style.display = 'none'
+    document.getElementById('stickerFileInput').value = ''
+    bouwGeluidsBib()
+    document.getElementById('stickerUploadModal').classList.add('show')
+  }
+
+  window.sluitStickerUpload = function() {
+    document.getElementById('stickerUploadModal').classList.remove('show')
+  }
+
+  window.previewStickerUpload = function(input) {
+    const file = input.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      stickerImageData = e.target.result
+      const img = document.getElementById('stickerPreviewImg')
+      img.src = stickerImageData
+      document.getElementById('stickerPreviewWrap').style.display = 'block'
+    }
+    reader.readAsDataURL(file)
+  }
+
+  function bouwGeluidsBib() {
+    const grid = document.getElementById('geluidsBibGrid')
+    grid.innerHTML = ''
+    GELUIDEN.forEach(g => {
+      const div = document.createElement('div')
+      div.className = 'geluid-item'
+      div.id = 'geluid-' + g.id
+      div.innerHTML = `<div class="geluid-icon">${g.icon}</div><div class="geluid-naam">${g.naam}</div>`
+      div.onclick = () => {
+        document.querySelectorAll('.geluid-item').forEach(i => i.classList.remove('actief'))
+        div.classList.add('actief')
+        geselecteerdGeluid = g.id
+        g.speel()
+      }
+      grid.appendChild(div)
+    })
+  }
+
+  window.slaCustomStickerOp = async function() {
+    if (!stickerImageData) {
+      alert('Kies eerst een afbeelding!')
+      return
+    }
+    // Sla op in Supabase als sticker record voor deze user
+    const stickerData = {
+      image: stickerImageData,
+      geluid: geselecteerdGeluid || null
+    }
+    const bestaand = JSON.parse(localStorage.getItem('fibro_custom_stickers') || '[]')
+    bestaand.push(stickerData)
+    localStorage.setItem('fibro_custom_stickers', JSON.stringify(bestaand))
+    sluitStickerUpload()
+    laadCustomStickers()
+  }
+
+  function laadCustomStickers() {
+    const stickers = JSON.parse(localStorage.getItem('fibro_custom_stickers') || '[]')
+    const grid = document.getElementById('stickerGrid')
+    // Verwijder bestaande custom stickers
+    grid.querySelectorAll('.custom-sticker-wrap').forEach(el => el.remove())
+    stickers.forEach((s, i) => {
+      const wrap = document.createElement('span')
+      wrap.className = 'custom-sticker-wrap'
+      const img = document.createElement('img')
+      img.src = s.image
+      img.className = 'custom-sticker'
+      img.onclick = () => sendCustomSticker(s)
+      wrap.appendChild(img)
+      grid.appendChild(wrap)
+    })
+  }
+
+  window.sendCustomSticker = async function(sticker) {
+    if (!geselecteerdeVriend) return
+    if (sticker.geluid) speelGeluidById(sticker.geluid)
+    document.getElementById('stickerGrid').style.display = 'none'
+    await supabase.from('messages').insert({
+      sender_id: huidigeUser.id,
+      receiver_id: geselecteerdeVriend.id,
+      content: 'customsticker:' + JSON.stringify({ image: sticker.image, geluid: sticker.geluid }),
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    })
+  }
+
+  // Laad custom stickers bij init
+  setTimeout(() => laadCustomStickers(), 500)
+
 </script>
 
 <div class="buzz-overlay" id="buzzOverlay"><div class="buzz-overlay-inner">📳</div></div>

@@ -118,8 +118,8 @@
     <div class="panel active" id="panel-inloggen">
       <div class="message" id="login-msg"></div>
       <div class="field">
-        <label>E-mailadres</label>
-        <input type="email" id="login-email" placeholder="jouw@email.nl" autocomplete="email" />
+        <label>Gebruikersnaam</label>
+        <input type="text" id="login-username" placeholder="jouwuniekename" autocomplete="username" />
       </div>
       <div class="field">
         <label>Wachtwoord</label>
@@ -137,16 +137,23 @@
           <input type="text" id="reg-username" placeholder="jouwuniekename" autocomplete="username" />
         </div>
         <div class="field">
-          <label>E-mailadres</label>
-          <input type="email" id="reg-email" placeholder="jouw@email.nl" autocomplete="email" />
-        </div>
-        <div class="field">
           <label>Wachtwoord</label>
           <input type="password" id="reg-wachtwoord" placeholder="Minimaal 8 tekens" autocomplete="new-password" />
         </div>
+        <div class="field">
+          <label>Geboortejaar</label>
+          <input type="number" id="reg-jaar" placeholder="bijv. 2005" min="1900" max="2025" />
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Alleen het jaar — voor leeftijdsinstellingen</div>
+        </div>
+        <div class="field" style="display:flex;align-items:flex-start;gap:10px;margin-top:4px;">
+          <input type="checkbox" id="reg-akkoord" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;" />
+          <label for="reg-akkoord" style="text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;cursor:pointer;">
+            Ik ga akkoord met de <span style="color:var(--accent)">spelregels van Fibro</span>. Ik begrijp dat dit een privé app is voor vrienden.
+          </label>
+        </div>
         <button class="btn btn-primary" onclick="registreren()" id="reg-btn">Account aanmaken</button>
         <div class="herstelsleutel-info">
-          💡 Na registratie ontvang je een herstelsleutel. Bewaar deze goed — zonder deze sleutel kun je je account niet herstellen als je je wachtwoord vergeet.
+          💡 Na registratie krijg je een herstelsleutel. Bewaar deze goed — dit is de enige manier om je account te herstellen.
         </div>
       </div>
     </div>
@@ -155,16 +162,17 @@
     <div class="panel" id="panel-herstellen">
       <div class="message" id="herstel-msg"></div>
       <div class="field">
-        <label>E-mailadres</label>
-        <input type="email" id="herstel-email" placeholder="jouw@email.nl" />
+        <label>Gebruikersnaam</label>
+        <input type="text" id="herstel-username" placeholder="jouwuniekename" />
       </div>
-      <button class="btn btn-primary" onclick="stuurHerstelmail()">Stuur herstelmail</button>
-      <div class="divider">of</div>
       <div class="field">
-        <label>Herstelsleutel (24 woorden)</label>
-        <input type="text" id="herstelsleutel-input" placeholder="woord1 woord2 woord3 ..." />
+        <label>Herstelsleutel</label>
+        <input type="text" id="herstelsleutel-input" placeholder="FIBRO-XXXX-XXXX-XXXX" />
       </div>
-      <button class="btn btn-ghost" onclick="herstelMetSleutel()">Herstel via sleutel</button>
+      <button class="btn btn-primary" onclick="herstelMetSleutel()">Account herstellen</button>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:12px;text-align:center;">
+        Je herstelsleutel heb je gekregen bij registratie
+      </div>
     </div>
   </div>
 </div>
@@ -214,70 +222,103 @@
     setTimeout(() => { window.location.href = 'index.html' }, 800)
   }
 
+  function maakHerstelSleutel() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    const deel = (n) => Array.from({length:n}, () => chars[Math.floor(Math.random()*chars.length)]).join('')
+    return 'FIBRO-' + deel(4) + '-' + deel(4) + '-' + deel(4)
+  }
+
+  function bepaalNiveau(jaar) {
+    const leeftijd = new Date().getFullYear() - parseInt(jaar)
+    if (leeftijd < 13) return 'kids'
+    if (leeftijd < 18) return 'teens'
+    return 'adults'
+  }
+
   window.registreren = async function() {
     const username = document.getElementById('reg-username').value.trim()
-    const email = document.getElementById('reg-email').value.trim()
     const wachtwoord = document.getElementById('reg-wachtwoord').value
+    const jaar = document.getElementById('reg-jaar').value.trim()
+    const akkoord = document.getElementById('reg-akkoord').checked
     const btn = document.getElementById('reg-btn')
     const msg = document.getElementById('reg-msg')
 
-    if (!username || !email || !wachtwoord) {
+    if (!username || !wachtwoord || !jaar) {
       toonBericht(msg, 'error', 'Vul alle velden in.')
       return
     }
-
+    if (!akkoord) {
+      toonBericht(msg, 'error', 'Je moet akkoord gaan met de spelregels.')
+      return
+    }
     if (wachtwoord.length < 8) {
       toonBericht(msg, 'error', 'Wachtwoord moet minimaal 8 tekens zijn.')
       return
     }
-
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
       toonBericht(msg, 'error', 'Gebruikersnaam mag alleen letters, cijfers en _ bevatten.')
+      return
+    }
+    const jaarNum = parseInt(jaar)
+    if (jaarNum < 1900 || jaarNum > new Date().getFullYear()) {
+      toonBericht(msg, 'error', 'Vul een geldig geboortejaar in.')
       return
     }
 
     btn.disabled = true
     btn.innerHTML = '<span class="spinner"></span>Account aanmaken...'
 
+    // Gebruik username@fibro.app als nep-email voor Supabase auth
+    const nep_email = username.toLowerCase() + '@fibro.internal'
+    const herstelsleutel = maakHerstelSleutel()
+    const niveau = bepaalNiveau(jaar)
+
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: nep_email,
       password: wachtwoord,
       options: {
-        data: { username, display_name: username }
+        data: { username, display_name: username, geboortejaar: jaarNum, niveau, herstelsleutel }
       }
     })
 
     if (error) {
-      toonBericht(msg, 'error', error.message)
+      toonBericht(msg, 'error', error.message.includes('already') ? 'Gebruikersnaam al in gebruik.' : error.message)
       btn.disabled = false
       btn.textContent = 'Account aanmaken'
       return
     }
 
-    toonBericht(msg, 'success', '🎉 Account aangemaakt! Log nu in.')
-    btn.textContent = 'Account aangemaakt ✓'
-  }
-
-  window.stuurHerstelmail = async function() {
-    const email = document.getElementById('herstel-email').value.trim()
-    const msg = document.getElementById('herstel-msg')
-
-    if (!email) {
-      toonBericht(msg, 'error', 'Vul je e-mailadres in.')
-      return
+    // Sla herstelsleutel en niveau op in profiel tabel
+    if (data.user) {
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        username,
+        display_name: username,
+        geboortejaar: jaarNum,
+        niveau,
+        herstelsleutel
+      })
     }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email)
-
-    if (error) {
-      toonBericht(msg, 'error', 'Er ging iets mis. Probeer opnieuw.')
-      return
-    }
-
-    toonBericht(msg, 'success', 'Herstelmail verstuurd! Controleer je inbox.')
+    // Toon herstelsleutel prominent
+    document.getElementById('reg-form').innerHTML = `
+      <div style="text-align:center;padding:8px 0;">
+        <div style="font-size:32px;margin-bottom:12px;">🎉</div>
+        <div style="font-size:16px;color:var(--text);margin-bottom:8px;">Account aangemaakt!</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Bewaar je herstelsleutel op een veilige plek</div>
+        <div style="background:var(--bg);border:1.5px solid var(--accent);border-radius:10px;padding:16px;font-size:18px;letter-spacing:2px;color:var(--accent);font-family:'DM Mono',monospace;margin-bottom:12px;">
+          ${herstelsleutel}
+        </div>
+        <div style="font-size:11px;color:var(--danger);margin-bottom:20px;">⚠️ Dit zie je maar één keer! Schrijf het op of maak een screenshot.</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">
+          Jouw niveau: <span style="color:var(--accent)">${niveau === 'kids' ? '👶 Kids' : niveau === 'teens' ? '🧒 Teens' : '🧑 Adults'}</span>
+        </div>
+        <button class="btn btn-primary" onclick="switchTab('inloggen')">Ga naar inloggen</button>
+      </div>
+    `
   }
 
-  window.herstelMetSleutel = function() {
+  window.herstelMetSleutel = async function() {
     const sleutel = document.getElementById('herstelsleutel-input').value.trim()
     const msg = document.getElementById('herstel-msg')
 

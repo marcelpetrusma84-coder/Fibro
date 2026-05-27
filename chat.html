@@ -124,7 +124,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   <div class="messages" id="messages">
     <div class="sys-msg" id="chatSysBericht">End-to-end versleuteld gesprek</div>
   </div>
-  <div class="input-wrap">
+  <div class="input-wrap" id="inputWrap">
     <div class="emoji-grid" id="emojiGrid"></div>
     <div id="stickerGrid" style="display:none; flex-wrap:wrap; gap:8px; padding:10px 14px;">
       <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌸')">🌸</span>
@@ -498,8 +498,10 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       })
       grid.style.display = 'flex'
       document.getElementById('stickerGrid').style.display = 'none'
+      pasPaddingAan(); scrollNaarOnder()
     } else {
       grid.style.display = 'none'
+      pasPaddingAan(); scrollNaarOnder()
     }
   }
 
@@ -560,10 +562,24 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     scrollNaarOnder()
   }
 
-  function scrollNaarOnder() {
+  function pasPaddingAan() {
+    const wrap = document.getElementById('inputWrap')
+    const nav = document.querySelector('.bottom-nav')
+    if (!wrap || !nav) return
+    const wrapH = wrap.offsetHeight
+    const navH = nav.offsetHeight
     const msgs = document.getElementById('messages')
-    msgs.scrollTop = msgs.scrollHeight
+    msgs.style.paddingBottom = (wrapH + navH + 16) + 'px'
   }
+
+  function scrollNaarOnder() {
+    pasPaddingAan()
+    const msgs = document.getElementById('messages')
+    setTimeout(() => { msgs.scrollTop = msgs.scrollHeight }, 50)
+  }
+
+  // Herbereken padding als scherm van grootte verandert (keyboard open/dicht)
+  window.addEventListener('resize', () => { pasPaddingAan(); scrollNaarOnder() })
 
   init()
 </script>

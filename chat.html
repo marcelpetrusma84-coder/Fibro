@@ -53,9 +53,11 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .emoji-grid { display:flex; flex-wrap:wrap; gap:6px; padding:10px 14px; background:rgba(0,0,0,0.3); border-top:0.5px solid var(--border); }
 .e-opt { font-size:22px; cursor:pointer; padding:4px; border-radius:8px; transition:background 0.2s; }
 .e-opt:hover { background:rgba(192,132,252,0.2); }
-.input-area { padding:10px 14px; border-top:0.5px solid var(--border); display:flex; gap:8px; align-items:center; background:rgba(0,0,0,0.2); position:fixed; bottom:60px; width:100%; max-width:480px; z-index:9; }
-.emoji-grid { position:fixed; bottom:104px; width:100%; max-width:480px; z-index:9; background:rgba(0,0,0,0.85); }
-#stickerGrid { position:fixed; bottom:104px; width:100%; max-width:480px; z-index:9; background:rgba(0,0,0,0.85); }
+.input-wrap { position:fixed; bottom:calc(60px + env(safe-area-inset-bottom,0px)); width:100%; max-width:480px; z-index:9; background:rgba(0,0,0,0.2); border-top:0.5px solid var(--border); backdrop-filter:blur(12px); }
+.emoji-toggle-row { display:flex; gap:8px; padding:6px 14px 0; }
+.input-area { padding:6px 14px 10px; display:flex; gap:8px; align-items:center; }
+.emoji-grid { width:100%; background:rgba(0,0,0,0.85); border-top:0.5px solid var(--border); display:none; }
+#stickerGrid { width:100%; background:rgba(0,0,0,0.85); border-top:0.5px solid var(--border); }
 .msg-input { flex:1; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-family:inherit; font-size:16px !important; outline:none; }
 .msg-input::placeholder { color:var(--muted); }
 .msg-input:focus { border-color:var(--accent); }
@@ -111,34 +113,38 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   <div class="messages" id="messages">
     <div class="sys-msg" id="chatSysBericht">End-to-end versleuteld gesprek</div>
   </div>
-  <div id="stickerGrid" style="display:flex; flex-wrap:wrap; gap:8px; padding:10px 14px;">
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌸')">🌸</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌿')">🌿</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🦋')">🦋</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌙')">🌙</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('⭐')">⭐</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎨')">🎨</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌊')">🌊</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🍂')">🍂</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎵')">🎵</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌺')">🌺</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🦊')">🦊</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🐱')">🐱</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌈')">🌈</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎮')">🎮</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('📚')">📚</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌻')">🌻</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🍀')">🍀</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🚀')">🚀</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('📷')">📷</span>
-    <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎸')">🎸</span>
-  </div>
-  <div class="emoji-grid" id="emojiGrid" style="display:none"></div>
-  <div class="input-area">
-    <button class="emoji-toggle" onclick="toggleEmojiPicker()">😊</button>
-    <input class="msg-input" id="msgInput" placeholder="Stuur een bericht..." onkeydown="if(event.key==='Enter')sendMsg()">
-    <button class="emoji-toggle" onclick="toggleStickers()">🎨</button>
-    <button class="send-btn" onclick="sendMsg()">➤</button>
+  <div class="input-wrap">
+    <div class="emoji-grid" id="emojiGrid"></div>
+    <div id="stickerGrid" style="display:none; flex-wrap:wrap; gap:8px; padding:10px 14px;">
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌸')">🌸</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌿')">🌿</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🦋')">🦋</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌙')">🌙</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('⭐')">⭐</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎨')">🎨</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌊')">🌊</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🍂')">🍂</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎵')">🎵</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌺')">🌺</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🦊')">🦊</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🐱')">🐱</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌈')">🌈</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎮')">🎮</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('📚')">📚</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🌻')">🌻</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🍀')">🍀</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🚀')">🚀</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('📷')">📷</span>
+      <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="sendSticker('🎸')">🎸</span>
+    </div>
+    <div class="emoji-toggle-row">
+      <button class="emoji-toggle" onclick="toggleEmojiPicker()">😊</button>
+      <button class="emoji-toggle" onclick="toggleStickers()">🎨</button>
+    </div>
+    <div class="input-area">
+      <input class="msg-input" id="msgInput" placeholder="Stuur een bericht..." onkeydown="if(event.key==='Enter')sendMsg()">
+      <button class="send-btn" onclick="sendMsg()">➤</button>
+    </div>
   </div>
 </div>
 

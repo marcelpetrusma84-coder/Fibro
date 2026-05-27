@@ -59,10 +59,12 @@ input[type="color"]{width:40px;height:40px;border:none;background:none;cursor:po
 .anim-preview{width:100%;height:120px;border-radius:12px;background:#0a0015;border:0.5px solid var(--border);margin-bottom:10px;overflow:hidden;}
 #previewCanvas{width:100%;height:100%;}
 .font-grid{display:flex;flex-direction:column;gap:6px;}
-.font-item{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
-.font-item.selected{border-color:var(--accent);background:rgba(192,132,252,0.08);}
-.font-preview{font-size:16px;color:var(--text);}
-.font-name{font-size:15px;color:var(--muted);}
+.font-item{background:var(--card);border:0.5px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;transition:border-color 0.2s,background 0.2s;}
+.font-item.selected{border-color:var(--accent);background:rgba(192,132,252,0.1);box-shadow:0 0 0 1px var(--accent);}
+.font-preview{font-size:26px;color:var(--text);line-height:1.2;margin-bottom:4px;}
+.font-zin{font-size:13px;color:var(--accent2);margin-bottom:6px;line-height:1.4;}
+.font-name{font-size:11px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;}
+.font-grid{display:flex;flex-direction:column;gap:10px;}
 .swatches{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
 .swatch{width:32px;height:32px;border-radius:50%;cursor:pointer;border:2px solid transparent;}
 .swatch.selected{border-color:white;transform:scale(1.1);}
@@ -438,7 +440,7 @@ window.selectAnimatie=function(naam){huidigeAnimatie=naam;updateAnimatieUI();sta
 function updateAnimatieUI(){document.querySelectorAll('.anim-cell').forEach(c=>c.classList.remove('selected'));const el=document.getElementById('anim-'+huidigeAnimatie);if(el)el.classList.add('selected')}
 function startAnimatiePreview(){stopAnimatiePreview();const canvas=document.getElementById('previewCanvas');if(!canvas)return;const ctx=canvas.getContext('2d');canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;if(huidigeAnimatie==='geen'){ctx.clearRect(0,0,canvas.width,canvas.height);return};deeltjes=[];for(let i=0;i<60;i++)deeltjes.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*0.5,vy:Math.random()*0.8+0.2,grootte:Math.random()*3+1,alpha:Math.random(),kleur:huidigeAnimatie==='confetti'?`hsl(${Math.random()*360},80%,60%)`:'white'});function teken(){ctx.clearRect(0,0,canvas.width,canvas.height);deeltjes.forEach(d=>{ctx.globalAlpha=d.alpha;ctx.fillStyle=d.kleur;if(huidigeAnimatie==='sterren'||huidigeAnimatie==='vuurvliegjes'){ctx.beginPath();ctx.arc(d.x,d.y,d.grootte,0,Math.PI*2);ctx.fill();d.alpha=0.3+Math.sin(Date.now()*0.003+d.x)*0.7}else if(huidigeAnimatie==='sneeuw'||huidigeAnimatie==='bubbels'){ctx.beginPath();ctx.arc(d.x,d.y,d.grootte+1,0,Math.PI*2);ctx.fill();d.y+=d.vy*0.5;d.x+=Math.sin(Date.now()*0.001+d.y)*0.3}else if(huidigeAnimatie==='regen'){ctx.fillRect(d.x,d.y,1,d.grootte*4);d.y+=d.vy*3;d.x+=0.5}else{ctx.fillRect(d.x,d.y,d.grootte*2,d.grootte);d.y+=d.vy;d.x+=Math.sin(Date.now()*0.002+d.y)*0.8};if(d.y>canvas.height)d.y=-10;if(d.x>canvas.width)d.x=0;if(d.x<0)d.x=canvas.width});ctx.globalAlpha=1;animFrame=requestAnimationFrame(teken)};teken()}
 function stopAnimatiePreview(){if(animFrame){cancelAnimationFrame(animFrame);animFrame=null}}
-function bouwFontGrid(){const grid=document.getElementById('fontGrid');grid.innerHTML='';fonts.forEach(f=>{const div=document.createElement('div');div.className='font-item';div.innerHTML=`<div><div class="font-preview" style="font-family:${f.familie};">${f.naam}</div><div class="font-name">${f.stijl}</div></div><div style="font-size:15px;color:var(--muted);">Aa</div>`;div.onclick=()=>{document.querySelectorAll('.font-item').forEach(i=>i.classList.remove('selected'));div.classList.add('selected');document.body.style.fontFamily=f.familie;huidigLettertype=f.familie};grid.appendChild(div)})}
+function bouwFontGrid(){const grid=document.getElementById('fontGrid');grid.innerHTML='';fonts.forEach(f=>{const div=document.createElement('div');div.className='font-item'+(huidigLettertype===f.familie?' selected':'');div.innerHTML=`<div class="font-preview" style="font-family:${f.familie};">${f.naam}</div><div class="font-zin" style="font-family:${f.familie};">Het leven is mooi & bijzonder</div><div class="font-name">${f.stijl}</div>`;div.onclick=()=>{document.querySelectorAll('.font-item').forEach(i=>i.classList.remove('selected'));div.classList.add('selected');document.body.style.fontFamily=f.familie;huidigLettertype=f.familie};grid.appendChild(div)})}
 window.updateAccent=function(k){document.getElementById('accentPicker').value=k;document.getElementById('accentHex').value=k;document.documentElement.style.setProperty('--accent',k)}
 window.updateAccentHex=function(v){if(/^#[0-9a-f]{6}$/i.test(v))updateAccent(v)}
 window.updateAccent2=function(k){document.getElementById('accent2Picker').value=k;document.getElementById('accent2Hex').value=k;document.documentElement.style.setProperty('--accent2',k)}

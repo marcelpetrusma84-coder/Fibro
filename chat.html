@@ -59,7 +59,7 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .emoji-grid { width:100%; background:rgba(0,0,0,0.85); border-top:0.5px solid var(--border); display:none; }
 #stickerGrid { width:100%; background:rgba(0,0,0,0.85); border-top:0.5px solid var(--border); max-height:220px; overflow-y:auto; }
 .sticker-tab-row { display:flex; gap:0; border-bottom:0.5px solid var(--border); }
-.sticker-tab { flex:1; padding:7px 4px; font-size:11px; text-align:center; cursor:pointer; color:var(--muted); border:none; background:transparent; border-bottom:2px solid transparent; transition:all 0.2s; }
+.sticker-tab { flex-shrink:0; padding:6px 8px; font-size:13px; text-align:center; cursor:pointer; color:var(--muted); border:none; background:transparent; border-bottom:2px solid transparent; transition:all 0.2s; }
 .sticker-tab.actief { color:var(--accent); border-bottom-color:var(--accent); }
 .sticker-sectie { display:none; flex-wrap:wrap; gap:6px; padding:10px 12px; }
 .sticker-sectie.actief { display:flex; }
@@ -147,7 +147,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   <div class="input-wrap">
     <div class="emoji-grid" id="emojiGrid"></div>
     <div id="stickerGrid" style="display:none;">
-      <div class="sticker-tab-row" style="overflow-x:auto;display:flex;gap:0;-webkit-overflow-scrolling:touch;">
+      <div class="sticker-tab-row" style="overflow-x:auto;display:flex;gap:0;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
         <button class="sticker-tab actief" onclick="toonStickerTab('emoji')" style="flex-shrink:0;">🙂</button>
         <button class="sticker-tab" onclick="toonStickerTab('hart')" style="flex-shrink:0;">❤️</button>
         <button class="sticker-tab" onclick="toonStickerTab('hond')" style="flex-shrink:0;">🐶</button>

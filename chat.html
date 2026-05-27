@@ -63,6 +63,16 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .msg-input:focus { border-color:var(--accent); }
 .emoji-toggle { width:36px; height:36px; border-radius:50%; background:var(--card); border:0.5px solid var(--border); cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .send-btn { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.buzz-btn { width:36px; height:36px; border-radius:50%; background:var(--card); border:0.5px solid rgba(192,132,252,0.5); cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:transform 0.1s; }
+.buzz-btn:active { transform:scale(0.85); }
+.buzz-btn.sending { animation:buzzSpin 0.4s ease; }
+@keyframes buzzSpin { 0%{transform:rotate(0deg) scale(1)} 25%{transform:rotate(-15deg) scale(1.2)} 75%{transform:rotate(15deg) scale(1.2)} 100%{transform:rotate(0deg) scale(1)} }
+@keyframes schudScherm { 0%,100%{transform:translateX(0)} 10%{transform:translateX(-8px)} 20%{transform:translateX(8px)} 30%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 50%{transform:translateX(-6px)} 60%{transform:translateX(6px)} 70%{transform:translateX(-4px)} 80%{transform:translateX(4px)} 90%{transform:translateX(-2px)} }
+.buzz-ontvangen { animation:schudScherm 0.6s ease; }
+.buzz-overlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:99; pointer-events:none; opacity:0; transition:opacity 0.3s; }
+.buzz-overlay.show { opacity:1; }
+.buzz-overlay-inner { font-size:80px; animation:buzzPop 0.6s ease; }
+@keyframes buzzPop { 0%{transform:scale(0.5);opacity:0} 50%{transform:scale(1.3);opacity:1} 100%{transform:scale(1);opacity:0} }
 .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.75); display:none; align-items:center; justify-content:center; z-index:20; padding:20px; }
 .modal-bg.show { display:flex; }
 .modal { background:#1e0d35; border:0.5px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:300px; text-align:center; }
@@ -140,6 +150,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     <div class="emoji-toggle-row">
       <button class="emoji-toggle" onclick="toggleEmojiPicker()">😊</button>
       <button class="emoji-toggle" onclick="toggleStickers()">🎨</button>
+      <button class="buzz-btn" id="buzzBtn" onclick="sendBuzz()">📳</button>
     </div>
     <div class="input-area">
       <input class="msg-input" id="msgInput" placeholder="Stuur een bericht..." onkeydown="if(event.key==='Enter')sendMsg()">
@@ -366,6 +377,29 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     })
   }
 
+  window.sendBuzz = async function() {
+    if (!geselecteerdeVriend) return
+    const btn = document.getElementById('buzzBtn')
+    btn.classList.add('sending')
+    setTimeout(() => btn.classList.remove('sending'), 400)
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100])
+    await supabase.from('messages').insert({
+      sender_id: huidigeUser.id,
+      receiver_id: geselecteerdeVriend.id,
+      content: 'buzz:',
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    })
+  }
+
+  function ontvangBuzz() {
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200])
+    document.body.classList.add('buzz-ontvangen')
+    setTimeout(() => document.body.classList.remove('buzz-ontvangen'), 600)
+    const overlay = document.getElementById('buzzOverlay')
+    overlay.classList.add('show')
+    setTimeout(() => overlay.classList.remove('show'), 700)
+  }
+
   window.sendMsg = async function() {
     if (!geselecteerdeVriend) return
     const input = document.getElementById('msgInput')
@@ -395,9 +429,14 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
           (msg.sender_id === geselecteerdeVriend?.id && msg.receiver_id === huidigeUser.id)
         )
         if (isRelevant) {
-          speelPlop('in')
-          voegBerichtToe(msg)
-          scrollNaarOnder()
+          if (msg.content === 'buzz:' && msg.sender_id !== huidigeUser.id) {
+            ontvangBuzz()
+            voegSysBericht('📳 ' + (geselecteerdeVriend?.gebruikersnaam || 'Vriend') + ' stuurt een buzz!')
+          } else {
+            speelPlop('in')
+            voegBerichtToe(msg)
+            scrollNaarOnder()
+          }
         }
       })
       .subscribe()
@@ -503,6 +542,8 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 
   init()
 </script>
+
+<div class="buzz-overlay" id="buzzOverlay"><div class="buzz-overlay-inner">📳</div></div>
 
 </body>
 </html>

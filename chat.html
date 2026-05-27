@@ -95,6 +95,30 @@ body.heeft-wallpaper { background-size:cover; background-position:center; backgr
 .block,.edit-vak,.bottom-nav,.top-bar,.bubble,.vriend-item,.modal { backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
 .p-name,.p-bio,.block-title,.nav-item,.chat-name,.vriend-naam,.chat-status { text-shadow:0 1px 4px rgba(0,0,0,0.9); }
 button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44px; }
+
+/* Datum scheider */
+.datum-scheider { text-align:center; font-size:11px; color:var(--muted); padding:4px 12px; background:var(--card); border-radius:20px; align-self:center; border:0.5px solid var(--border); margin:4px 0; }
+/* Typing indicator */
+.typing-row { display:flex; gap:8px; align-items:flex-end; }
+.typing-bubble { background:rgba(0,0,0,0.55); border:0.5px solid var(--border); border-radius:14px; border-bottom-left-radius:4px; padding:10px 14px; display:flex; gap:5px; align-items:center; }
+.typing-dot { width:7px; height:7px; border-radius:50%; background:var(--accent); animation:typingBounce 1.2s infinite; }
+.typing-dot:nth-child(2) { animation-delay:0.2s; }
+.typing-dot:nth-child(3) { animation-delay:0.4s; }
+@keyframes typingBounce { 0%,60%,100%{transform:translateY(0);opacity:0.4} 30%{transform:translateY(-6px);opacity:1} }
+/* Leesbevestiging blauw */
+.bubble-time.gelezen { color:#60a5fa; }
+/* Lange woorden afbreken */
+.bubble { word-break:break-word; overflow-wrap:anywhere; }
+/* Keyboard fix */
+@supports(height: 100dvh) { body { min-height:100dvh; } }
+/* Bericht swipe reactie */
+.msg-row { transition:transform 0.15s ease; }
+.reaction-popup { position:absolute; background:rgba(30,13,53,0.95); border:0.5px solid var(--border); border-radius:20px; padding:4px 8px; display:flex; gap:4px; z-index:50; box-shadow:0 4px 20px rgba(0,0,0,0.5); }
+.reaction-emoji { font-size:20px; cursor:pointer; padding:2px 4px; border-radius:8px; transition:transform 0.1s; }
+.reaction-emoji:hover { transform:scale(1.3); }
+.bubble-reactions { display:flex; flex-wrap:wrap; gap:3px; margin-top:4px; }
+.reaction-badge { font-size:13px; background:rgba(192,132,252,0.15); border:0.5px solid rgba(192,132,252,0.3); border-radius:12px; padding:1px 6px; cursor:pointer; }
+
 </style>
 </head>
 <body>
@@ -154,7 +178,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       <button class="buzz-btn" id="buzzBtn" onclick="sendBuzz()" title="Buzz!">⚡</button>
     </div>
     <div class="input-area">
-      <input class="msg-input" id="msgInput" placeholder="Stuur een bericht..." onkeydown="if(event.key==='Enter')sendMsg()">
+      <input class="msg-input" id="msgInput" placeholder="Stuur een bericht..." onkeydown="if(event.key==='Enter')sendMsg()" oninput="stuurTypingSignaal()">
       <button class="send-btn" onclick="sendMsg()">➤</button>
     </div>
   </div>
@@ -313,6 +337,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       .order('created_at', { ascending: true })
       .limit(50)
 
+    laatsteDatum = null
     const container = document.getElementById('messages')
     const sysBericht = document.getElementById('chatSysBericht')
     container.innerHTML = ''
@@ -333,14 +358,45 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     })
   }
 
+  let laatsteDatum = null
+
+  function datumLabel(dateStr) {
+    const d = new Date(dateStr)
+    const nu = new Date()
+    const gisteren = new Date(nu); gisteren.setDate(nu.getDate() - 1)
+    if (d.toDateString() === nu.toDateString()) return 'Vandaag'
+    if (d.toDateString() === gisteren.toDateString()) return 'Gisteren'
+    return d.toLocaleDateString('nl-NL', { weekday:'long', day:'numeric', month:'long' })
+  }
+
   function voegBerichtToe(bericht) {
+    if (bericht.content === 'buzz:') return
     const isMijn = bericht.sender_id === huidigeUser.id
     const container = document.getElementById('messages')
     const tijd = new Date(bericht.created_at).toLocaleTimeString('nl-NL', { hour:'2-digit', minute:'2-digit' })
     const avatar = isMijn ? (huidigProfiel?.avatar_url || '👤') : geselecteerdeVriend.avatar
+    const berichtDatum = new Date(bericht.created_at).toDateString()
+
+    // Datum scheider
+    if (berichtDatum !== laatsteDatum) {
+      laatsteDatum = berichtDatum
+      const scheider = document.createElement('div')
+      scheider.className = 'datum-scheider'
+      scheider.textContent = datumLabel(bericht.created_at)
+      container.appendChild(scheider)
+    }
 
     const row = document.createElement('div')
     row.className = `msg-row ${isMijn ? 'out' : ''}`
+    row.dataset.id = bericht.id || ''
+
+    // Long press / swipe voor reactie
+    let pressTimer = null
+    row.addEventListener('touchstart', () => {
+      pressTimer = setTimeout(() => toonReactiePicker(row, bericht.id), 500)
+    }, { passive:true })
+    row.addEventListener('touchend', () => clearTimeout(pressTimer))
+    row.addEventListener('touchmove', () => clearTimeout(pressTimer))
 
     if (bericht.content.startsWith('sticker:')) {
       const stickerEmoji = bericht.content.replace('sticker:', '')
@@ -352,15 +408,55 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
         </div>
       `
     } else {
+      const gelezen = !isMijn && bericht.gelezen ? ' gelezen' : ''
       row.innerHTML = `
         <div class="msg-av-sm">${avatar}</div>
-        <div class="bubble ${isMijn ? 'out' : 'in'}">
+        <div class="bubble ${isMijn ? 'out' : 'in'}" id="bubble-${bericht.id || ''}">
           ${bericht.content}
-          <div class="bubble-time">${tijd} ${isMijn ? '✓✓' : ''}</div>
+          <div class="bubble-time${gelezen}">${tijd} ${isMijn ? '<span class="vinkjes">✓✓</span>' : ''}</div>
+          <div class="bubble-reactions" id="reactions-${bericht.id || ''}"></div>
         </div>
       `
     }
     container.appendChild(row)
+  }
+
+  const REACTIE_EMOJIS = ['❤️','😂','😮','😢','😡','👍']
+
+  function toonReactiePicker(row, berichtId) {
+    document.querySelectorAll('.reaction-popup').forEach(p => p.remove())
+    const popup = document.createElement('div')
+    popup.className = 'reaction-popup'
+    popup.style.cssText = 'position:fixed;bottom:' + (document.getElementById('inputWrap').offsetHeight + 80 + 16) + 'px;left:50%;transform:translateX(-50%);'
+    REACTIE_EMOJIS.forEach(e => {
+      const span = document.createElement('span')
+      span.className = 'reaction-emoji'
+      span.textContent = e
+      span.onclick = () => { stuurReactie(berichtId, e); popup.remove() }
+      popup.appendChild(span)
+    })
+    document.body.appendChild(popup)
+    setTimeout(() => popup.remove(), 3000)
+  }
+
+  async function stuurReactie(berichtId, emoji) {
+    if (!geselecteerdeVriend || !berichtId) return
+    await supabase.from('messages').insert({
+      sender_id: huidigeUser.id,
+      receiver_id: geselecteerdeVriend.id,
+      content: 'reactie:' + berichtId + ':' + emoji,
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    })
+    voegReactieToe(berichtId, emoji)
+  }
+
+  function voegReactieToe(berichtId, emoji) {
+    const container = document.getElementById('reactions-' + berichtId)
+    if (!container) return
+    const badge = document.createElement('span')
+    badge.className = 'reaction-badge'
+    badge.textContent = emoji
+    container.appendChild(badge)
   }
 
   window.toggleStickers = function() {
@@ -450,6 +546,46 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     requestAnimationFrame(() => scrollNaarOnder())
   }
 
+  let typingTimeout = null
+  let typingKanaal = null
+
+  function stuurTypingSignaal() {
+    if (!geselecteerdeVriend) return
+    supabase.channel('typing-' + geselecteerdeVriend.id + '-' + huidigeUser.id)
+      .send({ type:'broadcast', event:'typing', payload:{ user: huidigeUser.id } })
+  }
+
+  function startTypingKanaal() {
+    if (typingKanaal) supabase.removeChannel(typingKanaal)
+    typingKanaal = supabase
+      .channel('typing-' + huidigeUser.id + '-' + geselecteerdeVriend.id)
+      .on('broadcast', { event:'typing' }, () => {
+        toonTypingIndicator()
+      })
+      .subscribe()
+  }
+
+  function toonTypingIndicator() {
+    let indicator = document.getElementById('typingIndicator')
+    if (!indicator) {
+      indicator = document.createElement('div')
+      indicator.id = 'typingIndicator'
+      indicator.className = 'typing-row'
+      indicator.innerHTML = `
+        <div class="msg-av-sm">${geselecteerdeVriend?.avatar || '👤'}</div>
+        <div class="typing-bubble">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      `
+      document.getElementById('messages').appendChild(indicator)
+    }
+    scrollNaarOnder()
+    clearTimeout(typingTimeout)
+    typingTimeout = setTimeout(() => indicator?.remove(), 3000)
+  }
+
   function startRealtime() {
     if (realtimeKanaal) supabase.removeChannel(realtimeKanaal)
     realtimeKanaal = supabase
@@ -461,10 +597,14 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
           (msg.sender_id === geselecteerdeVriend?.id && msg.receiver_id === huidigeUser.id)
         )
         if (isRelevant) {
+          document.getElementById('typingIndicator')?.remove()
           if (msg.content === 'buzz:' && msg.sender_id !== huidigeUser.id) {
             ontvangBuzz()
-            voegSysBericht('📳 ' + (geselecteerdeVriend?.gebruikersnaam || 'Vriend') + ' stuurt een buzz!')
-          } else {
+            voegSysBericht('⚡ ' + (geselecteerdeVriend?.naam || 'Vriend') + ' stuurt een buzz!')
+          } else if (msg.content.startsWith('reactie:') && msg.sender_id !== huidigeUser.id) {
+            const delen = msg.content.split(':')
+            voegReactieToe(delen[1], delen[2])
+          } else if (msg.sender_id !== huidigeUser.id) {
             speelPlop('in')
             voegBerichtToe(msg)
             pasPaddingAan()
@@ -473,6 +613,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
         }
       })
       .subscribe()
+    startTypingKanaal()
   }
 
   window.gaTerug = function() {
@@ -593,8 +734,18 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     })
   }
 
-  // Herbereken padding als scherm van grootte verandert (keyboard open/dicht)
-  window.addEventListener('resize', () => { pasPaddingAan(); scrollNaarOnder() })
+  // Keyboard open/dicht: scroll naar beneden
+  window.addEventListener('resize', () => {
+    pasPaddingAan()
+    setTimeout(() => scrollNaarOnder(), 100)
+  })
+  // Visual Viewport API voor moderne browsers
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      pasPaddingAan()
+      setTimeout(() => scrollNaarOnder(), 50)
+    })
+  }
 
   init()
 </script>

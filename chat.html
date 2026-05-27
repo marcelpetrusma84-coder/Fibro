@@ -41,7 +41,7 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .vriend-naam { font-size:14px; font-weight:500; }
 .vriend-username { font-size:14px; color:var(--muted); margin-top:2px; }
 .geen-vrienden { text-align:center; padding:40px 20px; color:var(--muted); font-size:15px; line-height:1.6; }
-.messages { flex:1; padding:12px 14px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; min-height:360px; padding-bottom:240px; }
+.messages { flex:1; padding:12px 14px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; min-height:360px; padding-bottom:280px; }
 .msg-row { display:flex; gap:8px; align-items:flex-end; }
 .msg-row.out { flex-direction:row-reverse; }
 .msg-av-sm { width:26px; height:26px; border-radius:50%; background:var(--card); border:0.5px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
@@ -54,6 +54,7 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .e-opt { font-size:22px; cursor:pointer; padding:4px; border-radius:8px; transition:background 0.2s; }
 .e-opt:hover { background:rgba(192,132,252,0.2); }
 .input-wrap { position:fixed; bottom:calc(80px + env(safe-area-inset-bottom,0px)); width:100%; max-width:480px; z-index:9; background:rgba(0,0,0,0.2); border-top:0.5px solid var(--border); backdrop-filter:blur(12px); }
+.input-bridge { position:fixed; bottom:0; height:calc(80px + env(safe-area-inset-bottom,0px)); width:100%; max-width:480px; z-index:8; background:rgba(0,0,0,0.2); backdrop-filter:blur(12px); pointer-events:none; }
 .emoji-toggle-row { display:flex; gap:8px; padding:6px 14px 0; }
 .input-area { padding:6px 14px 10px; display:flex; gap:8px; align-items:center; }
 .emoji-grid { width:100%; background:rgba(0,0,0,0.85); border-top:0.5px solid var(--border); display:none; }
@@ -150,7 +151,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     <div class="emoji-toggle-row">
       <button class="emoji-toggle" onclick="toggleEmojiPicker()">😊</button>
       <button class="emoji-toggle" onclick="toggleStickers()">🎨</button>
-      <button class="buzz-btn" id="buzzBtn" onclick="sendBuzz()">📳</button>
+      <button class="buzz-btn" id="buzzBtn" onclick="sendBuzz()" title="Buzz!">⚡</button>
     </div>
     <div class="input-area">
       <input class="msg-input" id="msgInput" placeholder="Stuur een bericht..." onkeydown="if(event.key==='Enter')sendMsg()">
@@ -159,6 +160,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   </div>
 </div>
 
+<div class="input-bridge"></div>
 <div class="bottom-nav">
   <div class="nav-item" onclick="window.location.href='index.html'"><div class="nav-icon">🏠</div>Home</div>
   <div class="nav-item" onclick="window.location.href='vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
@@ -382,6 +384,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     const btn = document.getElementById('buzzBtn')
     btn.classList.add('sending')
     setTimeout(() => btn.classList.remove('sending'), 400)
+    speelBuzzGeluid()
     if (navigator.vibrate) navigator.vibrate([100, 50, 100])
     await supabase.from('messages').insert({
       sender_id: huidigeUser.id,
@@ -391,7 +394,29 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     })
   }
 
+  function speelBuzzGeluid() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)()
+      const t = ctx.currentTime
+      // Twee opeenvolgende zware dreun tonen
+      ;[0, 0.18, 0.36].forEach((offset) => {
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(80, t + offset)
+        osc.frequency.exponentialRampToValueAtTime(40, t + offset + 0.15)
+        gain.gain.setValueAtTime(0.6, t + offset)
+        gain.gain.exponentialRampToValueAtTime(0.001, t + offset + 0.15)
+        osc.start(t + offset)
+        osc.stop(t + offset + 0.15)
+      })
+    } catch(e) {}
+  }
+
   function ontvangBuzz() {
+    speelBuzzGeluid()
     if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200])
     document.body.classList.add('buzz-ontvangen')
     setTimeout(() => document.body.classList.remove('buzz-ontvangen'), 600)
@@ -543,7 +568,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   init()
 </script>
 
-<div class="buzz-overlay" id="buzzOverlay"><div class="buzz-overlay-inner">📳</div></div>
+<div class="buzz-overlay" id="buzzOverlay"><div class="buzz-overlay-inner">⚡</div></div>
 
 <script src="swipe.js"></script>
 

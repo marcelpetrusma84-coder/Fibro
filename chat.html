@@ -711,25 +711,20 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     scrollNaarOnder()
   }
 
-  function balkHoogte() {
-    const wrap = document.getElementById('inputWrap')
-    const nav = document.querySelector('.bottom-nav')
-    const wrapH = wrap ? wrap.getBoundingClientRect().height : 90
-    const navH = nav ? nav.getBoundingClientRect().height : 60
-    return wrapH + navH + 24
-  }
-
   function pasPaddingAan() {
     const msgs = document.getElementById('messages')
-    if (!msgs) return
-    msgs.style.paddingBottom = balkHoogte() + 'px'
+    const wrap = document.getElementById('inputWrap')
+    if (!msgs || !wrap) return
+    // Meet de bovenkant van input-wrap t.o.v. de onderkant van het scherm
+    const wrapRect = wrap.getBoundingClientRect()
+    const beschikbaarVanOnder = window.innerHeight - wrapRect.top
+    msgs.style.paddingBottom = (beschikbaarVanOnder + 20) + 'px'
   }
 
   function scrollNaarOnder() {
-    pasPaddingAan()
     const msgs = document.getElementById('messages')
     if (!msgs) return
-    // Dubbelstap: eerst instellen, dan na render nogmaals
+    pasPaddingAan()
     requestAnimationFrame(() => {
       msgs.scrollTop = msgs.scrollHeight
       requestAnimationFrame(() => {

@@ -65,6 +65,9 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .sticker-sectie.actief { display:flex; }
 .sticker-knop { font-size:28px; cursor:pointer; padding:4px 6px; border-radius:10px; transition:transform 0.1s; background:transparent; border:none; }
 .sticker-knop:active { transform:scale(0.85); }
+.pack-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; padding:8px 10px; }
+.pack-sticker { width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; cursor:pointer; border:1.5px solid transparent; transition:border-color 0.15s,transform 0.1s; }
+.pack-sticker:active { transform:scale(0.9); border-color:var(--accent); }
 .msg-input { flex:1; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-family:inherit; font-size:16px !important; outline:none; }
 .msg-input::placeholder { color:var(--muted); }
 .msg-input:focus { border-color:var(--accent); }
@@ -144,67 +147,157 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   <div class="input-wrap">
     <div class="emoji-grid" id="emojiGrid"></div>
     <div id="stickerGrid" style="display:none;">
-      <div class="sticker-tab-row">
-        <button class="sticker-tab actief" onclick="toonStickerTab('blij')">😊 Blij</button>
-        <button class="sticker-tab" onclick="toonStickerTab('verdriet')">😢 Verdriet</button>
-        <button class="sticker-tab" onclick="toonStickerTab('liefde')">❤️ Liefde</button>
-        <button class="sticker-tab" onclick="toonStickerTab('grappig')">😂 Grappig</button>
-        <button class="sticker-tab" onclick="toonStickerTab('eigen')">⭐ Eigen</button>
+      <div class="sticker-tab-row" style="overflow-x:auto;display:flex;gap:0;-webkit-overflow-scrolling:touch;">
+        <button class="sticker-tab actief" onclick="toonStickerTab('emoji')" style="flex-shrink:0;">🙂</button>
+        <button class="sticker-tab" onclick="toonStickerTab('hart')" style="flex-shrink:0;">❤️</button>
+        <button class="sticker-tab" onclick="toonStickerTab('hond')" style="flex-shrink:0;">🐶</button>
+        <button class="sticker-tab" onclick="toonStickerTab('kat')" style="flex-shrink:0;">🐱</button>
+        <button class="sticker-tab" onclick="toonStickerTab('baby')" style="flex-shrink:0;">👶</button>
+        <button class="sticker-tab" onclick="toonStickerTab('boy')" style="flex-shrink:0;">👦</button>
+        <button class="sticker-tab" onclick="toonStickerTab('girl')" style="flex-shrink:0;">👧</button>
+        <button class="sticker-tab" onclick="toonStickerTab('eigen')" style="flex-shrink:0;">⭐</button>
       </div>
-      <div class="sticker-sectie actief" id="sticker-blij">
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('😊','blij')">😊</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('😁','blij')">😁</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🥳','feest')">🥳</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('😄','blij')">😄</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🤩','wow')">🤩</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('😎','cool')">😎</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🙌','yes')">🙌</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('✨','sparkle')">✨</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🎉','feest')">🎉</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🌈','blij')">🌈</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('☀️','blij')">☀️</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🌸','zacht')">🌸</button>
+      <div class="sticker-sectie actief" id="sticker-emoji">
+        <div class="pack-grid">
+          <div class="pack-sticker" style="background-image:url('stickers/emoji.webp');background-size:400% 400%;background-position:0.0% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/emoji.webp',0.0,0.0,4,4,'blij')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/emoji.webp');background-size:400% 400%;background-position:33.3% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/emoji.webp',33.3,0.0,4,4,'cool')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/emoji.webp');background-size:400% 400%;background-position:66.7% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/emoji.webp',66.7,0.0,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/emoji.webp');background-size:400% 400%;background-position:100.0% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/emoji.webp',100.0,0.0,4,4,'boos')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/emoji.webp');background-size:400% 400%;background-position:0.0% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/emoji.webp',0.0,33.3,4,4,'verdriet')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/emoji.webp');background-size:400% 400%;background-position:33.3% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/emoji.webp',33.3,33.3,4,4,'wow')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/emoji.webp');background-size:400% 400%;background-position:66.7% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/emoji.webp',66.7,33.3,4,4,'feest')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/emoji.webp');background-size:400% 400%;background-position:100.0% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/emoji.webp',100.0,33.3,4,4,'kus')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/emoji.webp');background-size:400% 400%;background-position:0.0% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/emoji.webp',0.0,66.7,4,4,'blij')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/emoji.webp');background-size:400% 400%;background-position:33.3% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/emoji.webp',33.3,66.7,4,4,'boos')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/emoji.webp');background-size:400% 400%;background-position:66.7% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/emoji.webp',66.7,66.7,4,4,'cool')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/emoji.webp');background-size:400% 400%;background-position:100.0% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/emoji.webp',100.0,66.7,4,4,'hart')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/emoji.webp');background-size:400% 400%;background-position:0.0% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/emoji.webp',0.0,100.0,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/emoji.webp');background-size:400% 400%;background-position:33.3% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/emoji.webp',33.3,100.0,4,4,'yes')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/emoji.webp');background-size:400% 400%;background-position:66.7% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/emoji.webp',66.7,100.0,4,4,'grappig')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/emoji.webp');background-size:400% 400%;background-position:100.0% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/emoji.webp',100.0,100.0,4,4,'feest')"></div>
+        </div>
       </div>
-      <div class="sticker-sectie" id="sticker-verdriet">
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('😢','verdriet')">😢</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('😭','verdriet')">😭</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('😔','stil')">😔</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('😞','stil')">😞</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🥺','zacht')">🥺</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('😟','stil')">😟</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('💔','verdriet')">💔</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🌧️','regen')">🌧️</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('😪','stil')">😪</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🫂','zacht')">🫂</button>
+      <div class="sticker-sectie" id="sticker-hart">
+        <div class="pack-grid">
+          <div class="pack-sticker" style="background-image:url('stickers/hart.webp');background-size:400% 400%;background-position:0.0% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hart.webp',0.0,0.0,4,4,'hart')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hart.webp');background-size:400% 400%;background-position:33.3% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hart.webp',33.3,0.0,4,4,'cool')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hart.webp');background-size:400% 400%;background-position:66.7% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hart.webp',66.7,0.0,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hart.webp');background-size:400% 400%;background-position:100.0% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hart.webp',100.0,0.0,4,4,'boos')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hart.webp');background-size:400% 400%;background-position:0.0% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hart.webp',0.0,33.3,4,4,'verdriet')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hart.webp');background-size:400% 400%;background-position:33.3% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hart.webp',33.3,33.3,4,4,'wow')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hart.webp');background-size:400% 400%;background-position:66.7% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hart.webp',66.7,33.3,4,4,'feest')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hart.webp');background-size:400% 400%;background-position:100.0% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hart.webp',100.0,33.3,4,4,'kus')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hart.webp');background-size:400% 400%;background-position:0.0% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hart.webp',0.0,66.7,4,4,'blij')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hart.webp');background-size:400% 400%;background-position:33.3% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hart.webp',33.3,66.7,4,4,'boos')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hart.webp');background-size:400% 400%;background-position:66.7% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hart.webp',66.7,66.7,4,4,'cool')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hart.webp');background-size:400% 400%;background-position:100.0% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hart.webp',100.0,66.7,4,4,'hart')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hart.webp');background-size:400% 400%;background-position:0.0% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hart.webp',0.0,100.0,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hart.webp');background-size:400% 400%;background-position:33.3% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hart.webp',33.3,100.0,4,4,'yes')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hart.webp');background-size:400% 400%;background-position:66.7% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hart.webp',66.7,100.0,4,4,'verdriet')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hart.webp');background-size:400% 400%;background-position:100.0% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hart.webp',100.0,100.0,4,4,'feest')"></div>
+        </div>
       </div>
-      <div class="sticker-sectie" id="sticker-liefde">
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('❤️','hart')">❤️</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🥰','hart')">🥰</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('😍','hart')">😍</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('💕','hart')">💕</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('💖','hart')">💖</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('💗','hart')">💗</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('💝','hart')">💝</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🌹','zacht')">🌹</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('💌','hart')">💌</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🫶','hart')">🫶</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('😘','kus')">😘</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('💋','kus')">💋</button>
+      <div class="sticker-sectie" id="sticker-hond">
+        <div class="pack-grid">
+          <div class="pack-sticker" style="background-image:url('stickers/hond.webp');background-size:400% 400%;background-position:0.0% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hond.webp',0.0,0.0,4,4,'blij')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hond.webp');background-size:400% 400%;background-position:33.3% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hond.webp',33.3,0.0,4,4,'cool')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hond.webp');background-size:400% 400%;background-position:66.7% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hond.webp',66.7,0.0,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hond.webp');background-size:400% 400%;background-position:100.0% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hond.webp',100.0,0.0,4,4,'boos')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hond.webp');background-size:400% 400%;background-position:0.0% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hond.webp',0.0,33.3,4,4,'verdriet')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hond.webp');background-size:400% 400%;background-position:33.3% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hond.webp',33.3,33.3,4,4,'wow')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hond.webp');background-size:400% 400%;background-position:66.7% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hond.webp',66.7,33.3,4,4,'feest')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hond.webp');background-size:400% 400%;background-position:100.0% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hond.webp',100.0,33.3,4,4,'kus')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hond.webp');background-size:400% 400%;background-position:0.0% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hond.webp',0.0,66.7,4,4,'blij')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hond.webp');background-size:400% 400%;background-position:33.3% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hond.webp',33.3,66.7,4,4,'boos')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hond.webp');background-size:400% 400%;background-position:66.7% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hond.webp',66.7,66.7,4,4,'cool')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hond.webp');background-size:400% 400%;background-position:100.0% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hond.webp',100.0,66.7,4,4,'hart')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hond.webp');background-size:400% 400%;background-position:0.0% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hond.webp',0.0,100.0,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hond.webp');background-size:400% 400%;background-position:33.3% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hond.webp',33.3,100.0,4,4,'yes')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hond.webp');background-size:400% 400%;background-position:66.7% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hond.webp',66.7,100.0,4,4,'grappig')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/hond.webp');background-size:400% 400%;background-position:100.0% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/hond.webp',100.0,100.0,4,4,'feest')"></div>
+        </div>
       </div>
-      <div class="sticker-sectie" id="sticker-grappig">
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('😂','lach')">😂</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🤣','lach')">🤣</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('😜','grappig')">😜</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🤪','grappig')">🤪</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('😝','grappig')">😝</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🤡','grappig')">🤡</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('💨','pruttel')">💨</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🙈','pop')">🙈</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🫠','boing')">🫠</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🤓','pop')">🤓</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('👻','grappig')">👻</button>
-        <button class="sticker-knop" onclick="sendStickerMetGeluid('🫣','pop')">🫣</button>
+      <div class="sticker-sectie" id="sticker-kat">
+        <div class="pack-grid">
+          <div class="pack-sticker" style="background-image:url('stickers/kat.webp');background-size:400% 400%;background-position:0.0% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/kat.webp',0.0,0.0,4,4,'blij')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/kat.webp');background-size:400% 400%;background-position:33.3% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/kat.webp',33.3,0.0,4,4,'cool')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/kat.webp');background-size:400% 400%;background-position:66.7% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/kat.webp',66.7,0.0,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/kat.webp');background-size:400% 400%;background-position:100.0% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/kat.webp',100.0,0.0,4,4,'boos')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/kat.webp');background-size:400% 400%;background-position:0.0% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/kat.webp',0.0,33.3,4,4,'verdriet')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/kat.webp');background-size:400% 400%;background-position:33.3% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/kat.webp',33.3,33.3,4,4,'wow')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/kat.webp');background-size:400% 400%;background-position:66.7% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/kat.webp',66.7,33.3,4,4,'feest')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/kat.webp');background-size:400% 400%;background-position:100.0% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/kat.webp',100.0,33.3,4,4,'kus')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/kat.webp');background-size:400% 400%;background-position:0.0% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/kat.webp',0.0,66.7,4,4,'blij')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/kat.webp');background-size:400% 400%;background-position:33.3% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/kat.webp',33.3,66.7,4,4,'boos')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/kat.webp');background-size:400% 400%;background-position:66.7% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/kat.webp',66.7,66.7,4,4,'cool')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/kat.webp');background-size:400% 400%;background-position:100.0% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/kat.webp',100.0,66.7,4,4,'hart')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/kat.webp');background-size:400% 400%;background-position:0.0% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/kat.webp',0.0,100.0,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/kat.webp');background-size:400% 400%;background-position:33.3% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/kat.webp',33.3,100.0,4,4,'yes')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/kat.webp');background-size:400% 400%;background-position:66.7% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/kat.webp',66.7,100.0,4,4,'grappig')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/kat.webp');background-size:400% 400%;background-position:100.0% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/kat.webp',100.0,100.0,4,4,'feest')"></div>
+        </div>
       </div>
+      <div class="sticker-sectie" id="sticker-baby">
+        <div class="pack-grid">
+          <div class="pack-sticker" style="background-image:url('stickers/baby.webp');background-size:400% 400%;background-position:0.0% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/baby.webp',0.0,0.0,4,4,'blij')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/baby.webp');background-size:400% 400%;background-position:33.3% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/baby.webp',33.3,0.0,4,4,'boos')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/baby.webp');background-size:400% 400%;background-position:66.7% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/baby.webp',66.7,0.0,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/baby.webp');background-size:400% 400%;background-position:100.0% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/baby.webp',100.0,0.0,4,4,'verdriet')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/baby.webp');background-size:400% 400%;background-position:0.0% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/baby.webp',0.0,33.3,4,4,'verdriet')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/baby.webp');background-size:400% 400%;background-position:33.3% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/baby.webp',33.3,33.3,4,4,'boos')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/baby.webp');background-size:400% 400%;background-position:66.7% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/baby.webp',66.7,33.3,4,4,'verdriet')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/baby.webp');background-size:400% 400%;background-position:100.0% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/baby.webp',100.0,33.3,4,4,'wow')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/baby.webp');background-size:400% 400%;background-position:0.0% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/baby.webp',0.0,66.7,4,4,'blij')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/baby.webp');background-size:400% 400%;background-position:33.3% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/baby.webp',33.3,66.7,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/baby.webp');background-size:400% 400%;background-position:66.7% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/baby.webp',66.7,66.7,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/baby.webp');background-size:400% 400%;background-position:100.0% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/baby.webp',100.0,66.7,4,4,'kus')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/baby.webp');background-size:400% 400%;background-position:0.0% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/baby.webp',0.0,100.0,4,4,'grappig')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/baby.webp');background-size:400% 400%;background-position:33.3% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/baby.webp',33.3,100.0,4,4,'yes')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/baby.webp');background-size:400% 400%;background-position:66.7% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/baby.webp',66.7,100.0,4,4,'grappig')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/baby.webp');background-size:400% 400%;background-position:100.0% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/baby.webp',100.0,100.0,4,4,'feest')"></div>
+        </div>
+      </div>
+      <div class="sticker-sectie" id="sticker-boy">
+        <div class="pack-grid">
+          <div class="pack-sticker" style="background-image:url('stickers/anime_boy.webp');background-size:400% 400%;background-position:0.0% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_boy.webp',0.0,0.0,4,4,'blij')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_boy.webp');background-size:400% 400%;background-position:33.3% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_boy.webp',33.3,0.0,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_boy.webp');background-size:400% 400%;background-position:66.7% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_boy.webp',66.7,0.0,4,4,'lach')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_boy.webp');background-size:400% 400%;background-position:100.0% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_boy.webp',100.0,0.0,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_boy.webp');background-size:400% 400%;background-position:0.0% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_boy.webp',0.0,33.3,4,4,'blij')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_boy.webp');background-size:400% 400%;background-position:33.3% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_boy.webp',33.3,33.3,4,4,'boos')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_boy.webp');background-size:400% 400%;background-position:66.7% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_boy.webp',66.7,33.3,4,4,'verdriet')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_boy.webp');background-size:400% 400%;background-position:100.0% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_boy.webp',100.0,33.3,4,4,'wow')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_boy.webp');background-size:400% 400%;background-position:0.0% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_boy.webp',0.0,66.7,4,4,'blij')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_boy.webp');background-size:400% 400%;background-position:33.3% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_boy.webp',33.3,66.7,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_boy.webp');background-size:400% 400%;background-position:66.7% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_boy.webp',66.7,66.7,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_boy.webp');background-size:400% 400%;background-position:100.0% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_boy.webp',100.0,66.7,4,4,'yes')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_boy.webp');background-size:400% 400%;background-position:0.0% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_boy.webp',0.0,100.0,4,4,'blij')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_boy.webp');background-size:400% 400%;background-position:33.3% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_boy.webp',33.3,100.0,4,4,'cool')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_boy.webp');background-size:400% 400%;background-position:66.7% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_boy.webp',66.7,100.0,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_boy.webp');background-size:400% 400%;background-position:100.0% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_boy.webp',100.0,100.0,4,4,'kus')"></div>
+        </div>
+      </div>
+      <div class="sticker-sectie" id="sticker-girl">
+        <div class="pack-grid">
+          <div class="pack-sticker" style="background-image:url('stickers/anime_girl.webp');background-size:400% 400%;background-position:0.0% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_girl.webp',0.0,0.0,4,4,'blij')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_girl.webp');background-size:400% 400%;background-position:33.3% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_girl.webp',33.3,0.0,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_girl.webp');background-size:400% 400%;background-position:66.7% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_girl.webp',66.7,0.0,4,4,'lach')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_girl.webp');background-size:400% 400%;background-position:100.0% 0.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_girl.webp',100.0,0.0,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_girl.webp');background-size:400% 400%;background-position:0.0% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_girl.webp',0.0,33.3,4,4,'blij')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_girl.webp');background-size:400% 400%;background-position:33.3% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_girl.webp',33.3,33.3,4,4,'boos')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_girl.webp');background-size:400% 400%;background-position:66.7% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_girl.webp',66.7,33.3,4,4,'verdriet')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_girl.webp');background-size:400% 400%;background-position:100.0% 33.3%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_girl.webp',100.0,33.3,4,4,'wow')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_girl.webp');background-size:400% 400%;background-position:0.0% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_girl.webp',0.0,66.7,4,4,'blij')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_girl.webp');background-size:400% 400%;background-position:33.3% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_girl.webp',33.3,66.7,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_girl.webp');background-size:400% 400%;background-position:66.7% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_girl.webp',66.7,66.7,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_girl.webp');background-size:400% 400%;background-position:100.0% 66.7%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_girl.webp',100.0,66.7,4,4,'yes')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_girl.webp');background-size:400% 400%;background-position:0.0% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_girl.webp',0.0,100.0,4,4,'blij')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_girl.webp');background-size:400% 400%;background-position:33.3% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_girl.webp',33.3,100.0,4,4,'cool')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_girl.webp');background-size:400% 400%;background-position:66.7% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_girl.webp',66.7,100.0,4,4,'stil')"></div>
+          <div class="pack-sticker" style="background-image:url('stickers/anime_girl.webp');background-size:400% 400%;background-position:100.0% 100.0%;width:100%;aspect-ratio:1;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendPackSticker('stickers/anime_girl.webp',100.0,100.0,4,4,'kus')"></div>
+        </div>
+      </div>
+
       <div class="sticker-sectie" id="sticker-eigen">
         <div id="eigenStickerWrap" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
         <button style="font-size:24px;padding:6px;background:rgba(192,132,252,0.1);border:1.5px dashed var(--accent);border-radius:10px;cursor:pointer;" onclick="openStickerUpload()">➕</button>
@@ -397,6 +490,21 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     const row = document.createElement('div')
     row.className = `msg-row ${isMijn ? 'out' : ''}`
 
+    if (bericht.content.startsWith('packsticker:')) {
+      try {
+        const data = JSON.parse(bericht.content.replace('packsticker:', ''))
+        if (!isMijn && data.geluid) speelEmotieGeluid(data.geluid)
+        row.innerHTML = `
+          <div class="msg-av-sm">${avatar}</div>
+          <div style="padding:4px;">
+            <div style="width:80px;height:80px;border-radius:12px;background-image:url('${data.src}');background-size:${data.cols*100}% ${data.rows*100}%;background-position:${data.bx}% ${data.by}%;"></div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;text-align:right;">${tijd}</div>
+          </div>
+        `
+        container.appendChild(row)
+        return
+      } catch(e) {}
+    }
     if (bericht.content.startsWith('customsticker:')) {
       try {
         const data = JSON.parse(bericht.content.replace('customsticker:', ''))
@@ -685,6 +793,19 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       const fn = EMOTIE_GELUID[emotieId]
       if (fn) fn(ctx, ctx.currentTime)
     } catch(e) {}
+  }
+
+  window.sendPackSticker = async function(src, bx, by, cols, rows, emotieId) {
+    if (!geselecteerdeVriend) return
+    speelEmotieGeluid(emotieId)
+    document.getElementById('stickerGrid').style.display = 'none'
+    const data = JSON.stringify({ src, bx, by, cols, rows, geluid: emotieId })
+    await supabase.from('messages').insert({
+      sender_id: huidigeUser.id,
+      receiver_id: geselecteerdeVriend.id,
+      content: 'packsticker:' + data,
+      expires_at: new Date(Date.now() + 24*60*60*1000).toISOString()
+    })
   }
 
   window.sendStickerMetGeluid = async function(emoji, emotieId) {

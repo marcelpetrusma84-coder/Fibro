@@ -661,10 +661,24 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     if (!file) return
     const reader = new FileReader()
     reader.onload = (e) => {
-      stickerImageData = e.target.result
-      const img = document.getElementById('stickerPreviewImg')
-      img.src = stickerImageData
-      document.getElementById('stickerPreviewWrap').style.display = 'block'
+      const origImg = new Image()
+      origImg.onload = () => {
+        // Comprimeer naar max 80x80px, kwaliteit 0.5 = klein bestand
+        const canvas = document.createElement('canvas')
+        const MAX = 80
+        const ratio = Math.min(MAX / origImg.width, MAX / origImg.height)
+        canvas.width = Math.round(origImg.width * ratio)
+        canvas.height = Math.round(origImg.height * ratio)
+        canvas.getContext('2d').drawImage(origImg, 0, 0, canvas.width, canvas.height)
+        stickerImageData = canvas.toDataURL('image/webp', 0.5)
+        const img = document.getElementById('stickerPreviewImg')
+        img.src = stickerImageData
+        document.getElementById('stickerPreviewWrap').style.display = 'block'
+        // Toon bestandsgrootte
+        const kb = Math.round(stickerImageData.length * 0.75 / 1024)
+        img.title = kb + ' KB'
+      }
+      origImg.src = e.target.result
     }
     reader.readAsDataURL(file)
   }

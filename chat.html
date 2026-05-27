@@ -711,26 +711,30 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     scrollNaarOnder()
   }
 
-  function pasPaddingAan() {
+  function balkHoogte() {
     const wrap = document.getElementById('inputWrap')
     const nav = document.querySelector('.bottom-nav')
-    if (!wrap || !nav) return
-    const wrapH = wrap.offsetHeight
-    const navH = nav.offsetHeight
+    const wrapH = wrap ? wrap.getBoundingClientRect().height : 90
+    const navH = nav ? nav.getBoundingClientRect().height : 60
+    return wrapH + navH + 24
+  }
+
+  function pasPaddingAan() {
     const msgs = document.getElementById('messages')
-    msgs.style.paddingBottom = (wrapH + navH + 16) + 'px'
+    if (!msgs) return
+    msgs.style.paddingBottom = balkHoogte() + 'px'
   }
 
   function scrollNaarOnder() {
     pasPaddingAan()
     const msgs = document.getElementById('messages')
+    if (!msgs) return
+    // Dubbelstap: eerst instellen, dan na render nogmaals
     requestAnimationFrame(() => {
-      msgs.scrollTop = msgs.scrollHeight + 9999
-      // Forceer ook via laatste kind element
-      const kinderen = msgs.children
-      if (kinderen.length > 0) {
-        kinderen[kinderen.length - 1].scrollIntoView({ block: 'end', behavior: 'instant' })
-      }
+      msgs.scrollTop = msgs.scrollHeight
+      requestAnimationFrame(() => {
+        msgs.scrollTop = msgs.scrollHeight
+      })
     })
   }
 

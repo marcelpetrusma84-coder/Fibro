@@ -324,7 +324,13 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     }
 
     data.forEach(bericht => voegBerichtToe(bericht))
-    scrollNaarOnder()
+    // Meerdere scroll pogingen om zeker te zijn dat DOM klaar is
+    pasPaddingAan()
+    requestAnimationFrame(() => {
+      scrollNaarOnder()
+      setTimeout(() => scrollNaarOnder(), 100)
+      setTimeout(() => scrollNaarOnder(), 300)
+    })
   }
 
   function voegBerichtToe(bericht) {
@@ -441,6 +447,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     if (error) console.error('Versturen mislukt:', error)
     document.getElementById('emojiGrid').style.display = 'none'
     emojiOpen = false
+    requestAnimationFrame(() => scrollNaarOnder())
   }
 
   function startRealtime() {
@@ -460,7 +467,8 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
           } else {
             speelPlop('in')
             voegBerichtToe(msg)
-            scrollNaarOnder()
+            pasPaddingAan()
+            requestAnimationFrame(() => scrollNaarOnder())
           }
         }
       })
@@ -575,7 +583,14 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   function scrollNaarOnder() {
     pasPaddingAan()
     const msgs = document.getElementById('messages')
-    setTimeout(() => { msgs.scrollTop = msgs.scrollHeight }, 50)
+    requestAnimationFrame(() => {
+      msgs.scrollTop = msgs.scrollHeight + 9999
+      // Forceer ook via laatste kind element
+      const kinderen = msgs.children
+      if (kinderen.length > 0) {
+        kinderen[kinderen.length - 1].scrollIntoView({ block: 'end', behavior: 'instant' })
+      }
+    })
   }
 
   // Herbereken padding als scherm van grootte verandert (keyboard open/dicht)

@@ -195,12 +195,12 @@
   }
 
   window.inloggen = async function() {
-    const email = document.getElementById('login-email').value.trim()
+    const username = document.getElementById('login-username').value.trim()
     const wachtwoord = document.getElementById('login-wachtwoord').value
     const btn = document.getElementById('login-btn')
     const msg = document.getElementById('login-msg')
 
-    if (!email || !wachtwoord) {
+    if (!username || !wachtwoord) {
       toonBericht(msg, 'error', 'Vul alle velden in.')
       return
     }
@@ -208,8 +208,9 @@
     btn.disabled = true
     btn.innerHTML = '<span class="spinner"></span>Inloggen...'
 
+    const nep_email = username.toLowerCase() + '@fibro.internal'
     await supabase.auth.signOut()
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password: wachtwoord })
+    const { data, error } = await supabase.auth.signInWithPassword({ email: nep_email, password: wachtwoord })
 
     if (error) {
       toonBericht(msg, 'error', 'Ongeldig e-mailadres of wachtwoord.')

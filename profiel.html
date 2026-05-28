@@ -397,23 +397,29 @@ async function init(){
   const{data}=await supabase.from('profiles').select('*').eq('id',huidigeUser.id).single()
   profiel=data
   if(profiel){
-    document.getElementById('editNaam').value=localStorage.getItem('fibro_weergavenaam')||''
+    // ── Laad alles uit localStorage ──
+    const lokaal = JSON.parse(localStorage.getItem('fibro_profiel') || '{}')
+
+    document.getElementById('editNaam').value=lokaal.naam||''
     document.getElementById('editUsername').value=profiel.username||''
-    document.getElementById('editBio').value=profiel.bio||''
-    document.getElementById('editMood').value=profiel.mood||''
+    document.getElementById('editBio').value=lokaal.bio||''
+    document.getElementById('editMood').value=lokaal.mood||profiel.mood||''
+
     const userId=huidigeUser.id
     const opgeslagenFoto=await laadFotoUitDB('avatar_thumbnail_'+userId)
     if(opgeslagenFoto){document.getElementById('avatarEmoji').innerHTML=`<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;document.getElementById('previewAvatar').innerHTML=`<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`}
-    else{document.getElementById('avatarEmoji').textContent=profiel.avatar_url||'🌿';document.getElementById('previewAvatar').textContent=profiel.avatar_url||'🌿'}
-    document.getElementById('previewNaam').textContent=localStorage.getItem('fibro_weergavenaam')||profiel.username||'Jouw naam'
-    document.getElementById('previewBio').textContent=profiel.bio||'Jouw bio verschijnt hier'
-    if(profiel.accent_kleur)updateAccent(profiel.accent_kleur)
-    if(profiel.accent_kleur2)updateAccent2(profiel.accent_kleur2)
-    if(profiel.achtergrond_kleur)updateBgKleur(profiel.achtergrond_kleur)
-    if(profiel.animatie){huidigeAnimatie=profiel.animatie;updateAnimatieUI()}
-    if(profiel.lettertype){huidigLettertype=profiel.lettertype;document.body.style.fontFamily=profiel.lettertype}
-    if(profiel.widgets)actieveWidgets=profiel.widgets
-    if(profiel.stickers)actieveStickers=profiel.stickers
+    else{const av=lokaal.avatar||profiel.avatar_url||'🌿';document.getElementById('avatarEmoji').textContent=av;document.getElementById('previewAvatar').textContent=av}
+
+    document.getElementById('previewNaam').textContent=lokaal.naam||profiel.username||'Jouw naam'
+    document.getElementById('previewBio').textContent=lokaal.bio||'Jouw bio verschijnt hier'
+
+    if(lokaal.accentKleur)updateAccent(lokaal.accentKleur)
+    if(lokaal.accentKleur2)updateAccent2(lokaal.accentKleur2)
+    if(lokaal.bgKleur)updateBgKleur(lokaal.bgKleur)
+    if(lokaal.animatie){huidigeAnimatie=lokaal.animatie;updateAnimatieUI()}
+    if(lokaal.lettertype){huidigLettertype=lokaal.lettertype;document.body.style.fontFamily=lokaal.lettertype}
+    if(lokaal.widgets)actieveWidgets=lokaal.widgets
+    if(lokaal.stickers)actieveStickers=lokaal.stickers
     const bestaandeWallpaper=await laadFotoUitDB('bg_wallpaper_'+userId)
     if(bestaandeWallpaper){document.getElementById('uploadedWallpaper').innerHTML=`<img src="${bestaandeWallpaper}" style="width:100%;height:100%;object-fit:cover;">`;document.getElementById('uploadPreview').style.display='block';document.body.style.backgroundImage=`url(${bestaandeWallpaper})`;document.body.style.backgroundSize='cover';document.body.style.backgroundPosition='center';document.body.style.backgroundAttachment='fixed';document.body.style.backgroundRepeat='no-repeat';document.documentElement.style.setProperty('--bg','transparent')}
   }
@@ -450,8 +456,41 @@ function updateWidgetToggles(){actieveWidgets.forEach(w=>{const el=document.getE
 function bouwStickerGrids(){bouwStickerGrid('stickerNatuur',stickers.natuur);bouwStickerGrid('stickerMagie',stickers.magie);bouwStickerGrid('stickerKunst',stickers.kunst);bouwStickerGrid('stickerDieren',stickers.dieren)}
 function bouwStickerGrid(id,lijst){const grid=document.getElementById(id);grid.innerHTML='';lijst.forEach(s=>{const div=document.createElement('div');div.className='sticker-item'+(actieveStickers.includes(s)?' selected':'');div.textContent=s;div.onclick=()=>{if(actieveStickers.includes(s)){actieveStickers=actieveStickers.filter(x=>x!==s);div.classList.remove('selected')}else{actieveStickers.push(s);div.classList.add('selected')};updateActieveStickers()};grid.appendChild(div)})}
 function updateActieveStickers(){const grid=document.getElementById('actieveStickers');grid.innerHTML='';if(actieveStickers.length===0){grid.innerHTML='<div style="font-size:15px;color:var(--muted);padding:8px;">Nog geen stickers gekozen</div>';return};actieveStickers.forEach(s=>{const div=document.createElement('div');div.className='sticker-item selected';div.textContent=s;grid.appendChild(div)})}
-window.slaAllesOp=async function(){const naam=document.getElementById('editNaam').value.trim();const bio=document.getElementById('editBio').value.trim();const mood=document.getElementById('editMood').value.trim();const avatar=document.getElementById('avatarEmoji').textContent;const accentKleur=document.getElementById('accentHex').value;const accentKleur2=document.getElementById('accent2Hex').value;const bgKleur=document.getElementById('bgKleurHex').value;// Weergavenaam ALLEEN lokaal opslaan — nooit naar Supabase
-if(naam) localStorage.setItem('fibro_weergavenaam',naam);const{error}=await supabase.from('profiles').upsert({id:huidigeUser.id,username:profiel?.username||huidigeUser.email.split('@')[0],bio:bio,mood:mood,avatar_url:window._fotoAvatar||avatar,accent_kleur:accentKleur,accent_kleur2:accentKleur2,achtergrond_kleur:bgKleur,animatie:huidigeAnimatie,lettertype:huidigLettertype,widgets:actieveWidgets,stickers:actieveStickers,updated_at:new Date().toISOString()});const msg=document.getElementById('statusMsg');if(error){msg.className='status-msg error';msg.textContent='✗ Opslaan mislukt: '+error.message}else{msg.className='status-msg success';msg.textContent='✓ Profiel opgeslagen!';setTimeout(()=>msg.className='status-msg',2000)};window.scrollTo(0,0)}
+window.slaAllesOp=async function(){
+  const naam=document.getElementById('editNaam').value.trim()
+  const bio=document.getElementById('editBio').value.trim()
+  const mood=document.getElementById('editMood').value.trim()
+  const avatar=document.getElementById('avatarEmoji').textContent
+  const accentKleur=document.getElementById('accentHex').value
+  const accentKleur2=document.getElementById('accent2Hex').value
+  const bgKleur=document.getElementById('bgKleurHex').value
+
+  // ── Alles lokaal opslaan ──
+  const lokaalProfiel = {
+    naam, bio, mood, avatar,
+    accentKleur, accentKleur2, bgKleur,
+    animatie: huidigeAnimatie,
+    lettertype: huidigLettertype,
+    widgets: actieveWidgets,
+    stickers: actieveStickers
+  }
+  localStorage.setItem('fibro_profiel', JSON.stringify(lokaalProfiel))
+
+  // ── Minimum naar Supabase: alleen wat vrienden zien ──
+  // avatar_url en mood zijn nodig voor vriendenlijst/profielpagina
+  const{error}=await supabase.from('profiles').upsert({
+    id:huidigeUser.id,
+    username:profiel?.username||huidigeUser.id,
+    avatar_url:window._fotoAvatar||avatar,
+    mood:mood,
+    updated_at:new Date().toISOString()
+  })
+
+  const msg=document.getElementById('statusMsg')
+  if(error){msg.className='status-msg error';msg.textContent='✗ Opslaan mislukt: '+error.message}
+  else{msg.className='status-msg success';msg.textContent='✓ Profiel opgeslagen!';setTimeout(()=>msg.className='status-msg',2000)}
+  window.scrollTo(0,0)
+}
 window.uitloggen=async function(){await supabase.auth.signOut();window.location.href='login.html'}
 init()
 </script>

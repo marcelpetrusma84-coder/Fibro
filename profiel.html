@@ -162,7 +162,7 @@ input, textarea { font-size:16px !important; }
       <input class="field" id="editNaam" placeholder="Jouw naam"/>
       <label class="field-label">Gebruikersnaam <span style="font-size:10px;color:var(--muted);">— lokaal opgeslagen</span></label>
       <div style="display:flex;gap:8px;align-items:center;">
-        <input class="field" id="editUsername" placeholder="Of typ zelf iets..." style="flex:1;margin:0;" />
+        <input class="field" id="editUsername" placeholder="Kies een naam..." style="flex:1;margin:0;" />
         <button onclick="profielNieuweNaam()" style="background:var(--accent);border:none;border-radius:10px;padding:10px 12px;font-size:18px;cursor:pointer;flex-shrink:0;" title="Genereer willekeurige naam">🎲</button>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px;margin-bottom:8px;">Gebruik geen echte naam — kies een bijnaam</div>
@@ -598,8 +598,7 @@ window.slaAllesOp=async function(){
   const customUsername = document.getElementById('editUsername')?.value?.trim()
   if (customUsername) localStorage.setItem('fibro_custom_username', customUsername)
 
-  // ── Minimum naar Supabase: alleen username (voor vrienden zoeken) ──
-  // Avatar en mood lokaal opgeslagen, worden via P2P gedeeld
+  // ── Alleen technische sync naar Supabase (geen PII) ──
   const{error}=await supabase.from('profiles').upsert({
     id:huidigeUser.id,
     username:profiel?.username||huidigeUser.id,

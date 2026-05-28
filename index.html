@@ -273,19 +273,19 @@ async function init() {
 
     huidigeProfiel = data
 
-    // Vul profiel in
+    // Vul profiel in — alles uit localStorage
     const _lokaalP = JSON.parse(localStorage.getItem('fibro_profiel')||'{}')
     if(document.getElementById('editNaam')) document.getElementById('editNaam').value = _lokaalP.naam||''
-    document.getElementById('profielNaam').textContent = localStorage.getItem('fibro_profiel') ? (JSON.parse(localStorage.getItem('fibro_profiel')).naam || data.username || 'Naamloos') : (data.username || 'Naamloos')
-    document.getElementById('profielBio').textContent = data.bio || 'Klik om je bio in te stellen'
+    document.getElementById('profielNaam').textContent = _lokaalP.naam || data.username || 'Naamloos'
+    document.getElementById('profielBio').textContent = _lokaalP.bio || 'Klik om je bio in te stellen'
+    document.getElementById('moodTekst').textContent = _lokaalP.mood || 'Geen mood ingesteld'
     const userId = huidigeUser?.id || 'lokaal'
     const opgeslagenFoto = await laadFotoUitDB('avatar_thumbnail_' + userId)
     if (opgeslagenFoto) {
       document.getElementById('avatarEmoji').innerHTML = `<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
     } else {
-      document.getElementById('avatarEmoji').textContent = data.avatar_url || '🌿'
+      document.getElementById('avatarEmoji').textContent = _lokaalP.avatar || data.avatar_url || '🌿'
     }
-    document.getElementById('moodTekst').textContent = data.mood || 'Geen mood ingesteld'
     document.getElementById('eigenaarBadge').textContent = 'Eigenaar'
     isEigenaar = true
 

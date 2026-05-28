@@ -274,7 +274,9 @@ async function init() {
     huidigeProfiel = data
 
     // Vul profiel in
-    document.getElementById('profielNaam').textContent = data.display_name || data.username || 'Naamloos'
+    const _lokaalP = JSON.parse(localStorage.getItem('fibro_profiel')||'{}')
+    if(document.getElementById('editNaam')) document.getElementById('editNaam').value = _lokaalP.naam||''
+    document.getElementById('profielNaam').textContent = localStorage.getItem('fibro_profiel') ? (JSON.parse(localStorage.getItem('fibro_profiel')).naam || data.username || 'Naamloos') : (data.username || 'Naamloos')
     document.getElementById('profielBio').textContent = data.bio || 'Klik om je bio in te stellen'
     const userId = huidigeUser?.id || 'lokaal'
     const opgeslagenFoto = await laadFotoUitDB('avatar_thumbnail_' + userId)
@@ -389,6 +391,10 @@ async function init() {
   // ========================
   window.slaProfielOp = async function() {
     const naam = document.getElementById('editNaam').value.trim()
+    // Lokaal opslaan
+    const lokaal = JSON.parse(localStorage.getItem('fibro_profiel') || '{}')
+    lokaal.naam = naam
+    localStorage.setItem('fibro_profiel', JSON.stringify(lokaal))
     const bio = document.getElementById('editBio').value.trim()
     const mood = document.getElementById('editMood').value.trim()
     const status = document.getElementById('opslaanStatus')
@@ -398,7 +404,6 @@ async function init() {
       .upsert({
         id: huidigeUser.id,
         username: huidigeProfiel?.username || huidigeUser.email.split('@')[0],
-        display_name: naam,
         bio: bio,
         mood: mood,
         updated_at: new Date().toISOString()

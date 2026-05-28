@@ -189,58 +189,6 @@
     'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
   )
 
-  window.switchTab = function(tab) {
-    document.querySelectorAll('.tab').forEach((t, i) => {
-      const names = ['inloggen', 'registreren', 'herstellen']
-      t.classList.toggle('active', names[i] === tab)
-    })
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'))
-    document.getElementById('panel-' + tab).classList.add('active')
-    // Automatisch naam genereren als registratie tab opent
-    if (tab === 'registreren') {
-      setTimeout(() => {
-        const input = document.getElementById('reg-username')
-        if (!input.value) nieuweNaam()
-      }, 100)
-    }
-  }
-
-  // Genereer naam bij eerste load
-  setTimeout(() => {
-    if (document.getElementById('reg-username') && !document.getElementById('reg-username').value) {
-      nieuweNaam()
-    }
-  }, 300)
-
-  window.inloggen = async function() {
-    const username = document.getElementById('login-username').value.trim()
-    const wachtwoord = document.getElementById('login-wachtwoord').value
-    const btn = document.getElementById('login-btn')
-    const msg = document.getElementById('login-msg')
-
-    if (!username || !wachtwoord) {
-      toonBericht(msg, 'error', 'Vul alle velden in.')
-      return
-    }
-
-    btn.disabled = true
-    btn.innerHTML = '<span class="spinner"></span>Inloggen...'
-
-    const nep_email = username.toLowerCase() + '@fibro.internal'
-    await supabase.auth.signOut()
-    const { data, error } = await supabase.auth.signInWithPassword({ email: nep_email, password: wachtwoord })
-
-    if (error) {
-      toonBericht(msg, 'error', 'Ongeldig e-mailadres of wachtwoord.')
-      btn.disabled = false
-      btn.textContent = 'Inloggen'
-      return
-    }
-
-    toonBericht(msg, 'success', 'Ingelogd! Even laden...')
-    setTimeout(() => { window.location.href = 'index.html' }, 800)
-  }
-
 
   const BIJVOEGLIJK = [
     'Turbo','Pixel','Neon','Cosmic','Fluffy','Sneaky','Wobbly','Chonky',
@@ -294,6 +242,61 @@
       input.style.borderColor = ''
     }, 200)
   }
+  window.nieuweNaam = nieuweNaam
+
+  window.switchTab = function(tab) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      const names = ['inloggen', 'registreren', 'herstellen']
+      t.classList.toggle('active', names[i] === tab)
+    })
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'))
+    document.getElementById('panel-' + tab).classList.add('active')
+    // Automatisch naam genereren als registratie tab opent
+    if (tab === 'registreren') {
+      setTimeout(() => {
+        const input = document.getElementById('reg-username')
+        if (!input.value) nieuweNaam()
+      }, 100)
+    }
+  }
+
+  // Genereer naam bij eerste load
+  setTimeout(() => {
+    if (document.getElementById('reg-username') && !document.getElementById('reg-username').value) {
+      nieuweNaam()
+    }
+  }, 300)
+
+  window.inloggen = async function() {
+    const username = document.getElementById('login-username').value.trim()
+    const wachtwoord = document.getElementById('login-wachtwoord').value
+    const btn = document.getElementById('login-btn')
+    const msg = document.getElementById('login-msg')
+
+    if (!username || !wachtwoord) {
+      toonBericht(msg, 'error', 'Vul alle velden in.')
+      return
+    }
+
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner"></span>Inloggen...'
+
+    const nep_email = username.toLowerCase() + '@fibro.internal'
+    await supabase.auth.signOut()
+    const { data, error } = await supabase.auth.signInWithPassword({ email: nep_email, password: wachtwoord })
+
+    if (error) {
+      toonBericht(msg, 'error', 'Ongeldig e-mailadres of wachtwoord.')
+      btn.disabled = false
+      btn.textContent = 'Inloggen'
+      return
+    }
+
+    toonBericht(msg, 'success', 'Ingelogd! Even laden...')
+    setTimeout(() => { window.location.href = 'index.html' }, 800)
+  }
+
+
 
   function maakHerstelSleutel() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'

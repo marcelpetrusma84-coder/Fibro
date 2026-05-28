@@ -160,8 +160,12 @@ input, textarea { font-size:16px !important; }
     <div class="card">
       <label class="field-label">Weergavenaam</label>
       <input class="field" id="editNaam" placeholder="Jouw naam"/>
-      <label class="field-label">Gebruikersnaam</label>
-      <input class="field" id="editUsername" placeholder="@gebruikersnaam"/>
+      <label class="field-label">Gebruikersnaam <span style="font-size:10px;color:var(--muted);">— lokaal opgeslagen</span></label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input class="field" id="editUsername" placeholder="Of typ zelf iets..." style="flex:1;margin:0;" />
+        <button onclick="profielNieuweNaam()" style="background:var(--accent);border:none;border-radius:10px;padding:10px 12px;font-size:18px;cursor:pointer;flex-shrink:0;" title="Genereer willekeurige naam">🎲</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;margin-bottom:8px;">Gebruik geen echte naam — kies een bijnaam</div>
       <label class="field-label">Bio</label>
       <textarea class="field" id="editBio" placeholder="Schrijf iets over jezelf..."></textarea>
       <label class="field-label">Mood</label>
@@ -516,7 +520,7 @@ async function init(){
     const lokaal = JSON.parse(localStorage.getItem('fibro_profiel') || '{}')
 
     document.getElementById('editNaam').value=lokaal.naam||''
-    document.getElementById('editUsername').value=profiel.username||''
+    document.getElementById('editUsername').value=localStorage.getItem('fibro_custom_username')||profiel.username||''
     document.getElementById('editBio').value=lokaal.bio||''
     document.getElementById('editMood').value=lokaal.mood||profiel.mood||''
 
@@ -590,6 +594,9 @@ window.slaAllesOp=async function(){
     stickers: actieveStickers
   }
   localStorage.setItem('fibro_profiel', JSON.stringify(lokaalProfiel))
+  // Gebruikersnaam opslaan (wordt gebruikt als weergavenaam voor vrienden)
+  const customUsername = document.getElementById('editUsername')?.value?.trim()
+  if (customUsername) localStorage.setItem('fibro_custom_username', customUsername)
 
   // ── Minimum naar Supabase: alleen username (voor vrienden zoeken) ──
   // Avatar en mood lokaal opgeslagen, worden via P2P gedeeld
@@ -606,6 +613,24 @@ window.slaAllesOp=async function(){
 }
 window.uitloggen=async function(){await supabase.auth.signOut();window.location.href='login.html'}
 init()
+
+  // Naam generator voor profielpagina
+  const BIJVOEGLIJK_P=['Turbo','Pixel','Neon','Fluffy','Sneaky','Chonky','Sparkly','Grumpy','Bouncy','Squishy','Dizzy','Glitchy','Funky','Wiggly','Zappy','Bubbly','Fuzzy','Goofy','Jazzy','Mighty','Nifty','Peppy','Quirky','Sassy','Ultra','Wacky','Zesty','Blobby','Clumsy','Derpy','Floppy','Hangry','Jumpy','Kooky','Lazy','Moody','Nerdy','Silly','Zippy','Psycho','Mega','Hyper','Retro','Cyber','Magic','Spicy','Crispy']
+  const DIEREN_P=['Kikker','Panda','Hamster','Wasbeer','Capibara','Axolotl','Koala','Pinguin','Flamingo','Alpaca','Eekhoorn','Narwal','Quokka','Wombat','Platypus','Blobfish','Noodle','Pickle','Waffle','Muffin','Burrito','Spaghetti','Toaster','Pillow']
+  const ACHTER_P=['42','88','99','404','1337','XL','Pro','Max','Zero','Alpha','Prime','Turbo','9000','Plus','Elite','Ace','Boss','Legend']
+
+  window.profielNieuweNaam = function() {
+    const b = BIJVOEGLIJK_P[Math.floor(Math.random()*BIJVOEGLIJK_P.length)]
+    const d = DIEREN_P[Math.floor(Math.random()*DIEREN_P.length)]
+    const a = ACHTER_P[Math.floor(Math.random()*ACHTER_P.length)]
+    const naam = b + d + a
+    const input = document.getElementById('editUsername')
+    input.value = naam
+    input.style.transform = 'scale(1.03)'
+    input.style.borderColor = 'var(--accent)'
+    setTimeout(() => { input.style.transform=''; input.style.borderColor='' }, 200)
+  }
+
 </script>
 <script src="swipe.js"></script>
 

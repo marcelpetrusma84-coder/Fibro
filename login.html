@@ -72,7 +72,7 @@
     .field { margin-bottom: 16px; }
     label { display: block; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
 
-    input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 16px !important; outline: none; transition: border-color 0.2s; }
+    input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 16px !important; outline: none; transition: border-color 0.2s, transform 0.2s; }
     input:focus { border-color: var(--accent); }
     input::placeholder { color: var(--text-muted); }
 
@@ -134,7 +134,11 @@
       <div id="reg-form">
         <div class="field">
           <label>Gebruikersnaam</label>
-          <input type="text" id="reg-username" placeholder="jouwuniekename" autocomplete="username" />
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="text" id="reg-username" placeholder="Klik op 🎲 voor een naam" autocomplete="off" readonly style="flex:1;cursor:default;" />
+            <button type="button" onclick="nieuweNaam()" style="background:var(--accent);border:none;border-radius:8px;padding:12px 14px;font-size:18px;cursor:pointer;flex-shrink:0;min-height:44px;" title="Genereer nieuwe naam">🎲</button>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Geen echte naam — dit is jouw anonieme bijnaam</div>
         </div>
         <div class="field">
           <label>Wachtwoord</label>
@@ -192,7 +196,21 @@
     })
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'))
     document.getElementById('panel-' + tab).classList.add('active')
+    // Automatisch naam genereren als registratie tab opent
+    if (tab === 'registreren') {
+      setTimeout(() => {
+        const input = document.getElementById('reg-username')
+        if (!input.value) nieuweNaam()
+      }, 100)
+    }
   }
+
+  // Genereer naam bij eerste load
+  setTimeout(() => {
+    if (document.getElementById('reg-username') && !document.getElementById('reg-username').value) {
+      nieuweNaam()
+    }
+  }, 300)
 
   window.inloggen = async function() {
     const username = document.getElementById('login-username').value.trim()
@@ -221,6 +239,60 @@
 
     toonBericht(msg, 'success', 'Ingelogd! Even laden...')
     setTimeout(() => { window.location.href = 'index.html' }, 800)
+  }
+
+
+  const BIJVOEGLIJK = [
+    'Turbo','Pixel','Neon','Cosmic','Fluffy','Sneaky','Wobbly','Chonky',
+    'Sparkly','Grumpy','Bouncy','Squishy','Dizzy','Glitchy','Funky',
+    'Chunky','Wiggly','Zappy','Bubbly','Crispy','Fuzzy','Goofy','Jazzy',
+    'Lumpy','Mighty','Nifty','Peppy','Quirky','Rusty','Sassy','Tipsy',
+    'Ultra','Voodoo','Wacky','Zesty','Blobby','Clumsy','Derpy','Edgy',
+    'Floppy','Hangry','Itchy','Jumpy','Kooky','Lazy','Moody','Nerdy',
+    'Oozy','Pouty','Rowdy','Silly','Tangy','Uppity','Vivid','Wobbly',
+    'Psycho','Mega','Hyper','Super','Retro','Cyber','Solar','Lunar',
+    'Magic','Toxic','Spicy','Crispy','Glitchy','Doofy','Sloppy','Zippy'
+  ]
+
+  const DIEREN = [
+    'Kikker','Panda','Hamster','Wasbeer','Capibara','Axolotl','Koala',
+    'Pinguin','Flamingo','Alpaca','Eekhoorn','Cactus','Avocado','Nugget',
+    'Blobvis','Narwal','Tapir','Quokka','Fossa','Okapi','Meerkat',
+    'Dodo','Manatee','Wombat','Platypus','Tardigrade','Axolotl','Binturong',
+    'Capybara','Dugong','Echidna','Fugu','Goblin','Hagfish','Irrawaddy',
+    'Jerboa','Kinkajou','Loris','Mudskipper','Numbat','Olm','Pangolin',
+    'Quoll','Rockhopper','Saiga','Tarsier','Uakari','Viscacha','Wolverine',
+    'Xenops','Yapok','Zorilla','Blobfish','Dumbo','Googly','Snuggles',
+    'Noodle','Pickle','Waffle','Muffin','Pretzel','Burrito','Spaghetti',
+    'Toaster','Pillow','Blanket','Sockpuppet','Spoon','Spatula','Whisk'
+  ]
+
+  const ACHTERVOEGSEL = [
+    '42','69','88','99','007','404','420','666','777','1337',
+    'XL','Pro','Max','Ultra','Jr','Sr','III','IV','V','Zero',
+    'Alpha','Beta','Omega','Prime','Turbo','Mega','Hyper','Super',
+    '2000','3000','9000','X','Y','Z','Plus','Deluxe','Premium',
+    'Elite','Ace','Boss','King','Queen','Lord','Master','Legend'
+  ]
+
+  function genereerNaam() {
+    const b = BIJVOEGLIJK[Math.floor(Math.random() * BIJVOEGLIJK.length)]
+    const d = DIEREN[Math.floor(Math.random() * DIEREN.length)]
+    const a = ACHTERVOEGSEL[Math.floor(Math.random() * ACHTERVOEGSEL.length)]
+    return b + d + a
+  }
+
+  function nieuweNaam() {
+    const input = document.getElementById('reg-username')
+    const naam = genereerNaam()
+    input.value = naam
+    // Animatie
+    input.style.transform = 'scale(1.05)'
+    input.style.borderColor = 'var(--accent)'
+    setTimeout(() => {
+      input.style.transform = 'scale(1)'
+      input.style.borderColor = ''
+    }, 200)
   }
 
   function maakHerstelSleutel() {

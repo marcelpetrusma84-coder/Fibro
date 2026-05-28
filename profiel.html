@@ -94,7 +94,10 @@ input[type="color"]{width:40px;height:40px;border:none;background:none;cursor:po
 .nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:15px;color:#ffffff;cursor:pointer;padding:4px 12px;text-shadow:0 2px 6px rgba(0,0,0,1);}
 .nav-item.active{color:var(--accent);}
 .nav-icon{font-size:20px;}
-body::before{content:'';position:fixed;inset:0;background:rgba(0,0,0,0.38);z-index:0;pointer-events:none;display:none;}body.heeft-wallpaper::before{display:block;}body.heeft-wallpaper{background-size:cover;background-position:center;background-attachment:fixed;}.block,.edit-vak,.bottom-nav,.top-bar,.bubble,.vriend-item,.modal{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}.p-name,.p-bio,.block-title,.gb-name,.gb-msg,.music-title,.music-artist,.mood-text,.nav-item,.chat-name,.vriend-naam,.chat-status{text-shadow:0 1px 4px rgba(0,0,0,0.9);}button,.save-btn,.cancel-btn,.send-btn,.back-btn,.lock-btn,.gb-send,.chat-btn,.modal-btn{min-height:44px;min-width:44px;}.bottom-nav{padding-bottom:env(safe-area-inset-bottom,12px);}
+body::before{content:'';position:fixed;inset:0;background:rgba(0,0,0,0.38);z-index:0;pointer-events:none;display:none;}body.heeft-wallpaper::before{display:block;}body.heeft-wallpaper{background-size:cover;background-position:center;background-attachment:fixed;}.block,.edit-vak,.bottom-nav,.top-bar,.bubble,.vriend-item,.modal{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}.p-name,.p-bio,.block-title,.gb-name,.gb-msg,.music-title,.music-artist,.mood-text,.nav-item,.chat-name,.vriend-naam,.chat-status{text-shadow:0 1px 4px rgba(0,0,0,0.9);}button,.save-btn,.cancel-btn,.send-btn,.back-btn,.lock-btn,.gb-send,.chat-btn,.modal-btn{min-height:44px;min-width:44px;}
+.mood-emoji-opt{font-size:24px;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:border-color 0.15s,transform 0.1s;}
+.mood-emoji-opt:hover{transform:scale(1.2);}
+.mood-emoji-opt.actief{border-color:var(--accent);background:rgba(192,132,252,0.15);}.bottom-nav{padding-bottom:env(safe-area-inset-bottom,12px);}
 .wallpaper-bg {
   position: fixed;
   inset: 0;
@@ -166,7 +169,12 @@ input, textarea { font-size:16px !important; }
       <label class="field-label">Bio</label>
       <textarea class="field" id="editBio" placeholder="Schrijf iets over jezelf..."></textarea>
       <label class="field-label">Mood</label>
-      <input class="field" id="editMood" placeholder="Hoe voel je je vandaag?"/>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+        <div id="moodEmojiGekozen" style="font-size:28px;min-width:44px;text-align:center;cursor:pointer;background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:6px;" onclick="toggleMoodPicker()">😊</div>
+        <input class="field" id="editMood" placeholder="Hoe voel je je vandaag?" style="flex:1;margin:0;"/>
+      </div>
+      <div id="moodEmojiPicker" style="display:none;flex-wrap:wrap;gap:6px;padding:10px;background:var(--card);border:0.5px solid var(--border);border-radius:12px;margin-bottom:8px;">
+      </div>
     </div>
   </div>
   <div class="section">
@@ -524,7 +532,13 @@ async function init(){
     const prevUsername = document.getElementById('previewUsername')
     if (prevUsername) prevUsername.textContent = '@' + loginNaam
     document.getElementById('editBio').value=lokaal.bio||''
-    document.getElementById('editMood').value=lokaal.mood||profiel.mood||''
+    const opgeslagenMood = lokaal.mood || profiel.mood || ''
+    // Scheidt emoji van tekst
+    const moodEmoji = opgeslagenMood.match(/^\p{Emoji}/u)?.[0] || '😊'
+    const moodTekst = opgeslagenMood.replace(/^\p{Emoji}\s*/u, '')
+    gekozenMoodEmoji = moodEmoji
+    document.getElementById('moodEmojiGekozen').textContent = moodEmoji
+    document.getElementById('editMood').value = moodTekst
 
     const userId=huidigeUser.id
     const opgeslagenFoto=await laadFotoUitDB('avatar_thumbnail_'+userId)
@@ -580,7 +594,7 @@ function updateActieveStickers(){const grid=document.getElementById('actieveStic
 window.slaAllesOp=async function(){
   const naam=document.getElementById('editNaam').value.trim()
   const bio=document.getElementById('editBio').value.trim()
-  const mood=document.getElementById('editMood').value.trim()
+  const mood = gekozenMoodEmoji + ' ' + document.getElementById('editMood').value.trim()
   const avatar=document.getElementById('avatarEmoji').textContent
   const accentKleur=document.getElementById('accentHex').value
   const accentKleur2=document.getElementById('accent2Hex').value
@@ -612,6 +626,64 @@ window.slaAllesOp=async function(){
 }
 window.uitloggen=async function(){await supabase.auth.signOut();window.location.href='login.html'}
 init()
+
+  // ─── Mood emoji picker ───
+  const MOOD_EMOJIS = [
+    // Blij
+    '😊','😄','😁','🥰','😍','🤩','😎','🥳','😇','🤗',
+    // Verdrietig
+    '😢','😭','😔','😞','🥺','😟','💔','😪','😩','🫂',
+    // Boos
+    '😠','😤','🤬','😒','🙄','😑','😶','🫠','💢','😾',
+    // Moe
+    '😴','🥱','😪','🫥','😵','🤯','🥴','😵‍💫','🤒','🤕',
+    // Grappig
+    '😂','🤣','😜','🤪','😝','🤡','🫣','🤭','😏','😈',
+    // Lief
+    '🥰','😘','💕','❤️','🫶','💝','💖','💗','🌸','✨',
+    // Koel
+    '😎','🤙','👑','🔥','⚡','💫','🌟','🎯','🚀','💪',
+    // Natuur
+    '🌈','🌊','🌿','🦋','🌙','⭐','🌻','🍀','🌺','🦄',
+  ]
+
+  let gekozenMoodEmoji = '😊'
+
+  function bouwMoodPicker() {
+    const picker = document.getElementById('moodEmojiPicker')
+    picker.innerHTML = ''
+    MOOD_EMOJIS.forEach(emoji => {
+      const span = document.createElement('span')
+      span.className = 'mood-emoji-opt' + (emoji === gekozenMoodEmoji ? ' actief' : '')
+      span.textContent = emoji
+      span.onclick = () => {
+        gekozenMoodEmoji = emoji
+        document.getElementById('moodEmojiGekozen').textContent = emoji
+        document.querySelectorAll('.mood-emoji-opt').forEach(s => s.classList.remove('actief'))
+        span.classList.add('actief')
+        // Update preview
+        const previewMood = document.getElementById('previewMood')
+        if (previewMood) previewMood.textContent = emoji + ' ' + (document.getElementById('editMood').value || '')
+      }
+      picker.appendChild(span)
+    })
+  }
+
+  window.toggleMoodPicker = function() {
+    const picker = document.getElementById('moodEmojiPicker')
+    const open = picker.style.display === 'flex'
+    picker.style.display = open ? 'none' : 'flex'
+    if (!open) bouwMoodPicker()
+  }
+
+  // Initialiseer mood picker
+  bouwMoodPicker()
+
+  // Mood preview updaten bij typen
+  document.getElementById('editMood').addEventListener('input', () => {
+    const previewMood = document.getElementById('previewMood')
+    if (previewMood) previewMood.textContent = gekozenMoodEmoji + ' ' + document.getElementById('editMood').value
+  })
 
   // Naam generator voor profielpagina
   const BIJVOEGLIJK_P=['Turbo','Pixel','Neon','Fluffy','Sneaky','Chonky','Sparkly','Grumpy','Bouncy','Squishy','Dizzy','Glitchy','Funky','Wiggly','Zappy','Bubbly','Fuzzy','Goofy','Jazzy','Mighty','Nifty','Peppy','Quirky','Sassy','Ultra','Wacky','Zesty','Blobby','Clumsy','Derpy','Floppy','Hangry','Jumpy','Kooky','Lazy','Moody','Nerdy','Silly','Zippy','Psycho','Mega','Hyper','Retro','Cyber','Magic','Spicy','Crispy']

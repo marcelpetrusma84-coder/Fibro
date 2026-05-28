@@ -388,7 +388,122 @@ const fonts=[{naam:'DM Sans',familie:"'DM Sans',sans-serif",stijl:'Modern & Clea
 function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',1);req.onupgradeneeded=e=>e.target.result.createObjectStore('fotos',{keyPath:'id'});req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
 async function slaFotoOp(id,data){const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=resolve})}
 async function laadFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
-function comprimeerFoto(file,maxBreedte,kwaliteit){return new Promise((resolve)=>{const reader=new FileReader();reader.onload=function(e){const img=new Image();img.onload=function(){const canvas=document.createElement('canvas');let w=img.width,h=img.height;if(w>maxBreedte){h=h*maxBreedte/w;w=maxBreedte}if(h>maxBreedte){w=w*maxBreedte/h;h=maxBreedte}canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);resolve(canvas.toDataURL('image/jpeg',kwaliteit))};img.src=e.target.result};reader.readAsDataURL(file)})}
+function comprimeerFoto(file,maxBreedte,kwaliteit){return new Promise((resolve)=>{const reader=new FileReader();reader.onload=function(e){const img=new Image();img.onload=function(){const canvas=document.createElement('canvas');let w=img.width,h=img.height;if(w>maxBreedte){h=h*maxBreedte/w;w=maxBreedte}if(h>maxBreedte){w=w*maxBreedte/h;h=maxBreedte}canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);// WebP voor kleinste bestandsgrootte
+resolve(canvas.toDataURL('image/webp',kwaliteit))};img.src=e.target.result};reader.readAsDataURL(file)})}
+
+// Video compressie via MediaRecorder (thumbnail + gecomprimeerde versie)
+async function comprimeerVideo(file) {
+  return new Promise((resolve) => {
+    const maxMB = 15
+    const maxBytes = maxMB * 1024 * 1024
+    // Als video al klein genoeg is, direct opslaan
+    if (file.size <= maxBytes) {
+      const reader = new FileReader()
+      reader.onload = e => resolve(e.target.result)
+      reader.readAsDataURL(file)
+      return
+    }
+    // Anders: gebruik canvas om te comprimeren via video element
+    const video = document.createElement('video')
+    const url = URL.createObjectURL(file)
+    video.src = url
+    video.muted = true
+    video.onloadedmetadata = () => {
+      // Bereken schaalfactor voor 720p
+      const schaal = Math.min(1, 720 / video.videoHeight, 1280 / video.videoWidth)
+      const w = Math.round(video.videoWidth * schaal)
+      const h = Math.round(video.videoHeight * schaal)
+      const canvas = document.createElement('canvas')
+      canvas.width = w; canvas.height = h
+      const stream = canvas.captureStream(24)
+      const recorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm;codecs=vp9',
+        videoBitsPerSecond: 1_000_000 // 1Mbps
+      })
+      const chunks = []
+      recorder.ondataavailable = e => chunks.push(e.data)
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' })
+        const reader = new FileReader()
+        reader.onload = e => { URL.revokeObjectURL(url); resolve(e.target.result) }
+        reader.readAsDataURL(blob)
+      }
+      recorder.start()
+      video.play()
+      const ctx = canvas.getContext('2d')
+      function frame() {
+        if (video.ended || video.paused) { recorder.stop(); return }
+        ctx.drawImage(video, 0, 0, w, h)
+        requestAnimationFrame(frame)
+      }
+      frame()
+      // Stop na max 60 seconden
+      setTimeout(() => { if (recorder.state === 'recording') recorder.stop() }, 60000)
+    }
+  })
+}
+
+// Muziek compressie via Web Audio API
+async function comprimeerMuziek(file) {
+  return new Promise((resolve) => {
+    const maxMB = 3
+    const maxBytes = maxMB * 1024 * 1024
+    if (file.size <= maxBytes) {
+      const reader = new FileReader()
+      reader.onload = e => resolve(e.target.result)
+      reader.readAsDataURL(file)
+      return
+    }
+    // Resample naar 128kbps via AudioContext
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)()
+        const buffer = await ctx.decodeAudioData(e.target.result)
+        // Offline render op 44100Hz mono voor kleinste bestand
+        const offline = new OfflineAudioContext(1, buffer.length, 44100)
+        const src = offline.createBufferSource()
+        src.buffer = buffer
+        src.connect(offline.destination)
+        src.start()
+        const rendered = await offline.startRendering()
+        // Converteer naar WAV data URL
+        const wav = audioBufferToWav(rendered)
+        const blob = new Blob([wav], { type: 'audio/wav' })
+        const r2 = new FileReader()
+        r2.onload = f => resolve(f.target.result)
+        r2.readAsDataURL(blob)
+        ctx.close()
+      } catch(err) {
+        // Fallback: gewoon opslaan
+        resolve(e.target.result)
+      }
+    }
+    reader.readAsArrayBuffer(file)
+  })
+}
+
+function audioBufferToWav(buffer) {
+  const numCh = buffer.numberOfChannels
+  const len = buffer.length * numCh * 2 + 44
+  const ab = new ArrayBuffer(len)
+  const view = new DataView(ab)
+  const sr = buffer.sampleRate
+  function str(v,o,s){for(let i=0;i<s.length;i++)view.setUint8(o+i,s.charCodeAt(i))}
+  function u16(o,v){view.setUint16(o,v,true)}
+  function u32(o,v){view.setUint32(o,v,true)}
+  str(0,0,'RIFF');u32(4,len-8);str(8,0,'WAVE');str(12,0,'fmt ')
+  u32(16,16);u16(20,1);u16(22,numCh);u32(24,sr);u32(28,sr*numCh*2)
+  u16(32,numCh*2);u16(34,16);str(36,0,'data');u32(40,len-44)
+  let offset=44
+  for(let i=0;i<buffer.length;i++){
+    for(let ch=0;ch<numCh;ch++){
+      const s=Math.max(-1,Math.min(1,buffer.getChannelData(ch)[i]))
+      view.setInt16(offset,s<0?s*0x8000:s*0x7FFF,true);offset+=2
+    }
+  }
+  return ab
+}
 async function init(){
   const{data:{session}}=await supabase.auth.getSession()
   if(!session){window.location.href='login.html';return}
@@ -431,7 +546,7 @@ function updatePreview(){document.getElementById('previewNaam').textContent=docu
 window.switchTab=function(tab){document.querySelectorAll('.main-tab').forEach((t,i)=>{const tabs=['profiel','achtergrond','animatie','lettertype','kleur','widgets','stickers'];t.classList.toggle('active',tabs[i]===tab)});document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('panel-'+tab).classList.add('active');if(tab==='animatie')startAnimatiePreview();else stopAnimatiePreview()}
 function bouwAvatarPicker(){const picker=document.getElementById('avatarPicker');picker.innerHTML='';avatarEmojis.forEach(e=>{const span=document.createElement('span');span.className='emoji-opt';span.textContent=e;span.onclick=()=>{document.getElementById('avatarEmoji').textContent=e;document.getElementById('previewAvatar').textContent=e;document.getElementById('avatarPickerWrap').style.display='none'};picker.appendChild(span)})}
 window.switchAvatarTab=function(tab){if(tab==='emoji'){document.getElementById('avatarEmojiTab').style.display='block';document.getElementById('avatarFotoTab').style.display='none';document.getElementById('tabEmoji').style.cssText='flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;';document.getElementById('tabFoto').style.cssText='flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;'}else{document.getElementById('avatarEmojiTab').style.display='none';document.getElementById('avatarFotoTab').style.display='block';document.getElementById('tabFoto').style.cssText='flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;';document.getElementById('tabEmoji').style.cssText='flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;'}}
-window.verwerkFoto=async function(event){const file=event.target.files[0];if(!file)return;const volledig=await comprimeerFoto(file,400,0.80);const thumbnail=await comprimeerFoto(file,80,0.80);const userId=huidigeUser.id;await slaFotoOp('avatar_volledig_'+userId,volledig);await slaFotoOp('avatar_thumbnail_'+userId,thumbnail);document.getElementById('fotoPreview').src=volledig;document.getElementById('fotoPreviewWrap').style.display='block';window._fotoVolledig=volledig;window._fotoThumbnail=thumbnail}
+window.verwerkFoto=async function(event){const file=event.target.files[0];if(!file)return;const volledig=await comprimeerFoto(file,1080,0.85);const thumbnail=await comprimeerFoto(file,80,0.85);const userId=huidigeUser.id;await slaFotoOp('avatar_volledig_'+userId,volledig);await slaFotoOp('avatar_thumbnail_'+userId,thumbnail);document.getElementById('fotoPreview').src=volledig;document.getElementById('fotoPreviewWrap').style.display='block';window._fotoVolledig=volledig;window._fotoThumbnail=thumbnail}
 window.bevestigFoto=function(){const src=window._fotoThumbnail;document.getElementById('avatarEmoji').innerHTML=`<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;document.getElementById('previewAvatar').innerHTML=`<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;document.getElementById('avatarPickerWrap').style.display='none';window._fotoAvatar=src}
 window.toggleAvatarPicker=function(){const w=document.getElementById('avatarPickerWrap');w.style.display=w.style.display==='none'?'block':'none'}
 window.setAchtergrondType=function(type){document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));document.getElementById('type-'+type).classList.add('active');document.getElementById('bg-kleur-sectie').style.display=type==='kleur'?'block':'none';document.getElementById('bg-gradient-sectie').style.display=type==='gradient'?'block':'none';document.getElementById('bg-wallpaper-sectie').style.display=type==='wallpaper'?'block':'none';document.getElementById('bg-upload-sectie').style.display=type==='upload'?'block':'none'}
@@ -439,7 +554,7 @@ window.updateBgKleur=function(k){document.getElementById('bgKleurPicker').value=
 window.updateBgKleurHex=function(v){if(/^#[0-9a-f]{6}$/i.test(v))updateBgKleur(v)}
 window.updateGradient=function(){const k1=document.getElementById('grad1Picker').value,k2=document.getElementById('grad2Picker').value;document.getElementById('gradientPreview').style.background=`linear-gradient(135deg,${k1},${k2})`;document.documentElement.style.setProperty('--bg',k1)}
 window.selectWallpaper=function(naam,el){document.querySelectorAll('.wallpaper-cell').forEach(c=>c.classList.remove('selected'));el.classList.add('selected')}
-window.uploadAchtergrond=async function(input){const bestand=input.files[0];if(!bestand)return;if(bestand.size>10*1024*1024){alert('Bestand te groot! Max 10MB.');return};const userId=huidigeUser.id;if(bestand.type.startsWith('video')){const url=URL.createObjectURL(bestand);document.getElementById('uploadedWallpaper').innerHTML=`<video src="${url}" autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>`;document.getElementById('uploadPreview').style.display='block';document.body.style.backgroundImage=`url(${url})`;document.body.style.backgroundSize='cover';document.body.style.backgroundPosition='center';document.body.style.backgroundAttachment='fixed';return};const gecomprimeerd=await comprimeerFoto(bestand,1920,0.85);await slaFotoOp('bg_wallpaper_'+userId,gecomprimeerd);document.getElementById('uploadedWallpaper').innerHTML=`<img src="${gecomprimeerd}" style="width:100%;height:100%;object-fit:cover;">`;document.getElementById('uploadPreview').style.display='block';document.body.style.backgroundImage=`url(${gecomprimeerd})`;document.body.style.backgroundSize='cover';document.body.style.backgroundPosition='center';document.body.style.backgroundAttachment='fixed';document.body.style.backgroundRepeat='no-repeat';document.documentElement.style.setProperty('--bg','transparent')}
+window.uploadAchtergrond=async function(input){const bestand=input.files[0];if(!bestand)return;if(bestand.size>10*1024*1024){alert('Bestand te groot! Max 10MB.');return};const userId=huidigeUser.id;if(bestand.type.startsWith('video')){const url=URL.createObjectURL(bestand);document.getElementById('uploadedWallpaper').innerHTML=`<video src="${url}" autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>`;document.getElementById('uploadPreview').style.display='block';document.body.style.backgroundImage=`url(${url})`;document.body.style.backgroundSize='cover';document.body.style.backgroundPosition='center';document.body.style.backgroundAttachment='fixed';return};const gecomprimeerd=await comprimeerFoto(bestand,1080,0.85);await slaFotoOp('bg_wallpaper_'+userId,gecomprimeerd);document.getElementById('uploadedWallpaper').innerHTML=`<img src="${gecomprimeerd}" style="width:100%;height:100%;object-fit:cover;">`;document.getElementById('uploadPreview').style.display='block';document.body.style.backgroundImage=`url(${gecomprimeerd})`;document.body.style.backgroundSize='cover';document.body.style.backgroundPosition='center';document.body.style.backgroundAttachment='fixed';document.body.style.backgroundRepeat='no-repeat';document.documentElement.style.setProperty('--bg','transparent')}
 window.verwijderWallpaper=async function(){const userId=huidigeUser.id;const db=await openDB();await new Promise(resolve=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').delete('bg_wallpaper_'+userId);tx.oncomplete=resolve});document.body.style.backgroundImage='';document.body.style.backgroundSize='';document.body.style.backgroundPosition='';document.body.style.backgroundAttachment='';document.body.style.backgroundRepeat='';document.documentElement.style.setProperty('--bg','#1a0a2e');document.getElementById('uploadPreview').style.display='none';document.getElementById('uploadedWallpaper').innerHTML='';document.getElementById('bgUpload').value=''}
 var deeltjes=[]
 window.selectAnimatie=function(naam){huidigeAnimatie=naam;updateAnimatieUI();startAnimatiePreview()}
@@ -476,13 +591,11 @@ window.slaAllesOp=async function(){
   }
   localStorage.setItem('fibro_profiel', JSON.stringify(lokaalProfiel))
 
-  // ── Minimum naar Supabase: alleen wat vrienden zien ──
-  // avatar_url en mood zijn nodig voor vriendenlijst/profielpagina
+  // ── Minimum naar Supabase: alleen username (voor vrienden zoeken) ──
+  // Avatar en mood lokaal opgeslagen, worden via P2P gedeeld
   const{error}=await supabase.from('profiles').upsert({
     id:huidigeUser.id,
     username:profiel?.username||huidigeUser.id,
-    avatar_url:window._fotoAvatar||avatar,
-    mood:mood,
     updated_at:new Date().toISOString()
   })
 

@@ -23,7 +23,6 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 .input:focus { border-color:var(--accent); }
 .input[readonly] { cursor:default; color:var(--accent); font-family:'DM Mono',monospace; }
 .btn { width:100%; padding:14px; border-radius:12px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:16px; font-weight:600; margin-top:8px; }
-.btn-ghost { background:transparent; border:0.5px solid var(--border); color:var(--text); margin-top:6px; }
 .msg { font-size:14px; padding:10px 14px; border-radius:10px; margin-bottom:14px; display:none; }
 .msg.success { background:rgba(34,197,94,0.15); border:0.5px solid #22c55e; color:#22c55e; display:block; }
 .msg.error { background:rgba(248,113,113,0.15); border:0.5px solid #f87171; color:#f87171; display:block; }
@@ -32,6 +31,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 .herstel-box { background:rgba(192,132,252,0.08); border:1.5px solid var(--accent); border-radius:12px; padding:16px; margin:12px 0; }
 .herstel-code { font-family:'DM Mono',monospace; font-size:20px; letter-spacing:2px; color:var(--accent); text-align:center; margin:8px 0; word-break:break-all; }
 .laden { font-size:15px; color:var(--muted); }
+.e2e-badge { display:inline-flex; align-items:center; gap:5px; background:rgba(34,197,94,0.1); border:0.5px solid rgba(34,197,94,0.3); border-radius:20px; padding:4px 10px; font-size:11px; color:#22c55e; margin-bottom:12px; }
 </style>
 </head>
 <body>
@@ -44,6 +44,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
     <div class="avatar" id="uitnodigerAvatar">👤</div>
     <div class="uitnodiger" id="uitnodigerNaam">...</div>
     <div class="uitnodiger-sub">nodigt je uit op Fibro ✨</div>
+    <div class="e2e-badge">🔒 End-to-end versleuteld</div>
     <hr>
     <div class="msg" id="bericht"></div>
 
@@ -80,7 +81,8 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
   <div id="herstelScherm" style="display:none">
     <div style="font-size:40px;margin-bottom:12px;">🎉</div>
     <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Welkom bij Fibro!</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Bewaar je herstelsleutel op een veilige plek</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Bewaar je herstelsleutel op een veilige plek</div>
+    <div class="e2e-badge" style="margin:0 auto 16px;">🔒 Encryptie sleutels aangemaakt</div>
     <div class="herstel-box">
       <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Jouw herstelsleutel:</div>
       <div class="herstel-code" id="herstelCode">—</div>
@@ -101,6 +103,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+import { genereerKeypair, slaPrivateKeyOp } from './crypto.js'
 
 const supabase = createClient(
   'https://qmgatbphiplrfxrljtbe.supabase.co',
@@ -111,7 +114,6 @@ const urlParams = new URLSearchParams(window.location.search)
 const token = urlParams.get('token')
 var uitnodigerData = null
 
-// ─── Naam generator ───
 const BIJVOEGLIJK = ['Turbo','Pixel','Neon','Fluffy','Sneaky','Chonky','Sparkly','Grumpy','Bouncy','Squishy','Dizzy','Glitchy','Funky','Wiggly','Zappy','Bubbly','Fuzzy','Goofy','Jazzy','Mighty','Nifty','Peppy','Quirky','Sassy','Ultra','Wacky','Zesty','Blobby','Clumsy','Derpy','Floppy','Jumpy','Kooky','Lazy','Moody','Nerdy','Silly','Zippy','Psycho','Mega','Hyper','Retro','Cyber','Magic','Spicy','Crispy']
 const DIEREN = ['Kikker','Panda','Hamster','Wasbeer','Capibara','Axolotl','Koala','Pinguin','Flamingo','Alpaca','Eekhoorn','Narwal','Quokka','Wombat','Platypus','Blobfish','Noodle','Pickle','Waffle','Muffin','Burrito','Spaghetti','Toaster','Pillow','Nugget','Avocado','Cactus']
 const ACHTER = ['42','88','99','404','1337','XL','Pro','Max','Zero','Alpha','Prime','9000','Plus','Elite','Ace','Boss','Legend','007','777']
@@ -145,29 +147,23 @@ function bepaalNiveau(jaar) {
 
 async function init() {
   if (!token) { toonFout(); return }
-
   const { data, error } = await supabase
     .from('invite_tokens')
     .select('created_by, is_used')
     .eq('token', token)
     .eq('is_used', false)
     .single()
-
   if (error || !data) { toonFout(); return }
   uitnodigerData = data
-
   const { data: profiel } = await supabase
     .from('profiles')
     .select('username, avatar_url')
     .eq('id', data.created_by)
     .single()
-
   document.getElementById('uitnodigerNaam').textContent = profiel?.username || 'Iemand'
   document.getElementById('uitnodigerAvatar').textContent = profiel?.avatar_url || '👤'
   document.getElementById('laadScherm').style.display = 'none'
   document.getElementById('uitnodigingScherm').style.display = 'block'
-
-  // Genereer meteen een naam
   nieuweNaam()
 }
 
@@ -184,23 +180,27 @@ window.registreren = async function() {
   const msg = document.getElementById('bericht')
   const btn = document.getElementById('regBtn')
 
-  if (!naam || !ww || !jaar) {
-    msg.className='msg error'; msg.textContent='Vul alle velden in.'; return
-  }
-  if (!akkoord) {
-    msg.className='msg error'; msg.textContent='Ga akkoord met de spelregels.'; return
-  }
-  if (ww.length < 8) {
-    msg.className='msg error'; msg.textContent='Wachtwoord minimaal 8 tekens.'; return
-  }
+  if (!naam || !ww || !jaar) { msg.className='msg error'; msg.textContent='Vul alle velden in.'; return }
+  if (!akkoord) { msg.className='msg error'; msg.textContent='Ga akkoord met de spelregels.'; return }
+  if (ww.length < 8) { msg.className='msg error'; msg.textContent='Wachtwoord minimaal 8 tekens.'; return }
   const jaarNum = parseInt(jaar)
   if (jaarNum < 1900 || jaarNum > new Date().getFullYear()) {
     msg.className='msg error'; msg.textContent='Vul een geldig geboortejaar in.'; return
   }
 
-  btn.textContent = 'Account aanmaken...'
+  btn.textContent = '🔒 Encryptie voorbereiden...'
   btn.disabled = true
 
+  // ── E2E: Keypair genereren vóór registratie ──
+  let keypair
+  try {
+    keypair = await genereerKeypair()
+  } catch(e) {
+    msg.className='msg error'; msg.textContent='Encryptie aanmaken mislukt. Probeer opnieuw.'
+    btn.textContent='Account aanmaken 🌸'; btn.disabled=false; return
+  }
+
+  btn.textContent = 'Account aanmaken...'
   const nep_email = naam.toLowerCase() + '@fibro.internal'
   const herstelsleutel = maakHerstelSleutel()
   const niveau = bepaalNiveau(jaar)
@@ -218,11 +218,15 @@ window.registreren = async function() {
   }
 
   if (data.user) {
+    // ── E2E: private key lokaal opslaan, public key naar Supabase ──
+    slaPrivateKeyOp(data.user.id, keypair.privateKeyB64)
+
     await supabase.from('profiles').upsert({
       id: data.user.id,
       username: naam,
       niveau,
       herstelsleutel,
+      public_key: keypair.publicKeyB64,
       updated_at: new Date().toISOString()
     })
 
@@ -238,7 +242,6 @@ window.registreren = async function() {
     }
   }
 
-  // Toon herstelsleutel
   document.getElementById('uitnodigingScherm').style.display = 'none'
   document.getElementById('herstelCode').textContent = herstelsleutel
   document.getElementById('bevestigNaam').textContent = naam

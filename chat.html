@@ -126,6 +126,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     <div class="chat-name" id="chatNaam">Selecteer een vriend</div>
     <div class="chat-status" id="chatStatus">Kies hieronder met wie je wilt chatten</div>
   </div>
+  <button class="lock-btn" id="belKnop" onclick="openBelKeuze()" style="display:none">📞</button>
   <button class="lock-btn" onclick="showScreenshotModal()">🔒 Screenshot</button>
 </div>
 
@@ -243,11 +244,53 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 
 <div class="buzz-overlay" id="buzzOverlay"><div class="buzz-overlay-inner">📳</div></div>
 
+<!-- Bel keuze modal -->
+<div class="modal-bg" id="belKeuzeModal">
+  <div class="modal">
+    <div class="modal-icon">📞</div>
+    <div class="modal-title" id="belKeuzeNaam">Bellen</div>
+    <div class="modal-sub">Kies hoe je wilt bellen</div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="startBellen(false)" style="font-size:20px;color:var(--text)">🎤 Audio</button>
+      <button class="modal-btn confirm" onclick="startBellen(true)" style="font-size:20px;">📹 Video</button>
+    </div>
+    <button class="modal-btn cancel" style="width:100%;margin-top:8px;" onclick="sluitBelKeuze()">Annuleer</button>
+  </div>
+</div>
+
+<!-- Inkomende oproep modal -->
+<div class="modal-bg" id="inkomendModal">
+  <div class="modal">
+    <div class="modal-icon" id="inkomendAvatar">👤</div>
+    <div class="modal-title" id="inkomendNaam">Oproep</div>
+    <div class="modal-sub" id="inkomendType">belt je op...</div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="weigerbellen()" style="font-size:20px;">❌</button>
+      <button class="modal-btn confirm" onclick="accepteerBellen(false)" style="font-size:20px;">🎤</button>
+      <button class="modal-btn confirm" onclick="accepteerBellen(true)" style="font-size:20px;">📹</button>
+    </div>
+  </div>
+</div>
+
+<!-- Actief gesprek scherm -->
+<div id="gesprekScherm" style="display:none;position:fixed;inset:0;background:#0a0014;z-index:50;flex-direction:column;align-items:center;justify-content:center;">
+  <video id="remoteMedia" autoplay playsinline style="width:100%;max-height:60vh;object-fit:cover;background:#000;border-radius:16px;"></video>
+  <video id="lokaalMedia" autoplay playsinline muted style="position:absolute;top:16px;right:16px;width:100px;height:140px;object-fit:cover;border-radius:12px;border:2px solid var(--accent);"></video>
+  <audio id="remoteAudio" autoplay style="display:none;"></audio>
+  <div style="position:absolute;bottom:100px;display:flex;gap:16px;">
+    <button onclick="toggleMicBtn()" id="micBtn" style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;font-size:24px;cursor:pointer;">🎤</button>
+    <button onclick="hangOpBtn()" style="width:64px;height:64px;border-radius:50%;background:#f87171;border:none;font-size:28px;cursor:pointer;">📵</button>
+    <button onclick="toggleCameraBtn()" id="camBtn" style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;font-size:24px;cursor:pointer;">📹</button>
+  </div>
+  <div id="gesprekStatus" style="position:absolute;top:20px;left:0;right:0;text-align:center;color:#fff;font-size:14px;opacity:0.7;">Verbinden...</div>
+</div>
+
 <script type="module">
   import { laadThema } from './thema.js'
   import { laadWallpaper } from './wallpaper.js'
   import { supabase } from './supabase.js'
   import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js'
+  import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, toggleCamera } from './bellen.js'
 
   var huidigeUser = null
   var huidigProfiel = null
@@ -300,6 +343,26 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 
     huidigProfiel = data
     await laadVrienden()
+
+    // ── Bellen initialiseren ──
+    initBellen(huidigeUser.id, {
+      onOproep: (info) => {
+        // Inkomende oproep tonen
+        const vriend = geselecteerdeVriend
+        document.getElementById('inkomendAvatar').textContent = vriend?.avatar || '👤'
+        document.getElementById('inkomendNaam').textContent = vriend?.naam || 'Iemand'
+        document.getElementById('inkomendType').textContent = info.videoModus ? '📹 videogesprek' : '🎤 audiogesprek'
+        document.getElementById('inkomendModal').classList.add('show')
+        // Ringtone
+        speelRingtone()
+      },
+      onEind: () => {
+        stopRingtone()
+        document.getElementById('gesprekScherm').style.display = 'none'
+        document.getElementById('inkomendModal').classList.remove('show')
+        voegSysBericht('📵 Gesprek beëindigd')
+      }
+    })
   }
 
   // ─── Vrienden laden ───
@@ -361,7 +424,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     document.getElementById('chatSysBericht').textContent =
       `${versleuteldLabel} · ${vriendNaam}`
 
-    document.getElementById('vriendenSelectie').style.display = 'none'
+    document.getElementById('belKnop').style.display = 'flex'
     const chatScherm = document.getElementById('chatScherm')
     chatScherm.style.display = 'flex'
     chatScherm.style.flexDirection = 'column'
@@ -617,6 +680,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     if (geselecteerdeVriend) {
       geselecteerdeVriend = null
       vriendPublicKey = null
+      document.getElementById('belKnop').style.display = 'none'
       document.getElementById('chatScherm').style.display = 'none'
       document.getElementById('vriendenSelectie').style.display = 'block'
       document.getElementById('chatNaam').textContent = 'Selecteer een vriend'
@@ -718,6 +782,111 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   function scrollNaarOnder() {
     const msgs = document.getElementById('messages')
     msgs.scrollTop = msgs.scrollHeight
+  }
+
+  // ─── Bel functies ───
+  let videoModus = false
+  let ringtoneInterval = null
+
+  window.openBelKeuze = function() {
+    if (!geselecteerdeVriend) return
+    document.getElementById('belKeuzeNaam').textContent = geselecteerdeVriend.naam
+    document.getElementById('belKeuzeModal').classList.add('show')
+  }
+
+  window.sluitBelKeuze = function() {
+    document.getElementById('belKeuzeModal').classList.remove('show')
+  }
+
+  window.startBellen = async function(video) {
+    videoModus = video
+    document.getElementById('belKeuzeModal').classList.remove('show')
+    const gelukt = await belOp(geselecteerdeVriend.id, video)
+    if (gelukt) {
+      toonGesprekScherm(video)
+      document.getElementById('gesprekStatus').textContent = '⏳ Wachten op ' + geselecteerdeVriend.naam + '...'
+      voegSysBericht('📞 Bellen naar ' + geselecteerdeVriend.naam + '...')
+    }
+  }
+
+  window.accepteerBellen = async function(video) {
+    stopRingtone()
+    document.getElementById('inkomendModal').classList.remove('show')
+    videoModus = video
+    const gelukt = await accepteerOproep(video)
+    if (gelukt) {
+      toonGesprekScherm(video)
+      document.getElementById('gesprekStatus').textContent = '🔗 Verbonden'
+      voegSysBericht('📞 Gesprek gestart')
+    }
+  }
+
+  window.weigerbellen = async function() {
+    stopRingtone()
+    document.getElementById('inkomendModal').classList.remove('show')
+    await weigerooproep()
+    voegSysBericht('📵 Oproep geweigerd')
+  }
+
+  window.hangOpBtn = async function() {
+    await hangOp()
+    document.getElementById('gesprekScherm').style.display = 'none'
+    voegSysBericht('📵 Gesprek beëindigd')
+  }
+
+  window.toggleMicBtn = function() {
+    const aan = toggleMic()
+    document.getElementById('micBtn').textContent = aan ? '🎤' : '🔇'
+    document.getElementById('micBtn').style.background = aan ? 'rgba(255,255,255,0.15)' : 'rgba(248,113,113,0.4)'
+  }
+
+  window.toggleCameraBtn = function() {
+    const aan = toggleCamera()
+    document.getElementById('camBtn').textContent = aan ? '📹' : '🚫'
+    document.getElementById('camBtn').style.background = aan ? 'rgba(255,255,255,0.15)' : 'rgba(248,113,113,0.4)'
+  }
+
+  function toonGesprekScherm(video) {
+    const scherm = document.getElementById('gesprekScherm')
+    scherm.style.display = 'flex'
+    // Audio only — verberg video elementen
+    if (!video) {
+      document.getElementById('remoteMedia').style.display = 'none'
+      document.getElementById('lokaalMedia').style.display = 'none'
+      document.getElementById('remoteAudio').style.display = 'block'
+      // Wijs remote stream toe aan audio element
+      setTimeout(() => {
+        const remoteEl = document.getElementById('remoteAudio')
+        if (remoteEl && window._remoteStream) remoteEl.srcObject = window._remoteStream
+      }, 500)
+    } else {
+      document.getElementById('remoteMedia').style.display = 'block'
+      document.getElementById('lokaalMedia').style.display = 'block'
+    }
+  }
+
+  function speelRingtone() {
+    let teller = 0
+    ringtoneInterval = setInterval(() => {
+      if (teller++ > 30) { stopRingtone(); return }
+      try {
+        const ctx = new (window.AudioContext||window.webkitAudioContext)()
+        const speel = (freq, start, dur) => {
+          const osc = ctx.createOscillator(), gain = ctx.createGain()
+          osc.connect(gain); gain.connect(ctx.destination)
+          osc.type = 'sine'; osc.frequency.value = freq
+          gain.gain.setValueAtTime(0.3, ctx.currentTime + start)
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur)
+          osc.start(ctx.currentTime + start); osc.stop(ctx.currentTime + start + dur)
+        }
+        speel(880, 0, 0.15); speel(1100, 0.2, 0.15)
+      } catch(e) {}
+    }, 1500)
+    if (navigator.vibrate) navigator.vibrate([400, 200, 400])
+  }
+
+  function stopRingtone() {
+    if (ringtoneInterval) { clearInterval(ringtoneInterval); ringtoneInterval = null }
   }
 
   // ─── Geluidsbibliotheek ───
@@ -870,6 +1039,5 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 
   init()
 </script>
-<script src="swipe.js"></script>
 </body>
 </html>

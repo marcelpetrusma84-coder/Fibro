@@ -5,25 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fibro — Uitnodiging</title>
 <meta name="theme-color" content="#c084fc">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
-:root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:#ffffff; }
+:root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:rgba(255,255,255,0.5); }
 body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
 .kaart { background:rgba(0,0,0,0.5); border:0.5px solid var(--border); border-radius:20px; padding:30px 24px; width:100%; text-align:center; backdrop-filter:blur(16px); }
-.fibro-logo { font-family:'DM Serif Display',serif; font-size:56px; color:#ffffff; margin-bottom:20px; text-shadow:0 2px 8px rgba(0,0,0,0.8); }
-.avatar { width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:36px; margin:0 auto 16px; }
-.uitnodiger { font-family:'Playfair Display',serif; font-size:20px; font-weight:600; margin-bottom:6px; }
-.uitnodiger-sub { font-size:15px; color:var(--muted); margin-bottom:24px; }
-.divider { border:none; border-top:0.5px solid var(--border); margin:20px 0; }
-.field { margin-bottom:14px; text-align:left; }
-.field label { font-size:14px; color:var(--muted); display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.08em; }
-.input { width:100%; background:rgba(255,255,255,0.05); border:0.5px solid var(--border); border-radius:10px; padding:12px 14px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:16px; outline:none; }
+.fibro-logo { font-family:'DM Serif Display',serif; font-size:48px; color:#ffffff; margin-bottom:16px; text-shadow:0 2px 8px rgba(0,0,0,0.8); }
+.avatar { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:32px; margin:0 auto 12px; }
+.uitnodiger { font-size:18px; font-weight:600; margin-bottom:4px; }
+.uitnodiger-sub { font-size:14px; color:var(--muted); margin-bottom:20px; }
+hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
+.field { margin-bottom:12px; text-align:left; }
+.field label { font-size:12px; color:var(--muted); display:block; margin-bottom:5px; text-transform:uppercase; letter-spacing:0.08em; }
+.field .hint { font-size:11px; color:var(--muted); margin-top:4px; }
+.input { width:100%; background:rgba(255,255,255,0.05); border:0.5px solid var(--border); border-radius:10px; padding:12px 14px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:16px; outline:none; transition:border-color 0.2s,transform 0.2s; }
 .input:focus { border-color:var(--accent); }
+.input[readonly] { cursor:default; color:var(--accent); font-family:'DM Mono',monospace; }
 .btn { width:100%; padding:14px; border-radius:12px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:16px; font-weight:600; margin-top:8px; }
+.btn-ghost { background:transparent; border:0.5px solid var(--border); color:var(--text); margin-top:6px; }
 .msg { font-size:14px; padding:10px 14px; border-radius:10px; margin-bottom:14px; display:none; }
 .msg.success { background:rgba(34,197,94,0.15); border:0.5px solid #22c55e; color:#22c55e; display:block; }
 .msg.error { background:rgba(248,113,113,0.15); border:0.5px solid #f87171; color:#f87171; display:block; }
+.naam-row { display:flex; gap:8px; align-items:center; }
+.dice-btn { background:var(--accent); border:none; border-radius:8px; padding:12px; font-size:18px; cursor:pointer; flex-shrink:0; min-height:44px; }
+.herstel-box { background:rgba(192,132,252,0.08); border:1.5px solid var(--accent); border-radius:12px; padding:16px; margin:12px 0; }
+.herstel-code { font-family:'DM Mono',monospace; font-size:20px; letter-spacing:2px; color:var(--accent); text-align:center; margin:8px 0; word-break:break-all; }
 .laden { font-size:15px; color:var(--muted); }
 </style>
 </head>
@@ -37,27 +44,58 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
     <div class="avatar" id="uitnodigerAvatar">👤</div>
     <div class="uitnodiger" id="uitnodigerNaam">...</div>
     <div class="uitnodiger-sub">nodigt je uit op Fibro ✨</div>
-    <hr class="divider">
+    <hr>
     <div class="msg" id="bericht"></div>
+
     <div class="field">
-      <label>Gebruikersnaam</label>
-      <input class="input" type="text" id="gebruikersnaam" placeholder="jouwuniekename">
+      <label>Jouw gebruikersnaam</label>
+      <div class="naam-row">
+        <input class="input" type="text" id="gebruikersnaam" placeholder="Klik op 🎲" readonly />
+        <button class="dice-btn" onclick="nieuweNaam()" title="Genereer naam">🎲</button>
+      </div>
+      <div class="hint">⚠️ Onthoud deze naam — je hebt hem nodig om in te loggen</div>
     </div>
-    <div class="field">
-      <label>E-mailadres</label>
-      <input class="input" type="email" id="email" placeholder="jouw@email.nl">
-    </div>
+
     <div class="field">
       <label>Wachtwoord</label>
       <input class="input" type="password" id="wachtwoord" placeholder="Minimaal 8 tekens">
     </div>
+
+    <div class="field">
+      <label>Geboortejaar</label>
+      <input class="input" type="number" id="geboortejaar" placeholder="bijv. 2005" min="1900" max="2025">
+      <div class="hint">Alleen het jaar — voor leeftijdsinstellingen</div>
+    </div>
+
+    <div style="display:flex;align-items:flex-start;gap:10px;margin:12px 0;">
+      <input type="checkbox" id="akkoord" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;">
+      <label for="akkoord" style="font-size:12px;line-height:1.5;cursor:pointer;color:var(--muted);">
+        Ik ga akkoord met de <span style="color:var(--accent)">spelregels van Fibro</span>
+      </label>
+    </div>
+
     <button class="btn" onclick="registreren()" id="regBtn">Account aanmaken 🌸</button>
+  </div>
+
+  <div id="herstelScherm" style="display:none">
+    <div style="font-size:40px;margin-bottom:12px;">🎉</div>
+    <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Welkom bij Fibro!</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Bewaar je herstelsleutel op een veilige plek</div>
+    <div class="herstel-box">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Jouw herstelsleutel:</div>
+      <div class="herstel-code" id="herstelCode">—</div>
+    </div>
+    <div style="font-size:11px;color:#f87171;margin-bottom:20px;">⚠️ Dit zie je maar één keer! Schrijf het op.</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+      Inloggen doe je met: <span style="color:var(--accent)" id="bevestigNaam">—</span>
+    </div>
+    <button class="btn" onclick="window.location.href='login.html'">Naar inloggen →</button>
   </div>
 
   <div id="foutScherm" style="display:none">
     <div style="font-size:40px;margin-bottom:16px;">😔</div>
     <div style="font-size:18px;margin-bottom:8px;">Ongeldige uitnodiging</div>
-    <div style="font-size:15px;color:var(--muted);">Deze invite link is verlopen of al gebruikt.</div>
+    <div style="font-size:14px;color:var(--muted);">Deze invite link is verlopen of al gebruikt.</div>
   </div>
 </div>
 
@@ -71,8 +109,39 @@ const supabase = createClient(
 
 const urlParams = new URLSearchParams(window.location.search)
 const token = urlParams.get('token')
-
 var uitnodigerData = null
+
+// ─── Naam generator ───
+const BIJVOEGLIJK = ['Turbo','Pixel','Neon','Fluffy','Sneaky','Chonky','Sparkly','Grumpy','Bouncy','Squishy','Dizzy','Glitchy','Funky','Wiggly','Zappy','Bubbly','Fuzzy','Goofy','Jazzy','Mighty','Nifty','Peppy','Quirky','Sassy','Ultra','Wacky','Zesty','Blobby','Clumsy','Derpy','Floppy','Jumpy','Kooky','Lazy','Moody','Nerdy','Silly','Zippy','Psycho','Mega','Hyper','Retro','Cyber','Magic','Spicy','Crispy']
+const DIEREN = ['Kikker','Panda','Hamster','Wasbeer','Capibara','Axolotl','Koala','Pinguin','Flamingo','Alpaca','Eekhoorn','Narwal','Quokka','Wombat','Platypus','Blobfish','Noodle','Pickle','Waffle','Muffin','Burrito','Spaghetti','Toaster','Pillow','Nugget','Avocado','Cactus']
+const ACHTER = ['42','88','99','404','1337','XL','Pro','Max','Zero','Alpha','Prime','9000','Plus','Elite','Ace','Boss','Legend','007','777']
+
+function genereerNaam() {
+  const b = BIJVOEGLIJK[Math.floor(Math.random()*BIJVOEGLIJK.length)]
+  const d = DIEREN[Math.floor(Math.random()*DIEREN.length)]
+  const a = ACHTER[Math.floor(Math.random()*ACHTER.length)]
+  return b+d+a
+}
+
+window.nieuweNaam = function() {
+  const input = document.getElementById('gebruikersnaam')
+  input.value = genereerNaam()
+  input.style.transform = 'scale(1.03)'
+  setTimeout(() => input.style.transform = '', 200)
+}
+
+function maakHerstelSleutel() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  const deel = n => Array.from({length:n}, () => chars[Math.floor(Math.random()*chars.length)]).join('')
+  return 'FIBRO-'+deel(4)+'-'+deel(4)+'-'+deel(4)
+}
+
+function bepaalNiveau(jaar) {
+  const leeftijd = new Date().getFullYear() - parseInt(jaar)
+  if (leeftijd < 13) return 'kids'
+  if (leeftijd < 18) return 'teens'
+  return 'adults'
+}
 
 async function init() {
   if (!token) { toonFout(); return }
@@ -85,19 +154,21 @@ async function init() {
     .single()
 
   if (error || !data) { toonFout(); return }
-
   uitnodigerData = data
 
   const { data: profiel } = await supabase
     .from('profiles')
-    .select('display_name, username, avatar_url')
+    .select('username, avatar_url')
     .eq('id', data.created_by)
     .single()
 
-  document.getElementById('uitnodigerNaam').textContent = profiel?.display_name || profiel?.username || 'Iemand'
+  document.getElementById('uitnodigerNaam').textContent = profiel?.username || 'Iemand'
   document.getElementById('uitnodigerAvatar').textContent = profiel?.avatar_url || '👤'
   document.getElementById('laadScherm').style.display = 'none'
   document.getElementById('uitnodigingScherm').style.display = 'block'
+
+  // Genereer meteen een naam
+  nieuweNaam()
 }
 
 function toonFout() {
@@ -107,81 +178,74 @@ function toonFout() {
 
 window.registreren = async function() {
   const naam = document.getElementById('gebruikersnaam').value.trim()
-  const email = document.getElementById('email').value.trim()
-  const ww = document.getElementById('wachtwoord').value.trim()
+  const ww = document.getElementById('wachtwoord').value
+  const jaar = document.getElementById('geboortejaar').value.trim()
+  const akkoord = document.getElementById('akkoord').checked
   const msg = document.getElementById('bericht')
   const btn = document.getElementById('regBtn')
 
-  if (!naam || !email || !ww) {
-    msg.className = 'msg error'
-    msg.textContent = 'Vul alle velden in.'
-    return
+  if (!naam || !ww || !jaar) {
+    msg.className='msg error'; msg.textContent='Vul alle velden in.'; return
   }
-
+  if (!akkoord) {
+    msg.className='msg error'; msg.textContent='Ga akkoord met de spelregels.'; return
+  }
   if (ww.length < 8) {
-    msg.className = 'msg error'
-    msg.textContent = 'Wachtwoord minimaal 8 tekens.'
-    return
+    msg.className='msg error'; msg.textContent='Wachtwoord minimaal 8 tekens.'; return
+  }
+  const jaarNum = parseInt(jaar)
+  if (jaarNum < 1900 || jaarNum > new Date().getFullYear()) {
+    msg.className='msg error'; msg.textContent='Vul een geldig geboortejaar in.'; return
   }
 
   btn.textContent = 'Account aanmaken...'
   btn.disabled = true
 
+  const nep_email = naam.toLowerCase() + '@fibro.internal'
+  const herstelsleutel = maakHerstelSleutel()
+  const niveau = bepaalNiveau(jaar)
+
   const { data, error } = await supabase.auth.signUp({
-  email,
-  password: ww,
-  options: {
-    data: {
-      username: naam,
-      display_name: naam
-    }
-  }
-})
-
-  console.log('signUp data:', JSON.stringify(data))
-  console.log('signUp error:', JSON.stringify(error))
-
-  if (error) {
-    msg.className = 'msg error'
-    msg.textContent = error.message
-    btn.textContent = 'Account aanmaken 🌸'
-    btn.disabled = false
-    return
-  }
-
-  if (!data.user) {
-    msg.className = 'msg success'
-    msg.textContent = 'Controleer je e-mail en bevestig je account. Daarna kun je inloggen.'
-    btn.textContent = 'Naar inloggen'
-    btn.disabled = false
-    btn.onclick = () => window.location.href = 'login.html'
-    return
-  }
-
-  await supabase.from('profiles').upsert({
-    id: data.user.id,
-    username: naam,
-    display_name: naam,
-    updated_at: new Date().toISOString()
+    email: nep_email,
+    password: ww,
+    options: { data: { username: naam, geboortejaar: jaarNum, niveau, herstelsleutel } }
   })
 
-  await supabase.from('invite_tokens')
-    .update({ is_used: true, used_at: new Date().toISOString(), used_by: data.user.id })
-    .eq('token', token)
-
-  if (uitnodigerData?.created_by && uitnodigerData.created_by !== data.user.id) {
-    await supabase.from('friendships').insert([
-      { user_id: data.user.id, friend_id: uitnodigerData.created_by, status: 'accepted' },
-      { user_id: uitnodigerData.created_by, friend_id: data.user.id, status: 'accepted' }
-    ])
+  if (error) {
+    msg.className='msg error'
+    msg.textContent = error.message.includes('already') ? 'Gebruikersnaam al in gebruik — genereer een nieuwe.' : error.message
+    btn.textContent='Account aanmaken 🌸'; btn.disabled=false; return
   }
 
-  msg.className = 'msg success'
-  msg.textContent = 'Account aangemaakt! Controleer je e-mail en log daarna in.'
-  btn.textContent = 'Naar inloggen'
-  btn.disabled = false
-  btn.onclick = () => window.location.href = 'login.html'
+  if (data.user) {
+    await supabase.from('profiles').upsert({
+      id: data.user.id,
+      username: naam,
+      niveau,
+      herstelsleutel,
+      updated_at: new Date().toISOString()
+    })
+
+    await supabase.from('invite_tokens')
+      .update({ is_used:true, used_at:new Date().toISOString(), used_by:data.user.id })
+      .eq('token', token)
+
+    if (uitnodigerData?.created_by && uitnodigerData.created_by !== data.user.id) {
+      await supabase.from('friendships').insert([
+        { user_id:data.user.id, friend_id:uitnodigerData.created_by, status:'accepted' },
+        { user_id:uitnodigerData.created_by, friend_id:data.user.id, status:'accepted' }
+      ])
+    }
+  }
+
+  // Toon herstelsleutel
+  document.getElementById('uitnodigingScherm').style.display = 'none'
+  document.getElementById('herstelCode').textContent = herstelsleutel
+  document.getElementById('bevestigNaam').textContent = naam
+  document.getElementById('herstelScherm').style.display = 'block'
 }
 
 init()
 </script>
+</body>
+</html>

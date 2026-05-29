@@ -9,6 +9,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Fibro">
+<script>
+try {
+  const f = localStorage.getItem("fibro_font")
+  if (f) document.write("<style>*{font-family:" + f + " !important}</style>")
+} catch(e) {}
+</script>
 <meta name="theme-color" content="#c084fc">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400;500&family=Raleway:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:wght@300;400;700&family=Bebas+Neue&family=Oswald:wght@300;400;500&family=Pacifico&family=Dancing+Script:wght@400;600&family=Great+Vibes&family=Space+Mono:wght@400;700&family=Courier+Prime:wght@400;700&family=Quicksand:wght@300;400;500&family=Nunito:wght@300;400;500&family=Righteous&family=Comfortaa:wght@300;400;500&family=Cinzel:wght@400;600&family=Satisfy&family=Lobster&display=swap" rel="stylesheet">
 <style>

@@ -116,7 +116,7 @@ input, textarea { font-size:16px !important; }
 <div class="bottom-nav">
   <div class="nav-item" onclick="window.location.href='index.html'"><div class="nav-icon">🏠</div>Home</div>
   <div class="nav-item active"><div class="nav-icon">👥</div>Vrienden</div>
-  <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
+  <div class="nav-item" onclick="window.location.href='chat.html?id='+p.id+'&naam='+encodeURIComponent(naam)+'&avatar='+encodeURIComponent(avatar)"><div class="nav-icon">💬</div>Chat</div>
   <div class="nav-item" onclick="window.location.href='profiel.html'"><div class="nav-icon">👤</div>Profiel</div>
 </div>
 
@@ -170,7 +170,7 @@ input, textarea { font-size:16px !important; }
             ${bio ? `<div class="f-bio">${bio}</div>` : ''}
             ${mood ? `<div class="f-mood">💭 ${mood}</div>` : ''}
           </div>
-          <div class="f-btn" onclick="event.stopPropagation();window.location.href='chat.html'">💬</div>
+          <div class="f-btn" onclick="event.stopPropagation();window.location.href='chat.html?id='+p.id+'&naam='+encodeURIComponent(naam)+'&avatar='+encodeURIComponent(avatar)">💬</div>
           <div class="f-arrow">›</div>
         </div>
       `

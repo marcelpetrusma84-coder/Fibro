@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="nl" style="background:#1a0a2e;">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fibro — Moderatie</title>
+<meta name="theme-color" content="#c084fc">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+:root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:rgba(255,255,255,0.5); }
+body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); max-width:480px; margin:0 auto; min-height:100vh; padding:16px; }
+.top-bar { display:flex; align-items:center; gap:10px; padding:10px 0; margin-bottom:16px; border-bottom:0.5px solid var(--border); }
+.titel { font-family:'DM Serif Display',serif; font-size:22px; color:var(--accent); }
+.stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px; }
+.stat-kaart { background:var(--card); border:0.5px solid var(--border); border-radius:12px; padding:12px; text-align:center; }
+.stat-getal { font-size:24px; font-weight:600; color:var(--accent); }
+.stat-label { font-size:11px; color:var(--muted); margin-top:4px; }
+.filter-row { display:flex; gap:8px; margin-bottom:12px; overflow-x:auto; }
+.filter-btn { flex-shrink:0; padding:6px 14px; border-radius:20px; border:0.5px solid var(--border); background:none; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:12px; cursor:pointer; }
+.filter-btn.actief { background:var(--accent); color:#1a0a2e; border-color:var(--accent); font-weight:600; }
+.rapport-kaart { background:var(--card); border:0.5px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px; }
+.rapport-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.rapport-av { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.rapport-namen { flex:1; }
+.rapport-melder { font-size:12px; color:var(--muted); }
+.rapport-gemelde { font-size:14px; font-weight:500; }
+.rapport-tijd { font-size:11px; color:var(--muted); }
+.rapport-reden { background:rgba(248,113,113,0.08); border:0.5px solid rgba(248,113,113,0.2); border-radius:8px; padding:8px 10px; font-size:12px; color:#f87171; margin-bottom:8px; }
+.rapport-bericht { background:rgba(255,255,255,0.04); border:0.5px solid var(--border); border-radius:8px; padding:8px 10px; font-size:12px; color:var(--muted); margin-bottom:10px; font-style:italic; word-break:break-word; }
+.rapport-acties { display:flex; gap:8px; }
+.actie-btn { flex:1; padding:8px; border-radius:8px; border:none; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:500; cursor:pointer; min-height:36px; }
+.actie-btn.negeer { background:var(--card); color:var(--muted); border:0.5px solid var(--border); }
+.actie-btn.waarschuw { background:rgba(251,191,36,0.15); color:#fbbf24; border:0.5px solid rgba(251,191,36,0.3); }
+.actie-btn.blokkeer { background:rgba(248,113,113,0.15); color:#f87171; border:0.5px solid rgba(248,113,113,0.3); }
+.status-badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:500; margin-left:auto; }
+.status-badge.nieuw { background:rgba(192,132,252,0.15); color:var(--accent); border:0.5px solid rgba(192,132,252,0.3); }
+.status-badge.behandeld { background:rgba(34,197,94,0.1); color:#22c55e; border:0.5px solid rgba(34,197,94,0.3); }
+.status-badge.geblokkeerd { background:rgba(248,113,113,0.1); color:#f87171; border:0.5px solid rgba(248,113,113,0.3); }
+.laden { text-align:center; padding:40px; color:var(--muted); font-size:14px; }
+.geen-rapporten { text-align:center; padding:40px; color:var(--muted); font-size:14px; }
+.toegang-geweigerd { text-align:center; padding:60px 20px; }
+.toegang-icon { font-size:48px; margin-bottom:16px; }
+.msg { font-size:14px; padding:10px 14px; border-radius:10px; margin-bottom:14px; }
+.msg.error { background:rgba(248,113,113,0.15); border:0.5px solid #f87171; color:#f87171; }
+.msg.success { background:rgba(34,197,94,0.15); border:0.5px solid #22c55e; color:#22c55e; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <button onclick="window.location.href='index.html'" style="background:none;border:0.5px solid var(--border);border-radius:20px;padding:4px 10px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">← terug</button>
+  <div class="titel">🛡️ Moderatie</div>
+</div>
+
+<div id="toegangGeweigerd" style="display:none" class="toegang-geweigerd">
+  <div class="toegang-icon">🔒</div>
+  <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Geen toegang</div>
+  <div style="font-size:14px;color:var(--muted);">Alleen de beheerder kan deze pagina zien.</div>
+</div>
+
+<div id="inhoud" style="display:none">
+  <div class="stats">
+    <div class="stat-kaart">
+      <div class="stat-getal" id="statNieuw">—</div>
+      <div class="stat-label">Nieuw</div>
+    </div>
+    <div class="stat-kaart">
+      <div class="stat-getal" id="statBehandeld">—</div>
+      <div class="stat-label">Behandeld</div>
+    </div>
+    <div class="stat-kaart">
+      <div class="stat-getal" id="statGeblokkeerd">—</div>
+      <div class="stat-label">Geblokkeerd</div>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-btn actief" onclick="filterRapporten('alle')">Alle</button>
+    <button class="filter-btn" onclick="filterRapporten('nieuw')">🆕 Nieuw</button>
+    <button class="filter-btn" onclick="filterRapporten('behandeld')">✅ Behandeld</button>
+    <button class="filter-btn" onclick="filterRapporten('geblokkeerd')">🚫 Geblokkeerd</button>
+  </div>
+
+  <div id="msg" class="msg" style="display:none"></div>
+  <div id="rapportenLijst"><div class="laden">Rapporten laden...</div></div>
+</div>
+
+<script type="module">
+import { supabase } from './supabase.js'
+
+const BEHEERDER_ID = '99cc6986-c650-4954-8a2e-aa3f19e5beac'
+let alleRapporten = []
+let huidigFilter = 'alle'
+
+async function init() {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session || session.user.id !== BEHEERDER_ID) {
+    document.getElementById('toegangGeweigerd').style.display = 'block'
+    return
+  }
+  document.getElementById('inhoud').style.display = 'block'
+  await laadRapporten()
+}
+
+async function laadRapporten() {
+  const { data, error } = await supabase
+    .from('rapporten')
+    .select(`
+      *,
+      melder:melder_id(username, avatar_url),
+      gemelde:gemelde_id(username, avatar_url)
+    `)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    toonMsg('Rapporten laden mislukt.', 'error')
+    return
+  }
+
+  alleRapporten = data || []
+  updateStats()
+  toonRapporten()
+}
+
+function updateStats() {
+  document.getElementById('statNieuw').textContent = alleRapporten.filter(r => r.status === 'nieuw').length
+  document.getElementById('statBehandeld').textContent = alleRapporten.filter(r => r.status === 'behandeld').length
+  document.getElementById('statGeblokkeerd').textContent = alleRapporten.filter(r => r.status === 'geblokkeerd').length
+}
+
+function toonRapporten() {
+  const container = document.getElementById('rapportenLijst')
+  const gefilterd = huidigFilter === 'alle'
+    ? alleRapporten
+    : alleRapporten.filter(r => r.status === huidigFilter)
+
+  if (gefilterd.length === 0) {
+    container.innerHTML = '<div class="geen-rapporten">Geen rapporten gevonden 🎉</div>'
+    return
+  }
+
+  container.innerHTML = gefilterd.map(r => {
+    const tijd = new Date(r.created_at).toLocaleDateString('nl-NL', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+    const statusKleur = r.status === 'nieuw' ? 'nieuw' : r.status === 'behandeld' ? 'behandeld' : 'geblokkeerd'
+    return `
+      <div class="rapport-kaart" id="rapport-${r.id}">
+        <div class="rapport-header">
+          <div class="rapport-av">${r.gemelde?.avatar_url || '👤'}</div>
+          <div class="rapport-namen">
+            <div class="rapport-gemelde">@${r.gemelde?.username || 'onbekend'}</div>
+            <div class="rapport-melder">Gemeld door @${r.melder?.username || 'onbekend'}</div>
+          </div>
+          <div>
+            <div class="status-badge ${statusKleur}">${r.status}</div>
+            <div class="rapport-tijd" style="margin-top:4px;">${tijd}</div>
+          </div>
+        </div>
+        <div class="rapport-reden">🚩 ${r.reden || 'Geen reden opgegeven'}</div>
+        ${r.bericht_inhoud ? `<div class="rapport-bericht">"${r.bericht_inhoud}"</div>` : ''}
+        ${r.status === 'nieuw' ? `
+        <div class="rapport-acties">
+          <button class="actie-btn negeer" onclick="behandelRapport('${r.id}', 'behandeld')">✓ Negeer</button>
+          <button class="actie-btn waarschuw" onclick="behandelRapport('${r.id}', 'gewaarschuwd')">⚠️ Waarschuw</button>
+          <button class="actie-btn blokkeer" onclick="blokkeerGebruiker('${r.gemelde_id}', '${r.id}')">🚫 Blokkeer</button>
+        </div>` : ''}
+      </div>
+    `
+  }).join('')
+}
+
+window.filterRapporten = function(filter) {
+  huidigFilter = filter
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('actief'))
+  event.target.classList.add('actief')
+  toonRapporten()
+}
+
+window.behandelRapport = async function(id, status) {
+  const { error } = await supabase.from('rapporten').update({ status }).eq('id', id)
+  if (error) { toonMsg('Actie mislukt.', 'error'); return }
+  toonMsg('Rapport bijgewerkt ✓', 'success')
+  await laadRapporten()
+}
+
+window.blokkeerGebruiker = async function(userId, rapportId) {
+  const { error } = await supabase.from('profiles').update({ geblokkeerd: true }).eq('id', userId)
+  if (error) { toonMsg('Blokkeren mislukt.', 'error'); return }
+  await supabase.from('rapporten').update({ status: 'geblokkeerd' }).eq('id', rapportId)
+  toonMsg('Gebruiker geblokkeerd 🚫', 'success')
+  await laadRapporten()
+}
+
+function toonMsg(tekst, type) {
+  const el = document.getElementById('msg')
+  el.className = `msg ${type}`
+  el.textContent = tekst
+  el.style.display = 'block'
+  setTimeout(() => el.style.display = 'none', 3000)
+}
+
+init()
+</script>
+</body>
+</html>

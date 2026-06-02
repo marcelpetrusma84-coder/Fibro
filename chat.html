@@ -362,15 +362,6 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     huidigProfiel = data
     await laadVrienden()
 
-    // URL parameters uitlezen
-    const urlParams = new URLSearchParams(window.location.search)
-    const urlId = urlParams.get("id")
-    const urlNaam = urlParams.get("naam")
-    const urlAvatar = urlParams.get("avatar")
-    if (urlId && urlNaam) {
-      await openChat(urlId, decodeURIComponent(urlNaam), decodeURIComponent(urlAvatar || "👤"), "")
-    }
-
     // ── Bellen initialiseren ──
     initBellen(huidigeUser.id, {
       onOproep: (info) => {

@@ -1,656 +1,345 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="nl" style="background:#1a0a2e;">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fibro — Inloggen</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap');
-
-    :root {
-      --bg: #0d0d0f;
-      --surface: #161618;
-      --border: #2a2a2e;
-      --accent: #c8f563;
-      --accent-dim: #8aaa3a;
-      --text: #e8e8e0;
-      --text-muted: #666660;
-      --danger: #ff5c5c;
-      --radius: 12px;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'DM Mono', monospace;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      overflow: hidden;
-    }
-
-    /* Achtergrond grain effect */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 420px;
-      position: relative;
-      z-index: 1;
-    }
-
-    /* Logo */
-    .logo {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .logo h1 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 48px;
-      letter-spacing: -1px;
-      color: var(--text);
-    }
-
-    .logo h1 span {
-      color: var(--accent);
-    }
-
-    .logo p {
-      font-size: 11px;
-      color: var(--text-muted);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-top: 6px;
-    }
-
-    /* Card */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 32px;
-    }
-
-    /* Tabs */
-    .tabs {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 28px;
-      background: var(--bg);
-      padding: 4px;
-      border-radius: 8px;
-    }
-
-    .tab {
-      flex: 1;
-      padding: 8px;
-      border: none;
-      background: transparent;
-      color: var(--text-muted);
-      font-family: 'DM Mono', monospace;
-      font-size: 12px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      cursor: pointer;
-      border-radius: 6px;
-      transition: all 0.2s;
-    }
-
-    .tab.active {
-      background: var(--surface);
-      color: var(--accent);
-      border: 1px solid var(--border);
-    }
-
-    /* Panels */
-    .panel { display: none; }
-    .panel.active { display: block; }
-
-    /* Form */
-    .field {
-      margin-bottom: 16px;
-    }
-
-    label {
-      display: block;
-      font-size: 11px;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-
-    input {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 16px;
-      color: var(--text);
-      font-family: 'DM Mono', monospace;
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    input:focus {
-      border-color: var(--accent);
-    }
-
-    input::placeholder {
-      color: var(--text-muted);
-    }
-
-    /* Buttons */
-    .btn {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 8px;
-      font-family: 'DM Mono', monospace;
-      font-size: 13px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.2s;
-      margin-top: 8px;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #0d0d0f;
-      font-weight: 500;
-    }
-
-    .btn-primary:hover {
-      background: #d4ff6e;
-      transform: translateY(-1px);
-    }
-
-    .btn-primary:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .btn-ghost {
-      background: transparent;
-      color: var(--text-muted);
-      border: 1px solid var(--border);
-      margin-top: 12px;
-    }
-
-    .btn-ghost:hover {
-      border-color: var(--text-muted);
-      color: var(--text);
-    }
-
-    /* Status berichten */
-    .message {
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-size: 13px;
-      margin-bottom: 16px;
-      display: none;
-    }
-
-    .message.error {
-      background: rgba(255, 92, 92, 0.1);
-      border: 1px solid rgba(255, 92, 92, 0.3);
-      color: var(--danger);
-      display: block;
-    }
-
-    .message.success {
-      background: rgba(200, 245, 99, 0.1);
-      border: 1px solid rgba(200, 245, 99, 0.3);
-      color: var(--accent);
-      display: block;
-    }
-
-    /* Invite token sectie */
-    .invite-check {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 20px;
-      font-size: 12px;
-    }
-
-    .invite-check .invite-status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--text-muted);
-    }
-
-    .invite-check .invite-status.valid {
-      color: var(--accent);
-    }
-
-    .invite-check .invite-status.invalid {
-      color: var(--danger);
-    }
-
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: currentColor;
-      flex-shrink: 0;
-    }
-
-    /* Divider */
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 20px 0;
-      color: var(--text-muted);
-      font-size: 11px;
-      letter-spacing: 1px;
-    }
-
-    .divider::before,
-    .divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
-
-    /* Herstelsleutel */
-    .herstelsleutel-info {
-      font-size: 12px;
-      color: var(--text-muted);
-      line-height: 1.6;
-      margin-top: 16px;
-      padding: 12px;
-      border: 1px dashed var(--border);
-      border-radius: 8px;
-    }
-
-    /* Loading spinner */
-    .spinner {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      border: 2px solid rgba(13,13,15,0.3);
-      border-top-color: #0d0d0f;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      margin-right: 8px;
-      vertical-align: middle;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* Fade in animatie */
-    .container {
-      animation: fadeUp 0.4s ease both;
-    }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    :root { --bg:#1a0a2e; --surface:#161618; --border:#2a2a2e; --accent:#c084fc; --accent-dim:#f0abfc; --text:#f3e8ff; --text-muted:#666660; --danger:#ff5c5c; --radius:12px; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Mono',monospace; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; overflow:hidden; }
+    body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:0; }
+    .container { width:100%; max-width:420px; position:relative; z-index:1; animation:fadeUp 0.4s ease both; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    .logo { text-align:center; margin-bottom:40px; }
+    .logo h1 { font-family:'DM Serif Display',serif; font-size:48px; letter-spacing:-1px; color:var(--text); }
+    .logo h1 span { color:var(--accent); }
+    .logo p { font-size:11px; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase; margin-top:6px; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:32px; }
+    .tabs { display:flex; gap:4px; margin-bottom:28px; background:var(--bg); padding:4px; border-radius:8px; }
+    .tab { flex:1; padding:8px; border:none; background:transparent; color:var(--text-muted); font-family:'DM Mono',monospace; font-size:12px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; border-radius:6px; transition:all 0.2s; }
+    .tab.active { background:var(--surface); color:var(--accent); border:1px solid var(--border); }
+    .panel { display:none; }
+    .panel.active { display:block; }
+    .field { margin-bottom:16px; }
+    label { display:block; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; }
+    input { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px 16px; color:var(--text); font-family:'DM Mono',monospace; font-size:16px !important; outline:none; transition:border-color 0.2s,transform 0.2s; }
+    input:focus { border-color:var(--accent); }
+    input::placeholder { color:var(--text-muted); }
+    .btn { width:100%; padding:14px; border:none; border-radius:8px; font-family:'DM Mono',monospace; font-size:13px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; margin-top:8px; min-height:44px; }
+    .btn-primary { background:var(--accent); color:#0d0d0f; font-weight:500; }
+    .btn-primary:hover { background:#d4ff6e; transform:translateY(-1px); }
+    .btn-primary:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+    .btn-ghost { background:transparent; color:var(--text-muted); border:1px solid var(--border); margin-top:12px; }
+    .message { padding:12px 16px; border-radius:8px; font-size:13px; margin-bottom:16px; display:none; }
+    .message.error { background:rgba(255,92,92,0.1); border:1px solid rgba(255,92,92,0.3); color:var(--danger); display:block; }
+    .message.success { background:rgba(192,132,252,0.1); border:1px solid rgba(192,132,252,0.3); color:var(--accent); display:block; }
+    .herstelsleutel-info { font-size:12px; color:var(--text-muted); line-height:1.6; margin-top:16px; padding:12px; border:1px dashed var(--border); border-radius:8px; }
+    .spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(13,13,15,0.3); border-top-color:#0d0d0f; border-radius:50%; animation:spin 0.6s linear infinite; margin-right:8px; vertical-align:middle; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .e2e-badge { display:inline-flex; align-items:center; gap:5px; background:rgba(34,197,94,0.1); border:0.5px solid rgba(34,197,94,0.3); border-radius:20px; padding:3px 8px; font-size:10px; color:#22c55e; margin-top:8px; }
   </style>
 </head>
 <body>
 
 <div class="container">
-
   <div class="logo">
     <h1>Fi<span>b</span>ro</h1>
     <p>Jouw persoonlijke ruimte</p>
   </div>
 
   <div class="card">
-
     <div class="tabs">
       <button class="tab active" onclick="switchTab('inloggen')">Inloggen</button>
       <button class="tab" onclick="switchTab('registreren')">Registreren</button>
       <button class="tab" onclick="switchTab('herstellen')">Herstel</button>
     </div>
 
-    <!-- ======================== -->
     <!-- INLOGGEN -->
-    <!-- ======================== -->
     <div class="panel active" id="panel-inloggen">
       <div class="message" id="login-msg"></div>
-
       <div class="field">
-        <label>E-mailadres</label>
-        <input type="email" id="login-email" placeholder="jouw@email.nl" autocomplete="email" />
+        <label>Gebruikersnaam</label>
+        <input type="text" id="login-username" placeholder="bijv. ChonkyCapibara404" autocomplete="username" />
       </div>
-
       <div class="field">
         <label>Wachtwoord</label>
         <input type="password" id="login-wachtwoord" placeholder="••••••••" autocomplete="current-password" />
       </div>
-
-      <button class="btn btn-primary" onclick="inloggen()" id="login-btn">
-        Inloggen
-      </button>
+      <button class="btn btn-primary" onclick="inloggen()" id="login-btn">Inloggen</button>
+      <div style="text-align:center;margin-top:8px;">
+        <span class="e2e-badge">🔒 End-to-end versleuteld</span>
+      </div>
     </div>
 
-    <!-- ======================== -->
-    <!-- REGISTREREN (via invite) -->
-    <!-- ======================== -->
+    <!-- REGISTREREN -->
     <div class="panel" id="panel-registreren">
       <div class="message" id="reg-msg"></div>
-
-      <!-- Invite token check -->
-      <div class="invite-check">
-        <div class="invite-status" id="invite-status">
-          <div class="dot"></div>
-          <span>Voer je invite code in om te beginnen</span>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Invite code</label>
-        <input
-          type="text"
-          id="invite-token"
-          placeholder="Plak hier je invite code"
-          oninput="checkInviteToken(this.value)"
-        />
-      </div>
-
-      <div id="reg-form" style="display:none;">
+      <div id="reg-form">
         <div class="field">
           <label>Gebruikersnaam</label>
-          <input type="text" id="reg-username" placeholder="jouwuniekename" autocomplete="username" />
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="text" id="reg-username" placeholder="Klik op 🎲 voor een naam" autocomplete="off" readonly style="flex:1;cursor:default;" />
+            <button type="button" onclick="nieuweNaam()" style="background:var(--accent);border:none;border-radius:8px;padding:12px 14px;font-size:18px;cursor:pointer;flex-shrink:0;min-height:44px;">🎲</button>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">⚠ Onthoud deze naam — je hebt hem nodig om in te loggen</div>
         </div>
-
-        <div class="field">
-          <label>E-mailadres</label>
-          <input type="email" id="reg-email" placeholder="jouw@email.nl" autocomplete="email" />
-        </div>
-
         <div class="field">
           <label>Wachtwoord</label>
           <input type="password" id="reg-wachtwoord" placeholder="Minimaal 8 tekens" autocomplete="new-password" />
         </div>
-
-        <button class="btn btn-primary" onclick="registreren()" id="reg-btn">
-          Account aanmaken
-        </button>
-
-        <div class="herstelsleutel-info">
-          💡 Na registratie ontvang je een herstelsleutel. Bewaar deze goed — zonder deze sleutel kun je je account niet herstellen als je je wachtwoord vergeet.
+        <div class="field">
+          <label>Geboortejaar</label>
+          <input type="number" id="reg-jaar" placeholder="bijv. 2005" min="1900" max="2025" />
         </div>
+        <div class="field" style="display:flex;align-items:flex-start;gap:10px;margin-top:4px;">
+          <input type="checkbox" id="reg-akkoord" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;" />
+          <label for="reg-akkoord" style="text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;cursor:pointer;">
+            Ik ga akkoord met de <span style="color:var(--accent)">spelregels van Fibro</span>
+          </label>
+        </div>
+        <button class="btn btn-primary" onclick="registreren()" id="reg-btn">Account aanmaken</button>
+        <div class="herstelsleutel-info">💡 Na registratie krijg je een herstelsleutel. Bewaar deze goed.</div>
       </div>
     </div>
 
-    <!-- ======================== -->
-    <!-- HERSTELSLEUTEL -->
-    <!-- ======================== -->
+    <!-- HERSTEL -->
     <div class="panel" id="panel-herstellen">
       <div class="message" id="herstel-msg"></div>
-
       <div class="field">
-        <label>E-mailadres</label>
-        <input type="email" id="herstel-email" placeholder="jouw@email.nl" />
+        <label>Gebruikersnaam</label>
+        <input type="text" id="herstel-username" placeholder="jouwuniekename" />
       </div>
-
-      <button class="btn btn-primary" onclick="stuurHerstelmail()">
-        Stuur herstelmail
-      </button>
-
-      <div class="divider">of</div>
-
       <div class="field">
-        <label>Herstelsleutel (24 woorden)</label>
-        <input type="text" id="herstelsleutel-input" placeholder="woord1 woord2 woord3 ..." />
+        <label>Herstelsleutel</label>
+        <input type="text" id="herstelsleutel-input" placeholder="FIBRO-XXXX-XXXX-XXXX" />
       </div>
-
-      <button class="btn btn-ghost" onclick="herstelMetSleutel()">
-        Herstel via sleutel
-      </button>
+      <button class="btn btn-primary" onclick="herstelMetSleutel()">Account herstellen</button>
     </div>
-
   </div>
 </div>
 
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+  import { genereerKeypair, slaPrivateKeyOp, haalPrivateKeyOp } from './crypto.js'
 
   const supabase = createClient(
     'https://qmgatbphiplrfxrljtbe.supabase.co',
     'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
   )
 
-  // ========================
-  // TAB WISSELEN
-  // ========================
+  // ── E2E: Controleer en maak keypair aan als die ontbreekt ──
+  async function controleerKeypair(userId) {
+    try {
+      const bestaand = haalPrivateKeyOp(userId)
+      if (bestaand) return // Al een keypair op dit apparaat
+
+      // Genereer nieuw keypair
+      const keypair = await genereerKeypair()
+      slaPrivateKeyOp(userId, keypair.privateKeyB64)
+      await supabase.from('profiles').update({
+        public_key: keypair.publicKeyB64
+      }).eq('id', userId)
+
+      console.log('🔒 Nieuw E2E keypair aangemaakt voor bestaand account')
+    } catch(e) {
+      console.error('Keypair aanmaken mislukt:', e)
+    }
+  }
+
+  // ── Naam generator ──
+  const BIJVOEGLIJK = ['Turbo','Pixel','Neon','Fluffy','Sneaky','Chonky','Sparkly','Grumpy','Bouncy','Squishy','Dizzy','Glitchy','Funky','Wiggly','Zappy','Bubbly','Fuzzy','Goofy','Jazzy','Mighty','Nifty','Peppy','Quirky','Sassy','Ultra','Wacky','Zesty','Blobby','Clumsy','Derpy','Floppy','Jumpy','Kooky','Lazy','Moody','Nerdy','Silly','Zippy','Psycho','Mega','Hyper','Retro','Cyber','Magic','Spicy','Crispy']
+  const DIEREN = ['Kikker','Panda','Hamster','Wasbeer','Capibara','Axolotl','Koala','Pinguin','Flamingo','Alpaca','Eekhoorn','Narwal','Quokka','Wombat','Platypus','Blobfish','Noodle','Pickle','Waffle','Muffin','Burrito','Spaghetti','Toaster','Pillow','Nugget','Avocado','Cactus']
+  const ACHTER = ['42','88','99','404','1337','XL','Pro','Max','Zero','Alpha','Prime','9000','Plus','Elite','Ace','Boss','Legend','007','777']
+
+  function genereerNaam() {
+    const b = BIJVOEGLIJK[Math.floor(Math.random()*BIJVOEGLIJK.length)]
+    const d = DIEREN[Math.floor(Math.random()*DIEREN.length)]
+    const a = ACHTER[Math.floor(Math.random()*ACHTER.length)]
+    return b+d+a
+  }
+
+  function nieuweNaam() {
+    const input = document.getElementById('reg-username')
+    input.value = genereerNaam()
+    input.style.transform = 'scale(1.05)'
+    input.style.borderColor = 'var(--accent)'
+    setTimeout(() => { input.style.transform='scale(1)'; input.style.borderColor='' }, 200)
+  }
+  window.nieuweNaam = nieuweNaam
+
   window.switchTab = function(tab) {
     document.querySelectorAll('.tab').forEach((t, i) => {
-      const names = ['inloggen', 'registreren', 'herstellen']
+      const names = ['inloggen','registreren','herstellen']
       t.classList.toggle('active', names[i] === tab)
     })
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'))
-    document.getElementById('panel-' + tab).classList.add('active')
-  }
-
-  // ========================
-  // INVITE TOKEN CHECK
-  // ========================
-  let inviteGeldig = false
-  let checkTimeout = null
-
-  window.checkInviteToken = function(token) {
-    clearTimeout(checkTimeout)
-    const status = document.getElementById('invite-status')
-    const regForm = document.getElementById('reg-form')
-
-    if (token.length < 10) {
-      status.className = 'invite-status'
-      status.innerHTML = '<div class="dot"></div><span>Voer je invite code in om te beginnen</span>'
-      regForm.style.display = 'none'
-      inviteGeldig = false
-      return
+    document.getElementById('panel-'+tab).classList.add('active')
+    if (tab === 'registreren') {
+      setTimeout(() => { if (!document.getElementById('reg-username').value) nieuweNaam() }, 100)
     }
-
-    status.innerHTML = '<div class="dot"></div><span>Controleren...</span>'
-
-    checkTimeout = setTimeout(async () => {
-      const { data, error } = await supabase
-        .from('invite_tokens')
-        .select('id, expires_at, is_used')
-        .eq('token', token.trim())
-        .single()
-
-      if (error || !data) {
-        status.className = 'invite-status invalid'
-        status.innerHTML = '<div class="dot"></div><span>Ongeldige invite code</span>'
-        regForm.style.display = 'none'
-        inviteGeldig = false
-        return
-      }
-
-      if (data.is_used) {
-        status.className = 'invite-status invalid'
-        status.innerHTML = '<div class="dot"></div><span>Deze invite is al gebruikt</span>'
-        regForm.style.display = 'none'
-        inviteGeldig = false
-        return
-      }
-
-      if (new Date(data.expires_at) < new Date()) {
-        status.className = 'invite-status invalid'
-        status.innerHTML = '<div class="dot"></div><span>Deze invite is verlopen</span>'
-        regForm.style.display = 'none'
-        inviteGeldig = false
-        return
-      }
-
-      status.className = 'invite-status valid'
-      status.innerHTML = '<div class="dot"></div><span>Invite geldig ✓ — Maak je account aan</span>'
-      regForm.style.display = 'block'
-      inviteGeldig = true
-
-    }, 500)
   }
 
-  // ========================
-  // INLOGGEN
-  // ========================
+  setTimeout(() => {
+    if (document.getElementById('reg-username') && !document.getElementById('reg-username').value) nieuweNaam()
+  }, 300)
+
   window.inloggen = async function() {
-    const email = document.getElementById('login-email').value.trim()
+    const username = document.getElementById('login-username').value.trim()
     const wachtwoord = document.getElementById('login-wachtwoord').value
     const btn = document.getElementById('login-btn')
     const msg = document.getElementById('login-msg')
 
-    if (!email || !wachtwoord) {
-      toonBericht(msg, 'error', 'Vul alle velden in.')
-      return
-    }
+    if (!username || !wachtwoord) { toonBericht(msg,'error','Vul alle velden in.'); return }
 
     btn.disabled = true
     btn.innerHTML = '<span class="spinner"></span>Inloggen...'
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password: wachtwoord })
+    const nep_email = username.toLowerCase() + '@fibro.internal'
+    await supabase.auth.signOut()
+    const { data, error } = await supabase.auth.signInWithPassword({ email: nep_email, password: wachtwoord })
 
     if (error) {
-      toonBericht(msg, 'error', 'Ongeldig e-mailadres of wachtwoord.')
-      btn.disabled = false
-      btn.textContent = 'Inloggen'
-      return
+      toonBericht(msg,'error','Ongeldige gebruikersnaam of wachtwoord.')
+      btn.disabled = false; btn.textContent = 'Inloggen'; return
     }
 
-    toonBericht(msg, 'success', 'Ingelogd! Even laden...')
+    // ── E2E: Controleer keypair na inloggen ──
+    btn.innerHTML = '<span class="spinner"></span>🔒 Encryptie controleren...'
+    await controleerKeypair(data.user.id)
+
+    toonBericht(msg,'success','Ingelogd! Even laden...')
     setTimeout(() => { window.location.href = 'index.html' }, 800)
   }
 
-  // ========================
-  // REGISTREREN
-  // ========================
-  window.registreren = async function() {
-    if (!inviteGeldig) return
+  function maakHerstelSleutel() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    const deel = n => Array.from({length:n}, () => chars[Math.floor(Math.random()*chars.length)]).join('')
+    return 'FIBRO-'+deel(4)+'-'+deel(4)+'-'+deel(4)
+  }
 
-    const token = document.getElementById('invite-token').value.trim()
+  function bepaalNiveau(jaar) {
+    const leeftijd = new Date().getFullYear() - parseInt(jaar)
+    if (leeftijd < 13) return 'kids'
+    if (leeftijd < 18) return 'teens'
+    return 'adults'
+  }
+
+  window.registreren = async function() {
     const username = document.getElementById('reg-username').value.trim()
-    const email = document.getElementById('reg-email').value.trim()
     const wachtwoord = document.getElementById('reg-wachtwoord').value
+    const jaar = document.getElementById('reg-jaar').value.trim()
+    const akkoord = document.getElementById('reg-akkoord').checked
     const btn = document.getElementById('reg-btn')
     const msg = document.getElementById('reg-msg')
 
-    if (!username || !email || !wachtwoord) {
-      toonBericht(msg, 'error', 'Vul alle velden in.')
-      return
-    }
-
-    if (wachtwoord.length < 8) {
-      toonBericht(msg, 'error', 'Wachtwoord moet minimaal 8 tekens zijn.')
-      return
-    }
-
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      toonBericht(msg, 'error', 'Gebruikersnaam mag alleen letters, cijfers en _ bevatten.')
-      return
-    }
+    if (!username || !wachtwoord || !jaar) { toonBericht(msg,'error','Vul alle velden in.'); return }
+    if (!akkoord) { toonBericht(msg,'error','Je moet akkoord gaan met de spelregels.'); return }
+    if (wachtwoord.length < 8) { toonBericht(msg,'error','Wachtwoord minimaal 8 tekens.'); return }
+    const jaarNum = parseInt(jaar)
+    if (jaarNum < 1900 || jaarNum > new Date().getFullYear()) { toonBericht(msg,'error','Geldig geboortejaar invullen.'); return }
 
     btn.disabled = true
+    btn.innerHTML = '<span class="spinner"></span>🔒 Encryptie voorbereiden...'
+
+    // Genereer keypair voor nieuwe gebruiker
+    let keypair
+    try {
+      keypair = await genereerKeypair()
+    } catch(e) {
+      toonBericht(msg,'error','Encryptie aanmaken mislukt. Probeer opnieuw.')
+      btn.disabled=false; btn.textContent='Account aanmaken'; return
+    }
+
     btn.innerHTML = '<span class="spinner"></span>Account aanmaken...'
 
-    // Account aanmaken bij Supabase
+    const nep_email = username.toLowerCase() + '@fibro.internal'
+    const herstelsleutel = maakHerstelSleutel()
+    const niveau = bepaalNiveau(jaar)
+
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: nep_email,
       password: wachtwoord,
-      options: {
-        data: { username, display_name: username }
-      }
+      options: { data: { username, geboortejaar: jaarNum, niveau, herstelsleutel } }
     })
 
     if (error) {
-      toonBericht(msg, 'error', error.message)
-      btn.disabled = false
-      btn.textContent = 'Account aanmaken'
-      return
+      toonBericht(msg,'error', error.message.includes('already') ? 'Gebruikersnaam al in gebruik.' : error.message)
+      btn.disabled=false; btn.textContent='Account aanmaken'; return
     }
 
-    // Invite token markeren als gebruikt
-    await supabase
-      .from('invite_tokens')
-      .update({ is_used: true, used_at: new Date().toISOString() })
-      .eq('token', token)
+    if (data.user) {
+      // Sla private key op, public key naar Supabase
+      slaPrivateKeyOp(data.user.id, keypair.privateKeyB64)
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        username,
+        niveau,
+        herstelsleutel,
+        public_key: keypair.publicKeyB64
+      })
+    }
 
-    toonBericht(msg, 'success', '🎉 Account aangemaakt! Controleer je e-mail om te bevestigen.')
-    btn.textContent = 'Account aangemaakt ✓'
+    document.getElementById('reg-form').innerHTML = `
+      <div style="text-align:center;padding:8px 0;">
+        <div style="font-size:32px;margin-bottom:12px;">🎉</div>
+        <div style="font-size:16px;color:var(--text);margin-bottom:8px;">Account aangemaakt!</div>
+        <div class="e2e-badge" style="margin:0 auto 16px;">🔒 Encryptie sleutels aangemaakt</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Bewaar je herstelsleutel op een veilige plek</div>
+        <div style="background:var(--bg);border:1.5px solid var(--accent);border-radius:10px;padding:16px;font-size:18px;letter-spacing:2px;color:var(--accent);font-family:'DM Mono',monospace;margin-bottom:12px;">
+          ${herstelsleutel}
+        </div>
+        <div style="font-size:11px;color:var(--danger);margin-bottom:20px;">⚠ Dit zie je maar één keer! Schrijf het op.</div>
+        <button class="btn btn-primary" onclick="switchTab('inloggen')">Ga naar inloggen</button>
+      </div>
+    `
   }
 
-  // ========================
-  // HERSTELMAIL STUREN
-  // ========================
-  window.stuurHerstelmail = async function() {
-    const email = document.getElementById('herstel-email').value.trim()
+  window.herstelMetSleutel = async function() {
     const msg = document.getElementById('herstel-msg')
-
-    if (!email) {
-      toonBericht(msg, 'error', 'Vul je e-mailadres in.')
-      return
-    }
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email)
-
-    if (error) {
-      toonBericht(msg, 'error', 'Er ging iets mis. Probeer opnieuw.')
-      return
-    }
-
-    toonBericht(msg, 'success', 'Herstelmail verstuurd! Controleer je inbox.')
+    toonBericht(msg,'error','Herstel via sleutel komt binnenkort.')
   }
 
-  // ========================
-  // HERSTEL VIA SLEUTEL
-  // ========================
-  window.herstelMetSleutel = function() {
-    const sleutel = document.getElementById('herstelsleutel-input').value.trim()
-    const msg = document.getElementById('herstel-msg')
-
-    if (!sleutel) {
-      toonBericht(msg, 'error', 'Voer je herstelsleutel in.')
-      return
-    }
-
-    // TODO: herstelsleutel logica implementeren
-    toonBericht(msg, 'error', 'Herstel via sleutel komt binnenkort.')
-  }
-
-  // ========================
-  // HULPFUNCTIE: BERICHT TONEN
-  // ========================
   function toonBericht(el, type, tekst) {
-    el.className = 'message ' + type
+    el.className = 'message '+type
     el.textContent = tekst
   }
 
-  // ========================
-  // CHECK: AL INGELOGD?
-  // ========================
   supabase.auth.getSession().then(({ data: { session } }) => {
-    if (session) {
-      window.location.href = 'index.html'
-    }
+    const params = new URLSearchParams(window.location.search)
+    if (session && !params.get('logout')) window.location.href = 'index.html'
   })
-</script>
 
+  async function laadWallpaper() {
+    try {
+      const db = await new Promise((res,rej) => {
+        const r = indexedDB.open('FibroDB',1)
+        r.onsuccess = e => res(e.target.result)
+        r.onerror = () => rej()
+      })
+      const keys = await new Promise(res => {
+        const r = db.transaction('fotos').objectStore('fotos').getAllKeys()
+        r.onsuccess = e => res(e.target.result)
+        r.onerror = () => res([])
+      })
+      const wallpaperKey = keys.find(k => k.startsWith('bg_wallpaper_'))
+      if (!wallpaperKey) return
+      const data = await new Promise(res => {
+        const r = db.transaction('fotos').objectStore('fotos').get(wallpaperKey)
+        r.onsuccess = e => res(e.target.result?.data||null)
+        r.onerror = () => res(null)
+      })
+      if (data) {
+        document.body.style.backgroundImage = 'url('+data+')'
+        document.body.style.backgroundAttachment = 'fixed'
+        document.body.style.backgroundSize = 'cover'
+        document.body.style.backgroundPosition = 'center'
+        document.body.classList.add('heeft-wallpaper')
+      }
+    } catch(e) {}
+  }
+  laadWallpaper()
+</script>
 </body>
 </html>

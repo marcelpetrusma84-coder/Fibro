@@ -242,6 +242,23 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   </div>
 </div>
 
+<!-- Rapporteer modal -->
+<div class="modal-bg" id="rapportModal">
+  <div class="modal">
+    <div class="modal-icon">🚩</div>
+    <div class="modal-title">Bericht rapporteren</div>
+    <div class="modal-sub">Waarom wil je dit rapporteren?</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="modal-btn confirm" onclick="stuurRapportIn('Ongepaste inhoud')">😡 Ongepaste inhoud</button>
+      <button class="modal-btn confirm" onclick="stuurRapportIn('Pesten of intimidatie')">😢 Pesten of intimidatie</button>
+      <button class="modal-btn confirm" onclick="stuurRapportIn('Spam')">🗑️ Spam</button>
+      <button class="modal-btn confirm" onclick="stuurRapportIn('Gevaarlijke inhoud')">⚠️ Gevaarlijke inhoud</button>
+      <button class="modal-btn confirm" onclick="stuurRapportIn('Anders')">❓ Anders</button>
+    </div>
+    <button class="modal-btn cancel" style="width:100%;margin-top:8px;" onclick="sluitRapport()">Annuleer</button>
+  </div>
+</div>
+
 <div class="buzz-overlay" id="buzzOverlay"><div class="buzz-overlay-inner">📳</div></div>
 
 <!-- Bel keuze modal -->
@@ -291,6 +308,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   import { supabase } from './supabase.js'
   import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js'
   import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, toggleCamera } from './bellen.js'
+  import { stuurRapport } from './rapport.js'
 
   var huidigeUser = null
   var huidigProfiel = null
@@ -547,6 +565,13 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
           ${content}
           <div class="bubble-time">${tijd} ${isMijn ? '✓✓' : ''}</div>
         </div>`
+      // Long press voor rapporteren
+      setTimeout(() => {
+        const bubble = row.querySelector('.bubble')
+        if (bubble && window._voegLongPressToe) {
+          window._voegLongPressToe(bubble, content, isMijn)
+        }
+      }, 0)
     }
     container.appendChild(row)
   }
@@ -1036,6 +1061,51 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     })
   }
   setTimeout(()=>laadCustomStickers(),500)
+
+  // ─── Rapporteer systeem ───
+  let rapportBericht = null
+  let rapportGemeldeId = null
+
+  window.openRapportMenu = function(berichtInhoud, gemeldeId) {
+    rapportBericht = berichtInhoud
+    rapportGemeldeId = gemeldeId
+    document.getElementById('rapportModal').classList.add('show')
+  }
+
+  window.sluitRapport = function() {
+    document.getElementById('rapportModal').classList.remove('show')
+    rapportBericht = null
+    rapportGemeldeId = null
+  }
+
+  window.stuurRapportIn = async function(reden) {
+    document.getElementById('rapportModal').classList.remove('show')
+    const gelukt = await stuurRapport({
+      melderId: huidigeUser.id,
+      gemeldeId: rapportGemeldeId,
+      berichtInhoud: rapportBericht,
+      reden
+    })
+    voegSysBericht(gelukt ? '🚩 Rapport verstuurd — bedankt voor de melding' : '❌ Rapport versturen mislukt')
+    rapportBericht = null
+    rapportGemeldeId = null
+  }
+
+  // Long press op berichten voor rapporteer optie
+  function voegLongPressToe(el, berichtInhoud, isMijn) {
+    if (isMijn) return // Eigen berichten niet rapporteren
+    let timer
+    el.addEventListener('touchstart', () => {
+      timer = setTimeout(() => {
+        openRapportMenu(berichtInhoud, geselecteerdeVriend?.id)
+      }, 600)
+    }, { passive: true })
+    el.addEventListener('touchend', () => clearTimeout(timer), { passive: true })
+    el.addEventListener('touchmove', () => clearTimeout(timer), { passive: true })
+  }
+
+  // Exporteer voor gebruik in voegBerichtToe
+  window._voegLongPressToe = voegLongPressToe
 
   init()
 </script>

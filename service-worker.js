@@ -1,4 +1,5 @@
 self.addEventListener('fetch', function(event) {
+  if (event.request.url.includes('supabase.co')) return;
   event.respondWith(fetch(event.request));
 });
 

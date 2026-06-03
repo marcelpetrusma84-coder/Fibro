@@ -5,7 +5,15 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
 const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY")
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY")
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, content-type",
+}
+
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders })
+  }
   const { receiver_id, title, body, url } = await req.json()
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
@@ -15,7 +23,7 @@ Deno.serve(async (req) => {
     .eq("user_id", receiver_id)
 
   if (!subs || subs.length === 0) {
-    return new Response(JSON.stringify({ ok: false }), { status: 200 })
+    return new Response(JSON.stringify({ ok: false }), { status: 200, headers: corsHeaders })
   }
 
   const payload = JSON.stringify({ title, body, url: url || "/Fibro/chat.html" })
@@ -35,7 +43,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  return new Response(JSON.stringify({ ok: true }), { status: 200 })
+  return new Response(JSON.stringify({ ok: true }), { status: 200, headers: corsHeaders })
 })
 
 async function buildVapidHeaders(endpoint, publicKey, privateKey) {

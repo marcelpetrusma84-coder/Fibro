@@ -168,9 +168,9 @@ input, textarea { font-size:16px !important; }
           <div class="f-info">
             <div class="f-name">${naam}</div>
             ${bio ? `<div class="f-bio">${bio}</div>` : ''}
-            <div style="font-size:12px;margin-top:3px;color:var(--accent2);font-style:italic;">
-              ${mood || ''}
-              <span style="margin-left:6px;color:${p.online_status ? '#22c55e' : 'var(--muted)'};">${p.online_status ? '🟢' : (p.offline_emoji || '🌙')}</span>
+            <div style="font-size:12px;margin-top:3px;color:var(--accent2);font-style:italic;display:flex;align-items:center;gap:6px;">
+              <span>${mood || ''}</span>
+              <span style="width:9px;height:9px;border-radius:50%;display:inline-block;background:${p.online_status ? '#22c55e' : '#ef4444'};flex-shrink:0;"></span>
             </div>
           </div>
           <div class="f-btn" onclick="event.stopPropagation();window.location.href='chat.html'">💬</div>

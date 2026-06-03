@@ -622,7 +622,12 @@ window.slaAllesOp=async function(){
   const{error}=await supabase.from('profiles').upsert({
     id:huidigeUser.id,
     username:profiel?.username||huidigeUser.id,
-    updated_at:new Date().toISOString()
+    updated_at:new Date().toISOString(),
+    accent_kleur:accentKleur,
+    accent_kleur2:accentKleur2,
+    achtergrond_kleur:bgKleur,
+    lettertype:huidigLettertype,
+    animatie:huidigeAnimatie
   })
 
   const msg=document.getElementById('statusMsg')

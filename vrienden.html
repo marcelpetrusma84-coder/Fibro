@@ -168,8 +168,10 @@ input, textarea { font-size:16px !important; }
           <div class="f-info">
             <div class="f-name">${naam}</div>
             ${bio ? `<div class="f-bio">${bio}</div>` : ''}
-            ${mood ? `<div class="f-mood">💭 ${mood}</div>` : ''}
-            <div style="font-size:11px;margin-top:2px;color:${p.online_status ? '#22c55e' : 'var(--muted)'}">              ${p.online_status ? '🟢 Online' : (p.offline_emoji || '🌙') + ' ' + (p.offline_bericht || 'Offline')}            </div>
+            <div style="font-size:12px;margin-top:3px;color:var(--accent2);font-style:italic;">
+              ${mood || ''}
+              <span style="margin-left:6px;color:${p.online_status ? '#22c55e' : 'var(--muted)'};">${p.online_status ? '🟢' : (p.offline_emoji || '🌙')}</span>
+            </div>
           </div>
           <div class="f-btn" onclick="event.stopPropagation();window.location.href='chat.html'">💬</div>
           <div class="f-arrow">›</div>

@@ -433,7 +433,10 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
         <div>
           <div class="vriend-naam">${vriend.display_name || vriend.username}</div>
           <div class="vriend-username">@${vriend.username}</div>
-          <div style="font-size:11px;margin-top:2px;color:${vriend.online_status ? '#22c55e' : 'var(--muted)'}">            ${vriend.online_status ? '🟢 Online' : (vriend.offline_emoji || '🌙') + ' ' + (vriend.offline_bericht || 'Offline')}          </div>
+          <div style="font-size:12px;margin-top:3px;color:var(--accent2);font-style:italic;">
+            ${vriend.mood || ''}
+            <span style="margin-left:6px;color:${vriend.online_status ? '#22c55e' : 'var(--muted)'};">${vriend.online_status ? '🟢' : (vriend.offline_emoji || '🌙')}</span>
+          </div>
         </div>
         <div style="margin-left:auto;font-size:12px;color:${vriend.public_key ? '#22c55e' : '#f87171'}">
           ${vriend.public_key ? '🔒' : '🔓'}

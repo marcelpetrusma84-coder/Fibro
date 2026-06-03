@@ -140,7 +140,7 @@ input, textarea { font-size:16px !important; }
   async function laadVrienden(userId) {
     const { data, error } = await supabase
       .from('friendships')
-      .select('friend_id, profiles!friendships_friend_id_fkey(id, username, display_name, bio, avatar_url, mood)')
+      .select('friend_id, profiles!friendships_friend_id_fkey(id, username, display_name, bio, avatar_url, mood, online_status, offline_emoji, offline_bericht)')
       .eq('user_id', userId)
       .eq('status', 'accepted')
 
@@ -169,6 +169,7 @@ input, textarea { font-size:16px !important; }
             <div class="f-name">${naam}</div>
             ${bio ? `<div class="f-bio">${bio}</div>` : ''}
             ${mood ? `<div class="f-mood">💭 ${mood}</div>` : ''}
+            <div style="font-size:11px;margin-top:2px;color:${p.online_status ? '#22c55e' : 'var(--muted)'}">              ${p.online_status ? '🟢 Online' : (p.offline_emoji || '🌙') + ' ' + (p.offline_bericht || 'Offline')}            </div>
           </div>
           <div class="f-btn" onclick="event.stopPropagation();window.location.href='chat.html'">💬</div>
           <div class="f-arrow">›</div>

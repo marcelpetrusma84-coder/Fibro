@@ -136,10 +136,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 </div>
 <div class="privacy-bar" id="privacyBar">⚠ Screenshot poging gedetecteerd — zonder toestemming</div>
 
-<div id="vriendenSelectie" class="vriend-selectie">
-  <h3>Met wie wil je chatten?</h3>
-  <div id="vriendenLijst"><div class="laden">Vrienden laden...</div></div>
-</div>
+
 
 <div id="chatScherm" style="display:none; flex:1; flex-direction:column;">
   <div class="messages" id="messages">
@@ -740,7 +737,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       vriendPublicKey = null
       document.getElementById('belKnop').style.display = 'none'
       document.getElementById('chatScherm').style.display = 'none'
-      document.getElementById('vriendenSelectie').style.display = 'block'
+      window.location.href = 'vrienden.html'
       document.getElementById('chatNaam').textContent = 'Selecteer een vriend'
       document.getElementById('chatStatus').textContent = 'Kies hieronder met wie je wilt chatten'
       document.getElementById('chatAv').textContent = '💬'

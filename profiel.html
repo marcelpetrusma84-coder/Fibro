@@ -184,6 +184,13 @@ input, textarea { font-size:16px !important; }
     </div>
   </div>
   <div class="section">
+    <div class="section-label">Offline status</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+      <input class="field" id="offlineEmoji" placeholder="🌙" maxlength="2" style="width:60px;text-align:center;font-size:20px;padding:8px;"/>
+      <input class="field" id="offlineBericht" placeholder="Niet beschikbaar..." style="flex:1;margin:0;"/>
+    </div>
+  </div>
+  <div class="section">
     <div class="section-label">Profiel preview</div>
     <div class="profiel-preview">
       <div class="preview-label">Zo zien anderen jouw profiel</div>
@@ -545,6 +552,8 @@ async function init(){
     gekozenMoodEmoji = moodEmoji
     document.getElementById('moodEmojiGekozen').textContent = moodEmoji
     document.getElementById('editMood').value = moodTekst
+    document.getElementById('offlineEmoji').value = profiel.offline_emoji || '🌙'
+    document.getElementById('offlineBericht').value = profiel.offline_bericht || ''
 
     const userId=huidigeUser.id
     const opgeslagenFoto=await laadFotoUitDB('avatar_thumbnail_'+userId)
@@ -602,6 +611,8 @@ window.slaAllesOp=async function(){
   const bio=document.getElementById('editBio').value.trim()
   const mood = gekozenMoodEmoji + ' ' + document.getElementById('editMood').value.trim()
   const avatar=document.getElementById('avatarEmoji').textContent
+  const offlineEmoji=document.getElementById('offlineEmoji').value.trim() || '🌙'
+  const offlineBericht=document.getElementById('offlineBericht').value.trim() || 'Offline'
   const accentKleur=document.getElementById('accentHex').value
   const accentKleur2=document.getElementById('accent2Hex').value
   const bgKleur=document.getElementById('bgKleurHex').value
@@ -627,7 +638,9 @@ window.slaAllesOp=async function(){
     accent_kleur2:accentKleur2,
     achtergrond_kleur:bgKleur,
     lettertype:huidigLettertype,
-    animatie:huidigeAnimatie
+    animatie:huidigeAnimatie,
+    offline_emoji:offlineEmoji,
+    offline_bericht:offlineBericht
   })
 
   const msg=document.getElementById('statusMsg')

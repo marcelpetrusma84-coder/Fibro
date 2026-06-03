@@ -627,7 +627,23 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       content,
       expires_at: new Date(Date.now() + 24*60*60*1000).toISOString()
     })
-    if (error) console.error('Versturen mislukt:', error)
+    if (error) {
+      console.error('Versturen mislukt:', error)
+    } else {
+      // ── Push notificatie sturen ──
+      try {
+        await fetch('https://qmgatbphiplrfxrljtbe.supabase.co/functions/v1/stuur-push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await supabase.auth.getSession()).data.session.access_token },
+          body: JSON.stringify({
+            receiver_id: geselecteerdeVriend.id,
+            title: huidigProfiel?.display_name || huidigProfiel?.username || 'Fibro',
+            body: '💬 Nieuw bericht',
+            url: '/Fibro/chat.html'
+          })
+        })
+      } catch(e) { console.log('Push mislukt:', e) }
+    }
     document.getElementById('emojiGrid').style.display = 'none'
     emojiOpen = false
   }

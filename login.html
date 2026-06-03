@@ -210,6 +210,26 @@
     await controleerKeypair(data.user.id)
 
     toonBericht(msg,'success','Ingelogd! Even laden...')
+
+    // ── Push notificaties registreren ──
+    try {
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
+        const reg = await navigator.serviceWorker.register('/Fibro/service-worker.js')
+        await navigator.serviceWorker.ready
+        const toestemming = await Notification.requestPermission()
+        if (toestemming === 'granted') {
+          const sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: 'BPlj7NQfA670j7ZmTQnzcv5QLrsj0D1AtAimf9Ros_B0jUp6mk0w4UQ6K1RP5y891cfAB70zOJAFl5zrSPJ3lbE'
+          })
+          await supabase.from('push_subscriptions').upsert({
+            user_id: data.user.id,
+            subscription: sub.toJSON()
+          })
+        }
+      }
+    } catch(e) { console.log('Push registratie mislukt:', e) }
+
     setTimeout(() => { window.location.href = 'index.html' }, 800)
   }
 

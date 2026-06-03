@@ -438,19 +438,22 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 
     container.innerHTML = data.map(vriend => `
       <div class="vriend-item" onclick="openChat('${vriend.id}', '${vriend.display_name || vriend.username}', '${vriend.avatar_url || '👤'}', '${vriend.public_key || ''}')">
-        <div class="vriend-av">${vriend.avatar_url || '👤'}</div>
+        <div class="vriend-av">
+          ${vriend.avatar_url && vriend.avatar_url.startsWith('http')
+            ? `<img src="${vriend.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+            : (vriend.avatar_url || '👤')}
+        </div>
         <div>
           <div class="vriend-naam">${vriend.display_name || vriend.username}</div>
           <div class="vriend-username">@${vriend.username}</div>
-          <div style="font-size:12px;margin-top:3px;color:var(--accent2);font-style:italic;display:flex;align-items:center;gap:6px;">
-            <span>${vriend.mood || ''}</span>
-            <span style="position:relative;display:inline-flex;align-items:center;margin-left:4px;width:22px;height:22px;">
-              <span style="font-size:20px;line-height:1;">💬</span>
-              <span style="position:absolute;bottom:-1px;right:-2px;width:9px;height:9px;border-radius:50%;background:${vriend.online_status ? '#22c55e' : '#ef4444'};border:1.5px solid var(--card);"></span>
-            </span>
-          </div>
-        <div style="margin-left:auto;font-size:12px;color:${vriend.public_key ? '#22c55e' : '#f87171'}">
-          ${vriend.public_key ? '🔒' : '🔓'}
+          <div style="font-size:12px;margin-top:2px;color:var(--accent2);font-style:italic;">${vriend.mood || ''}</div>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+          <div style="font-size:12px;color:${vriend.public_key ? '#22c55e' : '#f87171'}">${vriend.public_key ? '🔒' : '🔓'}</div>
+          <span style="position:relative;display:inline-flex;align-items:center;width:24px;height:24px;">
+            <span style="font-size:22px;line-height:1;">💬</span>
+            <span style="position:absolute;bottom:-1px;right:-2px;width:9px;height:9px;border-radius:50%;background:${vriend.online_status ? '#22c55e' : '#ef4444'};border:1.5px solid var(--card);"></span>
+          </span>
         </div>
       </div>
     `).join('')

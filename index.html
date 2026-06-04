@@ -254,6 +254,52 @@ async function init() {
     await laadThema()
     await laadProfiel()
     await laadGastenboek()
+    await laadVriendenCache()
+  }
+
+  // ========================
+  // VRIENDEN CACHE LADEN
+  // ========================
+  async function laadVriendenCache() {
+    try {
+      const { data: friendships } = await supabase
+        .from('friendships')
+        .select('user_id, friend_id')
+        .or(`user_id.eq.${huidigeUser.id},friend_id.eq.${huidigeUser.id}`)
+        .eq('status', 'accepted')
+
+      if (!friendships || friendships.length === 0) return
+
+      const vriendIds = friendships.map(f =>
+        f.user_id === huidigeUser.id ? f.friend_id : f.user_id
+      )
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', vriendIds)
+
+      if (!data) return
+
+      data.forEach(vriend => {
+        try {
+          localStorage.setItem('vriend_cache_' + vriend.id, JSON.stringify({
+            naam: vriend.display_name || vriend.username || '',
+            bio: vriend.bio || '',
+            mood: vriend.mood || '',
+            avatar: vriend.avatar_url || '👤',
+            accent_kleur: vriend.accent_kleur || '',
+            accent_kleur2: vriend.accent_kleur2 || '',
+            achtergrond_kleur: vriend.achtergrond_kleur || '',
+            lettertype: vriend.lettertype || '',
+            online_status: vriend.online_status || false,
+            offline_emoji: vriend.offline_emoji || '🌙',
+            offline_bericht: vriend.offline_bericht || 'Offline',
+            bijgewerkt: new Date().toISOString()
+          }))
+        } catch(e) {}
+      })
+    } catch(e) {}
   }
 
   // ========================

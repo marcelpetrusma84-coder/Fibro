@@ -118,25 +118,43 @@ body.heeft-wallpaper::before { display:block; }
     await laadGastenboek()
   }
 
+  function toonProfielData(data) {
+    document.getElementById("profielNaam").textContent = data.naam || data.display_name || data.username || "Naamloos"
+    document.getElementById("profielUsername").textContent = "@" + (data.username || "")
+    document.getElementById("profielBio").textContent = data.bio || ""
+    document.getElementById("avatarEmoji").textContent = data.avatar || data.avatar_url || "👤"
+    document.getElementById("moodTekst").textContent = data.mood || "Geen mood ingesteld"
+    document.getElementById("paginaTitel").textContent = data.naam || data.display_name || data.username || "Profiel"
+    if (data.accent_kleur) document.documentElement.style.setProperty("--accent", data.accent_kleur)
+    if (data.accent_kleur2) document.documentElement.style.setProperty("--accent2", data.accent_kleur2)
+    if (data.achtergrond_kleur) document.documentElement.style.setProperty("--bg", data.achtergrond_kleur)
+  }
+
   async function laadProfiel() {
+    const cache = localStorage.getItem("vriend_cache_" + vriendId)
+    if (cache) { try { toonProfielData(JSON.parse(cache)) } catch(e) {} }
+
     const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', vriendId)
+      .from("profiles")
+      .select("*")
+      .eq("id", vriendId)
       .single()
-
     if (error || !data) return
+    toonProfielData(data)
 
-    document.getElementById('profielNaam').textContent = data.display_name || data.username || 'Naamloos'
-    document.getElementById('profielUsername').textContent = '@' + (data.username || '')
-    document.getElementById('profielBio').textContent = data.bio || ''
-    document.getElementById('avatarEmoji').textContent = data.avatar_url || '👤'
-    document.getElementById('moodTekst').textContent = data.mood || 'Geen mood ingesteld'
-    document.getElementById('paginaTitel').textContent = data.display_name || data.username || 'Profiel'
-
-if (data.accent_kleur) document.documentElement.style.setProperty('--accent', data.accent_kleur)
-    if (data.accent_kleur2) document.documentElement.style.setProperty('--accent2', data.accent_kleur2)
-    if (data.achtergrond_kleur) document.documentElement.style.setProperty('--bg', data.achtergrond_kleur)
+    try {
+      localStorage.setItem("vriend_cache_" + vriendId, JSON.stringify({
+        naam: data.display_name || data.username || "",
+        bio: data.bio || "",
+        mood: data.mood || "",
+        avatar: data.avatar_url || "👤",
+        accent_kleur: data.accent_kleur || "",
+        accent_kleur2: data.accent_kleur2 || "",
+        achtergrond_kleur: data.achtergrond_kleur || "",
+        online_status: data.online_status || false,
+        bijgewerkt: new Date().toISOString()
+      }))
+    } catch(e) {}
   }
 
   async function laadGastenboek() {

@@ -1,4 +1,4 @@
-export const VAPID_PUBLIC_KEY = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE4VhhJGuLpOKa8JMtoC1r20RbCG-1JSuIXQgxGgRBoH6E-pdZZ70-31STJISZKlTVqhHHgOEX2jx5_CO4f0vLZw'
+export const VAPID_PUBLIC_KEY = 'BFRFUyT_qEMMA2G3jq1SnTfAv1ASgtNpHSBzB_IQBvJM3IeWiXeCYb2mVvLVgHrDIYLvNYV53QElg2Hn3HycuSo'
 
 export async function abonneerOpNotificaties() {
   if (!('Notification' in window)) return null

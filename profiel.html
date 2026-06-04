@@ -207,6 +207,7 @@ input, textarea { font-size:16px !important; }
   </div>
   <button class="save-btn" onclick="slaAllesOp()">Opslaan</button>
   <button class="uitlog-btn" onclick="uitloggen()">Uitloggen</button>
+  <button class="save-btn" style="margin-top:8px;background:linear-gradient(135deg,#3b82f6,#6366f1);" onclick="activeerPushNotificaties()">🔔 Notificaties inschakelen</button>
 </div>
 <div class="panel" id="panel-achtergrond">
   <div class="section">
@@ -650,6 +651,34 @@ window.slaAllesOp=async function(){
   window.scrollTo(0,0)
 }
 window.uitloggen=async function(){await supabase.auth.signOut();window.location.href='login.html'}
+
+window.activeerPushNotificaties = async function() {
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      alert('Push notificaties worden niet ondersteund op dit apparaat.')
+      return
+    }
+    const reg = await navigator.serviceWorker.register('/Fibro/service-worker.js')
+    await navigator.serviceWorker.ready
+    const toestemming = await Notification.requestPermission()
+    if (toestemming !== 'granted') {
+      alert('Toestemming geweigerd. Zet notificaties aan in je instellingen.')
+      return
+    }
+    const { data: { session } } = await supabase.auth.getSession()
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: 'BFRFUyT_qEMMA2G3jq1SnTfAv1ASgtNpHSBzB_IQBvJM3IeWiXeCYb2mVvLVgHrDIYLvNYV53QElg2Hn3HycuSo'
+    })
+    await supabase.from('push_subscriptions').upsert({
+      user_id: session.user.id,
+      subscription: sub.toJSON()
+    })
+    alert('✅ Notificaties ingeschakeld!')
+  } catch(e) {
+    alert('Fout: ' + e.message)
+  }
+}
 
 let isOnline = true
 window.toggleOnlineStatus = async function() {

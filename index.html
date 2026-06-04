@@ -255,6 +255,9 @@ async function init() {
     await laadProfiel()
     await laadGastenboek()
     await laadVriendenCache()
+    // Cache opruimen
+    const vriendIds = JSON.parse(localStorage.getItem('actieve_vriend_ids') || '[]')
+    import('./cache.js').then(m => m.ruimCacheOp(vriendIds))
   }
 
   // ========================
@@ -280,6 +283,11 @@ async function init() {
         .in('id', vriendIds)
 
       if (!data) return
+
+      // Sla actieve vriend IDs op voor cache opruim
+      try {
+        localStorage.setItem('actieve_vriend_ids', JSON.stringify(data.map(v => v.id)))
+      } catch(e) {}
 
       data.forEach(vriend => {
         try {

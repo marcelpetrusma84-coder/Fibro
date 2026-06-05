@@ -1,77 +1,210 @@
 <!DOCTYPE html>
-<html lang="nl" style="background:#1a0a2e;">
+<html lang="nl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fibro - Vrienden</title>
-<link rel="apple-touch-icon" href="/icon-192.png">
-<link rel="manifest" href="/manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Fibro">
-<meta name="theme-color" content="#c084fc">
-  <meta name="theme-color" content="#c084fc">
-<script>
-  try {
-    const f = localStorage.getItem('fibro_font')
-    if (f) document.write('<style>*{font-family:' + f + ' !important}</style>')
-  } catch(e) {}
-</script>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400;500&family=Raleway:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:wght@300;400;700&family=Bebas+Neue&family=Oswald:wght@300;400;500&family=Pacifico&family=Dancing+Script:wght@400;600&family=Great+Vibes&family=Space+Mono:wght@400;700&family=Courier+Prime:wght@400;700&family=Quicksand:wght@300;400;500&family=Nunito:wght@300;400;500&family=Righteous&family=Comfortaa:wght@300;400;500&family=Cinzel:wght@400;600&family=Satisfy&family=Lobster&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
-:root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:#ffffff; }
-body { background:var(--bg); background-attachment:fixed; background-size:cover; background-position:center; font-family:"DM Sans",sans-serif; color:var(--text); max-width:480px; margin:0 auto; min-height:100vh; padding-bottom:70px; overflow-y:auto; }
-.top-bar { display:flex; align-items:center; gap:10px; padding:12px 16px; background:rgba(0,0,0,0.35); border-bottom:0.5px solid var(--border); position:sticky; top:0; z-index:10; backdrop-filter:blur(12px); }
+:root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:rgba(243,232,255,0.5); }
+body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text); max-width:480px; margin:0 auto; min-height:100vh; }
+.top-bar { display:flex; align-items:center; gap:10px; padding:12px 16px; background:rgba(0,0,0,0.35); border-bottom:0.5px solid var(--border); position:sticky; top:0; z-index:10; }
 .top-title { font-family:"Playfair Display",serif; font-style:italic; font-size:18px; color:var(--accent); flex:1; }
-.invite-btn { font-size:14px; padding:5px 12px; border-radius:20px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-weight:500; min-height:44px; }
+.invite-btn { font-size:11px; padding:5px 12px; border-radius:20px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-weight:500; }
 .search-bar { padding:10px 14px; border-bottom:0.5px solid var(--border); }
-.search-input { width:100%; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-size:16px; outline:none; }
-.section-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; padding:12px 16px 6px; }
-.friend-row { display:flex; align-items:center; gap:12px; padding:14px 16px; margin:8px 14px; border:0.5px solid var(--border); border-radius:16px; cursor:pointer; background:var(--card); backdrop-filter:blur(12px); transition:border-color 0.2s; }
-.friend-row:hover { border-color:var(--accent); }
-.f-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; border:1.5px solid rgba(192,132,252,0.4); background:rgba(192,132,252,0.1); }
+.search-input { width:100%; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-size:12px; outline:none; }
+.section-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; padding:12px 16px 6px; }
+.friend-row { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:0.5px solid var(--border); cursor:pointer; }
+.f-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; border:1.5px solid var(--border); position:relative; }
+.f-avatar.purple { border-color:rgba(192,132,252,0.4); background:rgba(192,132,252,0.1); }
+.f-avatar.blue { border-color:rgba(56,189,248,0.4); background:rgba(56,189,248,0.1); }
+.f-avatar.pink { border-color:rgba(244,114,182,0.4); background:rgba(244,114,182,0.1); }
+.f-avatar.orange { border-color:rgba(245,158,74,0.4); background:rgba(245,158,74,0.1); }
+.online-dot { width:10px; height:10px; border-radius:50%; background:#4ade80; border:2px solid var(--bg); position:absolute; bottom:1px; right:1px; }
+.online-dot.off { background:var(--muted); }
 .f-info { flex:1; }
 .f-name { font-size:14px; font-weight:500; }
-.f-bio { font-size:12px; color:var(--muted); margin-top:2px; }
-.f-mood { font-size:12px; color:var(--accent2); margin-top:3px; font-style:italic; }
+.f-bio { font-size:11px; color:var(--muted); margin-top:2px; }
+.f-status { font-size:10px; margin-top:3px; }
+.f-status.on { color:#4ade80; }
+.f-status.off { color:var(--muted); }
 .f-arrow { color:var(--muted); font-size:16px; }
-.f-btn { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--card); border:0.5px solid var(--border); cursor:pointer; font-size:16px; flex-shrink:0; }
-.bottom-nav { display:flex; justify-content:space-around; padding:12px 0; border-top:0.5px solid var(--border); background:rgba(0,0,0,0.3); position:fixed; bottom:0; width:100%; max-width:480px; z-index:10; padding-bottom:env(safe-area-inset-bottom,12px); backdrop-filter:blur(12px); }
-.nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:15px; color:#ffffff; cursor:pointer; padding:4px 12px; min-height:44px; }
+.f-btn { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--card); border:0.5px solid var(--border); cursor:pointer; font-size:14px; }
+.bottom-nav { display:flex; justify-content:space-around; padding:12px 0; border-top:0.5px solid var(--border); background:rgba(0,0,0,0.3); position:sticky; bottom:0; }
+.nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; color:var(--muted); cursor:pointer; padding:4px 12px; }
 .nav-item.active { color:var(--accent); }
 .nav-icon { font-size:20px; }
-.fibro-logo { font-family:"Playfair Display",serif; font-style:italic; font-size:14px; color:var(--accent); text-align:center; padding:12px; opacity:0.5; }
-.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:100; align-items:center; justify-content:center; padding:24px; backdrop-filter:blur(8px); }
+.fibro-logo { font-family:"Playfair Display",serif; font-style:italic; font-size:11px; color:var(--accent); text-align:center; padding:12px; opacity:0.5; }
+
+/* ======================== */
+/* QR MODAL */
+/* ======================== */
+.modal-overlay {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.8);
+  z-index:100;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  backdrop-filter:blur(8px);
+}
 .modal-overlay.open { display:flex; }
-.modal { background:#1a0a2e; border:1px solid rgba(192,132,252,0.3); border-radius:20px; padding:28px 24px; width:100%; max-width:340px; text-align:center; }
-.modal h2 { font-family:"Playfair Display",serif; font-style:italic; font-size:22px; color:var(--accent); margin-bottom:6px; }
-.modal p { font-size:12px; color:var(--muted); margin-bottom:20px; line-height:1.5; }
-#qr-container { background:white; border-radius:12px; padding:16px; display:inline-block; margin-bottom:20px; }
-.timer-ring { display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:20px; }
-.timer-text { font-size:13px; color:var(--muted); }
-.timer-countdown { font-size:16px; font-weight:600; color:var(--accent); min-width:48px; }
+
+.modal {
+  background:#1a0a2e;
+  border:1px solid rgba(192,132,252,0.3);
+  border-radius:20px;
+  padding:28px 24px;
+  width:100%;
+  max-width:340px;
+  text-align:center;
+  animation:fadeUp 0.3s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(16px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+.modal h2 {
+  font-family:"Playfair Display",serif;
+  font-style:italic;
+  font-size:22px;
+  color:var(--accent);
+  margin-bottom:6px;
+}
+
+.modal p {
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:20px;
+  line-height:1.5;
+}
+
+/* QR code container */
+#qr-container {
+  background:white;
+  border-radius:12px;
+  padding:16px;
+  display:inline-block;
+  margin-bottom:20px;
+}
+
+/* Timer */
+.timer-ring {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin-bottom:20px;
+}
+
+.timer-text {
+  font-size:13px;
+  color:var(--muted);
+}
+
+.timer-countdown {
+  font-size:16px;
+  font-weight:600;
+  color:var(--accent);
+  font-variant-numeric:tabular-nums;
+  min-width:48px;
+}
+
 .timer-countdown.warning { color:#f59e0b; }
 .timer-countdown.expired { color:#ff5c5c; }
-.progress-bar { width:100%; height:3px; background:rgba(255,255,255,0.1); border-radius:2px; margin-bottom:20px; overflow:hidden; }
-.progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:2px; transition:width 1s linear; }
-.token-code { background:rgba(192,132,252,0.1); border:1px dashed rgba(192,132,252,0.3); border-radius:8px; padding:10px; font-size:12px; color:var(--accent); margin-bottom:20px; word-break:break-all; }
-.modal-btn { width:100%; padding:12px; border:none; border-radius:10px; font-family:"DM Sans",sans-serif; font-size:14px; cursor:pointer; margin-bottom:8px; min-height:44px; }
-.modal-btn-primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; font-weight:600; }
-.modal-btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--border); }
-.modal-status { font-size:12px; padding:8px 12px; border-radius:8px; margin-bottom:12px; display:none; }
+
+/* Progress bar */
+.progress-bar {
+  width:100%;
+  height:3px;
+  background:rgba(255,255,255,0.1);
+  border-radius:2px;
+  margin-bottom:20px;
+  overflow:hidden;
+}
+
+.progress-fill {
+  height:100%;
+  background:linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius:2px;
+  transition:width 1s linear;
+}
+
+/* Token code */
+.token-code {
+  background:rgba(192,132,252,0.1);
+  border:1px dashed rgba(192,132,252,0.3);
+  border-radius:8px;
+  padding:10px;
+  font-size:11px;
+  color:var(--accent);
+  letter-spacing:1px;
+  margin-bottom:20px;
+  word-break:break-all;
+}
+
+/* Buttons */
+.modal-btn {
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  font-family:"DM Sans",sans-serif;
+  font-size:13px;
+  cursor:pointer;
+  margin-bottom:8px;
+  transition:all 0.2s;
+}
+
+.modal-btn-primary {
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#1a0a2e;
+  font-weight:600;
+}
+
+.modal-btn-primary:hover { opacity:0.9; transform:translateY(-1px); }
+.modal-btn-primary:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+
+.modal-btn-ghost {
+  background:transparent;
+  color:var(--muted);
+  border:1px solid var(--border);
+}
+
+.modal-btn-ghost:hover { color:var(--text); border-color:var(--muted); }
+
+/* Status bericht */
+.modal-status {
+  font-size:12px;
+  padding:8px 12px;
+  border-radius:8px;
+  margin-bottom:12px;
+  display:none;
+}
 .modal-status.error { background:rgba(255,92,92,0.1); color:#ff5c5c; border:1px solid rgba(255,92,92,0.2); display:block; }
 .modal-status.success { background:rgba(192,132,252,0.1); color:var(--accent); border:1px solid rgba(192,132,252,0.2); display:block; }
-.expired-overlay { display:none; flex-direction:column; align-items:center; gap:12px; padding:20px 0; }
+
+/* Verlopen staat */
+.expired-overlay {
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+  padding:20px 0;
+}
 .expired-overlay.show { display:flex; }
 .expired-icon { font-size:40px; }
-body::before { content:''; position:fixed; inset:0; background:rgba(0,0,0,0.38); z-index:0; pointer-events:none; display:none; }
-body.heeft-wallpaper::before { display:block; }
-input, textarea { font-size:16px !important; }
 </style>
 </head>
-<body><div class="top-bar">
+<body>
+
+<div class="top-bar">
   <span class="top-title">Vrienden</span>
   <button class="invite-btn" onclick="openInviteModal()">+ Uitnodigen</button>
 </div>
@@ -81,107 +214,100 @@ input, textarea { font-size:16px !important; }
 </div>
 
 <div id="vriendenLijst">
-  <div style="padding:20px; text-align:center; color:var(--muted); font-size:12px;">Vrienden laden...</div>
+  <div class="section-label">Online</div>
+  <div class="friend-row" onclick="window.location.href='http://localhost:4000/index.html'">
+    <div class="f-avatar pink">🌸<div class="online-dot"></div></div>
+    <div class="f-info"><div class="f-name">Zoe</div><div class="f-bio">Anime en Gaming Fan</div><div class="f-status on">online</div></div>
+    <div class="f-btn" onclick="event.stopPropagation();window.location.href='http://localhost:4000/chat.html'">💬</div>
+    <div class="f-arrow">&#8250;</div>
+  </div>
+  <div class="friend-row" onclick="window.location.href='http://localhost:4000/index.html'">
+    <div class="f-avatar blue">🎸<div class="online-dot"></div></div>
+    <div class="f-info"><div class="f-name">Evan</div><div class="f-bio">Guitarist en Music Lover</div><div class="f-status on">online</div></div>
+    <div class="f-btn" onclick="event.stopPropagation();window.location.href='http://localhost:4000/chat.html'">💬</div>
+    <div class="f-arrow">&#8250;</div>
+  </div>
+  <div class="section-label">Offline</div>
+  <div class="friend-row" onclick="window.location.href='http://localhost:4000/index.html'">
+    <div class="f-avatar orange">📷<div class="online-dot off"></div></div>
+    <div class="f-info"><div class="f-name">Lucas</div><div class="f-bio">Street Photographer</div><div class="f-status off">verborgen</div></div>
+    <div class="f-btn" onclick="event.stopPropagation();window.location.href='http://localhost:4000/chat.html'">💬</div>
+    <div class="f-arrow">&#8250;</div>
+  </div>
+  <div class="friend-row" onclick="window.location.href='http://localhost:4000/index.html'">
+    <div class="f-avatar purple">🌙<div class="online-dot off"></div></div>
+    <div class="f-info"><div class="f-name">Mia</div><div class="f-bio">Photographer en Traveller</div><div class="f-status off">2 uur geleden</div></div>
+    <div class="f-btn" onclick="event.stopPropagation();window.location.href='http://localhost:4000/chat.html'">💬</div>
+    <div class="f-arrow">&#8250;</div>
+  </div>
 </div>
 
 <div class="fibro-logo">Fibro - jouw netwerk</div>
 
+<div class="bottom-nav">
+  <div class="nav-item" onclick="window.location.href='http://localhost:4000/index.html'"><div class="nav-icon">🏠</div>Home</div>
+  <div class="nav-item active"><div class="nav-icon">👥</div>Vrienden</div>
+  <div class="nav-item" onclick="window.location.href='http://localhost:4000/chat.html'"><div class="nav-icon">💬</div>Chat</div>
+  <div class="nav-item" onclick="window.location.href='http://localhost:4000/login.html'"><div class="nav-icon">👤</div>Profiel</div>
+</div>
+
+<!-- ======================== -->
+<!-- QR INVITE MODAL -->
+<!-- ======================== -->
 <div class="modal-overlay" id="inviteModal" onclick="sluitModalBuiten(event)">
-  <div class="modal"> 
+  <div class="modal">
     <h2>Vriend uitnodigen</h2>
     <p>Genereer een QR code. Je vriend heeft 20 minuten om zich te registreren.</p>
+
     <div class="modal-status" id="modal-status"></div>
+
+    <!-- QR code weergave -->
     <div id="qr-sectie" style="display:none;">
       <div id="qr-container"></div>
+
       <div class="timer-ring">
         <span class="timer-text">Geldig nog:</span>
         <span class="timer-countdown" id="timer-display">20:00</span>
       </div>
+
       <div class="progress-bar">
         <div class="progress-fill" id="progress-fill"></div>
       </div>
+
       <div class="token-code" id="token-display"></div>
-      <button onclick="kopieerLink()" style="margin-top:10px;width:100%;padding:10px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;border:none;cursor:pointer;font-size:14px;font-weight:600;min-height:44px;">📋 Kopieer link</button>
+
+      <!-- Verlopen staat -->
       <div class="expired-overlay" id="expired-overlay">
         <div class="expired-icon">⏰</div>
         <p style="margin:0;">Deze invite is verlopen.</p>
         <button class="modal-btn modal-btn-primary" onclick="nieuweInvite()">Nieuwe QR genereren</button>
       </div>
     </div>
-    <div id="qr-laden" style="padding:20px 0; color:var(--muted); font-size:13px;">Even laden...</div>
+
+    <!-- Laden staat -->
+    <div id="qr-laden" style="padding:20px 0; color:var(--muted); font-size:13px;">
+      Even laden...
+    </div>
+
     <button class="modal-btn modal-btn-ghost" onclick="sluitModal()">Sluiten</button>
   </div>
 </div>
 
-<div class="bottom-nav">
-  <div class="nav-item" onclick="window.location.href='index.html'"><div class="nav-icon">🏠</div>Home</div>
-  <div class="nav-item active"><div class="nav-icon">👥</div>Vrienden</div>
-  <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
-  <div class="nav-item" onclick="window.location.href='profiel.html'"><div class="nav-icon">👤</div>Profiel</div>
-</div>
-
 <script type="module">
-  import { laadThema } from './thema.js'
-  import { laadWallpaper } from './wallpaper.js'
-  import { supabase } from './supabase.js'
- 
-  const DUUR = 20 * 60
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+  const supabase = createClient(
+    'https://qmgatbphiplrfxrljtbe.supabase.co',
+    'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
+  )
+
+  const DUUR = 20 * 60 // 20 minuten in seconden
   let timerInterval = null
-  let secondsLeft = DUUR 
+  let secondsLeft = DUUR
 
-  async function init() {
-    await laadThema()
-    await laadWallpaper()
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { window.location.href = 'login.html'; return }
-    await laadVrienden(session.user.id)
-  }
-
-  async function laadVrienden(userId) {
-    const { data, error } = await supabase
-      .from('friendships')
-      .select('friend_id, profiles!friendships_friend_id_fkey(id, username, display_name, bio, avatar_url, mood, online_status, offline_emoji, offline_bericht)')
-      .eq('user_id', userId)
-      .eq('status', 'accepted')
-
-    const container = document.getElementById('vriendenLijst')
-
-    if (error || !data || data.length === 0) {
-      container.innerHTML = `
-        <div style="padding:40px 20px; text-align:center; color:var(--muted); font-size:15px; line-height:1.8;">
-          👥 Nog geen vrienden.<br>
-          Klik op <strong style="color:var(--accent)">+ Uitnodigen</strong> om iemand uit te nodigen!
-        </div>
-      `
-      return
-    }
-
-    container.innerHTML = '<div class="section-label">Vrienden</div>' + data.map(f => {
-      const p = f.profiles
-      const avatar = p.avatar_url || '👤'
-      const naam = p.display_name || p.username
-      const bio = p.bio || ''
-      const mood = p.mood || ''
-      return `
-        <div class="friend-row" onclick="window.location.href='vriend-profiel.html?id=' + '${p.id}'">
-          <div class="f-avatar">${avatar}</div>
-          <div class="f-info">
-            <div class="f-name">${naam}</div>
-            ${bio ? `<div class="f-bio">${bio}</div>` : ''}
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
-            <span style="font-size:12px;color:var(--accent2);font-style:italic;">${mood || ''}</span>
-            <span style="position:relative;display:inline-flex;align-items:center;width:24px;height:24px;" onclick="event.stopPropagation();window.location.href='chat.html?id='+p.id+'&naam='+encodeURIComponent(naam)+'&avatar='+encodeURIComponent(avatar)">
-              <span style="font-size:22px;line-height:1;cursor:pointer;">💬</span>
-              <span style="position:absolute;bottom:-1px;right:-2px;width:9px;height:9px;border-radius:50%;background:${p.online_status ? '#22c55e' : '#ef4444'};border:1.5px solid var(--card);"></span>
-            </span>
-          </div>
-          <div class="f-arrow">›</div>
-        </div>
-      `
-    }).join('')
-  }
-
+  // ========================
+  // MODAL OPENEN
+  // ========================
   window.openInviteModal = async function() {
     document.getElementById('inviteModal').classList.add('open')
     await genereerInvite()
@@ -196,21 +322,30 @@ input, textarea { font-size:16px !important; }
     if (e.target.id === 'inviteModal') sluitModal()
   }
 
+  // ========================
+  // INVITE GENEREREN
+  // ========================
   async function genereerInvite() {
     document.getElementById('qr-laden').style.display = 'block'
     document.getElementById('qr-sectie').style.display = 'none'
     document.getElementById('expired-overlay').classList.remove('show')
     clearInterval(timerInterval)
 
+    // Haal ingelogde gebruiker op
     const { data: { user } } = await supabase.auth.getUser()
+
+    // Genereer uniek token
     const token = 'fibro-' + Math.random().toString(36).substring(2, 10) + '-' + Date.now().toString(36)
     const verlooptOm = new Date(Date.now() + DUUR * 1000).toISOString()
 
-    const { error } = await supabase.from('invite_tokens').insert({
-      token: token,
-      expires_at: verlooptOm,
-      ...(user ? { created_by: user.id } : {})
-    })
+    // Sla op in Supabase
+    const { error } = await supabase
+      .from('invite_tokens')
+      .insert({
+        token: token,
+        expires_at: verlooptOm,
+        ...(user ? { created_by: user.id } : {})
+      })
 
     if (error) {
       toonStatus('error', 'Kon geen invite aanmaken. Probeer opnieuw.')
@@ -218,14 +353,15 @@ input, textarea { font-size:16px !important; }
       return
     }
 
+    // Toon QR code
     document.getElementById('qr-laden').style.display = 'none'
     document.getElementById('qr-sectie').style.display = 'block'
+    document.getElementById('token-display').textContent = token
 
+    // Maak QR code
     document.getElementById('qr-container').innerHTML = ''
-    const inviteLink = 'https://marcelpetrusma84-coder.github.io/Fibro/invite.html?token=' + token
-    document.getElementById('token-display').textContent = inviteLink
     new QRCode(document.getElementById('qr-container'), {
-      text: inviteLink,
+      text: token,
       width: 200,
       height: 200,
       colorDark: '#1a0a2e',
@@ -233,6 +369,7 @@ input, textarea { font-size:16px !important; }
       correctLevel: QRCode.CorrectLevel.H
     })
 
+    // Start timer
     secondsLeft = DUUR
     updateTimer()
     timerInterval = setInterval(() => {
@@ -245,18 +382,30 @@ input, textarea { font-size:16px !important; }
     }, 1000)
   }
 
+  // ========================
+  // TIMER UPDATEN
+  // ========================
   function updateTimer() {
-    const m = Math.floor(secondsLeft / 60)
-    const s = secondsLeft % 60
+    const minuten = Math.floor(secondsLeft / 60)
+    const seconden = secondsLeft % 60
     const display = document.getElementById('timer-display')
     const progress = document.getElementById('progress-fill')
-    display.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+
+    display.textContent = `${String(minuten).padStart(2,'0')}:${String(seconden).padStart(2,'0')}`
+
+    // Kleur aanpassen
     display.className = 'timer-countdown'
     if (secondsLeft <= 60) display.classList.add('expired')
     else if (secondsLeft <= 300) display.classList.add('warning')
-    progress.style.width = (secondsLeft / DUUR * 100) + '%'
+
+    // Progress bar
+    const percentage = (secondsLeft / DUUR) * 100
+    progress.style.width = percentage + '%'
   }
 
+  // ========================
+  // VERLOPEN WEERGAVE
+  // ========================
   function toonVerlopen() {
     document.getElementById('expired-overlay').classList.add('show')
     document.getElementById('timer-display').className = 'timer-countdown expired'
@@ -264,37 +413,37 @@ input, textarea { font-size:16px !important; }
     document.getElementById('progress-fill').style.width = '0%'
   }
 
-  window.kopieerLink = function() {
-    navigator.clipboard.writeText(document.getElementById('token-display').textContent)
-  }
-
-  window.nieuweInvite = async function() { 
+  // ========================
+  // NIEUWE INVITE
+  // ========================
+  window.nieuweInvite = async function() {
     await genereerInvite()
   }
 
+  // ========================
+  // STATUS BERICHT
+  // ========================
   function toonStatus(type, tekst) {
     const el = document.getElementById('modal-status')
     el.className = 'modal-status ' + type
     el.textContent = tekst
   }
-
-  init()
 </script>
 
 <script>
+// Zoekfunctie (niet-module)
 function filterVrienden() {
-  var query = document.getElementById('searchInput').value.toLowerCase()
-  document.querySelectorAll('.friend-row').forEach(function(row) {
-    var naam = row.querySelector('.f-name').textContent.toLowerCase()
-    row.style.display = naam.indexOf(query) !== -1 ? 'flex' : 'none'
-  })
-  document.querySelectorAll('.section-label').forEach(function(l) {
-    l.style.display = query ? 'none' : 'block'
-  })
+  var query = document.getElementById("searchInput").value.toLowerCase();
+  var rows = document.querySelectorAll(".friend-row");
+  rows.forEach(function(row) {
+    var naam = row.querySelector(".f-name").textContent.toLowerCase();
+    row.style.display = naam.indexOf(query) !== -1 ? "flex" : "none";
+  });
+  document.querySelectorAll(".section-label").forEach(function(l) {
+    l.style.display = query ? "none" : "block";
+  });
 }
 </script>
-
-<script src="swipe.js"></script>
 
 </body>
 </html>

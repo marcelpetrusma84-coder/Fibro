@@ -404,7 +404,8 @@ input, textarea { font-size:16px !important; }
 </div>
 <script type="module">
 import { supabase } from './supabase.js'
-import{laadThema}from'./thema.js'
+import { laadThema } from './thema.js'
+import { startHeartbeat } from './heartbeat.js'
 
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
@@ -534,6 +535,7 @@ async function init(){
   if(!session){window.location.href='login.html';return}
   huidigeUser=session.user
   await laadThema()
+  await startHeartbeat()
   const{data}=await supabase.from('profiles').select('*').eq('id',huidigeUser.id).single()
   profiel=data
   if(profiel){

@@ -1,3 +1,17 @@
+const CACHE_VERSION = 'fibro-v2'
+
+self.addEventListener('install', function(event) {
+  self.skipWaiting()
+})
+
+self.addEventListener('activate', function(event) {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.map(key => caches.delete(key)))
+    ).then(() => clients.claim())
+  )
+})
+
 self.addEventListener('fetch', function(event) {
   if (event.request.url.includes('supabase.co')) return;
   event.respondWith(fetch(event.request));

@@ -611,6 +611,34 @@ function updateWidgetToggles(){actieveWidgets.forEach(w=>{const el=document.getE
 function bouwStickerGrids(){bouwStickerGrid('stickerNatuur',stickers.natuur);bouwStickerGrid('stickerMagie',stickers.magie);bouwStickerGrid('stickerKunst',stickers.kunst);bouwStickerGrid('stickerDieren',stickers.dieren)}
 function bouwStickerGrid(id,lijst){const grid=document.getElementById(id);grid.innerHTML='';lijst.forEach(s=>{const div=document.createElement('div');div.className='sticker-item'+(actieveStickers.includes(s)?' selected':'');div.textContent=s;div.onclick=()=>{if(actieveStickers.includes(s)){actieveStickers=actieveStickers.filter(x=>x!==s);div.classList.remove('selected')}else{actieveStickers.push(s);div.classList.add('selected')};updateActieveStickers()};grid.appendChild(div)})}
 function updateActieveStickers(){const grid=document.getElementById('actieveStickers');grid.innerHTML='';if(actieveStickers.length===0){grid.innerHTML='<div style="font-size:15px;color:var(--muted);padding:8px;">Nog geen stickers gekozen</div>';return};actieveStickers.forEach(s=>{const div=document.createElement('div');div.className='sticker-item selected';div.textContent=s;grid.appendChild(div)})}
+// ── Haal avatar data op voor Supabase ──
+async function haalAvatarDataOp() {
+  const userId = huidigeUser?.id
+  if (!userId) return null
+  try {
+    const db = await openDB()
+    return new Promise(resolve => {
+      const req = db.transaction('fotos').objectStore('fotos').get('avatar_thumbnail_' + userId)
+      req.onsuccess = e => resolve(e.target.result?.data || null)
+      req.onerror = () => resolve(null)
+    })
+  } catch(e) { return null }
+}
+
+// ── Haal wallpaper data op voor Supabase ──
+async function haalWallpaperDataOp() {
+  const userId = huidigeUser?.id
+  if (!userId) return null
+  try {
+    const db = await openDB()
+    return new Promise(resolve => {
+      const req = db.transaction('fotos').objectStore('fotos').get('bg_wallpaper_' + userId)
+      req.onsuccess = e => resolve(e.target.result?.data || null)
+      req.onerror = () => resolve(null)
+    })
+  } catch(e) { return null }
+}
+
 window.slaAllesOp=async function(){
   const naam=document.getElementById('editNaam').value.trim()
   const bio=document.getElementById('editBio').value.trim()
@@ -644,7 +672,9 @@ window.slaAllesOp=async function(){
     animatie:huidigeAnimatie,
     online_status:isOnline,
     offline_emoji:gekozenMoodEmoji,
-    offline_bericht:document.getElementById('editMood').value.trim() || 'Offline'
+    offline_bericht:document.getElementById('editMood').value.trim() || 'Offline',
+    avatar_data: await haalAvatarDataOp(),
+    wallpaper_data: await haalWallpaperDataOp()
   })
 
   const msg=document.getElementById('statusMsg')

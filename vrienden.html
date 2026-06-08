@@ -210,20 +210,17 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 </div>
 
 <div class="search-bar">
-  <input class="search-input" id="searchInput" placeholder="Zoek een vriend..." oninput="filterVrienden()">
 </div>
 
 <div id="vriendenLijst">
   <div class="section-label">Online</div>
   <div class="friend-row" onclick="window.location.href='http://localhost:4000/index.html'">
     <div class="f-avatar pink">🌸<div class="online-dot"></div></div>
-    <div class="f-info"><div class="f-name">Zoe</div><div class="f-bio">Anime en Gaming Fan</div><div class="f-status on">online</div></div>
     <div class="f-btn" onclick="event.stopPropagation();window.location.href='http://localhost:4000/chat.html'">💬</div>
     <div class="f-arrow">&#8250;</div>
   </div>
   <div class="friend-row" onclick="window.location.href='http://localhost:4000/index.html'">
     <div class="f-avatar blue">🎸<div class="online-dot"></div></div>
-    <div class="f-info"><div class="f-name">Evan</div><div class="f-bio">Guitarist en Music Lover</div><div class="f-status on">online</div></div>
     <div class="f-btn" onclick="event.stopPropagation();window.location.href='http://localhost:4000/chat.html'">💬</div>
     <div class="f-arrow">&#8250;</div>
   </div>
@@ -431,7 +428,6 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 </script>
 
 <script>
-// Zoekfunctie (niet-module)
 function filterVrienden() {
   var query = document.getElementById("searchInput").value.toLowerCase();
   var rows = document.querySelectorAll(".friend-row");

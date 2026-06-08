@@ -116,6 +116,7 @@ input, textarea { font-size:16px !important; }
 </style>
 </head>
 <body>
+<div id="debug" style="background:red;color:white;font-size:11px;padding:4px 8px;display:none;"></div>
 <div class="top-bar">
   <span class="top-title">Mijn profiel</span>
   <button class="save-top-btn" onclick="slaAllesOp()">Opslaan</button>
@@ -534,7 +535,7 @@ async function init(){
   const{data:{session}}=await supabase.auth.getSession()
   if(!session){window.location.href='login.html';return}
   huidigeUser=session.user
-  await laadThema()
+  try { await laadThema(); document.getElementById("debug").style.display="none" } catch(e) { const d=document.getElementById("debug"); d.style.display="block"; d.textContent="Fout: "+e.message }
   await startHeartbeat()
   const{data}=await supabase.from('profiles').select('*').eq('id',huidigeUser.id).single()
   profiel=data

@@ -316,19 +316,23 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
       const statusTekst = online
         ? (p.mood ? '<span style="font-size:12px;color:var(--accent2);font-style:italic;">' + p.mood + '</span>' : '')
         : '<span style="font-size:12px;color:var(--muted);">' + (p.offline_bericht ? (p.offline_emoji || '💤') + ' ' + p.offline_bericht : 'Offline') + '</span>'
-      return '<div class="friend-row" onclick="window.location.href=\'vriend-profiel.html?id=' + p.id + '\'">' +
+      return '<div class="friend-row" onclick="window.location.href=\'vriend-profiel.html?id=' + p.id + '\'" style="display:flex;align-items:center;gap:12px;padding:12px 16px;margin:6px 12px;background:rgba(0,0,0,0.45);border:0.5px solid rgba(255,255,255,0.08);border-radius:18px;backdrop-filter:blur(16px);cursor:pointer;">' +
         '<div style="position:relative;flex-shrink:0;">' +
-        '<div class="f-avatar">' + avatar + '</div>' +
-        '<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:' + stipKleur + ';border:2px solid var(--bg);display:block;"></span>' +
+        '<div style="width:46px;height:46px;border-radius:50%;background:rgba(192,132,252,0.15);border:1.5px solid rgba(192,132,252,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;">' + avatar + '</div>' +
+        '<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:' + stipKleur + ';border:2px solid #0a0014;display:block;"></span>' +
         '</div>' +
-        '<div class="f-info"><div class="f-name">' + naam + '</div>' +
-        (bio ? '<div class="f-bio">' + bio + '</div>' : '') +
-        '<div style="margin-top:3px;">' + statusTekst + '</div></div>' +
-        '<span style="position:relative;display:inline-flex;align-items:center;width:24px;height:24px;margin-left:auto;" onclick="event.stopPropagation();window.location.href=\'chat.html?id=' + p.id + '&naam=' + encodeURIComponent(naam) + '&avatar=' + encodeURIComponent(avatar) + '\'">' +
+        '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:14px;font-weight:600;color:#f3e8ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + naam + '</div>' +
+        '<div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:1px;">@' + (p.username || naam) + '</div>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
+        '<span style="font-size:16px;opacity:0.6;">' + (p.public_key ? '🔒' : '🔓') + '</span>' +
+        '<span style="position:relative;display:inline-flex;align-items:center;" onclick="event.stopPropagation();window.location.href=\'chat.html?id=' + p.id + '&naam=' + encodeURIComponent(naam) + '&avatar=' + encodeURIComponent(avatar) + '\'">' +
         '<span style="font-size:22px;line-height:1;cursor:pointer;">💬</span>' +
-        '<span style="position:absolute;bottom:-1px;right:-2px;width:9px;height:9px;border-radius:50%;background:' + stipKleur + ';border:1.5px solid var(--card);"></span>' +
+        '<span style="position:absolute;bottom:-1px;right:-2px;width:9px;height:9px;border-radius:50%;background:' + stipKleur + ';border:1.5px solid rgba(0,0,0,0.5);"></span>' +
         '</span>' +
-        '<div class="f-arrow">›</div></div>'
+        '</div>' +
+        '</div>'
     }
 
     let html = ''

@@ -116,9 +116,6 @@ input, textarea { font-size:16px !important; }
 </style>
 </head>
 <body>
-<div id="debug2" style="background:blue;color:white;font-size:11px;padding:4px 8px;cursor:pointer;" onclick="alert('JS werkt!')">Tik hier om JS te testen</div>
-<div id="debug2-oud" style="background:blue;color:white;font-size:11px;padding:4px 8px;cursor:pointer;" onclick="testSessie()">Tik hier om sessie te testen</div>
-<div id="debug" style="background:red;color:white;font-size:11px;padding:4px 8px;display:none;"></div>
 <div class="top-bar">
   <span class="top-title">Mijn profiel</span>
   <button class="save-top-btn" onclick="slaAllesOp()">Opslaan</button>
@@ -537,7 +534,7 @@ async function init(){
   const{data:{session}}=await supabase.auth.getSession()
   if(!session){window.location.href='login.html';return}
   huidigeUser=session.user
-  try { await laadThema(); document.getElementById("debug").style.display="none" } catch(e) { const d=document.getElementById("debug"); d.style.display="block"; d.textContent="Fout: "+e.message }
+  await laadThema()
   await startHeartbeat()
   const{data}=await supabase.from('profiles').select('*').eq('id',huidigeUser.id).single()
   profiel=data

@@ -268,6 +268,79 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 </div>
 
 <script type="module">
+
+  import { laadThema } from './thema.js'
+  import { supabase } from './supabase.js'
+  import { startHeartbeat } from './heartbeat.js'
+
+  function isGebruikerOnline(profiel) {
+    if (!profiel.online_status) return false
+    if (!profiel.laatst_gezien) return false
+    const sec = (Date.now() - new Date(profiel.laatst_gezien).getTime()) / 1000
+    return sec < 150
+  }
+
+  async function init() {
+    await laadThema()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { window.location.href = 'login.html'; return }
+    await startHeartbeat()
+    await laadVrienden(session.user.id)
+  }
+
+  async function laadVrienden(userId) {
+    const { data, error } = await supabase
+      .from('friendships')
+      .select('friend_id, profiles!friendships_friend_id_fkey(id, username, display_name, bio, avatar_url, mood, online_status, offline_emoji, offline_bericht, laatst_gezien)')
+      .eq('user_id', userId)
+      .eq('status', 'accepted')
+
+    const container = document.getElementById('vriendenLijst')
+
+    if (error || !data || data.length === 0) {
+      container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);font-size:15px;line-height:1.8;">👥 Nog geen vrienden.<br>Klik op <strong style=\"color:var(--accent)\">+ Uitnodigen</strong> om iemand uit te nodigen!</div>'
+      return
+    }
+
+    const gesorteerd = [...data].sort((a, b) => (isGebruikerOnline(b.profiles) ? 1 : 0) - (isGebruikerOnline(a.profiles) ? 1 : 0))
+    const online = gesorteerd.filter(f => isGebruikerOnline(f.profiles))
+    const offline = gesorteerd.filter(f => !isGebruikerOnline(f.profiles))
+
+    function bouwRij(f) {
+      const p = f.profiles
+      const avatar = p.avatar_url || '👤'
+      const naam = p.display_name || p.username
+      const bio = p.bio || ''
+      const online = isGebruikerOnline(p)
+      const stipKleur = online ? '#22c55e' : '#6b7280'
+      const statusTekst = online
+        ? (p.mood ? '<span style="font-size:12px;color:var(--accent2);font-style:italic;">' + p.mood + '</span>' : '')
+        : '<span style="font-size:12px;color:var(--muted);">' + (p.offline_bericht ? (p.offline_emoji || '💤') + ' ' + p.offline_bericht : 'Offline') + '</span>'
+      return '<div class="friend-row" onclick="window.location.href=\'vriend-profiel.html?id=' + p.id + '\'">' +
+        '<div style="position:relative;flex-shrink:0;">' +
+        '<div class="f-avatar">' + avatar + '</div>' +
+        '<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:' + stipKleur + ';border:2px solid var(--bg);display:block;"></span>' +
+        '</div>' +
+        '<div class="f-info"><div class="f-name">' + naam + '</div>' +
+        (bio ? '<div class="f-bio">' + bio + '</div>' : '') +
+        '<div style="margin-top:3px;">' + statusTekst + '</div></div>' +
+        '<span style="position:relative;display:inline-flex;align-items:center;width:24px;height:24px;margin-left:auto;" onclick="event.stopPropagation();window.location.href=\'chat.html?id=' + p.id + '&naam=' + encodeURIComponent(naam) + '&avatar=' + encodeURIComponent(avatar) + '\'">' +
+        '<span style="font-size:22px;line-height:1;cursor:pointer;">💬</span>' +
+        '<span style="position:absolute;bottom:-1px;right:-2px;width:9px;height:9px;border-radius:50%;background:' + stipKleur + ';border:1.5px solid var(--card);"></span>' +
+        '</span>' +
+        '<div class="f-arrow">›</div></div>'
+    }
+
+    let html = ''
+    if (online.length > 0) html += '<div class="section-label">🟢 Online (' + online.length + ')</div>' + online.map(bouwRij).join('')
+    if (offline.length > 0) html += '<div class="section-label">⚫ Offline (' + offline.length + ')</div>' + offline.map(bouwRij).join('')
+    container.innerHTML = html
+  }
+
+  init()
+
+</script>
+<script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
   const supabase = createClient(

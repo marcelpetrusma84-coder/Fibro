@@ -142,7 +142,7 @@ export async function accepteerOproep(video = false) {
 }
 
 // ─── Oproep weigeren ───
-export async function weigerOproep() {
+export async function weigerooproep() {
   await stuurSignaal(vriendId, 'ophangen', {})
   vriendId = null
 }

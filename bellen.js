@@ -155,8 +155,15 @@ function maakPeerConnection() {
   remoteStream = new MediaStream()
   peerConnection.ontrack = (event) => {
     event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track))
+    // Koppel aan video element
     const remoteEl = document.getElementById('remoteMedia')
     if (remoteEl) remoteEl.srcObject = remoteStream
+    // Koppel ook aan audio element zodat geluid altijd speelt (Steam Deck fix)
+    const audioEl = document.getElementById('remoteAudio')
+    if (audioEl) {
+      audioEl.srcObject = remoteStream
+      audioEl.play().catch(e => console.log('audio play:', e))
+    }
   }
   peerConnection.onicecandidate = async (event) => {
     if (event.candidate) await stuurSignaal(vriendId, 'ice', event.candidate.toJSON())

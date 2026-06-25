@@ -1,5 +1,4 @@
 // bellen.js — WebRTC P2P audio/video bellen via Supabase Realtime signaling
-
 import { supabase } from './supabase.js'
 
 // ─── State ───
@@ -12,8 +11,9 @@ let vriendId = null
 let isInitiator = false
 let onOproepCallback = null
 let onEindCallback = null
+let geinitialiseerd = false
 
-// ─── ICE servers (Google STUN — gratis) ───
+// ─── ICE servers ───
 const ICE_SERVERS = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
@@ -23,54 +23,64 @@ const ICE_SERVERS = {
 
 // ─── Initialiseer bellen module ───
 export function initBellen(userId, callbacks = {}) {
+  if (geinitialiseerd && huidigeUserId === userId) return
   huidigeUserId = userId
   onOproepCallback = callbacks.onOproep || null
   onEindCallback = callbacks.onEind || null
+  geinitialiseerd = true
   luisterNaarOproepen()
 }
 
-// ─── Luister naar inkomende oproepen via Supabase Realtime ───
+// ─── Luister naar inkomende oproepen ───
 function luisterNaarOproepen() {
-  if (belKanaal) supabase.removeChannel(belKanaal)
-
+  if (belKanaal) {
+    supabase.removeChannel(belKanaal)
+    belKanaal = null
+  }
   belKanaal = supabase
-    .channel('bellen-' + huidigeUserId)
+    .channel('bellen-' + huidigeUserId, {
+      config: { broadcast: { self: false } }
+    })
     .on('broadcast', { event: 'oproep' }, (payload) => {
       const { van, type, data } = payload.payload
       verwerkSignaal(van, type, data)
     })
-    .subscribe()
+    .subscribe((status) => {
+      console.log('Belkanaal status:', status)
+    })
 }
 
 // ─── Verwerk inkomend signaal ───
 async function verwerkSignaal(van, type, data) {
+  console.log('Signaal ontvangen:', type, 'van:', van)
+
   if (type === 'uitnodiging') {
-    // Inkomende oproep
     vriendId = van
     isInitiator = false
-    if (onOproepCallback) {
-      onOproepCallback({ van, videoModus: data.video })
-    }
+    if (onOproepCallback) onOproepCallback({ van, videoModus: data.video })
   }
 
   if (type === 'geaccepteerd') {
-    // Vriend heeft aangenomen — stuur offer
+    if (!isInitiator) return
     await maakEnStuurOffer()
   }
 
   if (type === 'offer') {
+    if (isInitiator) return
     await verwerkOffer(data)
   }
 
   if (type === 'answer') {
+    if (!peerConnection) return
+    if (peerConnection.signalingState !== 'have-local-offer') return
     await peerConnection.setRemoteDescription(new RTCSessionDescription(data))
   }
 
   if (type === 'ice') {
-    if (peerConnection && data) {
+    if (peerConnection && data && peerConnection.remoteDescription) {
       try {
         await peerConnection.addIceCandidate(new RTCIceCandidate(data))
-      } catch(e) {}
+      } catch(e) { console.warn('ICE fout:', e) }
     }
   }
 
@@ -81,10 +91,23 @@ async function verwerkSignaal(van, type, data) {
 
 // ─── Stuur signaal naar vriend ───
 async function stuurSignaal(naar, type, data = {}) {
-  await supabase.channel('bellen-' + naar).send({
-    type: 'broadcast',
-    event: 'oproep',
-    payload: { van: huidigeUserId, type, data }
+  const kanaal = supabase.channel('bellen-' + naar)
+  return new Promise((resolve) => {
+    const verstuur = async () => {
+      await kanaal.send({
+        type: 'broadcast',
+        event: 'oproep',
+        payload: { van: huidigeUserId, type, data }
+      })
+      resolve()
+    }
+    if (kanaal.state === 'joined') {
+      verstuur()
+    } else {
+      kanaal.subscribe((status) => {
+        if (status === 'SUBSCRIBED') verstuur()
+      })
+    }
   })
 }
 
@@ -92,19 +115,14 @@ async function stuurSignaal(naar, type, data = {}) {
 export async function belOp(naarVriendId, video = false) {
   vriendId = naarVriendId
   isInitiator = true
-
-  // Haal lokale stream op
   try {
-    lokaleStream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: video
-    })
+    lokaleStream = await navigator.mediaDevices.getUserMedia({ audio: true, video })
   } catch(e) {
-    alert('Geen toegang tot microfoon/camera. Controleer je browserinstellingen.')
+    alert('Geen toegang tot microfoon/camera.')
     return false
   }
-
-  // Stuur uitnodiging
+  const lokaalEl = document.getElementById('lokaalMedia')
+  if (lokaalEl) lokaalEl.srcObject = lokaleStream
   await stuurSignaal(vriendId, 'uitnodiging', { video })
   return true
 }
@@ -112,67 +130,48 @@ export async function belOp(naarVriendId, video = false) {
 // ─── Oproep accepteren ───
 export async function accepteerOproep(video = false) {
   try {
-    lokaleStream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: video
-    })
+    lokaleStream = await navigator.mediaDevices.getUserMedia({ audio: true, video })
   } catch(e) {
     alert('Geen toegang tot microfoon/camera.')
     return false
   }
-
   maakPeerConnection()
-
-  // Laat initiator weten dat we hebben aangenomen
+  await new Promise(r => setTimeout(r, 300))
   await stuurSignaal(vriendId, 'geaccepteerd', {})
   return true
 }
 
 // ─── Oproep weigeren ───
-export async function weigerooproep() {
+export async function weigerOproep() {
   await stuurSignaal(vriendId, 'ophangen', {})
   vriendId = null
 }
 
 // ─── Maak RTCPeerConnection aan ───
 function maakPeerConnection() {
+  if (peerConnection) { peerConnection.close(); peerConnection = null }
   peerConnection = new RTCPeerConnection(ICE_SERVERS)
-
-  // Voeg lokale stream toe
-  lokaleStream.getTracks().forEach(track => {
-    peerConnection.addTrack(track, lokaleStream)
-  })
-
-  // Ontvang remote stream
+  lokaleStream.getTracks().forEach(track => peerConnection.addTrack(track, lokaleStream))
   remoteStream = new MediaStream()
   peerConnection.ontrack = (event) => {
-    event.streams[0].getTracks().forEach(track => {
-      remoteStream.addTrack(track)
-    })
-    // Update remote video/audio element
+    event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track))
     const remoteEl = document.getElementById('remoteMedia')
     if (remoteEl) remoteEl.srcObject = remoteStream
   }
-
-  // Stuur ICE candidates door
   peerConnection.onicecandidate = async (event) => {
-    if (event.candidate) {
-      await stuurSignaal(vriendId, 'ice', event.candidate.toJSON())
-    }
+    if (event.candidate) await stuurSignaal(vriendId, 'ice', event.candidate.toJSON())
   }
-
-  // Update lokale video
   const lokaalEl = document.getElementById('lokaalMedia')
   if (lokaalEl) lokaalEl.srcObject = lokaleStream
-
   peerConnection.onconnectionstatechange = () => {
+    console.log('Connectie state:', peerConnection.connectionState)
     if (['disconnected', 'failed', 'closed'].includes(peerConnection.connectionState)) {
       beeindigGesprek(false)
     }
   }
 }
 
-// ─── Maak en stuur offer (initiator) ───
+// ─── Maak en stuur offer ───
 async function maakEnStuurOffer() {
   maakPeerConnection()
   const offer = await peerConnection.createOffer()
@@ -182,7 +181,7 @@ async function maakEnStuurOffer() {
 
 // ─── Verwerk offer en stuur answer ───
 async function verwerkOffer(offer) {
-  maakPeerConnection()
+  if (!peerConnection) maakPeerConnection()
   await peerConnection.setRemoteDescription(new RTCSessionDescription(offer))
   const answer = await peerConnection.createAnswer()
   await peerConnection.setLocalDescription(answer)
@@ -197,17 +196,11 @@ export async function hangOp() {
 
 // ─── Beëindig gesprek ───
 function beeindigGesprek(doorOns) {
-  if (lokaleStream) {
-    lokaleStream.getTracks().forEach(t => t.stop())
-    lokaleStream = null
-  }
-  if (peerConnection) {
-    peerConnection.close()
-    peerConnection = null
-  }
+  if (lokaleStream) { lokaleStream.getTracks().forEach(t => t.stop()); lokaleStream = null }
+  if (peerConnection) { peerConnection.close(); peerConnection = null }
   remoteStream = null
   vriendId = null
-
+  isInitiator = false
   if (onEindCallback) onEindCallback(doorOns)
 }
 

@@ -90,24 +90,24 @@ async function verwerkSignaal(van, type, data) {
 }
 
 // ─── Stuur signaal naar vriend ───
+// Hergebruik één zend-kanaal per ontvanger (voorkomt CHANNEL_ERROR en verloren signalen)
+let zendKanalen = {}
+
 async function stuurSignaal(naar, type, data = {}) {
-  const kanaal = supabase.channel('bellen-' + naar)
-  return new Promise((resolve) => {
-    const verstuur = async () => {
-      await kanaal.send({
-        type: 'broadcast',
-        event: 'oproep',
-        payload: { van: huidigeUserId, type, data }
-      })
-      resolve()
-    }
-    if (kanaal.state === 'joined') {
-      verstuur()
-    } else {
+  let kanaal = zendKanalen[naar]
+  if (!kanaal) {
+    kanaal = supabase.channel('bellen-' + naar)
+    zendKanalen[naar] = kanaal
+    await new Promise((resolve) => {
       kanaal.subscribe((status) => {
-        if (status === 'SUBSCRIBED') verstuur()
+        if (status === 'SUBSCRIBED') resolve()
       })
-    }
+    })
+  }
+  await kanaal.send({
+    type: 'broadcast',
+    event: 'oproep',
+    payload: { van: huidigeUserId, type, data }
   })
 }
 

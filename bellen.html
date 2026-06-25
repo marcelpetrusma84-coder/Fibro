@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="nl" style="background:#1a0a2e;">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fibro — Bellen</title>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+:root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:rgba(243,232,255,0.5); }
+body { background:var(--bg); color:var(--text); font-family:sans-serif; max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.bel-avatar { width:120px; height:120px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:52px; animation:pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(192,132,252,0.5)} 50%{box-shadow:0 0 0 20px rgba(192,132,252,0)} }
+.bel-naam { font-size:26px; font-weight:600; margin-top:20px; }
+.bel-status { font-size:16px; color:var(--muted); margin-top:8px; }
+.bel-knoppen { display:flex; gap:20px; margin-top:30px; }
+.bel-btn { width:64px; height:64px; border-radius:50%; border:none; cursor:pointer; font-size:26px; display:flex; align-items:center; justify-content:center; }
+.btn-ophangen { background:#f87171; }
+.btn-opnemen { background:#22c55e; }
+.btn-mic { background:var(--card); border:0.5px solid var(--border); }
+video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; display:none; }
+.overlay { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; }
+.terug-btn { position:fixed; top:16px; left:16px; z-index:10; background:rgba(0,0,0,0.4); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-size:13px; cursor:pointer; }
+.gesprek-tijd { font-size:18px; color:var(--accent); font-family:monospace; margin-top:8px; }
+#lokaalMedia { position:fixed; bottom:120px; right:16px; width:100px; height:140px; border-radius:12px; object-fit:cover; z-index:3; border:2px solid rgba(255,255,255,0.3); background:#111; }
+</style>
+</head>
+<body>
+<button class="terug-btn" onclick="window.location.href='chat.html'">← terug</button>
+<audio id="remoteAudio" autoplay style="display:none"></audio>
+<video id="remoteMedia" autoplay playsinline></video>
+<video id="lokaalMedia" autoplay playsinline muted></video>
+<div class="overlay" id="ui">
+  <div class="bel-avatar" id="avatar">👤</div>
+  <div class="bel-naam" id="naam">Laden...</div>
+  <div class="bel-status" id="status">Verbinden...</div>
+  <div class="gesprek-tijd" id="tijd" style="display:none">0:00</div>
+  <div class="bel-knoppen" id="knoppen-keuze" style="display:none;flex-direction:column;align-items:center;gap:16px;">
+    <button onclick="startBellen(false)" style="width:200px;height:56px;border-radius:28px;background:#22c55e;border:none;font-size:18px;cursor:pointer;color:white;font-weight:600;">📞 Bellen</button>
+    <button onclick="startBellen(true)" style="width:200px;height:56px;border-radius:28px;background:#3b82f6;border:none;font-size:18px;cursor:pointer;color:white;font-weight:600;">📹 Videobellen</button>
+    <button onclick="window.location.href='chat.html'" style="width:200px;height:56px;border-radius:28px;background:rgba(255,255,255,0.1);border:0.5px solid rgba(255,255,255,0.2);font-size:16px;cursor:pointer;color:white;">Annuleer</button>
+  </div>
+  <div class="bel-knoppen" id="knoppen-bellen">
+    <button class="bel-btn btn-ophangen" onclick="annuleer()">📵</button>
+  </div>
+  <div class="bel-knoppen" id="knoppen-inkomend" style="display:none">
+    <button class="bel-btn btn-ophangen" onclick="weiger()">📵</button>
+    <button class="bel-btn btn-opnemen" onclick="neem()">📞</button>
+  </div>
+  <div class="bel-knoppen" id="knoppen-gesprek" style="display:none">
+    <button class="bel-btn btn-mic" id="micBtn" onclick="togMic()">🎤</button>
+    <button class="bel-btn btn-ophangen" onclick="hangop()">📵</button>
+  </div>
+</div>
+<script>
+let beltoonInterval = null
+function startBeltoon() {
+  stopBeltoon()
+  beltoonInterval = setInterval(() => {
+    try {
+      const ctx = new (window.AudioContext||window.webkitAudioContext)()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain); gain.connect(ctx.destination)
+      osc.frequency.value = 440; osc.type = "sine"
+      gain.gain.setValueAtTime(0.3, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8)
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.8)
+    } catch(e) {}
+  }, 1500)
+}
+function stopBeltoon() {
+  if (beltoonInterval) { clearInterval(beltoonInterval); beltoonInterval = null }
+}
+</script>
+<script type="module">
+import { supabase } from './supabase.js'
+import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic } from './bellen.js'
+
+const params = new URLSearchParams(window.location.search)
+const vriendId = params.get('vriend')
+const vriendNaam = params.get('naam') || 'Vriend'
+let timer = null, sec = 0, micAan = true
+
+document.getElementById('naam').textContent = vriendNaam
+
+const { data: { session } } = await supabase.auth.getSession()
+if (!session) { window.location.href = 'login.html' }
+
+initBellen(session.user.id, {
+  onVerbonden: () => { startTimer() },
+  onOproep: async (info) => {
+    const { data: v } = await supabase.from('profiles').select('*').eq('id', info.van).single()
+    document.getElementById('avatar').textContent = v?.avatar_url || '👤'
+    document.getElementById('naam').textContent = v?.display_name || v?.username || 'Vriend'
+    document.getElementById('status').textContent = 'Belt je op...'
+    document.getElementById('knoppen-bellen').style.display = 'none'
+    document.getElementById('knoppen-inkomend').style.display = 'flex'
+  },
+  onEind: () => {
+    clearInterval(timer)
+    setTimeout(() => window.location.href = 'chat.html', 800)
+  }
+})
+
+if (vriendId && !params.get('inkomend')) {
+  // Toon keuzescherm
+  document.getElementById('knoppen-bellen').style.display = 'none'
+  document.getElementById('status').textContent = 'Kies hoe je wilt bellen'
+  document.getElementById('knoppen-keuze').style.display = 'flex'
+}
+
+function startTimer() {
+  // iOS fix: audio moet gestart worden na gebruikersinteractie
+  const audioEl = document.getElementById('remoteAudio')
+  if (audioEl) { audioEl.play().catch(e => console.log('audio play:', e)) }
+  document.getElementById('knoppen-bellen').style.display = 'none'
+  document.getElementById('knoppen-inkomend').style.display = 'none'
+  document.getElementById('knoppen-gesprek').style.display = 'flex'
+  document.getElementById('status').textContent = 'Verbonden'
+  document.getElementById('tijd').style.display = 'block'
+  document.getElementById('remoteMedia').style.display = 'block'
+  timer = setInterval(() => {
+    sec++
+    const m = Math.floor(sec/60), s = sec%60
+    document.getElementById('tijd').textContent = m+':'+String(s).padStart(2,'0')
+  }, 1000)
+}
+
+window.startBellen = async (video) => {
+  document.getElementById('knoppen-keuze').style.display = 'none'
+  document.getElementById('knoppen-bellen').style.display = 'flex'
+  document.getElementById('status').textContent = video ? 'Videobellen...' : 'Aan het bellen...'
+  const gelukt = await belOp(vriendId, video)
+  else startBeltoon()
+}
+window.annuleer = async () => { stopBeltoon(); await hangOp(); window.location.href = 'chat.html' }
+window.weiger = async () => { stopBeltoon(); await weigerooproep(); window.location.href = 'chat.html' }
+window.neem = async () => { stopBeltoon(); const ok = await accepteerOproep(false); if(ok) document.getElementById('status').textContent = 'Verbinding maken...' }
+window.hangop = async () => { await hangOp(); window.location.href = 'chat.html' }
+window.togMic = () => { micAan = toggleMic(); document.getElementById('micBtn').textContent = micAan ? '🎤' : '🔇' }
+</script>
+</body>
+</html>

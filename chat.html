@@ -136,8 +136,8 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     <div class="chat-status" id="chatStatus">Kies hieronder met wie je wilt chatten</div>
   </div>
   <div id="belKnoppen" style="display:none; margin-left:auto; display:flex; gap:8px; flex-shrink:0;">
-    <button onclick="gaanBellen(false)" title="Bellen" style="background:rgba(34,197,94,0.15); border:0.5px solid rgba(34,197,94,0.4); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;">📞</button>
-    <button onclick="gaanBellen(true)" title="Videobellen" style="background:rgba(96,165,250,0.15); border:0.5px solid rgba(96,165,250,0.4); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;">📹</button>
+    <button onclick="if(geselecteerdeVriend)window.location.href='bellen.html?vriend='+geselecteerdeVriend.id+'&naam='+encodeURIComponent(geselecteerdeVriend.naam)" title="Bellen" style="background:rgba(34,197,94,0.15); border:0.5px solid rgba(34,197,94,0.4); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;">📞</button>
+    <button onclick="if(geselecteerdeVriend)window.location.href='bellen.html?vriend='+geselecteerdeVriend.id+'&naam='+encodeURIComponent(geselecteerdeVriend.naam)+'&video=1'" title="Videobellen" style="background:rgba(96,165,250,0.15); border:0.5px solid rgba(96,165,250,0.4); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;">📹</button>
   </div>
 </div>
 
@@ -427,53 +427,27 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       onOproep: async (info) => {
         window._inkomendVanId = info.van
         window._inkomendVideo = info.videoModus || false
-        // Laad beller info
-        const { data: v } = await supabase.from('profiles').select('avatar_url,avatar_data,display_name,username').eq('id', info.van).single()
-        const naam = v?.display_name || v?.username || 'Onbekend'
-        const av = document.getElementById('oproepAvatar')
-        if (v?.avatar_data && v.avatar_data.startsWith('data:')) {
-          av.innerHTML = `<img src="${v.avatar_data}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
-        } else {
-          av.textContent = v?.avatar_url || '👤'
-        }
-        document.getElementById('oproepNaam').textContent = naam
-        document.getElementById('oproepType').textContent = info.videoModus ? '📹 Videogesprek' : '📞 Gesprek'
-        // Als er een spel actief is, automatisch opnemen
+
+        // Als er een spel actief is, automatisch opnemen (audio)
         if (spelActief) {
           await accepteerOproep(false)
-          document.getElementById('spelMuteBtn').style.display = 'flex'
-          document.getElementById('spelMuteBtn').style.alignItems = 'center'
-          document.getElementById('spelMuteBtn').style.justifyContent = 'center'
+          const muteBtn = document.getElementById('spelMuteBtn')
+          if (muteBtn) {
+            muteBtn.style.display = 'flex'
+            muteBtn.style.alignItems = 'center'
+            muteBtn.style.justifyContent = 'center'
+          }
           spelBelActief = true
-        } else {
-          document.getElementById('oproepModal').style.display = 'flex'
+          return
         }
-      },
-      onVerbonden: () => {
-        document.getElementById('oproepSchermInkomend').style.display = 'none'
-        document.getElementById('oproepSchermGesprek').style.display = 'flex'
-        document.getElementById('oproepType').textContent = 'Verbonden'
-        if (window._inkomendVideo) {
-          document.getElementById('belRemoteVideo').style.display = 'block'
-          document.getElementById('belLokaalVideo').style.display = 'block'
-          document.getElementById('oproepCamBtn').style.display = 'flex'
-        }
-        // Koppel audio/video aan bellen.js elementen
-        const remoteEl = document.getElementById('belRemoteVideo').style.display === 'block'
-          ? document.getElementById('belRemoteVideo')
-          : document.getElementById('belRemoteAudio')
-        let sec = 0
-        window._belTimer = setInterval(() => {
-          sec++
-          const m = Math.floor(sec/60), s = sec%60
-          document.getElementById('oproepTijd').textContent = m + ':' + String(s).padStart(2,'0')
-          document.getElementById('oproepTijd').style.display = 'block'
-        }, 1000)
+
+        // Anders: stuur door naar bellen.html
+        const { data: v } = await supabase.from('profiles').select('avatar_url,avatar_data,display_name,username').eq('id', info.van).single()
+        const naam = v?.display_name || v?.username || 'Onbekend'
+        const videoParam = info.videoModus ? '&video=1' : ''
+        window.location.href = 'bellen.html?vriend=' + info.van + '&naam=' + encodeURIComponent(naam) + '&inkomend=1' + videoParam
       },
       onEind: () => {
-        document.getElementById('oproepModal').style.display = 'none'
-        document.getElementById('oproepSchermInkomend').style.display = 'flex'
-        document.getElementById('oproepSchermGesprek').style.display = 'none'
         if (window._belTimer) clearInterval(window._belTimer)
       }
     })
@@ -538,7 +512,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
           <div class="vriend-username">@${vriend.username}</div>
         </div>
         <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-          <button onclick="event.stopPropagation();openChat('${vriend.id}','${(vriend.display_name||vriend.username).replace(/'/g,'')}','${vriend.avatar_url||''}','${vriend.public_key||''}');setTimeout(()=>gaanBellen(false),400)" style="background:#22c55e;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">📞</button>
+          <button onclick="event.stopPropagation();window.location.href='bellen.html?vriend=${vriend.id}&naam=${encodeURIComponent(vriend.display_name||vriend.username)}'" style="background:#22c55e;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">📞</button>
           <span style="font-size:12px;color:${vriend.public_key ? '#22c55e' : '#f87171'}">${vriend.public_key ? '🔒' : '🔓'}</span>
         </div>
       </div>

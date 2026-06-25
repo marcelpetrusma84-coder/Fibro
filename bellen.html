@@ -131,7 +131,7 @@ window.startBellen = async (video) => {
   document.getElementById('knoppen-bellen').style.display = 'flex'
   document.getElementById('status').textContent = video ? 'Videobellen...' : 'Aan het bellen...'
   const gelukt = await belOp(vriendId, video)
-  else startBeltoon()
+  if (gelukt) startBeltoon()
 }
 window.annuleer = async () => { stopBeltoon(); await hangOp(); window.location.href = 'chat.html' }
 window.weiger = async () => { stopBeltoon(); await weigerooproep(); window.location.href = 'chat.html' }

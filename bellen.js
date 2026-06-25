@@ -38,7 +38,7 @@ function luisterNaarOproepen() {
     belKanaal = null
   }
   belKanaal = supabase
-    .channel('bellen-' + huidigeUserId, {
+    .channel('bel-in-' + huidigeUserId, {
       config: { broadcast: { self: false } }
     })
     .on('broadcast', { event: 'oproep' }, (payload) => {
@@ -96,7 +96,7 @@ let zendKanalen = {}
 async function stuurSignaal(naar, type, data = {}) {
   let kanaal = zendKanalen[naar]
   if (!kanaal) {
-    kanaal = supabase.channel('bellen-' + naar)
+    kanaal = supabase.channel('bel-in-' + naar)
     zendKanalen[naar] = kanaal
     await new Promise((resolve) => {
       kanaal.subscribe((status) => {

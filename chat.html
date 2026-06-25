@@ -2928,10 +2928,26 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     const aan = toggleCamera()
     document.getElementById('oproepCamBtn').textContent = aan ? '📷' : '🚫'
   }
-  window.gaanBellen = function(video = false) {
+  window.gaanBellen = async function(video = false) {
     if (!geselecteerdeVriend) return
-    const videoParam = video ? '&video=1' : ''
-    window.location.href = 'bellen.html?vriend=' + geselecteerdeVriend.id + '&naam=' + encodeURIComponent(geselecteerdeVriend.naam) + videoParam
+    window._inkomendVanId = geselecteerdeVriend.id
+    window._inkomendVideo = video
+    // Toon oproepModal als 'uitgaand'
+    const av = document.getElementById('oproepAvatar')
+    if (geselecteerdeVriend.avatar && geselecteerdeVriend.avatar.startsWith('data:')) {
+      av.innerHTML = `<img src="${geselecteerdeVriend.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+    } else {
+      av.textContent = geselecteerdeVriend.avatar || '👤'
+    }
+    document.getElementById('oproepNaam').textContent = geselecteerdeVriend.naam || 'Vriend'
+    document.getElementById('oproepType').textContent = video ? '📹 Videobellen...' : '📞 Aan het bellen...'
+    document.getElementById('oproepSchermInkomend').style.display = 'none'
+    document.getElementById('oproepSchermGesprek').style.display = 'flex'
+    document.getElementById('oproepModal').style.display = 'flex'
+    if (video) {
+      document.getElementById('oproepCamBtn').style.display = 'flex'
+    }
+    await belOp(geselecteerdeVriend.id, video)
   }
 
   // ─── Spel audiobel ───

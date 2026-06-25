@@ -107,6 +107,18 @@ if (vriendId && !params.get('inkomend')) {
   document.getElementById('knoppen-bellen').style.display = 'none'
   document.getElementById('status').textContent = 'Kies hoe je wilt bellen'
   document.getElementById('knoppen-keuze').style.display = 'flex'
+} else if (vriendId && params.get('inkomend')) {
+  // Inkomend gesprek: direct opnemen-scherm tonen
+  document.getElementById('knoppen-keuze').style.display = 'none'
+  document.getElementById('knoppen-bellen').style.display = 'none'
+  document.getElementById('knoppen-inkomend').style.display = 'flex'
+  document.getElementById('status').textContent = 'Belt je op...'
+  // Laad beller info
+  const { data: v } = await supabase.from('profiles').select('*').eq('id', vriendId).single()
+  if (v) {
+    document.getElementById('avatar').textContent = v.avatar_url || '👤'
+    document.getElementById('naam').textContent = v.display_name || v.username || 'Vriend'
+  }
 }
 
 function startTimer() {

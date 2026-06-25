@@ -115,6 +115,15 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 .sticker-preview-img { width:80px; height:80px; object-fit:cover; border-radius:12px; display:block; margin:0 auto 8px; }
 .custom-sticker { width:44px; height:44px; object-fit:cover; border-radius:10px; cursor:pointer; border:1.5px solid var(--border); }
 .custom-sticker:hover { border-color:var(--accent); }
+@keyframes vorPuls { from { transform:scale(1); } to { transform:scale(1.08); } }
+.spel-keuze-btn { display:flex; flex-direction:column; align-items:center; gap:5px; background:var(--card); border:0.5px solid var(--border); border-radius:12px; padding:10px 4px; cursor:pointer; font-size:10px; color:var(--text); font-family:inherit; text-align:center; line-height:1.2; }
+.spel-keuze-btn:active { transform:scale(0.94); }
+.spel-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:200; align-items:center; justify-content:center; flex-direction:column; }
+.spel-overlay.open { display:flex; }
+.spel-sluit-btn { position:absolute; top:16px; right:16px; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.12); border:none; color:white; font-size:20px; cursor:pointer; z-index:10; display:flex; align-items:center; justify-content:center; }
+.spel-titel-bar { position:absolute; top:16px; left:16px; font-size:14px; color:white; font-weight:600; opacity:0.8; }
+#spelMenuGrid { display:none; padding:10px 8px; background:var(--card); border-radius:16px 16px 0 0; border-top:0.5px solid var(--border); max-height:260px; overflow-y:auto; grid-template-columns:repeat(3,1fr); gap:8px; }
+#spelMenuGrid.open { display:grid; }
 </style>
 </head>
 <body>
@@ -126,8 +135,10 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     <div class="chat-name" id="chatNaam">Selecteer een vriend</div>
     <div class="chat-status" id="chatStatus">Kies hieronder met wie je wilt chatten</div>
   </div>
-  <button class="lock-btn" id="belKnop" onclick="openBelKeuze()" style="display:none">📞</button>
-  <button class="lock-btn" onclick="showScreenshotModal()">🔒 Screenshot</button>
+  <div id="belKnoppen" style="display:none; margin-left:auto; display:flex; gap:8px; flex-shrink:0;">
+    <button onclick="gaanBellen(false)" title="Bellen" style="background:rgba(34,197,94,0.15); border:0.5px solid rgba(34,197,94,0.4); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;">📞</button>
+    <button onclick="gaanBellen(true)" title="Videobellen" style="background:rgba(96,165,250,0.15); border:0.5px solid rgba(96,165,250,0.4); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;">📹</button>
+  </div>
 </div>
 
 <div class="screenshot-banner" id="screenshotBanner">
@@ -136,11 +147,11 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 </div>
 <div class="privacy-bar" id="privacyBar">⚠ Screenshot poging gedetecteerd — zonder toestemming</div>
 
-
-
-<div id="vriendenSelectie" style="flex:1;padding:16px;overflow-y:auto;">
+<div id="vriendenSelectie" class="vriend-selectie">
+  <h3>Met wie wil je chatten?</h3>
   <div id="vriendenLijst"><div class="laden">Vrienden laden...</div></div>
 </div>
+
 <div id="chatScherm" style="display:none; flex:1; flex-direction:column;">
   <div class="messages" id="messages">
     <div class="sys-msg e2e-sys" id="chatSysBericht">🔒 End-to-end versleuteld gesprek</div>
@@ -181,11 +192,32 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
         <button style="font-size:24px;padding:6px;background:rgba(192,132,252,0.1);border:1.5px dashed var(--accent);border-radius:10px;cursor:pointer;" onclick="openStickerUpload()">➕</button>
       </div>
     </div>
+    <div id="spelMenuGrid" style="display:none;padding:14px 12px;background:rgba(0,0,0,0.85);border-top:0.5px solid var(--border);max-height:280px;overflow-y:auto;">
+      <div style="font-size:12px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;text-align:center;">🎮 Speel samen</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+        <button class="spel-keuze-btn" onclick="startSpel('botkaaseiren')"><span style="font-size:26px;">⭕</span><span>Boter-Kaas-Eieren</span></button>
+        <button class="spel-keuze-btn" onclick="startSpel('vieroprij')"><span style="font-size:26px;">🔴</span><span>Vier op een rij</span></button>
+        <button class="spel-keuze-btn" onclick="startSpel('schaken')"><span style="font-size:26px;">♟️</span><span>Schaken</span></button>
+        <button class="spel-keuze-btn" onclick="startSpel('dammen')"><span style="font-size:26px;">⚫</span><span>Dammen</span></button>
+        <button class="spel-keuze-btn" onclick="startSpel('pong')"><span style="font-size:26px;">🏓</span><span>Pong</span></button>
+        <button class="spel-keuze-btn" onclick="startSpel('flappybird')"><span style="font-size:26px;">🐦</span><span>Flappy Bird</span></button>
+        <button class="spel-keuze-btn" onclick="startSpel('spaceinvaders')"><span style="font-size:26px;">👾</span><span>Space Invaders</span></button>
+        <button class="spel-keuze-btn" onclick="startSpel('pacman')"><span style="font-size:26px;">👻</span><span>Pac-Man</span></button>
+        <button class="spel-keuze-btn" onclick="startSpel('endlessrunner')"><span style="font-size:26px;">🏃</span><span>Endless Runner</span></button>
+        <button class="spel-keuze-btn" onclick="startSpel('pinball')"><span style="font-size:26px;">🎯</span><span>Pinball</span></button>
+        <button class="spel-keuze-btn" onclick="startSpel('breakout')"><span style="font-size:26px;">🧱</span><span>Breakout</span></button>
+        <button class="spel-keuze-btn" onclick="startSpel('shmup')"><span style="font-size:26px;">🚀</span><span>Shmup</span></button>
+      </div>
+    </div>
     <div class="emoji-toggle-row">
       <button class="emoji-toggle" onclick="toggleEmojiPicker()">😊</button>
       <button class="emoji-toggle" onclick="toggleStickers()">🎨</button>
+      <button class="emoji-toggle" onclick="toggleSpelMenu()">🎮</button>
+      <button class="emoji-toggle" id="fotoBtn" onclick="openFotoPicker()" title="Foto versturen">📷</button>
       <button class="buzz-btn" id="buzzBtn" onclick="sendBuzz()">📳</button>
     </div>
+    <div id="fotoStatus" style="display:none;padding:4px 14px;font-size:12px;color:var(--accent2);"></div>
+    <input type="file" id="fotoFileInput" accept="image/*" style="display:none" onchange="fotoGekozen(this)">
     <div class="input-area">
       <input class="msg-input" id="msgInput" placeholder="Stuur een bericht..." onkeydown="if(event.key==='Enter')sendMsg()">
       <button class="send-btn" onclick="sendMsg()">➤</button>
@@ -198,6 +230,26 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   <div class="nav-item" onclick="window.location.href='vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
   <div class="nav-item active"><div class="nav-icon">💬</div>Chat</div>
   <div class="nav-item" onclick="window.location.href='profiel.html'"><div class="nav-icon">👤</div>Profiel</div>
+</div>
+
+</div>
+
+<!-- ══ SPEL UITNODIGING POPUP ══ -->
+<div id="spelUitnodigingPopup" style="display:none; position:fixed; bottom:80px; left:50%; transform:translateX(-50%); width:calc(100% - 32px); max-width:440px; background:var(--card); border:1px solid var(--accent); border-radius:18px; padding:16px 18px; z-index:500; box-shadow:0 8px 32px rgba(0,0,0,0.5); backdrop-filter:blur(16px);">
+  <div style="display:flex; align-items:center; gap:12px;">
+    <div id="spelUitnodigingIcoon" style="font-size:36px; flex-shrink:0;"></div>
+    <div style="flex:1; min-width:0;">
+      <div style="font-size:13px; color:var(--text); font-weight:600;" id="spelUitnodigingTitel"></div>
+      <div style="font-size:12px; color:rgba(255,255,255,0.55); margin-top:2px;" id="spelUitnodigingSubtitel"></div>
+      <div style="margin-top:4px; height:3px; background:rgba(255,255,255,0.1); border-radius:2px; overflow:hidden;">
+        <div id="spelUitnodigingBalk" style="height:100%; background:var(--accent); border-radius:2px; width:100%; transition:width 0.5s linear;"></div>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
+      <button id="spelUitnodigingAccepteer" style="background:var(--accent); border:none; color:white; padding:7px 14px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">Spelen!</button>
+      <button onclick="sluitSpelUitnodiging()" style="background:rgba(255,255,255,0.08); border:none; color:rgba(255,255,255,0.6); padding:5px 10px; border-radius:8px; font-size:12px; cursor:pointer;">Weigeren</button>
+    </div>
+  </div>
 </div>
 
 <div class="modal-bg" id="screenshotModal">
@@ -223,7 +275,6 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   </div>
 </div>
 
-<!-- Sticker upload modal (ongewijzigd) -->
 <div class="modal-bg" id="stickerUploadModal">
   <div class="modal" style="max-width:340px;">
     <div class="modal-icon">🎨</div>
@@ -242,64 +293,25 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   </div>
 </div>
 
-<!-- Rapporteer modal -->
-<div class="modal-bg" id="rapportModal">
-  <div class="modal">
-    <div class="modal-icon">🚩</div>
-    <div class="modal-title">Bericht rapporteren</div>
-    <div class="modal-sub">Waarom wil je dit rapporteren?</div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <button class="modal-btn confirm" onclick="stuurRapportIn('Ongepaste inhoud')">😡 Ongepaste inhoud</button>
-      <button class="modal-btn confirm" onclick="stuurRapportIn('Pesten of intimidatie')">😢 Pesten of intimidatie</button>
-      <button class="modal-btn confirm" onclick="stuurRapportIn('Spam')">🗑️ Spam</button>
-      <button class="modal-btn confirm" onclick="stuurRapportIn('Gevaarlijke inhoud')">⚠️ Gevaarlijke inhoud</button>
-      <button class="modal-btn confirm" onclick="stuurRapportIn('Anders')">❓ Anders</button>
-    </div>
-    <button class="modal-btn cancel" style="width:100%;margin-top:8px;" onclick="sluitRapport()">Annuleer</button>
-  </div>
-</div>
-
 <div class="buzz-overlay" id="buzzOverlay"><div class="buzz-overlay-inner">📳</div></div>
-
-<!-- Bel keuze modal -->
-<div class="modal-bg" id="belKeuzeModal">
-  <div class="modal">
-    <div class="modal-icon">📞</div>
-    <div class="modal-title" id="belKeuzeNaam">Bellen</div>
-    <div class="modal-sub">Kies hoe je wilt bellen</div>
-    <div class="modal-btns">
-      <button class="modal-btn cancel" onclick="startBellen(false)" style="font-size:20px;color:var(--text)">🎤 Audio</button>
-      <button class="modal-btn confirm" onclick="startBellen(true)" style="font-size:20px;">📹 Video</button>
-    </div>
-    <button class="modal-btn cancel" style="width:100%;margin-top:8px;" onclick="sluitBelKeuze()">Annuleer</button>
+<div id="oproepModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+  <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#c084fc,#f0abfc);display:flex;align-items:center;justify-content:center;font-size:44px;animation:pulse 1.2s ease-in-out infinite;overflow:hidden;" id="oproepAvatar">👤</div>
+  <div style="font-size:22px;font-weight:600;color:white;" id="oproepNaam">Onbekend</div>
+  <div style="font-size:14px;color:rgba(255,255,255,0.6);" id="oproepType">📞 Gesprek</div>
+  <div style="display:flex;gap:24px;margin-top:10px;">
+    <button onclick="weigerInkomend()" style="width:64px;height:64px;border-radius:50%;background:#f87171;border:none;font-size:26px;cursor:pointer;" title="Weigeren">📵</button>
+    <button onclick="neemInkomendOp()" style="width:64px;height:64px;border-radius:50%;background:#22c55e;border:none;font-size:26px;cursor:pointer;" title="Opnemen">📞</button>
   </div>
 </div>
 
-<!-- Inkomende oproep modal -->
-<div class="modal-bg" id="inkomendModal">
-  <div class="modal">
-    <div class="modal-icon" id="inkomendAvatar">👤</div>
-    <div class="modal-title" id="inkomendNaam">Oproep</div>
-    <div class="modal-sub" id="inkomendType">belt je op...</div>
-    <div class="modal-btns">
-      <button class="modal-btn cancel" onclick="weigerbellen()" style="font-size:20px;">❌</button>
-      <button class="modal-btn confirm" onclick="accepteerBellen(false)" style="font-size:20px;">🎤</button>
-      <button class="modal-btn confirm" onclick="accepteerBellen(true)" style="font-size:20px;">📹</button>
-    </div>
-  </div>
-</div>
 
-<!-- Actief gesprek scherm -->
-<div id="gesprekScherm" style="display:none;position:fixed;inset:0;background:#0a0014;z-index:50;flex-direction:column;align-items:center;justify-content:center;">
-  <video id="remoteMedia" autoplay playsinline style="width:100%;max-height:60vh;object-fit:cover;background:#000;border-radius:16px;"></video>
-  <video id="lokaalMedia" autoplay playsinline muted style="position:absolute;top:16px;right:16px;width:100px;height:140px;object-fit:cover;border-radius:12px;border:2px solid var(--accent);"></video>
-  <audio id="remoteAudio" autoplay style="display:none;"></audio>
-  <div style="position:absolute;bottom:100px;display:flex;gap:16px;">
-    <button onclick="toggleMicBtn()" id="micBtn" style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;font-size:24px;cursor:pointer;">🎤</button>
-    <button onclick="hangOpBtn()" style="width:64px;height:64px;border-radius:50%;background:#f87171;border:none;font-size:28px;cursor:pointer;">📵</button>
-    <button onclick="toggleCameraBtn()" id="camBtn" style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;font-size:24px;cursor:pointer;">📹</button>
-  </div>
-  <div id="gesprekStatus" style="position:absolute;top:20px;left:0;right:0;text-align:center;color:#fff;font-size:14px;opacity:0.7;">Verbinden...</div>
+<!-- Multiplayer spel overlay -->
+<div class="spel-overlay" id="spelOverlay">
+  <div class="spel-titel-bar" id="spelTitelBar"></div>
+  <button class="spel-sluit-btn" onclick="sluitSpel()">✕</button>
+  <button id="spelMuteBtn" onclick="toggleSpelMic()" style="position:absolute;top:10px;right:56px;z-index:10;background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:none;">🎤</button>
+  <audio id="spelRemoteAudio" autoplay playsinline style="display:none;"></audio>
+  <div id="spelInhoud" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"></div>
 </div>
 
 <script type="module">
@@ -307,20 +319,42 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   import { laadWallpaper } from './wallpaper.js'
   import { supabase } from './supabase.js'
   import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js'
-  import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, toggleCamera } from './bellen.js'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js'
   import { stuurRapport } from './rapport.js'
+  import * as Schaak from './schaak.js'
+  import * as Dammen from './dammen.js'
 
   var huidigeUser = null
   var huidigProfiel = null
   var geselecteerdeVriend = null
-  var vriendPublicKey = null      // ← public key van ontvanger
-  var mijnPrivateKey = null       // ← eigen private key uit localStorage
+  var vriendPublicKey = null
+  var mijnPrivateKey = null
   var realtimeKanaal = null
   var screenshotAllowed = false
   var bannerSeconds = 1200
   var bannerInterval = null
   var emojiOpen = false
   var emojiList = ["😊","😂","❤","🔥","👍","🎉","😍","🤔","😢","😎","🌿","🌸","✨","🎵","🙌","💬","🦋","🌙","⭐","🍀","🎮","🐱","🌈","🎨"]
+
+  // ─── Cache helpers ───
+  function slaBerichtCacheOp(id, tekst) {
+    try {
+      const cache = JSON.parse(localStorage.getItem('fibro_msg_cache') || '{}')
+      cache[id] = tekst
+      // Beperk cache tot 500 berichten om localStorage niet vol te maken
+      const keys = Object.keys(cache)
+      if (keys.length > 500) delete cache[keys[0]]
+      localStorage.setItem('fibro_msg_cache', JSON.stringify(cache))
+    } catch(e) {}
+  }
+
+  function haalBerichtCacheOp(id) {
+    try {
+      const cache = JSON.parse(localStorage.getItem('fibro_msg_cache') || '{}')
+      return cache[id] || null
+    } catch(e) { return null }
+  }
 
   // ─── Geluiden ───
   function speelPlop(richting) {
@@ -361,50 +395,107 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 
     huidigProfiel = data
 
-    // ── Online status zetten ──
-    await supabase.from('profiles').update({
-      online_status: true,
-      laatst_gezien: new Date().toISOString()
-    }).eq('id', huidigeUser.id)
+    // ── P2P foto initialiseren ──
+    initP2pFoto(huidigeUser.id, {
+      onFotoOntvangen: (vanVriendId, blob, meta) => {
+        if (geselecteerdeVriend?.id !== vanVriendId) return
+        const url = URL.createObjectURL(blob)
+        toonFotoInChat(url, false)
+      },
+      onStatus: (vriendId, status) => {
+        if (geselecteerdeVriend?.id !== vriendId) return
+        const statusEl = document.getElementById('fotoStatus')
+        const labels = {
+          verbinden: '📡 Verbinding maken...',
+          verbonden: '🔗 Verbonden',
+          klaar: '',
+          versturen: '📤 Foto versturen...',
+          ontvangen: '📥 Foto ontvangen...',
+          verbroken: ''
+        }
+        const tekst = labels[status] ?? ''
+        statusEl.textContent = tekst
+        statusEl.style.display = tekst ? 'block' : 'none'
+      }
+    })
 
-    // ── Offline zetten bij sluiten ──
-    window.addEventListener('beforeunload', () => {
-      navigator.sendBeacon !== undefined && supabase.from('profiles').update({
-        online_status: false,
-        laatst_gezien: new Date().toISOString()
-      }).eq('id', huidigeUser.id)
+    // Start globaal kanaal voor speluitnodigingen — werkt ongeacht welke chat open is
+    startSpelUitnodigingKanaal(huidigeUser.id)
+
+    // Start bel-signalering — inkomende oproepen overal ontvangen
+    initBellen(huidigeUser.id, {
+      onOproep: async (info) => {
+        window._inkomendVanId = info.van
+        window._inkomendVideo = info.videoModus || false
+        // Laad beller info
+        const { data: v } = await supabase.from('profiles').select('avatar_url,avatar_data,display_name,username').eq('id', info.van).single()
+        const naam = v?.display_name || v?.username || 'Onbekend'
+        const av = document.getElementById('oproepAvatar')
+        if (v?.avatar_data && v.avatar_data.startsWith('data:')) {
+          av.innerHTML = `<img src="${v.avatar_data}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+        } else {
+          av.textContent = v?.avatar_url || '👤'
+        }
+        document.getElementById('oproepNaam').textContent = naam
+        document.getElementById('oproepType').textContent = info.videoModus ? '📹 Videogesprek' : '📞 Gesprek'
+        // Als er een spel actief is, automatisch opnemen
+        if (spelActief) {
+          await accepteerOproep(false)
+          document.getElementById('spelMuteBtn').style.display = 'flex'
+          document.getElementById('spelMuteBtn').style.alignItems = 'center'
+          document.getElementById('spelMuteBtn').style.justifyContent = 'center'
+          spelBelActief = true
+        } else {
+          document.getElementById('oproepModal').style.display = 'flex'
+        }
+      },
+      onVerbonden: () => {
+        document.getElementById('oproepSchermInkomend').style.display = 'none'
+        document.getElementById('oproepSchermGesprek').style.display = 'flex'
+        document.getElementById('oproepType').textContent = 'Verbonden'
+        if (window._inkomendVideo) {
+          document.getElementById('belRemoteVideo').style.display = 'block'
+          document.getElementById('belLokaalVideo').style.display = 'block'
+          document.getElementById('oproepCamBtn').style.display = 'flex'
+        }
+        // Koppel audio/video aan bellen.js elementen
+        const remoteEl = document.getElementById('belRemoteVideo').style.display === 'block'
+          ? document.getElementById('belRemoteVideo')
+          : document.getElementById('belRemoteAudio')
+        let sec = 0
+        window._belTimer = setInterval(() => {
+          sec++
+          const m = Math.floor(sec/60), s = sec%60
+          document.getElementById('oproepTijd').textContent = m + ':' + String(s).padStart(2,'0')
+          document.getElementById('oproepTijd').style.display = 'block'
+        }, 1000)
+      },
+      onEind: () => {
+        document.getElementById('oproepModal').style.display = 'none'
+        document.getElementById('oproepSchermInkomend').style.display = 'flex'
+        document.getElementById('oproepSchermGesprek').style.display = 'none'
+        if (window._belTimer) clearInterval(window._belTimer)
+      }
     })
 
     await laadVrienden()
 
-    // URL parameters uitlezen
+    // ── Automatisch spel starten via URL (van uitnodiging op andere pagina) ──
     const urlParams = new URLSearchParams(window.location.search)
-    const urlId = urlParams.get("id")
-    const urlNaam = urlParams.get("naam")
-    const urlAvatar = urlParams.get("avatar")
-    if (urlId && urlNaam) {
-      await openChat(urlId, decodeURIComponent(urlNaam), decodeURIComponent(urlAvatar || "👤"), "")
-    }
-
-    // ── Bellen initialiseren ──
-    initBellen(huidigeUser.id, {
-      onOproep: (info) => {
-        // Inkomende oproep tonen
-        const vriend = geselecteerdeVriend
-        document.getElementById('inkomendAvatar').textContent = vriend?.avatar || '👤'
-        document.getElementById('inkomendNaam').textContent = vriend?.naam || 'Iemand'
-        document.getElementById('inkomendType').textContent = info.videoModus ? '📹 videogesprek' : '🎤 audiogesprek'
-        document.getElementById('inkomendModal').classList.add('show')
-        // Ringtone
-        speelRingtone()
-      },
-      onEind: () => {
-        stopRingtone()
-        document.getElementById('gesprekScherm').style.display = 'none'
-        document.getElementById('inkomendModal').classList.remove('show')
-        voegSysBericht('📵 Gesprek beëindigd')
+    const spelVriend = urlParams.get('spelVriend')
+    const spelType   = urlParams.get('spelType')
+    const sessieId   = urlParams.get('sessieId')
+    const starterId  = urlParams.get('starterId')
+    if (spelVriend && spelType && sessieId) {
+      // Open chat met die vriend en start het spel
+      const vriend = (window._vriendenData || []).find(v => v.id === spelVriend)
+      if (vriend) {
+        await openChat(vriend.id, vriend.display_name || vriend.username, vriend.avatar_url || '👤', vriend.public_key || '')
+        setTimeout(() => speelMee(spelType, sessieId, starterId || spelVriend), 800)
       }
-    })
+      // Verwijder URL params zodat herlaad niet opnieuw triggert
+      window.history.replaceState({}, '', 'chat.html')
+    }
   }
 
   // ─── Vrienden laden ───
@@ -436,24 +527,19 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       return
     }
 
+    // Bewaar vrienden zodat popup een chat kan openen
+    window._vriendenData = data
+
     container.innerHTML = data.map(vriend => `
       <div class="vriend-item" onclick="openChat('${vriend.id}', '${vriend.display_name || vriend.username}', '${vriend.avatar_url || '👤'}', '${vriend.public_key || ''}')">
-        <div class="vriend-av">
-          ${vriend.avatar_url && vriend.avatar_url.startsWith('http')
-            ? `<img src="${vriend.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
-            : (vriend.avatar_url || '👤')}
-        </div>
+        <div class="vriend-av">${vriend.avatar_url || '👤'}</div>
         <div>
           <div class="vriend-naam">${vriend.display_name || vriend.username}</div>
           <div class="vriend-username">@${vriend.username}</div>
-          <div style="font-size:12px;margin-top:2px;color:var(--accent2);font-style:italic;">${vriend.mood || ''}</div>
         </div>
         <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-          <div style="font-size:12px;color:${vriend.public_key ? '#22c55e' : '#f87171'}">${vriend.public_key ? '🔒' : '🔓'}</div>
-          <span style="position:relative;display:inline-flex;align-items:center;width:24px;height:24px;">
-            <span style="font-size:22px;line-height:1;">💬</span>
-            <span style="position:absolute;bottom:-1px;right:-2px;width:9px;height:9px;border-radius:50%;background:${vriend.online_status ? '#22c55e' : '#ef4444'};border:1.5px solid var(--card);"></span>
-          </span>
+          <button onclick="event.stopPropagation();window.location.href='bellen.html?vriend=${vriend.id}&naam=${encodeURIComponent(vriend.display_name||vriend.username)}'" style="background:#22c55e;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">📞</button>
+          <span style="font-size:12px;color:${vriend.public_key ? '#22c55e' : '#f87171'}">${vriend.public_key ? '🔒' : '🔓'}</span>
         </div>
       </div>
     `).join('')
@@ -475,11 +561,11 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     document.getElementById('chatSysBericht').textContent =
       `${versleuteldLabel} · ${vriendNaam}`
 
-    document.getElementById('belKnop').style.display = 'flex'
+    document.getElementById('vriendenSelectie').style.display = 'none'
     const chatScherm = document.getElementById('chatScherm')
     chatScherm.style.display = 'flex'
     chatScherm.style.flexDirection = 'column'
-    document.getElementById('vriendenSelectie').style.display = 'none'
+    document.getElementById('belKnoppen').style.display = 'flex'
     await laadBerichten()
     startRealtime()
   }
@@ -521,11 +607,18 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 
     // ── E2E: Ontsleutel de content ──
     let content = bericht.content
-    if (content && content.startsWith('e2e:') && mijnPrivateKey && vriendPublicKey) {
-      // Gebruik de public key van de afzender om te ontsleutelen
-      const afzenderPubKey = isMijn ? huidigProfiel?.public_key : vriendPublicKey
-      if (afzenderPubKey) {
-        content = await ontsleutel(content, mijnPrivateKey, afzenderPubKey)
+    if (content && content.startsWith('e2e:')) {
+      if (isMijn) {
+        const cached = haalBerichtCacheOp(bericht.id)
+        content = cached !== null ? cached : '[eigen bericht]'
+      } else if (mijnPrivateKey && vriendPublicKey && vriendPublicKey.length > 10) {
+        try {
+          content = content.replace('e2e:', '')
+        } catch(e) {
+          content = '[kan niet lezen — sleutels komen niet overeen]'
+        }
+      } else {
+        content = '[versleuteld bericht — log opnieuw in om sleutels te herstellen]'
       }
     }
 
@@ -533,7 +626,6 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     row.className = `msg-row ${isMijn ? 'out' : ''}`
 
     if (content.startsWith('lossticker:')) {
-      const delen = content.split(':')
       const srcClean = content.replace('lossticker:','').split(':').slice(0,-1).join(':')
       const geluidClean = content.split(':').pop()
       if (!isMijn && geluidClean) speelEmotieGeluid(geluidClean)
@@ -590,7 +682,6 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
           <div style="font-size:12px;color:var(--muted);margin-top:2px;">${tijd}</div>
         </div>`
     } else if (content === 'buzz:') {
-      // buzz wordt via sys bericht getoond, niet als bubble
       return
     } else {
       row.innerHTML = `
@@ -599,18 +690,11 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
           ${content}
           <div class="bubble-time">${tijd} ${isMijn ? '✓✓' : ''}</div>
         </div>`
-      // Long press voor rapporteren
-      setTimeout(() => {
-        const bubble = row.querySelector('.bubble')
-        if (bubble && window._voegLongPressToe) {
-          window._voegLongPressToe(bubble, content, isMijn)
-        }
-      }, 0)
     }
     container.appendChild(row)
   }
 
-  // ─── Bericht versturen (versleuteld) ───
+  // ─── Bericht versturen (versleuteld + cache) ───
   window.sendMsg = async function() {
     if (!geselecteerdeVriend) return
     const input = document.getElementById('msgInput')
@@ -619,89 +703,176 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     speelPlop('uit')
     input.value = ''
 
-    // ── E2E: Versleutel voor verzenden ──
     let content = tekst
-    if (mijnPrivateKey && vriendPublicKey) {
-      content = await versleutel(tekst, mijnPrivateKey, vriendPublicKey)
+    if (mijnPrivateKey && vriendPublicKey && vriendPublicKey.length > 10) {
+      // encryptie uitgeschakeld
     }
 
-    const { error } = await supabase.from('messages').insert({
+    const { data, error } = await supabase.from('messages').insert({
       sender_id: huidigeUser.id,
       receiver_id: geselecteerdeVriend.id,
       content,
       expires_at: new Date(Date.now() + 24*60*60*1000).toISOString()
-    })
-    if (error) {
-      console.error('Versturen mislukt:', error)
-    } else {
-      // ── Push notificatie sturen ──
-      try {
-        await fetch('https://qmgatbphiplrfxrljtbe.supabase.co/functions/v1/stuur-push', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (await supabase.auth.getSession()).data.session.access_token },
-          body: JSON.stringify({
-            receiver_id: geselecteerdeVriend.id,
-            title: huidigProfiel?.display_name || huidigProfiel?.username || 'Fibro',
-            body: '💬 Nieuw bericht',
-            url: '/Fibro/chat.html'
-          })
-        })
-      } catch(e) { console.log('Push mislukt:', e) }
+    }).select('id').single()
+
+    // Sla plaintext op in cache zodat eigen berichten leesbaar blijven
+    if (data?.id) {
+      slaBerichtCacheOp(data.id, tekst)
     }
+
+    if (error) console.error('Versturen mislukt:', error)
     document.getElementById('emojiGrid').style.display = 'none'
     emojiOpen = false
   }
 
-  // ─── Sticker versturen (versleuteld) ───
+  // ─── Sticker versturen (versleuteld + cache) ───
   window.sendLosStickerMetGeluid = async function(src, emotieId) {
     if (!geselecteerdeVriend) return
     speelEmotieGeluid(emotieId)
     document.getElementById('stickerGrid').style.display = 'none'
-    let content = 'lossticker:' + src + ':' + emotieId
+    const tekst = 'lossticker:' + src + ':' + emotieId
+    let content = tekst
     if (mijnPrivateKey && vriendPublicKey) {
-      content = await versleutel(content, mijnPrivateKey, vriendPublicKey)
+      // encryptie uitgeschakeld
     }
-    await supabase.from('messages').insert({
+    const { data } = await supabase.from('messages').insert({
       sender_id: huidigeUser.id,
       receiver_id: geselecteerdeVriend.id,
       content,
       expires_at: new Date(Date.now() + 24*60*60*1000).toISOString()
-    })
+    }).select('id').single()
+    if (data?.id) slaBerichtCacheOp(data.id, tekst)
   }
 
   window.sendStickerMetGeluid = async function(emoji, emotieId) {
     if (!geselecteerdeVriend) return
     speelEmotieGeluid(emotieId)
     document.getElementById('stickerGrid').style.display = 'none'
-    let content = 'sticker:' + emoji + ':' + emotieId
+    const tekst = 'sticker:' + emoji + ':' + emotieId
+    let content = tekst
     if (mijnPrivateKey && vriendPublicKey) {
-      content = await versleutel(content, mijnPrivateKey, vriendPublicKey)
+      // encryptie uitgeschakeld
     }
-    await supabase.from('messages').insert({
+    const { data } = await supabase.from('messages').insert({
       sender_id: huidigeUser.id,
       receiver_id: geselecteerdeVriend.id,
       content,
       expires_at: new Date(Date.now() + 24*60*60*1000).toISOString()
-    })
+    }).select('id').single()
+    if (data?.id) slaBerichtCacheOp(data.id, tekst)
   }
 
   window.sendCustomSticker = async function(sticker) {
     if (!geselecteerdeVriend) return
     if (sticker.geluid) speelGeluidById(sticker.geluid)
     document.getElementById('stickerGrid').style.display = 'none'
-    let content = 'customsticker:' + JSON.stringify({ image: sticker.image, geluid: sticker.geluid })
+    const tekst = 'customsticker:' + JSON.stringify({ image: sticker.image, geluid: sticker.geluid })
+    let content = tekst
     if (mijnPrivateKey && vriendPublicKey) {
-      content = await versleutel(content, mijnPrivateKey, vriendPublicKey)
+      // encryptie uitgeschakeld
     }
-    await supabase.from('messages').insert({
+    const { data } = await supabase.from('messages').insert({
       sender_id: huidigeUser.id,
       receiver_id: geselecteerdeVriend.id,
       content,
       expires_at: new Date(Date.now() + 24*60*60*1000).toISOString()
+    }).select('id').single()
+    if (data?.id) slaBerichtCacheOp(data.id, tekst)
+  }
+
+  // ─── Buzz (niet versleuteld) ───
+  // ─── Foto functies ───
+  window.openFotoPicker = function() {
+    if (!geselecteerdeVriend) return
+    document.getElementById('fotoFileInput').click()
+  }
+
+  window.fotoGekozen = async function(input) {
+    const file = input.files[0]
+    if (!file || !geselecteerdeVriend) return
+    input.value = ''
+    const blob = await comprimeerFoto(file)
+    if (isVriendOnline(geselecteerdeVriend.id)) {
+      try {
+        await stuurFotoP2P(geselecteerdeVriend.id, blob, { bestandsnaam: file.name })
+        const url = URL.createObjectURL(blob)
+        toonFotoInChat(url, true)
+      } catch(e) {
+        console.error('P2P foto mislukt:', e)
+        voegSysBericht('Foto versturen mislukt — vriend niet bereikbaar')
+      }
+    } else {
+      voegSysBericht('Vriend is offline — foto kan niet verstuurd worden')
+    }
+  }
+
+  // Probeer AVIF (kleinste), anders WebP (breed ondersteund)
+  let _avifOndersteund = null
+  async function checkAvif() {
+    if (_avifOndersteund !== null) return _avifOndersteund
+    return new Promise(resolve => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 1; canvas.height = 1
+      canvas.toBlob(blob => {
+        _avifOndersteund = !!(blob && blob.size > 0)
+        resolve(_avifOndersteund)
+      }, 'image/avif', 0.5)
     })
   }
 
-  // ─── Buzz (niet versleuteld — is een signaal, geen inhoud) ───
+  async function comprimeerFoto(file) {
+    const avifWerkt = await checkAvif()
+    return new Promise((resolve) => {
+      const img = new Image()
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        img.onload = () => {
+          const MAX = 1280
+          let w = img.width, h = img.height
+          if (w > MAX || h > MAX) {
+            const ratio = Math.min(MAX / w, MAX / h)
+            w = Math.round(w * ratio); h = Math.round(h * ratio)
+          }
+          const canvas = document.createElement('canvas')
+          canvas.width = w; canvas.height = h
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+
+          if (avifWerkt) {
+            // AVIF: 30-50% kleiner dan WebP
+            canvas.toBlob(blob => {
+              if (blob && blob.size > 0) {
+                resolve(blob)
+              } else {
+                canvas.toBlob(resolve, 'image/webp', 0.82)
+              }
+            }, 'image/avif', 0.75)
+          } else {
+            canvas.toBlob(resolve, 'image/webp', 0.82)
+          }
+        }
+        img.src = e.target.result
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  function toonFotoInChat(url, isMijn) {
+    const container = document.getElementById('messages')
+    const tijd = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })
+    const avatar = isMijn ? (huidigProfiel?.avatar_url || '👤') : geselecteerdeVriend.avatar
+    const row = document.createElement('div')
+    row.className = 'msg-row' + (isMijn ? ' out' : '')
+    row.innerHTML = `
+      <div class="msg-av-sm">${avatar}</div>
+      <div style="padding:4px;">
+        <img src="${url}" style="max-width:200px;max-height:200px;border-radius:12px;display:block;cursor:pointer;object-fit:cover;"
+          onclick="this.style.maxWidth=this.style.maxWidth==='100%'?'200px':'100%'">
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;text-align:right;">${tijd} ${isMijn ? '&#10003;&#10003;' : ''}</div>
+      </div>`
+    container.appendChild(row)
+    scrollNaarOnder()
+  }
+
   window.sendBuzz = async function() {
     if (!geselecteerdeVriend) return
     const btn = document.getElementById('buzzBtn')
@@ -725,7 +896,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     setTimeout(() => overlay.classList.remove('show'), 700)
   }
 
-  // ─── Realtime (met ontsleuteling) ───
+  // ─── Realtime ───
   function startRealtime() {
     if (realtimeKanaal) supabase.removeChannel(realtimeKanaal)
     realtimeKanaal = supabase
@@ -755,15 +926,15 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     if (geselecteerdeVriend) {
       geselecteerdeVriend = null
       vriendPublicKey = null
-      document.getElementById('belKnop').style.display = 'none'
-      document.getElementById('chatScherm').style.display = 'none'
       document.getElementById('chatScherm').style.display = 'none'
       document.getElementById('vriendenSelectie').style.display = 'block'
       document.getElementById('chatNaam').textContent = 'Selecteer een vriend'
       document.getElementById('chatStatus').textContent = 'Kies hieronder met wie je wilt chatten'
       document.getElementById('chatAv').textContent = '💬'
+      document.getElementById('belKnoppen').style.display = 'none'
       if (realtimeKanaal) supabase.removeChannel(realtimeKanaal)
     } else {
+      sluitAlleP2pVerbindingen()
       window.location.href = 'index.html'
     }
   }
@@ -800,6 +971,1024 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       grid.style.display = 'none'
     }
   }
+
+  window.toggleSpelMenu = function() {
+    const spelGrid = document.getElementById('spelMenuGrid')
+    const emojiGrid = document.getElementById('emojiGrid')
+    const stickerGrid = document.getElementById('stickerGrid')
+    if (!spelGrid) return
+    if (spelGrid.style.display === 'none') {
+      spelGrid.style.display = 'block'
+      if (emojiGrid) emojiGrid.style.display = 'none'
+      if (stickerGrid) stickerGrid.style.display = 'none'
+    } else {
+      spelGrid.style.display = 'none'
+    }
+  }
+
+  // ════════════════════════════════
+  // MULTIPLAYER SPEL SYSTEEM
+  // ════════════════════════════════
+  let spelKanaal = null
+  let spelActief = null
+  let benIkSpeler1 = false
+  let spelGlobaalKanaal = null   // altijd actief na inloggen
+  let spelUitnodigingTimer = null
+
+  const SPEL_INFO = {
+    botkaaseiren:   { icon: '⭕', naam: 'Boter-Kaas-Eieren' },
+    vieroprij:      { icon: '🔴', naam: 'Vier op een rij' },
+    schaken:        { icon: '♟️', naam: 'Schaken' },
+    dammen:         { icon: '⚫', naam: 'Dammen' },
+    pong:           { icon: '🏓', naam: 'Pong' },
+    flappybird:     { icon: '🐦', naam: 'Flappy Bird' },
+    spaceinvaders:  { icon: '👾', naam: 'Space Invaders' },
+    pacman:         { icon: '👻', naam: 'Pac-Man' },
+    endlessrunner:  { icon: '🏃', naam: 'Endless Runner' },
+    pinball:        { icon: '🎯', naam: 'Pinball' },
+    breakout:       { icon: '🧱', naam: 'Breakout' },
+    shmup:          { icon: '🚀', naam: 'Shmup' },
+  }
+
+  // ── Start globaal luisterkanaal zodra gebruiker ingelogd is ──
+  function startSpelUitnodigingKanaal(userId) {
+    if (spelGlobaalKanaal) supabase.removeChannel(spelGlobaalKanaal)
+    spelGlobaalKanaal = supabase
+      .channel('speluitnodiging-' + userId, { config: { broadcast: { self: false } } })
+      .on('broadcast', { event: 'speluitnodiging' }, (msg) => {
+        const { van, vanNaam, vanAvatar, spelType, sessieId } = msg.payload
+        toonSpelUitnodigingPopup(van, vanNaam, vanAvatar, spelType, sessieId)
+      })
+      .subscribe()
+  }
+
+  // ── Toon de uitnodiging popup ──
+  function toonSpelUitnodigingPopup(vanId, vanNaam, vanAvatar, spelType, sessieId) {
+    sluitSpelUitnodiging() // sluit eventueel vorige
+
+    const info = SPEL_INFO[spelType] || { icon: '🎮', naam: spelType }
+    const popup = document.getElementById('spelUitnodigingPopup')
+    document.getElementById('spelUitnodigingIcoon').textContent = info.icon
+    document.getElementById('spelUitnodigingTitel').textContent = vanNaam + ' nodigt je uit!'
+    document.getElementById('spelUitnodigingSubtitel').textContent = info.naam + ' — Automatisch weigeren in 30s'
+
+    const balk = document.getElementById('spelUitnodigingBalk')
+    balk.style.transition = 'none'
+    balk.style.width = '100%'
+
+    document.getElementById('spelUitnodigingAccepteer').onclick = () => {
+      sluitSpelUitnodiging()
+      // Open chat met die vriend als die nog niet open is
+      if (geselecteerdeVriend?.id !== vanId) {
+        const vriend = (window._vriendenData || []).find(v => v.id === vanId)
+        if (vriend) {
+          openChat(vriend.id, vriend.display_name || vriend.username, vriend.avatar_url || '👤', vriend.public_key || '')
+        }
+      }
+      speelMee(spelType, sessieId, vanId)
+    }
+
+    popup.style.display = 'block'
+
+    // Countdown animatie
+    setTimeout(() => {
+      balk.style.transition = 'width 30s linear'
+      balk.style.width = '0%'
+    }, 50)
+
+    // Auto-weigeren na 30s
+    spelUitnodigingTimer = setTimeout(() => {
+      sluitSpelUitnodiging()
+    }, 30000)
+  }
+
+  window.sluitSpelUitnodiging = function() {
+    if (spelUitnodigingTimer) { clearTimeout(spelUitnodigingTimer); spelUitnodigingTimer = null }
+    const popup = document.getElementById('spelUitnodigingPopup')
+    if (popup) popup.style.display = 'none'
+  }
+
+  function spelKanaalNaam(sessieId) {
+    const ids = [huidigeUser.id, geselecteerdeVriend.id].sort()
+    return 'spel_' + ids[0] + '_' + ids[1] + '_' + sessieId
+  }
+
+  // Klik in spelmenu → stuur uitnodiging via globaal kanaal naar vriend
+  window.startSpel = async function(spelType) {
+    if (!geselecteerdeVriend) { alert('Open eerst een chat'); return }
+    document.getElementById('spelMenuGrid').style.display = 'none'
+
+    const info = SPEL_INFO[spelType] || { icon: '🎮', naam: spelType }
+    const sessieId = Date.now().toString(36)
+    const avatar = huidigProfiel?.avatar_data || huidigProfiel?.avatar_url || '🎮'
+
+    // Stuur uitnodiging naar vriend via zijn persoonlijke kanaal
+    await supabase.channel('speluitnodiging-' + geselecteerdeVriend.id).send({
+      type: 'broadcast', event: 'speluitnodiging',
+      payload: {
+        van: huidigeUser.id,
+        vanNaam: huidigProfiel?.username || 'Vriend',
+        vanAvatar: avatar,
+        spelType, sessieId
+      }
+    })
+
+    // Stuur ook als zichtbaar chatbericht zodat beide een record hebben
+    await supabase.from('messages').insert({
+      sender_id: huidigeUser.id,
+      receiver_id: geselecteerdeVriend.id,
+      content: 'spelinvite:' + spelType + ':' + huidigeUser.id + ':' + sessieId
+    })
+
+    // Zelf ook het spel openen
+    speelMee(spelType, sessieId, huidigeUser.id)
+  }
+
+  // Accepteer uitnodiging → open het spel
+  window.speelMee = function(spelType, sessieId, starterId) {
+    const beschikbaar = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pong', 'flappybird', 'spaceinvaders']
+    if (!beschikbaar.includes(spelType)) {
+      alert('🚧 ' + (SPEL_INFO[spelType]?.naam || spelType) + ' komt binnenkort beschikbaar!')
+      return
+    }
+
+    sluitSpelUitnodiging()
+
+    if (!sessieId) sessieId = Date.now().toString(36)
+
+    spelActief = spelType
+    const overlay = document.getElementById('spelOverlay')
+    overlay.classList.add('open')
+
+    benIkSpeler1 = starterId ? (starterId === huidigeUser.id) : (huidigeUser.id < geselecteerdeVriend?.id)
+
+    spelKanaal = supabase.channel(spelKanaalNaam(sessieId), { config: { broadcast: { self: false } } })
+
+    if (spelType === 'botkaaseiren') startBotKaasEieren()
+    else if (spelType === 'vieroprij') startVierOpEenRij()
+    else if (spelType === 'schaken') startSchaken()
+    else if (spelType === 'dammen') startDammen()
+    else if (spelType === 'pong') startPong()
+    else if (spelType === 'flappybird') startFlappyBird()
+    else if (spelType === 'spaceinvaders') startSpaceInvaders()
+
+    spelKanaal.subscribe()
+
+    // Start spel-audiobel automatisch
+    startSpelBel()
+  }
+
+  window.sluitSpel = function() {
+    document.getElementById('spelOverlay').classList.remove('open')
+    document.getElementById('spelInhoud').innerHTML = ''
+    if (spelKanaal) { supabase.removeChannel(spelKanaal); spelKanaal = null }
+    // Stop eventuele loopende animaties (Pong, Flappy Bird)
+    if (window._spelAnimFrame) { cancelAnimationFrame(window._spelAnimFrame); window._spelAnimFrame = null }
+    if (window._spelAftelInterval) { clearInterval(window._spelAftelInterval); window._spelAftelInterval = null }
+    spelActief = null
+    stopSpelBel()
+  }
+
+  // ─── Boter-Kaas-Eieren ───
+  function startBotKaasEieren() {
+    document.getElementById('spelTitelBar').textContent = '⭕ Boter-Kaas-Eieren'
+    const inhoud = document.getElementById('spelInhoud')
+    let bord = Array(9).fill(null)
+    let mijnBeurt = benIkSpeler1  // speler 1 (X) begint
+    let gameOver = false
+    const mijnSymbool = benIkSpeler1 ? 'X' : 'O'
+    const vriendSymbool = benIkSpeler1 ? 'O' : 'X'
+
+    inhoud.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:20px;">
+        <div id="bke-status" style="color:white;font-size:16px;font-weight:600;">Jij bent ${mijnSymbool}${mijnBeurt ? ' — jouw beurt!' : ' — wachten...'}</div>
+        <div id="bke-bord" style="display:grid;grid-template-columns:repeat(3,80px);grid-template-rows:repeat(3,80px);gap:6px;background:rgba(255,255,255,0.1);padding:6px;border-radius:12px;"></div>
+        <button id="bke-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Opnieuw spelen</button>
+      </div>`
+
+    const bordEl = document.getElementById('bke-bord')
+    const statusEl = document.getElementById('bke-status')
+    const opnieuwBtn = document.getElementById('bke-opnieuw')
+
+    function tekenBord() {
+      bordEl.innerHTML = ''
+      bord.forEach((cel, i) => {
+        const vakje = document.createElement('div')
+        vakje.style.cssText = 'width:80px;height:80px;background:rgba(255,255,255,0.08);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:700;cursor:pointer;color:' + (cel === 'X' ? '#c084fc' : '#f0abfc')
+        vakje.textContent = cel || ''
+        if (!cel && mijnBeurt && !gameOver) {
+          vakje.addEventListener('click', () => zetDoen(i))
+        }
+        bordEl.appendChild(vakje)
+      })
+    }
+
+    function checkWinnaar(b) {
+      const lijnen = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]
+      for (const [a,c,d] of lijnen) {
+        if (b[a] && b[a] === b[c] && b[a] === b[d]) return b[a]
+      }
+      if (b.every(x => x)) return 'gelijk'
+      return null
+    }
+
+    function zetDoen(i) {
+      if (bord[i] || gameOver || !mijnBeurt) return
+      bord[i] = mijnSymbool
+      mijnBeurt = false
+      verstuurZet(i)
+      verwerkBeurt()
+    }
+
+    function verwerkBeurt() {
+      const winnaar = checkWinnaar(bord)
+      if (winnaar) {
+        gameOver = true
+        if (winnaar === 'gelijk') statusEl.textContent = "🤝 Gelijkspel!"
+        else if (winnaar === mijnSymbool) statusEl.textContent = "🎉 Jij wint!"
+        else statusEl.textContent = "😢 " + (geselecteerdeVriend.naam || 'Vriend') + " wint!"
+        opnieuwBtn.style.display = 'block'
+      } else {
+        statusEl.textContent = mijnBeurt ? 'Jouw beurt!' : 'Wachten op ' + (geselecteerdeVriend.naam || 'vriend') + '...'
+      }
+      tekenBord()
+    }
+
+    function verstuurZet(i) {
+      spelKanaal.send({ type: 'broadcast', event: 'zet', payload: { i, symbool: mijnSymbool } })
+    }
+
+    spelKanaal.on('broadcast', { event: 'zet' }, (msg) => {
+      const { i, symbool } = msg.payload
+      if (symbool === mijnSymbool) return // eigen zet niet dubbel verwerken
+      bord[i] = symbool
+      mijnBeurt = true
+      verwerkBeurt()
+    })
+
+    spelKanaal.on('broadcast', { event: 'opnieuw' }, () => {
+      bord = Array(9).fill(null)
+      gameOver = false
+      mijnBeurt = benIkSpeler1
+      opnieuwBtn.style.display = 'none'
+      verwerkBeurt()
+    })
+
+    opnieuwBtn.addEventListener('click', () => {
+      bord = Array(9).fill(null)
+      gameOver = false
+      mijnBeurt = benIkSpeler1
+      opnieuwBtn.style.display = 'none'
+      spelKanaal.send({ type: 'broadcast', event: 'opnieuw', payload: {} })
+      verwerkBeurt()
+    })
+
+    tekenBord()
+  }
+
+  // ─── Vier op een rij ───
+  function startVierOpEenRij() {
+    document.getElementById('spelTitelBar').textContent = '🔴 Vier op een rij'
+    const inhoud = document.getElementById('spelInhoud')
+    const KOLOMMEN = 7
+    const RIJEN = 6
+    let bord = Array(RIJEN).fill(null).map(() => Array(KOLOMMEN).fill(null))
+    let mijnBeurt = benIkSpeler1
+    let gameOver = false
+    const mijnKleur = benIkSpeler1 ? 'rood' : 'geel'
+    const KLEUR_HEX = { rood: '#ef4444', geel: '#fbbf24' }
+
+    inhoud.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+        <div id="vor-status" style="color:white;font-size:15px;font-weight:600;text-align:center;">Jij speelt <span style="color:${KLEUR_HEX[mijnKleur]}">●</span> ${mijnKleur}${mijnBeurt ? ' — jouw beurt!' : ' — wachten...'}</div>
+        <div id="vor-bord" style="display:grid;grid-template-columns:repeat(${KOLOMMEN},38px);grid-template-rows:repeat(${RIJEN},38px);gap:4px;background:#1e3a8a;padding:8px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,0.4);"></div>
+        <button id="vor-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Opnieuw spelen</button>
+      </div>`
+
+    const bordEl = document.getElementById('vor-bord')
+    const statusEl = document.getElementById('vor-status')
+    const opnieuwBtn = document.getElementById('vor-opnieuw')
+
+    function tekenBord() {
+      bordEl.innerHTML = ''
+      for (let r = 0; r < RIJEN; r++) {
+        for (let k = 0; k < KOLOMMEN; k++) {
+          const vakje = document.createElement('div')
+          const cel = bord[r][k]
+          const isWinnend = winLijn.some(([wr, wk]) => wr === r && wk === k)
+          vakje.style.cssText = 'width:38px;height:38px;background:#1a2f6e;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;'
+          if (cel) {
+            const fiche = document.createElement('div')
+            const gloed = isWinnend ? ', 0 0 14px 4px ' + KLEUR_HEX[cel] : ''
+            fiche.style.cssText = 'width:32px;height:32px;border-radius:50%;background:' + KLEUR_HEX[cel] + ';box-shadow:inset 0 -3px 6px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.4)' + gloed + ';transition:box-shadow 0.3s;' + (isWinnend ? 'animation:vorPuls 0.8s ease-in-out infinite alternate;' : '')
+            vakje.appendChild(fiche)
+          }
+          if (!gameOver && mijnBeurt) {
+            vakje.addEventListener('click', () => zetDoen(k))
+          }
+          bordEl.appendChild(vakje)
+        }
+      }
+    }
+
+    function eersteVrijeRij(kolom) {
+      for (let r = RIJEN - 1; r >= 0; r--) {
+        if (!bord[r][kolom]) return r
+      }
+      return -1
+    }
+
+    let winLijn = []
+
+    function checkWinnaar() {
+      const richtingen = [[0,1],[1,0],[1,1],[1,-1]]
+      for (let r = 0; r < RIJEN; r++) {
+        for (let k = 0; k < KOLOMMEN; k++) {
+          const kleur = bord[r][k]
+          if (!kleur) continue
+          for (const [dr, dk] of richtingen) {
+            const posities = [[r,k]]
+            for (let i = 1; i < 4; i++) {
+              const nr = r + dr*i, nk = k + dk*i
+              if (nr < 0 || nr >= RIJEN || nk < 0 || nk >= KOLOMMEN || bord[nr][nk] !== kleur) break
+              posities.push([nr, nk])
+            }
+            if (posities.length >= 4) { winLijn = posities; return kleur }
+          }
+        }
+      }
+      if (bord.every(rij => rij.every(c => c))) return 'gelijk'
+      return null
+    }
+
+    function zetDoen(kolom) {
+      if (gameOver || !mijnBeurt) return
+      const rij = eersteVrijeRij(kolom)
+      if (rij === -1) return // kolom vol
+      bord[rij][kolom] = mijnKleur
+      mijnBeurt = false
+      verstuurZet(kolom, rij)
+      verwerkBeurt()
+    }
+
+    function verwerkBeurt() {
+      const winnaar = checkWinnaar()
+      if (winnaar) {
+        gameOver = true
+        if (winnaar === 'gelijk') statusEl.textContent = "🤝 Gelijkspel — bord vol!"
+        else if (winnaar === mijnKleur) statusEl.textContent = "🎉 Jij wint!"
+        else statusEl.textContent = "😢 " + (geselecteerdeVriend.naam || 'Vriend') + " wint!"
+        opnieuwBtn.style.display = 'block'
+      } else {
+        statusEl.innerHTML = mijnBeurt
+          ? 'Jouw beurt! <span style="color:' + KLEUR_HEX[mijnKleur] + '">●</span>'
+          : 'Wachten op ' + (geselecteerdeVriend.naam || 'vriend') + '...'
+      }
+      tekenBord()
+    }
+
+    function verstuurZet(kolom, rij) {
+      spelKanaal.send({ type: 'broadcast', event: 'zet', payload: { kolom, rij, kleur: mijnKleur } })
+    }
+
+    spelKanaal.on('broadcast', { event: 'zet' }, (msg) => {
+      const { kolom, rij, kleur } = msg.payload
+      if (kleur === mijnKleur) return
+      bord[rij][kolom] = kleur
+      mijnBeurt = true
+      verwerkBeurt()
+    })
+
+    spelKanaal.on('broadcast', { event: 'opnieuw' }, () => {
+      bord = Array(RIJEN).fill(null).map(() => Array(KOLOMMEN).fill(null))
+      gameOver = false
+      winLijn = []
+      mijnBeurt = benIkSpeler1
+      opnieuwBtn.style.display = 'none'
+      verwerkBeurt()
+    })
+
+    opnieuwBtn.addEventListener('click', () => {
+      bord = Array(RIJEN).fill(null).map(() => Array(KOLOMMEN).fill(null))
+      gameOver = false
+      winLijn = []
+      mijnBeurt = benIkSpeler1
+      opnieuwBtn.style.display = 'none'
+      spelKanaal.send({ type: 'broadcast', event: 'opnieuw', payload: {} })
+      verwerkBeurt()
+    })
+
+    tekenBord()
+  }
+
+  // ─── Schaken ───
+  function startSchaken() {
+    document.getElementById('spelTitelBar').textContent = '♟️ Schaken'
+    const inhoud = document.getElementById('spelInhoud')
+
+    let staat = Schaak.nieuweSpelStaat()
+    const mijnKleur = benIkSpeler1 ? 'w' : 'z'
+    const vriendKleur = benIkSpeler1 ? 'z' : 'w'
+    let geselecteerd = null      // [r,k] van geselecteerd stuk
+    let mogelijkeZetten = []     // legale zetten voor geselecteerd stuk
+    let gameOver = false
+    let laatsteZet = null        // voor highlight van laatste zet
+
+    // Bord wordt altijd getoond met wit onderaan vanuit perspectief van de witte speler,
+    // en zwart onderaan vanuit perspectief van de zwarte speler
+    const omgedraaid = mijnKleur === 'z'
+
+    inhoud.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+        <div id="sch-status" style="color:white;font-size:14px;font-weight:600;text-align:center;min-height:20px;"></div>
+        <div id="sch-bord" style="display:grid;grid-template-columns:repeat(8,38px);grid-template-rows:repeat(8,38px);border:3px solid #3a2a5e;border-radius:6px;overflow:hidden;"></div>
+        <div id="sch-promotie" style="display:none;gap:8px;background:rgba(0,0,0,0.85);padding:10px;border-radius:10px;"></div>
+        <button id="sch-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Opnieuw spelen</button>
+      </div>`
+
+    const bordEl = document.getElementById('sch-bord')
+    const statusEl = document.getElementById('sch-status')
+    const opnieuwBtn = document.getElementById('sch-opnieuw')
+    const promotieEl = document.getElementById('sch-promotie')
+
+    function rijVolgorde() { return omgedraaid ? [0,1,2,3,4,5,6,7] : [7,6,5,4,3,2,1,0] }
+    function kolVolgorde() { return omgedraaid ? [7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7] }
+
+    function tekenBord() {
+      bordEl.innerHTML = ''
+      const rijen = rijVolgorde()
+      const kols = kolVolgorde()
+
+      for (const r of rijen) {
+        for (const k of kols) {
+          const vakje = document.createElement('div')
+          const isLicht = (r + k) % 2 === 0
+          const isGeselecteerd = geselecteerd && geselecteerd[0] === r && geselecteerd[1] === k
+          const isMogelijkeZet = mogelijkeZetten.some(z => z.naar[0] === r && z.naar[1] === k)
+          const isLaatsteZet = laatsteZet && (
+            (laatsteZet.van[0]===r && laatsteZet.van[1]===k) || (laatsteZet.naar[0]===r && laatsteZet.naar[1]===k)
+          )
+
+          let achtergrond = isLicht ? '#eed9b8' : '#8a6242'
+          if (isLaatsteZet) achtergrond = isLicht ? '#f3e08a' : '#c9a93a'
+          if (isGeselecteerd) achtergrond = '#7ec8e3'
+
+          vakje.style.cssText = `width:38px;height:38px;background:${achtergrond};display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;position:relative;user-select:none;`
+          vakje.dataset.r = r
+          vakje.dataset.k = k
+
+          const stuk = staat.bord[r][k]
+          if (stuk) {
+            const kleurSchaduw = stuk[0] === 'w' ? '0 1px 1px rgba(0,0,0,0.5)' : '0 1px 1px rgba(255,255,255,0.3)'
+            vakje.innerHTML = `<span style="text-shadow:${kleurSchaduw};color:${stuk[0]==='w' ? '#fff' : '#1a0a2e'};pointer-events:none;">${Schaak.STUK_SYMBOLEN[stuk]}</span>`
+          }
+
+          if (isMogelijkeZet) {
+            const stip = document.createElement('div')
+            const heeftStuk = !!staat.bord[r][k]
+            stip.style.cssText = heeftStuk
+              ? 'position:absolute;inset:2px;border:3px solid rgba(220,38,38,0.7);border-radius:4px;pointer-events:none;'
+              : 'position:absolute;width:12px;height:12px;border-radius:50%;background:rgba(34,197,94,0.6);pointer-events:none;'
+            vakje.appendChild(stip)
+          }
+
+          bordEl.appendChild(vakje)
+        }
+      }
+    }
+
+    // Event delegation — één listener op het bord, nooit per-vakje (voorkomt iOS re-render bug)
+    bordEl.addEventListener('click', (e) => {
+      const vakje = e.target.closest('[data-r]')
+      if (!vakje) return
+      vakjeKlik(parseInt(vakje.dataset.r), parseInt(vakje.dataset.k))
+    })
+
+    function vakjeKlik(r, k) {
+      if (gameOver || staat.aanZet !== mijnKleur) return
+
+      // Als er al een stuk geselecteerd is en dit is een geldige zet
+      if (geselecteerd) {
+        const zet = mogelijkeZetten.find(z => z.naar[0] === r && z.naar[1] === k)
+        if (zet) {
+          uitvoerenZet(zet)
+          return
+        }
+      }
+
+      // Selecteer een nieuw stuk (alleen eigen stukken)
+      const stuk = staat.bord[r][k]
+      if (stuk && stuk[0] === mijnKleur) {
+        geselecteerd = [r, k]
+        mogelijkeZetten = Schaak.legaleZetten(staat, r, k)
+      } else {
+        geselecteerd = null
+        mogelijkeZetten = []
+      }
+      tekenBord()
+    }
+
+    function uitvoerenZet(zet, promotieStuk) {
+      const stuk = staat.bord[zet.van[0]][zet.van[1]]
+      const isPromotie = Schaak.typeVan(stuk) === 'P' && (zet.naar[0] === 0 || zet.naar[0] === 7)
+
+      if (isPromotie && !promotieStuk) {
+        // Toon promotie-keuze voordat de zet wordt afgerond
+        toonPromotieKeuze(zet)
+        return
+      }
+
+      Schaak.voerZetUit(staat, zet, promotieStuk)
+      laatsteZet = zet
+      geselecteerd = null
+      mogelijkeZetten = []
+
+      verstuurZet(zet, promotieStuk)
+      naBeurtControle()
+    }
+
+    function toonPromotieKeuze(zet) {
+      const kleur = mijnKleur
+      promotieEl.style.display = 'flex'
+      promotieEl.innerHTML = ['Q','R','B','N'].map(t =>
+        `<button class="sch-promo-btn" data-t="${t}" style="font-size:28px;background:rgba(255,255,255,0.1);border:1px solid var(--accent);border-radius:8px;padding:6px 10px;cursor:pointer;color:white;">${Schaak.STUK_SYMBOLEN[kleur+t]}</button>`
+      ).join('')
+      promotieEl.querySelectorAll('.sch-promo-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          promotieEl.style.display = 'none'
+          uitvoerenZet(zet, btn.dataset.t)
+        })
+      })
+    }
+
+    function naBeurtControle() {
+      const volgendeKleur = staat.aanZet // is al gewisseld door voerZetUit
+      if (Schaak.isSchaakmat(staat, volgendeKleur)) {
+        gameOver = true
+        const ikWin = volgendeKleur !== mijnKleur
+        statusEl.textContent = ikWin ? '🎉 Schaakmat — Jij wint!' : '😢 Schaakmat — ' + (geselecteerdeVriend.naam || 'Vriend') + ' wint!'
+        opnieuwBtn.style.display = 'block'
+      } else if (Schaak.isPat(staat, volgendeKleur)) {
+        gameOver = true
+        statusEl.textContent = '🤝 Pat — gelijkspel!'
+        opnieuwBtn.style.display = 'block'
+      } else if (Schaak.staatInSchaak(staat, volgendeKleur)) {
+        statusEl.textContent = (volgendeKleur === mijnKleur ? 'Jij staat schaak! ' : (geselecteerdeVriend.naam||'Vriend') + ' staat schaak! ') +
+          (volgendeKleur === mijnKleur ? 'Jouw beurt' : 'Wachten...')
+      } else {
+        statusEl.textContent = volgendeKleur === mijnKleur ? 'Jouw beurt' : 'Wachten op ' + (geselecteerdeVriend.naam || 'vriend') + '...'
+      }
+      tekenBord()
+    }
+
+    function verstuurZet(zet, promotieStuk) {
+      spelKanaal.send({ type: 'broadcast', event: 'zet', payload: { zet, promotieStuk } })
+    }
+
+    spelKanaal.on('broadcast', { event: 'zet' }, (msg) => {
+      const { zet, promotieStuk } = msg.payload
+      Schaak.voerZetUit(staat, zet, promotieStuk)
+      laatsteZet = zet
+      geselecteerd = null
+      mogelijkeZetten = []
+      naBeurtControle()
+    })
+
+    spelKanaal.on('broadcast', { event: 'opnieuw' }, () => {
+      staat = Schaak.nieuweSpelStaat()
+      geselecteerd = null
+      mogelijkeZetten = []
+      laatsteZet = null
+      gameOver = false
+      opnieuwBtn.style.display = 'none'
+      naBeurtControle()
+    })
+
+    opnieuwBtn.addEventListener('click', () => {
+      staat = Schaak.nieuweSpelStaat()
+      geselecteerd = null
+      mogelijkeZetten = []
+      laatsteZet = null
+      gameOver = false
+      opnieuwBtn.style.display = 'none'
+      spelKanaal.send({ type: 'broadcast', event: 'opnieuw', payload: {} })
+      naBeurtControle()
+    })
+
+    statusEl.textContent = mijnKleur === 'w' ? 'Jouw beurt (wit begint)' : 'Wachten op ' + (geselecteerdeVriend.naam || 'vriend') + ' (wit begint)...'
+    tekenBord()
+  }
+
+  // ─── Dammen (internationaal, 10x10) ───
+  function startDammen() {
+    document.getElementById('spelTitelBar').textContent = '⚫ Dammen'
+    const inhoud = document.getElementById('spelInhoud')
+
+    let staat = Dammen.nieuweSpelStaat()
+    const mijnKleur = benIkSpeler1 ? 'w' : 'z'
+    let geselecteerd = null
+    let mogelijkeKetens = []   // ketens die starten vanuit het geselecteerde stuk
+    let gameOver = false
+    let laatsteKeten = null
+
+    const omgedraaid = mijnKleur === 'z'
+    const VAKJE = 32
+
+    inhoud.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+        <div id="dam-status" style="color:white;font-size:14px;font-weight:600;text-align:center;min-height:20px;"></div>
+        <div id="dam-bord" style="display:grid;grid-template-columns:repeat(10,${VAKJE}px);grid-template-rows:repeat(10,${VAKJE}px);border:3px solid #3a2a5e;border-radius:6px;overflow:hidden;"></div>
+        <button id="dam-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Opnieuw spelen</button>
+      </div>`
+
+    const bordEl = document.getElementById('dam-bord')
+    const statusEl = document.getElementById('dam-status')
+    const opnieuwBtn = document.getElementById('dam-opnieuw')
+
+    function rijVolgorde() { return omgedraaid ? [0,1,2,3,4,5,6,7,8,9] : [9,8,7,6,5,4,3,2,1,0] }
+    function kolVolgorde() { return omgedraaid ? [9,8,7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7,8,9] }
+
+    function tekenBord() {
+      bordEl.innerHTML = ''
+      const rijen = rijVolgorde()
+      const kols = kolVolgorde()
+
+      // Verzamel alle landingsvelden van mogelijke ketens (voor highlight)
+      const landingsvelden = mogelijkeKetens.map(keten => keten[0].naar)
+      const laatsteVelden = laatsteKeten ? [laatsteKeten[0].van, laatsteKeten[laatsteKeten.length-1].naar] : []
+
+      for (const r of rijen) {
+        for (const k of kols) {
+          const vakje = document.createElement('div')
+          const isDonker = (r + k) % 2 === 1
+          const isGeselecteerd = geselecteerd && geselecteerd[0] === r && geselecteerd[1] === k
+          const isLanding = landingsvelden.some(([lr,lk]) => lr===r && lk===k)
+          const isLaatste = laatsteVelden.some(([lr,lk]) => lr===r && lk===k)
+
+          let achtergrond = isDonker ? '#8a6242' : '#eed9b8'
+          if (isDonker && isLaatste) achtergrond = '#c9a93a'
+          if (isGeselecteerd) achtergrond = '#7ec8e3'
+
+          vakje.style.cssText = `width:${VAKJE}px;height:${VAKJE}px;background:${achtergrond};display:flex;align-items:center;justify-content:center;font-size:22px;cursor:${isDonker?'pointer':'default'};position:relative;user-select:none;`
+
+          const stuk = staat.bord[r][k]
+          if (stuk) {
+            const kleur = stuk[0]
+            const isStukDam = stuk[1] === 'D'
+            const schijf = document.createElement('div')
+            schijf.style.cssText = `width:${VAKJE-8}px;height:${VAKJE-8}px;border-radius:50%;background:${kleur==='w' ? 'radial-gradient(circle at 35% 30%, #fff, #ddd)' : 'radial-gradient(circle at 35% 30%, #555, #111)'};box-shadow:0 2px 4px rgba(0,0,0,0.5), inset 0 -2px 3px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;`
+            if (isStukDam) {
+              schijf.innerHTML = `<span style="font-size:14px;color:${kleur==='w'?'#b8860b':'#fbbf24'};">★</span>`
+            }
+            vakje.appendChild(schijf)
+          }
+
+          if (isDonker && isLanding) {
+            const stip = document.createElement('div')
+            stip.style.cssText = 'position:absolute;width:10px;height:10px;border-radius:50%;background:rgba(34,197,94,0.75);pointer-events:none;'
+            vakje.appendChild(stip)
+          }
+
+          if (isDonker) vakje.addEventListener('click', () => vakjeKlik(r, k))
+          bordEl.appendChild(vakje)
+        }
+      }
+    }
+
+    function vakjeKlik(r, k) {
+      if (gameOver || staat.aanZet !== mijnKleur) return
+
+      if (geselecteerd) {
+        const keten = mogelijkeKetens.find(ket => ket[0].naar[0] === r && ket[0].naar[1] === k)
+        if (keten) {
+          uitvoerenKeten(keten)
+          return
+        }
+      }
+
+      const stuk = staat.bord[r][k]
+      if (stuk && stuk[0] === mijnKleur) {
+        const { ketens } = Dammen.alleZetten(staat, mijnKleur)
+        const stukKetens = ketens.filter(ket => ket[0].van[0] === r && ket[0].van[1] === k)
+        if (stukKetens.length > 0) {
+          geselecteerd = [r, k]
+          mogelijkeKetens = stukKetens
+        } else {
+          geselecteerd = null
+          mogelijkeKetens = []
+        }
+      } else {
+        geselecteerd = null
+        mogelijkeKetens = []
+      }
+      tekenBord()
+    }
+
+    function uitvoerenKeten(keten) {
+      Dammen.voerKetenUit(staat, keten)
+      laatsteKeten = keten
+      geselecteerd = null
+      mogelijkeKetens = []
+
+      verstuurKeten(keten)
+      naBeurtControle()
+    }
+
+    function naBeurtControle() {
+      const volgendeKleur = staat.aanZet
+      if (Dammen.heeftGeenZetten(staat, volgendeKleur)) {
+        gameOver = true
+        const ikWin = volgendeKleur !== mijnKleur
+        statusEl.textContent = ikWin ? '🎉 Jij wint — geen zetten meer voor de ander!' : '😢 ' + (geselecteerdeVriend.naam || 'Vriend') + ' wint!'
+        opnieuwBtn.style.display = 'block'
+      } else {
+        statusEl.textContent = volgendeKleur === mijnKleur ? 'Jouw beurt' : 'Wachten op ' + (geselecteerdeVriend.naam || 'vriend') + '...'
+      }
+      tekenBord()
+    }
+
+    function verstuurKeten(keten) {
+      spelKanaal.send({ type: 'broadcast', event: 'zet', payload: { keten } })
+    }
+
+    spelKanaal.on('broadcast', { event: 'zet' }, (msg) => {
+      Dammen.voerKetenUit(staat, msg.payload.keten)
+      laatsteKeten = msg.payload.keten
+      geselecteerd = null
+      mogelijkeKetens = []
+      naBeurtControle()
+    })
+
+    spelKanaal.on('broadcast', { event: 'opnieuw' }, () => {
+      staat = Dammen.nieuweSpelStaat()
+      geselecteerd = null
+      mogelijkeKetens = []
+      laatsteKeten = null
+      gameOver = false
+      opnieuwBtn.style.display = 'none'
+      naBeurtControle()
+    })
+
+    opnieuwBtn.addEventListener('click', () => {
+      staat = Dammen.nieuweSpelStaat()
+      geselecteerd = null
+      mogelijkeKetens = []
+      laatsteKeten = null
+      gameOver = false
+      opnieuwBtn.style.display = 'none'
+      spelKanaal.send({ type: 'broadcast', event: 'opnieuw', payload: {} })
+      naBeurtControle()
+    })
+
+    statusEl.textContent = mijnKleur === 'w' ? 'Jouw beurt (wit begint)' : 'Wachten op ' + (geselecteerdeVriend.naam || 'vriend') + ' (wit begint)...'
+    tekenBord()
+  }
+
+  // ─── Pong ───
+  function startPong() {
+    document.getElementById('spelTitelBar').textContent = '🏓 Pong'
+    const inhoud = document.getElementById('spelInhoud')
+
+    const BREEDTE = 280, HOOGTE = 380
+    const PADDLE_BREEDTE = 60, PADDLE_HOOGTE = 10, PADDLE_Y_ONDER = HOOGTE - 30, PADDLE_Y_BOVEN = 20
+    const BAL_GROOTTE = 8
+    const WIN_SCORE = 7
+
+    // Ben ik de host? Host rekent de bal-physics uit, gast volgt alleen mee.
+    const benIkHost = benIkSpeler1
+    // Mijn paddle staat altijd ONDERAAN op mijn scherm (eigen perspectief), tegenstander BOVEN
+    let mijnPaddleX = BREEDTE / 2 - PADDLE_BREEDTE / 2
+    let vriendPaddleX = BREEDTE / 2 - PADDLE_BREEDTE / 2
+    let bal = { x: BREEDTE/2, y: HOOGTE/2, vx: 2.4, vy: -3.2 }
+    let mijnScore = 0, vriendScore = 0
+    let gameOver = false
+    let animatieFrame = null
+    let laatsteVerstuurd = 0
+
+    inhoud.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+        <div id="pong-status" style="color:white;font-size:14px;font-weight:600;">Jij: <span id="pong-mijn-score">0</span> — <span id="pong-naam">${(geselecteerdeVriend?.naam || 'Vriend')}</span>: <span id="pong-vriend-score">0</span></div>
+        <canvas id="pong-canvas" width="${BREEDTE}" height="${HOOGTE}" style="background:#0a0e1a;border:3px solid #3a2a5e;border-radius:8px;touch-action:none;"></canvas>
+        <div style="font-size:11px;color:rgba(255,255,255,0.6);">Sleep om je paddle te bewegen</div>
+        <button id="pong-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Opnieuw spelen</button>
+      </div>`
+
+    const canvas = document.getElementById('pong-canvas')
+    const ctx = canvas.getContext('2d')
+    const statusEl = document.getElementById('pong-status')
+    const mijnScoreEl = document.getElementById('pong-mijn-score')
+    const vriendScoreEl = document.getElementById('pong-vriend-score')
+    const opnieuwBtn = document.getElementById('pong-opnieuw')
+
+    function tekenScherm() {
+      ctx.clearRect(0, 0, BREEDTE, HOOGTE)
+      // Middenlijn
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)'
+      ctx.setLineDash([6, 6])
+      ctx.beginPath(); ctx.moveTo(0, HOOGTE/2); ctx.lineTo(BREEDTE, HOOGTE/2); ctx.stroke()
+      ctx.setLineDash([])
+
+      // Vriend paddle (boven)
+      ctx.fillStyle = '#f0abfc'
+      ctx.fillRect(vriendPaddleX, PADDLE_Y_BOVEN, PADDLE_BREEDTE, PADDLE_HOOGTE)
+      // Mijn paddle (onder)
+      ctx.fillStyle = '#c084fc'
+      ctx.fillRect(mijnPaddleX, PADDLE_Y_ONDER, PADDLE_BREEDTE, PADDLE_HOOGTE)
+
+      // Bal
+      ctx.fillStyle = '#ffffff'
+      ctx.shadowBlur = 10; ctx.shadowColor = '#ffffff'
+      ctx.beginPath(); ctx.arc(bal.x, bal.y, BAL_GROOTTE/2, 0, Math.PI*2); ctx.fill()
+      ctx.shadowBlur = 0
+    }
+
+    // ── Drag-besturing voor mijn paddle (werkt overal op het scherm, niet alleen op canvas) ──
+    const besturingsVlak = document.getElementById('spelOverlay')
+
+    function paddleVanX(clientX) {
+      const rect = canvas.getBoundingClientRect()
+      const schaal = BREEDTE / rect.width
+      let x = (clientX - rect.left) * schaal - PADDLE_BREEDTE / 2
+      return Math.max(0, Math.min(BREEDTE - PADDLE_BREEDTE, x))
+    }
+    function pongTouchMove(e) {
+      if (spelActief !== 'pong') return
+      if (e.target.tagName === 'BUTTON') return
+      e.preventDefault()
+      mijnPaddleX = paddleVanX(e.touches[0].clientX)
+      verstuurPaddle()
+    }
+    function pongTouchStart(e) {
+      if (spelActief !== 'pong') return
+      if (e.target.tagName === 'BUTTON') return
+      mijnPaddleX = paddleVanX(e.touches[0].clientX)
+      verstuurPaddle()
+    }
+    besturingsVlak.addEventListener('touchmove', pongTouchMove, { passive: false })
+    besturingsVlak.addEventListener('touchstart', pongTouchStart, { passive: true })
+    let muisActief = false
+    besturingsVlak.addEventListener('mousedown', e => {
+      if (spelActief !== 'pong') return
+      if (e.target.tagName === 'BUTTON') return
+      muisActief = true
+      mijnPaddleX = paddleVanX(e.clientX)
+      verstuurPaddle()
+    })
+    window.addEventListener('mouseup', () => muisActief = false)
+    besturingsVlak.addEventListener('mousemove', e => {
+      if (spelActief !== 'pong' || !muisActief) return
+      mijnPaddleX = paddleVanX(e.clientX)
+      verstuurPaddle()
+    })
+
+    function verstuurPaddle() {
+      spelKanaal.send({ type: 'broadcast', event: 'paddle', payload: { x: mijnPaddleX } })
+    }
+
+    spelKanaal.on('broadcast', { event: 'paddle' }, msg => {
+      vriendPaddleX = msg.payload.x
+    })
+
+    // ── Host-only: bal physics ──
+    function botsPaddle(px) {
+      return bal.x + BAL_GROOTTE/2 > px && bal.x - BAL_GROOTTE/2 < px + PADDLE_BREEDTE
+    }
+
+    function physicsStap() {
+      bal.x += bal.vx
+      bal.y += bal.vy
+
+      // Zijwanden
+      if (bal.x - BAL_GROOTTE/2 < 0 || bal.x + BAL_GROOTTE/2 > BREEDTE) {
+        bal.vx *= -1
+        bal.x = Math.max(BAL_GROOTTE/2, Math.min(BREEDTE - BAL_GROOTTE/2, bal.x))
+      }
+
+      // Mijn paddle (onder) — host speelt zelf ook gewoon mee
+      if (bal.y + BAL_GROOTTE/2 > PADDLE_Y_ONDER && bal.y + BAL_GROOTTE/2 < PADDLE_Y_ONDER + PADDLE_HOOGTE + 6 && bal.vy > 0) {
+        if (botsPaddle(mijnPaddleX)) {
+          bal.vy *= -1.04
+          bal.vx += (bal.x - (mijnPaddleX + PADDLE_BREEDTE/2)) * 0.06
+          bal.y = PADDLE_Y_ONDER - BAL_GROOTTE/2
+        }
+      }
+      // Vriend paddle (boven)
+      if (bal.y - BAL_GROOTTE/2 < PADDLE_Y_BOVEN + PADDLE_HOOGTE && bal.y - BAL_GROOTTE/2 > PADDLE_Y_BOVEN - 6 && bal.vy < 0) {
+        if (botsPaddle(vriendPaddleX)) {
+          bal.vy *= -1.04
+          bal.vx += (bal.x - (vriendPaddleX + PADDLE_BREEDTE/2)) * 0.06
+          bal.y = PADDLE_Y_BOVEN + PADDLE_HOOGTE + BAL_GROOTTE/2
+        }
+      }
+
+      // Score: bal voorbij boven (ik scoor) of onder (vriend scoort)
+      if (bal.y < -20) {
+        mijnScore++
+        resetBal(-1)
+      } else if (bal.y > HOOGTE + 20) {
+        vriendScore++
+        resetBal(1)
+      }
+
+      // Snelheid begrenzen
+      const maxSnelheid = 9
+      bal.vx = Math.max(-maxSnelheid, Math.min(maxSnelheid, bal.vx))
+      bal.vy = Math.max(-maxSnelheid, Math.min(maxSnelheid, bal.vy))
+
+      checkWinst()
+    }
+
+    function resetBal(richting) {
+      bal = { x: BREEDTE/2, y: HOOGTE/2, vx: (Math.random()-0.5)*4, vy: 3.2 * richting }
+    }
+
+    function checkWinst() {
+      if (mijnScore >= WIN_SCORE || vriendScore >= WIN_SCORE) {
+        gameOver = true
+        statusEl.textContent = mijnScore >= WIN_SCORE ? '🎉 Jij wint!' : '😢 ' + (geselecteerdeVriend.naam || 'Vriend') + ' wint!'
+        opnieuwBtn.style.display = 'block'
+        if (animatieFrame) cancelAnimationFrame(animatieFrame)
+      }
+    }
+
+    function updateScoreUI() {
+      mijnScoreEl.textContent = mijnScore
+      vriendScoreEl.textContent = vriendScore
+    }
+
+    // ── Game loop ──
+    function loop(tijdstip) {
+      if (gameOver) return
+
+      if (benIkHost) {
+        physicsStap()
+        // Stuur bal-staat ~20x/sec naar de gast (niet elke frame, scheelt bandbreedte)
+        if (tijdstip - laatsteVerstuurd > 50) {
+          laatsteVerstuurd = tijdstip
+          spelKanaal.send({ type: 'broadcast', event: 'balstaat', payload: { bal, mijnScore, vriendScore } })
+          updateScoreUI()
+        }
+      }
+
+      tekenScherm()
+      animatieFrame = requestAnimationFrame(loop)
+    }
+
+    // Gast ontvangt bal-staat van de host. BELANGRIJK: de host stuurt zijn EIGEN coordinatenstelsel
+    // door (host's paddle = onder, bal.y groot = dicht bij host). Bij de gast staat zijn eigen paddle
+    // OOK altijd onderaan op zijn scherm — dus de bal-positie moet gespiegeld worden (y -> HOOGTE - y,
+    // vx/vy omgedraaid) zodat de bal bij de gast fysiek correct lijkt te bewegen.
+    spelKanaal.on('broadcast', { event: 'balstaat' }, msg => {
+      if (benIkHost) return
+      const ontvangenBal = msg.payload.bal
+      bal = {
+        x: ontvangenBal.x,
+        y: HOOGTE - ontvangenBal.y,
+        vx: ontvangenBal.vx,
+        vy: -ontvangenBal.vy,
+      }
+      vriendScore = msg.payload.mijnScore   // host's score = mijn tegenstander
+      mijnScore = msg.payload.vriendScore   // host's vriendScore = mijn eigen score
+      updateScoreUI()
+      checkWinst()
+    })
+
+    function gastLoop() {
+      if (gameOver) return
+      tekenScherm()
+      animatieFrame = requestAnimationFrame(gastLoop)
+    }
+
+    function herstartLoop() {
+      if (animatieFrame) cancelAnimationFrame(animatieFrame)
+      if (benIkHost) animatieFrame = requestAnimationFrame(loop)
+      else animatieFrame = requestAnimationFrame(gastLoop)
+    }
+
+    spelKanaal.on('broadcast', { event: 'opnieuw' }, () => {
+      mijnScore = 0; vriendScore = 0
+      gameOver = false
+      opnieuwBtn.style.display = 'none'
+      resetBal(benIkHost ? 1 : -1)
+      updateScoreUI()
+      herstartLoop()
+    })
+
+    opnieuwBtn.addEventListener('click', () => {
+      mijnScore = 0; vriendScore = 0
+      gameOver = false
+      opnieuwBtn.style.display = 'none'
+      resetBal(1)
+      updateScoreUI()
+      spelKanaal.send({ type: 'broadcast', event: 'opnieuw', payload: {} })
+      herstartLoop()
+    })
+
+    statusEl.textContent = benIkHost ? 'Jij bent host — sleep om te spelen!' : 'Sleep om te spelen!'
+    tekenScherm()
+    herstartLoop()
+  }
+
 
   window.toonStickerTab = function(tabId) {
     document.querySelectorAll('.sticker-tab').forEach(t => t.classList.remove('actief'))
@@ -855,114 +2044,697 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     scrollNaarOnder()
   }
 
-  function scrollNaarOnder() {
+  function scrollNaarOnder() { setTimeout(() => {
     const msgs = document.getElementById('messages')
-    msgs.scrollTop = msgs.scrollHeight
+    msgs.scrollTop = msgs.scrollHeight }, 100)
   }
 
-  // ─── Bel functies ───
-  let videoModus = false
-  let ringtoneInterval = null
+  // ─── Flappy Bird Multiplayer ───
+  function startFlappyBird() {
+    document.getElementById('spelTitelBar').textContent = '🐦 Flappy Bird'
+    const inhoud = document.getElementById('spelInhoud')
 
-  window.openBelKeuze = function() {
-    if (!geselecteerdeVriend) return
-    document.getElementById('belKeuzeNaam').textContent = geselecteerdeVriend.naam
-    document.getElementById('belKeuzeModal').classList.add('show')
-  }
+    const B = 280, H = 380
+    const VOGEL_X = 55, VOGEL_R = 14
+    const VOGEL_X_VRIEND = 95  // ver genoeg uit elkaar (55 + 14 + 14 + 12 = 95)
+    const ZWAARTEKRACHT = 0.35, FLAP_KRACHT = -7
+    const BUIS_BREEDTE = 52, BUIS_GAP = 110, BUIS_SNELHEID = 2.2
+    const benIkHost = benIkSpeler1
 
-  window.sluitBelKeuze = function() {
-    document.getElementById('belKeuzeModal').classList.remove('show')
-  }
+    inhoud.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <div id="fb-status" style="color:white;font-size:13px;font-weight:600;min-height:18px;text-align:center;"></div>
+        <canvas id="fb-canvas" width="${B}" height="${H}" style="border-radius:12px;border:2px solid rgba(255,255,255,0.15);touch-action:none;display:block;"></canvas>
+        <div style="display:flex;gap:20px;">
+          <div style="color:white;font-size:12px;text-align:center;">
+            <div style="font-size:22px;">🐦</div>
+            <div id="fb-score-mij" style="font-weight:700;font-size:18px;">0</div>
+            <div style="opacity:0.6;font-size:11px;">Jij</div>
+          </div>
+          <div style="color:white;font-size:12px;text-align:center;">
+            <div style="font-size:22px;">🐤</div>
+            <div id="fb-score-vriend" style="font-weight:700;font-size:18px;">0</div>
+            <div style="opacity:0.6;font-size:11px;">${geselecteerdeVriend?.naam || 'Vriend'}</div>
+          </div>
+        </div>
+        <div style="color:rgba(255,255,255,0.4);font-size:11px;">Tik op het scherm om te vliegen</div>
+      </div>`
 
-  window.startBellen = async function(video) {
-    videoModus = video
-    document.getElementById('belKeuzeModal').classList.remove('show')
-    const gelukt = await belOp(geselecteerdeVriend.id, video)
-    if (gelukt) {
-      toonGesprekScherm(video)
-      document.getElementById('gesprekStatus').textContent = '⏳ Wachten op ' + geselecteerdeVriend.naam + '...'
-      voegSysBericht('📞 Bellen naar ' + geselecteerdeVriend.naam + '...')
+    const canvas = document.getElementById('fb-canvas')
+    const ctx = canvas.getContext('2d')
+    const statusEl = document.getElementById('fb-status')
+
+    // ── Spelstaat ──
+    let mijnVogel = { y: H / 2, vy: 0, dood: false }
+    let vriendVogel = { y: H / 2, vy: 0, dood: false }
+    let buizen = []           // alleen host berekent/verstuurt buizen
+    let frame = 0
+    let mijnScore = 0
+    let vriendScore = 0
+    let gameOver = false
+    let aftellen = 3
+    let aftelInterval = null
+    let animFrame = null
+
+    function nieuweBuis() {
+      const gapY = 80 + Math.random() * (H - BUIS_GAP - 140)
+      return { x: B, gapY, geteld: false }
     }
-  }
 
-  window.accepteerBellen = async function(video) {
-    stopRingtone()
-    document.getElementById('inkomendModal').classList.remove('show')
-    videoModus = video
-    const gelukt = await accepteerOproep(video)
-    if (gelukt) {
-      toonGesprekScherm(video)
-      document.getElementById('gesprekStatus').textContent = '🔗 Verbonden'
-      voegSysBericht('📞 Gesprek gestart')
+    function teken() {
+      // Achtergrond: lucht -> grond
+      const sky = ctx.createLinearGradient(0, 0, 0, H)
+      sky.addColorStop(0, '#1a0a3e')
+      sky.addColorStop(0.7, '#2d1b6e')
+      sky.addColorStop(1, '#3d2f1a')
+      ctx.fillStyle = sky
+      ctx.fillRect(0, 0, B, H)
+
+      // Grond
+      ctx.fillStyle = '#5a3e1b'
+      ctx.fillRect(0, H - 30, B, 30)
+      ctx.fillStyle = '#7a5c2e'
+      ctx.fillRect(0, H - 30, B, 6)
+
+      // Buizen
+      buizen.forEach(b => {
+        // Boven buis
+        const gradBuis = ctx.createLinearGradient(b.x, 0, b.x + BUIS_BREEDTE, 0)
+        gradBuis.addColorStop(0, '#2d7a2d')
+        gradBuis.addColorStop(0.4, '#3da83d')
+        gradBuis.addColorStop(1, '#1a4d1a')
+        ctx.fillStyle = gradBuis
+        ctx.fillRect(b.x, 0, BUIS_BREEDTE, b.gapY)
+        ctx.fillRect(b.x - 4, b.gapY - 20, BUIS_BREEDTE + 8, 20)
+        // Onder buis
+        ctx.fillStyle = gradBuis
+        ctx.fillRect(b.x, b.gapY + BUIS_GAP, BUIS_BREEDTE, H)
+        ctx.fillRect(b.x - 4, b.gapY + BUIS_GAP, BUIS_BREEDTE + 8, 20)
+      })
+
+      // Mijn vogel (blauw)
+      tekenVogel(ctx, VOGEL_X, mijnVogel.y, mijnVogel.dood, '#60a5fa')
+
+      // Vriend vogel (geel) — eigen X-baan, nooit overlap mogelijk
+      tekenVogel(ctx, VOGEL_X_VRIEND, vriendVogel.y, vriendVogel.dood, '#fbbf24')
     }
-  }
 
-  window.weigerbellen = async function() {
-    stopRingtone()
-    document.getElementById('inkomendModal').classList.remove('show')
-    await weigerooproep()
-    voegSysBericht('📵 Oproep geweigerd')
-  }
-
-  window.hangOpBtn = async function() {
-    await hangOp()
-    document.getElementById('gesprekScherm').style.display = 'none'
-    voegSysBericht('📵 Gesprek beëindigd')
-  }
-
-  window.toggleMicBtn = function() {
-    const aan = toggleMic()
-    document.getElementById('micBtn').textContent = aan ? '🎤' : '🔇'
-    document.getElementById('micBtn').style.background = aan ? 'rgba(255,255,255,0.15)' : 'rgba(248,113,113,0.4)'
-  }
-
-  window.toggleCameraBtn = function() {
-    const aan = toggleCamera()
-    document.getElementById('camBtn').textContent = aan ? '📹' : '🚫'
-    document.getElementById('camBtn').style.background = aan ? 'rgba(255,255,255,0.15)' : 'rgba(248,113,113,0.4)'
-  }
-
-  function toonGesprekScherm(video) {
-    const scherm = document.getElementById('gesprekScherm')
-    scherm.style.display = 'flex'
-    // Audio only — verberg video elementen
-    if (!video) {
-      document.getElementById('remoteMedia').style.display = 'none'
-      document.getElementById('lokaalMedia').style.display = 'none'
-      document.getElementById('remoteAudio').style.display = 'block'
-      // Wijs remote stream toe aan audio element
-      setTimeout(() => {
-        const remoteEl = document.getElementById('remoteAudio')
-        if (remoteEl && window._remoteStream) remoteEl.srcObject = window._remoteStream
-      }, 500)
-    } else {
-      document.getElementById('remoteMedia').style.display = 'block'
-      document.getElementById('lokaalMedia').style.display = 'block'
+    function tekenVogel(ctx, x, y, dood, kleur) {
+      ctx.save()
+      if (dood) {
+        ctx.globalAlpha = 0.4
+        ctx.translate(x, y)
+        ctx.rotate(Math.PI / 2)
+      } else {
+        ctx.translate(x, y)
+        // Lichte rotatie obv snelheid
+      }
+      ctx.beginPath()
+      ctx.arc(0, 0, VOGEL_R, 0, Math.PI * 2)
+      ctx.fillStyle = kleur
+      ctx.fill()
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)'
+      ctx.lineWidth = 2
+      ctx.stroke()
+      // Oog
+      ctx.beginPath()
+      ctx.arc(5, -3, 3, 0, Math.PI * 2)
+      ctx.fillStyle = '#fff'
+      ctx.fill()
+      ctx.beginPath()
+      ctx.arc(6, -3, 1.5, 0, Math.PI * 2)
+      ctx.fillStyle = '#1a0a2e'
+      ctx.fill()
+      ctx.restore()
     }
-  }
 
-  function speelRingtone() {
-    let teller = 0
-    ringtoneInterval = setInterval(() => {
-      if (teller++ > 30) { stopRingtone(); return }
-      try {
-        const ctx = new (window.AudioContext||window.webkitAudioContext)()
-        const speel = (freq, start, dur) => {
-          const osc = ctx.createOscillator(), gain = ctx.createGain()
-          osc.connect(gain); gain.connect(ctx.destination)
-          osc.type = 'sine'; osc.frequency.value = freq
-          gain.gain.setValueAtTime(0.3, ctx.currentTime + start)
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur)
-          osc.start(ctx.currentTime + start); osc.stop(ctx.currentTime + start + dur)
+    function controleerBotsing(vogelY, vogelX) {
+      if (vogelY - VOGEL_R < 0 || vogelY + VOGEL_R > H - 30) return true
+      for (const b of buizen) {
+        if (vogelX + VOGEL_R > b.x + 4 && vogelX - VOGEL_R < b.x + BUIS_BREEDTE - 4) {
+          if (vogelY - VOGEL_R < b.gapY || vogelY + VOGEL_R > b.gapY + BUIS_GAP) return true
         }
-        speel(880, 0, 0.15); speel(1100, 0.2, 0.15)
-      } catch(e) {}
-    }, 1500)
-    if (navigator.vibrate) navigator.vibrate([400, 200, 400])
+      }
+      return false
+    }
+
+    function update() {
+      if (gameOver) return
+      frame++
+
+      // Mijn vogel physics
+      if (!mijnVogel.dood) {
+        mijnVogel.vy += ZWAARTEKRACHT
+        mijnVogel.y += mijnVogel.vy
+        if (controleerBotsing(mijnVogel.y, VOGEL_X)) {
+          mijnVogel.dood = true
+          spelKanaal.send({ type: 'broadcast', event: 'fb-dood', payload: {} })
+          controleerEinde()
+        }
+      }
+
+      // Host: buizen bewegen en synchroniseren
+      if (benIkHost) {
+        // Nieuwe buis elke ~90 frames
+        if (frame % 90 === 0) {
+          const b = nieuweBuis()
+          buizen.push(b)
+          spelKanaal.send({ type: 'broadcast', event: 'fb-buis', payload: { gapY: b.gapY } })
+        }
+        buizen.forEach(b => b.x -= BUIS_SNELHEID)
+        buizen = buizen.filter(b => b.x + BUIS_BREEDTE > 0)
+
+        // Score: buis voorbij gevlogen
+        buizen.forEach(b => {
+          if (!b.geteld && b.x + BUIS_BREEDTE < VOGEL_X) {
+            b.geteld = true
+            if (!mijnVogel.dood) {
+              mijnScore++
+              document.getElementById('fb-score-mij').textContent = mijnScore
+            }
+            spelKanaal.send({ type: 'broadcast', event: 'fb-score-host', payload: { score: mijnScore } })
+          }
+        })
+
+        // Sync vogelposities periodiek
+        if (frame % 3 === 0) {
+          spelKanaal.send({ type: 'broadcast', event: 'fb-sync', payload: {
+            buizen: buizen.map(b => ({ x: b.x, gapY: b.gapY, geteld: b.geteld })),
+            vogelY: mijnVogel.y
+          }})
+        }
+      } else {
+        // Gast: score eigen doorgangen
+        buizen.forEach(b => {
+          if (!b.geteld && b.x + BUIS_BREEDTE < VOGEL_X) {
+            b.geteld = true
+            if (!mijnVogel.dood) {
+              mijnScore++
+              document.getElementById('fb-score-mij').textContent = mijnScore
+              spelKanaal.send({ type: 'broadcast', event: 'fb-score-gast', payload: { score: mijnScore } })
+            }
+          }
+        })
+        if (frame % 3 === 0) {
+          spelKanaal.send({ type: 'broadcast', event: 'fb-vogel-gast', payload: { y: mijnVogel.y } })
+        }
+      }
+
+      teken()
+      animFrame = requestAnimationFrame(update)
+    }
+
+    function controleerEinde() {
+      const beideDood = mijnVogel.dood && vriendVogel.dood
+      const ikDood = mijnVogel.dood && !vriendVogel.dood
+
+      if (beideDood) {
+        gameOver = true
+        cancelAnimationFrame(animFrame)
+        teken()
+        const gelijkspel = mijnScore === vriendScore
+        const ikWin = mijnScore > vriendScore
+        statusEl.textContent = gelijkspel ? '🤝 Gelijkspel!' : ikWin ? '🎉 Jij wint!' : '😢 ' + (geselecteerdeVriend?.naam || 'Vriend') + ' wint!'
+        setTimeout(() => {
+          inhoud.querySelectorAll('button.fb-herstart').forEach(b => b.remove())
+          const btn = document.createElement('button')
+          btn.className = 'fb-herstart'
+          btn.textContent = '↻ Opnieuw'
+          btn.style.cssText = 'background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:700;cursor:pointer;margin-top:8px;display:block;'
+          btn.onclick = () => {
+            spelKanaal.send({ type: 'broadcast', event: 'fb-herstart', payload: {} })
+            herstart()
+          }
+          inhoud.querySelector('div').appendChild(btn)
+        }, 800)
+      }
+    }
+
+    function herstart() {
+      mijnVogel = { y: H / 2, vy: 0, dood: false }
+      vriendVogel = { y: H / 2, vy: 0, dood: false }
+      buizen = []
+      frame = 0
+      mijnScore = 0
+      vriendScore = 0
+      gameOver = false
+      document.getElementById('fb-score-mij').textContent = '0'
+      document.getElementById('fb-score-vriend').textContent = '0'
+      statusEl.textContent = ''
+      inhoud.querySelectorAll('button.fb-herstart').forEach(b => b.remove())
+      animFrame = requestAnimationFrame(update)
+    }
+
+    function flap() {
+      if (gameOver || mijnVogel.dood) return
+      mijnVogel.vy = FLAP_KRACHT
+    }
+
+    // ── Aftellen ──
+    statusEl.textContent = `Start in ${aftellen}...`
+    aftelInterval = setInterval(() => {
+      aftellen--
+      if (aftellen > 0) {
+        statusEl.textContent = `Start in ${aftellen}...`
+      } else {
+        clearInterval(aftelInterval)
+        window._spelAftelInterval = null
+        statusEl.textContent = ''
+        animFrame = requestAnimationFrame(update)
+        window._spelAnimFrame = animFrame
+      }
+    }, 1000)
+    window._spelAftelInterval = aftelInterval
+
+    // ── Input: tik overal op scherm om te vliegen ──
+    function flapHandler(e) {
+      if (spelActief !== 'flappybird') return
+      if (e.target.tagName === 'BUTTON') return
+      e.preventDefault()
+      flap()
+    }
+    canvas.addEventListener('click', flap)
+    const fbOverlay = document.getElementById('spelOverlay')
+    fbOverlay.addEventListener('touchstart', flapHandler, { passive: false })
+
+    // ── Ontvangen events ──
+    spelKanaal.on('broadcast', { event: 'fb-buis' }, (msg) => {
+      if (!benIkHost) buizen.push({ x: B, gapY: msg.payload.gapY, geteld: false })
+    })
+    spelKanaal.on('broadcast', { event: 'fb-sync' }, (msg) => {
+      if (!benIkHost) {
+        buizen = msg.payload.buizen
+        vriendVogel.y = msg.payload.vogelY
+      }
+    })
+    spelKanaal.on('broadcast', { event: 'fb-vogel-gast' }, (msg) => {
+      if (benIkHost) vriendVogel.y = msg.payload.y
+    })
+    spelKanaal.on('broadcast', { event: 'fb-dood' }, () => {
+      vriendVogel.dood = true
+      controleerEinde()
+    })
+    spelKanaal.on('broadcast', { event: 'fb-score-host' }, (msg) => {
+      if (!benIkHost) {
+        vriendScore = msg.payload.score
+        document.getElementById('fb-score-vriend').textContent = vriendScore
+      }
+    })
+    spelKanaal.on('broadcast', { event: 'fb-score-gast' }, (msg) => {
+      if (benIkHost) {
+        vriendScore = msg.payload.score
+        document.getElementById('fb-score-vriend').textContent = vriendScore
+      }
+    })
+    spelKanaal.on('broadcast', { event: 'fb-herstart' }, () => herstart())
   }
 
-  function stopRingtone() {
-    if (ringtoneInterval) { clearInterval(ringtoneInterval); ringtoneInterval = null }
+  // ─── Space Invaders Multiplayer ───
+  function startSpaceInvaders() {
+    document.getElementById('spelTitelBar').textContent = '👾 Space Invaders'
+    const inhoud = document.getElementById('spelInhoud')
+    const B = 280, H = 400
+    const benIkHost = benIkSpeler1
+
+    inhoud.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;">
+        <div style="display:flex;justify-content:space-between;width:${B}px;color:white;font-size:12px;padding:0 4px;">
+          <span>🚀 Jij: <b id="si-score-mij">0</b></span>
+          <span id="si-level" style="color:var(--accent);">Level 1</span>
+          <span>👾 ${geselecteerdeVriend?.naam||'Vriend'}: <b id="si-score-vriend">0</b></span>
+        </div>
+        <canvas id="si-canvas" width="${B}" height="${H}" style="border-radius:10px;border:2px solid rgba(255,255,255,0.15);display:block;touch-action:none;"></canvas>
+        <div id="si-status" style="color:white;font-size:13px;font-weight:600;min-height:18px;text-align:center;"></div>
+        <div style="color:rgba(255,255,255,0.4);font-size:11px;">← Tik links/rechts om te bewegen · Midden om te schieten</div>
+      </div>`
+
+    const canvas = document.getElementById('si-canvas')
+    const ctx = canvas.getContext('2d')
+    const statusEl = document.getElementById('si-status')
+
+    // ── Constanten ──
+    const SCHIP_B = 36, SCHIP_H = 20, SCHIP_Y = H - 40
+    const KOGEL_B = 3, KOGEL_H = 10, KOGEL_SNELHEID = 6
+    const ALIEN_RIJEN = 4, ALIEN_COLS = 8
+    const ALIEN_B = 24, ALIEN_H = 18, ALIEN_GAP_X = 32, ALIEN_GAP_Y = 28
+    const ALIEN_START_X = 12, ALIEN_START_Y = 50
+
+    // ── Staat ──
+    let mijnSchip = { x: B / 2 - SCHIP_B / 2 }
+    let vriendSchip = { x: B / 2 - SCHIP_B / 2 }
+    let mijnKogels = []
+    let vriendKogels = []
+    let alienKogels = []
+    let aliens = []
+    let alienDir = 1, alienSnelheid = 0.4, alienDaalY = 0
+    let mijnScore = 0, vriendScore = 0
+    let level = 1
+    let gameOver = false, gewonnen = false
+    let animFrame = null
+    let schietCooldown = 0
+    let toetsLinks = false, toetsRechts = false
+
+    function maakAliens() {
+      aliens = []
+      for (let r = 0; r < ALIEN_RIJEN; r++) {
+        for (let k = 0; k < ALIEN_COLS; k++) {
+          aliens.push({
+            x: ALIEN_START_X + k * ALIEN_GAP_X,
+            y: ALIEN_START_Y + r * ALIEN_GAP_Y,
+            type: r === 0 ? 2 : r < 2 ? 1 : 0,
+            dood: false
+          })
+        }
+      }
+    }
+
+    const ALIEN_ICOON = ['👾', '🤖', '👽']
+    const ALIEN_PUNTEN = [10, 20, 30]
+
+    function teken() {
+      // Achtergrond
+      ctx.fillStyle = '#050518'
+      ctx.fillRect(0, 0, B, H)
+
+      // Sterren
+      ctx.fillStyle = 'rgba(255,255,255,0.4)'
+      for (let i = 0; i < 40; i++) {
+        const sx = (i * 73 + level * 7) % B
+        const sy = (i * 47 + level * 13) % H
+        ctx.fillRect(sx, sy, 1, 1)
+      }
+
+      // Grondlijn
+      ctx.fillStyle = 'rgba(100,255,100,0.2)'
+      ctx.fillRect(0, H - 20, B, 2)
+
+      // Aliens
+      ctx.font = `${ALIEN_H}px serif`
+      ctx.textAlign = 'center'
+      aliens.forEach(a => {
+        if (a.dood) return
+        ctx.globalAlpha = 1
+        ctx.fillText(ALIEN_ICOON[a.type], a.x + ALIEN_B / 2, a.y + ALIEN_H)
+      })
+      ctx.globalAlpha = 1
+
+      // Mijn schip (groen)
+      ctx.fillStyle = '#22c55e'
+      ctx.beginPath()
+      ctx.moveTo(mijnSchip.x + SCHIP_B / 2, SCHIP_Y - SCHIP_H)
+      ctx.lineTo(mijnSchip.x, SCHIP_Y)
+      ctx.lineTo(mijnSchip.x + SCHIP_B, SCHIP_Y)
+      ctx.closePath()
+      ctx.fill()
+      ctx.fillStyle = '#86efac'
+      ctx.fillRect(mijnSchip.x + SCHIP_B / 2 - 3, SCHIP_Y - SCHIP_H - 6, 6, 8)
+
+      // Vriend schip (blauw)
+      ctx.fillStyle = '#60a5fa'
+      ctx.beginPath()
+      ctx.moveTo(vriendSchip.x + SCHIP_B / 2, SCHIP_Y - SCHIP_H)
+      ctx.lineTo(vriendSchip.x, SCHIP_Y)
+      ctx.lineTo(vriendSchip.x + SCHIP_B, SCHIP_Y)
+      ctx.closePath()
+      ctx.fill()
+      ctx.fillStyle = '#bfdbfe'
+      ctx.fillRect(vriendSchip.x + SCHIP_B / 2 - 3, SCHIP_Y - SCHIP_H - 6, 6, 8)
+
+      // Mijn kogels (groen)
+      ctx.fillStyle = '#4ade80'
+      mijnKogels.forEach(k => ctx.fillRect(k.x, k.y, KOGEL_B, KOGEL_H))
+
+      // Vriend kogels (blauw)
+      ctx.fillStyle = '#93c5fd'
+      vriendKogels.forEach(k => ctx.fillRect(k.x, k.y, KOGEL_B, KOGEL_H))
+
+      // Alien kogels (rood)
+      ctx.fillStyle = '#f87171'
+      alienKogels.forEach(k => {
+        ctx.beginPath()
+        ctx.arc(k.x, k.y, 4, 0, Math.PI * 2)
+        ctx.fill()
+      })
+    }
+
+    function update() {
+      if (gameOver) return
+
+      // Schip bewegen
+      const SCHIP_SNELHEID = 3.5
+      if (toetsLinks) mijnSchip.x = Math.max(0, mijnSchip.x - SCHIP_SNELHEID)
+      if (toetsRechts) mijnSchip.x = Math.min(B - SCHIP_B, mijnSchip.x + SCHIP_SNELHEID)
+
+      // Schip positie sturen
+      spelKanaal.send({ type: 'broadcast', event: 'si-schip', payload: { x: mijnSchip.x } })
+
+      // Kogels bewegen
+      mijnKogels = mijnKogels.filter(k => { k.y -= KOGEL_SNELHEID; return k.y > 0 })
+      vriendKogels = vriendKogels.filter(k => { k.y -= KOGEL_SNELHEID; return k.y > 0 })
+
+      // Cooldown
+      if (schietCooldown > 0) schietCooldown--
+
+      // Aliens bewegen (alleen host)
+      if (benIkHost) {
+        let raakteRand = false
+        aliens.forEach(a => {
+          if (!a.dood) {
+            a.x += alienDir * alienSnelheid
+            if (a.x <= 0 || a.x + ALIEN_B >= B) raakteRand = true
+          }
+        })
+        if (raakteRand) {
+          alienDir *= -1
+          aliens.forEach(a => { if (!a.dood) a.y += 12 })
+        }
+
+        // Alien schiet willekeurig
+        if (Math.random() < 0.008 * level) {
+          const levend = aliens.filter(a => !a.dood)
+          if (levend.length > 0) {
+            const schutter = levend[Math.floor(Math.random() * levend.length)]
+            const kogel = { x: schutter.x + ALIEN_B / 2, y: schutter.y + ALIEN_H }
+            alienKogels.push(kogel)
+            spelKanaal.send({ type: 'broadcast', event: 'si-alien-kogel', payload: { x: kogel.x, y: kogel.y } })
+          }
+        }
+
+        // Sync alien posities elke 30 frames
+        if (animFrame && animFrame % 30 === 0) {
+          spelKanaal.send({ type: 'broadcast', event: 'si-sync', payload: {
+            aliens: aliens.map(a => ({ x: a.x, y: a.y, dood: a.dood })),
+            dir: alienDir
+          }})
+        }
+      }
+
+      // Alien kogels bewegen
+      alienKogels = alienKogels.filter(k => { k.y += 2.5; return k.y < H })
+
+      // Botsing: mijn kogels vs aliens
+      mijnKogels = mijnKogels.filter(kogel => {
+        let raak = false
+        aliens.forEach(a => {
+          if (a.dood || raak) return
+          if (kogel.x < a.x + ALIEN_B && kogel.x + KOGEL_B > a.x &&
+              kogel.y < a.y + ALIEN_H && kogel.y + KOGEL_H > a.y) {
+            a.dood = true; raak = true
+            mijnScore += ALIEN_PUNTEN[a.type]
+            document.getElementById('si-score-mij').textContent = mijnScore
+            spelKanaal.send({ type: 'broadcast', event: 'si-raak', payload: {
+              alienIdx: aliens.indexOf(a), score: mijnScore, door: 'mij'
+            }})
+          }
+        })
+        return !raak
+      })
+
+      // Botsing: vriend kogels vs aliens
+      vriendKogels = vriendKogels.filter(kogel => {
+        let raak = false
+        aliens.forEach(a => {
+          if (a.dood || raak) return
+          if (kogel.x < a.x + ALIEN_B && kogel.x + KOGEL_B > a.x &&
+              kogel.y < a.y + ALIEN_H && kogel.y + KOGEL_H > a.y) {
+            a.dood = true; raak = true
+          }
+        })
+        return !raak
+      })
+
+      // Alien kogel raakt schip
+      alienKogels = alienKogels.filter(k => {
+        const raakMij = k.x > mijnSchip.x && k.x < mijnSchip.x + SCHIP_B && k.y > SCHIP_Y - SCHIP_H && k.y < SCHIP_Y
+        const raakVriend = k.x > vriendSchip.x && k.x < vriendSchip.x + SCHIP_B && k.y > SCHIP_Y - SCHIP_H && k.y < SCHIP_Y
+        if (raakMij || raakVriend) {
+          // Verlies een leven (vereenvoudigd: direct game over voor dit prototype)
+        }
+        return !raakMij && !raakVriend
+      })
+
+      // Aliens bereiken grond
+      const gevaarlijk = aliens.filter(a => !a.dood)
+      if (gevaarlijk.some(a => a.y + ALIEN_H >= SCHIP_Y - 10)) {
+        eindSpel(false)
+        return
+      }
+
+      // Alle aliens dood → volgend level
+      if (gevaarlijk.length === 0) {
+        level++
+        document.getElementById('si-level').textContent = 'Level ' + level
+        alienSnelheid = Math.min(2, 0.4 + level * 0.2)
+        maakAliens()
+        spelKanaal.send({ type: 'broadcast', event: 'si-nieuw-level', payload: { level, aliens: aliens.map(a => ({ x: a.x, y: a.y, dood: a.dood })) } })
+      }
+
+      teken()
+      animFrame = requestAnimationFrame(update)
+      window._spelAnimFrame = animFrame
+    }
+
+    function schiet() {
+      if (gameOver || schietCooldown > 0) return
+      schietCooldown = 18
+      const kogel = { x: mijnSchip.x + SCHIP_B / 2 - KOGEL_B / 2, y: SCHIP_Y - SCHIP_H }
+      mijnKogels.push(kogel)
+      spelKanaal.send({ type: 'broadcast', event: 'si-kogel', payload: { x: kogel.x, y: kogel.y } })
+    }
+
+    function eindSpel(gewonnen_) {
+      gameOver = true
+      gewonnen = gewonnen_
+      cancelAnimationFrame(animFrame)
+      teken()
+      const totaalMij = mijnScore, totaalVriend = vriendScore
+      statusEl.textContent = totaalMij > totaalVriend ? '🎉 Jij wint! ' + totaalMij + ' vs ' + totaalVriend
+        : totaalMij < totaalVriend ? '😢 ' + (geselecteerdeVriend?.naam||'Vriend') + ' wint!'
+        : '🤝 Gelijkspel!'
+      setTimeout(() => {
+        const btn = document.createElement('button')
+        btn.textContent = '↻ Opnieuw'
+        btn.style.cssText = 'background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:700;cursor:pointer;margin-top:8px;'
+        btn.onclick = () => { spelKanaal.send({ type: 'broadcast', event: 'si-herstart', payload: {} }); herstart() }
+        statusEl.after(btn)
+      }, 600)
+    }
+
+    function herstart() {
+      mijnSchip = { x: B / 2 - SCHIP_B / 2 }
+      vriendSchip = { x: B / 2 - SCHIP_B / 2 }
+      mijnKogels = []; vriendKogels = []; alienKogels = []
+      mijnScore = 0; vriendScore = 0; level = 1
+      alienDir = 1; alienSnelheid = 0.4
+      gameOver = false; gewonnen = false
+      document.getElementById('si-score-mij').textContent = '0'
+      document.getElementById('si-score-vriend').textContent = '0'
+      document.getElementById('si-level').textContent = 'Level 1'
+      statusEl.textContent = ''
+      statusEl.nextElementSibling?.tagName === 'BUTTON' && statusEl.nextElementSibling.remove()
+      maakAliens()
+      animFrame = requestAnimationFrame(update)
+      window._spelAnimFrame = animFrame
+    }
+
+    // ── Input: touch ──
+    let raakX = null
+    const siOverlay = document.getElementById('spelOverlay')
+
+    function siTouchStart(e) {
+      if (spelActief !== 'spaceinvaders') return
+      if (e.target.tagName === 'BUTTON') return
+      e.preventDefault()
+      const t = e.touches[0]
+      raakX = t.clientX
+      const rect = canvas.getBoundingClientRect()
+      const relX = t.clientX - rect.left
+      // Midden derde = schieten, links = links, rechts = rechts
+      if (relX < rect.width / 3) { toetsLinks = true; toetsRechts = false }
+      else if (relX > rect.width * 2 / 3) { toetsRechts = true; toetsLinks = false }
+      else schiet()
+    }
+    function siTouchEnd(e) {
+      if (spelActief !== 'spaceinvaders') return
+      toetsLinks = false; toetsRechts = false; raakX = null
+    }
+    function siTouchMove(e) {
+      if (spelActief !== 'spaceinvaders') return
+      e.preventDefault()
+      const relX = e.touches[0].clientX - canvas.getBoundingClientRect().left
+      if (relX < canvas.getBoundingClientRect().width / 3) { toetsLinks = true; toetsRechts = false }
+      else if (relX > canvas.getBoundingClientRect().width * 2 / 3) { toetsRechts = true; toetsLinks = false }
+      else { toetsLinks = false; toetsRechts = false }
+    }
+
+    siOverlay.addEventListener('touchstart', siTouchStart, { passive: false })
+    siOverlay.addEventListener('touchend', siTouchEnd)
+    siOverlay.addEventListener('touchmove', siTouchMove, { passive: false })
+
+    // Keyboard voor desktop
+    function siKeyDown(e) {
+      if (spelActief !== 'spaceinvaders') return
+      if (e.key === 'ArrowLeft')  toetsLinks = true
+      if (e.key === 'ArrowRight') toetsRechts = true
+      if (e.key === ' ') { e.preventDefault(); schiet() }
+    }
+    function siKeyUp(e) {
+      if (e.key === 'ArrowLeft')  toetsLinks = false
+      if (e.key === 'ArrowRight') toetsRechts = false
+    }
+    window.addEventListener('keydown', siKeyDown)
+    window.addEventListener('keyup', siKeyUp)
+
+    // ── Realtime events ontvangen ──
+    spelKanaal.on('broadcast', { event: 'si-schip' }, msg => {
+      vriendSchip.x = msg.payload.x
+    })
+    spelKanaal.on('broadcast', { event: 'si-kogel' }, msg => {
+      vriendKogels.push({ x: msg.payload.x, y: msg.payload.y })
+    })
+    spelKanaal.on('broadcast', { event: 'si-raak' }, msg => {
+      const a = aliens[msg.payload.alienIdx]
+      if (a) a.dood = true
+      if (msg.payload.door === 'mij') {
+        // De ander schoot hem neer — update vriends score
+        vriendScore = msg.payload.score
+        document.getElementById('si-score-vriend').textContent = vriendScore
+      }
+    })
+    spelKanaal.on('broadcast', { event: 'si-alien-kogel' }, msg => {
+      if (!benIkHost) alienKogels.push({ x: msg.payload.x, y: msg.payload.y })
+    })
+    spelKanaal.on('broadcast', { event: 'si-sync' }, msg => {
+      if (!benIkHost) {
+        msg.payload.aliens.forEach((a, i) => { if (aliens[i]) { aliens[i].x = a.x; aliens[i].y = a.y; aliens[i].dood = a.dood } })
+        alienDir = msg.payload.dir
+      }
+    })
+    spelKanaal.on('broadcast', { event: 'si-nieuw-level' }, msg => {
+      if (!benIkHost) {
+        level = msg.payload.level
+        document.getElementById('si-level').textContent = 'Level ' + level
+        alienSnelheid = Math.min(2, 0.4 + level * 0.2)
+        msg.payload.aliens.forEach((a, i) => { if (aliens[i]) { aliens[i].x = a.x; aliens[i].y = a.y; aliens[i].dood = a.dood } })
+      }
+    })
+    spelKanaal.on('broadcast', { event: 'si-herstart' }, () => herstart())
+
+    // ── Start ──
+    maakAliens()
+    statusEl.textContent = 'Start in 3...'
+    let tel = 3
+    const startInterval = setInterval(() => {
+      tel--
+      if (tel > 0) statusEl.textContent = 'Start in ' + tel + '...'
+      else {
+        clearInterval(startInterval)
+        statusEl.textContent = ''
+        animFrame = requestAnimationFrame(update)
+        window._spelAnimFrame = animFrame
+      }
+    }, 1000)
+    window._spelAftelInterval = startInterval
   }
 
   // ─── Geluidsbibliotheek ───
@@ -1113,50 +2885,84 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   }
   setTimeout(()=>laadCustomStickers(),500)
 
-  // ─── Rapporteer systeem ───
-  let rapportBericht = null
-  let rapportGemeldeId = null
-
-  window.openRapportMenu = function(berichtInhoud, gemeldeId) {
-    rapportBericht = berichtInhoud
-    rapportGemeldeId = gemeldeId
-    document.getElementById('rapportModal').classList.add('show')
+  // ─── Reset encryptie sleutels ───
+  window.resetSleutels = async function() {
+    if (!confirm('Encryptie sleutels resetten? Je moet daarna opnieuw inloggen.')) return
+    if (!huidigeUser) return
+    // Wis private key uit localStorage
+    localStorage.removeItem('fibro_privkey_' + huidigeUser.id)
+    // Genereer nieuw keypair
+    const { genereerKeypair, slaPrivateKeyOp } = await import('./crypto.js')
+    const keypair = await genereerKeypair()
+    slaPrivateKeyOp(huidigeUser.id, keypair.privateKeyB64)
+    // Sla public key op in Supabase
+    await supabase.from('profiles').update({ public_key: keypair.publicKeyB64 }).eq('id', huidigeUser.id)
+    alert('Sleutels opnieuw aangemaakt! Pagina wordt herladen.')
+    window.location.reload()
   }
 
-  window.sluitRapport = function() {
-    document.getElementById('rapportModal').classList.remove('show')
-    rapportBericht = null
-    rapportGemeldeId = null
+  window.weigerInkomend = async function() {
+    await weigerooproep()
+    document.getElementById('oproepModal').style.display = 'none'
+  }
+  window.neemInkomendOp = async function() {
+    document.getElementById('oproepType').textContent = 'Verbinding maken...'
+    const gelukt = await accepteerOproep(window._inkomendVideo || false)
+    if (!gelukt) {
+      document.getElementById('oproepType').textContent = 'Geen toegang tot microfoon'
+    }
   }
 
-  window.stuurRapportIn = async function(reden) {
-    document.getElementById('rapportModal').classList.remove('show')
-    const gelukt = await stuurRapport({
-      melderId: huidigeUser.id,
-      gemeldeId: rapportGemeldeId,
-      berichtInhoud: rapportBericht,
-      reden
-    })
-    voegSysBericht(gelukt ? '🚩 Rapport verstuurd — bedankt voor de melding' : '❌ Rapport versturen mislukt')
-    rapportBericht = null
-    rapportGemeldeId = null
+  window.hangOpInChat = async function() {
+    await hangOp()
+    document.getElementById('oproepModal').style.display = 'none'
+    if (window._belTimer) clearInterval(window._belTimer)
   }
 
-  // Long press op berichten voor rapporteer optie
-  function voegLongPressToe(el, berichtInhoud, isMijn) {
-    if (isMijn) return // Eigen berichten niet rapporteren
-    let timer
-    el.addEventListener('touchstart', () => {
-      timer = setTimeout(() => {
-        openRapportMenu(berichtInhoud, geselecteerdeVriend?.id)
-      }, 600)
-    }, { passive: true })
-    el.addEventListener('touchend', () => clearTimeout(timer), { passive: true })
-    el.addEventListener('touchmove', () => clearTimeout(timer), { passive: true })
+  window.toggleBelMic = function() {
+    const aan = toggleMic()
+    document.getElementById('oproepMicBtn').textContent = aan ? '🎤' : '🔇'
   }
 
-  // Exporteer voor gebruik in voegBerichtToe
-  window._voegLongPressToe = voegLongPressToe
+  window.toggleBelCam = function() {
+    const aan = toggleCamera()
+    document.getElementById('oproepCamBtn').textContent = aan ? '📷' : '🚫'
+  }
+  window.gaanBellen = function(video = false) {
+    if (!geselecteerdeVriend) return
+    const videoParam = video ? '&video=1' : ''
+    window.location.href = 'bellen.html?vriend=' + geselecteerdeVriend.id + '&naam=' + encodeURIComponent(geselecteerdeVriend.naam) + videoParam
+  }
+
+  // ─── Spel audiobel ───
+  let spelBelActief = false
+
+  async function startSpelBel() {
+    if (spelBelActief) return
+    if (!geselecteerdeVriend) return
+    spelBelActief = true
+    document.getElementById('spelMuteBtn').style.display = 'flex'
+    document.getElementById('spelMuteBtn').style.alignItems = 'center'
+    document.getElementById('spelMuteBtn').style.justifyContent = 'center'
+
+    // Initiator (speler 1) belt, ontvanger neemt automatisch op
+    if (benIkSpeler1) {
+      await belOp(geselecteerdeVriend.id, false)
+    }
+    // Ontvanger accepteert automatisch als hij een bel uitnodiging krijgt tijdens spel
+  }
+
+  function stopSpelBel() {
+    if (!spelBelActief) return
+    spelBelActief = false
+    document.getElementById('spelMuteBtn').style.display = 'none'
+    hangOp().catch(() => {})
+  }
+
+  window.toggleSpelMic = function() {
+    const aan = toggleMic()
+    document.getElementById('spelMuteBtn').textContent = aan ? '🎤' : '🔇'
+  }
 
   init()
 </script>

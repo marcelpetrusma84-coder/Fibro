@@ -538,7 +538,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
           <div class="vriend-username">@${vriend.username}</div>
         </div>
         <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-          <button onclick="event.stopPropagation();window.location.href='bellen.html?vriend=${vriend.id}&naam=${encodeURIComponent(vriend.display_name||vriend.username)}'" style="background:#22c55e;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">📞</button>
+          <button onclick="event.stopPropagation();openChat('${vriend.id}','${(vriend.display_name||vriend.username).replace(/'/g,'')}','${vriend.avatar_url||''}','${vriend.public_key||''}');setTimeout(()=>gaanBellen(false),400)" style="background:#22c55e;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">📞</button>
           <span style="font-size:12px;color:${vriend.public_key ? '#22c55e' : '#f87171'}">${vriend.public_key ? '🔒' : '🔓'}</span>
         </div>
       </div>

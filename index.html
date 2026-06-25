@@ -1,594 +1,1288 @@
 <!DOCTYPE html>
-<html lang="nl" style="background:#1a0a2e;">
+<html lang="nl" style="background:#1a0a2e">
+<script>
+  const f = localStorage.getItem('fibro_lettertype')
+  if (f) document.write("<style>*{font-family:" + f + " !important}</style>")
+</script>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Fibro</title>
-<link rel="apple-touch-icon" href="/icon-192.png">
-<link rel="manifest" href="/manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Fibro">
-<script>
-try {
-  const f = localStorage.getItem("fibro_font")
-  if (f) document.write("<style>*{font-family:" + f + " !important}</style>")
-} catch(e) {}
-</script>
-<meta name="theme-color" content="#c084fc">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400;500&family=Raleway:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:wght@300;400;700&family=Bebas+Neue&family=Oswald:wght@300;400;500&family=Pacifico&family=Dancing+Script:wght@400;600&family=Great+Vibes&family=Space+Mono:wght@400;700&family=Courier+Prime:wght@400;700&family=Quicksand:wght@300;400;500&family=Nunito:wght@300;400;500&family=Righteous&family=Comfortaa:wght@300;400;500&family=Cinzel:wght@400;600&family=Satisfy&family=Lobster&display=swap" rel="stylesheet">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
 <style>
-* { box-sizing:border-box; margin:0; padding:0; }
-:root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:#ffffff; }
-body { background:var(--bg); background-attachment:fixed; background-size:cover; background-position:center; font-family:'DM Sans',sans-serif; color:var(--text); max-width:480px; margin:0 auto; min-height:100vh; overflow-y:auto; }
-.top-bar { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:rgba(0,0,0,0.35); border-bottom:0.5px solid var(--border); position:sticky; top:0; z-index:10; }
-.top-title { font-family:'Playfair Display',serif; font-style:italic; font-size:18px; color:var(--accent); }
-.top-icons { display:flex; gap:12px; align-items:center; }
-.eigenaar-badge { font-size:15px; padding:3px 10px; border-radius:20px; background:rgba(192,132,252,0.15); border:0.5px solid var(--accent); color:var(--accent); cursor:pointer; }
-.theme-bar { display:flex; gap:8px; padding:10px 16px; border-bottom:0.5px solid var(--border); align-items:center; }
-.theme-dot { width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid transparent; }
-.theme-dot.active { border-color:var(--text); }
-.t1 { background:linear-gradient(135deg,#c084fc,#818cf8); }
-.t2 { background:linear-gradient(135deg,#f59e4a,#a3522a); }
-.t3 { background:linear-gradient(135deg,#38bdf8,#1e3a5f); }
-.t4 { background:linear-gradient(135deg,#f472b6,#c026d3); }
-.profile-hero { padding:20px 16px 14px; display:flex; gap:14px; align-items:flex-start; }
-.avatar-ring { width:64px; height:64px; border-radius:50%; padding:2.5px; background:linear-gradient(135deg,var(--accent),var(--accent2)); flex-shrink:0; cursor:pointer; }
-.avatar-inner { width:100%; height:100%; border-radius:50%; background:var(--bg); display:flex; align-items:center; justify-content:center; font-size:26px; }
-.p-name { font-family:'Playfair Display',serif; font-size:20px; font-weight:600; cursor:pointer; }
-.p-bio { font-size:12px; color:var(--muted); margin-top:3px; cursor:pointer; }
-.p-tags { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
-.tag { font-size:15px; padding:3px 9px; border-radius:20px; border:0.5px solid var(--accent); color:var(--accent); }
-.edit-vak { background:var(--card); border:0.5px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px; }
-.edit-field { width:100%; background:rgba(255,255,255,0.05); border:0.5px solid var(--accent); border-radius:8px; padding:7px 10px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:15px; outline:none; margin-bottom:8px; display:block; }
-.edit-label { font-size:15px; color:var(--muted); margin-bottom:4px; display:block; text-transform:uppercase; letter-spacing:0.08em; }
-.save-btn { font-size:14px; padding:6px 14px; border-radius:20px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-weight:500; }
-.cancel-btn { font-size:14px; padding:6px 14px; border-radius:20px; background:var(--card); color:var(--muted); border:0.5px solid var(--border); cursor:pointer; margin-left:6px; }
-.emoji-picker { display:flex; flex-wrap:wrap; gap:8px; padding:10px; background:var(--card); border:0.5px solid var(--border); border-radius:12px; margin:0 16px 10px; }
-.emoji-opt { font-size:24px; cursor:pointer; padding:4px; border-radius:8px; }
-.nav-tabs { display:flex; padding:0 16px; border-bottom:0.5px solid var(--border); }
-.nav-tab { font-size:12px; padding:9px 12px; color:var(--muted); border-bottom:2px solid transparent; cursor:pointer; }
-.nav-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
-.blocks { padding:12px 14px; display:flex; flex-direction:column; gap:10px; }
-.block { background:var(--card); border:0.5px solid var(--border); border-radius:14px; padding:13px 14px; }
-.block-title { font-size:14px; font-weight:500; color:var(--accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px; }
-.gb-entry { display:flex; gap:9px; padding:7px 0; border-bottom:0.5px solid var(--border); }
-.gb-entry:last-child { border-bottom:none; }
-.gb-av { width:28px; height:28px; border-radius:50%; background:rgba(192,132,252,0.15); border:0.5px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
-.gb-name { font-size:14px; font-weight:500; }
-.gb-msg { font-size:14px; color:var(--muted); margin-top:2px; }
-.gb-time { font-size:12px; color:var(--muted); opacity:0.6; margin-top:2px; }
-.gb-input { display:flex; gap:8px; margin-top:10px; }
-.gb-field { flex:1; background:rgba(255,255,255,0.05); border:0.5px solid var(--border); border-radius:20px; padding:7px 14px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:12px; outline:none; }
-.gb-send { padding:7px 14px; border-radius:20px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-size:12px; font-weight:500; }
-.photo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; }
-.photo-cell { aspect-ratio:1; border-radius:8px; background:rgba(192,132,252,0.1); border:0.5px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:22px; }
-.music-row { display:flex; align-items:center; gap:10px; }
-.music-icon { width:38px; height:38px; border-radius:8px; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
-.music-title { font-size:15px; font-weight:500; }
-.music-artist { font-size:14px; color:var(--muted); }
-.music-bar { height:3px; background:var(--border); border-radius:2px; margin-top:6px; overflow:hidden; }
-.music-progress { height:100%; width:40%; background:var(--accent); border-radius:2px; }
-.mood-row { display:flex; align-items:center; gap:10px; }
-.mood-emoji { font-size:28px; }
-.mood-text { font-size:15px; font-weight:500; }
-.mood-sub { font-size:14px; color:var(--muted); margin-top:2px; }
-.chat-btn { width:100%; padding:11px; border-radius:12px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:500; margin-top:10px; }
-.bottom-nav { display:flex; justify-content:space-around; padding:12px 0; border-top:0.5px solid var(--border); background:rgba(0,0,0,0.3); position:fixed; bottom:0; width:100%; max-width:480px; z-index:10; }
-.nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:15px; color:#ffffff; cursor:pointer; padding:4px 12px; text-shadow:0 1px 4px rgba(0,0,0,0.9); }
-.nav-item.active { color:var(--accent); }
-.nav-icon { font-size:20px; }
-.fibro-logo { font-family:'Playfair Display',serif; font-style:italic; font-size:12px; color:var(--accent); text-align:center; padding:12px; opacity:0.5; }
+  :root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:rgba(243,232,255,0.5); }
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  body { background:transparent; color:var(--text); font-family:'DM Sans',sans-serif; max-width:480px; margin:0 auto; min-height:100vh; overflow-x:hidden; position:relative; }
+  html { background:var(--bg); }
+  #fibro-animatie-canvas { background:var(--bg); }
+  #content-laag { position:relative; z-index:1; }
+  input, textarea { font-size:16px !important; }
 
-/* Opslaan status */
-.opslaan-status { font-size:14px; color:var(--accent); margin-top:6px; display:none; }
-.opslaan-status.show { display:block; }
+  /* TOP BAR */
+  .top-bar { display:flex; align-items:center; justify-content:space-between; padding:14px 16px 10px; }
+  .top-logo { font-family:'Playfair Display',serif; font-style:italic; font-size:20px; color:var(--accent); }
+  .top-av { width:38px; height:38px; border-radius:50%; background:rgba(192,132,252,0.15); border:1.5px solid var(--accent); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; overflow:hidden; }
 
-/* Uitloggen knop */
-.uitlog-btn { font-size:15px; padding:3px 10px; border-radius:20px; background:transparent; border:0.5px solid var(--border); color:var(--muted); cursor:pointer; }
-.uitlog-btn:hover { border-color:var(--muted); color:var(--text); }
+  /* PROFIEL HERO */
+  .profile-hero { padding:12px 16px 14px; display:flex; gap:14px; align-items:flex-start; }
+  .hero-av { width:64px; height:64px; border-radius:50%; background:rgba(192,132,252,0.15); border:2px solid var(--accent); display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0; overflow:hidden; }
+  .hero-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+  .hero-info { flex:1; min-width:0; }
+  .hero-naam { font-size:18px; font-weight:600; }
+  .hero-username { font-size:13px; color:var(--muted); margin-top:2px; }
+  .hero-mood { font-size:13px; color:var(--muted); margin-top:6px; display:flex; align-items:center; gap:5px; }
+  .hero-badge { display:inline-block; font-size:10px; background:rgba(192,132,252,0.15); border:0.5px solid rgba(192,132,252,0.3); border-radius:20px; padding:2px 8px; color:var(--accent); margin-top:6px; }
 
-/* Laden overlay */
-.laden { text-align:center; padding:40px; color:var(--muted); font-size:15px; }
-body::before{content:'';position:fixed;inset:0;background:rgba(0,0,0,0.38);z-index:0;pointer-events:none;display:none;}body.heeft-wallpaper::before{display:block;}body.heeft-wallpaper{background-size:cover;background-position:center;background-attachment:fixed;}.block,.edit-vak,.bottom-nav,.top-bar{backdrop-filter:blur(12px)}.p-name,.p-bio,.block-title,.mood-text{text-shadow:0 1px 4px rgba(0,0,0,0.9)}
-.wallpaper-bg {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-input, textarea { font-size:16px !important; }
+  /* WIDGET GRID */
+  .widget-grid { display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:85px; gap:10px; padding:12px 14px; }
+  .widget-blok { background:var(--card); border:0.5px solid var(--border); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 4px 20px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.2); }
+  .widget-header { display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 10px 6px; border-bottom:0.5px solid var(--border); }
+  .widget-icon-sm { font-size:14px; }
+  .widget-titel { font-size:11px; font-weight:600; color:#ffffff; text-transform:uppercase; letter-spacing:0.07em; }
+  .widget-inhoud { flex:1; min-height:0; padding:10px; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+  .widget-inhoud.foto-widget { padding:0 !important; display:flex !important; flex-direction:column !important; align-items:stretch !important; justify-content:stretch !important; overflow:visible !important; }
+  .widget-blok-naakt { background:transparent !important; border:none !important; box-shadow:none !important; overflow:visible !important; }
+
+  /* LEGE STAAT */
+  .leeg-staat { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:50px 20px; gap:14px; text-align:center; }
+  .leeg-staat-icon { font-size:48px; }
+  .leeg-staat-titel { font-size:16px; font-weight:600; }
+  .leeg-staat-sub { font-size:13px; color:var(--muted); line-height:1.6; }
+  .leeg-staat-btn { background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; border-radius:12px; padding:10px 22px; color:#1a0a2e; font-weight:600; font-size:14px; cursor:pointer; }
+
+  /* BOTTOM NAV */
+  .bottom-nav { display:flex; justify-content:space-around; padding:12px 0; border-top:0.5px solid var(--border); background:rgba(0,0,0,0.3); position:fixed; bottom:0; width:100%; max-width:480px; z-index:10; }
+  .nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:2px 16px; opacity:0.6; transition:opacity 0.2s; }
+  .nav-item.active { opacity:1; }
+  .nav-icon { font-size:22px; }
+  .nav-label { font-size:10px; font-weight:500; color:var(--text); }
+
+  /* PROFIEL SECTIE LABEL */
+  .sectie-label { padding:4px 14px 0; font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; }
 </style>
 </head>
-<body><div id="wallpaper-bg" style="position:fixed;inset:0;z-index:-1;background-size:cover;background-position:center;background-repeat:no-repeat;"></div>
+<body>
 
+<div id="content-laag">
 <div class="top-bar">
-  <span class="top-title">Fibro</span>
-  <div class="top-icons">
-    
-    <button class="uitlog-btn" onclick="uitloggen()">Uitloggen</button>
-    <span style="cursor:pointer;font-size:18px" onclick="toggleMusic()" id="musicBtn">🎵</span>
+  <div class="top-logo">Fibro</div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button id="uitlogBtn" onclick="window.uitloggen()" title="Uitloggen" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:rgba(255,255,255,0.7);padding:0;">🚪</button>
+    <div class="top-av" id="topAvatar" onclick="window.location.href='profiel.html'">
+    <div class="nav-icon">📞</div><div class="nav-label">Bellen</div>
+  </div>
+  <div class="top-av" id="topAvatar" onclick="window.location.href='profiel.html'">👤</div>
   </div>
 </div>
-
-
 
 <div class="profile-hero">
-  <div class="avatar-ring" onclick="openAvatarPicker()">
-    <div class="avatar-inner" id="avatarEmoji">⏳</div>
-  </div>
-  <div style="flex:1">
-    <div id="profielWeergave">
-      <div class="p-name" id="profielNaam" onclick="openBewerk()">Laden...</div>
-      <div class="p-bio" id="profielBio" onclick="openBewerk()">...</div>
-      <div class="p-tags" id="profielTags"></div>
-    </div>
-    <div id="profielBewerk" style="display:none">
-      <div class="edit-vak">
-        <label class="edit-label">Weergavenaam</label>
-        <input class="edit-field" id="editNaam" placeholder="Jouw naam">
-        <label class="edit-label">Bio</label>
-        <input class="edit-field" id="editBio" placeholder="Korte bio">
-        <label class="edit-label">Mood</label>
-        <input class="edit-field" id="editMood" placeholder="Peaceful & Creative">
-        <button class="save-btn" onclick="slaProfielOp()">Opslaan</button>
-        <button class="cancel-btn" onclick="annuleerBewerk()">Annuleer</button>
-        <div class="opslaan-status" id="opslaanStatus">✓ Opgeslagen!</div>
-      </div>
-    </div>
+  <div class="hero-av" id="heroAvatar">👤</div>
+  <div class="hero-info">
+    <div class="hero-naam" id="heroNaam">Laden...</div>
+    <div class="hero-username" id="heroUsername"></div>
+    <div class="hero-mood" id="heroMood"></div>
+    <div class="hero-badge" id="heroBadge" style="display:none"></div>
   </div>
 </div>
 
-<div id="avatarPickerWrap" style="display:none">
-  <div class="emoji-picker" id="emojiPicker"></div>
-</div>
-
-<div class="nav-tabs">
-  <div class="nav-tab active">Profiel</div>
-  <div class="nav-tab">Fotos</div>
-  <div class="nav-tab">Vrienden</div>
-  <div class="nav-tab">Themas</div>
-</div>
-
-<div class="blocks">
-  <div class="block">
-    <div class="block-title">Mood</div>
-    <div class="mood-row">
-      <div class="mood-emoji" id="moodEmoji">🌙</div>
-      <div>
-        <div class="mood-text" id="moodTekst">Laden...</div>
-        <div class="mood-sub">Klik op bewerken om aan te passen</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="block">
-    <div class="block-title">Gastenboek</div>
-    <div id="gbEntries">
-      <div class="laden">Gastenboek laden...</div>
-    </div>
-    <div class="gb-input">
-      <input class="gb-field" id="gbInput" placeholder="Laat een berichtje achter...">
-      <button class="gb-send" onclick="sendGb()">Stuur</button>
-    </div>
-  </div>
-
-  <div class="block">
-    <div class="block-title">Fotos</div>
-    <div class="photo-grid">
-      <div class="photo-cell">🌄</div><div class="photo-cell">🌿</div><div class="photo-cell">🦋</div>
-      <div class="photo-cell">🌊</div><div class="photo-cell">🍂</div><div class="photo-cell">⛰</div>
-    </div>
-  </div>
-
-  <div class="block">
-    <div class="block-title">Muziek</div>
-    <div class="music-row">
-      <div class="music-icon">♪</div>
-      <div style="flex:1">
-        <div class="music-title">Forest Rain</div>
-        <div class="music-artist">Ambient Dreams</div>
-        <div class="music-bar"><div class="music-progress"></div></div>
-      </div>
-    </div>
-  </div>
-
-  <button class="chat-btn" onclick="window.location.href='https://marcelpetrusma84-coder.github.io/Fibro/chat.html'">Stuur een bericht</button>
-</div>
-
-<div class="fibro-logo">Fibro - jouw ruimte</div>
+<div id="home-sectie"></div>
+<div id="profiel-sectie-label" class="sectie-label" style="display:none">Jouw profiel</div>
+<div id="profiel-sectie"></div>
+<div style="height:80px;"></div>
 
 <div class="bottom-nav">
-  <div class="nav-item active" onclick="window.location.href='https://marcelpetrusma84-coder.github.io/Fibro/index.html'"><div class="nav-icon">🏠</div>Home</div>
-  <div class="nav-item" onclick="window.location.href='https://marcelpetrusma84-coder.github.io/Fibro/vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
-  <div class="nav-item" onclick="window.location.href='https://marcelpetrusma84-coder.github.io/Fibro/chat.html'"><div class="nav-icon">💬</div>Chat</div>
-  <div class="nav-item" onclick="window.location.href='profiel.html'"><div class="nav-icon">👤</div>Profiel</div>
+  <div class="nav-item active" onclick="window.location.href='index.html'">
+    <div class="nav-icon">🏠</div><div class="nav-label">Home</div>
+  </div>
+  <div class="nav-item" onclick="window.location.href='vrienden.html'">
+    <div class="nav-icon">👥</div><div class="nav-label">Vrienden</div>
+  </div>
+  
+  <div class="nav-item" onclick="window.location.href='chat.html'">
+    <div class="nav-icon">💬</div><div class="nav-label">Chat</div>
+  </div>
+  <div class="nav-item" onclick="window.location.href='profiel.html'">
+    <div class="nav-icon">👤</div><div class="nav-label">Profiel</div>
+  </div>
+</div>
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js'
-import { laadWallpaper } from './wallpaper.js'
+import { laadThema } from './thema.js'
+import { startOproepLuisteraar } from './oproep-luisteraar.js'
+import { startHeartbeat } from './heartbeat.js'
+import { supabase } from './supabase.js'
 
-  // IndexedDB
-  function openDB() {
-    return new Promise((resolve, reject) => {
-      const req = indexedDB.open('FibroDB', 1)
-      req.onupgradeneeded = e => e.target.result.createObjectStore('fotos', { keyPath: 'id' })
-      req.onsuccess = e => resolve(e.target.result)
-      req.onerror = () => reject('DB fout')
-    })
-  }
-  async function laadFotoUitDB(id) {
-    const db = await openDB()
-    return new Promise((resolve) => {
-      const req = db.transaction('fotos').objectStore('fotos').get(id)
-      req.onsuccess = e => resolve(e.target.result?.data || null)
-      req.onerror = () => resolve(null)
-    })
-  }
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+// ════════════════════════════════
+// WIDGET SYSTEEM
+// ════════════════════════════════
+const WK_HOME    = 'fibro_widgets_home'
+const WK_PROFIEL = 'fibro_widgets_profiel'
 
-  const supabase = createClient(
-    'https://qmgatbphiplrfxrljtbe.supabase.co',
-    'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
-  )
+const HOME_DEFS = [
+  { id:'klok',         icon:'🌍', titel:'Wereldklok',       w:4, h:2 },
+  { id:'datum',        icon:'📅', titel:'Datum',            w:2, h:1 },
+  { id:'online',       icon:'👥', titel:'Online vrienden',  w:2, h:1 },
+  { id:'laastbericht', icon:'💬', titel:'Laatste bericht',  w:4, h:1 },
+  { id:'batterij',     icon:'🔋', titel:'Batterij',         w:2, h:1 },
+  { id:'activiteit',   icon:'📊', titel:'Activiteit',       w:2, h:2 },
+  { id:'poll',         icon:'🗳️', titel:'Poll',             w:4, h:3 },
+  { id:'afteltimer',   icon:'⏳', titel:'Afteltimer',       w:4, h:2 },
+  { id:'gastenboek',   icon:'📖', titel:'Gastenboek',       w:4, h:4 },
+]
 
-  var isEigenaar = false
-  var huidigeProfiel = null
-  var huidigeUser = null
-  var emojis = ["🌿","🌸","🎸","📷","🚀","🌙","🦋","🎨","🌊","🍂","⭐","🎵","🌺","🦊","🐱","🌈","🎮","📚","🌻","🍀"]
+const PROFIEL_DEFS = [
+  { id:'mood',           icon:'😊', titel:'Mood',                 w:4, h:1 },
+  { id:'muziek',         icon:'🎵', titel:'Muziek player',        w:4, h:2 },
+  { id:'quote',          icon:'✍️', titel:'Quote',                w:4, h:1 },
+  // Foto widgets
+  { id:'fotos_3x3',      icon:'📷', titel:'Foto grid 3×3',        w:4, h:3 },
+  { id:'fotos_2x2',      icon:'🖼️', titel:'Foto grid 2×2',        w:2, h:2 },
+  { id:'fotos_groot',    icon:'🌅', titel:'Grote foto',           w:4, h:2 },
+  { id:'fotos_banner',   icon:'🎞️', titel:'Foto strip',           w:4, h:1 },
+  { id:'fotos_1x3',      icon:'📸', titel:'Portret strip',        w:2, h:3 },
+  { id:'fotos_featured', icon:'🎨', titel:'Uitgelicht + 4 klein', w:4, h:3 },
+  { id:'fotos_masonry',  icon:'🗃️', titel:'Polaroid grid',        w:4, h:3 },
+  { id:'fotos_zwevend',  icon:'📌', titel:'Zwevende Polaroids',   w:4, h:3, geenHeader:true },
+  // Overige
+  { id:'poll',           icon:'🗳️', titel:'Poll',                 w:4, h:3 },
+  { id:'afteltimer',     icon:'⏳', titel:'Afteltimer',           w:4, h:2 },
+  { id:'gastenboek',     icon:'📖', titel:'Gastenboek',           w:4, h:4 },
+]
 
-  // ========================
-  // OPSTARTEN
-async function init() {
-    const { data: { session } } = await supabase.auth.getSession()
+function laadLayout(pagina) {
+  const key = pagina === 'home' ? WK_HOME : WK_PROFIEL
+  const defs = pagina === 'home' ? HOME_DEFS : PROFIEL_DEFS
+  try {
+    const saved = JSON.parse(localStorage.getItem(key))
+    if (saved && saved.length > 0) return saved
+  } catch(e) {}
+  return defs.map((w, i) => ({ ...w, volgorde: i, aan: false }))
+}
 
-    if (!session) {
-      window.location.href = 'login.html'
-      return
-    }
+function tekenGrid(containerId, layout, renderFn) {
+  const container = document.getElementById(containerId)
+  if (!container) return
+  const actief = layout.filter(w => w.aan).sort((a,b) => a.volgorde - b.volgorde)
+  if (!actief.length) { container.innerHTML = ''; return }
 
-    huidigeUser = session.user
-    await laadThema()
-    await laadProfiel()
-    await laadGastenboek()
-    await laadVriendenCache()
-    // Cache opruimen
-    const vriendIds = JSON.parse(localStorage.getItem('actieve_vriend_ids') || '[]')
-    import('./cache.js').then(m => m.ruimCacheOp(vriendIds))
-  }
+  container.className = 'widget-grid'
+  container.innerHTML = ''
 
-  // ========================
-  // VRIENDEN CACHE LADEN
-  // ========================
-  async function laadVriendenCache() {
-    try {
-      const { data: friendships } = await supabase
-        .from('friendships')
-        .select('user_id, friend_id')
-        .or(`user_id.eq.${huidigeUser.id},friend_id.eq.${huidigeUser.id}`)
-        .eq('status', 'accepted')
-
-      if (!friendships || friendships.length === 0) return
-
-      const vriendIds = friendships.map(f =>
-        f.user_id === huidigeUser.id ? f.friend_id : f.user_id
-      )
-
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .in('id', vriendIds)
-
-      if (!data) return
-
-      // Sla actieve vriend IDs op voor cache opruim
-      try {
-        localStorage.setItem('actieve_vriend_ids', JSON.stringify(data.map(v => v.id)))
-      } catch(e) {}
-
-      data.forEach(vriend => {
-        try {
-          localStorage.setItem('vriend_cache_' + vriend.id, JSON.stringify({
-            naam: vriend.display_name || vriend.username || '',
-            bio: vriend.bio || '',
-            mood: vriend.mood || '',
-            avatar: vriend.avatar_url || '👤',
-            accent_kleur: vriend.accent_kleur || '',
-            accent_kleur2: vriend.accent_kleur2 || '',
-            achtergrond_kleur: vriend.achtergrond_kleur || '',
-            lettertype: vriend.lettertype || '',
-            online_status: vriend.online_status || false,
-            offline_emoji: vriend.offline_emoji || '🌙',
-            offline_bericht: vriend.offline_bericht || 'Offline',
-            bijgewerkt: new Date().toISOString()
-          }))
-        } catch(e) {}
-      })
-    } catch(e) {}
-  }
-
-  // ========================
-  // PROFIEL LADEN
-  // ========================
-  async function laadProfiel() {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', huidigeUser.id)
-      .single()
-
-    if (error || !data) {
-      // Profiel bestaat nog niet, maak een basis aan
-      document.getElementById('profielNaam').textContent = huidigeUser.email.split('@')[0]
-      document.getElementById('profielBio').textContent = 'Klik om je bio in te stellen'
-      document.getElementById('avatarEmoji').textContent = '🌿'
-      document.getElementById('moodTekst').textContent = 'Stel je mood in'
-      document.getElementById('eigenaarBadge').textContent = 'Eigenaar'
-      isEigenaar = true
-      return
-    }
-
-    huidigeProfiel = data
-
-    // Vul profiel in — alles uit localStorage
-    const _lokaalP = JSON.parse(localStorage.getItem('fibro_profiel')||'{}')
-    if(document.getElementById('editNaam')) document.getElementById('editNaam').value = _lokaalP.naam||''
-    document.getElementById('profielNaam').textContent = _lokaalP.naam || data.username || 'Naamloos'
-    document.getElementById('profielBio').textContent = _lokaalP.bio || 'Klik om je bio in te stellen'
-    document.getElementById('moodTekst').textContent = _lokaalP.mood || 'Geen mood ingesteld'
-    const userId = huidigeUser?.id || 'lokaal'
-    const opgeslagenFoto = await laadFotoUitDB('avatar_thumbnail_' + userId)
-    if (opgeslagenFoto) {
-      document.getElementById('avatarEmoji').innerHTML = `<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+  actief.forEach(w => {
+    const el = document.createElement('div')
+    el.className = 'widget-blok'
+    el.style.gridColumn = 'span ' + (w.w || 2)
+    el.style.gridRow    = 'span ' + (w.h || 1)
+    if (w.geenHeader) {
+      el.classList.add('widget-blok-naakt')
+      el.innerHTML = `<div class="widget-inhoud"></div>`
     } else {
-      document.getElementById('avatarEmoji').textContent = _lokaalP.avatar || data.avatar_url || '🌿'
+      el.innerHTML = `
+        <div class="widget-header">
+          <span class="widget-icon-sm">${w.icon}</span>
+          <span class="widget-titel">${w.titel}</span>
+        </div>
+        <div class="widget-inhoud"></div>`
     }
-    document.getElementById('eigenaarBadge').textContent = 'Eigenaar'
-    isEigenaar = true
+    container.appendChild(el)
+    try { renderFn(w.id, el.querySelector('.widget-inhoud')) } catch(e) { console.error(w.id, e) }
+  })
+}
 
-    // Thema toepassen
-    if (data.theme) setThemeByName(data.theme)
+// ════════════════════════════════
+// HOME WIDGET RENDERS
+// ════════════════════════════════
+// ════════════════════════════════
+// WERELDKLOK WIDGET
+// ════════════════════════════════
+const WERELDKLOK_STEDEN = [
+  { naam: 'Amsterdam', tz: 'Europe/Amsterdam' },
+  { naam: 'Londen', tz: 'Europe/London' },
+  { naam: 'New York', tz: 'America/New_York' },
+  { naam: 'Los Angeles', tz: 'America/Los_Angeles' },
+  { naam: 'Tokio', tz: 'Asia/Tokyo' },
+  { naam: 'Dubai', tz: 'Asia/Dubai' },
+  { naam: 'Sydney', tz: 'Australia/Sydney' },
+  { naam: 'Parijs', tz: 'Europe/Paris' },
+  { naam: 'Berlijn', tz: 'Europe/Berlin' },
+  { naam: 'Moskou', tz: 'Europe/Moscow' },
+  { naam: 'Bangkok', tz: 'Asia/Bangkok' },
+  { naam: 'Singapore', tz: 'Asia/Singapore' },
+  { naam: 'Hong Kong', tz: 'Asia/Hong_Kong' },
+  { naam: 'Mumbai', tz: 'Asia/Kolkata' },
+  { naam: 'São Paulo', tz: 'America/Sao_Paulo' },
+  { naam: 'Kaapstad', tz: 'Africa/Johannesburg' },
+  { naam: 'Mexico-Stad', tz: 'America/Mexico_City' },
+  { naam: 'Chicago', tz: 'America/Chicago' },
+  { naam: 'Seoul', tz: 'Asia/Seoul' },
+  { naam: 'Istanbul', tz: 'Europe/Istanbul' },
+]
+
+function laadWereldklokSteden() {
+  try {
+    const opgeslagen = JSON.parse(localStorage.getItem('wereldklok_steden'))
+    if (opgeslagen && opgeslagen.length) return opgeslagen
+  } catch(e) {}
+  return ['Amsterdam', 'New York', 'Tokio'] // standaard selectie
+}
+
+function slaWereldklokStedenOp(stedenNamen) {
+  localStorage.setItem('wereldklok_steden', JSON.stringify(stedenNamen))
+}
+
+function renderWereldklok(c) {
+  c.style.padding = '10px 12px'
+  c.style.display = 'block'
+  c.style.alignItems = 'stretch'
+  c.style.justifyContent = 'flex-start'
+
+  let gekozenSteden = laadWereldklokSteden()
+
+  function tijdInStad(tz) {
+    return new Date().toLocaleTimeString('nl-NL', { hour:'2-digit', minute:'2-digit', timeZone: tz, hour12: false })
+  }
+  function dagVerschil(tz) {
+    const nu = new Date()
+    const lokaalDag = nu.getDate()
+    const stadDag = parseInt(new Date(nu.toLocaleString('en-US', { timeZone: tz })).getDate())
+    if (stadDag > lokaalDag || (lokaalDag >= 28 && stadDag <= 3)) return '+1'
+    if (stadDag < lokaalDag || (stadDag >= 28 && lokaalDag <= 3)) return '-1'
+    return ''
   }
 
-  // ========================
-  // GASTENBOEK LADEN
-  // ========================
-  async function laadGastenboek() {
-    const { data, error } = await supabase
-      .from('guestbook_entries')
-      .select('*, author:author_id(username, avatar_url)')
-      .eq('profile_id', huidigeUser.id)
-      .order('created_at', { ascending: false })
-      .limit(10)
+  function tekenLijst() {
+    const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    const rijen = gekozenSteden.map(naam => {
+      const stad = WERELDKLOK_STEDEN.find(s => s.naam === naam)
+      if (!stad) return ''
+      const tijd = tijdInStad(stad.tz)
+      const verschil = dagVerschil(stad.tz)
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;">
+        <span style="font-size:13px;color:white;">${escH(stad.naam)}</span>
+        <span style="font-size:15px;font-weight:700;color:var(--accent);font-family:monospace;">${tijd}${verschil ? `<span style="font-size:10px;color:rgba(255,255,255,0.5);margin-left:3px;">${verschil}d</span>` : ''}</span>
+      </div>`
+    }).join('')
 
-    const container = document.getElementById('gbEntries')
+    c.innerHTML = `
+      <div id="wk-lijst" style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow-y:auto;">${rijen || '<div style="font-size:12px;color:rgba(255,255,255,0.5);text-align:center;padding:10px;">Geen steden gekozen</div>'}</div>
+      <button id="wk-beheer-btn" style="margin-top:8px;width:100%;background:rgba(192,132,252,0.1);border:0.5px dashed var(--accent);border-radius:8px;padding:5px;color:var(--accent);font-size:11px;cursor:pointer;">⚙️ Steden beheren</button>
+    `
+    document.getElementById('wk-beheer-btn').addEventListener('click', toonBeheer)
+  }
 
-    if (error || !data || data.length === 0) {
-      container.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0;">Nog geen berichten. Nodig vrienden uit!</div>'
-      return
+  function toonBeheer() {
+    const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    c.innerHTML = `
+      <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:6px;">Kies je steden:</div>
+      <div id="wk-keuzelijst" style="display:flex;flex-direction:column;gap:2px;max-height:130px;overflow-y:auto;margin-bottom:8px;">
+        ${WERELDKLOK_STEDEN.map(stad => {
+          const actief = gekozenSteden.includes(stad.naam)
+          return `<label style="display:flex;align-items:center;gap:8px;padding:3px 4px;cursor:pointer;">
+            <input type="checkbox" data-stad="${escH(stad.naam)}" ${actief ? 'checked' : ''} style="accent-color:var(--accent);width:14px;height:14px;flex-shrink:0;">
+            <span style="font-size:12px;color:white;">${escH(stad.naam)}</span>
+          </label>`
+        }).join('')}
+      </div>
+      <button id="wk-klaar-btn" style="width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:6px;color:#1a0a2e;font-weight:600;font-size:12px;cursor:pointer;">✓ Klaar</button>
+    `
+    document.getElementById('wk-klaar-btn').addEventListener('click', () => {
+      const checkboxen = c.querySelectorAll('#wk-keuzelijst input[type="checkbox"]')
+      gekozenSteden = Array.from(checkboxen).filter(cb => cb.checked).map(cb => cb.dataset.stad)
+      slaWereldklokStedenOp(gekozenSteden)
+      tekenLijst()
+    })
+  }
+
+  tekenLijst()
+  const interval = setInterval(() => {
+    if (!document.body.contains(c)) { clearInterval(interval); return }
+    const lijst = document.getElementById('wk-lijst')
+    if (lijst) tekenLijst()
+  }, 30000) // elke 30 sec updaten (geen seconden nodig in wereldklok)
+}
+
+function renderHome(id, c) {
+  const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  if (id === 'klok') {
+    renderWereldklok(c)
+  } else if (id === 'datum') {
+    const nu=new Date()
+    const dg=['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag']
+    const mn=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec']
+    c.innerHTML = `<div style="text-align:center"><div style="font-size:12px;color:rgba(255,255,255,0.8)">${dg[nu.getDay()]}</div><div style="font-size:24px;font-weight:700;color:var(--accent)">${nu.getDate()}</div><div style="font-size:12px;color:rgba(255,255,255,0.8)">${mn[nu.getMonth()]} ${nu.getFullYear()}</div></div>`
+  } else if (id === 'online') {
+    c.innerHTML = '<div id="wonl" style="font-size:28px;font-weight:700;text-align:center;color:#22c55e">…</div><div style="font-size:11px;text-align:center;color:rgba(255,255,255,0.8)">vrienden online</div>'
+    supabase.from('friendships').select('user_id,friend_id').or(`user_id.eq.${window._uid},friend_id.eq.${window._uid}`).eq('status','accepted').then(({data:fs})=>{
+      if(!fs)return
+      const ids=fs.map(f=>f.user_id===window._uid?f.friend_id:f.user_id)
+      if(!ids.length){const e=document.getElementById('wonl');if(e)e.textContent='0';return}
+      supabase.from('profiles').select('online_status').in('id',ids).then(({data:p})=>{const e=document.getElementById('wonl');if(e)e.textContent=(p||[]).filter(x=>x.online_status).length})
+    })
+  } else if (id === 'laastbericht') {
+    c.innerHTML = '<div id="wlb" style="font-size:13px;color:rgba(255,255,255,0.8)">Laden...</div>'
+    supabase.from('messages').select('content,sender_id').or(`sender_id.eq.${window._uid},receiver_id.eq.${window._uid}`).order('created_at',{ascending:false}).limit(1).then(({data})=>{
+      const e=document.getElementById('wlb');if(!e)return
+      if(!data||!data.length){e.textContent='Nog geen berichten';return}
+      const m=data[0],van=m.sender_id===window._uid?'Jij':'Iemand'
+      const prev=m.content.startsWith('encrypt:')?'🔒 versleuteld':m.content.substring(0,40)
+      e.innerHTML=`<span style="color:var(--accent);font-weight:600">${van}:</span> ${escH(prev)}`
+    })
+  } else if (id === 'batterij') {
+    c.innerHTML = '<div style="text-align:center"><div id="wbatt" style="font-size:26px;font-weight:700;color:var(--accent)">…%</div><div style="font-size:11px;color:rgba(255,255,255,0.8)">batterij</div></div>'
+    if(navigator.getBattery){navigator.getBattery().then(b=>{const e=document.getElementById('wbatt');if(e){const p=Math.round(b.level*100);e.textContent=p+'%';e.style.color=p<20?'#f87171':p<50?'#fbbf24':'#22c55e'}})}
+    else{const e=document.getElementById('wbatt');if(e)e.textContent='N/A'}
+  } else if (id === 'activiteit') {
+    c.innerHTML = '<div style="text-align:center"><div id="wact" style="font-size:28px;font-weight:700;color:var(--accent)">…</div><div style="font-size:11px;color:rgba(255,255,255,0.8)">berichten vandaag</div></div>'
+    const vd=new Date();vd.setHours(0,0,0,0)
+    supabase.from('messages').select('id',{count:'exact'}).eq('sender_id',window._uid).gte('created_at',vd.toISOString()).then(({count})=>{const e=document.getElementById('wact');if(e)e.textContent=count||0})
+  } else if (id === 'poll') {
+    renderPoll(c, window._uid)
+  } else if (id === 'afteltimer') {
+    renderAftel(c, window._uid)
+  } else if (id === 'gastenboek') {
+    renderGastenboek(c, window._uid)
+  }
+}
+
+// ════════════════════════════════
+// PROFIEL WIDGET RENDERS
+// ════════════════════════════════
+function renderProfiel(id, c) {
+  const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+
+  if (id === 'mood') {
+    const emoji = window._profiel?.offline_emoji || '😊'
+    const tekst = window._profiel?.offline_bericht || ''
+    c.innerHTML = `<div style="display:flex;align-items:center;gap:10px"><span style="font-size:28px">${emoji}</span><span style="font-size:14px">${escH(tekst)}</span></div>`
+
+  } else if (id === 'muziek') {
+    renderMuziekPlayer(c)
+
+  } else if (id === 'fotos_3x3') {
+    c.classList.add('foto-widget')
+    renderFotoGrid(c, '3x3', 9)
+  } else if (id === 'fotos_2x2') {
+    c.classList.add('foto-widget')
+    renderFotoGrid(c, '2x2', 4)
+  } else if (id === 'fotos_groot') {
+    c.classList.add('foto-widget')
+    renderFotoGrid(c, 'groot', 1)
+  } else if (id === 'fotos_banner') {
+    c.classList.add('foto-widget')
+    renderFotoGrid(c, 'banner', 4)
+  } else if (id === 'fotos_1x3') {
+    c.classList.add('foto-widget')
+    renderFotoGrid(c, '1x3', 3)
+  } else if (id === 'fotos_featured') {
+    c.classList.add('foto-widget')
+    renderFotoFeatured(c)
+  } else if (id === 'fotos_masonry') {
+    c.classList.add('foto-widget')
+    renderFotoPolaroid(c)
+  } else if (id === 'fotos_zwevend') {
+    c.classList.add('foto-widget')
+    renderFotoZwevend(c)
+
+  } else if (id === 'quote') {
+    const oq = localStorage.getItem('quote_'+window._uid)||''
+    if (oq) {
+      c.innerHTML = `<div style="font-size:20px;color:var(--accent)">"</div><div style="font-size:14px;line-height:1.5;font-style:italic">${escH(oq)}</div><button id="qwij" style="margin-top:8px;background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;color:rgba(255,255,255,0.7);font-size:11px;cursor:pointer">✏️ Wijzigen</button>`
+      document.getElementById('qwij').onclick = () => { localStorage.removeItem('quote_'+window._uid); renderProfiel('quote',c) }
+    } else {
+      c.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px"><textarea id="qi" placeholder="Jouw quote..." rows="3" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;width:100%;resize:none;font-family:inherit"></textarea><button id="qok" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:8px;color:#1a0a2e;font-weight:600;cursor:pointer">Opslaan</button></div>`
+      document.getElementById('qok').onclick = () => {
+        const q=document.getElementById('qi').value.trim()
+        if(!q)return
+        localStorage.setItem('quote_'+window._uid, q)
+        renderProfiel('quote', c)
+      }
+    }
+  } else if (id === 'poll') {
+    renderPoll(c, window._uid)
+  } else if (id === 'afteltimer') {
+    renderAftel(c, window._uid)
+  } else if (id === 'gastenboek') {
+    renderGastenboek(c, window._uid)
+  }
+}
+
+// ════════════════════════════════
+// MUZIEK PLAYER WIDGET
+// ════════════════════════════════
+function renderMuziekPlayer(c) {
+  const uid = window._uid
+  const key = 'muziek_tracks_' + uid
+  let tracks = []
+  try { tracks = JSON.parse(localStorage.getItem(key)) || [] } catch(e) {}
+  let huidigIdx = 0
+  let audio = null
+
+  const render = () => {
+    const heeftTracks = tracks.length > 0
+    const track = heeftTracks ? tracks[huidigIdx] : null
+
+    c.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${heeftTracks ? `
+          <!-- Album art / emoji -->
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div id="muz-art" style="width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;">
+              ${track.cover ? `<img src="${track.cover}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">` : '🎵'}
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div id="muz-titel" style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${track.naam}</div>
+              <div id="muz-artiest" style="font-size:12px;color:rgba(255,255,255,0.8);">${track.artiest||''}</div>
+            </div>
+          </div>
+          <!-- Voortgangsbalk -->
+          <div>
+            <div id="muz-balk" style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;cursor:pointer;position:relative;">
+              <div id="muz-prog" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width 0.3s;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:3px;">
+              <span id="muz-tijd" style="font-size:10px;color:rgba(255,255,255,0.75);">0:00</span>
+              <span id="muz-duur" style="font-size:10px;color:rgba(255,255,255,0.75);">0:00</span>
+            </div>
+          </div>
+          <!-- Controls -->
+          <div style="display:flex;align-items:center;justify-content:center;gap:14px;">
+            <button id="muz-prev" style="background:none;border:none;font-size:20px;cursor:pointer;color:rgba(255,255,255,0.7);">⏮</button>
+            <button id="muz-play" style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;font-size:18px;cursor:pointer;color:#1a0a2e;display:flex;align-items:center;justify-content:center;">▶</button>
+            <button id="muz-next" style="background:none;border:none;font-size:20px;cursor:pointer;color:rgba(255,255,255,0.7);">⏭</button>
+          </div>
+          <!-- Tracklist -->
+          ${tracks.length > 1 ? `<div style="max-height:80px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;" id="muz-lijst">
+            ${tracks.map((t,i) => `<div class="muz-item" data-i="${i}" style="padding:4px 8px;border-radius:6px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;background:${i===huidigIdx?'rgba(192,132,252,0.15)':'transparent'};">
+              <span style="color:var(--accent);width:14px;text-align:center;">${i===huidigIdx?'▶':'·'}</span>
+              <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.naam}</span>
+            </div>`).join('')}
+          </div>` : ''}
+        ` : `
+          <div style="text-align:center;font-size:12px;color:rgba(255,255,255,0.8);padding:8px;">Geen nummers toegevoegd</div>
+        `}
+        <!-- Upload knop -->
+        <button id="muz-upload-btn" style="background:rgba(192,132,252,0.1);border:0.5px dashed var(--accent);border-radius:8px;padding:7px;color:var(--accent);font-size:12px;cursor:pointer;width:100%;">
+          ➕ Nummer toevoegen (MP3/AAC)
+        </button>
+        <input id="muz-file-inp" type="file" accept="audio/*" style="display:none;">
+      </div>`
+
+    // Audio object aanmaken
+    if (heeftTracks && track.data) {
+      if (audio) { audio.pause(); audio.src = '' }
+      audio = new Audio(track.data)
+      audio.ontimeupdate = () => {
+        const prog = document.getElementById('muz-prog')
+        const tijdEl = document.getElementById('muz-tijd')
+        if (prog && audio.duration) {
+          prog.style.width = (audio.currentTime / audio.duration * 100) + '%'
+        }
+        if (tijdEl) tijdEl.textContent = fmt(audio.currentTime)
+      }
+      audio.onloadedmetadata = () => {
+        const durEl = document.getElementById('muz-duur')
+        if (durEl) durEl.textContent = fmt(audio.duration)
+      }
+      audio.onended = () => {
+        huidigIdx = (huidigIdx + 1) % tracks.length
+        render()
+        setTimeout(() => { if(audio) audio.play() }, 100)
+      }
     }
 
-    container.innerHTML = data.map(entry => {
-      const initiaal = (entry.author?.username || '?')[0].toUpperCase()
-      const avatar = entry.author?.avatar_url || initiaal
-      const tijd = tijdGeleden(entry.created_at)
-      return `
-        <div class="gb-entry">
-          <div class="gb-av">${avatar}</div>
-          <div>
-            <div class="gb-name">${entry.author?.username || 'Onbekend'}</div>
-            <div class="gb-msg">${entry.content}</div>
-            <div class="gb-time">${tijd}</div>
-          </div>
+    const fmt = s => { const m=Math.floor(s/60),sec=Math.floor(s%60); return m+':'+(sec<10?'0':'')+sec }
+
+    // Play/pause
+    const playBtn = document.getElementById('muz-play')
+    if (playBtn) {
+      playBtn.onclick = () => {
+        if (!audio) return
+        if (audio.paused) { audio.play(); playBtn.textContent = '⏸' }
+        else { audio.pause(); playBtn.textContent = '▶' }
+      }
+    }
+
+    // Vorige
+    const prevBtn = document.getElementById('muz-prev')
+    if (prevBtn) prevBtn.onclick = () => {
+      huidigIdx = (huidigIdx - 1 + tracks.length) % tracks.length
+      render()
+      setTimeout(() => { if(audio) audio.play(); document.getElementById('muz-play').textContent = '⏸' }, 100)
+    }
+
+    // Volgende
+    const nextBtn = document.getElementById('muz-next')
+    if (nextBtn) nextBtn.onclick = () => {
+      huidigIdx = (huidigIdx + 1) % tracks.length
+      render()
+      setTimeout(() => { if(audio) audio.play(); document.getElementById('muz-play').textContent = '⏸' }, 100)
+    }
+
+    // Voortgangsbalk klikken
+    const balk = document.getElementById('muz-balk')
+    if (balk && audio) {
+      balk.onclick = e => {
+        const rect = balk.getBoundingClientRect()
+        const pct = (e.clientX - rect.left) / rect.width
+        audio.currentTime = pct * audio.duration
+      }
+    }
+
+    // Tracklist klikken
+    c.querySelectorAll('.muz-item').forEach(el => {
+      el.onclick = () => {
+        huidigIdx = parseInt(el.dataset.i)
+        render()
+        setTimeout(() => { if(audio) audio.play(); document.getElementById('muz-play').textContent = '⏸' }, 100)
+      }
+    })
+
+    // Upload
+    const uploadBtn = document.getElementById('muz-upload-btn')
+    const fileInp = document.getElementById('muz-file-inp')
+    if (uploadBtn && fileInp) {
+      uploadBtn.onclick = () => fileInp.click()
+      fileInp.onchange = async () => {
+        const file = fileInp.files[0]
+        if (!file) return
+        if (file.size > 15 * 1024 * 1024) { alert('Max 15MB per nummer.'); return }
+        const reader = new FileReader()
+        reader.onload = e => {
+          // Probeer metadata te lezen
+          const naam = file.name.replace(/\.[^.]+$/, '').replace(/_/g, ' ')
+          tracks.push({ naam, artiest: '', data: e.target.result })
+          localStorage.setItem(key, JSON.stringify(tracks))
+          huidigIdx = tracks.length - 1
+          render()
+        }
+        reader.readAsDataURL(file)
+      }
+    }
+  }
+
+  render()
+}
+
+// ════════════════════════════════
+// FOTO GALERIJ WIDGET
+// ════════════════════════════════
+function renderFotoGrid(c, stijl, aantalFotos) {
+  const uid = window._uid || 'lokaal'
+  const KEY = 'pfoto_' + stijl + '_'
+
+  c.style.cssText = 'padding:0;overflow:hidden;display:flex;flex-direction:column;width:100%;height:100%;flex:1;'
+
+  for (let i = 0; i < 20; i++) {
+    const old = document.getElementById('foto-inp-' + stijl + '-' + i)
+    if (old) old.remove()
+  }
+
+  // Aspect ratio per stijl
+  // Aspect ratio alleen voor cellen waar het grid zelf geen vaste hoogte regelt
+  // (3x3 en 2x2 zijn vierkant en passen exact in hun widget — groot/banner/1x3 vullen gewoon de widget-ruimte)
+  const celAspect = { '3x3':'1/1', '2x2':'1/1' }
+
+  for (let idx = 0; idx < aantalFotos; idx++) {
+    const inp = document.createElement('input')
+    inp.id = 'foto-inp-' + stijl + '-' + idx
+    inp.type = 'file'; inp.accept = 'image/*'
+    inp.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;'
+    inp.addEventListener('change', function() {
+      const file = this.files[0]; if (!file) return
+      if (file.size > 10*1024*1024) { alert('Max 10MB'); return }
+      const celIdx = idx
+      const reader = new FileReader()
+      reader.onload = ev => {
+        const tmpImg = new Image()
+        tmpImg.onload = () => {
+          const canvas = document.createElement('canvas')
+          const max = stijl === 'groot' ? 1200 : 800
+          let w = tmpImg.width, h = tmpImg.height
+          if (w > max || h > max) { if(w>h){h=Math.round(h*max/w);w=max}else{w=Math.round(w*max/h);h=max} }
+          canvas.width=w; canvas.height=h
+          canvas.getContext('2d').drawImage(tmpImg,0,0,w,h)
+          localStorage.setItem(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.85))
+          const cel = document.getElementById('foto-cel-'+stijl+'-'+celIdx)
+          if (cel) tekenCel(cel, celIdx)
+        }
+        tmpImg.src = ev.target.result
+      }
+      reader.readAsDataURL(file)
+    })
+    document.body.appendChild(inp)
+  }
+
+  function tekenCel(cel, i) {
+    const foto = localStorage.getItem(KEY+i+'_'+uid)
+    const fitKey = KEY+i+'_fit_'+uid
+    const aspect = celAspect[stijl]
+    if (aspect) cel.style.aspectRatio = aspect
+    cel.innerHTML = ''
+    if (foto) {
+      const defaultFit = (stijl === 'groot' || stijl === 'banner' || stijl === '1x3') ? 'contain' : 'cover'
+      const huidigeFit = localStorage.getItem(fitKey) || defaultFit
+      if (huidigeFit === 'contain') cel.style.background = '#000'
+      else cel.style.background = 'rgba(192,132,252,0.06)'
+
+      const img = document.createElement('img')
+      img.src = foto
+      img.style.cssText = 'width:100%;height:100%;object-fit:'+huidigeFit+';display:block;pointer-events:none;'
+      cel.appendChild(img)
+
+      // Knop: wissel tussen cover (bijsnijden) en contain (volledig zichtbaar)
+      const fitBtn = document.createElement('button')
+      fitBtn.textContent = huidigeFit === 'cover' ? '⊞' : '⊡'
+      fitBtn.title = huidigeFit === 'cover' ? 'Volledig tonen' : 'Beeldvullend'
+      fitBtn.style.cssText = 'position:absolute;bottom:4px;left:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.65);border:none;color:white;font-size:11px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;padding:0;'
+      fitBtn.addEventListener('click', e => {
+        e.stopPropagation()
+        const nieuw = img.style.objectFit === 'cover' ? 'contain' : 'cover'
+        img.style.objectFit = nieuw
+        localStorage.setItem(fitKey, nieuw)
+        fitBtn.textContent = nieuw === 'cover' ? '⊞' : '⊡'
+        fitBtn.title = nieuw === 'cover' ? 'Volledig tonen' : 'Beeldvullend'
+        cel.style.background = nieuw === 'contain' ? '#000' : 'rgba(192,132,252,0.06)'
+      })
+
+      const del = document.createElement('button')
+      del.textContent = '×'
+      del.style.cssText = 'position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.75);border:none;color:white;font-size:16px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;'
+      del.addEventListener('click', e => {
+        e.stopPropagation()
+        localStorage.removeItem(KEY+i+'_'+uid)
+        localStorage.removeItem(fitKey)
+        cel.style.background = 'rgba(192,132,252,0.06)'
+        tekenCel(cel, i)
+      })
+      cel.appendChild(fitBtn)
+      cel.appendChild(del)
+    } else {
+      cel.style.background = 'rgba(192,132,252,0.06)'
+      const plus = document.createElement('div')
+      plus.style.cssText = 'pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:4px;'
+      plus.innerHTML = '<span style="font-size:28px;color:rgba(192,132,252,0.4);">+</span>'
+      cel.appendChild(plus)
+    }
+  }
+
+  function maakCel(i) {
+    const aspect = celAspect[stijl]
+    const cel = document.createElement('div')
+    cel.id = 'foto-cel-'+stijl+'-'+i
+    cel.style.cssText = 'position:relative;background:rgba(192,132,252,0.06);cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;' + (aspect ? 'aspect-ratio:'+aspect+';' : '')
+    tekenCel(cel, i)
+    cel.addEventListener('click', e => {
+      if (e.target.tagName === 'BUTTON') return
+      const inp = document.getElementById('foto-inp-'+stijl+'-'+i)
+      if (inp) { inp.value=''; inp.click() }
+    })
+    return cel
+  }
+
+  const wrap = document.createElement('div')
+  wrap.style.cssText = 'display:grid;gap:2px;width:100%;height:100%;'
+
+  if (stijl === '3x3') {
+    wrap.style.gridTemplateColumns = 'repeat(3,1fr)'
+    wrap.style.gridTemplateRows = 'repeat(3,1fr)'
+    for (let i=0;i<9;i++) wrap.appendChild(maakCel(i))
+  } else if (stijl === '2x2') {
+    wrap.style.gridTemplateColumns = 'repeat(2,1fr)'
+    wrap.style.gridTemplateRows = 'repeat(2,1fr)'
+    for (let i=0;i<4;i++) wrap.appendChild(maakCel(i))
+  } else if (stijl === 'groot') {
+    wrap.style.gridTemplateColumns = '1fr'
+    wrap.style.gridTemplateRows = '1fr'
+    wrap.appendChild(maakCel(0))
+  } else if (stijl === 'banner') {
+    wrap.style.gridTemplateColumns = 'repeat(4,1fr)'
+    wrap.style.gridTemplateRows = '1fr'
+    for (let i=0;i<4;i++) wrap.appendChild(maakCel(i))
+  } else if (stijl === '1x3') {
+    wrap.style.gridTemplateColumns = '1fr'
+    wrap.style.gridTemplateRows = 'repeat(3,1fr)'
+    for (let i=0;i<3;i++) wrap.appendChild(maakCel(i))
+  }
+
+  c.innerHTML = ''
+  c.appendChild(wrap)
+}
+
+function renderFotoGalerij(c) { renderFotoGrid(c, '3x3', 9) }
+
+// ─── Uitgelicht + 4 klein ───
+function renderFotoFeatured(c) {
+  const uid = window._uid || 'lokaal'
+  const KEY = 'pfoto_featured_'
+  c.style.cssText = 'padding:0;overflow:hidden;display:flex;flex-direction:column;width:100%;height:100%;flex:1;'
+
+  for (let i = 0; i < 5; i++) {
+    const old = document.getElementById('foto-inp-featured-' + i)
+    if (old) old.remove()
+    const inp = document.createElement('input')
+    inp.id = 'foto-inp-featured-' + i
+    inp.type = 'file'; inp.accept = 'image/*'
+    inp.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;'
+    inp.addEventListener('change', function() {
+      const file = this.files[0]; if (!file) return
+      if (file.size > 10*1024*1024) { alert('Max 10MB'); return }
+      const celIdx = i
+      const reader = new FileReader()
+      reader.onload = ev => {
+        const tmp = new Image()
+        tmp.onload = () => {
+          const canvas = document.createElement('canvas')
+          const max = celIdx === 0 ? 1000 : 500
+          let w = tmp.width, h = tmp.height
+          if (w > max || h > max) { if (w>h){h=Math.round(h*max/w);w=max} else {w=Math.round(w*max/h);h=max} }
+          canvas.width=w; canvas.height=h
+          canvas.getContext('2d').drawImage(tmp,0,0,w,h)
+          localStorage.setItem(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.85))
+          const cel = document.getElementById('foto-cel-featured-'+celIdx)
+          if (cel) tekenFtCel(cel, celIdx)
+        }
+        tmp.src = ev.target.result
+      }
+      reader.readAsDataURL(file)
+    })
+    document.body.appendChild(inp)
+  }
+
+  function tekenFtCel(cel, i) {
+    const foto = localStorage.getItem(KEY+i+'_'+uid)
+    const fitKey = KEY+i+'_fit_'+uid
+    cel.innerHTML = ''
+    if (foto) {
+      const huidigeFit = localStorage.getItem(fitKey) || 'cover'
+      cel.style.background = huidigeFit === 'contain' ? '#000' : 'rgba(192,132,252,0.06)'
+
+      const img = document.createElement('img')
+      img.src = foto
+      img.style.cssText = 'width:100%;height:100%;object-fit:'+huidigeFit+';display:block;pointer-events:none;'
+      cel.appendChild(img)
+
+      const fitBtn = document.createElement('button')
+      fitBtn.textContent = huidigeFit === 'cover' ? '⊞' : '⊡'
+      fitBtn.style.cssText = 'position:absolute;bottom:3px;left:3px;width:'+(i===0?'20px':'16px')+';height:'+(i===0?'20px':'16px')+';border-radius:50%;background:rgba(0,0,0,0.65);border:none;color:white;font-size:'+(i===0?'10px':'9px')+';cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;padding:0;'
+      fitBtn.addEventListener('click', e => {
+        e.stopPropagation()
+        const nieuw = img.style.objectFit === 'cover' ? 'contain' : 'cover'
+        img.style.objectFit = nieuw
+        localStorage.setItem(fitKey, nieuw)
+        fitBtn.textContent = nieuw === 'cover' ? '⊞' : '⊡'
+        cel.style.background = nieuw === 'contain' ? '#000' : 'rgba(192,132,252,0.06)'
+      })
+
+      const del = document.createElement('button')
+      del.textContent = '×'
+      del.style.cssText = 'position:absolute;top:3px;right:3px;width:'+(i===0?'20px':'16px')+';height:'+(i===0?'20px':'16px')+';border-radius:50%;background:rgba(0,0,0,0.75);border:none;color:white;font-size:'+(i===0?'13px':'11px')+';cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;padding:0;'
+      del.addEventListener('click', e => {
+        e.stopPropagation()
+        localStorage.removeItem(KEY+i+'_'+uid)
+        localStorage.removeItem(fitKey)
+        tekenFtCel(cel,i)
+      })
+      cel.appendChild(fitBtn)
+      cel.appendChild(del)
+    } else {
+      cel.style.background = 'rgba(192,132,252,0.06)'
+      cel.innerHTML = '<div style="pointer-events:none;font-size:' + (i===0?'28px':'18px') + ';color:rgba(192,132,252,0.35);">+</div>'
+    }
+  }
+
+  function maakFtCel(i) {
+    const cel = document.createElement('div')
+    cel.id = 'foto-cel-featured-'+i
+    cel.style.cssText = 'position:relative;background:rgba(192,132,252,0.06);cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;'
+    tekenFtCel(cel, i)
+    cel.addEventListener('click', e => {
+      if (e.target.tagName==='BUTTON') return
+      const inp = document.getElementById('foto-inp-featured-'+i)
+      if (inp) { inp.value=''; inp.click() }
+    })
+    return cel
+  }
+
+  // Grote foto links (2 rijen hoog), 4 kleine vierkante rechts in 2x2
+  const wrap = document.createElement('div')
+  wrap.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;width:100%;height:100%;'
+
+  const groot = maakFtCel(0)
+  groot.style.gridColumn = '1 / 2'
+  groot.style.gridRow = '1 / 3'
+  wrap.appendChild(groot)
+
+  // Expliciete posities voor de 4 kleine cellen (voorkomt auto-placement overlap)
+  const posities = [
+    { col: '2 / 3', row: '1 / 2' },
+    { col: '3 / 4', row: '1 / 2' },
+    { col: '2 / 3', row: '2 / 3' },
+    { col: '3 / 4', row: '2 / 3' },
+  ]
+  for (let i = 1; i <= 4; i++) {
+    const cel = maakFtCel(i)
+    cel.style.gridColumn = posities[i-1].col
+    cel.style.gridRow = posities[i-1].row
+    wrap.appendChild(cel)
+  }
+
+  c.innerHTML = ''
+  c.appendChild(wrap)
+}
+
+// ─── Polaroid grid ───
+// ─── Zwevende Polaroids (3 foto's, overlappend, geen kaart) ───
+function renderFotoZwevend(c) {
+  const uid = window._uid || 'lokaal'
+  const KEY = 'pfoto_zwevend_'
+  c.style.cssText = 'padding:14px 10px 24px;overflow:visible;display:flex;align-items:center;justify-content:center;width:100%;height:100%;position:relative;'
+
+  // Positie-config: links rechtop, midden voorop-lager, rechts rechtop
+  const POS = [
+    { rot: -8,  z: 1, top: '6%',  left: '2%',  w: '40%' },
+    { rot: 4,   z: 3, top: '14%', left: '32%', w: '42%' },
+    { rot: 9,   z: 2, top: '4%',  left: '58%', w: '40%' },
+  ]
+
+  for (let i = 0; i < 3; i++) {
+    const old = document.getElementById('foto-inp-zwevend-'+i)
+    if (old) old.remove()
+    const inp = document.createElement('input')
+    inp.id = 'foto-inp-zwevend-'+i
+    inp.type = 'file'; inp.accept = 'image/*'
+    inp.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;'
+    inp.addEventListener('change', function() {
+      const file = this.files[0]; if (!file) return
+      if (file.size > 10*1024*1024) { alert('Max 10MB'); return }
+      const celIdx = i
+      const reader = new FileReader()
+      reader.onload = ev => {
+        const tmp = new Image()
+        tmp.onload = () => {
+          const canvas = document.createElement('canvas')
+          let w=tmp.width, h=tmp.height, max=600
+          if (w>max||h>max) { if(w>h){h=Math.round(h*max/w);w=max} else {w=Math.round(w*max/h);h=max} }
+          canvas.width=w; canvas.height=h
+          canvas.getContext('2d').drawImage(tmp,0,0,w,h)
+          localStorage.setItem(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.85))
+          tekenZwevend(celIdx)
+        }
+        tmp.src = ev.target.result
+      }
+      reader.readAsDataURL(file)
+    })
+    document.body.appendChild(inp)
+  }
+
+  function tekenZwevend(i) {
+    const old = document.getElementById('zwevend-'+i)
+    if (old) old.remove()
+
+    const foto = localStorage.getItem(KEY+i+'_'+uid)
+    const fitKey = KEY+i+'_fit_'+uid
+    const pos = POS[i]
+
+    const frame = document.createElement('div')
+    frame.id = 'zwevend-'+i
+    frame.style.cssText = `position:absolute;top:${pos.top};left:${pos.left};width:${pos.w};aspect-ratio:0.82;background:#fffef2;padding:6px 6px 18px;border-radius:3px;box-shadow:0 6px 16px rgba(0,0,0,0.45);transform:rotate(${pos.rot}deg);cursor:pointer;z-index:${pos.z};`
+
+    const fotoEl = document.createElement('div')
+    fotoEl.style.cssText = 'width:100%;height:100%;overflow:hidden;background:rgba(192,132,252,0.12);position:relative;display:flex;align-items:center;justify-content:center;'
+
+    if (foto) {
+      const huidigeFit = localStorage.getItem(fitKey) || 'cover'
+      fotoEl.style.background = huidigeFit === 'contain' ? '#000' : 'rgba(192,132,252,0.12)'
+
+      const img = document.createElement('img')
+      img.src = foto
+      img.style.cssText = 'width:100%;height:100%;object-fit:'+huidigeFit+';pointer-events:none;'
+      fotoEl.appendChild(img)
+
+      const fitBtn = document.createElement('button')
+      fitBtn.textContent = huidigeFit === 'cover' ? '⊞' : '⊡'
+      fitBtn.style.cssText = 'position:absolute;bottom:3px;left:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.6);border:none;color:white;font-size:10px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;padding:0;'
+      fitBtn.addEventListener('click', e => {
+        e.stopPropagation()
+        const nieuw = img.style.objectFit === 'cover' ? 'contain' : 'cover'
+        img.style.objectFit = nieuw
+        localStorage.setItem(fitKey, nieuw)
+        fitBtn.textContent = nieuw === 'cover' ? '⊞' : '⊡'
+        fotoEl.style.background = nieuw === 'contain' ? '#000' : 'rgba(192,132,252,0.12)'
+      })
+
+      const del = document.createElement('button')
+      del.textContent = '×'
+      del.style.cssText = 'position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.65);border:none;color:white;font-size:12px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;padding:0;'
+      del.addEventListener('click', e => { e.stopPropagation(); localStorage.removeItem(KEY+i+'_'+uid); localStorage.removeItem(fitKey); tekenZwevend(i) })
+
+      fotoEl.appendChild(fitBtn)
+      frame.appendChild(del)
+    } else {
+      fotoEl.innerHTML = '<span style="font-size:24px;color:rgba(192,132,252,0.45);pointer-events:none;">+</span>'
+    }
+
+    frame.appendChild(fotoEl)
+    frame.addEventListener('click', e => {
+      if (e.target.tagName === 'BUTTON') return
+      const inp = document.getElementById('foto-inp-zwevend-'+i)
+      if (inp) { inp.value=''; inp.click() }
+    })
+
+    c.appendChild(frame)
+  }
+
+  c.innerHTML = ''
+  for (let i = 0; i < 3; i++) tekenZwevend(i)
+}
+
+function renderFotoPolaroid(c) {
+  const uid = window._uid || 'lokaal'
+  const KEY = 'pfoto_polaroid_'
+  c.style.cssText = 'padding:8px;overflow:hidden;display:flex;flex-wrap:wrap;gap:6px;width:100%;flex:1;align-content:flex-start;justify-content:center;'
+
+  const ROTATIES = [-3, 2, -1.5, 3, -2, 1]
+  const N = 6
+
+  for (let i = 0; i < N; i++) {
+    const old = document.getElementById('foto-inp-polaroid-'+i)
+    if (old) old.remove()
+    const inp = document.createElement('input')
+    inp.id = 'foto-inp-polaroid-'+i
+    inp.type = 'file'; inp.accept = 'image/*'
+    inp.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;'
+    inp.addEventListener('change', function() {
+      const file = this.files[0]; if (!file) return
+      if (file.size > 10*1024*1024) { alert('Max 10MB'); return }
+      const celIdx = i
+      const reader = new FileReader()
+      reader.onload = ev => {
+        const tmp = new Image()
+        tmp.onload = () => {
+          const canvas = document.createElement('canvas')
+          let w=tmp.width, h=tmp.height, max=500
+          if(w>max||h>max){ if(w>h){h=Math.round(h*max/w);w=max} else {w=Math.round(w*max/h);h=max} }
+          canvas.width=w; canvas.height=h
+          canvas.getContext('2d').drawImage(tmp,0,0,w,h)
+          localStorage.setItem(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.85))
+          tekenPolaroid(celIdx)
+        }
+        tmp.src = ev.target.result
+      }
+      reader.readAsDataURL(file)
+    })
+    document.body.appendChild(inp)
+  }
+
+  function tekenPolaroid(i) {
+    const old = document.getElementById('polaroid-'+i)
+    if (old) old.remove()
+
+    const foto = localStorage.getItem(KEY+i+'_'+uid)
+    const fitKey = KEY+i+'_fit_'+uid
+    const rot = ROTATIES[i % ROTATIES.length]
+
+    const frame = document.createElement('div')
+    frame.id = 'polaroid-'+i
+    frame.style.cssText = `background:#fffef0;padding:5px 5px 16px;border-radius:2px;box-shadow:0 3px 8px rgba(0,0,0,0.4);transform:rotate(${rot}deg);cursor:pointer;width:calc(33% - 4px);aspect-ratio:0.85;display:flex;flex-direction:column;overflow:hidden;position:relative;flex-shrink:0;`
+
+    const fotoEl = document.createElement('div')
+    fotoEl.style.cssText = 'flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(192,132,252,0.1);position:relative;'
+
+    if (foto) {
+      const huidigeFit = localStorage.getItem(fitKey) || 'cover'
+      fotoEl.style.background = huidigeFit === 'contain' ? '#000' : 'rgba(192,132,252,0.1)'
+
+      const img = document.createElement('img')
+      img.src = foto
+      img.style.cssText = 'width:100%;height:100%;object-fit:'+huidigeFit+';pointer-events:none;'
+      fotoEl.appendChild(img)
+
+      const fitBtn = document.createElement('button')
+      fitBtn.textContent = huidigeFit === 'cover' ? '⊞' : '⊡'
+      fitBtn.style.cssText = 'position:absolute;bottom:2px;left:2px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,0.6);border:none;color:white;font-size:9px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;padding:0;'
+      fitBtn.addEventListener('click', e => {
+        e.stopPropagation()
+        const nieuw = img.style.objectFit === 'cover' ? 'contain' : 'cover'
+        img.style.objectFit = nieuw
+        localStorage.setItem(fitKey, nieuw)
+        fitBtn.textContent = nieuw === 'cover' ? '⊞' : '⊡'
+        fotoEl.style.background = nieuw === 'contain' ? '#000' : 'rgba(192,132,252,0.1)'
+      })
+
+      const del = document.createElement('button')
+      del.textContent = '×'
+      del.style.cssText = 'position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.6);border:none;color:white;font-size:12px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;padding:0;'
+      del.addEventListener('click', e => { e.stopPropagation(); localStorage.removeItem(KEY+i+'_'+uid); localStorage.removeItem(fitKey); tekenPolaroid(i) })
+
+      fotoEl.appendChild(fitBtn)
+      frame.appendChild(del)
+    } else {
+      fotoEl.innerHTML = '<span style="font-size:22px;color:rgba(192,132,252,0.4);pointer-events:none;">+</span>'
+    }
+
+    frame.appendChild(fotoEl)
+    frame.addEventListener('click', e => {
+      if (e.target.tagName==='BUTTON') return
+      const inp = document.getElementById('foto-inp-polaroid-'+i)
+      if (inp) { inp.value=''; inp.click() }
+    })
+
+    const children = [...c.children]
+    if (children[i]) c.insertBefore(frame, children[i])
+    else c.appendChild(frame)
+  }
+
+  c.innerHTML = ''
+  for (let i = 0; i < N; i++) c.appendChild(document.createElement('div'))
+  for (let i = 0; i < N; i++) tekenPolaroid(i)
+}
+
+// ════════════════════════════════
+// POLL
+// ════════════════════════════════
+function renderPoll(c, uid) {
+  const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  const key = 'poll_'+uid
+  let poll = null
+  try { poll = JSON.parse(localStorage.getItem(key)) } catch(e) {}
+
+  function toonInvoer() {
+    c.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <input id="pv" placeholder="Jouw vraag..." maxlength="120" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;outline:none;width:100%">
+        <input id="po1" placeholder="Optie 1" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:13px;outline:none;width:100%">
+        <input id="po2" placeholder="Optie 2" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:13px;outline:none;width:100%">
+        <input id="po3" placeholder="Optie 3 (optioneel)" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:7px 10px;color:rgba(255,255,255,0.5);font-size:13px;outline:none;width:100%">
+        <button id="pok" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:9px;color:#1a0a2e;font-weight:600;cursor:pointer">Opslaan ✓</button>
+      </div>`
+    document.getElementById('pok').onclick = () => {
+      const v = document.getElementById('pv').value.trim()
+      const opts = ['po1','po2','po3'].map(id => document.getElementById(id).value.trim()).filter(Boolean)
+      if (!v || opts.length < 2) { alert('Vul een vraag en minstens 2 opties in'); return }
+      const nieuw = { vraag: v, opties: opts.map(t => ({ tekst: t, stemmen: 0 })), gestemd: false }
+      localStorage.setItem(key, JSON.stringify(nieuw))
+      toonPoll(nieuw)
+    }
+  }
+
+  function toonPoll(data) {
+    const tot = data.opties.reduce((s,o) => s+(o.stemmen||0), 0)
+    const opties = data.opties.map((opt, i) => {
+      const pct = tot > 0 ? Math.round((opt.stemmen||0)/tot*100) : 0
+      return `<div class="popt" data-i="${i}" style="position:relative;border-radius:8px;overflow:hidden;border:0.5px solid var(--border);cursor:${data.gestemd?'default':'pointer'}">
+        <div style="position:absolute;top:0;left:0;height:100%;width:${pct}%;background:rgba(192,132,252,0.25)"></div>
+        <div style="position:relative;display:flex;justify-content:space-between;padding:8px 10px">
+          <span style="font-size:13px">${escH(opt.tekst)}</span>
+          <span style="font-size:12px;color:var(--accent);font-weight:600">${data.gestemd?pct+'%':''}</span>
         </div>
-      `
+      </div>`
+    }).join('')
+    c.innerHTML = `
+      <div style="font-size:14px;font-weight:600;margin-bottom:8px">${escH(data.vraag)}</div>
+      <div style="display:flex;flex-direction:column;gap:6px">${opties}</div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px">
+        <span style="font-size:11px;color:rgba(255,255,255,0.8)" style="font-size:11px;color:rgba(255,255,255,0.7)">${tot} stemmen</span>
+        <button id="prst" style="background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;color:rgba(255,255,255,0.7);font-size:11px;cursor:pointer">✏️ Bewerken</button>
+      </div>`
+    document.getElementById('prst').onclick = toonInvoer
+    if (!data.gestemd) {
+      c.querySelectorAll('.popt').forEach(el => {
+        el.onclick = () => {
+          const i = parseInt(el.dataset.i)
+          data.opties[i].stemmen = (data.opties[i].stemmen||0) + 1
+          data.gestemd = true
+          localStorage.setItem(key, JSON.stringify(data))
+          toonPoll(data)
+        }
+      })
+    }
+  }
+
+  if (poll) toonPoll(poll)
+  else toonInvoer()
+}
+
+// ════════════════════════════════
+// AFTELTIMER
+// ════════════════════════════════
+function renderAftel(c, uid) {
+  const key = 'aftel_'+uid
+  let cfg = null
+  try { cfg = JSON.parse(localStorage.getItem(key)) } catch(e) {}
+
+  function toonInvoer() {
+    const d = new Date(); d.setDate(d.getDate()+7)
+    const def = d.toISOString().slice(0,10)
+    c.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input id="afb" placeholder="Bijv. Zomervakantie 🌞" maxlength="80" value="${cfg?String(cfg.bericht||'').replace(/"/g,'&quot;'):''}" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;outline:none;width:100%">
+        <input id="afd" type="date" value="${cfg?cfg.datum:def}" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;outline:none;width:100%;color-scheme:dark">
+        <button id="afok" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:9px;color:#1a0a2e;font-weight:600;cursor:pointer">Opslaan ✓</button>
+      </div>`
+    document.getElementById('afok').onclick = () => {
+      const b = document.getElementById('afb').value.trim()
+      const dt = document.getElementById('afd').value
+      if (!dt) { alert('Kies een datum'); return }
+      cfg = { bericht: b||'Aftellen...', datum: dt }
+      localStorage.setItem(key, JSON.stringify(cfg))
+      toonTimer(cfg)
+    }
+  }
+
+  function toonTimer(cr) {
+    const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    c.innerHTML = `
+      <div style="text-align:center">
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--accent)">${escH(cr.bericht)}</div>
+        <div id="atd" style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap"></div>
+        <button id="atw" style="margin-top:8px;background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;color:rgba(255,255,255,0.7);font-size:11px;cursor:pointer">✏️ Wijzigen</button>
+      </div>`
+    document.getElementById('atw').onclick = toonInvoer
+    const blok = (n,l) => `<div style="display:flex;flex-direction:column;align-items:center;background:rgba(192,132,252,0.1);border-radius:8px;padding:5px 7px;min-width:42px"><span style="font-size:18px;font-weight:700;color:var(--accent);font-family:monospace">${String(n).padStart(2,'0')}</span><span style="font-size:9px;color:rgba(255,255,255,0.75)">${l}</span></div>`
+    let tr
+    const upd = () => {
+      const el = document.getElementById('atd'); if(!el){clearInterval(tr);return}
+      const diff = new Date(cr.datum+'T00:00:00') - new Date()
+      if (diff <= 0) { el.innerHTML = '🎉 Het is zover!'; clearInterval(tr); return }
+      const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000)
+      el.innerHTML = blok(d,'dagen')+blok(h,'uur')+blok(m,'min')+blok(s,'sec')
+    }
+    upd(); tr = setInterval(upd, 1000)
+  }
+
+  if (cfg) toonTimer(cfg)
+  else toonInvoer()
+}
+
+// ════════════════════════════════
+// GASTENBOEK
+// ════════════════════════════════
+async function renderGastenboek(c, uid) {
+  const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  const { data: entries } = await supabase.from('guestbook_entries').select('*, author:author_id(username,avatar_url,avatar_data)').eq('profile_id', uid).order('created_at',{ascending:false}).limit(8)
+
+  c.innerHTML = `
+    <div id="gbl" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;max-height:200px;overflow-y:auto"></div>
+    <div style="display:flex;gap:6px">
+      <input id="gbi" maxlength="300" placeholder="Schrijf iets..." style="flex:1;background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:20px;padding:7px 12px;color:var(--text);font-size:13px;outline:none;min-width:0">
+      <button id="gbs" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:20px;padding:7px 14px;color:#1a0a2e;font-size:13px;font-weight:600;cursor:pointer">➤</button>
+    </div>`
+
+  const vul = d => {
+    const l = document.getElementById('gbl'); if(!l)return
+    if (!d?.length) { l.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,0.8);text-align:center;padding:10px">Nog geen berichten 👋</div>'; return }
+    l.innerHTML = d.map(e => {
+      const av = e.author?.avatar_data?.startsWith('data:') ? `<img src="${e.author.avatar_data}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0">` : `<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">${e.author?.avatar_url||'👤'}</div>`
+      return `<div style="display:flex;gap:8px;align-items:flex-start">${av}<div style="flex:1;min-width:0;background:rgba(255,255,255,0.04);border-radius:10px;padding:6px 10px"><div style="font-size:12px;font-weight:600;color:var(--accent)">${escH(e.author?.username||'?')}</div><div style="font-size:13px;line-height:1.4;word-break:break-word">${escH(e.content)}</div></div></div>`
     }).join('')
   }
+  vul(entries)
 
-  // ========================
-  // GASTENBOEK STUREN
-  // ========================
-  window.sendGb = async function() {
-    const input = document.getElementById('gbInput')
-    const tekst = input.value.trim()
-    if (!tekst) return
-
-    const { error } = await supabase
-      .from('guestbook_entries')
-      .insert({
-        profile_id: huidigeUser.id,
-        author_id: huidigeUser.id,
-        content: tekst
-      })
-
-    if (!error) {
-      input.value = ''
-      await laadGastenboek()
-    }
+  const stuur = async () => {
+    const inp = document.getElementById('gbi'); if(!inp)return
+    const t = inp.value.trim(); if(!t||t.length>300)return
+    inp.value = ''
+    await supabase.from('guestbook_entries').insert({ profile_id: uid, author_id: window._uid, content: t })
+    const { data: v } = await supabase.from('guestbook_entries').select('*, author:author_id(username,avatar_url,avatar_data)').eq('profile_id',uid).order('created_at',{ascending:false}).limit(8)
+    vul(v)
   }
+  document.getElementById('gbs')?.addEventListener('click', stuur)
+  document.getElementById('gbi')?.addEventListener('keydown', e => { if(e.key==='Enter') stuur() })
+}
 
-  // ========================
-  // PROFIEL BEWERKEN
-  // ========================
-  window.toggleEigenaar = function() {
-    isEigenaar = !isEigenaar
-    const badge = document.getElementById('eigenaarBadge')
-    const balk = document.getElementById('themaBalk')
-    if (isEigenaar) {
-      badge.textContent = 'Eigenaar'
-      badge.style.color = 'var(--accent2)'
-      badge.style.borderColor = 'var(--accent2)'
-      balk.style.display = 'block'
-    } else {
-      badge.textContent = 'Bezoeker'
-      badge.style.color = 'var(--accent)'
-      badge.style.borderColor = 'var(--accent)'
-      balk.style.display = 'none'
-      annuleerBewerk()
-      document.getElementById('avatarPickerWrap').style.display = 'none'
-    }
-  }
-
-  window.openBewerk = function() {
-    if (!isEigenaar) return
-    document.getElementById('editNaam').value = document.getElementById('profielNaam').textContent
-    document.getElementById('editBio').value = document.getElementById('profielBio').textContent
-    document.getElementById('editMood').value = document.getElementById('moodTekst').textContent
-    document.getElementById('profielWeergave').style.display = 'none'
-    document.getElementById('profielBewerk').style.display = 'block'
-  }
-
-  window.annuleerBewerk = function() {
-    document.getElementById('profielBewerk').style.display = 'none'
-    document.getElementById('profielWeergave').style.display = 'block'
-  }
-
-  // ========================
-  // PROFIEL OPSLAAN IN SUPABASE
-  // ========================
-  window.slaProfielOp = async function() {
-    const naam = document.getElementById('editNaam').value.trim()
-    // Lokaal opslaan
-    const lokaal = JSON.parse(localStorage.getItem('fibro_profiel') || '{}')
-    lokaal.naam = naam
-    localStorage.setItem('fibro_profiel', JSON.stringify(lokaal))
-    const bio = document.getElementById('editBio').value.trim()
-    const mood = document.getElementById('editMood').value.trim()
-    const status = document.getElementById('opslaanStatus')
-
-    const { error } = await supabase
-      .from('profiles')
-      .upsert({
-        id: huidigeUser.id,
-        username: huidigeProfiel?.username || huidigeUser.email.split('@')[0],
-        bio: bio,
-        mood: mood,
-        updated_at: new Date().toISOString()
-      })
-
-    if (error) {
-      status.textContent = '✗ Opslaan mislukt'
-      status.style.color = '#ff5c5c'
-      status.classList.add('show')
-      return
-    }
-
-    // UI bijwerken
-    document.getElementById('profielNaam').textContent = naam
-    document.getElementById('profielBio').textContent = bio
-    document.getElementById('moodTekst').textContent = mood
-
-    status.textContent = '✓ Opgeslagen!'
-    status.style.color = 'var(--accent)'
-    status.classList.add('show')
-
-    setTimeout(() => {
-      status.classList.remove('show')
-      annuleerBewerk()
-    }, 1500)
-  }
-
-  // ========================
-  // AVATAR PICKER
-  // ========================
-  window.openAvatarPicker = function() {
-    if (!isEigenaar) return
-    const wrap = document.getElementById('avatarPickerWrap')
-    if (wrap.style.display !== 'none') { wrap.style.display = 'none'; return }
-    const picker = document.getElementById('emojiPicker')
-    picker.innerHTML = ''
-    emojis.forEach(e => {
-      const span = document.createElement('span')
-      span.className = 'emoji-opt'
-      span.textContent = e
-      span.onclick = async () => {
-        document.getElementById('avatarEmoji').textContent = e
-        wrap.style.display = 'none'
-        await supabase.from('profiles').upsert({
-          id: huidigeUser.id,
-          username: huidigeProfiel?.username || huidigeUser.email.split('@')[0],
-          avatar_url: e,
-          updated_at: new Date().toISOString()
-        })
-      }
-      picker.appendChild(span)
-    })
-    wrap.style.display = 'block'
-  }
-
-  // ========================
-  // THEMA
-  // ========================
-  var themes = {
-    purple:{bg:"#1a0a2e",accent:"#c084fc",accent2:"#f0abfc"},
-    cottage:{bg:"#2d1f14",accent:"#f59e4a",accent2:"#fcd34d"},
-    space:{bg:"#030712",accent:"#38bdf8",accent2:"#7dd3fc"},
-    kawaii:{bg:"#2a0a3e",accent:"#f472b6",accent2:"#e879f9"},
-  }
-
-  window.setTheme = async function(name, dot) {
-    setThemeByName(name)
-    document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'))
-    if (dot) dot.classList.add('active')
-    await supabase.from('profiles').upsert({
-      id: huidigeUser.id,
-      username: huidigeProfiel?.username || huidigeUser.email.split('@')[0],
-      theme: name,
-      updated_at: new Date().toISOString()
-    })
-  }
-
-  function setThemeByName(name) {
-    const t = themes[name]
-    if (!t) return
-    document.documentElement.style.setProperty('--bg', t.bg)
-    document.documentElement.style.setProperty('--accent', t.accent)
-    document.documentElement.style.setProperty('--accent2', t.accent2)
-  }
-
-  // ========================
-  // MUZIEK
-  // ========================
-  var musicOn = false
-  window.toggleMusic = function() {
-    musicOn = !musicOn
-    document.getElementById('musicBtn').textContent = musicOn ? '🔇' : '🎵'
-  }
-
-  // ========================
-  // UITLOGGEN
-  // ========================
-  window.uitloggen = async function() {
+// ════════════════════════════════
+// INIT
+// ════════════════════════════════
+// ════════════════════════════════
+// UITLOGGEN
+// ════════════════════════════════
+window.uitloggen = async function() {
+  if (!confirm('Weet je zeker dat je wilt uitloggen?')) return
+  const btn = document.getElementById('uitlogBtn')
+  if (btn) { btn.textContent = '⏳'; btn.disabled = true }
+  try {
     await supabase.auth.signOut()
-    window.location.href = 'login.html'
+  } catch(e) { /* ga toch door naar login, ook als signOut faalt */ }
+  window.location.href = 'login.html'
+}
+
+async function init() {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) { window.location.href = 'login.html'; return }
+
+  window._uid = session.user.id
+
+  await laadThema()
+  startOproepLuisteraar()
+  await startHeartbeat()
+
+  const { data: profiel } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
+  window._profiel = profiel
+
+  // Hero
+  const heroAv = document.getElementById('heroAvatar')
+  if (profiel?.avatar_data?.startsWith('data:')) {
+    heroAv.innerHTML = `<img src="${profiel.avatar_data}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`
+    document.getElementById('topAvatar').innerHTML = heroAv.innerHTML
+  } else if (profiel?.avatar_url) {
+    heroAv.textContent = profiel.avatar_url
+    document.getElementById('topAvatar').textContent = profiel.avatar_url
+  }
+  const naam = profiel?.display_name || profiel?.username || 'Jij'
+  document.getElementById('heroNaam').textContent = naam
+  document.getElementById('heroUsername').textContent = '@' + (profiel?.username || '')
+  const moodEl = document.getElementById('heroMood')
+  if (profiel?.offline_emoji || profiel?.offline_bericht) {
+    moodEl.innerHTML = `<span>${profiel.offline_emoji||''}</span><span>${profiel.offline_bericht||''}</span>`
   }
 
-  // ========================
-  // HULPFUNCTIE: TIJD GELEDEN
-  // ========================
-  function tijdGeleden(datum) {
-    const nu = new Date()
-    const dan = new Date(datum)
-    const diff = Math.floor((nu - dan) / 1000)
-    if (diff < 60) return 'Zojuist'
-    if (diff < 3600) return Math.floor(diff/60) + ' minuten geleden'
-    if (diff < 86400) return Math.floor(diff/3600) + ' uur geleden'
-    return Math.floor(diff/86400) + ' dagen geleden'
+  // Cache opruimen
+  import('./cache.js').then(m => {
+    const ids = JSON.parse(localStorage.getItem('actieve_vriend_ids')||'[]')
+    m.ruimCacheOp(ids)
+  }).catch(()=>{})
+}
+
+// ════════════════════════════════
+// START
+// ════════════════════════════════
+init().then(() => {
+  // HOME WIDGETS
+  const homeLayout = laadLayout('home')
+  const homeActief = homeLayout.filter(w => w.aan)
+  const homeGrid = document.getElementById('home-sectie')
+
+  if (homeActief.length) {
+    tekenGrid('home-sectie', homeLayout, renderHome)
+  } else {
+    homeGrid.innerHTML = `
+      <div class="leeg-staat">
+        <div class="leeg-staat-icon">🧩</div>
+        <div class="leeg-staat-titel">Geen widgets actief</div>
+        <div class="leeg-staat-sub">Ga naar je profiel en zet widgets aan om ze hier te zien.</div>
+        <button class="leeg-staat-btn" onclick="window.location.href='profiel.html#widgets'">Widgets instellen ⚙️</button>
+      </div>`
   }
 
-  // Start
-  init()
+  // PROFIEL WIDGETS
+  const proLayout = laadLayout('profiel')
+  const proActief = proLayout.filter(w => w.aan)
+  if (proActief.length) {
+    document.getElementById('profiel-sectie-label').style.display = 'block'
+    tekenGrid('profiel-sectie', proLayout, renderProfiel)
+  }
+}).catch(e => console.error('Init fout:', e))
 </script>
 
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/service-worker.js')
+  navigator.serviceWorker.register('/Fibro/service-worker.js')
 }
 </script>
 <script src="swipe.js"></script>
-
 </body>
 </html>
+

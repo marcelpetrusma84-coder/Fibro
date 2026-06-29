@@ -1874,6 +1874,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       if (bal.x - BAL_GROOTTE/2 < 0 || bal.x + BAL_GROOTTE/2 > BREEDTE) {
         bal.vx *= -1
         bal.x = Math.max(BAL_GROOTTE/2, Math.min(BREEDTE - BAL_GROOTTE/2, bal.x))
+        geluidStuiter()
       }
 
       // Mijn paddle (onder) — host speelt zelf ook gewoon mee

@@ -1992,7 +1992,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     })
 
     function gastLoop() {
-      if (gameOver) return
+      if (gameOver) { tekenEindScherm(); return }
       tekenScherm()
       animatieFrame = requestAnimationFrame(gastLoop)
     }

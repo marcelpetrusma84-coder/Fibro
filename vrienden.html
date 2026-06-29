@@ -412,7 +412,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     // Maak QR code
     document.getElementById('qr-container').innerHTML = ''
     new QRCode(document.getElementById('qr-container'), {
-      text: token,
+      text: 'https://marcelpetrusma84-coder.github.io/Fibro/invite.html?token=' + token,
       width: 200,
       height: 200,
       colorDark: '#1a0a2e',
@@ -496,5 +496,6 @@ function filterVrienden() {
 </script>
 
 <script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js"; startVriendverzoekLuisteraar()</script>
 </body>
 </html>

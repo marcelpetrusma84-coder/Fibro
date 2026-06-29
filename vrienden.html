@@ -249,6 +249,10 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
       </div>
 
       <div class="token-code" id="token-display"></div>
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center;background:rgba(255,255,255,0.06);border-radius:12px;padding:8px 10px;">
+        <input id="invite-link" readonly style="flex:1;background:transparent;border:none;color:var(--text);font-size:12px;outline:none;" value="">
+        <button id="kopieer-link-btn" onclick="kopieerInviteLink()" style="background:var(--accent);color:#1a0a2e;border:none;border-radius:10px;padding:6px 12px;font-size:12px;font-weight:bold;cursor:pointer;white-space:nowrap;">Kopieer</button>
+      </div>
 
       <!-- Verlopen staat -->
       <div class="expired-overlay" id="expired-overlay">
@@ -408,6 +412,9 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     document.getElementById('qr-laden').style.display = 'none'
     document.getElementById('qr-sectie').style.display = 'block'
     document.getElementById('token-display').textContent = token
+    const inviteUrl = 'https://marcelpetrusma84-coder.github.io/Fibro/invite.html?token=' + token
+    const linkVeld = document.getElementById('invite-link')
+    if (linkVeld) linkVeld.value = inviteUrl
 
     // Maak QR code
     document.getElementById('qr-container').innerHTML = ''
@@ -467,6 +474,17 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   // ========================
   // NIEUWE INVITE
   // ========================
+  window.kopieerInviteLink = function() {
+    const veld = document.getElementById('invite-link')
+    veld.select()
+    navigator.clipboard.writeText(veld.value).then(() => {
+      const btn = document.getElementById('kopieer-link-btn')
+      const orig = btn.textContent
+      btn.textContent = 'Gekopieerd!'
+      setTimeout(() => btn.textContent = orig, 2000)
+    }).catch(() => { prompt('Kopieer deze link:', veld.value) })
+  }
+
   window.nieuweInvite = async function() {
     await genereerInvite()
   }

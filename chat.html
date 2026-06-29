@@ -1766,7 +1766,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     inhoud.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
         <div id="pong-status" style="color:#00f0ff;font-size:14px;font-weight:700;letter-spacing:1px;text-shadow:0 0 8px #00f0ff;">Jij: <span id="pong-mijn-score">0</span> — <span id="pong-naam">${(geselecteerdeVriend?.naam || 'Vriend')}</span>: <span id="pong-vriend-score">0</span></div>
-        <canvas id="pong-canvas" width="${BREEDTE}" height="${HOOGTE}" style="background:#050510;border:2px solid #1a0a3e;border-radius:8px;touch-action:none;box-shadow:0 0 24px rgba(0,240,255,0.15);"></canvas>
+        <canvas id="pong-canvas" width="${BREEDTE}" height="${HOOGTE}" style="background:#050510;border:2px solid #00f0ff;border-radius:8px;touch-action:none;box-shadow:0 0 30px rgba(0,240,255,0.4),0 0 60px rgba(0,240,255,0.15),inset 0 0 30px rgba(0,0,0,0.8);"></canvas>
         <div style="font-size:11px;color:rgba(255,255,255,0.6);">Sleep om je paddle te bewegen</div>
         <button id="pong-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Opnieuw spelen</button>
       </div>`
@@ -1921,7 +1921,21 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     function checkWinst() {
       if (mijnScore >= WIN_SCORE || vriendScore >= WIN_SCORE) {
         gameOver = true
-        statusEl.textContent = mijnScore >= WIN_SCORE ? '🎉 Jij wint!' : '😢 ' + (geselecteerdeVriend.naam || 'Vriend') + ' wint!'
+        const winnaar = mijnScore >= WIN_SCORE
+      statusEl.textContent = winnaar ? '🎉 Jij wint!' : '😢 ' + (geselecteerdeVriend.naam || 'Vriend') + ' wint!'
+      ctx.fillStyle = '#050510'
+      ctx.fillRect(0, 0, BREEDTE, HOOGTE)
+      ctx.save()
+      ctx.shadowColor = winnaar ? '#00f0ff' : '#ff00cc'
+      ctx.shadowBlur = 40
+      ctx.fillStyle = winnaar ? '#00f0ff' : '#ff00cc'
+      ctx.font = 'bold 28px monospace'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(winnaar ? 'JIJ WINT!' : 'VERLOREN!', BREEDTE/2, HOOGTE/2 - 20)
+      ctx.font = 'bold 48px monospace'
+      ctx.fillText(mijnScore + ' — ' + vriendScore, BREEDTE/2, HOOGTE/2 + 40)
+      ctx.restore()
         opnieuwBtn.style.display = 'block'
         if (animatieFrame) cancelAnimationFrame(animatieFrame)
       }

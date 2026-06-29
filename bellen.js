@@ -100,7 +100,7 @@ export async function belOp(naarVriendId, video = false) {
   vriendId = naarVriendId
   isInitiator = true
   try {
-    lokaleStream = await navigator.mediaDevices.getUserMedia({ audio: true, video })
+    lokaleStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video })
   } catch(e) { alert('Geen toegang tot microfoon/camera.'); return false }
   const lokaalEl = document.getElementById('lokaalMedia')
   if (lokaalEl) lokaalEl.srcObject = lokaleStream
@@ -114,7 +114,7 @@ export async function belOp(naarVriendId, video = false) {
 
 export async function accepteerOproep(video = false) {
   try {
-    lokaleStream = await navigator.mediaDevices.getUserMedia({ audio: true, video })
+    lokaleStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video })
   } catch(e) { alert('Geen toegang tot microfoon/camera.'); return false }
   // Zorg dat het gesprekkanaal open is (bij paginawissel kan het nog ontbreken)
   if (!gesprekKanaal && vriendId) {

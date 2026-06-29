@@ -1932,9 +1932,22 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       ctx.font = 'bold 28px monospace'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      ctx.fillText(winnaar ? 'JIJ WINT!' : 'VERLOREN!', BREEDTE/2, HOOGTE/2 - 20)
+      const winNaam = winnaar ? 'JIJ' : (geselecteerdeVriend.naam || 'Vriend').toUpperCase()
+      const verliesNaam = winnaar ? (geselecteerdeVriend.naam || 'Vriend').toUpperCase() : 'JIJ'
+      ctx.font = 'bold 14px monospace'
+      ctx.fillStyle = winnaar ? '#00f0ff' : '#ff00cc'
+      ctx.shadowColor = winnaar ? '#00f0ff' : '#ff00cc'
+      ctx.fillText('WINNAAR', BREEDTE/2, HOOGTE/2 - 60)
+      ctx.font = 'bold 32px monospace'
+      ctx.fillText(winNaam, BREEDTE/2, HOOGTE/2 - 30)
       ctx.font = 'bold 48px monospace'
-      ctx.fillText(mijnScore + ' — ' + vriendScore, BREEDTE/2, HOOGTE/2 + 40)
+      ctx.fillText(mijnScore + ' — ' + vriendScore, BREEDTE/2, HOOGTE/2 + 20)
+      ctx.font = 'bold 14px monospace'
+      ctx.fillStyle = winnaar ? '#ff00cc' : '#00f0ff'
+      ctx.shadowColor = winnaar ? '#ff00cc' : '#00f0ff'
+      ctx.fillText('VERLIEZER', BREEDTE/2, HOOGTE/2 + 60)
+      ctx.font = 'bold 20px monospace'
+      ctx.fillText(verliesNaam, BREEDTE/2, HOOGTE/2 + 82)
       ctx.restore()
         opnieuwBtn.style.display = 'block'
         if (animatieFrame) cancelAnimationFrame(animatieFrame)

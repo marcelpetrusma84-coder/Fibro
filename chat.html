@@ -2024,11 +2024,11 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     }
 
     function controleerLevel() {
-      const totaal = mijnScore + vriendScore
-      const nieuwLevel = Math.min(Math.floor(totaal / 7) + 1, MAX_LEVEL)
-      if (nieuwLevel > huidigLevel) {
-        huidigLevel = nieuwLevel
-        spelKanaal.send({ type: "broadcast", event: "level-update", payload: { level: huidigLevel } })
+      if (mijnScore >= WIN_SCORE || vriendScore >= WIN_SCORE) {
+        if (huidigLevel < MAX_LEVEL) {
+          huidigLevel++
+          spelKanaal.send({ type: "broadcast", event: "level-update", payload: { level: huidigLevel } })
+        }
       }
     }
     function resetBal(richting) {
@@ -2124,7 +2124,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       huidigLevel = msg.payload.level
     })
     spelKanaal.on('broadcast', { event: 'opnieuw' }, () => {
-      mijnScore = 0; vriendScore = 0; huidigLevel = 1
+      mijnScore = 0; vriendScore = 0
       gameOver = false
       opnieuwBtn.style.display = 'none'
       resetBal(benIkHost ? 1 : -1)

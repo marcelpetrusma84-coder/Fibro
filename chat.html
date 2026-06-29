@@ -1961,8 +1961,11 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       // Mijn paddle (onder) — host speelt zelf ook gewoon mee
       if (bal.y + BAL_GROOTTE/2 > PADDLE_Y_ONDER && bal.y + BAL_GROOTTE/2 < PADDLE_Y_ONDER + PADDLE_HOOGTE + 6 && bal.vy > 0) {
         if (botsPaddle(mijnPaddleX)) {
-          bal.vy *= -1.04
-          bal.vx += (bal.x - (mijnPaddleX + PADDLE_BREEDTE/2)) * 0.06
+          const raak1 = (bal.x - (mijnPaddleX + PADDLE_BREEDTE/2)) / (PADDLE_BREEDTE/2)
+          const snelheid1 = Math.sqrt(bal.vx*bal.vx + bal.vy*bal.vy) * 1.04
+          const hoek1 = raak1 * 1.1
+          bal.vx = Math.sin(hoek1) * snelheid1
+          bal.vy = -Math.abs(Math.cos(hoek1) * snelheid1)
           bal.y = PADDLE_Y_ONDER - BAL_GROOTTE/2
           geluidStuiter()
         }
@@ -1970,8 +1973,11 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       // Vriend paddle (boven)
       if (bal.y - BAL_GROOTTE/2 < PADDLE_Y_BOVEN + PADDLE_HOOGTE && bal.y - BAL_GROOTTE/2 > PADDLE_Y_BOVEN - 6 && bal.vy < 0) {
         if (botsPaddle(vriendPaddleX)) {
-          bal.vy *= -1.04
-          bal.vx += (bal.x - (vriendPaddleX + PADDLE_BREEDTE/2)) * 0.06
+          const raak2 = (bal.x - (vriendPaddleX + PADDLE_BREEDTE/2)) / (PADDLE_BREEDTE/2)
+          const snelheid2 = Math.sqrt(bal.vx*bal.vx + bal.vy*bal.vy) * 1.04
+          const hoek2 = raak2 * 1.1
+          bal.vx = Math.sin(hoek2) * snelheid2
+          bal.vy = Math.abs(Math.cos(hoek2) * snelheid2)
           bal.y = PADDLE_Y_BOVEN + PADDLE_HOOGTE + BAL_GROOTTE/2
           geluidStuiter()
         }
@@ -2036,7 +2042,11 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       }
     }
     function resetBal(richting) {
-      bal = { x: BREEDTE/2, y: HOOGTE/2, vx: (Math.random()-0.5)*4, vy: 3.2 * richting }
+      const startX = mijnPaddleX + PADDLE_BREEDTE/2
+      const startY = richting < 0 ? PADDLE_Y_ONDER - 20 : PADDLE_Y_BOVEN + PADDLE_HOOGTE + 20
+      const hoek = (Math.random()-0.5) * 0.8
+      const snelheid = 3.5
+      bal = { x: startX, y: startY, vx: Math.sin(hoek)*snelheid, vy: richting < 0 ? -snelheid : snelheid }
     }
 
     function tekenEindScherm() {

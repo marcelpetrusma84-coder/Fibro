@@ -152,38 +152,7 @@ function bepaalNiveau(jaar) {
   return 'adults'
 }
 
-window.voegToe = async function() {
-  const btn = document.getElementById('toevoegBtn')
-  btn.textContent = 'Toevoegen...'
-  btn.disabled = true
-  const { data: { session } } = await supabase.auth.getSession()
-  const mij = session.user.id
-  const ander = uitnodigerData.created_by
-
-  // Check of al vrienden
-  const { data: bestaat } = await supabase
-    .from('friendships')
-    .select('id')
-    .eq('user_id', mij)
-    .eq('friend_id', ander)
-    .maybeSingle()
-
-  if (!bestaat) {
-    await supabase.from('friendships').insert([
-      { user_id: mij, friend_id: ander, status: 'accepted' },
-      { user_id: ander, friend_id: mij, status: 'accepted' }
-    ])
-  }
-  // Markeer token als gebruikt
-  await supabase.from('invite_tokens')
-    .update({ is_used: true, used_at: new Date().toISOString(), used_by: mij })
-    .eq('token', token)
-
-  btn.textContent = '✅ Toegevoegd!'
-  setTimeout(() => window.location.href = 'vrienden.html', 1000)
-}
-
-init() {
+async function init() {
   if (!token) { toonFout(); return }
   const { data, error } = await supabase
     .from('invite_tokens')

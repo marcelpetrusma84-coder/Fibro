@@ -1761,10 +1761,11 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
         case 2: return [ // hoek-bumpers
           {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
           {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'}]
-        case 3: return [ // hoek-bumpers + zijkant midden
+        case 3: return [ // 3 extra hoeken midden
           {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
           {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
-          {type:'rect',x:0,y:H/2-30,b:18,h:60},{type:'rect',x:W-18,y:H/2-30,b:18,h:60}]
+          {type:'hoek',x:0,y:H/2,richting:'lb'},{type:'hoek',x:W,y:H/2,richting:'rb'},
+          {type:'hoek',x:W/2,y:H/2,richting:'lt'}]
         case 4: return [ // hoek-bumpers + ruit midden
           {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
           {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
@@ -2654,10 +2655,11 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
         case 2: return [ // hoek-bumpers
           {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
           {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'}]
-        case 3: return [ // hoek-bumpers + zijkant midden
+        case 3: return [ // 3 extra hoeken midden
           {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
           {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
-          {type:'rect',x:0,y:H/2-30,b:18,h:60},{type:'rect',x:W-18,y:H/2-30,b:18,h:60}]
+          {type:'hoek',x:0,y:H/2,richting:'lb'},{type:'hoek',x:W,y:H/2,richting:'rb'},
+          {type:'hoek',x:W/2,y:H/2,richting:'lt'}]
         case 4: return [ // hoek-bumpers + ruit midden
           {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
           {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},

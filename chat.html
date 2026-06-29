@@ -1805,6 +1805,13 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       }
       ctx.save(); ctx.shadowColor = "#00f0ff"; ctx.shadowBlur = 20; ctx.fillStyle = "#ffffff"
       ctx.beginPath(); ctx.arc(bal.x, bal.y, BAL_GROOTTE/2, 0, Math.PI*2); ctx.fill(); ctx.restore()
+      ctx.save(); ctx.fillStyle = "#ff00cc"; ctx.shadowColor = "#ff00cc"; ctx.shadowBlur = 12
+      ctx.font = "bold 22px monospace"; ctx.textAlign = "center"; ctx.textBaseline = "top"
+      ctx.fillText(vriendScore, BREEDTE/2, 36)
+      ctx.fillStyle = "#00f0ff"; ctx.shadowColor = "#00f0ff"
+      ctx.textBaseline = "bottom"
+      ctx.fillText(mijnScore, BREEDTE/2, HOOGTE - 36)
+      ctx.restore()
     }
 
     // ── Drag-besturing voor mijn paddle (werkt overal op het scherm, niet alleen op canvas) ──
@@ -2043,12 +2050,22 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     }
 
     function tekenWachtScherm() {
-      ctx.clearRect(0, 0, BREEDTE, HOOGTE)
-      ctx.fillStyle = '#ffffff'
-      ctx.font = 'bold 80px sans-serif'
+      ctx.fillStyle = '#050510'
+      ctx.fillRect(0, 0, BREEDTE, HOOGTE)
+      ctx.save()
+      ctx.shadowColor = '#00f0ff'; ctx.shadowBlur = 40
+      ctx.fillStyle = '#00f0ff'
+      ctx.font = 'bold 80px monospace'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       ctx.fillText(aftellen, BREEDTE/2, HOOGTE/2)
+      ctx.restore()
+      ctx.save()
+      ctx.fillStyle = '#00f0ff'
+      ctx.shadowColor = '#00f0ff'; ctx.shadowBlur = 16
+      ctx.font = 'bold 28px monospace'
+      ctx.fillText(mijnScore + '  —  ' + vriendScore, BREEDTE/2, 24)
+      ctx.restore()
     }
 
     // Start: toon wachtscherm en meld dat ik klaar ben

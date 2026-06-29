@@ -1201,6 +1201,9 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       verwerkBeurt()
     })
 
+    spelKanaal.on('broadcast', { event: 'level-update' }, msg => {
+      huidigLevel = msg.payload.level
+    })
     spelKanaal.on('broadcast', { event: 'opnieuw' }, () => {
       bord = Array(9).fill(null)
       gameOver = false
@@ -1334,6 +1337,9 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       verwerkBeurt()
     })
 
+    spelKanaal.on('broadcast', { event: 'level-update' }, msg => {
+      huidigLevel = msg.payload.level
+    })
     spelKanaal.on('broadcast', { event: 'opnieuw' }, () => {
       bord = Array(RIJEN).fill(null).map(() => Array(KOLOMMEN).fill(null))
       gameOver = false
@@ -1529,6 +1535,9 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       naBeurtControle()
     })
 
+    spelKanaal.on('broadcast', { event: 'level-update' }, msg => {
+      huidigLevel = msg.payload.level
+    })
     spelKanaal.on('broadcast', { event: 'opnieuw' }, () => {
       staat = Schaak.nieuweSpelStaat()
       geselecteerd = null
@@ -1694,6 +1703,9 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       naBeurtControle()
     })
 
+    spelKanaal.on('broadcast', { event: 'level-update' }, msg => {
+      huidigLevel = msg.payload.level
+    })
     spelKanaal.on('broadcast', { event: 'opnieuw' }, () => {
       staat = Dammen.nieuweSpelStaat()
       geselecteerd = null
@@ -1736,6 +1748,47 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     let vriendPaddleX = BREEDTE / 2 - PADDLE_BREEDTE / 2
     let bal = { x: BREEDTE/2, y: HOOGTE/2, vx: 2.4, vy: -3.2 }
     let mijnScore = 0, vriendScore = 0
+    let huidigLevel = 1
+    const MAX_LEVEL = 7
+
+    // Obstakels per level (gebaseerd op jouw tekeningen)
+    // type: rect={x,y,b,h}, bumper={x,y,r} (driehoek-hoek), zijkant={x,y,b,h}
+    function getLevelObstakels(level) {
+      const W = BREEDTE, H = HOOGTE
+      const bs = 22 // bumper size
+      switch(level) {
+        case 1: return []
+        case 2: return [ // hoek-bumpers
+          {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
+          {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'}]
+        case 3: return [ // hoek-bumpers + zijkant midden
+          {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
+          {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
+          {type:'rect',x:0,y:H/2-30,b:18,h:60},{type:'rect',x:W-18,y:H/2-30,b:18,h:60}]
+        case 4: return [ // hoek-bumpers + ruit midden
+          {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
+          {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
+          {type:'ruit',x:W/2,y:H/2,r:28}]
+        case 5: return [ // hoek + zijkant + 2 ruiten
+          {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
+          {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
+          {type:'zijkant',x:0,y:H/2-50,richting:'l'},{type:'zijkant',x:W,y:H/2-50,richting:'r'},
+          {type:'ruit',x:W/2,y:H/3,r:22},{type:'ruit',x:W/2,y:2*H/3,r:22}]
+        case 6: return [ // zijkant-bumpers + ruit
+          {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
+          {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
+          {type:'zijkant',x:0,y:H/3,richting:'l'},{type:'zijkant',x:W,y:H/3,richting:'r'},
+          {type:'zijkant',x:0,y:2*H/3,richting:'l'},{type:'zijkant',x:W,y:2*H/3,richting:'r'},
+          {type:'ruit',x:W/2,y:H/2,r:28}]
+        case 7: return [ // zijkant-bumpers + 2 verticale staven
+          {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
+          {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
+          {type:'zijkant',x:0,y:H/3,richting:'l'},{type:'zijkant',x:W,y:H/3,richting:'r'},
+          {type:'zijkant',x:0,y:2*H/3,richting:'l'},{type:'zijkant',x:W,y:2*H/3,richting:'r'},
+          {type:'rect',x:W/2-30,y:H/2-50,b:14,h:60},{type:'rect',x:W/2+16,y:H/2-50,b:14,h:60}]
+        default: return []
+      }
+    }
     let gameOver = false
     let animatieFrame = null
     let laatsteVerstuurd = 0
@@ -1805,6 +1858,34 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       }
       ctx.save(); ctx.shadowColor = "#00f0ff"; ctx.shadowBlur = 20; ctx.fillStyle = "#ffffff"
       ctx.beginPath(); ctx.arc(bal.x, bal.y, BAL_GROOTTE/2, 0, Math.PI*2); ctx.fill(); ctx.restore()
+      // Teken obstakels
+      const obs = getLevelObstakels(huidigLevel)
+      const bs = 22
+      obs.forEach(o => {
+        ctx.save(); ctx.shadowColor = "#ff00cc"; ctx.shadowBlur = 12; ctx.fillStyle = "#ff00cc"
+        if (o.type === "rect") {
+          ctx.fillRect(o.x, o.y, o.b, o.h)
+        } else if (o.type === "ruit") {
+          ctx.beginPath(); ctx.moveTo(o.x,o.y-o.r); ctx.lineTo(o.x+o.r,o.y); ctx.lineTo(o.x,o.y+o.r); ctx.lineTo(o.x-o.r,o.y); ctx.closePath(); ctx.fill()
+        } else if (o.type === "hoek") {
+          ctx.beginPath()
+          if(o.richting==="lt"){ ctx.moveTo(o.x,o.y); ctx.lineTo(o.x+bs,o.y); ctx.lineTo(o.x,o.y+bs) }
+          else if(o.richting==="rt"){ ctx.moveTo(o.x,o.y); ctx.lineTo(o.x-bs,o.y); ctx.lineTo(o.x,o.y+bs) }
+          else if(o.richting==="lb"){ ctx.moveTo(o.x,o.y); ctx.lineTo(o.x+bs,o.y); ctx.lineTo(o.x,o.y-bs) }
+          else if(o.richting==="rb"){ ctx.moveTo(o.x,o.y); ctx.lineTo(o.x-bs,o.y); ctx.lineTo(o.x,o.y-bs) }
+          ctx.closePath(); ctx.fill()
+        } else if (o.type === "zijkant") {
+          ctx.beginPath()
+          if(o.richting==="l"){ ctx.moveTo(o.x,o.y); ctx.lineTo(o.x+bs,o.y+25); ctx.lineTo(o.x,o.y+50) }
+          else{ ctx.moveTo(o.x,o.y); ctx.lineTo(o.x-bs,o.y+25); ctx.lineTo(o.x,o.y+50) }
+          ctx.closePath(); ctx.fill()
+        }
+        ctx.restore()
+      })
+      // Level indicator
+      ctx.save(); ctx.fillStyle = "rgba(255,0,204,0.4)"; ctx.font = "bold 11px monospace"
+      ctx.textAlign = "right"; ctx.textBaseline = "top"
+      ctx.fillText("LVL " + huidigLevel, BREEDTE-4, 4); ctx.restore()
       ctx.save(); ctx.fillStyle = "#ff00cc"; ctx.shadowColor = "#ff00cc"; ctx.shadowBlur = 12
       ctx.font = "bold 22px monospace"; ctx.textAlign = "center"; ctx.textBaseline = "top"
       ctx.fillText(vriendScore, BREEDTE/2, 36)
@@ -1900,13 +1981,40 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       if (bal.y < -20) {
         mijnScore++
         geluidScore()
+        controleerLevel()
         resetBal(-1)
       } else if (bal.y > HOOGTE + 20) {
         vriendScore++
         geluidScore()
+        controleerLevel()
         resetBal(1)
       }
 
+      // Obstakels botsen
+      const obs2 = getLevelObstakels(huidigLevel)
+      obs2.forEach(o => {
+        if (o.type === "rect") {
+          if (bal.x+BAL_GROOTTE/2 > o.x && bal.x-BAL_GROOTTE/2 < o.x+o.b &&
+              bal.y+BAL_GROOTTE/2 > o.y && bal.y-BAL_GROOTTE/2 < o.y+o.h) {
+            const dx = Math.min(Math.abs(bal.x-(o.x+o.b/2)), o.b/2)
+            const dy = Math.min(Math.abs(bal.y-(o.y+o.h/2)), o.h/2)
+            if (dx < dy) bal.vx *= -1; else bal.vy *= -1
+            geluidTik()
+          }
+        } else if (o.type === "ruit") {
+          const dist = Math.abs(bal.x-o.x) + Math.abs(bal.y-o.y)
+          if (dist < o.r + BAL_GROOTTE/2) {
+            if (Math.abs(bal.x-o.x) > Math.abs(bal.y-o.y)) bal.vx *= -1; else bal.vy *= -1
+            geluidTik()
+          }
+        } else if (o.type === "hoek" || o.type === "zijkant") {
+          const bs2 = 22
+          let inBox = false
+          if (o.type === "hoek") inBox = bal.x > o.x-bs2 && bal.x < o.x+bs2 && bal.y > o.y-bs2 && bal.y < o.y+bs2
+          else inBox = o.richting==="l" ? bal.x < bs2 && bal.y > o.y && bal.y < o.y+50 : bal.x > BREEDTE-bs2 && bal.y > o.y && bal.y < o.y+50
+          if (inBox) { bal.vx *= -1; bal.vy *= -1; geluidTik() }
+        }
+      })
       // Snelheid begrenzen
       const maxSnelheid = 9
       bal.vx = Math.max(-maxSnelheid, Math.min(maxSnelheid, bal.vx))
@@ -1915,6 +2023,14 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       checkWinst()
     }
 
+    function controleerLevel() {
+      const totaal = mijnScore + vriendScore
+      const nieuwLevel = Math.min(Math.floor(totaal / 7) + 1, MAX_LEVEL)
+      if (nieuwLevel > huidigLevel) {
+        huidigLevel = nieuwLevel
+        spelKanaal.send({ type: "broadcast", event: "level-update", payload: { level: huidigLevel } })
+      }
+    }
     function resetBal(richting) {
       bal = { x: BREEDTE/2, y: HOOGTE/2, vx: (Math.random()-0.5)*4, vy: 3.2 * richting }
     }
@@ -2004,8 +2120,11 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       else animatieFrame = requestAnimationFrame(gastLoop)
     }
 
+    spelKanaal.on('broadcast', { event: 'level-update' }, msg => {
+      huidigLevel = msg.payload.level
+    })
     spelKanaal.on('broadcast', { event: 'opnieuw' }, () => {
-      mijnScore = 0; vriendScore = 0
+      mijnScore = 0; vriendScore = 0; huidigLevel = 1
       gameOver = false
       opnieuwBtn.style.display = 'none'
       resetBal(benIkHost ? 1 : -1)
@@ -2507,6 +2626,47 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     let aliens = []
     let alienDir = 1, alienSnelheid = 0.4, alienDaalY = 0
     let mijnScore = 0, vriendScore = 0
+    let huidigLevel = 1
+    const MAX_LEVEL = 7
+
+    // Obstakels per level (gebaseerd op jouw tekeningen)
+    // type: rect={x,y,b,h}, bumper={x,y,r} (driehoek-hoek), zijkant={x,y,b,h}
+    function getLevelObstakels(level) {
+      const W = BREEDTE, H = HOOGTE
+      const bs = 22 // bumper size
+      switch(level) {
+        case 1: return []
+        case 2: return [ // hoek-bumpers
+          {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
+          {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'}]
+        case 3: return [ // hoek-bumpers + zijkant midden
+          {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
+          {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
+          {type:'rect',x:0,y:H/2-30,b:18,h:60},{type:'rect',x:W-18,y:H/2-30,b:18,h:60}]
+        case 4: return [ // hoek-bumpers + ruit midden
+          {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
+          {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
+          {type:'ruit',x:W/2,y:H/2,r:28}]
+        case 5: return [ // hoek + zijkant + 2 ruiten
+          {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
+          {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
+          {type:'zijkant',x:0,y:H/2-50,richting:'l'},{type:'zijkant',x:W,y:H/2-50,richting:'r'},
+          {type:'ruit',x:W/2,y:H/3,r:22},{type:'ruit',x:W/2,y:2*H/3,r:22}]
+        case 6: return [ // zijkant-bumpers + ruit
+          {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
+          {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
+          {type:'zijkant',x:0,y:H/3,richting:'l'},{type:'zijkant',x:W,y:H/3,richting:'r'},
+          {type:'zijkant',x:0,y:2*H/3,richting:'l'},{type:'zijkant',x:W,y:2*H/3,richting:'r'},
+          {type:'ruit',x:W/2,y:H/2,r:28}]
+        case 7: return [ // zijkant-bumpers + 2 verticale staven
+          {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
+          {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
+          {type:'zijkant',x:0,y:H/3,richting:'l'},{type:'zijkant',x:W,y:H/3,richting:'r'},
+          {type:'zijkant',x:0,y:2*H/3,richting:'l'},{type:'zijkant',x:W,y:2*H/3,richting:'r'},
+          {type:'rect',x:W/2-30,y:H/2-50,b:14,h:60},{type:'rect',x:W/2+16,y:H/2-50,b:14,h:60}]
+        default: return []
+      }
+    }
     let level = 1
     let gameOver = false, gewonnen = false
     let animFrame = null

@@ -40,7 +40,14 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
   <div class="fibro-logo">Fibro</div>
   <div id="laadScherm" class="laden">Uitnodiging laden...</div>
 
-  <div id="uitnodigingScherm" style="display:none">
+  <div id="bestaandScherm" style="display:none; text-align:center; padding:30px 20px;">
+  <div id="bestaandAvatar" style="font-size:60px; margin-bottom:12px;">👤</div>
+  <h2 id="bestaandNaam" style="margin-bottom:8px;">Iemand</h2>
+  <p style="color:#888; margin-bottom:24px;">wil je toevoegen als vriend op Fibro</p>
+  <button id="toevoegBtn" onclick="voegToe()" style="display:block; width:100%; padding:14px; border:none; border-radius:24px; background:#5c6bc0; color:white; font-size:16px; font-weight:bold; cursor:pointer; margin-bottom:10px;">✅ Toevoegen</button>
+  <button onclick="window.location.href='index.html'" style="display:block; width:100%; padding:14px; border:none; border-radius:24px; background:rgba(255,255,255,0.1); color:#aaa; font-size:16px; cursor:pointer;">Annuleren</button>
+</div>
+<div id="uitnodigingScherm" style="display:none">
     <div class="avatar" id="uitnodigerAvatar">👤</div>
     <div class="uitnodiger" id="uitnodigerNaam">...</div>
     <div class="uitnodiger-sub">nodigt je uit op Fibro ✨</div>
@@ -145,7 +152,38 @@ function bepaalNiveau(jaar) {
   return 'adults'
 }
 
-async function init() {
+async function window.voegToe = async function() {
+  const btn = document.getElementById('toevoegBtn')
+  btn.textContent = 'Toevoegen...'
+  btn.disabled = true
+  const { data: { session } } = await supabase.auth.getSession()
+  const mij = session.user.id
+  const ander = uitnodigerData.created_by
+
+  // Check of al vrienden
+  const { data: bestaat } = await supabase
+    .from('friendships')
+    .select('id')
+    .eq('user_id', mij)
+    .eq('friend_id', ander)
+    .maybeSingle()
+
+  if (!bestaat) {
+    await supabase.from('friendships').insert([
+      { user_id: mij, friend_id: ander, status: 'accepted' },
+      { user_id: ander, friend_id: mij, status: 'accepted' }
+    ])
+  }
+  // Markeer token als gebruikt
+  await supabase.from('invite_tokens')
+    .update({ is_used: true, used_at: new Date().toISOString(), used_by: mij })
+    .eq('token', token)
+
+  btn.textContent = '✅ Toegevoegd!'
+  setTimeout(() => window.location.href = 'vrienden.html', 1000)
+}
+
+init() {
   if (!token) { toonFout(); return }
   const { data, error } = await supabase
     .from('invite_tokens')
@@ -162,6 +200,19 @@ async function init() {
     .single()
   document.getElementById('uitnodigerNaam').textContent = profiel?.username || 'Iemand'
   document.getElementById('uitnodigerAvatar').textContent = profiel?.avatar_url || '👤'
+
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session && session.user.id !== uitnodigerData.created_by) {
+    document.getElementById('bestaandNaam').textContent = profiel?.username || 'Iemand'
+    document.getElementById('bestaandAvatar').textContent = profiel?.avatar_url || ''
+    document.getElementById('laadScherm').style.display = 'none'
+    document.getElementById('bestaandScherm').style.display = 'block'
+    return
+  }
+  if (session && session.user.id === uitnodigerData.created_by) {
+    window.location.href = 'index.html'
+    return
+  }
   document.getElementById('laadScherm').style.display = 'none'
   document.getElementById('uitnodigingScherm').style.display = 'block'
   nieuweNaam()
@@ -246,6 +297,37 @@ window.registreren = async function() {
   document.getElementById('herstelCode').textContent = herstelsleutel
   document.getElementById('bevestigNaam').textContent = naam
   document.getElementById('herstelScherm').style.display = 'block'
+}
+
+window.voegToe = async function() {
+  const btn = document.getElementById('toevoegBtn')
+  btn.textContent = 'Toevoegen...'
+  btn.disabled = true
+  const { data: { session } } = await supabase.auth.getSession()
+  const mij = session.user.id
+  const ander = uitnodigerData.created_by
+
+  // Check of al vrienden
+  const { data: bestaat } = await supabase
+    .from('friendships')
+    .select('id')
+    .eq('user_id', mij)
+    .eq('friend_id', ander)
+    .maybeSingle()
+
+  if (!bestaat) {
+    await supabase.from('friendships').insert([
+      { user_id: mij, friend_id: ander, status: 'accepted' },
+      { user_id: ander, friend_id: mij, status: 'accepted' }
+    ])
+  }
+  // Markeer token als gebruikt
+  await supabase.from('invite_tokens')
+    .update({ is_used: true, used_at: new Date().toISOString(), used_by: mij })
+    .eq('token', token)
+
+  btn.textContent = '✅ Toegevoegd!'
+  setTimeout(() => window.location.href = 'vrienden.html', 1000)
 }
 
 init()

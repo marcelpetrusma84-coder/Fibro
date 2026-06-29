@@ -74,7 +74,7 @@ function stopBeltoon() {
 </script>
 <script type="module">
 import { supabase } from './supabase.js'
-import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic } from './bellen.js'
+import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId } from './bellen.js'
 
 const params = new URLSearchParams(window.location.search)
 const vriendId = params.get('vriend')
@@ -108,6 +108,8 @@ if (vriendId && !params.get('inkomend')) {
   document.getElementById('status').textContent = 'Kies hoe je wilt bellen'
   document.getElementById('knoppen-keuze').style.display = 'flex'
 } else if (vriendId && params.get('inkomend')) {
+  // Geef vriendId door aan bellen.js zodat accepteerOproep het kanaal kan openen
+  zetVriendId(vriendId)
   // Inkomend gesprek: direct opnemen-scherm tonen
   document.getElementById('knoppen-keuze').style.display = 'none'
   document.getElementById('knoppen-bellen').style.display = 'none'

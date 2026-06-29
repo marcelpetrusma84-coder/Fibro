@@ -116,6 +116,11 @@ export async function accepteerOproep(video = false) {
   try {
     lokaleStream = await navigator.mediaDevices.getUserMedia({ audio: true, video })
   } catch(e) { alert('Geen toegang tot microfoon/camera.'); return false }
+  // Zorg dat het gesprekkanaal open is (bij paginawissel kan het nog ontbreken)
+  if (!gesprekKanaal && vriendId) {
+    openGesprekKanaal(vriendId)
+    await new Promise(r => setTimeout(r, 500))
+  }
   maakPeerConnection()
   await stuurSignaal('geaccepteerd', {})
   return true
@@ -192,4 +197,9 @@ export function toggleCamera() {
   const track = lokaleStream.getVideoTracks()[0]
   if (track) track.enabled = !track.enabled
   return track ? track.enabled : false
+}
+
+// ─── Zet vriendId handmatig (voor inkomend gesprek na paginawissel) ───
+export function zetVriendId(id) {
+  vriendId = id
 }

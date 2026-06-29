@@ -1765,8 +1765,8 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 
     inhoud.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
-        <div id="pong-status" style="color:white;font-size:14px;font-weight:600;">Jij: <span id="pong-mijn-score">0</span> — <span id="pong-naam">${(geselecteerdeVriend?.naam || 'Vriend')}</span>: <span id="pong-vriend-score">0</span></div>
-        <canvas id="pong-canvas" width="${BREEDTE}" height="${HOOGTE}" style="background:#0a0e1a;border:3px solid #3a2a5e;border-radius:8px;touch-action:none;"></canvas>
+        <div id="pong-status" style="color:#00f0ff;font-size:14px;font-weight:700;letter-spacing:1px;text-shadow:0 0 8px #00f0ff;">Jij: <span id="pong-mijn-score">0</span> — <span id="pong-naam">${(geselecteerdeVriend?.naam || 'Vriend')}</span>: <span id="pong-vriend-score">0</span></div>
+        <canvas id="pong-canvas" width="${BREEDTE}" height="${HOOGTE}" style="background:#050510;border:2px solid #1a0a3e;border-radius:8px;touch-action:none;box-shadow:0 0 24px rgba(0,240,255,0.15);"></canvas>
         <div style="font-size:11px;color:rgba(255,255,255,0.6);">Sleep om je paddle te bewegen</div>
         <button id="pong-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Opnieuw spelen</button>
       </div>`
@@ -1779,25 +1779,31 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     const opnieuwBtn = document.getElementById('pong-opnieuw')
 
     function tekenScherm() {
-      ctx.clearRect(0, 0, BREEDTE, HOOGTE)
-      // Middenlijn
-      ctx.strokeStyle = 'rgba(255,255,255,0.15)'
-      ctx.setLineDash([6, 6])
+      ctx.fillStyle = "#050510"
+      ctx.fillRect(0, 0, BREEDTE, HOOGTE)
+      ctx.strokeStyle = "rgba(255,255,255,0.03)"
+      ctx.lineWidth = 1
+      for (let gx = 0; gx < BREEDTE; gx += 20) { ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,HOOGTE); ctx.stroke() }
+      for (let gy = 0; gy < HOOGTE; gy += 20) { ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(BREEDTE,gy); ctx.stroke() }
+      ctx.strokeStyle = "rgba(255,255,255,0.08)"
+      ctx.setLineDash([8, 8])
       ctx.beginPath(); ctx.moveTo(0, HOOGTE/2); ctx.lineTo(BREEDTE, HOOGTE/2); ctx.stroke()
       ctx.setLineDash([])
-
-      // Vriend paddle (boven)
-      ctx.fillStyle = '#f0abfc'
-      ctx.fillRect(vriendPaddleX, PADDLE_Y_BOVEN, PADDLE_BREEDTE, PADDLE_HOOGTE)
-      // Mijn paddle (onder)
-      ctx.fillStyle = '#c084fc'
-      ctx.fillRect(mijnPaddleX, PADDLE_Y_ONDER, PADDLE_BREEDTE, PADDLE_HOOGTE)
-
-      // Bal
-      ctx.fillStyle = '#ffffff'
-      ctx.shadowBlur = 10; ctx.shadowColor = '#ffffff'
-      ctx.beginPath(); ctx.arc(bal.x, bal.y, BAL_GROOTTE/2, 0, Math.PI*2); ctx.fill()
-      ctx.shadowBlur = 0
+      ctx.save(); ctx.shadowColor = "#ff00cc"; ctx.shadowBlur = 16; ctx.fillStyle = "#ff00cc"
+      ctx.beginPath(); ctx.roundRect(vriendPaddleX, PADDLE_Y_BOVEN, PADDLE_BREEDTE, PADDLE_HOOGTE, 4); ctx.fill(); ctx.restore()
+      ctx.save(); ctx.shadowColor = "#00f0ff"; ctx.shadowBlur = 16; ctx.fillStyle = "#00f0ff"
+      ctx.beginPath(); ctx.roundRect(mijnPaddleX, PADDLE_Y_ONDER, PADDLE_BREEDTE, PADDLE_HOOGTE, 4); ctx.fill(); ctx.restore()
+      window._pongTrail.push({x: bal.x, y: bal.y})
+      if (window._pongTrail.length > 10) window._pongTrail.shift()
+      for (let i = 0; i < window._pongTrail.length; i++) {
+        const tp = window._pongTrail[i]
+        const alpha = (i / window._pongTrail.length) * 0.4
+        const tr = (BAL_GROOTTE/2) * (i / window._pongTrail.length) * 0.8
+        ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = "#ffffff"
+        ctx.beginPath(); ctx.arc(tp.x, tp.y, tr, 0, Math.PI*2); ctx.fill(); ctx.restore()
+      }
+      ctx.save(); ctx.shadowColor = "#00f0ff"; ctx.shadowBlur = 20; ctx.fillStyle = "#ffffff"
+      ctx.beginPath(); ctx.arc(bal.x, bal.y, BAL_GROOTTE/2, 0, Math.PI*2); ctx.fill(); ctx.restore()
     }
 
     // ── Drag-besturing voor mijn paddle (werkt overal op het scherm, niet alleen op canvas) ──

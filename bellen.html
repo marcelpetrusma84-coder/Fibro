@@ -87,7 +87,7 @@ const { data: { session } } = await supabase.auth.getSession()
 if (!session) { window.location.href = 'login.html' }
 
 initBellen(session.user.id, {
-  onVerbonden: () => { startTimer() },
+  onVerbonden: () => { stopBeltoon(); startTimer() },
   onOproep: async (info) => {
     const { data: v } = await supabase.from('profiles').select('*').eq('id', info.van).single()
     document.getElementById('avatar').textContent = v?.avatar_url || '👤'

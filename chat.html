@@ -1981,12 +1981,10 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       if (bal.y < -20) {
         mijnScore++
         geluidScore()
-        controleerLevel()
         resetBal(-1)
       } else if (bal.y > HOOGTE + 20) {
         vriendScore++
         geluidScore()
-        controleerLevel()
         resetBal(1)
       }
 
@@ -2058,6 +2056,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     function checkWinst() {
       if (mijnScore >= WIN_SCORE || vriendScore >= WIN_SCORE) {
         gameOver = true
+        controleerLevel()
         const winnaar = mijnScore >= WIN_SCORE
       statusEl.textContent = winnaar ? '🎉 Jij wint!' : '😢 ' + (geselecteerdeVriend.naam || 'Vriend') + ' wint!'
 

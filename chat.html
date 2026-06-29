@@ -1739,6 +1739,29 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     let gameOver = false
     let animatieFrame = null
     let laatsteVerstuurd = 0
+    let beideKlaar = false
+    let aftellen = 0  // >0 = bezig met aftellen
+
+    // ── Geluid via Web Audio ──
+    let audioCtx = null
+    function piep(freq, duur, volume) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.connect(gain); gain.connect(audioCtx.destination)
+        osc.frequency.value = freq
+        osc.type = 'square'
+        gain.gain.setValueAtTime(volume || 0.15, audioCtx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (duur || 0.1))
+        osc.start()
+        osc.stop(audioCtx.currentTime + (duur || 0.1))
+      } catch(e) {}
+    }
+    const geluidStuiter = () => piep(440, 0.06, 0.12)
+    const geluidScore = () => piep(220, 0.25, 0.18)
+    const geluidWin = () => { piep(523,0.12,0.2); setTimeout(()=>piep(659,0.12,0.2),120); setTimeout(()=>piep(784,0.2,0.2),240) }
+    const geluidTik = () => piep(660, 0.08, 0.15)
 
     inhoud.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
@@ -1845,6 +1868,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
           bal.vy *= -1.04
           bal.vx += (bal.x - (mijnPaddleX + PADDLE_BREEDTE/2)) * 0.06
           bal.y = PADDLE_Y_ONDER - BAL_GROOTTE/2
+          geluidStuiter()
         }
       }
       // Vriend paddle (boven)
@@ -1853,15 +1877,18 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
           bal.vy *= -1.04
           bal.vx += (bal.x - (vriendPaddleX + PADDLE_BREEDTE/2)) * 0.06
           bal.y = PADDLE_Y_BOVEN + PADDLE_HOOGTE + BAL_GROOTTE/2
+          geluidStuiter()
         }
       }
 
       // Score: bal voorbij boven (ik scoor) of onder (vriend scoort)
       if (bal.y < -20) {
         mijnScore++
+        geluidScore()
         resetBal(-1)
       } else if (bal.y > HOOGTE + 20) {
         vriendScore++
+        geluidScore()
         resetBal(1)
       }
 
@@ -1959,9 +1986,79 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       herstartLoop()
     })
 
-    statusEl.textContent = benIkHost ? 'Jij bent host — sleep om te spelen!' : 'Sleep om te spelen!'
-    tekenScherm()
-    herstartLoop()
+    // ── Wachtkamer: wacht tot beide spelers klaar zijn ──
+    let ikKlaarGemeld = false
+    let anderKlaar = false
+
+    function meldIkBenKlaar() {
+      if (ikKlaarGemeld) return
+      ikKlaarGemeld = true
+      spelKanaal.send({ type: 'broadcast', event: 'pong-klaar', payload: {} })
+      checkBeideKlaar()
+    }
+
+    spelKanaal.on('broadcast', { event: 'pong-klaar' }, () => {
+      anderKlaar = true
+      // Stuur ook terug zodat de ander ook weet dat wij klaar zijn
+      if (ikKlaarGemeld) spelKanaal.send({ type: 'broadcast', event: 'pong-klaar-terug', payload: {} })
+      checkBeideKlaar()
+    })
+    spelKanaal.on('broadcast', { event: 'pong-klaar-terug' }, () => {
+      anderKlaar = true
+      checkBeideKlaar()
+    })
+
+    function checkBeideKlaar() {
+      if (ikKlaarGemeld && anderKlaar && !beideKlaar) {
+        beideKlaar = true
+        startAftellen()
+      }
+    }
+
+    function startAftellen() {
+      aftellen = 3
+      geluidTik()
+      tekenWachtScherm()
+      const interval = setInterval(() => {
+        aftellen--
+        if (aftellen > 0) {
+          geluidTik()
+          tekenWachtScherm()
+        } else {
+          clearInterval(interval)
+          geluidStuiter()
+          statusEl.textContent = 'Jij: 0 — ' + (geselecteerdeVriend?.naam || 'Vriend') + ': 0'
+          // Herbouw status met scores
+          statusEl.innerHTML = 'Jij: <span id="pong-mijn-score">0</span> — <span id="pong-naam">' + (geselecteerdeVriend?.naam || 'Vriend') + '</span>: <span id="pong-vriend-score">0</span>'
+          herstartLoop()
+        }
+      }, 1000)
+    }
+
+    function tekenWachtScherm() {
+      ctx.clearRect(0, 0, BREEDTE, HOOGTE)
+      ctx.fillStyle = '#ffffff'
+      ctx.font = 'bold 80px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(aftellen, BREEDTE/2, HOOGTE/2)
+    }
+
+    // Start: toon wachtscherm en meld dat ik klaar ben
+    statusEl.textContent = 'Wachten op tegenstander...'
+    ctx.clearRect(0, 0, BREEDTE, HOOGTE)
+    ctx.fillStyle = 'rgba(255,255,255,0.6)'
+    ctx.font = '16px sans-serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('Wachten...', BREEDTE/2, HOOGTE/2)
+    // Meld na klein moment dat ik klaar ben (kanaal moet subscribed zijn)
+    setTimeout(meldIkBenKlaar, 800)
+    // Blijf melden tot de ander reageert (voor het geval de ander later klaar is)
+    const klaarHerhaal = setInterval(() => {
+      if (beideKlaar) { clearInterval(klaarHerhaal); return }
+      spelKanaal.send({ type: 'broadcast', event: 'pong-klaar', payload: {} })
+    }, 1500)
   }
 
 

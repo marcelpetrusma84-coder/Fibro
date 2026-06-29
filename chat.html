@@ -2002,7 +2002,13 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
         } else if (o.type === "ruit") {
           const dist = Math.abs(bal.x-o.x) + Math.abs(bal.y-o.y)
           if (dist < o.r + BAL_GROOTTE/2) {
-            if (Math.abs(bal.x-o.x) > Math.abs(bal.y-o.y)) bal.vx *= -1; else bal.vy *= -1
+            if (Math.abs(bal.x-o.x) > Math.abs(bal.y-o.y)) {
+              bal.vx *= -1
+              bal.x += bal.vx * 3
+            } else {
+              bal.vy *= -1
+              bal.y += bal.vy * 3
+            }
             geluidTik()
           }
         } else if (o.type === "hoek" || o.type === "zijkant") {

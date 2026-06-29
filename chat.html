@@ -1918,37 +1918,32 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       bal = { x: BREEDTE/2, y: HOOGTE/2, vx: (Math.random()-0.5)*4, vy: 3.2 * richting }
     }
 
+    function tekenEindScherm() {
+      const winnaar = mijnScore >= WIN_SCORE
+      ctx.fillStyle = "#050510"
+      ctx.fillRect(0, 0, BREEDTE, HOOGTE)
+      ctx.save()
+      ctx.textAlign = "center"; ctx.textBaseline = "middle"
+      const winNaam = winnaar ? "JIJ" : (geselecteerdeVriend.naam || "Vriend").toUpperCase()
+      const verliesNaam = winnaar ? (geselecteerdeVriend.naam || "Vriend").toUpperCase() : "JIJ"
+      ctx.font = "bold 14px monospace"; ctx.fillStyle = winnaar ? "#00f0ff" : "#ff00cc"; ctx.shadowColor = winnaar ? "#00f0ff" : "#ff00cc"; ctx.shadowBlur = 20
+      ctx.fillText("WINNAAR", BREEDTE/2, HOOGTE/2 - 60)
+      ctx.font = "bold 32px monospace"
+      ctx.fillText(winNaam, BREEDTE/2, HOOGTE/2 - 30)
+      ctx.font = "bold 48px monospace"; ctx.shadowBlur = 40
+      ctx.fillText(mijnScore + " — " + vriendScore, BREEDTE/2, HOOGTE/2 + 20)
+      ctx.font = "bold 14px monospace"; ctx.fillStyle = winnaar ? "#ff00cc" : "#00f0ff"; ctx.shadowColor = winnaar ? "#ff00cc" : "#00f0ff"; ctx.shadowBlur = 20
+      ctx.fillText("VERLIEZER", BREEDTE/2, HOOGTE/2 + 60)
+      ctx.font = "bold 20px monospace"
+      ctx.fillText(verliesNaam, BREEDTE/2, HOOGTE/2 + 82)
+      ctx.restore()
+    }
     function checkWinst() {
       if (mijnScore >= WIN_SCORE || vriendScore >= WIN_SCORE) {
         gameOver = true
         const winnaar = mijnScore >= WIN_SCORE
       statusEl.textContent = winnaar ? '🎉 Jij wint!' : '😢 ' + (geselecteerdeVriend.naam || 'Vriend') + ' wint!'
-      ctx.fillStyle = '#050510'
-      ctx.fillRect(0, 0, BREEDTE, HOOGTE)
-      ctx.save()
-      ctx.shadowColor = winnaar ? '#00f0ff' : '#ff00cc'
-      ctx.shadowBlur = 40
-      ctx.fillStyle = winnaar ? '#00f0ff' : '#ff00cc'
-      ctx.font = 'bold 28px monospace'
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      const winNaam = winnaar ? 'JIJ' : (geselecteerdeVriend.naam || 'Vriend').toUpperCase()
-      const verliesNaam = winnaar ? (geselecteerdeVriend.naam || 'Vriend').toUpperCase() : 'JIJ'
-      ctx.font = 'bold 14px monospace'
-      ctx.fillStyle = winnaar ? '#00f0ff' : '#ff00cc'
-      ctx.shadowColor = winnaar ? '#00f0ff' : '#ff00cc'
-      ctx.fillText('WINNAAR', BREEDTE/2, HOOGTE/2 - 60)
-      ctx.font = 'bold 32px monospace'
-      ctx.fillText(winNaam, BREEDTE/2, HOOGTE/2 - 30)
-      ctx.font = 'bold 48px monospace'
-      ctx.fillText(mijnScore + ' — ' + vriendScore, BREEDTE/2, HOOGTE/2 + 20)
-      ctx.font = 'bold 14px monospace'
-      ctx.fillStyle = winnaar ? '#ff00cc' : '#00f0ff'
-      ctx.shadowColor = winnaar ? '#ff00cc' : '#00f0ff'
-      ctx.fillText('VERLIEZER', BREEDTE/2, HOOGTE/2 + 60)
-      ctx.font = 'bold 20px monospace'
-      ctx.fillText(verliesNaam, BREEDTE/2, HOOGTE/2 + 82)
-      ctx.restore()
+
         opnieuwBtn.style.display = 'block'
         if (animatieFrame) cancelAnimationFrame(animatieFrame)
       }
@@ -1963,9 +1958,9 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     function loop(tijdstip) {
       if (gameOver) return
 
+      if (gameOver) { tekenEindScherm(); return }
       if (benIkHost) {
         physicsStap()
-        // Stuur bal-staat ~20x/sec naar de gast (niet elke frame, scheelt bandbreedte)
         if (tijdstip - laatsteVerstuurd > 50) {
           laatsteVerstuurd = tijdstip
           spelKanaal.send({ type: 'broadcast', event: 'balstaat', payload: { bal, mijnScore, vriendScore } })

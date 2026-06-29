@@ -2931,6 +2931,11 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   async function startSpelBel() {
     if (spelBelActief) return
     if (!geselecteerdeVriend) return
+    // Check of er een microfoon is (Steam Deck heeft er geen)
+    try {
+      const app = await navigator.mediaDevices.enumerateDevices()
+      if (!app.some(d => d.kind === "audioinput")) { console.log("Geen mic, spel-bel over"); return }
+    } catch(e) { console.log("Apparaatcheck faalde, spel-bel over"); return }
     spelBelActief = true
     document.getElementById('spelMuteBtn').style.display = 'flex'
     document.getElementById('spelMuteBtn').style.alignItems = 'center'

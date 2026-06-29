@@ -1793,6 +1793,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       ctx.fillRect(vriendPaddleX, PADDLE_Y_BOVEN, PADDLE_BREEDTE, PADDLE_HOOGTE); ctx.restore()
       ctx.save(); ctx.shadowColor = "#00f0ff"; ctx.shadowBlur = 16; ctx.fillStyle = "#00f0ff"
       ctx.fillRect(mijnPaddleX, PADDLE_Y_ONDER, PADDLE_BREEDTE, PADDLE_HOOGTE); ctx.restore()
+      if (!window._pongTrail) window._pongTrail = []
       window._pongTrail.push({x: bal.x, y: bal.y})
       if (window._pongTrail.length > 10) window._pongTrail.shift()
       for (let i = 0; i < window._pongTrail.length; i++) {

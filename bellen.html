@@ -79,7 +79,7 @@ import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, z
 const params = new URLSearchParams(window.location.search)
 const vriendId = params.get('vriend')
 const vriendNaam = params.get('naam') || 'Vriend'
-let timer = null, sec = 0, micAan = true
+let timer = null, sec = 0, micAan = true, videoModus = false
 
 document.getElementById('naam').textContent = vriendNaam
 
@@ -110,6 +110,7 @@ if (vriendId && !params.get('inkomend')) {
 } else if (vriendId && params.get('inkomend')) {
   // Geef vriendId door aan bellen.js zodat accepteerOproep het kanaal kan openen
   zetVriendId(vriendId)
+  videoModus = params.get('video') === '1'
   // Inkomend gesprek: direct opnemen-scherm tonen
   document.getElementById('knoppen-keuze').style.display = 'none'
   document.getElementById('knoppen-bellen').style.display = 'none'
@@ -132,7 +133,13 @@ function startTimer() {
   document.getElementById('knoppen-gesprek').style.display = 'flex'
   document.getElementById('status').textContent = 'Verbonden'
   document.getElementById('tijd').style.display = 'block'
-  document.getElementById('remoteMedia').style.display = 'block'
+  if (videoModus) {
+    document.getElementById('remoteMedia').style.display = 'block'
+    document.getElementById('lokaalMedia').style.display = 'block'
+  } else {
+    document.getElementById('remoteMedia').style.display = 'none'
+    document.getElementById('lokaalMedia').style.display = 'none'
+  }
   timer = setInterval(() => {
     sec++
     const m = Math.floor(sec/60), s = sec%60
@@ -141,6 +148,7 @@ function startTimer() {
 }
 
 window.startBellen = async (video) => {
+  videoModus = video
   document.getElementById('knoppen-keuze').style.display = 'none'
   document.getElementById('knoppen-bellen').style.display = 'flex'
   document.getElementById('status').textContent = video ? 'Videobellen...' : 'Aan het bellen...'

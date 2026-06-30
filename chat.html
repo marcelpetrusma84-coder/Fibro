@@ -2138,6 +2138,9 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
       }
       vriendScore = msg.payload.mijnScore   // host's score = mijn tegenstander
       mijnScore = msg.payload.vriendScore   // host's vriendScore = mijn eigen score
+      if (msg.payload.geluiden && msg.payload.geluiden.length) {
+        msg.payload.geluiden.forEach(g => speelGeluid(g))
+      }
       updateScoreUI()
       checkWinst()
     })

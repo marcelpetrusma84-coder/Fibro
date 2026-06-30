@@ -88,14 +88,17 @@ async function verwerkSignaal(type, data) {
   }
   if (type === 'offer-renegotiate') {
     if (peerConnection === null) return
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(data))
-    const answer = await peerConnection.createAnswer()
-    await peerConnection.setLocalDescription(answer)
-    await stuurSignaal('answer-renegotiate', answer)
+    try {
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(data))
+      const answer = await peerConnection.createAnswer()
+      await peerConnection.setLocalDescription(answer)
+      await stuurSignaal('answer-renegotiate', answer)
+    } catch(e) { console.warn('renegotiate offer fout:', e) }
   }
   if (type === 'answer-renegotiate') {
     if (peerConnection === null) return
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(data))
+    if (peerConnection.signalingState !== 'have-local-offer') return
+    try { await peerConnection.setRemoteDescription(new RTCSessionDescription(data)) } catch(e) { console.warn('renegotiate answer fout:', e) }
   }
   if (type === 'answer') {
     if (!peerConnection) return
@@ -154,11 +157,23 @@ function maakPeerConnection() {
   lokaleStream.getTracks().forEach(track => peerConnection.addTrack(track, lokaleStream))
   remoteStream = new MediaStream()
   peerConnection.ontrack = (event) => {
-    event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track))
+    const track = event.track
+    const bestaat = remoteStream.getTracks().some(t => t.id === track.id)
+    if (!bestaat) remoteStream.addTrack(track)
     const remoteEl = document.getElementById('remoteMedia')
-    if (remoteEl) remoteEl.srcObject = remoteStream
+    if (remoteEl) {
+      remoteEl.srcObject = remoteStream
+      if (track.kind === 'video') {
+        remoteEl.style.display = 'block'
+        remoteEl.play().catch(()=>{})
+      }
+    }
     const audioEl = document.getElementById('remoteAudio')
     if (audioEl) { audioEl.srcObject = remoteStream; audioEl.play().catch(()=>{}) }
+    track.onended = () => {
+      remoteStream.getTracks().forEach(t => { if (t.kind === 'video' && t.readyState === 'ended') remoteStream.removeTrack(t) })
+      if (remoteEl && remoteStream.getVideoTracks().length === 0) remoteEl.style.display = 'none'
+    }
   }
   peerConnection.onicecandidate = async (event) => {
     if (event.candidate) await stuurSignaal('ice', event.candidate.toJSON())

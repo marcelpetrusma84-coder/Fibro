@@ -15,6 +15,7 @@ let onEindCallback = null
 let onVerbondenCallback = null
 let onVideoStatusCallback = null
 let videoActiefLokaal = false
+let videoSender = null
 let geinitialiseerd = false
 
 const ICE_SERVERS = {
@@ -208,22 +209,24 @@ export async function schakelVideo(aanzetten) {
     if (aanzetten) {
       const videoStream = await navigator.mediaDevices.getUserMedia({ video: true })
       const videoTrack = videoStream.getVideoTracks()[0]
+      const oudeVideo = lokaleStream.getVideoTracks()[0]
+      if (oudeVideo) { lokaleStream.removeTrack(oudeVideo); oudeVideo.stop() }
       lokaleStream.addTrack(videoTrack)
-      peerConnection.addTrack(videoTrack, lokaleStream)
+      if (videoSender) {
+        await videoSender.replaceTrack(videoTrack)
+      } else {
+        videoSender = peerConnection.addTrack(videoTrack, lokaleStream)
+      }
       const lokaalEl = document.getElementById('lokaalMedia')
       if (lokaalEl) lokaalEl.srcObject = lokaleStream
       videoActiefLokaal = true
     } else {
       const track = lokaleStream.getVideoTracks()[0]
-      if (track) {
-        lokaleStream.removeTrack(track)
-        track.stop()
-        const sender = peerConnection.getSenders().find(s => s.track && s.track.kind === 'video')
-        if (sender) peerConnection.removeTrack(sender)
-      }
+      if (track) { lokaleStream.removeTrack(track); track.stop() }
+      if (videoSender) await videoSender.replaceTrack(null)
       videoActiefLokaal = false
     }
-    // Renegotiation: nieuwe offer op de bestaande connectie (sluit hem niet)
+    // Renegotiation alleen nodig als de sender nieuw is aangemaakt
     const offer = await peerConnection.createOffer()
     await peerConnection.setLocalDescription(offer)
     await stuurSignaal('offer-renegotiate', offer)
@@ -251,6 +254,8 @@ function beeindigGesprek(doorOns) {
   remoteStream = null
   vriendId = null
   isInitiator = false
+  videoSender = null
+  videoActiefLokaal = false
   if (onEindCallback) onEindCallback(doorOns)
 }
 

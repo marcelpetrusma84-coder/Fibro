@@ -154,13 +154,10 @@ function bepaalNiveau(jaar) {
 
 async function init() {
   if (!token) { toonFout(); return }
-  const { data, error } = await supabase
-    .from('invite_tokens')
-    .select('created_by, is_used')
-    .eq('token', token)
-    .eq('is_used', false)
-    .single()
-  if (error || !data) { toonFout(); return }
+  const { data: rows, error } = await supabase
+    .rpc('valideer_invite', { token_in: token })
+  const data = (rows && rows.length > 0) ? rows[0] : null
+  if (error || data === null) { toonFout(); return }
   uitnodigerData = data
   const { data: profiel } = await supabase
     .from('profiles')
@@ -250,9 +247,7 @@ window.registreren = async function() {
       updated_at: new Date().toISOString()
     })
 
-    await supabase.from('invite_tokens')
-      .update({ is_used:true, used_at:new Date().toISOString(), used_by:data.user.id })
-      .eq('token', token)
+    await supabase.rpc('gebruik_invite', { token_in: token, gebruiker: data.user.id })
 
     if (uitnodigerData?.created_by && uitnodigerData.created_by !== data.user.id) {
       await supabase.from('friendships').insert([
@@ -291,9 +286,7 @@ window.voegToe = async function() {
     ])
   }
   // Markeer token als gebruikt
-  await supabase.from('invite_tokens')
-    .update({ is_used: true, used_at: new Date().toISOString(), used_by: mij })
-    .eq('token', token)
+  await supabase.rpc('gebruik_invite', { token_in: token, gebruiker: mij })
 
   btn.textContent = '✅ Toegevoegd!'
   setTimeout(() => window.location.href = 'vrienden.html', 1000)

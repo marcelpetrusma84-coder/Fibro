@@ -1812,10 +1812,16 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
         osc.stop(audioCtx.currentTime + (duur || 0.1))
       } catch(e) {}
     }
-    const geluidStuiter = () => piep(440, 0.06, 0.12)
-    const geluidScore = () => piep(220, 0.25, 0.18)
+    let geluidBuffer = []
+    const geluidStuiter = () => { piep(440, 0.06, 0.12); geluidBuffer.push('stuiter') }
+    const geluidScore = () => { piep(220, 0.25, 0.18); geluidBuffer.push('score') }
     const geluidWin = () => { piep(523,0.12,0.2); setTimeout(()=>piep(659,0.12,0.2),120); setTimeout(()=>piep(784,0.2,0.2),240) }
-    const geluidTik = () => piep(660, 0.08, 0.15)
+    const geluidTik = () => { piep(660, 0.08, 0.15); geluidBuffer.push('tik') }
+    function speelGeluid(soort) {
+      if (soort === 'stuiter') piep(440, 0.06, 0.12)
+      else if (soort === 'score') piep(220, 0.25, 0.18)
+      else if (soort === 'tik') piep(660, 0.08, 0.15)
+    }
 
     inhoud.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
@@ -2107,7 +2113,8 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
         physicsStap()
         if (tijdstip - laatsteVerstuurd > 50) {
           laatsteVerstuurd = tijdstip
-          spelKanaal.send({ type: 'broadcast', event: 'balstaat', payload: { bal, mijnScore, vriendScore } })
+          spelKanaal.send({ type: 'broadcast', event: 'balstaat', payload: { bal, mijnScore, vriendScore, geluiden: geluidBuffer } })
+          geluidBuffer = []
           updateScoreUI()
         }
       }

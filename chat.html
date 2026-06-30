@@ -1107,15 +1107,69 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     else if (spelType === 'flappybird') startFlappyBird()
     else if (spelType === 'spaceinvaders') startSpaceInvaders()
 
+    spelKanaal.on('broadcast', { event: 'spelchat' }, (msg) => {
+      if (msg.payload && msg.payload.tekst) toonSpelChat(msg.payload.tekst, false)
+    })
     spelKanaal.subscribe()
+    bouwSpelChatUI()
 
     // Start spel-audiobel automatisch
     startSpelBel()
   }
 
+  window.verstuurSpelChat = function(tekst) {
+    if (spelKanaal === null) return
+    if (tekst === undefined || tekst === '') return
+    spelKanaal.send({ type: 'broadcast', event: 'spelchat', payload: { tekst: tekst } })
+    toonSpelChat(tekst, true)
+  }
+
+  function toonSpelChat(tekst, vanMij) {
+    var laag = document.getElementById('spelChatLaag')
+    if (laag === null) return
+    var b = document.createElement('div')
+    b.textContent = tekst
+    b.style.cssText = 'max-width:70%;margin:4px 0;padding:8px 12px;border-radius:14px;font-size:15px;color:#fff;align-self:' + (vanMij ? 'flex-end' : 'flex-start') + ';background:' + (vanMij ? '#00f0ff33' : '#ff00cc33') + ';border:1px solid ' + (vanMij ? '#00f0ff' : '#ff00cc') + ';opacity:1;transition:opacity 1s'
+    laag.appendChild(b)
+    while (laag.children.length > 4) laag.removeChild(laag.firstChild)
+    setTimeout(function(){ b.style.opacity = '0'; setTimeout(function(){ if (b.parentNode) b.parentNode.removeChild(b) }, 1000) }, 6000)
+  }
+
+  function bouwSpelChatUI() {
+    var overlay = document.getElementById('spelOverlay')
+    if (overlay === null) return
+    if (document.getElementById('spelChatWrap')) return
+    var wrap = document.createElement('div')
+    wrap.id = 'spelChatWrap'
+    wrap.style.cssText = 'position:absolute;bottom:10px;left:10px;right:10px;display:flex;flex-direction:column;gap:6px;pointer-events:none;z-index:50'
+    var laag = document.createElement('div')
+    laag.id = 'spelChatLaag'
+    laag.style.cssText = 'display:flex;flex-direction:column;'
+    var rij = document.createElement('div')
+    rij.style.cssText = 'display:flex;gap:6px;pointer-events:auto;align-items:center'
+    var emojis = ['👍','😂','🎉','😮','🔥','😅']
+    emojis.forEach(function(e){
+      var b = document.createElement('button')
+      b.textContent = e
+      b.style.cssText = 'font-size:20px;background:#ffffff22;border:1px solid #ffffff44;border-radius:10px;padding:4px 8px;cursor:pointer'
+      b.onclick = function(){ verstuurSpelChat(e) }
+      rij.appendChild(b)
+    })
+    var inp = document.createElement('input')
+    inp.type = 'text'
+    inp.placeholder = 'Bericht...'
+    inp.style.cssText = 'flex:1;min-width:60px;padding:8px 10px;border-radius:10px;border:1px solid #ffffff44;background:#000000aa;color:#fff;font-size:15px'
+    inp.onkeydown = function(ev){ if (ev.key === 'Enter') { verstuurSpelChat(inp.value.trim()); inp.value = '' } }
+    rij.appendChild(inp)
+    wrap.appendChild(laag)
+    wrap.appendChild(rij)
+    overlay.appendChild(wrap)
+  }
+
   window.sluitSpel = function() {
     document.getElementById('spelOverlay').classList.remove('open')
     document.getElementById('spelInhoud').innerHTML = ''
+    var scw = document.getElementById('spelChatWrap'); if (scw) scw.remove()
     if (spelKanaal) { supabase.removeChannel(spelKanaal); spelKanaal = null }
     // Stop eventuele loopende animaties (Pong, Flappy Bird)
     if (window._spelAnimFrame) { cancelAnimationFrame(window._spelAnimFrame); window._spelAnimFrame = null }

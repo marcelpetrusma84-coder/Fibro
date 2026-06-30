@@ -13,6 +13,8 @@ let isInitiator = false
 let onOproepCallback = null
 let onEindCallback = null
 let onVerbondenCallback = null
+let onVideoStatusCallback = null
+let videoActiefLokaal = false
 let geinitialiseerd = false
 
 const ICE_SERVERS = {
@@ -38,6 +40,7 @@ export function initBellen(userId, callbacks = {}) {
   onOproepCallback = callbacks.onOproep || null
   onEindCallback = callbacks.onEind || null
   onVerbondenCallback = callbacks.onVerbonden || null
+  onVideoStatusCallback = callbacks.onVideoStatus || null
   geinitialiseerd = true
   luisterNaarUitnodigingen()
 }
@@ -83,6 +86,17 @@ async function verwerkSignaal(type, data) {
     if (isInitiator) return
     await verwerkOffer(data)
   }
+  if (type === 'offer-renegotiate') {
+    if (peerConnection === null) return
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(data))
+    const answer = await peerConnection.createAnswer()
+    await peerConnection.setLocalDescription(answer)
+    await stuurSignaal('answer-renegotiate', answer)
+  }
+  if (type === 'answer-renegotiate') {
+    if (peerConnection === null) return
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(data))
+  }
   if (type === 'answer') {
     if (!peerConnection) return
     if (peerConnection.signalingState !== 'have-local-offer') return
@@ -94,6 +108,9 @@ async function verwerkSignaal(type, data) {
     }
   }
   if (type === 'ophangen') { beeindigGesprek(false) }
+  if (type === 'video-status') {
+    if (onVideoStatusCallback) onVideoStatusCallback(data.actief)
+  }
 }
 
 export async function belOp(naarVriendId, video = false) {
@@ -168,6 +185,43 @@ async function verwerkOffer(offer) {
   const answer = await peerConnection.createAnswer()
   await peerConnection.setLocalDescription(answer)
   await stuurSignaal('answer', answer)
+}
+
+export async function schakelVideo(aanzetten) {
+  if (lokaleStream === null || peerConnection === null) return false
+  try {
+    if (aanzetten) {
+      const videoStream = await navigator.mediaDevices.getUserMedia({ video: true })
+      const videoTrack = videoStream.getVideoTracks()[0]
+      lokaleStream.addTrack(videoTrack)
+      peerConnection.addTrack(videoTrack, lokaleStream)
+      const lokaalEl = document.getElementById('lokaalMedia')
+      if (lokaalEl) lokaalEl.srcObject = lokaleStream
+      videoActiefLokaal = true
+    } else {
+      const track = lokaleStream.getVideoTracks()[0]
+      if (track) {
+        lokaleStream.removeTrack(track)
+        track.stop()
+        const sender = peerConnection.getSenders().find(s => s.track && s.track.kind === 'video')
+        if (sender) peerConnection.removeTrack(sender)
+      }
+      videoActiefLokaal = false
+    }
+    // Renegotiation: nieuwe offer op de bestaande connectie (sluit hem niet)
+    const offer = await peerConnection.createOffer()
+    await peerConnection.setLocalDescription(offer)
+    await stuurSignaal('offer-renegotiate', offer)
+    await stuurSignaal('video-status', { actief: videoActiefLokaal })
+    return true
+  } catch(e) {
+    console.warn('schakelVideo fout:', e)
+    return false
+  }
+}
+
+export function isVideoActiefLokaal() {
+  return videoActiefLokaal
 }
 
 export async function hangOp() {

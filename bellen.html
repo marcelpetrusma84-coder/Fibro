@@ -42,12 +42,16 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   <div class="bel-knoppen" id="knoppen-bellen">
     <button class="bel-btn btn-ophangen" onclick="annuleer()">📵</button>
   </div>
-  <div class="bel-knoppen" id="knoppen-inkomend" style="display:none">
-    <button class="bel-btn btn-ophangen" onclick="weiger()">📵</button>
-    <button class="bel-btn btn-opnemen" onclick="neem()">📞</button>
+  <div class="bel-knoppen" id="knoppen-inkomend" style="display:none;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:14px;justify-content:center;">
+      <button class="bel-btn btn-ophangen" onclick="weiger()">📵</button>
+      <button class="bel-btn btn-opnemen" onclick="neem(false)" title="Audio opnemen">📞</button>
+      <button class="bel-btn btn-opnemen" onclick="neem(true)" title="Video opnemen">📹</button>
+    </div>
   </div>
   <div class="bel-knoppen" id="knoppen-gesprek" style="display:none">
     <button class="bel-btn btn-mic" id="micBtn" onclick="togMic()">🎤</button>
+    <button class="bel-btn btn-mic" id="camBtn" onclick="togCam()">📷</button>
     <button class="bel-btn btn-ophangen" onclick="hangop()">📵</button>
   </div>
 </div>
@@ -74,7 +78,7 @@ function stopBeltoon() {
 </script>
 <script type="module">
 import { supabase } from './supabase.js'
-import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId } from './bellen.js'
+import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal } from './bellen.js'
 
 const params = new URLSearchParams(window.location.search)
 const vriendId = params.get('vriend')
@@ -88,11 +92,17 @@ if (!session) { window.location.href = 'login.html' }
 
 initBellen(session.user.id, {
   onVerbonden: () => { stopBeltoon(); startTimer() },
+  onVideoStatus: (actief) => {
+    const remoteMedia = document.getElementById('remoteMedia')
+    if (remoteMedia) remoteMedia.style.display = actief ? 'block' : 'none'
+    document.getElementById('status').textContent = actief ? '📹 Video aan' : '📞 Audio'
+    setTimeout(() => { if (timer) document.getElementById('status').textContent = 'Verbonden' }, 1500)
+  },
   onOproep: async (info) => {
     const { data: v } = await supabase.from('profiles').select('*').eq('id', info.van).single()
     document.getElementById('avatar').textContent = v?.avatar_url || '👤'
     document.getElementById('naam').textContent = v?.display_name || v?.username || 'Vriend'
-    document.getElementById('status').textContent = 'Belt je op...'
+    document.getElementById('status').textContent = (videoModus ? '📹 Videogesprek — ' : '📞 Belt je op...')
     document.getElementById('knoppen-bellen').style.display = 'none'
     document.getElementById('knoppen-inkomend').style.display = 'flex'
   },
@@ -115,7 +125,7 @@ if (vriendId && !params.get('inkomend')) {
   document.getElementById('knoppen-keuze').style.display = 'none'
   document.getElementById('knoppen-bellen').style.display = 'none'
   document.getElementById('knoppen-inkomend').style.display = 'flex'
-  document.getElementById('status').textContent = 'Belt je op...'
+  document.getElementById('status').textContent = (videoModus ? '📹 Videogesprek — ' : '📞 Belt je op...')
   // Laad beller info
   const { data: v } = await supabase.from('profiles').select('*').eq('id', vriendId).single()
   if (v) {
@@ -157,9 +167,22 @@ window.startBellen = async (video) => {
 }
 window.annuleer = async () => { stopBeltoon(); await hangOp(); window.location.href = 'chat.html' }
 window.weiger = async () => { stopBeltoon(); await weigerooproep(); window.location.href = 'chat.html' }
-window.neem = async () => { stopBeltoon(); const ok = await accepteerOproep(false); if(ok) document.getElementById('status').textContent = 'Verbinding maken...' }
+window.neem = async (video) => {
+  stopBeltoon()
+  videoModus = video
+  const ok = await accepteerOproep(video)
+  if(ok) document.getElementById('status').textContent = 'Verbinding maken...'
+}
 window.hangop = async () => { await hangOp(); window.location.href = 'chat.html' }
 window.togMic = () => { micAan = toggleMic(); document.getElementById('micBtn').textContent = micAan ? '🎤' : '🔇' }
+window.togCam = async () => {
+  const camAan = isVideoActiefLokaal()
+  const ok = await schakelVideo(!camAan)
+  if (ok) {
+    document.getElementById('camBtn').textContent = !camAan ? '📷' : '🚫'
+    document.getElementById('lokaalMedia').style.display = !camAan ? 'block' : 'none'
+  }
+}
 </script>
 </body>
 </html>

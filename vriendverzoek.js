@@ -53,10 +53,7 @@ function toonVriendverzoekPopup(vanId, vanNaam, vanAvatar) {
   document.getElementById('vvBevestig').onclick = async () => {
     const { data: { session } } = await supabase.auth.getSession()
     const mij = session.user.id
-    await supabase.from('friendships').insert([
-      { user_id: mij, friend_id: vanId, status: 'accepted' },
-      { user_id: vanId, friend_id: mij, status: 'accepted' }
-    ])
+    await supabase.rpc('maak_vriendschap', { vriend: vanId })
     popup.remove()
     const terugKanaal = supabase.channel('vriendverzoek-' + vanId)
     await new Promise((resolve) => { terugKanaal.subscribe((s) => { if (s === 'SUBSCRIBED') resolve() }) })

@@ -250,10 +250,7 @@ window.registreren = async function() {
     await supabase.rpc('gebruik_invite', { token_in: token, gebruiker: data.user.id })
 
     if (uitnodigerData?.created_by && uitnodigerData.created_by !== data.user.id) {
-      await supabase.from('friendships').insert([
-        { user_id:data.user.id, friend_id:uitnodigerData.created_by, status:'accepted' },
-        { user_id:uitnodigerData.created_by, friend_id:data.user.id, status:'accepted' }
-      ])
+      await supabase.rpc('maak_vriendschap', { vriend: uitnodigerData.created_by })
     }
   }
 
@@ -280,10 +277,7 @@ window.voegToe = async function() {
     .maybeSingle()
 
   if (!bestaat) {
-    await supabase.from('friendships').insert([
-      { user_id: mij, friend_id: ander, status: 'accepted' },
-      { user_id: ander, friend_id: mij, status: 'accepted' }
-    ])
+    await supabase.rpc('maak_vriendschap', { vriend: ander })
   }
   // Markeer token als gebruikt
   await supabase.rpc('gebruik_invite', { token_in: token, gebruiker: mij })

@@ -2001,9 +2001,15 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
         if (o.type === "rect") {
           if (bal.x+BAL_GROOTTE/2 > o.x && bal.x-BAL_GROOTTE/2 < o.x+o.b &&
               bal.y+BAL_GROOTTE/2 > o.y && bal.y-BAL_GROOTTE/2 < o.y+o.h) {
-            const dx = Math.min(Math.abs(bal.x-(o.x+o.b/2)), o.b/2)
-            const dy = Math.min(Math.abs(bal.y-(o.y+o.h/2)), o.h/2)
-            if (dx < dy) bal.vx *= -1; else bal.vy *= -1
+            const overlapL = (bal.x+BAL_GROOTTE/2) - o.x
+            const overlapR = (o.x+o.b) - (bal.x-BAL_GROOTTE/2)
+            const overlapT = (bal.y+BAL_GROOTTE/2) - o.y
+            const overlapB = (o.y+o.h) - (bal.y-BAL_GROOTTE/2)
+            const minOverlap = Math.min(overlapL, overlapR, overlapT, overlapB)
+            if (minOverlap === overlapL) { bal.vx = -Math.abs(bal.vx); bal.x = o.x - BAL_GROOTTE/2 - 1 }
+            else if (minOverlap === overlapR) { bal.vx = Math.abs(bal.vx); bal.x = o.x+o.b + BAL_GROOTTE/2 + 1 }
+            else if (minOverlap === overlapT) { bal.vy = -Math.abs(bal.vy); bal.y = o.y - BAL_GROOTTE/2 - 1 }
+            else { bal.vy = Math.abs(bal.vy); bal.y = o.y+o.h + BAL_GROOTTE/2 + 1 }
             geluidTik()
           }
         } else if (o.type === "ruit") {
@@ -2023,11 +2029,16 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
           let inBox = false
           if (o.type === "hoek") inBox = bal.x > o.x-bs2 && bal.x < o.x+bs2 && bal.y > o.y-bs2 && bal.y < o.y+bs2
           else inBox = o.richting==="l" ? bal.x < bs2 && bal.y > o.y && bal.y < o.y+50 : bal.x > BREEDTE-bs2 && bal.y > o.y && bal.y < o.y+50
-          if (inBox) { bal.vx *= -1; bal.vy *= -1; geluidTik() }
+          if (inBox) {
+            bal.vx = -bal.vx; bal.vy = -bal.vy
+            bal.x += bal.vx * 4
+            bal.y += bal.vy * 4
+            geluidTik()
+          }
         }
       })
       // Snelheid begrenzen
-      const maxSnelheid = 9
+      const maxSnelheid = 7
       bal.vx = Math.max(-maxSnelheid, Math.min(maxSnelheid, bal.vx))
       bal.vy = Math.max(-maxSnelheid, Math.min(maxSnelheid, bal.vy))
 

@@ -281,7 +281,7 @@
     const { data, error } = await supabase.auth.signUp({
       email: nep_email,
       password: wachtwoord,
-      options: { data: { username, geboortejaar: jaarNum, niveau, herstelsleutel } }
+      options: { data: { username, geboortejaar: jaarNum, niveau } }
     })
 
     if (error) {
@@ -296,9 +296,10 @@
         id: data.user.id,
         username,
         niveau,
-        herstelsleutel,
         public_key: keypair.publicKeyB64
       })
+      const hsHash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(herstelsleutel)))).map(b=>b.toString(16).padStart(2,'0')).join('')
+      await supabase.rpc('zet_herstelsleutel', { hash_in: hsHash })
     }
 
     document.getElementById('reg-form').innerHTML = `

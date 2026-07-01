@@ -225,7 +225,7 @@ window.registreren = async function() {
   const { data, error } = await supabase.auth.signUp({
     email: nep_email,
     password: ww,
-    options: { data: { username: naam, geboortejaar: jaarNum, niveau, herstelsleutel } }
+    options: { data: { username: naam, geboortejaar: jaarNum, niveau } }
   })
 
   if (error) {
@@ -242,10 +242,11 @@ window.registreren = async function() {
       id: data.user.id,
       username: naam,
       niveau,
-      herstelsleutel,
       public_key: keypair.publicKeyB64,
       updated_at: new Date().toISOString()
     })
+    const hsHash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(herstelsleutel)))).map(b=>b.toString(16).padStart(2,'0')).join('')
+    await supabase.rpc('zet_herstelsleutel', { hash_in: hsHash })
 
     await supabase.rpc('gebruik_invite', { token_in: token, gebruiker: data.user.id })
 

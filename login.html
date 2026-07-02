@@ -335,7 +335,11 @@
   async function laadWallpaper() {
     try {
       const db = await new Promise((res,rej) => {
-        const r = indexedDB.open('FibroDB',1)
+        const r = indexedDB.open('FibroDB',2)
+        r.onupgradeneeded = e => {
+          const db = e.target.result
+          if (!db.objectStoreNames.contains('fotos')) db.createObjectStore('fotos', { keyPath: 'id' })
+        }
         r.onsuccess = e => res(e.target.result)
         r.onerror = () => rej()
       })

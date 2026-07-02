@@ -2,7 +2,7 @@ import { supabase } from './supabase.js'
 
 function openDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open('FibroDB', 1)
+    const req = indexedDB.open('FibroDB', 2)
     req.onupgradeneeded = e => {
       const db = e.target.result
       if (!db.objectStoreNames.contains('fotos')) {

@@ -659,6 +659,19 @@ window.slaAllesOp=async function(){
   }
   localStorage.setItem('fibro_profiel', JSON.stringify(lokaalProfiel))
 
+  // ── Sync naar widget-layout voor index.html ──
+  const WMAP = {
+    mood:       { id:'mood',       icon:'😊', titel:'Mood',          w:4, h:1 },
+    muziek:     { id:'muziek',     icon:'🎵', titel:'Muziek player', w:4, h:2 },
+    quote:      { id:'quote',      icon:'✍', titel:'Quote',         w:4, h:1 },
+    fotos:      { id:'fotos_3x3',  icon:'📷', titel:'Foto grid 3×3', w:4, h:3 },
+    poll:       { id:'poll',       icon:'🗳', titel:'Poll',          w:4, h:3 },
+    countdown:  { id:'afteltimer', icon:'⏳', titel:'Afteltimer',    w:4, h:2 },
+    gastenboek: { id:'gastenboek', icon:'📖', titel:'Gastenboek',    w:4, h:4 }
+  }
+  const wLayout = actieveWidgets.filter(n => WMAP[n]).map((n, i) => ({ ...WMAP[n], volgorde: i, aan: true }))
+  localStorage.setItem('fibro_widgets_profiel', JSON.stringify(wLayout))
+
 
   // ── Alleen technische sync naar Supabase (geen PII) ──
   const{error}=await supabase.from('profiles').upsert({

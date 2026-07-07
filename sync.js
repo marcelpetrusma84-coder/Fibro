@@ -56,6 +56,10 @@ function startPresence() {
       if (status === 'SUBSCRIBED') {
         await presenceKanaal.track({ online_sinds: new Date().toISOString() })
       }
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.log('[sync] Presence-kanaal weggevallen — reconnect over 5 sec')
+        setTimeout(startPresence, 5000)
+      }
     })
 }
 

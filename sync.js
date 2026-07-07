@@ -22,6 +22,7 @@ function startPresence() {
       onlineGebruikers = new Set(Object.keys(state).filter((id) => id !== huidigeUserId))
       console.log('[sync] Online gebruikers:', [...onlineGebruikers])
       if (onOnlineChangeCallback) onOnlineChangeCallback([...onlineGebruikers])
+      toonDebugBadge()
     })
     .subscribe(async (status) => {
       console.log('[sync] Presence-kanaal status:', status)
@@ -29,6 +30,17 @@ function startPresence() {
         await presenceKanaal.track({ online_sinds: new Date().toISOString() })
       }
     })
+}
+
+function toonDebugBadge() {
+  let b = document.getElementById('sync-debug-badge')
+  if (!b) {
+    b = document.createElement('div')
+    b.id = 'sync-debug-badge'
+    b.style.cssText = 'position:fixed;bottom:70px;right:10px;background:rgba(0,0,0,0.8);color:#0f0;padding:6px 10px;border-radius:8px;font-size:13px;z-index:9999;font-family:monospace'
+    document.body.appendChild(b)
+  }
+  b.textContent = 'sync: ' + onlineGebruikers.size + ' online'
 }
 
 export function isOnline(userId) {

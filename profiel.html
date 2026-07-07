@@ -379,6 +379,16 @@ input, textarea { font-size:16px !important; }
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">📅</div><div><div class="widget-name">Agenda</div><div class="widget-desc">Deel aankomende events</div></div></div><div class="toggle off" id="widget-agenda" onclick="toggleWidget('agenda')"><div class="toggle-dot"></div></div></div>
     </div>
   </div>
+  <div class="section">
+    <div class="section-label">Muziek uploaden</div>
+    <div class="upload-zone" onclick="document.getElementById('muziekUpload').click()">
+      <div class="upload-icon">🎵</div>
+      <div class="upload-text" id="muziekUploadTekst">Upload een muziekbestand</div>
+      <div class="upload-formats">MP3, M4A, OGG — wordt verkleind naar 128kbps</div>
+    </div>
+    <input type="file" id="muziekUpload" accept="audio/*" style="display:none" onchange="verwerkMuziek(event)"/>
+    <div class="status-msg" id="muziekStatus"></div>
+  </div>
 </div>
 <div class="panel" id="panel-stickers">
   <div class="section"><div class="section-label">Actieve stickers</div><div class="sticker-galerij" id="actieveStickers"></div></div>
@@ -402,6 +412,7 @@ input, textarea { font-size:16px !important; }
   <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
   <div class="nav-item active"><div class="nav-icon">👤</div>Profiel</div>
 </div>
+<script src="lame.min.js"></script>
 <script type="module">
 import { supabase } from './supabase.js'
 import { laadThema } from './thema.js'
@@ -469,44 +480,60 @@ async function comprimeerVideo(file) {
   })
 }
 
-// Muziek compressie via Web Audio API
+// Muziek compressie: mp3 128kbps mono via lamejs
 async function comprimeerMuziek(file) {
+  const arrayBuf = await file.arrayBuffer()
+  const ctx = new (window.AudioContext || window.webkitAudioContext)()
+  const buffer = await ctx.decodeAudioData(arrayBuf)
+  ctx.close()
+  // Mono samples ophalen als Int16
+  const ch = buffer.getChannelData(0)
+  const samples = new Int16Array(ch.length)
+  for (let i = 0; i < ch.length; i++) {
+    const s = Math.max(-1, Math.min(1, ch[i]))
+    samples[i] = s < 0 ? s * 0x8000 : s * 0x7FFF
+  }
+  const encoder = new lamejs.Mp3Encoder(1, buffer.sampleRate, 128)
+  const delen = []
+  const blok = 1152
+  for (let i = 0; i < samples.length; i += blok) {
+    const stuk = samples.subarray(i, i + blok)
+    const mp3 = encoder.encodeBuffer(stuk)
+    if (mp3.length > 0) delen.push(mp3)
+  }
+  const rest = encoder.flush()
+  if (rest.length > 0) delen.push(rest)
+  const blob = new Blob(delen, { type: 'audio/mp3' })
   return new Promise((resolve) => {
-    const maxMB = 3
-    const maxBytes = maxMB * 1024 * 1024
-    if (file.size <= maxBytes) {
-      const reader = new FileReader()
-      reader.onload = e => resolve(e.target.result)
-      reader.readAsDataURL(file)
-      return
-    }
-    // Resample naar 128kbps via AudioContext
-    const reader = new FileReader()
-    reader.onload = async (e) => {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)()
-        const buffer = await ctx.decodeAudioData(e.target.result)
-        // Offline render op 44100Hz mono voor kleinste bestand
-        const offline = new OfflineAudioContext(1, buffer.length, 44100)
-        const src = offline.createBufferSource()
-        src.buffer = buffer
-        src.connect(offline.destination)
-        src.start()
-        const rendered = await offline.startRendering()
-        // Converteer naar WAV data URL
-        const wav = audioBufferToWav(rendered)
-        const blob = new Blob([wav], { type: 'audio/wav' })
-        const r2 = new FileReader()
-        r2.onload = f => resolve(f.target.result)
-        r2.readAsDataURL(blob)
-        ctx.close()
-      } catch(err) {
-        // Fallback: gewoon opslaan
-        resolve(e.target.result)
-      }
-    }
-    reader.readAsArrayBuffer(file)
+    const r = new FileReader()
+    r.onload = e => resolve(e.target.result)
+    r.readAsDataURL(blob)
   })
+}
+
+window.verwerkMuziek = async function(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  const status = document.getElementById('muziekStatus')
+  const maxMB = 25
+  if (file.size > maxMB * 1024 * 1024) {
+    status.className = 'status-msg error'
+    status.textContent = 'Bestand te groot (max ' + maxMB + ' MB)'
+    return
+  }
+  try {
+    status.className = 'status-msg'
+    status.textContent = 'Bezig met verkleinen...'
+    const data = await comprimeerMuziek(file)
+    await slaFotoOp('muziek_track', data)
+    await slaFotoOp('muziek_titel', file.name.replace(/\.[^.]+$/, ''))
+    document.getElementById('muziekUploadTekst').textContent = file.name
+    status.className = 'status-msg success'
+    status.textContent = 'Muziek opgeslagen (' + Math.round(data.length * 0.75 / 1024) + ' KB)'
+  } catch(err) {
+    status.className = 'status-msg error'
+    status.textContent = 'Mislukt: ' + err.message
+  }
 }
 
 function audioBufferToWav(buffer) {

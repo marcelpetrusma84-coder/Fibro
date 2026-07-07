@@ -135,18 +135,87 @@ function koppelDataChannel(kanaal) {
   dataChannel.onopen = () => {
     console.log('[sync] DataChannel OPEN')
     zetP2pStatus('P2P open')
-    if (isInitiator) dataChannel.send(JSON.stringify({ type: 'ping' }))
+    stuurManifest()
   }
   dataChannel.onmessage = (event) => {
     const bericht = JSON.parse(event.data)
     console.log('[sync] P2P bericht:', bericht.type)
-    if (bericht.type === 'ping') {
-      dataChannel.send(JSON.stringify({ type: 'pong' }))
-      zetP2pStatus('PING-PONG OK')
-    }
-    if (bericht.type === 'pong') zetP2pStatus('PING-PONG OK')
+    verwerkP2pBericht(bericht)
   }
   dataChannel.onclose = () => zetP2pStatus('')
+}
+
+function hashString(s) {
+  let h = 5381
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0
+  return h.toString(16)
+}
+
+function stuurManifest() {
+  const layoutJson = localStorage.getItem('fibro_widgets_profiel') || '[]'
+  const manifest = { layout: { hash: hashString(layoutJson) } }
+  dataChannel.send(JSON.stringify({ type: 'manifest', data: manifest }))
+  zetP2pStatus('manifest gestuurd')
+}
+
+async function verwerkP2pBericht(bericht) {
+  if (bericht.type === 'manifest') {
+    const cached = await dbGet('vriend_' + syncPartnerId + '_layout')
+    const nodig = []
+    if (!cached || cached.hash !== bericht.data.layout.hash) nodig.push('layout')
+    if (nodig.length) {
+      dataChannel.send(JSON.stringify({ type: 'geef', items: nodig }))
+      zetP2pStatus('vraag ' + nodig.length + ' item(s)')
+    } else {
+      zetP2pStatus('alles up-to-date')
+    }
+  }
+  if (bericht.type === 'geef') {
+    for (const item of bericht.items) {
+      if (item === 'layout') {
+        const layoutJson = localStorage.getItem('fibro_widgets_profiel') || '[]'
+        dataChannel.send(JSON.stringify({ type: 'item', itemId: 'layout', hash: hashString(layoutJson), data: layoutJson }))
+      }
+    }
+  }
+  if (bericht.type === 'item') {
+    if (bericht.itemId === 'layout') {
+      await dbPut({ id: 'vriend_' + syncPartnerId + '_layout', hash: bericht.hash, data: bericht.data, ontvangen: Date.now() })
+      console.log('[sync] Layout van vriend opgeslagen')
+      zetP2pStatus('layout ontvangen \u2713')
+    }
+  }
+}
+
+function openFibroDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('FibroDB', 2)
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result
+      if (!db.objectStoreNames.contains('fotos')) db.createObjectStore('fotos', { keyPath: 'id' })
+    }
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
+
+async function dbGet(id) {
+  const db = await openFibroDB()
+  return new Promise((resolve) => {
+    const req = db.transaction('fotos').objectStore('fotos').get(id)
+    req.onsuccess = () => resolve(req.result || null)
+    req.onerror = () => resolve(null)
+  })
+}
+
+async function dbPut(obj) {
+  const db = await openFibroDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('fotos', 'readwrite')
+    tx.objectStore('fotos').put(obj)
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error)
+  })
 }
 
 async function maakEnStuurOffer() {

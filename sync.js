@@ -16,6 +16,9 @@ let syncPartnerId = null
 let isInitiator = false
 let p2pStatus = ''
 let iceBuffer = []
+let offerRetryCount = 0
+let offerRetryTimer = null
+let syncTimeout = null
 
 const ICE_SERVERS = {
   iceServers: [
@@ -88,9 +91,25 @@ function openSyncKanaal(anderId) {
     .subscribe((status) => {
       console.log('[sync] Synckanaal status:', status)
       if (status === 'SUBSCRIBED' && isInitiator) {
-        setTimeout(maakEnStuurOffer, 2000)
+        offerRetryCount = 0
+        startOfferRetry()
+        syncTimeout = setTimeout(() => {
+          console.log('[sync] Sync timeout — geen answer na 30 sec')
+          stopSync()
+        }, 30000)
       }
     })
+}
+
+function startOfferRetry() {
+  if (offerRetryCount >= 5) {
+    console.log('[sync] Offer retries uitgeput')
+    return
+  }
+  offerRetryCount++
+  console.log('[sync] Offer poging', offerRetryCount, '/ 5')
+  maakEnStuurOffer()
+  offerRetryTimer = setTimeout(startOfferRetry, 5000)
 }
 
 async function stuurSignaal(type, data = {}) {
@@ -148,6 +167,9 @@ async function verwerkSignaal(type, data) {
   if (type === 'answer') {
     if (!isInitiator || !peerConnection) return
     if (peerConnection.signalingState !== 'have-local-offer') return
+    clearTimeout(offerRetryTimer)
+    clearTimeout(syncTimeout)
+    console.log('[sync] Answer ontvangen — retry gestopt')
     await peerConnection.setRemoteDescription(new RTCSessionDescription(data))
     await leegIceBuffer()
   }
@@ -171,11 +193,14 @@ async function leegIceBuffer() {
 
 function stopSync() {
   console.log('[sync] Sync gestopt')
+  clearTimeout(offerRetryTimer)
+  clearTimeout(syncTimeout)
   if (dataChannel) { dataChannel.close(); dataChannel = null }
   if (peerConnection) { peerConnection.close(); peerConnection = null }
   if (syncKanaal) { supabase.removeChannel(syncKanaal); syncKanaal = null }
   syncPartnerId = null
   iceBuffer = []
+  offerRetryCount = 0
   zetP2pStatus('')
 }
 

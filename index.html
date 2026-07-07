@@ -490,10 +490,10 @@ function renderMuziekPlayer(c) {
             <button id="muz-next" style="background:none;border:none;font-size:20px;cursor:pointer;color:rgba(255,255,255,0.7);">⏭</button>
           </div>
           <!-- Tracklist -->
-          ${tracks.length > 1 ? `<div style="max-height:80px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;" id="muz-lijst">
+          ${tracks.length > 0 ? `<div style="max-height:80px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;" id="muz-lijst">
             ${tracks.map((t,i) => `<div class="muz-item" data-i="${i}" style="padding:4px 8px;border-radius:6px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;background:${i===huidigIdx?'rgba(192,132,252,0.15)':'transparent'};">
               <span style="color:var(--accent);width:14px;text-align:center;">${i===huidigIdx?'▶':'·'}</span>
-              <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.naam}</span>
+              <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.naam}</span><span class="muz-del" data-i="${i}" style="color:rgba(255,255,255,0.5);padding:0 6px;cursor:pointer;">✕</span>
             </div>`).join('')}
           </div>` : ''}
         ` : `
@@ -568,6 +568,17 @@ function renderMuziekPlayer(c) {
     }
 
     // Tracklist klikken
+    c.querySelectorAll('.muz-del').forEach(el => {
+      el.onclick = async (ev) => {
+        ev.stopPropagation()
+        const idx = parseInt(el.dataset.i)
+        if (audio) { audio.pause(); audio.src = '' }
+        tracks.splice(idx, 1)
+        if (huidigIdx >= tracks.length) huidigIdx = 0
+        await slaInDB(key, JSON.stringify(tracks))
+        render()
+      }
+    })
     c.querySelectorAll('.muz-item').forEach(el => {
       el.onclick = () => {
         huidigIdx = parseInt(el.dataset.i)

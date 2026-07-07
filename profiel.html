@@ -386,7 +386,7 @@ input, textarea { font-size:16px !important; }
       <div class="upload-text" id="muziekUploadTekst">Upload een muziekbestand</div>
       <div class="upload-formats">MP3, M4A, OGG — wordt verkleind naar 128kbps</div>
     </div>
-    <input type="file" id="muziekUpload" accept="audio/*" style="display:none" onchange="verwerkMuziek(event)"/>
+    <input type="file" id="muziekUpload" accept="audio/*,.mp3,.m4a,.ogg,.wav,audio/mpeg,audio/mp4" style="display:none" onchange="verwerkMuziek(event)"/>
     <div class="status-msg" id="muziekStatus"></div>
   </div>
 </div>

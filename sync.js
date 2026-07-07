@@ -7,6 +7,7 @@ let presenceKanaal = null
 let huidigeUserId = null
 let onlineGebruikers = new Set()
 let onOnlineChangeCallback = null
+let vrienden = new Set()
 
 let syncKanaal = null
 let peerConnection = null
@@ -31,7 +32,7 @@ const ICE_SERVERS = {
 export function initSync(userId, callbacks = {}) {
   huidigeUserId = userId
   onOnlineChangeCallback = callbacks.onOnlineChange || null
-  startPresence()
+  laadVrienden().then(() => startPresence())
 }
 
 function startPresence() {
@@ -55,9 +56,20 @@ function startPresence() {
     })
 }
 
+async function laadVrienden() {
+  const { data, error } = await supabase
+    .from('friendships')
+    .select('user_id,friend_id')
+    .or('user_id.eq.' + huidigeUserId + ',friend_id.eq.' + huidigeUserId)
+    .eq('status', 'accepted')
+  if (error) { console.warn('[sync] vrienden laden mislukt:', error); return }
+  vrienden = new Set((data || []).map((f) => f.user_id === huidigeUserId ? f.friend_id : f.user_id))
+  console.log('[sync] Vrienden geladen:', vrienden.size)
+}
+
 function checkSyncStart() {
   if (syncPartnerId) return
-  const ander = [...onlineGebruikers][0]
+  const ander = [...onlineGebruikers].find((id) => vrienden.has(id))
   if (!ander) return
   syncPartnerId = ander
   isInitiator = huidigeUserId < ander

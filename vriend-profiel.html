@@ -146,6 +146,7 @@ body.heeft-wallpaper::before { display:block; }
 <script type="module">
   import { laadThema } from './thema.js'
   import { supabase } from './supabase.js'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js'
 
   var vriendId = null
   var huidigeUser = null

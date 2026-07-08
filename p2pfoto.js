@@ -3,20 +3,7 @@
 // zolang beide kanten tegelijk online zijn (fase 1 — geen offline-fallback nog).
 
 import { supabase } from './supabase.js'
-
-// ─── ICE servers (zelfde STUN+TURN als bellen.js, los geïmporteerd zodat bellen.js
-//     niet belast wordt met logica die niets met audio/video te maken heeft) ───
-const ICE_SERVERS = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun.relay.metered.ca:80' },
-    { urls: 'turn:global.relay.metered.ca:80', username: '3d8f6969f613be308e4de56c', credential: '9pioPuLlUDLd7sPT' },
-    { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: '3d8f6969f613be308e4de56c', credential: '9pioPuLlUDLd7sPT' },
-    { urls: 'turn:global.relay.metered.ca:443', username: '3d8f6969f613be308e4de56c', credential: '9pioPuLlUDLd7sPT' },
-    { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '3d8f6969f613be308e4de56c', credential: '9pioPuLlUDLd7sPT' },
-  ]
-}
+import { ICE_SERVERS } from './ice-config.js'
 
 let huidigeUserId = null
 let presenceKanaal = null
@@ -232,15 +219,23 @@ function verwerkOntvangenData(vriendId, data) {
       meldStatus(vriendId, 'ontvangen')
     } else if (bericht.soort === 'chunk-info') {
       const buf = ontvangstBuffers[bericht.transferId]
-      if (buf) buf._volgendeIndex = bericht.index
+      if (buf) {
+        buf._volgendeTransferId = bericht.transferId
+        buf._volgendeIndex = bericht.index
+      }
     }
   } else {
-    const transferId = Object.keys(ontvangstBuffers).find(id => ontvangstBuffers[id]._volgendeIndex !== undefined)
+    // Binary chunk data — zoek transfer via _volgendeTransferId (ingesteld bij chunk-info)
+    const transferId = Object.keys(ontvangstBuffers).find(id => 
+      ontvangstBuffers[id]._volgendeTransferId !== undefined && 
+      ontvangstBuffers[id]._volgendeIndex !== undefined
+    )
     if (!transferId) return
     const buf = ontvangstBuffers[transferId]
     const index = buf._volgendeIndex
     buf.chunks[index] = data
     buf.ontvangen++
+    delete buf._volgendeTransferId
     delete buf._volgendeIndex
 
     if (buf.ontvangen === buf.totaal) {

@@ -18,9 +18,8 @@ let videoActiefLokaal = false
 let videoSender = null
 let geinitialiseerd = false
 
-const ICE_SERVERS = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
+// ICE_SERVERS is verplaatst naar ice-config.js
+import { ICE_SERVERS } from './ice-config.js',
     { urls: 'stun:stun1.l.google.com:19302' },
     { urls: 'stun:stun.relay.metered.ca:80' },
     { urls: 'turn:global.relay.metered.ca:80', username: '3d8f6969f613be308e4de56c', credential: '9pioPuLlUDLd7sPT' },

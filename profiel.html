@@ -417,6 +417,7 @@ input, textarea { font-size:16px !important; }
 import { supabase } from './supabase.js'
 import { laadThema } from './thema.js'
 import { startHeartbeat } from './heartbeat.js'
+import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js'
 
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
@@ -605,6 +606,13 @@ async function init(){
     const bestaandeWallpaper=await laadFotoUitDB('bg_wallpaper_'+userId)
     if(bestaandeWallpaper){document.getElementById('uploadedWallpaper').innerHTML=`<img src="${bestaandeWallpaper}" style="width:100%;height:100%;object-fit:cover;">`;document.getElementById('uploadPreview').style.display='block';document.body.style.backgroundImage=`url(${bestaandeWallpaper})`;document.body.style.backgroundSize='cover';document.body.style.backgroundPosition='center';document.body.style.backgroundAttachment='fixed';document.body.style.backgroundRepeat='no-repeat';document.documentElement.style.setProperty('--bg','transparent')}
   }
+  // P2P foto-sync initialiseren
+  if (huidigeUser?.id) initP2pFoto(huidigeUser.id, {
+    onFotoOntvangen: (vriendId, blob, meta) => console.log('📷 Foto ontvangen van', vriendId),
+    onStatus: (vriendId, status) => console.log('P2P status:', vriendId, status)
+  })
+  // P2P foto-sync initialiseren
+  if (huidigeUser?.id) initP2pFoto(huidigeUser.id, { onFotoOntvangen: (vriendId, blob, meta) => console.log('📷 Foto:', vriendId), onStatus: (vriendId, status) => console.log('P2P', vriendId, status) })
   bouwFontGrid();bouwStickerGrids();bouwAvatarPicker();updateWidgetToggles();updateActieveStickers()
   document.getElementById('editNaam').oninput=updatePreview
   document.getElementById('editBio').oninput=updatePreview

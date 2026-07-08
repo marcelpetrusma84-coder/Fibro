@@ -177,6 +177,17 @@ async function verwerkP2pBericht(bericht) {
       const fCached = await dbGet('vriend_' + syncPartnerId + '_foto_' + itemId)
       if (!fCached || fCached.hash !== fotos[itemId].hash) nodig.push('foto:' + itemId)
     }
+    // Opruimen: gecachte foto's die niet meer in het manifest staan zijn verwijderd bij de vriend
+    const fotoPrefix = 'vriend_' + syncPartnerId + '_foto_'
+    const bestaandeKeys = await dbListKeys(fotoPrefix)
+    for (const key of bestaandeKeys) {
+      const oudItemId = key.slice(fotoPrefix.length)
+      if (!fotos[oudItemId]) {
+        await dbDelete(key)
+        console.log('[sync] Verouderde foto verwijderd:', key)
+        zetP2pStatus('oude foto opgeruimd')
+      }
+    }
     if (nodig.length) {
       dataChannel.send(JSON.stringify({ type: 'geef', items: nodig }))
       zetP2pStatus('vraag ' + nodig.length + ' item(s)')
@@ -281,6 +292,25 @@ async function dbPut(obj) {
     tx.objectStore('fotos').put(obj)
     tx.oncomplete = () => resolve()
     tx.onerror = () => reject(tx.error)
+  })
+}
+
+async function dbDelete(id) {
+  const db = await openFibroDB()
+  return new Promise((resolve) => {
+    const tx = db.transaction('fotos', 'readwrite')
+    tx.objectStore('fotos').delete(id)
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => resolve()
+  })
+}
+
+async function dbListKeys(prefix) {
+  const db = await openFibroDB()
+  return new Promise((resolve) => {
+    const req = db.transaction('fotos').objectStore('fotos').getAllKeys()
+    req.onsuccess = () => resolve((req.result || []).filter(k => typeof k === 'string' && k.startsWith(prefix)))
+    req.onerror = () => resolve([])
   })
 }
 

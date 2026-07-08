@@ -57,6 +57,27 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .laden { text-align:center; padding:40px; color:var(--muted); font-size:13px; }
 body::before { content:''; position:fixed; inset:0; background:rgba(0,0,0,0.38); z-index:0; pointer-events:none; display:none; }
 body.heeft-wallpaper::before { display:block; }
+.vriend-widget-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: minmax(60px, auto);
+  gap: 8px;
+}
+.vriend-widget-item {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px;
+  font-size: 13px;
+  text-align: center;
+}
+.vriend-widget-item .wi-icon { font-size: 24px; }
+.vriend-widget-item .wi-titel { opacity: 0.7; font-size: 11px; }
 </style>
 </head>
 <body>
@@ -225,6 +246,26 @@ body.heeft-wallpaper::before { display:block; }
     }
   }
 
+  async function toonVriendWidgets() {
+    const layoutJson = await laadFotoUitDB('vriend_' + vriendId + '_layout')
+    if (!layoutJson) return
+    let layout
+    try { layout = JSON.parse(layoutJson) } catch { return }
+    const actief = (layout || []).filter(w => w.aan).sort((a,b) => (a.volgorde||0) - (b.volgorde||0))
+    if (!actief.length) return
+    const grid = document.getElementById('vriendWidgetGrid')
+    grid.innerHTML = ''
+    actief.forEach(w => {
+      const el = document.createElement('div')
+      el.className = 'vriend-widget-item'
+      el.style.gridColumn = 'span ' + Math.min(w.w || 2, 4)
+      el.style.gridRow = 'span ' + (w.h || 1)
+      el.innerHTML = '<div class="wi-icon">' + (w.icon || '🧩') + '</div><div class="wi-titel">' + (w.titel || w.id) + '</div>'
+      grid.appendChild(el)
+    })
+    document.getElementById('widgetBlok').style.display = ''
+  }
+
   async function init() {
     await laadThema()
 
@@ -235,6 +276,8 @@ body.heeft-wallpaper::before { display:block; }
     const params = new URLSearchParams(window.location.search)
     vriendId = params.get('id')
     if (!vriendId) { window.location.href = 'vrienden.html'; return }
+
+    toonVriendWidgets()
 
     // ── Stap 1: Toon eerst cache (snel) ──
     const cacheKey = 'vriend_cache_' + vriendId

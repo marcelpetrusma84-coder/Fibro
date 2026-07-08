@@ -197,6 +197,7 @@ body.heeft-wallpaper::before { display:block; }
     if (!dataUrl) return
     const bg = document.getElementById('wallpaperBg')
     bg.style.backgroundImage = `url(${dataUrl})`
+    document.body.style.background = 'transparent'
     document.body.classList.add('heeft-wallpaper')
     // Maak kaarten iets donkerder voor leesbaarheid
     document.documentElement.style.setProperty('--card', 'rgba(0,0,0,0.65)')

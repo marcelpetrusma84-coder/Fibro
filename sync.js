@@ -142,9 +142,27 @@ function hashString(s) {
   return h.toString(16)
 }
 
+function verzamelEigenFotos() {
+  // Foto's van de home-widgets staan in localStorage als pfoto_<stijl>_<idx>_<uid>
+  // itemId = key ZONDER uid-suffix, zodat de ontvanger apparaat-onafhankelijke ids cachet
+  const fotos = {}
+  const suffix = '_' + huidigeUserId
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key && key.startsWith('pfoto_') && key.endsWith(suffix) && !key.includes('_fit_')) {
+      const data = localStorage.getItem(key)
+      if (data && data.startsWith('data:image')) {
+        const itemId = key.slice(0, -suffix.length)
+        fotos[itemId] = { hash: hashString(data) }
+      }
+    }
+  }
+  return fotos
+}
+
 function stuurManifest() {
   const layoutJson = localStorage.getItem('fibro_widgets_profiel') || '[]'
-  const manifest = { layout: { hash: hashString(layoutJson) } }
+  const manifest = { layout: { hash: hashString(layoutJson) }, fotos: verzamelEigenFotos() }
   dataChannel.send(JSON.stringify({ type: 'manifest', data: manifest }))
   zetP2pStatus('manifest gestuurd')
 }
@@ -154,6 +172,11 @@ async function verwerkP2pBericht(bericht) {
     const cached = await dbGet('vriend_' + syncPartnerId + '_layout')
     const nodig = []
     if (!cached || cached.hash !== bericht.data.layout.hash) nodig.push('layout')
+    const fotos = bericht.data.fotos || {}
+    for (const itemId of Object.keys(fotos)) {
+      const fCached = await dbGet('vriend_' + syncPartnerId + '_foto_' + itemId)
+      if (!fCached || fCached.hash !== fotos[itemId].hash) nodig.push('foto:' + itemId)
+    }
     if (nodig.length) {
       dataChannel.send(JSON.stringify({ type: 'geef', items: nodig }))
       zetP2pStatus('vraag ' + nodig.length + ' item(s)')
@@ -166,8 +189,14 @@ async function verwerkP2pBericht(bericht) {
       if (item === 'layout') {
         const layoutJson = localStorage.getItem('fibro_widgets_profiel') || '[]'
         dataChannel.send(JSON.stringify({ type: 'item', itemId: 'layout', hash: hashString(layoutJson), data: layoutJson }))
+      } else if (item.startsWith('foto:')) {
+        const itemId = item.slice(5)
+        await stuurFotoInChunks(itemId)
       }
     }
+  }
+  if (bericht.type === 'chunk') {
+    await verwerkChunk(bericht)
   }
   if (bericht.type === 'item') {
     if (bericht.itemId === 'layout') {
@@ -175,6 +204,52 @@ async function verwerkP2pBericht(bericht) {
       console.log('[sync] Layout van vriend opgeslagen')
       zetP2pStatus('layout ontvangen \u2713')
     }
+  }
+}
+
+const CHUNK_TEKST = 12 * 1024 // 12KB tekst per chunk (dataURL is string; +JSON-overhead blijft ruim onder 16KB WebRTC-limiet)
+const chunkBuffers = {}       // { itemId: { delen:[], ontvangen:0, totaal:0, hash } }
+
+async function stuurFotoInChunks(itemId) {
+  const data = localStorage.getItem(itemId + '_' + huidigeUserId)
+  if (!data) { console.warn('[sync] foto niet gevonden:', itemId); return }
+  const hash = hashString(data)
+  const totaal = Math.ceil(data.length / CHUNK_TEKST)
+  console.log('[sync] Stuur foto', itemId, 'in', totaal, 'chunks')
+  for (let i = 0; i < totaal; i++) {
+    // Flow control: wacht als de verzendbuffer vol raakt
+    while (dataChannel.bufferedAmount > 512 * 1024) {
+      await new Promise((r) => setTimeout(r, 20))
+    }
+    dataChannel.send(JSON.stringify({
+      type: 'chunk', itemId, hash, volgnr: i, totaal,
+      data: data.slice(i * CHUNK_TEKST, (i + 1) * CHUNK_TEKST)
+    }))
+  }
+}
+
+async function verwerkChunk(bericht) {
+  const { itemId, hash, volgnr, totaal, data } = bericht
+  if (!chunkBuffers[itemId] || chunkBuffers[itemId].hash !== hash) {
+    chunkBuffers[itemId] = { delen: new Array(totaal), ontvangen: 0, totaal, hash }
+  }
+  const buf = chunkBuffers[itemId]
+  if (buf.delen[volgnr] === undefined) {
+    buf.delen[volgnr] = data
+    buf.ontvangen++
+  }
+  zetP2pStatus('foto ' + itemId.replace('pfoto_', '') + ': ' + buf.ontvangen + '/' + buf.totaal)
+  if (buf.ontvangen === buf.totaal) {
+    const compleet = buf.delen.join('')
+    if (hashString(compleet) !== hash) {
+      console.warn('[sync] hash-mismatch bij', itemId, '— chunk-buffer weggegooid')
+      delete chunkBuffers[itemId]
+      return
+    }
+    await dbPut({ id: 'vriend_' + syncPartnerId + '_foto_' + itemId, hash, data: compleet, ontvangen: Date.now() })
+    delete chunkBuffers[itemId]
+    console.log('[sync] Foto compleet opgeslagen:', itemId)
+    zetP2pStatus('foto ' + itemId.replace('pfoto_', '') + ' \u2713')
   }
 }
 

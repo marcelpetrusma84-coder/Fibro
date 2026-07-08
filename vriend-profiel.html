@@ -274,14 +274,33 @@ body.heeft-wallpaper::before { display:block; }
     if (!actief.length) return
     const grid = document.getElementById('vriendWidgetGrid')
     grid.innerHTML = ''
-    actief.forEach(w => {
+    const fotoAantal = { '3x3': 9, '2x2': 4, 'groot': 1, 'banner': 4, '1x3': 3 }
+    for (const w of actief) {
       const el = document.createElement('div')
       el.className = 'vriend-widget-item'
       el.style.gridColumn = 'span ' + Math.min(w.w || 2, 4)
       el.style.gridRow = 'span ' + (w.h || 1)
+      // Foto-widget: probeer echte (P2P-gesyncte) foto's uit de cache te tonen
+      const stijl = (w.id || '').startsWith('fotos_') ? w.id.slice(6) : null
+      if (stijl && fotoAantal[stijl]) {
+        const fotos = []
+        for (let i = 0; i < fotoAantal[stijl]; i++) {
+          const f = await laadFotoUitDB('vriend_' + vriendId + '_foto_pfoto_' + stijl + '_' + i)
+          if (f) fotos.push(f)
+        }
+        if (fotos.length) {
+          const kolommen = stijl === '3x3' ? 3 : (stijl === '2x2' ? 2 : (stijl === 'banner' ? 4 : (stijl === '1x3' ? 1 : 1)))
+          el.style.padding = '4px'
+          el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(' + kolommen + ',1fr);gap:3px;width:100%;height:100%;">' +
+            fotos.map(f => '<img src="' + f + '" style="width:100%;height:100%;object-fit:cover;border-radius:6px;min-height:0;">').join('') +
+            '</div>'
+          grid.appendChild(el)
+          continue
+        }
+      }
       el.innerHTML = '<div class="wi-icon">' + (w.icon || '🧩') + '</div><div class="wi-titel">' + (w.titel || w.id) + '</div>'
       grid.appendChild(el)
-    })
+    }
     document.getElementById('widgetBlok').style.display = ''
   }
 

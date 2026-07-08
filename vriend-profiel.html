@@ -57,27 +57,14 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .laden { text-align:center; padding:40px; color:var(--muted); font-size:13px; }
 body::before { content:''; position:fixed; inset:0; background:rgba(0,0,0,0.38); z-index:0; pointer-events:none; display:none; }
 body.heeft-wallpaper::before { display:block; }
-.vriend-widget-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: minmax(60px, auto);
-  gap: 8px;
-}
-.vriend-widget-item {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 8px;
-  font-size: 13px;
-  text-align: center;
-}
-.vriend-widget-item .wi-icon { font-size: 24px; }
-.vriend-widget-item .wi-titel { opacity: 0.7; font-size: 11px; }
+.widget-grid { display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:minmax(85px,auto); gap:10px; padding:0 2px; }
+.widget-blok { background:var(--card, rgba(255,255,255,0.08)); border:0.5px solid var(--border, rgba(255,255,255,0.14)); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 4px 20px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.2); }
+.widget-header { display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 10px 6px; border-bottom:0.5px solid var(--border, rgba(255,255,255,0.14)); }
+.widget-icon-sm { font-size:14px; }
+.widget-titel { font-size:11px; font-weight:600; color:#ffffff; text-transform:uppercase; letter-spacing:0.07em; }
+.widget-inhoud { flex:1; min-height:0; padding:10px; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+.widget-inhoud .wi-icon { font-size:24px; }
+.widget-blok-naakt { background:transparent !important; border:none !important; box-shadow:none !important; overflow:visible !important; }
 </style>
 </head>
 <body>
@@ -115,10 +102,7 @@ body.heeft-wallpaper::before { display:block; }
     </div>
   </div>
 
-  <div class="block" id="widgetBlok" style="display:none">
-    <div class="block-title">Widgets</div>
-    <div id="vriendWidgetGrid" class="vriend-widget-grid"></div>
-  </div>
+  <div id="vriendWidgetGrid" class="widget-grid" style="display:none"></div>
 
   <div class="block">
     <div class="block-title">💬 Stuur een bericht</div>
@@ -277,7 +261,7 @@ body.heeft-wallpaper::before { display:block; }
     const fotoAantal = { '3x3': 9, '2x2': 4, 'groot': 1, 'banner': 4, '1x3': 3 }
     for (const w of actief) {
       const el = document.createElement('div')
-      el.className = 'vriend-widget-item'
+      el.className = 'widget-blok'
       el.style.gridColumn = 'span ' + Math.min(w.w || 2, 4)
       el.style.gridRow = 'span ' + (w.h || 1)
       // Foto-widget: probeer echte (P2P-gesyncte) foto's uit de cache te tonen
@@ -290,18 +274,19 @@ body.heeft-wallpaper::before { display:block; }
         }
         if (fotos.length) {
           const kolommen = stijl === '3x3' ? 3 : (stijl === '2x2' ? 2 : (stijl === 'banner' ? 4 : (stijl === '1x3' ? 1 : 1)))
-          el.style.padding = '4px'
-          el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(' + kolommen + ',1fr);gap:3px;width:100%;height:100%;">' +
-            fotos.map(f => '<img src="' + f + '" style="width:100%;height:100%;object-fit:cover;border-radius:6px;min-height:0;">').join('') +
+          const ratio = stijl === 'groot' ? '4/3' : (stijl === 'banner' ? '3/4' : '1/1')
+          el.classList.add('widget-blok-naakt')
+          el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(' + kolommen + ',1fr);gap:6px;width:100%;">' +
+            fotos.map(f => '<img src="' + f + '" style="width:100%;aspect-ratio:' + ratio + ';object-fit:cover;border-radius:10px;display:block;">').join('') +
             '</div>'
           grid.appendChild(el)
           continue
         }
       }
-      el.innerHTML = '<div class="wi-icon">' + (w.icon || '🧩') + '</div><div class="wi-titel">' + (w.titel || w.id) + '</div>'
+      el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">' + (w.icon || '🧩') + '</span><span class="widget-titel">' + (w.titel || w.id) + '</span></div><div class="widget-inhoud"><div class="wi-icon">' + (w.icon || '🧩') + '</div></div>'
       grid.appendChild(el)
     }
-    document.getElementById('widgetBlok').style.display = ''
+    grid.style.display = ''
   }
 
   async function init() {

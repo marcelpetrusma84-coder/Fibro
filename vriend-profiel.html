@@ -285,6 +285,8 @@ body.heeft-wallpaper::before { display:block; }
 
   async function init() {
     await laadThema()
+    // Eigen wallpaper hoort niet op het profiel van een vriend:
+    document.body.style.backgroundImage = ''
 
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) { window.location.href = 'login.html'; return }

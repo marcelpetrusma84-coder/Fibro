@@ -1,6 +1,7 @@
 // bellen.js — WebRTC P2P audio/video bellen via Supabase Realtime signaling
 // Gebruikt het bewezen spel-patroon: gedeeld kanaal met gesorteerde IDs
 import { supabase } from './supabase.js'
+import { ICE_SERVERS } from './ice-config.js'
 
 let lokaleStream = null
 let remoteStream = null
@@ -18,16 +19,7 @@ let videoActiefLokaal = false
 let videoSender = null
 let geinitialiseerd = false
 
-// ICE_SERVERS is verplaatst naar ice-config.js
-import { ICE_SERVERS } from './ice-config.js',
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun.relay.metered.ca:80' },
-    { urls: 'turn:global.relay.metered.ca:80', username: '3d8f6969f613be308e4de56c', credential: '9pioPuLlUDLd7sPT' },
-    { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: '3d8f6969f613be308e4de56c', credential: '9pioPuLlUDLd7sPT' },
-    { urls: 'turn:global.relay.metered.ca:443', username: '3d8f6969f613be308e4de56c', credential: '9pioPuLlUDLd7sPT' },
-    { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '3d8f6969f613be308e4de56c', credential: '9pioPuLlUDLd7sPT' }
-  ]
-}
+// ICE_SERVERS komt uit ice-config.js (import staat bovenaan)
 
 function gesprekKanaalNaam(id1, id2) {
   const ids = [id1, id2].sort()

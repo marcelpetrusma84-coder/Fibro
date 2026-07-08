@@ -2,6 +2,7 @@
 // Stap A: presence ✓ | Stap B: DataChannel ping-pong
 // Zelfde signaling-patroon als bellen.js: gedeeld kanaal met gesorteerde IDs
 import { supabase } from './supabase.js'
+import { ICE_SERVERS } from './ice-config.js'
 
 let presenceKanaal = null
 let huidigeUserId = null
@@ -20,16 +21,7 @@ let offerRetryCount = 0
 let offerRetryTimer = null
 let syncTimeout = null
 
-// ICE_SERVERS is verplaatst naar ice-config.js
-import { ICE_SERVERS } from './ice-config.js',
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun.relay.metered.ca:80' },
-    { urls: 'turn:global.relay.metered.ca:80', username: '3d8f6969f613be308e4de56c', credential: '9pioPuLlUDLd7sPT' },
-    { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: '3d8f6969f613be308e4de56c', credential: '9pioPuLlUDLd7sPT' },
-    { urls: 'turn:global.relay.metered.ca:443', username: '3d8f6969f613be308e4de56c', credential: '9pioPuLlUDLd7sPT' },
-    { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '3d8f6969f613be308e4de56c', credential: '9pioPuLlUDLd7sPT' }
-  ]
-}
+// ICE_SERVERS komt uit ice-config.js (import staat bovenaan)
 
 export function initSync(userId, callbacks = {}) {
   huidigeUserId = userId

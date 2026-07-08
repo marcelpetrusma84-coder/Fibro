@@ -246,12 +246,24 @@ body.heeft-wallpaper::before { display:block; }
     }
   }
 
+  function widgetDebug(tekst) {
+    let d = document.getElementById('widget-debug')
+    if (!d) {
+      d = document.createElement('div')
+      d.id = 'widget-debug'
+      d.style.cssText = 'position:fixed;bottom:110px;right:10px;background:rgba(0,0,0,0.8);color:#ff0;padding:6px 10px;border-radius:8px;font-size:12px;z-index:9999;font-family:monospace;max-width:260px'
+      document.body.appendChild(d)
+    }
+    d.textContent = 'widgets: ' + tekst
+  }
+
   async function toonVriendWidgets() {
     const layoutJson = await laadFotoUitDB('vriend_' + vriendId + '_layout')
-    if (!layoutJson) return
+    if (!layoutJson) { widgetDebug('niets in cache voor ' + vriendId.slice(0,8)) ; return }
     let layout
-    try { layout = JSON.parse(layoutJson) } catch { return }
+    try { layout = JSON.parse(layoutJson) } catch (e) { widgetDebug('JSON kapot: ' + String(layoutJson).slice(0,40)) ; return }
     const actief = (layout || []).filter(w => w.aan).sort((a,b) => (a.volgorde||0) - (b.volgorde||0))
+    widgetDebug(layout.length + ' totaal, ' + actief.length + ' aan')
     if (!actief.length) return
     const grid = document.getElementById('vriendWidgetGrid')
     grid.innerHTML = ''

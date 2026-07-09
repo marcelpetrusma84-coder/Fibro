@@ -20,6 +20,7 @@ let iceBuffer = []
 let offerRetryCount = 0
 let offerRetryTimer = null
 let syncTimeout = null
+let isRelayConnection = false // TURN/relay detectie
 
 // ICE_SERVERS komt uit ice-config.js (import staat bovenaan)
 
@@ -123,9 +124,11 @@ function maakPeerConnection() {
 
 function koppelDataChannel(kanaal) {
   dataChannel = kanaal
-  dataChannel.onopen = () => {
+  dataChannel.onopen = async () => {
     console.log('[sync] DataChannel OPEN')
     zetP2pStatus('P2P open')
+    // Detecteer TURN/relay verbinding
+    await detecteerRelayConnection()
     stuurManifest()
   }
   dataChannel.onmessage = (event) => {
@@ -134,6 +137,33 @@ function koppelDataChannel(kanaal) {
     verwerkP2pBericht(bericht)
   }
   dataChannel.onclose = () => zetP2pStatus('')
+}
+
+async function detecteerRelayConnection() {
+  if (!peerConnection) return
+  try {
+    const stats = await peerConnection.getStats()
+    let relayGebruikt = false
+    stats.forEach(report => {
+      // Kijk naar candidate-pair die data transporteert
+      if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+        const type = report.currentRoundTripTime ? 'selected' : ''
+        // Als dit de actieve pair is, check de candidate types
+        const localCandidate = stats.get(report.localCandidateId)
+        const remoteCandidate = stats.get(report.remoteCandidateId)
+        if (localCandidate?.candidateType === 'relay' || remoteCandidate?.candidateType === 'relay') {
+          relayGebruikt = true
+          console.log('[sync] RELAY VERBINDING GEDETECTEERD — muziek wordt overgeslagen')
+        }
+      }
+    })
+    isRelayConnection = relayGebruikt
+    if (isRelayConnection) {
+      zetP2pStatus('⚠️ relay-verbinding (muziek overgeslagen)')
+    }
+  } catch(e) {
+    console.warn('[sync] TURN-detectie fout:', e)
+  }
 }
 
 function hashString(s) {
@@ -160,9 +190,53 @@ function verzamelEigenFotos() {
   return fotos
 }
 
-function stuurManifest() {
+async function verzamelEigenMuziek() {
+  // Muziek: twee systemen
+  // Systeem 1 (profiel.html): muziek_track + muziek_titel (los item, geen uid-suffix)
+  // Systeem 2 (index.html): muziek_tracks_<uid> (playlist als JSON-array in IndexedDB)
+  const muziek = {}
+  
+  // ── Systeem 1: profiel-muziek (losstaande track) ──
+  try {
+    const track1 = localStorage.getItem('muziek_track') || (await dbGet('muziek_track'))?.data
+    if (track1 && track1.startsWith('data:audio')) {
+      muziek['muziek_profiel'] = { hash: hashString(track1) }
+      console.log('[sync] Systeem 1 (profiel-muziek) gevonden')
+    }
+  } catch(e) { console.warn('[sync] Systeem 1 muziek-ophalen fout:', e) }
+  
+  // ── Systeem 2: playlist (index.html widget) ──
+  try {
+    const playlistKey = 'muziek_tracks_' + huidigeUserId
+    let playlistJson = localStorage.getItem(playlistKey)
+    if (!playlistJson) {
+      const dbResult = await dbGet(playlistKey)
+      if (dbResult?.data) playlistJson = dbResult.data
+    }
+    if (playlistJson) {
+      try {
+        const tracks = JSON.parse(playlistJson)
+        if (Array.isArray(tracks) && tracks.length > 0) {
+          // Stuur hele playlist als één item
+          muziek['muziek_playlist'] = { hash: hashString(playlistJson), count: tracks.length }
+          console.log('[sync] Systeem 2 (playlist) gevonden:', tracks.length, 'nummers')
+        }
+      } catch(e) { console.warn('[sync] Playlist JSON parse fout:', e) }
+    }
+  } catch(e) { console.warn('[sync] Systeem 2 muziek-ophalen fout:', e) }
+  
+  return muziek
+}
+
+async function stuurManifest() {
   const layoutJson = localStorage.getItem('fibro_widgets_profiel') || '[]'
-  const manifest = { layout: { hash: hashString(layoutJson) }, fotos: verzamelEigenFotos() }
+  const fotos = verzamelEigenFotos()
+  const muziek = await verzamelEigenMuziek()
+  const manifest = { 
+    layout: { hash: hashString(layoutJson) }, 
+    fotos,
+    muziek
+  }
   dataChannel.send(JSON.stringify({ type: 'manifest', data: manifest }))
   zetP2pStatus('manifest gestuurd')
 }
@@ -177,7 +251,17 @@ async function verwerkP2pBericht(bericht) {
       const fCached = await dbGet('vriend_' + syncPartnerId + '_foto_' + itemId)
       if (!fCached || fCached.hash !== fotos[itemId].hash) nodig.push('foto:' + itemId)
     }
-    // Opruimen: gecachte foto's die niet meer in het manifest staan zijn verwijderd bij de vriend
+    const muziek = bericht.data.muziek || {}
+    for (const itemId of Object.keys(muziek)) {
+      const mCached = await dbGet('vriend_' + syncPartnerId + '_muziek_' + itemId)
+      // Skip muziek als we relay gebruiken (datalimiet)
+      if (!isRelayConnection && (!mCached || mCached.hash !== muziek[itemId].hash)) {
+        nodig.push('muziek:' + itemId)
+      } else if (isRelayConnection) {
+        console.log('[sync] Muziek', itemId, 'overgeslagen vanwege relay-verbinding')
+      }
+    }
+    // Opruimen foto's: gecachte foto's die niet meer in het manifest staan zijn verwijderd bij de vriend
     const fotoPrefix = 'vriend_' + syncPartnerId + '_foto_'
     const bestaandeKeys = await dbListKeys(fotoPrefix)
     for (const key of bestaandeKeys) {
@@ -188,6 +272,20 @@ async function verwerkP2pBericht(bericht) {
         zetP2pStatus('oude foto opgeruimd')
       }
     }
+    
+    // Opruimen muziek: gecachte muziek-items die niet meer in het manifest staan
+    const muziekPrefix = 'vriend_' + syncPartnerId + '_muziek_'
+    const muziekKeys = await dbListKeys(muziekPrefix)
+    const muziek = bericht.data.muziek || {}
+    for (const key of muziekKeys) {
+      const itemId = key.slice(muziekPrefix.length)
+      if (!muziek[itemId]) {
+        await dbDelete(key)
+        console.log('[sync] Verouderde muziek verwijderd:', key)
+        zetP2pStatus('oude muziek opgeruimd')
+      }
+    }
+    
     if (nodig.length) {
       dataChannel.send(JSON.stringify({ type: 'geef', items: nodig }))
       zetP2pStatus('vraag ' + nodig.length + ' item(s)')
@@ -203,6 +301,9 @@ async function verwerkP2pBericht(bericht) {
       } else if (item.startsWith('foto:')) {
         const itemId = item.slice(5)
         await stuurFotoInChunks(itemId)
+      } else if (item.startsWith('muziek:')) {
+        const itemId = item.slice(7)
+        await stuurMuziekInChunks(itemId)
       }
     }
   }
@@ -214,6 +315,11 @@ async function verwerkP2pBericht(bericht) {
       await dbPut({ id: 'vriend_' + syncPartnerId + '_layout', hash: bericht.hash, data: bericht.data, ontvangen: Date.now() })
       console.log('[sync] Layout van vriend opgeslagen')
       zetP2pStatus('layout ontvangen \u2713')
+    } else if (bericht.itemId.startsWith('muziek_')) {
+      const muziekItemId = bericht.itemId.slice(7) // 'profiel' of 'playlist'
+      await dbPut({ id: 'vriend_' + syncPartnerId + '_muziek_' + muziekItemId, hash: bericht.hash, data: bericht.data, ontvangen: Date.now() })
+      console.log('[sync] Muziek van vriend opgeslagen:', muziekItemId)
+      zetP2pStatus('muziek ' + muziekItemId + ' ontvangen \u2713')
     }
   }
 }
@@ -239,6 +345,45 @@ async function stuurFotoInChunks(itemId) {
   }
 }
 
+async function stuurMuziekInChunks(itemId) {
+  // itemId = 'profiel' of 'playlist'
+  let data = null
+  
+  if (itemId === 'profiel') {
+    // Systeem 1: muziek_track uit localStorage of IndexedDB
+    data = localStorage.getItem('muziek_track')
+    if (!data) {
+      const dbResult = await dbGet('muziek_track')
+      data = dbResult?.data
+    }
+  } else if (itemId === 'playlist') {
+    // Systeem 2: muziek_tracks_<uid> (hele JSON-array)
+    const playlistKey = 'muziek_tracks_' + huidigeUserId
+    data = localStorage.getItem(playlistKey)
+    if (!data) {
+      const dbResult = await dbGet(playlistKey)
+      data = dbResult?.data
+    }
+  }
+  
+  if (!data) { console.warn('[sync] muziek niet gevonden:', itemId); return }
+  
+  const hash = hashString(data)
+  const totaal = Math.ceil(data.length / CHUNK_TEKST)
+  console.log('[sync] Stuur muziek', itemId, 'in', totaal, 'chunks')
+  
+  for (let i = 0; i < totaal; i++) {
+    // Flow control: wacht als de verzendbuffer vol raakt
+    while (dataChannel.bufferedAmount > 512 * 1024) {
+      await new Promise((r) => setTimeout(r, 20))
+    }
+    dataChannel.send(JSON.stringify({
+      type: 'chunk', itemId: 'muziek_' + itemId, hash, volgnr: i, totaal,
+      data: data.slice(i * CHUNK_TEKST, (i + 1) * CHUNK_TEKST)
+    }))
+  }
+}
+
 async function verwerkChunk(bericht) {
   const { itemId, hash, volgnr, totaal, data } = bericht
   if (!chunkBuffers[itemId] || chunkBuffers[itemId].hash !== hash) {
@@ -249,7 +394,16 @@ async function verwerkChunk(bericht) {
     buf.delen[volgnr] = data
     buf.ontvangen++
   }
-  zetP2pStatus('foto ' + itemId.replace('pfoto_', '') + ': ' + buf.ontvangen + '/' + buf.totaal)
+  
+  // Status-message: onderscheid foto vs muziek
+  let statusLabel = itemId
+  if (itemId.startsWith('pfoto_')) {
+    statusLabel = 'foto ' + itemId.replace('pfoto_', '')
+  } else if (itemId.startsWith('muziek_')) {
+    statusLabel = 'muziek ' + itemId.replace('muziek_', '')
+  }
+  zetP2pStatus(statusLabel + ': ' + buf.ontvangen + '/' + buf.totaal)
+  
   if (buf.ontvangen === buf.totaal) {
     const compleet = buf.delen.join('')
     if (hashString(compleet) !== hash) {
@@ -257,10 +411,22 @@ async function verwerkChunk(bericht) {
       delete chunkBuffers[itemId]
       return
     }
-    await dbPut({ id: 'vriend_' + syncPartnerId + '_foto_' + itemId, hash, data: compleet, ontvangen: Date.now() })
+    
+    // Opslaan: bepaal de juiste key op basis van itemId
+    let dbKey = itemId
+    if (itemId.startsWith('pfoto_')) {
+      dbKey = 'vriend_' + syncPartnerId + '_foto_' + itemId
+    } else if (itemId.startsWith('muziek_')) {
+      dbKey = 'vriend_' + syncPartnerId + '_muziek_' + itemId.slice(7)
+    } else {
+      // layout of ander item — dit zou niet via chunks moeten komen
+      dbKey = 'vriend_' + syncPartnerId + '_' + itemId
+    }
+    
+    await dbPut({ id: dbKey, hash, data: compleet, ontvangen: Date.now() })
     delete chunkBuffers[itemId]
-    console.log('[sync] Foto compleet opgeslagen:', itemId)
-    zetP2pStatus('foto ' + itemId.replace('pfoto_', '') + ' \u2713')
+    console.log('[sync] Item compleet opgeslagen:', itemId)
+    zetP2pStatus(statusLabel + ' \u2713')
   }
 }
 
@@ -370,6 +536,7 @@ function stopSync() {
   syncPartnerId = null
   iceBuffer = []
   offerRetryCount = 0
+  isRelayConnection = false
   zetP2pStatus('')
 }
 

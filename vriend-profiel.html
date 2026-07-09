@@ -284,10 +284,105 @@ body.heeft-wallpaper::before { display:block; }
           continue
         }
       }
+      // Muziek-widget: probeer echte (P2P-gesyncte) muziek uit de cache af te spelen
+      if (w.id === 'muziek') {
+        const gelukt = await renderVriendMuziek(el)
+        if (gelukt) { grid.appendChild(el); continue }
+      }
       el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">' + (w.icon || '🧩') + '</span><span class="widget-titel">' + (w.titel || w.id) + '</span></div><div class="widget-inhoud"><div class="wi-icon">' + (w.icon || '🧩') + '</div></div>'
       grid.appendChild(el)
     }
     grid.style.display = ''
+  }
+
+  // ── Muziek-widget van vriend (P2P-gesyncte cache) ──
+  async function renderVriendMuziek(el) {
+    // Verzamel tracks: eerst playlist (Systeem 2), dan losse profiel-track (Systeem 1)
+    let tracks = []
+    const playlistJson = await laadFotoUitDB('vriend_' + vriendId + '_muziek_playlist')
+    if (playlistJson) {
+      try {
+        const p = JSON.parse(playlistJson)
+        if (Array.isArray(p)) tracks = p.filter(t => t && t.data)
+      } catch(e) {}
+    }
+    if (!tracks.length) {
+      const los = await laadFotoUitDB('vriend_' + vriendId + '_muziek_profiel')
+      if (los && String(los).startsWith('data:audio')) {
+        tracks = [{ naam: 'Nummer', artiest: '', data: los }]
+      }
+    }
+    if (!tracks.length) return false
+
+    let idx = 0
+    let audio = null
+    const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    const fmt = s => { if(!s||isNaN(s))return '0:00'; const m=Math.floor(s/60),sec=Math.floor(s%60); return m+':'+(sec<10?'0':'')+sec }
+
+    const render = () => {
+      const t = tracks[idx]
+      el.innerHTML = `
+        <div class="widget-header"><span class="widget-icon-sm">🎵</span><span class="widget-titel">Muziek</span></div>
+        <div class="widget-inhoud" style="align-items:stretch;text-align:left;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden;">
+              ${t.cover ? '<img src="' + t.cover + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">' : '🎵'}
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escH(t.naam || 'Nummer')}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.7);">${escH(t.artiest || '')}</div>
+            </div>
+          </div>
+          <div>
+            <div id="vm-balk" style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;cursor:pointer;">
+              <div id="vm-prog" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:3px;">
+              <span id="vm-tijd" style="font-size:10px;color:rgba(255,255,255,0.7);">0:00</span>
+              <span id="vm-duur" style="font-size:10px;color:rgba(255,255,255,0.7);">0:00</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:14px;">
+            ${tracks.length > 1 ? '<button id="vm-prev" style="background:none;border:none;font-size:18px;cursor:pointer;color:rgba(255,255,255,0.7);">⏮</button>' : ''}
+            <button id="vm-play" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;font-size:16px;cursor:pointer;color:#1a0a2e;display:flex;align-items:center;justify-content:center;">▶</button>
+            ${tracks.length > 1 ? '<button id="vm-next" style="background:none;border:none;font-size:18px;cursor:pointer;color:rgba(255,255,255,0.7);">⏭</button>' : ''}
+          </div>
+        </div>`
+
+      if (audio) { audio.pause(); audio.src = '' }
+      audio = new Audio(t.data)
+      audio.ontimeupdate = () => {
+        const prog = el.querySelector('#vm-prog'), tijd = el.querySelector('#vm-tijd')
+        if (prog && audio.duration) prog.style.width = (audio.currentTime / audio.duration * 100) + '%'
+        if (tijd) tijd.textContent = fmt(audio.currentTime)
+      }
+      audio.onloadedmetadata = () => {
+        const d = el.querySelector('#vm-duur'); if (d) d.textContent = fmt(audio.duration)
+      }
+      audio.onended = () => {
+        if (tracks.length > 1) { idx = (idx + 1) % tracks.length; render(); setTimeout(() => { if(audio){audio.play(); const b=el.querySelector('#vm-play'); if(b)b.textContent='⏸'} }, 100) }
+        else { const b = el.querySelector('#vm-play'); if (b) b.textContent = '▶' }
+      }
+
+      const playBtn = el.querySelector('#vm-play')
+      if (playBtn) playBtn.onclick = () => {
+        if (!audio) return
+        if (audio.paused) { audio.play(); playBtn.textContent = '⏸' }
+        else { audio.pause(); playBtn.textContent = '▶' }
+      }
+      const prevBtn = el.querySelector('#vm-prev')
+      if (prevBtn) prevBtn.onclick = () => { idx = (idx - 1 + tracks.length) % tracks.length; render(); setTimeout(() => { if(audio){audio.play(); const b=el.querySelector('#vm-play'); if(b)b.textContent='⏸'} }, 100) }
+      const nextBtn = el.querySelector('#vm-next')
+      if (nextBtn) nextBtn.onclick = () => { idx = (idx + 1) % tracks.length; render(); setTimeout(() => { if(audio){audio.play(); const b=el.querySelector('#vm-play'); if(b)b.textContent='⏸'} }, 100) }
+      const balk = el.querySelector('#vm-balk')
+      if (balk) balk.onclick = e => {
+        if (!audio || !audio.duration) return
+        const rect = balk.getBoundingClientRect()
+        audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration
+      }
+    }
+    render()
+    return true
   }
 
   async function init() {

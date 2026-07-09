@@ -276,7 +276,7 @@ async function verwerkP2pBericht(bericht) {
     // Opruimen muziek: gecachte muziek-items die niet meer in het manifest staan
     const muziekPrefix = 'vriend_' + syncPartnerId + '_muziek_'
     const muziekKeys = await dbListKeys(muziekPrefix)
-    const muziek = bericht.data.muziek || {}
+
     for (const key of muziekKeys) {
       const itemId = key.slice(muziekPrefix.length)
       if (!muziek[itemId]) {

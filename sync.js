@@ -144,19 +144,36 @@ async function detecteerRelayConnection() {
   try {
     const stats = await peerConnection.getStats()
     let relayGebruikt = false
+    let selectedPairId = null
+    // Stap 1: vind het GESELECTEERDE candidate-pair (via transport)
     stats.forEach(report => {
-      // Kijk naar candidate-pair die data transporteert
-      if (report.type === 'candidate-pair' && report.state === 'succeeded') {
-        const type = report.currentRoundTripTime ? 'selected' : ''
-        // Als dit de actieve pair is, check de candidate types
-        const localCandidate = stats.get(report.localCandidateId)
-        const remoteCandidate = stats.get(report.remoteCandidateId)
+      if (report.type === 'transport' && report.selectedCandidatePairId) {
+        selectedPairId = report.selectedCandidatePairId
+      }
+    })
+    // Fallback (Firefox): pair met selected=true of nominated+succeeded
+    stats.forEach(report => {
+      if (report.type === 'candidate-pair') {
+        if (report.selected === true) selectedPairId = report.id
+        else if (!selectedPairId && report.nominated && report.state === 'succeeded') selectedPairId = report.id
+      }
+    })
+    // Stap 2: check ALLEEN dat pair op relay
+    if (selectedPairId) {
+      const pair = stats.get(selectedPairId)
+      if (pair) {
+        const localCandidate = stats.get(pair.localCandidateId)
+        const remoteCandidate = stats.get(pair.remoteCandidateId)
         if (localCandidate?.candidateType === 'relay' || remoteCandidate?.candidateType === 'relay') {
           relayGebruikt = true
           console.log('[sync] RELAY VERBINDING GEDETECTEERD — muziek wordt overgeslagen')
+        } else {
+          console.log('[sync] Directe P2P-verbinding (' + (localCandidate?.candidateType || '?') + ') — muziek toegestaan')
         }
       }
-    })
+    } else {
+      console.log('[sync] Geen geselecteerd pair gevonden — muziek toegestaan (voordeel van de twijfel)')
+    }
     isRelayConnection = relayGebruikt
     if (isRelayConnection) {
       zetP2pStatus('⚠️ relay-verbinding (muziek overgeslagen)')
@@ -276,7 +293,6 @@ async function verwerkP2pBericht(bericht) {
     // Opruimen muziek: gecachte muziek-items die niet meer in het manifest staan
     const muziekPrefix = 'vriend_' + syncPartnerId + '_muziek_'
     const muziekKeys = await dbListKeys(muziekPrefix)
-
     for (const key of muziekKeys) {
       const itemId = key.slice(muziekPrefix.length)
       if (!muziek[itemId]) {
@@ -553,7 +569,7 @@ function toonDebugBadge() {
     b.style.cssText = 'position:fixed;bottom:70px;right:10px;background:rgba(0,0,0,0.8);color:#0f0;padding:6px 10px;border-radius:8px;font-size:13px;z-index:9999;font-family:monospace'
     document.body.appendChild(b)
   }
-  b.textContent = 'sync2: ' + onlineGebruikers.size + ' online' + (p2pStatus ? ' | ' + p2pStatus : '')
+  b.textContent = 'sync3: ' + onlineGebruikers.size + ' online' + (p2pStatus ? ' | ' + p2pStatus : '')
 }
 
 export function isOnline(userId) {

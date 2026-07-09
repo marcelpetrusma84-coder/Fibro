@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'fibro-v4'
+const CACHE_VERSION = 'fibro-v5'
 
 self.addEventListener('install', function(event) {
   self.skipWaiting()

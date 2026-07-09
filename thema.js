@@ -37,12 +37,21 @@ async function laadFotoUitDB(id) {
 async function laadWallpaper(userId) {
   const wallpaper = await laadFotoUitDB('bg_wallpaper_' + userId)
   if (wallpaper) {
-    document.body.style.backgroundImage = 'url(' + wallpaper + ')'
-    document.body.style.backgroundSize = 'cover'
-    document.body.style.backgroundPosition = 'center'
-    document.body.style.backgroundAttachment = 'fixed'
-    document.body.style.backgroundRepeat = 'no-repeat'
+    // Wallpaper op een vaste laag ter grootte van het SCHERM (viewport),
+    // niet op de body. Zo blijft 'cover' altijd correct geschaald:
+    // - iPhone: geen inzoom-bug van background-attachment:fixed
+    // - Desktop: pagina mag groeien (sync/profiel), achtergrond blijft gelijk
+    let laag = document.getElementById('fibro-wallpaper')
+    if (!laag) {
+      laag = document.createElement('div')
+      laag.id = 'fibro-wallpaper'
+      laag.style.cssText = 'position:fixed;inset:0;z-index:-1;background-size:cover;background-position:center;background-repeat:no-repeat;pointer-events:none;'
+      document.body.prepend(laag)
+    }
+    laag.style.backgroundImage = 'url(' + wallpaper + ')'
+    document.body.style.backgroundImage = '' // oude body-achtergrond weghalen
     document.documentElement.style.setProperty('--bg', 'transparent')
+    document.body.style.background = 'transparent'
     document.documentElement.style.setProperty('--card', 'rgba(0,0,0,0.70)')
     document.documentElement.style.setProperty('--border', 'rgba(255,255,255,0.15)')
     const topBar = document.querySelector('.top-bar')
@@ -50,6 +59,8 @@ async function laadWallpaper(userId) {
     const bottomNav = document.querySelector('.bottom-nav')
     if (bottomNav) bottomNav.style.background = 'rgba(0,0,0,0.75)'
   } else {
+    const laag = document.getElementById('fibro-wallpaper')
+    if (laag) laag.remove()
     document.body.style.backgroundImage = ''
     document.documentElement.style.setProperty('--card', 'rgba(255,255,255,0.06)')
     document.documentElement.style.setProperty('--border', 'rgba(255,255,255,0.12)')

@@ -553,7 +553,7 @@ function toonDebugBadge() {
     b.style.cssText = 'position:fixed;bottom:70px;right:10px;background:rgba(0,0,0,0.8);color:#0f0;padding:6px 10px;border-radius:8px;font-size:13px;z-index:9999;font-family:monospace'
     document.body.appendChild(b)
   }
-  b.textContent = 'sync: ' + onlineGebruikers.size + ' online' + (p2pStatus ? ' | ' + p2pStatus : '')
+  b.textContent = 'sync2: ' + onlineGebruikers.size + ' online' + (p2pStatus ? ' | ' + p2pStatus : '')
 }
 
 export function isOnline(userId) {

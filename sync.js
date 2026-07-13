@@ -217,7 +217,7 @@ async function verzamelEigenMuziek() {
   try {
     const track1 = localStorage.getItem('muziek_track') || (await dbGet('muziek_track'))?.data
     if (track1 && track1.startsWith('data:audio')) {
-      muziek['muziek_profiel'] = { hash: hashString(track1) }
+      muziek['profiel'] = { hash: hashString(track1) }
       console.log('[sync] Systeem 1 (profiel-muziek) gevonden')
     }
   } catch(e) { console.warn('[sync] Systeem 1 muziek-ophalen fout:', e) }
@@ -235,7 +235,7 @@ async function verzamelEigenMuziek() {
         const tracks = JSON.parse(playlistJson)
         if (Array.isArray(tracks) && tracks.length > 0) {
           // Stuur hele playlist als één item
-          muziek['muziek_playlist'] = { hash: hashString(playlistJson), count: tracks.length }
+          muziek['playlist'] = { hash: hashString(playlistJson), count: tracks.length }
           console.log('[sync] Systeem 2 (playlist) gevonden:', tracks.length, 'nummers')
         }
       } catch(e) { console.warn('[sync] Playlist JSON parse fout:', e) }

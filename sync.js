@@ -269,14 +269,17 @@ async function verwerkP2pBericht(bericht) {
       if (!fCached || fCached.hash !== fotos[itemId].hash) nodig.push('foto:' + itemId)
     }
     const muziek = bericht.data.muziek || {}
+    const muziekNodig = []
     for (const itemId of Object.keys(muziek)) {
       const mCached = await dbGet('vriend_' + syncPartnerId + '_muziek_' + itemId)
-      // Skip muziek als we relay gebruiken (datalimiet)
-      if (!isRelayConnection && (!mCached || mCached.hash !== muziek[itemId].hash)) {
-        nodig.push('muziek:' + itemId)
-      } else if (isRelayConnection) {
-        console.log('[sync] Muziek', itemId, 'overgeslagen vanwege relay-verbinding')
-      }
+      if (!mCached || mCached.hash !== muziek[itemId].hash) muziekNodig.push('muziek:' + itemId)
+    }
+    if (muziekNodig.length && !isRelayConnection) {
+      nodig.push(...muziekNodig)
+    } else if (muziekNodig.length && isRelayConnection) {
+      // Relay-verbinding: niet automatisch, maar vraag de gebruiker
+      console.log('[sync] Relay-verbinding — muziek wacht op toestemming')
+      toonRelayMuziekVraag(muziekNodig)
     }
     // Opruimen foto's: gecachte foto's die niet meer in het manifest staan zijn verwijderd bij de vriend
     const fotoPrefix = 'vriend_' + syncPartnerId + '_foto_'
@@ -542,6 +545,27 @@ async function leegIceBuffer() {
   iceBuffer = []
 }
 
+// ── Relay-vraag: muziek toch versturen via relay? ──
+function toonRelayMuziekVraag(muziekItems) {
+  // Niet dubbel tonen
+  if (document.getElementById('sync-relay-vraag')) return
+  const box = document.createElement('div')
+  box.id = 'sync-relay-vraag'
+  box.style.cssText = 'position:fixed;bottom:110px;right:10px;background:rgba(20,10,40,0.95);color:#fff;padding:12px 14px;border-radius:12px;font-size:13px;z-index:9999;font-family:inherit;max-width:240px;border:1px solid rgba(192,132,252,0.4);box-shadow:0 4px 20px rgba(0,0,0,0.5)'
+  box.innerHTML = '🎵 Muziek van je vriend gevonden, maar de verbinding loopt via een relay-server (kost extra data).<div style="display:flex;gap:8px;margin-top:10px;">' +
+    '<button id="sync-relay-ja" style="flex:1;background:linear-gradient(135deg,#c084fc,#818cf8);border:none;border-radius:8px;padding:8px;color:#1a0a2e;font-weight:600;cursor:pointer;min-height:40px;">Toch ophalen</button>' +
+    '<button id="sync-relay-nee" style="flex:1;background:rgba(255,255,255,0.1);border:none;border-radius:8px;padding:8px;color:#fff;cursor:pointer;min-height:40px;">Overslaan</button></div>'
+  document.body.appendChild(box)
+  document.getElementById('sync-relay-ja').onclick = () => {
+    box.remove()
+    if (dataChannel && dataChannel.readyState === 'open') {
+      dataChannel.send(JSON.stringify({ type: 'geef', items: muziekItems }))
+      zetP2pStatus('muziek ophalen via relay...')
+    }
+  }
+  document.getElementById('sync-relay-nee').onclick = () => box.remove()
+}
+
 function stopSync() {
   console.log('[sync] Sync gestopt')
   clearTimeout(offerRetryTimer)
@@ -569,7 +593,7 @@ function toonDebugBadge() {
     b.style.cssText = 'position:fixed;bottom:70px;right:10px;background:rgba(0,0,0,0.8);color:#0f0;padding:6px 10px;border-radius:8px;font-size:13px;z-index:9999;font-family:monospace'
     document.body.appendChild(b)
   }
-  b.textContent = 'sync3: ' + onlineGebruikers.size + ' online' + (p2pStatus ? ' | ' + p2pStatus : '')
+  b.textContent = 'sync4: ' + onlineGebruikers.size + ' online' + (p2pStatus ? ' | ' + p2pStatus : '')
 }
 
 export function isOnline(userId) {

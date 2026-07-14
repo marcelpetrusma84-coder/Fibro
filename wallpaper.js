@@ -14,6 +14,13 @@ function openDB() {
   })
 }
 
+// Alleen data-URLs van afbeeldingen of blob-URLs toestaan als wallpaper.
+// Voorkomt CSS-injectie (bug #4) als er ooit iets anders in IndexedDB belandt.
+function isVeiligeAfbeeldingsUrl(url) {
+  return /^data:image\/(png|jpe?g|gif|webp|avif);base64,[A-Za-z0-9+/=]+$/.test(url)
+      || url.startsWith('blob:')
+}
+
 export async function laadWallpaper() {
   try {
     const { data: { session } } = await supabase.auth.getSession()
@@ -26,7 +33,7 @@ export async function laadWallpaper() {
       r.onsuccess = e => res(e.target.result?.data || null)
       r.onerror = () => res(null)
     })
-    if (data) {
+    if (data && typeof data === 'string' && isVeiligeAfbeeldingsUrl(data)) {
       let bg = document.getElementById('wallpaper-bg')
       if (!bg) {
         bg = document.createElement('div')
@@ -34,7 +41,8 @@ export async function laadWallpaper() {
         bg.style.cssText = 'position:fixed;inset:0;z-index:-1;background-size:cover;background-position:center;background-repeat:no-repeat;'
         document.body.prepend(bg)
       }
-      bg.style.backgroundImage = 'url(' + data + ')'
+      // JSON.stringify quote-t en escape-t de URL zodat er niet uit url("...") gebroken kan worden
+      bg.style.backgroundImage = 'url(' + JSON.stringify(data) + ')'
       document.body.classList.add('heeft-wallpaper')
     }
   } catch(e) { console.error('wallpaper fout:', e) }

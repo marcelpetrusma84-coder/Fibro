@@ -1,14 +1,14 @@
-// ice-config.js — Gedeelde WebRTC ICE-servers (STUN + TURN)
-// TURN-credentials LATER vervangen via ENV of geheime backend-RPC
+// ice-config.js — Gedeelde WebRTC ICE-servers (alleen STUN)
+//
+// TURN is hier bewust VERWIJDERD:
+// - Gratis gebruikers krijgen alleen STUN (P2P werkt in de meeste gevallen)
+// - Fibro+ gebruikers krijgen straks tijdelijke TURN-credentials via een
+//   Supabase edge function (get-turn-credentials) — zie fibro-plus-relay.js
+// - Zet NOOIT vaste TURN-credentials in dit bestand: het staat openbaar op GitHub
 
 export const ICE_SERVERS = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun.relay.metered.ca:80' },
-    { urls: 'turn:global.relay.metered.ca:80', username: '3d8f6969f613be308e4de56c', credential: '9pioPuLlUDLd7sPT' },
-    { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: '3d8f6969f613be308e4de56c', credential: '9pioPuLlUDLd7sPT' },
-    { urls: 'turn:global.relay.metered.ca:443', username: '3d8f6969f613be308e4de56c', credential: '9pioPuLlUDLd7sPT' },
-    { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: '3d8f6969f613be308e4de56c', credential: '9pioPuLlUDLd7sPT' },
   ]
 }

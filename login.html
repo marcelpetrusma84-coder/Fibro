@@ -214,7 +214,7 @@
     // ── Push notificaties registreren ──
     try {
       if ('serviceWorker' in navigator && 'PushManager' in window) {
-        const reg = await navigator.serviceWorker.register('/Fibro/service-worker.js')
+        const reg = await navigator.serviceWorker.register('./service-worker.js')
         await navigator.serviceWorker.ready
         const toestemming = await Notification.requestPermission()
         if (toestemming === 'granted') {

@@ -36,4 +36,9 @@ async function laadTurnServers() {
   }
 }
 
-laadTurnServers()
+// Promise waar bellen.js/sync.js op kunnen wachten vóór het opzetten
+// van een verbinding. Max 5 sec — daarna door met wat er is (STUN).
+export const iceReady = Promise.race([
+  laadTurnServers(),
+  new Promise(r => setTimeout(r, 5000))
+])

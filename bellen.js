@@ -1,7 +1,7 @@
 // bellen.js — WebRTC P2P audio/video bellen via Supabase Realtime signaling
 // Gebruikt het bewezen spel-patroon: gedeeld kanaal met gesorteerde IDs
 import { supabase } from './supabase.js'
-import { ICE_SERVERS } from './ice-config.js'
+import { ICE_SERVERS, iceReady } from './ice-config.js'
 
 let lokaleStream = null
 let remoteStream = null
@@ -116,6 +116,7 @@ function stopBelTimeout() {
 }
 
 export async function belOp(naarVriendId, video = false) {
+  await iceReady // TURN-servers eerst binnen laten komen
   vriendId = naarVriendId
   isInitiator = true
   try {
@@ -139,6 +140,7 @@ export async function belOp(naarVriendId, video = false) {
 }
 
 export async function accepteerOproep(video = false) {
+  await iceReady // TURN-servers eerst binnen laten komen
   try {
     lokaleStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video })
   } catch(e) { alert('Geen toegang tot microfoon/camera.'); return false }

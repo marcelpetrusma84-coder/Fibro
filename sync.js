@@ -2,7 +2,7 @@
 // Stap A: presence ✓ | Stap B: DataChannel ping-pong
 // Zelfde signaling-patroon als bellen.js: gedeeld kanaal met gesorteerde IDs
 import { supabase } from './supabase.js'
-import { ICE_SERVERS } from './ice-config.js'
+import { ICE_SERVERS, iceReady } from './ice-config.js'
 
 let presenceKanaal = null
 let huidigeUserId = null
@@ -577,6 +577,7 @@ async function dbListKeys(prefix) {
 }
 
 async function maakEnStuurOffer() {
+  await iceReady // TURN-servers eerst binnen laten komen
   maakPeerConnection()
   koppelDataChannel(peerConnection.createDataChannel('fibro-sync'))
   const offer = await peerConnection.createOffer()
@@ -598,6 +599,7 @@ async function verwerkSignaal(type, data) {
         return
       }
     }
+    await iceReady // TURN-servers eerst binnen laten komen
     maakPeerConnection()
     await peerConnection.setRemoteDescription(new RTCSessionDescription(data))
     await leegIceBuffer()

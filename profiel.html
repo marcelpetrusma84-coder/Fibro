@@ -373,6 +373,11 @@ input, textarea { font-size:16px !important; }
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎨</div><div><div class="widget-name">Uitgelicht + 4 klein</div><div class="widget-desc">Eén grote, vier kleine fotos</div></div></div><div class="toggle off" id="widget-fotosfeatured" onclick="toggleWidget('fotosfeatured')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🗃</div><div><div class="widget-name">Polaroid grid</div><div class="widget-desc">6 fotos als polaroids</div></div></div><div class="toggle off" id="widget-fotosmasonry" onclick="toggleWidget('fotosmasonry')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">📌</div><div><div class="widget-name">Zwevende Polaroids</div><div class="widget-desc">3 fotos los en schuin</div></div></div><div class="toggle off" id="widget-fotoszwevend" onclick="toggleWidget('fotoszwevend')"><div class="toggle-dot"></div></div></div>
+    </div>
+    <div style="margin-top:24px;text-align:center;">
+      <span onclick="testTogglePlus()" id="testPlusLink" style="font-size:11px;color:rgba(255,255,255,0.15);cursor:pointer;">🔧 test</span>
+    </div>
+    <div style="display:none;">
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">✍</div><div><div class="widget-name">Quote</div><div class="widget-desc">Favoriete citaat tonen</div></div></div><div class="toggle off" id="widget-quote" onclick="toggleWidget('quote')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎬</div><div><div class="widget-name">Video clip</div><div class="widget-desc">Korte mp4 op je profiel</div></div></div><div class="toggle off" id="widget-video" onclick="toggleWidget('video')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">⏰</div><div><div class="widget-name">Countdown</div><div class="widget-desc">Aftellen naar een datum</div></div></div><div class="toggle off" id="widget-countdown" onclick="toggleWidget('countdown')"><div class="toggle-dot"></div></div></div>
@@ -650,6 +655,15 @@ window.updateAccent=function(k){document.getElementById('accentPicker').value=k;
 window.updateAccentHex=function(v){if(/^#[0-9a-f]{6}$/i.test(v))updateAccent(v)}
 window.updateAccent2=function(k){document.getElementById('accent2Picker').value=k;document.getElementById('accent2Hex').value=k;document.documentElement.style.setProperty('--accent2',k)}
 window.updateAccent2Hex=function(v){if(/^#[0-9a-f]{6}$/i.test(v))updateAccent2(v)}
+window.testTogglePlus = async function() {
+  if (!huidigeUser) return
+  const { data: huidig } = await supabase.from('profiles').select('is_plus').eq('id', huidigeUser.id).single()
+  const nieuw = !(huidig && huidig.is_plus)
+  const { error } = await supabase.from('profiles').update({ is_plus: nieuw }).eq('id', huidigeUser.id)
+  if (error) { alert('Mislukt: ' + error.message); return }
+  alert('Fibro+ test-status: ' + (nieuw ? 'AAN' : 'UIT') + '\n\nHerlaad index.html om het effect te zien.')
+}
+
 window.toggleWidget=function(naam){const toggle=document.getElementById('widget-'+naam);if(actieveWidgets.includes(naam)){actieveWidgets=actieveWidgets.filter(w=>w!==naam);toggle.classList.remove('on');toggle.classList.add('off')}else{actieveWidgets.push(naam);toggle.classList.remove('off');toggle.classList.add('on')}}
 function updateWidgetToggles(){actieveWidgets.forEach(w=>{const el=document.getElementById('widget-'+w);if(el){el.classList.remove('off');el.classList.add('on')}})}
 function bouwStickerGrids(){bouwStickerGrid('stickerNatuur',stickers.natuur);bouwStickerGrid('stickerMagie',stickers.magie);bouwStickerGrid('stickerKunst',stickers.kunst);bouwStickerGrid('stickerDieren',stickers.dieren)}

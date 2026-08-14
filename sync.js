@@ -209,8 +209,11 @@ async function detecteerRelayConnection() {
     } else {
       console.log('[sync] Geen geselecteerd pair gevonden — muziek toegestaan (voordeel van de twijfel)')
     }
-    isRelayConnection = relayGebruikt
-    if (isRelayConnection) {
+    const isPlus = !!(window._profiel && window._profiel.is_plus)
+    isRelayConnection = relayGebruikt && !isPlus
+    if (relayGebruikt && isPlus) {
+      zetP2pStatus('relay-verbinding (Fibro+, alles toegestaan)')
+    } else if (isRelayConnection) {
       zetP2pStatus('⚠️ relay-verbinding (muziek overgeslagen)')
     }
   } catch(e) {

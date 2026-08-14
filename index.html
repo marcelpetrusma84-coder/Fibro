@@ -618,6 +618,42 @@ function renderMuziekPlayer(c) {
 // ════════════════════════════════
 // FOTO GALERIJ WIDGET
 // ════════════════════════════════
+function maakFotoTitel(keyPrefix, uid) {
+  const TKEY = keyPrefix + 'titel_' + uid
+  const bar = document.createElement('div')
+  bar.style.cssText = 'padding:6px 10px 2px;flex-shrink:0;'
+  function teken() {
+    const tekst = localStorage.getItem(TKEY) || ''
+    bar.innerHTML = ''
+    const el = document.createElement('div')
+    el.textContent = tekst || '+ Titel toevoegen'
+    el.style.cssText = tekst
+      ? 'font-size:13px;font-weight:600;color:var(--text);cursor:pointer;'
+      : 'font-size:12px;color:rgba(255,255,255,0.35);cursor:pointer;'
+    el.addEventListener('click', bewerk)
+    bar.appendChild(el)
+  }
+  function bewerk() {
+    bar.innerHTML = ''
+    const inp = document.createElement('input')
+    inp.value = localStorage.getItem(TKEY) || ''
+    inp.maxLength = 40
+    inp.placeholder = 'Titel boven de fotos...'
+    inp.style.cssText = 'width:100%;background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;'
+    const opslaan = () => {
+      const v = inp.value.trim()
+      if (v) localStorage.setItem(TKEY, v); else localStorage.removeItem(TKEY)
+      teken()
+    }
+    inp.addEventListener('blur', opslaan)
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur() })
+    bar.appendChild(inp)
+    inp.focus()
+  }
+  teken()
+  return bar
+}
+
 function renderFotoGrid(c, stijl, aantalFotos) {
   const uid = window._uid || 'lokaal'
   const KEY = 'pfoto_' + stijl + '_'
@@ -757,6 +793,7 @@ function renderFotoGrid(c, stijl, aantalFotos) {
   }
 
   c.innerHTML = ''
+  c.appendChild(maakFotoTitel(KEY, uid))
   c.appendChild(wrap)
 }
 
@@ -879,6 +916,7 @@ function renderFotoFeatured(c) {
   }
 
   c.innerHTML = ''
+  c.appendChild(maakFotoTitel(KEY, uid))
   c.appendChild(wrap)
 }
 
@@ -984,13 +1022,18 @@ function renderFotoZwevend(c) {
   }
 
   c.innerHTML = ''
+  const titelBar = maakFotoTitel(KEY, uid)
+  titelBar.style.cssText += 'position:absolute;top:0;left:0;width:100%;z-index:5;text-align:center;padding:4px 8px;'
+  c.appendChild(titelBar)
   for (let i = 0; i < 3; i++) tekenZwevend(i)
 }
 
 function renderFotoPolaroid(c) {
   const uid = window._uid || 'lokaal'
   const KEY = 'pfoto_polaroid_'
-  c.style.cssText = 'padding:8px;overflow:hidden;display:flex;flex-wrap:wrap;gap:6px;width:100%;flex:1;align-content:flex-start;justify-content:center;'
+  c.style.cssText = 'padding:0;overflow:hidden;display:flex;flex-direction:column;width:100%;flex:1;'
+  const fotoWrap = document.createElement('div')
+  fotoWrap.style.cssText = 'padding:8px;overflow:hidden;display:flex;flex-wrap:wrap;gap:6px;width:100%;flex:1;align-content:flex-start;justify-content:center;'
 
   const ROTATIES = [-3, 2, -1.5, 3, -2, 1]
   const N = 6
@@ -1079,13 +1122,15 @@ function renderFotoPolaroid(c) {
       if (inp) { inp.value=''; inp.click() }
     })
 
-    const children = [...c.children]
-    if (children[i]) c.insertBefore(frame, children[i])
-    else c.appendChild(frame)
+    const children = [...fotoWrap.children]
+    if (children[i]) fotoWrap.insertBefore(frame, children[i])
+    else fotoWrap.appendChild(frame)
   }
 
   c.innerHTML = ''
-  for (let i = 0; i < N; i++) c.appendChild(document.createElement('div'))
+  c.appendChild(maakFotoTitel(KEY, uid))
+  c.appendChild(fotoWrap)
+  for (let i = 0; i < N; i++) fotoWrap.appendChild(document.createElement('div'))
   for (let i = 0; i < N; i++) tekenPolaroid(i)
 }
 

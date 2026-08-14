@@ -670,6 +670,17 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
   }
 
   // ─── Bericht versturen (versleuteld + cache) ───
+  async function stuurPling(ontvangerId) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      await fetch('https://qmgatbphiplrfxrljtbe.supabase.co/functions/v1/stuur-push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ receiver_id: ontvangerId, title: 'Fibro', body: 'Je hebt een nieuw bericht 💬' })
+      })
+    } catch(e) { console.log('[pling] versturen mislukt:', e) }
+  }
+
   window.sendMsg = async function() {
     if (!geselecteerdeVriend) return
     const input = document.getElementById('msgInput')
@@ -696,6 +707,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     }
 
     if (error) console.error('Versturen mislukt:', error)
+    if (!error) stuurPling(geselecteerdeVriend.id)
     document.getElementById('emojiGrid').style.display = 'none'
     emojiOpen = false
   }

@@ -656,12 +656,14 @@ window.updateAccentHex=function(v){if(/^#[0-9a-f]{6}$/i.test(v))updateAccent(v)}
 window.updateAccent2=function(k){document.getElementById('accent2Picker').value=k;document.getElementById('accent2Hex').value=k;document.documentElement.style.setProperty('--accent2',k)}
 window.updateAccent2Hex=function(v){if(/^#[0-9a-f]{6}$/i.test(v))updateAccent2(v)}
 window.testTogglePlus = async function() {
-  if (!huidigeUser) return
-  const { data: huidig } = await supabase.from('profiles').select('is_plus').eq('id', huidigeUser.id).single()
-  const nieuw = !(huidig && huidig.is_plus)
-  const { error } = await supabase.from('profiles').update({ is_plus: nieuw }).eq('id', huidigeUser.id)
-  if (error) { alert('Mislukt: ' + error.message); return }
-  alert('Fibro+ test-status: ' + (nieuw ? 'AAN' : 'UIT') + '\n\nHerlaad index.html om het effect te zien.')
+  if (!huidigeUser) { alert('Geen gebruiker geladen — kan niet wisselen.'); return }
+  const { data: huidig, error: leesFout } = await supabase.from('profiles').select('is_plus').eq('id', huidigeUser.id).single()
+  if (leesFout) { alert('Lezen mislukt: ' + leesFout.message); return }
+  const gewenst = !(huidig && huidig.is_plus)
+  const { data: bijgewerkt, error: schrijfFout } = await supabase.from('profiles').update({ is_plus: gewenst }).eq('id', huidigeUser.id).select('is_plus').single()
+  if (schrijfFout) { alert('Schrijven mislukt: ' + schrijfFout.message); return }
+  if (!bijgewerkt) { alert('LET OP: update leverde geen rij op — mogelijk RLS-probleem of verkeerd id.'); return }
+  alert('Fibro+ test-status (bevestigd uit database): ' + (bijgewerkt.is_plus ? 'AAN' : 'UIT') + '\n\nHerlaad index.html om het effect te zien.')
 }
 
 window.toggleWidget=function(naam){const toggle=document.getElementById('widget-'+naam);if(actieveWidgets.includes(naam)){actieveWidgets=actieveWidgets.filter(w=>w!==naam);toggle.classList.remove('on');toggle.classList.add('off')}else{actieveWidgets.push(naam);toggle.classList.remove('off');toggle.classList.add('on')}}

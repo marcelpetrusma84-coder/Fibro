@@ -10,7 +10,8 @@ export const ICE_SERVERS = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
-  ]
+  ],
+  iceTransportPolicy: 'relay' // TIJDELIJK — testen van Fibro+ relay-tak, hierna weer weghalen
 }
 
 async function laadTurnServers() {

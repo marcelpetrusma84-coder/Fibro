@@ -212,9 +212,14 @@ async function detecteerRelayConnection() {
     const isPlus = !!(window._profiel && window._profiel.is_plus)
     isRelayConnection = relayGebruikt && !isPlus
     if (relayGebruikt && isPlus) {
+      console.log('[sync] STATUS: relay + Fibro+ -> alles toegestaan')
       zetP2pStatus('relay-verbinding (Fibro+, alles toegestaan)')
     } else if (isRelayConnection) {
+      console.log('[sync] STATUS: relay + gratis -> muziek overgeslagen')
       zetP2pStatus('⚠️ relay-verbinding (muziek overgeslagen)')
+    }
+    else {
+      console.log('[sync] STATUS: directe verbinding -> geen beperking')
     }
   } catch(e) {
     console.warn('[sync] TURN-detectie fout:', e)

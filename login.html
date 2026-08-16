@@ -134,7 +134,8 @@
   async function controleerKeypair(userId) {
     try {
       const bestaand = haalPrivateKeyOp(userId)
-      if (bestaand) return // Al een keypair op dit apparaat
+      const { data: prof } = await supabase.from('profiles').select('public_key').eq('id', userId).single()
+      if (bestaand && prof?.public_key) return // Sleutelpaar compleet
 
       // Genereer nieuw keypair
       const keypair = await genereerKeypair()

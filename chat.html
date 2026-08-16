@@ -588,7 +588,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
         content = cached !== null ? cached : '[eigen bericht]'
       } else if (mijnPrivateKey && vriendPublicKey && vriendPublicKey.length > 10) {
         try {
-          content = content.replace('e2e:', '')
+          content = await ontsleutel(content, mijnPrivateKey, vriendPublicKey)
         } catch(e) {
           content = '[kan niet lezen — sleutels komen niet overeen]'
         }
@@ -691,7 +691,12 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 
     let content = tekst
     if (mijnPrivateKey && vriendPublicKey && vriendPublicKey.length > 10) {
-      // encryptie uitgeschakeld
+      try {
+        content = await versleutel(tekst, mijnPrivateKey, vriendPublicKey)
+      } catch (e) {
+        alert('Bericht NIET verstuurd: versleutelen mislukt.')
+        return
+      }
     }
 
     const { data, error } = await supabase.from('messages').insert({
@@ -720,7 +725,12 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     const tekst = 'lossticker:' + src + ':' + emotieId
     let content = tekst
     if (mijnPrivateKey && vriendPublicKey) {
-      // encryptie uitgeschakeld
+      try {
+        content = await versleutel(tekst, mijnPrivateKey, vriendPublicKey)
+      } catch (e) {
+        alert('Bericht NIET verstuurd: versleutelen mislukt.')
+        return
+      }
     }
     const { data } = await supabase.from('messages').insert({
       sender_id: huidigeUser.id,
@@ -738,7 +748,12 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     const tekst = 'sticker:' + emoji + ':' + emotieId
     let content = tekst
     if (mijnPrivateKey && vriendPublicKey) {
-      // encryptie uitgeschakeld
+      try {
+        content = await versleutel(tekst, mijnPrivateKey, vriendPublicKey)
+      } catch (e) {
+        alert('Bericht NIET verstuurd: versleutelen mislukt.')
+        return
+      }
     }
     const { data } = await supabase.from('messages').insert({
       sender_id: huidigeUser.id,
@@ -756,7 +771,12 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
     const tekst = 'customsticker:' + JSON.stringify({ image: sticker.image, geluid: sticker.geluid })
     let content = tekst
     if (mijnPrivateKey && vriendPublicKey) {
-      // encryptie uitgeschakeld
+      try {
+        content = await versleutel(tekst, mijnPrivateKey, vriendPublicKey)
+      } catch (e) {
+        alert('Bericht NIET verstuurd: versleutelen mislukt.')
+        return
+      }
     }
     const { data } = await supabase.from('messages').insert({
       sender_id: huidigeUser.id,

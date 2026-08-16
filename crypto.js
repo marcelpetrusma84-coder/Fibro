@@ -85,7 +85,7 @@ export async function versleutel(plaintext, mijnPrivKeyB64, ontvangerPubKeyB64) 
     return 'e2e:' + bufferNaarB64(combined)
   } catch (e) {
     console.error('Versleutelen mislukt:', e)
-    return plaintext // Fallback: stuur plaintext als encryptie faalt
+    throw new Error('Versleutelen mislukt')
   }
 }
 

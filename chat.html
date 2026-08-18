@@ -935,7 +935,7 @@ window.veiligeUrl = function(v){
     if (realtimeKanaal) supabase.removeChannel(realtimeKanaal)
     realtimeKanaal = supabase
       .channel('berichten-' + huidigeUser.id)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'receiver_id=eq.' + huidigeUser.id }, async (payload) => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
         const msg = payload.new
         const isRelevant = (
           (msg.sender_id === huidigeUser.id && msg.receiver_id === geselecteerdeVriend?.id) ||

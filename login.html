@@ -137,6 +137,14 @@
       const { data: prof } = await supabase.from('profiles').select('public_key').eq('id', userId).single()
       if (bestaand && prof?.public_key) return // Sleutelpaar compleet
 
+      // VEILIGHEID: nooit een nieuwe keypair maken als er al een public_key
+      // bestaat. Dat zou alle oude berichten permanent onleesbaar maken.
+      if (!bestaand && prof?.public_key) {
+        console.warn('Private key ontbreekt op dit apparaat, maar er bestaat al een public_key. Geen nieuwe keypair aangemaakt.')
+        sessionStorage.setItem('fibro_sleutel_mist', '1')
+        return
+      }
+
       // Genereer nieuw keypair
       const keypair = await genereerKeypair()
       slaPrivateKeyOp(userId, keypair.privateKeyB64)

@@ -521,18 +521,30 @@ window.veiligeUrl = function(v){
     window._vriendenData = data
 
     container.innerHTML = data.map(vriend => `
-      <div class="vriend-item" onclick="openChat('${vriend.id}', '${vriend.display_name || vriend.username}', '${vriend.avatar_url || '👤'}', '${vriend.public_key || ''}')">
+      <div class="vriend-item" data-vid="${esc(vriend.id)}" data-vnaam="${esc(vriend.display_name || vriend.username)}" data-vav="${esc(vriend.avatar_url || '👤')}" data-vkey="${esc(vriend.public_key || '')}">
         <div class="vriend-av">${vriend.avatar_url || '👤'}</div>
         <div>
           <div class="vriend-naam">${vriend.display_name || vriend.username}</div>
           <div class="vriend-username">@${vriend.username}</div>
         </div>
         <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-          <button onclick="event.stopPropagation();window.location.href='bellen.html?vriend=${vriend.id}&naam=${encodeURIComponent(vriend.display_name||vriend.username)}'" style="background:#22c55e;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">📞</button>
+          <button class="bel-knop" data-bid="${esc(vriend.id)}" data-bnaam="${esc(vriend.display_name||vriend.username)}" style="background:#22c55e;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">📞</button>
           <span style="font-size:12px;color:${vriend.public_key ? '#22c55e' : '#f87171'}">${vriend.public_key ? '🔒' : '🔓'}</span>
         </div>
       </div>
     `).join('')
+
+    container.querySelectorAll('.vriend-item').forEach(el => {
+      el.addEventListener('click', () => {
+        openChat(el.dataset.vid, el.dataset.vnaam, el.dataset.vav, el.dataset.vkey)
+      })
+    })
+    container.querySelectorAll('.bel-knop').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation()
+        window.location.href = 'bellen.html?vriend=' + encodeURIComponent(btn.dataset.bid) + '&naam=' + encodeURIComponent(btn.dataset.bnaam)
+      })
+    })
   }
 
   // ─── Chat openen ───

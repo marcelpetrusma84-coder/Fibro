@@ -45,10 +45,10 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .msg-row { display:flex; gap:8px; align-items:flex-end; }
 .msg-row.out { flex-direction:row-reverse; }
 .msg-av-sm { width:26px; height:26px; border-radius:50%; background:var(--card); border:0.5px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
-.bubble { max-width:70%; padding:8px 12px; border-radius:14px; font-size:12px; line-height:1.5; word-break:break-word; }
+.bubble { white-space:pre-wrap; max-width:75%; padding:6px 10px 5px; border-radius:14px; font-size:13px; line-height:1.35; word-break:break-word; }
 .bubble.in { background:rgba(0,0,0,0.55); border:0.5px solid var(--border); border-bottom-left-radius:4px; }
 .bubble.out { background:rgba(139,79,192,0.65); border:0.5px solid rgba(192,132,252,0.4); border-bottom-right-radius:4px; }
-.bubble-time { font-size:12px; color:var(--muted); margin-top:4px; text-align:right; }
+.bubble-time { font-size:10px; color:var(--muted); margin-top:1px; text-align:right; opacity:0.75; }
 .sys-msg { text-align:center; font-size:15px; color:var(--muted); padding:3px 12px; background:var(--card); border-radius:20px; align-self:center; border:0.5px solid var(--border); }
 .e2e-sys { color:#22c55e; border-color:rgba(34,197,94,0.3); background:rgba(34,197,94,0.08); font-size:11px; }
 .emoji-grid { display:flex; flex-wrap:wrap; gap:6px; padding:10px 14px; background:rgba(0,0,0,0.3); border-top:0.5px solid var(--border); }
@@ -234,7 +234,7 @@ window.veiligeUrl = function(v){
     <div id="fotoStatus" style="display:none;padding:4px 14px;font-size:12px;color:var(--accent2);"></div>
     <input type="file" id="fotoFileInput" accept="image/*" style="display:none" onchange="fotoGekozen(this)">
     <div class="input-area">
-      <input class="msg-input" id="msgInput" placeholder="Stuur een bericht..." onkeydown="if(event.key==='Enter')sendMsg()">
+      <input class="msg-input" id="msgInput" maxlength="2000" placeholder="Stuur een bericht..." onkeydown="if(event.key==='Enter')sendMsg()">
       <button class="send-btn" onclick="sendMsg()">➤</button>
     </div>
   </div>
@@ -597,7 +597,7 @@ window.veiligeUrl = function(v){
     for (const bericht of data) {
       await voegBerichtToe(bericht)
     }
-    scrollNaarOnder()
+    scrollNaarOnder(true)
   }
 
   // ─── Bericht toevoegen (met ontsleuteling) ───
@@ -708,6 +708,25 @@ window.veiligeUrl = function(v){
     } catch(e) { console.log('[pling] versturen mislukt:', e) }
   }
 
+  function toonEigenBericht(id, tekst) {
+    const container = document.getElementById('messages')
+    if (!container) return
+    const tijd = new Date().toLocaleTimeString('nl-NL', { hour:'2-digit', minute:'2-digit' })
+    const avatar = huidigProfiel?.avatar_url || '\u{1F464}'
+    const row = document.createElement('div')
+    row.id = id
+    row.className = 'msg-row out'
+    row.style.opacity = '0.55'
+    row.innerHTML = `
+        <div class="msg-av-sm">${esc(avatar)}</div>
+        <div class="bubble out">
+          ${esc(tekst)}
+          <div class="bubble-time">${tijd}</div>
+        </div>`
+    container.appendChild(row)
+    scrollNaarOnder(true)
+  }
+
   window.sendMsg = async function() {
     if (!geselecteerdeVriend) return
     const input = document.getElementById('msgInput')
@@ -715,6 +734,10 @@ window.veiligeUrl = function(v){
     if (!tekst) return
     speelPlop('uit')
     input.value = ''
+
+    // Direct tonen (nog niet bevestigd)
+    const tijdelijkId = 'tmp-' + Date.now()
+    toonEigenBericht(tijdelijkId, tekst)
 
     let content = tekst
     if (mijnPrivateKey && vriendPublicKey && vriendPublicKey.length > 10) {
@@ -736,9 +759,19 @@ window.veiligeUrl = function(v){
     // Sla plaintext op in cache zodat eigen berichten leesbaar blijven
     if (data?.id) {
       slaBerichtCacheOp(data.id, tekst)
+      const el = document.getElementById(tijdelijkId)
+      if (el) { el.style.opacity = '1'; el.id = 'msg-' + data.id }
     }
 
-    if (error) console.error('Versturen mislukt:', error)
+    if (error) {
+      console.error('Versturen mislukt:', error)
+      const el = document.getElementById(tijdelijkId)
+      if (el) {
+        el.style.opacity = '1'
+        const b = el.querySelector('.bubble-time')
+        if (b) b.textContent = '⚠ niet verstuurd'
+      }
+    }
     if (!error) stuurPling(geselecteerdeVriend.id)
     document.getElementById('emojiGrid').style.display = 'none'
     emojiOpen = false
@@ -904,7 +937,7 @@ window.veiligeUrl = function(v){
         <div style="font-size:12px;color:var(--muted);margin-top:2px;text-align:right;">${tijd} ${isMijn ? '&#10003;&#10003;' : ''}</div>
       </div>`
     container.appendChild(row)
-    scrollNaarOnder()
+    scrollNaarOnder(true)
   }
 
   window.sendBuzz = async function() {
@@ -935,7 +968,7 @@ window.veiligeUrl = function(v){
     if (realtimeKanaal) supabase.removeChannel(realtimeKanaal)
     realtimeKanaal = supabase
       .channel('berichten-' + huidigeUser.id)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'receiver_id=eq.' + huidigeUser.id }, async (payload) => {
         const msg = payload.new
         const isRelevant = (
           (msg.sender_id === huidigeUser.id && msg.receiver_id === geselecteerdeVriend?.id) ||
@@ -2432,7 +2465,16 @@ window.veiligeUrl = function(v){
     scrollNaarOnder()
   }
 
-  function scrollNaarOnder() { setTimeout(() => {
+  function zitOnderaan() {
+    const m = document.getElementById('messages')
+    if (!m) return true
+    return (m.scrollHeight - m.scrollTop - m.clientHeight) < 120
+  }
+  function scrollNaarOnder(forceer) {
+    if (!forceer && !zitOnderaan()) return
+    _scrollNu()
+  }
+  function _scrollNu() { setTimeout(() => {
     const msgs = document.getElementById('messages')
     msgs.scrollTop = msgs.scrollHeight }, 100)
   }

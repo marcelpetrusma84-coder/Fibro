@@ -114,6 +114,8 @@
       </div>
       <div class="field">
         <label>Herstelsleutel</label>
+        <input type="password" id="herstel-wachtwoord" placeholder="je wachtwoord" autocomplete="current-password" style="margin-bottom:12px" />
+        <label>Herstelsleutel</label>
         <input type="text" id="herstelsleutel-input" placeholder="FIBRO-XXXX-XXXX-XXXX" />
       </div>
       <button class="btn btn-primary" onclick="herstelMetSleutel()">Account herstellen</button>
@@ -123,7 +125,7 @@
 
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
-  import { genereerKeypair, slaPrivateKeyOp, haalPrivateKeyOp } from './crypto.js'
+  import { genereerKeypair, slaPrivateKeyOp, haalPrivateKeyOp, ontsleutelPrivateKey, normaliseerHerstelSleutel } from './crypto.js'
 
   const supabase = createClient(
     'https://qmgatbphiplrfxrljtbe.supabase.co',
@@ -329,7 +331,33 @@
 
   window.herstelMetSleutel = async function() {
     const msg = document.getElementById('herstel-msg')
-    toonBericht(msg,'error','Herstel via sleutel komt binnenkort.')
+    const username = document.getElementById('herstel-username').value.trim()
+    const wachtwoord = (document.getElementById('herstel-wachtwoord')||{}).value || ''
+    const ruweCode = document.getElementById('herstelsleutel-input').value
+
+    if (!username || !wachtwoord) { toonBericht(msg,'error','Vul je naam en wachtwoord in.'); return }
+    const code = normaliseerHerstelSleutel(ruweCode)
+    if (!code) { toonBericht(msg,'error','Herstelsleutel klopt niet (FIBRO-XXXX-XXXX-XXXX).'); return }
+
+    toonBericht(msg,'info','Bezig met herstellen, dit duurt even...')
+    try {
+      const nep_email = username.toLowerCase() + '@fibro.internal'
+      const { data, error } = await supabase.auth.signInWithPassword({ email: nep_email, password: wachtwoord })
+      if (error) { toonBericht(msg,'error','Naam of wachtwoord klopt niet.'); return }
+
+      const userId = data.user.id
+      const { data: kluis } = await supabase.from('sleutel_kluis').select('blob').eq('user_id', userId).maybeSingle()
+      if (!kluis || !kluis.blob) { toonBericht(msg,'error','Geen sleutelkluis gevonden voor dit account.'); return }
+
+      const priv = await ontsleutelPrivateKey(kluis.blob, code)
+      slaPrivateKeyOp(userId, priv)
+      sessionStorage.removeItem('fibro_sleutel_mist')
+      toonBericht(msg,'success','Gelukt! Je berichten zijn weer leesbaar.')
+      setTimeout(() => { window.location.href = 'index.html' }, 1200)
+    } catch (e) {
+      console.error(e)
+      toonBericht(msg,'error','Herstelsleutel klopt niet voor dit account.')
+    }
   }
 
   function toonBericht(el, type, tekst) {

@@ -124,3 +124,78 @@ function b64NaarBuffer(b64) {
   for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i)
   return buf.buffer
 }
+
+// ═══════════════════════════════════════════════════════════
+// SLEUTELKLUIS — private key versleutelen met de herstelcode
+// ═══════════════════════════════════════════════════════════
+
+const HERSTEL_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+const PBKDF2_RONDES = 600000
+
+export function maakHerstelSleutel() {
+  const deel = n => Array.from(
+    crypto.getRandomValues(new Uint8Array(n)),
+    b => HERSTEL_CHARS[b % HERSTEL_CHARS.length]
+  ).join('')
+  return 'FIBRO-' + deel(4) + '-' + deel(4) + '-' + deel(4)
+}
+
+export function normaliseerHerstelSleutel(invoer) {
+  const schoon = (invoer || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+  const kern = schoon.startsWith('FIBRO') ? schoon.slice(5) : schoon
+  if (kern.length !== 12) return null
+  for (const c of kern) if (!HERSTEL_CHARS.includes(c)) return null
+  return 'FIBRO-' + kern.slice(0,4) + '-' + kern.slice(4,8) + '-' + kern.slice(8,12)
+}
+
+export async function hashHerstelSleutel(code) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code))
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2,'0')).join('')
+}
+
+async function leidKluisSleutelAf(code, salt) {
+  const basis = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(code), 'PBKDF2', false, ['deriveKey']
+  )
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: PBKDF2_RONDES, hash: 'SHA-256' },
+    basis,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt','decrypt']
+  )
+}
+
+export async function versleutelPrivateKey(privateKeyB64, herstelCode) {
+  const code = normaliseerHerstelSleutel(herstelCode)
+  if (!code) throw new Error('Ongeldige herstelsleutel')
+  const salt = crypto.getRandomValues(new Uint8Array(16))
+  const iv = crypto.getRandomValues(new Uint8Array(12))
+  const aesKey = await leidKluisSleutelAf(code, salt)
+  const ct = new Uint8Array(await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv }, aesKey, new TextEncoder().encode(privateKeyB64)
+  ))
+  const alles = new Uint8Array(1 + 16 + 12 + ct.length)
+  alles[0] = 1
+  alles.set(salt, 1)
+  alles.set(iv, 17)
+  alles.set(ct, 29)
+  return bufferNaarB64(alles.buffer)
+}
+
+export async function ontsleutelPrivateKey(blobB64, herstelCode) {
+  const code = normaliseerHerstelSleutel(herstelCode)
+  if (!code) throw new Error('Ongeldige herstelsleutel')
+  const alles = new Uint8Array(b64NaarBuffer(blobB64))
+  if (alles[0] !== 1) throw new Error('Onbekende kluisversie')
+  const salt = alles.slice(1, 17)
+  const iv = alles.slice(17, 29)
+  const ct = alles.slice(29)
+  const aesKey = await leidKluisSleutelAf(code, salt)
+  try {
+    const plat = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, aesKey, ct)
+    return new TextDecoder().decode(plat)
+  } catch (e) {
+    throw new Error('Herstelsleutel klopt niet')
+  }
+}

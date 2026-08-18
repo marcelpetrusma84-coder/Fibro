@@ -708,25 +708,6 @@ window.veiligeUrl = function(v){
     } catch(e) { console.log('[pling] versturen mislukt:', e) }
   }
 
-  function toonEigenBericht(id, tekst) {
-    const container = document.getElementById('messages')
-    if (!container) return
-    const tijd = new Date().toLocaleTimeString('nl-NL', { hour:'2-digit', minute:'2-digit' })
-    const avatar = huidigProfiel?.avatar_url || '\u{1F464}'
-    const row = document.createElement('div')
-    row.id = id
-    row.className = 'msg-row out'
-    row.style.opacity = '0.55'
-    row.innerHTML = `
-        <div class="msg-av-sm">${esc(avatar)}</div>
-        <div class="bubble out">
-          ${esc(tekst)}
-          <div class="bubble-time">${tijd}</div>
-        </div>`
-    container.appendChild(row)
-    scrollNaarOnder(true)
-  }
-
   window.sendMsg = async function() {
     if (!geselecteerdeVriend) return
     const input = document.getElementById('msgInput')
@@ -734,10 +715,6 @@ window.veiligeUrl = function(v){
     if (!tekst) return
     speelPlop('uit')
     input.value = ''
-
-    // Direct tonen (nog niet bevestigd)
-    const tijdelijkId = 'tmp-' + Date.now()
-    toonEigenBericht(tijdelijkId, tekst)
 
     let content = tekst
     if (mijnPrivateKey && vriendPublicKey && vriendPublicKey.length > 10) {
@@ -759,19 +736,9 @@ window.veiligeUrl = function(v){
     // Sla plaintext op in cache zodat eigen berichten leesbaar blijven
     if (data?.id) {
       slaBerichtCacheOp(data.id, tekst)
-      const el = document.getElementById(tijdelijkId)
-      if (el) { el.style.opacity = '1'; el.id = 'msg-' + data.id }
     }
 
-    if (error) {
-      console.error('Versturen mislukt:', error)
-      const el = document.getElementById(tijdelijkId)
-      if (el) {
-        el.style.opacity = '1'
-        const b = el.querySelector('.bubble-time')
-        if (b) b.textContent = '⚠ niet verstuurd'
-      }
-    }
+    if (error) console.error('Versturen mislukt:', error)
     if (!error) stuurPling(geselecteerdeVriend.id)
     document.getElementById('emojiGrid').style.display = 'none'
     emojiOpen = false

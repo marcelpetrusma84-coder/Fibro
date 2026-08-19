@@ -292,10 +292,14 @@ async function stuurManifest() {
   const layoutJson = localStorage.getItem('fibro_widgets_profiel_' + huidigeUserId) || '[]'
   const fotos = verzamelEigenFotos()
   const muziek = await verzamelEigenMuziek()
+  // Weergavenaam reist mee over P2P: hij staat bewust niet op de server.
+  let eigenNaam = ''
+  try { eigenNaam = String(JSON.parse(localStorage.getItem('fibro_profiel') || '{}').naam || '').slice(0, 40) } catch(e) {}
   const manifest = {
     layout: { hash: hashString(layoutJson) },
     fotos,
-    muziek
+    muziek,
+    naam: eigenNaam
   }
   dataChannel.send(JSON.stringify({ type: 'manifest', data: manifest }))
   zetP2pStatus('manifest gestuurd')
@@ -303,6 +307,13 @@ async function stuurManifest() {
 
 async function verwerkP2pBericht(bericht) {
   if (bericht.type === 'manifest') {
+    // Naam van de vriend lokaal bewaren; laatste verbinding is leidend.
+    try {
+      const binnen = String(bericht.data?.naam || '').slice(0, 40).trim()
+      const sleutel = 'vriend_naam_' + syncPartnerId + '_' + huidigeUserId
+      if (binnen) localStorage.setItem(sleutel, binnen)
+      else localStorage.removeItem(sleutel)
+    } catch(e) { console.warn('[sync] naam opslaan mislukt', e) }
     const cached = await dbGet('vriend_' + syncPartnerId + '_layout')
     const nodig = []
     if (!cached || cached.hash !== bericht.data.layout.hash) nodig.push('layout')
@@ -699,4 +710,12 @@ export function isOnline(userId) {
 
 export function getOnlineGebruikers() {
   return [...onlineGebruikers]
+}
+
+
+// ── Lokaal opgeslagen weergavenaam van een vriend (via P2P ontvangen) ──
+export function lokaleVriendNaam(vriendId, eigenId) {
+  try {
+    return localStorage.getItem('vriend_naam_' + vriendId + '_' + eigenId) || null
+  } catch(e) { return null }
 }

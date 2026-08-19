@@ -1389,7 +1389,10 @@ async function init() {
     heroAv.textContent = profiel.avatar_url
     document.getElementById('topAvatar').textContent = profiel.avatar_url
   }
-  const naam = profiel?.display_name || profiel?.username || 'Jij'
+  // Eigen naam staat lokaal (bewust niet op de server), dus die gaat voor.
+  let lokaleNaam = ''
+  try { lokaleNaam = String(JSON.parse(localStorage.getItem('fibro_profiel') || '{}').naam || '').trim() } catch(e) {}
+  const naam = lokaleNaam || profiel?.display_name || profiel?.username || 'Jij'
   document.getElementById('heroNaam').textContent = naam
   document.getElementById('heroUsername').textContent = '@' + (profiel?.username || '')
   const moodEl = document.getElementById('heroMood')

@@ -310,28 +310,32 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     const online = gesorteerd.filter(f => isGebruikerOnline(f.profiles))
     const offline = gesorteerd.filter(f => !isGebruikerOnline(f.profiles))
 
+    // Alles wat een ander invult (naam, avatar, mood, status) moet ontsnapt
+    // worden voordat het via innerHTML op het scherm komt.
+    const vEsc = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')
+
     function bouwRij(f) {
       const p = f.profiles
-      const avatar = p.avatar_url || '👤'
-      const naam = p.display_name || p.username
-      const bio = p.bio || ''
+      const avatar = vEsc(p.avatar_url || '👤')
+      const naam = vEsc(p.display_name || p.username)
+      const bio = vEsc(p.bio || '')
       const online = isGebruikerOnline(p)
       const stipKleur = online ? '#22c55e' : '#6b7280'
       const statusTekst = online
-        ? (p.mood ? '<span style="font-size:12px;color:var(--accent2);font-style:italic;">' + p.mood + '</span>' : '')
-        : '<span style="font-size:12px;color:var(--muted);">' + (p.offline_bericht ? (p.offline_emoji || '💤') + ' ' + p.offline_bericht : 'Offline') + '</span>'
-      return '<div class="friend-row" onclick="window.location.href=\'vriend-profiel.html?id=' + p.id + '\'" style="display:flex;align-items:center;gap:12px;padding:13px 14px;margin:6px 14px;background:var(--card);border:0.5px solid var(--border);border-radius:14px;backdrop-filter:blur(12px);cursor:pointer;">' +
+        ? (p.mood ? '<span style="font-size:12px;color:var(--accent2);font-style:italic;">' + vEsc(p.mood) + '</span>' : '')
+        : '<span style="font-size:12px;color:var(--muted);">' + (p.offline_bericht ? vEsc((p.offline_emoji || '💤') + ' ' + p.offline_bericht) : 'Offline') + '</span>'
+      return '<div class="friend-row" data-vid="' + vEsc(p.id) + '" style="display:flex;align-items:center;gap:12px;padding:13px 14px;margin:6px 14px;background:var(--card);border:0.5px solid var(--border);border-radius:14px;backdrop-filter:blur(12px);cursor:pointer;">' +
         '<div style="position:relative;flex-shrink:0;">' +
         '<div style="width:46px;height:46px;border-radius:50%;background:rgba(192,132,252,0.15);border:1.5px solid rgba(192,132,252,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;">' + avatar + '</div>' +
         '<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:' + stipKleur + ';border:2px solid #0a0014;display:block;"></span>' +
         '</div>' +
         '<div style="flex:1;min-width:0;">' +
         '<div style="font-size:14px;font-weight:600;color:#f3e8ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + naam + '</div>' +
-        '<div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:1px;">@' + (p.username || naam) + '</div>' +
+        '<div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:1px;">@' + vEsc(p.username || naam) + '</div>' +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
         '<span style="font-size:16px;opacity:0.6;">' + (p.public_key ? '🔒' : '🔓') + '</span>' +
-        '<span style="position:relative;display:inline-flex;align-items:center;" onclick="event.stopPropagation();window.location.href=\'chat.html?id=' + p.id + '&naam=' + encodeURIComponent(naam) + '&avatar=' + encodeURIComponent(avatar) + '\'">' +
+        '<span class="chat-knop" data-cid="' + vEsc(p.id) + '" data-cnaam="' + vEsc(p.display_name || p.username) + '" data-cav="' + vEsc(p.avatar_url || '👤') + '" style="position:relative;display:inline-flex;align-items:center;">' +
         '<span style="font-size:22px;line-height:1;cursor:pointer;">💬</span>' +
         '<span style="position:absolute;bottom:-1px;right:-2px;width:9px;height:9px;border-radius:50%;background:' + stipKleur + ';border:1.5px solid rgba(0,0,0,0.5);"></span>' +
         '</span>' +
@@ -343,6 +347,22 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     if (online.length > 0) html += '<div class="section-label">🟢 Online (' + online.length + ')</div>' + online.map(bouwRij).join('')
     if (offline.length > 0) html += '<div class="section-label">⚫ Offline (' + offline.length + ')</div>' + offline.map(bouwRij).join('')
     container.innerHTML = html
+
+    // Klikgedrag via listeners in plaats van onclick-attributen
+    container.querySelectorAll('.friend-row').forEach(rij => {
+      rij.style.cursor = 'pointer'
+      rij.addEventListener('click', () => {
+        window.location.href = 'vriend-profiel.html?id=' + encodeURIComponent(rij.dataset.vid)
+      })
+    })
+    container.querySelectorAll('.chat-knop').forEach(knop => {
+      knop.addEventListener('click', e => {
+        e.stopPropagation()
+        window.location.href = 'chat.html?id=' + encodeURIComponent(knop.dataset.cid) +
+          '&naam=' + encodeURIComponent(knop.dataset.cnaam) +
+          '&avatar=' + encodeURIComponent(knop.dataset.cav)
+      })
+    })
   }
 
   init()

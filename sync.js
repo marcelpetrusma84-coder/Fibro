@@ -311,8 +311,9 @@ async function verwerkP2pBericht(bericht) {
     try {
       const binnen = String(bericht.data?.naam || '').slice(0, 40).trim()
       const sleutel = 'vriend_naam_' + syncPartnerId + '_' + huidigeUserId
+      // Alleen een echte naam overschrijft; een leeg veld laat de
+      // bestaande naam met rust.
       if (binnen) localStorage.setItem(sleutel, binnen)
-      else localStorage.removeItem(sleutel)
     } catch(e) { console.warn('[sync] naam opslaan mislukt', e) }
     const cached = await dbGet('vriend_' + syncPartnerId + '_layout')
     const nodig = []

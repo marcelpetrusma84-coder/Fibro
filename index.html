@@ -148,8 +148,35 @@ import { haalPrivateKeyOp } from './crypto.js'
 // ════════════════════════════════
 // WIDGET SYSTEEM
 // ════════════════════════════════
-const WK_HOME    = 'fibro_widgets_home'
-const WK_PROFIEL = 'fibro_widgets_profiel'
+// Widget-indeling staat per account, anders ziet de volgende gebruiker in
+// deze browser de indeling van de vorige.
+function _widgetUid() {
+  if (window._uid) return window._uid
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+        const v = JSON.parse(localStorage.getItem(k))
+        const id = v?.user?.id
+        if (id) return id
+      }
+    }
+  } catch(e) {}
+  return 'lokaal'
+}
+const WK_HOME    = 'fibro_widgets_home_' + _widgetUid()
+const WK_PROFIEL = 'fibro_widgets_profiel_' + _widgetUid()
+
+// Eenmalig: bestaande indeling overzetten naar de sleutel van dit account
+;(() => {
+  try {
+    for (const [oudK, nieuwK] of [['fibro_widgets_home', WK_HOME], ['fibro_widgets_profiel', WK_PROFIEL]]) {
+      const oudeWaarde = localStorage.getItem(oudK)
+      if (oudeWaarde && !localStorage.getItem(nieuwK)) localStorage.setItem(nieuwK, oudeWaarde)
+      if (oudeWaarde) localStorage.removeItem(oudK)
+    }
+  } catch(e) {}
+})()
 
 const HOME_DEFS = [
   { id:'klok',         icon:'🌍', titel:'Wereldklok',       w:4, h:2 },

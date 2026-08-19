@@ -426,6 +426,21 @@ input, textarea { font-size:16px !important; }
 </div>
 <script src="lame.min.js"></script>
 <script type="module">
+function _profielUid() {
+  if (window._uid) return window._uid
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+        const v = JSON.parse(localStorage.getItem(k))
+        const id = v?.user?.id
+        if (id) return id
+      }
+    }
+  } catch(e) {}
+  return 'lokaal'
+}
+
 import { supabase } from './supabase.js'
 import { laadThema } from './thema.js'
 import { startHeartbeat } from './heartbeat.js'
@@ -737,7 +752,7 @@ window.slaAllesOp=async function(){
     gastenboek: { id:'gastenboek', icon:'📖', titel:'Gastenboek',    w:4, h:4 }
   }
   const wLayout = actieveWidgets.filter(n => WMAP[n]).map((n, i) => ({ ...WMAP[n], volgorde: i, aan: true }))
-  localStorage.setItem('fibro_widgets_profiel', JSON.stringify(wLayout))
+  localStorage.setItem('fibro_widgets_profiel_' + _profielUid(), JSON.stringify(wLayout))
 
 
   // ── Alleen technische sync naar Supabase (geen PII) ──

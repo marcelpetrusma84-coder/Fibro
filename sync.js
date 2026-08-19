@@ -289,7 +289,7 @@ async function verzamelEigenMuziek() {
 }
 
 async function stuurManifest() {
-  const layoutJson = localStorage.getItem('fibro_widgets_profiel') || '[]'
+  const layoutJson = localStorage.getItem('fibro_widgets_profiel_' + huidigeUserId) || '[]'
   const fotos = verzamelEigenFotos()
   const muziek = await verzamelEigenMuziek()
   const manifest = {
@@ -361,7 +361,7 @@ async function verwerkP2pBericht(bericht) {
     for (const item of bericht.items) {
       if (typeof item !== 'string' || item.length > 200) continue
       if (item === 'layout') {
-        const layoutJson = localStorage.getItem('fibro_widgets_profiel') || '[]'
+        const layoutJson = localStorage.getItem('fibro_widgets_profiel_' + huidigeUserId) || '[]'
         dataChannel.send(JSON.stringify({ type: 'item', itemId: 'layout', hash: hashString(layoutJson), data: layoutJson }))
       } else if (item.startsWith('foto:')) {
         const itemId = item.slice(5)

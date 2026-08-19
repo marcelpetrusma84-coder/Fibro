@@ -354,20 +354,33 @@ window.veiligeUrl = function(v){
   var emojiList = ["😊","😂","❤","🔥","👍","🎉","😍","🤔","😢","😎","🌿","🌸","✨","🎵","🙌","💬","🦋","🌙","⭐","🍀","🎮","🐱","🌈","🎨"]
 
   // ─── Cache helpers ───
+  // De cache staat per account: anders ziet de volgende gebruiker in deze
+  // browser de leesbare berichten van de vorige.
+  function berichtCacheSleutel() {
+    return huidigeUser ? 'fibro_msg_cache_' + huidigeUser.id : null
+  }
+
+  // Eenmalig: de oude gedeelde cache opruimen
+  try { localStorage.removeItem('fibro_msg_cache') } catch(e) {}
+
   function slaBerichtCacheOp(id, tekst) {
+    const key = berichtCacheSleutel()
+    if (!key) return
     try {
-      const cache = JSON.parse(localStorage.getItem('fibro_msg_cache') || '{}')
+      const cache = JSON.parse(localStorage.getItem(key) || '{}')
       cache[id] = tekst
       // Beperk cache tot 500 berichten om localStorage niet vol te maken
       const keys = Object.keys(cache)
       if (keys.length > 500) delete cache[keys[0]]
-      localStorage.setItem('fibro_msg_cache', JSON.stringify(cache))
+      localStorage.setItem(key, JSON.stringify(cache))
     } catch(e) {}
   }
 
   function haalBerichtCacheOp(id) {
+    const key = berichtCacheSleutel()
+    if (!key) return null
     try {
-      const cache = JSON.parse(localStorage.getItem('fibro_msg_cache') || '{}')
+      const cache = JSON.parse(localStorage.getItem(key) || '{}')
       return cache[id] || null
     } catch(e) { return null }
   }

@@ -353,6 +353,20 @@ window.veiligeUrl = function(v){
   var emojiOpen = false
   var emojiList = ["😊","😂","❤","🔥","👍","🎉","😍","🤔","😢","😎","🌿","🌸","✨","🎵","🙌","💬","🦋","🌙","⭐","🍀","🎮","🐱","🌈","🎨"]
 
+  // ─── Weergavenaam van een vriend (via P2P ontvangen, lokaal bewaard) ───
+  function vriendWeergaveNaam(vriend) {
+    try {
+      const n = String(localStorage.getItem('vriend_naam_' + vriend.id + '_' + (huidigeUser?.id || '')) || '').trim()
+      if (n) return n
+    } catch(e) {}
+    return vriend.username || ''
+  }
+  function heeftWeergaveNaam(vriend) {
+    try {
+      return !!String(localStorage.getItem('vriend_naam_' + vriend.id + '_' + (huidigeUser?.id || '')) || '').trim()
+    } catch(e) { return false }
+  }
+
   // ─── Cache helpers ───
   // De cache staat per account: anders ziet de volgende gebruiker in deze
   // browser de leesbare berichten van de vorige.
@@ -471,8 +485,8 @@ window.veiligeUrl = function(v){
         }
 
         // Anders: stuur door naar bellen.html
-        const { data: v } = await supabase.from('profiles').select('avatar_url,avatar_data,display_name,username').eq('id', info.van).single()
-        const naam = v?.display_name || v?.username || 'Onbekend'
+        const { data: v } = await supabase.from('profiles').select('avatar_url,avatar_data,username').eq('id', info.van).single()
+        const naam = vriendWeergaveNaam({ id: info.van, username: v?.username }) || 'Onbekend'
         const videoParam = info.videoModus ? '&video=1' : ''
         window.location.href = 'bellen.html?vriend=' + info.van + '&naam=' + encodeURIComponent(naam) + '&inkomend=1' + videoParam
       },
@@ -493,7 +507,7 @@ window.veiligeUrl = function(v){
       // Open chat met die vriend en start het spel
       const vriend = (window._vriendenData || []).find(v => v.id === spelVriend)
       if (vriend) {
-        await openChat(vriend.id, vriend.display_name || vriend.username, vriend.avatar_url || '👤', vriend.public_key || '')
+        await openChat(vriend.id, vriendWeergaveNaam(vriend), vriend.avatar_url || '👤', vriend.public_key || '')
         setTimeout(() => speelMee(spelType, sessieId, starterId || spelVriend), 800)
       }
       // Verwijder URL params zodat herlaad niet opnieuw triggert
@@ -534,14 +548,14 @@ window.veiligeUrl = function(v){
     window._vriendenData = data
 
     container.innerHTML = data.map(vriend => `
-      <div class="vriend-item" data-vid="${esc(vriend.id)}" data-vnaam="${esc(vriend.display_name || vriend.username)}" data-vav="${esc(vriend.avatar_url || '👤')}" data-vkey="${esc(vriend.public_key || '')}">
-        <div class="vriend-av">${vriend.avatar_url || '👤'}</div>
+      <div class="vriend-item" data-vid="${esc(vriend.id)}" data-vnaam="${esc(vriendWeergaveNaam(vriend))}" data-vav="${esc(vriend.avatar_url || '👤')}" data-vkey="${esc(vriend.public_key || '')}">
+        <div class="vriend-av">${esc(vriend.avatar_url || '👤')}</div>
         <div>
-          <div class="vriend-naam">${vriend.display_name || vriend.username}</div>
-          <div class="vriend-username">@${vriend.username}</div>
+          <div class="vriend-naam">${esc(vriendWeergaveNaam(vriend))}</div>
+          ${heeftWeergaveNaam(vriend) ? `<div class="vriend-username">@${esc(vriend.username)}</div>` : ''}
         </div>
         <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-          <button class="bel-knop" data-bid="${esc(vriend.id)}" data-bnaam="${esc(vriend.display_name||vriend.username)}" style="background:#22c55e;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">📞</button>
+          <button class="bel-knop" data-bid="${esc(vriend.id)}" data-bnaam="${esc(vriendWeergaveNaam(vriend))}" style="background:#22c55e;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">📞</button>
           <span style="font-size:12px;color:${vriend.public_key ? '#22c55e' : '#f87171'}">${vriend.public_key ? '🔒' : '🔓'}</span>
         </div>
       </div>
@@ -1089,7 +1103,7 @@ window.veiligeUrl = function(v){
       if (geselecteerdeVriend?.id !== vanId) {
         const vriend = (window._vriendenData || []).find(v => v.id === vanId)
         if (vriend) {
-          openChat(vriend.id, vriend.display_name || vriend.username, vriend.avatar_url || '👤', vriend.public_key || '')
+          openChat(vriend.id, vriendWeergaveNaam(vriend), vriend.avatar_url || '👤', vriend.public_key || '')
         }
       }
       speelMee(spelType, sessieId, vanId)

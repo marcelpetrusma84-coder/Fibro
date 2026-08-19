@@ -317,7 +317,11 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     function bouwRij(f) {
       const p = f.profiles
       const avatar = vEsc(p.avatar_url || '👤')
-      const naam = vEsc(p.display_name || p.username)
+      // Weergavenaam komt via P2P binnen en staat lokaal; anders de username.
+      let p2pNaam = ''
+      try { p2pNaam = String(localStorage.getItem('vriend_naam_' + p.id + '_' + userId) || '').trim() } catch(e) {}
+      const heeftWeergavenaam = !!p2pNaam
+      const naam = vEsc(p2pNaam || p.username)
       const bio = vEsc(p.bio || '')
       const online = isGebruikerOnline(p)
       const stipKleur = online ? '#22c55e' : '#6b7280'
@@ -331,11 +335,11 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
         '</div>' +
         '<div style="flex:1;min-width:0;">' +
         '<div style="font-size:14px;font-weight:600;color:#f3e8ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + naam + '</div>' +
-        '<div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:1px;">@' + vEsc(p.username || naam) + '</div>' +
+        (heeftWeergavenaam ? '<div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:1px;">@' + vEsc(p.username || '') + '</div>' : '') +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
         '<span style="font-size:16px;opacity:0.6;">' + (p.public_key ? '🔒' : '🔓') + '</span>' +
-        '<span class="chat-knop" data-cid="' + vEsc(p.id) + '" data-cnaam="' + vEsc(p.display_name || p.username) + '" data-cav="' + vEsc(p.avatar_url || '👤') + '" style="position:relative;display:inline-flex;align-items:center;">' +
+        '<span class="chat-knop" data-cid="' + vEsc(p.id) + '" data-cnaam="' + vEsc(p2pNaam || p.username) + '" data-cav="' + vEsc(p.avatar_url || '👤') + '" style="position:relative;display:inline-flex;align-items:center;">' +
         '<span style="font-size:22px;line-height:1;cursor:pointer;">💬</span>' +
         '<span style="position:absolute;bottom:-1px;right:-2px;width:9px;height:9px;border-radius:50%;background:' + stipKleur + ';border:1.5px solid rgba(0,0,0,0.5);"></span>' +
         '</span>' +

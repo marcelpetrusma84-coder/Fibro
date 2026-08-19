@@ -202,7 +202,14 @@
   // Open direct het juiste tabblad bij login.html#herstellen
   ;(() => {
     const h = (location.hash || '').replace('#','')
-    if (['inloggen','registreren','herstellen'].includes(h)) window.switchTab(h)
+    if (!['inloggen','registreren','herstellen'].includes(h)) return
+    const schakel = () => { try { window.switchTab(h) } catch(e) { console.error('switchTab faalde:', e) } }
+    schakel()
+    setTimeout(schakel, 400)
+    window.addEventListener('hashchange', () => {
+      const h2 = (location.hash || '').replace('#','')
+      if (['inloggen','registreren','herstellen'].includes(h2)) window.switchTab(h2)
+    })
   })()
 
   window.inloggen = async function() {

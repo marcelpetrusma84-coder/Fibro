@@ -199,6 +199,12 @@
     if (document.getElementById('reg-username') && !document.getElementById('reg-username').value) nieuweNaam()
   }, 300)
 
+  // Open direct het juiste tabblad bij login.html#herstellen
+  ;(() => {
+    const h = (location.hash || '').replace('#','')
+    if (['inloggen','registreren','herstellen'].includes(h)) window.switchTab(h)
+  })()
+
   window.inloggen = async function() {
     const username = document.getElementById('login-username').value.trim()
     const wachtwoord = document.getElementById('login-wachtwoord').value

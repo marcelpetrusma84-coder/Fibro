@@ -1391,7 +1391,7 @@ async function init() {
   }
   // Eigen naam staat lokaal (bewust niet op de server), dus die gaat voor.
   let lokaleNaam = ''
-  try { lokaleNaam = String(JSON.parse(localStorage.getItem('fibro_profiel') || '{}').naam || '').trim() } catch(e) {}
+  try { lokaleNaam = String(JSON.parse(localStorage.getItem('fibro_profiel_' + window._uid) || '{}').naam || '').trim() } catch(e) {}
   const naam = lokaleNaam || profiel?.display_name || profiel?.username || 'Jij'
   document.getElementById('heroNaam').textContent = naam
   document.getElementById('heroUsername').textContent = '@' + (profiel?.username || '')

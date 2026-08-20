@@ -595,7 +595,7 @@ async function init(){
   profiel=data
   if(profiel){
     // ── Laad alles uit localStorage ──
-    const lokaal = JSON.parse(localStorage.getItem('fibro_profiel') || '{}')
+    const lokaal = JSON.parse(localStorage.getItem('fibro_profiel_' + huidigeUser.id) || '{}')
 
     document.getElementById('editNaam').value=lokaal.naam||''
     const loginNaam = profiel.username || huidigeUser.id
@@ -732,7 +732,7 @@ window.slaAllesOp=async function(){
     widgets: actieveWidgets,
     stickers: actieveStickers
   }
-  localStorage.setItem('fibro_profiel', JSON.stringify(lokaalProfiel))
+  localStorage.setItem('fibro_profiel_' + huidigeUser.id, JSON.stringify(lokaalProfiel))
 
   // ── Sync naar widget-layout voor index.html ──
   const WMAP = {

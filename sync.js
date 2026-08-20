@@ -294,7 +294,7 @@ async function stuurManifest() {
   const muziek = await verzamelEigenMuziek()
   // Weergavenaam reist mee over P2P: hij staat bewust niet op de server.
   let eigenNaam = ''
-  try { eigenNaam = String(JSON.parse(localStorage.getItem('fibro_profiel') || '{}').naam || '').slice(0, 40) } catch(e) {}
+  try { eigenNaam = String(JSON.parse(localStorage.getItem('fibro_profiel_' + huidigeUserId) || '{}').naam || '').slice(0, 40) } catch(e) {}
   const manifest = {
     layout: { hash: hashString(layoutJson) },
     fotos,

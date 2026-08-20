@@ -200,11 +200,37 @@ body.heeft-wallpaper::before { display:block; }
     }
   }
 
+  // ── Weergavenaam: via P2P ontvangen en lokaal bewaard ──
+  function _eigenUid() {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)
+        if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+          const v = JSON.parse(localStorage.getItem(k))
+          if (v?.user?.id) return v.user.id
+        }
+      }
+    } catch(e) {}
+    return ''
+  }
+  function vriendNaam(username) {
+    try {
+      const n = String(localStorage.getItem('vriend_naam_' + vriendId + '_' + _eigenUid()) || '').trim()
+      if (n) return n
+    } catch(e) {}
+    return username || 'Naamloos'
+  }
+  function heeftVriendNaam() {
+    try {
+      return !!String(localStorage.getItem('vriend_naam_' + vriendId + '_' + _eigenUid()) || '').trim()
+    } catch(e) { return false }
+  }
+
   // ── Profiel data tonen ──
   function toonProfielData(data) {
-    const naam = data.naam || data.display_name || data.username || 'Naamloos'
+    const naam = vriendNaam(data.username)
     document.getElementById('profielNaam').textContent = naam
-    document.getElementById('profielUsername').textContent = '@' + (data.username || '')
+    document.getElementById('profielUsername').textContent = heeftVriendNaam() ? '@' + (data.username || '') : ''
     document.getElementById('profielBio').textContent = data.bio || ''
     document.getElementById('paginaTitel').textContent = naam
 
@@ -448,7 +474,7 @@ body.heeft-wallpaper::before { display:block; }
     // ── Cache bijwerken ──
     try {
       localStorage.setItem(cacheKey, JSON.stringify({
-        naam: data.display_name || data.username || '',
+        naam: data.username || '',
         bio: data.bio || '',
         mood: data.mood || '',
         avatar: data.avatar_url || '👤',
@@ -524,7 +550,7 @@ body.heeft-wallpaper::before { display:block; }
 
   window.naarChat = function() {
     if (vriendData) {
-      const naam = encodeURIComponent(vriendData.display_name || vriendData.username)
+      const naam = encodeURIComponent(vriendNaam(vriendData.username))
       const avatar = encodeURIComponent(vriendData.avatar_url || '👤')
       window.location.href = `chat.html?id=${vriendId}&naam=${naam}&avatar=${avatar}`
     } else {

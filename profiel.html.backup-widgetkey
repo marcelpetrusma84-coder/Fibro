@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="nl" style="background:#1a0a2e;">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fibro — Profiel</title>
+<meta http-equiv="cache-control" content="no-cache">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fibro">
+<script>
+try {
+  const f = localStorage.getItem("fibro_font")
+  if (f) document.write("<style>*{font-family:" + f + " !important}</style>")
+} catch(e) {}
+</script>
+<meta name="theme-color" content="#c084fc">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400;500&family=Raleway:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:wght@300;400;700&family=Bebas+Neue&family=Oswald:wght@300;400;500&family=Pacifico&family=Dancing+Script:wght@400;600&family=Great+Vibes&family=Space+Mono:wght@400;700&family=Courier+Prime:wght@400;700&family=Quicksand:wght@300;400;500&family=Nunito:wght@300;400;500&family=Righteous&family=Comfortaa:wght@300;400;500&family=Cinzel:wght@400;600&family=Satisfy&family=Lobster&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#1a0a2e;--card:rgba(255,255,255,0.06);--border:rgba(255,255,255,0.12);--accent:#c084fc;--accent2:#f0abfc;--text:#f3e8ff;--muted:#ffffff;}
+body{background:var(--bg);background-attachment:fixed;background-size:cover;background-position:center;overflow-y:auto;font-family:'DM Sans',sans-serif;color:var(--text);max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:80px;}
+.top-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(0,0,0,0.35);border-bottom:0.5px solid var(--border);position:sticky;top:0;z-index:10;}
+.top-title{font-family:'Playfair Display',serif;font-style:italic;font-size:18px;color:var(--accent);flex:1;}
+.save-top-btn{font-size:14px;padding:5px 14px;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;border:none;cursor:pointer;font-weight:600;}
+.main-tabs{display:flex;border-bottom:0.5px solid var(--border);background:rgba(0,0,0,0.2);overflow-x:auto;}
+.main-tab{font-size:14px;padding:10px 14px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.main-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.panel{display:none;padding:14px;}
+.panel.active{display:block;}
+.section{margin-bottom:20px;}
+.section-label{font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;}
+.card{background:var(--card);border:0.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;}
+.field-label{font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;}
+.field{width:100%;background:rgba(0,0,0,0.3);border:0.5px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:10px;}
+.field:focus{border-color:var(--accent);}
+textarea.field{min-height:70px;resize:vertical;}
+.avatar-ring{width:64px;height:64px;border-radius:50%;padding:2px;background:linear-gradient(135deg,var(--accent),var(--accent2));flex-shrink:0;cursor:pointer;}
+.avatar-inner{width:100%;height:100%;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:28px;}
+.emoji-grid{display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:rgba(0,0,0,0.3);border-radius:10px;margin-bottom:10px;}
+.emoji-opt{font-size:24px;cursor:pointer;padding:4px;border-radius:8px;}
+.color-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.color-input{flex:1;background:rgba(0,0,0,0.3);border:0.5px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:15px;font-family:'DM Mono',monospace;outline:none;}
+input[type="color"]{width:40px;height:40px;border:none;background:none;cursor:pointer;padding:0;border-radius:8px;}
+.gradient-preview{width:100%;height:50px;border-radius:10px;margin-bottom:10px;border:0.5px solid var(--border);}
+.type-btns{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.type-btn{font-size:14px;padding:6px 14px;border-radius:20px;border:0.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;}
+.type-btn.active{background:rgba(192,132,252,0.15);border-color:var(--accent);color:var(--accent);}
+.wallpaper-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;}
+.wallpaper-cell{aspect-ratio:16/10;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;position:relative;}
+.wallpaper-cell.selected{border-color:var(--accent);}
+.wallpaper-label{position:absolute;bottom:4px;left:6px;font-size:15px;color:white;text-shadow:0 1px 3px rgba(0,0,0,0.8);}
+.upload-zone{border:1px dashed rgba(192,132,252,0.4);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;}
+.upload-icon{font-size:28px;margin-bottom:8px;}
+.upload-text{font-size:15px;color:var(--muted);line-height:1.5;}
+.upload-formats{font-size:15px;color:rgba(243,232,255,0.3);margin-top:4px;}
+.anim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+.anim-cell{background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;}
+.anim-cell.selected{border-color:var(--accent);background:rgba(192,132,252,0.1);}
+.anim-icon{font-size:22px;margin-bottom:4px;}
+.anim-name{font-size:15px;color:var(--muted);}
+.anim-cell.selected .anim-name{color:var(--accent);}
+.anim-preview{width:100%;height:120px;border-radius:12px;background:#0a0015;border:0.5px solid var(--border);margin-bottom:10px;overflow:hidden;}
+#previewCanvas{width:100%;height:100%;}
+.font-grid{display:flex;flex-direction:column;gap:6px;}
+.font-item{background:var(--card);border:0.5px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;transition:border-color 0.2s,background 0.2s;}
+.font-item.selected{border-color:var(--accent);background:rgba(192,132,252,0.1);box-shadow:0 0 0 1px var(--accent);}
+.font-preview{font-size:26px;color:var(--text);line-height:1.2;margin-bottom:4px;}
+.font-zin{font-size:13px;color:var(--accent2);margin-bottom:6px;line-height:1.4;}
+.font-name{font-size:11px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;}
+.font-grid{display:flex;flex-direction:column;gap:10px;}
+.swatches{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.swatch{width:32px;height:32px;border-radius:50%;cursor:pointer;border:2px solid transparent;}
+.swatch.selected{border-color:white;transform:scale(1.1);}
+.widget-list{display:flex;flex-direction:column;gap:6px;}
+.widget-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--card);border:0.5px solid var(--border);border-radius:12px;}
+.widget-info{display:flex;align-items:center;gap:10px;}
+.widget-icon{font-size:18px;}
+.widget-name{font-size:15px;}
+.widget-desc{font-size:15px;color:var(--muted);margin-top:2px;}
+.toggle{width:36px;height:20px;border-radius:10px;position:relative;cursor:pointer;flex-shrink:0;transition:background 0.2s;}
+.toggle.on{background:var(--accent);}
+.toggle.off{background:rgba(255,255,255,0.15);}
+.toggle-dot{width:16px;height:16px;background:white;border-radius:50%;position:absolute;top:2px;transition:left 0.2s;}
+.toggle.on .toggle-dot{left:18px;}
+.toggle.off .toggle-dot{left:2px;}
+.sticker-galerij{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:10px;}
+.sticker-item{aspect-ratio:1;background:var(--card);border:0.5px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;}
+.sticker-item.selected{border-color:var(--accent);background:rgba(192,132,252,0.1);}
+.profiel-preview{background:rgba(0,0,0,0.3);border-radius:14px;padding:14px;margin-bottom:14px;border:0.5px solid var(--border);}
+.preview-label{font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.status-msg{font-size:15px;padding:10px 14px;border-radius:10px;margin:10px 14px;display:none;}
+.status-msg.success{background:rgba(192,132,252,0.1);border:0.5px solid rgba(192,132,252,0.3);color:var(--accent);display:block;}
+.status-msg.error{background:rgba(255,92,92,0.1);border:0.5px solid rgba(255,92,92,0.3);color:#ff5c5c;display:block;}
+.save-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:12px;color:#1a0a2e;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px;font-family:'DM Sans',sans-serif;}
+.uitlog-btn{width:100%;padding:11px;background:transparent;border:0.5px solid var(--border);border-radius:12px;color:var(--muted);font-size:15px;cursor:pointer;margin-top:8px;font-family:'DM Sans',sans-serif;}
+.bottom-nav{display:flex;justify-content:space-around;padding:12px 0;border-top:0.5px solid var(--border);background:rgba(0,0,0,0.3);position:fixed;bottom:0;width:100%;max-width:480px;}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:15px;color:#ffffff;cursor:pointer;padding:4px 12px;text-shadow:0 2px 6px rgba(0,0,0,1);}
+.nav-item.active{color:var(--accent);}
+.nav-icon{font-size:20px;}
+body::before{content:'';position:fixed;inset:0;background:rgba(0,0,0,0.38);z-index:0;pointer-events:none;display:none;}body.heeft-wallpaper::before{display:block;}body.heeft-wallpaper{background-size:cover;background-position:center;background-attachment:fixed;}.block,.edit-vak,.bottom-nav,.top-bar,.bubble,.vriend-item,.modal{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}.p-name,.p-bio,.block-title,.gb-name,.gb-msg,.music-title,.music-artist,.mood-text,.nav-item,.chat-name,.vriend-naam,.chat-status{text-shadow:0 1px 4px rgba(0,0,0,0.9);}button,.save-btn,.cancel-btn,.send-btn,.back-btn,.lock-btn,.gb-send,.chat-btn,.modal-btn{min-height:44px;min-width:44px;}
+.mood-emoji-opt{font-size:24px;cursor:pointer;padding:4px 6px;border-radius:8px;border:1.5px solid transparent;transition:border-color 0.15s,transform 0.1s;}
+.mood-emoji-opt:hover{transform:scale(1.2);}
+.mood-emoji-opt.actief{border-color:var(--accent);background:rgba(192,132,252,0.15);}.bottom-nav{padding-bottom:env(safe-area-inset-bottom,12px);}
+.wallpaper-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+input, textarea { font-size:16px !important; }
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <span class="top-title">Mijn profiel</span>
+  <button class="save-top-btn" onclick="slaAllesOp()">Opslaan</button>
+</div>
+<div class="main-tabs">
+  <div class="main-tab active" onclick="switchTab('profiel')">👤 Profiel</div>
+  <div class="main-tab" onclick="switchTab('achtergrond')">🖼 Achtergrond</div>
+  <div class="main-tab" onclick="switchTab('animatie')">✨ Animatie</div>
+  <div class="main-tab" onclick="switchTab('lettertype')">🔤 Lettertype</div>
+  <div class="main-tab" onclick="switchTab('kleur')">💜 Kleur</div>
+  <div class="main-tab" onclick="switchTab('widgets')">🧩 Widgets</div>
+  <div class="main-tab" onclick="switchTab('stickers')">🎨 Stickers</div>
+</div>
+<div class="status-msg" id="statusMsg"></div>
+<div class="panel active" id="panel-profiel">
+  <div class="section">
+    <div class="section-label">Avatar</div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+      <div class="avatar-ring" onclick="toggleAvatarPicker()">
+        <div class="avatar-inner" id="avatarEmoji">🌿</div>
+      </div>
+      <div>
+        <div style="font-size:15px;">Klik op je avatar om te wijzigen</div>
+        <div style="font-size:14px;color:var(--muted);">Emoji of eigen foto</div>
+      </div>
+    </div>
+    <div id="avatarPickerWrap" style="display:none;">
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button onclick="switchAvatarTab('emoji')" id="tabEmoji" style="flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;">😊 Emoji</button>
+        <button onclick="switchAvatarTab('foto')" id="tabFoto" style="flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;">📷 Foto</button>
+      </div>
+      <div id="avatarEmojiTab">
+        <div class="emoji-grid" id="avatarPicker"></div>
+      </div>
+      <div id="avatarFotoTab" style="display:none;">
+        <div class="upload-zone" onclick="document.getElementById('fotoInput').click()">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text">Klik om een foto te kiezen</div>
+          <div class="upload-formats">JPG, PNG, GIF — max 5MB</div>
+        </div>
+        <input type="file" id="fotoInput" accept="image/*" style="display:none;" onchange="verwerkFoto(event)">
+        <div id="fotoPreviewWrap" style="display:none;text-align:center;margin-top:8px;">
+          <img id="fotoPreview" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);">
+          <div style="font-size:14px;color:var(--accent);margin-top:6px;cursor:pointer;" onclick="bevestigFoto()">✓ Gebruik deze foto</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">Informatie</div>
+    <div class="card">
+      <label class="field-label">Weergavenaam</label>
+      <input class="field" id="editNaam" placeholder="Jouw naam"/>
+      <label class="field-label">Gebruikersnaam <span style="font-size:10px;color:var(--muted);">— je login naam</span></label>
+      <div style="background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;font-size:14px;color:var(--muted);margin-bottom:8px;" id="usernameWeergave">—</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Dit is je anonieme login naam — niet aanpasbaar</div>
+      <label class="field-label">Bio</label>
+      <textarea class="field" id="editBio" placeholder="Schrijf iets over jezelf..."></textarea>
+      <label class="field-label">Mood</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+        <div id="moodEmojiGekozen" style="font-size:28px;min-width:44px;text-align:center;cursor:pointer;background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:6px;" onclick="toggleMoodPicker()">😊</div>
+        <input class="field" id="editMood" placeholder="Hoe voel je je vandaag?" style="flex:1;margin:0;"/>
+        <div onclick="toggleOnlineStatus()" id="onlineToggle" style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--card);border:0.5px solid var(--border);border-radius:20px;padding:6px 12px;flex-shrink:0;">
+          <div id="onlineDot" style="width:10px;height:10px;border-radius:50%;background:#22c55e;"></div>
+          <span id="onlineLabel" style="font-size:12px;color:var(--text);">Online</span>
+        </div>
+      </div>
+      <div id="moodEmojiPicker" style="display:none;flex-wrap:wrap;gap:6px;padding:10px;background:var(--card);border:0.5px solid var(--border);border-radius:12px;margin-bottom:8px;">
+      </div>
+    </div>
+  </div>
+  <div class="section">
+
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">Profiel preview</div>
+    <div class="profiel-preview">
+      <div class="preview-label">Zo zien anderen jouw profiel</div>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;" id="previewAvatar">🌿</div>
+        <div>
+          <div style="font-size:18px;color:var(--text);font-weight:600;" id="previewNaam">Jouw naam</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;" id="previewUsername">@gebruikersnaam</div>
+          <div style="font-size:14px;color:var(--muted);" id="previewBio">Jouw bio verschijnt hier</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  
+  
+</div>
+<div class="panel" id="panel-achtergrond">
+  <div class="section">
+    <div class="section-label">Type achtergrond</div>
+    <div class="type-btns">
+      <button class="type-btn active" id="type-kleur" onclick="setAchtergrondType('kleur')">🎨 Kleur</button>
+      <button class="type-btn" id="type-gradient" onclick="setAchtergrondType('gradient')">🌈 Gradient</button>
+      <button class="type-btn" id="type-wallpaper" onclick="setAchtergrondType('wallpaper')">🖼 Wallpaper</button>
+      <button class="type-btn" id="type-upload" onclick="setAchtergrondType('upload')">📤 Eigen upload</button>
+    </div>
+  </div>
+  <div id="bg-kleur-sectie" class="section">
+    <div class="section-label">Achtergrondkleur</div>
+    <div class="card">
+      <div class="color-row">
+        <input type="color" id="bgKleurPicker" value="#1a0a2e" oninput="updateBgKleur(this.value)"/>
+        <input class="color-input" id="bgKleurHex" value="#1a0a2e" oninput="updateBgKleurHex(this.value)" placeholder="#1a0a2e"/>
+      </div>
+      <div class="swatches">
+        <div class="swatch selected" style="background:#1a0a2e" onclick="updateBgKleur('#1a0a2e')"></div>
+        <div class="swatch" style="background:#030712" onclick="updateBgKleur('#030712')"></div>
+        <div class="swatch" style="background:#0f172a" onclick="updateBgKleur('#0f172a')"></div>
+        <div class="swatch" style="background:#2d1f14" onclick="updateBgKleur('#2d1f14')"></div>
+        <div class="swatch" style="background:#14532d" onclick="updateBgKleur('#14532d')"></div>
+        <div class="swatch" style="background:#1e1b4b" onclick="updateBgKleur('#1e1b4b')"></div>
+        <div class="swatch" style="background:#4a044e" onclick="updateBgKleur('#4a044e')"></div>
+        <div class="swatch" style="background:#450a0a" onclick="updateBgKleur('#450a0a')"></div>
+        <div class="swatch" style="background:#1c1917" onclick="updateBgKleur('#1c1917')"></div>
+        <div class="swatch" style="background:#042f2e" onclick="updateBgKleur('#042f2e')"></div>
+      </div>
+    </div>
+  </div>
+  <div id="bg-gradient-sectie" class="section" style="display:none;">
+    <div class="section-label">Gradient kleuren</div>
+    <div class="card">
+      <div id="gradientPreview" class="gradient-preview"></div>
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1;"><label class="field-label">Kleur 1</label>
+          <div class="color-row"><input type="color" id="grad1Picker" value="#1a0a2e" oninput="updateGradient()"/><input class="color-input" id="grad1Hex" value="#1a0a2e" oninput="updateGradient()"/></div>
+        </div>
+        <div style="flex:1;"><label class="field-label">Kleur 2</label>
+          <div class="color-row"><input type="color" id="grad2Picker" value="#0f172a" oninput="updateGradient()"/><input class="color-input" id="grad2Hex" value="#0f172a" oninput="updateGradient()"/></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="bg-wallpaper-sectie" class="section" style="display:none;">
+    <div class="section-label">Kies een wallpaper</div>
+    <div class="wallpaper-grid">
+      <div class="wallpaper-cell" onclick="selectWallpaper('fibro-nacht',this)" style="background:linear-gradient(135deg,#1a0a2e,#4a044e);"><span class="wallpaper-label">Fibro Nacht</span></div>
+      <div class="wallpaper-cell" onclick="selectWallpaper('oceaan',this)" style="background:linear-gradient(135deg,#042f2e,#0f172a);"><span class="wallpaper-label">Oceaan</span></div>
+      <div class="wallpaper-cell" onclick="selectWallpaper('zonsondergang',this)" style="background:linear-gradient(135deg,#450a0a,#2d1f14);"><span class="wallpaper-label">Zonsondergang</span></div>
+      <div class="wallpaper-cell" onclick="selectWallpaper('woud',this)" style="background:linear-gradient(135deg,#14532d,#042f2e);"><span class="wallpaper-label">Woud</span></div>
+      <div class="wallpaper-cell" onclick="selectWallpaper('galaxy',this)" style="background:linear-gradient(135deg,#1e1b4b,#4a044e);"><span class="wallpaper-label">Galaxy</span></div>
+      <div class="wallpaper-cell" onclick="selectWallpaper('noir',this)" style="background:linear-gradient(135deg,#1c1917,#030712);"><span class="wallpaper-label">Noir</span></div>
+    </div>
+  </div>
+  <div id="bg-upload-sectie" class="section" style="display:none;">
+    <div class="section-label">Upload eigen achtergrond</div>
+    <div onclick="document.getElementById('bgUpload').click()" style="border:2px dashed rgba(192,132,252,0.5);border-radius:16px;padding:40px 20px;text-align:center;cursor:pointer;margin-bottom:14px;background:rgba(192,132,252,0.04);">
+      <div style="font-size:52px;margin-bottom:12px;">🖼️</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;">Kies een afbeelding</div>
+      <div style="font-size:15px;color:var(--muted);line-height:1.6;">Wordt gebruikt als wallpaper op je home pagina</div>
+      <div style="font-size:14px;color:rgba(243,232,255,0.3);margin-top:8px;">JPG · PNG · WEBP · GIF — max 10MB</div>
+    </div>
+    <input type="file" id="bgUpload" accept="image/*,video/mp4" style="display:none" onchange="uploadAchtergrond(this)"/>
+    <div id="uploadPreview" style="display:none;margin-top:4px;">
+      <div class="section-label">Huidige wallpaper</div>
+      <div style="position:relative;border-radius:14px;overflow:hidden;border:1.5px solid var(--accent);">
+        <div id="uploadedWallpaper" style="width:100%;aspect-ratio:16/9;"></div>
+        <button onclick="verwijderWallpaper()" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.65);border:0.5px solid rgba(255,255,255,0.2);color:white;border-radius:20px;padding:6px 14px;font-size:14px;cursor:pointer;backdrop-filter:blur(6px);">✕ Verwijderen</button>
+      </div>
+      <div style="font-size:14px;color:var(--accent);text-align:center;margin-top:8px;">✓ Actief als wallpaper op home</div>
+    </div>
+  </div>
+</div>
+<div class="panel" id="panel-animatie">
+  <div class="section">
+    <div class="section-label">Live preview</div>
+    <div class="anim-preview"><canvas id="previewCanvas"></canvas></div>
+  </div>
+  <div class="section">
+    <div class="section-label">Kies een animatie</div>
+    <div class="anim-grid">
+      <div class="anim-cell selected" id="anim-geen" onclick="selectAnimatie('geen')"><div class="anim-icon">🚫</div><div class="anim-name">Geen</div></div>
+      <div class="anim-cell" id="anim-sterren" onclick="selectAnimatie('sterren')"><div class="anim-icon">⭐</div><div class="anim-name">Sterren</div></div>
+      <div class="anim-cell" id="anim-sneeuw" onclick="selectAnimatie('sneeuw')"><div class="anim-icon">❄</div><div class="anim-name">Sneeuw</div></div>
+      <div class="anim-cell" id="anim-regen" onclick="selectAnimatie('regen')"><div class="anim-icon">🌧</div><div class="anim-name">Regen</div></div>
+      <div class="anim-cell" id="anim-bladeren" onclick="selectAnimatie('bladeren')"><div class="anim-icon">🍂</div><div class="anim-name">Bladeren</div></div>
+      <div class="anim-cell" id="anim-bubbels" onclick="selectAnimatie('bubbels')"><div class="anim-icon">🫧</div><div class="anim-name">Bubbels</div></div>
+      <div class="anim-cell" id="anim-vlinders" onclick="selectAnimatie('vlinders')"><div class="anim-icon">🦋</div><div class="anim-name">Vlinders</div></div>
+      <div class="anim-cell" id="anim-vuurvliegjes" onclick="selectAnimatie('vuurvliegjes')"><div class="anim-icon">✨</div><div class="anim-name">Vuurvliegjes</div></div>
+      <div class="anim-cell" id="anim-confetti" onclick="selectAnimatie('confetti')"><div class="anim-icon">🎉</div><div class="anim-name">Confetti</div></div>
+    </div>
+  </div>
+</div>
+<div class="panel" id="panel-lettertype">
+  <div class="section">
+    <div class="section-label">Kies je lettertype</div>
+    <div class="font-grid" id="fontGrid"></div>
+  </div>
+</div>
+<div class="panel" id="panel-kleur">
+  <div class="section">
+    <div class="section-label">Accentkleur</div>
+    <div class="card">
+      <div class="color-row"><input type="color" id="accentPicker" value="#c084fc" oninput="updateAccent(this.value)"/><input class="color-input" id="accentHex" value="#c084fc" oninput="updateAccentHex(this.value)"/></div>
+      <div class="swatches">
+        <div class="swatch selected" style="background:#c084fc" onclick="updateAccent('#c084fc')"></div>
+        <div class="swatch" style="background:#f472b6" onclick="updateAccent('#f472b6')"></div>
+        <div class="swatch" style="background:#38bdf8" onclick="updateAccent('#38bdf8')"></div>
+        <div class="swatch" style="background:#4ade80" onclick="updateAccent('#4ade80')"></div>
+        <div class="swatch" style="background:#fb923c" onclick="updateAccent('#fb923c')"></div>
+        <div class="swatch" style="background:#facc15" onclick="updateAccent('#facc15')"></div>
+        <div class="swatch" style="background:#f87171" onclick="updateAccent('#f87171')"></div>
+        <div class="swatch" style="background:#a78bfa" onclick="updateAccent('#a78bfa')"></div>
+        <div class="swatch" style="background:#34d399" onclick="updateAccent('#34d399')"></div>
+        <div class="swatch" style="background:#e879f9" onclick="updateAccent('#e879f9')"></div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">Tweede accentkleur</div>
+    <div class="card">
+      <div class="color-row"><input type="color" id="accent2Picker" value="#f0abfc" oninput="updateAccent2(this.value)"/><input class="color-input" id="accent2Hex" value="#f0abfc" oninput="updateAccent2Hex(this.value)"/></div>
+      <div class="swatches">
+        <div class="swatch selected" style="background:#f0abfc" onclick="updateAccent2('#f0abfc')"></div>
+        <div class="swatch" style="background:#fbcfe8" onclick="updateAccent2('#fbcfe8')"></div>
+        <div class="swatch" style="background:#bae6fd" onclick="updateAccent2('#bae6fd')"></div>
+        <div class="swatch" style="background:#bbf7d0" onclick="updateAccent2('#bbf7d0')"></div>
+        <div class="swatch" style="background:#fed7aa" onclick="updateAccent2('#fed7aa')"></div>
+        <div class="swatch" style="background:#fef08a" onclick="updateAccent2('#fef08a')"></div>
+        <div class="swatch" style="background:#fecaca" onclick="updateAccent2('#fecaca')"></div>
+        <div class="swatch" style="background:#ddd6fe" onclick="updateAccent2('#ddd6fe')"></div>
+        <div class="swatch" style="background:#a7f3d0" onclick="updateAccent2('#a7f3d0')"></div>
+        <div class="swatch" style="background:#f5d0fe" onclick="updateAccent2('#f5d0fe')"></div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">Live preview</div>
+    <div class="card">
+      <div style="display:flex;gap:10px;align-items:center;">
+        <div style="width:44px;height:44px;border-radius:50%;padding:2px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:20px;">🌿</div>
+        <div><div style="font-size:14px;color:var(--accent);font-weight:500;">Jouw naam</div><div style="font-size:14px;color:var(--muted);">Jouw bio hier</div></div>
+      </div>
+      <div style="margin-top:10px;padding:8px 14px;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;font-size:15px;font-weight:600;text-align:center;">Knop voorbeeld</div>
+    </div>
+  </div>
+</div>
+<div class="panel" id="panel-widgets">
+  <div class="section">
+    <div class="section-label">Actieve widgets</div>
+    <div class="widget-list">
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📖</div><div><div class="widget-name">Gastenboek</div><div class="widget-desc">Vrienden laten berichten achter</div></div></div><div class="toggle on" id="widget-gastenboek" onclick="toggleWidget('gastenboek')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">😊</div><div><div class="widget-name">Mood</div><div class="widget-desc">Toon hoe je je voelt</div></div></div><div class="toggle on" id="widget-mood" onclick="toggleWidget('mood')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎵</div><div><div class="widget-name">Muziek</div><div class="widget-desc">Deel wat je luistert</div></div></div><div class="toggle on" id="widget-muziek" onclick="toggleWidget('muziek')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📷</div><div><div class="widget-name">Foto grid</div><div class="widget-desc">3x3 fotos op je profiel</div></div></div><div class="toggle off" id="widget-fotos" onclick="toggleWidget('fotos')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🖼</div><div><div class="widget-name">Foto grid 2×2</div><div class="widget-desc">4 fotos op je profiel</div></div></div><div class="toggle off" id="widget-fotos2x2" onclick="toggleWidget('fotos2x2')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🌅</div><div><div class="widget-name">Grote foto</div><div class="widget-desc">Eén uitgelichte foto</div></div></div><div class="toggle off" id="widget-fotosgroot" onclick="toggleWidget('fotosgroot')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎞</div><div><div class="widget-name">Foto strip</div><div class="widget-desc">4 fotos op een rij</div></div></div><div class="toggle off" id="widget-fotosbanner" onclick="toggleWidget('fotosbanner')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📸</div><div><div class="widget-name">Portret strip</div><div class="widget-desc">3 fotos onder elkaar</div></div></div><div class="toggle off" id="widget-fotos1x3" onclick="toggleWidget('fotos1x3')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎨</div><div><div class="widget-name">Uitgelicht + 4 klein</div><div class="widget-desc">Eén grote, vier kleine fotos</div></div></div><div class="toggle off" id="widget-fotosfeatured" onclick="toggleWidget('fotosfeatured')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🗃</div><div><div class="widget-name">Polaroid grid</div><div class="widget-desc">6 fotos als polaroids</div></div></div><div class="toggle off" id="widget-fotosmasonry" onclick="toggleWidget('fotosmasonry')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📌</div><div><div class="widget-name">Zwevende Polaroids</div><div class="widget-desc">3 fotos los en schuin</div></div></div><div class="toggle off" id="widget-fotoszwevend" onclick="toggleWidget('fotoszwevend')"><div class="toggle-dot"></div></div></div>
+    </div>
+    <div style="margin-top:24px;text-align:center;">
+      <span onclick="testTogglePlus()" id="testPlusLink" style="font-size:11px;color:rgba(255,255,255,0.15);cursor:pointer;">🔧 test</span>
+    </div>
+    <div style="display:none;">
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">✍</div><div><div class="widget-name">Quote</div><div class="widget-desc">Favoriete citaat tonen</div></div></div><div class="toggle off" id="widget-quote" onclick="toggleWidget('quote')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎬</div><div><div class="widget-name">Video clip</div><div class="widget-desc">Korte mp4 op je profiel</div></div></div><div class="toggle off" id="widget-video" onclick="toggleWidget('video')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⏰</div><div><div class="widget-name">Countdown</div><div class="widget-desc">Aftellen naar een datum</div></div></div><div class="toggle off" id="widget-countdown" onclick="toggleWidget('countdown')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🗺</div><div><div class="widget-name">Locatie</div><div class="widget-desc">Toon je stad</div></div></div><div class="toggle off" id="widget-locatie" onclick="toggleWidget('locatie')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📊</div><div><div class="widget-name">Poll</div><div class="widget-desc">Laat vrienden stemmen</div></div></div><div class="toggle off" id="widget-poll" onclick="toggleWidget('poll')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">❓</div><div><div class="widget-name">Vragen</div><div class="widget-desc">Vrienden stellen vragen</div></div></div><div class="toggle off" id="widget-vragen" onclick="toggleWidget('vragen')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🔗</div><div><div class="widget-name">Links</div><div class="widget-desc">Handige links delen</div></div></div><div class="toggle off" id="widget-links" onclick="toggleWidget('links')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎨</div><div><div class="widget-name">Sticker board</div><div class="widget-desc">Collage van stickers</div></div></div><div class="toggle off" id="widget-stickerboard" onclick="toggleWidget('stickerboard')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏆</div><div><div class="widget-name">Achievements</div><div class="widget-desc">Badges verdienen</div></div></div><div class="toggle off" id="widget-achievements" onclick="toggleWidget('achievements')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎮</div><div><div class="widget-name">Mini game</div><div class="widget-desc">Speel een spel op profiel</div></div></div><div class="toggle off" id="widget-game" onclick="toggleWidget('game')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📅</div><div><div class="widget-name">Agenda</div><div class="widget-desc">Deel aankomende events</div></div></div><div class="toggle off" id="widget-agenda" onclick="toggleWidget('agenda')"><div class="toggle-dot"></div></div></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">Muziek uploaden</div>
+    <div class="upload-zone" onclick="document.getElementById('muziekUpload').click()">
+      <div class="upload-icon">🎵</div>
+      <div class="upload-text" id="muziekUploadTekst">Upload een muziekbestand</div>
+      <div class="upload-formats">MP3, M4A, OGG — wordt verkleind naar 128kbps</div>
+    </div>
+    <input type="file" id="muziekUpload" accept="audio/*,.mp3,.m4a,.ogg,.wav,audio/mpeg,audio/mp4" style="display:none" onchange="verwerkMuziek(event)"/>
+    <div class="status-msg" id="muziekStatus"></div>
+  </div>
+</div>
+<div class="panel" id="panel-stickers">
+  <div class="section"><div class="section-label">Actieve stickers</div><div class="sticker-galerij" id="actieveStickers"></div></div>
+  <div class="section"><div class="section-label">Natuur & Planten</div><div class="sticker-galerij" id="stickerNatuur"></div></div>
+  <div class="section"><div class="section-label">Sfeer & Magie</div><div class="sticker-galerij" id="stickerMagie"></div></div>
+  <div class="section"><div class="section-label">Muziek & Kunst</div><div class="sticker-galerij" id="stickerKunst"></div></div>
+  <div class="section"><div class="section-label">Dieren</div><div class="sticker-galerij" id="stickerDieren"></div></div>
+  <div class="section">
+    <div class="section-label">Eigen sticker uploaden</div>
+    <div class="upload-zone" onclick="document.getElementById('stickerUpload').click()">
+      <div class="upload-icon">🎨</div>
+      <div class="upload-text">Upload je eigen sticker</div>
+      <div class="upload-formats">PNG, WEBP, SVG, GIF — max 2MB</div>
+    </div>
+    <input type="file" id="stickerUpload" accept="image/*" style="display:none"/>
+  </div>
+</div>
+<div class="bottom-nav">
+  <div class="nav-item" onclick="window.location.href='index.html'"><div class="nav-icon">🏠</div>Home</div>
+  <div class="nav-item" onclick="window.location.href='vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
+  <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
+  <div class="nav-item active"><div class="nav-icon">👤</div>Profiel</div>
+</div>
+<script src="lame.min.js"></script>
+<script type="module">
+import { supabase } from './supabase.js'
+import { laadThema } from './thema.js'
+import { startHeartbeat } from './heartbeat.js'
+import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js'
+
+var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
+const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
+const stickers={natuur:['🌿','🌸','🌺','🌻','🍀','🌱','🌾','🍃','🌴','🌊','🍂','🌹','🌷','🌼','🍁'],magie:['✨','🔮','🌙','⭐','💫','🌟','🔯','🌠','🌌','🪄','💎','🌈','⚡','🔥','🌀'],kunst:['🎵','🎸','🎨','🎭','🎬','📷','🎪','🎯','🎲','🎹','🥁','🎺','🎻','🖼','✏'],dieren:['🦋','🦊','🐱','🐺','🦄','🐉','🦁','🐻','🦝','🦔','🐧','🦅','🐠','🐬','🦋']}
+const fonts=[{naam:'DM Sans',familie:"'DM Sans',sans-serif",stijl:'Modern & Clean'},{naam:'Playfair Display',familie:"'Playfair Display',serif",stijl:'Elegant & Klassiek'},{naam:'DM Mono',familie:"'DM Mono',monospace",stijl:'Technisch & Strak'},{naam:'Raleway',familie:"'Raleway',sans-serif",stijl:'Licht & Stijlvol'},{naam:'Lora',familie:"'Lora',serif",stijl:'Literair & Warm'},{naam:'Merriweather',familie:"'Merriweather',serif",stijl:'Leesbaar & Solide'},{naam:'Bebas Neue',familie:"'Bebas Neue',cursive",stijl:'Vet & Impactvol'},{naam:'Oswald',familie:"'Oswald',sans-serif",stijl:'Compact & Krachtig'},{naam:'Pacifico',familie:"'Pacifico',cursive",stijl:'Speels & Retro'},{naam:'Dancing Script',familie:"'Dancing Script',cursive",stijl:'Vloeiend & Handgeschreven'},{naam:'Great Vibes',familie:"'Great Vibes',cursive",stijl:'Kalligrafisch & Sierlijk'},{naam:'Space Mono',familie:"'Space Mono',monospace",stijl:'Ruimtelijk & Futuristisch'},{naam:'Courier Prime',familie:"'Courier Prime',monospace",stijl:'Vintage & Schrijfmachine'},{naam:'Quicksand',familie:"'Quicksand',sans-serif",stijl:'Vriendelijk & Zacht'},{naam:'Nunito',familie:"'Nunito',sans-serif",stijl:'Rond & Toegankelijk'},{naam:'Righteous',familie:"'Righteous',cursive",stijl:'Retro & Energiek'},{naam:'Comfortaa',familie:"'Comfortaa',cursive",stijl:'Comfortabel & Modern'},{naam:'Cinzel',familie:"'Cinzel',serif",stijl:'Klassiek & Imposant'},{naam:'Satisfy',familie:"'Satisfy',cursive",stijl:'Casual & Vloeiend'},{naam:'Lobster',familie:"'Lobster',cursive",stijl:'Vrolijk & Opvallend'}]
+function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
+async function slaFotoOp(id,data){const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=resolve})}
+async function laadFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
+function comprimeerFoto(file,maxBreedte,kwaliteit){return new Promise((resolve)=>{const reader=new FileReader();reader.onload=function(e){const img=new Image();img.onload=function(){const canvas=document.createElement('canvas');let w=img.width,h=img.height;if(w>maxBreedte){h=h*maxBreedte/w;w=maxBreedte}if(h>maxBreedte){w=w*maxBreedte/h;h=maxBreedte}canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);// WebP voor kleinste bestandsgrootte
+resolve(canvas.toDataURL('image/webp',kwaliteit))};img.src=e.target.result};reader.readAsDataURL(file)})}
+
+// Video compressie via MediaRecorder (thumbnail + gecomprimeerde versie)
+async function comprimeerVideo(file) {
+  return new Promise((resolve) => {
+    const maxMB = 15
+    const maxBytes = maxMB * 1024 * 1024
+    // Als video al klein genoeg is, direct opslaan
+    if (file.size <= maxBytes) {
+      const reader = new FileReader()
+      reader.onload = e => resolve(e.target.result)
+      reader.readAsDataURL(file)
+      return
+    }
+    // Anders: gebruik canvas om te comprimeren via video element
+    const video = document.createElement('video')
+    const url = URL.createObjectURL(file)
+    video.src = url
+    video.muted = true
+    video.onloadedmetadata = () => {
+      // Bereken schaalfactor voor 720p
+      const schaal = Math.min(1, 720 / video.videoHeight, 1280 / video.videoWidth)
+      const w = Math.round(video.videoWidth * schaal)
+      const h = Math.round(video.videoHeight * schaal)
+      const canvas = document.createElement('canvas')
+      canvas.width = w; canvas.height = h
+      const stream = canvas.captureStream(24)
+      const recorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm;codecs=vp9',
+        videoBitsPerSecond: 1_000_000 // 1Mbps
+      })
+      const chunks = []
+      recorder.ondataavailable = e => chunks.push(e.data)
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' })
+        const reader = new FileReader()
+        reader.onload = e => { URL.revokeObjectURL(url); resolve(e.target.result) }
+        reader.readAsDataURL(blob)
+      }
+      recorder.start()
+      video.play()
+      const ctx = canvas.getContext('2d')
+      function frame() {
+        if (video.ended || video.paused) { recorder.stop(); return }
+        ctx.drawImage(video, 0, 0, w, h)
+        requestAnimationFrame(frame)
+      }
+      frame()
+      // Stop na max 60 seconden
+      setTimeout(() => { if (recorder.state === 'recording') recorder.stop() }, 60000)
+    }
+  })
+}
+
+// Muziek compressie: mp3 128kbps mono via lamejs
+async function comprimeerMuziek(file) {
+  const arrayBuf = await file.arrayBuffer()
+  const ctx = new (window.AudioContext || window.webkitAudioContext)()
+  const buffer = await ctx.decodeAudioData(arrayBuf)
+  ctx.close()
+  // Mono samples ophalen als Int16
+  const ch = buffer.getChannelData(0)
+  const samples = new Int16Array(ch.length)
+  for (let i = 0; i < ch.length; i++) {
+    const s = Math.max(-1, Math.min(1, ch[i]))
+    samples[i] = s < 0 ? s * 0x8000 : s * 0x7FFF
+  }
+  const encoder = new lamejs.Mp3Encoder(1, buffer.sampleRate, 128)
+  const delen = []
+  const blok = 1152
+  for (let i = 0; i < samples.length; i += blok) {
+    const stuk = samples.subarray(i, i + blok)
+    const mp3 = encoder.encodeBuffer(stuk)
+    if (mp3.length > 0) delen.push(mp3)
+  }
+  const rest = encoder.flush()
+  if (rest.length > 0) delen.push(rest)
+  const blob = new Blob(delen, { type: 'audio/mp3' })
+  return new Promise((resolve) => {
+    const r = new FileReader()
+    r.onload = e => resolve(e.target.result)
+    r.readAsDataURL(blob)
+  })
+}
+
+window.verwerkMuziek = async function(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  const status = document.getElementById('muziekStatus')
+  const maxMB = 25
+  if (file.size > maxMB * 1024 * 1024) {
+    status.className = 'status-msg error'
+    status.textContent = 'Bestand te groot (max ' + maxMB + ' MB)'
+    return
+  }
+  try {
+    status.className = 'status-msg'
+    status.textContent = 'Bezig met verkleinen...'
+    const data = await comprimeerMuziek(file)
+    await slaFotoOp('muziek_track', data)
+    await slaFotoOp('muziek_titel', file.name.replace(/\.[^.]+$/, ''))
+    document.getElementById('muziekUploadTekst').textContent = file.name
+    status.className = 'status-msg success'
+    status.textContent = 'Muziek opgeslagen (' + Math.round(data.length * 0.75 / 1024) + ' KB)'
+  } catch(err) {
+    status.className = 'status-msg error'
+    status.textContent = 'Mislukt: ' + err.message
+  }
+}
+
+function audioBufferToWav(buffer) {
+  const numCh = buffer.numberOfChannels
+  const len = buffer.length * numCh * 2 + 44
+  const ab = new ArrayBuffer(len)
+  const view = new DataView(ab)
+  const sr = buffer.sampleRate
+  function str(v,o,s){for(let i=0;i<s.length;i++)view.setUint8(o+i,s.charCodeAt(i))}
+  function u16(o,v){view.setUint16(o,v,true)}
+  function u32(o,v){view.setUint32(o,v,true)}
+  str(0,0,'RIFF');u32(4,len-8);str(8,0,'WAVE');str(12,0,'fmt ')
+  u32(16,16);u16(20,1);u16(22,numCh);u32(24,sr);u32(28,sr*numCh*2)
+  u16(32,numCh*2);u16(34,16);str(36,0,'data');u32(40,len-44)
+  let offset=44
+  for(let i=0;i<buffer.length;i++){
+    for(let ch=0;ch<numCh;ch++){
+      const s=Math.max(-1,Math.min(1,buffer.getChannelData(ch)[i]))
+      view.setInt16(offset,s<0?s*0x8000:s*0x7FFF,true);offset+=2
+    }
+  }
+  return ab
+}
+async function init(){
+  const{data:{session}}=await supabase.auth.getSession()
+  if(!session){window.location.href='login.html';return}
+  huidigeUser=session.user
+  await laadThema()
+  await startHeartbeat()
+  const{data}=await supabase.from('profiles').select('*').eq('id',huidigeUser.id).single()
+  profiel=data
+  if(profiel){
+    // ── Laad alles uit localStorage ──
+    const lokaal = JSON.parse(localStorage.getItem('fibro_profiel') || '{}')
+
+    document.getElementById('editNaam').value=lokaal.naam||''
+    const loginNaam = profiel.username || huidigeUser.id
+    const weergave = document.getElementById('usernameWeergave')
+    if (weergave) weergave.textContent = loginNaam
+    const prevUsername = document.getElementById('previewUsername')
+    if (prevUsername) prevUsername.textContent = '@' + loginNaam
+    document.getElementById('editBio').value=lokaal.bio||''
+    const opgeslagenMood = lokaal.mood || profiel.mood || ''
+    // Scheidt emoji van tekst
+    const moodEmoji = opgeslagenMood.match(/^\p{Emoji}/u)?.[0] || '😊'
+    const moodTekst = opgeslagenMood.replace(/^\p{Emoji}\s*/u, '')
+    gekozenMoodEmoji = moodEmoji
+    document.getElementById('moodEmojiGekozen').textContent = moodEmoji
+    document.getElementById('editMood').value = moodTekst
+    isOnline = profiel.online_status ?? true
+    document.getElementById('onlineDot').style.background = isOnline ? '#22c55e' : '#6b7280'
+    document.getElementById('onlineLabel').textContent = isOnline ? 'Online' : 'Offline'
+
+    const userId=huidigeUser.id
+    const opgeslagenFoto=await laadFotoUitDB('avatar_thumbnail_'+userId)
+    if(opgeslagenFoto){document.getElementById('avatarEmoji').innerHTML=`<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;document.getElementById('previewAvatar').innerHTML=`<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`}
+    else{const av=lokaal.avatar||profiel.avatar_url||'🌿';document.getElementById('avatarEmoji').textContent=av;document.getElementById('previewAvatar').textContent=av}
+
+    document.getElementById('previewNaam').textContent=lokaal.naam||profiel.username||'Jouw naam'
+    document.getElementById('previewBio').textContent=lokaal.bio||'Jouw bio verschijnt hier'
+
+    if(lokaal.accentKleur)updateAccent(lokaal.accentKleur)
+    if(lokaal.accentKleur2)updateAccent2(lokaal.accentKleur2)
+    if(lokaal.bgKleur)updateBgKleur(lokaal.bgKleur)
+    if(lokaal.animatie){huidigeAnimatie=lokaal.animatie;updateAnimatieUI()}
+    if(lokaal.lettertype){huidigLettertype=lokaal.lettertype;document.body.style.fontFamily=lokaal.lettertype}
+    if(lokaal.widgets)actieveWidgets=lokaal.widgets
+    if(lokaal.stickers)actieveStickers=lokaal.stickers
+    const bestaandeWallpaper=await laadFotoUitDB('bg_wallpaper_'+userId)
+    if(bestaandeWallpaper){document.getElementById('uploadedWallpaper').innerHTML=`<img src="${bestaandeWallpaper}" style="width:100%;height:100%;object-fit:cover;">`;document.getElementById('uploadPreview').style.display='block';zetWallpaperLaag(bestaandeWallpaper)}
+  }
+  // P2P foto-sync initialiseren
+  if (huidigeUser?.id) initP2pFoto(huidigeUser.id, {
+    onFotoOntvangen: (vriendId, blob, meta) => console.log('📷 Foto ontvangen van', vriendId),
+    onStatus: (vriendId, status) => console.log('P2P status:', vriendId, status)
+  })
+  // P2P foto-sync initialiseren
+  if (huidigeUser?.id) initP2pFoto(huidigeUser.id, { onFotoOntvangen: (vriendId, blob, meta) => console.log('📷 Foto:', vriendId), onStatus: (vriendId, status) => console.log('P2P', vriendId, status) })
+  bouwFontGrid();bouwStickerGrids();bouwAvatarPicker();updateWidgetToggles();updateActieveStickers()
+  document.getElementById('editNaam').oninput=updatePreview
+  document.getElementById('editBio').oninput=updatePreview
+}
+function updatePreview(){document.getElementById('previewNaam').textContent=document.getElementById('editNaam').value||'Jouw naam';document.getElementById('previewBio').textContent=document.getElementById('editBio').value||'Jouw bio verschijnt hier'}
+window.switchTab=function(tab){document.querySelectorAll('.main-tab').forEach((t,i)=>{const tabs=['profiel','achtergrond','animatie','lettertype','kleur','widgets','stickers'];t.classList.toggle('active',tabs[i]===tab)});document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('panel-'+tab).classList.add('active');if(tab==='animatie')startAnimatiePreview();else stopAnimatiePreview()}
+function bouwAvatarPicker(){const picker=document.getElementById('avatarPicker');picker.innerHTML='';avatarEmojis.forEach(e=>{const span=document.createElement('span');span.className='emoji-opt';span.textContent=e;span.onclick=()=>{document.getElementById('avatarEmoji').textContent=e;document.getElementById('previewAvatar').textContent=e;document.getElementById('avatarPickerWrap').style.display='none'};picker.appendChild(span)})}
+window.switchAvatarTab=function(tab){if(tab==='emoji'){document.getElementById('avatarEmojiTab').style.display='block';document.getElementById('avatarFotoTab').style.display='none';document.getElementById('tabEmoji').style.cssText='flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;';document.getElementById('tabFoto').style.cssText='flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;'}else{document.getElementById('avatarEmojiTab').style.display='none';document.getElementById('avatarFotoTab').style.display='block';document.getElementById('tabFoto').style.cssText='flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;';document.getElementById('tabEmoji').style.cssText='flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;'}}
+window.verwerkFoto=async function(event){const file=event.target.files[0];if(!file)return;const volledig=await comprimeerFoto(file,1080,0.85);const thumbnail=await comprimeerFoto(file,80,0.85);const userId=huidigeUser.id;await slaFotoOp('avatar_volledig_'+userId,volledig);await slaFotoOp('avatar_thumbnail_'+userId,thumbnail);document.getElementById('fotoPreview').src=volledig;document.getElementById('fotoPreviewWrap').style.display='block';window._fotoVolledig=volledig;window._fotoThumbnail=thumbnail}
+window.bevestigFoto=function(){const src=window._fotoThumbnail;document.getElementById('avatarEmoji').innerHTML=`<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;document.getElementById('previewAvatar').innerHTML=`<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;document.getElementById('avatarPickerWrap').style.display='none';window._fotoAvatar=src}
+window.toggleAvatarPicker=function(){const w=document.getElementById('avatarPickerWrap');w.style.display=w.style.display==='none'?'block':'none'}
+window.setAchtergrondType=function(type){document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));document.getElementById('type-'+type).classList.add('active');document.getElementById('bg-kleur-sectie').style.display=type==='kleur'?'block':'none';document.getElementById('bg-gradient-sectie').style.display=type==='gradient'?'block':'none';document.getElementById('bg-wallpaper-sectie').style.display=type==='wallpaper'?'block':'none';document.getElementById('bg-upload-sectie').style.display=type==='upload'?'block':'none'}
+window.updateBgKleur=function(k){document.getElementById('bgKleurPicker').value=k;document.getElementById('bgKleurHex').value=k;document.documentElement.style.setProperty('--bg',k)}
+window.updateBgKleurHex=function(v){if(/^#[0-9a-f]{6}$/i.test(v))updateBgKleur(v)}
+window.updateGradient=function(){const k1=document.getElementById('grad1Picker').value,k2=document.getElementById('grad2Picker').value;document.getElementById('gradientPreview').style.background=`linear-gradient(135deg,${k1},${k2})`;document.documentElement.style.setProperty('--bg',k1)}
+window.selectWallpaper=function(naam,el){document.querySelectorAll('.wallpaper-cell').forEach(c=>c.classList.remove('selected'));el.classList.add('selected')}
+window.zetWallpaperLaag=function(url){let laag=document.getElementById('fibro-wallpaper');if(!laag){laag=document.createElement('div');laag.id='fibro-wallpaper';laag.style.cssText='position:fixed;inset:0;z-index:-1;background-size:cover;background-position:center;background-repeat:no-repeat;pointer-events:none;';document.body.prepend(laag)}laag.style.backgroundImage='url('+url+')';document.body.style.backgroundImage='';document.body.style.background='transparent';document.documentElement.style.setProperty('--bg','transparent')};
+window.weghaalWallpaperLaag=function(){const laag=document.getElementById('fibro-wallpaper');if(laag)laag.remove()};
+window.uploadAchtergrond=async function(input){const bestand=input.files[0];if(!bestand)return;if(bestand.size>10*1024*1024){alert('Bestand te groot! Max 10MB.');return};const userId=huidigeUser.id;if(bestand.type.startsWith('video')){const url=URL.createObjectURL(bestand);document.getElementById('uploadedWallpaper').innerHTML=`<video src="${url}" autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>`;document.getElementById('uploadPreview').style.display='block';zetWallpaperLaag(url);return};const gecomprimeerd=await comprimeerFoto(bestand,1080,0.85);await slaFotoOp('bg_wallpaper_'+userId,gecomprimeerd);document.getElementById('uploadedWallpaper').innerHTML=`<img src="${gecomprimeerd}" style="width:100%;height:100%;object-fit:cover;">`;document.getElementById('uploadPreview').style.display='block';zetWallpaperLaag(gecomprimeerd)}
+window.verwijderWallpaper=async function(){const userId=huidigeUser.id;const db=await openDB();await new Promise(resolve=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').delete('bg_wallpaper_'+userId);tx.oncomplete=resolve});weghaalWallpaperLaag();document.body.style.backgroundImage='';document.documentElement.style.setProperty('--bg','#1a0a2e');document.getElementById('uploadPreview').style.display='none';document.getElementById('uploadedWallpaper').innerHTML='';document.getElementById('bgUpload').value=''}
+var deeltjes=[]
+window.selectAnimatie=function(naam){huidigeAnimatie=naam;updateAnimatieUI();startAnimatiePreview()}
+function updateAnimatieUI(){document.querySelectorAll('.anim-cell').forEach(c=>c.classList.remove('selected'));const el=document.getElementById('anim-'+huidigeAnimatie);if(el)el.classList.add('selected')}
+function startAnimatiePreview(){stopAnimatiePreview();const canvas=document.getElementById('previewCanvas');if(!canvas)return;const ctx=canvas.getContext('2d');canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;if(huidigeAnimatie==='geen'){ctx.clearRect(0,0,canvas.width,canvas.height);return};deeltjes=[];for(let i=0;i<60;i++)deeltjes.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*0.5,vy:Math.random()*0.8+0.2,grootte:Math.random()*3+1,alpha:Math.random(),kleur:huidigeAnimatie==='confetti'?`hsl(${Math.random()*360},80%,60%)`:'white'});function teken(){ctx.clearRect(0,0,canvas.width,canvas.height);deeltjes.forEach(d=>{ctx.globalAlpha=d.alpha;ctx.fillStyle=d.kleur;if(huidigeAnimatie==='sterren'||huidigeAnimatie==='vuurvliegjes'){ctx.beginPath();ctx.arc(d.x,d.y,d.grootte,0,Math.PI*2);ctx.fill();d.alpha=0.3+Math.sin(Date.now()*0.003+d.x)*0.7}else if(huidigeAnimatie==='sneeuw'||huidigeAnimatie==='bubbels'){ctx.beginPath();ctx.arc(d.x,d.y,d.grootte+1,0,Math.PI*2);ctx.fill();d.y+=d.vy*0.5;d.x+=Math.sin(Date.now()*0.001+d.y)*0.3}else if(huidigeAnimatie==='regen'){ctx.fillRect(d.x,d.y,1,d.grootte*4);d.y+=d.vy*3;d.x+=0.5}else{ctx.fillRect(d.x,d.y,d.grootte*2,d.grootte);d.y+=d.vy;d.x+=Math.sin(Date.now()*0.002+d.y)*0.8};if(d.y>canvas.height)d.y=-10;if(d.x>canvas.width)d.x=0;if(d.x<0)d.x=canvas.width});ctx.globalAlpha=1;animFrame=requestAnimationFrame(teken)};teken()}
+function stopAnimatiePreview(){if(animFrame){cancelAnimationFrame(animFrame);animFrame=null}}
+function bouwFontGrid(){const grid=document.getElementById('fontGrid');grid.innerHTML='';fonts.forEach(f=>{const div=document.createElement('div');div.className='font-item'+(huidigLettertype===f.familie?' selected':'');div.innerHTML=`<div class="font-preview" style="font-family:${f.familie};">${f.naam}</div><div class="font-zin" style="font-family:${f.familie};">Het leven is mooi & bijzonder</div><div class="font-name">${f.stijl}</div>`;div.onclick=()=>{document.querySelectorAll('.font-item').forEach(i=>i.classList.remove('selected'));div.classList.add('selected');document.body.style.fontFamily=f.familie;huidigLettertype=f.familie};grid.appendChild(div)})}
+window.updateAccent=function(k){document.getElementById('accentPicker').value=k;document.getElementById('accentHex').value=k;document.documentElement.style.setProperty('--accent',k)}
+window.updateAccentHex=function(v){if(/^#[0-9a-f]{6}$/i.test(v))updateAccent(v)}
+window.updateAccent2=function(k){document.getElementById('accent2Picker').value=k;document.getElementById('accent2Hex').value=k;document.documentElement.style.setProperty('--accent2',k)}
+window.updateAccent2Hex=function(v){if(/^#[0-9a-f]{6}$/i.test(v))updateAccent2(v)}
+window.testTogglePlus = async function() {
+  if (!huidigeUser) { alert('Geen gebruiker geladen — kan niet wisselen.'); return }
+  const { data: huidig, error: leesFout } = await supabase.from('profiles').select('is_plus').eq('id', huidigeUser.id).single()
+  if (leesFout) { alert('Lezen mislukt: ' + leesFout.message); return }
+  const gewenst = !(huidig && huidig.is_plus)
+  const { data: bijgewerkt, error: schrijfFout } = await supabase.from('profiles').update({ is_plus: gewenst }).eq('id', huidigeUser.id).select('is_plus').single()
+  if (schrijfFout) { alert('Schrijven mislukt: ' + schrijfFout.message); return }
+  if (!bijgewerkt) { alert('LET OP: update leverde geen rij op — mogelijk RLS-probleem of verkeerd id.'); return }
+  alert('Fibro+ test-status (bevestigd uit database): ' + (bijgewerkt.is_plus ? 'AAN' : 'UIT') + '\n\nHerlaad index.html om het effect te zien.')
+}
+
+window.toggleWidget=function(naam){const toggle=document.getElementById('widget-'+naam);if(actieveWidgets.includes(naam)){actieveWidgets=actieveWidgets.filter(w=>w!==naam);toggle.classList.remove('on');toggle.classList.add('off')}else{actieveWidgets.push(naam);toggle.classList.remove('off');toggle.classList.add('on')}}
+function updateWidgetToggles(){actieveWidgets.forEach(w=>{const el=document.getElementById('widget-'+w);if(el){el.classList.remove('off');el.classList.add('on')}})}
+function bouwStickerGrids(){bouwStickerGrid('stickerNatuur',stickers.natuur);bouwStickerGrid('stickerMagie',stickers.magie);bouwStickerGrid('stickerKunst',stickers.kunst);bouwStickerGrid('stickerDieren',stickers.dieren)}
+function bouwStickerGrid(id,lijst){const grid=document.getElementById(id);grid.innerHTML='';lijst.forEach(s=>{const div=document.createElement('div');div.className='sticker-item'+(actieveStickers.includes(s)?' selected':'');div.textContent=s;div.onclick=()=>{if(actieveStickers.includes(s)){actieveStickers=actieveStickers.filter(x=>x!==s);div.classList.remove('selected')}else{actieveStickers.push(s);div.classList.add('selected')};updateActieveStickers()};grid.appendChild(div)})}
+function updateActieveStickers(){const grid=document.getElementById('actieveStickers');grid.innerHTML='';if(actieveStickers.length===0){grid.innerHTML='<div style="font-size:15px;color:var(--muted);padding:8px;">Nog geen stickers gekozen</div>';return};actieveStickers.forEach(s=>{const div=document.createElement('div');div.className='sticker-item selected';div.textContent=s;grid.appendChild(div)})}
+// ── Haal avatar data op voor Supabase ──
+async function haalAvatarDataOp() {
+  const userId = huidigeUser?.id
+  if (!userId) return null
+  try {
+    const db = await openDB()
+    return new Promise(resolve => {
+      const req = db.transaction('fotos').objectStore('fotos').get('avatar_thumbnail_' + userId)
+      req.onsuccess = e => resolve(e.target.result?.data || null)
+      req.onerror = () => resolve(null)
+    })
+  } catch(e) { return null }
+}
+
+// ── Haal wallpaper data op voor Supabase ──
+async function haalWallpaperDataOp() {
+  const userId = huidigeUser?.id
+  if (!userId) return null
+  try {
+    const db = await openDB()
+    return new Promise(resolve => {
+      const req = db.transaction('fotos').objectStore('fotos').get('bg_wallpaper_' + userId)
+      req.onsuccess = e => resolve(e.target.result?.data || null)
+      req.onerror = () => resolve(null)
+    })
+  } catch(e) { return null }
+}
+
+window.slaAllesOp=async function(){
+  const naam=document.getElementById('editNaam').value.trim()
+  const bio=document.getElementById('editBio').value.trim()
+  const mood = gekozenMoodEmoji + ' ' + document.getElementById('editMood').value.trim()
+  const avatar=document.getElementById('avatarEmoji').textContent
+  const accentKleur=document.getElementById('accentHex').value
+  const accentKleur2=document.getElementById('accent2Hex').value
+  const bgKleur=document.getElementById('bgKleurHex').value
+
+  // ── Alles lokaal opslaan ──
+  const lokaalProfiel = {
+    naam, bio, mood, avatar,
+    accentKleur, accentKleur2, bgKleur,
+    animatie: huidigeAnimatie,
+    lettertype: huidigLettertype,
+    widgets: actieveWidgets,
+    stickers: actieveStickers
+  }
+  localStorage.setItem('fibro_profiel', JSON.stringify(lokaalProfiel))
+
+  // ── Sync naar widget-layout voor index.html ──
+  const WMAP = {
+    mood:       { id:'mood',       icon:'😊', titel:'Mood',          w:4, h:1 },
+    muziek:     { id:'muziek',     icon:'🎵', titel:'Muziek player', w:4, h:2 },
+    quote:      { id:'quote',      icon:'✍', titel:'Quote',         w:4, h:1 },
+    fotos:      { id:'fotos_3x3',  icon:'📷', titel:'Foto grid 3×3', w:4, h:3 },
+    fotos2x2:      { id:'fotos_2x2',      icon:'🖼', titel:'Foto grid 2×2',        w:2, h:2 },
+    fotosgroot:    { id:'fotos_groot',    icon:'🌅', titel:'Grote foto',           w:4, h:2 },
+    fotosbanner:   { id:'fotos_banner',   icon:'🎞', titel:'Foto strip',           w:4, h:1 },
+    fotos1x3:      { id:'fotos_1x3',      icon:'📸', titel:'Portret strip',        w:2, h:3 },
+    fotosfeatured: { id:'fotos_featured', icon:'🎨', titel:'Uitgelicht + 4 klein', w:4, h:3 },
+    fotosmasonry:  { id:'fotos_masonry',  icon:'🗃', titel:'Polaroid grid',        w:4, h:3 },
+    fotoszwevend:  { id:'fotos_zwevend',  icon:'📌', titel:'Zwevende Polaroids',   w:4, h:3, geenHeader:true },
+    poll:       { id:'poll',       icon:'🗳', titel:'Poll',          w:4, h:3 },
+    countdown:  { id:'afteltimer', icon:'⏳', titel:'Afteltimer',    w:4, h:2 },
+    gastenboek: { id:'gastenboek', icon:'📖', titel:'Gastenboek',    w:4, h:4 }
+  }
+  const wLayout = actieveWidgets.filter(n => WMAP[n]).map((n, i) => ({ ...WMAP[n], volgorde: i, aan: true }))
+  localStorage.setItem('fibro_widgets_profiel', JSON.stringify(wLayout))
+
+
+  // ── Alleen technische sync naar Supabase (geen PII) ──
+  const{error}=await supabase.from('profiles').upsert({
+    id:huidigeUser.id,
+    username:profiel?.username||huidigeUser.id,
+    updated_at:new Date().toISOString(),
+    accent_kleur:accentKleur,
+    accent_kleur2:accentKleur2,
+    achtergrond_kleur:bgKleur,
+    lettertype:huidigLettertype,
+    animatie:huidigeAnimatie,
+    online_status:isOnline,
+    offline_emoji:gekozenMoodEmoji,
+    offline_bericht:document.getElementById('editMood').value.trim() || 'Offline',
+    avatar_data: await haalAvatarDataOp(),
+    wallpaper_data: await haalWallpaperDataOp()
+  })
+
+  const msg=document.getElementById('statusMsg')
+  if(error){msg.className='status-msg error';msg.textContent='✗ Opslaan mislukt: '+error.message}
+  else{msg.className='status-msg success';msg.textContent='✓ Profiel opgeslagen!';setTimeout(()=>msg.className='status-msg',2000)}
+  window.scrollTo(0,0)
+}
+window.uitloggen=async function(){await supabase.auth.signOut();window.location.href='login.html'}
+
+window.activeerPushNotificaties = async function() {
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      alert('Push notificaties worden niet ondersteund op dit apparaat.')
+      return
+    }
+    const reg = await navigator.serviceWorker.register('/Fibro/service-worker.js')
+    await navigator.serviceWorker.ready
+    const toestemming = await Notification.requestPermission()
+    if (toestemming !== 'granted') {
+      alert('Toestemming geweigerd. Zet notificaties aan in je instellingen.')
+      return
+    }
+    const { data: { session } } = await supabase.auth.getSession()
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: 'BBTo5083-joPZ8FjJW0_lIMuyUWP3T6b6cul22b971RK033GrXdRzFyPUbSE8aoTADuQmdRtVOq1CI2n3v-RLyA'
+    })
+    await supabase.from('push_subscriptions').upsert({
+      user_id: session.user.id,
+      subscription: sub.toJSON()
+    }, { onConflict: 'user_id,endpoint' })
+    alert('✅ Notificaties ingeschakeld!')
+  } catch(e) {
+    alert('Fout: ' + e.message)
+  }
+}
+
+let isOnline = true
+window.toggleOnlineStatus = async function() {
+  isOnline = !isOnline
+  document.getElementById('onlineDot').style.background = isOnline ? '#22c55e' : '#6b7280'
+  document.getElementById('onlineLabel').textContent = isOnline ? 'Online' : 'Offline'
+  await supabase.from('profiles').update({
+    online_status: isOnline
+  }).eq('id', huidigeUser.id)
+}
+init()
+
+  // ─── Mood emoji picker ───
+  const MOOD_EMOJIS = [
+    // Blij
+    '😊','😄','😁','🥰','😍','🤩','😎','🥳','😇','🤗',
+    // Verdrietig
+    '😢','😭','😔','😞','🥺','😟','💔','😪','😩','🫂',
+    // Boos
+    '😠','😤','🤬','😒','🙄','😑','😶','🫠','💢','😾',
+    // Moe
+    '😴','🥱','😪','🫥','😵','🤯','🥴','😵‍💫','🤒','🤕',
+    // Grappig
+    '😂','🤣','😜','🤪','😝','🤡','🫣','🤭','😏','😈',
+    // Lief
+    '🥰','😘','💕','❤️','🫶','💝','💖','💗','🌸','✨',
+    // Koel
+    '😎','🤙','👑','🔥','⚡','💫','🌟','🎯','🚀','💪',
+    // Natuur
+    '🌈','🌊','🌿','🦋','🌙','⭐','🌻','🍀','🌺','🦄',
+  ]
+
+  let gekozenMoodEmoji = '😊'
+
+  function bouwMoodPicker() {
+    const picker = document.getElementById('moodEmojiPicker')
+    picker.innerHTML = ''
+    MOOD_EMOJIS.forEach(emoji => {
+      const span = document.createElement('span')
+      span.className = 'mood-emoji-opt' + (emoji === gekozenMoodEmoji ? ' actief' : '')
+      span.textContent = emoji
+      span.onclick = () => {
+        gekozenMoodEmoji = emoji
+        document.getElementById('moodEmojiGekozen').textContent = emoji
+        document.querySelectorAll('.mood-emoji-opt').forEach(s => s.classList.remove('actief'))
+        span.classList.add('actief')
+        // Update preview
+        const previewMood = document.getElementById('previewMood')
+        if (previewMood) previewMood.textContent = emoji + ' ' + (document.getElementById('editMood').value || '')
+      }
+      picker.appendChild(span)
+    })
+  }
+
+  window.toggleMoodPicker = function() {
+    const picker = document.getElementById('moodEmojiPicker')
+    const open = picker.style.display === 'flex'
+    picker.style.display = open ? 'none' : 'flex'
+    if (!open) bouwMoodPicker()
+  }
+
+  // Initialiseer mood picker
+  bouwMoodPicker()
+
+  // Mood preview updaten bij typen
+  document.getElementById('editMood').addEventListener('input', () => {
+    const previewMood = document.getElementById('previewMood')
+    if (previewMood) previewMood.textContent = gekozenMoodEmoji + ' ' + document.getElementById('editMood').value
+  })
+
+  // Naam generator voor profielpagina
+  const BIJVOEGLIJK_P=['Turbo','Pixel','Neon','Fluffy','Sneaky','Chonky','Sparkly','Grumpy','Bouncy','Squishy','Dizzy','Glitchy','Funky','Wiggly','Zappy','Bubbly','Fuzzy','Goofy','Jazzy','Mighty','Nifty','Peppy','Quirky','Sassy','Ultra','Wacky','Zesty','Blobby','Clumsy','Derpy','Floppy','Hangry','Jumpy','Kooky','Lazy','Moody','Nerdy','Silly','Zippy','Psycho','Mega','Hyper','Retro','Cyber','Magic','Spicy','Crispy']
+  const DIEREN_P=['Kikker','Panda','Hamster','Wasbeer','Capibara','Axolotl','Koala','Pinguin','Flamingo','Alpaca','Eekhoorn','Narwal','Quokka','Wombat','Platypus','Blobfish','Noodle','Pickle','Waffle','Muffin','Burrito','Spaghetti','Toaster','Pillow']
+  const ACHTER_P=['42','88','99','404','1337','XL','Pro','Max','Zero','Alpha','Prime','Turbo','9000','Plus','Elite','Ace','Boss','Legend']
+
+  window.profielNieuweNaam = function() {
+    const b = BIJVOEGLIJK_P[Math.floor(Math.random()*BIJVOEGLIJK_P.length)]
+    const d = DIEREN_P[Math.floor(Math.random()*DIEREN_P.length)]
+    const a = ACHTER_P[Math.floor(Math.random()*ACHTER_P.length)]
+    const naam = b + d + a
+    const input = document.getElementById('editUsername')
+    input.value = naam
+    input.style.transform = 'scale(1.03)'
+    input.style.borderColor = 'var(--accent)'
+    setTimeout(() => { input.style.transform=''; input.style.borderColor='' }, 200)
+  }
+
+</script>
+<script src="swipe.js"></script>
+
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js"; startSpelUitnodigingLuisteraar()</script>
+<script>
+/* FIBRO-DIAGNOSE - tijdelijk, later weghalen */
+setTimeout(function(){
+  alert('standalone: ' + window.matchMedia('(display-mode: standalone)').matches
+    + '\npush mogelijk: ' + ('PushManager' in window)
+    + '\nserviceworker: ' + ('serviceWorker' in navigator)
+    + '\ntoestemming: ' + (window.Notification ? Notification.permission : 'geen Notification'));
+}, 1200);
+</script>
+</body>
+</html>

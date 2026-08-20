@@ -110,7 +110,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
-import { genereerKeypair, slaPrivateKeyOp, versleutelPrivateKey } from './crypto.js'
+import { genereerKeypair, slaPrivateKeyOp } from './crypto.js'
 
 const supabase = createClient(
   'https://qmgatbphiplrfxrljtbe.supabase.co',
@@ -160,7 +160,7 @@ async function init() {
   if (error || data === null) { toonFout(); return }
   uitnodigerData = data
   const { data: profiel } = await supabase
-    .from('profielen_publiek')
+    .from('profiles')
     .select('username, avatar_url')
     .eq('id', data.created_by)
     .single()
@@ -247,9 +247,6 @@ window.registreren = async function() {
     })
     const hsHash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(herstelsleutel)))).map(b=>b.toString(16).padStart(2,'0')).join('')
     await supabase.rpc('zet_herstelsleutel', { hash_in: hsHash })
-    // Sleutelkluis vullen: private key versleuteld met de herstelsleutel
-    const kluisBlob = await versleutelPrivateKey(keypair.privateKeyB64, herstelsleutel)
-    await supabase.from('sleutel_kluis').upsert({ user_id: data.user.id, blob: kluisBlob })
 
     await supabase.rpc('gebruik_invite', { token_in: token, gebruiker: data.user.id })
 

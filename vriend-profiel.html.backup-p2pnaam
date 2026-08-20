@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="nl" style="background:#1a0a2e;">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fibro — Profiel</title>
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fibro">
+<meta name="theme-color" content="#c084fc">
+<script>
+  try {
+    const f = localStorage.getItem('fibro_font')
+    if (f) document.write('<style>*{font-family:' + f + ' !important}</style>')
+  } catch(e) {}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=Lobster&family=Pacifico&family=Dancing+Script:wght@400;600&family=Great+Vibes&family=Raleway:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:wght@300;400;700&family=Bebas+Neue&family=Oswald:wght@300;400;500&family=Space+Mono:wght@400;700&family=Courier+Prime:wght@400;700&family=Quicksand:wght@300;400;500&family=Nunito:wght@300;400;500&family=Righteous&family=Comfortaa:wght@300;400;500&family=Cinzel:wght@400;600&family=Satisfy&display=swap" rel="stylesheet">
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+:root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:#ffffff; }
+body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); max-width:480px; margin:0 auto; min-height:100vh; padding-bottom:80px; background-attachment:fixed; background-size:cover; background-position:center; overflow-y:auto; }
+.wallpaper-bg { position:fixed; inset:0; z-index:-1; background-size:cover; background-position:center; background-repeat:no-repeat; transition:opacity 0.5s; }
+.top-bar { display:flex; align-items:center; gap:10px; padding:12px 16px; background:rgba(0,0,0,0.35); border-bottom:0.5px solid var(--border); position:sticky; top:0; z-index:10; backdrop-filter:blur(12px); }
+.back-btn { font-size:12px; color:var(--muted); cursor:pointer; padding:4px 10px; border:0.5px solid var(--border); border-radius:20px; background:none; font-family:'DM Sans',sans-serif; min-height:44px; }
+.top-title { font-family:'Playfair Display',serif; font-style:italic; font-size:18px; color:var(--accent); flex:1; }
+.profile-hero { padding:20px 16px 14px; display:flex; gap:14px; align-items:flex-start; }
+.avatar-ring { width:72px; height:72px; border-radius:50%; padding:2.5px; background:linear-gradient(135deg,var(--accent),var(--accent2)); flex-shrink:0; }
+.avatar-inner { width:100%; height:100%; border-radius:50%; background:var(--bg); display:flex; align-items:center; justify-content:center; font-size:26px; overflow:hidden; }
+.p-name { font-family:'Playfair Display',serif; font-size:20px; font-weight:600; }
+.p-username { font-size:13px; color:var(--accent); margin-top:2px; }
+.p-bio { font-size:12px; color:var(--muted); margin-top:4px; }
+.online-badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); margin-top:5px; }
+.online-dot { width:8px; height:8px; border-radius:50%; background:#6b7280; }
+.online-dot.online { background:#22c55e; }
+.blocks { padding:12px 14px; display:flex; flex-direction:column; gap:10px; }
+.block { background:var(--card); border:0.5px solid var(--border); border-radius:14px; padding:13px 14px; backdrop-filter:blur(12px); }
+.block-title { font-size:12px; font-weight:500; color:var(--accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px; }
+.mood-row { display:flex; align-items:center; gap:10px; }
+.mood-emoji { font-size:28px; }
+.mood-text { font-size:15px; font-weight:500; }
+.chat-btn { width:100%; padding:11px; border-radius:12px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:500; margin-top:4px; min-height:44px; }
+.gb-entry { display:flex; gap:9px; padding:7px 0; border-bottom:0.5px solid var(--border); }
+.gb-entry:last-child { border-bottom:none; }
+.gb-av { width:28px; height:28px; border-radius:50%; background:rgba(192,132,252,0.15); border:0.5px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; overflow:hidden; }
+.gb-name { font-size:13px; font-weight:500; }
+.gb-msg { font-size:12px; color:var(--muted); margin-top:2px; }
+.gb-time { font-size:11px; color:var(--muted); opacity:0.6; margin-top:2px; }
+.gb-input { display:flex; gap:8px; margin-top:10px; }
+.gb-field { flex:1; background:rgba(255,255,255,0.05); border:0.5px solid var(--border); border-radius:20px; padding:7px 14px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:16px; outline:none; }
+.gb-send { padding:7px 14px; border-radius:20px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-size:12px; font-weight:500; min-height:44px; }
+.bottom-nav { display:flex; justify-content:space-around; padding:12px 0; border-top:0.5px solid var(--border); background:rgba(0,0,0,0.3); position:fixed; bottom:0; width:100%; max-width:480px; z-index:10; padding-bottom:env(safe-area-inset-bottom,12px); backdrop-filter:blur(12px); }
+.nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px; color:#ffffff; cursor:pointer; padding:4px 12px; min-height:44px; }
+.nav-item.active { color:var(--accent); }
+.nav-icon { font-size:20px; }
+.laden { text-align:center; padding:40px; color:var(--muted); font-size:13px; }
+body::before { content:''; position:fixed; inset:0; background:rgba(0,0,0,0.38); z-index:0; pointer-events:none; display:none; }
+body.heeft-wallpaper::before { display:block; }
+.widget-grid { display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:minmax(85px,auto); gap:10px; padding:0 2px; }
+.widget-blok { background:var(--card, rgba(255,255,255,0.08)); border:0.5px solid var(--border, rgba(255,255,255,0.14)); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 4px 20px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.2); }
+.widget-header { display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 10px 6px; border-bottom:0.5px solid var(--border, rgba(255,255,255,0.14)); }
+.widget-icon-sm { font-size:14px; }
+.widget-titel { font-size:11px; font-weight:600; color:#ffffff; text-transform:uppercase; letter-spacing:0.07em; }
+.widget-inhoud { flex:1; min-height:0; padding:10px; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+.widget-inhoud .wi-icon { font-size:24px; }
+.widget-blok-naakt { background:transparent !important; border:none !important; box-shadow:none !important; overflow:visible !important; }
+</style>
+</head>
+<body>
+
+<!-- Wallpaper laag -->
+<div class="wallpaper-bg" id="wallpaperBg"></div>
+
+<div class="top-bar">
+  <button class="back-btn" onclick="history.back()">← terug</button>
+  <span class="top-title" id="paginaTitel">Profiel</span>
+</div>
+
+<div class="profile-hero">
+  <div class="avatar-ring">
+    <div class="avatar-inner" id="avatarEmoji">⏳</div>
+  </div>
+  <div style="flex:1">
+    <div class="p-name" id="profielNaam">Laden...</div>
+    <div class="p-username" id="profielUsername">@...</div>
+    <div class="p-bio" id="profielBio"></div>
+    <div class="online-badge">
+      <div class="online-dot" id="onlineDot"></div>
+      <span id="onlineLabel">Laden...</span>
+    </div>
+  </div>
+</div>
+
+<div class="blocks">
+
+  <div class="block">
+    <div class="block-title">Mood</div>
+    <div class="mood-row">
+      <div class="mood-emoji" id="moodEmoji">💭</div>
+      <div class="mood-text" id="moodTekst">Laden...</div>
+    </div>
+  </div>
+
+  <div id="vriendWidgetGrid" class="widget-grid" style="display:none"></div>
+
+  <div class="block">
+    <div class="block-title">💬 Stuur een bericht</div>
+    <button class="chat-btn" onclick="naarChat()">Chat openen</button>
+  </div>
+
+  <div class="block">
+    <div class="block-title">Gastenboek</div>
+    <div id="gbEntries"><div class="laden">Laden...</div></div>
+    <div class="gb-input">
+      <input class="gb-field" id="gbInput" placeholder="Laat een berichtje achter...">
+      <button class="gb-send" onclick="sendGb()">Stuur</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="bottom-nav">
+  <div class="nav-item" onclick="window.location.href='index.html'"><div class="nav-icon">🏠</div>Home</div>
+  <div class="nav-item active" onclick="window.location.href='vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
+  <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
+  <div class="nav-item" onclick="window.location.href='profiel.html'"><div class="nav-icon">👤</div>Profiel</div>
+</div>
+
+<script type="module">
+  import { laadThema } from './thema.js'
+  import { supabase } from './supabase.js'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js'
+
+  var vriendId = null
+  var huidigeUser = null
+  var vriendData = null
+
+  // ── IndexedDB voor vriend cache ──
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open('FibroDB', 2)
+      req.onupgradeneeded = e => {
+        const db = e.target.result
+        if (!db.objectStoreNames.contains('fotos')) db.createObjectStore('fotos', { keyPath: 'id' })
+      }
+      req.onsuccess = e => resolve(e.target.result)
+      req.onerror = () => reject('DB fout')
+    })
+  }
+
+  async function slaFotoOp(id, data) {
+    const db = await openDB()
+    return new Promise(resolve => {
+      const tx = db.transaction('fotos', 'readwrite')
+      tx.objectStore('fotos').put({ id, data })
+      tx.oncomplete = resolve
+    })
+  }
+
+  async function laadFotoUitDB(id) {
+    try {
+      const db = await openDB()
+      return new Promise(resolve => {
+        const req = db.transaction('fotos').objectStore('fotos').get(id)
+        req.onsuccess = e => resolve(e.target.result?.data || null)
+        req.onerror = () => resolve(null)
+      })
+    } catch { return null }
+  }
+
+  // ── Online check via laatst_gezien ──
+  function isOnline(profiel) {
+    if (!profiel.online_status) return false
+    if (!profiel.laatst_gezien) return false
+    const sec = (Date.now() - new Date(profiel.laatst_gezien).getTime()) / 1000
+    return sec < 150
+  }
+
+  // ── Wallpaper tonen ──
+  function toonWallpaper(dataUrl) {
+    if (!dataUrl) return
+    const bg = document.getElementById('wallpaperBg')
+    bg.style.backgroundImage = `url(${dataUrl})`
+    document.body.style.background = 'transparent'
+    document.body.classList.add('heeft-wallpaper')
+    // Maak kaarten iets donkerder voor leesbaarheid
+    document.documentElement.style.setProperty('--card', 'rgba(0,0,0,0.65)')
+    document.documentElement.style.setProperty('--border', 'rgba(255,255,255,0.15)')
+  }
+
+  // ── Avatar tonen (foto of emoji) ──
+  function toonAvatar(dataUrl, emoji) {
+    const el = document.getElementById('avatarEmoji')
+    const veiligeAvatar = /^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=]+$/i.test(String(dataUrl||'').trim()) ? dataUrl : null
+    if (veiligeAvatar) {
+      el.innerHTML = `<img src="${veiligeAvatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+    } else {
+      el.textContent = emoji || '👤'
+    }
+  }
+
+  // ── Profiel data tonen ──
+  function toonProfielData(data) {
+    const naam = data.naam || data.display_name || data.username || 'Naamloos'
+    document.getElementById('profielNaam').textContent = naam
+    document.getElementById('profielUsername').textContent = '@' + (data.username || '')
+    document.getElementById('profielBio').textContent = data.bio || ''
+    document.getElementById('paginaTitel').textContent = naam
+
+    // Mood splitsen in emoji + tekst
+    const mood = data.mood || ''
+    const moodEmoji = mood.match(/^\p{Emoji}/u)?.[0] || '💭'
+    const moodTekst = mood.replace(/^\p{Emoji}\s*/u, '') || 'Geen mood'
+    document.getElementById('moodEmoji').textContent = moodEmoji
+    document.getElementById('moodTekst').textContent = moodTekst
+
+    // Online status
+    const online = isOnline(data)
+    const dot = document.getElementById('onlineDot')
+    dot.classList.toggle('online', online)
+    document.getElementById('onlineLabel').textContent = online
+      ? 'Online'
+      : (data.offline_bericht ? `${data.offline_emoji || '💤'} ${data.offline_bericht}` : 'Offline')
+
+    // Kleuren
+    if (data.accent_kleur) document.documentElement.style.setProperty('--accent', data.accent_kleur)
+    if (data.accent_kleur2) document.documentElement.style.setProperty('--accent2', data.accent_kleur2)
+    if (data.achtergrond_kleur && !data.wallpaper_data) {
+      document.documentElement.style.setProperty('--bg', data.achtergrond_kleur)
+    }
+
+    // Lettertype
+    if (data.lettertype) {
+      const style = document.createElement('style')
+      style.textContent = `* { font-family: ${data.lettertype} !important; }`
+      document.head.appendChild(style)
+    }
+  }
+
+  function widgetDebug(tekst) {
+    return // debug-badge uitgeschakeld (stap D af)
+    let d = document.getElementById('widget-debug')
+    if (!d) {
+      d = document.createElement('div')
+      d.id = 'widget-debug'
+      d.style.cssText = 'position:fixed;bottom:110px;right:10px;background:rgba(0,0,0,0.8);color:#ff0;padding:6px 10px;border-radius:8px;font-size:12px;z-index:9999;font-family:monospace;max-width:260px'
+      document.body.appendChild(d)
+    }
+    d.textContent = 'widgets: ' + tekst
+  }
+
+  async function toonVriendWidgets() {
+    const layoutJson = await laadFotoUitDB('vriend_' + vriendId + '_layout')
+    if (!layoutJson) { widgetDebug('niets in cache voor ' + vriendId.slice(0,8)) ; return }
+    let layout
+    try { layout = JSON.parse(layoutJson) } catch (e) { widgetDebug('JSON kapot: ' + String(layoutJson).slice(0,40)) ; return }
+    const actief = (layout || []).filter(w => w.aan).sort((a,b) => (a.volgorde||0) - (b.volgorde||0))
+    widgetDebug(layout.length + ' totaal, ' + actief.length + ' aan')
+    if (!actief.length) return
+    const grid = document.getElementById('vriendWidgetGrid')
+    grid.innerHTML = ''
+    const fotoAantal = { '3x3': 9, '2x2': 4, 'groot': 1, 'banner': 4, '1x3': 3 }
+    for (const w of actief) {
+      const el = document.createElement('div')
+      el.className = 'widget-blok'
+      el.style.gridColumn = 'span ' + Math.min(w.w || 2, 4)
+      el.style.gridRow = 'span ' + (w.h || 1)
+      // Foto-widget: probeer echte (P2P-gesyncte) foto's uit de cache te tonen
+      const stijl = (w.id || '').startsWith('fotos_') ? w.id.slice(6) : null
+      if (stijl && fotoAantal[stijl]) {
+        const fotos = []
+        for (let i = 0; i < fotoAantal[stijl]; i++) {
+          const f = await laadFotoUitDB('vriend_' + vriendId + '_foto_pfoto_' + stijl + '_' + i)
+          if (f) fotos.push(f)
+        }
+        if (fotos.length) {
+          const kolommen = stijl === '3x3' ? 3 : (stijl === '2x2' ? 2 : (stijl === 'banner' ? 4 : (stijl === '1x3' ? 1 : 1)))
+          const ratio = stijl === 'groot' ? '4/3' : (stijl === 'banner' ? '3/4' : '1/1')
+          el.classList.add('widget-blok-naakt')
+          el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(' + kolommen + ',1fr);gap:6px;width:100%;">' +
+            fotos.map(f => '<img src="' + f + '" style="width:100%;aspect-ratio:' + ratio + ';object-fit:cover;border-radius:10px;display:block;">').join('') +
+            '</div>'
+          grid.appendChild(el)
+          continue
+        }
+      }
+      // Muziek-widget: probeer echte (P2P-gesyncte) muziek uit de cache af te spelen
+      if (w.id === 'muziek') {
+        const gelukt = await renderVriendMuziek(el)
+        if (gelukt) { grid.appendChild(el); continue }
+      }
+      el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">' + (w.icon || '🧩') + '</span><span class="widget-titel">' + (w.titel || w.id) + '</span></div><div class="widget-inhoud"><div class="wi-icon">' + (w.icon || '🧩') + '</div></div>'
+      grid.appendChild(el)
+    }
+    grid.style.display = ''
+  }
+
+  // ── Muziek-widget van vriend (P2P-gesyncte cache) ──
+  async function renderVriendMuziek(el) {
+    // Verzamel tracks: eerst playlist (Systeem 2), dan losse profiel-track (Systeem 1)
+    let tracks = []
+    const playlistJson = await laadFotoUitDB('vriend_' + vriendId + '_muziek_playlist')
+    if (playlistJson) {
+      try {
+        const p = JSON.parse(playlistJson)
+        if (Array.isArray(p)) tracks = p.filter(t => t && t.data)
+      } catch(e) {}
+    }
+    if (!tracks.length) {
+      const los = await laadFotoUitDB('vriend_' + vriendId + '_muziek_profiel')
+      if (los && String(los).startsWith('data:audio')) {
+        tracks = [{ naam: 'Nummer', artiest: '', data: los }]
+      }
+    }
+    if (!tracks.length) return false
+
+    let idx = 0
+    let audio = null
+    const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    const fmt = s => { if(!s||isNaN(s))return '0:00'; const m=Math.floor(s/60),sec=Math.floor(s%60); return m+':'+(sec<10?'0':'')+sec }
+
+    const render = () => {
+      const t = tracks[idx]
+      el.innerHTML = `
+        <div class="widget-header"><span class="widget-icon-sm">🎵</span><span class="widget-titel">Muziek</span></div>
+        <div class="widget-inhoud" style="align-items:stretch;text-align:left;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden;">
+              ${/^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=]+$/i.test(String(t.cover||'').trim()) ? '<img src="' + t.cover + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">' : '🎵'}
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escH(t.naam || 'Nummer')}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.7);">${escH(t.artiest || '')}</div>
+            </div>
+          </div>
+          <div>
+            <div id="vm-balk" style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;cursor:pointer;">
+              <div id="vm-prog" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:3px;">
+              <span id="vm-tijd" style="font-size:10px;color:rgba(255,255,255,0.7);">0:00</span>
+              <span id="vm-duur" style="font-size:10px;color:rgba(255,255,255,0.7);">0:00</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:14px;">
+            ${tracks.length > 1 ? '<button id="vm-prev" style="background:none;border:none;font-size:18px;cursor:pointer;color:rgba(255,255,255,0.7);">⏮</button>' : ''}
+            <button id="vm-play" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;font-size:16px;cursor:pointer;color:#1a0a2e;display:flex;align-items:center;justify-content:center;">▶</button>
+            ${tracks.length > 1 ? '<button id="vm-next" style="background:none;border:none;font-size:18px;cursor:pointer;color:rgba(255,255,255,0.7);">⏭</button>' : ''}
+          </div>
+        </div>`
+
+      if (audio) { audio.pause(); audio.src = '' }
+      audio = new Audio(t.data)
+      audio.ontimeupdate = () => {
+        const prog = el.querySelector('#vm-prog'), tijd = el.querySelector('#vm-tijd')
+        if (prog && audio.duration) prog.style.width = (audio.currentTime / audio.duration * 100) + '%'
+        if (tijd) tijd.textContent = fmt(audio.currentTime)
+      }
+      audio.onloadedmetadata = () => {
+        const d = el.querySelector('#vm-duur'); if (d) d.textContent = fmt(audio.duration)
+      }
+      audio.onended = () => {
+        if (tracks.length > 1) { idx = (idx + 1) % tracks.length; render(); setTimeout(() => { if(audio){audio.play(); const b=el.querySelector('#vm-play'); if(b)b.textContent='⏸'} }, 100) }
+        else { const b = el.querySelector('#vm-play'); if (b) b.textContent = '▶' }
+      }
+
+      const playBtn = el.querySelector('#vm-play')
+      if (playBtn) playBtn.onclick = () => {
+        if (!audio) return
+        if (audio.paused) { audio.play(); playBtn.textContent = '⏸' }
+        else { audio.pause(); playBtn.textContent = '▶' }
+      }
+      const prevBtn = el.querySelector('#vm-prev')
+      if (prevBtn) prevBtn.onclick = () => { idx = (idx - 1 + tracks.length) % tracks.length; render(); setTimeout(() => { if(audio){audio.play(); const b=el.querySelector('#vm-play'); if(b)b.textContent='⏸'} }, 100) }
+      const nextBtn = el.querySelector('#vm-next')
+      if (nextBtn) nextBtn.onclick = () => { idx = (idx + 1) % tracks.length; render(); setTimeout(() => { if(audio){audio.play(); const b=el.querySelector('#vm-play'); if(b)b.textContent='⏸'} }, 100) }
+      const balk = el.querySelector('#vm-balk')
+      if (balk) balk.onclick = e => {
+        if (!audio || !audio.duration) return
+        const rect = balk.getBoundingClientRect()
+        audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration
+      }
+    }
+    render()
+    return true
+  }
+
+  async function init() {
+    await laadThema()
+    // Eigen wallpaper hoort niet op het profiel van een vriend:
+    document.body.style.backgroundImage = ''
+
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { window.location.href = 'login.html'; return }
+    huidigeUser = session.user
+
+    const params = new URLSearchParams(window.location.search)
+    vriendId = params.get('id')
+    if (!vriendId) { window.location.href = 'vrienden.html'; return }
+
+    toonVriendWidgets()
+
+    // ── Stap 1: Toon eerst cache (snel) ──
+    const cacheKey = 'vriend_cache_' + vriendId
+    const cache = localStorage.getItem(cacheKey)
+    if (cache) {
+      try {
+        const cached = JSON.parse(cache)
+        toonProfielData(cached)
+
+        // Gecachede avatar tonen
+        const cachedAvatar = await laadFotoUitDB('vriend_avatar_' + vriendId)
+        toonAvatar(cachedAvatar, cached.avatar)
+
+        // Gecachede wallpaper tonen
+        const cachedWallpaper = await laadFotoUitDB('vriend_wallpaper_' + vriendId)
+        if (cachedWallpaper) toonWallpaper(cachedWallpaper)
+      } catch(e) {}
+    }
+
+    // ── Stap 2: Laad vers van Supabase op achtergrond ──
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', vriendId)
+      .single()
+
+    if (error || !data) return
+    vriendData = data
+    toonProfielData(data)
+
+    // ── Avatar verwerken ──
+    if (data.avatar_data && data.avatar_data.startsWith('data:')) {
+      // Foto avatar uit Supabase
+      toonAvatar(data.avatar_data, null)
+      await slaFotoOp('vriend_avatar_' + vriendId, data.avatar_data)
+    } else {
+      toonAvatar(null, data.avatar_url || '👤')
+    }
+
+    // ── Wallpaper verwerken ──
+    if (data.wallpaper_data && data.wallpaper_data.startsWith('data:')) {
+      toonWallpaper(data.wallpaper_data)
+      await slaFotoOp('vriend_wallpaper_' + vriendId, data.wallpaper_data)
+    }
+
+    // ── Cache bijwerken ──
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({
+        naam: data.display_name || data.username || '',
+        bio: data.bio || '',
+        mood: data.mood || '',
+        avatar: data.avatar_url || '👤',
+        accent_kleur: data.accent_kleur || '',
+        accent_kleur2: data.accent_kleur2 || '',
+        achtergrond_kleur: data.achtergrond_kleur || '',
+        lettertype: data.lettertype || '',
+        online_status: data.online_status || false,
+        offline_emoji: data.offline_emoji || '',
+        offline_bericht: data.offline_bericht || '',
+        laatst_gezien: data.laatst_gezien || '',
+        bijgewerkt: new Date().toISOString()
+      }))
+    } catch(e) {}
+
+    await laadGastenboek()
+  }
+
+  async function laadGastenboek() {
+    const { data, error } = await supabase
+      .from('guestbook_entries')
+      .select('*, author:author_id(username, avatar_url, avatar_data)')
+      .eq('profile_id', vriendId)
+      .order('created_at', { ascending: false })
+      .limit(10)
+
+    const container = document.getElementById('gbEntries')
+
+    if (error || !data || data.length === 0) {
+      container.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0;">Nog geen berichten.</div>'
+      return
+    }
+
+    // Gastenboekberichten komen van andere gebruikers: altijd ontsnappen.
+    const gbEsc = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')
+    const gbAfbeelding = v => {
+      const u = String(v||'').trim()
+      return /^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=]+$/i.test(u) ? u : null
+    }
+    container.innerHTML = data.map(entry => {
+      const avSrc = gbAfbeelding(entry.author?.avatar_data)
+      const avatarHtml = avSrc
+        ? `<img src="${avSrc}" style="width:100%;height:100%;object-fit:cover;">`
+        : gbEsc(entry.author?.avatar_url || '👤')
+      const tijd = tijdGeleden(entry.created_at)
+      return `
+        <div class="gb-entry">
+          <div class="gb-av">${avatarHtml}</div>
+          <div>
+            <div class="gb-name">${gbEsc(entry.author?.username || 'Onbekend')}</div>
+            <div class="gb-msg">${gbEsc(entry.content)}</div>
+            <div class="gb-time">${gbEsc(tijd)}</div>
+          </div>
+        </div>
+      `
+    }).join('')
+  }
+
+  window.sendGb = async function() {
+    const input = document.getElementById('gbInput')
+    const tekst = input.value.trim()
+    if (!tekst) return
+    const { error } = await supabase.from('guestbook_entries').insert({
+      profile_id: vriendId,
+      author_id: huidigeUser.id,
+      content: tekst
+    })
+    if (!error) {
+      input.value = ''
+      await laadGastenboek()
+    }
+  }
+
+  window.naarChat = function() {
+    if (vriendData) {
+      const naam = encodeURIComponent(vriendData.display_name || vriendData.username)
+      const avatar = encodeURIComponent(vriendData.avatar_url || '👤')
+      window.location.href = `chat.html?id=${vriendId}&naam=${naam}&avatar=${avatar}`
+    } else {
+      window.location.href = 'chat.html'
+    }
+  }
+
+  function tijdGeleden(datum) {
+    const diff = Math.floor((new Date() - new Date(datum)) / 1000)
+    if (diff < 60) return 'Zojuist'
+    if (diff < 3600) return Math.floor(diff/60) + ' minuten geleden'
+    if (diff < 86400) return Math.floor(diff/3600) + ' uur geleden'
+    return Math.floor(diff/86400) + ' dagen geleden'
+  }
+
+  init()
+</script>
+
+</body>
+</html>

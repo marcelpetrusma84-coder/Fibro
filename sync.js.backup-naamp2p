@@ -1,0 +1,702 @@
+// sync.js — P2P widget-sync via WebRTC DataChannel
+// Stap A: presence ✓ | Stap B: DataChannel ping-pong
+// Zelfde signaling-patroon als bellen.js: gedeeld kanaal met gesorteerde IDs
+import { supabase } from './supabase.js'
+import { ICE_SERVERS, iceReady } from './ice-config.js'
+
+let presenceKanaal = null
+let huidigeUserId = null
+let onlineGebruikers = new Set()
+let onOnlineChangeCallback = null
+let vrienden = new Set()
+
+let syncKanaal = null
+let peerConnection = null
+let dataChannel = null
+let syncPartnerId = null
+let isInitiator = false
+let p2pStatus = ''
+let iceBuffer = []
+let offerRetryCount = 0
+let offerRetryTimer = null
+let syncTimeout = null
+let isRelayConnection = false // TURN/relay detectie
+
+// ICE_SERVERS komt uit ice-config.js (import staat bovenaan)
+
+export function initSync(userId, callbacks = {}) {
+  huidigeUserId = userId
+  onOnlineChangeCallback = callbacks.onOnlineChange || null
+  laadVrienden().then(() => startPresence())
+}
+
+function startPresence() {
+  if (presenceKanaal) { supabase.removeChannel(presenceKanaal); presenceKanaal = null }
+  presenceKanaal = supabase
+    .channel('fibro-online', { config: { presence: { key: huidigeUserId } } })
+    .on('presence', { event: 'sync' }, () => {
+      const state = presenceKanaal.presenceState()
+      onlineGebruikers = new Set(Object.keys(state).filter((id) => id !== huidigeUserId))
+      console.log('[sync] Online gebruikers:', [...onlineGebruikers])
+      if (onOnlineChangeCallback) onOnlineChangeCallback([...onlineGebruikers])
+      toonDebugBadge()
+      if (syncPartnerId && !onlineGebruikers.has(syncPartnerId)) stopSync()
+      checkSyncStart()
+    })
+    .subscribe(async (status) => {
+      console.log('[sync] Presence-kanaal status:', status)
+      if (status === 'SUBSCRIBED') {
+        await presenceKanaal.track({ online_sinds: new Date().toISOString() })
+      }
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.log('[sync] Presence-kanaal weggevallen — reconnect over 5 sec')
+        setTimeout(startPresence, 5000)
+      }
+    })
+}
+
+async function laadVrienden() {
+  const { data, error } = await supabase
+    .from('friendships')
+    .select('user_id,friend_id')
+    .or('user_id.eq.' + huidigeUserId + ',friend_id.eq.' + huidigeUserId)
+    .eq('status', 'accepted')
+  if (error) { console.warn('[sync] vrienden laden mislukt:', error); return }
+  vrienden = new Set((data || []).map((f) => f.user_id === huidigeUserId ? f.friend_id : f.user_id))
+  console.log('[sync] Vrienden geladen:', vrienden.size)
+}
+
+function checkSyncStart() {
+  if (syncPartnerId) return
+  const ander = [...onlineGebruikers].find((id) => vrienden.has(id))
+  if (!ander) return
+  syncPartnerId = ander
+  isInitiator = huidigeUserId < ander
+  console.log('[sync] Start sync met', ander, '- initiator:', isInitiator)
+  zetP2pStatus('verbinden...')
+  openSyncKanaal(ander)
+}
+
+function openSyncKanaal(anderId) {
+  const ids = [huidigeUserId, anderId].sort()
+  syncKanaal = supabase
+    .channel('syncdata_' + ids[0] + '_' + ids[1], { config: { broadcast: { self: false } } })
+    .on('broadcast', { event: 'signaal' }, (msg) => {
+      verwerkSignaal(msg.payload.type, msg.payload.data)
+    })
+    .subscribe((status) => {
+      console.log('[sync] Synckanaal status:', status)
+      if (status === 'SUBSCRIBED' && isInitiator) {
+        offerRetryCount = 0
+        startOfferRetry()
+        syncTimeout = setTimeout(() => {
+          console.log('[sync] Sync timeout — geen answer na 30 sec')
+          stopSync()
+        }, 30000)
+      }
+    })
+}
+
+function startOfferRetry() {
+  if (offerRetryCount >= 5) {
+    console.log('[sync] Offer retries uitgeput')
+    stopSync()
+    return
+  }
+  offerRetryCount++
+  console.log('[sync] Offer poging', offerRetryCount, '/ 5')
+  if (offerRetryCount === 1 || !peerConnection) {
+    // Eerste poging: maak connectie + offer
+    maakEnStuurOffer()
+  } else if (peerConnection.localDescription) {
+    // RACE-FIX (bug #3): bij retry NIET een nieuwe RTCPeerConnection maken,
+    // maar hetzelfde offer opnieuw sturen. Nieuwe connecties per retry
+    // veroorzaakten lekkende connecties, stale ICE-candidates en een
+    // ontvanger die zijn (soms al werkende) verbinding weggooide.
+    stuurSignaal('offer', peerConnection.localDescription)
+  }
+  offerRetryTimer = setTimeout(startOfferRetry, 5000)
+}
+
+async function stuurSignaal(type, data = {}) {
+  if (!syncKanaal) return
+  await syncKanaal.send({ type: 'broadcast', event: 'signaal', payload: { type, data } })
+}
+
+function maakPeerConnection() {
+  // Oude connectie netjes sluiten — voorkomt lekken en stale ICE-events (bug #3)
+  if (peerConnection) {
+    peerConnection.onicecandidate = null
+    peerConnection.ondatachannel = null
+    peerConnection.close()
+    peerConnection = null
+  }
+  peerConnection = new RTCPeerConnection(ICE_SERVERS)
+  iceBuffer = []
+  const pc = peerConnection
+  pc.onicecandidate = (event) => {
+    // Alleen candidates van de HUIDIGE connectie doorsturen
+    if (pc !== peerConnection) return
+    if (event.candidate) stuurSignaal('ice', event.candidate)
+  }
+  pc.ondatachannel = (event) => {
+    if (pc !== peerConnection) return
+    koppelDataChannel(event.channel)
+  }
+}
+
+function koppelDataChannel(kanaal) {
+  dataChannel = kanaal
+  dataChannel.onopen = async () => {
+    console.log('[sync] DataChannel OPEN')
+    zetP2pStatus('P2P open')
+    // Detecteer TURN/relay verbinding
+    await detecteerRelayConnection()
+    stuurManifest()
+  }
+  dataChannel.onmessage = (event) => {
+    // VALIDATIE (bug #5): nooit blind parsen/vertrouwen wat de peer stuurt
+    if (typeof event.data !== 'string' || event.data.length > 64 * 1024) {
+      console.warn('[sync] P2P bericht geweigerd: geen string of te groot')
+      return
+    }
+    let bericht
+    try { bericht = JSON.parse(event.data) }
+    catch(e) { console.warn('[sync] P2P bericht geweigerd: ongeldige JSON'); return }
+    if (!bericht || typeof bericht !== 'object' || typeof bericht.type !== 'string') return
+    if (!['manifest', 'geef', 'chunk', 'item'].includes(bericht.type)) {
+      console.warn('[sync] P2P bericht geweigerd: onbekend type', bericht.type)
+      return
+    }
+    console.log('[sync] P2P bericht:', bericht.type)
+    verwerkP2pBericht(bericht)
+  }
+  dataChannel.onclose = () => zetP2pStatus('')
+}
+
+async function detecteerRelayConnection() {
+  if (!peerConnection) return
+  try {
+    const stats = await peerConnection.getStats()
+    let relayGebruikt = false
+    let selectedPairId = null
+    // Stap 1: vind het GESELECTEERDE candidate-pair (via transport)
+    stats.forEach(report => {
+      if (report.type === 'transport' && report.selectedCandidatePairId) {
+        selectedPairId = report.selectedCandidatePairId
+      }
+    })
+    // Fallback (Firefox): pair met selected=true of nominated+succeeded
+    stats.forEach(report => {
+      if (report.type === 'candidate-pair') {
+        if (report.selected === true) selectedPairId = report.id
+        else if (!selectedPairId && report.nominated && report.state === 'succeeded') selectedPairId = report.id
+      }
+    })
+    // Stap 2: check ALLEEN dat pair op relay
+    if (selectedPairId) {
+      const pair = stats.get(selectedPairId)
+      if (pair) {
+        const localCandidate = stats.get(pair.localCandidateId)
+        const remoteCandidate = stats.get(pair.remoteCandidateId)
+        if (localCandidate?.candidateType === 'relay' || remoteCandidate?.candidateType === 'relay') {
+          relayGebruikt = true
+          console.log('[sync] RELAY VERBINDING GEDETECTEERD — muziek wordt overgeslagen')
+        } else {
+          console.log('[sync] Directe P2P-verbinding (' + (localCandidate?.candidateType || '?') + ') — muziek toegestaan')
+        }
+      }
+    } else {
+      console.log('[sync] Geen geselecteerd pair gevonden — muziek toegestaan (voordeel van de twijfel)')
+    }
+    const isPlus = !!(window._profiel && window._profiel.is_plus)
+    isRelayConnection = relayGebruikt && !isPlus
+    if (relayGebruikt && isPlus) {
+      console.log('[sync] STATUS: relay + Fibro+ -> alles toegestaan')
+      zetP2pStatus('relay-verbinding (Fibro+, alles toegestaan)')
+    } else if (isRelayConnection) {
+      console.log('[sync] STATUS: relay + gratis -> muziek overgeslagen')
+      zetP2pStatus('⚠️ relay-verbinding (muziek overgeslagen)')
+    }
+    else {
+      console.log('[sync] STATUS: directe verbinding -> geen beperking')
+    }
+  } catch(e) {
+    console.warn('[sync] TURN-detectie fout:', e)
+  }
+}
+
+function hashString(s) {
+  let h = 5381
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0
+  return h.toString(16)
+}
+
+function verzamelEigenFotos() {
+  // Foto's van de home-widgets staan in localStorage als pfoto_<stijl>_<idx>_<uid>
+  // itemId = key ZONDER uid-suffix, zodat de ontvanger apparaat-onafhankelijke ids cachet
+  const fotos = {}
+  const suffix = '_' + huidigeUserId
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key && key.startsWith('pfoto_') && key.endsWith(suffix) && !key.includes('_fit_')) {
+      const data = localStorage.getItem(key)
+      if (data && data.startsWith('data:image')) {
+        const itemId = key.slice(0, -suffix.length)
+        fotos[itemId] = { hash: hashString(data) }
+      }
+    }
+  }
+  return fotos
+}
+
+async function verzamelEigenMuziek() {
+  // Muziek: twee systemen
+  // Systeem 1 (profiel.html): muziek_track + muziek_titel (los item, geen uid-suffix)
+  // Systeem 2 (index.html): muziek_tracks_<uid> (playlist als JSON-array in IndexedDB)
+  const muziek = {}
+
+  // ── Systeem 1: profiel-muziek (losstaande track) ──
+  try {
+    const track1 = localStorage.getItem('muziek_track') || (await dbGet('muziek_track'))?.data
+    if (track1 && track1.startsWith('data:audio')) {
+      muziek['profiel'] = { hash: hashString(track1) }
+      console.log('[sync] Systeem 1 (profiel-muziek) gevonden')
+    }
+  } catch(e) { console.warn('[sync] Systeem 1 muziek-ophalen fout:', e) }
+
+  // ── Systeem 2: playlist (index.html widget) ──
+  try {
+    const playlistKey = 'muziek_tracks_' + huidigeUserId
+    let playlistJson = localStorage.getItem(playlistKey)
+    if (!playlistJson) {
+      const dbResult = await dbGet(playlistKey)
+      if (dbResult?.data) playlistJson = dbResult.data
+    }
+    if (playlistJson) {
+      try {
+        const tracks = JSON.parse(playlistJson)
+        if (Array.isArray(tracks) && tracks.length > 0) {
+          // Stuur hele playlist als één item
+          muziek['playlist'] = { hash: hashString(playlistJson), count: tracks.length }
+          console.log('[sync] Systeem 2 (playlist) gevonden:', tracks.length, 'nummers')
+        }
+      } catch(e) { console.warn('[sync] Playlist JSON parse fout:', e) }
+    }
+  } catch(e) { console.warn('[sync] Systeem 2 muziek-ophalen fout:', e) }
+
+  return muziek
+}
+
+async function stuurManifest() {
+  const layoutJson = localStorage.getItem('fibro_widgets_profiel_' + huidigeUserId) || '[]'
+  const fotos = verzamelEigenFotos()
+  const muziek = await verzamelEigenMuziek()
+  const manifest = {
+    layout: { hash: hashString(layoutJson) },
+    fotos,
+    muziek
+  }
+  dataChannel.send(JSON.stringify({ type: 'manifest', data: manifest }))
+  zetP2pStatus('manifest gestuurd')
+}
+
+async function verwerkP2pBericht(bericht) {
+  if (bericht.type === 'manifest') {
+    const cached = await dbGet('vriend_' + syncPartnerId + '_layout')
+    const nodig = []
+    if (!cached || cached.hash !== bericht.data.layout.hash) nodig.push('layout')
+    const fotos = bericht.data.fotos || {}
+    for (const itemId of Object.keys(fotos)) {
+      const fCached = await dbGet('vriend_' + syncPartnerId + '_foto_' + itemId)
+      if (!fCached || fCached.hash !== fotos[itemId].hash) nodig.push('foto:' + itemId)
+    }
+    const muziek = bericht.data.muziek || {}
+    const muziekNodig = []
+    for (const itemId of Object.keys(muziek)) {
+      const mCached = await dbGet('vriend_' + syncPartnerId + '_muziek_' + itemId)
+      if (!mCached || mCached.hash !== muziek[itemId].hash) muziekNodig.push('muziek:' + itemId)
+    }
+    if (muziekNodig.length && !isRelayConnection) {
+      nodig.push(...muziekNodig)
+    } else if (muziekNodig.length && isRelayConnection) {
+      // Relay-verbinding: niet automatisch, maar vraag de gebruiker
+      console.log('[sync] Relay-verbinding — muziek wacht op toestemming')
+      toonRelayMuziekVraag(muziekNodig)
+    }
+    // Opruimen foto's: gecachte foto's die niet meer in het manifest staan zijn verwijderd bij de vriend
+    const fotoPrefix = 'vriend_' + syncPartnerId + '_foto_'
+    const bestaandeKeys = await dbListKeys(fotoPrefix)
+    for (const key of bestaandeKeys) {
+      const oudItemId = key.slice(fotoPrefix.length)
+      if (!fotos[oudItemId]) {
+        await dbDelete(key)
+        console.log('[sync] Verouderde foto verwijderd:', key)
+        zetP2pStatus('oude foto opgeruimd')
+      }
+    }
+
+    // Opruimen muziek: gecachte muziek-items die niet meer in het manifest staan
+    const muziekPrefix = 'vriend_' + syncPartnerId + '_muziek_'
+    const muziekKeys = await dbListKeys(muziekPrefix)
+    for (const key of muziekKeys) {
+      const itemId = key.slice(muziekPrefix.length)
+      if (!muziek[itemId]) {
+        await dbDelete(key)
+        console.log('[sync] Verouderde muziek verwijderd:', key)
+        zetP2pStatus('oude muziek opgeruimd')
+      }
+    }
+
+    if (nodig.length) {
+      dataChannel.send(JSON.stringify({ type: 'geef', items: nodig }))
+      zetP2pStatus('vraag ' + nodig.length + ' item(s)')
+    } else {
+      zetP2pStatus('alles up-to-date')
+    }
+  }
+  if (bericht.type === 'geef') {
+    // VALIDATIE (bug #5): items moet een lijst van bekende, korte strings zijn
+    if (!Array.isArray(bericht.items) || bericht.items.length > 300) return
+    for (const item of bericht.items) {
+      if (typeof item !== 'string' || item.length > 200) continue
+      if (item === 'layout') {
+        const layoutJson = localStorage.getItem('fibro_widgets_profiel_' + huidigeUserId) || '[]'
+        dataChannel.send(JSON.stringify({ type: 'item', itemId: 'layout', hash: hashString(layoutJson), data: layoutJson }))
+      } else if (item.startsWith('foto:')) {
+        const itemId = item.slice(5)
+        await stuurFotoInChunks(itemId)
+      } else if (item.startsWith('muziek:')) {
+        const itemId = item.slice(7)
+        await stuurMuziekInChunks(itemId)
+      }
+    }
+  }
+  if (bericht.type === 'chunk') {
+    await verwerkChunk(bericht)
+  }
+  if (bericht.type === 'item') {
+    // VALIDATIE (bug #5): alleen bekende itemIds, met size-cap
+    if (typeof bericht.itemId !== 'string' || typeof bericht.data !== 'string') return
+    if (typeof bericht.hash !== 'string' || bericht.hash.length > 16) return
+    if (bericht.data.length > 5 * 1024 * 1024) { console.warn('[sync] item te groot — geweigerd'); return }
+    if (bericht.itemId === 'layout') {
+      await dbPut({ id: 'vriend_' + syncPartnerId + '_layout', hash: bericht.hash, data: bericht.data, ontvangen: Date.now() })
+      console.log('[sync] Layout van vriend opgeslagen')
+      zetP2pStatus('layout ontvangen \u2713')
+    } else if (bericht.itemId.startsWith('muziek_')) {
+      const muziekItemId = bericht.itemId.slice(7) // 'profiel' of 'playlist'
+      await dbPut({ id: 'vriend_' + syncPartnerId + '_muziek_' + muziekItemId, hash: bericht.hash, data: bericht.data, ontvangen: Date.now() })
+      console.log('[sync] Muziek van vriend opgeslagen:', muziekItemId)
+      zetP2pStatus('muziek ' + muziekItemId + ' ontvangen \u2713')
+    }
+  }
+}
+
+const CHUNK_TEKST = 12 * 1024 // 12KB tekst per chunk (dataURL is string; +JSON-overhead blijft ruim onder 16KB WebRTC-limiet)
+const MAX_CHUNKS_PER_ITEM = 12000   // ± 140 MB max per item — ruim boven 75MB-limiet, blokkeert geheugen-bommen
+const MAX_CHUNK_BUFFERS = 10        // max aantal items tegelijk in ontvangst
+const chunkBuffers = {}             // { itemId: { delen:[], ontvangen:0, totaal:0, hash } }
+
+function isGeldigeChunk(b) {
+  // VALIDATIE (bug #5): alle velden checken vóór gebruik.
+  // Zonder deze check kon een peer bijv. totaal=1e9 sturen → new Array(1e9) → crash
+  if (typeof b.itemId !== 'string' || b.itemId.length > 200) return false
+  if (!b.itemId.startsWith('pfoto_') && !b.itemId.startsWith('muziek_')) return false
+  if (typeof b.hash !== 'string' || b.hash.length > 16) return false
+  if (!Number.isInteger(b.totaal) || b.totaal < 1 || b.totaal > MAX_CHUNKS_PER_ITEM) return false
+  if (!Number.isInteger(b.volgnr) || b.volgnr < 0 || b.volgnr >= b.totaal) return false
+  if (typeof b.data !== 'string' || b.data.length > CHUNK_TEKST * 2) return false
+  return true
+}
+
+async function stuurFotoInChunks(itemId) {
+  // VALIDATIE (bug #5): alleen echte foto-keys — anders kon een peer via
+  // 'geef' willekeurige localStorage-keys opvragen (bijv. tokens)
+  if (typeof itemId !== 'string' || !itemId.startsWith('pfoto_') || itemId.includes('_fit_')) {
+    console.warn('[sync] foto-verzoek geweigerd:', itemId)
+    return
+  }
+  const data = localStorage.getItem(itemId + '_' + huidigeUserId)
+  if (!data) { console.warn('[sync] foto niet gevonden:', itemId); return }
+  if (!data.startsWith('data:image')) { console.warn('[sync] geen afbeelding — niet verstuurd:', itemId); return }
+  const hash = hashString(data)
+  const totaal = Math.ceil(data.length / CHUNK_TEKST)
+  console.log('[sync] Stuur foto', itemId, 'in', totaal, 'chunks')
+  for (let i = 0; i < totaal; i++) {
+    // Flow control: wacht als de verzendbuffer vol raakt
+    while (dataChannel.bufferedAmount > 512 * 1024) {
+      await new Promise((r) => setTimeout(r, 20))
+    }
+    dataChannel.send(JSON.stringify({
+      type: 'chunk', itemId, hash, volgnr: i, totaal,
+      data: data.slice(i * CHUNK_TEKST, (i + 1) * CHUNK_TEKST)
+    }))
+  }
+}
+
+async function stuurMuziekInChunks(itemId) {
+  // itemId = 'profiel' of 'playlist' — al het andere weigeren (bug #5)
+  if (itemId !== 'profiel' && itemId !== 'playlist') {
+    console.warn('[sync] muziek-verzoek geweigerd:', itemId)
+    return
+  }
+  let data = null
+
+  if (itemId === 'profiel') {
+    // Systeem 1: muziek_track uit localStorage of IndexedDB
+    data = localStorage.getItem('muziek_track')
+    if (!data) {
+      const dbResult = await dbGet('muziek_track')
+      data = dbResult?.data
+    }
+  } else if (itemId === 'playlist') {
+    // Systeem 2: muziek_tracks_<uid> (hele JSON-array)
+    const playlistKey = 'muziek_tracks_' + huidigeUserId
+    data = localStorage.getItem(playlistKey)
+    if (!data) {
+      const dbResult = await dbGet(playlistKey)
+      data = dbResult?.data
+    }
+  }
+
+  if (!data) { console.warn('[sync] muziek niet gevonden:', itemId); return }
+
+  const hash = hashString(data)
+  const totaal = Math.ceil(data.length / CHUNK_TEKST)
+  console.log('[sync] Stuur muziek', itemId, 'in', totaal, 'chunks')
+
+  for (let i = 0; i < totaal; i++) {
+    // Flow control: wacht als de verzendbuffer vol raakt
+    while (dataChannel.bufferedAmount > 512 * 1024) {
+      await new Promise((r) => setTimeout(r, 20))
+    }
+    dataChannel.send(JSON.stringify({
+      type: 'chunk', itemId: 'muziek_' + itemId, hash, volgnr: i, totaal,
+      data: data.slice(i * CHUNK_TEKST, (i + 1) * CHUNK_TEKST)
+    }))
+  }
+}
+
+async function verwerkChunk(bericht) {
+  if (!isGeldigeChunk(bericht)) {
+    console.warn('[sync] Ongeldige chunk geweigerd')
+    return
+  }
+  const { itemId, hash, volgnr, totaal, data } = bericht
+  if (!chunkBuffers[itemId] || chunkBuffers[itemId].hash !== hash) {
+    // Cap op aantal gelijktijdige buffers — voorkomt geheugen-uitputting
+    if (!chunkBuffers[itemId] && Object.keys(chunkBuffers).length >= MAX_CHUNK_BUFFERS) {
+      console.warn('[sync] Te veel gelijktijdige chunk-buffers — chunk geweigerd')
+      return
+    }
+    chunkBuffers[itemId] = { delen: new Array(totaal), ontvangen: 0, totaal, hash }
+  }
+  const buf = chunkBuffers[itemId]
+  if (buf.totaal !== totaal) { console.warn('[sync] totaal-mismatch — chunk geweigerd'); return }
+  if (buf.delen[volgnr] === undefined) {
+    buf.delen[volgnr] = data
+    buf.ontvangen++
+  }
+
+  // Status-message: onderscheid foto vs muziek
+  let statusLabel = itemId
+  if (itemId.startsWith('pfoto_')) {
+    statusLabel = 'foto ' + itemId.replace('pfoto_', '')
+  } else if (itemId.startsWith('muziek_')) {
+    statusLabel = 'muziek ' + itemId.replace('muziek_', '')
+  }
+  zetP2pStatus(statusLabel + ': ' + buf.ontvangen + '/' + buf.totaal)
+
+  if (buf.ontvangen === buf.totaal) {
+    const compleet = buf.delen.join('')
+    if (hashString(compleet) !== hash) {
+      console.warn('[sync] hash-mismatch bij', itemId, '— chunk-buffer weggegooid')
+      delete chunkBuffers[itemId]
+      return
+    }
+
+    // Opslaan: bepaal de juiste key op basis van itemId
+    let dbKey = itemId
+    if (itemId.startsWith('pfoto_')) {
+      dbKey = 'vriend_' + syncPartnerId + '_foto_' + itemId
+    } else if (itemId.startsWith('muziek_')) {
+      dbKey = 'vriend_' + syncPartnerId + '_muziek_' + itemId.slice(7)
+    } else {
+      // layout of ander item — dit zou niet via chunks moeten komen
+      dbKey = 'vriend_' + syncPartnerId + '_' + itemId
+    }
+
+    await dbPut({ id: dbKey, hash, data: compleet, ontvangen: Date.now() })
+    delete chunkBuffers[itemId]
+    console.log('[sync] Item compleet opgeslagen:', itemId)
+    zetP2pStatus(statusLabel + ' \u2713')
+  }
+}
+
+function openFibroDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('FibroDB', 2)
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result
+      if (!db.objectStoreNames.contains('fotos')) db.createObjectStore('fotos', { keyPath: 'id' })
+    }
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
+
+async function dbGet(id) {
+  const db = await openFibroDB()
+  return new Promise((resolve) => {
+    const req = db.transaction('fotos').objectStore('fotos').get(id)
+    req.onsuccess = () => resolve(req.result || null)
+    req.onerror = () => resolve(null)
+  })
+}
+
+async function dbPut(obj) {
+  const db = await openFibroDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('fotos', 'readwrite')
+    tx.objectStore('fotos').put(obj)
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error)
+  })
+}
+
+async function dbDelete(id) {
+  const db = await openFibroDB()
+  return new Promise((resolve) => {
+    const tx = db.transaction('fotos', 'readwrite')
+    tx.objectStore('fotos').delete(id)
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => resolve()
+  })
+}
+
+async function dbListKeys(prefix) {
+  const db = await openFibroDB()
+  return new Promise((resolve) => {
+    const req = db.transaction('fotos').objectStore('fotos').getAllKeys()
+    req.onsuccess = () => resolve((req.result || []).filter(k => typeof k === 'string' && k.startsWith(prefix)))
+    req.onerror = () => resolve([])
+  })
+}
+
+async function maakEnStuurOffer() {
+  await iceReady // TURN-servers eerst binnen laten komen
+  maakPeerConnection()
+  koppelDataChannel(peerConnection.createDataChannel('fibro-sync'))
+  const offer = await peerConnection.createOffer()
+  await peerConnection.setLocalDescription(offer)
+  await stuurSignaal('offer', offer)
+}
+
+async function verwerkSignaal(type, data) {
+  console.log('[sync] Signaal:', type)
+  if (type === 'offer') {
+    if (isInitiator) return
+    // RACE-FIX (bug #3): duplicate offer (van een retry) negeren als er al
+    // een verbinding loopt of staat — anders wordt een werkende verbinding weggegooid
+    if (peerConnection) {
+      const staat = peerConnection.connectionState
+      const dcOpen = dataChannel && dataChannel.readyState === 'open'
+      if (dcOpen || staat === 'connected' || staat === 'connecting') {
+        console.log('[sync] Duplicate offer genegeerd (verbinding al actief)')
+        return
+      }
+    }
+    await iceReady // TURN-servers eerst binnen laten komen
+    maakPeerConnection()
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(data))
+    await leegIceBuffer()
+    const answer = await peerConnection.createAnswer()
+    await peerConnection.setLocalDescription(answer)
+    await stuurSignaal('answer', answer)
+  }
+  if (type === 'answer') {
+    if (!isInitiator || !peerConnection) return
+    if (peerConnection.signalingState !== 'have-local-offer') return
+    clearTimeout(offerRetryTimer)
+    clearTimeout(syncTimeout)
+    console.log('[sync] Answer ontvangen — retry gestopt')
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(data))
+    await leegIceBuffer()
+  }
+  if (type === 'ice') {
+    if (!peerConnection || !peerConnection.remoteDescription) {
+      iceBuffer.push(data)
+      return
+    }
+    try { await peerConnection.addIceCandidate(new RTCIceCandidate(data)) }
+    catch (e) { console.warn('[sync] ice fout:', e) }
+  }
+}
+
+async function leegIceBuffer() {
+  for (const kandidaat of iceBuffer) {
+    try { await peerConnection.addIceCandidate(new RTCIceCandidate(kandidaat)) }
+    catch (e) { console.warn('[sync] ice-buffer fout:', e) }
+  }
+  iceBuffer = []
+}
+
+// ── Relay-vraag: muziek toch versturen via relay? ──
+function toonRelayMuziekVraag(muziekItems) {
+  // Niet dubbel tonen
+  if (document.getElementById('sync-relay-vraag')) return
+  const box = document.createElement('div')
+  box.id = 'sync-relay-vraag'
+  box.style.cssText = 'position:fixed;bottom:110px;right:10px;background:rgba(20,10,40,0.95);color:#fff;padding:12px 14px;border-radius:12px;font-size:13px;z-index:9999;font-family:inherit;max-width:240px;border:1px solid rgba(192,132,252,0.4);box-shadow:0 4px 20px rgba(0,0,0,0.5)'
+  box.innerHTML = '🎵 Muziek van je vriend gevonden, maar de verbinding loopt via een relay-server (kost extra data).<div style="display:flex;gap:8px;margin-top:10px;">' +
+    '<button id="sync-relay-ja" style="flex:1;background:linear-gradient(135deg,#c084fc,#818cf8);border:none;border-radius:8px;padding:8px;color:#1a0a2e;font-weight:600;cursor:pointer;min-height:40px;">Toch ophalen</button>' +
+    '<button id="sync-relay-nee" style="flex:1;background:rgba(255,255,255,0.1);border:none;border-radius:8px;padding:8px;color:#fff;cursor:pointer;min-height:40px;">Overslaan</button></div>'
+  document.body.appendChild(box)
+  document.getElementById('sync-relay-ja').onclick = () => {
+    box.remove()
+    if (dataChannel && dataChannel.readyState === 'open') {
+      dataChannel.send(JSON.stringify({ type: 'geef', items: muziekItems }))
+      zetP2pStatus('muziek ophalen via relay...')
+    }
+  }
+  document.getElementById('sync-relay-nee').onclick = () => box.remove()
+}
+
+function stopSync() {
+  console.log('[sync] Sync gestopt')
+  clearTimeout(offerRetryTimer)
+  clearTimeout(syncTimeout)
+  if (dataChannel) { dataChannel.close(); dataChannel = null }
+  if (peerConnection) { peerConnection.close(); peerConnection = null }
+  if (syncKanaal) { supabase.removeChannel(syncKanaal); syncKanaal = null }
+  syncPartnerId = null
+  iceBuffer = []
+  offerRetryCount = 0
+  isRelayConnection = false
+  zetP2pStatus('')
+}
+
+function zetP2pStatus(status) {
+  p2pStatus = status
+  toonDebugBadge()
+}
+
+function toonDebugBadge() {
+  let b = document.getElementById('sync-debug-badge')
+  if (!b) {
+    b = document.createElement('div')
+    b.id = 'sync-debug-badge'
+    b.style.cssText = 'position:fixed;bottom:70px;right:10px;background:rgba(0,0,0,0.8);color:#0f0;padding:6px 10px;border-radius:8px;font-size:13px;z-index:9999;font-family:monospace'
+    document.body.appendChild(b)
+  }
+  b.textContent = 'sync5: ' + onlineGebruikers.size + ' online' + (p2pStatus ? ' | ' + p2pStatus : '')
+}
+
+export function isOnline(userId) {
+  return onlineGebruikers.has(userId)
+}
+
+export function getOnlineGebruikers() {
+  return [...onlineGebruikers]
+}

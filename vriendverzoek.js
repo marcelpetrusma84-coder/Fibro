@@ -38,14 +38,15 @@ export async function stuurVriendverzoek(naarId) {
 }
 
 function toonVriendverzoekPopup(vanId, vanNaam, vanAvatar) {
+  const vvEsc = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')
   const oud = document.getElementById('vvPopup')
   if (oud) oud.remove()
   const popup = document.createElement('div')
   popup.id = 'vvPopup'
   popup.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:10000;background:#1e1e2e;border:1px solid rgba(255,255,255,0.15);border-radius:16px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:flex;align-items:center;gap:12px;max-width:90%;'
   popup.innerHTML = `
-    <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#c084fc,#f0abfc);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;">${vanAvatar && vanAvatar.startsWith('http') ? `<img src="${vanAvatar}" style="width:100%;height:100%;object-fit:cover;">` : vanAvatar}</div>
-    <div style="flex:1;color:white;font-size:14px;"><strong>${vanNaam}</strong> wil je toevoegen</div>
+    <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#c084fc,#f0abfc);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;">${vanAvatar && vanAvatar.startsWith('http') ? `<img src="${vvEsc(vanAvatar)}" style="width:100%;height:100%;object-fit:cover;">` : vvEsc(vanAvatar)}</div>
+    <div style="flex:1;color:white;font-size:14px;"><strong>${vvEsc(vanNaam)}</strong> wil je toevoegen</div>
     <button id="vvBevestig" style="background:#4caf50;color:white;border:none;border-radius:16px;padding:8px 14px;font-size:13px;font-weight:bold;cursor:pointer;">Bevestigen</button>
     <button id="vvWeiger" style="background:rgba(255,255,255,0.1);color:#aaa;border:none;border-radius:16px;padding:8px 14px;font-size:13px;cursor:pointer;">Annuleren</button>
   `

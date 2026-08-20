@@ -428,7 +428,7 @@ body.heeft-wallpaper::before { display:block; }
     toonVriendWidgets()
 
     // ── Stap 1: Toon eerst cache (snel) ──
-    const cacheKey = 'vriend_cache_' + vriendId
+    const cacheKey = 'vriend_cache_' + vriendId + '_' + (huidigeUser?.id || 'anon')
     const cache = localStorage.getItem(cacheKey)
     if (cache) {
       try {

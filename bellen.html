@@ -88,6 +88,15 @@ let timer = null, sec = 0, micAan = true, videoModus = false
 document.getElementById('naam').textContent = vriendNaam
 
 const { data: { session } } = await supabase.auth.getSession()
+
+// ── Weergavenaam van een vriend: via P2P ontvangen en lokaal bewaard ──
+function belNaam(vriendId, username) {
+  try {
+    const n = String(localStorage.getItem('vriend_naam_' + vriendId + '_' + (session?.user?.id || '')) || '').trim()
+    if (n) return n
+  } catch(e) {}
+  return username || 'Vriend'
+}
 if (!session) { window.location.href = 'login.html' }
 
 initBellen(session.user.id, {
@@ -101,7 +110,7 @@ initBellen(session.user.id, {
   onOproep: async (info) => {
     const { data: v } = await supabase.from('profiles').select('*').eq('id', info.van).single()
     document.getElementById('avatar').textContent = v?.avatar_url || '👤'
-    document.getElementById('naam').textContent = v?.display_name || v?.username || 'Vriend'
+    document.getElementById('naam').textContent = belNaam(info.van, v?.username)
     document.getElementById('status').textContent = (videoModus ? '📹 Videogesprek — ' : '📞 Belt je op...')
     document.getElementById('knoppen-bellen').style.display = 'none'
     document.getElementById('knoppen-inkomend').style.display = 'flex'
@@ -130,7 +139,7 @@ if (vriendId && !params.get('inkomend')) {
   const { data: v } = await supabase.from('profiles').select('*').eq('id', vriendId).single()
   if (v) {
     document.getElementById('avatar').textContent = v.avatar_url || '👤'
-    document.getElementById('naam').textContent = v.display_name || v.username || 'Vriend'
+    document.getElementById('naam').textContent = belNaam(vriendId, v.username)
   }
 }
 

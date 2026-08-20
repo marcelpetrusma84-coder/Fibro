@@ -251,11 +251,11 @@ window.registreren = async function() {
     const kluisBlob = await versleutelPrivateKey(keypair.privateKeyB64, herstelsleutel)
     await supabase.from('sleutel_kluis').upsert({ user_id: data.user.id, blob: kluisBlob })
 
-    await supabase.rpc('gebruik_invite', { token_in: token, gebruiker: data.user.id })
-
     if (uitnodigerData?.created_by && uitnodigerData.created_by !== data.user.id) {
-      await supabase.rpc('maak_vriendschap', { vriend: uitnodigerData.created_by })
+      await supabase.rpc('maak_vriendschap_via_invite', { token_in: token })
     }
+
+    await supabase.rpc('gebruik_invite', { token_in: token, gebruiker: data.user.id })
   }
 
   document.getElementById('uitnodigingScherm').style.display = 'none'
@@ -281,7 +281,7 @@ window.voegToe = async function() {
     .maybeSingle()
 
   if (!bestaat) {
-    await supabase.rpc('maak_vriendschap', { vriend: ander })
+    await supabase.rpc('maak_vriendschap_via_invite', { token_in: token })
   }
   // Markeer token als gebruikt
   await supabase.rpc('gebruik_invite', { token_in: token, gebruiker: mij })

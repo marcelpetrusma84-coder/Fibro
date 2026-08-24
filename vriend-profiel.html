@@ -580,7 +580,7 @@ body.heeft-wallpaper::before { display:block; }
     } catch (e) {}
 
     alert('Gelukt. ' + naam + ' staat niet meer in je vriendenlijst. (' + res.data.length + ' rijen verwijderd)')
-    window.location.href = 'vrienden.html'
+    setTimeout(function () { window.location.href = 'vrienden.html' }, 50)
   }
 
   window.naarChat = function() {

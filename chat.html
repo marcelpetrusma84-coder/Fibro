@@ -429,6 +429,7 @@ window.veiligeUrl = function(v){
     if (!session) { window.location.href = 'login.html'; return }
 
     huidigeUser = session.user
+    window.huidigeUser = huidigeUser
     mijnPrivateKey = haalPrivateKeyOp(huidigeUser.id)
 
     const { data } = await supabase
@@ -578,6 +579,7 @@ window.veiligeUrl = function(v){
   // ─── Chat openen ───
   window.openChat = async function(vriendId, vriendNaam, vriendAvatar, vriendPubKey) {
     geselecteerdeVriend = { id: vriendId, naam: vriendNaam, avatar: vriendAvatar }
+    window.geselecteerdeVriend = geselecteerdeVriend
     vriendPublicKey = vriendPubKey || null
 
     document.getElementById('chatAv').textContent = vriendAvatar
@@ -989,6 +991,7 @@ window.veiligeUrl = function(v){
   window.gaTerug = function() {
     if (geselecteerdeVriend) {
       geselecteerdeVriend = null
+      window.geselecteerdeVriend = null
       vriendPublicKey = null
       document.getElementById('chatScherm').style.display = 'none'
       document.getElementById('vriendenSelectie').style.display = 'block'
@@ -3464,7 +3467,7 @@ let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
 window.toonChatMenu = function() {
-  if (!geselecteerdeVriend) { alert('Kies eerst een gesprek.'); return }
+  const gv = window.geselecteerdeVriend; if (!gv) { alert('Kies eerst een gesprek.'); return }
   const oud = document.getElementById('chatMenu'); if (oud) { oud.remove(); return }
   const m = document.createElement('div')
   m.id = 'chatMenu'
@@ -3540,8 +3543,8 @@ async function verstuurMelding(reden) {
     if (r && r.dataset.mtekst) teksten.push(r.dataset.mtekst)
   })
   const ok = await stuurRapport({
-    melderId: huidigeUser.id,
-    gemeldeId: geselecteerdeVriend.id,
+    melderId: window.huidigeUser.id,
+    gemeldeId: window.geselecteerdeVriend.id,
     berichtInhoud: teksten.join('\n---\n').slice(0, 2000),
     reden: reden
   })

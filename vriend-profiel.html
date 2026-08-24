@@ -548,6 +548,41 @@ body.heeft-wallpaper::before { display:block; }
     }
   }
 
+  window.ontvriend = async function () {
+    if (!huidigeUser || !vriendId) return
+    var mijnId = huidigeUser.id
+    var naam = String(localStorage.getItem('vriend_naam_' + vriendId + '_' + mijnId) || '').trim() || 'deze vriend'
+    if (!confirm('Wil je ' + naam + ' uit je vriendenlijst halen?\n\nJullie verdwijnen allebei uit elkaars lijst. Berichten sturen en bellen kan daarna niet meer. Opnieuw toevoegen kan alleen met een nieuwe uitnodigingslink.')) return
+
+    var knop = document.getElementById('ontvriend-btn')
+    if (knop) { knop.disabled = true; knop.textContent = 'bezig...' }
+
+    var res = await supabase
+      .from('friendships')
+      .delete()
+      .or('and(user_id.eq.' + mijnId + ',friend_id.eq.' + vriendId + '),and(user_id.eq.' + vriendId + ',friend_id.eq.' + mijnId + ')')
+      .select()
+
+    if (res.error) {
+      alert('Het is niet gelukt: ' + res.error.message)
+      if (knop) { knop.disabled = false; knop.textContent = 'Vriendschap beeindigen' }
+      return
+    }
+    if (!res.data || res.data.length === 0) {
+      alert('Er is niets verwijderd. Waarschijnlijk ontbreekt de DELETE-policy op friendships.')
+      if (knop) { knop.disabled = false; knop.textContent = 'Vriendschap beeindigen' }
+      return
+    }
+
+    try {
+      localStorage.removeItem('vriend_cache_' + vriendId + '_' + mijnId)
+      localStorage.removeItem('vriend_naam_' + vriendId + '_' + mijnId)
+    } catch (e) {}
+
+    alert('Gelukt. ' + naam + ' staat niet meer in je vriendenlijst. (' + res.data.length + ' rijen verwijderd)')
+    window.location.href = 'vrienden.html'
+  }
+
   window.naarChat = function() {
     if (vriendData) {
       const naam = encodeURIComponent(vriendNaam(vriendData.username))
@@ -569,5 +604,8 @@ body.heeft-wallpaper::before { display:block; }
   init()
 </script>
 
+<div style="max-width:640px;margin:28px auto 44px;text-align:center;">
+    <button id="ontvriend-btn" onclick="ontvriend()" style="background:none;border:none;color:rgba(255,255,255,0.32);font-size:12px;cursor:pointer;text-decoration:underline;padding:8px;font-family:inherit;">Vriendschap beeindigen</button>
+  </div>
 </body>
 </html>

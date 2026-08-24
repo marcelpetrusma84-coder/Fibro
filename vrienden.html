@@ -355,7 +355,32 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     // Klikgedrag via listeners in plaats van onclick-attributen
     container.querySelectorAll('.friend-row').forEach(rij => {
       rij.style.cursor = 'pointer'
-      rij.addEventListener('click', () => {
+      var langIndrukken = null
+      var wasLang = false
+
+      function startDruk() {
+        wasLang = false
+        clearTimeout(langIndrukken)
+        langIndrukken = setTimeout(function () {
+          wasLang = true
+          rij.style.outline = '1px solid var(--accent)'
+          try { if (navigator.vibrate) navigator.vibrate(30) } catch (e) {}
+          vraagOntvrienden(rij, userId)
+        }, 600)
+      }
+      function stopDruk() {
+        clearTimeout(langIndrukken)
+        setTimeout(function () { rij.style.outline = '' }, 200)
+      }
+
+      rij.addEventListener('pointerdown', startDruk)
+      rij.addEventListener('pointerup', stopDruk)
+      rij.addEventListener('pointerleave', stopDruk)
+      rij.addEventListener('pointercancel', stopDruk)
+      rij.addEventListener('contextmenu', function (e) { e.preventDefault() })
+
+      rij.addEventListener('click', e => {
+        if (wasLang) { e.preventDefault(); e.stopPropagation(); wasLang = false; return }
         window.location.href = 'vriend-profiel.html?id=' + encodeURIComponent(rij.dataset.vid)
       })
     })
@@ -367,6 +392,32 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
           '&avatar=' + encodeURIComponent(knop.dataset.cav)
       })
     })
+  }
+
+  async function vraagOntvrienden(rij, mijnId) {
+    var vriendId = rij.dataset.vid
+    var naamEl = rij.querySelector('.friend-naam, strong, b')
+    var naam = naamEl ? String(naamEl.textContent || '').trim() : ''
+    if (!naam) naam = 'deze vriend'
+
+    if (!confirm(naam + ' uit je vriendenlijst halen?\n\nJullie verdwijnen allebei uit elkaars lijst. Berichten sturen en bellen kan daarna niet meer. Opnieuw toevoegen kan alleen met een nieuwe uitnodigingslink.')) return
+
+    var res = await supabase
+      .from('friendships')
+      .delete()
+      .or('and(user_id.eq.' + mijnId + ',friend_id.eq.' + vriendId + '),and(user_id.eq.' + vriendId + ',friend_id.eq.' + mijnId + ')')
+      .select()
+
+    if (res.error) { alert('Het is niet gelukt: ' + res.error.message); return }
+    if (!res.data || res.data.length === 0) { alert('Er is niets verwijderd.'); return }
+
+    try {
+      localStorage.removeItem('vriend_cache_' + vriendId + '_' + mijnId)
+      localStorage.removeItem('vriend_naam_' + vriendId + '_' + mijnId)
+    } catch (e) {}
+
+    rij.remove()
+    alert(naam + ' staat niet meer in je vriendenlijst.')
   }
 
   init()

@@ -900,9 +900,9 @@ init()
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js"; startSpelUitnodigingLuisteraar()</script>
 <script>
-/* FIBRO-DIAGNOSE - tijdelijk, later weghalen */
+/* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */
 setTimeout(function(){
-  alert('standalone: ' + window.matchMedia('(display-mode: standalone)').matches
+  console.log('[fibro-diagnose] standalone: ' + window.matchMedia('(display-mode: standalone)').matches
     + '\npush mogelijk: ' + ('PushManager' in window)
     + '\nserviceworker: ' + ('serviceWorker' in navigator)
     + '\ntoestemming: ' + (window.Notification ? Notification.permission : 'geen Notification'));

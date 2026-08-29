@@ -454,7 +454,7 @@ function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open
 async function slaFotoOp(id,data){const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=resolve})}
 async function laadFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
 function comprimeerFoto(file,maxBreedte,kwaliteit){return new Promise((resolve)=>{const reader=new FileReader();reader.onload=function(e){const img=new Image();img.onload=function(){const canvas=document.createElement('canvas');let w=img.width,h=img.height;if(w>maxBreedte){h=h*maxBreedte/w;w=maxBreedte}if(h>maxBreedte){w=w*maxBreedte/h;h=maxBreedte}canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);// WebP voor kleinste bestandsgrootte
-resolve(canvas.toDataURL('image/webp',kwaliteit))};img.src=e.target.result};reader.readAsDataURL(file)})}
+resolve(canvas.toDataURL('image/webp',kwaliteit))};img.onerror=function(){alert('Deze foto kan niet worden gelezen.\n\nWaarschijnlijk is het een HEIC-bestand van een iPhone. Zet in Instellingen > Camera > Indelingen op "Meest compatibel", of maak er eerst een schermafbeelding van.');resolve(null)};img.src=e.target.result};reader.onerror=function(){alert('Bestand kon niet worden gelezen.');resolve(null)};reader.readAsDataURL(file)})}
 
 // Video compressie via MediaRecorder (thumbnail + gecomprimeerde versie)
 async function comprimeerVideo(file) {

@@ -62,6 +62,12 @@
   /* PROFIEL SECTIE LABEL */
   .sectie-label { padding:4px 14px 0; font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; }
 </style>
+<script>
+function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
+async function slaFotoOp(id,data){const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=resolve})}
+async function laadFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
+async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').delete(id);tx.oncomplete=resolve})}catch{return null}}
+</script>
 </head>
 <body>
 <div id="sleutel-balk" style="display:none;position:sticky;top:0;z-index:9999;background:#2a1f3d;border-bottom:2px solid #c084fc;padding:14px 16px;font-family:'DM Mono',monospace;">
@@ -739,7 +745,7 @@ function renderFotoGrid(c, stijl, aantalFotos) {
       const reader = new FileReader()
       reader.onload = ev => {
         const tmpImg = new Image()
-        tmpImg.onload = () => {
+        tmpImg.onload = async () => {
           const canvas = document.createElement('canvas')
           const max = stijl === 'groot' ? 900 : 600
           let w = tmpImg.width, h = tmpImg.height
@@ -747,9 +753,9 @@ function renderFotoGrid(c, stijl, aantalFotos) {
           canvas.width=w; canvas.height=h
           canvas.getContext('2d').drawImage(tmpImg,0,0,w,h)
           try {
-            localStorage.setItem(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.6))
+            await slaFotoOp(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.85))
           } catch(err) {
-            alert('Deze foto past er niet meer bij.\n\nDe opslagruimte op dit apparaat is vol. Verwijder eerst een andere foto uit je widgets en probeer het opnieuw.')
+            alert('Opslaan van de foto is mislukt. Probeer het opnieuw.')
             return
           }
           const cel = document.getElementById('foto-cel-'+stijl+'-'+celIdx)
@@ -763,8 +769,12 @@ function renderFotoGrid(c, stijl, aantalFotos) {
     document.body.appendChild(inp)
   }
 
-  function tekenCel(cel, i) {
-    const foto = localStorage.getItem(KEY+i+'_'+uid)
+  async function tekenCel(cel, i) {
+    let foto = await laadFotoUitDB(KEY+i+'_'+uid)
+    if (!foto) {
+      const oudLS = localStorage.getItem(KEY+i+'_'+uid)
+      if (oudLS) { foto = oudLS; try { await slaFotoOp(KEY+i+'_'+uid, oudLS); localStorage.removeItem(KEY+i+'_'+uid) } catch(e) {} }
+    }
     const fitKey = KEY+i+'_fit_'+uid
     const aspect = celAspect[stijl]
     if (aspect) cel.style.aspectRatio = aspect
@@ -882,7 +892,7 @@ function renderFotoFeatured(c) {
       const reader = new FileReader()
       reader.onload = ev => {
         const tmp = new Image()
-        tmp.onload = () => {
+        tmp.onload = async () => {
           const canvas = document.createElement('canvas')
           const max = celIdx === 0 ? 1000 : 500
           let w = tmp.width, h = tmp.height
@@ -890,9 +900,9 @@ function renderFotoFeatured(c) {
           canvas.width=w; canvas.height=h
           canvas.getContext('2d').drawImage(tmp,0,0,w,h)
           try {
-            localStorage.setItem(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.6))
+            await slaFotoOp(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.85))
           } catch(err) {
-            alert('Deze foto past er niet meer bij.\n\nDe opslagruimte op dit apparaat is vol. Verwijder eerst een andere foto uit je widgets en probeer het opnieuw.')
+            alert('Opslaan van de foto is mislukt. Probeer het opnieuw.')
             return
           }
           const cel = document.getElementById('foto-cel-featured-'+celIdx)
@@ -905,8 +915,12 @@ function renderFotoFeatured(c) {
     document.body.appendChild(inp)
   }
 
-  function tekenFtCel(cel, i) {
-    const foto = localStorage.getItem(KEY+i+'_'+uid)
+  async function tekenFtCel(cel, i) {
+    let foto = await laadFotoUitDB(KEY+i+'_'+uid)
+    if (!foto) {
+      const oudLS = localStorage.getItem(KEY+i+'_'+uid)
+      if (oudLS) { foto = oudLS; try { await slaFotoOp(KEY+i+'_'+uid, oudLS); localStorage.removeItem(KEY+i+'_'+uid) } catch(e) {} }
+    }
     const fitKey = KEY+i+'_fit_'+uid
     cel.innerHTML = ''
     if (foto) {
@@ -1016,16 +1030,16 @@ function renderFotoZwevend(c) {
       const reader = new FileReader()
       reader.onload = ev => {
         const tmp = new Image()
-        tmp.onload = () => {
+        tmp.onload = async () => {
           const canvas = document.createElement('canvas')
           let w=tmp.width, h=tmp.height, max=600
           if (w>max||h>max) { if(w>h){h=Math.round(h*max/w);w=max} else {w=Math.round(w*max/h);h=max} }
           canvas.width=w; canvas.height=h
           canvas.getContext('2d').drawImage(tmp,0,0,w,h)
           try {
-            localStorage.setItem(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.6))
+            await slaFotoOp(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.85))
           } catch(err) {
-            alert('Deze foto past er niet meer bij.\n\nDe opslagruimte op dit apparaat is vol. Verwijder eerst een andere foto uit je widgets en probeer het opnieuw.')
+            alert('Opslaan van de foto is mislukt. Probeer het opnieuw.')
             return
           }
           tekenZwevend(celIdx)
@@ -1037,11 +1051,15 @@ function renderFotoZwevend(c) {
     document.body.appendChild(inp)
   }
 
-  function tekenZwevend(i) {
+  async function tekenZwevend(i) {
     const old = document.getElementById('zwevend-'+i)
     if (old) old.remove()
 
-    const foto = localStorage.getItem(KEY+i+'_'+uid)
+    let foto = await laadFotoUitDB(KEY+i+'_'+uid)
+    if (!foto) {
+      const oudLS = localStorage.getItem(KEY+i+'_'+uid)
+      if (oudLS) { foto = oudLS; try { await slaFotoOp(KEY+i+'_'+uid, oudLS); localStorage.removeItem(KEY+i+'_'+uid) } catch(e) {} }
+    }
     const fitKey = KEY+i+'_fit_'+uid
     const pos = POS[i]
 
@@ -1125,16 +1143,16 @@ function renderFotoPolaroid(c) {
       const reader = new FileReader()
       reader.onload = ev => {
         const tmp = new Image()
-        tmp.onload = () => {
+        tmp.onload = async () => {
           const canvas = document.createElement('canvas')
           let w=tmp.width, h=tmp.height, max=500
           if(w>max||h>max){ if(w>h){h=Math.round(h*max/w);w=max} else {w=Math.round(w*max/h);h=max} }
           canvas.width=w; canvas.height=h
           canvas.getContext('2d').drawImage(tmp,0,0,w,h)
           try {
-            localStorage.setItem(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.6))
+            await slaFotoOp(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.85))
           } catch(err) {
-            alert('Deze foto past er niet meer bij.\n\nDe opslagruimte op dit apparaat is vol. Verwijder eerst een andere foto uit je widgets en probeer het opnieuw.')
+            alert('Opslaan van de foto is mislukt. Probeer het opnieuw.')
             return
           }
           tekenPolaroid(celIdx)
@@ -1146,11 +1164,15 @@ function renderFotoPolaroid(c) {
     document.body.appendChild(inp)
   }
 
-  function tekenPolaroid(i) {
+  async function tekenPolaroid(i) {
     const old = document.getElementById('polaroid-'+i)
     if (old) old.remove()
 
-    const foto = localStorage.getItem(KEY+i+'_'+uid)
+    let foto = await laadFotoUitDB(KEY+i+'_'+uid)
+    if (!foto) {
+      const oudLS = localStorage.getItem(KEY+i+'_'+uid)
+      if (oudLS) { foto = oudLS; try { await slaFotoOp(KEY+i+'_'+uid, oudLS); localStorage.removeItem(KEY+i+'_'+uid) } catch(e) {} }
+    }
     const fitKey = KEY+i+'_fit_'+uid
     const rot = ROTATIES[i % ROTATIES.length]
 

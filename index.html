@@ -808,9 +808,9 @@ function renderFotoGrid(c, stijl, aantalFotos) {
       const del = document.createElement('button')
       del.textContent = '×'
       del.style.cssText = 'position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.75);border:none;color:white;font-size:16px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;'
-      del.addEventListener('click', e => {
+      del.addEventListener('click', async e => {
         e.stopPropagation()
-        localStorage.removeItem(KEY+i+'_'+uid)
+        await wisFotoUitDB(KEY+i+'_'+uid)
         localStorage.removeItem(fitKey)
         cel.style.background = 'rgba(192,132,252,0.06)'
         tekenCel(cel, i)
@@ -947,9 +947,9 @@ function renderFotoFeatured(c) {
       const del = document.createElement('button')
       del.textContent = '×'
       del.style.cssText = 'position:absolute;top:3px;right:3px;width:'+(i===0?'20px':'16px')+';height:'+(i===0?'20px':'16px')+';border-radius:50%;background:rgba(0,0,0,0.75);border:none;color:white;font-size:'+(i===0?'13px':'11px')+';cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;padding:0;'
-      del.addEventListener('click', e => {
+      del.addEventListener('click', async e => {
         e.stopPropagation()
-        localStorage.removeItem(KEY+i+'_'+uid)
+        await wisFotoUitDB(KEY+i+'_'+uid)
         localStorage.removeItem(fitKey)
         tekenFtCel(cel,i)
       })
@@ -1094,7 +1094,7 @@ function renderFotoZwevend(c) {
       const del = document.createElement('button')
       del.textContent = '×'
       del.style.cssText = 'position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.65);border:none;color:white;font-size:12px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;padding:0;'
-      del.addEventListener('click', e => { e.stopPropagation(); localStorage.removeItem(KEY+i+'_'+uid); localStorage.removeItem(fitKey); tekenZwevend(i) })
+      del.addEventListener('click', async e => { e.stopPropagation(); await wisFotoUitDB(KEY+i+'_'+uid); localStorage.removeItem(fitKey); tekenZwevend(i) })
 
       fotoEl.appendChild(fitBtn)
       frame.appendChild(del)
@@ -1207,7 +1207,7 @@ function renderFotoPolaroid(c) {
       const del = document.createElement('button')
       del.textContent = '×'
       del.style.cssText = 'position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.6);border:none;color:white;font-size:12px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;padding:0;'
-      del.addEventListener('click', e => { e.stopPropagation(); localStorage.removeItem(KEY+i+'_'+uid); localStorage.removeItem(fitKey); tekenPolaroid(i) })
+      del.addEventListener('click', async e => { e.stopPropagation(); await wisFotoUitDB(KEY+i+'_'+uid); localStorage.removeItem(fitKey); tekenPolaroid(i) })
 
       fotoEl.appendChild(fitBtn)
       frame.appendChild(del)

@@ -741,13 +741,13 @@ function renderFotoGrid(c, stijl, aantalFotos) {
         const tmpImg = new Image()
         tmpImg.onload = () => {
           const canvas = document.createElement('canvas')
-          const max = stijl === 'groot' ? 1200 : 800
+          const max = stijl === 'groot' ? 900 : 600
           let w = tmpImg.width, h = tmpImg.height
           if (w > max || h > max) { if(w>h){h=Math.round(h*max/w);w=max}else{w=Math.round(w*max/h);h=max} }
           canvas.width=w; canvas.height=h
           canvas.getContext('2d').drawImage(tmpImg,0,0,w,h)
           try {
-            localStorage.setItem(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.85))
+            localStorage.setItem(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.6))
           } catch(err) {
             alert('Deze foto past er niet meer bij.\n\nDe opslagruimte op dit apparaat is vol. Verwijder eerst een andere foto uit je widgets en probeer het opnieuw.')
             return
@@ -890,7 +890,7 @@ function renderFotoFeatured(c) {
           canvas.width=w; canvas.height=h
           canvas.getContext('2d').drawImage(tmp,0,0,w,h)
           try {
-            localStorage.setItem(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.85))
+            localStorage.setItem(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.6))
           } catch(err) {
             alert('Deze foto past er niet meer bij.\n\nDe opslagruimte op dit apparaat is vol. Verwijder eerst een andere foto uit je widgets en probeer het opnieuw.')
             return
@@ -1023,7 +1023,7 @@ function renderFotoZwevend(c) {
           canvas.width=w; canvas.height=h
           canvas.getContext('2d').drawImage(tmp,0,0,w,h)
           try {
-            localStorage.setItem(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.85))
+            localStorage.setItem(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.6))
           } catch(err) {
             alert('Deze foto past er niet meer bij.\n\nDe opslagruimte op dit apparaat is vol. Verwijder eerst een andere foto uit je widgets en probeer het opnieuw.')
             return
@@ -1132,7 +1132,7 @@ function renderFotoPolaroid(c) {
           canvas.width=w; canvas.height=h
           canvas.getContext('2d').drawImage(tmp,0,0,w,h)
           try {
-            localStorage.setItem(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.85))
+            localStorage.setItem(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.6))
           } catch(err) {
             alert('Deze foto past er niet meer bij.\n\nDe opslagruimte op dit apparaat is vol. Verwijder eerst een andere foto uit je widgets en probeer het opnieuw.')
             return

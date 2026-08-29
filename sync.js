@@ -232,19 +232,19 @@ function hashString(s) {
   return h.toString(16)
 }
 
-function verzamelEigenFotos() {
+async function verzamelEigenFotos() {
   // Foto's van de home-widgets staan in localStorage als pfoto_<stijl>_<idx>_<uid>
   // itemId = key ZONDER uid-suffix, zodat de ontvanger apparaat-onafhankelijke ids cachet
   const fotos = {}
   const suffix = '_' + huidigeUserId
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i)
-    if (key && key.startsWith('pfoto_') && key.endsWith(suffix) && !key.includes('_fit_')) {
-      const data = localStorage.getItem(key)
-      if (data && data.startsWith('data:image')) {
-        const itemId = key.slice(0, -suffix.length)
-        fotos[itemId] = { hash: hashString(data) }
-      }
+  const keys = await dbListKeys('pfoto_')
+  for (const key of keys) {
+    if (!key.endsWith(suffix) || key.includes('_fit_')) continue
+    const rec = await dbGet(key)
+    const data = rec && rec.data
+    if (data && typeof data === 'string' && data.startsWith('data:image')) {
+      const itemId = key.slice(0, -suffix.length)
+      fotos[itemId] = { hash: hashString(data) }
     }
   }
   return fotos
@@ -290,7 +290,7 @@ async function verzamelEigenMuziek() {
 
 async function stuurManifest() {
   const layoutJson = localStorage.getItem('fibro_widgets_profiel_' + huidigeUserId) || '[]'
-  const fotos = verzamelEigenFotos()
+  const fotos = await verzamelEigenFotos()
   const muziek = await verzamelEigenMuziek()
   // Weergavenaam reist mee over P2P: hij staat bewust niet op de server.
   let eigenNaam = ''
@@ -429,7 +429,8 @@ async function stuurFotoInChunks(itemId) {
     console.warn('[sync] foto-verzoek geweigerd:', itemId)
     return
   }
-  const data = localStorage.getItem(itemId + '_' + huidigeUserId)
+  const rec = await dbGet(itemId + '_' + huidigeUserId)
+  const data = rec && rec.data
   if (!data) { console.warn('[sync] foto niet gevonden:', itemId); return }
   if (!data.startsWith('data:image')) { console.warn('[sync] geen afbeelding — niet verstuurd:', itemId); return }
   const hash = hashString(data)

@@ -286,7 +286,7 @@ body.heeft-wallpaper::before { display:block; }
     if (!actief.length) return
     const grid = document.getElementById('vriendWidgetGrid')
     grid.innerHTML = ''
-    const fotoAantal = { '3x3': 9, '2x2': 4, 'groot': 1, 'banner': 4, '1x3': 3 }
+    const fotoAantal = { '3x3': 9, '2x2': 4, 'groot': 1, 'banner': 4, '1x3': 3, 'featured': 5, 'zwevend': 3, 'polaroid': 6 }
     for (const w of actief) {
       const el = document.createElement('div')
       el.className = 'widget-blok'

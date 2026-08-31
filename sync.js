@@ -22,12 +22,56 @@ let offerRetryTimer = null
 let syncTimeout = null
 let isRelayConnection = false // TURN/relay detectie
 
+// ── Tabblad-slot: maar één tabblad mag de sync draaien ──
+const SLOT_SLEUTEL = 'fibro_sync_slot'
+const SLOT_ID = Math.random().toString(36).slice(2)
+let slotTimer = null
+let heeftSlot = false
+
+function slotProberen() {
+  try {
+    const nu = Date.now()
+    const ruw = localStorage.getItem(SLOT_SLEUTEL)
+    const huidig = ruw ? JSON.parse(ruw) : null
+    if (!huidig || huidig.id === SLOT_ID || nu - huidig.tijd > 8000) {
+      localStorage.setItem(SLOT_SLEUTEL, JSON.stringify({ id: SLOT_ID, tijd: nu }))
+      return true
+    }
+    return false
+  } catch (e) { return true }
+}
+
+function slotVrijgeven() {
+  try {
+    const ruw = localStorage.getItem(SLOT_SLEUTEL)
+    if (ruw && JSON.parse(ruw).id === SLOT_ID) localStorage.removeItem(SLOT_SLEUTEL)
+  } catch (e) {}
+}
+
 // ICE_SERVERS komt uit ice-config.js (import staat bovenaan)
 
 export function initSync(userId, callbacks = {}) {
   huidigeUserId = userId
   onOnlineChangeCallback = callbacks.onOnlineChange || null
-  laadVrienden().then(() => startPresence())
+  window.addEventListener('pagehide', slotVrijgeven)
+  slotTimer = setInterval(() => {
+    const nu = slotProberen()
+    if (nu && !heeftSlot) {
+      heeftSlot = true
+      console.log('[sync] Slot verkregen - sync actief in dit tabblad')
+      laadVrienden().then(() => startPresence())
+    } else if (!nu && heeftSlot) {
+      heeftSlot = false
+      console.log('[sync] Slot verloren - sync gestopt')
+    }
+  }, 3000)
+  if (slotProberen()) {
+    heeftSlot = true
+    console.log('[sync] Slot verkregen - sync actief in dit tabblad')
+    laadVrienden().then(() => startPresence())
+  } else {
+    console.log('[sync] Ander tabblad heeft de sync - dit tabblad wacht')
+  }
 }
 
 function startPresence() {

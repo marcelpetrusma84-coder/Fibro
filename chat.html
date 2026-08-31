@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fibro — Chat</title>
 <link rel="apple-touch-icon" href="/icon-192.png">
-<link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Fibro">
@@ -44,6 +45,8 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .messages { flex:1; min-height:0; padding:12px 14px; display:flex; flex-direction:column; gap:4px; overflow-y:auto; padding-bottom:200px; }
 .msg-row { display:flex; gap:8px; align-items:flex-end; }
 .msg-row.out { flex-direction:row-reverse; }
+.msg-row.gegroepeerd .msg-av-sm { visibility:hidden; }
+.msg-row.gegroepeerd { margin-top:-2px; }
 .msg-av-sm { width:26px; height:26px; border-radius:50%; background:var(--card); border:0.5px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
 .bubble { max-width:75%; padding:6px 10px 5px; border-radius:14px; font-size:13px; line-height:1.35; word-break:break-word; }
 .bubble.in { background:rgba(0,0,0,0.55); border:0.5px solid var(--border); border-bottom-left-radius:4px; }
@@ -657,9 +660,13 @@ window.veiligeUrl = function(v){
       }
     }
 
+    const vorige = container.lastElementChild
+    const zelfdeAfzender = vorige && vorige.classList.contains('msg-row') && vorige.dataset.sid === String(bericht.sender_id)
     const row = document.createElement('div')
     row.className = `msg-row ${isMijn ? 'out' : ''}`
     row.dataset.mid = bericht.id
+    row.dataset.sid = String(bericht.sender_id)
+    if (zelfdeAfzender) row.classList.add('gegroepeerd')
     if (!isMijn) { row.dataset.mtekst = String(content).slice(0, 500); row.dataset.meldbaar = '1' }
 
     if (content.startsWith('lossticker:')) {

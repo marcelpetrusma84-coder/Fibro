@@ -64,6 +64,7 @@ body.heeft-wallpaper::before { display:block; }
 .widget-titel { font-size:11px; font-weight:600; color:#ffffff; text-transform:uppercase; letter-spacing:0.07em; }
 .widget-inhoud { flex:1; min-height:0; padding:10px; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
 .widget-inhoud .wi-icon { font-size:24px; }
+.widget-blok-naakt > div { height:100%; }
 .widget-blok-naakt { background:transparent !important; border:none !important; box-shadow:none !important; overflow:visible !important; }
 </style>
 </head>
@@ -306,7 +307,7 @@ body.heeft-wallpaper::before { display:block; }
           const kolommenMap = { '3x3':3, '2x2':2, 'banner':4, '1x3':1, 'groot':1, 'zwevend':3, 'polaroid':3, 'featured':3 }
           const kolommen = kolommenMap[stijl] || 1
           const ratio = stijl === 'groot' ? '4/3' : (stijl === 'banner' ? '3/4' : '1/1')
-          el.classList.add('widget-blok-naakt')
+          el.classList.add('widget-blok-naakt'); el.style.display='flex'; el.style.flexDirection='column'
           if (stijl === 'polaroid') {
             el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;">' +
               fotos.map((f,i) => '<div style="background:#f5f5f0;padding:5px 5px 16px;border-radius:3px;box-shadow:0 2px 8px rgba(0,0,0,0.4);transform:rotate(' + ((i%3)-1)*2 + 'deg);"><img src="' + f + '" style="width:100%;aspect-ratio:1/1;object-fit:cover;display:block;"></div>').join('') +

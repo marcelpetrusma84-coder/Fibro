@@ -325,7 +325,7 @@ body.heeft-wallpaper::before { display:block; }
               }).join('') +
               '</div>'
           } else if (stijl === 'featured' && fotos.length > 1) {
-            el.innerHTML = '<div style="display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:4px;width:100%;height:100%;">' +
+            el.innerHTML = '<div style="display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:4px;width:100%;aspect-ratio:3/2;max-height:100%;">' +
               '<img src="' + fotos[0] + '" style="grid-column:1/2;grid-row:1/3;width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;min-height:0;">' +
               fotos.slice(1,5).map(f => '<img src="' + f + '" style="width:100%;height:100%;object-fit:cover;border-radius:8px;display:block;min-height:0;">').join('') +
               '</div>'

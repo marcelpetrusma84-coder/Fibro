@@ -293,7 +293,9 @@ body.heeft-wallpaper::before { display:block; }
       el.style.gridColumn = 'span ' + Math.min(w.w || 2, 4)
       el.style.gridRow = 'span ' + (w.h || 1)
       // Foto-widget: probeer echte (P2P-gesyncte) foto's uit de cache te tonen
-      const stijl = (w.id || '').startsWith('fotos_') ? w.id.slice(6) : null
+      const stijlAlias = { 'masonry': 'polaroid' }
+      let stijl = (w.id || '').startsWith('fotos_') ? w.id.slice(6) : null
+      if (stijl && stijlAlias[stijl]) stijl = stijlAlias[stijl]
       if (stijl && fotoAantal[stijl]) {
         const fotos = []
         for (let i = 0; i < fotoAantal[stijl]; i++) {

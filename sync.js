@@ -335,10 +335,16 @@ async function stuurManifest() {
   // Weergavenaam reist mee over P2P: hij staat bewust niet op de server.
   let eigenNaam = ''
   try { eigenNaam = String(JSON.parse(localStorage.getItem('fibro_profiel_' + huidigeUserId) || '{}').naam || '').slice(0, 40) } catch(e) {}
+  let videoMeta = null
+  try {
+    const vm = await dbGet('video_meta_' + huidigeUserId)
+    if (vm?.data) videoMeta = JSON.parse(vm.data)
+  } catch(e) {}
   const manifest = {
     layout: { hash: hashString(layoutJson) },
     fotos,
     muziek,
+    video: videoMeta,
     naam: eigenNaam
   }
   dataChannel.send(JSON.stringify({ type: 'manifest', data: manifest }))
@@ -355,6 +361,11 @@ async function verwerkP2pBericht(bericht) {
       // bestaande naam met rust.
       if (binnen) localStorage.setItem(sleutel, binnen)
     } catch(e) { console.warn('[sync] naam opslaan mislukt', e) }
+    try {
+      if (bericht.data.video && bericht.data.video.thumb) {
+        await dbPut({ id: 'vriend_' + syncPartnerId + '_video_meta', data: JSON.stringify(bericht.data.video), ontvangen: Date.now() })
+      }
+    } catch(e) { console.warn('[sync] video-meta opslaan mislukt', e) }
     const cached = await dbGet('vriend_' + syncPartnerId + '_layout')
     const nodig = []
     if (!cached || cached.hash !== bericht.data.layout.hash) nodig.push('layout')

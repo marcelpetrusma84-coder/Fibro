@@ -489,8 +489,8 @@ async function stuurFotoInChunks(itemId) {
 }
 
 async function stuurMuziekInChunks(itemId) {
-  // itemId = 'profiel' of 'playlist' — al het andere weigeren (bug #5)
-  if (itemId !== 'profiel' && itemId !== 'playlist') {
+  // Alleen bekende namen toestaan (bug #5): oude systemen + nieuwe losse nummers
+  if (itemId !== 'profiel' && itemId !== 'playlist' && itemId !== 'index' && !/^nr\d{1,4}$/.test(itemId)) {
     console.warn('[sync] muziek-verzoek geweigerd:', itemId)
     return
   }

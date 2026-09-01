@@ -488,7 +488,7 @@ function renderProfiel(id, c) {
 
 // ── IndexedDB voor muziek (FibroDB v2, zelfde als profiel.html) ──
 function openFibroDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
-async function slaInDB(id,data){const db=await openFibroDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}
+async function slaInDB(id,data){const uid=window._uid;if(uid&&typeof id==='string'&&id.includes(uid)){const g=typeof data==='string'?data.length:(data&&data.size)||0;const oudItem=await laadFotoUitDB(id);const oudG=typeof oudItem==='string'?oudItem.length:0;const nu=await metenOpslag(uid);if(nu-oudG+g>157286400){alert('Je profiel is vol (150 MB).');throw new Error('Opslag vol')}}const db=await openFibroDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}
 async function laadUitDB(id){try{const db=await openFibroDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
 async function comprimeerMuziek(file) {
   const arrayBuf = await file.arrayBuffer()

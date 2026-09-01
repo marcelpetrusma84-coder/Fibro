@@ -432,6 +432,8 @@ async function verwerkP2pBericht(bericht) {
       } else if (item.startsWith('muziek:')) {
         const itemId = item.slice(7)
         await stuurMuziekInChunks(itemId)
+      } else if (item === 'video') {
+        await stuurVideoInChunks()
       }
     }
   }
@@ -540,6 +542,25 @@ async function stuurMuziekInChunks(itemId) {
   }
 }
 
+async function stuurVideoInChunks() {
+  const r = await dbGet('video_data_' + huidigeUserId)
+  const data = r?.data
+  if (!data || typeof data !== 'string') { console.warn('[sync] video niet gevonden'); return }
+  const hash = hashString(data)
+  const totaal = Math.ceil(data.length / CHUNK_TEKST)
+  console.log('[sync] Stuur video in', totaal, 'chunks')
+  for (let i = 0; i < totaal; i++) {
+    while (dataChannel.bufferedAmount > 512 * 1024) {
+      await new Promise((r2) => setTimeout(r2, 20))
+    }
+    if (!dataChannel || dataChannel.readyState !== 'open') { console.warn('[sync] verbinding weg tijdens video'); return }
+    dataChannel.send(JSON.stringify({
+      type: 'chunk', itemId: 'video', hash, volgnr: i, totaal,
+      data: data.slice(i * CHUNK_TEKST, (i + 1) * CHUNK_TEKST)
+    }))
+  }
+}
+
 async function verwerkChunk(bericht) {
   if (!isGeldigeChunk(bericht)) {
     console.warn('[sync] Ongeldige chunk geweigerd')
@@ -584,6 +605,8 @@ async function verwerkChunk(bericht) {
       dbKey = 'vriend_' + syncPartnerId + '_foto_' + itemId
     } else if (itemId.startsWith('muziek_')) {
       dbKey = 'vriend_' + syncPartnerId + '_muziek_' + itemId.slice(7)
+    } else if (itemId === 'video') {
+      dbKey = 'vriend_' + syncPartnerId + '_video_data'
     } else {
       // layout of ander item — dit zou niet via chunks moeten komen
       dbKey = 'vriend_' + syncPartnerId + '_' + itemId
@@ -723,6 +746,16 @@ function toonRelayMuziekVraag(muziekItems) {
     }
   }
   document.getElementById('sync-relay-nee').onclick = () => box.remove()
+}
+
+export function vraagVideoOp() {
+  if (dataChannel && dataChannel.readyState === 'open') {
+    dataChannel.send(JSON.stringify({ type: 'geef', items: ['video'] }))
+    console.log('[sync] Video opgevraagd')
+    return true
+  }
+  console.log('[sync] Geen open verbinding voor video')
+  return false
 }
 
 function stopSync() {

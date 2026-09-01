@@ -366,6 +366,7 @@ input, textarea { font-size:16px !important; }
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">📖</div><div><div class="widget-name">Gastenboek</div><div class="widget-desc">Vrienden laten berichten achter</div></div></div><div class="toggle on" id="widget-gastenboek" onclick="toggleWidget('gastenboek')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">😊</div><div><div class="widget-name">Mood</div><div class="widget-desc">Toon hoe je je voelt</div></div></div><div class="toggle on" id="widget-mood" onclick="toggleWidget('mood')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎵</div><div><div class="widget-name">Muziek</div><div class="widget-desc">Deel wat je luistert</div></div></div><div class="toggle on" id="widget-muziek" onclick="toggleWidget('muziek')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎬</div><div><div class="widget-name">Video clip</div><div class="widget-desc">Korte mp4 op je profiel</div></div></div><div class="toggle off" id="widget-video" onclick="toggleWidget('video')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">📷</div><div><div class="widget-name">Foto grid</div><div class="widget-desc">3x3 fotos op je profiel</div></div></div><div class="toggle off" id="widget-fotos" onclick="toggleWidget('fotos')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🖼</div><div><div class="widget-name">Foto grid 2×2</div><div class="widget-desc">4 fotos op je profiel</div></div></div><div class="toggle off" id="widget-fotos2x2" onclick="toggleWidget('fotos2x2')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🌅</div><div><div class="widget-name">Grote foto</div><div class="widget-desc">Eén uitgelichte foto</div></div></div><div class="toggle off" id="widget-fotosgroot" onclick="toggleWidget('fotosgroot')"><div class="toggle-dot"></div></div></div>
@@ -380,7 +381,6 @@ input, textarea { font-size:16px !important; }
     </div>
     <div style="display:none;">
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">✍</div><div><div class="widget-name">Quote</div><div class="widget-desc">Favoriete citaat tonen</div></div></div><div class="toggle off" id="widget-quote" onclick="toggleWidget('quote')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎬</div><div><div class="widget-name">Video clip</div><div class="widget-desc">Korte mp4 op je profiel</div></div></div><div class="toggle off" id="widget-video" onclick="toggleWidget('video')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">⏰</div><div><div class="widget-name">Countdown</div><div class="widget-desc">Aftellen naar een datum</div></div></div><div class="toggle off" id="widget-countdown" onclick="toggleWidget('countdown')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🗺</div><div><div class="widget-name">Locatie</div><div class="widget-desc">Toon je stad</div></div></div><div class="toggle off" id="widget-locatie" onclick="toggleWidget('locatie')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">📊</div><div><div class="widget-name">Poll</div><div class="widget-desc">Laat vrienden stemmen</div></div></div><div class="toggle off" id="widget-poll" onclick="toggleWidget('poll')"><div class="toggle-dot"></div></div></div>
@@ -742,6 +742,7 @@ window.slaAllesOp=async function(){
     mood:       { id:'mood',       icon:'😊', titel:'Mood',          w:4, h:1 },
     muziek:     { id:'muziek',     icon:'🎵', titel:'Muziek player', w:4, h:2 },
     quote:      { id:'quote',      icon:'✍', titel:'Quote',         w:4, h:1 },
+    video:      { id:'video',      icon:'🎬', titel:'Video',         w:4, h:3 },
     fotos:      { id:'fotos_3x3',  icon:'📷', titel:'Foto grid 3×3', w:4, h:3 },
     fotos2x2:      { id:'fotos_2x2',      icon:'🖼', titel:'Foto grid 2×2',        w:2, h:2 },
     fotosgroot:    { id:'fotos_groot',    icon:'🌅', titel:'Grote foto',           w:4, h:2 },

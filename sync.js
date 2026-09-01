@@ -481,7 +481,7 @@ function isGeldigeChunk(b) {
   // VALIDATIE (bug #5): alle velden checken vóór gebruik.
   // Zonder deze check kon een peer bijv. totaal=1e9 sturen → new Array(1e9) → crash
   if (typeof b.itemId !== 'string' || b.itemId.length > 200) return false
-  if (!b.itemId.startsWith('pfoto_') && !b.itemId.startsWith('muziek_')) return false
+  if (!b.itemId.startsWith('pfoto_') && !b.itemId.startsWith('muziek_') && b.itemId !== 'video') return false
   if (typeof b.hash !== 'string' || b.hash.length > 16) return false
   if (!Number.isInteger(b.totaal) || b.totaal < 1 || b.totaal > MAX_CHUNKS_PER_ITEM) return false
   if (!Number.isInteger(b.volgnr) || b.volgnr < 0 || b.volgnr >= b.totaal) return false

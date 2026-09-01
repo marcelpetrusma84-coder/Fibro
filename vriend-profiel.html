@@ -354,7 +354,17 @@ body.heeft-wallpaper::before { display:block; }
   async function renderVriendMuziek(el) {
     // Verzamel tracks: eerst playlist (Systeem 2), dan losse profiel-track (Systeem 1)
     let tracks = []
-    const playlistJson = await laadFotoUitDB('vriend_' + vriendId + '_muziek_playlist')
+    const idxRuw = await laadFotoUitDB('vriend_' + vriendId + '_muziek_index')
+    if (idxRuw) {
+      try {
+        const idxLijst = JSON.parse(idxRuw) || []
+        for (let i = 0; i < idxLijst.length; i++) {
+          const d = await laadFotoUitDB('vriend_' + vriendId + '_muziek_nr' + i)
+          if (d) tracks.push({ naam: idxLijst[i].naam, artiest: idxLijst[i].artiest || '', data: d })
+        }
+      } catch(e) {}
+    }
+    const playlistJson = tracks.length ? null : await laadFotoUitDB('vriend_' + vriendId + '_muziek_playlist')
     if (playlistJson) {
       try {
         const p = JSON.parse(playlistJson)

@@ -311,21 +311,17 @@ async function verzamelEigenMuziek() {
 
   // ── Systeem 2: playlist (index.html widget) ──
   try {
-    const playlistKey = 'muziek_tracks_' + huidigeUserId
-    let playlistJson = localStorage.getItem(playlistKey)
-    if (!playlistJson) {
-      const dbResult = await dbGet(playlistKey)
-      if (dbResult?.data) playlistJson = dbResult.data
-    }
-    if (playlistJson) {
-      try {
-        const tracks = JSON.parse(playlistJson)
-        if (Array.isArray(tracks) && tracks.length > 0) {
-          // Stuur hele playlist als één item
-          muziek['playlist'] = { hash: hashString(playlistJson), count: tracks.length }
-          console.log('[sync] Systeem 2 (playlist) gevonden:', tracks.length, 'nummers')
-        }
-      } catch(e) { console.warn('[sync] Playlist JSON parse fout:', e) }
+    const idxKey = 'muziek_index_' + huidigeUserId
+    const idxRes = await dbGet(idxKey)
+    if (idxRes?.data) {
+      muziek['index'] = { hash: hashString(idxRes.data) }
+      let lijst = []
+      try { lijst = JSON.parse(idxRes.data) || [] } catch(e) {}
+      for (let i = 0; i < lijst.length; i++) {
+        const tr = await dbGet('muziek_nr_' + huidigeUserId + '_' + i)
+        if (tr?.data) muziek['nr' + i] = { hash: hashString(tr.data) }
+      }
+      console.log('[sync] Muziek gevonden:', lijst.length, 'nummers (los)')
     }
   } catch(e) { console.warn('[sync] Systeem 2 muziek-ophalen fout:', e) }
 
@@ -507,14 +503,12 @@ async function stuurMuziekInChunks(itemId) {
       const dbResult = await dbGet('muziek_track')
       data = dbResult?.data
     }
-  } else if (itemId === 'playlist') {
-    // Systeem 2: muziek_tracks_<uid> (hele JSON-array)
-    const playlistKey = 'muziek_tracks_' + huidigeUserId
-    data = localStorage.getItem(playlistKey)
-    if (!data) {
-      const dbResult = await dbGet(playlistKey)
-      data = dbResult?.data
-    }
+  } else if (itemId === 'index') {
+    const r = await dbGet('muziek_index_' + huidigeUserId)
+    data = r?.data
+  } else if (/^nr\d+$/.test(itemId)) {
+    const r = await dbGet('muziek_nr_' + huidigeUserId + '_' + itemId.slice(2))
+    data = r?.data
   }
 
   if (!data) { console.warn('[sync] muziek niet gevonden:', itemId); return }

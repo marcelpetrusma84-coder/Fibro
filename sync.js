@@ -340,11 +340,17 @@ async function stuurManifest() {
     const vm = await dbGet('video_meta_' + huidigeUserId)
     if (vm?.data) videoMeta = JSON.parse(vm.data)
   } catch(e) {}
+  let videoHash = null
+  try {
+    const vd = await dbGet('video_data_' + huidigeUserId)
+    if (vd?.data) videoHash = hashString(vd.data)
+  } catch(e) {}
   const manifest = {
     layout: { hash: hashString(layoutJson) },
     fotos,
     muziek,
     video: videoMeta,
+    videoHash,
     naam: eigenNaam
   }
   dataChannel.send(JSON.stringify({ type: 'manifest', data: manifest }))
@@ -353,6 +359,7 @@ async function stuurManifest() {
 
 async function verwerkP2pBericht(bericht) {
   if (bericht.type === 'manifest') {
+    let videoNodig = false
     // Naam van de vriend lokaal bewaren; laatste verbinding is leidend.
     try {
       const binnen = String(bericht.data?.naam || '').slice(0, 40).trim()
@@ -366,6 +373,12 @@ async function verwerkP2pBericht(bericht) {
         await dbPut({ id: 'vriend_' + syncPartnerId + '_video_meta', data: JSON.stringify(bericht.data.video), ontvangen: Date.now() })
       }
     } catch(e) { console.warn('[sync] video-meta opslaan mislukt', e) }
+    try {
+      if (bericht.data.videoHash) {
+        const vCached = await dbGet('vriend_' + syncPartnerId + '_video_data')
+        if (!vCached || vCached.hash !== bericht.data.videoHash) videoNodig = true
+      }
+    } catch(e) {}
     const cached = await dbGet('vriend_' + syncPartnerId + '_layout')
     const nodig = []
     if (!cached || cached.hash !== bericht.data.layout.hash) nodig.push('layout')
@@ -411,6 +424,7 @@ async function verwerkP2pBericht(bericht) {
       }
     }
 
+    if (videoNodig) nodig.push('video')
     if (nodig.length) {
       dataChannel.send(JSON.stringify({ type: 'geef', items: nodig }))
       zetP2pStatus('vraag ' + nodig.length + ' item(s)')

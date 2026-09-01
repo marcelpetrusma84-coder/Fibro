@@ -641,8 +641,6 @@ async function init(){
     onFotoOntvangen: (vriendId, blob, meta) => console.log('📷 Foto ontvangen van', vriendId),
     onStatus: (vriendId, status) => console.log('P2P status:', vriendId, status)
   })
-  // P2P foto-sync initialiseren
-  if (huidigeUser?.id) initP2pFoto(huidigeUser.id, { onFotoOntvangen: (vriendId, blob, meta) => console.log('📷 Foto:', vriendId), onStatus: (vriendId, status) => console.log('P2P', vriendId, status) })
   bouwFontGrid();bouwStickerGrids();bouwAvatarPicker();updateWidgetToggles();updateActieveStickers()
   document.getElementById('editNaam').oninput=updatePreview
   document.getElementById('editBio').oninput=updatePreview

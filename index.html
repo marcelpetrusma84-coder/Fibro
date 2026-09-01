@@ -67,6 +67,10 @@
 <script>
 function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
 async function slaFotoOp(id,data){const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=resolve})}
+async function dbAlleSleutels(){const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').getAllKeys();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>resolve([])})}
+async function metenOpslag(uid){try{const alle=await dbAlleSleutels();const mijn=alle.filter(k=>typeof k==='string'&&k.includes(uid));let totaal=0;for(const k of mijn){const d=await laadFotoUitDB(k);if(typeof d==='string')totaal+=d.length;else if(d&&d.size)totaal+=d.size}return totaal}catch(e){console.warn('[opslag] meten mislukt',e);return 0}}
+async function werkOpslagBalkBij(){try{const uid=window._uid;if(!uid)return;const bytes=await metenOpslag(uid);const mb=bytes/1048576;const limiet=150;const pct=Math.min(100,mb/limiet*100);const vul=document.getElementById('opslagVulling');const tekst=document.getElementById('opslagTekst');if(tekst)tekst.textContent=(Math.round(mb*10)/10)+' MB van '+limiet+' MB';if(vul){vul.style.width=pct+'%';vul.style.background=pct>95?'#ef4444':pct>80?'#f59e0b':'#22c55e'}}catch(e){console.warn('[opslag] balk bijwerken mislukt',e)}}
+window.werkOpslagBalkBij=werkOpslagBalkBij
 async function laadFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
 async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').delete(id);tx.oncomplete=resolve})}catch{return null}}
 </script>
@@ -114,6 +118,14 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 <div id="profiel-sectie"></div>
 <div style="height:80px;"></div>
 
+<div id="opslagBalk" style="max-width:600px;margin:20px auto 90px;padding:0 16px;font-family:'DM Sans',sans-serif;">
+  <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;">
+    <span>Opslag op dit apparaat</span><span id="opslagTekst">—</span>
+  </div>
+  <div style="height:8px;background:rgba(255,255,255,0.08);border-radius:20px;overflow:hidden;">
+    <div id="opslagVulling" style="height:100%;width:0%;background:#22c55e;border-radius:20px;transition:width 0.4s,background 0.4s;"></div>
+  </div>
+</div>
 <div class="bottom-nav">
   <div class="nav-item active" onclick="window.location.href='index.html'">
     <div class="nav-icon">🏠</div><div class="nav-label">Home</div>
@@ -1421,6 +1433,7 @@ async function init() {
   await laadThema()
   await startHeartbeat()
   initSync(session.user.id)
+  werkOpslagBalkBij()
 
   const { data: profiel } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
   window._profiel = profiel

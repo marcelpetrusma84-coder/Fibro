@@ -66,13 +66,13 @@
 </style>
 <script>
 function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
-async function slaFotoOp(id,data){const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=resolve})}
+async function slaFotoOp(id,data){const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}
 async function dbAlleSleutels(){const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').getAllKeys();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>resolve([])})}
 async function metenOpslag(uid){try{const alle=await dbAlleSleutels();const mijn=alle.filter(k=>typeof k==='string'&&k.includes(uid));let totaal=0;for(const k of mijn){const d=await laadFotoUitDB(k);if(typeof d==='string')totaal+=d.length;else if(d&&d.size)totaal+=d.size}return totaal}catch(e){console.warn('[opslag] meten mislukt',e);return 0}}
 async function werkOpslagBalkBij(){try{const uid=window._uid;if(!uid)return;const bytes=await metenOpslag(uid);const mb=bytes/1048576;const limiet=150;const pct=Math.min(100,mb/limiet*100);const vul=document.getElementById('opslagVulling');const tekst=document.getElementById('opslagTekst');if(tekst)tekst.textContent=(Math.round(mb*10)/10)+' MB van '+limiet+' MB';if(vul){vul.style.width=pct+'%';vul.style.background=pct>95?'#ef4444':pct>80?'#f59e0b':'#22c55e'}}catch(e){console.warn('[opslag] balk bijwerken mislukt',e)}}
 window.werkOpslagBalkBij=werkOpslagBalkBij
 async function laadFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
-async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').delete(id);tx.oncomplete=resolve})}catch{return null}}
+async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').delete(id);tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}catch{return null}}
 </script>
 </head>
 <body>
@@ -488,7 +488,7 @@ function renderProfiel(id, c) {
 
 // ── IndexedDB voor muziek (FibroDB v2, zelfde als profiel.html) ──
 function openFibroDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
-async function slaInDB(id,data){const db=await openFibroDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=resolve})}
+async function slaInDB(id,data){const db=await openFibroDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}
 async function laadUitDB(id){try{const db=await openFibroDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
 async function comprimeerMuziek(file) {
   const arrayBuf = await file.arrayBuffer()

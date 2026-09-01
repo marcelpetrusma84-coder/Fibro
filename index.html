@@ -522,13 +522,15 @@ async function comprimeerMuziek(file) {
 // ════════════════════════════════
 // MUZIEK PLAYER WIDGET
 // ════════════════════════════════
+async function laadMuziek(uid){const idxKey='muziek_index_'+uid;const idxRuw=await laadUitDB(idxKey);if(idxRuw){let idx=[];try{idx=JSON.parse(idxRuw)||[]}catch(e){return []}const uit=[];for(let i=0;i<idx.length;i++){const d=await laadUitDB('muziek_nr_'+uid+'_'+i);if(d)uit.push({naam:idx[i].naam,artiest:idx[i].artiest||'',data:d})}return uit}return await migreerMuziek(uid)}
+async function migreerMuziek(uid){const oudKey='muziek_tracks_'+uid;let ruw=await laadUitDB(oudKey);if(!ruw)ruw=localStorage.getItem(oudKey);if(!ruw)return [];let oud=[];try{oud=JSON.parse(ruw)||[]}catch(e){return []}if(!oud.length)return [];console.log('[muziek] migratie van',oud.length,'nummers');await bewaarMuziek(uid,oud);try{const db=await openFibroDB();db.transaction('fotos','readwrite').objectStore('fotos').delete(oudKey)}catch(e){}localStorage.removeItem(oudKey);console.log('[muziek] migratie klaar');return oud}
+async function bewaarMuziek(uid,lijst){const idx=lijst.map(t=>({naam:t.naam,artiest:t.artiest||''}));for(let i=0;i<lijst.length;i++){await slaInDB('muziek_nr_'+uid+'_'+i,lijst[i].data)}await slaInDB('muziek_index_'+uid,JSON.stringify(idx))}
 function renderMuziekPlayer(c) {
   const uid = window._uid
   const key = 'muziek_tracks_' + uid
   let tracks = []
-  laadUitDB(key).then(data => {
-    if (data) { try { tracks = JSON.parse(data) || [] } catch(e) {} }
-    else { try { tracks = JSON.parse(localStorage.getItem(key)) || [] } catch(e) {} }
+  laadMuziek(uid).then(lijst => {
+    tracks = lijst || []
     if (tracks.length) render()
   })
   let huidigIdx = 0
@@ -679,8 +681,7 @@ function renderMuziekPlayer(c) {
           try {
             const data = await comprimeerMuziek(file)
             tracks.push({ naam, artiest: '', data })
-            await slaInDB(key, JSON.stringify(tracks))
-            localStorage.removeItem(key)
+            await bewaarMuziek(uid, tracks)
             huidigIdx = tracks.length - 1
             render()
           } catch(err) { alert('Opslaan mislukt: ' + err.message) }

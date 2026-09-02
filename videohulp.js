@@ -126,8 +126,8 @@ export async function remuxNaarMp4(file, opLog) {
     const trak = bron.getTrackById(t.id)
     if (trak && trak.mdia && trak.mdia.minf && trak.mdia.minf.stbl) {
       for (const entry of trak.mdia.minf.stbl.stsd.entries) {
-        if (entry.avcC) opties.avcDecoderConfigRecord = pakConfig(entry.avcC)
-        else if (entry.hvcC) opties.hevcDecoderConfigRecord = pakConfig(entry.hvcC)
+        if (entry.avcC) opties.description = entry.avcC
+        else if (entry.hvcC) opties.description = entry.hvcC
         else if (entry.esds) opties.description = entry.esds
       }
     }

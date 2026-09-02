@@ -149,9 +149,16 @@ export async function maakMp4(file, opLog) {
   const log = opLog || (() => {})
   const { bron, doel, koppeling, info } = await remuxNaarMp4(file, log)
 
+  const teDoen = {}
+  const gedaan = {}
+  for (const t of info.tracks) {
+    if (!koppeling[t.id]) continue
+    teDoen[t.id] = t.nb_samples
+    gedaan[t.id] = 0
+  }
+
   await new Promise((resolve, reject) => {
-    let open = info.tracks.length
-    const tijd = setTimeout(() => reject(new Error('samples ophalen duurde te lang')), 60000)
+    const tijd = setTimeout(() => reject(new Error('samples ophalen duurde te lang')), 120000)
 
     bron.onSamples = (id, gebruiker, samples) => {
       for (const s of samples) {
@@ -162,21 +169,20 @@ export async function maakMp4(file, opLog) {
           is_sync: s.is_sync
         })
       }
-      if (samples.length && samples[samples.length - 1].number + 1 >= gebruiker.aantal) {
-        open--
-        if (open <= 0) { clearTimeout(tijd); resolve() }
-      }
+      gedaan[id] = (gedaan[id] || 0) + samples.length
+      let klaar = true
+      for (const k in teDoen) if (gedaan[k] < teDoen[k]) klaar = false
+      if (klaar) { clearTimeout(tijd); resolve() }
     }
 
-    for (const t of info.tracks) {
-      bron.setExtractionOptions(t.id, { aantal: t.nb_samples }, { nbSamples: t.nb_samples })
+    for (const k in teDoen) {
+      bron.setExtractionOptions(parseInt(k, 10), null, { nbSamples: teDoen[k] })
     }
     bron.start()
-    bron.flush()
-    setTimeout(() => { clearTimeout(tijd); resolve() }, 5000)
   })
 
-  log('samples gekopieerd')
+  const totaal = Object.keys(gedaan).map(k => k + '=' + gedaan[k]).join(' ')
+  log('samples gekopieerd: ' + totaal)
   const buffer = doel.getBuffer()
   return new Blob([buffer], { type: 'video/mp4' })
 }

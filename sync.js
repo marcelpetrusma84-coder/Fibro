@@ -335,10 +335,10 @@ async function stuurManifest() {
   // Weergavenaam reist mee over P2P: hij staat bewust niet op de server.
   let eigenNaam = ''
   try { eigenNaam = String(JSON.parse(localStorage.getItem('fibro_profiel_' + huidigeUserId) || '{}').naam || '').slice(0, 40) } catch(e) {}
-  let videoMeta = null
+  let videoMetaHash = null
   try {
     const vm = await dbGet('video_meta_' + huidigeUserId)
-    if (vm?.data) videoMeta = JSON.parse(vm.data)
+    if (vm?.data) videoMetaHash = hashString(vm.data)
   } catch(e) {}
   let videoHash = null
   try {
@@ -349,7 +349,7 @@ async function stuurManifest() {
     layout: { hash: hashString(layoutJson) },
     fotos,
     muziek,
-    video: videoMeta,
+    videoMetaHash,
     videoHash,
     naam: eigenNaam
   }
@@ -368,11 +368,13 @@ async function verwerkP2pBericht(bericht) {
       // bestaande naam met rust.
       if (binnen) localStorage.setItem(sleutel, binnen)
     } catch(e) { console.warn('[sync] naam opslaan mislukt', e) }
+    let videoMetaNodig = false
     try {
-      if (bericht.data.video && bericht.data.video.thumb) {
-        await dbPut({ id: 'vriend_' + syncPartnerId + '_video_meta', data: JSON.stringify(bericht.data.video), ontvangen: Date.now() })
+      if (bericht.data.videoMetaHash) {
+        const vm = await dbGet('vriend_' + syncPartnerId + '_video_meta')
+        if (!vm || vm.hash !== bericht.data.videoMetaHash) videoMetaNodig = true
       }
-    } catch(e) { console.warn('[sync] video-meta opslaan mislukt', e) }
+    } catch(e) {}
     try {
       if (bericht.data.videoHash) {
         const vCached = await dbGet('vriend_' + syncPartnerId + '_video_data')
@@ -424,6 +426,7 @@ async function verwerkP2pBericht(bericht) {
       }
     }
 
+    if (videoMetaNodig) nodig.push('videometa')
     if (videoNodig) nodig.push('video')
     if (nodig.length) {
       dataChannel.send(JSON.stringify({ type: 'geef', items: nodig }))
@@ -448,6 +451,9 @@ async function verwerkP2pBericht(bericht) {
         await stuurMuziekInChunks(itemId)
       } else if (item === 'video') {
         await stuurVideoInChunks()
+      } else if (item === 'videometa') {
+        const vm = await dbGet('video_meta_' + huidigeUserId)
+        if (vm?.data) dataChannel.send(JSON.stringify({ type: 'item', itemId: 'videometa', hash: hashString(vm.data), data: vm.data }))
       }
     }
   }
@@ -468,6 +474,10 @@ async function verwerkP2pBericht(bericht) {
       await dbPut({ id: 'vriend_' + syncPartnerId + '_muziek_' + muziekItemId, hash: bericht.hash, data: bericht.data, ontvangen: Date.now() })
       console.log('[sync] Muziek van vriend opgeslagen:', muziekItemId)
       zetP2pStatus('muziek ' + muziekItemId + ' ontvangen \u2713')
+    } else if (bericht.itemId === 'videometa') {
+      await dbPut({ id: 'vriend_' + syncPartnerId + '_video_meta', hash: bericht.hash, data: bericht.data, ontvangen: Date.now() })
+      console.log('[sync] Video-info van vriend opgeslagen')
+      zetP2pStatus('video-info ontvangen \u2713')
     }
   }
 }

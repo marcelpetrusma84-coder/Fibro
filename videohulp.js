@@ -84,3 +84,126 @@ window.testVideo = function () {
   }
   inp.click()
 }
+
+// ── Remuxen: haalt de tracks uit een .mov en schrijft ze in een MP4-doos.
+// Geen hercodering, dus verliesloos en snel. Zelfde bestandsgrootte.
+export async function remuxNaarMp4(file, opLog) {
+  const log = opLog || (() => {})
+  const MP4Box = await laadMp4box()
+  const buf = await file.arrayBuffer()
+  buf.fileStart = 0
+
+  const bron = MP4Box.createFile()
+  const info = await new Promise((resolve, reject) => {
+    const tijd = setTimeout(() => reject(new Error('lezen duurde te lang')), 30000)
+    bron.onReady = i => { clearTimeout(tijd); resolve(i) }
+    bron.onError = e => { clearTimeout(tijd); reject(new Error('lezen mislukt: ' + e)) }
+    bron.appendBuffer(buf)
+    bron.flush()
+  })
+  log('gelezen: ' + info.tracks.length + ' tracks')
+
+  const doel = MP4Box.createFile()
+  const koppeling = {}
+
+  for (const t of info.tracks) {
+    const opties = {
+      timescale: t.timescale,
+      duration: t.duration,
+      language: t.language,
+      type: t.codec.split('.')[0]
+    }
+    if (t.video) {
+      opties.width = t.video.width
+      opties.height = t.video.height
+    }
+    if (t.audio) {
+      opties.channel_count = t.audio.channel_count
+      opties.samplerate = t.audio.sample_rate
+      opties.samplesize = t.audio.sample_size
+    }
+    const trak = bron.getTrackById(t.id)
+    if (trak && trak.mdia && trak.mdia.minf && trak.mdia.minf.stbl) {
+      for (const entry of trak.mdia.minf.stbl.stsd.entries) {
+        if (entry.avcC) opties.avcDecoderConfigRecord = pakConfig(entry.avcC)
+        else if (entry.hvcC) opties.hevcDecoderConfigRecord = pakConfig(entry.hvcC)
+        else if (entry.esds) opties.description = entry.esds
+      }
+    }
+    koppeling[t.id] = doel.addTrack(opties)
+  }
+  return { bron, doel, koppeling, info, log }
+}
+
+function pakConfig(box) {
+  const stream = new (window.MP4Box.DataStream)(undefined, 0, window.MP4Box.DataStream.BIG_ENDIAN)
+  box.write(stream)
+  return new Uint8Array(stream.buffer, 8)
+}
+
+// Kopieert alle samples van bron naar doel en levert een MP4-Blob op.
+export async function maakMp4(file, opLog) {
+  const log = opLog || (() => {})
+  const { bron, doel, koppeling, info } = await remuxNaarMp4(file, log)
+
+  await new Promise((resolve, reject) => {
+    let open = info.tracks.length
+    const tijd = setTimeout(() => reject(new Error('samples ophalen duurde te lang')), 60000)
+
+    bron.onSamples = (id, gebruiker, samples) => {
+      for (const s of samples) {
+        doel.addSample(koppeling[id], s.data, {
+          duration: s.duration,
+          dts: s.dts,
+          cts: s.cts,
+          is_sync: s.is_sync
+        })
+      }
+      if (samples.length && samples[samples.length - 1].number + 1 >= gebruiker.aantal) {
+        open--
+        if (open <= 0) { clearTimeout(tijd); resolve() }
+      }
+    }
+
+    for (const t of info.tracks) {
+      bron.setExtractionOptions(t.id, { aantal: t.nb_samples }, { nbSamples: t.nb_samples })
+    }
+    bron.start()
+    bron.flush()
+    setTimeout(() => { clearTimeout(tijd); resolve() }, 5000)
+  })
+
+  log('samples gekopieerd')
+  const buffer = doel.getBuffer()
+  return new Blob([buffer], { type: 'video/mp4' })
+}
+
+// Voor de BROWSER-CONSOLE: kies een .mov, pak hem om, speel hem af.
+window.testRemux = function () {
+  const inp = document.createElement('input')
+  inp.type = 'file'
+  inp.accept = 'video/*'
+  inp.style.cssText = 'position:fixed;top:10px;left:10px;z-index:99999;background:#fff;padding:8px'
+  document.body.appendChild(inp)
+  inp.onchange = async () => {
+    const f = inp.files[0]
+    if (!f) return
+    console.log('[remux] start:', f.name, Math.round(f.size / 1048576 * 10) / 10 + ' MB')
+    const begin = Date.now()
+    try {
+      const blob = await maakMp4(f, m => console.log('[remux]', m))
+      const sec = Math.round((Date.now() - begin) / 100) / 10
+      console.log('[remux] klaar in', sec + 's', '-', Math.round(blob.size / 1048576 * 10) / 10 + ' MB')
+      const v = document.createElement('video')
+      v.src = URL.createObjectURL(blob)
+      v.controls = true
+      v.style.cssText = 'position:fixed;top:60px;left:10px;width:420px;z-index:99999;background:#000'
+      document.body.appendChild(v)
+      window._remuxVideo = v
+      console.log('[remux] speler toegevoegd. Weghalen: _remuxVideo.remove()')
+    } catch (e) {
+      console.error('[remux] mislukt:', e)
+    }
+    inp.remove()
+  }
+}

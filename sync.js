@@ -453,7 +453,11 @@ async function verwerkP2pBericht(bericht) {
         await stuurVideoInChunks()
       } else if (item === 'videometa') {
         const vm = await dbGet('video_meta_' + huidigeUserId)
-        if (vm?.data) dataChannel.send(JSON.stringify({ type: 'item', itemId: 'videometa', hash: hashString(vm.data), data: vm.data }))
+        if (vm?.data) {
+          let vdHash = null
+          try { const vd = await dbGet('video_data_' + huidigeUserId); if (vd?.data) vdHash = hashString(vd.data) } catch(e) {}
+          dataChannel.send(JSON.stringify({ type: 'item', itemId: 'videometa', hash: hashString(vm.data), dataHash: vdHash, data: vm.data }))
+        }
       }
     }
   }
@@ -475,7 +479,7 @@ async function verwerkP2pBericht(bericht) {
       console.log('[sync] Muziek van vriend opgeslagen:', muziekItemId)
       zetP2pStatus('muziek ' + muziekItemId + ' ontvangen \u2713')
     } else if (bericht.itemId === 'videometa') {
-      await dbPut({ id: 'vriend_' + syncPartnerId + '_video_meta', hash: bericht.hash, data: bericht.data, ontvangen: Date.now() })
+      await dbPut({ id: 'vriend_' + syncPartnerId + '_video_meta', hash: bericht.hash, dataHash: bericht.dataHash || null, data: bericht.data, ontvangen: Date.now() })
       console.log('[sync] Video-info van vriend opgeslagen')
       zetP2pStatus('video-info ontvangen \u2713')
     }

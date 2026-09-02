@@ -1427,7 +1427,8 @@ window.uitloggen = async function() {
   const btn = document.getElementById('uitlogBtn')
   if (btn) { btn.textContent = '⏳'; btn.disabled = true }
   try {
-    await supabase.auth.signOut()
+    sessionStorage.setItem('fibro_bewust_uitloggen','1')
+    await supabase.auth.signOut({ scope: 'local' })
   } catch(e) { /* ga toch door naar login, ook als signOut faalt */ }
   window.location.href = 'login.html'
 }

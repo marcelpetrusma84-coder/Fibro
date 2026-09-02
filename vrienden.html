@@ -427,12 +427,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 
 </script>
 <script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
-
-  const supabase = createClient(
-    'https://qmgatbphiplrfxrljtbe.supabase.co',
-    'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
-  )
+  // dubbele client verwijderd 2 sep — gebruikt de import op regel 280
 
   const DUUR = 20 * 60 // 20 minuten in seconden
   let timerInterval = null

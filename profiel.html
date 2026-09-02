@@ -779,7 +779,7 @@ window.slaAllesOp=async function(){
   else{msg.className='status-msg success';msg.textContent='✓ Profiel opgeslagen!';setTimeout(()=>msg.className='status-msg',2000)}
   window.scrollTo(0,0)
 }
-window.uitloggen=async function(){await supabase.auth.signOut();window.location.href='login.html'}
+window.uitloggen=async function(){sessionStorage.setItem('fibro_bewust_uitloggen','1');await supabase.auth.signOut({scope:'local'});window.location.href='login.html'}
 
 window.activeerPushNotificaties = async function() {
   try {

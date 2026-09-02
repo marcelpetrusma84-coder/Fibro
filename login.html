@@ -226,7 +226,7 @@
     btn.innerHTML = '<span class="spinner"></span>Inloggen...'
 
     const nep_email = username.toLowerCase() + '@fibro.internal'
-    await supabase.auth.signOut()
+    await supabase.auth.signOut({ scope: 'local' })
     const { data, error } = await supabase.auth.signInWithPassword({ email: nep_email, password: wachtwoord })
 
     if (error) {

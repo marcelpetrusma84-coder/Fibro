@@ -132,6 +132,7 @@ body.heeft-wallpaper::before { display:block; }
 <script type="module">
   import { laadThema } from './thema.js'
   import { supabase } from './supabase.js'
+  import { eisSessie, startBewaking } from './sessie.js'
 
   var vriendId = null
   var huidigeUser = null
@@ -486,8 +487,13 @@ async function renderVriendMuziek(el) {
     // Eigen wallpaper hoort niet op het profiel van een vriend:
     document.body.style.backgroundImage = ''
 
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { window.location.href = 'login.html'; return }
+    let { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      const s2 = await eisSessie()
+      if (!s2) return
+      session = s2
+    }
+    startBewaking()
     huidigeUser = session.user
 
     const params = new URLSearchParams(window.location.search)

@@ -107,6 +107,7 @@ export async function remuxNaarMp4(file, opLog) {
   const koppeling = {}
 
   for (const t of info.tracks) {
+    if (!t.video && !t.audio) { log('track ' + t.id + ' overgeslagen (' + t.codec + ')'); continue }
     const opties = {
       timescale: t.timescale,
       duration: t.duration,
@@ -136,7 +137,9 @@ export async function remuxNaarMp4(file, opLog) {
 }
 
 function pakConfig(box) {
-  const stream = new (window.MP4Box.DataStream)(undefined, 0, window.MP4Box.DataStream.BIG_ENDIAN)
+  const DS = window.DataStream || (window.MP4Box && window.MP4Box.DataStream)
+  if (!DS) throw new Error('DataStream niet gevonden in mp4box')
+  const stream = new DS(undefined, 0, DS.BIG_ENDIAN)
   box.write(stream)
   return new Uint8Array(stream.buffer, 8)
 }

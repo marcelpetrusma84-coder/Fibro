@@ -1267,6 +1267,7 @@ function renderFotoPolaroid(c) {
 // POLL
 // ════════════════════════════════
 function renderPoll(c, uid) {
+  zetWidgetAchtergrond(c, 'widgetbg_poll_'+uid)
   const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
   const key = 'poll_'+uid
   let poll = null
@@ -1331,8 +1332,75 @@ function renderPoll(c, uid) {
 // ════════════════════════════════
 // AFTELTIMER
 // ════════════════════════════════
+// ── Gedeelde achtergrondfoto voor widgets ──
+// Zet een klein icoontje rechtsboven waarmee je een foto kiest.
+// Opslag in IndexedDB, dus de 150 MB-grens en de opslagbalk werken mee.
+async function zetWidgetAchtergrond(c, sleutel) {
+  const data = await laadUitDB(sleutel)
+  if (data) {
+    c.style.backgroundImage = 'linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(' + data + ')'
+    c.style.backgroundSize = 'cover'
+    c.style.backgroundPosition = 'center'
+  } else {
+    c.style.backgroundImage = ''
+  }
+
+  if (c.querySelector('.wbg-knop')) return
+  const knop = document.createElement('button')
+  knop.className = 'wbg-knop'
+  knop.textContent = data ? '\u2715' : '\u{1F5BC}'
+  knop.title = data ? 'Achtergrond verwijderen' : 'Achtergrondfoto kiezen'
+  knop.style.cssText = 'position:absolute;top:4px;right:4px;z-index:5;background:rgba(0,0,0,0.5);border:none;border-radius:50%;width:22px;height:22px;min-width:22px;min-height:22px;padding:0;font-size:11px;line-height:1;color:#fff;cursor:pointer;opacity:0.65'
+  if (getComputedStyle(c).position === 'static') c.style.position = 'relative'
+  c.appendChild(knop)
+
+  knop.onclick = async (e) => {
+    e.stopPropagation()
+    if (data) {
+      if (!confirm('Achtergrondfoto verwijderen?')) return
+      try { await wisFotoUitDB(sleutel) } catch(err) {}
+      c.style.backgroundImage = ''
+      knop.textContent = '\u{1F5BC}'
+      knop.title = 'Achtergrondfoto kiezen'
+      return
+    }
+    const inp = document.createElement('input')
+    inp.type = 'file'
+    inp.accept = 'image/*'
+    inp.onchange = () => {
+      const f = inp.files[0]
+      if (!f) return
+      const lezer = new FileReader()
+      lezer.onload = ev => {
+        const img = new Image()
+        img.onload = async () => {
+          const cv = document.createElement('canvas')
+          const max = 800
+          let w = img.width, h = img.height
+          if (w > max || h > max) { if(w>h){h=Math.round(h*max/w);w=max}else{w=Math.round(w*max/h);h=max} }
+          cv.width = w; cv.height = h
+          cv.getContext('2d').drawImage(img,0,0,w,h)
+          try {
+            await slaFotoOp(sleutel, cv.toDataURL('image/jpeg',0.8))
+          } catch(err) {
+            alert('Opslaan van de achtergrond is mislukt.')
+            return
+          }
+          knop.remove()
+          zetWidgetAchtergrond(c, sleutel)
+        }
+        img.onerror = () => alert('Deze foto kan niet worden gelezen.\n\nOp een iPhone: zet Instellingen > Camera > Indelingen op "Meest compatibel".')
+        img.src = ev.target.result
+      }
+      lezer.readAsDataURL(f)
+    }
+    inp.click()
+  }
+}
+
 function renderAftel(c, uid) {
   const key = 'aftel_'+uid
+  zetWidgetAchtergrond(c, 'widgetbg_aftel_'+uid)
   let cfg = null
   try { cfg = JSON.parse(localStorage.getItem(key)) } catch(e) {}
 
@@ -1385,6 +1453,7 @@ function renderAftel(c, uid) {
 
 function renderOptel(c, uid) {
   const key = 'optel_'+uid
+  zetWidgetAchtergrond(c, 'widgetbg_optel_'+uid)
   let cfg = null
   try { cfg = JSON.parse(localStorage.getItem(key)) } catch(e) {}
 

@@ -151,7 +151,6 @@ import { supabase } from './supabase.js'
 import { eisSessie, startBewaking } from './sessie.js'
 import { onderzoekVideo } from './videohulp.js'
 import { startMeldingen } from './meldingen.js'
-startMeldingen()
 import { haalPrivateKeyOp } from './crypto.js'
 
 // ── Waarschuw als de private key op dit apparaat ontbreekt ──
@@ -1760,6 +1759,8 @@ init().then(() => {
     tekenGrid('profiel-sectie', proLayout, renderProfiel)
   }
 }).catch(e => console.error('Init fout:', e))
+
+startMeldingen()
 </script>
 
 <script>

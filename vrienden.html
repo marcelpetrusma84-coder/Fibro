@@ -279,7 +279,6 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   import { laadThema } from './thema.js'
   import { supabase } from './supabase.js'
   import { startMeldingen } from './meldingen.js'
-  startMeldingen()
   import { startHeartbeat } from './heartbeat.js'
 
   function isGebruikerOnline(profiel) {
@@ -427,6 +426,8 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 
   init()
 
+
+startMeldingen()
 </script>
 <script type="module">
   // dubbele client verwijderd 2 sep — gebruikt de import op regel 280

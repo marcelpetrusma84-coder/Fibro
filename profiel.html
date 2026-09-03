@@ -446,7 +446,6 @@ function _profielUid() {
 import { supabase } from './supabase.js'
 import { eisSessie, startBewaking } from './sessie.js'
 import { startMeldingen } from './meldingen.js'
-startMeldingen()
 import { laadThema } from './thema.js'
 import { startHeartbeat } from './heartbeat.js'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js'
@@ -901,6 +900,8 @@ init()
     setTimeout(() => { input.style.transform=''; input.style.borderColor='' }, 200)
   }
 
+
+startMeldingen()
 </script>
 <script src="swipe.js"></script>
 

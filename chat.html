@@ -342,7 +342,6 @@ window.veiligeUrl = function(v){
   import { laadWallpaper } from './wallpaper.js'
   import { supabase } from './supabase.js'
   import { startMeldingen } from './meldingen.js'
-  startMeldingen()
   import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js'
   import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js'
@@ -3518,6 +3517,8 @@ window.veiligeUrl = function(v){
   }
 
   init()
+
+startMeldingen()
 </script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js"; startVriendverzoekLuisteraar()</script>
 

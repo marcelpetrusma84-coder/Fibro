@@ -1385,34 +1385,36 @@ function renderQuoteWidget(c, uid) {
 // Zet een klein icoontje rechtsboven waarmee je een foto kiest.
 // Opslag in IndexedDB, dus de 150 MB-grens en de opslagbalk werken mee.
 async function zetWidgetAchtergrond(c, sleutel) {
+  const posKey = 'widgetbgpos_' + sleutel
   const data = await laadUitDB(sleutel)
-  if (data) {
-    c.style.backgroundImage = 'linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(' + data + ')'
-    c.style.backgroundSize = 'cover'
-    c.style.backgroundPosition = 'center'
-  } else {
-    c.style.backgroundImage = ''
+
+  function leesPos() {
+    try { const p = JSON.parse(localStorage.getItem(posKey)); if (p && p.s) return p } catch(e) {}
+    return { s: 100, x: 50, y: 50 }
   }
 
-  if (c.querySelector('.wbg-knop')) return
+  function pas(p) {
+    if (!data) { c.style.backgroundImage = ''; return }
+    c.style.backgroundImage = 'linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url(' + data + ')'
+    c.style.backgroundSize = p.s + '% auto'
+    c.style.backgroundPosition = p.x + '% ' + p.y + '%'
+    c.style.backgroundRepeat = 'no-repeat'
+  }
+
+  pas(leesPos())
+  if (getComputedStyle(c).position === 'static') c.style.position = 'relative'
+
+  const oude = c.querySelector('.wbg-knop')
+  if (oude) oude.remove()
+
   const knop = document.createElement('button')
   knop.className = 'wbg-knop'
-  knop.textContent = data ? '\u2715' : '\u{1F5BC}'
-  knop.title = data ? 'Achtergrond verwijderen' : 'Achtergrondfoto kiezen'
-  knop.style.cssText = 'position:absolute;top:4px;right:4px;z-index:5;background:rgba(0,0,0,0.5);border:none;border-radius:50%;width:22px;height:22px;min-width:22px;min-height:22px;padding:0;font-size:11px;line-height:1;color:#fff;cursor:pointer;opacity:0.65'
-  if (getComputedStyle(c).position === 'static') c.style.position = 'relative'
+  knop.textContent = '\u{1F5BC}'
+  knop.title = data ? 'Achtergrond aanpassen' : 'Achtergrondfoto kiezen'
+  knop.style.cssText = 'position:absolute;top:4px;right:4px;z-index:6;background:rgba(0,0,0,0.5);border:none;border-radius:50%;width:22px;height:22px;min-width:22px;min-height:22px;padding:0;font-size:11px;line-height:1;color:#fff;cursor:pointer;opacity:0.65'
   c.appendChild(knop)
 
-  knop.onclick = async (e) => {
-    e.stopPropagation()
-    if (data) {
-      if (!confirm('Achtergrondfoto verwijderen?')) return
-      try { await wisFotoUitDB(sleutel) } catch(err) {}
-      c.style.backgroundImage = ''
-      knop.textContent = '\u{1F5BC}'
-      knop.title = 'Achtergrondfoto kiezen'
-      return
-    }
+  function kiesFoto() {
     const inp = document.createElement('input')
     inp.type = 'file'
     inp.accept = 'image/*'
@@ -1424,28 +1426,95 @@ async function zetWidgetAchtergrond(c, sleutel) {
         const img = new Image()
         img.onload = async () => {
           const cv = document.createElement('canvas')
-          const max = 800
+          const max = 900
           let w = img.width, h = img.height
           if (w > max || h > max) { if(w>h){h=Math.round(h*max/w);w=max}else{w=Math.round(w*max/h);h=max} }
           cv.width = w; cv.height = h
           cv.getContext('2d').drawImage(img,0,0,w,h)
-          try {
-            await slaFotoOp(sleutel, cv.toDataURL('image/jpeg',0.8))
-          } catch(err) {
-            alert('Opslaan van de achtergrond is mislukt.')
-            return
-          }
-          knop.remove()
+          try { await slaFotoOp(sleutel, cv.toDataURL('image/jpeg',0.8)) }
+          catch(err) { alert('Opslaan van de achtergrond is mislukt.'); return }
+          localStorage.setItem(posKey, JSON.stringify({ s:100, x:50, y:50 }))
           zetWidgetAchtergrond(c, sleutel)
         }
-        img.onerror = () => alert('Deze foto kan niet worden gelezen.\n\nOp een iPhone: zet Instellingen > Camera > Indelingen op "Meest compatibel".')
+        img.onerror = () => alert('Deze foto kan niet worden gelezen.')
         img.src = ev.target.result
       }
       lezer.readAsDataURL(f)
     }
     inp.click()
   }
+
+  function bewerkStand() {
+    let p = leesPos()
+    const begin = { s:p.s, x:p.x, y:p.y }
+    const bar = document.createElement('div')
+    bar.className = 'wbg-bewerk'
+    bar.style.cssText = 'position:absolute;left:0;right:0;bottom:0;z-index:8;background:rgba(0,0,0,0.85);padding:7px 9px;display:flex;flex-direction:column;gap:6px'
+    bar.innerHTML = '<div style="font-size:10px;color:rgba(255,255,255,0.7);text-align:center">Sleep om te verschuiven</div>'
+      + '<div style="display:flex;align-items:center;gap:7px"><span style="font-size:11px;color:rgba(255,255,255,0.6)">Zoom</span>'
+      + '<input class="wbg-zoom" type="range" min="100" max="300" value="' + p.s + '" style="flex:1;accent-color:var(--accent)">'
+      + '<span class="wbg-zl" style="font-size:11px;color:var(--accent);min-width:34px">' + p.s + '%</span></div>'
+      + '<div style="display:flex;gap:6px"><button class="wbg-ok" style="flex:1;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:7px;padding:6px;color:#1a0a2e;font-weight:600;font-size:12px;cursor:pointer;min-height:32px">Klaar</button>'
+      + '<button class="wbg-an" style="flex:1;background:rgba(255,255,255,0.12);border:none;border-radius:7px;padding:6px;color:#fff;font-size:12px;cursor:pointer;min-height:32px">Annuleren</button>'
+      + '<button class="wbg-vv" style="background:rgba(255,255,255,0.12);border:none;border-radius:7px;padding:6px 9px;color:#fff;font-size:12px;cursor:pointer;min-height:32px">Wissen</button></div>'
+    c.appendChild(bar)
+    knop.style.display = 'none'
+
+    const zoom = bar.querySelector('.wbg-zoom')
+    const zl = bar.querySelector('.wbg-zl')
+    zoom.oninput = () => { p.s = parseInt(zoom.value,10); zl.textContent = p.s + '%'; pas(p) }
+
+    let sleept = false, lx = 0, ly = 0
+    const neer = e => {
+      if (e.target.closest && e.target.closest('.wbg-bewerk')) return
+      sleept = true
+      const t0 = e.touches ? e.touches[0] : e
+      lx = t0.clientX; ly = t0.clientY
+      e.preventDefault()
+    }
+    const beweeg = e => {
+      if (!sleept) return
+      const t0 = e.touches ? e.touches[0] : e
+      p.x = Math.max(0, Math.min(100, p.x - (t0.clientX - lx) * 0.4))
+      p.y = Math.max(0, Math.min(100, p.y - (t0.clientY - ly) * 0.4))
+      lx = t0.clientX; ly = t0.clientY
+      pas(p)
+      e.preventDefault()
+    }
+    const los = () => { sleept = false }
+
+    c.addEventListener('mousedown', neer)
+    window.addEventListener('mousemove', beweeg)
+    window.addEventListener('mouseup', los)
+    c.addEventListener('touchstart', neer, { passive:false })
+    window.addEventListener('touchmove', beweeg, { passive:false })
+    window.addEventListener('touchend', los)
+
+    function sluit() {
+      c.removeEventListener('mousedown', neer)
+      window.removeEventListener('mousemove', beweeg)
+      window.removeEventListener('mouseup', los)
+      c.removeEventListener('touchstart', neer)
+      window.removeEventListener('touchmove', beweeg)
+      window.removeEventListener('touchend', los)
+      bar.remove()
+      knop.style.display = ''
+    }
+
+    bar.querySelector('.wbg-ok').onclick = () => { localStorage.setItem(posKey, JSON.stringify(p)); sluit() }
+    bar.querySelector('.wbg-an').onclick = () => { pas(begin); sluit() }
+    bar.querySelector('.wbg-vv').onclick = async () => {
+      if (!confirm('Achtergrondfoto verwijderen?')) return
+      try { await wisFotoUitDB(sleutel) } catch(e) {}
+      localStorage.removeItem(posKey)
+      sluit()
+      zetWidgetAchtergrond(c, sleutel)
+    }
+  }
+
+  knop.onclick = e => { e.stopPropagation(); if (!data) kiesFoto(); else bewerkStand() }
 }
+
 
 function renderAftel(c, uid) {
   const key = 'aftel_'+uid

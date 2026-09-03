@@ -229,6 +229,7 @@ const PROFIEL_DEFS = [
   // Overige
   { id:'poll',           icon:'🗳️', titel:'Poll',                 w:4, h:3 },
   { id:'afteltimer',     icon:'⏳', titel:'Afteltimer',           w:4, h:2 },
+  { id:'opteltimer',     icon:'⏱', titel:'Opteltimer',           w:4, h:2 },
   { id:'gastenboek',     icon:'📖', titel:'Gastenboek',           w:4, h:4 },
 ]
 
@@ -422,6 +423,8 @@ function renderHome(id, c) {
     renderPoll(c, window._uid)
   } else if (id === 'afteltimer') {
     renderAftel(c, window._uid)
+  } else if (id === 'opteltimer') {
+    renderOptel(c, window._uid)
   } else if (id === 'gastenboek') {
     renderGastenboek(c, window._uid)
   }
@@ -487,6 +490,8 @@ function renderProfiel(id, c) {
     renderPoll(c, window._uid)
   } else if (id === 'afteltimer') {
     renderAftel(c, window._uid)
+  } else if (id === 'opteltimer') {
+    renderOptel(c, window._uid)
   } else if (id === 'gastenboek') {
     renderGastenboek(c, window._uid)
   }
@@ -1334,17 +1339,20 @@ function renderAftel(c, uid) {
   function toonInvoer() {
     const d = new Date(); d.setDate(d.getDate()+7)
     const def = d.toISOString().slice(0,10)
+    const deft = cfg && cfg.tijd ? cfg.tijd : '00:00'
     c.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:8px">
         <input id="afb" placeholder="Bijv. Zomervakantie 🌞" maxlength="80" value="${cfg?String(cfg.bericht||'').replace(/"/g,'&quot;'):''}" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;outline:none;width:100%">
         <input id="afd" type="date" value="${cfg?cfg.datum:def}" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;outline:none;width:100%;color-scheme:dark">
+        <input id="aft" type="time" value="${deft}" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;outline:none;width:100%;color-scheme:dark">
         <button id="afok" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:9px;color:#1a0a2e;font-weight:600;cursor:pointer">Opslaan ✓</button>
       </div>`
     document.getElementById('afok').onclick = () => {
       const b = document.getElementById('afb').value.trim()
       const dt = document.getElementById('afd').value
       if (!dt) { alert('Kies een datum'); return }
-      cfg = { bericht: b||'Aftellen...', datum: dt }
+      const tj = (document.getElementById('aft').value || '00:00')
+      cfg = { bericht: b||'Aftellen...', datum: dt, tijd: tj }
       localStorage.setItem(key, JSON.stringify(cfg))
       toonTimer(cfg)
     }
@@ -1363,7 +1371,7 @@ function renderAftel(c, uid) {
     let tr
     const upd = () => {
       const el = document.getElementById('atd'); if(!el){clearInterval(tr);return}
-      const diff = new Date(cr.datum+'T00:00:00') - new Date()
+      const diff = new Date(cr.datum+'T'+(cr.tijd||'00:00')+':00') - new Date()
       if (diff <= 0) { el.innerHTML = '🎉 Het is zover!'; clearInterval(tr); return }
       const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000)
       el.innerHTML = blok(d,'dagen')+blok(h,'uur')+blok(m,'min')+blok(s,'sec')
@@ -1372,6 +1380,59 @@ function renderAftel(c, uid) {
   }
 
   if (cfg) toonTimer(cfg)
+  else toonInvoer()
+}
+
+function renderOptel(c, uid) {
+  const key = 'optel_'+uid
+  let cfg = null
+  try { cfg = JSON.parse(localStorage.getItem(key)) } catch(e) {}
+
+  function toonInvoer() {
+    const nu = new Date()
+    const def = cfg ? cfg.datum : nu.toISOString().slice(0,10)
+    const deft = cfg && cfg.tijd ? cfg.tijd : '00:00'
+    const inp = 'background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;outline:none;width:100%'
+    c.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input id="opb" placeholder="Bijv. Samen sinds \u2764" maxlength="80" value="${cfg?String(cfg.bericht||'').replace(/"/g,'&quot;'):''}" style="${inp}">
+        <input id="opd" type="date" value="${def}" style="${inp};color-scheme:dark">
+        <input id="opt" type="time" value="${deft}" style="${inp};color-scheme:dark">
+        <button id="opok" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:9px;color:#1a0a2e;font-weight:600;cursor:pointer">Opslaan \u2713</button>
+      </div>`
+    document.getElementById('opok').onclick = () => {
+      const b = document.getElementById('opb').value.trim()
+      const dt = document.getElementById('opd').value
+      if (!dt) { alert('Kies een datum'); return }
+      const tj = document.getElementById('opt').value || '00:00'
+      cfg = { bericht: b||'Optellen...', datum: dt, tijd: tj }
+      localStorage.setItem(key, JSON.stringify(cfg))
+      toonTeller(cfg)
+    }
+  }
+
+  function toonTeller(cr) {
+    const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    c.innerHTML = `
+      <div style="text-align:center">
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--accent)">${escH(cr.bericht)}</div>
+        <div id="optd" style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap"></div>
+        <button id="optw" style="margin-top:8px;background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;color:rgba(255,255,255,0.7);font-size:11px;cursor:pointer">\u270F Wijzigen</button>
+      </div>`
+    document.getElementById('optw').onclick = toonInvoer
+    const blok = (n,l) => `<div style="display:flex;flex-direction:column;align-items:center;background:rgba(192,132,252,0.1);border-radius:8px;padding:5px 7px;min-width:42px"><span style="font-size:18px;font-weight:700;color:var(--accent);font-family:monospace">${String(n).padStart(2,'0')}</span><span style="font-size:9px;color:rgba(255,255,255,0.75)">${l}</span></div>`
+    let tr
+    const upd = () => {
+      const el = document.getElementById('optd'); if(!el){clearInterval(tr);return}
+      const diff = new Date() - new Date(cr.datum+'T'+(cr.tijd||'00:00')+':00')
+      if (diff < 0) { el.innerHTML = 'Die datum ligt nog in de toekomst'; return }
+      const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000)
+      el.innerHTML = blok(d,'dagen')+blok(h,'uur')+blok(m,'min')+blok(s,'sec')
+    }
+    upd(); tr = setInterval(upd, 1000)
+  }
+
+  if (cfg) toonTeller(cfg)
   else toonInvoer()
 }
 

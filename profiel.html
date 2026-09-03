@@ -381,6 +381,7 @@ input, textarea { font-size:16px !important; }
     </div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">⏰</div><div><div class="widget-name">Countdown</div><div class="widget-desc">Aftellen naar een datum</div></div></div><div class="toggle off" id="widget-countdown" onclick="toggleWidget('countdown')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">📊</div><div><div class="widget-name">Poll</div><div class="widget-desc">Laat vrienden stemmen</div></div></div><div class="toggle off" id="widget-poll" onclick="toggleWidget('poll')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⏱</div><div><div class="widget-name">Opteltimer</div><div class="widget-desc">Tellen sinds een datum</div></div></div><div class="toggle off" id="widget-opteltimer" onclick="toggleWidget('opteltimer')"><div class="toggle-dot"></div></div></div>
     <div style="display:none;">
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">✍</div><div><div class="widget-name">Quote</div><div class="widget-desc">Favoriete citaat tonen</div></div></div><div class="toggle off" id="widget-quote" onclick="toggleWidget('quote')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🗺</div><div><div class="widget-name">Locatie</div><div class="widget-desc">Toon je stad</div></div></div><div class="toggle off" id="widget-locatie" onclick="toggleWidget('locatie')"><div class="toggle-dot"></div></div></div>
@@ -753,6 +754,7 @@ window.slaAllesOp=async function(){
     fotoszwevend:  { id:'fotos_zwevend',  icon:'📌', titel:'Zwevende Polaroids',   w:4, h:3, geenHeader:true },
     poll:       { id:'poll',       icon:'🗳', titel:'Poll',          w:4, h:3 },
     countdown:  { id:'afteltimer', icon:'⏳', titel:'Afteltimer',    w:4, h:2 },
+    opteltimer: { id:'opteltimer', icon:'⏱', titel:'Opteltimer',    w:4, h:2 },
     gastenboek: { id:'gastenboek', icon:'📖', titel:'Gastenboek',    w:4, h:4 }
   }
   const wLayout = actieveWidgets.filter(n => WMAP[n]).map((n, i) => ({ ...WMAP[n], volgorde: i, aan: true }))

@@ -736,13 +736,13 @@ window.veiligeUrl = function(v){
   }
 
   // ─── Bericht versturen (versleuteld + cache) ───
-  async function stuurPling(ontvangerId) {
+  async function stuurPling(ontvangerId, titel, tekst) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       await fetch('https://qmgatbphiplrfxrljtbe.supabase.co/functions/v1/stuur-push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-        body: JSON.stringify({ receiver_id: ontvangerId, title: 'Fibro', body: 'Je hebt een nieuw bericht 💬' })
+        body: JSON.stringify({ receiver_id: ontvangerId, title: titel || 'Fibro', body: tekst || 'Je hebt een nieuw bericht 💬' })
       })
     } catch(e) { console.log('[pling] versturen mislukt:', e) }
   }
@@ -958,6 +958,7 @@ window.veiligeUrl = function(v){
       content: 'buzz:',
       expires_at: new Date(Date.now() + 24*60*60*1000).toISOString()
     })
+    stuurPling(geselecteerdeVriend.id, '⚡ Buzz!', 'Je wordt gebuzzd!')
   }
 
   // Buzzgeluid: lage zaagtand die snel aan-uit pulseert.

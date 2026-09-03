@@ -20,11 +20,14 @@ self.addEventListener('fetch', function(event) {
 self.addEventListener('push', function(event) {
   const data = event.data ? event.data.json() : {}
   const title = data.title || 'Fibro'
+  const isBuzz = data.type === 'buzz'
   const options = {
     body: data.body || 'Je hebt een nieuw bericht',
-    icon: '/icon-192.png',
+    icon: isBuzz ? '/Fibro/icon-buzz.png' : '/icon-192.png',
     badge: '/icon-192.png',
-    vibrate: [200, 100, 200],
+    vibrate: isBuzz ? [300, 80, 300, 80, 300, 80, 500] : [200, 100, 200],
+    tag: isBuzz ? 'buzz' : undefined,
+    renotify: isBuzz,
     data: { url: data.url || '/chat.html' }
   }
   event.waitUntil(self.registration.showNotification(title, options))

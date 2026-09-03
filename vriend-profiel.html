@@ -348,10 +348,92 @@ body.heeft-wallpaper::before { display:block; }
         const gelukt = await renderVriendVideo(el, vriendId)
         if (gelukt) { grid.appendChild(el); continue }
       }
+      if (w.id === 'quote') {
+        const gelukt = await renderVriendQuote(el, vriendId)
+        if (gelukt) { grid.appendChild(el); continue }
+      }
+      if (w.id === 'afteltimer') {
+        const gelukt = await renderVriendTimer(el, vriendId, 'aftel')
+        if (gelukt) { grid.appendChild(el); continue }
+      }
+      if (w.id === 'opteltimer') {
+        const gelukt = await renderVriendTimer(el, vriendId, 'optel')
+        if (gelukt) { grid.appendChild(el); continue }
+      }
       el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">' + (w.icon || '🧩') + '</span><span class="widget-titel">' + (w.titel || w.id) + '</span></div><div class="widget-inhoud"><div class="wi-icon">' + (w.icon || '🧩') + '</div></div>'
       grid.appendChild(el)
     }
     grid.style.display = ''
+  }
+
+
+  // ── Achtergrondfoto van vriend-widget (alleen tonen, niet bewerken) ──
+  async function vriendAchtergrond(el, vriendId, wid) {
+    const rec = await haalRecordVP('vriend_' + vriendId + '_wbg_' + wid)
+    if (!rec || !rec.data) return
+    let p = { s:100, x:50, y:50 }
+    try { if (rec.pos) p = JSON.parse(rec.pos) } catch(e) {}
+    el.style.position = 'relative'
+    el.style.backgroundImage = 'linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url(' + rec.data + ')'
+    el.style.backgroundSize = p.s + '% auto'
+    el.style.backgroundPosition = p.x + '% ' + p.y + '%'
+    el.style.backgroundRepeat = 'no-repeat'
+  }
+
+  async function haalRecordVP(id) {
+    try {
+      const db = await openDB()
+      return await new Promise(res => {
+        const r = db.transaction('fotos','readonly').objectStore('fotos').get(id)
+        r.onsuccess = () => res(r.result || null)
+        r.onerror = () => res(null)
+      })
+    } catch(e) { return null }
+  }
+
+  const escVW = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+
+  async function renderVriendQuote(el, vriendId) {
+    const ruw = await laadFotoUitDB('vriend_' + vriendId + '_quote')
+    if (!ruw) return false
+    let q = null
+    try { q = JSON.parse(ruw) } catch(e) { q = { tekst: ruw, grootte: 16, font: "'DM Sans',sans-serif" } }
+    if (!q || !q.tekst) return false
+    await vriendAchtergrond(el, vriendId, 'quote')
+    el.innerHTML = '<div style="text-align:center;position:relative;z-index:2;padding:10px 6px">'
+      + '<div style="font-size:' + (q.grootte||16) + 'px;line-height:1.35;font-family:' + (q.font||'inherit') + ';color:var(--text);white-space:pre-wrap;text-shadow:0 1px 4px rgba(0,0,0,0.7)">'
+      + escVW(q.tekst) + '</div></div>'
+    return true
+  }
+
+  async function renderVriendTimer(el, vriendId, soort) {
+    const ruw = await laadFotoUitDB('vriend_' + vriendId + '_' + soort)
+    if (!ruw) return false
+    let cfg = null
+    try { cfg = JSON.parse(ruw) } catch(e) { return false }
+    if (!cfg || !cfg.datum) return false
+    await vriendAchtergrond(el, vriendId, soort)
+    el.innerHTML = '<div style="text-align:center;position:relative;z-index:2;padding:8px 4px">'
+      + '<div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--accent);text-shadow:0 1px 4px rgba(0,0,0,0.7)">'
+      + escVW(cfg.bericht || (soort === 'aftel' ? 'Aftellen' : 'Optellen')) + '</div>'
+      + '<div class="vt-cijfers" style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap"></div></div>'
+    const doel = el.querySelector('.vt-cijfers')
+    const blok = (n,l) => '<div style="display:flex;flex-direction:column;align-items:center;background:rgba(192,132,252,0.15);border-radius:8px;padding:5px 7px;min-width:42px"><span style="font-size:18px;font-weight:700;color:var(--accent);font-family:monospace">' + String(n).padStart(2,'0') + '</span><span style="font-size:9px;color:rgba(255,255,255,0.8)">' + l + '</span></div>'
+    let tr
+    const upd = () => {
+      if (!document.body.contains(doel)) { clearInterval(tr); return }
+      const mom = new Date(cfg.datum + 'T' + (cfg.tijd || '00:00') + ':00')
+      const diff = soort === 'aftel' ? (mom - new Date()) : (new Date() - mom)
+      if (diff <= 0) {
+        doel.innerHTML = soort === 'aftel' ? 'Het is zover!' : 'Nog niet begonnen'
+        clearInterval(tr); return
+      }
+      const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000)
+      const m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000)
+      doel.innerHTML = blok(d,'dagen') + blok(h,'uur') + blok(m,'min') + blok(s,'sec')
+    }
+    upd(); tr = setInterval(upd, 1000)
+    return true
   }
 
   // ── Muziek-widget van vriend (P2P-gesyncte cache) ──

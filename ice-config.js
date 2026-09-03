@@ -9,6 +9,8 @@ const ANON_KEY = 'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
 export const ICE_SERVERS = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun.cloudflare.com:3478' },
   ]
 }
 
@@ -34,8 +36,9 @@ async function laadTurnServers() {
         typeof s.urls === 'string' ? s.urls.startsWith('turn') :
         Array.isArray(s.urls) ? s.urls.some(u => u.startsWith('turn')) : false
       )
-      ICE_SERVERS.iceServers.push(...turn)
-      console.log('[ice] TURN geladen:', turn.length, 'server(s)')
+      // Max 2 TURN-servers: meer vertraagt de verbinding (WebRTC-richtlijn)
+      ICE_SERVERS.iceServers.push(...turn.slice(0, 2))
+      console.log('[ice] TURN geladen:', Math.min(turn.length, 2), 'van', turn.length, 'server(s)')
     } else {
       console.warn('[ice] Onverwacht antwoord:', tekst.slice(0, 200))
     }

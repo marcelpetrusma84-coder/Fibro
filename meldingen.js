@@ -15,7 +15,7 @@ function aan(sleutel) {
 }
 
 // Kleine melding onderin beeld, verdwijnt vanzelf.
-export function toonMelding(tekst, kleur) {
+export function toonMelding(tekst, kleur, opKlik) {
   let bak = document.getElementById('fibro-meldingen')
   if (!bak) {
     bak = document.createElement('div')
@@ -26,14 +26,18 @@ export function toonMelding(tekst, kleur) {
   const m = document.createElement('div')
   m.textContent = tekst
   m.style.cssText = 'background:rgba(26,10,46,0.94);color:#fff;border:0.5px solid ' + (kleur || 'rgba(192,132,252,0.5)')
-    + ';border-radius:20px;padding:8px 16px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,0.4);opacity:0;transform:translateY(8px);transition:opacity 0.25s,transform 0.25s;max-width:90vw;text-align:center'
+    + ';border-radius:20px;padding:8px 16px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,0.4);opacity:0;transform:translateY(8px);transition:opacity 0.25s,transform 0.25s;max-width:90vw;text-align:center;pointer-events:auto;cursor:pointer'
+  m.onclick = () => {
+    if (opKlik) opKlik()
+    else window.location.href = 'chat.html'
+  }
   bak.appendChild(m)
   requestAnimationFrame(() => { m.style.opacity = '1'; m.style.transform = 'translateY(0)' })
   setTimeout(() => {
     m.style.opacity = '0'
     m.style.transform = 'translateY(8px)'
     setTimeout(() => m.remove(), 300)
-  }, 3200)
+  }, 6500)
 }
 
 // Buzzgeluid: lage zaagtand die snel aan-uit pulseert.

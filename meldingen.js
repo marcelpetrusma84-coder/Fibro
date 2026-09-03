@@ -40,12 +40,34 @@ export function toonMelding(tekst, kleur, opKlik) {
   }, 6500)
 }
 
+// iOS/Safari laat geluid alleen toe na een aanraking. We openen de
+// audiocontext daarom bij de eerste tik en houden hem open.
+let gedeeldeCtx = null
+function ontgrendelAudio() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext
+    if (!AC) return
+    if (!gedeeldeCtx) gedeeldeCtx = new AC()
+    if (gedeeldeCtx.state === 'suspended') gedeeldeCtx.resume()
+    // Stil toontje van 1 sample: ontgrendelt de context op iOS
+    const b = gedeeldeCtx.createBuffer(1, 1, 22050)
+    const s = gedeeldeCtx.createBufferSource()
+    s.buffer = b
+    s.connect(gedeeldeCtx.destination)
+    s.start(0)
+  } catch(e) {}
+}
+document.addEventListener('touchstart', ontgrendelAudio, { once: true, passive: true })
+document.addEventListener('click', ontgrendelAudio, { once: true })
+
 // Buzzgeluid: lage zaagtand die snel aan-uit pulseert.
 function speelBuzz() {
   try {
     const AC = window.AudioContext || window.webkitAudioContext
     if (!AC) return
-    const ctx = new AC()
+    if (!gedeeldeCtx) gedeeldeCtx = new AC()
+    const ctx = gedeeldeCtx
+    if (ctx.state === 'suspended') ctx.resume()
     const nu = ctx.currentTime
     const osc = ctx.createOscillator()
     const g = ctx.createGain()
@@ -62,7 +84,6 @@ function speelBuzz() {
     g.gain.setValueAtTime(0, nu + 1.05)
     osc.connect(g); g.connect(ctx.destination)
     osc.start(nu); osc.stop(nu + 1.1)
-    osc.onended = () => { try { ctx.close() } catch(e) {} }
   } catch(e) {}
 }
 

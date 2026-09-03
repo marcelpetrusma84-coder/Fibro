@@ -74,7 +74,7 @@ function zorgVoorSchudStijl() {
   document.head.appendChild(s)
 }
 
-function buzzBinnen(vanNaam) {
+function buzzBinnen(vanNaam, vanId) {
   const nu = Date.now()
   if (nu - laatsteBuzz < 5000) return   // rem: max 1 buzz per 5 sec
   laatsteBuzz = nu
@@ -83,7 +83,7 @@ function buzzBinnen(vanNaam) {
   if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200])
   document.body.classList.add('fibro-schudt')
   setTimeout(() => document.body.classList.remove('fibro-schudt'), 700)
-  toonMelding('\u26a1 ' + (vanNaam || 'Iemand') + ' buzzt je!', 'rgba(250,204,21,0.7)')
+  toonMelding('\u26a1 ' + (vanNaam || 'Iemand') + ' buzzt je!', 'rgba(250,204,21,0.7)', vanId ? () => { window.location.href = 'chat.html?vriend=' + vanId } : null)
 }
 
 // Naam van een vriend ophalen (kort gecachet)
@@ -108,7 +108,7 @@ function startBuzzLuisteraar() {
         if (!msg || msg.sender_id === eigenId) return
         if (msg.content !== 'buzz:') return
         if (!aan(BUZZ_UIT)) return
-        buzzBinnen(await haalNaam(msg.sender_id))
+        buzzBinnen(await haalNaam(msg.sender_id), msg.sender_id)
       })
     .subscribe()
 }
@@ -134,7 +134,7 @@ async function startOnlineLuisteraar() {
       if (eersteRonde) { bekend = nu; eersteRonde = false; return }
       for (const id of nu) {
         if (!bekend.has(id) && vrienden.has(id) && aan(ONLINE_UIT)) {
-          toonMelding('\u{1F7E2} ' + (await haalNaam(id)) + ' is online', 'rgba(74,222,128,0.6)')
+          toonMelding('\u{1F7E2} ' + (await haalNaam(id)) + ' is online', 'rgba(74,222,128,0.6)', () => { window.location.href = 'chat.html?vriend=' + id })
         }
       }
       bekend = nu

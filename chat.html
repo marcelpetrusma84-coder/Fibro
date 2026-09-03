@@ -508,6 +508,12 @@ window.veiligeUrl = function(v){
 
     // ── Automatisch spel starten via URL (van uitnodiging op andere pagina) ──
     const urlParams = new URLSearchParams(window.location.search)
+    // Rechtstreeks een gesprek openen: chat.html?vriend=<id>
+    const directVriend = urlParams.get('vriend')
+    if (directVriend) {
+      const v = (window._vriendenData || []).find(x => x.id === directVriend)
+      if (v) await openChat(v.id, vriendWeergaveNaam(v), v.avatar_url || '\u{1F464}', v.public_key || '')
+    }
     const spelVriend = urlParams.get('spelVriend')
     const spelType   = urlParams.get('spelType')
     const sessieId   = urlParams.get('sessieId')

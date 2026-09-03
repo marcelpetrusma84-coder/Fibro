@@ -145,13 +145,15 @@ async function startOnlineLuisteraar() {
     for (const r of (data || [])) {
       vrienden.add(r.user_id === eigenId ? r.friend_id : r.user_id)
     }
-  } catch(e) {}
+  } catch(e) { console.warn('[meldingen] vrienden ophalen mislukt:', e) }
+  console.log('[meldingen] vrienden voor online-melding:', [...vrienden])
 
   if (pKanaal) supabase.removeChannel(pKanaal)
   pKanaal = supabase
     .channel('fibro-online', { config: { presence: { key: eigenId } } })
     .on('presence', { event: 'sync' }, async () => {
       const nu = new Set(Object.keys(pKanaal.presenceState()).filter(i => i !== eigenId))
+      console.log('[meldingen] presence:', [...nu], 'eerste ronde:', eersteRonde)
       if (eersteRonde) { bekend = nu; eersteRonde = false; return }
       for (const id of nu) {
         if (!bekend.has(id) && vrienden.has(id) && aan(ONLINE_UIT)) {

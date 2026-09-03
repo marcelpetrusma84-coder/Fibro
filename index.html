@@ -473,19 +473,7 @@ function renderProfiel(id, c) {
     renderFotoZwevend(c)
 
   } else if (id === 'quote') {
-    const oq = localStorage.getItem('quote_'+window._uid)||''
-    if (oq) {
-      c.innerHTML = `<div style="font-size:20px;color:var(--accent)">"</div><div style="font-size:14px;line-height:1.5;font-style:italic">${escH(oq)}</div><button id="qwij" style="margin-top:8px;background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;color:rgba(255,255,255,0.7);font-size:11px;cursor:pointer">✏️ Wijzigen</button>`
-      document.getElementById('qwij').onclick = () => { localStorage.removeItem('quote_'+window._uid); renderProfiel('quote',c) }
-    } else {
-      c.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px"><textarea id="qi" placeholder="Jouw quote..." rows="3" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;width:100%;resize:none;font-family:inherit"></textarea><button id="qok" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:8px;color:#1a0a2e;font-weight:600;cursor:pointer">Opslaan</button></div>`
-      document.getElementById('qok').onclick = () => {
-        const q=document.getElementById('qi').value.trim()
-        if(!q)return
-        localStorage.setItem('quote_'+window._uid, q)
-        renderProfiel('quote', c)
-      }
-    }
+    renderQuoteWidget(c, window._uid)
   } else if (id === 'poll') {
     renderPoll(c, window._uid)
   } else if (id === 'afteltimer') {
@@ -1332,6 +1320,67 @@ function renderPoll(c, uid) {
 // ════════════════════════════════
 // AFTELTIMER
 // ════════════════════════════════
+function renderQuoteWidget(c, uid) {
+  const key = 'quote_'+uid
+  const FONTS = [
+    ["'DM Sans',sans-serif", 'DM Sans'],
+    ["'Playfair Display',serif", 'Playfair'],
+    ["'Dancing Script',cursive", 'Dancing Script'],
+    ["'Great Vibes',cursive", 'Great Vibes'],
+    ["'Bebas Neue',cursive", 'Bebas Neue'],
+    ["'Lora',serif", 'Lora'],
+    ["'Pacifico',cursive", 'Pacifico'],
+    ["'Courier Prime',monospace", 'Courier'],
+  ]
+  let cfg = null
+  try {
+    const ruw = localStorage.getItem(key)
+    if (ruw && ruw.trim().startsWith('{')) cfg = JSON.parse(ruw)
+    else if (ruw) cfg = { tekst: ruw, grootte: 16, font: FONTS[0][0] }
+  } catch(e) {}
+
+  zetWidgetAchtergrond(c, 'widgetbg_quote_'+uid)
+
+  function toonInvoer() {
+    const inp = 'background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;width:100%'
+    const hg = cfg ? cfg.grootte : 18
+    const hf = cfg ? cfg.font : FONTS[0][0]
+    c.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:7px;position:relative;z-index:2">
+        <textarea id="qi" placeholder="Jouw quote..." rows="3" style="${inp};resize:none;font-family:inherit">${cfg?String(cfg.tekst||''):''}</textarea>
+        <select id="qf" style="${inp}">${FONTS.map(f=>`<option value="${f[0]}" ${hf===f[0]?'selected':''} style="font-family:${f[0]}">${f[1]}</option>`).join('')}</select>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:rgba(255,255,255,0.6)">Grootte</span>
+          <input id="qg" type="range" min="12" max="40" value="${hg}" style="flex:1;accent-color:var(--accent)">
+          <span id="qgl" style="font-size:11px;color:var(--accent);min-width:28px">${hg}px</span>
+        </div>
+        <button id="qok" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:8px;color:#1a0a2e;font-weight:600;cursor:pointer">Opslaan \u2713</button>
+      </div>`
+    const sl = document.getElementById('qg')
+    sl.oninput = () => { document.getElementById('qgl').textContent = sl.value + 'px' }
+    document.getElementById('qok').onclick = () => {
+      const tk = document.getElementById('qi').value.trim()
+      if (!tk) { alert('Vul een quote in'); return }
+      cfg = { tekst: tk, grootte: parseInt(sl.value,10), font: document.getElementById('qf').value }
+      localStorage.setItem(key, JSON.stringify(cfg))
+      toonQuote(cfg)
+    }
+  }
+
+  function toonQuote(q) {
+    const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    c.innerHTML = `
+      <div style="text-align:center;position:relative;z-index:2;padding:6px 4px">
+        <div style="font-size:${q.grootte}px;line-height:1.35;font-family:${q.font};color:var(--text);white-space:pre-wrap;text-shadow:0 1px 4px rgba(0,0,0,0.7)">${escH(q.tekst)}</div>
+        <button id="qwij" style="margin-top:8px;background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;color:rgba(255,255,255,0.7);font-size:11px;cursor:pointer">\u270F Wijzigen</button>
+      </div>`
+    document.getElementById('qwij').onclick = toonInvoer
+  }
+
+  if (cfg && cfg.tekst) toonQuote(cfg)
+  else toonInvoer()
+}
+
 // ── Gedeelde achtergrondfoto voor widgets ──
 // Zet een klein icoontje rechtsboven waarmee je een foto kiest.
 // Opslag in IndexedDB, dus de 150 MB-grens en de opslagbalk werken mee.

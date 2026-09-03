@@ -382,8 +382,8 @@ input, textarea { font-size:16px !important; }
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">⏰</div><div><div class="widget-name">Countdown</div><div class="widget-desc">Aftellen naar een datum</div></div></div><div class="toggle off" id="widget-countdown" onclick="toggleWidget('countdown')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">📊</div><div><div class="widget-name">Poll</div><div class="widget-desc">Laat vrienden stemmen</div></div></div><div class="toggle off" id="widget-poll" onclick="toggleWidget('poll')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">⏱</div><div><div class="widget-name">Opteltimer</div><div class="widget-desc">Tellen sinds een datum</div></div></div><div class="toggle off" id="widget-opteltimer" onclick="toggleWidget('opteltimer')"><div class="toggle-dot"></div></div></div>
-    <div style="display:none;">
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">✍</div><div><div class="widget-name">Quote</div><div class="widget-desc">Favoriete citaat tonen</div></div></div><div class="toggle off" id="widget-quote" onclick="toggleWidget('quote')"><div class="toggle-dot"></div></div></div>
+    <div style="display:none;">
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🗺</div><div><div class="widget-name">Locatie</div><div class="widget-desc">Toon je stad</div></div></div><div class="toggle off" id="widget-locatie" onclick="toggleWidget('locatie')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">❓</div><div><div class="widget-name">Vragen</div><div class="widget-desc">Vrienden stellen vragen</div></div></div><div class="toggle off" id="widget-vragen" onclick="toggleWidget('vragen')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🔗</div><div><div class="widget-name">Links</div><div class="widget-desc">Handige links delen</div></div></div><div class="toggle off" id="widget-links" onclick="toggleWidget('links')"><div class="toggle-dot"></div></div></div>
@@ -742,7 +742,7 @@ window.slaAllesOp=async function(){
   const WMAP = {
     mood:       { id:'mood',       icon:'😊', titel:'Mood',          w:4, h:1 },
     muziek:     { id:'muziek',     icon:'🎵', titel:'Muziek player', w:4, h:2 },
-    quote:      { id:'quote',      icon:'✍', titel:'Quote',         w:4, h:1 },
+    quote:      { id:'quote',      icon:'✍', titel:'Quote',         w:4, h:2 },
     video:      { id:'video',      icon:'🎬', titel:'Video',         w:4, h:3 },
     fotos:      { id:'fotos_3x3',  icon:'📷', titel:'Foto grid 3×3', w:4, h:3 },
     fotos2x2:      { id:'fotos_2x2',      icon:'🖼', titel:'Foto grid 2×2',        w:2, h:2 },

@@ -770,7 +770,7 @@ function renderFotoGrid(c, stijl, aantalFotos) {
           canvas.width=w; canvas.height=h
           canvas.getContext('2d').drawImage(tmpImg,0,0,w,h)
           try {
-            await slaFotoOp(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.85))
+            await slaFotoOp(KEY+celIdx+'_'+uid, canvas.toDataURL('image/webp',0.85))
           } catch(err) {
             alert('Opslaan van de foto is mislukt. Probeer het opnieuw.')
             return
@@ -917,7 +917,7 @@ function renderFotoFeatured(c) {
           canvas.width=w; canvas.height=h
           canvas.getContext('2d').drawImage(tmp,0,0,w,h)
           try {
-            await slaFotoOp(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.85))
+            await slaFotoOp(KEY+celIdx+'_'+uid, canvas.toDataURL('image/webp',0.85))
           } catch(err) {
             alert('Opslaan van de foto is mislukt. Probeer het opnieuw.')
             return
@@ -1054,7 +1054,7 @@ function renderFotoZwevend(c) {
           canvas.width=w; canvas.height=h
           canvas.getContext('2d').drawImage(tmp,0,0,w,h)
           try {
-            await slaFotoOp(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.85))
+            await slaFotoOp(KEY+celIdx+'_'+uid, canvas.toDataURL('image/webp',0.85))
           } catch(err) {
             alert('Opslaan van de foto is mislukt. Probeer het opnieuw.')
             return
@@ -1167,7 +1167,7 @@ function renderFotoPolaroid(c) {
           canvas.width=w; canvas.height=h
           canvas.getContext('2d').drawImage(tmp,0,0,w,h)
           try {
-            await slaFotoOp(KEY+celIdx+'_'+uid, canvas.toDataURL('image/jpeg',0.85))
+            await slaFotoOp(KEY+celIdx+'_'+uid, canvas.toDataURL('image/webp',0.85))
           } catch(err) {
             alert('Opslaan van de foto is mislukt. Probeer het opnieuw.')
             return

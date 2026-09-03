@@ -398,9 +398,9 @@ async function verwerkP2pBericht(bericht) {
     if (muziekNodig.length && !isRelayConnection) {
       nodig.push(...muziekNodig)
     } else if (muziekNodig.length && isRelayConnection) {
-      // Relay-verbinding: niet automatisch, maar vraag de gebruiker
-      console.log('[sync] Relay-verbinding — muziek wacht op toestemming')
-      toonRelayMuziekVraag(muziekNodig)
+      console.log('[sync] Relay-verbinding - muziek overgeslagen (geen Fibro+)')
+      zetP2pStatus('muziek niet opgehaald (relay)')
+      window._muziekGeblokkeerdDoorRelay = true
     }
     // Opruimen foto's: gecachte foto's die niet meer in het manifest staan zijn verwijderd bij de vriend
     const fotoPrefix = 'vriend_' + syncPartnerId + '_foto_'
@@ -427,7 +427,13 @@ async function verwerkP2pBericht(bericht) {
     }
 
     if (videoMetaNodig) nodig.push('videometa')
-    if (videoNodig) nodig.push('video')
+    if (videoNodig && !isRelayConnection) {
+      nodig.push('video')
+    } else if (videoNodig && isRelayConnection) {
+      console.log('[sync] Relay-verbinding - video overgeslagen (geen Fibro+)')
+      zetP2pStatus('video niet opgehaald (relay)')
+      window._videoGeblokkeerdDoorRelay = true
+    }
     if (nodig.length) {
       dataChannel.send(JSON.stringify({ type: 'geef', items: nodig }))
       zetP2pStatus('vraag ' + nodig.length + ' item(s)')

@@ -345,12 +345,21 @@ async function stuurManifest() {
     const vd = await dbGet('video_data_' + huidigeUserId)
     if (vd?.data) videoHash = hashString(vd.data)
   } catch(e) {}
+  // Kleine tekstwidgets: quote, afteltimer, opteltimer
+  const klein = {}
+  for (const [sl, key] of [['quote','quote_'],['aftel','aftel_'],['optel','optel_']]) {
+    try {
+      const w = localStorage.getItem(key + huidigeUserId)
+      if (w) klein[sl] = hashString(w)
+    } catch(e) {}
+  }
   const manifest = {
     layout: { hash: hashString(layoutJson) },
     fotos,
     muziek,
     videoMetaHash,
     videoHash,
+    klein,
     naam: eigenNaam
   }
   dataChannel.send(JSON.stringify({ type: 'manifest', data: manifest }))
@@ -426,6 +435,13 @@ async function verwerkP2pBericht(bericht) {
       }
     }
 
+    // Kleine tekstwidgets
+    const klein = bericht.data.klein || {}
+    for (const sl of Object.keys(klein)) {
+      if (!['quote','aftel','optel'].includes(sl)) continue
+      const kc = await dbGet('vriend_' + syncPartnerId + '_' + sl)
+      if (!kc || kc.hash !== klein[sl]) nodig.push('klein:' + sl)
+    }
     if (videoMetaNodig) nodig.push('videometa')
     if (videoNodig && !isRelayConnection) {
       nodig.push('video')
@@ -455,6 +471,14 @@ async function verwerkP2pBericht(bericht) {
       } else if (item.startsWith('muziek:')) {
         const itemId = item.slice(7)
         await stuurMuziekInChunks(itemId)
+      } else if (item.startsWith('klein:')) {
+        const sl = item.slice(6)
+        if (!['quote','aftel','optel'].includes(sl)) continue
+        const key = (sl === 'quote' ? 'quote_' : sl === 'aftel' ? 'aftel_' : 'optel_') + huidigeUserId
+        const w = localStorage.getItem(key)
+        if (w && w.length < 20000) {
+          dataChannel.send(JSON.stringify({ type: 'item', itemId: 'klein_' + sl, hash: hashString(w), data: w }))
+        }
       } else if (item === 'video') {
         await stuurVideoInChunks()
       } else if (item === 'videometa') {
@@ -484,6 +508,13 @@ async function verwerkP2pBericht(bericht) {
       await dbPut({ id: 'vriend_' + syncPartnerId + '_muziek_' + muziekItemId, hash: bericht.hash, data: bericht.data, ontvangen: Date.now() })
       console.log('[sync] Muziek van vriend opgeslagen:', muziekItemId)
       zetP2pStatus('muziek ' + muziekItemId + ' ontvangen \u2713')
+    } else if (bericht.itemId.startsWith('klein_')) {
+      const sl = bericht.itemId.slice(6)
+      if (!['quote','aftel','optel'].includes(sl)) return
+      if (bericht.data.length > 20000) return
+      await dbPut({ id: 'vriend_' + syncPartnerId + '_' + sl, hash: bericht.hash, data: bericht.data, ontvangen: Date.now() })
+      console.log('[sync] Widget van vriend opgeslagen:', sl)
+      zetP2pStatus(sl + ' ontvangen \u2713')
     } else if (bericht.itemId === 'videometa') {
       await dbPut({ id: 'vriend_' + syncPartnerId + '_video_meta', hash: bericht.hash, dataHash: bericht.dataHash || null, data: bericht.data, ontvangen: Date.now() })
       console.log('[sync] Video-info van vriend opgeslagen')

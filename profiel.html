@@ -431,7 +431,7 @@ input, textarea { font-size:16px !important; }
   <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
   <div class="nav-item active"><div class="nav-icon">👤</div>Profiel</div>
 </div>
-<script src="lame.min.js?v=17"></script>
+<script src="lame.min.js?v=18"></script>
 <script type="module">
 function _profielUid() {
   if (window._uid) return window._uid
@@ -448,12 +448,12 @@ function _profielUid() {
   return 'lokaal'
 }
 
-import { supabase } from './supabase.js?v=17'
-import { eisSessie, startBewaking } from './sessie.js?v=17'
-import { startMeldingen } from './meldingen.js?v=17'
-import { laadThema } from './thema.js?v=17'
-import { startHeartbeat } from './heartbeat.js?v=17'
-import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=17'
+import { supabase } from './supabase.js?v=18'
+import { eisSessie, startBewaking } from './sessie.js?v=18'
+import { startMeldingen } from './meldingen.js?v=18'
+import { laadThema } from './thema.js?v=18'
+import { startHeartbeat } from './heartbeat.js?v=18'
+import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=18'
 
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
@@ -917,11 +917,11 @@ init()
 
 startMeldingen()
 </script>
-<script src="swipe.js?v=17"></script>
+<script src="swipe.js?v=18"></script>
 
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=17"; startBelLuisteraar()</script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=17"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=17"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=18"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=18"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=18"; startSpelUitnodigingLuisteraar()</script>
 <script>
 /* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */
 setTimeout(function(){

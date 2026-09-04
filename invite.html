@@ -106,7 +106,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
       <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Jouw herstelsleutel:</div>
       <div class="herstel-code" id="herstelCode">—</div>
     </div>
-    <div style="font-size:11px;color:#f87171;margin-bottom:20px;">⚠️ Dit zie je maar één keer! Schrijf het op.</div>
+    <button onclick="kopieerCode()" id="kopieerCodeBtn" style="background:rgba(255,255,255,0.07);color:#e5e5e5;border:0.5px solid rgba(255,255,255,0.15);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 0 12px;font-family:inherit;">Code kopieren</button><div style="font-size:11px;color:#f87171;margin-bottom:16px;">Dit zie je maar een keer. Bewaar hem buiten je telefoon.</div><div style="background:rgba(255,255,255,0.05);border:0.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;">Zet Fibro op je beginscherm</div><div style="font-size:12px;color:var(--muted);line-height:1.6;">Op de iPhone werken meldingen alleen als Fibro op je beginscherm staat.<br><b>iPhone:</b> Safari, deelicoon onderin, Zet op beginscherm.<br><b>Android:</b> Chrome, drie puntjes, Toevoegen aan startscherm.</div></div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">
       Inloggen doe je met: <span style="color:var(--accent)" id="bevestigNaam">—</span>
     </div>
@@ -122,7 +122,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.113.0/+esm'
-import { genereerKeypair, slaPrivateKeyOp, versleutelPrivateKey } from './crypto.js?v=17'
+import { genereerKeypair, slaPrivateKeyOp, versleutelPrivateKey } from './crypto.js?v=18'
 
 const supabase = createClient(
   'https://qmgatbphiplrfxrljtbe.supabase.co',
@@ -319,6 +319,15 @@ window.voegToe = async function() {
 }
 
 init()
+
+window.kopieerCode = function() {
+  const c = document.getElementById('herstelCode').textContent
+  navigator.clipboard.writeText(c).then(function() {
+    const b = document.getElementById('kopieerCodeBtn')
+    b.textContent = 'Gekopieerd'
+    setTimeout(function(){ b.textContent = 'Code kopieren' }, 2000)
+  })
+}
 </script>
 </body>
 </html>

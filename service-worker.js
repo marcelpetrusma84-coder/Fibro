@@ -23,8 +23,8 @@ self.addEventListener('push', function(event) {
   const isBuzz = data.type === 'buzz'
   const options = {
     body: data.body || 'Je hebt een nieuw bericht',
-    icon: isBuzz ? '/Fibro/icon-buzz.png' : '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: isBuzz ? '/Fibro/icon-buzz.png' : '/Fibro/icon-192.png',
+    badge: '/Fibro/icon-192.png',
     vibrate: isBuzz ? [300, 80, 300, 80, 300, 80, 500] : [200, 100, 200],
     tag: isBuzz ? 'buzz' : undefined,
     renotify: isBuzz,

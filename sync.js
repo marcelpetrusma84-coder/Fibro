@@ -74,7 +74,10 @@ export function initSync(userId, callbacks = {}) {
   }
 }
 
+let presenceBezig = false
 function startPresence() {
+  if (presenceBezig) { console.log('[sync] Presence al bezig - dubbele start genegeerd'); return }
+  presenceBezig = true
   if (presenceKanaal) { supabase.removeChannel(presenceKanaal); presenceKanaal = null }
   presenceKanaal = supabase
     .channel('fibro-online', { config: { presence: { key: huidigeUserId } } })
@@ -89,6 +92,7 @@ function startPresence() {
     })
     .subscribe(async (status) => {
       console.log('[sync] Presence-kanaal status:', status)
+      if (status !== 'SUBSCRIBED') presenceBezig = false
       if (status === 'SUBSCRIBED') {
         await presenceKanaal.track({ online_sinds: new Date().toISOString() })
       }

@@ -150,7 +150,7 @@ async function startOnlineLuisteraar() {
 
   if (pKanaal) supabase.removeChannel(pKanaal)
   pKanaal = supabase
-    .channel('fibro-online', { config: { presence: { key: eigenId } } })
+    .channel('fibro-online-meldingen', { config: { presence: { key: eigenId } } })
     .on('presence', { event: 'sync' }, async () => {
       const nu = new Set(Object.keys(pKanaal.presenceState()).filter(i => i !== eigenId))
       console.log('[meldingen] presence:', [...nu], 'eerste ronde:', eersteRonde)

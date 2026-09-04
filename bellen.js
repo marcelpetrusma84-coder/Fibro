@@ -1,7 +1,7 @@
 // bellen.js — WebRTC P2P audio/video bellen via Supabase Realtime signaling
 // Gebruikt het bewezen spel-patroon: gedeeld kanaal met gesorteerde IDs
-import { supabase } from './supabase.js?v=28'
-import { ICE_SERVERS, iceReady } from './ice-config.js?v=28'
+import { supabase } from './supabase.js?v=29'
+import { ICE_SERVERS, iceReady } from './ice-config.js?v=29'
 
 let lokaleStream = null
 let remoteStream = null

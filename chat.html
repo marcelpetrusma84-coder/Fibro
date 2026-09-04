@@ -346,16 +346,16 @@ window.veiligeUrl = function(v){
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=28'
-  import { laadWallpaper } from './wallpaper.js?v=28'
-  import { supabase } from './supabase.js?v=28'
-  import { startMeldingen } from './meldingen.js?v=28'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=28'
-  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=28'
-  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=28'
-  import { stuurRapport } from './rapport.js?v=28'
-  import * as Schaak from './schaak.js?v=28'
-  import * as Dammen from './dammen.js?v=28'
+  import { laadThema } from './thema.js?v=29'
+  import { laadWallpaper } from './wallpaper.js?v=29'
+  import { supabase } from './supabase.js?v=29'
+  import { startMeldingen } from './meldingen.js?v=29'
+  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=29'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=29'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=29'
+  import { stuurRapport } from './rapport.js?v=29'
+  import * as Schaak from './schaak.js?v=29'
+  import * as Dammen from './dammen.js?v=29'
 
   var huidigeUser = null
   var huidigProfiel = null
@@ -3534,10 +3534,10 @@ window.veiligeUrl = function(v){
 
 startMeldingen()
 </script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=28"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=29"; startVriendverzoekLuisteraar()</script>
 
 <script type="module">
-import { stuurRapport } from './rapport.js?v=28'
+import { stuurRapport } from './rapport.js?v=29'
 let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
@@ -3627,6 +3627,6 @@ async function verstuurMelding(reden) {
   alert(ok ? 'Bedankt. Je melding is doorgestuurd.' : 'Melden is niet gelukt. Probeer het later opnieuw.')
 }
 </script>
-<script src="swipe.js?v=28"></script>
+<script src="swipe.js?v=29"></script>
 </body>
 </html>

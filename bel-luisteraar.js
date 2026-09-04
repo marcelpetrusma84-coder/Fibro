@@ -1,6 +1,6 @@
 // bel-luisteraar.js — luistert op elke pagina naar inkomende oproepen
-import { supabase } from './supabase.js?v=28'
-import { initBellen } from './bellen.js?v=28'
+import { supabase } from './supabase.js?v=29'
+import { initBellen } from './bellen.js?v=29'
 
 export async function startBelLuisteraar() {
   // Niet op de bellen-pagina zelf (die handelt het gesprek af)

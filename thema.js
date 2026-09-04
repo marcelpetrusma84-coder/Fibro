@@ -1,5 +1,5 @@
-import { supabase } from './supabase.js?v=16'
-import { pasAnimatieToe } from './animatie.js?v=16'
+import { supabase } from './supabase.js?v=17'
+import { pasAnimatieToe } from './animatie.js?v=17'
 
 // ========================
 // INDEXEDDB

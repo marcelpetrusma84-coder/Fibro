@@ -338,16 +338,16 @@ window.veiligeUrl = function(v){
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js'
-  import { laadWallpaper } from './wallpaper.js'
-  import { supabase } from './supabase.js'
-  import { startMeldingen } from './meldingen.js'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js'
-  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js'
-  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js'
-  import { stuurRapport } from './rapport.js'
-  import * as Schaak from './schaak.js'
-  import * as Dammen from './dammen.js'
+  import { laadThema } from './thema.js?v=1'
+  import { laadWallpaper } from './wallpaper.js?v=1'
+  import { supabase } from './supabase.js?v=1'
+  import { startMeldingen } from './meldingen.js?v=1'
+  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=1'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=1'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=1'
+  import { stuurRapport } from './rapport.js?v=1'
+  import * as Schaak from './schaak.js?v=1'
+  import * as Dammen from './dammen.js?v=1'
 
   var huidigeUser = null
   var huidigProfiel = null
@@ -3526,10 +3526,10 @@ window.veiligeUrl = function(v){
 
 startMeldingen()
 </script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=1"; startVriendverzoekLuisteraar()</script>
 
 <script type="module">
-import { stuurRapport } from './rapport.js'
+import { stuurRapport } from './rapport.js?v=1'
 let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 

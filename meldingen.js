@@ -1,5 +1,5 @@
 // meldingen.js — buzz en online-meldingen op elke pagina (4 september 2026)
-import { supabase } from './supabase.js?v=15'
+import { supabase } from './supabase.js?v=16'
 
 const BUZZ_UIT = 'fibro_buzz_uit'
 const ONLINE_UIT = 'fibro_online_melding_uit'

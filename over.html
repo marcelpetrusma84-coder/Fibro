@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="nl" style="background:#1a0a2e">
+<script>
+  const f = localStorage.getItem('fibro_lettertype')
+  if (f) document.write("<style>*{font-family:" + f + " !important}</style>")
+</script>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Fibro — Over</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#1a0a2e; --text:#e5e5e5; --muted:#9488a8; --accent:#c084fc; --accent2:#f47fbf; --border:rgba(255,255,255,0.12); --card:rgba(255,255,255,0.05); }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; max-width:480px; margin:0 auto; min-height:100vh; padding-bottom:80px; }
+  .top-bar { display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:0.5px solid var(--border); }
+  .back-btn { font-size:13px; color:var(--muted); cursor:pointer; padding:6px 12px; border:0.5px solid var(--border); border-radius:20px; background:none; font-family:inherit; color:var(--text); }
+  .top-title { font-family:'Playfair Display',serif; font-style:italic; font-size:18px; color:var(--accent); }
+  .wrap { padding:20px 16px; }
+  .blok { background:var(--card); border:0.5px solid var(--border); border-radius:14px; padding:18px; margin-bottom:14px; }
+  h2 { font-size:16px; color:var(--accent); margin-bottom:10px; font-weight:600; }
+  p { font-size:14px; line-height:1.65; color:var(--text); margin-bottom:10px; }
+  p:last-child { margin-bottom:0; }
+  ul { margin:8px 0 0 18px; }
+  li { font-size:14px; line-height:1.6; margin-bottom:6px; }
+  .binnenkort { opacity:0.55; }
+  .binnenkort h2 { color:var(--muted); }
+  .label { display:inline-block; font-size:11px; color:var(--muted); border:0.5px solid var(--border); border-radius:10px; padding:3px 8px; margin-left:6px; }
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <button class="back-btn" onclick="history.length>1?history.back():location.href='index.html'">← Terug</button>
+  <div class="top-title">Over Fibro</div>
+</div>
+<div class="wrap">
+
+  <div class="blok">
+    <h2>Wat is Fibro?</h2>
+    <p>Fibro is een digitale huiskamer. Een kleine plek voor je eigen vrienden, waar je kunt bellen, videobellen, kletsen en foto’s delen.</p>
+    <p>Geen tijdlijn die bepaalt wat je te zien krijgt. Geen likes. Geen vreemden. Alleen de mensen die je zelf hebt uitgenodigd.</p>
+  </div>
+
+  <div class="blok">
+    <h2>Waarom Fibro bestaat</h2>
+    <p>De grote platformen verdienen aan wat je over jezelf weggeeft. Je berichten, je contacten, je gedrag: het wordt verzameld, gekoppeld en doorverkocht. Je bent er niet de klant, je bent er het product.</p>
+    <p>Fibro is gebouwd vanuit het idee dat het ook anders kan. Een leuke app die gewoon eerlijk is, en die je privacy en je integriteit respecteert.</p>
+  </div>
+
+  <div class="blok">
+    <h2>Hoe je gegevens werken</h2>
+    <ul>
+      <li>Gesprekken en bestanden gaan rechtstreeks tussen jullie apparaten, niet via een server.</li>
+      <li>Je widgets, foto’s en muziek staan op je eigen apparaat. Niet in de cloud.</li>
+      <li>Je weergavenaam staat niet in de database. Die reist alleen mee naar je vrienden.</li>
+      <li>Berichten zijn versleuteld met sleutels die alleen jij hebt.</li>
+      <li>Fibro werkt alleen op uitnodiging. Er is geen zoekfunctie, dus niemand kan je opzoeken.</li>
+      <li>Geen advertenties, geen trackers, geen analytics.</li>
+    </ul>
+  </div>
+
+  <div class="blok">
+    <h2>Eerlijk gezegd</h2>
+    <p>Volledige privacy bestaat niet, en ik ga niet doen alsof wel. Een paar dingen die je moet weten:</p>
+    <ul>
+      <li>Je gebruikersnaam staat wél in de database. Daar herkennen vrienden je aan.</li>
+      <li>Als een directe verbinding niet lukt, loopt het gesprek via een tussenserver. Versleuteld, maar het gaat er wel langs.</li>
+      <li>Staan je foto’s alleen op je telefoon? Dan zijn ze weg als je van toestel wisselt.</li>
+    </ul>
+  </div>
+
+  <div class="blok binnenkort">
+    <h2>Binnenkort<span class="label">in aanbouw</span></h2>
+    <ul>
+      <li>Taal instellen</li>
+      <li>Buzz uitschakelen</li>
+      <li>Fibro Store</li>
+      <li>Fibro+ activeren</li>
+    </ul>
+  </div>
+
+</div>
+<script src="swipe.js?v=16"></script>
+</body>
+</html>

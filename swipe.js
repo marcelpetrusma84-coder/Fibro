@@ -25,13 +25,19 @@ let startX = 0
 let startY = 0
 let bezig = false
 
+// Elementen die zelf horizontaal schuiven: die mogen de veeg houden.
+const NIET_SWIPEN = '.main-tabs, .sticker-galerij, [data-geen-swipe]'
+let negeer = false
+
 document.addEventListener('touchstart', (e) => {
   startX = e.touches[0].clientX
   startY = e.touches[0].clientY
   bezig = false
+  negeer = !!(e.target.closest && e.target.closest(NIET_SWIPEN))
 }, { passive: true })
 
 document.addEventListener('touchmove', (e) => {
+  if (negeer) return
   if (bezig) return
   const dx = e.touches[0].clientX - startX
   const dy = e.touches[0].clientY - startY

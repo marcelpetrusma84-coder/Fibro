@@ -2,7 +2,11 @@
 <html lang="nl" style="background:#1a0a2e">
 <script>
   const f = localStorage.getItem('fibro_lettertype')
-  if (f) document.write("<style>*{font-family:" + f + " !important}</style>")
+  if (f) {
+    document.write("<style>*{font-family:" + f + " !important}</style>")
+    var fn = f.split(",")[0].replace(/[\x27\x22]/g, "").trim()
+    if (fn) document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=' + fn.replace(/ /g, "+") + ':wght@400;600&display=swap">')
+  }
 </script>
 <head>
 <meta charset="UTF-8">
@@ -145,14 +149,14 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 </div>
 
 <script type="module">
-import { laadThema } from './thema.js?v=25'
-import { startHeartbeat } from './heartbeat.js?v=25'
-import { initSync } from './sync.js?v=25'
-import { supabase } from './supabase.js?v=25'
-import { eisSessie, startBewaking } from './sessie.js?v=25'
-import { onderzoekVideo } from './videohulp.js?v=25'
-import { startMeldingen } from './meldingen.js?v=25'
-import { haalPrivateKeyOp } from './crypto.js?v=25'
+import { laadThema } from './thema.js?v=26'
+import { startHeartbeat } from './heartbeat.js?v=26'
+import { initSync } from './sync.js?v=26'
+import { supabase } from './supabase.js?v=26'
+import { eisSessie, startBewaking } from './sessie.js?v=26'
+import { onderzoekVideo } from './videohulp.js?v=26'
+import { startMeldingen } from './meldingen.js?v=26'
+import { haalPrivateKeyOp } from './crypto.js?v=26'
 
 // ── Waarschuw als de private key op dit apparaat ontbreekt ──
 ;(async () => {
@@ -1776,11 +1780,11 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js')
 }
 </script>
-<script src="lame.min.js?v=25"></script>
-<script src="swipe.js?v=25"></script>
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=25"; startBelLuisteraar()</script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=25"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=25"; startSpelUitnodigingLuisteraar()</script>
+<script src="lame.min.js?v=26"></script>
+<script src="swipe.js?v=26"></script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=26"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=26"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=26"; startSpelUitnodigingLuisteraar()</script>
 </body>
 </html>
 

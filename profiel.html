@@ -2,7 +2,11 @@
 <html lang="nl" style="background:#1a0a2e;">
 <script>
   const f = localStorage.getItem('fibro_lettertype')
-  if (f) document.write("<style>*{font-family:" + f + " !important}</style>")
+  if (f) {
+    document.write("<style>*{font-family:" + f + " !important}</style>")
+    var fn = f.split(",")[0].replace(/[\x27\x22]/g, "").trim()
+    if (fn) document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=' + fn.replace(/ /g, "+") + ':wght@400;600&display=swap">')
+  }
 </script>
 <head>
 <meta charset="UTF-8">
@@ -431,7 +435,7 @@ input, textarea { font-size:16px !important; }
   <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
   <div class="nav-item active"><div class="nav-icon">👤</div>Profiel</div>
 </div>
-<script src="lame.min.js?v=25"></script>
+<script src="lame.min.js?v=26"></script>
 <script type="module">
 function _profielUid() {
   if (window._uid) return window._uid
@@ -448,12 +452,12 @@ function _profielUid() {
   return 'lokaal'
 }
 
-import { supabase } from './supabase.js?v=25'
-import { eisSessie, startBewaking } from './sessie.js?v=25'
-import { startMeldingen } from './meldingen.js?v=25'
-import { laadThema } from './thema.js?v=25'
-import { startHeartbeat } from './heartbeat.js?v=25'
-import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=25'
+import { supabase } from './supabase.js?v=26'
+import { eisSessie, startBewaking } from './sessie.js?v=26'
+import { startMeldingen } from './meldingen.js?v=26'
+import { laadThema } from './thema.js?v=26'
+import { startHeartbeat } from './heartbeat.js?v=26'
+import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=26'
 
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
@@ -918,11 +922,11 @@ init()
 
 startMeldingen()
 </script>
-<script src="swipe.js?v=25"></script>
+<script src="swipe.js?v=26"></script>
 
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=25"; startBelLuisteraar()</script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=25"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=25"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=26"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=26"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=26"; startSpelUitnodigingLuisteraar()</script>
 <script>
 /* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */
 setTimeout(function(){

@@ -2,7 +2,11 @@
 <html lang="nl" style="background:#1a0a2e">
 <script>
   const f = localStorage.getItem('fibro_lettertype')
-  if (f) document.write("<style>*{font-family:" + f + " !important}</style>")
+  if (f) {
+    document.write("<style>*{font-family:" + f + " !important}</style>")
+    var fn = f.split(",")[0].replace(/[\x27\x22]/g, "").trim()
+    if (fn) document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=' + fn.replace(/ /g, "+") + ':wght@400;600&display=swap">')
+  }
 </script>
 <head>
 <meta charset="UTF-8">
@@ -91,6 +95,6 @@
   </div>
 
 </div>
-<script src="swipe.js?v=25"></script>
+<script src="swipe.js?v=26"></script>
 </body>
 </html>

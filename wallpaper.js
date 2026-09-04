@@ -1,4 +1,4 @@
-import { supabase } from './supabase.js?v=25'
+import { supabase } from './supabase.js?v=26'
 
 function openDB() {
   return new Promise((resolve, reject) => {

@@ -2,7 +2,11 @@
 <html lang="nl" style="background:#1a0a2e;">
 <script>
   const f = localStorage.getItem('fibro_lettertype')
-  if (f) document.write("<style>*{font-family:" + f + " !important}</style>")
+  if (f) {
+    document.write("<style>*{font-family:" + f + " !important}</style>")
+    var fn = f.split(",")[0].replace(/[\x27\x22]/g, "").trim()
+    if (fn) document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=' + fn.replace(/ /g, "+") + ':wght@400;600&display=swap">')
+  }
 </script>
 <head>
 <meta charset="UTF-8">
@@ -84,8 +88,8 @@ function stopBeltoon() {
 }
 </script>
 <script type="module">
-import { supabase } from './supabase.js?v=25'
-import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal } from './bellen.js?v=25'
+import { supabase } from './supabase.js?v=26'
+import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal } from './bellen.js?v=26'
 
 const params = new URLSearchParams(window.location.search)
 const vriendId = params.get('vriend')

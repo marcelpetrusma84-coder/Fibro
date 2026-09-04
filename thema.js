@@ -1,5 +1,6 @@
-import { supabase } from './supabase.js?v=25'
-import { pasAnimatieToe } from './animatie.js?v=25'
+import { supabase } from './supabase.js?v=26'
+import { pasAnimatieToe } from './animatie.js?v=26'
+import { laadFont } from './lettertypes.js?v=26'
 
 // ========================
 // INDEXEDDB
@@ -99,7 +100,7 @@ export async function laadThema() {
   if (!data) return
   if (data.accent_kleur) document.documentElement.style.setProperty('--accent', data.accent_kleur)
   if (data.accent_kleur2) document.documentElement.style.setProperty('--accent2', data.accent_kleur2)
-  if (data.lettertype) pasLettertypeToe(data.lettertype)
+  if (data.lettertype) { laadFont(String(data.lettertype).split(",")[0].replace(/['"]/g, "").trim()); pasLettertypeToe(data.lettertype) }
   pasAnimatieToe(data.animatie)
   await laadWallpaper(session.user.id)
   const wallpaper = await laadFotoUitDB('bg_wallpaper_' + session.user.id)

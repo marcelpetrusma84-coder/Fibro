@@ -443,12 +443,12 @@ function _profielUid() {
   return 'lokaal'
 }
 
-import { supabase } from './supabase.js?v=1'
-import { eisSessie, startBewaking } from './sessie.js?v=1'
-import { startMeldingen } from './meldingen.js?v=1'
-import { laadThema } from './thema.js?v=1'
-import { startHeartbeat } from './heartbeat.js?v=1'
-import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=1'
+import { supabase } from './supabase.js?v=2'
+import { eisSessie, startBewaking } from './sessie.js?v=2'
+import { startMeldingen } from './meldingen.js?v=2'
+import { laadThema } from './thema.js?v=2'
+import { startHeartbeat } from './heartbeat.js?v=2'
+import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=2'
 
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
@@ -905,9 +905,9 @@ startMeldingen()
 </script>
 <script src="swipe.js"></script>
 
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=1"; startBelLuisteraar()</script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=1"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=1"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=2"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=2"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=2"; startSpelUitnodigingLuisteraar()</script>
 <script>
 /* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */
 setTimeout(function(){

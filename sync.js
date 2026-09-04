@@ -1,8 +1,8 @@
 // sync.js — P2P widget-sync via WebRTC DataChannel
 // Stap A: presence ✓ | Stap B: DataChannel ping-pong
 // Zelfde signaling-patroon als bellen.js: gedeeld kanaal met gesorteerde IDs
-import { supabase } from './supabase.js?v=1'
-import { ICE_SERVERS, iceReady } from './ice-config.js?v=1'
+import { supabase } from './supabase.js?v=2'
+import { ICE_SERVERS, iceReady } from './ice-config.js?v=2'
 
 let presenceKanaal = null
 let huidigeUserId = null
@@ -79,6 +79,11 @@ function startPresence() {
   if (presenceBezig) { console.log('[sync] Presence al bezig - dubbele start genegeerd'); return }
   presenceBezig = true
   if (presenceKanaal) { supabase.removeChannel(presenceKanaal); presenceKanaal = null }
+  // Ruim eventuele achtergebleven kanalen met deze naam op: een hergebruikt
+  // kanaal heeft al subscribe() gehad en weigert dan nieuwe .on()-callbacks.
+  for (const k of supabase.getChannels()) {
+    if (k.topic === 'realtime:fibro-online') supabase.removeChannel(k)
+  }
   presenceKanaal = supabase
     .channel('fibro-online', { config: { presence: { key: huidigeUserId } } })
     .on('presence', { event: 'sync' }, () => {

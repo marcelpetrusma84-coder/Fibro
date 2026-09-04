@@ -1,4 +1,4 @@
-import { supabase } from './supabase.js?v=1'
+import { supabase } from './supabase.js?v=2'
 
 // ========================
 // INDEXEDDB

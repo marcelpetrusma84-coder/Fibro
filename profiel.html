@@ -435,7 +435,7 @@ input, textarea { font-size:16px !important; }
   <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
   <div class="nav-item active"><div class="nav-icon">👤</div>Profiel</div>
 </div>
-<script src="lame.min.js?v=26"></script>
+<script src="lame.min.js?v=27"></script>
 <script type="module">
 function _profielUid() {
   if (window._uid) return window._uid
@@ -452,17 +452,19 @@ function _profielUid() {
   return 'lokaal'
 }
 
-import { supabase } from './supabase.js?v=26'
-import { eisSessie, startBewaking } from './sessie.js?v=26'
-import { startMeldingen } from './meldingen.js?v=26'
-import { laadThema } from './thema.js?v=26'
-import { startHeartbeat } from './heartbeat.js?v=26'
-import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=26'
+import { supabase } from './supabase.js?v=27'
+import { eisSessie, startBewaking } from './sessie.js?v=27'
+import { startMeldingen } from './meldingen.js?v=27'
+import { laadThema } from './thema.js?v=27'
+import { startHeartbeat } from './heartbeat.js?v=27'
+import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=27'
 
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
 const stickers={natuur:['🌿','🌸','🌺','🌻','🍀','🌱','🌾','🍃','🌴','🌊','🍂','🌹','🌷','🌼','🍁'],magie:['✨','🔮','🌙','⭐','💫','🌟','🔯','🌠','🌌','🪄','💎','🌈','⚡','🔥','🌀'],kunst:['🎵','🎸','🎨','🎭','🎬','📷','🎪','🎯','🎲','🎹','🥁','🎺','🎻','🖼','✏'],dieren:['🦋','🦊','🐱','🐺','🦄','🐉','🦁','🐻','🦝','🦔','🐧','🦅','🐠','🐬','🦋']}
-const fonts=[{naam:'DM Sans',familie:"'DM Sans',sans-serif",stijl:'Modern & Clean'},{naam:'Playfair Display',familie:"'Playfair Display',serif",stijl:'Elegant & Klassiek'},{naam:'DM Mono',familie:"'DM Mono',monospace",stijl:'Technisch & Strak'},{naam:'Raleway',familie:"'Raleway',sans-serif",stijl:'Licht & Stijlvol'},{naam:'Lora',familie:"'Lora',serif",stijl:'Literair & Warm'},{naam:'Merriweather',familie:"'Merriweather',serif",stijl:'Leesbaar & Solide'},{naam:'Bebas Neue',familie:"'Bebas Neue',cursive",stijl:'Vet & Impactvol'},{naam:'Oswald',familie:"'Oswald',sans-serif",stijl:'Compact & Krachtig'},{naam:'Pacifico',familie:"'Pacifico',cursive",stijl:'Speels & Retro'},{naam:'Dancing Script',familie:"'Dancing Script',cursive",stijl:'Vloeiend & Handgeschreven'},{naam:'Great Vibes',familie:"'Great Vibes',cursive",stijl:'Kalligrafisch & Sierlijk'},{naam:'Space Mono',familie:"'Space Mono',monospace",stijl:'Ruimtelijk & Futuristisch'},{naam:'Courier Prime',familie:"'Courier Prime',monospace",stijl:'Vintage & Schrijfmachine'},{naam:'Quicksand',familie:"'Quicksand',sans-serif",stijl:'Vriendelijk & Zacht'},{naam:'Nunito',familie:"'Nunito',sans-serif",stijl:'Rond & Toegankelijk'},{naam:'Righteous',familie:"'Righteous',cursive",stijl:'Retro & Energiek'},{naam:'Comfortaa',familie:"'Comfortaa',cursive",stijl:'Comfortabel & Modern'},{naam:'Cinzel',familie:"'Cinzel',serif",stijl:'Klassiek & Imposant'},{naam:'Satisfy',familie:"'Satisfy',cursive",stijl:'Casual & Vloeiend'},{naam:'Lobster',familie:"'Lobster',cursive",stijl:'Vrolijk & Opvallend'}]
+import { LETTERTYPES, laadFont } from './lettertypes.js?v=27'
+const fonts = LETTERTYPES.map(f => ({ naam: f.naam, familie: "'" + f.naam + "'," + f.val, stijl: f.label }))
+LETTERTYPES.forEach(f => laadFont(f.naam))
 function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
 async function dbAlleSleutels(){const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').getAllKeys();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>resolve([])})}
 async function metenOpslag(uid){try{const alle=await dbAlleSleutels();const mijn=alle.filter(k=>typeof k==='string'&&k.includes(uid));let totaal=0;for(const k of mijn){const d=await laadFotoUitDB(k);if(typeof d==='string')totaal+=d.length;else if(d&&d.size)totaal+=d.size}return totaal}catch(e){return 0}}
@@ -922,11 +924,11 @@ init()
 
 startMeldingen()
 </script>
-<script src="swipe.js?v=26"></script>
+<script src="swipe.js?v=27"></script>
 
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=26"; startBelLuisteraar()</script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=26"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=26"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=27"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=27"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=27"; startSpelUitnodigingLuisteraar()</script>
 <script>
 /* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */
 setTimeout(function(){

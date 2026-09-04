@@ -26,8 +26,9 @@ body{background:var(--bg);background-attachment:fixed;background-size:cover;back
 .top-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(0,0,0,0.35);border-bottom:0.5px solid var(--border);position:sticky;top:0;z-index:10;}
 .top-title{font-family:'Playfair Display',serif;font-style:italic;font-size:18px;color:var(--accent);flex:1;}
 .save-top-btn{font-size:14px;padding:5px 14px;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;border:none;cursor:pointer;font-weight:600;}
-.main-tabs{display:flex;border-bottom:0.5px solid var(--border);background:rgba(0,0,0,0.2);overflow-x:auto;}
-.main-tab{font-size:14px;padding:10px 14px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.main-tabs{display:flex;border-bottom:0.5px solid var(--border);background:rgba(0,0,0,0.2);overflow-x:auto;overscroll-behavior-x:contain;touch-action:pan-x;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.main-tabs::-webkit-scrollbar{display:none;}
+.main-tab{font-size:14px;padding:16px 16px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;flex-shrink:0;}
 .main-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
 .panel{display:none;padding:14px;}
 .panel.active{display:block;}
@@ -443,12 +444,12 @@ function _profielUid() {
   return 'lokaal'
 }
 
-import { supabase } from './supabase.js?v=3'
-import { eisSessie, startBewaking } from './sessie.js?v=3'
-import { startMeldingen } from './meldingen.js?v=3'
-import { laadThema } from './thema.js?v=3'
-import { startHeartbeat } from './heartbeat.js?v=3'
-import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=3'
+import { supabase } from './supabase.js?v=6'
+import { eisSessie, startBewaking } from './sessie.js?v=6'
+import { startMeldingen } from './meldingen.js?v=6'
+import { laadThema } from './thema.js?v=6'
+import { startHeartbeat } from './heartbeat.js?v=6'
+import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=6'
 
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
@@ -650,6 +651,12 @@ async function init(){
   document.getElementById('editBio').oninput=updatePreview
 }
 function updatePreview(){document.getElementById('previewNaam').textContent=document.getElementById('editNaam').value||'Jouw naam';document.getElementById('previewBio').textContent=document.getElementById('editBio').value||'Jouw bio verschijnt hier'}
+document.addEventListener('DOMContentLoaded',function(){const b=document.querySelector('.main-tabs');if(!b)return;let neer=false,x0=0,s0=0,ver=0;
+b.addEventListener('wheel',function(e){if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){b.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});
+b.addEventListener('mousedown',function(e){neer=true;ver=0;x0=e.pageX;s0=b.scrollLeft;b.style.cursor='grabbing'});
+window.addEventListener('mousemove',function(e){if(!neer)return;const d=e.pageX-x0;if(Math.abs(d)>3)ver=1;b.scrollLeft=s0-d;e.preventDefault()});
+window.addEventListener('mouseup',function(){if(!neer)return;neer=false;b.style.cursor='';if(ver)setTimeout(function(){ver=0},50)});
+b.addEventListener('click',function(e){if(ver){e.stopPropagation();e.preventDefault()}},true)})
 window.switchTab=function(tab){document.querySelectorAll('.main-tab').forEach((t,i)=>{const tabs=['profiel','achtergrond','animatie','lettertype','kleur','widgets','stickers'];t.classList.toggle('active',tabs[i]===tab)});document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('panel-'+tab).classList.add('active');if(tab==='animatie')startAnimatiePreview();else stopAnimatiePreview()}
 function bouwAvatarPicker(){const picker=document.getElementById('avatarPicker');picker.innerHTML='';avatarEmojis.forEach(e=>{const span=document.createElement('span');span.className='emoji-opt';span.textContent=e;span.onclick=()=>{document.getElementById('avatarEmoji').textContent=e;document.getElementById('previewAvatar').textContent=e;document.getElementById('avatarPickerWrap').style.display='none'};picker.appendChild(span)})}
 window.switchAvatarTab=function(tab){if(tab==='emoji'){document.getElementById('avatarEmojiTab').style.display='block';document.getElementById('avatarFotoTab').style.display='none';document.getElementById('tabEmoji').style.cssText='flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;';document.getElementById('tabFoto').style.cssText='flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;'}else{document.getElementById('avatarEmojiTab').style.display='none';document.getElementById('avatarFotoTab').style.display='block';document.getElementById('tabFoto').style.cssText='flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;';document.getElementById('tabEmoji').style.cssText='flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;'}}
@@ -905,9 +912,9 @@ startMeldingen()
 </script>
 <script src="swipe.js"></script>
 
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=3"; startBelLuisteraar()</script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=3"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=3"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=6"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=6"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=6"; startSpelUitnodigingLuisteraar()</script>
 <script>
 /* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */
 setTimeout(function(){

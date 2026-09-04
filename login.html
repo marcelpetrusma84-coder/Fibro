@@ -120,7 +120,10 @@
       </div>
       <div class="field">
         <label>Herstelsleutel</label>
-        <input type="text" id="herstelsleutel-input" placeholder="FIBRO-XXXX-XXXX-XXXX" />
+        <div style="display:flex;align-items:center;gap:0;">
+          <span style="background:rgba(255,255,255,0.06);border:1px solid var(--border);border-right:none;border-radius:8px 0 0 8px;padding:10px 10px;font-size:14px;color:var(--text-muted);white-space:nowrap;">FIBRO-</span>
+          <input type="text" id="herstelsleutel-input" placeholder="XXXXXXXXXXXX" maxlength="14" autocapitalize="characters" autocorrect="off" spellcheck="false" style="border-radius:0 8px 8px 0;flex:1;letter-spacing:1px;" oninput="formatHerstel(this)" />
+        </div>
       </div>
       <button class="btn btn-primary" onclick="herstelMetSleutel()">Account herstellen</button>
     </div>
@@ -349,7 +352,17 @@
     `
   }
 
-  window.herstelMetSleutel = async function() {
+window.formatHerstel = function(el) {
+  let v = el.value.toUpperCase().replace(/[^A-Z0-9]/g, '')
+  v = v.replace(/^FIBRO/, '')
+  v = v.replace(/[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/g, '')
+  v = v.slice(0, 12)
+  const d = []
+  for (let i = 0; i < v.length; i += 4) d.push(v.slice(i, i + 4))
+  el.value = d.join('-')
+}
+
+window.herstelMetSleutel = async function() {
     const msg = document.getElementById('herstel-msg')
     const username = document.getElementById('herstel-username').value.trim()
     const wachtwoord = (document.getElementById('herstel-wachtwoord')||{}).value || ''

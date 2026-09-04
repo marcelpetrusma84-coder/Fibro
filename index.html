@@ -144,14 +144,14 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 </div>
 
 <script type="module">
-import { laadThema } from './thema.js?v=10'
-import { startHeartbeat } from './heartbeat.js?v=10'
-import { initSync } from './sync.js?v=10'
-import { supabase } from './supabase.js?v=10'
-import { eisSessie, startBewaking } from './sessie.js?v=10'
-import { onderzoekVideo } from './videohulp.js?v=10'
-import { startMeldingen } from './meldingen.js?v=10'
-import { haalPrivateKeyOp } from './crypto.js?v=10'
+import { laadThema } from './thema.js?v=11'
+import { startHeartbeat } from './heartbeat.js?v=11'
+import { initSync } from './sync.js?v=11'
+import { supabase } from './supabase.js?v=11'
+import { eisSessie, startBewaking } from './sessie.js?v=11'
+import { onderzoekVideo } from './videohulp.js?v=11'
+import { startMeldingen } from './meldingen.js?v=11'
+import { haalPrivateKeyOp } from './crypto.js?v=11'
 
 // ── Waarschuw als de private key op dit apparaat ontbreekt ──
 ;(async () => {
@@ -1768,11 +1768,11 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js')
 }
 </script>
-<script src="lame.min.js?v=10"></script>
-<script src="swipe.js?v=10"></script>
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=10"; startBelLuisteraar()</script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=10"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=10"; startSpelUitnodigingLuisteraar()</script>
+<script src="lame.min.js?v=11"></script>
+<script src="swipe.js?v=11"></script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=11"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=11"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=11"; startSpelUitnodigingLuisteraar()</script>
 </body>
 </html>
 

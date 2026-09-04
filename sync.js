@@ -1,8 +1,8 @@
 // sync.js — P2P widget-sync via WebRTC DataChannel
 // Stap A: presence ✓ | Stap B: DataChannel ping-pong
 // Zelfde signaling-patroon als bellen.js: gedeeld kanaal met gesorteerde IDs
-import { supabase } from './supabase.js?v=10'
-import { ICE_SERVERS, iceReady } from './ice-config.js?v=10'
+import { supabase } from './supabase.js?v=11'
+import { ICE_SERVERS, iceReady } from './ice-config.js?v=11'
 
 let presenceKanaal = null
 let huidigeUserId = null

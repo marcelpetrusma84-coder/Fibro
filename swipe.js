@@ -26,7 +26,7 @@ let startY = 0
 let bezig = false
 
 // Elementen die zelf horizontaal schuiven: die mogen de veeg houden.
-const NIET_SWIPEN = '.main-tabs, .sticker-galerij, [data-geen-swipe]'
+const NIET_SWIPEN = '.main-tabs, .sticker-galerij, #spelOverlay, [data-geen-swipe]'
 let negeer = false
 
 document.addEventListener('touchstart', (e) => {

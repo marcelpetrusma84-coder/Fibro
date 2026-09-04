@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <html lang="nl" style="background:#1a0a2e;">
+<script>
+  const f = localStorage.getItem('fibro_lettertype')
+  if (f) document.write("<style>*{font-family:" + f + " !important}</style>")
+</script>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -130,10 +134,10 @@ body.heeft-wallpaper::before { display:block; }
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=11'
-  import { supabase } from './supabase.js?v=11'
-  import { eisSessie, startBewaking } from './sessie.js?v=11'
-  import { startMeldingen } from './meldingen.js?v=11'
+  import { laadThema } from './thema.js?v=14'
+  import { supabase } from './supabase.js?v=14'
+  import { eisSessie, startBewaking } from './sessie.js?v=14'
+  import { startMeldingen } from './meldingen.js?v=14'
 
   var vriendId = null
   var huidigeUser = null

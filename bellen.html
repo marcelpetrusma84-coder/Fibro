@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <html lang="nl" style="background:#1a0a2e;">
+<script>
+  const f = localStorage.getItem('fibro_lettertype')
+  if (f) document.write("<style>*{font-family:" + f + " !important}</style>")
+</script>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -80,8 +84,8 @@ function stopBeltoon() {
 }
 </script>
 <script type="module">
-import { supabase } from './supabase.js?v=11'
-import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal } from './bellen.js?v=11'
+import { supabase } from './supabase.js?v=14'
+import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal } from './bellen.js?v=14'
 
 const params = new URLSearchParams(window.location.search)
 const vriendId = params.get('vriend')

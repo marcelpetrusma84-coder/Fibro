@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <html lang="nl" style="background:#1a0a2e;">
+<script>
+  const f = localStorage.getItem('fibro_lettertype')
+  if (f) document.write("<style>*{font-family:" + f + " !important}</style>")
+</script>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -427,7 +431,7 @@ input, textarea { font-size:16px !important; }
   <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
   <div class="nav-item active"><div class="nav-icon">👤</div>Profiel</div>
 </div>
-<script src="lame.min.js?v=11"></script>
+<script src="lame.min.js?v=14"></script>
 <script type="module">
 function _profielUid() {
   if (window._uid) return window._uid
@@ -444,12 +448,12 @@ function _profielUid() {
   return 'lokaal'
 }
 
-import { supabase } from './supabase.js?v=11'
-import { eisSessie, startBewaking } from './sessie.js?v=11'
-import { startMeldingen } from './meldingen.js?v=11'
-import { laadThema } from './thema.js?v=11'
-import { startHeartbeat } from './heartbeat.js?v=11'
-import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=11'
+import { supabase } from './supabase.js?v=14'
+import { eisSessie, startBewaking } from './sessie.js?v=14'
+import { startMeldingen } from './meldingen.js?v=14'
+import { laadThema } from './thema.js?v=14'
+import { startHeartbeat } from './heartbeat.js?v=14'
+import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=14'
 
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
@@ -635,7 +639,7 @@ async function init(){
     if(lokaal.accentKleur2)updateAccent2(lokaal.accentKleur2)
     if(lokaal.bgKleur)updateBgKleur(lokaal.bgKleur)
     if(lokaal.animatie){huidigeAnimatie=lokaal.animatie;updateAnimatieUI()}
-    if(lokaal.lettertype){huidigLettertype=lokaal.lettertype;document.body.style.fontFamily=lokaal.lettertype}
+    if(lokaal.lettertype){huidigLettertype=lokaal.lettertype;document.body.style.fontFamily=lokaal.lettertype;localStorage.setItem('fibro_lettertype',lokaal.lettertype)}
     if(lokaal.widgets)actieveWidgets=lokaal.widgets
     if(lokaal.stickers)actieveStickers=lokaal.stickers
     const bestaandeWallpaper=await laadFotoUitDB('bg_wallpaper_'+userId)
@@ -745,6 +749,9 @@ window.slaAllesOp=async function(){
     stickers: actieveStickers
   }
   localStorage.setItem('fibro_profiel_' + huidigeUser.id, JSON.stringify(lokaalProfiel))
+  // losse kopie voor de andere pagina's (worden vroeg geladen, kennen de user nog niet)
+  if (huidigLettertype) localStorage.setItem('fibro_lettertype', huidigLettertype)
+  else localStorage.removeItem('fibro_lettertype')
 
   // ── Sync naar widget-layout voor index.html ──
   const WMAP = {
@@ -791,7 +798,7 @@ window.slaAllesOp=async function(){
   else{msg.className='status-msg success';msg.textContent='✓ Profiel opgeslagen!';setTimeout(()=>msg.className='status-msg',2000)}
   window.scrollTo(0,0)
 }
-window.uitloggen=async function(){sessionStorage.setItem('fibro_bewust_uitloggen','1');await supabase.auth.signOut({scope:'local'});window.location.href='login.html'}
+window.uitloggen=async function(){sessionStorage.setItem('fibro_bewust_uitloggen','1');localStorage.removeItem('fibro_lettertype');await supabase.auth.signOut({scope:'local'});window.location.href='login.html'}
 
 window.activeerPushNotificaties = async function() {
   try {
@@ -910,11 +917,11 @@ init()
 
 startMeldingen()
 </script>
-<script src="swipe.js?v=11"></script>
+<script src="swipe.js?v=14"></script>
 
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=11"; startBelLuisteraar()</script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=11"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=11"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=14"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=14"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=14"; startSpelUitnodigingLuisteraar()</script>
 <script>
 /* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */
 setTimeout(function(){

@@ -1,7 +1,7 @@
 // ice-config.js — Gedeelde WebRTC ICE-servers
 // Basis: STUN. TURN wordt toegevoegd via edge function 'get-turn-credentials'.
 // Geen keys in dit bestand — die staan veilig als secrets in Supabase.
-import { supabase } from './supabase.js?v=27'
+import { supabase } from './supabase.js?v=28'
 
 const FUNCTIE_URL = 'https://qmgatbphiplrfxrljtbe.supabase.co/functions/v1/get-turn-credentials'
 const ANON_KEY = 'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'

@@ -165,7 +165,7 @@ window.veiligeUrl = function(v){
   </div>
   <div id="belKnoppen" style="display:none; margin-left:auto; display:flex; gap:8px; flex-shrink:0;">
     <button onclick="if(geselecteerdeVriend)window.location.href='bellen.html?vriend='+geselecteerdeVriend.id+'&naam='+encodeURIComponent(geselecteerdeVriend.naam)" title="Bellen" style="background:rgba(34,197,94,0.15); border:0.5px solid rgba(34,197,94,0.4); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;">📞</button>
-    <button onclick="if(geselecteerdeVriend)window.location.href='bellen.html?vriend='+geselecteerdeVriend.id+'&naam='+encodeURIComponent(geselecteerdeVriend.naam)+'&video=1'" title="Videobellen" style="background:rgba(96,165,250,0.15); border:0.5px solid rgba(96,165,250,0.4); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;">📹</button>
+    
     <button onclick="toonChatMenu()" title="Meer" style="background:rgba(255,255,255,0.06); border:0.5px solid var(--border); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--muted);">⋯</button>
   </div>
 </div>
@@ -346,16 +346,16 @@ window.veiligeUrl = function(v){
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=27'
-  import { laadWallpaper } from './wallpaper.js?v=27'
-  import { supabase } from './supabase.js?v=27'
-  import { startMeldingen } from './meldingen.js?v=27'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=27'
-  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=27'
-  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=27'
-  import { stuurRapport } from './rapport.js?v=27'
-  import * as Schaak from './schaak.js?v=27'
-  import * as Dammen from './dammen.js?v=27'
+  import { laadThema } from './thema.js?v=28'
+  import { laadWallpaper } from './wallpaper.js?v=28'
+  import { supabase } from './supabase.js?v=28'
+  import { startMeldingen } from './meldingen.js?v=28'
+  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=28'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=28'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=28'
+  import { stuurRapport } from './rapport.js?v=28'
+  import * as Schaak from './schaak.js?v=28'
+  import * as Dammen from './dammen.js?v=28'
 
   var huidigeUser = null
   var huidigProfiel = null
@@ -3534,10 +3534,10 @@ window.veiligeUrl = function(v){
 
 startMeldingen()
 </script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=27"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=28"; startVriendverzoekLuisteraar()</script>
 
 <script type="module">
-import { stuurRapport } from './rapport.js?v=27'
+import { stuurRapport } from './rapport.js?v=28'
 let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
@@ -3627,6 +3627,6 @@ async function verstuurMelding(reden) {
   alert(ok ? 'Bedankt. Je melding is doorgestuurd.' : 'Melden is niet gelukt. Probeer het later opnieuw.')
 }
 </script>
-<script src="swipe.js?v=27"></script>
+<script src="swipe.js?v=28"></script>
 </body>
 </html>

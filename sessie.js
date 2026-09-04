@@ -1,6 +1,6 @@
 // sessie.js — sessiebewaking Fibro (2 september 2026)
 // Onderscheid tussen een echte uitlog en een tijdelijke hapering.
-import { supabase } from './supabase.js?v=18'
+import { supabase } from './supabase.js?v=25'
 
 const BEWUST = 'fibro_bewust_uitloggen'
 const slaap = ms => new Promise(r => setTimeout(r, ms))

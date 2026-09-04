@@ -11,6 +11,8 @@ for f in *.html *.js; do
   case "$f" in *.backup-*|*.kapot-*|*.nieuw-*) continue;; esac
   # eerst bestaande ?v=NN weghalen, dan het nieuwe nummer erachter
   sed -i -E "s|(from ['\"]\./[a-z0-9_-]+\.js)(\?v=[0-9]+)?(['\"])|\1?v=$NIEUW\3|g" "$f"
+  # ook gewone script-tags: <script src="bestand.js?v=NN">
+  sed -i -E "s|(<script src=['\"][a-z0-9_.-]+\.js)(\?v=[0-9]+)?(['\"])|\1?v=$NIEUW\3|g" "$f"
 done
 
 echo "$NIEUW" > .versie

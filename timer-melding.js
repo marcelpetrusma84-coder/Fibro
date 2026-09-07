@@ -1,8 +1,8 @@
-import { toonMelding } from './meldingen.js?v=29'
+import { toonMelding } from './meldingen.js?v=30'
 
 function openDB(){
   return new Promise((res,rej)=>{
-    const r=indexedDB.open('FibroDB',2)
+    const r=indexedDB.open('FibroDB')
     r.onsuccess=e=>res(e.target.result)
     r.onerror=()=>rej()
   })

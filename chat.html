@@ -346,16 +346,17 @@ window.veiligeUrl = function(v){
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=30'
-  import { laadWallpaper } from './wallpaper.js?v=30'
-  import { supabase } from './supabase.js?v=30'
-  import { startMeldingen } from './meldingen.js?v=30'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=30'
-  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=30'
-  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=30'
-  import { stuurRapport } from './rapport.js?v=30'
-  import * as Schaak from './schaak.js?v=30'
-  import * as Dammen from './dammen.js?v=30'
+  import { laadThema } from './thema.js?v=31'
+  import { laadWallpaper } from './wallpaper.js?v=31'
+  import { supabase } from './supabase.js?v=31'
+  import { startMeldingen } from './meldingen.js?v=31'
+  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=31'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=31'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=31'
+  import { stuurRapport } from './rapport.js?v=31'
+  import * as Schaak from './schaak.js?v=31'
+  import * as Dammen from './dammen.js?v=31'
+  import { initReacties, startLangIndrukken } from './reacties.js?v=31'
 
   var huidigeUser = null
   var huidigProfiel = null
@@ -446,7 +447,8 @@ window.veiligeUrl = function(v){
     huidigeUser = session.user
     window.huidigeUser = huidigeUser
     mijnPrivateKey = haalPrivateKeyOp(huidigeUser.id)
-
+    initReacties({ supabase, versleutel, ontsleutel, mijnId: () => huidigeUser.id, geefSleutels: () => ({ mijn: mijnPrivateKey, vriend: vriendPublicKey }) })
+    startLangIndrukken(document.getElementById('messages'))
     const { data } = await supabase
       .from('profiles')
       .select('*')
@@ -3534,10 +3536,10 @@ window.veiligeUrl = function(v){
 
 startMeldingen()
 </script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=30"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=31"; startVriendverzoekLuisteraar()</script>
 
 <script type="module">
-import { stuurRapport } from './rapport.js?v=30'
+import { stuurRapport } from './rapport.js?v=31'
 let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
@@ -3627,6 +3629,6 @@ async function verstuurMelding(reden) {
   alert(ok ? 'Bedankt. Je melding is doorgestuurd.' : 'Melden is niet gelukt. Probeer het later opnieuw.')
 }
 </script>
-<script src="swipe.js?v=30"></script>
+<script src="swipe.js?v=31"></script>
 </body>
 </html>

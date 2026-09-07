@@ -99,3 +99,43 @@ function toonMenu(x, y, knoppen){
   m.style.top = ly + 'px'
   _menu = m
 }
+
+function vraagTekst(berichtId){
+  sluitMenu()
+  const t = prompt('Jouw reactie (max 30 tekkens):')
+  if(t&&t.trim()) zetReactie(berichtId, 'tekst', t.trim())
+}
+
+function toonEmojiKiezer(x, y, id){
+  const kn = EMOJIS.map(e => maakKnop(e, ()=>{ sluitMenu(); zetReactie(id, 'emoji', e) }))
+  toonMenu(x, y, kn)
+}
+
+function openVoor(row, x, y){
+  const id = row.dataset.mid
+  if(!id) return
+  const k1 = maakKnop('\uD83D\uDE03', ()=> toonEmojiKiezer(x, y, id))
+  const k2 = maakKnop('\uD83D\uDCAC', ()=> vraagTekst(id))
+  toonMenu(x, y, [k1, k2])
+}
+
+export function startLangIndrukken(c){
+  if(!c) return
+  c.setAttribute('data-geen-swipe', '1')
+  let tm = null, sx = 0, sy = 0
+  c.addEventListener('pointerdown', (e)=>{
+    const r = e.target.closest && e.target.closest('[data-mid]')
+    if(!r) return
+    sx = e.clientX; sy = e.clientY
+    clearTimeout(tm)
+    tm = setTimeout(()=> openVoor(r, sx, sy), 500)
+  })
+  c.addEventListener('pointermove', (e)=>{
+    if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy) > 6) clearTimeout(tm)
+  })
+  c.addEventListener('pointerup', ()=> clearTimeout(tm))
+  c.addEventListener('scroll', ()=> clearTimeout(tm))
+  document.addEventListener('pointerdown', (e)=>{
+    if(_menu && !e.target.closest('.reactie-menu')) sluitMenu()
+  }, true)
+}

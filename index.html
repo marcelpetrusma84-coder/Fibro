@@ -149,14 +149,14 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 </div>
 
 <script type="module">
-import { laadThema } from './thema.js?v=32'
-import { startHeartbeat } from './heartbeat.js?v=32'
-import { initSync } from './sync.js?v=32'
-import { supabase } from './supabase.js?v=32'
-import { eisSessie, startBewaking } from './sessie.js?v=32'
-import { onderzoekVideo } from './videohulp.js?v=32'
-import { startMeldingen } from './meldingen.js?v=32'
-import { haalPrivateKeyOp } from './crypto.js?v=32'
+import { laadThema } from './thema.js?v=33'
+import { startHeartbeat } from './heartbeat.js?v=33'
+import { initSync } from './sync.js?v=33'
+import { supabase } from './supabase.js?v=33'
+import { eisSessie, startBewaking } from './sessie.js?v=33'
+import { onderzoekVideo } from './videohulp.js?v=33'
+import { startMeldingen } from './meldingen.js?v=33'
+import { haalPrivateKeyOp } from './crypto.js?v=33'
 
 // ── Waarschuw als de private key op dit apparaat ontbreekt ──
 ;(async () => {
@@ -1780,12 +1780,12 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js')
 }
 </script>
-<script src="lame.min.js?v=32"></script>
-<script src="swipe.js?v=32"></script>
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=32"; startBelLuisteraar()</script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=32"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=32"; startSpelUitnodigingLuisteraar()</script>
-<script type="module">import { checkTimers } from "./timer-melding.js?v=32"; setTimeout(checkTimers,4000)</script>
+<script src="lame.min.js?v=33"></script>
+<script src="swipe.js?v=33"></script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=33"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=33"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=33"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { checkTimers } from "./timer-melding.js?v=33"; setTimeout(checkTimers,4000)</script>
 </body>
 </html>
 

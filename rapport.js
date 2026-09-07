@@ -1,6 +1,6 @@
 // rapport.js — Rapporteer systeem voor Fibro
 
-import { supabase } from './supabase.js?v=32'
+import { supabase } from './supabase.js?v=33'
 
 // ─── Stuur een rapport in ───
 export async function stuurRapport({ melderId, gemeldeId, berichtInhoud, reden }) {

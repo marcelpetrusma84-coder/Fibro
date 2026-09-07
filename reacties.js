@@ -47,6 +47,7 @@ export async function zetReactie(berichtId, soort, tekst){
     inhoud: inhoud
   })
   if(error){ console.warn('[reacties] insert mislukt:', error.message); return false }
+  if(_ctx.herteken) _ctx.herteken()
   return true
 }
 
@@ -139,4 +140,28 @@ export function startLangIndrukken(c){
   document.addEventListener('pointerdown', (e)=>{
     if(_menu && !e.target.closest('.reactie-menu')) sluitMenu()
   }, true)
+}
+
+export async function tekenReacties(container){
+  if(!container) return
+  zorgVoorStijl()
+  for(const oud of Array.from(container.querySelectorAll('.reactie-rij'))) oud.remove()
+  const rows = Array.from(container.querySelectorAll('[data-mid]'))
+  const ids = rows.map(r => r.dataset.mid).filter(Boolean)
+  if(!ids.length) return
+  const perBericht = await haalReacties(ids)
+  for(const row of rows){
+    const lijst = perBericht[row.dataset.mid]
+    if(!lijst || !lijst.length) continue
+    const rij = document.createElement('div')
+    rij.className = 'reactie-rij'
+    if(row.classList.contains('out')) rij.style.justifyContent = 'flex-end'
+    for(const r of lijst){
+      const bub = document.createElement('span')
+      bub.className = 'reactie-bub'
+      bub.textContent = await leesInhoud(r)
+      rij.appendChild(bub)
+    }
+    row.insertAdjacentElement('afterend', rij)
+  }
 }

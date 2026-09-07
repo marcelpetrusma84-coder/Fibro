@@ -346,17 +346,17 @@ window.veiligeUrl = function(v){
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=32'
-  import { laadWallpaper } from './wallpaper.js?v=32'
-  import { supabase } from './supabase.js?v=32'
-  import { startMeldingen } from './meldingen.js?v=32'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=32'
-  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=32'
-  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=32'
-  import { stuurRapport } from './rapport.js?v=32'
-  import * as Schaak from './schaak.js?v=32'
-  import * as Dammen from './dammen.js?v=32'
-  import { initReacties, startLangIndrukken } from './reacties.js?v=32'
+  import { laadThema } from './thema.js?v=33'
+  import { laadWallpaper } from './wallpaper.js?v=33'
+  import { supabase } from './supabase.js?v=33'
+  import { startMeldingen } from './meldingen.js?v=33'
+  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=33'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=33'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=33'
+  import { stuurRapport } from './rapport.js?v=33'
+  import * as Schaak from './schaak.js?v=33'
+  import * as Dammen from './dammen.js?v=33'
+  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=33'
 
   var huidigeUser = null
   var huidigProfiel = null
@@ -447,7 +447,7 @@ window.veiligeUrl = function(v){
     huidigeUser = session.user
     window.huidigeUser = huidigeUser
     mijnPrivateKey = haalPrivateKeyOp(huidigeUser.id)
-    initReacties({ supabase, versleutel, ontsleutel, mijnId: () => huidigeUser.id, geefSleutels: () => ({ mijn: mijnPrivateKey, vriend: vriendPublicKey }) })
+    initReacties({ supabase, versleutel, ontsleutel, mijnId: () => huidigeUser.id, geefSleutels: () => ({ mijn: mijnPrivateKey, vriend: vriendPublicKey }), herteken: () => tekenReacties(document.getElementById('messages')) })
     startLangIndrukken(document.getElementById('messages'))
     const { data } = await supabase
       .from('profiles')
@@ -622,6 +622,7 @@ window.veiligeUrl = function(v){
     chatScherm.style.flexDirection = 'column'
     document.getElementById('belKnoppen').style.display = 'flex'
     await laadBerichten()
+    await tekenReacties(document.getElementById('messages'))
     startRealtime()
   }
 
@@ -1036,6 +1037,7 @@ window.veiligeUrl = function(v){
           speelPlop('in')
           const wasOnder = zitOnderaan()
           await voegBerichtToe(msg)
+          await tekenReacties(document.getElementById('messages'))
           if (wasOnder) _scrollNu(); else toonNieuwKnop()
         }
       })
@@ -3536,10 +3538,10 @@ window.veiligeUrl = function(v){
 
 startMeldingen()
 </script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=32"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=33"; startVriendverzoekLuisteraar()</script>
 
 <script type="module">
-import { stuurRapport } from './rapport.js?v=32'
+import { stuurRapport } from './rapport.js?v=33'
 let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
@@ -3629,6 +3631,6 @@ async function verstuurMelding(reden) {
   alert(ok ? 'Bedankt. Je melding is doorgestuurd.' : 'Melden is niet gelukt. Probeer het later opnieuw.')
 }
 </script>
-<script src="swipe.js?v=32"></script>
+<script src="swipe.js?v=33"></script>
 </body>
 </html>

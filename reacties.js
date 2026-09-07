@@ -35,8 +35,9 @@ export async function zetReactie(berichtId, soort, tekst){
   const sl = _ctx.geefSleutels()
   let inhoud = String(tekst||'').slice(0, 30)
   if(!inhoud) return false
-  if(sl&&sl.mijn&&sl.vriend){
-    try{ inhoud = await _ctx.versleutel(inhoud, sl.mijn, sl.vriend) }catch(e){}
+  if(!sl||!sl.mijn||!sl.vriend){ console.warn('sleutels ontbreken'); return false }
+  {
+    try{ inhoud = await _ctx.versleutel(inhoud, sl.mijn, sl.vriend) }catch(e){ console.warn('versleutelen mislukt'); return false }
   }
   await verwijderReactie(berichtId)
   const { error } = await _ctx.supabase.from('reacties').insert({

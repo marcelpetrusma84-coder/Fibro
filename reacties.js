@@ -1,3 +1,4 @@
+import { kiesAntwoordOp } from './reply.js?v=35'
 let _ctx = null
 
 export function initReacties(ctx){ _ctx = ctx }
@@ -118,7 +119,8 @@ function openVoor(row, x, y){
   if(!id) return
   const k1 = maakKnop('\uD83D\uDE03', ()=> toonEmojiKiezer(x, y, id))
   const k2 = maakKnop('\uD83D\uDCAC', ()=> vraagTekst(id))
-  toonMenu(x, y, [k1, k2])
+  const k3 = maakKnop('\u21A9', ()=> { sluitMenu(); kiesAntwoordOp(id, row.dataset.mtekst || 'bericht') })
+  toonMenu(x, y, [k1, k2, k3])
 }
 
 export function startLangIndrukken(c){

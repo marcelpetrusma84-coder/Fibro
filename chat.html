@@ -346,17 +346,18 @@ window.veiligeUrl = function(v){
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=33'
-  import { laadWallpaper } from './wallpaper.js?v=33'
-  import { supabase } from './supabase.js?v=33'
-  import { startMeldingen } from './meldingen.js?v=33'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=33'
-  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=33'
-  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=33'
-  import { stuurRapport } from './rapport.js?v=33'
-  import * as Schaak from './schaak.js?v=33'
-  import * as Dammen from './dammen.js?v=33'
-  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=33'
+  import { laadThema } from './thema.js?v=35'
+  import { laadWallpaper } from './wallpaper.js?v=35'
+  import { supabase } from './supabase.js?v=35'
+  import { startMeldingen } from './meldingen.js?v=35'
+  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=35'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=35'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=35'
+  import { stuurRapport } from './rapport.js?v=35'
+  import * as Schaak from './schaak.js?v=35'
+  import * as Dammen from './dammen.js?v=35'
+  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=35'
+  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=35'
 
   var huidigeUser = null
   var huidigProfiel = null
@@ -678,6 +679,8 @@ window.veiligeUrl = function(v){
       }
     }
 
+    if (!window._tekstPerId) window._tekstPerId = {}
+    window._tekstPerId[bericht.id] = content
     const vorige = container.lastElementChild
     const zelfdeAfzender = vorige && vorige.classList.contains('msg-row') && vorige.dataset.sid === String(bericht.sender_id)
     const row = document.createElement('div')
@@ -750,6 +753,16 @@ window.veiligeUrl = function(v){
         <div class="msg-av-sm">${esc(avatar)}</div>
         <div class="bubble ${isMijn ? 'out' : 'in'}"><span class="bubble-content">${esc(content)}</span><span class="bubble-time">${tijd} ${isMijn ? '✓✓' : ''}</span></div>`
     }
+    if (bericht.antwoord_op) {
+      const bub = row.querySelector(".bubble")
+      if (bub) {
+        const st = document.createElement("div")
+        st.style.cssText = "border-left:3px solid var(--accent);padding:1px 6px;margin-bottom:3px;font-size:11px;opacity:0.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px"
+        const orig = window._tekstPerId ? window._tekstPerId[bericht.antwoord_op] : null
+        st.textContent = orig ? String(orig).slice(0, 60) : "bericht niet meer beschikbaar"
+        bub.insertBefore(st, bub.firstChild)
+      }
+    }
     container.appendChild(row)
   }
 
@@ -787,6 +800,7 @@ window.veiligeUrl = function(v){
       sender_id: huidigeUser.id,
       receiver_id: geselecteerdeVriend.id,
       content,
+      antwoord_op: geefAntwoordOp(),
       expires_at: new Date(Date.now() + 24*60*60*1000).toISOString()
     }).select('id').single()
 
@@ -795,6 +809,7 @@ window.veiligeUrl = function(v){
       slaBerichtCacheOp(data.id, tekst)
     }
 
+    wisAntwoordOp()
     if (error) console.error('Versturen mislukt:', error)
     if (!error) stuurPling(geselecteerdeVriend.id)
     document.getElementById('emojiGrid').style.display = 'none'
@@ -3538,10 +3553,10 @@ window.veiligeUrl = function(v){
 
 startMeldingen()
 </script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=33"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=35"; startVriendverzoekLuisteraar()</script>
 
 <script type="module">
-import { stuurRapport } from './rapport.js?v=33'
+import { stuurRapport } from './rapport.js?v=35'
 let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
@@ -3631,6 +3646,6 @@ async function verstuurMelding(reden) {
   alert(ok ? 'Bedankt. Je melding is doorgestuurd.' : 'Melden is niet gelukt. Probeer het later opnieuw.')
 }
 </script>
-<script src="swipe.js?v=33"></script>
+<script src="swipe.js?v=35"></script>
 </body>
 </html>

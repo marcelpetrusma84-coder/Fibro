@@ -1,4 +1,4 @@
-import { kiesAntwoordOp } from './reply.js?v=39'
+import { kiesAntwoordOp } from './reply.js?v=40'
 let _ctx = null
 
 export function initReacties(ctx){ _ctx = ctx }
@@ -63,7 +63,7 @@ const STIJL = '.reactie-menu{position:fixed;z-index:9999;background:#fff;border-
   + '.reactie-menu button{background:none;border:0;font-size:22px;cursor:pointer;line-height:1}'
   + '.msg-row{user-select:none;-webkit-user-select:none;touch-action:pan-y}'
   + '.reactie-rij{display:flex;gap:4px;margin:2px 36px;flex-wrap:wrap}'
-  + '.reactie-bub{background:rgba(255,255,255,0.22);border:0.5px solid rgba(255,255,255,0.25);color:var(--text);border-radius:10px;padding:2px 8px;font-size:13px}'
+  + '.reactie-bub{background:rgba(255,255,255,0.35);border:0.5px solid rgba(255,255,255,0.4);color:#ffffff;border-radius:10px;padding:2px 8px;font-size:13px}'
 
 function zorgVoorStijl(){
   if(document.getElementById('reactie-stijl')) return

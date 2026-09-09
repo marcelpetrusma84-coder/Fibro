@@ -1,5 +1,5 @@
 // speluitnodiging.js — globale spel-uitnodiging op elke pagina
-import { supabase } from './supabase.js?v=36'
+import { supabase } from './supabase.js?v=38'
 
 const SPEL_INFO = {
   botkaaseiren: { icon: '⭕', naam: 'Boter-Kaas-Eieren' },

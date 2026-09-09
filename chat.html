@@ -346,18 +346,18 @@ window.veiligeUrl = function(v){
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=35'
-  import { laadWallpaper } from './wallpaper.js?v=35'
-  import { supabase } from './supabase.js?v=35'
-  import { startMeldingen } from './meldingen.js?v=35'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=35'
-  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=35'
-  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=35'
-  import { stuurRapport } from './rapport.js?v=35'
-  import * as Schaak from './schaak.js?v=35'
-  import * as Dammen from './dammen.js?v=35'
-  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=35'
-  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=35'
+  import { laadThema } from './thema.js?v=36'
+  import { laadWallpaper } from './wallpaper.js?v=36'
+  import { supabase } from './supabase.js?v=36'
+  import { startMeldingen } from './meldingen.js?v=36'
+  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=36'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=36'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=36'
+  import { stuurRapport } from './rapport.js?v=36'
+  import * as Schaak from './schaak.js?v=36'
+  import * as Dammen from './dammen.js?v=36'
+  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=36'
+  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=36'
 
   var huidigeUser = null
   var huidigProfiel = null
@@ -1033,8 +1033,20 @@ window.veiligeUrl = function(v){
   }
 
   // ─── Realtime ───
+  var reactieKanaal = null
+  function startReactieRealtime() {
+    if (reactieKanaal) supabase.removeChannel(reactieKanaal)
+    reactieKanaal = supabase
+      .channel("reacties-" + huidigeUser.id)
+      .on("postgres_changes", { event: "*", schema: "public", table: "reacties" }, async () => {
+        if (!geselecteerdeVriend) return
+        await tekenReacties(document.getElementById("messages"))
+      })
+      .subscribe()
+  }
   function startRealtime() {
     if (realtimeKanaal) supabase.removeChannel(realtimeKanaal)
+    startReactieRealtime()
     realtimeKanaal = supabase
       .channel('berichten-' + huidigeUser.id)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
@@ -1072,6 +1084,7 @@ window.veiligeUrl = function(v){
       document.getElementById('chatAv').textContent = '💬'
       document.getElementById('belKnoppen').style.display = 'none'
       if (realtimeKanaal) supabase.removeChannel(realtimeKanaal)
+      if (reactieKanaal) { supabase.removeChannel(reactieKanaal); reactieKanaal = null }
     } else {
       sluitAlleP2pVerbindingen()
       window.location.href = 'index.html'
@@ -3553,10 +3566,10 @@ window.veiligeUrl = function(v){
 
 startMeldingen()
 </script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=35"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=36"; startVriendverzoekLuisteraar()</script>
 
 <script type="module">
-import { stuurRapport } from './rapport.js?v=35'
+import { stuurRapport } from './rapport.js?v=36'
 let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
@@ -3646,6 +3659,6 @@ async function verstuurMelding(reden) {
   alert(ok ? 'Bedankt. Je melding is doorgestuurd.' : 'Melden is niet gelukt. Probeer het later opnieuw.')
 }
 </script>
-<script src="swipe.js?v=35"></script>
+<script src="swipe.js?v=36"></script>
 </body>
 </html>

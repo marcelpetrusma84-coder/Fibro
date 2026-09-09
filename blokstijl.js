@@ -24,7 +24,7 @@ function naarRgba(hex, procent){
 export function pasBlokstijlToe(s){
     const st = s || haalBlokstijl()
     const w = document.documentElement.style
-    w.setProperty('--card', naarRgba(st.kleur, st.doorzicht))
+    w.setProperty('--blok-kleur', naarRgba(st.kleur, st.doorzicht))
     w.setProperty('--blok-hoek', st.hoek + 'px')
     if (st.kantel) startKantelen(); else stopKantelen()
 }

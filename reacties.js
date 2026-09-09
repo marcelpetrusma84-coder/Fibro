@@ -1,4 +1,4 @@
-import { kiesAntwoordOp } from './reply.js?v=47'
+import { kiesAntwoordOp } from './reply.js?v=48'
 let _ctx = null
 
 export function initReacties(ctx){ _ctx = ctx }

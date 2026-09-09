@@ -31,8 +31,8 @@ export function pasBlokstijlToe(s){
 
 let _kantelAan = false
 function opBeweging(e){
-    const x = Math.max(-3, Math.min(3, (e.gamma || 0) / 10))
-    const y = Math.max(-3, Math.min(3, (e.beta || 0) / 10))
+    const x = Math.max(-8, Math.min(8, (e.gamma || 0) / 5))
+    const y = Math.max(-8, Math.min(8, (e.beta || 0) / 5))
     document.documentElement.style.setProperty('--blok-kantel',
                                                'perspective(600px) rotateY(' + x + 'deg) rotateX(' + (-y) + 'deg)')
 }

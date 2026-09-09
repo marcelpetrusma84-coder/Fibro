@@ -1,5 +1,5 @@
 const SLEUTEL = 'fibro_blokstijl'
-const STANDAARD = { kleur: '#ffffff', doorzicht: 6, hoek: 14, kantel: false }
+const STANDAARD = { kleur: '#ffffff', doorzicht: 12, hoek: 14, kantel: false }
 
 export function haalBlokstijl(){
     try {

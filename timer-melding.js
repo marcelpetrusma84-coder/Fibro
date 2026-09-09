@@ -1,4 +1,4 @@
-import { toonMelding } from './meldingen.js?v=48'
+import { toonMelding } from './meldingen.js?v=49'
 
 function openDB(){
   return new Promise((res,rej)=>{

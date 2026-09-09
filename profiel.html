@@ -449,7 +449,7 @@ input, textarea { font-size:16px !important; }
   <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
   <div class="nav-item active"><div class="nav-icon">👤</div>Profiel</div>
 </div>
-<script src="lame.min.js?v=48"></script>
+<script src="lame.min.js?v=49"></script>
 <script type="module">
 function _profielUid() {
   if (window._uid) return window._uid
@@ -466,18 +466,18 @@ function _profielUid() {
   return 'lokaal'
 }
 
-import { supabase } from './supabase.js?v=48'
-import { eisSessie, startBewaking } from './sessie.js?v=48'
-import { startMeldingen } from './meldingen.js?v=48'
-import { laadThema } from './thema.js?v=48'
-import { startHeartbeat } from './heartbeat.js?v=48'
-import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=48'
+import { supabase } from './supabase.js?v=49'
+import { eisSessie, startBewaking } from './sessie.js?v=49'
+import { startMeldingen } from './meldingen.js?v=49'
+import { laadThema } from './thema.js?v=49'
+import { startHeartbeat } from './heartbeat.js?v=49'
+import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=49'
 
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
 const stickers={natuur:['🌿','🌸','🌺','🌻','🍀','🌱','🌾','🍃','🌴','🌊','🍂','🌹','🌷','🌼','🍁'],magie:['✨','🔮','🌙','⭐','💫','🌟','🔯','🌠','🌌','🪄','💎','🌈','⚡','🔥','🌀'],kunst:['🎵','🎸','🎨','🎭','🎬','📷','🎪','🎯','🎲','🎹','🥁','🎺','🎻','🖼','✏'],dieren:['🦋','🦊','🐱','🐺','🦄','🐉','🦁','🐻','🦝','🦔','🐧','🦅','🐠','🐬','🦋']}
-import { LETTERTYPES, laadFont } from './lettertypes.js?v=48'
-import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=48'
+import { LETTERTYPES, laadFont } from './lettertypes.js?v=49'
+import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=49'
 window.blokAangepast = function(){
   const s = {
     kleur: document.getElementById("blokKleur").value,
@@ -962,11 +962,11 @@ init()
 
 startMeldingen()
 </script>
-<script src="swipe.js?v=48"></script>
+<script src="swipe.js?v=49"></script>
 
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=48"; startBelLuisteraar()</script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=48"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=48"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=49"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=49"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=49"; startSpelUitnodigingLuisteraar()</script>
 <script>
 /* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */
 setTimeout(function(){

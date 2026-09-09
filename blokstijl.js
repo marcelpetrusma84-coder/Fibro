@@ -31,10 +31,10 @@ export function pasBlokstijlToe(s){
 
 let _kantelAan = false
 function opBeweging(e){
-    const x = Math.max(-8, Math.min(8, (e.gamma || 0) / 5))
-    const y = Math.max(-8, Math.min(8, (e.beta || 0) / 5))
+    const x = Math.max(-14, Math.min(14, (e.gamma || 0) / 5))
+    const y = Math.max(-14, Math.min(14, (e.beta || 0) / 5))
     document.documentElement.style.setProperty('--blok-kantel',
-                                               'perspective(600px) rotateY(' + x + 'deg) rotateX(' + (-y) + 'deg)')
+                                               'perspective(300px) rotateY(' + x + 'deg) rotateX(' + (-y) + 'deg)')
 }
 
 export async function startKantelen(){

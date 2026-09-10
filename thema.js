@@ -1,6 +1,6 @@
-import { supabase } from './supabase.js?v=53'
-import { pasAnimatieToe } from './animatie.js?v=53'
-import { laadFont } from './lettertypes.js?v=53'
+import { supabase } from './supabase.js?v=54'
+import { pasAnimatieToe } from './animatie.js?v=54'
+import { laadFont } from './lettertypes.js?v=54'
 
 // ========================
 // INDEXEDDB

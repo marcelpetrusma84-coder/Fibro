@@ -284,11 +284,11 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 
 <script type="module">
 
-  import { laadThema } from './thema.js?v=55'
-  import { pasBlokstijlToe } from './blokstijl.js?v=55'
-  import { supabase } from './supabase.js?v=55'
-  import { startMeldingen } from './meldingen.js?v=55'
-  import { startHeartbeat } from './heartbeat.js?v=55'
+  import { laadThema } from './thema.js?v=56'
+  import { pasBlokstijlToe } from './blokstijl.js?v=56'
+  import { supabase } from './supabase.js?v=56'
+  import { startMeldingen } from './meldingen.js?v=56'
+  import { startHeartbeat } from './heartbeat.js?v=56'
   pasBlokstijlToe()
 
   function isGebruikerOnline(profiel) {
@@ -440,7 +440,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 startMeldingen()
 </script>
 <script type="module">
-  // dubbele client verwijderd 2 sep — gebruikt de import op regel 280
+  import { supabase } from './supabase.js?v=56'
 
   const DUUR = 20 * 60 // 20 minuten in seconden
   let timerInterval = null
@@ -599,9 +599,9 @@ function filterVrienden() {
 }
 </script>
 
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=55"; startBelLuisteraar()</script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=55"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=55"; startSpelUitnodigingLuisteraar()</script>
-<script src="swipe.js?v=55"></script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=56"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=56"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=56"; startSpelUitnodigingLuisteraar()</script>
+<script src="swipe.js?v=56"></script>
 </body>
 </html>

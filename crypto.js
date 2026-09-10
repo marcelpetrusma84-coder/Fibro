@@ -93,9 +93,7 @@ export async function versleutel(plaintext, mijnPrivKeyB64, ontvangerPubKeyB64) 
 export async function ontsleutel(blob, mijnPrivKeyB64, afzenderPubKeyB64) {
   if (!blob.startsWith('e2e:')) return blob // Niet versleuteld (oud bericht)
   try {
-    const mijnPrivKey = await importeerPrivateKey(mijnPrivKeyB64)
-    const afzenderPubKey = await importeerPublicKey(afzenderPubKeyB64)
-    const aesKey = await leidAesAfVan(mijnPrivKey, afzenderPubKey)
+    const aesKey = await aesSleutelVoor(mijnPrivKeyB64, afzenderPubKeyB64)
 
     const combined = b64NaarBuffer(blob.replace('e2e:', ''))
     const iv = combined.slice(0, 12)
@@ -198,4 +196,22 @@ export async function ontsleutelPrivateKey(blobB64, herstelCode) {
   } catch (e) {
     throw new Error('Herstelsleutel klopt niet')
   }
+}
+
+// ─── Gedeelde gesprekssleutel onthouden ───
+// Uitrekenen (ECDH) is het dure deel; voor hetzelfde sleutelpaar is de uitkomst altijd gelijk.
+const _aesCache = new Map()
+function aesSleutelVoor(mijnPrivKeyB64, andermansPubKeyB64) {
+    const k = mijnPrivKeyB64 + '|' + andermansPubKeyB64
+    let p = _aesCache.get(k)
+    if (!p) {
+        p = (async () => {
+            const priv = await importeerPrivateKey(mijnPrivKeyB64)
+            const pub = await importeerPublicKey(andermansPubKeyB64)
+            return leidAesAfVan(priv, pub)
+        })()
+        _aesCache.set(k, p)
+        p.catch(() => _aesCache.delete(k))
+    }
+    return p
 }

@@ -346,20 +346,20 @@ window.veiligeUrl = function(v){
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=49'
-  import { pasBlokstijlToe } from './blokstijl.js?v=49'
+  import { laadThema } from './thema.js?v=50'
+  import { pasBlokstijlToe } from './blokstijl.js?v=50'
   pasBlokstijlToe()
-  import { laadWallpaper } from './wallpaper.js?v=49'
-  import { supabase } from './supabase.js?v=49'
-  import { startMeldingen } from './meldingen.js?v=49'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=49'
-  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=49'
-  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=49'
-  import { stuurRapport } from './rapport.js?v=49'
-  import * as Schaak from './schaak.js?v=49'
-  import * as Dammen from './dammen.js?v=49'
-  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=49'
-  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=49'
+  import { laadWallpaper } from './wallpaper.js?v=50'
+  import { supabase } from './supabase.js?v=50'
+  import { startMeldingen } from './meldingen.js?v=50'
+  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=50'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=50'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=50'
+  import { stuurRapport } from './rapport.js?v=50'
+  import * as Schaak from './schaak.js?v=50'
+  import * as Dammen from './dammen.js?v=50'
+  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=50'
+  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=50'
 
   var huidigeUser = null
   var huidigProfiel = null
@@ -3568,10 +3568,10 @@ window.veiligeUrl = function(v){
 
 startMeldingen()
 </script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=49"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=50"; startVriendverzoekLuisteraar()</script>
 
 <script type="module">
-import { stuurRapport } from './rapport.js?v=49'
+import { stuurRapport } from './rapport.js?v=50'
 let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
@@ -3661,6 +3661,6 @@ async function verstuurMelding(reden) {
   alert(ok ? 'Bedankt. Je melding is doorgestuurd.' : 'Melden is niet gelukt. Probeer het later opnieuw.')
 }
 </script>
-<script src="swipe.js?v=49"></script>
+<script src="swipe.js?v=50"></script>
 </body>
 </html>

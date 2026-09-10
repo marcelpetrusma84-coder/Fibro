@@ -35,6 +35,10 @@ function opBeweging(e){
     const y = Math.max(-14, Math.min(14, (e.beta || 0) / 5))
     document.documentElement.style.setProperty('--blok-kantel',
                                                'perspective(300px) rotateY(' + x + 'deg) rotateX(' + (-y) + 'deg)')
+  const sx = Math.round(-x * 1.2)
+  const sy = Math.round(y * 1.2)
+  document.documentElement.style.setProperty('--blok-schaduw',
+    sx + 'px ' + sy + 'px ' + (14 + Math.abs(x)) + 'px rgba(0,0,0,0.55)')
 }
 
 export async function startKantelen(){

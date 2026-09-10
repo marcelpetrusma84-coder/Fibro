@@ -149,15 +149,16 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 </div>
 
 <script type="module">
-import { laadThema } from './thema.js?v=56'
-import { pasBlokstijlToe } from './blokstijl.js?v=56'
-import { startHeartbeat } from './heartbeat.js?v=56'
-import { initSync } from './sync.js?v=56'
-import { supabase } from './supabase.js?v=56'
-import { eisSessie, startBewaking } from './sessie.js?v=56'
-import { onderzoekVideo } from './videohulp.js?v=56'
-import { startMeldingen } from './meldingen.js?v=56'
-import { haalPrivateKeyOp } from './crypto.js?v=56'
+import { laadThema } from './thema.js?v=57'
+import { pasBlokstijlToe } from './blokstijl.js?v=57'
+import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=57'
+import { startHeartbeat } from './heartbeat.js?v=57'
+import { initSync } from './sync.js?v=57'
+import { supabase } from './supabase.js?v=57'
+import { eisSessie, startBewaking } from './sessie.js?v=57'
+import { onderzoekVideo } from './videohulp.js?v=57'
+import { startMeldingen } from './meldingen.js?v=57'
+import { haalPrivateKeyOp } from './crypto.js?v=57'
 pasBlokstijlToe()
 
 // ── Waarschuw als de private key op dit apparaat ontbreekt ──
@@ -262,7 +263,7 @@ function tekenGrid(containerId, layout, renderFn) {
 
   actief.forEach(w => {
     const el = document.createElement('div')
-    el.className = 'widget-blok'
+    el.className = 'widget-blok'; el.dataset.id = w.id
     el.style.gridColumn = 'span ' + (w.w || 2)
     el.style.gridRow    = 'span ' + (w.h || 1)
     if (w.geenHeader) {
@@ -1754,7 +1755,7 @@ init().then(() => {
   const homeGrid = document.getElementById('home-sectie')
 
   if (homeActief.length) {
-    tekenGrid('home-sectie', homeLayout, renderHome)
+    tekenGrid('home-sectie', homeLayout, renderHome); startVolgorde(homeGrid, ids => bewaarVolgorde(WK_HOME, ids))
   } else {
     homeGrid.innerHTML = `
       <div class="leeg-staat">
@@ -1770,7 +1771,7 @@ init().then(() => {
   const proActief = proLayout.filter(w => w.aan)
   if (proActief.length) {
     document.getElementById('profiel-sectie-label').style.display = 'block'
-    tekenGrid('profiel-sectie', proLayout, renderProfiel)
+    tekenGrid('profiel-sectie', proLayout, renderProfiel); startVolgorde(document.getElementById('profiel-sectie'), ids => bewaarVolgorde(WK_PROFIEL, ids))
   }
 }).catch(e => console.error('Init fout:', e))
 
@@ -1782,12 +1783,12 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js')
 }
 </script>
-<script src="lame.min.js?v=56"></script>
-<script src="swipe.js?v=56"></script>
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=56"; startBelLuisteraar()</script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=56"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=56"; startSpelUitnodigingLuisteraar()</script>
-<script type="module">import { checkTimers } from "./timer-melding.js?v=56"; setTimeout(checkTimers,4000)</script>
+<script src="lame.min.js?v=57"></script>
+<script src="swipe.js?v=57"></script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=57"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=57"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=57"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { checkTimers } from "./timer-melding.js?v=57"; setTimeout(checkTimers,4000)</script>
 </body>
 </html>
 

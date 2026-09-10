@@ -630,7 +630,7 @@ window.veiligeUrl = function(v){
   }
 
   // ─── Berichten laden + ontsleutelen ───
-  async function laadBerichten() {
+  async function laadBerichten() { console.time('[chat] berichten')
     const { data, error } = await supabase
       .from('messages')
       .select('*')
@@ -640,6 +640,7 @@ window.veiligeUrl = function(v){
       )
       .order('created_at', { ascending: false })
       .limit(50)
+console.timeLog('[chat] berichten', 'opgehaald')
 
     const container = document.getElementById('messages')
     const sysBericht = document.getElementById('chatSysBericht')
@@ -654,7 +655,7 @@ window.veiligeUrl = function(v){
     for (const bericht of data.slice().reverse()) {
       await voegBerichtToe(bericht)
     }
-    scrollNaarOnder(true)
+    scrollNaarOnder(true); console.timeEnd('[chat] berichten')
   }
 
   // ─── Bericht toevoegen (met ontsleuteling) ───

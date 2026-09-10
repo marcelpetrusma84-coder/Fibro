@@ -45,7 +45,7 @@
 
   /* WIDGET GRID */
   .widget-grid { display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:minmax(85px,auto); gap:10px; padding:12px 14px; }
-  .widget-blok { background:var(--blok-kleur,var(--card)); border:0.5px solid var(--border); border-radius:var(--blok-hoek,14px); overflow:visible; display:flex; flex-direction:column; box-shadow:0 4px 20px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.2); }
+  .widget-blok { background:var(--blok-kleur,var(--card)); border:0.5px solid var(--border); border-radius:var(--blok-hoek,14px); transform:var(--blok-kantel,none); transition:transform 0.15s; overflow:visible; display:flex; flex-direction:column; box-shadow:0 4px 20px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.2); }
   .widget-header { display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 10px 6px; border-bottom:0.5px solid var(--border); }
   .widget-icon-sm { font-size:14px; }
   .widget-titel { font-size:11px; font-weight:600; color:#ffffff; text-transform:uppercase; letter-spacing:0.07em; }
@@ -149,16 +149,16 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 </div>
 
 <script type="module">
-import { laadThema } from './thema.js?v=51'
-import { pasBlokstijlToe } from './blokstijl.js?v=51'
+import { laadThema } from './thema.js?v=52'
+import { pasBlokstijlToe } from './blokstijl.js?v=52'
 pasBlokstijlToe()
-import { startHeartbeat } from './heartbeat.js?v=51'
-import { initSync } from './sync.js?v=51'
-import { supabase } from './supabase.js?v=51'
-import { eisSessie, startBewaking } from './sessie.js?v=51'
-import { onderzoekVideo } from './videohulp.js?v=51'
-import { startMeldingen } from './meldingen.js?v=51'
-import { haalPrivateKeyOp } from './crypto.js?v=51'
+import { startHeartbeat } from './heartbeat.js?v=52'
+import { initSync } from './sync.js?v=52'
+import { supabase } from './supabase.js?v=52'
+import { eisSessie, startBewaking } from './sessie.js?v=52'
+import { onderzoekVideo } from './videohulp.js?v=52'
+import { startMeldingen } from './meldingen.js?v=52'
+import { haalPrivateKeyOp } from './crypto.js?v=52'
 
 // ── Waarschuw als de private key op dit apparaat ontbreekt ──
 ;(async () => {
@@ -1782,12 +1782,12 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js')
 }
 </script>
-<script src="lame.min.js?v=51"></script>
-<script src="swipe.js?v=51"></script>
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=51"; startBelLuisteraar()</script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=51"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=51"; startSpelUitnodigingLuisteraar()</script>
-<script type="module">import { checkTimers } from "./timer-melding.js?v=51"; setTimeout(checkTimers,4000)</script>
+<script src="lame.min.js?v=52"></script>
+<script src="swipe.js?v=52"></script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=52"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=52"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=52"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { checkTimers } from "./timer-melding.js?v=52"; setTimeout(checkTimers,4000)</script>
 </body>
 </html>
 

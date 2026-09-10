@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Fibro - Vrienden</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400;500&family=Raleway:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:wght@300;400;700&family=Bebas+Neue&family=Oswald:wght@300;400;500&family=Pacifico&family=Dancing+Script:wght@400;600&family=Great+Vibes&family=Space+Mono:wght@400;700&family=Courier+Prime:wght@400;700&family=Quicksand:wght@300;400;500&family=Nunito:wght@300;400;500&family=Righteous&family=Comfortaa:wght@300;400;500&family=Cinzel:wght@400;600&family=Satisfy&family=Lobster&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
 :root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:rgba(243,232,255,0.5); }
@@ -302,7 +302,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     await laadThema()
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) { window.location.href = 'login.html'; return }
-    await startHeartbeat()
+    startHeartbeat().catch(e => console.warn('[heartbeat]', e))
     await laadVrienden(session.user.id)
   }
 

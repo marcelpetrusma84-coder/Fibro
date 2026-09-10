@@ -1706,7 +1706,7 @@ async function init() {
   window._uid = session.user.id
 
   await laadThema()
-  await startHeartbeat()
+  startHeartbeat().catch(e => console.warn('[heartbeat]', e))
   initSync(session.user.id)
   werkOpslagBalkBij()
 

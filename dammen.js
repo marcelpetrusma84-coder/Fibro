@@ -66,8 +66,7 @@ function vindSlagKetens(bord, r, k, kleur, dam, reedsGeslagen = []) {
 
       const nieuweKeten = { van: [r,k], naar: [lr,lk], geslagen: [mr,mk] }
       const vervolgBord = simuleerSlag(bord, r, k, lr, lk, [mr, mk])
-      const wordtDam = (kleur === 'w' && lr === 0) || (kleur === 'z' && lr === 9)
-      const vervolgKetens = wordtDam ? [] : vindSlagKetens(vervolgBord, lr, lk, kleur, false, [...reedsGeslagen, [mr,mk]])
+      const vervolgKetens = vindSlagKetens(vervolgBord, lr, lk, kleur, false, [...reedsGeslagen, [mr,mk]])
       if (vervolgKetens.length > 0) {
         for (const vk2 of vervolgKetens) ketens.push([nieuweKeten, ...vk2])
       } else {
@@ -82,7 +81,6 @@ function simuleerSlag(bord, vr, vk, nr, nk, geslagenPos) {
   const nieuw = bord.map(rij => rij.slice())
   const stuk = nieuw[vr][vk]
   nieuw[vr][vk] = null
-  nieuw[geslagenPos[0]][geslagenPos[1]] = null
   nieuw[nr][nk] = stuk
   return nieuw
 }

@@ -346,20 +346,21 @@ window.veiligeUrl = function(v){
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=60'
-  import { pasBlokstijlToe } from './blokstijl.js?v=60'
-  import { laadWallpaper } from './wallpaper.js?v=60'
-  import { supabase } from './supabase.js?v=60'
-  import { startMeldingen } from './meldingen.js?v=60'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=60'
-  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=60'
-  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=60'
-  import { stuurRapport } from './rapport.js?v=60'
-  import * as Schaak from './schaak.js?v=60'
-  import * as Dammen from './dammen.js?v=60'
-  import * as Bordgeluid from './bordgeluid.js?v=60'
-  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=60'
-  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=60'
+  import { laadThema } from './thema.js?v=61'
+  import { pasBlokstijlToe } from './blokstijl.js?v=61'
+  import { laadWallpaper } from './wallpaper.js?v=61'
+  import { supabase } from './supabase.js?v=61'
+  import { startMeldingen } from './meldingen.js?v=61'
+  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=61'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=61'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=61'
+  import { stuurRapport } from './rapport.js?v=61'
+  import * as Schaak from './schaak.js?v=61'
+  import * as Dammen from './dammen.js?v=61'
+  import * as Bordgeluid from './bordgeluid.js?v=61'
+  import * as DammenUI from './dammen-ui.js?v=61'
+  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=61'
+  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=61'
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -1799,172 +1800,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   // ─── Dammen (internationaal, 10x10) ───
-  function startDammen() {
-    document.getElementById('spelTitelBar').textContent = '⚫ Dammen'
-    const inhoud = document.getElementById('spelInhoud')
-
-    let staat = Dammen.nieuweSpelStaat()
-    const mijnKleur = benIkSpeler1 ? 'w' : 'z'
-    let geselecteerd = null
-    let mogelijkeKetens = []   // ketens die starten vanuit het geselecteerde stuk
-    let gameOver = false
-    let laatsteKeten = null
-
-    const omgedraaid = mijnKleur === 'z'
-    const VAKJE = 32
-
-    inhoud.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
-        <div id="dam-status" style="color:white;font-size:14px;font-weight:600;text-align:center;min-height:20px;"></div>
-        <div id="dam-bord" style="display:grid;grid-template-columns:repeat(10,${VAKJE}px);grid-template-rows:repeat(10,${VAKJE}px);border:3px solid #3a2a5e;border-radius:6px;overflow:hidden;"></div>
-        <button id="dam-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Opnieuw spelen</button>
-      </div>`
-
-    const bordEl = document.getElementById('dam-bord')
-    const statusEl = document.getElementById('dam-status')
-    const opnieuwBtn = document.getElementById('dam-opnieuw'); Bordgeluid.knop(statusEl)
-
-    function rijVolgorde() { return omgedraaid ? [9,8,7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7,8,9] }
-    function kolVolgorde() { return omgedraaid ? [9,8,7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7,8,9] }
-
-    function tekenBord() {
-      bordEl.innerHTML = ''
-      const rijen = rijVolgorde()
-      const kols = kolVolgorde()
-
-      // Verzamel alle landingsvelden van mogelijke ketens (voor highlight)
-      const landingsvelden = mogelijkeKetens.map(keten => keten[0].naar)
-      const laatsteVelden = laatsteKeten ? [laatsteKeten[0].van, laatsteKeten[laatsteKeten.length-1].naar] : []
-
-      for (const r of rijen) {
-        for (const k of kols) {
-          const vakje = document.createElement('div')
-          const isDonker = (r + k) % 2 === 1
-          const isGeselecteerd = geselecteerd && geselecteerd[0] === r && geselecteerd[1] === k
-          const isLanding = landingsvelden.some(([lr,lk]) => lr===r && lk===k)
-          const isLaatste = laatsteVelden.some(([lr,lk]) => lr===r && lk===k)
-
-          let achtergrond = isDonker ? '#8a6242' : '#eed9b8'
-          if (isDonker && isLaatste) achtergrond = '#c9a93a'
-          if (isGeselecteerd) achtergrond = '#7ec8e3'
-
-          vakje.style.cssText = `width:${VAKJE}px;height:${VAKJE}px;background:${achtergrond};display:flex;align-items:center;justify-content:center;font-size:22px;cursor:${isDonker?'pointer':'default'};position:relative;user-select:none;`
-
-          const stuk = staat.bord[r][k]
-          if (stuk) {
-            const kleur = stuk[0]
-            const isStukDam = stuk[1] === 'D'
-            const schijf = document.createElement('div')
-            schijf.style.cssText = `width:${VAKJE-8}px;height:${VAKJE-8}px;border-radius:50%;background:${kleur==='w' ? 'radial-gradient(circle at 35% 30%, #fff, #ddd)' : 'radial-gradient(circle at 35% 30%, #555, #111)'};box-shadow:0 2px 4px rgba(0,0,0,0.5), inset 0 -2px 3px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;`
-            if (isStukDam) {
-              schijf.innerHTML = `<span style="font-size:14px;color:${kleur==='w'?'#b8860b':'#fbbf24'};">★</span>`
-            }
-            vakje.appendChild(schijf)
-          }
-
-          if (isDonker && isLanding) {
-            const stip = document.createElement('div')
-            stip.style.cssText = 'position:absolute;width:10px;height:10px;border-radius:50%;background:rgba(34,197,94,0.75);pointer-events:none;'
-            vakje.appendChild(stip)
-          }
-
-          if (isDonker) vakje.addEventListener('click', () => vakjeKlik(r, k))
-          bordEl.appendChild(vakje)
-        }
-      }
-    }
-
-    function vakjeKlik(r, k) {
-      if (gameOver || staat.aanZet !== mijnKleur) return
-
-      if (geselecteerd) {
-        const keten = mogelijkeKetens.find(ket => ket[0].naar[0] === r && ket[0].naar[1] === k)
-        if (keten) {
-          uitvoerenKeten(keten)
-          return
-        }
-      }
-
-      const stuk = staat.bord[r][k]
-      if (stuk && stuk[0] === mijnKleur) {
-        const { ketens } = Dammen.alleZetten(staat, mijnKleur)
-        const stukKetens = ketens.filter(ket => ket[0].van[0] === r && ket[0].van[1] === k)
-        if (stukKetens.length > 0) {
-          geselecteerd = [r, k]
-          mogelijkeKetens = stukKetens
-        } else {
-          geselecteerd = null
-          mogelijkeKetens = []
-        }
-      } else {
-        geselecteerd = null
-        mogelijkeKetens = []
-      }
-      tekenBord()
-    }
-
-    function uitvoerenKeten(keten) {
-      Dammen.voerKetenUit(staat, keten)
-      laatsteKeten = keten
-      geselecteerd = null
-      mogelijkeKetens = []
-
-      verstuurKeten(keten)
-      naBeurtControle()
-    }
-
-    function naBeurtControle() {
-      const volgendeKleur = staat.aanZet; Bordgeluid.dammen(Dammen, staat, laatsteKeten, mijnKleur)
-      if (Dammen.heeftGeenZetten(staat, volgendeKleur)) {
-        gameOver = true
-        const ikWin = volgendeKleur !== mijnKleur
-        statusEl.textContent = ikWin ? '🎉 Jij wint — geen zetten meer voor de ander!' : '😢 ' + (geselecteerdeVriend.naam || 'Vriend') + ' wint!'
-        opnieuwBtn.style.display = 'block'
-      } else {
-        statusEl.textContent = volgendeKleur === mijnKleur ? 'Jouw beurt' : 'Wachten op ' + (geselecteerdeVriend.naam || 'vriend') + '...'
-      }
-      tekenBord()
-    }
-
-    function verstuurKeten(keten) {
-      spelKanaal.send({ type: 'broadcast', event: 'zet', payload: { keten } })
-    }
-
-    spelKanaal.on('broadcast', { event: 'zet' }, (msg) => {
-      Dammen.voerKetenUit(staat, msg.payload.keten)
-      laatsteKeten = msg.payload.keten
-      geselecteerd = null
-      mogelijkeKetens = []
-      naBeurtControle()
-    })
-
-    spelKanaal.on('broadcast', { event: 'level-update' }, msg => {
-      huidigLevel = msg.payload.level
-    })
-    spelKanaal.on('broadcast', { event: 'opnieuw' }, () => {
-      staat = Dammen.nieuweSpelStaat()
-      geselecteerd = null
-      mogelijkeKetens = []
-      laatsteKeten = null
-      gameOver = false
-      opnieuwBtn.style.display = 'none'
-      naBeurtControle()
-    })
-
-    opnieuwBtn.addEventListener('click', () => {
-      staat = Dammen.nieuweSpelStaat()
-      geselecteerd = null
-      mogelijkeKetens = []
-      laatsteKeten = null
-      gameOver = false
-      opnieuwBtn.style.display = 'none'
-      spelKanaal.send({ type: 'broadcast', event: 'opnieuw', payload: {} })
-      naBeurtControle()
-    })
-
-    statusEl.textContent = mijnKleur === 'w' ? 'Jouw beurt (wit begint)' : 'Wachten op ' + (geselecteerdeVriend.naam || 'vriend') + ' (wit begint)...'
-    tekenBord()
-  }
+  function startDammen() { DammenUI.start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend' }) }
 
   // ─── Pong ───
   function startPong() {
@@ -3570,10 +3406,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
 startMeldingen()
 </script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=60"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=61"; startVriendverzoekLuisteraar()</script>
 
 <script type="module">
-import { stuurRapport } from './rapport.js?v=60'
+import { stuurRapport } from './rapport.js?v=61'
 let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
@@ -3663,6 +3499,6 @@ async function verstuurMelding(reden) {
   alert(ok ? 'Bedankt. Je melding is doorgestuurd.' : 'Melden is niet gelukt. Probeer het later opnieuw.')
 }
 </script>
-<script src="swipe.js?v=60"></script>
+<script src="swipe.js?v=61"></script>
 </body>
 </html>

@@ -129,7 +129,7 @@ export function alleZetten(staat, kleur) {
     }
   }
 
-  if (alleSlagKetens.length > 0) return { ketens: alleSlagKetens, verplichtSlaan: true }
+  if (alleSlagKetens.length > 0) { const aantal = x => x.filter(s => s.geslagen).length; const meeste = Math.max(...alleSlagKetens.map(aantal)); return { ketens: alleSlagKetens.filter(x => aantal(x) === meeste), verplichtSlaan: true } }
   return { ketens: alleNormaleZetten, verplichtSlaan: false }
 }
 

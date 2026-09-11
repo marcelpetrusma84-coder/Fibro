@@ -27,12 +27,12 @@ export function nieuweSpelStaat() {
 }
 
 function kleurVan(stuk) { return stuk ? stuk[0] : null }
-function typeVan(stuk) { return stuk ? stuk[1] : null }
+export function typeVan(stuk) { return stuk ? stuk[1] : null }
 function tegenKleur(k) { return k === 'w' ? 'z' : 'w' }
 function inBord(r, k) { return r >= 0 && r < 8 && k >= 0 && k < 8 }
 
 // ── Genereer alle "ruwe" zetten voor een stuk (zonder schaak-check) ──
-function ruweZetten(staat, r, k) {
+function ruweZetten(staat, r, k, zonderRokade) {
   const stuk = staat.bord[r][k]
   if (!stuk) return []
   const kleur = kleurVan(stuk)
@@ -93,7 +93,7 @@ function ruweZetten(staat, r, k) {
     }
     // Rokade
     const rij = kleur === 'w' ? 7 : 0
-    if (r === rij && k === 4) {
+    if (!zonderRokade && r === rij && k === 4) {
       const kort = kleur === 'w' ? staat.rokade.wK : staat.rokade.zK
       const lang = kleur === 'w' ? staat.rokade.wQ : staat.rokade.zQ
       if (kort && !bord[rij][5] && !bord[rij][6] && bord[rij][7] === kleur+'R') {
@@ -149,7 +149,8 @@ function veldAangevallen(staat, r, k, aanvallerKleur) {
     for (let kk = 0; kk < 8; kk++) {
       const stuk = staat.bord[rr][kk]
       if (!stuk || kleurVan(stuk) !== aanvallerKleur) continue
-      const zetten = ruweZetten(staat, rr, kk)
+      if (stuk[1] === 'P') { if (rr + (aanvallerKleur === 'w' ? -1 : 1) === r && Math.abs(kk - k) === 1) return true; continue }
+      const zetten = ruweZetten(staat, rr, kk, true)
       if (zetten.some(z => z.naar[0] === r && z.naar[1] === k)) return true
     }
   }

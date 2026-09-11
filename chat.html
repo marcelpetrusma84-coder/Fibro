@@ -346,19 +346,19 @@ window.veiligeUrl = function(v){
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=58'
-  import { pasBlokstijlToe } from './blokstijl.js?v=58'
-  import { laadWallpaper } from './wallpaper.js?v=58'
-  import { supabase } from './supabase.js?v=58'
-  import { startMeldingen } from './meldingen.js?v=58'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=58'
-  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=58'
-  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=58'
-  import { stuurRapport } from './rapport.js?v=58'
-  import * as Schaak from './schaak.js?v=58'
-  import * as Dammen from './dammen.js?v=58'
-  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=58'
-  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=58'
+  import { laadThema } from './thema.js?v=59'
+  import { pasBlokstijlToe } from './blokstijl.js?v=59'
+  import { laadWallpaper } from './wallpaper.js?v=59'
+  import { supabase } from './supabase.js?v=59'
+  import { startMeldingen } from './meldingen.js?v=59'
+  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=59'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=59'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=59'
+  import { stuurRapport } from './rapport.js?v=59'
+  import * as Schaak from './schaak.js?v=59'
+  import * as Dammen from './dammen.js?v=59'
+  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=59'
+  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=59'
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -1626,7 +1626,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const opnieuwBtn = document.getElementById('sch-opnieuw')
     const promotieEl = document.getElementById('sch-promotie')
 
-    function rijVolgorde() { return omgedraaid ? [0,1,2,3,4,5,6,7] : [7,6,5,4,3,2,1,0] }
+    function rijVolgorde() { return omgedraaid ? [7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7] }
     function kolVolgorde() { return omgedraaid ? [7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7] }
 
     function tekenBord() {
@@ -1823,7 +1823,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const statusEl = document.getElementById('dam-status')
     const opnieuwBtn = document.getElementById('dam-opnieuw')
 
-    function rijVolgorde() { return omgedraaid ? [0,1,2,3,4,5,6,7,8,9] : [9,8,7,6,5,4,3,2,1,0] }
+    function rijVolgorde() { return omgedraaid ? [9,8,7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7,8,9] }
     function kolVolgorde() { return omgedraaid ? [9,8,7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7,8,9] }
 
     function tekenBord() {
@@ -3569,10 +3569,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
 startMeldingen()
 </script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=58"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=59"; startVriendverzoekLuisteraar()</script>
 
 <script type="module">
-import { stuurRapport } from './rapport.js?v=58'
+import { stuurRapport } from './rapport.js?v=59'
 let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
@@ -3662,6 +3662,6 @@ async function verstuurMelding(reden) {
   alert(ok ? 'Bedankt. Je melding is doorgestuurd.' : 'Melden is niet gelukt. Probeer het later opnieuw.')
 }
 </script>
-<script src="swipe.js?v=58"></script>
+<script src="swipe.js?v=59"></script>
 </body>
 </html>

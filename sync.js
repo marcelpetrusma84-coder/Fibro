@@ -1,8 +1,8 @@
 // sync.js — P2P widget-sync via WebRTC DataChannel
 // Stap A: presence ✓ | Stap B: DataChannel ping-pong
 // Zelfde signaling-patroon als bellen.js: gedeeld kanaal met gesorteerde IDs
-import { supabase } from './supabase.js?v=61'
-import { ICE_SERVERS, iceReady } from './ice-config.js?v=61'
+import { supabase } from './supabase.js?v=62'
+import { ICE_SERVERS, iceReady } from './ice-config.js?v=62'
 
 let presenceKanaal = null
 let huidigeUserId = null
@@ -209,7 +209,7 @@ function koppelDataChannel(kanaal) {
   }
   dataChannel.onmessage = (event) => {
     // VALIDATIE (bug #5): nooit blind parsen/vertrouwen wat de peer stuurt
-    if (typeof event.data !== 'string' || event.data.length > 64 * 1024) {
+    if (typeof event.data !== 'string' || event.data.length > 256 * 1024) {
       console.warn('[sync] P2P bericht geweigerd: geen string of te groot')
       return
     }

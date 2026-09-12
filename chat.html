@@ -346,22 +346,22 @@ window.veiligeUrl = function(v){
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=65'
-  import { pasBlokstijlToe } from './blokstijl.js?v=65'
-  import { laadWallpaper } from './wallpaper.js?v=65'
-  import { supabase } from './supabase.js?v=65'
-  import { initSync } from './sync.js?v=65'
-  import { startMeldingen } from './meldingen.js?v=65'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=65'
-  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=65'
-  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=65'
-  import { stuurRapport } from './rapport.js?v=65'
-  import * as Schaak from './schaak.js?v=65'
-  import * as Dammen from './dammen.js?v=65'
-  import * as Bordgeluid from './bordgeluid.js?v=65'
-  import * as DammenUI from './dammen-ui.js?v=65'
-  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=65'
-  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=65'
+  import { laadThema } from './thema.js?v=66'
+  import { pasBlokstijlToe } from './blokstijl.js?v=66'
+  import { laadWallpaper } from './wallpaper.js?v=66'
+  import { supabase } from './supabase.js?v=66'
+  import { initSync } from './sync.js?v=66'
+  import { startMeldingen } from './meldingen.js?v=66'
+  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=66'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=66'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=66'
+  import { stuurRapport } from './rapport.js?v=66'
+  import * as Schaak from './schaak.js?v=66'
+  import * as Dammen from './dammen.js?v=66'
+  import * as Bordgeluid from './bordgeluid.js?v=66'
+  import * as DammenUI from './dammen-ui.js?v=66'
+  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=66'
+  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=66'
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -821,7 +821,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       receiver_id: geselecteerdeVriend.id,
       content,
       antwoord_op: geefAntwoordOp(),
-      expires_at: new Date(Date.now() + 24*60*60*1000).toISOString()
+      expires_at: new Date(Date.now() + 31*24*60*60*1000).toISOString()
     }).select('id').single()
 
     // Sla plaintext op in cache zodat eigen berichten leesbaar blijven
@@ -848,7 +848,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       sender_id: huidigeUser.id,
       receiver_id: geselecteerdeVriend.id,
       content,
-      expires_at: new Date(Date.now() + 24*60*60*1000).toISOString()
+      expires_at: new Date(Date.now() + 31*24*60*60*1000).toISOString()
     }).select('id').single()
     if (data?.id) slaBerichtCacheOp(data.id, tekst)
   }
@@ -864,7 +864,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       sender_id: huidigeUser.id,
       receiver_id: geselecteerdeVriend.id,
       content,
-      expires_at: new Date(Date.now() + 24*60*60*1000).toISOString()
+      expires_at: new Date(Date.now() + 31*24*60*60*1000).toISOString()
     }).select('id').single()
     if (data?.id) slaBerichtCacheOp(data.id, tekst)
   }
@@ -880,7 +880,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       sender_id: huidigeUser.id,
       receiver_id: geselecteerdeVriend.id,
       content,
-      expires_at: new Date(Date.now() + 24*60*60*1000).toISOString()
+      expires_at: new Date(Date.now() + 31*24*60*60*1000).toISOString()
     }).select('id').single()
     if (data?.id) slaBerichtCacheOp(data.id, tekst)
   }
@@ -988,7 +988,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       sender_id: huidigeUser.id,
       receiver_id: geselecteerdeVriend.id,
       content: 'buzz:',
-      expires_at: new Date(Date.now() + 24*60*60*1000).toISOString()
+      expires_at: new Date(Date.now() + 31*24*60*60*1000).toISOString()
     })
     const mijnNaam = huidigProfiel?.username || 'Iemand'
     stuurPling(geselecteerdeVriend.id, '⚡ Buzz!', mijnNaam + ' buzzt je!', 'buzz')
@@ -3400,10 +3400,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
 startMeldingen()
 </script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=65"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=66"; startVriendverzoekLuisteraar()</script>
 
 <script type="module">
-import { stuurRapport } from './rapport.js?v=65'
+import { stuurRapport } from './rapport.js?v=66'
 let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
@@ -3493,6 +3493,6 @@ async function verstuurMelding(reden) {
   alert(ok ? 'Bedankt. Je melding is doorgestuurd.' : 'Melden is niet gelukt. Probeer het later opnieuw.')
 }
 </script>
-<script src="swipe.js?v=65"></script>
+<script src="swipe.js?v=66"></script>
 </body>
 </html>

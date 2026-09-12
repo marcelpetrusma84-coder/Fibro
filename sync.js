@@ -1,8 +1,8 @@
 // sync.js — P2P widget-sync via WebRTC DataChannel
 // Stap A: presence ✓ | Stap B: DataChannel ping-pong
 // Zelfde signaling-patroon als bellen.js: gedeeld kanaal met gesorteerde IDs
-import { supabase } from './supabase.js?v=62'
-import { ICE_SERVERS, iceReady } from './ice-config.js?v=62'
+import { supabase } from './supabase.js?v=63'
+import { ICE_SERVERS, iceReady } from './ice-config.js?v=63'
 
 let presenceKanaal = null
 let huidigeUserId = null
@@ -92,7 +92,7 @@ function startPresence() {
       console.log('[sync] Online gebruikers:', [...onlineGebruikers])
       if (onOnlineChangeCallback) onOnlineChangeCallback([...onlineGebruikers])
       toonDebugBadge()
-      if (syncPartnerId && !onlineGebruikers.has(syncPartnerId)) stopSync()
+      if (syncPartnerId && !onlineGebruikers.has(syncPartnerId)) { geenStraf = true; stopSync() }
       checkSyncStart()
     })
     .subscribe(async (status) => {
@@ -121,10 +121,11 @@ async function laadVrienden() {
 
 function checkSyncStart() {
   if (syncPartnerId) return
-  const ander = [...onlineGebruikers].find((id) => vrienden.has(id))
+  const ander = kiesSyncPartner()
   if (!ander) return
   syncPartnerId = ander
   isInitiator = huidigeUserId < ander
+  zetTijd('poging', ander)
   console.log('[sync] Start sync met', ander, '- initiator:', isInitiator)
   zetP2pStatus('verbinden...')
   openSyncKanaal(ander)
@@ -139,6 +140,7 @@ function openSyncKanaal(anderId) {
     })
     .subscribe((status) => {
       console.log('[sync] Synckanaal status:', status)
+      if (status === 'SUBSCRIBED' && !isInitiator) { clearTimeout(syncTimeout); syncTimeout = setTimeout(() => { if (!dataChannel || dataChannel.readyState !== 'open') { console.log('[sync] Geen verbinding gekregen - opgegeven'); stopSync() } }, 40000) }
       if (status === 'SUBSCRIBED' && isInitiator) {
         offerRetryCount = 0
         startOfferRetry()
@@ -192,6 +194,7 @@ function maakPeerConnection() {
     if (pc !== peerConnection) return
     if (event.candidate) stuurSignaal('ice', event.candidate)
   }
+  pc.onconnectionstatechange = () => { if (pc === peerConnection && pc.connectionState === 'failed') { console.log('[sync] Verbinding mislukt'); stopSync() } }
   pc.ondatachannel = (event) => {
     if (pc !== peerConnection) return
     koppelDataChannel(event.channel)
@@ -200,14 +203,16 @@ function maakPeerConnection() {
 
 function koppelDataChannel(kanaal) {
   dataChannel = kanaal
+  { const orig = kanaal.send.bind(kanaal); kanaal.send = d => { laatsteActiviteit = Date.now(); return orig(d) } }
   dataChannel.onopen = async () => {
-    console.log('[sync] DataChannel OPEN')
+    console.log('[sync] DataChannel OPEN'); clearTimeout(syncTimeout); startKlaarCheck()
     zetP2pStatus('P2P open')
     // Detecteer TURN/relay verbinding
     await detecteerRelayConnection()
     stuurManifest()
   }
   dataChannel.onmessage = (event) => {
+    laatsteActiviteit = Date.now()
     // VALIDATIE (bug #5): nooit blind parsen/vertrouwen wat de peer stuurt
     if (typeof event.data !== 'string' || event.data.length > 256 * 1024) {
       console.warn('[sync] P2P bericht geweigerd: geen string of te groot')
@@ -217,14 +222,14 @@ function koppelDataChannel(kanaal) {
     try { bericht = JSON.parse(event.data) }
     catch(e) { console.warn('[sync] P2P bericht geweigerd: ongeldige JSON'); return }
     if (!bericht || typeof bericht !== 'object' || typeof bericht.type !== 'string') return
-    if (!['manifest', 'geef', 'chunk', 'item'].includes(bericht.type)) {
+    if (!['manifest', 'geef', 'chunk', 'item', 'klaar'].includes(bericht.type)) {
       console.warn('[sync] P2P bericht geweigerd: onbekend type', bericht.type)
       return
     }
     console.log('[sync] P2P bericht:', bericht.type)
     verwerkP2pBericht(bericht)
   }
-  dataChannel.onclose = () => zetP2pStatus('')
+  dataChannel.onclose = () => { zetP2pStatus(''); if (kanaal === dataChannel) kanaalDicht() }
 }
 
 async function detecteerRelayConnection() {
@@ -459,6 +464,7 @@ async function verwerkP2pBericht(bericht) {
       zetP2pStatus('video niet opgehaald (relay)')
       window._videoGeblokkeerdDoorRelay = true
     }
+    { const rang = x => x === 'layout' ? 0 : (x.startsWith('klein:') || x === 'videometa') ? 1 : x.startsWith('foto:') ? 2 : x.startsWith('muziek:') ? 3 : 4; nodig.sort((a, b) => rang(a) - rang(b)) }
     if (nodig.length) {
       dataChannel.send(JSON.stringify({ type: 'geef', items: nodig }))
       zetP2pStatus('vraag ' + nodig.length + ' item(s)')
@@ -500,6 +506,7 @@ async function verwerkP2pBericht(bericht) {
       }
     }
   }
+  if (bericht.type === 'klaar') { rondeKlaar(); return }
   if (bericht.type === 'chunk') {
     await verwerkChunk(bericht)
   }
@@ -719,7 +726,7 @@ async function dbPut(obj) {
   return new Promise((resolve, reject) => {
     const tx = db.transaction('fotos', 'readwrite')
     tx.objectStore('fotos').put(obj)
-    tx.oncomplete = () => resolve()
+    tx.oncomplete = () => { resolve(); meldSync(obj.id) }
     tx.onerror = () => reject(tx.error)
   })
 }
@@ -833,6 +840,7 @@ export function vraagVideoOp() {
 }
 
 function stopSync() {
+  const vorigePartner = syncPartnerId
   console.log('[sync] Sync gestopt')
   clearTimeout(offerRetryTimer)
   clearTimeout(syncTimeout)
@@ -844,6 +852,7 @@ function stopSync() {
   offerRetryCount = 0
   isRelayConnection = false
   zetP2pStatus('')
+  naStop(vorigePartner)
 }
 
 function zetP2pStatus(status) {
@@ -852,6 +861,7 @@ function zetP2pStatus(status) {
 }
 
 function toonDebugBadge() {
+  { const p = location.pathname; if (!(p.endsWith('/') || p.endsWith('index.html'))) return }
   let b = document.getElementById('sync-debug-badge')
   if (!b) {
     b = document.createElement('div')
@@ -877,3 +887,83 @@ export function lokaleVriendNaam(vriendId, eigenId) {
     return localStorage.getItem('vriend_naam_' + vriendId + '_' + eigenId) || null
   } catch(e) { return null }
 }
+
+// ── Rondes: na een afgeronde sync door naar de volgende vriend ──
+// Een ronde is klaar als er 8 seconden niets meer over de lijn gaat. Daarna
+// slaan we deze vriend een paar minuten over en gaan we door naar de volgende.
+let laatsteActiviteit = 0
+let klaarTimer = null
+let geenStraf = false
+let voorkeurId = null
+const AFKOEL_MS = 3 * 60 * 1000
+const MISLUKT_MS = 60 * 1000
+
+function tijdVan(soort, id) {
+    try { return parseInt(localStorage.getItem('fibro_sync_' + soort + '_' + huidigeUserId + '_' + id) || '0', 10) || 0 } catch (e) { return 0 }
+}
+function zetTijd(soort, id) {
+    try { localStorage.setItem('fibro_sync_' + soort + '_' + huidigeUserId + '_' + id, String(Date.now())) } catch (e) {}
+}
+
+function kiesSyncPartner() {
+    const nu = Date.now()
+    const kandidaten = [...onlineGebruikers].filter(id => vrienden.has(id))
+    .filter(id => nu - tijdVan('klaar', id) > AFKOEL_MS && nu - tijdVan('mislukt', id) > MISLUKT_MS)
+    // Harde rem: nooit vaker dan eens per 20 seconden dezelfde vriend proberen,
+    // wat er ook gebeurt. Voorkomt een eindeloze reeks verbindingspogingen.
+    .filter(id => nu - tijdVan('poging', id) > 20000)
+    if (voorkeurId && kandidaten.includes(voorkeurId)) return voorkeurId
+        return kandidaten[0]
+}
+
+function startKlaarCheck() {
+    laatsteActiviteit = Date.now()
+    clearInterval(klaarTimer)
+    klaarTimer = setInterval(() => {
+        if (!dataChannel || dataChannel.readyState !== 'open') { clearInterval(klaarTimer); return }
+        if (dataChannel.bufferedAmount > 0) return
+            if (Date.now() - laatsteActiviteit < 8000) return
+                rondeKlaar()
+    }, 2000)
+}
+
+function rondeKlaar() {
+    clearInterval(klaarTimer)
+    if (!syncPartnerId) return
+        // De ander ook laten weten dat we klaar zijn, zodat hij niet meteen opnieuw verbindt
+        try { if (dataChannel && dataChannel.readyState === 'open') dataChannel.send(JSON.stringify({ type: 'klaar' })) } catch (e) {}
+        zetTijd('klaar', syncPartnerId)
+        geenStraf = true
+        console.log('[sync] Ronde klaar met', syncPartnerId, '- door naar de volgende vriend')
+        stopSync()
+}
+
+// De ander sloot de lijn: rustig = klaar, midden in een overdracht = gewoon opnieuw proberen
+function kanaalDicht() {
+    if (!syncPartnerId) return
+        if (Date.now() - laatsteActiviteit > 4000) { rondeKlaar(); return }
+        geenStraf = true
+        stopSync()
+}
+
+function naStop(partner) {
+    clearInterval(klaarTimer)
+    if (partner && !geenStraf) zetTijd('mislukt', partner)
+        geenStraf = false
+        for (const k of Object.keys(chunkBuffers)) delete chunkBuffers[k]
+            setTimeout(() => { if (heeftSlot && !syncPartnerId) checkSyncStart() }, 1500)
+}
+
+// Op het profiel van een vriend: die vriend eerst
+export function zetSyncVoorkeur(id) {
+    voorkeurId = id || null
+    if (heeftSlot && !syncPartnerId) checkSyncStart()
+}
+
+// Laat pagina's weten dat er iets van een vriend binnen is
+function meldSync(id) {
+    try { if (typeof id === 'string' && id.startsWith('vriend_')) window.dispatchEvent(new CustomEvent('fibro-sync', { detail: { id } })) } catch (e) {}
+}
+
+// Afkoeltijd voorbij? Dan opnieuw kijken wie er online is
+setInterval(() => { if (huidigeUserId && heeftSlot && !syncPartnerId) checkSyncStart() }, 15000)

@@ -346,21 +346,21 @@ window.veiligeUrl = function(v){
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=63'
-  import { pasBlokstijlToe } from './blokstijl.js?v=63'
-  import { laadWallpaper } from './wallpaper.js?v=63'
-  import { supabase } from './supabase.js?v=63'
-  import { startMeldingen } from './meldingen.js?v=63'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=63'
-  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=63'
-  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=63'
-  import { stuurRapport } from './rapport.js?v=63'
-  import * as Schaak from './schaak.js?v=63'
-  import * as Dammen from './dammen.js?v=63'
-  import * as Bordgeluid from './bordgeluid.js?v=63'
-  import * as DammenUI from './dammen-ui.js?v=63'
-  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=63'
-  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=63'
+  import { laadThema } from './thema.js?v=62'
+  import { pasBlokstijlToe } from './blokstijl.js?v=62'
+  import { laadWallpaper } from './wallpaper.js?v=62'
+  import { supabase } from './supabase.js?v=62'
+  import { startMeldingen } from './meldingen.js?v=62'
+  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=62'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=62'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=62'
+  import { stuurRapport } from './rapport.js?v=62'
+  import * as Schaak from './schaak.js?v=62'
+  import * as Dammen from './dammen.js?v=62'
+  import * as Bordgeluid from './bordgeluid.js?v=62'
+  import * as DammenUI from './dammen-ui.js?v=62'
+  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=62'
+  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=62'
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -3406,10 +3406,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
 startMeldingen()
 </script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=63"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=62"; startVriendverzoekLuisteraar()</script>
 
 <script type="module">
-import { stuurRapport } from './rapport.js?v=63'
+import { stuurRapport } from './rapport.js?v=62'
 let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
@@ -3499,6 +3499,6 @@ async function verstuurMelding(reden) {
   alert(ok ? 'Bedankt. Je melding is doorgestuurd.' : 'Melden is niet gelukt. Probeer het later opnieuw.')
 }
 </script>
-<script src="swipe.js?v=63"></script>
+<script src="swipe.js?v=62"></script>
 </body>
 </html>

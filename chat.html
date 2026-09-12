@@ -346,22 +346,22 @@ window.veiligeUrl = function(v){
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=64'
-  import { pasBlokstijlToe } from './blokstijl.js?v=64'
-  import { laadWallpaper } from './wallpaper.js?v=64'
-  import { supabase } from './supabase.js?v=64'
-  import { initSync } from './sync.js?v=64'
-  import { startMeldingen } from './meldingen.js?v=64'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=64'
-  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=64'
-  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=64'
-  import { stuurRapport } from './rapport.js?v=64'
-  import * as Schaak from './schaak.js?v=64'
-  import * as Dammen from './dammen.js?v=64'
-  import * as Bordgeluid from './bordgeluid.js?v=64'
-  import * as DammenUI from './dammen-ui.js?v=64'
-  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=64'
-  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=64'
+  import { laadThema } from './thema.js?v=65'
+  import { pasBlokstijlToe } from './blokstijl.js?v=65'
+  import { laadWallpaper } from './wallpaper.js?v=65'
+  import { supabase } from './supabase.js?v=65'
+  import { initSync } from './sync.js?v=65'
+  import { startMeldingen } from './meldingen.js?v=65'
+  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=65'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=65'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=65'
+  import { stuurRapport } from './rapport.js?v=65'
+  import * as Schaak from './schaak.js?v=65'
+  import * as Dammen from './dammen.js?v=65'
+  import * as Bordgeluid from './bordgeluid.js?v=65'
+  import * as DammenUI from './dammen-ui.js?v=65'
+  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=65'
+  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=65'
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -785,6 +785,26 @@ console.timeLog('[chat] berichten', 'opgehaald')
     } catch(e) { console.log('[pling] versturen mislukt:', e) }
   }
 
+  // Versleutelen is verplicht: zonder sleutels gaat er niets de deur uit.
+  // Geeft de versleutelde inhoud terug, of null (dan is er al een melding gegeven).
+  async function versleutelOfStop(tekst) {
+    if (!mijnPrivateKey) {
+      alert('Bericht NIET verstuurd.\n\nDit apparaat heeft geen sleutel voor jouw account, dus het bericht kan niet versleuteld worden. Log opnieuw in met je herstelcode om je sleutel terug te zetten.')
+      return null
+    }
+    if (!vriendPublicKey || vriendPublicKey.length <= 10) {
+      alert('Bericht NIET verstuurd.\n\nDe sleutel van deze vriend is nog niet bekend. Probeer het opnieuw zodra hij een keer online is geweest.')
+      return null
+    }
+    try {
+      return await versleutel(tekst, mijnPrivateKey, vriendPublicKey)
+    } catch (e) {
+      console.error('[chat] versleutelen mislukt:', e)
+      alert('Bericht NIET verstuurd: versleutelen mislukt.')
+      return null
+    }
+  }
+
   window.sendMsg = async function() {
     if (!geselecteerdeVriend) return
     const input = document.getElementById('msgInput')
@@ -793,15 +813,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     speelPlop('uit')
     input.value = ''
 
-    let content = tekst
-    if (mijnPrivateKey && vriendPublicKey && vriendPublicKey.length > 10) {
-      try {
-        content = await versleutel(tekst, mijnPrivateKey, vriendPublicKey)
-      } catch (e) {
-        alert('Bericht NIET verstuurd: versleutelen mislukt.')
-        return
-      }
-    }
+    const content = await versleutelOfStop(tekst)
+    if (content === null) return
 
     const { data, error } = await supabase.from('messages').insert({
       sender_id: huidigeUser.id,
@@ -829,15 +842,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     speelEmotieGeluid(emotieId)
     document.getElementById('stickerGrid').style.display = 'none'
     const tekst = 'lossticker:' + src + ':' + emotieId
-    let content = tekst
-    if (mijnPrivateKey && vriendPublicKey) {
-      try {
-        content = await versleutel(tekst, mijnPrivateKey, vriendPublicKey)
-      } catch (e) {
-        alert('Bericht NIET verstuurd: versleutelen mislukt.')
-        return
-      }
-    }
+    const content = await versleutelOfStop(tekst)
+    if (content === null) return
     const { data } = await supabase.from('messages').insert({
       sender_id: huidigeUser.id,
       receiver_id: geselecteerdeVriend.id,
@@ -852,15 +858,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     speelEmotieGeluid(emotieId)
     document.getElementById('stickerGrid').style.display = 'none'
     const tekst = 'sticker:' + emoji + ':' + emotieId
-    let content = tekst
-    if (mijnPrivateKey && vriendPublicKey) {
-      try {
-        content = await versleutel(tekst, mijnPrivateKey, vriendPublicKey)
-      } catch (e) {
-        alert('Bericht NIET verstuurd: versleutelen mislukt.')
-        return
-      }
-    }
+    const content = await versleutelOfStop(tekst)
+    if (content === null) return
     const { data } = await supabase.from('messages').insert({
       sender_id: huidigeUser.id,
       receiver_id: geselecteerdeVriend.id,
@@ -875,15 +874,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (sticker.geluid) speelGeluidById(sticker.geluid)
     document.getElementById('stickerGrid').style.display = 'none'
     const tekst = 'customsticker:' + JSON.stringify({ image: sticker.image, geluid: sticker.geluid })
-    let content = tekst
-    if (mijnPrivateKey && vriendPublicKey) {
-      try {
-        content = await versleutel(tekst, mijnPrivateKey, vriendPublicKey)
-      } catch (e) {
-        alert('Bericht NIET verstuurd: versleutelen mislukt.')
-        return
-      }
-    }
+    const content = await versleutelOfStop(tekst)
+    if (content === null) return
     const { data } = await supabase.from('messages').insert({
       sender_id: huidigeUser.id,
       receiver_id: geselecteerdeVriend.id,
@@ -3408,10 +3400,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
 startMeldingen()
 </script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=64"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=65"; startVriendverzoekLuisteraar()</script>
 
 <script type="module">
-import { stuurRapport } from './rapport.js?v=64'
+import { stuurRapport } from './rapport.js?v=65'
 let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
@@ -3501,6 +3493,6 @@ async function verstuurMelding(reden) {
   alert(ok ? 'Bedankt. Je melding is doorgestuurd.' : 'Melden is niet gelukt. Probeer het later opnieuw.')
 }
 </script>
-<script src="swipe.js?v=64"></script>
+<script src="swipe.js?v=65"></script>
 </body>
 </html>

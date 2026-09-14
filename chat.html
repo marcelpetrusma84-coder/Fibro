@@ -2055,8 +2055,17 @@ console.timeLog('[chat] berichten', 'opgehaald')
         ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = "#ffffff"
         ctx.beginPath(); ctx.arc(tp.x, tp.y, tr, 0, Math.PI*2); ctx.fill(); ctx.restore()
       }
-      ctx.save(); ctx.shadowColor = "#00f0ff"; ctx.shadowBlur = 20; ctx.fillStyle = "#ffffff"
-      ctx.beginPath(); ctx.arc(bal.x, bal.y, BAL_GROOTTE/2, 0, Math.PI*2); ctx.fill(); ctx.restore()
+      // De bal kleurt mee met zijn snelheid: rustig = wit, snel = oranjerood.
+      const balSnelheid = Math.hypot(bal.vx, bal.vy)
+      const heet = Math.max(0, Math.min(1, (balSnelheid - 3.5) / 3.5))
+      const balKleur = heet < 0.5
+        ? 'rgb(255,255,' + Math.round(255 - heet * 2 * 90) + ')'
+        : 'rgb(255,' + Math.round(255 - (heet - 0.5) * 2 * 150) + ',' + Math.round(165 - (heet - 0.5) * 2 * 165) + ')'
+      ctx.save()
+      ctx.shadowColor = heet > 0.35 ? balKleur : "#00f0ff"
+      ctx.shadowBlur = 20 + heet * 18
+      ctx.fillStyle = balKleur
+      ctx.beginPath(); ctx.arc(bal.x, bal.y, BAL_GROOTTE/2 + heet, 0, Math.PI*2); ctx.fill(); ctx.restore()
       // Teken obstakels
       const obs = getLevelObstakels(huidigLevel)
       const bs = 22

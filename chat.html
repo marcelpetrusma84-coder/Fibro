@@ -1896,8 +1896,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
         case 3: return [ // 3 extra hoeken midden
           {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
           {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
-          {type:'hoek',x:0,y:H/2,richting:'lb'},{type:'hoek',x:W,y:H/2,richting:'rb'},
-          {type:'hoek',x:W/2,y:H/2,richting:'lt'}]
+          {type:'hoek',x:0,y:H/3,richting:'lb'},{type:'hoek',x:W,y:H/3,richting:'rb'},
+          {type:'hoek',x:0,y:2*H/3,richting:'lt'},{type:'hoek',x:W,y:2*H/3,richting:'rt'},
+          {type:'ruit',x:W/2,y:H/2,r:20}]
         case 4: return [ // hoek-bumpers + ruit midden
           {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
           {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
@@ -1910,15 +1911,15 @@ console.timeLog('[chat] berichten', 'opgehaald')
         case 6: return [ // zijkant-bumpers + ruit
           {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
           {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
-          {type:'zijkant',x:0,y:H/3,richting:'l'},{type:'zijkant',x:W,y:H/3,richting:'r'},
-          {type:'zijkant',x:0,y:2*H/3,richting:'l'},{type:'zijkant',x:W,y:2*H/3,richting:'r'},
+          {type:'zijkant',x:0,y:60,richting:'l'},{type:'zijkant',x:W,y:60,richting:'r'},
+          {type:'zijkant',x:0,y:H-160,richting:'l'},{type:'zijkant',x:W,y:H-160,richting:'r'},
           {type:'ruit',x:W/2,y:H/2,r:28}]
         case 7: return [ // zijkant-bumpers + 2 verticale staven
           {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
           {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
-          {type:'zijkant',x:0,y:H/3,richting:'l'},{type:'zijkant',x:W,y:H/3,richting:'r'},
-          {type:'zijkant',x:0,y:2*H/3,richting:'l'},{type:'zijkant',x:W,y:2*H/3,richting:'r'},
-          {type:'rect',x:W/2-30,y:H/2-50,b:14,h:60},{type:'rect',x:W/2+16,y:H/2-50,b:14,h:60}]
+          {type:'zijkant',x:0,y:60,richting:'l'},{type:'zijkant',x:W,y:60,richting:'r'},
+          {type:'zijkant',x:0,y:H-160,richting:'l'},{type:'zijkant',x:W,y:H-160,richting:'r'},
+          {type:'rect',x:W/2-30,y:H/2-30,b:14,h:60},{type:'rect',x:W/2+16,y:H/2-30,b:14,h:60}]
         default: return []
       }
     }

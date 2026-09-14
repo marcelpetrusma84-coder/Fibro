@@ -149,16 +149,16 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 </div>
 
 <script type="module">
-import { laadThema } from './thema.js?v=70'
-import { pasBlokstijlToe } from './blokstijl.js?v=70'
-import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=70'
-import { startHeartbeat } from './heartbeat.js?v=70'
-import { initSync } from './sync.js?v=70'
-import { supabase } from './supabase.js?v=70'
-import { eisSessie, startBewaking } from './sessie.js?v=70'
-import { onderzoekVideo } from './videohulp.js?v=70'
-import { startMeldingen } from './meldingen.js?v=70'
-import { haalPrivateKeyOp } from './crypto.js?v=70'
+import { laadThema } from './thema.js?v=71'
+import { pasBlokstijlToe } from './blokstijl.js?v=71'
+import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=71'
+import { startHeartbeat } from './heartbeat.js?v=71'
+import { initSync } from './sync.js?v=71'
+import { supabase } from './supabase.js?v=71'
+import { eisSessie, startBewaking } from './sessie.js?v=71'
+import { onderzoekVideo } from './videohulp.js?v=71'
+import { startMeldingen } from './meldingen.js?v=71'
+import { haalPrivateKeyOp } from './crypto.js?v=71'
 pasBlokstijlToe()
 
 // ── Waarschuw als de private key op dit apparaat ontbreekt ──
@@ -1783,12 +1783,12 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js')
 }
 </script>
-<script src="lame.min.js?v=70"></script>
-<script src="swipe.js?v=70"></script>
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=70"; startBelLuisteraar()</script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=70"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=70"; startSpelUitnodigingLuisteraar()</script>
-<script type="module">import { checkTimers } from "./timer-melding.js?v=70"; setTimeout(checkTimers,4000)</script>
+<script src="lame.min.js?v=71"></script>
+<script src="swipe.js?v=71"></script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=71"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=71"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=71"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { checkTimers } from "./timer-melding.js?v=71"; setTimeout(checkTimers,4000)</script>
 </body>
 </html>
 

@@ -149,16 +149,16 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 </div>
 
 <script type="module">
-import { laadThema } from './thema.js?v=71'
-import { pasBlokstijlToe } from './blokstijl.js?v=71'
-import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=71'
-import { startHeartbeat } from './heartbeat.js?v=71'
-import { initSync } from './sync.js?v=71'
-import { supabase } from './supabase.js?v=71'
-import { eisSessie, startBewaking } from './sessie.js?v=71'
-import { onderzoekVideo } from './videohulp.js?v=71'
-import { startMeldingen } from './meldingen.js?v=71'
-import { haalPrivateKeyOp } from './crypto.js?v=71'
+import { laadThema } from './thema.js?v=72'
+import { pasBlokstijlToe } from './blokstijl.js?v=72'
+import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=72'
+import { startHeartbeat } from './heartbeat.js?v=72'
+import { initSync } from './sync.js?v=72'
+import { supabase } from './supabase.js?v=72'
+import { eisSessie, startBewaking } from './sessie.js?v=72'
+import { onderzoekVideo } from './videohulp.js?v=72'
+import { startMeldingen } from './meldingen.js?v=72'
+import { haalPrivateKeyOp } from './crypto.js?v=72'
 pasBlokstijlToe()
 
 // ── Waarschuw als de private key op dit apparaat ontbreekt ──
@@ -1269,6 +1269,11 @@ function renderPoll(c, uid) {
   const key = 'poll_'+uid
   let poll = null
   try { poll = JSON.parse(localStorage.getItem(key)) } catch(e) {}
+  // Oudere polls hebben nog geen nummer; dat is nodig om stemmen aan te koppelen.
+  if (poll && !poll.id) {
+    poll.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+    try { localStorage.setItem(key, JSON.stringify(poll)) } catch(e) {}
+  }
 
   function toonInvoer() {
     c.innerHTML = `
@@ -1283,7 +1288,7 @@ function renderPoll(c, uid) {
       const v = document.getElementById('pv').value.trim()
       const opts = ['po1','po2','po3'].map(id => document.getElementById(id).value.trim()).filter(Boolean)
       if (!v || opts.length < 2) { alert('Vul een vraag en minstens 2 opties in'); return }
-      const nieuw = { vraag: v, opties: opts.map(t => ({ tekst: t, stemmen: 0 })), gestemd: false }
+      const nieuw = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), vraag: v, opties: opts.map(t => ({ tekst: t, stemmen: 0 })), gestemd: false }
       localStorage.setItem(key, JSON.stringify(nieuw))
       toonPoll(nieuw)
     }
@@ -1783,12 +1788,12 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js')
 }
 </script>
-<script src="lame.min.js?v=71"></script>
-<script src="swipe.js?v=71"></script>
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=71"; startBelLuisteraar()</script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=71"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=71"; startSpelUitnodigingLuisteraar()</script>
-<script type="module">import { checkTimers } from "./timer-melding.js?v=71"; setTimeout(checkTimers,4000)</script>
+<script src="lame.min.js?v=72"></script>
+<script src="swipe.js?v=72"></script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=72"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=72"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=72"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { checkTimers } from "./timer-melding.js?v=72"; setTimeout(checkTimers,4000)</script>
 </body>
 </html>
 

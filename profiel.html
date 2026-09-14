@@ -452,7 +452,7 @@ input, textarea { font-size:16px !important; }
   <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
   <div class="nav-item active"><div class="nav-icon">👤</div>Profiel</div>
 </div>
-<script src="lame.min.js?v=71"></script>
+<script src="lame.min.js?v=72"></script>
 <script type="module">
 function _profielUid() {
   if (window._uid) return window._uid
@@ -469,19 +469,19 @@ function _profielUid() {
   return 'lokaal'
 }
 
-import { supabase } from './supabase.js?v=71'
-import { eisSessie, startBewaking } from './sessie.js?v=71'
-import { startMeldingen } from './meldingen.js?v=71'
-import { laadThema } from './thema.js?v=71'
-import { startHeartbeat } from './heartbeat.js?v=71'
-import { initSync } from './sync.js?v=71'
-import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=71'
+import { supabase } from './supabase.js?v=72'
+import { eisSessie, startBewaking } from './sessie.js?v=72'
+import { startMeldingen } from './meldingen.js?v=72'
+import { laadThema } from './thema.js?v=72'
+import { startHeartbeat } from './heartbeat.js?v=72'
+import { initSync } from './sync.js?v=72'
+import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=72'
 
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
 const stickers={natuur:['🌿','🌸','🌺','🌻','🍀','🌱','🌾','🍃','🌴','🌊','🍂','🌹','🌷','🌼','🍁'],magie:['✨','🔮','🌙','⭐','💫','🌟','🔯','🌠','🌌','🪄','💎','🌈','⚡','🔥','🌀'],kunst:['🎵','🎸','🎨','🎭','🎬','📷','🎪','🎯','🎲','🎹','🥁','🎺','🎻','🖼','✏'],dieren:['🦋','🦊','🐱','🐺','🦄','🐉','🦁','🐻','🦝','🦔','🐧','🦅','🐠','🐬','🦋']}
-import { LETTERTYPES, laadFont } from './lettertypes.js?v=71'
-import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=71'
+import { LETTERTYPES, laadFont } from './lettertypes.js?v=72'
+import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=72'
 window.blokAangepast = function(){
   const s = {
     kleur: document.getElementById("blokKleur").value,
@@ -967,11 +967,11 @@ init()
 
 startMeldingen()
 </script>
-<script src="swipe.js?v=71"></script>
+<script src="swipe.js?v=72"></script>
 
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=71"; startBelLuisteraar()</script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=71"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=71"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=72"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=72"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=72"; startSpelUitnodigingLuisteraar()</script>
 <script>
 /* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */
 setTimeout(function(){

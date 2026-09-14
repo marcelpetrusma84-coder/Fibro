@@ -138,13 +138,13 @@ body.heeft-wallpaper::before { display:block; }
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=71'
-  import { pasBlokstijlToe } from './blokstijl.js?v=71'
-  import { supabase } from './supabase.js?v=71'
-  import { wisVriendData } from './opruimen.js?v=71'
-  import { initSync } from './sync.js?v=71'
-  import { eisSessie, startBewaking } from './sessie.js?v=71'
-  import { startMeldingen } from './meldingen.js?v=71'
+  import { laadThema } from './thema.js?v=72'
+  import { pasBlokstijlToe } from './blokstijl.js?v=72'
+  import { supabase } from './supabase.js?v=72'
+  import { wisVriendData } from './opruimen.js?v=72'
+  import { initSync } from './sync.js?v=72'
+  import { eisSessie, startBewaking } from './sessie.js?v=72'
+  import { startMeldingen } from './meldingen.js?v=72'
   pasBlokstijlToe()
 
   var vriendId = null
@@ -410,7 +410,8 @@ body.heeft-wallpaper::before { display:block; }
 
   const escVW = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
 
-  // Poll van een vriend: alleen kijken, balkjes met percentages, geen namen.
+  // Poll van een vriend. De vraag en de antwoorden komen via P2P; de stemmen
+  // staan op de server. Niemand kan zien wie wat gestemd heeft, ook wij niet.
   async function renderVriendPoll(el, vriendId) {
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_poll')
     if (!ruw) return false
@@ -418,21 +419,59 @@ body.heeft-wallpaper::before { display:block; }
     try { p = JSON.parse(ruw) } catch (e) { return false }
     if (!p || !p.vraag || !Array.isArray(p.opties) || p.opties.length < 2) return false
     await vriendAchtergrond(el, vriendId, 'poll')
-    const tot = p.opties.reduce((s, o) => s + (o.stemmen || 0), 0)
-    const balken = p.opties.map(o => {
-      const pct = tot > 0 ? Math.round((o.stemmen || 0) / tot * 100) : 0
-      return '<div style="position:relative;border-radius:8px;overflow:hidden;border:0.5px solid var(--border)">'
-        + '<div style="position:absolute;top:0;left:0;height:100%;width:' + pct + '%;background:rgba(192,132,252,0.25)"></div>'
-        + '<div style="position:relative;display:flex;justify-content:space-between;padding:8px 10px">'
-        + '<span style="font-size:13px">' + escVW(o.tekst) + '</span>'
-        + '<span style="font-size:12px;color:var(--accent);font-weight:600">' + pct + '%</span>'
-        + '</div></div>'
-    }).join('')
-    el.innerHTML = '<div style="position:relative;z-index:2;padding:10px 8px">'
-      + '<div style="font-size:14px;font-weight:600;margin-bottom:8px">' + escVW(p.vraag) + '</div>'
-      + '<div style="display:flex;flex-direction:column;gap:6px">' + balken + '</div>'
-      + '<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:8px">' + tot + ' stemmen</div>'
-      + '</div>'
+
+    const teken = async () => {
+      let tellers = {}, alGestemd = false, kanStemmen = !!p.id
+      if (p.id) {
+        try {
+          const [t, m] = await Promise.all([
+            supabase.from('poll_tellers').select('optie, aantal').eq('eigenaar_id', vriendId).eq('poll_id', p.id),
+            supabase.from('poll_stemmers').select('poll_id').eq('eigenaar_id', vriendId).eq('poll_id', p.id).eq('stemmer_id', huidigeUser.id)
+          ])
+          for (const r of (t.data || [])) tellers[r.optie] = r.aantal
+          alGestemd = !!(m.data && m.data.length)
+        } catch (e) { console.warn('[poll] tellers ophalen mislukt', e); kanStemmen = false }
+      }
+      const tot = Object.values(tellers).reduce((a, b) => a + b, 0)
+      const toonPct = alGestemd || !kanStemmen
+      const balken = p.opties.map((o, i) => {
+        const n = tellers[i] || 0
+        const pct = tot > 0 ? Math.round(n / tot * 100) : 0
+        return '<div class="vpoll-opt" data-i="' + i + '" style="position:relative;border-radius:8px;overflow:hidden;border:0.5px solid var(--border);cursor:' + (toonPct ? 'default' : 'pointer') + '">'
+          + '<div style="position:absolute;top:0;left:0;height:100%;width:' + (toonPct ? pct : 0) + '%;background:rgba(192,132,252,0.25)"></div>'
+          + '<div style="position:relative;display:flex;justify-content:space-between;padding:8px 10px">'
+          + '<span style="font-size:13px">' + escVW(o.tekst) + '</span>'
+          + '<span style="font-size:12px;color:var(--accent);font-weight:600">' + (toonPct ? pct + '%' : '') + '</span>'
+          + '</div></div>'
+      }).join('')
+      const onder = !kanStemmen ? 'Stemmen kan nog niet op deze poll'
+        : alGestemd ? tot + ' stemmen'
+        : 'Tik op je keuze'
+      el.innerHTML = '<div style="position:relative;z-index:2;padding:10px 8px">'
+        + '<div style="font-size:14px;font-weight:600;margin-bottom:8px">' + escVW(p.vraag) + '</div>'
+        + '<div style="display:flex;flex-direction:column;gap:6px">' + balken + '</div>'
+        + '<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:8px">' + onder + '</div>'
+        + '</div>'
+
+      if (toonPct) return
+      el.querySelectorAll('.vpoll-opt').forEach(knop => {
+        knop.onclick = async () => {
+          el.querySelectorAll('.vpoll-opt').forEach(k => { k.onclick = null })
+          try {
+            const { data, error } = await supabase.rpc('stem_op_poll', {
+              eigenaar_in: vriendId, poll_id_in: p.id,
+              optie_in: parseInt(knop.dataset.i, 10), aantal_opties: p.opties.length
+            })
+            if (error) { alert('Stemmen is niet gelukt. Probeer het later nog eens.'); console.error('[poll]', error) }
+            else if (data === 'geen vriend') alert('Je kunt alleen stemmen op de poll van een vriend.')
+            else if (data && data !== 'ok' && data !== 'al gestemd') alert('Stemmen is niet gelukt: ' + data)
+          } catch (e) { console.error('[poll]', e) }
+          await teken()
+        }
+      })
+    }
+
+    await teken()
     return true
   }
 

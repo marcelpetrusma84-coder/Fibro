@@ -1518,11 +1518,14 @@ console.timeLog('[chat] berichten', 'opgehaald')
     let mijnBeurt = benIkSpeler1
     let gameOver = false
     const mijnKleur = benIkSpeler1 ? 'rood' : 'geel'
+    let beginner = benIkSpeler1  // wisselt elke ronde, zodat het eerlijk blijft
+    let scoreIk = 0, scoreVriend = 0, scoreGelijk = 0
     const KLEUR_HEX = { rood: '#ef4444', geel: '#fbbf24' }
 
     inhoud.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
         <div id="vor-status" style="color:white;font-size:15px;font-weight:600;text-align:center;">Jij speelt <span style="color:${KLEUR_HEX[mijnKleur]}">●</span> ${mijnKleur}${mijnBeurt ? ' — jouw beurt!' : ' — wachten...'}</div>
+        <div id="vor-score" style="color:rgba(255,255,255,0.75);font-size:13px;margin-top:-10px;"></div>
         <div id="vor-bord" style="display:grid;grid-template-columns:repeat(${KOLOMMEN},38px);grid-template-rows:repeat(${RIJEN},38px);gap:4px;background:#1e3a8a;padding:8px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,0.4);"></div>
         <button id="vor-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Opnieuw spelen</button>
       </div>`
@@ -1530,6 +1533,23 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const bordEl = document.getElementById('vor-bord')
     const statusEl = document.getElementById('vor-status')
     const opnieuwBtn = document.getElementById('vor-opnieuw')
+    const scoreEl = document.getElementById('vor-score')
+    try { Bordgeluid.knop(statusEl) } catch (e) {}
+
+    function toonScore() {
+      const naam = (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend'
+      scoreEl.textContent = 'Jij ' + scoreIk + ' \u00b7 ' + naam + ' ' + scoreVriend + ' \u00b7 ' + scoreGelijk + ' gelijk'
+    }
+
+    function nieuweRonde() {
+      bord = Array(RIJEN).fill(null).map(() => Array(KOLOMMEN).fill(null))
+      gameOver = false
+      winLijn = []
+      beginner = !beginner
+      mijnBeurt = beginner
+      opnieuwBtn.style.display = 'none'
+      verwerkBeurt()
+    }
 
     function tekenBord() {
       bordEl.innerHTML = ''
@@ -1589,6 +1609,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       if (rij === -1) return // kolom vol
       bord[rij][kolom] = mijnKleur
       mijnBeurt = false
+      Bordgeluid.geluid('damzet')
       verstuurZet(kolom, rij)
       verwerkBeurt()
     }
@@ -1597,15 +1618,17 @@ console.timeLog('[chat] berichten', 'opgehaald')
       const winnaar = checkWinnaar()
       if (winnaar) {
         gameOver = true
-        if (winnaar === 'gelijk') statusEl.textContent = "🤝 Gelijkspel — bord vol!"
-        else if (winnaar === mijnKleur) statusEl.textContent = "🎉 Jij wint!"
-        else statusEl.textContent = "😢 " + (geselecteerdeVriend.naam || 'Vriend') + " wint!"
+        if (winnaar === 'gelijk') { scoreGelijk++; statusEl.textContent = "🤝 Gelijkspel — bord vol!"; Bordgeluid.geluid('remise') }
+        else if (winnaar === mijnKleur) { scoreIk++; statusEl.textContent = "🎉 Jij wint!"; Bordgeluid.geluid('win') }
+        else { scoreVriend++; statusEl.textContent = "😢 " + (geselecteerdeVriend.naam || 'Vriend') + " wint!"; Bordgeluid.geluid('verlies') }
+        opnieuwBtn.textContent = '\u21bb Volgende ronde'
         opnieuwBtn.style.display = 'block'
       } else {
         statusEl.innerHTML = mijnBeurt
           ? 'Jouw beurt! <span style="color:' + KLEUR_HEX[mijnKleur] + '">●</span>'
           : 'Wachten op ' + (geselecteerdeVriend.naam || 'vriend') + '...'
       }
+      toonScore()
       tekenBord()
     }
 
@@ -1618,31 +1641,21 @@ console.timeLog('[chat] berichten', 'opgehaald')
       if (kleur === mijnKleur) return
       bord[rij][kolom] = kleur
       mijnBeurt = true
+      Bordgeluid.geluid('damzet')
       verwerkBeurt()
     })
 
     spelKanaal.on('broadcast', { event: 'level-update' }, msg => {
       huidigLevel = msg.payload.level
     })
-    spelKanaal.on('broadcast', { event: 'opnieuw' }, () => {
-      bord = Array(RIJEN).fill(null).map(() => Array(KOLOMMEN).fill(null))
-      gameOver = false
-      winLijn = []
-      mijnBeurt = benIkSpeler1
-      opnieuwBtn.style.display = 'none'
-      verwerkBeurt()
-    })
+    spelKanaal.on('broadcast', { event: 'opnieuw' }, () => nieuweRonde())
 
     opnieuwBtn.addEventListener('click', () => {
-      bord = Array(RIJEN).fill(null).map(() => Array(KOLOMMEN).fill(null))
-      gameOver = false
-      winLijn = []
-      mijnBeurt = benIkSpeler1
-      opnieuwBtn.style.display = 'none'
+      nieuweRonde()
       spelKanaal.send({ type: 'broadcast', event: 'opnieuw', payload: {} })
-      verwerkBeurt()
     })
 
+    toonScore()
     tekenBord()
   }
 

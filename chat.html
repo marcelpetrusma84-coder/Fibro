@@ -60,6 +60,10 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .bubble.in { background:rgba(0,0,0,0.55); border:0.5px solid var(--border); border-bottom-left-radius:4px; }
 .bubble.out { background:rgba(139,79,192,0.65); border:0.5px solid rgba(192,132,252,0.4); border-bottom-right-radius:4px; }
 .bubble-content { white-space:pre-wrap; }
+.bubble.emoji-1 .bubble-content { font-size:44px; line-height:1.1; }
+.bubble.emoji-2 .bubble-content { font-size:36px; line-height:1.1; }
+.bubble.emoji-3 .bubble-content { font-size:30px; line-height:1.1; }
+.bubble.emoji-1, .bubble.emoji-2, .bubble.emoji-3 { background:transparent !important; box-shadow:none !important; border:none !important; padding:2px 4px 4px; }
 .bubble-time { float:right; font-size:11px; color:var(--muted); margin:4px 0 0 8px; line-height:1; opacity:0.75; }
 .sys-msg { text-align:center; font-size:15px; color:var(--muted); padding:3px 12px; background:var(--card); border-radius:20px; align-self:center; border:0.5px solid var(--border); }
 .nieuw-knop { position:fixed; bottom:calc(230px + env(safe-area-inset-bottom,0px)); left:50%; transform:translateX(-50%); z-index:11; background:rgba(139,79,192,0.95); color:#fff; border:0.5px solid rgba(192,132,252,0.5); border-radius:20px; padding:6px 14px; font-size:12px; font-family:'DM Sans',sans-serif; cursor:pointer; display:none; box-shadow:0 2px 12px rgba(0,0,0,0.4); }
@@ -760,7 +764,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     } else {
       row.innerHTML = `
         <div class="msg-av-sm">${esc(avatar)}</div>
-        <div class="bubble ${isMijn ? 'out' : 'in'}"><span class="bubble-content">${esc(content)}</span><span class="bubble-time">${tijd} ${isMijn ? '✓✓' : ''}</span></div>`
+        <div class="bubble ${isMijn ? 'out' : 'in'}${emojiNiveau(content) ? ' emoji-' + emojiNiveau(content) : ''}"><span class="bubble-content">${esc(content)}</span><span class="bubble-time">${tijd} ${isMijn ? '✓✓' : ''}</span></div>`
     }
     if (bericht.antwoord_op) {
       const bub = row.querySelector(".bubble")
@@ -824,6 +828,21 @@ console.timeLog('[chat] berichten', 'opgehaald')
     inp.placeholder = kan ? 'Stuur een bericht...' : reden
   }
   window.werkVerzendknopBij = werkVerzendknopBij
+
+  // Bericht dat alleen uit emoji's bestaat (maximaal 3) wordt groter getoond.
+  // Geeft 1, 2 of 3 terug (hoe minder emoji's, hoe groter), of 0 voor gewone tekst.
+  function emojiNiveau(tekst) {
+    try {
+      const t = String(tekst || '').trim()
+      if (!t || t.length > 40) return 0
+      if (/[\p{L}\p{N}]/u.test(t)) return 0
+      const zonder = t.replace(/\s+/g, '')
+      if (!/[\p{Extended_Pictographic}\p{Regional_Indicator}]/u.test(zonder)) return 0
+      const stuks = [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(zonder)].length
+      if (stuks === 0 || stuks > 3) return 0
+      return stuks
+    } catch (e) { return 0 }
+  }
 
   window.sendMsg = async function() {
     if (!geselecteerdeVriend) return

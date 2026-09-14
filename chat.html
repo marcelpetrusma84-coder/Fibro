@@ -1906,19 +1906,19 @@ console.timeLog('[chat] berichten', 'opgehaald')
         case 5: return [ // hoek + zijkant + 2 ruiten
           {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
           {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
-          {type:'zijkant',x:0,y:H/2-50,richting:'l'},{type:'zijkant',x:W,y:H/2-50,richting:'r'},
+          {type:'zijkant',x:0,y:H/2-25,richting:'l'},{type:'zijkant',x:W,y:H/2-25,richting:'r'},
           {type:'ruit',x:W/2,y:H/3,r:22},{type:'ruit',x:W/2,y:2*H/3,r:22}]
         case 6: return [ // zijkant-bumpers + ruit
           {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
           {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
           {type:'zijkant',x:0,y:60,richting:'l'},{type:'zijkant',x:W,y:60,richting:'r'},
-          {type:'zijkant',x:0,y:H-160,richting:'l'},{type:'zijkant',x:W,y:H-160,richting:'r'},
+          {type:'zijkant',x:0,y:H-110,richting:'l'},{type:'zijkant',x:W,y:H-110,richting:'r'},
           {type:'ruit',x:W/2,y:H/2,r:28}]
         case 7: return [ // zijkant-bumpers + 2 verticale staven
           {type:'hoek',x:0,y:0,richting:'lt'},{type:'hoek',x:W,y:0,richting:'rt'},
           {type:'hoek',x:0,y:H,richting:'lb'},{type:'hoek',x:W,y:H,richting:'rb'},
           {type:'zijkant',x:0,y:60,richting:'l'},{type:'zijkant',x:W,y:60,richting:'r'},
-          {type:'zijkant',x:0,y:H-160,richting:'l'},{type:'zijkant',x:W,y:H-160,richting:'r'},
+          {type:'zijkant',x:0,y:H-110,richting:'l'},{type:'zijkant',x:W,y:H-110,richting:'r'},
           {type:'rect',x:W/2-30,y:H/2-30,b:14,h:60},{type:'rect',x:W/2+16,y:H/2-30,b:14,h:60}]
         default: return []
       }

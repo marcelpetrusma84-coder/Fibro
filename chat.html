@@ -1885,6 +1885,65 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
     // Obstakels per level (gebaseerd op jouw tekeningen)
     // type: rect={x,y,b,h}, bumper={x,y,r} (driehoek-hoek), zijkant={x,y,b,h}
+    // ── Botsingen: werk met de ECHTE vorm, niet met een vierkant eromheen ──
+    // Elke vorm is een veelhoek. De bal weerkaatst netjes tegen het vlak dat
+    // hij raakt, in plaats van simpelweg om te keren.
+    function vormPunten(o) {
+      const bs = 22
+      if (o.type === 'hoek') {
+        if (o.richting === 'lt') return [[o.x,o.y],[o.x+bs,o.y],[o.x,o.y+bs]]
+        if (o.richting === 'rt') return [[o.x,o.y],[o.x-bs,o.y],[o.x,o.y+bs]]
+        if (o.richting === 'lb') return [[o.x,o.y],[o.x+bs,o.y],[o.x,o.y-bs]]
+        return [[o.x,o.y],[o.x-bs,o.y],[o.x,o.y-bs]]
+      }
+      if (o.type === 'zijkant') {
+        if (o.richting === 'l') return [[o.x,o.y],[o.x+bs,o.y+25],[o.x,o.y+50]]
+        return [[o.x,o.y],[o.x-bs,o.y+25],[o.x,o.y+50]]
+      }
+      if (o.type === 'ruit') return [[o.x,o.y-o.r],[o.x+o.r,o.y],[o.x,o.y+o.r],[o.x-o.r,o.y]]
+      if (o.type === 'rect') return [[o.x,o.y],[o.x+o.b,o.y],[o.x+o.b,o.y+o.h],[o.x,o.y+o.h]]
+      return []
+    }
+
+    function inVorm(px, py, pts) {
+      let binnen = false
+      for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+        const xi = pts[i][0], yi = pts[i][1], xj = pts[j][0], yj = pts[j][1]
+        if ((yi > py) !== (yj > py) && px < (xj - xi) * (py - yi) / (yj - yi) + xi) binnen = !binnen
+      }
+      return binnen
+    }
+
+    function botsVorm(o) {
+      const pts = vormPunten(o)
+      if (pts.length < 3) return false
+      const straal = BAL_GROOTTE / 2
+      let besteD = Infinity, bdx = 0, bdy = 0
+      for (let i = 0; i < pts.length; i++) {
+        const a = pts[i], b = pts[(i + 1) % pts.length]
+        const vx = b[0] - a[0], vy = b[1] - a[1]
+        const l2 = vx * vx + vy * vy
+        let t = l2 ? ((bal.x - a[0]) * vx + (bal.y - a[1]) * vy) / l2 : 0
+        t = Math.max(0, Math.min(1, t))
+        const dx = bal.x - (a[0] + t * vx), dy = bal.y - (a[1] + t * vy)
+        const d = Math.hypot(dx, dy)
+        if (d < besteD) { besteD = d; bdx = dx; bdy = dy }
+      }
+      const binnen = inVorm(bal.x, bal.y, pts)
+      if (!binnen && besteD > straal) return false
+      let nx, ny
+      if (besteD > 0.0001) { nx = bdx / besteD; ny = bdy / besteD } else { nx = 0; ny = -1 }
+      if (binnen) { nx = -nx; ny = -ny }
+      const dot = bal.vx * nx + bal.vy * ny
+      if (dot > 0) return false
+      bal.vx -= 2 * dot * nx
+      bal.vy -= 2 * dot * ny
+      const diep = (binnen ? straal + besteD : straal - besteD) + 0.5
+      bal.x += nx * diep
+      bal.y += ny * diep
+      return true
+    }
+
     function getLevelObstakels(level) {
       const W = BREEDTE, H = HOOGTE
       const bs = 22 // bumper size
@@ -2135,47 +2194,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
       }
 
       // Obstakels botsen
-      const obs2 = getLevelObstakels(huidigLevel)
-      obs2.forEach(o => {
-        if (o.type === "rect") {
-          if (bal.x+BAL_GROOTTE/2 > o.x && bal.x-BAL_GROOTTE/2 < o.x+o.b &&
-              bal.y+BAL_GROOTTE/2 > o.y && bal.y-BAL_GROOTTE/2 < o.y+o.h) {
-            const overlapL = (bal.x+BAL_GROOTTE/2) - o.x
-            const overlapR = (o.x+o.b) - (bal.x-BAL_GROOTTE/2)
-            const overlapT = (bal.y+BAL_GROOTTE/2) - o.y
-            const overlapB = (o.y+o.h) - (bal.y-BAL_GROOTTE/2)
-            const minOverlap = Math.min(overlapL, overlapR, overlapT, overlapB)
-            if (minOverlap === overlapL) { bal.vx = -Math.abs(bal.vx); bal.x = o.x - BAL_GROOTTE/2 - 1 }
-            else if (minOverlap === overlapR) { bal.vx = Math.abs(bal.vx); bal.x = o.x+o.b + BAL_GROOTTE/2 + 1 }
-            else if (minOverlap === overlapT) { bal.vy = -Math.abs(bal.vy); bal.y = o.y - BAL_GROOTTE/2 - 1 }
-            else { bal.vy = Math.abs(bal.vy); bal.y = o.y+o.h + BAL_GROOTTE/2 + 1 }
-            geluidTik()
-          }
-        } else if (o.type === "ruit") {
-          const dist = Math.abs(bal.x-o.x) + Math.abs(bal.y-o.y)
-          if (dist < o.r + BAL_GROOTTE/2) {
-            if (Math.abs(bal.x-o.x) > Math.abs(bal.y-o.y)) {
-              bal.vx *= -1
-              bal.x += bal.vx * 3
-            } else {
-              bal.vy *= -1
-              bal.y += bal.vy * 3
-            }
-            geluidTik()
-          }
-        } else if (o.type === "hoek" || o.type === "zijkant") {
-          const bs2 = 22
-          let inBox = false
-          if (o.type === "hoek") inBox = bal.x > o.x-bs2 && bal.x < o.x+bs2 && bal.y > o.y-bs2 && bal.y < o.y+bs2
-          else inBox = o.richting==="l" ? bal.x < bs2 && bal.y > o.y && bal.y < o.y+50 : bal.x > BREEDTE-bs2 && bal.y > o.y && bal.y < o.y+50
-          if (inBox) {
-            bal.vx = -bal.vx; bal.vy = -bal.vy
-            bal.x += bal.vx * 4
-            bal.y += bal.vy * 4
-            geluidTik()
-          }
-        }
-      })
+      getLevelObstakels(huidigLevel).forEach(o => { if (botsVorm(o)) geluidTik() })
+
       // Snelheid begrenzen
       const maxSnelheid = 7
       bal.vx = Math.max(-maxSnelheid, Math.min(maxSnelheid, bal.vx))

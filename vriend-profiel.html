@@ -821,13 +821,9 @@ async function renderVriendMuziek(el) {
   }
 
   window.naarChat = function() {
-    if (vriendData) {
-      const naam = encodeURIComponent(vriendNaam(vriendData.username))
-      const avatar = encodeURIComponent(vriendData.avatar_url || '👤')
-      window.location.href = `chat.html?id=${vriendId}&naam=${naam}&avatar=${avatar}`
-    } else {
-      window.location.href = 'chat.html'
-    }
+    // chat.html opent het gesprek zelf op basis van ?vriend=<id>; naam en avatar
+    // haalt hij uit de vriendenlijst, dus die hoeven niet in de link.
+    window.location.href = vriendId ? 'chat.html?vriend=' + encodeURIComponent(vriendId) : 'chat.html'
   }
 
   function tijdGeleden(datum) {

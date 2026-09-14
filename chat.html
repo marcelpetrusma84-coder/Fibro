@@ -250,7 +250,7 @@ window.veiligeUrl = function(v){
     <input type="file" id="fotoFileInput" accept="image/*" style="display:none" onchange="fotoGekozen(this)">
     <div class="input-area">
       <input class="msg-input" id="msgInput" maxlength="2000" placeholder="Stuur een bericht..." onkeydown="if(event.key==='Enter')sendMsg()">
-      <button class="send-btn" onclick="sendMsg()">➤</button>
+      <button class="send-btn" id="sendBtn" onclick="sendMsg()">➤</button>
     </div>
   </div>
 </div>
@@ -346,22 +346,22 @@ window.veiligeUrl = function(v){
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=67'
-  import { pasBlokstijlToe } from './blokstijl.js?v=67'
-  import { laadWallpaper } from './wallpaper.js?v=67'
-  import { supabase } from './supabase.js?v=67'
-  import { initSync } from './sync.js?v=67'
-  import { startMeldingen } from './meldingen.js?v=67'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=67'
-  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=67'
-  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=67'
-  import { stuurRapport } from './rapport.js?v=67'
-  import * as Schaak from './schaak.js?v=67'
-  import * as Dammen from './dammen.js?v=67'
-  import * as Bordgeluid from './bordgeluid.js?v=67'
-  import * as DammenUI from './dammen-ui.js?v=67'
-  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=67'
-  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=67'
+  import { laadThema } from './thema.js?v=68'
+  import { pasBlokstijlToe } from './blokstijl.js?v=68'
+  import { laadWallpaper } from './wallpaper.js?v=68'
+  import { supabase } from './supabase.js?v=68'
+  import { initSync } from './sync.js?v=68'
+  import { startMeldingen } from './meldingen.js?v=68'
+  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=68'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=68'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=68'
+  import { stuurRapport } from './rapport.js?v=68'
+  import * as Schaak from './schaak.js?v=68'
+  import * as Dammen from './dammen.js?v=68'
+  import * as Bordgeluid from './bordgeluid.js?v=68'
+  import * as DammenUI from './dammen-ui.js?v=68'
+  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=68'
+  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=68'
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -454,6 +454,7 @@ window.veiligeUrl = function(v){
     window.huidigeUser = huidigeUser
     initSync(huidigeUser.id)
     mijnPrivateKey = haalPrivateKeyOp(huidigeUser.id)
+    werkVerzendknopBij()
     initReacties({ supabase, versleutel, ontsleutel, mijnId: () => huidigeUser.id, geefSleutels: () => ({ mijn: mijnPrivateKey, vriend: vriendPublicKey }), herteken: () => tekenReacties(document.getElementById('messages')) })
     startLangIndrukken(document.getElementById('messages'))
     const { data } = await supabase
@@ -611,6 +612,7 @@ window.veiligeUrl = function(v){
     geselecteerdeVriend = { id: vriendId, naam: vriendNaam, avatar: vriendAvatar }
     window.geselecteerdeVriend = geselecteerdeVriend
     vriendPublicKey = vriendPubKey || null
+    werkVerzendknopBij()
 
     document.getElementById('chatAv').textContent = vriendAvatar
     document.getElementById('chatNaam').textContent = vriendNaam
@@ -804,6 +806,24 @@ console.timeLog('[chat] berichten', 'opgehaald')
       return null
     }
   }
+
+  // Versturen kan alleen als er versleuteld kan worden. Zolang dat niet kan,
+  // staat de knop uit en legt het invoerveld uit waarom.
+  function werkVerzendknopBij() {
+    const inp = document.getElementById('msgInput')
+    const knop = document.getElementById('sendBtn')
+    if (!inp || !knop) return
+    let reden = ''
+    if (!mijnPrivateKey) reden = 'Geen sleutel op dit apparaat'
+    else if (!geselecteerdeVriend) reden = 'Kies eerst een vriend'
+    else if (!vriendPublicKey || vriendPublicKey.length <= 10) reden = 'Sleutels laden...'
+    const kan = reden === ''
+    inp.disabled = !kan
+    knop.disabled = !kan
+    knop.style.opacity = kan ? '' : '0.4'
+    inp.placeholder = kan ? 'Stuur een bericht...' : reden
+  }
+  window.werkVerzendknopBij = werkVerzendknopBij
 
   window.sendMsg = async function() {
     if (!geselecteerdeVriend) return
@@ -1076,6 +1096,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       geselecteerdeVriend = null
       window.geselecteerdeVriend = null
       vriendPublicKey = null
+      werkVerzendknopBij()
       document.getElementById('chatScherm').style.display = 'none'
       document.getElementById('vriendenSelectie').style.display = 'block'
       document.getElementById('chatNaam').textContent = 'Selecteer een vriend'
@@ -3400,10 +3421,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
 startMeldingen()
 </script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=67"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=68"; startVriendverzoekLuisteraar()</script>
 
 <script type="module">
-import { stuurRapport } from './rapport.js?v=67'
+import { stuurRapport } from './rapport.js?v=68'
 let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
@@ -3493,6 +3514,6 @@ async function verstuurMelding(reden) {
   alert(ok ? 'Bedankt. Je melding is doorgestuurd.' : 'Melden is niet gelukt. Probeer het later opnieuw.')
 }
 </script>
-<script src="swipe.js?v=67"></script>
+<script src="swipe.js?v=68"></script>
 </body>
 </html>

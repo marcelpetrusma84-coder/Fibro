@@ -346,22 +346,22 @@ window.veiligeUrl = function(v){
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=69'
-  import { pasBlokstijlToe } from './blokstijl.js?v=69'
-  import { laadWallpaper } from './wallpaper.js?v=69'
-  import { supabase } from './supabase.js?v=69'
-  import { initSync } from './sync.js?v=69'
-  import { startMeldingen } from './meldingen.js?v=69'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=69'
-  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=69'
-  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=69'
-  import { stuurRapport } from './rapport.js?v=69'
-  import * as Schaak from './schaak.js?v=69'
-  import * as Dammen from './dammen.js?v=69'
-  import * as Bordgeluid from './bordgeluid.js?v=69'
-  import * as DammenUI from './dammen-ui.js?v=69'
-  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=69'
-  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=69'
+  import { laadThema } from './thema.js?v=70'
+  import { pasBlokstijlToe } from './blokstijl.js?v=70'
+  import { laadWallpaper } from './wallpaper.js?v=70'
+  import { supabase } from './supabase.js?v=70'
+  import { initSync } from './sync.js?v=70'
+  import { startMeldingen } from './meldingen.js?v=70'
+  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=70'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=70'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=70'
+  import { stuurRapport } from './rapport.js?v=70'
+  import * as Schaak from './schaak.js?v=70'
+  import * as Dammen from './dammen.js?v=70'
+  import * as Bordgeluid from './bordgeluid.js?v=70'
+  import * as DammenUI from './dammen-ui.js?v=70'
+  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=70'
+  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=70'
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -3421,10 +3421,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
 startMeldingen()
 </script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=69"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=70"; startVriendverzoekLuisteraar()</script>
 
 <script type="module">
-import { stuurRapport } from './rapport.js?v=69'
+import { stuurRapport } from './rapport.js?v=70'
 let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
@@ -3514,6 +3514,6 @@ async function verstuurMelding(reden) {
   alert(ok ? 'Bedankt. Je melding is doorgestuurd.' : 'Melden is niet gelukt. Probeer het later opnieuw.')
 }
 </script>
-<script src="swipe.js?v=69"></script>
+<script src="swipe.js?v=70"></script>
 </body>
 </html>

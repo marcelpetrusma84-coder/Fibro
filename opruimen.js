@@ -18,7 +18,9 @@ function openFibroDB() {
 export async function wisVriendData(vriendId, mijnId) {
     const resultaat = { items: 0, kb: 0, sleutels: 0 }
     if (!vriendId) return resultaat
-        const prefix = 'vriend_' + vriendId + '_'
+        // Let op: de meeste items heten 'vriend_<id>_...', maar de wallpaper heet
+  // 'vriend_wallpaper_<id>'. Daarom zoeken we op het id ergens in de naam.
+  const hoortErbij = (naam) => naam.startsWith('vriend_') && naam.includes(vriendId)
 
         try {
             const db = await openFibroDB()
@@ -30,7 +32,7 @@ export async function wisVriendData(vriendId, mijnId) {
                     const c = e.target.result
                     if (!c) return
                         const id = String(c.value && c.value.id || c.key || '')
-                        if (id.startsWith(prefix)) {
+                        if (hoortErbij(id)) {
                             resultaat.items++
                             resultaat.kb += Math.round(String(c.value && c.value.data || '').length / 1024)
                             c.delete()

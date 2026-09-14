@@ -1,4 +1,4 @@
-import { supabase } from './supabase.js?v=69'
+import { supabase } from './supabase.js?v=70'
 
 let heartbeatInterval = null
 let heartbeatUserId = null

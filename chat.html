@@ -1879,6 +1879,18 @@ console.timeLog('[chat] berichten', 'opgehaald')
     let mijnPaddleX = BREEDTE / 2 - PADDLE_BREEDTE / 2
     let vriendPaddleX = BREEDTE / 2 - PADDLE_BREEDTE / 2
     // Voor 'effect': hoe hard bewoog de paddle op het moment van raken?
+    // Vonkjes en een klein schokje bij een botsing (alleen visueel)
+    let vonken = []
+    let schok = 0
+    function maakVonken(x, y, nx, ny, kracht) {
+      schok = Math.min(6, 2 + kracht * 0.6)
+      for (let i = 0; i < 7; i++) {
+        const hoek = Math.atan2(ny, nx) + (Math.random() - 0.5) * 1.6
+        const snel = 0.8 + Math.random() * 2.2
+        vonken.push({ x: x, y: y, vx: Math.cos(hoek) * snel, vy: Math.sin(hoek) * snel, leven: 1 })
+      }
+      if (vonken.length > 60) vonken = vonken.slice(-60)
+    }
     let vorigMijnPaddleX = mijnPaddleX, vorigVriendPaddleX = vriendPaddleX
     let mijnPaddleV = 0, vriendPaddleV = 0
     // Geeft de bal een zetje mee in de richting waarin de paddle beweegt.
@@ -1925,6 +1937,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       return binnen
     }
 
+    let laatsteNx = 0, laatsteNy = -1
     function botsVorm(o) {
       const pts = vormPunten(o)
       if (pts.length < 3) return false
@@ -1952,6 +1965,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       const diep = (binnen ? straal + besteD : straal - besteD) + 0.5
       bal.x += nx * diep
       bal.y += ny * diep
+      laatsteNx = nx; laatsteNy = ny
       return true
     }
 
@@ -2044,6 +2058,11 @@ console.timeLog('[chat] berichten', 'opgehaald')
     function tekenScherm() {
       ctx.fillStyle = "#050510"
       ctx.fillRect(0, 0, BREEDTE, HOOGTE)
+      ctx.save()
+      if (schok > 0.2) {
+        ctx.translate((Math.random() - 0.5) * schok, (Math.random() - 0.5) * schok)
+        schok *= 0.82
+      } else schok = 0
       ctx.strokeStyle = "rgba(255,255,255,0.03)"
       ctx.lineWidth = 1
       for (let gx = 0; gx < BREEDTE; gx += 20) { ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,HOOGTE); ctx.stroke() }
@@ -2101,6 +2120,17 @@ console.timeLog('[chat] berichten', 'opgehaald')
         }
         ctx.restore()
       })
+      // Vonkjes
+      for (let i = vonken.length - 1; i >= 0; i--) {
+        const v = vonken[i]
+        v.x += v.vx; v.y += v.vy; v.vx *= 0.92; v.vy *= 0.92; v.leven -= 0.06
+        if (v.leven <= 0) { vonken.splice(i, 1); continue }
+        ctx.save(); ctx.globalAlpha = v.leven
+        ctx.fillStyle = "#ff00cc"; ctx.shadowColor = "#ff00cc"; ctx.shadowBlur = 8
+        ctx.beginPath(); ctx.arc(v.x, v.y, 1.6 * v.leven + 0.4, 0, Math.PI * 2); ctx.fill(); ctx.restore()
+      }
+      ctx.restore()
+
       // Level indicator
       ctx.save(); ctx.fillStyle = "rgba(255,0,204,0.4)"; ctx.font = "bold 11px monospace"
       ctx.textAlign = "right"; ctx.textBaseline = "top"
@@ -2221,7 +2251,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       }
 
       // Obstakels botsen
-      getLevelObstakels(huidigLevel).forEach(o => { if (botsVorm(o)) geluidTik() })
+      getLevelObstakels(huidigLevel).forEach(o => { if (botsVorm(o)) { geluidTik(); maakVonken(bal.x, bal.y, laatsteNx, laatsteNy, Math.hypot(bal.vx, bal.vy)) } })
 
       // Snelheid begrenzen
       const maxSnelheid = 7

@@ -108,6 +108,11 @@ export function kiesDamGeluid(Dammen, staat, keten, mijnKleur) {
                 return 'damzet'
 }
 
+// Los geluidje afspelen, voor spellen zonder eigen regels-logica.
+export function geluid(naam) {
+  try { speel(naam) } catch (e) {}
+}
+
 export function schaak(Schaak, staat, zet, mijnKleur) {
     try { speel(kiesSchaakGeluid(Schaak, staat, zet, mijnKleur)) } catch (e) {}
 }

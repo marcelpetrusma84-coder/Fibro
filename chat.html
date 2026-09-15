@@ -1239,6 +1239,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       speelMee(spelType, sessieId, vanId)
     }
 
+    laadSpelAlvast(spelType)
     popup.style.display = 'block'
 
     // Countdown animatie
@@ -1264,9 +1265,25 @@ console.timeLog('[chat] berichten', 'opgehaald')
     return 'spel_' + ids[0] + '_' + ids[1] + '_' + sessieId
   }
 
+  // ── Spelbestand alvast ophalen ──
+  // Spellen in een eigen bestand worden pas opgehaald als je ze start. Door dat
+  // te doen zodra een spel gekozen is, staat het klaar tegen de tijd dat de
+  // ander accepteert. Spellen die nog in chat.html zitten hoeven niets.
+  const SPEL_BESTAND = {
+    botkaaseiren: './bke-ui.js?v=74',
+    dammen: './dammen-ui.js?v=74'
+  }
+  const _alGeladen = {}
+  function laadSpelAlvast(spelType) {
+    const bestand = SPEL_BESTAND[spelType]
+    if (!bestand || _alGeladen[spelType]) return
+    _alGeladen[spelType] = import(bestand).catch(e => { delete _alGeladen[spelType]; console.warn('[spel] vooraf laden mislukt', e) })
+  }
+
   // Klik in spelmenu → stuur uitnodiging via globaal kanaal naar vriend
   window.startSpel = async function(spelType) {
     if (!geselecteerdeVriend) { alert('Open eerst een chat'); return }
+    laadSpelAlvast(spelType)
     document.getElementById('spelMenuGrid').style.display = 'none'
 
     const info = SPEL_INFO[spelType] || { icon: '🎮', naam: spelType }

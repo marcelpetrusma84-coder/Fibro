@@ -1878,6 +1878,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
     // Mijn paddle staat altijd ONDERAAN op mijn scherm (eigen perspectief), tegenstander BOVEN
     let mijnPaddleX = BREEDTE / 2 - PADDLE_BREEDTE / 2
     let vriendPaddleX = BREEDTE / 2 - PADDLE_BREEDTE / 2
+    // De paddle van de ander komt via het netwerk binnen, en die berichten komen
+    // niet even vaak als we tekenen. Daarom loopt de getekende paddle vloeiend
+    // naar de laatst ontvangen positie toe. De fysica gebruikt de echte positie.
+    let vriendPaddleTekenX = vriendPaddleX
     // Voor 'effect': hoe hard bewoog de paddle op het moment van raken?
     // Vonkjes en een klein schokje bij een botsing (alleen visueel)
     let vonken = []
@@ -2076,7 +2080,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
       ctx.beginPath(); ctx.moveTo(0, HOOGTE/2); ctx.lineTo(BREEDTE, HOOGTE/2); ctx.stroke()
       ctx.setLineDash([])
       ctx.save(); ctx.shadowColor = "#00f0ff"; ctx.shadowBlur = 16; ctx.fillStyle = "#00f0ff"
-      ctx.fillRect(vriendPaddleX, PADDLE_Y_BOVEN, PADDLE_BREEDTE, PADDLE_HOOGTE); ctx.restore()
+      const verschil = vriendPaddleX - vriendPaddleTekenX
+      // Klein verschil: soepel bijtrekken. Groot verschil (na een pauze): meteen goed zetten.
+      vriendPaddleTekenX += Math.abs(verschil) > 60 ? verschil : verschil * 0.25
+      ctx.fillRect(vriendPaddleTekenX, PADDLE_Y_BOVEN, PADDLE_BREEDTE, PADDLE_HOOGTE); ctx.restore()
       ctx.save(); ctx.shadowColor = "#00f0ff"; ctx.shadowBlur = 16; ctx.fillStyle = "#00f0ff"
       ctx.fillRect(mijnPaddleX, PADDLE_Y_ONDER, PADDLE_BREEDTE, PADDLE_HOOGTE); ctx.restore()
       if (!window._pongTrail) window._pongTrail = []

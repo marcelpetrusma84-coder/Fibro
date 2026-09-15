@@ -1348,7 +1348,18 @@ console.timeLog('[chat] berichten', 'opgehaald')
     spelKanaal.on('broadcast', { event: 'spelchat' }, (msg) => {
       if (msg.payload && msg.payload.tekst) toonSpelChat(msg.payload.tekst, false)
     })
+
+    spelKanaal.on('broadcast', { event: 'verlaten' }, () => {
+      stopSpelHartslag()
+      toonSpelMelding(((geselecteerdeVriend && geselecteerdeVriend.naam) || 'Je vriend') + ' heeft het spel verlaten.')
+    })
+
+    spelKanaal.on('broadcast', { event: 'ping' }, () => {
+      laatstePing = Date.now()
+      pingOntvangen = true
+    })
     spelKanaal.subscribe()
+    startSpelHartslag()
     bouwSpelChatUI()
 
     // Start spel-audiobel automatisch
@@ -1404,7 +1415,55 @@ console.timeLog('[chat] berichten', 'opgehaald')
     overlay.appendChild(wrap)
   }
 
-  window.sluitSpel = function() {
+  // ── Tegenstander weg? ──
+  // Netjes stoppen stuurt een bericht. Wegvallen merken we aan het uitblijven
+  // van de hartslag die beide kanten elke 3 seconden sturen.
+  let spelPingTimer = null, spelWachtTimer = null, laatstePing = 0, pingOntvangen = false
+
+  function toonSpelMelding(tekst) {
+    const inhoud = document.getElementById('spelInhoud')
+    if (!inhoud) return
+    const box = document.createElement('div')
+    box.style.cssText = 'position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(5,5,16,0.88);text-align:center;padding:20px;'
+    box.innerHTML = '<div style="font-size:15px;color:#fff;font-weight:600;line-height:1.4">' + tekst + '</div>'
+    const knop = document.createElement('button')
+    knop.textContent = 'Sluiten'
+    knop.style.cssText = 'background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 24px;color:#1a0a2e;font-weight:600;cursor:pointer;'
+    knop.onclick = () => sluitSpel(true)
+    box.appendChild(knop)
+    if (getComputedStyle(inhoud).position === 'static') inhoud.style.position = 'relative'
+    inhoud.appendChild(box)
+  }
+
+  function startSpelHartslag() {
+    stopSpelHartslag()
+    laatstePing = Date.now()
+    pingOntvangen = false
+    spelPingTimer = setInterval(() => {
+      if (spelKanaal) { try { spelKanaal.send({ type: 'broadcast', event: 'ping', payload: {} }) } catch (e) {} }
+    }, 3000)
+    spelWachtTimer = setInterval(() => {
+      // Pas waarschuwen als we ooit een hartslag hebben gehad; anders speelt de
+      // ander misschien op een oudere versie die nog geen hartslag stuurt.
+      if (!pingOntvangen || !spelActief) return
+      if (Date.now() - laatstePing > 10000) {
+        stopSpelHartslag()
+        toonSpelMelding('De verbinding met ' + ((geselecteerdeVriend && geselecteerdeVriend.naam) || 'je vriend') + ' is weggevallen.<br>Het spel is gestopt.')
+      }
+    }, 2000)
+  }
+
+  function stopSpelHartslag() {
+    clearInterval(spelPingTimer); spelPingTimer = null
+    clearInterval(spelWachtTimer); spelWachtTimer = null
+  }
+
+  window.sluitSpel = function(stil) {
+    // stil = true: niet melden aan de ander (die is zelf al gestopt)
+    if (!stil && spelKanaal && spelActief) {
+      try { spelKanaal.send({ type: 'broadcast', event: 'verlaten', payload: {} }) } catch (e) {}
+    }
+    stopSpelHartslag()
     document.getElementById('spelOverlay').classList.remove('open')
     document.getElementById('spelInhoud').innerHTML = ''
     var scw = document.getElementById('spelChatWrap'); if (scw) scw.remove()

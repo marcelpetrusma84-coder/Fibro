@@ -2030,10 +2030,12 @@ console.timeLog('[chat] berichten', 'opgehaald')
       } catch(e) {}
     }
     let geluidBuffer = []
-    const geluidStuiter = () => { piep(440, 0.06, 0.12); geluidBuffer.push('stuiter') }
+    // Hoe sneller de bal, hoe hoger de toon
+    const toonhoogte = (basis) => basis * (1 + Math.max(0, Math.min(1, (Math.hypot(bal.vx, bal.vy) - 3.5) / 3.5)) * 0.5)
+    const geluidStuiter = () => { piep(toonhoogte(440), 0.06, 0.12); geluidBuffer.push('stuiter') }
     const geluidScore = () => { piep(220, 0.25, 0.18); geluidBuffer.push('score') }
     const geluidWin = () => { piep(523,0.12,0.2); setTimeout(()=>piep(659,0.12,0.2),120); setTimeout(()=>piep(784,0.2,0.2),240) }
-    const geluidTik = () => { piep(660, 0.08, 0.15); geluidBuffer.push('tik') }
+    const geluidTik = () => { piep(toonhoogte(660), 0.08, 0.15); geluidBuffer.push('tik') }
     function speelGeluid(soort) {
       if (soort === 'stuiter') piep(440, 0.06, 0.12)
       else if (soort === 'score') piep(220, 0.25, 0.18)
@@ -2043,6 +2045,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     inhoud.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
         <div id="pong-status" style="color:#00f0ff;font-size:14px;font-weight:700;letter-spacing:1px;text-shadow:0 0 8px #00f0ff;">Jij: <span id="pong-mijn-score">0</span> — <span id="pong-naam">${(geselecteerdeVriend?.naam || 'Vriend')}</span>: <span id="pong-vriend-score">0</span></div>
+        <div id="pong-match" style="font-size:12px;font-weight:700;letter-spacing:1px;min-height:15px;"></div>
         <canvas id="pong-canvas" width="${BREEDTE}" height="${HOOGTE}" style="background:#050510;border:2px solid #ff00cc;border-radius:8px;touch-action:none;box-shadow:0 0 30px rgba(255,0,204,0.5),0 0 60px rgba(255,0,204,0.2),inset 0 0 30px rgba(0,0,0,0.8);"></canvas>
         <div style="font-size:11px;color:rgba(255,255,255,0.6);">Sleep om je paddle te bewegen</div>
         <button id="pong-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Opnieuw spelen</button>
@@ -2053,6 +2056,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const statusEl = document.getElementById('pong-status')
     const mijnScoreEl = document.getElementById('pong-mijn-score')
     const vriendScoreEl = document.getElementById('pong-vriend-score')
+    const matchEl = document.getElementById('pong-match')
     const opnieuwBtn = document.getElementById('pong-opnieuw')
 
     function tekenScherm() {
@@ -2312,6 +2316,14 @@ console.timeLog('[chat] berichten', 'opgehaald')
     function updateScoreUI() {
       mijnScoreEl.textContent = mijnScore
       vriendScoreEl.textContent = vriendScore
+      // Matchpoint: laat zien wanneer iemand op winst staat
+      if (!gameOver && (mijnScore === WIN_SCORE - 1 || vriendScore === WIN_SCORE - 1)) {
+        const wie = mijnScore === WIN_SCORE - 1 && vriendScore === WIN_SCORE - 1 ? 'BESLISSEND PUNT'
+          : mijnScore === WIN_SCORE - 1 ? 'JIJ STAAT OP WINST' : 'LET OP: TEGENSTANDER OP WINST'
+        matchEl.textContent = wie
+        matchEl.style.color = mijnScore === WIN_SCORE - 1 ? '#00f0ff' : '#ff00cc'
+        matchEl.style.textShadow = '0 0 8px ' + matchEl.style.color
+      } else matchEl.textContent = ''
     }
 
     // ── Game loop ──

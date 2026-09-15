@@ -350,22 +350,22 @@ window.veiligeUrl = function(v){
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=75'
-  import { pasBlokstijlToe } from './blokstijl.js?v=75'
-  import { laadWallpaper } from './wallpaper.js?v=75'
-  import { supabase } from './supabase.js?v=75'
-  import { initSync } from './sync.js?v=75'
-  import { startMeldingen } from './meldingen.js?v=75'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=75'
-  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=75'
-  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=75'
-  import { stuurRapport } from './rapport.js?v=75'
-  import * as Schaak from './schaak.js?v=75'
-  import * as Dammen from './dammen.js?v=75'
-  import * as Bordgeluid from './bordgeluid.js?v=75'
-  import * as DammenUI from './dammen-ui.js?v=75'
-  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=75'
-  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=75'
+  import { laadThema } from './thema.js?v=76'
+  import { pasBlokstijlToe } from './blokstijl.js?v=76'
+  import { laadWallpaper } from './wallpaper.js?v=76'
+  import { supabase } from './supabase.js?v=76'
+  import { initSync } from './sync.js?v=76'
+  import { startMeldingen } from './meldingen.js?v=76'
+  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=76'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=76'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=76'
+  import { stuurRapport } from './rapport.js?v=76'
+  import * as Schaak from './schaak.js?v=76'
+  import * as Dammen from './dammen.js?v=76'
+  import * as Bordgeluid from './bordgeluid.js?v=76'
+  import * as DammenUI from './dammen-ui.js?v=76'
+  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=76'
+  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=76'
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -1270,9 +1270,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // te doen zodra een spel gekozen is, staat het klaar tegen de tijd dat de
   // ander accepteert. Spellen die nog in chat.html zitten hoeven niets.
   const SPEL_BESTAND = {
-    botkaaseiren: './bke-ui.js?v=75',
-    dammen: './dammen-ui.js?v=75',
-    pong: './pong-ui.js?v=75'
+    botkaaseiren: './bke-ui.js?v=76',
+    dammen: './dammen-ui.js?v=76',
+    pong: './pong-ui.js?v=76'
   }
   const _alGeladen = {}
   function laadSpelAlvast(spelType) {
@@ -1414,7 +1414,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Boter-Kaas-Eieren ───
   async function startBotKaasEieren() {
-    const m = await import('./bke-ui.js?v=75')
+    const m = await import('./bke-ui.js?v=76')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend' })
   }
 
@@ -1775,7 +1775,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Pong ───
   async function startPong() {
-    const m = await import('./pong-ui.js?v=75')
+    const m = await import('./pong-ui.js?v=76')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'pong' })
   }
 
@@ -2753,7 +2753,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     // Wis private key uit localStorage
     localStorage.removeItem('fibro_privkey_' + huidigeUser.id)
     // Genereer nieuw keypair
-    const { genereerKeypair, slaPrivateKeyOp } = await import('./crypto.js')
+    const { genereerKeypair, slaPrivateKeyOp } = await import('./crypto.js?v=76')
     const keypair = await genereerKeypair()
     slaPrivateKeyOp(huidigeUser.id, keypair.privateKeyB64)
     // Sla public key op in Supabase
@@ -2850,10 +2850,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
 startMeldingen()
 </script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=75"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=76"; startVriendverzoekLuisteraar()</script>
 
 <script type="module">
-import { stuurRapport } from './rapport.js?v=75'
+import { stuurRapport } from './rapport.js?v=76'
 let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
@@ -2943,6 +2943,6 @@ async function verstuurMelding(reden) {
   alert(ok ? 'Bedankt. Je melding is doorgestuurd.' : 'Melden is niet gelukt. Probeer het later opnieuw.')
 }
 </script>
-<script src="swipe.js?v=75"></script>
+<script src="swipe.js?v=76"></script>
 </body>
 </html>

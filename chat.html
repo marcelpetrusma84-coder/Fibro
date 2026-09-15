@@ -1270,9 +1270,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // te doen zodra een spel gekozen is, staat het klaar tegen de tijd dat de
   // ander accepteert. Spellen die nog in chat.html zitten hoeven niets.
   const SPEL_BESTAND = {
-    botkaaseiren: './bke-ui.js?v=74',
-    dammen: './dammen-ui.js?v=74',
-    pong: './pong-ui.js?v=74'
+    botkaaseiren: './bke-ui.js?v=75',
+    dammen: './dammen-ui.js?v=75',
+    pong: './pong-ui.js?v=75'
   }
   const _alGeladen = {}
   function laadSpelAlvast(spelType) {
@@ -1414,7 +1414,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Boter-Kaas-Eieren ───
   async function startBotKaasEieren() {
-    const m = await import('./bke-ui.js?v=74')
+    const m = await import('./bke-ui.js?v=75')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend' })
   }
 
@@ -1775,7 +1775,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Pong ───
   async function startPong() {
-    const m = await import('./pong-ui.js?v=74')
+    const m = await import('./pong-ui.js?v=75')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'pong' })
   }
 

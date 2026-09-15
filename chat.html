@@ -1318,7 +1318,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   // Accepteer uitnodiging → open het spel
-  window.speelMee = function(spelType, sessieId, starterId) {
+  window.speelMee = async function(spelType, sessieId, starterId) {
     const beschikbaar = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pong', 'flappybird', 'spaceinvaders']
     if (!beschikbaar.includes(spelType)) {
       alert('🚧 ' + (SPEL_INFO[spelType]?.naam || spelType) + ' komt binnenkort beschikbaar!')
@@ -1337,13 +1337,14 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
     spelKanaal = supabase.channel(spelKanaalNaam(sessieId), { config: { broadcast: { self: false } } })
 
-    if (spelType === 'botkaaseiren') startBotKaasEieren()
-    else if (spelType === 'vieroprij') startVierOpEenRij()
-    else if (spelType === 'schaken') startSchaken()
-    else if (spelType === 'dammen') startDammen()
-    else if (spelType === 'pong') startPong()
-    else if (spelType === 'flappybird') startFlappyBird()
-    else if (spelType === 'spaceinvaders') startSpaceInvaders()
+    if (spelType === 'botkaaseiren') await startBotKaasEieren()
+    else if (spelType === 'vieroprij') await startVierOpEenRij()
+    else if (spelType === 'schaken') await startSchaken()
+    else if (spelType === 'dammen') await startDammen()
+    else if (spelType === 'pong') await startPong()
+    else if (spelType === 'flappybird') await startFlappyBird()
+    else if (spelType === 'spaceinvaders') await startSpaceInvaders()
+    if (spelActief !== spelType) return   // ondertussen gesloten
 
     spelKanaal.on('broadcast', { event: 'spelchat' }, (msg) => {
       if (msg.payload && msg.payload.tekst) toonSpelChat(msg.payload.tekst, false)

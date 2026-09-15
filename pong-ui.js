@@ -2,7 +2,10 @@
 // Tekent zichzelf in #spelInhoud en praat met de tegenstander via het
 // spelkanaal dat chat.html aanlevert. De host rekent de bal uit.
 
-export function start({ spelKanaal, benIkSpeler1, vriendNaam }) {
+export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
+  // isActief() zegt of Pong nog het geopende spel is; zonder die controle blijft
+  // het spel naar aanrakingen luisteren nadat je het gesloten hebt.
+  isActief = isActief || (() => true)
   vriendNaam = vriendNaam || 'vriend'
   let pongTrail = null
   document.getElementById('spelTitelBar').textContent = '🏓 Pong'
@@ -305,14 +308,14 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam }) {
     return Math.max(0, Math.min(BREEDTE - PADDLE_BREEDTE, x))
   }
   function pongTouchMove(e) {
-    if (spelActief !== 'pong') return
+    if (!isActief()) return
     if (e.target.tagName === 'BUTTON') return
     e.preventDefault()
     mijnPaddleX = paddleVanX(e.touches[0].clientX)
     verstuurPaddle()
   }
   function pongTouchStart(e) {
-    if (spelActief !== 'pong') return
+    if (!isActief()) return
     if (e.target.tagName === 'BUTTON') return
     mijnPaddleX = paddleVanX(e.touches[0].clientX)
     verstuurPaddle()
@@ -321,7 +324,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam }) {
   besturingsVlak.addEventListener('touchstart', pongTouchStart, { passive: true })
   let muisActief = false
   besturingsVlak.addEventListener('mousedown', e => {
-    if (spelActief !== 'pong') return
+    if (!isActief()) return
     if (e.target.tagName === 'BUTTON') return
     muisActief = true
     mijnPaddleX = paddleVanX(e.clientX)
@@ -329,7 +332,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam }) {
   })
   window.addEventListener('mouseup', () => muisActief = false)
   besturingsVlak.addEventListener('mousemove', e => {
-    if (spelActief !== 'pong' || !muisActief) return
+    if (!isActief() || !muisActief) return
     mijnPaddleX = paddleVanX(e.clientX)
     verstuurPaddle()
   })

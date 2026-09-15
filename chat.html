@@ -1776,7 +1776,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ─── Pong ───
   async function startPong() {
     const m = await import('./pong-ui.js?v=74')
-    m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend' })
+    m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'pong' })
   }
 
 

@@ -1,8 +1,8 @@
 // sync.js — P2P widget-sync via WebRTC DataChannel
 // Stap A: presence ✓ | Stap B: DataChannel ping-pong
 // Zelfde signaling-patroon als bellen.js: gedeeld kanaal met gesorteerde IDs
-import { supabase } from './supabase.js?v=77'
-import { ICE_SERVERS, iceReady } from './ice-config.js?v=77'
+import { supabase } from './supabase.js?v=78'
+import { ICE_SERVERS, iceReady } from './ice-config.js?v=78'
 
 let presenceKanaal = null
 let huidigeUserId = null
@@ -181,6 +181,8 @@ function maakPeerConnection() {
   if (peerConnection) {
     peerConnection.onicecandidate = null
     peerConnection.ondatachannel = null
+    peerConnection.onconnectionstatechange = null
+    peerConnection.oniceconnectionstatechange = null
     peerConnection.close()
     peerConnection = null
   }
@@ -195,6 +197,15 @@ function maakPeerConnection() {
   pc.ondatachannel = (event) => {
     if (pc !== peerConnection) return
     koppelDataChannel(event.channel)
+  }
+  pc.onconnectionstatechange = () => {
+    if (pc !== peerConnection) return
+    console.log('[sync] Verbinding:', pc.connectionState)
+    if (pc.connectionState === 'failed') zetP2pStatus('P2P mislukt')
+  }
+  pc.oniceconnectionstatechange = () => {
+    if (pc !== peerConnection) return
+    console.log('[sync] ICE-status:', pc.iceConnectionState)
   }
 }
 

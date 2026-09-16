@@ -1320,7 +1320,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // Accepteer uitnodiging → open het spel
   window.speelMee = async function(spelType, sessieId, starterId) {
-    const beschikbaar = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pong', 'flappybird', 'spaceinvaders']
+    const beschikbaar = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pong', 'flappybird', 'spaceinvaders', 'breakout']
     if (!beschikbaar.includes(spelType)) {
       alert('🚧 ' + (SPEL_INFO[spelType]?.naam || spelType) + ' komt binnenkort beschikbaar!')
       return

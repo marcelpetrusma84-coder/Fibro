@@ -1,8 +1,8 @@
 // sync.js — P2P widget-sync via WebRTC DataChannel
 // Stap A: presence ✓ | Stap B: DataChannel ping-pong
 // Zelfde signaling-patroon als bellen.js: gedeeld kanaal met gesorteerde IDs
-import { supabase } from './supabase.js?v=78'
-import { ICE_SERVERS, iceReady } from './ice-config.js?v=78'
+import { supabase } from './supabase.js?v=79'
+import { ICE_SERVERS, iceReady } from './ice-config.js?v=79'
 
 let presenceKanaal = null
 let huidigeUserId = null
@@ -348,7 +348,10 @@ async function verzamelEigenMuziek() {
   return muziek
 }
 
-async function stuurManifest() {
+const WBG_WIDGETS = ['poll', 'quote', 'aftel', 'optel']
+        const wbgPosWacht = {}
+
+        async function stuurManifest() {
   const layoutJson = localStorage.getItem('fibro_widgets_profiel_' + huidigeUserId) || '[]'
   const fotos = await verzamelEigenFotos()
   const muziek = await verzamelEigenMuziek()
@@ -373,14 +376,27 @@ async function stuurManifest() {
       if (w) klein[sl] = hashString(w)
     } catch(e) {}
   }
-  const manifest = {
+  // Achtergrondfoto's achter tekstwidgets (v79)
+                    const wbg = {}
+                    for (const sl of WBG_WIDGETS) {
+                        try {
+                            const rec = await dbGet('widgetbg_' + sl + '_' + huidigeUserId)
+                            const d = rec && rec.data
+                            if (typeof d === 'string' && d.startsWith('data:image')) {
+                                const pos = (localStorage.getItem('widgetbgpos_widgetbg_' + sl + '_' + huidigeUserId) || '').slice(0, 200)
+                                wbg[sl] = { hash: hashString(d), pos }
+                            }
+                        } catch (e) {}
+                    }
+                    const manifest = {
     layout: { hash: hashString(layoutJson) },
     fotos,
     muziek,
     videoMetaHash,
     videoHash,
     klein,
-    naam: eigenNaam
+    wbg,
+                                naam: eigenNaam
   }
   dataChannel.send(JSON.stringify({ type: 'manifest', data: manifest }))
   zetP2pStatus('manifest gestuurd')
@@ -418,7 +434,26 @@ async function verwerkP2pBericht(bericht) {
       const fCached = await dbGet('vriend_' + syncPartnerId + '_foto_' + itemId)
       if (!fCached || fCached.hash !== fotos[itemId].hash) nodig.push('foto:' + itemId)
     }
-    const muziek = bericht.data.muziek || {}
+    // Achtergrondfoto's achter tekstwidgets (v79)
+                                if (bericht.data.wbg && typeof bericht.data.wbg === 'object') {
+                                    for (const sl of WBG_WIDGETS) {
+                                        const wKey = 'vriend_' + syncPartnerId + '_wbg_' + sl
+                                        const binnenW = bericht.data.wbg[sl]
+                                        const wCached = await dbGet(wKey)
+                                        if (!binnenW || typeof binnenW.hash !== 'string') {
+                                            if (wCached) { await dbDelete(wKey); console.log('[sync] Achtergrond verwijderd bij vriend:', sl) }
+                                            continue
+                                        }
+                                        const wPos = typeof binnenW.pos === 'string' ? binnenW.pos.slice(0, 200) : ''
+                                        if (!wCached || wCached.hash !== binnenW.hash) {
+                                            wbgPosWacht[sl] = wPos
+                                            nodig.push('wbg:' + sl)
+                                        } else if (wCached.pos !== wPos) {
+                                            await dbPut({ ...wCached, pos: wPos })
+                                        }
+                                    }
+                                }
+                                const muziek = bericht.data.muziek || {}
     const muziekNodig = []
     for (const itemId of Object.keys(muziek)) {
       const mCached = await dbGet('vriend_' + syncPartnerId + '_muziek_' + itemId)
@@ -488,6 +523,8 @@ async function verwerkP2pBericht(bericht) {
       } else if (item.startsWith('foto:')) {
         const itemId = item.slice(5)
         await stuurFotoInChunks(itemId)
+                    } else if (item.startsWith('wbg:')) {
+                        await stuurWbgInChunks(item.slice(4))
       } else if (item.startsWith('muziek:')) {
         const itemId = item.slice(7)
         await stuurMuziekInChunks(itemId)
@@ -552,7 +589,7 @@ function isGeldigeChunk(b) {
   // VALIDATIE (bug #5): alle velden checken vóór gebruik.
   // Zonder deze check kon een peer bijv. totaal=1e9 sturen → new Array(1e9) → crash
   if (typeof b.itemId !== 'string' || b.itemId.length > 200) return false
-  if (!b.itemId.startsWith('pfoto_') && !b.itemId.startsWith('muziek_') && b.itemId !== 'video') return false
+  if (!b.itemId.startsWith('pfoto_') && !b.itemId.startsWith('muziek_') && b.itemId !== 'video' && !/^widgetbg_(poll|quote|aftel|optel)$/.test(b.itemId)) return false
   if (typeof b.hash !== 'string' || b.hash.length > 16) return false
   if (!Number.isInteger(b.totaal) || b.totaal < 1 || b.totaal > MAX_CHUNKS_PER_ITEM) return false
   if (!Number.isInteger(b.volgnr) || b.volgnr < 0 || b.volgnr >= b.totaal) return false
@@ -586,7 +623,29 @@ async function stuurFotoInChunks(itemId) {
   }
 }
 
-async function stuurMuziekInChunks(itemId) {
+async function stuurWbgInChunks(sl) {
+                                    // Alleen de vier bekende widgets, nooit willekeurige keys (bug #5)
+                                    if (!WBG_WIDGETS.includes(sl)) { console.warn('[sync] achtergrond-verzoek geweigerd:', sl); return }
+                                    const itemId = 'widgetbg_' + sl
+                                    const rec = await dbGet(itemId + '_' + huidigeUserId)
+                                    const data = rec && rec.data
+                                    if (typeof data !== 'string' || !data.startsWith('data:image')) { console.warn('[sync] achtergrond niet gevonden:', sl); return }
+                                    const hash = hashString(data)
+                                    const totaal = Math.ceil(data.length / CHUNK_TEKST)
+                                    if (totaal > MAX_CHUNKS_PER_ITEM) { console.warn('[sync] achtergrond te groot:', sl); return }
+                                    console.log('[sync] Stuur achtergrond', sl, 'in', totaal, 'chunks')
+                                    for (let i = 0; i < totaal; i++) {
+                                        while (dataChannel.bufferedAmount > 512 * 1024) {
+                                            await new Promise((r) => setTimeout(r, 20))
+                                        }
+                                        dataChannel.send(JSON.stringify({
+                                            type: 'chunk', itemId, hash, volgnr: i, totaal,
+                                            data: data.slice(i * CHUNK_TEKST, (i + 1) * CHUNK_TEKST)
+                                        }))
+                                    }
+                                }
+
+                                async function stuurMuziekInChunks(itemId) {
   // Alleen bekende namen toestaan (bug #5): oude systemen + nieuwe losse nummers
   if (itemId !== 'profiel' && itemId !== 'playlist' && itemId !== 'index' && !/^nr\d{1,4}$/.test(itemId)) {
     console.warn('[sync] muziek-verzoek geweigerd:', itemId)
@@ -697,7 +756,19 @@ async function verwerkChunk(bericht) {
       dbKey = 'vriend_' + syncPartnerId + '_' + itemId
     }
 
-    await dbPut({ id: dbKey, hash, data: compleet, ontvangen: Date.now() })
+    const opslagRecord = { id: dbKey, hash, data: compleet, ontvangen: Date.now() }
+                                            if (itemId.startsWith('widgetbg_')) {
+                                                const sl = itemId.slice(9)
+                                                if (!compleet.startsWith('data:image')) {
+                                                    console.warn('[sync] achtergrond is geen afbeelding, niet opgeslagen:', sl)
+                                                    delete chunkBuffers[itemId]
+                                                    return
+                                                }
+                                                opslagRecord.id = 'vriend_' + syncPartnerId + '_wbg_' + sl
+                                                opslagRecord.pos = wbgPosWacht[sl] || ''
+                                                delete wbgPosWacht[sl]
+                                            }
+                                            await dbPut(opslagRecord)
     delete chunkBuffers[itemId]
     console.log('[sync] Item compleet opgeslagen:', itemId)
     zetP2pStatus(statusLabel + ' \u2713')

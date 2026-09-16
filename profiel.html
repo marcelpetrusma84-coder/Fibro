@@ -452,7 +452,7 @@ input, textarea { font-size:16px !important; }
   <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
   <div class="nav-item active"><div class="nav-icon">👤</div>Profiel</div>
 </div>
-<script src="lame.min.js?v=86"></script>
+<script src="lame.min.js?v=87"></script>
 <script type="module">
 function _profielUid() {
   if (window._uid) return window._uid
@@ -469,19 +469,19 @@ function _profielUid() {
   return 'lokaal'
 }
 
-import { supabase } from './supabase.js?v=86'
-import { eisSessie, startBewaking } from './sessie.js?v=86'
-import { startMeldingen } from './meldingen.js?v=86'
-import { laadThema } from './thema.js?v=86'
-import { startHeartbeat } from './heartbeat.js?v=86'
-import { initSync } from './sync.js?v=86'
-import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=86'
+import { supabase } from './supabase.js?v=87'
+import { eisSessie, startBewaking } from './sessie.js?v=87'
+import { startMeldingen } from './meldingen.js?v=87'
+import { laadThema } from './thema.js?v=87'
+import { startHeartbeat } from './heartbeat.js?v=87'
+import { initSync } from './sync.js?v=87'
+import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=87'
 
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
 const stickers={natuur:['🌿','🌸','🌺','🌻','🍀','🌱','🌾','🍃','🌴','🌊','🍂','🌹','🌷','🌼','🍁'],magie:['✨','🔮','🌙','⭐','💫','🌟','🔯','🌠','🌌','🪄','💎','🌈','⚡','🔥','🌀'],kunst:['🎵','🎸','🎨','🎭','🎬','📷','🎪','🎯','🎲','🎹','🥁','🎺','🎻','🖼','✏'],dieren:['🦋','🦊','🐱','🐺','🦄','🐉','🦁','🐻','🦝','🦔','🐧','🦅','🐠','🐬','🦋']}
-import { LETTERTYPES, laadFont } from './lettertypes.js?v=86'
-import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=86'
+import { LETTERTYPES, laadFont } from './lettertypes.js?v=87'
+import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=87'
 window.blokAangepast = function(){
   const s = {
     kleur: document.getElementById("blokKleur").value,
@@ -856,7 +856,7 @@ window.activeerPushNotificaties = async function() {
       alert('Push notificaties worden niet ondersteund op dit apparaat.')
       return
     }
-    const reg = await navigator.serviceWorker.register('./service-worker.js?v=86')
+    const reg = await navigator.serviceWorker.register('./service-worker.js?v=87')
     await navigator.serviceWorker.ready
     const toestemming = await Notification.requestPermission()
     if (toestemming !== 'granted') {
@@ -967,11 +967,11 @@ init()
 
 startMeldingen()
 </script>
-<script src="swipe.js?v=86"></script>
+<script src="swipe.js?v=87"></script>
 
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=86"; startBelLuisteraar()</script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=86"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=86"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=87"; startBelLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=87"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=87"; startSpelUitnodigingLuisteraar()</script>
 <script>
 /* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */
 setTimeout(function(){

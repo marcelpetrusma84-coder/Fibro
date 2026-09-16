@@ -1,4 +1,5 @@
-// flappy-ui.js - Flappy Vleermuis voor Fibro.
+import { maakGeluid } from './flappy-geluid.js?v=87'
+// flappy-ui.js - Flappy Friends voor Fibro.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
 // Grot-level: rotsen, plafond en grond zijn massief.
 // Scherpe punten, spijkers, fakkelvuur en vallende rotsen zijn dodelijk.
@@ -7,7 +8,7 @@
 export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     vriendNaam = vriendNaam || 'vriend'
     isActief = isActief || (() => true)
-    document.getElementById('spelTitelBar').textContent = '🦇 Flappy Vleermuis'
+    document.getElementById('spelTitelBar').textContent = '🦇 Flappy Friends'
     const inhoud = document.getElementById('spelInhoud')
 
     // ── Instellingen ──
@@ -46,12 +47,17 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     <div style="opacity:0.6;font-size:11px;">${vriendNaam}</div>
     </div>
     </div>
-    <div style="color:rgba(255,255,255,0.4);font-size:11px;">Tik om te vliegen. Rotsen mag je raken, punten en vuur niet!</div>
+    <button id="fb-geluid" style="background:rgba(255,255,255,0.12);border:none;border-radius:8px;color:white;padding:4px 12px;font-size:16px;cursor:pointer;">🔊</button>
+      <div style="color:rgba(255,255,255,0.4);font-size:11px;">Tik om te vliegen. Rotsen mag je raken, punten en vuur niet!</div>
     </div>`
 
     const canvas = document.getElementById('fb-canvas')
     const ctx = canvas.getContext('2d')
     const statusEl = document.getElementById('fb-status')
+  const geluid = maakGeluid()
+  const geluidKnop = document.getElementById('fb-geluid')
+  geluidKnop.textContent = geluid.aan ? '🔊' : '🔇'
+  geluidKnop.onclick = (e) => { e.stopPropagation(); geluidKnop.textContent = geluid.wissel() ? '🔊' : '🔇' }
 
     // ── Spelstaat ──
     let mijnVogel, vriendVogel, obstakels, volgendeId, rotsTeller
@@ -119,7 +125,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
 
     function toonMeldingVoor(o) {
         if (o.soort === 'rots' && MELDINGEN[o.n] && !obstakels.some(x => x.id === o.id)) {
-            melding = { tekst: MELDINGEN[o.n], tot: frame + 120 }
+            melding = { tekst: MELDINGEN[o.n], tot: frame + 120 }; geluid.waarschuwing()
         }
     }
 
@@ -141,7 +147,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
         for (const o of obstakels) {
             o.x -= SNELHEID
             if (o.soort === 'vallend') {
-                if (!o.valt && o.x < o.trigger) o.valt = true
+                if (!o.valt && o.x < o.trigger) { o.valt = true; geluid.vallen() }
                     if (o.valt) {
                         o.vy += VAL_ZWAARTEKRACHT
                         o.y += o.vy
@@ -545,7 +551,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
                 if (geraakt || uitBeeld(mijnVogel)) {
                     mijnVogel.dood = true
                     spelKanaal.send({ type: 'broadcast', event: 'fb-dood', payload: {} })
-                    const reden = geraakt ? '💥 Geraakt!' : '💀 Uit beeld!'
+                    geluid.af(geraakt); const reden = geraakt ? '💥 Geraakt!' : '💀 Uit beeld!'
                     statusEl.textContent = vriendVogel.dood ? '' : `${reden} ${vriendNaam} vliegt nog...`
                     controleerEinde()
                 } else {
@@ -554,7 +560,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
                         if (o.soort !== 'rots' || mijnGeteld.has(o.id)) continue
                             if (o.x + ROTS_BREEDTE + 4 < mijnVogel.x - HIT_R) {
                                 mijnGeteld.add(o.id)
-                                mijnScore++
+                                mijnScore++; geluid.punt()
                                 document.getElementById('fb-score-mij').textContent = mijnScore
                                 spelKanaal.send({
                                     type: 'broadcast',
@@ -593,7 +599,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
             teken()
             const gelijkspel = mijnScore === vriendScore
             const ikWin = mijnScore > vriendScore
-            statusEl.textContent = gelijkspel ? '🤝 Gelijkspel!' : ikWin ? '🎉 Jij wint!' : '😢 ' + vriendNaam + ' wint!'
+            geluid.einde(gelijkspel ? 0 : ikWin ? 1 : -1); statusEl.textContent = gelijkspel ? '🤝 Gelijkspel!' : ikWin ? '🎉 Jij wint!' : '😢 ' + vriendNaam + ' wint!'
             setTimeout(() => {
                 inhoud.querySelectorAll('button.fb-herstart').forEach(b => b.remove())
                 const btn = document.createElement('button')
@@ -621,19 +627,19 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
 
     function flap() {
         if (gameOver || mijnVogel.dood) return
-            mijnVogel.vy = FLAP_KRACHT
+            mijnVogel.vy = FLAP_KRACHT; geluid.flap()
     }
 
     // ── Aftellen ──
     teken()
-    statusEl.textContent = `Start in ${aftellen}...`
+    geluid.tel(); statusEl.textContent = `Start in ${aftellen}...`
     aftelInterval = setInterval(() => {
         aftellen--
         if (aftellen > 0) {
-            statusEl.textContent = `Start in ${aftellen}...`
+            geluid.tel(); statusEl.textContent = `Start in ${aftellen}...`
         } else {
             clearInterval(aftelInterval)
-            window._spelAftelInterval = null
+            window._spelAftelInterval = null; geluid.start()
             statusEl.textContent = ''
             animFrame = requestAnimationFrame(update)
             window._spelAnimFrame = animFrame
@@ -673,7 +679,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
         if (benIkHost) zetVriend(msg.payload.y, msg.payload.x)
     })
     spelKanaal.on('broadcast', { event: 'fb-dood' }, () => {
-        vriendVogel.dood = true
+        vriendVogel.dood = true; geluid.vriendAf()
         if (!mijnVogel.dood) statusEl.textContent = `${vriendNaam} is af. Hou vol!`
             controleerEinde()
     })

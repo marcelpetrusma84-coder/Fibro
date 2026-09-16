@@ -234,7 +234,7 @@ window.veiligeUrl = function(v){
         <button class="spel-keuze-btn" onclick="startSpel('schaken')"><span style="font-size:26px;">♟️</span><span>Schaken</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('dammen')"><span style="font-size:26px;">⚫</span><span>Dammen</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('pong')"><span style="font-size:26px;">🏓</span><span>Pong</span></button>
-        <button class="spel-keuze-btn" onclick="startSpel('flappybird')"><span style="font-size:26px;">🦇</span><span>Flappy Vleermuis</span></button>
+        <button class="spel-keuze-btn" onclick="startSpel('flappybird')"><span style="font-size:26px;">🦇</span><span>Flappy Friends</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('spaceinvaders')"><span style="font-size:26px;">👾</span><span>Space Invaders</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('pacman')"><span style="font-size:26px;">👻</span><span>Pac-Man</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('endlessrunner')"><span style="font-size:26px;">🏃</span><span>Endless Runner</span></button>
@@ -350,22 +350,22 @@ window.veiligeUrl = function(v){
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=86'
-  import { pasBlokstijlToe } from './blokstijl.js?v=86'
-  import { laadWallpaper } from './wallpaper.js?v=86'
-  import { supabase } from './supabase.js?v=86'
-  import { initSync } from './sync.js?v=86'
-  import { startMeldingen } from './meldingen.js?v=86'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=86'
-  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=86'
-  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=86'
-  import { stuurRapport } from './rapport.js?v=86'
-  import * as Schaak from './schaak.js?v=86'
-  import * as Dammen from './dammen.js?v=86'
-  import * as Bordgeluid from './bordgeluid.js?v=86'
-  import * as DammenUI from './dammen-ui.js?v=86'
-  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=86'
-  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=86'
+  import { laadThema } from './thema.js?v=87'
+  import { pasBlokstijlToe } from './blokstijl.js?v=87'
+  import { laadWallpaper } from './wallpaper.js?v=87'
+  import { supabase } from './supabase.js?v=87'
+  import { initSync } from './sync.js?v=87'
+  import { startMeldingen } from './meldingen.js?v=87'
+  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=87'
+  import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=87'
+  import { initBellen, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=87'
+  import { stuurRapport } from './rapport.js?v=87'
+  import * as Schaak from './schaak.js?v=87'
+  import * as Dammen from './dammen.js?v=87'
+  import * as Bordgeluid from './bordgeluid.js?v=87'
+  import * as DammenUI from './dammen-ui.js?v=87'
+  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=87'
+  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=87'
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -1192,7 +1192,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     schaken:        { icon: '♟️', naam: 'Schaken' },
     dammen:         { icon: '⚫', naam: 'Dammen' },
     pong:           { icon: '🏓', naam: 'Pong' },
-    flappybird:     { icon: '🦇', naam: 'Flappy Vleermuis' },
+    flappybird:     { icon: '🦇', naam: 'Flappy Friends' },
     spaceinvaders:  { icon: '👾', naam: 'Space Invaders' },
     pacman:         { icon: '👻', naam: 'Pac-Man' },
     endlessrunner:  { icon: '🏃', naam: 'Endless Runner' },
@@ -1270,13 +1270,13 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // te doen zodra een spel gekozen is, staat het klaar tegen de tijd dat de
   // ander accepteert. Spellen die nog in chat.html zitten hoeven niets.
   const SPEL_BESTAND = {
-    botkaaseiren: './bke-ui.js?v=86',
-    dammen: './dammen-ui.js?v=86',
-    pong: './pong-ui.js?v=86',
-    vieroprij: './vieroprij-ui.js?v=86',
-    schaken: './schaken-ui.js?v=86',
-    flappybird: './flappy-ui.js?v=86',
-    spaceinvaders: './invaders-ui.js?v=86'
+    botkaaseiren: './bke-ui.js?v=87',
+    dammen: './dammen-ui.js?v=87',
+    pong: './pong-ui.js?v=87',
+    vieroprij: './vieroprij-ui.js?v=87',
+    schaken: './schaken-ui.js?v=87',
+    flappybird: './flappy-ui.js?v=87',
+    spaceinvaders: './invaders-ui.js?v=87'
   }
   const _alGeladen = {}
   function laadSpelAlvast(spelType) {
@@ -1478,19 +1478,19 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Boter-Kaas-Eieren ───
   async function startBotKaasEieren() {
-    const m = await import('./bke-ui.js?v=86')
+    const m = await import('./bke-ui.js?v=87')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend' })
   }
 
   // ─── Vier op een rij ───
   async function startVierOpEenRij() {
-    const m = await import('./vieroprij-ui.js?v=86')
+    const m = await import('./vieroprij-ui.js?v=87')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend' })
   }
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await import('./schaken-ui.js?v=86')
+    const m = await import('./schaken-ui.js?v=87')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend' })
   }
 
@@ -1499,7 +1499,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Pong ───
   async function startPong() {
-    const m = await import('./pong-ui.js?v=86')
+    const m = await import('./pong-ui.js?v=87')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'pong' })
   }
 
@@ -1594,13 +1594,13 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Flappy Bird Multiplayer ───
   async function startFlappyBird() {
-    const m = await import('./flappy-ui.js?v=86')
+    const m = await import('./flappy-ui.js?v=87')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'flappybird' })
   }
 
   // ─── Space Invaders Multiplayer ───
   async function startSpaceInvaders() {
-    const m = await import('./invaders-ui.js?v=86')
+    const m = await import('./invaders-ui.js?v=87')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'spaceinvaders' })
   }
 
@@ -1759,7 +1759,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     // Wis private key uit localStorage
     localStorage.removeItem('fibro_privkey_' + huidigeUser.id)
     // Genereer nieuw keypair
-    const { genereerKeypair, slaPrivateKeyOp } = await import('./crypto.js?v=86')
+    const { genereerKeypair, slaPrivateKeyOp } = await import('./crypto.js?v=87')
     const keypair = await genereerKeypair()
     slaPrivateKeyOp(huidigeUser.id, keypair.privateKeyB64)
     // Sla public key op in Supabase
@@ -1856,10 +1856,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
 startMeldingen()
 </script>
-<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=86"; startVriendverzoekLuisteraar()</script>
+<script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=87"; startVriendverzoekLuisteraar()</script>
 
 <script type="module">
-import { stuurRapport } from './rapport.js?v=86'
+import { stuurRapport } from './rapport.js?v=87'
 let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
@@ -1949,6 +1949,6 @@ async function verstuurMelding(reden) {
   alert(ok ? 'Bedankt. Je melding is doorgestuurd.' : 'Melden is niet gelukt. Probeer het later opnieuw.')
 }
 </script>
-<script src="swipe.js?v=86"></script>
+<script src="swipe.js?v=87"></script>
 </body>
 </html>

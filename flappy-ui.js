@@ -1,4 +1,4 @@
-import { maakGeluid } from './flappy-geluid.js?v=87'
+import { maakGeluid } from './flappy-geluid.js?v=86'
 // flappy-ui.js - Flappy Friends voor Fibro.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
 // Grot-level: rotsen, plafond en grond zijn massief.

@@ -132,7 +132,7 @@
 
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.113.0/+esm'
-  import { genereerKeypair, slaPrivateKeyOp, haalPrivateKeyOp, ontsleutelPrivateKey, normaliseerHerstelSleutel, versleutelPrivateKey } from './crypto.js?v=81'
+  import { genereerKeypair, slaPrivateKeyOp, haalPrivateKeyOp, ontsleutelPrivateKey, normaliseerHerstelSleutel, versleutelPrivateKey } from './crypto.js?v=82'
 
   const supabase = createClient(
     'https://qmgatbphiplrfxrljtbe.supabase.co',
@@ -246,7 +246,7 @@
     // ── Push notificaties registreren ──
     try {
       if ('serviceWorker' in navigator && 'PushManager' in window) {
-        const reg = await navigator.serviceWorker.register('./service-worker.js?v=81')
+        const reg = await navigator.serviceWorker.register('./service-worker.js?v=82')
         await navigator.serviceWorker.ready
         const toestemming = await Notification.requestPermission()
         if (toestemming === 'granted') {

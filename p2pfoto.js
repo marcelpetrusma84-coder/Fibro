@@ -2,8 +2,8 @@
 // Foto's gaan rechtstreeks van apparaat naar apparaat, NIET via de server,
 // zolang beide kanten tegelijk online zijn (fase 1 — geen offline-fallback nog).
 
-import { supabase } from './supabase.js?v=82'
-import { ICE_SERVERS } from './ice-config.js?v=82'
+import { supabase } from './supabase.js?v=83'
+import { ICE_SERVERS } from './ice-config.js?v=83'
 
 let huidigeUserId = null
 let presenceKanaal = null

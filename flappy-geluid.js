@@ -91,7 +91,20 @@ export function maakGeluid() {
                 toon({ freq: 500, eind: 120, duur: 0.5, type: 'triangle', volume: 0.2 })
             }
         },
-        vriendAf() {
+        munt() {
+      toon({ freq: 988, duur: 0.07, type: 'square', volume: 0.07 })
+      toon({ freq: 1319, duur: 0.18, type: 'square', volume: 0.07, vertraging: 0.06 })
+    },
+    hartje() {
+      toon({ freq: 523, duur: 0.1, type: 'triangle', volume: 0.15 })
+      toon({ freq: 659, duur: 0.1, type: 'triangle', volume: 0.15, vertraging: 0.08 })
+      toon({ freq: 1047, duur: 0.25, type: 'triangle', volume: 0.15, vertraging: 0.16 })
+    },
+    au() {
+      ruis({ duur: 0.2, volume: 0.4, filter: 1500, filterEind: 300 })
+      toon({ freq: 440, eind: 220, duur: 0.25, type: 'square', volume: 0.1 })
+    },
+    vriendAf() {
             toon({ freq: 400, eind: 200, duur: 0.25, type: 'triangle', volume: 0.1 })
         },
         waarschuwing() {

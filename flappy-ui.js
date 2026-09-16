@@ -21,6 +21,8 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     const TERUG_SNELHEID = 0.5        // zweven terug naar startplek (0 = uit)
     const ROTS_BREEDTE = 52, GAP = 110, GAP_MET_PUNTEN = 134, SNELHEID = 2.2
     const PUNT_H = 16, SPIJKER_H = 14, VAL_ZWAARTEKRACHT = 0.25
+  const START_HARTEN = 3, ONKWETSBAAR = 90, MUNT_R = 7
+  const HART_VANAF = 8, HART_KANS = 0.12   // vanaf welke rots, en hoe vaak
     // Na hoeveel rotsen elk gevaar begint
     const LEVEL_PUNTEN = 6, LEVEL_SPIJKERS = 12, LEVEL_FAKKELS = 18, LEVEL_VALLEND = 24
     const MELDINGEN = {
@@ -38,17 +40,19 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     <div style="display:flex;gap:20px;">
     <div style="color:white;font-size:12px;text-align:center;">
     <div style="font-size:22px;">🦇</div>
-    <div id="fb-score-mij" style="font-weight:700;font-size:18px;color:#60a5fa;">0</div>
+    <div id="fb-score-mij" style="font-weight:700;font-size:18px;color:#60a5fa;">🪙 0</div>
+          <div id="fb-harten-mij" style="font-size:12px;letter-spacing:1px;">❤️❤️❤️</div>
     <div style="opacity:0.6;font-size:11px;">Jij</div>
     </div>
     <div style="color:white;font-size:12px;text-align:center;">
     <div style="font-size:22px;">🦇</div>
-    <div id="fb-score-vriend" style="font-weight:700;font-size:18px;color:#fbbf24;">0</div>
+    <div id="fb-score-vriend" style="font-weight:700;font-size:18px;color:#fbbf24;">🪙 0</div>
+          <div id="fb-harten-vriend" style="font-size:12px;letter-spacing:1px;">❤️❤️❤️</div>
     <div style="opacity:0.6;font-size:11px;">${vriendNaam}</div>
     </div>
     </div>
     <button id="fb-geluid" style="background:rgba(255,255,255,0.12);border:none;border-radius:8px;color:white;padding:4px 12px;font-size:16px;cursor:pointer;">🔊</button>
-      <div style="color:rgba(255,255,255,0.4);font-size:11px;">Tik om te vliegen. Rotsen mag je raken, punten en vuur niet!</div>
+      <div style="color:rgba(255,255,255,0.4);font-size:11px;">Tik om te vliegen. Pak muntjes! Punten en vuur kosten een hartje.</div>
     </div>`
 
     const canvas = document.getElementById('fb-canvas')
@@ -62,6 +66,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     // ── Spelstaat ──
     let mijnVogel, vriendVogel, obstakels, volgendeId, rotsTeller
     let mijnGeteld, frame, mijnScore, vriendScore, gameOver, melding
+  let mijnHarten, vriendHarten, onkwetsbaarTot, vriendOnk, aangevraagd
     let aftellen = 3
     let aftelInterval = null
     let animFrame = null
@@ -78,6 +83,12 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
         vriendScore = 0
         gameOver = false
         melding = null
+    mijnHarten = START_HARTEN
+    vriendHarten = START_HARTEN
+    onkwetsbaarTot = 0
+    vriendOnk = false
+    aangevraagd = new Set()
+    toonStand()
     }
     resetStaat()
 
@@ -274,7 +285,131 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
             }
     }
 
-    function uitBeeld(v) {
+    
+function toonStand() {
+    const harten = (n) => '❤️'.repeat(Math.max(n, 0)) + '🖤'.repeat(Math.max(START_HARTEN - n, 0))
+    document.getElementById('fb-score-mij').textContent = '🪙 ' + mijnScore
+    document.getElementById('fb-score-vriend').textContent = '🪙 ' + vriendScore
+    document.getElementById('fb-harten-mij').textContent = harten(mijnHarten)
+    document.getElementById('fb-harten-vriend').textContent = harten(vriendHarten)
+}
+
+function stuurLeven() {
+    spelKanaal.send({ type: 'broadcast', event: 'fb-leven', payload: { harten: mijnHarten } })
+}
+
+function stuurMunt(id, door) {
+    spelKanaal.send({ type: 'broadcast', event: 'fb-munt', payload: { id, door, host: mijnScore, gast: vriendScore } })
+}
+
+function veiligeY() {
+    for (const o of obstakels) {
+        if (o.soort === 'rots' && o.x - 14 < VOGEL_X + HIT_R && o.x + ROTS_BREEDTE + 14 > VOGEL_X - HIT_R) return o.gapY + o.gap / 2
+    }
+    return H / 2
+}
+
+function verliesHart(uit) {
+    mijnHarten--
+    onkwetsbaarTot = frame + ONKWETSBAAR
+    geluid.au()
+    if (uit) {
+        mijnVogel.x = VOGEL_X
+        mijnVogel.y = veiligeY()
+        mijnVogel.vy = 0
+    } else {
+        mijnVogel.vy = -4
+    }
+    const tekst = mijnHarten === 1 ? '💔 Laatste hartje!' : '💔 Nog ' + mijnHarten + ' hartjes'
+    statusEl.textContent = tekst
+    setTimeout(() => { if (statusEl.textContent === tekst) statusEl.textContent = '' }, 1500)
+    stuurLeven()
+    toonStand()
+}
+
+function krijgHart() {
+    mijnHarten = Math.min(mijnHarten + 1, START_HARTEN)
+    const tekst = '💖 Extra hartje!'
+    statusEl.textContent = tekst
+    setTimeout(() => { if (statusEl.textContent === tekst) statusEl.textContent = '' }, 1500)
+    stuurLeven()
+    toonStand()
+}
+
+function pakHartjes() {
+    if (mijnHarten >= START_HARTEN) return
+        for (const o of obstakels) {
+            if (o.soort !== 'hart' || aangevraagd.has(o.id)) continue
+                if (Math.hypot(mijnVogel.x - o.x, mijnVogel.y - o.y) > HIT_R + 9) continue
+                    geluid.hartje()
+                    if (benIkHost) {
+                        o.weg = true
+                        krijgHart()
+                        spelKanaal.send({ type: 'broadcast', event: 'fb-hart', payload: { id: o.id, door: 'host' } })
+                    } else {
+                        aangevraagd.add(o.id)
+                        spelKanaal.send({ type: 'broadcast', event: 'fb-hart-vraag', payload: { id: o.id } })
+                    }
+                    break
+        }
+        obstakels = obstakels.filter(o => !o.weg)
+}
+
+function tekenHartje(o) {
+    const s = 1 + Math.sin(frame * 0.15) * 0.12
+    ctx.save()
+    ctx.translate(o.x, o.y)
+    ctx.scale(s, s)
+    ctx.beginPath()
+    ctx.moveTo(0, 7)
+    ctx.bezierCurveTo(-10, 0, -9, -8, -4.5, -8)
+    ctx.bezierCurveTo(-2, -8, 0, -6, 0, -4)
+    ctx.bezierCurveTo(0, -6, 2, -8, 4.5, -8)
+    ctx.bezierCurveTo(9, -8, 10, 0, 0, 7)
+    ctx.closePath()
+    ctx.fillStyle = '#ef4444'
+    ctx.fill()
+    ctx.strokeStyle = '#ffffff'
+    ctx.lineWidth = 1.5
+    ctx.stroke()
+    ctx.restore()
+}
+
+function pakMunten() {
+    for (const o of obstakels) {
+        if (o.soort !== 'munt' || aangevraagd.has(o.id)) continue
+            if (Math.hypot(mijnVogel.x - o.x, mijnVogel.y - o.y) > HIT_R + MUNT_R) continue
+                geluid.munt()
+                if (benIkHost) {
+                    o.weg = true
+                    mijnScore++
+                    stuurMunt(o.id, 'host')
+                } else {
+                    aangevraagd.add(o.id)
+                    spelKanaal.send({ type: 'broadcast', event: 'fb-munt-vraag', payload: { id: o.id } })
+                }
+    }
+    obstakels = obstakels.filter(o => !o.weg)
+    toonStand()
+}
+
+function tekenMunt(o) {
+    const breedte = Math.abs(Math.cos(frame * 0.08 + o.id)) * MUNT_R + 1
+    ctx.beginPath()
+    ctx.ellipse(o.x, o.y, breedte, MUNT_R, 0, 0, Math.PI * 2)
+    ctx.fillStyle = '#fbbf24'
+    ctx.fill()
+    ctx.strokeStyle = '#b45309'
+    ctx.lineWidth = 1.5
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.ellipse(o.x, o.y, breedte * 0.5, MUNT_R * 0.55, 0, 0, Math.PI * 2)
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)'
+    ctx.lineWidth = 1
+    ctx.stroke()
+}
+
+function uitBeeld(v) {
         return v.x + VOGEL_R < 0
     }
 
@@ -286,9 +421,11 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
             for (const o of obstakels) if (o.soort === 'spijkers') tekenSpijkers(o)
                 for (const o of obstakels) if (o.soort === 'fakkel') tekenFakkel(o)
                     for (const o of obstakels) if (o.soort === 'vallend') tekenVallend(o)
+    for (const o of obstakels) if (o.soort === 'munt' && !aangevraagd.has(o.id)) tekenMunt(o)
+    for (const o of obstakels) if (o.soort === 'hart' && !aangevraagd.has(o.id)) tekenHartje(o)
 
-                        if (!vriendVogel.dood) tekenVleermuis(vriendVogel.x, vriendVogel.y, vriendVogel.vy, '#fbbf24')
-                            if (!mijnVogel.dood) tekenVleermuis(mijnVogel.x, mijnVogel.y, mijnVogel.vy, '#60a5fa')
+                        if (!vriendVogel.dood && !(vriendOnk && Math.floor(frame / 6) % 2)) tekenVleermuis(vriendVogel.x, vriendVogel.y, vriendVogel.vy, '#fbbf24')
+                            if (!mijnVogel.dood && !(frame < onkwetsbaarTot && Math.floor(frame / 6) % 2)) tekenVleermuis(mijnVogel.x, mijnVogel.y, mijnVogel.vy, '#60a5fa')
 
                                 if (melding && frame < melding.tot) {
                                     ctx.fillStyle = 'rgba(0,0,0,0.6)'
@@ -535,10 +672,25 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
 
             // Host maakt nieuwe obstakels: rots elke 90 frames, extra gevaar ertussen
             if (benIkHost) {
-                if (frame % 90 === 0) stuurNieuw(maakRots())
+                if (frame % 90 === 0) {
+        const rots = maakRots()
+        stuurNieuw(rots)
+        if (Math.random() < 0.6) {
+            stuurNieuw({ id: volgendeId++, soort: 'munt', x: rots.x + ROTS_BREEDTE / 2, y: rots.gapY + rots.gap / 2 })
+        }
+    }
                     if (frame % 90 === 45) {
                         const extra = maakExtra()
                         if (extra) stuurNieuw(extra)
+    if (rotsTeller >= HART_VANAF && Math.random() < HART_KANS) {
+        stuurNieuw({ id: volgendeId++, soort: 'hart', x: B + 26, y: PLAFOND_Y + 40 + Math.random() * (GROND_Y - PLAFOND_Y - 80) })
+    } else if (rotsTeller > 0 && (!extra || Math.random() < 0.5)) {
+        const aantal = 1 + Math.floor(Math.random() * 3)
+        const y = PLAFOND_Y + 40 + Math.random() * (GROND_Y - PLAFOND_Y - 80)
+        for (let i = 0; i < aantal; i++) {
+            stuurNieuw({ id: volgendeId++, soort: 'munt', x: B + 26 + (i - (aantal - 1) / 2) * 20, y })
+        }
+    }
                     }
             }
             beweegObstakels()
@@ -546,22 +698,30 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
             // Mijn vleermuis
             if (!mijnVogel.dood) {
                 beweegVleermuis(mijnVogel)
-                const geraakt = raaktGevaar(mijnVogel)
+                let geraakt = frame >= onkwetsbaarTot && raaktGevaar(mijnVogel)
+      let uit = uitBeeld(mijnVogel)
+      if ((geraakt || uit) && mijnHarten > 1) {
+        verliesHart(uit)
+        geraakt = false
+        uit = false
+      }
 
-                if (geraakt || uitBeeld(mijnVogel)) {
-                    mijnVogel.dood = true
+                if (geraakt || uit) {
+                    mijnVogel.dood = true; mijnHarten = 0; stuurLeven(); toonStand()
                     spelKanaal.send({ type: 'broadcast', event: 'fb-dood', payload: {} })
                     geluid.af(geraakt); const reden = geraakt ? '💥 Geraakt!' : '💀 Uit beeld!'
                     statusEl.textContent = vriendVogel.dood ? '' : `${reden} ${vriendNaam} vliegt nog...`
                     controleerEinde()
                 } else {
-                    // Punt voor elke rots die ik voorbij ben
+                    pakMunten()
+        // Rotsen geven geen punten meer, muntjes wel
+        pakHartjes()
                     for (const o of obstakels) {
                         if (o.soort !== 'rots' || mijnGeteld.has(o.id)) continue
                             if (o.x + ROTS_BREEDTE + 4 < mijnVogel.x - HIT_R) {
                                 mijnGeteld.add(o.id)
-                                mijnScore++; geluid.punt()
-                                document.getElementById('fb-score-mij').textContent = mijnScore
+                                
+                                toonStand()
                                 spelKanaal.send({
                                     type: 'broadcast',
                                     event: benIkHost ? 'fb-score-host' : 'fb-score-gast',
@@ -578,10 +738,10 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
                     spelKanaal.send({ type: 'broadcast', event: 'fb-sync', payload: {
                         obstakels: obstakels.map(o => ({ ...o })),
                                     vogelY: mijnVogel.y,
-                                    vogelX: mijnVogel.x
+                                    vogelX: mijnVogel.x, onk: frame < onkwetsbaarTot
                     }})
                 } else {
-                    spelKanaal.send({ type: 'broadcast', event: 'fb-vogel-gast', payload: { y: mijnVogel.y, x: mijnVogel.x } })
+                    spelKanaal.send({ type: 'broadcast', event: 'fb-vogel-gast', payload: { y: mijnVogel.y, x: mijnVogel.x, onk: frame < onkwetsbaarTot } })
                 }
             }
 
@@ -617,8 +777,8 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     function herstart() {
         cancelAnimationFrame(animFrame)
         resetStaat()
-        document.getElementById('fb-score-mij').textContent = '0'
-        document.getElementById('fb-score-vriend').textContent = '0'
+        
+        
         statusEl.textContent = ''
         inhoud.querySelectorAll('button.fb-herstart').forEach(b => b.remove())
         animFrame = requestAnimationFrame(update)
@@ -672,28 +832,60 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
         if (!benIkHost) {
             msg.payload.obstakels.forEach(toonMeldingVoor)
             obstakels = msg.payload.obstakels
-            zetVriend(msg.payload.vogelY, msg.payload.vogelX)
+            zetVriend(msg.payload.vogelY, msg.payload.vogelX); vriendOnk = !!msg.payload.onk
         }
     })
     spelKanaal.on('broadcast', { event: 'fb-vogel-gast' }, (msg) => {
-        if (benIkHost) zetVriend(msg.payload.y, msg.payload.x)
+        if (benIkHost) zetVriend(msg.payload.y, msg.payload.x); vriendOnk = !!msg.payload.onk
     })
     spelKanaal.on('broadcast', { event: 'fb-dood' }, () => {
-        vriendVogel.dood = true; geluid.vriendAf()
+        vriendVogel.dood = true; geluid.vriendAf(); vriendHarten = 0; toonStand()
         if (!mijnVogel.dood) statusEl.textContent = `${vriendNaam} is af. Hou vol!`
             controleerEinde()
     })
     spelKanaal.on('broadcast', { event: 'fb-score-host' }, (msg) => {
         if (!benIkHost) {
-            vriendScore = msg.payload.score
-            document.getElementById('fb-score-vriend').textContent = vriendScore
+            
+            toonStand()
         }
     })
     spelKanaal.on('broadcast', { event: 'fb-score-gast' }, (msg) => {
         if (benIkHost) {
-            vriendScore = msg.payload.score
-            document.getElementById('fb-score-vriend').textContent = vriendScore
+            
+            toonStand()
         }
+    })
+    spelKanaal.on('broadcast', { event: 'fb-munt-vraag' }, (msg) => {
+        if (!benIkHost || vriendVogel.dood) return
+            const munt = obstakels.find(o => o.soort === 'munt' && o.id === msg.payload.id)
+            if (!munt) return
+                obstakels = obstakels.filter(o => o !== munt)
+                vriendScore++
+                toonStand()
+                stuurMunt(munt.id, 'gast')
+    })
+    spelKanaal.on('broadcast', { event: 'fb-munt' }, (msg) => {
+        if (benIkHost) return
+            obstakels = obstakels.filter(o => o.id !== msg.payload.id)
+            mijnScore = msg.payload.gast
+            vriendScore = msg.payload.host
+            toonStand()
+    })
+    spelKanaal.on('broadcast', { event: 'fb-hart-vraag' }, (msg) => {
+            if (!benIkHost || vriendVogel.dood) return
+                const hart = obstakels.find(o => o.soort === 'hart' && o.id === msg.payload.id)
+                if (!hart) return
+                    obstakels = obstakels.filter(o => o !== hart)
+                    spelKanaal.send({ type: 'broadcast', event: 'fb-hart', payload: { id: hart.id, door: 'gast' } })
+        })
+        spelKanaal.on('broadcast', { event: 'fb-hart' }, (msg) => {
+            if (benIkHost) return
+                obstakels = obstakels.filter(o => o.id !== msg.payload.id)
+                if (msg.payload.door === 'gast' && !mijnVogel.dood) krijgHart()
+        })
+        spelKanaal.on('broadcast', { event: 'fb-leven' }, (msg) => {
+        vriendHarten = msg.payload.harten
+        toonStand()
     })
     spelKanaal.on('broadcast', { event: 'fb-herstart' }, () => herstart())
 }

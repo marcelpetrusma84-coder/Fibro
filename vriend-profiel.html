@@ -139,13 +139,13 @@ body.heeft-wallpaper::before { display:block; }
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=83'
-  import { pasBlokstijlToe } from './blokstijl.js?v=83'
-  import { supabase } from './supabase.js?v=83'
-  import { wisVriendData } from './opruimen.js?v=83'
-  import { initSync } from './sync.js?v=83'
-  import { eisSessie, startBewaking } from './sessie.js?v=83'
-  import { startMeldingen } from './meldingen.js?v=83'
+  import { laadThema } from './thema.js?v=84'
+  import { pasBlokstijlToe } from './blokstijl.js?v=84'
+  import { supabase } from './supabase.js?v=84'
+  import { wisVriendData } from './opruimen.js?v=84'
+  import { initSync } from './sync.js?v=84'
+  import { eisSessie, startBewaking } from './sessie.js?v=84'
+  import { startMeldingen } from './meldingen.js?v=84'
   pasBlokstijlToe()
 
   var vriendId = null
@@ -671,7 +671,7 @@ async function renderVriendMuziek(el) {
         const ruwBs = await laadFotoUitDB('vriend_' + vriendId + '_blokstijl')
         if (!ruwBs) return
         const bs = JSON.parse(ruwBs)
-        const m = await import('./blokstijl.js?v=83')
+        const m = await import('./blokstijl.js?v=84')
         const eigen = m.haalBlokstijl()
         m.pasBlokstijlToe({ ...eigen, kleur: bs.kleur, doorzicht: bs.doorzicht, hoek: bs.hoek })
       } catch (e) { console.warn('[blokstijl] stijl van vriend toepassen mislukt', e) }

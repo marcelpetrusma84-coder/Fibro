@@ -1,8 +1,8 @@
 // sync.js — P2P widget-sync via WebRTC DataChannel
 // Stap A: presence ✓ | Stap B: DataChannel ping-pong
 // Zelfde signaling-patroon als bellen.js: gedeeld kanaal met gesorteerde IDs
-import { supabase } from './supabase.js?v=79'
-import { ICE_SERVERS, iceReady } from './ice-config.js?v=79'
+import { supabase } from './supabase.js?v=80'
+import { ICE_SERVERS, iceReady } from './ice-config.js?v=80'
 
 let presenceKanaal = null
 let huidigeUserId = null
@@ -377,7 +377,17 @@ const WBG_WIDGETS = ['poll', 'quote', 'aftel', 'optel']
     } catch(e) {}
   }
   // Achtergrondfoto's achter tekstwidgets (v79)
-                    const wbg = {}
+                    // Blokstijl: kleur, doorzichtigheid en hoeken (v80). Kantelen blijft lokaal.
+          let eigenBlokstijl = null
+          try {
+              const r = JSON.parse(localStorage.getItem('fibro_blokstijl') || '{}') || {}
+              const kleur = /^#[0-9a-fA-F]{6}$/.test(r.kleur) ? r.kleur : '#ffffff'
+              const d = Number(r.doorzicht), h = Number(r.hoek)
+              const doorzicht = r.doorzicht != null && r.doorzicht !== '' && Number.isFinite(d) ? d : 12
+              const hoek = r.hoek != null && r.hoek !== '' && Number.isFinite(h) ? h : 14
+              eigenBlokstijl = { kleur, doorzicht, hoek }
+          } catch (e) {}
+          const wbg = {}
                     for (const sl of WBG_WIDGETS) {
                         try {
                             const rec = await dbGet('widgetbg_' + sl + '_' + huidigeUserId)
@@ -396,7 +406,8 @@ const WBG_WIDGETS = ['poll', 'quote', 'aftel', 'optel']
     videoHash,
     klein,
     wbg,
-                                naam: eigenNaam
+                                blokstijl: eigenBlokstijl,
+          naam: eigenNaam
   }
   dataChannel.send(JSON.stringify({ type: 'manifest', data: manifest }))
   zetP2pStatus('manifest gestuurd')
@@ -435,7 +446,27 @@ async function verwerkP2pBericht(bericht) {
       if (!fCached || fCached.hash !== fotos[itemId].hash) nodig.push('foto:' + itemId)
     }
     // Achtergrondfoto's achter tekstwidgets (v79)
-                                if (bericht.data.wbg && typeof bericht.data.wbg === 'object') {
+                                // Blokstijl van de vriend (v80): streng controleren, dan bewaren
+    try {
+        const bs = bericht.data.blokstijl
+        if (bs && typeof bs === 'object') {
+            const kleur = typeof bs.kleur === 'string' && /^#[0-9a-fA-F]{6}$/.test(bs.kleur) ? bs.kleur : null
+            const d = Number(bs.doorzicht), h = Number(bs.hoek)
+            const doorzicht = Number.isFinite(d) ? Math.max(0, Math.min(100, Math.round(d))) : null
+            const hoek = Number.isFinite(h) ? Math.max(0, Math.min(50, Math.round(h))) : null
+            if (kleur !== null && doorzicht !== null && hoek !== null) {
+                const json = JSON.stringify({ kleur, doorzicht, hoek })
+                const bKey = 'vriend_' + syncPartnerId + '_blokstijl'
+                const bCached = await dbGet(bKey)
+                const bHash = hashString(json)
+                if (!bCached || bCached.hash !== bHash) {
+                    await dbPut({ id: bKey, hash: bHash, data: json, ontvangen: Date.now() })
+                    console.log('[sync] Blokstijl van vriend bijgewerkt:', json)
+                }
+            }
+        }
+    } catch (e) { console.warn('[sync] blokstijl verwerken mislukt', e) }
+    if (bericht.data.wbg && typeof bericht.data.wbg === 'object') {
                                     for (const sl of WBG_WIDGETS) {
                                         const wKey = 'vriend_' + syncPartnerId + '_wbg_' + sl
                                         const binnenW = bericht.data.wbg[sl]

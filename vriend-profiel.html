@@ -138,13 +138,13 @@ body.heeft-wallpaper::before { display:block; }
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=79'
-  import { pasBlokstijlToe } from './blokstijl.js?v=79'
-  import { supabase } from './supabase.js?v=79'
-  import { wisVriendData } from './opruimen.js?v=79'
-  import { initSync } from './sync.js?v=79'
-  import { eisSessie, startBewaking } from './sessie.js?v=79'
-  import { startMeldingen } from './meldingen.js?v=79'
+  import { laadThema } from './thema.js?v=80'
+  import { pasBlokstijlToe } from './blokstijl.js?v=80'
+  import { supabase } from './supabase.js?v=80'
+  import { wisVriendData } from './opruimen.js?v=80'
+  import { initSync } from './sync.js?v=80'
+  import { eisSessie, startBewaking } from './sessie.js?v=80'
+  import { startMeldingen } from './meldingen.js?v=80'
   pasBlokstijlToe()
 
   var vriendId = null
@@ -663,6 +663,18 @@ async function renderVriendMuziek(el) {
 
     const params = new URLSearchParams(window.location.search)
     vriendId = params.get('id')
+    // Blokstijl van de vriend tonen (v80); zonder gesyncte stijl blijft de eigen stijl staan
+    ;(async () => {
+      try {
+        if (!vriendId) return
+        const ruwBs = await laadFotoUitDB('vriend_' + vriendId + '_blokstijl')
+        if (!ruwBs) return
+        const bs = JSON.parse(ruwBs)
+        const m = await import('./blokstijl.js?v=80')
+        const eigen = m.haalBlokstijl()
+        m.pasBlokstijlToe({ ...eigen, kleur: bs.kleur, doorzicht: bs.doorzicht, hoek: bs.hoek })
+      } catch (e) { console.warn('[blokstijl] stijl van vriend toepassen mislukt', e) }
+    })()
     if (!vriendId) { window.location.href = 'vrienden.html'; return }
 
     toonVriendWidgets()

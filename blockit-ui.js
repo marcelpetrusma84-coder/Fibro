@@ -727,7 +727,9 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
             }
         }
 
-        // Steen van je vriend
+        if (mijnStuk) tekenHalo(absoluut(mijnStuk), MIJN_KLEUR)
+
+    // Steen van je vriend
         if (vriendStuk && vriendStuk.cellen) {
             for (const [x, y] of vriendStuk.cellen) {
                 if (y < 0) continue
@@ -760,7 +762,9 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
                 }
         }
 
-        for (const r of ringen) {
+        if (mijnStuk) tekenContour(absoluut(mijnStuk), MIJN_KLEUR)
+
+    for (const r of ringen) {
             ctx.globalAlpha = Math.max(0, r.leven)
             ctx.strokeStyle = r.kleur
             ctx.lineWidth = Math.max(1, cel * 0.35 * r.leven)
@@ -800,7 +804,51 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
         }
     }
 
-    function tekenHud() {
+    function contourVan(cellen) {
+    const bezet = new Set(cellen.map(([x, y]) => x + ',' + y))
+    const lijnen = []
+    for (const [x, y] of cellen) {
+        if (!bezet.has(x + ',' + (y - 1))) lijnen.push([x, y, x + 1, y])
+            if (!bezet.has(x + ',' + (y + 1))) lijnen.push([x, y + 1, x + 1, y + 1])
+                if (!bezet.has((x - 1) + ',' + y)) lijnen.push([x, y, x, y + 1])
+                    if (!bezet.has((x + 1) + ',' + y)) lijnen.push([x + 1, y, x + 1, y + 1])
+    }
+    return lijnen
+}
+
+// Zachte, kloppende gloed onder je eigen steen
+function tekenHalo(cellen, kleur) {
+    const puls = 0.55 + 0.45 * Math.sin(nu() / 180)
+    ctx.save()
+    ctx.shadowColor = kleur
+    ctx.shadowBlur = cel * (0.6 + 0.5 * puls)
+    ctx.fillStyle = kleur
+    ctx.globalAlpha = 0.35 + 0.25 * puls
+    for (const [x, y] of cellen) if (y >= 0) ctx.fillRect(gx + x * cel, gy + y * cel, cel, cel)
+        ctx.restore()
+}
+
+// Lichtende rand om de buitenkant van je eigen steen
+function tekenContour(cellen, kleur) {
+    const puls = 0.55 + 0.45 * Math.sin(nu() / 180)
+    ctx.save()
+    ctx.lineCap = 'round'
+    ctx.strokeStyle = kleur
+    ctx.shadowColor = kleur
+    ctx.shadowBlur = cel * 0.5 * puls + 4
+    ctx.lineWidth = Math.max(2, cel * 0.12)
+    ctx.globalAlpha = 0.75 + 0.25 * puls
+    ctx.beginPath()
+    for (const [x1, y1, x2, y2] of contourVan(cellen)) {
+        if (y1 < 0 && y2 < 0) continue
+            ctx.moveTo(gx + x1 * cel, gy + y1 * cel)
+            ctx.lineTo(gx + x2 * cel, gy + y2 * cel)
+    }
+    ctx.stroke()
+    ctx.restore()
+}
+
+function tekenHud() {
         const wb = Math.min(170, B * 0.34)
         const pb = (B - wb - 24) / 2
         tekenSpeler(IK, 'Jij', MIJN_KLEUR, 6, 4, pb, HUD_H - 12)

@@ -2,8 +2,9 @@
 // Spelvormen: gedeelde bak (gemengde of eigen kleuren) en twee velden.
 // Gedeelde bak: de host beheert de bak, de wachtrij en de punten.
 // Twee velden: ieder beheert zijn eigen bak; vierkanten sturen rijen naar je vriend.
-// Een vierkant laadt je volgende steen met Crush; een vierkant van 4x4 of groter maakt hem een bom.
-// Crush: je steen boort door alles heen en verdwijnt daarna zelf ook.
+// Een vierkant laadt je volgende steen: veeg hem omlaag en hij boort door alles heen en ontploft.
+// Hoe groter het vierkant dat je weghaalt, hoe groter die explosie.
+// Bomstenen zitten willekeurig in de wachtrij en ontploffen zodra ze landen.
 
 export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     vriendNaam = vriendNaam || 'vriend'
@@ -17,7 +18,8 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     // ── Instellingen ──
     const KOL_SAMEN = 20, KOL_VERSUS = 10, RIJ = 20
     const LOCK_MS = 380
-    const BOM_STRAAL = 1              // 1 = gat van 3x3
+    const BOM_STRAAL = 3              // straal van het gat in blokjes (3 = rond gat van ongeveer 7 breed)
+    const BOM_KANS = 1 / 12           // hoe vaak er een bomsteen in de wachtrij zit
     const HUD_H = 66
     const CRUSH_KLEUR = '#ffe066'
     const BOM_KLEUR = '#ff9f1c'
@@ -75,7 +77,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     let modus = null                  // null (kiezen) | 'samen' | 'eigen' | 'versus'
     let KOL = KOL_SAMEN
     let rooster, pop, wachtrij, scores
-    let lading, ladingStuk, bom, bomStuk
+    let lading, ladingStuk, bom, bomStuk   // lading = verdiende explosiestraal voor je volgende steen (0 = geen)
     let vriendRooster = null          // twee velden: de bak van je vriend, alleen om te tekenen
     let mijnStuk, vriendStuk, wachtOpSteen, vraagNr, vraagTijd, wachtendeData
     let spawnWacht, valTimer, lockTimer, bezig, gameOver, starttijd
@@ -97,8 +99,8 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
         wachtrij = benIkHost || modus === 'versus' ? [nieuwStukData(), nieuwStukData(), nieuwStukData()] : []
         vriendRooster = modus === 'versus' ? leegRooster(KOL) : null
         scores = [0, 0]
-        lading = [false, false]
-        ladingStuk = [false, false]
+        lading = [0, 0]
+        ladingStuk = [0, 0]
         bom = [false, false]
         bomStuk = [false, false]
         mijnStuk = null
@@ -128,6 +130,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     }
 
     function nieuwStukData() {
+        if (Math.random() < BOM_KANS) return { vorm: 'B', k: 0, keuze: 0 }
         return {
             vorm: VORM_NAMEN[Math.floor(Math.random() * VORM_NAMEN.length)],
             k: Math.floor(Math.random() * KLEUREN.length),
@@ -242,18 +245,14 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     // ── De baas over de bak ──
     function geefSteen(speler) {
         const crush = lading[speler]
-        lading[speler] = false
+        lading[speler] = 0
         ladingStuk[speler] = crush
-        // Beloning na een 4x4 of groter: deze steen is een bom (de wachtrij schuift niet door)
-        if (bom[speler]) {
-            bom[speler] = false
-            bomStuk[speler] = true
-            return { vorm: 'B', k: 0, crush, bom: true }
-        }
-        bomStuk[speler] = false
         const data = wachtrij.shift()
         wachtrij.push(nieuwStukData())
-        return { vorm: data.vorm, k: kleurVoor(data, speler), crush, bom: false }
+        const isBom = data.vorm === 'B'
+        bomStuk[speler] = isBom
+        bom[speler] = isBom
+        return { vorm: data.vorm, k: isBom ? 0 : kleurVoor(data, speler), crush, bom: isBom }
     }
 
     function landInBak(speler, cellen, k, isCrush, isBom) {
@@ -261,10 +260,14 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
         let geplaatst = cellen.map(c => [c[0], c[1]])
 
         // Alleen een geladen steen mag crushen, alleen een echte bom mag ontploffen
-        if (isCrush && !ladingStuk[speler]) isCrush = false
+        const verdiend = ladingStuk[speler]
+        if (isCrush && !verdiend) isCrush = false
             if (isBom && !bomStuk[speler]) isBom = false
-                ladingStuk[speler] = false
+                ladingStuk[speler] = 0
                 bomStuk[speler] = false
+
+                // Vegen met een geladen steen boort door alles heen en ontploft onderaan
+                const straal = isBom ? (isCrush ? BOM_STRAAL + verdiend - 1 : BOM_STRAAL) : (isCrush ? verdiend : 0)
 
                 if (isCrush) {
                     const onderste = new Map()
@@ -286,20 +289,22 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
                 }
 
                 let overloop = false
-                if (isBom) {
+                if (straal > 0) {
                     let [bx, by] = geplaatst[0]
                     while (by >= 0 && rooster[by][bx] !== null) by--
                         by = Math.max(0, by)
                         let geplet = 0
-                        for (let y = by - BOM_STRAAL; y <= by + BOM_STRAAL; y++) {
-                            for (let x = bx - BOM_STRAAL; x <= bx + BOM_STRAAL; x++) {
-                                if (y >= 0 && y < RIJ && x >= 0 && x < KOL && rooster[y][x] !== null) {
-                                    rooster[y][x] = null
-                                    geplet++
-                                }
+                        for (let y = by - straal; y <= by + straal; y++) {
+                            for (let x = bx - straal; x <= bx + straal; x++) {
+                                // Rond gat in plaats van een vierkant
+                                if ((x - bx) * (x - bx) + (y - by) * (y - by) > straal * straal + straal) continue
+                                    if (y >= 0 && y < RIJ && x >= 0 && x < KOL && rooster[y][x] !== null) {
+                                        rooster[y][x] = null
+                                        geplet++
+                                    }
                             }
                         }
-                        effecten.push({ t: 'bom', speler, x: bx, y: by, geplet })
+                        effecten.push({ t: 'bom', speler, x: bx, y: by, geplet, straal })
                 } else if (!isCrush) {
                     // Is een plek intussen bezet (de ander landde net eerder)? Dan schuift het blokje omhoog.
                     const landing = []
@@ -345,14 +350,12 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
                         }
                     }
 
+                    // Hoe groter het vlak, hoe groter de explosie bij je volgende veeg
                     let beloning = null
-                    if (v.k >= 4 && !bom[speler]) {
-                        bom[speler] = true
-                        beloning = 'bom'
-                    }
-                    if (!lading[speler]) {
-                        lading[speler] = true
-                        if (!beloning) beloning = 'crush'
+                    const verdiend = v.k - 1
+                    if (verdiend > lading[speler]) {
+                        lading[speler] = verdiend
+                        beloning = verdiend
                     }
                     effecten.push({ t: 'vierkant', speler, x: v.x, y: v.y, k: v.k, kleur: v.kleur, keten, punten, dikte, beloning })
                     laatVallen()
@@ -450,10 +453,11 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
                         lockTimer = 0
                         if (stuk.bom) {
                             geluid.crushKlaar()
-                            meld('💣 Bom! Laat hem vallen, of veeg snel omlaag om eerst door de blokken te boren')
+                            meld(stuk.crush ? '💣⚡ Bom én geladen! Veeg omlaag voor een extra grote knal'
+                            : '💣 Bom! Waar hij landt, ontploft hij')
                         } else if (stuk.crush) {
                             geluid.crushKlaar()
-                            meld('⚡ Crush! Veeg snel omlaag om door de blokken te boren')
+                            meld('⚡ Geladen (explosie ' + stuk.crush + ')! Veeg snel omlaag')
                         }
                         stuurStuk()
                         return
@@ -611,17 +615,20 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
                 geluid.crush()
             } else if (e.t === 'bom') {
                 const cx = e.x + 0.5, cy = e.y + 0.5
-                for (let i = 0; i < 40; i++) {
+                for (let i = 0; i < 120; i++) {
                     const hoek = Math.random() * Math.PI * 2
-                    const snel = 4 + Math.random() * 14
-                    deeltjes.push({ x: cx, y: cy, vx: Math.cos(hoek) * snel, vy: Math.sin(hoek) * snel - 4, leven: 1, kleur: Math.random() < 0.5 ? BOM_KLEUR : '#ffd23f', grootte: 0.2 + Math.random() * 0.3 })
+                    const snel = 6 + Math.random() * 26
+                    deeltjes.push({ x: cx, y: cy, vx: Math.cos(hoek) * snel, vy: Math.sin(hoek) * snel - 6, leven: 1, kleur: Math.random() < 0.4 ? BOM_KLEUR : Math.random() < 0.7 ? '#ffd23f' : '#ffffff', grootte: 0.25 + Math.random() * 0.45 })
                 }
-                ringen.push({ x: cx, y: cy, max: BOM_STRAAL * 2 + 4, kleur: BOM_KLEUR, leven: 1 })
-                ringen.push({ x: cx, y: cy, max: BOM_STRAAL * 2 + 1.5, kleur: '#ffffff', leven: 1 })
-                zweef(cx, cy - 1.2, 'BOEM!' + (e.geplet ? ' ' + e.geplet + ' weg' : ''), BOM_KLEUR, 1.5)
-                flits = { kleur: BOM_KLEUR, a: 0.45 }
+                const straal = e.straal || BOM_STRAAL
+                ringen.push({ x: cx, y: cy, max: straal * 2 + 9, kleur: BOM_KLEUR, leven: 1 })
+                ringen.push({ x: cx, y: cy, max: straal * 2 + 5, kleur: '#ffd23f', leven: 1 })
+                ringen.push({ x: cx, y: cy, max: straal * 2 + 2, kleur: '#ffffff', leven: 1 })
+                zweef(cx, cy - 1.2, 'BOEM!' + (e.geplet ? ' ' + e.geplet + ' weg' : ''), BOM_KLEUR, 2.1)
+                flits = { kleur: '#ffffff', a: 0.7 }
+                setTimeout(() => { flits = { kleur: BOM_KLEUR, a: 0.5 } }, 90)
                 schok(1)
-                stoot = 1
+                stoot = 1.6
                 geluid.bom()
             } else if (e.t === 'vierkant') {
                 const kleur = KLEUREN[e.kleur]
@@ -643,11 +650,8 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
                                 ringen.push({ x: cx, y: cy, max: e.k + 1.5, kleur: 'rgba(255,255,255,0.7)', leven: 1 })
                                 schok(0.35)
                             }
-                            if (e.beloning === 'bom') {
-                                zweef(cx, cy + 3.6, 'VOLGENDE STEEN: BOM!', BOM_KLEUR, 0.85)
-                                if (e.speler === IK) geluid.ontgrendeld()
-                            } else if (e.beloning === 'crush') {
-                                zweef(cx, cy + 3.6, 'VOLGENDE STEEN: CRUSH!', CRUSH_KLEUR, 0.8)
+                            if (e.beloning) {
+                                zweef(cx, cy + 3.6, 'VOLGENDE VEEG: EXPLOSIE ' + e.beloning, CRUSH_KLEUR, 0.85)
                                 if (e.speler === IK) geluid.ontgrendeld()
                             }
             }
@@ -706,7 +710,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
             deeltjes.push({ x: x + Math.random(), y: y + Math.random(), vx: (Math.random() - 0.5) * 4, vy: -1 - Math.random() * 3, leven: 0.6, kleur: mijnStuk.bom ? BOM_KLEUR : CRUSH_KLEUR, grootte: 0.12 })
         }
         schud = Math.max(0, schud - s * 1.8)
-        stoot = Math.max(0, stoot - s * 2.2)
+        stoot = Math.max(0, stoot - s * 1.6)
         if (flits) {
             flits.a -= s * 2.2
             if (flits.a <= 0) flits = null
@@ -1191,6 +1195,10 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
             const vakX = wx + 4 + n * vakB
             const bx = vakX + (vakB - (maxX - minX + 1) * mini) / 2 - minX * mini
             const by = wy + 16 + (wh - 18 - (maxY - minY + 1) * mini) / 2 - minY * mini
+            if (data.vorm === 'B') {
+                tekenBom(bx, by, mini * 1.6)
+                return
+            }
             const k = kleurVoor(data, IK)
             for (const [cx, cy] of cellen) tekenBlok(bx + cx * mini, by + cy * mini, mini, k, n === 0 ? 1 : 0.7)
         })
@@ -1231,15 +1239,11 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
             balk = BOM_KLEUR
         } else if (crushNu) {
             ctx.fillStyle = Math.sin(nu() / 70) > 0 ? CRUSH_KLEUR : '#ffffff'
-            ctx.fillText('⚡ CRUSH!', x + b - 8, y + 16)
+            ctx.fillText('⚡ CRUSH ' + stuk.crush, x + b - 8, y + 16)
             balk = CRUSH_KLEUR
-        } else if (bom[i]) {
-            ctx.fillStyle = BOM_KLEUR
-            ctx.fillText('Bom bij volgende', x + b - 8, y + 16)
-            balk = 'rgba(255,159,28,0.35)'
         } else if (lading[i]) {
             ctx.fillStyle = CRUSH_KLEUR
-            ctx.fillText('Crush bij volgende', x + b - 8, y + 16)
+            ctx.fillText('Explosie ' + lading[i] + ' bij volgende', x + b - 8, y + 16)
             balk = 'rgba(255,224,102,0.35)'
         } else {
             ctx.fillStyle = '#a99cc9'
@@ -1504,9 +1508,11 @@ function maakGeluid() {
             toon({ freq: 200, eind: 40, duur: 0.35, type: 'square', volume: 0.12 })
         },
         bom() {
-            toon({ freq: 95, eind: 25, duur: 0.9, volume: 0.5 })
-            ruis({ duur: 1.1, volume: 0.55, filter: 3000, filterEind: 50 })
-            ruis({ duur: 0.15, volume: 0.35, filter: 5000, filterEind: 1500, soort: 'highpass' })
+            toon({ freq: 110, eind: 18, duur: 1.4, volume: 0.6 })
+            toon({ freq: 60, eind: 20, duur: 1.6, volume: 0.45, vertraging: 0.05 })
+            ruis({ duur: 1.6, volume: 0.6, filter: 3500, filterEind: 40 })
+            ruis({ duur: 0.2, volume: 0.45, filter: 6000, filterEind: 1200, soort: 'highpass' })
+            ruis({ duur: 0.9, volume: 0.25, filter: 900, filterEind: 120, vertraging: 0.25 })
         },
         rommel() {
             ruis({ duur: 0.4, volume: 0.35, filter: 500, filterEind: 80 })

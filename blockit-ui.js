@@ -3,6 +3,7 @@
 // Gedeelde bak: de host beheert de bak, de wachtrij en de punten.
 // Twee velden: ieder beheert zijn eigen bak; vierkanten sturen rijen naar je vriend.
 // Een vierkant laadt je volgende steen met Crush; een vierkant van 4x4 of groter maakt hem een bom.
+// Crush: je steen boort door alles heen en verdwijnt daarna zelf ook.
 
 export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     vriendNaam = vriendNaam || 'vriend'
@@ -81,6 +82,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     let schud = 0, stoot = 0, flits = null, deeltjes = [], teksten = [], ringen = []
     let laatsteStukSync = 0, laatste = 0, animFrame = null, aftelInterval = null, pingInterval = null
     let gastAntwoorden = new Map()
+    let vriendAanwezig = false
     let cel = 16, celV = 10, B = 300, H = 400, gx = 6, gy = HUD_H + 6, vgx = 0, vgy = 0
 
     function leegRooster(kol) {
@@ -298,7 +300,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
                             }
                         }
                         effecten.push({ t: 'bom', speler, x: bx, y: by, geplet })
-                } else {
+                } else if (!isCrush) {
                     // Is een plek intussen bezet (de ander landde net eerder)? Dan schuift het blokje omhoog.
                     const landing = []
                     geplaatst.sort((a, b) => b[1] - a[1])
@@ -316,7 +318,9 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
                 }
                 laatVallen()
                 const aanval = overloop ? 0 : vierkantenInBak(speler, effecten)
-                return { effecten, overloop, aanval }
+                // Raakt een blok de bovenkant van het speelveld? Dan is het spel voorbij.
+                if (rooster[0].some(c => c !== null)) overloop = true
+                    return { effecten, overloop, aanval }
     }
 
     function vierkantenInBak(speler, effecten) {
@@ -403,9 +407,10 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
             schok(0.7)
             stoot = Math.max(stoot, 0.6)
             geluid.rommel()
-            zweef(KOL / 2, RIJ - 3, '+' + n + (n === 1 ? ' RIJ!' : ' RIJEN!'), '#ff4d6d', 1.1)
-            stuurVeld()
-            if (overloop) verloren()
+            if (rooster[0].some(c => c !== null)) overloop = true
+                zweef(KOL / 2, RIJ - 3, '+' + n + (n === 1 ? ' RIJ!' : ' RIJEN!'), '#ff4d6d', 1.1)
+                stuurVeld()
+                if (overloop) verloren()
     }
 
     // ── Eigen steen ──
@@ -757,6 +762,10 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
         resize()
         keuzeEl.innerHTML = ''
         keuzeEl.style.display = 'flex'
+        if (!vriendAanwezig) {
+            statusEl.textContent = '⏳ Wachten tot ' + vriendNaam + ' in het spel zit...'
+            return
+        }
         if (benIkHost) {
             statusEl.textContent = 'Kies een spelvorm'
             for (const v of SPELVORMEN) {
@@ -979,6 +988,31 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
         }
     }
 
+    function tekenGrens(r, x0, y0, c) {
+        // Rode lijn bovenaan; hoe dichter de blokken bij de bovenkant, hoe feller hij knippert
+        let hoogste = RIJ
+        for (let y = 0; y < RIJ && hoogste === RIJ; y++) if (r[y].some(v => v !== null)) hoogste = y
+            const gevaar = hoogste <= 4 ? 1 - hoogste / 5 : 0
+            const puls = 0.5 + 0.5 * Math.sin(nu() / (gevaar > 0 ? 90 : 400))
+            ctx.save()
+            if (gevaar > 0) {
+                const verloop = ctx.createLinearGradient(0, y0, 0, y0 + c * 5)
+                verloop.addColorStop(0, 'rgba(255,60,90,' + (0.35 * gevaar * (0.6 + 0.4 * puls)) + ')')
+                verloop.addColorStop(1, 'rgba(255,60,90,0)')
+                ctx.fillStyle = verloop
+                ctx.fillRect(x0, y0, c * KOL, c * 5)
+            }
+            ctx.strokeStyle = '#ff3c5a'
+            ctx.lineWidth = gevaar > 0 ? 2 + gevaar * 2 : 1.5
+            ctx.setLineDash([6, 4])
+            ctx.globalAlpha = gevaar > 0 ? 0.6 + 0.4 * puls : 0.45
+            ctx.beginPath()
+            ctx.moveTo(x0, y0 + 0.5)
+            ctx.lineTo(x0 + c * KOL, y0 + 0.5)
+            ctx.stroke()
+            ctx.restore()
+    }
+
     function teken() {
         ctx.clearRect(0, 0, B, H)
         ctx.save()
@@ -996,6 +1030,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
             ctx.font = '600 11px ' + FONT
             ctx.fillText(vriendNaam, vgx, vgy - 8)
             tekenBak(vriendRooster, vgx, vgy, celV, null)
+            tekenGrens(vriendRooster, vgx, vgy, celV)
             if (vriendStuk && vriendStuk.cellen) {
                 tekenCellen(vriendStuk.cellen, vgx, vgy, celV, vriendStuk)
                 if (vriendStuk.crush || vriendStuk.bom) tekenContour(vriendStuk.cellen, vriendStuk.bom ? BOM_KLEUR : CRUSH_KLEUR, true, vgx, vgy, celV)
@@ -1009,6 +1044,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
         }
 
         tekenBak(rooster, gx, gy, cel, pop)
+        tekenGrens(rooster, gx, gy, cel)
 
         // Gloed onder je eigen steen
         const eigenKleur = mijnStuk ? (mijnStuk.bom ? BOM_KLEUR : mijnStuk.crush ? CRUSH_KLEUR : MIJN_KLEUR) : MIJN_KLEUR
@@ -1283,7 +1319,14 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
 
     // ── Ontvangen berichten ──
     // Spelvorm: de gast meldt zich tot de host een spelvorm stuurt
-    spelKanaal.on('broadcast', { event: 'bi-klaar' }, () => {
+    spelKanaal.on('broadcast', { event: 'bi-hier' }, () => {
+        const eerst = !vriendAanwezig
+        vriendAanwezig = true
+        // Meld jezelf één keer terug, zodat je vriend ook weet dat jij er bent
+        if (eerst) {
+            spelKanaal.send({ type: 'broadcast', event: 'bi-hier', payload: {} })
+            if (!modus) toonKeuze()
+        }
         if (benIkHost && modus) spelKanaal.send({ type: 'broadcast', event: 'bi-modus', payload: { modus } })
     })
     spelKanaal.on('broadcast', { event: 'bi-modus' }, (msg) => {
@@ -1360,16 +1403,14 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
 
     // ── Start ──
     toonKeuze()
-    if (!benIkHost) {
-        spelKanaal.send({ type: 'broadcast', event: 'bi-klaar', payload: {} })
-        pingInterval = setInterval(() => {
-            if (!isActief()) {
-                clearInterval(pingInterval)
-                return
-            }
-            if (!modus) spelKanaal.send({ type: 'broadcast', event: 'bi-klaar', payload: {} })
-        }, 1500)
-    }
+    spelKanaal.send({ type: 'broadcast', event: 'bi-hier', payload: {} })
+    pingInterval = setInterval(() => {
+        if (!isActief()) {
+            clearInterval(pingInterval)
+            return
+        }
+        if (!vriendAanwezig) spelKanaal.send({ type: 'broadcast', event: 'bi-hier', payload: {} })
+    }, 1200)
     animFrame = requestAnimationFrame(lus)
     window._spelAnimFrame = animFrame
 }

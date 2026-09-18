@@ -120,15 +120,6 @@ body.heeft-wallpaper::before { display:block; }
     <button class="chat-btn" onclick="naarChat()">Chat openen</button>
   </div>
 
-  <div class="block">
-    <div class="block-title">Gastenboek</div>
-    <div id="gbEntries"><div class="laden">Laden...</div></div>
-    <div class="gb-input">
-      <input class="gb-field" id="gbInput" placeholder="Laat een berichtje achter...">
-      <button class="gb-send" onclick="sendGb()">Stuur</button>
-    </div>
-  </div>
-
 </div>
 
 <div class="bottom-nav">
@@ -750,17 +741,26 @@ async function renderVriendMuziek(el) {
       }))
     } catch(e) {}
 
-    await laadGastenboek()
   }
 
-  // Gastenboek in een widgettegel. Overgenomen van renderGastenboek() uit
-  // index.html, met huidigeUser.id als schrijver in plaats van window._uid.
+  // Gastenboek als opengeslagen boek. Papier, liniatuur en kantlijn zitten
+  // in de stijl hieronder; de gegevens komen uit guestbook_entries.
   async function renderGastenboekWidget(c, uid) {
     if (!c) return
     const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')
     const veiligeAfbeelding = v => {
       const u = String(v||'').trim()
       return /^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=]+$/i.test(u) ? u : null
+    }
+
+    const wanneer = iso => {
+      const s = Math.floor((Date.now() - new Date(iso)) / 1000)
+      if (s < 60) return 'zojuist'
+      if (s < 3600) return Math.floor(s/60) + ' min geleden'
+      if (s < 86400) return Math.floor(s/3600) + ' uur geleden'
+      if (s < 172800) return 'gisteren'
+      if (s < 604800) return Math.floor(s/86400) + ' dagen geleden'
+      return new Date(iso).toLocaleDateString('nl-NL', { day:'numeric', month:'short' })
     }
 
     const haal = async () => {
@@ -773,26 +773,48 @@ async function renderVriendMuziek(el) {
       return data
     }
 
+    // Papier: warme ondergrond, blauwe liniatuur, rode kantlijn, vouw links.
+    const papier = [
+      'background-color:#f3ead6',
+      'background-image:repeating-linear-gradient(transparent,transparent 25px,rgba(70,90,130,0.16) 25px,rgba(70,90,130,0.16) 26px),linear-gradient(90deg,rgba(120,90,60,0.22),rgba(120,90,60,0) 22px)',
+      'border-radius:4px 10px 10px 4px',
+      'box-shadow:inset 3px 0 6px rgba(90,60,30,0.18),0 2px 10px rgba(0,0,0,0.35)',
+      'font-family:Georgia,"Iowan Old Style","Times New Roman",serif',
+      'color:#3a3226',
+      'padding:12px 14px 12px 26px',
+      'position:relative'
+    ].join(';')
+
+    c.style.cssText = 'align-items:stretch;text-align:left;gap:0;' + papier
+
     c.innerHTML = `
-      <div id="gbwLijst" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;max-height:200px;overflow-y:auto"></div>
-      <div style="display:flex;gap:6px">
-        <input id="gbwInvoer" maxlength="300" placeholder="Schrijf iets..." style="flex:1;background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:20px;padding:7px 12px;color:var(--text);font-size:13px;outline:none;min-width:0">
-        <button id="gbwKnop" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:20px;padding:7px 14px;color:#1a0a2e;font-size:13px;font-weight:600;cursor:pointer">➤</button>
+      <div style="position:absolute;top:0;bottom:0;left:18px;width:1px;background:rgba(170,60,60,0.35)"></div>
+      <div id="gbwLijst" style="flex:1;min-height:0;overflow-y:auto;padding-right:2px"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;border-top:1px solid rgba(90,70,40,0.25);padding-top:8px">
+        <input id="gbwInvoer" maxlength="300" placeholder="Schrijf iets in het boek..." style="flex:1;min-width:0;background:transparent;border:0;outline:0;font-family:inherit;font-size:14px;color:#2f2a20;padding:2px 0">
+        <button id="gbwKnop" title="Plaatsen" style="background:transparent;border:0;cursor:pointer;font-size:17px;line-height:1;color:#4a5a7a;padding:2px 4px">\u2712</button>
       </div>`
 
     const vul = d => {
       const l = c.querySelector('#gbwLijst')
       if (!l) return
       if (!d?.length) {
-        l.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,0.8);text-align:center;padding:10px">Nog geen berichten 👋</div>'
+        l.innerHTML = '<div style="font-size:14px;font-style:italic;color:#8a7f6d;padding:14px 4px">Dit boek is nog leeg.</div>'
         return
       }
       l.innerHTML = d.map(e => {
         const avSrc = veiligeAfbeelding(e.author?.avatar_data)
         const av = avSrc
-          ? `<img src="${avSrc}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0">`
-          : `<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">${escH(e.author?.avatar_url||'👤')}</div>`
-        return `<div style="display:flex;gap:8px;align-items:flex-start">${av}<div style="flex:1;min-width:0;background:rgba(255,255,255,0.04);border-radius:10px;padding:6px 10px"><div style="font-size:12px;font-weight:600;color:var(--accent)">${escH(e.author?.username||'?')}</div><div style="font-size:13px;line-height:1.4;word-break:break-word">${escH(e.content)}</div></div></div>`
+          ? `<img src="${avSrc}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;filter:sepia(0.25)">`
+          : `<div style="width:22px;height:22px;border-radius:50%;background:rgba(74,90,122,0.15);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">${escH(e.author?.avatar_url||'\u270D')}</div>`
+        return `<div style="padding:7px 0;border-bottom:1px solid rgba(90,70,40,0.12)">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
+            ${av}
+            <span style="font-size:13px;font-weight:700;color:#33415c">${escH(e.author?.username||'?')}</span>
+            <span style="font-size:11px;color:#9a8f7c;margin-left:auto">${escH(wanneer(e.created_at))}</span>
+          </div>
+          <div style="font-size:14px;line-height:1.45;word-break:break-word;padding-left:29px">${escH(e.content)}</div>
+        </div>`
       }).join('')
     }
 
@@ -870,7 +892,6 @@ async function renderVriendMuziek(el) {
     })
     if (!error) {
       input.value = ''
-      await laadGastenboek()
     }
   }
 

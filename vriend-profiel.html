@@ -746,6 +746,7 @@ async function renderVriendMuziek(el) {
   // Gastenboek als opengeslagen boek. Papier, liniatuur en kantlijn zitten
   // in de stijl hieronder; de gegevens komen uit guestbook_entries.
   async function renderGastenboekWidget(c, uid) {
+    // Gastenboek als opengeslagen boek, met bladzijden in plaats van scrollen.
     if (!c) return
     const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')
     const veiligeAfbeelding = v => {
@@ -763,18 +764,47 @@ async function renderVriendMuziek(el) {
       return new Date(iso).toLocaleDateString('nl-NL', { day:'numeric', month:'short' })
     }
 
+    // De omslag-beweging staat één keer in de pagina.
+    if (!document.getElementById('gb-boek-stijl')) {
+      const st = document.createElement('style')
+      st.id = 'gb-boek-stijl'
+      st.textContent = `
+        @keyframes gbBladerVooruit {
+          from { transform: rotateY(0deg); opacity: 1 }
+          50%  { transform: rotateY(-14deg); opacity: 0 }
+          to   { transform: rotateY(0deg); opacity: 1 }
+        }
+        @keyframes gbBladerTerug {
+          from { transform: rotateY(0deg); opacity: 1 }
+          50%  { transform: rotateY(14deg); opacity: 0 }
+          to   { transform: rotateY(0deg); opacity: 1 }
+        }
+        .gb-blad { transform-origin: left center }
+        .gb-blad-vooruit { animation: gbBladerVooruit 340ms ease-in-out }
+        .gb-blad-terug { animation: gbBladerTerug 340ms ease-in-out }
+        @media (prefers-reduced-motion: reduce) {
+          .gb-blad-vooruit, .gb-blad-terug { animation: none }
+        }`
+      document.head.appendChild(st)
+    }
+
     const haal = async () => {
       const { data } = await supabase
         .from('guestbook_entries')
         .select('*, author:author_id(username,avatar_url,avatar_data)')
         .eq('profile_id', uid)
         .order('created_at', { ascending: false })
-        .limit(8)
-      return data
+        .limit(40)
+      return data || []
     }
 
     // Papier: warme ondergrond, blauwe liniatuur, rode kantlijn, vouw links.
     const papier = [
+      'display:flex',
+      'flex-direction:column',
+      'align-items:stretch',
+      'text-align:left',
+      'gap:0',
       'background-color:#f3ead6',
       'background-image:repeating-linear-gradient(transparent,transparent 25px,rgba(70,90,130,0.16) 25px,rgba(70,90,130,0.16) 26px),linear-gradient(90deg,rgba(120,90,60,0.22),rgba(120,90,60,0) 22px)',
       'border-radius:4px 10px 10px 4px',
@@ -782,43 +812,83 @@ async function renderVriendMuziek(el) {
       'font-family:Georgia,"Iowan Old Style","Times New Roman",serif',
       'color:#3a3226',
       'padding:12px 14px 12px 26px',
-      'position:relative'
+      'position:relative',
+      'perspective:900px'
     ].join(';')
 
-    c.style.cssText = 'align-items:stretch;text-align:left;gap:0;' + papier
+    c.style.cssText += ';' + papier
 
     c.innerHTML = `
       <div style="position:absolute;top:0;bottom:0;left:18px;width:1px;background:rgba(170,60,60,0.35)"></div>
-      <div id="gbwLijst" style="flex:1;min-height:0;overflow-y:auto;padding-right:2px"></div>
-      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;border-top:1px solid rgba(90,70,40,0.25);padding-top:8px">
+      <div id="gbwLijst" class="gb-blad" style="flex:1;min-height:0;overflow:hidden"></div>
+      <div id="gbwLijst-nav" style="display:flex;align-items:center;gap:8px;font-size:12px;color:#8a7f6d;padding:4px 0 2px"></div>
+      <div style="display:flex;align-items:center;gap:8px;border-top:1px solid rgba(90,70,40,0.25);padding-top:8px">
         <input id="gbwInvoer" maxlength="300" placeholder="Schrijf iets in het boek..." style="flex:1;min-width:0;background:transparent;border:0;outline:0;font-family:inherit;font-size:14px;color:#2f2a20;padding:2px 0">
         <button id="gbwKnop" title="Plaatsen" style="background:transparent;border:0;cursor:pointer;font-size:17px;line-height:1;color:#4a5a7a;padding:2px 4px">\u2712</button>
       </div>`
 
-    const vul = d => {
-      const l = c.querySelector('#gbwLijst')
-      if (!l) return
-      if (!d?.length) {
-        l.innerHTML = '<div style="font-size:14px;font-style:italic;color:#8a7f6d;padding:14px 4px">Dit boek is nog leeg.</div>'
-        return
-      }
-      l.innerHTML = d.map(e => {
-        const avSrc = veiligeAfbeelding(e.author?.avatar_data)
-        const av = avSrc
-          ? `<img src="${avSrc}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;filter:sepia(0.25)">`
-          : `<div style="width:22px;height:22px;border-radius:50%;background:rgba(74,90,122,0.15);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">${escH(e.author?.avatar_url||'\u270D')}</div>`
-        return `<div style="padding:7px 0;border-bottom:1px solid rgba(90,70,40,0.12)">
-          <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
-            ${av}
-            <span style="font-size:13px;font-weight:700;color:#33415c">${escH(e.author?.username||'?')}</span>
-            <span style="font-size:11px;color:#9a8f7c;margin-left:auto">${escH(wanneer(e.created_at))}</span>
-          </div>
-          <div style="font-size:14px;line-height:1.45;word-break:break-word;padding-left:29px">${escH(e.content)}</div>
-        </div>`
-      }).join('')
+    let alles = []
+    let blad = 0
+
+    const bladen = () => Math.max(1, Math.ceil(alles.length / 4))
+
+    const tekenBericht = e => {
+      const avSrc = veiligeAfbeelding(e.author?.avatar_data)
+      const av = avSrc
+        ? `<img src="${avSrc}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;filter:sepia(0.25)">`
+        : `<div style="width:22px;height:22px;border-radius:50%;background:rgba(74,90,122,0.15);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">${escH(e.author?.avatar_url||'\u270D')}</div>`
+      return `<div style="padding:7px 0;border-bottom:1px solid rgba(90,70,40,0.12)">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
+          ${av}
+          <span style="font-size:13px;font-weight:700;color:#33415c">${escH(e.author?.username||'?')}</span>
+          <span style="font-size:11px;color:#9a8f7c;margin-left:auto">${escH(wanneer(e.created_at))}</span>
+        </div>
+        <div style="font-size:14px;line-height:1.45;word-break:break-word;padding-left:29px">${escH(e.content)}</div>
+      </div>`
     }
 
-    vul(await haal())
+    const tekenNav = () => {
+      const nav = c.querySelector('#gbwLijst-nav')
+      if (!nav) return
+      if (alles.length <= 4) { nav.innerHTML = ''; return }
+      const knop = (richting, teken, uit) =>
+        `<button data-blader="${richting}" style="background:transparent;border:0;font-family:inherit;font-size:16px;line-height:1;padding:2px 6px;color:#4a5a7a;cursor:${uit?'default':'pointer'};opacity:${uit?0.25:1}" ${uit?'disabled':''}>${teken}</button>`
+      nav.innerHTML =
+        knop('terug', '\u2039', blad === 0) +
+        `<span style="margin:0 auto">blz. ${blad + 1} van ${bladen()}</span>` +
+        knop('vooruit', '\u203A', blad >= bladen() - 1)
+      nav.querySelectorAll('[data-blader]').forEach(b => {
+        b.addEventListener('click', () => blader(b.dataset.blader))
+      })
+    }
+
+    const tekenBlad = richting => {
+      const l = c.querySelector('#gbwLijst')
+      if (!l) return
+      if (!alles.length) {
+        l.innerHTML = '<div style="font-size:14px;font-style:italic;color:#8a7f6d;padding:14px 4px">Dit boek is nog leeg.</div>'
+        tekenNav()
+        return
+      }
+      const begin = blad * 4
+      l.innerHTML = alles.slice(begin, begin + 4).map(tekenBericht).join('')
+      tekenNav()
+      if (richting) {
+        l.classList.remove('gb-blad-vooruit', 'gb-blad-terug')
+        void l.offsetWidth
+        l.classList.add(richting === 'vooruit' ? 'gb-blad-vooruit' : 'gb-blad-terug')
+      }
+    }
+
+    const blader = richting => {
+      const nieuw = richting === 'vooruit' ? blad + 1 : blad - 1
+      if (nieuw < 0 || nieuw >= bladen()) return
+      blad = nieuw
+      tekenBlad(richting)
+    }
+
+    alles = await haal()
+    tekenBlad(null)
 
     const stuur = async () => {
       const inp = c.querySelector('#gbwInvoer')
@@ -832,13 +902,13 @@ async function renderVriendMuziek(el) {
         content: t
       })
       if (error) { console.warn('[gastenboek] plaatsen mislukt', error); return }
-      vul(await haal())
+      alles = await haal()
+      blad = 0
+      tekenBlad(null)
     }
 
     c.querySelector('#gbwKnop')?.addEventListener('click', stuur)
-    c.querySelector('#gbwInvoer')?.addEventListener('keydown', e => {
-      if (e.key === 'Enter') stuur()
-    })
+    c.querySelector('#gbwInvoer')?.addEventListener('keydown', e => { if (e.key === 'Enter') stuur() })
   }
 
   async function laadGastenboek() {

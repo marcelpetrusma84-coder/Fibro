@@ -380,9 +380,9 @@ body.heeft-wallpaper::before { display:block; }
       }
       // Gastenboek-widget: dezelfde inhoud als op de homepagina
       if (w.id === 'gastenboek') {
-        el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">📖</span><span class="widget-titel">Gastenboek</span></div><div class="widget-inhoud gbw-inhoud" style="align-items:stretch;text-align:left;gap:8px;"></div>'
-        await renderGastenboekWidget(el.querySelector('.gbw-inhoud'), vriendId)
+        el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">📖</span><span class="widget-titel">Gastenboek</span></div><div class="widget-inhoud gbw-inhoud" style="align-items:stretch;text-align:left;gap:8px;background:rgba(20,8,36,0.72);border-radius:12px;padding:10px;"></div>'
         grid.appendChild(el)
+        await renderGastenboekWidget(el.querySelector('.gbw-inhoud'), vriendId)
         continue
       }
       el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">' + (w.icon || '🧩') + '</span><span class="widget-titel">' + (w.titel || w.id) + '</span></div><div class="widget-inhoud"><div class="wi-icon">' + (w.icon || '🧩') + '</div></div>'
@@ -781,7 +781,7 @@ async function renderVriendMuziek(el) {
       </div>`
 
     const vul = d => {
-      const l = document.getElementById('gbwLijst')
+      const l = c.querySelector('#gbwLijst')
       if (!l) return
       if (!d?.length) {
         l.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,0.8);text-align:center;padding:10px">Nog geen berichten 👋</div>'
@@ -799,7 +799,7 @@ async function renderVriendMuziek(el) {
     vul(await haal())
 
     const stuur = async () => {
-      const inp = document.getElementById('gbwInvoer')
+      const inp = c.querySelector('#gbwInvoer')
       if (!inp) return
       const t = inp.value.trim()
       if (!t || t.length > 300) return
@@ -813,8 +813,8 @@ async function renderVriendMuziek(el) {
       vul(await haal())
     }
 
-    document.getElementById('gbwKnop')?.addEventListener('click', stuur)
-    document.getElementById('gbwInvoer')?.addEventListener('keydown', e => {
+    c.querySelector('#gbwKnop')?.addEventListener('click', stuur)
+    c.querySelector('#gbwInvoer')?.addEventListener('keydown', e => {
       if (e.key === 'Enter') stuur()
     })
   }

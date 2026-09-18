@@ -1,4 +1,4 @@
-// fotoviewer.js — Fibro
+// fotoviewer.js — Fibro  (v2)
 //
 // Klik op een foto in een widget en hij opent groot over de pagina heen.
 // Staan er meer foto's in dezelfde widget, dan kun je doorbladeren met de
@@ -8,7 +8,11 @@
 // hoeven te weten: de klik wordt opgevangen op documentniveau. Ook foto's
 // die pas later verschijnen doen dus mee.
 //
-// Inhaken:  <script src="./fotoviewer.js?v=1"></script>  vlak voor </body>
+// De klik wordt in de vangfase opgepakt, dus vóór de fotocel eronder.
+// Anders zou op je eigen pagina tegelijk de bestandskiezer opengaan.
+// Een foto vervangen gaat daar met het kruisje wissen en dan de plus.
+//
+// Inhaken:  <script src="./fotoviewer.js?v=2"></script>  vlak voor </body>
 
 (function () {
   'use strict'
@@ -24,9 +28,8 @@
     // Avatars in het gastenboek en andere kleine plaatjes overslaan.
     if (img.closest('#gbl') || img.closest('#gbwLijst')) return false
     if (img.getBoundingClientRect().width < MINIMALE_BREEDTE) return false
-    if (!img.src || img.src.indexOf('data:image') !== 0) {
-      if (!/^https?:|^blob:/.test(img.src || '')) return false
-    }
+    if (!img.src) return false
+    if (img.src.indexOf('data:image') !== 0 && !/^https?:|^blob:/.test(img.src)) return false
     return true
   }
 
@@ -113,12 +116,16 @@
     document.documentElement.style.overflow = ''
   }
 
+  // Vangfase: dit draait vóór de klikafhandeling van de fotocel zelf, zodat
+  // op de eigen pagina niet ook de bestandskiezer opengaat.
   document.addEventListener('click', function (e) {
-    var img = e.target.closest ? e.target.closest('img') : null
+    if (overlay && overlay.contains(e.target)) return
+    var img = e.target && e.target.closest ? e.target.closest('img') : null
     if (!komtInAanmerking(img)) return
     e.preventDefault()
+    e.stopPropagation()
     open(img)
-  })
+  }, true)
 
   document.addEventListener('keydown', function (e) {
     if (!overlay || overlay.style.display === 'none') return
@@ -127,9 +134,12 @@
     else if (e.key === 'ArrowRight') ga(1)
   })
 
-  // Muisaanwijzer laten zien dat foto's aanklikbaar zijn.
+  // De fotocellen zetten pointer-events op none om de klik door te laten
+  // vallen naar de cel. Dat zetten we terug, anders bereikt de klik de foto
+  // nooit. De knoppen in de hoeken blijven gewoon werken.
   var stijl = document.createElement('style')
-  stijl.textContent = '.widget-blok img { cursor: zoom-in }' +
-    '#gbl img, #gbwLijst img { cursor: default }'
+  stijl.textContent =
+    '.widget-blok img { pointer-events: auto !important; cursor: zoom-in }' +
+    '#gbl img, #gbwLijst img { pointer-events: none !important; cursor: default }'
   document.head.appendChild(stijl)
 })()

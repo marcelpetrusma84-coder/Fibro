@@ -358,7 +358,7 @@ window.veiligeUrl = function(v){
   import { startMeldingen } from './meldingen.js?v=95'
   import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=95'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=95'
-  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=95'
+  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=96'
   import { stuurRapport } from './rapport.js?v=95'
   import * as Schaak from './schaak.js?v=95'
   import * as Dammen from './dammen.js?v=95'
@@ -1843,7 +1843,7 @@ async function startBlockIt() {
 
     // Initiator (speler 1) belt, ontvanger neemt automatisch op
     if (benIkSpeler1) {
-      await belOp(geselecteerdeVriend.id, false)
+      await belOp(geselecteerdeVriend.id, false, true)
     }
     // Ontvanger accepteert automatisch als hij een bel uitnodiging krijgt tijdens spel
   }

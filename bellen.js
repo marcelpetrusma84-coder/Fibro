@@ -42,11 +42,12 @@ function luisterNaarUitnodigingen() {
   uitnodigingKanaal = supabase
     .channel('bel-uitnodiging-' + huidigeUserId, { config: { broadcast: { self: false } } })
     .on('broadcast', { event: 'uitnodiging' }, (msg) => {
-      const { van, video } = msg.payload
+      const { van, video, spel } = msg.payload
       console.log('Uitnodiging ontvangen van:', van)
       vriendId = van
       isInitiator = false
       openGesprekKanaal(van)
+      if (spel) { accepteerOproep(false); return }
       if (onOproepCallback) onOproepCallback({ van, videoModus: video })
     })
     .subscribe((status) => { console.log('Uitnodigingskanaal status:', status) })
@@ -115,7 +116,7 @@ function stopBelTimeout() {
   if (belTimeout) { clearTimeout(belTimeout); belTimeout = null }
 }
 
-export async function belOp(naarVriendId, video = false) {
+export async function belOp(naarVriendId, video = false, spelModus = false) {
   await iceReady // TURN-servers eerst binnen laten komen
   vriendId = naarVriendId
   isInitiator = true
@@ -127,7 +128,7 @@ export async function belOp(naarVriendId, video = false) {
   openGesprekKanaal(naarVriendId)
   const uitnodiging = supabase.channel('bel-uitnodiging-' + naarVriendId)
   await new Promise((resolve) => { uitnodiging.subscribe((s) => { if (s === 'SUBSCRIBED') resolve() }) })
-  await uitnodiging.send({ type: 'broadcast', event: 'uitnodiging', payload: { van: huidigeUserId, video } })
+  await uitnodiging.send({ type: 'broadcast', event: 'uitnodiging', payload: { van: huidigeUserId, video, spel: spelModus } })
   supabase.removeChannel(uitnodiging)
   // Zonder timeout blijft de microfoon oneindig aan als niemand opneemt
   stopBelTimeout()

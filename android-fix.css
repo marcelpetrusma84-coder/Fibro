@@ -1,0 +1,12 @@
+/* Android-aanpassingen — 20 sept 2026 */
+
+/* Voorkomt dat Chrome de pagina herlaadt als je naar beneden veegt */
+html, body {
+  overscroll-behavior: none;
+}
+
+/* Geen grijze flits bij aanraken, geen wachttijd op dubbeltik */
+button, a, .knop {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}

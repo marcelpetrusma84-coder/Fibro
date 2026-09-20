@@ -80,6 +80,7 @@ window.werkOpslagBalkBij=werkOpslagBalkBij
 async function laadFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
 async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').delete(id);tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}catch{return null}}
 </script>
+<link rel="stylesheet" href="android-fix.css">
 </head>
 <body>
 <div id="sleutel-balk" style="display:none;position:sticky;top:0;z-index:9999;background:#2a1f3d;border-bottom:2px solid #c084fc;padding:14px 16px;font-family:'DM Mono',monospace;">

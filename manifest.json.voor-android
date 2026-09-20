@@ -2,7 +2,6 @@
   "name": "Fibro",
   "short_name": "Fibro",
   "description": "Jouw persoonlijke sociale app",
-  "id": "/Fibro/",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#1a0a2e",
@@ -12,20 +11,12 @@
     {
       "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/png"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "type": "image/png"
     }
   ],
   "scope": "./"

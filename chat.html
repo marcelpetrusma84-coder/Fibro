@@ -1360,13 +1360,13 @@ console.timeLog('[chat] berichten', 'opgehaald')
     spelKanaal.on('broadcast', { event: 'ping' }, () => {
       laatstePing = Date.now()
       pingOntvangen = true
+      startSpelBel()
     })
     spelKanaal.subscribe()
     startSpelHartslag()
     bouwSpelChatUI()
 
     // Start spel-audiobel automatisch
-    startSpelBel()
   }
 
   window.verstuurSpelChat = function(tekst) {

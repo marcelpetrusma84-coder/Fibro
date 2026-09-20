@@ -78,7 +78,7 @@
     </div>
   </div>
   <p class="voet">Toetsen: <b>spatie</b> springen, twee keer voor dubbelsprong.
-    <b>omlaag</b> glijden. <b>X</b> schieten. Schiet blokken kapot om erdoor te komen.</p>
+    <b>omlaag</b> glijden. <b>X</b> schieten. De camera kruipt door; achterblijven kost een leven.</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>
@@ -152,29 +152,34 @@ var BREED=320,HOOG=180,TEGEL=16,GRONDY=144,ZWAARTE=900,CHUNK=10*TEGEL;
 /* ---------- figuren, met de hand op het pixelraster ---------- */
 function tekenRunner(g,f){
   var K=P.zwart,B=P.blauw,D=P.blauwD,W=P.wit,C=P.cyaan,G=P.grijs;
+  // f: 0 loop A, 1 loop B, 2 sprong, 3 glijden
   if(f===3){
     px(g,K,0,10,22,10);
     px(g,B,1,11,18,7); px(g,D,1,16,18,3);
     px(g,W,3,12,6,2);
-    px(g,G,9,11,7,5); px(g,C,13,12,4,3);
-    px(g,D,17,13,5,4); px(g,C,21,14,1,2);
+    px(g,G,9,11,7,5); px(g,C,13,12,4,3);      // helm plat vooruit
+    px(g,D,17,13,5,4); px(g,C,21,14,1,2);     // kanon vooruit
     px(g,K,2,19,4,1); px(g,K,9,19,5,1);
     return;
   }
+  // helm
   px(g,K,2,0,11,10);
   px(g,B,3,1,9,8);
   px(g,W,4,1,5,2);
   px(g,C,8,3,4,4);
   px(g,D,3,7,6,2);
-  px(g,K,0,1,2,2); px(g,B,0,2,2,1);
+  px(g,K,0,1,2,2); px(g,B,0,2,2,1);           // vin achter
+  // romp
   px(g,K,2,9,10,8);
   px(g,B,3,10,8,6);
   px(g,C,5,11,3,2);
   px(g,G,3,10,2,4);
   px(g,D,3,15,8,2);
+  // kanonarm
   px(g,K,11,11,9,6);
   px(g,D,12,12,7,4);
   px(g,C,18,13,1,2);
+  // benen
   var voor=f===0?7:3, achter=f===0?3:7;
   px(g,K,voor,16,4,4); px(g,B,voor+1,17,2,3);
   px(g,K,achter,16,3,3); px(g,D,achter+1,17,1,2);
@@ -193,17 +198,17 @@ function tekenGunner(g,f){
     px(g,K,2,21,5,1); px(g,K,10,21,6,1);
     return;
   }
-  px(g,K,2,0,13,11);
+  px(g,K,2,0,13,11);      // helm
   px(g,G,3,1,11,9);
   px(g,O,4,1,5,2);
   px(g,C,9,3,5,5);
   px(g,D,3,8,7,2);
-  px(g,K,2,10,14,10);
+  px(g,K,2,10,14,10);     // romp, breder
   px(g,R,3,11,12,8);
   px(g,O,5,12,4,2);
-  px(g,G,3,11,3,5);
+  px(g,G,3,11,3,5);       // schouderpantser
   px(g,D,3,17,12,2);
-  px(g,K,14,11,11,8);
+  px(g,K,14,11,11,8);     // zwaar kanon
   px(g,S,15,12,9,6);
   px(g,D,15,13,6,2);
   px(g,K,23,13,2,4);
@@ -232,18 +237,6 @@ function maakTegel(scene){
   px(b,P.roze,4,6,8,3);
   px(b,P.zwart,4,6,8,1);
   b.generateTexture("blok",16,16);b.destroy();
-
-  /* aangeschoten blok: dezelfde steen met barsten erin */
-  var s=scene.make.graphics({x:0,y:0,add:false});
-  px(s,P.steenD,0,0,16,16);
-  px(s,P.staal,1,1,14,14);
-  px(s,P.steenL,1,1,14,2);
-  px(s,P.roze,4,6,8,3);
-  px(s,P.zwart,4,6,8,1);
-  px(s,P.zwart,3,2,1,4); px(s,P.zwart,4,6,1,2);
-  px(s,P.zwart,11,3,1,3); px(s,P.zwart,10,9,1,4);
-  px(s,P.zwart,6,11,4,1);
-  s.generateTexture("blokStuk",16,16);s.destroy();
 }
 
 function maakStad(scene){
@@ -270,11 +263,13 @@ function maakLucht(scene){
   px(g,P.luchtB,0,40,BREED,40);
   px(g,P.luchtC,0,80,BREED,40);
   px(g,P.luchtD,0,120,BREED,60);
+  // dithering tussen de banden, zoals een console dat oploste
   for(var b=0;b<3;b++){
     var y=40+b*40, k=[P.luchtA,P.luchtB,P.luchtC][b];
     for(var x=0;x<BREED;x+=2)px(g,k,x+(b%2),y,1,1);
     for(var x2=0;x2<BREED;x2+=4)px(g,k,x2,y+2,1,1);
   }
+  // wolken
   var r=rng(31);
   for(var w=0;w<5;w++){
     var cx=Math.floor(r()*BREED),cy=12+Math.floor(r()*44),cb=16+Math.floor(r()*18);
@@ -294,24 +289,16 @@ var Spel={
     this.onraakbaar=0;this.glijdt=0;this.sprongen=0;this.wacht=0;
     this.coyote=0;this.herlaad=0;this.loper=0;
     this.laatsteChunk=-1;this.chunks={};
-    this.brokken=[];this.bevries=0;
 
-    ["r0","r1","r2","r3","kogel"].forEach(function(k){
+    ["r0","r1","r2","r3"].forEach(function(k){
       if(this.textures.exists(k))this.textures.remove(k);
     },this);
     for(var f=0;f<4;f++){
       var g=this.make.graphics({x:0,y:0,add:false});
       h.teken(g,f);
-      g.generateTexture("r"+f,f===3?28:26,24);
+      g.generateTexture("r"+f,f===3?28:26,f===3?24:24);
       g.destroy();
     }
-    /* kogeltextuur vooraf, niet pas bij het eerste schot */
-    var gk=this.make.graphics({x:0,y:0,add:false}),R=h.kogelR;
-    px(gk,h.kogelKleur,0,1,R*2+2,R*2);
-    px(gk,h.kogelKleur,1,0,R*2,R*2+2);
-    px(gk,P.wit,1,1,2,2);
-    gk.generateTexture("kogel",R*2+2,R*2+2);gk.destroy();
-
     maakTegel(this);maakStad(this);maakLucht(this);
 
     this.add.image(0,0,"lucht").setOrigin(0,0).setScrollFactor(0).setDepth(-30);
@@ -325,13 +312,9 @@ var Spel={
 
     this.speler=this.physics.add.sprite(60,80,"r0");
     this.speler.body.setSize(h.bb,h.bh);
-    this.speler.body.setOffset(4,2);
+    this.speler.body.setOffset(4,f===3?4:2);
     this.speler.setDepth(5);
     this.physics.add.collider(this.speler,this.vast);
-    this.physics.add.overlap(this.kogels,this.vast,this.raakBlok,null,this);
-
-    /* brokstukken worden met de hand getekend, geen aparte objecten */
-    this.fx=this.add.graphics().setDepth(6);
 
     for(var c=0;c<4;c++)this.bouwChunk(c);
     this.laatsteChunk=3;
@@ -348,10 +331,7 @@ var Spel={
     var basis=index*CHUNK,lijst=[],scene=this;
     function tegel(tx,ty,key){
       var b=scene.vast.create(basis+tx*TEGEL,ty*TEGEL,key||"tegel").setOrigin(0,0);
-      b.refreshBody();
-      b.stuk=(key==="blok");   /* alleen losse blokken zijn kapot te schieten */
-      b.leven=2;
-      lijst.push(b);return b;
+      b.refreshBody();lijst.push(b);return b;
     }
     var gat=-1;
     if(index>=2&&r()<0.4)gat=2+Math.floor(r()*5);
@@ -368,68 +348,12 @@ var Spel={
         if(r()<0.4)tegel(tx,7,"blok");
       }
     }
-    /* een versperring: drie blokken op elkaar, dwars op je route */
-    if(index>=3&&r()<0.35){
-      var vx=1+Math.floor(r()*7);
-      if(vx!==gat&&vx!==gat+1){
-        tegel(vx,8,"blok");tegel(vx,7,"blok");tegel(vx,6,"blok");
-      }
-    }
     this.chunks[index]=lijst;
   },
   ruimChunk:function(i){
     var l=this.chunks[i];if(!l)return;
-    for(var k=0;k<l.length;k++)if(l[k]&&l[k].scene)l[k].destroy();
+    for(var k=0;k<l.length;k++)l[k].destroy();
     delete this.chunks[i];
-  },
-
-  /* ---------- brokstukken, naar het voorbeeld van Blockit ---------- */
-  spat:function(x,y,kleuren,aantal){
-    for(var i=0;i<aantal;i++){
-      var hoek=Math.random()*Math.PI*2,snel=40+Math.random()*150;
-      this.brokken.push({
-        x:x,y:y,
-        vx:Math.cos(hoek)*snel,
-        vy:Math.sin(hoek)*snel-70,
-        leven:1,
-        kleur:kleuren[Math.floor(Math.random()*kleuren.length)],
-        maat:1+Math.floor(Math.random()*3)
-      });
-    }
-    if(this.brokken.length>180)this.brokken=this.brokken.slice(-180);
-  },
-  tekenBrokken:function(d){
-    var g=this.fx;g.clear();
-    for(var i=this.brokken.length-1;i>=0;i--){
-      var p=this.brokken[i];
-      p.vy+=700*d;p.x+=p.vx*d;p.y+=p.vy*d;p.leven-=d*1.5;
-      if(p.leven<=0){this.brokken.splice(i,1);continue;}
-      g.fillStyle(p.kleur,p.leven>0.35?1:0.6);
-      g.fillRect(Math.floor(p.x),Math.floor(p.y),p.maat,p.maat);
-    }
-  },
-
-  raakBlok:function(kogel,blok){
-    if(!kogel.active||!blok.scene)return;
-    var mx=blok.x+8,my=blok.y+8;
-    kogel.destroy();
-    if(!blok.stuk){
-      /* harde grond: alleen vonken, de kogel is weg */
-      this.spat(mx-6,my-6,[P.wit,P.cyaan],4);
-      return;
-    }
-    blok.leven--;
-    if(blok.leven>0){
-      blok.setTexture("blokStuk");
-      this.spat(mx,my,[P.steenL,P.staal],5);
-      this.cameras.main.shake(60,0.002);
-      return;
-    }
-    this.spat(mx,my,[P.roze,P.staal,P.steenL,P.wit],16);
-    blok.destroy();
-    this.cameras.main.shake(100,0.005);
-    this.bevries=60;                 /* alles staat heel even stil */
-    this.physics.world.pause();
   },
 
   spring:function(){this.wacht=150;},
@@ -445,29 +369,26 @@ var Spel={
     this.speler.body.setOffset(4,2);
   },
   schiet:function(){
-    if(this.herlaad>0||this.bevries>0)return;
+    if(this.herlaad>0)return;
     this.herlaad=this.h.herlaad;
     var y=this.speler.y+(this.glijdt>0?5:-1);
     var k=this.kogels.create(this.speler.x+9,y,"kogel");
+    if(!this.textures.exists("kogel")){
+      var g=this.make.graphics({x:0,y:0,add:false});
+      var R=this.h.kogelR;
+      px(g,this.h.kogelKleur,0,1,R*2+2,R*2);
+      px(g,this.h.kogelKleur,1,0,R*2,R*2+2);
+      px(g,P.wit,1,1,2,2);
+      g.generateTexture("kogel",R*2+2,R*2+2);g.destroy();
+      k.setTexture("kogel");
+    }
     k.body.setAllowGravity(false);
-    k.body.setSize(6,6);
     k.setVelocityX(260);k.setDepth(4);k.geboren=this.time.now;
-    this.spat(this.speler.x+12,y,[this.h.kogelKleur],2);
   },
 
   update:function(tijd,dt){
     dt=Math.min(dt,50);
-    var d=dt/1000;
-
-    /* korte stilstand na een treffer: alleen de brokstukken bewegen door */
-    if(this.bevries>0){
-      this.bevries-=dt;
-      this.tekenBrokken(d*0.35);
-      if(this.bevries<=0)this.physics.world.resume();
-      return;
-    }
-
-    var s=this.speler,h=this.h;
+    var s=this.speler,h=this.h,d=dt/1000;
 
     this.camX+=h.loop*d;
     this.cameras.main.scrollX=Math.floor(this.camX);
@@ -521,8 +442,6 @@ var Spel={
       if(k.active&&(k.x>this.camX+BREED+20||tijd-k.geboren>2200))k.destroy();
     },this);
 
-    this.tekenBrokken(d);
-
     if(s.x<this.camX+8||s.y>HOOG+80)this.verliesLeven();
     metersVak.textContent=Math.floor(this.camX/16)+"M";
   },
@@ -532,7 +451,6 @@ var Spel={
     this.levens--;
     tekenHarten(Math.max(0,this.levens),this.h.levens);
     this.cameras.main.shake(140,0.006);
-    this.spat(this.speler.x,this.speler.y,[P.roze,P.wit],14);
     if(this.levens<=0){this.einde();return;}
     this.speler.setPosition(this.camX+90,50);
     this.speler.setVelocity(0,0);

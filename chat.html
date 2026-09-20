@@ -1842,15 +1842,8 @@ async function startBlockIt() {
     document.getElementById('spelMuteBtn').style.justifyContent = 'center'
 
     // Initiator (speler 1) belt, ontvanger neemt automatisch op
-    alert('A) speler1 = ' + benIkSpeler1)
     if (benIkSpeler1) {
-      alert('B) belOp start')
-      try {
-        const okBel = await belOp(geselecteerdeVriend.id, false)
-        alert('C) belOp gaf terug: ' + okBel)
-      } catch (e) {
-        alert('FOUT: ' + (e && e.name) + ' - ' + (e && e.message))
-      }
+      await belOp(geselecteerdeVriend.id, false)
     }
     // Ontvanger accepteert automatisch als hij een bel uitnodiging krijgt tijdens spel
   }

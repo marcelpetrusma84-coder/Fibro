@@ -81,6 +81,11 @@ function zetStijl() {
   .rg .zSpring{border-color:var(--cyaan);color:var(--cyaan)}
   .rg .zSchiet{border-color:var(--roze);color:var(--roze)}
   .rg .zSpring.in{background:rgba(94,231,224,.16)}
+  /* liggend: het veld vult het hele scherm; sluit- en microfoonknop liggen erbovenop */
+  .rg.liggend{padding:0}
+  .rg.liggend .veld{border:none;border-radius:0}
+  .rg.liggend .hud{padding-right:108px}
+  body.rg-vol #spelChatWrap{display:none!important}
   .rg .zSchiet.in{background:rgba(255,93,158,.16)}
   `
   document.head.appendChild(st)
@@ -158,11 +163,16 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
 
   /* ---------- indeling: past het veld in de ruimte die de chat overlaat ---------- */
   function indeling() {
-    const W = wrap.clientWidth - 20, H = wrap.clientHeight - 52 - 64
-    const staand = aanraak && H > W
+    const volB = wrap.clientWidth, volH = wrap.clientHeight
+    const liggend = volB > volH
+    const W = volB - 20, H = volH - 52 - 64
+    const staand = aanraak && !liggend
+    wrap.classList.toggle('liggend', liggend)
     wrap.classList.toggle('staand', staand)
     let vb, vh
-    if (staand) {
+    if (liggend) {
+      vh = volH; vb = Math.min(volB, Math.round(vh * 520 / 180))
+    } else if (staand) {
       vb = W; vh = Math.round(vb * 180 / 320)
       const rest = H - vh - 10
       wrap.querySelector('.bediening').style.height = Math.max(110, rest) + 'px'
@@ -808,8 +818,12 @@ function zetAanraking(scene){
 
   /* ---------- opruimen zodra het spel gesloten wordt ---------- */
   const waker = setInterval(() => {
-    if (isActief() && wrap.isConnected) return
+    if (isActief() && wrap.isConnected) {
+      document.body.classList.toggle('rg-vol', wrap.classList.contains('liggend') && laag.hidden)
+      return
+    }
     clearInterval(waker)
+    document.body.classList.remove('rg-vol')
     window.removeEventListener('resize', indeling)
     window.removeEventListener('orientationchange', indeling)
     huidige = null

@@ -43,6 +43,7 @@ function zetStijl() {
     padding:8px 9px;pointer-events:none;z-index:2}
   .rg .score{font-size:13px;color:#fff;text-shadow:2px 2px 0 #0b1020;letter-spacing:1px}
   .rg .meters{font-size:7px;color:#bfe9ff;text-shadow:1px 1px 0 #0b1020;margin-top:2px}
+  .rg .ander{font-size:7px;color:#ffd27a;text-shadow:1px 1px 0 #0b1020;margin-top:4px}
   .rg .harten{display:flex;gap:4px}
   .rg .harten svg{width:14px;height:12px;shape-rendering:crispEdges}
   .rg .laag{position:absolute;inset:0;display:grid;place-items:center;text-align:center;
@@ -117,7 +118,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   wrap.innerHTML = `
     <div class="veld">
       <div class="hud" aria-hidden="true">
-        <div><div class="score">0000000</div><div class="meters">0M</div></div>
+        <div><div class="score">0000000</div><div class="meters">0M</div><div class="ander"></div></div>
         <div class="harten"></div>
       </div>
       <div class="laag">
@@ -459,6 +460,7 @@ var Spel=new Phaser.Class({
 
     this.toetsen=this.input.keyboard.addKeys("SPACE,UP,DOWN,X",false);
     zetAanraking(this);
+    maakGeest(this);
     tekenHarten(this.levens,h.levens);
   },
 
@@ -711,6 +713,7 @@ var Spel=new Phaser.Class({
 
     if(s.x<this.camX+8||s.y>HOOG+80)this.verliesLeven();
     metersVak.textContent=meter+"M  "+this.muntTal+" MUNTEN";
+    netwerkStap(this,tijd,dt);
   },
 
   verliesLeven:function(){
@@ -729,6 +732,7 @@ var Spel=new Phaser.Class({
   einde:function(){
     var m=Math.floor(this.camX/16);
     this.scene.pause();
+    stuurEinde(this);
     laag.querySelector("h1").textContent="GAME OVER";
     scoreVak.textContent=String(this.score).padStart(7,"0");
     laag.querySelector("p").textContent="SCORE "+String(this.score).padStart(7,"0")+
@@ -766,6 +770,81 @@ function zetAanraking(scene){
   scene.input.on("pointerupoutside",los);
 }
 
+
+  /* ---------- samen: de ander als doorzichtige figuur ---------- */
+  const anderVak = wrap.querySelector('.ander')
+  const NAAM = naamVriend.toUpperCase().slice(0, 10)
+  let ander = null          // laatste stand van de ander
+  let stuurKlok = 0
+  function stuur(p) {
+    if (!spelKanaal || typeof spelKanaal.send !== 'function' || !isActief()) return
+    try { spelKanaal.send({ type: 'broadcast', event: 'rg', payload: p }) } catch (e) {}
+  }
+  function toonAnder() {
+    if (!ander) { anderVak.textContent = NAAM + ': NOG NIET GESTART'; return }
+    const sc = String(ander.s || 0).padStart(7, '0')
+    anderVak.textContent = ander.d ? NAAM + ': GAME OVER ' + sc
+      : NAAM + ' ' + sc + '  ' + '\u2665'.repeat(Math.max(0, ander.l || 0))
+  }
+  toonAnder()
+  if (spelKanaal && typeof spelKanaal.on === 'function') spelKanaal.on('broadcast', { event: 'rg' }, msg => {
+    const p = msg && msg.payload
+    if (!p || typeof p.x !== 'number') return
+    ander = { x: p.x, y: p.y, f: p.f | 0, h: p.h === 'gunner' ? 'gunner' : 'runner',
+              s: p.s | 0, l: p.l | 0, d: !!p.d, v: +p.v || 92, tijd: performance.now() }
+    toonAnder()
+  })
+
+  function maakGeest(scene) {
+    ;[['runner', tekenRunner], ['gunner', tekenGunner]].forEach(([n, teken]) => {
+      for (let f = 0; f < 4; f++) {
+        const k = 'gh_' + n + f
+        if (scene.textures.exists(k)) continue
+        const g = scene.make.graphics({ x: 0, y: 0, add: false })
+        teken(g, f); g.generateTexture(k, f === 3 ? 28 : 26, 24); g.destroy()
+      }
+    })
+    scene.geest = scene.add.sprite(-500, -500, 'gh_runner0').setAlpha(0.5).setDepth(4).setVisible(false)
+    const stijl = { fontFamily: '"Press Start 2P",monospace', fontSize: '6px', color: '#ffd27a', stroke: '#0d1326', strokeThickness: 2 }
+    scene.geestNaam = scene.add.text(0, 0, NAAM, stijl).setOrigin(0.5, 1).setDepth(7).setVisible(false)
+    scene.pijl = scene.add.text(0, 0, '', stijl).setScrollFactor(0).setDepth(8).setVisible(false)
+  }
+
+  function netwerkStap(scene, tijd, dt) {
+    const s = scene.speler
+    stuurKlok += dt
+    if (stuurKlok >= 160) {                         // zes keer per seconde
+      stuurKlok = 0
+      stuur({ x: Math.round(s.x), y: Math.round(s.y), f: parseInt(s.texture.key.slice(1)) || 0,
+              h: held, s: scene.score, l: scene.levens, v: scene.h.loop, d: 0 })
+    }
+    const g = scene.geest, nm = scene.geestNaam, pijl = scene.pijl
+    const oud = ander ? performance.now() - ander.tijd : 1e9
+    if (!ander || ander.d || oud > 3000) { g.setVisible(false); nm.setVisible(false); pijl.setVisible(false); return }
+    // tussen twee berichten doorrekenen: de ander rent altijd even hard vooruit
+    const doelX = ander.x + ander.v * Math.min(oud, 400) / 1000
+    if (!g.visible || Math.abs(doelX - g.x) > 160) g.setPosition(doelX, ander.y)
+    g.x += (doelX - g.x) * 0.3
+    g.y += (ander.y - g.y) * 0.3
+    g.setTexture('gh_' + ander.h + Math.min(3, Math.max(0, ander.f)))
+    const cam = scene.camX, links = g.x < cam - 10, rechts = g.x > cam + BREED + 10
+    if (!links && !rechts) {
+      g.setVisible(true); nm.setVisible(true).setPosition(Math.round(g.x), Math.round(g.y - 14))
+      pijl.setVisible(false)
+    } else {
+      g.setVisible(false); nm.setVisible(false)
+      const verschil = Math.round((g.x - s.x) / 16)
+      pijl.setText(links ? '< ' + NAAM + ' ' + verschil + 'M' : NAAM + ' +' + verschil + 'M >')
+      pijl.setOrigin(links ? 0 : 1, 0.5)
+      pijl.setPosition(links ? 4 : BREED - 4, Math.max(40, Math.min(150, Math.round(g.y))))
+      pijl.setVisible(true)
+    }
+  }
+
+  function stuurEinde(scene) {
+    stuur({ x: Math.round(scene.speler.x), y: Math.round(scene.speler.y), f: 0, h: held,
+            s: scene.score, l: 0, v: 0, d: 1 })
+  }
 
   /* ---------- bediening buiten het veld ---------- */
   function speeltNu() {
@@ -834,4 +913,5 @@ function zetAanraking(scene){
     if (spel) { try { spel.destroy(true) } catch (e) {} spel = null }
     if (wrap.isConnected) wrap.remove()
   }, 300)
+  return { _proef: { maakGeest, netwerkStap, stuurEinde, ander: () => ander } }
 }

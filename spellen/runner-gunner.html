@@ -57,10 +57,30 @@
 
   .laag{overflow-y:auto}
 
+  /* bediening onder het veld, voor een telefoon die rechtop staat */
+  .bediening{display:none}
+  .zone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:10px;border:2px solid;border-radius:10px;background:rgba(22,32,58,.55);
+    touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+    -webkit-tap-highlight-color:transparent;text-align:center;padding:10px}
+  .zone b{font-size:12px;font-weight:400}
+  .zone small{font-size:7px;line-height:2;color:var(--zacht)}
+  #zSpring{border-color:var(--cyaan);color:var(--cyaan)}
+  #zSchiet{border-color:var(--roze);color:var(--roze)}
+  .zone.in{background:rgba(94,231,224,.16)}
+  #zSchiet.in{background:rgba(255,93,158,.16)}
+  @media (orientation:portrait) and (pointer:coarse){
+    .hoes{display:flex;flex-direction:column;
+      min-height:calc(100dvh - 24px - env(safe-area-inset-bottom))}
+    .bediening{display:flex;flex:1;min-height:140px;margin-top:10px;gap:8px}
+    .voet{display:none}
+  }
+
   /* telefoon dwars: het scherm is laag, dus de hoogte is de grens */
   @media (max-height:500px){
     body{padding:4px max(8px,env(safe-area-inset-right)) 4px max(8px,env(safe-area-inset-left))}
-    .hoes{max-width:min(800px, calc((100dvh - 12px) * 16 / 9))}
+    .hoes{max-width:none}
+    #veld{aspect-ratio:auto;height:calc(100dvh - 12px)}
     .voet{display:none}
   }
 
@@ -100,6 +120,10 @@
         <button class="knop" id="startKnop">START</button>
       </div>
     </div>
+  </div>
+  <div class="bediening" id="bediening" aria-hidden="true">
+    <div class="zone" id="zSpring"><b>SPRING</b><small>tik = springen<br>nog eens = dubbel<br>omlaag vegen = glijden</small></div>
+    <div class="zone" id="zSchiet"><b>SCHIET</b><small>tik = schieten</small></div>
   </div>
   <p class="voet">Toetsen: <b>spatie</b> springen, twee keer voor dubbelsprong.
     <b>omlaag</b> glijden. <b>X</b> schieten. Schiet blokken kapot om erdoor te komen.</p>
@@ -334,6 +358,7 @@ var Spel=new Phaser.Class({
   initialize:function Spel(){Phaser.Scene.call(this,{key:"spel"});},
   create:function(){
     var h=HELDEN[held];this.h=h;
+    huidige=this;
     this.seed=12345;this.camX=0;this.levens=h.levens;
     this.onraakbaar=0;this.glijdt=0;this.sprongen=0;this.wacht=0;
     this.coyote=0;this.herlaad=0;this.loper=0;
@@ -691,11 +716,51 @@ function zetAanraking(scene){
   scene.input.on("pointerupoutside",los);
 }
 
+/* ---------- bediening buiten het veld ---------- */
+var huidige=null;
+function speeltNu(){
+  try{ return !!(huidige&&huidige.sys&&huidige.sys.isActive()); }catch(e){ return false; }
+}
+(function(){
+  var zS=document.getElementById("zSpring"),zX=document.getElementById("zSchiet");
+  var begin=null;
+  zS.addEventListener("pointerdown",function(e){
+    e.preventDefault();zS.classList.add("in");
+    begin={y:e.clientY,t:performance.now(),geveegd:false,id:e.pointerId};
+    if(speeltNu()){huidige.vinger=true;huidige.spring();}
+  });
+  zS.addEventListener("pointermove",function(e){
+    if(!begin||begin.geveegd||e.pointerId!==begin.id)return;
+    if(e.clientY-begin.y>30&&performance.now()-begin.t<450){
+      begin.geveegd=true;if(speeltNu())huidige.glij();
+    }
+  });
+  function losS(e){
+    zS.classList.remove("in");begin=null;
+    if(huidige)huidige.vinger=false;
+  }
+  zS.addEventListener("pointerup",losS);
+  zS.addEventListener("pointercancel",losS);
+  zS.addEventListener("pointerleave",losS);
+
+  zX.addEventListener("pointerdown",function(e){
+    e.preventDefault();zX.classList.add("in");
+    if(speeltNu())huidige.schiet();
+  });
+  ["pointerup","pointercancel","pointerleave"].forEach(function(n){
+    zX.addEventListener(n,function(){zX.classList.remove("in");});
+  });
+})();
+
 var spel=null;
 startKnop.addEventListener("click",function(){
+  /* meet het veld: dwars wordt de wereld breder, de hoogte blijft 180 */
+  var verh=veld.clientWidth/Math.max(1,veld.clientHeight);
+  BREED=Math.round(Math.min(520,Math.max(320,HOOG*verh))/2)*2;
   laag.hidden=true;
   scoreVak.textContent="0000000";metersVak.textContent="0M";
   tekenHarten(HELDEN[held].levens,HELDEN[held].levens);
+  huidige=null;
   if(spel){spel.destroy(true);spel=null;}
   spel=new Phaser.Game({
     type:Phaser.AUTO,width:BREED,height:HOOG,parent:"veld",

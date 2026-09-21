@@ -758,7 +758,10 @@ function zetAanraking(scene){
     if(!s||s.geveegd||!s.links)return;
     if(p.y-s.y>26&&scene.time.now-s.t<420){s.geveegd=true;scene.glij();}
   });
-  function los(p){delete start[p.id];scene.vinger=false;}
+  function los(p){
+    delete start[p.id];
+    scene.vinger=Object.keys(start).some(function(k){return start[k].links;});
+  }
   scene.input.on("pointerup",los);
   scene.input.on("pointerupoutside",los);
 }
@@ -810,6 +813,7 @@ function zetAanraking(scene){
     spel = new Phaser.Game({
       type: Phaser.AUTO, width: BREED, height: HOOG, parent: veld,
       pixelArt: true, roundPixels: true, backgroundColor: '#4a7fc4',
+      input: { activePointers: 3 },
       scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
       physics: { default: 'arcade', arcade: { gravity: { y: ZWAARTE } } },
       scene: [Spel]

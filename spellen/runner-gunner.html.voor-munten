@@ -20,7 +20,6 @@
   .hoes{width:100%;max-width:800px}
 
   #veld{position:relative;border-radius:6px;overflow:hidden;
-    aspect-ratio:320/180;
     border:2px solid var(--rand);background:#4a7fc4;
     image-rendering:pixelated;
     touch-action:none;-webkit-user-select:none;user-select:none;
@@ -30,8 +29,7 @@
 
   .hud{position:absolute;top:0;left:0;right:0;display:flex;
     justify-content:space-between;padding:8px 9px;pointer-events:none}
-  .score{font-size:13px;color:#fff;text-shadow:2px 2px 0 #0b1020;letter-spacing:1px}
-  .meters{font-size:7px;color:#bfe9ff;text-shadow:1px 1px 0 #0b1020;margin-top:2px}
+  .meters{font-size:12px;color:#fff;text-shadow:2px 2px 0 #0b1020}
   .harten{display:flex;gap:4px}
   .harten svg{width:14px;height:12px;shape-rendering:crispEdges}
 
@@ -64,7 +62,7 @@
 <div class="hoes">
   <div id="veld">
     <div class="hud" aria-hidden="true">
-      <div><div class="score" id="score">0000000</div><div class="meters" id="meters">0M</div></div>
+      <div class="meters" id="meters">0M</div>
       <div class="harten" id="harten"></div>
     </div>
     <div class="laag" id="laag">
@@ -94,7 +92,6 @@ if(!window.Phaser){
 var laag=document.getElementById("laag"),startKnop=document.getElementById("startKnop");
 var kRunner=document.getElementById("kRunner"),kGunner=document.getElementById("kGunner");
 var metersVak=document.getElementById("meters"),hartenVak=document.getElementById("harten");
-var scoreVak=document.getElementById("score");
 
 /* ---------- pixelraster-helper ---------- */
 function px(g,kleur,x,y,b,h){ g.fillStyle(kleur,1); g.fillRect(x,y,b||1,h||1); }
@@ -288,28 +285,9 @@ function maakLucht(scene){
   g.generateTexture("lucht",BREED,HOOG);g.destroy();
 }
 
-/* ---------- munten: drie standen van een draaiende munt ---------- */
-function maakMunten(scene){
-  function munt(naam,maat,breed){
-    var g=scene.make.graphics({x:0,y:0,add:false});
-    var x0=Math.floor((maat-breed)/2);
-    px(g,P.zwart,x0,1,breed,maat-2);
-    if(breed>2)px(g,P.zwart,x0+1,0,breed-2,maat);
-    if(breed>2){
-      px(g,P.goud,x0+1,1,breed-2,maat-2);
-      px(g,0xc8871e,x0+breed-2,2,1,maat-4);
-      px(g,P.wit,x0+1,2,1,2);
-    } else px(g,P.goud,x0,1,breed,maat-2);
-    g.generateTexture(naam,maat,maat);g.destroy();
-  }
-  munt("munt0",8,8); munt("munt1",8,5); munt("munt2",8,2);
-  munt("muntD0",12,12); munt("muntD1",12,7); munt("muntD2",12,3);
-}
-
 /* ---------- scene ---------- */
-var Spel=new Phaser.Class({
-  Extends:Phaser.Scene,
-  initialize:function Spel(){Phaser.Scene.call(this,{key:"spel"});},
+var Spel={
+  key:"spel",
   create:function(){
     var h=HELDEN[held];this.h=h;
     this.seed=12345;this.camX=0;this.levens=h.levens;
@@ -317,8 +295,6 @@ var Spel=new Phaser.Class({
     this.coyote=0;this.herlaad=0;this.loper=0;
     this.laatsteChunk=-1;this.chunks={};
     this.brokken=[];this.bevries=0;
-    this.score=0;this.getoond=0;this.muntTal=0;this.laatsteMeter=0;
-    this.muntKlok=0;this.muntStand=0;
 
     ["r0","r1","r2","r3","kogel"].forEach(function(k){
       if(this.textures.exists(k))this.textures.remove(k);
@@ -336,7 +312,7 @@ var Spel=new Phaser.Class({
     px(gk,P.wit,1,1,2,2);
     gk.generateTexture("kogel",R*2+2,R*2+2);gk.destroy();
 
-    maakTegel(this);maakStad(this);maakLucht(this);maakMunten(this);
+    maakTegel(this);maakStad(this);maakLucht(this);
 
     this.add.image(0,0,"lucht").setOrigin(0,0).setScrollFactor(0).setDepth(-30);
     this.verA=this.add.tileSprite(0,0,BREED,HOOG,"stad1").setOrigin(0,0)
@@ -346,7 +322,6 @@ var Spel=new Phaser.Class({
 
     this.vast=this.physics.add.staticGroup();
     this.kogels=this.physics.add.group({allowGravity:false});
-    this.munten=this.physics.add.group({allowGravity:false,immovable:true});
 
     this.speler=this.physics.add.sprite(60,80,"r0");
     this.speler.body.setSize(h.bb,h.bh);
@@ -354,7 +329,6 @@ var Spel=new Phaser.Class({
     this.speler.setDepth(5);
     this.physics.add.collider(this.speler,this.vast);
     this.physics.add.overlap(this.kogels,this.vast,this.raakBlok,null,this);
-    this.physics.add.overlap(this.speler,this.munten,this.pak,null,this);
 
     /* brokstukken worden met de hand getekend, geen aparte objecten */
     this.fx=this.add.graphics().setDepth(6);
@@ -371,9 +345,8 @@ var Spel=new Phaser.Class({
 
   bouwChunk:function(index){
     var r=rng(this.seed^Math.imul(index,0x9E3779B1));
-    var basis=index*CHUNK,lijst=[],scene=this,bezet={};
+    var basis=index*CHUNK,lijst=[],scene=this;
     function tegel(tx,ty,key){
-      bezet[tx+","+ty]=true;
       var b=scene.vast.create(basis+tx*TEGEL,ty*TEGEL,key||"tegel").setOrigin(0,0);
       b.refreshBody();
       b.stuk=(key==="blok");   /* alleen losse blokken zijn kapot te schieten */
@@ -402,55 +375,7 @@ var Spel=new Phaser.Class({
         tegel(vx,8,"blok");tegel(vx,7,"blok");tegel(vx,6,"blok");
       }
     }
-    /* munten — pas NA de rest, zodat de baan zelf niet verschuift */
-    if(index>=1){
-      if(r()<0.6){                                   /* rijtje op de grond */
-        var s0=Math.floor(r()*6),lengte=3+Math.floor(r()*3);
-        for(var m=0;m<lengte;m++){
-          var mx=s0+m;if(mx>9)break;
-          if(mx===gat||mx===gat+1||bezet[mx+",8"])continue;
-          lijst.push(scene.maakMunt(basis+mx*TEGEL+8,8*TEGEL+6,false));
-        }
-      }
-      if(gat>=0){                                     /* boog over het gat */
-        var boog=[5,4,4,5];
-        for(var bi=0;bi<4;bi++)
-          lijst.push(scene.maakMunt(basis+(gat-1+bi)*TEGEL+8,boog[bi]*TEGEL+8,false));
-      }
-      var top=null;                                   /* dikke munt, hoog */
-      for(var sleutel in bezet){
-        var dl=sleutel.split(","),kx=+dl[0],ky=+dl[1];
-        if(ky<9&&(top===null||ky<top.y))top={x:kx,y:ky};
-      }
-      if(top&&r()<0.7)
-        lijst.push(scene.maakMunt(basis+top.x*TEGEL+8,(top.y-2)*TEGEL+8,true));
-    }
     this.chunks[index]=lijst;
-  },
-
-  maakMunt:function(x,y,dik){
-    var m=this.munten.create(x,y,dik?"muntD0":"munt0");
-    m.body.setAllowGravity(false);
-    m.body.setSize(dik?10:6,dik?10:6);
-    m.dik=dik;m.setDepth(3);
-    return m;
-  },
-
-  pak:function(speler,munt){
-    if(!munt.active)return;
-    var waarde=munt.dik?50:10;
-    this.score+=waarde;this.muntTal++;
-    this.spat(munt.x,munt.y,[P.goud,P.wit],munt.dik?12:4);
-    this.zweef(munt.x,munt.y-6,"+"+waarde,munt.dik?"#ffffff":"#ffc94a");
-    munt.destroy();
-  },
-
-  zweef:function(x,y,tekst,kleur){
-    var t=this.add.text(x,y,tekst,{fontFamily:'"Press Start 2P",monospace',
-      fontSize:"8px",color:kleur,stroke:"#0d1326",strokeThickness:2})
-      .setOrigin(0.5).setDepth(7);
-    this.tweens.add({targets:t,y:y-18,alpha:0,duration:650,ease:"Cubic.easeOut",
-      onComplete:function(){t.destroy();}});
   },
   ruimChunk:function(i){
     var l=this.chunks[i];if(!l)return;
@@ -598,25 +523,8 @@ var Spel=new Phaser.Class({
 
     this.tekenBrokken(d);
 
-    this.muntKlok+=dt;
-    if(this.muntKlok>110){
-      this.muntKlok=0;this.muntStand=(this.muntStand+1)%4;
-      var st=[0,1,2,1][this.muntStand];
-      this.munten.children.each(function(m){
-        if(m.active)m.setTexture((m.dik?"muntD":"munt")+st);
-      });
-    }
-
-    var meter=Math.floor(this.camX/16);
-    if(meter>this.laatsteMeter){this.score+=meter-this.laatsteMeter;this.laatsteMeter=meter;}
-    if(this.getoond<this.score){
-      this.getoond+=Math.max(1,Math.ceil((this.score-this.getoond)*0.18));
-      if(this.getoond>this.score)this.getoond=this.score;
-      scoreVak.textContent=String(this.getoond).padStart(7,"0");
-    }
-
     if(s.x<this.camX+8||s.y>HOOG+80)this.verliesLeven();
-    metersVak.textContent=meter+"M  "+this.muntTal+" MUNTEN";
+    metersVak.textContent=Math.floor(this.camX/16)+"M";
   },
 
   verliesLeven:function(){
@@ -636,13 +544,11 @@ var Spel=new Phaser.Class({
     var m=Math.floor(this.camX/16);
     this.scene.pause();
     laag.querySelector("h1").textContent="GAME OVER";
-    scoreVak.textContent=String(this.score).padStart(7,"0");
-    laag.querySelector("p").textContent="SCORE "+String(this.score).padStart(7,"0")+
-      " — "+m+" meter, "+this.muntTal+" munten.";
+    laag.querySelector("p").textContent=m+" meter gehaald.";
     startKnop.textContent="OPNIEUW";
     laag.hidden=false;startKnop.focus({preventScroll:true});
   }
-});
+};
 
 function ring(scene,x,y){
   var c=scene.add.circle(x,y,4).setStrokeStyle(1,P.cyaan,1).setDepth(4);
@@ -672,7 +578,6 @@ function zetAanraking(scene){
 var spel=null;
 startKnop.addEventListener("click",function(){
   laag.hidden=true;
-  scoreVak.textContent="0000000";metersVak.textContent="0M";
   tekenHarten(HELDEN[held].levens,HELDEN[held].levens);
   if(spel){spel.destroy(true);spel=null;}
   spel=new Phaser.Game({

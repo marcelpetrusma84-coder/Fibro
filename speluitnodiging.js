@@ -7,8 +7,10 @@ const SPEL_INFO = {
   schaken: { icon: '♟️', naam: 'Schaken' },
   dammen: { icon: '⚫', naam: 'Dammen' },
   pong: { icon: '🏓', naam: 'Pong' },
-  flappybird: { icon: '🐦', naam: 'Flappy Bird' },
-  spaceinvaders: { icon: '👾', naam: 'Space Invaders' }
+  flappybird: { icon: '🦇', naam: 'Flappy Friends' },
+  spaceinvaders: { icon: '👾', naam: 'Space Invaders' },
+  endlessrunner: { icon: '🏃', naam: 'Endless Runner' },
+  breakout: { icon: '🟪', naam: 'Block It' }
 }
 
 let kanaal = null

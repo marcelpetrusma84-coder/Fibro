@@ -61,6 +61,12 @@ function zetStijl() {
   .rg .knop{font-family:inherit;font-size:11px;color:#08131f;background:var(--cyaan);border:none;
     border-radius:0;padding:11px 20px;cursor:pointer;box-shadow:3px 3px 0 #1c9aa2}
   .rg .knop:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #1c9aa2}
+  .rg .rol{font-size:8px;color:#ffd27a;margin-bottom:10px;line-height:2}
+  .rg:not(.volger) .rol{display:none}
+  .rg.volger .keuze{display:none}
+  .rg .knop:disabled{background:var(--rand);color:var(--zacht);box-shadow:none;cursor:default}
+  .rg.telt .keuze,.rg.telt .knop,.rg.telt .rol{display:none}
+  .rg.telt .laag h1{font-size:44px;line-height:1.2}
   .rg .fout{padding:18px;color:var(--roze);font-size:10px;line-height:2;text-align:center}
   /* klein veld: startscherm compacter */
   .rg.klein .laag{padding:8px}
@@ -125,6 +131,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
         <div>
           <h1>RUNNER &amp; GUNNER</h1>
           <p>Jij en ${naamVriend} rennen op dezelfde baan. Wie komt het verst?</p>
+          <div class="rol"></div>
           <div class="keuze">
             <button class="kRunner" aria-pressed="true"><b>RUNNER</b><small>Licht. Springt hoog. Schiet snel.</small></button>
             <button class="kGunner" aria-pressed="false"><b>GUNNER</b><small>Zwaar. Lage sprong. Lange glijpartij.</small></button>
@@ -207,11 +214,12 @@ var held="runner";
 var HELDEN={
   runner:{sprong:305,tweede:255,loop:92,glijtijd:520,herlaad:260,levens:3,
     bb:9,bh:19,teken:tekenRunner,kogelKleur:P.cyaan,kogelR:2},
-  gunner:{sprong:262,tweede:215,loop:92,glijtijd:720,herlaad:440,levens:4,
+  gunner:{sprong:262,tweede:215,loop:92,glijtijd:720,herlaad:440,levens:3,
     bb:12,bh:21,teken:tekenGunner,kogelKleur:P.oranje,kogelR:3}
 };
 function kies(w){
   held=w;
+  naKeuze(w);
   kRunner.setAttribute("aria-pressed",w==="runner");
   kGunner.setAttribute("aria-pressed",w==="gunner");
 }
@@ -739,6 +747,7 @@ var Spel=new Phaser.Class({
       " — "+m+" meter, "+this.muntTal+" munten.";
     startKnop.textContent="OPNIEUW";
     laag.hidden=false;startKnop.focus({preventScroll:true});
+    naEinde();
   }
 });
 
@@ -880,7 +889,81 @@ function zetAanraking(scene){
   })
 
   /* ---------- starten ---------- */
+  /* ---------- samen starten: de uitnodiger kiest en start voor allebei ---------- */
+  const kanaalOk = !!(spelKanaal && typeof spelKanaal.on === 'function' && typeof spelKanaal.send === 'function')
+  const leider = !!benIkSpeler1 || !kanaalOk
+  const rolVak = wrap.querySelector('.rol')
+  const AFTEL = 700
+  const tegen = h => h === 'gunner' ? 'runner' : 'gunner'
+  let partnerKlaar = !kanaalOk, laatsteKlaar = 0, aftellen = false, klaarKlok = 0, ronde = 0
+  if (!leider) { wrap.classList.add('volger'); held = 'gunner' }
+
+  function stuurBericht(event, payload) {
+    if (!kanaalOk || !isActief()) return
+    try { spelKanaal.send({ type: 'broadcast', event, payload: payload || {} }) } catch (e) {}
+  }
+  function werkStartscherm() {
+    if (leider) {
+      startKnop.hidden = false
+      startKnop.disabled = !partnerKlaar
+      startKnop.textContent = partnerKlaar ? (ronde ? 'OPNIEUW' : 'START') : 'WACHT OP ' + NAAM
+    } else {
+      startKnop.hidden = true
+      rolVak.textContent = 'JIJ BENT ' + held.toUpperCase() + ' — ' + NAAM + ' START HET SPEL'
+    }
+  }
+  function naKeuze(w) { if (leider) stuurBericht('rg-keuze', { h: w }) }
+  function naEinde() { werkStartscherm() }
+
+  function aftel(daarna) {
+    aftellen = true
+    wrap.classList.add('telt')
+    const h1 = laag.querySelector('h1'), p = laag.querySelector('p')
+    laag.hidden = false
+    let n = 3
+    const stap = () => {
+      if (!isActief() || !wrap.isConnected) return
+      if (n === 0) {
+        aftellen = false; wrap.classList.remove('telt')
+        h1.textContent = 'RUNNER & GUNNER'
+        daarna(); return
+      }
+      h1.textContent = String(n)
+      p.textContent = 'JIJ BENT ' + held.toUpperCase()
+      n--; setTimeout(stap, AFTEL)
+    }
+    stap()
+  }
+
+  if (kanaalOk) {
+    spelKanaal.on('broadcast', { event: 'rg-klaar' }, () => {
+      if (!leider) return
+      laatsteKlaar = performance.now()
+      if (!partnerKlaar && !aftellen) { partnerKlaar = true; werkStartscherm() }
+      stuurBericht('rg-keuze', { h: held })
+    })
+    spelKanaal.on('broadcast', { event: 'rg-keuze' }, msg => {
+      if (leider || !msg || !msg.payload) return
+      held = tegen(msg.payload.h); werkStartscherm()
+    })
+    spelKanaal.on('broadcast', { event: 'rg-start' }, msg => {
+      if (leider || !msg || !msg.payload || aftellen || laag.hidden) return
+      held = tegen(msg.payload.h)
+      aftel(startRonde)
+    })
+  }
+
   startKnop.addEventListener('click', () => {
+    if (!leider || aftellen || !partnerKlaar) return
+    partnerKlaar = !kanaalOk
+    const h = held
+    ;[0, 250, 500].forEach(ms => setTimeout(() => stuurBericht('rg-start', { h }), ms))
+    aftel(startRonde)
+  })
+  werkStartscherm()
+
+  function startRonde() {
+    ronde++
     indeling()
     const verh = veld.clientWidth / Math.max(1, veld.clientHeight)
     BREED = Math.round(Math.min(640, Math.max(320, HOOG * verh)) / 2) * 2
@@ -897,12 +980,19 @@ function zetAanraking(scene){
       physics: { default: 'arcade', arcade: { gravity: { y: ZWAARTE } } },
       scene: [Spel]
     })
-  })
+  }
 
   /* ---------- opruimen zodra het spel gesloten wordt ---------- */
   const waker = setInterval(() => {
     if (isActief() && wrap.isConnected) {
       document.body.classList.toggle('rg-vol', wrap.classList.contains('liggend') && laag.hidden)
+      if (!leider && !aftellen && !laag.hidden) {
+        klaarKlok += 300
+        if (klaarKlok >= 900) { klaarKlok = 0; stuurBericht('rg-klaar') }
+      }
+      if (leider && kanaalOk && partnerKlaar && performance.now() - laatsteKlaar > 3000) {
+        partnerKlaar = false; werkStartscherm()
+      }
       return
     }
     clearInterval(waker)
@@ -913,5 +1003,5 @@ function zetAanraking(scene){
     if (spel) { try { spel.destroy(true) } catch (e) {} spel = null }
     if (wrap.isConnected) wrap.remove()
   }, 300)
-  return { _proef: { maakGeest, netwerkStap, stuurEinde, ander: () => ander } }
+  return { _proef: { maakGeest, netwerkStap, stuurEinde, ander: () => ander, held: () => held, naEinde } }
 }

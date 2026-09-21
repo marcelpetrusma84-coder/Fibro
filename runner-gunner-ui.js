@@ -171,13 +171,13 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     wrap.classList.toggle('staand', staand)
     let vb, vh
     if (liggend) {
-      vh = volH; vb = Math.min(volB, Math.round(vh * 520 / 180))
+      vh = volH; vb = Math.min(volB, Math.round(vh * 640 / 180))
     } else if (staand) {
       vb = W; vh = Math.round(vb * 180 / 320)
       const rest = H - vh - 10
       wrap.querySelector('.bediening').style.height = Math.max(110, rest) + 'px'
     } else {
-      vh = H; vb = Math.min(W, Math.round(vh * 520 / 180))
+      vh = H; vb = Math.min(W, Math.round(vh * 640 / 180))
       if (vb < vh * 320 / 180) vh = Math.round(vb * 180 / 320)
     }
     veld.style.width = vb + 'px'
@@ -804,7 +804,7 @@ function zetAanraking(scene){
   startKnop.addEventListener('click', () => {
     indeling()
     const verh = veld.clientWidth / Math.max(1, veld.clientHeight)
-    BREED = Math.round(Math.min(520, Math.max(320, HOOG * verh)) / 2) * 2
+    BREED = Math.round(Math.min(640, Math.max(320, HOOG * verh)) / 2) * 2
     laag.hidden = true
     scoreVak.textContent = '0000000'; metersVak.textContent = '0M'
     tekenHarten(HELDEN[held].levens, HELDEN[held].levens)

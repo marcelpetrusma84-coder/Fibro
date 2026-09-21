@@ -913,7 +913,10 @@ function zetAanraking(scene){
     }
   }
   function naKeuze(w) { if (leider) stuurBericht('rg-keuze', { h: w }) }
-  function naEinde() { werkStartscherm() }
+  function naEinde() {
+    if (leider) kies(tegen(held))      // volgende ronde: allebei de andere figuur
+    werkStartscherm()
+  }
 
   function aftel(daarna) {
     aftellen = true
@@ -943,7 +946,7 @@ function zetAanraking(scene){
       stuurBericht('rg-keuze', { h: held })
     })
     spelKanaal.on('broadcast', { event: 'rg-keuze' }, msg => {
-      if (leider || !msg || !msg.payload) return
+      if (leider || !msg || !msg.payload || laag.hidden || aftellen) return
       held = tegen(msg.payload.h); werkStartscherm()
     })
     spelKanaal.on('broadcast', { event: 'rg-start' }, msg => {

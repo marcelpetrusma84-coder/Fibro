@@ -12,7 +12,7 @@
     --zacht:#7d90b8;--cyaan:#5ee7e0;--roze:#ff5d9e}
   :root:not([data-theme="light"]){color-scheme:dark}
   *{box-sizing:border-box}
-  html,body{margin:0}
+  html,body{margin:0;touch-action:manipulation}
   body{background:var(--diep);color:var(--inkt);
     font-family:"Press Start 2P",monospace;font-size:11px;line-height:1.9;
     display:flex;justify-content:center;
@@ -81,6 +81,7 @@
     body{padding:4px max(8px,env(safe-area-inset-right)) 4px max(8px,env(safe-area-inset-left))}
     .hoes{max-width:none}
     #veld{aspect-ratio:auto;height:calc(100dvh - 12px)}
+    #veld canvas{width:auto!important;height:100%!important;margin:0 auto!important}
     .voet{display:none}
   }
 
@@ -742,6 +743,12 @@ function speeltNu(){
   zS.addEventListener("pointerup",losS);
   zS.addEventListener("pointercancel",losS);
   zS.addEventListener("pointerleave",losS);
+
+  /* iOS zoomt bij een dubbeltik via touch-gebeurtenissen, niet via pointer */
+  [zS,zX,veld].forEach(function(el){
+    el.addEventListener("touchstart",function(e){ if(e.target.closest(".knop,.keuze"))return; e.preventDefault(); },{passive:false});
+    el.addEventListener("touchend",function(e){ if(e.target.closest(".knop,.keuze"))return; e.preventDefault(); },{passive:false});
+  });
 
   zX.addEventListener("pointerdown",function(e){
     e.preventDefault();zX.classList.add("in");

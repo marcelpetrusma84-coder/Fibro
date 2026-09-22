@@ -1,4 +1,4 @@
-// beltoon.js — beltoon voor een inkomende oproep (v5)
+// beltoon.js — beltoon voor een inkomende oproep (v6)
 // Werkt met een gewoon <audio>-element i.p.v. Web Audio: de iPhone laat dat beter toe.
 // Het klankje wordt hier in code gemaakt als WAV, er zijn geen geluidsbestanden.
 // Bij de eerste tik op de pagina speelt het element een stil stukje af; daarna
@@ -47,19 +47,8 @@
 
   let ontgrendeld = false, bezig = false, belt = false, max = null, tril = null, getikt = false
 
-  // Statusregel in het belvenster, zodat we zien wat de telefoon met het geluid doet
-  function status(tekst) {
-    const type = document.getElementById('oproepType')
-    if (!type) return
-    let r = document.getElementById('oproepBelStatus')
-    if (!r) {
-      r = document.createElement('div')
-      r.id = 'oproepBelStatus'
-      r.style.cssText = 'font-size:12px;opacity:0.7;margin-top:6px;text-align:center;'
-      type.insertAdjacentElement('afterend', r)
-    }
-    r.textContent = tekst
-  }
+  // Status alleen in de console (de grijze regel in het belvenster is weg)
+  function status(tekst) { console.log('beltoon:', tekst) }
 
   function speelNu(doorTik) {
     const p = el.play()
@@ -95,7 +84,7 @@
   // Safari vergeet de tik bij elke nieuwe pagina; zonder tik blijft de beltoon stil.
   const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-  const WACHT_MS = 12000
+  const WACHT_MS = 15000 // halverwege het standaard-slot van 30 s
   let wekScherm = null
 
   // welkom = true: "Welkom bij Fibro" (na inloggen / openen), anders het gewone Fibro-scherm

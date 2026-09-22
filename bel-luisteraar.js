@@ -9,7 +9,7 @@ import { initBellen, weigerooproep } from './bellen.js?v=95'
 function laadBeltoon() {
   if (window.FibroBeltoon || document.querySelector('script[data-fibro-beltoon]')) return
   const s = document.createElement('script')
-  s.src = 'beltoon.js?v=5'
+  s.src = 'beltoon.js?v=6'
   s.dataset.fibroBeltoon = '1'
   document.head.appendChild(s)
 }

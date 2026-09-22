@@ -1,4 +1,4 @@
-// beltoon.js — beltoon voor een inkomende oproep (v4)
+// beltoon.js — beltoon voor een inkomende oproep (v5)
 // Werkt met een gewoon <audio>-element i.p.v. Web Audio: de iPhone laat dat beter toe.
 // Het klankje wordt hier in code gemaakt als WAV, er zijn geen geluidsbestanden.
 // Bij de eerste tik op de pagina speelt het element een stil stukje af; daarna
@@ -98,24 +98,28 @@
   const WACHT_MS = 12000
   let wekScherm = null
 
-  function toonWekScherm() {
+  // welkom = true: "Welkom bij Fibro" (na inloggen / openen), anders het gewone Fibro-scherm
+  function toonWekScherm(welkom) {
     if (getikt || belt || wekScherm || !document.body) return
     wekScherm = document.createElement('div')
     wekScherm.style.cssText =
       'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;' +
       'justify-content:center;gap:14px;background:rgba(26,10,46,0.94);color:#f3e8ff;' +
       'font-family:inherit;text-align:center;padding:24px;opacity:0;transition:opacity .3s;cursor:pointer;'
+    const hallo = document.createElement('div')
+    hallo.textContent = welkom ? 'Welkom bij' : ''
+    hallo.style.cssText = 'font-size:22px;opacity:0.8;' + (welkom ? '' : 'display:none;')
     const logo = document.createElement('div')
-    logo.textContent = 'Fibro'
+    logo.textContent = welkom ? 'Fibro 👋' : 'Fibro'
     logo.style.cssText = 'font-size:52px;font-weight:700;background:linear-gradient(135deg,#c084fc,#f0abfc);' +
       '-webkit-background-clip:text;background-clip:text;color:transparent;'
     const tik = document.createElement('div')
-    tik.textContent = '👆 Tik om verder te gaan'
+    tik.textContent = welkom ? '👆 Tik om te beginnen' : '👆 Tik om verder te gaan'
     tik.style.cssText = 'font-size:20px;'
     const uitleg = document.createElement('div')
     uitleg.textContent = '🔔 Dan hoor je de beltoon als iemand belt'
     uitleg.style.cssText = 'font-size:14px;opacity:0.6;'
-    wekScherm.append(logo, tik, uitleg)
+    wekScherm.append(hallo, logo, tik, uitleg)
     // De tik zelf wordt al opgevangen door ontgrendel(); hier alleen het scherm weghalen
     // en voorkomen dat de tik doorgaat naar wat eronder ligt
     const weg = (e) => { e.preventDefault(); e.stopPropagation(); verbergWekScherm() }
@@ -133,7 +137,24 @@
     setTimeout(() => w.remove(), 300)
   }
 
-  if (IS_IOS) setTimeout(toonWekScherm, WACHT_MS)
+  // Welkom: net ingelogd (kwam van login.html) of Fibro net geopend in dit tabblad
+  function isWelkomMoment() {
+    let nieuw = false
+    try {
+      nieuw = !sessionStorage.getItem('fibro_welkom')
+      sessionStorage.setItem('fibro_welkom', '1')
+    } catch (e) {}
+    const vanLogin = /login\.html/.test(document.referrer || '')
+    return nieuw || vanLogin
+  }
+
+  if (IS_IOS) {
+    if (isWelkomMoment()) {
+      const toon = () => toonWekScherm(true)
+      if (document.body) toon(); else document.addEventListener('DOMContentLoaded', toon)
+    }
+    setTimeout(() => toonWekScherm(false), WACHT_MS) // doet niets als er al getikt is of het welkom er nog staat
+  }
 
   function trillen() {
     if (navigator.vibrate) { try { navigator.vibrate([300, 150, 300]) } catch (e) {} }

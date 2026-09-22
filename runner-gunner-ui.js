@@ -37,7 +37,7 @@ function zetStijl() {
     touch-action:manipulation;-webkit-user-select:none;user-select:none}
   .rg *{box-sizing:border-box}
   .rg .veld{position:relative;overflow:hidden;border:2px solid var(--rand);border-radius:6px;
-    background:#4a7fc4;touch-action:none;-webkit-tap-highlight-color:transparent;flex:none}
+    background:#07051a;touch-action:none;-webkit-tap-highlight-color:transparent;flex:none}
   .rg .veld canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
   .rg .hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;
     padding:8px 9px;pointer-events:none;z-index:2}
@@ -67,6 +67,11 @@ function zetStijl() {
   .rg .knop:disabled{background:var(--rand);color:var(--zacht);box-shadow:none;cursor:default}
   .rg.telt .keuze,.rg.telt .knop,.rg.telt .rol{display:none}
   .rg.telt .laag h1{font-size:44px;line-height:1.2}
+  .rg .bord{position:absolute;left:0;right:0;top:34%;text-align:center;pointer-events:none;z-index:2;
+    font-size:clamp(14px,5.5vw,30px);color:#fff;letter-spacing:2px;opacity:0;
+    text-shadow:0 0 3px var(--k),0 0 10px var(--k),0 0 22px var(--k),0 0 40px var(--k)}
+  .rg .bord.aan{animation:rgBord 2.6s linear forwards}
+  @keyframes rgBord{0%{opacity:0}4%{opacity:1}7%{opacity:.15}10%{opacity:1}13%{opacity:.35}16%{opacity:1}78%{opacity:1}100%{opacity:0}}
   .rg .fout{padding:18px;color:var(--roze);font-size:10px;line-height:2;text-align:center}
   /* klein veld: startscherm compacter */
   .rg.klein .laag{padding:8px}
@@ -196,26 +201,458 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   window.addEventListener('resize', indeling)
   window.addEventListener('orientationchange', indeling)
 
-/* ---------- pixelraster-helper ---------- */
-function px(g,kleur,x,y,b,h){ g.fillStyle(kleur,1); g.fillRect(x,y,b||1,h||1); }
+var FIG = (function(){
+/* Runner & Gunner — figuren in code.
+   Geen plaatjes: elk beeldje is een rooster van kleurnummers. */
 
-/* ---------- palet, 16bit-beperkt ---------- */
+const OUT=1, DARK=2, MID=3, LITE=4, TRIM=5, STD=6, ST=7, STL=8, CYD=9, CY=10, CYL=11, WIT=12;
+
+const GEDEELD = {1:'#080c14',6:'#1d2433',7:'#4b5670',8:'#98a4be',9:'#0b5f70',10:'#22dbe6',11:'#bafcff',12:'#eaf3ff'};
+
+const RUNNER = { naam:'Runner', b:46, h:54,
+  dark:'#123a72', mid:'#2f74d8', lite:'#7cc2ff', trim:'#bafcff',
+  cx:16, beenL:17, lijfH:13, lijfB:13, borstB:15, kopB:17, kopH:15,
+  beenD:5, armD:4, stap:8, til:7, schouders:false, vin:true, loopL:12, loopH:6 };
+
+const GUNNER = { naam:'Gunner', b:50, h:54,
+  dark:'#5e1220', mid:'#b8262f', lite:'#ec5c3c', trim:'#ff902e',
+  cx:19, beenL:16, lijfH:15, lijfB:16, borstB:22, kopB:20, kopH:17,
+  beenD:7, armD:5, stap:7, til:6, schouders:true, vin:false, loopL:15, loopH:11 };
+
+function palet(C){ const p=Object.assign({},GEDEELD); p[2]=C.dark;p[3]=C.mid;p[4]=C.lite;p[5]=C.trim; return p; }
+
+function nieuw(b,h){ return {b,h,d:new Uint8Array(b*h)}; }
+function zet(r,x,y,c){ x=Math.round(x);y=Math.round(y); if(x<0||y<0||x>=r.b||y>=r.h)return; r.d[y*r.b+x]=c; }
+function blok(r,x,y,b,h,c){ for(let j=0;j<h;j++)for(let i=0;i<b;i++)zet(r,x+i,y+j,c); }
+function rondBlok(r,x,y,b,h,k,c){
+  for(let j=0;j<h;j++)for(let i=0;i<b;i++){
+    const dx=Math.min(i,b-1-i), dy=Math.min(j,h-1-j);
+    if(dx<k&&dy<k){ const a=k-dx, o=k-dy; if(a*a+o*o>k*k+1) continue; }
+    zet(r,x+i,y+j,c);
+  }
+}
+function ovaal(r,cx,cy,rx,ry,c){
+  for(let y=Math.floor(cy-ry);y<=Math.ceil(cy+ry);y++)
+    for(let x=Math.floor(cx-rx);x<=Math.ceil(cx+rx);x++){
+      const a=(x-cx)/rx,o=(y-cy)/ry; if(a*a+o*o<=1.06) zet(r,x,y,c);
+    }
+}
+function dikLijn(r,x0,y0,x1,y1,d,c){
+  const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0),1), h=Math.floor(d/2);
+  for(let i=0;i<=n;i++){
+    const x=x0+(x1-x0)*i/n, y=y0+(y1-y0)*i/n;
+    blok(r,Math.round(x)-h,Math.round(y)-h,d,d,c);
+  }
+}
+function omtrek(r){
+  const k=r.d.slice();
+  const v=(x,y)=>(x<0||y<0||x>=r.b||y>=r.h)?0:k[y*r.b+x];
+  for(let y=0;y<r.h;y++)for(let x=0;x<r.b;x++){
+    if(v(x,y))continue;
+    if(v(x-1,y)||v(x+1,y)||v(x,y-1)||v(x,y+1)) zet(r,x,y,OUT);
+  }
+}
+
+function been(r,C,hx,hy,fase,achter){
+  const grond=r.h-2;
+  const fx=hx+C.stap*Math.cos(fase);
+  const fy=grond-Math.max(0,-Math.sin(fase))*C.til;
+  const kx=(hx+fx)/2+1, ky=(hy+fy)/2;
+  const kl=achter?DARK:MID;
+  dikLijn(r,hx,hy,kx,ky,C.beenD,kl);
+  dikLijn(r,kx,ky,fx,fy-3,C.beenD-1,kl);
+  const bx0=fx-Math.floor(C.beenD/2)-1;
+  blok(r,bx0,fy-3,C.beenD+3,4,achter?STD:ST);
+  blok(r,bx0+C.beenD+1,fy-2,2,3,achter?STD:ST);
+  if(!achter) blok(r,bx0,fy-3,C.beenD+3,1,STL);
+}
+
+function beenNaar(r,C,hx,hy,fx,fy,kx,ky,achter){
+  const kl=achter?DARK:MID;
+  dikLijn(r,hx,hy,kx,ky,C.beenD,kl);
+  dikLijn(r,kx,ky,fx,fy-2,C.beenD-1,kl);
+  const bx0=fx-Math.floor(C.beenD/2)-1;
+  blok(r,bx0,fy-3,C.beenD+3,4,achter?STD:ST);
+  blok(r,bx0+C.beenD+1,fy-2,2,3,achter?STD:ST);
+  if(!achter) blok(r,bx0,fy-3,C.beenD+3,1,STL);
+}
+
+function arm(r,C,sx,sy,fase,achter){
+  const hx=sx+C.stap*1.0*Math.cos(fase);
+  const hy=sy+10-Math.abs(Math.sin(fase))*3;
+  const ex=(sx+hx)/2+1, ey=(sy+hy)/2;
+  const kl=achter?DARK:MID;
+  dikLijn(r,sx,sy,ex,ey,C.armD,kl);
+  dikLijn(r,ex,ey,hx,hy,C.armD-1,kl);
+  blok(r,hx-2,hy-1,4,4,achter?STD:ST);
+  if(!achter) blok(r,hx-2,hy-1,4,1,STL);
+}
+
+
+function armKanon(r,C,sx,sy,fase){
+  const wip = Math.sin(fase*2)>0 ? -1 : 0;
+  const ey = sy + 4 + wip, ex = sx + 5;
+  const L = C.loopL, H = C.loopH, h = Math.floor(H/2);
+  dikLijn(r,sx,sy+wip,ex,ey,C.armD+1,MID);            // bovenarm
+  ovaal(r,sx,sy+wip,C.armD*0.7+1,C.armD*0.7+1,LITE);  // schoudergewricht
+  blok(r,ex-2,ey-h-1,6,H+2,DARK);                     // elleboogstuk
+  blok(r,ex-1,ey-h,4,2,MID);
+  blok(r,ex+4,ey-h,L,H,MID);                          // de loop zelf
+  blok(r,ex+5,ey-h,L-2,1,LITE);
+  blok(r,ex+5,ey-h+3,L-2,2,TRIM);                     // ring
+  blok(r,ex+4,ey+h-2,L,2,DARK);
+  blok(r,ex+L+2,ey-h-1,3,H+2,STD);                    // mond
+  ovaal(r,ex+L+3,ey,2,h-1,CYD);
+  ovaal(r,ex+L+3,ey,1,h-2,CY);
+}
+
+function kop(r,C,cx,top){
+  const x=cx-Math.floor(C.kopB/2);
+  rondBlok(r,x,top,C.kopB,C.kopH,5,MID);
+  blok(r,x+3,top+1,C.kopB-7,2,LITE);                 // glans bovenop
+  if(C.vin){ blok(r,cx-2,top-5,4,7,LITE); blok(r,cx-1,top-6,2,4,TRIM); }
+  else { blok(r,x+2,top+3,C.kopB-4,2,TRIM); blok(r,x-1,top+6,3,5,STD); blok(r,x+C.kopB-2,top+6,3,5,STD); }
+  const vy=top+Math.floor(C.kopH*0.55);
+  const rx=Math.floor(C.kopB/2)-2, ry=Math.floor(C.kopH/2)-2, vx=cx+1;
+  ovaal(r,vx,vy,rx,ry,STD);
+  ovaal(r,vx,vy,rx-1,ry-1,CYD);
+  ovaal(r,vx,vy,rx-2,ry-2,CY);
+  blok(r,vx-2,vy-2,3,2,CYL);
+  blok(r,vx+2,vy+1,1,1,WIT);
+}
+
+function beeldje(C,nr,aantal,houding){
+  houding=houding||'loop';
+  const r=nieuw(C.b,C.h);
+  const f=(nr/aantal)*Math.PI*2;
+  const grond=r.h-2, cx=C.cx;
+  const wip=houding==='loop'?(Math.sin(f*2)>0?-1:0):(houding==='sprong'?-2:0);
+  const zak=houding==='glij'?Math.round(C.beenL*0.7):0;       // heupen omlaag bij glijden
+  const lijfH=houding==='glij'?Math.round(C.lijfH*0.7):C.lijfH;
+  const hy=grond-C.beenL+zak;
+  const lijfOnder=hy+wip, lijfTop=lijfOnder-lijfH;
+  const borstH=Math.round(lijfH*0.62);
+  const schY=lijfTop+4;
+  const kopOnder=lijfTop-1, kopTop=kopOnder-C.kopH;
+
+  if(houding==='sprong') beenNaar(r,C,cx-3,lijfOnder,cx-9,lijfOnder+C.beenL-3,cx-8,lijfOnder+7,true);
+  else if(houding==='glij') beenNaar(r,C,cx-3,lijfOnder,cx-9,grond,cx+1,grond-3,true);
+  else been(r,C,cx-3,lijfOnder,f+Math.PI,true);
+  arm(r,C,cx-Math.floor(C.borstB/2)+2,schY+1,f,true);
+
+  const bx=cx-Math.floor(C.borstB/2);
+  rondBlok(r,bx,lijfTop,C.borstB,borstH,3,MID);                       // borst
+  blok(r,bx+3,lijfTop+1,C.borstB-9,2,LITE);
+  blok(r,bx+2,lijfTop+borstH-3,C.borstB-4,2,TRIM);
+  const wx=cx-Math.floor(C.lijfB/2);
+  rondBlok(r,wx,lijfTop+borstH-1,C.lijfB,lijfH-borstH+2,2,MID);      // heup
+  blok(r,wx+1,lijfOnder-3,C.lijfB-2,3,STD);
+
+  if(C.schouders){
+    ovaal(r,bx+1,schY,6,6,LITE); ovaal(r,bx+C.borstB-2,schY,6,6,LITE);
+    ovaal(r,bx+1,schY+1,4,4,MID); ovaal(r,bx+C.borstB-2,schY+1,4,4,MID);
+  }
+  blok(r,cx-2,kopOnder-1,5,3,STD);                                    // nek
+
+  kop(r,C,cx+(houding==='glij'?2:0),kopTop);
+
+  armKanon(r,C,cx+Math.floor(C.borstB/2)-4,schY+4,f);
+
+  if(houding==='sprong') beenNaar(r,C,cx+2,lijfOnder,cx+8,lijfOnder+C.beenL-6,cx+9,lijfOnder+4,false);
+  else if(houding==='glij') beenNaar(r,C,cx+2,lijfOnder,cx+15,grond,cx+9,grond-2,false);
+  else been(r,C,cx+2,lijfOnder,f,false);
+  omtrek(r);
+  return r;
+}
+
+function reeks(C,aantal){ const u=[]; for(let i=0;i<aantal;i++)u.push(beeldje(C,i,aantal)); return u; }
+
+
+
+return { RUNNER:RUNNER, GUNNER:GUNNER, palet:palet, beeldje:beeldje };
+})();
+
+/* ---------- de acht gebieden ---------- */
+/* Alles wordt getekend op dubbele scherpte: een tegel is 32x32 beeldpunten
+   en verschijnt als 16x16 in de wereld. Achtergronden zijn 512 breed en
+   herhalen zich; ze liggen in twee lagen die langzamer meeschuiven dan de baan. */
+
+var BIOOM_LENGTE = 16;               // stukken baan per gebied
+var LAAG_B = 512, LAAG_H = 360;      // maat van een achtergrondlaag, dubbele scherpte
+
+var BIOMEN = [
+  { id:'stad', naam:'NEON STAD', donker:false,
+    lucht:['#07051a','#1d0b3c','#4a1250','#8a2a62'], neon:'#ff3d9a', neon2:'#22e6ff',
+    grond:{ boven:'#4b5184', vlak:'#262a4a', donker:'#141630', lijn:'#22e6ff' },
+    blok:{ rand:'#0c0e22', vlak:'#4a507c', licht:'#7c83b8', schaduw:'#2c3058', accent:'#ff3d9a', motief:'band' },
+    vloei:['#22e6ff','#0e7c9a'], maan:null, sterren:true },
+  { id:'jungle', naam:'NEON JUNGLE', donker:false,
+    lucht:['#020d0f','#062a26','#0c4a38','#1e6a48'], neon:'#7dff5a', neon2:'#ffe14a',
+    grond:{ boven:'#2a8a4e', vlak:'#1c2c24', donker:'#0e1812', lijn:'#9dff6a' },
+    blok:{ rand:'#1a0f08', vlak:'#7a4a28', licht:'#a8703e', schaduw:'#4e2c16', accent:'#7dff5a', motief:'kruis' },
+    vloei:['#9dff3a','#3a8a1a'], maan:{x:0.78,y:46,r:26,kleur:'#e8ffd8'}, sterren:true },
+  { id:'riool', naam:'NEON RIOOL', donker:true,
+    lucht:['#020409','#060d18','#0a1626','#0e1e32'], neon:'#3dff9a', neon2:'#2a8aff',
+    grond:{ boven:'#3e5062', vlak:'#1c2632', donker:'#0e141c', lijn:'#3dff9a' },
+    blok:{ rand:'#140a04', vlak:'#7c4a2c', licht:'#a86a3e', schaduw:'#4a2a16', accent:'#3dff9a', motief:'streep' },
+    vloei:['#5aff4a','#1e6a2a'], maan:null, sterren:false },
+  { id:'woestijn', naam:'NEON WOESTIJN', donker:false,
+    lucht:['#0c0626','#2a1052','#6a2a6a','#d8663e'], neon:'#ff8a2a', neon2:'#ff3d9a',
+    grond:{ boven:'#b06a4a', vlak:'#5a3236', donker:'#2e1a22', lijn:'#ffa24a' },
+    blok:{ rand:'#1e0e0a', vlak:'#b07446', licht:'#d89a62', schaduw:'#7a4a2a', accent:'#ff8a2a', motief:'lijn' },
+    vloei:['#3a1a2a','#1a0a14'], maan:{x:0.7,y:40,r:30,kleur:'#ffe8c8'}, sterren:true },
+  { id:'tempel', naam:'NEON TEMPEL', donker:true,
+    lucht:['#05080a','#0c1614','#16241e','#223328'], neon:'#ffd24a', neon2:'#5affd2',
+    grond:{ boven:'#6a7458', vlak:'#2e3530', donker:'#161c18', lijn:'#ffd24a' },
+    blok:{ rand:'#0e120e', vlak:'#6e7660', licht:'#98a084', schaduw:'#44493a', accent:'#ffd24a', motief:'glyph' },
+    vloei:['#ffd24a','#6a4a0a'], maan:null, sterren:false },
+  { id:'server', naam:'SERVERHAL', donker:false,
+    lucht:['#0a0816','#1a1630','#2c2448','#40305e'], neon:'#c46aff', neon2:'#3dffcf',
+    grond:{ boven:'#5c6284', vlak:'#2a2d44', donker:'#15172a', lijn:'#c46aff' },
+    blok:{ rand:'#08080f', vlak:'#262a3c', licht:'#3c4260', schaduw:'#181a28', accent:'#3dffcf', motief:'leds' },
+    vloei:['#c46aff','#3a1a5a'], maan:null, sterren:false },
+  { id:'ijs', naam:'IJSGROT', donker:true,
+    lucht:['#020612','#061430','#0c2450','#12366e'], neon:'#7af0ff', neon2:'#ffffff',
+    grond:{ boven:'#a8e6ff', vlak:'#2c6aa0', donker:'#123a62', lijn:'#ffffff' },
+    blok:{ rand:'#0a2448', vlak:'#7ecbf0', licht:'#d8f6ff', schaduw:'#3e8ac0', accent:'#ffffff', motief:'ijs' },
+    vloei:['#7af0ff','#1a5a9a'], maan:null, sterren:false },
+  { id:'magma', naam:'MAGMAFABRIEK', donker:false,
+    lucht:['#070202','#200606','#4a0e06','#9a2a08'], neon:'#ff6a1a', neon2:'#ffd23a',
+    grond:{ boven:'#4a3434', vlak:'#221616', donker:'#120a0a', lijn:'#ff6a1a' },
+    blok:{ rand:'#0a0606', vlak:'#3a3232', licht:'#5a4e4e', schaduw:'#221c1c', accent:'#ff7a1a', motief:'kern' },
+    vloei:['#ffb01a','#d83a0a'], maan:null, sterren:false }
+];
+
+/* volgorde: stad eerst, dan geschud uit de seed; nooit twee donkere naast elkaar */
+function maakVolgorde(seed){
+  var r = rng(seed ^ 0x5bd1e995), lijst = [];
+  function schud(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(r()*(i+1)), t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+  function donker(i){ return BIOMEN[i].donker; }
+  function cyclus(){
+    var rij = lijst.length===0 ? [0].concat(schud([1,2,3,4,5,6,7])) : schud([0,1,2,3,4,5,6,7]);
+    var vorige = lijst.length ? lijst[lijst.length-1] : -1;
+    if (rij[0] === vorige) { var t0=rij[0]; rij[0]=rij[1]; rij[1]=t0; }
+    for (var p=0;p<rij.length;p++){
+      var ervoor = p===0 ? vorige : rij[p-1];
+      if (ervoor>=0 && donker(ervoor) && donker(rij[p])) {
+        for (var q=p+1;q<rij.length;q++) if(!donker(rij[q])){ var t=rij[p]; rij[p]=rij[q]; rij[q]=t; break; }
+      }
+    }
+    lijst = lijst.concat(rij);
+  }
+  return function(n){ while(lijst.length<=n) cyclus(); return lijst[n]; };
+}
+
+/* ---------- teken-hulp op een canvas ---------- */
+function vlak(g,k,x,y,b,h){ g.fillStyle=k; g.fillRect(x|0,y|0,b|0,h|0); }
+function gloed(g,k,x,y,b,h,d){
+  g.globalAlpha=0.10; vlak(g,k,x-d*2,y-d*2,b+d*4,h+d*4);
+  g.globalAlpha=0.18; vlak(g,k,x-d,y-d,b+d*2,h+d*2);
+  g.globalAlpha=1;
+}
+function neonBord(g,k,x,y,b,h){
+  gloed(g,k,x,y,b,h,3);
+  vlak(g,'#07050f',x,y,b,h);
+  vlak(g,k,x,y,b,2); vlak(g,k,x,y+h-2,b,2); vlak(g,k,x,y,2,h); vlak(g,k,x+b-2,y,2,h);
+  for (var i=6;i<b-6;i+=6) vlak(g,k,x+i,y+Math.floor(h/2)-1,3,2);
+}
+function nieuwDoek(scene,key,b,h){
+  if (scene.textures.exists(key)) scene.textures.remove(key);
+  var t = scene.textures.createCanvas(key,b,h);
+  return { t:t, g:t.getContext() };
+}
+
+/* ---------- lucht: verloop met rasterovergangen, sterren, maan ---------- */
+function tekenLucht(scene,B){
+  var LB = 320, d = nieuwDoek(scene,'lucht_'+B.id,LB,LAAG_H), g = d.g, k = B.lucht, band = LAAG_H/4;
+  for (var i=0;i<4;i++) vlak(g,k[i],0,Math.round(i*band),LB,Math.ceil(band)+1);
+  for (var j=1;j<4;j++){                      // gerasterde overgang tussen de banden
+    var y0 = Math.round(j*band);
+    for (var x=0;x<LB;x+=2){ vlak(g,k[j-1],x+(j%2),y0,1,1); vlak(g,k[j-1],x,y0+2,1,1); if(x%4===0) vlak(g,k[j-1],x+1,y0+4,1,1); }
+  }
+  if (B.sterren){
+    var r = rng(77);
+    for (var s=0;s<70;s++){ var sx=Math.floor(r()*LB), sy=Math.floor(r()*LAAG_H*0.5);
+      g.globalAlpha = 0.4+r()*0.6; vlak(g,'#ffffff',sx,sy,r()<0.15?2:1,r()<0.15?2:1); }
+    g.globalAlpha = 1;
+  }
+  d.t.refresh();
+  if (B.maan){
+    var m = nieuwDoek(scene,'maan_'+B.id,B.maan.r*2+16,B.maan.r*2+16), mg=m.g, c=B.maan.r+8, rr=B.maan.r;
+    mg.globalAlpha=0.12; mg.fillStyle=B.maan.kleur; mg.beginPath(); mg.arc(c,c,rr+7,0,7); mg.fill();
+    mg.globalAlpha=1;
+    for (var yy=-rr;yy<=rr;yy++){ var w=Math.floor(Math.sqrt(rr*rr-yy*yy)); vlak(mg,B.maan.kleur,c-w,c+yy,w*2,1); }
+    mg.globalAlpha=0.18; vlak(mg,'#000000',c-rr*0.3,c-rr*0.4,rr*0.35,rr*0.3); vlak(mg,'#000000',c+rr*0.2,c+rr*0.2,rr*0.25,rr*0.2);
+    mg.globalAlpha=1; m.t.refresh();
+  }
+}
+
+/* ---------- achtergrondlagen per gebied ---------- */
+function tekenLagen(scene,B){
+  var ver = nieuwDoek(scene,'ver_'+B.id,LAAG_B,LAAG_H), dicht = nieuwDoek(scene,'dicht_'+B.id,LAAG_B,LAAG_H);
+  var r = rng(B.id.length*9173+B.id.charCodeAt(0));
+  var tek = LAGEN[B.id]; tek(ver.g,dicht.g,r,B);
+  ver.t.refresh(); dicht.t.refresh();
+}
+
+var GROND_Y = 288;   // bovenkant van de grond op dubbele scherpte
+
+var LAGEN = {
+  stad: function(v,d,r,B){
+    for (var x=0;x<LAAG_B;){ var b=24+Math.floor(r()*40), h=90+Math.floor(r()*120);
+      vlak(v,'#1a0f36',x,GROND_Y-h,b,h+72);
+      if (r()<0.5) vlak(v,'#1a0f36',x+Math.floor(b/2)-1,GROND_Y-h-14,2,14);
+      for (var wy=GROND_Y-h+8;wy<GROND_Y-6;wy+=10) for (var wx=x+4;wx<x+b-4;wx+=7)
+        if (r()<0.3) vlak(v,r()<0.5?'#ff3d9a':'#22e6ff',wx,wy,3,4);
+      x+=b+2+Math.floor(r()*6); }
+    for (var x2=0;x2<LAAG_B;){ var b2=40+Math.floor(r()*60), h2=60+Math.floor(r()*90);
+      vlak(d,'#0c0720',x2,GROND_Y-h2,b2,h2+72);
+      vlak(d,'#1c1238',x2,GROND_Y-h2,b2,3);
+      if (r()<0.75){ var kk=[B.neon,B.neon2,'#ffe14a'][Math.floor(r()*3)], sb=Math.min(b2-10,20+Math.floor(r()*26));
+        neonBord(d,kk,x2+5,GROND_Y-h2+12+Math.floor(r()*20),sb,12); }
+      for (var wy2=GROND_Y-h2+44;wy2<GROND_Y-10;wy2+=14) for (var wx2=x2+6;wx2<x2+b2-6;wx2+=10)
+        if (r()<0.2) vlak(d,'#ffd27a',wx2,wy2,4,5);
+      x2+=b2+6+Math.floor(r()*20); }
+  },
+  jungle: function(v,d,r,B){
+    for (var x=-20;x<LAAG_B+20;x+=18+Math.floor(r()*14)){ var h=120+Math.floor(r()*80), w=30+Math.floor(r()*30);
+      for (var yy=0;yy<w;yy++){ var ww=Math.floor(Math.sqrt(w*w-yy*yy)); vlak(v,'#0a2a22',x-ww,GROND_Y-h+yy,ww*2,1); }
+      vlak(v,'#0a2a22',x-w,GROND_Y-h+w,w*2,h); }
+    for (var f=0;f<30;f++){ var fx=Math.floor(r()*LAAG_B), fy=60+Math.floor(r()*200); gloed(v,B.neon2,fx,fy,2,2,2); vlak(v,B.neon2,fx,fy,2,2); }
+    for (var s=0;s<7;s++){ var sx=Math.floor(r()*LAAG_B), sw=10+Math.floor(r()*8);
+      vlak(d,'#051410',sx,0,sw,GROND_Y+72);
+      for (var k=0;k<5;k++){ var ly=40+Math.floor(r()*220), lw=26+Math.floor(r()*20), naar=r()<0.5?-1:1;
+        for (var q=0;q<10;q++) vlak(d,'#0c3a24',naar>0?sx+sw:sx-lw+q*2,ly+q,lw-q*2,1);
+        if (r()<0.6){ gloed(d,B.neon,sx+(naar>0?sw+6:-10),ly+4,3,3,2); vlak(d,B.neon,sx+(naar>0?sw+6:-10),ly+4,3,3); } } }
+    for (var l=0;l<12;l++){ var lx=Math.floor(r()*LAAG_B), ll=40+Math.floor(r()*120);
+      for (var yy2=0;yy2<ll;yy2+=2) vlak(d,'#1e5a2a',lx+Math.round(Math.sin(yy2/14)*3),yy2,2,2);
+      gloed(d,B.neon,lx,ll,3,3,2); vlak(d,B.neon,lx,ll,3,3); }
+  },
+  riool: function(v,d,r,B){
+    vlak(v,'#0a1422',0,40,LAAG_B,GROND_Y);
+    for (var by=44;by<GROND_Y;by+=10) for (var bx=((by/10)%2)*14;bx<LAAG_B;bx+=28) vlak(v,'#0e1a2c',bx,by,26,8);
+    for (var a=0;a<LAAG_B;a+=128){ for (var yy=0;yy<60;yy++){ var ww=Math.floor(Math.sqrt(60*60-yy*yy)*0.75);
+        vlak(v,'#030609',a+64-ww,GROND_Y-100+yy+60-60,ww*2,1); }
+      vlak(v,'#030609',a+19,GROND_Y-100+60,90,40); }
+    vlak(d,'#1a2a38',0,120,LAAG_B,18); vlak(d,'#2a3e50',0,120,LAAG_B,3); vlak(d,'#0c141c',0,135,LAAG_B,3);
+    for (var rv=10;rv<LAAG_B;rv+=40) vlak(d,'#3e5468',rv,126,4,4);
+    for (var p=0;p<4;p++){ var px2=40+p*128+Math.floor(r()*30);
+      vlak(d,'#162230',px2,138,14,GROND_Y-138); vlak(d,'#243646',px2,138,3,GROND_Y-138);
+      gloed(d,B.neon,px2-2,160,18,8,3); vlak(d,B.neon,px2,162,14,4); }
+    for (var dr=0;dr<14;dr++){ var dx=Math.floor(r()*LAAG_B); vlak(d,'#2a8aff',dx,139,2,3+Math.floor(r()*6)); }
+  },
+  woestijn: function(v,d,r,B){
+    function duin(g,kleur,basis,amp,golf,fase){ for (var x=0;x<LAAG_B;x++){ var h=basis+Math.round(Math.sin(x/golf*Math.PI*2+fase)*amp+Math.sin(x/(golf*0.37)*Math.PI*2)*amp*0.3);
+        vlak(g,kleur,x,GROND_Y-h,1,h+72); } }
+    duin(v,'#3a1a4a',110,24,LAAG_B/2,0.4); duin(v,'#2a1238',70,18,LAAG_B/3,1.7);
+    for (var c=0;c<5;c++){ var cx=30+c*100+Math.floor(r()*40), ch=40+Math.floor(r()*40);
+      if (r()<0.5){ vlak(d,'#1a0c1e',cx,GROND_Y-ch,10,ch+2); vlak(d,'#1a0c1e',cx-10,GROND_Y-ch+16,10,6); vlak(d,'#1a0c1e',cx-10,GROND_Y-ch+6,6,14);
+        vlak(d,'#1a0c1e',cx+10,GROND_Y-ch+24,10,6); vlak(d,'#1a0c1e',cx+14,GROND_Y-ch+12,6,16); }
+      else { var mb=60+Math.floor(r()*50); vlak(d,'#221024',cx-20,GROND_Y-ch,mb,ch+2); vlak(d,'#2e1630',cx-20,GROND_Y-ch,mb,3); } }
+    for (var s=0;s<LAAG_B;s+=32){ gloed(d,B.neon,s,GROND_Y-4,16,2,2); vlak(d,B.neon,s,GROND_Y-4,16,2); }
+  },
+  tempel: function(v,d,r,B){
+    var mid=LAAG_B/2;
+    for (var t=0;t<7;t++){ var w=200-t*26; vlak(v,'#141f1a',mid-w/2,GROND_Y-30-t*24,w,26); }
+    vlak(v,'#141f1a',mid-14,GROND_Y-30-7*24-20,28,20);
+    gloed(v,B.neon,mid-4,GROND_Y-30-7*24-12,8,6,3); vlak(v,B.neon,mid-4,GROND_Y-30-7*24-12,8,6);
+    for (var c=0;c<6;c++){ var cx=20+c*88+Math.floor(r()*20), ch=80+Math.floor(r()*100);
+      vlak(d,'#1c2620',cx,GROND_Y-ch,22,ch+2); vlak(d,'#2a3830',cx-4,GROND_Y-ch,30,8); vlak(d,'#2a3830',cx,GROND_Y-ch+8,3,ch-8);
+      if (r()<0.4) vlak(d,'#0a0f0c',cx,GROND_Y-ch-10+Math.floor(r()*4),22,10);
+      for (var gy=GROND_Y-ch+20;gy<GROND_Y-14;gy+=16) if (r()<0.55){ gloed(d,B.neon,cx+7,gy,8,8,2); vlak(d,B.neon,cx+7,gy,8,2); vlak(d,B.neon,cx+10,gy+2,2,6); } }
+    d.globalAlpha=0.16; for (var m=0;m<3;m++) vlak(d,'#9ad0b8',0,GROND_Y-30+m*8,LAAG_B,6); d.globalAlpha=1;
+  },
+  server: function(v,d,r,B){
+    for (var x=0;x<LAAG_B;x+=34){ vlak(v,'#161428',x,70,30,GROND_Y-70); vlak(v,'#221e3a',x,70,30,3);
+      for (var y=80;y<GROND_Y-6;y+=8){ vlak(v,'#0e0c1c',x+3,y,24,6);
+        if (r()<0.5) vlak(v,[B.neon,B.neon2,'#ff3d9a'][Math.floor(r()*3)],x+5+Math.floor(r()*18),y+2,2,2); } }
+    for (var x2=0;x2<LAAG_B;x2+=86){ vlak(d,'#0a0914',x2,40,54,GROND_Y-40); vlak(d,'#1c1830',x2,40,54,4); vlak(d,'#1c1830',x2,40,3,GROND_Y-40);
+      for (var y2=54;y2<GROND_Y-8;y2+=14){ vlak(d,'#141226',x2+6,y2,42,10);
+        for (var l=0;l<5;l++) if (r()<0.6){ var kk=[B.neon,B.neon2][Math.floor(r()*2)]; gloed(d,kk,x2+10+l*7,y2+4,3,2,1); vlak(d,kk,x2+10+l*7,y2+4,3,2); } } }
+    for (var k=0;k<LAAG_B;k+=86){ for (var t=0;t<32;t++) vlak(d,'#2a1e48',k+54+t,20+Math.round(Math.sin(t/32*Math.PI)*22),2,3); }
+  },
+  ijs: function(v,d,r,B){
+    vlak(v,'#081a3a',0,0,LAAG_B,24);
+    for (var x=0;x<LAAG_B;x+=10+Math.floor(r()*14)){ var l=20+Math.floor(r()*90), w=6+Math.floor(r()*10);
+      for (var y=0;y<l;y++){ var ww=Math.max(1,Math.round(w*(1-y/l))); vlak(v,'#0e2c5a',x-ww/2,24+y,ww,1); } }
+    for (var h=0;h<LAAG_B;h+=60){ var hh=60+Math.floor(r()*60); for (var y2=0;y2<hh;y2++) vlak(v,'#0c2448',h+y2*0.3,GROND_Y-hh+y2,50-y2*0.2,1); }
+    for (var c=0;c<9;c++){ var cx=Math.floor(r()*LAAG_B), ch=24+Math.floor(r()*50), cw=8+Math.floor(r()*8);
+      gloed(d,B.neon,cx-cw/2,GROND_Y-ch,cw,ch,3);
+      for (var y3=0;y3<ch;y3++){ var w3=Math.max(1,Math.round(cw*(y3/ch))); vlak(d,y3<3?'#ffffff':'#7ad8ff',cx-w3/2,GROND_Y-ch+y3,w3,1); }
+      vlak(d,'#ffffff',cx-1,GROND_Y-ch+4,1,ch*0.5); }
+    for (var s=0;s<20;s++){ var sx=Math.floor(r()*LAAG_B), sy=24+Math.floor(r()*160); vlak(d,'#bff4ff',sx,sy,1,1); }
+  },
+  magma: function(v,d,r,B){
+    for (var x=0;x<LAAG_B;){ var b=40+Math.floor(r()*60), h=70+Math.floor(r()*80);
+      vlak(v,'#1a0806',x,GROND_Y-h,b,h+72);
+      if (r()<0.6){ var sx=x+Math.floor(r()*(b-12)), sh=30+Math.floor(r()*40); vlak(v,'#1a0806',sx,GROND_Y-h-sh,12,sh);
+        v.globalAlpha=0.25; for (var rk=0;rk<4;rk++) vlak(v,'#6a4a44',sx-4+rk*3,GROND_Y-h-sh-10-rk*10,14+rk*4,8); v.globalAlpha=1; }
+      for (var wy=GROND_Y-h+10;wy<GROND_Y-8;wy+=14) for (var wx=x+6;wx<x+b-6;wx+=12) if (r()<0.3) vlak(v,'#ff6a1a',wx,wy,5,4);
+      x+=b+4+Math.floor(r()*14); }
+    vlak(d,'#221412',0,100,LAAG_B,14); vlak(d,'#3a2420',0,100,LAAG_B,3);
+    for (var p=0;p<3;p++){ var px2=60+p*170+Math.floor(r()*40);
+      vlak(d,'#2a1a18',px2-10,90,34,20);
+      gloed(d,B.neon2,px2,114,10,GROND_Y-114,4); vlak(d,B.neon,px2,114,10,GROND_Y-114); vlak(d,B.neon2,px2+3,114,3,GROND_Y-114);
+      gloed(d,B.neon,px2-16,GROND_Y-8,42,8,4); }
+    for (var s=0;s<30;s++){ vlak(d,r()<0.5?B.neon2:B.neon,Math.floor(r()*LAAG_B),120+Math.floor(r()*160),2,2); }
+  }
+};
+
+/* ---------- grond, blokken en vloeistof per gebied ---------- */
+function tekenTegels(scene,B){
+  var G = B.grond, K = B.blok, T = 32;
+  var a = nieuwDoek(scene,'grondT_'+B.id,T,T), g = a.g;          // bovenste laag grond
+  vlak(g,G.vlak,0,0,T,T); vlak(g,G.boven,0,0,T,8); vlak(g,G.donker,0,8,T,2);
+  vlak(g,G.lijn,0,0,T,2);
+  g.globalAlpha=0.35; vlak(g,G.lijn,0,2,T,2); g.globalAlpha=1;
+  vlak(g,G.donker,0,18,T,2); vlak(g,G.donker,15,10,2,8); vlak(g,G.donker,6,20,2,12); vlak(g,G.donker,24,20,2,12);
+  vlak(g,G.boven,2,4,6,2); vlak(g,G.boven,18,4,8,2);
+  a.t.refresh();
+  var b = nieuwDoek(scene,'grondB_'+B.id,T,T), h = b.g;          // onderste laag
+  vlak(h,G.vlak,0,0,T,T); vlak(h,G.donker,0,0,T,2); vlak(h,G.donker,0,16,T,2);
+  vlak(h,G.donker,9,2,2,14); vlak(h,G.donker,25,18,2,14);
+  h.globalAlpha=0.5; vlak(h,G.donker,0,24,T,8); h.globalAlpha=1;
+  b.t.refresh();
+  ['blok_','blokStuk_'].forEach(function(p,stuk){
+    var c = nieuwDoek(scene,p+B.id,T,T), k = c.g;
+    vlak(k,K.rand,0,0,T,T); vlak(k,K.vlak,2,2,T-4,T-4); vlak(k,K.licht,2,2,T-4,3); vlak(k,K.licht,2,2,3,T-4);
+    vlak(k,K.schaduw,2,T-5,T-4,3); vlak(k,K.schaduw,T-5,2,3,T-4);
+    var m = K.motief, A = K.accent;
+    if (m==='band'){ vlak(k,K.rand,8,12,16,8); vlak(k,A,9,14,14,4); }
+    else if (m==='kruis'){ for (var i=0;i<18;i++){ vlak(k,K.schaduw,7+i,7+i,3,3); vlak(k,K.schaduw,22-i,7+i,3,3); } vlak(k,A,14,14,4,4); }
+    else if (m==='streep'){ for (var s=0;s<4;s++) vlak(k,s%2?K.rand:A,5+s*6,12,6,8); }
+    else if (m==='lijn'){ vlak(k,A,6,10,20,2); vlak(k,A,6,20,20,2); vlak(k,K.schaduw,6,12,20,8); }
+    else if (m==='glyph'){ vlak(k,A,11,8,10,2); vlak(k,A,15,10,2,10); vlak(k,A,11,20,10,2); vlak(k,A,9,13,3,2); vlak(k,A,20,13,3,2); }
+    else if (m==='leds'){ for (var l=0;l<4;l++) vlak(k,l===1?'#ff3d9a':A,7+l*5,8,3,2); vlak(k,K.rand,6,16,20,2); vlak(k,K.rand,6,21,20,2); }
+    else if (m==='ijs'){ k.globalAlpha=0.5; vlak(k,'#ffffff',6,6,6,14); vlak(k,'#ffffff',14,6,3,6); k.globalAlpha=1; vlak(k,'#ffffff',5,5,3,3); }
+    else if (m==='kern'){ vlak(k,K.rand,8,8,16,16); vlak(k,'#ff3a0a',10,10,12,12); vlak(k,A,12,12,8,8); vlak(k,'#ffe08a',14,14,4,4); }
+    vlak(k,K.rand,4,4,2,2); vlak(k,K.rand,T-6,4,2,2); vlak(k,K.rand,4,T-6,2,2); vlak(k,K.rand,T-6,T-6,2,2);
+    if (stuk){ vlak(k,K.rand,6,4,2,8); vlak(k,K.rand,8,11,2,4); vlak(k,K.rand,22,5,2,6); vlak(k,K.rand,20,18,2,8); vlak(k,K.rand,12,24,8,2); vlak(k,K.rand,18,22,2,2); }
+    c.t.refresh();
+  });
+  var v = nieuwDoek(scene,'vloei_'+B.id,T,T), w = v.g;           // vloeistof in een gat
+  vlak(w,B.vloei[1],0,0,T,T); vlak(w,B.vloei[0],0,0,T,6);
+  w.globalAlpha=0.5; vlak(w,'#ffffff',4,1,6,1); vlak(w,'#ffffff',20,2,5,1); vlak(w,B.vloei[0],0,10,T,3); w.globalAlpha=1;
+  v.t.refresh();
+}
+
+/* ---------- palet voor effecten ---------- */
 var P={
   zwart:0x0d1326, wit:0xeaf4ff, grijs:0xb9cfe8, staal:0x6b84ad,
   blauw:0x3d7fd8, blauwD:0x23508f, cyaan:0x5ee7e0,
   rood:0xc0392b, roodD:0x7a2018, oranje:0xe8892f,
-  roze:0xff5d9e, goud:0xffc94a,
-  steenL:0x8fa3bd, steen:0x5d7396, steenD:0x3a4c6e,
-  luchtA:0x4a7fc4, luchtB:0x6ea5d8, luchtC:0x9ecbe8, luchtD:0xc9e5f2,
-  stadA:0x35558a, stadB:0x2a4370, raam:0x7fe3ff
+  roze:0xff5d9e, goud:0xffc94a, steenL:0x8fa3bd
 };
+function int(hex){ return parseInt(String(hex).slice(1),16); }
 
 var held="runner";
+/* romp en mond in beeldpunten van de figuurtekening (dubbele scherpte);
+   romp = [x, y, breed, hoog] vanaf linksboven van het figuur */
 var HELDEN={
   runner:{sprong:305,tweede:255,loop:92,glijtijd:520,herlaad:260,levens:3,
-    bb:9,bh:19,teken:tekenRunner,kogelKleur:P.cyaan,kogelR:2},
+    romp:[8,10,16,42], rompGlij:[8,24,26,28], mond:[16,4], mondGlij:[16,20], kogelKleur:P.cyaan},
   gunner:{sprong:262,tweede:215,loop:92,glijtijd:720,herlaad:440,levens:3,
-    bb:12,bh:21,teken:tekenGunner,kogelKleur:P.oranje,kogelR:3}
+    romp:[9,8,20,44], rompGlij:[9,20,28,32], mond:[24,3], mondGlij:[24,18], kogelKleur:P.oranje}
 };
 function kies(w){
   held=w;
@@ -240,7 +677,6 @@ function tekenHarten(n,max){
 }
 tekenHarten(3,3);
 
-/* ---------- toevalsreeks ---------- */
 function rng(seed){
   return function(){
     seed|=0;seed=seed+0x6D2B79F5|0;
@@ -251,160 +687,42 @@ function rng(seed){
 }
 
 /* ---------- maten ---------- */
-var BREED=320,HOOG=180,TEGEL=16,GRONDY=144,ZWAARTE=900,CHUNK=10*TEGEL;
+/* De wereld is 180 hoog en BREED breed; getekend wordt op dubbele scherpte. */
+var BREED=320,HOOG=180,TEGEL=16,ZWAARTE=900,CHUNK=10*TEGEL,SCHERP=2;
 
-/* ---------- figuren, met de hand op het pixelraster ---------- */
-function tekenRunner(g,f){
-  var K=P.zwart,B=P.blauw,D=P.blauwD,W=P.wit,C=P.cyaan,G=P.grijs;
-  if(f===3){
-    px(g,K,0,10,22,10);
-    px(g,B,1,11,18,7); px(g,D,1,16,18,3);
-    px(g,W,3,12,6,2);
-    px(g,G,9,11,7,5); px(g,C,13,12,4,3);
-    px(g,D,17,13,5,4); px(g,C,21,14,1,2);
-    px(g,K,2,19,4,1); px(g,K,9,19,5,1);
-    return;
-  }
-  px(g,K,2,0,11,10);
-  px(g,B,3,1,9,8);
-  px(g,W,4,1,5,2);
-  px(g,C,8,3,4,4);
-  px(g,D,3,7,6,2);
-  px(g,K,0,1,2,2); px(g,B,0,2,2,1);
-  px(g,K,2,9,10,8);
-  px(g,B,3,10,8,6);
-  px(g,C,5,11,3,2);
-  px(g,G,3,10,2,4);
-  px(g,D,3,15,8,2);
-  px(g,K,11,11,9,6);
-  px(g,D,12,12,7,4);
-  px(g,C,18,13,1,2);
-  var voor=f===0?7:3, achter=f===0?3:7;
-  px(g,K,voor,16,4,4); px(g,B,voor+1,17,2,3);
-  px(g,K,achter,16,3,3); px(g,D,achter+1,17,1,2);
-  px(g,K,voor-1,19,5,1);
-  px(g,K,achter-1,18,4,1);
-}
-
-function tekenGunner(g,f){
-  var K=P.zwart,R=P.rood,D=P.roodD,O=P.oranje,C=P.cyaan,G=P.grijs,S=P.staal;
-  if(f===3){
-    px(g,K,0,11,26,11);
-    px(g,R,1,12,22,8); px(g,D,1,18,22,3);
-    px(g,O,3,13,7,2);
-    px(g,G,10,12,8,6); px(g,C,14,13,5,4);
-    px(g,S,19,14,7,5); px(g,K,25,15,1,3);
-    px(g,K,2,21,5,1); px(g,K,10,21,6,1);
-    return;
-  }
-  px(g,K,2,0,13,11);
-  px(g,G,3,1,11,9);
-  px(g,O,4,1,5,2);
-  px(g,C,9,3,5,5);
-  px(g,D,3,8,7,2);
-  px(g,K,2,10,14,10);
-  px(g,R,3,11,12,8);
-  px(g,O,5,12,4,2);
-  px(g,G,3,11,3,5);
-  px(g,D,3,17,12,2);
-  px(g,K,14,11,11,8);
-  px(g,S,15,12,9,6);
-  px(g,D,15,13,6,2);
-  px(g,K,23,13,2,4);
-  var voor=f===0?9:4, achter=f===0?4:9;
-  px(g,K,voor,18,5,4); px(g,R,voor+1,19,3,3);
-  px(g,K,achter,18,4,3); px(g,D,achter+1,19,2,2);
-  px(g,K,voor-1,21,6,1);
-  px(g,K,achter-1,20,5,1);
-}
-
-/* ---------- omgeving ---------- */
-function maakTegel(scene){
-  var g=scene.make.graphics({x:0,y:0,add:false});
-  px(g,P.steen,0,0,16,16);
-  px(g,P.steenL,0,0,16,3);
-  px(g,P.cyaan,2,4,5,1);
-  px(g,P.steenD,0,13,16,3);
-  px(g,P.steenD,7,3,1,10);
-  px(g,P.steenD,0,8,16,1);
-  g.generateTexture("tegel",16,16);g.destroy();
-
-  var b=scene.make.graphics({x:0,y:0,add:false});
-  px(b,P.steenD,0,0,16,16);
-  px(b,P.staal,1,1,14,14);
-  px(b,P.steenL,1,1,14,2);
-  px(b,P.roze,4,6,8,3);
-  px(b,P.zwart,4,6,8,1);
-  b.generateTexture("blok",16,16);b.destroy();
-
-  /* aangeschoten blok: dezelfde steen met barsten erin */
-  var s=scene.make.graphics({x:0,y:0,add:false});
-  px(s,P.steenD,0,0,16,16);
-  px(s,P.staal,1,1,14,14);
-  px(s,P.steenL,1,1,14,2);
-  px(s,P.roze,4,6,8,3);
-  px(s,P.zwart,4,6,8,1);
-  px(s,P.zwart,3,2,1,4); px(s,P.zwart,4,6,1,2);
-  px(s,P.zwart,11,3,1,3); px(s,P.zwart,10,9,1,4);
-  px(s,P.zwart,6,11,4,1);
-  s.generateTexture("blokStuk",16,16);s.destroy();
-}
-
-function maakStad(scene){
-  for(var laagNr=0;laagNr<2;laagNr++){
-    var g=scene.make.graphics({x:0,y:0,add:false});
-    var r=rng(laagNr===0?404:909);
-    var kleur=laagNr===0?P.stadA:P.stadB;
-    var x=0;
-    while(x<BREED){
-      var b=10+Math.floor(r()*20), h=24+Math.floor(r()*(laagNr===0?50:80));
-      px(g,kleur,x,HOOG-h-20,b,h);
-      for(var ry=0;ry<Math.floor(h/8)-1;ry++)
-        for(var rx=0;rx<Math.floor(b/5);rx++)
-          if(r()<0.45)px(g,P.raam,x+2+rx*5,HOOG-h-16+ry*8,2,3);
-      x+=b+2+Math.floor(r()*8);
+/* ---------- figuren naar texturen ---------- */
+function figuurTexturen(scene){
+  [['runner',FIG.RUNNER],['gunner',FIG.GUNNER]].forEach(function(paar){
+    var naam=paar[0], C=paar[1], pal=FIG.palet(C);
+    for (var f=0;f<10;f++){
+      var houding = f<8 ? 'loop' : (f===8 ? 'sprong' : 'glij');
+      var r = FIG.beeldje(C, f<8?f:0, 8, houding);
+      var d = nieuwDoek(scene,'fig_'+naam+'_'+f,r.b,r.h), id = d.g.createImageData(r.b,r.h);
+      for (var i=0;i<r.b*r.h;i++){ var k=r.d[i]; if(!k||!pal[k]) continue; var hx=pal[k];
+        id.data[i*4]=parseInt(hx.slice(1,3),16); id.data[i*4+1]=parseInt(hx.slice(3,5),16);
+        id.data[i*4+2]=parseInt(hx.slice(5,7),16); id.data[i*4+3]=255; }
+      d.g.putImageData(id,0,0); d.t.refresh();
     }
-    g.generateTexture("stad"+laagNr,BREED,HOOG);g.destroy();
-  }
+  });
 }
 
-function maakLucht(scene){
-  var g=scene.make.graphics({x:0,y:0,add:false});
-  px(g,P.luchtA,0,0,BREED,40);
-  px(g,P.luchtB,0,40,BREED,40);
-  px(g,P.luchtC,0,80,BREED,40);
-  px(g,P.luchtD,0,120,BREED,60);
-  for(var b=0;b<3;b++){
-    var y=40+b*40, k=[P.luchtA,P.luchtB,P.luchtC][b];
-    for(var x=0;x<BREED;x+=2)px(g,k,x+(b%2),y,1,1);
-    for(var x2=0;x2<BREED;x2+=4)px(g,k,x2,y+2,1,1);
-  }
-  var r=rng(31);
-  for(var w=0;w<5;w++){
-    var cx=Math.floor(r()*BREED),cy=12+Math.floor(r()*44),cb=16+Math.floor(r()*18);
-    px(g,P.luchtD,cx,cy,cb,4);
-    px(g,P.luchtD,cx+3,cy-3,cb-8,3);
-    px(g,P.wit,cx+3,cy-3,cb-12,1);
-  }
-  g.generateTexture("lucht",BREED,HOOG);g.destroy();
-}
-
-/* ---------- munten: drie standen van een draaiende munt ---------- */
+/* ---------- munten en kogels, dubbele scherpte ---------- */
 function maakMunten(scene){
   function munt(naam,maat,breed){
-    var g=scene.make.graphics({x:0,y:0,add:false});
-    var x0=Math.floor((maat-breed)/2);
-    px(g,P.zwart,x0,1,breed,maat-2);
-    if(breed>2)px(g,P.zwart,x0+1,0,breed-2,maat);
-    if(breed>2){
-      px(g,P.goud,x0+1,1,breed-2,maat-2);
-      px(g,0xc8871e,x0+breed-2,2,1,maat-4);
-      px(g,P.wit,x0+1,2,1,2);
-    } else px(g,P.goud,x0,1,breed,maat-2);
-    g.generateTexture(naam,maat,maat);g.destroy();
+    var d=nieuwDoek(scene,naam,maat,maat), g=d.g, x0=Math.floor((maat-breed)/2);
+    vlak(g,'#1a1004',x0,2,breed,maat-4);
+    if (breed>4){ vlak(g,'#1a1004',x0+2,0,breed-4,maat);
+      vlak(g,'#ffc94a',x0+2,2,breed-4,maat-4); vlak(g,'#c8781e',x0+breed-4,4,2,maat-8);
+      vlak(g,'#fff2b0',x0+2,4,2,4); if (breed>8) vlak(g,'#e8a02e',x0+Math.floor(breed/2)-1,5,2,maat-10); }
+    else vlak(g,'#ffc94a',x0,2,breed,maat-4);
+    d.t.refresh();
   }
-  munt("munt0",8,8); munt("munt1",8,5); munt("munt2",8,2);
-  munt("muntD0",12,12); munt("muntD1",12,7); munt("muntD2",12,3);
+  munt("munt0",16,16); munt("munt1",16,10); munt("munt2",16,4);
+  munt("muntD0",24,24); munt("muntD1",24,14); munt("muntD2",24,6);
+  var k1=nieuwDoek(scene,'kogel_runner',12,6), a=k1.g;
+  vlak(a,'#0a5a66',0,1,12,4); vlak(a,'#5ee7e0',1,1,11,4); vlak(a,'#ffffff',6,2,5,2); k1.t.refresh();
+  var k2=nieuwDoek(scene,'kogel_gunner',10,10), b=k2.g;
+  vlak(b,'#5a1e06',2,0,6,10); vlak(b,'#5a1e06',0,2,10,6); vlak(b,'#e8892f',2,2,6,6); vlak(b,'#ffe08a',3,3,3,3); k2.t.refresh();
 }
 
 /* ---------- scene ---------- */
@@ -421,50 +739,36 @@ var Spel=new Phaser.Class({
     this.brokken=[];this.bevries=0;
     this.score=0;this.getoond=0;this.muntTal=0;this.laatsteMeter=0;
     this.muntKlok=0;this.muntStand=0;
+    this.volgorde=maakVolgorde(this.seed);this.bioomNu=-1;this.klaar={};
 
-    ["r0","r1","r2","r3","kogel"].forEach(function(k){
-      if(this.textures.exists(k))this.textures.remove(k);
-    },this);
-    for(var f=0;f<4;f++){
-      var g=this.make.graphics({x:0,y:0,add:false});
-      h.teken(g,f);
-      g.generateTexture("r"+f,f===3?28:26,24);
-      g.destroy();
-    }
-    /* kogeltextuur vooraf, niet pas bij het eerste schot */
-    var gk=this.make.graphics({x:0,y:0,add:false}),R=h.kogelR;
-    px(gk,h.kogelKleur,0,1,R*2+2,R*2);
-    px(gk,h.kogelKleur,1,0,R*2,R*2+2);
-    px(gk,P.wit,1,1,2,2);
-    gk.generateTexture("kogel",R*2+2,R*2+2);gk.destroy();
+    figuurTexturen(this);maakMunten(this);
+    for (var b=0;b<BIOMEN.length;b++) tekenTegels(this,BIOMEN[b]);
 
-    maakTegel(this);maakStad(this);maakLucht(this);maakMunten(this);
+    var cam=this.cameras.main;
+    cam.setZoom(SCHERP).setOrigin(0,0);cam.roundPixels=true;
 
-    this.add.image(0,0,"lucht").setOrigin(0,0).setScrollFactor(0).setDepth(-30);
-    this.verA=this.add.tileSprite(0,0,BREED,HOOG,"stad1").setOrigin(0,0)
-      .setScrollFactor(0).setDepth(-20);
-    this.verB=this.add.tileSprite(0,0,BREED,HOOG,"stad0").setOrigin(0,0)
-      .setScrollFactor(0).setDepth(-10);
+    this.lucht=this.add.tileSprite(0,0,BREED*SCHERP,LAAG_H,'__WHITE').setOrigin(0,0).setScale(0.5).setScrollFactor(0).setDepth(-40);
+    this.maan=this.add.image(0,0,'__WHITE').setOrigin(0.5).setScrollFactor(0).setDepth(-35).setScale(0.5).setVisible(false);
+    this.laagVer=this.add.tileSprite(0,0,BREED*SCHERP,LAAG_H,'__WHITE').setOrigin(0,0).setScale(0.5).setScrollFactor(0).setDepth(-20);
+    this.laagDicht=this.add.tileSprite(0,0,BREED*SCHERP,LAAG_H,'__WHITE').setOrigin(0,0).setScale(0.5).setScrollFactor(0).setDepth(-10);
 
     this.vast=this.physics.add.staticGroup();
+    this.sier=this.add.group();
     this.kogels=this.physics.add.group({allowGravity:false});
     this.munten=this.physics.add.group({allowGravity:false,immovable:true});
 
-    this.speler=this.physics.add.sprite(60,80,"r0");
-    this.speler.body.setSize(h.bb,h.bh);
-    this.speler.body.setOffset(4,2);
+    this.speler=this.physics.add.sprite(60,80,'fig_'+held+'_0').setScale(0.5);
+    this.zetRomp(false);
     this.speler.setDepth(5);
     this.physics.add.collider(this.speler,this.vast);
     this.physics.add.overlap(this.kogels,this.vast,this.raakBlok,null,this);
     this.physics.add.overlap(this.speler,this.munten,this.pak,null,this);
 
-    /* brokstukken worden met de hand getekend, geen aparte objecten */
     this.fx=this.add.graphics().setDepth(6);
 
     for(var c=0;c<4;c++)this.bouwChunk(c);
     this.laatsteChunk=3;
-    this.cameras.main.setBounds(-1e6,0,2e7,HOOG);
-    this.cameras.main.roundPixels=true;
+    this.wisselBioom(0,true);
 
     this.toetsen=this.input.keyboard.addKeys("SPACE,UP,DOWN,X",false);
     zetAanraking(this);
@@ -472,21 +776,44 @@ var Spel=new Phaser.Class({
     tekenHarten(this.levens,h.levens);
   },
 
+  /* ---------- gebieden ---------- */
+  bioomVan:function(chunk){ return BIOMEN[this.volgorde(Math.floor(Math.max(0,chunk)/BIOOM_LENGTE))]; },
+  zorgVoor:function(B){
+    if (this.klaar[B.id]) return;
+    tekenLucht(this,B); tekenLagen(this,B); this.klaar[B.id]=true;
+  },
+  wisselBioom:function(n,stil){
+    var B=BIOMEN[this.volgorde(n)];this.bioomNu=n;this.B=B;
+    this.zorgVoor(B);
+    this.lucht.setTexture('lucht_'+B.id);
+    this.laagVer.setTexture('ver_'+B.id);this.laagDicht.setTexture('dicht_'+B.id);
+    if (B.maan){ this.maan.setTexture('maan_'+B.id).setVisible(true).setPosition(Math.round(BREED*B.maan.x),B.maan.y); }
+    else this.maan.setVisible(false);
+    /* texturen van gebieden die we niet meer zien, weer opruimen */
+    var houd={}; houd[B.id]=1; houd[BIOMEN[this.volgorde(n+1)].id]=1;
+    for (var id in this.klaar) if (!houd[id]){ ['lucht_','ver_','dicht_','maan_'].forEach(function(p){ if(this.textures.exists(p+id)) this.textures.remove(p+id); },this); delete this.klaar[id]; }
+    if (!stil){ var k=int(B.neon); this.cameras.main.flash(260,(k>>16)&255,(k>>8)&255,k&255); }
+    toonBord(B.naam,B.neon);
+  },
+
   bouwChunk:function(index){
     var r=rng(this.seed^Math.imul(index,0x9E3779B1));
     var basis=index*CHUNK,lijst=[],scene=this,bezet={};
-    function tegel(tx,ty,key){
+    var B=this.bioomVan(index);
+    if (index%BIOOM_LENGTE===0) this.zorgVoor(B);   // volgende gebied alvast klaarzetten
+    function tegel(tx,ty,soort){
       bezet[tx+","+ty]=true;
-      var b=scene.vast.create(basis+tx*TEGEL,ty*TEGEL,key||"tegel").setOrigin(0,0);
+      var key = soort==='blok' ? 'blok_'+B.id : (ty===9 ? 'grondT_'+B.id : 'grondB_'+B.id);
+      var b=scene.vast.create(basis+tx*TEGEL,ty*TEGEL,key).setOrigin(0,0).setScale(0.5);
       b.refreshBody();
-      b.stuk=(key==="blok");   /* alleen losse blokken zijn kapot te schieten */
-      b.leven=2;
+      b.stuk=(soort==="blok");
+      b.leven=2;b.bioom=B;
       lijst.push(b);return b;
     }
     var gat=-1;
     if(index>=2&&r()<0.4)gat=2+Math.floor(r()*5);
     for(var t=0;t<10;t++){
-      if(t===gat||t===gat+1)continue;
+      if(t===gat||t===gat+1){ var vl=scene.add.image(basis+t*TEGEL,10*TEGEL+4,'vloei_'+B.id).setOrigin(0,0).setScale(0.5).setDepth(1); lijst.push(vl); continue; }
       tegel(t,9);tegel(t,10);
     }
     if(index>=1){
@@ -498,16 +825,14 @@ var Spel=new Phaser.Class({
         if(r()<0.4)tegel(tx,7,"blok");
       }
     }
-    /* een versperring: drie blokken op elkaar, dwars op je route */
     if(index>=3&&r()<0.35){
       var vx=1+Math.floor(r()*7);
       if(vx!==gat&&vx!==gat+1){
         tegel(vx,8,"blok");tegel(vx,7,"blok");tegel(vx,6,"blok");
       }
     }
-    /* munten — pas NA de rest, zodat de baan zelf niet verschuift */
     if(index>=1){
-      if(r()<0.6){                                   /* rijtje op de grond */
+      if(r()<0.6){
         var s0=Math.floor(r()*6),lengte=3+Math.floor(r()*3);
         for(var m=0;m<lengte;m++){
           var mx=s0+m;if(mx>9)break;
@@ -515,12 +840,12 @@ var Spel=new Phaser.Class({
           lijst.push(scene.maakMunt(basis+mx*TEGEL+8,8*TEGEL+6,false));
         }
       }
-      if(gat>=0){                                     /* boog over het gat */
+      if(gat>=0){
         var boog=[5,4,4,5];
         for(var bi=0;bi<4;bi++)
           lijst.push(scene.maakMunt(basis+(gat-1+bi)*TEGEL+8,boog[bi]*TEGEL+8,false));
       }
-      var top=null;                                   /* dikke munt, hoog */
+      var top=null;
       for(var sleutel in bezet){
         var dl=sleutel.split(","),kx=+dl[0],ky=+dl[1];
         if(ky<9&&(top===null||ky<top.y))top={x:kx,y:ky};
@@ -530,15 +855,13 @@ var Spel=new Phaser.Class({
     }
     this.chunks[index]=lijst;
   },
-
   maakMunt:function(x,y,dik){
-    var m=this.munten.create(x,y,dik?"muntD0":"munt0");
+    var m=this.munten.create(x,y,dik?"muntD0":"munt0").setScale(0.5);
     m.body.setAllowGravity(false);
-    m.body.setSize(dik?10:6,dik?10:6);
+    m.body.setSize(dik?20:12,dik?20:12);
     m.dik=dik;m.setDepth(3);
     return m;
   },
-
   pak:function(speler,munt){
     if(!munt.active)return;
     var waarde=munt.dik?50:10;
@@ -547,7 +870,6 @@ var Spel=new Phaser.Class({
     this.zweef(munt.x,munt.y-6,"+"+waarde,munt.dik?"#ffffff":"#ffc94a");
     munt.destroy();
   },
-
   zweef:function(x,y,tekst,kleur){
     var t=this.add.text(x,y,tekst,{fontFamily:'"Press Start 2P",monospace',
       fontSize:"8px",color:kleur,stroke:"#0d1326",strokeThickness:2})
@@ -565,14 +887,8 @@ var Spel=new Phaser.Class({
   spat:function(x,y,kleuren,aantal){
     for(var i=0;i<aantal;i++){
       var hoek=Math.random()*Math.PI*2,snel=40+Math.random()*150;
-      this.brokken.push({
-        x:x,y:y,
-        vx:Math.cos(hoek)*snel,
-        vy:Math.sin(hoek)*snel-70,
-        leven:1,
-        kleur:kleuren[Math.floor(Math.random()*kleuren.length)],
-        maat:1+Math.floor(Math.random()*3)
-      });
+      this.brokken.push({x:x,y:y,vx:Math.cos(hoek)*snel,vy:Math.sin(hoek)*snel-70,leven:1,
+        kleur:kleuren[Math.floor(Math.random()*kleuren.length)],maat:(1+Math.floor(Math.random()*4))/2});
     }
     if(this.brokken.length>180)this.brokken=this.brokken.slice(-180);
   },
@@ -583,82 +899,81 @@ var Spel=new Phaser.Class({
       p.vy+=700*d;p.x+=p.vx*d;p.y+=p.vy*d;p.leven-=d*1.5;
       if(p.leven<=0){this.brokken.splice(i,1);continue;}
       g.fillStyle(p.kleur,p.leven>0.35?1:0.6);
-      g.fillRect(Math.floor(p.x),Math.floor(p.y),p.maat,p.maat);
+      g.fillRect(Math.round(p.x*2)/2,Math.round(p.y*2)/2,p.maat,p.maat);
     }
   },
 
   raakBlok:function(kogel,blok){
     if(!kogel.active||!blok.scene)return;
-    var mx=blok.x+8,my=blok.y+8;
+    var mx=blok.x+8,my=blok.y+8,K=blok.bioom.blok;
     kogel.destroy();
-    if(!blok.stuk){
-      /* harde grond: alleen vonken, de kogel is weg */
-      this.spat(mx-6,my-6,[P.wit,P.cyaan],4);
-      return;
-    }
+    if(!blok.stuk){ this.spat(mx-6,my-6,[P.wit,int(blok.bioom.grond.lijn)],4); return; }
     blok.leven--;
     if(blok.leven>0){
-      blok.setTexture("blokStuk");
-      this.spat(mx,my,[P.steenL,P.staal],5);
+      blok.setTexture("blokStuk_"+blok.bioom.id);
+      this.spat(mx,my,[int(K.licht),int(K.vlak)],5);
       this.cameras.main.shake(60,0.002);
       return;
     }
-    this.spat(mx,my,[P.roze,P.staal,P.steenL,P.wit],16);
+    this.spat(mx,my,[int(K.accent),int(K.vlak),int(K.licht),P.wit],16);
     blok.destroy();
     this.cameras.main.shake(100,0.005);
-    this.bevries=60;                 /* alles staat heel even stil */
+    this.bevries=60;
     this.physics.world.pause();
   },
 
+  zetRomp:function(glij){
+    var R=glij?this.h.rompGlij:this.h.romp;
+    this.speler.body.setSize(R[2],R[3]);
+    this.speler.body.setOffset(R[0],R[1]);
+  },
   spring:function(){this.wacht=150;},
   glij:function(){
     if(this.glijdt>0||!this.speler.body.blocked.down)return;
     this.glijdt=this.h.glijtijd;
-    this.speler.body.setSize(this.h.bb+6,10);
-    this.speler.body.setOffset(2,12);
+    this.zetRomp(true);
   },
   stopGlijden:function(){
     this.glijdt=0;
-    this.speler.body.setSize(this.h.bb,this.h.bh);
-    this.speler.body.setOffset(4,2);
+    this.zetRomp(false);
   },
   schiet:function(){
     if(this.herlaad>0||this.bevries>0)return;
     this.herlaad=this.h.herlaad;
-    var y=this.speler.y+(this.glijdt>0?5:-1);
-    var k=this.kogels.create(this.speler.x+9,y,"kogel");
+    var M=this.glijdt>0?this.h.mondGlij:this.h.mond;
+    var x=this.speler.x+M[0]/2, y=this.speler.y+M[1]/2;
+    var k=this.kogels.create(x,y,'kogel_'+held).setScale(0.5);
     k.body.setAllowGravity(false);
-    k.body.setSize(6,6);
+    k.body.setSize(10,6);
     k.setVelocityX(260);k.setDepth(4);k.geboren=this.time.now;
-    this.spat(this.speler.x+12,y,[this.h.kogelKleur],2);
+    this.spat(x+2,y,[this.h.kogelKleur,P.wit],3);
   },
 
   update:function(tijd,dt){
     dt=Math.min(dt,50);
     var d=dt/1000;
-
-    /* korte stilstand na een treffer: alleen de brokstukken bewegen door */
     if(this.bevries>0){
       this.bevries-=dt;
       this.tekenBrokken(d*0.35);
       if(this.bevries<=0)this.physics.world.resume();
       return;
     }
-
     var s=this.speler,h=this.h;
-
     this.camX+=h.loop*d;
-    this.cameras.main.scrollX=Math.floor(this.camX);
-    this.verB.tilePositionX=this.camX*0.35;
-    this.verA.tilePositionX=this.camX*0.15;
+    this.cameras.main.scrollX=Math.round(this.camX*SCHERP)/SCHERP;
+    this.laagDicht.tilePositionX=this.camX*0.4*SCHERP;
+    this.laagVer.tilePositionX=this.camX*0.15*SCHERP;
+    this.lucht.tilePositionX=this.camX*0.03*SCHERP;
 
     var nodig=Math.floor((this.camX+BREED)/CHUNK)+1;
     while(this.laatsteChunk<nodig){this.laatsteChunk++;this.bouwChunk(this.laatsteChunk);}
     var oud=Math.floor((this.camX-CHUNK*2)/CHUNK);
     if(this.chunks[oud])this.ruimChunk(oud);
 
-    s.setVelocityX(h.loop);
+    var hier=Math.floor(Math.max(0,s.x)/CHUNK/BIOOM_LENGTE);
+    if(hier!==this.bioomNu)this.wisselBioom(hier,false);
 
+    s.setVelocityX(h.loop);
     if(s.body.blocked.down){this.sprongen=0;this.coyote=110;}
     else if(this.coyote>0)this.coyote-=dt;
 
@@ -678,7 +993,7 @@ var Spel=new Phaser.Class({
         this.stopGlijden();
       } else if(!eerste&&this.sprongen===1){
         s.setVelocityY(-h.tweede);this.sprongen=2;this.wacht=0;
-        ring(this,s.x,s.y+6);
+        ring(this,s.x,s.y+10);
       }
     }
     if(s.body.velocity.y<0&&!(this.toetsen.SPACE.isDown||this.vinger))
@@ -692,9 +1007,10 @@ var Spel=new Phaser.Class({
       if(this.onraakbaar<=0)s.setVisible(true);
     }
 
-    this.loper+=d*(s.body.blocked.down&&this.glijdt<=0?9:0);
-    var frame=this.glijdt>0?"r3":(!s.body.blocked.down?"r2":"r"+(Math.floor(this.loper)%2));
-    if(s.texture.key!==frame&&this.textures.exists(frame))s.setTexture(frame);
+    this.loper+=d*(s.body.blocked.down&&this.glijdt<=0?15:0);
+    var nr=this.glijdt>0?9:(!s.body.blocked.down?8:Math.floor(this.loper)%8);
+    var key='fig_'+held+'_'+nr;
+    if(s.texture.key!==key)s.setTexture(key);
 
     this.kogels.children.each(function(k){
       if(k.active&&(k.x>this.camX+BREED+20||tijd-k.geboren>2200))k.destroy();
@@ -718,7 +1034,6 @@ var Spel=new Phaser.Class({
       if(this.getoond>this.score)this.getoond=this.score;
       scoreVak.textContent=String(this.getoond).padStart(7,"0");
     }
-
     if(s.x<this.camX+8||s.y>HOOG+80)this.verliesLeven();
     metersVak.textContent=meter+"M  "+this.muntTal+" MUNTEN";
     netwerkStap(this,tijd,dt);
@@ -769,7 +1084,7 @@ function zetAanraking(scene){
   scene.input.on("pointermove",function(p){
     var s=start[p.id];
     if(!s||s.geveegd||!s.links)return;
-    if(p.y-s.y>26&&scene.time.now-s.t<420){s.geveegd=true;scene.glij();}
+    if(p.y-s.y>26*SCHERP&&scene.time.now-s.t<420){s.geveegd=true;scene.glij();}
   });
   function los(p){
     delete start[p.id];
@@ -778,7 +1093,6 @@ function zetAanraking(scene){
   scene.input.on("pointerup",los);
   scene.input.on("pointerupoutside",los);
 }
-
 
   /* ---------- samen: de ander als doorzichtige figuur ---------- */
   const anderVak = wrap.querySelector('.ander')
@@ -805,18 +1119,20 @@ function zetAanraking(scene){
   })
 
   function maakGeest(scene) {
-    ;[['runner', tekenRunner], ['gunner', tekenGunner]].forEach(([n, teken]) => {
-      for (let f = 0; f < 4; f++) {
-        const k = 'gh_' + n + f
-        if (scene.textures.exists(k)) continue
-        const g = scene.make.graphics({ x: 0, y: 0, add: false })
-        teken(g, f); g.generateTexture(k, f === 3 ? 28 : 26, 24); g.destroy()
-      }
-    })
-    scene.geest = scene.add.sprite(-500, -500, 'gh_runner0').setAlpha(0.5).setDepth(4).setVisible(false)
+    scene.geest = scene.add.sprite(-500, -500, 'fig_runner_0').setScale(0.5).setAlpha(0.5).setDepth(4).setVisible(false)
     const stijl = { fontFamily: '"Press Start 2P",monospace', fontSize: '6px', color: '#ffd27a', stroke: '#0d1326', strokeThickness: 2 }
     scene.geestNaam = scene.add.text(0, 0, NAAM, stijl).setOrigin(0.5, 1).setDepth(7).setVisible(false)
     scene.pijl = scene.add.text(0, 0, '', stijl).setScrollFactor(0).setDepth(8).setVisible(false)
+  }
+
+  /* neonbord met de naam van het gebied */
+  const bord = document.createElement('div')
+  bord.className = 'bord'
+  veld.appendChild(bord)
+  function toonBord(naam, kleur) {
+    bord.textContent = naam
+    bord.style.setProperty('--k', kleur)
+    bord.classList.remove('aan'); void bord.offsetWidth; bord.classList.add('aan')
   }
 
   function netwerkStap(scene, tijd, dt) {
@@ -824,7 +1140,7 @@ function zetAanraking(scene){
     stuurKlok += dt
     if (stuurKlok >= 160) {                         // zes keer per seconde
       stuurKlok = 0
-      stuur({ x: Math.round(s.x), y: Math.round(s.y), f: parseInt(s.texture.key.slice(1)) || 0,
+      stuur({ x: Math.round(s.x), y: Math.round(s.y), f: +s.texture.key.split('_').pop() || 0,
               h: held, s: scene.score, l: scene.levens, v: scene.h.loop, d: 0 })
     }
     const g = scene.geest, nm = scene.geestNaam, pijl = scene.pijl
@@ -835,10 +1151,10 @@ function zetAanraking(scene){
     if (!g.visible || Math.abs(doelX - g.x) > 160) g.setPosition(doelX, ander.y)
     g.x += (doelX - g.x) * 0.3
     g.y += (ander.y - g.y) * 0.3
-    g.setTexture('gh_' + ander.h + Math.min(3, Math.max(0, ander.f)))
+    g.setTexture('fig_' + ander.h + '_' + Math.min(9, Math.max(0, ander.f)))
     const cam = scene.camX, links = g.x < cam - 10, rechts = g.x > cam + BREED + 10
     if (!links && !rechts) {
-      g.setVisible(true); nm.setVisible(true).setPosition(Math.round(g.x), Math.round(g.y - 14))
+      g.setVisible(true); nm.setVisible(true).setPosition(Math.round(g.x), Math.round(g.y - 16))
       pijl.setVisible(false)
     } else {
       g.setVisible(false); nm.setVisible(false)
@@ -976,8 +1292,8 @@ function zetAanraking(scene){
     huidige = null
     if (spel) { spel.destroy(true); spel = null }
     spel = new Phaser.Game({
-      type: Phaser.AUTO, width: BREED, height: HOOG, parent: veld,
-      pixelArt: true, roundPixels: true, backgroundColor: '#4a7fc4',
+      type: Phaser.AUTO, width: BREED * SCHERP, height: HOOG * SCHERP, parent: veld,
+      pixelArt: true, roundPixels: true, backgroundColor: '#07051a',
       input: { activePointers: 3 },
       scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
       physics: { default: 'arcade', arcade: { gravity: { y: ZWAARTE } } },
@@ -1006,5 +1322,5 @@ function zetAanraking(scene){
     if (spel) { try { spel.destroy(true) } catch (e) {} spel = null }
     if (wrap.isConnected) wrap.remove()
   }, 300)
-  return { _proef: { maakGeest, netwerkStap, stuurEinde, ander: () => ander, held: () => held, naEinde } }
+  return { _proef: { maakGeest, netwerkStap, stuurEinde, ander: () => ander, held: () => held, naEinde, scene: () => huidige, spel: () => spel } }
 }

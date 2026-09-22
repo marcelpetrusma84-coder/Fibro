@@ -62,8 +62,6 @@ function zetStijl() {
     border-radius:0;padding:11px 20px;cursor:pointer;box-shadow:3px 3px 0 #1c9aa2}
   .rg .knop:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #1c9aa2}
   .rg .rol{font-size:8px;color:#ffd27a;margin-bottom:10px;line-height:2}
-  .rg:not(.volger) .rol{display:none}
-  .rg.volger .keuze{display:none}
   .rg .knop:disabled{background:var(--rand);color:var(--zacht);box-shadow:none;cursor:default}
   .rg.telt .keuze,.rg.telt .knop,.rg.telt .rol{display:none}
   .rg.telt .laag h1{font-size:44px;line-height:1.2}
@@ -142,8 +140,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
           <p>Jij en ${naamVriend} rennen op dezelfde baan. Wie komt het verst?</p>
           <div class="rol"></div>
           <div class="keuze">
-            <button class="kRunner" aria-pressed="true"><b>RUNNER</b><small>Licht. Springt hoog. Schiet snel.</small></button>
-            <button class="kGunner" aria-pressed="false"><b>GUNNER</b><small>Zwaar. Lage sprong. Lange glijpartij.</small></button>
+            <button class="kRunner" aria-pressed="true"><b>RUNNER</b><small>Springt hoger.</small></button>
+            <button class="kGunner" aria-pressed="false"><b>GUNNER</b><small>Sterker kanon.</small></button>
           </div>
           <button class="knop">START</button>
           <div><button class="geluidKnop" type="button">GELUID: AAN</button></div>
@@ -802,9 +800,9 @@ var held="runner";
 /* romp en mond in beeldpunten van de figuurtekening (dubbele scherpte);
    romp = [x, y, breed, hoog] vanaf linksboven van het figuur */
 var HELDEN={
-  runner:{sprong:305,tweede:255,loop:92,glijtijd:520,herlaad:260,levens:3,
+  runner:{sprong:300,tweede:250,loop:92,glijtijd:600,herlaad:300,levens:3,kracht:1,
     romp:[8,10,16,42], rompGlij:[8,24,26,28], mond:[16,4], mondGlij:[16,20], kogelKleur:P.cyaan},
-  gunner:{sprong:262,tweede:215,loop:92,glijtijd:720,herlaad:440,levens:3,
+  gunner:{sprong:285,tweede:235,loop:92,glijtijd:600,herlaad:300,levens:3,kracht:2,
     romp:[9,8,20,44], rompGlij:[9,20,28,32], mond:[24,3], mondGlij:[24,18], kogelKleur:P.oranje}
 };
 function kies(w){
@@ -845,7 +843,9 @@ var BREED=320,HOOG=180,TEGEL=16,ZWAARTE=900,CHUNK=10*TEGEL,SCHERP=2;
 
 /* ---------- figuren naar texturen ---------- */
 function figuurTexturen(scene){
-  [['runner',FIG.RUNNER],['gunner',FIG.GUNNER]].forEach(function(paar){
+  var groen=Object.assign({},FIG.RUNNER,{dark:'#0e4a2a',mid:'#26a45a',lite:'#86e8a8',trim:'#e0ffb8'});
+  var paars=Object.assign({},FIG.GUNNER,{dark:'#321060',mid:'#7a2ab8',lite:'#b870ec',trim:'#ff9ae0'});
+  [['runner',FIG.RUNNER],['gunner',FIG.GUNNER],['runnerB',groen],['gunnerB',paars]].forEach(function(paar){
     var naam=paar[0], C=paar[1], pal=FIG.palet(C);
     for (var f=0;f<10;f++){
       var houding = f<8 ? 'loop' : (f===8 ? 'sprong' : 'glij');
@@ -890,7 +890,7 @@ var Spel=new Phaser.Class({
   Extends:Phaser.Scene,
   initialize:function Spel(){Phaser.Scene.call(this,{key:"spel"});},
   create:function(){
-    var h=HELDEN[held];this.h=h;
+    var h=HELDEN[held];this.h=h;this.huid=mijnHuid();
     huidige=this;
     this.seed=SEED;this.camX=0;this.levens=h.levens;
     this.onraakbaar=0;this.glijdt=0;this.sprongen=0;this.wacht=0;
@@ -918,7 +918,7 @@ var Spel=new Phaser.Class({
     this.munten=this.physics.add.group({allowGravity:false,immovable:true});
     this.vijanden=this.physics.add.group();
 
-    this.speler=this.physics.add.sprite(60,80,'fig_'+held+'_0').setScale(0.5);
+    this.speler=this.physics.add.sprite(60,80,'fig_'+this.huid+'_0').setScale(0.5);
     this.zetRomp(false);
     this.speler.setDepth(5);
     this.physics.add.collider(this.speler,this.vast);
@@ -1078,7 +1078,7 @@ var Spel=new Phaser.Class({
   raakVijand:function(kogel,v){
     if(!kogel.active||!v.active)return;
     kogel.destroy();
-    v.leven-=(held==='gunner'?2:1);
+    v.leven-=this.h.kracht;
     this.spat(v.x,v.y,[P.wit,int(v.B.neon)],4);
     if(v.leven>0){ GELUID.speel('raak'); if(v.setTintFill){ v.setTintFill(0xffffff); this.time.delayedCall(70,function(){ if(v.active) v.clearTint(); }); } return; }
     this.doodVijand(v);
@@ -1184,7 +1184,7 @@ var Spel=new Phaser.Class({
     kogel.destroy();
     if(!blok.stuk){ this.spat(mx-6,my-6,[P.wit,int(blok.bioom.grond.lijn)],4); return; }
     if(blok.vat){ this.explodeer(blok); return; }
-    blok.leven--;
+    blok.leven-=this.h.kracht;
     if(blok.leven>0){
       blok.setTexture("blokStuk_"+blok.bioom.id);
       this.spat(mx,my,[int(K.licht),int(K.vlak)],5);
@@ -1288,7 +1288,7 @@ var Spel=new Phaser.Class({
 
     this.loper+=d*(s.body.blocked.down&&this.glijdt<=0?15:0);
     var nr=this.glijdt>0?9:(!s.body.blocked.down?8:Math.floor(this.loper)%8);
-    var key='fig_'+held+'_'+nr;
+    var key='fig_'+this.huid+'_'+nr;
     if(s.texture.key!==key)s.setTexture(key);
 
     this.kogels.children.each(function(k){
@@ -1406,7 +1406,7 @@ function zetAanraking(scene){
   if (spelKanaal && typeof spelKanaal.on === 'function') spelKanaal.on('broadcast', { event: 'rg' }, msg => {
     const p = msg && msg.payload
     if (!p || typeof p.x !== 'number') return
-    ander = { x: p.x, y: p.y, f: p.f | 0, h: p.h === 'gunner' ? 'gunner' : 'runner',
+    ander = { x: p.x, y: p.y, f: p.f | 0, h: ['runner','gunner','runnerB','gunnerB'].indexOf(p.h) >= 0 ? p.h : 'runner',
               s: p.s | 0, l: p.l | 0, d: !!p.d, v: +p.v || 92, tijd: performance.now() }
     toonAnder()
   })
@@ -1434,7 +1434,7 @@ function zetAanraking(scene){
     if (stuurKlok >= 160) {                         // zes keer per seconde
       stuurKlok = 0
       stuur({ x: Math.round(s.x), y: Math.round(s.y), f: +s.texture.key.split('_').pop() || 0,
-              h: held, s: scene.score, l: scene.levens, v: scene.h.loop, d: 0 })
+              h: scene.huid || held, s: scene.score, l: scene.levens, v: scene.h.loop, d: 0 })
     }
     const g = scene.geest, nm = scene.geestNaam, pijl = scene.pijl
     const oud = ander ? performance.now() - ander.tijd : 1e9
@@ -1460,7 +1460,7 @@ function zetAanraking(scene){
   }
 
   function stuurEinde(scene) {
-    stuur({ x: Math.round(scene.speler.x), y: Math.round(scene.speler.y), f: 0, h: held,
+    stuur({ x: Math.round(scene.speler.x), y: Math.round(scene.speler.y), f: 0, h: scene.huid || held,
             s: scene.score, l: 0, v: 0, d: 1 })
   }
 
@@ -1503,29 +1503,40 @@ function zetAanraking(scene){
   const leider = !!benIkSpeler1 || !kanaalOk
   const rolVak = wrap.querySelector('.rol')
   const AFTEL = 700
-  const tegen = h => h === 'gunner' ? 'runner' : 'gunner'
   let partnerKlaar = !kanaalOk, laatsteKlaar = 0, aftellen = false, klaarKlok = 0, ronde = 0
-  if (!leider) { wrap.classList.add('volger'); held = 'gunner' }
+  if (!leider) wrap.classList.add('volger')
+  const geldig = h => (h === 'runner' || h === 'gunner') ? h : null
+  const KLEUR = { runner: 'GROEN', gunner: 'PAARS' }
+  let anderHeld = null           // wat de ander gekozen heeft, voor zover we weten
+
+  /* zelfde figuur? dan speelt de genodigde in de tweede kleur */
+  function mijnHuid() { return held + ((!leider && anderHeld === held) ? 'B' : '') }
 
   function stuurBericht(event, payload) {
     if (!kanaalOk || !isActief()) return
     try { spelKanaal.send({ type: 'broadcast', event, payload: payload || {} }) } catch (e) {}
   }
   function werkStartscherm() {
+    let regel = ''
     if (leider) {
       startKnop.hidden = false
       startKnop.disabled = !partnerKlaar
       startKnop.textContent = partnerKlaar ? (ronde ? 'OPNIEUW' : 'START') : 'WACHT OP ' + NAAM
+      if (partnerKlaar && anderHeld) regel = NAAM + ' KIEST ' + anderHeld.toUpperCase()
     } else {
       startKnop.hidden = true
-      rolVak.textContent = 'JIJ BENT ' + held.toUpperCase() + ' — ' + NAAM + ' START HET SPEL'
+      regel = NAAM + ' START HET SPEL'
     }
+    if (anderHeld && anderHeld === held)
+      regel += ' — ALLEBEI ' + held.toUpperCase() + ', ' + (leider ? NAAM + ' IS ' : 'JIJ BENT ') + KLEUR[held]
+    rolVak.textContent = regel
   }
-  function naKeuze(w) { if (leider) stuurBericht('rg-keuze', { h: w }) }
-  function naEinde() {
-    if (leider) kies(tegen(held))      // volgende ronde: allebei de andere figuur
+  function naKeuze(w) {
+    if (leider) stuurBericht('rg-keuze', { h: w })
+    else stuurBericht('rg-klaar', { h: w })
     werkStartscherm()
   }
+  function naEinde() { werkStartscherm() }
 
   function aftel(daarna) {
     aftellen = true
@@ -1543,26 +1554,34 @@ function zetAanraking(scene){
       }
       h1.textContent = String(n)
       GELUID.speel('tel')
-      p.textContent = 'JIJ BENT ' + held.toUpperCase()
+      p.textContent = 'JIJ BENT ' + held.toUpperCase() + (mijnHuid().endsWith('B') ? ' (' + KLEUR[held] + ')' : '')
       n--; setTimeout(stap, AFTEL)
     }
     stap()
   }
 
   if (kanaalOk) {
-    spelKanaal.on('broadcast', { event: 'rg-klaar' }, () => {
+    spelKanaal.on('broadcast', { event: 'rg-klaar' }, msg => {
       if (!leider) return
       laatsteKlaar = performance.now()
-      if (!partnerKlaar && !aftellen) { partnerKlaar = true; werkStartscherm() }
+      const h = geldig(msg && msg.payload && msg.payload.h)
+      if (h) anderHeld = h
+      if (!partnerKlaar && !aftellen) partnerKlaar = true
+      if (!aftellen) werkStartscherm()
       stuurBericht('rg-keuze', { h: held })
     })
     spelKanaal.on('broadcast', { event: 'rg-keuze' }, msg => {
-      if (leider || !msg || !msg.payload || laag.hidden || aftellen) return
-      held = tegen(msg.payload.h); werkStartscherm()
+      if (leider) return
+      const h = geldig(msg && msg.payload && msg.payload.h)
+      if (!h) return
+      anderHeld = h
+      if (!laag.hidden && !aftellen) werkStartscherm()
     })
     spelKanaal.on('broadcast', { event: 'rg-start' }, msg => {
-      if (leider || !msg || !msg.payload || aftellen || laag.hidden) return
-      held = tegen(msg.payload.h)
+      if (leider || aftellen || laag.hidden) return
+      const h = geldig(msg && msg.payload && msg.payload.h)
+      if (!h) return
+      anderHeld = h
       aftel(startRonde)
     })
   }
@@ -1612,7 +1631,7 @@ function zetAanraking(scene){
       document.body.classList.toggle('rg-vol', wrap.classList.contains('liggend') && laag.hidden)
       if (!leider && !aftellen && !laag.hidden) {
         klaarKlok += 300
-        if (klaarKlok >= 900) { klaarKlok = 0; stuurBericht('rg-klaar') }
+        if (klaarKlok >= 900) { klaarKlok = 0; stuurBericht('rg-klaar', { h: held }) }
       }
       if (leider && kanaalOk && partnerKlaar && performance.now() - laatsteKlaar > 3000) {
         partnerKlaar = false; werkStartscherm()
@@ -1629,5 +1648,5 @@ function zetAanraking(scene){
     if (spel) { try { spel.destroy(true) } catch (e) {} spel = null }
     if (wrap.isConnected) wrap.remove()
   }, 300)
-  return { _proef: { maakGeest, netwerkStap, stuurEinde, ander: () => ander, held: () => held, naEinde, scene: () => huidige, spel: () => spel } }
+  return { _proef: { maakGeest, netwerkStap, stuurEinde, ander: () => ander, held: () => held, huid: mijnHuid, naEinde, scene: () => huidige, spel: () => spel } }
 }

@@ -1279,7 +1279,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     flappybird: './flappy-ui.js?v=95',
     breakout: './blockit-ui.js?v=95',
     spaceinvaders: './invaders-ui.js?v=95',
-    endlessrunner: './runner-gunner-ui.js?v=9'
+    endlessrunner: './runner-gunner-ui.js?v=10'
   }
   const _alGeladen = {}
   function laadSpelAlvast(spelType) {
@@ -1617,7 +1617,7 @@ async function startBlockIt() {
 
   // ─── Runner & Gunner (vakje Endless Runner) ───
   async function startRunnerGunner() {
-    const m = await import('./runner-gunner-ui.js?v=9')
+    const m = await import('./runner-gunner-ui.js?v=10')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'endlessrunner' })
   }
 

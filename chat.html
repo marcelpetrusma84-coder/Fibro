@@ -335,7 +335,8 @@ window.veiligeUrl = function(v){
   <div style="font-size:14px;color:rgba(255,255,255,0.6);" id="oproepType">📞 Gesprek</div>
   <div style="display:flex;gap:24px;margin-top:10px;">
     <button onclick="weigerInkomend()" style="width:64px;height:64px;border-radius:50%;background:#f87171;border:none;font-size:26px;cursor:pointer;" title="Weigeren">📵</button>
-    <button onclick="neemInkomendOp()" style="width:64px;height:64px;border-radius:50%;background:#22c55e;border:none;font-size:26px;cursor:pointer;" title="Opnemen">📞</button>
+    <button onclick="neemInkomendOp(false)" style="width:64px;height:64px;border-radius:50%;background:#22c55e;border:none;font-size:26px;cursor:pointer;" title="Opnemen">📞</button>
+    <button id="oproepVideoBtn" onclick="neemInkomendOp(true)" style="width:64px;height:64px;border-radius:50%;background:#22c55e;border:none;font-size:26px;cursor:pointer;display:none;" title="Opnemen met video">📹</button>
   </div>
 </div>
 
@@ -350,6 +351,7 @@ window.veiligeUrl = function(v){
   <div id="spelInhoud" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"></div>
 </div>
 
+<script src="beltoon.js?v=1"></script>
 <script type="module">
   import { laadThema } from './thema.js?v=95'
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
@@ -516,14 +518,39 @@ window.veiligeUrl = function(v){
           return
         }
 
-        // Anders: stuur door naar bellen.html
+        // Anders: oproep hier tonen met beltoon. Deze pagina heeft al een tik gehad,
+        // dus de iPhone laat het geluid toe (op een nieuwe pagina niet)
+        window.FibroBeltoon?.start()
         const { data: v } = await supabase.from('profiles').select('avatar_url,avatar_data,username').eq('id', info.van).single()
         const naam = vriendWeergaveNaam({ id: info.van, username: v?.username }) || 'Onbekend'
-        const videoParam = info.videoModus ? '&video=1' : ''
-        window.location.href = 'bellen.html?vriend=' + info.van + '&naam=' + encodeURIComponent(naam) + '&inkomend=1' + videoParam
+        window._inkomendNaam = naam
+        const av = document.getElementById('oproepAvatar')
+        const plaatje = v?.avatar_data || v?.avatar_url || ''
+        av.textContent = ''
+        if (typeof plaatje === 'string' && plaatje.startsWith('data:image')) {
+          const img = document.createElement('img')
+          img.src = plaatje
+          img.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover;'
+          av.appendChild(img)
+        } else {
+          av.textContent = (plaatje && plaatje.length <= 8) ? plaatje : '👤'
+        }
+        document.getElementById('oproepNaam').textContent = naam
+        document.getElementById('oproepType').textContent = info.videoModus ? '📹 Videogesprek...' : '📞 Belt je op...'
+        document.getElementById('oproepVideoBtn').style.display = info.videoModus ? 'block' : 'none'
+        document.getElementById('oproepModal').style.display = 'flex'
+        clearTimeout(window._oproepVerloop)
+        window._oproepVerloop = setTimeout(() => {
+          window.FibroBeltoon?.stop()
+          document.getElementById('oproepModal').style.display = 'none'
+        }, 47000)
       },
       onEind: () => {
         if (window._belTimer) clearInterval(window._belTimer)
+        // Beller hing op (of gaf het op) voordat er werd opgenomen
+        window.FibroBeltoon?.stop()
+        clearTimeout(window._oproepVerloop)
+        document.getElementById('oproepModal').style.display = 'none'
       }
     })
 
@@ -1786,15 +1813,19 @@ async function startBlockIt() {
   }
 
   window.weigerInkomend = async function() {
-    await weigerooproep()
+    window.FibroBeltoon?.stop()
+    clearTimeout(window._oproepVerloop)
     document.getElementById('oproepModal').style.display = 'none'
+    await weigerooproep()
   }
-  window.neemInkomendOp = async function() {
+  window.neemInkomendOp = function(video = false) {
+    // Opnemen gebeurt op bellen.html, dat neemt daar meteen op
+    window.FibroBeltoon?.stop()
+    clearTimeout(window._oproepVerloop)
     document.getElementById('oproepType').textContent = 'Verbinding maken...'
-    const gelukt = await accepteerOproep(window._inkomendVideo || false)
-    if (!gelukt) {
-      document.getElementById('oproepType').textContent = 'Geen toegang tot microfoon'
-    }
+    window.location.href = 'bellen.html?vriend=' + encodeURIComponent(window._inkomendVanId) +
+      '&naam=' + encodeURIComponent(window._inkomendNaam || 'Vriend') +
+      '&inkomend=1&opnemen=1' + (video ? '&video=1' : '')
   }
 
   window.hangOpInChat = async function() {

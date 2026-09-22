@@ -193,7 +193,7 @@ if (vriendId && !params.get('inkomend')) {
   document.getElementById('knoppen-bellen').style.display = 'none'
   document.getElementById('knoppen-inkomend').style.display = 'flex'
   document.getElementById('status').textContent = (videoModus ? '📹 Videogesprek — ' : '📞 Belt je op...')
-  startBeltoon('inkomend')
+  if (params.get('opnemen') !== '1') startBeltoon('inkomend')
   wachtKanaal = supabase
     .channel(gesprekKanaalNaam(session.user.id, vriendId), { config: { broadcast: { self: false } } })
     .on('broadcast', { event: 'signaal' }, (msg) => {
@@ -266,6 +266,8 @@ window.neem = async (video) => {
   const ok = await accepteerOproep(video)
   if(ok) document.getElementById('status').textContent = 'Verbinding maken...'
 }
+// Al opgenomen in de chat: hier meteen verbinden
+if (vriendId && params.get('inkomend') && params.get('opnemen') === '1') window.neem(videoModus)
 window.hangop = async () => { stopBeltoon(); await hangOp(); window.location.href = 'chat.html' }
 window.togMic = () => { micAan = toggleMic(); document.getElementById('micBtn').textContent = micAan ? '🎤' : '🔇' }
 window.togCam = async () => {

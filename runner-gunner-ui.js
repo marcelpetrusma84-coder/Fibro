@@ -72,6 +72,10 @@ function zetStijl() {
     text-shadow:0 0 3px var(--k),0 0 10px var(--k),0 0 22px var(--k),0 0 40px var(--k)}
   .rg .bord.aan{animation:rgBord 2.6s linear forwards}
   @keyframes rgBord{0%{opacity:0}4%{opacity:1}7%{opacity:.15}10%{opacity:1}13%{opacity:.35}16%{opacity:1}78%{opacity:1}100%{opacity:0}}
+  .rg .geluidKnop{font-family:inherit;font-size:8px;color:var(--zacht);background:none;border:1px solid var(--rand);
+    border-radius:0;padding:6px 10px;margin-top:12px;cursor:pointer}
+  .rg.telt .geluidKnop{display:none}
+  .rg.klein .geluidKnop{margin-top:6px;padding:4px 8px;font-size:7px}
   .rg .fout{padding:18px;color:var(--roze);font-size:10px;line-height:2;text-align:center}
   /* klein veld: startscherm compacter */
   .rg.klein .laag{padding:8px}
@@ -142,6 +146,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
             <button class="kGunner" aria-pressed="false"><b>GUNNER</b><small>Zwaar. Lage sprong. Lange glijpartij.</small></button>
           </div>
           <button class="knop">START</button>
+          <div><button class="geluidKnop" type="button">GELUID: AAN</button></div>
         </div>
       </div>
     </div>
@@ -598,6 +603,46 @@ var LAGEN = {
   }
 };
 
+/* dunne rand in een kleur rond alles wat getekend is, zodat het loskomt van de achtergrond */
+function neonRand(g,b,h,kleur){
+  var id=g.getImageData(0,0,b,h), d=id.data, k=int(kleur), vol=function(x,y){ return x>=0&&y>=0&&x<b&&y<h&&d[(y*b+x)*4+3]>200; };
+  var rand=[];
+  for (var y=0;y<h;y++) for (var x=0;x<b;x++){ if (vol(x,y)) continue; if (vol(x-1,y)||vol(x+1,y)||vol(x,y-1)||vol(x,y+1)) rand.push(x,y); }
+  for (var i=0;i<rand.length;i+=2){ var o=(rand[i+1]*b+rand[i])*4; d[o]=(k>>16)&255; d[o+1]=(k>>8)&255; d[o+2]=k&255; d[o+3]=170; }
+  g.putImageData(id,0,0);
+}
+
+/* ---------- vijanden: loper over de grond, zwevende drone ---------- */
+function tekenVijanden(scene,B){
+  var oog=B.neon, schaal=B.id==='magma'?'#b04aff':'#ff3a4a', licht=B.id==='magma'?'#e0a0ff':'#ff9a8a', donker=B.id==='magma'?'#5a1a8a':'#8a1020';
+  var Z='#07060e';
+  for (var f=0;f<2;f++){
+    /* loper: rood schild, vizier met oog, pootjes die wisselen */
+    var a=nieuwDoek(scene,'loper_'+B.id+'_'+f,36,32), g=a.g, p=f?3:0;
+    vlak(g,Z,8,2,20,4); vlak(g,Z,4,5,28,16); vlak(g,Z,2,9,32,10);
+    vlak(g,schaal,8,4,20,3); vlak(g,schaal,6,7,24,12); vlak(g,schaal,4,10,28,7);
+    vlak(g,licht,9,5,10,2); vlak(g,licht,7,8,4,3);
+    vlak(g,donker,6,16,24,3); vlak(g,donker,26,9,4,8);
+    vlak(g,Z,5,11,16,6); gloed(g,oog,7,12,8,4,2); vlak(g,oog,7,12,8,4); vlak(g,'#ffffff',8,12,3,2);
+    vlak(g,Z,16,0,4,3); vlak(g,oog,17,0,2,2);
+    vlak(g,Z,6+p,19,7,11); vlak(g,Z,23-p,19,7,11);
+    vlak(g,'#9aa0c0',8+p,20,3,7); vlak(g,'#9aa0c0',25-p,20,3,7);
+    vlak(g,Z,4+p,28,10,4); vlak(g,Z,21-p,28,10,4); vlak(g,'#5a6078',5+p,29,8,2); vlak(g,'#5a6078',22-p,29,8,2);
+    a.t.refresh();
+    /* vlieger: ronde koepel, schroef bovenop, gloed eronder */
+    var b=nieuwDoek(scene,'vlieger_'+B.id+'_'+f,36,30), h=b.g;
+    vlak(h,Z,10,5,16,3); vlak(h,Z,6,7,24,14); vlak(h,Z,4,10,28,8);
+    vlak(h,schaal,10,7,16,3); vlak(h,schaal,8,9,20,10); vlak(h,schaal,6,11,24,6);
+    vlak(h,licht,11,8,8,2); vlak(h,licht,9,11,3,3); vlak(h,donker,8,16,20,3);
+    vlak(h,Z,11,11,14,6); gloed(h,oog,13,12,10,4,2); vlak(h,oog,13,12,10,4); vlak(h,'#ffffff',14,12,3,2);
+    vlak(h,Z,17,1,2,5);
+    if (f===0){ vlak(h,Z,6,0,24,3); vlak(h,'#c8d0e8',7,1,22,1); } else { vlak(h,Z,12,0,12,3); vlak(h,'#c8d0e8',13,1,10,1); }
+    vlak(h,Z,10,20,4,5); vlak(h,Z,22,20,4,5);
+    gloed(h,oog,15,22,6,3,2); vlak(h,oog,15,22,6,3); vlak(h,'#ffffff',17,23,2,1);
+    b.t.refresh();
+  }
+}
+
 /* ---------- grond, blokken en vloeistof per gebied ---------- */
 function tekenTegels(scene,B){
   var G = B.grond, K = B.blok, T = 32;
@@ -630,11 +675,119 @@ function tekenTegels(scene,B){
     if (stuk){ vlak(k,K.rand,6,4,2,8); vlak(k,K.rand,8,11,2,4); vlak(k,K.rand,22,5,2,6); vlak(k,K.rand,20,18,2,8); vlak(k,K.rand,12,24,8,2); vlak(k,K.rand,18,22,2,2); }
     c.t.refresh();
   });
+  var pl = nieuwDoek(scene,'plat_'+B.id,T,12), q = pl.g;       // zwevende richel
+  vlak(q,K.rand,0,0,T,12); vlak(q,G.boven,1,1,T-2,8); vlak(q,G.lijn,1,1,T-2,2);
+  q.globalAlpha=0.4; vlak(q,G.lijn,1,3,T-2,1); q.globalAlpha=1;
+  vlak(q,G.donker,1,7,T-2,2); vlak(q,K.rand,6,9,4,3); vlak(q,K.rand,22,9,4,3);
+  pl.t.refresh();
+  tekenVijanden(scene,B);
   var v = nieuwDoek(scene,'vloei_'+B.id,T,T), w = v.g;           // vloeistof in een gat
   vlak(w,B.vloei[1],0,0,T,T); vlak(w,B.vloei[0],0,0,T,6);
   w.globalAlpha=0.5; vlak(w,'#ffffff',4,1,6,1); vlak(w,'#ffffff',20,2,5,1); vlak(w,B.vloei[0],0,10,T,3); w.globalAlpha=1;
   v.t.refresh();
 }
+
+/* ---------- geluid: alles in code, geen bestanden ---------- */
+/* Geluidseffecten uit oscillatoren en ruis, en een zacht deuntje eronder met
+   per gebied een andere grondtoon. Faalt stil als de browser niet mee wil. */
+var GELUID = (function(){
+  var ctx=null, meester=null, muziekBus=null, aan=true, ruisBuf=null;
+  var loopt=false, klok=null, stap=0, volgende=0, grond=0;
+  try { aan = localStorage.getItem('rg-geluid') !== 'uit'; } catch(e) {}
+
+  function wek(){
+    if (!aan) return;
+    try {
+      if (!ctx){
+        var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+        ctx = new AC();
+        meester = ctx.createGain(); meester.gain.value = 0.32; meester.connect(ctx.destination);
+        muziekBus = ctx.createGain(); muziekBus.gain.value = 0.55; muziekBus.connect(meester);
+      }
+      if (ctx.state === 'suspended') ctx.resume();
+    } catch(e) {}
+  }
+  function klaar(){ return ctx && aan && ctx.state !== 'closed'; }
+
+  function toon(f1,f2,duur,vorm,vol,wanneer,uit){
+    if (!klaar()) return;
+    try {
+      var t = wanneer || ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = vorm || 'square';
+      o.frequency.setValueAtTime(f1, t);
+      if (f2) o.frequency.exponentialRampToValueAtTime(Math.max(20,f2), t+duur);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol||0.2, t+0.005);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+duur);
+      o.connect(g); g.connect(uit || meester); o.start(t); o.stop(t+duur+0.03);
+    } catch(e) {}
+  }
+  function ruis(duur,vol,f1,f2){
+    if (!klaar()) return;
+    try {
+      if (!ruisBuf){ ruisBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate); var d = ruisBuf.getChannelData(0); for (var i=0;i<d.length;i++) d[i] = Math.random()*2-1; }
+      var t = ctx.currentTime, s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      s.buffer = ruisBuf; f.type = 'lowpass';
+      f.frequency.setValueAtTime(f1||2000, t); if (f2) f.frequency.exponentialRampToValueAtTime(f2, t+duur);
+      g.gain.setValueAtTime(vol||0.3, t); g.gain.exponentialRampToValueAtTime(0.0001, t+duur);
+      s.connect(f); f.connect(g); g.connect(meester); s.start(t); s.stop(t+duur+0.03);
+    } catch(e) {}
+  }
+  function noot(n){ return 110*Math.pow(2,(n+grond)/12); }
+
+  var SFX = {
+    spring:  function(){ toon(330,660,0.12,'square',0.12); },
+    dubbel:  function(){ toon(520,1040,0.14,'square',0.11); toon(780,1560,0.1,'triangle',0.06); },
+    schietR: function(){ toon(1400,500,0.08,'square',0.06); },
+    schietG: function(){ toon(180,70,0.14,'sawtooth',0.12); ruis(0.08,0.12,1800,300); },
+    munt:    function(){ var t=ctx.currentTime; toon(988,0,0.07,'square',0.08,t); toon(1319,0,0.16,'square',0.08,t+0.07); },
+    dikke:   function(){ var t=ctx.currentTime; [784,988,1175,1568].forEach(function(f,i){ toon(f,0,0.1,'square',0.08,t+i*0.06); }); },
+    tik:     function(){ ruis(0.05,0.14,3000,800); toon(220,160,0.05,'square',0.05); },
+    kapot:   function(){ ruis(0.22,0.24,2400,200); toon(160,50,0.2,'square',0.1); },
+    knal:    function(){ ruis(0.7,0.45,1800,60); toon(90,30,0.55,'sine',0.35); toon(60,25,0.7,'triangle',0.25); },
+    raak:    function(){ toon(700,350,0.06,'square',0.07); },
+    vijand:  function(){ ruis(0.18,0.2,2600,300); toon(600,80,0.25,'square',0.09); },
+    pijn:    function(){ toon(420,90,0.35,'sawtooth',0.14); ruis(0.15,0.15,1200,200); },
+    val:     function(){ toon(700,60,0.6,'triangle',0.14); },
+    tel:     function(){ toon(440,0,0.12,'square',0.1); },
+    go:      function(){ toon(880,0,0.3,'square',0.12); toon(1320,0,0.3,'triangle',0.06); },
+    bioom:   function(){ var t=ctx.currentTime; [0,4,7,12,16].forEach(function(i,k){ toon(noot(i+12),0,0.14,'square',0.07,t+k*0.07); toon(noot(i+24),0,0.1,'triangle',0.04,t+k*0.07); }); },
+    einde:   function(){ var t=ctx.currentTime; [7,4,0,-5].forEach(function(i,k){ toon(noot(i+12),0,0.28,'square',0.09,t+k*0.2); }); }
+  };
+
+  /* zacht deuntje: bas op de tellen, arpeggio in achtsten, vier maten rond */
+  var BAS = [0,7,5,3], ARP = [0,7,12,15, 12,7,10,7];
+  function plan(){
+    if (!loopt || !klaar()) return;
+    var achtste = 60/132/2;
+    while (volgende < ctx.currentTime + 0.25){
+      var i = stap % 8, maat = Math.floor(stap/8) % 4;
+      if (i%4===0) toon(noot(BAS[maat] - 12), 0, achtste*3.6, 'triangle', 0.12, volgende, muziekBus);
+      if (i%4===2) toon(noot(BAS[maat] - 12 + 12), 0, achtste*1.2, 'triangle', 0.06, volgende, muziekBus);
+      toon(noot(ARP[i] + BAS[maat]), 0, achtste*0.8, 'square', 0.026, volgende, muziekBus);
+      if (i===4) toon(4000, 0, 0.02, 'square', 0.012, volgende, muziekBus);
+      volgende += achtste; stap++;
+    }
+  }
+
+  return {
+    wek: wek,
+    speel: function(n){ try { if (SFX[n] && klaar()) SFX[n](); } catch(e) {} },
+    grondtoon: function(semitoon){ grond = semitoon|0; },
+    muziek: function(start){
+      if (start){ if (loopt) return; wek(); if (!klaar()) return; loopt = true; volgende = ctx.currentTime + 0.05; stap = 0; klok = setInterval(plan, 60); }
+      else { loopt = false; if (klok) clearInterval(klok); klok = null; }
+    },
+    staatAan: function(){ return aan; },
+    zet: function(v){
+      aan = !!v; try { localStorage.setItem('rg-geluid', aan ? 'aan' : 'uit'); } catch(e) {}
+      if (!aan) this.muziek(false); else wek();
+      if (meester) try { meester.gain.value = aan ? 0.32 : 0; } catch(e) {}
+    },
+    stop: function(){ this.muziek(false); try { if (ctx && ctx.state === 'running') ctx.suspend(); } catch(e) {} }
+  };
+})();
+var GRONDTOON = { stad:0, jungle:5, riool:-2, woestijn:3, tempel:-5, server:7, ijs:2, magma:-3 };
+
 
 /* ---------- palet voor effecten ---------- */
 var P={
@@ -719,6 +872,13 @@ function maakMunten(scene){
   }
   munt("munt0",16,16); munt("munt1",16,10); munt("munt2",16,4);
   munt("muntD0",24,24); munt("muntD1",24,14); munt("muntD2",24,6);
+  var vt=nieuwDoek(scene,'vat',32,32), v=vt.g;
+  vlak(v,'#140606',4,0,24,32); vlak(v,'#140606',2,2,28,28);
+  vlak(v,'#9a1e14',6,2,20,28); vlak(v,'#9a1e14',4,4,24,24); vlak(v,'#c8341e',6,2,5,28); vlak(v,'#5e100a',22,4,4,24);
+  vlak(v,'#140606',4,7,24,2); vlak(v,'#140606',4,23,24,2);
+  vlak(v,'#ffb01a',8,11,16,10); vlak(v,'#140606',9,12,14,8);
+  vlak(v,'#ffd23a',15,12,2,5); vlak(v,'#ffd23a',15,18,2,2); vlak(v,'#ffe89a',12,13,1,1);
+  vt.t.refresh();
   var k1=nieuwDoek(scene,'kogel_runner',12,6), a=k1.g;
   vlak(a,'#0a5a66',0,1,12,4); vlak(a,'#5ee7e0',1,1,11,4); vlak(a,'#ffffff',6,2,5,2); k1.t.refresh();
   var k2=nieuwDoek(scene,'kogel_gunner',10,10), b=k2.g;
@@ -756,6 +916,7 @@ var Spel=new Phaser.Class({
     this.sier=this.add.group();
     this.kogels=this.physics.add.group({allowGravity:false});
     this.munten=this.physics.add.group({allowGravity:false,immovable:true});
+    this.vijanden=this.physics.add.group();
 
     this.speler=this.physics.add.sprite(60,80,'fig_'+held+'_0').setScale(0.5);
     this.zetRomp(false);
@@ -763,6 +924,9 @@ var Spel=new Phaser.Class({
     this.physics.add.collider(this.speler,this.vast);
     this.physics.add.overlap(this.kogels,this.vast,this.raakBlok,null,this);
     this.physics.add.overlap(this.speler,this.munten,this.pak,null,this);
+    this.physics.add.collider(this.vijanden,this.vast);
+    this.physics.add.overlap(this.kogels,this.vijanden,this.raakVijand,null,this);
+    this.physics.add.overlap(this.speler,this.vijanden,this.botsVijand,null,this);
 
     this.fx=this.add.graphics().setDepth(6);
 
@@ -792,68 +956,177 @@ var Spel=new Phaser.Class({
     /* texturen van gebieden die we niet meer zien, weer opruimen */
     var houd={}; houd[B.id]=1; houd[BIOMEN[this.volgorde(n+1)].id]=1;
     for (var id in this.klaar) if (!houd[id]){ ['lucht_','ver_','dicht_','maan_'].forEach(function(p){ if(this.textures.exists(p+id)) this.textures.remove(p+id); },this); delete this.klaar[id]; }
-    if (!stil){ var k=int(B.neon); this.cameras.main.flash(260,(k>>16)&255,(k>>8)&255,k&255); }
+    GELUID.grondtoon(GRONDTOON[B.id]||0);
+    if (!stil){ var k=int(B.neon); this.cameras.main.flash(260,(k>>16)&255,(k>>8)&255,k&255); GELUID.speel('bioom'); }
     toonBord(B.naam,B.neon);
+  },
+
+  /* Een pad boven loopt over vier stukken baan; of het er is en hoe hoog,
+     hangt af van het blok van vier, zodat de stukken op elkaar aansluiten. */
+  route:function(index){
+    var seg=Math.floor(index/4), r=rng(this.seed^Math.imul(seg+7,0x85ebca6b));
+    var aan = r()<0.5 && seg>=1;
+    return { aan:aan, rij:r()<0.7?5:4, pos:index%4 };
+  },
+  rustig:function(index){
+    if (index%BIOOM_LENGTE<3) return true;                  // elk gebied begint rustig
+    return rng(this.seed^Math.imul(index,0x27d4eb2d))()<0.12;
   },
 
   bouwChunk:function(index){
     var r=rng(this.seed^Math.imul(index,0x9E3779B1));
+    var r2=rng(this.seed^Math.imul(index+3,0x165667b1));     // aparte reeks voor de nieuwe dingen
     var basis=index*CHUNK,lijst=[],scene=this,bezet={};
     var B=this.bioomVan(index);
-    if (index%BIOOM_LENGTE===0) this.zorgVoor(B);   // volgende gebied alvast klaarzetten
+    if (index%BIOOM_LENGTE===0) this.zorgVoor(B);
     function tegel(tx,ty,soort){
+      if (bezet[tx+","+ty]) return null;
       bezet[tx+","+ty]=true;
-      var key = soort==='blok' ? 'blok_'+B.id : (ty===9 ? 'grondT_'+B.id : 'grondB_'+B.id);
+      var key = soort==='blok' ? 'blok_'+B.id : soort==='vat' ? 'vat' : soort==='plat' ? 'plat_'+B.id : (ty===9 ? 'grondT_'+B.id : 'grondB_'+B.id);
       var b=scene.vast.create(basis+tx*TEGEL,ty*TEGEL,key).setOrigin(0,0).setScale(0.5);
       b.refreshBody();
-      b.stuk=(soort==="blok");
-      b.leven=2;b.bioom=B;
+      b.stuk=(soort==="blok"||soort==="vat");
+      b.vat=(soort==="vat");
+      b.leven=soort==="vat"?1:2;b.bioom=B;
+      if (soort==='plat'){ b.body.checkCollision.down=false; b.body.checkCollision.left=false; b.body.checkCollision.right=false; b.setDepth(2); }
       lijst.push(b);return b;
     }
+    function munt(x,y,dik){ lijst.push(scene.maakMunt(x,y,dik)); }
+
+    /* rustig stuk: alleen grond en een boog munten */
+    if (index>=1 && this.rustig(index)){
+      for (var t0=0;t0<10;t0++){ tegel(t0,9); tegel(t0,10); }
+      if (index%BIOOM_LENGTE>=1) for (var m0=1;m0<9;m0++) munt(basis+m0*TEGEL+8, 8*TEGEL+6-Math.round(Math.sin(m0/9*Math.PI)*28), false);
+      this.chunks[index]=lijst; return;
+    }
+    if (index===0){ for (var t1=0;t1<10;t1++){ tegel(t1,9); tegel(t1,10); } this.chunks[index]=lijst; return; }
+
+    var R=this.route(index), metRoute=R.aan && !this.rustig(index-R.pos);
     var gat=-1;
     if(index>=2&&r()<0.4)gat=2+Math.floor(r()*5);
+    var treden = metRoute && R.pos===0 ? (R.rij===5 ? 3 : 4) : 0;
+    if (treden && gat>=0 && gat<treden+1) gat=treden+2;       // geen gat onder het trapje
     for(var t=0;t<10;t++){
       if(t===gat||t===gat+1){ var vl=scene.add.image(basis+t*TEGEL,10*TEGEL+4,'vloei_'+B.id).setOrigin(0,0).setScale(0.5).setDepth(1); lijst.push(vl); continue; }
       tegel(t,9);tegel(t,10);
     }
-    if(index>=1){
-      var n=r()<0.5?1:2;
-      for(var i=0;i<n;i++){
-        var tx=Math.floor(r()*9);
-        if(tx===gat||tx===gat+1)continue;
-        tegel(tx,8,"blok");
-        if(r()<0.4)tegel(tx,7,"blok");
+
+    /* pad boven: trapje, richels, soms een gat, munten erop */
+    if (metRoute){
+      var begin = R.pos===0 ? 3 : 0, eind = R.pos===3 ? 7 : 9, rij=R.rij;
+      var gatB = (R.pos===1||R.pos===2) && r2()<0.5 ? 3+Math.floor(r2()*3) : -9;
+      if (R.pos===0){                                          // trapje: treden van 16 pixels
+        for (var tr=0;tr<treden;tr++) for (var th=0;th<=tr;th++) tegel(tr,8-th,'blok');
+        begin=treden;
       }
+      for (var c=begin;c<=eind;c++){
+        if (c===gatB||c===gatB+1) continue;
+        tegel(c,rij,'plat');
+        if (c%2===1) munt(basis+c*TEGEL+8,(rij-1)*TEGEL+8,false);
+      }
+      if (R.pos===2) munt(basis+(gatB>0?gatB+1:5)*TEGEL,(rij-2)*TEGEL+4,true);
+    }
+
+    var n=r()<0.5?1:2;
+    for(var i=0;i<n;i++){
+      var tx=Math.floor(r()*9);
+      if(tx===gat||tx===gat+1)continue;
+      tegel(tx,8,r2()<0.22?"vat":"blok");
+      if(r()<0.4)tegel(tx,7,"blok");
     }
     if(index>=3&&r()<0.35){
       var vx=1+Math.floor(r()*7);
       if(vx!==gat&&vx!==gat+1){
         tegel(vx,8,"blok");tegel(vx,7,"blok");tegel(vx,6,"blok");
+        if (r2()<0.4) tegel(vx+1<10&&vx+1!==gat?vx+1:vx-1,8,"vat");   // vat naast de versperring
       }
     }
-    if(index>=1){
-      if(r()<0.6){
-        var s0=Math.floor(r()*6),lengte=3+Math.floor(r()*3);
-        for(var m=0;m<lengte;m++){
-          var mx=s0+m;if(mx>9)break;
-          if(mx===gat||mx===gat+1||bezet[mx+",8"])continue;
-          lijst.push(scene.maakMunt(basis+mx*TEGEL+8,8*TEGEL+6,false));
-        }
+
+    if(r()<0.6){
+      var s0=Math.floor(r()*6),lengte=3+Math.floor(r()*3);
+      for(var m=0;m<lengte;m++){
+        var mx=s0+m;if(mx>9)break;
+        if(mx===gat||mx===gat+1||bezet[mx+",8"])continue;
+        munt(basis+mx*TEGEL+8,8*TEGEL+6,false);
       }
-      if(gat>=0){
-        var boog=[5,4,4,5];
-        for(var bi=0;bi<4;bi++)
-          lijst.push(scene.maakMunt(basis+(gat-1+bi)*TEGEL+8,boog[bi]*TEGEL+8,false));
-      }
-      var top=null;
-      for(var sleutel in bezet){
-        var dl=sleutel.split(","),kx=+dl[0],ky=+dl[1];
-        if(ky<9&&(top===null||ky<top.y))top={x:kx,y:ky};
-      }
-      if(top&&r()<0.7)
-        lijst.push(scene.maakMunt(basis+top.x*TEGEL+8,(top.y-2)*TEGEL+8,true));
+    }
+    if(gat>=0){
+      var boog=[5,4,4,5];
+      for(var bi=0;bi<4;bi++) if(!metRoute||boog[bi]!==R.rij) munt(basis+(gat-1+bi)*TEGEL+8,boog[bi]*TEGEL+8,false);
+    }
+    var top=null;
+    for(var sleutel in bezet){
+      var dl=sleutel.split(","),kx=+dl[0],ky=+dl[1];
+      if(ky<9&&ky>6&&(top===null||ky<top.y))top={x:kx,y:ky};
+    }
+    if(top&&!metRoute&&r()<0.7) munt(basis+top.x*TEGEL+8,(top.y-2)*TEGEL+8,true);
+
+    /* vijanden, pas vanaf het vijfde stuk */
+    if (index>=5){
+      if (r2()<0.38){ var lx=4+Math.floor(r2()*5); if(lx!==gat&&lx!==gat+1&&!bezet[lx+",8"]) lijst.push(this.maakVijand('loper',basis+lx*TEGEL+8,8*TEGEL+2,B)); }
+      if (r2()<0.28){ var hy=metRoute?(R.rij-2):(4+Math.floor(r2()*3)); lijst.push(this.maakVijand('vlieger',basis+(3+Math.floor(r2()*6))*TEGEL,hy*TEGEL+8,B)); }
     }
     this.chunks[index]=lijst;
+  },
+  maakVijand:function(soort,x,y,B){
+    var v=this.vijanden.create(x,y,soort+'_'+B.id+'_0').setScale(0.5).setDepth(4);
+    v.soort=soort;v.B=B;v.fase=Math.random()*6;v.richting=-1;
+    if(soort==='loper'){ v.leven=2; v.body.setSize(26,22); v.body.setOffset(5,9); }
+    else { v.leven=1; v.body.setAllowGravity(false); v.body.setSize(24,18); v.body.setOffset(6,5); }
+    return v;
+  },
+  raakVijand:function(kogel,v){
+    if(!kogel.active||!v.active)return;
+    kogel.destroy();
+    v.leven-=(held==='gunner'?2:1);
+    this.spat(v.x,v.y,[P.wit,int(v.B.neon)],4);
+    if(v.leven>0){ GELUID.speel('raak'); if(v.setTintFill){ v.setTintFill(0xffffff); this.time.delayedCall(70,function(){ if(v.active) v.clearTint(); }); } return; }
+    this.doodVijand(v);
+  },
+  doodVijand:function(v){
+    if(!v.active)return;
+    var punten=v.soort==='loper'?100:150;
+    this.score+=punten;
+    this.spat(v.x,v.y,[int(v.B.neon),0x3a3348,0x5a5270,P.wit],18);
+    this.zweef(v.x,v.y-10,'+'+punten,v.B.neon);
+    this.cameras.main.shake(80,0.004);
+    GELUID.speel('vijand');
+    v.destroy();
+  },
+  botsVijand:function(speler,v){
+    if(!v.active||this.onraakbaar>0)return;
+    this.pijn();
+  },
+  pijn:function(){
+    this.levens--;
+    tekenHarten(Math.max(0,this.levens),this.h.levens);
+    this.cameras.main.shake(160,0.008);
+    this.spat(this.speler.x,this.speler.y,[P.roze,P.wit],14);
+    GELUID.speel('pijn');
+    if(this.levens<=0){this.einde();return;}
+    this.onraakbaar=1500;
+    this.speler.setVelocityY(-200);
+  },
+  explodeer:function(bron){
+    if(!bron||!bron.scene)return;
+    var x=bron.x+8,y=bron.y+8,sc=this,R=36;
+    bron.destroy();
+    this.spat(x,y,[0xffd23a,0xff6a1a,0xffffff,0x9a1e14],30);
+    var ring2=this.add.circle(x,y,6,0xffd23a,0.85).setDepth(6);
+    this.tweens.add({targets:ring2,scale:6,alpha:0,duration:300,onComplete:function(){ring2.destroy();}});
+    var ring3=this.add.circle(x,y,8,0xff6a1a,0).setStrokeStyle(3,0xff6a1a,0.9).setDepth(6);
+    this.tweens.add({targets:ring3,scale:5,alpha:0,duration:420,delay:40,onComplete:function(){ring3.destroy();}});
+    this.cameras.main.shake(220,0.012);
+    GELUID.speel('knal');
+    this.score+=25; this.zweef(x,y-12,'+25','#ffd23a');
+    var weg=[];
+    this.vast.children.each(function(b){ if(b.active&&b.stuk){ var dx=b.x+8-x,dy=b.y+8-y; if(dx*dx+dy*dy<=R*R) weg.push(b); } });
+    weg.forEach(function(b){
+      if(!b.scene)return;
+      if(b.vat){ sc.time.delayedCall(130,function(){ sc.explodeer(b); }); }
+      else { var K=b.bioom.blok; sc.spat(b.x+8,b.y+8,[int(K.accent),int(K.vlak),int(K.licht)],10); b.destroy(); }
+    });
+    this.vijanden.children.each(function(v){ if(v.active){ var dx=v.x-x,dy=v.y-y; if(dx*dx+dy*dy<=(R+8)*(R+8)) sc.time.delayedCall(40,function(){ sc.doodVijand(v); }); } });
   },
   maakMunt:function(x,y,dik){
     var m=this.munten.create(x,y,dik?"muntD0":"munt0").setScale(0.5);
@@ -867,6 +1140,7 @@ var Spel=new Phaser.Class({
     var waarde=munt.dik?50:10;
     this.score+=waarde;this.muntTal++;
     this.spat(munt.x,munt.y,[P.goud,P.wit],munt.dik?12:4);
+    GELUID.speel(munt.dik?'dikke':'munt');
     this.zweef(munt.x,munt.y-6,"+"+waarde,munt.dik?"#ffffff":"#ffc94a");
     munt.destroy();
   },
@@ -905,17 +1179,21 @@ var Spel=new Phaser.Class({
 
   raakBlok:function(kogel,blok){
     if(!kogel.active||!blok.scene)return;
+    if(!blok.bioom)blok.bioom=this.B;
     var mx=blok.x+8,my=blok.y+8,K=blok.bioom.blok;
     kogel.destroy();
     if(!blok.stuk){ this.spat(mx-6,my-6,[P.wit,int(blok.bioom.grond.lijn)],4); return; }
+    if(blok.vat){ this.explodeer(blok); return; }
     blok.leven--;
     if(blok.leven>0){
       blok.setTexture("blokStuk_"+blok.bioom.id);
       this.spat(mx,my,[int(K.licht),int(K.vlak)],5);
+      GELUID.speel('tik');
       this.cameras.main.shake(60,0.002);
       return;
     }
     this.spat(mx,my,[int(K.accent),int(K.vlak),int(K.licht),P.wit],16);
+    GELUID.speel('kapot');
     blok.destroy();
     this.cameras.main.shake(100,0.005);
     this.bevries=60;
@@ -947,6 +1225,7 @@ var Spel=new Phaser.Class({
     k.body.setSize(10,6);
     k.setVelocityX(260);k.setDepth(4);k.geboren=this.time.now;
     this.spat(x+2,y,[this.h.kogelKleur,P.wit],3);
+    GELUID.speel(held==='gunner'?'schietG':'schietR');
   },
 
   update:function(tijd,dt){
@@ -989,10 +1268,10 @@ var Spel=new Phaser.Class({
       this.wacht-=dt;
       var eerste=s.body.blocked.down||this.coyote>0;
       if(eerste&&this.sprongen===0){
-        s.setVelocityY(-h.sprong);this.sprongen=1;this.wacht=0;this.coyote=0;
+        s.setVelocityY(-h.sprong);this.sprongen=1;this.wacht=0;this.coyote=0;GELUID.speel('spring');
         this.stopGlijden();
       } else if(!eerste&&this.sprongen===1){
-        s.setVelocityY(-h.tweede);this.sprongen=2;this.wacht=0;
+        s.setVelocityY(-h.tweede);this.sprongen=2;this.wacht=0;GELUID.speel('dubbel');
         ring(this,s.x,s.y+10);
       }
     }
@@ -1014,6 +1293,18 @@ var Spel=new Phaser.Class({
 
     this.kogels.children.each(function(k){
       if(k.active&&(k.x>this.camX+BREED+20||tijd-k.geboren>2200))k.destroy();
+    },this);
+
+    var tNu=tijd/1000;
+    this.vijanden.children.each(function(v){
+      if(!v.active)return;
+      if(v.x<this.camX-40||v.y>HOOG+40){ v.destroy(); return; }
+      var key=v.soort+'_'+v.B.id+'_'+(Math.floor(tNu*6+v.fase)%2);
+      if(v.texture.key!==key)v.setTexture(key);
+      if(v.soort==='loper'){
+        if(v.body.blocked.left)v.richting=1; else if(v.body.blocked.right)v.richting=-1;
+        v.setVelocityX(28*v.richting); v.setFlipX(v.richting>0);
+      } else { v.setVelocityX(-18); v.setVelocityY(Math.cos(tNu*2.5+v.fase)*20); }
     },this);
 
     this.tekenBrokken(d);
@@ -1045,6 +1336,7 @@ var Spel=new Phaser.Class({
     tekenHarten(Math.max(0,this.levens),this.h.levens);
     this.cameras.main.shake(140,0.006);
     this.spat(this.speler.x,this.speler.y,[P.roze,P.wit],14);
+    GELUID.speel('val');
     if(this.levens<=0){this.einde();return;}
     this.speler.setPosition(this.camX+90,50);
     this.speler.setVelocity(0,0);
@@ -1055,6 +1347,7 @@ var Spel=new Phaser.Class({
   einde:function(){
     var m=Math.floor(this.camX/16);
     this.scene.pause();
+    GELUID.muziek(false);GELUID.speel('einde');
     stuurEinde(this);
     laag.querySelector("h1").textContent="GAME OVER";
     scoreVak.textContent=String(this.score).padStart(7,"0");
@@ -1243,11 +1536,13 @@ function zetAanraking(scene){
     const stap = () => {
       if (!isActief() || !wrap.isConnected) return
       if (n === 0) {
+        GELUID.speel('go')
         aftellen = false; wrap.classList.remove('telt')
         h1.textContent = 'RUNNER & GUNNER'
         daarna(); return
       }
       h1.textContent = String(n)
+      GELUID.speel('tel')
       p.textContent = 'JIJ BENT ' + held.toUpperCase()
       n--; setTimeout(stap, AFTEL)
     }
@@ -1272,7 +1567,16 @@ function zetAanraking(scene){
     })
   }
 
+  const geluidKnop = wrap.querySelector('.geluidKnop')
+  const toonGeluid = () => { geluidKnop.textContent = 'GELUID: ' + (GELUID.staatAan() ? 'AAN' : 'UIT') }
+  toonGeluid()
+  geluidKnop.addEventListener('click', e => { e.stopPropagation(); GELUID.zet(!GELUID.staatAan()); toonGeluid(); if (GELUID.staatAan() && laag.hidden) GELUID.muziek(true) })
+  const wekGeluid = () => GELUID.wek()
+  wrap.addEventListener('pointerdown', wekGeluid)
+  window.addEventListener('keydown', wekGeluid)
+
   startKnop.addEventListener('click', () => {
+    GELUID.wek()
     if (!leider || aftellen || !partnerKlaar) return
     partnerKlaar = !kanaalOk
     const h = held
@@ -1299,6 +1603,7 @@ function zetAanraking(scene){
       physics: { default: 'arcade', arcade: { gravity: { y: ZWAARTE } } },
       scene: [Spel]
     })
+    GELUID.muziek(true)
   }
 
   /* ---------- opruimen zodra het spel gesloten wordt ---------- */
@@ -1316,6 +1621,8 @@ function zetAanraking(scene){
     }
     clearInterval(waker)
     document.body.classList.remove('rg-vol')
+    GELUID.stop()
+    window.removeEventListener('keydown', wekGeluid)
     window.removeEventListener('resize', indeling)
     window.removeEventListener('orientationchange', indeling)
     huidige = null

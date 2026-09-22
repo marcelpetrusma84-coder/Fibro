@@ -1,4 +1,4 @@
-// beltoon.js — beltoon voor een inkomende oproep (v3)
+// beltoon.js — beltoon voor een inkomende oproep (v4)
 // Werkt met een gewoon <audio>-element i.p.v. Web Audio: de iPhone laat dat beter toe.
 // Het klankje wordt hier in code gemaakt als WAV, er zijn geen geluidsbestanden.
 // Bij de eerste tik op de pagina speelt het element een stil stukje af; daarna
@@ -45,7 +45,7 @@
   el.style.display = 'none'
   ;(document.body || document.documentElement).appendChild(el)
 
-  let ontgrendeld = false, bezig = false, belt = false, max = null, tril = null
+  let ontgrendeld = false, bezig = false, belt = false, max = null, tril = null, getikt = false
 
   // Statusregel in het belvenster, zodat we zien wat de telefoon met het geluid doet
   function status(tekst) {
@@ -73,6 +73,7 @@
   }
 
   function ontgrendel() {
+    getikt = true
     // Belt het al maar is het stil? Dan telt deze tik: nu afspelen
     if (belt) { if (el.paused) speelNu(true); return }
     if (ontgrendeld || bezig) return
@@ -90,12 +91,57 @@
     document.addEventListener(ev, ontgrendel, { passive: true, capture: true })
   )
 
+  // ── Alleen iPhone/iPad: na 12 s zonder tik een Fibro-scherm dat je aantikt ──
+  // Safari vergeet de tik bij elke nieuwe pagina; zonder tik blijft de beltoon stil.
+  const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  const WACHT_MS = 12000
+  let wekScherm = null
+
+  function toonWekScherm() {
+    if (getikt || belt || wekScherm || !document.body) return
+    wekScherm = document.createElement('div')
+    wekScherm.style.cssText =
+      'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;' +
+      'justify-content:center;gap:14px;background:rgba(26,10,46,0.94);color:#f3e8ff;' +
+      'font-family:inherit;text-align:center;padding:24px;opacity:0;transition:opacity .3s;cursor:pointer;'
+    const logo = document.createElement('div')
+    logo.textContent = 'Fibro'
+    logo.style.cssText = 'font-size:52px;font-weight:700;background:linear-gradient(135deg,#c084fc,#f0abfc);' +
+      '-webkit-background-clip:text;background-clip:text;color:transparent;'
+    const tik = document.createElement('div')
+    tik.textContent = '👆 Tik om verder te gaan'
+    tik.style.cssText = 'font-size:20px;'
+    const uitleg = document.createElement('div')
+    uitleg.textContent = '🔔 Dan hoor je de beltoon als iemand belt'
+    uitleg.style.cssText = 'font-size:14px;opacity:0.6;'
+    wekScherm.append(logo, tik, uitleg)
+    // De tik zelf wordt al opgevangen door ontgrendel(); hier alleen het scherm weghalen
+    // en voorkomen dat de tik doorgaat naar wat eronder ligt
+    const weg = (e) => { e.preventDefault(); e.stopPropagation(); verbergWekScherm() }
+    wekScherm.addEventListener('click', weg)
+    wekScherm.addEventListener('touchend', weg)
+    document.body.appendChild(wekScherm)
+    requestAnimationFrame(() => { if (wekScherm) wekScherm.style.opacity = '1' })
+  }
+
+  function verbergWekScherm() {
+    if (!wekScherm) return
+    const w = wekScherm
+    wekScherm = null
+    w.style.opacity = '0'
+    setTimeout(() => w.remove(), 300)
+  }
+
+  if (IS_IOS) setTimeout(toonWekScherm, WACHT_MS)
+
   function trillen() {
     if (navigator.vibrate) { try { navigator.vibrate([300, 150, 300]) } catch (e) {} }
   }
 
   function start() {
     stop()
+    verbergWekScherm() // het belvenster moet zichtbaar zijn
     belt = true
     el.src = BELTOON
     el.loop = true

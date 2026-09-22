@@ -57,6 +57,10 @@ function zetStijl() {
     width:132px;text-align:left;cursor:pointer}
   .rg .keuze button[aria-pressed="true"]{border-color:var(--cyaan);background:#20345c}
   .rg .keuze b{display:block;color:#fff;margin-bottom:4px;font-weight:400}
+  .rg .keuze button{display:flex;flex-direction:column;align-items:center;text-align:center}
+  .rg .keuze .pop{display:block;height:58px;width:auto;margin:0 0 6px;image-rendering:pixelated;image-rendering:crisp-edges}
+  .rg .keuze button[aria-pressed="false"] .pop{opacity:.45}
+  .rg.klein .keuze .pop{height:34px;margin-bottom:3px}
   .rg .keuze small{display:block;color:var(--zacht);font-size:7px;line-height:1.9}
   .rg .knop{font-family:inherit;font-size:11px;color:#08131f;background:var(--cyaan);border:none;
     border-radius:0;padding:11px 20px;cursor:pointer;box-shadow:3px 3px 0 #1c9aa2}
@@ -140,8 +144,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
           <p>Jij en ${naamVriend} rennen op dezelfde baan. Wie komt het verst?</p>
           <div class="rol"></div>
           <div class="keuze">
-            <button class="kRunner" aria-pressed="true"><b>RUNNER</b><small>Springt hoger.</small></button>
-            <button class="kGunner" aria-pressed="false"><b>GUNNER</b><small>Sterker kanon.</small></button>
+            <button class="kRunner" aria-pressed="true"><canvas class="pop"></canvas><b>RUNNER</b><small>Springt hoger.</small></button>
+            <button class="kGunner" aria-pressed="false"><canvas class="pop"></canvas><b>GUNNER</b><small>Sterker kanon.</small></button>
           </div>
           <button class="knop">START</button>
           <div><button class="geluidKnop" type="button">GELUID: AAN</button></div>
@@ -842,10 +846,14 @@ function rng(seed){
 var BREED=320,HOOG=180,TEGEL=16,ZWAARTE=900,CHUNK=10*TEGEL,SCHERP=2;
 
 /* ---------- figuren naar texturen ---------- */
+var HUIDEN = {
+  runner: FIG.RUNNER,
+  gunner: FIG.GUNNER,
+  runnerB: Object.assign({},FIG.RUNNER,{dark:'#0e4a2a',mid:'#26a45a',lite:'#86e8a8',trim:'#e0ffb8'}),
+  gunnerB: Object.assign({},FIG.GUNNER,{dark:'#321060',mid:'#7a2ab8',lite:'#b870ec',trim:'#ff9ae0'})
+};
 function figuurTexturen(scene){
-  var groen=Object.assign({},FIG.RUNNER,{dark:'#0e4a2a',mid:'#26a45a',lite:'#86e8a8',trim:'#e0ffb8'});
-  var paars=Object.assign({},FIG.GUNNER,{dark:'#321060',mid:'#7a2ab8',lite:'#b870ec',trim:'#ff9ae0'});
-  [['runner',FIG.RUNNER],['gunner',FIG.GUNNER],['runnerB',groen],['gunnerB',paars]].forEach(function(paar){
+  [['runner',HUIDEN.runner],['gunner',HUIDEN.gunner],['runnerB',HUIDEN.runnerB],['gunnerB',HUIDEN.gunnerB]].forEach(function(paar){
     var naam=paar[0], C=paar[1], pal=FIG.palet(C);
     for (var f=0;f<10;f++){
       var houding = f<8 ? 'loop' : (f===8 ? 'sprong' : 'glij');
@@ -1530,7 +1538,30 @@ function zetAanraking(scene){
     if (anderHeld && anderHeld === held)
       regel += ' — ALLEBEI ' + held.toUpperCase() + ', ' + (leider ? NAAM + ' IS ' : 'JIJ BENT ') + KLEUR[held]
     rolVak.textContent = regel
+    tekenPops()
   }
+  /* plaatjes in de keuzeknoppen: dezelfde tekening als in het spel */
+  const pops = { runner: kRunner.querySelector('.pop'), gunner: kGunner.querySelector('.pop') }
+  const popCache = {}
+  function tekenPop(el, huid, nr) {
+    const C = HUIDEN[huid]; if (!C || !el) return
+    const sleutel = huid + nr
+    let r = popCache[sleutel]
+    if (!r) r = popCache[sleutel] = FIG.beeldje(C, nr, 8, 'loop')
+    if (el.width !== r.b) { el.width = r.b; el.height = r.h }
+    const g = el.getContext && el.getContext('2d'); if (!g) return
+    const pal = FIG.palet(C), id = g.createImageData(r.b, r.h)
+    for (let i = 0; i < r.b * r.h; i++) { const k = r.d[i]; if (!k || !pal[k]) continue; const hx = pal[k]
+      id.data[i*4] = parseInt(hx.slice(1,3),16); id.data[i*4+1] = parseInt(hx.slice(3,5),16); id.data[i*4+2] = parseInt(hx.slice(5,7),16); id.data[i*4+3] = 255 }
+    g.putImageData(id, 0, 0)
+  }
+  let popStap = 0
+  function huidVoor(h) { return h + ((!leider && anderHeld === h) ? 'B' : '') }
+  function tekenPops() {
+    for (const h of ['runner', 'gunner']) tekenPop(pops[h], huidVoor(h), h === held ? popStap % 8 : 0)
+  }
+  const popKlok = setInterval(() => { if (laag.hidden || aftellen) return; popStap++; tekenPop(pops[held], huidVoor(held), popStap % 8) }, 90)
+
   function naKeuze(w) {
     if (leider) stuurBericht('rg-keuze', { h: w })
     else stuurBericht('rg-klaar', { h: w })
@@ -1639,6 +1670,7 @@ function zetAanraking(scene){
       return
     }
     clearInterval(waker)
+    clearInterval(popKlok)
     document.body.classList.remove('rg-vol')
     GELUID.stop()
     window.removeEventListener('keydown', wekGeluid)

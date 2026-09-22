@@ -68,25 +68,63 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   </div>
 </div>
 <script>
-let beltoonInterval = null
-function startBeltoon() {
+// ── Beltoon (in code gemaakt, geen geluidsbestanden) ──
+// 'uitgaand' = overgaan voor wie belt: 425 Hz, 1 s aan / 4 s uit (zoals in Nederland)
+// 'inkomend' = beltoon voor wie gebeld wordt: belletje-deuntje, elke 2,5 s
+let belCtx = null, belHerhaal = null, belMax = null, belSoort = null
+function belContext() {
+  try {
+    if (!belCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext
+      if (!AC) return null
+      belCtx = new AC()
+    }
+    if (belCtx.state === 'suspended') belCtx.resume().catch(() => {})
+  } catch (e) { return null }
+  return belCtx
+}
+function belNoot(ctx, freq, start, duur, vol) {
+  const osc = ctx.createOscillator(), gain = ctx.createGain()
+  osc.type = 'sine'; osc.frequency.value = freq
+  osc.connect(gain); gain.connect(ctx.destination)
+  gain.gain.setValueAtTime(0.0001, start)
+  gain.gain.exponentialRampToValueAtTime(vol, start + 0.02)
+  gain.gain.setValueAtTime(vol, start + Math.max(0.02, duur - 0.2))
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duur)
+  osc.start(start); osc.stop(start + duur + 0.05)
+}
+function speelOvergaan() {
+  const ctx = belContext()
+  if (!ctx || ctx.state !== 'running') return // nog geen geluid toegestaan: overslaan i.p.v. opstapelen
+  const t = ctx.currentTime + 0.03
+  belNoot(ctx, 425, t, 1.0, 0.15)
+}
+function speelBeltoon() {
+  if (navigator.vibrate) { try { navigator.vibrate([300, 150, 300]) } catch (e) {} }
+  const ctx = belContext()
+  if (!ctx || ctx.state !== 'running') return
+  const t = ctx.currentTime + 0.03
+  const noten = [784, 988, 1175, 988, 784, 988, 1175, 1568] // G-B-D, twee keer, hoog eind
+  noten.forEach((f, i) => belNoot(ctx, f, t + i * 0.14, 0.32, 0.28))
+}
+function startBeltoon(soort = 'uitgaand') {
   stopBeltoon()
-  beltoonInterval = setInterval(() => {
-    try {
-      const ctx = new (window.AudioContext||window.webkitAudioContext)()
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain); gain.connect(ctx.destination)
-      osc.frequency.value = 440; osc.type = "sine"
-      gain.gain.setValueAtTime(0.3, ctx.currentTime)
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8)
-      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.8)
-    } catch(e) {}
-  }, 1500)
+  belSoort = soort
+  const speel = soort === 'inkomend' ? speelBeltoon : speelOvergaan
+  speel()
+  belHerhaal = setInterval(speel, soort === 'inkomend' ? 2500 : 5000)
+  belMax = setTimeout(stopBeltoon, 46000) // nooit langer dan de beltijd van 45 s
 }
 function stopBeltoon() {
-  if (beltoonInterval) { clearInterval(beltoonInterval); beltoonInterval = null }
+  if (belHerhaal) { clearInterval(belHerhaal); belHerhaal = null }
+  if (belMax) { clearTimeout(belMax); belMax = null }
+  belSoort = null
+  if (navigator.vibrate) { try { navigator.vibrate(0) } catch (e) {} }
 }
+// Browsers staan geluid pas toe na een tik: bij de eerste tik de beltoon alsnog aanzetten
+;['pointerdown', 'touchstart', 'keydown'].forEach(ev =>
+  document.addEventListener(ev, () => { if (belSoort) belContext() }, { passive: true, capture: true })
+)
 </script>
 <script type="module">
 import { supabase } from './supabase.js?v=95'
@@ -96,6 +134,10 @@ const params = new URLSearchParams(window.location.search)
 const vriendId = params.get('vriend')
 const vriendNaam = params.get('naam') || 'Vriend'
 let timer = null, sec = 0, micAan = true, videoModus = false
+// Wachtkanaal voor een inkomende oproep: hoort het als de beller ophangt, en laat de beller weten als je weigert
+let wachtKanaal = null
+function gesprekKanaalNaam(a, b) { const ids = [a, b].sort(); return 'belgesprek_' + ids[0] + '_' + ids[1] }
+function sluitWachtKanaal() { if (wachtKanaal) { supabase.removeChannel(wachtKanaal); wachtKanaal = null } }
 
 document.getElementById('naam').textContent = vriendNaam
 
@@ -126,10 +168,14 @@ initBellen(session.user.id, {
     document.getElementById('status').textContent = (videoModus ? '📹 Videogesprek — ' : '📞 Belt je op...')
     document.getElementById('knoppen-bellen').style.display = 'none'
     document.getElementById('knoppen-inkomend').style.display = 'flex'
+    startBeltoon('inkomend')
   },
-  onEind: () => {
+  onEind: (doorOns) => {
+    stopBeltoon()
+    const wasVerbonden = !!timer
     clearInterval(timer)
-    setTimeout(() => window.location.href = 'chat.html', 800)
+    if (!wasVerbonden && !doorOns) document.getElementById('status').textContent = 'Niet opgenomen'
+    setTimeout(() => window.location.href = 'chat.html', wasVerbonden ? 800 : 1500)
   }
 })
 
@@ -147,6 +193,20 @@ if (vriendId && !params.get('inkomend')) {
   document.getElementById('knoppen-bellen').style.display = 'none'
   document.getElementById('knoppen-inkomend').style.display = 'flex'
   document.getElementById('status').textContent = (videoModus ? '📹 Videogesprek — ' : '📞 Belt je op...')
+  startBeltoon('inkomend')
+  wachtKanaal = supabase
+    .channel(gesprekKanaalNaam(session.user.id, vriendId), { config: { broadcast: { self: false } } })
+    .on('broadcast', { event: 'signaal' }, (msg) => {
+      if (msg.payload?.type !== 'ophangen') return
+      // Beller hing op voordat er werd opgenomen
+      stopBeltoon(); sluitWachtKanaal()
+      document.getElementById('knoppen-inkomend').style.display = 'none'
+      document.getElementById('status').textContent = 'Gemiste oproep'
+      setTimeout(() => window.location.href = 'chat.html', 1500)
+    })
+    .subscribe()
+  // Niemand neemt op: na de beltijd terug naar de chat
+  setTimeout(() => { if (!timer && wachtKanaal) { stopBeltoon(); sluitWachtKanaal(); window.location.href = 'chat.html' } }, 46000)
   // Laad beller info
   const { data: v } = await supabase.from('profiles').select('*').eq('id', vriendId).single()
   if (v) {
@@ -179,22 +239,34 @@ function startTimer() {
 }
 
 window.startBellen = async (video) => {
+  belContext() // geluid 'ontgrendelen' nu de tik nog vers is
   videoModus = video
   document.getElementById('knoppen-keuze').style.display = 'none'
   document.getElementById('knoppen-bellen').style.display = 'flex'
   document.getElementById('status').textContent = video ? 'Videobellen...' : 'Aan het bellen...'
   const gelukt = await belOp(vriendId, video)
-  if (gelukt) startBeltoon()
+  if (gelukt) startBeltoon('uitgaand')
 }
 window.annuleer = async () => { stopBeltoon(); await hangOp(); window.location.href = 'chat.html' }
-window.weiger = async () => { stopBeltoon(); await weigerooproep(); window.location.href = 'chat.html' }
+window.weiger = async () => {
+  stopBeltoon()
+  if (wachtKanaal) {
+    // Via het wachtkanaal, zodat de beller het echt hoort
+    try { await wachtKanaal.send({ type: 'broadcast', event: 'signaal', payload: { type: 'ophangen', data: {} } }) } catch (e) {}
+    sluitWachtKanaal()
+  } else {
+    await weigerooproep()
+  }
+  window.location.href = 'chat.html'
+}
 window.neem = async (video) => {
   stopBeltoon()
+  sluitWachtKanaal() // bellen.js opent zelf het gesprekskanaal
   videoModus = video
   const ok = await accepteerOproep(video)
   if(ok) document.getElementById('status').textContent = 'Verbinding maken...'
 }
-window.hangop = async () => { await hangOp(); window.location.href = 'chat.html' }
+window.hangop = async () => { stopBeltoon(); await hangOp(); window.location.href = 'chat.html' }
 window.togMic = () => { micAan = toggleMic(); document.getElementById('micBtn').textContent = micAan ? '🎤' : '🔇' }
 window.togCam = async () => {
   const camAan = isVideoActiefLokaal()

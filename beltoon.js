@@ -1,4 +1,4 @@
-// beltoon.js — beltoon voor een inkomende oproep (v2)
+// beltoon.js — beltoon voor een inkomende oproep (v3)
 // Werkt met een gewoon <audio>-element i.p.v. Web Audio: de iPhone laat dat beter toe.
 // Het klankje wordt hier in code gemaakt als WAV, er zijn geen geluidsbestanden.
 // Bij de eerste tik op de pagina speelt het element een stil stukje af; daarna
@@ -18,10 +18,8 @@
       const x = Math.max(-1, Math.min(1, samples[i]))
       v.setInt16(44 + i * 2, x * 32767, true)
     }
-    const bytes = new Uint8Array(buf)
-    let bin = ''
-    for (let i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192))
-    return 'data:audio/wav;base64,' + btoa(bin)
+    // Echt bestandje (blob) i.p.v. data-URL: Safari speelt dat betrouwbaarder af
+    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }))
   }
 
   function maakBeltoon() {
@@ -49,8 +47,35 @@
 
   let ontgrendeld = false, bezig = false, belt = false, max = null, tril = null
 
+  // Statusregel in het belvenster, zodat we zien wat de telefoon met het geluid doet
+  function status(tekst) {
+    const type = document.getElementById('oproepType')
+    if (!type) return
+    let r = document.getElementById('oproepBelStatus')
+    if (!r) {
+      r = document.createElement('div')
+      r.id = 'oproepBelStatus'
+      r.style.cssText = 'font-size:12px;opacity:0.7;margin-top:6px;text-align:center;'
+      type.insertAdjacentElement('afterend', r)
+    }
+    r.textContent = tekst
+  }
+
+  function speelNu(doorTik) {
+    const p = el.play()
+    if (!p || !p.then) { status('🔔 speelt'); return }
+    p.then(() => status('🔔 speelt' + (doorTik ? ' (na tik)' : '')))
+     .catch(e => {
+       const naam = (e && e.name) || 'fout'
+       if (naam === 'NotAllowedError') status('🔇 geblokkeerd (ontgrendeld: ' + (ontgrendeld ? 'ja' : 'nee') + ') — tik ergens om te horen')
+       else status('⚠️ beltoon: ' + naam)
+     })
+  }
+
   function ontgrendel() {
-    if (ontgrendeld || bezig || belt) return
+    // Belt het al maar is het stil? Dan telt deze tik: nu afspelen
+    if (belt) { if (el.paused) speelNu(true); return }
+    if (ontgrendeld || bezig) return
     bezig = true
     el.loop = false
     el.src = STIL
@@ -75,8 +100,8 @@
     el.src = BELTOON
     el.loop = true
     try { el.currentTime = 0 } catch (e) {}
-    const p = el.play()
-    if (p && p.catch) p.catch(e => console.log('beltoon geblokkeerd:', e && e.name))
+    status('…')
+    speelNu(false)
     trillen()
     tril = setInterval(trillen, 2500)
     max = setTimeout(stop, 46000) // nooit langer dan de beltijd van 45 s

@@ -1300,7 +1300,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   const SPEL_BESTAND = {
     botkaaseiren: './bke-ui.js?v=95',
     dammen: './dammen-ui.js?v=95',
-    pong: './pong-ui.js?v=95',
+    pong: './pong-ui.js?v=96',
     vieroprij: './vieroprij-ui.js?v=95',
     schaken: './schaken-ui.js?v=95',
     flappybird: './flappy-ui.js?v=95',
@@ -1533,7 +1533,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Pong ───
   async function startPong() {
-    const m = await import('./pong-ui.js?v=95')
+    const m = await import('./pong-ui.js?v=96')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'pong' })
   }
 

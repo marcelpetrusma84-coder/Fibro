@@ -8,7 +8,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
   isActief = isActief || (() => true)
   vriendNaam = vriendNaam || 'vriend'
   let pongTrail = null
-  document.getElementById('spelTitelBar').textContent = '🏓 Pong'
+  document.getElementById('spelTitelBar').textContent = '🏓 Neo Paddle'
   const inhoud = document.getElementById('spelInhoud')
 
   const BREEDTE = 280, HOOGTE = 380

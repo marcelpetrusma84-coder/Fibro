@@ -7,6 +7,9 @@
    in stap 2; de plek van de ecto-bol komt nu al uit de naam van het
    spelkanaal, dus beide telefoons krijgen straks dezelfde bollen.
 
+   v6: vier speelvelden, elk met een eigen kleur. Welk veld je krijgt komt uit
+   de naam van het spelkanaal, en elke ronde is het een ander.
+
    v5: veegt langs de schermrand pikt Safari niet meer af (terugveeg), en het
    tekenen is een stuk lichter gemaakt.
 
@@ -26,31 +29,73 @@
 
 const FONT_URL = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap'
 
-// ═══════════════ Doolhof ═══════════════
+// ═══════════════ Doolhoven ═══════════════
 // # = muur, . = stip, X = leegte. Rij 9 is een tunnel: links eruit = rechts erin.
-const KAART = [
-  '###################',
-  '#........#........#',
-  '#.##.###.#.###.##.#',
-  '#.................#',
-  '#.##.#.#####.#.##.#',
-  '#....#...#...#....#',
-  '####.###.#.###.####',
-  'XXX#.#.......#.#XXX',
-  '####.#.##.##.#.####',
-  '........#X#........',
-  '####.#.#####.#.####',
-  'XXX#.#.......#.#XXX',
-  '####.#.#####.#.####',
-  '#........#........#',
-  '#.##.###.#.###.##.#',
-  '#..#...........#..#',
-  '##.#.#.#####.#.#.##',
-  '#....#...#...#....#',
-  '#.######.#.######.#',
-  '#.................#',
-  '###################',
+// Alle velden zijn even groot. Welk veld je krijgt komt uit de naam van het
+// spelkanaal, dus beide telefoons spelen in hetzelfde doolhof.
+const VELDEN = [
+  {
+    naam: 'stad', muur: '#b44dff', binnen: '#150a26', achter: '#07030f',
+    start: [[1, 1, 'R'], [17, 19, 'L']],
+    kaart: [
+    '###################', '#........#........#', '#.##.###.#.###.##.#', '#.................#',
+    '#.##.#.#####.#.##.#', '#....#...#...#....#', '####.###.#.###.####', 'XXX#.#.......#.#XXX',
+    '####.#.##.##.#.####', '........#X#........', '####.#.#####.#.####', 'XXX#.#.......#.#XXX',
+    '####.#.#####.#.####', '#........#........#', '#.##.###.#.###.##.#', '#..#...........#..#',
+    '##.#.#.#####.#.#.##', '#....#...#...#....#', '#.######.#.######.#', '#.................#',
+    '###################',
+    ],
+  },
+  {
+    naam: 'riool', muur: '#3ddc84', binnen: '#0b1a12', achter: '#04100a',
+    start: [[10, 5, 'R'], [6, 19, 'L']],
+    kaart: [
+    '###################', '#........#........#', '#.#####..#..#####.#', '#.#...#..#..#...#.#',
+    '#...#.#.###.#.#...#', '###.#.#.....#.#.###', '#...#.###.###.#...#', '#.#...#.....#...#.#',
+    '#.#.#####.#####.#.#', '....#.........#....', '#.#.#####.#####.#.#', '#.#.....#.#.....#.#',
+    '#.#####.#.#.#####.#', '#.......#.#.......#', '#.#####.#.#.#####.#', '#.....#.#.#.#.....#',
+    '###.#.#.#.#.#.#.###', '#...#...#.#...#...#', '#.#############.#.#', '#.................#',
+    '###################',
+    ],
+  },
+  {
+    naam: 'tempel', muur: '#ffb347', binnen: '#241505', achter: '#0f0803',
+    start: [[2, 1, 'R'], [14, 19, 'L']],
+    kaart: [
+    '###################', '#........#........#', '#.##.##..#..##.##.#', '#.................#',
+    '#.##.#.#####.#.##.#', '#....#...#...#....#', '##.#.#.#.#.#.#.#.##', '#..#.#.#.#.#.#.#..#',
+    '#.##...#...#...##.#', '.........#.........', '#.##...#...#...##.#', '#..#.#.#.#.#.#.#..#',
+    '##.#.#.#.#.#.#.#.##', '#....#...#...#....#', '#.##.#.#####.#.##.#', '#.................#',
+    '#.##.##..#..##.##.#', '#........#........#', '#.###.#######.###.#', '#.................#',
+    '###################',
+    ],
+  },
+  {
+    naam: 'ijsgrot', muur: '#7aa2ff', binnen: '#0d1730', achter: '#04060f',
+    start: [[13, 7, 'R'], [3, 19, 'L']],
+    kaart: [
+    '###################', '#.................#', '#.###.###.###.###.#', '#.#.....#.#.....#.#',
+    '#.#.###.#.#.###.#.#', '#...#.....#...#...#', '###.#.###.#.#.#.###', '#...#...#.#...#...#',
+    '#.#####.#.#.#####.#', '.......#...#.......', '#.#####.#.#.#####.#', '#...#...#.#...#...#',
+    '###.#.###.#.#.#.###', '#...#.....#...#...#', '#.#.###.#.#.###.#.#', '#.#.....#.#.....#.#',
+    '#.###.###.###.###.#', '#.................#', '#.##.##.###.##.##.#', '#.................#',
+    '###################',
+    ],
+  },
 ]
+
+let veldNr = 0
+let KAART = VELDEN[0].kaart
+let NEON = VELDEN[0].muur, MUURBINNEN = VELDEN[0].binnen, ACHTER = VELDEN[0].achter
+let STARTPLEK = VELDEN[0].start
+
+function zetVeld(n) {
+  veldNr = ((n % VELDEN.length) + VELDEN.length) % VELDEN.length
+  const v = VELDEN[veldNr]
+  KAART = v.kaart; NEON = v.muur; MUURBINNEN = v.binnen; ACHTER = v.achter
+  STARTPLEK = v.start
+}
+
 const RIJEN = KAART.length, KOLOM = KAART[0].length
 const T = 16, HUD = 32
 const W = KOLOM * T, H = RIJEN * T + HUD
@@ -71,10 +116,9 @@ const CFG = {
 
 const KLEUR = ['#5ff4ff', '#ff6bd6']
 const BANG_BLAUW = '#2a38ff'
-const ECTO = '#7dff6a', NEON = '#b44dff', MUURBINNEN = '#150a26', ACHTER = '#07030f'
+const ECTO = '#7dff6a'
 const RICHT = { L: [-1, 0], R: [1, 0], U: [0, -1], D: [0, 1] }
 const TEGEN = { L: 'R', R: 'L', U: 'D', D: 'U' }
-const STARTPLEK = [[1, 1, 'R'], [17, 19, 'L']]
 
 // Ons eigen spookje: 14 breed, 12 rijen bol lijf. De onderkant is geen vaste
 // tekening maar een golf die meedeint, en aan de zijkanten zitten armpjes.
@@ -319,6 +363,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   let tweeSpelers = false
   let deeltjes = [], schud = 0, flits = 0
   let geluidAan = true, draait = true
+  let rondeNr = 0
+  const veldStart = seedUit(String(kanaalNaam) + 'veld') % VELDEN.length
 
   // ═══════════════ Geluid ═══════════════
   // Alle fragmenten worden één keer uitgerekend en daarna via <audio> gespeeld.
@@ -435,6 +481,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   }
 
   function reset() {
+    zetVeld(veldStart + rondeNr)
+    wrap.style.background = ACHTER
     stippen = new Uint8Array(KOLOM * RIJEN); totaalStippen = 0
     for (let y = 0; y < RIJEN; y++) for (let x = 0; x < KOLOM; x++) {
       if (KAART[y][x] === '.') { stippen[y * KOLOM + x] = 1; totaalStippen++ }
@@ -446,7 +494,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     jager = null; jagerTijd = 0; bol = null; bolTimer = 0
     deeltjes = []; schud = 0; flits = 0
     plaatsBol()
-    if (stipBeeld) bouwStippen()
+    if (stipBeeld) { bouwDoolhof(); bouwStippen() }
     geluid.jachtStop()
   }
 
@@ -649,6 +697,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
 
   function startRonde() {
     geluid.init()
+    rondeNr++
     reset()
     staat = 'aftellen'; aftel = 3; laatsteTel = 4
     startLaag.hidden = true

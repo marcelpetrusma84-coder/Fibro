@@ -3,6 +3,9 @@
    die zichzelf in #spelInhoud tekent en zichzelf opruimt zodra het spel
    gesloten wordt.
 
+   v8: bochten afsnijden. Veeg je net nadat je een zijgang voorbij bent, dan
+   gaat je spookje die gang alsnog in, in plaats van door te lopen.
+
    v7: samen spelen over het spelkanaal. De uitnodiger (benIkSpeler1) is de
    baas: hij start de ronde, legt de bol neer en beslist wie er geraakt is.
    Elke telefoon stuurt zijn eigen spookje een keer of vijf tot tien per
@@ -114,6 +117,7 @@ const CFG = {
   levens: 3,
   raakAfstand: 0.85,  // in tegels
   aiFout: 0.12,       // kans dat de computer iets doms doet
+  laatBocht: 0.45,    // tot zover (in tegels) voorbij een kruising mag je nog afslaan
 }
 
 const KLEUR = ['#5ff4ff', '#ff6bd6']
@@ -1288,7 +1292,29 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   }
 
   // ═══════════════ Bediening ═══════════════
-  function zet(i, r) { const s = spelers[i]; if (s && !s.ai && !s.remote && !s.uit) s.volgende = r }
+  function zet(i, r) {
+    const s = spelers[i]
+    if (!s || s.ai || s.remote || s.uit) return
+    s.volgende = r
+    snijBocht(s)
+  }
+
+  // Bocht afsnijden: is het spookje net een kruising voorbij en kon het daar
+  // de gevraagde kant op, dan gaat het die gang alsnog in. Het afgelegde stukje
+  // gaat mee de nieuwe gang in, zodat het spookje niet terugspringt.
+  function snijBocht(s) {
+    if (staat !== 'spel' || !s.dir || !s.volgende) return
+    if (s.volgende === s.dir || s.volgende === TEGEN[s.dir]) return
+    if (s.x === s.tx && s.y === s.ty) return
+    const [dx, dy] = RICHT[s.dir]
+    const vx = s.tx - dx, vy = s.ty - dy          // de tegel die we net verlieten
+    const voorbij = Math.abs(s.x - vx) + Math.abs(s.y - vy)
+    if (voorbij > CFG.laatBocht || !kan(vx, vy, s.volgende)) return
+    const [nx, ny] = RICHT[s.volgende]
+    s.dir = s.volgende; s.kijk = s.dir
+    s.x = vx + nx * voorbij; s.y = vy + ny * voorbij
+    s.tx = vx + nx; s.ty = vy + ny
+  }
 
   function bijToets(e) {
     if (!draait) return

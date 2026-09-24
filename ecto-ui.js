@@ -1,7 +1,9 @@
-/* Spookjes (vakje Pac-Man) — als spel in de Fibro-chat.
+/* Ghost Tag (vakje Pac-Man, eerst Spookjes) — als spel in de Fibro-chat.
    Zelfde opbouw als pong-ui.js en runner-gunner-ui.js: één ingang, start(),
    die zichzelf in #spelInhoud tekent en zichzelf opruimt zodra het spel
    gesloten wordt.
+
+   v9: heet nu Ghost Tag.
 
    v8: bochten afsnijden. Veeg je net nadat je een zijgang voorbij bent, dan
    gaat je spookje die gang alsnog in, in plaats van door te lopen.
@@ -326,7 +328,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   const inhoud = document.getElementById('spelInhoud')
   const titel = document.getElementById('spelTitelBar')
   if (!inhoud) return
-  if (titel) titel.textContent = '👻 Spookjes'
+  if (titel) titel.textContent = '👻 Ghost Tag'
   if (getComputedStyle(inhoud).position === 'static') inhoud.style.position = 'relative'
   zetStijl()
 

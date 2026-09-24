@@ -1306,7 +1306,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     flappybird: './flappy-ui.js?v=95',
     breakout: './blockit-ui.js?v=95',
     spaceinvaders: './invaders-ui.js?v=95',
-    endlessrunner: './runner-gunner-ui.js?v=11'
+    endlessrunner: './runner-gunner-ui.js?v=11',
+    pacman: './ecto-ui.js?v=1'
   }
   const _alGeladen = {}
   function laadSpelAlvast(spelType) {
@@ -1349,7 +1350,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // Accepteer uitnodiging → open het spel
   window.speelMee = async function(spelType, sessieId, starterId) {
-    const beschikbaar = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pong', 'flappybird', 'spaceinvaders', 'breakout', 'endlessrunner']
+    const beschikbaar = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pong', 'flappybird', 'spaceinvaders', 'breakout', 'endlessrunner', 'pacman']
     if (!beschikbaar.includes(spelType)) {
       alert('🚧 ' + (SPEL_INFO[spelType]?.naam || spelType) + ' komt binnenkort beschikbaar!')
       return
@@ -1376,6 +1377,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     else if (spelType === 'breakout') await startBlockIt()
     else if (spelType === 'spaceinvaders') await startSpaceInvaders()
     else if (spelType === 'endlessrunner') await startRunnerGunner()
+    else if (spelType === 'pacman') await startEcto()
     if (spelActief !== spelType) return   // ondertussen gesloten
 
     spelKanaal.on('broadcast', { event: 'spelchat' }, (msg) => {
@@ -1643,6 +1645,12 @@ async function startBlockIt() {
   }
 
   // ─── Runner & Gunner (vakje Endless Runner) ───
+  // ─── Spookjes (vakje Pac-Man) ───
+  async function startEcto() {
+    const m = await import('./ecto-ui.js?v=1')
+    await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'pacman' })
+  }
+
   async function startRunnerGunner() {
     const m = await import('./runner-gunner-ui.js?v=11')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'endlessrunner' })

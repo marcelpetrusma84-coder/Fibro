@@ -7,6 +7,9 @@
    in stap 2; de plek van de ecto-bol komt nu al uit de naam van het
    spelkanaal, dus beide telefoons krijgen straks dezelfde bollen.
 
+   v5: veegt langs de schermrand pikt Safari niet meer af (terugveeg), en het
+   tekenen is een stuk lichter gemaakt.
+
    v4: geluid via <audio> met in code gemaakte WAV-fragmenten, zodat het ook
    op de iPhone klinkt.
 
@@ -443,6 +446,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     jager = null; jagerTijd = 0; bol = null; bolTimer = 0
     deeltjes = []; schud = 0; flits = 0
     plaatsBol()
+    if (stipBeeld) bouwStippen()
     geluid.jachtStop()
   }
 
@@ -495,6 +499,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     const i = s.y * KOLOM + s.x
     if (stippen[i]) {
       stippen[i] = 0; aantalStippen--; s.score++
+    wisStip(s.x, s.y)
       geluid.stip(s.i)
       spetter((s.x + 0.5) * T, HUD + (s.y + 0.5) * T, ECTO, 4, 25, 0.3, 1)
     }
@@ -652,6 +657,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
 
   // ═══════════════ Tekenen ═══════════════
   let res = 1, doolhofLaag = null, stipBeeld = null, druppelBeeld = []
+  let stippenLaag = null, stippenCtx = null, gloedBeelden = new Map()
+  let laatsteMaat = ''
 
   function maakLaag(w, h) {
     const c = document.createElement('canvas')
@@ -708,6 +715,37 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       g2.fillStyle = '#ffffff'; g2.fillRect(3.1, 3.7, 0.8, 0.8)
       return c2
     })
+    gloedBeelden = new Map()
+  }
+
+  // Alle stippen staan in één laag. Een opgegeten stip wordt uit die laag
+  // gewist; dat is veel lichter dan er tweehonderd per beeldje tekenen.
+  function bouwStippen() {
+    const [c, g] = maakLaag(W, RIJEN * T)
+    stippenLaag = c; stippenCtx = g
+    if (!stippen) return
+    for (let i = 0; i < stippen.length; i++) {
+      if (!stippen[i]) continue
+      const x = i % KOLOM, y = (i / KOLOM) | 0
+      g.drawImage(stipBeeld, x * T + 3, y * T + 3, 10, 10)
+    }
+  }
+
+  function wisStip(x, y) {
+    if (stippenCtx) stippenCtx.clearRect(x * T, y * T, T, T)
+  }
+
+  // De gloed om een spookje is een vast plaatje per kleur, niet elk beeldje opnieuw.
+  function gloed(kleur) {
+    let b = gloedBeelden.get(kleur)
+    if (!b) {
+      const [c, g] = maakLaag(64, 64)
+      const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32)
+      gr.addColorStop(0, rgba(kleur, 0.4)); gr.addColorStop(1, rgba(kleur, 0))
+      g.fillStyle = gr; g.fillRect(0, 0, 64, 64)
+      b = c; gloedBeelden.set(kleur, b)
+    }
+    return b
   }
 
   // fase laat de rok deinen; gezicht is 'normaal', 'boos' of 'bang'
@@ -715,9 +753,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     const x0 = cx - 7 * u, y0 = cy - 7.5 * u
     g.save()
     g.globalAlpha = alpha
-    const gr = g.createRadialGradient(cx, cy, 0, cx, cy, 13 * u)
-    gr.addColorStop(0, rgba(kleur, 0.4)); gr.addColorStop(1, rgba(kleur, 0))
-    g.fillStyle = gr; g.fillRect(cx - 13 * u, cy - 13 * u, 26 * u, 26 * u)
+    g.drawImage(gloed(kleur), cx - 13 * u, cy - 13 * u, 26 * u, 26 * u)
     const lijf = wit ? '#ffffff' : kleur
     const px = (x, y, w = 1, h = 1) => g.fillRect(x0 + x * u, y0 + y * u, w * u + 0.05, h * u + 0.05)
     pixels(g, SPOOK, x0, y0, u, lijf)
@@ -815,11 +851,11 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     ctx.fillRect(x + 2, y - 3, 2, 6); ctx.fillRect(x + 4, y - 2, 2, 4); ctx.fillRect(x + 6, y - 1, 1, 2)
   }
 
-  function tekst(t, x, y, kleur, grootte = 10, uitlijn = 'center') {
+  function tekst(t, x, y, kleur, grootte = 10, uitlijn = 'center', gloeien = true) {
     ctx.save()
     ctx.font = `${grootte}px "Press Start 2P", monospace`
     ctx.textAlign = uitlijn; ctx.textBaseline = 'middle'
-    ctx.shadowColor = kleur; ctx.shadowBlur = 6 * res
+    if (gloeien) { ctx.shadowColor = kleur; ctx.shadowBlur = 6 * res }
     ctx.fillStyle = kleur; ctx.fillText(t, x, y)
     ctx.restore()
   }
@@ -833,16 +869,14 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       tekenFiguur(ctx, links ? 14 : W - 14, 16, 0.95,
         bang || s.uit ? meng(s.kleur, BANG_BLAUW, 0.55) : s.kleur,
         s.uit || bang ? 'bang' : jager === s.i ? 'boos' : 'normaal', links ? 'R' : 'L', tijd * 7 + s.i, s.uit ? 0.4 : 1)
-      tekst(pad3(s.score), links ? 28 : W - 28, 17, s.kleur, 10, links ? 'left' : 'right')
+      tekst(pad3(s.score), links ? 28 : W - 28, 17, s.kleur, 10, links ? 'left' : 'right', false)
     }
     const bw = 84, bx = (W - bw) / 2, by = 13, bh = 6
     ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fillRect(bx, by, bw, bh)
     let frac, kleur
     if (jager !== null) { frac = Math.max(0, jagerTijd / CFG.jagerDuur); kleur = spelers[jager].kleur }
     else { frac = totaalStippen ? aantalStippen / totaalStippen : 0; kleur = ECTO }
-    ctx.save(); ctx.shadowColor = kleur; ctx.shadowBlur = 6 * res
     ctx.fillStyle = kleur; ctx.fillRect(bx, by, bw * frac, bh)
-    ctx.restore()
   }
 
   function tekenUitleg() {
@@ -897,13 +931,11 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     ctx.save()
     if (schud > 0) ctx.translate((Math.random() - 0.5) * schud * 14, (Math.random() - 0.5) * schud * 14)
     if (doolhofLaag) ctx.drawImage(doolhofLaag, 0, HUD, W, RIJEN * T)
-    for (let i = 0; i < stippen.length; i++) {
-      if (!stippen[i]) continue
-      const x = i % KOLOM, y = (i / KOLOM) | 0
-      ctx.globalAlpha = 0.7 + 0.3 * Math.sin(tijd * 3 + x * 0.7 + y * 0.5)
-      ctx.drawImage(stipBeeld, x * T + 3, HUD + y * T + 3, 10, 10)
+    if (stippenLaag) {
+      ctx.globalAlpha = 0.78 + 0.22 * Math.sin(tijd * 3)
+      ctx.drawImage(stippenLaag, 0, HUD, W, RIJEN * T)
+      ctx.globalAlpha = 1
     }
-    ctx.globalAlpha = 1
     if (bol) tekenBol((bol.x + 0.5) * T, HUD + (bol.y + 0.5) * T)
     for (const p of deeltjes) {
       ctx.globalAlpha = Math.max(0, p.t / p.max)
@@ -942,12 +974,15 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     let k = Math.min(vak.width / W, vak.height / H)
     if (!(k > 0)) k = 1
     const cssW = Math.floor(W * k), cssH = Math.floor(H * k)
-    const dpr = Math.min(window.devicePixelRatio || 1, 3)
+    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    const maat = cssW + 'x' + cssH + 'x' + dpr
+    if (maat === laatsteMaat) return      // niets veranderd: niets herbouwen
+    laatsteMaat = maat
     doek.style.width = cssW + 'px'; doek.style.height = cssH + 'px'
     scherm.style.width = cssW + 'px'; scherm.style.height = cssH + 'px'
     doek.width = Math.round(cssW * dpr); doek.height = Math.round(cssH * dpr)
     res = doek.width / W
-    bouwDoolhof(); bouwSprites()
+    bouwDoolhof(); bouwSprites(); bouwStippen()
   }
 
   // ═══════════════ Bediening ═══════════════
@@ -968,6 +1003,19 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   window.addEventListener('keydown', bijToets)
 
   const vegen = new Map()
+  // Op de iPhone is een veeg vanaf de linkerrand "terug" in Safari. Tijdens het
+  // spelen begint je duim daar juist vaak. Beginnen we in een randstrook, dan
+  // houden we de aanraking vast zodat de browser hem niet afpakt.
+  const RANDBREEDTE = 30
+  function inRand(x) {
+    return x <= RANDBREEDTE || x >= (window.innerWidth || 0) - RANDBREEDTE
+  }
+  wrap.addEventListener('touchstart', e => {
+    let rand = false
+    for (const t of e.changedTouches) if (inRand(t.clientX)) rand = true
+    if (rand && e.cancelable && !e.target.closest('button')) e.preventDefault()
+  }, { passive: false })
+
   scherm.addEventListener('touchstart', e => {
     for (const t of e.changedTouches) vegen.set(t.identifier, { x: t.clientX, y: t.clientY })
   }, { passive: true })
@@ -986,6 +1034,23 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   const losLaten = e => { for (const t of e.changedTouches) vegen.delete(t.identifier) }
   scherm.addEventListener('touchend', losLaten)
   scherm.addEventListener('touchcancel', losLaten)
+  // Begint de veeg naast het veld (in de randstrook), dan telt hij ook mee.
+  wrap.addEventListener('touchstart', e => {
+    for (const t of e.changedTouches) if (!vegen.has(t.identifier)) vegen.set(t.identifier, { x: t.clientX, y: t.clientY })
+  }, { passive: true })
+  wrap.addEventListener('touchmove', e => {
+    for (const t of e.changedTouches) {
+      const a = vegen.get(t.identifier); if (!a) continue
+      const dx = t.clientX - a.x, dy = t.clientY - a.y
+      if (Math.hypot(dx, dy) < 18) continue
+      const r = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'R' : 'L') : (dy > 0 ? 'D' : 'U')
+      const vak = doek.getBoundingClientRect()
+      zet(tweeSpelers && t.clientX >= vak.left + vak.width / 2 ? 1 : 0, r)
+      a.x = t.clientX; a.y = t.clientY
+    }
+  }, { passive: true })
+  wrap.addEventListener('touchend', losLaten)
+  wrap.addEventListener('touchcancel', losLaten)
 
   // Eerste echte tik: geluid van het slot (verplicht op de iPhone).
   const bijEersteTik = e => { if (e.isTrusted !== false) geluid.ontgrendel() }
@@ -1026,6 +1091,17 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     chatBalk = null
   }
 
+  function meldFout(e) {
+    draait = false
+    geluid.jachtStop()
+    const m = document.createElement('div')
+    m.className = 'fout'
+    m.style.cssText = 'position:absolute;inset:auto 8px 8px 8px;background:rgba(20,10,38,.95);' +
+      'border:2px solid #ff4d6d;border-radius:10px;padding:10px;z-index:9'
+    m.textContent = 'Er ging iets mis: ' + (e && e.message ? e.message : e)
+    wrap.appendChild(m)
+  }
+
   function stop() {
     if (!draait) return
     draait = false
@@ -1047,7 +1123,14 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     verbergChatBalk()
     const dt = Math.min(0.05, Math.max(0, (nu - vorige) / 1000))
     vorige = nu
-    update(dt); teken()
+    try {
+      update(dt); teken()
+    } catch (e) {
+      // Niet stilletjes stoppen: laat zien wat er misging.
+      console.error('[spookjes]', e)
+      meldFout(e)
+      return
+    }
     requestAnimationFrame(lus)
   }
   requestAnimationFrame(lus)

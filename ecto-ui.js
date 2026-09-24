@@ -7,6 +7,9 @@
    in stap 2; de plek van de ecto-bol komt nu al uit de naam van het
    spelkanaal, dus beide telefoons krijgen straks dezelfde bollen.
 
+   v4: geluid via <audio> met in code gemaakte WAV-fragmenten, zodat het ook
+   op de iPhone klinkt.
+
    v3: eigen spookje (rond, armpjes, deinende rok), grappig geluidje bij een
    tik.
 
@@ -130,6 +133,104 @@ function pixels(g, rijen, x0, y0, u, kleur) {
   })
 }
 
+// ═══════════════ Geluid in code, als echte fragmenten ═══════════════
+// De iPhone houdt Web Audio op slot, ook na een tik. Een <audio>-element doet
+// het daar wel. Daarom rekenen we elk geluidje hier uit tot een WAV-fragment
+// (net als de beltoon) en spelen we dat af via <audio>.
+const KLANK_HZ = 22050
+
+function golf(vorm, fase) {
+  const f = fase - Math.floor(fase)
+  if (vorm === 'square') return f < 0.5 ? 1 : -1
+  if (vorm === 'sawtooth') return 2 * f - 1
+  if (vorm === 'triangle') return 4 * Math.abs(f - 0.5) - 1
+  return Math.sin(2 * Math.PI * f)
+}
+
+// Eén toon: van -> naar in toonhoogte, met een korte aanzet en uitsterven.
+function toonGolf(o) {
+  const n = Math.max(1, Math.round(o.duur * KLANK_HZ))
+  const uit = new Float32Array(n)
+  const vorm = o.vorm || 'square', vol = o.vol == null ? 0.3 : o.vol
+  const naar = o.naar || o.van
+  let fase = 0
+  for (let i = 0; i < n; i++) {
+    const t = i / KLANK_HZ, deel = t / o.duur
+    const hz = o.van * Math.pow(naar / o.van, deel)
+    fase += hz / KLANK_HZ
+    const aanzet = Math.min(1, t / 0.004)
+    const eind = Math.min(1, (o.duur - t) / 0.01)
+    uit[i] = golf(vorm, fase) * vol * Math.exp(-3.2 * deel) * aanzet * Math.max(0, eind)
+  }
+  return uit
+}
+
+// "Oef", "au", "woeps": een zaagtand door een filter dat als een mondje
+// open- en dichtgaat.
+function stemGolf(o) {
+  const n = Math.round(o.duur * KLANK_HZ)
+  const uit = new Float32Array(n)
+  let fase = 0, laag = 0, band = 0
+  for (let i = 0; i < n; i++) {
+    const t = i / KLANK_HZ, deel = t / o.duur
+    const hz = o.van * Math.pow(o.naar / o.van, deel) * (1 + 0.05 * Math.sin(2 * Math.PI * 11 * t))
+    fase += hz / KLANK_HZ
+    const bron = golf('sawtooth', fase)
+    const fc = o.f1 * Math.pow(o.f2 / o.f1, deel)
+    const f = 2 * Math.sin(Math.PI * Math.min(fc, KLANK_HZ * 0.45) / KLANK_HZ)
+    const hoog = bron - laag - 0.18 * band
+    band += f * hoog
+    laag += f * band
+    const aanzet = Math.min(1, t / 0.02)
+    const eind = Math.min(1, (o.duur - t) / 0.05)
+    uit[i] = band * aanzet * Math.max(0, eind) * Math.exp(-1.6 * deel)
+  }
+  // het filter versterkt, dus terugschalen tot een nette hoogte
+  let piek = 0
+  for (let i = 0; i < n; i++) piek = Math.max(piek, Math.abs(uit[i]))
+  if (piek > 0) { const f = 0.42 / piek; for (let i = 0; i < n; i++) uit[i] *= f }
+  return uit
+}
+
+// Meerdere golfjes na elkaar of over elkaar heen.
+function mengGolf(delen) {
+  let lengte = 0
+  for (const d of delen) lengte = Math.max(lengte, Math.round((d.na || 0) * KLANK_HZ) + d.golf.length)
+  const uit = new Float32Array(lengte)
+  for (const d of delen) {
+    const start = Math.round((d.na || 0) * KLANK_HZ)
+    for (let i = 0; i < d.golf.length; i++) uit[start + i] += d.golf[i]
+  }
+  for (let i = 0; i < uit.length; i++) uit[i] = Math.max(-1, Math.min(1, uit[i]))
+  return uit
+}
+
+// Sirene tijdens de jacht: precies één seconde, zodat hij rond loopt zonder tik.
+function sireneGolf() {
+  const n = KLANK_HZ
+  const uit = new Float32Array(n)
+  let fase = 0
+  for (let i = 0; i < n; i++) {
+    const t = i / KLANK_HZ
+    fase += (230 + 60 * Math.sin(2 * Math.PI * 5 * t)) / KLANK_HZ
+    uit[i] = golf('triangle', fase) * 0.16
+  }
+  return uit
+}
+
+function wavAdres(golfje) {
+  const n = golfje.length
+  const buf = new ArrayBuffer(44 + n * 2), dv = new DataView(buf)
+  const zet = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)) }
+  zet(0, 'RIFF'); dv.setUint32(4, 36 + n * 2, true); zet(8, 'WAVEfmt ')
+  dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true)
+  dv.setUint32(24, KLANK_HZ, true); dv.setUint32(28, KLANK_HZ * 2, true)
+  dv.setUint16(32, 2, true); dv.setUint16(34, 16, true)
+  zet(36, 'data'); dv.setUint32(40, n * 2, true)
+  for (let i = 0; i < n; i++) dv.setInt16(44 + i * 2, Math.max(-1, Math.min(1, golfje[i])) * 32767, true)
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }))
+}
+
 function zetStijl() {
   if (!document.getElementById('ecto-font')) {
     const l = document.createElement('link')
@@ -217,71 +318,103 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   let geluidAan = true, draait = true
 
   // ═══════════════ Geluid ═══════════════
+  // Alle fragmenten worden één keer uitgerekend en daarna via <audio> gespeeld.
+  // Elk geluidje heeft een paar kopieën, zodat ze over elkaar heen kunnen.
   const geluid = {
-    c: null, sirene: null,
-    init() {
-      if (!this.c) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) this.c = new AC() }
-      if (this.c && this.c.state === 'suspended') this.c.resume()
+    klanken: {}, adressen: [], sirene: null, ontgrendeld: false, kan: false,
+    bouw() {
+      if (typeof Audio === 'undefined' || !window.URL || !URL.createObjectURL) return
+      const maak = (naam, golfje, aantal, vol) => {
+        const adres = wavAdres(golfje)
+        this.adressen.push(adres)
+        const els = []
+        for (let n = 0; n < aantal; n++) {
+          const a = new Audio(adres)
+          a.preload = 'auto'; a.volume = vol
+          els.push(a)
+        }
+        this.klanken[naam] = { els, i: 0 }
+      }
+      try {
+        maak('stip0', toonGolf({ van: 880, naar: 1100, duur: 0.05, vorm: 'square', vol: 0.3 }), 4, 0.5)
+        maak('stip1', toonGolf({ van: 620, naar: 480, duur: 0.05, vorm: 'square', vol: 0.3 }), 4, 0.5)
+        const auSoorten = [
+          { van: 330, naar: 150, f1: 950, f2: 420, duur: 0.3, piep: [700, 260] },   // oeeef
+          { van: 260, naar: 380, f1: 600, f2: 1100, duur: 0.26, piep: [520, 900] }, // auw?
+          { van: 420, naar: 170, f1: 1200, f2: 500, duur: 0.34, piep: [880, 300] }, // woeps
+        ]
+        auSoorten.forEach((s, n) => maak('au' + n, mengGolf([
+          { golf: stemGolf(s) },
+          { golf: toonGolf({ van: s.piep[0], naar: s.piep[1], duur: 0.12, vorm: 'triangle', vol: 0.18 }), na: 0.02 },
+        ]), 2, 0.85))
+        maak('bol', mengGolf([
+          { golf: toonGolf({ van: 180, naar: 1200, duur: 0.5, vorm: 'sawtooth', vol: 0.26 }) },
+          { golf: toonGolf({ van: 300, naar: 1600, duur: 0.45, vorm: 'square', vol: 0.16 }), na: 0.06 },
+        ]), 2, 0.8)
+        maak('uit', mengGolf([523, 392, 330, 262, 196].map((f, n) => (
+          { golf: toonGolf({ van: f, duur: 0.2, vorm: 'triangle', vol: 0.3 }), na: n * 0.15 }
+        ))), 1, 0.8)
+        maak('winst', mengGolf([523, 659, 784, 1047, 784, 1047].map((f, n) => (
+          { golf: toonGolf({ van: f, duur: 0.16, vorm: 'square', vol: 0.24 }), na: n * 0.11 }
+        ))), 1, 0.8)
+        maak('telLaag', toonGolf({ van: 440, duur: 0.12, vorm: 'square', vol: 0.26 }), 2, 0.7)
+        maak('telHoog', toonGolf({ van: 880, duur: 0.3, vorm: 'square', vol: 0.26 }), 2, 0.7)
+        maak('jachtEind', toonGolf({ van: 900, naar: 300, duur: 0.25, vorm: 'triangle', vol: 0.22 }), 2, 0.7)
+        const sAdres = wavAdres(sireneGolf())
+        this.adressen.push(sAdres)
+        this.sirene = new Audio(sAdres)
+        this.sirene.loop = true; this.sirene.volume = 0.35; this.sirene.preload = 'auto'
+        this.kan = true
+      } catch (e) { console.warn('[spookjes] geluid kon niet gebouwd worden', e) }
     },
-    toon(freq, duur, type = 'square', vol = 0.06, naar = null, na = 0) {
-      if (!geluidAan || !this.c) return
-      const c = this.c, t = c.currentTime + na
-      const o = c.createOscillator(), g = c.createGain()
-      o.type = type; o.frequency.setValueAtTime(freq, t)
-      if (naar) o.frequency.exponentialRampToValueAtTime(naar, t + duur)
-      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + duur)
-      o.connect(g).connect(c.destination); o.start(t); o.stop(t + duur + 0.02)
+    // Moet tijdens een echte tik gebeuren, anders blijft geluid op slot (iPhone).
+    ontgrendel() {
+      if (this.ontgrendeld || !this.kan) return
+      this.ontgrendeld = true
+      const alles = [this.sirene]
+      for (const naam in this.klanken) alles.push(...this.klanken[naam].els)
+      for (const a of alles) {
+        if (!a) continue
+        try {
+          const p = a.play()
+          const rust = () => { try { a.pause(); a.currentTime = 0 } catch (e) {} }
+          if (p && p.then) p.then(rust).catch(() => {}); else rust()
+        } catch (e) {}
+      }
     },
-    stip(i) { this.toon(i ? 620 : 880, 0.05, 'square', 0.035, i ? 480 : 1100) },
-    bol() { this.toon(180, 0.5, 'sawtooth', 0.06, 1200); this.toon(300, 0.45, 'square', 0.035, 1600, 0.06) },
-    tik() { this.toon(320, 0.35, 'sawtooth', 0.08, 55) },
-    // "oef!", "au!", "woeps!" — in code gemaakt met een filter dat als een
-    // mondje open- en dichtgaat. Elke tik klinkt net iets anders.
-    au() {
-      if (!geluidAan || !this.c) return
-      const c = this.c, t = c.currentTime
-      const soorten = [
-        { van: 330, naar: 150, f1: 950, f2: 420, duur: 0.3, piep: [700, 260] },   // oeeef
-        { van: 260, naar: 380, f1: 600, f2: 1100, duur: 0.26, piep: [520, 900] }, // auw?
-        { van: 420, naar: 170, f1: 1200, f2: 500, duur: 0.34, piep: [880, 300] }, // woeps
-      ]
-      const s = soorten[Math.floor(Math.random() * soorten.length)]
-      const o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain()
-      const vib = c.createOscillator(), vd = c.createGain()
-      o.type = 'sawtooth'
-      o.frequency.setValueAtTime(s.van, t)
-      o.frequency.exponentialRampToValueAtTime(s.naar, t + s.duur)
-      vib.frequency.value = 11; vd.gain.value = 16
-      vib.connect(vd).connect(o.frequency)
-      f.type = 'bandpass'; f.Q.value = 6
-      f.frequency.setValueAtTime(s.f1, t)
-      f.frequency.exponentialRampToValueAtTime(s.f2, t + s.duur)
-      g.gain.setValueAtTime(0.0001, t)
-      g.gain.exponentialRampToValueAtTime(0.18, t + 0.03)
-      g.gain.exponentialRampToValueAtTime(0.0001, t + s.duur + 0.06)
-      o.connect(f).connect(g).connect(c.destination)
-      o.start(t); vib.start(t); o.stop(t + s.duur + 0.08); vib.stop(t + s.duur + 0.08)
-      this.toon(s.piep[0], 0.12, 'triangle', 0.045, s.piep[1], 0.02)
+    speel(naam) {
+      if (!geluidAan || !this.kan) return
+      const k = this.klanken[naam]
+      if (!k) return
+      const a = k.els[k.i++ % k.els.length]
+      try {
+        a.currentTime = 0
+        const p = a.play()
+        if (p && p.catch) p.catch(() => {})
+      } catch (e) {}
     },
-    uit() { [523, 392, 330, 262, 196].forEach((f, n) => this.toon(f, 0.2, 'triangle', 0.08, null, n * 0.15)) },
-    aftel(n) { this.toon(n ? 440 : 880, n ? 0.12 : 0.3, 'square', 0.06) },
-    winst() { [523, 659, 784, 1047, 784, 1047].forEach((f, n) => this.toon(f, 0.16, 'square', 0.06, null, n * 0.11)) },
+    init() { this.ontgrendel() },
+    stip(i) { this.speel(i ? 'stip1' : 'stip0') },
+    au() { this.speel('au' + Math.floor(Math.random() * 3)) },
+    bol() { this.speel('bol') },
+    uit() { this.speel('uit') },
+    winst() { this.speel('winst') },
+    aftel(n) { this.speel(n ? 'telLaag' : 'telHoog') },
+    jachtEinde() { this.speel('jachtEind') },
     jachtStart() {
+      if (!geluidAan || !this.kan || !this.sirene) return
+      try { this.sirene.currentTime = 0; const p = this.sirene.play(); if (p && p.catch) p.catch(() => {}) } catch (e) {}
+    },
+    jachtStop() { if (this.sirene) { try { this.sirene.pause() } catch (e) {} } },
+    sluit() {
       this.jachtStop()
-      if (!geluidAan || !this.c) return
-      const c = this.c, o = c.createOscillator(), lfo = c.createOscillator()
-      const diep = c.createGain(), g = c.createGain()
-      o.type = 'triangle'; o.frequency.value = 230
-      lfo.frequency.value = 5; diep.gain.value = 60
-      lfo.connect(diep).connect(o.frequency)
-      g.gain.value = 0.025; o.connect(g).connect(c.destination)
-      o.start(); lfo.start(); this.sirene = [o, lfo]
+      for (const naam in this.klanken) for (const a of this.klanken[naam].els) { try { a.pause(); a.src = '' } catch (e) {} }
+      if (this.sirene) { try { this.sirene.src = '' } catch (e) {} }
+      for (const adres of this.adressen) { try { URL.revokeObjectURL(adres) } catch (e) {} }
+      this.adressen = []; this.klanken = {}; this.sirene = null; this.kan = false
     },
-    jachtStop() {
-      if (this.sirene) { this.sirene.forEach(o => { try { o.stop() } catch (e) {} }); this.sirene = null }
-    },
-    sluit() { this.jachtStop(); if (this.c) { try { this.c.close() } catch (e) {} this.c = null } },
   }
+  geluid.bouw()
 
   // ═══════════════ Opzetten ═══════════════
   function maakSpeler(i) {
@@ -496,7 +629,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       if (!p.uit && p.onkw <= 0 && afstandTussen(j, p) < CFG.raakAfstand) tik(j, p)
       if (jager !== null && jagerTijd <= 0) {
         jager = null; bolTimer = CFG.bolTerug
-        geluid.jachtStop(); geluid.toon(900, 0.25, 'triangle', 0.05, 300)
+        geluid.jachtStop(); geluid.jachtEinde()
       }
     } else if (!bol && spelers.every(s => !s.uit)) {
       bolTimer -= dt * tempo
@@ -853,6 +986,11 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   const losLaten = e => { for (const t of e.changedTouches) vegen.delete(t.identifier) }
   scherm.addEventListener('touchend', losLaten)
   scherm.addEventListener('touchcancel', losLaten)
+
+  // Eerste echte tik: geluid van het slot (verplicht op de iPhone).
+  const bijEersteTik = e => { if (e.isTrusted !== false) geluid.ontgrendel() }
+  wrap.addEventListener('pointerdown', bijEersteTik, { passive: true })
+  wrap.addEventListener('touchstart', bijEersteTik, { passive: true })
 
   wrap.querySelector('.kSpeel').addEventListener('click', startRonde)
   wrap.querySelector('.kOpnieuw').addEventListener('click', startRonde)

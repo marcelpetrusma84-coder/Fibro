@@ -7,6 +7,10 @@
    in stap 2; de plek van de ecto-bol komt nu al uit de naam van het
    spelkanaal, dus beide telefoons krijgen straks dezelfde bollen.
 
+   v2: geen pijlknoppen meer (vegen over het veld, of pijltjes/WASD op een
+   toetsenbord), de emojibalk van de chat gaat tijdelijk weg en het doolhof
+   krijgt zoveel mogelijk ruimte.
+
    Doel: wie aan het eind de meeste ectoplasma-stippen heeft, wint.
    Wie de grote bol pakt wordt de jager: groter en sneller. De ander wordt
    bang en verliest een druppel bij een tik. Drie druppels kwijt = af. */
@@ -133,8 +137,8 @@ function zetStijl() {
   st.id = 'ecto-stijl'
   st.textContent = `
   .ecto{--muur:#b44dff;--ecto:#7dff6a;--tekst:#e9ddff;--paneel:rgba(20,10,38,.92);
-    position:absolute;inset:0;padding:46px 8px 8px;box-sizing:border-box;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    position:absolute;inset:0;padding:40px 2px 2px;box-sizing:border-box;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
     background:#07030f;color:var(--tekst);font-family:"Press Start 2P",monospace;
     touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
   .ecto *{box-sizing:border-box}
@@ -153,21 +157,6 @@ function zetStijl() {
   .ecto .knop.groot{width:60px;height:60px;border-radius:50%;font-size:24px;padding:0;
     color:var(--ecto);border-color:var(--ecto);box-shadow:0 0 18px rgba(125,255,106,.55)}
   .ecto .knop:active{transform:scale(.94)}
-  .ecto .pads{display:flex;justify-content:center;align-items:center;gap:10px;width:100%;flex:0 0 auto}
-  .ecto .pads[hidden]{display:none}
-  .ecto .pad{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:3px}
-  .ecto .pad[data-s="0"]{--kl:#5ff4ff}
-  .ecto .pad[data-s="1"]{--kl:#ff6bd6}
-  .ecto .pad button{font-family:inherit;font-size:14px;color:var(--kl);background:var(--paneel);
-    border:2px solid var(--kl);border-radius:10px;padding:0;touch-action:none}
-  .ecto .pad button.aan{background:var(--kl);color:#07030f}
-  .ecto .pad [data-r="U"]{grid-area:1/2}
-  .ecto .pad [data-r="L"]{grid-area:2/1}
-  .ecto .pad [data-r="R"]{grid-area:2/3}
-  .ecto .pad [data-r="D"]{grid-area:3/2}
-  .ecto.liggend .pads{position:absolute;left:8px;right:8px;bottom:8px;justify-content:space-between;
-    pointer-events:none;z-index:3}
-  .ecto.liggend .pad{pointer-events:auto}
   .ecto .fout{font-size:10px;line-height:2;text-align:center;color:#ff9db5}
   `
   document.head.appendChild(st)
@@ -197,16 +186,6 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
           <button class="knop groot kOpnieuw" type="button" aria-label="Opnieuw">↻</button>
         </div>
       </div>
-    </div>
-    <div class="pads">
-      <div class="pad" data-s="0">
-        <button data-r="U" type="button">▲</button><button data-r="L" type="button">◀</button>
-        <button data-r="R" type="button">▶</button><button data-r="D" type="button">▼</button>
-      </div>
-      <div class="pad" data-s="1" hidden>
-        <button data-r="U" type="button">▲</button><button data-r="L" type="button">◀</button>
-        <button data-r="R" type="button">▶</button><button data-r="D" type="button">▼</button>
-      </div>
     </div>`
   inhoud.appendChild(wrap)
 
@@ -215,12 +194,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   const ctx = doek.getContext('2d')
   const startLaag = wrap.querySelector('.startLaag')
   const eindLaag = wrap.querySelector('.eindLaag')
-  const padsVak = wrap.querySelector('.pads')
-  const pad2 = wrap.querySelector('.pad[data-s="1"]')
   if (!ctx) { wrap.innerHTML = '<p class="fout">Dit toestel kan het spel niet tekenen.</p>'; return }
-
-  const aanraak = !!(window.matchMedia && window.matchMedia('(pointer:coarse)').matches) || 'ontouchstart' in window
-  if (!aanraak) padsVak.hidden = true
 
   // Zelfde kanaalnaam bij beide spelers → straks dezelfde bollen
   const kanaalNaam = (spelKanaal && (spelKanaal.topic || spelKanaal.subTopic)) || 'los'
@@ -788,14 +762,9 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   function indeling() {
     const volB = wrap.clientWidth, volH = wrap.clientHeight
     if (!volB || !volH) return
-    const liggend = volB > volH
-    wrap.classList.toggle('liggend', liggend)
-    padsVak.hidden = !aanraak
-    // Liggend staan de pads over het veld heen, staand eronder.
-    const padHoogte = (aanraak && !liggend) ? 146 : 0
+    wrap.classList.toggle('liggend', volB > volH)
     const vak = wrap.querySelector('.veld').getBoundingClientRect()
-    const bh = Math.max(60, (liggend ? vak.height : vak.height - padHoogte) - 8)
-    let k = Math.min((vak.width - 8) / W, bh / H)
+    let k = Math.min(vak.width / W, vak.height / H)
     if (!(k > 0)) k = 1
     const cssW = Math.floor(W * k), cssH = Math.floor(H * k)
     const dpr = Math.min(window.devicePixelRatio || 1, 3)
@@ -843,20 +812,11 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   scherm.addEventListener('touchend', losLaten)
   scherm.addEventListener('touchcancel', losLaten)
 
-  wrap.querySelectorAll('.pad button').forEach(b => {
-    b.addEventListener('pointerdown', e => {
-      e.preventDefault()
-      zet(+b.closest('.pad').dataset.s, b.dataset.r)
-      b.classList.add('aan'); setTimeout(() => b.classList.remove('aan'), 120)
-    })
-  })
-
   wrap.querySelector('.kSpeel').addEventListener('click', startRonde)
   wrap.querySelector('.kOpnieuw').addEventListener('click', startRonde)
   wrap.querySelector('.kModus').addEventListener('click', e => {
     tweeSpelers = !tweeSpelers
     e.currentTarget.textContent = tweeSpelers ? '👤🆚👤' : '👤🆚🤖'
-    pad2.hidden = !tweeSpelers
     reset(); indeling()
   })
   wrap.querySelector('.kGeluid').addEventListener('click', e => {
@@ -870,9 +830,26 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   if (kijker) kijker.observe(wrap)
   window.addEventListener('resize', indeling)
 
+  // De chat zet zelf een balk met emoji's en een invoervak over het spel heen
+  // (bouwSpelChatUI, ná start). Die zit hier in de weg, dus we leggen hem
+  // tijdelijk weg en zetten hem terug zodra het spel dicht gaat.
+  let chatBalk = null, chatBalkStijl = ''
+  function verbergChatBalk() {
+    if (chatBalk) return
+    const el = document.getElementById('spelChatWrap')
+    if (!el) return
+    chatBalk = el; chatBalkStijl = el.style.display
+    el.style.display = 'none'
+  }
+  function herstelChatBalk() {
+    if (chatBalk && chatBalk.isConnected) chatBalk.style.display = chatBalkStijl
+    chatBalk = null
+  }
+
   function stop() {
     if (!draait) return
     draait = false
+    herstelChatBalk()
     window.removeEventListener('keydown', bijToets)
     window.removeEventListener('resize', indeling)
     if (kijker) kijker.disconnect()
@@ -887,6 +864,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   function lus(nu) {
     if (!draait) return
     if (!wrap.isConnected || (isActief && !isActief())) { stop(); return }
+    verbergChatBalk()
     const dt = Math.min(0.05, Math.max(0, (nu - vorige) / 1000))
     vorige = nu
     update(dt); teken()

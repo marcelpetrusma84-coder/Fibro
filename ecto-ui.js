@@ -3,9 +3,11 @@
    die zichzelf in #spelInhoud tekent en zichzelf opruimt zodra het spel
    gesloten wordt.
 
-   STAP 1: je speelt tegen de computer. Samen spelen over het spelkanaal komt
-   in stap 2; de plek van de ecto-bol komt nu al uit de naam van het
-   spelkanaal, dus beide telefoons krijgen straks dezelfde bollen.
+   v7: samen spelen over het spelkanaal. De uitnodiger (benIkSpeler1) is de
+   baas: hij start de ronde, legt de bol neer en beslist wie er geraakt is.
+   Elke telefoon stuurt zijn eigen spookje een keer of vijf tot tien per
+   seconde door; daartussen loopt het spookje van de ander vanzelf verder,
+   zodat het niet schokt. Zonder spelkanaal speel je tegen de computer.
 
    v6: vier speelvelden, elk met een eigen kleur. Welk veld je krijgt komt uit
    de naam van het spelkanaal, en elke ronde is het een ander.
@@ -309,6 +311,7 @@ function zetStijl() {
   .ecto .knop.groot{width:60px;height:60px;border-radius:50%;font-size:24px;padding:0;
     color:var(--ecto);border-color:var(--ecto);box-shadow:0 0 18px rgba(125,255,106,.55)}
   .ecto .knop:active{transform:scale(.94)}
+  .ecto .knop:disabled{opacity:.35;box-shadow:none;cursor:default}
   .ecto .fout{font-size:10px;line-height:2;text-align:center;color:#ff9db5}
   `
   document.head.appendChild(st)
@@ -330,7 +333,6 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       <div class="scherm">
         <canvas class="doek"></canvas>
         <div class="laag startLaag">
-          <button class="knop kModus" type="button" aria-label="Tegenstander">👤🆚🤖</button>
           <button class="knop groot kSpeel" type="button" aria-label="Start">▶</button>
           <button class="knop kGeluid" type="button" aria-label="Geluid">🔊</button>
         </div>
@@ -360,7 +362,14 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   let bol = null, bolTimer = 0
   let jager = null, jagerTijd = 0
   let staat = 'start', aftel = 0, laatsteTel = 4, tijd = 0, eindTijd = 0
-  let tweeSpelers = false
+  // Samen spelen: wie ben ik, en wie beslist er
+  const kanaalOk = !!(spelKanaal && typeof spelKanaal.on === 'function' && typeof spelKanaal.send === 'function')
+  const leider = !!benIkSpeler1 || !kanaalOk
+  const ik = leider ? 0 : 1, ander = 1 - ik
+  const NAAM = String(vriendNaam || 'je vriend').toUpperCase().slice(0, 12)
+  let laatsteVanAnder = -Infinity     // tijd van het laatste bericht van de ander
+  let etKlok = 0, klaarKlok = 0, laatsteEt = -Infinity, laatsteDir = null, nuSturen = false
+  let mijnGegeten = [], gevraagdeBol = 0, bolTeller = 0
   let deeltjes = [], schud = 0, flits = 0
   let geluidAan = true, draait = true
   let rondeNr = 0
@@ -472,9 +481,22 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       i, x, y, tx: x, ty: y, dir: null, volgende: null, kijk,
       levens: CFG.levens, score: 0, onkw: 0, schaal: 1,
       uit: false, uitTijd: 0, kleur: KLEUR[i], ai: false, spoorT: 0,
+      remote: false, ox: 0, oy: 0,
     }
   }
   function tegel(s) { return [wrapX(Math.round(s.x)), Math.round(s.y)] }
+  // Waar een spookje getekend wordt. Het spookje van de ander loopt tussen
+  // twee berichten vanzelf door. Klopt een nieuw bericht niet precies met waar
+  // het was, dan wordt dat verschil (ox, oy) in een tel weggewerkt in plaats
+  // van dat het spookje verspringt.
+  const plekX = s => s.x + s.ox
+  const plekY = s => s.y + s.oy
+  function volg(s, dt) {
+    const f = Math.exp(-dt * 9)
+    s.ox *= f; s.oy *= f
+    if (Math.abs(s.ox) < 0.01) s.ox = 0
+    if (Math.abs(s.oy) < 0.01) s.oy = 0
+  }
   function afstandTussen(a, b) {
     let dx = Math.abs(a.x - b.x); dx = Math.min(dx, KOLOM - dx)
     return Math.hypot(dx, a.y - b.y)
@@ -490,10 +512,12 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     for (const [x, y] of STARTPLEK) if (stippen[y * KOLOM + x]) { stippen[y * KOLOM + x] = 0; totaalStippen-- }
     aantalStippen = totaalStippen
     spelers = [maakSpeler(0), maakSpeler(1)]
-    spelers[1].ai = !tweeSpelers
+    spelers[ander].ai = !kanaalOk        // zonder kanaal: oefenen tegen de computer
+    spelers[ander].remote = kanaalOk     // anders: het spookje van je vriend
     jager = null; jagerTijd = 0; bol = null; bolTimer = 0
     deeltjes = []; schud = 0; flits = 0
-    plaatsBol()
+    mijnGegeten = []; gevraagdeBol = 0; etKlok = 0; nuSturen = true
+    if (leider) plaatsBol()
     if (stipBeeld) { bouwDoolhof(); bouwStippen() }
     geluid.jachtStop()
   }
@@ -509,7 +533,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       ;(Math.abs(a - b) <= 2 ? eerlijk : rest).push([x, y])
     }
     const [x, y] = kiesUit(eerlijk.length ? eerlijk : rest.length ? rest : [[9, 3]])
-    bol = { x, y }
+    bol = { x, y, id: ++bolTeller }
+    nuSturen = true
     spetter((x + 0.5) * T, HUD + (y + 0.5) * T, ECTO, 16, 50, 0.6, 1.5)
   }
 
@@ -520,7 +545,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     let rest = snel * dt, veilig = 10
     while (rest > 1e-6 && veilig--) {
       if (s.x === s.tx && s.y === s.ty) {
-        aangekomen(s)
+        if (!s.remote) aangekomen(s)
         if (staat !== 'spel') return
         if (s.ai) s.volgende = aiKies(s)
         if (s.volgende && kan(s.x, s.y, s.volgende)) s.dir = s.volgende
@@ -547,11 +572,19 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     const i = s.y * KOLOM + s.x
     if (stippen[i]) {
       stippen[i] = 0; aantalStippen--; s.score++
-    wisStip(s.x, s.y)
+      wisStip(s.x, s.y)
       geluid.stip(s.i)
       spetter((s.x + 0.5) * T, HUD + (s.y + 0.5) * T, ECTO, 4, 25, 0.3, 1)
+      if (s.i === ik) { mijnGegeten.push(i); if (mijnGegeten.length > 12) mijnGegeten.shift() }
     }
-    if (bol && bol.x === s.x && bol.y === s.y) pakBol(s)
+    if (bol && bol.x === s.x && bol.y === s.y) {
+      if (leider) pakBol(s)
+      else if (gevraagdeBol !== bol.id) {
+        // De uitnodiger beslist wie de bol heeft; wij vragen erom.
+        gevraagdeBol = bol.id
+        stuur('et-pak', { r: rondeNr, b: bol.id })
+      }
+    }
   }
 
   function pakBol(s) {
@@ -560,10 +593,18 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     spetter(cx, cy, ECTO, 36, 90, 0.7, 2)
     spetter(cx, cy, s.kleur, 20, 60, 0.6, 2)
     geluid.bol(); geluid.jachtStart()
+    nuSturen = true
   }
 
   function tik(j, p) {
-    p.levens--; p.onkw = CFG.onkwetsbaar; schud = 0.3
+    raak(p, p.levens - 1)
+    nuSturen = true
+  }
+
+  // Wat een tik laat zien en horen. Bij de uitnodiger komt dat uit tik(), bij
+  // de genodigde uit het bericht van de uitnodiger.
+  function raak(p, levens) {
+    p.levens = levens; p.onkw = CFG.onkwetsbaar; schud = 0.3
     const cx = (p.x + 0.5) * T, cy = HUD + (p.y + 0.5) * T
     spetter(cx, cy, p.kleur, 24, 80, 0.6, 2)
     geluid.au()
@@ -638,6 +679,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
 
   function update(dt) {
     tijd += dt
+    netwerk(dt)
+    werkKnoppen()
     schud = Math.max(0, schud - dt)
     flits = Math.max(0, flits - dt)
     for (const p of deeltjes) { p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.93; p.vy *= 0.93; p.t -= dt }
@@ -646,6 +689,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       const doel = jager === s.i ? CFG.jagerGroot : 1
       s.schaal += (doel - s.schaal) * Math.min(1, dt * 10)
       if (s.uit) s.uitTijd += dt
+      volg(s, dt)
     }
 
     if (staat === 'aftellen') {
@@ -663,7 +707,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
         const w = winnaars[Math.floor(Math.random() * winnaars.length)]
         spetter(W * (w.i ? 0.7 : 0.3), H * 0.3, Math.random() < 0.5 ? ECTO : w.kleur, 6, 70, 1, 2)
       }
-      if (eindTijd > 0.7) eindLaag.hidden = false
+      if (eindTijd > 0.7 && leider) eindLaag.hidden = false
       return
     }
     if (staat !== 'spel') return
@@ -675,33 +719,229 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
 
     if (jager !== null) {
       const j = spelers[jager]
-      jagerTijd -= dt * tempo
+      jagerTijd = Math.max(0, jagerTijd - dt * tempo)
       j.spoorT -= dt
-      if (j.spoorT <= 0) { j.spoorT = 0.04; spetter((j.x + 0.5) * T, HUD + (j.y + 0.5) * T, j.kleur, 1, 10, 0.4, 2) }
-      const p = spelers[1 - jager]
-      if (!p.uit && p.onkw <= 0 && afstandTussen(j, p) < CFG.raakAfstand) tik(j, p)
-      if (jager !== null && jagerTijd <= 0) {
-        jager = null; bolTimer = CFG.bolTerug
-        geluid.jachtStop(); geluid.jachtEinde()
+      if (j.spoorT <= 0) { j.spoorT = 0.04; spetter((plekX(j) + 0.5) * T, HUD + (plekY(j) + 0.5) * T, j.kleur, 1, 10, 0.4, 2) }
+      // Alleen de uitnodiger beslist over tikken en het eind van de jacht,
+      // anders krijgen twee telefoons ruzie over wie er geraakt is.
+      if (leider) {
+        const p = spelers[1 - jager]
+        if (!p.uit && p.onkw <= 0 && afstandTussen(j, p) < CFG.raakAfstand) tik(j, p)
+        if (jager !== null && jagerTijd <= 0) {
+          jager = null; bolTimer = CFG.bolTerug
+          geluid.jachtStop(); geluid.jachtEinde()
+          nuSturen = true
+        }
       }
-    } else if (!bol && spelers.every(s => !s.uit)) {
+    } else if (leider && !bol && spelers.every(s => !s.uit)) {
       bolTimer -= dt * tempo
       if (bolTimer <= 0) plaatsBol()
     }
 
-    if (rondeKlaar()) {
-      staat = 'einde'; eindTijd = 0; jager = null
-      geluid.jachtStop(); geluid.winst()
-    }
+    if (leider && rondeKlaar()) naarEinde(true)
   }
 
-  function startRonde() {
+  function startRonde(r) {
     geluid.init()
-    rondeNr++
+    rondeNr = Number.isInteger(r) ? r : rondeNr + 1
     reset()
     staat = 'aftellen'; aftel = 3; laatsteTel = 4
     startLaag.hidden = true
     eindLaag.hidden = true
+  }
+
+  function naarEinde(gewoon) {
+    staat = 'einde'; eindTijd = 0; jager = null
+    geluid.jachtStop()
+    if (gewoon) geluid.winst()
+    if (leider && kanaalOk) [0, 250, 500].forEach(ms => setTimeout(stuurKlaar, ms))
+  }
+
+  // De uitnodiger start de ronde, voor allebei tegelijk.
+  function leiderStart() {
+    if (!leider) return
+    if (!(staat === 'start' || (staat === 'einde' && eindTijd > 0.7))) return
+    if (kanaalOk && !anderIsEr()) return
+    startRonde()
+    if (kanaalOk) {
+      const r = rondeNr
+      ;[0, 250, 500].forEach(ms => setTimeout(() => { if (rondeNr === r) stuur('et-start', { r }) }, ms))
+    }
+  }
+
+  // ═══════════════ Samen spelen: berichten ═══════════════
+  // et        mijn spookje: plek, richting, score en de laatst opgegeten stippen;
+  //           bij de uitnodiger ook de bol, de jager en de druppels van allebei
+  // et-pak    genodigde → uitnodiger: ik sta op de bol
+  // et-start  uitnodiger → genodigde: ronde r begint (3× verstuurd)
+  // et-klaar  allebei, buiten een ronde: ik ben er, en zo staat het
+  function anderIsEr() { return tijd - laatsteVanAnder < 3 }
+
+  function stuur(event, payload) {
+    if (!kanaalOk || !draait || (isActief && !isActief())) return
+    payload.w = ik
+    try {
+      const p = spelKanaal.send({ type: 'broadcast', event, payload })
+      if (p && p.catch) p.catch(() => {})
+    } catch (e) {}
+  }
+
+  const rond2 = v => Math.round(v * 100) / 100
+
+  function stuurEt() {
+    const s = spelers[ik]
+    const p = {
+      r: rondeNr, x: rond2(s.x), y: rond2(s.y), tx: s.tx, ty: s.ty, d: s.dir, k: s.kijk,
+      sc: s.score, g: mijnGegeten.slice(),
+    }
+    if (leider) {
+      p.bo = bol ? [bol.id, bol.x, bol.y] : 0
+      p.j = jager === null ? -1 : jager
+      p.jt = rond2(jagerTijd)
+      p.lv = spelers.map(q => q.levens)
+    }
+    stuur('et', p)
+    etKlok = 0.25; laatsteEt = tijd; laatsteDir = s.dir; nuSturen = false
+  }
+
+  function stuurKlaar() {
+    const p = { r: rondeNr, s: staat, g: mijnGegeten.slice() }
+    if (leider) { p.sc = spelers.map(q => q.score); p.lv = spelers.map(q => q.levens) }
+    stuur('et-klaar', p)
+  }
+
+  // Elk beeldje: zo nodig iets versturen, en kijken of de ander er nog is.
+  function netwerk(dt) {
+    if (!kanaalOk) return
+    if (staat === 'aftellen' || staat === 'spel') {
+      // Hooguit zo'n 8 berichten per seconde: Supabase knijpt daarboven af.
+      etKlok -= dt
+      const gedraaid = spelers[ik].dir !== laatsteDir
+      if (tijd - laatsteEt >= 0.13 && (etKlok <= 0 || nuSturen || gedraaid)) stuurEt()
+      if (tijd - laatsteVanAnder > 5) naarEinde(false)      // de ander is weg
+    } else {
+      klaarKlok -= dt
+      if (klaarKlok <= 0) { klaarKlok = 0.9; stuurKlaar() }
+    }
+  }
+
+  function geldigePlek(p) {
+    if (![p.x, p.y, p.tx, p.ty].every(Number.isFinite)) return false
+    if (!Number.isInteger(p.tx) || !Number.isInteger(p.ty)) return false
+    if (p.x < -1 || p.x > KOLOM || p.y < 0 || p.y > RIJEN - 1) return false
+    if (p.tx !== p.x && p.ty !== p.y) return false
+    if (Math.abs(p.tx - p.x) + Math.abs(p.ty - p.y) > 1.01) return false
+    return isOpen(p.tx, p.ty)
+  }
+
+  function zetAnderPlek(p) {
+    if (!geldigePlek(p)) return
+    const s = spelers[ander]
+    const oudX = s.x + s.ox, oudY = s.y + s.oy
+    s.x = p.x; s.y = p.y; s.tx = p.tx; s.ty = p.ty
+    let ox = oudX - s.x
+    if (ox > KOLOM / 2) ox -= KOLOM
+    else if (ox < -KOLOM / 2) ox += KOLOM
+    const oy = oudY - s.y
+    if (Math.abs(ox) + Math.abs(oy) > 3) { s.ox = 0; s.oy = 0 } else { s.ox = ox; s.oy = oy }
+    s.dir = RICHT[p.d] ? p.d : null
+    s.volgende = s.dir
+    if (RICHT[p.k]) s.kijk = p.k
+  }
+
+  function eetStippen(lijst) {
+    if (!Array.isArray(lijst) || !stippen) return
+    let gegeten = 0
+    for (const i of lijst) {
+      if (!Number.isInteger(i) || i < 0 || i >= stippen.length || !stippen[i]) continue
+      stippen[i] = 0; aantalStippen--; gegeten++
+      wisStip(i % KOLOM, (i / KOLOM) | 0)
+    }
+    if (gegeten) geluid.stip(ander)
+  }
+
+  // Wat de uitnodiger over druppels, jager en bol zegt, neemt de genodigde over.
+  function neemStandOver(p) {
+    if (Array.isArray(p.lv)) {
+      p.lv.forEach((lv, i) => {
+        const s = spelers[i]
+        if (s && Number.isInteger(lv) && lv < s.levens) raak(s, Math.max(0, lv))
+      })
+    }
+    if (Number.isInteger(p.j)) {
+      const j = p.j === 0 || p.j === 1 ? p.j : null
+      if (j !== jager) {
+        if (j !== null) {
+          const s = spelers[j]
+          jager = j; flits = 0.25
+          spetter((plekX(s) + 0.5) * T, HUD + (plekY(s) + 0.5) * T, ECTO, 36, 90, 0.7, 2)
+          geluid.bol(); geluid.jachtStart()
+        } else {
+          jager = null
+          geluid.jachtStop(); geluid.jachtEinde()
+        }
+      }
+      if (jager !== null && Number.isFinite(p.jt)) jagerTijd = p.jt
+    }
+    if (p.bo === 0) bol = null
+    else if (Array.isArray(p.bo) && p.bo.length === 3 && p.bo.every(Number.isInteger)) {
+      const [id, x, y] = p.bo
+      if (openZonderWrap(x, y) && (!bol || bol.id !== id)) {
+        bol = { id, x, y }
+        spetter((x + 0.5) * T, HUD + (y + 0.5) * T, ECTO, 16, 50, 0.6, 1.5)
+      }
+    }
+  }
+
+  function ontvang(soort, p) {
+    if (!draait || !p || typeof p !== 'object' || p.w === ik) return
+    laatsteVanAnder = tijd
+    const inRonde = staat === 'aftellen' || staat === 'spel'
+    if (soort === 'et') {
+      if (!inRonde || p.r !== rondeNr) {
+        // Startsein gemist? Dan start de eerste plek van de uitnodiger de ronde.
+        if (leider || inRonde || !Number.isInteger(p.r) || p.r < 1) return
+        if (staat === 'einde' && p.r === rondeNr) return
+        startRonde(p.r)
+      }
+      zetAnderPlek(p)
+      if (Number.isInteger(p.sc) && p.sc >= 0) spelers[ander].score = p.sc
+      eetStippen(p.g)
+      if (!leider) neemStandOver(p)
+    } else if (soort === 'et-pak') {
+      if (leider && staat === 'spel' && p.r === rondeNr && bol && bol.id === p.b &&
+          jager === null && !spelers[ander].uit) pakBol(spelers[ander])
+    } else if (soort === 'et-start') {
+      if (leider || inRonde || !Number.isInteger(p.r) || p.r < 1) return
+      if (staat === 'einde' && p.r === rondeNr) return
+      startRonde(p.r)
+    } else if (soort === 'et-klaar') {
+      if (p.r === rondeNr) eetStippen(p.g)       // laatste stippen van de ronde
+      if (leider) {
+        // De genodigde zit al in de eindstand van deze ronde: dan wij ook.
+        if (inRonde && p.s === 'einde' && p.r === rondeNr) naarEinde(false)
+        return
+      }
+      const eindstand = p.s === 'einde' && p.r === rondeNr
+      if (eindstand) {
+        if (Array.isArray(p.sc)) p.sc.forEach((sc, i) => { if (spelers[i] && Number.isInteger(sc)) spelers[i].score = sc })
+        if (Array.isArray(p.lv)) p.lv.forEach((lv, i) => {
+          const s = spelers[i]
+          if (!s || !Number.isInteger(lv)) return
+          s.levens = Math.max(0, lv)
+          if (lv <= 0 && !s.uit) { s.uit = true; s.uitTijd = 9 }
+        })
+      }
+      if (inRonde) naarEinde(eindstand)
+    }
+  }
+
+  if (kanaalOk) {
+    for (const soort of ['et', 'et-pak', 'et-start', 'et-klaar']) {
+      spelKanaal.on('broadcast', { event: soort }, m => {
+        try { ontvang(soort, m && m.payload) } catch (e) { console.warn('[spookjes] bericht', soort, e) }
+      })
+    }
   }
 
   // ═══════════════ Tekenen ═══════════════
@@ -865,7 +1105,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
 
   function tekenSpeler(s) {
     if (s.uit && s.uitTijd > 1.2) return
-    const bx = (s.x + 0.5) * T, by = HUD + (s.y + 0.5) * T
+    const bx = (plekX(s) + 0.5) * T, by = HUD + (plekY(s) + 0.5) * T
     tekenSpelerOp(s, bx, by)
     if (bx < T) tekenSpelerOp(s, bx + W, by)
     if (bx > W - T) tekenSpelerOp(s, bx - W, by)
@@ -887,6 +1127,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     }
     if (!s.uit) {
       const top = cy + dy - 7.5 * u - 5
+      if (kanaalOk && s.i === ik && staat === 'aftellen') tekst('JIJ', cx, top - 10, s.kleur, 7)
       for (let n = 0; n < s.levens; n++) {
         const lx = cx + (n - (CFG.levens - 1) / 2) * 6
         ctx.drawImage(druppelBeeld[s.i], lx - 4, top - 4 + Math.sin(tijd * 4 + n) * 0.8, 8, 8)
@@ -974,6 +1215,17 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     }
   }
 
+  // Onder de uitleg en de eindstand: op wie we wachten.
+  function tekenStatus() {
+    let regel = '', tweede = ''
+    if (!kanaalOk) regel = 'OEFENEN TEGEN DE COMPUTER'
+    else if (!anderIsEr()) regel = 'WACHT OP ' + NAAM
+    else if (!leider) regel = NAAM + ' START HET SPEL'
+    if (kanaalOk && !leider && geluidAan && geluid.kan && !geluid.ontgrendeld) tweede = 'TIK HIER VOOR GELUID'
+    if (regel) tekst(regel, W / 2, H - 94, '#e9ddff', 7)
+    if (tweede) tekst(tweede, W / 2, H - 78, ECTO, 7)
+  }
+
   function teken() {
     ctx.setTransform(res, 0, 0, res, 0, 0)
     ctx.fillStyle = ACHTER; ctx.fillRect(0, 0, W, H)
@@ -998,7 +1250,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     tekenHud()
     if (flits > 0) { ctx.fillStyle = rgba(ECTO, flits * 1.2); ctx.fillRect(0, HUD, W, RIJEN * T) }
 
-    if (staat === 'start') tekenUitleg()
+    if (staat === 'start') { tekenUitleg(); tekenStatus() }
     if (staat === 'aftellen') {
       const n = Math.ceil(aftel), f = aftel - Math.floor(aftel)
       ctx.fillStyle = 'rgba(5,2,12,0.35)'; ctx.fillRect(0, HUD, W, RIJEN * T)
@@ -1011,6 +1263,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
         ctx.fillStyle = p.kleur; ctx.fillRect(p.x - p.g / 2, p.y - p.g / 2, p.g, p.g)
       }
       ctx.globalAlpha = 1
+      tekenStatus()
     }
   }
 
@@ -1035,7 +1288,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   }
 
   // ═══════════════ Bediening ═══════════════
-  function zet(i, r) { const s = spelers[i]; if (s && !s.ai && !s.uit) s.volgende = r }
+  function zet(i, r) { const s = spelers[i]; if (s && !s.ai && !s.remote && !s.uit) s.volgende = r }
 
   function bijToets(e) {
     if (!draait) return
@@ -1043,10 +1296,10 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     if (a && /^(INPUT|TEXTAREA)$/.test(a.tagName)) return
     const pijlen = { ArrowLeft: 'L', ArrowRight: 'R', ArrowUp: 'U', ArrowDown: 'D' }
     const wasd = { a: 'L', d: 'R', w: 'U', s: 'D', A: 'L', D: 'R', W: 'U', S: 'D' }
-    if (pijlen[e.key]) { e.preventDefault(); zet(tweeSpelers ? 1 : 0, pijlen[e.key]) }
-    else if (wasd[e.key]) zet(0, wasd[e.key])
+    if (pijlen[e.key]) { e.preventDefault(); zet(ik, pijlen[e.key]) }
+    else if (wasd[e.key]) zet(ik, wasd[e.key])
     else if ((e.key === ' ' || e.key === 'Enter') && (staat === 'start' || (staat === 'einde' && eindTijd > 0.7))) {
-      e.preventDefault(); startRonde()
+      e.preventDefault(); leiderStart()
     }
   }
   window.addEventListener('keydown', bijToets)
@@ -1075,8 +1328,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       const dx = t.clientX - a.x, dy = t.clientY - a.y
       if (Math.hypot(dx, dy) < 18) continue
       const r = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'R' : 'L') : (dy > 0 ? 'D' : 'U')
-      const vak = doek.getBoundingClientRect()
-      zet(tweeSpelers && t.clientX >= vak.left + vak.width / 2 ? 1 : 0, r)
+      zet(ik, r)
       a.x = t.clientX; a.y = t.clientY
     }
   }, { passive: false })
@@ -1093,8 +1345,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       const dx = t.clientX - a.x, dy = t.clientY - a.y
       if (Math.hypot(dx, dy) < 18) continue
       const r = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'R' : 'L') : (dy > 0 ? 'D' : 'U')
-      const vak = doek.getBoundingClientRect()
-      zet(tweeSpelers && t.clientX >= vak.left + vak.width / 2 ? 1 : 0, r)
+      zet(ik, r)
       a.x = t.clientX; a.y = t.clientY
     }
   }, { passive: true })
@@ -1106,13 +1357,19 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   wrap.addEventListener('pointerdown', bijEersteTik, { passive: true })
   wrap.addEventListener('touchstart', bijEersteTik, { passive: true })
 
-  wrap.querySelector('.kSpeel').addEventListener('click', startRonde)
-  wrap.querySelector('.kOpnieuw').addEventListener('click', startRonde)
-  wrap.querySelector('.kModus').addEventListener('click', e => {
-    tweeSpelers = !tweeSpelers
-    e.currentTarget.textContent = tweeSpelers ? '👤🆚👤' : '👤🆚🤖'
-    reset(); indeling()
-  })
+  // ▶ en ↻ zijn er alleen voor de uitnodiger, en werken pas als de ander er is.
+  const kSpeel = wrap.querySelector('.kSpeel'), kOpnieuw = wrap.querySelector('.kOpnieuw')
+  kSpeel.addEventListener('click', leiderStart)
+  kOpnieuw.addEventListener('click', leiderStart)
+  kSpeel.hidden = !leider
+  let knopStand = ''
+  function werkKnoppen() {
+    const mag = !kanaalOk || anderIsEr()
+    const stand = mag ? 'ja' : 'nee'
+    if (stand === knopStand) return
+    knopStand = stand
+    kSpeel.disabled = !mag; kOpnieuw.disabled = !mag
+  }
   wrap.querySelector('.kGeluid').addEventListener('click', e => {
     geluidAan = !geluidAan
     e.currentTarget.textContent = geluidAan ? '🔊' : '🔇'
@@ -1192,6 +1449,9 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       get bol() { return bol }, get stippen() { return aantalStippen },
       startRonde, update, teken, reset, zet,
       zetAI: (i, v) => { spelers[i].ai = v },
+      get ik() { return ik }, get leider() { return leider }, get rondeNr() { return rondeNr },
+      get stippenVeld() { return stippen }, get jagerTijd() { return jagerTijd },
+      leiderStart, ontvang,
     },
   }
 }

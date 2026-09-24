@@ -7,6 +7,9 @@
    in stap 2; de plek van de ecto-bol komt nu al uit de naam van het
    spelkanaal, dus beide telefoons krijgen straks dezelfde bollen.
 
+   v3: eigen spookje (rond, armpjes, deinende rok), grappig geluidje bij een
+   tik.
+
    v2: geen pijlknoppen meer (vegen over het veld, of pijltjes/WASD op een
    toetsenbord), de emojibalk van de chat gaat tijdelijk weg en het doolhof
    krijgt zoveel mogelijk ruimte.
@@ -67,10 +70,11 @@ const RICHT = { L: [-1, 0], R: [1, 0], U: [0, -1], D: [0, 1] }
 const TEGEN = { L: 'R', R: 'L', U: 'D', D: 'U' }
 const STARTPLEK = [[1, 1, 'R'], [17, 19, 'L']]
 
-// Spookje: 12 breed, 11 rijen lijf + 2 rijen wapperende onderkant
-const LIJF = ['....####....', '..########..', '.##########.', '.##########.',
-  '############', '############', '############', '############', '############', '############', '############']
-const VOET = [['##.##..##.##', '#...#..#...#'], ['.##.####.##.', '..#..##..#..']]
+// Ons eigen spookje: 14 breed, 12 rijen bol lijf. De onderkant is geen vaste
+// tekening maar een golf die meedeint, en aan de zijkanten zitten armpjes.
+const SPOOK = ['.....####.....', '...########...', '..##########..', '.############.',
+  '##############', '##############', '##############', '##############',
+  '##############', '##############', '##############', '##############']
 const KROON = ['#..#..#', '##.#.##', '#######', '#.#.#.#', '#######']
 
 // ═══════════════ Hulpjes zonder spelstand ═══════════════
@@ -231,6 +235,34 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     stip(i) { this.toon(i ? 620 : 880, 0.05, 'square', 0.035, i ? 480 : 1100) },
     bol() { this.toon(180, 0.5, 'sawtooth', 0.06, 1200); this.toon(300, 0.45, 'square', 0.035, 1600, 0.06) },
     tik() { this.toon(320, 0.35, 'sawtooth', 0.08, 55) },
+    // "oef!", "au!", "woeps!" — in code gemaakt met een filter dat als een
+    // mondje open- en dichtgaat. Elke tik klinkt net iets anders.
+    au() {
+      if (!geluidAan || !this.c) return
+      const c = this.c, t = c.currentTime
+      const soorten = [
+        { van: 330, naar: 150, f1: 950, f2: 420, duur: 0.3, piep: [700, 260] },   // oeeef
+        { van: 260, naar: 380, f1: 600, f2: 1100, duur: 0.26, piep: [520, 900] }, // auw?
+        { van: 420, naar: 170, f1: 1200, f2: 500, duur: 0.34, piep: [880, 300] }, // woeps
+      ]
+      const s = soorten[Math.floor(Math.random() * soorten.length)]
+      const o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain()
+      const vib = c.createOscillator(), vd = c.createGain()
+      o.type = 'sawtooth'
+      o.frequency.setValueAtTime(s.van, t)
+      o.frequency.exponentialRampToValueAtTime(s.naar, t + s.duur)
+      vib.frequency.value = 11; vd.gain.value = 16
+      vib.connect(vd).connect(o.frequency)
+      f.type = 'bandpass'; f.Q.value = 6
+      f.frequency.setValueAtTime(s.f1, t)
+      f.frequency.exponentialRampToValueAtTime(s.f2, t + s.duur)
+      g.gain.setValueAtTime(0.0001, t)
+      g.gain.exponentialRampToValueAtTime(0.18, t + 0.03)
+      g.gain.exponentialRampToValueAtTime(0.0001, t + s.duur + 0.06)
+      o.connect(f).connect(g).connect(c.destination)
+      o.start(t); vib.start(t); o.stop(t + s.duur + 0.08); vib.stop(t + s.duur + 0.08)
+      this.toon(s.piep[0], 0.12, 'triangle', 0.045, s.piep[1], 0.02)
+    },
     uit() { [523, 392, 330, 262, 196].forEach((f, n) => this.toon(f, 0.2, 'triangle', 0.08, null, n * 0.15)) },
     aftel(n) { this.toon(n ? 440 : 880, n ? 0.12 : 0.3, 'square', 0.06) },
     winst() { [523, 659, 784, 1047, 784, 1047].forEach((f, n) => this.toon(f, 0.16, 'square', 0.06, null, n * 0.11)) },
@@ -348,7 +380,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     p.levens--; p.onkw = CFG.onkwetsbaar; schud = 0.3
     const cx = (p.x + 0.5) * T, cy = HUD + (p.y + 0.5) * T
     spetter(cx, cy, p.kleur, 24, 80, 0.6, 2)
-    geluid.tik()
+    geluid.au()
     if (navigator.vibrate) { try { navigator.vibrate(80) } catch (e) {} }
     if (p.levens <= 0) {
       p.uit = true; p.uitTijd = 0
@@ -545,34 +577,44 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     })
   }
 
-  function tekenFiguur(g, cx, cy, u, kleur, gezicht, kijk, frame, alpha = 1, wit = false) {
-    const x0 = cx - 6 * u, y0 = cy - 6.5 * u
+  // fase laat de rok deinen; gezicht is 'normaal', 'boos' of 'bang'
+  function tekenFiguur(g, cx, cy, u, kleur, gezicht, kijk, fase, alpha = 1, wit = false) {
+    const x0 = cx - 7 * u, y0 = cy - 7.5 * u
     g.save()
     g.globalAlpha = alpha
-    const gr = g.createRadialGradient(cx, cy, 0, cx, cy, 12 * u)
+    const gr = g.createRadialGradient(cx, cy, 0, cx, cy, 13 * u)
     gr.addColorStop(0, rgba(kleur, 0.4)); gr.addColorStop(1, rgba(kleur, 0))
-    g.fillStyle = gr; g.fillRect(cx - 12 * u, cy - 12 * u, 24 * u, 24 * u)
+    g.fillStyle = gr; g.fillRect(cx - 13 * u, cy - 13 * u, 26 * u, 26 * u)
     const lijf = wit ? '#ffffff' : kleur
-    pixels(g, LIJF, x0, y0, u, lijf)
-    pixels(g, VOET[frame % 2], x0, y0 + 11 * u, u, lijf)
-    const px = (x, y, w = 1, h = 1) => g.fillRect(x0 + x * u, y0 + y * u, w * u, h * u)
+    const px = (x, y, w = 1, h = 1) => g.fillRect(x0 + x * u, y0 + y * u, w * u + 0.05, h * u + 0.05)
+    pixels(g, SPOOK, x0, y0, u, lijf)
+    g.fillStyle = lijf
+    px(-1, 6, 1, 2); px(14, 6, 1, 2)                       // armpjes
+    for (let c = 0; c < 14; c++) {                          // deinende rok
+      const laag = 1.7 + Math.sin(c * 0.85 + fase) * 1.4
+      px(c, 12, 1, Math.max(0.2, laag))
+    }
     if (gezicht === 'bang') {
-      g.fillStyle = '#ffe0f0'
-      px(3, 4, 2, 2); px(7, 4, 2, 2)
-      for (let i = 0; i < 8; i++) px(2 + i, i % 2 ? 8 : 9)
-    } else {
+      g.fillStyle = '#ffffff'; px(2, 4, 3, 3); px(9, 4, 3, 3)
+      g.fillStyle = '#1b1245'; px(3, 5); px(10, 5)
+      for (let i = 0; i < 8; i++) px(3 + i, i % 2 ? 8 : 9)   // zigzagmondje
+    } else if (gezicht === 'boos') {
+      g.fillStyle = '#ffffff'; px(2, 4, 4, 4); px(8, 4, 4, 4)
       const [dx, dy] = RICHT[kijk] || [0, 1]
-      g.fillStyle = '#ffffff'; px(2, 3, 3, 4); px(7, 3, 3, 4)
-      const ox = dx < 0 ? 0 : dx > 0 ? 1 : 0.5, oy = dy < 0 ? 0 : dy > 0 ? 2 : 1
-      g.fillStyle = gezicht === 'boos' ? '#ff2a2a' : '#1b1245'
-      px(2 + ox, 3 + oy, 2, 2); px(7 + ox, 3 + oy, 2, 2)
-      if (gezicht === 'boos') {
-        g.fillStyle = '#2a0014'
-        px(2, 2); px(3, 2); px(4, 3); px(9, 2); px(8, 2); px(7, 3)
-        px(3, 8, 6, 2)
-        g.fillStyle = '#ffffff'
-        px(3, 8); px(5, 8); px(7, 8); px(4, 9); px(6, 9); px(8, 9)
-      }
+      const ox = dx < 0 ? 0 : dx > 0 ? 2 : 1, oy = dy < 0 ? 0 : dy > 0 ? 2 : 1
+      g.fillStyle = '#ff2a2a'; px(2 + ox, 4 + oy, 2, 2); px(8 + ox, 4 + oy, 2, 2)
+      g.fillStyle = '#2a0014'
+      px(1, 2, 2, 1); px(3, 3, 2, 1); px(11, 2, 2, 1); px(9, 3, 2, 1)   // boze wenkbrauwen
+      px(4, 9, 6, 2)                                                     // grijns
+      g.fillStyle = '#ffffff'; px(4, 9); px(6, 9); px(8, 9); px(5, 10); px(7, 10); px(9, 10)
+    } else {
+      g.fillStyle = '#ffffff'; px(2, 3, 4, 5); px(8, 3, 4, 5)
+      const [dx, dy] = RICHT[kijk] || [0, 1]
+      const ox = dx < 0 ? 0 : dx > 0 ? 2 : 1, oy = dy < 0 ? 0 : dy > 0 ? 3 : 1.5
+      g.fillStyle = '#1b1245'; px(2 + ox, 3 + oy, 2, 2); px(8 + ox, 3 + oy, 2, 2)
+      g.fillStyle = 'rgba(255,255,255,0.85)'; px(2 + ox, 3 + oy, 0.7, 0.7); px(8 + ox, 3 + oy, 0.7, 0.7)
+      g.fillStyle = rgba('#ff6b9d', 0.5); px(0, 8, 2, 1); px(12, 8, 2, 1)   // blosjes
+      g.fillStyle = '#1b1245'; px(6, 9, 2, 2)                                // mondje
     }
     g.restore()
   }
@@ -617,16 +659,16 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     let alpha = 1, dy = Math.sin(tijd * 6 + s.i * 2) * 0.8, dx = 0
     if (s.uit) { alpha = Math.max(0, 1 - s.uitTijd / 1.2); dy -= s.uitTijd * 14 }
     if (bang) { dx = (Math.random() - 0.5) * 0.9; dy += (Math.random() - 0.5) * 0.5 }
-    const u = T * 0.9 / 12 * s.schaal
+    const u = T * 0.95 / 14 * s.schaal
     const knipper = s.onkw > 0 && Math.floor(tijd * 14) % 2 === 0
     if (!knipper) {
       const kleur = bang || s.uit ? meng(s.kleur, BANG_BLAUW, 0.55) : s.kleur
       const wit = boos && jagerTijd < CFG.waarschuw && Math.floor(tijd * 8) % 2 === 0
       const gezicht = s.uit || bang ? 'bang' : boos ? 'boos' : 'normaal'
-      tekenFiguur(ctx, cx + dx, cy + dy, u, kleur, gezicht, s.kijk, Math.floor(tijd * 8 + s.i) % 2, alpha, wit)
+      tekenFiguur(ctx, cx + dx, cy + dy, u, kleur, gezicht, s.kijk, tijd * 7 + s.i * 1.3, alpha, wit)
     }
     if (!s.uit) {
-      const top = cy + dy - 6.5 * u - 5
+      const top = cy + dy - 7.5 * u - 5
       for (let n = 0; n < s.levens; n++) {
         const lx = cx + (n - (CFG.levens - 1) / 2) * 6
         ctx.drawImage(druppelBeeld[s.i], lx - 4, top - 4 + Math.sin(tijd * 4 + n) * 0.8, 8, 8)
@@ -657,7 +699,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       const bang = jager !== null && jager !== s.i
       tekenFiguur(ctx, links ? 14 : W - 14, 16, 0.95,
         bang || s.uit ? meng(s.kleur, BANG_BLAUW, 0.55) : s.kleur,
-        s.uit || bang ? 'bang' : jager === s.i ? 'boos' : 'normaal', links ? 'R' : 'L', 0, s.uit ? 0.4 : 1)
+        s.uit || bang ? 'bang' : jager === s.i ? 'boos' : 'normaal', links ? 'R' : 'L', tijd * 7 + s.i, s.uit ? 0.4 : 1)
       tekst(pad3(s.score), links ? 28 : W - 28, 17, s.kleur, 10, links ? 'left' : 'right')
     }
     const bw = 84, bx = (W - bw) / 2, by = 13, bh = 6
@@ -677,7 +719,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     ctx.save(); ctx.shadowColor = NEON; ctx.shadowBlur = 8 * res
     ctx.strokeStyle = NEON; ctx.lineWidth = 1.5; ctx.strokeRect(px + 0.75, py + 0.75, pw - 1.5, ph - 1.5)
     ctx.restore()
-    const f = Math.floor(tijd * 8) % 2, u = 1.3
+    const f = tijd * 7, u = 1.2
     const bangKleur = meng(KLEUR[1], BANG_BLAUW, 0.55)
     const r1 = py + 34, r2 = py + 93, r3 = py + 152
     tekenFiguur(ctx, 78, r1, u, KLEUR[0], 'normaal', 'R', f)
@@ -702,15 +744,15 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     for (const s of spelers) {
       const cx = W * (s.i ? 0.7 : 0.3), cy = H * 0.42
       const win = s.score === max
-      const u = win ? 3 : 2.2
+      const u = win ? 2.6 : 2
       const dy = win ? Math.sin(tijd * 4 + s.i) * 3 : 0
       tekenFiguur(ctx, cx, cy + dy, u, win ? s.kleur : meng(s.kleur, BANG_BLAUW, 0.55),
-        win ? 'normaal' : 'bang', 'D', Math.floor(tijd * 6) % 2, win ? 1 : 0.75)
-      if (win) tekenKroon(cx, cy + dy - 6.5 * u - 10, 2.4)
-      tekst(pad3(s.score), cx, cy + 6.5 * u + 22, s.kleur, 14)
+        win ? 'normaal' : 'bang', 'D', tijd * 6 + s.i, win ? 1 : 0.75)
+      if (win) tekenKroon(cx, cy + dy - 7.5 * u - 10, 2.4)
+      tekst(pad3(s.score), cx, cy + 7.5 * u + 22, s.kleur, 14)
       for (let n = 0; n < CFG.levens; n++) {
         ctx.globalAlpha = n < s.levens ? 1 : 0.18
-        ctx.drawImage(druppelBeeld[s.i], cx + (n - 1) * 12 - 6, cy + 6.5 * u + 38, 12, 12)
+        ctx.drawImage(druppelBeeld[s.i], cx + (n - 1) * 12 - 6, cy + 7.5 * u + 38, 12, 12)
         ctx.globalAlpha = 1
       }
     }

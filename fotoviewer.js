@@ -12,7 +12,7 @@
 // Anders zou op je eigen pagina tegelijk de bestandskiezer opengaan.
 // Een foto vervangen gaat daar met het kruisje wissen en dan de plus.
 //
-// Inhaken:  <script src="./fotoviewer.js?v=2"></script>  vlak voor </body>
+// Inhaken:  <script src="./fotoviewer.js?v=3"></script>  vlak voor </body>
 
 (function () {
   'use strict'
@@ -38,6 +38,9 @@
     el.id = 'fibro-fotoviewer'
     el.setAttribute('role', 'dialog')
     el.setAttribute('aria-label', 'Foto groot bekijken')
+    // Houdt swipe.js buiten de viewer: anders ga je bij vegen naar een
+    // andere pagina in plaats van naar de volgende foto.
+    el.setAttribute('data-geen-swipe', '')
     el.style.cssText = [
       'position:fixed', 'inset:0', 'z-index:99999',
       'background:rgba(8,4,16,0.94)',
@@ -63,16 +66,53 @@
       e.stopPropagation(); ga(1)
     })
 
-    // Vegen op een telefoon.
-    var startX = null
+    // Vegen op een telefoon: de foto volgt je vinger.
+    var startX = null, startY = null, dx = 0, richting = null
+    function fotoEl() { return el.querySelector('#fv-foto') }
+    function terug() {
+      var img = fotoEl()
+      img.style.transition = 'transform .2s ease-out'
+      img.style.transform = ''
+    }
     el.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1) { startX = null; return }
       startX = e.touches[0].clientX
+      startY = e.touches[0].clientY
+      dx = 0
+      richting = null
+      fotoEl().style.transition = 'none'
     }, { passive: true })
-    el.addEventListener('touchend', function (e) {
+    el.addEventListener('touchmove', function (e) {
       if (startX === null) return
-      var verschil = e.changedTouches[0].clientX - startX
+      var x = e.touches[0].clientX - startX
+      var y = e.touches[0].clientY - startY
+      if (!richting && (Math.abs(x) > 8 || Math.abs(y) > 8)) {
+        richting = Math.abs(x) > Math.abs(y) ? 'h' : 'v'
+      }
+      if (richting !== 'h' || fotos.length < 2) return
+      dx = x
+      fotoEl().style.transform = 'translateX(' + dx + 'px)'
+    }, { passive: true })
+    el.addEventListener('touchend', function () {
+      if (startX === null) return
       startX = null
-      if (Math.abs(verschil) > 50) ga(verschil < 0 ? 1 : -1)
+      if (richting !== 'h' || fotos.length < 2 || Math.abs(dx) < 50) { terug(); return }
+      var stap = dx < 0 ? 1 : -1
+      var img = fotoEl()
+      img.style.transition = 'transform .15s ease-in'
+      img.style.transform = 'translateX(' + (-stap * window.innerWidth) + 'px)'
+      setTimeout(function () {
+        ga(stap)
+        img.style.transition = 'none'
+        img.style.transform = 'translateX(' + (stap * window.innerWidth * 0.4) + 'px)'
+        void img.offsetWidth
+        img.style.transition = 'transform .2s ease-out'
+        img.style.transform = ''
+      }, 150)
+    }, { passive: true })
+    el.addEventListener('touchcancel', function () {
+      startX = null
+      terug()
     }, { passive: true })
 
     document.body.appendChild(el)

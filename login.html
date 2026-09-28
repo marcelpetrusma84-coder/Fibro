@@ -104,7 +104,7 @@
           </label>
         </div>
         <button class="btn btn-primary" onclick="registreren()" id="reg-btn">Account aanmaken</button>
-        <div class="herstelsleutel-info">💡 Na registratie krijg je een herstelsleutel. Bewaar deze goed.</div>
+        <div class="herstelsleutel-info">💡 Na registratie zet je herstel met Face ID of je vingerafdruk aan.</div>
       </div>
     </div>
 
@@ -127,6 +127,8 @@
         </div>
       </div>
       <button class="btn btn-primary" onclick="herstelMetSleutel()">Account herstellen</button>
+      <div style="text-align:center;font-size:12px;opacity:0.6;margin:12px 0 2px;">of</div>
+      <button class="btn btn-primary" onclick="herstelMetFaceId()">Herstel met Face ID</button>
     </div>
   </div>
 </div>
@@ -134,6 +136,7 @@
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.113.0/+esm'
   import { genereerKeypair, slaPrivateKeyOp, haalPrivateKeyOp, ontsleutelPrivateKey, normaliseerHerstelSleutel, versleutelPrivateKey } from './crypto.js?v=95'
+  import { passkeyStatus, lijstDozen, maakDoos, openDoos, sleutelPastBij } from './passkey-kluis.js?v=1'
 
   const supabase = createClient(
     'https://qmgatbphiplrfxrljtbe.supabase.co',
@@ -169,6 +172,177 @@
   }
 
   // ── Naam generator ──
+  // --- Face ID-herstel (passkey + dichte doos, zie passkey-kluis.js) ---
+  async function kanFaceIdGebruiken() {
+    try { const s = await passkeyStatus(); return !!(s.passkeys && s.prf !== false) } catch (e) { return false }
+  }
+
+  function faceIdFoutTekst(e) {
+    const c = e && e.code
+    if (c === 'geannuleerd') return 'Geannuleerd. Probeer het opnieuw, of kies later.'
+    if (c === 'bestaat-al') return 'Hier bestaat al een Fibro-passkey voor dit account.'
+    if (c === 'geen-prf') return 'Deze browser kan Face ID-herstel niet gebruiken.'
+    if (c === 'geen-doos') return 'Er is nog geen Face ID-herstel voor dit account.'
+    if (c === 'past-niet') return 'De sleutel in de doos past niet bij je account.'
+    return 'Mislukt: ' + ((e && e.message) || e)
+  }
+
+  // Venster over de pagina. actie() mag een fout gooien: dan blijft het venster open met de melding.
+  function faceIdVenster({ titel, tekst, ja, nee, actie }) {
+    return new Promise(resolve => {
+      const achter = document.createElement('div')
+      achter.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(10,4,20,0.82);display:flex;align-items:center;justify-content:center;padding:20px;'
+      const kaart = document.createElement('div')
+      kaart.style.cssText = 'max-width:360px;width:100%;background:var(--bg,#1a0a2e);border:1px solid var(--accent,#c084fc);border-radius:16px;padding:22px;text-align:center;color:var(--text,#f3e8ff);'
+      const ic = document.createElement('div'); ic.style.cssText = 'font-size:36px;margin-bottom:8px;'; ic.textContent = '\u{1F512}'
+      const h = document.createElement('div'); h.style.cssText = 'font-size:17px;font-weight:600;margin-bottom:8px;'; h.textContent = titel
+      const p = document.createElement('div'); p.style.cssText = 'font-size:13px;line-height:1.6;opacity:0.85;margin-bottom:14px;'; p.textContent = tekst
+      const melding = document.createElement('div'); melding.style.cssText = 'font-size:13px;min-height:18px;margin-bottom:10px;'
+      const knopJa = document.createElement('button'); knopJa.className = 'btn btn-primary'; knopJa.style.width = '100%'; knopJa.textContent = ja
+      const knopNee = document.createElement('button'); knopNee.textContent = nee
+      knopNee.style.cssText = 'width:100%;margin-top:10px;background:none;border:none;color:inherit;opacity:0.7;font-size:13px;cursor:pointer;padding:8px;'
+      kaart.append(ic, h, p, melding, knopJa, knopNee)
+      achter.append(kaart)
+      document.body.append(achter)
+      const sluit = (w) => { achter.remove(); resolve(w) }
+      knopNee.onclick = () => sluit(false)
+      knopJa.onclick = async () => {
+        knopJa.disabled = true; knopNee.disabled = true
+        melding.style.color = 'inherit'; melding.textContent = 'Even geduld...'
+        try {
+          const klaar = await actie()
+          melding.style.color = '#4ade80'; melding.textContent = klaar || 'Gelukt!'
+          setTimeout(() => sluit(true), 1000)
+        } catch (e) {
+          melding.style.color = '#f87171'; melding.textContent = faceIdFoutTekst(e)
+          knopJa.disabled = false; knopNee.disabled = false
+          knopJa.textContent = 'Opnieuw proberen'
+        }
+      }
+    })
+  }
+
+  const FACEID_LATER_DAGEN = 14
+  function faceIdLaterGekozen(userId) {
+    try {
+      const t = parseInt(localStorage.getItem('fibro_faceid_later_' + userId) || '0', 10)
+      return !!t && (Date.now() - t) < FACEID_LATER_DAGEN * 86400000
+    } catch (e) { return false }
+  }
+  function faceIdZetLater(userId) {
+    try { localStorage.setItem('fibro_faceid_later_' + userId, String(Date.now())) } catch (e) {}
+  }
+
+  // Doos openen en de sleutel op dit toestel zetten, alleen als hij bij het profiel past
+  async function ontgrendelMetFaceId(userId, publiek) {
+    const r = await openDoos(supabase, userId)
+    if (!(await sleutelPastBij(r.privateKeyB64, publiek))) { const e = new Error('past niet'); e.code = 'past-niet'; throw e }
+    slaPrivateKeyOp(userId, r.privateKeyB64)
+    try { sessionStorage.removeItem('fibro_sleutel_mist') } catch (e) {}
+    return 'Gelukt! Je berichten zijn weer leesbaar.'
+  }
+
+  async function ontgrendelVenster(userId, publiek) {
+    return faceIdVenster({
+      titel: 'Ontgrendel je berichten',
+      tekst: 'Dit toestel heeft je sleutel nog niet. Ontgrendel met Face ID, je vingerafdruk of je toestelcode. Op een pc kun je je telefoon gebruiken via de QR-code.',
+      ja: 'Ontgrendel met Face ID', nee: 'Later',
+      actie: () => ontgrendelMetFaceId(userId, publiek)
+    })
+  }
+
+  // Na inloggen: geen sleutel -> ontgrendelen aanbieden; wel sleutel maar geen doos -> aanzetten aanbieden
+  async function naInloggenFaceId(userId, username) {
+    try {
+      if (!(await kanFaceIdGebruiken())) return
+      const { data: prof } = await supabase.from('profiles').select('public_key, username').eq('id', userId).single()
+      const publiek = prof && prof.public_key
+      if (!publiek) return
+      const naam = username || (prof && prof.username) || ''
+      let dozen = []
+      try { dozen = await lijstDozen(supabase, userId) } catch (e) { return }
+      const lokaal = haalPrivateKeyOp(userId)
+      if (!lokaal) {
+        if (dozen.length) await ontgrendelVenster(userId, publiek)
+      } else if (!dozen.length && !faceIdLaterGekozen(userId) && await sleutelPastBij(lokaal, publiek)) {
+        const gedaan = await faceIdVenster({
+          titel: 'Face ID-herstel aanzetten?',
+          tekst: 'Dan krijg je je berichten op een nieuw toestel terug met alleen Face ID of je vingerafdruk, zonder herstelcode. De server bewaart alleen een dichte doos die hij zelf niet kan openen.',
+          ja: 'Face ID-herstel aanzetten', nee: 'Niet nu',
+          actie: async () => { await maakDoos(supabase, { userId, gebruikersnaam: naam, privateKeyB64: lokaal }); return 'Face ID-herstel staat aan.' }
+        })
+        if (!gedaan) faceIdZetLater(userId)
+      }
+    } catch (e) { console.warn('[faceid]', e) }
+  }
+
+  // Reserve voor wie geen Face ID-herstel kan of wil: de oude herstelcode
+  async function maakHerstelcodeReserve(userId, privateKeyB64) {
+    const code = maakHerstelSleutel()
+    const hsHash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code)))).map(b => b.toString(16).padStart(2, '0')).join('')
+    await supabase.rpc('zet_herstelsleutel', { hash_in: hsHash })
+    const kluisBlob = await versleutelPrivateKey(privateKeyB64, code)
+    await supabase.from('sleutel_kluis').upsert({ user_id: userId, blob: kluisBlob })
+    return code
+  }
+
+  function regKnop(tekst, hoofd) {
+    const k = document.createElement('button')
+    k.textContent = tekst
+    if (hoofd) { k.className = 'btn btn-primary'; k.style.width = '100%' }
+    else k.style.cssText = 'width:100%;margin-top:10px;background:none;border:none;color:inherit;opacity:0.7;font-size:13px;cursor:pointer;padding:8px;'
+    return k
+  }
+
+  async function toonHerstelcodeNaRegistratie(userId, privateKeyB64) {
+    const vak = document.getElementById('reg-form')
+    vak.textContent = 'Herstelcode maken...'
+    let code
+    try { code = await maakHerstelcodeReserve(userId, privateKeyB64) }
+    catch (e) { vak.textContent = 'Herstelcode maken mislukt. Je kunt Face ID-herstel later aanzetten na het inloggen.'; return }
+    vak.textContent = ''
+    const blok = document.createElement('div'); blok.style.cssText = 'text-align:center;padding:8px 0;'
+    const t1 = document.createElement('div'); t1.style.cssText = 'font-size:12px;opacity:0.7;margin-bottom:12px;'; t1.textContent = 'Bewaar je herstelsleutel op een veilige plek'
+    const c = document.createElement('div')
+    c.style.cssText = "background:var(--bg);border:1.5px solid var(--accent);border-radius:10px;padding:16px;font-size:18px;letter-spacing:2px;color:var(--accent);font-family:'DM Mono',monospace;margin-bottom:12px;"
+    c.textContent = code
+    const t2 = document.createElement('div'); t2.style.cssText = 'font-size:11px;color:var(--danger,#f87171);margin-bottom:20px;'; t2.textContent = 'Dit zie je maar een keer! Schrijf het op.'
+    const verder = regKnop('Ga naar inloggen', true); verder.onclick = () => window.switchTab('inloggen')
+    blok.append(t1, c, t2, verder)
+    vak.append(blok)
+  }
+
+  // Na registreren: meteen Face ID-herstel aanzetten; herstelcode alleen als reserve
+  function toonRegistratieFaceId(userId, username, privateKeyB64) {
+    const vak = document.getElementById('reg-form')
+    vak.textContent = ''
+    const blok = document.createElement('div'); blok.style.cssText = 'text-align:center;padding:8px 0;'
+    const ic = document.createElement('div'); ic.style.cssText = 'font-size:32px;margin-bottom:12px;'; ic.textContent = '\u{1F389}'
+    const h = document.createElement('div'); h.style.cssText = 'font-size:16px;margin-bottom:8px;'; h.textContent = 'Account aangemaakt!'
+    const p = document.createElement('div'); p.style.cssText = 'font-size:13px;line-height:1.6;opacity:0.85;margin-bottom:14px;'
+    p.textContent = 'Zet nu Face ID-herstel aan. Dan krijg je je berichten op een nieuw toestel terug met alleen Face ID of je vingerafdruk, zonder code.'
+    const melding = document.createElement('div'); melding.style.cssText = 'font-size:13px;min-height:18px;margin-bottom:10px;'
+    const ja = regKnop('Face ID-herstel aanzetten', true)
+    const nee = regKnop('Geen Face ID? Gebruik een herstelcode', false)
+    blok.append(ic, h, p, melding, ja, nee)
+    vak.append(blok)
+    nee.onclick = () => toonHerstelcodeNaRegistratie(userId, privateKeyB64)
+    ja.onclick = async () => {
+      ja.disabled = true; nee.disabled = true
+      melding.style.color = 'inherit'; melding.textContent = 'Even geduld...'
+      try {
+        await maakDoos(supabase, { userId, gebruikersnaam: username, privateKeyB64 })
+        melding.style.color = '#4ade80'; melding.textContent = 'Face ID-herstel staat aan.'
+        ja.remove(); nee.remove()
+        const verder = regKnop('Ga naar inloggen', true); verder.onclick = () => window.switchTab('inloggen')
+        blok.append(verder)
+      } catch (e) {
+        melding.style.color = '#f87171'; melding.textContent = faceIdFoutTekst(e)
+        ja.disabled = false; nee.disabled = false; ja.textContent = 'Opnieuw proberen'
+      }
+    }
+  }
+
   const BIJVOEGLIJK = ['Turbo','Pixel','Neon','Fluffy','Sneaky','Chonky','Sparkly','Grumpy','Bouncy','Squishy','Dizzy','Glitchy','Funky','Wiggly','Zappy','Bubbly','Fuzzy','Goofy','Jazzy','Mighty','Nifty','Peppy','Quirky','Sassy','Ultra','Wacky','Zesty','Blobby','Clumsy','Derpy','Floppy','Jumpy','Kooky','Lazy','Moody','Nerdy','Silly','Zippy','Psycho','Mega','Hyper','Retro','Cyber','Magic','Spicy','Crispy']
   const DIEREN = ['Kikker','Panda','Hamster','Wasbeer','Capibara','Axolotl','Koala','Pinguin','Flamingo','Alpaca','Eekhoorn','Narwal','Quokka','Wombat','Platypus','Blobfish','Noodle','Pickle','Waffle','Muffin','Burrito','Spaghetti','Toaster','Pillow','Nugget','Avocado','Cactus']
   const ACHTER = ['42','88','99','404','1337','XL','Pro','Max','Zero','Alpha','Prime','9000','Plus','Elite','Ace','Boss','Legend','007','777']
@@ -263,6 +437,7 @@
       }
     } catch(e) { console.log('Push registratie mislukt:', e) }
 
+    await naInloggenFaceId(data.user.id, username)
     setTimeout(() => { window.location.href = 'index.html' }, 800)
   }
 
@@ -308,6 +483,7 @@
     btn.innerHTML = '<span class="spinner"></span>Account aanmaken...'
 
     const nep_email = username.toLowerCase() + '@fibro.internal'
+    const metFaceId = await kanFaceIdGebruiken()
     const herstelsleutel = maakHerstelSleutel()
     const niveau = bepaalNiveau(jaar)
 
@@ -331,13 +507,16 @@
         niveau,
         public_key: keypair.publicKeyB64
       })
+      if (!metFaceId) {
       const hsHash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(herstelsleutel)))).map(b=>b.toString(16).padStart(2,'0')).join('')
       await supabase.rpc('zet_herstelsleutel', { hash_in: hsHash })
       // Sleutelkluis vullen: private key versleuteld met de herstelsleutel
       const kluisBlob = await versleutelPrivateKey(keypair.privateKeyB64, herstelsleutel)
       await supabase.from('sleutel_kluis').upsert({ user_id: data.user.id, blob: kluisBlob })
+      }
     }
 
+    if (metFaceId && data.user) { toonRegistratieFaceId(data.user.id, username, keypair.privateKeyB64); return }
     document.getElementById('reg-form').innerHTML = `
       <div style="text-align:center;padding:8px 0;">
         <div style="font-size:32px;margin-bottom:12px;">🎉</div>
@@ -394,6 +573,34 @@ window.herstelMetSleutel = async function() {
     }
   }
 
+  window.herstelMetFaceId = async function() {
+    const msg = document.getElementById('herstel-msg')
+    const username = document.getElementById('herstel-username').value.trim()
+    const wachtwoord = (document.getElementById('herstel-wachtwoord') || {}).value || ''
+    if (!username || !wachtwoord) { toonBericht(msg, 'error', 'Vul je naam en wachtwoord in (de herstelsleutel is niet nodig).'); return }
+    if (!(await kanFaceIdGebruiken())) { toonBericht(msg, 'error', 'Deze browser kan Face ID-herstel niet gebruiken. Gebruik je herstelsleutel.'); return }
+    toonBericht(msg, 'info', 'Inloggen...')
+    const nep_email = username.toLowerCase() + '@fibro.internal'
+    const { data, error } = await supabase.auth.signInWithPassword({ email: nep_email, password: wachtwoord })
+    if (error) { toonBericht(msg, 'error', 'Naam of wachtwoord klopt niet.'); return }
+    const userId = data.user.id
+    const { data: prof } = await supabase.from('profiles').select('public_key').eq('id', userId).single()
+    let dozen = []
+    try { dozen = await lijstDozen(supabase, userId) } catch (e) {}
+    if (!prof || !prof.public_key || !dozen.length) {
+      toonBericht(msg, 'error', 'Dit account heeft nog geen Face ID-herstel. Gebruik je herstelsleutel.')
+      return
+    }
+    toonBericht(msg, 'info', 'Bevestig met Face ID...')
+    const gelukt = await ontgrendelVenster(userId, prof.public_key)
+    if (gelukt) {
+      toonBericht(msg, 'success', 'Gelukt! Je berichten zijn weer leesbaar.')
+      setTimeout(() => { window.location.href = 'index.html' }, 800)
+    } else {
+      toonBericht(msg, 'info', 'Geannuleerd.')
+    }
+  }
+
   function toonBericht(el, type, tekst) {
     el.className = 'message '+type
     el.textContent = tekst
@@ -401,7 +608,9 @@ window.herstelMetSleutel = async function() {
 
   supabase.auth.getSession().then(({ data: { session } }) => {
     const params = new URLSearchParams(window.location.search)
-    if (session && !params.get('logout')) window.location.href = 'index.html'
+    if (session && !params.get('logout')) {
+      naInloggenFaceId(session.user.id, '').finally(() => { window.location.href = 'index.html' })
+    }
   })
 
   async function laadWallpaper() {

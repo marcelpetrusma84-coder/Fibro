@@ -697,6 +697,16 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   // ─── Bericht toevoegen (met ontsleuteling) ───
+  // Speluitnodiging in het gesprek: 'spelinvite:<spel>:<van>:<sessie>' wordt
+  // '🎮 Spel-uitnodiging: 🐍 Twin Snakes' (icoon en naam uit SPEL_INFO).
+  function spelInviteTekst(content) {
+    const soort = String(content).split(':')[1] || ''
+    let info = null
+    try { if (Object.prototype.hasOwnProperty.call(SPEL_INFO, soort)) info = SPEL_INFO[soort] } catch (e) {}
+    if (!info) info = { icon: '🎲', naam: /^[a-z0-9]{1,30}$/.test(soort) ? soort : 'een spel' }
+    return '🎮 Spel-uitnodiging: ' + info.icon + ' ' + info.naam
+  }
+
   async function voegBerichtToe(bericht) {
     const isMijn = bericht.sender_id === huidigeUser.id
     const container = document.getElementById('messages')
@@ -720,6 +730,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
       }
     }
 
+    // Speluitnodiging: toon het spel in plaats van de code erachter
+    if (typeof content === 'string' && content.startsWith('spelinvite:')) content = spelInviteTekst(content)
     if (!window._tekstPerId) window._tekstPerId = {}
     window._tekstPerId[bericht.id] = content
     const vorige = container.lastElementChild

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fibro - Face ID-herstel (test)</title>
+<style>
+:root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:rgba(243,232,255,0.6); }
+* { box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:sans-serif; max-width:560px; margin:0 auto; padding:16px; padding-top:calc(16px + env(safe-area-inset-top, 0px)); }
+h1 { font-size:20px; margin:4px 0; }
+.sub { color:var(--muted); font-size:13px; line-height:1.5; margin-bottom:14px; }
+.blok { background:var(--card); border:0.5px solid var(--border); border-radius:12px; padding:12px; margin-bottom:12px; }
+.blok h2 { font-size:15px; margin:0 0 6px; }
+.blok p { font-size:13px; color:var(--muted); margin:0 0 10px; line-height:1.5; }
+button { width:100%; padding:12px; border:none; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; color:#1a0a2e; background:linear-gradient(135deg,var(--accent),var(--accent2)); margin-top:6px; }
+button.grijs { background:rgba(255,255,255,0.1); color:var(--text); border:0.5px solid var(--border); font-weight:400; }
+button.klein { width:auto; padding:6px 12px; font-size:13px; margin:0; }
+button:disabled { opacity:0.45; }
+.info { font-size:13px; line-height:1.8; }
+.info b { color:var(--accent2); font-weight:600; }
+.doos { display:flex; align-items:center; gap:10px; padding:8px 0; border-top:0.5px solid var(--border); font-size:13px; }
+.doos:first-child { border-top:none; }
+.doos .tekst { flex:1; line-height:1.4; }
+.doos .tekst span { color:var(--muted); font-size:12px; }
+#log { font-family:monospace; font-size:12px; white-space:pre-wrap; word-break:break-word; background:rgba(0,0,0,0.35); border-radius:10px; padding:10px; max-height:300px; overflow:auto; }
+.goed { color:#4ade80; } .fout { color:#f87171; } .let { color:#fbbf24; }
+.verborgen { display:none; }
+</style>
+</head>
+<body>
+<h1>Face ID-herstel (test)</h1>
+<div class="sub">Testpagina met je eigen Fibro-account. Maakt een dichte doos met je sleutel op de server, die alleen opengaat met je passkey. Je bestaande sleutel en berichten worden niet aangeraakt.</div>
+
+<div class="blok">
+  <h2>Dit toestel</h2>
+  <div class="info" id="status">Bezig met laden...</div>
+</div>
+
+<div class="blok">
+  <h2>Je dozen</h2>
+  <div id="dozen"><div class="info">Laden...</div></div>
+</div>
+
+<div class="blok">
+  <h2>1. Doos maken</h2>
+  <p>Kan alleen op een toestel waar je sleutel al staat. Je telefoon maakt een passkey "Fibro" en vraagt Face ID of je vingerafdruk.</p>
+  <button id="knopMaak" disabled>Doos maken met Face ID</button>
+</div>
+
+<div class="blok">
+  <h2>2. Doos openen</h2>
+  <p>Opent een doos met je passkey en controleert of de sleutel erin klopt. Op een toestel zonder sleutel kun je hem daarna op dit toestel zetten. Op de pc/Deck kun je je telefoon gebruiken via de QR-code.</p>
+  <button id="knopOpen" disabled>Doos openen met Face ID</button>
+  <button id="knopZet" class="verborgen">Sleutel op dit toestel zetten</button>
+</div>
+
+<div class="blok">
+  <h2>Verslag</h2>
+  <div id="log"></div>
+  <button class="grijs" id="knopKopieer">Verslag kopieren</button>
+</div>
+
+<script type="module">
+import { supabase } from './supabase.js?v=95'
+import { haalPrivateKeyOp, slaPrivateKeyOp } from './crypto.js?v=95'
+import { passkeyStatus, lijstDozen, maakDoos, openDoos, verwijderDoos, sleutelPastBij, toestelNaam } from './passkey-kluis.js?v=1'
+
+const logEl = document.getElementById('log')
+function log(tekst, soort) {
+  const r = document.createElement('div')
+  if (soort) r.className = soort
+  r.textContent = tekst
+  logEl.appendChild(r)
+  logEl.scrollTop = logEl.scrollHeight
+}
+function foutTekst(e) { return (e && e.code ? '[' + e.code + '] ' : '') + ((e && e.message) || String(e)) }
+
+let userId = null, naam = '', publiek = null, lokaal = null, lokaalKlopt = false, geopend = null
+
+async function laadStatus() {
+  const { data: { session } } = await supabase.auth.getSession()
+  const el = document.getElementById('status')
+  if (!session) {
+    el.textContent = 'Niet ingelogd. Log eerst in bij Fibro op dit toestel (in deze browser) en open deze pagina opnieuw.'
+    log('Niet ingelogd.', 'fout')
+    return false
+  }
+  userId = session.user.id
+  const { data: prof } = await supabase.from('profiles').select('username, public_key').eq('id', userId).single()
+  naam = (prof && prof.username) || 'Fibro'
+  publiek = (prof && prof.public_key) || null
+  lokaal = haalPrivateKeyOp(userId)
+  lokaalKlopt = lokaal ? await sleutelPastBij(lokaal, publiek) : false
+  const s = await passkeyStatus()
+  const regels = [
+    ['Account', naam],
+    ['Toestel', toestelNaam()],
+    ['Sleutel op dit toestel', lokaal ? (lokaalKlopt ? 'ja, klopt met je profiel' : 'ja, maar past NIET bij je profiel') : 'nee'],
+    ['Passkeys', s.passkeys ? 'ja' : 'nee'],
+    ['Face ID / vingerafdruk hier', s.ingebouwd ? 'ja' : 'nee (gebruik je telefoon via QR)'],
+    ['PRF volgens browser', s.prf === null ? 'onbekend' : (s.prf ? 'ja' : 'nee')]
+  ]
+  el.textContent = ''
+  regels.forEach(([k, v]) => {
+    const d = document.createElement('div')
+    d.append(k + ': ')
+    const b = document.createElement('b'); b.textContent = v; d.append(b)
+    el.append(d)
+  })
+  log('Account ' + naam + ' | ' + toestelNaam() + ' | sleutel hier: ' + (lokaal ? (lokaalKlopt ? 'ja (klopt)' : 'ja (past niet!)') : 'nee'))
+  log('Passkeys: ' + (s.passkeys ? 'ja' : 'nee') + ' | ingebouwd: ' + (s.ingebouwd ? 'ja' : 'nee') + ' | PRF: ' + (s.prf === null ? 'onbekend' : s.prf))
+  document.getElementById('knopMaak').disabled = !(s.passkeys && lokaal && lokaalKlopt)
+  document.getElementById('knopOpen').disabled = !s.passkeys
+  return true
+}
+
+async function laadDozen() {
+  const el = document.getElementById('dozen')
+  el.textContent = ''
+  let dozen = []
+  try { dozen = await lijstDozen(supabase, userId) }
+  catch (e) { log(foutTekst(e), 'fout'); el.textContent = 'Kon dozen niet laden.'; return }
+  if (!dozen.length) {
+    const d = document.createElement('div'); d.className = 'info'; d.textContent = 'Nog geen dozen.'; el.append(d)
+    return
+  }
+  dozen.forEach(r => {
+    const rij = document.createElement('div'); rij.className = 'doos'
+    const t = document.createElement('div'); t.className = 'tekst'
+    t.append(r.naam || 'Onbekend toestel')
+    const sub = document.createElement('span')
+    sub.textContent = ' - ' + new Date(r.gemaakt_op).toLocaleString('nl-NL') + ' - passkey ' + r.cred_id.slice(0, 8) + '...'
+    t.append(document.createElement('br'), sub)
+    const knop = document.createElement('button'); knop.className = 'grijs klein'; knop.textContent = 'Weggooien'
+    knop.onclick = async () => {
+      if (!confirm('Deze doos weggooien? De passkey zelf blijft op je telefoon staan, maar opent dan niets meer.')) return
+      try { await verwijderDoos(supabase, userId, r.cred_id); log('Doos weggegooid.', 'goed'); laadDozen() }
+      catch (e) { log(foutTekst(e), 'fout') }
+    }
+    rij.append(t, knop); el.append(rij)
+  })
+  log('Dozen: ' + dozen.length)
+}
+
+document.getElementById('knopMaak').onclick = async () => {
+  const k = document.getElementById('knopMaak'); k.disabled = true
+  try {
+    log('Doos maken...')
+    const r = await maakDoos(supabase, { userId, gebruikersnaam: naam, privateKeyB64: lokaal })
+    log('GELUKT: doos gemaakt (passkey ' + r.credId.slice(0, 8) + '...).', 'goed')
+    await laadDozen()
+  } catch (e) { log('Maken mislukt: ' + foutTekst(e), 'fout') }
+  finally { k.disabled = !(lokaal && lokaalKlopt) }
+}
+
+document.getElementById('knopOpen').onclick = async () => {
+  const k = document.getElementById('knopOpen'); k.disabled = true
+  geopend = null
+  document.getElementById('knopZet').classList.add('verborgen')
+  try {
+    log('Doos openen...')
+    const r = await openDoos(supabase, userId)
+    const klopt = await sleutelPastBij(r.privateKeyB64, publiek)
+    if (!klopt) { log('Doos geopend, maar de sleutel past NIET bij je profiel. Niet gebruiken.', 'fout'); return }
+    log('GELUKT: doos geopend (' + (r.naam || '?') + '), sleutel past bij je profiel.', 'goed')
+    if (lokaal) {
+      log(r.privateKeyB64 === lokaal ? 'Zelfde sleutel als op dit toestel.' : 'Let op: andere sleutel dan op dit toestel.', r.privateKeyB64 === lokaal ? 'goed' : 'let')
+    } else {
+      geopend = r.privateKeyB64
+      document.getElementById('knopZet').classList.remove('verborgen')
+      log('Dit toestel heeft nog geen sleutel. Tik op "Sleutel op dit toestel zetten".', 'let')
+    }
+  } catch (e) { log('Openen mislukt: ' + foutTekst(e), 'fout') }
+  finally { k.disabled = false }
+}
+
+document.getElementById('knopZet').onclick = async () => {
+  if (!geopend || haalPrivateKeyOp(userId)) return
+  if (!(await sleutelPastBij(geopend, publiek))) { log('Sleutel past niet, niet opgeslagen.', 'fout'); return }
+  slaPrivateKeyOp(userId, geopend)
+  geopend = null
+  document.getElementById('knopZet').classList.add('verborgen')
+  log('Sleutel staat nu op dit toestel. Open Fibro opnieuw: je berichten horen leesbaar te zijn.', 'goed')
+  try { sessionStorage.removeItem('fibro_sleutel_mist') } catch (e) {}
+  await laadStatus()
+}
+
+document.getElementById('knopKopieer').onclick = async () => {
+  const tekst = Array.from(logEl.children).map(d => d.textContent).join('\n')
+  try { await navigator.clipboard.writeText(tekst); log('Verslag gekopieerd.', 'goed') }
+  catch (e) { log('Kopieren lukt niet; selecteer de tekst hierboven.', 'let') }
+}
+
+try {
+  if (await laadStatus()) await laadDozen()
+} catch (e) { log('Laden mislukt: ' + foutTekst(e), 'fout') }
+</script>
+</body>
+</html>

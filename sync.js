@@ -965,6 +965,7 @@ function zetP2pStatus(status) {
 }
 
 function toonDebugBadge() {
+  return // debug-badge uitgeschakeld: lag over de chatbalk
   let b = document.getElementById('sync-debug-badge')
   if (!b) {
     b = document.createElement('div')

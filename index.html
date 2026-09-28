@@ -1940,6 +1940,9 @@ init().then(() => {
 
   if (homeActief.length) {
     tekenGrid('home-sectie', homeLayout, renderHome); startVolgorde(homeGrid, ids => bewaarVolgorde(WK_HOME, ids))
+  } else if (laadLayout('profiel').some(w => w.aan)) {
+    // Wel profielwidgets op de pagina: dan geen melding 'Geen widgets actief'
+    homeGrid.innerHTML = ''
   } else {
     homeGrid.innerHTML = `
       <div class="leeg-staat">

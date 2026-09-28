@@ -1036,5 +1036,23 @@ setTimeout(function(){
     + '\ntoestemming: ' + (window.Notification ? Notification.permission : 'geen Notification'));
 }, 1200);
 </script>
+<script>
+// Knop "Widgets instellen" op de homepagina gaat naar profiel.html#widgets:
+// dan meteen het tabblad Widgets openen.
+(function () {
+  if (location.hash !== '#widgets') return
+  var pogingen = 0
+  var t = setInterval(function () {
+    if (typeof window.switchTab === 'function') {
+      clearInterval(t)
+      window.switchTab('widgets')
+      var tab = document.querySelector('.main-tab.active')
+      if (tab && tab.scrollIntoView) tab.scrollIntoView({ block: 'nearest', inline: 'center' })
+    } else if (++pogingen > 50) {
+      clearInterval(t)
+    }
+  }, 100)
+})()
+</script>
 </body>
 </html>

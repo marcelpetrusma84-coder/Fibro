@@ -609,7 +609,11 @@ window.herstelMetSleutel = async function() {
   supabase.auth.getSession().then(({ data: { session } }) => {
     const params = new URLSearchParams(window.location.search)
     if (session && !params.get('logout')) {
-      naInloggenFaceId(session.user.id, '').finally(() => { window.location.href = 'index.html' })
+      naInloggenFaceId(session.user.id, '').finally(() => {
+        // Via 'Sleutel terugzetten' en nog steeds geen sleutel: op het tabblad Herstel blijven
+        if (window.location.hash === '#herstellen' && !haalPrivateKeyOp(session.user.id)) return
+        window.location.href = 'index.html'
+      })
     }
   })
 

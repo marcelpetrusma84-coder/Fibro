@@ -786,7 +786,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
           content = '[kan niet lezen — sleutels komen niet overeen]'
         }
       } else {
-        content = '[versleuteld bericht — log opnieuw in om sleutels te herstellen]'
+        content = '[versleuteld bericht — tik op het beginscherm op Sleutel terugzetten]'
       }
     }
 
@@ -895,7 +895,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // Geeft de versleutelde inhoud terug, of null (dan is er al een melding gegeven).
   async function versleutelOfStop(tekst) {
     if (!mijnPrivateKey) {
-      alert('Bericht NIET verstuurd.\n\nDit apparaat heeft geen sleutel voor jouw account, dus het bericht kan niet versleuteld worden. Log opnieuw in met je herstelcode om je sleutel terug te zetten.')
+      alert('Bericht NIET verstuurd.\n\nDit apparaat heeft geen sleutel voor jouw account, dus het bericht kan niet versleuteld worden. Ga naar het beginscherm en tik op Sleutel terugzetten (Face ID of herstelcode).')
       return null
     }
     if (!vriendPublicKey || vriendPublicKey.length <= 10) {
@@ -1896,6 +1896,9 @@ async function startBlockIt() {
     slaPrivateKeyOp(huidigeUser.id, keypair.privateKeyB64)
     // Sla public key op in Supabase
     await supabase.from('profiles').update({ public_key: keypair.publicKeyB64 }).eq('id', huidigeUser.id)
+    // Oude dozen en kluis bevatten de oude sleutel: weggooien (Face ID-herstel daarna opnieuw aanzetten)
+    try { await supabase.from('passkey_kluis').delete().eq('user_id', huidigeUser.id) } catch (e) {}
+    try { await supabase.from('sleutel_kluis').delete().eq('user_id', huidigeUser.id) } catch (e) {}
     alert('Sleutels opnieuw aangemaakt! Pagina wordt herladen.')
     window.location.reload()
   }

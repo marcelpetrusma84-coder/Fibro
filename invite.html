@@ -124,6 +124,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.113.0/+esm'
 import { genereerKeypair, slaPrivateKeyOp, versleutelPrivateKey } from './crypto.js?v=95'
+import { passkeyStatus, maakDoos } from './passkey-kluis.js?v=1'
 
 const supabase = createClient(
   'https://qmgatbphiplrfxrljtbe.supabase.co',
@@ -248,6 +249,7 @@ window.registreren = async function() {
 
   btn.textContent = 'Account aanmaken...'
   const nep_email = naam.toLowerCase() + '@fibro.internal'
+  const metFaceId = await kanFaceIdGebruiken()
   const herstelsleutel = maakHerstelSleutel()
   const niveau = bepaalNiveau(jaar)
 
@@ -274,11 +276,13 @@ window.registreren = async function() {
       public_key: keypair.publicKeyB64,
       updated_at: new Date().toISOString()
     })
+    if (!metFaceId) {
     const hsHash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(herstelsleutel)))).map(b=>b.toString(16).padStart(2,'0')).join('')
     await supabase.rpc('zet_herstelsleutel', { hash_in: hsHash })
     // Sleutelkluis vullen: private key versleuteld met de herstelsleutel
     const kluisBlob = await versleutelPrivateKey(keypair.privateKeyB64, herstelsleutel)
     await supabase.from('sleutel_kluis').upsert({ user_id: data.user.id, blob: kluisBlob })
+    }
 
     if (uitnodigerData?.created_by && uitnodigerData.created_by !== data.user.id) {
       await supabase.rpc('maak_vriendschap_via_invite', { token_in: token })
@@ -288,9 +292,73 @@ window.registreren = async function() {
   }
 
   document.getElementById('uitnodigingScherm').style.display = 'none'
+  if (metFaceId && data.user) { toonFaceIdNaInvite(data.user.id, naam, keypair.privateKeyB64); return }
   document.getElementById('herstelCode').textContent = herstelsleutel
   document.getElementById('bevestigNaam').textContent = naam
   document.getElementById('herstelScherm').style.display = 'block'
+}
+
+// --- Face ID-herstel na registreren (zie passkey-kluis.js) ---
+async function kanFaceIdGebruiken() {
+  try { const s = await passkeyStatus(); return !!(s.passkeys && s.prf !== false) } catch (e) { return false }
+}
+
+function faceIdFoutTekst(e) {
+  const c = e && e.code
+  if (c === 'geannuleerd') return 'Geannuleerd. Probeer het opnieuw.'
+  if (c === 'bestaat-al') return 'Hier bestaat al een Fibro-passkey voor dit account.'
+  if (c === 'geen-prf') return 'Deze browser kan Face ID-herstel niet gebruiken. Kies een herstelcode.'
+  return 'Mislukt: ' + ((e && e.message) || e)
+}
+
+// Reserve: de oude herstelcode, getoond in het bestaande herstelscherm
+async function toonHerstelcodeReserve(userId, naam, privateKeyB64, paneel) {
+  paneel.textContent = 'Herstelcode maken...'
+  try {
+    const code = maakHerstelSleutel()
+    const hsHash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code)))).map(b => b.toString(16).padStart(2, '0')).join('')
+    await supabase.rpc('zet_herstelsleutel', { hash_in: hsHash })
+    const kluisBlob = await versleutelPrivateKey(privateKeyB64, code)
+    await supabase.from('sleutel_kluis').upsert({ user_id: userId, blob: kluisBlob })
+    paneel.remove()
+    document.getElementById('herstelCode').textContent = code
+    document.getElementById('bevestigNaam').textContent = naam
+    document.getElementById('herstelScherm').style.display = 'block'
+  } catch (e) {
+    paneel.textContent = 'Herstelcode maken mislukt. Je kunt Face ID-herstel later aanzetten na het inloggen.'
+  }
+}
+
+function toonFaceIdNaInvite(userId, naam, privateKeyB64) {
+  const plek = document.getElementById('herstelScherm')
+  const paneel = document.createElement('div')
+  paneel.style.cssText = 'max-width:400px;margin:24px auto;padding:22px;text-align:center;border:1px solid var(--accent,#c084fc);border-radius:16px;color:var(--text,#f3e8ff);'
+  const ic = document.createElement('div'); ic.style.cssText = 'font-size:34px;margin-bottom:10px;'; ic.textContent = '\u{1F389}'
+  const h = document.createElement('div'); h.style.cssText = 'font-size:17px;font-weight:600;margin-bottom:8px;'; h.textContent = 'Welkom, ' + naam + '!'
+  const p = document.createElement('div'); p.style.cssText = 'font-size:13px;line-height:1.6;opacity:0.85;margin-bottom:14px;'
+  p.textContent = 'Zet nu Face ID-herstel aan. Dan krijg je je berichten op een nieuw toestel terug met alleen Face ID of je vingerafdruk, zonder code.'
+  const melding = document.createElement('div'); melding.style.cssText = 'font-size:13px;min-height:18px;margin-bottom:10px;'
+  const ja = document.createElement('button'); ja.textContent = 'Face ID-herstel aanzetten'
+  ja.style.cssText = 'width:100%;padding:13px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,var(--accent,#c084fc),var(--accent2,#f0abfc));color:#1a0a2e;'
+  const nee = document.createElement('button'); nee.textContent = 'Geen Face ID? Gebruik een herstelcode'
+  nee.style.cssText = 'width:100%;margin-top:10px;background:none;border:none;color:inherit;opacity:0.7;font-size:13px;cursor:pointer;padding:8px;'
+  paneel.append(ic, h, p, melding, ja, nee)
+  plek.parentNode.insertBefore(paneel, plek)
+  nee.onclick = () => toonHerstelcodeReserve(userId, naam, privateKeyB64, paneel)
+  ja.onclick = async () => {
+    ja.disabled = true; nee.disabled = true
+    melding.style.color = 'inherit'; melding.textContent = 'Even geduld...'
+    try {
+      await maakDoos(supabase, { userId, gebruikersnaam: naam, privateKeyB64 })
+      melding.style.color = '#4ade80'; melding.textContent = 'Face ID-herstel staat aan.'
+      nee.remove()
+      ja.disabled = false; ja.textContent = 'Verder naar Fibro'
+      ja.onclick = () => { window.location.href = 'index.html' }
+    } catch (e) {
+      melding.style.color = '#f87171'; melding.textContent = faceIdFoutTekst(e)
+      ja.disabled = false; nee.disabled = false; ja.textContent = 'Opnieuw proberen'
+    }
+  }
 }
 
 window.voegToe = async function() {

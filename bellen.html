@@ -64,6 +64,7 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   <div class="bel-knoppen" id="knoppen-gesprek" style="display:none">
     <button class="bel-btn btn-mic" id="micBtn" onclick="togMic()">🎤</button>
     <button class="bel-btn btn-mic" id="camBtn" onclick="togCam()">📷</button>
+    <button class="bel-btn btn-mic" id="wisselBtn" onclick="wisselCam()" title="Andere camera" style="display:none">🔄</button>
     <button class="bel-btn btn-ophangen" onclick="hangop()">📵</button>
   </div>
 </div>
@@ -128,7 +129,7 @@ function stopBeltoon() {
 </script>
 <script type="module">
 import { supabase } from './supabase.js?v=95'
-import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal } from './bellen.js?v=95'
+import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo } from './bellen.js?v=97'
 
 const params = new URLSearchParams(window.location.search)
 const vriendId = params.get('vriend')
@@ -231,6 +232,7 @@ function startTimer() {
     document.getElementById('remoteMedia').style.display = 'none'
     document.getElementById('lokaalMedia').style.display = 'none'
   }
+  toonWissel()
   timer = setInterval(() => {
     sec++
     const m = Math.floor(sec/60), s = sec%60
@@ -276,6 +278,30 @@ window.togCam = async () => {
   if (ok) {
     document.getElementById('camBtn').textContent = !camAan ? '📷' : '🚫'
     document.getElementById('lokaalMedia').style.display = !camAan ? 'block' : 'none'
+  }
+  toonWissel()
+}
+// Camera wisselen: knop alleen zichtbaar als je video aan hebt en er meer dan een camera is
+async function toonWissel() {
+  const knop = document.getElementById('wisselBtn')
+  if (!knop) return
+  const tonen = heeftLokaleVideo() && (await aantalCameras()) > 1
+  knop.style.display = tonen ? 'flex' : 'none'
+}
+window.wisselCam = async () => {
+  const knop = document.getElementById('wisselBtn')
+  if (!knop || knop.disabled) return
+  knop.disabled = true
+  knop.style.opacity = '0.5'
+  try {
+    await wisselCamera()
+  } finally {
+    knop.disabled = false
+    knop.style.opacity = ''
+    const video = heeftLokaleVideo()
+    document.getElementById('camBtn').textContent = video ? '📷' : '🚫'
+    document.getElementById('lokaalMedia').style.display = video ? 'block' : 'none'
+    toonWissel()
   }
 }
 </script>

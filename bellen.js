@@ -165,7 +165,11 @@ export async function weigerooproep() {
 function maakPeerConnection() {
   if (peerConnection) { peerConnection.close(); peerConnection = null }
   peerConnection = new RTCPeerConnection(ICE_SERVERS)
-  lokaleStream.getTracks().forEach(track => peerConnection.addTrack(track, lokaleStream))
+  lokaleStream.getTracks().forEach(track => {
+    const sender = peerConnection.addTrack(track, lokaleStream)
+    // Gesprek begint met video: onthoud de videobron, dan werken de cameraknoppen meteen goed
+    if (track.kind === 'video') { videoSender = sender; videoActiefLokaal = true }
+  })
   remoteStream = new MediaStream()
   peerConnection.ontrack = (event) => {
     const track = event.track
@@ -308,4 +312,78 @@ export function toggleCamera() {
 // ─── Zet vriendId handmatig (voor inkomend gesprek na paginawissel) ───
 export function zetVriendId(id) {
   vriendId = id
+}
+
+// --- Camera wisselen tijdens een gesprek (voor/achter, of de volgende camera) ---
+// Er wordt niet opnieuw verbonden: alleen de bron van het beeld wordt vervangen.
+export function heeftLokaleVideo() {
+  return !!(lokaleStream && lokaleStream.getVideoTracks().some(t => t.readyState === 'live'))
+}
+
+export async function aantalCameras() {
+  try {
+    const lijst = await navigator.mediaDevices.enumerateDevices()
+    return lijst.filter(d => d.kind === 'videoinput').length
+  } catch (e) { return 0 }
+}
+
+let bezigMetWisselen = false
+export async function wisselCamera() {
+  if (bezigMetWisselen || !lokaleStream || !peerConnection) return false
+  const oud = lokaleStream.getVideoTracks().find(t => t.readyState === 'live')
+  if (!oud) return false
+  bezigMetWisselen = true
+  try {
+    const inst = oud.getSettings ? oud.getSettings() : {}
+    const pogingen = []
+    // Telefoon: voor <-> achter
+    if (inst.facingMode === 'user') pogingen.push({ facingMode: { exact: 'environment' } })
+    else if (inst.facingMode === 'environment') pogingen.push({ facingMode: { exact: 'user' } })
+    // Anders (of als dat niet lukt): de volgende camera in de lijst
+    try {
+      const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput' && d.deviceId)
+      const i = cams.findIndex(d => d.deviceId === inst.deviceId)
+      if (cams.length > 1) pogingen.push({ deviceId: { exact: cams[(i + 1) % cams.length].deviceId } })
+    } catch (e) {}
+    if (!pogingen.length) return false
+    const senders = peerConnection.getSenders()
+    const sender = senders.find(s => s.track === oud) || senders.find(s => s.track && s.track.kind === 'video') || videoSender
+    const wasAan = oud.enabled
+    oud.stop() // iPhone: maar een camera tegelijk open
+    let nieuw = null
+    for (const v of pogingen) {
+      try {
+        const s = await navigator.mediaDevices.getUserMedia({ video: v })
+        nieuw = s.getVideoTracks()[0] || null
+        if (nieuw) break
+      } catch (e) { console.warn('Camera wisselen: poging mislukt', e && e.name) }
+    }
+    if (!nieuw) {
+      // Andere camera lukt niet: de oude weer aanzetten
+      try {
+        const s = await navigator.mediaDevices.getUserMedia({ video: inst.deviceId ? { deviceId: { exact: inst.deviceId } } : true })
+        nieuw = s.getVideoTracks()[0] || null
+      } catch (e) { console.warn('Camera wisselen: oude camera terugzetten mislukt', e && e.name) }
+    }
+    lokaleStream.removeTrack(oud)
+    if (!nieuw) {
+      if (sender) { try { await sender.replaceTrack(null) } catch (e) {} }
+      videoActiefLokaal = false
+      return false
+    }
+    nieuw.enabled = wasAan
+    lokaleStream.addTrack(nieuw)
+    if (sender) await sender.replaceTrack(nieuw)
+    if (sender) videoSender = sender
+    videoActiefLokaal = true
+    const lokaalEl = document.getElementById('lokaalMedia')
+    if (lokaalEl) { lokaalEl.srcObject = lokaleStream; lokaalEl.play().catch(() => {}) }
+    const nieuwInst = nieuw.getSettings ? nieuw.getSettings() : {}
+    return nieuwInst.deviceId !== inst.deviceId
+  } catch (e) {
+    console.warn('wisselCamera fout:', e)
+    return false
+  } finally {
+    bezigMetWisselen = false
+  }
 }

@@ -33,6 +33,10 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 .terug-btn { position:fixed; top:16px; left:16px; z-index:10; background:rgba(0,0,0,0.4); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-size:13px; cursor:pointer; }
 .gesprek-tijd { font-size:18px; color:var(--accent); font-family:monospace; margin-top:8px; }
 #lokaalMedia { position:fixed; bottom:120px; right:16px; width:100px; height:140px; border-radius:12px; object-fit:cover; z-index:3; border:2px solid rgba(255,255,255,0.3); background:#111; }
+#lokaalMedia { top:auto; left:auto; touch-action:none; cursor:grab; user-select:none; -webkit-user-select:none; transition:opacity 0.2s; }
+#lokaalMedia.sleept { cursor:grabbing; opacity:0.8; transition:none; }
+#knoppen-gesprek, .terug-btn { transition:opacity 0.3s; }
+body.knoppen-weg #knoppen-gesprek, body.knoppen-weg .terug-btn { opacity:0; pointer-events:none; }
 </style>
 <link rel="stylesheet" href="android-fix.css">
 </head>
@@ -233,6 +237,7 @@ function startTimer() {
     document.getElementById('lokaalMedia').style.display = 'none'
   }
   toonWissel()
+  toonKnoppen()
   timer = setInterval(() => {
     sec++
     const m = Math.floor(sec/60), s = sec%60
@@ -304,6 +309,97 @@ window.wisselCam = async () => {
     toonWissel()
   }
 }
+// --- Eigen beeld: vorm volgt de camera, en verschuiven met vinger of muis ---
+const lok = document.getElementById('lokaalMedia')
+const LOK_BREED = 100
+function houBinnen(x, y) {
+  const w = lok.offsetWidth || LOK_BREED, h = lok.offsetHeight || 140
+  x = Math.max(4, Math.min(window.innerWidth - w - 4, x))
+  y = Math.max(4, Math.min(window.innerHeight - h - 4, y))
+  lok.style.left = x + 'px'
+  lok.style.top = y + 'px'
+  lok.style.right = 'auto'
+  lok.style.bottom = 'auto'
+}
+function zetOpPlek() {
+  if (!lok.style.left) {
+    // Nog nooit verplaatst: onthouden plek, anders rechtsonder boven de knoppen
+    let plek = null
+    try { plek = JSON.parse(localStorage.getItem('fibro_eigenbeeld_plek') || 'null') } catch (e) {}
+    const w = lok.offsetWidth || LOK_BREED, h = lok.offsetHeight || 140
+    if (plek && typeof plek.x === 'number' && typeof plek.y === 'number') {
+      houBinnen(plek.x * (window.innerWidth - w), plek.y * (window.innerHeight - h))
+    } else {
+      houBinnen(window.innerWidth - w - 16, window.innerHeight - h - 120)
+    }
+  } else {
+    houBinnen(parseFloat(lok.style.left) || 0, parseFloat(lok.style.top) || 0)
+  }
+}
+function pasVormAan() {
+  const vw = lok.videoWidth, vh = lok.videoHeight
+  if (!vw || !vh) return
+  const h = Math.round(Math.max(60, Math.min(180, LOK_BREED * vh / vw)))
+  lok.style.width = LOK_BREED + 'px'
+  lok.style.height = h + 'px'
+  zetOpPlek()
+}
+lok.addEventListener('loadedmetadata', pasVormAan)
+lok.addEventListener('resize', pasVormAan)
+window.addEventListener('resize', () => { if (lok.style.display === 'block') zetOpPlek() })
+
+let sleep = null
+lok.addEventListener('pointerdown', (e) => {
+  e.preventDefault()
+  const r = lok.getBoundingClientRect()
+  sleep = { id: e.pointerId, dx: e.clientX - r.left, dy: e.clientY - r.top }
+  try { lok.setPointerCapture(e.pointerId) } catch (er) {}
+  lok.classList.add('sleept')
+})
+lok.addEventListener('pointermove', (e) => {
+  if (!sleep || e.pointerId !== sleep.id) return
+  houBinnen(e.clientX - sleep.dx, e.clientY - sleep.dy)
+})
+function stopSlepen(e) {
+  if (!sleep || e.pointerId !== sleep.id) return
+  sleep = null
+  lok.classList.remove('sleept')
+  const w = lok.offsetWidth, h = lok.offsetHeight
+  const x = parseFloat(lok.style.left) || 0, y = parseFloat(lok.style.top) || 0
+  const plek = { x: x / Math.max(1, window.innerWidth - w), y: y / Math.max(1, window.innerHeight - h) }
+  try { localStorage.setItem('fibro_eigenbeeld_plek', JSON.stringify(plek)) } catch (er) {}
+}
+lok.addEventListener('pointerup', stopSlepen)
+lok.addEventListener('pointercancel', stopSlepen)
+
+// --- Belknoppen: bij video verdwijnen ze na 4 s, tik op het scherm laat ze zien ---
+let knoppenTimer = null
+function videoInBeeld() {
+  const r = document.getElementById('remoteMedia')
+  return (r && r.style.display === 'block') || lok.style.display === 'block'
+}
+function inGesprek() {
+  const g = document.getElementById('knoppen-gesprek')
+  return !!(g && g.style.display !== 'none')
+}
+function toonKnoppen() {
+  document.body.classList.remove('knoppen-weg')
+  if (knoppenTimer) clearTimeout(knoppenTimer)
+  knoppenTimer = setTimeout(() => {
+    if (inGesprek() && videoInBeeld() && !sleep) document.body.classList.add('knoppen-weg')
+  }, 4000)
+}
+document.addEventListener('pointerdown', (e) => {
+  if (e.target === lok) return // slepen van het eigen beeld telt niet als tik
+  toonKnoppen()
+}, true)
+// Geen video meer (camera's uit): knoppen altijd laten zien
+setInterval(() => {
+  if (document.body.classList.contains('knoppen-weg') && !(inGesprek() && videoInBeeld())) {
+    document.body.classList.remove('knoppen-weg')
+  }
+}, 1000)
+
 </script>
 </body>
 </html>

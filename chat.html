@@ -46,6 +46,9 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .vriend-selectie h3 { font-family:'Playfair Display',serif; font-style:italic; font-size:16px; color:var(--accent); margin-bottom:14px; }
 .vriend-item { display:flex; align-items:center; gap:12px; padding:12px; border:0.5px solid var(--border); border-radius:12px; margin-bottom:8px; cursor:pointer; background:var(--card); transition:border-color 0.2s; }
 .vriend-item:hover { border-color:var(--accent); }
+.vriend-item .vriend-av { position:relative; }
+.vriend-av .online-dot { position:absolute; bottom:-1px; right:-1px; width:11px; height:11px; border-radius:50%; background:#4ade80; border:2px solid var(--bg); display:none; }
+.vriend-item.is-online .online-dot { display:block; }
 .vriend-av { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:18px; }
 .vriend-naam { font-size:14px; font-weight:500; }
 .vriend-username { font-size:14px; color:var(--muted); margin-top:2px; }
@@ -581,6 +584,59 @@ window.veiligeUrl = function(v){
   }
 
   // ─── Vrienden laden ───
+  // --- Online-status in de vriendenlijst (zelfde regel als de pagina Vrienden) ---
+  function isGebruikerOnline(profiel) {
+    if (!profiel || !profiel.online_status) return false
+    if (!profiel.laatst_gezien) return false
+    const sec = (Date.now() - new Date(profiel.laatst_gezien).getTime()) / 1000
+    return sec < 150
+  }
+
+  // Zet stipjes aan/uit en schuift wie online is naar boven.
+  // Rijen worden alleen verplaatst, zodat klikken en ongelezen-bolletjes blijven werken.
+  function werkOnlineBij(profielen) {
+    const container = document.getElementById('vriendenLijst')
+    if (!container || !Array.isArray(profielen)) return
+    const online = new Set(profielen.filter(isGebruikerOnline).map(p => String(p.id)))
+    const rijen = [...container.querySelectorAll('.vriend-item[data-vid]')]
+    if (!rijen.length) return
+    rijen.forEach(el => {
+      const av = el.querySelector('.vriend-av')
+      if (av && !av.querySelector('.online-dot')) {
+        const stip = document.createElement('span')
+        stip.className = 'online-dot'
+        av.appendChild(stip)
+      }
+      el.classList.toggle('is-online', online.has(el.dataset.vid))
+    })
+    // Basisvolgorde = zoals de lijst geladen werd; online eerst
+    const basis = (window._vriendenData || []).map(v => String(v.id))
+    const plek = el => { const i = basis.indexOf(el.dataset.vid); return i < 0 ? 9999 : i }
+    const gesorteerd = [...rijen].sort((a, b) =>
+      (b.classList.contains('is-online') ? 1 : 0) - (a.classList.contains('is-online') ? 1 : 0) || plek(a) - plek(b))
+    if (gesorteerd.some((el, i) => el !== rijen[i])) gesorteerd.forEach(el => container.appendChild(el))
+  }
+
+  // Elke 30 s (en bij terugkomen in de app) de status opnieuw ophalen
+  let onlineTimer = null
+  async function haalOnlineOp() {
+    if (document.hidden) return
+    const ids = (window._vriendenData || []).map(v => v.id)
+    if (!ids.length) return
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, online_status, laatst_gezien')
+        .in('id', ids)
+      if (!error && data) werkOnlineBij(data)
+    } catch (e) { console.warn('[online] ophalen mislukt', e) }
+  }
+  function startOnlineTimer() {
+    if (onlineTimer) return
+    onlineTimer = setInterval(haalOnlineOp, 30000)
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) haalOnlineOp() })
+  }
+
   async function laadVrienden() {
     const { data: friendships, error } = await supabase
       .from('friendships')
@@ -637,6 +693,8 @@ window.veiligeUrl = function(v){
         window.location.href = 'bellen.html?vriend=' + encodeURIComponent(btn.dataset.bid) + '&naam=' + encodeURIComponent(btn.dataset.bnaam)
       })
     })
+    werkOnlineBij(data)
+    startOnlineTimer()
   }
 
   // ─── Chat openen ───

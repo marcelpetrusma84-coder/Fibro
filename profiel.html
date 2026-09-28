@@ -569,7 +569,47 @@ async function comprimeerVideo(file) {
 }
 
 // Muziek compressie: mp3 128kbps mono via lamejs
-async function comprimeerMuziek(file) {
+// Voortgangsbalk bij muziek uploaden
+const muzBalk = (() => {
+  let el = null
+  const deel = c => el && el.querySelector(c)
+  function maak() {
+    if (el) return
+    if (!document.getElementById('muz-balk-stijl')) {
+      const st = document.createElement('style')
+      st.id = 'muz-balk-stijl'
+      st.textContent = '@keyframes muzSchuif{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}'
+      document.head.appendChild(st)
+    }
+    el = document.createElement('div')
+    el.style.cssText = 'position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);z-index:99999;width:min(320px,86vw);padding:12px 16px;border-radius:14px;background:rgba(20,20,30,.92);color:#fff;font:14px system-ui,-apple-system,sans-serif;box-shadow:0 4px 20px rgba(0,0,0,.4);pointer-events:none'
+    el.innerHTML = '<div class="mb-tekst" style="margin-bottom:8px"></div>' +
+      '<div style="height:8px;border-radius:4px;background:rgba(255,255,255,.2);overflow:hidden">' +
+      '<div class="mb-vol" style="height:100%;width:40%;border-radius:4px;background:#8b5cf6;transition:width .2s"></div></div>'
+    document.body.appendChild(el)
+  }
+  return {
+    toon(t) {
+      maak()
+      deel('.mb-tekst').textContent = t
+      const v = deel('.mb-vol')
+      v.style.width = '40%'
+      v.style.animation = 'muzSchuif 1.1s linear infinite'
+    },
+    zet(f) {
+      if (!el) return
+      const p = Math.round(Math.max(0, Math.min(1, f)) * 100)
+      const v = deel('.mb-vol')
+      v.style.animation = 'none'
+      v.style.transform = 'none'
+      v.style.width = p + '%'
+      deel('.mb-tekst').textContent = '\ud83c\udfb5 Muziek verwerken\u2026 ' + p + '%'
+    },
+    tekst(t) { if (el) deel('.mb-tekst').textContent = t },
+    weg() { if (el) { el.remove(); el = null } }
+  }
+})()
+async function comprimeerMuziek(file, voortgang) {
   const arrayBuf = await file.arrayBuffer()
   const ctx = new (window.AudioContext || window.webkitAudioContext)()
   const buffer = await ctx.decodeAudioData(arrayBuf)
@@ -584,11 +624,17 @@ async function comprimeerMuziek(file) {
   const encoder = new lamejs.Mp3Encoder(1, buffer.sampleRate, 128)
   const delen = []
   const blok = 1152
+  let tel = 0
   for (let i = 0; i < samples.length; i += blok) {
     const stuk = samples.subarray(i, i + blok)
     const mp3 = encoder.encodeBuffer(stuk)
     if (mp3.length > 0) delen.push(mp3)
+    if (++tel % 50 === 0) {
+      if (voortgang) voortgang(i / samples.length)
+      await new Promise(r => setTimeout(r, 0))
+    }
   }
+  if (voortgang) voortgang(1)
   const rest = encoder.flush()
   if (rest.length > 0) delen.push(rest)
   const blob = new Blob(delen, { type: 'audio/mp3' })
@@ -609,10 +655,14 @@ window.verwerkMuziek = async function(event) {
     status.textContent = 'Bestand te groot (max ' + maxMB + ' MB)'
     return
   }
+  if (window._muzBezig) { alert('Er wordt al een nummer verwerkt. Even wachten.'); return }
+  window._muzBezig = true
   try {
     status.className = 'status-msg'
     status.textContent = 'Bezig met verkleinen...'
-    const data = await comprimeerMuziek(file)
+    muzBalk.toon('\ud83c\udfb5 Muziek inlezen\u2026')
+    const data = await comprimeerMuziek(file, f => muzBalk.zet(f))
+    muzBalk.tekst('\ud83c\udfb5 Opslaan\u2026')
     await slaFotoOp('muziek_track', data)
     await slaFotoOp('muziek_titel', file.name.replace(/\.[^.]+$/, ''))
     document.getElementById('muziekUploadTekst').textContent = file.name
@@ -621,6 +671,9 @@ window.verwerkMuziek = async function(event) {
   } catch(err) {
     status.className = 'status-msg error'
     status.textContent = 'Mislukt: ' + err.message
+  } finally {
+    window._muzBezig = false
+    muzBalk.weg()
   }
 }
 

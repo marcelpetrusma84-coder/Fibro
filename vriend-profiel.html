@@ -177,6 +177,14 @@ body.heeft-wallpaper::before { display:block; }
     } catch { return null }
   }
 
+  // -- Gegevens van anderen veilig tonen (ontsmetten) --
+  // Alles wat van een vriend komt (via P2P of Supabase) kan vervalst zijn.
+  const vEsc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')
+  const vAfb = v => { const u = String(v || '').trim(); return /^data:image\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=]+$/i.test(u) ? u : null }
+  const vVideo = v => { const u = String(v || '').trim(); return /^data:video\/[a-z0-9.+-]+(;[a-z0-9.=+-]+)*;base64,[A-Za-z0-9+/=]+$/i.test(u) ? u : null }
+  const vKleur = v => { const u = String(v || '').trim(); return /^(#[0-9a-f]{3,8}|[a-z]{3,30}|(rgba?|hsla?)\([0-9.,%\sdeg]+\)|(repeating-)?(linear|radial|conic)-gradient\([#0-9a-z.,%\s()-]+\))$/i.test(u) ? u : null }
+  const vFont = v => { const u = String(v || '').trim(); return u && u.length < 200 && /^[\w\s,'"-]+$/.test(u) ? u : null }
+
   // ── Online check via laatst_gezien ──
   function isOnline(profiel) {
     try { if (localStorage.getItem('fibro_ik_offline') === '1') return false } catch (e) {}
@@ -188,6 +196,7 @@ body.heeft-wallpaper::before { display:block; }
 
   // ── Wallpaper tonen ──
   function toonWallpaper(dataUrl) {
+    dataUrl = vAfb(dataUrl)
     if (!dataUrl) return
     const bg = document.getElementById('wallpaperBg')
     bg.style.backgroundImage = `url(${dataUrl})`
@@ -259,16 +268,16 @@ body.heeft-wallpaper::before { display:block; }
       : (data.offline_bericht ? `${data.offline_emoji || '💤'} ${data.offline_bericht}` : 'Offline')
 
     // Kleuren
-    if (data.accent_kleur) document.documentElement.style.setProperty('--accent', data.accent_kleur)
-    if (data.accent_kleur2) document.documentElement.style.setProperty('--accent2', data.accent_kleur2)
-    if (data.achtergrond_kleur && !data.wallpaper_data) {
-      document.documentElement.style.setProperty('--bg', data.achtergrond_kleur)
+    if (vKleur(data.accent_kleur)) document.documentElement.style.setProperty('--accent', vKleur(data.accent_kleur))
+    if (vKleur(data.accent_kleur2)) document.documentElement.style.setProperty('--accent2', vKleur(data.accent_kleur2))
+    if (vKleur(data.achtergrond_kleur) && !data.wallpaper_data) {
+      document.documentElement.style.setProperty('--bg', vKleur(data.achtergrond_kleur))
     }
 
     // Lettertype
-    if (data.lettertype) {
+    if (vFont(data.lettertype)) {
       const style = document.createElement('style')
-      style.textContent = `* { font-family: ${data.lettertype} !important; }`
+      style.textContent = `* { font-family: ${vFont(data.lettertype)} !important; }`
       document.head.appendChild(style)
     }
   }
@@ -309,7 +318,7 @@ body.heeft-wallpaper::before { display:block; }
         const fotos = []
         for (let i = 0; i < fotoAantal[stijl]; i++) {
           const f = await laadFotoUitDB('vriend_' + vriendId + '_foto_pfoto_' + stijl + '_' + i)
-          if (f) fotos.push(f)
+          if (vAfb(f)) fotos.push(vAfb(f))
         }
         if (fotos.length) {
           const kolommenMap = { '3x3':3, '2x2':2, 'banner':4, '1x3':1, 'groot':1, 'zwevend':3, 'polaroid':3, 'featured':3 }
@@ -378,7 +387,7 @@ body.heeft-wallpaper::before { display:block; }
         await renderGastenboekWidget(el.querySelector('.gbw-inhoud'), vriendId)
         continue
       }
-      el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">' + (w.icon || '🧩') + '</span><span class="widget-titel">' + (w.titel || w.id) + '</span></div><div class="widget-inhoud"><div class="wi-icon">' + (w.icon || '🧩') + '</div></div>'
+      el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">' + vEsc(w.icon || '🧩') + '</span><span class="widget-titel">' + vEsc(w.titel || w.id) + '</span></div><div class="widget-inhoud"><div class="wi-icon">' + vEsc(w.icon || '🧩') + '</div></div>'
       grid.appendChild(el)
     }
     grid.style.display = ''
@@ -388,11 +397,11 @@ body.heeft-wallpaper::before { display:block; }
   // ── Achtergrondfoto van vriend-widget (alleen tonen, niet bewerken) ──
   async function vriendAchtergrond(el, vriendId, wid) {
     const rec = await haalRecordVP('vriend_' + vriendId + '_wbg_' + wid)
-    if (!rec || !rec.data) return
+    if (!rec || !vAfb(rec.data)) return
     let p = { s:100, x:50, y:50 }
     try { if (rec.pos) p = JSON.parse(rec.pos) } catch(e) {}
     el.style.position = 'relative'
-    el.style.backgroundImage = 'linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url(' + rec.data + ')'
+    el.style.backgroundImage = 'linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url(' + vAfb(rec.data) + ')'
     el.style.backgroundSize = p.s + '% auto'
     el.style.backgroundPosition = p.x + '% ' + p.y + '%'
     el.style.backgroundRepeat = 'no-repeat'
@@ -484,7 +493,7 @@ body.heeft-wallpaper::before { display:block; }
     if (!q || !q.tekst) return false
     await vriendAchtergrond(el, vriendId, 'quote')
     el.innerHTML = '<div style="text-align:center;position:relative;z-index:2;padding:10px 6px">'
-      + '<div style="font-size:' + (q.grootte||16) + 'px;line-height:1.35;font-family:' + (q.font||'inherit') + ';color:var(--text);white-space:pre-wrap;text-shadow:0 1px 4px rgba(0,0,0,0.7)">'
+      + '<div style="font-size:' + (Math.min(72, Math.max(8, parseInt(q.grootte, 10) || 16))) + 'px;line-height:1.35;font-family:' + vEsc(vFont(q.font) || 'inherit') + ';color:var(--text);white-space:pre-wrap;text-shadow:0 1px 4px rgba(0,0,0,0.7)">'
       + escVW(q.tekst) + '</div></div>'
     return true
   }
@@ -526,11 +535,11 @@ body.heeft-wallpaper::before { display:block; }
     if (!ruw) return false
     let meta = null
     try { meta = JSON.parse(ruw) } catch(e) { return false }
-    if (!meta || !meta.thumb || !String(meta.thumb).startsWith('data:image')) return false
+    if (!meta || !meta.thumb || !vAfb(meta.thumb)) return false
     const titel = String(meta.titel || 'Video').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     const duur = Math.floor(meta.duur/60) + ':' + String(Math.floor(meta.duur%60)).padStart(2,'0')
     el.innerHTML = '<div style="position:relative;width:100%;height:100%;border-radius:10px;overflow:hidden;background:#000;">'
-      + '<img src="' + meta.thumb + '" style="width:100%;height:100%;object-fit:cover;">'
+      + '<img src="' + vAfb(meta.thumb) + '" style="width:100%;height:100%;object-fit:cover;">'
       + '<div class="vid-play-knop" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;cursor:pointer;background:rgba(0,0,0,0.25);">'
       + '<div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;font-size:20px;color:#1a0a2e;">&#9654;</div></div>'
       + '<div style="position:absolute;bottom:0;left:0;right:0;padding:6px 10px;background:linear-gradient(transparent,rgba(0,0,0,0.8));font-size:11px;color:#fff;display:flex;justify-content:space-between;">'
@@ -538,8 +547,8 @@ body.heeft-wallpaper::before { display:block; }
     const knop = el.querySelector('.vid-play-knop')
     if (knop) knop.onclick = async () => {
       const data = await laadFotoUitDB('vriend_' + vriendId + '_video_data')
-      if (data && String(data).startsWith('data:video')) {
-        el.innerHTML = '<video src="' + data + '" controls autoplay playsinline style="width:100%;height:100%;border-radius:10px;background:#000;"></video>'
+      if (vVideo(data)) {
+        el.innerHTML = '<video src="' + vVideo(data) + '" controls autoplay playsinline style="width:100%;height:100%;border-radius:10px;background:#000;"></video>'
       } else {
         alert('Deze video is nog niet opgehaald.\n\nDat gebeurt als je vriend online is en jullie verbonden zijn.')
       }
@@ -578,7 +587,7 @@ async function renderVriendMuziek(el) {
 
     let idx = 0
     let audio = null
-    const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    const escH = vEsc
     const fmt = s => { if(!s||isNaN(s))return '0:00'; const m=Math.floor(s/60),sec=Math.floor(s%60); return m+':'+(sec<10?'0':'')+sec }
 
     const render = () => {

@@ -1380,7 +1380,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     flappybird: './flappy-ui.js?v=95',
     breakout: './blockit-ui.js?v=95',
     spaceinvaders: './invaders-ui.js?v=95',
-    swarm: './swarm-ui.js?v=1',
+    swarm: './swarm-ui.js?v=3',
     endlessrunner: './runner-gunner-ui.js?v=11',
     pacman: './ecto-ui.js?v=9',
     pinball: './twin-snakes-ui.js?v=1'
@@ -1724,7 +1724,7 @@ async function startBlockIt() {
 
 // ─── The Swarm Multiplayer ───
   async function startSwarm() {
-    const m = await import('./swarm-ui.js?v=1')
+    const m = await import('./swarm-ui.js?v=3')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'swarm' })
   }
 

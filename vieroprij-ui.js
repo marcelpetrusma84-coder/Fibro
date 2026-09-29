@@ -3,7 +3,7 @@
 
 export function start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
   vriendNaam = vriendNaam || 'vriend'
-  document.getElementById('spelTitelBar').textContent = '🔴 Vier op een rij'
+  document.getElementById('spelTitelBar').textContent = '🔴 Four in a Row'
   const inhoud = document.getElementById('spelInhoud')
   const KOLOMMEN = 7
   const RIJEN = 6

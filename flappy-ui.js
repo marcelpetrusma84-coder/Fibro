@@ -8,7 +8,7 @@ import { maakGeluid } from './flappy-geluid.js?v=86'
 export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     vriendNaam = vriendNaam || 'vriend'
     isActief = isActief || (() => true)
-    document.getElementById('spelTitelBar').textContent = '🦇 Flappy Friends'
+    document.getElementById('spelTitelBar').textContent = '🦇 Flapper'
     const inhoud = document.getElementById('spelInhoud')
 
     // ── Instellingen ──

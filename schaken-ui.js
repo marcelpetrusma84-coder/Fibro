@@ -3,7 +3,7 @@
 
 export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
   vriendNaam = vriendNaam || 'vriend'
-  document.getElementById('spelTitelBar').textContent = '♟️ Schaken'
+  document.getElementById('spelTitelBar').textContent = '♟️ Chess'
   const inhoud = document.getElementById('spelInhoud')
 
   let staat = Schaak.nieuweSpelStaat()

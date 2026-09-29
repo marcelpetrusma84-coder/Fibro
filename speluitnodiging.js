@@ -7,14 +7,15 @@
 import { supabase } from './supabase.js?v=95'
 
 const SPEL_INFO = {
-  botkaaseiren: { icon: '⭕', naam: 'Boter-Kaas-Eieren' },
-  vieroprij: { icon: '🔴', naam: 'Vier op een rij' },
-  schaken: { icon: '♟️', naam: 'Schaken' },
-  dammen: { icon: '⚫', naam: 'Dammen' },
+  botkaaseiren: { icon: '⭕', naam: 'Tic-Tac-Toe' },
+  vieroprij: { icon: '🔴', naam: 'Four in a Row' },
+  schaken: { icon: '♟️', naam: 'Chess' },
+  dammen: { icon: '⚫', naam: 'Draughts' },
   pong: { icon: '🏓', naam: 'Neo Paddle' },
-  flappybird: { icon: '🦇', naam: 'Flappy Friends' },
+  flappybird: { icon: '🦇', naam: 'Flapper' },
   spaceinvaders: { icon: '👾', naam: 'Space Invaders' },
   swarm: { icon: '🪲', naam: 'The Swarm' },
+  shmup: { icon: '🚀', naam: 'Neon Raiders' },
   endlessrunner: { icon: '🏃', naam: 'Runner & Gunner' },
   breakout: { icon: '🟪', naam: 'Block It' },
   pacman: { icon: '👻', naam: 'Ghost Tag' },

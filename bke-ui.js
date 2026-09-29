@@ -4,7 +4,7 @@
 
 export function start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
   vriendNaam = vriendNaam || 'vriend'
-  document.getElementById('spelTitelBar').textContent = '⭕ Boter-Kaas-Eieren'
+  document.getElementById('spelTitelBar').textContent = '⭕ Tic-Tac-Toe'
   const inhoud = document.getElementById('spelInhoud')
   let bord = Array(9).fill(null)
   let mijnBeurt = benIkSpeler1  // speler 1 (X) begint

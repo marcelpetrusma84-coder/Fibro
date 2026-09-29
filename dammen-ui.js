@@ -4,7 +4,7 @@
 
 export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
     const titel = document.getElementById('spelTitelBar')
-    if (titel) titel.textContent = '⚫ Dammen'
+    if (titel) titel.textContent = '⚫ Draughts'
         const inhoud = document.getElementById('spelInhoud')
         const VAKJE = 32
         const mijnKleur = benIkSpeler1 ? 'w' : 'z'

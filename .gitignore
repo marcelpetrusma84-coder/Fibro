@@ -1,9 +1,5 @@
 *.backup-*
 *.kapot-*
 *.tar.gz
-*.bak-0902
 *.bak-*
-vriend-profiel.html.voor-gbwidget-*
-*.bak-*
-vriend-profiel.html.voor-*
-index.html.voor-*
+*.voor-*

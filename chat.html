@@ -365,7 +365,7 @@ window.veiligeUrl = function(v){
   import { startMeldingen } from './meldingen.js?v=99'
   import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=95'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=95'
-  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=96'
+  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=98'
   import { stuurRapport } from './rapport.js?v=95'
   import * as Schaak from './schaak.js?v=95'
   import * as Dammen from './dammen.js?v=95'
@@ -1943,27 +1943,6 @@ async function startBlockIt() {
   window.toggleBelCam = function() {
     const aan = toggleCamera()
     document.getElementById('oproepCamBtn').textContent = aan ? '📷' : '🚫'
-  }
-  window.gaanBellen = async function(video = false) {
-    if (!geselecteerdeVriend) return
-    window._inkomendVanId = geselecteerdeVriend.id
-    window._inkomendVideo = video
-    // Toon oproepModal als 'uitgaand'
-    const av = document.getElementById('oproepAvatar')
-    if (geselecteerdeVriend.avatar && geselecteerdeVriend.avatar.startsWith('data:')) {
-      av.innerHTML = `<img src="${geselecteerdeVriend.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
-    } else {
-      av.textContent = geselecteerdeVriend.avatar || '👤'
-    }
-    document.getElementById('oproepNaam').textContent = geselecteerdeVriend.naam || 'Vriend'
-    document.getElementById('oproepType').textContent = video ? '📹 Videobellen...' : '📞 Aan het bellen...'
-    document.getElementById('oproepSchermInkomend').style.display = 'none'
-    document.getElementById('oproepSchermGesprek').style.display = 'flex'
-    document.getElementById('oproepModal').style.display = 'flex'
-    if (video) {
-      document.getElementById('oproepCamBtn').style.display = 'flex'
-    }
-    await belOp(geselecteerdeVriend.id, video)
   }
 
   // ─── Spel audiobel ───

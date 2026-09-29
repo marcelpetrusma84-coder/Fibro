@@ -474,7 +474,7 @@ import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
 import { startMeldingen } from './meldingen.js?v=95'
 import { laadThema } from './thema.js?v=95'
-import { startHeartbeat } from './heartbeat.js?v=95'
+import { startHeartbeat } from './heartbeat.js?v=99'
 import { initSync } from './sync.js?v=96'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=95'
 
@@ -726,7 +726,7 @@ async function init(){
     gekozenMoodEmoji = moodEmoji
     document.getElementById('moodEmojiGekozen').textContent = moodEmoji
     document.getElementById('editMood').value = moodTekst
-    isOnline = profiel.online_status ?? true
+    isOnline = profiel.toon_online ?? true
     document.getElementById('onlineDot').style.background = isOnline ? '#22c55e' : '#6b7280'
     document.getElementById('onlineLabel').textContent = isOnline ? 'Online' : 'Offline'
 
@@ -891,6 +891,7 @@ window.slaAllesOp=async function(){
     lettertype:huidigLettertype,
     animatie:huidigeAnimatie,
     online_status:isOnline,
+    toon_online:isOnline,
     offline_emoji:gekozenMoodEmoji,
     offline_bericht:document.getElementById('editMood').value.trim() || 'Offline',
     avatar_data: await haalAvatarDataOp(),
@@ -935,10 +936,12 @@ window.activeerPushNotificaties = async function() {
 let isOnline = true
 window.toggleOnlineStatus = async function() {
   isOnline = !isOnline
+  try { localStorage.setItem('fibro_ik_offline', isOnline ? '0' : '1') } catch (e) {}
   document.getElementById('onlineDot').style.background = isOnline ? '#22c55e' : '#6b7280'
   document.getElementById('onlineLabel').textContent = isOnline ? 'Online' : 'Offline'
   await supabase.from('profiles').update({
-    online_status: isOnline
+    online_status: isOnline,
+    toon_online: isOnline
   }).eq('id', huidigeUser.id)
 }
 init()

@@ -289,12 +289,13 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { startMeldingen } from './meldingen.js?v=95'
-  import { startHeartbeat } from './heartbeat.js?v=95'
+  import { startHeartbeat } from './heartbeat.js?v=99'
   import { wisVriendData } from './opruimen.js?v=95'
   import { initSync } from './sync.js?v=96'
   pasBlokstijlToe()
 
   function isGebruikerOnline(profiel) {
+    try { if (localStorage.getItem('fibro_ik_offline') === '1') return false } catch (e) {}
     if (!profiel.online_status) return false
     if (!profiel.laatst_gezien) return false
     const sec = (Date.now() - new Date(profiel.laatst_gezien).getTime()) / 1000

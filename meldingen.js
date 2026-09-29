@@ -135,6 +135,7 @@ function startBuzzLuisteraar() {
 }
 
 async function startOnlineLuisteraar() {
+  try { if (localStorage.getItem('fibro_ik_offline') === '1') return } catch (e) {} // helemaal offline: niet aanmelden, geen meldingen
   // Alleen vrienden melden, niet iedereen
   let vrienden = new Set()
   try {
@@ -156,7 +157,7 @@ async function startOnlineLuisteraar() {
       console.log('[meldingen] presence:', [...nu], 'eerste ronde:', eersteRonde)
       if (eersteRonde) { bekend = nu; eersteRonde = false; return }
       for (const id of nu) {
-        if (!bekend.has(id) && vrienden.has(id) && aan(ONLINE_UIT)) {
+        if (!bekend.has(id) && vrienden.has(id) && aan(ONLINE_UIT) && localStorage.getItem('fibro_ik_offline') !== '1') {
           toonMelding('\u{1F7E2} ' + (await haalNaam(id)) + ' is online', 'rgba(74,222,128,0.6)', () => { window.location.href = 'chat.html?vriend=' + id })
         }
       }

@@ -14,6 +14,7 @@ const SPEL_INFO = {
   pong: { icon: '🏓', naam: 'Neo Paddle' },
   flappybird: { icon: '🦇', naam: 'Flappy Friends' },
   spaceinvaders: { icon: '👾', naam: 'Space Invaders' },
+  swarm: { icon: '🪲', naam: 'The Swarm' },
   endlessrunner: { icon: '🏃', naam: 'Runner & Gunner' },
   breakout: { icon: '🟪', naam: 'Block It' },
   pacman: { icon: '👻', naam: 'Ghost Tag' },

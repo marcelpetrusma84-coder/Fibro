@@ -1464,7 +1464,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
     spelKanaal.on('broadcast', { event: 'verlaten' }, () => {
       stopSpelHartslag()
-      toonSpelMelding(((geselecteerdeVriend && geselecteerdeVriend.naam) || 'Je vriend') + ' heeft het spel verlaten.')
+      toonSpelMelding(esc((geselecteerdeVriend && geselecteerdeVriend.naam) || 'Je vriend') + ' heeft het spel verlaten.')
     })
 
     spelKanaal.on('broadcast', { event: 'ping' }, () => {
@@ -1561,7 +1561,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       if (!pingOntvangen || !spelActief) return
       if (Date.now() - laatstePing > 10000) {
         stopSpelHartslag()
-        toonSpelMelding('De verbinding met ' + ((geselecteerdeVriend && geselecteerdeVriend.naam) || 'je vriend') + ' is weggevallen.<br>Het spel is gestopt.')
+        toonSpelMelding('De verbinding met ' + esc((geselecteerdeVriend && geselecteerdeVriend.naam) || 'je vriend') + ' is weggevallen.<br>Het spel is gestopt.')
       }
     }, 2000)
   }

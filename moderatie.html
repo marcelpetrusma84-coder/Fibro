@@ -130,6 +130,10 @@ function updateStats() {
   document.getElementById('statGeblokkeerd').textContent = alleRapporten.filter(r => r.status === 'geblokkeerd').length
 }
 
+// Rapporten bevatten tekst van anderen: altijd ontsnappen, id's alleen letters/cijfers/streepjes
+const mEsc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')
+const mId = v => /^[0-9A-Za-z-]{1,64}$/.test(String(v ?? '')) ? String(v) : ''
+
 function toonRapporten() {
   const container = document.getElementById('rapportenLijst')
   const gefilterd = huidigFilter === 'alle'
@@ -145,25 +149,25 @@ function toonRapporten() {
     const tijd = new Date(r.created_at).toLocaleDateString('nl-NL', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
     const statusKleur = r.status === 'nieuw' ? 'nieuw' : r.status === 'behandeld' ? 'behandeld' : 'geblokkeerd'
     return `
-      <div class="rapport-kaart" id="rapport-${r.id}">
+      <div class="rapport-kaart" id="rapport-${mId(r.id)}">
         <div class="rapport-header">
-          <div class="rapport-av">${r.gemelde?.avatar_url || '👤'}</div>
+          <div class="rapport-av">${mEsc(r.gemelde?.avatar_url || '👤')}</div>
           <div class="rapport-namen">
-            <div class="rapport-gemelde">@${r.gemelde?.username || 'onbekend'}</div>
-            <div class="rapport-melder">Gemeld door @${r.melder?.username || 'onbekend'}</div>
+            <div class="rapport-gemelde">@${mEsc(r.gemelde?.username || 'onbekend')}</div>
+            <div class="rapport-melder">Gemeld door @${mEsc(r.melder?.username || 'onbekend')}</div>
           </div>
           <div>
-            <div class="status-badge ${statusKleur}">${r.status}</div>
+            <div class="status-badge ${statusKleur}">${mEsc(r.status)}</div>
             <div class="rapport-tijd" style="margin-top:4px;">${tijd}</div>
           </div>
         </div>
-        <div class="rapport-reden">🚩 ${r.reden || 'Geen reden opgegeven'}</div>
-        ${r.bericht_inhoud ? `<div class="rapport-bericht">"${r.bericht_inhoud}"</div>` : ''}
+        <div class="rapport-reden">🚩 ${mEsc(r.reden || 'Geen reden opgegeven')}</div>
+        ${r.bericht_inhoud ? `<div class="rapport-bericht">"${mEsc(r.bericht_inhoud)}"</div>` : ''}
         ${r.status === 'nieuw' ? `
         <div class="rapport-acties">
-          <button class="actie-btn negeer" onclick="behandelRapport('${r.id}', 'behandeld')">✓ Negeer</button>
-          <button class="actie-btn waarschuw" onclick="behandelRapport('${r.id}', 'gewaarschuwd')">⚠️ Waarschuw</button>
-          <button class="actie-btn blokkeer" onclick="blokkeerGebruiker('${r.gemelde_id}', '${r.id}')">🚫 Blokkeer</button>
+          <button class="actie-btn negeer" onclick="behandelRapport('${mId(r.id)}', 'behandeld')">✓ Negeer</button>
+          <button class="actie-btn waarschuw" onclick="behandelRapport('${mId(r.id)}', 'gewaarschuwd')">⚠️ Waarschuw</button>
+          <button class="actie-btn blokkeer" onclick="blokkeerGebruiker('${mId(r.gemelde_id)}', '${mId(r.id)}')">🚫 Blokkeer</button>
         </div>` : ''}
       </div>
     `

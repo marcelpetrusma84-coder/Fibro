@@ -153,7 +153,7 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 import { laadThema } from './thema.js?v=95'
 import { pasBlokstijlToe } from './blokstijl.js?v=95'
 import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=95'
-import { startHeartbeat } from './heartbeat.js?v=99'
+import { startHeartbeat } from './heartbeat.js?v=101'
 import { initSync } from './sync.js?v=96'
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -406,7 +406,9 @@ function renderHome(id, c) {
     c.innerHTML = `<div style="text-align:center"><div style="font-size:12px;color:rgba(255,255,255,0.8)">${dg[nu.getDay()]}</div><div style="font-size:24px;font-weight:700;color:var(--accent)">${nu.getDate()}</div><div style="font-size:12px;color:rgba(255,255,255,0.8)">${mn[nu.getMonth()]} ${nu.getFullYear()}</div></div>`
   } else if (id === 'online') {
     c.innerHTML = '<div id="wonl" style="font-size:28px;font-weight:700;text-align:center;color:#22c55e">…</div><div style="font-size:11px;text-align:center;color:rgba(255,255,255,0.8)">vrienden online</div>'
-    supabase.from('friendships').select('user_id,friend_id').or(`user_id.eq.${window._uid},friend_id.eq.${window._uid}`).eq('status','accepted').then(({data:fs})=>{
+    let ikOff=false;try{ikOff=localStorage.getItem('fibro_ik_offline')==='1'}catch(e){}
+    if(ikOff){const e=c.querySelector('#wonl');if(e)e.textContent='0'} // helemaal offline: niet opvragen
+    else supabase.from('friendships').select('user_id,friend_id').or(`user_id.eq.${window._uid},friend_id.eq.${window._uid}`).eq('status','accepted').then(({data:fs})=>{
       if(!fs)return
       const ids=fs.map(f=>f.user_id===window._uid?f.friend_id:f.user_id)
       if(!ids.length){const e=document.getElementById('wonl');if(e)e.textContent='0';return}

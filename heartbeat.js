@@ -36,8 +36,15 @@ export async function startHeartbeat() {
   window.addEventListener('pagehide', zetOffline)
 }
 
+// Helemaal offline: na de eerste ping (die toon_online ophaalt en de status op
+// offline zet) geen verzoeken meer naar de server. De database laat
+// laatst_gezien dan toch staan. Zet je jezelf in het profiel weer online, dan
+// pingt de volgende ronde gewoon weer.
+let eerstePingGedaan = false
 async function ping() {
   if (!heartbeatUserId) return
+  if (eerstePingGedaan && ikOffline()) return
+  eerstePingGedaan = true
   const nu = new Date().toISOString()
   const verwacht = !ikOffline()
   const { data, error } = await supabase.from('profiles')
@@ -65,6 +72,7 @@ async function zetOffline() {
   if (!heartbeatUserId) return
   clearInterval(heartbeatInterval)
   heartbeatInterval = null
+  if (eerstePingGedaan && ikOffline()) return // staat al op offline
   await supabase.from('profiles').update({
     online_status: false,
     laatst_gezien: new Date().toISOString()

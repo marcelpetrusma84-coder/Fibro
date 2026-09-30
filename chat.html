@@ -361,7 +361,7 @@ window.veiligeUrl = function(v){
   import { laadWallpaper } from './wallpaper.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { initSync } from './sync.js?v=96'
-  import { startHeartbeat } from './heartbeat.js?v=99'
+  import { startHeartbeat } from './heartbeat.js?v=101'
   import { startMeldingen } from './meldingen.js?v=99'
   import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=95'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=95'
@@ -624,6 +624,7 @@ window.veiligeUrl = function(v){
   let onlineTimer = null
   async function haalOnlineOp() {
     if (document.hidden) return
+    try { if (localStorage.getItem('fibro_ik_offline') === '1') return } catch (e) {} // helemaal offline: niet opvragen
     const ids = (window._vriendenData || []).map(v => v.id)
     if (!ids.length) return
     try {

@@ -291,7 +291,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   import { startMeldingen } from './meldingen.js?v=99'
   import { startHeartbeat } from './heartbeat.js?v=99'
   import { wisVriendData } from './opruimen.js?v=95'
-  import { blokkeerPersoon, kiesVriendActie } from './persoonblok.js?v=1'
+  import { blokkeerPersoon, kiesVriendActie, kiesGeblokkeerdActie, deblokkeerPersoon, verwijderGeblokkeerde, haalGeblokkeerden } from './persoonblok.js?v=2'
   import { initSync } from './sync.js?v=96'
   pasBlokstijlToe()
 
@@ -321,7 +321,8 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 
     const container = document.getElementById('vriendenLijst')
 
-    if (error || !data || data.length === 0) {
+    const geblokkeerd = error ? [] : await haalGeblokkeerden()
+    if (error || !data || (data.length === 0 && geblokkeerd.length === 0)) {
       container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);font-size:15px;line-height:1.8;">👥 Nog geen vrienden.<br>Klik op <strong style=\"color:var(--accent)\">+ Uitnodigen</strong> om iemand uit te nodigen!</div>'
       return
     }
@@ -367,9 +368,23 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
         '</div>'
     }
 
+    function bouwGeblokkeerdRij(g) {
+      let p2pNaam = ''
+      try { p2pNaam = String(localStorage.getItem('vriend_naam_' + g.id + '_' + userId) || '').trim() } catch(e) {}
+      const naam = p2pNaam || g.username || 'onbekend'
+      return '<div class="blok-rij" data-bid="' + vEsc(g.id) + '" data-bnaam="' + vEsc(naam) + '" style="display:flex;align-items:center;gap:12px;padding:13px 14px;margin:6px 14px;background:var(--blok-kleur,var(--card));border:0.5px solid var(--border);border-radius:var(--blok-hoek,14px);opacity:0.6;cursor:pointer;">' +
+        '<div style="width:46px;height:46px;border-radius:50%;background:rgba(248,113,113,0.12);border:1.5px solid rgba(248,113,113,0.35);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🚫</div>' +
+        '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:14px;font-weight:600;color:#f3e8ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + vEsc(naam) + '</div>' +
+        '<div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:1px;">Geblokkeerd · tik voor opties</div>' +
+        '</div>' +
+        '</div>'
+    }
+
     let html = ''
     if (online.length > 0) html += '<div class="section-label">🟢 Online (' + online.length + ')</div>' + online.map(bouwRij).join('')
     if (offline.length > 0) html += '<div class="section-label">⚫ Offline (' + offline.length + ')</div>' + offline.map(bouwRij).join('')
+    if (geblokkeerd.length > 0) html += '<div class="section-label">🚫 Geblokkeerd (' + geblokkeerd.length + ')</div>' + geblokkeerd.map(bouwGeblokkeerdRij).join('')
     container.innerHTML = html
 
     // Klikgedrag via listeners in plaats van onclick-attributen
@@ -404,6 +419,10 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
         window.location.href = 'vriend-profiel.html?id=' + encodeURIComponent(rij.dataset.vid)
       })
     })
+    container.querySelectorAll('.blok-rij').forEach(rij => {
+      rij.addEventListener('contextmenu', function (e) { e.preventDefault() })
+      rij.addEventListener('click', () => vraagGeblokkeerde(rij, userId))
+    })
     container.querySelectorAll('.chat-knop').forEach(knop => {
       knop.addEventListener('click', e => {
         e.stopPropagation()
@@ -422,11 +441,9 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 
     var keuze = await kiesVriendActie(naam)
     if (keuze === 'blokkeren') {
-      if (!confirm(naam + ' blokkeren?\n\nJullie zijn daarna geen vrienden meer. ' + naam + ' kan je geen berichten meer sturen en jullie kunnen elkaar niet opnieuw toevoegen. ' + naam + ' krijgt hier geen melding van.\n\nOngedaan maken kan in Mijn profiel, onder Geblokkeerd.')) return
+      if (!confirm(naam + ' blokkeren?\n\n' + naam + ' kan je dan geen berichten meer sturen, je profiel niet meer zien en ziet jou niet meer in de vriendenlijst. ' + naam + ' krijgt hier geen melding van.\n\nJe vindt ' + naam + ' daarna onderaan je vriendenlijst. Daar kun je ook weer deblokkeren.')) return
       if (!(await blokkeerPersoon(vriendId))) { alert('Het is niet gelukt. Probeer het later opnieuw.'); return }
-      await wisVriendData(vriendId, mijnId)
-      rij.remove()
-      alert(naam + ' is geblokkeerd.')
+      await laadVrienden(mijnId)
       return
     }
     if (keuze !== 'verwijderen') return
@@ -446,6 +463,22 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 
     rij.remove()
     alert(naam + ' staat niet meer in je vriendenlijst.\n\nDe foto\'s, muziek en widgets van deze vriend zijn van dit apparaat verwijderd.')
+  }
+
+  async function vraagGeblokkeerde(rij, mijnId) {
+    var id = rij.dataset.bid
+    var naam = String(rij.dataset.bnaam || '').trim() || 'deze persoon'
+    var keuze = await kiesGeblokkeerdActie(naam)
+    if (keuze === 'deblokkeren') {
+      if (!(await deblokkeerPersoon(id))) { alert('Het is niet gelukt. Probeer het later opnieuw.'); return }
+      await laadVrienden(mijnId)
+      return
+    }
+    if (keuze !== 'verwijderen') return
+    if (!confirm(naam + ' verwijderen?\n\nDe blokkade wordt opgeheven en jullie zijn geen vrienden meer. Opnieuw toevoegen kan alleen met een nieuwe uitnodigingslink.')) return
+    if (!(await verwijderGeblokkeerde(id))) { alert('Het is niet gelukt. Probeer het later opnieuw.'); return }
+    await wisVriendData(id, mijnId)
+    await laadVrienden(mijnId)
   }
 
   init()

@@ -1,25 +1,30 @@
-// persoonblok.js - gebruikers blokkeren elkaar zelf (30-09-2026)
-// kiesVriendActie(naam): keuzemenu na lang indrukken in de vriendenlijst.
+// persoonblok.js - gebruikers blokkeren elkaar zelf (versie 2, 30-09-2026)
+// Blokkeren zet de vriendschap op 'geblokkeerd'; de geblokkeerde staat
+// onderaan in je vriendenlijst. Menu's: kiesVriendActie en kiesGeblokkeerdActie.
 // toonGeblokkeerden(id): lijstje met Deblokkeren-knoppen (profiel.html).
 import { supabase } from './supabase.js?v=95'
 
-export async function blokkeerPersoon(id) {
-  const { data, error } = await supabase.rpc('blokkeer_persoon', { ander: id })
-  if (error) { console.warn('[persoonblok] blokkeren mislukt:', error.message); return false }
+async function roep(naam, args) {
+  const { data, error } = await supabase.rpc(naam, args)
+  if (error) { console.warn('[persoonblok] ' + naam + ' mislukt:', error.message); return false }
   return data === true
 }
 
-export async function deblokkeerPersoon(id) {
-  const { data, error } = await supabase.rpc('deblokkeer_persoon', { ander: id })
-  if (error) { console.warn('[persoonblok] deblokkeren mislukt:', error.message); return false }
-  return data === true
+export const blokkeerPersoon = id => roep('blokkeer_persoon', { ander: id })
+export const deblokkeerPersoon = id => roep('deblokkeer_persoon', { ander: id })
+export const verwijderGeblokkeerde = id => roep('verwijder_geblokkeerde', { ander: id })
+
+export async function haalGeblokkeerden() {
+  const { data, error } = await supabase.rpc('mijn_geblokkeerden')
+  if (error) { console.warn('[persoonblok] lijst mislukt:', error.message); return [] }
+  return Array.isArray(data) ? data : []
 }
 
-// Keuzemenu onderaan het scherm. Geeft 'blokkeren', 'verwijderen' of null.
-export function kiesVriendActie(naam) {
+// Keuzemenu onderaan het scherm. opties: [tekst, kleur, rand, waarde].
+function kiesUit(naam, sub, opties) {
   return new Promise(resolve => {
     const oud = document.getElementById('fibroVriendActie')
-    if (oud) oud.remove()
+    if (oud && oud._klaar) oud._klaar(null)
 
     const achter = document.createElement('div')
     achter.id = 'fibroVriendActie'
@@ -35,10 +40,10 @@ export function kiesVriendActie(naam) {
     titel.textContent = naam
     titel.style.cssText = 'text-align:center;font-weight:600;font-size:16px;margin-bottom:4px;' +
       'white-space:nowrap;overflow:hidden;text-overflow:ellipsis'
-    const sub = document.createElement('div')
-    sub.textContent = 'Wat wil je doen?'
-    sub.style.cssText = 'text-align:center;font-size:12px;opacity:.6;margin-bottom:14px'
-    blad.append(titel, sub)
+    const onder = document.createElement('div')
+    onder.textContent = sub
+    onder.style.cssText = 'text-align:center;font-size:12px;opacity:.6;margin-bottom:14px'
+    blad.append(titel, onder)
 
     function klaar(waarde) {
       document.removeEventListener('keydown', opEsc)
@@ -46,8 +51,9 @@ export function kiesVriendActie(naam) {
       resolve(waarde)
     }
     function opEsc(e) { if (e.key === 'Escape') klaar(null) }
+    achter._klaar = klaar
 
-    function knop(tekst, kleur, rand, waarde) {
+    for (const [tekst, kleur, rand, waarde] of opties) {
       const b = document.createElement('button')
       b.type = 'button'
       b.textContent = tekst
@@ -57,15 +63,32 @@ export function kiesVriendActie(naam) {
       b.addEventListener('click', () => klaar(waarde))
       blad.appendChild(b)
     }
-    knop('\u{1F6AB} Blokkeren', '#f87171', 'rgba(248,113,113,.35)', 'blokkeren')
-    knop('\u{1F44B} Verwijderen uit vriendenlijst', '#f3e8ff', 'rgba(255,255,255,.15)', 'verwijderen')
-    knop('Annuleren', 'rgba(243,232,255,.6)', 'rgba(255,255,255,.1)', null)
 
     achter.addEventListener('click', e => { if (e.target === achter) klaar(null) })
     document.addEventListener('keydown', opEsc)
     achter.appendChild(blad)
     document.body.appendChild(achter)
   })
+}
+
+const ANNULEER = ['Annuleren', 'rgba(243,232,255,.6)', 'rgba(255,255,255,.1)', null]
+
+// Geeft 'blokkeren', 'verwijderen' of null.
+export function kiesVriendActie(naam) {
+  return kiesUit(naam, 'Wat wil je doen?', [
+    ['\u{1F6AB} Blokkeren', '#f87171', 'rgba(248,113,113,.35)', 'blokkeren'],
+    ['\u{1F5D1}\uFE0F Verwijderen uit vriendenlijst', '#f3e8ff', 'rgba(255,255,255,.15)', 'verwijderen'],
+    ANNULEER
+  ])
+}
+
+// Geeft 'deblokkeren', 'verwijderen' of null.
+export function kiesGeblokkeerdActie(naam) {
+  return kiesUit(naam, '\u{1F6AB} Geblokkeerd', [
+    ['\u2705 Deblokkeren', '#22c55e', 'rgba(34,197,94,.35)', 'deblokkeren'],
+    ['\u{1F5D1}\uFE0F Verwijderen', '#f87171', 'rgba(248,113,113,.35)', 'verwijderen'],
+    ANNULEER
+  ])
 }
 
 function datum(iso) {
@@ -94,7 +117,7 @@ export async function toonGeblokkeerden(id) {
     const info = document.createElement('div')
     info.style.cssText = 'flex:1;min-width:0'
     const naam = document.createElement('div')
-    naam.textContent = '@' + (p.username || 'onbekend')
+    naam.textContent = '\u{1F6AB} @' + (p.username || 'onbekend')
     naam.style.cssText = 'font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'
     const sinds = document.createElement('div')
     sinds.textContent = 'Geblokkeerd op ' + datum(p.sinds)
@@ -108,7 +131,7 @@ export async function toonGeblokkeerden(id) {
       'font-family:inherit;cursor:pointer;background:var(--card);color:var(--text);border:0.5px solid var(--border)'
     knop.addEventListener('click', async () => {
       const n = '@' + (p.username || 'onbekend')
-      if (!confirm(n + ' deblokkeren?\n\nJullie worden niet vanzelf weer vrienden. Daarvoor is een nieuwe uitnodigingslink nodig.')) return
+      if (!confirm(n + ' deblokkeren?\n\nAls jullie vrienden waren, zijn jullie dat daarna weer.')) return
       knop.disabled = true
       const ok = await deblokkeerPersoon(p.id)
       if (!ok) { knop.disabled = false; alert('Het is niet gelukt. Probeer het later opnieuw.'); return }

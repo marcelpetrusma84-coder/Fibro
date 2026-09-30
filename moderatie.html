@@ -44,6 +44,33 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .msg { font-size:14px; padding:10px 14px; border-radius:10px; margin-bottom:14px; }
 .msg.error { background:rgba(248,113,113,0.15); border:0.5px solid #f87171; color:#f87171; }
 .msg.success { background:rgba(34,197,94,0.15); border:0.5px solid #22c55e; color:#22c55e; }
+.status-badge.gewaarschuwd { background:rgba(251,191,36,0.1); color:#fbbf24; border:0.5px solid rgba(251,191,36,0.3); }
+.tabs { display:flex; gap:8px; margin-bottom:14px; }
+.tab-btn { flex:1; padding:9px; border-radius:10px; border:0.5px solid var(--border); background:none; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer; }
+.tab-btn.actief { background:var(--card); color:var(--text); border-color:var(--accent); font-weight:600; }
+.sectie-kop { font-size:13px; color:var(--muted); margin:16px 0 8px; text-transform:uppercase; letter-spacing:0.05em; }
+.blok-kaart { background:var(--card); border:0.5px solid var(--border); border-radius:14px; padding:12px 14px; margin-bottom:10px; }
+.blok-kaart.oud { opacity:0.6; }
+.blok-naam { font-size:14px; font-weight:500; }
+.blok-duur { font-size:12px; color:#f87171; margin-top:2px; }
+.blok-reden { font-size:12px; margin-top:6px; word-break:break-word; }
+.blok-info { font-size:11px; color:var(--muted); margin-top:6px; }
+.zoek-rij { display:flex; gap:8px; }
+.veld { flex:1; padding:9px 12px; border-radius:10px; border:0.5px solid var(--border); background:rgba(255,255,255,0.05); color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; width:100%; }
+.veld:focus { outline:none; border-color:var(--accent); }
+select.veld option { background:#1a0a2e; }
+.knop { padding:9px 14px; border-radius:10px; border:none; background:var(--accent); color:#1a0a2e; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; cursor:pointer; }
+.knop.grijs { background:var(--card); color:var(--muted); border:0.5px solid var(--border); font-weight:500; }
+.knop.rood { background:#f87171; color:#1a0a2e; }
+.knop:disabled { opacity:0.5; cursor:default; }
+.venster-achter { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; padding:16px; z-index:1000; }
+.venster { background:#2a1545; border:0.5px solid var(--border); border-radius:16px; padding:18px; width:100%; max-width:420px; }
+.venster-titel { font-family:'DM Serif Display',serif; font-size:20px; color:var(--accent); margin-bottom:12px; word-break:break-word; }
+.venster label { display:block; font-size:12px; color:var(--muted); margin:10px 0 4px; }
+.venster textarea.veld { min-height:80px; resize:vertical; }
+.venster-tip { font-size:11px; color:#fbbf24; margin-top:4px; }
+.venster-knoppen { display:flex; gap:8px; margin-top:16px; }
+.venster-knoppen .knop { flex:1; }
 </style>
 <link rel="stylesheet" href="android-fix.css">
 </head>
@@ -57,60 +84,114 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 <div id="toegangGeweigerd" style="display:none" class="toegang-geweigerd">
   <div class="toegang-icon">🔒</div>
   <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Geen toegang</div>
-  <div style="font-size:14px;color:var(--muted);">Alleen de beheerder kan deze pagina zien.</div>
+  <div style="font-size:14px;color:var(--muted);">Alleen moderators kunnen deze pagina zien.</div>
 </div>
 
 <div id="inhoud" style="display:none">
-  <div class="stats">
-    <div class="stat-kaart">
-      <div class="stat-getal" id="statNieuw">—</div>
-      <div class="stat-label">Nieuw</div>
-    </div>
-    <div class="stat-kaart">
-      <div class="stat-getal" id="statBehandeld">—</div>
-      <div class="stat-label">Behandeld</div>
-    </div>
-    <div class="stat-kaart">
-      <div class="stat-getal" id="statGeblokkeerd">—</div>
-      <div class="stat-label">Geblokkeerd</div>
-    </div>
-  </div>
-
-  <div class="filter-row">
-    <button class="filter-btn actief" onclick="filterRapporten('alle')">Alle</button>
-    <button class="filter-btn" onclick="filterRapporten('nieuw')">🆕 Nieuw</button>
-    <button class="filter-btn" onclick="filterRapporten('behandeld')">✅ Behandeld</button>
-    <button class="filter-btn" onclick="filterRapporten('geblokkeerd')">🚫 Geblokkeerd</button>
+  <div class="tabs">
+    <button class="tab-btn actief" id="tabRapporten" onclick="kiesTab('rapporten')">🚩 Rapporten</button>
+    <button class="tab-btn" id="tabBlokkades" onclick="kiesTab('blokkades')">🚫 Blokkades <span id="aantalActief"></span></button>
   </div>
 
   <div id="msg" class="msg" style="display:none"></div>
-  <div id="rapportenLijst"><div class="laden">Rapporten laden...</div></div>
+
+  <div id="deelRapporten">
+    <div class="stats">
+      <div class="stat-kaart">
+        <div class="stat-getal" id="statNieuw">—</div>
+        <div class="stat-label">Nieuw</div>
+      </div>
+      <div class="stat-kaart">
+        <div class="stat-getal" id="statBehandeld">—</div>
+        <div class="stat-label">Behandeld</div>
+      </div>
+      <div class="stat-kaart">
+        <div class="stat-getal" id="statGeblokkeerd">—</div>
+        <div class="stat-label">Geblokkeerd</div>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <button class="filter-btn actief" onclick="filterRapporten('alle', this)">Alle</button>
+      <button class="filter-btn" onclick="filterRapporten('nieuw', this)">🆕 Nieuw</button>
+      <button class="filter-btn" onclick="filterRapporten('behandeld', this)">✅ Behandeld</button>
+      <button class="filter-btn" onclick="filterRapporten('gewaarschuwd', this)">⚠️ Gewaarschuwd</button>
+      <button class="filter-btn" onclick="filterRapporten('geblokkeerd', this)">🚫 Geblokkeerd</button>
+    </div>
+
+    <div id="rapportenLijst"><div class="laden">Rapporten laden...</div></div>
+  </div>
+
+  <div id="deelBlokkades" style="display:none">
+    <div class="sectie-kop">Iemand blokkeren</div>
+    <div class="zoek-rij">
+      <input class="veld" id="zoekNaam" type="text" placeholder="gebruikersnaam" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="40">
+      <button class="knop" onclick="zoekGebruiker()">Zoek</button>
+    </div>
+
+    <div class="sectie-kop">Actief</div>
+    <div id="blokkadesActief"><div class="laden">Laden...</div></div>
+
+    <div class="sectie-kop">Eerder (logboek)</div>
+    <div id="blokkadesEerder"></div>
+  </div>
+</div>
+
+<div class="venster-achter" id="blokVenster">
+  <div class="venster">
+    <div class="venster-titel" id="blokTitel">Blokkeren</div>
+    <label for="blokReden">Reden</label>
+    <textarea class="veld" id="blokReden" maxlength="500"></textarea>
+    <div class="venster-tip">De gebruiker ziet deze reden.</div>
+    <label for="blokDuur">Hoe lang</label>
+    <select class="veld" id="blokDuur">
+      <option value="24">1 dag</option>
+      <option value="72">3 dagen</option>
+      <option value="168" selected>1 week</option>
+      <option value="720">1 maand</option>
+      <option value="">Voor altijd</option>
+    </select>
+    <div class="venster-knoppen">
+      <button class="knop grijs" onclick="sluitVenster()">Annuleren</button>
+      <button class="knop rood" id="blokBevestig" onclick="bevestigBlokkade()">🚫 Blokkeren</button>
+    </div>
+  </div>
 </div>
 
 <script type="module">
 import { supabase } from './supabase.js?v=95'
 
-const BEHEERDER_ID = '489dec83-a05d-4020-b06b-b3b1a815076e'
 let alleRapporten = []
 let huidigFilter = 'alle'
+let mijnId = null
+let teBlokkeren = null   // { gebruikerId, rapportId, naam }
+
+// Tekst van anderen: altijd ontsnappen, id's alleen letters/cijfers/streepjes
+const mEsc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')
+const mId = v => /^[0-9A-Za-z-]{1,64}$/.test(String(v ?? '')) ? String(v) : ''
+const datum = iso => new Date(iso).toLocaleString('nl-NL', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
 
 async function init() {
   const { data: { session } } = await supabase.auth.getSession()
-  if (!session || session.user.id !== BEHEERDER_ID) {
+  if (!session) { document.getElementById('toegangGeweigerd').style.display = 'block'; return }
+  const { data: isMod, error } = await supabase.rpc('ben_ik_moderator')
+  if (error || isMod !== true) {
     document.getElementById('toegangGeweigerd').style.display = 'block'
     return
   }
+  mijnId = session.user.id
   document.getElementById('inhoud').style.display = 'block'
-  await laadRapporten()
+  await Promise.all([laadRapporten(), laadBlokkades()])
 }
 
+// ─── Rapporten ───
 async function laadRapporten() {
   const { data, error } = await supabase
     .from('rapporten')
     .select(`
       *,
-      melder:melder_id(username, avatar_url),
-      gemelde:gemelde_id(username, avatar_url)
+      melder:melder_id(username),
+      gemelde:gemelde_id(username)
     `)
     .order('created_at', { ascending: false })
 
@@ -130,10 +211,6 @@ function updateStats() {
   document.getElementById('statGeblokkeerd').textContent = alleRapporten.filter(r => r.status === 'geblokkeerd').length
 }
 
-// Rapporten bevatten tekst van anderen: altijd ontsnappen, id's alleen letters/cijfers/streepjes
-const mEsc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')
-const mId = v => /^[0-9A-Za-z-]{1,64}$/.test(String(v ?? '')) ? String(v) : ''
-
 function toonRapporten() {
   const container = document.getElementById('rapportenLijst')
   const gefilterd = huidigFilter === 'alle'
@@ -146,14 +223,15 @@ function toonRapporten() {
   }
 
   container.innerHTML = gefilterd.map(r => {
-    const tijd = new Date(r.created_at).toLocaleDateString('nl-NL', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
-    const statusKleur = r.status === 'nieuw' ? 'nieuw' : r.status === 'behandeld' ? 'behandeld' : 'geblokkeerd'
+    const tijd = datum(r.created_at)
+    const statusKleur = ['nieuw', 'behandeld', 'gewaarschuwd'].includes(r.status) ? r.status : 'geblokkeerd'
+    const naam = r.gemelde?.username || 'onbekend'
     return `
       <div class="rapport-kaart" id="rapport-${mId(r.id)}">
         <div class="rapport-header">
-          <div class="rapport-av">${mEsc(r.gemelde?.avatar_url || '👤')}</div>
+          <div class="rapport-av">${mEsc(naam.charAt(0).toUpperCase() || '?')}</div>
           <div class="rapport-namen">
-            <div class="rapport-gemelde">@${mEsc(r.gemelde?.username || 'onbekend')}</div>
+            <div class="rapport-gemelde">@${mEsc(naam)}</div>
             <div class="rapport-melder">Gemeld door @${mEsc(r.melder?.username || 'onbekend')}</div>
           </div>
           <div>
@@ -163,21 +241,21 @@ function toonRapporten() {
         </div>
         <div class="rapport-reden">🚩 ${mEsc(r.reden || 'Geen reden opgegeven')}</div>
         ${r.bericht_inhoud ? `<div class="rapport-bericht">"${mEsc(r.bericht_inhoud)}"</div>` : ''}
-        ${r.status === 'nieuw' ? `
+        ${r.status === 'nieuw' || r.status === 'gewaarschuwd' ? `
         <div class="rapport-acties">
-          <button class="actie-btn negeer" onclick="behandelRapport('${mId(r.id)}', 'behandeld')">✓ Negeer</button>
-          <button class="actie-btn waarschuw" onclick="behandelRapport('${mId(r.id)}', 'gewaarschuwd')">⚠️ Waarschuw</button>
-          <button class="actie-btn blokkeer" onclick="blokkeerGebruiker('${mId(r.gemelde_id)}', '${mId(r.id)}')">🚫 Blokkeer</button>
+          <button class="actie-btn negeer" onclick="behandelRapport('${mId(r.id)}', 'behandeld')">✓ Afgehandeld</button>
+          ${r.status === 'nieuw' ? `<button class="actie-btn waarschuw" onclick="behandelRapport('${mId(r.id)}', 'gewaarschuwd')">⚠️ Waarschuw</button>` : ''}
+          <button class="actie-btn blokkeer" onclick="blokkeerVanuitRapport('${mId(r.id)}')">🚫 Blokkeer</button>
         </div>` : ''}
       </div>
     `
   }).join('')
 }
 
-window.filterRapporten = function(filter) {
+window.filterRapporten = function(filter, knop) {
   huidigFilter = filter
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('actief'))
-  event.target.classList.add('actief')
+  if (knop) knop.classList.add('actief')
   toonRapporten()
 }
 
@@ -188,20 +266,165 @@ window.behandelRapport = async function(id, status) {
   await laadRapporten()
 }
 
-window.blokkeerGebruiker = async function(userId, rapportId) {
-  const { error } = await supabase.from('profiles').update({ geblokkeerd: true }).eq('id', userId)
-  if (error) { toonMsg('Blokkeren mislukt.', 'error'); return }
-  await supabase.from('rapporten').update({ status: 'geblokkeerd' }).eq('id', rapportId)
-  toonMsg('Gebruiker geblokkeerd 🚫', 'success')
-  await laadRapporten()
+window.blokkeerVanuitRapport = function(rapportId) {
+  const r = alleRapporten.find(x => x.id === rapportId)
+  if (!r) return
+  openVenster({ gebruikerId: r.gemelde_id, rapportId: r.id, naam: r.gemelde?.username || 'onbekend' }, r.reden || '')
 }
+
+// ─── Blokkeren (venster) ───
+function openVenster(doel, reden) {
+  if (doel.gebruikerId === mijnId) { toonMsg('Je kunt jezelf niet blokkeren.', 'error'); return }
+  teBlokkeren = doel
+  document.getElementById('blokTitel').textContent = '@' + doel.naam + ' blokkeren'
+  document.getElementById('blokReden').value = reden
+  document.getElementById('blokDuur').value = '168'
+  document.getElementById('blokBevestig').disabled = false
+  document.getElementById('blokVenster').style.display = 'flex'
+  document.getElementById('blokReden').focus()
+}
+
+window.sluitVenster = function() {
+  document.getElementById('blokVenster').style.display = 'none'
+  teBlokkeren = null
+}
+
+window.bevestigBlokkade = async function() {
+  if (!teBlokkeren) return
+  const reden = document.getElementById('blokReden').value.trim()
+  if (!reden) { alert('Vul een reden in. De gebruiker ziet deze reden.'); return }
+  const uren = document.getElementById('blokDuur').value
+  const tot = uren ? new Date(Date.now() + Number(uren) * 3600e3).toISOString() : null
+  const knop = document.getElementById('blokBevestig')
+  knop.disabled = true
+
+  const { error } = await supabase.from('blokkades').insert({
+    gebruiker_id: teBlokkeren.gebruikerId,
+    reden: reden.slice(0, 500),
+    tot
+  })
+  if (error) {
+    knop.disabled = false
+    toonMsg('Blokkeren mislukt: ' + error.message, 'error')
+    return
+  }
+  if (teBlokkeren.rapportId) {
+    await supabase.from('rapporten').update({ status: 'geblokkeerd' }).eq('id', teBlokkeren.rapportId)
+  }
+  const naam = teBlokkeren.naam
+  sluitVenster()
+  toonMsg('@' + naam + ' is geblokkeerd 🚫', 'success')
+  await Promise.all([laadRapporten(), laadBlokkades()])
+}
+
+window.zoekGebruiker = async function() {
+  const naam = document.getElementById('zoekNaam').value.trim()
+  if (!naam) return
+  const patroon = naam.replace(/[\\%_]/g, m => '\\' + m)
+  const { data, error } = await supabase.from('profiles').select('id, username').ilike('username', patroon).limit(2)
+  if (error) { toonMsg('Zoeken mislukt.', 'error'); return }
+  if (!data || data.length === 0) { toonMsg('Geen gebruiker met die naam gevonden.', 'error'); return }
+  openVenster({ gebruikerId: data[0].id, rapportId: null, naam: data[0].username }, '')
+}
+
+// ─── Blokkades (overzicht) ───
+async function laadBlokkades() {
+  const [blk, vlag] = await Promise.all([
+    supabase.from('blokkades').select('*').order('created_at', { ascending: false }).limit(100),
+    supabase.from('profiles').select('id, username').eq('geblokkeerd', true)
+  ])
+  if (blk.error || vlag.error) {
+    document.getElementById('blokkadesActief').innerHTML = '<div class="geen-rapporten">Blokkades laden mislukt.</div>'
+    return
+  }
+  const rijen = blk.data || []
+  const ids = [...new Set(rijen.flatMap(b => [b.gebruiker_id, b.door, b.opgeheven_door]).filter(Boolean))]
+  const namen = {}
+  if (ids.length) {
+    const { data } = await supabase.from('profiles').select('id, username').in('id', ids)
+    ;(data || []).forEach(p => { namen[p.id] = p.username })
+  }
+  const nm = id => '@' + (namen[id] || 'onbekend')
+  const nu = Date.now()
+  const isActief = b => !b.opgeheven_op && new Date(b.van).getTime() <= nu && (!b.tot || new Date(b.tot).getTime() > nu)
+
+  const actief = rijen.filter(isActief)
+  const eerder = rijen.filter(b => !isActief(b))
+
+  let html = (vlag.data || []).map(p => `
+    <div class="blok-kaart">
+      <div class="blok-naam">@${mEsc(p.username || 'onbekend')}</div>
+      <div class="blok-duur">Voor altijd (oude blokkade, zonder reden)</div>
+      <div class="rapport-acties" style="margin-top:8px;">
+        <button class="actie-btn negeer" onclick="deblokkeerVlag('${mId(p.id)}')">Deblokkeren</button>
+      </div>
+    </div>`).join('')
+
+  html += actief.map(b => `
+    <div class="blok-kaart">
+      <div class="blok-naam">${mEsc(nm(b.gebruiker_id))}</div>
+      <div class="blok-duur">${b.tot ? 'Tot ' + datum(b.tot) : 'Voor altijd'}</div>
+      <div class="blok-reden">${mEsc(b.reden)}</div>
+      <div class="blok-info">Door ${mEsc(nm(b.door))} op ${datum(b.van)}</div>
+      <div class="rapport-acties" style="margin-top:8px;">
+        <button class="actie-btn negeer" onclick="hefOp('${mId(b.id)}')">Opheffen</button>
+      </div>
+    </div>`).join('')
+
+  const aantal = (vlag.data || []).length + actief.length
+  document.getElementById('aantalActief').textContent = aantal ? '(' + aantal + ')' : ''
+  document.getElementById('blokkadesActief').innerHTML = html || '<div class="geen-rapporten">Niemand geblokkeerd 🎉</div>'
+
+  document.getElementById('blokkadesEerder').innerHTML = eerder.map(b => {
+    let status
+    if (b.opgeheven_op) status = 'Opgeheven op ' + datum(b.opgeheven_op) + ' door ' + mEsc(nm(b.opgeheven_door))
+    else if (b.tot && new Date(b.tot).getTime() <= nu) status = 'Verlopen op ' + datum(b.tot)
+    else status = 'Begint op ' + datum(b.van)
+    return `
+    <div class="blok-kaart oud">
+      <div class="blok-naam">${mEsc(nm(b.gebruiker_id))}</div>
+      <div class="blok-reden">${mEsc(b.reden)}</div>
+      <div class="blok-info">Door ${mEsc(nm(b.door))} op ${datum(b.van)}${b.tot ? ', tot ' + datum(b.tot) : ', voor altijd'}</div>
+      <div class="blok-info">${status}</div>
+    </div>`
+  }).join('') || '<div class="geen-rapporten" style="padding:16px;">Nog niets.</div>'
+}
+
+window.hefOp = async function(id) {
+  if (!confirm('Deze blokkade opheffen?')) return
+  const { error } = await supabase.from('blokkades').update({ opgeheven_op: new Date().toISOString() }).eq('id', id)
+  if (error) { toonMsg('Opheffen mislukt: ' + error.message, 'error'); return }
+  toonMsg('Blokkade opgeheven ✓', 'success')
+  await laadBlokkades()
+}
+
+window.deblokkeerVlag = async function(id) {
+  if (!confirm('Deze gebruiker deblokkeren?')) return
+  const { error } = await supabase.from('profiles').update({ geblokkeerd: false }).eq('id', id)
+  if (error) { toonMsg('Deblokkeren mislukt: ' + error.message, 'error'); return }
+  toonMsg('Gebruiker gedeblokkeerd ✓', 'success')
+  await laadBlokkades()
+}
+
+// ─── Algemeen ───
+window.kiesTab = function(tab) {
+  document.getElementById('deelRapporten').style.display = tab === 'rapporten' ? 'block' : 'none'
+  document.getElementById('deelBlokkades').style.display = tab === 'blokkades' ? 'block' : 'none'
+  document.getElementById('tabRapporten').classList.toggle('actief', tab === 'rapporten')
+  document.getElementById('tabBlokkades').classList.toggle('actief', tab === 'blokkades')
+}
+
+document.getElementById('zoekNaam').addEventListener('keydown', e => { if (e.key === 'Enter') window.zoekGebruiker() })
+document.getElementById('blokVenster').addEventListener('click', e => { if (e.target.id === 'blokVenster') window.sluitVenster() })
 
 function toonMsg(tekst, type) {
   const el = document.getElementById('msg')
   el.className = `msg ${type}`
   el.textContent = tekst
   el.style.display = 'block'
-  setTimeout(() => el.style.display = 'none', 3000)
+  clearTimeout(toonMsg.t)
+  toonMsg.t = setTimeout(() => el.style.display = 'none', 4000)
+  el.scrollIntoView({ block: 'nearest' })
 }
 
 init()

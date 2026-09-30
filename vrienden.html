@@ -291,6 +291,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   import { startMeldingen } from './meldingen.js?v=99'
   import { startHeartbeat } from './heartbeat.js?v=99'
   import { wisVriendData } from './opruimen.js?v=95'
+  import { blokkeerPersoon, kiesVriendActie } from './persoonblok.js?v=1'
   import { initSync } from './sync.js?v=96'
   pasBlokstijlToe()
 
@@ -415,9 +416,20 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 
   async function vraagOntvrienden(rij, mijnId) {
     var vriendId = rij.dataset.vid
-    var naamEl = rij.querySelector('.friend-naam, strong, b')
-    var naam = naamEl ? String(naamEl.textContent || '').trim() : ''
+    var chatKnop = rij.querySelector('.chat-knop')
+    var naam = chatKnop ? String(chatKnop.dataset.cnaam || '').trim() : ''
     if (!naam) naam = 'deze vriend'
+
+    var keuze = await kiesVriendActie(naam)
+    if (keuze === 'blokkeren') {
+      if (!confirm(naam + ' blokkeren?\n\nJullie zijn daarna geen vrienden meer. ' + naam + ' kan je geen berichten meer sturen en jullie kunnen elkaar niet opnieuw toevoegen. ' + naam + ' krijgt hier geen melding van.\n\nOngedaan maken kan in Mijn profiel, onder Geblokkeerd.')) return
+      if (!(await blokkeerPersoon(vriendId))) { alert('Het is niet gelukt. Probeer het later opnieuw.'); return }
+      await wisVriendData(vriendId, mijnId)
+      rij.remove()
+      alert(naam + ' is geblokkeerd.')
+      return
+    }
+    if (keuze !== 'verwijderen') return
 
     if (!confirm(naam + ' uit je vriendenlijst halen?\n\nJullie verdwijnen allebei uit elkaars lijst. Berichten sturen en bellen kan daarna niet meer. Opnieuw toevoegen kan alleen met een nieuwe uitnodigingslink.')) return
 

@@ -409,7 +409,7 @@ input, textarea { font-size:16px !important; }
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">📌</div><div><div class="widget-name">Zwevende Polaroids</div><div class="widget-desc">3 fotos los en schuin</div></div></div><div class="toggle off" id="widget-fotoszwevend" onclick="toggleWidget('fotoszwevend')"><div class="toggle-dot"></div></div></div>
     </div>
     <div style="margin-top:24px;text-align:center;">
-      <span onclick="testTogglePlus()" id="testPlusLink" style="font-size:11px;color:rgba(255,255,255,0.15);cursor:pointer;">🔧 test</span>
+      <span onclick="testTogglePlus()" id="testPlusLink" style="display:none;font-size:11px;color:rgba(255,255,255,0.15);cursor:pointer;">🔧 test</span>
     </div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">⏰</div><div><div class="widget-name">Countdown</div><div class="widget-desc">Aftellen naar een datum</div></div></div><div class="toggle off" id="widget-countdown" onclick="toggleWidget('countdown')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">📊</div><div><div class="widget-name">Poll</div><div class="widget-desc">Laat vrienden stemmen</div></div></div><div class="toggle off" id="widget-poll" onclick="toggleWidget('poll')"><div class="toggle-dot"></div></div></div>
@@ -713,6 +713,8 @@ async function init(){
   await startHeartbeat()
   const{data}=await supabase.from('profiles').select('*').eq('id',huidigeUser.id).single()
   profiel=data
+  // Testlinkje Fibro+ alleen voor de moderator (de database laat ook alleen de moderator is_plus wijzigen)
+  if (profiel && profiel.is_moderator) { const tl = document.getElementById('testPlusLink'); if (tl) tl.style.display = '' }
   if(profiel){
     // ── Laad alles uit localStorage ──
     const lokaal = JSON.parse(localStorage.getItem('fibro_profiel_' + huidigeUser.id) || '{}')

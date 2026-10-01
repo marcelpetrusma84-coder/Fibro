@@ -133,7 +133,7 @@ function stopBeltoon() {
 </script>
 <script type="module">
 import { supabase } from './supabase.js?v=95'
-import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo } from './bellen.js?v=101'
+import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo } from './bellen.js?v=102'
 
 const params = new URLSearchParams(window.location.search)
 const vriendId = params.get('vriend')
@@ -200,7 +200,7 @@ if (vriendId && !params.get('inkomend')) {
   document.getElementById('status').textContent = (videoModus ? '📹 Videogesprek — ' : '📞 Belt je op...')
   if (params.get('opnemen') !== '1') startBeltoon('inkomend')
   wachtKanaal = supabase
-    .channel(gesprekKanaalNaam(session.user.id, vriendId), { config: { broadcast: { self: false } } })
+    .channel(gesprekKanaalNaam(session.user.id, vriendId), { config: { broadcast: { self: false }, private: true } })
     .on('broadcast', { event: 'signaal' }, (msg) => {
       if (msg.payload?.type !== 'ophangen') return
       // Beller hing op voordat er werd opgenomen

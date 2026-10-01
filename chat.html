@@ -365,7 +365,7 @@ window.veiligeUrl = function(v){
   import { startMeldingen } from './meldingen.js?v=101'
   import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=95'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=95'
-  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=101'
+  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=102'
   import { stuurRapport } from './rapport.js?v=95'
   import * as Schaak from './schaak.js?v=95'
   import * as Dammen from './dammen.js?v=95'
@@ -1447,7 +1447,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
     benIkSpeler1 = starterId ? (starterId === huidigeUser.id) : (huidigeUser.id < geselecteerdeVriend?.id)
 
-    spelKanaal = supabase.channel(spelKanaalNaam(sessieId), { config: { broadcast: { self: false } } })
+    spelKanaal = supabase.channel(spelKanaalNaam(sessieId), { config: { broadcast: { self: false }, private: true } })
 
     if (spelType === 'botkaaseiren') await startBotKaasEieren()
     else if (spelType === 'vieroprij') await startVierOpEenRij()

@@ -56,7 +56,7 @@ function luisterNaarUitnodigingen() {
 function openGesprekKanaal(anderId) {
   if (gesprekKanaal) { supabase.removeChannel(gesprekKanaal); gesprekKanaal = null }
   gesprekKanaal = supabase
-    .channel(gesprekKanaalNaam(huidigeUserId, anderId), { config: { broadcast: { self: false } } })
+    .channel(gesprekKanaalNaam(huidigeUserId, anderId), { config: { broadcast: { self: false }, private: true } })
     .on('broadcast', { event: 'signaal' }, (msg) => {
       const { type, data } = msg.payload
       verwerkSignaal(type, data)

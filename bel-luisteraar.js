@@ -3,7 +3,7 @@
 // Op de iPhone mag geluid alleen na een tik op déze pagina; daarom niet meer
 // meteen doorsturen naar bellen.html, maar pas bij Opnemen.
 import { supabase } from './supabase.js?v=95'
-import { initBellen, weigerooproep } from './bellen.js?v=101'
+import { initBellen, weigerooproep } from './bellen.js?v=102'
 
 // beltoon.js laden (klassiek script, zet window.FibroBeltoon)
 function laadBeltoon() {

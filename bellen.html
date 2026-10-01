@@ -133,7 +133,7 @@ function stopBeltoon() {
 </script>
 <script type="module">
 import { supabase } from './supabase.js?v=95'
-import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo } from './bellen.js?v=104'
+import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo } from './bellen.js?v=105'
 
 const params = new URLSearchParams(window.location.search)
 const vriendId = params.get('vriend')
@@ -266,12 +266,24 @@ window.weiger = async () => {
   }
   window.location.href = 'chat.html'
 }
+let alOpgenomen = false
 window.neem = async (video) => {
+  // Maar een keer opnemen: een tweede keer breekt de lopende verbinding af
+  if (alOpgenomen) return
+  alOpgenomen = true
   stopBeltoon()
   sluitWachtKanaal() // bellen.js opent zelf het gesprekskanaal
   videoModus = video
+  // Opnemen-knoppen weg, alleen ophangen tonen tot de verbinding er is
+  document.getElementById('knoppen-inkomend').style.display = 'none'
+  document.getElementById('knoppen-bellen').style.display = 'flex'
+  document.getElementById('status').textContent = 'Verbinding maken...'
   const ok = await accepteerOproep(video)
-  if(ok) document.getElementById('status').textContent = 'Verbinding maken...'
+  if (!ok) {
+    alOpgenomen = false
+    document.getElementById('knoppen-bellen').style.display = 'none'
+    document.getElementById('knoppen-inkomend').style.display = 'flex'
+  }
 }
 // Al opgenomen in de chat: hier meteen verbinden
 if (vriendId && params.get('inkomend') && params.get('opnemen') === '1') window.neem(videoModus)

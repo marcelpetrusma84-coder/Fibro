@@ -20,6 +20,13 @@ let videoSender = null
 let geinitialiseerd = false
 let gesprekKlaar = null   // belofte: klaar zodra het gesprekskanaal echt open is
 let iceBuffer = []        // ICE-gegevens die binnenkomen voordat offer/answer verwerkt is
+const BELLEN_VERSIE = 105 // gaat mee in elk signaal: zo toont het log welke versie de ander draait
+
+// Soort ICE-adres uit een kandidaat halen: host (eigen netwerk), srflx (via de router), relay (via TURN)
+function kandidaatSoort(k) {
+  const m = / typ ([a-z]+)/.exec((k && k.candidate) || '')
+  return m ? m[1] : '?'
+}
 
 // ICE_SERVERS komt uit ice-config.js (import staat bovenaan)
 
@@ -82,8 +89,8 @@ async function bouwGesprekKanaal(anderId) {
   const kanaal = supabase
     .channel(naam, { config: { broadcast: { self: false }, private: true } })
     .on('broadcast', { event: 'signaal' }, (msg) => {
-      const { type, data } = msg.payload
-      verwerkSignaal(type, data)
+      const { type, data, v } = msg.payload
+      verwerkSignaal(type, data, v)
     })
   gesprekKanaal = kanaal
   return new Promise((resolve) => {
@@ -99,11 +106,12 @@ async function bouwGesprekKanaal(anderId) {
 async function stuurSignaal(type, data = {}) {
   if (gesprekKlaar) await gesprekKlaar
   if (!gesprekKanaal) { console.warn('Geen gesprekkanaal:', type); return }
-  await gesprekKanaal.send({ type: 'broadcast', event: 'signaal', payload: { type, data } })
+  await gesprekKanaal.send({ type: 'broadcast', event: 'signaal', payload: { type, data, v: BELLEN_VERSIE } })
 }
 
-async function verwerkSignaal(type, data) {
-  console.log('Signaal ontvangen:', type)
+async function verwerkSignaal(type, data, v) {
+  if (type === 'ice') console.log('Signaal ontvangen: ice', kandidaatSoort(data))
+  else console.log('Signaal ontvangen:', type, '(versie ander: ' + (v || 'oud') + ')')
   if (type === 'geaccepteerd') {
     if (!isInitiator) return
     await maakEnStuurOffer()
@@ -230,11 +238,16 @@ function maakPeerConnection() {
     }
   }
   peerConnection.onicecandidate = async (event) => {
-    if (event.candidate) await stuurSignaal('ice', event.candidate.toJSON())
+    if (event.candidate) {
+      const k = event.candidate.toJSON()
+      console.log('Eigen ice:', kandidaatSoort(k))
+      await stuurSignaal('ice', k)
+    } else console.log('Eigen ice: klaar met verzamelen')
   }
   const lokaalEl = document.getElementById('lokaalMedia')
   if (lokaalEl) lokaalEl.srcObject = lokaleStream
   const pc = peerConnection
+  pc.oniceconnectionstatechange = () => { console.log('ICE state:', pc.iceConnectionState) }
   pc.onconnectionstatechange = () => {
     // pc (lokale referentie) i.p.v. globale peerConnection:
     // voorkomt crash als de globale al op null staat na beeindigGesprek()

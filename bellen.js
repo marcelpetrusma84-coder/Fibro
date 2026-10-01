@@ -19,6 +19,7 @@ let videoActiefLokaal = false
 let videoSender = null
 let geinitialiseerd = false
 let gesprekKlaar = null   // belofte: klaar zodra het gesprekskanaal echt open is
+let iceBuffer = []        // ICE-gegevens die binnenkomen voordat offer/answer verwerkt is
 
 // ICE_SERVERS komt uit ice-config.js (import staat bovenaan)
 
@@ -61,6 +62,7 @@ function luisterNaarUitnodigingen() {
 // wachtkanaal van bellen.html) wordt eerst helemaal gesloten: anders geeft
 // supabase.channel() dat sluitende kanaal terug en komt er geen verbinding.
 function openGesprekKanaal(anderId) {
+  iceBuffer = []
   gesprekKlaar = bouwGesprekKanaal(anderId)
   return gesprekKlaar
 }
@@ -128,11 +130,13 @@ async function verwerkSignaal(type, data) {
     if (!peerConnection) return
     if (peerConnection.signalingState !== 'have-local-offer') return
     await peerConnection.setRemoteDescription(new RTCSessionDescription(data))
+    await leegIceBuffer()
   }
   if (type === 'ice') {
-    if (peerConnection && data && peerConnection.remoteDescription) {
-      try { await peerConnection.addIceCandidate(new RTCIceCandidate(data)) } catch(e) { console.warn('ICE fout:', e) }
-    }
+    if (!data) return
+    // Komt te vroeg binnen (offer/answer nog niet verwerkt): bewaren in plaats van weggooien
+    if (!peerConnection || !peerConnection.remoteDescription) { iceBuffer.push(data); return }
+    try { await peerConnection.addIceCandidate(new RTCIceCandidate(data)) } catch(e) { console.warn('ICE fout:', e) }
   }
   if (type === 'ophangen') { beeindigGesprek(false) }
   if (type === 'video-status') {
@@ -220,6 +224,7 @@ function maakPeerConnection() {
     const audioEl = document.getElementById('remoteAudio')
     if (audioEl) { audioEl.srcObject = remoteStream; audioEl.play().catch(()=>{}) }
     track.onended = () => {
+      if (!remoteStream) return // gesprek is al afgelopen
       remoteStream.getTracks().forEach(t => { if (t.kind === 'video' && t.readyState === 'ended') remoteStream.removeTrack(t) })
       if (remoteEl && remoteStream.getVideoTracks().length === 0) remoteEl.style.display = 'none'
     }
@@ -253,9 +258,20 @@ async function maakEnStuurOffer() {
 async function verwerkOffer(offer) {
   if (!peerConnection) maakPeerConnection()
   await peerConnection.setRemoteDescription(new RTCSessionDescription(offer))
+  await leegIceBuffer()
   const answer = await peerConnection.createAnswer()
   await peerConnection.setLocalDescription(answer)
   await stuurSignaal('answer', answer)
+}
+
+// Bewaarde ICE-gegevens alsnog toevoegen, nu offer/answer verwerkt is
+async function leegIceBuffer() {
+  const lijst = iceBuffer
+  iceBuffer = []
+  for (const k of lijst) {
+    if (!peerConnection) return
+    try { await peerConnection.addIceCandidate(new RTCIceCandidate(k)) } catch (e) { console.warn('ICE-buffer fout:', e) }
+  }
 }
 
 export async function schakelVideo(aanzetten) {
@@ -315,6 +331,7 @@ function beeindigGesprek(doorOns) {
   }
   if (gesprekKanaal) { supabase.removeChannel(gesprekKanaal); gesprekKanaal = null }
   gesprekKlaar = null
+  iceBuffer = []
   remoteStream = null
   // Media-elementen leegmaken zodat de browser streams echt vrijgeeft
   const remoteEl = document.getElementById('remoteMedia')

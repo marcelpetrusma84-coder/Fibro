@@ -18,6 +18,7 @@ let onVideoStatusCallback = null
 let videoActiefLokaal = false
 let videoSender = null
 let geinitialiseerd = false
+let gesprekKlaar = null   // belofte: klaar zodra het gesprekskanaal echt open is
 
 // ICE_SERVERS komt uit ice-config.js (import staat bovenaan)
 
@@ -53,18 +54,48 @@ function luisterNaarUitnodigingen() {
     .subscribe((status) => { console.log('Uitnodigingskanaal status:', status) })
 }
 
+// Een afgeschermd kanaal heeft bij het openen even nodig (Supabase controleert dan de
+// regels). openGesprekKanaal geeft daarom een belofte terug (gesprekKlaar) die pas klaar
+// is als het kanaal echt open is; wie uitnodigt, opneemt of een signaal stuurt, wacht
+// daarop. Een kanaal met dezelfde naam dat nog aan het sluiten is (bijvoorbeeld het
+// wachtkanaal van bellen.html) wordt eerst helemaal gesloten: anders geeft
+// supabase.channel() dat sluitende kanaal terug en komt er geen verbinding.
 function openGesprekKanaal(anderId) {
-  if (gesprekKanaal) { supabase.removeChannel(gesprekKanaal); gesprekKanaal = null }
-  gesprekKanaal = supabase
-    .channel(gesprekKanaalNaam(huidigeUserId, anderId), { config: { broadcast: { self: false }, private: true } })
+  gesprekKlaar = bouwGesprekKanaal(anderId)
+  return gesprekKlaar
+}
+
+function wachtMs(ms) { return new Promise(r => setTimeout(r, ms)) }
+
+async function bouwGesprekKanaal(anderId) {
+  if (gesprekKanaal) {
+    const oud = gesprekKanaal
+    gesprekKanaal = null
+    await Promise.race([supabase.removeChannel(oud), wachtMs(3000)])
+  }
+  const naam = gesprekKanaalNaam(huidigeUserId, anderId)
+  for (const k of supabase.getChannels()) {
+    if (k.topic === 'realtime:' + naam) await Promise.race([supabase.removeChannel(k), wachtMs(3000)])
+  }
+  const kanaal = supabase
+    .channel(naam, { config: { broadcast: { self: false }, private: true } })
     .on('broadcast', { event: 'signaal' }, (msg) => {
       const { type, data } = msg.payload
       verwerkSignaal(type, data)
     })
-    .subscribe((status) => { console.log('Gesprekkanaal status:', status) })
+  gesprekKanaal = kanaal
+  return new Promise((resolve) => {
+    const t = setTimeout(() => { console.warn('Gesprekkanaal: na 8 s nog niet open'); resolve(false) }, 8000)
+    kanaal.subscribe((status) => {
+      console.log('Gesprekkanaal status:', status)
+      if (status === 'SUBSCRIBED') { clearTimeout(t); resolve(true) }
+      else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') { clearTimeout(t); resolve(false) }
+    })
+  })
 }
 
 async function stuurSignaal(type, data = {}) {
+  if (gesprekKlaar) await gesprekKlaar
   if (!gesprekKanaal) { console.warn('Geen gesprekkanaal:', type); return }
   await gesprekKanaal.send({ type: 'broadcast', event: 'signaal', payload: { type, data } })
 }
@@ -125,7 +156,9 @@ export async function belOp(naarVriendId, video = false, spelModus = false) {
   } catch(e) { alert('Geen toegang tot microfoon/camera.'); return false }
   const lokaalEl = document.getElementById('lokaalMedia')
   if (lokaalEl) lokaalEl.srcObject = lokaleStream
-  openGesprekKanaal(naarVriendId)
+  // Eerst het gesprekskanaal echt open, dan pas uitnodigen: bij een spel neemt de ander
+  // meteen op, en dat antwoord mag niet aankomen voordat wij luisteren
+  await openGesprekKanaal(naarVriendId)
   // Afgeschermde brievenbus van de vriend: alleen sturen, niet openen (lezen mag alleen hij zelf)
   const uitnodiging = supabase.channel('bel-uitnodiging-' + naarVriendId, { config: { private: true } })
   const verstuurd = await uitnodiging.send({ type: 'broadcast', event: 'uitnodiging', payload: { van: huidigeUserId, video, spel: spelModus } })
@@ -146,11 +179,10 @@ export async function accepteerOproep(video = false) {
   try {
     lokaleStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video })
   } catch(e) { alert('Geen toegang tot microfoon/camera.'); return false }
-  // Zorg dat het gesprekkanaal open is (bij paginawissel kan het nog ontbreken)
-  if (!gesprekKanaal && vriendId) {
-    openGesprekKanaal(vriendId)
-    await new Promise(r => setTimeout(r, 500))
-  }
+  // Zorg dat het gesprekkanaal echt open is (bij paginawissel kan het nog ontbreken,
+  // en bij een spel is het misschien net pas geopend)
+  if (gesprekKlaar) await gesprekKlaar
+  if (!gesprekKanaal && vriendId) await openGesprekKanaal(vriendId)
   maakPeerConnection()
   await stuurSignaal('geaccepteerd', {})
   return true
@@ -160,6 +192,7 @@ export async function weigerooproep() {
   await stuurSignaal('ophangen', {})
   // Kanaal opruimen — anders lekt elk geweigerd gesprek een open Supabase-kanaal
   if (gesprekKanaal) { supabase.removeChannel(gesprekKanaal); gesprekKanaal = null }
+  gesprekKlaar = null
   vriendId = null
 }
 
@@ -281,6 +314,7 @@ function beeindigGesprek(doorOns) {
     peerConnection = null
   }
   if (gesprekKanaal) { supabase.removeChannel(gesprekKanaal); gesprekKanaal = null }
+  gesprekKlaar = null
   remoteStream = null
   // Media-elementen leegmaken zodat de browser streams echt vrijgeeft
   const remoteEl = document.getElementById('remoteMedia')

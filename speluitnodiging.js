@@ -31,7 +31,7 @@ export async function startSpelUitnodigingLuisteraar() {
   if (!session) return
   if (kanaal) supabase.removeChannel(kanaal)
   kanaal = supabase
-    .channel('speluitnodiging-' + session.user.id, { config: { broadcast: { self: false } } })
+    .channel('speluitnodiging-' + session.user.id, { config: { broadcast: { self: false }, private: true } })
     .on('broadcast', { event: 'speluitnodiging' }, (msg) => {
       const p = (msg && msg.payload) || {}
       toonPopup(p.van, p.vanNaam, p.vanAvatar, p.spelType, p.sessieId)

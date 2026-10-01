@@ -362,10 +362,10 @@ window.veiligeUrl = function(v){
   import { supabase } from './supabase.js?v=95'
   import { initSync } from './sync.js?v=96'
   import { startHeartbeat } from './heartbeat.js?v=101'
-  import { startMeldingen } from './meldingen.js?v=99'
+  import { startMeldingen } from './meldingen.js?v=101'
   import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=95'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=95'
-  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=98'
+  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=101'
   import { stuurRapport } from './rapport.js?v=95'
   import * as Schaak from './schaak.js?v=95'
   import * as Dammen from './dammen.js?v=95'
@@ -1177,7 +1177,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   function startReactieRealtime() {
     if (reactieKanaal) supabase.removeChannel(reactieKanaal)
     reactieKanaal = supabase
-      .channel("reacties-" + huidigeUser.id)
+      .channel("reacties-" + huidigeUser.id, { config: { private: true } })
       .on("postgres_changes", { event: "*", schema: "public", table: "reacties" }, async () => {
         if (!geselecteerdeVriend) return
         await tekenReacties(document.getElementById("messages"))
@@ -1188,7 +1188,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (realtimeKanaal) supabase.removeChannel(realtimeKanaal)
     startReactieRealtime()
     realtimeKanaal = supabase
-      .channel('berichten-' + huidigeUser.id)
+      .channel('berichten-' + huidigeUser.id, { config: { private: true } })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
         const msg = payload.new
         const isRelevant = (
@@ -1308,7 +1308,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   function startSpelUitnodigingKanaal(userId) {
     if (spelGlobaalKanaal) supabase.removeChannel(spelGlobaalKanaal)
     spelGlobaalKanaal = supabase
-      .channel('speluitnodiging-' + userId, { config: { broadcast: { self: false } } })
+      .channel('speluitnodiging-' + userId, { config: { broadcast: { self: false }, private: true } })
       .on('broadcast', { event: 'speluitnodiging' }, (msg) => {
         const { van, vanNaam, vanAvatar, spelType, sessieId } = msg.payload
         toonSpelUitnodigingPopup(van, vanNaam, vanAvatar, spelType, sessieId)
@@ -1404,7 +1404,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const avatar = huidigProfiel?.avatar_data || huidigProfiel?.avatar_url || '🎮'
 
     // Stuur uitnodiging naar vriend via zijn persoonlijke kanaal
-    await supabase.channel('speluitnodiging-' + geselecteerdeVriend.id).send({
+    // Afgeschermde brievenbus van de vriend: alleen sturen, niet openen
+    const spelUitKanaal = supabase.channel('speluitnodiging-' + geselecteerdeVriend.id, { config: { private: true } })
+    const spelVerstuurd = await spelUitKanaal.send({
       type: 'broadcast', event: 'speluitnodiging',
       payload: {
         van: huidigeUser.id,
@@ -1413,6 +1415,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
         spelType, sessieId
       }
     })
+    if (spelVerstuurd !== 'ok') console.warn('[spel] uitnodiging niet verstuurd:', spelVerstuurd)
+    supabase.removeChannel(spelUitKanaal)
 
     // Stuur ook als zichtbaar chatbericht zodat beide een record hebben
     await supabase.from('messages').insert({
@@ -2080,7 +2084,7 @@ async function verstuurMelding(reden) {
 </script>
 <script src="swipe.js?v=95"></script>
 <audio id="remoteMedia" autoplay playsinline></audio>
-<script type="module">import { startOngelezen } from "./ongelezen.js?v=1"; startOngelezen()</script>
+<script type="module">import { startOngelezen } from "./ongelezen.js?v=101"; startOngelezen()</script>
 <script type="module" src="blokkade.js?v=1"></script>
 </body>
 </html>

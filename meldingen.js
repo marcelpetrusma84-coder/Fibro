@@ -121,7 +121,7 @@ async function haalNaam(id) {
 function startBuzzLuisteraar() {
   if (mKanaal) supabase.removeChannel(mKanaal)
   mKanaal = supabase
-    .channel('meldingen-berichten-' + eigenId)
+    .channel('meldingen-berichten-' + eigenId, { config: { private: true } })
     .on('postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'messages', filter: 'receiver_id=eq.' + eigenId },
       async (payload) => {

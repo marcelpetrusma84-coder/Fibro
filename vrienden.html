@@ -288,7 +288,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   import { laadThema } from './thema.js?v=95'
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
-  import { startMeldingen } from './meldingen.js?v=99'
+  import { startMeldingen } from './meldingen.js?v=101'
   import { startHeartbeat } from './heartbeat.js?v=101'
   import { wisVriendData } from './opruimen.js?v=95'
   import { blokkeerPersoon, kiesVriendActie, kiesGeblokkeerdActie, deblokkeerPersoon, verwijderGeblokkeerde, haalGeblokkeerden } from './persoonblok.js?v=2'
@@ -646,10 +646,10 @@ function filterVrienden() {
 }
 </script>
 
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=100"; startBelLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=101"; startBelLuisteraar()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=100"; startSpelUitnodigingLuisteraar()</script>
-<script type="module">import { startOngelezen } from "./ongelezen.js?v=1"; startOngelezen()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=101"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startOngelezen } from "./ongelezen.js?v=101"; startOngelezen()</script>
 <script src="swipe.js?v=95"></script>
 </body>
 </html>

@@ -20,7 +20,7 @@ export async function startOngelezen() {
   werkt = await haalOp()
   if (!werkt) return               // functie ontbreekt (nog) in Supabase: niets tonen
   supabase
-    .channel('ongelezen-' + mijnId)
+    .channel('ongelezen-' + mijnId, { config: { private: true } })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'receiver_id=eq.' + mijnId }, (p) => {
       const m = p && p.new
       if (!m || m.receiver_id !== mijnId || !m.sender_id || m.sender_id === mijnId) return

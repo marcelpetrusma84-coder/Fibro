@@ -40,7 +40,7 @@ export function initBellen(userId, callbacks = {}) {
 function luisterNaarUitnodigingen() {
   if (uitnodigingKanaal) { supabase.removeChannel(uitnodigingKanaal); uitnodigingKanaal = null }
   uitnodigingKanaal = supabase
-    .channel('bel-uitnodiging-' + huidigeUserId, { config: { broadcast: { self: false } } })
+    .channel('bel-uitnodiging-' + huidigeUserId, { config: { broadcast: { self: false }, private: true } })
     .on('broadcast', { event: 'uitnodiging' }, (msg) => {
       const { van, video, spel } = msg.payload
       console.log('Uitnodiging ontvangen van:', van)
@@ -126,9 +126,10 @@ export async function belOp(naarVriendId, video = false, spelModus = false) {
   const lokaalEl = document.getElementById('lokaalMedia')
   if (lokaalEl) lokaalEl.srcObject = lokaleStream
   openGesprekKanaal(naarVriendId)
-  const uitnodiging = supabase.channel('bel-uitnodiging-' + naarVriendId)
-  await new Promise((resolve) => { uitnodiging.subscribe((s) => { if (s === 'SUBSCRIBED') resolve() }) })
-  await uitnodiging.send({ type: 'broadcast', event: 'uitnodiging', payload: { van: huidigeUserId, video, spel: spelModus } })
+  // Afgeschermde brievenbus van de vriend: alleen sturen, niet openen (lezen mag alleen hij zelf)
+  const uitnodiging = supabase.channel('bel-uitnodiging-' + naarVriendId, { config: { private: true } })
+  const verstuurd = await uitnodiging.send({ type: 'broadcast', event: 'uitnodiging', payload: { van: huidigeUserId, video, spel: spelModus } })
+  if (verstuurd !== 'ok') console.warn('[bellen] uitnodiging niet verstuurd:', verstuurd)
   supabase.removeChannel(uitnodiging)
   // Zonder timeout blijft de microfoon oneindig aan als niemand opneemt
   stopBelTimeout()

@@ -34,6 +34,39 @@ function inRust(id) {
   try { return Date.now() - Number(localStorage.getItem(rustSleutel(id)) || 0) < RELAY_RUST_MS }
   catch (e) { return false }
 }
+// -- Herstel na mislukte verbinding (v107): mislukt een sync-verbinding, dan stopt
+// sync netjes en probeert het later opnieuw, met een pauze die steeds langer wordt
+// (30 s, 1, 2, 4, 8, max 15 min). Bewaard per account en vriend, zodat een
+// paginawissel de pauze niet opheft. Een gelukte verbinding wist de pauze.
+function pauzeSleutel(id) { return 'fibro_sync_pauze_' + huidigeUserId + '_' + id }
+function leesPauze(id) {
+  try { const p = JSON.parse(localStorage.getItem(pauzeSleutel(id)) || 'null'); return p && typeof p === 'object' ? p : null }
+  catch (e) { return null }
+}
+function inPauze(id) { const p = leesPauze(id); return !!p && Date.now() < Number(p.tot || 0) }
+function wisPauze(id) { try { localStorage.removeItem(pauzeSleutel(id)) } catch (e) {} }
+let pauzeTimer = null
+function mislukking(id, reden) {
+  if (!id) return
+  const n = Math.min(10, (Number((leesPauze(id) || {}).n) || 0) + 1)
+  const ms = Math.min(15 * 60 * 1000, 30000 * Math.pow(2, n - 1))
+  try { localStorage.setItem(pauzeSleutel(id), JSON.stringify({ n, tot: Date.now() + ms })) } catch (e) {}
+  console.log('[sync] ' + reden + ' - nieuwe poging met deze vriend over ' + Math.round(ms / 1000) + ' s')
+  planPauze()
+}
+// Wekker voor het einde van de eerstvolgende pauze van een online vriend (ook na een paginawissel)
+function planPauze() {
+  clearTimeout(pauzeTimer)
+  pauzeTimer = null
+  let eerst = Infinity
+  for (const id of onlineGebruikers) {
+    if (!vrienden.has(id) || inRust(id) || !inPauze(id)) continue
+    eerst = Math.min(eerst, Number(leesPauze(id).tot))
+  }
+  if (eerst === Infinity) return
+  pauzeTimer = setTimeout(() => { pauzeTimer = null; checkSyncStart() }, Math.max(0, eerst - Date.now()) + 100)
+}
+
 function controleerRust() {
   if (!eigenKlaar || !anderKlaar || !isRelayConnection || !syncPartnerId) return
   const partner = syncPartnerId
@@ -78,7 +111,7 @@ export function initSync(userId, callbacks = {}) {
     const nu = slotProberen()
     if (nu && !heeftSlot) {
       heeftSlot = true
-      console.log('[sync] Slot verkregen - sync actief in dit tabblad')
+      console.log('[sync] Slot verkregen - sync actief in dit tabblad (v107)')
       laadVrienden().then(() => startPresence())
     } else if (!nu && heeftSlot) {
       heeftSlot = false
@@ -87,7 +120,7 @@ export function initSync(userId, callbacks = {}) {
   }, 3000)
   if (slotProberen()) {
     heeftSlot = true
-    console.log('[sync] Slot verkregen - sync actief in dit tabblad')
+    console.log('[sync] Slot verkregen - sync actief in dit tabblad (v107)')
     laadVrienden().then(() => startPresence())
   } else {
     console.log('[sync] Ander tabblad heeft de sync - dit tabblad wacht')
@@ -115,6 +148,15 @@ function startPresence() {
       if (syncPartnerId && !onlineGebruikers.has(syncPartnerId)) stopSync()
       checkSyncStart()
     })
+    .on('presence', { event: 'join' }, ({ key }) => {
+      // v107: de vriend opende een nieuwe pagina terwijl wij nog aan zijn oude pagina
+      // hingen (zelfde naam, dus geen 'weg'-melding). Opnieuw beginnen; de 'sync'
+      // die hierna komt, start de sync weer.
+      if (key && key === syncPartnerId && !(dataChannel && dataChannel.readyState === 'open')) {
+        console.log('[sync] Vriend opnieuw online - sync opnieuw')
+        stopSync()
+      }
+    })
     .subscribe(async (status) => {
       console.log('[sync] Presence-kanaal status:', status)
       if (status !== 'SUBSCRIBED') presenceBezig = false
@@ -141,8 +183,8 @@ async function laadVrienden() {
 
 function checkSyncStart() {
   if (syncPartnerId) return
-  const ander = [...onlineGebruikers].find((id) => vrienden.has(id) && !inRust(id))
-  if (!ander) return
+  const ander = [...onlineGebruikers].find((id) => vrienden.has(id) && !inRust(id) && !inPauze(id))
+  if (!ander) { planPauze(); return }
   syncPartnerId = ander
   isInitiator = huidigeUserId < ander
   console.log('[sync] Start sync met', ander, '- initiator:', isInitiator)
@@ -164,7 +206,9 @@ function openSyncKanaal(anderId) {
         startOfferRetry()
         syncTimeout = setTimeout(() => {
           console.log('[sync] Sync timeout — geen answer na 30 sec')
+          const partner = syncPartnerId
           stopSync()
+          mislukking(partner, 'Geen antwoord')
         }, 30000)
       }
     })
@@ -173,7 +217,9 @@ function openSyncKanaal(anderId) {
 function startOfferRetry() {
   if (offerRetryCount >= 5) {
     console.log('[sync] Offer retries uitgeput')
+    const partner = syncPartnerId
     stopSync()
+    mislukking(partner, 'Geen antwoord')
     return
   }
   offerRetryCount++
@@ -203,8 +249,10 @@ function maakPeerConnection() {
     peerConnection.ondatachannel = null
     peerConnection.onconnectionstatechange = null
     peerConnection.oniceconnectionstatechange = null
+    peerConnection.onicecandidateerror = null
     peerConnection.close()
     peerConnection = null
+    dataChannel = null
   }
   peerConnection = new RTCPeerConnection(ICE_SERVERS)
   iceBuffer = []
@@ -221,7 +269,35 @@ function maakPeerConnection() {
   pc.onconnectionstatechange = () => {
     if (pc !== peerConnection) return
     console.log('[sync] Verbinding:', pc.connectionState)
-    if (pc.connectionState === 'failed') zetP2pStatus('P2P mislukt')
+    if (pc.connectionState === 'connected') {
+      pc._wasVerbonden = true
+      if (syncPartnerId) wisPauze(syncPartnerId)
+    }
+    if (pc.connectionState === 'failed') {
+      zetP2pStatus('P2P mislukt')
+      // v107: niet blijven hangen aan een mislukte verbinding
+      const partner = syncPartnerId
+      if (pc._wasVerbonden) {
+        // werkte eerst wel (bijv. de vriend is weg): gewoon opnieuw, zonder pauze
+        console.log('[sync] Verbinding weggevallen - sync opnieuw')
+        stopSync()
+        setTimeout(checkSyncStart, 1000)
+        return
+      }
+      logKandidaten(pc).finally(() => {
+        if (pc !== peerConnection) return
+        stopSync()
+        mislukking(partner, 'Verbinding mislukt')
+      })
+    }
+  }
+  const iceFouten = new Set()
+  pc.onicecandidateerror = (e) => {
+    if (pc !== peerConnection) return
+    const sleutel = (e.url || '?') + ' ' + e.errorCode
+    if (iceFouten.has(sleutel)) return
+    iceFouten.add(sleutel)
+    console.log('[sync] ICE-serverfout:', e.url || '?', e.errorCode, e.errorText || '')
   }
   pc.oniceconnectionstatechange = () => {
     if (pc !== peerConnection) return
@@ -239,7 +315,8 @@ function koppelDataChannel(kanaal) {
     anderKlaar = false
     relayCheck = detecteerRelayConnection()
     await relayCheck
-    stuurManifest()
+    // v107: verbinding kan tussendoor wegvallen; dan geen rode fout in de console
+    stuurManifest().catch(e => console.log('[sync] Manifest afgebroken (verbinding weg):', e && e.message))
   }
   dataChannel.onmessage = (event) => {
     // VALIDATIE (bug #5): nooit blind parsen/vertrouwen wat de peer stuurt
@@ -256,9 +333,50 @@ function koppelDataChannel(kanaal) {
       return
     }
     console.log('[sync] P2P bericht:', bericht.type)
-    verwerkP2pBericht(bericht)
+    verwerkP2pBericht(bericht).catch(e => console.log('[sync] Verwerken afgebroken (verbinding weg):', e && e.message))
   }
-  dataChannel.onclose = () => zetP2pStatus('')
+  dataChannel.onclose = () => {
+    zetP2pStatus('')
+    // v107: de andere kant sloot de verbinding (bijv. paginawissel): opnieuw beginnen
+    if (dataChannel !== kanaal || !syncPartnerId) return
+    console.log('[sync] DataChannel dicht - sync opnieuw')
+    stopSync()
+    setTimeout(checkSyncStart, 1000)
+  }
+}
+
+// v107: bij een mislukte verbinding laten zien welke soorten adressen geprobeerd zijn
+// (zonder de adressen zelf)
+function soortAdres(a) {
+  if (!a) return 'verborgen'
+  if (/\.local$/i.test(a)) return 'mdns'
+  if (/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|127\.)/.test(a)) return 'prive'
+  if (/^(fe80:|f[cd][0-9a-f]{2}:)/i.test(a)) return 'prive6'
+  if (a.includes(':')) return 'openbaar6'
+  return 'openbaar'
+}
+
+async function logKandidaten(pc) {
+  try {
+    const stats = await pc.getStats()
+    const lokaal = {}, remote = {}, paren = {}
+    stats.forEach(r => {
+      if (r.type === 'local-candidate' || r.type === 'remote-candidate') {
+        const k = (r.candidateType || '?') + '/' + soortAdres(r.address || r.ip) + '/' + (r.relayProtocol || r.protocol || '?')
+        const doel = r.type === 'local-candidate' ? lokaal : remote
+        doel[k] = (doel[k] || 0) + 1
+      } else if (r.type === 'candidate-pair') {
+        const st = r.state || '?'
+        paren[st] = (paren[st] || 0) + 1
+      }
+    })
+    const tekst = o => Object.entries(o).map(([k, n]) => k + ' x' + n).join(', ') || 'geen'
+    const servers = (ICE_SERVERS.iceServers || []).map(s => [].concat(s.urls).join(' ')).join(', ')
+    console.log('[sync] ICE-servers: ' + servers)
+    console.log('[sync] Kandidaten lokaal: ' + tekst(lokaal))
+    console.log('[sync] Kandidaten remote: ' + tekst(remote))
+    console.log('[sync] Paren: ' + tekst(paren))
+  } catch (e) { console.warn('[sync] Kandidaten-log fout:', e) }
 }
 
 async function detecteerRelayConnection() {
@@ -288,7 +406,7 @@ async function detecteerRelayConnection() {
         const remoteCandidate = stats.get(pair.remoteCandidateId)
         if (localCandidate?.candidateType === 'relay' || remoteCandidate?.candidateType === 'relay') {
           relayGebruikt = true
-          console.log('[sync] RELAY VERBINDING GEDETECTEERD — muziek wordt overgeslagen')
+          console.log('[sync] RELAY VERBINDING GEDETECTEERD — muziek en video worden overgeslagen')
         } else {
           console.log('[sync] Directe P2P-verbinding (' + (localCandidate?.candidateType || '?') + ') — muziek toegestaan')
         }
@@ -300,7 +418,7 @@ async function detecteerRelayConnection() {
     isRelayConnection = relayGebruikt
     if (isRelayConnection) {
       console.log('[sync] STATUS: relay -> geen muziek en video')
-      zetP2pStatus('⚠️ relay-verbinding (muziek overgeslagen)')
+      zetP2pStatus('⚠️ relay-verbinding (muziek en video overgeslagen)')
     }
     else {
       console.log('[sync] STATUS: directe verbinding -> geen beperking')
@@ -903,18 +1021,26 @@ async function verwerkSignaal(type, data) {
   console.log('[sync] Signaal:', type)
   if (type === 'offer') {
     if (isInitiator) return
+    const ufrag = iceUfrag(data && data.sdp)
     // RACE-FIX (bug #3): duplicate offer (van een retry) negeren als er al
     // een verbinding loopt of staat — anders wordt een werkende verbinding weggegooid
     if (peerConnection) {
       const staat = peerConnection.connectionState
       const dcOpen = dataChannel && dataChannel.readyState === 'open'
-      if (dcOpen || staat === 'connected' || staat === 'connecting') {
+      const oud = iceUfrag(peerConnection.remoteDescription && peerConnection.remoteDescription.sdp)
+      // v107: een offer met een andere ice-ufrag komt van een nieuwe verbinding van de vriend
+      const nieuw = !!(ufrag && oud && ufrag !== oud)
+      if (!nieuw && (dcOpen || staat === 'connected' || staat === 'connecting')) {
         console.log('[sync] Duplicate offer genegeerd (verbinding al actief)')
         return
       }
+      if (nieuw) console.log('[sync] Nieuw offer van de vriend - verbinding opnieuw')
     }
+    // v107: ice die vóór het offer binnenkwam niet weggooien (kan via REST in andere volgorde aankomen)
+    const vroeg = iceBuffer
     await iceReady // TURN-servers eerst binnen laten komen
     maakPeerConnection()
+    iceBuffer = vroeg.filter(c => !c || !c.usernameFragment || !ufrag || c.usernameFragment === ufrag)
     await peerConnection.setRemoteDescription(new RTCSessionDescription(data))
     await leegIceBuffer()
     const answer = await peerConnection.createAnswer()
@@ -938,6 +1064,11 @@ async function verwerkSignaal(type, data) {
     try { await peerConnection.addIceCandidate(new RTCIceCandidate(data)) }
     catch (e) { console.warn('[sync] ice fout:', e) }
   }
+}
+
+function iceUfrag(sdp) {
+  const m = /a=ice-ufrag:(\S+)/.exec(typeof sdp === 'string' ? sdp : '')
+  return m ? m[1] : null
 }
 
 async function leegIceBuffer() {

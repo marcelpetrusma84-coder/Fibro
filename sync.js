@@ -2,7 +2,7 @@
 // Stap A: presence ✓ | Stap B: DataChannel ping-pong
 // Zelfde signaling-patroon als bellen.js: gedeeld kanaal met gesorteerde IDs
 import { supabase } from './supabase.js?v=95'
-import { ICE_SERVERS, iceReady } from './ice-config.js?v=95'
+import { ICE_SERVERS, iceReady } from './ice-config.js?v=106'
 
 let presenceKanaal = null
 let huidigeUserId = null
@@ -21,6 +21,26 @@ let offerRetryCount = 0
 let offerRetryTimer = null
 let syncTimeout = null
 let isRelayConnection = false // TURN/relay detectie
+let relayCheck = null        // belofte: relay-detectie klaar (v106)
+let eigenKlaar = false       // ik heb alles van de vriend (v106)
+let anderKlaar = false       // de vriend heeft alles van mij (v106)
+
+// ── Rust na relay-sync (v106): via TURN kost elke sync tegoed. Is alles aan beide
+// kanten up-to-date, dan wordt de relay-verbinding gesloten en start sync met die
+// vriend een kwartier niet opnieuw. Directe verbindingen merken hier niets van.
+const RELAY_RUST_MS = 15 * 60 * 1000
+function rustSleutel(id) { return 'fibro_relay_rust_' + huidigeUserId + '_' + id }
+function inRust(id) {
+  try { return Date.now() - Number(localStorage.getItem(rustSleutel(id)) || 0) < RELAY_RUST_MS }
+  catch (e) { return false }
+}
+function controleerRust() {
+  if (!eigenKlaar || !anderKlaar || !isRelayConnection || !syncPartnerId) return
+  const partner = syncPartnerId
+  try { localStorage.setItem(rustSleutel(partner), String(Date.now())) } catch (e) {}
+  console.log('[sync] Relay-sync compleet - verbinding dicht, 15 min rust met', partner)
+  setTimeout(() => { if (syncPartnerId === partner) stopSync() }, 2000)
+}
 
 // ── Tabblad-slot: maar één tabblad mag de sync draaien ──
 const SLOT_SLEUTEL = 'fibro_sync_slot'
@@ -121,7 +141,7 @@ async function laadVrienden() {
 
 function checkSyncStart() {
   if (syncPartnerId) return
-  const ander = [...onlineGebruikers].find((id) => vrienden.has(id))
+  const ander = [...onlineGebruikers].find((id) => vrienden.has(id) && !inRust(id))
   if (!ander) return
   syncPartnerId = ander
   isInitiator = huidigeUserId < ander
@@ -215,7 +235,10 @@ function koppelDataChannel(kanaal) {
     console.log('[sync] DataChannel OPEN')
     zetP2pStatus('P2P open')
     // Detecteer TURN/relay verbinding
-    await detecteerRelayConnection()
+    eigenKlaar = false
+    anderKlaar = false
+    relayCheck = detecteerRelayConnection()
+    await relayCheck
     stuurManifest()
   }
   dataChannel.onmessage = (event) => {
@@ -228,7 +251,7 @@ function koppelDataChannel(kanaal) {
     try { bericht = JSON.parse(event.data) }
     catch(e) { console.warn('[sync] P2P bericht geweigerd: ongeldige JSON'); return }
     if (!bericht || typeof bericht !== 'object' || typeof bericht.type !== 'string') return
-    if (!['manifest', 'geef', 'chunk', 'item'].includes(bericht.type)) {
+    if (!['manifest', 'geef', 'chunk', 'item', 'klaar'].includes(bericht.type)) {
       console.warn('[sync] P2P bericht geweigerd: onbekend type', bericht.type)
       return
     }
@@ -273,13 +296,10 @@ async function detecteerRelayConnection() {
     } else {
       console.log('[sync] Geen geselecteerd pair gevonden — muziek toegestaan (voordeel van de twijfel)')
     }
-    const isPlus = !!(window._profiel && window._profiel.is_plus)
-    isRelayConnection = relayGebruikt && !isPlus
-    if (relayGebruikt && isPlus) {
-      console.log('[sync] STATUS: relay + Fibro+ -> alles toegestaan')
-      zetP2pStatus('relay-verbinding (Fibro+, alles toegestaan)')
-    } else if (isRelayConnection) {
-      console.log('[sync] STATUS: relay + gratis -> muziek overgeslagen')
+    // Via relay (TURN) nooit muziek of video, ook niet met Fibro+ (v106): dat kost te veel TURN-tegoed
+    isRelayConnection = relayGebruikt
+    if (isRelayConnection) {
+      console.log('[sync] STATUS: relay -> geen muziek en video')
       zetP2pStatus('⚠️ relay-verbinding (muziek overgeslagen)')
     }
     else {
@@ -414,6 +434,12 @@ const WBG_WIDGETS = ['poll', 'quote', 'aftel', 'optel']
 }
 
 async function verwerkP2pBericht(bericht) {
+  if (relayCheck) await relayCheck // eerst weten of het via relay gaat (v106)
+  if (bericht.type === 'klaar') {
+    anderKlaar = true
+    controleerRust()
+    return
+  }
   if (bericht.type === 'manifest') {
     let videoNodig = false
     // Naam van de vriend lokaal bewaren; laatste verbinding is leidend.
@@ -541,6 +567,9 @@ async function verwerkP2pBericht(bericht) {
       zetP2pStatus('vraag ' + nodig.length + ' item(s)')
     } else {
       zetP2pStatus('alles up-to-date')
+      eigenKlaar = true
+      try { dataChannel.send(JSON.stringify({ type: 'klaar' })) } catch (e) {}
+      controleerRust()
     }
   }
   if (bericht.type === 'geef') {
@@ -548,6 +577,11 @@ async function verwerkP2pBericht(bericht) {
     if (!Array.isArray(bericht.items) || bericht.items.length > 300) return
     for (const item of bericht.items) {
       if (typeof item !== 'string' || item.length > 200) continue
+      // Ook als verzender: via relay geen muziek of video (v106), wat de ander ook vraagt
+      if (isRelayConnection && (item.startsWith('muziek:') || item === 'video')) {
+        console.log('[sync] Relay-verbinding - niet verstuurd:', item)
+        continue
+      }
       if (item === 'layout') {
         const layoutJson = localStorage.getItem('fibro_widgets_profiel_' + huidigeUserId) || '[]'
         dataChannel.send(JSON.stringify({ type: 'item', itemId: 'layout', hash: hashString(layoutJson), data: layoutJson }))
@@ -936,6 +970,7 @@ function toonRelayMuziekVraag(muziekItems) {
 }
 
 export function vraagVideoOp() {
+  if (isRelayConnection) { console.log('[sync] Relay-verbinding - video niet opgevraagd'); return false }
   if (dataChannel && dataChannel.readyState === 'open') {
     dataChannel.send(JSON.stringify({ type: 'geef', items: ['video'] }))
     console.log('[sync] Video opgevraagd')
@@ -956,6 +991,9 @@ function stopSync() {
   iceBuffer = []
   offerRetryCount = 0
   isRelayConnection = false
+  relayCheck = null
+  eigenKlaar = false
+  anderKlaar = false
   zetP2pStatus('')
 }
 

@@ -75,6 +75,7 @@ function zorgVoorStijl(){
 
 const EMOJIS = ['\uD83D\uDC4D','\u274C','\uD83D\uDE02','\uD83D\uDE2E','\uD83D\uDE22','\uD83D\uDD25']
 let _menu = null
+let _opVerwijder = null
 
 function sluitMenu(){
   if(_menu&&_menu.parentNode) _menu.parentNode.removeChild(_menu)
@@ -119,12 +120,15 @@ function openVoor(row, x, y){
   if(!id) return
   const k1 = maakKnop('\uD83D\uDE03', ()=> toonEmojiKiezer(x, y, id))
   const k2 = maakKnop('\uD83D\uDCAC', ()=> vraagTekst(id))
+  const kv = _opVerwijder ? maakKnop('\uD83D\uDDD1', ()=> { sluitMenu(); _opVerwijder(row, x, y) }) : null
+  if (row.dataset.verwijderd === '1') { if (kv) toonMenu(x, y, [kv]); return }
   const k3 = maakKnop('\u21A9', ()=> { sluitMenu(); kiesAntwoordOp(id, row.dataset.mtekst || 'bericht') })
-  toonMenu(x, y, [k1, k2, k3])
+  toonMenu(x, y, kv ? [k1, k2, k3, kv] : [k1, k2, k3])
 }
 
-export function startLangIndrukken(c){
+export function startLangIndrukken(c, opVerwijder){
   if(!c) return
+  _opVerwijder = typeof opVerwijder === 'function' ? opVerwijder : null
   c.setAttribute('data-geen-swipe', '1')
   let tm = null, sx = 0, sy = 0
   c.addEventListener('pointerdown', (e)=>{

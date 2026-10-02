@@ -1531,7 +1531,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     pong: './pong-ui.js?v=96',
     vieroprij: './vieroprij-ui.js?v=96',
     schaken: './schaken-ui.js?v=96',
-    flappybird: './flappy-ui.js?v=96',
+    flappybird: './flappy-ui.js?v=109',
     breakout: './blockit-ui.js?v=95',
     spaceinvaders: './invaders-ui.js?v=95',
     swarm: './swarm-ui.js?v=4',
@@ -1864,7 +1864,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Flappy Bird Multiplayer ───
   async function startFlappyBird() {
-    const m = await import('./flappy-ui.js?v=96')
+    const m = await import('./flappy-ui.js?v=109')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'flappybird' })
   }
 

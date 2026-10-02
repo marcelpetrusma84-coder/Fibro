@@ -31,7 +31,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 </style>
 </head>
 <body>
-<div class="spel-scherm">
+<div class="spel-scherm" id="spelOverlay">
   <div class="spel-titel-bar" id="spelTitelBar"></div>
   <button class="spel-sluit-btn" id="sluitKnop" title="Terug">✕</button>
   <div id="spelInhoud"></div>
@@ -39,7 +39,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
 <script type="module">
   import * as Bordgeluid from './bordgeluid.js?v=95'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=1'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=2'
 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   const inhoud = document.getElementById('spelInhoud')
@@ -54,11 +54,51 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
   const spelId = new URLSearchParams(location.search).get('spel') || ''
   const spel = Object.prototype.hasOwnProperty.call(SOLO_SPELLEN, spelId) ? SOLO_SPELLEN[spelId] : null
 
+  // Record per account, alleen op dit toestel.
+  function accountId() {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)
+        if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+          const id = JSON.parse(localStorage.getItem(k))?.user?.id
+          if (id) return id
+        }
+      }
+    } catch (e) {}
+    return 'lokaal'
+  }
+  const recordSleutel = 'fibro_record_' + spelId + '_' + accountId()
+  const solo = {
+    record() { try { return parseInt(localStorage.getItem(recordSleutel), 10) || 0 } catch (e) { return 0 } },
+    // Geeft true als dit een nieuw record is (en bewaart het dan).
+    nieuweScore(n) {
+      n = Math.floor(Number(n)) || 0
+      if (n <= solo.record()) return false
+      try { localStorage.setItem(recordSleutel, String(n)) } catch (e) {}
+      return true
+    },
+  }
+
+
   if (!spel) {
     inhoud.innerHTML = '<div class="melding">Dit spel kan nog niet alleen gespeeld worden.<br><button onclick="location.href=\'index.html\'">Terug</button></div>'
   } else {
     document.title = 'Fibro — ' + spel.naam
-    kiesNiveau()
+    if (spel.arcade) startScherm()
+    else kiesNiveau()
+  }
+
+  // Arcadespellen: geen niveau, wel een startknop (dan mag het geluid meteen aan).
+  function startScherm() {
+    titel.textContent = spel.icon + ' ' + spel.naam
+    inhoud.innerHTML = `
+      <div class="niveau-kaart">
+        <div class="niveau-icon">${esc(spel.icon)}</div>
+        <div class="niveau-naam">${esc(spel.naam)}</div>
+        <div class="niveau-sub">Jouw record: ${solo.record()}</div>
+        <button class="niveau-btn gekozen" id="startKnop">▶ Start</button>
+      </div>`
+    document.getElementById('startKnop').onclick = () => start('normaal')
   }
 
   function kiesNiveau() {
@@ -89,7 +129,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
       const m = await import(spel.bestand)
       kanaal = maakSoloKanaal(spel.bot, niveau)
       // Jij bent altijd speler 1 en begint de eerste ronde.
-      m.start({ Bordgeluid, spelKanaal: kanaal, benIkSpeler1: true, vriendNaam: 'Computer', isActief: () => true })
+      m.start({ Bordgeluid, spelKanaal: kanaal, benIkSpeler1: true, vriendNaam: 'Computer', isActief: () => true, solo: spel.arcade ? solo : undefined })
       kanaal.subscribe()
     } catch (e) {
       console.error('[solo] starten mislukt', e)

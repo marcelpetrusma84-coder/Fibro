@@ -5,7 +5,8 @@ import { maakGeluid } from './flappy-geluid.js?v=86'
 // Scherpe punten, spijkers, fakkelvuur en vallende rotsen zijn dodelijk.
 // Je bent ook af als je links uit beeld wordt geduwd.
 
-export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
+export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) {
+    // solo: alleen spelen (spel.html). Geen vriend; aan het eind telt je record.
     vriendNaam = vriendNaam || 'vriend'
     isActief = isActief || (() => true)
     document.getElementById('spelTitelBar').textContent = '🦇 Flapper'
@@ -42,9 +43,9 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     <div style="font-size:22px;">🦇</div>
     <div id="fb-score-mij" style="font-weight:700;font-size:18px;color:#60a5fa;">🪙 0</div>
           <div id="fb-harten-mij" style="font-size:12px;letter-spacing:1px;">❤️❤️❤️</div>
-    <div style="opacity:0.6;font-size:11px;">Jij</div>
+    <div id="fb-label-mij" style="opacity:0.6;font-size:11px;">${solo ? 'Record ' + solo.record() : 'Jij'}</div>
     </div>
-    <div style="color:white;font-size:12px;text-align:center;">
+    <div style="color:white;font-size:12px;text-align:center;${solo ? 'display:none;' : ''}">
     <div style="font-size:22px;">🦇</div>
     <div id="fb-score-vriend" style="font-weight:700;font-size:18px;color:#fbbf24;">🪙 0</div>
           <div id="fb-harten-vriend" style="font-size:12px;letter-spacing:1px;">❤️❤️❤️</div>
@@ -73,7 +74,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
 
     function resetStaat() {
         mijnVogel = { x: VOGEL_X, y: H / 2, vy: 0, dood: false }
-        vriendVogel = { x: VOGEL_X_VRIEND, y: H / 2, vy: 0, dood: false }
+        vriendVogel = { x: VOGEL_X_VRIEND, y: H / 2, vy: 0, dood: !!solo }
         obstakels = []
         volgendeId = 0
         rotsTeller = 0
@@ -757,9 +758,17 @@ function uitBeeld(v) {
             gameOver = true
             cancelAnimationFrame(animFrame)
             teken()
+            if (solo) {
+                const nieuw = solo.nieuweScore(mijnScore)
+                geluid.einde(nieuw ? 1 : 0)
+                statusEl.textContent = (nieuw ? '🏆 Nieuw record: ' : '🪙 Score: ') + mijnScore
+                const lab = document.getElementById('fb-label-mij')
+                if (lab) lab.textContent = 'Record ' + solo.record()
+            } else {
             const gelijkspel = mijnScore === vriendScore
             const ikWin = mijnScore > vriendScore
             geluid.einde(gelijkspel ? 0 : ikWin ? 1 : -1); statusEl.textContent = gelijkspel ? '🤝 Gelijkspel!' : ikWin ? '🎉 Jij wint!' : '😢 ' + vriendNaam + ' wint!'
+            }
             setTimeout(() => {
                 inhoud.querySelectorAll('button.fb-herstart').forEach(b => b.remove())
                 const btn = document.createElement('button')

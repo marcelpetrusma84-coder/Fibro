@@ -305,10 +305,17 @@ export function vorBot({ stuur, niveau, isDicht }) {
   }
 }
 
+// Arcadespellen: daar is geen tegenstander. Het spel krijgt solo mee en speelt
+// zonder vriend; het kanaal hoeft niets terug te sturen.
+export function stilBot() {
+  return { ontvang() {} }
+}
+
 // Welke spellen alleen te spelen zijn, met hun bestand en computerspeler.
 // Het bestand heeft dezelfde ?v= als in chat.html, zodat de service worker
 // het al in zijn cache heeft.
 export const SOLO_SPELLEN = {
   botkaaseiren: { naam: 'Tic-Tac-Toe',   icon: '⭕', bestand: './bke-ui.js?v=96',      bot: bkeBot },
   vieroprij:    { naam: 'Four in a Row', icon: '🔴', bestand: './vieroprij-ui.js?v=96', bot: vorBot },
+  flappybird:   { naam: 'Flapper',       icon: '🦇', bestand: './flappy-ui.js?v=109',   bot: stilBot, arcade: true },
 }

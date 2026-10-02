@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="nl" style="background:#1a0a2e">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Fibro — Spel</title>
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#c084fc">
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+:root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:#ffffff; }
+html, body { height:100%; }
+body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sans-serif; overflow:hidden; }
+@keyframes vorPuls { from { transform:scale(1); } to { transform:scale(1.08); } }
+.spel-scherm { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; }
+.spel-sluit-btn { position:absolute; top:16px; right:16px; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.12); border:none; color:white; font-size:20px; cursor:pointer; z-index:10; display:flex; align-items:center; justify-content:center; }
+.spel-titel-bar { position:absolute; top:16px; left:16px; font-size:14px; color:white; font-weight:600; opacity:0.8; }
+#spelInhoud { width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+.niveau-kaart { display:flex; flex-direction:column; align-items:center; gap:14px; padding:24px; text-align:center; }
+.niveau-icon { font-size:56px; }
+.niveau-naam { font-size:20px; font-weight:600; color:white; }
+.niveau-sub { font-size:13px; color:rgba(255,255,255,0.7); margin-bottom:6px; }
+.niveau-btn { width:220px; padding:12px 0; border-radius:12px; border:0.5px solid var(--border); background:var(--card); color:white; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; }
+.niveau-btn.gekozen { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; }
+.niveau-btn:active { transform:scale(0.96); }
+.melding { color:white; text-align:center; padding:24px; line-height:1.5; }
+.melding button { margin-top:16px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; border-radius:10px; padding:10px 22px; color:#1a0a2e; font-weight:600; cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="spel-scherm">
+  <div class="spel-titel-bar" id="spelTitelBar"></div>
+  <button class="spel-sluit-btn" id="sluitKnop" title="Terug">✕</button>
+  <div id="spelInhoud"></div>
+</div>
+
+<script type="module">
+  import * as Bordgeluid from './bordgeluid.js?v=95'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=1'
+
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  const inhoud = document.getElementById('spelInhoud')
+  const titel = document.getElementById('spelTitelBar')
+  let kanaal = null
+
+  document.getElementById('sluitKnop').onclick = () => {
+    if (kanaal) kanaal.sluit()
+    location.href = 'index.html'
+  }
+
+  const spelId = new URLSearchParams(location.search).get('spel') || ''
+  const spel = Object.prototype.hasOwnProperty.call(SOLO_SPELLEN, spelId) ? SOLO_SPELLEN[spelId] : null
+
+  if (!spel) {
+    inhoud.innerHTML = '<div class="melding">Dit spel kan nog niet alleen gespeeld worden.<br><button onclick="location.href=\'index.html\'">Terug</button></div>'
+  } else {
+    document.title = 'Fibro — ' + spel.naam
+    kiesNiveau()
+  }
+
+  function kiesNiveau() {
+    const sleutel = 'fibro_solo_niveau_' + spelId
+    let vorige = 'normaal'
+    try { vorige = localStorage.getItem(sleutel) || 'normaal' } catch (e) {}
+    const NAMEN = { makkelijk: 'Makkelijk', normaal: 'Normaal', moeilijk: 'Moeilijk' }
+    titel.textContent = spel.icon + ' ' + spel.naam
+    inhoud.innerHTML = `
+      <div class="niveau-kaart">
+        <div class="niveau-icon">${esc(spel.icon)}</div>
+        <div class="niveau-naam">${esc(spel.naam)}</div>
+        <div class="niveau-sub">Tegen de computer. Kies een niveau:</div>
+        ${NIVEAUS.map(n => `<button class="niveau-btn${n === vorige ? ' gekozen' : ''}" data-niveau="${n}">${NAMEN[n]}</button>`).join('')}
+      </div>`
+    inhoud.querySelectorAll('.niveau-btn').forEach(knop => {
+      knop.onclick = () => {
+        const niveau = knop.dataset.niveau
+        try { localStorage.setItem(sleutel, niveau) } catch (e) {}
+        start(niveau)
+      }
+    })
+  }
+
+  async function start(niveau) {
+    inhoud.innerHTML = '<div class="melding">Laden...</div>'
+    try {
+      const m = await import(spel.bestand)
+      kanaal = maakSoloKanaal(spel.bot, niveau)
+      // Jij bent altijd speler 1 en begint de eerste ronde.
+      m.start({ Bordgeluid, spelKanaal: kanaal, benIkSpeler1: true, vriendNaam: 'Computer', isActief: () => true })
+      kanaal.subscribe()
+    } catch (e) {
+      console.error('[solo] starten mislukt', e)
+      inhoud.innerHTML = '<div class="melding">Het spel kon niet starten.<br><button onclick="location.reload()">Opnieuw proberen</button></div>'
+    }
+  }
+</script>
+</body>
+</html>

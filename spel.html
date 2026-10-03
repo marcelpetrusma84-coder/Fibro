@@ -39,7 +39,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
 <script type="module">
   import * as Bordgeluid from './bordgeluid.js?v=95'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=2'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=3'
 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   const inhoud = document.getElementById('spelInhoud')
@@ -127,9 +127,12 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     inhoud.innerHTML = '<div class="melding">Laden...</div>'
     try {
       const m = await import(spel.bestand)
-      kanaal = maakSoloKanaal(spel.bot, niveau)
+      // Dammen en schaken krijgen hun spelregels mee, net als in de chat.
+      const motor = spel.motor ? await import(spel.motor) : null
+      const extra = spel.motorNaam ? { [spel.motorNaam]: motor } : {}
+      kanaal = maakSoloKanaal(spel.bot, niveau, motor)
       // Jij bent altijd speler 1 en begint de eerste ronde.
-      m.start({ Bordgeluid, spelKanaal: kanaal, benIkSpeler1: true, vriendNaam: 'Computer', isActief: () => true, solo: spel.arcade ? solo : undefined })
+      m.start({ ...extra, Bordgeluid, spelKanaal: kanaal, benIkSpeler1: true, vriendNaam: 'Computer', isActief: () => true, solo: spel.arcade ? solo : undefined })
       kanaal.subscribe()
     } catch (e) {
       console.error('[solo] starten mislukt', e)

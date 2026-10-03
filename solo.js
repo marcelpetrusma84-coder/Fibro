@@ -4,10 +4,12 @@
 // hetzelfde terugstuurt als een vriend zou doen. De spelbestanden zelf hoeven
 // daardoor niet te veranderen. Er gaat niets over het internet.
 
+import { damBot, schaakBot } from './solo-bord.js?v=1'
+
 export const NIVEAUS = ['makkelijk', 'normaal', 'moeilijk']
 
 // Nagemaakt kanaal: dezelfde on/send/subscribe als een Supabase-kanaal.
-export function maakSoloKanaal(maakBot, niveau) {
+export function maakSoloKanaal(maakBot, niveau, motor) {
   const luisteraars = {}
   let dicht = false
   const kanaal = {
@@ -33,7 +35,7 @@ export function maakSoloKanaal(maakBot, niveau) {
       try { fn({ type: 'broadcast', event, payload }) } catch (e) { console.error('[solo]', e) }
     }
   }
-  const bot = maakBot({ stuur, niveau, isDicht: () => dicht })
+  const bot = maakBot({ stuur, niveau, isDicht: () => dicht, motor })
   kanaal.sluit = () => { dicht = true; if (bot.stop) bot.stop() }
   return kanaal
 }
@@ -317,5 +319,7 @@ export function stilBot() {
 export const SOLO_SPELLEN = {
   botkaaseiren: { naam: 'Tic-Tac-Toe',   icon: '⭕', bestand: './bke-ui.js?v=96',      bot: bkeBot },
   vieroprij:    { naam: 'Four in a Row', icon: '🔴', bestand: './vieroprij-ui.js?v=96', bot: vorBot },
+  schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=96',  bot: schaakBot, motor: './schaak.js?v=95', motorNaam: 'Schaak' },
+  dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=96',   bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
   flappybird:   { naam: 'Flapper',       icon: '🦇', bestand: './flappy-ui.js?v=109',   bot: stilBot, arcade: true },
 }

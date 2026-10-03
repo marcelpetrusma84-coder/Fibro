@@ -6,8 +6,10 @@
 // Hoe groter het vierkant dat je weghaalt, hoe groter die explosie.
 // Bomstenen zitten willekeurig in de wachtrij en ontploffen zodra ze landen.
 
-export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
+export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) {
     vriendNaam = vriendNaam || 'vriend'
+    // solo: alleen spelen (spel.html). Eén eigen bak; rechtsboven staat je record.
+    if (solo) vriendNaam = 'Record'
     isActief = isActief || (() => true)
     document.getElementById('spelTitelBar').textContent = '🟪 Block It'
     const inhoud = document.getElementById('spelInhoud')
@@ -99,6 +101,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
         wachtrij = benIkHost || modus === 'versus' ? [nieuwStukData(), nieuwStukData(), nieuwStukData()] : []
         vriendRooster = modus === 'versus' ? leegRooster(KOL) : null
         scores = [0, 0]
+        if (solo) scores[ANDER] = solo.record()
         lading = [0, 0]
         ladingStuk = [0, 0]
         bom = [false, false]
@@ -755,6 +758,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     ]
 
     function naamVan(m) {
+        if (solo) return 'Block It'
         const v = SPELVORMEN.find(s => s.modus === m)
         return v ? v.titel : ''
     }
@@ -831,7 +835,11 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
         geluid.einde()
         schok(1)
         const mij = scores[IK], vriend = scores[ANDER]
-        if (ikVerloor === true) statusEl.textContent = '😢 Je bak liep vol. ' + vriendNaam + ' wint!'
+        if (solo) {
+            const nieuw = solo.nieuweScore(mij)
+            scores[ANDER] = solo.record()
+            statusEl.textContent = (nieuw ? '🏆 Nieuw record: ' : 'Je bak liep vol. Score: ') + mij
+        } else if (ikVerloor === true) statusEl.textContent = '😢 Je bak liep vol. ' + vriendNaam + ' wint!'
             else if (ikVerloor === false) statusEl.textContent = '🎉 De bak van ' + vriendNaam + ' liep vol. Jij wint!'
                 else {
                     statusEl.textContent = mij === vriend ? '🤝 Gelijkspel! ' + mij + ' - ' + vriend
@@ -852,7 +860,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
                             beginSpel(gespeeld)
                         }
                         rij.appendChild(opnieuw)
-                        if (benIkHost) {
+                        if (benIkHost && !solo) {
                             const ander = document.createElement('button')
                             ander.className = 'bi-herstart'
                             ander.textContent = 'Andere spelvorm'
@@ -871,7 +879,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
         const dpr = Math.min(window.devicePixelRatio || 1, 2)
         const ruimteB = Math.max(260, Math.min(inhoud.clientWidth || window.innerWidth, window.innerWidth) - 8)
         const ruimteH = Math.max(260, window.innerHeight * 0.72 - HUD_H)
-        if (modus === 'versus') {
+        if (modus === 'versus' && !solo) {
             // Eigen veld groot, veld van je vriend kleiner ernaast
             cel = Math.max(10, Math.floor(Math.min((ruimteB - 30) / (KOL * 1.6), ruimteH / RIJ)))
             celV = Math.max(6, Math.floor(cel * 0.6))
@@ -1028,7 +1036,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
         tekenHud()
 
         // Veld van je vriend (twee velden)
-        if (modus === 'versus' && vriendRooster) {
+        if (modus === 'versus' && vriendRooster && !solo) {
             ctx.textAlign = 'left'
             ctx.fillStyle = VRIEND_KLEUR
             ctx.font = '600 11px ' + FONT
@@ -1406,14 +1414,17 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     })
 
     // ── Start ──
-    toonKeuze()
-    spelKanaal.send({ type: 'broadcast', event: 'bi-hier', payload: {} })
+    if (solo) beginSpel('versus')
+    else {
+        toonKeuze()
+        spelKanaal.send({ type: 'broadcast', event: 'bi-hier', payload: {} })
+    }
     pingInterval = setInterval(() => {
         if (!isActief()) {
             clearInterval(pingInterval)
             return
         }
-        if (!vriendAanwezig) spelKanaal.send({ type: 'broadcast', event: 'bi-hier', payload: {} })
+        if (!vriendAanwezig && !solo) spelKanaal.send({ type: 'broadcast', event: 'bi-hier', payload: {} })
     }, 1200)
     animFrame = requestAnimationFrame(lus)
     window._spelAnimFrame = animFrame

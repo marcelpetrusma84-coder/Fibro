@@ -1532,7 +1532,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     vieroprij: './vieroprij-ui.js?v=96',
     schaken: './schaken-ui.js?v=96',
     flappybird: './flappy-ui.js?v=109',
-    breakout: './blockit-ui.js?v=95',
+    breakout: './blockit-ui.js?v=109',
     spaceinvaders: './invaders-ui.js?v=95',
     swarm: './swarm-ui.js?v=4',
     endlessrunner: './runner-gunner-ui.js?v=11',
@@ -1870,7 +1870,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Block It Multiplayer ───
 async function startBlockIt() {
-    const m = await import('./blockit-ui.js?v=95')
+    const m = await import('./blockit-ui.js?v=109')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'breakout' })
 }
 

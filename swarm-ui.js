@@ -3,8 +3,10 @@
 // en knoppen (sw-cmd). Het spel start pas als allebei op dezelfde knop hebben gedrukt.
 // Geluiden: geluid/swarm/<naam>.wav (vervangbaar door eigen opnames); anders ingebouwde klanken. Tekent zichzelf in #spelInhoud via het spelkanaal van chat.html.
 
-export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
+export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) {
 vriendNaam = vriendNaam || 'vriend'
+// solo: alleen spelen (spel.html). Het tweede schip doet niet mee; rechtsboven staat je record.
+if (solo) vriendNaam = 'Record'
 isActief = isActief || (() => true)
 const HOST = !!benIkSpeler1
 document.getElementById('spelTitelBar').textContent = '\u{1FAB2} The Swarm'
@@ -218,7 +220,10 @@ const SLIME=['#8dff2a','#5fbf1a','#6b7a12','#a4ff5a','#3f5a10'];
 function landY(y){return Math.min(H-3,Math.max(cur.FL+2,y+R(15,70)))}
 function setMode(m){mode=m;modeT=0;if(m==='chaos')bugs.forEach(b=>{b.vx+=R(-2,2);b.vy+=R(-2,2);b.ax=CL(b.x,15,W-15);b.ay=CL(b.y,20,100)})}
 function newBug(ty,x,y,i,sc){const hp=Math.round(TY[ty].hp*(sc||1));return{ty,x,y,vx:0,vy:0,hp,mx:hp,frz:0,spd:1+Math.min(.5,(sc||1)-1),pat:i%4,t:R(0,100)|0,ph:R(0,6.28),fl:0,cd:R(160,420),dir:Math.random()<.5?-1:1,ax:R(20,W-20),ay:R(25,85),wait:0,jx:0,jy:0,dv:0,kami:0}}
-function revive(){HE.forEach(h=>{if(h.dn){h.dn=0;h.hp=3;h.hit=120}})}
+function revive(){HE.forEach(h=>{if(h.dn){h.dn=0;h.hp=3;h.hit=120}});soloWeg()}
+let soloNieuw=false;
+function soloWeg(){if(!solo)return;OT.dn=1;OT.hp=0;OT.pu=null;OT.shT=0;OT.drT=0;OT.x=OT.tx=-50}
+function soloEinde(){if(solo)soloNieuw=solo.nieuweScore(ME.sc)}
 function setDark(){const d=cur.dark||(gm==='e'&&ewv%4===3)?1:0;if(d&&!dark)say('DE STROOM VALT UIT!');dark=d}
 function wave(){bugs=[];revive();cur.waves[waveNr%cur.waves.length].forEach((ty,i)=>{const b=newBug(ty,i%2?W+12:-12,R(10,40),i);b.wait=i*9;bugs.push(b)});setDark()}
 function waveE(){bugs=[];revive();const n=9+Math.min(12,ewv),sc=1+ewv*.07,pool=['hg','hg','sp','ws','mt','kv','sl'];for(let i=0;i<n;i++){const ty=Math.random()<Math.min(.3,.04+ewv*.02)?'br':RI(pool);const b=newBug(ty,i%2?W+12:-12,R(10,40),i,sc);b.wait=i*8;bugs.push(b)}setDark();say('GOLF '+(ewv+1))}
@@ -302,13 +307,13 @@ rings=rings.filter(r=>{r.r+=r.m/12;return--r.l>0})}
 function moveHero(h){if(h.dn){h.tx=h.x;return}h.x+=(h.tx-h.x)*(h.slow>0?.07:.25);if(h.cd>0)h.cd--;if(h.hit>0)h.hit--;if(h.slow>0)h.slow--}
 function titleUpd(){const lx=W/2+Math.sin(T*.013)*45,ly=60+Math.sin(T*.021)*28;bugs.forEach(b=>{b.t=(b.t||0)+1;b.vx+=(lx-b.x)*.01+Math.sin(b.t*.05+b.ph)*.05;b.vy+=(ly-b.y)*.01+Math.cos(b.t*.04+b.ph)*.05;for(const o of bugs){if(o===b)continue;const ex=b.x-o.x,ey=b.y-o.y,d2=ex*ex+ey*ey;if(d2<100&&d2>0){b.vx+=ex/d2;b.vy+=ey/d2}}const sp=Math.hypot(b.vx,b.vy);if(sp>1.6){b.vx*=1.6/sp;b.vy*=1.6/sp}b.x+=b.vx;b.y+=b.vy})}
 function titelBugs(){bugs=[];TYK.concat(['hg','hg','sp','ws','mt','kv','hg']).forEach((ty,i)=>{const b=newBug(ty,R(10,W-10),R(20,90),i);bugs.push(b)})}
-function naarTitel(){rdy=[null,null];gst='titel';gm='v';ewv=0;HE.forEach((h,i)=>{h.hp=5;h.dn=0;h.pu=null;h.puT=0;h.slow=0;h.hit=0;h.rv=0;h.shT=0;h.drT=0;h.x=h.tx=i?90:50});setLevel(0,true);titelBugs()}
-function beginSpel(m){rdy=[null,null];gm=m==='e'?'e':'v';ewv=0;HE.forEach((h,i)=>{h.hp=5;h.dn=0;h.pu=null;h.puT=0;h.slow=0;h.hit=0;h.sc=0;h.rv=0;h.shT=0;h.drT=0;h.x=h.tx=i?90:50});lastN=0;setLevel(0,true);gst='aftel';stT=180}
-function verderEindeloos(){rdy=[null,null];gm='e';ewv=5;HE.forEach(h=>{if(h.dn){h.dn=0;h.hp=3}});setLevel(0,true);gst='overgang';stT=150;say('EINDELOZE MODUS');waveE();sfx('level',1)}
+function naarTitel(){rdy=[null,null];gst='titel';gm='v';ewv=0;HE.forEach((h,i)=>{h.hp=5;h.dn=0;h.pu=null;h.puT=0;h.slow=0;h.hit=0;h.rv=0;h.shT=0;h.drT=0;h.x=h.tx=i?90:50});setLevel(0,true);titelBugs();soloWeg()}
+function beginSpel(m){rdy=[null,null];gm=m==='e'?'e':'v';ewv=0;HE.forEach((h,i)=>{h.hp=5;h.dn=0;h.pu=null;h.puT=0;h.slow=0;h.hit=0;h.sc=0;h.rv=0;h.shT=0;h.drT=0;h.x=h.tx=i?90:50});lastN=0;setLevel(0,true);gst='aftel';stT=180;soloNieuw=false;soloWeg()}
+function verderEindeloos(){rdy=[null,null];gm='e';ewv=5;HE.forEach(h=>{if(h.dn){h.dn=0;h.hp=3}});soloWeg();setLevel(0,true);gst='overgang';stT=150;say('EINDELOZE MODUS');waveE();sfx('level',1)}
 function hostCmd(c,wie){wie=wie?1:0;if(c==='titel'){if(gst==='over'||gst==='klaar')naarTitel();return}
 const mag=(gst==='titel'&&(c==='verhaal'||c==='eindeloos'))||(gst==='klaar'&&c==='verder');if(!mag)return;
 if(rdy[wie]===c)rdy[wie]=null;else{rdy[wie]=c;if(rdy[1-wie]&&rdy[1-wie]!==c)rdy[1-wie]=null}sfx('klaar',1);
-if(rdy[0]&&rdy[0]===rdy[1]){const k=rdy[0];if(k==='verder')verderEindeloos();else beginSpel(k==='eindeloos'?'e':'v')}}
+if(solo)rdy[1]=rdy[0];if(rdy[0]&&rdy[0]===rdy[1]){const k=rdy[0];if(k==='verder')verderEindeloos();else beginSpel(k==='eindeloos'?'e':'v')}}
 function ballTrail(o){if(o.k==='fl'&&T%4===0)parts.push({x:o.x,y:o.y,vx:0,vy:.2,l:25,land:o.y+R(4,10),c:'#5fbf1a',s:1});if(o.k==='gw'&&T%3===0)parts.push({x:o.x+R(-2,2),y:o.y,vx:R(-.2,.2),vy:-.1,l:20,land:H,c:'#a0c060',s:1,d:1})}
 function ballMove(o){o.x+=o.vx;o.y+=o.vy;if(o.k==='fl'||o.k==='dr'||o.k==='gw')o.vy=Math.min(o.vy+.012,o.k==='gw'?.9:1.8)}
 function hostUpd(){T++;ambient();
@@ -317,7 +322,7 @@ if(gst==='aftel'){if(--stT<=0){gst='spel';if(gm==='e')waveE();else{wave();say('L
 if(gst==='overgang'){if(--stT<=0){gst='spel'}updFx();HE.forEach(moveHero);return}
 if(gst!=='spel'){updFx();HE.forEach(moveHero);return}
 modeT++;if(mode==='zwerm'&&modeT>360)setMode('chaos');else if(mode==='chaos'&&modeT>300)setMode('zwerm');
-if(next>0){if(--next===0){if(gm==='e'){ewv++;setLevel((lv+1)%LV.length,true);gst='overgang';stT=150;say(cur.n.toUpperCase());waveE();sfx('level',1)}else if(lv===LV.length-1){gst='klaar';sfx('level',1)}else{setLevel(lv+1);gst='overgang';stT=150;say('LEVEL '+(lv+1)+' \u00b7 '+cur.n.toUpperCase());sfx('level',1)}}}
+if(next>0){if(--next===0){if(gm==='e'){ewv++;setLevel((lv+1)%LV.length,true);gst='overgang';stT=150;say(cur.n.toUpperCase());waveE();sfx('level',1)}else if(lv===LV.length-1){gst='klaar';soloEinde();sfx('level',1)}else{setLevel(lv+1);gst='overgang';stT=150;say('LEVEL '+(lv+1)+' \u00b7 '+cur.n.toUpperCase());sfx('level',1)}}}
 else if(!boss&&!bugs.length&&++waveT>70){waveT=0;if(gm==='e'){ewv++;if(ewv%5===4)spawnBoss();else if(ewv%3===0){setLevel((lv+1)%LV.length,true);gst='overgang';stT=120;say(cur.n.toUpperCase());waveE()}else waveE()}else{waveNr++;if(waveNr>=2)spawnBoss();else wave()}}
 const act=bugs.filter(b=>b.wait<=0&&!b.kami);let cx=W/2,cy=60,avx=0,avy=0;if(act.length){cx=0;cy=0;act.forEach(b=>{cx+=b.x;cy+=b.y;avx+=b.vx;avy+=b.vy});cx/=act.length;cy/=act.length;avx/=act.length;avy/=act.length}
 const lx=W/2+Math.sin(T*.013)*45+Math.sin(T*.031)*12,ly=(boss?80:58)+Math.sin(T*.021)*(boss?15:28)+Math.cos(T*.009)*12;
@@ -339,7 +344,7 @@ clouds=clouds.filter(c=>{for(const h of HE)if(!h.dn&&Math.abs(h.x-c.x)<11&&T%45=
 items=items.filter(it=>{if(it.vy>0){it.y+=it.vy;it.vy=Math.min(it.vy+.03,1.4);if(it.y>=H-8){it.y=H-8;it.vy=0}}
 for(const h of HE){if(!h.dn&&it.vy===0&&Math.abs(h.x-it.x)<8){if(it.t==='hp'){h.hp=Math.min(5,h.hp+2);sfx('hart',1)}else if(it.t==='schild'){h.shT=900;sfx('pak',1)}else if(it.t==='drone'){h.drT=900;sfx('pak',1)}else{h.pu=it.t;h.puT=600;sfx('pak',1)}ring(it.x,it.y,18,it.t==='hp'?'#ff6080':'#ffe060');return false}}return--it.l>0});
 updFx();
-if(h1.dn&&h2.dn){gst='over';sfx('over',1);shake(3,30)}}
+if(h1.dn&&h2.dn){gst='over';soloEinde();sfx('over',1);shake(3,30)}}
 function snap(){const m={T,lv,st:gst,stT,mode,gm,rd:rdy,ew:ewv,dk:dark,sl:slowT>0?1:0,
 h:HE.map(h=>[r1(h.x),h.hp,h.pu?IK.indexOf(h.pu):-1,h.puT,h.slow,h.dn,h.hit,h.sc,h.rv,h.shT,h.drT]),
 b:bugs.filter(b=>b.wait<=0).map(b=>[TYK.indexOf(b.ty),r1(b.x),r1(b.y),r2(b.vx),r2(b.vy),r1(b.hp),b.mx,b.fl,b.kami,b.frz>0?1:0]),
@@ -431,18 +436,18 @@ spores.forEach(s=>{const a=.25+.25*Math.sin(T*.05+s.p);ctx.fillStyle=fx==='ander
 if(boss){const w=100,x=20,f=Math.max(0,boss.hp/boss.mx);ctx.fillStyle='#200008';ctx.fillRect(x-1,2,w+2,4);ctx.fillStyle='#ff2040';ctx.fillRect(x,3,Math.round(w*f),2);ctx.fillStyle='#ffa0b0';ctx.fillRect(x,3,Math.round(w*f),1)}
 ctx.restore();ctx.fillStyle=cur.tint;ctx.fillRect(0,0,W,H);
 if(flash>0&&flash%3){ctx.fillStyle=fx==='ander'?'rgba(255,40,70,0.12)':'rgba(200,210,255,0.08)';ctx.fillRect(0,0,W,H)}
-if(gst!=='titel')HE.forEach((h,i)=>{for(let k=0;k<5;k++){const x=i?W-6-k*6:6+k*6;draw(k<h.hp?MH:MHe,x,11,0)}const ic=[];if(h.pu&&IC[h.pu])ic.push([IC[h.pu],h.puT/600]);if(h.shT>0)ic.push([IC.schild,h.shT/900]);if(h.drT>0)ic.push([IC.drone,h.drT/900]);ic.forEach(([s,f],j)=>{const x=i?W-37-j*11:37+j*11;draw(s,x,11,.5);ctx.fillStyle=h.c;ctx.fillRect(x-4,16,Math.round(f*8),1)})})}
+if(gst!=='titel')HE.forEach((h,i)=>{if(solo&&h===OT)return;for(let k=0;k<5;k++){const x=i?W-6-k*6:6+k*6;draw(k<h.hp?MH:MHe,x,11,0)}const ic=[];if(h.pu&&IC[h.pu])ic.push([IC[h.pu],h.puT/600]);if(h.shT>0)ic.push([IC.schild,h.shT/900]);if(h.drT>0)ic.push([IC.drone,h.drT/900]);ic.forEach(([s,f],j)=>{const x=i?W-37-j*11:37+j*11;draw(s,x,11,.5);ctx.fillStyle=h.c;ctx.fillRect(x-4,16,Math.round(f*8),1)})})}
 const dkC=mk(W,H),elTitel=document.getElementById('sw-titel'),elVerder=document.getElementById('sw-verder');
 const elMij=document.getElementById('sw-mij'),elVr=document.getElementById('sw-vr'),elLv=document.getElementById('sw-lv'),elMsg=document.getElementById('sw-msg'),elEind=document.getElementById('sw-eind'),elEindT=document.getElementById('sw-eind-tekst');
 let uiMsg=null,uiEind=null,uiKlaar=null;const elKlaar=document.getElementById('sw-klaar'),elKlaar2=document.getElementById('sw-klaar2'),elBV=document.getElementById('sw-verhaal'),elBE=document.getElementById('sw-eindeloos');
-function ui(){if(T%5)return;elMij.textContent=ME.sc;elVr.textContent=OT.sc;elLv.textContent=gst==='titel'?'':(gm==='e'?'Golf '+(ewv+1):'Level '+(lv+1))+' \u00b7 '+cur.n;elTitel.style.display=gst==='titel'?'flex':'none';const mi=HOST?0:1,ik=rdy[mi],zij=rdy[1-mi],NM={verhaal:'Verhaal',eindeloos:'Eindeloos',verder:'Door: eindeloos'};
-const kt=ik&&ik===zij?'Daar gaan we!':ik?'\u2714 Jij bent klaar voor '+NM[ik]+'. Wachten op '+vriendNaam+'...':zij?vriendNaam+' wil '+NM[zij]+' spelen. Druk ook op '+NM[zij]+'!':'Kies samen een spel. Het start als jullie allebei klaar zijn.';
+function ui(){if(T%5)return;elMij.textContent=ME.sc;elVr.textContent=solo?solo.record():OT.sc;elLv.textContent=gst==='titel'?'':(gm==='e'?'Golf '+(ewv+1):'Level '+(lv+1))+' \u00b7 '+cur.n;elTitel.style.display=gst==='titel'?'flex':'none';const mi=HOST?0:1,ik=rdy[mi],zij=rdy[1-mi],NM={verhaal:'Verhaal',eindeloos:'Eindeloos',verder:'Door: eindeloos'};
+const kt=solo?'Kies een spel.':ik&&ik===zij?'Daar gaan we!':ik?'\u2714 Jij bent klaar voor '+NM[ik]+'. Wachten op '+vriendNaam+'...':zij?vriendNaam+' wil '+NM[zij]+' spelen. Druk ook op '+NM[zij]+'!':'Kies samen een spel. Het start als jullie allebei klaar zijn.';
 if(kt!==uiKlaar){uiKlaar=kt;elKlaar.textContent=kt;elKlaar2.textContent=gst==='klaar'&&gm==='v'?kt.replace('Kies samen een spel. Het start als jullie allebei klaar zijn.','Allebei op Door drukken om verder te spelen.'):'';
 elBV.textContent=(ik==='verhaal'?'\u2714 ':'\u25B6 ')+'Verhaal \u00b7 5 levels'+(zij==='verhaal'?' \u2190':'');elBE.textContent=(ik==='eindeloos'?'\u2714 ':'\u221E ')+'Eindeloos'+(zij==='eindeloos'?' \u2190':'');elVerder.textContent=(ik==='verder'?'\u2714 ':'\u221E ')+'Door: eindeloos'+(zij==='verder'?' \u2190':'');
 elBV.style.background=ik==='verhaal'?'rgba(141,255,42,0.3)':'rgba(20,0,10,0.75)';elBE.style.background=ik==='eindeloos'?'rgba(255,48,80,0.3)':'rgba(20,0,10,0.75)';elVerder.style.background=ik==='verder'?'rgba(255,48,80,0.3)':'rgba(20,0,10,0.75)'}
 let m='';if(gst==='titel')m='';else if(gst==='aftel')m='START IN '+Math.max(1,Math.ceil(stT/60));else if(!HOST&&lastSnap&&performance.now()-lastSnap>4000)m='WACHTEN OP '+vriendNaam.toUpperCase()+'...';else if(bannerT>0)m=banner;else if(ME.dn&&gst==='spel')m='GERAAKT! WACHT OP DE VOLGENDE GOLF';
 if(m!==uiMsg){elMsg.textContent=m;uiMsg=m}
-const e=(gst==='over'||gst==='klaar')?gst:'';if(e!==uiEind){uiEind=e;if(e){const tt=e==='klaar'?'GEWONNEN!':'GAME OVER';elEindT.innerHTML='<div style="font-size:26px;color:'+(e==='klaar'?'#8dff2a':'#ff4060')+';text-shadow:0 0 10px currentColor;">'+tt+'</div><div style="margin-top:8px;">'+(gm==='e'?'Golf '+(ewv+1):'Level '+(lv+1))+' \u00b7 '+cur.n+'</div><div style="margin-top:4px;">Jij: '+ME.sc+' \u00b7 '+esc(vriendNaam)+': '+OT.sc+'</div><div style="margin-top:4px;color:#ffe060;">Samen: '+(ME.sc+OT.sc)+'</div>';elVerder.style.display=e==='klaar'&&gm==='v'?'':'none';elEind.style.display='flex'}else elEind.style.display='none'}}
+const e=(gst==='over'||gst==='klaar')?gst:'';if(e!==uiEind){uiEind=e;if(e){const tt=e==='klaar'?'GEWONNEN!':'GAME OVER';elEindT.innerHTML='<div style="font-size:26px;color:'+(e==='klaar'?'#8dff2a':'#ff4060')+';text-shadow:0 0 10px currentColor;">'+tt+'</div><div style="margin-top:8px;">'+(gm==='e'?'Golf '+(ewv+1):'Level '+(lv+1))+' \u00b7 '+cur.n+'</div>'+(solo?'<div style="margin-top:4px;">Score: '+ME.sc+'</div><div style="margin-top:4px;color:#ffe060;">'+(soloNieuw?'\u{1F3C6} NIEUW RECORD!':'Record: '+solo.record())+'</div>':'<div style="margin-top:4px;">Jij: '+ME.sc+' \u00b7 '+esc(vriendNaam)+': '+OT.sc+'</div><div style="margin-top:4px;color:#ffe060;">Samen: '+(ME.sc+OT.sc)+'</div>');elVerder.style.display=e==='klaar'&&gm==='v'?'':'none';elEind.style.display='flex'}else elEind.style.display='none'}}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';')}
 function send(ev,payload){try{spelKanaal.send({type:'broadcast',event:ev,payload})}catch(e){}}
 function net(){if(HOST)send('sw-st',snap());else send('sw-in',{x:r1(ME.tx),n:shotN})}

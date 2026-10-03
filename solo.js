@@ -307,6 +307,70 @@ export function vorBot({ stuur, niveau, isDicht }) {
   }
 }
 
+// ─────────────────────────────────────────────
+// Neo Paddle. Jij bent de host: jouw scherm rekent de bal uit en stuurt
+// 'balstaat'. De computer is de gast: zijn paddle staat boven (y = 20) en hij
+// stuurt alleen zijn plek ('paddle'). Maten zoals in pong-ui.js.
+// ─────────────────────────────────────────────
+const PONG = { B: 280, PB: 60, LIJN: 34, BAL: 8 }
+const PONG_NIVEAU = {
+  // fout: hoe ver hij er naast kan zitten. Bal + halve paddle = 34, dus
+  // boven de 34 mist hij soms; anders zou een rally nooit eindigen.
+  makkelijk: { snel: 5,  fout: 55, rust: 0.02 },
+  normaal:   { snel: 8,  fout: 44, rust: 0.04 },
+  moeilijk:  { snel: 12, fout: 37, rust: 0.08 },
+}
+
+// Waar komt de bal aan op de lijn van de computer? Kaatst tegen de zijkanten.
+export function pongVoorspel(bal, lijnY) {
+  if (!bal || !(bal.vy < 0)) return null
+  const frames = (bal.y - lijnY) / -bal.vy
+  if (!(frames >= 0)) return null
+  const min = PONG.BAL / 2, max = PONG.B - PONG.BAL / 2, w = max - min
+  let x = bal.x + bal.vx * frames - min
+  x = ((x % (2 * w)) + 2 * w) % (2 * w)
+  return min + (x > w ? 2 * w - x : x)
+}
+
+export function pongBot({ stuur, niveau, isDicht }) {
+  const n = PONG_NIVEAU[niveau] || PONG_NIVEAU.normaal
+  let x = PONG.B / 2 - PONG.PB / 2
+  let bal = null, balTijd = 0
+  let richting = 0, afwijking = 0
+  let vorigeX = null
+  const tik = setInterval(() => {
+    if (isDicht()) { clearInterval(tik); return }
+    let doel = PONG.B / 2
+    if (bal) {
+      // Bal doorrekenen sinds het laatste bericht (60 beelden per seconde).
+      const f = Math.min((Date.now() - balTijd) / 16.7, 6)
+      const nu = { x: bal.x + bal.vx * f, y: bal.y + bal.vy * f, vx: bal.vx, vy: bal.vy }
+      const r = nu.vy < 0 ? -1 : 1
+      if (r !== richting) {
+        richting = r
+        // Elke keer dat de bal eraan komt een nieuwe kleine misser.
+        afwijking = (Math.random() * 2 - 1) * n.fout
+      }
+      const aan = pongVoorspel(nu, PONG.LIJN)
+      if (aan !== null) doel = aan + afwijking
+      else doel = PONG.B / 2 + (nu.x - PONG.B / 2) * n.rust * 5
+    }
+    const gewenst = Math.max(0, Math.min(PONG.B - PONG.PB, doel - PONG.PB / 2))
+    const stap = Math.max(-n.snel, Math.min(n.snel, gewenst - x))
+    x += stap
+    const afgerond = Math.round(x * 10) / 10
+    if (afgerond !== vorigeX) { vorigeX = afgerond; stuur('paddle', { x: afgerond }) }
+  }, 50)
+  return {
+    ontvang(event, p) {
+      if (event === 'pong-klaar') stuur('pong-klaar-terug', {})
+      else if (event === 'balstaat' && p.bal) { bal = p.bal; balTijd = Date.now() }
+      else if (event === 'opnieuw') { bal = null; richting = 0 }
+    },
+    stop() { clearInterval(tik) },
+  }
+}
+
 // Arcadespellen: daar is geen tegenstander. Het spel krijgt solo mee en speelt
 // zonder vriend; het kanaal hoeft niets terug te sturen.
 export function stilBot() {
@@ -321,5 +385,6 @@ export const SOLO_SPELLEN = {
   vieroprij:    { naam: 'Four in a Row', icon: '🔴', bestand: './vieroprij-ui.js?v=96', bot: vorBot },
   schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=96',  bot: schaakBot, motor: './schaak.js?v=95', motorNaam: 'Schaak' },
   dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=96',   bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
+  pong:         { naam: 'Neo Paddle',    icon: '🏓', bestand: './pong-ui.js?v=96',     bot: pongBot },
   flappybird:   { naam: 'Flapper',       icon: '🦇', bestand: './flappy-ui.js?v=109',   bot: stilBot, arcade: true },
 }

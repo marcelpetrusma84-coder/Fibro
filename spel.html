@@ -39,7 +39,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
 <script type="module">
   import * as Bordgeluid from './bordgeluid.js?v=95'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=4'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=5'
 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   const inhoud = document.getElementById('spelInhoud')
@@ -84,7 +84,9 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     inhoud.innerHTML = '<div class="melding">Dit spel kan nog niet alleen gespeeld worden.<br><button onclick="location.href=\'index.html\'">Terug</button></div>'
   } else {
     document.title = 'Fibro — ' + spel.naam
-    if (spel.arcade) startScherm()
+    // Ghost Tag heeft een eigen startknop en eigen computer.
+    if (spel.zonderKanaal) start('normaal')
+    else if (spel.arcade) startScherm()
     else kiesNiveau()
   }
 
@@ -130,10 +132,10 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
       // Dammen en schaken krijgen hun spelregels mee, net als in de chat.
       const motor = spel.motor ? await import(spel.motor) : null
       const extra = spel.motorNaam ? { [spel.motorNaam]: motor } : {}
-      kanaal = maakSoloKanaal(spel.bot, niveau, motor)
+      kanaal = spel.zonderKanaal ? null : maakSoloKanaal(spel.bot, niveau, motor)
       // Jij bent altijd speler 1 en begint de eerste ronde.
       m.start({ ...extra, Bordgeluid, spelKanaal: kanaal, benIkSpeler1: true, vriendNaam: 'Computer', isActief: () => true, solo: spel.arcade ? solo : undefined })
-      kanaal.subscribe()
+      if (kanaal) kanaal.subscribe()
     } catch (e) {
       console.error('[solo] starten mislukt', e)
       inhoud.innerHTML = '<div class="melding">Het spel kon niet starten.<br><button onclick="location.reload()">Opnieuw proberen</button></div>'

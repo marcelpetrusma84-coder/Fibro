@@ -386,5 +386,7 @@ export const SOLO_SPELLEN = {
   schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=96',  bot: schaakBot, motor: './schaak.js?v=95', motorNaam: 'Schaak' },
   dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=96',   bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
   pong:         { naam: 'Neo Paddle',    icon: '🏓', bestand: './pong-ui.js?v=96',     bot: pongBot },
+  // Ghost Tag heeft zelf al een computerspookje: zonder kanaal speel je daartegen.
+  pacman:       { naam: 'Ghost Tag',     icon: '👻', bestand: './ecto-ui.js?v=9',      zonderKanaal: true },
   flappybird:   { naam: 'Flapper',       icon: '🦇', bestand: './flappy-ui.js?v=109',   bot: stilBot, arcade: true },
 }

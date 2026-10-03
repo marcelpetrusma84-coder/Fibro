@@ -39,7 +39,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
 <script type="module">
   import * as Bordgeluid from './bordgeluid.js?v=95'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=8'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=9'
 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   const inhoud = document.getElementById('spelInhoud')
@@ -84,7 +84,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     inhoud.innerHTML = '<div class="melding">Dit spel kan nog niet alleen gespeeld worden.<br><button onclick="location.href=\'index.html\'">Terug</button></div>'
   } else {
     document.title = 'Fibro — ' + spel.naam
-    // Ghost Tag en Twin Snakes hebben een eigen startknop en eigen computer.
+    // Ghost Tag, Twin Snakes en Runner & Gunner hebben een eigen startscherm.
     if (spel.zonderKanaal) start('normaal')
     else if (spel.arcade) startScherm()
     else kiesNiveau()

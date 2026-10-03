@@ -387,7 +387,8 @@ export const SOLO_SPELLEN = {
   dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=96',   bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
   pong:         { naam: 'Neo Paddle',    icon: '🏓', bestand: './pong-ui.js?v=96',     bot: pongBot },
   // Ghost Tag heeft zelf al een computerspookje: zonder kanaal speel je daartegen.
-  pacman:       { naam: 'Ghost Tag',     icon: '👻', bestand: './ecto-ui.js?v=9',      zonderKanaal: true },
+  // gewoneScherpte: op telefoons niet op dubbele scherpte tekenen (4x minder beeldpunten).
+  pacman:       { naam: 'Ghost Tag',     icon: '👻', bestand: './ecto-ui.js?v=9',      zonderKanaal: true, gewoneScherpte: true },
   breakout:     { naam: 'Block It',      icon: '🟪', bestand: './blockit-ui.js?v=109',  bot: stilBot, arcade: true },
   swarm:        { naam: 'The Swarm',     icon: '🪲', bestand: './swarm-ui.js?v=109',    bot: stilBot, arcade: true },
   // Twin Snakes heeft net als Ghost Tag al een eigen computerslang.

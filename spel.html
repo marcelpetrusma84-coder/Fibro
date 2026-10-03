@@ -39,7 +39,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
 <script type="module">
   import * as Bordgeluid from './bordgeluid.js?v=95'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=9'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=10'
 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   const inhoud = document.getElementById('spelInhoud')
@@ -129,6 +129,11 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     inhoud.innerHTML = '<div class="melding">Laden...</div>'
     try {
       const m = await import(spel.bestand)
+      // Zware spellen op de telefoon: tekenen op gewone scherpte in plaats van
+      // dubbel. Bij pixelart zie je dat nauwelijks, en het scheelt veel rekenwerk.
+      if (spel.gewoneScherpte && (window.devicePixelRatio || 1) > 1) {
+        try { Object.defineProperty(window, 'devicePixelRatio', { configurable: true, get: () => 1 }) } catch (e) {}
+      }
       // Dammen en schaken krijgen hun spelregels mee, net als in de chat.
       const motor = spel.motor ? await import(spel.motor) : null
       const extra = spel.motorNaam ? { [spel.motorNaam]: motor } : {}

@@ -434,6 +434,7 @@ input, textarea { font-size:16px !important; }
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">⚫</div><div><div class="widget-name">Draughts</div><div class="widget-desc">Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_dammen" onclick="toggleWidget('spel_dammen')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏓</div><div><div class="widget-name">Neo Paddle</div><div class="widget-desc">Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_pong" onclick="toggleWidget('spel_pong')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">👻</div><div><div class="widget-name">Ghost Tag</div><div class="widget-desc">Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_pacman" onclick="toggleWidget('spel_pacman')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🐍</div><div><div class="widget-name">Twin Snakes</div><div class="widget-desc">Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_pinball" onclick="toggleWidget('spel_pinball')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🦇</div><div><div class="widget-name">Flapper</div><div class="widget-desc">Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_flappybird" onclick="toggleWidget('spel_flappybird')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🟪</div><div><div class="widget-name">Block It</div><div class="widget-desc">Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_breakout" onclick="toggleWidget('spel_breakout')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🪲</div><div><div class="widget-name">The Swarm</div><div class="widget-desc">Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_swarm" onclick="toggleWidget('spel_swarm')"><div class="toggle-dot"></div></div></div>
@@ -904,7 +905,8 @@ window.slaAllesOp=async function(){
     spel_pong:         { id:'spel_pong',         icon:'🏓', titel:'Neo Paddle',    w:2, h:1 },
     spel_pacman:       { id:'spel_pacman',       icon:'👻', titel:'Ghost Tag',     w:2, h:1 },
     spel_breakout:     { id:'spel_breakout',     icon:'🟪', titel:'Block It',      w:2, h:1 },
-    spel_swarm:        { id:'spel_swarm',        icon:'🪲', titel:'The Swarm',     w:2, h:1 }
+    spel_swarm:        { id:'spel_swarm',        icon:'🪲', titel:'The Swarm',     w:2, h:1 },
+    spel_pinball:      { id:'spel_pinball',      icon:'🐍', titel:'Twin Snakes',   w:2, h:1 }
   }
   const wLayout = actieveWidgets.filter(n => WMAP[n]).map((n, i) => ({ ...WMAP[n], volgorde: i, aan: true }))
   localStorage.setItem('fibro_widgets_profiel_' + _profielUid(), JSON.stringify(wLayout))

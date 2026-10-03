@@ -390,5 +390,7 @@ export const SOLO_SPELLEN = {
   pacman:       { naam: 'Ghost Tag',     icon: '👻', bestand: './ecto-ui.js?v=9',      zonderKanaal: true },
   breakout:     { naam: 'Block It',      icon: '🟪', bestand: './blockit-ui.js?v=109',  bot: stilBot, arcade: true },
   swarm:        { naam: 'The Swarm',     icon: '🪲', bestand: './swarm-ui.js?v=109',    bot: stilBot, arcade: true },
+  // Twin Snakes heeft net als Ghost Tag al een eigen computerslang.
+  pinball:      { naam: 'Twin Snakes',   icon: '🐍', bestand: './twin-snakes-ui.js?v=1', zonderKanaal: true },
   flappybird:   { naam: 'Flapper',       icon: '🦇', bestand: './flappy-ui.js?v=109',   bot: stilBot, arcade: true },
 }

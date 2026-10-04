@@ -3,6 +3,8 @@
 // 4 oktober 2026: maakH264() zet elke video om naar H.264 in MP4 (Mediabunny).
 //   Kiest zelf het geluidsspoor (AAC eerst), zodat video's met een extra spoor
 //   (ruimtelijk geluid van nieuwe iPhones, iMovie) hun geluid houden.
+//   Controleert of de uitkomst nog beeld heeft; o.veilig = tweede poging
+//   (kleiner, 30 beelden per seconde). info.diag = technische samenvatting.
 
 let mp4boxPromise = null
 
@@ -240,7 +242,8 @@ export async function maakH264(file, opties) {
   const opVoortgang = o.opVoortgang || (() => {})
   const opInfo = o.opInfo || (() => {})
   const maxBytes = o.maxBytes || 100 * 1024 * 1024
-  const maxZijde = o.maxZijde || 1280
+  const veilig = !!o.veilig
+  const maxZijde = veilig ? 960 : (o.maxZijde || 1280)
   const log = m => console.log('[omzetten]', m)
 
   const mb = await laadMediabunny()
@@ -257,11 +260,22 @@ export async function maakH264(file, opties) {
   const geluidSporen = await input.getAudioTracks()
   const sporen = geluidSporen.map(t => t.codec || 'onbekend')
   log('geluidssporen: ' + (sporen.join(', ') || 'geen'))
+  let fps = 0
+  try { fps = (await vtrack.computePacketStats(120)).averagePacketRate || 0 } catch (e) {}
+  let diag = (veilig ? '[veilig] ' : '') + 'bron: ' + ((formaat && formaat.name) || '?') + ' ' + bronCodec + ' ' +
+    vtrack.displayWidth + 'x' + vtrack.displayHeight + (fps ? ' ' + Math.round(fps) + 'fps' : '') +
+    ' ' + Math.round(file.size / 1048576) + 'MB, geluid ' + (sporen.join('+') || 'geen')
+  const meldInfo = extra => {
+    try { localStorage.setItem('fibro_video_diag', diag) } catch (e) {}
+    log(diag)
+    opInfo(Object.assign({ sporen, diag }, extra))
+  }
 
   // Al goed: niets doen
-  if (isMp4 && bronCodec === 'avc' && file.size <= maxBytes && sporen.every(c => c === 'aac')) {
+  if (!veilig && isMp4 && bronCodec === 'avc' && file.size <= maxBytes && sporen.every(c => c === 'aac')) {
     log('al goed')
-    opInfo({ geluid: sporen.length ? 'meegenomen' : 'geen', sporen })
+    diag += ' | ongewijzigd'
+    meldInfo({ geluid: sporen.length ? 'meegenomen' : 'geen' })
     return null
   }
 
@@ -278,8 +292,8 @@ export async function maakH264(file, opties) {
   const videoOpties = { codec: 'avc' }
   // Alleen opnieuw coderen als het moet (andere codec of te groot).
   // Anders alleen een nieuwe MP4-doos (snel en zonder kwaliteitsverlies).
-  if (bronCodec !== 'avc' || file.size > maxBytes) {
-    if (!(await vtrack.canDecode())) throw new Error('niet-te-lezen')
+  if (veilig || bronCodec !== 'avc' || file.size > maxBytes) {
+    if (!(await vtrack.canDecode())) { diag += ' | kan bron niet lezen'; meldInfo({ geluid: 'onbekend' }); throw new Error('niet-te-lezen') }
     // Bitrate zo kiezen dat het bestand ruim onder maxBytes blijft
     let bits = Math.floor(maxBytes * 8 * 0.85 / Math.max(duur, 1)) - 160000
     bits = Math.max(300000, Math.min(4000000, bits))
@@ -288,13 +302,17 @@ export async function maakH264(file, opties) {
     const nw = Math.max(2, Math.round(w * schaal / 2) * 2)
     const nh = Math.max(2, Math.round(h * schaal / 2) * 2)
     const kan = await mb.canEncodeVideo('avc', { width: nw, height: nh, bitrate: bits })
-    if (!kan) throw new Error('niet-te-maken')
+    if (!kan) { diag += ' | kan geen H.264 ' + nw + 'x' + nh + ' maken'; meldInfo({ geluid: 'onbekend' }); throw new Error('niet-te-maken') }
     videoOpties.width = nw
     videoOpties.height = nh
     videoOpties.fit = 'contain'
     videoOpties.quality = new mb.Quality(bits)
+    // Meer dan 30 beelden per seconde past niet bij het H.264-niveau dat gekozen wordt
+    if (veilig || fps > 31) videoOpties.frameRate = 30
+    diag += ' | omzetten naar ' + nw + 'x' + nh + ' ' + Math.round(bits / 1000) + 'kbit/s' + (videoOpties.frameRate ? ' 30fps' : '')
     log('opnieuw coderen naar ' + nw + 'x' + nh + ', ' + Math.round(bits / 1000) + ' kbit/s')
   } else {
+    diag += ' | alleen nieuwe MP4-doos'
     log('alleen nieuwe MP4-doos')
   }
 
@@ -309,13 +327,29 @@ export async function maakH264(file, opties) {
     audio: t => (geluid && t.id === geluid.id ? { codec: 'aac' } : { discard: true }),
     showWarnings: false
   })
-  for (const d of conv.discardedTracks) log('spoor ' + d.track.id + ' (' + d.track.type + ') weggelaten: ' + d.reason)
-  if (!conv.isValid) throw new Error('niet-te-maken')
+  for (const d of conv.discardedTracks) {
+    log('spoor ' + d.track.id + ' (' + d.track.type + ') weggelaten: ' + d.reason)
+    if (d.reason !== 'discarded_by_user') diag += ' | ' + d.track.type + ' weg: ' + d.reason
+  }
   const geluidMee = !!geluid && conv.utilizedTracks.some(t => t.id === geluid.id)
-  opInfo({ geluid: geluidMee ? 'meegenomen' : (sporen.length ? 'weg' : 'geen'), sporen })
+  const geluidStand = geluidMee ? 'meegenomen' : (sporen.length ? 'weg' : 'geen')
+  if (!conv.isValid || !conv.utilizedTracks.some(t => t.id === vtrack.id)) {
+    diag += ' | beeld kan niet mee'
+    meldInfo({ geluid: geluidStand })
+    throw new Error('geen-beeld')
+  }
   conv.onProgress = p => opVoortgang(p)
   await conv.execute()
   const blob = new Blob([output.target.buffer], { type: 'video/mp4' })
-  log('klaar: ' + Math.round(blob.size / 1048576 * 10) / 10 + ' MB')
+  // Uitkomst nalezen: zit er nog een beeldspoor in, en welk?
+  let uitBeeld = null
+  try {
+    const uit = new mb.Input({ source: new mb.BlobSource(blob), formats: mb.ALL_FORMATS })
+    const ut = await uit.getPrimaryVideoTrack()
+    if (ut) uitBeeld = ((await ut.getCodecParameterString()) || ut.codec) + ' ' + ut.displayWidth + 'x' + ut.displayHeight
+  } catch (e) { uitBeeld = null }
+  diag += ' | uit: ' + (uitBeeld || 'GEEN BEELD') + ' ' + Math.round(blob.size / 1048576 * 10) / 10 + 'MB'
+  meldInfo({ geluid: geluidStand })
+  if (!uitBeeld) throw new Error('geen-beeld')
   return blob
 }

@@ -39,7 +39,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
 <script type="module">
   import * as Bordgeluid from './bordgeluid.js?v=95'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=10'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=11'
 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   const inhoud = document.getElementById('spelInhoud')
@@ -125,6 +125,20 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     })
   }
 
+  // Toont rechts naast de titel hoeveel beeldjes per seconde de telefoon haalt.
+  function meetBeeldjes() {
+    let n = 0, sinds = performance.now()
+    const tel = nu => {
+      n++
+      if (nu - sinds >= 1000) {
+        titel.textContent = spel.icon + ' ' + spel.naam + ' · ' + Math.round(n * 1000 / (nu - sinds)) + ' fps'
+        n = 0; sinds = nu
+      }
+      requestAnimationFrame(tel)
+    }
+    requestAnimationFrame(tel)
+  }
+
   async function start(niveau) {
     inhoud.innerHTML = '<div class="melding">Laden...</div>'
     try {
@@ -141,6 +155,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
       // Jij bent altijd speler 1 en begint de eerste ronde.
       m.start({ ...extra, Bordgeluid, spelKanaal: kanaal, benIkSpeler1: true, vriendNaam: 'Computer', isActief: () => true, solo: spel.arcade ? solo : undefined })
       if (kanaal) kanaal.subscribe()
+      if (spel.meetFps) meetBeeldjes()
     } catch (e) {
       console.error('[solo] starten mislukt', e)
       inhoud.innerHTML = '<div class="melding">Het spel kon niet starten.<br><button onclick="location.reload()">Opnieuw proberen</button></div>'

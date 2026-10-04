@@ -1536,8 +1536,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     spaceinvaders: './invaders-ui.js?v=95',
     swarm: './swarm-ui.js?v=109',
     endlessrunner: './runner-gunner-ui.js?v=11',
-    pacman: './ecto-ui.js?v=9',
-    pinball: './twin-snakes-ui.js?v=1'
+    pacman: './ecto-ui.js?v=109',
+    pinball: './twin-snakes-ui.js?v=109'
   }
   const _alGeladen = {}
   function laadSpelAlvast(spelType) {
@@ -1889,7 +1889,7 @@ async function startBlockIt() {
   // ─── Runner & Gunner (vakje Endless Runner) ───
   // ─── Spookjes (vakje Pac-Man) ───
   async function startEcto() {
-    const m = await import('./ecto-ui.js?v=9')
+    const m = await import('./ecto-ui.js?v=109')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'pacman' })
   }
 
@@ -1900,7 +1900,7 @@ async function startBlockIt() {
 
   // ─── Twin Snakes (vakje Pinball) ───
   async function startTwinSnakes() {
-    const m = await import('./twin-snakes-ui.js?v=1')
+    const m = await import('./twin-snakes-ui.js?v=109')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'pinball' })
   }
 

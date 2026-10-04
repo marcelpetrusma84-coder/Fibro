@@ -37,6 +37,8 @@ const CFG = {
   tempoRondje: 1.5,   // erbij per keer dat alle velden geweest zijn
   tempoTijd: 0.03,    // erbij per seconde dat de ronde duurt
   tempoMax: 13,
+  aanloopStart: 0.55, // elke ronde (elk level) begint op dit deel van het tempo...
+  aanloopTijd: 15,    // ...en is na zoveel seconden op volle snelheid
   gelijkVenster: 0.35, // zo kort na elkaar dood = gelijkspel (seconden)
   aftelTijd: 3,
   weg: 5,             // zoveel seconden niets van de ander: ronde stopt
@@ -416,8 +418,10 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   const levelNummer = () => lv + 1 + rondje * LEVELS.length
 
   function tempo() {
+    // Rustig beginnen: elk level start langzaam en wordt dan sneller.
+    const aanloop = CFG.aanloopStart + (1 - CFG.aanloopStart) * Math.min(1, rondeTijd / CFG.aanloopTijd)
     return Math.min(CFG.tempoMax,
-      CFG.tempoBasis + CFG.tempoLevel * lv + CFG.tempoRondje * rondje + CFG.tempoTijd * rondeTijd)
+      (CFG.tempoBasis + CFG.tempoLevel * lv + CFG.tempoRondje * rondje) * aanloop + CFG.tempoTijd * rondeTijd)
   }
 
   // Muren en slangen in één rooster. Met zonderStaart tellen staarten die deze

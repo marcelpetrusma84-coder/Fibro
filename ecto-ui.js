@@ -1455,10 +1455,13 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     if (!draait) return
     if (!wrap.isConnected || (isActief && !isActief())) { stop(); return }
     verbergChatBalk()
-    const dt = Math.min(0.05, Math.max(0, (nu - vorige) / 1000))
+    let dt = Math.min(0.1, Math.max(0, (nu - vorige) / 1000))
     vorige = nu
     try {
-      update(dt); teken()
+      // Op een trage telefoon komen er minder beeldjes per seconde. Reken dan
+      // in kleine stapjes bij, zodat het spel toch op de goede snelheid loopt.
+      do { const d = Math.min(0.04, dt); update(d); dt -= d } while (dt > 1e-6)
+      teken()
     } catch (e) {
       // Niet stilletjes stoppen: laat zien wat er misging.
       console.error('[spookjes]', e)

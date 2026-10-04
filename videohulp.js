@@ -1,6 +1,8 @@
 // videohulp.js — codec-detectie, remuxen en omzetten voor Fibro
 // 2 september 2026: detectie en remuxen (mp4box).
 // 4 oktober 2026: maakH264() zet elke video om naar H.264 in MP4 (Mediabunny).
+//   Kiest zelf het geluidsspoor (AAC eerst), zodat video's met een extra spoor
+//   (ruimtelijk geluid van nieuwe iPhones, iMovie) hun geluid houden.
 
 let mp4boxPromise = null
 
@@ -222,7 +224,9 @@ window.testRemux = function () {
 // iPhones filmen in HEVC (H.265). Dat speelt niet af op Linux en op veel
 // Android-toestellen. maakH264() zet de video om met de video-hardware van
 // het toestel zelf (WebCodecs, via Mediabunny). De server doet niets.
-// Geeft null terug als de video al goed is (H.264 in MP4, niet te groot).
+// Geeft null terug als de video al goed is (H.264 in MP4, niet te groot,
+// alleen AAC-geluid). o.opInfo(info) krijgt te horen wat er met het geluid gebeurt:
+// info.geluid = 'meegenomen' | 'weg' | 'geen', info.sporen = codecs van de geluidssporen.
 let mbPromise = null
 function laadMediabunny() {
   if (!mbPromise) {
@@ -234,6 +238,7 @@ function laadMediabunny() {
 export async function maakH264(file, opties) {
   const o = opties || {}
   const opVoortgang = o.opVoortgang || (() => {})
+  const opInfo = o.opInfo || (() => {})
   const maxBytes = o.maxBytes || 100 * 1024 * 1024
   const maxZijde = o.maxZijde || 1280
   const log = m => console.log('[omzetten]', m)
@@ -249,8 +254,25 @@ export async function maakH264(file, opties) {
   log('bron: ' + (formaat && formaat.name) + ', ' + bronCodec + ', ' +
       vtrack.displayWidth + 'x' + vtrack.displayHeight + ', ' + Math.round(file.size / 1048576) + ' MB')
 
+  const geluidSporen = await input.getAudioTracks()
+  const sporen = geluidSporen.map(t => t.codec || 'onbekend')
+  log('geluidssporen: ' + (sporen.join(', ') || 'geen'))
+
   // Al goed: niets doen
-  if (isMp4 && bronCodec === 'avc' && file.size <= maxBytes) { log('al goed'); return null }
+  if (isMp4 && bronCodec === 'avc' && file.size <= maxBytes && sporen.every(c => c === 'aac')) {
+    log('al goed')
+    opInfo({ geluid: sporen.length ? 'meegenomen' : 'geen', sporen })
+    return null
+  }
+
+  // Geluidsspoor kiezen: eerst AAC (kan zonder omzetten mee), anders het eerste dat te lezen is
+  let geluid = geluidSporen.find(t => t.codec === 'aac') || null
+  if (!geluid) {
+    for (const t of geluidSporen) {
+      try { if (t.codec && await t.canDecode()) { geluid = t; break } } catch (e) {}
+    }
+  }
+  if (geluid) log('gekozen geluidsspoor: ' + geluid.codec + ' (spoor ' + geluid.id + ')')
 
   const duur = await input.computeDuration()
   const videoOpties = { codec: 'avc' }
@@ -282,13 +304,15 @@ export async function maakH264(file, opties) {
   })
   const conv = await mb.Conversion.init({
     input, output,
-    tracks: 'primary',
-    video: videoOpties,
-    audio: { codec: 'aac' },
+    tracks: 'all',
+    video: t => (t.id === vtrack.id ? videoOpties : { discard: true }),
+    audio: t => (geluid && t.id === geluid.id ? { codec: 'aac' } : { discard: true }),
     showWarnings: false
   })
-  for (const d of conv.discardedTracks) log('spoor ' + d.track.type + ' weggelaten: ' + d.reason)
+  for (const d of conv.discardedTracks) log('spoor ' + d.track.id + ' (' + d.track.type + ') weggelaten: ' + d.reason)
   if (!conv.isValid) throw new Error('niet-te-maken')
+  const geluidMee = !!geluid && conv.utilizedTracks.some(t => t.id === geluid.id)
+  opInfo({ geluid: geluidMee ? 'meegenomen' : (sporen.length ? 'weg' : 'geen'), sporen })
   conv.onProgress = p => opVoortgang(p)
   await conv.execute()
   const blob = new Blob([output.target.buffer], { type: 'video/mp4' })

@@ -24,6 +24,11 @@ let isRelayConnection = false // TURN/relay detectie
 let relayCheck = null        // belofte: relay-detectie klaar (v106)
 let eigenKlaar = false       // ik heb alles van de vriend (v106)
 let anderKlaar = false       // de vriend heeft alles van mij (v106)
+// v112: de video van een vriend wordt pas opgehaald als iemand hem wil zien
+let videoVraag = null        // { vriendId, opVoortgang, resolve, reject, timer }
+let voorkeurVriend = null    // met deze vriend eerst verbinden (voor een videovraag)
+let manifestVan = null       // van welke vriend het laatste manifest binnenkwam
+let laatsteVideoHash = null  // video volgens dat manifest (null = geen video)
 
 // ── Rust na relay-sync (v106): via TURN kost elke sync tegoed. Is alles aan beide
 // kanten up-to-date, dan wordt de relay-verbinding gesloten en start sync met die
@@ -183,7 +188,10 @@ async function laadVrienden() {
 
 function checkSyncStart() {
   if (syncPartnerId) return
-  const ander = [...onlineGebruikers].find((id) => vrienden.has(id) && !inRust(id) && !inPauze(id))
+  const kan = (id) => vrienden.has(id) && !inRust(id) && !inPauze(id)
+  const ander = (voorkeurVriend && onlineGebruikers.has(voorkeurVriend) && kan(voorkeurVriend))
+    ? voorkeurVriend
+    : [...onlineGebruikers].find(kan)
   if (!ander) { planPauze(); return }
   syncPartnerId = ander
   isInitiator = huidigeUserId < ander
@@ -489,6 +497,21 @@ async function verzamelEigenMuziek() {
 const WBG_WIDGETS = ['poll', 'quote', 'aftel', 'optel']
         const wbgPosWacht = {}
 
+// v112: controlegetal van de eigen video onthouden bij dat van de video-info, zodat de
+// hele video niet bij elke verbinding opnieuw ingelezen en doorgerekend hoeft te worden
+async function eigenVideoHash(metaHash) {
+  const sl = 'fibro_videohash_' + huidigeUserId
+  try {
+    const c = JSON.parse(localStorage.getItem(sl) || 'null')
+    if (c && c.meta === metaHash && typeof c.data === 'string') return c.data
+  } catch (e) {}
+  const vd = await dbGet('video_data_' + huidigeUserId)
+  if (!vd?.data) return null
+  const h = hashString(vd.data)
+  try { localStorage.setItem(sl, JSON.stringify({ meta: metaHash, data: h })) } catch (e) {}
+  return h
+}
+
         async function stuurManifest() {
   const layoutJson = localStorage.getItem('fibro_widgets_profiel_' + huidigeUserId) || '[]'
   const fotos = await verzamelEigenFotos()
@@ -502,10 +525,7 @@ const WBG_WIDGETS = ['poll', 'quote', 'aftel', 'optel']
     if (vm?.data) videoMetaHash = hashString(vm.data)
   } catch(e) {}
   let videoHash = null
-  try {
-    const vd = await dbGet('video_data_' + huidigeUserId)
-    if (vd?.data) videoHash = hashString(vd.data)
-  } catch(e) {}
+  try { if (videoMetaHash) videoHash = await eigenVideoHash(videoMetaHash) } catch(e) {}
   // Kleine tekstwidgets: quote, afteltimer, opteltimer
   const klein = {}
   for (const [sl, key] of [['quote','quote_'],['aftel','aftel_'],['optel','optel_'],['poll','poll_']]) {
@@ -673,12 +693,19 @@ async function verwerkP2pBericht(bericht) {
       if (!kc || kc.hash !== klein[sl]) nodig.push('klein:' + sl)
     }
     if (videoMetaNodig) nodig.push('videometa')
-    if (videoNodig && !isRelayConnection) {
-      nodig.push('video')
-    } else if (videoNodig && isRelayConnection) {
-      console.log('[sync] Relay-verbinding - video overgeslagen (geen Fibro+)')
-      zetP2pStatus('video niet opgehaald (relay)')
-      window._videoGeblokkeerdDoorRelay = true
+    // v112: de video zelf alleen ophalen als iemand hem wil zien (vraagVriendVideo).
+    // Heeft de vriend geen video meer, of een andere, dan de oude hier weggooien.
+    manifestVan = syncPartnerId
+    laatsteVideoHash = bericht.data.videoHash || null
+    try {
+      if (!bericht.data.videoMetaHash) await dbDelete('vriend_' + syncPartnerId + '_video_meta')
+      if (videoNodig || !bericht.data.videoHash) await dbDelete('vriend_' + syncPartnerId + '_video_data')
+    } catch (e) {}
+    if (videoVraag && videoVraag.vriendId === syncPartnerId) {
+      if (isRelayConnection) videoVraagFout('relay')
+      else if (!laatsteVideoHash) videoVraagFout('geen-video')
+      else if (videoNodig) nodig.push('video')
+      else videoVraagKlaar()
     }
     if (nodig.length) {
       dataChannel.send(JSON.stringify({ type: 'geef', items: nodig }))
@@ -725,7 +752,7 @@ async function verwerkP2pBericht(bericht) {
         const vm = await dbGet('video_meta_' + huidigeUserId)
         if (vm?.data) {
           let vdHash = null
-          try { const vd = await dbGet('video_data_' + huidigeUserId); if (vd?.data) vdHash = hashString(vd.data) } catch(e) {}
+          try { vdHash = await eigenVideoHash(hashString(vm.data)) } catch(e) {}
           dataChannel.send(JSON.stringify({ type: 'item', itemId: 'videometa', hash: hashString(vm.data), dataHash: vdHash, data: vm.data }))
         }
       }
@@ -908,6 +935,10 @@ async function verwerkChunk(bericht) {
     buf.delen[volgnr] = data
     buf.ontvangen++
   }
+  if (itemId === 'video' && videoVraag && videoVraag.vriendId === syncPartnerId) {
+    zetVideoTimer(30000) // zolang er stukjes binnenkomen, niet opgeven
+    try { videoVraag.opVoortgang(buf.ontvangen / buf.totaal) } catch (e) {}
+  }
 
   // Status-message: onderscheid foto vs muziek
   let statusLabel = itemId
@@ -923,6 +954,7 @@ async function verwerkChunk(bericht) {
     if (hashString(compleet) !== hash) {
       console.warn('[sync] hash-mismatch bij', itemId, '— chunk-buffer weggegooid')
       delete chunkBuffers[itemId]
+      if (itemId === 'video') videoVraagFout('fout')
       return
     }
 
@@ -954,6 +986,7 @@ async function verwerkChunk(bericht) {
                                             await dbPut(opslagRecord)
     delete chunkBuffers[itemId]
     console.log('[sync] Item compleet opgeslagen:', itemId)
+    if (itemId === 'video' && videoVraag && videoVraag.vriendId === syncPartnerId) videoVraagKlaar()
     zetP2pStatus(statusLabel + ' \u2713')
   }
 }
@@ -1100,15 +1133,59 @@ function toonRelayMuziekVraag(muziekItems) {
   document.getElementById('sync-relay-nee').onclick = () => box.remove()
 }
 
-export function vraagVideoOp() {
-  if (isRelayConnection) { console.log('[sync] Relay-verbinding - video niet opgevraagd'); return false }
-  if (dataChannel && dataChannel.readyState === 'open') {
-    dataChannel.send(JSON.stringify({ type: 'geef', items: ['video'] }))
-    console.log('[sync] Video opgevraagd')
-    return true
-  }
-  console.log('[sync] Geen open verbinding voor video')
-  return false
+// ── Video van een vriend ophalen als je hem wilt zien (v112) ──
+// Belofte: klaar als de video binnen is (opgeslagen als vriend_<id>_video_data).
+// Mislukt met een Error waarvan message is: 'offline', 'relay', 'geen-video',
+// 'ander-tabblad', 'tijd', 'fout' of 'afgebroken'.
+function zetVideoTimer(ms) {
+  if (!videoVraag) return
+  clearTimeout(videoVraag.timer)
+  videoVraag.timer = setTimeout(() => videoVraagFout('tijd'), ms)
+}
+function videoVraagKlaar() {
+  const v = videoVraag
+  if (!v) return
+  videoVraag = null
+  voorkeurVriend = null
+  clearTimeout(v.timer)
+  console.log('[sync] Video van vriend binnen')
+  v.resolve(true)
+}
+function videoVraagFout(reden) {
+  const v = videoVraag
+  if (!v) return
+  videoVraag = null
+  voorkeurVriend = null
+  clearTimeout(v.timer)
+  console.log('[sync] Video van vriend niet opgehaald:', reden)
+  v.reject(new Error(reden))
+}
+export function vraagVriendVideo(vriendId, opVoortgang) {
+  return new Promise((resolve, reject) => {
+    if (videoVraag) videoVraagFout('afgebroken')
+    if (!heeftSlot) { reject(new Error('ander-tabblad')); return }
+    if (!vriendId || !vrienden.has(vriendId) || !onlineGebruikers.has(vriendId)) { reject(new Error('offline')); return }
+    if (inRust(vriendId)) { reject(new Error('relay')); return }
+    videoVraag = { vriendId, opVoortgang: opVoortgang || (() => {}), resolve, reject, timer: null }
+    zetVideoTimer(45000)
+    voorkeurVriend = vriendId
+    wisPauze(vriendId)
+    if (syncPartnerId === vriendId) {
+      // Al verbonden en het manifest is binnen: meteen vragen. Anders gebeurt het bij het manifest.
+      if (dataChannel && dataChannel.readyState === 'open' && manifestVan === vriendId) {
+        (async () => {
+          if (relayCheck) await relayCheck
+          if (!videoVraag || videoVraag.vriendId !== vriendId) return
+          if (isRelayConnection) { videoVraagFout('relay'); return }
+          if (!laatsteVideoHash) { videoVraagFout('geen-video'); return }
+          try { dataChannel.send(JSON.stringify({ type: 'geef', items: ['video'] })) } catch (e) { videoVraagFout('fout') }
+        })()
+      }
+    } else {
+      if (syncPartnerId) stopSync()
+      checkSyncStart()
+    }
+  })
 }
 
 function stopSync() {
@@ -1125,6 +1202,8 @@ function stopSync() {
   relayCheck = null
   eigenKlaar = false
   anderKlaar = false
+  manifestVan = null
+  laatsteVideoHash = null
   zetP2pStatus('')
 }
 

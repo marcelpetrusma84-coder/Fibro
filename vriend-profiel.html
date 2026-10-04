@@ -135,7 +135,7 @@ body.heeft-wallpaper::before { display:block; }
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { wisVriendData } from './opruimen.js?v=95'
-  import { initSync } from './sync.js?v=107'
+  import { initSync, vraagVriendVideo } from './sync.js?v=112'
   import { eisSessie, startBewaking } from './sessie.js?v=95'
   import { startMeldingen } from './meldingen.js?v=101'
   pasBlokstijlToe()
@@ -546,12 +546,8 @@ body.heeft-wallpaper::before { display:block; }
       + '<span>' + titel + '</span><span>' + duur + '</span></div></div>'
     const knop = el.querySelector('.vid-play-knop')
     if (knop) knop.onclick = async () => {
-      const data = vVideo(await laadFotoUitDB('vriend_' + vriendId + '_video_data'))
-      if (!data) {
-        alert('Deze video is nog niet opgehaald.\n\nDat gebeurt als je vriend online is en jullie verbonden zijn.')
-        return
-      }
-      // Afspelen via een Blob-adres: iPhones spelen een lange data:-tekst slecht af
+      // Afspelen via een Blob-adres: iPhones spelen een lange data:-tekst slecht af.
+      // Staat de video hier nog niet, dan wordt hij nu pas bij de vriend opgehaald (v112).
       el.innerHTML = '<div style="display:flex;flex-direction:column;width:100%;height:100%;gap:6px;">'
         + '<div class="vid-plek" style="position:relative;flex:1;min-height:0;border-radius:10px;overflow:hidden;background:#000;">'
         + '<div class="vid-melding" style="position:absolute;inset:0;z-index:2;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;padding:0 12px;text-align:center;">Video laden...</div></div>'
@@ -565,8 +561,40 @@ body.heeft-wallpaper::before { display:block; }
         if (url) { try { URL.revokeObjectURL(url) } catch(e) {} url = null }
       }
       el.querySelector('.vid-sluit').onclick = () => { stop(); renderVriendVideo(el, vriendId) }
+      let data = vVideo(await laadFotoUitDB('vriend_' + vriendId + '_video_data'))
+      if (!data) {
+        meld('Video ophalen bij je vriend...')
+        try {
+          await vraagVriendVideo(vriendId, p => { if (plek.isConnected) meld('Video ophalen... ' + Math.round(p * 100) + '%') })
+        } catch (e) {
+          const r = e && e.message
+          if (r === 'afgebroken' || !plek.isConnected) return
+          meld(r === 'offline' ? 'Je vriend is nu niet online. De video kan alleen worden opgehaald als jullie allebei Fibro open hebben.'
+            : r === 'relay' ? 'Jullie zijn alleen via de relay-server verbonden. Video\u2019s worden daarom niet opgehaald (dat kost te veel data).'
+            : r === 'geen-video' ? 'Je vriend heeft deze video niet meer.'
+            : r === 'ander-tabblad' ? 'Fibro is ook in een ander tabblad open. Sluit dat en probeer het opnieuw.'
+            : 'De video kon niet worden opgehaald. Probeer het zo nog eens.')
+          return
+        }
+        if (!plek.isConnected) return
+        data = vVideo(await laadFotoUitDB('vriend_' + vriendId + '_video_data'))
+        if (!data) { meld('De video kon niet worden opgehaald. Probeer het zo nog eens.'); return }
+      }
       let blob = null
-      try { blob = await (await fetch(data)).blob() } catch(e) { meld('Video kon niet worden geladen.'); return }
+      try {
+        // In stukjes omzetten: fetch() op een lange data:-tekst faalt op de iPhone bij grote video's
+        const k = data.indexOf(','), type = data.slice(5, k).split(';')[0] || 'video/mp4'
+        const STAP = 4194304, delen = [], tot = data.length - k - 1
+        for (let i = k + 1; i < data.length; i += STAP) {
+          const s = atob(data.slice(i, Math.min(i + STAP, data.length)))
+          const u = new Uint8Array(s.length)
+          for (let j = 0; j < s.length; j++) u[j] = s.charCodeAt(j)
+          delen.push(u)
+          meld('Video laden... ' + Math.round(Math.min(1, (i + STAP - k - 1) / tot) * 100) + '%')
+          await new Promise(r => setTimeout(r, 0))
+        }
+        blob = new Blob(delen, { type })
+      } catch(e) { meld('Video kon niet worden geladen.'); return }
       if (!plek.isConnected) return
       url = URL.createObjectURL(blob)
       const v = document.createElement('video')

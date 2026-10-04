@@ -546,12 +546,37 @@ body.heeft-wallpaper::before { display:block; }
       + '<span>' + titel + '</span><span>' + duur + '</span></div></div>'
     const knop = el.querySelector('.vid-play-knop')
     if (knop) knop.onclick = async () => {
-      const data = await laadFotoUitDB('vriend_' + vriendId + '_video_data')
-      if (vVideo(data)) {
-        el.innerHTML = '<video src="' + vVideo(data) + '" controls autoplay playsinline style="width:100%;height:100%;border-radius:10px;background:#000;"></video>'
-      } else {
+      const data = vVideo(await laadFotoUitDB('vriend_' + vriendId + '_video_data'))
+      if (!data) {
         alert('Deze video is nog niet opgehaald.\n\nDat gebeurt als je vriend online is en jullie verbonden zijn.')
+        return
       }
+      // Afspelen via een Blob-adres: iPhones spelen een lange data:-tekst slecht af
+      el.innerHTML = '<div style="display:flex;flex-direction:column;width:100%;height:100%;gap:6px;">'
+        + '<div class="vid-plek" style="position:relative;flex:1;min-height:0;border-radius:10px;overflow:hidden;background:#000;">'
+        + '<div class="vid-melding" style="position:absolute;inset:0;z-index:2;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;padding:0 12px;text-align:center;">Video laden...</div></div>'
+        + '<div style="display:flex;justify-content:flex-start;"><button type="button" class="vid-sluit" style="background:rgba(255,255,255,0.12);color:#fff;border:0.5px solid rgba(255,255,255,0.14);border-radius:16px;padding:6px 14px;font-size:12px;cursor:pointer;">&#10005; Sluiten</button></div></div>'
+      const plek = el.querySelector('.vid-plek')
+      const meld = t => { const m = el.querySelector('.vid-melding'); if (m) { m.textContent = t; m.style.display = t ? 'flex' : 'none' } }
+      let url = null
+      const stop = () => {
+        const v = el.querySelector('video')
+        if (v) { try { v.pause() } catch(e) {} v.removeAttribute('src'); try { v.load() } catch(e) {} }
+        if (url) { try { URL.revokeObjectURL(url) } catch(e) {} url = null }
+      }
+      el.querySelector('.vid-sluit').onclick = () => { stop(); renderVriendVideo(el, vriendId) }
+      let blob = null
+      try { blob = await (await fetch(data)).blob() } catch(e) { meld('Video kon niet worden geladen.'); return }
+      if (!plek.isConnected) return
+      url = URL.createObjectURL(blob)
+      const v = document.createElement('video')
+      v.controls = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.preload = 'auto'
+      v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;'
+      v.onloadedmetadata = () => { if (!v.videoWidth) meld('Dit toestel kan het beeld van deze video niet tonen (alleen geluid).'); else meld('') }
+      v.onerror = () => { meld('Deze video kan op dit toestel niet worden afgespeeld' + (v.error ? ' (fout ' + v.error.code + ')' : '') + '.') }
+      v.src = url
+      plek.appendChild(v)
+      try { const p = v.play(); if (p && p.catch) p.catch(() => {}) } catch(e) {}
     }
     return true
   } catch(e) { return false }

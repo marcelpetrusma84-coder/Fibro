@@ -1,5 +1,6 @@
-// videohulp.js — codec-detectie en remuxen voor Fibro (2 september 2026)
-// Stap 1: alleen detectie. Remuxen volgt in stap 2.
+// videohulp.js — codec-detectie, remuxen en omzetten voor Fibro
+// 2 september 2026: detectie en remuxen (mp4box).
+// 4 oktober 2026: maakH264() zet elke video om naar H.264 in MP4 (Mediabunny).
 
 let mp4boxPromise = null
 
@@ -215,4 +216,82 @@ window.testRemux = function () {
     }
     inp.remove()
   }
+}
+
+// ── Omzetten naar H.264 in MP4 (4 oktober 2026)
+// iPhones filmen in HEVC (H.265). Dat speelt niet af op Linux en op veel
+// Android-toestellen. maakH264() zet de video om met de video-hardware van
+// het toestel zelf (WebCodecs, via Mediabunny). De server doet niets.
+// Geeft null terug als de video al goed is (H.264 in MP4, niet te groot).
+let mbPromise = null
+function laadMediabunny() {
+  if (!mbPromise) {
+    mbPromise = import('./mediabunny.js?v=1').catch(e => { mbPromise = null; throw e })
+  }
+  return mbPromise
+}
+
+export async function maakH264(file, opties) {
+  const o = opties || {}
+  const opVoortgang = o.opVoortgang || (() => {})
+  const maxBytes = o.maxBytes || 100 * 1024 * 1024
+  const maxZijde = o.maxZijde || 1280
+  const log = m => console.log('[omzetten]', m)
+
+  const mb = await laadMediabunny()
+  const input = new mb.Input({ source: new mb.BlobSource(file), formats: mb.ALL_FORMATS })
+  let formaat
+  try { formaat = await input.getFormat() } catch (e) { throw new Error('onbekend') }
+  const vtrack = await input.getPrimaryVideoTrack()
+  if (!vtrack) throw new Error('onbekend')
+  const bronCodec = vtrack.codec
+  const isMp4 = formaat === mb.MP4
+  log('bron: ' + (formaat && formaat.name) + ', ' + bronCodec + ', ' +
+      vtrack.displayWidth + 'x' + vtrack.displayHeight + ', ' + Math.round(file.size / 1048576) + ' MB')
+
+  // Al goed: niets doen
+  if (isMp4 && bronCodec === 'avc' && file.size <= maxBytes) { log('al goed'); return null }
+
+  const duur = await input.computeDuration()
+  const videoOpties = { codec: 'avc' }
+  // Alleen opnieuw coderen als het moet (andere codec of te groot).
+  // Anders alleen een nieuwe MP4-doos (snel en zonder kwaliteitsverlies).
+  if (bronCodec !== 'avc' || file.size > maxBytes) {
+    if (!(await vtrack.canDecode())) throw new Error('niet-te-lezen')
+    // Bitrate zo kiezen dat het bestand ruim onder maxBytes blijft
+    let bits = Math.floor(maxBytes * 8 * 0.85 / Math.max(duur, 1)) - 160000
+    bits = Math.max(300000, Math.min(4000000, bits))
+    const w = vtrack.displayWidth, h = vtrack.displayHeight
+    const schaal = Math.min(1, maxZijde / Math.max(w, h))
+    const nw = Math.max(2, Math.round(w * schaal / 2) * 2)
+    const nh = Math.max(2, Math.round(h * schaal / 2) * 2)
+    const kan = await mb.canEncodeVideo('avc', { width: nw, height: nh, bitrate: bits })
+    if (!kan) throw new Error('niet-te-maken')
+    videoOpties.width = nw
+    videoOpties.height = nh
+    videoOpties.fit = 'contain'
+    videoOpties.quality = new mb.Quality(bits)
+    log('opnieuw coderen naar ' + nw + 'x' + nh + ', ' + Math.round(bits / 1000) + ' kbit/s')
+  } else {
+    log('alleen nieuwe MP4-doos')
+  }
+
+  const output = new mb.Output({
+    format: new mb.Mp4OutputFormat({ fastStart: 'in-memory' }),
+    target: new mb.BufferTarget()
+  })
+  const conv = await mb.Conversion.init({
+    input, output,
+    tracks: 'primary',
+    video: videoOpties,
+    audio: { codec: 'aac' },
+    showWarnings: false
+  })
+  for (const d of conv.discardedTracks) log('spoor ' + d.track.type + ' weggelaten: ' + d.reason)
+  if (!conv.isValid) throw new Error('niet-te-maken')
+  conv.onProgress = p => opVoortgang(p)
+  await conv.execute()
+  const blob = new Blob([output.target.buffer], { type: 'video/mp4' })
+  log('klaar: ' + Math.round(blob.size / 1048576 * 10) / 10 + ' MB')
+  return blob
 }

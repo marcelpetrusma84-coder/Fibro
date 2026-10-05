@@ -471,13 +471,14 @@ window.veiligeUrl = function(v){
     werkVerzendknopBij()
     initReacties({ supabase, versleutel, ontsleutel, mijnId: () => huidigeUser.id, geefSleutels: () => ({ mijn: mijnPrivateKey, vriend: vriendPublicKey }), herteken: () => tekenReacties(document.getElementById('messages')) })
     startLangIndrukken(document.getElementById('messages'), (row, x, y) => toonVerwijderMenu(row, x, y))
-    const { data } = await supabase
+    // v120: alleen de velden die de chat gebruikt (geen achtergrond), en tegelijk met de
+    // vriendenlijst ophalen in plaats van ervoor. .then() start het verzoek meteen.
+    const profielBelofte = supabase
       .from('profiles')
-      .select('*')
+      .select('id, username, avatar_url, avatar_data')
       .eq('id', huidigeUser.id)
       .single()
-
-    huidigProfiel = data
+      .then(r => r, e => ({ data: null, error: e }))
 
     // ── P2P foto initialiseren ──
     initP2pFoto(huidigeUser.id, {
@@ -562,6 +563,7 @@ window.veiligeUrl = function(v){
     })
 
     await laadVrienden()
+    huidigProfiel = (await profielBelofte).data
 
     // ── Automatisch spel starten via URL (van uitnodiging op andere pagina) ──
     const urlParams = new URLSearchParams(window.location.search)
@@ -643,37 +645,16 @@ window.veiligeUrl = function(v){
     document.addEventListener('visibilitychange', () => { if (!document.hidden) haalOnlineOp() })
   }
 
-  async function laadVrienden() {
-    const { data: friendships, error } = await supabase
-      .from('friendships')
-      .select('user_id, friend_id')
-      .or(`user_id.eq.${huidigeUser.id},friend_id.eq.${huidigeUser.id}`)
-      .eq('status', 'accepted')
-
+  // v120: de vriendenlijst van de vorige keer meteen tonen; de verse lijst komt erachteraan
+  const vriendenCacheSleutel = () => 'fibro_chatvrienden_' + huidigeUser.id
+  function leesVriendenCache() {
+    try {
+      const b = JSON.parse(localStorage.getItem(vriendenCacheSleutel()) || 'null')
+      return Array.isArray(b) && b.length ? b : null
+    } catch (e) { return null }
+  }
+  function tekenVriendenLijst(data) {
     const container = document.getElementById('vriendenLijst')
-
-    if (error || !friendships || friendships.length === 0) {
-      container.innerHTML = `<div class="geen-vrienden">Nog geen vrienden. Nodig iemand uit via je profiel!</div>`
-      return
-    }
-
-    const vriendIds = friendships.map(f =>
-      f.user_id === huidigeUser.id ? f.friend_id : f.user_id
-    )
-
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .in('id', vriendIds)
-
-    if (!data || data.length === 0) {
-      container.innerHTML = `<div class="geen-vrienden">Vrienden niet gevonden.</div>`
-      return
-    }
-
-    // Bewaar vrienden zodat popup een chat kan openen
-    window._vriendenData = data
-
     container.innerHTML = data.map(vriend => `
       <div class="vriend-item" data-vid="${esc(vriend.id)}" data-vnaam="${esc(vriendWeergaveNaam(vriend))}" data-vav="${esc(vriend.avatar_url || '👤')}" data-vkey="${esc(vriend.public_key || '')}">
         <div class="vriend-av">${esc(vriend.avatar_url || '👤')}</div>
@@ -699,6 +680,51 @@ window.veiligeUrl = function(v){
         window.location.href = 'bellen.html?vriend=' + encodeURIComponent(btn.dataset.bid) + '&naam=' + encodeURIComponent(btn.dataset.bnaam)
       })
     })
+  }
+
+  async function laadVrienden() {
+    const bewaard = leesVriendenCache()
+    if (bewaard && !window._vriendenData) { window._vriendenData = bewaard; tekenVriendenLijst(bewaard) }
+
+    const { data: friendships, error } = await supabase
+      .from('friendships')
+      .select('user_id, friend_id')
+      .or(`user_id.eq.${huidigeUser.id},friend_id.eq.${huidigeUser.id}`)
+      .eq('status', 'accepted')
+
+    const container = document.getElementById('vriendenLijst')
+
+    if (!error && friendships && friendships.length === 0) { try { localStorage.removeItem(vriendenCacheSleutel()) } catch (e) {} }
+    if (error || !friendships || friendships.length === 0) {
+      container.innerHTML = `<div class="geen-vrienden">Nog geen vrienden. Nodig iemand uit via je profiel!</div>`
+      return
+    }
+
+    const vriendIds = friendships.map(f =>
+      f.user_id === huidigeUser.id ? f.friend_id : f.user_id
+    )
+
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, username, avatar_url, public_key, online_status, laatst_gezien') // v120: geen foto's/achtergronden
+      .in('id', vriendIds)
+
+    if (!data || data.length === 0) {
+      container.innerHTML = `<div class="geen-vrienden">Vrienden niet gevonden.</div>`
+      return
+    }
+
+    // Bewaar vrienden zodat popup een chat kan openen
+    window._vriendenData = data
+    try {
+      localStorage.setItem(vriendenCacheSleutel(), JSON.stringify(data.map(v => ({ id: v.id, username: v.username, avatar_url: v.avatar_url, public_key: v.public_key }))))
+    } catch (e) {}
+    tekenVriendenLijst(data)
+    // Al een chat geopend vanuit de bewaarde lijst? Dan de verse sleutel van die vriend gebruiken.
+    if (geselecteerdeVriend) {
+      const vers = data.find(v => v.id === geselecteerdeVriend.id)
+      if (vers && (vers.public_key || null) !== vriendPublicKey) { vriendPublicKey = vers.public_key || null; werkVerzendknopBij() }
+    }
     werkOnlineBij(data)
     startOnlineTimer()
   }

@@ -41,8 +41,9 @@ function inRust(id) {
 }
 // -- Herstel na mislukte verbinding (v107): mislukt een sync-verbinding, dan stopt
 // sync netjes en probeert het later opnieuw, met een pauze die steeds langer wordt
-// (30 s, 1, 2, 4, 8, max 15 min). Bewaard per account en vriend, zodat een
+// (30 s, 1, 2, 4, max 5 min; v116). Bewaard per account en vriend, zodat een
 // paginawissel de pauze niet opheft. Een gelukte verbinding wist de pauze.
+// v116: komt de app weer in beeld of het netwerk terug, dan vervalt de pauze (zie wekSync).
 function pauzeSleutel(id) { return 'fibro_sync_pauze_' + huidigeUserId + '_' + id }
 function leesPauze(id) {
   try { const p = JSON.parse(localStorage.getItem(pauzeSleutel(id)) || 'null'); return p && typeof p === 'object' ? p : null }
@@ -54,7 +55,7 @@ let pauzeTimer = null
 function mislukking(id, reden) {
   if (!id) return
   const n = Math.min(10, (Number((leesPauze(id) || {}).n) || 0) + 1)
-  const ms = Math.min(15 * 60 * 1000, 30000 * Math.pow(2, n - 1))
+  const ms = Math.min(5 * 60 * 1000, 30000 * Math.pow(2, n - 1))
   try { localStorage.setItem(pauzeSleutel(id), JSON.stringify({ n, tot: Date.now() + ms })) } catch (e) {}
   console.log('[sync] ' + reden + ' - nieuwe poging met deze vriend over ' + Math.round(ms / 1000) + ' s')
   planPauze()
@@ -70,6 +71,81 @@ function planPauze() {
   }
   if (eerst === Infinity) return
   pauzeTimer = setTimeout(() => { pauzeTimer = null; checkSyncStart() }, Math.max(0, eerst - Date.now()) + 100)
+}
+
+// -- Wekken (v116): komt de app weer in beeld (na minstens 10 s weg) of komt het
+// netwerk terug, dan meteen opnieuw proberen in plaats van de pauze uit te zitten.
+// Het aantal mislukkingen blijft staan: mislukt het weer, dan loopt de pauze verder op.
+const WEK_NA_VERBORGEN_MS = 10000
+let verborgenSinds = 0
+function wekSync(reden) {
+  if (!heeftSlot || !huidigeUserId) return
+  let opgeheven = 0
+  for (const id of vrienden) {
+    const p = leesPauze(id)
+    if (!p || Date.now() >= Number(p.tot || 0)) continue
+    try { localStorage.setItem(pauzeSleutel(id), JSON.stringify({ n: Number(p.n) || 0, tot: 0 })) } catch (e) {}
+    opgeheven++
+  }
+  console.log('[sync] ' + reden + (opgeheven ? ' - pauze opgeheven voor ' + opgeheven + ' vriend(en)' : ''))
+  const pc = peerConnection
+  if (pc && pc._wasVerbonden && (pc.connectionState === 'disconnected' || pc.connectionState === 'failed')) verbindingHapert(pc)
+  checkSyncStart()
+}
+function luisterNaarWekkers() {
+  window.addEventListener('online', () => wekSync('Netwerk terug'))
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { verborgenSinds = Date.now(); return }
+    const weg = verborgenSinds ? Date.now() - verborgenSinds : 0
+    verborgenSinds = 0
+    if (weg >= WEK_NA_VERBORGEN_MS) wekSync('App weer in beeld')
+  })
+}
+
+// -- Herstel van een weggevallen verbinding (v116): eerst een ICE-restart op dezelfde
+// verbinding (het datakanaal blijft bestaan, een video-overdracht loopt door). Alleen de
+// initiatiefnemer start die; de ander vraagt erom met 'herstart-vraag'. Lukt het niet
+// binnen 15 s (of heeft de vriend nog een oude sync.js), dan helemaal opnieuw zoals voorheen.
+const HERSTART_MS = 15000
+let herstartTimer = null
+let herstartPogingen = 0
+function verbindingHapert(pc) {
+  if (pc !== peerConnection || !pc._wasVerbonden || herstartTimer) return
+  if (herstartPogingen >= 2) { volledigOpnieuw('Herstel lukt niet'); return }
+  herstartPogingen++
+  console.log('[sync] Verbinding hapert - ICE-restart (poging ' + herstartPogingen + ')')
+  zetP2pStatus('herstellen...')
+  herstartTimer = setTimeout(() => {
+    herstartTimer = null
+    if (pc !== peerConnection || pc.connectionState === 'connected') return
+    volledigOpnieuw('ICE-restart lukte niet binnen ' + (HERSTART_MS / 1000) + ' s')
+  }, HERSTART_MS)
+  if (isInitiator) doeIceRestart(pc)
+  else stuurSignaal('herstart-vraag').catch(() => {})
+}
+function volledigOpnieuw(reden) {
+  console.log('[sync] ' + reden + ' - sync opnieuw')
+  stopSync()
+  setTimeout(checkSyncStart, 1000)
+}
+async function doeIceRestart(pc) {
+  try {
+    if (pc !== peerConnection || pc.signalingState === 'closed') return
+    if (pc.signalingState === 'have-local-offer' && pc.localDescription) {
+      // vorige restart nog niet beantwoord: hetzelfde offer nog eens sturen
+      await stuurSignaal('herstart', pc.localDescription)
+      return
+    }
+    if (pc.signalingState !== 'stable') return
+    const offer = await pc.createOffer({ iceRestart: true })
+    if (pc !== peerConnection) return
+    await pc.setLocalDescription(offer)
+    await stuurSignaal('herstart', pc.localDescription)
+  } catch (e) { console.log('[sync] ICE-restart fout:', e && e.message) }
+}
+function dtlsVingerafdruk(sdp) {
+  const m = /a=fingerprint:(\S+ \S+)/.exec(typeof sdp === 'string' ? sdp : '')
+  return m ? m[1].toLowerCase() : null
 }
 
 function controleerRust() {
@@ -112,11 +188,12 @@ export function initSync(userId, callbacks = {}) {
   huidigeUserId = userId
   onOnlineChangeCallback = callbacks.onOnlineChange || null
   window.addEventListener('pagehide', slotVrijgeven)
+  luisterNaarWekkers()
   slotTimer = setInterval(() => {
     const nu = slotProberen()
     if (nu && !heeftSlot) {
       heeftSlot = true
-      console.log('[sync] Slot verkregen - sync actief in dit tabblad (v107)')
+      console.log('[sync] Slot verkregen - sync actief in dit tabblad (v116)')
       laadVrienden().then(() => startPresence())
     } else if (!nu && heeftSlot) {
       heeftSlot = false
@@ -125,7 +202,7 @@ export function initSync(userId, callbacks = {}) {
   }, 3000)
   if (slotProberen()) {
     heeftSlot = true
-    console.log('[sync] Slot verkregen - sync actief in dit tabblad (v107)')
+    console.log('[sync] Slot verkregen - sync actief in dit tabblad (v116)')
     laadVrienden().then(() => startPresence())
   } else {
     console.log('[sync] Ander tabblad heeft de sync - dit tabblad wacht')
@@ -278,18 +355,24 @@ function maakPeerConnection() {
     if (pc !== peerConnection) return
     console.log('[sync] Verbinding:', pc.connectionState)
     if (pc.connectionState === 'connected') {
+      if (pc._wasVerbonden && herstartTimer) console.log('[sync] Verbinding hersteld (ICE-restart)')
       pc._wasVerbonden = true
+      clearTimeout(herstartTimer)
+      herstartTimer = null
+      herstartPogingen = 0
       if (syncPartnerId) wisPauze(syncPartnerId)
+    }
+    if (pc.connectionState === 'disconnected' && pc._wasVerbonden) {
+      // v116: 'disconnected' herstelt zich vaak vanzelf; pas na 3 s ingrijpen
+      setTimeout(() => { if (pc === peerConnection && pc.connectionState === 'disconnected') verbindingHapert(pc) }, 3000)
     }
     if (pc.connectionState === 'failed') {
       zetP2pStatus('P2P mislukt')
       // v107: niet blijven hangen aan een mislukte verbinding
       const partner = syncPartnerId
       if (pc._wasVerbonden) {
-        // werkte eerst wel (bijv. de vriend is weg): gewoon opnieuw, zonder pauze
-        console.log('[sync] Verbinding weggevallen - sync opnieuw')
-        stopSync()
-        setTimeout(checkSyncStart, 1000)
+        // werkte eerst wel: v116 eerst herstellen (ICE-restart), anders opnieuw zonder pauze
+        verbindingHapert(pc)
         return
       }
       logKandidaten(pc).finally(() => {
@@ -1052,6 +1135,27 @@ async function maakEnStuurOffer() {
 
 async function verwerkSignaal(type, data) {
   console.log('[sync] Signaal:', type)
+  if (type === 'herstart') {
+    // v116: ICE-restart van de vriend op de bestaande verbinding
+    const pc = peerConnection
+    if (isInitiator || !pc || !pc.remoteDescription) return
+    if (dtlsVingerafdruk(data && data.sdp) !== dtlsVingerafdruk(pc.remoteDescription.sdp)) return // ander/oud toestel
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(data))
+      if (pc !== peerConnection) return
+      await leegIceBuffer()
+      const answer = await pc.createAnswer()
+      await pc.setLocalDescription(answer)
+      await stuurSignaal('answer', answer)
+      console.log('[sync] ICE-restart van de vriend beantwoord')
+    } catch (e) { console.log('[sync] ICE-restart beantwoorden mislukt:', e && e.message) }
+    return
+  }
+  if (type === 'herstart-vraag') {
+    // v116: de vriend merkt dat de verbinding hapert; de initiatiefnemer herstelt
+    if (isInitiator && peerConnection && peerConnection._wasVerbonden) verbindingHapert(peerConnection)
+    return
+  }
   if (type === 'offer') {
     if (isInitiator) return
     const ufrag = iceUfrag(data && data.sdp)
@@ -1090,8 +1194,12 @@ async function verwerkSignaal(type, data) {
     await leegIceBuffer()
   }
   if (type === 'ice') {
-    if (!peerConnection || !peerConnection.remoteDescription) {
+    const rd = peerConnection && peerConnection.remoteDescription
+    const uf = data && data.usernameFragment, rdUf = rd && iceUfrag(rd.sdp)
+    // v116: ook kandidaten van een nieuwere ICE-ronde (restart) even bewaren
+    if (!rd || (uf && rdUf && uf !== rdUf)) {
       iceBuffer.push(data)
+      if (iceBuffer.length > 60) iceBuffer = iceBuffer.slice(-60)
       return
     }
     try { await peerConnection.addIceCandidate(new RTCIceCandidate(data)) }
@@ -1105,11 +1213,17 @@ function iceUfrag(sdp) {
 }
 
 async function leegIceBuffer() {
-  for (const kandidaat of iceBuffer) {
-    try { await peerConnection.addIceCandidate(new RTCIceCandidate(kandidaat)) }
+  // v116: alleen kandidaten van de huidige ICE-ronde toevoegen; nieuwere bewaren
+  const pc = peerConnection
+  if (!pc) return
+  const uf = iceUfrag(pc.remoteDescription && pc.remoteDescription.sdp)
+  const nu = [], later = []
+  for (const k of iceBuffer) (k && k.usernameFragment && uf && k.usernameFragment !== uf ? later : nu).push(k)
+  iceBuffer = later.slice(-60)
+  for (const kandidaat of nu) {
+    try { await pc.addIceCandidate(new RTCIceCandidate(kandidaat)) }
     catch (e) { console.warn('[sync] ice-buffer fout:', e) }
   }
-  iceBuffer = []
 }
 
 // ── Relay-vraag: muziek toch versturen via relay? ──
@@ -1192,6 +1306,9 @@ function stopSync() {
   console.log('[sync] Sync gestopt')
   clearTimeout(offerRetryTimer)
   clearTimeout(syncTimeout)
+  clearTimeout(herstartTimer)
+  herstartTimer = null
+  herstartPogingen = 0
   if (dataChannel) { dataChannel.close(); dataChannel = null }
   if (peerConnection) { peerConnection.close(); peerConnection = null }
   if (syncKanaal) { supabase.removeChannel(syncKanaal); syncKanaal = null }

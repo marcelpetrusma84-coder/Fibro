@@ -1528,12 +1528,12 @@ console.timeLog('[chat] berichten', 'opgehaald')
   const SPEL_BESTAND = {
     botkaaseiren: './bke-ui.js?v=96',
     dammen: './dammen-ui.js?v=96',
-    pong: './pong-ui.js?v=96',
-    vieroprij: './vieroprij-ui.js?v=96',
+    pong: './pong-ui.js?v=115',
+    vieroprij: './vieroprij-ui.js?v=115',
     schaken: './schaken-ui.js?v=96',
-    flappybird: './flappy-ui.js?v=109',
-    breakout: './blockit-ui.js?v=109',
-    spaceinvaders: './invaders-ui.js?v=95',
+    flappybird: './flappy-ui.js?v=115',
+    breakout: './blockit-ui.js?v=115',
+    spaceinvaders: './invaders-ui.js?v=115',
     swarm: './swarm-ui.js?v=109',
     endlessrunner: './runner-gunner-ui.js?v=11',
     pacman: './ecto-ui.js?v=109',
@@ -1754,7 +1754,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Vier op een rij ───
   async function startVierOpEenRij() {
-    const m = await import('./vieroprij-ui.js?v=96')
+    const m = await import('./vieroprij-ui.js?v=115')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend' })
   }
 
@@ -1769,7 +1769,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Pong ───
   async function startPong() {
-    const m = await import('./pong-ui.js?v=96')
+    const m = await import('./pong-ui.js?v=115')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'pong' })
   }
 
@@ -1864,19 +1864,19 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Flappy Bird Multiplayer ───
   async function startFlappyBird() {
-    const m = await import('./flappy-ui.js?v=109')
+    const m = await import('./flappy-ui.js?v=115')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'flappybird' })
   }
 
   // ─── Block It Multiplayer ───
 async function startBlockIt() {
-    const m = await import('./blockit-ui.js?v=109')
+    const m = await import('./blockit-ui.js?v=115')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'breakout' })
 }
 
 // ─── Space Invaders Multiplayer ───
   async function startSpaceInvaders() {
-    const m = await import('./invaders-ui.js?v=95')
+    const m = await import('./invaders-ui.js?v=115')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'spaceinvaders' })
   }
 

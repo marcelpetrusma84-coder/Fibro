@@ -191,7 +191,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
 
   inhoud.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
-      <div id="pong-status" style="color:#00f0ff;font-size:14px;font-weight:700;letter-spacing:1px;text-shadow:0 0 8px #00f0ff;">Jij: <span id="pong-mijn-score">0</span> — <span id="pong-naam">${vriendNaam}</span>: <span id="pong-vriend-score">0</span></div>
+      <div id="pong-status" style="color:#00f0ff;font-size:14px;font-weight:700;letter-spacing:1px;text-shadow:0 0 8px #00f0ff;"></div>
       <div id="pong-match" style="font-size:12px;font-weight:700;letter-spacing:1px;min-height:15px;"></div>
       <canvas id="pong-canvas" width="${BREEDTE}" height="${HOOGTE}" style="background:#050510;border:2px solid #ff00cc;border-radius:8px;touch-action:none;box-shadow:0 0 30px rgba(255,0,204,0.5),0 0 60px rgba(255,0,204,0.2),inset 0 0 30px rgba(0,0,0,0.8);"></canvas>
       <div style="font-size:11px;color:rgba(255,255,255,0.6);">Sleep om je paddle te bewegen</div>
@@ -201,8 +201,17 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
   const canvas = document.getElementById('pong-canvas')
   const ctx = canvas.getContext('2d')
   const statusEl = document.getElementById('pong-status')
-  const mijnScoreEl = document.getElementById('pong-mijn-score')
-  const vriendScoreEl = document.getElementById('pong-vriend-score')
+  // De scoreregel wordt met textContent opgebouwd (de naam komt van de vriend)
+  // en opnieuw gemaakt als hij vervangen is (wachten, aftellen, winst).
+  let mijnScoreEl = null, vriendScoreEl = null
+  function bouwScoreRegel() {
+    mijnScoreEl = document.createElement('span'); mijnScoreEl.id = 'pong-mijn-score'
+    vriendScoreEl = document.createElement('span'); vriendScoreEl.id = 'pong-vriend-score'
+    const naamEl = document.createElement('span'); naamEl.id = 'pong-naam'; naamEl.textContent = vriendNaam
+    mijnScoreEl.textContent = mijnScore; vriendScoreEl.textContent = vriendScore
+    statusEl.textContent = ''
+    statusEl.append('Jij: ', mijnScoreEl, ' — ', naamEl, ': ', vriendScoreEl)
+  }
   const matchEl = document.getElementById('pong-match')
   const opnieuwBtn = document.getElementById('pong-opnieuw')
 
@@ -464,8 +473,8 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
   }
 
   function updateScoreUI() {
-    mijnScoreEl.textContent = mijnScore
-    vriendScoreEl.textContent = vriendScore
+    if (!gameOver && !statusEl.contains(mijnScoreEl)) bouwScoreRegel()
+    if (mijnScoreEl) { mijnScoreEl.textContent = mijnScore; vriendScoreEl.textContent = vriendScore }
     // Matchpoint: laat zien wanneer iemand op winst staat
     if (!gameOver && (mijnScore === WIN_SCORE - 1 || vriendScore === WIN_SCORE - 1)) {
       const wie = mijnScore === WIN_SCORE - 1 && vriendScore === WIN_SCORE - 1 ? 'BESLISSEND PUNT'
@@ -592,9 +601,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
       } else {
         clearInterval(interval)
         geluidStuiter()
-        statusEl.textContent = 'Jij: 0 — ' + vriendNaam + ': 0'
-        // Herbouw status met scores
-        statusEl.innerHTML = 'Jij: <span id="pong-mijn-score">0</span> — <span id="pong-naam">' + vriendNaam + '</span>: <span id="pong-vriend-score">0</span>'
+        bouwScoreRegel()
         herstartLoop()
       }
     }, 1000)

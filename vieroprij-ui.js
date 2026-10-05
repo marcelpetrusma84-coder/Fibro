@@ -1,6 +1,9 @@
 // vieroprij-ui.js - spel voor Fibro, losgetrokken uit chat.html.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
 
+// Tekst veilig in HTML zetten (namen komen van andere gebruikers)
+const htmlVeilig = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
 export function start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
   vriendNaam = vriendNaam || 'vriend'
   document.getElementById('spelTitelBar').textContent = '🔴 Four in a Row'
@@ -119,7 +122,7 @@ export function start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
     } else {
       statusEl.innerHTML = mijnBeurt
         ? 'Jouw beurt! <span style="color:' + KLEUR_HEX[mijnKleur] + '">●</span>'
-        : 'Wachten op ' + vriendNaam + '...'
+        : 'Wachten op ' + htmlVeilig(vriendNaam) + '...'
     }
     toonScore()
     tekenBord()

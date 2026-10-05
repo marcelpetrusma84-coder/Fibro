@@ -5,6 +5,9 @@ import { maakGeluid } from './flappy-geluid.js?v=86'
 // Scherpe punten, spijkers, fakkelvuur en vallende rotsen zijn dodelijk.
 // Je bent ook af als je links uit beeld wordt geduwd.
 
+// Tekst veilig in HTML zetten (namen komen van andere gebruikers)
+const htmlVeilig = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
 export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) {
     // solo: alleen spelen (spel.html). Geen vriend; aan het eind telt je record.
     vriendNaam = vriendNaam || 'vriend'
@@ -49,7 +52,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     <div style="font-size:22px;">🦇</div>
     <div id="fb-score-vriend" style="font-weight:700;font-size:18px;color:#fbbf24;">🪙 0</div>
           <div id="fb-harten-vriend" style="font-size:12px;letter-spacing:1px;">❤️❤️❤️</div>
-    <div style="opacity:0.6;font-size:11px;">${vriendNaam}</div>
+    <div style="opacity:0.6;font-size:11px;">${htmlVeilig(vriendNaam)}</div>
     </div>
     </div>
     <button id="fb-geluid" style="background:rgba(255,255,255,0.12);border:none;border-radius:8px;color:white;padding:4px 12px;font-size:16px;cursor:pointer;">🔊</button>

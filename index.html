@@ -420,8 +420,10 @@ function renderHome(id, c) {
       const e=document.getElementById('wlb');if(!e)return
       if(!data||!data.length){e.textContent='Nog geen berichten';return}
       const m=data[0],van=m.sender_id===window._uid?'Jij':'Iemand'
-      const prev=m.content.startsWith('encrypt:')?'🔒 versleuteld':m.content.substring(0,40)
-      e.innerHTML=`<span style="color:var(--accent);font-weight:600">${van}:</span> ${escH(prev)}`
+      // Berichten zijn versleuteld (e2e:); de inhoud tonen we hier niet
+      const inh=m.content||'',verw=inh==='verwijderd:'
+      const prev=verw?'🚫 Bericht verwijderd':(inh.startsWith('e2e:')||inh.startsWith('encrypt:'))?'🔒 versleuteld':inh.startsWith('spelinvite:')?'🎮 Spel-uitnodiging':inh.substring(0,40)
+      e.innerHTML=`<span style="color:var(--accent);font-weight:600">${van}:</span> ${verw?'<i>'+escH(prev)+'</i>':escH(prev)}`
     })
   } else if (id === 'batterij') {
     c.innerHTML = '<div style="text-align:center"><div id="wbatt" style="font-size:26px;font-weight:700;color:var(--accent)">…%</div><div style="font-size:11px;color:rgba(255,255,255,0.8)">batterij</div></div>'

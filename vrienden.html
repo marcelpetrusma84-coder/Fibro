@@ -490,6 +490,8 @@ startMeldingen()
   import { supabase } from './supabase.js?v=95'
 
   const DUUR = 20 * 60 // 20 minuten in seconden
+  // Het adres van de uitnodigingspagina staat alleen hier (later: eigen domein)
+  const UITNODIGING_ADRES = 'https://marcelpetrusma84-coder.github.io/Fibro/invite.html'
   let timerInterval = null
   let secondsLeft = DUUR
 
@@ -522,8 +524,9 @@ startMeldingen()
     // Haal ingelogde gebruiker op
     const { data: { user } } = await supabase.auth.getUser()
 
-    // Genereer uniek token
-    const token = 'fibro-' + Math.random().toString(36).substring(2, 10) + '-' + Date.now().toString(36)
+    // Genereer uniek token: 16 willekeurige tekens via crypto.getRandomValues
+    const TEKENS = 'abcdefghijklmnopqrstuvwxyz234567'
+    const token = 'fibro-' + Array.from(window.crypto.getRandomValues(new Uint8Array(16)), b => TEKENS[b % 32]).join('')
     const verlooptOm = new Date(Date.now() + DUUR * 1000).toISOString()
 
     // Sla op in Supabase
@@ -545,14 +548,14 @@ startMeldingen()
     document.getElementById('qr-laden').style.display = 'none'
     document.getElementById('qr-sectie').style.display = 'block'
     document.getElementById('token-display').textContent = token
-    const inviteUrl = 'https://marcelpetrusma84-coder.github.io/Fibro/invite.html?token=' + token
+    const inviteUrl = UITNODIGING_ADRES + '?token=' + token
     const linkVeld = document.getElementById('invite-link')
     if (linkVeld) linkVeld.value = inviteUrl
 
     // Maak QR code
     document.getElementById('qr-container').innerHTML = ''
     new QRCode(document.getElementById('qr-container'), {
-      text: 'https://marcelpetrusma84-coder.github.io/Fibro/invite.html?token=' + token,
+      text: inviteUrl,
       width: 200,
       height: 200,
       colorDark: '#1a0a2e',

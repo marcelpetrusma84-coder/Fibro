@@ -1,6 +1,9 @@
 // invaders-ui.js - spel voor Fibro, losgetrokken uit chat.html.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
 
+// Tekst veilig in HTML zetten (namen komen van andere gebruikers)
+const htmlVeilig = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
 export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
   vriendNaam = vriendNaam || 'vriend'
   isActief = isActief || (() => true)
@@ -14,7 +17,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
       <div style="display:flex;justify-content:space-between;width:${B}px;color:white;font-size:12px;padding:0 4px;">
         <span>🚀 Jij: <b id="si-score-mij">0</b></span>
         <span id="si-level" style="color:var(--accent);">Level 1</span>
-        <span>👾 ${vriendNaam}: <b id="si-score-vriend">0</b></span>
+        <span>👾 ${htmlVeilig(vriendNaam)}: <b id="si-score-vriend">0</b></span>
       </div>
       <canvas id="si-canvas" width="${B}" height="${H}" style="border-radius:10px;border:2px solid rgba(255,255,255,0.15);display:block;touch-action:none;"></canvas>
       <div id="si-status" style="color:white;font-size:13px;font-weight:600;min-height:18px;text-align:center;"></div>

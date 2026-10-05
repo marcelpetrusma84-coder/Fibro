@@ -6,6 +6,9 @@
 // Hoe groter het vierkant dat je weghaalt, hoe groter die explosie.
 // Bomstenen zitten willekeurig in de wachtrij en ontploffen zodra ze landen.
 
+// Tekst veilig in HTML zetten (namen komen van andere gebruikers)
+const htmlVeilig = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
 export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) {
     vriendNaam = vriendNaam || 'vriend'
     // solo: alleen spelen (spel.html). Eén eigen bak; rechtsboven staat je record.
@@ -779,7 +782,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
             for (const v of SPELVORMEN) {
                 const knop = document.createElement('button')
                 knop.style.cssText = KNOP_STIJL
-                knop.innerHTML = '<div style="font-size:15px;">' + v.titel + '</div><div style="font-size:11px;font-weight:500;opacity:0.75;">' + v.uitleg + '</div>'
+                knop.innerHTML = '<div style="font-size:15px;">' + htmlVeilig(v.titel) + '</div><div style="font-size:11px;font-weight:500;opacity:0.75;">' + htmlVeilig(v.uitleg) + '</div>'
                 knop.onclick = () => {
                     spelKanaal.send({ type: 'broadcast', event: 'bi-modus', payload: { modus: v.modus } })
                     beginSpel(v.modus)

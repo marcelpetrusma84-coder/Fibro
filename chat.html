@@ -362,7 +362,7 @@ window.veiligeUrl = function(v){
   import { laadWallpaper } from './wallpaper.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { initSync } from './sync.js?v=116'
-  import { startHeartbeat } from './heartbeat.js?v=101'
+  import { startHeartbeat } from './heartbeat.js?v=117'
   import { startMeldingen } from './meldingen.js?v=101'
   import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=95'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=106'
@@ -593,7 +593,7 @@ window.veiligeUrl = function(v){
     if (!profiel || !profiel.online_status) return false
     if (!profiel.laatst_gezien) return false
     const sec = (Date.now() - new Date(profiel.laatst_gezien).getTime()) / 1000
-    return sec < 150
+    return sec < 300 // heartbeat elke 2 min (heartbeat.js)
   }
 
   // Zet stipjes aan/uit en schuift wie online is naar boven.
@@ -621,7 +621,7 @@ window.veiligeUrl = function(v){
     if (gesorteerd.some((el, i) => el !== rijen[i])) gesorteerd.forEach(el => container.appendChild(el))
   }
 
-  // Elke 30 s (en bij terugkomen in de app) de status opnieuw ophalen
+  // Elke 2 min (en bij terugkomen in de app) de status opnieuw ophalen (v117: was 30 s)
   let onlineTimer = null
   async function haalOnlineOp() {
     if (document.hidden) return
@@ -638,7 +638,7 @@ window.veiligeUrl = function(v){
   }
   function startOnlineTimer() {
     if (onlineTimer) return
-    onlineTimer = setInterval(haalOnlineOp, 30000)
+    onlineTimer = setInterval(haalOnlineOp, 120000)
     document.addEventListener('visibilitychange', () => { if (!document.hidden) haalOnlineOp() })
   }
 
@@ -1331,9 +1331,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
   function startRealtime() {
     if (realtimeKanaal) supabase.removeChannel(realtimeKanaal)
     startReactieRealtime()
-    realtimeKanaal = supabase
-      .channel('berichten-' + huidigeUser.id, { config: { private: true } })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
+    // v117: met filter (aan mij / van mij) in plaats van alle berichten in de database;
+    // zo hoeft Supabase niet bij elk bericht van iedereen voor elke open chat te controleren.
+    const opNieuw = async (payload) => {
         const msg = payload.new
         const isRelevant = (
           (msg.sender_id === huidigeUser.id && msg.receiver_id === geselecteerdeVriend?.id) ||
@@ -1351,8 +1351,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
           await tekenReacties(document.getElementById('messages'))
           if (wasOnder) _scrollNu(); else toonNieuwKnop()
         }
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, (payload) => {
+      }
+    const opGewijzigd = (payload) => {
         const msg = payload.new || {}
         if (msg.content !== 'verwijderd:') return
         const isRelevant = (
@@ -1360,7 +1360,14 @@ console.timeLog('[chat] berichten', 'opgehaald')
           (msg.sender_id === geselecteerdeVriend?.id && msg.receiver_id === huidigeUser.id)
         )
         if (isRelevant) toonAlsVerwijderd(msg.id)
-      })
+      }
+    const aanMij = 'receiver_id=eq.' + huidigeUser.id, vanMij = 'sender_id=eq.' + huidigeUser.id
+    realtimeKanaal = supabase
+      .channel('berichten-' + huidigeUser.id, { config: { private: true } })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: aanMij }, opNieuw)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: vanMij }, opNieuw)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: aanMij }, opGewijzigd)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: vanMij }, opGewijzigd)
       .subscribe()
   }
 

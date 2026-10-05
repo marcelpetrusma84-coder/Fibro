@@ -1,5 +1,6 @@
 import { supabase } from './supabase.js?v=95'
 
+const PING_MS = 120000
 let heartbeatInterval = null
 let heartbeatUserId = null
 
@@ -26,8 +27,9 @@ export async function startHeartbeat() {
   // Stop eventueel lopende interval
   if (heartbeatInterval) clearInterval(heartbeatInterval)
 
-  // Elke 60 seconden pingen
-  heartbeatInterval = setInterval(ping, 60000)
+  // Elke 2 minuten pingen (v117: was 60 s; minder schrijfacties naar de database).
+  // Online telt tot 5 min na het laatste teken; wegklikken zet je meteen offline.
+  heartbeatInterval = setInterval(ping, PING_MS)
 
   // App verbergen (bijv. telefoon vergrendeld of andere app)
   document.addEventListener('visibilitychange', handleVisibility)
@@ -87,6 +89,6 @@ function handleVisibility() {
     // App weer zichtbaar: herstart heartbeat
     ping()
     if (heartbeatInterval) clearInterval(heartbeatInterval)
-    heartbeatInterval = setInterval(ping, 60000)
+    heartbeatInterval = setInterval(ping, PING_MS)
   }
 }

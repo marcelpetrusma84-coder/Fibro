@@ -153,7 +153,7 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 import { laadThema } from './thema.js?v=95'
 import { pasBlokstijlToe } from './blokstijl.js?v=95'
 import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=95'
-import { startHeartbeat } from './heartbeat.js?v=101'
+import { startHeartbeat } from './heartbeat.js?v=117'
 import { initSync } from './sync.js?v=116'
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -412,7 +412,7 @@ function renderHome(id, c) {
       if(!fs)return
       const ids=fs.map(f=>f.user_id===window._uid?f.friend_id:f.user_id)
       if(!ids.length){const e=document.getElementById('wonl');if(e)e.textContent='0';return}
-      supabase.from('profiles').select('online_status,laatst_gezien').in('id',ids).then(({data:p})=>{const e=document.getElementById('wonl');if(e)e.textContent=(p||[]).filter(x=>x.online_status&&x.laatst_gezien&&Date.now()-new Date(x.laatst_gezien).getTime()<150000&&localStorage.getItem('fibro_ik_offline')!=='1').length})
+      supabase.from('profiles').select('online_status,laatst_gezien').in('id',ids).then(({data:p})=>{const e=document.getElementById('wonl');if(e)e.textContent=(p||[]).filter(x=>x.online_status&&x.laatst_gezien&&Date.now()-new Date(x.laatst_gezien).getTime()<300000&&localStorage.getItem('fibro_ik_offline')!=='1').length})
     })
   } else if (id === 'laastbericht') {
     c.innerHTML = '<div id="wlb" style="font-size:13px;color:rgba(255,255,255,0.8)">Laden...</div>'

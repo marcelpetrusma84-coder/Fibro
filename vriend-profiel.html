@@ -191,7 +191,7 @@ body.heeft-wallpaper::before { display:block; }
     if (!profiel.online_status) return false
     if (!profiel.laatst_gezien) return false
     const sec = (Date.now() - new Date(profiel.laatst_gezien).getTime()) / 1000
-    return sec < 150
+    return sec < 300 // heartbeat elke 2 min (heartbeat.js)
   }
 
   // ── Wallpaper tonen ──

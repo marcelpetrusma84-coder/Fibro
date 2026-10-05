@@ -21,7 +21,7 @@
      tegen de computer.
 */
 
-const FONT_URL = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap'
+const FONT_URL = 'lettertypen/press-start-2p.css?v=1' // v118: eigen repo
 const KLANK_HZ = 22050
 
 const KOLOM = 20, RIJEN = 28

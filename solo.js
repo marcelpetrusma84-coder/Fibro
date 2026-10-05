@@ -388,12 +388,12 @@ export const SOLO_SPELLEN = {
   pong:         { naam: 'Neo Paddle',    icon: '🏓', bestand: './pong-ui.js?v=115',     bot: pongBot },
   // Ghost Tag heeft zelf al een computerspookje: zonder kanaal speel je daartegen.
   // gewoneScherpte: op telefoons niet op dubbele scherpte tekenen (4x minder beeldpunten).
-  pacman:       { naam: 'Ghost Tag',     icon: '👻', bestand: './ecto-ui.js?v=109',    zonderKanaal: true, gewoneScherpte: true, meetFps: true },
+  pacman:       { naam: 'Ghost Tag',     icon: '👻', bestand: './ecto-ui.js?v=118',    zonderKanaal: true, gewoneScherpte: true, meetFps: true },
   breakout:     { naam: 'Block It',      icon: '🟪', bestand: './blockit-ui.js?v=115',  bot: stilBot, arcade: true },
   swarm:        { naam: 'The Swarm',     icon: '🪲', bestand: './swarm-ui.js?v=109',    bot: stilBot, arcade: true },
   // Twin Snakes heeft net als Ghost Tag al een eigen computerslang.
-  pinball:      { naam: 'Twin Snakes',   icon: '🐍', bestand: './twin-snakes-ui.js?v=109', zonderKanaal: true },
+  pinball:      { naam: 'Twin Snakes',   icon: '🐍', bestand: './twin-snakes-ui.js?v=118', zonderKanaal: true },
   // Runner & Gunner start zonder kanaal meteen alleen: geen vriend nodig om te starten.
-  endlessrunner: { naam: 'Runner & Gunner', icon: '🏃', bestand: './runner-gunner-ui.js?v=11', zonderKanaal: true },
+  endlessrunner: { naam: 'Runner & Gunner', icon: '🏃', bestand: './runner-gunner-ui.js?v=118', zonderKanaal: true },
   flappybird:   { naam: 'Flapper',       icon: '🦇', bestand: './flappy-ui.js?v=115',   bot: stilBot, arcade: true },
 }

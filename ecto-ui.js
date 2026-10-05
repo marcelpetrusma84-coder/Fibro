@@ -34,7 +34,7 @@
    Wie de grote bol pakt wordt de jager: groter en sneller. De ander wordt
    bang en verliest een druppel bij een tik. Drie druppels kwijt = af. */
 
-const FONT_URL = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap'
+const FONT_URL = 'lettertypen/press-start-2p.css?v=1' // v118: eigen repo
 
 // ═══════════════ Doolhoven ═══════════════
 // # = muur, . = stip, X = leegte. Rij 9 is een tunnel: links eruit = rechts erin.

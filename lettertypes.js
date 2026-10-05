@@ -1,5 +1,5 @@
 // Alle beschikbare lettertypes. Nieuwe toevoegen: een regel erbij.
-// naam = Google Fonts-naam, val = CSS fallback, label = wat de gebruiker ziet
+// naam = lettertypenaam (bestand: lettertypen/<naam-met-streepjes>.css), val = CSS fallback, label = wat de gebruiker ziet
 export const LETTERTYPES = [
   { naam: 'DM Sans', val: 'sans-serif', label: 'Standaard' },
   { naam: 'Nunito', val: 'sans-serif', label: 'Rond' },
@@ -41,14 +41,31 @@ export const LETTERTYPES = [
   { naam: 'Permanent Marker', val: 'cursive', label: 'Stift' },
 ]
 
+// v118: de lettertypen staan in de eigen repo (map lettertypen/, Fontsource 5.3.0),
+// niet meer bij Google. Ook oudere keuzes (van voor deze lijst) staan erin.
+const EIGEN = new Set([
+  'audiowide', 'bagel-fat-one', 'bebas-neue', 'bungee', 'bungee-shade', 'caveat', 'chewy',
+  'cinzel', 'cinzel-decorative', 'comfortaa', 'courier-prime', 'creepster', 'dancing-script',
+  'dm-mono', 'dm-sans', 'dm-serif-display', 'fascinate', 'fredoka', 'great-vibes', 'lobster',
+  'lora', 'medievalsharp', 'merriweather', 'monoton', 'mountains-of-christmas', 'nosifer',
+  'nunito', 'orbitron', 'oswald', 'pacifico', 'permanent-marker', 'pirata-one', 'playfair-display',
+  'press-start-2p', 'quicksand', 'raleway', 'rampart-one', 'righteous', 'rubik-bubbles',
+  'rubik-spray-paint', 'rye', 'satisfy', 'sedgwick-ave', 'shadows-into-light', 'share-tech-mono',
+  'silkscreen', 'space-mono', 'titan-one'
+])
+export function lettertypeSlug(naam) {
+  return String(naam || '').trim().toLowerCase().replace(/ /g, '-')
+}
+
 // Laadt alleen het gekozen lettertype, niet alle 38.
 export function laadFont(naam) {
-  if (!naam) return
-  const id = 'font-' + naam.replace(/[^a-zA-Z0-9]/g, '')
+  const slug = lettertypeSlug(naam)
+  if (!EIGEN.has(slug)) return
+  const id = 'font-' + slug
   if (document.getElementById(id)) return
   const l = document.createElement('link')
   l.id = id
   l.rel = 'stylesheet'
-  l.href = 'https://fonts.googleapis.com/css2?family=' + naam.replace(/ /g, '+') + ':wght@400;600&display=swap'
+  l.href = 'lettertypen/' + slug + '.css?v=1'
   document.head.appendChild(l)
 }

@@ -37,6 +37,19 @@ self.addEventListener('fetch', function(event) {
         )
         return
       }
+      // Lettertypebestanden (v118): veranderen nooit, dus ook direct uit de cache
+      if (/\/lettertypen\/[a-z0-9-]+\.woff2$/.test(url.pathname)) {
+        event.respondWith(
+          caches.open(CACHE_VERSION).then(async function(cache) {
+            const hit = await cache.match(req)
+            if (hit) return hit
+              const res = await fetch(req)
+              if (res.ok) cache.put(req, res.clone())
+                return res
+          })
+        )
+        return
+      }
       // Al het andere (HTML, afbeeldingen): browser regelt het zelf
 })
 self.addEventListener('push', function(event) {

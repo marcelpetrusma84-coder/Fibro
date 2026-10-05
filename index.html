@@ -5,7 +5,8 @@
   if (f) {
     document.write("<style>*{font-family:" + f + " !important}</style>")
     var fn = f.split(",")[0].replace(/[\x27\x22]/g, "").trim()
-    if (fn) document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=' + fn.replace(/ /g, "+") + ':wght@400;600&display=swap">')
+    var fsl = fn.toLowerCase().replace(/ /g, "-") // v118: lettertype uit de eigen repo
+    if (/^[a-z0-9-]+$/.test(fsl)) document.write('<link rel="stylesheet" href="lettertypen/' + fsl + '.css?v=1">')
   }
 </script>
 <head>
@@ -16,7 +17,7 @@
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400;500&family=Raleway:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:wght@300;400;700&family=Bebas+Neue&family=Oswald:wght@300;400;500&family=Pacifico&family=Dancing+Script:wght@400;600&family=Great+Vibes&family=Space+Mono:wght@400;700&family=Courier+Prime:wght@400;700&family=Quicksand:wght@300;400;500&family=Nunito:wght@300;400;500&family=Righteous&family=Comfortaa:wght@300;400;500&family=Cinzel:wght@400;600&family=Satisfy&family=Lobster&display=swap" rel="stylesheet">
+<link href="lettertypen/basis.css?v=1" rel="stylesheet">
 <style>
   :root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:#ffffff; }
   * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
@@ -150,7 +151,7 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 </div>
 
 <script type="module">
-import { laadThema } from './thema.js?v=95'
+import { laadThema } from './thema.js?v=118'
 import { pasBlokstijlToe } from './blokstijl.js?v=95'
 import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=95'
 import { startHeartbeat } from './heartbeat.js?v=117'

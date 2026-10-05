@@ -5,7 +5,7 @@
    de seed, dus jullie rennen op precies dezelfde baan. */
 
 const PHASER_URL = 'https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js'
-const FONT_URL = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap'
+const FONT_URL = 'lettertypen/press-start-2p.css?v=1' // v118: eigen repo
 
 function laadPhaser() {
   if (window.Phaser) return Promise.resolve()

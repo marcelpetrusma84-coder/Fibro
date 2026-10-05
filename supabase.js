@@ -1,4 +1,5 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.113.0/+esm'
+// supabase-js 2.113.0 staat in de eigen repo (supabase-lib.js), niet meer via jsdelivr
+import { createClient } from './supabase-lib.js?v=1'
 
 export const supabase = createClient(
   'https://qmgatbphiplrfxrljtbe.supabase.co',

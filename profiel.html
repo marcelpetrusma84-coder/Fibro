@@ -495,7 +495,7 @@ function _profielUid() {
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
 import { startMeldingen } from './meldingen.js?v=101'
-import { laadThema } from './thema.js?v=118'
+import { laadThema, bewaarThemaCache } from './thema.js?v=119'
 import { startHeartbeat } from './heartbeat.js?v=117'
 import { initSync } from './sync.js?v=116'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=106'
@@ -933,12 +933,13 @@ window.slaAllesOp=async function(){
     wallpaper_data: await haalWallpaperDataOp()
   })
 
+  if(!error)bewaarThemaCache(huidigeUser.id,{accent_kleur:accentKleur,accent_kleur2:accentKleur2,achtergrond_kleur:bgKleur,lettertype:huidigLettertype,animatie:huidigeAnimatie}) // v119
   const msg=document.getElementById('statusMsg')
   if(error){msg.className='status-msg error';msg.textContent='✗ Opslaan mislukt: '+error.message}
   else{msg.className='status-msg success';msg.textContent='✓ Profiel opgeslagen!';setTimeout(()=>msg.className='status-msg',2000)}
   window.scrollTo(0,0)
 }
-window.uitloggen=async function(){sessionStorage.setItem('fibro_bewust_uitloggen','1');localStorage.removeItem('fibro_lettertype');localStorage.removeItem('fibro_lettertype');await supabase.auth.signOut({scope:'local'});window.location.href='login.html'}
+window.uitloggen=async function(){sessionStorage.setItem('fibro_bewust_uitloggen','1');localStorage.removeItem('fibro_lettertype');localStorage.removeItem('fibro_lettertype');try{localStorage.removeItem('fibro_thema_'+huidigeUser.id);localStorage.removeItem('fibro_profielcache_'+huidigeUser.id)}catch(e){};await supabase.auth.signOut({scope:'local'});window.location.href='login.html'}
 
 window.activeerPushNotificaties = async function() {
   try {

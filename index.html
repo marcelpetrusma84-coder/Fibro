@@ -151,7 +151,7 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 </div>
 
 <script type="module">
-import { laadThema } from './thema.js?v=118'
+import { laadThema } from './thema.js?v=119'
 import { pasBlokstijlToe } from './blokstijl.js?v=95'
 import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=95'
 import { startHeartbeat } from './heartbeat.js?v=117'
@@ -1891,29 +1891,32 @@ window.uitloggen = async function() {
     sessionStorage.setItem('fibro_bewust_uitloggen','1')
     localStorage.removeItem('fibro_lettertype')
     localStorage.removeItem('fibro_lettertype')
+    if (window._uid) { localStorage.removeItem('fibro_thema_' + window._uid); localStorage.removeItem('fibro_profielcache_' + window._uid) } // v119
     await supabase.auth.signOut({ scope: 'local' })
   } catch(e) { /* ga toch door naar login, ook als signOut faalt */ }
   window.location.href = 'login.html'
 }
 
-async function init() {
-  let { data: { session } } = await supabase.auth.getSession()
-  if (!session) {
-    const s2 = await eisSessie()
-    if (!s2) return
-    session = s2
-  }
-  startBewaking()
+// v119: profiel van de vorige keer (zonder wallpaper; zonder avatar als het te groot is)
+const profielCacheSleutel = uid => 'fibro_profielcache_' + uid
+function leesProfielCache(uid) {
+  try {
+    const p = JSON.parse(localStorage.getItem(profielCacheSleutel(uid)) || 'null')
+    return p && typeof p === 'object' ? p : null
+  } catch (e) { return null }
+}
+function bewaarProfielCache(uid, p) {
+  try {
+    const kopie = Object.assign({}, p)
+    delete kopie.wallpaper_data
+    let s = JSON.stringify(kopie)
+    if (s.length > 300000) { delete kopie.avatar_data; s = JSON.stringify(kopie) }
+    localStorage.setItem(profielCacheSleutel(uid), s)
+  } catch (e) {}
+}
 
-  window._uid = session.user.id
-
-  await laadThema()
-  startHeartbeat().catch(e => console.warn('[heartbeat]', e))
-  initSync(session.user.id)
-  werkOpslagBalkBij()
-
-  const { data: profiel } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
-  window._profiel = profiel
+// Kop bovenaan (avatar, naam, bio, mood)
+function toonHero(profiel) {
 
   // Hero
   const heroAv = document.getElementById('heroAvatar')
@@ -1940,6 +1943,38 @@ async function init() {
     moodEl.innerHTML = ''
     for (const tk of [profiel.offline_emoji || '', profiel.offline_bericht || '']) { const s = document.createElement('span'); s.textContent = tk; moodEl.appendChild(s) }
   }
+}
+
+async function init() {
+  let { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
+    const s2 = await eisSessie()
+    if (!s2) return
+    session = s2
+  }
+  startBewaking()
+
+  window._uid = session.user.id
+
+  await laadThema()
+  startHeartbeat().catch(e => console.warn('[heartbeat]', e))
+  initSync(session.user.id)
+  werkOpslagBalkBij()
+
+  // v119: het profiel van de vorige keer meteen tonen (niet wachten op de server);
+  // het verse profiel komt op de achtergrond binnen en werkt de kop en de mood bij.
+  const uid = session.user.id
+  const bewaard = leesProfielCache(uid)
+  if (bewaard) { window._profiel = bewaard; toonHero(bewaard) }
+  const vers = supabase.from('profiles').select('*').eq('id', uid).single().then(({ data: profiel }) => {
+    if (!profiel) return
+    window._profiel = profiel
+    toonHero(profiel)
+    bewaarProfielCache(uid, profiel)
+    const moodEl = document.querySelector('#profiel-sectie .widget-blok[data-id="mood"] .widget-inhoud')
+    if (moodEl) renderProfiel('mood', moodEl)
+  }, () => {})
+  if (!bewaard) await vers
 
   // Cache opruimen
   import('./cache.js?v=95').then(m => {

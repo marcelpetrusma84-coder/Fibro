@@ -67,6 +67,7 @@ async function laadWallpaper(userId) {
     document.documentElement.style.setProperty('--card', 'rgba(255,255,255,0.06)')
     document.documentElement.style.setProperty('--border', 'rgba(255,255,255,0.12)')
   }
+  return !!wallpaper
 }
 
 // ========================
@@ -89,22 +90,57 @@ function pasLettertypeToe(lettertype) {
 // ========================
 // THEMA LADEN
 // ========================
-export async function laadThema() {
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return
-  const { data } = await supabase
-    .from('profiles')
-    .select('achtergrond_kleur,accent_kleur,accent_kleur2,lettertype,animatie')
-    .eq('id', session.user.id)
-    .single()
-  if (!data) return
+// v119: het thema wordt onthouden (localStorage) en meteen toegepast. De server wordt
+// op de achtergrond gevraagd of er iets veranderd is; zo wacht een pagina daar niet meer op.
+const THEMA_VELDEN = ['achtergrond_kleur', 'accent_kleur', 'accent_kleur2', 'lettertype', 'animatie']
+const themaSleutel = uid => 'fibro_thema_' + uid
+function leesThemaCache(uid) {
+  try {
+    const d = JSON.parse(localStorage.getItem(themaSleutel(uid)) || 'null')
+    return d && typeof d === 'object' ? d : null
+  } catch (e) { return null }
+}
+export function bewaarThemaCache(uid, data) {
+  if (!uid || !data) return
+  const d = {}
+  for (const k of THEMA_VELDEN) d[k] = data[k] == null ? null : data[k]
+  try { localStorage.setItem(themaSleutel(uid), JSON.stringify(d)) } catch (e) {}
+}
+const zelfdeThema = (a, b) => THEMA_VELDEN.every(k => (a[k] == null ? null : a[k]) === (b[k] == null ? null : b[k]))
+
+async function pasThemaToe(data, uid) {
   if (data.accent_kleur) document.documentElement.style.setProperty('--accent', data.accent_kleur)
   if (data.accent_kleur2) document.documentElement.style.setProperty('--accent2', data.accent_kleur2)
   if (data.lettertype) { laadFont(String(data.lettertype).split(",")[0].replace(/['"]/g, "").trim()); pasLettertypeToe(data.lettertype) }
   pasAnimatieToe(data.animatie)
-  await laadWallpaper(session.user.id)
-  const wallpaper = await laadFotoUitDB('bg_wallpaper_' + session.user.id)
-  if (!wallpaper && data.achtergrond_kleur) {
+  const heeftWallpaper = await laadWallpaper(uid)
+  if (!heeftWallpaper && data.achtergrond_kleur) {
     document.documentElement.style.setProperty('--bg', data.achtergrond_kleur)
   }
+}
+
+export async function laadThema() {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) return
+  const uid = session.user.id
+  const vanServer = supabase
+    .from('profiles')
+    .select('achtergrond_kleur,accent_kleur,accent_kleur2,lettertype,animatie')
+    .eq('id', uid)
+    .single()
+    .then(r => r.data || null, () => null)
+  const bewaard = leesThemaCache(uid)
+  if (bewaard) {
+    await pasThemaToe(bewaard, uid)
+    vanServer.then(data => {
+      if (!data || zelfdeThema(data, bewaard)) return
+      bewaarThemaCache(uid, data)
+      pasThemaToe(data, uid).catch(() => {})
+    })
+    return
+  }
+  const data = await vanServer
+  if (!data) return
+  bewaarThemaCache(uid, data)
+  await pasThemaToe(data, uid)
 }

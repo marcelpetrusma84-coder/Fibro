@@ -375,6 +375,7 @@ window.veiligeUrl = function(v){
   import * as DammenUI from './dammen-ui.js?v=96'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=108'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=95'
+  import { bewaardeSessieZonderInternet } from './offline.js?v=125'
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -435,6 +436,55 @@ window.veiligeUrl = function(v){
     } catch(e) { return null }
   }
 
+  // v125: per vriend de laatste 50 berichten bewaren, precies zoals de server ze geeft
+  // (dus nog versleuteld). Zonder internet toont de chat deze; de sleutel om ze te
+  // openen staat al op dit toestel. Berichten die je "voor mij" verwijderd hebt,
+  // worden niet bewaard.
+  const CHATLOG_MAX = 50
+  // Tijd van een bericht als getal (de server en het realtime-kanaal schrijven de tijd soms net anders)
+  function berichtTijd(b) {
+    const s = String((b && b.created_at) || '').replace(' ', 'T').replace(/([+-]\d\d)$/, '$1:00')
+    const t = Date.parse(s)
+    return isNaN(t) ? 0 : t
+  }
+  function nieuwsteEerst(a, b) {
+    return berichtTijd(b) - berichtTijd(a) || String(b.created_at).localeCompare(String(a.created_at))
+  }
+  function chatlogSleutel(vriendId) {
+    return huidigeUser && vriendId ? 'fibro_chatlog_' + huidigeUser.id + '_' + vriendId : null
+  }
+  function leesChatlog(vriendId) {
+    const key = chatlogSleutel(vriendId)
+    if (!key) return null
+    try {
+      const b = JSON.parse(localStorage.getItem(key) || 'null')
+      return Array.isArray(b) ? b : null
+    } catch(e) { return null }
+  }
+  function bewaarChatlog(vriendId, rijen) {
+    const key = chatlogSleutel(vriendId)
+    if (!key) return
+    try {
+      const nieuwste = rijen.slice().sort(nieuwsteEerst).slice(0, CHATLOG_MAX)
+      localStorage.setItem(key, JSON.stringify(nieuwste))
+    } catch(e) {
+      try { localStorage.removeItem(key) } catch(e2) {}
+    }
+  }
+  function voegAanChatlog(vriendId, bericht) {
+    if (!bericht || !bericht.id) return
+    const oud = leesChatlog(vriendId)
+    if (!oud || oud.some(b => b.id === bericht.id)) return
+    oud.push(bericht)
+    bewaarChatlog(vriendId, oud)
+  }
+  function wisUitChatlog(vriendId, id) {
+    const oud = leesChatlog(vriendId)
+    if (!oud) return
+    const rest = oud.filter(b => b.id !== id)
+    if (rest.length !== oud.length) bewaarChatlog(vriendId, rest)
+  }
+
   // ─── Geluiden ───
   function speelPlop(richting) {
     try {
@@ -460,7 +510,8 @@ window.veiligeUrl = function(v){
   async function init() {
     await laadThema()
     await laadWallpaper()
-    const { data: { session } } = await supabase.auth.getSession()
+    let { data: { session } } = await supabase.auth.getSession()
+    if (!session) session = bewaardeSessieZonderInternet() // v125: zonder internet niet naar het inlogscherm
     if (!session) { window.location.href = 'login.html'; return }
 
     huidigeUser = session.user
@@ -695,6 +746,7 @@ window.veiligeUrl = function(v){
     const container = document.getElementById('vriendenLijst')
 
     if (!error && friendships && friendships.length === 0) { try { localStorage.removeItem(vriendenCacheSleutel()) } catch (e) {} }
+    if ((error || !friendships) && bewaard) return // v125: ophalen mislukt (geen internet): de bewaarde lijst blijft staan
     if (error || !friendships || friendships.length === 0) {
       container.innerHTML = `<div class="geen-vrienden">Nog geen vrienden. Nodig iemand uit via je profiel!</div>`
       return
@@ -704,11 +756,12 @@ window.veiligeUrl = function(v){
       f.user_id === huidigeUser.id ? f.friend_id : f.user_id
     )
 
-    const { data } = await supabase
+    const { data, error: profielFout } = await supabase
       .from('profiles')
       .select('id, username, avatar_url, public_key, online_status, laatst_gezien') // v120: geen foto's/achtergronden
       .in('id', vriendIds)
 
+    if ((profielFout || !data) && bewaard) return // v125: zie hierboven
     if (!data || data.length === 0) {
       container.innerHTML = `<div class="geen-vrienden">Vrienden niet gevonden.</div>`
       return
@@ -759,7 +812,8 @@ window.veiligeUrl = function(v){
 
   // ─── Berichten laden + ontsleutelen ───
   async function laadBerichten() { console.time('[chat] berichten')
-    const { data, error } = await supabase
+    const vriendId = geselecteerdeVriend.id
+    let { data, error } = await supabase
       .from('messages')
       .select('*')
       .or(
@@ -769,6 +823,14 @@ window.veiligeUrl = function(v){
       .order('created_at', { ascending: false })
       .limit(50)
 console.timeLog('[chat] berichten', 'opgehaald')
+    if (geselecteerdeVriend?.id !== vriendId) return // intussen een andere chat geopend
+
+    // v125: ophalen mislukt (meestal: geen internet)? Dan de bewaarde berichten tonen.
+    let uitGeheugen = false
+    if (error || !data) {
+      const bewaard = leesChatlog(vriendId)
+      if (bewaard && bewaard.length) { data = bewaard; error = null; uitGeheugen = true }
+    }
 
     const container = document.getElementById('messages')
     const sysBericht = document.getElementById('chatSysBericht')
@@ -776,16 +838,31 @@ console.timeLog('[chat] berichten', 'opgehaald')
     container.appendChild(sysBericht)
 
     if (error || !data || data.length === 0) {
+      if (!error && data) bewaarChatlog(vriendId, [])
       voegSysBericht('Stuur je eerste bericht! 👋')
       return
     }
 
-    const verborgen = await haalVerborgen(data.map(b => b.id))
+    let verborgen = new Set()
+    if (!uitGeheugen) {
+      verborgen = await haalVerborgen(data.map(b => b.id))
+      if (!verborgen.mislukt) bewaarChatlog(vriendId, data.filter(b => !verborgen.has(b.id)))
+    }
+    if (uitGeheugen) data = data.slice().sort(nieuwsteEerst)
     for (const bericht of data.slice().reverse()) {
       if (verborgen.has(bericht.id)) continue
       await voegBerichtToe(bericht)
     }
     if (!container.querySelector('.msg-row')) voegSysBericht('Stuur je eerste bericht! 👋')
+    if (uitGeheugen) {
+      voegSysBericht(navigator.onLine
+        ? '⚠️ Berichten ophalen lukte niet. Je ziet de berichten die op dit toestel bewaard zijn.'
+        : '📴 Geen internet. Je ziet de berichten die op dit toestel bewaard zijn.')
+      // Zodra er weer internet is: de echte berichten ophalen (als deze chat nog open is)
+      window.addEventListener('online', () => {
+        if (geselecteerdeVriend?.id === vriendId) laadBerichten().then(() => tekenReacties(document.getElementById('messages'))).catch(() => {})
+      }, { once: true })
+    }
     scrollNaarOnder(true); console.timeEnd('[chat] berichten')
   }
 
@@ -811,9 +888,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (!ids || !ids.length) return set
     try {
       const { data, error } = await supabase.from('verborgen_berichten').select('bericht_id').in('bericht_id', ids)
-      if (error) { console.warn('[verwijderen] verborgen ophalen mislukt:', error.message); return set }
+      if (error) { console.warn('[verwijderen] verborgen ophalen mislukt:', error.message); set.mislukt = true; return set }
       for (const r of (data || [])) set.add(r.bericht_id)
-    } catch(e) { console.warn('[verwijderen] verborgen ophalen mislukt:', e) }
+    } catch(e) { console.warn('[verwijderen] verborgen ophalen mislukt:', e); set.mislukt = true }
     return set
   }
 
@@ -828,6 +905,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (!window._tekstPerId) window._tekstPerId = {}
     window._tekstPerId[id] = VERWIJDERD_TEKST
     document.querySelectorAll('#messages [data-aop="' + id + '"] .antwoord-citaat').forEach(el => { el.textContent = VERWIJDERD_TEKST })
+    wisUitChatlog(geselecteerdeVriend?.id, id) // v125
     const row = document.querySelector('#messages [data-mid="' + id + '"]')
     if (!row || row.dataset.verwijderd === '1') return
     const isMijn = row.classList.contains('out')
@@ -851,6 +929,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   function verbergRij(id) {
+    wisUitChatlog(geselecteerdeVriend?.id, id) // v125
     const row = document.querySelector('#messages [data-mid="' + id + '"]')
     if (!row) return
     const volgende = row.nextElementSibling
@@ -1374,6 +1453,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
         } else {
           speelPlop('in')
           const wasOnder = zitOnderaan()
+          voegAanChatlog(geselecteerdeVriend?.id, msg) // v125
           await voegBerichtToe(msg)
           await tekenReacties(document.getElementById('messages'))
           if (wasOnder) _scrollNu(); else toonNieuwKnop()

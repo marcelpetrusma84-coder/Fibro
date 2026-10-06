@@ -158,6 +158,7 @@ import { startHeartbeat } from './heartbeat.js?v=117'
 import { initSync } from './sync.js?v=122'
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
+import { bewaardeSessieZonderInternet } from './offline.js?v=125'
 import { startMeldingen } from './meldingen.js?v=122'
 import { haalPrivateKeyOp } from './crypto.js?v=95'
 pasBlokstijlToe()
@@ -1946,6 +1947,7 @@ function toonHero(profiel) {
 
 async function init() {
   let { data: { session } } = await supabase.auth.getSession()
+  if (!session) session = bewaardeSessieZonderInternet() // v125: zonder internet de bewaarde gegevens tonen
   if (!session) {
     const s2 = await eisSessie()
     if (!s2) return

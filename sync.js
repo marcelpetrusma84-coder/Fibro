@@ -3,7 +3,7 @@
 // Zelfde signaling-patroon als bellen.js: gedeeld kanaal met gesorteerde IDs
 import { supabase } from './supabase.js?v=95'
 import { ICE_SERVERS, iceReady } from './ice-config.js?v=106'
-import { startParen, opOnline, opNieuwePagina, onlineVrienden, vrienden as parenVrienden } from './paren.js?v=1'
+import { startParen, opOnline, opNieuwePagina, onlineVrienden, vrienden as parenVrienden } from './paren.js?v=2'
 
 let huidigeUserId = null
 let onlineGebruikers = new Set()
@@ -193,7 +193,7 @@ export function initSync(userId, callbacks = {}) {
     const nu = slotProberen()
     if (nu && !heeftSlot) {
       heeftSlot = true
-      console.log('[sync] Slot verkregen - sync actief in dit tabblad (v121)')
+      console.log('[sync] Slot verkregen - sync actief in dit tabblad (v122)')
       laadVrienden().then(() => startPresence())
     } else if (!nu && heeftSlot) {
       heeftSlot = false
@@ -202,7 +202,7 @@ export function initSync(userId, callbacks = {}) {
   }, 3000)
   if (slotProberen()) {
     heeftSlot = true
-    console.log('[sync] Slot verkregen - sync actief in dit tabblad (v121)')
+    console.log('[sync] Slot verkregen - sync actief in dit tabblad (v122)')
     laadVrienden().then(() => startPresence())
   } else {
     console.log('[sync] Ander tabblad heeft de sync - dit tabblad wacht')
@@ -286,7 +286,7 @@ async function openSyncKanaal(anderId) {
     stopSync()
     mislukking(anderId, 'Synckanaal niet open binnen ' + (KANAAL_OPEN_MS / 1000) + ' s')
   }, KANAAL_OPEN_MS)
-  syncKanaal = supabase
+  const kanaal = supabase
     .channel(naam, { config: { broadcast: { self: false }, private: true } })
     .on('broadcast', { event: 'signaal' }, (msg) => {
       verwerkSignaal(msg.payload.type, msg.payload.data)
@@ -298,6 +298,15 @@ async function openSyncKanaal(anderId) {
         // geweigerd (bijv. geen vrienden meer): niet blijven proberen, later opnieuw
         stopSync()
         mislukking(anderId, 'Synckanaal geweigerd')
+        return
+      }
+      if (status === 'CLOSED' && syncKanaal === kanaal) {
+        // door de server gesloten (bijv. inlogpas verlopen); komt nooit vanzelf terug
+        syncKanaal = null
+        if (dataChannel && dataChannel.readyState === 'open') return // verbinding werkt al
+        const partner = syncPartnerId
+        stopSync()
+        mislukking(partner, 'Synckanaal gesloten')
         return
       }
       if (status === 'SUBSCRIBED') clearTimeout(kanaalTimer)
@@ -312,6 +321,7 @@ async function openSyncKanaal(anderId) {
         }, 30000)
       }
     })
+  syncKanaal = kanaal
 }
 
 function startOfferRetry() {

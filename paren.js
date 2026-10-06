@@ -22,6 +22,7 @@ import { supabase } from './supabase.js?v=95'
 
 const MAX_VRIENDEN = 90                       // Supabase: ongeveer 100 kanalen per verbinding
 const GEWEIGERD_WACHT = [5000, 60000, 600000] // geweigerd kanaal: daarna niet meer proberen
+const GESLOTEN_WACHT = [2000, 10000, 60000, 300000] // door de server gesloten: opnieuw openen
 const PAGINA = Math.random().toString(36).slice(2, 10)
 
 let ikId = null
@@ -93,7 +94,7 @@ async function laadVrienden() {
 
 function openKamer(vriendId) {
   if (kamers.has(vriendId)) return
-  const kamer = { vriendId, naam: kamerNaam(vriendId), kanaal: null, open: false, eerste: true, metas: [], weigeringen: 0, timer: null }
+  const kamer = { vriendId, naam: kamerNaam(vriendId), kanaal: null, open: false, eerste: true, metas: [], weigeringen: 0, gesloten: 0, openSinds: 0, timer: null }
   kamers.set(vriendId, kamer)
   bouwKanaal(kamer).catch((e) => console.warn('[paren] kanaal openen mislukt:', e))
 }
@@ -116,10 +117,12 @@ async function bouwKanaal(kamer) {
       if (status === 'SUBSCRIBED') {
         kamer.open = true
         kamer.weigeringen = 0
+        kamer.openSinds = Date.now()
         volgen(kamer)
         return
       }
       kamer.open = false
+      if (status === 'CLOSED') { doorServerGesloten(kamer); return }
       if (status !== 'CHANNEL_ERROR') return
       const tekst = String((fout && fout.message) || fout || '')
       if (/unauthori[sz]ed|permission/i.test(tekst)) geweigerd(kamer)
@@ -145,6 +148,26 @@ function geweigerd(kamer) {
     kamer.eerste = true
     bouwKanaal(kamer).catch((e) => console.warn('[paren] kanaal openen mislukt:', e))
   }, GEWEIGERD_WACHT[n])
+}
+
+// De server sluit een kanaal bijvoorbeeld als de inlogpas verlopen is: die wordt alleen
+// vernieuwd zolang de pagina in beeld is, dus na een uur op de achtergrond. Een gesloten
+// kanaal komt nooit vanzelf terug. Eerst de pas vernieuwen (getSession doet dat zo nodig),
+// dan opnieuw openen.
+function doorServerGesloten(kamer) {
+  kamer.kanaal = null
+  zetOffline(kamer)
+  if (Date.now() - kamer.openSinds > 120000) kamer.gesloten = 0
+  const wachtMs = GESLOTEN_WACHT[Math.min(kamer.gesloten++, GESLOTEN_WACHT.length - 1)]
+  console.log('[paren] kanaal met een vriend door de server gesloten - opnieuw over ' + Math.round(wachtMs / 1000) + ' s')
+  clearTimeout(kamer.timer)
+  kamer.timer = setTimeout(async () => {
+    if (kamers.get(kamer.vriendId) !== kamer || kamer.kanaal) return
+    try { await supabase.auth.getSession() } catch (e) {}
+    if (kamers.get(kamer.vriendId) !== kamer || kamer.kanaal) return
+    kamer.eerste = true
+    bouwKanaal(kamer).catch((e) => console.warn('[paren] kanaal openen mislukt:', e))
+  }, wachtMs)
 }
 
 function huidigeMeta() {

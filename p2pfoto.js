@@ -5,7 +5,7 @@
 import { ICE_SERVERS } from './ice-config.js?v=106'
 // v121 (stap B deel 4): aanwezigheid en signalen gaan via paren.js, een afgeschermd
 // kanaal per vriendenpaar, in plaats van het openbare kanaal fibro-aanwezigheid.
-import { startParen, isOnline, heeftKenmerk, opBericht, stuurNaar, zetKenmerk } from './paren.js?v=1'
+import { startParen, isOnline, heeftKenmerk, opBericht, stuurNaar, zetKenmerk } from './paren.js?v=2'
 
 let huidigeUserId = null
 let signaalAfmelden = null

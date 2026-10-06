@@ -4,7 +4,9 @@
    Beide spelers zitten in hetzelfde spelkanaal; uit de naam daarvan komt
    de seed, dus jullie rennen op precies dezelfde baan. */
 
-const PHASER_URL = 'https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js'
+// v124: Phaser 3.80.1 staat in de eigen repo (phaser.min.js), niet meer via cdnjs.
+// Het adres wordt bepaald vanaf dit bestand, zodat het vanaf elke pagina klopt.
+const PHASER_URL = new URL('./phaser.min.js?v=1', import.meta.url).href
 const FONT_URL = 'lettertypen/press-start-2p.css?v=1' // v118: eigen repo
 
 function laadPhaser() {

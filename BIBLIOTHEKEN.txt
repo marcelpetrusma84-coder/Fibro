@@ -1,0 +1,72 @@
+Bibliotheken van anderen in Fibro
+=================================
+
+Fibro laadt geen code van andere websites. Bibliotheken van anderen staan
+ongewijzigd in deze repo. Hieronder staat per bibliotheek de versie, de bron,
+de licentie en de sha512 van het bestand (zo is na te gaan dat het precies het
+origineel is).
+
+Lettertypen: zie lettertypen/LICENTIES.txt (SIL Open Font License 1.1).
+
+
+supabase-lib.js
+---------------
+supabase-js 2.113.0, gebundeld met esbuild (zie de kop van het bestand).
+Licentie: MIT. https://github.com/supabase/supabase-js
+
+
+mediabunny.js
+-------------
+Mediabunny. Licentie: MPL-2.0. https://github.com/Vanilagy/mediabunny
+
+
+qrcode.min.js
+-------------
+QRCode.js 1.0.0 (davidshimjs), gebruikt op vrienden.html (uitnodigings-QR).
+Bron: https://github.com/davidshimjs/qrcodejs (qrcode.min.js)
+sha512: 08d80845e706a3b9e985b799d3849cd7791ad3ba5aa9d793bb4591d4833890d7299810144874905f416c94d8530da74be0ee520066a91ade05a1da8bf0ccb498
+
+The MIT License (MIT)
+---------------------
+Copyright (c) 2012 davidshimjs
+
+Permission is hereby granted, free of charge,
+to any person obtaining a copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+phaser.min.js
+-------------
+Phaser 3.80.1, gebruikt door Runner & Gunner (runner-gunner-ui.js en
+spellen/runner-gunner.html).
+Bron: https://github.com/phaserjs/phaser (tag v3.80.1, dist/phaser.min.js),
+gelijk aan het npm-pakket phaser@3.80.1.
+sha512: cd02b5d6eed0ca15162e684af8aca7e0e69cd27d9de7e01cb848826a07e6d98ac66b6c0cadd6e3e4425a9a6126194edb1a7724991a0d4d44f6f4397e0da45296
+
+The MIT License (MIT)
+
+Copyright (c) 2024 Richard Davey, Phaser Studio Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

@@ -1,5 +1,7 @@
 // fibro-v28: supabase.js laadt nu supabase-lib.js uit de eigen repo. Een nieuwe
 // CACHE_VERSION gooit alle oude scriptkopieen weg, zodat iedereen de nieuwe ophaalt.
+// v30 (zonder nieuwe CACHE_VERSION): html-pagina's worden ook bewaard, voor als er
+// geen internet is. Zie hieronder bij 'Html-pagina's'.
 const CACHE_VERSION = 'fibro-v29'
 
 self.addEventListener('install', function(event) {
@@ -50,7 +52,34 @@ self.addEventListener('fetch', function(event) {
         )
         return
       }
-      // Al het andere (HTML, afbeeldingen): browser regelt het zelf
+      // Html-pagina's (v30): eerst van internet, zodat je online altijd de nieuwste
+      // versie krijgt. Lukt internet niet, dan de laatst bewaarde kopie: zo opent Fibro
+      // ook zonder internet. Een kopie wordt bewaard zonder ?vriend=... e.d. (die leest
+      // de pagina zelf uit het adres) en verdwijnt met een nieuwe CACHE_VERSION, samen
+      // met de scripts waar ze bij hoort.
+      if (req.mode === 'navigate' && /(\/|\.html)$/.test(url.pathname)) {
+        const sleutel = url.origin + url.pathname + (url.pathname.endsWith('/') ? 'index.html' : '')
+        event.respondWith((async function() {
+          let res
+          try {
+            res = await fetch(req)
+          } catch (fout) {
+            const hit = await caches.open(CACHE_VERSION).then(c => c.match(sleutel)).catch(() => null)
+            if (hit) return hit
+            throw fout
+          }
+          // Bewaren mag nooit de pagina zelf in de weg zitten
+          try {
+            if (res.ok && res.type === 'basic') {
+              const kopie = res.clone()
+              event.waitUntil(caches.open(CACHE_VERSION).then(c => c.put(sleutel, kopie)).catch(() => {}))
+            }
+          } catch (e) {}
+          return res
+        })())
+        return
+      }
+      // Al het andere (afbeeldingen e.d.): browser regelt het zelf
 })
 self.addEventListener('push', function(event) {
   const data = event.data ? event.data.json() : {}

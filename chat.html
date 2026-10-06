@@ -375,7 +375,7 @@ window.veiligeUrl = function(v){
   import * as DammenUI from './dammen-ui.js?v=96'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=108'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=95'
-  import { bewaardeSessieZonderInternet } from './offline.js?v=125'
+  import { bewaardeSessieZonderInternet } from './offline.js?v=126'
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -813,7 +813,9 @@ window.veiligeUrl = function(v){
   // ─── Berichten laden + ontsleutelen ───
   async function laadBerichten() { console.time('[chat] berichten')
     const vriendId = geselecteerdeVriend.id
-    let { data, error } = await supabase
+    // v126: zonder internet niet eerst de server proberen. supabase-js probeert dan zelf
+    // een paar keer opnieuw (samen zo'n 7 seconden) voordat de bewaarde berichten komen.
+    let { data, error } = !navigator.onLine ? { data: null, error: { message: 'geen internet' } } : await supabase
       .from('messages')
       .select('*')
       .or(

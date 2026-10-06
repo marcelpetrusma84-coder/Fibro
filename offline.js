@@ -1,17 +1,23 @@
 // offline.js - Fibro zonder internet (v125)
 // 1. Een balkje "Geen internet" bovenaan, zolang het toestel geen verbinding heeft.
-//    Het verdwijnt vanzelf zodra er weer internet is.
+//    Het verdwijnt vanzelf zodra er weer internet is. v126: na 5 seconden krimpt het
+//    tot een klein bolletje, zodat het niets van de pagina bedekt.
 // 2. bewaardeSessieZonderInternet(): zonder internet kan een verlopen inlogpas niet
 //    vernieuwd worden. In plaats van naar het inlogscherm te gaan, toont de pagina dan
 //    wat er op dit toestel bewaard is. Zodra er weer internet is, laadt de pagina
 //    opnieuw en wordt de pas gewoon vernieuwd.
 
 const BALK_ID = 'fibro-offline-balk'
+const VOLLE_TEKST = '\u{1F4F4} Geen internet \u00B7 je ziet wat er op dit toestel bewaard is'
+let krimpTimer = null
+let wasOffline = false
 
 function werkBalkBij() {
   if (!document.body) return
   let balk = document.getElementById(BALK_ID)
   if (navigator.onLine) {
+    wasOffline = false
+    clearTimeout(krimpTimer)
     if (balk) balk.style.display = 'none'
     return
   }
@@ -19,7 +25,6 @@ function werkBalkBij() {
     balk = document.createElement('div')
     balk.id = BALK_ID
     balk.setAttribute('role', 'status')
-    balk.textContent = '\u{1F4F4} Geen internet \u00B7 je ziet wat er op dit toestel bewaard is'
     balk.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top, 0px) + 6px);left:50%;transform:translateX(-50%);' +
       'z-index:99998;max-width:calc(100% - 24px);padding:5px 12px;border-radius:999px;background:rgba(40,24,60,0.94);' +
       'border:0.5px solid rgba(255,255,255,0.25);color:#f3e8ff;font:12px "DM Sans",sans-serif;text-align:center;' +
@@ -27,6 +32,15 @@ function werkBalkBij() {
     document.body.appendChild(balk)
   }
   balk.style.display = 'block'
+  if (wasOffline) return // al offline: niet opnieuw de volle tekst tonen
+  wasOffline = true
+  balk.textContent = VOLLE_TEKST
+  balk.style.padding = '5px 12px'
+  clearTimeout(krimpTimer)
+  krimpTimer = setTimeout(() => {
+    balk.textContent = '\u{1F4F4}'
+    balk.style.padding = '3px 7px'
+  }, 5000)
 }
 
 window.addEventListener('online', werkBalkBij)

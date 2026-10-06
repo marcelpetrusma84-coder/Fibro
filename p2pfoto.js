@@ -2,12 +2,13 @@
 // Foto's gaan rechtstreeks van apparaat naar apparaat, NIET via de server,
 // zolang beide kanten tegelijk online zijn (fase 1 — geen offline-fallback nog).
 
-import { supabase } from './supabase.js?v=95'
 import { ICE_SERVERS } from './ice-config.js?v=106'
+// v121 (stap B deel 4): aanwezigheid en signalen gaan via paren.js, een afgeschermd
+// kanaal per vriendenpaar, in plaats van het openbare kanaal fibro-aanwezigheid.
+import { startParen, isOnline, heeftKenmerk, opBericht, stuurNaar, zetKenmerk } from './paren.js?v=1'
 
 let huidigeUserId = null
-let presenceKanaal = null
-let onlineVrienden = new Set()      // user-ID's die nu live in de app zitten
+let signaalAfmelden = null
 
 // Per-vriend WebRTC state — meerdere gelijktijdige P2P-verbindingen mogelijk
 const verbindingen = {}             // { vriendId: { pc, dataChannel, status } }
@@ -17,35 +18,26 @@ let onFotoOntvangenCallback = null
 let onStatusCallback = null         // (vriendId, status) — voor UI-feedback
 
 // ════════════════════════════════
-// INIT: presence bijhouden + signaling-listener
+// INIT: aanwezigheid (via paren.js) + signaling-listener
 // ════════════════════════════════
 export function initP2pFoto(userId, callbacks = {}) {
   huidigeUserId = userId
   onFotoOntvangenCallback = callbacks.onFotoOntvangen || null
   onStatusCallback = callbacks.onStatus || null
 
-  if (presenceKanaal) supabase.removeChannel(presenceKanaal)
-  presenceKanaal = supabase.channel('fibro-aanwezigheid', {
-    config: { presence: { key: userId } }
-  })
-
-  presenceKanaal
-    .on('presence', { event: 'sync' }, () => {
-      const staat = presenceKanaal.presenceState()
-      onlineVrienden = new Set(Object.keys(staat))
+  // Vrienden zien zo dat deze pagina foto's kan ontvangen
+  zetKenmerk('foto', true)
+  if (!signaalAfmelden) {
+    signaalAfmelden = opBericht('p2p-signaal', (bericht, vanVriendId) => {
+      verwerkSignaal(vanVriendId, bericht).catch((e) => console.warn('[p2pfoto] signaal fout:', e))
     })
-    .on('broadcast', { event: 'p2p-signaal' }, (msg) => {
-      verwerkSignaal(msg.payload)
-    })
-    .subscribe(async (status) => {
-      if (status === 'SUBSCRIBED') {
-        await presenceKanaal.track({ online_op: new Date().toISOString() })
-      }
-    })
+  }
+  startParen(userId)
 }
 
+// Online met een pagina die foto's kan ontvangen (chat of profiel)
 export function isVriendOnline(vriendId) {
-  return onlineVrienden.has(vriendId)
+  return isOnline(vriendId) && heeftKenmerk(vriendId, 'foto')
 }
 
 function meldStatus(vriendId, status) {
@@ -53,19 +45,16 @@ function meldStatus(vriendId, status) {
 }
 
 // ════════════════════════════════
-// SIGNALING (via broadcast op het gedeelde presence-kanaal)
+// SIGNALING (via het afgeschermde kanaal van het vriendenpaar, paren.js)
 // ════════════════════════════════
 async function stuurSignaal(naarVriendId, type, data) {
-  await presenceKanaal.send({
-    type: 'broadcast',
-    event: 'p2p-signaal',
-    payload: { van: huidigeUserId, naar: naarVriendId, type, data }
-  })
+  // JSON-kopie: een RTCIceCandidate of RTCSessionDescription wordt zo een gewoon object
+  await stuurNaar(naarVriendId, 'p2p-signaal', JSON.parse(JSON.stringify({ type, data })))
 }
 
-async function verwerkSignaal(payload) {
-  const { van, naar, type, data } = payload
-  if (naar !== huidigeUserId) return // niet voor mij bedoeld
+async function verwerkSignaal(van, bericht) {
+  // van komt van paren.js: alleen de vriend van dat kanaal kan het sturen
+  const { type, data } = bericht || {}
 
   if (type === 'offer') {
     await accepteerVerbinding(van, data)
@@ -260,5 +249,4 @@ export function sluitP2pVerbinding(vriendId) {
 
 export function sluitAlleP2pVerbindingen() {
   Object.keys(verbindingen).forEach(sluitP2pVerbinding)
-  if (presenceKanaal) { supabase.removeChannel(presenceKanaal); presenceKanaal = null }
 }

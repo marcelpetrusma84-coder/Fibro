@@ -155,11 +155,11 @@ import { laadThema } from './thema.js?v=119'
 import { pasBlokstijlToe } from './blokstijl.js?v=95'
 import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=95'
 import { startHeartbeat } from './heartbeat.js?v=117'
-import { initSync } from './sync.js?v=116'
+import { initSync } from './sync.js?v=121'
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
 import { onderzoekVideo } from './videohulp.js?v=114'
-import { startMeldingen } from './meldingen.js?v=101'
+import { startMeldingen } from './meldingen.js?v=121'
 import { haalPrivateKeyOp } from './crypto.js?v=95'
 pasBlokstijlToe()
 
@@ -2031,7 +2031,7 @@ if ('serviceWorker' in navigator) {
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=101"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=101"; startOngelezen()</script>
-<script type="module">import { checkTimers } from "./timer-melding.js?v=101"; setTimeout(checkTimers,4000)</script>
+<script type="module">import { checkTimers } from "./timer-melding.js?v=121"; setTimeout(checkTimers,4000)</script>
 <script src="./fotoviewer.js?v=3"></script>
 <script type="module" src="blokkade.js?v=1"></script>
 </body>

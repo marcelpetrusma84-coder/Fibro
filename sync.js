@@ -3,8 +3,8 @@
 // Zelfde signaling-patroon als bellen.js: gedeeld kanaal met gesorteerde IDs
 import { supabase } from './supabase.js?v=95'
 import { ICE_SERVERS, iceReady } from './ice-config.js?v=106'
+import { startParen, opOnline, opNieuwePagina, onlineVrienden, vrienden as parenVrienden } from './paren.js?v=1'
 
-let presenceKanaal = null
 let huidigeUserId = null
 let onlineGebruikers = new Set()
 let onOnlineChangeCallback = null
@@ -193,7 +193,7 @@ export function initSync(userId, callbacks = {}) {
     const nu = slotProberen()
     if (nu && !heeftSlot) {
       heeftSlot = true
-      console.log('[sync] Slot verkregen - sync actief in dit tabblad (v116)')
+      console.log('[sync] Slot verkregen - sync actief in dit tabblad (v121)')
       laadVrienden().then(() => startPresence())
     } else if (!nu && heeftSlot) {
       heeftSlot = false
@@ -202,64 +202,51 @@ export function initSync(userId, callbacks = {}) {
   }, 3000)
   if (slotProberen()) {
     heeftSlot = true
-    console.log('[sync] Slot verkregen - sync actief in dit tabblad (v116)')
+    console.log('[sync] Slot verkregen - sync actief in dit tabblad (v121)')
     laadVrienden().then(() => startPresence())
   } else {
     console.log('[sync] Ander tabblad heeft de sync - dit tabblad wacht')
   }
 }
 
+// v121 (stap B deel 4): wie er online is, komt uit paren.js: per vriend een afgeschermd
+// kanaal (paar_<a>_<b>, private), gedeeld met p2pfoto.js en meldingen.js. Het oude
+// openbare kanaal fibro-online is weg: alleen vrienden zien nog dat je online bent.
 let presenceBezig = false
 function startPresence() {
   if (presenceBezig) { console.log('[sync] Presence al bezig - dubbele start genegeerd'); return }
   presenceBezig = true
-  if (presenceKanaal) { supabase.removeChannel(presenceKanaal); presenceKanaal = null }
-  // Ruim eventuele achtergebleven kanalen met deze naam op: een hergebruikt
-  // kanaal heeft al subscribe() gehad en weigert dan nieuwe .on()-callbacks.
-  for (const k of supabase.getChannels()) {
-    if (k.topic === 'realtime:fibro-online') supabase.removeChannel(k)
+  opOnline(onlineVeranderd)
+  opNieuwePagina(vriendNieuwePagina)
+  onlineVeranderd()
+}
+
+function onlineVeranderd() {
+  vrienden = new Set(parenVrienden())
+  const nu = new Set(onlineVrienden())
+  const anders = nu.size !== onlineGebruikers.size || [...nu].some((id) => !onlineGebruikers.has(id))
+  onlineGebruikers = nu
+  if (anders) {
+    console.log('[sync] Online vrienden:', [...onlineGebruikers])
+    if (onOnlineChangeCallback) onOnlineChangeCallback([...onlineGebruikers])
+    toonDebugBadge()
   }
-  presenceKanaal = supabase
-    .channel('fibro-online', { config: { presence: { key: huidigeUserId } } })
-    .on('presence', { event: 'sync' }, () => {
-      const state = presenceKanaal.presenceState()
-      onlineGebruikers = new Set(Object.keys(state).filter((id) => id !== huidigeUserId))
-      console.log('[sync] Online gebruikers:', [...onlineGebruikers])
-      if (onOnlineChangeCallback) onOnlineChangeCallback([...onlineGebruikers])
-      toonDebugBadge()
-      if (syncPartnerId && !onlineGebruikers.has(syncPartnerId)) stopSync()
-      checkSyncStart()
-    })
-    .on('presence', { event: 'join' }, ({ key }) => {
-      // v107: de vriend opende een nieuwe pagina terwijl wij nog aan zijn oude pagina
-      // hingen (zelfde naam, dus geen 'weg'-melding). Opnieuw beginnen; de 'sync'
-      // die hierna komt, start de sync weer.
-      if (key && key === syncPartnerId && !(dataChannel && dataChannel.readyState === 'open')) {
-        console.log('[sync] Vriend opnieuw online - sync opnieuw')
-        stopSync()
-      }
-    })
-    .subscribe(async (status) => {
-      console.log('[sync] Presence-kanaal status:', status)
-      if (status !== 'SUBSCRIBED') presenceBezig = false
-      if (status === 'SUBSCRIBED') {
-        await presenceKanaal.track({ online_sinds: new Date().toISOString() })
-      }
-      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        console.log('[sync] Presence-kanaal weggevallen — reconnect over 5 sec')
-        setTimeout(startPresence, 5000)
-      }
-    })
+  if (syncPartnerId && !onlineGebruikers.has(syncPartnerId)) stopSync()
+  checkSyncStart()
+}
+
+// v107: de vriend opende een nieuwe pagina terwijl wij nog aan zijn oude pagina hingen
+// (zelfde naam, dus geen 'weg'-melding). Opnieuw beginnen; de online-melding die hierna
+// komt (paren.js), start de sync weer.
+function vriendNieuwePagina(id) {
+  if (id && id === syncPartnerId && !(dataChannel && dataChannel.readyState === 'open')) {
+    console.log('[sync] Vriend opnieuw online - sync opnieuw')
+    stopSync()
+  }
 }
 
 async function laadVrienden() {
-  const { data, error } = await supabase
-    .from('friendships')
-    .select('user_id,friend_id')
-    .or('user_id.eq.' + huidigeUserId + ',friend_id.eq.' + huidigeUserId)
-    .eq('status', 'accepted')
-  if (error) { console.warn('[sync] vrienden laden mislukt:', error); return }
-  vrienden = new Set((data || []).map((f) => f.user_id === huidigeUserId ? f.friend_id : f.user_id))
+  vrienden = new Set(await startParen(huidigeUserId))
   console.log('[sync] Vrienden geladen:', vrienden.size)
 }
 
@@ -274,18 +261,46 @@ function checkSyncStart() {
   isInitiator = huidigeUserId < ander
   console.log('[sync] Start sync met', ander, '- initiator:', isInitiator)
   zetP2pStatus('verbinden...')
-  openSyncKanaal(ander)
+  openSyncKanaal(ander).catch((e) => console.log('[sync] Synckanaal openen mislukt:', e && e.message))
 }
 
-function openSyncKanaal(anderId) {
+// v121: het synckanaal is afgeschermd (private): alleen jij en die vriend kunnen erin.
+// Een kanaal met dezelfde naam dat nog aan het sluiten is, eerst helemaal laten sluiten:
+// anders geeft supabase.channel() dat sluitende kanaal terug en gaat het nooit open
+// (zelfde les als bellen.js). Is het kanaal na 15 s niet open (bijv. geweigerd), dan
+// stopt deze poging en volgt later een nieuwe.
+const KANAAL_OPEN_MS = 15000
+let kanaalPoging = 0
+let kanaalTimer = null
+async function openSyncKanaal(anderId) {
+  const poging = ++kanaalPoging
   const ids = [huidigeUserId, anderId].sort()
+  const naam = 'syncdata_' + ids[0] + '_' + ids[1]
+  for (const k of supabase.getChannels()) {
+    if (k.topic === 'realtime:' + naam) await Promise.race([supabase.removeChannel(k), new Promise((r) => setTimeout(r, 3000))])
+  }
+  if (poging !== kanaalPoging || syncPartnerId !== anderId) return
+  clearTimeout(kanaalTimer)
+  kanaalTimer = setTimeout(() => {
+    if (poging !== kanaalPoging || syncPartnerId !== anderId) return
+    stopSync()
+    mislukking(anderId, 'Synckanaal niet open binnen ' + (KANAAL_OPEN_MS / 1000) + ' s')
+  }, KANAAL_OPEN_MS)
   syncKanaal = supabase
-    .channel('syncdata_' + ids[0] + '_' + ids[1], { config: { broadcast: { self: false } } })
+    .channel(naam, { config: { broadcast: { self: false }, private: true } })
     .on('broadcast', { event: 'signaal' }, (msg) => {
       verwerkSignaal(msg.payload.type, msg.payload.data)
     })
-    .subscribe((status) => {
+    .subscribe((status, fout) => {
       console.log('[sync] Synckanaal status:', status)
+      if (poging !== kanaalPoging) return
+      if (status === 'CHANNEL_ERROR' && /unauthori[sz]ed|permission/i.test(String((fout && fout.message) || fout || ''))) {
+        // geweigerd (bijv. geen vrienden meer): niet blijven proberen, later opnieuw
+        stopSync()
+        mislukking(anderId, 'Synckanaal geweigerd')
+        return
+      }
+      if (status === 'SUBSCRIBED') clearTimeout(kanaalTimer)
       if (status === 'SUBSCRIBED' && isInitiator) {
         offerRetryCount = 0
         startOfferRetry()
@@ -1304,6 +1319,8 @@ export function vraagVriendVideo(vriendId, opVoortgang) {
 
 function stopSync() {
   console.log('[sync] Sync gestopt')
+  kanaalPoging++
+  clearTimeout(kanaalTimer)
   clearTimeout(offerRetryTimer)
   clearTimeout(syncTimeout)
   clearTimeout(herstartTimer)

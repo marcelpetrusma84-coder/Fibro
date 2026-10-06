@@ -1,14 +1,13 @@
 // meldingen.js — buzz en online-meldingen op elke pagina (4 september 2026)
 import { supabase } from './supabase.js?v=95'
+import { startParen, opOnline } from './paren.js?v=1'
 
 const BUZZ_UIT = 'fibro_buzz_uit'
 const ONLINE_UIT = 'fibro_online_melding_uit'
 let laatsteBuzz = 0
 let mKanaal = null
-let pKanaal = null
 let eigenId = null
-let bekend = new Set()
-let eersteRonde = true
+let onlineAfmelden = null
 
 function aan(sleutel) {
   try { return localStorage.getItem(sleutel) !== '1' } catch(e) { return true }
@@ -134,38 +133,24 @@ function startBuzzLuisteraar() {
     .subscribe()
 }
 
-async function startOnlineLuisteraar() {
-  try { if (localStorage.getItem('fibro_ik_offline') === '1') return } catch (e) {} // helemaal offline: niet aanmelden, geen meldingen
-  // Alleen vrienden melden, niet iedereen
-  let vrienden = new Set()
-  try {
-    const { data } = await supabase.from('friendships')
-      .select('user_id,friend_id')
-      .or('user_id.eq.' + eigenId + ',friend_id.eq.' + eigenId)
-      .eq('status', 'accepted')
-    for (const r of (data || [])) {
-      vrienden.add(r.user_id === eigenId ? r.friend_id : r.user_id)
-    }
-  } catch(e) { console.warn('[meldingen] vrienden ophalen mislukt:', e) }
-  console.log('[meldingen] vrienden voor online-melding:', [...vrienden])
-
-  if (pKanaal) supabase.removeChannel(pKanaal)
-  pKanaal = supabase
-    .channel('fibro-online-meldingen', { config: { presence: { key: eigenId } } })
-    .on('presence', { event: 'sync' }, async () => {
-      const nu = new Set(Object.keys(pKanaal.presenceState()).filter(i => i !== eigenId))
-      console.log('[meldingen] presence:', [...nu], 'eerste ronde:', eersteRonde)
-      if (eersteRonde) { bekend = nu; eersteRonde = false; return }
-      for (const id of nu) {
-        if (!bekend.has(id) && vrienden.has(id) && aan(ONLINE_UIT) && localStorage.getItem('fibro_ik_offline') !== '1') {
-          toonMelding('\u{1F7E2} ' + (await haalNaam(id)) + ' is online', 'rgba(74,222,128,0.6)', () => { window.location.href = 'chat.html?vriend=' + id })
-        }
-      }
-      bekend = nu
+// v121 (stap B deel 4): wie online komt, zie je via paren.js (een afgeschermd kanaal per
+// vriendenpaar) in plaats van het openbare kanaal fibro-online-meldingen. Er kunnen
+// alleen vrienden in, dus apart vrienden ophalen is niet meer nodig.
+// Een vriend die korter dan een minuut weg was (bijv. een andere pagina opende), of die
+// 'helemaal offline' aan heeft staan, geeft geen melding.
+const ONLINE_MELDING_NA_MS = 60000
+function startOnlineLuisteraar() {
+  try { if (localStorage.getItem('fibro_ik_offline') === '1') return } catch (e) {} // helemaal offline: geen meldingen
+  if (!onlineAfmelden) {
+    onlineAfmelden = opOnline(async (w) => {
+      if (!w || !w.id || !w.online || w.eerste || w.gelijk || w.stil) return
+      if (typeof w.wegMs === 'number' && w.wegMs < ONLINE_MELDING_NA_MS) return
+      if (!aan(ONLINE_UIT) || localStorage.getItem('fibro_ik_offline') === '1') return
+      const id = w.id
+      toonMelding('\u{1F7E2} ' + (await haalNaam(id)) + ' is online', 'rgba(74,222,128,0.6)', () => { window.location.href = 'chat.html?vriend=' + id })
     })
-    .subscribe(async (st) => {
-      if (st === 'SUBSCRIBED') await pKanaal.track({ online_sinds: new Date().toISOString() })
-    })
+  }
+  startParen(eigenId)
 }
 
 export async function startMeldingen() {

@@ -1,6 +1,6 @@
 // fibro-v28: supabase.js laadt nu supabase-lib.js uit de eigen repo. Een nieuwe
 // CACHE_VERSION gooit alle oude scriptkopieen weg, zodat iedereen de nieuwe ophaalt.
-const CACHE_VERSION = 'fibro-v28'
+const CACHE_VERSION = 'fibro-v29'
 
 self.addEventListener('install', function(event) {
   self.skipWaiting()

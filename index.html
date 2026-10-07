@@ -1811,27 +1811,29 @@ async function renderGastenboek(c, uid) {
   // Zonder internet niet eerst de server proberen (die probeert het een paar keer opnieuw).
   const gbSleutel = 'fibro_gastenboek_' + uid
   const leesGb = () => {
-    try { const a = JSON.parse(localStorage.getItem(gbSleutel) || 'null'); return Array.isArray(a) ? a : [] } catch (e) { return [] }
+    try {
+      const a = JSON.parse(localStorage.getItem(gbSleutel) || 'null')
+      if (!Array.isArray(a)) return []
+      // v129: de foto van een schrijver staat maar bij één bericht; hier weer bij al zijn berichten zetten
+      const foto = {}
+      for (const e of a) if (e && e.author_id && e.author && e.author.avatar_data) foto[e.author_id] = e.author.avatar_data
+      return a.map(e => (e && e.author && !e.author.avatar_data && foto[e.author_id]) ? Object.assign({}, e, { author: Object.assign({}, e.author, { avatar_data: foto[e.author_id] }) }) : e)
+    } catch (e) { return [] }
   }
   const bewaarGb = lijst => {
     try {
+      // v129: elke foto maar één keer bewaren (bij het eerste bericht van die schrijver)
+      const gehad = {}
+      lijst = lijst.map(e => {
+        if (!e || !e.author || !e.author.avatar_data) return e
+        if (!gehad[e.author_id]) { gehad[e.author_id] = true; return e }
+        return Object.assign({}, e, { author: Object.assign({}, e.author, { avatar_data: null }) })
+      })
       let s = JSON.stringify(lijst)
       // Te groot (foto's van de schrijvers): dan zonder foto, de emoji blijft
       if (s.length > 300000) s = JSON.stringify(lijst.map(e => Object.assign({}, e, { author: e.author ? { username: e.author.username, avatar_url: e.author.avatar_url } : e.author })))
       localStorage.setItem(gbSleutel, s)
     } catch (e) {}
-  }
-  const haal = async () => {
-    if (!navigator.onLine) return leesGb()
-    const { data, error } = await supabase
-      .from('guestbook_entries')
-      .select('*, author:author_id(username,avatar_url,avatar_data)')
-      .eq('profile_id', uid)
-      .order('created_at', { ascending: false })
-      .limit(40)
-    if (error || !Array.isArray(data)) return leesGb()
-    bewaarGb(data)
-    return data
   }
 
   // Papier: warme ondergrond, blauwe liniatuur, rode kantlijn, vouw links.
@@ -1923,10 +1925,54 @@ async function renderGastenboek(c, uid) {
     tekenBlad(richting)
   }
 
-  alles = await haal()
-  tekenBlad(null)
+  // v129: eerst meteen het bewaarde boek tonen, dan op de achtergrond het verse boek ophalen.
+  // Eerst alleen de tekst (klein), daarna de foto's van de schrijvers: elke schrijver maar één keer
+  // (vroeger kwam de foto bij elk bericht opnieuw mee, soms meer dan een megabyte).
+  let getekend = null
+  const vingerafdruk = l => JSON.stringify(l.map(e => [e.id, e.content, e.created_at, e.author && e.author.username, e.author && e.author.avatar_url, String((e.author && e.author.avatar_data) || '').length]))
+  const toon = (lijst, naarBegin) => {
+    const v = vingerafdruk(lijst)
+    if (v === getekend && !naarBegin) return
+    getekend = v
+    alles = lijst
+    if (naarBegin || blad >= bladen()) blad = 0
+    tekenBlad(null)
+  }
+  const metFotos = (lijst, fotos) => lijst.map(e => Object.assign({}, e, {
+    author: e.author ? Object.assign({}, e.author, { avatar_data: fotos[e.author_id] || null }) : e.author
+  }))
+  const ververs = async naarBegin => {
+    if (!navigator.onLine) { if (getekend === null || naarBegin) toon(leesGb(), naarBegin); return }
+    const { data, error } = await supabase
+      .from('guestbook_entries')
+      .select('*, author:author_id(username,avatar_url)')
+      .eq('profile_id', uid)
+      .order('created_at', { ascending: false })
+      .limit(40)
+    if (!c.isConnected) return
+    if (error || !Array.isArray(data)) { if (getekend === null) toon(leesGb(), naarBegin); return }
+    // foto's die al op dit toestel staan meteen gebruiken
+    const bekend = {}
+    for (const e of alles.concat(leesGb())) if (e.author_id && e.author && e.author.avatar_data) bekend[e.author_id] = e.author.avatar_data
+    toon(metFotos(data, bekend), naarBegin)
+    const ids = [...new Set(data.map(e => e.author_id).filter(Boolean))]
+    if (!ids.length) { bewaarGb(data); return }
+    const { data: profs, error: fout } = await supabase.from('profiles').select('id,avatar_data').in('id', ids)
+    if (!c.isConnected) return
+    if (fout || !Array.isArray(profs)) { bewaarGb(metFotos(data, bekend)); return }
+    const fotos = {}
+    for (const p of profs) if (p && p.id) fotos[p.id] = p.avatar_data || null
+    const vol = metFotos(data, fotos)
+    bewaarGb(vol)
+    toon(vol, false)
+  }
+  let bewaardIets = false
+  try { bewaardIets = localStorage.getItem(gbSleutel) !== null } catch (e) {}
+  if (bewaardIets || !navigator.onLine) toon(leesGb(), true)
+  else { const l = c.querySelector('#gbl'); if (l) l.innerHTML = '<div style="font-size:14px;font-style:italic;color:#8a7f6d;padding:14px 4px">Bladzijden laden\u2026</div>' }
+  ververs(false).catch(e => console.warn('[gastenboek] ophalen mislukt', e))
   // v127: is er weer internet, dan het boek opnieuw ophalen (het laatst getekende boek)
-  window._gbVerversen = async () => { if (!c.isConnected) return; alles = await haal(); blad = 0; tekenBlad(null) }
+  window._gbVerversen = async () => { if (!c.isConnected) return; await ververs(false) }
   if (!window._gbLuistert) { window._gbLuistert = true; window.addEventListener('online', () => { if (window._gbVerversen) window._gbVerversen() }) }
 
   const stuur = async () => {
@@ -1941,9 +1987,7 @@ async function renderGastenboek(c, uid) {
       content: t
     })
     if (error) { console.warn('[gastenboek] plaatsen mislukt', error); if (!inp.value) inp.value = t; return } // v127: tekst niet kwijt
-    alles = await haal()
-    blad = 0
-    tekenBlad(null)
+    await ververs(true)
   }
 
   c.querySelector('#gbs')?.addEventListener('click', stuur)

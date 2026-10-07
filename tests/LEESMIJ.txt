@@ -1,0 +1,34 @@
+Fibro - gereedschap van Claude (tests/)
+=======================================
+Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
+Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 7 oktober 2026 (na commit 3ee7bd2).
+
+Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
+Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
+
+gen/bouw.py              generator: bouw(naam, oudmap, nieuwmap, gewijzigd, nieuwe, oude_v,
+                         beschrijving, vereist, uitpad) -> maakt maak-<naam>.py
+                         (controleert alles en schrijft pas als alles klopt; slaat tests/ over
+                         bij het zoeken naar oude ?v=-verwijzingen)
+gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
+                         offline3 = 272c9cb, stickergeluid = 3ee7bd2)
+gen/testscript.py        veiligheids- en mutatietests:
+                         python3 -I testscript.py <scratch> <script> [basismap]
+                         (verwacht <scratch>/nieuw = gewenste uitkomst)
+gen/testscript_*.py      dezelfde tests, aangepast per script (tests 5-11)
+tools/server.py          serveert een map onder /Fibro/ met Cache-Control max-age=600 (zoals GitHub Pages)
+tools/proef7.py          deur-testje (iframe) met en zonder "Bypass for network"
+tools/proef8.py          kast vullen, offline Home/gastenboek, Vrienden, alle spellen
+tools/proef9.py          offline met verlopen inlogpas: tijd tot Home/Vrienden/Chat klaar zijn
+tools/proef10.py         update fibro-v29 -> fibro-v30, daarna alle pagina's offline
+tools/proef11.py         berichten van alle vrienden bewaren, Runner & Gunner alleen,
+                         uitloggen wist offline-gegevens:
+                         python3 -I proef11.py <scratch met tools/server.py> <map> <poort>
+tools/proef12.py         geen stickergeluid bij het openen van een chat
+tools/checkhtml.py       node --check op alle inline scripts: checkhtml.py <uitmap> <html...>
+tools/*.js               console-testjes voor Marcel (alert); ?v=-nummers daarin kunnen verouderd zijn
+
+Opzet nabootsing: Chromium via Playwright; www/Fibro -> symlink naar de map;
+inlogpas in localStorage ('sb-qmgatbphiplrfxrljtbe-auth-token'); Supabase via ctx.route
+nabootsen; offline = server stoppen plus CDP Network.emulateNetworkConditions(offline).

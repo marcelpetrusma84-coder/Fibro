@@ -1052,7 +1052,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     return '🎮 Spel-uitnodiging: ' + info.icon + ' ' + info.naam
   }
 
-  async function voegBerichtToe(bericht) {
+  // v128: metGeluid alleen bij een nieuw binnenkomend bericht, niet bij het laden van oude berichten
+  async function voegBerichtToe(bericht, metGeluid = false) {
     const isMijn = bericht.sender_id === huidigeUser.id
     const container = document.getElementById('messages')
     const tijd = new Date(bericht.created_at).toLocaleTimeString('nl-NL', { hour:'2-digit', minute:'2-digit' })
@@ -1101,7 +1102,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (content.startsWith('lossticker:')) {
       const srcClean = content.replace('lossticker:','').split(':').slice(0,-1).join(':')
       const geluidClean = content.split(':').pop()
-      if (!isMijn && geluidClean) speelEmotieGeluid(geluidClean)
+      if (!isMijn && metGeluid && geluidClean) speelEmotieGeluid(geluidClean)
       row.innerHTML = `
         <div class="msg-av-sm">${esc(avatar)}</div>
         <div style="padding:4px;">
@@ -1114,7 +1115,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (content.startsWith('packsticker:')) {
       try {
         const d = JSON.parse(content.replace('packsticker:', ''))
-        if (!isMijn && d.geluid) speelEmotieGeluid(d.geluid)
+        if (!isMijn && metGeluid && d.geluid) speelEmotieGeluid(d.geluid)
         const cel = 72, sw = d.cols*cel, sh = d.rows*cel
         const ox = -(d.kolom*cel), oy = -(d.rij*cel), schaal = 80/cel
         row.innerHTML = `
@@ -1132,7 +1133,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (content.startsWith('customsticker:')) {
       try {
         const d = JSON.parse(content.replace('customsticker:', ''))
-        if (!isMijn && d.geluid) speelGeluidById(d.geluid)
+        if (!isMijn && metGeluid && d.geluid) speelGeluidById(d.geluid)
         row.innerHTML = `
           <div class="msg-av-sm">${esc(avatar)}</div>
           <div style="padding:4px;">
@@ -1147,7 +1148,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       const delen = content.split(':')
       const stickerEmoji = delen[1] || content.replace('sticker:','')
       const emotieId = delen[2] || null
-      if (!isMijn && emotieId) speelEmotieGeluid(emotieId)
+      if (!isMijn && metGeluid && emotieId) speelEmotieGeluid(emotieId)
       row.innerHTML = `
         <div class="msg-av-sm">${esc(avatar)}</div>
         <div style="font-size:52px;line-height:1;padding:4px;filter:drop-shadow(0 2px 8px rgba(192,132,252,0.3));">
@@ -1498,7 +1499,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
           speelPlop('in')
           const wasOnder = zitOnderaan()
           voegAanChatlog(geselecteerdeVriend?.id, msg) // v125
-          await voegBerichtToe(msg)
+          await voegBerichtToe(msg, true)
           await tekenReacties(document.getElementById('messages'))
           if (wasOnder) _scrollNu(); else toonNieuwKnop()
         }

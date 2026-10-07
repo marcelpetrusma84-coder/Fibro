@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 7 oktober 2026 (gastenboek op Home sneller).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 7 oktober 2026 (Profiel: preview en geblokkeerd alleen bij tabblad Profiel).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -15,7 +15,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          offline3 = 272c9cb, stickergeluid = 3ee7bd2, tests = fe03cde,
                          vriendprofiel = vriend-profiel zonder internet,
                          snel = tekst op Home en Profiel sneller (testscript_snel.py),
-                         gastenboek = gastenboek op Home sneller (testscript_gastenboek.py))
+                         gastenboek = gastenboek op Home sneller (testscript_gastenboek.py),
+                         tabblad = preview/geblokkeerd alleen bij tabblad Profiel (testscript_tabblad.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -40,6 +41,7 @@ tools/proef16.py         snelheid van het gastenboek op Home (antwoorden met fot
                          DELAY_MS=300 python3 -I proef16.py <scratch> <map> <poort> [cpu-vertraging] [server-ms]
 tools/proef17.py         gastenboek meteen uit het geheugen, foto per schrijver één keer, bladeren blijft staan,
                          nieuw bericht, plaatsen, zonder internet
+tools/proef18.py         Profiel: preview en geblokkeerd alleen zichtbaar bij het tabblad Profiel
 tools/checkhtml.py       node --check op alle inline scripts: checkhtml.py <uitmap> <html...>
 tools/*.js               console-testjes voor Marcel (alert); ?v=-nummers daarin kunnen verouderd zijn
 

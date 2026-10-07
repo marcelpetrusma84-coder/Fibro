@@ -476,7 +476,46 @@ input, textarea { font-size:16px !important; }
   <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
   <div class="nav-item active"><div class="nav-icon">👤</div>Profiel</div>
 </div>
-<script src="lame.min.js?v=95"></script>
+<script>
+// v129: de tekst (naam, @naam, bio, mood, online) meteen uit het geheugen van dit toestel tonen,
+// nog voordat de rest van de pagina geladen is. Het verse profiel van de server werkt het daarna bij,
+// behalve wat je intussen zelf al veranderd hebt.
+(function () {
+  try {
+    var uid = ''
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i)
+      if (k && k.indexOf('sb-') === 0 && k.slice(-11) === '-auth-token') {
+        var v = JSON.parse(localStorage.getItem(k) || 'null')
+        if (v && v.user && v.user.id) { uid = v.user.id; break }
+      }
+    }
+    if (!uid) return
+    var p = JSON.parse(localStorage.getItem('fibro_profielcache_' + uid) || 'null')
+    if (!p || typeof p !== 'object') return
+    var lokaal = {}
+    try { lokaal = JSON.parse(localStorage.getItem('fibro_profiel_' + uid) || '{}') || {} } catch (e) {}
+    var g = function (id) { return document.getElementById(id) }
+    var naam = p.username || uid
+    if (g('usernameWeergave')) g('usernameWeergave').textContent = naam
+    if (g('previewUsername')) g('previewUsername').textContent = '@' + naam
+    var mood = String(lokaal.mood || p.mood || '')
+    var moodEmoji = (mood.match(/^\p{Emoji}/u) || [])[0] || '\ud83d\ude0a'
+    var moodTekst = mood.replace(/^\p{Emoji}\s*/u, '')
+    var online = (p.toon_online == null ? true : !!p.toon_online) ? 'Online' : 'Offline'
+    g('editNaam').value = lokaal.naam || ''
+    g('editBio').value = lokaal.bio || ''
+    g('editMood').value = moodTekst
+    g('moodEmojiGekozen').textContent = moodEmoji
+    g('onlineDot').style.background = online === 'Online' ? '#22c55e' : '#6b7280'
+    g('onlineLabel').textContent = online
+    g('previewNaam').textContent = lokaal.naam || p.username || 'Jouw naam'
+    g('previewBio').textContent = lokaal.bio || 'Jouw bio verschijnt hier'
+    if (g('bioTeller')) g('bioTeller').textContent = (100 - (lokaal.bio || '').length) + ' tekens over'
+    window._profielVroeg = { editNaam: g('editNaam').value, editBio: g('editBio').value, editMood: g('editMood').value, moodEmoji: moodEmoji, online: online }
+  } catch (e) {}
+})()
+</script>
 <script type="module">
 function _profielUid() {
   if (window._uid) return window._uid
@@ -632,7 +671,20 @@ const muzBalk = (() => {
     weg() { if (el) { el.remove(); el = null } }
   }
 })()
+// v129: de mp3-maker (lame.min.js, 156 KB) pas laden als er echt muziek wordt omgezet
+function laadLame() {
+  if (window.lamejs) return Promise.resolve()
+  if (!window._lameLaden) window._lameLaden = new Promise((klaar, fout) => {
+    const s = document.createElement('script')
+    s.src = 'lame.min.js?v=95'
+    s.onload = () => klaar()
+    s.onerror = () => { window._lameLaden = null; s.remove(); fout(new Error('lame.min.js laden mislukt')) }
+    document.head.appendChild(s)
+  })
+  return window._lameLaden
+}
 async function comprimeerMuziek(file, voortgang) {
+  await laadLame()
   const arrayBuf = await file.arrayBuffer()
   const ctx = new (window.AudioContext || window.webkitAudioContext)()
   const buffer = await ctx.decodeAudioData(arrayBuf)
@@ -721,47 +773,60 @@ function audioBufferToWav(buffer) {
   }
   return ab
 }
+// v129: profiel bewaren voor de volgende keer (zonder wallpaper; zonder avatar als het te groot is), zoals Home
+function bewaarProfielCache(uid,p){try{const kopie=Object.assign({},p);delete kopie.wallpaper_data;let t=JSON.stringify(kopie);if(t.length>300000){delete kopie.avatar_data;t=JSON.stringify(kopie)}localStorage.setItem('fibro_profielcache_'+uid,t)}catch(e){}}
 async function init(){
   let{data:{session}}=await supabase.auth.getSession()
   if(!session){const s2=await eisSessie();if(!s2)return;session=s2}
   startBewaking()
   huidigeUser=session.user
   initSync(huidigeUser.id)
+  // v129: het profiel meteen opvragen, tegelijk met het thema; niet meer wachten op de hartslag
+  const versProfiel=supabase.from('profiles').select('*').eq('id',huidigeUser.id).single().then(r=>r,()=>({data:null}))
   await laadThema()
-  await startHeartbeat()
-  const{data}=await supabase.from('profiles').select('*').eq('id',huidigeUser.id).single()
+  startHeartbeat().catch(e=>console.warn('[heartbeat]',e))
+  const{data}=await versProfiel
   profiel=data
+  if(profiel)bewaarProfielCache(huidigeUser.id,profiel)
+  // v129: wat al vroeg getoond is en wat je intussen zelf veranderd hebt, niet overschrijven
+  const vroeg=window._profielVroeg||null
+  const zelfVeranderd=id=>!!(vroeg&&document.getElementById(id).value!==vroeg[id])
   // Testlinkje Fibro+ alleen voor de moderator (de database laat ook alleen de moderator is_plus wijzigen)
   if (profiel && profiel.is_moderator) { const tl = document.getElementById('testPlusLink'); if (tl) tl.style.display = '' }
   if(profiel){
     // ── Laad alles uit localStorage ──
     const lokaal = JSON.parse(localStorage.getItem('fibro_profiel_' + huidigeUser.id) || '{}')
 
-    document.getElementById('editNaam').value=lokaal.naam||''
+    if(!zelfVeranderd('editNaam'))document.getElementById('editNaam').value=lokaal.naam||''
     const loginNaam = profiel.username || huidigeUser.id
     const weergave = document.getElementById('usernameWeergave')
     if (weergave) weergave.textContent = loginNaam
     const prevUsername = document.getElementById('previewUsername')
     if (prevUsername) prevUsername.textContent = '@' + loginNaam
-    document.getElementById('editBio').value=lokaal.bio||''
+    if(!zelfVeranderd('editBio'))document.getElementById('editBio').value=lokaal.bio||''
     const opgeslagenMood = lokaal.mood || profiel.mood || ''
     // Scheidt emoji van tekst
     const moodEmoji = opgeslagenMood.match(/^\p{Emoji}/u)?.[0] || '😊'
     const moodTekst = opgeslagenMood.replace(/^\p{Emoji}\s*/u, '')
+    if(!zelfVeranderd('editMood')&&!(vroeg&&document.getElementById('moodEmojiGekozen').textContent!==vroeg.moodEmoji)){
     gekozenMoodEmoji = moodEmoji
     document.getElementById('moodEmojiGekozen').textContent = moodEmoji
     document.getElementById('editMood').value = moodTekst
+    } else gekozenMoodEmoji = document.getElementById('moodEmojiGekozen').textContent || gekozenMoodEmoji
+    if(!(vroeg&&document.getElementById('onlineLabel').textContent!==vroeg.online)){
     isOnline = profiel.toon_online ?? true
     document.getElementById('onlineDot').style.background = isOnline ? '#22c55e' : '#6b7280'
     document.getElementById('onlineLabel').textContent = isOnline ? 'Online' : 'Offline'
+    }
 
     const userId=huidigeUser.id
     const opgeslagenFoto=await laadFotoUitDB('avatar_thumbnail_'+userId)
     if(opgeslagenFoto){document.getElementById('avatarEmoji').innerHTML=`<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;document.getElementById('previewAvatar').innerHTML=`<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`}
     else{const av=lokaal.avatar||profiel.avatar_url||'🌿';document.getElementById('avatarEmoji').textContent=av;document.getElementById('previewAvatar').textContent=av}
 
-    document.getElementById('previewNaam').textContent=lokaal.naam||profiel.username||'Jouw naam'
-    document.getElementById('previewBio').textContent=lokaal.bio||'Jouw bio verschijnt hier'
+    document.getElementById('previewNaam').textContent=document.getElementById('editNaam').value||profiel.username||'Jouw naam'
+    document.getElementById('previewBio').textContent=document.getElementById('editBio').value||'Jouw bio verschijnt hier'
+    updateBioTeller()
 
     if(lokaal.accentKleur)updateAccent(lokaal.accentKleur)
     if(lokaal.accentKleur2)updateAccent2(lokaal.accentKleur2)
@@ -970,7 +1035,7 @@ window.activeerPushNotificaties = async function() {
   }
 }
 
-let isOnline = true
+let isOnline = window._profielVroeg ? window._profielVroeg.online === 'Online' : true // v129: zoals vroeg getoond
 window.toggleOnlineStatus = async function() {
   isOnline = !isOnline
   try { localStorage.setItem('fibro_ik_offline', isOnline ? '0' : '1') } catch (e) {}

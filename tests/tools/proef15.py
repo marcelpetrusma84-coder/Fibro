@@ -78,7 +78,7 @@ async def main():
         await p.wait_for_timeout(4500)
         r = await p.evaluate(LEES)
         check('profiel: eigen wijziging blijft staan', r['pnaam'] == 'Nieuwe naam' and r['pmood'] == 'Moe' and r['pbio'] == 'Mijn bio', r)
-        check('profiel: voorbeeld toont eigen naam', r['preview'] == 'Nieuwe naam', r['preview'])
+        check('profiel: voorbeeld toont eigen naam (of is er niet meer)', r['preview'] in ('Nieuwe naam', None), r['preview'])
         print('4. Online-knop vroeg indrukken (server 3 s)')
         await p.goto(B + 'profiel.html'); await p.wait_for_function("() => typeof window.toggleOnlineStatus === 'function'", timeout=5000)
         await p.evaluate("() => window.toggleOnlineStatus()"); await p.wait_for_timeout(4500)

@@ -203,28 +203,6 @@ input, textarea { font-size:16px !important; }
       </div>
     </div>
   </div>
-  <div class="section">
-    <div class="section-label">Profiel preview</div>
-    <div class="profiel-preview">
-      <div class="preview-label">Zo zien anderen jouw profiel</div>
-      <div style="display:flex;gap:12px;align-items:center;">
-        <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;" id="previewAvatar">🌿</div>
-        <div>
-          <div style="font-size:18px;color:var(--text);font-weight:600;" id="previewNaam">Jouw naam</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px;" id="previewUsername">@gebruikersnaam</div>
-          <div style="font-size:14px;color:var(--muted);" id="previewBio">Jouw bio verschijnt hier</div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  
-  
-  <div class="section">
-    <div class="section-label">Geblokkeerd</div>
-    <div class="card" id="geblokkeerdLijst"><div style="font-size:14px;color:var(--muted);">Laden...</div></div>
-    <div style="font-size:12px;color:var(--muted);">Iemand blokkeren: houd in je vriendenlijst een vriend lang ingedrukt.</div>
-  </div>
 </div>
 <div class="panel" id="panel-achtergrond">
   <div class="section">
@@ -505,8 +483,8 @@ input, textarea { font-size:16px !important; }
     g('moodEmojiGekozen').textContent = moodEmoji
     g('onlineDot').style.background = online === 'Online' ? '#22c55e' : '#6b7280'
     g('onlineLabel').textContent = online
-    g('previewNaam').textContent = lokaal.naam || p.username || 'Jouw naam'
-    g('previewBio').textContent = lokaal.bio || 'Jouw bio verschijnt hier'
+    if (g('previewNaam')) g('previewNaam').textContent = lokaal.naam || p.username || 'Jouw naam'
+    if (g('previewBio')) g('previewBio').textContent = lokaal.bio || 'Jouw bio verschijnt hier'
     if (g('bioTeller')) g('bioTeller').textContent = (100 - (lokaal.bio || '').length) + ' tekens over'
     window._profielVroeg = { editNaam: g('editNaam').value, editBio: g('editBio').value, editMood: g('editMood').value, moodEmoji: moodEmoji, online: online }
   } catch (e) {}
@@ -817,11 +795,11 @@ async function init(){
 
     const userId=huidigeUser.id
     const opgeslagenFoto=await laadFotoUitDB('avatar_thumbnail_'+userId)
-    if(opgeslagenFoto){document.getElementById('avatarEmoji').innerHTML=`<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;document.getElementById('previewAvatar').innerHTML=`<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`}
-    else{const av=lokaal.avatar||profiel.avatar_url||'🌿';document.getElementById('avatarEmoji').textContent=av;document.getElementById('previewAvatar').textContent=av}
+    if(opgeslagenFoto){document.getElementById('avatarEmoji').innerHTML=`<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;(document.getElementById('previewAvatar')||{}).innerHTML=`<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`}
+    else{const av=lokaal.avatar||profiel.avatar_url||'🌿';document.getElementById('avatarEmoji').textContent=av;(document.getElementById('previewAvatar')||{}).textContent=av}
 
-    document.getElementById('previewNaam').textContent=document.getElementById('editNaam').value||profiel.username||'Jouw naam'
-    document.getElementById('previewBio').textContent=document.getElementById('editBio').value||'Jouw bio verschijnt hier'
+    ;(document.getElementById('previewNaam')||{}).textContent=document.getElementById('editNaam').value||profiel.username||'Jouw naam'
+    ;(document.getElementById('previewBio')||{}).textContent=document.getElementById('editBio').value||'Jouw bio verschijnt hier'
     updateBioTeller()
 
     if(lokaal.accentKleur)updateAccent(lokaal.accentKleur)
@@ -844,7 +822,7 @@ async function init(){
   document.getElementById('editBio').oninput=updatePreview
 }
 function updateBioTeller(){const el=document.getElementById('bioTeller');if(el)el.textContent=(100-document.getElementById('editBio').value.length)+' tekens over'}
-function updatePreview(){updateBioTeller();document.getElementById('previewNaam').textContent=document.getElementById('editNaam').value||'Jouw naam';document.getElementById('previewBio').textContent=document.getElementById('editBio').value||'Jouw bio verschijnt hier'}
+function updatePreview(){updateBioTeller();(document.getElementById('previewNaam')||{}).textContent=document.getElementById('editNaam').value||'Jouw naam';(document.getElementById('previewBio')||{}).textContent=document.getElementById('editBio').value||'Jouw bio verschijnt hier'}
 document.addEventListener('DOMContentLoaded',function(){const b=document.querySelector('.main-tabs');if(!b)return;let neer=false,x0=0,s0=0,ver=0;
 b.addEventListener('wheel',function(e){if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){b.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});
 b.addEventListener('mousedown',function(e){neer=true;ver=0;x0=e.pageX;s0=b.scrollLeft;b.style.cursor='grabbing'});
@@ -852,10 +830,10 @@ window.addEventListener('mousemove',function(e){if(!neer)return;const d=e.pageX-
 window.addEventListener('mouseup',function(){if(!neer)return;neer=false;b.style.cursor='';if(ver)setTimeout(function(){ver=0},50)});
 b.addEventListener('click',function(e){if(ver){e.stopPropagation();e.preventDefault()}},true)})
 window.switchTab=function(tab){document.querySelectorAll('.main-tab').forEach((t,i)=>{const tabs=['profiel','achtergrond','animatie','lettertype','kleur','widgets','stickers'];t.classList.toggle('active',tabs[i]===tab)});document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('panel-'+tab).classList.add('active');if(tab==='animatie')startAnimatiePreview();else stopAnimatiePreview()}
-function bouwAvatarPicker(){const picker=document.getElementById('avatarPicker');picker.innerHTML='';avatarEmojis.forEach(e=>{const span=document.createElement('span');span.className='emoji-opt';span.textContent=e;span.onclick=()=>{document.getElementById('avatarEmoji').textContent=e;document.getElementById('previewAvatar').textContent=e;document.getElementById('avatarPickerWrap').style.display='none'};picker.appendChild(span)})}
+function bouwAvatarPicker(){const picker=document.getElementById('avatarPicker');picker.innerHTML='';avatarEmojis.forEach(e=>{const span=document.createElement('span');span.className='emoji-opt';span.textContent=e;span.onclick=()=>{document.getElementById('avatarEmoji').textContent=e;(document.getElementById('previewAvatar')||{}).textContent=e;document.getElementById('avatarPickerWrap').style.display='none'};picker.appendChild(span)})}
 window.switchAvatarTab=function(tab){if(tab==='emoji'){document.getElementById('avatarEmojiTab').style.display='block';document.getElementById('avatarFotoTab').style.display='none';document.getElementById('tabEmoji').style.cssText='flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;';document.getElementById('tabFoto').style.cssText='flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;'}else{document.getElementById('avatarEmojiTab').style.display='none';document.getElementById('avatarFotoTab').style.display='block';document.getElementById('tabFoto').style.cssText='flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;';document.getElementById('tabEmoji').style.cssText='flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;'}}
 window.verwerkFoto=async function(event){const file=event.target.files[0];if(!file)return;const volledig=await comprimeerFoto(file,1080,0.85);const thumbnail=await comprimeerFoto(file,160,0.85);const userId=huidigeUser.id;await slaFotoOp('avatar_volledig_'+userId,volledig);await slaFotoOp('avatar_thumbnail_'+userId,thumbnail);document.getElementById('fotoPreview').src=volledig;document.getElementById('fotoPreviewWrap').style.display='block';window._fotoVolledig=volledig;window._fotoThumbnail=thumbnail}
-window.bevestigFoto=function(){const src=window._fotoThumbnail;document.getElementById('avatarEmoji').innerHTML=`<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;document.getElementById('previewAvatar').innerHTML=`<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;document.getElementById('avatarPickerWrap').style.display='none';window._fotoAvatar=src}
+window.bevestigFoto=function(){const src=window._fotoThumbnail;document.getElementById('avatarEmoji').innerHTML=`<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;(document.getElementById('previewAvatar')||{}).innerHTML=`<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;document.getElementById('avatarPickerWrap').style.display='none';window._fotoAvatar=src}
 window.toggleAvatarPicker=function(){const w=document.getElementById('avatarPickerWrap');w.style.display=w.style.display==='none'?'block':'none'}
 window.setAchtergrondType=function(type){document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));document.getElementById('type-'+type).classList.add('active');document.getElementById('bg-kleur-sectie').style.display=type==='kleur'?'block':'none';document.getElementById('bg-gradient-sectie').style.display=type==='gradient'?'block':'none';document.getElementById('bg-wallpaper-sectie').style.display=type==='wallpaper'?'block':'none';document.getElementById('bg-upload-sectie').style.display=type==='upload'?'block':'none'}
 window.updateBgKleur=function(k){document.getElementById('bgKleurPicker').value=k;document.getElementById('bgKleurHex').value=k;document.documentElement.style.setProperty('--bg',k)}
@@ -1125,7 +1103,6 @@ startMeldingen()
 <script src="swipe.js?v=95"></script>
 
 <script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=106"; startBelLuisteraar()</script>
-<script type="module">import { toonGeblokkeerden } from "./persoonblok.js?v=2"; toonGeblokkeerden("geblokkeerdLijst")</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=101"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=101"; startOngelezen()</script>

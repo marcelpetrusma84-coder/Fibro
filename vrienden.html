@@ -213,7 +213,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 .expired-overlay.show { display:flex; }
 .expired-icon { font-size:40px; }
 </style>
-<link rel="stylesheet" href="android-fix.css">
+<link rel="stylesheet" href="android-fix.css?v=1">
 </head>
 <body>
 
@@ -294,10 +294,12 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   import { wisVriendData } from './opruimen.js?v=95'
   import { blokkeerPersoon, kiesVriendActie, kiesGeblokkeerdActie, deblokkeerPersoon, verwijderGeblokkeerde, haalGeblokkeerden } from './persoonblok.js?v=2'
   import { initSync } from './sync.js?v=122'
+  import { bewaardeSessieZonderInternet } from './offline.js?v=126'
   pasBlokstijlToe()
 
   function isGebruikerOnline(profiel) {
     try { if (localStorage.getItem('fibro_ik_offline') === '1') return false } catch (e) {}
+    if (!navigator.onLine) return false // v127: zonder internet weten we het niet
     if (!profiel.online_status) return false
     if (!profiel.laatst_gezien) return false
     const sec = (Date.now() - new Date(profiel.laatst_gezien).getTime()) / 1000
@@ -305,24 +307,50 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   }
 
   async function init() {
+    // v127: zonder internet eerst de bewaarde lijst tonen, zonder op de server te wachten
+    // (een bijna verlopen inlogpas kan anders tot 30 seconden ophouden)
+    const zonderNet = bewaardeSessieZonderInternet()
+    if (zonderNet) await laadVrienden(zonderNet.user.id)
     await laadThema()
-    const { data: { session } } = await supabase.auth.getSession()
+    let { data: { session } } = await supabase.auth.getSession()
+    if (!session) session = zonderNet || bewaardeSessieZonderInternet()
     if (!session) { window.location.href = 'login.html'; return }
     startHeartbeat().catch(e => console.warn('[heartbeat]', e))
-    await laadVrienden(session.user.id)
+    if (!zonderNet) await laadVrienden(session.user.id)
     initSync(session.user.id)
   }
 
   async function laadVrienden(userId) {
-    const { data, error } = await supabase
-      .from('friendships')
-      .select('friend_id, profiles!friendships_friend_id_fkey(id, username, display_name, bio, avatar_url, mood, online_status, offline_emoji, offline_bericht, laatst_gezien)')
-      .eq('user_id', userId)
-      .eq('status', 'accepted')
+    const antwoord = navigator.onLine
+      ? await supabase
+        .from('friendships')
+        .select('friend_id, profiles!friendships_friend_id_fkey(id, username, display_name, bio, avatar_url, mood, online_status, offline_emoji, offline_bericht, laatst_gezien)')
+        .eq('user_id', userId)
+        .eq('status', 'accepted')
+      : { data: null, error: { message: 'geen internet' } }
+    let { data, error } = antwoord
 
     const container = document.getElementById('vriendenLijst')
 
-    const geblokkeerd = error ? [] : await haalGeblokkeerden()
+    // v127: de lijst bewaren; lukt ophalen niet (geen internet), dan de bewaarde lijst
+    const lijstSleutel = 'fibro_vriendenpagina_' + userId
+    let geblokkeerd = []
+    if (!error && data) {
+      geblokkeerd = await haalGeblokkeerden()
+      try { localStorage.setItem(lijstSleutel, JSON.stringify({ data, geblokkeerd })) } catch (e) {}
+    } else {
+      let bewaard = null
+      try { bewaard = JSON.parse(localStorage.getItem(lijstSleutel) || 'null') } catch (e) {}
+      if (bewaard && Array.isArray(bewaard.data)) {
+        data = bewaard.data
+        geblokkeerd = Array.isArray(bewaard.geblokkeerd) ? bewaard.geblokkeerd : []
+        error = null
+      }
+    }
+    if (error && !navigator.onLine) {
+      container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);font-size:15px;line-height:1.8;">📴 Geen internet.<br>Je vriendenlijst staat nog niet op dit toestel. Open Vrienden een keer met internet.</div>'
+      return
+    }
     if (error || !data || (data.length === 0 && geblokkeerd.length === 0)) {
       container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);font-size:15px;line-height:1.8;">👥 Nog geen vrienden.<br>Klik op <strong style=\"color:var(--accent)\">+ Uitnodigen</strong> om iemand uit te nodigen!</div>'
       return

@@ -81,7 +81,7 @@ window.werkOpslagBalkBij=werkOpslagBalkBij
 async function laadFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
 async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').delete(id);tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}catch{return null}}
 </script>
-<link rel="stylesheet" href="android-fix.css">
+<link rel="stylesheet" href="android-fix.css?v=1">
 </head>
 <body>
 <div id="sleutel-balk" style="display:none;position:sticky;top:0;z-index:9999;background:#2a1f3d;border-bottom:2px solid #c084fc;padding:14px 16px;font-family:'DM Mono',monospace;">
@@ -1754,14 +1754,31 @@ async function renderGastenboek(c, uid) {
     document.head.appendChild(st)
   }
 
+  // v127: de laatste stand van het boek bewaren, zodat het ook zonder internet gevuld is.
+  // Zonder internet niet eerst de server proberen (die probeert het een paar keer opnieuw).
+  const gbSleutel = 'fibro_gastenboek_' + uid
+  const leesGb = () => {
+    try { const a = JSON.parse(localStorage.getItem(gbSleutel) || 'null'); return Array.isArray(a) ? a : [] } catch (e) { return [] }
+  }
+  const bewaarGb = lijst => {
+    try {
+      let s = JSON.stringify(lijst)
+      // Te groot (foto's van de schrijvers): dan zonder foto, de emoji blijft
+      if (s.length > 300000) s = JSON.stringify(lijst.map(e => Object.assign({}, e, { author: e.author ? { username: e.author.username, avatar_url: e.author.avatar_url } : e.author })))
+      localStorage.setItem(gbSleutel, s)
+    } catch (e) {}
+  }
   const haal = async () => {
-    const { data } = await supabase
+    if (!navigator.onLine) return leesGb()
+    const { data, error } = await supabase
       .from('guestbook_entries')
       .select('*, author:author_id(username,avatar_url,avatar_data)')
       .eq('profile_id', uid)
       .order('created_at', { ascending: false })
       .limit(40)
-    return data || []
+    if (error || !Array.isArray(data)) return leesGb()
+    bewaarGb(data)
+    return data
   }
 
   // Papier: warme ondergrond, blauwe liniatuur, rode kantlijn, vouw links.
@@ -1855,6 +1872,9 @@ async function renderGastenboek(c, uid) {
 
   alles = await haal()
   tekenBlad(null)
+  // v127: is er weer internet, dan het boek opnieuw ophalen (het laatst getekende boek)
+  window._gbVerversen = async () => { if (!c.isConnected) return; alles = await haal(); blad = 0; tekenBlad(null) }
+  if (!window._gbLuistert) { window._gbLuistert = true; window.addEventListener('online', () => { if (window._gbVerversen) window._gbVerversen() }) }
 
   const stuur = async () => {
     const inp = c.querySelector('#gbi')
@@ -1867,7 +1887,7 @@ async function renderGastenboek(c, uid) {
       author_id: window._uid,
       content: t
     })
-    if (error) { console.warn('[gastenboek] plaatsen mislukt', error); return }
+    if (error) { console.warn('[gastenboek] plaatsen mislukt', error); if (!inp.value) inp.value = t; return } // v127: tekst niet kwijt
     alles = await haal()
     blad = 0
     tekenBlad(null)
@@ -2018,6 +2038,10 @@ init().then(() => {
 }).catch(e => console.error('Init fout:', e))
 
 startMeldingen()
+
+// v127: met internet, op de achtergrond, de kast van de portier aanvullen (alle spellen
+// en pagina's), zodat ze ook zonder internet werken. Zie kastvullen.js.
+setTimeout(() => { import('./kastvullen.js?v=127').then(m => m.vulKast()).catch(() => {}) }, 6000)
 </script>
 
 <script>

@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (Profiel: preview en geblokkeerd weg).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (Profiel: lettertypen zichtbaar, wijzigingen meteen te zien).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -17,7 +17,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          snel = tekst op Home en Profiel sneller (testscript_snel.py),
                          gastenboek = gastenboek op Home sneller (testscript_gastenboek.py),
                          tabblad = preview/geblokkeerd alleen bij tabblad Profiel (testscript_tabblad.py),
-                         zonderpreview = preview en geblokkeerd weg van Profiel (testscript_zonderpreview.py))
+                         zonderpreview = preview en geblokkeerd weg van Profiel (testscript_zonderpreview.py),
+                         lettertype = lettertypen zichtbaar, wijzigingen meteen (testscript_lettertype.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -44,6 +45,8 @@ tools/proef17.py         gastenboek meteen uit het geheugen, foto per schrijver 
                          nieuw bericht, plaatsen, zonder internet
 tools/proef18.py         Profiel: preview en geblokkeerd weg (deblokkeren kan op Vrienden), tabbladen,
                          naam typen en avatar kiezen zonder fouten
+tools/proef19.py         Profiel: elk lettertype in zichzelf, kiezen geldt meteen, na Opslaan meteen animatie,
+                         lettertype en (op Home) mood; de .woff2 zitten niet in upload-alles
 tools/checkhtml.py       node --check op alle inline scripts: checkhtml.py <uitmap> <html...>
 tools/*.js               console-testjes voor Marcel (alert); ?v=-nummers daarin kunnen verouderd zijn
 

@@ -519,6 +519,7 @@ const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','�
 const stickers={natuur:['🌿','🌸','🌺','🌻','🍀','🌱','🌾','🍃','🌴','🌊','🍂','🌹','🌷','🌼','🍁'],magie:['✨','🔮','🌙','⭐','💫','🌟','🔯','🌠','🌌','🪄','💎','🌈','⚡','🔥','🌀'],kunst:['🎵','🎸','🎨','🎭','🎬','📷','🎪','🎯','🎲','🎹','🥁','🎺','🎻','🖼','✏'],dieren:['🦋','🦊','🐱','🐺','🦄','🐉','🦁','🐻','🦝','🦔','🐧','🦅','🐠','🐬','🦋']}
 import { LETTERTYPES, laadFont } from './lettertypes.js?v=118'
 import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=95'
+import { pasAnimatieToe } from './animatie.js?v=95'
 window.blokAangepast = function(){
   const s = {
     kleur: document.getElementById("blokKleur").value,
@@ -543,7 +544,7 @@ function vulBlokvelden(){
 pasBlokstijlToe()
 setTimeout(vulBlokvelden, 300)
 const fonts = LETTERTYPES.map(f => ({ naam: f.naam, familie: "'" + f.naam + "'," + f.val, stijl: f.label }))
-LETTERTYPES.forEach(f => laadFont(f.naam))
+// v129: niet meer alle 38 lettertypen bij het openen laden; bouwFontGrid laadt ze als ze in beeld komen
 function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
 async function dbAlleSleutels(){const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').getAllKeys();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>resolve([])})}
 async function metenOpslag(uid){try{const alle=await dbAlleSleutels();const mijn=alle.filter(k=>typeof k==='string'&&k.includes(uid));let totaal=0;for(const k of mijn){if(k==='video_data_'+uid){try{const m=JSON.parse(await laadFotoUitDB('video_meta_'+uid)||'null');if(m&&m.grootte>0){totaal+=m.grootte;continue}}catch(e){}}const d=await laadFotoUitDB(k);if(typeof d==='string')totaal+=d.length;else if(d&&d.size)totaal+=d.size}return totaal}catch(e){return 0}}
@@ -849,7 +850,10 @@ window.selectAnimatie=function(naam){huidigeAnimatie=naam;updateAnimatieUI();sta
 function updateAnimatieUI(){document.querySelectorAll('.anim-cell').forEach(c=>c.classList.remove('selected'));const el=document.getElementById('anim-'+huidigeAnimatie);if(el)el.classList.add('selected')}
 function startAnimatiePreview(){stopAnimatiePreview();const canvas=document.getElementById('previewCanvas');if(!canvas)return;const ctx=canvas.getContext('2d');canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;if(huidigeAnimatie==='geen'){ctx.clearRect(0,0,canvas.width,canvas.height);return};deeltjes=[];for(let i=0;i<60;i++)deeltjes.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*0.5,vy:Math.random()*0.8+0.2,grootte:Math.random()*3+1,alpha:Math.random(),kleur:huidigeAnimatie==='confetti'?`hsl(${Math.random()*360},80%,60%)`:'white'});function teken(){ctx.clearRect(0,0,canvas.width,canvas.height);deeltjes.forEach(d=>{ctx.globalAlpha=d.alpha;ctx.fillStyle=d.kleur;if(huidigeAnimatie==='sterren'||huidigeAnimatie==='vuurvliegjes'){ctx.beginPath();ctx.arc(d.x,d.y,d.grootte,0,Math.PI*2);ctx.fill();d.alpha=0.3+Math.sin(Date.now()*0.003+d.x)*0.7}else if(huidigeAnimatie==='sneeuw'||huidigeAnimatie==='bubbels'){ctx.beginPath();ctx.arc(d.x,d.y,d.grootte+1,0,Math.PI*2);ctx.fill();d.y+=d.vy*0.5;d.x+=Math.sin(Date.now()*0.001+d.y)*0.3}else if(huidigeAnimatie==='regen'){ctx.fillRect(d.x,d.y,1,d.grootte*4);d.y+=d.vy*3;d.x+=0.5}else{ctx.fillRect(d.x,d.y,d.grootte*2,d.grootte);d.y+=d.vy;d.x+=Math.sin(Date.now()*0.002+d.y)*0.8};if(d.y>canvas.height)d.y=-10;if(d.x>canvas.width)d.x=0;if(d.x<0)d.x=canvas.width});ctx.globalAlpha=1;animFrame=requestAnimationFrame(teken)};teken()}
 function stopAnimatiePreview(){if(animFrame){cancelAnimationFrame(animFrame);animFrame=null}}
-function bouwFontGrid(){const grid=document.getElementById('fontGrid');grid.innerHTML='';fonts.forEach(f=>{const div=document.createElement('div');div.className='font-item'+(huidigLettertype===f.familie?' selected':'');div.innerHTML=`<div class="font-preview" style="font-family:${f.familie};">${f.naam}</div><div class="font-zin" style="font-family:${f.familie};">Het leven is mooi & bijzonder</div><div class="font-name">${f.stijl}</div>`;div.onclick=()=>{document.querySelectorAll('.font-item').forEach(i=>i.classList.remove('selected'));div.classList.add('selected');document.body.style.fontFamily=f.familie;huidigLettertype=f.familie};grid.appendChild(div)})}
+// v129: elk lettertype laat zichzelf zien (ook als er al een ander lettertype voor de hele pagina geldt),
+// en wordt pas geladen als het in beeld komt. Kiezen = meteen de hele pagina in dat lettertype.
+function pasLettertypeLiveToe(fam){document.querySelectorAll('style').forEach(st=>{if(st.id==='fibro-font-style'||/^\s*\*\s*\{\s*font-family:/.test(st.textContent))st.remove()});if(!fam){document.body.style.fontFamily='';return}try{laadFont(String(fam).split(',')[0].replace(/['"]/g,'').trim())}catch(e){}const st=document.createElement('style');st.id='fibro-font-style';st.textContent='* { font-family: '+fam+' !important; }';document.head.appendChild(st);document.body.style.fontFamily=fam}
+function bouwFontGrid(){const grid=document.getElementById('fontGrid');grid.innerHTML='';const zichtbaar=('IntersectionObserver' in window)?new IntersectionObserver(items=>{items.forEach(it=>{if(it.isIntersecting&&it.boundingClientRect.height>0){try{laadFont(it.target.dataset.font)}catch(e){};zichtbaar.unobserve(it.target)}})},{rootMargin:'300px'}):null;fonts.forEach(f=>{const div=document.createElement('div');div.className='font-item'+(huidigLettertype===f.familie?' selected':'');div.dataset.font=f.naam;div.innerHTML=`<div class="font-preview" style="font-family:${f.familie} !important;">${f.naam}</div><div class="font-zin" style="font-family:${f.familie} !important;">Het leven is mooi & bijzonder</div><div class="font-name">${f.stijl}</div>`;div.onclick=()=>{document.querySelectorAll('.font-item').forEach(i=>i.classList.remove('selected'));div.classList.add('selected');huidigLettertype=f.familie;pasLettertypeLiveToe(f.familie)};grid.appendChild(div);if(zichtbaar)zichtbaar.observe(div);else{try{laadFont(f.naam)}catch(e){}}})}
 window.updateAccent=function(k){document.getElementById('accentPicker').value=k;document.getElementById('accentHex').value=k;document.documentElement.style.setProperty('--accent',k)}
 window.updateAccentHex=function(v){if(/^#[0-9a-f]{6}$/i.test(v))updateAccent(v)}
 window.updateAccent2=function(k){document.getElementById('accent2Picker').value=k;document.getElementById('accent2Hex').value=k;document.documentElement.style.setProperty('--accent2',k)}
@@ -956,6 +960,7 @@ window.slaAllesOp=async function(){
 
 
   // ── Alleen technische sync naar Supabase (geen PII) ──
+  const avatarData=await haalAvatarDataOp()
   const{error}=await supabase.from('profiles').upsert({
     id:huidigeUser.id,
     username:profiel?.username||huidigeUser.id,
@@ -969,11 +974,17 @@ window.slaAllesOp=async function(){
     toon_online:isOnline,
     offline_emoji:gekozenMoodEmoji,
     offline_bericht:document.getElementById('editMood').value.trim() || 'Offline',
-    avatar_data: await haalAvatarDataOp(),
+    avatar_data: avatarData,
     wallpaper_data: await haalWallpaperDataOp()
   })
 
   if(!error)bewaarThemaCache(huidigeUser.id,{accent_kleur:accentKleur,accent_kleur2:accentKleur2,achtergrond_kleur:bgKleur,lettertype:huidigLettertype,animatie:huidigeAnimatie}) // v119
+  // v129: de wijziging meteen laten zien (niet pas na verversen): lettertype en animatie op deze pagina,
+  // en het bewaarde profiel bijwerken zodat Home meteen de nieuwe mood en avatar toont
+  try{if(huidigLettertype)localStorage.setItem('fibro_font',huidigLettertype);else localStorage.removeItem('fibro_font')}catch(e){}
+  pasLettertypeLiveToe(huidigLettertype)
+  try{pasAnimatieToe(huidigeAnimatie)}catch(e){}
+  if(!error){const nieuw=Object.assign({},profiel||{},{accent_kleur:accentKleur,accent_kleur2:accentKleur2,achtergrond_kleur:bgKleur,lettertype:huidigLettertype,animatie:huidigeAnimatie,online_status:isOnline,toon_online:isOnline,offline_emoji:gekozenMoodEmoji,offline_bericht:document.getElementById('editMood').value.trim()||'Offline',avatar_data:avatarData});profiel=nieuw;bewaarProfielCache(huidigeUser.id,nieuw)}
   const msg=document.getElementById('statusMsg')
   if(error){msg.className='status-msg error';msg.textContent='✗ Opslaan mislukt: '+error.message}
   else{msg.className='status-msg success';msg.textContent='✓ Profiel opgeslagen!';setTimeout(()=>msg.className='status-msg',2000)}

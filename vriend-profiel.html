@@ -433,8 +433,8 @@ body.heeft-wallpaper::before { display:block; }
     await vriendAchtergrond(el, vriendId, 'poll')
 
     const teken = async () => {
-      let tellers = {}, alGestemd = false, kanStemmen = !!p.id
-      if (p.id) {
+      let tellers = {}, alGestemd = false, kanStemmen = !!p.id && navigator.onLine // v128: zonder internet niet wachten
+      if (kanStemmen) {
         try {
           const [t, m] = await Promise.all([
             supabase.from('poll_tellers').select('optie, aantal').eq('eigenaar_id', vriendId).eq('poll_id', p.id),
@@ -456,7 +456,8 @@ body.heeft-wallpaper::before { display:block; }
           + '<span style="font-size:12px;color:var(--accent);font-weight:600">' + (toonPct ? pct + '%' : '') + '</span>'
           + '</div></div>'
       }).join('')
-      const onder = !kanStemmen ? 'Stemmen kan nog niet op deze poll'
+      const onder = !navigator.onLine ? '\u{1F4F4} Zonder internet kun je niet stemmen'
+        : !kanStemmen ? 'Stemmen kan nog niet op deze poll'
         : alGestemd ? tot + ' stemmen'
         : 'Tik op je keuze'
       el.innerHTML = '<div style="position:relative;z-index:2;padding:10px 8px">'
@@ -747,10 +748,12 @@ async function renderVriendMuziek(el) {
     // ── Stap 1: Toon eerst cache (snel) ──
     const cacheKey = 'vriend_cache_' + vriendId + '_' + (huidigeUser?.id || 'anon')
     const cache = localStorage.getItem(cacheKey)
+    let getoond = false
     if (cache) {
       try {
         const cached = JSON.parse(cache)
-        toonProfielData(cached)
+        toonProfielData({ ...cached, username: cached.naam }) // v128: de cache bewaart de naam als 'naam'
+        getoond = true
 
         // Gecachede avatar tonen
         const cachedAvatar = await laadFotoUitDB('vriend_avatar_' + vriendId)
@@ -761,15 +764,63 @@ async function renderVriendMuziek(el) {
         if (cachedWallpaper) toonWallpaper(cachedWallpaper)
       } catch(e) {}
     }
+    // v128: profiel nog nooit geopend? Dan wat de vriendenlijsten op dit toestel weten
+    if (!getoond) {
+      const b = bewaardeVriend()
+      if (b) {
+        toonProfielData(b)
+        toonAvatar(await laadFotoUitDB('vriend_avatar_' + vriendId), b.avatar_url)
+        getoond = true
+      }
+    }
 
-    // ── Stap 2: Laad vers van Supabase op achtergrond ──
+    // v128: zonder internet niet op de server wachten (supabase-js probeert het zelf ~7 s opnieuw)
+    if (!navigator.onLine) {
+      toonZonderVerbinding(getoond, '\u{1F4F4} Geen internet')
+      window.addEventListener('online', () => { haalVers(cacheKey) }, { once: true })
+      return
+    }
+    if (!(await haalVers(cacheKey)) && !getoond) toonZonderVerbinding(false, '\u26A0\uFE0F Laden lukte niet')
+  }
+
+  // v128: profiel nog nooit geopend? Dan wat Vrienden of Chat op dit toestel bewaard hebben
+  function bewaardeVriend() {
+    const ik = huidigeUser.id
+    try {
+      const vp = JSON.parse(localStorage.getItem('fibro_vriendenpagina_' + ik) || 'null')
+      const f = vp && Array.isArray(vp.data) && vp.data.find(x => x && x.profiles && x.profiles.id === vriendId)
+      if (f) return f.profiles
+    } catch (e) {}
+    try {
+      const cv = JSON.parse(localStorage.getItem('fibro_chatvrienden_' + ik) || 'null')
+      const c = Array.isArray(cv) && cv.find(x => x && x.id === vriendId)
+      if (c) return { username: c.username, avatar_url: c.avatar_url }
+    } catch (e) {}
+    return null
+  }
+
+  // v128: zonder verbinding weten we niet of de vriend online is
+  function toonZonderVerbinding(getoond, tekst) {
+    document.getElementById('onlineDot').classList.remove('online')
+    document.getElementById('onlineLabel').textContent = tekst
+    if (getoond) return
+    const naam = vriendNaam('Vriend')
+    document.getElementById('profielNaam').textContent = naam
+    document.getElementById('paginaTitel').textContent = naam
+    document.getElementById('moodEmoji').textContent = '\u{1F4F4}'
+    document.getElementById('moodTekst').textContent = 'Dit profiel staat nog niet op dit toestel'
+    toonAvatar(null, '\u{1F464}')
+  }
+
+  // ── Stap 2: Laad vers van Supabase ──
+  async function haalVers(cacheKey) {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', vriendId)
       .single()
 
-    if (error || !data) return
+    if (error || !data) return false
     vriendData = data
     toonProfielData(data)
 
@@ -806,7 +857,7 @@ async function renderVriendMuziek(el) {
         bijgewerkt: new Date().toISOString()
       }))
     } catch(e) {}
-
+    return true
   }
 
   // Gastenboek als opengeslagen boek. Papier, liniatuur en kantlijn zitten
@@ -854,14 +905,36 @@ async function renderVriendMuziek(el) {
       document.head.appendChild(st)
     }
 
+    // v128: de laatste stand bewaren, zodat het boek ook zonder internet gevuld is (zoals op Home).
+    // Zonder internet niet eerst de server proberen (die probeert het een paar keer opnieuw).
+    const gbSleutel = 'fibro_vriendgb_' + huidigeUser.id + '_' + uid
+    let nietBewaard = false
+    const leesGb = () => {
+      try { const a = JSON.parse(localStorage.getItem(gbSleutel) || 'null'); return Array.isArray(a) ? a : null } catch (e) { return null }
+    }
+    const bewaarGb = lijst => {
+      try {
+        let s = JSON.stringify(lijst)
+        // Te groot (foto's van de schrijvers): dan zonder foto, de emoji blijft
+        if (s.length > 300000) s = JSON.stringify(lijst.map(e => Object.assign({}, e, { author: e.author ? { username: e.author.username, avatar_url: e.author.avatar_url } : e.author })))
+        if (s.length <= 300000) localStorage.setItem(gbSleutel, s)
+      } catch (e) {}
+    }
     const haal = async () => {
-      const { data } = await supabase
-        .from('guestbook_entries')
-        .select('*, author:author_id(username,avatar_url,avatar_data)')
-        .eq('profile_id', uid)
-        .order('created_at', { ascending: false })
-        .limit(40)
-      return data || []
+      nietBewaard = false
+      if (navigator.onLine) {
+        const { data, error } = await supabase
+          .from('guestbook_entries')
+          .select('*, author:author_id(username,avatar_url,avatar_data)')
+          .eq('profile_id', uid)
+          .order('created_at', { ascending: false })
+          .limit(40)
+        if (!error && Array.isArray(data)) { bewaarGb(data); return data }
+      }
+      const bewaard = leesGb()
+      if (bewaard) return bewaard
+      nietBewaard = !navigator.onLine
+      return []
     }
 
     // Papier: warme ondergrond, blauwe liniatuur, rode kantlijn, vouw links.
@@ -932,7 +1005,8 @@ async function renderVriendMuziek(el) {
       const l = c.querySelector('#gbwLijst')
       if (!l) return
       if (!alles.length) {
-        l.innerHTML = '<div style="font-size:14px;font-style:italic;color:#8a7f6d;padding:14px 4px">Dit boek is nog leeg.</div>'
+        l.innerHTML = '<div style="font-size:14px;font-style:italic;color:#8a7f6d;padding:14px 4px">' +
+          (nietBewaard ? '\u{1F4F4} Geen internet. Dit gastenboek staat nog niet op dit toestel.' : 'Dit boek is nog leeg.') + '</div>'
         tekenNav()
         return
       }
@@ -955,19 +1029,22 @@ async function renderVriendMuziek(el) {
 
     alles = await haal()
     tekenBlad(null)
+    // v128: is er weer internet, dan het boek opnieuw ophalen
+    window.addEventListener('online', async () => { if (!c.isConnected) return; alles = await haal(); blad = 0; tekenBlad(null) })
 
     const stuur = async () => {
       const inp = c.querySelector('#gbwInvoer')
       if (!inp) return
       const t = inp.value.trim()
       if (!t || t.length > 300) return
+      if (!navigator.onLine) { inp.placeholder = '\u{1F4F4} Geen internet, probeer het straks nog eens'; return } // v128: tekst blijft staan
       inp.value = ''
       const { error } = await supabase.from('guestbook_entries').insert({
         profile_id: uid,
         author_id: huidigeUser.id,
         content: t
       })
-      if (error) { console.warn('[gastenboek] plaatsen mislukt', error); return }
+      if (error) { console.warn('[gastenboek] plaatsen mislukt', error); inp.value = t; return } // v128: tekst terug in het vakje
       alles = await haal()
       blad = 0
       tekenBlad(null)

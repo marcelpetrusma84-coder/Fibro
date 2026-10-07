@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 7 oktober 2026 (na commit 3ee7bd2).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 7 oktober 2026 (vriend-profiel zonder internet).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -12,7 +12,8 @@ gen/bouw.py              generator: bouw(naam, oudmap, nieuwmap, gewijzigd, nieu
                          (controleert alles en schrijft pas als alles klopt; slaat tests/ over
                          bij het zoeken naar oude ?v=-verwijzingen)
 gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
-                         offline3 = 272c9cb, stickergeluid = 3ee7bd2)
+                         offline3 = 272c9cb, stickergeluid = 3ee7bd2, tests = fe03cde,
+                         vriendprofiel = vriend-profiel zonder internet)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -26,6 +27,8 @@ tools/proef11.py         berichten van alle vrienden bewaren, Runner & Gunner al
                          uitloggen wist offline-gegevens:
                          python3 -I proef11.py <scratch met tools/server.py> <map> <poort>
 tools/proef12.py         geen stickergeluid bij het openen van een chat
+tools/proef13.py         vriend-profiel zonder internet (eerder geopend / nooit geopend / onbekend),
+                         gastenboek van een vriend bewaard, uitloggen wist het
 tools/checkhtml.py       node --check op alle inline scripts: checkhtml.py <uitmap> <html...>
 tools/*.js               console-testjes voor Marcel (alert); ?v=-nummers daarin kunnen verouderd zijn
 

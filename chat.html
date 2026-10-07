@@ -780,6 +780,48 @@ window.veiligeUrl = function(v){
     }
     werkOnlineBij(data)
     startOnlineTimer()
+    setTimeout(() => bewaarAlleChats(data), 5000) // v128
+  }
+
+  // v128: zonder internet ook de berichten tonen van vrienden waarvan je de chat nog niet
+  // geopend had. Met internet, hoogstens eens per uur, op de achtergrond: per vriend de
+  // laatste 50 berichten bewaren, precies zoals laadBerichten (dus nog versleuteld).
+  // Eén vriend tegelijk, met een pauze ertussen, zodat de server er weinig van merkt.
+  let alleChatsBezig = false
+  async function bewaarAlleChats(vrienden) {
+    if (alleChatsBezig || !navigator.onLine || !huidigeUser || !Array.isArray(vrienden) || !vrienden.length) return
+    const stempel = 'fibro_chatlogs_bewaard_' + huidigeUser.id
+    try { if (Date.now() - Number(localStorage.getItem(stempel) || 0) < 60 * 60 * 1000) return } catch (e) { return }
+    alleChatsBezig = true
+    let bewaard = 0, mislukt = 0
+    try {
+      for (const v of vrienden.slice(0, 50)) {
+        const vriendId = v && v.id
+        if (!vriendId || geselecteerdeVriend?.id === vriendId) continue // open chat: laadBerichten bewaart zelf
+        if (!navigator.onLine) { mislukt++; break }
+        const { data, error } = await supabase
+          .from('messages')
+          .select('*')
+          .or(
+            `and(sender_id.eq.${huidigeUser.id},receiver_id.eq.${vriendId}),` +
+            `and(sender_id.eq.${vriendId},receiver_id.eq.${huidigeUser.id})`
+          )
+          .order('created_at', { ascending: false })
+          .limit(50)
+        if (error || !data) { mislukt++; continue }
+        const verborgen = await haalVerborgen(data.map(b => b.id))
+        if (verborgen.mislukt) { mislukt++; continue }
+        const rijen = data.filter(b => !verborgen.has(b.id))
+        if (JSON.stringify(rijen).length > 300000) continue // te groot om op dit toestel te bewaren
+        if (geselecteerdeVriend?.id === vriendId) continue // intussen geopend
+        bewaarChatlog(vriendId, rijen)
+        bewaard++
+        await new Promise(r => setTimeout(r, 300))
+      }
+      if (!mislukt) localStorage.setItem(stempel, String(Date.now()))
+      console.log('[chat] berichten bewaard voor zonder internet: ' + bewaard + ' vriend(en)' + (mislukt ? ', ' + mislukt + ' niet gelukt' : ''))
+    } catch (e) { console.warn('[chat] berichten bewaren mislukt', e) }
+    alleChatsBezig = false
   }
 
   // ─── Chat openen ───
@@ -1651,7 +1693,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     breakout: './blockit-ui.js?v=115',
     spaceinvaders: './invaders-ui.js?v=115',
     swarm: './swarm-ui.js?v=109',
-    endlessrunner: './runner-gunner-ui.js?v=124',
+    endlessrunner: './runner-gunner-ui.js?v=128',
     pacman: './ecto-ui.js?v=118',
     pinball: './twin-snakes-ui.js?v=118'
   }
@@ -2010,7 +2052,7 @@ async function startBlockIt() {
   }
 
   async function startRunnerGunner() {
-    const m = await import('./runner-gunner-ui.js?v=124')
+    const m = await import('./runner-gunner-ui.js?v=128')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'endlessrunner' })
   }
 

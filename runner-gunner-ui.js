@@ -143,7 +143,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       <div class="laag">
         <div>
           <h1>RUNNER &amp; GUNNER</h1>
-          <p>Jij en ${naamVriend} rennen op dezelfde baan. Wie komt het verst?</p>
+          <p>${spelKanaal ? 'Jij en ' + naamVriend + ' rennen op dezelfde baan. Wie komt het verst?' : 'Hoe ver kom jij?'}</p>
           <div class="rol"></div>
           <div class="keuze">
             <button class="kRunner" aria-pressed="true"><canvas class="pop"></canvas><b>RUNNER</b><small>Springt hoger.</small></button>
@@ -1407,6 +1407,7 @@ function zetAanraking(scene){
     try { spelKanaal.send({ type: 'broadcast', event: 'rg', payload: p }) } catch (e) {}
   }
   function toonAnder() {
+    if (!spelKanaal) { anderVak.hidden = true; return }   // v128: alleen spelen, geen medespeler
     if (!ander) { anderVak.textContent = NAAM + ': NOG NIET GESTART'; return }
     const sc = String(ander.s || 0).padStart(7, '0')
     anderVak.textContent = ander.d ? NAAM + ': GAME OVER ' + sc

@@ -1912,6 +1912,8 @@ window.uitloggen = async function() {
     localStorage.removeItem('fibro_lettertype')
     localStorage.removeItem('fibro_lettertype')
     if (window._uid) { localStorage.removeItem('fibro_thema_' + window._uid); localStorage.removeItem('fibro_profielcache_' + window._uid) } // v119
+    // v128: ook de bewaarde gegevens voor zonder internet wissen (chatberichten, vriendenlijsten, gastenboek)
+    if (window._uid) { const u = window._uid; Object.keys(localStorage).forEach(k => { if (k.startsWith('fibro_chatlog_' + u + '_') || k === 'fibro_chatvrienden_' + u || k === 'fibro_gastenboek_' + u || k === 'fibro_vriendenpagina_' + u || k === 'fibro_chatlogs_bewaard_' + u) localStorage.removeItem(k) }) }
     await supabase.auth.signOut({ scope: 'local' })
   } catch(e) { /* ga toch door naar login, ook als signOut faalt */ }
   window.location.href = 'login.html'

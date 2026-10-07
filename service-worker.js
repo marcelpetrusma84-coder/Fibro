@@ -2,7 +2,10 @@
 // CACHE_VERSION gooit alle oude scriptkopieen weg, zodat iedereen de nieuwe ophaalt.
 // v30 (zonder nieuwe CACHE_VERSION): html-pagina's worden ook bewaard, voor als er
 // geen internet is. Zie hieronder bij 'Html-pagina's'.
-const CACHE_VERSION = 'fibro-v29'
+// fibro-v30: supabase.js wacht zonder internet niet meer op een verlopen inlogpas.
+// supabase.js wordt bijna overal geladen (?v=95); een nieuwe CACHE_VERSION zorgt dat
+// iedereen de nieuwe ophaalt. kastvullen.js vult de kast daarna vanzelf weer aan.
+const CACHE_VERSION = 'fibro-v30'
 
 self.addEventListener('install', function(event) {
   self.skipWaiting()

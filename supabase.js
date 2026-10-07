@@ -6,6 +6,27 @@ export const supabase = createClient(
   'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
 )
 
+// Zonder internet niet wachten op een verlopen inlogpas (fibro-v30).
+// Is de pas (bijna) verlopen, dan probeert supabase-js hem te vernieuwen en houdt dat
+// zonder internet tot 30 seconden vol; alle andere aanroepen (ook elk verzoek naar de
+// server) wachten zolang. Zonder internet heeft dat geen zin: dan geven we meteen de
+// bewaarde pas terug, ook als hij verlopen is. Verzoeken mislukken dan direct en de
+// pagina toont wat er op dit toestel bewaard is. Met internet verandert er niets.
+const echteGetSession = supabase.auth.getSession.bind(supabase.auth)
+supabase.auth.getSession = async function () {
+  if (navigator.onLine === false) {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)
+        if (!k || !k.startsWith('sb-') || !k.endsWith('-auth-token')) continue
+        const s = JSON.parse(localStorage.getItem(k) || 'null')
+        if (s && s.access_token && s.user && s.user.id) return { data: { session: s }, error: null }
+      }
+    } catch (e) {}
+  }
+  return echteGetSession()
+}
+
 // Inlogpas ook op de achtergrond vernieuwen (fibro-v29).
 // De pas is een uur geldig. supabase-js vernieuwt hem alleen zolang de pagina in beeld
 // is. Verloopt hij terwijl de pagina op de achtergrond staat, dan sluit Supabase alle

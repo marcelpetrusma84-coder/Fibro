@@ -1,6 +1,6 @@
 import subprocess, sys, time, json, os
 from playwright.sync_api import sync_playwright
-# proef24: balkje "Server even niet bereikbaar" (verbinding.js) als Supabase niet antwoordt;
+# proef24 (v2): balkje "Server even niet bereikbaar" (verbinding.js) als Supabase niet antwoordt;
 # weg zodra de server weer antwoordt; niet bij een losse hapering, niet bij 401, niet zonder internet.
 # python3 -I proef24.py <scratch met tools/server.py> <map> <poort>
 S = sys.argv[1]; MAP = sys.argv[2]; PORT = int(sys.argv[3]); B = f'http://127.0.0.1:{PORT}/Fibro/'
@@ -13,6 +13,8 @@ TOKEN = json.dumps({"access_token": "x", "refresh_token": "y", "token_type": "be
 staat = {'modus': 'goed'}
 def supa(route):
     u = route.request.url; m = route.request.method
+    if '/functions/v1/' in u: return route.fulfill(status=500, json={"message": "hulpfunctie kapot"})
+    if staat['modus'] == 'hik' and '/auth/v1/health' not in u: return route.abort('connectionrefused')
     if staat['modus'] == 'kapot': return route.fulfill(status=503, json={"message": "even weg"})
     if staat['modus'] == 'weg': return route.abort('connectionrefused')
     if staat['modus'] == '401': return route.fulfill(status=401, json={"message": "nee"})
@@ -33,16 +35,22 @@ with sync_playwright() as pw:
     for pg in ['index.html', 'vrienden.html', 'chat.html', 'profiel.html']:
         staat['modus'] = 'goed'; p.goto(B + pg); p.wait_for_timeout(2500)
         check(pg + ': server goed, geen balkje', p.evaluate(BALK) is None, p.evaluate(BALK))
-        staat['modus'] = 'kapot'; p.goto(B + pg); p.wait_for_timeout(3000)
+        staat['modus'] = 'kapot'; p.goto(B + pg); p.wait_for_timeout(10500)
         b = p.evaluate(BALK)
         check(pg + ': server geeft fouten, balkje', b is not None and 'Server even niet bereikbaar' in b, b)
-    staat['modus'] = 'weg'; p.goto(B + 'index.html'); p.wait_for_timeout(3000)
+    staat['modus'] = 'hik'; p.goto(B + 'index.html'); p.wait_for_timeout(10500)
+    check('hapering vlak na openen, server antwoordt wel: geen balkje', p.evaluate(BALK) is None, p.evaluate(BALK))
+    staat['modus'] = 'goed'; p.goto(B + 'index.html'); p.wait_for_timeout(9000)
+    for i in range(3): p.evaluate("() => fetch('https://qmgatbphiplrfxrljtbe.supabase.co/functions/v1/stuur-push', { method: 'POST' }).catch(() => {})")
+    p.wait_for_timeout(1500)
+    check('hulpfunctie geeft fouten: geen balkje', p.evaluate(BALK) is None, p.evaluate(BALK))
+    staat['modus'] = 'weg'; p.goto(B + 'index.html'); p.wait_for_timeout(10500)
     check('server helemaal weg: balkje', p.evaluate(BALK) is not None, p.evaluate(BALK))
     p.wait_for_timeout(6500)
     check('na 6 s klein', p.evaluate(BALK) == '⚠️', p.evaluate(BALK))
     staat['modus'] = 'goed'
-    p.evaluate("() => fetch('https://qmgatbphiplrfxrljtbe.supabase.co/rest/v1/profiles?select=id').catch(() => {})"); p.wait_for_timeout(800)
-    check('server weer goed: balkje weg', p.evaluate(BALK) is None, p.evaluate(BALK))
+    p.wait_for_timeout(16000)
+    check('server weer goed: balkje gaat vanzelf weg (Fibro kijkt zelf)', p.evaluate(BALK) is None, p.evaluate(BALK))
     p.evaluate("() => { const f = () => fetch('https://qmgatbphiplrfxrljtbe.supabase.co/rest/v1/x').catch(() => {}); return f() }")
     staat['modus'] = 'kapot'
     p.evaluate("() => fetch('https://qmgatbphiplrfxrljtbe.supabase.co/rest/v1/x').catch(() => {})"); p.wait_for_timeout(500)

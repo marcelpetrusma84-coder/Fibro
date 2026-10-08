@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (lettertypen even breed).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (serverbalkje rustiger).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -24,7 +24,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          nietkwijt = niet verstuurde berichten/stickers blijven staan (testscript_nietkwijt.py),
                          serverbalk = balkje als de server even weg is (testscript_serverbalk.py),
                          toegankelijk = zoomen, contrast, hoofdgebied en hoofdtitel (testscript_toegankelijk.py),
-                         lettermaat = lettertypen even breed (size-adjust) (testscript_lettermaat.py))
+                         lettermaat = lettertypen even breed (size-adjust) (testscript_lettermaat.py),
+                         serverbalk2 = serverbalkje niet te snel (testscript_serverbalk2.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -59,7 +60,7 @@ tools/proef22.py         vegen (touch via CDP): gastenboek bladeren op Home en b
                          pagina), fotoviewer: omlaag vegen sluit, klein stukje niet, opzij = volgende foto
 tools/proef23.py         chat: niet verstuurd (server weg / geen internet) blijft staan, ook na verversen,
                          tikken = opnieuw; maakt zelf sleutels met crypto.js
-tools/proef24.py         verbinding.js: balkje als Supabase niet antwoordt (503 of weg), weg als hij weer antwoordt,
+tools/proef24.py         verbinding.js (v2): balkje als Supabase niet antwoordt (503 of weg), weg als hij weer antwoordt,
                          niet bij één hapering, niet bij 401, niet zonder internet
 tools/keuring.py         keuring van 8 pagina's: kwaadaardige namen/teksten (XSS), server kapot (fouten),
                          toegankelijkheid met axe-core (eerst npm install axe-core@4.10.2 in <scratch>/axe)

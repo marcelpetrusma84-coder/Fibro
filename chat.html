@@ -465,7 +465,7 @@ window.veiligeUrl = function(v){
     if (!key) return null
     try {
       const b = JSON.parse(localStorage.getItem(key) || 'null')
-      // v132: verlopen berichten (zelf gekozen bewaartijd) ook zonder internet niet meer tonen
+      // v132: verlopen berichten (zelf gekozen bewaartijd) ook zonder internet niet meer tonen (v133: ruimChatlogsOp gooit ze ook weg)
       return Array.isArray(b) ? b.filter(m => !m || !m.expires_at || !(new Date(m.expires_at).getTime() <= Date.now())) : null
     } catch(e) { return null }
   }
@@ -491,6 +491,61 @@ window.veiligeUrl = function(v){
     if (!oud) return
     const rest = oud.filter(b => b.id !== id)
     if (rest.length !== oud.length) bewaarChatlog(vriendId, rest)
+  }
+
+  // v133: verlopen berichten ook van dit toestel weggooien (zelf gekozen bewaartijd).
+  // 1. De bewaarde gesprekken (voor zonder internet): alles met een verlopen einddatum eruit.
+  //    Gaat alleen over dit toestel, dus elke keer.
+  // 2. De tekst van je eigen verstuurde berichten (voor het teruglezen, max 500): de server
+  //    zegt welke er nog zijn; wat verlopen of voor iedereen weg is, gaat er hier ook uit.
+  //    Hoogstens eens per 6 uur, met 100 berichten per vraag. Lukt een vraag niet, dan
+  //    wordt er niets weggegooid.
+  function ruimChatlogsOp() {
+    if (!huidigeUser) return 0
+    const begin = 'fibro_chatlog_' + huidigeUser.id + '_'
+    let weg = 0
+    try {
+      for (const k of Object.keys(localStorage)) {
+        if (!k.startsWith(begin)) continue
+        let b = null
+        try { b = JSON.parse(localStorage.getItem(k) || 'null') } catch (e) {}
+        if (!Array.isArray(b)) continue
+        const rest = b.filter(m => !m || !m.expires_at || !(new Date(m.expires_at).getTime() <= Date.now()))
+        if (rest.length !== b.length) { weg += b.length - rest.length; localStorage.setItem(k, JSON.stringify(rest)) }
+      }
+    } catch (e) {}
+    return weg
+  }
+  let cacheNakijkenBezig = false
+  async function ruimBerichtCacheOp() {
+    const weg1 = ruimChatlogsOp()
+    if (weg1) console.log('[chat] ' + weg1 + ' verlopen bericht(en) uit de bewaarde gesprekken gewist')
+    const key = berichtCacheSleutel()
+    if (!key || cacheNakijkenBezig || navigator.onLine === false) return
+    const stempel = 'fibro_msgcache_nagekeken_' + huidigeUser.id
+    try { if (Date.now() - Number(localStorage.getItem(stempel) || 0) < 6 * 60 * 60 * 1000) return } catch (e) { return }
+    let cache
+    try { cache = JSON.parse(localStorage.getItem(key) || '{}') } catch (e) { return }
+    const ids = Object.keys(cache).filter(id => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))
+    cacheNakijkenBezig = true
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session || !session.user || session.user.id !== huidigeUser.id) return
+      const nogEr = new Set()
+      for (let i = 0; i < ids.length; i += 100) {
+        const { data, error } = await supabase.from('messages').select('id').in('id', ids.slice(i, i + 100))
+        if (error || !Array.isArray(data)) return // niets weggooien
+        for (const r of data) if (r && r.id) nogEr.add(String(r.id))
+      }
+      const nu = JSON.parse(localStorage.getItem(key) || '{}') // opnieuw lezen: intussen kan er iets bij zijn gekomen
+      let weg = 0
+      for (const id of ids) if (!nogEr.has(id) && Object.prototype.hasOwnProperty.call(nu, id)) { delete nu[id]; weg++ }
+      if (weg) localStorage.setItem(key, JSON.stringify(nu))
+      localStorage.setItem(stempel, String(Date.now()))
+      if (weg) console.log('[chat] ' + weg + ' eigen bericht(en) die niet meer op de server staan, ook hier gewist')
+    } catch (e) {
+      console.warn('[chat] eigen berichten nakijken mislukt', e)
+    } finally { cacheNakijkenBezig = false }
   }
 
   // ─── Geluiden ───
@@ -789,6 +844,7 @@ window.veiligeUrl = function(v){
     werkOnlineBij(data)
     startOnlineTimer()
     setTimeout(() => bewaarAlleChats(data), 5000) // v128
+    setTimeout(() => ruimBerichtCacheOp(), 15000) // v133
   }
 
   // v128: zonder internet ook de berichten tonen van vrienden waarvan je de chat nog niet

@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (huisregel = Content-Security-Policy op alle pagina's, huisregel.js).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (Over Fibro: eerlijke tekst over wat er op de server staat).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -36,7 +36,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          toesteloprui = verlopen berichten ook van het toestel weg (testscript_toesteloprui.py),
                          vriendfotos = avatarfoto's van vrienden in Vrienden en Chat (testscript_vriendfotos.py),
                          account = mijn gegevens downloaden en account verwijderen (testscript_account.py),
-                         huisregel = Content-Security-Policy op alle 12 pagina's (testscript_huisregel.py))
+                         huisregel = Content-Security-Policy op alle 12 pagina's (testscript_huisregel.py),
+                         eerlijk = Over Fibro: wat er echt op de server staat (testscript_eerlijk.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)

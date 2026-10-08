@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (Over Fibro: eerlijke tekst over wat er op de server staat).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (Profiel opslaan stuurt foto's alleen mee als ze veranderd zijn).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -37,7 +37,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          vriendfotos = avatarfoto's van vrienden in Vrienden en Chat (testscript_vriendfotos.py),
                          account = mijn gegevens downloaden en account verwijderen (testscript_account.py),
                          huisregel = Content-Security-Policy op alle 12 pagina's (testscript_huisregel.py),
-                         eerlijk = Over Fibro: wat er echt op de server staat (testscript_eerlijk.py))
+                         eerlijk = Over Fibro: wat er echt op de server staat (testscript_eerlijk.py),
+                         licht = Profiel opslaan zonder onveranderde foto's (testscript_licht.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -108,6 +109,8 @@ tools/proef36.py         de huisregel (Content-Security-Policy): dezelfde ronde 
                          LET OP bij elke proef met de huisregel: geen route_web_socket (Playwright vervangt dan
                          WebSocket in de pagina, de huisregel kijkt er niet naar); pogingen tellen via CDP
                          Network.webSocketCreated. WebKit (Safari) staat niet in de werkmap.
+tools/proef37.py         Profiel opslaan: avatar en achtergrond alleen mee als ze anders zijn dan de vorige keer
+                         (vingerafdruk fibro_fotos_verstuurd_<uid>), updated_at alleen dan; server-fout = opnieuw
 tools/nep-supabase.sql   kleine nabootsing van de database (PostgreSQL 16, nep-gegevens) om sql/*.sql vooraf te
                          proberen: initdb + pg_ctl als gebruiker postgres, psql -f nep-supabase.sql, dan het
                          SQL-bestand (regel 'create extension if not exists pg_cron;' eruit: cron is nagebootst).

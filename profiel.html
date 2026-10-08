@@ -899,6 +899,25 @@ async function haalAvatarDataOp() {
   } catch(e) { return null }
 }
 
+// v137: vingerafdruk (SHA-256) van een foto, om te weten of hij anders is dan wat dit toestel de vorige
+// keer naar de server stuurde. '-' = geen foto; null = kon niet (dan altijd meesturen, zoals vroeger).
+async function fotoVinger(data) {
+  if (!data) return '-'
+  try {
+    const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(data)))
+    return Array.from(new Uint8Array(h), b => b.toString(16).padStart(2, '0')).join('')
+  } catch (e) { return null }
+}
+function leesFotoVingers(uid) {
+  try {
+    const v = JSON.parse(localStorage.getItem('fibro_fotos_verstuurd_' + uid) || 'null')
+    return v && typeof v.a === 'string' && typeof v.w === 'string' ? v : null
+  } catch (e) { return null }
+}
+function bewaarFotoVingers(uid, v) {
+  try { localStorage.setItem('fibro_fotos_verstuurd_' + uid, JSON.stringify(v)) } catch (e) {}
+}
+
 // ── Haal wallpaper data op voor Supabase ──
 async function haalWallpaperDataOp() {
   const userId = huidigeUser?.id
@@ -971,11 +990,17 @@ window.slaAllesOp=async function(){
 
 
   // ── Alleen technische sync naar Supabase (geen PII) ──
+  // v137: avatar en achtergrondfoto (samen gemiddeld 1,5 MB) alleen meesturen als ze anders zijn dan wat
+  // dit toestel de vorige keer stuurde. updated_at is het etiket waaraan vrienden zien dat ze je foto's
+  // opnieuw moeten ophalen (vriend-profiel, vriendfotos.js): dat gaat dus ook alleen mee als er een foto
+  // veranderd is. Zo zet een ander toestel met een oude achtergrond die ook niet meer terug.
   const avatarData=await haalAvatarDataOp()
-  const{error}=await supabase.from('profiles').upsert({
+  const wallpaperData=await haalWallpaperDataOp()
+  const vorigeVingers=leesFotoVingers(huidigeUser.id)
+  const vingers={a:await fotoVinger(avatarData),w:await fotoVinger(wallpaperData)}
+  const rij={
     id:huidigeUser.id,
     username:profiel?.username||huidigeUser.id,
-    updated_at:new Date().toISOString(),
     accent_kleur:accentKleur,
     accent_kleur2:accentKleur2,
     achtergrond_kleur:bgKleur,
@@ -984,10 +1009,13 @@ window.slaAllesOp=async function(){
     online_status:isOnline,
     toon_online:isOnline,
     offline_emoji:gekozenMoodEmoji,
-    offline_bericht:document.getElementById('editMood').value.trim() || 'Offline',
-    avatar_data: avatarData,
-    wallpaper_data: await haalWallpaperDataOp()
-  })
+    offline_bericht:document.getElementById('editMood').value.trim() || 'Offline'
+  }
+  if(!vorigeVingers||!vingers.a||vingers.a!==vorigeVingers.a)rij.avatar_data=avatarData
+  if(!vorigeVingers||!vingers.w||vingers.w!==vorigeVingers.w)rij.wallpaper_data=wallpaperData
+  if('avatar_data' in rij||'wallpaper_data' in rij)rij.updated_at=new Date().toISOString()
+  const{error}=await supabase.from('profiles').upsert(rij)
+  if(!error&&vingers.a&&vingers.w)bewaarFotoVingers(huidigeUser.id,vingers)
 
   if(!error)bewaarThemaCache(huidigeUser.id,{accent_kleur:accentKleur,accent_kleur2:accentKleur2,achtergrond_kleur:bgKleur,lettertype:huidigLettertype,animatie:huidigeAnimatie}) // v119
   // v129: de wijziging meteen laten zien (niet pas na verversen): lettertype en animatie op deze pagina,

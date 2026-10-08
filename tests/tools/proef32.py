@@ -47,7 +47,7 @@ with sync_playwright() as pw:
     print('1. Menu')
     p.click('#menuBtn'); p.wait_for_timeout(300)
     items = p.evaluate("() => [...document.querySelectorAll('#fibroMenu [role=menuitem]')].map(b => b.textContent)")
-    check('menu met Berichten bewaren en Over Fibro', len(items) == 2 and 'Berichten bewaren' in items[0] and 'Over Fibro' in items[1], items)
+    check('menu met Berichten bewaren en Over Fibro', 'Berichten bewaren' in items[0] and any('Over Fibro' in t for t in items), items)  # v135: er staan er nu meer in
     check('nog op Home (niet meteen naar Over)', p.url.endswith('index.html'), p.url)
     p.mouse.click(30, 400); p.wait_for_timeout(300)
     check('tikken naast het menu sluit het', p.evaluate("() => !document.getElementById('fibroMenu')"))
@@ -106,7 +106,7 @@ with sync_playwright() as pw:
     staat['msgfout'] = False
     print('10. Over Fibro via het menu')
     p.goto(B + 'index.html'); p.wait_for_timeout(1500)
-    p.click('#menuBtn'); p.click('#fibroMenu [role=menuitem] >> nth=1'); p.wait_for_timeout(1000)
+    p.click('#menuBtn'); p.click('#fibroMenu [role=menuitem]:has-text("Over Fibro")'); p.wait_for_timeout(1000)
     check('naar Over Fibro', p.url.endswith('over.html') and 'kortste' in p.inner_text('body'), p.url)
     check('geen paginafouten', not perr, perr)
     br.close()

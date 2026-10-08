@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (avatarfoto's van vrienden, vriendfotos.js).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (account verwijderen en mijn gegevens downloaden, account.js).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -34,7 +34,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          profielkolommen = profielen zonder onnodige foto's (testscript_profielkolommen.py),
                          bewaren = menu op Home, berichten bewaren 1 dag t/m 1 jaar (testscript_bewaren.py),
                          toesteloprui = verlopen berichten ook van het toestel weg (testscript_toesteloprui.py),
-                         vriendfotos = avatarfoto's van vrienden in Vrienden en Chat (testscript_vriendfotos.py))
+                         vriendfotos = avatarfoto's van vrienden in Vrienden en Chat (testscript_vriendfotos.py),
+                         account = mijn gegevens downloaden en account verwijderen (testscript_account.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -93,9 +94,17 @@ tools/proef33.py         verlopen berichten van het toestel: eigen berichttekst 
                          nagekeken bij de server (100 per vraag, bij een fout niets weg), bewaarde gesprekken meteen
 tools/proef34.py         avatarfoto's van vrienden (vriendfotos.js) in Vrienden, Chat-lijst, kop en berichten; alleen
                          ophalen als ze ontbreken of de vriend opnieuw opsloeg (updated_at); foto weg = emoji
+tools/proef35.py         menu (☰) op Home: mijn gegevens downloaden (berichten leesbaar met echte sleutels uit
+                         crypto.js, gewoon downloaden en delen zoals op de iPhone) en account verwijderen (naam
+                         intypen, verkeerde naam, server nog niet bijgewerkt, geen internet, verbinding weg en
+                         opnieuw); daarna niets meer van dit account op het toestel, van een ander account alles nog
 tools/nep-supabase.sql   kleine nabootsing van de database (PostgreSQL 16, nep-gegevens) om sql/*.sql vooraf te
                          proberen: initdb + pg_ctl als gebruiker postgres, psql -f nep-supabase.sql, dan het
-                         SQL-bestand (regel 'create extension if not exists pg_cron;' eruit: cron is nagebootst)
+                         SQL-bestand (regel 'create extension if not exists pg_cron;' eruit: cron is nagebootst).
+                         Sinds 8 okt (account verwijderen): alle 16 tabellen met een verwijzing naar een account,
+                         met precies dezelfde 25 verwijzingen (CASCADE / SET NULL / NO ACTION) als de echte
+                         database, auth.users, de (lege) foto-opslag, en functies krijgen vanzelf rechten voor
+                         anon/authenticated zoals bij Supabase. Eerst sql/berichten-bewaren.sql erover draaien.
 tools/checkhtml.py       node --check op alle inline scripts: checkhtml.py <uitmap> <html...>
 tools/*.js               console-testjes voor Marcel (alert); ?v=-nummers daarin kunnen verouderd zijn
 

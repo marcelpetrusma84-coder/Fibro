@@ -2048,9 +2048,12 @@ window.openMenu = function() {
     b.style.cssText = 'display:block;width:100%;min-height:44px;text-align:left;background:none;border:none;border-radius:10px;color:var(--text);font-size:15px;padding:10px 12px;cursor:pointer;font-family:inherit'
     b.onclick = () => { sluitMenu(); actie() }
     m.appendChild(b)
+    return b
   }
   item('\u23F3 Berichten bewaren', openBewaren)
+  item('\u{1F4E6} Mijn gegevens downloaden', () => openAccount('gegevens'))
   item('\u2139\uFE0F Over Fibro', () => { window.location.href = 'over.html' })
+  item('\u{1F5D1}\uFE0F Account verwijderen', () => openAccount('verwijderen')).style.color = '#fca5a5'
   document.body.appendChild(m)
   knop.setAttribute('aria-expanded', 'true')
   m.querySelector('button').focus()
@@ -2167,6 +2170,21 @@ async function openBewaren() {
       teken()
     }
   } catch (e) {}
+}
+
+// v135: mijn gegevens downloaden en account verwijderen (account.js, pas laden bij een tik;
+// de server doet het echte werk: sql/account-verwijderen.sql)
+async function openAccount(wat) {
+  const uid = window._uid
+  if (!uid) return
+  try {
+    const m = await import('./account.js?v=1')
+    if (wat === 'verwijderen') m.openVerwijderen(uid)
+    else m.openGegevens(uid)
+  } catch (e) {
+    console.warn('[account] laden mislukt', e)
+    alert(navigator.onLine === false ? 'Geen internet. Probeer het later opnieuw.' : 'Dit lukte niet. Probeer het later opnieuw.')
+  }
 }
 
 // ════════════════════════════════

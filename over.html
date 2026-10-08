@@ -11,6 +11,8 @@
 </script>
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<script src="huisregel.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -33,6 +35,9 @@
   .binnenkort { opacity:1; } /* v130: leesbaar (contrast) */
   .binnenkort h2 { color:var(--muted); }
   .label { display:inline-block; font-size:11px; color:var(--muted); border:0.5px solid var(--border); border-radius:10px; padding:3px 8px; margin-left:6px; }
+  details.blok > summary { font-size:16px; color:var(--accent); font-weight:600; cursor:pointer; min-height:44px; display:flex; align-items:center; }
+  details.blok[open] > summary { margin-bottom:10px; }
+  #huisregelLijst li { word-break:break-all; font-size:13px; }
 </style>
 <link rel="stylesheet" href="android-fix.css?v=1">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -107,8 +112,40 @@
     </ul>
   </div>
 
+  <details class="blok" id="technisch">
+    <summary>Technisch</summary>
+    <p id="huisregelStand"></p>
+    <ul id="huisregelLijst"></ul>
+    <button type="button" id="huisregelWis" class="back-btn" style="min-height:44px;margin-top:10px" hidden>Lijst wissen</button>
+  </details>
+
 </div>
 </main>
+<script>
+// v136: de huisregel (Content-Security-Policy) en wat hij tegenhield (huisregel.js schrijft het op)
+(function () {
+  var stand = document.getElementById('huisregelStand')
+  var lijst = document.getElementById('huisregelLijst')
+  var wis = document.getElementById('huisregelWis')
+  function teken() {
+    var actief = !!document.querySelector('meta[http-equiv="Content-Security-Policy"]')
+    var l = window.fibroHuisregel ? window.fibroHuisregel.lees() : []
+    stand.textContent = '🛡️ Huisregel: ' + (actief ? 'actief' : 'niet actief') + '. ' +
+      (l.length ? 'Tegengehouden (laatste ' + l.length + '):' : 'Niets tegengehouden.')
+    lijst.textContent = ''
+    l.forEach(function (r) {
+      var li = document.createElement('li')
+      var d = new Date(r.laatst || 0)
+      li.textContent = (r.keer || 1) + '× ' + r.regel + ': ' + r.adres + ' (' + r.pagina + ', ' +
+        d.toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + ')'
+      lijst.appendChild(li)
+    })
+    wis.hidden = !l.length
+  }
+  wis.onclick = function () { if (window.fibroHuisregel) window.fibroHuisregel.wis(); teken() }
+  teken()
+})()
+</script>
 <script src="swipe.js?v=95"></script>
 </body>
 </html>

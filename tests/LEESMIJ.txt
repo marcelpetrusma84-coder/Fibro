@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (account verwijderen en mijn gegevens downloaden, account.js).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (huisregel = Content-Security-Policy op alle pagina's, huisregel.js).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -35,7 +35,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          bewaren = menu op Home, berichten bewaren 1 dag t/m 1 jaar (testscript_bewaren.py),
                          toesteloprui = verlopen berichten ook van het toestel weg (testscript_toesteloprui.py),
                          vriendfotos = avatarfoto's van vrienden in Vrienden en Chat (testscript_vriendfotos.py),
-                         account = mijn gegevens downloaden en account verwijderen (testscript_account.py))
+                         account = mijn gegevens downloaden en account verwijderen (testscript_account.py),
+                         huisregel = Content-Security-Policy op alle 12 pagina's (testscript_huisregel.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -98,6 +99,14 @@ tools/proef35.py         menu (☰) op Home: mijn gegevens downloaden (berichten
                          crypto.js, gewoon downloaden en delen zoals op de iPhone) en account verwijderen (naam
                          intypen, verkeerde naam, server nog niet bijgewerkt, geen internet, verbinding weg en
                          opnieuw); daarna niets meer van dit account op het toestel, van een ander account alles nog
+tools/proef36.py         de huisregel (Content-Security-Policy): dezelfde ronde op oud en nieuw (alle pagina's, alle
+                         spellen, chat, QR, portier en kast, werkers/geluid/plaatjes van het toestel, Realtime);
+                         nieuw houdt niets tegen en geeft geen nieuwe fouten; nep-aanval (fetch, script, plaatje,
+                         WebSocket, eval) op nieuw tegengehouden, op oud gelukt; Over Fibro -> Technisch.
+                         python3 -I proef36.py <scratch met tools/server.py> <oude map> <nieuwe map> <poort>
+                         LET OP bij elke proef met de huisregel: geen route_web_socket (Playwright vervangt dan
+                         WebSocket in de pagina, de huisregel kijkt er niet naar); pogingen tellen via CDP
+                         Network.webSocketCreated. WebKit (Safari) staat niet in de werkmap.
 tools/nep-supabase.sql   kleine nabootsing van de database (PostgreSQL 16, nep-gegevens) om sql/*.sql vooraf te
                          proberen: initdb + pg_ctl als gebruiker postgres, psql -f nep-supabase.sql, dan het
                          SQL-bestand (regel 'create extension if not exists pg_cron;' eruit: cron is nagebootst).

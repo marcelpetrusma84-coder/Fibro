@@ -1063,6 +1063,23 @@ async function renderVriendMuziek(el) {
       tekenBlad(richting)
     }
 
+    // v129: vegen in het boek om te bladeren (naar links = volgende blz., naar rechts = vorige).
+    // data-geen-swipe: dan gaat swipe.js op het boek niet naar een andere pagina.
+    c.setAttribute('data-geen-swipe', '')
+    ;(() => {
+      const l = c.querySelector('#gbwLijst')
+      if (!l) return
+      let x0 = null, y0 = 0
+      l.addEventListener('touchstart', e => { if (e.touches.length !== 1) { x0 = null; return } x0 = e.touches[0].clientX; y0 = e.touches[0].clientY }, { passive: true })
+      l.addEventListener('touchend', e => {
+        if (x0 === null) return
+        const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0
+        x0 = null
+        if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2) return
+        blader(dx < 0 ? 'vooruit' : 'terug')
+      }, { passive: true })
+      l.addEventListener('touchcancel', () => { x0 = null }, { passive: true })
+    })()
     alles = await haal()
     tekenBlad(null)
     // v128: is er weer internet, dan het boek opnieuw ophalen
@@ -1198,7 +1215,7 @@ startMeldingen()
 <div style="max-width:640px;margin:28px auto 44px;text-align:center;">
     <button id="ontvriend-btn" onclick="ontvriend()" style="background:none;border:none;color:rgba(255,255,255,0.32);font-size:12px;cursor:pointer;text-decoration:underline;padding:8px;font-family:inherit;">Vriendschap beeindigen</button>
   </div>
-<script src="./fotoviewer.js?v=3"></script>
+<script src="./fotoviewer.js?v=4"></script>
 <script type="module" src="offline.js?v=126"></script>
 </body>
 </html>

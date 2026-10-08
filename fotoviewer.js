@@ -3,6 +3,7 @@
 // Klik op een foto in een widget en hij opent groot over de pagina heen.
 // Staan er meer foto's in dezelfde widget, dan kun je doorbladeren met de
 // pijltjes, de pijltjestoetsen of een veegbeweging.
+// v4: naar beneden vegen sluit de foto (de foto zakt mee met je vinger).
 //
 // Werkt op elke pagina met widgets, zonder dat de fotowidgets zelf iets
 // hoeven te weten: de klik wordt opgevangen op documentniveau. Ook foto's
@@ -12,7 +13,7 @@
 // Anders zou op je eigen pagina tegelijk de bestandskiezer opengaan.
 // Een foto vervangen gaat daar met het kruisje wissen en dan de plus.
 //
-// Inhaken:  <script src="./fotoviewer.js?v=3"></script>  vlak voor </body>
+// Inhaken:  <script src="./fotoviewer.js?v=4"></script>  vlak voor </body>
 
 (function () {
   'use strict'
@@ -67,20 +68,26 @@
     })
 
     // Vegen op een telefoon: de foto volgt je vinger.
-    var startX = null, startY = null, dx = 0, richting = null
+    var startX = null, startY = null, dx = 0, dy = 0, richting = null
+    var ACHTERGROND = 'rgba(8,4,16,0.94)'
     function fotoEl() { return el.querySelector('#fv-foto') }
     function terug() {
       var img = fotoEl()
-      img.style.transition = 'transform .2s ease-out'
+      img.style.transition = 'transform .2s ease-out, opacity .2s ease-out'
       img.style.transform = ''
+      img.style.opacity = ''
+      el.style.transition = 'background .2s ease-out'
+      el.style.background = ACHTERGROND
     }
     el.addEventListener('touchstart', function (e) {
       if (e.touches.length !== 1) { startX = null; return }
       startX = e.touches[0].clientX
       startY = e.touches[0].clientY
       dx = 0
+      dy = 0
       richting = null
       fotoEl().style.transition = 'none'
+      el.style.transition = 'none'
     }, { passive: true })
     el.addEventListener('touchmove', function (e) {
       if (startX === null) return
@@ -89,6 +96,14 @@
       if (!richting && (Math.abs(x) > 8 || Math.abs(y) > 8)) {
         richting = Math.abs(x) > Math.abs(y) ? 'h' : 'v'
       }
+      if (richting === 'v') {
+        // naar beneden: de foto zakt mee en de achtergrond wordt lichter; omhoog gaat maar een beetje
+        dy = y > 0 ? y : y * 0.25
+        var deel = Math.min(1, Math.max(0, dy) / (window.innerHeight * 0.5))
+        fotoEl().style.transform = 'translateY(' + dy + 'px) scale(' + (1 - deel * 0.15) + ')'
+        el.style.background = 'rgba(8,4,16,' + (0.94 * (1 - deel * 0.8)) + ')'
+        return
+      }
       if (richting !== 'h' || fotos.length < 2) return
       dx = x
       fotoEl().style.transform = 'translateX(' + dx + 'px)'
@@ -96,6 +111,21 @@
     el.addEventListener('touchend', function () {
       if (startX === null) return
       startX = null
+      if (richting === 'v') {
+        if (dy < 90) { terug(); return }
+        var f = fotoEl()
+        f.style.transition = 'transform .18s ease-in, opacity .18s ease-in'
+        f.style.transform = 'translateY(' + window.innerHeight + 'px)'
+        f.style.opacity = '0'
+        el.style.transition = 'background .18s ease-in'
+        el.style.background = 'rgba(8,4,16,0)'
+        setTimeout(function () {
+          sluit()
+          f.style.transition = 'none'; f.style.transform = ''; f.style.opacity = ''
+          el.style.transition = 'none'; el.style.background = ACHTERGROND
+        }, 180)
+        return
+      }
       if (richting !== 'h' || fotos.length < 2 || Math.abs(dx) < 50) { terug(); return }
       var stap = dx < 0 ? 1 : -1
       var img = fotoEl()

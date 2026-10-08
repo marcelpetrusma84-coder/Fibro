@@ -1925,6 +1925,23 @@ async function renderGastenboek(c, uid) {
     tekenBlad(richting)
   }
 
+  // v129: vegen in het boek om te bladeren (naar links = volgende blz., naar rechts = vorige).
+  // data-geen-swipe: dan gaat swipe.js op het boek niet naar een andere pagina.
+  c.setAttribute('data-geen-swipe', '')
+  ;(() => {
+    const l = c.querySelector('#gbl')
+    if (!l) return
+    let x0 = null, y0 = 0
+    l.addEventListener('touchstart', e => { if (e.touches.length !== 1) { x0 = null; return } x0 = e.touches[0].clientX; y0 = e.touches[0].clientY }, { passive: true })
+    l.addEventListener('touchend', e => {
+      if (x0 === null) return
+      const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0
+      x0 = null
+      if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2) return
+      blader(dx < 0 ? 'vooruit' : 'terug')
+    }, { passive: true })
+    l.addEventListener('touchcancel', () => { x0 = null }, { passive: true })
+  })()
   // v129: eerst meteen het bewaarde boek tonen, dan op de achtergrond het verse boek ophalen.
   // Eerst alleen de tekst (klein), daarna de foto's van de schrijvers: elke schrijver maar één keer
   // (vroeger kwam de foto bij elk bericht opnieuw mee, soms meer dan een megabyte).
@@ -2155,7 +2172,7 @@ if ('serviceWorker' in navigator) {
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=101"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=101"; startOngelezen()</script>
 <script type="module">import { checkTimers } from "./timer-melding.js?v=122"; setTimeout(checkTimers,4000)</script>
-<script src="./fotoviewer.js?v=3"></script>
+<script src="./fotoviewer.js?v=4"></script>
 <script type="module" src="blokkade.js?v=1"></script>
 </body>
 </html>

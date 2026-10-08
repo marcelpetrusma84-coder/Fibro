@@ -137,7 +137,7 @@ body.heeft-wallpaper::before { display:block; }
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { wisVriendData } from './opruimen.js?v=95'
-  import { initSync, vraagVriendVideo } from './sync.js?v=122'
+  import { initSync, vraagVriendVideo } from './sync.js?v=129'
   import { eisSessie, startBewaking } from './sessie.js?v=95'
   import { startMeldingen } from './meldingen.js?v=122'
   pasBlokstijlToe()
@@ -389,7 +389,18 @@ body.heeft-wallpaper::before { display:block; }
         await renderGastenboekWidget(el.querySelector('.gbw-inhoud'), vriendId)
         continue
       }
-      el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">' + vEsc(w.icon || '🧩') + '</span><span class="widget-titel">' + vEsc(w.titel || w.id) + '</span></div><div class="widget-inhoud"><div class="wi-icon">' + vEsc(w.icon || '🧩') + '</div></div>'
+      // v129: spel van de vriend: tikken = zelf spelen tegen de computer (zoals op Home)
+      if ((w.id || '').startsWith('spel_')) {
+        const spel = w.id.slice(5)
+        el.innerHTML = '<div class="widget-inhoud" style="flex-direction:row;gap:10px;cursor:pointer"><span style="font-size:30px;line-height:1">' + vEsc(w.icon || '\u{1F3AE}') + '</span><span style="font-size:13px;font-weight:600;color:#fff">\u25B6 Spelen</span></div>'
+        el.style.cursor = 'pointer'
+        el.onclick = () => { location.href = 'spel.html?spel=' + encodeURIComponent(spel) }
+        grid.appendChild(el)
+        continue
+      }
+      // v129: poll/timer/quote zonder inhoud: zeggen dat er nog niets staat (in plaats van alleen een icoon)
+      const leegTekst = { poll: 'Nog geen poll', afteltimer: 'Nog geen datum', opteltimer: 'Nog geen datum', quote: 'Nog geen quote' }[w.id]
+      el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">' + vEsc(w.icon || '🧩') + '</span><span class="widget-titel">' + vEsc(w.titel || w.id) + '</span></div><div class="widget-inhoud">' + (leegTekst ? '<div style="font-size:13px;color:var(--muted)">' + leegTekst + '</div>' : '<div class="wi-icon">' + vEsc(w.icon || '🧩') + '</div>') + '</div>'
       grid.appendChild(el)
     }
     grid.style.display = ''
@@ -743,7 +754,32 @@ async function renderVriendMuziek(el) {
     })()
     if (!vriendId) { window.location.href = 'vrienden.html'; return }
 
-    toonVriendWidgets()
+    // v129: komen er nieuwe gegevens van deze vriend binnen (de sync), dan de widgets meteen bijwerken.
+    // Niet terwijl er muziek of een video van de vriend speelt.
+    let widgetsBezig = null, widgetsOpnieuw = false, widgetsTimer = null
+    const verversWidgets = async () => {
+      if (widgetsBezig) { widgetsOpnieuw = true; return }
+      widgetsBezig = toonVriendWidgets().catch(e => console.warn('[widgets]', e))
+      await widgetsBezig
+      widgetsBezig = null
+      if (widgetsOpnieuw) { widgetsOpnieuw = false; verversWidgets() }
+    }
+    const speeltIets = () => [...document.querySelectorAll('#vriendWidgetGrid audio, #vriendWidgetGrid video')].some(m => !m.paused)
+    const later = () => {
+      clearTimeout(widgetsTimer)
+      widgetsTimer = setTimeout(() => { if (speeltIets()) later(); else verversWidgets() }, 800)
+    }
+    try {
+      if ('BroadcastChannel' in window) {
+        const kanaal = new BroadcastChannel('fibro-vriend-data')
+        kanaal.onmessage = e => {
+          const id = e && e.data && e.data.id
+          if (typeof id === 'string' && id.startsWith('vriend_' + vriendId + '_') && !id.endsWith('_video_data')) later()
+        }
+      }
+    } catch (e) {}
+
+    verversWidgets()
 
     // ── Stap 1: Toon eerst cache (snel) ──
     const cacheKey = 'vriend_cache_' + vriendId + '_' + (huidigeUser?.id || 'anon')

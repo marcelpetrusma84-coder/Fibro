@@ -795,6 +795,11 @@ async function verwerkP2pBericht(bericht) {
 
     // Kleine tekstwidgets
     const klein = bericht.data.klein || {}
+    // v129: heeft de vriend een poll/timer/quote niet meer, dan ook hier weggooien
+    for (const sl of ['quote','aftel','optel','poll']) {
+      if (klein[sl]) continue
+      try { if (await dbGet('vriend_' + syncPartnerId + '_' + sl)) await dbDelete('vriend_' + syncPartnerId + '_' + sl) } catch (e) {}
+    }
     for (const sl of Object.keys(klein)) {
       if (!['quote','aftel','optel','poll'].includes(sl)) continue
       const kc = await dbGet('vriend_' + syncPartnerId + '_' + sl)
@@ -1120,12 +1125,23 @@ async function dbGet(id) {
   })
 }
 
+// v129: andere stukken van de pagina (het profiel van een vriend) laten weten dat er
+// nieuwe gegevens van een vriend binnen zijn, zodat ze meteen bijwerken
+let vriendDataKanaal = null
+function meldVriendData(id) {
+  if (typeof id !== 'string' || !id.startsWith('vriend_')) return
+  try {
+    if (!vriendDataKanaal && 'BroadcastChannel' in window) vriendDataKanaal = new BroadcastChannel('fibro-vriend-data')
+    if (vriendDataKanaal) vriendDataKanaal.postMessage({ id })
+  } catch (e) {}
+}
+
 async function dbPut(obj) {
   const db = await openFibroDB()
   return new Promise((resolve, reject) => {
     const tx = db.transaction('fotos', 'readwrite')
     tx.objectStore('fotos').put(obj)
-    tx.oncomplete = () => resolve()
+    tx.oncomplete = () => { resolve(); meldVriendData(obj && obj.id) }
     tx.onerror = () => reject(tx.error)
   })
 }
@@ -1135,7 +1151,7 @@ async function dbDelete(id) {
   return new Promise((resolve) => {
     const tx = db.transaction('fotos', 'readwrite')
     tx.objectStore('fotos').delete(id)
-    tx.oncomplete = () => resolve()
+    tx.oncomplete = () => { resolve(); meldVriendData(id) }
     tx.onerror = () => resolve()
   })
 }

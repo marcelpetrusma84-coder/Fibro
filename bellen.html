@@ -171,7 +171,7 @@ initBellen(session.user.id, {
     setTimeout(() => { if (timer) document.getElementById('status').textContent = 'Verbonden' }, 1500)
   },
   onOproep: async (info) => {
-    const { data: v } = await supabase.from('profiles').select('*').eq('id', info.van).single()
+    const { data: v } = await supabase.from('profiles').select('username, avatar_url').eq('id', info.van).single() // v132: alleen wat hier getoond wordt
     document.getElementById('avatar').textContent = v?.avatar_url || '👤'
     document.getElementById('naam').textContent = belNaam(info.van, v?.username)
     document.getElementById('status').textContent = (videoModus ? '📹 Videogesprek — ' : '📞 Belt je op...')
@@ -217,7 +217,7 @@ if (vriendId && !params.get('inkomend')) {
   // Niemand neemt op: na de beltijd terug naar de chat
   setTimeout(() => { if (!timer && wachtKanaal) { stopBeltoon(); sluitWachtKanaal(); window.location.href = 'chat.html' } }, 46000)
   // Laad beller info
-  const { data: v } = await supabase.from('profiles').select('*').eq('id', vriendId).single()
+  const { data: v } = await supabase.from('profiles').select('username, avatar_url').eq('id', vriendId).single() // v132: alleen wat hier getoond wordt
   if (v) {
     document.getElementById('avatar').textContent = v.avatar_url || '👤'
     document.getElementById('naam').textContent = belNaam(vriendId, v.username)

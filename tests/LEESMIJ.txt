@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (lijntjes blijven open, lijntjes.js).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (profielen zonder onnodige foto's).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -30,7 +30,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          stijl = menu overal gelijk, schaduw alleen bij een achtergrondfoto (testscript_stijl.py),
                          stijl2 = geen schaduw in het gastenboek (testscript_stijl2.py),
                          stijl3 = spierwitte tekst, knoppen zonder schaduw, stijl.css op alle paginas (testscript_stijl3.py),
-                         lijntjes = open lijntjes weer open na netwerkwissel, gemiste berichten alsnog (testscript_lijntjes.py))
+                         lijntjes = open lijntjes weer open na netwerkwissel, gemiste berichten alsnog (testscript_lijntjes.py),
+                         profielkolommen = profielen zonder onnodige foto's (testscript_profielkolommen.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -80,6 +81,9 @@ tools/proef30.py         lijntjes (lijntjes.js): nep-Realtime-server (Phoenix) v
                          netwerkwissel, lijn door de server gesloten, verbinding weg, op de achtergrond; gemiste
                          berichten/buzz/ongelezen alsnog, niets dubbel, gezonde lijn kost niets extra:
                          python3 -I proef30.py <scratch met tools/server.py> <map> <poort> [kort]
+tools/proef31.py         profielen zonder onnodige foto's: vriend-profiel haalt avatar/achtergrond alleen bij een andere
+                         updated_at, Home/Profiel nooit de eigen achtergrond, belscherm alleen naam en emoji
+                         (nep-PostgREST met de echte kolommen; onbekende kolom = 400 42703)
 tools/checkhtml.py       node --check op alle inline scripts: checkhtml.py <uitmap> <html...>
 tools/*.js               console-testjes voor Marcel (alert); ?v=-nummers daarin kunnen verouderd zijn
 

@@ -762,7 +762,11 @@ async function init(){
   huidigeUser=session.user
   initSync(huidigeUser.id)
   // v129: het profiel meteen opvragen, tegelijk met het thema; niet meer wachten op de hartslag
-  const versProfiel=supabase.from('profiles').select('*').eq('id',huidigeUser.id).single().then(r=>r,()=>({data:null}))
+  // v132: alle kolommen behalve wallpaper_data (gemiddeld 1,5 MB; Profiel haalt de eigen achtergrond van het toestel)
+  const KOLOMMEN='id,username,display_name,bio,mood,theme,avatar_url,created_at,updated_at,achtergrond_kleur,achtergrond_type,achtergrond_url,animatie,lettertype,accent_kleur,accent_kleur2,widgets,stickers,niveau,public_key,geblokkeerd,online_status,offline_emoji,offline_bericht,laatst_gezien,avatar_data,muziek_titel,muziek_artiest,profiel_quote,widget_layout,is_plus,is_moderator,toon_online'
+  const versProfiel=supabase.from('profiles').select(KOLOMMEN).eq('id',huidigeUser.id).single()
+    .then(r=>(r.error&&r.error.code==='42703')?supabase.from('profiles').select('*').eq('id',huidigeUser.id).single():r) // kolom bestaat niet (meer)
+    .then(r=>r,()=>({data:null}))
   await laadThema()
   startHeartbeat().catch(e=>console.warn('[heartbeat]',e))
   const{data}=await versProfiel

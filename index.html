@@ -2109,7 +2109,11 @@ async function init() {
   const uid = session.user.id
   const bewaard = leesProfielCache(uid)
   if (bewaard) { window._profiel = bewaard; toonHero(bewaard) }
-  const vers = supabase.from('profiles').select('*').eq('id', uid).single().then(({ data: profiel }) => {
+  // v132: alle kolommen behalve wallpaper_data (gemiddeld 1,5 MB; Home gebruikt die niet)
+  const KOLOMMEN = 'id,username,display_name,bio,mood,theme,avatar_url,created_at,updated_at,achtergrond_kleur,achtergrond_type,achtergrond_url,animatie,lettertype,accent_kleur,accent_kleur2,widgets,stickers,niveau,public_key,geblokkeerd,online_status,offline_emoji,offline_bericht,laatst_gezien,avatar_data,muziek_titel,muziek_artiest,profiel_quote,widget_layout,is_plus,is_moderator,toon_online'
+  const vers = supabase.from('profiles').select(KOLOMMEN).eq('id', uid).single()
+    .then(r => (r.error && r.error.code === '42703') ? supabase.from('profiles').select('*').eq('id', uid).single() : r) // kolom bestaat niet (meer)
+    .then(({ data: profiel }) => {
     if (!profiel) return
     window._profiel = profiel
     toonHero(profiel)

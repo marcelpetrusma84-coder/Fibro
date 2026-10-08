@@ -854,14 +854,52 @@ async function renderVriendMuziek(el) {
   }
 
   // ── Stap 2: Laad vers van Supabase ──
+  // v132: eerst alleen de tekst en de kleuren (een paar KB). De avatar (±20 KB) en de
+  // achtergrondfoto (gemiddeld 1,5 MB) alleen als de vriend zijn profiel sindsdien heeft
+  // opgeslagen (updated_at is anders), of als ze niet (meer) op dit toestel staan.
+  const KOLOMMEN_VRIEND = 'id,username,display_name,bio,mood,theme,avatar_url,created_at,updated_at,achtergrond_kleur,achtergrond_type,achtergrond_url,animatie,lettertype,accent_kleur,accent_kleur2,widgets,stickers,niveau,public_key,geblokkeerd,online_status,offline_emoji,offline_bericht,laatst_gezien,muziek_titel,muziek_artiest,profiel_quote,widget_layout,is_plus,is_moderator,toon_online'
   async function haalVers(cacheKey) {
-    const { data, error } = await supabase
+    let oud = null
+    try { oud = JSON.parse(localStorage.getItem(cacheKey) || 'null') } catch (e) {}
+    let { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select(KOLOMMEN_VRIEND)
       .eq('id', vriendId)
       .single()
+    if (error && error.code === '42703') { // kolom bestaat niet (meer): dan alles, zoals vroeger
+      ({ data, error } = await supabase.from('profiles').select('*').eq('id', vriendId).single())
+    }
 
     if (error || !data) return false
+    let fotosVersie = ''
+    if ('avatar_data' in data || 'wallpaper_data' in data) {
+      fotosVersie = data.updated_at || ''
+    } else {
+      const zelfde = !!(oud && oud.fotos_versie && data.updated_at && oud.fotos_versie === data.updated_at)
+      let avatarData = null, wallpaperData = null, bewaard = false
+      if (zelfde) {
+        if (oud.heeft_avatar) avatarData = await laadFotoUitDB('vriend_avatar_' + vriendId)
+        if (oud.heeft_wallpaper) wallpaperData = await laadFotoUitDB('vriend_wallpaper_' + vriendId)
+      }
+      if (zelfde && (!oud.heeft_avatar || avatarData) && (!oud.heeft_wallpaper || wallpaperData)) {
+        fotosVersie = oud.fotos_versie
+        bewaard = true // niets nieuws: de foto's op dit toestel kloppen nog
+      } else {
+        const r = await supabase.from('profiles').select('avatar_data, wallpaper_data').eq('id', vriendId).single()
+        if (!r.error && r.data) {
+          avatarData = r.data.avatar_data
+          wallpaperData = r.data.wallpaper_data
+          fotosVersie = data.updated_at || ''
+        } else {
+          // foto's ophalen lukte niet: wat er op dit toestel staat, en de volgende keer opnieuw proberen
+          avatarData = await laadFotoUitDB('vriend_avatar_' + vriendId)
+          wallpaperData = await laadFotoUitDB('vriend_wallpaper_' + vriendId)
+          bewaard = true
+        }
+      }
+      data = Object.assign({}, data, { avatar_data: avatarData, wallpaper_data: wallpaperData })
+      if (bewaard) data._fotosBewaard = true
+    }
     vriendData = data
     toonProfielData(data)
 
@@ -869,7 +907,7 @@ async function renderVriendMuziek(el) {
     if (data.avatar_data && data.avatar_data.startsWith('data:')) {
       // Foto avatar uit Supabase
       toonAvatar(data.avatar_data, null)
-      await slaFotoOp('vriend_avatar_' + vriendId, data.avatar_data)
+      if (!data._fotosBewaard) await slaFotoOp('vriend_avatar_' + vriendId, data.avatar_data)
     } else {
       toonAvatar(null, data.avatar_url || '👤')
     }
@@ -877,7 +915,7 @@ async function renderVriendMuziek(el) {
     // ── Wallpaper verwerken ──
     if (data.wallpaper_data && data.wallpaper_data.startsWith('data:')) {
       toonWallpaper(data.wallpaper_data)
-      await slaFotoOp('vriend_wallpaper_' + vriendId, data.wallpaper_data)
+      if (!data._fotosBewaard) await slaFotoOp('vriend_wallpaper_' + vriendId, data.wallpaper_data)
     }
 
     // ── Cache bijwerken ──
@@ -895,6 +933,9 @@ async function renderVriendMuziek(el) {
         offline_emoji: data.offline_emoji || '',
         offline_bericht: data.offline_bericht || '',
         laatst_gezien: data.laatst_gezien || '',
+        fotos_versie: fotosVersie, // v132: updated_at van de laatst opgehaalde foto's
+        heeft_avatar: !!(data.avatar_data && data.avatar_data.startsWith('data:')),
+        heeft_wallpaper: !!(data.wallpaper_data && data.wallpaper_data.startsWith('data:')),
         bijgewerkt: new Date().toISOString()
       }))
     } catch(e) {}

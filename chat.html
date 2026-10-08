@@ -44,9 +44,9 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .banner-timer { margin-left:auto; font-weight:500; color:var(--accent); }
 .privacy-bar { background:rgba(248,113,113,0.08); border-bottom:0.5px solid rgba(248,113,113,0.2); padding:6px 14px; font-size:15px; color:#f87171; display:none; align-items:center; gap:6px; }
 .privacy-bar.show { display:flex; }
-.vriend-selectie { flex:1; padding:16px; }
+.vriend-selectie { flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:16px 16px calc(96px + env(safe-area-inset-bottom,0px)); } /* v130: veel vrienden: scrollen, en de laatste niet onder het menu */
 .vriend-selectie h3, .vriend-selectie .vs-kop { font-family:'Playfair Display',serif; font-style:italic; font-size:16px; color:var(--accent); margin-bottom:14px; }
-.vriend-item { display:flex; align-items:center; gap:12px; padding:12px; border:0.5px solid var(--border); border-radius:12px; margin-bottom:8px; cursor:pointer; background:var(--card); transition:border-color 0.2s; }
+.vriend-item { display:flex; align-items:center; gap:12px; padding:12px; border:0.5px solid var(--border); border-radius:var(--blok-hoek,12px); margin-bottom:8px; cursor:pointer; background:var(--blok-kleur,var(--card)); transform:var(--blok-kantel,none); box-shadow:var(--blok-schaduw,none); transition:border-color 0.2s; } /* v130: blokstijl zoals de rest van de app */
 .vriend-item:hover { border-color:var(--accent); }
 .vriend-item .vriend-av { position:relative; }
 .vriend-av .online-dot { position:absolute; bottom:-1px; right:-1px; width:11px; height:11px; border-radius:50%; background:#4ade80; border:2px solid var(--bg); display:none; }

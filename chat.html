@@ -370,10 +370,11 @@ window.veiligeUrl = function(v){
   import { supabase } from './supabase.js?v=95'
   import { initSync } from './sync.js?v=129'
   import { startHeartbeat } from './heartbeat.js?v=117'
-  import { startMeldingen } from './meldingen.js?v=122'
+  import { startMeldingen } from './meldingen.js?v=131'
+  import { houOpen } from './lijntjes.js?v=1'
   import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=95'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=122'
-  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=106'
+  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=131'
   import { stuurRapport } from './rapport.js?v=95'
   import * as Schaak from './schaak.js?v=95'
   import * as Dammen from './dammen.js?v=95'
@@ -1511,38 +1512,47 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   // ─── Realtime ───
+  // v131: via houOpen (lijntjes.js): gaat een lijntje dicht of valt de verbinding even weg,
+  // dan gaat het weer open en wordt wat er intussen binnenkwam alsnog opgehaald.
   var reactieKanaal = null
   function startReactieRealtime() {
-    if (reactieKanaal) supabase.removeChannel(reactieKanaal)
-    reactieKanaal = supabase
+    if (reactieKanaal) reactieKanaal.stop()
+    const teken = async () => {
+      if (!geselecteerdeVriend) return
+      await tekenReacties(document.getElementById("messages"))
+    }
+    reactieKanaal = houOpen("reacties-" + huidigeUser.id, () => supabase
       .channel("reacties-" + huidigeUser.id, { config: { private: true } })
-      .on("postgres_changes", { event: "*", schema: "public", table: "reacties" }, async () => {
-        if (!geselecteerdeVriend) return
-        await tekenReacties(document.getElementById("messages"))
-      })
-      .subscribe()
+      .on("postgres_changes", { event: "*", schema: "public", table: "reacties" }, teken), teken)
+  }
+  const inBehandeling = new Set() // v131: elk bericht maar een keer tonen (lijntje en ophalen tegelijk)
+  function alGetoond(id) {
+    if (id == null) return false
+    return inBehandeling.has(String(id)) || !!document.querySelector('#messages [data-mid="' + CSS.escape(String(id)) + '"]')
   }
   function startRealtime() {
-    if (realtimeKanaal) supabase.removeChannel(realtimeKanaal)
+    if (realtimeKanaal) realtimeKanaal.stop()
     startReactieRealtime()
     // v117: met filter (aan mij / van mij) in plaats van alle berichten in de database;
     // zo hoeft Supabase niet bij elk bericht van iedereen voor elke open chat te controleren.
-    const opNieuw = async (payload) => {
+    const opNieuw = async (payload, oud) => {
         const msg = payload.new
         const isRelevant = (
           (msg.sender_id === huidigeUser.id && msg.receiver_id === geselecteerdeVriend?.id) ||
           (msg.sender_id === geselecteerdeVriend?.id && msg.receiver_id === huidigeUser.id)
         )
         if (!isRelevant) return
+        if (alGetoond(msg.id)) return
+        if (msg.id != null) inBehandeling.add(String(msg.id))
 
         if (msg.content === 'buzz:' && msg.sender_id !== huidigeUser.id) {
-          ontvangBuzz()
-          voegSysBericht('📳 ' + (geselecteerdeVriend?.naam || 'Vriend') + ' stuurt een buzz!')
+          if (!oud) ontvangBuzz()
+          voegSysBericht('📳 ' + (geselecteerdeVriend?.naam || 'Vriend') + (oud ? ' stuurde een buzz' : ' stuurt een buzz!'))
         } else {
-          speelPlop('in')
+          if (!oud) speelPlop('in')
           const wasOnder = zitOnderaan()
           voegAanChatlog(geselecteerdeVriend?.id, msg) // v125
-          await voegBerichtToe(msg, true)
+          await voegBerichtToe(msg, !oud)
           await tekenReacties(document.getElementById('messages'))
           if (wasOnder) _scrollNu(); else toonNieuwKnop()
         }
@@ -1556,14 +1566,50 @@ console.timeLog('[chat] berichten', 'opgehaald')
         )
         if (isRelevant) toonAlsVerwijderd(msg.id)
       }
+    // v131: het lijntje was even weg: de laatste 50 berichten van dit gesprek ophalen en
+    // tonen wat er nog niet staat (nieuwer dan het nieuwste bericht dat er al staat).
+    // Een buzz van meer dan 2 minuten geleden alleen als regel, zonder trillen en geluid.
+    let gemistBezig = false
+    const haalGemist = async () => {
+      if (!geselecteerdeVriend || gemistBezig || navigator.onLine === false) return
+      gemistBezig = true
+      const vriendId = geselecteerdeVriend.id
+      try {
+        const { data, error } = await supabase
+          .from('messages')
+          .select('*')
+          .or(
+            `and(sender_id.eq.${huidigeUser.id},receiver_id.eq.${vriendId}),` +
+            `and(sender_id.eq.${vriendId},receiver_id.eq.${huidigeUser.id})`
+          )
+          .order('created_at', { ascending: false })
+          .limit(50)
+        if (error || !Array.isArray(data) || geselecteerdeVriend?.id !== vriendId) return
+        const rijen = data.slice().reverse()
+        let laatsteBekend = -1
+        rijen.forEach((m, i) => { if (alGetoond(m.id)) laatsteBekend = i })
+        for (const m of rijen) if (m.content === 'verwijderd:' && alGetoond(m.id)) toonAlsVerwijderd(m.id)
+        const nieuw = rijen.slice(laatsteBekend + 1).filter(m => !alGetoond(m.id))
+        if (!nieuw.length) return
+        const verborgen = await haalVerborgen(nieuw.map(m => m.id))
+        if (geselecteerdeVriend?.id !== vriendId) return
+        console.log('[chat] ' + nieuw.length + ' gemist bericht(en) alsnog getoond')
+        for (const m of nieuw) {
+          if (verborgen.has(m.id)) continue
+          const oud = Date.now() - new Date(m.created_at).getTime() > 2 * 60 * 1000
+          await opNieuw({ new: m }, oud)
+        }
+      } catch (e) {
+        console.warn('[chat] gemiste berichten ophalen mislukt', e)
+      } finally { gemistBezig = false }
+    }
     const aanMij = 'receiver_id=eq.' + huidigeUser.id, vanMij = 'sender_id=eq.' + huidigeUser.id
-    realtimeKanaal = supabase
+    realtimeKanaal = houOpen('berichten-' + huidigeUser.id, () => supabase
       .channel('berichten-' + huidigeUser.id, { config: { private: true } })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: aanMij }, opNieuw)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: vanMij }, opNieuw)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: aanMij }, (p) => opNieuw(p))
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: vanMij }, (p) => opNieuw(p))
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: aanMij }, opGewijzigd)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: vanMij }, opGewijzigd)
-      .subscribe()
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: vanMij }, opGewijzigd), haalGemist)
   }
 
   // ─── UI helpers ───
@@ -1579,8 +1625,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
       document.getElementById('chatStatus').textContent = 'Kies hieronder met wie je wilt chatten'
       document.getElementById('chatAv').textContent = '💬'
       document.getElementById('belKnoppen').style.display = 'none'
-      if (realtimeKanaal) supabase.removeChannel(realtimeKanaal)
-      if (reactieKanaal) { supabase.removeChannel(reactieKanaal); reactieKanaal = null }
+      if (realtimeKanaal) { realtimeKanaal.stop(); realtimeKanaal = null }
+      if (reactieKanaal) { reactieKanaal.stop(); reactieKanaal = null }
     } else {
       sluitAlleP2pVerbindingen()
       window.location.href = 'index.html'
@@ -1661,14 +1707,13 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ── Start globaal luisterkanaal zodra gebruiker ingelogd is ──
   function startSpelUitnodigingKanaal(userId) {
-    if (spelGlobaalKanaal) supabase.removeChannel(spelGlobaalKanaal)
-    spelGlobaalKanaal = supabase
+    if (spelGlobaalKanaal) spelGlobaalKanaal.stop()
+    spelGlobaalKanaal = houOpen('speluitnodiging-' + userId, () => supabase
       .channel('speluitnodiging-' + userId, { config: { broadcast: { self: false }, private: true } })
       .on('broadcast', { event: 'speluitnodiging' }, (msg) => {
         const { van, vanNaam, vanAvatar, spelType, sessieId } = msg.payload
         toonSpelUitnodigingPopup(van, vanNaam, vanAvatar, spelType, sessieId)
-      })
-      .subscribe()
+      }))
   }
 
   // ── Toon de uitnodiging popup ──
@@ -2439,7 +2484,7 @@ async function verstuurMelding(reden) {
 </script>
 <script src="swipe.js?v=95"></script>
 <audio id="remoteMedia" autoplay playsinline></audio>
-<script type="module">import { startOngelezen } from "./ongelezen.js?v=101"; startOngelezen()</script>
+<script type="module">import { startOngelezen } from "./ongelezen.js?v=131"; startOngelezen()</script>
 <script type="module" src="blokkade.js?v=1"></script>
 </body>
 </html>

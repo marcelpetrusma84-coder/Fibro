@@ -5,6 +5,7 @@
 // wordt netjes gecodeerd in het adres van de chat gezet. Namen van de spellen
 // gelijk aan die in de chat, met Ghost Tag en Twin Snakes erbij.
 import { supabase } from './supabase.js?v=95'
+import { houOpen } from './lijntjes.js?v=1'
 
 const SPEL_INFO = {
   botkaaseiren: { icon: '⭕', naam: 'Tic-Tac-Toe' },
@@ -29,14 +30,14 @@ export async function startSpelUitnodigingLuisteraar() {
   if (window.location.pathname.includes('chat.html')) return
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return
-  if (kanaal) supabase.removeChannel(kanaal)
-  kanaal = supabase
+  if (kanaal) kanaal.stop()
+  // v131: via houOpen (lijntjes.js): gaat weer open als de server het sluit
+  kanaal = houOpen('speluitnodiging-' + session.user.id, () => supabase
     .channel('speluitnodiging-' + session.user.id, { config: { broadcast: { self: false }, private: true } })
     .on('broadcast', { event: 'speluitnodiging' }, (msg) => {
       const p = (msg && msg.payload) || {}
       toonPopup(p.van, p.vanNaam, p.vanAvatar, p.spelType, p.sessieId)
-    })
-    .subscribe()
+    }))
 }
 
 // Een id of sessienummer: tekst of getal, niet leeg en niet absurd lang.

@@ -1,11 +1,13 @@
 // meldingen.js — buzz en online-meldingen op elke pagina (4 september 2026)
 import { supabase } from './supabase.js?v=95'
 import { startParen, opOnline } from './paren.js?v=2'
+import { houOpen } from './lijntjes.js?v=1'
 
 const BUZZ_UIT = 'fibro_buzz_uit'
 const ONLINE_UIT = 'fibro_online_melding_uit'
 let laatsteBuzz = 0
 let mKanaal = null
+let buzzGezienTot = '' // v131: tijd van de laatste buzz die gemeld is (of van het starten)
 let eigenId = null
 let onlineAfmelden = null
 
@@ -117,9 +119,33 @@ async function haalNaam(id) {
   return naamCache[id]
 }
 
+// v131: via houOpen (lijntjes.js). Was het lijntje even weg, dan alsnog de laatste buzz
+// melden, als die minder dan 2 minuten oud is en nog niet gemeld.
+function nieuwer(t) {
+  if (typeof t !== 'string' || !t) return false
+  if (!buzzGezienTot || new Date(t).getTime() > new Date(buzzGezienTot).getTime()) { buzzGezienTot = t; return true }
+  return false
+}
+async function haalGemisteBuzz() {
+  if (!aan(BUZZ_UIT)) return
+  const grens = Math.max(new Date(buzzGezienTot || 0).getTime(), Date.now() - 2 * 60 * 1000)
+  const { data, error } = await supabase
+    .from('messages')
+    .select('sender_id,created_at')
+    .eq('receiver_id', eigenId)
+    .eq('content', 'buzz:')
+    .gt('created_at', new Date(grens).toISOString())
+    .order('created_at', { ascending: false })
+    .limit(1)
+  if (error || !Array.isArray(data) || !data.length) return
+  const msg = data[0]
+  if (!msg || msg.sender_id === eigenId || !nieuwer(msg.created_at)) return
+  buzzBinnen(await haalNaam(msg.sender_id), msg.sender_id)
+}
 function startBuzzLuisteraar() {
-  if (mKanaal) supabase.removeChannel(mKanaal)
-  mKanaal = supabase
+  if (mKanaal) mKanaal.stop()
+  buzzGezienTot = new Date().toISOString()
+  mKanaal = houOpen('meldingen-berichten-' + eigenId, () => supabase
     .channel('meldingen-berichten-' + eigenId, { config: { private: true } })
     .on('postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'messages', filter: 'receiver_id=eq.' + eigenId },
@@ -127,10 +153,10 @@ function startBuzzLuisteraar() {
         const msg = payload.new
         if (!msg || msg.sender_id === eigenId) return
         if (msg.content !== 'buzz:') return
+        nieuwer(msg.created_at)
         if (!aan(BUZZ_UIT)) return
         buzzBinnen(await haalNaam(msg.sender_id), msg.sender_id)
-      })
-    .subscribe()
+      }), haalGemisteBuzz)
 }
 
 // v121 (stap B deel 4): wie online komt, zie je via paren.js (een afgeschermd kanaal per

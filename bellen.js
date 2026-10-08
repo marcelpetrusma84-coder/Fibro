@@ -2,6 +2,7 @@
 // Gebruikt het bewezen spel-patroon: gedeeld kanaal met gesorteerde IDs
 import { supabase } from './supabase.js?v=95'
 import { ICE_SERVERS, iceReady } from './ice-config.js?v=106'
+import { houOpen } from './lijntjes.js?v=1'
 
 let lokaleStream = null
 let remoteStream = null
@@ -47,8 +48,9 @@ export function initBellen(userId, callbacks = {}) {
 }
 
 function luisterNaarUitnodigingen() {
-  if (uitnodigingKanaal) { supabase.removeChannel(uitnodigingKanaal); uitnodigingKanaal = null }
-  uitnodigingKanaal = supabase
+  if (uitnodigingKanaal) { uitnodigingKanaal.stop(); uitnodigingKanaal = null }
+  // v131: via houOpen (lijntjes.js): gaat weer open als de server het sluit
+  uitnodigingKanaal = houOpen('bel-uitnodiging-' + huidigeUserId, () => supabase
     .channel('bel-uitnodiging-' + huidigeUserId, { config: { broadcast: { self: false }, private: true } })
     .on('broadcast', { event: 'uitnodiging' }, (msg) => {
       const { van, video, spel } = msg.payload
@@ -58,8 +60,7 @@ function luisterNaarUitnodigingen() {
       openGesprekKanaal(van)
       if (spel) { accepteerOproep(false); return }
       if (onOproepCallback) onOproepCallback({ van, videoModus: video })
-    })
-    .subscribe((status) => { console.log('Uitnodigingskanaal status:', status) })
+    }))
 }
 
 // Een afgeschermd kanaal heeft bij het openen even nodig (Supabase controleert dan de

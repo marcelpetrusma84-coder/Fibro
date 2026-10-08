@@ -6,6 +6,7 @@
 // in de database (tabel laatst_gelezen), dus je telefoon en je pc zijn het
 // met elkaar eens. De tabel en de twee functies staan in sql/ongelezen.sql.
 import { supabase } from './supabase.js?v=95'
+import { houOpen } from './lijntjes.js?v=1'
 
 const aantallen = new Map()      // vriend-id → aantal ongelezen
 const bezig = new Map()          // vriend-id → 'loopt' | 'nogEens'
@@ -19,7 +20,8 @@ export async function startOngelezen() {
   mijnId = session.user.id
   werkt = await haalOp()
   if (!werkt) return               // functie ontbreekt (nog) in Supabase: niets tonen
-  supabase
+  // v131: via houOpen (lijntjes.js); was het lijntje even weg, dan opnieuw tellen
+  houOpen('ongelezen-' + mijnId, () => supabase
     .channel('ongelezen-' + mijnId, { config: { private: true } })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'receiver_id=eq.' + mijnId }, (p) => {
       const m = p && p.new
@@ -27,8 +29,7 @@ export async function startOngelezen() {
       if (leestNu(m.sender_id)) { markeer(m.sender_id); return }
       aantallen.set(m.sender_id, (aantallen.get(m.sender_id) || 0) + 1)
       toon()
-    })
-    .subscribe()
+    }), haalOp)
   // Terug naar de app: opnieuw tellen (misschien heb je elders gelezen).
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible') return

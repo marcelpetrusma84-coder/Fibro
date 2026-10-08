@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (spierwitte tekst, knoppen zonder schaduw).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (lijntjes blijven open, lijntjes.js).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -29,7 +29,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          lijsten = lange vriendenlijsten scrollen, chat-blokken in de blokstijl (testscript_lijsten.py),
                          stijl = menu overal gelijk, schaduw alleen bij een achtergrondfoto (testscript_stijl.py),
                          stijl2 = geen schaduw in het gastenboek (testscript_stijl2.py),
-                         stijl3 = spierwitte tekst, knoppen zonder schaduw, stijl.css op alle paginas (testscript_stijl3.py))
+                         stijl3 = spierwitte tekst, knoppen zonder schaduw, stijl.css op alle paginas (testscript_stijl3.py),
+                         lijntjes = open lijntjes weer open na netwerkwissel, gemiste berichten alsnog (testscript_lijntjes.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -75,6 +76,10 @@ tools/proef26.py         20 vrienden op Vrienden en Chat: helemaal naar beneden 
 tools/proef27.py         stijl.css: menu onderaan overal gelijk; schaduw achter tekst alleen met achtergrondfoto
 tools/proef28.py         gastenboek (Home en vriend) nooit schaduw, ook met achtergrondfoto (stijl.css v2)
 tools/proef29.py         knoppen nooit schaduw; witte tekst spierwit op alle pagina's (stijl.css v3)
+tools/proef30.py         lijntjes (lijntjes.js): nep-Realtime-server (Phoenix) via route_web_socket; dode verbinding na
+                         netwerkwissel, lijn door de server gesloten, verbinding weg, op de achtergrond; gemiste
+                         berichten/buzz/ongelezen alsnog, niets dubbel, gezonde lijn kost niets extra:
+                         python3 -I proef30.py <scratch met tools/server.py> <map> <poort> [kort]
 tools/checkhtml.py       node --check op alle inline scripts: checkhtml.py <uitmap> <html...>
 tools/*.js               console-testjes voor Marcel (alert); ?v=-nummers daarin kunnen verouderd zijn
 

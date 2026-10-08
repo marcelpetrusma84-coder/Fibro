@@ -205,7 +205,7 @@ import { initSync } from './sync.js?v=129'
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
 import { bewaardeSessieZonderInternet } from './offline.js?v=126'
-import { startMeldingen } from './meldingen.js?v=122'
+import { startMeldingen } from './meldingen.js?v=131'
 import { haalPrivateKeyOp } from './crypto.js?v=95'
 pasBlokstijlToe()
 
@@ -2172,12 +2172,12 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <script src="swipe.js?v=95"></script>
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=106"; startBelLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=131"; startBelLuisteraar()</script>
 <script type="module">import { beschermOpslag } from "./opslag.js?v=1"; beschermOpslag()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=101"; startSpelUitnodigingLuisteraar()</script>
-<script type="module">import { startOngelezen } from "./ongelezen.js?v=101"; startOngelezen()</script>
-<script type="module">import { checkTimers } from "./timer-melding.js?v=122"; setTimeout(checkTimers,4000)</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=131"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startOngelezen } from "./ongelezen.js?v=131"; startOngelezen()</script>
+<script type="module">import { checkTimers } from "./timer-melding.js?v=131"; setTimeout(checkTimers,4000)</script>
 <script src="./fotoviewer.js?v=4"></script>
 <script type="module" src="blokkade.js?v=1"></script>
 </body>

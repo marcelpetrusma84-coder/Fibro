@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (berichten nooit stil kwijt).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (balkje als de server even weg is).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -21,7 +21,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          lettertype = lettertypen zichtbaar, wijzigingen meteen (testscript_lettertype.py),
                          vriendwidgets = vriend-profiel: spellen, lege widgets, meteen bijwerken (testscript_vriendwidgets.py),
                          vegen = foto omlaag vegen sluit, gastenboek bladeren met vegen (testscript_vegen.py),
-                         nietkwijt = niet verstuurde berichten/stickers blijven staan (testscript_nietkwijt.py))
+                         nietkwijt = niet verstuurde berichten/stickers blijven staan (testscript_nietkwijt.py),
+                         serverbalk = balkje als de server even weg is (testscript_serverbalk.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -56,6 +57,8 @@ tools/proef22.py         vegen (touch via CDP): gastenboek bladeren op Home en b
                          pagina), fotoviewer: omlaag vegen sluit, klein stukje niet, opzij = volgende foto
 tools/proef23.py         chat: niet verstuurd (server weg / geen internet) blijft staan, ook na verversen,
                          tikken = opnieuw; maakt zelf sleutels met crypto.js
+tools/proef24.py         verbinding.js: balkje als Supabase niet antwoordt (503 of weg), weg als hij weer antwoordt,
+                         niet bij één hapering, niet bij 401, niet zonder internet
 tools/checkhtml.py       node --check op alle inline scripts: checkhtml.py <uitmap> <html...>
 tools/*.js               console-testjes voor Marcel (alert); ?v=-nummers daarin kunnen verouderd zijn
 

@@ -301,6 +301,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   import { blokkeerPersoon, kiesVriendActie, kiesGeblokkeerdActie, deblokkeerPersoon, verwijderGeblokkeerde, haalGeblokkeerden } from './persoonblok.js?v=2'
   import { initSync } from './sync.js?v=129'
   import { bewaardeSessieZonderInternet } from './offline.js?v=126'
+  import { haalVriendFotos, zetAvatar } from './vriendfotos.js?v=1'
   pasBlokstijlToe()
 
   function isGebruikerOnline(profiel) {
@@ -330,7 +331,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     const antwoord = navigator.onLine
       ? await supabase
         .from('friendships')
-        .select('friend_id, profiles!friendships_friend_id_fkey(id, username, display_name, bio, avatar_url, mood, online_status, offline_emoji, offline_bericht, laatst_gezien)')
+        .select('friend_id, profiles!friendships_friend_id_fkey(id, username, display_name, bio, avatar_url, mood, online_status, offline_emoji, offline_bericht, laatst_gezien, updated_at)')
         .eq('user_id', userId)
         .eq('status', 'accepted')
       : { data: null, error: { message: 'geen internet' } }
@@ -386,7 +387,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
         : '<span style="font-size:12px;color:var(--muted);">' + (p.offline_bericht ? vEsc((p.offline_emoji || '💤') + ' ' + p.offline_bericht) : 'Offline') + '</span>'
       return '<div class="friend-row" data-vid="' + vEsc(p.id) + '" style="display:flex;align-items:center;gap:12px;padding:13px 14px;margin:6px 14px;background:var(--blok-kleur,var(--card));border:0.5px solid var(--border);border-radius:var(--blok-hoek,14px);transform:var(--blok-kantel,none);transition:transform 0.15s;backdrop-filter:blur(12px);cursor:pointer;">' +
         '<div style="position:relative;flex-shrink:0;">' +
-        '<div style="width:46px;height:46px;border-radius:50%;background:rgba(192,132,252,0.15);border:1.5px solid rgba(192,132,252,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;">' + avatar + '</div>' +
+        '<div class="vriend-foto" data-fid="' + vEsc(p.id) + '" data-emoji="' + avatar + '" style="width:46px;height:46px;border-radius:50%;background:rgba(192,132,252,0.15);border:1.5px solid rgba(192,132,252,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;">' + avatar + '</div>' +
         '<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:' + stipKleur + ';border:2px solid #0a0014;display:block;"></span>' +
         '</div>' +
         '<div style="flex:1;min-width:0;">' +
@@ -421,6 +422,15 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     if (offline.length > 0) html += '<div class="section-label">⚫ Offline (' + offline.length + ')</div>' + offline.map(bouwRij).join('')
     if (geblokkeerd.length > 0) html += '<div class="section-label">🚫 Geblokkeerd (' + geblokkeerd.length + ')</div>' + geblokkeerd.map(bouwGeblokkeerdRij).join('')
     container.innerHTML = html
+
+    // v134: avatarfoto's van vrienden (vriendfotos.js): eerst wat op dit toestel staat, nieuwe later
+    const zetFotos = (fotos) => {
+      for (const el of container.querySelectorAll('.vriend-foto[data-fid]')) {
+        const f = fotos.get(el.dataset.fid)
+        if (f || el.dataset.foto) zetAvatar(el, el.dataset.emoji, f)
+      }
+    }
+    haalVriendFotos(userId, data.map(f => f && f.profiles).filter(Boolean), zetFotos).then(zetFotos).catch(e => console.warn('[vrienden] vriendfoto\'s', e))
 
     // Klikgedrag via listeners in plaats van onclick-attributen
     container.querySelectorAll('.friend-row').forEach(rij => {

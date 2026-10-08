@@ -372,6 +372,7 @@ window.veiligeUrl = function(v){
   import { startHeartbeat } from './heartbeat.js?v=117'
   import { startMeldingen } from './meldingen.js?v=131'
   import { houOpen } from './lijntjes.js?v=1'
+  import { haalVriendFotos, zetAvatar, geldigeFoto } from './vriendfotos.js?v=1'
   import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=95'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=122'
   import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=131'
@@ -678,6 +679,7 @@ window.veiligeUrl = function(v){
 
     await laadVrienden()
     huidigProfiel = (await profielBelofte).data
+    pasFotosToe() // v134: eigen foto bij eigen berichten
 
     // ── Automatisch spel starten via URL (van uitnodiging op andere pagina) ──
     const urlParams = new URLSearchParams(window.location.search)
@@ -767,6 +769,41 @@ window.veiligeUrl = function(v){
       return Array.isArray(b) && b.length ? b : null
     } catch (e) { return null }
   }
+  // v134: avatarfoto's van vrienden (vriendfotos.js) in de lijst, de kop en bij de berichten;
+  // bij je eigen berichten je eigen foto. Zonder foto blijft de emoji staan.
+  var vriendFotos = new Map()
+  function fotoInRij(row) {
+    const av = row && row.querySelector && row.querySelector('.msg-av-sm')
+    if (!av) return
+    const mijn = row.classList.contains('out')
+    const f = mijn ? geldigeFoto(huidigProfiel?.avatar_data) : (geselecteerdeVriend ? vriendFotos.get(geselecteerdeVriend.id) : null)
+    if (f || av.dataset.foto) zetAvatar(av, mijn ? (huidigProfiel?.avatar_url || '\u{1F464}') : (geselecteerdeVriend?.avatar || '\u{1F464}'), f)
+  }
+  function pasFotosToe() {
+    for (const el of document.querySelectorAll('#vriendenLijst .vriend-item[data-vid]')) {
+      const av = el.querySelector('.vriend-av')
+      const f = vriendFotos.get(el.dataset.vid)
+      if (av && (f || av.dataset.foto)) zetAvatar(av, el.dataset.vav, f)
+    }
+    const kop = document.getElementById('chatAv')
+    if (geselecteerdeVriend && kop) {
+      const f = vriendFotos.get(geselecteerdeVriend.id)
+      if (f || kop.dataset.foto) zetAvatar(kop, geselecteerdeVriend.avatar, f)
+    }
+    for (const row of document.querySelectorAll('#messages .msg-row')) fotoInRij(row)
+  }
+  try {
+    new MutationObserver(ms => {
+      for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1 && n.classList.contains('msg-row')) fotoInRij(n)
+    }).observe(document.getElementById('messages'), { childList: true })
+  } catch (e) {}
+  function laadVriendFotos(lijst) {
+    if (!huidigeUser) return
+    haalVriendFotos(huidigeUser.id, lijst, m => { vriendFotos = m; pasFotosToe() })
+      .then(m => { for (const [id, f] of m) vriendFotos.set(id, f); pasFotosToe() })
+      .catch(e => console.warn('[chat] vriendfoto\'s', e))
+  }
+
   function tekenVriendenLijst(data) {
     const container = document.getElementById('vriendenLijst')
     container.innerHTML = data.map(vriend => `
@@ -794,11 +831,12 @@ window.veiligeUrl = function(v){
         window.location.href = 'bellen.html?vriend=' + encodeURIComponent(btn.dataset.bid) + '&naam=' + encodeURIComponent(btn.dataset.bnaam)
       })
     })
+    pasFotosToe() // v134
   }
 
   async function laadVrienden() {
     const bewaard = leesVriendenCache()
-    if (bewaard && !window._vriendenData) { window._vriendenData = bewaard; tekenVriendenLijst(bewaard) }
+    if (bewaard && !window._vriendenData) { window._vriendenData = bewaard; tekenVriendenLijst(bewaard); laadVriendFotos(bewaard.map(v => ({ id: v.id }))) }
 
     const { data: friendships, error } = await supabase
       .from('friendships')
@@ -821,7 +859,7 @@ window.veiligeUrl = function(v){
 
     const { data, error: profielFout } = await supabase
       .from('profiles')
-      .select('id, username, avatar_url, public_key, online_status, laatst_gezien') // v120: geen foto's/achtergronden
+      .select('id, username, avatar_url, public_key, online_status, laatst_gezien, updated_at') // v120: geen foto's/achtergronden (v134: avatarfoto's via vriendfotos.js)
       .in('id', vriendIds)
 
     if ((profielFout || !data) && bewaard) return // v125: zie hierboven
@@ -836,6 +874,7 @@ window.veiligeUrl = function(v){
       localStorage.setItem(vriendenCacheSleutel(), JSON.stringify(data.map(v => ({ id: v.id, username: v.username, avatar_url: v.avatar_url, public_key: v.public_key }))))
     } catch (e) {}
     tekenVriendenLijst(data)
+    laadVriendFotos(data) // v134
     // Al een chat geopend vanuit de bewaarde lijst? Dan de verse sleutel van die vriend gebruiken.
     if (geselecteerdeVriend) {
       const vers = data.find(v => v.id === geselecteerdeVriend.id)
@@ -896,6 +935,7 @@ window.veiligeUrl = function(v){
     werkVerzendknopBij()
 
     document.getElementById('chatAv').textContent = vriendAvatar
+    zetAvatar(document.getElementById('chatAv'), vriendAvatar, vriendFotos.get(vriendId)) // v134
     document.getElementById('chatNaam').textContent = vriendNaam
     document.getElementById('chatStatus').textContent = '● actief'
 
@@ -1680,7 +1720,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       document.getElementById('vriendenSelectie').style.display = 'block'
       document.getElementById('chatNaam').textContent = 'Selecteer een vriend'
       document.getElementById('chatStatus').textContent = 'Kies hieronder met wie je wilt chatten'
-      document.getElementById('chatAv').textContent = '💬'
+      zetAvatar(document.getElementById('chatAv'), '💬', null) // v134
       document.getElementById('belKnoppen').style.display = 'none'
       if (realtimeKanaal) { realtimeKanaal.stop(); realtimeKanaal = null }
       if (reactieKanaal) { reactieKanaal.stop(); reactieKanaal = null }

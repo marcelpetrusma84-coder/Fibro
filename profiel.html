@@ -133,11 +133,13 @@ input, textarea { font-size:16px !important; }
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 </head>
 <body>
-<div class="top-bar">
+<div class="top-bar" role="banner">
   <span class="top-title">Mijn profiel</span>
   <button class="save-top-btn" onclick="slaAllesOp()">Opslaan</button>
 </div>
-<div class="main-tabs">
+<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Fibro – Mijn profiel</h1>
+
+<div class="main-tabs" tabindex="0" aria-label="Onderdelen van je profiel">
   <div class="main-tab active" onclick="switchTab('profiel')">👤 Profiel</div>
   <div class="main-tab" onclick="switchTab('achtergrond')">🖼 Achtergrond</div>
   <div class="main-tab" onclick="switchTab('animatie')">✨ Animatie</div>
@@ -445,7 +447,8 @@ input, textarea { font-size:16px !important; }
     <input type="file" id="stickerUpload" accept="image/*" style="display:none"/>
   </div>
 </div>
-<div class="bottom-nav">
+</main>
+<div class="bottom-nav" role="navigation" aria-label="Menu">
   <div class="nav-item" onclick="window.location.href='index.html'"><div class="nav-icon">🏠</div>Home</div>
   <div class="nav-item" onclick="window.location.href='vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
   <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>

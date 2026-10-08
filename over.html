@@ -30,7 +30,7 @@
   p:last-child { margin-bottom:0; }
   ul { margin:8px 0 0 18px; }
   li { font-size:14px; line-height:1.6; margin-bottom:6px; }
-  .binnenkort { opacity:0.55; }
+  .binnenkort { opacity:1; } /* v130: leesbaar (contrast) */
   .binnenkort h2 { color:var(--muted); }
   .label { display:inline-block; font-size:11px; color:var(--muted); border:0.5px solid var(--border); border-radius:10px; padding:3px 8px; margin-left:6px; }
 </style>
@@ -38,10 +38,12 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 </head>
 <body>
-<div class="top-bar">
+<div class="top-bar" role="banner">
   <button class="back-btn" onclick="history.length>1?history.back():location.href='index.html'">← Terug</button>
   <div class="top-title">Over Fibro</div>
 </div>
+<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Fibro – Over Fibro</h1>
+
 <div class="wrap">
 
   <div class="blok">
@@ -98,6 +100,7 @@
   </div>
 
 </div>
+</main>
 <script src="swipe.js?v=95"></script>
 </body>
 </html>

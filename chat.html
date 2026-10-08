@@ -45,7 +45,7 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .privacy-bar { background:rgba(248,113,113,0.08); border-bottom:0.5px solid rgba(248,113,113,0.2); padding:6px 14px; font-size:15px; color:#f87171; display:none; align-items:center; gap:6px; }
 .privacy-bar.show { display:flex; }
 .vriend-selectie { flex:1; padding:16px; }
-.vriend-selectie h3 { font-family:'Playfair Display',serif; font-style:italic; font-size:16px; color:var(--accent); margin-bottom:14px; }
+.vriend-selectie h3, .vriend-selectie .vs-kop { font-family:'Playfair Display',serif; font-style:italic; font-size:16px; color:var(--accent); margin-bottom:14px; }
 .vriend-item { display:flex; align-items:center; gap:12px; padding:12px; border:0.5px solid var(--border); border-radius:12px; margin-bottom:8px; cursor:pointer; background:var(--card); transition:border-color 0.2s; }
 .vriend-item:hover { border-color:var(--accent); }
 .vriend-item .vriend-av { position:relative; }
@@ -168,7 +168,7 @@ window.veiligeUrl = function(v){
 </script>
 
 
-<div class="top-bar">
+<div class="top-bar" role="banner">
   <button class="back-btn" onclick="gaTerug()">← terug</button>
   <div class="chat-av" id="chatAv">💬</div>
   <div class="chat-info">
@@ -181,6 +181,8 @@ window.veiligeUrl = function(v){
     <button onclick="toonChatMenu()" title="Meer" style="background:rgba(255,255,255,0.06); border:0.5px solid var(--border); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--muted);">⋯</button>
   </div>
 </div>
+<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Fibro – Chat</h1>
+
 
 <div class="screenshot-banner" id="screenshotBanner">
   📸 Screenshots toegestaan voor <span class="banner-timer" id="bannerTimer">20:00</span>
@@ -189,7 +191,7 @@ window.veiligeUrl = function(v){
 <div class="privacy-bar" id="privacyBar">⚠ Screenshot poging gedetecteerd — zonder toestemming</div>
 
 <div id="vriendenSelectie" class="vriend-selectie">
-  <h3>Met wie wil je chatten?</h3>
+  <h2 class="vs-kop">Met wie wil je chatten?</h2>
   <div id="vriendenLijst"><div class="laden">Vrienden laden...</div></div>
 </div>
 
@@ -267,7 +269,8 @@ window.veiligeUrl = function(v){
   </div>
 </div>
 
-<div class="bottom-nav">
+</main>
+<div class="bottom-nav" role="navigation" aria-label="Menu">
   <div class="nav-item" onclick="window.location.href='index.html'"><div class="nav-icon">🏠</div>Home</div>
   <div class="nav-item" onclick="window.location.href='vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
   <div class="nav-item active"><div class="nav-icon">💬</div>Chat</div>

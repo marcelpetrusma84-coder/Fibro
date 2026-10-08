@@ -87,10 +87,12 @@ body.heeft-wallpaper::before { display:block; }
 <!-- Wallpaper laag -->
 <div class="wallpaper-bg" id="wallpaperBg"></div>
 
-<div class="top-bar">
+<div class="top-bar" role="banner">
   <button class="back-btn" onclick="history.back()">← terug</button>
   <span class="top-title" id="paginaTitel">Profiel</span>
 </div>
+<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Fibro – Profiel van een vriend</h1>
+
 
 <div class="profile-hero">
   <div class="avatar-ring">
@@ -126,7 +128,8 @@ body.heeft-wallpaper::before { display:block; }
 
 </div>
 
-<div class="bottom-nav">
+</main>
+<div class="bottom-nav" role="navigation" aria-label="Menu">
   <div class="nav-item" onclick="window.location.href='index.html'"><div class="nav-icon">🏠</div>Home</div>
   <div class="nav-item active" onclick="window.location.href='vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
   <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
@@ -1214,7 +1217,7 @@ startMeldingen()
 </script>
 
 <div style="max-width:640px;margin:28px auto 44px;text-align:center;">
-    <button id="ontvriend-btn" onclick="ontvriend()" style="background:none;border:none;color:rgba(255,255,255,0.32);font-size:12px;cursor:pointer;text-decoration:underline;padding:8px;font-family:inherit;">Vriendschap beeindigen</button>
+    <button id="ontvriend-btn" onclick="ontvriend()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:12px;cursor:pointer;text-decoration:underline;padding:8px;font-family:inherit;">Vriendschap beeindigen</button>
   </div>
 <script src="./fotoviewer.js?v=4"></script>
 <script type="module" src="offline.js?v=126"></script>

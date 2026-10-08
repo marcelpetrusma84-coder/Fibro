@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (vegen: foto sluiten, gastenboek bladeren).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (berichten nooit stil kwijt).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -20,7 +20,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          zonderpreview = preview en geblokkeerd weg van Profiel (testscript_zonderpreview.py),
                          lettertype = lettertypen zichtbaar, wijzigingen meteen (testscript_lettertype.py),
                          vriendwidgets = vriend-profiel: spellen, lege widgets, meteen bijwerken (testscript_vriendwidgets.py),
-                         vegen = foto omlaag vegen sluit, gastenboek bladeren met vegen (testscript_vegen.py))
+                         vegen = foto omlaag vegen sluit, gastenboek bladeren met vegen (testscript_vegen.py),
+                         nietkwijt = niet verstuurde berichten/stickers blijven staan (testscript_nietkwijt.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -53,6 +54,8 @@ tools/proef21.py         vriend-profiel: spel = zelf spelen, lege poll/timer zeg
                          sync (BroadcastChannel fibro-vriend-data) werken de widgets meteen bij
 tools/proef22.py         vegen (touch via CDP): gastenboek bladeren op Home en bij een vriend (niet naar een andere
                          pagina), fotoviewer: omlaag vegen sluit, klein stukje niet, opzij = volgende foto
+tools/proef23.py         chat: niet verstuurd (server weg / geen internet) blijft staan, ook na verversen,
+                         tikken = opnieuw; maakt zelf sleutels met crypto.js
 tools/checkhtml.py       node --check op alle inline scripts: checkhtml.py <uitmap> <html...>
 tools/*.js               console-testjes voor Marcel (alert); ?v=-nummers daarin kunnen verouderd zijn
 

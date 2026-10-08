@@ -885,6 +885,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (error || !data || data.length === 0) {
       if (!error && data) bewaarChatlog(vriendId, [])
       voegSysBericht('Stuur je eerste bericht! 👋')
+      toonWachtende(vriendId) // v130
       return
     }
 
@@ -908,6 +909,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
         if (geselecteerdeVriend?.id === vriendId) laadBerichten().then(() => tekenReacties(document.getElementById('messages'))).catch(() => {})
       }, { once: true })
     }
+    toonWachtende(vriendId) // v130: niet verstuurde berichten onderaan
     scrollNaarOnder(true); console.timeEnd('[chat] berichten')
   }
 
@@ -1242,6 +1244,78 @@ console.timeLog('[chat] berichten', 'opgehaald')
     } catch (e) { return 0 }
   }
 
+  // ─── v130: versturen dat nooit stil mislukt ───
+  // Lukt versturen niet (geen internet, server even weg, geen sleutel), dan blijft het bericht
+  // in de chat staan als "⚠️ Niet verstuurd · tik om opnieuw te proberen". Het wordt op dit toestel
+  // bewaard (fibro_nietverstuurd_<ik>), dus ook na verversen of een andere chat is het niet weg.
+  const nvSleutel = () => 'fibro_nietverstuurd_' + huidigeUser.id
+  const leesNV = () => { try { const a = JSON.parse(localStorage.getItem(nvSleutel()) || '[]'); return Array.isArray(a) ? a : [] } catch (e) { return [] } }
+  const bewaarNV = a => { try { localStorage.setItem(nvSleutel(), JSON.stringify(a.slice(-50))) } catch (e) {} }
+  function nvOmschrijving(tekst) {
+    if (tekst.startsWith('sticker:')) return (tekst.split(':')[1] || '') + ' (sticker)'
+    if (tekst.startsWith('lossticker:') || tekst.startsWith('customsticker:')) return '\u{1F5BC}\uFE0F Sticker'
+    return tekst
+  }
+  function tekenNV(item) {
+    const container = document.getElementById('messages')
+    if (!container || container.querySelector('[data-nv="' + item.id + '"]')) return
+    const row = document.createElement('div')
+    row.className = 'msg-row out msg-nietverstuurd'
+    row.dataset.nv = item.id
+    row.innerHTML = '<div class="nv-blok" role="button" tabindex="0" aria-label="Niet verstuurd. Tik om opnieuw te proberen" style="max-width:75%;background:rgba(239,68,68,0.14);border:1px solid rgba(239,68,68,0.6);border-radius:14px;padding:8px 12px;cursor:pointer">'
+      + '<div class="nv-tekst" style="font-size:14px;color:var(--text);word-break:break-word;white-space:pre-wrap"></div>'
+      + '<div class="nv-status" style="font-size:11px;color:#fca5a5;margin-top:4px">\u26A0\uFE0F Niet verstuurd \u00B7 tik om opnieuw te proberen</div></div>'
+    row.querySelector('.nv-tekst').textContent = nvOmschrijving(item.tekst)
+    const blok = row.querySelector('.nv-blok'), status = row.querySelector('.nv-status')
+    let bezig = false
+    const probeer = async () => {
+      if (bezig) return
+      bezig = true
+      status.textContent = 'Versturen\u2026'
+      const ok = await opnieuwNV(item.id)
+      bezig = false
+      if (ok) row.remove()
+      else status.textContent = (navigator.onLine ? '\u26A0\uFE0F Niet verstuurd' : '\u{1F4F4} Geen internet') + ' \u00B7 tik om opnieuw te proberen'
+    }
+    blok.onclick = probeer
+    blok.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); probeer() } }
+    container.appendChild(row)
+  }
+  function toonWachtende(vriendId) { for (const it of leesNV()) if (it.vriendId === vriendId) tekenNV(it) }
+  function nietVerstuurd(vriendId, tekst, antwoordOp, pling) {
+    const item = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), vriendId, tekst, antwoordOp: antwoordOp || null, pling: !!pling, tijd: Date.now() }
+    const a = leesNV(); a.push(item); bewaarNV(a)
+    if (geselecteerdeVriend?.id === vriendId) { tekenNV(item); scrollNaarOnder(true) }
+  }
+  // Geeft true als het bericht echt op de server staat.
+  async function verstuur(vriendId, tekst, antwoordOp, pling) {
+    const content = await versleutelOfStop(tekst)
+    if (content === null) return false
+    if (!navigator.onLine) return false
+    const velden = { sender_id: huidigeUser.id, receiver_id: vriendId, content, expires_at: new Date(Date.now() + 31*24*60*60*1000).toISOString() }
+    if (antwoordOp) velden.antwoord_op = antwoordOp
+    try {
+      let { data, error } = await supabase.from('messages').insert(velden).select('id').single()
+      // het bericht waarop je antwoordde bestaat niet meer: dan zonder antwoord versturen
+      if (error && antwoordOp && error.code === '23503') {
+        delete velden.antwoord_op
+        ;({ data, error } = await supabase.from('messages').insert(velden).select('id').single())
+      }
+      if (error || !data?.id) { console.error('Versturen mislukt:', error); return false }
+      slaBerichtCacheOp(data.id, tekst)
+      if (pling) stuurPling(vriendId)
+      return true
+    } catch (e) { console.error('Versturen mislukt:', e); return false }
+  }
+  async function opnieuwNV(id) {
+    const it = leesNV().find(x => x.id === id)
+    if (!it) return true
+    if (geselecteerdeVriend?.id !== it.vriendId) return false
+    const ok = await verstuur(it.vriendId, it.tekst, it.antwoordOp, it.pling)
+    if (ok) bewaarNV(leesNV().filter(x => x.id !== id))
+    return ok
+  }
+
   window.sendMsg = async function() {
     if (!geselecteerdeVriend) return
     const input = document.getElementById('msgInput')
@@ -1249,28 +1323,12 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (!tekst) return
     speelPlop('uit')
     input.value = ''
-
-    const content = await versleutelOfStop(tekst)
-    if (content === null) return
-
-    const { data, error } = await supabase.from('messages').insert({
-      sender_id: huidigeUser.id,
-      receiver_id: geselecteerdeVriend.id,
-      content,
-      antwoord_op: geefAntwoordOp(),
-      expires_at: new Date(Date.now() + 31*24*60*60*1000).toISOString()
-    }).select('id').single()
-
-    // Sla plaintext op in cache zodat eigen berichten leesbaar blijven
-    if (data?.id) {
-      slaBerichtCacheOp(data.id, tekst)
-    }
-
+    const vriendId = geselecteerdeVriend.id
+    const antwoordOp = geefAntwoordOp()
     wisAntwoordOp()
-    if (error) console.error('Versturen mislukt:', error)
-    if (!error) stuurPling(geselecteerdeVriend.id)
     document.getElementById('emojiGrid').style.display = 'none'
     emojiOpen = false
+    if (!(await verstuur(vriendId, tekst, antwoordOp, true))) nietVerstuurd(vriendId, tekst, antwoordOp, true)
   }
 
   // ─── Sticker versturen (versleuteld + cache) ───
@@ -1279,15 +1337,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     speelEmotieGeluid(emotieId)
     document.getElementById('stickerGrid').style.display = 'none'
     const tekst = 'lossticker:' + src + ':' + emotieId
-    const content = await versleutelOfStop(tekst)
-    if (content === null) return
-    const { data } = await supabase.from('messages').insert({
-      sender_id: huidigeUser.id,
-      receiver_id: geselecteerdeVriend.id,
-      content,
-      expires_at: new Date(Date.now() + 31*24*60*60*1000).toISOString()
-    }).select('id').single()
-    if (data?.id) slaBerichtCacheOp(data.id, tekst)
+    const vriendId = geselecteerdeVriend.id
+    if (!(await verstuur(vriendId, tekst))) nietVerstuurd(vriendId, tekst)
   }
 
   window.sendStickerMetGeluid = async function(emoji, emotieId) {
@@ -1295,15 +1346,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     speelEmotieGeluid(emotieId)
     document.getElementById('stickerGrid').style.display = 'none'
     const tekst = 'sticker:' + emoji + ':' + emotieId
-    const content = await versleutelOfStop(tekst)
-    if (content === null) return
-    const { data } = await supabase.from('messages').insert({
-      sender_id: huidigeUser.id,
-      receiver_id: geselecteerdeVriend.id,
-      content,
-      expires_at: new Date(Date.now() + 31*24*60*60*1000).toISOString()
-    }).select('id').single()
-    if (data?.id) slaBerichtCacheOp(data.id, tekst)
+    const vriendId = geselecteerdeVriend.id
+    if (!(await verstuur(vriendId, tekst))) nietVerstuurd(vriendId, tekst)
   }
 
   window.sendCustomSticker = async function(sticker) {
@@ -1311,15 +1355,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (sticker.geluid) speelGeluidById(sticker.geluid)
     document.getElementById('stickerGrid').style.display = 'none'
     const tekst = 'customsticker:' + JSON.stringify({ image: sticker.image, geluid: sticker.geluid })
-    const content = await versleutelOfStop(tekst)
-    if (content === null) return
-    const { data } = await supabase.from('messages').insert({
-      sender_id: huidigeUser.id,
-      receiver_id: geselecteerdeVriend.id,
-      content,
-      expires_at: new Date(Date.now() + 31*24*60*60*1000).toISOString()
-    }).select('id').single()
-    if (data?.id) slaBerichtCacheOp(data.id, tekst)
+    const vriendId = geselecteerdeVriend.id
+    if (!(await verstuur(vriendId, tekst))) nietVerstuurd(vriendId, tekst)
   }
 
   // ─── Buzz (niet versleuteld) ───

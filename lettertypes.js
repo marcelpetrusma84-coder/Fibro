@@ -16,7 +16,7 @@ export const LETTERTYPES = [
   { naam: 'Nosifer', val: 'cursive', label: 'Bloederig' },
   { naam: 'Orbitron', val: 'sans-serif', label: 'Sci-fi' },
   { naam: 'Audiowide', val: 'cursive', label: 'Techno' },
-  { naam: 'Press Start 2P', val: 'cursive', label: 'Retro game' },
+  { naam: 'Press Start 2P Tekst', val: 'cursive', label: 'Retro game' }, // v130: kleinere versie (zie lettertypen/press-start-2p-tekst.css)
   { naam: 'Silkscreen', val: 'cursive', label: 'Pixels' },
   { naam: 'Bungee', val: 'cursive', label: 'Verkeersbord' },
   { naam: 'Bungee Shade', val: 'cursive', label: 'Verkeersbord 3D' },
@@ -49,7 +49,7 @@ const EIGEN = new Set([
   'dm-mono', 'dm-sans', 'dm-serif-display', 'fascinate', 'fredoka', 'great-vibes', 'lobster',
   'lora', 'medievalsharp', 'merriweather', 'monoton', 'mountains-of-christmas', 'nosifer',
   'nunito', 'orbitron', 'oswald', 'pacifico', 'permanent-marker', 'pirata-one', 'playfair-display',
-  'press-start-2p', 'quicksand', 'raleway', 'rampart-one', 'righteous', 'rubik-bubbles',
+  'press-start-2p', 'press-start-2p-tekst', 'quicksand', 'raleway', 'rampart-one', 'righteous', 'rubik-bubbles',
   'rubik-spray-paint', 'rye', 'satisfy', 'sedgwick-ave', 'shadows-into-light', 'share-tech-mono',
   'silkscreen', 'space-mono', 'titan-one'
 ])

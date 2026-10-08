@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (toegankelijkheid).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (lettertypen even breed).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -23,7 +23,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          vegen = foto omlaag vegen sluit, gastenboek bladeren met vegen (testscript_vegen.py),
                          nietkwijt = niet verstuurde berichten/stickers blijven staan (testscript_nietkwijt.py),
                          serverbalk = balkje als de server even weg is (testscript_serverbalk.py),
-                         toegankelijk = zoomen, contrast, hoofdgebied en hoofdtitel (testscript_toegankelijk.py))
+                         toegankelijk = zoomen, contrast, hoofdgebied en hoofdtitel (testscript_toegankelijk.py),
+                         lettermaat = lettertypen even breed (size-adjust) (testscript_lettermaat.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -62,6 +63,8 @@ tools/proef24.py         verbinding.js: balkje als Supabase niet antwoordt (503 
                          niet bij één hapering, niet bij 401, niet zonder internet
 tools/keuring.py         keuring van 8 pagina's: kwaadaardige namen/teksten (XSS), server kapot (fouten),
                          toegankelijkheid met axe-core (eerst npm install axe-core@4.10.2 in <scratch>/axe)
+tools/proef25.py         alle lettertypen even breed als DM Sans (size-adjust), spellen houden Press Start 2P,
+                         oude keuze Press Start 2P -> 'Press Start 2P Tekst'; woff2 eerst via npm @fontsource/<naam>
 tools/checkhtml.py       node --check op alle inline scripts: checkhtml.py <uitmap> <html...>
 tools/*.js               console-testjes voor Marcel (alert); ?v=-nummers daarin kunnen verouderd zijn
 

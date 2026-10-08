@@ -1,6 +1,6 @@
 import { supabase } from './supabase.js?v=95'
 import { pasAnimatieToe } from './animatie.js?v=95'
-import { laadFont } from './lettertypes.js?v=118'
+import { laadFont } from './lettertypes.js?v=130'
 
 // ========================
 // INDEXEDDB
@@ -73,8 +73,11 @@ async function laadWallpaper(userId) {
 // ========================
 // LETTERTYPE TOEPASSEN
 // ========================
+// v130: wie eerder Press Start 2P koos, krijgt de kleinere versie (even breed als de rest)
+const nieuweLetter = lt => /^'Press Start 2P',/.test(String(lt || '')) ? String(lt).replace("'Press Start 2P',", "'Press Start 2P Tekst',") : lt
 function pasLettertypeToe(lettertype) {
   if (!lettertype) return
+  lettertype = nieuweLetter(lettertype)
   // Sla op voor snelle herlaad
   try { localStorage.setItem('fibro_font', lettertype) } catch(e) {}
   // Verwijder oude lettertype stijl als die er al is
@@ -111,7 +114,7 @@ const zelfdeThema = (a, b) => THEMA_VELDEN.every(k => (a[k] == null ? null : a[k
 async function pasThemaToe(data, uid) {
   if (data.accent_kleur) document.documentElement.style.setProperty('--accent', data.accent_kleur)
   if (data.accent_kleur2) document.documentElement.style.setProperty('--accent2', data.accent_kleur2)
-  if (data.lettertype) { laadFont(String(data.lettertype).split(",")[0].replace(/['"]/g, "").trim()); pasLettertypeToe(data.lettertype) }
+  if (data.lettertype) { const lt = nieuweLetter(data.lettertype); laadFont(String(lt).split(",")[0].replace(/['"]/g, "").trim()); pasLettertypeToe(lt) }
   pasAnimatieToe(data.animatie)
   const heeftWallpaper = await laadWallpaper(uid)
   if (!heeftWallpaper && data.achtergrond_kleur) {

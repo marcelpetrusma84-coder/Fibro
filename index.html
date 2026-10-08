@@ -196,7 +196,7 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 </div>
 
 <script type="module">
-import { laadThema } from './thema.js?v=119'
+import { laadThema } from './thema.js?v=130'
 import { pasBlokstijlToe } from './blokstijl.js?v=95'
 import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=95'
 import { startHeartbeat } from './heartbeat.js?v=117'
@@ -683,8 +683,8 @@ function renderMuziekPlayer(c) {
               ${track.cover ? `<img src="${track.cover}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">` : '🎵'}
             </div>
             <div style="flex:1;min-width:0;">
-              <div id="muz-titel" style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${track.naam}</div>
-              <div id="muz-artiest" style="font-size:12px;color:rgba(255,255,255,0.8);">${track.artiest||''}</div>
+              <div id="muz-titel" style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${String(track.naam||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+              <div id="muz-artiest" style="font-size:12px;color:rgba(255,255,255,0.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${String(track.artiest||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
             </div>
           </div>
           <!-- Voortgangsbalk -->
@@ -1490,7 +1490,7 @@ function renderQuoteWidget(c, uid) {
     const hf = cfg ? cfg.font : FONTS[0][0]
     c.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:7px;position:relative;z-index:2">
-        <textarea id="qi" placeholder="Jouw quote..." rows="3" style="${inp};resize:none;font-family:inherit">${cfg?String(cfg.tekst||''):''}</textarea>
+        <textarea id="qi" placeholder="Jouw quote..." rows="3" style="${inp};resize:none;font-family:inherit">${cfg?String(cfg.tekst||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'):''}</textarea>
         <select id="qf" style="${inp}">${FONTS.map(f=>`<option value="${f[0]}" ${hf===f[0]?'selected':''} style="font-family:${f[0]}">${f[1]}</option>`).join('')}</select>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:rgba(255,255,255,0.6)">Grootte</span>

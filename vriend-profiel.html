@@ -137,7 +137,7 @@ body.heeft-wallpaper::before { display:block; }
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=119'
+  import { laadThema } from './thema.js?v=130'
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { wisVriendData } from './opruimen.js?v=95'
@@ -672,7 +672,7 @@ async function renderVriendMuziek(el) {
             </div>
             <div style="flex:1;min-width:0;">
               <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escH(t.naam || 'Nummer')}</div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.7);">${escH(t.artiest || '')}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escH(t.artiest || '')}</div>
             </div>
           </div>
           <div>

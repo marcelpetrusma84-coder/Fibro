@@ -5,7 +5,7 @@
 // fibro-v30: supabase.js wacht zonder internet niet meer op een verlopen inlogpas.
 // supabase.js wordt bijna overal geladen (?v=95); een nieuwe CACHE_VERSION zorgt dat
 // iedereen de nieuwe ophaalt. kastvullen.js vult de kast daarna vanzelf weer aan.
-const CACHE_VERSION = 'fibro-v30'
+const CACHE_VERSION = 'fibro-v31' // v31: lettertypen met size-adjust (zelfde ?v=1)
 
 self.addEventListener('install', function(event) {
   self.skipWaiting()

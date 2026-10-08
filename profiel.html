@@ -513,7 +513,7 @@ function _profielUid() {
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
 import { startMeldingen } from './meldingen.js?v=122'
-import { laadThema, bewaarThemaCache } from './thema.js?v=119'
+import { laadThema, bewaarThemaCache } from './thema.js?v=130'
 import { startHeartbeat } from './heartbeat.js?v=117'
 import { initSync } from './sync.js?v=129'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=122'
@@ -521,7 +521,7 @@ import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=122'
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
 const stickers={natuur:['🌿','🌸','🌺','🌻','🍀','🌱','🌾','🍃','🌴','🌊','🍂','🌹','🌷','🌼','🍁'],magie:['✨','🔮','🌙','⭐','💫','🌟','🔯','🌠','🌌','🪄','💎','🌈','⚡','🔥','🌀'],kunst:['🎵','🎸','🎨','🎭','🎬','📷','🎪','🎯','🎲','🎹','🥁','🎺','🎻','🖼','✏'],dieren:['🦋','🦊','🐱','🐺','🦄','🐉','🦁','🐻','🦝','🦔','🐧','🦅','🐠','🐬','🦋']}
-import { LETTERTYPES, laadFont } from './lettertypes.js?v=118'
+import { LETTERTYPES, laadFont } from './lettertypes.js?v=130'
 import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=95'
 import { pasAnimatieToe } from './animatie.js?v=95'
 window.blokAangepast = function(){

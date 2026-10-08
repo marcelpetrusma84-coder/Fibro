@@ -1,6 +1,7 @@
-/* stijl.css - Fibro (v2): dingen die op elke pagina hetzelfde moeten zijn.
+/* stijl.css - Fibro (v3): dingen die op elke pagina hetzelfde moeten zijn.
    Wordt als laatste stylesheet geladen (vlak voor </head>), zodat dit voorgaat.
-   Op: index, chat, profiel, vrienden, vriend-profiel.  Inhaken: <link rel="stylesheet" href="stijl.css?v=2"> vlak voor </head> */
+   Op alle pagina's (index, chat, profiel, vrienden, vriend-profiel, over, login, invite, bellen, spel, moderatie).
+   Inhaken: <link rel="stylesheet" href="stijl.css?v=3"> vlak voor </head> */
 
 /* 1. Het menu onderaan: overal dezelfde letter, hetzelfde icoon en de gekozen pagina in de accentkleur */
 .bottom-nav .nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:15px !important; color:#ffffff; cursor:pointer; padding:4px 12px; min-height:44px; opacity:1 !important; }
@@ -16,3 +17,10 @@ body *:not(:is(input, textarea, select, #spelOverlay, #spelOverlay *, .spel-sche
 input, textarea, select { text-shadow:none !important; }
 /* v2: het gastenboek is licht papier met donkere letters: daar nooit een schaduw */
 .widget-inhoud:has(#gbl), .widget-inhoud:has(#gbl) *, .gbw-inhoud:has(#gbwLijst), .gbw-inhoud:has(#gbwLijst) * { text-shadow:none !important; }
+
+/* v3: knoppen (meestal een lichte knop met donkere letters, zoals Opslaan en Uitnodigen): nooit een schaduw */
+:is(button, .invite-btn, .save-top-btn, .leeg-staat-btn, [role="button"]):not(#_fibro), :is(button, .invite-btn, .save-top-btn, .leeg-staat-btn, [role="button"]):not(#_fibro) * { text-shadow:none !important; }
+
+/* 3. Witte tekst spierwit (was op veel plekken een heel licht paars wit, #f3e8ff) */
+:root { --text:#ffffff !important; }
+[style*="color:#f3e8ff" i], [style*="color: #f3e8ff" i], [style*="color: rgb(243, 232, 255)"] { color:#ffffff !important; }

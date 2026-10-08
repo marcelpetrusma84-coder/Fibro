@@ -465,7 +465,8 @@ window.veiligeUrl = function(v){
     if (!key) return null
     try {
       const b = JSON.parse(localStorage.getItem(key) || 'null')
-      return Array.isArray(b) ? b : null
+      // v132: verlopen berichten (zelf gekozen bewaartijd) ook zonder internet niet meer tonen
+      return Array.isArray(b) ? b.filter(m => !m || !m.expires_at || !(new Date(m.expires_at).getTime() <= Date.now())) : null
     } catch(e) { return null }
   }
   function bewaarChatlog(vriendId, rijen) {

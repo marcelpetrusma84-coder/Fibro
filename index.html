@@ -108,7 +108,7 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
   <div class="top-logo">Fibro</div>
   <div style="display:flex;align-items:center;gap:10px;">
     <button id="uitlogBtn" onclick="window.uitloggen()" title="Uitloggen" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.08);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.7);padding:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
-    <button id="menuBtn" onclick="window.location.href='over.html'" title="Menu" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.08);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.7);padding:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <button id="menuBtn" onclick="window.openMenu()" title="Menu" aria-label="Menu" aria-haspopup="true" aria-expanded="false" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.08);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.7);padding:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     <div class="top-av" id="topAvatar" onclick="window.location.href='profiel.html'" style="display:none">👤</div>
   </div>
 </div>
@@ -2020,6 +2020,155 @@ async function renderGastenboek(c, uid) {
 // ════════════════════════════════
 // INIT
 // ════════════════════════════════
+// ════════════════════════════════
+// MENU (☰) en BERICHTEN BEWAREN (v132)
+// ════════════════════════════════
+// Hoelang berichten bewaard worden kies je zelf (1 dag t/m 1 jaar). De server rekent met
+// het kortste van jouw keuze en die van je vriend, en past het ook toe op berichten die er al
+// zijn (sql/berichten-bewaren.sql: profiles.bewaar_dagen en zet_bewaartermijn).
+const BEWAAR_KEUZES = [[1, '1 dag'], [7, '7 dagen'], [31, '31 dagen'], [90, '90 dagen'], [365, '1 jaar']]
+function sluitMenu() {
+  const m = document.getElementById('fibroMenu')
+  if (m) m.remove()
+  const k = document.getElementById('menuBtn')
+  if (k) k.setAttribute('aria-expanded', 'false')
+}
+window.openMenu = function() {
+  if (document.getElementById('fibroMenu')) { sluitMenu(); return }
+  const knop = document.getElementById('menuBtn')
+  const r = knop.getBoundingClientRect()
+  const m = document.createElement('div')
+  m.id = 'fibroMenu'
+  m.setAttribute('role', 'menu')
+  m.style.cssText = 'position:fixed;z-index:10000;top:' + Math.round(r.bottom + 8) + 'px;right:' + Math.max(12, Math.round(window.innerWidth - r.right)) + 'px;min-width:220px;background:rgba(26,10,46,0.97);border:0.5px solid var(--border);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,0.5)'
+  const item = (tekst, actie) => {
+    const b = document.createElement('button')
+    b.setAttribute('role', 'menuitem')
+    b.textContent = tekst
+    b.style.cssText = 'display:block;width:100%;min-height:44px;text-align:left;background:none;border:none;border-radius:10px;color:var(--text);font-size:15px;padding:10px 12px;cursor:pointer;font-family:inherit'
+    b.onclick = () => { sluitMenu(); actie() }
+    m.appendChild(b)
+  }
+  item('\u23F3 Berichten bewaren', openBewaren)
+  item('\u2139\uFE0F Over Fibro', () => { window.location.href = 'over.html' })
+  document.body.appendChild(m)
+  knop.setAttribute('aria-expanded', 'true')
+  m.querySelector('button').focus()
+  setTimeout(() => {
+    const weg = (e) => {
+      if (!document.getElementById('fibroMenu')) { document.removeEventListener('click', weg, true); document.removeEventListener('keydown', weg, true); return }
+      if (e.type === 'keydown' && e.key !== 'Escape') return
+      if (e.type === 'click' && (m.contains(e.target) || knop.contains(e.target))) return
+      sluitMenu(); document.removeEventListener('click', weg, true); document.removeEventListener('keydown', weg, true)
+    }
+    document.addEventListener('click', weg, true)
+    document.addEventListener('keydown', weg, true)
+  }, 0)
+}
+
+async function openBewaren() {
+  const uid = window._uid
+  if (!uid) return
+  const sleutel = 'fibro_bewaren_' + uid
+  let huidig = null
+  try { huidig = Number(localStorage.getItem(sleutel)) || null } catch (e) {}
+  const achter = document.createElement('div')
+  achter.id = 'bewarenScherm'
+  achter.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center'
+  const kaart = document.createElement('div')
+  kaart.setAttribute('role', 'dialog')
+  kaart.setAttribute('aria-modal', 'true')
+  kaart.setAttribute('aria-labelledby', 'bewarenTitel')
+  kaart.style.cssText = 'width:100%;max-width:480px;background:#1a0a2e;border:0.5px solid var(--border);border-radius:20px 20px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));color:var(--text)'
+  const titel = document.createElement('h2')
+  titel.id = 'bewarenTitel'
+  titel.textContent = '\u23F3 Berichten bewaren'
+  titel.style.cssText = 'font-size:18px;margin:0 0 8px;color:var(--accent)'
+  const uitleg = document.createElement('p')
+  uitleg.textContent = 'Na deze tijd verdwijnen berichten, bij jou \u00E9n bij je vriend. Kiezen jullie iets anders, dan geldt het kortste. Dit geldt ook voor berichten die er al zijn.'
+  uitleg.style.cssText = 'font-size:14px;line-height:1.5;margin:0 0 14px;color:var(--text)'
+  const lijst = document.createElement('div')
+  lijst.setAttribute('role', 'radiogroup')
+  lijst.setAttribute('aria-label', 'Bewaartijd')
+  lijst.style.cssText = 'display:flex;flex-direction:column;gap:8px'
+  const status = document.createElement('div')
+  status.setAttribute('role', 'status')
+  status.style.cssText = 'min-height:22px;font-size:13px;margin-top:12px;color:var(--text)'
+  const sluit = document.createElement('button')
+  sluit.textContent = 'Sluiten'
+  sluit.style.cssText = 'margin-top:8px;width:100%;min-height:44px;border-radius:12px;border:0.5px solid var(--border);background:rgba(255,255,255,0.08);color:var(--text);font-size:15px;cursor:pointer;font-family:inherit'
+  const dicht = () => { achter.remove(); document.removeEventListener('keydown', esc, true) }
+  const esc = (e) => { if (e.key === 'Escape') dicht() }
+  document.addEventListener('keydown', esc, true)
+  sluit.onclick = dicht
+  achter.onclick = (e) => { if (e.target === achter) dicht() }
+  let bezig = false
+  const knoppen = []
+  const teken = () => {
+    for (const [dagen, b] of knoppen) {
+      const aan = dagen === huidig
+      b.setAttribute('aria-checked', aan ? 'true' : 'false')
+      b.textContent = (aan ? '\u25C9  ' : '\u25CB  ') + BEWAAR_KEUZES.find(k => k[0] === dagen)[1] + (dagen === 31 ? ' (standaard)' : '')
+      b.style.borderColor = aan ? 'var(--accent)' : 'var(--border)'
+      b.style.background = aan ? 'rgba(192,132,252,0.18)' : 'rgba(255,255,255,0.05)'
+    }
+  }
+  const kies = async (dagen) => {
+    if (bezig || dagen === huidig) return
+    if (navigator.onLine === false) { status.textContent = '\u{1F4F4} Geen internet. Probeer het later opnieuw.'; return }
+    bezig = true
+    status.textContent = 'Even kijken\u2026'
+    try {
+      const tel = await supabase.rpc('zet_bewaartermijn', { p_dagen: dagen, p_tellen: true })
+      if (tel.error) throw tel.error
+      const n = Number(tel.data) || 0
+      if (n > 0 && !confirm(n + (n === 1 ? ' bericht is' : ' berichten zijn') + ' ouder dan ' + BEWAAR_KEUZES.find(k => k[0] === dagen)[1] + ' en ' + (n === 1 ? 'verdwijnt' : 'verdwijnen') + ' meteen, ook bij je vrienden.\n\nDoorgaan?')) {
+        status.textContent = ''
+        return
+      }
+      const r = await supabase.rpc('zet_bewaartermijn', { p_dagen: dagen })
+      if (r.error) throw r.error
+      huidig = dagen
+      try { localStorage.setItem(sleutel, String(dagen)) } catch (e) {}
+      teken()
+      status.textContent = '\u2713 Opgeslagen' + (n > 0 ? ' (' + n + (n === 1 ? ' bericht' : ' berichten') + ' verwijderd)' : '')
+    } catch (e) {
+      console.warn('[bewaren] opslaan mislukt', e)
+      status.textContent = /zet_bewaartermijn|function|PGRST202/i.test(String((e && (e.message || e.code)) || ''))
+        ? '\u26A0\uFE0F Dit kan nog niet: de server is nog niet bijgewerkt.'
+        : '\u26A0\uFE0F Opslaan lukte niet. Probeer het later opnieuw.'
+    } finally { bezig = false }
+  }
+  for (const [dagen] of BEWAAR_KEUZES) {
+    const b = document.createElement('button')
+    b.setAttribute('role', 'radio')
+    b.style.cssText = 'width:100%;min-height:44px;text-align:left;border-radius:12px;border:0.5px solid var(--border);color:var(--text);font-size:15px;padding:10px 14px;cursor:pointer;font-family:inherit'
+    b.onclick = () => kies(dagen)
+    knoppen.push([dagen, b])
+    lijst.appendChild(b)
+  }
+  kaart.append(titel, uitleg, lijst, status, sluit)
+  achter.appendChild(kaart)
+  document.body.appendChild(achter)
+  teken()
+  ;(knoppen.find(k => k[0] === huidig) || knoppen[2])[1].focus()
+  // De huidige keuze van de server (de bewaarde waarde staat er al)
+  if (navigator.onLine === false) { if (!huidig) status.textContent = '\u{1F4F4} Geen internet.'; return }
+  try {
+    const { data, error } = await supabase.from('profiles').select('bewaar_dagen').eq('id', uid).single()
+    if (error) {
+      if (error.code === '42703') status.textContent = '\u26A0\uFE0F Dit kan nog niet: de server is nog niet bijgewerkt.'
+      return
+    }
+    const d = Number(data && data.bewaar_dagen)
+    if (BEWAAR_KEUZES.some(k => k[0] === d) && !bezig) {
+      huidig = d
+      try { localStorage.setItem(sleutel, String(d)) } catch (e) {}
+      teken()
+    }
+  } catch (e) {}
+}
+
 // ════════════════════════════════
 // UITLOGGEN
 // ════════════════════════════════

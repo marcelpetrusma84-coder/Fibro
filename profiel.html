@@ -557,8 +557,36 @@ async function dbAlleSleutels(){const db=await openDB();return new Promise((reso
 async function metenOpslag(uid){try{const alle=await dbAlleSleutels();const mijn=alle.filter(k=>typeof k==='string'&&k.includes(uid));let totaal=0;for(const k of mijn){if(k==='video_data_'+uid){try{const m=JSON.parse(await laadFotoUitDB('video_meta_'+uid)||'null');if(m&&m.grootte>0){totaal+=m.grootte;continue}}catch(e){}}const d=await laadFotoUitDB(k);if(typeof d==='string')totaal+=d.length;else if(d&&d.size)totaal+=d.size}return totaal}catch(e){return 0}}
 async function slaFotoOp(id,data){const uid=huidigeUser&&huidigeUser.id;if(uid&&typeof id==='string'&&id.includes(uid)){const g=typeof data==='string'?data.length:(data&&data.size)||0;const nu=await metenOpslag(uid);if(nu+g>157286400){alert('Je profiel is vol (150 MB).\n\nVerwijder eerst een foto of nummer om ruimte te maken.');return null}}const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=resolve})}
 async function laadFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
+// v138: foto's maken in een formaat dat dit toestel echt kan. Safari (iPhone) kan geen WebP maken en
+// Chromium geen AVIF: dan komt er stilletjes een PNG uit, 5-10x groter. Dus WebP als het kan, anders JPEG
+// (op een witte ondergrond, want JPEG kent geen doorzichtigheid).
+const _kanWebp = (() => { try { const c = document.createElement('canvas'); c.width = c.height = 1; return c.toDataURL('image/webp').startsWith('data:image/webp') } catch (e) { return false } })()
+function _opWit(canvas) {
+  const c = document.createElement('canvas'); c.width = canvas.width; c.height = canvas.height
+  const x = c.getContext('2d'); x.fillStyle = '#ffffff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(canvas, 0, 0)
+  return c
+}
+function fotoData(canvas, kwaliteit) {
+  return _kanWebp ? canvas.toDataURL('image/webp', kwaliteit) : _opWit(canvas).toDataURL('image/jpeg', kwaliteit)
+}
+// v138: een achtergrond die op een iPhone als PNG is bewaard, eenmalig kleiner maken (alleen op dit
+// toestel; bij de volgende keer Opslaan gaat de kleinere naar de server, zie de vingerafdruk van v137).
+async function maakAchtergrondKleiner(userId, data) {
+  if (typeof data !== 'string' || !data.startsWith('data:image/png') || data.length < 400000) return null
+  const img = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = data })
+  if (!img || !img.width) return null
+  let w = img.width, h = img.height
+  if (w > 1080) { h = h * 1080 / w; w = 1080 }
+  if (h > 1080) { w = w * 1080 / h; h = 1080 }
+  const c = document.createElement('canvas'); c.width = Math.round(w); c.height = Math.round(h)
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height)
+  const kleiner = fotoData(c, 0.85)
+  if (!kleiner || kleiner.length >= data.length * 0.8) return null
+  if (await slaFotoOp('bg_wallpaper_' + userId, kleiner) === null) return null
+  return kleiner
+}
 function comprimeerFoto(file,maxBreedte,kwaliteit){return new Promise((resolve)=>{const reader=new FileReader();reader.onload=function(e){const img=new Image();img.onload=function(){const canvas=document.createElement('canvas');let w=img.width,h=img.height;if(w>maxBreedte){h=h*maxBreedte/w;w=maxBreedte}if(h>maxBreedte){w=w*maxBreedte/h;h=maxBreedte}canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);// WebP voor kleinste bestandsgrootte
-resolve(canvas.toDataURL('image/webp',kwaliteit))};img.onerror=function(){alert('Deze foto kan niet worden gelezen.\n\nWaarschijnlijk is het een HEIC-bestand van een iPhone. Zet in Instellingen > Camera > Indelingen op "Meest compatibel", of maak er eerst een schermafbeelding van.');resolve(null)};img.src=e.target.result};reader.onerror=function(){alert('Bestand kon niet worden gelezen.');resolve(null)};reader.readAsDataURL(file)})}
+resolve(fotoData(canvas,kwaliteit))};img.onerror=function(){alert('Deze foto kan niet worden gelezen.\n\nWaarschijnlijk is het een HEIC-bestand van een iPhone. Zet in Instellingen > Camera > Indelingen op "Meest compatibel", of maak er eerst een schermafbeelding van.');resolve(null)};img.src=e.target.result};reader.onerror=function(){alert('Bestand kon niet worden gelezen.');resolve(null)};reader.readAsDataURL(file)})}
 
 // Video compressie via MediaRecorder (thumbnail + gecomprimeerde versie)
 async function comprimeerVideo(file) {
@@ -822,6 +850,8 @@ async function init(){
     if(lokaal.widgets)actieveWidgets=lokaal.widgets
     if(lokaal.stickers)actieveStickers=lokaal.stickers
     const bestaandeWallpaper=await laadFotoUitDB('bg_wallpaper_'+userId)
+    // v138: een grote PNG-achtergrond (van een iPhone) op de achtergrond kleiner maken
+    maakAchtergrondKleiner(userId,bestaandeWallpaper).then(k=>{if(!k)return;const im=document.querySelector('#uploadedWallpaper img');if(im)im.src=k;console.log('[foto] achtergrond kleiner gemaakt:',Math.round(bestaandeWallpaper.length/1024),'->',Math.round(k.length/1024),'kB')}).catch(()=>{})
     if(bestaandeWallpaper){document.getElementById('uploadedWallpaper').innerHTML=`<img src="${bestaandeWallpaper}" style="width:100%;height:100%;object-fit:cover;">`;document.getElementById('uploadPreview').style.display='block';zetWallpaperLaag(bestaandeWallpaper)}
   }
   // P2P foto-sync initialiseren

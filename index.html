@@ -561,6 +561,18 @@ function renderSpelWidget(c, spel) {
 }
 
 // ── IndexedDB voor muziek (FibroDB v2, zelfde als profiel.html) ──
+// v138: foto's maken in een formaat dat dit toestel echt kan. Safari (iPhone) kan geen WebP maken en
+// Chromium geen AVIF: dan komt er stilletjes een PNG uit, 5-10x groter. Dus WebP als het kan, anders JPEG
+// (op een witte ondergrond, want JPEG kent geen doorzichtigheid).
+const _kanWebp = (() => { try { const c = document.createElement('canvas'); c.width = c.height = 1; return c.toDataURL('image/webp').startsWith('data:image/webp') } catch (e) { return false } })()
+function _opWit(canvas) {
+  const c = document.createElement('canvas'); c.width = canvas.width; c.height = canvas.height
+  const x = c.getContext('2d'); x.fillStyle = '#ffffff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(canvas, 0, 0)
+  return c
+}
+function fotoData(canvas, kwaliteit) {
+  return _kanWebp ? canvas.toDataURL('image/webp', kwaliteit) : _opWit(canvas).toDataURL('image/jpeg', kwaliteit)
+}
 function openFibroDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
 async function slaInDB(id,data){const uid=window._uid;if(uid&&typeof id==='string'&&id.includes(uid)){const g=typeof data==='string'?data.length:(data&&data.size)||0;const oudItem=await laadFotoUitDB(id);const oudG=typeof oudItem==='string'?oudItem.length:0;const nu=await metenOpslag(uid);if(nu-oudG+g>157286400){alert('Je profiel is vol (150 MB).');throw new Error('Opslag vol')}}const db=await openFibroDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}
 async function laadUitDB(id){try{const db=await openFibroDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
@@ -911,7 +923,7 @@ function renderFotoGrid(c, stijl, aantalFotos) {
           canvas.width=w; canvas.height=h
           canvas.getContext('2d').drawImage(tmpImg,0,0,w,h)
           try {
-            await slaFotoOp(KEY+celIdx+'_'+uid, canvas.toDataURL('image/webp',0.85))
+            await slaFotoOp(KEY+celIdx+'_'+uid, fotoData(canvas,0.85))
           } catch(err) {
             alert('Opslaan van de foto is mislukt. Probeer het opnieuw.')
             return
@@ -1058,7 +1070,7 @@ function renderFotoFeatured(c) {
           canvas.width=w; canvas.height=h
           canvas.getContext('2d').drawImage(tmp,0,0,w,h)
           try {
-            await slaFotoOp(KEY+celIdx+'_'+uid, canvas.toDataURL('image/webp',0.85))
+            await slaFotoOp(KEY+celIdx+'_'+uid, fotoData(canvas,0.85))
           } catch(err) {
             alert('Opslaan van de foto is mislukt. Probeer het opnieuw.')
             return
@@ -1195,7 +1207,7 @@ function renderFotoZwevend(c) {
           canvas.width=w; canvas.height=h
           canvas.getContext('2d').drawImage(tmp,0,0,w,h)
           try {
-            await slaFotoOp(KEY+celIdx+'_'+uid, canvas.toDataURL('image/webp',0.85))
+            await slaFotoOp(KEY+celIdx+'_'+uid, fotoData(canvas,0.85))
           } catch(err) {
             alert('Opslaan van de foto is mislukt. Probeer het opnieuw.')
             return
@@ -1308,7 +1320,7 @@ function renderFotoPolaroid(c) {
           canvas.width=w; canvas.height=h
           canvas.getContext('2d').drawImage(tmp,0,0,w,h)
           try {
-            await slaFotoOp(KEY+celIdx+'_'+uid, canvas.toDataURL('image/webp',0.85))
+            await slaFotoOp(KEY+celIdx+'_'+uid, fotoData(canvas,0.85))
           } catch(err) {
             alert('Opslaan van de foto is mislukt. Probeer het opnieuw.')
             return

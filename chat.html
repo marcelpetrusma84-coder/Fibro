@@ -1490,7 +1490,24 @@ console.timeLog('[chat] berichten', 'opgehaald')
     }
   }
 
-  // Probeer AVIF (kleinste), anders WebP (breed ondersteund)
+  // v138: foto's maken in een formaat dat dit toestel echt kan. Safari (iPhone) kan geen WebP maken en
+  // Chromium geen AVIF: dan komt er stilletjes een PNG uit, 5-10x groter. Dus WebP als het kan, anders JPEG
+  // (op een witte ondergrond, want JPEG kent geen doorzichtigheid).
+  const _kanWebp = (() => { try { const c = document.createElement('canvas'); c.width = c.height = 1; return c.toDataURL('image/webp').startsWith('data:image/webp') } catch (e) { return false } })()
+  function _opWit(canvas) {
+    const c = document.createElement('canvas'); c.width = canvas.width; c.height = canvas.height
+    const x = c.getContext('2d'); x.fillStyle = '#ffffff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(canvas, 0, 0)
+    return c
+  }
+  function fotoData(canvas, kwaliteit) {
+    return _kanWebp ? canvas.toDataURL('image/webp', kwaliteit) : _opWit(canvas).toDataURL('image/jpeg', kwaliteit)
+  }
+  function fotoBlob(canvas, kwaliteit) {
+    return new Promise(r => _kanWebp ? canvas.toBlob(r, 'image/webp', kwaliteit) : _opWit(canvas).toBlob(r, 'image/jpeg', kwaliteit))
+  }
+
+  // Probeer AVIF (kleinste), anders WebP of JPEG (fotoBlob). v138: AVIF alleen als er echt AVIF uitkomt;
+  // Chromium en Safari geven bij AVIF stilletjes een PNG terug, en dat telde vroeger als "lukt".
   let _avifOndersteund = null
   async function checkAvif() {
     if (_avifOndersteund !== null) return _avifOndersteund
@@ -1498,7 +1515,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       const canvas = document.createElement('canvas')
       canvas.width = 1; canvas.height = 1
       canvas.toBlob(blob => {
-        _avifOndersteund = !!(blob && blob.size > 0)
+        _avifOndersteund = !!(blob && blob.size > 0 && blob.type === 'image/avif')
         resolve(_avifOndersteund)
       }, 'image/avif', 0.5)
     })
@@ -1524,14 +1541,14 @@ console.timeLog('[chat] berichten', 'opgehaald')
           if (avifWerkt) {
             // AVIF: 30-50% kleiner dan WebP
             canvas.toBlob(blob => {
-              if (blob && blob.size > 0) {
+              if (blob && blob.size > 0 && blob.type === 'image/avif') {
                 resolve(blob)
               } else {
-                canvas.toBlob(resolve, 'image/webp', 0.82)
+                fotoBlob(canvas, 0.82).then(resolve)
               }
             }, 'image/avif', 0.75)
           } else {
-            canvas.toBlob(resolve, 'image/webp', 0.82)
+            fotoBlob(canvas, 0.82).then(resolve)
           }
         }
         img.src = e.target.result

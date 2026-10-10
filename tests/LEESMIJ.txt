@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 8 oktober 2026 (Profiel opslaan stuurt foto's alleen mee als ze veranderd zijn).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 10 oktober 2026 (foto's als WebP of JPEG, nooit stilletjes PNG).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -38,7 +38,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          account = mijn gegevens downloaden en account verwijderen (testscript_account.py),
                          huisregel = Content-Security-Policy op alle 12 pagina's (testscript_huisregel.py),
                          eerlijk = Over Fibro: wat er echt op de server staat (testscript_eerlijk.py),
-                         licht = Profiel opslaan zonder onveranderde foto's (testscript_licht.py))
+                         licht = Profiel opslaan zonder onveranderde foto's (testscript_licht.py),
+                         fotos = foto's als WebP of JPEG i.p.v. stilletjes PNG (testscript_fotos.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -111,6 +112,11 @@ tools/proef36.py         de huisregel (Content-Security-Policy): dezelfde ronde 
                          Network.webSocketCreated. WebKit (Safari) staat niet in de werkmap.
 tools/proef37.py         Profiel opslaan: avatar en achtergrond alleen mee als ze anders zijn dan de vorige keer
                          (vingerafdruk fibro_fotos_verstuurd_<uid>), updated_at alleen dan; server-fout = opnieuw
+tools/proef38.py         foto's: Safari kan geen WebP en Chromium geen AVIF maken (dan stilletjes PNG); nagebootst
+                         ("iphone": webp/avif -> png). Achtergrond kiezen, bestaande grote PNG-achtergrond wordt
+                         kleiner, 3x3-widget op Home, chatfoto. Heeft testfoto.jpg in <scratch> nodig (4032x3024,
+                         bv. met PIL: zachte kleurverlopen + cirkels + wat ruis, JPEG q90, ±1 MB):
+                         python3 -I proef38.py <scratch met tools/server.py en testfoto.jpg> <map> <poort>
 tools/nep-supabase.sql   kleine nabootsing van de database (PostgreSQL 16, nep-gegevens) om sql/*.sql vooraf te
                          proberen: initdb + pg_ctl als gebruiker postgres, psql -f nep-supabase.sql, dan het
                          SQL-bestand (regel 'create extension if not exists pg_cron;' eruit: cron is nagebootst).

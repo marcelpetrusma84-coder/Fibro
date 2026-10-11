@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 11 oktober 2026 (Fibro in twee talen, portie 3: Profiel).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 11 oktober 2026 (Fibro in twee talen, portie 4: gegevens, account, moderatie, spel, Over Fibro).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -43,7 +43,9 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          taal = Nederlands en Engels, stap 1: taal.js, taal-en.js, inloggen, uitnodiging, Home (testscript_taal.py),
                          taal2 = Engels portie 1: Vrienden, profiel van een vriend, blokkeren, meldingen, bellen (testscript_taal2.py),
                          taal3 = Engels portie 2: Chat, reacties, antwoorden, melden (testscript_taal3.py),
-                         taal4 = Engels portie 3: Profiel, T('context|tekst') (testscript_taal4.py))
+                         taal4 = Engels portie 3: Profiel, T('context|tekst') (testscript_taal4.py),
+                         taal5 = Engels portie 4: Mijn gegevens, account verwijderen, Face ID-herstel, moderatie,
+                                 spelen tegen de computer, Over Fibro, balkjes (testscript_taal5.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -163,6 +165,7 @@ tools/proef43.py         twee talen per scherm (v143 en verder): Nederlands prec
                          TOON=1 laat de Engelse tekst zien. Willekeurige uitnodigingscodes tellen niet mee.
                          (proef36 wacht sinds v145 16 s op de kast: de woordenlijst kwam erbij, 9 s was net te kort.)
                          python3 -I proef43.py <scratch met tools/server.py> <map> <poort> [oude map|-] [filter]
+                         MAG_WEG: tekst die in het Nederlands bewust weg is (v146: 'Taal instellen' uit Binnenkort).
 tools/taalcheck.py       heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

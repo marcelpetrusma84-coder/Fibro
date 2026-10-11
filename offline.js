@@ -1,4 +1,4 @@
-// offline.js - Fibro zonder internet (v125)
+// offline.js - Fibro zonder internet (v125; v146: ook in het Engels, taal.js)
 // 1. Een balkje "Geen internet" bovenaan, zolang het toestel geen verbinding heeft.
 //    Het verdwijnt vanzelf zodra er weer internet is. v126: na 5 seconden krimpt het
 //    tot een klein bolletje, zodat het niets van de pagina bedekt.
@@ -8,7 +8,7 @@
 //    opnieuw en wordt de pas gewoon vernieuwd.
 
 const BALK_ID = 'fibro-offline-balk'
-const VOLLE_TEKST = '\u{1F4F4} Geen internet \u00B7 je ziet wat er op dit toestel bewaard is'
+const VOLLE_TEKST = window.T ? window.T('\u{1F4F4} Geen internet \u00B7 je ziet wat er op dit toestel bewaard is') : '\u{1F4F4} Geen internet \u00B7 je ziet wat er op dit toestel bewaard is'
 let krimpTimer = null
 let wasOffline = false
 

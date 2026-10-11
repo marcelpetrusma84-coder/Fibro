@@ -29,6 +29,15 @@ def supa(route):
     u = route.request.url; m = route.request.method
     een = 'vnd.pgrst.object' in (route.request.headers.get('accept') or '')
     if '/rest/v1/rpc/mijn_geblokkeerden' in u: return route.fulfill(status=200, json=[{"id": KEES, "username": "Kees", "sinds": ISO(86400 * 3)}])
+    if '/rest/v1/rpc/ben_ik_moderator' in u: return route.fulfill(status=200, json=True)  # v146: moderatie
+    if '/rest/v1/rapporten' in u and m == 'GET':
+        return route.fulfill(status=200, json=[
+            {"id": "r1", "melder_id": BRAM, "gemelde_id": LOTTE, "reden": "Ongepaste inhoud", "status": "nieuw", "bericht_inhoud": "Hallo", "created_at": ISO(7200), "melder": {"username": "Bram"}, "gemelde": {"username": "Lotte"}},
+            {"id": "r2", "melder_id": LOTTE, "gemelde_id": KEES, "reden": None, "status": "behandeld", "bericht_inhoud": None, "created_at": ISO(90000), "melder": {"username": "Lotte"}, "gemelde": {"username": "Kees"}}])
+    if '/rest/v1/blokkades' in u and m == 'GET':
+        return route.fulfill(status=200, json=[
+            {"id": "b1", "gebruiker_id": KEES, "door": UID, "reden": "Spam", "van": ISO(86400), "tot": ISO(-86400 * 6), "opgeheven_op": None, "opgeheven_door": None},
+            {"id": "b2", "gebruiker_id": LOTTE, "door": UID, "reden": "Test", "van": ISO(86400 * 30), "tot": ISO(86400 * 20), "opgeheven_op": None, "opgeheven_door": None}])
     if '/rest/v1/rpc/' in u: return route.fulfill(status=200, json=None)
     if '/rest/v1/friendships' in u and m == 'GET':
         if 'profiles' in u: return route.fulfill(status=200, json=[{"friend_id": k, "profiles": v} for k, v in PROF.items()])
@@ -106,6 +115,16 @@ SCHERMEN = [
     ('profiel: lettertype', 'profiel.html', "() => { switchTab('lettertype') }", ['Choose your font', 'Life is beautiful & special', 'Standard', 'Typewriter', 'Bubbles', 'Felt pen']),
     ('profiel: kleur', 'profiel.html', "() => { switchTab('kleur') }", ['Accent colour', 'Second accent colour', 'Blocks', 'Transparency', 'Rounded corners', 'tilt with your phone', 'Your bio here', 'Button example']),
     ('profiel: widgets', 'profiel.html', "() => { switchTab('widgets') }", ['Active widgets', 'Guestbook', 'Friends leave messages', 'Photo grid', 'Featured + 4 small', 'Games', 'Play against the computer', 'Upload music']),
+    # v146: Mijn gegevens, account verwijderen, moderatie, spelen tegen de computer, Over Fibro, balkjes
+    ('home: mijn gegevens', 'index.html', "async () => { openMenu(); [...document.querySelectorAll('#fibroMenu [role=menuitem]')][2].click() }", ['My data', 'You get one file', 'Get data', 'Close']),
+    ('home: account verwijderen', 'index.html', "async () => { openMenu(); [...document.querySelectorAll('#fibroMenu [role=menuitem]')][4].click() }", ['Delete account', 'will be deleted immediately', 'Download my data first', 'Delete account permanently', 'To confirm, type your username: Marcel']),
+    ('moderatie', 'moderatie.html', '', ['Moderation', 'Reports', 'Blocks', 'New', 'Handled', 'All', 'Warned', 'Reported by @Bram', 'Inappropriate content', 'No reason given', 'Handled', 'Warn', 'Block']),
+    ('moderatie: blokkades', 'moderatie.html', "() => { kiesTab('blokkades') }", ['Block someone', 'username', 'Search', 'Active', 'Earlier (log)', 'Until', 'By @', 'Lift', 'Expired on']),
+    ('spel: schaken', 'spel.html?spel=schaken', '', ['Chess', 'Against the computer. Choose a level:', 'Easy', 'Normal', 'Hard', 'Back']),
+    ('spel: flapper', 'spel.html?spel=flappybird', '', ['Your record: 0']),
+    ('over', 'over.html', "() => { document.getElementById('technisch').open = true }", ['About Fibro', '← Back', 'What is Fibro?', 'digital living room', 'Why Fibro exists', 'How your data works', 'Your recovery code',
+        'Keep it somewhere other than your phone.', 'Your data and your account', 'Download my data', 'To be honest', 'Coming soon', 'under construction', 'Turn off buzz', 'Technical', 'House rule: active. Nothing blocked.']),
+    ('home: geen internet', 'index.html', "() => { Object.defineProperty(navigator, 'onLine', { get: () => false, configurable: true }); window.dispatchEvent(new Event('offline')) }", ['No internet · you\'re seeing what\'s saved on this device']),
     ('profiel: stickers', 'profiel.html', "() => { switchTab('stickers') }", ['Active stickers', 'No stickers chosen yet', 'Nature & Plants', 'Mood & Magic', 'Animals', 'Upload your own sticker']),
 ]
 NL_WOORDEN = ['Vrienden', 'Uitnodigen', 'Geblokkeerd', 'terug', 'Stuur een bericht', 'Chat openen', 'Gastenboek', 'GASTENBOEK', 'dagen', 'geleden', 'Vriendschap',
@@ -113,8 +132,11 @@ NL_WOORDEN = ['Vrienden', 'Uitnodigen', 'Geblokkeerd', 'terug', 'Stuur een beric
               'Je account', 'Reden', 'Nog geen', 'Spelen', 'Laden', 'Verbinden', 'jouw netwerk',
               'Selecteer', 'chatten', 'versleuteld', 'Bericht', 'bericht', 'Niet verstuurd', 'Geen sleutel', 'Melden', 'Speel samen', 'Akkoord', 'toestemming', 'Kies',
               'Mijn profiel', 'Opslaan', 'Achtergrond', 'Lettertype', 'Kleur', 'Informatie', 'Weergavenaam', 'tekens over', 'Sterren', 'Sneeuw', 'Vlinders',
-              'Blokken', 'Doorzichtigheid', 'Actieve', 'Speel tegen', 'Dieren', 'Natuur', 'Typemachine', 'Standaard', 'Het leven']
+              'Blokken', 'Doorzichtigheid', 'Actieve', 'Speel tegen', 'Dieren', 'Natuur', 'Typemachine', 'Standaard', 'Het leven',
+              'Mijn gegevens', 'Gegevens ophalen', 'definitief', 'Moderatie', 'Rapporten', 'Behandeld', 'Gemeld door', 'Opheffen', 'Makkelijk', 'Moeilijk',
+              'Tegen de computer', 'Wat is Fibro', 'Eerlijk gezegd', 'herstelcode', 'Technisch', 'Huisregel', 'Geen internet']
 MAG_ERBIJ = set()
+MAG_WEG = {'Taal instellen'}  # v146: uit 'Binnenkort' op Over Fibro (is nu klaar)
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')
@@ -149,7 +171,7 @@ with sync_playwright() as pw:
             o = scherm(br, BO, 'nl', pad, actie)
             erbij = [l[2:] for l in difflib.ndiff(zonder(o[0]), zonder(n[0])) if l.startswith('+ ')]
             eraf = [l[2:] for l in difflib.ndiff(zonder(o[0]), zonder(n[0])) if l.startswith('- ')]
-            check('NL: niets weg of anders', not eraf, eraf[:6])
+            check('NL: niets weg of anders', all(x.strip() in MAG_WEG for x in eraf), eraf[:6])
             check('NL: niets erbij', all(x.strip() in MAG_ERBIJ for x in erbij), erbij[:6])
             check('NL: geen nieuwe fouten', len(n[1]) <= len(o[1]), (n[1][:3], o[1][:3]))
         check('NL: geen vertaling gezocht', not n[2], n[2][:3])

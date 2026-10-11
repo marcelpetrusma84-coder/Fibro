@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="nl" style="background:#1a0a2e;">
+<html lang="nl" data-taal style="background:#1a0a2e;">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=4"></script>
+<script src="taal.js?v=5"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fibro — Moderatie</title>
+<title data-t>Fibro — Moderatie</title>
 <meta name="theme-color" content="#c084fc">
 <link href="lettertypen/basis.css?v=1" rel="stylesheet">
 <style>
@@ -82,20 +82,20 @@ select.veld option { background:#1a0a2e; }
 <body>
 
 <div class="top-bar">
-  <button onclick="window.location.href='index.html'" style="background:none;border:0.5px solid var(--border);border-radius:20px;padding:4px 10px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">← terug</button>
-  <div class="titel">🛡️ Moderatie</div>
+  <button onclick="window.location.href='index.html'" style="background:none;border:0.5px solid var(--border);border-radius:20px;padding:4px 10px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;" data-t>← terug</button>
+  <div class="titel" data-t>🛡️ Moderatie</div>
 </div>
 
 <div id="toegangGeweigerd" style="display:none" class="toegang-geweigerd">
   <div class="toegang-icon">🔒</div>
-  <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Geen toegang</div>
-  <div style="font-size:14px;color:var(--muted);">Alleen moderators kunnen deze pagina zien.</div>
+  <div style="font-size:18px;font-weight:600;margin-bottom:8px;" data-t>Geen toegang</div>
+  <div style="font-size:14px;color:var(--muted);" data-t>Alleen moderators kunnen deze pagina zien.</div>
 </div>
 
 <div id="inhoud" style="display:none">
   <div class="tabs">
-    <button class="tab-btn actief" id="tabRapporten" onclick="kiesTab('rapporten')">🚩 Rapporten</button>
-    <button class="tab-btn" id="tabBlokkades" onclick="kiesTab('blokkades')">🚫 Blokkades <span id="aantalActief"></span></button>
+    <button class="tab-btn actief" id="tabRapporten" onclick="kiesTab('rapporten')" data-t>🚩 Rapporten</button>
+    <button class="tab-btn" id="tabBlokkades" onclick="kiesTab('blokkades')"><span data-t>🚫 Blokkades</span> <span id="aantalActief"></span></button>
   </div>
 
   <div id="msg" class="msg" style="display:none"></div>
@@ -104,61 +104,61 @@ select.veld option { background:#1a0a2e; }
     <div class="stats">
       <div class="stat-kaart">
         <div class="stat-getal" id="statNieuw">—</div>
-        <div class="stat-label">Nieuw</div>
+        <div class="stat-label" data-t>Nieuw</div>
       </div>
       <div class="stat-kaart">
         <div class="stat-getal" id="statBehandeld">—</div>
-        <div class="stat-label">Behandeld</div>
+        <div class="stat-label" data-t>Behandeld</div>
       </div>
       <div class="stat-kaart">
         <div class="stat-getal" id="statGeblokkeerd">—</div>
-        <div class="stat-label">Geblokkeerd</div>
+        <div class="stat-label" data-t>Geblokkeerd</div>
       </div>
     </div>
 
     <div class="filter-row">
-      <button class="filter-btn actief" onclick="filterRapporten('alle', this)">Alle</button>
-      <button class="filter-btn" onclick="filterRapporten('nieuw', this)">🆕 Nieuw</button>
-      <button class="filter-btn" onclick="filterRapporten('behandeld', this)">✅ Behandeld</button>
-      <button class="filter-btn" onclick="filterRapporten('gewaarschuwd', this)">⚠️ Gewaarschuwd</button>
-      <button class="filter-btn" onclick="filterRapporten('geblokkeerd', this)">🚫 Geblokkeerd</button>
+      <button class="filter-btn actief" onclick="filterRapporten('alle', this)" data-t>Alle</button>
+      <button class="filter-btn" onclick="filterRapporten('nieuw', this)" data-t>🆕 Nieuw</button>
+      <button class="filter-btn" onclick="filterRapporten('behandeld', this)" data-t>✅ Behandeld</button>
+      <button class="filter-btn" onclick="filterRapporten('gewaarschuwd', this)" data-t>⚠️ Gewaarschuwd</button>
+      <button class="filter-btn" onclick="filterRapporten('geblokkeerd', this)" data-t>🚫 Geblokkeerd</button>
     </div>
 
-    <div id="rapportenLijst"><div class="laden">Rapporten laden...</div></div>
+    <div id="rapportenLijst"><div class="laden" data-t>Rapporten laden...</div></div>
   </div>
 
   <div id="deelBlokkades" style="display:none">
-    <div class="sectie-kop">Iemand blokkeren</div>
+    <div class="sectie-kop" data-t>Iemand blokkeren</div>
     <div class="zoek-rij">
-      <input class="veld" id="zoekNaam" type="text" placeholder="gebruikersnaam" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="40">
-      <button class="knop" onclick="zoekGebruiker()">Zoek</button>
+      <input class="veld" id="zoekNaam" type="text" placeholder="gebruikersnaam" data-t-attr="placeholder" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="40">
+      <button class="knop" onclick="zoekGebruiker()" data-t>Zoek</button>
     </div>
 
-    <div class="sectie-kop">Actief</div>
-    <div id="blokkadesActief"><div class="laden">Laden...</div></div>
+    <div class="sectie-kop" data-t>Actief</div>
+    <div id="blokkadesActief"><div class="laden" data-t>Laden...</div></div>
 
-    <div class="sectie-kop">Eerder (logboek)</div>
+    <div class="sectie-kop" data-t>Eerder (logboek)</div>
     <div id="blokkadesEerder"></div>
   </div>
 </div>
 
 <div class="venster-achter" id="blokVenster">
   <div class="venster">
-    <div class="venster-titel" id="blokTitel">Blokkeren</div>
-    <label for="blokReden">Reden</label>
+    <div class="venster-titel" id="blokTitel" data-t>Blokkeren</div>
+    <label for="blokReden" data-t>Reden</label>
     <textarea class="veld" id="blokReden" maxlength="500"></textarea>
-    <div class="venster-tip">De gebruiker ziet deze reden.</div>
-    <label for="blokDuur">Hoe lang</label>
+    <div class="venster-tip" data-t>De gebruiker ziet deze reden.</div>
+    <label for="blokDuur" data-t>Hoe lang</label>
     <select class="veld" id="blokDuur">
-      <option value="24">1 dag</option>
-      <option value="72">3 dagen</option>
-      <option value="168" selected>1 week</option>
-      <option value="720">1 maand</option>
-      <option value="">Voor altijd</option>
+      <option value="24" data-t>1 dag</option>
+      <option value="72" data-t>3 dagen</option>
+      <option value="168" selected data-t>1 week</option>
+      <option value="720" data-t>1 maand</option>
+      <option value="" data-t>Voor altijd</option>
     </select>
     <div class="venster-knoppen">
-      <button class="knop grijs" onclick="sluitVenster()">Annuleren</button>
-      <button class="knop rood" id="blokBevestig" onclick="bevestigBlokkade()">🚫 Blokkeren</button>
+      <button class="knop grijs" onclick="sluitVenster()" data-t>Annuleren</button>
+      <button class="knop rood" id="blokBevestig" onclick="bevestigBlokkade()" data-t>🚫 Blokkeren</button>
     </div>
   </div>
 </div>
@@ -174,7 +174,7 @@ let teBlokkeren = null   // { gebruikerId, rapportId, naam }
 // Tekst van anderen: altijd ontsnappen, id's alleen letters/cijfers/streepjes
 const mEsc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')
 const mId = v => /^[0-9A-Za-z-]{1,64}$/.test(String(v ?? '')) ? String(v) : ''
-const datum = iso => new Date(iso).toLocaleString('nl-NL', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
+const datum = iso => new Date(iso).toLocaleString(T.locale, { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
 
 async function init() {
   const { data: { session } } = await supabase.auth.getSession()
@@ -201,7 +201,7 @@ async function laadRapporten() {
     .order('created_at', { ascending: false })
 
   if (error) {
-    toonMsg('Rapporten laden mislukt.', 'error')
+    toonMsg(T('Rapporten laden mislukt.'), 'error')
     return
   }
 
@@ -223,34 +223,34 @@ function toonRapporten() {
     : alleRapporten.filter(r => r.status === huidigFilter)
 
   if (gefilterd.length === 0) {
-    container.innerHTML = '<div class="geen-rapporten">Geen rapporten gevonden 🎉</div>'
+    container.innerHTML = '<div class="geen-rapporten">' + T('Geen rapporten gevonden 🎉') + '</div>'
     return
   }
 
   container.innerHTML = gefilterd.map(r => {
     const tijd = datum(r.created_at)
     const statusKleur = ['nieuw', 'behandeld', 'gewaarschuwd'].includes(r.status) ? r.status : 'geblokkeerd'
-    const naam = r.gemelde?.username || 'onbekend'
+    const naam = r.gemelde?.username || T('onbekend')
     return `
       <div class="rapport-kaart" id="rapport-${mId(r.id)}">
         <div class="rapport-header">
           <div class="rapport-av">${mEsc(naam.charAt(0).toUpperCase() || '?')}</div>
           <div class="rapport-namen">
             <div class="rapport-gemelde">@${mEsc(naam)}</div>
-            <div class="rapport-melder">Gemeld door @${mEsc(r.melder?.username || 'onbekend')}</div>
+            <div class="rapport-melder">${T('Gemeld door @{naam}', { naam: mEsc(r.melder?.username || T('onbekend')) })}</div>
           </div>
           <div>
-            <div class="status-badge ${statusKleur}">${mEsc(r.status)}</div>
+            <div class="status-badge ${statusKleur}">${mEsc(['nieuw', 'behandeld', 'gewaarschuwd', 'geblokkeerd'].includes(r.status) ? T('status|' + r.status) : r.status)}</div>
             <div class="rapport-tijd" style="margin-top:4px;">${tijd}</div>
           </div>
         </div>
-        <div class="rapport-reden">🚩 ${mEsc(r.reden || 'Geen reden opgegeven')}</div>
+        <div class="rapport-reden">🚩 ${mEsc(!r.reden ? T('Geen reden opgegeven') : ['Ongewenste berichten', 'Bedreiging of intimidatie', 'Ongepaste inhoud', 'Iets anders'].includes(r.reden) ? T(r.reden) : r.reden)}</div>
         ${r.bericht_inhoud ? `<div class="rapport-bericht">"${mEsc(r.bericht_inhoud)}"</div>` : ''}
         ${r.status === 'nieuw' || r.status === 'gewaarschuwd' ? `
         <div class="rapport-acties">
-          <button class="actie-btn negeer" onclick="behandelRapport('${mId(r.id)}', 'behandeld')">✓ Afgehandeld</button>
-          ${r.status === 'nieuw' ? `<button class="actie-btn waarschuw" onclick="behandelRapport('${mId(r.id)}', 'gewaarschuwd')">⚠️ Waarschuw</button>` : ''}
-          <button class="actie-btn blokkeer" onclick="blokkeerVanuitRapport('${mId(r.id)}')">🚫 Blokkeer</button>
+          <button class="actie-btn negeer" onclick="behandelRapport('${mId(r.id)}', 'behandeld')">${T('✓ Afgehandeld')}</button>
+          ${r.status === 'nieuw' ? `<button class="actie-btn waarschuw" onclick="behandelRapport('${mId(r.id)}', 'gewaarschuwd')">${T('⚠️ Waarschuw')}</button>` : ''}
+          <button class="actie-btn blokkeer" onclick="blokkeerVanuitRapport('${mId(r.id)}')">${T('🚫 Blokkeer')}</button>
         </div>` : ''}
       </div>
     `
@@ -266,22 +266,22 @@ window.filterRapporten = function(filter, knop) {
 
 window.behandelRapport = async function(id, status) {
   const { error } = await supabase.from('rapporten').update({ status }).eq('id', id)
-  if (error) { toonMsg('Actie mislukt.', 'error'); return }
-  toonMsg('Rapport bijgewerkt ✓', 'success')
+  if (error) { toonMsg(T('Actie mislukt.'), 'error'); return }
+  toonMsg(T('Rapport bijgewerkt ✓'), 'success')
   await laadRapporten()
 }
 
 window.blokkeerVanuitRapport = function(rapportId) {
   const r = alleRapporten.find(x => x.id === rapportId)
   if (!r) return
-  openVenster({ gebruikerId: r.gemelde_id, rapportId: r.id, naam: r.gemelde?.username || 'onbekend' }, r.reden || '')
+  openVenster({ gebruikerId: r.gemelde_id, rapportId: r.id, naam: r.gemelde?.username || T('onbekend') }, r.reden || '')
 }
 
 // ─── Blokkeren (venster) ───
 function openVenster(doel, reden) {
-  if (doel.gebruikerId === mijnId) { toonMsg('Je kunt jezelf niet blokkeren.', 'error'); return }
+  if (doel.gebruikerId === mijnId) { toonMsg(T('Je kunt jezelf niet blokkeren.'), 'error'); return }
   teBlokkeren = doel
-  document.getElementById('blokTitel').textContent = '@' + doel.naam + ' blokkeren'
+  document.getElementById('blokTitel').textContent = T('@{naam} blokkeren', { naam: doel.naam })
   document.getElementById('blokReden').value = reden
   document.getElementById('blokDuur').value = '168'
   document.getElementById('blokBevestig').disabled = false
@@ -297,7 +297,7 @@ window.sluitVenster = function() {
 window.bevestigBlokkade = async function() {
   if (!teBlokkeren) return
   const reden = document.getElementById('blokReden').value.trim()
-  if (!reden) { alert('Vul een reden in. De gebruiker ziet deze reden.'); return }
+  if (!reden) { alert(T('Vul een reden in. De gebruiker ziet deze reden.')); return }
   const uren = document.getElementById('blokDuur').value
   const tot = uren ? new Date(Date.now() + Number(uren) * 3600e3).toISOString() : null
   const knop = document.getElementById('blokBevestig')
@@ -310,7 +310,7 @@ window.bevestigBlokkade = async function() {
   })
   if (error) {
     knop.disabled = false
-    toonMsg('Blokkeren mislukt: ' + error.message, 'error')
+    toonMsg(T('Blokkeren mislukt: {fout}', { fout: error.message }), 'error')
     return
   }
   if (teBlokkeren.rapportId) {
@@ -318,7 +318,7 @@ window.bevestigBlokkade = async function() {
   }
   const naam = teBlokkeren.naam
   sluitVenster()
-  toonMsg('@' + naam + ' is geblokkeerd 🚫', 'success')
+  toonMsg(T('@{naam} is geblokkeerd 🚫', { naam }), 'success')
   await Promise.all([laadRapporten(), laadBlokkades()])
 }
 
@@ -327,8 +327,8 @@ window.zoekGebruiker = async function() {
   if (!naam) return
   const patroon = naam.replace(/[\\%_]/g, m => '\\' + m)
   const { data, error } = await supabase.from('profiles').select('id, username').ilike('username', patroon).limit(2)
-  if (error) { toonMsg('Zoeken mislukt.', 'error'); return }
-  if (!data || data.length === 0) { toonMsg('Geen gebruiker met die naam gevonden.', 'error'); return }
+  if (error) { toonMsg(T('Zoeken mislukt.'), 'error'); return }
+  if (!data || data.length === 0) { toonMsg(T('Geen gebruiker met die naam gevonden.'), 'error'); return }
   openVenster({ gebruikerId: data[0].id, rapportId: null, naam: data[0].username }, '')
 }
 
@@ -339,7 +339,7 @@ async function laadBlokkades() {
     supabase.from('profiles').select('id, username').eq('geblokkeerd', true)
   ])
   if (blk.error || vlag.error) {
-    document.getElementById('blokkadesActief').innerHTML = '<div class="geen-rapporten">Blokkades laden mislukt.</div>'
+    document.getElementById('blokkadesActief').innerHTML = '<div class="geen-rapporten">' + T('Blokkades laden mislukt.') + '</div>'
     return
   }
   const rijen = blk.data || []
@@ -349,7 +349,7 @@ async function laadBlokkades() {
     const { data } = await supabase.from('profiles').select('id, username').in('id', ids)
     ;(data || []).forEach(p => { namen[p.id] = p.username })
   }
-  const nm = id => '@' + (namen[id] || 'onbekend')
+  const nm = id => '@' + (namen[id] || T('onbekend'))
   const nu = Date.now()
   const isActief = b => !b.opgeheven_op && new Date(b.van).getTime() <= nu && (!b.tot || new Date(b.tot).getTime() > nu)
 
@@ -358,56 +358,56 @@ async function laadBlokkades() {
 
   let html = (vlag.data || []).map(p => `
     <div class="blok-kaart">
-      <div class="blok-naam">@${mEsc(p.username || 'onbekend')}</div>
-      <div class="blok-duur">Voor altijd (oude blokkade, zonder reden)</div>
+      <div class="blok-naam">@${mEsc(p.username || T('onbekend'))}</div>
+      <div class="blok-duur">${T('Voor altijd (oude blokkade, zonder reden)')}</div>
       <div class="rapport-acties" style="margin-top:8px;">
-        <button class="actie-btn negeer" onclick="deblokkeerVlag('${mId(p.id)}')">Deblokkeren</button>
+        <button class="actie-btn negeer" onclick="deblokkeerVlag('${mId(p.id)}')">${T('Deblokkeren')}</button>
       </div>
     </div>`).join('')
 
   html += actief.map(b => `
     <div class="blok-kaart">
       <div class="blok-naam">${mEsc(nm(b.gebruiker_id))}</div>
-      <div class="blok-duur">${b.tot ? 'Tot ' + datum(b.tot) : 'Voor altijd'}</div>
+      <div class="blok-duur">${b.tot ? T('Tot {datum}', { datum: datum(b.tot) }) : T('Voor altijd')}</div>
       <div class="blok-reden">${mEsc(b.reden)}</div>
-      <div class="blok-info">Door ${mEsc(nm(b.door))} op ${datum(b.van)}</div>
+      <div class="blok-info">${T('Door {naam} op {datum}', { naam: mEsc(nm(b.door)), datum: datum(b.van) })}</div>
       <div class="rapport-acties" style="margin-top:8px;">
-        <button class="actie-btn negeer" onclick="hefOp('${mId(b.id)}')">Opheffen</button>
+        <button class="actie-btn negeer" onclick="hefOp('${mId(b.id)}')">${T('Opheffen')}</button>
       </div>
     </div>`).join('')
 
   const aantal = (vlag.data || []).length + actief.length
   document.getElementById('aantalActief').textContent = aantal ? '(' + aantal + ')' : ''
-  document.getElementById('blokkadesActief').innerHTML = html || '<div class="geen-rapporten">Niemand geblokkeerd 🎉</div>'
+  document.getElementById('blokkadesActief').innerHTML = html || '<div class="geen-rapporten">' + T('Niemand geblokkeerd 🎉') + '</div>'
 
   document.getElementById('blokkadesEerder').innerHTML = eerder.map(b => {
     let status
-    if (b.opgeheven_op) status = 'Opgeheven op ' + datum(b.opgeheven_op) + ' door ' + mEsc(nm(b.opgeheven_door))
-    else if (b.tot && new Date(b.tot).getTime() <= nu) status = 'Verlopen op ' + datum(b.tot)
-    else status = 'Begint op ' + datum(b.van)
+    if (b.opgeheven_op) status = T('Opgeheven op {datum} door {naam}', { datum: datum(b.opgeheven_op), naam: mEsc(nm(b.opgeheven_door)) })
+    else if (b.tot && new Date(b.tot).getTime() <= nu) status = T('Verlopen op {datum}', { datum: datum(b.tot) })
+    else status = T('Begint op {datum}', { datum: datum(b.van) })
     return `
     <div class="blok-kaart oud">
       <div class="blok-naam">${mEsc(nm(b.gebruiker_id))}</div>
       <div class="blok-reden">${mEsc(b.reden)}</div>
-      <div class="blok-info">Door ${mEsc(nm(b.door))} op ${datum(b.van)}${b.tot ? ', tot ' + datum(b.tot) : ', voor altijd'}</div>
+      <div class="blok-info">${b.tot ? T('Door {naam} op {datum}, tot {tot}', { naam: mEsc(nm(b.door)), datum: datum(b.van), tot: datum(b.tot) }) : T('Door {naam} op {datum}, voor altijd', { naam: mEsc(nm(b.door)), datum: datum(b.van) })}</div>
       <div class="blok-info">${status}</div>
     </div>`
-  }).join('') || '<div class="geen-rapporten" style="padding:16px;">Nog niets.</div>'
+  }).join('') || '<div class="geen-rapporten" style="padding:16px;">' + T('Nog niets.') + '</div>'
 }
 
 window.hefOp = async function(id) {
-  if (!confirm('Deze blokkade opheffen?')) return
+  if (!confirm(T('Deze blokkade opheffen?'))) return
   const { error } = await supabase.from('blokkades').update({ opgeheven_op: new Date().toISOString() }).eq('id', id)
-  if (error) { toonMsg('Opheffen mislukt: ' + error.message, 'error'); return }
-  toonMsg('Blokkade opgeheven ✓', 'success')
+  if (error) { toonMsg(T('Opheffen mislukt: {fout}', { fout: error.message }), 'error'); return }
+  toonMsg(T('Blokkade opgeheven ✓'), 'success')
   await laadBlokkades()
 }
 
 window.deblokkeerVlag = async function(id) {
-  if (!confirm('Deze gebruiker deblokkeren?')) return
+  if (!confirm(T('Deze gebruiker deblokkeren?'))) return
   const { error } = await supabase.from('profiles').update({ geblokkeerd: false }).eq('id', id)
-  if (error) { toonMsg('Deblokkeren mislukt: ' + error.message, 'error'); return }
-  toonMsg('Gebruiker gedeblokkeerd ✓', 'success')
+  if (error) { toonMsg(T('Deblokkeren mislukt: {fout}', { fout: error.message }), 'error'); return }
+  toonMsg(T('Gebruiker gedeblokkeerd ✓'), 'success')
   await laadBlokkades()
 }
 

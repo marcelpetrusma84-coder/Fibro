@@ -13,8 +13,8 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=4"></script>
-<script src="verbinding.js?v=2"></script>
+<script src="taal.js?v=5"></script>
+<script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Profiel</title>
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -146,7 +146,7 @@ body.heeft-wallpaper::before { display:block; }
   import { supabase } from './supabase.js?v=95'
   import { wisVriendData } from './opruimen.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
-  import { initSync, vraagVriendVideo } from './sync.js?v=129'
+  import { initSync, vraagVriendVideo } from './sync.js?v=146'
   import { eisSessie, startBewaking } from './sessie.js?v=95'
   import { startMeldingen } from './meldingen.js?v=143'
   pasBlokstijlToe()
@@ -1333,6 +1333,6 @@ startMeldingen()
     <button id="ontvriend-btn" onclick="ontvriend()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:12px;cursor:pointer;text-decoration:underline;padding:8px;font-family:inherit;" data-t>Vriendschap beeindigen</button>
   </div>
 <script src="./fotoviewer.js?v=5"></script>
-<script type="module" src="offline.js?v=126"></script>
+<script type="module" src="offline.js?v=146"></script>
 </body>
 </html>

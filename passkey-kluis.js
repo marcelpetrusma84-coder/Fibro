@@ -2,6 +2,8 @@
 // De server bewaart alleen de doos (tabel passkey_kluis). Openen kan alleen met de passkey
 // (Face ID, vingerafdruk of toestelpincode). Gezicht en vingerafdruk verlaten het toestel nooit.
 // Alle functies krijgen de Supabase-client mee (sb), zodat elke pagina zijn eigen client kan gebruiken.
+// v2 (11 oktober 2026): foutmeldingen ook in het Engels (taal.js)
+const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 
 const TABEL = 'passkey_kluis'
 const INFO = new TextEncoder().encode('fibro-passkey-kluis-v2')
@@ -91,19 +93,19 @@ export async function lijstDozen(sb, userId) {
     .select('cred_id, naam, gemaakt_op, blob')
     .eq('user_id', userId)
     .order('gemaakt_op', { ascending: true })
-  if (error) throw fout('ophalen', 'Dozen ophalen mislukt: ' + error.message)
+  if (error) throw fout('ophalen', T('Dozen ophalen mislukt: {fout}', { fout: error.message }))
   return (data || []).filter(r => leesBlob(r.blob))
 }
 
 export async function verwijderDoos(sb, userId, credId) {
   const { error } = await sb.from(TABEL).delete().eq('user_id', userId).eq('cred_id', credId)
-  if (error) throw fout('weggooien', 'Weggooien mislukt: ' + error.message)
+  if (error) throw fout('weggooien', T('Weggooien mislukt: {fout}', { fout: error.message }))
 }
 
 // --- Doos maken: nieuwe passkey + geheime sleutel erin ---
 export async function maakDoos(sb, { userId, gebruikersnaam, privateKeyB64 }) {
-  if (!userId) throw fout('niet-ingelogd', 'Niet ingelogd')
-  if (!privateKeyB64) throw fout('geen-sleutel', 'Geen sleutel op dit toestel')
+  if (!userId) throw fout('niet-ingelogd', T('Niet ingelogd'))
+  if (!privateKeyB64) throw fout('geen-sleutel', T('Geen sleutel op dit toestel'))
   const bestaand = await lijstDozen(sb, userId)
   const zout = willekeurig(32)
   const naam = String(gebruikersnaam || 'Fibro').slice(0, 60)
@@ -120,15 +122,15 @@ export async function maakDoos(sb, { userId, gebruikersnaam, privateKeyB64 }) {
       extensions: { prf: { eval: { first: zout } } }
     } })
   } catch (e) {
-    if (e && e.name === 'InvalidStateError') throw fout('bestaat-al', 'Voor dit account bestaat hier al een Fibro-passkey')
-    if (e && e.name === 'NotAllowedError') throw fout('geannuleerd', 'Geannuleerd of niet toegestaan')
+    if (e && e.name === 'InvalidStateError') throw fout('bestaat-al', T('Voor dit account bestaat hier al een Fibro-passkey'))
+    if (e && e.name === 'NotAllowedError') throw fout('geannuleerd', T('Geannuleerd of niet toegestaan'))
     throw e
   }
   const credId = b64url(cred.rawId)
   let geheim = prfUit(cred)
   if (!geheim) {
     const ext = cred.getClientExtensionResults ? cred.getClientExtensionResults() : {}
-    if (ext && ext.prf && ext.prf.enabled === false) throw fout('geen-prf', 'Deze passkey kan geen geheim geven (PRF)')
+    if (ext && ext.prf && ext.prf.enabled === false) throw fout('geen-prf', T('Deze passkey kan geen geheim geven (PRF)'))
     // Sommige browsers geven het geheim pas bij het ophalen
     let g
     try {
@@ -140,11 +142,11 @@ export async function maakDoos(sb, { userId, gebruikersnaam, privateKeyB64 }) {
         extensions: { prf: { eval: { first: zout } } }
       } })
     } catch (e) {
-      if (e && e.name === 'NotAllowedError') throw fout('geannuleerd', 'Geannuleerd of niet toegestaan')
+      if (e && e.name === 'NotAllowedError') throw fout('geannuleerd', T('Geannuleerd of niet toegestaan'))
       throw e
     }
     geheim = prfUit(g)
-    if (!geheim) throw fout('geen-prf', 'Deze browser of passkey kan geen geheim geven (PRF)')
+    if (!geheim) throw fout('geen-prf', T('Deze browser of passkey kan geen geheim geven (PRF)'))
   }
   const iv = willekeurig(12)
   const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await aesSleutel(geheim, zout),
@@ -152,15 +154,15 @@ export async function maakDoos(sb, { userId, gebruikersnaam, privateKeyB64 }) {
   const blob = JSON.stringify({ v: 2, z: b64url(zout), iv: b64url(iv), ct: b64url(ct) })
   const { error } = await sb.from(TABEL)
     .upsert({ user_id: userId, cred_id: credId, blob, naam: toestelNaam() }, { onConflict: 'user_id,cred_id' })
-  if (error) throw fout('opslaan', 'Doos opslaan mislukt: ' + error.message)
+  if (error) throw fout('opslaan', T('Doos opslaan mislukt: {fout}', { fout: error.message }))
   return { credId }
 }
 
 // --- Doos openen: kies een passkey van dit account, krijg de geheime sleutel terug ---
 export async function openDoos(sb, userId) {
-  if (!userId) throw fout('niet-ingelogd', 'Niet ingelogd')
+  if (!userId) throw fout('niet-ingelogd', T('Niet ingelogd'))
   const dozen = await lijstDozen(sb, userId)
-  if (!dozen.length) throw fout('geen-doos', 'Er is nog geen Face ID-herstel voor dit account')
+  if (!dozen.length) throw fout('geen-doos', T('Er is nog geen Face ID-herstel voor dit account'))
   const perCred = {}
   const toegestaan = []
   for (const r of dozen) {
@@ -178,21 +180,21 @@ export async function openDoos(sb, userId) {
       extensions: { prf: { evalByCredential: perCred } }
     } })
   } catch (e) {
-    if (e && e.name === 'NotAllowedError') throw fout('geannuleerd', 'Geannuleerd of niet toegestaan')
+    if (e && e.name === 'NotAllowedError') throw fout('geannuleerd', T('Geannuleerd of niet toegestaan'))
     throw e
   }
   const credId = b64url(cred.rawId)
   const rij = dozen.find(r => r.cred_id === credId)
-  if (!rij) throw fout('onbekend', 'Deze passkey hoort niet bij dit account')
+  if (!rij) throw fout('onbekend', T('Deze passkey hoort niet bij dit account'))
   const geheim = prfUit(cred)
-  if (!geheim) throw fout('geen-prf', 'Deze browser gaf geen geheim terug (PRF)')
+  if (!geheim) throw fout('geen-prf', T('Deze browser gaf geen geheim terug (PRF)'))
   const b = leesBlob(rij.blob)
   let plat
   try {
     plat = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: vanB64url(b.iv) },
       await aesSleutel(geheim, vanB64url(b.z)), vanB64url(b.ct))
   } catch (e) {
-    throw fout('kapot', 'De doos kon niet worden geopend')
+    throw fout('kapot', T('De doos kon niet worden geopend'))
   }
   return { privateKeyB64: new TextDecoder().decode(plat), credId, naam: rij.naam }
 }

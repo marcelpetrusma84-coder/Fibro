@@ -1,4 +1,4 @@
-// verbinding.js - Fibro (v2): een balkje als de server even niet antwoordt.
+// verbinding.js - Fibro (v2): een balkje als de server even niet antwoordt. (v3, 11 okt 2026: ook in het Engels, taal.js)
 //
 // Fibro blijft dan gewoon werken met wat er op dit toestel bewaard is, maar je ziet nu ook
 // dat het niet de nieuwste stand is. Het balkje verdwijnt vanzelf zodra de server weer
@@ -11,7 +11,7 @@
 //
 // Werkt door fetch() van de pagina te volgen. Daarom moet dit een gewoon script zijn dat vroeg
 // in <head> geladen wordt, vóór supabase.js.
-// Inhaken:  <script src="verbinding.js?v=2"></script>  direct na <meta charset="UTF-8">
+// Inhaken:  <script src="verbinding.js?v=3"></script>  direct na taal.js
 (function () {
   'use strict'
   var orig = window.fetch
@@ -19,7 +19,7 @@
   window.__fibroVerbinding = true
 
   var BALK_ID = 'fibro-server-balk'
-  var TEKST = '⚠️ Server even niet bereikbaar · je ziet wat er op dit toestel bewaard is'
+  var TEKST = window.T ? window.T('⚠️ Server even niet bereikbaar · je ziet wat er op dit toestel bewaard is') : '⚠️ Server even niet bereikbaar · je ziet wat er op dit toestel bewaard is'
   var RUST_MS = 8000          // zo lang na openen/terugkomen tellen fouten niet
   var balk = null, krimpTimer = null, zichtbaar = false
   var fouten = [], server = null, rustTot = Date.now() + RUST_MS, bezigMetKijken = false, kijkTimer = null

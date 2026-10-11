@@ -14,6 +14,8 @@ VAST = {  # met T(variabele) vertaald: deze moeten er ook in staan
                 'Ghost Tag', 'Block It', 'The Swarm', 'Twin Snakes', 'Runner & Gunner',
                 'Amsterdam', 'Londen', 'New York', 'Los Angeles', 'Tokio', 'Dubai', 'Sydney', 'Parijs', 'Berlijn', 'Moskou', 'Bangkok', 'Singapore',
                 'Hong Kong', 'Mumbai', 'São Paulo', 'Kaapstad', 'Mexico-Stad', 'Chicago', 'Seoul', 'Istanbul'],
+ 'moderatie.html': ['Ongewenste berichten', 'Bedreiging of intimidatie', 'Ongepaste inhoud', 'Iets anders',  # T(r.reden)
+                    'status|nieuw', 'status|behandeld', 'status|gewaarschuwd', 'status|geblokkeerd'],  # T('status|' + r.status)
  'chat.html': ['Ongewenste berichten', 'Bedreiging of intimidatie', 'Ongepaste inhoud', 'Iets anders',  # redenen om te melden
                'Pop', 'Klingel', 'Boing', 'Plop', 'Sparkle', 'Drum', 'Swoosh', 'Chime', 'Hartje', 'Ding'],  # geluiden voor stickers
 }
@@ -33,7 +35,7 @@ fout = 0
 def meld(t):
     global fout; fout += 1; print('FOUT', t)
 code = set()
-TOEGESTAAN = ('w.titel', 'stad.naam', 's)', 'nl,', 's, v)', 'r)', 'g.naam', "'lettertype|'+f.stijl)")
+TOEGESTAAN = ('w.titel', 'stad.naam', 's)', 'nl,', 's, v)', 'r)', 'g.naam', "'lettertype|'+f.stijl)", 'r.reden)')
 for p in BESTANDEN:
     s = open(os.path.join(MAP, p), encoding='utf-8').read()
     if p == 'taal.js': continue
@@ -41,7 +43,7 @@ for p in BESTANDEN:
         rest = s[m.end():]
         if rest.startswith("'"):
             k = re.match(r"'((?:[^'\\\n]|\\.)*)'", rest)
-            if k and rest[k.end():k.end() + 1] == '+' and k.group(1).endswith('|'): continue  # T('context|' + iets): zie VAST
+            if k and rest[k.end():].lstrip().startswith('+') and k.group(1).endswith('|'): continue  # T('context|' + iets): zie VAST
             if not k or rest[k.end():k.end() + 1] not in (')', ','): meld('geen enkele tekst in %s: %s' % (p, rest[:70])); continue
             code.add(ontcijfer(k.group(1)))
         elif not rest.startswith(TOEGESTAAN): meld('T( zonder vaste tekst in %s: %s' % (p, rest[:60].replace('\n', ' ')))

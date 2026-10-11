@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl" style="background:#1a0a2e">
+<html lang="nl" data-taal style="background:#1a0a2e">
 <script>
   const f = localStorage.getItem('fibro_lettertype')
   if (f) {
@@ -13,11 +13,11 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=4"></script>
+<script src="taal.js?v=5"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Fibro — Over</title>
+<title data-t>Fibro — Over</title>
 <link href="lettertypen/basis.css?v=1" rel="stylesheet">
 <style>
   :root { --bg:#1a0a2e; --text:#e5e5e5; --muted:#9488a8; --accent:#c084fc; --accent2:#f47fbf; --border:rgba(255,255,255,0.12); --card:rgba(255,255,255,0.05); }
@@ -46,85 +46,84 @@
 </head>
 <body>
 <div class="top-bar" role="banner">
-  <button class="back-btn" onclick="history.length>1?history.back():location.href='index.html'">← Terug</button>
-  <div class="top-title">Over Fibro</div>
+  <button class="back-btn" onclick="history.length>1?history.back():location.href='index.html'" data-t>← Terug</button>
+  <div class="top-title" data-t>Over Fibro</div>
 </div>
-<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Fibro – Over Fibro</h1>
+<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0" data-t>Fibro – Over Fibro</h1>
 
 <div class="wrap">
 
   <div class="blok">
-    <h2>Wat is Fibro?</h2>
-    <p>Fibro is een digitale huiskamer. Een kleine plek voor je eigen vrienden, waar je kunt bellen, videobellen, kletsen en foto’s delen.</p>
-    <p>Geen tijdlijn die bepaalt wat je te zien krijgt. Geen likes. Geen vreemden. Alleen de mensen die je zelf hebt uitgenodigd.</p>
+    <h2 data-t>Wat is Fibro?</h2>
+    <p data-t>Fibro is een digitale huiskamer. Een kleine plek voor je eigen vrienden, waar je kunt bellen, videobellen, kletsen en foto’s delen.</p>
+    <p data-t>Geen tijdlijn die bepaalt wat je te zien krijgt. Geen likes. Geen vreemden. Alleen de mensen die je zelf hebt uitgenodigd.</p>
   </div>
 
   <div class="blok">
-    <h2>Waarom Fibro bestaat</h2>
-    <p>De grote platformen verdienen aan wat je over jezelf weggeeft. Je berichten, je contacten, je gedrag: het wordt verzameld, gekoppeld en doorverkocht. Je bent er niet de klant, je bent er het product.</p>
-    <p>Fibro is gebouwd vanuit het idee dat het ook anders kan. Een leuke app die gewoon eerlijk is, en die je privacy en je integriteit respecteert.</p>
+    <h2 data-t>Waarom Fibro bestaat</h2>
+    <p data-t>De grote platformen verdienen aan wat je over jezelf weggeeft. Je berichten, je contacten, je gedrag: het wordt verzameld, gekoppeld en doorverkocht. Je bent er niet de klant, je bent er het product.</p>
+    <p data-t>Fibro is gebouwd vanuit het idee dat het ook anders kan. Een leuke app die gewoon eerlijk is, en die je privacy en je integriteit respecteert.</p>
   </div>
 
   <div class="blok">
-    <h2>Hoe je gegevens werken</h2>
+    <h2 data-t>Hoe je gegevens werken</h2>
     <ul>
-      <li>Fibro vraagt geen e-mailadres en geen telefoonnummer. Je gebruikersnaam verzin je zelf.</li>
-      <li>Je berichten staan versleuteld op de server tot de bewaartijd voorbij is. Alleen jij en je vriend kunnen ze lezen, ik niet.</li>
-      <li>Berichten verdwijnen na de tijd die jij kiest: van 1 dag tot 1 jaar (standaard 31 dagen). Dat stel je in via het menu ☰ op Home. Kiezen jij en een vriend iets anders, dan geldt het kortste.</li>
-      <li>Bellen, videobellen en foto’s in de chat gaan rechtstreeks tussen jullie apparaten, niet via de server.</li>
-      <li>Je widgets, muziek en video’s staan op je eigen apparaat en gaan rechtstreeks naar je vrienden. Niet in de cloud.</li>
-      <li>Je weergavenaam staat niet in de database. Die reist alleen mee naar je vrienden.</li>
-      <li>Een pushmelding zegt alleen dát er iets is, nooit wat er in je bericht staat.</li>
-      <li>Fibro werkt alleen op uitnodiging. Er is geen zoekfunctie, dus niemand kan je opzoeken.</li>
-      <li>Geen advertenties, geen trackers, geen analytics. Fibro laadt geen code van andere websites.</li>
+      <li data-t>Fibro vraagt geen e-mailadres en geen telefoonnummer. Je gebruikersnaam verzin je zelf.</li>
+      <li data-t>Je berichten staan versleuteld op de server tot de bewaartijd voorbij is. Alleen jij en je vriend kunnen ze lezen, ik niet.</li>
+      <li data-t>Berichten verdwijnen na de tijd die jij kiest: van 1 dag tot 1 jaar (standaard 31 dagen). Dat stel je in via het menu ☰ op Home. Kiezen jij en een vriend iets anders, dan geldt het kortste.</li>
+      <li data-t>Bellen, videobellen en foto’s in de chat gaan rechtstreeks tussen jullie apparaten, niet via de server.</li>
+      <li data-t>Je widgets, muziek en video’s staan op je eigen apparaat en gaan rechtstreeks naar je vrienden. Niet in de cloud.</li>
+      <li data-t>Je weergavenaam staat niet in de database. Die reist alleen mee naar je vrienden.</li>
+      <li data-t>Een pushmelding zegt alleen dát er iets is, nooit wat er in je bericht staat.</li>
+      <li data-t>Fibro werkt alleen op uitnodiging. Er is geen zoekfunctie, dus niemand kan je opzoeken.</li>
+      <li data-t>Geen advertenties, geen trackers, geen analytics. Fibro laadt geen code van andere websites.</li>
     </ul>
   </div>
 
   <div class="blok">
-    <h2>Je herstelcode</h2>
-    <p>Bij het aanmaken van je account krijg je eenmalig een herstelcode. Die ziet eruit als FIBRO-XXXX-XXXX-XXXX.</p>
-    <p>Je berichten zijn versleuteld met een sleutel die op je apparaat staat. Ga je naar een nieuwe telefoon, dan kun je gewoon inloggen, maar je oude berichten zijn onleesbaar. Met je herstelcode zet je die sleutel terug en kun je alles weer lezen.</p>
-    <p><strong>Bewaar hem buiten je telefoon.</strong> In een wachtwoordmanager, op papier in een la, of ergens anders waar je hem terugvindt als je toestel weg is. Een screenshot op datzelfde toestel helpt je niet.</p>
-    <p>Kwijt is kwijt: ik kan hem niet voor je opzoeken. Hij staat nergens leesbaar opgeslagen, ook niet bij mij. Dat is precies de bedoeling, maar het betekent wel dat je er zelf op moet passen.</p>
-    <p>Vindt iemand anders je code, dan kan hij er niets mee zonder ook je wachtwoord. Toch: deel hem met niemand.</p>
+    <h2 data-t>Je herstelcode</h2>
+    <p data-t>Bij het aanmaken van je account krijg je eenmalig een herstelcode. Die ziet eruit als FIBRO-XXXX-XXXX-XXXX.</p>
+    <p data-t>Je berichten zijn versleuteld met een sleutel die op je apparaat staat. Ga je naar een nieuwe telefoon, dan kun je gewoon inloggen, maar je oude berichten zijn onleesbaar. Met je herstelcode zet je die sleutel terug en kun je alles weer lezen.</p>
+    <p data-t><strong>Bewaar hem buiten je telefoon.</strong> In een wachtwoordmanager, op papier in een la, of ergens anders waar je hem terugvindt als je toestel weg is. Een screenshot op datzelfde toestel helpt je niet.</p>
+    <p data-t>Kwijt is kwijt: ik kan hem niet voor je opzoeken. Hij staat nergens leesbaar opgeslagen, ook niet bij mij. Dat is precies de bedoeling, maar het betekent wel dat je er zelf op moet passen.</p>
+    <p data-t>Vindt iemand anders je code, dan kan hij er niets mee zonder ook je wachtwoord. Toch: deel hem met niemand.</p>
   </div>
 
   <div class="blok">
-    <h2>Je gegevens en je account</h2>
-    <p>Via het menu ☰ op Home kun je <strong>📦 Mijn gegevens downloaden</strong>: één bestand met alles wat Fibro op de server over jou bewaart. Je berichten maakt de app daarbij leesbaar, op je eigen toestel.</p>
-    <p>Daar kun je ook je <strong>🗑️ Account verwijderen</strong>. Dan is alles meteen en voorgoed weg: je profiel, je vrienden, je gastenboek en je gesprekken, ook bij je vrienden. Wat er op je toestel van je stond, wist de app ook. Terughalen kan niet, ook niet door mij.</p>
+    <h2 data-t>Je gegevens en je account</h2>
+    <p data-t>Via het menu ☰ op Home kun je <strong>📦 Mijn gegevens downloaden</strong>: één bestand met alles wat Fibro op de server over jou bewaart. Je berichten maakt de app daarbij leesbaar, op je eigen toestel.</p>
+    <p data-t>Daar kun je ook je <strong>🗑️ Account verwijderen</strong>. Dan is alles meteen en voorgoed weg: je profiel, je vrienden, je gastenboek en je gesprekken, ook bij je vrienden. Wat er op je toestel van je stond, wist de app ook. Terughalen kan niet, ook niet door mij.</p>
   </div>
 
   <div class="blok">
-    <h2>Eerlijk gezegd</h2>
-    <p>Volledige privacy bestaat niet, en ik ga niet doen alsof wel. Een paar dingen die je moet weten:</p>
+    <h2 data-t>Eerlijk gezegd</h2>
+    <p data-t>Volledige privacy bestaat niet, en ik ga niet doen alsof wel. Een paar dingen die je moet weten:</p>
     <ul>
-      <li>Wat wél op de server staat: je gebruikersnaam (daar herkennen vrienden je aan), je profielfoto en achtergrondfoto, je kleuren en mood, of je online bent, en met wie je bevriend bent.</li>
-      <li>De server ziet niet wát je schrijft, maar wel wie met wie berichten stuurt en wanneer.</li>
-      <li>Gastenboekberichten zijn niet versleuteld. Je vrienden lezen ze, en op de server zijn ze leesbaar.</li>
-      <li>Als een directe verbinding niet lukt, loopt een gesprek via een tussenserver (nu van Metered). Versleuteld, maar het gaat er wel langs.</li>
-      <li>Om een directe verbinding te maken, vraagt je toestel even zijn internetadres op bij Google of Cloudflare.</li>
-      <li>De database draait bij Supabase en de website bij GitHub, allebei Amerikaanse bedrijven. Het plan is om alles naar een eigen server in Europa te verhuizen.</li>
-      <li>Pushmeldingen lopen via Apple of Google. Dat kan niet anders.</li>
-      <li>Je muziek, video’s en widgets staan alleen op je telefoon. Wissel je van toestel, dan moet je ze opnieuw plaatsen.</li>
+      <li data-t>Wat wél op de server staat: je gebruikersnaam (daar herkennen vrienden je aan), je profielfoto en achtergrondfoto, je kleuren en mood, of je online bent, en met wie je bevriend bent.</li>
+      <li data-t>De server ziet niet wát je schrijft, maar wel wie met wie berichten stuurt en wanneer.</li>
+      <li data-t>Gastenboekberichten zijn niet versleuteld. Je vrienden lezen ze, en op de server zijn ze leesbaar.</li>
+      <li data-t>Als een directe verbinding niet lukt, loopt een gesprek via een tussenserver (nu van Metered). Versleuteld, maar het gaat er wel langs.</li>
+      <li data-t>Om een directe verbinding te maken, vraagt je toestel even zijn internetadres op bij Google of Cloudflare.</li>
+      <li data-t>De database draait bij Supabase en de website bij GitHub, allebei Amerikaanse bedrijven. Het plan is om alles naar een eigen server in Europa te verhuizen.</li>
+      <li data-t>Pushmeldingen lopen via Apple of Google. Dat kan niet anders.</li>
+      <li data-t>Je muziek, video’s en widgets staan alleen op je telefoon. Wissel je van toestel, dan moet je ze opnieuw plaatsen.</li>
     </ul>
   </div>
 
   <div class="blok binnenkort">
-    <h2>Binnenkort<span class="label">in aanbouw</span></h2>
+    <h2 data-t>Binnenkort<span class="label">in aanbouw</span></h2>
     <ul>
-      <li>Taal instellen</li>
-      <li>Buzz uitschakelen</li>
-      <li>Fibro Store</li>
-      <li>Fibro+ activeren</li>
+      <li data-t>Buzz uitschakelen</li>
+      <li data-t>Fibro Store</li>
+      <li data-t>Fibro+ activeren</li>
     </ul>
   </div>
 
   <details class="blok" id="technisch">
-    <summary>Technisch</summary>
+    <summary data-t>Technisch</summary>
     <p id="huisregelStand"></p>
     <ul id="huisregelLijst"></ul>
-    <button type="button" id="huisregelWis" class="back-btn" style="min-height:44px;margin-top:10px" hidden>Lijst wissen</button>
+    <button type="button" id="huisregelWis" class="back-btn" style="min-height:44px;margin-top:10px" hidden data-t>Lijst wissen</button>
   </details>
 
 </div>
@@ -138,14 +137,14 @@
   function teken() {
     var actief = !!document.querySelector('meta[http-equiv="Content-Security-Policy"]')
     var l = window.fibroHuisregel ? window.fibroHuisregel.lees() : []
-    stand.textContent = '🛡️ Huisregel: ' + (actief ? 'actief' : 'niet actief') + '. ' +
-      (l.length ? 'Tegengehouden (laatste ' + l.length + '):' : 'Niets tegengehouden.')
+    stand.textContent = (actief ? T('🛡️ Huisregel: actief.') : T('🛡️ Huisregel: niet actief.')) + ' ' +
+      (l.length ? T('Tegengehouden (laatste {n}):', { n: l.length }) : T('Niets tegengehouden.'))
     lijst.textContent = ''
     l.forEach(function (r) {
       var li = document.createElement('li')
       var d = new Date(r.laatst || 0)
       li.textContent = (r.keer || 1) + '× ' + r.regel + ': ' + r.adres + ' (' + r.pagina + ', ' +
-        d.toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + ')'
+        d.toLocaleString(T.locale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + ')'
       lijst.appendChild(li)
     })
     wis.hidden = !l.length

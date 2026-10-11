@@ -1,4 +1,4 @@
-// account.js - mijn gegevens downloaden en account verwijderen (v1, 8 oktober 2026)
+// account.js - mijn gegevens downloaden en account verwijderen (v1, 8 oktober 2026; v2 11 oktober 2026: ook in het Engels)
 // Geopend via het menu (☰) op Home; index.html laadt dit bestand pas als je erop tikt.
 // Het echte werk doet de server (sql/account-verwijderen.sql):
 // - mijn_gegevens(): alles wat Fibro op de server over jou bewaart. Berichten staan daar
@@ -11,9 +11,10 @@
 //   toestel blijft alles staan.
 import { supabase } from './supabase.js?v=95'
 import { haalPrivateKeyOp, ontsleutel } from './crypto.js?v=95'
+const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v2, v146)
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
-const NIET_TE_LEZEN = '(niet te lezen op dit toestel)'
+const NIET_TE_LEZEN = T('(niet te lezen op dit toestel)')
 // wat ontsleutel() teruggeeft als het niet lukt (crypto.js)
 const ONLEESBAAR = '\u{1F512} [versleuteld bericht — kan niet lezen]'
 
@@ -68,7 +69,7 @@ function maakVel(id, titelTekst) {
   const status = document.createElement('div')
   status.setAttribute('role', 'status')
   status.style.cssText = 'min-height:22px;font-size:13px;line-height:1.5;margin-top:12px;color:var(--text)'
-  const sluit = knop('Sluiten')
+  const sluit = knop(T('Sluiten'))
   let vast = false
   const esc = (e) => { if (e.key === 'Escape' && !vast) dicht() }
   const dicht = () => { achter.remove(); document.removeEventListener('keydown', esc, true) }
@@ -90,7 +91,7 @@ async function maakLeesbaar(data, uid) {
   const personen = new Map()
   for (const p of (Array.isArray(data && data.personen) ? data.personen : [])) if (p && p.id) personen.set(p.id, p)
   const ik = (data && data.profiel) || {}
-  const naamVan = (id) => id === uid ? 'ik' : ((personen.get(id) || {}).username || 'onbekend')
+  const naamVan = (id) => id === uid ? T('ik') : ((personen.get(id) || {}).username || T('onbekend'))
   const sleutelVan = (id) => id === uid ? ik.public_key : (personen.get(id) || {}).public_key
   let priv = null
   try { priv = haalPrivateKeyOp(uid) } catch (e) {}
@@ -172,45 +173,47 @@ function bestandsnaam(gebruikersnaam) {
 
 export function openGegevens(uid) {
   if (!uid) return
-  const v = maakVel('gegevensScherm', '\u{1F4E6} Mijn gegevens')
-  v.kaart.appendChild(alinea('Je krijgt één bestand met alles wat Fibro op de server over jou bewaart: je account, profiel, vrienden, berichten, gastenboek, reacties en instellingen. Op de server zijn je berichten versleuteld; de app maakt ze hier leesbaar, op je eigen toestel.'))
-  const haal = knop('\u{1F4E6} Gegevens ophalen', 'hoofd')
-  const bewaar = knop('\u{1F4BE} Bestand bewaren', 'hoofd')
+  const v = maakVel('gegevensScherm', T('\u{1F4E6} Mijn gegevens'))
+  v.kaart.appendChild(alinea(T('Je krijgt één bestand met alles wat Fibro op de server over jou bewaart: je account, profiel, vrienden, berichten, gastenboek, reacties en instellingen. Op de server zijn je berichten versleuteld; de app maakt ze hier leesbaar, op je eigen toestel.')))
+  const haal = knop(T('\u{1F4E6} Gegevens ophalen'), 'hoofd')
+  const bewaar = knop(T('\u{1F4BE} Bestand bewaren'), 'hoofd')
   bewaar.style.display = 'none'
   v.kaart.append(haal, bewaar)
   let bestand = null
   haal.onclick = async () => {
-    if (navigator.onLine === false) { v.status.textContent = '\u{1F4F4} Geen internet. Probeer het later opnieuw.'; return }
+    if (navigator.onLine === false) { v.status.textContent = T('\u{1F4F4} Geen internet. Probeer het later opnieuw.'); return }
     zetAan(haal, false)
-    v.status.textContent = 'Ophalen…'
+    v.status.textContent = T('Ophalen…')
     try {
       const { data, error } = await supabase.rpc('mijn_gegevens')
       if (error) throw error
       if (!data || typeof data !== 'object') throw new Error('leeg antwoord')
-      v.status.textContent = 'Berichten leesbaar maken…'
+      v.status.textContent = T('Berichten leesbaar maken…')
       const telling = await maakLeesbaar(data, uid)
       const tekst = JSON.stringify(data, null, 2)
       bestand = { naam: bestandsnaam(data.profiel && data.profiel.username), tekst }
       haal.style.display = 'none'
       bewaar.style.display = 'block'
-      v.status.textContent = '✓ Klaar: ' + telling.berichten + (telling.berichten === 1 ? ' bericht' : ' berichten') +
-        (telling.berichten ? ' (' + telling.leesbaar + ' leesbaar)' : '') + ', ' + Math.max(1, Math.round(tekst.length / 1024)) + ' kB. Tik op Bestand bewaren.'
+      const kb = Math.max(1, Math.round(tekst.length / 1024))
+      v.status.textContent = telling.berichten === 0 ? T('✓ Klaar: 0 berichten, {kb} kB. Tik op Bestand bewaren.', { kb })
+        : telling.berichten === 1 ? T('✓ Klaar: 1 bericht ({leesbaar} leesbaar), {kb} kB. Tik op Bestand bewaren.', { leesbaar: telling.leesbaar, kb })
+        : T('✓ Klaar: {n} berichten ({leesbaar} leesbaar), {kb} kB. Tik op Bestand bewaren.', { n: telling.berichten, leesbaar: telling.leesbaar, kb })
       bewaar.focus()
     } catch (e) {
       console.warn('[gegevens] ophalen mislukt', e)
-      v.status.textContent = serverOud(e) ? '⚠️ Dit kan nog niet: de server is nog niet bijgewerkt.'
-        : geenVerbinding(e) ? '\u{1F4F4} Geen verbinding met de server. Probeer het later opnieuw.'
-        : '⚠️ Ophalen lukte niet. Probeer het later opnieuw.'
+      v.status.textContent = serverOud(e) ? T('⚠️ Dit kan nog niet: de server is nog niet bijgewerkt.')
+        : geenVerbinding(e) ? T('\u{1F4F4} Geen verbinding met de server. Probeer het later opnieuw.')
+        : T('⚠️ Ophalen lukte niet. Probeer het later opnieuw.')
       zetAan(haal, true)
     }
   }
   bewaar.onclick = async () => {
     if (!bestand) return
     const r = await bewaarBestand(bestand.naam, bestand.tekst)
-    v.status.textContent = r === 'gedeeld' ? '✓ Bewaard: ' + bestand.naam
-      : r === 'gedownload' ? '✓ Gedownload: ' + bestand.naam
-      : r === 'geannuleerd' ? 'Niet bewaard. Tik nog eens op Bestand bewaren.'
-      : '⚠️ Bewaren lukte niet.'
+    v.status.textContent = r === 'gedeeld' ? T('✓ Bewaard: {naam}', { naam: bestand.naam })
+      : r === 'gedownload' ? T('✓ Gedownload: {naam}', { naam: bestand.naam })
+      : r === 'geannuleerd' ? T('Niet bewaard. Tik nog eens op Bestand bewaren.')
+      : T('⚠️ Bewaren lukte niet.')
   }
   v.toon()
   haal.focus()
@@ -299,9 +302,9 @@ function naamUitGeheugen(uid) {
 
 export function openVerwijderen(uid) {
   if (!uid) return
-  const v = maakVel('verwijderScherm', '\u{1F5D1}️ Account verwijderen')
-  v.kaart.appendChild(alinea('Je account wordt meteen en voorgoed verwijderd. Alles verdwijnt: je profiel, je vrienden, je gastenboek en al je gesprekken, ook bij je vrienden. Wat er op dit toestel van je staat, wordt ook gewist. Dit kan niet ongedaan worden gemaakt.'))
-  const eerst = knop('\u{1F4E6} Eerst mijn gegevens downloaden')
+  const v = maakVel('verwijderScherm', T('\u{1F5D1}️ Account verwijderen'))
+  v.kaart.appendChild(alinea(T('Je account wordt meteen en voorgoed verwijderd. Alles verdwijnt: je profiel, je vrienden, je gastenboek en al je gesprekken, ook bij je vrienden. Wat er op dit toestel van je staat, wordt ook gewist. Dit kan niet ongedaan worden gemaakt.')))
+  const eerst = knop(T('\u{1F4E6} Eerst mijn gegevens downloaden'))
   eerst.onclick = () => { v.dicht(); openGegevens(uid) }
   const label = document.createElement('label')
   label.htmlFor = 'verwijderNaam'
@@ -314,14 +317,14 @@ export function openVerwijderen(uid) {
   invoer.setAttribute('autocapitalize', 'none')
   invoer.setAttribute('autocorrect', 'off')
   invoer.style.cssText = 'display:block;width:100%;box-sizing:border-box;min-height:44px;border-radius:12px;border:0.5px solid var(--border);background:rgba(255,255,255,0.08);color:var(--text);font-size:16px;padding:10px 12px;font-family:inherit'
-  const weg = knop('Account definitief verwijderen', 'gevaar')
+  const weg = knop(T('Account definitief verwijderen'), 'gevaar')
   v.kaart.append(eerst, label, invoer, weg)
 
   let naam = naamUitGeheugen(uid) // null = nog niet bekend
   let bezig = false
   const verwacht = () => (naam || 'verwijder').trim().toLowerCase()
   const zetLabel = () => {
-    label.textContent = naam === null ? 'Even kijken…' : 'Typ ter bevestiging je gebruikersnaam: ' + (naam.trim() || 'VERWIJDER')
+    label.textContent = naam === null ? T('Even kijken…') : T('Typ ter bevestiging je gebruikersnaam: {naam}', { naam: naam.trim() || 'VERWIJDER' })
   }
   const controleer = () => zetAan(weg, !bezig && naam !== null && invoer.value.trim().toLowerCase() === verwacht())
   invoer.oninput = controleer
@@ -331,13 +334,13 @@ export function openVerwijderen(uid) {
 
   weg.onclick = async () => {
     if (bezig || weg.disabled) return
-    if (navigator.onLine === false) { v.status.textContent = '\u{1F4F4} Geen internet. Probeer het later opnieuw.'; return }
+    if (navigator.onLine === false) { v.status.textContent = T('\u{1F4F4} Geen internet. Probeer het later opnieuw.'); return }
     bezig = true
     v.zetVast(true)
     zetAan(weg, false)
     zetAan(eerst, false)
     invoer.disabled = true
-    v.status.textContent = 'Bezig met verwijderen…'
+    v.status.textContent = T('Bezig met verwijderen…')
     try {
       const { data, error } = await supabase.rpc('verwijder_mijn_account', { p_bevestiging: invoer.value.trim() })
       // 'Account niet gevonden': de vorige poging is wel aangekomen
@@ -345,10 +348,10 @@ export function openVerwijderen(uid) {
       if (!error && data !== true) throw new Error('onverwacht antwoord')
     } catch (e) {
       console.warn('[verwijderen] mislukt', e)
-      v.status.textContent = serverOud(e) ? '⚠️ Dit kan nog niet: de server is nog niet bijgewerkt. Er is niets verwijderd.'
-        : /Bevestiging klopt niet/i.test(foutTekst(e)) ? '⚠️ De naam klopt niet. Er is niets verwijderd.'
-        : geenVerbinding(e) ? '\u{1F4F4} Geen verbinding met de server. Probeer het opnieuw.'
-        : '⚠️ Verwijderen lukte niet. Er is niets verwijderd. Probeer het later opnieuw.'
+      v.status.textContent = serverOud(e) ? T('⚠️ Dit kan nog niet: de server is nog niet bijgewerkt. Er is niets verwijderd.')
+        : /Bevestiging klopt niet/i.test(foutTekst(e)) ? T('⚠️ De naam klopt niet. Er is niets verwijderd.')
+        : geenVerbinding(e) ? T('\u{1F4F4} Geen verbinding met de server. Probeer het opnieuw.')
+        : T('⚠️ Verwijderen lukte niet. Er is niets verwijderd. Probeer het later opnieuw.')
       bezig = false
       v.zetVast(false)
       zetAan(eerst, true)
@@ -356,9 +359,9 @@ export function openVerwijderen(uid) {
       controleer()
       return
     }
-    v.status.textContent = '✓ Je account is verwijderd. Even opruimen…'
+    v.status.textContent = T('✓ Je account is verwijderd. Even opruimen…')
     await wisToestel(uid)
-    v.status.textContent = '✓ Je account is verwijderd. Tot ziens!'
+    v.status.textContent = T('✓ Je account is verwijderd. Tot ziens!')
     setTimeout(() => {
       wisOpslag(localStorage, uid) // wat andere onderdelen intussen nog bewaarden
       location.replace('login.html?logout=1')
@@ -369,7 +372,7 @@ export function openVerwijderen(uid) {
   invoer.focus()
   // de gebruikersnaam van de server (die telt)
   if (navigator.onLine === false) {
-    if (naam === null) v.status.textContent = '\u{1F4F4} Geen internet. Verwijderen kan alleen met internet.'
+    if (naam === null) v.status.textContent = T('\u{1F4F4} Geen internet. Verwijderen kan alleen met internet.')
     return
   }
   supabase.from('profiles').select('username').eq('id', uid).single().then(({ data, error }) => {

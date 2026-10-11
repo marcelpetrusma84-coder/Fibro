@@ -215,7 +215,8 @@ with sync_playwright() as pw:
     check('rommel in fibro_taal telt niet', taal_van('en-US', "() => localStorage.setItem('fibro_taal', 'fr')")[0] == 'en')
     ctx = nieuw_ctx(br, 'en-US'); p = nieuwe_pagina(ctx); p.goto(B + 'over.html'); wacht(p, 500)
     r = p.evaluate("() => [location.pathname.split('/').pop(), document.documentElement.lang, typeof T, T.taal, typeof window.FIBRO_EN]")
-    check('nog niet vertaalde pagina (Over Fibro): lang blijft "nl", T en de woordenlijst zijn er', r == ['over.html', 'nl', 'function', 'en', 'object'], r)
+    # v146: Over Fibro is nu ook vertaald (data-taal), dus lang="en"
+    check('Over Fibro (sinds v146 vertaald): lang="en", T en de woordenlijst zijn er', r == ['over.html', 'en', 'function', 'en', 'object'], r)
     ctx.close()
 
     # ---------------- D. Kiezen ----------------

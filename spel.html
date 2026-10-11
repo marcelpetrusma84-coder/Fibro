@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="nl" style="background:#1a0a2e">
+<html lang="nl" data-taal style="background:#1a0a2e">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=4"></script>
+<script src="taal.js?v=5"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Fibro — Spel</title>
+<title data-t>Fibro — Spel</title>
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
@@ -39,7 +39,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 <body>
 <div class="spel-scherm" id="spelOverlay">
   <div class="spel-titel-bar" id="spelTitelBar"></div>
-  <button class="spel-sluit-btn" id="sluitKnop" title="Terug">✕</button>
+  <button class="spel-sluit-btn" id="sluitKnop" title="Terug" data-t-attr="title">✕</button>
   <div id="spelInhoud"></div>
 </div>
 
@@ -87,7 +87,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
 
   if (!spel) {
-    inhoud.innerHTML = '<div class="melding">Dit spel kan nog niet alleen gespeeld worden.<br><button onclick="location.href=\'index.html\'">Terug</button></div>'
+    inhoud.innerHTML = '<div class="melding">' + T('Dit spel kan nog niet alleen gespeeld worden.') + '<br><button onclick="location.href=\'index.html\'">' + T('Terug') + '</button></div>'
   } else {
     document.title = 'Fibro — ' + spel.naam
     // Ghost Tag, Twin Snakes en Runner & Gunner hebben een eigen startscherm.
@@ -103,7 +103,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
       <div class="niveau-kaart">
         <div class="niveau-icon">${esc(spel.icon)}</div>
         <div class="niveau-naam">${esc(spel.naam)}</div>
-        <div class="niveau-sub">Jouw record: ${solo.record()}</div>
+        <div class="niveau-sub">${T('Jouw record: {n}', { n: solo.record() })}</div>
         <button class="niveau-btn gekozen" id="startKnop">▶ Start</button>
       </div>`
     document.getElementById('startKnop').onclick = () => start('normaal')
@@ -113,13 +113,13 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     const sleutel = 'fibro_solo_niveau_' + spelId
     let vorige = 'normaal'
     try { vorige = localStorage.getItem(sleutel) || 'normaal' } catch (e) {}
-    const NAMEN = { makkelijk: 'Makkelijk', normaal: 'Normaal', moeilijk: 'Moeilijk' }
+    const NAMEN = { makkelijk: T('Makkelijk'), normaal: T('Normaal'), moeilijk: T('Moeilijk') }
     titel.textContent = spel.icon + ' ' + spel.naam
     inhoud.innerHTML = `
       <div class="niveau-kaart">
         <div class="niveau-icon">${esc(spel.icon)}</div>
         <div class="niveau-naam">${esc(spel.naam)}</div>
-        <div class="niveau-sub">Tegen de computer. Kies een niveau:</div>
+        <div class="niveau-sub">${T('Tegen de computer. Kies een niveau:')}</div>
         ${NIVEAUS.map(n => `<button class="niveau-btn${n === vorige ? ' gekozen' : ''}" data-niveau="${n}">${NAMEN[n]}</button>`).join('')}
       </div>`
     inhoud.querySelectorAll('.niveau-btn').forEach(knop => {
@@ -146,7 +146,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
   }
 
   async function start(niveau) {
-    inhoud.innerHTML = '<div class="melding">Laden...</div>'
+    inhoud.innerHTML = '<div class="melding">' + T('Laden...') + '</div>'
     try {
       const m = await import(spel.bestand)
       // Zware spellen op de telefoon: tekenen op gewone scherpte in plaats van
@@ -159,12 +159,12 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
       const extra = spel.motorNaam ? { [spel.motorNaam]: motor } : {}
       kanaal = spel.zonderKanaal ? null : maakSoloKanaal(spel.bot, niveau, motor)
       // Jij bent altijd speler 1 en begint de eerste ronde.
-      m.start({ ...extra, Bordgeluid, spelKanaal: kanaal, benIkSpeler1: true, vriendNaam: 'Computer', isActief: () => true, solo: spel.arcade ? solo : undefined })
+      m.start({ ...extra, Bordgeluid, spelKanaal: kanaal, benIkSpeler1: true, vriendNaam: T('Computer'), isActief: () => true, solo: spel.arcade ? solo : undefined })
       if (kanaal) kanaal.subscribe()
       if (spel.meetFps) meetBeeldjes()
     } catch (e) {
       console.error('[solo] starten mislukt', e)
-      inhoud.innerHTML = '<div class="melding">Het spel kon niet starten.<br><button onclick="location.reload()">Opnieuw proberen</button></div>'
+      inhoud.innerHTML = '<div class="melding">' + T('Het spel kon niet starten.') + '<br><button onclick="location.reload()">' + T('Opnieuw proberen') + '</button></div>'
     }
   }
 </script>

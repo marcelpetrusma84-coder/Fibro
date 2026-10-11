@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="nl" data-taal>
 <script>
   const f = localStorage.getItem('fibro_lettertype')
   if (f) {
@@ -13,13 +13,13 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=1"></script>
+<script src="taal.js?v=2"></script>
 <script src="verbinding.js?v=2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Fibro - Vrienden</title>
+<title data-t>Fibro - Vrienden</title>
 <link href="lettertypen/basis.css?v=1" rel="stylesheet">
 <script defer src="qrcode.min.js?v=1"></script>
 <style>
@@ -224,27 +224,27 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 <body>
 
 <div class="top-bar" role="banner">
-  <span class="top-title">Vrienden</span>
-  <button class="invite-btn" onclick="openInviteModal()">+ Uitnodigen</button>
+  <span class="top-title" data-t>Vrienden</span>
+  <button class="invite-btn" onclick="openInviteModal()" data-t>+ Uitnodigen</button>
 </div>
-<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Fibro – Vrienden</h1>
+<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0" data-t>Fibro – Vrienden</h1>
 
 
 <div class="search-bar">
 </div>
 
 <div id="vriendenLijst">
-  <div style="padding:20px; text-align:center; color:var(--muted); font-size:12px;">Vrienden laden...</div>
+  <div style="padding:20px; text-align:center; color:var(--muted); font-size:12px;" data-t>Vrienden laden...</div>
 </div>
 
-<div class="fibro-logo">Fibro - jouw netwerk</div>
+<div class="fibro-logo" data-t>Fibro - jouw netwerk</div>
 
 </main>
 <div class="bottom-nav" role="navigation" aria-label="Menu">
-  <div class="nav-item" onclick="window.location.href='index.html'"><div class="nav-icon">🏠</div>Home</div>
-  <div class="nav-item active"><div class="nav-icon">👥</div>Vrienden</div>
-  <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
-  <div class="nav-item" onclick="window.location.href='profiel.html'"><div class="nav-icon">👤</div>Profiel</div>
+  <div class="nav-item" onclick="window.location.href='index.html'" data-t><div class="nav-icon">🏠</div>Home</div>
+  <div class="nav-item active" data-t><div class="nav-icon">👥</div>Vrienden</div>
+  <div class="nav-item" onclick="window.location.href='chat.html'" data-t><div class="nav-icon">💬</div>Chat</div>
+  <div class="nav-item" onclick="window.location.href='profiel.html'" data-t><div class="nav-icon">👤</div>Profiel</div>
 </div>
 
 <!-- ======================== -->
@@ -252,8 +252,8 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 <!-- ======================== -->
 <div class="modal-overlay" id="inviteModal" onclick="sluitModalBuiten(event)">
   <div class="modal">
-    <h2>Vriend uitnodigen</h2>
-    <p>Genereer een QR code. Je vriend heeft 20 minuten om zich te registreren.</p>
+    <h2 data-t>Vriend uitnodigen</h2>
+    <p data-t>Genereer een QR code. Je vriend heeft 20 minuten om zich te registreren.</p>
 
     <div class="modal-status" id="modal-status"></div>
 
@@ -262,7 +262,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
       <div id="qr-container"></div>
 
       <div class="timer-ring">
-        <span class="timer-text">Geldig nog:</span>
+        <span class="timer-text" data-t>Geldig nog:</span>
         <span class="timer-countdown" id="timer-display">20:00</span>
       </div>
 
@@ -273,23 +273,23 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
       <div class="token-code" id="token-display"></div>
       <div style="margin-top:12px;display:flex;gap:8px;align-items:center;background:rgba(255,255,255,0.06);border-radius:12px;padding:8px 10px;">
         <input id="invite-link" readonly style="flex:1;background:transparent;border:none;color:var(--text);font-size:12px;outline:none;" value="">
-        <button id="kopieer-link-btn" onclick="kopieerInviteLink()" style="background:var(--accent);color:#1a0a2e;border:none;border-radius:10px;padding:6px 12px;font-size:12px;font-weight:bold;cursor:pointer;white-space:nowrap;">Kopieer</button>
+        <button id="kopieer-link-btn" onclick="kopieerInviteLink()" style="background:var(--accent);color:#1a0a2e;border:none;border-radius:10px;padding:6px 12px;font-size:12px;font-weight:bold;cursor:pointer;white-space:nowrap;" data-t>Kopieer</button>
       </div>
 
       <!-- Verlopen staat -->
       <div class="expired-overlay" id="expired-overlay">
         <div class="expired-icon">⏰</div>
-        <p style="margin:0;">Deze invite is verlopen.</p>
-        <button class="modal-btn modal-btn-primary" onclick="nieuweInvite()">Nieuwe QR genereren</button>
+        <p style="margin:0;" data-t>Deze invite is verlopen.</p>
+        <button class="modal-btn modal-btn-primary" onclick="nieuweInvite()" data-t>Nieuwe QR genereren</button>
       </div>
     </div>
 
     <!-- Laden staat -->
-    <div id="qr-laden" style="padding:20px 0; color:var(--muted); font-size:13px;">
+    <div id="qr-laden" style="padding:20px 0; color:var(--muted); font-size:13px;" data-t>
       Even laden...
     </div>
 
-    <button class="modal-btn modal-btn-ghost" onclick="sluitModal()">Sluiten</button>
+    <button class="modal-btn modal-btn-ghost" onclick="sluitModal()" data-t>Sluiten</button>
   </div>
 </div>
 
@@ -298,10 +298,10 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   import { laadThema } from './thema.js?v=130'
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
-  import { startMeldingen } from './meldingen.js?v=131'
+  import { startMeldingen } from './meldingen.js?v=143'
   import { startHeartbeat } from './heartbeat.js?v=117'
   import { wisVriendData } from './opruimen.js?v=95'
-  import { blokkeerPersoon, kiesVriendActie, kiesGeblokkeerdActie, deblokkeerPersoon, verwijderGeblokkeerde, haalGeblokkeerden } from './persoonblok.js?v=2'
+  import { blokkeerPersoon, kiesVriendActie, kiesGeblokkeerdActie, deblokkeerPersoon, verwijderGeblokkeerde, haalGeblokkeerden } from './persoonblok.js?v=3'
   import { initSync } from './sync.js?v=129'
   import { bewaardeSessieZonderInternet } from './offline.js?v=126'
   import { haalVriendFotos, zetAvatar } from './vriendfotos.js?v=2'
@@ -362,11 +362,11 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
       }
     }
     if (error && !navigator.onLine) {
-      container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);font-size:15px;line-height:1.8;">📴 Geen internet.<br>Je vriendenlijst staat nog niet op dit toestel. Open Vrienden een keer met internet.</div>'
+      container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);font-size:15px;line-height:1.8;">' + T('📴 Geen internet.<br>Je vriendenlijst staat nog niet op dit toestel. Open Vrienden een keer met internet.') + '</div>'
       return
     }
     if (error || !data || (data.length === 0 && geblokkeerd.length === 0)) {
-      container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);font-size:15px;line-height:1.8;">👥 Nog geen vrienden.<br>Klik op <strong style=\"color:var(--accent)\">+ Uitnodigen</strong> om iemand uit te nodigen!</div>'
+      container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);font-size:15px;line-height:1.8;">' + T('👥 Nog geen vrienden.<br>Klik op <strong style="color:var(--accent)">+ Uitnodigen</strong> om iemand uit te nodigen!') + '</div>'
       return
     }
 
@@ -391,7 +391,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
       const stipKleur = online ? '#22c55e' : '#6b7280'
       const statusTekst = online
         ? (p.mood ? '<span style="font-size:12px;color:var(--accent2);font-style:italic;">' + vEsc(p.mood) + '</span>' : '')
-        : '<span style="font-size:12px;color:var(--muted);">' + (p.offline_bericht ? vEsc((p.offline_emoji || '💤') + ' ' + p.offline_bericht) : 'Offline') + '</span>'
+        : '<span style="font-size:12px;color:var(--muted);">' + (p.offline_bericht ? vEsc((p.offline_emoji || '💤') + ' ' + p.offline_bericht) : T('Offline')) + '</span>'
       return '<div class="friend-row" data-vid="' + vEsc(p.id) + '" style="display:flex;align-items:center;gap:12px;padding:13px 14px;margin:6px 14px;background:var(--blok-kleur,var(--card));border:0.5px solid var(--border);border-radius:var(--blok-hoek,14px);transform:var(--blok-kantel,none);transition:transform 0.15s;backdrop-filter:blur(12px);cursor:pointer;">' +
         '<div style="position:relative;flex-shrink:0;">' +
         '<div class="vriend-foto" data-fid="' + vEsc(p.id) + '" data-emoji="' + avatar + '" style="width:46px;height:46px;border-radius:50%;background:rgba(192,132,252,0.15);border:1.5px solid rgba(192,132,252,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;">' + avatar + '</div>' +
@@ -414,20 +414,20 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     function bouwGeblokkeerdRij(g) {
       let p2pNaam = ''
       try { p2pNaam = String(localStorage.getItem('vriend_naam_' + g.id + '_' + userId) || '').trim() } catch(e) {}
-      const naam = p2pNaam || g.username || 'onbekend'
+      const naam = p2pNaam || g.username || T('onbekend')
       return '<div class="blok-rij" data-bid="' + vEsc(g.id) + '" data-bnaam="' + vEsc(naam) + '" style="display:flex;align-items:center;gap:12px;padding:13px 14px;margin:6px 14px;background:var(--blok-kleur,var(--card));border:0.5px solid var(--border);border-radius:var(--blok-hoek,14px);opacity:0.6;cursor:pointer;">' +
         '<div style="width:46px;height:46px;border-radius:50%;background:rgba(248,113,113,0.12);border:1.5px solid rgba(248,113,113,0.35);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🚫</div>' +
         '<div style="flex:1;min-width:0;">' +
         '<div style="font-size:14px;font-weight:600;color:#f3e8ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + vEsc(naam) + '</div>' +
-        '<div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:1px;">Geblokkeerd · tik voor opties</div>' +
+        '<div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:1px;">' + T('Geblokkeerd · tik voor opties') + '</div>' +
         '</div>' +
         '</div>'
     }
 
     let html = ''
     if (online.length > 0) html += '<div class="section-label">🟢 Online (' + online.length + ')</div>' + online.map(bouwRij).join('')
-    if (offline.length > 0) html += '<div class="section-label">⚫ Offline (' + offline.length + ')</div>' + offline.map(bouwRij).join('')
-    if (geblokkeerd.length > 0) html += '<div class="section-label">🚫 Geblokkeerd (' + geblokkeerd.length + ')</div>' + geblokkeerd.map(bouwGeblokkeerdRij).join('')
+    if (offline.length > 0) html += '<div class="section-label">' + T('⚫ Offline ({n})', { n: offline.length }) + '</div>' + offline.map(bouwRij).join('')
+    if (geblokkeerd.length > 0) html += '<div class="section-label">' + T('🚫 Geblokkeerd ({n})', { n: geblokkeerd.length }) + '</div>' + geblokkeerd.map(bouwGeblokkeerdRij).join('')
     container.innerHTML = html
 
     // v134: avatarfoto's van vrienden (vriendfotos.js): eerst wat op dit toestel staat, nieuwe later
@@ -489,18 +489,18 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     var vriendId = rij.dataset.vid
     var chatKnop = rij.querySelector('.chat-knop')
     var naam = chatKnop ? String(chatKnop.dataset.cnaam || '').trim() : ''
-    if (!naam) naam = 'deze vriend'
+    if (!naam) naam = T('deze vriend')
 
     var keuze = await kiesVriendActie(naam)
     if (keuze === 'blokkeren') {
-      if (!confirm(naam + ' blokkeren?\n\n' + naam + ' kan je dan geen berichten meer sturen, je profiel niet meer zien en ziet jou niet meer in de vriendenlijst. ' + naam + ' krijgt hier geen melding van.\n\nJe vindt ' + naam + ' daarna onderaan je vriendenlijst. Daar kun je ook weer deblokkeren.')) return
-      if (!(await blokkeerPersoon(vriendId))) { alert('Het is niet gelukt. Probeer het later opnieuw.'); return }
+      if (!confirm(T('{naam} blokkeren?\n\n{naam} kan je dan geen berichten meer sturen, je profiel niet meer zien en ziet jou niet meer in de vriendenlijst. {naam} krijgt hier geen melding van.\n\nJe vindt {naam} daarna onderaan je vriendenlijst. Daar kun je ook weer deblokkeren.', { naam }))) return
+      if (!(await blokkeerPersoon(vriendId))) { alert(T('Het is niet gelukt. Probeer het later opnieuw.')); return }
       await laadVrienden(mijnId)
       return
     }
     if (keuze !== 'verwijderen') return
 
-    if (!confirm(naam + ' uit je vriendenlijst halen?\n\nJullie verdwijnen allebei uit elkaars lijst. Berichten sturen en bellen kan daarna niet meer. Opnieuw toevoegen kan alleen met een nieuwe uitnodigingslink.')) return
+    if (!confirm(T('{naam} uit je vriendenlijst halen?\n\nJullie verdwijnen allebei uit elkaars lijst. Berichten sturen en bellen kan daarna niet meer. Opnieuw toevoegen kan alleen met een nieuwe uitnodigingslink.', { naam }))) return
 
     var res = await supabase
       .from('friendships')
@@ -508,27 +508,27 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
       .or('and(user_id.eq.' + mijnId + ',friend_id.eq.' + vriendId + '),and(user_id.eq.' + vriendId + ',friend_id.eq.' + mijnId + ')')
       .select()
 
-    if (res.error) { alert('Het is niet gelukt: ' + res.error.message); return }
-    if (!res.data || res.data.length === 0) { alert('Er is niets verwijderd.'); return }
+    if (res.error) { alert(T('Het is niet gelukt: {fout}', { fout: res.error.message })); return }
+    if (!res.data || res.data.length === 0) { alert(T('Er is niets verwijderd.')); return }
 
     await wisVriendData(vriendId, mijnId)
 
     rij.remove()
-    alert(naam + ' staat niet meer in je vriendenlijst.\n\nDe foto\'s, muziek en widgets van deze vriend zijn van dit apparaat verwijderd.')
+    alert(T('{naam} staat niet meer in je vriendenlijst.\n\nDe foto\'s, muziek en widgets van deze vriend zijn van dit apparaat verwijderd.', { naam }))
   }
 
   async function vraagGeblokkeerde(rij, mijnId) {
     var id = rij.dataset.bid
-    var naam = String(rij.dataset.bnaam || '').trim() || 'deze persoon'
+    var naam = String(rij.dataset.bnaam || '').trim() || T('deze persoon')
     var keuze = await kiesGeblokkeerdActie(naam)
     if (keuze === 'deblokkeren') {
-      if (!(await deblokkeerPersoon(id))) { alert('Het is niet gelukt. Probeer het later opnieuw.'); return }
+      if (!(await deblokkeerPersoon(id))) { alert(T('Het is niet gelukt. Probeer het later opnieuw.')); return }
       await laadVrienden(mijnId)
       return
     }
     if (keuze !== 'verwijderen') return
-    if (!confirm(naam + ' verwijderen?\n\nDe blokkade wordt opgeheven en jullie zijn geen vrienden meer. Opnieuw toevoegen kan alleen met een nieuwe uitnodigingslink.')) return
-    if (!(await verwijderGeblokkeerde(id))) { alert('Het is niet gelukt. Probeer het later opnieuw.'); return }
+    if (!confirm(T('{naam} verwijderen?\n\nDe blokkade wordt opgeheven en jullie zijn geen vrienden meer. Opnieuw toevoegen kan alleen met een nieuwe uitnodigingslink.', { naam }))) return
+    if (!(await verwijderGeblokkeerde(id))) { alert(T('Het is niet gelukt. Probeer het later opnieuw.')); return }
     await wisVriendData(id, mijnId)
     await laadVrienden(mijnId)
   }
@@ -591,7 +591,7 @@ startMeldingen()
       })
 
     if (error) {
-      toonStatus('error', 'Kon geen invite aanmaken. Probeer opnieuw.')
+      toonStatus('error', T('Kon geen invite aanmaken. Probeer opnieuw.'))
       document.getElementById('qr-laden').style.display = 'none'
       return
     }
@@ -668,9 +668,9 @@ startMeldingen()
     navigator.clipboard.writeText(veld.value).then(() => {
       const btn = document.getElementById('kopieer-link-btn')
       const orig = btn.textContent
-      btn.textContent = 'Gekopieerd!'
+      btn.textContent = T('Gekopieerd!')
       setTimeout(() => btn.textContent = orig, 2000)
-    }).catch(() => { prompt('Kopieer deze link:', veld.value) })
+    }).catch(() => { prompt(T('Kopieer deze link:'), veld.value) })
   }
 
   window.nieuweInvite = async function() {
@@ -701,9 +701,9 @@ function filterVrienden() {
 }
 </script>
 
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=142"; startBelLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=143"; startBelLuisteraar()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=131"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=143"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=131"; startOngelezen()</script>
 <script src="swipe.js?v=95"></script>
 <script type="module" src="offline.js?v=126"></script>

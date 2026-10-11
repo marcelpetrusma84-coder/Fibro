@@ -1,4 +1,5 @@
-import { toonMelding } from './meldingen.js?v=131'
+import { toonMelding } from './meldingen.js?v=143'
+// v143: ook in het Engels (taal.js)
 
 function openDB(){
   return new Promise((res,rej)=>{
@@ -41,7 +42,7 @@ export async function checkTimers(){
     const sl='fibro_timer_gemeld_'+t.key
     if(localStorage.getItem(sl)===String(ms)) continue
     localStorage.setItem(sl,String(ms))
-    const bericht=(cfg.bericht||'Er is een afteltimer afgelopen')
+    const bericht=(cfg.bericht||(window.T?T('Er is een afteltimer afgelopen'):'Er is een afteltimer afgelopen'))
     toonMelding(bericht,'#c084fc')
   }
 }

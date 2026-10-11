@@ -1,12 +1,13 @@
-// blokkade.js - toont een balk als je account geblokkeerd is (30-09-2026)
+// blokkade.js - toont een balk als je account geblokkeerd is (30-09-2026; v2 11-10-2026: ook in het Engels)
 // Vraagt mijn_blokkade() op (alleen over jezelf). Testen zonder blokkade:
 // zet ?blokkadetest=1 achter het adres.
 import { supabase } from './supabase.js?v=95'
+const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v142)
 
 function datumTekst(iso) {
   const d = new Date(iso)
   if (isNaN(d)) return ''
-  return d.toLocaleString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleString(window.T ? T.locale : 'nl-NL', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 function toonBalk(b) {
@@ -21,27 +22,25 @@ function toonBalk(b) {
 
   const kop = document.createElement('div')
   kop.style.fontWeight = '600'
-  let tekst = '\u{1F6AB} Je account is geblokkeerd'
   const tot = b.tot ? datumTekst(b.tot) : ''
-  if (tot) tekst += ' tot ' + tot
-  kop.textContent = tekst + '.'
+  kop.textContent = tot ? T('\u{1F6AB} Je account is geblokkeerd tot {tot}.', { tot }) : T('\u{1F6AB} Je account is geblokkeerd.')
   balk.appendChild(kop)
 
   if (b.reden) {
     const r = document.createElement('div')
-    r.textContent = 'Reden: ' + b.reden
+    r.textContent = T('Reden: {reden}', { reden: b.reden })
     balk.appendChild(r)
   }
 
   const uitleg = document.createElement('div')
   uitleg.style.cssText = 'opacity:.85;font-size:12px;margin-top:2px'
-  uitleg.textContent = 'Je kunt je berichten nog lezen, maar niets versturen, schrijven of stemmen.'
+  uitleg.textContent = T('Je kunt je berichten nog lezen, maar niets versturen, schrijven of stemmen.')
   balk.appendChild(uitleg)
 
   const sluit = document.createElement('button')
   sluit.type = 'button'
   sluit.textContent = '\u00D7'
-  sluit.setAttribute('aria-label', 'Melding sluiten')
+  sluit.setAttribute('aria-label', T('Melding sluiten'))
   sluit.style.cssText = 'position:absolute;right:6px;top:calc(4px + env(safe-area-inset-top, 0px));' +
     'width:32px;height:32px;border:0;background:transparent;color:#fff;font-size:22px;cursor:pointer'
   sluit.addEventListener('click', () => balk.remove())

@@ -2,8 +2,10 @@
 // Toont een oproepvenster met beltoon op de pagina zelf (zoals in de chat).
 // Op de iPhone mag geluid alleen na een tik op déze pagina; daarom niet meer
 // meteen doorsturen naar bellen.html, maar pas bij Opnemen.
+// v143: ook in het Engels (taal.js)
 import { supabase } from './supabase.js?v=95'
-import { initBellen, weigerooproep } from './bellen.js?v=131'
+const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v143)
+import { initBellen, weigerooproep } from './bellen.js?v=143'
 
 // beltoon.js laden (klassiek script, zet window.FibroBeltoon)
 function laadBeltoon() {
@@ -41,9 +43,9 @@ function maakVenster() {
   type.style.cssText = 'font-size:16px;opacity:0.6;'
   const rij = document.createElement('div')
   rij.style.cssText = 'display:flex;gap:20px;margin-top:24px;'
-  const weiger = knop('📵', '#f87171', 'Weigeren', weigeren)
-  const neem = knop('📞', '#22c55e', 'Opnemen', () => opnemen(false))
-  const video = knop('📹', '#22c55e', 'Opnemen met video', () => opnemen(true))
+  const weiger = knop('📵', '#f87171', T('Weigeren'), weigeren)
+  const neem = knop('📞', '#22c55e', T('Opnemen'), () => opnemen(false))
+  const video = knop('📹', '#22c55e', T('Opnemen met video'), () => opnemen(true))
   rij.append(weiger, neem, video)
   v.append(avatar, naam, type, rij)
   const stijl = document.createElement('style')
@@ -70,7 +72,7 @@ function toonOproep(info, naam, plaatje) {
   const w = maakVenster()
   zetAvatar(w.avatar, plaatje)
   w.naam.textContent = naam
-  w.type.textContent = info.videoModus ? '📹 Videogesprek...' : '📞 Belt je op...'
+  w.type.textContent = info.videoModus ? T('📹 Videogesprek...') : T('📞 Belt je op...')
   w.video.style.display = info.videoModus ? 'flex' : 'none'
   w.v.style.display = 'flex'
   clearTimeout(verloop)
@@ -93,7 +95,7 @@ function opnemen(video) {
   if (!huidig) return
   window.FibroBeltoon?.stop()
   clearTimeout(verloop)
-  if (venster) venster.type.textContent = 'Verbinding maken...'
+  if (venster) venster.type.textContent = T('Verbinding maken...')
   window.location.href = 'bellen.html?vriend=' + encodeURIComponent(huidig.van) +
     '&naam=' + encodeURIComponent(huidig.naam) + '&inkomend=1&opnemen=1' + (video ? '&video=1' : '')
 }
@@ -109,7 +111,7 @@ export async function startBelLuisteraar() {
   initBellen(session.user.id, {
     onOproep: async (info) => {
       window.FibroBeltoon?.start() // meteen, niet pas na het ophalen van de naam
-      huidig = { van: info.van, naam: 'Onbekend' }
+      huidig = { van: info.van, naam: T('Onbekend') }
       let v = null
       try {
         const r = await supabase.from('profiles')
@@ -118,7 +120,7 @@ export async function startBelLuisteraar() {
         v = r.data
       } catch (e) {}
       if (!huidig || huidig.van !== info.van) return // ondertussen al opgehangen
-      huidig.naam = v?.display_name || v?.username || 'Onbekend'
+      huidig.naam = v?.display_name || v?.username || T('Onbekend')
       toonOproep(info, huidig.naam, v?.avatar_data || v?.avatar_url || '')
     },
     // Beller hing op (of gaf het op) voordat er werd opgenomen

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl" style="background:#1a0a2e;">
+<html lang="nl" data-taal style="background:#1a0a2e;">
 <script>
   const f = localStorage.getItem('fibro_lettertype')
   if (f) {
@@ -13,13 +13,13 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=1"></script>
+<script src="taal.js?v=2"></script>
 <script src="verbinding.js?v=2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Fibro — Bellen</title>
+<title data-t>Fibro — Bellen</title>
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
 :root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:rgba(243,232,255,0.5); }
@@ -48,19 +48,19 @@ body.knoppen-weg #knoppen-gesprek, body.knoppen-weg .terug-btn, body.knoppen-weg
 <link rel="stylesheet" href="stijl.css?v=3">
 </head>
 <body>
-<button class="terug-btn" onclick="window.location.href='chat.html'">← terug</button>
+<button class="terug-btn" onclick="window.location.href='chat.html'" data-t>← terug</button>
 <audio id="remoteAudio" autoplay style="display:none"></audio>
 <video id="remoteMedia" autoplay playsinline></video>
 <video id="lokaalMedia" autoplay playsinline muted></video>
 <div class="overlay" id="ui">
   <div class="bel-avatar" id="avatar">👤</div>
-  <div class="bel-naam" id="naam">Laden...</div>
-  <div class="bel-status" id="status">Verbinden...</div>
+  <div class="bel-naam" id="naam" data-t>Laden...</div>
+  <div class="bel-status" id="status" data-t>Verbinden...</div>
   <div class="gesprek-tijd" id="tijd" style="display:none">0:00</div>
   <div class="bel-knoppen" id="knoppen-keuze" style="display:none;flex-direction:column;align-items:center;gap:16px;">
-    <button onclick="startBellen(false)" style="width:200px;height:56px;border-radius:28px;background:#22c55e;border:none;font-size:18px;cursor:pointer;color:white;font-weight:600;">📞 Bellen</button>
-    <button onclick="startBellen(true)" style="width:200px;height:56px;border-radius:28px;background:#3b82f6;border:none;font-size:18px;cursor:pointer;color:white;font-weight:600;">📹 Videobellen</button>
-    <button onclick="window.location.href='chat.html'" style="width:200px;height:56px;border-radius:28px;background:rgba(255,255,255,0.1);border:0.5px solid rgba(255,255,255,0.2);font-size:16px;cursor:pointer;color:white;">Annuleer</button>
+    <button onclick="startBellen(false)" style="width:200px;height:56px;border-radius:28px;background:#22c55e;border:none;font-size:18px;cursor:pointer;color:white;font-weight:600;" data-t>📞 Bellen</button>
+    <button onclick="startBellen(true)" style="width:200px;height:56px;border-radius:28px;background:#3b82f6;border:none;font-size:18px;cursor:pointer;color:white;font-weight:600;" data-t>📹 Videobellen</button>
+    <button onclick="window.location.href='chat.html'" style="width:200px;height:56px;border-radius:28px;background:rgba(255,255,255,0.1);border:0.5px solid rgba(255,255,255,0.2);font-size:16px;cursor:pointer;color:white;" data-t>Annuleer</button>
   </div>
   <div class="bel-knoppen" id="knoppen-bellen">
     <button class="bel-btn btn-ophangen" onclick="annuleer()">📵</button>
@@ -68,14 +68,14 @@ body.knoppen-weg #knoppen-gesprek, body.knoppen-weg .terug-btn, body.knoppen-weg
   <div class="bel-knoppen" id="knoppen-inkomend" style="display:none;flex-direction:column;gap:10px;">
     <div style="display:flex;gap:14px;justify-content:center;">
       <button class="bel-btn btn-ophangen" onclick="weiger()">📵</button>
-      <button class="bel-btn btn-opnemen" onclick="neem(false)" title="Audio opnemen">📞</button>
-      <button class="bel-btn btn-opnemen" onclick="neem(true)" title="Video opnemen">📹</button>
+      <button class="bel-btn btn-opnemen" onclick="neem(false)" title="Audio opnemen" data-t-attr="title">📞</button>
+      <button class="bel-btn btn-opnemen" onclick="neem(true)" title="Video opnemen" data-t-attr="title">📹</button>
     </div>
   </div>
   <div class="bel-knoppen" id="knoppen-gesprek" style="display:none">
     <button class="bel-btn btn-mic" id="micBtn" onclick="togMic()">🎤</button>
     <button class="bel-btn btn-mic" id="camBtn" onclick="togCam()">📷</button>
-    <button class="bel-btn btn-mic" id="wisselBtn" onclick="wisselCam()" title="Andere camera" style="display:none">🔄</button>
+    <button class="bel-btn btn-mic" id="wisselBtn" onclick="wisselCam()" title="Andere camera" data-t-attr="title" style="display:none">🔄</button>
     <button class="bel-btn btn-ophangen" onclick="hangop()">📵</button>
   </div>
 </div>
@@ -140,11 +140,11 @@ function stopBeltoon() {
 </script>
 <script type="module">
 import { supabase } from './supabase.js?v=95'
-import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo } from './bellen.js?v=131'
+import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo } from './bellen.js?v=143'
 
 const params = new URLSearchParams(window.location.search)
 const vriendId = params.get('vriend')
-const vriendNaam = params.get('naam') || 'Vriend'
+const vriendNaam = params.get('naam') || T('Vriend')
 let timer = null, sec = 0, micAan = true, videoModus = false
 // Wachtkanaal voor een inkomende oproep: hoort het als de beller ophangt, en laat de beller weten als je weigert
 let wachtKanaal = null
@@ -161,7 +161,7 @@ function belNaam(vriendId, username) {
     const n = String(localStorage.getItem('vriend_naam_' + vriendId + '_' + (session?.user?.id || '')) || '').trim()
     if (n) return n
   } catch(e) {}
-  return username || 'Vriend'
+  return username || T('Vriend')
 }
 if (!session) { window.location.href = 'login.html' }
 
@@ -170,14 +170,14 @@ initBellen(session.user.id, {
   onVideoStatus: (actief) => {
     const remoteMedia = document.getElementById('remoteMedia')
     if (remoteMedia) remoteMedia.style.display = actief ? 'block' : 'none'
-    document.getElementById('status').textContent = actief ? '📹 Video aan' : '📞 Audio'
-    setTimeout(() => { if (timer) document.getElementById('status').textContent = 'Verbonden' }, 1500)
+    document.getElementById('status').textContent = actief ? T('📹 Video aan') : T('📞 Audio')
+    setTimeout(() => { if (timer) document.getElementById('status').textContent = T('Verbonden') }, 1500)
   },
   onOproep: async (info) => {
     const { data: v } = await supabase.from('profiles').select('username, avatar_url').eq('id', info.van).single() // v132: alleen wat hier getoond wordt
     document.getElementById('avatar').textContent = v?.avatar_url || '👤'
     document.getElementById('naam').textContent = belNaam(info.van, v?.username)
-    document.getElementById('status').textContent = (videoModus ? '📹 Videogesprek — ' : '📞 Belt je op...')
+    document.getElementById('status').textContent = (videoModus ? T('📹 Videogesprek — ') : T('📞 Belt je op...'))
     document.getElementById('knoppen-bellen').style.display = 'none'
     document.getElementById('knoppen-inkomend').style.display = 'flex'
     startBeltoon('inkomend')
@@ -186,7 +186,7 @@ initBellen(session.user.id, {
     stopBeltoon()
     const wasVerbonden = !!timer
     clearInterval(timer)
-    if (!wasVerbonden && !doorOns) document.getElementById('status').textContent = 'Niet opgenomen'
+    if (!wasVerbonden && !doorOns) document.getElementById('status').textContent = T('Niet opgenomen')
     setTimeout(() => window.location.href = 'chat.html', wasVerbonden ? 800 : 1500)
   }
 })
@@ -194,7 +194,7 @@ initBellen(session.user.id, {
 if (vriendId && !params.get('inkomend')) {
   // Toon keuzescherm
   document.getElementById('knoppen-bellen').style.display = 'none'
-  document.getElementById('status').textContent = 'Kies hoe je wilt bellen'
+  document.getElementById('status').textContent = T('Kies hoe je wilt bellen')
   document.getElementById('knoppen-keuze').style.display = 'flex'
 } else if (vriendId && params.get('inkomend')) {
   // Geef vriendId door aan bellen.js zodat accepteerOproep het kanaal kan openen
@@ -204,7 +204,7 @@ if (vriendId && !params.get('inkomend')) {
   document.getElementById('knoppen-keuze').style.display = 'none'
   document.getElementById('knoppen-bellen').style.display = 'none'
   document.getElementById('knoppen-inkomend').style.display = 'flex'
-  document.getElementById('status').textContent = (videoModus ? '📹 Videogesprek — ' : '📞 Belt je op...')
+  document.getElementById('status').textContent = (videoModus ? T('📹 Videogesprek — ') : T('📞 Belt je op...'))
   if (params.get('opnemen') !== '1') startBeltoon('inkomend')
   wachtKanaal = supabase
     .channel(gesprekKanaalNaam(session.user.id, vriendId), { config: { broadcast: { self: false }, private: true } })
@@ -213,7 +213,7 @@ if (vriendId && !params.get('inkomend')) {
       // Beller hing op voordat er werd opgenomen
       stopBeltoon(); sluitWachtKanaal()
       document.getElementById('knoppen-inkomend').style.display = 'none'
-      document.getElementById('status').textContent = 'Gemiste oproep'
+      document.getElementById('status').textContent = T('Gemiste oproep')
       setTimeout(() => window.location.href = 'chat.html', 1500)
     })
     .subscribe()
@@ -234,7 +234,7 @@ function startTimer() {
   document.getElementById('knoppen-bellen').style.display = 'none'
   document.getElementById('knoppen-inkomend').style.display = 'none'
   document.getElementById('knoppen-gesprek').style.display = 'flex'
-  document.getElementById('status').textContent = 'Verbonden'
+  document.getElementById('status').textContent = T('Verbonden')
   document.getElementById('tijd').style.display = 'block'
   if (videoModus) {
     document.getElementById('remoteMedia').style.display = 'block'
@@ -257,7 +257,7 @@ window.startBellen = async (video) => {
   videoModus = video
   document.getElementById('knoppen-keuze').style.display = 'none'
   document.getElementById('knoppen-bellen').style.display = 'flex'
-  document.getElementById('status').textContent = video ? 'Videobellen...' : 'Aan het bellen...'
+  document.getElementById('status').textContent = video ? T('Videobellen...') : T('Aan het bellen...')
   const gelukt = await belOp(vriendId, video)
   if (gelukt) startBeltoon('uitgaand')
 }
@@ -284,7 +284,7 @@ window.neem = async (video) => {
   // Opnemen-knoppen weg, alleen ophangen tonen tot de verbinding er is
   document.getElementById('knoppen-inkomend').style.display = 'none'
   document.getElementById('knoppen-bellen').style.display = 'flex'
-  document.getElementById('status').textContent = 'Verbinding maken...'
+  document.getElementById('status').textContent = T('Verbinding maken...')
   const ok = await accepteerOproep(video)
   if (!ok) {
     alOpgenomen = false

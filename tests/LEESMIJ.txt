@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 11 oktober 2026 (Fibro in twee talen, stap 1).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 11 oktober 2026 (Fibro in twee talen, portie 1: Vrienden en bellen).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -40,7 +40,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          eerlijk = Over Fibro: wat er echt op de server staat (testscript_eerlijk.py),
                          licht = Profiel opslaan zonder onveranderde foto's (testscript_licht.py),
                          fotos = foto's als WebP of JPEG i.p.v. stilletjes PNG (testscript_fotos.py),
-                         taal = Nederlands en Engels, stap 1: taal.js, taal-en.js, inloggen, uitnodiging, Home (testscript_taal.py))
+                         taal = Nederlands en Engels, stap 1: taal.js, taal-en.js, inloggen, uitnodiging, Home (testscript_taal.py),
+                         taal2 = Engels portie 1: Vrienden, profiel van een vriend, blokkeren, meldingen, bellen (testscript_taal2.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -154,6 +155,11 @@ tools/proef42.py         twee talen, stap 1 (v142). A: in het Nederlands precies
                          woordenlijst gewoon Nederlands. Vaste tijd (page.clock); seconden van de afteltimer tellen
                          niet mee bij het vergelijken. Op de oude code loopt hij vast in C (geen T): dat is goed.
                          python3 -I proef42.py <scratch met tools/server.py> <map> <poort> [oude map voor A]
+tools/proef43.py         twee talen per scherm (v143 en verder): Nederlands precies gelijk aan de oude code (tekst,
+                         titel, title/aria-label/placeholder), Engels zonder ontbrekende vertaling en zonder
+                         Nederlandse woorden. Schermen staan in de lijst SCHERMEN (elke portie voegt er toe).
+                         TOON=1 laat de Engelse tekst zien. Willekeurige uitnodigingscodes tellen niet mee.
+                         python3 -I proef43.py <scratch met tools/server.py> <map> <poort> [oude map|-] [filter]
 tools/taalcheck.py       heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.
@@ -161,6 +167,9 @@ tools/taalcheck.py       heeft elke Nederlandse tekst een Engelse vertaling in t
                          Regels voor nieuwe teksten: T('één vaste tekst', { n }) - nooit T(a ? 'x' : 'y'), maar
                          a ? T('x') : T('y'); geen T(`...`). In html: data-t (tekst, ook met <b>/<span>) of
                          data-t-attr="placeholder,title". Een pagina die af is krijgt <html data-taal>.
+                         In een module: const T = window.T || ((s, v) => ...) (zie meldingen.js); window.T('...')
+                         telt ook. Verandert taal-en.js, dan gaat taal-en.js?v= omhoog in taal.js, en dus
+                         taal.js?v= in alle 12 pagina's.
 tools/nep-supabase.sql   kleine nabootsing van de database (PostgreSQL 16, nep-gegevens) om sql/*.sql vooraf te
                          proberen: initdb + pg_ctl als gebruiker postgres, psql -f nep-supabase.sql, dan het
                          SQL-bestand (regel 'create extension if not exists pg_cron;' eruit: cron is nagebootst).

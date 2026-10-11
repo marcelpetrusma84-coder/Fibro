@@ -1,5 +1,6 @@
-// meldingen.js — buzz en online-meldingen op elke pagina (4 september 2026)
+// meldingen.js — buzz en online-meldingen op elke pagina (4 september 2026; v143: ook in het Engels)
 import { supabase } from './supabase.js?v=95'
+const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v143)
 import { startParen, opOnline } from './paren.js?v=2'
 import { houOpen } from './lijntjes.js?v=1'
 
@@ -105,7 +106,7 @@ function buzzBinnen(vanNaam, vanId) {
   if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200])
   document.body.classList.add('fibro-schudt')
   setTimeout(() => document.body.classList.remove('fibro-schudt'), 700)
-  toonMelding('\u26a1 ' + (vanNaam || 'Iemand') + ' buzzt je!', 'rgba(250,204,21,0.7)', vanId ? () => { window.location.href = 'chat.html?vriend=' + vanId } : null)
+  toonMelding(T('\u26a1 {naam} buzzt je!', { naam: vanNaam || T('Iemand') }), 'rgba(250,204,21,0.7)', vanId ? () => { window.location.href = 'chat.html?vriend=' + vanId } : null)
 }
 
 // Naam van een vriend ophalen (kort gecachet)
@@ -114,8 +115,8 @@ async function haalNaam(id) {
   if (naamCache[id]) return naamCache[id]
   try {
     const { data } = await supabase.from('profiles').select('username').eq('id', id).single()
-    naamCache[id] = data?.username || 'Een vriend'
-  } catch(e) { naamCache[id] = 'Een vriend' }
+    naamCache[id] = data?.username || T('Een vriend')
+  } catch(e) { naamCache[id] = T('Een vriend') }
   return naamCache[id]
 }
 
@@ -173,7 +174,7 @@ function startOnlineLuisteraar() {
       if (typeof w.wegMs === 'number' && w.wegMs < ONLINE_MELDING_NA_MS) return
       if (!aan(ONLINE_UIT) || localStorage.getItem('fibro_ik_offline') === '1') return
       const id = w.id
-      toonMelding('\u{1F7E2} ' + (await haalNaam(id)) + ' is online', 'rgba(74,222,128,0.6)', () => { window.location.href = 'chat.html?vriend=' + id })
+      toonMelding(T('\u{1F7E2} {naam} is online', { naam: await haalNaam(id) }), 'rgba(74,222,128,0.6)', () => { window.location.href = 'chat.html?vriend=' + id })
     })
   }
   startParen(eigenId)

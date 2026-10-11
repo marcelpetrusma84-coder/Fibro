@@ -1,8 +1,9 @@
-// persoonblok.js - gebruikers blokkeren elkaar zelf (versie 2, 30-09-2026)
+// persoonblok.js - gebruikers blokkeren elkaar zelf (versie 3, 30-09-2026; v3 11-10-2026: ook in het Engels)
 // Blokkeren zet de vriendschap op 'geblokkeerd'; de geblokkeerde staat
 // onderaan in je vriendenlijst. Menu's: kiesVriendActie en kiesGeblokkeerdActie.
 // toonGeblokkeerden(id): lijstje met Deblokkeren-knoppen (profiel.html).
 import { supabase } from './supabase.js?v=95'
+const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v142)
 
 async function roep(naam, args) {
   const { data, error } = await supabase.rpc(naam, args)
@@ -71,29 +72,29 @@ function kiesUit(naam, sub, opties) {
   })
 }
 
-const ANNULEER = ['Annuleren', 'rgba(243,232,255,.6)', 'rgba(255,255,255,.1)', null]
+const ANNULEER = [T('Annuleren'), 'rgba(243,232,255,.6)', 'rgba(255,255,255,.1)', null]
 
 // Geeft 'blokkeren', 'verwijderen' of null.
 export function kiesVriendActie(naam) {
-  return kiesUit(naam, 'Wat wil je doen?', [
-    ['\u{1F6AB} Blokkeren', '#f87171', 'rgba(248,113,113,.35)', 'blokkeren'],
-    ['\u{1F5D1}\uFE0F Verwijderen uit vriendenlijst', '#f3e8ff', 'rgba(255,255,255,.15)', 'verwijderen'],
+  return kiesUit(naam, T('Wat wil je doen?'), [
+    [T('\u{1F6AB} Blokkeren'), '#f87171', 'rgba(248,113,113,.35)', 'blokkeren'],
+    [T('\u{1F5D1}\uFE0F Verwijderen uit vriendenlijst'), '#f3e8ff', 'rgba(255,255,255,.15)', 'verwijderen'],
     ANNULEER
   ])
 }
 
 // Geeft 'deblokkeren', 'verwijderen' of null.
 export function kiesGeblokkeerdActie(naam) {
-  return kiesUit(naam, '\u{1F6AB} Geblokkeerd', [
-    ['\u2705 Deblokkeren', '#22c55e', 'rgba(34,197,94,.35)', 'deblokkeren'],
-    ['\u{1F5D1}\uFE0F Verwijderen', '#f87171', 'rgba(248,113,113,.35)', 'verwijderen'],
+  return kiesUit(naam, T('\u{1F6AB} Geblokkeerd'), [
+    [T('\u2705 Deblokkeren'), '#22c55e', 'rgba(34,197,94,.35)', 'deblokkeren'],
+    [T('\u{1F5D1}\uFE0F Verwijderen'), '#f87171', 'rgba(248,113,113,.35)', 'verwijderen'],
     ANNULEER
   ])
 }
 
 function datum(iso) {
   const d = new Date(iso)
-  return isNaN(d) ? '' : d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
+  return isNaN(d) ? '' : d.toLocaleDateString(window.T ? T.locale : 'nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 export async function toonGeblokkeerden(id) {
@@ -108,8 +109,8 @@ export async function toonGeblokkeerden(id) {
 
   const { data, error } = await supabase.rpc('mijn_geblokkeerden')
   vak.textContent = ''
-  if (error) { regel('Laden mislukt.'); console.warn('[persoonblok]', error.message); return }
-  if (!data || data.length === 0) { regel('Je hebt niemand geblokkeerd.'); return }
+  if (error) { regel(T('Laden mislukt.')); console.warn('[persoonblok]', error.message); return }
+  if (!data || data.length === 0) { regel(T('Je hebt niemand geblokkeerd.')); return }
 
   for (const p of data) {
     const rij = document.createElement('div')
@@ -117,24 +118,24 @@ export async function toonGeblokkeerden(id) {
     const info = document.createElement('div')
     info.style.cssText = 'flex:1;min-width:0'
     const naam = document.createElement('div')
-    naam.textContent = '\u{1F6AB} @' + (p.username || 'onbekend')
+    naam.textContent = '\u{1F6AB} @' + (p.username || T('onbekend'))
     naam.style.cssText = 'font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'
     const sinds = document.createElement('div')
-    sinds.textContent = 'Geblokkeerd op ' + datum(p.sinds)
+    sinds.textContent = T('Geblokkeerd op {datum}', { datum: datum(p.sinds) })
     sinds.style.cssText = 'font-size:12px;color:var(--muted)'
     info.append(naam, sinds)
 
     const knop = document.createElement('button')
     knop.type = 'button'
-    knop.textContent = 'Deblokkeren'
+    knop.textContent = T('Deblokkeren')
     knop.style.cssText = 'flex-shrink:0;padding:8px 12px;min-height:36px;border-radius:20px;font-size:13px;' +
       'font-family:inherit;cursor:pointer;background:var(--card);color:var(--text);border:0.5px solid var(--border)'
     knop.addEventListener('click', async () => {
-      const n = '@' + (p.username || 'onbekend')
-      if (!confirm(n + ' deblokkeren?\n\nAls jullie vrienden waren, zijn jullie dat daarna weer.')) return
+      const n = '@' + (p.username || T('onbekend'))
+      if (!confirm(T('{naam} deblokkeren?\n\nAls jullie vrienden waren, zijn jullie dat daarna weer.', { naam: n }))) return
       knop.disabled = true
       const ok = await deblokkeerPersoon(p.id)
-      if (!ok) { knop.disabled = false; alert('Het is niet gelukt. Probeer het later opnieuw.'); return }
+      if (!ok) { knop.disabled = false; alert(T('Het is niet gelukt. Probeer het later opnieuw.')); return }
       await toonGeblokkeerden(id)
     })
 

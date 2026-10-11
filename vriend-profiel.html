@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl" style="background:#1a0a2e;">
+<html lang="nl" data-taal style="background:#1a0a2e;">
 <script>
   const f = localStorage.getItem('fibro_lettertype')
   if (f) {
@@ -13,10 +13,10 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=1"></script>
+<script src="taal.js?v=2"></script>
 <script src="verbinding.js?v=2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fibro — Profiel</title>
+<title data-t>Fibro — Profiel</title>
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
@@ -92,10 +92,10 @@ body.heeft-wallpaper::before { display:block; }
 <div class="wallpaper-bg" id="wallpaperBg"></div>
 
 <div class="top-bar" role="banner">
-  <button class="back-btn" onclick="history.back()">← terug</button>
-  <span class="top-title" id="paginaTitel">Profiel</span>
+  <button class="back-btn" onclick="history.back()" data-t>← terug</button>
+  <span class="top-title" id="paginaTitel" data-t>Profiel</span>
 </div>
-<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Fibro – Profiel van een vriend</h1>
+<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0" data-t>Fibro – Profiel van een vriend</h1>
 
 
 <div class="profile-hero">
@@ -103,12 +103,12 @@ body.heeft-wallpaper::before { display:block; }
     <div class="avatar-inner" id="avatarEmoji">⏳</div>
   </div>
   <div style="flex:1">
-    <div class="p-name" id="profielNaam">Laden...</div>
+    <div class="p-name" id="profielNaam" data-t>Laden...</div>
     <div class="p-username" id="profielUsername">@...</div>
     <div class="p-bio" id="profielBio"></div>
     <div class="online-badge">
       <div class="online-dot" id="onlineDot"></div>
-      <span id="onlineLabel">Laden...</span>
+      <span id="onlineLabel" data-t>Laden...</span>
     </div>
   </div>
 </div>
@@ -116,28 +116,28 @@ body.heeft-wallpaper::before { display:block; }
 <div class="blocks">
 
   <div class="block">
-    <div class="block-title">Mood</div>
+    <div class="block-title" data-t>Mood</div>
     <div class="mood-row">
       <div class="mood-emoji" id="moodEmoji">💭</div>
-      <div class="mood-text" id="moodTekst">Laden...</div>
+      <div class="mood-text" id="moodTekst" data-t>Laden...</div>
     </div>
   </div>
 
   <div id="vriendWidgetGrid" class="widget-grid" style="display:none"></div>
 
   <div class="block">
-    <div class="block-title">💬 Stuur een bericht</div>
-    <button class="chat-btn" onclick="naarChat()">Chat openen</button>
+    <div class="block-title" data-t>💬 Stuur een bericht</div>
+    <button class="chat-btn" onclick="naarChat()" data-t>Chat openen</button>
   </div>
 
 </div>
 
 </main>
 <div class="bottom-nav" role="navigation" aria-label="Menu">
-  <div class="nav-item" onclick="window.location.href='index.html'"><div class="nav-icon">🏠</div>Home</div>
-  <div class="nav-item active" onclick="window.location.href='vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
-  <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
-  <div class="nav-item" onclick="window.location.href='profiel.html'"><div class="nav-icon">👤</div>Profiel</div>
+  <div class="nav-item" onclick="window.location.href='index.html'" data-t><div class="nav-icon">🏠</div>Home</div>
+  <div class="nav-item active" onclick="window.location.href='vrienden.html'" data-t><div class="nav-icon">👥</div>Vrienden</div>
+  <div class="nav-item" onclick="window.location.href='chat.html'" data-t><div class="nav-icon">💬</div>Chat</div>
+  <div class="nav-item" onclick="window.location.href='profiel.html'" data-t><div class="nav-icon">👤</div>Profiel</div>
 </div>
 
 <script type="module">
@@ -148,7 +148,7 @@ body.heeft-wallpaper::before { display:block; }
   import { haalVriendFotos } from './vriendfotos.js?v=2'
   import { initSync, vraagVriendVideo } from './sync.js?v=129'
   import { eisSessie, startBewaking } from './sessie.js?v=95'
-  import { startMeldingen } from './meldingen.js?v=131'
+  import { startMeldingen } from './meldingen.js?v=143'
   pasBlokstijlToe()
 
   var vriendId = null
@@ -280,7 +280,7 @@ body.heeft-wallpaper::before { display:block; }
     // Mood splitsen in emoji + tekst
     const mood = data.mood || ''
     const moodEmoji = mood.match(/^\p{Emoji}/u)?.[0] || '💭'
-    const moodTekst = mood.replace(/^\p{Emoji}\s*/u, '') || 'Geen mood'
+    const moodTekst = mood.replace(/^\p{Emoji}\s*/u, '') || T('Geen mood')
     document.getElementById('moodEmoji').textContent = moodEmoji
     document.getElementById('moodTekst').textContent = moodTekst
 
@@ -290,7 +290,7 @@ body.heeft-wallpaper::before { display:block; }
     dot.classList.toggle('online', online)
     document.getElementById('onlineLabel').textContent = online
       ? 'Online'
-      : (data.offline_bericht ? `${data.offline_emoji || '💤'} ${data.offline_bericht}` : 'Offline')
+      : (data.offline_bericht ? `${data.offline_emoji || '💤'} ${data.offline_bericht}` : T('Offline'))
 
     // Kleuren
     if (vKleur(data.accent_kleur)) document.documentElement.style.setProperty('--accent', vKleur(data.accent_kleur))
@@ -407,7 +407,7 @@ body.heeft-wallpaper::before { display:block; }
       }
       // Gastenboek-widget: dezelfde inhoud als op de homepagina
       if (w.id === 'gastenboek') {
-        el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">📖</span><span class="widget-titel">Gastenboek</span></div><div class="widget-inhoud gbw-inhoud" style="align-items:stretch;text-align:left;gap:8px;background:rgba(20,8,36,0.72);border-radius:12px;padding:10px;"></div>'
+        el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">📖</span><span class="widget-titel">' + T('Gastenboek') + '</span></div><div class="widget-inhoud gbw-inhoud" style="align-items:stretch;text-align:left;gap:8px;background:rgba(20,8,36,0.72);border-radius:12px;padding:10px;"></div>'
         grid.appendChild(el)
         await renderGastenboekWidget(el.querySelector('.gbw-inhoud'), vriendId)
         continue
@@ -415,15 +415,15 @@ body.heeft-wallpaper::before { display:block; }
       // v129: spel van de vriend: tikken = zelf spelen tegen de computer (zoals op Home)
       if ((w.id || '').startsWith('spel_')) {
         const spel = w.id.slice(5)
-        el.innerHTML = '<div class="widget-inhoud" style="flex-direction:row;gap:10px;cursor:pointer"><span style="font-size:30px;line-height:1">' + vEsc(w.icon || '\u{1F3AE}') + '</span><span style="font-size:13px;font-weight:600;color:#fff">\u25B6 Spelen</span></div>'
+        el.innerHTML = '<div class="widget-inhoud" style="flex-direction:row;gap:10px;cursor:pointer"><span style="font-size:30px;line-height:1">' + vEsc(w.icon || '\u{1F3AE}') + '</span><span style="font-size:13px;font-weight:600;color:#fff">' + T('\u25B6 Spelen') + '</span></div>'
         el.style.cursor = 'pointer'
         el.onclick = () => { location.href = 'spel.html?spel=' + encodeURIComponent(spel) }
         grid.appendChild(el)
         continue
       }
       // v129: poll/timer/quote zonder inhoud: zeggen dat er nog niets staat (in plaats van alleen een icoon)
-      const leegTekst = { poll: 'Nog geen poll', afteltimer: 'Nog geen datum', opteltimer: 'Nog geen datum', quote: 'Nog geen quote' }[w.id]
-      el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">' + vEsc(w.icon || '🧩') + '</span><span class="widget-titel">' + vEsc(w.titel || w.id) + '</span></div><div class="widget-inhoud">' + (leegTekst ? '<div style="font-size:13px;color:var(--muted)">' + leegTekst + '</div>' : '<div class="wi-icon">' + vEsc(w.icon || '🧩') + '</div>') + '</div>'
+      const leegTekst = { poll: T('Nog geen poll'), afteltimer: T('Nog geen datum'), opteltimer: T('Nog geen datum'), quote: T('Nog geen quote') }[w.id]
+      el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">' + vEsc(w.icon || '🧩') + '</span><span class="widget-titel">' + vEsc(w.titel ? T(w.titel) : w.id) + '</span></div><div class="widget-inhoud">' + (leegTekst ? '<div style="font-size:13px;color:var(--muted)">' + leegTekst + '</div>' : '<div class="wi-icon">' + vEsc(w.icon || '🧩') + '</div>') + '</div>'
       grid.appendChild(el)
     }
     grid.style.display = ''
@@ -490,10 +490,10 @@ body.heeft-wallpaper::before { display:block; }
           + '<span style="font-size:12px;color:var(--accent);font-weight:600">' + (toonPct ? pct + '%' : '') + '</span>'
           + '</div></div>'
       }).join('')
-      const onder = !navigator.onLine ? '\u{1F4F4} Zonder internet kun je niet stemmen'
-        : !kanStemmen ? 'Stemmen kan nog niet op deze poll'
-        : alGestemd ? tot + ' stemmen'
-        : 'Tik op je keuze'
+      const onder = !navigator.onLine ? T('\u{1F4F4} Zonder internet kun je niet stemmen')
+        : !kanStemmen ? T('Stemmen kan nog niet op deze poll')
+        : alGestemd ? T('{n} stemmen', { n: tot })
+        : T('Tik op je keuze')
       el.innerHTML = '<div style="position:relative;z-index:2;padding:10px 8px">'
         + '<div style="font-size:14px;font-weight:600;margin-bottom:8px">' + escVW(p.vraag) + '</div>'
         + '<div style="display:flex;flex-direction:column;gap:6px">' + balken + '</div>'
@@ -509,9 +509,9 @@ body.heeft-wallpaper::before { display:block; }
               eigenaar_in: vriendId, poll_id_in: p.id,
               optie_in: parseInt(knop.dataset.i, 10), aantal_opties: p.opties.length
             })
-            if (error) { alert('Stemmen is niet gelukt. Probeer het later nog eens.'); console.error('[poll]', error) }
-            else if (data === 'geen vriend') alert('Je kunt alleen stemmen op de poll van een vriend.')
-            else if (data && data !== 'ok' && data !== 'al gestemd') alert('Stemmen is niet gelukt: ' + data)
+            if (error) { alert(T('Stemmen is niet gelukt. Probeer het later nog eens.')); console.error('[poll]', error) }
+            else if (data === 'geen vriend') alert(T('Je kunt alleen stemmen op de poll van een vriend.'))
+            else if (data && data !== 'ok' && data !== 'al gestemd') alert(T('Stemmen is niet gelukt: {fout}', { fout: data }))
           } catch (e) { console.error('[poll]', e) }
           await teken()
         }
@@ -544,7 +544,7 @@ body.heeft-wallpaper::before { display:block; }
     await vriendAchtergrond(el, vriendId, soort)
     el.innerHTML = '<div style="text-align:center;position:relative;z-index:2;padding:8px 4px">'
       + '<div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--accent);text-shadow:0 1px 4px rgba(0,0,0,0.7)">'
-      + escVW(cfg.bericht || (soort === 'aftel' ? 'Aftellen' : 'Optellen')) + '</div>'
+      + escVW(cfg.bericht || (soort === 'aftel' ? T('Aftellen') : T('Optellen'))) + '</div>'
       + '<div class="vt-cijfers" style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap"></div></div>'
     const doel = el.querySelector('.vt-cijfers')
     const blok = (n,l) => '<div style="display:flex;flex-direction:column;align-items:center;background:rgba(192,132,252,0.15);border-radius:8px;padding:5px 7px;min-width:42px"><span style="font-size:18px;font-weight:700;color:var(--accent);font-family:monospace">' + String(n).padStart(2,'0') + '</span><span style="font-size:9px;color:rgba(255,255,255,0.8)">' + l + '</span></div>'
@@ -554,12 +554,12 @@ body.heeft-wallpaper::before { display:block; }
       const mom = new Date(cfg.datum + 'T' + (cfg.tijd || '00:00') + ':00')
       const diff = soort === 'aftel' ? (mom - new Date()) : (new Date() - mom)
       if (diff <= 0) {
-        doel.innerHTML = soort === 'aftel' ? 'Het is zover!' : 'Nog niet begonnen'
+        doel.innerHTML = soort === 'aftel' ? T('Het is zover!') : T('Nog niet begonnen')
         clearInterval(tr); return
       }
       const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000)
       const m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000)
-      doel.innerHTML = blok(d,'dagen') + blok(h,'uur') + blok(m,'min') + blok(s,'sec')
+      doel.innerHTML = blok(d,T('dagen')) + blok(h,T('uur')) + blok(m,T('min')) + blok(s,T('sec'))
     }
     upd(); tr = setInterval(upd, 1000)
     return true
@@ -587,8 +587,8 @@ body.heeft-wallpaper::before { display:block; }
       // Staat de video hier nog niet, dan wordt hij nu pas bij de vriend opgehaald (v112).
       el.innerHTML = '<div style="display:flex;flex-direction:column;width:100%;height:100%;gap:6px;">'
         + '<div class="vid-plek" style="position:relative;flex:1;min-height:0;border-radius:10px;overflow:hidden;background:#000;">'
-        + '<div class="vid-melding" style="position:absolute;inset:0;z-index:2;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;padding:0 12px;text-align:center;">Video laden...</div></div>'
-        + '<div style="display:flex;justify-content:flex-start;"><button type="button" class="vid-sluit" style="background:rgba(255,255,255,0.12);color:#fff;border:0.5px solid rgba(255,255,255,0.14);border-radius:16px;padding:6px 14px;font-size:12px;cursor:pointer;">&#10005; Sluiten</button></div></div>'
+        + '<div class="vid-melding" style="position:absolute;inset:0;z-index:2;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;padding:0 12px;text-align:center;">' + T('Video laden...') + '</div></div>'
+        + '<div style="display:flex;justify-content:flex-start;"><button type="button" class="vid-sluit" style="background:rgba(255,255,255,0.12);color:#fff;border:0.5px solid rgba(255,255,255,0.14);border-radius:16px;padding:6px 14px;font-size:12px;cursor:pointer;">' + T('✕ Sluiten') + '</button></div></div>'
       const plek = el.querySelector('.vid-plek')
       const meld = t => { const m = el.querySelector('.vid-melding'); if (m) { m.textContent = t; m.style.display = t ? 'flex' : 'none' } }
       let url = null
@@ -600,22 +600,22 @@ body.heeft-wallpaper::before { display:block; }
       el.querySelector('.vid-sluit').onclick = () => { stop(); renderVriendVideo(el, vriendId) }
       let data = vVideo(await laadFotoUitDB('vriend_' + vriendId + '_video_data'))
       if (!data) {
-        meld('Video ophalen bij je vriend...')
+        meld(T('Video ophalen bij je vriend...'))
         try {
-          await vraagVriendVideo(vriendId, p => { if (plek.isConnected) meld('Video ophalen... ' + Math.round(p * 100) + '%') })
+          await vraagVriendVideo(vriendId, p => { if (plek.isConnected) meld(T('Video ophalen... {p}%', { p: Math.round(p * 100) })) })
         } catch (e) {
           const r = e && e.message
           if (r === 'afgebroken' || !plek.isConnected) return
-          meld(r === 'offline' ? 'Je vriend is nu niet online. De video kan alleen worden opgehaald als jullie allebei Fibro open hebben.'
-            : r === 'relay' ? 'Jullie zijn alleen via de relay-server verbonden. Video\u2019s worden daarom niet opgehaald (dat kost te veel data).'
-            : r === 'geen-video' ? 'Je vriend heeft deze video niet meer.'
-            : r === 'ander-tabblad' ? 'Fibro is ook in een ander tabblad open. Sluit dat en probeer het opnieuw.'
-            : 'De video kon niet worden opgehaald. Probeer het zo nog eens.')
+          meld(r === 'offline' ? T('Je vriend is nu niet online. De video kan alleen worden opgehaald als jullie allebei Fibro open hebben.')
+            : r === 'relay' ? T('Jullie zijn alleen via de relay-server verbonden. Video\u2019s worden daarom niet opgehaald (dat kost te veel data).')
+            : r === 'geen-video' ? T('Je vriend heeft deze video niet meer.')
+            : r === 'ander-tabblad' ? T('Fibro is ook in een ander tabblad open. Sluit dat en probeer het opnieuw.')
+            : T('De video kon niet worden opgehaald. Probeer het zo nog eens.'))
           return
         }
         if (!plek.isConnected) return
         data = vVideo(await laadFotoUitDB('vriend_' + vriendId + '_video_data'))
-        if (!data) { meld('De video kon niet worden opgehaald. Probeer het zo nog eens.'); return }
+        if (!data) { meld(T('De video kon niet worden opgehaald. Probeer het zo nog eens.')); return }
       }
       let blob = null
       try {
@@ -627,18 +627,18 @@ body.heeft-wallpaper::before { display:block; }
           const u = new Uint8Array(s.length)
           for (let j = 0; j < s.length; j++) u[j] = s.charCodeAt(j)
           delen.push(u)
-          meld('Video laden... ' + Math.round(Math.min(1, (i + STAP - k - 1) / tot) * 100) + '%')
+          meld(T('Video laden... {p}%', { p: Math.round(Math.min(1, (i + STAP - k - 1) / tot) * 100) }))
           await new Promise(r => setTimeout(r, 0))
         }
         blob = new Blob(delen, { type })
-      } catch(e) { meld('Video kon niet worden geladen.'); return }
+      } catch(e) { meld(T('Video kon niet worden geladen.')); return }
       if (!plek.isConnected) return
       url = URL.createObjectURL(blob)
       const v = document.createElement('video')
       v.controls = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.preload = 'auto'
       v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;'
-      v.onloadedmetadata = () => { if (!v.videoWidth) meld('Dit toestel kan het beeld van deze video niet tonen (alleen geluid).'); else meld('') }
-      v.onerror = () => { meld('Deze video kan op dit toestel niet worden afgespeeld' + (v.error ? ' (fout ' + v.error.code + ')' : '') + '.') }
+      v.onloadedmetadata = () => { if (!v.videoWidth) meld(T('Dit toestel kan het beeld van deze video niet tonen (alleen geluid).')); else meld('') }
+      v.onerror = () => { meld(v.error ? T('Deze video kan op dit toestel niet worden afgespeeld (fout {code}).', { code: v.error.code }) : T('Deze video kan op dit toestel niet worden afgespeeld.')) }
       v.src = url
       plek.appendChild(v)
       try { const p = v.play(); if (p && p.catch) p.catch(() => {}) } catch(e) {}
@@ -683,14 +683,14 @@ async function renderVriendMuziek(el) {
     const render = () => {
       const t = tracks[idx]
       el.innerHTML = `
-        <div class="widget-header"><span class="widget-icon-sm">🎵</span><span class="widget-titel">Muziek</span></div>
+        <div class="widget-header"><span class="widget-icon-sm">🎵</span><span class="widget-titel">${T('Muziek')}</span></div>
         <div class="widget-inhoud" style="align-items:stretch;text-align:left;gap:8px;">
           <div style="display:flex;align-items:center;gap:10px;">
             <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden;">
               ${/^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=]+$/i.test(String(t.cover||'').trim()) ? '<img src="' + t.cover + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">' : '🎵'}
             </div>
             <div style="flex:1;min-width:0;">
-              <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escH(t.naam || 'Nummer')}</div>
+              <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escH(t.naam || T('Nummer'))}</div>
               <div style="font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escH(t.artiest || '')}</div>
             </div>
           </div>
@@ -835,11 +835,11 @@ async function renderVriendMuziek(el) {
 
     // v128: zonder internet niet op de server wachten (supabase-js probeert het zelf ~7 s opnieuw)
     if (!navigator.onLine) {
-      toonZonderVerbinding(getoond, '\u{1F4F4} Geen internet')
+      toonZonderVerbinding(getoond, T('\u{1F4F4} Geen internet'))
       window.addEventListener('online', () => { haalVers(cacheKey) }, { once: true })
       return
     }
-    if (!(await haalVers(cacheKey)) && !getoond) toonZonderVerbinding(false, '\u26A0\uFE0F Laden lukte niet')
+    if (!(await haalVers(cacheKey)) && !getoond) toonZonderVerbinding(false, T('\u26A0\uFE0F Laden lukte niet'))
   }
 
   // v128: profiel nog nooit geopend? Dan wat Vrienden of Chat op dit toestel bewaard hebben
@@ -863,11 +863,11 @@ async function renderVriendMuziek(el) {
     document.getElementById('onlineDot').classList.remove('online')
     document.getElementById('onlineLabel').textContent = tekst
     if (getoond) return
-    const naam = vriendNaam('Vriend')
+    const naam = vriendNaam(T('Vriend'))
     document.getElementById('profielNaam').textContent = naam
     document.getElementById('paginaTitel').textContent = naam
     document.getElementById('moodEmoji').textContent = '\u{1F4F4}'
-    document.getElementById('moodTekst').textContent = 'Dit profiel staat nog niet op dit toestel'
+    document.getElementById('moodTekst').textContent = T('Dit profiel staat nog niet op dit toestel')
     toonAvatar(null, '\u{1F464}')
   }
 
@@ -996,12 +996,12 @@ async function renderVriendMuziek(el) {
 
     const wanneer = iso => {
       const s = Math.floor((Date.now() - new Date(iso)) / 1000)
-      if (s < 60) return 'zojuist'
-      if (s < 3600) return Math.floor(s/60) + ' min geleden'
-      if (s < 86400) return Math.floor(s/3600) + ' uur geleden'
-      if (s < 172800) return 'gisteren'
-      if (s < 604800) return Math.floor(s/86400) + ' dagen geleden'
-      return new Date(iso).toLocaleDateString('nl-NL', { day:'numeric', month:'short' })
+      if (s < 60) return T('zojuist')
+      if (s < 3600) return T('{n} min geleden', { n: Math.floor(s/60) })
+      if (s < 86400) return T('{n} uur geleden', { n: Math.floor(s/3600) })
+      if (s < 172800) return T('gisteren')
+      if (s < 604800) return T('{n} dagen geleden', { n: Math.floor(s/86400) })
+      return new Date(iso).toLocaleDateString(T.locale, { day:'numeric', month:'short' })
     }
 
     // De omslag-beweging staat één keer in de pagina.
@@ -1115,8 +1115,8 @@ async function renderVriendMuziek(el) {
       <div id="gbwLijst" class="gb-blad" style="flex:1;min-height:0;overflow:hidden"></div>
       <div id="gbwLijst-nav" style="display:flex;align-items:center;gap:8px;font-size:12px;color:#8a7f6d;padding:4px 0 2px"></div>
       <div style="display:flex;align-items:center;gap:8px;border-top:1px solid rgba(90,70,40,0.25);padding-top:8px">
-        <input id="gbwInvoer" maxlength="300" placeholder="Schrijf iets in het boek..." style="flex:1;min-width:0;background:transparent;border:0;outline:0;font-family:inherit;font-size:14px;color:#2f2a20;padding:2px 0">
-        <button id="gbwKnop" title="Plaatsen" style="background:transparent;border:0;cursor:pointer;font-size:17px;line-height:1;color:#4a5a7a;padding:2px 4px">\u2712</button>
+        <input id="gbwInvoer" maxlength="300" placeholder="${T('Schrijf iets in het boek...')}" style="flex:1;min-width:0;background:transparent;border:0;outline:0;font-family:inherit;font-size:14px;color:#2f2a20;padding:2px 0">
+        <button id="gbwKnop" title="${T('Plaatsen')}" style="background:transparent;border:0;cursor:pointer;font-size:17px;line-height:1;color:#4a5a7a;padding:2px 4px">\u2712</button>
       </div>`
 
     let alles = []
@@ -1147,7 +1147,7 @@ async function renderVriendMuziek(el) {
         `<button data-blader="${richting}" style="background:transparent;border:0;font-family:inherit;font-size:16px;line-height:1;padding:2px 6px;color:#4a5a7a;cursor:${uit?'default':'pointer'};opacity:${uit?0.25:1}" ${uit?'disabled':''}>${teken}</button>`
       nav.innerHTML =
         knop('terug', '\u2039', blad === 0) +
-        `<span style="margin:0 auto">blz. ${blad + 1} van ${bladen()}</span>` +
+        `<span style="margin:0 auto">${T('blz. {n} van {m}', { n: blad + 1, m: bladen() })}</span>` +
         knop('vooruit', '\u203A', blad >= bladen() - 1)
       nav.querySelectorAll('[data-blader]').forEach(b => {
         b.addEventListener('click', () => blader(b.dataset.blader))
@@ -1159,7 +1159,7 @@ async function renderVriendMuziek(el) {
       if (!l) return
       if (!alles.length) {
         l.innerHTML = '<div style="font-size:14px;font-style:italic;color:#8a7f6d;padding:14px 4px">' +
-          (nietBewaard ? '\u{1F4F4} Geen internet. Dit gastenboek staat nog niet op dit toestel.' : 'Dit boek is nog leeg.') + '</div>'
+          (nietBewaard ? T('\u{1F4F4} Geen internet. Dit gastenboek staat nog niet op dit toestel.') : T('Dit boek is nog leeg.')) + '</div>'
         tekenNav()
         return
       }
@@ -1207,7 +1207,7 @@ async function renderVriendMuziek(el) {
       if (!inp) return
       const t = inp.value.trim()
       if (!t || t.length > 300) return
-      if (!navigator.onLine) { inp.placeholder = '\u{1F4F4} Geen internet, probeer het straks nog eens'; return } // v128: tekst blijft staan
+      if (!navigator.onLine) { inp.placeholder = T('\u{1F4F4} Geen internet, probeer het straks nog eens'); return } // v128: tekst blijft staan
       inp.value = ''
       const { error } = await supabase.from('guestbook_entries').insert({
         profile_id: uid,
@@ -1281,11 +1281,11 @@ async function renderVriendMuziek(el) {
   window.ontvriend = async function () {
     if (!huidigeUser || !vriendId) return
     var mijnId = huidigeUser.id
-    var naam = String(localStorage.getItem('vriend_naam_' + vriendId + '_' + mijnId) || '').trim() || 'deze vriend'
-    if (!confirm('Wil je ' + naam + ' uit je vriendenlijst halen?\n\nJullie verdwijnen allebei uit elkaars lijst. Berichten sturen en bellen kan daarna niet meer. Opnieuw toevoegen kan alleen met een nieuwe uitnodigingslink.')) return
+    var naam = String(localStorage.getItem('vriend_naam_' + vriendId + '_' + mijnId) || '').trim() || T('deze vriend')
+    if (!confirm(T('Wil je {naam} uit je vriendenlijst halen?\n\nJullie verdwijnen allebei uit elkaars lijst. Berichten sturen en bellen kan daarna niet meer. Opnieuw toevoegen kan alleen met een nieuwe uitnodigingslink.', { naam }))) return
 
     var knop = document.getElementById('ontvriend-btn')
-    if (knop) { knop.disabled = true; knop.textContent = 'bezig...' }
+    if (knop) { knop.disabled = true; knop.textContent = T('bezig...') }
 
     var res = await supabase
       .from('friendships')
@@ -1294,19 +1294,19 @@ async function renderVriendMuziek(el) {
       .select()
 
     if (res.error) {
-      alert('Het is niet gelukt: ' + res.error.message)
-      if (knop) { knop.disabled = false; knop.textContent = 'Vriendschap beeindigen' }
+      alert(T('Het is niet gelukt: {fout}', { fout: res.error.message }))
+      if (knop) { knop.disabled = false; knop.textContent = T('Vriendschap beeindigen') }
       return
     }
     if (!res.data || res.data.length === 0) {
-      alert('Er is niets verwijderd. Waarschijnlijk ontbreekt de DELETE-policy op friendships.')
-      if (knop) { knop.disabled = false; knop.textContent = 'Vriendschap beeindigen' }
+      alert(T('Er is niets verwijderd. Waarschijnlijk ontbreekt de DELETE-policy op friendships.'))
+      if (knop) { knop.disabled = false; knop.textContent = T('Vriendschap beeindigen') }
       return
     }
 
     await wisVriendData(vriendId, mijnId)
 
-    alert('Gelukt. ' + naam + ' staat niet meer in je vriendenlijst.\n\nDe foto\'s, muziek en widgets van deze vriend zijn van dit apparaat verwijderd.')
+    alert(T('Gelukt. {naam} staat niet meer in je vriendenlijst.\n\nDe foto\'s, muziek en widgets van deze vriend zijn van dit apparaat verwijderd.', { naam }))
     setTimeout(function () { window.location.href = 'vrienden.html' }, 50)
   }
 
@@ -1330,9 +1330,9 @@ startMeldingen()
 </script>
 
 <div style="max-width:640px;margin:28px auto 44px;text-align:center;">
-    <button id="ontvriend-btn" onclick="ontvriend()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:12px;cursor:pointer;text-decoration:underline;padding:8px;font-family:inherit;">Vriendschap beeindigen</button>
+    <button id="ontvriend-btn" onclick="ontvriend()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:12px;cursor:pointer;text-decoration:underline;padding:8px;font-family:inherit;" data-t>Vriendschap beeindigen</button>
   </div>
-<script src="./fotoviewer.js?v=4"></script>
+<script src="./fotoviewer.js?v=5"></script>
 <script type="module" src="offline.js?v=126"></script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 // bellen.js — WebRTC P2P audio/video bellen via Supabase Realtime signaling
 // Gebruikt het bewezen spel-patroon: gedeeld kanaal met gesorteerde IDs
+// v143: meldingen ook in het Engels (taal.js)
 import { supabase } from './supabase.js?v=95'
 import { ICE_SERVERS, iceReady } from './ice-config.js?v=106'
 import { houOpen } from './lijntjes.js?v=1'
@@ -166,7 +167,7 @@ export async function belOp(naarVriendId, video = false, spelModus = false) {
   isInitiator = true
   try {
     lokaleStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video })
-  } catch(e) { alert('Geen toegang tot microfoon/camera.'); return false }
+  } catch(e) { alert(window.T ? window.T('Geen toegang tot microfoon/camera.') : 'Geen toegang tot microfoon/camera.'); return false }
   const lokaalEl = document.getElementById('lokaalMedia')
   if (lokaalEl) lokaalEl.srcObject = lokaleStream
   // Eerst het gesprekskanaal echt open, dan pas uitnodigen: bij een spel neemt de ander
@@ -191,7 +192,7 @@ export async function accepteerOproep(video = false) {
   await iceReady // TURN-servers eerst binnen laten komen
   try {
     lokaleStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video })
-  } catch(e) { alert('Geen toegang tot microfoon/camera.'); return false }
+  } catch(e) { alert(window.T ? window.T('Geen toegang tot microfoon/camera.') : 'Geen toegang tot microfoon/camera.'); return false }
   // Zorg dat het gesprekkanaal echt open is (bij paginawissel kan het nog ontbreken,
   // en bij een spel is het misschien net pas geopend)
   if (gesprekKlaar) await gesprekKlaar

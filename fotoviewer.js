@@ -1,4 +1,4 @@
-// fotoviewer.js — Fibro  (v2)
+// fotoviewer.js — Fibro  (v2; v5 11-10-2026: ook in het Engels)
 //
 // Klik op een foto in een widget en hij opent groot over de pagina heen.
 // Staan er meer foto's in dezelfde widget, dan kun je doorbladeren met de
@@ -13,10 +13,11 @@
 // Anders zou op je eigen pagina tegelijk de bestandskiezer opengaan.
 // Een foto vervangen gaat daar met het kruisje wissen en dan de plus.
 //
-// Inhaken:  <script src="./fotoviewer.js?v=4"></script>  vlak voor </body>
+// Inhaken:  <script src="./fotoviewer.js?v=5"></script>  vlak voor </body>
 
 (function () {
   'use strict'
+  var vt = function (s, v) { return window.T ? window.T(s, v) : String(s).replace(/\{(\w+)\}/g, function (m, k) { return v && k in v ? v[k] : m }) }
 
   var MINIMALE_BREEDTE = 60   // kleiner dan dit is een avatar of pictogram
   var overlay = null
@@ -38,7 +39,7 @@
     var el = document.createElement('div')
     el.id = 'fibro-fotoviewer'
     el.setAttribute('role', 'dialog')
-    el.setAttribute('aria-label', 'Foto groot bekijken')
+    el.setAttribute('aria-label', vt('Foto groot bekijken'))
     // Houdt swipe.js buiten de viewer: anders ga je bij vegen naar een
     // andere pagina in plaats van naar de volgende foto.
     el.setAttribute('data-geen-swipe', '')
@@ -51,9 +52,9 @@
 
     el.innerHTML =
       '<img id="fv-foto" alt="" style="max-width:94vw;max-height:88vh;object-fit:contain;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,0.6)">' +
-      '<button id="fv-sluit" aria-label="Sluiten" style="position:absolute;top:14px;right:16px;width:40px;height:40px;border:0;border-radius:50%;background:rgba(255,255,255,0.12);color:#fff;font-size:22px;line-height:1;cursor:pointer">\u00d7</button>' +
-      '<button id="fv-vorige" aria-label="Vorige foto" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);width:44px;height:64px;border:0;border-radius:10px;background:rgba(255,255,255,0.10);color:#fff;font-size:26px;line-height:1;cursor:pointer">\u2039</button>' +
-      '<button id="fv-volgende" aria-label="Volgende foto" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:44px;height:64px;border:0;border-radius:10px;background:rgba(255,255,255,0.10);color:#fff;font-size:26px;line-height:1;cursor:pointer">\u203a</button>' +
+      '<button id="fv-sluit" aria-label="' + vt('Sluiten') + '" style="position:absolute;top:14px;right:16px;width:40px;height:40px;border:0;border-radius:50%;background:rgba(255,255,255,0.12);color:#fff;font-size:22px;line-height:1;cursor:pointer">\u00d7</button>' +
+      '<button id="fv-vorige" aria-label="' + vt('Vorige foto') + '" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);width:44px;height:64px;border:0;border-radius:10px;background:rgba(255,255,255,0.10);color:#fff;font-size:26px;line-height:1;cursor:pointer">\u2039</button>' +
+      '<button id="fv-volgende" aria-label="' + vt('Volgende foto') + '" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:44px;height:64px;border:0;border-radius:10px;background:rgba(255,255,255,0.10);color:#fff;font-size:26px;line-height:1;cursor:pointer">\u203a</button>' +
       '<div id="fv-teller" style="position:absolute;bottom:16px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.75);font-size:13px"></div>'
 
     el.addEventListener('click', function (e) {
@@ -157,7 +158,7 @@
     overlay.querySelector('#fv-vorige').style.display = meerdere ? '' : 'none'
     overlay.querySelector('#fv-volgende').style.display = meerdere ? '' : 'none'
     overlay.querySelector('#fv-teller').textContent =
-      meerdere ? (huidig + 1) + ' van ' + fotos.length : ''
+      meerdere ? vt('{n} van {m}', { n: huidig + 1, m: fotos.length }) : ''
   }
 
   function ga(stap) {

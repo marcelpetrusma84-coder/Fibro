@@ -1,4 +1,4 @@
-// speluitnodiging.js — globale spel-uitnodiging op elke pagina
+// speluitnodiging.js — globale spel-uitnodiging op elke pagina (v143: ook in het Engels)
 //
 // v98: wat er via het kanaal binnenkomt (naam, speltype, ids) kan van iedereen
 // komen. Het gaat daarom alleen als tekst de pagina in, nooit als HTML, en
@@ -60,7 +60,8 @@ function toonPopup(vanId, vanNaam, vanAvatar, spelType, sessieId) {
   sessieId = alsId(sessieId)
   if (!vanId || !sessieId) return
   if (typeof spelType !== 'string' || !/^[a-z0-9]{1,30}$/.test(spelType)) return
-  const naam = String(vanNaam || 'Iemand').slice(0, 40)
+  const T = window.T || (s => s)
+  const naam = String(vanNaam || T('Iemand')).slice(0, 40)
   const oud = document.getElementById('globaalSpelPopup')
   if (oud) oud.remove()
   if (timer) clearTimeout(timer)
@@ -68,10 +69,10 @@ function toonPopup(vanId, vanNaam, vanAvatar, spelType, sessieId) {
   const popup = maak('div', 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:10000;background:#1e1e2e;border:1px solid rgba(255,255,255,0.15);border-radius:16px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:flex;flex-direction:column;align-items:center;gap:10px;max-width:90%;min-width:260px;')
   popup.id = 'globaalSpelPopup'
   const regel = maak('div', 'color:white;font-size:15px;text-align:center;')
-  regel.append(maak('strong', '', naam), ' nodigt je uit!')
+  regel.append(maak('strong', '', naam), T(' nodigt je uit!'))
   const knoppen = maak('div', 'display:flex;gap:10px;margin-top:6px;')
-  const ja = maak('button', 'background:#4caf50;color:white;border:none;border-radius:16px;padding:8px 18px;font-size:14px;font-weight:bold;cursor:pointer;', 'Spelen')
-  const nee = maak('button', 'background:rgba(255,255,255,0.1);color:#aaa;border:none;border-radius:16px;padding:8px 18px;font-size:14px;cursor:pointer;', 'Weigeren')
+  const ja = maak('button', 'background:#4caf50;color:white;border:none;border-radius:16px;padding:8px 18px;font-size:14px;font-weight:bold;cursor:pointer;', T('Spelen'))
+  const nee = maak('button', 'background:rgba(255,255,255,0.1);color:#aaa;border:none;border-radius:16px;padding:8px 18px;font-size:14px;cursor:pointer;', T('Weigeren'))
   ja.id = 'gspAccepteer'; nee.id = 'gspWeiger'
   knoppen.append(ja, nee)
   popup.append(maak('div', 'font-size:40px;', info.icon), regel, maak('div', 'color:#aaa;font-size:13px;', info.naam), knoppen)

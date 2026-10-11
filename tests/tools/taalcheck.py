@@ -35,14 +35,14 @@ TOEGESTAAN = ('w.titel', 'stad.naam', 's)', 'nl,', 's, v)')
 for p in BESTANDEN:
     s = open(os.path.join(MAP, p), encoding='utf-8').read()
     if p == 'taal.js': continue
-    for m in re.finditer(r"(?<![\w.$])(T|vt)\(", s):
+    for m in re.finditer(r"(?:(?<=window\.)|(?<![\w.$]))(T|vt)\(", s):
         rest = s[m.end():]
         if rest.startswith("'"):
             k = re.match(r"'((?:[^'\\\n]|\\.)*)'", rest)
             if not k or rest[k.end():k.end() + 1] not in (')', ','): meld('geen enkele tekst in %s: %s' % (p, rest[:70])); continue
             code.add(ontcijfer(k.group(1)))
         elif not rest.startswith(TOEGESTAAN): meld('T( zonder vaste tekst in %s: %s' % (p, rest[:60].replace('\n', ' ')))
-    code.update(VAST.get(p, []))
+    code.update(VAST.get('index.html' if p == 'vriend-profiel.html' else p, []))
 # html via Chromium
 class H(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a): pass

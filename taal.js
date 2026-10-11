@@ -1,4 +1,4 @@
-// taal.js - Fibro in het Nederlands of in het Engels (v1, 11 oktober 2026, v142)
+// taal.js - Fibro in het Nederlands of in het Engels (v2, 11 oktober 2026, v143)
 //
 // In gewone woorden: dit bestand weet welke taal je gekozen hebt en vertaalt de teksten.
 // De Nederlandse zin is zelf de sleutel: T('Opslaan') geeft in het Nederlands 'Opslaan' en in
@@ -21,7 +21,7 @@
 // Alleen pagina's met <html data-taal> krijgen lang="en" (die zijn al vertaald).
 // In het Nederlands doet dit bestand verder niets met de pagina: alles blijft precies zoals het was.
 // Een gewoon script (geen module), vroeg geladen: direct na huisregel.js.
-// De Engelse woordenlijst (taal-en.js?v=1) wordt alleen bij Engels geladen.
+// De Engelse woordenlijst (taal-en.js?v=2) wordt alleen bij Engels geladen.
 (function () {
   'use strict'
   if (window.T) return
@@ -86,7 +86,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=1', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=2', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

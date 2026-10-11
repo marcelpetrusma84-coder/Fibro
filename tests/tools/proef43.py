@@ -31,7 +31,15 @@ def supa(route):
     if '/rest/v1/rpc/mijn_geblokkeerden' in u: return route.fulfill(status=200, json=[{"id": KEES, "username": "Kees", "sinds": ISO(86400 * 3)}])
     if '/rest/v1/rpc/' in u: return route.fulfill(status=200, json=None)
     if '/rest/v1/friendships' in u and m == 'GET':
-        return route.fulfill(status=200, json=[{"friend_id": k, "profiles": v} for k, v in PROF.items()])
+        if 'profiles' in u: return route.fulfill(status=200, json=[{"friend_id": k, "profiles": v} for k, v in PROF.items()])
+        return route.fulfill(status=200, json=[{"user_id": UID, "friend_id": k} for k in PROF])  # chat.html
+    if '/rest/v1/profiles' in u and m == 'GET' and 'id=in.' in u:
+        return route.fulfill(status=200, json=[dict(v, public_key='x' * 20) for v in PROF.values()])
+    if '/rest/v1/messages' in u and m == 'GET':
+        b = [("e2e:abc", BRAM, None), ("spelinvite:schaken:" + BRAM + ":s1", BRAM, None), ("verwijderd:", UID, None), ("sticker:😀:blij", BRAM, None),
+             ("e2e:def", UID, None), ("Oud antwoord", BRAM, "weg-id")]
+        return route.fulfill(status=200, json=[{"id": "m%d" % i, "sender_id": z, "receiver_id": UID if z == BRAM else BRAM, "content": c, "antwoord_op": a,
+                                                 "created_at": ISO(3600 - i * 60)} for i, (c, z, a) in enumerate(b)][::-1])
     if '/rest/v1/profiles' in u and m == 'GET':
         for k, v in PROF.items():
             if k in u: return route.fulfill(status=200, json=v if een else [v])
@@ -65,6 +73,7 @@ ZAAI = """async ([t, u, bram]) => {
     { id: 'opteltimer', icon: '⏱', titel: 'Opteltimer', w: 4, h: 2, volgorde: 5, aan: true }]))
   await zet('vriend_' + bram + '_poll', JSON.stringify({ id: 'p1', vraag: 'Pizza of pasta?', opties: [{ tekst: 'Pizza' }, { tekst: 'Pasta' }] }))
   await zet('vriend_' + bram + '_aftel', JSON.stringify({ bericht: '', datum: '2026-12-24', tijd: '00:00' }))
+  localStorage.setItem('fibro_nietverstuurd_' + u, JSON.stringify([{ id: 'nv1', vriendId: bram, tekst: 'Hallo?', antwoordOp: null, pling: true, tijd: Date.now() }]))
 }"""
 LANG = 'tests/tools/proef43: lange druk'
 # (naam, pagina, actie in de pagina (JS, mag leeg), verwacht in het Engels)
@@ -79,10 +88,19 @@ SCHERMEN = [
     ('bellen: inkomend', 'bellen.html?vriend=' + BRAM + '&naam=Bram&inkomend=1', '', ['← back', 'Is calling you']),
     ('home: blokkade-balk', 'index.html?blokkadetest=1', '', ['Your account is blocked until', 'Reason: Voorbeeld', 'You can still read your messages']),
     ('home: buzz-melding', 'index.html', "() => { window.testBuzz() }", ['Test is buzzing you!']),
+    # v144: Chat
+    ('chat: lijst', 'chat.html', '', ['Who do you want to chat with?', 'Select a friend', 'Choose who you want to chat with below', 'Bram', '← back']),
+    ('chat: gesprek', 'chat.html?vriend=' + BRAM, '', ['encrypted message — tap Restore key', 'Game invite: ♟️ Chess', 'Message deleted',
+        '[your message]', 'message no longer available', 'Not sent · tap to try again', 'No key on this device', 'Send photo', '● active', 'Call', 'More']),
+    ('chat: melden', 'chat.html?vriend=' + BRAM, "() => { toonChatMenu(); document.getElementById('cmMeld').click() }", ['Tap the messages you want to report (max 5)', 'Cancel', 'Report']),
+    ('chat: eigen sticker', 'chat.html?vriend=' + BRAM, "() => { openStickerUpload() }", ['Add your own sticker', 'Choose image', 'Choose a sound (optional)', 'Jingle', 'Heart', 'Save ✓']),
+    ('chat: screenshot', 'chat.html?vriend=' + BRAM, "() => { document.getElementById('screenshotModal').classList.add('show') }", ['Screenshot permission', 'Both people have to agree', '20 minutes', 'Agree']),
+    ('chat: spellen', 'chat.html?vriend=' + BRAM, "() => { toggleSpelMenu() }", ['Play together', 'Chess', 'Twin Snakes']),
 ]
 NL_WOORDEN = ['Vrienden', 'Uitnodigen', 'Geblokkeerd', 'terug', 'Stuur een bericht', 'Chat openen', 'Gastenboek', 'GASTENBOEK', 'dagen', 'geleden', 'Vriendschap',
               'Bellen', 'Annuleer', 'Kies hoe', 'Belt je op', 'Wat wil je doen', 'Blokkeren', 'Deblokkeren', 'Verwijderen', 'Annuleren', 'Sluiten', 'buzzt',
-              'Je account', 'Reden', 'Nog geen', 'Spelen', 'Laden', 'Verbinden', 'jouw netwerk']
+              'Je account', 'Reden', 'Nog geen', 'Spelen', 'Laden', 'Verbinden', 'jouw netwerk',
+              'Selecteer', 'chatten', 'versleuteld', 'Bericht', 'bericht', 'Niet verstuurd', 'Geen sleutel', 'Melden', 'Speel samen', 'Akkoord', 'toestemming', 'Kies']
 MAG_ERBIJ = set()
 
 def ctx_maken(br, taal):

@@ -1,5 +1,5 @@
 <!DOCTYPE html> 
-<html lang="nl" style="background:#1a0a2e;">
+<html lang="nl" data-taal style="background:#1a0a2e;">
 <script>
   const f = localStorage.getItem('fibro_lettertype')
   if (f) {
@@ -13,10 +13,10 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=2"></script>
+<script src="taal.js?v=3"></script>
 <script src="verbinding.js?v=2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fibro — Chat</title>
+<title data-t>Fibro — Chat</title>
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
@@ -173,36 +173,36 @@ window.veiligeUrl = function(v){
 
 
 <div class="top-bar" role="banner">
-  <button class="back-btn" onclick="gaTerug()">← terug</button>
+  <button class="back-btn" onclick="gaTerug()" data-t>← terug</button>
   <div class="chat-av" id="chatAv">💬</div>
   <div class="chat-info">
-    <div class="chat-name" id="chatNaam">Selecteer een vriend</div>
-    <div class="chat-status" id="chatStatus">Kies hieronder met wie je wilt chatten</div>
+    <div class="chat-name" id="chatNaam" data-t>Selecteer een vriend</div>
+    <div class="chat-status" id="chatStatus" data-t>Kies hieronder met wie je wilt chatten</div>
   </div>
   <div id="belKnoppen" style="display:none; margin-left:auto; display:flex; gap:8px; flex-shrink:0;">
-    <button onclick="if(geselecteerdeVriend)window.location.href='bellen.html?vriend='+geselecteerdeVriend.id+'&naam='+encodeURIComponent(geselecteerdeVriend.naam)" title="Bellen" style="background:rgba(34,197,94,0.15); border:0.5px solid rgba(34,197,94,0.4); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;">📞</button>
+    <button onclick="if(geselecteerdeVriend)window.location.href='bellen.html?vriend='+geselecteerdeVriend.id+'&naam='+encodeURIComponent(geselecteerdeVriend.naam)" title="Bellen" data-t-attr="title" style="background:rgba(34,197,94,0.15); border:0.5px solid rgba(34,197,94,0.4); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;">📞</button>
     
-    <button onclick="toonChatMenu()" title="Meer" style="background:rgba(255,255,255,0.06); border:0.5px solid var(--border); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--muted);">⋯</button>
+    <button onclick="toonChatMenu()" title="Meer" data-t-attr="title" style="background:rgba(255,255,255,0.06); border:0.5px solid var(--border); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--muted);">⋯</button>
   </div>
 </div>
 <main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Fibro – Chat</h1>
 
 
-<div class="screenshot-banner" id="screenshotBanner">
+<div class="screenshot-banner" id="screenshotBanner" data-t>
   📸 Screenshots toegestaan voor <span class="banner-timer" id="bannerTimer">20:00</span>
   <span style="cursor:pointer;color:var(--muted)" onclick="revokeScreenshot()">✕</span>
 </div>
-<div class="privacy-bar" id="privacyBar">⚠ Screenshot poging gedetecteerd — zonder toestemming</div>
+<div class="privacy-bar" id="privacyBar" data-t>⚠ Screenshot poging gedetecteerd — zonder toestemming</div>
 
 <div id="vriendenSelectie" class="vriend-selectie">
-  <h2 class="vs-kop">Met wie wil je chatten?</h2>
-  <div id="vriendenLijst"><div class="laden">Vrienden laden...</div></div>
+  <h2 class="vs-kop" data-t>Met wie wil je chatten?</h2>
+  <div id="vriendenLijst"><div class="laden" data-t>Vrienden laden...</div></div>
 </div>
 
 <div id="chatScherm" style="display:none; flex:1; min-height:0; flex-direction:column; overflow:hidden;">
-  <button class="nieuw-knop" id="nieuwKnop" onclick="naarNieuwste()">↓ nieuwe berichten</button>
+  <button class="nieuw-knop" id="nieuwKnop" onclick="naarNieuwste()" data-t>↓ nieuwe berichten</button>
   <div class="messages" id="messages">
-    <div class="sys-msg e2e-sys" id="chatSysBericht">🔒 End-to-end versleuteld gesprek</div>
+    <div class="sys-msg e2e-sys" id="chatSysBericht" data-t>🔒 End-to-end versleuteld gesprek</div>
   </div>
   <div class="input-wrap">
     <div class="emoji-grid" id="emojiGrid"></div>
@@ -241,7 +241,7 @@ window.veiligeUrl = function(v){
       </div>
     </div>
     <div id="spelMenuGrid" style="display:none;padding:14px 12px;background:rgba(0,0,0,0.85);border-top:0.5px solid var(--border);max-height:280px;overflow-y:auto;">
-      <div style="font-size:12px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;text-align:center;">🎮 Speel samen</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;text-align:center;" data-t>🎮 Speel samen</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
         <button class="spel-keuze-btn" onclick="startSpel('botkaaseiren')"><span style="font-size:26px;">⭕</span><span>Tic-Tac-Toe</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('vieroprij')"><span style="font-size:26px;">🔴</span><span>Four in a Row</span></button>
@@ -261,13 +261,13 @@ window.veiligeUrl = function(v){
       <button class="emoji-toggle" onclick="toggleEmojiPicker()">😊</button>
       <button class="emoji-toggle" onclick="toggleStickers()">🎨</button>
       <button class="emoji-toggle" onclick="toggleSpelMenu()">🎮</button>
-      <button class="emoji-toggle" id="fotoBtn" onclick="openFotoPicker()" title="Foto versturen">📷</button>
+      <button class="emoji-toggle" id="fotoBtn" onclick="openFotoPicker()" title="Foto versturen" data-t-attr="title">📷</button>
       <button class="buzz-btn" id="buzzBtn" onclick="sendBuzz()" title="Buzz!"><svg viewBox="0 0 24 24" width="20" height="20" fill="#facc15" style="filter:drop-shadow(0 0 3px rgba(250,204,21,0.6))"><path d="M13 2 L4 14 h6 l-1 8 9-12 h-6 z"/></svg></button>
     </div>
     <div id="fotoStatus" style="display:none;padding:4px 14px;font-size:12px;color:var(--accent2);"></div>
     <input type="file" id="fotoFileInput" accept="image/*" style="display:none" onchange="fotoGekozen(this)">
     <div class="input-area">
-      <input class="msg-input" id="msgInput" maxlength="2000" placeholder="Stuur een bericht..." onkeydown="if(event.key==='Enter')sendMsg()">
+      <input class="msg-input" id="msgInput" maxlength="2000" placeholder="Stuur een bericht..." data-t-attr="placeholder" onkeydown="if(event.key==='Enter')sendMsg()">
       <button class="send-btn" id="sendBtn" onclick="sendMsg()">➤</button>
     </div>
   </div>
@@ -275,10 +275,10 @@ window.veiligeUrl = function(v){
 
 </main>
 <div class="bottom-nav" role="navigation" aria-label="Menu">
-  <div class="nav-item" onclick="window.location.href='index.html'"><div class="nav-icon">🏠</div>Home</div>
-  <div class="nav-item" onclick="window.location.href='vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
-  <div class="nav-item active"><div class="nav-icon">💬</div>Chat</div>
-  <div class="nav-item" onclick="window.location.href='profiel.html'"><div class="nav-icon">👤</div>Profiel</div>
+  <div class="nav-item" onclick="window.location.href='index.html'" data-t><div class="nav-icon">🏠</div>Home</div>
+  <div class="nav-item" onclick="window.location.href='vrienden.html'" data-t><div class="nav-icon">👥</div>Vrienden</div>
+  <div class="nav-item active" data-t><div class="nav-icon">💬</div>Chat</div>
+  <div class="nav-item" onclick="window.location.href='profiel.html'" data-t><div class="nav-icon">👤</div>Profiel</div>
 </div>
 
 </div>
@@ -295,8 +295,8 @@ window.veiligeUrl = function(v){
       </div>
     </div>
     <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
-      <button id="spelUitnodigingAccepteer" style="background:var(--accent); border:none; color:white; padding:7px 14px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">Spelen!</button>
-      <button onclick="sluitSpelUitnodiging()" style="background:rgba(255,255,255,0.08); border:none; color:rgba(255,255,255,0.6); padding:5px 10px; border-radius:8px; font-size:12px; cursor:pointer;">Weigeren</button>
+      <button id="spelUitnodigingAccepteer" style="background:var(--accent); border:none; color:white; padding:7px 14px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;" data-t>Spelen!</button>
+      <button onclick="sluitSpelUitnodiging()" style="background:rgba(255,255,255,0.08); border:none; color:rgba(255,255,255,0.6); padding:5px 10px; border-radius:8px; font-size:12px; cursor:pointer;" data-t>Weigeren</button>
     </div>
   </div>
 </div>
@@ -304,11 +304,11 @@ window.veiligeUrl = function(v){
 <div class="modal-bg" id="screenshotModal">
   <div class="modal">
     <div class="modal-icon">📸</div>
-    <div class="modal-title">Screenshot toestemming</div>
-    <div class="modal-sub">Beide personen moeten akkoord gaan.<br>Toestemming vervalt na <strong style="color:var(--accent2)">20 minuten</strong>.</div>
+    <div class="modal-title" data-t>Screenshot toestemming</div>
+    <div class="modal-sub" data-t>Beide personen moeten akkoord gaan.<br>Toestemming vervalt na <strong style="color:var(--accent2)">20 minuten</strong>.</div>
     <div class="modal-btns">
-      <button class="modal-btn cancel" onclick="closeModal()">Annuleer</button>
-      <button class="modal-btn confirm" onclick="grantScreenshot()">Akkoord</button>
+      <button class="modal-btn cancel" onclick="closeModal()" data-t>Annuleer</button>
+      <button class="modal-btn confirm" onclick="grantScreenshot()" data-t>Akkoord</button>
     </div>
   </div>
 </div>
@@ -316,10 +316,10 @@ window.veiligeUrl = function(v){
 <div class="modal-bg" id="blockedModal">
   <div class="modal">
     <div class="modal-icon">🚫</div>
-    <div class="modal-title">Screenshot geblokkeerd</div>
-    <div class="modal-sub">Screenshots zijn niet toegestaan zonder toestemming.</div>
+    <div class="modal-title" data-t>Screenshot geblokkeerd</div>
+    <div class="modal-sub" data-t>Screenshots zijn niet toegestaan zonder toestemming.</div>
     <div class="modal-btns">
-      <button class="modal-btn confirm" style="flex:1" onclick="closeBlockedModal()">Begrepen</button>
+      <button class="modal-btn confirm" style="flex:1" onclick="closeBlockedModal()" data-t>Begrepen</button>
     </div>
   </div>
 </div>
@@ -327,17 +327,17 @@ window.veiligeUrl = function(v){
 <div class="modal-bg" id="stickerUploadModal">
   <div class="modal" style="max-width:340px;">
     <div class="modal-icon">🎨</div>
-    <div class="modal-title">Eigen sticker toevoegen</div>
+    <div class="modal-title" data-t>Eigen sticker toevoegen</div>
     <input type="file" id="stickerFileInput" accept="image/*" style="display:none" onchange="previewStickerUpload(this)">
-    <button class="modal-btn confirm" style="width:100%;margin-bottom:10px;" onclick="document.getElementById('stickerFileInput').click()">📁 Kies afbeelding</button>
+    <button class="modal-btn confirm" style="width:100%;margin-bottom:10px;" onclick="document.getElementById('stickerFileInput').click()" data-t>📁 Kies afbeelding</button>
     <div id="stickerPreviewWrap" style="display:none;margin-bottom:10px;">
       <img id="stickerPreviewImg" class="sticker-preview-img">
     </div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;text-align:left;">Kies een geluid (optioneel):</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;text-align:left;" data-t>Kies een geluid (optioneel):</div>
     <div class="geluidsbib-grid" id="geluidsBibGrid"></div>
     <div class="modal-btns" style="margin-top:12px;">
-      <button class="modal-btn cancel" onclick="sluitStickerUpload()">Annuleer</button>
-      <button class="modal-btn confirm" onclick="slaCustomStickerOp()">Opslaan ✓</button>
+      <button class="modal-btn cancel" onclick="sluitStickerUpload()" data-t>Annuleer</button>
+      <button class="modal-btn confirm" onclick="slaCustomStickerOp()" data-t>Opslaan ✓</button>
     </div>
   </div>
 </div>
@@ -345,12 +345,12 @@ window.veiligeUrl = function(v){
 <div class="buzz-overlay" id="buzzOverlay"><div class="buzz-overlay-inner"><svg viewBox="0 0 24 24" width="110" height="110" fill="#facc15" style="filter:drop-shadow(0 0 18px rgba(250,204,21,0.9))"><path d="M13 2 L4 14 h6 l-1 8 9-12 h-6 z"/></svg></div></div>
 <div id="oproepModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
   <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#c084fc,#f0abfc);display:flex;align-items:center;justify-content:center;font-size:44px;animation:pulse 1.2s ease-in-out infinite;overflow:hidden;" id="oproepAvatar">👤</div>
-  <div style="font-size:22px;font-weight:600;color:white;" id="oproepNaam">Onbekend</div>
-  <div style="font-size:14px;color:rgba(255,255,255,0.6);" id="oproepType">📞 Gesprek</div>
+  <div style="font-size:22px;font-weight:600;color:white;" id="oproepNaam" data-t>Onbekend</div>
+  <div style="font-size:14px;color:rgba(255,255,255,0.6);" id="oproepType" data-t>📞 Gesprek</div>
   <div style="display:flex;gap:24px;margin-top:10px;">
-    <button onclick="weigerInkomend()" style="width:64px;height:64px;border-radius:50%;background:#f87171;border:none;font-size:26px;cursor:pointer;" title="Weigeren">📵</button>
-    <button onclick="neemInkomendOp(false)" style="width:64px;height:64px;border-radius:50%;background:#22c55e;border:none;font-size:26px;cursor:pointer;" title="Opnemen">📞</button>
-    <button id="oproepVideoBtn" onclick="neemInkomendOp(true)" style="width:64px;height:64px;border-radius:50%;background:#22c55e;border:none;font-size:26px;cursor:pointer;display:none;" title="Opnemen met video">📹</button>
+    <button onclick="weigerInkomend()" style="width:64px;height:64px;border-radius:50%;background:#f87171;border:none;font-size:26px;cursor:pointer;" title="Weigeren" data-t-attr="title">📵</button>
+    <button onclick="neemInkomendOp(false)" style="width:64px;height:64px;border-radius:50%;background:#22c55e;border:none;font-size:26px;cursor:pointer;" title="Opnemen" data-t-attr="title">📞</button>
+    <button id="oproepVideoBtn" onclick="neemInkomendOp(true)" style="width:64px;height:64px;border-radius:50%;background:#22c55e;border:none;font-size:26px;cursor:pointer;display:none;" title="Opnemen met video" data-t-attr="title">📹</button>
   </div>
 </div>
 
@@ -384,8 +384,8 @@ window.veiligeUrl = function(v){
   import * as Dammen from './dammen.js?v=95'
   import * as Bordgeluid from './bordgeluid.js?v=95'
   import * as DammenUI from './dammen-ui.js?v=96'
-  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=108'
-  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=95'
+  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=144'
+  import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=126'
   pasBlokstijlToe()
 
@@ -609,11 +609,11 @@ window.veiligeUrl = function(v){
         if (geselecteerdeVriend?.id !== vriendId) return
         const statusEl = document.getElementById('fotoStatus')
         const labels = {
-          verbinden: '📡 Verbinding maken...',
-          verbonden: '🔗 Verbonden',
+          verbinden: T('📡 Verbinding maken...'),
+          verbonden: T('🔗 Verbonden'),
           klaar: '',
-          versturen: '📤 Foto versturen...',
-          ontvangen: '📥 Foto ontvangen...',
+          versturen: T('📤 Foto versturen...'),
+          ontvangen: T('📥 Foto ontvangen...'),
           verbroken: ''
         }
         const tekst = labels[status] ?? ''
@@ -648,7 +648,7 @@ window.veiligeUrl = function(v){
         // dus de iPhone laat het geluid toe (op een nieuwe pagina niet)
         window.FibroBeltoon?.start()
         const { data: v } = await supabase.from('profiles').select('avatar_url,avatar_data,username').eq('id', info.van).single()
-        const naam = vriendWeergaveNaam({ id: info.van, username: v?.username }) || 'Onbekend'
+        const naam = vriendWeergaveNaam({ id: info.van, username: v?.username }) || T('Onbekend')
         window._inkomendNaam = naam
         const av = document.getElementById('oproepAvatar')
         const plaatje = v?.avatar_data || v?.avatar_url || ''
@@ -662,7 +662,7 @@ window.veiligeUrl = function(v){
           av.textContent = (plaatje && plaatje.length <= 8) ? plaatje : '👤'
         }
         document.getElementById('oproepNaam').textContent = naam
-        document.getElementById('oproepType').textContent = info.videoModus ? '📹 Videogesprek...' : '📞 Belt je op...'
+        document.getElementById('oproepType').textContent = info.videoModus ? T('📹 Videogesprek...') : T('📞 Belt je op...')
         document.getElementById('oproepVideoBtn').style.display = info.videoModus ? 'block' : 'none'
         document.getElementById('oproepModal').style.display = 'flex'
         clearTimeout(window._oproepVerloop)
@@ -852,7 +852,7 @@ window.veiligeUrl = function(v){
     if (!error && friendships && friendships.length === 0) { try { localStorage.removeItem(vriendenCacheSleutel()) } catch (e) {} }
     if ((error || !friendships) && bewaard) return // v125: ophalen mislukt (geen internet): de bewaarde lijst blijft staan
     if (error || !friendships || friendships.length === 0) {
-      container.innerHTML = `<div class="geen-vrienden">Nog geen vrienden. Nodig iemand uit via je profiel!</div>`
+      container.innerHTML = `<div class="geen-vrienden">${T('Nog geen vrienden. Nodig iemand uit via je profiel!')}</div>`
       return
     }
 
@@ -868,7 +868,7 @@ window.veiligeUrl = function(v){
 
     if ((profielFout || !data) && bewaard) return // v125: zie hierboven
     if (!data || data.length === 0) {
-      container.innerHTML = `<div class="geen-vrienden">Vrienden niet gevonden.</div>`
+      container.innerHTML = `<div class="geen-vrienden">${T('Vrienden niet gevonden.')}</div>`
       return
     }
 
@@ -941,11 +941,11 @@ window.veiligeUrl = function(v){
     document.getElementById('chatAv').textContent = vriendAvatar
     zetAvatar(document.getElementById('chatAv'), vriendAvatar, vriendFotos.get(vriendId)) // v134
     document.getElementById('chatNaam').textContent = vriendNaam
-    document.getElementById('chatStatus').textContent = '● actief'
+    document.getElementById('chatStatus').textContent = T('● actief')
 
     const versleuteldLabel = (mijnPrivateKey && vriendPublicKey)
-      ? '🔒 End-to-end versleuteld'
-      : '⚠️ Geen encryptie — update app'
+      ? T('🔒 End-to-end versleuteld')
+      : T('⚠️ Geen encryptie — update app')
 
     document.getElementById('chatSysBericht').textContent =
       `${versleuteldLabel} · ${vriendNaam}`
@@ -991,7 +991,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
     if (error || !data || data.length === 0) {
       if (!error && data) bewaarChatlog(vriendId, [])
-      voegSysBericht('Stuur je eerste bericht! 👋')
+      voegSysBericht(T('Stuur je eerste bericht! 👋'))
       toonWachtende(vriendId) // v130
       return
     }
@@ -1006,11 +1006,11 @@ console.timeLog('[chat] berichten', 'opgehaald')
       if (verborgen.has(bericht.id)) continue
       await voegBerichtToe(bericht)
     }
-    if (!container.querySelector('.msg-row')) voegSysBericht('Stuur je eerste bericht! 👋')
+    if (!container.querySelector('.msg-row')) voegSysBericht(T('Stuur je eerste bericht! 👋'))
     if (uitGeheugen) {
       voegSysBericht(navigator.onLine
-        ? '⚠️ Berichten ophalen lukte niet. Je ziet de berichten die op dit toestel bewaard zijn.'
-        : '📴 Geen internet. Je ziet de berichten die op dit toestel bewaard zijn.')
+        ? T('⚠️ Berichten ophalen lukte niet. Je ziet de berichten die op dit toestel bewaard zijn.')
+        : T('📴 Geen internet. Je ziet de berichten die op dit toestel bewaard zijn.'))
       // Zodra er weer internet is: de echte berichten ophalen (als deze chat nog open is)
       window.addEventListener('online', () => {
         if (geselecteerdeVriend?.id === vriendId) laadBerichten().then(() => tekenReacties(document.getElementById('messages'))).catch(() => {})
@@ -1023,7 +1023,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ─── Berichten verwijderen (tekst ingedrukt houden, dan 🗑) ───
   // Eigen bericht: voor iedereen of voor mij. Bericht van de ander: voor mij.
   // Het 🗑-knopje zit in het menu van reacties.js (startLangIndrukken).
-  const VERWIJDERD_TEKST = '🚫 Bericht verwijderd'
+  const VERWIJDERD_TEKST = T('🚫 Bericht verwijderd')
 
   function wisUitBerichtCache(id) {
     const key = berichtCacheSleutel()
@@ -1092,22 +1092,22 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   async function verwijderVoorIedereen(id) {
-    if (!confirm('Dit bericht voor iedereen verwijderen?\n\nDe ander kan het al gezien hebben.')) return
+    if (!confirm(T('Dit bericht voor iedereen verwijderen?\n\nDe ander kan het al gezien hebben.'))) return
     const { data, error } = await supabase.rpc('verwijder_bericht_voor_iedereen', { p_id: id })
     if (error || data !== true) {
       console.warn('[verwijderen] voor iedereen mislukt:', error ? error.message : data)
-      alert('Verwijderen is niet gelukt. Probeer het later opnieuw.')
+      alert(T('Verwijderen is niet gelukt. Probeer het later opnieuw.'))
       return
     }
     toonAlsVerwijderd(id)
   }
 
   async function verwijderVoorMij(id) {
-    if (!confirm('Dit bericht alleen bij jou verwijderen?\n\nDe ander ziet het nog wel.')) return
+    if (!confirm(T('Dit bericht alleen bij jou verwijderen?\n\nDe ander ziet het nog wel.'))) return
     const { data, error } = await supabase.rpc('verberg_bericht', { p_id: id })
     if (error || data !== true) {
       console.warn('[verwijderen] voor mij mislukt:', error ? error.message : data)
-      alert('Verwijderen is niet gelukt. Probeer het later opnieuw.')
+      alert(T('Verwijderen is niet gelukt. Probeer het later opnieuw.'))
       return
     }
     verbergRij(id)
@@ -1133,9 +1133,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
       b.addEventListener('click', (e) => { e.stopPropagation(); sluitVerwijderMenu(); actie() })
       m.appendChild(b)
     }
-    if (isMijn && row.dataset.verwijderd !== '1') knop('Voor iedereen verwijderen', '#f87171', () => verwijderVoorIedereen(id))
-    knop('Voor mij verwijderen', '#e5e5e5', () => verwijderVoorMij(id))
-    knop('Annuleren', '#888', () => {})
+    if (isMijn && row.dataset.verwijderd !== '1') knop(T('Voor iedereen verwijderen'), '#f87171', () => verwijderVoorIedereen(id))
+    knop(T('Voor mij verwijderen'), '#e5e5e5', () => verwijderVoorMij(id))
+    knop(T('Annuleren'), '#888', () => {})
     document.body.appendChild(m)
     const b = m.getBoundingClientRect()
     let top = y - b.height - 10
@@ -1158,15 +1158,15 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const soort = String(content).split(':')[1] || ''
     let info = null
     try { if (Object.prototype.hasOwnProperty.call(SPEL_INFO, soort)) info = SPEL_INFO[soort] } catch (e) {}
-    if (!info) info = { icon: '🎲', naam: /^[a-z0-9]{1,30}$/.test(soort) ? soort : 'een spel' }
-    return '🎮 Spel-uitnodiging: ' + info.icon + ' ' + info.naam
+    if (!info) info = { icon: '🎲', naam: /^[a-z0-9]{1,30}$/.test(soort) ? soort : T('een spel') }
+    return T('🎮 Spel-uitnodiging: {icoon} {naam}', { icoon: info.icon, naam: info.naam })
   }
 
   // v128: metGeluid alleen bij een nieuw binnenkomend bericht, niet bij het laden van oude berichten
   async function voegBerichtToe(bericht, metGeluid = false) {
     const isMijn = bericht.sender_id === huidigeUser.id
     const container = document.getElementById('messages')
-    const tijd = new Date(bericht.created_at).toLocaleTimeString('nl-NL', { hour:'2-digit', minute:'2-digit' })
+    const tijd = new Date(bericht.created_at).toLocaleTimeString(T.locale, { hour:'2-digit', minute:'2-digit' })
     const avatar = isMijn ? (huidigProfiel?.avatar_url || '👤') : geselecteerdeVriend.avatar
 
     // ── E2E: Ontsleutel de content ──
@@ -1174,15 +1174,15 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (content && content.startsWith('e2e:')) {
       if (isMijn) {
         const cached = haalBerichtCacheOp(bericht.id)
-        content = cached !== null ? cached : '[eigen bericht]'
+        content = cached !== null ? cached : T('[eigen bericht]')
       } else if (mijnPrivateKey && vriendPublicKey && vriendPublicKey.length > 10) {
         try {
           content = await ontsleutel(content, mijnPrivateKey, vriendPublicKey)
         } catch(e) {
-          content = '[kan niet lezen — sleutels komen niet overeen]'
+          content = T('[kan niet lezen — sleutels komen niet overeen]')
         }
       } else {
-        content = '[versleuteld bericht — tik op het beginscherm op Sleutel terugzetten]'
+        content = T('[versleuteld bericht — tik op het beginscherm op Sleutel terugzetten]')
       }
     }
 
@@ -1279,7 +1279,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
         st.className = "antwoord-citaat"
         st.style.cssText = "border-left:3px solid var(--accent);background:rgba(255,255,255,0.10);border-radius:4px;padding:3px 8px;margin-bottom:4px;font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px"
         const orig = window._tekstPerId ? window._tekstPerId[bericht.antwoord_op] : null
-        st.textContent = orig ? String(orig).slice(0, 60) : "bericht niet meer beschikbaar"
+        st.textContent = orig ? String(orig).slice(0, 60) : T('bericht niet meer beschikbaar')
         bub.insertBefore(st, bub.firstChild)
       }
     }
@@ -1302,18 +1302,18 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // Geeft de versleutelde inhoud terug, of null (dan is er al een melding gegeven).
   async function versleutelOfStop(tekst) {
     if (!mijnPrivateKey) {
-      alert('Bericht NIET verstuurd.\n\nDit apparaat heeft geen sleutel voor jouw account, dus het bericht kan niet versleuteld worden. Ga naar het beginscherm en tik op Sleutel terugzetten (Face ID of herstelcode).')
+      alert(T('Bericht NIET verstuurd.\n\nDit apparaat heeft geen sleutel voor jouw account, dus het bericht kan niet versleuteld worden. Ga naar het beginscherm en tik op Sleutel terugzetten (Face ID of herstelcode).'))
       return null
     }
     if (!vriendPublicKey || vriendPublicKey.length <= 10) {
-      alert('Bericht NIET verstuurd.\n\nDe sleutel van deze vriend is nog niet bekend. Probeer het opnieuw zodra hij een keer online is geweest.')
+      alert(T('Bericht NIET verstuurd.\n\nDe sleutel van deze vriend is nog niet bekend. Probeer het opnieuw zodra hij een keer online is geweest.'))
       return null
     }
     try {
       return await versleutel(tekst, mijnPrivateKey, vriendPublicKey)
     } catch (e) {
       console.error('[chat] versleutelen mislukt:', e)
-      alert('Bericht NIET verstuurd: versleutelen mislukt.')
+      alert(T('Bericht NIET verstuurd: versleutelen mislukt.'))
       return null
     }
   }
@@ -1325,14 +1325,14 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const knop = document.getElementById('sendBtn')
     if (!inp || !knop) return
     let reden = ''
-    if (!mijnPrivateKey) reden = 'Geen sleutel op dit apparaat'
-    else if (!geselecteerdeVriend) reden = 'Kies eerst een vriend'
-    else if (!vriendPublicKey || vriendPublicKey.length <= 10) reden = 'Sleutels laden...'
+    if (!mijnPrivateKey) reden = T('Geen sleutel op dit apparaat')
+    else if (!geselecteerdeVriend) reden = T('Kies eerst een vriend')
+    else if (!vriendPublicKey || vriendPublicKey.length <= 10) reden = T('Sleutels laden...')
     const kan = reden === ''
     inp.disabled = !kan
     knop.disabled = !kan
     knop.style.opacity = kan ? '' : '0.4'
-    inp.placeholder = kan ? 'Stuur een bericht...' : reden
+    inp.placeholder = kan ? T('Stuur een bericht...') : reden
   }
   window.werkVerzendknopBij = werkVerzendknopBij
 
@@ -1359,8 +1359,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
   const leesNV = () => { try { const a = JSON.parse(localStorage.getItem(nvSleutel()) || '[]'); return Array.isArray(a) ? a : [] } catch (e) { return [] } }
   const bewaarNV = a => { try { localStorage.setItem(nvSleutel(), JSON.stringify(a.slice(-50))) } catch (e) {} }
   function nvOmschrijving(tekst) {
-    if (tekst.startsWith('sticker:')) return (tekst.split(':')[1] || '') + ' (sticker)'
-    if (tekst.startsWith('lossticker:') || tekst.startsWith('customsticker:')) return '\u{1F5BC}\uFE0F Sticker'
+    if (tekst.startsWith('sticker:')) return (tekst.split(':')[1] || '') + T(' (sticker)')
+    if (tekst.startsWith('lossticker:') || tekst.startsWith('customsticker:')) return T('\u{1F5BC}\uFE0F Sticker')
     return tekst
   }
   function tekenNV(item) {
@@ -1369,20 +1369,20 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const row = document.createElement('div')
     row.className = 'msg-row out msg-nietverstuurd'
     row.dataset.nv = item.id
-    row.innerHTML = '<div class="nv-blok" role="button" tabindex="0" aria-label="Niet verstuurd. Tik om opnieuw te proberen" style="max-width:75%;background:rgba(239,68,68,0.14);border:1px solid rgba(239,68,68,0.6);border-radius:14px;padding:8px 12px;cursor:pointer">'
+    row.innerHTML = '<div class="nv-blok" role="button" tabindex="0" aria-label="' + T('Niet verstuurd. Tik om opnieuw te proberen') + '" style="max-width:75%;background:rgba(239,68,68,0.14);border:1px solid rgba(239,68,68,0.6);border-radius:14px;padding:8px 12px;cursor:pointer">'
       + '<div class="nv-tekst" style="font-size:14px;color:var(--text);word-break:break-word;white-space:pre-wrap"></div>'
-      + '<div class="nv-status" style="font-size:11px;color:#fca5a5;margin-top:4px">\u26A0\uFE0F Niet verstuurd \u00B7 tik om opnieuw te proberen</div></div>'
+      + '<div class="nv-status" style="font-size:11px;color:#fca5a5;margin-top:4px">' + T('\u26A0\uFE0F Niet verstuurd \u00B7 tik om opnieuw te proberen') + '</div></div>'
     row.querySelector('.nv-tekst').textContent = nvOmschrijving(item.tekst)
     const blok = row.querySelector('.nv-blok'), status = row.querySelector('.nv-status')
     let bezig = false
     const probeer = async () => {
       if (bezig) return
       bezig = true
-      status.textContent = 'Versturen\u2026'
+      status.textContent = T('Versturen\u2026')
       const ok = await opnieuwNV(item.id)
       bezig = false
       if (ok) row.remove()
-      else status.textContent = (navigator.onLine ? '\u26A0\uFE0F Niet verstuurd' : '\u{1F4F4} Geen internet') + ' \u00B7 tik om opnieuw te proberen'
+      else status.textContent = navigator.onLine ? T('\u26A0\uFE0F Niet verstuurd \u00B7 tik om opnieuw te proberen') : T('\u{1F4F4} Geen internet \u00B7 tik om opnieuw te proberen')
     }
     blok.onclick = probeer
     blok.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); probeer() } }
@@ -1485,10 +1485,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
         toonFotoInChat(url, true)
       } catch(e) {
         console.error('P2P foto mislukt:', e)
-        voegSysBericht('Foto versturen mislukt — vriend niet bereikbaar')
+        voegSysBericht(T('Foto versturen mislukt — vriend niet bereikbaar'))
       }
     } else {
-      voegSysBericht('Vriend is offline — foto kan niet verstuurd worden')
+      voegSysBericht(T('Vriend is offline — foto kan niet verstuurd worden'))
     }
   }
 
@@ -1561,7 +1561,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   function toonFotoInChat(url, isMijn) {
     const container = document.getElementById('messages')
-    const tijd = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })
+    const tijd = new Date().toLocaleTimeString(T.locale, { hour: '2-digit', minute: '2-digit' })
     const avatar = isMijn ? (huidigProfiel?.avatar_url || '👤') : geselecteerdeVriend.avatar
     const row = document.createElement('div')
     row.className = 'msg-row' + (isMijn ? ' out' : '')
@@ -1665,7 +1665,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
         if (msg.content === 'buzz:' && msg.sender_id !== huidigeUser.id) {
           if (!oud) ontvangBuzz()
-          voegSysBericht('📳 ' + (geselecteerdeVriend?.naam || 'Vriend') + (oud ? ' stuurde een buzz' : ' stuurt een buzz!'))
+          voegSysBericht(oud ? T('📳 {naam} stuurde een buzz', { naam: geselecteerdeVriend?.naam || T('Vriend') }) : T('📳 {naam} stuurt een buzz!', { naam: geselecteerdeVriend?.naam || T('Vriend') }))
         } else {
           if (!oud) speelPlop('in')
           const wasOnder = zitOnderaan()
@@ -1739,8 +1739,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
       werkVerzendknopBij()
       document.getElementById('chatScherm').style.display = 'none'
       document.getElementById('vriendenSelectie').style.display = 'block'
-      document.getElementById('chatNaam').textContent = 'Selecteer een vriend'
-      document.getElementById('chatStatus').textContent = 'Kies hieronder met wie je wilt chatten'
+      document.getElementById('chatNaam').textContent = T('Selecteer een vriend')
+      document.getElementById('chatStatus').textContent = T('Kies hieronder met wie je wilt chatten')
       zetAvatar(document.getElementById('chatAv'), '💬', null) // v134
       document.getElementById('belKnoppen').style.display = 'none'
       if (realtimeKanaal) { realtimeKanaal.stop(); realtimeKanaal = null }
@@ -1841,8 +1841,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const info = SPEL_INFO[spelType] || { icon: '🎮', naam: spelType }
     const popup = document.getElementById('spelUitnodigingPopup')
     document.getElementById('spelUitnodigingIcoon').textContent = info.icon
-    document.getElementById('spelUitnodigingTitel').textContent = vanNaam + ' nodigt je uit!'
-    document.getElementById('spelUitnodigingSubtitel').textContent = info.naam + ' — Automatisch weigeren in 30s'
+    document.getElementById('spelUitnodigingTitel').textContent = T('{naam} nodigt je uit!', { naam: vanNaam })
+    document.getElementById('spelUitnodigingSubtitel').textContent = T('{spel} — Automatisch weigeren in 30s', { spel: info.naam })
 
     const balk = document.getElementById('spelUitnodigingBalk')
     balk.style.transition = 'none'
@@ -1913,7 +1913,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // Klik in spelmenu → stuur uitnodiging via globaal kanaal naar vriend
   window.startSpel = async function(spelType) {
-    if (!geselecteerdeVriend) { alert('Open eerst een chat'); return }
+    if (!geselecteerdeVriend) { alert(T('Open eerst een chat')); return }
     laadSpelAlvast(spelType)
     document.getElementById('spelMenuGrid').style.display = 'none'
 
@@ -1928,7 +1928,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       type: 'broadcast', event: 'speluitnodiging',
       payload: {
         van: huidigeUser.id,
-        vanNaam: huidigProfiel?.username || 'Vriend',
+        vanNaam: huidigProfiel?.username || T('Vriend'),
         vanAvatar: avatar,
         spelType, sessieId
       }
@@ -1951,7 +1951,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   window.speelMee = async function(spelType, sessieId, starterId) {
     const beschikbaar = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball']
     if (!beschikbaar.includes(spelType)) {
-      alert('🚧 ' + (SPEL_INFO[spelType]?.naam || spelType) + ' komt binnenkort beschikbaar!')
+      alert(T('🚧 {spel} komt binnenkort beschikbaar!', { spel: SPEL_INFO[spelType]?.naam || spelType }))
       return
     }
 
@@ -1987,7 +1987,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
     spelKanaal.on('broadcast', { event: 'verlaten' }, () => {
       stopSpelHartslag()
-      toonSpelMelding(esc((geselecteerdeVriend && geselecteerdeVriend.naam) || 'Je vriend') + ' heeft het spel verlaten.')
+      toonSpelMelding(T('{naam} heeft het spel verlaten.', { naam: esc((geselecteerdeVriend && geselecteerdeVriend.naam) || T('Je vriend')) }))
     })
 
     spelKanaal.on('broadcast', { event: 'ping' }, () => {
@@ -2042,7 +2042,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     })
     var inp = document.createElement('input')
     inp.type = 'text'
-    inp.placeholder = 'Bericht...'
+    inp.placeholder = T('Bericht...')
     inp.style.cssText = 'flex:1;min-width:60px;padding:8px 10px;border-radius:10px;border:1px solid #ffffff44;background:#000000aa;color:#fff;font-size:15px'
     inp.onkeydown = function(ev){ if (ev.key === 'Enter') { verstuurSpelChat(inp.value.trim()); inp.value = '' } }
     rij.appendChild(inp)
@@ -2063,7 +2063,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     box.style.cssText = 'position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(5,5,16,0.88);text-align:center;padding:20px;'
     box.innerHTML = '<div style="font-size:15px;color:#fff;font-weight:600;line-height:1.4">' + tekst + '</div>'
     const knop = document.createElement('button')
-    knop.textContent = 'Sluiten'
+    knop.textContent = T('Sluiten')
     knop.style.cssText = 'background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 24px;color:#1a0a2e;font-weight:600;cursor:pointer;'
     knop.onclick = () => sluitSpel(true)
     box.appendChild(knop)
@@ -2084,7 +2084,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       if (!pingOntvangen || !spelActief) return
       if (Date.now() - laatstePing > 10000) {
         stopSpelHartslag()
-        toonSpelMelding('De verbinding met ' + esc((geselecteerdeVriend && geselecteerdeVriend.naam) || 'je vriend') + ' is weggevallen.<br>Het spel is gestopt.')
+        toonSpelMelding(T('De verbinding met {naam} is weggevallen.<br>Het spel is gestopt.', { naam: esc((geselecteerdeVriend && geselecteerdeVriend.naam) || T('je vriend')) }))
       }
     }, 2000)
   }
@@ -2114,28 +2114,28 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ─── Boter-Kaas-Eieren ───
   async function startBotKaasEieren() {
     const m = await import('./bke-ui.js?v=96')
-    m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend' })
+    m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend') })
   }
 
   // ─── Vier op een rij ───
   async function startVierOpEenRij() {
     const m = await import('./vieroprij-ui.js?v=115')
-    m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend' })
+    m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend') })
   }
 
   // ─── Schaken ───
   async function startSchaken() {
     const m = await import('./schaken-ui.js?v=96')
-    m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend' })
+    m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend') })
   }
 
   // ─── Dammen (internationaal, 10x10) ───
-  function startDammen() { DammenUI.start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend' }) }
+  function startDammen() { DammenUI.start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend') }) }
 
   // ─── Pong ───
   async function startPong() {
     const m = await import('./pong-ui.js?v=115')
-    m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'pong' })
+    m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'pong' })
   }
 
 
@@ -2170,18 +2170,18 @@ console.timeLog('[chat] berichten', 'opgehaald')
         screenshotAllowed = false
         document.getElementById('screenshotBanner').classList.remove('show')
         clearInterval(bannerInterval)
-        voegSysBericht('Screenshot toestemming verlopen'); return
+        voegSysBericht(T('Screenshot toestemming verlopen')); return
       }
       const m = Math.floor(bannerSeconds/60), s = bannerSeconds%60
       document.getElementById('bannerTimer').textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')
     }, 1000)
-    voegSysBericht('Screenshots toegestaan voor 20 minuten')
+    voegSysBericht(T('Screenshots toegestaan voor 20 minuten'))
   }
   window.revokeScreenshot = function() {
     screenshotAllowed = false
     document.getElementById('screenshotBanner').classList.remove('show')
     if (bannerInterval) clearInterval(bannerInterval)
-    voegSysBericht('Screenshot toestemming ingetrokken')
+    voegSysBericht(T('Screenshot toestemming ingetrokken'))
   }
 
   function voegSysBericht(tekst) {
@@ -2199,7 +2199,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const k = document.getElementById('nieuwKnop')
     if (!k) return
     const mv = ongelezenTeller > 1
-    k.textContent = '\u2193 ' + ongelezenTeller + ' nieuw' + (mv?'e':'') + ' bericht' + (mv?'en':'')
+    k.textContent = mv ? T('\u2193 {n} nieuwe berichten', { n: ongelezenTeller }) : T('\u2193 {n} nieuw bericht', { n: ongelezenTeller })
     k.style.display = 'block'
   }
   window.naarNieuwste = function() { _scrollNu(); verbergNieuwKnop() }
@@ -2230,43 +2230,43 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ─── Flappy Bird Multiplayer ───
   async function startFlappyBird() {
     const m = await import('./flappy-ui.js?v=115')
-    m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'flappybird' })
+    m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'flappybird' })
   }
 
   // ─── Block It Multiplayer ───
 async function startBlockIt() {
     const m = await import('./blockit-ui.js?v=115')
-    m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'breakout' })
+    m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'breakout' })
 }
 
 // ─── Space Invaders Multiplayer ───
   async function startSpaceInvaders() {
     const m = await import('./invaders-ui.js?v=115')
-    m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'spaceinvaders' })
+    m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'spaceinvaders' })
   }
 
 // ─── The Swarm Multiplayer ───
   async function startSwarm() {
     const m = await import('./swarm-ui.js?v=109')
-    m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'swarm' })
+    m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'swarm' })
   }
 
   // ─── Runner & Gunner (vakje Endless Runner) ───
   // ─── Spookjes (vakje Pac-Man) ───
   async function startEcto() {
     const m = await import('./ecto-ui.js?v=118')
-    await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'pacman' })
+    await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'pacman' })
   }
 
   async function startRunnerGunner() {
     const m = await import('./runner-gunner-ui.js?v=128')
-    await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'endlessrunner' })
+    await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'endlessrunner' })
   }
 
   // ─── Twin Snakes (vakje Pinball) ───
   async function startTwinSnakes() {
     const m = await import('./twin-snakes-ui.js?v=118')
-    await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || 'vriend', isActief: () => spelActief === 'pinball' })
+    await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'pinball' })
   }
 
   // ─── Geluidsbibliotheek ───
@@ -2389,7 +2389,7 @@ async function startBlockIt() {
     const grid=document.getElementById('geluidsBibGrid'); grid.innerHTML=''
     GELUIDEN.forEach(g => {
       const div=document.createElement('div'); div.className='geluid-item'; div.id='geluid-'+g.id
-      div.innerHTML=`<div class="geluid-icon">${g.icon}</div><div class="geluid-naam">${g.naam}</div>`
+      div.innerHTML=`<div class="geluid-icon">${g.icon}</div><div class="geluid-naam">${T(g.naam)}</div>`
       div.onclick=() => {
         document.querySelectorAll('.geluid-item').forEach(i=>i.classList.remove('actief'))
         div.classList.add('actief'); geselecteerdGeluid=g.id; g.speel()
@@ -2398,7 +2398,7 @@ async function startBlockIt() {
     })
   }
   window.slaCustomStickerOp = function() {
-    if (!stickerImageData) { alert('Kies eerst een afbeelding!'); return }
+    if (!stickerImageData) { alert(T('Kies eerst een afbeelding!')); return }
     const bestaand=JSON.parse(localStorage.getItem('fibro_custom_stickers')||'[]')
     bestaand.push({ image:stickerImageData, geluid:geselecteerdGeluid||null })
     localStorage.setItem('fibro_custom_stickers',JSON.stringify(bestaand))
@@ -2419,7 +2419,7 @@ async function startBlockIt() {
 
   // ─── Reset encryptie sleutels ───
   window.resetSleutels = async function() {
-    if (!confirm('Encryptie sleutels resetten? Je moet daarna opnieuw inloggen.')) return
+    if (!confirm(T('Encryptie sleutels resetten? Je moet daarna opnieuw inloggen.'))) return
     if (!huidigeUser) return
     // Wis private key uit localStorage
     localStorage.removeItem('fibro_privkey_' + huidigeUser.id)
@@ -2432,7 +2432,7 @@ async function startBlockIt() {
     // Oude dozen en kluis bevatten de oude sleutel: weggooien (Face ID-herstel daarna opnieuw aanzetten)
     try { await supabase.from('passkey_kluis').delete().eq('user_id', huidigeUser.id) } catch (e) {}
     try { await supabase.from('sleutel_kluis').delete().eq('user_id', huidigeUser.id) } catch (e) {}
-    alert('Sleutels opnieuw aangemaakt! Pagina wordt herladen.')
+    alert(T('Sleutels opnieuw aangemaakt! Pagina wordt herladen.'))
     window.location.reload()
   }
 
@@ -2446,9 +2446,9 @@ async function startBlockIt() {
     // Opnemen gebeurt op bellen.html, dat neemt daar meteen op
     window.FibroBeltoon?.stop()
     clearTimeout(window._oproepVerloop)
-    document.getElementById('oproepType').textContent = 'Verbinding maken...'
+    document.getElementById('oproepType').textContent = T('Verbinding maken...')
     window.location.href = 'bellen.html?vriend=' + encodeURIComponent(window._inkomendVanId) +
-      '&naam=' + encodeURIComponent(window._inkomendNaam || 'Vriend') +
+      '&naam=' + encodeURIComponent(window._inkomendNaam || T('Vriend')) +
       '&inkomend=1&opnemen=1' + (video ? '&video=1' : '')
   }
 
@@ -2515,12 +2515,12 @@ let meldModus = false, gekozen = new Set()
 const MAX_MELD = 5
 
 window.toonChatMenu = function() {
-  const gv = window.geselecteerdeVriend; if (!gv) { alert('Kies eerst een gesprek.'); return }
+  const gv = window.geselecteerdeVriend; if (!gv) { alert(T('Kies eerst een gesprek.')); return }
   const oud = document.getElementById('chatMenu'); if (oud) { oud.remove(); return }
   const m = document.createElement('div')
   m.id = 'chatMenu'
   m.style.cssText = 'position:fixed;top:64px;right:12px;z-index:9000;background:#1e1e2e;border:0.5px solid rgba(255,255,255,0.15);border-radius:12px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,0.5);'
-  m.innerHTML = '<button id="cmMeld" style="background:none;border:none;color:#e5e5e5;font-size:14px;padding:10px 16px;cursor:pointer;white-space:nowrap;">Bericht melden</button>'
+  m.innerHTML = '<button id="cmMeld" style="background:none;border:none;color:#e5e5e5;font-size:14px;padding:10px 16px;cursor:pointer;white-space:nowrap;">' + T('Bericht melden') + '</button>'
   document.body.appendChild(m)
   document.getElementById('cmMeld').onclick = () => { m.remove(); startMeldModus() }
   setTimeout(() => { document.addEventListener('click', function sluit(e){ if(!m.contains(e.target)){ m.remove(); document.removeEventListener('click', sluit) } }) }, 50)
@@ -2536,7 +2536,7 @@ function startMeldModus() {
   const balk = document.createElement('div')
   balk.id = 'meldBalk'
   balk.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9500;background:#1e1e2e;border-top:0.5px solid rgba(255,255,255,0.15);padding:12px 16px;display:flex;align-items:center;gap:10px;'
-  balk.innerHTML = '<div style="flex:1;color:#aaa;font-size:13px;" id="meldTeller">Tik de berichten aan die je wilt melden (max ' + MAX_MELD + ')</div><button id="meldAnn" style="background:rgba(255,255,255,0.08);color:#aaa;border:none;border-radius:14px;padding:8px 14px;font-size:13px;cursor:pointer;">Annuleren</button><button id="meldGa" style="background:#f87171;color:#fff;border:none;border-radius:14px;padding:8px 14px;font-size:13px;cursor:pointer;">Melden</button>'
+  balk.innerHTML = '<div style="flex:1;color:#aaa;font-size:13px;" id="meldTeller">' + T('Tik de berichten aan die je wilt melden (max {n})', { n: MAX_MELD }) + '</div><button id="meldAnn" style="background:rgba(255,255,255,0.08);color:#aaa;border:none;border-radius:14px;padding:8px 14px;font-size:13px;cursor:pointer;">' + T('Annuleren') + '</button><button id="meldGa" style="background:#f87171;color:#fff;border:none;border-radius:14px;padding:8px 14px;font-size:13px;cursor:pointer;">' + T('Melden') + '</button>'
   document.body.appendChild(balk)
   document.getElementById('meldAnn').onclick = stopMeldModus
   document.getElementById('meldGa').onclick = toonRedenen
@@ -2553,8 +2553,8 @@ function kiesBericht(e) {
     gekozen.add(id); r.style.background = 'rgba(248,113,113,0.12)'
   }
   document.getElementById('meldTeller').textContent = gekozen.size === 0
-    ? 'Tik de berichten aan die je wilt melden (max ' + MAX_MELD + ')'
-    : gekozen.size + ' bericht(en) geselecteerd'
+    ? T('Tik de berichten aan die je wilt melden (max {n})', { n: MAX_MELD })
+    : T('{n} bericht(en) geselecteerd', { n: gekozen.size })
 }
 
 function stopMeldModus() {
@@ -2566,17 +2566,17 @@ function stopMeldModus() {
 }
 
 function toonRedenen() {
-  if (gekozen.size === 0) { alert('Selecteer eerst minstens \u00e9\u00e9n bericht.'); return }
+  if (gekozen.size === 0) { alert(T('Selecteer eerst minstens \u00e9\u00e9n bericht.')); return }
   const v = document.createElement('div')
   v.id = 'meldVenster'
   v.style.cssText = 'position:fixed;inset:0;z-index:9600;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:20px;'
   const redenen = ['Ongewenste berichten','Bedreiging of intimidatie','Ongepaste inhoud','Iets anders']
-  v.innerHTML = '<div style="background:#1e1e2e;border-radius:16px;padding:20px;max-width:340px;width:100%;border:0.5px solid rgba(255,255,255,0.15);"><div style="color:#fff;font-size:16px;font-weight:600;margin-bottom:4px;">Waarom meld je dit?</div><div style="color:#888;font-size:12px;margin-bottom:14px;">' + gekozen.size + ' bericht(en) worden meegestuurd.</div><div id="redenLijst"></div><div style="color:#888;font-size:11px;line-height:1.5;margin:14px 0;">Gaat het om iets strafbaars, zoals bedreiging of misbruik? Neem dan ook contact op met de politie of een meldpunt in jouw land. Een melding hier alleen is dan niet genoeg.</div><button id="meldSluit" style="background:rgba(255,255,255,0.08);color:#aaa;border:none;border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;width:100%;">Annuleren</button></div>'
+  v.innerHTML = '<div style="background:#1e1e2e;border-radius:16px;padding:20px;max-width:340px;width:100%;border:0.5px solid rgba(255,255,255,0.15);"><div style="color:#fff;font-size:16px;font-weight:600;margin-bottom:4px;">' + T('Waarom meld je dit?') + '</div><div style="color:#888;font-size:12px;margin-bottom:14px;">' + T('{n} bericht(en) worden meegestuurd.', { n: gekozen.size }) + '</div><div id="redenLijst"></div><div style="color:#888;font-size:11px;line-height:1.5;margin:14px 0;">' + T('Gaat het om iets strafbaars, zoals bedreiging of misbruik? Neem dan ook contact op met de politie of een meldpunt in jouw land. Een melding hier alleen is dan niet genoeg.') + '</div><button id="meldSluit" style="background:rgba(255,255,255,0.08);color:#aaa;border:none;border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;width:100%;">' + T('Annuleren') + '</button></div>'
   document.body.appendChild(v)
   const lijst = v.querySelector('#redenLijst')
   redenen.forEach(r => {
     const b = document.createElement('button')
-    b.textContent = r
+    b.textContent = T(r) // de reden zelf gaat in het Nederlands naar de moderatie
     b.style.cssText = 'display:block;width:100%;text-align:left;background:rgba(255,255,255,0.05);color:#e5e5e5;border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:11px 14px;font-size:14px;cursor:pointer;margin-bottom:7px;'
     b.onclick = () => verstuurMelding(r)
     lijst.appendChild(b)
@@ -2597,7 +2597,7 @@ async function verstuurMelding(reden) {
     reden: reden
   })
   stopMeldModus()
-  alert(ok ? 'Bedankt. Je melding is doorgestuurd.' : 'Melden is niet gelukt. Probeer het later opnieuw.')
+  alert(ok ? T('Bedankt. Je melding is doorgestuurd.') : T('Melden is niet gelukt. Probeer het later opnieuw.'))
 }
 </script>
 <script src="swipe.js?v=95"></script>

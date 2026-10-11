@@ -1,3 +1,4 @@
+// reply.js - antwoorden op een bericht (v144: ook in het Engels, taal.js)
 let _antwoordOp = null
 
 export function geefAntwoordOp(){ return _antwoordOp }
@@ -12,7 +13,7 @@ export function kiesAntwoordOp(berichtId, tekst){
     zorgVoorReplyBalk()
     const b = document.getElementById('reply-balk')
     const t = document.getElementById('reply-balk-tekst')
-    if(t) t.textContent = String(tekst || 'bericht').slice(0, 60)
+    if(t) t.textContent = String(tekst || (window.T ? window.T('bericht') : 'bericht')).slice(0, 60)
         if(b) b.style.display = 'flex'
 }
 

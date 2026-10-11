@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 11 oktober 2026 (Fibro in twee talen, portie 1: Vrienden en bellen).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 11 oktober 2026 (Fibro in twee talen, portie 2: Chat).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -41,7 +41,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          licht = Profiel opslaan zonder onveranderde foto's (testscript_licht.py),
                          fotos = foto's als WebP of JPEG i.p.v. stilletjes PNG (testscript_fotos.py),
                          taal = Nederlands en Engels, stap 1: taal.js, taal-en.js, inloggen, uitnodiging, Home (testscript_taal.py),
-                         taal2 = Engels portie 1: Vrienden, profiel van een vriend, blokkeren, meldingen, bellen (testscript_taal2.py))
+                         taal2 = Engels portie 1: Vrienden, profiel van een vriend, blokkeren, meldingen, bellen (testscript_taal2.py),
+                         taal3 = Engels portie 2: Chat, reacties, antwoorden, melden (testscript_taal3.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)

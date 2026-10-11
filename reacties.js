@@ -1,4 +1,6 @@
-import { kiesAntwoordOp } from './reply.js?v=95'
+import { kiesAntwoordOp } from './reply.js?v=144'
+// v144: ook in het Engels (taal.js)
+const T = window.T || (s => s)
 let _ctx = null
 
 export function initReacties(ctx){ _ctx = ctx }
@@ -21,13 +23,13 @@ export async function haalReacties(berichtIds){
 export async function leesInhoud(r){
   if(!r||!r.inhoud) return ''
   if(!String(r.inhoud).startsWith('e2e:')) return r.inhoud
-  if(!_ctx) return 'onleesbaar'
+  if(!_ctx) return T('onleesbaar')
   const sl = _ctx.geefSleutels()
-  if(!sl||!sl.mijn||!sl.vriend) return 'onleesbaar'
+  if(!sl||!sl.mijn||!sl.vriend) return T('onleesbaar')
   try{
     return await _ctx.ontsleutel(r.inhoud, sl.mijn, sl.vriend)
   }catch(e){
-    return 'onleesbaar'
+    return T('onleesbaar')
   }
 }
 
@@ -106,7 +108,7 @@ function toonMenu(x, y, knoppen){
 
 function vraagTekst(berichtId){
   sluitMenu()
-  const t = prompt('Jouw reactie (max 30 tekkens):')
+  const t = prompt(T('Jouw reactie (max 30 tekens):'))
   if(t&&t.trim()) zetReactie(berichtId, 'tekst', t.trim())
 }
 
@@ -122,7 +124,7 @@ function openVoor(row, x, y){
   const k2 = maakKnop('\uD83D\uDCAC', ()=> vraagTekst(id))
   const kv = _opVerwijder ? maakKnop('\uD83D\uDDD1', ()=> { sluitMenu(); _opVerwijder(row, x, y) }) : null
   if (row.dataset.verwijderd === '1') { if (kv) toonMenu(x, y, [kv]); return }
-  const k3 = maakKnop('\u21A9', ()=> { sluitMenu(); kiesAntwoordOp(id, row.dataset.mtekst || 'bericht') })
+  const k3 = maakKnop('\u21A9', ()=> { sluitMenu(); kiesAntwoordOp(id, row.dataset.mtekst || T('bericht')) })
   toonMenu(x, y, kv ? [k1, k2, k3, kv] : [k1, k2, k3])
 }
 

@@ -14,6 +14,8 @@ VAST = {  # met T(variabele) vertaald: deze moeten er ook in staan
                 'Ghost Tag', 'Block It', 'The Swarm', 'Twin Snakes', 'Runner & Gunner',
                 'Amsterdam', 'Londen', 'New York', 'Los Angeles', 'Tokio', 'Dubai', 'Sydney', 'Parijs', 'Berlijn', 'Moskou', 'Bangkok', 'Singapore',
                 'Hong Kong', 'Mumbai', 'São Paulo', 'Kaapstad', 'Mexico-Stad', 'Chicago', 'Seoul', 'Istanbul'],
+ 'chat.html': ['Ongewenste berichten', 'Bedreiging of intimidatie', 'Ongepaste inhoud', 'Iets anders',  # redenen om te melden
+               'Pop', 'Klingel', 'Boing', 'Plop', 'Sparkle', 'Drum', 'Swoosh', 'Chime', 'Hartje', 'Ding'],  # geluiden voor stickers
 }
 def ontcijfer(s):
     uit, i = [], 0
@@ -31,7 +33,7 @@ fout = 0
 def meld(t):
     global fout; fout += 1; print('FOUT', t)
 code = set()
-TOEGESTAAN = ('w.titel', 'stad.naam', 's)', 'nl,', 's, v)')
+TOEGESTAAN = ('w.titel', 'stad.naam', 's)', 'nl,', 's, v)', 'r)', 'g.naam')
 for p in BESTANDEN:
     s = open(os.path.join(MAP, p), encoding='utf-8').read()
     if p == 'taal.js': continue

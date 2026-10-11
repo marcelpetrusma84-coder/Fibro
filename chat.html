@@ -374,7 +374,7 @@ window.veiligeUrl = function(v){
   import { startHeartbeat } from './heartbeat.js?v=117'
   import { startMeldingen } from './meldingen.js?v=131'
   import { houOpen } from './lijntjes.js?v=1'
-  import { haalVriendFotos, zetAvatar, geldigeFoto } from './vriendfotos.js?v=1'
+  import { haalVriendFotos, zetAvatar, geldigeFoto } from './vriendfotos.js?v=2'
   import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=95'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=122'
   import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=131'
@@ -859,10 +859,11 @@ window.veiligeUrl = function(v){
       f.user_id === huidigeUser.id ? f.friend_id : f.user_id
     )
 
-    const { data, error: profielFout } = await supabase
-      .from('profiles')
-      .select('id, username, avatar_url, public_key, online_status, laatst_gezien, updated_at') // v120: geen foto's/achtergronden (v134: avatarfoto's via vriendfotos.js)
-      .in('id', vriendIds)
+    // v140: met het etiket van de avatar (avatar_versie); heeft de server dat nog niet, dan zonder
+    const VELDEN = 'id, username, avatar_url, public_key, online_status, laatst_gezien, updated_at' // v120: geen foto's/achtergronden (v134: avatarfoto's via vriendfotos.js)
+    let antw = await supabase.from('profiles').select(VELDEN + ', avatar_versie').in('id', vriendIds)
+    if (antw.error && antw.error.code === '42703') antw = await supabase.from('profiles').select(VELDEN).in('id', vriendIds)
+    const { data, error: profielFout } = antw
 
     if ((profielFout || !data) && bewaard) return // v125: zie hierboven
     if (!data || data.length === 0) {

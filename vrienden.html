@@ -303,7 +303,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   import { blokkeerPersoon, kiesVriendActie, kiesGeblokkeerdActie, deblokkeerPersoon, verwijderGeblokkeerde, haalGeblokkeerden } from './persoonblok.js?v=2'
   import { initSync } from './sync.js?v=129'
   import { bewaardeSessieZonderInternet } from './offline.js?v=126'
-  import { haalVriendFotos, zetAvatar } from './vriendfotos.js?v=1'
+  import { haalVriendFotos, zetAvatar } from './vriendfotos.js?v=2'
   pasBlokstijlToe()
 
   function isGebruikerOnline(profiel) {
@@ -330,13 +330,17 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   }
 
   async function laadVrienden(userId) {
-    const antwoord = navigator.onLine
-      ? await supabase
-        .from('friendships')
-        .select('friend_id, profiles!friendships_friend_id_fkey(id, username, display_name, bio, avatar_url, mood, online_status, offline_emoji, offline_bericht, laatst_gezien, updated_at)')
-        .eq('user_id', userId)
-        .eq('status', 'accepted')
+    // v140: met het etiket van de avatar (avatar_versie); heeft de server dat nog niet, dan zonder
+    const VELDEN = 'id, username, display_name, bio, avatar_url, mood, online_status, offline_emoji, offline_bericht, laatst_gezien, updated_at'
+    const vraag = velden => supabase
+      .from('friendships')
+      .select('friend_id, profiles!friendships_friend_id_fkey(' + velden + ')')
+      .eq('user_id', userId)
+      .eq('status', 'accepted')
+    let antwoord = navigator.onLine
+      ? await vraag(VELDEN + ', avatar_versie')
       : { data: null, error: { message: 'geen internet' } }
+    if (antwoord.error && antwoord.error.code === '42703') antwoord = await vraag(VELDEN)
     let { data, error } = antwoord
 
     const container = document.getElementById('vriendenLijst')

@@ -2,6 +2,7 @@ import subprocess, sys, time, json, os, urllib.parse as up
 from playwright.sync_api import sync_playwright
 # proef34: avatarfoto's van vrienden in Vrienden, de Chat-lijst, de kop van het gesprek en bij de berichten
 # (eigen berichten: eigen foto). Foto's alleen ophalen als ze er niet zijn of de vriend opnieuw opsloeg.
+# v140: onbekende kolom = 400 42703, zoals de echte server (hier: zonder foto-etiketten; die staan in proef40).
 # python3 -I proef34.py <scratch met tools/server.py> <map> <poort>
 S = sys.argv[1]; MAP = sys.argv[2]; PORT = int(sys.argv[3]); B = f'http://127.0.0.1:{PORT}/Fibro/'
 WWW = S + '/www34_' + str(PORT); os.makedirs(WWW, exist_ok=True)
@@ -20,6 +21,14 @@ P = {UID: {"id": UID, "username": "Marcel", "avatar_url": "\U0001F600", "avatar_
             "online_status": False, "laatst_gezien": "2026-10-01T00:00:00Z", "public_key": None}}
 MSG = [{"id": "11111111-0000-4000-8000-000000000001", "sender_id": LOTTE, "receiver_id": UID, "content": "Hoi van Lotte", "created_at": NU, "expires_at": "2030-01-01T00:00:00Z"},
        {"id": "11111111-0000-4000-8000-000000000002", "sender_id": UID, "receiver_id": LOTTE, "content": "Hoi terug", "created_at": NU, "expires_at": "2030-01-01T00:00:00Z"}]
+KOL = ['id', 'username', 'display_name', 'bio', 'mood', 'theme', 'avatar_url', 'created_at', 'updated_at', 'achtergrond_kleur', 'achtergrond_type',
+       'achtergrond_url', 'animatie', 'lettertype', 'accent_kleur', 'accent_kleur2', 'widgets', 'stickers', 'niveau', 'public_key', 'geblokkeerd',
+       'online_status', 'offline_emoji', 'offline_bericht', 'laatst_gezien', 'avatar_data', 'wallpaper_data', 'muziek_titel', 'muziek_artiest',
+       'profiel_quote', 'widget_layout', 'is_plus', 'is_moderator', 'toon_online']
+def onbekend(route, kol):
+    k = [x for x in kol if x not in KOL]
+    if k: route.fulfill(status=400, json={"code": "42703", "message": "column profiles." + k[0] + " does not exist"}); return True
+    return False
 log = []
 def supa(route):
     u = route.request.url; m = route.request.method
@@ -27,10 +36,12 @@ def supa(route):
     if '/rest/v1/friendships' in u:
         if 'profiles' in sel:
             kol = sel[sel.index('(') + 1:sel.rindex(')')].replace(' ', '').split(',')
+            if onbekend(route, kol): return
             return route.fulfill(status=200, json=[{"friend_id": v, "profiles": {k: P[v].get(k) for k in kol}} for v in (LOTTE, BRAM)])
         return route.fulfill(status=200, json=[{"user_id": UID, "friend_id": v} for v in (LOTTE, BRAM)])
     if '/rest/v1/profiles' in u and m == 'GET':
         kol = [k.strip() for k in sel.split(',')] if sel != '*' else list(P[UID].keys())
+        if onbekend(route, kol): return
         if 'id' in q and q['id'][0].startswith('in.'):
             ids = q['id'][0][4:-1].split(',')
             if 'avatar_data' in kol: log.append(('fotos', sorted(ids)))

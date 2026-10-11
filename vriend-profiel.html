@@ -175,6 +175,20 @@ body.heeft-wallpaper::before { display:block; }
     })
   }
 
+  // v140: een foto die de vriend weghaalde, ook hier weghalen
+  async function wisFotoUitDB(id) {
+    try {
+      const db = await openDB()
+      return new Promise(resolve => {
+        const tx = db.transaction('fotos', 'readwrite')
+        tx.objectStore('fotos').delete(id)
+        tx.oncomplete = resolve
+        tx.onerror = resolve
+        tx.onabort = resolve
+      })
+    } catch { }
+  }
+
   async function laadFotoUitDB(id) {
     try {
       const db = await openDB()
@@ -865,42 +879,62 @@ async function renderVriendMuziek(el) {
     try { oud = JSON.parse(localStorage.getItem(cacheKey) || 'null') } catch (e) {}
     let { data, error } = await supabase
       .from('profiles')
-      .select(KOLOMMEN_VRIEND)
+      .select(KOLOMMEN_VRIEND + ',avatar_versie,wallpaper_versie')
       .eq('id', vriendId)
       .single()
+    if (error && error.code === '42703') { // v140: server nog niet bijgewerkt (nog geen foto-etiketten)
+      ({ data, error } = await supabase.from('profiles').select(KOLOMMEN_VRIEND).eq('id', vriendId).single())
+    }
     if (error && error.code === '42703') { // kolom bestaat niet (meer): dan alles, zoals vroeger
       ({ data, error } = await supabase.from('profiles').select('*').eq('id', vriendId).single())
     }
 
     if (error || !data) return false
+    // v140: elke foto heeft een eigen etiket (avatar_versie, wallpaper_versie: de vingerafdruk die de
+    // database zelf zet). Een foto wordt alleen opgehaald als zijn eigen etiket anders is, of als hij
+    // niet (meer) op dit toestel staat: een nieuwe avatar haalt de achtergrond niet meer mee.
+    // De eerste keer (nog geen etiket bewaard) geldt nog updated_at, zoals sinds v132; zonder
+    // etiketten op de server ook (dan voor allebei).
     let fotosVersie = ''
+    const etiket = { avatar: null, wallpaper: null } // etiket van de foto die nu op dit toestel staat (null: onbekend)
+    const bewaard = { avatar: false, wallpaper: false } // staat al op dit toestel: niet opnieuw opslaan
     if ('avatar_data' in data || 'wallpaper_data' in data) {
       fotosVersie = data.updated_at || ''
+      for (const s of ['avatar', 'wallpaper']) if ((s + '_versie') in data) etiket[s] = data[s + '_versie'] || ''
     } else {
-      const zelfde = !!(oud && oud.fotos_versie && data.updated_at && oud.fotos_versie === data.updated_at)
-      let avatarData = null, wallpaperData = null, bewaard = false
-      if (zelfde) {
-        if (oud.heeft_avatar) avatarData = await laadFotoUitDB('vriend_avatar_' + vriendId)
-        if (oud.heeft_wallpaper) wallpaperData = await laadFotoUitDB('vriend_wallpaper_' + vriendId)
+      const metEtiket = 'avatar_versie' in data && 'wallpaper_versie' in data
+      const zelfdeTijd = !!(oud && oud.fotos_versie && data.updated_at && oud.fotos_versie === data.updated_at)
+      const fotos = { avatar: null, wallpaper: null }
+      const nodig = []
+      for (const s of ['avatar', 'wallpaper']) {
+        const nu = metEtiket ? (data[s + '_versie'] || '') : null
+        let goed = !!oud && (metEtiket && typeof oud[s + '_versie'] === 'string' ? oud[s + '_versie'] === nu : zelfdeTijd)
+        if (goed && oud['heeft_' + s]) {
+          fotos[s] = await laadFotoUitDB('vriend_' + s + '_' + vriendId)
+          if (!fotos[s]) goed = false // stond er toch niet (meer)
+        }
+        if (goed) { etiket[s] = nu; bewaard[s] = true } else nodig.push(s)
       }
-      if (zelfde && (!oud.heeft_avatar || avatarData) && (!oud.heeft_wallpaper || wallpaperData)) {
-        fotosVersie = oud.fotos_versie
-        bewaard = true // niets nieuws: de foto's op dit toestel kloppen nog
-      } else {
-        const r = await supabase.from('profiles').select('avatar_data, wallpaper_data').eq('id', vriendId).single()
+      fotosVersie = data.updated_at || ''
+      if (nodig.length) {
+        const kolommen = nodig.map(s => s + '_data').concat(metEtiket ? nodig.map(s => s + '_versie') : [])
+        const r = await supabase.from('profiles').select(kolommen.join(',')).eq('id', vriendId).single()
         if (!r.error && r.data) {
-          avatarData = r.data.avatar_data
-          wallpaperData = r.data.wallpaper_data
-          fotosVersie = data.updated_at || ''
+          for (const s of nodig) {
+            fotos[s] = r.data[s + '_data'] || null
+            etiket[s] = metEtiket ? (r.data[s + '_versie'] || '') : null
+          }
         } else {
-          // foto's ophalen lukte niet: wat er op dit toestel staat, en de volgende keer opnieuw proberen
-          avatarData = await laadFotoUitDB('vriend_avatar_' + vriendId)
-          wallpaperData = await laadFotoUitDB('vriend_wallpaper_' + vriendId)
-          bewaard = true
+          // ophalen lukte niet: wat er op dit toestel staat, en de volgende keer opnieuw proberen
+          for (const s of nodig) {
+            fotos[s] = await laadFotoUitDB('vriend_' + s + '_' + vriendId)
+            bewaard[s] = true
+            etiket[s] = null
+          }
+          fotosVersie = ''
         }
       }
-      data = Object.assign({}, data, { avatar_data: avatarData, wallpaper_data: wallpaperData })
-      if (bewaard) data._fotosBewaard = true
+      data = Object.assign({}, data, { avatar_data: fotos.avatar, wallpaper_data: fotos.wallpaper })
     }
     vriendData = data
     toonProfielData(data)
@@ -909,16 +943,17 @@ async function renderVriendMuziek(el) {
     if (data.avatar_data && data.avatar_data.startsWith('data:')) {
       // Foto avatar uit Supabase
       toonAvatar(data.avatar_data, null)
-      if (!data._fotosBewaard) await slaFotoOp('vriend_avatar_' + vriendId, data.avatar_data)
+      if (!bewaard.avatar) await slaFotoOp('vriend_avatar_' + vriendId, data.avatar_data)
     } else {
       toonAvatar(null, data.avatar_url || '👤')
+      if (!bewaard.avatar) await wisFotoUitDB('vriend_avatar_' + vriendId)
     }
 
     // ── Wallpaper verwerken ──
     if (data.wallpaper_data && data.wallpaper_data.startsWith('data:')) {
       toonWallpaper(data.wallpaper_data)
-      if (!data._fotosBewaard) await slaFotoOp('vriend_wallpaper_' + vriendId, data.wallpaper_data)
-    }
+      if (!bewaard.wallpaper) await slaFotoOp('vriend_wallpaper_' + vriendId, data.wallpaper_data)
+    } else if (!bewaard.wallpaper) await wisFotoUitDB('vriend_wallpaper_' + vriendId)
 
     // ── Cache bijwerken ──
     try {
@@ -936,6 +971,8 @@ async function renderVriendMuziek(el) {
         offline_bericht: data.offline_bericht || '',
         laatst_gezien: data.laatst_gezien || '',
         fotos_versie: fotosVersie, // v132: updated_at van de laatst opgehaalde foto's
+        avatar_versie: etiket.avatar, // v140: etiket van de avatar op dit toestel (null: onbekend)
+        wallpaper_versie: etiket.wallpaper,
         heeft_avatar: !!(data.avatar_data && data.avatar_data.startsWith('data:')),
         heeft_wallpaper: !!(data.wallpaper_data && data.wallpaper_data.startsWith('data:')),
         bijgewerkt: new Date().toISOString()

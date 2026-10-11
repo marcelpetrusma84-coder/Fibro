@@ -5,10 +5,15 @@
 // alleen opnieuw opgehaald als die vriend zijn profiel sindsdien heeft opgeslagen
 // (profiles.updated_at is anders) of als de foto hier ontbreekt. Alle vrienden die iets nodig
 // hebben in een keer (50 per vraag). Zonder internet: alleen wat er al op het toestel staat.
+// v2 (11 oktober 2026, v140): de avatar heeft een eigen etiket (profiles.avatar_versie, de
+// vingerafdruk die de database zelf zet). Is dat er, dan telt alleen dat etiket: een nieuwe
+// achtergrond laat de avatar niet meer opnieuw ophalen. De eerste keer (nog geen etiket bewaard)
+// geldt nog updated_at; zonder etiketten op de server alleen updated_at, zoals in v1.
 //
 // Gebruik:
 //   const fotos = await haalVriendFotos(mijnId, vrienden, (bijgewerkt) => { ...opnieuw tekenen... })
-//     vrienden: [{ id, updated_at }] (zonder updated_at: niets ophalen, alleen van dit toestel)
+//     vrienden: [{ id, updated_at, avatar_versie }] (zonder updated_at: niets ophalen, alleen van
+//     dit toestel; avatar_versie alleen als de server die kolom heeft)
 //     fotos: Map vriend-id -> data:image/...; opBijgewerkt komt (eventueel) later met de nieuwe Map
 //   zetAvatar(element, emoji, foto)  // foto als achtergrond, anders de emoji
 import { supabase } from './supabase.js?v=95'
@@ -58,6 +63,8 @@ export async function haalVriendFotos(ikId, vrienden, opBijgewerkt) {
   let versies = {}
   try { versies = JSON.parse(localStorage.getItem(sleutel) || '{}') || {} } catch (e) {}
   const nodig = []
+  let metEtiket = false
+  let overgezet = false
   for (const v of vrienden) {
     const id = v && typeof v.id === 'string' ? v.id : null
     if (!id) continue
@@ -65,14 +72,26 @@ export async function haalVriendFotos(ikId, vrienden, opBijgewerkt) {
     if (f) fotos.set(id, f)
     if (!('updated_at' in v)) continue // lijst van dit toestel: niets ophalen
     const w = versies[id]
-    const actueel = !!(w && w.v === (v.updated_at || '') && (!w.f || f))
+    let actueel
+    if ('avatar_versie' in v) { // v140: eigen etiket van de avatar
+      metEtiket = true
+      const e = v.avatar_versie || ''
+      if (w && typeof w.a === 'string') actueel = w.a === e
+      else {
+        actueel = !!(w && w.v === (v.updated_at || '')) // nog geen etiket bewaard: dan nog updated_at
+        if (actueel) { w.a = e; overgezet = true }
+      }
+      actueel = actueel && (!w.f || !!f)
+    } else actueel = !!(w && w.v === (v.updated_at || '') && (!w.f || f))
     if (!actueel) nodig.push(id)
   }
+  if (overgezet && !nodig.length) { try { localStorage.setItem(sleutel, JSON.stringify(versies)) } catch (e) {} }
   if (nodig.length && navigator.onLine !== false) {
     ;(async () => {
       let veranderd = false
+      const kolommen = 'id, avatar_data, updated_at' + (metEtiket ? ', avatar_versie' : '')
       for (let i = 0; i < nodig.length; i += 50) {
-        const { data, error } = await supabase.from('profiles').select('id, avatar_data, updated_at').in('id', nodig.slice(i, i + 50))
+        const { data, error } = await supabase.from('profiles').select(kolommen).in('id', nodig.slice(i, i + 50))
         if (error || !Array.isArray(data)) break // later opnieuw
         for (const r of data) {
           if (!r || typeof r.id !== 'string') continue
@@ -83,6 +102,7 @@ export async function haalVriendFotos(ikId, vrienden, opBijgewerkt) {
             veranderd = true
           }
           versies[r.id] = { v: r.updated_at || '', f: !!f }
+          if ('avatar_versie' in r) versies[r.id].a = r.avatar_versie || '' // v140
         }
       }
       try { localStorage.setItem(sleutel, JSON.stringify(versies)) } catch (e) {}

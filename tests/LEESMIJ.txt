@@ -97,7 +97,8 @@ tools/proef32.py         menu (☰) op Home met Berichten bewaren: kiezen, waars
 tools/proef33.py         verlopen berichten van het toestel: eigen berichttekst (fibro_msg_cache) eens per 6 uur
                          nagekeken bij de server (100 per vraag, bij een fout niets weg), bewaarde gesprekken meteen
 tools/proef34.py         avatarfoto's van vrienden (vriendfotos.js) in Vrienden, Chat-lijst, kop en berichten; alleen
-                         ophalen als ze ontbreken of de vriend opnieuw opsloeg (updated_at); foto weg = emoji
+                         ophalen als ze ontbreken of de vriend opnieuw opsloeg (updated_at); foto weg = emoji.
+                         Sinds v140: onbekende kolom = 400 42703 (server zonder foto-etiketten, zie proef40)
 tools/proef35.py         menu (☰) op Home: mijn gegevens downloaden (berichten leesbaar met echte sleutels uit
                          crypto.js, gewoon downloaden en delen zoals op de iPhone) en account verwijderen (naam
                          intypen, verkeerde naam, server nog niet bijgewerkt, geen internet, verbinding weg en
@@ -110,6 +111,8 @@ tools/proef36.py         de huisregel (Content-Security-Policy): dezelfde ronde 
                          LET OP bij elke proef met de huisregel: geen route_web_socket (Playwright vervangt dan
                          WebSocket in de pagina, de huisregel kijkt er niet naar); pogingen tellen via CDP
                          Network.webSocketCreated. WebKit (Safari) staat niet in de werkmap.
+                         Met een oude map die de huisregel al heeft, falen de 6 controles "oud ..." (aanvallen
+                         gelukt, geen huisregel) zoals te verwachten; de andere 28 moeten goed zijn.
 tools/proef37.py         Profiel opslaan: avatar en achtergrond alleen mee als ze anders zijn dan de vorige keer
                          (vingerafdruk fibro_fotos_verstuurd_<uid>), updated_at alleen dan; server-fout = opnieuw
 tools/proef38.py         foto's: Safari kan geen WebP en Chromium geen AVIF maken (dan stilletjes PNG); nagebootst
@@ -126,6 +129,14 @@ tools/proef39.py         de portier wacht hoogstens 0,4 s op een html-pagina, da
                          Vlak na het bijwerken van de portier doet Chromium er een keer ±1 s langer over (ook met de
                          oude portier met een byte anders): dat is de browser, niet de portier.
                          Snelheid bij traag internet: DELAY_MS=1000 python3 -I proef14.py ... (vertraagt alles).
+tools/proef40.py         een eigen etiket per foto (avatar_versie, wallpaper_versie: md5 van de foto, gezet door de
+                         database, sql/foto-etiketten.sql): vriend-profiel haalt alleen de foto op waarvan het
+                         etiket anders is; Vrienden/Chat (vriendfotos.js) niet meer de avatar na een nieuwe
+                         achtergrond. Overgang van een server zonder etiketten (niets opnieuw ophalen), zelfde
+                         foto opnieuw opgeslagen, foto weg (ook van het toestel), foto niet meer op het toestel,
+                         ophalen lukt even niet, server zonder etiketten, kolom bestaat niet meer. Op oud: de
+                         controles "oud (controle)" laten zien dat de oude code meer ophaalt.
+                         python3 -I proef40.py <scratch met tools/server.py> <map> <oud|nieuw> <poort>
 tools/nep-supabase.sql   kleine nabootsing van de database (PostgreSQL 16, nep-gegevens) om sql/*.sql vooraf te
                          proberen: initdb + pg_ctl als gebruiker postgres, psql -f nep-supabase.sql, dan het
                          SQL-bestand (regel 'create extension if not exists pg_cron;' eruit: cron is nagebootst).
@@ -133,6 +144,10 @@ tools/nep-supabase.sql   kleine nabootsing van de database (PostgreSQL 16, nep-g
                          met precies dezelfde 25 verwijzingen (CASCADE / SET NULL / NO ACTION) als de echte
                          database, auth.users, de (lege) foto-opslag, en functies krijgen vanzelf rechten voor
                          anon/authenticated zoals bij Supabase. Eerst sql/berichten-bewaren.sql erover draaien.
+                         Proeven met profiles (v140, foto-etiketten): nep-supabase.sql heeft een korte versie van
+                         bescherm_profielrechten; draai de echte erover (uit sql/fibro-plus-afschermen.sql, met
+                         ben_ik_moderator) plus bescherm_online (sql/profielvelden.sql) en de kolommen
+                         laatst_gezien en mood. Daarna o.a. een geblokkeerd account (hartslag moet nog lukken).
 tools/checkhtml.py       node --check op alle inline scripts: checkhtml.py <uitmap> <html...>
 tools/*.js               console-testjes voor Marcel (alert); ?v=-nummers daarin kunnen verouderd zijn
 

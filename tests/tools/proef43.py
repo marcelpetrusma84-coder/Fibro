@@ -96,11 +96,24 @@ SCHERMEN = [
     ('chat: eigen sticker', 'chat.html?vriend=' + BRAM, "() => { openStickerUpload() }", ['Add your own sticker', 'Choose image', 'Choose a sound (optional)', 'Jingle', 'Heart', 'Save ✓']),
     ('chat: screenshot', 'chat.html?vriend=' + BRAM, "() => { document.getElementById('screenshotModal').classList.add('show') }", ['Screenshot permission', 'Both people have to agree', '20 minutes', 'Agree']),
     ('chat: spellen', 'chat.html?vriend=' + BRAM, "() => { toggleSpelMenu() }", ['Play together', 'Chess', 'Twin Snakes']),
+    # v145: Profiel (elk tabblad)
+    ('profiel: profiel', 'profiel.html', '', ['My profile', 'Save', 'Profile', 'Background', 'Animation', 'Font', 'Colour', 'Tap your avatar to change it',
+        'Information', 'Display name', 'Your name', 'Username', 'your login name', "can't be changed", 'characters left', 'Write something about yourself',
+        'How are you feeling today?']),
+    ('profiel: achtergrond', 'profiel.html', "() => { switchTab('achtergrond') }", ['Background type', 'Your own upload', 'Background colour']),
+    ('profiel: wallpaper', 'profiel.html', "() => { switchTab('achtergrond'); setAchtergrondType('wallpaper') }", ['Choose a wallpaper', 'Night', 'Ocean', 'Sunset', 'Forest']),
+    ('profiel: animatie', 'profiel.html', "() => { switchTab('animatie') }", ['Choose an animation', 'None', 'Stars', 'Snow', 'Rain', 'Leaves', 'Bubbles', 'Butterflies', 'Fireflies']),
+    ('profiel: lettertype', 'profiel.html', "() => { switchTab('lettertype') }", ['Choose your font', 'Life is beautiful & special', 'Standard', 'Typewriter', 'Bubbles', 'Felt pen']),
+    ('profiel: kleur', 'profiel.html', "() => { switchTab('kleur') }", ['Accent colour', 'Second accent colour', 'Blocks', 'Transparency', 'Rounded corners', 'tilt with your phone', 'Your bio here', 'Button example']),
+    ('profiel: widgets', 'profiel.html', "() => { switchTab('widgets') }", ['Active widgets', 'Guestbook', 'Friends leave messages', 'Photo grid', 'Featured + 4 small', 'Games', 'Play against the computer', 'Upload music']),
+    ('profiel: stickers', 'profiel.html', "() => { switchTab('stickers') }", ['Active stickers', 'No stickers chosen yet', 'Nature & Plants', 'Mood & Magic', 'Animals', 'Upload your own sticker']),
 ]
 NL_WOORDEN = ['Vrienden', 'Uitnodigen', 'Geblokkeerd', 'terug', 'Stuur een bericht', 'Chat openen', 'Gastenboek', 'GASTENBOEK', 'dagen', 'geleden', 'Vriendschap',
               'Bellen', 'Annuleer', 'Kies hoe', 'Belt je op', 'Wat wil je doen', 'Blokkeren', 'Deblokkeren', 'Verwijderen', 'Annuleren', 'Sluiten', 'buzzt',
               'Je account', 'Reden', 'Nog geen', 'Spelen', 'Laden', 'Verbinden', 'jouw netwerk',
-              'Selecteer', 'chatten', 'versleuteld', 'Bericht', 'bericht', 'Niet verstuurd', 'Geen sleutel', 'Melden', 'Speel samen', 'Akkoord', 'toestemming', 'Kies']
+              'Selecteer', 'chatten', 'versleuteld', 'Bericht', 'bericht', 'Niet verstuurd', 'Geen sleutel', 'Melden', 'Speel samen', 'Akkoord', 'toestemming', 'Kies',
+              'Mijn profiel', 'Opslaan', 'Achtergrond', 'Lettertype', 'Kleur', 'Informatie', 'Weergavenaam', 'tekens over', 'Sterren', 'Sneeuw', 'Vlinders',
+              'Blokken', 'Doorzichtigheid', 'Actieve', 'Speel tegen', 'Dieren', 'Natuur', 'Typemachine', 'Standaard', 'Het leven']
 MAG_ERBIJ = set()
 
 def ctx_maken(br, taal):

@@ -1,4 +1,4 @@
-// taal.js - Fibro in het Nederlands of in het Engels (v3, 11 oktober 2026, v144)
+// taal.js - Fibro in het Nederlands of in het Engels (v4, 11 oktober 2026, v145)
 //
 // In gewone woorden: dit bestand weet welke taal je gekozen hebt en vertaalt de teksten.
 // De Nederlandse zin is zelf de sleutel: T('Opslaan') geeft in het Nederlands 'Opslaan' en in
@@ -14,6 +14,8 @@
 // Gebruik:
 //   T('Opslaan')                       vaste tekst in de code
 //   T('{n} stemmen', { n: 3 })          met invulplekken; {app} is altijd de naam van de app
+//   T('lettertype|Bellen')             met een context ervoor, als hetzelfde woord twee dingen betekent
+//                                      (bellen = opbellen / bubbels); in het Nederlands valt 'lettertype|' weg
 //   <div data-t>Inloggen</div>          vaste tekst in de html (ook met <b>/<span> erin)
 //   <input data-t-attr="placeholder,title" placeholder="...">   tekst in een attribuut
 //   T.taal ('nl' of 'en'), T.locale ('nl-NL' of 'en-GB'), T.kies('en'), T.bewaar()
@@ -21,7 +23,7 @@
 // Alleen pagina's met <html data-taal> krijgen lang="en" (die zijn al vertaald).
 // In het Nederlands doet dit bestand verder niets met de pagina: alles blijft precies zoals het was.
 // Een gewoon script (geen module), vroeg geladen: direct na huisregel.js.
-// De Engelse woordenlijst (taal-en.js?v=3) wordt alleen bij Engels geladen.
+// De Engelse woordenlijst (taal-en.js?v=4) wordt alleen bij Engels geladen.
 (function () {
   'use strict'
   if (window.T) return
@@ -60,7 +62,7 @@
   }
 
   function T(nl, v) {
-    var s = nl
+    var s = (typeof nl === 'string' && /^[a-z]+\|/.test(nl)) ? nl.slice(nl.indexOf('|') + 1) : nl
     if (taal === 'en') {
       var l = window.FIBRO_EN
       if (heeft(l, nl)) s = l[nl]
@@ -86,7 +88,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=3', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=4', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

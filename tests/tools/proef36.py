@@ -99,7 +99,7 @@ def ronde(map_, poort, naam):
                 p.goto(B + pad); p.wait_for_timeout(wacht)
             if sw == 'allow':
                 ga('login.html', 800); p.evaluate("t => { localStorage.setItem('sb-qmgatbphiplrfxrljtbe-auth-token', t); localStorage.setItem('fibro_opslagtip_later', String(Date.now())) }", TOKEN)
-                ga('index.html', 2500); ga('index.html', 9000)  # tweede keer: de portier regelt; kastvullen na 6 s
+                ga('index.html', 2500); ga('index.html', 16000)  # tweede keer: de portier regelt; kastvullen na 6 s (v145: 16 s, de woordenlijst kwam erbij)
                 w['portier'] = p.evaluate("() => !!navigator.serviceWorker.controller")
                 w['kast'] = p.evaluate("async () => { let n = 0; for (const k of await caches.keys()) n += (await (await caches.open(k)).keys()).length; return n }")
                 ga('chat.html', 2000); ga('over.html', 1200)

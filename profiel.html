@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl" style="background:#1a0a2e;">
+<html lang="nl" data-taal style="background:#1a0a2e;">
 <script>
   const f = localStorage.getItem('fibro_lettertype')
   if (f) {
@@ -13,10 +13,10 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=3"></script>
+<script src="taal.js?v=4"></script>
 <script src="verbinding.js?v=2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fibro — Profiel</title>
+<title data-t>Fibro — Profiel</title>
 <meta http-equiv="cache-control" content="no-cache">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
@@ -138,37 +138,37 @@ input, textarea { font-size:16px !important; }
 </head>
 <body>
 <div class="top-bar" role="banner">
-  <span class="top-title">Mijn profiel</span>
-  <button class="save-top-btn" onclick="slaAllesOp()">Opslaan</button>
+  <span class="top-title" data-t>Mijn profiel</span>
+  <button class="save-top-btn" onclick="slaAllesOp()" data-t>Opslaan</button>
 </div>
-<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Fibro – Mijn profiel</h1>
+<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0" data-t>Fibro – Mijn profiel</h1>
 
-<div class="main-tabs" tabindex="0" aria-label="Onderdelen van je profiel">
-  <div class="main-tab active" onclick="switchTab('profiel')">👤 Profiel</div>
-  <div class="main-tab" onclick="switchTab('achtergrond')">🖼 Achtergrond</div>
-  <div class="main-tab" onclick="switchTab('animatie')">✨ Animatie</div>
-  <div class="main-tab" onclick="switchTab('lettertype')">🔤 Lettertype</div>
-  <div class="main-tab" onclick="switchTab('kleur')">💜 Kleur</div>
-  <div class="main-tab" onclick="switchTab('widgets')">🧩 Widgets</div>
-  <div class="main-tab" onclick="switchTab('stickers')">🎨 Stickers</div>
+<div class="main-tabs" tabindex="0" aria-label="Onderdelen van je profiel" data-t-attr="aria-label">
+  <div class="main-tab active" onclick="switchTab('profiel')" data-t>👤 Profiel</div>
+  <div class="main-tab" onclick="switchTab('achtergrond')" data-t>🖼 Achtergrond</div>
+  <div class="main-tab" onclick="switchTab('animatie')" data-t>✨ Animatie</div>
+  <div class="main-tab" onclick="switchTab('lettertype')" data-t>🔤 Lettertype</div>
+  <div class="main-tab" onclick="switchTab('kleur')" data-t>💜 Kleur</div>
+  <div class="main-tab" onclick="switchTab('widgets')" data-t>🧩 Widgets</div>
+  <div class="main-tab" onclick="switchTab('stickers')" data-t>🎨 Stickers</div>
 </div>
 <div class="status-msg" id="statusMsg"></div>
 <div class="panel active" id="panel-profiel">
   <div class="section">
-    <div class="section-label">Avatar</div>
+    <div class="section-label" data-t>Avatar</div>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
       <div class="avatar-ring" onclick="toggleAvatarPicker()">
         <div class="avatar-inner" id="avatarEmoji">🌿</div>
       </div>
       <div>
-        <div style="font-size:15px;">Klik op je avatar om te wijzigen</div>
-        <div style="font-size:14px;color:var(--muted);">Emoji of eigen foto</div>
+        <div style="font-size:15px;" data-t>Klik op je avatar om te wijzigen</div>
+        <div style="font-size:14px;color:var(--muted);" data-t>Emoji of eigen foto</div>
       </div>
     </div>
     <div id="avatarPickerWrap" style="display:none;">
       <div style="display:flex;gap:8px;margin-bottom:10px;">
-        <button onclick="switchAvatarTab('emoji')" id="tabEmoji" style="flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;">😊 Emoji</button>
-        <button onclick="switchAvatarTab('foto')" id="tabFoto" style="flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;">📷 Foto</button>
+        <button onclick="switchAvatarTab('emoji')" id="tabEmoji" style="flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;" data-t>😊 Emoji</button>
+        <button onclick="switchAvatarTab('foto')" id="tabFoto" style="flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;" data-t>📷 Foto</button>
       </div>
       <div id="avatarEmojiTab">
         <div class="emoji-grid" id="avatarPicker"></div>
@@ -176,31 +176,31 @@ input, textarea { font-size:16px !important; }
       <div id="avatarFotoTab" style="display:none;">
         <div class="upload-zone" onclick="document.getElementById('fotoInput').click()">
           <div class="upload-icon">📷</div>
-          <div class="upload-text">Klik om een foto te kiezen</div>
-          <div class="upload-formats">JPG, PNG, GIF — max 5MB</div>
+          <div class="upload-text" data-t>Klik om een foto te kiezen</div>
+          <div class="upload-formats" data-t>JPG, PNG, GIF — max 5MB</div>
         </div>
         <input type="file" id="fotoInput" accept="image/*" style="display:none;" onchange="verwerkFoto(event)">
         <div id="fotoPreviewWrap" style="display:none;text-align:center;margin-top:8px;">
           <img id="fotoPreview" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);">
-          <div style="font-size:14px;color:var(--accent);margin-top:6px;cursor:pointer;" onclick="bevestigFoto()">✓ Gebruik deze foto</div>
+          <div style="font-size:14px;color:var(--accent);margin-top:6px;cursor:pointer;" onclick="bevestigFoto()" data-t>✓ Gebruik deze foto</div>
         </div>
       </div>
     </div>
   </div>
   <div class="section">
-    <div class="section-label">Informatie</div>
+    <div class="section-label" data-t>Informatie</div>
     <div class="card">
-      <label class="field-label">Weergavenaam</label>
-      <input class="field" id="editNaam" placeholder="Jouw naam"/>
-      <label class="field-label">Gebruikersnaam <span style="font-size:10px;color:var(--muted);">— je login naam</span></label>
+      <label class="field-label" data-t>Weergavenaam</label>
+      <input class="field" id="editNaam" placeholder="Jouw naam" data-t-attr="placeholder"/>
+      <label class="field-label" data-t>Gebruikersnaam <span style="font-size:10px;color:var(--muted);">— je login naam</span></label>
       <div style="background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;font-size:14px;color:var(--muted);margin-bottom:8px;" id="usernameWeergave">—</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Dit is je anonieme login naam — niet aanpasbaar</div>
-      <label class="field-label">Bio</label>
-      <textarea class="field" id="editBio" maxlength="100" placeholder="Schrijf iets over jezelf..."></textarea><div id="bioTeller" style="font-size:11px;color:var(--muted);text-align:right;margin-top:4px;">100 tekens over</div>
-      <label class="field-label">Mood</label>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;" data-t>Dit is je anonieme login naam — niet aanpasbaar</div>
+      <label class="field-label" data-t>Bio</label>
+      <textarea class="field" id="editBio" maxlength="100" placeholder="Schrijf iets over jezelf..." data-t-attr="placeholder"></textarea><div id="bioTeller" style="font-size:11px;color:var(--muted);text-align:right;margin-top:4px;" data-t>100 tekens over</div>
+      <label class="field-label" data-t>Mood</label>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
         <div id="moodEmojiGekozen" style="font-size:28px;min-width:44px;text-align:center;cursor:pointer;background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:6px;" onclick="toggleMoodPicker()">😊</div>
-        <input class="field" id="editMood" placeholder="Hoe voel je je vandaag?" style="flex:1;margin:0;"/>
+        <input class="field" id="editMood" placeholder="Hoe voel je je vandaag?" data-t-attr="placeholder" style="flex:1;margin:0;"/>
         <div onclick="toggleOnlineStatus()" id="onlineToggle" style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--card);border:0.5px solid var(--border);border-radius:20px;padding:6px 12px;flex-shrink:0;">
           <div id="onlineDot" style="width:10px;height:10px;border-radius:50%;background:#22c55e;"></div>
           <span id="onlineLabel" style="font-size:12px;color:var(--text);">Online</span>
@@ -213,16 +213,16 @@ input, textarea { font-size:16px !important; }
 </div>
 <div class="panel" id="panel-achtergrond">
   <div class="section">
-    <div class="section-label">Type achtergrond</div>
+    <div class="section-label" data-t>Type achtergrond</div>
     <div class="type-btns">
-      <button class="type-btn active" id="type-kleur" onclick="setAchtergrondType('kleur')">🎨 Kleur</button>
-      <button class="type-btn" id="type-gradient" onclick="setAchtergrondType('gradient')">🌈 Gradient</button>
-      <button class="type-btn" id="type-wallpaper" onclick="setAchtergrondType('wallpaper')">🖼 Wallpaper</button>
-      <button class="type-btn" id="type-upload" onclick="setAchtergrondType('upload')">📤 Eigen upload</button>
+      <button class="type-btn active" id="type-kleur" onclick="setAchtergrondType('kleur')" data-t>🎨 Kleur</button>
+      <button class="type-btn" id="type-gradient" onclick="setAchtergrondType('gradient')" data-t>🌈 Gradient</button>
+      <button class="type-btn" id="type-wallpaper" onclick="setAchtergrondType('wallpaper')" data-t>🖼 Wallpaper</button>
+      <button class="type-btn" id="type-upload" onclick="setAchtergrondType('upload')" data-t>📤 Eigen upload</button>
     </div>
   </div>
   <div id="bg-kleur-sectie" class="section">
-    <div class="section-label">Achtergrondkleur</div>
+    <div class="section-label" data-t>Achtergrondkleur</div>
     <div class="card">
       <div class="color-row">
         <input type="color" id="bgKleurPicker" value="#1a0a2e" oninput="updateBgKleur(this.value)"/>
@@ -243,78 +243,78 @@ input, textarea { font-size:16px !important; }
     </div>
   </div>
   <div id="bg-gradient-sectie" class="section" style="display:none;">
-    <div class="section-label">Gradient kleuren</div>
+    <div class="section-label" data-t>Gradient kleuren</div>
     <div class="card">
       <div id="gradientPreview" class="gradient-preview"></div>
       <div style="display:flex;gap:10px;">
-        <div style="flex:1;"><label class="field-label">Kleur 1</label>
+        <div style="flex:1;"><label class="field-label" data-t>Kleur 1</label>
           <div class="color-row"><input type="color" id="grad1Picker" value="#1a0a2e" oninput="updateGradient()"/><input class="color-input" id="grad1Hex" value="#1a0a2e" oninput="updateGradient()"/></div>
         </div>
-        <div style="flex:1;"><label class="field-label">Kleur 2</label>
+        <div style="flex:1;"><label class="field-label" data-t>Kleur 2</label>
           <div class="color-row"><input type="color" id="grad2Picker" value="#0f172a" oninput="updateGradient()"/><input class="color-input" id="grad2Hex" value="#0f172a" oninput="updateGradient()"/></div>
         </div>
       </div>
     </div>
   </div>
   <div id="bg-wallpaper-sectie" class="section" style="display:none;">
-    <div class="section-label">Kies een wallpaper</div>
+    <div class="section-label" data-t>Kies een wallpaper</div>
     <div class="wallpaper-grid">
-      <div class="wallpaper-cell" onclick="selectWallpaper('fibro-nacht',this)" style="background:linear-gradient(135deg,#1a0a2e,#4a044e);"><span class="wallpaper-label">Fibro Nacht</span></div>
-      <div class="wallpaper-cell" onclick="selectWallpaper('oceaan',this)" style="background:linear-gradient(135deg,#042f2e,#0f172a);"><span class="wallpaper-label">Oceaan</span></div>
-      <div class="wallpaper-cell" onclick="selectWallpaper('zonsondergang',this)" style="background:linear-gradient(135deg,#450a0a,#2d1f14);"><span class="wallpaper-label">Zonsondergang</span></div>
-      <div class="wallpaper-cell" onclick="selectWallpaper('woud',this)" style="background:linear-gradient(135deg,#14532d,#042f2e);"><span class="wallpaper-label">Woud</span></div>
-      <div class="wallpaper-cell" onclick="selectWallpaper('galaxy',this)" style="background:linear-gradient(135deg,#1e1b4b,#4a044e);"><span class="wallpaper-label">Galaxy</span></div>
-      <div class="wallpaper-cell" onclick="selectWallpaper('noir',this)" style="background:linear-gradient(135deg,#1c1917,#030712);"><span class="wallpaper-label">Noir</span></div>
+      <div class="wallpaper-cell" onclick="selectWallpaper('fibro-nacht',this)" style="background:linear-gradient(135deg,#1a0a2e,#4a044e);"><span class="wallpaper-label" data-t>Fibro Nacht</span></div>
+      <div class="wallpaper-cell" onclick="selectWallpaper('oceaan',this)" style="background:linear-gradient(135deg,#042f2e,#0f172a);"><span class="wallpaper-label" data-t>Oceaan</span></div>
+      <div class="wallpaper-cell" onclick="selectWallpaper('zonsondergang',this)" style="background:linear-gradient(135deg,#450a0a,#2d1f14);"><span class="wallpaper-label" data-t>Zonsondergang</span></div>
+      <div class="wallpaper-cell" onclick="selectWallpaper('woud',this)" style="background:linear-gradient(135deg,#14532d,#042f2e);"><span class="wallpaper-label" data-t>Woud</span></div>
+      <div class="wallpaper-cell" onclick="selectWallpaper('galaxy',this)" style="background:linear-gradient(135deg,#1e1b4b,#4a044e);"><span class="wallpaper-label" data-t>Galaxy</span></div>
+      <div class="wallpaper-cell" onclick="selectWallpaper('noir',this)" style="background:linear-gradient(135deg,#1c1917,#030712);"><span class="wallpaper-label" data-t>Noir</span></div>
     </div>
   </div>
   <div id="bg-upload-sectie" class="section" style="display:none;">
-    <div class="section-label">Upload eigen achtergrond</div>
+    <div class="section-label" data-t>Upload eigen achtergrond</div>
     <div onclick="document.getElementById('bgUpload').click()" style="border:2px dashed rgba(192,132,252,0.5);border-radius:16px;padding:40px 20px;text-align:center;cursor:pointer;margin-bottom:14px;background:rgba(192,132,252,0.04);">
       <div style="font-size:52px;margin-bottom:12px;">🖼️</div>
-      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;">Kies een afbeelding</div>
-      <div style="font-size:15px;color:var(--muted);line-height:1.6;">Wordt gebruikt als wallpaper op je home pagina</div>
-      <div style="font-size:14px;color:rgba(243,232,255,0.3);margin-top:8px;">JPG · PNG · WEBP · GIF — max 10MB</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;" data-t>Kies een afbeelding</div>
+      <div style="font-size:15px;color:var(--muted);line-height:1.6;" data-t>Wordt gebruikt als wallpaper op je home pagina</div>
+      <div style="font-size:14px;color:rgba(243,232,255,0.3);margin-top:8px;" data-t>JPG · PNG · WEBP · GIF — max 10MB</div>
     </div>
     <input type="file" id="bgUpload" accept="image/*,video/mp4" style="display:none" onchange="uploadAchtergrond(this)"/>
     <div id="uploadPreview" style="display:none;margin-top:4px;">
-      <div class="section-label">Huidige wallpaper</div>
+      <div class="section-label" data-t>Huidige wallpaper</div>
       <div style="position:relative;border-radius:14px;overflow:hidden;border:1.5px solid var(--accent);">
         <div id="uploadedWallpaper" style="width:100%;aspect-ratio:16/9;"></div>
-        <button onclick="verwijderWallpaper()" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.65);border:0.5px solid rgba(255,255,255,0.2);color:white;border-radius:20px;padding:6px 14px;font-size:14px;cursor:pointer;backdrop-filter:blur(6px);">✕ Verwijderen</button>
+        <button onclick="verwijderWallpaper()" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.65);border:0.5px solid rgba(255,255,255,0.2);color:white;border-radius:20px;padding:6px 14px;font-size:14px;cursor:pointer;backdrop-filter:blur(6px);" data-t>✕ Verwijderen</button>
       </div>
-      <div style="font-size:14px;color:var(--accent);text-align:center;margin-top:8px;">✓ Actief als wallpaper op home</div>
+      <div style="font-size:14px;color:var(--accent);text-align:center;margin-top:8px;" data-t>✓ Actief als wallpaper op home</div>
     </div>
   </div>
 </div>
 <div class="panel" id="panel-animatie">
   <div class="section">
-    <div class="section-label">Live preview</div>
+    <div class="section-label" data-t>Live preview</div>
     <div class="anim-preview"><canvas id="previewCanvas"></canvas></div>
   </div>
   <div class="section">
-    <div class="section-label">Kies een animatie</div>
+    <div class="section-label" data-t>Kies een animatie</div>
     <div class="anim-grid">
-      <div class="anim-cell selected" id="anim-geen" onclick="selectAnimatie('geen')"><div class="anim-icon">🚫</div><div class="anim-name">Geen</div></div>
-      <div class="anim-cell" id="anim-sterren" onclick="selectAnimatie('sterren')"><div class="anim-icon">⭐</div><div class="anim-name">Sterren</div></div>
-      <div class="anim-cell" id="anim-sneeuw" onclick="selectAnimatie('sneeuw')"><div class="anim-icon">❄</div><div class="anim-name">Sneeuw</div></div>
-      <div class="anim-cell" id="anim-regen" onclick="selectAnimatie('regen')"><div class="anim-icon">🌧</div><div class="anim-name">Regen</div></div>
-      <div class="anim-cell" id="anim-bladeren" onclick="selectAnimatie('bladeren')"><div class="anim-icon">🍂</div><div class="anim-name">Bladeren</div></div>
-      <div class="anim-cell" id="anim-bubbels" onclick="selectAnimatie('bubbels')"><div class="anim-icon">🫧</div><div class="anim-name">Bubbels</div></div>
-      <div class="anim-cell" id="anim-vlinders" onclick="selectAnimatie('vlinders')"><div class="anim-icon">🦋</div><div class="anim-name">Vlinders</div></div>
-      <div class="anim-cell" id="anim-vuurvliegjes" onclick="selectAnimatie('vuurvliegjes')"><div class="anim-icon">✨</div><div class="anim-name">Vuurvliegjes</div></div>
-      <div class="anim-cell" id="anim-confetti" onclick="selectAnimatie('confetti')"><div class="anim-icon">🎉</div><div class="anim-name">Confetti</div></div>
+      <div class="anim-cell selected" id="anim-geen" onclick="selectAnimatie('geen')"><div class="anim-icon">🚫</div><div class="anim-name" data-t>Geen</div></div>
+      <div class="anim-cell" id="anim-sterren" onclick="selectAnimatie('sterren')"><div class="anim-icon">⭐</div><div class="anim-name" data-t>Sterren</div></div>
+      <div class="anim-cell" id="anim-sneeuw" onclick="selectAnimatie('sneeuw')"><div class="anim-icon">❄</div><div class="anim-name" data-t>Sneeuw</div></div>
+      <div class="anim-cell" id="anim-regen" onclick="selectAnimatie('regen')"><div class="anim-icon">🌧</div><div class="anim-name" data-t>Regen</div></div>
+      <div class="anim-cell" id="anim-bladeren" onclick="selectAnimatie('bladeren')"><div class="anim-icon">🍂</div><div class="anim-name" data-t>Bladeren</div></div>
+      <div class="anim-cell" id="anim-bubbels" onclick="selectAnimatie('bubbels')"><div class="anim-icon">🫧</div><div class="anim-name" data-t>Bubbels</div></div>
+      <div class="anim-cell" id="anim-vlinders" onclick="selectAnimatie('vlinders')"><div class="anim-icon">🦋</div><div class="anim-name" data-t>Vlinders</div></div>
+      <div class="anim-cell" id="anim-vuurvliegjes" onclick="selectAnimatie('vuurvliegjes')"><div class="anim-icon">✨</div><div class="anim-name" data-t>Vuurvliegjes</div></div>
+      <div class="anim-cell" id="anim-confetti" onclick="selectAnimatie('confetti')"><div class="anim-icon">🎉</div><div class="anim-name" data-t>Confetti</div></div>
     </div>
   </div>
 </div>
 <div class="panel" id="panel-lettertype">
   <div class="section">
-    <div class="section-label">Kies je lettertype</div>
+    <div class="section-label" data-t>Kies je lettertype</div>
     <div class="font-grid" id="fontGrid"></div>
   </div>
 </div>
 <div class="panel" id="panel-kleur">
   <div class="section">
-    <div class="section-label">Accentkleur</div>
+    <div class="section-label" data-t>Accentkleur</div>
     <div class="card">
       <div class="color-row"><input type="color" id="accentPicker" value="#c084fc" oninput="updateAccent(this.value)"/><input class="color-input" id="accentHex" value="#c084fc" oninput="updateAccentHex(this.value)"/></div>
       <div class="swatches">
@@ -332,7 +332,7 @@ input, textarea { font-size:16px !important; }
     </div>
   </div>
   <div class="section">
-    <div class="section-label">Tweede accentkleur</div>
+    <div class="section-label" data-t>Tweede accentkleur</div>
     <div class="card">
       <div class="color-row"><input type="color" id="accent2Picker" value="#f0abfc" oninput="updateAccent2(this.value)"/><input class="color-input" id="accent2Hex" value="#f0abfc" oninput="updateAccent2Hex(this.value)"/></div>
       <div class="swatches">
@@ -350,113 +350,113 @@ input, textarea { font-size:16px !important; }
     </div>
   </div>
   <div class="section">
-    <div class="section-label">Blokken</div>
+    <div class="section-label" data-t>Blokken</div>
     <div class="card">
-      <div class="color-row"><input type="color" id="blokKleur" value="#ffffff" oninput="blokAangepast()"/><span style="font-size:12px;color:var(--muted);">Kleur van de blokken</span></div>
-      <label class="field-label">Doorzichtigheid <span id="blokDoorzichtWaarde">6%</span></label>
+      <div class="color-row"><input type="color" id="blokKleur" value="#ffffff" oninput="blokAangepast()"/><span style="font-size:12px;color:var(--muted);" data-t>Kleur van de blokken</span></div>
+      <label class="field-label" data-t>Doorzichtigheid <span id="blokDoorzichtWaarde">6%</span></label>
       <input type="range" data-geen-swipe="1" id="blokDoorzicht" min="0" max="100" value="6" oninput="blokAangepast()" style="width:100%;"/>
-      <label class="field-label">Ronde hoeken <span id="blokHoekWaarde">14px</span></label>
+      <label class="field-label" data-t>Ronde hoeken <span id="blokHoekWaarde">14px</span></label>
       <input type="range" data-geen-swipe="1" id="blokHoek" min="0" max="30" value="14" oninput="blokAangepast()" style="width:100%;"/>
       <label style="display:flex;align-items:center;gap:10px;margin-top:12px;font-size:14px;cursor:pointer;">
         <input type="checkbox" id="blokKantel" onchange="blokAangepast()" style="width:20px;height:20px;"/>
-        Blokken laten meekantelen met je telefoon
+        <span data-t>Blokken laten meekantelen met je telefoon</span>
       </label>
-      <div style="font-size:11px;color:var(--muted);margin-top:6px;">Werkt alleen op een telefoon of tablet met bewegingssensor.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;" data-t>Werkt alleen op een telefoon of tablet met bewegingssensor.</div>
     </div>
   </div>  <div class="section">
-    <div class="section-label">Live preview</div>
+    <div class="section-label" data-t>Live preview</div>
     <div class="card">
       <div style="display:flex;gap:10px;align-items:center;">
         <div style="width:44px;height:44px;border-radius:50%;padding:2px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:20px;">🌿</div>
-        <div><div style="font-size:14px;color:var(--accent);font-weight:500;">Jouw naam</div><div style="font-size:14px;color:var(--muted);">Jouw bio hier</div></div>
+        <div><div style="font-size:14px;color:var(--accent);font-weight:500;" data-t>Jouw naam</div><div style="font-size:14px;color:var(--muted);" data-t>Jouw bio hier</div></div>
       </div>
-      <div style="margin-top:10px;padding:8px 14px;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;font-size:15px;font-weight:600;text-align:center;">Knop voorbeeld</div>
+      <div style="margin-top:10px;padding:8px 14px;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;font-size:15px;font-weight:600;text-align:center;" data-t>Knop voorbeeld</div>
     </div>
   </div>
 </div>
 <div class="panel" id="panel-widgets">
   <div class="section">
-    <div class="section-label">Actieve widgets</div>
+    <div class="section-label" data-t>Actieve widgets</div>
     <div class="widget-list">
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📖</div><div><div class="widget-name">Gastenboek</div><div class="widget-desc">Vrienden laten berichten achter</div></div></div><div class="toggle on" id="widget-gastenboek" onclick="toggleWidget('gastenboek')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">😊</div><div><div class="widget-name">Mood</div><div class="widget-desc">Toon hoe je je voelt</div></div></div><div class="toggle on" id="widget-mood" onclick="toggleWidget('mood')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎵</div><div><div class="widget-name">Muziek</div><div class="widget-desc">Deel wat je luistert</div></div></div><div class="toggle on" id="widget-muziek" onclick="toggleWidget('muziek')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎬</div><div><div class="widget-name">Video clip</div><div class="widget-desc">Korte mp4 op je profiel</div></div></div><div class="toggle off" id="widget-video" onclick="toggleWidget('video')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📷</div><div><div class="widget-name">Foto grid</div><div class="widget-desc">3x3 fotos op je profiel</div></div></div><div class="toggle off" id="widget-fotos" onclick="toggleWidget('fotos')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🖼</div><div><div class="widget-name">Foto grid 2×2</div><div class="widget-desc">4 fotos op je profiel</div></div></div><div class="toggle off" id="widget-fotos2x2" onclick="toggleWidget('fotos2x2')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🌅</div><div><div class="widget-name">Grote foto</div><div class="widget-desc">Eén uitgelichte foto</div></div></div><div class="toggle off" id="widget-fotosgroot" onclick="toggleWidget('fotosgroot')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎞</div><div><div class="widget-name">Foto strip</div><div class="widget-desc">4 fotos op een rij</div></div></div><div class="toggle off" id="widget-fotosbanner" onclick="toggleWidget('fotosbanner')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📸</div><div><div class="widget-name">Portret strip</div><div class="widget-desc">3 fotos onder elkaar</div></div></div><div class="toggle off" id="widget-fotos1x3" onclick="toggleWidget('fotos1x3')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎨</div><div><div class="widget-name">Uitgelicht + 4 klein</div><div class="widget-desc">Eén grote, vier kleine fotos</div></div></div><div class="toggle off" id="widget-fotosfeatured" onclick="toggleWidget('fotosfeatured')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🗃</div><div><div class="widget-name">Polaroid grid</div><div class="widget-desc">6 fotos als polaroids</div></div></div><div class="toggle off" id="widget-fotosmasonry" onclick="toggleWidget('fotosmasonry')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📌</div><div><div class="widget-name">Zwevende Polaroids</div><div class="widget-desc">3 fotos los en schuin</div></div></div><div class="toggle off" id="widget-fotoszwevend" onclick="toggleWidget('fotoszwevend')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📖</div><div><div class="widget-name" data-t>Gastenboek</div><div class="widget-desc" data-t>Vrienden laten berichten achter</div></div></div><div class="toggle on" id="widget-gastenboek" onclick="toggleWidget('gastenboek')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">😊</div><div><div class="widget-name" data-t>Mood</div><div class="widget-desc" data-t>Toon hoe je je voelt</div></div></div><div class="toggle on" id="widget-mood" onclick="toggleWidget('mood')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎵</div><div><div class="widget-name" data-t>Muziek</div><div class="widget-desc" data-t>Deel wat je luistert</div></div></div><div class="toggle on" id="widget-muziek" onclick="toggleWidget('muziek')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎬</div><div><div class="widget-name" data-t>Video clip</div><div class="widget-desc" data-t>Korte mp4 op je profiel</div></div></div><div class="toggle off" id="widget-video" onclick="toggleWidget('video')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📷</div><div><div class="widget-name" data-t>Foto grid</div><div class="widget-desc" data-t>3x3 fotos op je profiel</div></div></div><div class="toggle off" id="widget-fotos" onclick="toggleWidget('fotos')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🖼</div><div><div class="widget-name" data-t>Foto grid 2×2</div><div class="widget-desc" data-t>4 fotos op je profiel</div></div></div><div class="toggle off" id="widget-fotos2x2" onclick="toggleWidget('fotos2x2')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🌅</div><div><div class="widget-name" data-t>Grote foto</div><div class="widget-desc" data-t>Eén uitgelichte foto</div></div></div><div class="toggle off" id="widget-fotosgroot" onclick="toggleWidget('fotosgroot')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎞</div><div><div class="widget-name" data-t>Foto strip</div><div class="widget-desc" data-t>4 fotos op een rij</div></div></div><div class="toggle off" id="widget-fotosbanner" onclick="toggleWidget('fotosbanner')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📸</div><div><div class="widget-name" data-t>Portret strip</div><div class="widget-desc" data-t>3 fotos onder elkaar</div></div></div><div class="toggle off" id="widget-fotos1x3" onclick="toggleWidget('fotos1x3')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎨</div><div><div class="widget-name" data-t>Uitgelicht + 4 klein</div><div class="widget-desc" data-t>Eén grote, vier kleine fotos</div></div></div><div class="toggle off" id="widget-fotosfeatured" onclick="toggleWidget('fotosfeatured')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🗃</div><div><div class="widget-name" data-t>Polaroid grid</div><div class="widget-desc" data-t>6 fotos als polaroids</div></div></div><div class="toggle off" id="widget-fotosmasonry" onclick="toggleWidget('fotosmasonry')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📌</div><div><div class="widget-name" data-t>Zwevende Polaroids</div><div class="widget-desc" data-t>3 fotos los en schuin</div></div></div><div class="toggle off" id="widget-fotoszwevend" onclick="toggleWidget('fotoszwevend')"><div class="toggle-dot"></div></div></div>
     </div>
     <div style="margin-top:24px;text-align:center;">
       <span onclick="testTogglePlus()" id="testPlusLink" style="display:none;font-size:11px;color:rgba(255,255,255,0.15);cursor:pointer;">🔧 test</span>
     </div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⏰</div><div><div class="widget-name">Countdown</div><div class="widget-desc">Aftellen naar een datum</div></div></div><div class="toggle off" id="widget-countdown" onclick="toggleWidget('countdown')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📊</div><div><div class="widget-name">Poll</div><div class="widget-desc">Laat vrienden stemmen</div></div></div><div class="toggle off" id="widget-poll" onclick="toggleWidget('poll')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⏱</div><div><div class="widget-name">Opteltimer</div><div class="widget-desc">Tellen sinds een datum</div></div></div><div class="toggle off" id="widget-opteltimer" onclick="toggleWidget('opteltimer')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">✍</div><div><div class="widget-name">Quote</div><div class="widget-desc">Favoriete citaat tonen</div></div></div><div class="toggle off" id="widget-quote" onclick="toggleWidget('quote')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⏰</div><div><div class="widget-name" data-t>Countdown</div><div class="widget-desc" data-t>Aftellen naar een datum</div></div></div><div class="toggle off" id="widget-countdown" onclick="toggleWidget('countdown')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📊</div><div><div class="widget-name" data-t>Poll</div><div class="widget-desc" data-t>Laat vrienden stemmen</div></div></div><div class="toggle off" id="widget-poll" onclick="toggleWidget('poll')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⏱</div><div><div class="widget-name" data-t>Opteltimer</div><div class="widget-desc" data-t>Tellen sinds een datum</div></div></div><div class="toggle off" id="widget-opteltimer" onclick="toggleWidget('opteltimer')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">✍</div><div><div class="widget-name" data-t>Quote</div><div class="widget-desc" data-t>Favoriete citaat tonen</div></div></div><div class="toggle off" id="widget-quote" onclick="toggleWidget('quote')"><div class="toggle-dot"></div></div></div>
     <div style="display:none;">
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🗺</div><div><div class="widget-name">Locatie</div><div class="widget-desc">Toon je stad</div></div></div><div class="toggle off" id="widget-locatie" onclick="toggleWidget('locatie')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">❓</div><div><div class="widget-name">Vragen</div><div class="widget-desc">Vrienden stellen vragen</div></div></div><div class="toggle off" id="widget-vragen" onclick="toggleWidget('vragen')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🔗</div><div><div class="widget-name">Links</div><div class="widget-desc">Handige links delen</div></div></div><div class="toggle off" id="widget-links" onclick="toggleWidget('links')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎨</div><div><div class="widget-name">Sticker board</div><div class="widget-desc">Collage van stickers</div></div></div><div class="toggle off" id="widget-stickerboard" onclick="toggleWidget('stickerboard')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏆</div><div><div class="widget-name">Achievements</div><div class="widget-desc">Badges verdienen</div></div></div><div class="toggle off" id="widget-achievements" onclick="toggleWidget('achievements')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎮</div><div><div class="widget-name">Mini game</div><div class="widget-desc">Speel een spel op profiel</div></div></div><div class="toggle off" id="widget-game" onclick="toggleWidget('game')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📅</div><div><div class="widget-name">Agenda</div><div class="widget-desc">Deel aankomende events</div></div></div><div class="toggle off" id="widget-agenda" onclick="toggleWidget('agenda')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🗺</div><div><div class="widget-name" data-t>Locatie</div><div class="widget-desc" data-t>Toon je stad</div></div></div><div class="toggle off" id="widget-locatie" onclick="toggleWidget('locatie')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">❓</div><div><div class="widget-name" data-t>Vragen</div><div class="widget-desc" data-t>Vrienden stellen vragen</div></div></div><div class="toggle off" id="widget-vragen" onclick="toggleWidget('vragen')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🔗</div><div><div class="widget-name" data-t>Links</div><div class="widget-desc" data-t>Handige links delen</div></div></div><div class="toggle off" id="widget-links" onclick="toggleWidget('links')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎨</div><div><div class="widget-name" data-t>Sticker board</div><div class="widget-desc" data-t>Collage van stickers</div></div></div><div class="toggle off" id="widget-stickerboard" onclick="toggleWidget('stickerboard')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏆</div><div><div class="widget-name" data-t>Achievements</div><div class="widget-desc" data-t>Badges verdienen</div></div></div><div class="toggle off" id="widget-achievements" onclick="toggleWidget('achievements')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎮</div><div><div class="widget-name" data-t>Mini game</div><div class="widget-desc" data-t>Speel een spel op profiel</div></div></div><div class="toggle off" id="widget-game" onclick="toggleWidget('game')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">📅</div><div><div class="widget-name" data-t>Agenda</div><div class="widget-desc" data-t>Deel aankomende events</div></div></div><div class="toggle off" id="widget-agenda" onclick="toggleWidget('agenda')"><div class="toggle-dot"></div></div></div>
     </div>
   </div>
   <div class="section">
-    <div class="section-label">Spellen</div>
+    <div class="section-label" data-t>Spellen</div>
     <div class="widget-list">
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⭕</div><div><div class="widget-name">Tic-Tac-Toe</div><div class="widget-desc">Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_botkaaseiren" onclick="toggleWidget('spel_botkaaseiren')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🔴</div><div><div class="widget-name">Four in a Row</div><div class="widget-desc">Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_vieroprij" onclick="toggleWidget('spel_vieroprij')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">♟️</div><div><div class="widget-name">Chess</div><div class="widget-desc">Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_schaken" onclick="toggleWidget('spel_schaken')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⚫</div><div><div class="widget-name">Draughts</div><div class="widget-desc">Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_dammen" onclick="toggleWidget('spel_dammen')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏓</div><div><div class="widget-name">Neo Paddle</div><div class="widget-desc">Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_pong" onclick="toggleWidget('spel_pong')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">👻</div><div><div class="widget-name">Ghost Tag</div><div class="widget-desc">Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_pacman" onclick="toggleWidget('spel_pacman')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🐍</div><div><div class="widget-name">Twin Snakes</div><div class="widget-desc">Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_pinball" onclick="toggleWidget('spel_pinball')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🦇</div><div><div class="widget-name">Flapper</div><div class="widget-desc">Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_flappybird" onclick="toggleWidget('spel_flappybird')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🟪</div><div><div class="widget-name">Block It</div><div class="widget-desc">Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_breakout" onclick="toggleWidget('spel_breakout')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🪲</div><div><div class="widget-name">The Swarm</div><div class="widget-desc">Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_swarm" onclick="toggleWidget('spel_swarm')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏃</div><div><div class="widget-name">Runner &amp; Gunner</div><div class="widget-desc">Speel alleen</div></div></div><div class="toggle off" id="widget-spel_endlessrunner" onclick="toggleWidget('spel_endlessrunner')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⭕</div><div><div class="widget-name" data-t>Tic-Tac-Toe</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_botkaaseiren" onclick="toggleWidget('spel_botkaaseiren')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🔴</div><div><div class="widget-name" data-t>Four in a Row</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_vieroprij" onclick="toggleWidget('spel_vieroprij')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">♟️</div><div><div class="widget-name" data-t>Chess</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_schaken" onclick="toggleWidget('spel_schaken')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⚫</div><div><div class="widget-name" data-t>Draughts</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_dammen" onclick="toggleWidget('spel_dammen')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏓</div><div><div class="widget-name" data-t>Neo Paddle</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_pong" onclick="toggleWidget('spel_pong')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">👻</div><div><div class="widget-name" data-t>Ghost Tag</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_pacman" onclick="toggleWidget('spel_pacman')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🐍</div><div><div class="widget-name" data-t>Twin Snakes</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_pinball" onclick="toggleWidget('spel_pinball')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🦇</div><div><div class="widget-name" data-t>Flapper</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_flappybird" onclick="toggleWidget('spel_flappybird')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🟪</div><div><div class="widget-name" data-t>Block It</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_breakout" onclick="toggleWidget('spel_breakout')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🪲</div><div><div class="widget-name" data-t>The Swarm</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_swarm" onclick="toggleWidget('spel_swarm')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏃</div><div><div class="widget-name" data-t>Runner &amp; Gunner</div><div class="widget-desc" data-t>Speel alleen</div></div></div><div class="toggle off" id="widget-spel_endlessrunner" onclick="toggleWidget('spel_endlessrunner')"><div class="toggle-dot"></div></div></div>
     </div>
   </div>
   <div class="section">
-    <div class="section-label">Muziek uploaden</div>
+    <div class="section-label" data-t>Muziek uploaden</div>
     <div class="upload-zone" onclick="document.getElementById('muziekUpload').click()">
       <div class="upload-icon">🎵</div>
-      <div class="upload-text" id="muziekUploadTekst">Upload een muziekbestand</div>
-      <div class="upload-formats">MP3, M4A, OGG — wordt verkleind naar 128kbps</div>
+      <div class="upload-text" id="muziekUploadTekst" data-t>Upload een muziekbestand</div>
+      <div class="upload-formats" data-t>MP3, M4A, OGG — wordt verkleind naar 128kbps</div>
     </div>
     <input type="file" id="muziekUpload" accept="audio/*,.mp3,.m4a,.ogg,.wav,audio/mpeg,audio/mp4" style="display:none" onchange="verwerkMuziek(event)"/>
     <div class="status-msg" id="muziekStatus"></div>
   </div>
 </div>
 <div class="panel" id="panel-stickers">
-  <div class="section"><div class="section-label">Actieve stickers</div><div class="sticker-galerij" id="actieveStickers"></div></div>
-  <div class="section"><div class="section-label">Natuur & Planten</div><div class="sticker-galerij" id="stickerNatuur"></div></div>
-  <div class="section"><div class="section-label">Sfeer & Magie</div><div class="sticker-galerij" id="stickerMagie"></div></div>
-  <div class="section"><div class="section-label">Muziek & Kunst</div><div class="sticker-galerij" id="stickerKunst"></div></div>
-  <div class="section"><div class="section-label">Dieren</div><div class="sticker-galerij" id="stickerDieren"></div></div>
+  <div class="section"><div class="section-label" data-t>Actieve stickers</div><div class="sticker-galerij" id="actieveStickers"></div></div>
+  <div class="section"><div class="section-label" data-t>Natuur & Planten</div><div class="sticker-galerij" id="stickerNatuur"></div></div>
+  <div class="section"><div class="section-label" data-t>Sfeer & Magie</div><div class="sticker-galerij" id="stickerMagie"></div></div>
+  <div class="section"><div class="section-label" data-t>Muziek & Kunst</div><div class="sticker-galerij" id="stickerKunst"></div></div>
+  <div class="section"><div class="section-label" data-t>Dieren</div><div class="sticker-galerij" id="stickerDieren"></div></div>
   <div class="section">
-    <div class="section-label">Eigen sticker uploaden</div>
+    <div class="section-label" data-t>Eigen sticker uploaden</div>
     <div class="upload-zone" onclick="document.getElementById('stickerUpload').click()">
       <div class="upload-icon">🎨</div>
-      <div class="upload-text">Upload je eigen sticker</div>
-      <div class="upload-formats">PNG, WEBP, SVG, GIF — max 2MB</div>
+      <div class="upload-text" data-t>Upload je eigen sticker</div>
+      <div class="upload-formats" data-t>PNG, WEBP, SVG, GIF — max 2MB</div>
     </div>
     <input type="file" id="stickerUpload" accept="image/*" style="display:none"/>
   </div>
 </div>
 </main>
 <div class="bottom-nav" role="navigation" aria-label="Menu">
-  <div class="nav-item" onclick="window.location.href='index.html'"><div class="nav-icon">🏠</div>Home</div>
-  <div class="nav-item" onclick="window.location.href='vrienden.html'"><div class="nav-icon">👥</div>Vrienden</div>
-  <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon">💬</div>Chat</div>
-  <div class="nav-item active"><div class="nav-icon">👤</div>Profiel</div>
+  <div class="nav-item" onclick="window.location.href='index.html'" data-t><div class="nav-icon">🏠</div>Home</div>
+  <div class="nav-item" onclick="window.location.href='vrienden.html'" data-t><div class="nav-icon">👥</div>Vrienden</div>
+  <div class="nav-item" onclick="window.location.href='chat.html'" data-t><div class="nav-icon">💬</div>Chat</div>
+  <div class="nav-item active" data-t><div class="nav-icon">👤</div>Profiel</div>
 </div>
 <script>
 // v129: de tekst (naam, @naam, bio, mood, online) meteen uit het geheugen van dit toestel tonen,
@@ -491,9 +491,9 @@ input, textarea { font-size:16px !important; }
     g('moodEmojiGekozen').textContent = moodEmoji
     g('onlineDot').style.background = online === 'Online' ? '#22c55e' : '#6b7280'
     g('onlineLabel').textContent = online
-    if (g('previewNaam')) g('previewNaam').textContent = lokaal.naam || p.username || 'Jouw naam'
-    if (g('previewBio')) g('previewBio').textContent = lokaal.bio || 'Jouw bio verschijnt hier'
-    if (g('bioTeller')) g('bioTeller').textContent = (100 - (lokaal.bio || '').length) + ' tekens over'
+    if (g('previewNaam')) g('previewNaam').textContent = lokaal.naam || p.username || T('Jouw naam')
+    if (g('previewBio')) g('previewBio').textContent = lokaal.bio || T('Jouw bio verschijnt hier')
+    if (g('bioTeller')) g('bioTeller').textContent = T('{n} tekens over', { n: 100 - (lokaal.bio || '').length })
     window._profielVroeg = { editNaam: g('editNaam').value, editBio: g('editBio').value, editMood: g('editMood').value, moodEmoji: moodEmoji, online: online }
   } catch (e) {}
 })()
@@ -556,7 +556,7 @@ const fonts = LETTERTYPES.map(f => ({ naam: f.naam, familie: "'" + f.naam + "',"
 function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
 async function dbAlleSleutels(){const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').getAllKeys();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>resolve([])})}
 async function metenOpslag(uid){try{const alle=await dbAlleSleutels();const mijn=alle.filter(k=>typeof k==='string'&&k.includes(uid));let totaal=0;for(const k of mijn){if(k==='video_data_'+uid){try{const m=JSON.parse(await laadFotoUitDB('video_meta_'+uid)||'null');if(m&&m.grootte>0){totaal+=m.grootte;continue}}catch(e){}}const d=await laadFotoUitDB(k);if(typeof d==='string')totaal+=d.length;else if(d&&d.size)totaal+=d.size}return totaal}catch(e){return 0}}
-async function slaFotoOp(id,data){const uid=huidigeUser&&huidigeUser.id;if(uid&&typeof id==='string'&&id.includes(uid)){const g=typeof data==='string'?data.length:(data&&data.size)||0;const nu=await metenOpslag(uid);if(nu+g>157286400){alert('Je profiel is vol (150 MB).\n\nVerwijder eerst een foto of nummer om ruimte te maken.');return null}}const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=resolve})}
+async function slaFotoOp(id,data){const uid=huidigeUser&&huidigeUser.id;if(uid&&typeof id==='string'&&id.includes(uid)){const g=typeof data==='string'?data.length:(data&&data.size)||0;const nu=await metenOpslag(uid);if(nu+g>157286400){alert(T('Je profiel is vol (150 MB).\n\nVerwijder eerst een foto of nummer om ruimte te maken.'));return null}}const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=resolve})}
 async function laadFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
 // v138: foto's maken in een formaat dat dit toestel echt kan. Safari (iPhone) kan geen WebP maken en
 // Chromium geen AVIF: dan komt er stilletjes een PNG uit, 5-10x groter. Dus WebP als het kan, anders JPEG
@@ -587,7 +587,7 @@ async function maakAchtergrondKleiner(userId, data) {
   return kleiner
 }
 function comprimeerFoto(file,maxBreedte,kwaliteit){return new Promise((resolve)=>{const reader=new FileReader();reader.onload=function(e){const img=new Image();img.onload=function(){const canvas=document.createElement('canvas');let w=img.width,h=img.height;if(w>maxBreedte){h=h*maxBreedte/w;w=maxBreedte}if(h>maxBreedte){w=w*maxBreedte/h;h=maxBreedte}canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);// WebP voor kleinste bestandsgrootte
-resolve(fotoData(canvas,kwaliteit))};img.onerror=function(){alert('Deze foto kan niet worden gelezen.\n\nWaarschijnlijk is het een HEIC-bestand van een iPhone. Zet in Instellingen > Camera > Indelingen op "Meest compatibel", of maak er eerst een schermafbeelding van.');resolve(null)};img.src=e.target.result};reader.onerror=function(){alert('Bestand kon niet worden gelezen.');resolve(null)};reader.readAsDataURL(file)})}
+resolve(fotoData(canvas,kwaliteit))};img.onerror=function(){alert(T('Deze foto kan niet worden gelezen.\n\nWaarschijnlijk is het een HEIC-bestand van een iPhone. Zet in Instellingen > Camera > Indelingen op "Meest compatibel", of maak er eerst een schermafbeelding van.'));resolve(null)};img.src=e.target.result};reader.onerror=function(){alert(T('Bestand kon niet worden gelezen.'));resolve(null)};reader.readAsDataURL(file)})}
 
 // Video compressie via MediaRecorder (thumbnail + gecomprimeerde versie)
 async function comprimeerVideo(file) {
@@ -676,7 +676,7 @@ const muzBalk = (() => {
       v.style.animation = 'none'
       v.style.transform = 'none'
       v.style.width = p + '%'
-      deel('.mb-tekst').textContent = '\ud83c\udfb5 Muziek verwerken\u2026 ' + p + '%'
+      deel('.mb-tekst').textContent = T('\ud83c\udfb5 Muziek verwerken\u2026 {p}%', { p })
     },
     tekst(t) { if (el) deel('.mb-tekst').textContent = t },
     weg() { if (el) { el.remove(); el = null } }
@@ -738,25 +738,25 @@ window.verwerkMuziek = async function(event) {
   const maxMB = 25
   if (file.size > maxMB * 1024 * 1024) {
     status.className = 'status-msg error'
-    status.textContent = 'Bestand te groot (max ' + maxMB + ' MB)'
+    status.textContent = T('Bestand te groot (max {mb} MB)', { mb: maxMB })
     return
   }
-  if (window._muzBezig) { alert('Er wordt al een nummer verwerkt. Even wachten.'); return }
+  if (window._muzBezig) { alert(T('Er wordt al een nummer verwerkt. Even wachten.')); return }
   window._muzBezig = true
   try {
     status.className = 'status-msg'
-    status.textContent = 'Bezig met verkleinen...'
-    muzBalk.toon('\ud83c\udfb5 Muziek inlezen\u2026')
+    status.textContent = T('Bezig met verkleinen...')
+    muzBalk.toon(T('\ud83c\udfb5 Muziek inlezen\u2026'))
     const data = await comprimeerMuziek(file, f => muzBalk.zet(f))
-    muzBalk.tekst('\ud83c\udfb5 Opslaan\u2026')
+    muzBalk.tekst(T('\ud83c\udfb5 Opslaan\u2026'))
     await slaFotoOp('muziek_track', data)
     await slaFotoOp('muziek_titel', file.name.replace(/\.[^.]+$/, ''))
     document.getElementById('muziekUploadTekst').textContent = file.name
     status.className = 'status-msg success'
-    status.textContent = 'Muziek opgeslagen (' + Math.round(data.length * 0.75 / 1024) + ' KB)'
+    status.textContent = T('Muziek opgeslagen ({kb} KB)', { kb: Math.round(data.length * 0.75 / 1024) })
   } catch(err) {
     status.className = 'status-msg error'
-    status.textContent = 'Mislukt: ' + err.message
+    status.textContent = T('Mislukt: {fout}', { fout: err.message })
   } finally {
     window._muzBezig = false
     muzBalk.weg()
@@ -839,8 +839,8 @@ async function init(){
     if(opgeslagenFoto){document.getElementById('avatarEmoji').innerHTML=`<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;(document.getElementById('previewAvatar')||{}).innerHTML=`<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`}
     else{const av=lokaal.avatar||profiel.avatar_url||'🌿';document.getElementById('avatarEmoji').textContent=av;(document.getElementById('previewAvatar')||{}).textContent=av}
 
-    ;(document.getElementById('previewNaam')||{}).textContent=document.getElementById('editNaam').value||profiel.username||'Jouw naam'
-    ;(document.getElementById('previewBio')||{}).textContent=document.getElementById('editBio').value||'Jouw bio verschijnt hier'
+    ;(document.getElementById('previewNaam')||{}).textContent=document.getElementById('editNaam').value||profiel.username||T('Jouw naam')
+    ;(document.getElementById('previewBio')||{}).textContent=document.getElementById('editBio').value||T('Jouw bio verschijnt hier')
     updateBioTeller()
 
     if(lokaal.accentKleur)updateAccent(lokaal.accentKleur)
@@ -864,8 +864,8 @@ async function init(){
   document.getElementById('editNaam').oninput=updatePreview
   document.getElementById('editBio').oninput=updatePreview
 }
-function updateBioTeller(){const el=document.getElementById('bioTeller');if(el)el.textContent=(100-document.getElementById('editBio').value.length)+' tekens over'}
-function updatePreview(){updateBioTeller();(document.getElementById('previewNaam')||{}).textContent=document.getElementById('editNaam').value||'Jouw naam';(document.getElementById('previewBio')||{}).textContent=document.getElementById('editBio').value||'Jouw bio verschijnt hier'}
+function updateBioTeller(){const el=document.getElementById('bioTeller');if(el)el.textContent=T('{n} tekens over',{n:100-document.getElementById('editBio').value.length})}
+function updatePreview(){updateBioTeller();(document.getElementById('previewNaam')||{}).textContent=document.getElementById('editNaam').value||T('Jouw naam');(document.getElementById('previewBio')||{}).textContent=document.getElementById('editBio').value||T('Jouw bio verschijnt hier')}
 document.addEventListener('DOMContentLoaded',function(){const b=document.querySelector('.main-tabs');if(!b)return;let neer=false,x0=0,s0=0,ver=0;
 b.addEventListener('wheel',function(e){if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){b.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});
 b.addEventListener('mousedown',function(e){neer=true;ver=0;x0=e.pageX;s0=b.scrollLeft;b.style.cursor='grabbing'});
@@ -885,7 +885,7 @@ window.updateGradient=function(){const k1=document.getElementById('grad1Picker')
 window.selectWallpaper=function(naam,el){document.querySelectorAll('.wallpaper-cell').forEach(c=>c.classList.remove('selected'));el.classList.add('selected')}
 window.zetWallpaperLaag=function(url){let laag=document.getElementById('fibro-wallpaper');if(!laag){laag=document.createElement('div');laag.id='fibro-wallpaper';laag.style.cssText='position:fixed;inset:0;z-index:-1;background-size:cover;background-position:center;background-repeat:no-repeat;pointer-events:none;';document.body.prepend(laag)}laag.style.backgroundImage='url('+url+')';document.body.style.backgroundImage='';document.body.style.background='transparent';document.documentElement.style.setProperty('--bg','transparent')};
 window.weghaalWallpaperLaag=function(){const laag=document.getElementById('fibro-wallpaper');if(laag)laag.remove()};
-window.uploadAchtergrond=async function(input){const bestand=input.files[0];if(!bestand)return;if(bestand.size>10*1024*1024){alert('Bestand te groot! Max 10MB.');return};const userId=huidigeUser.id;if(bestand.type.startsWith('video')){const url=URL.createObjectURL(bestand);document.getElementById('uploadedWallpaper').innerHTML=`<video src="${url}" autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>`;document.getElementById('uploadPreview').style.display='block';zetWallpaperLaag(url);return};const gecomprimeerd=await comprimeerFoto(bestand,1080,0.85);await slaFotoOp('bg_wallpaper_'+userId,gecomprimeerd);document.getElementById('uploadedWallpaper').innerHTML=`<img src="${gecomprimeerd}" style="width:100%;height:100%;object-fit:cover;">`;document.getElementById('uploadPreview').style.display='block';zetWallpaperLaag(gecomprimeerd)}
+window.uploadAchtergrond=async function(input){const bestand=input.files[0];if(!bestand)return;if(bestand.size>10*1024*1024){alert(T('Bestand te groot! Max 10MB.'));return};const userId=huidigeUser.id;if(bestand.type.startsWith('video')){const url=URL.createObjectURL(bestand);document.getElementById('uploadedWallpaper').innerHTML=`<video src="${url}" autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>`;document.getElementById('uploadPreview').style.display='block';zetWallpaperLaag(url);return};const gecomprimeerd=await comprimeerFoto(bestand,1080,0.85);await slaFotoOp('bg_wallpaper_'+userId,gecomprimeerd);document.getElementById('uploadedWallpaper').innerHTML=`<img src="${gecomprimeerd}" style="width:100%;height:100%;object-fit:cover;">`;document.getElementById('uploadPreview').style.display='block';zetWallpaperLaag(gecomprimeerd)}
 window.verwijderWallpaper=async function(){const userId=huidigeUser.id;const db=await openDB();await new Promise(resolve=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').delete('bg_wallpaper_'+userId);tx.oncomplete=resolve});weghaalWallpaperLaag();document.body.style.backgroundImage='';document.documentElement.style.setProperty('--bg','#1a0a2e');document.getElementById('uploadPreview').style.display='none';document.getElementById('uploadedWallpaper').innerHTML='';document.getElementById('bgUpload').value=''}
 var deeltjes=[]
 window.selectAnimatie=function(naam){huidigeAnimatie=naam;updateAnimatieUI();startAnimatiePreview()}
@@ -895,7 +895,7 @@ function stopAnimatiePreview(){if(animFrame){cancelAnimationFrame(animFrame);ani
 // v129: elk lettertype laat zichzelf zien (ook als er al een ander lettertype voor de hele pagina geldt),
 // en wordt pas geladen als het in beeld komt. Kiezen = meteen de hele pagina in dat lettertype.
 function pasLettertypeLiveToe(fam){document.querySelectorAll('style').forEach(st=>{if(st.id==='fibro-font-style'||/^\s*\*\s*\{\s*font-family:/.test(st.textContent))st.remove()});if(!fam){document.body.style.fontFamily='';return}try{laadFont(String(fam).split(',')[0].replace(/['"]/g,'').trim())}catch(e){}const st=document.createElement('style');st.id='fibro-font-style';st.textContent='* { font-family: '+fam+' !important; }';document.head.appendChild(st);document.body.style.fontFamily=fam}
-function bouwFontGrid(){const grid=document.getElementById('fontGrid');grid.innerHTML='';const zichtbaar=('IntersectionObserver' in window)?new IntersectionObserver(items=>{items.forEach(it=>{if(it.isIntersecting&&it.boundingClientRect.height>0){try{laadFont(it.target.dataset.font)}catch(e){};zichtbaar.unobserve(it.target)}})},{rootMargin:'300px'}):null;fonts.forEach(f=>{const div=document.createElement('div');div.className='font-item'+(huidigLettertype===f.familie?' selected':'');div.dataset.font=f.naam;div.innerHTML=`<div class="font-preview" style="font-family:${f.familie} !important;">${f.naam}</div><div class="font-zin" style="font-family:${f.familie} !important;">Het leven is mooi & bijzonder</div><div class="font-name">${f.stijl}</div>`;div.onclick=()=>{document.querySelectorAll('.font-item').forEach(i=>i.classList.remove('selected'));div.classList.add('selected');huidigLettertype=f.familie;pasLettertypeLiveToe(f.familie)};grid.appendChild(div);if(zichtbaar)zichtbaar.observe(div);else{try{laadFont(f.naam)}catch(e){}}})}
+function bouwFontGrid(){const grid=document.getElementById('fontGrid');grid.innerHTML='';const zichtbaar=('IntersectionObserver' in window)?new IntersectionObserver(items=>{items.forEach(it=>{if(it.isIntersecting&&it.boundingClientRect.height>0){try{laadFont(it.target.dataset.font)}catch(e){};zichtbaar.unobserve(it.target)}})},{rootMargin:'300px'}):null;fonts.forEach(f=>{const div=document.createElement('div');div.className='font-item'+(huidigLettertype===f.familie?' selected':'');div.dataset.font=f.naam;div.innerHTML=`<div class="font-preview" style="font-family:${f.familie} !important;">${f.naam}</div><div class="font-zin" style="font-family:${f.familie} !important;">${T('Het leven is mooi & bijzonder')}</div><div class="font-name">${T('lettertype|'+f.stijl)}</div>`;div.onclick=()=>{document.querySelectorAll('.font-item').forEach(i=>i.classList.remove('selected'));div.classList.add('selected');huidigLettertype=f.familie;pasLettertypeLiveToe(f.familie)};grid.appendChild(div);if(zichtbaar)zichtbaar.observe(div);else{try{laadFont(f.naam)}catch(e){}}})}
 window.updateAccent=function(k){document.getElementById('accentPicker').value=k;document.getElementById('accentHex').value=k;document.documentElement.style.setProperty('--accent',k)}
 window.updateAccentHex=function(v){if(/^#[0-9a-f]{6}$/i.test(v))updateAccent(v)}
 window.updateAccent2=function(k){document.getElementById('accent2Picker').value=k;document.getElementById('accent2Hex').value=k;document.documentElement.style.setProperty('--accent2',k)}
@@ -915,7 +915,7 @@ window.toggleWidget=function(naam){const toggle=document.getElementById('widget-
 function updateWidgetToggles(){actieveWidgets.forEach(w=>{const el=document.getElementById('widget-'+w);if(el){el.classList.remove('off');el.classList.add('on')}})}
 function bouwStickerGrids(){bouwStickerGrid('stickerNatuur',stickers.natuur);bouwStickerGrid('stickerMagie',stickers.magie);bouwStickerGrid('stickerKunst',stickers.kunst);bouwStickerGrid('stickerDieren',stickers.dieren)}
 function bouwStickerGrid(id,lijst){const grid=document.getElementById(id);grid.innerHTML='';lijst.forEach(s=>{const div=document.createElement('div');div.className='sticker-item'+(actieveStickers.includes(s)?' selected':'');div.textContent=s;div.onclick=()=>{if(actieveStickers.includes(s)){actieveStickers=actieveStickers.filter(x=>x!==s);div.classList.remove('selected')}else{actieveStickers.push(s);div.classList.add('selected')};updateActieveStickers()};grid.appendChild(div)})}
-function updateActieveStickers(){const grid=document.getElementById('actieveStickers');grid.innerHTML='';if(actieveStickers.length===0){grid.innerHTML='<div style="font-size:15px;color:var(--muted);padding:8px;">Nog geen stickers gekozen</div>';return};actieveStickers.forEach(s=>{const div=document.createElement('div');div.className='sticker-item selected';div.textContent=s;grid.appendChild(div)})}
+function updateActieveStickers(){const grid=document.getElementById('actieveStickers');grid.innerHTML='';if(actieveStickers.length===0){grid.innerHTML='<div style="font-size:15px;color:var(--muted);padding:8px;">'+T('Nog geen stickers gekozen')+'</div>';return};actieveStickers.forEach(s=>{const div=document.createElement('div');div.className='sticker-item selected';div.textContent=s;grid.appendChild(div)})}
 // ── Haal avatar data op voor Supabase ──
 async function haalAvatarDataOp() {
   const userId = huidigeUser?.id
@@ -1056,8 +1056,8 @@ window.slaAllesOp=async function(){
   try{pasAnimatieToe(huidigeAnimatie)}catch(e){}
   if(!error){const nieuw=Object.assign({},profiel||{},{accent_kleur:accentKleur,accent_kleur2:accentKleur2,achtergrond_kleur:bgKleur,lettertype:huidigLettertype,animatie:huidigeAnimatie,online_status:isOnline,toon_online:isOnline,offline_emoji:gekozenMoodEmoji,offline_bericht:document.getElementById('editMood').value.trim()||'Offline',avatar_data:avatarData});profiel=nieuw;bewaarProfielCache(huidigeUser.id,nieuw)}
   const msg=document.getElementById('statusMsg')
-  if(error){msg.className='status-msg error';msg.textContent='✗ Opslaan mislukt: '+error.message}
-  else{msg.className='status-msg success';msg.textContent='✓ Profiel opgeslagen!';setTimeout(()=>msg.className='status-msg',2000)}
+  if(error){msg.className='status-msg error';msg.textContent=T('✗ Opslaan mislukt: {fout}',{fout:error.message})}
+  else{msg.className='status-msg success';msg.textContent=T('✓ Profiel opgeslagen!');setTimeout(()=>msg.className='status-msg',2000)}
   window.scrollTo(0,0)
 }
 window.uitloggen=async function(){sessionStorage.setItem('fibro_bewust_uitloggen','1');localStorage.removeItem('fibro_lettertype');localStorage.removeItem('fibro_lettertype');try{localStorage.removeItem('fibro_thema_'+huidigeUser.id);localStorage.removeItem('fibro_profielcache_'+huidigeUser.id)}catch(e){};try{const u=huidigeUser.id;Object.keys(localStorage).forEach(k=>{if(k.startsWith('fibro_chatlog_'+u+'_')||k==='fibro_chatvrienden_'+u||k==='fibro_gastenboek_'+u||k==='fibro_vriendenpagina_'+u||k==='fibro_chatlogs_bewaard_'+u||k.startsWith('fibro_vriendgb_'+u+'_')||k==='fibro_nietverstuurd_'+u||(k.startsWith('vriend_cache_')&&k.endsWith('_'+u)))localStorage.removeItem(k)})}catch(e){};await supabase.auth.signOut({scope:'local'});window.location.href='login.html'}
@@ -1065,14 +1065,14 @@ window.uitloggen=async function(){sessionStorage.setItem('fibro_bewust_uitloggen
 window.activeerPushNotificaties = async function() {
   try {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      alert('Push notificaties worden niet ondersteund op dit apparaat.')
+      alert(T('Push notificaties worden niet ondersteund op dit apparaat.'))
       return
     }
     const reg = await navigator.serviceWorker.register('./service-worker.js?v=95')
     await navigator.serviceWorker.ready
     const toestemming = await Notification.requestPermission()
     if (toestemming !== 'granted') {
-      alert('Toestemming geweigerd. Zet notificaties aan in je instellingen.')
+      alert(T('Toestemming geweigerd. Zet notificaties aan in je instellingen.'))
       return
     }
     const { data: { session } } = await supabase.auth.getSession()
@@ -1084,9 +1084,9 @@ window.activeerPushNotificaties = async function() {
       user_id: session.user.id,
       subscription: sub.toJSON()
     }, { onConflict: 'user_id,endpoint' })
-    alert('✅ Notificaties ingeschakeld!')
+    alert(T('✅ Notificaties ingeschakeld!'))
   } catch(e) {
-    alert('Fout: ' + e.message)
+    alert(T('Fout: {fout}', { fout: e.message }))
   }
 }
 

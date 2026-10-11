@@ -33,7 +33,7 @@ fout = 0
 def meld(t):
     global fout; fout += 1; print('FOUT', t)
 code = set()
-TOEGESTAAN = ('w.titel', 'stad.naam', 's)', 'nl,', 's, v)', 'r)', 'g.naam')
+TOEGESTAAN = ('w.titel', 'stad.naam', 's)', 'nl,', 's, v)', 'r)', 'g.naam', "'lettertype|'+f.stijl)")
 for p in BESTANDEN:
     s = open(os.path.join(MAP, p), encoding='utf-8').read()
     if p == 'taal.js': continue
@@ -41,10 +41,13 @@ for p in BESTANDEN:
         rest = s[m.end():]
         if rest.startswith("'"):
             k = re.match(r"'((?:[^'\\\n]|\\.)*)'", rest)
+            if k and rest[k.end():k.end() + 1] == '+' and k.group(1).endswith('|'): continue  # T('context|' + iets): zie VAST
             if not k or rest[k.end():k.end() + 1] not in (')', ','): meld('geen enkele tekst in %s: %s' % (p, rest[:70])); continue
             code.add(ontcijfer(k.group(1)))
         elif not rest.startswith(TOEGESTAAN): meld('T( zonder vaste tekst in %s: %s' % (p, rest[:60].replace('\n', ' ')))
     code.update(VAST.get('index.html' if p == 'vriend-profiel.html' else p, []))
+    if p == 'profiel.html':  # lettertypen: T('lettertype|' + label), de labels staan in lettertypes.js
+        code.update('lettertype|' + l for l in re.findall(r"label: '([^']+)'", open(os.path.join(MAP, 'lettertypes.js'), encoding='utf-8').read()))
 # html via Chromium
 class H(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a): pass

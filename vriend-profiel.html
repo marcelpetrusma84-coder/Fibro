@@ -144,6 +144,7 @@ body.heeft-wallpaper::before { display:block; }
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { wisVriendData } from './opruimen.js?v=95'
+  import { haalVriendFotos } from './vriendfotos.js?v=2'
   import { initSync, vraagVriendVideo } from './sync.js?v=129'
   import { eisSessie, startBewaking } from './sessie.js?v=95'
   import { startMeldingen } from './meldingen.js?v=131'
@@ -1041,19 +1042,49 @@ async function renderVriendMuziek(el) {
         if (s.length <= 300000) localStorage.setItem(gbSleutel, s)
       } catch (e) {}
     }
+    // v141: de foto's van de schrijvers komen niet meer bij elk bericht mee (tot 40 x 20 kB), maar
+    // via vriendfotos.js, zoals in Vrienden en Chat: van dit toestel, en alleen opnieuw opgehaald als
+    // die schrijver een andere avatar heeft (etiket avatar_versie; heeft de server nog geen
+    // etiketten, dan updated_at). Het bewaarde boek heeft daardoor geen foto's meer nodig.
+    const vulFotos = async (lijst, online) => {
+      const wie = new Map()
+      for (const e of lijst) {
+        if (!e || !e.author_id || !e.author || wie.has(e.author_id)) continue
+        const v = { id: e.author_id }
+        if (online) { // alleen met internet mag vriendfotos.js iets ophalen
+          v.updated_at = e.author.updated_at || ''
+          if ('avatar_versie' in e.author) v.avatar_versie = e.author.avatar_versie
+        }
+        wie.set(e.author_id, v)
+      }
+      if (!wie.size) return lijst
+      // zonder internet mag een foto uit een ouder bewaard boek nog als het toestel er geen heeft
+      const zet = (l, m) => l.map(e => (e && e.author) ? Object.assign({}, e, { author: Object.assign({}, e.author,
+        { avatar_data: m.get(e.author_id) || (online ? null : veiligeAfbeelding(e.author.avatar_data)) }) }) : e)
+      try {
+        const m = await haalVriendFotos(huidigeUser.id, [...wie.values()], nieuw => {
+          if (!c.isConnected) return
+          alles = zet(alles, nieuw)
+          tekenBlad(null)
+        })
+        return zet(lijst, m)
+      } catch (e) { console.warn('[gastenboek] vriendfoto\'s', e); return lijst }
+    }
     const haal = async () => {
       nietBewaard = false
       if (navigator.onLine) {
-        const { data, error } = await supabase
+        const vraag = velden => supabase
           .from('guestbook_entries')
-          .select('*, author:author_id(username,avatar_url,avatar_data)')
+          .select('*, author:author_id(' + velden + ')')
           .eq('profile_id', uid)
           .order('created_at', { ascending: false })
           .limit(40)
-        if (!error && Array.isArray(data)) { bewaarGb(data); return data }
+        let { data, error } = await vraag('username,avatar_url,updated_at,avatar_versie')
+        if (error && error.code === '42703') ({ data, error } = await vraag('username,avatar_url,updated_at')) // server nog zonder foto-etiketten
+        if (!error && Array.isArray(data)) { bewaarGb(data); return await vulFotos(data, true) }
       }
       const bewaard = leesGb()
-      if (bewaard) return bewaard
+      if (bewaard) return await vulFotos(bewaard, false)
       nietBewaard = !navigator.onLine
       return []
     }

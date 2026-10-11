@@ -1966,7 +1966,9 @@ async function renderGastenboek(c, uid) {
   // Eerst alleen de tekst (klein), daarna de foto's van de schrijvers: elke schrijver maar één keer
   // (vroeger kwam de foto bij elk bericht opnieuw mee, soms meer dan een megabyte).
   let getekend = null
-  const vingerafdruk = l => JSON.stringify(l.map(e => [e.id, e.content, e.created_at, e.author && e.author.username, e.author && e.author.avatar_url, String((e.author && e.author.avatar_data) || '').length]))
+  // v141: van een foto ook het laatste stukje, want een nieuwe foto kan even lang zijn als de oude
+  const fotoStempel = f => { f = String(f || ''); return f.length + ':' + f.slice(-24) }
+  const vingerafdruk = l => JSON.stringify(l.map(e => [e.id, e.content, e.created_at, e.author && e.author.username, e.author && e.author.avatar_url, fotoStempel(e.author && e.author.avatar_data)]))
   const toon = (lijst, naarBegin) => {
     const v = vingerafdruk(lijst)
     if (v === getekend && !naarBegin) return
@@ -1980,28 +1982,43 @@ async function renderGastenboek(c, uid) {
   }))
   const ververs = async naarBegin => {
     if (!navigator.onLine) { if (getekend === null || naarBegin) toon(leesGb(), naarBegin); return }
-    const { data, error } = await supabase
+    // v141: van elke schrijver ook updated_at en het etiket van zijn avatar (avatar_versie); heeft
+    // de server nog geen etiketten, dan zonder
+    const vraag = velden => supabase
       .from('guestbook_entries')
-      .select('*, author:author_id(username,avatar_url)')
+      .select('*, author:author_id(' + velden + ')')
       .eq('profile_id', uid)
       .order('created_at', { ascending: false })
       .limit(40)
+    let { data, error } = await vraag('username,avatar_url,updated_at,avatar_versie')
+    if (error && error.code === '42703') ({ data, error } = await vraag('username,avatar_url,updated_at'))
     if (!c.isConnected) return
     if (error || !Array.isArray(data)) { if (getekend === null) toon(leesGb(), naarBegin); return }
-    // foto's die al op dit toestel staan meteen gebruiken
-    const bekend = {}
-    for (const e of alles.concat(leesGb())) if (e.author_id && e.author && e.author.avatar_data) bekend[e.author_id] = e.author.avatar_data
-    toon(metFotos(data, bekend), naarBegin)
-    const ids = [...new Set(data.map(e => e.author_id).filter(Boolean))]
-    if (!ids.length) { bewaarGb(data); return }
-    const { data: profs, error: fout } = await supabase.from('profiles').select('id,avatar_data').in('id', ids)
+    // v141: de foto's van de schrijvers via vriendfotos.js, zoals in Vrienden en Chat: van dit
+    // toestel, en alleen opnieuw opgehaald als die schrijver een andere avatar heeft. Vroeger
+    // werden bij elke keer Home de foto's van alle schrijvers opnieuw opgehaald (20 kB per stuk).
+    const wie = new Map()
+    for (const e of data) {
+      if (!e || !e.author_id || !e.author || wie.has(e.author_id)) continue
+      const v = { id: e.author_id, updated_at: e.author.updated_at || '' }
+      if ('avatar_versie' in e.author) v.avatar_versie = e.author.avatar_versie
+      wie.set(e.author_id, v)
+    }
+    const metDeze = m => { const vol = metFotos(data, Object.fromEntries(m)); bewaarGb(vol); return vol }
+    let fotos
+    try {
+      const { haalVriendFotos } = await import('./vriendfotos.js?v=2')
+      fotos = await haalVriendFotos(uid, [...wie.values()], m => { if (c.isConnected) toon(metDeze(m), false) })
+    } catch (e) {
+      // lukt dat niet: de foto's die al in het bewaarde boek staan
+      console.warn('[gastenboek] vriendfoto\'s', e)
+      const bekend = {}
+      for (const x of alles.concat(leesGb())) if (x.author_id && x.author && x.author.avatar_data) bekend[x.author_id] = x.author.avatar_data
+      toon(metFotos(data, bekend), naarBegin)
+      return
+    }
     if (!c.isConnected) return
-    if (fout || !Array.isArray(profs)) { bewaarGb(metFotos(data, bekend)); return }
-    const fotos = {}
-    for (const p of profs) if (p && p.id) fotos[p.id] = p.avatar_data || null
-    const vol = metFotos(data, fotos)
-    bewaarGb(vol)
-    toon(vol, false)
+    toon(metDeze(fotos), naarBegin)
   }
   let bewaardIets = false
   try { bewaardIets = localStorage.getItem(gbSleutel) !== null } catch (e) {}

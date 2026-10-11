@@ -6,6 +6,10 @@
 // supabase.js wordt bijna overal geladen (?v=95); een nieuwe CACHE_VERSION zorgt dat
 // iedereen de nieuwe ophaalt. kastvullen.js vult de kast daarna vanzelf weer aan.
 const CACHE_VERSION = 'fibro-v31' // v31: lettertypen met size-adjust (zelfde ?v=1)
+// v139 (zonder nieuwe CACHE_VERSION, de kast blijft vol): html-pagina's wachten hoogstens
+// 0,4 seconde op internet; daarna de bewaarde kopie. Zie hieronder bij 'Html-pagina's'.
+const WACHT_MS = 400
+const MAX_LEEFTIJD = 7 * 24 * 3600 * 1000 // een oudere kopie: gewoon wachten op internet
 
 self.addEventListener('install', function(event) {
   self.skipWaiting()
@@ -60,25 +64,33 @@ self.addEventListener('fetch', function(event) {
       // ook zonder internet. Een kopie wordt bewaard zonder ?vriend=... e.d. (die leest
       // de pagina zelf uit het adres) en verdwijnt met een nieuwe CACHE_VERSION, samen
       // met de scripts waar ze bij hoort.
+      // v139: duurt internet langer dan 0,4 seconde (trage 4G, wifi met een slecht
+      // signaal), dan meteen de bewaarde kopie. De nieuwe versie komt intussen gewoon
+      // binnen en gaat in de kast, voor de volgende keer. Na een update zie je bij traag
+      // internet dus hoogstens een keer de vorige versie (met de scripts die erbij horen).
+      // Is de kopie ouder dan een week, of weet je niet hoe oud, dan wachten zoals vroeger.
+      // Een verandering waarbij een oude pagina niet meer met de server kan praten: een
+      // nieuwe CACHE_VERSION, dan zijn alle kopieen weg.
       if (req.mode === 'navigate' && /(\/|\.html)$/.test(url.pathname)) {
         const sleutel = url.origin + url.pathname + (url.pathname.endsWith('/') ? 'index.html' : '')
+        const netwerk = fetch(req)
+        // Bewaren mag nooit de pagina zelf in de weg zitten. De kopie wordt meteen
+        // gemaakt (voordat de pagina de inhoud leest), ook als de pagina de oude kreeg.
+        event.waitUntil(netwerk.then(function(res) {
+          if (!res.ok || res.type !== 'basic') return
+          const kopie = res.clone()
+          return caches.open(CACHE_VERSION).then(c => c.put(sleutel, kopie))
+        }).catch(() => {}))
         event.respondWith((async function() {
-          let res
-          try {
-            res = await fetch(req)
-          } catch (fout) {
-            const hit = await caches.open(CACHE_VERSION).then(c => c.match(sleutel)).catch(() => null)
-            if (hit) return hit
-            throw fout
-          }
-          // Bewaren mag nooit de pagina zelf in de weg zitten
-          try {
-            if (res.ok && res.type === 'basic') {
-              const kopie = res.clone()
-              event.waitUntil(caches.open(CACHE_VERSION).then(c => c.put(sleutel, kopie)).catch(() => {}))
-            }
-          } catch (e) {}
-          return res
+          const hit = await caches.open(CACHE_VERSION).then(c => c.match(sleutel)).catch(() => null)
+          if (!hit) return netwerk // nog geen kopie: wachten, zoals vroeger
+          const leeftijd = Date.now() - Date.parse(hit.headers.get('date') || '')
+          if (!(leeftijd < MAX_LEEFTIJD)) return netwerk.catch(() => hit)
+          const op_tijd = await Promise.race([
+            netwerk.catch(() => null), // geen internet: meteen de kopie
+            new Promise(klaar => setTimeout(() => klaar(null), WACHT_MS))
+          ])
+          return op_tijd || hit
         })())
         return
       }

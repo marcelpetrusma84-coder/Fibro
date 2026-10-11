@@ -1,9 +1,11 @@
-// beltoon.js — beltoon voor een inkomende oproep (v6)
+// beltoon.js — beltoon voor een inkomende oproep (v7)
+// v7 (11 oktober 2026, v142): het welkomstscherm ook in het Engels (taal.js; zonder taal.js Nederlands)
 // Werkt met een gewoon <audio>-element i.p.v. Web Audio: de iPhone laat dat beter toe.
 // Het klankje wordt hier in code gemaakt als WAV, er zijn geen geluidsbestanden.
 // Bij de eerste tik op de pagina speelt het element een stil stukje af; daarna
 // mag het van de iPhone later ook zonder tik geluid maken.
 (function () {
+  const vt = (s) => (window.T ? window.T(s) : s)
   const SR = 22050
   const NOTEN = [784, 988, 1175, 988, 784, 988, 1175, 1568] // G-B-D, twee keer, hoog eind
 
@@ -96,17 +98,17 @@
       'justify-content:center;gap:14px;background:rgba(26,10,46,0.94);color:#f3e8ff;' +
       'font-family:inherit;text-align:center;padding:24px;opacity:0;transition:opacity .3s;cursor:pointer;'
     const hallo = document.createElement('div')
-    hallo.textContent = welkom ? 'Welkom bij' : ''
+    hallo.textContent = welkom ? vt('Welkom bij') : ''
     hallo.style.cssText = 'font-size:22px;opacity:0.8;' + (welkom ? '' : 'display:none;')
     const logo = document.createElement('div')
     logo.textContent = welkom ? 'Fibro 👋' : 'Fibro'
     logo.style.cssText = 'font-size:52px;font-weight:700;background:linear-gradient(135deg,#c084fc,#f0abfc);' +
       '-webkit-background-clip:text;background-clip:text;color:transparent;'
     const tik = document.createElement('div')
-    tik.textContent = welkom ? '👆 Tik om te beginnen' : '👆 Tik om verder te gaan'
+    tik.textContent = welkom ? vt('👆 Tik om te beginnen') : vt('👆 Tik om verder te gaan')
     tik.style.cssText = 'font-size:20px;'
     const uitleg = document.createElement('div')
-    uitleg.textContent = '🔔 Dan hoor je de beltoon als iemand belt'
+    uitleg.textContent = vt('🔔 Dan hoor je de beltoon als iemand belt')
     uitleg.style.cssText = 'font-size:14px;opacity:0.6;'
     wekScherm.append(hallo, logo, tik, uitleg)
     // De tik zelf wordt al opgevangen door ontgrendel(); hier alleen het scherm weghalen

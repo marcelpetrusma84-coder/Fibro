@@ -1,20 +1,24 @@
 <!DOCTYPE html>
-<html lang="nl" style="background:#1a0a2e;">
+<html lang="nl" data-taal style="background:#1a0a2e;">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
+<script src="taal.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Fibro — Uitnodiging</title>
+<title data-t>Fibro — Uitnodiging</title>
 <meta name="theme-color" content="#c084fc">
 <link href="lettertypen/basis.css?v=1" rel="stylesheet">
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
 :root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:rgba(255,255,255,0.5); }
 body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); max-width:480px; margin:0 auto; min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
+.taalkeuze { display:flex; justify-content:center; gap:6px; margin:-6px 0 18px; }
+.taalkeuze button { background:rgba(255,255,255,0.05); border:0.5px solid var(--border); color:var(--text); border-radius:20px; padding:6px 14px; min-height:34px; font-family:inherit; font-size:12px; cursor:pointer; }
+.taalkeuze button.aan { border-color:var(--accent); color:var(--accent); background:rgba(192,132,252,0.12); }
 .kaart { background:rgba(0,0,0,0.5); border:0.5px solid var(--border); border-radius:20px; padding:30px 24px; width:100%; text-align:center; backdrop-filter:blur(16px); }
 .fibro-logo { font-family:'DM Serif Display',serif; font-size:48px; color:#ffffff; margin-bottom:16px; text-shadow:0 2px 8px rgba(0,0,0,0.8); }
 .avatar { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:32px; margin:0 auto 12px; }
@@ -46,82 +50,87 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 
 <div class="kaart">
   <div class="fibro-logo">Fibro</div>
-  <div id="laadScherm" class="laden">Uitnodiging laden...</div>
+  <div class="taalkeuze" role="group" aria-label="Taal / Language">
+    <button type="button" data-kies-taal="nl" onclick="T.kies('nl')">Nederlands</button>
+    <button type="button" data-kies-taal="en" onclick="T.kies('en')">English</button>
+  </div>
+  <script>document.querySelectorAll('[data-kies-taal]').forEach(function (b) { var aan = b.getAttribute('data-kies-taal') === T.taal; b.setAttribute('aria-pressed', aan ? 'true' : 'false'); if (aan) b.classList.add('aan') })</script>
+  <div id="laadScherm" class="laden" data-t>Uitnodiging laden...</div>
 
   <div id="bestaandScherm" style="display:none; text-align:center; padding:30px 20px;">
   <div id="bestaandAvatar" style="font-size:60px; margin-bottom:12px;">👤</div>
-  <h2 id="bestaandNaam" style="margin-bottom:8px;">Iemand</h2>
-  <p style="color:#888; margin-bottom:24px;">wil je toevoegen als vriend op Fibro</p>
-  <button id="toevoegBtn" onclick="voegToe()" style="display:block; width:100%; padding:14px; border:none; border-radius:24px; background:#5c6bc0; color:white; font-size:16px; font-weight:bold; cursor:pointer; margin-bottom:10px;">✅ Toevoegen</button>
-  <button onclick="window.location.href='index.html'" style="display:block; width:100%; padding:14px; border:none; border-radius:24px; background:rgba(255,255,255,0.1); color:#aaa; font-size:16px; cursor:pointer;">Annuleren</button>
+  <h2 id="bestaandNaam" style="margin-bottom:8px;" data-t>Iemand</h2>
+  <p style="color:#888; margin-bottom:24px;" data-t>wil je toevoegen als vriend op Fibro</p>
+  <button id="toevoegBtn" onclick="voegToe()" style="display:block; width:100%; padding:14px; border:none; border-radius:24px; background:#5c6bc0; color:white; font-size:16px; font-weight:bold; cursor:pointer; margin-bottom:10px;" data-t>✅ Toevoegen</button>
+  <button onclick="window.location.href='index.html'" style="display:block; width:100%; padding:14px; border:none; border-radius:24px; background:rgba(255,255,255,0.1); color:#aaa; font-size:16px; cursor:pointer;" data-t>Annuleren</button>
 </div>
 <div id="uitnodigingScherm" style="display:none">
     <div class="avatar" id="uitnodigerAvatar">👤</div>
     <div class="uitnodiger" id="uitnodigerNaam">...</div>
-    <div class="uitnodiger-sub">nodigt je uit op Fibro ✨</div>
-    <div class="e2e-badge">🔒 End-to-end versleuteld</div>
+    <div class="uitnodiger-sub" data-t>nodigt je uit op Fibro ✨</div>
+    <div class="e2e-badge" data-t>🔒 End-to-end versleuteld</div>
     <hr>
     <div class="msg" id="bericht"></div>
 
     <div class="field">
-      <label>Jouw gebruikersnaam</label>
+      <label data-t>Jouw gebruikersnaam</label>
       <div class="naam-row">
-        <input class="input" type="text" id="gebruikersnaam" placeholder="Klik op 🎲" readonly />
-        <button class="dice-btn" onclick="nieuweNaam()" title="Genereer naam">🎲</button>
+        <input class="input" type="text" id="gebruikersnaam" placeholder="Klik op 🎲" readonly data-t-attr="placeholder" />
+        <button class="dice-btn" onclick="nieuweNaam()" title="Genereer naam" data-t-attr="title">🎲</button>
       </div>
-      <div class="hint">⚠️ Onthoud deze naam — je hebt hem nodig om in te loggen</div>
+      <div class="hint" data-t>⚠️ Onthoud deze naam — je hebt hem nodig om in te loggen</div>
     </div>
 
     <div class="field">
-      <label>Wachtwoord</label>
-      <input class="input" type="password" id="wachtwoord" placeholder="Minimaal 8 tekens">
+      <label data-t>Wachtwoord</label>
+      <input class="input" type="password" id="wachtwoord" placeholder="Minimaal 8 tekens" data-t-attr="placeholder">
     </div>
 
     <div class="field">
-      <label>Geboortejaar</label>
-      <input class="input" type="number" id="geboortejaar" placeholder="bijv. 2005" min="1900" max="2025">
-      <div class="hint">Alleen het jaar — voor leeftijdsinstellingen</div>
+      <label data-t>Geboortejaar</label>
+      <input class="input" type="number" id="geboortejaar" placeholder="bijv. 2005" min="1900" max="2025" data-t-attr="placeholder">
+      <div class="hint" data-t>Alleen het jaar — voor leeftijdsinstellingen</div>
     </div>
 
     <div style="display:flex;align-items:flex-start;gap:10px;margin:12px 0;">
       <input type="checkbox" id="akkoord" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;">
-      <label for="akkoord" style="font-size:12px;line-height:1.5;cursor:pointer;color:var(--muted);">
+      <label for="akkoord" style="font-size:12px;line-height:1.5;cursor:pointer;color:var(--muted);" data-t>
         Ik ga akkoord met de <span style="color:var(--accent)">spelregels van Fibro</span>
       </label>
     </div>
 
-    <button class="btn" onclick="registreren()" id="regBtn">Account aanmaken 🌸</button>
+    <button class="btn" onclick="registreren()" id="regBtn" data-t>Account aanmaken 🌸</button>
 
     <div style="margin-top:26px;padding-top:18px;border-top:0.5px solid rgba(255,255,255,0.12);text-align:center;">
-      <div style="font-size:13px;color:var(--muted);margin-bottom:4px;">Heb je al een Fibro-account?</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.35);line-height:1.5;margin-bottom:12px;">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:4px;" data-t>Heb je al een Fibro-account?</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.35);line-height:1.5;margin-bottom:12px;" data-t>
         Kopieer deze link en open hem in Fibro op je beginscherm, of log hier in.
       </div>
-      <button onclick="kopieerLink()" id="kopieerBtn" style="background:rgba(255,255,255,0.07);color:#e5e5e5;border:0.5px solid rgba(255,255,255,0.15);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 4px 6px;font-family:inherit;">Link kopieren</button>
-      <button onclick="naarLogin()" style="background:rgba(255,255,255,0.07);color:#e5e5e5;border:0.5px solid rgba(255,255,255,0.15);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 4px 6px;font-family:inherit;">Inloggen</button>
+      <button onclick="kopieerLink()" id="kopieerBtn" style="background:rgba(255,255,255,0.07);color:#e5e5e5;border:0.5px solid rgba(255,255,255,0.15);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 4px 6px;font-family:inherit;" data-t>Link kopieren</button>
+      <button onclick="naarLogin()" style="background:rgba(255,255,255,0.07);color:#e5e5e5;border:0.5px solid rgba(255,255,255,0.15);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 4px 6px;font-family:inherit;" data-t>Inloggen</button>
     </div>
   </div>
 
   <div id="herstelScherm" style="display:none">
     <div style="font-size:40px;margin-bottom:12px;">🎉</div>
-    <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Welkom bij Fibro!</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Bewaar je herstelsleutel op een veilige plek</div>
-    <div class="e2e-badge" style="margin:0 auto 16px;">🔒 Encryptie sleutels aangemaakt</div>
+    <div style="font-size:18px;font-weight:600;margin-bottom:8px;" data-t>Welkom bij Fibro!</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:8px;" data-t>Bewaar je herstelsleutel op een veilige plek</div>
+    <div class="e2e-badge" style="margin:0 auto 16px;" data-t>🔒 Encryptie sleutels aangemaakt</div>
     <div class="herstel-box">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Jouw herstelsleutel:</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;" data-t>Jouw herstelsleutel:</div>
       <div class="herstel-code" id="herstelCode">—</div>
     </div>
-    <button onclick="kopieerCode()" id="kopieerCodeBtn" style="background:rgba(255,255,255,0.07);color:#e5e5e5;border:0.5px solid rgba(255,255,255,0.15);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 0 12px;font-family:inherit;">Code kopieren</button><div style="font-size:11px;color:#f87171;margin-bottom:16px;">Dit zie je maar een keer. Bewaar hem buiten je telefoon.</div><div style="background:rgba(255,255,255,0.05);border:0.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;">Zet Fibro op je beginscherm</div><div style="font-size:12px;color:var(--muted);line-height:1.6;">Op de iPhone werken meldingen alleen als Fibro op je beginscherm staat.<br><b>iPhone:</b> Safari, deelicoon onderin, Zet op beginscherm.<br><b>Android:</b> Chrome, drie puntjes, Toevoegen aan startscherm.</div></div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+    <button onclick="kopieerCode()" id="kopieerCodeBtn" style="background:rgba(255,255,255,0.07);color:#e5e5e5;border:0.5px solid rgba(255,255,255,0.15);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 0 12px;font-family:inherit;" data-t>Code kopieren</button><div style="font-size:11px;color:#f87171;margin-bottom:16px;" data-t>Dit zie je maar een keer. Bewaar hem buiten je telefoon.</div><div style="background:rgba(255,255,255,0.05);border:0.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;" data-t>Zet Fibro op je beginscherm</div><div style="font-size:12px;color:var(--muted);line-height:1.6;" data-t>Op de iPhone werken meldingen alleen als Fibro op je beginscherm staat.<br><b>iPhone:</b> Safari, deelicoon onderin, Zet op beginscherm.<br><b>Android:</b> Chrome, drie puntjes, Toevoegen aan startscherm.</div></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;" data-t>
       Inloggen doe je met: <span style="color:var(--accent)" id="bevestigNaam">—</span>
     </div>
-    <button class="btn" onclick="window.location.href='login.html'">Naar inloggen →</button>
+    <button class="btn" onclick="window.location.href='login.html'" data-t>Naar inloggen →</button>
   </div>
 
   <div id="foutScherm" style="display:none">
     <div style="font-size:40px;margin-bottom:16px;">😔</div>
-    <div style="font-size:18px;margin-bottom:8px;">Ongeldige uitnodiging</div>
-    <div style="font-size:14px;color:var(--muted);">Deze invite link is verlopen of al gebruikt.</div>
+    <div style="font-size:18px;margin-bottom:8px;" data-t>Ongeldige uitnodiging</div>
+    <div style="font-size:14px;color:var(--muted);" data-t>Deze invite link is verlopen of al gebruikt.</div>
   </div>
 </div>
 
@@ -182,12 +191,12 @@ async function init() {
     .select('username, avatar_url')
     .eq('id', data.created_by)
     .single()
-  document.getElementById('uitnodigerNaam').textContent = profiel?.username || 'Iemand'
+  document.getElementById('uitnodigerNaam').textContent = profiel?.username || T('Iemand')
   document.getElementById('uitnodigerAvatar').textContent = profiel?.avatar_url || '👤'
 
   const { data: { session } } = await supabase.auth.getSession()
   if (session && session.user.id !== uitnodigerData.created_by) {
-    document.getElementById('bestaandNaam').textContent = profiel?.username || 'Iemand'
+    document.getElementById('bestaandNaam').textContent = profiel?.username || T('Iemand')
     document.getElementById('bestaandAvatar').textContent = profiel?.avatar_url || ''
     document.getElementById('laadScherm').style.display = 'none'
     document.getElementById('bestaandScherm').style.display = 'block'
@@ -211,10 +220,10 @@ window.kopieerLink = async function() {
   const btn = document.getElementById('kopieerBtn')
   try {
     await navigator.clipboard.writeText(window.location.href)
-    btn.textContent = 'Gekopieerd!'
-    setTimeout(() => { btn.textContent = 'Link kopieren' }, 2000)
+    btn.textContent = T('Gekopieerd!')
+    setTimeout(() => { btn.textContent = T('Link kopieren') }, 2000)
   } catch(e) {
-    prompt('Kopieer deze link:', window.location.href)
+    prompt(T('Kopieer deze link:'), window.location.href)
   }
 }
 
@@ -231,15 +240,15 @@ window.registreren = async function() {
   const msg = document.getElementById('bericht')
   const btn = document.getElementById('regBtn')
 
-  if (!naam || !ww || !jaar) { msg.className='msg error'; msg.textContent='Vul alle velden in.'; return }
-  if (!akkoord) { msg.className='msg error'; msg.textContent='Ga akkoord met de spelregels.'; return }
-  if (ww.length < 8) { msg.className='msg error'; msg.textContent='Wachtwoord minimaal 8 tekens.'; return }
+  if (!naam || !ww || !jaar) { msg.className='msg error'; msg.textContent=T('Vul alle velden in.'); return }
+  if (!akkoord) { msg.className='msg error'; msg.textContent=T('Ga akkoord met de spelregels.'); return }
+  if (ww.length < 8) { msg.className='msg error'; msg.textContent=T('Wachtwoord minimaal 8 tekens.'); return }
   const jaarNum = parseInt(jaar)
   if (jaarNum < 1900 || jaarNum > new Date().getFullYear()) {
-    msg.className='msg error'; msg.textContent='Vul een geldig geboortejaar in.'; return
+    msg.className='msg error'; msg.textContent=T('Vul een geldig geboortejaar in.'); return
   }
 
-  btn.textContent = '🔒 Encryptie voorbereiden...'
+  btn.textContent = T('🔒 Encryptie voorbereiden...')
   btn.disabled = true
 
   // ── E2E: Keypair genereren vóór registratie ──
@@ -247,11 +256,11 @@ window.registreren = async function() {
   try {
     keypair = await genereerKeypair()
   } catch(e) {
-    msg.className='msg error'; msg.textContent='Encryptie aanmaken mislukt. Probeer opnieuw.'
-    btn.textContent='Account aanmaken 🌸'; btn.disabled=false; return
+    msg.className='msg error'; msg.textContent=T('Encryptie aanmaken mislukt. Probeer opnieuw.')
+    btn.textContent=T('Account aanmaken 🌸'); btn.disabled=false; return
   }
 
-  btn.textContent = 'Account aanmaken...'
+  btn.textContent = T('Account aanmaken...')
   const nep_email = naam.toLowerCase() + '@fibro.internal'
   const metFaceId = await kanFaceIdGebruiken()
   const herstelsleutel = maakHerstelSleutel()
@@ -265,10 +274,11 @@ window.registreren = async function() {
 
   if (error) {
     msg.className='msg error'
-    msg.textContent = error.message.includes('already') ? 'Gebruikersnaam al in gebruik — genereer een nieuwe.' : error.message
-    btn.textContent='Account aanmaken 🌸'; btn.disabled=false; return
+    msg.textContent = error.message.includes('already') ? T('Gebruikersnaam al in gebruik — genereer een nieuwe.') : error.message
+    btn.textContent=T('Account aanmaken 🌸'); btn.disabled=false; return
   }
 
+  T.bewaar() // v142: de taal van dit scherm is de taal van het nieuwe account (later te veranderen in het menu)
   if (data.user) {
     // ── E2E: private key lokaal opslaan, public key naar Supabase ──
     slaPrivateKeyOp(data.user.id, keypair.privateKeyB64)
@@ -309,15 +319,15 @@ async function kanFaceIdGebruiken() {
 
 function faceIdFoutTekst(e) {
   const c = e && e.code
-  if (c === 'geannuleerd') return 'Geannuleerd. Probeer het opnieuw.'
-  if (c === 'bestaat-al') return 'Hier bestaat al een Fibro-passkey voor dit account.'
-  if (c === 'geen-prf') return 'Deze browser kan Face ID-herstel niet gebruiken. Kies een herstelcode.'
-  return 'Mislukt: ' + ((e && e.message) || e)
+  if (c === 'geannuleerd') return T('Geannuleerd. Probeer het opnieuw.')
+  if (c === 'bestaat-al') return T('Hier bestaat al een Fibro-passkey voor dit account.')
+  if (c === 'geen-prf') return T('Deze browser kan Face ID-herstel niet gebruiken. Kies een herstelcode.')
+  return T('Mislukt: {fout}', { fout: (e && e.message) || e })
 }
 
 // Reserve: de oude herstelcode, getoond in het bestaande herstelscherm
 async function toonHerstelcodeReserve(userId, naam, privateKeyB64, paneel) {
-  paneel.textContent = 'Herstelcode maken...'
+  paneel.textContent = T('Herstelcode maken...')
   try {
     const code = maakHerstelSleutel()
     const hsHash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code)))).map(b => b.toString(16).padStart(2, '0')).join('')
@@ -329,7 +339,7 @@ async function toonHerstelcodeReserve(userId, naam, privateKeyB64, paneel) {
     document.getElementById('bevestigNaam').textContent = naam
     document.getElementById('herstelScherm').style.display = 'block'
   } catch (e) {
-    paneel.textContent = 'Herstelcode maken mislukt. Je kunt Face ID-herstel later aanzetten na het inloggen.'
+    paneel.textContent = T('Herstelcode maken mislukt. Je kunt Face ID-herstel later aanzetten na het inloggen.')
   }
 }
 
@@ -338,36 +348,36 @@ function toonFaceIdNaInvite(userId, naam, privateKeyB64) {
   const paneel = document.createElement('div')
   paneel.style.cssText = 'max-width:400px;margin:24px auto;padding:22px;text-align:center;border:1px solid var(--accent,#c084fc);border-radius:16px;color:var(--text,#f3e8ff);'
   const ic = document.createElement('div'); ic.style.cssText = 'font-size:34px;margin-bottom:10px;'; ic.textContent = '\u{1F389}'
-  const h = document.createElement('div'); h.style.cssText = 'font-size:17px;font-weight:600;margin-bottom:8px;'; h.textContent = 'Welkom, ' + naam + '!'
+  const h = document.createElement('div'); h.style.cssText = 'font-size:17px;font-weight:600;margin-bottom:8px;'; h.textContent = T('Welkom, {naam}!', { naam })
   const p = document.createElement('div'); p.style.cssText = 'font-size:13px;line-height:1.6;opacity:0.85;margin-bottom:14px;'
-  p.textContent = 'Zet nu Face ID-herstel aan. Dan krijg je je berichten op een nieuw toestel terug met alleen Face ID of je vingerafdruk, zonder code.'
+  p.textContent = T('Zet nu Face ID-herstel aan. Dan krijg je je berichten op een nieuw toestel terug met alleen Face ID of je vingerafdruk, zonder code.')
   const melding = document.createElement('div'); melding.style.cssText = 'font-size:13px;min-height:18px;margin-bottom:10px;'
-  const ja = document.createElement('button'); ja.textContent = 'Face ID-herstel aanzetten'
+  const ja = document.createElement('button'); ja.textContent = T('Face ID-herstel aanzetten')
   ja.style.cssText = 'width:100%;padding:13px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,var(--accent,#c084fc),var(--accent2,#f0abfc));color:#1a0a2e;'
-  const nee = document.createElement('button'); nee.textContent = 'Geen Face ID? Gebruik een herstelcode'
+  const nee = document.createElement('button'); nee.textContent = T('Geen Face ID? Gebruik een herstelcode')
   nee.style.cssText = 'width:100%;margin-top:10px;background:none;border:none;color:inherit;opacity:0.7;font-size:13px;cursor:pointer;padding:8px;'
   paneel.append(ic, h, p, melding, ja, nee)
   plek.parentNode.insertBefore(paneel, plek)
   nee.onclick = () => toonHerstelcodeReserve(userId, naam, privateKeyB64, paneel)
   ja.onclick = async () => {
     ja.disabled = true; nee.disabled = true
-    melding.style.color = 'inherit'; melding.textContent = 'Even geduld...'
+    melding.style.color = 'inherit'; melding.textContent = T('Even geduld...')
     try {
       await maakDoos(supabase, { userId, gebruikersnaam: naam, privateKeyB64 })
-      melding.style.color = '#4ade80'; melding.textContent = 'Face ID-herstel staat aan.'
+      melding.style.color = '#4ade80'; melding.textContent = T('Face ID-herstel staat aan.')
       nee.remove()
-      ja.disabled = false; ja.textContent = 'Verder naar Fibro'
+      ja.disabled = false; ja.textContent = T('Verder naar Fibro')
       ja.onclick = () => { window.location.href = 'index.html' }
     } catch (e) {
       melding.style.color = '#f87171'; melding.textContent = faceIdFoutTekst(e)
-      ja.disabled = false; nee.disabled = false; ja.textContent = 'Opnieuw proberen'
+      ja.disabled = false; nee.disabled = false; ja.textContent = T('Opnieuw proberen')
     }
   }
 }
 
 window.voegToe = async function() {
   const btn = document.getElementById('toevoegBtn')
-  btn.textContent = 'Toevoegen...'
+  btn.textContent = T('Toevoegen...')
   btn.disabled = true
   const { data: { session } } = await supabase.auth.getSession()
   const mij = session.user.id
@@ -387,7 +397,7 @@ window.voegToe = async function() {
   // Markeer token als gebruikt
   await supabase.rpc('gebruik_invite', { token_in: token, gebruiker: mij })
 
-  btn.textContent = '✅ Toegevoegd!'
+  btn.textContent = T('✅ Toegevoegd!')
   setTimeout(() => window.location.href = 'vrienden.html', 1000)
 }
 
@@ -397,8 +407,8 @@ window.kopieerCode = function() {
   const c = document.getElementById('herstelCode').textContent
   navigator.clipboard.writeText(c).then(function() {
     const b = document.getElementById('kopieerCodeBtn')
-    b.textContent = 'Gekopieerd'
-    setTimeout(function(){ b.textContent = 'Code kopieren' }, 2000)
+    b.textContent = T('Gekopieerd')
+    setTimeout(function(){ b.textContent = T('Code kopieren') }, 2000)
   })
 }
 </script>

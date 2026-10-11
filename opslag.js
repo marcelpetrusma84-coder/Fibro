@@ -1,6 +1,9 @@
 // opslag.js - vraagt de browser de opslag van Fibro niet op te ruimen, en toont
 // een tip als Fibro op iPhone/iPad in een gewoon browsertabblad draait
 // (daar kan de opslag na 7 dagen zonder bezoek gewist worden). 29 september 2026
+// v2 (11 oktober 2026, v142): de tip ook in het Engels (taal.js)
+
+const T = window.T || (s => s)
 
 const LATER_KEY = 'fibro_opslagtip_later'
 const WEEK = 7 * 24 * 60 * 60 * 1000
@@ -47,15 +50,12 @@ function toonTip() {
     'border:1px solid rgba(255,255,255,0.18);border-radius:14px;padding:14px 16px;' +
     'box-shadow:0 8px 30px rgba(0,0,0,0.5);font:15px/1.45 system-ui,-apple-system,sans-serif'
   d.innerHTML =
-    '<div style="font-weight:700;font-size:16px;margin-bottom:6px">\u{1F4F1} Zet Fibro op je beginscherm</div>' +
-    '<div style="margin-bottom:8px">In een gewoon browsertabblad kan je iPhone de gegevens van Fibro wissen ' +
-    'als je een week niet kijkt. Dan moet je je sleutel opnieuw herstellen.</div>' +
-    '<div style="margin-bottom:8px"><b>Zo doe je het:</b> tik op de deelknop (vierkantje met pijl omhoog; ' +
-    'bij nieuwere iPhones eerst op <b>\u2022\u2022\u2022</b>) en kies <b>Zet op beginscherm</b>.</div>' +
-    '<div style="margin-bottom:12px;opacity:0.85">Open Fibro daarna via het nieuwe icoon. Dat heeft eigen opslag: ' +
-    'log daar opnieuw in en herstel je sleutel met Face ID (of je herstelcode).</div>' +
+    '<div style="font-weight:700;font-size:16px;margin-bottom:6px">' + T('\u{1F4F1} Zet Fibro op je beginscherm') + '</div>' +
+    '<div style="margin-bottom:8px">' + T('In een gewoon browsertabblad kan je iPhone de gegevens van Fibro wissen als je een week niet kijkt. Dan moet je je sleutel opnieuw herstellen.') + '</div>' +
+    '<div style="margin-bottom:8px">' + T('<b>Zo doe je het:</b> tik op de deelknop (vierkantje met pijl omhoog; bij nieuwere iPhones eerst op <b>\u2022\u2022\u2022</b>) en kies <b>Zet op beginscherm</b>.') + '</div>' +
+    '<div style="margin-bottom:12px;opacity:0.85">' + T('Open Fibro daarna via het nieuwe icoon. Dat heeft eigen opslag: log daar opnieuw in en herstel je sleutel met Face ID (of je herstelcode).') + '</div>' +
     '<div style="text-align:right"><button type="button" id="opslagTipOk" style="min-height:44px;padding:0 22px;' +
-    'border-radius:10px;border:0;background:#22c55e;color:#06210f;font-weight:700;font-size:15px">Begrepen</button></div>'
+    'border-radius:10px;border:0;background:#22c55e;color:#06210f;font-weight:700;font-size:15px">' + T('Begrepen') + '</button></div>'
   document.body.appendChild(d)
   document.getElementById('opslagTipOk').addEventListener('click', () => {
     try { localStorage.setItem(LATER_KEY, String(Date.now())) } catch (e) {}

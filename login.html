@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="nl" style="background:#1a0a2e;">
+<html lang="nl" data-taal style="background:#1a0a2e;">
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
   <script src="huisregel.js?v=1"></script>
+  <script src="taal.js?v=1"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fibro — Inloggen</title>
+  <title data-t>Fibro — Inloggen</title>
   <style>
     @import url('lettertypen/basis.css?v=1');
     :root { --bg:#1a0a2e; --surface:#161618; --border:#2a2a2e; --accent:#c084fc; --accent-dim:#f0abfc; --text:#f3e8ff; --text-muted:#666660; --danger:#ff5c5c; --radius:12px; }
@@ -18,6 +19,9 @@
     .logo h1 { font-family:'DM Serif Display',serif; font-size:48px; letter-spacing:-1px; color:var(--text); }
     .logo h1 span { color:var(--accent); }
     .logo p { font-size:11px; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase; margin-top:6px; }
+    .taalkeuze { display:flex; justify-content:center; gap:6px; margin-bottom:18px; }
+    .taalkeuze button { background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); border-radius:20px; padding:6px 14px; min-height:34px; font-family:inherit; font-size:12px; cursor:pointer; }
+    .taalkeuze button.aan { border-color:var(--accent); color:var(--accent); background:rgba(192,132,252,0.12); }
     .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:32px; }
     .tabs { display:flex; gap:4px; margin-bottom:28px; background:var(--bg); padding:4px; border-radius:8px; }
     .tab { flex:1; padding:8px; border:none; background:transparent; color:var(--text-muted); font-family:'DM Mono',monospace; font-size:12px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; border-radius:6px; transition:all 0.2s; }
@@ -54,30 +58,35 @@
 <div class="container">
   <div class="logo">
     <h1>Fi<span>b</span>ro</h1>
-    <p>Jouw persoonlijke ruimte</p>
+    <p data-t>Jouw persoonlijke ruimte</p>
   </div>
 
   <div class="card">
+    <div class="taalkeuze" role="group" aria-label="Taal / Language">
+      <button type="button" data-kies-taal="nl" onclick="T.kies('nl')">Nederlands</button>
+      <button type="button" data-kies-taal="en" onclick="T.kies('en')">English</button>
+    </div>
+    <script>document.querySelectorAll('[data-kies-taal]').forEach(function (b) { var aan = b.getAttribute('data-kies-taal') === T.taal; b.setAttribute('aria-pressed', aan ? 'true' : 'false'); if (aan) b.classList.add('aan') })</script>
     <div class="tabs">
-      <button class="tab active" onclick="switchTab('inloggen')">Inloggen</button>
-      <button class="tab" onclick="switchTab('registreren')">Registreren</button>
-      <button class="tab" onclick="switchTab('herstellen')">Herstel</button>
+      <button class="tab active" onclick="switchTab('inloggen')" data-t>Inloggen</button>
+      <button class="tab" onclick="switchTab('registreren')" data-t>Registreren</button>
+      <button class="tab" onclick="switchTab('herstellen')" data-t>Herstel</button>
     </div>
 
     <!-- INLOGGEN -->
     <div class="panel active" id="panel-inloggen">
       <div class="message" id="login-msg"></div>
       <div class="field">
-        <label>Gebruikersnaam</label>
-        <input type="text" id="login-username" placeholder="bijv. ChonkyCapibara404" autocomplete="username" />
+        <label data-t>Gebruikersnaam</label>
+        <input type="text" id="login-username" placeholder="bijv. ChonkyCapibara404" data-t-attr="placeholder" autocomplete="username" />
       </div>
       <div class="field">
-        <label>Wachtwoord</label>
+        <label data-t>Wachtwoord</label>
         <input type="password" id="login-wachtwoord" placeholder="••••••••" autocomplete="current-password" />
       </div>
-      <button class="btn btn-primary" onclick="inloggen()" id="login-btn">Inloggen</button>
+      <button class="btn btn-primary" onclick="inloggen()" id="login-btn" data-t>Inloggen</button>
       <div style="text-align:center;margin-top:8px;">
-        <span class="e2e-badge">🔒 End-to-end versleuteld</span>
+        <span class="e2e-badge" data-t>🔒 End-to-end versleuteld</span>
       </div>
     </div>
 
@@ -86,29 +95,29 @@
       <div class="message" id="reg-msg"></div>
       <div id="reg-form">
         <div class="field">
-          <label>Gebruikersnaam</label>
+          <label data-t>Gebruikersnaam</label>
           <div style="display:flex;gap:8px;align-items:center;">
-            <input type="text" id="reg-username" placeholder="Klik op 🎲 voor een naam" autocomplete="off" readonly style="flex:1;cursor:default;" />
+            <input type="text" id="reg-username" placeholder="Klik op 🎲 voor een naam" data-t-attr="placeholder" autocomplete="off" readonly style="flex:1;cursor:default;" />
             <button type="button" onclick="nieuweNaam()" style="background:var(--accent);border:none;border-radius:8px;padding:12px 14px;font-size:18px;cursor:pointer;flex-shrink:0;min-height:44px;">🎲</button>
           </div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">⚠ Onthoud deze naam — je hebt hem nodig om in te loggen</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;" data-t>⚠ Onthoud deze naam — je hebt hem nodig om in te loggen</div>
         </div>
         <div class="field">
-          <label>Wachtwoord</label>
-          <input type="password" id="reg-wachtwoord" placeholder="Minimaal 8 tekens" autocomplete="new-password" />
+          <label data-t>Wachtwoord</label>
+          <input type="password" id="reg-wachtwoord" placeholder="Minimaal 8 tekens" data-t-attr="placeholder" autocomplete="new-password" />
         </div>
         <div class="field">
-          <label>Geboortejaar</label>
-          <input type="number" id="reg-jaar" placeholder="bijv. 2005" min="1900" max="2025" />
+          <label data-t>Geboortejaar</label>
+          <input type="number" id="reg-jaar" placeholder="bijv. 2005" data-t-attr="placeholder" min="1900" max="2025" />
         </div>
         <div class="field" style="display:flex;align-items:flex-start;gap:10px;margin-top:4px;">
           <input type="checkbox" id="reg-akkoord" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;" />
-          <label for="reg-akkoord" style="text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;cursor:pointer;">
+          <label for="reg-akkoord" style="text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;cursor:pointer;" data-t>
             Ik ga akkoord met de <span style="color:var(--accent)">spelregels van Fibro</span>
           </label>
         </div>
-        <button class="btn btn-primary" onclick="registreren()" id="reg-btn">Account aanmaken</button>
-        <div class="herstelsleutel-info">💡 Na registratie zet je herstel met Face ID of je vingerafdruk aan.</div>
+        <button class="btn btn-primary" onclick="registreren()" id="reg-btn" data-t>Account aanmaken</button>
+        <div class="herstelsleutel-info" data-t>💡 Na registratie zet je herstel met Face ID of je vingerafdruk aan.</div>
       </div>
     </div>
 
@@ -116,23 +125,23 @@
     <div class="panel" id="panel-herstellen">
       <div class="message" id="herstel-msg"></div>
       <div class="field">
-        <label>Gebruikersnaam</label>
-        <input type="text" id="herstel-username" placeholder="jouwuniekename" />
+        <label data-t>Gebruikersnaam</label>
+        <input type="text" id="herstel-username" placeholder="jouwuniekename" data-t-attr="placeholder" />
       </div>
       <div class="field">
-        <label>Wachtwoord</label>
-        <input type="password" id="herstel-wachtwoord" placeholder="je wachtwoord" autocomplete="current-password" />
+        <label data-t>Wachtwoord</label>
+        <input type="password" id="herstel-wachtwoord" placeholder="je wachtwoord" data-t-attr="placeholder" autocomplete="current-password" />
       </div>
       <div class="field">
-        <label>Herstelsleutel</label>
+        <label data-t>Herstelsleutel</label>
         <div style="display:flex;align-items:center;gap:0;">
           <span style="background:rgba(255,255,255,0.06);border:1px solid var(--border);border-right:none;border-radius:8px 0 0 8px;padding:10px 10px;font-size:14px;color:var(--text-muted);white-space:nowrap;">FIBRO-</span>
           <input type="text" id="herstelsleutel-input" placeholder="XXXXXXXXXXXX" maxlength="14" autocapitalize="characters" autocorrect="off" spellcheck="false" style="border-radius:0 8px 8px 0;flex:1;letter-spacing:1px;" oninput="formatHerstel(this)" />
         </div>
       </div>
-      <button class="btn btn-primary" onclick="herstelMetSleutel()">Account herstellen</button>
-      <div style="text-align:center;font-size:12px;opacity:0.6;margin:12px 0 2px;">of</div>
-      <button class="btn btn-primary" onclick="herstelMetFaceId()">Herstel met Face ID</button>
+      <button class="btn btn-primary" onclick="herstelMetSleutel()" data-t>Account herstellen</button>
+      <div style="text-align:center;font-size:12px;opacity:0.6;margin:12px 0 2px;" data-t>of</div>
+      <button class="btn btn-primary" onclick="herstelMetFaceId()" data-t>Herstel met Face ID</button>
     </div>
   </div>
 </div>
@@ -183,12 +192,12 @@
 
   function faceIdFoutTekst(e) {
     const c = e && e.code
-    if (c === 'geannuleerd') return 'Geannuleerd. Probeer het opnieuw, of kies later.'
-    if (c === 'bestaat-al') return 'Hier bestaat al een Fibro-passkey voor dit account.'
-    if (c === 'geen-prf') return 'Deze browser kan Face ID-herstel niet gebruiken.'
-    if (c === 'geen-doos') return 'Er is nog geen Face ID-herstel voor dit account.'
-    if (c === 'past-niet') return 'De sleutel in de doos past niet bij je account.'
-    return 'Mislukt: ' + ((e && e.message) || e)
+    if (c === 'geannuleerd') return T('Geannuleerd. Probeer het opnieuw, of kies later.')
+    if (c === 'bestaat-al') return T('Hier bestaat al een Fibro-passkey voor dit account.')
+    if (c === 'geen-prf') return T('Deze browser kan Face ID-herstel niet gebruiken.')
+    if (c === 'geen-doos') return T('Er is nog geen Face ID-herstel voor dit account.')
+    if (c === 'past-niet') return T('De sleutel in de doos past niet bij je account.')
+    return T('Mislukt: {fout}', { fout: (e && e.message) || e })
   }
 
   // Venster over de pagina. actie() mag een fout gooien: dan blijft het venster open met de melding.
@@ -212,15 +221,15 @@
       knopNee.onclick = () => sluit(false)
       knopJa.onclick = async () => {
         knopJa.disabled = true; knopNee.disabled = true
-        melding.style.color = 'inherit'; melding.textContent = 'Even geduld...'
+        melding.style.color = 'inherit'; melding.textContent = T('Even geduld...')
         try {
           const klaar = await actie()
-          melding.style.color = '#4ade80'; melding.textContent = klaar || 'Gelukt!'
+          melding.style.color = '#4ade80'; melding.textContent = klaar || T('Gelukt!')
           setTimeout(() => sluit(true), 1000)
         } catch (e) {
           melding.style.color = '#f87171'; melding.textContent = faceIdFoutTekst(e)
           knopJa.disabled = false; knopNee.disabled = false
-          knopJa.textContent = 'Opnieuw proberen'
+          knopJa.textContent = T('Opnieuw proberen')
         }
       }
     })
@@ -243,14 +252,14 @@
     if (!(await sleutelPastBij(r.privateKeyB64, publiek))) { const e = new Error('past niet'); e.code = 'past-niet'; throw e }
     slaPrivateKeyOp(userId, r.privateKeyB64)
     try { sessionStorage.removeItem('fibro_sleutel_mist') } catch (e) {}
-    return 'Gelukt! Je berichten zijn weer leesbaar.'
+    return T('Gelukt! Je berichten zijn weer leesbaar.')
   }
 
   async function ontgrendelVenster(userId, publiek) {
     return faceIdVenster({
-      titel: 'Ontgrendel je berichten',
-      tekst: 'Dit toestel heeft je sleutel nog niet. Ontgrendel met Face ID, je vingerafdruk of je toestelcode. Op een pc kun je je telefoon gebruiken via de QR-code.',
-      ja: 'Ontgrendel met Face ID', nee: 'Later',
+      titel: T('Ontgrendel je berichten'),
+      tekst: T('Dit toestel heeft je sleutel nog niet. Ontgrendel met Face ID, je vingerafdruk of je toestelcode. Op een pc kun je je telefoon gebruiken via de QR-code.'),
+      ja: T('Ontgrendel met Face ID'), nee: T('Later'),
       actie: () => ontgrendelMetFaceId(userId, publiek)
     })
   }
@@ -270,10 +279,10 @@
         if (dozen.length) await ontgrendelVenster(userId, publiek)
       } else if (!dozen.length && !faceIdLaterGekozen(userId) && await sleutelPastBij(lokaal, publiek)) {
         const gedaan = await faceIdVenster({
-          titel: 'Face ID-herstel aanzetten?',
-          tekst: 'Dan krijg je je berichten op een nieuw toestel terug met alleen Face ID of je vingerafdruk, zonder herstelcode. De server bewaart alleen een dichte doos die hij zelf niet kan openen.',
-          ja: 'Face ID-herstel aanzetten', nee: 'Niet nu',
-          actie: async () => { await maakDoos(supabase, { userId, gebruikersnaam: naam, privateKeyB64: lokaal }); return 'Face ID-herstel staat aan.' }
+          titel: T('Face ID-herstel aanzetten?'),
+          tekst: T('Dan krijg je je berichten op een nieuw toestel terug met alleen Face ID of je vingerafdruk, zonder herstelcode. De server bewaart alleen een dichte doos die hij zelf niet kan openen.'),
+          ja: T('Face ID-herstel aanzetten'), nee: T('Niet nu'),
+          actie: async () => { await maakDoos(supabase, { userId, gebruikersnaam: naam, privateKeyB64: lokaal }); return T('Face ID-herstel staat aan.') }
         })
         if (!gedaan) faceIdZetLater(userId)
       }
@@ -300,18 +309,18 @@
 
   async function toonHerstelcodeNaRegistratie(userId, privateKeyB64) {
     const vak = document.getElementById('reg-form')
-    vak.textContent = 'Herstelcode maken...'
+    vak.textContent = T('Herstelcode maken...')
     let code
     try { code = await maakHerstelcodeReserve(userId, privateKeyB64) }
-    catch (e) { vak.textContent = 'Herstelcode maken mislukt. Je kunt Face ID-herstel later aanzetten na het inloggen.'; return }
+    catch (e) { vak.textContent = T('Herstelcode maken mislukt. Je kunt Face ID-herstel later aanzetten na het inloggen.'); return }
     vak.textContent = ''
     const blok = document.createElement('div'); blok.style.cssText = 'text-align:center;padding:8px 0;'
-    const t1 = document.createElement('div'); t1.style.cssText = 'font-size:12px;opacity:0.7;margin-bottom:12px;'; t1.textContent = 'Bewaar je herstelsleutel op een veilige plek'
+    const t1 = document.createElement('div'); t1.style.cssText = 'font-size:12px;opacity:0.7;margin-bottom:12px;'; t1.textContent = T('Bewaar je herstelsleutel op een veilige plek')
     const c = document.createElement('div')
     c.style.cssText = "background:var(--bg);border:1.5px solid var(--accent);border-radius:10px;padding:16px;font-size:18px;letter-spacing:2px;color:var(--accent);font-family:'DM Mono',monospace;margin-bottom:12px;"
     c.textContent = code
-    const t2 = document.createElement('div'); t2.style.cssText = 'font-size:11px;color:var(--danger,#f87171);margin-bottom:20px;'; t2.textContent = 'Dit zie je maar een keer! Schrijf het op.'
-    const verder = regKnop('Ga naar inloggen', true); verder.onclick = () => window.switchTab('inloggen')
+    const t2 = document.createElement('div'); t2.style.cssText = 'font-size:11px;color:var(--danger,#f87171);margin-bottom:20px;'; t2.textContent = T('Dit zie je maar een keer! Schrijf het op.')
+    const verder = regKnop(T('Ga naar inloggen'), true); verder.onclick = () => window.switchTab('inloggen')
     blok.append(t1, c, t2, verder)
     vak.append(blok)
   }
@@ -322,27 +331,27 @@
     vak.textContent = ''
     const blok = document.createElement('div'); blok.style.cssText = 'text-align:center;padding:8px 0;'
     const ic = document.createElement('div'); ic.style.cssText = 'font-size:32px;margin-bottom:12px;'; ic.textContent = '\u{1F389}'
-    const h = document.createElement('div'); h.style.cssText = 'font-size:16px;margin-bottom:8px;'; h.textContent = 'Account aangemaakt!'
+    const h = document.createElement('div'); h.style.cssText = 'font-size:16px;margin-bottom:8px;'; h.textContent = T('Account aangemaakt!')
     const p = document.createElement('div'); p.style.cssText = 'font-size:13px;line-height:1.6;opacity:0.85;margin-bottom:14px;'
-    p.textContent = 'Zet nu Face ID-herstel aan. Dan krijg je je berichten op een nieuw toestel terug met alleen Face ID of je vingerafdruk, zonder code.'
+    p.textContent = T('Zet nu Face ID-herstel aan. Dan krijg je je berichten op een nieuw toestel terug met alleen Face ID of je vingerafdruk, zonder code.')
     const melding = document.createElement('div'); melding.style.cssText = 'font-size:13px;min-height:18px;margin-bottom:10px;'
-    const ja = regKnop('Face ID-herstel aanzetten', true)
-    const nee = regKnop('Geen Face ID? Gebruik een herstelcode', false)
+    const ja = regKnop(T('Face ID-herstel aanzetten'), true)
+    const nee = regKnop(T('Geen Face ID? Gebruik een herstelcode'), false)
     blok.append(ic, h, p, melding, ja, nee)
     vak.append(blok)
     nee.onclick = () => toonHerstelcodeNaRegistratie(userId, privateKeyB64)
     ja.onclick = async () => {
       ja.disabled = true; nee.disabled = true
-      melding.style.color = 'inherit'; melding.textContent = 'Even geduld...'
+      melding.style.color = 'inherit'; melding.textContent = T('Even geduld...')
       try {
         await maakDoos(supabase, { userId, gebruikersnaam: username, privateKeyB64 })
-        melding.style.color = '#4ade80'; melding.textContent = 'Face ID-herstel staat aan.'
+        melding.style.color = '#4ade80'; melding.textContent = T('Face ID-herstel staat aan.')
         ja.remove(); nee.remove()
-        const verder = regKnop('Ga naar inloggen', true); verder.onclick = () => window.switchTab('inloggen')
+        const verder = regKnop(T('Ga naar inloggen'), true); verder.onclick = () => window.switchTab('inloggen')
         blok.append(verder)
       } catch (e) {
         melding.style.color = '#f87171'; melding.textContent = faceIdFoutTekst(e)
-        ja.disabled = false; nee.disabled = false; ja.textContent = 'Opnieuw proberen'
+        ja.disabled = false; nee.disabled = false; ja.textContent = T('Opnieuw proberen')
       }
     }
   }
@@ -402,25 +411,25 @@
     const btn = document.getElementById('login-btn')
     const msg = document.getElementById('login-msg')
 
-    if (!username || !wachtwoord) { toonBericht(msg,'error','Vul alle velden in.'); return }
+    if (!username || !wachtwoord) { toonBericht(msg,'error',T('Vul alle velden in.')); return }
 
     btn.disabled = true
-    btn.innerHTML = '<span class="spinner"></span>Inloggen...'
+    btn.innerHTML = '<span class="spinner"></span>' + T('Inloggen...')
 
     const nep_email = username.toLowerCase() + '@fibro.internal'
     await supabase.auth.signOut({ scope: 'local' })
     const { data, error } = await supabase.auth.signInWithPassword({ email: nep_email, password: wachtwoord })
 
     if (error) {
-      toonBericht(msg,'error','Ongeldige gebruikersnaam of wachtwoord.')
-      btn.disabled = false; btn.textContent = 'Inloggen'; return
+      toonBericht(msg,'error',T('Ongeldige gebruikersnaam of wachtwoord.'))
+      btn.disabled = false; btn.textContent = T('Inloggen'); return
     }
 
     // ── E2E: Controleer keypair na inloggen ──
-    btn.innerHTML = '<span class="spinner"></span>🔒 Encryptie controleren...'
+    btn.innerHTML = '<span class="spinner"></span>' + T('🔒 Encryptie controleren...')
     await controleerKeypair(data.user.id)
 
-    toonBericht(msg,'success','Ingelogd! Even laden...')
+    toonBericht(msg,'success',T('Ingelogd! Even laden...'))
 
     // ── Push notificaties registreren ──
     try {
@@ -466,25 +475,25 @@
     const btn = document.getElementById('reg-btn')
     const msg = document.getElementById('reg-msg')
 
-    if (!username || !wachtwoord || !jaar) { toonBericht(msg,'error','Vul alle velden in.'); return }
-    if (!akkoord) { toonBericht(msg,'error','Je moet akkoord gaan met de spelregels.'); return }
-    if (wachtwoord.length < 8) { toonBericht(msg,'error','Wachtwoord minimaal 8 tekens.'); return }
+    if (!username || !wachtwoord || !jaar) { toonBericht(msg,'error',T('Vul alle velden in.')); return }
+    if (!akkoord) { toonBericht(msg,'error',T('Je moet akkoord gaan met de spelregels.')); return }
+    if (wachtwoord.length < 8) { toonBericht(msg,'error',T('Wachtwoord minimaal 8 tekens.')); return }
     const jaarNum = parseInt(jaar)
-    if (jaarNum < 1900 || jaarNum > new Date().getFullYear()) { toonBericht(msg,'error','Geldig geboortejaar invullen.'); return }
+    if (jaarNum < 1900 || jaarNum > new Date().getFullYear()) { toonBericht(msg,'error',T('Geldig geboortejaar invullen.')); return }
 
     btn.disabled = true
-    btn.innerHTML = '<span class="spinner"></span>🔒 Encryptie voorbereiden...'
+    btn.innerHTML = '<span class="spinner"></span>' + T('🔒 Encryptie voorbereiden...')
 
     // Genereer keypair voor nieuwe gebruiker
     let keypair
     try {
       keypair = await genereerKeypair()
     } catch(e) {
-      toonBericht(msg,'error','Encryptie aanmaken mislukt. Probeer opnieuw.')
-      btn.disabled=false; btn.textContent='Account aanmaken'; return
+      toonBericht(msg,'error',T('Encryptie aanmaken mislukt. Probeer opnieuw.'))
+      btn.disabled=false; btn.textContent=T('Account aanmaken'); return
     }
 
-    btn.innerHTML = '<span class="spinner"></span>Account aanmaken...'
+    btn.innerHTML = '<span class="spinner"></span>' + T('Account aanmaken...')
 
     const nep_email = username.toLowerCase() + '@fibro.internal'
     const metFaceId = await kanFaceIdGebruiken()
@@ -498,10 +507,11 @@
     })
 
     if (error) {
-      toonBericht(msg,'error', error.message.includes('already') ? 'Gebruikersnaam al in gebruik.' : error.message)
-      btn.disabled=false; btn.textContent='Account aanmaken'; return
+      toonBericht(msg,'error', error.message.includes('already') ? T('Gebruikersnaam al in gebruik.') : error.message)
+      btn.disabled=false; btn.textContent=T('Account aanmaken'); return
     }
 
+    T.bewaar() // v142: de taal van dit scherm is de taal van het nieuwe account (later te veranderen in het menu)
     if (data.user) {
       // Sla private key op, public key naar Supabase
       slaPrivateKeyOp(data.user.id, keypair.privateKeyB64)
@@ -524,14 +534,14 @@
     document.getElementById('reg-form').innerHTML = `
       <div style="text-align:center;padding:8px 0;">
         <div style="font-size:32px;margin-bottom:12px;">🎉</div>
-        <div style="font-size:16px;color:var(--text);margin-bottom:8px;">Account aangemaakt!</div>
-        <div class="e2e-badge" style="margin:0 auto 16px;">🔒 Encryptie sleutels aangemaakt</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Bewaar je herstelsleutel op een veilige plek</div>
+        <div style="font-size:16px;color:var(--text);margin-bottom:8px;">${T('Account aangemaakt!')}</div>
+        <div class="e2e-badge" style="margin:0 auto 16px;">${T('🔒 Encryptie sleutels aangemaakt')}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">${T('Bewaar je herstelsleutel op een veilige plek')}</div>
         <div style="background:var(--bg);border:1.5px solid var(--accent);border-radius:10px;padding:16px;font-size:18px;letter-spacing:2px;color:var(--accent);font-family:'DM Mono',monospace;margin-bottom:12px;">
           ${herstelsleutel}
         </div>
-        <div style="font-size:11px;color:var(--danger);margin-bottom:20px;">⚠ Dit zie je maar één keer! Schrijf het op.</div>
-        <button class="btn btn-primary" onclick="switchTab('inloggen')">Ga naar inloggen</button>
+        <div style="font-size:11px;color:var(--danger);margin-bottom:20px;">${T('⚠ Dit zie je maar één keer! Schrijf het op.')}</div>
+        <button class="btn btn-primary" onclick="switchTab('inloggen')">${T('Ga naar inloggen')}</button>
       </div>
     `
   }
@@ -552,28 +562,28 @@ window.herstelMetSleutel = async function() {
     const wachtwoord = (document.getElementById('herstel-wachtwoord')||{}).value || ''
     const ruweCode = document.getElementById('herstelsleutel-input').value
 
-    if (!username || !wachtwoord) { toonBericht(msg,'error','Vul je naam en wachtwoord in.'); return }
+    if (!username || !wachtwoord) { toonBericht(msg,'error',T('Vul je naam en wachtwoord in.')); return }
     const code = normaliseerHerstelSleutel(ruweCode)
-    if (!code) { toonBericht(msg,'error','Herstelsleutel klopt niet (FIBRO-XXXX-XXXX-XXXX).'); return }
+    if (!code) { toonBericht(msg,'error',T('Herstelsleutel klopt niet (FIBRO-XXXX-XXXX-XXXX).')); return }
 
-    toonBericht(msg,'info','Bezig met herstellen, dit duurt even...')
+    toonBericht(msg,'info',T('Bezig met herstellen, dit duurt even...'))
     try {
       const nep_email = username.toLowerCase() + '@fibro.internal'
       const { data, error } = await supabase.auth.signInWithPassword({ email: nep_email, password: wachtwoord })
-      if (error) { toonBericht(msg,'error','Naam of wachtwoord klopt niet.'); return }
+      if (error) { toonBericht(msg,'error',T('Naam of wachtwoord klopt niet.')); return }
 
       const userId = data.user.id
       const { data: kluis } = await supabase.from('sleutel_kluis').select('blob').eq('user_id', userId).maybeSingle()
-      if (!kluis || !kluis.blob) { toonBericht(msg,'error','Geen sleutelkluis gevonden voor dit account.'); return }
+      if (!kluis || !kluis.blob) { toonBericht(msg,'error',T('Geen sleutelkluis gevonden voor dit account.')); return }
 
       const priv = await ontsleutelPrivateKey(kluis.blob, code)
       slaPrivateKeyOp(userId, priv)
       sessionStorage.removeItem('fibro_sleutel_mist')
-      toonBericht(msg,'success','Gelukt! Je berichten zijn weer leesbaar.')
+      toonBericht(msg,'success',T('Gelukt! Je berichten zijn weer leesbaar.'))
       setTimeout(() => { window.location.href = 'index.html' }, 1200)
     } catch (e) {
       console.error(e)
-      toonBericht(msg,'error','Herstelsleutel klopt niet voor dit account.')
+      toonBericht(msg,'error',T('Herstelsleutel klopt niet voor dit account.'))
     }
   }
 
@@ -581,27 +591,27 @@ window.herstelMetSleutel = async function() {
     const msg = document.getElementById('herstel-msg')
     const username = document.getElementById('herstel-username').value.trim()
     const wachtwoord = (document.getElementById('herstel-wachtwoord') || {}).value || ''
-    if (!username || !wachtwoord) { toonBericht(msg, 'error', 'Vul je naam en wachtwoord in (de herstelsleutel is niet nodig).'); return }
-    if (!(await kanFaceIdGebruiken())) { toonBericht(msg, 'error', 'Deze browser kan Face ID-herstel niet gebruiken. Gebruik je herstelsleutel.'); return }
-    toonBericht(msg, 'info', 'Inloggen...')
+    if (!username || !wachtwoord) { toonBericht(msg, 'error', T('Vul je naam en wachtwoord in (de herstelsleutel is niet nodig).')); return }
+    if (!(await kanFaceIdGebruiken())) { toonBericht(msg, 'error', T('Deze browser kan Face ID-herstel niet gebruiken. Gebruik je herstelsleutel.')); return }
+    toonBericht(msg, 'info', T('Inloggen...'))
     const nep_email = username.toLowerCase() + '@fibro.internal'
     const { data, error } = await supabase.auth.signInWithPassword({ email: nep_email, password: wachtwoord })
-    if (error) { toonBericht(msg, 'error', 'Naam of wachtwoord klopt niet.'); return }
+    if (error) { toonBericht(msg, 'error', T('Naam of wachtwoord klopt niet.')); return }
     const userId = data.user.id
     const { data: prof } = await supabase.from('profiles').select('public_key').eq('id', userId).single()
     let dozen = []
     try { dozen = await lijstDozen(supabase, userId) } catch (e) {}
     if (!prof || !prof.public_key || !dozen.length) {
-      toonBericht(msg, 'error', 'Dit account heeft nog geen Face ID-herstel. Gebruik je herstelsleutel.')
+      toonBericht(msg, 'error', T('Dit account heeft nog geen Face ID-herstel. Gebruik je herstelsleutel.'))
       return
     }
-    toonBericht(msg, 'info', 'Bevestig met Face ID...')
+    toonBericht(msg, 'info', T('Bevestig met Face ID...'))
     const gelukt = await ontgrendelVenster(userId, prof.public_key)
     if (gelukt) {
-      toonBericht(msg, 'success', 'Gelukt! Je berichten zijn weer leesbaar.')
+      toonBericht(msg, 'success', T('Gelukt! Je berichten zijn weer leesbaar.'))
       setTimeout(() => { window.location.href = 'index.html' }, 800)
     } else {
-      toonBericht(msg, 'info', 'Geannuleerd.')
+      toonBericht(msg, 'info', T('Geannuleerd.'))
     }
   }
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl" style="background:#1a0a2e">
+<html lang="nl" data-taal style="background:#1a0a2e">
 <script>
   const f = localStorage.getItem('fibro_lettertype')
   if (f) {
@@ -13,6 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
+<script src="taal.js?v=1"></script>
 <script src="verbinding.js?v=2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>/* v130: zoomen mag weer; iPhone zoomt bij invoervakken kleiner dan 16px vanzelf in */@supports (-webkit-touch-callout: none){input,textarea,select{font-size:16px !important}}</style>
@@ -77,10 +78,10 @@
 </style>
 <script>
 function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
-async function slaFotoOp(id,data){const uid=window._uid;if(uid&&typeof id==='string'&&id.includes(uid)){const g=typeof data==='string'?data.length:(data&&data.size)||0;const nu=await metenOpslag(uid);if(nu+g>157286400){alert('Je profiel is vol (150 MB).\n\nVerwijder eerst een foto of nummer om ruimte te maken.');return null}}const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}
+async function slaFotoOp(id,data){const uid=window._uid;if(uid&&typeof id==='string'&&id.includes(uid)){const g=typeof data==='string'?data.length:(data&&data.size)||0;const nu=await metenOpslag(uid);if(nu+g>157286400){alert(T('Je profiel is vol (150 MB).\n\nVerwijder eerst een foto of nummer om ruimte te maken.'));return null}}const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}
 async function dbAlleSleutels(){const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').getAllKeys();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>resolve([])})}
 async function metenOpslag(uid){try{const alle=await dbAlleSleutels();const mijn=alle.filter(k=>typeof k==='string'&&k.includes(uid));let totaal=0;for(const k of mijn){if(k==='video_data_'+uid){try{const m=JSON.parse(await laadFotoUitDB('video_meta_'+uid)||'null');if(m&&m.grootte>0){totaal+=m.grootte;continue}}catch(e){}}const d=await laadFotoUitDB(k);if(typeof d==='string')totaal+=d.length;else if(d&&d.size)totaal+=d.size}return totaal}catch(e){console.warn('[opslag] meten mislukt',e);return 0}}
-async function werkOpslagBalkBij(){try{const uid=window._uid;if(!uid)return;const bytes=await metenOpslag(uid);const mb=bytes/1048576;const limiet=150;const pct=Math.min(100,mb/limiet*100);const vul=document.getElementById('opslagVulling');const tekst=document.getElementById('opslagTekst');if(tekst)tekst.textContent=(Math.round(mb*10)/10)+' MB van '+limiet+' MB';if(vul){vul.style.width=pct+'%';vul.style.background=pct>95?'#ef4444':pct>80?'#f59e0b':'#22c55e'}}catch(e){console.warn('[opslag] balk bijwerken mislukt',e)}}
+async function werkOpslagBalkBij(){try{const uid=window._uid;if(!uid)return;const bytes=await metenOpslag(uid);const mb=bytes/1048576;const limiet=150;const pct=Math.min(100,mb/limiet*100);const vul=document.getElementById('opslagVulling');const tekst=document.getElementById('opslagTekst');if(tekst)tekst.textContent=T('{mb} MB van {max} MB',{mb:Math.round(mb*10)/10,max:limiet});if(vul){vul.style.width=pct+'%';vul.style.background=pct>95?'#ef4444':pct>80?'#f59e0b':'#22c55e'}}catch(e){console.warn('[opslag] balk bijwerken mislukt',e)}}
 window.werkOpslagBalkBij=werkOpslagBalkBij
 async function laadFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
 async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').delete(id);tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}catch{return null}}
@@ -94,14 +95,14 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
   <div style="max-width:640px;margin:0 auto;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
     <div style="font-size:22px;line-height:1.2;">&#128274;</div>
     <div style="flex:1;min-width:220px;">
-      <div style="color:#c084fc;font-size:14px;margin-bottom:4px;">Je berichten zijn hier niet leesbaar</div>
-      <div style="color:#b8b0c8;font-size:12px;line-height:1.5;">
+      <div style="color:#c084fc;font-size:14px;margin-bottom:4px;" data-t>Je berichten zijn hier niet leesbaar</div>
+      <div style="color:#b8b0c8;font-size:12px;line-height:1.5;" data-t>
         Je sleutel staat niet op dit apparaat. Dat is normaal als je Fibro voor het eerst
         opent in deze browser of op een nieuwe telefoon. Tik op Sleutel terugzetten en ontgrendel met Face ID
         of je vingerafdruk. Staat dat nog niet aan, gebruik dan je herstelsleutel.
       </div>
     </div>
-    <a href="login.html#herstellen" style="background:#c084fc;color:#1a1426;padding:9px 14px;border-radius:8px;text-decoration:none;font-size:13px;white-space:nowrap;">Sleutel terugzetten</a>
+    <a href="login.html#herstellen" style="background:#c084fc;color:#1a1426;padding:9px 14px;border-radius:8px;text-decoration:none;font-size:13px;white-space:nowrap;" data-t>Sleutel terugzetten</a>
   </div>
 </div>
 
@@ -109,7 +110,7 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 <div class="top-bar" role="banner">
   <div class="top-logo">Fibro</div>
   <div style="display:flex;align-items:center;gap:10px;">
-    <button id="uitlogBtn" onclick="window.uitloggen()" title="Uitloggen" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.08);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.7);padding:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+    <button id="uitlogBtn" onclick="window.uitloggen()" title="Uitloggen" data-t-attr="title" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.08);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.7);padding:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
     <button id="menuBtn" onclick="window.openMenu()" title="Menu" aria-label="Menu" aria-haspopup="true" aria-expanded="false" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.08);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.7);padding:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     <div class="top-av" id="topAvatar" onclick="window.location.href='profiel.html'" style="display:none">👤</div>
   </div>
@@ -120,7 +121,7 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 <div class="profile-hero">
   <div class="hero-av" id="heroAvatar">👤</div>
   <div class="hero-info">
-    <div class="hero-naam" id="heroNaam">Laden...</div>
+    <div class="hero-naam" id="heroNaam" data-t>Laden...</div>
     <div class="hero-username" id="heroUsername"></div>
     <div class="hero-mood" id="heroMood"></div>
     <div class="hero-bio" id="heroBio"></div>
@@ -146,7 +147,7 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
     var lokaal = {}
     try { lokaal = JSON.parse(localStorage.getItem('fibro_profiel_' + uid) || '{}') || {} } catch (e) {}
     var zet = function (id, t) { var el = document.getElementById(id); if (el) el.textContent = t }
-    zet('heroNaam', String(lokaal.naam || '').trim() || p.display_name || p.username || 'Jij')
+    zet('heroNaam', String(lokaal.naam || '').trim() || p.display_name || p.username || T('Jij'))
     zet('heroUsername', '@' + (p.username || ''))
     var bio = String(lokaal.bio || '').trim() || String(p.bio || '').trim()
     zet('heroBio', bio.length > 100 ? bio.slice(0, 100) + '...' : bio)
@@ -168,13 +169,13 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 </script>
 
 <div id="home-sectie"></div>
-<div id="profiel-sectie-label" class="sectie-label" style="display:none">Jouw profiel</div>
+<div id="profiel-sectie-label" class="sectie-label" style="display:none" data-t>Jouw profiel</div>
 <div id="profiel-sectie"></div>
 <div style="height:80px;"></div>
 
 <div id="opslagBalk" style="max-width:600px;margin:20px auto 90px;padding:0 16px;font-family:'DM Sans',sans-serif;">
   <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;">
-    <span>Opslag op dit apparaat</span><span id="opslagTekst">—</span>
+    <span data-t>Opslag op dit apparaat</span><span id="opslagTekst">—</span>
   </div>
   <div style="height:8px;background:rgba(255,255,255,0.08);border-radius:20px;overflow:hidden;">
     <div id="opslagVulling" style="height:100%;width:0%;background:#22c55e;border-radius:20px;transition:width 0.4s,background 0.4s;"></div>
@@ -183,17 +184,17 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 </main>
 <div class="bottom-nav" role="navigation" aria-label="Menu">
   <div class="nav-item active" onclick="window.location.href='index.html'">
-    <div class="nav-icon">🏠</div><div class="nav-label">Home</div>
+    <div class="nav-icon">🏠</div><div class="nav-label" data-t>Home</div>
   </div>
   <div class="nav-item" onclick="window.location.href='vrienden.html'">
-    <div class="nav-icon">👥</div><div class="nav-label">Vrienden</div>
+    <div class="nav-icon">👥</div><div class="nav-label" data-t>Vrienden</div>
   </div>
   
   <div class="nav-item" onclick="window.location.href='chat.html'">
-    <div class="nav-icon">💬</div><div class="nav-label">Chat</div>
+    <div class="nav-icon">💬</div><div class="nav-label" data-t>Chat</div>
   </div>
   <div class="nav-item" onclick="window.location.href='profiel.html'">
-    <div class="nav-icon">👤</div><div class="nav-label">Profiel</div>
+    <div class="nav-icon">👤</div><div class="nav-label" data-t>Profiel</div>
   </div>
 </div>
 </div>
@@ -323,7 +324,7 @@ function tekenGrid(containerId, layout, renderFn) {
       el.innerHTML = `
         <div class="widget-header">
           <span class="widget-icon-sm">${w.icon}</span>
-          <span class="widget-titel">${w.titel}</span>
+          <span class="widget-titel">${T(w.titel)}</span>
         </div>
         <div class="widget-inhoud"></div>`
     }
@@ -401,14 +402,14 @@ function renderWereldklok(c) {
       const tijd = tijdInStad(stad.tz)
       const verschil = dagVerschil(stad.tz)
       return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;">
-        <span style="font-size:13px;color:white;">${escH(stad.naam)}</span>
+        <span style="font-size:13px;color:white;">${escH(T(stad.naam))}</span>
         <span style="font-size:15px;font-weight:700;color:var(--accent);font-family:monospace;">${tijd}${verschil ? `<span style="font-size:10px;color:rgba(255,255,255,0.5);margin-left:3px;">${verschil}d</span>` : ''}</span>
       </div>`
     }).join('')
 
     c.innerHTML = `
-      <div id="wk-lijst" style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow-y:auto;">${rijen || '<div style="font-size:12px;color:rgba(255,255,255,0.5);text-align:center;padding:10px;">Geen steden gekozen</div>'}</div>
-      <button id="wk-beheer-btn" style="margin-top:8px;width:100%;background:rgba(192,132,252,0.1);border:0.5px dashed var(--accent);border-radius:8px;padding:5px;color:var(--accent);font-size:11px;cursor:pointer;">⚙️ Steden beheren</button>
+      <div id="wk-lijst" style="display:flex;flex-direction:column;gap:2px;max-height:120px;overflow-y:auto;">${rijen || '<div style="font-size:12px;color:rgba(255,255,255,0.5);text-align:center;padding:10px;">' + T('Geen steden gekozen') + '</div>'}</div>
+      <button id="wk-beheer-btn" style="margin-top:8px;width:100%;background:rgba(192,132,252,0.1);border:0.5px dashed var(--accent);border-radius:8px;padding:5px;color:var(--accent);font-size:11px;cursor:pointer;">${T('⚙️ Steden beheren')}</button>
     `
     document.getElementById('wk-beheer-btn').addEventListener('click', toonBeheer)
   }
@@ -416,17 +417,17 @@ function renderWereldklok(c) {
   function toonBeheer() {
     const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
     c.innerHTML = `
-      <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:6px;">Kies je steden:</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:6px;">${T('Kies je steden:')}</div>
       <div id="wk-keuzelijst" style="display:flex;flex-direction:column;gap:2px;max-height:130px;overflow-y:auto;margin-bottom:8px;">
         ${WERELDKLOK_STEDEN.map(stad => {
           const actief = gekozenSteden.includes(stad.naam)
           return `<label style="display:flex;align-items:center;gap:8px;padding:3px 4px;cursor:pointer;">
             <input type="checkbox" data-stad="${escH(stad.naam)}" ${actief ? 'checked' : ''} style="accent-color:var(--accent);width:14px;height:14px;flex-shrink:0;">
-            <span style="font-size:12px;color:white;">${escH(stad.naam)}</span>
+            <span style="font-size:12px;color:white;">${escH(T(stad.naam))}</span>
           </label>`
         }).join('')}
       </div>
-      <button id="wk-klaar-btn" style="width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:6px;color:#1a0a2e;font-weight:600;font-size:12px;cursor:pointer;">✓ Klaar</button>
+      <button id="wk-klaar-btn" style="width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:6px;color:#1a0a2e;font-weight:600;font-size:12px;cursor:pointer;">${T('✓ Klaar')}</button>
     `
     document.getElementById('wk-klaar-btn').addEventListener('click', () => {
       const checkboxen = c.querySelectorAll('#wk-keuzelijst input[type="checkbox"]')
@@ -450,11 +451,11 @@ function renderHome(id, c) {
     renderWereldklok(c)
   } else if (id === 'datum') {
     const nu=new Date()
-    const dg=['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag']
-    const mn=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec']
+    const dg=[T('Zondag'),T('Maandag'),T('Dinsdag'),T('Woensdag'),T('Donderdag'),T('Vrijdag'),T('Zaterdag')]
+    const mn=[T('jan'),T('feb'),T('mrt'),T('apr'),T('mei'),T('jun'),T('jul'),T('aug'),T('sep'),T('okt'),T('nov'),T('dec')]
     c.innerHTML = `<div style="text-align:center"><div style="font-size:12px;color:rgba(255,255,255,0.8)">${dg[nu.getDay()]}</div><div style="font-size:24px;font-weight:700;color:var(--accent)">${nu.getDate()}</div><div style="font-size:12px;color:rgba(255,255,255,0.8)">${mn[nu.getMonth()]} ${nu.getFullYear()}</div></div>`
   } else if (id === 'online') {
-    c.innerHTML = '<div id="wonl" style="font-size:28px;font-weight:700;text-align:center;color:#22c55e">…</div><div style="font-size:11px;text-align:center;color:rgba(255,255,255,0.8)">vrienden online</div>'
+    c.innerHTML = '<div id="wonl" style="font-size:28px;font-weight:700;text-align:center;color:#22c55e">…</div><div style="font-size:11px;text-align:center;color:rgba(255,255,255,0.8)">' + T('vrienden online') + '</div>'
     let ikOff=false;try{ikOff=localStorage.getItem('fibro_ik_offline')==='1'}catch(e){}
     if(ikOff){const e=c.querySelector('#wonl');if(e)e.textContent='0'} // helemaal offline: niet opvragen
     else supabase.from('friendships').select('user_id,friend_id').or(`user_id.eq.${window._uid},friend_id.eq.${window._uid}`).eq('status','accepted').then(({data:fs})=>{
@@ -464,22 +465,22 @@ function renderHome(id, c) {
       supabase.from('profiles').select('online_status,laatst_gezien').in('id',ids).then(({data:p})=>{const e=document.getElementById('wonl');if(e)e.textContent=(p||[]).filter(x=>x.online_status&&x.laatst_gezien&&Date.now()-new Date(x.laatst_gezien).getTime()<300000&&localStorage.getItem('fibro_ik_offline')!=='1').length})
     })
   } else if (id === 'laastbericht') {
-    c.innerHTML = '<div id="wlb" style="font-size:13px;color:rgba(255,255,255,0.8)">Laden...</div>'
+    c.innerHTML = '<div id="wlb" style="font-size:13px;color:rgba(255,255,255,0.8)">' + T('Laden...') + '</div>'
     supabase.from('messages').select('content,sender_id').or(`sender_id.eq.${window._uid},receiver_id.eq.${window._uid}`).order('created_at',{ascending:false}).limit(1).then(({data})=>{
       const e=document.getElementById('wlb');if(!e)return
-      if(!data||!data.length){e.textContent='Nog geen berichten';return}
-      const m=data[0],van=m.sender_id===window._uid?'Jij':'Iemand'
+      if(!data||!data.length){e.textContent=T('Nog geen berichten');return}
+      const m=data[0],van=m.sender_id===window._uid?T('Jij'):T('Iemand')
       // Berichten zijn versleuteld (e2e:); de inhoud tonen we hier niet
       const inh=m.content||'',verw=inh==='verwijderd:'
-      const prev=verw?'🚫 Bericht verwijderd':(inh.startsWith('e2e:')||inh.startsWith('encrypt:'))?'🔒 versleuteld':inh.startsWith('spelinvite:')?'🎮 Spel-uitnodiging':inh.substring(0,40)
+      const prev=verw?T('🚫 Bericht verwijderd'):(inh.startsWith('e2e:')||inh.startsWith('encrypt:'))?T('🔒 versleuteld'):inh.startsWith('spelinvite:')?T('🎮 Spel-uitnodiging'):inh.substring(0,40)
       e.innerHTML=`<span style="color:var(--accent);font-weight:600">${van}:</span> ${verw?'<i>'+escH(prev)+'</i>':escH(prev)}`
     })
   } else if (id === 'batterij') {
-    c.innerHTML = '<div style="text-align:center"><div id="wbatt" style="font-size:26px;font-weight:700;color:var(--accent)">…%</div><div style="font-size:11px;color:rgba(255,255,255,0.8)">batterij</div></div>'
+    c.innerHTML = '<div style="text-align:center"><div id="wbatt" style="font-size:26px;font-weight:700;color:var(--accent)">…%</div><div style="font-size:11px;color:rgba(255,255,255,0.8)">' + T('batterij') + '</div></div>'
     if(navigator.getBattery){navigator.getBattery().then(b=>{const e=document.getElementById('wbatt');if(e){const p=Math.round(b.level*100);e.textContent=p+'%';e.style.color=p<20?'#f87171':p<50?'#fbbf24':'#22c55e'}})}
     else{const e=document.getElementById('wbatt');if(e)e.textContent='N/A'}
   } else if (id === 'activiteit') {
-    c.innerHTML = '<div style="text-align:center"><div id="wact" style="font-size:28px;font-weight:700;color:var(--accent)">…</div><div style="font-size:11px;color:rgba(255,255,255,0.8)">berichten vandaag</div></div>'
+    c.innerHTML = '<div style="text-align:center"><div id="wact" style="font-size:28px;font-weight:700;color:var(--accent)">…</div><div style="font-size:11px;color:rgba(255,255,255,0.8)">' + T('berichten vandaag') + '</div></div>'
     const vd=new Date();vd.setHours(0,0,0,0)
     supabase.from('messages').select('id',{count:'exact'}).eq('sender_id',window._uid).gte('created_at',vd.toISOString()).then(({count})=>{const e=document.getElementById('wact');if(e)e.textContent=count||0})
   } else if (id === 'poll') {
@@ -554,7 +555,7 @@ function renderProfiel(id, c) {
 function renderSpelWidget(c, spel) {
   const ICONEN = { botkaaseiren: '⭕', vieroprij: '🔴', schaken: '♟️', dammen: '⚫', pong: '🏓', pacman: '👻', breakout: '🟪', flappybird: '🦇', swarm: '🪲', endlessrunner: '🏃', pinball: '🐍' }
   const icon = ICONEN[spel] || '🎮'
-  c.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:100%;"><span style="font-size:30px;line-height:1">' + icon + '</span><span style="font-size:13px;font-weight:600;color:#fff">▶ Spelen</span></div>'
+  c.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:100%;"><span style="font-size:30px;line-height:1">' + icon + '</span><span style="font-size:13px;font-weight:600;color:#fff">' + T('▶ Spelen') + '</span></div>'
   const blok = c.closest('.widget-blok') || c
   blok.style.cursor = 'pointer'
   blok.onclick = () => { location.href = 'spel.html?spel=' + encodeURIComponent(spel) }
@@ -574,7 +575,7 @@ function fotoData(canvas, kwaliteit) {
   return _kanWebp ? canvas.toDataURL('image/webp', kwaliteit) : _opWit(canvas).toDataURL('image/jpeg', kwaliteit)
 }
 function openFibroDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
-async function slaInDB(id,data){const uid=window._uid;if(uid&&typeof id==='string'&&id.includes(uid)){const g=typeof data==='string'?data.length:(data&&data.size)||0;const oudItem=await laadFotoUitDB(id);const oudG=typeof oudItem==='string'?oudItem.length:0;const nu=await metenOpslag(uid);if(nu-oudG+g>157286400){alert('Je profiel is vol (150 MB).');throw new Error('Opslag vol')}}const db=await openFibroDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}
+async function slaInDB(id,data){const uid=window._uid;if(uid&&typeof id==='string'&&id.includes(uid)){const g=typeof data==='string'?data.length:(data&&data.size)||0;const oudItem=await laadFotoUitDB(id);const oudG=typeof oudItem==='string'?oudItem.length:0;const nu=await metenOpslag(uid);if(nu-oudG+g>157286400){alert(T('Je profiel is vol (150 MB).'));throw new Error('Opslag vol')}}const db=await openFibroDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}
 async function laadUitDB(id){try{const db=await openFibroDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
 // Voortgangsbalk bij muziek uploaden
 const muzBalk = (() => {
@@ -610,7 +611,7 @@ const muzBalk = (() => {
       v.style.animation = 'none'
       v.style.transform = 'none'
       v.style.width = p + '%'
-      deel('.mb-tekst').textContent = '\ud83c\udfb5 Muziek verwerken\u2026 ' + p + '%'
+      deel('.mb-tekst').textContent = T('\ud83c\udfb5 Muziek verwerken\u2026 {p}%', { p })
     },
     tekst(t) { if (el) deel('.mb-tekst').textContent = t },
     weg() { if (el) { el.remove(); el = null } }
@@ -672,7 +673,7 @@ async function migreerMuziek(uid){const oudKey='muziek_tracks_'+uid;let ruw=awai
 async function bewaarMuziek(uid,lijst){const idx=lijst.map(t=>({naam:t.naam,artiest:t.artiest||''}));for(let i=0;i<lijst.length;i++){await slaInDB('muziek_nr_'+uid+'_'+i,lijst[i].data)}await slaInDB('muziek_index_'+uid,JSON.stringify(idx))}
 async function maakVideoThumb(file){return new Promise((resolve)=>{const url=URL.createObjectURL(file);const v=document.createElement('video');v.preload='metadata';v.muted=true;v.playsInline=true;let klaar=false;const fout=()=>{if(!klaar){klaar=true;URL.revokeObjectURL(url);resolve(null)}};v.onerror=fout;setTimeout(fout,10000);v.onloadedmetadata=()=>{const duur=v.duration;v.currentTime=Math.min(1,duur/2)};v.onseeked=()=>{if(klaar)return;klaar=true;try{const c=document.createElement('canvas');const max=480;let w=v.videoWidth,h=v.videoHeight;if(w>max){h=h*max/w;w=max}c.width=w;c.height=h;c.getContext('2d').drawImage(v,0,0,w,h);const thumb=c.toDataURL('image/webp',0.7);URL.revokeObjectURL(url);resolve({thumb,breedte:v.videoWidth,hoogte:v.videoHeight,duur:v.duration})}catch(e){URL.revokeObjectURL(url);resolve(null)}};v.src=url})}
 async function dataNaarBlob(d,opVoortgang){const k=d.indexOf(',');if(k<0)throw new Error('geen data-adres');const type=d.slice(5,k).split(';')[0]||'video/mp4';const STAP=4194304;const delen=[];const tot=d.length-k-1;for(let i=k+1;i<d.length;i+=STAP){const s=atob(d.slice(i,Math.min(i+STAP,d.length)));const u=new Uint8Array(s.length);for(let j=0;j<s.length;j++)u[j]=s.charCodeAt(j);delen.push(u);if(opVoortgang)opVoortgang(Math.min(1,(i+STAP-k-1)/tot));await new Promise(r=>setTimeout(r,0))}return new Blob(delen,{type})}
-function renderVideoWidget(c){const uid=window._uid;const MAXDUUR=300;const MAXBYTES=104857600;let meta=null;const render=async()=>{if(!meta){const m=await laadUitDB('video_meta_'+uid);if(m){try{meta=JSON.parse(m)}catch(e){}}}if(!meta){c.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--muted);"><div style="font-size:32px;">🎬</div><div style="font-size:12px;">Nog geen video</div><button id="vid-up" style="background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;border:none;border-radius:20px;padding:6px 16px;font-size:12px;cursor:pointer;">Video kiezen</button><input id="vid-inp" type="file" accept="video/*" style="display:none;"></div>';koppel();return}c.innerHTML='<div style="position:relative;width:100%;height:100%;border-radius:10px;overflow:hidden;background:#000;"><img src="'+meta.thumb+'" style="width:100%;height:100%;object-fit:cover;pointer-events:none;"><div id="vid-play" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;cursor:pointer;background:rgba(0,0,0,0.25);"><div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;font-size:20px;color:#1a0a2e;">▶</div></div><div style="position:absolute;bottom:0;left:0;right:0;padding:6px 10px;background:linear-gradient(transparent,rgba(0,0,0,0.8));font-size:11px;color:#fff;display:flex;justify-content:space-between;"><span>'+String(meta.titel||'Video').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')+'</span><span>'+Math.floor(meta.duur/60)+':'+String(Math.floor(meta.duur%60)).padStart(2,'0')+'</span></div><button id="vid-wis" title="Video verwijderen" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">×</button></div>';const pl=document.getElementById('vid-play');if(pl)pl.onclick=speel;const wis=document.getElementById('vid-wis');if(wis)wis.onclick=verwijder};const knopStijl='background:rgba(255,255,255,0.12);color:#fff;border:0.5px solid var(--border);border-radius:16px;padding:6px 14px;font-size:12px;cursor:pointer;';let vidUrl=null;const stopSpelen=()=>{const v=c.querySelector('video');if(v){try{v.pause()}catch(e){}v.removeAttribute('src');try{v.load()}catch(e){}}if(vidUrl){try{URL.revokeObjectURL(vidUrl)}catch(e){}vidUrl=null}};const speel=async()=>{const data=await laadUitDB('video_data_'+uid);if(!data){alert('Video niet gevonden.');return}c.innerHTML='<div style="display:flex;flex-direction:column;width:100%;height:100%;gap:6px;"><div id="vid-plek" style="position:relative;flex:1;min-height:0;border-radius:10px;overflow:hidden;background:#000;"><div id="vid-melding" style="position:absolute;inset:0;z-index:2;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;padding:0 12px;text-align:center;">Video laden...</div></div><div style="display:flex;justify-content:space-between;gap:8px;"><button id="vid-sluit" style="'+knopStijl+'">✕ Sluiten</button><button id="vid-wis2" style="'+knopStijl+'">🗑 Verwijderen</button></div></div>';document.getElementById('vid-sluit').onclick=()=>{stopSpelen();render()};document.getElementById('vid-wis2').onclick=verwijder;const meld=t=>{const m=document.getElementById('vid-melding');if(m){m.textContent=t;m.style.display=t?'flex':'none'}};let blob=null;try{blob=await dataNaarBlob(data,p=>meld('Video laden... '+Math.round(p*100)+'%'))}catch(e){console.error('[video] laden mislukt',e);meld('Video kon niet worden geladen.');return}const plek=document.getElementById('vid-plek');if(!plek||!c.contains(plek))return;stopSpelen();vidUrl=URL.createObjectURL(blob);const v=document.createElement('video');v.controls=true;v.playsInline=true;v.setAttribute('playsinline','');v.preload='auto';v.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;';v.onloadedmetadata=()=>{if(!v.videoWidth)meld('Dit toestel kan het beeld van deze video niet tonen (alleen geluid).');else meld('')};v.onerror=()=>{meld('Deze video kan op dit toestel niet worden afgespeeld'+(v.error?' (fout '+v.error.code+')':'')+'.')};v.src=vidUrl;plek.appendChild(v);try{const p=v.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}};const verwijder=async()=>{if(!confirm('Video verwijderen?\n\nDaarna kun je een nieuwe video kiezen.'))return;stopSpelen();try{const db=await openFibroDB();const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').delete('video_meta_'+uid);tx.objectStore('fotos').delete('video_data_'+uid);await new Promise(k=>{tx.oncomplete=k;tx.onerror=k;tx.onabort=k})}catch(e){}meta=null;render();try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){}};const koppel=()=>{const btn=document.getElementById('vid-up');const inp=document.getElementById('vid-inp');if(!btn||!inp)return;btn.onclick=()=>inp.click();inp.onchange=async()=>{const f=inp.files[0];if(!f)return;let vf=f;let maxB=MAXBYTES;try{const vrij=157286400-await metenOpslag(uid);maxB=Math.min(MAXBYTES,Math.floor((vrij-1000)*3/4))}catch(e){}if(maxB<2097152){alert('Je profiel is bijna vol (150 MB).\n\nMaak eerst ruimte, bijvoorbeeld door een foto of muziek weg te halen.');return}c.innerHTML='<div id="vid-stat" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:12px;text-align:center;padding:0 10px;">Video bekijken...</div>';let gInfo=null,proef=null;for(let poging=1;poging<=2;poging++){vf=f;gInfo=null;proef=null;const zet=t=>{const st=document.getElementById('vid-stat');if(st)st.textContent=t};try{const vh=await import('./videohulp.js?v=123');const blob=await vh.maakH264(f,{maxBytes:maxB,maxDuur:MAXDUUR,veilig:poging===2,opInfo:i=>{gInfo=i},opVoortgang:p=>zet((poging===2?'Opnieuw omzetten (veilige stand)... ':'Video omzetten naar 720p... ')+Math.round(p*100)+'%')});if(blob)vf=new File([blob],f.name.replace(/\.[^.]+$/,'')+'.mp4',{type:'video/mp4'})}catch(e){console.error('[omzetten] mislukt:',e,gInfo&&gInfo.diag);const r=e&&e.message;if(r==='geen-beeld'&&poging===1)continue;const diag=gInfo&&gInfo.diag?'\n\nTechnische info:\n'+gInfo.diag:'';const ruimte=maxB<MAXBYTES?' (of maak eerst ruimte in je profiel)':'';alert(r==='te-groot'?'Deze video is te groot om te plaatsen.\n\nNa het omzetten naar 720p wordt hij ongeveer '+Math.round(((gInfo&&gInfo.schatting)||0)/1048576)+' MB, en er past nu maximaal '+Math.round(maxB/1048576)+' MB.\n\nKies een kortere video'+ruimte+'.':r==='te-lang'?'Deze video is te lang ('+Math.round((gInfo&&gInfo.duur)||0)+' sec). Maximaal '+Math.round(MAXDUUR/60)+' minuten.':r==='geen-beeld'?'Bij het omzetten van deze video ging het beeld verloren. De video is niet opgeslagen.'+diag:r==='niet-te-lezen'?'Deze browser kan deze video niet lezen (waarschijnlijk een iPhone-video in HEVC).\n\nKies de video op de iPhone zelf, dan wordt hij daar omgezet. Of zet op de iPhone Instellingen > Camera > Indelingen op "Meest compatibel".':r==='onbekend'?'Dit bestand wordt niet herkend als video.':'Deze video kon niet worden omgezet.\n\nProbeer een MP4-bestand, of zet op de iPhone Instellingen > Camera > Indelingen op "Meest compatibel".'+diag);render();return}zet('Beeld controleren...');proef=await maakVideoThumb(vf);if(vf===f||(proef&&proef.breedte>0))break;console.warn('[omzetten] uitkomst heeft geen zichtbaar beeld',gInfo&&gInfo.diag);if(poging===2){alert('Na het omzetten kan deze telefoon het beeld van deze video niet tonen. De video is niet opgeslagen.\n\nTechnische info:\n'+(gInfo&&gInfo.diag||'?'));render();return}}if(gInfo&&gInfo.geluid==='weg'&&!confirm('Het geluid van deze video kon niet worden meegenomen (geluid: '+gInfo.sporen.join(', ')+').\n\nToch opslaan zonder geluid?')){render();return}if(vf.size>maxB){alert('Deze video is te groot om te plaatsen.\n\nNa het omzetten naar 720p is hij '+Math.round(vf.size/1048576)+' MB, en er past nu maximaal '+Math.round(maxB/1048576)+' MB.\n\nKies een kortere video'+(maxB<MAXBYTES?' (of maak eerst ruimte in je profiel)':'')+'.');render();return}c.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:12px;">Video verwerken...</div>';const info=proef||await maakVideoThumb(vf);if(!info){alert('Deze video kan niet worden gelezen. Probeer een MP4-bestand.');render();return}if(info.duur>MAXDUUR){alert('Video te lang ('+Math.round(info.duur)+' sec). Maximaal 5 minuten.');meta=null;render();return}const lezer=new FileReader();lezer.onload=async()=>{try{await slaInDB('video_data_'+uid,lezer.result);meta={thumb:info.thumb,breedte:info.breedte,hoogte:info.hoogte,duur:info.duur,titel:vf.name.replace(/\.[^.]+$/,''),grootte:lezer.result.length};await slaInDB('video_meta_'+uid,JSON.stringify(meta));render()}catch(e){meta=null;render()}};lezer.onerror=()=>{alert('Video kon niet worden gelezen.');render()};lezer.readAsDataURL(vf)}};render()}
+function renderVideoWidget(c){const uid=window._uid;const MAXDUUR=300;const MAXBYTES=104857600;let meta=null;const render=async()=>{if(!meta){const m=await laadUitDB('video_meta_'+uid);if(m){try{meta=JSON.parse(m)}catch(e){}}}if(!meta){c.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--muted);"><div style="font-size:32px;">🎬</div><div style="font-size:12px;">'+T('Nog geen video')+'</div><button id="vid-up" style="background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;border:none;border-radius:20px;padding:6px 16px;font-size:12px;cursor:pointer;">'+T('Video kiezen')+'</button><input id="vid-inp" type="file" accept="video/*" style="display:none;"></div>';koppel();return}c.innerHTML='<div style="position:relative;width:100%;height:100%;border-radius:10px;overflow:hidden;background:#000;"><img src="'+meta.thumb+'" style="width:100%;height:100%;object-fit:cover;pointer-events:none;"><div id="vid-play" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;cursor:pointer;background:rgba(0,0,0,0.25);"><div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;font-size:20px;color:#1a0a2e;">▶</div></div><div style="position:absolute;bottom:0;left:0;right:0;padding:6px 10px;background:linear-gradient(transparent,rgba(0,0,0,0.8));font-size:11px;color:#fff;display:flex;justify-content:space-between;"><span>'+String(meta.titel||'Video').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')+'</span><span>'+Math.floor(meta.duur/60)+':'+String(Math.floor(meta.duur%60)).padStart(2,'0')+'</span></div><button id="vid-wis" title="'+T('Video verwijderen')+'" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">×</button></div>';const pl=document.getElementById('vid-play');if(pl)pl.onclick=speel;const wis=document.getElementById('vid-wis');if(wis)wis.onclick=verwijder};const knopStijl='background:rgba(255,255,255,0.12);color:#fff;border:0.5px solid var(--border);border-radius:16px;padding:6px 14px;font-size:12px;cursor:pointer;';let vidUrl=null;const stopSpelen=()=>{const v=c.querySelector('video');if(v){try{v.pause()}catch(e){}v.removeAttribute('src');try{v.load()}catch(e){}}if(vidUrl){try{URL.revokeObjectURL(vidUrl)}catch(e){}vidUrl=null}};const speel=async()=>{const data=await laadUitDB('video_data_'+uid);if(!data){alert(T('Video niet gevonden.'));return}c.innerHTML='<div style="display:flex;flex-direction:column;width:100%;height:100%;gap:6px;"><div id="vid-plek" style="position:relative;flex:1;min-height:0;border-radius:10px;overflow:hidden;background:#000;"><div id="vid-melding" style="position:absolute;inset:0;z-index:2;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;padding:0 12px;text-align:center;">'+T('Video laden...')+'</div></div><div style="display:flex;justify-content:space-between;gap:8px;"><button id="vid-sluit" style="'+knopStijl+'">'+T('✕ Sluiten')+'</button><button id="vid-wis2" style="'+knopStijl+'">'+T('🗑 Verwijderen')+'</button></div></div>';document.getElementById('vid-sluit').onclick=()=>{stopSpelen();render()};document.getElementById('vid-wis2').onclick=verwijder;const meld=t=>{const m=document.getElementById('vid-melding');if(m){m.textContent=t;m.style.display=t?'flex':'none'}};let blob=null;try{blob=await dataNaarBlob(data,p=>meld(T('Video laden... {p}%',{p:Math.round(p*100)})))}catch(e){console.error('[video] laden mislukt',e);meld(T('Video kon niet worden geladen.'));return}const plek=document.getElementById('vid-plek');if(!plek||!c.contains(plek))return;stopSpelen();vidUrl=URL.createObjectURL(blob);const v=document.createElement('video');v.controls=true;v.playsInline=true;v.setAttribute('playsinline','');v.preload='auto';v.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;';v.onloadedmetadata=()=>{if(!v.videoWidth)meld(T('Dit toestel kan het beeld van deze video niet tonen (alleen geluid).'));else meld('')};v.onerror=()=>{meld(v.error?T('Deze video kan op dit toestel niet worden afgespeeld (fout {code}).',{code:v.error.code}):T('Deze video kan op dit toestel niet worden afgespeeld.'))};v.src=vidUrl;plek.appendChild(v);try{const p=v.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}};const verwijder=async()=>{if(!confirm(T('Video verwijderen?\n\nDaarna kun je een nieuwe video kiezen.')))return;stopSpelen();try{const db=await openFibroDB();const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').delete('video_meta_'+uid);tx.objectStore('fotos').delete('video_data_'+uid);await new Promise(k=>{tx.oncomplete=k;tx.onerror=k;tx.onabort=k})}catch(e){}meta=null;render();try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){}};const koppel=()=>{const btn=document.getElementById('vid-up');const inp=document.getElementById('vid-inp');if(!btn||!inp)return;btn.onclick=()=>inp.click();inp.onchange=async()=>{const f=inp.files[0];if(!f)return;let vf=f;let maxB=MAXBYTES;try{const vrij=157286400-await metenOpslag(uid);maxB=Math.min(MAXBYTES,Math.floor((vrij-1000)*3/4))}catch(e){}if(maxB<2097152){alert(T('Je profiel is bijna vol (150 MB).\n\nMaak eerst ruimte, bijvoorbeeld door een foto of muziek weg te halen.'));return}c.innerHTML='<div id="vid-stat" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:12px;text-align:center;padding:0 10px;">'+T('Video bekijken...')+'</div>';let gInfo=null,proef=null;for(let poging=1;poging<=2;poging++){vf=f;gInfo=null;proef=null;const zet=t=>{const st=document.getElementById('vid-stat');if(st)st.textContent=t};try{const vh=await import('./videohulp.js?v=123');const blob=await vh.maakH264(f,{maxBytes:maxB,maxDuur:MAXDUUR,veilig:poging===2,opInfo:i=>{gInfo=i},opVoortgang:p=>zet(poging===2?T('Opnieuw omzetten (veilige stand)... {p}%',{p:Math.round(p*100)}):T('Video omzetten naar 720p... {p}%',{p:Math.round(p*100)}))});if(blob)vf=new File([blob],f.name.replace(/\.[^.]+$/,'')+'.mp4',{type:'video/mp4'})}catch(e){console.error('[omzetten] mislukt:',e,gInfo&&gInfo.diag);const r=e&&e.message;if(r==='geen-beeld'&&poging===1)continue;const diag=gInfo&&gInfo.diag?T('\n\nTechnische info:\n{diag}',{diag:gInfo.diag}):'';const ruimte=maxB<MAXBYTES?T(' (of maak eerst ruimte in je profiel)'):'';alert(r==='te-groot'?T('Deze video is te groot om te plaatsen.\n\nNa het omzetten naar 720p wordt hij ongeveer {mb} MB, en er past nu maximaal {max} MB.\n\nKies een kortere video{ruimte}.',{mb:Math.round(((gInfo&&gInfo.schatting)||0)/1048576),max:Math.round(maxB/1048576),ruimte}):r==='te-lang'?T('Deze video is te lang ({sec} sec). Maximaal {min} minuten.',{sec:Math.round((gInfo&&gInfo.duur)||0),min:Math.round(MAXDUUR/60)}):r==='geen-beeld'?T('Bij het omzetten van deze video ging het beeld verloren. De video is niet opgeslagen.')+diag:r==='niet-te-lezen'?T('Deze browser kan deze video niet lezen (waarschijnlijk een iPhone-video in HEVC).\n\nKies de video op de iPhone zelf, dan wordt hij daar omgezet. Of zet op de iPhone Instellingen > Camera > Indelingen op "Meest compatibel".'):r==='onbekend'?T('Dit bestand wordt niet herkend als video.'):T('Deze video kon niet worden omgezet.\n\nProbeer een MP4-bestand, of zet op de iPhone Instellingen > Camera > Indelingen op "Meest compatibel".')+diag);render();return}zet(T('Beeld controleren...'));proef=await maakVideoThumb(vf);if(vf===f||(proef&&proef.breedte>0))break;console.warn('[omzetten] uitkomst heeft geen zichtbaar beeld',gInfo&&gInfo.diag);if(poging===2){alert(T('Na het omzetten kan deze telefoon het beeld van deze video niet tonen. De video is niet opgeslagen.\n\nTechnische info:\n{diag}',{diag:gInfo&&gInfo.diag||'?'}));render();return}}if(gInfo&&gInfo.geluid==='weg'&&!confirm(T('Het geluid van deze video kon niet worden meegenomen (geluid: {sporen}).\n\nToch opslaan zonder geluid?',{sporen:gInfo.sporen.join(', ')}))){render();return}if(vf.size>maxB){alert(T('Deze video is te groot om te plaatsen.\n\nNa het omzetten naar 720p is hij {mb} MB, en er past nu maximaal {max} MB.\n\nKies een kortere video{ruimte}.',{mb:Math.round(vf.size/1048576),max:Math.round(maxB/1048576),ruimte:maxB<MAXBYTES?T(' (of maak eerst ruimte in je profiel)'):''}));render();return}c.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:12px;">'+T('Video verwerken...')+'</div>';const info=proef||await maakVideoThumb(vf);if(!info){alert(T('Deze video kan niet worden gelezen. Probeer een MP4-bestand.'));render();return}if(info.duur>MAXDUUR){alert(T('Video te lang ({sec} sec). Maximaal 5 minuten.',{sec:Math.round(info.duur)}));meta=null;render();return}const lezer=new FileReader();lezer.onload=async()=>{try{await slaInDB('video_data_'+uid,lezer.result);meta={thumb:info.thumb,breedte:info.breedte,hoogte:info.hoogte,duur:info.duur,titel:vf.name.replace(/\.[^.]+$/,''),grootte:lezer.result.length};await slaInDB('video_meta_'+uid,JSON.stringify(meta));render()}catch(e){meta=null;render()}};lezer.onerror=()=>{alert(T('Video kon niet worden gelezen.'));render()};lezer.readAsDataURL(vf)}};render()}
 
 function renderMuziekPlayer(c) {
   const uid = window._uid
@@ -726,11 +727,11 @@ function renderMuziekPlayer(c) {
             </div>`).join('')}
           </div>` : ''}
         ` : `
-          <div style="text-align:center;font-size:12px;color:rgba(255,255,255,0.8);padding:8px;">Geen nummers toegevoegd</div>
+          <div style="text-align:center;font-size:12px;color:rgba(255,255,255,0.8);padding:8px;">${T('Geen nummers toegevoegd')}</div>
         `}
         <!-- Upload knop -->
         <button id="muz-upload-btn" style="background:rgba(192,132,252,0.1);border:0.5px dashed var(--accent);border-radius:8px;padding:7px;color:var(--accent);font-size:12px;cursor:pointer;width:100%;">
-          ➕ Nummer toevoegen (MP3/AAC)
+          ${T('➕ Nummer toevoegen (MP3/AAC)')}
         </button>
         <input id="muz-file-inp" type="file" accept="audio/*,.mp3,.m4a,.ogg,.wav,audio/mpeg,audio/mp4" style="display:none;">
       </div>`
@@ -824,22 +825,22 @@ function renderMuziekPlayer(c) {
       fileInp.onchange = async () => {
         const file = fileInp.files[0]
         if (!file) return
-        if (file.size > 15 * 1024 * 1024) { alert('Max 15MB per nummer.'); return }
+        if (file.size > 15 * 1024 * 1024) { alert(T('Max 15MB per nummer.')); return }
         const naam = file.name.replace(/\.[^.]+$/, '').replace(/_/g, ' ')
         ;(async () => {
           try {
-            if (window._muzBezig) { alert('Er wordt al een nummer verwerkt. Even wachten.'); return }
+            if (window._muzBezig) { alert(T('Er wordt al een nummer verwerkt. Even wachten.')); return }
             window._muzBezig = true
-            muzBalk.toon('\ud83c\udfb5 Muziek inlezen\u2026')
+            muzBalk.toon(T('\ud83c\udfb5 Muziek inlezen\u2026'))
             const data = await comprimeerMuziek(file, f => muzBalk.zet(f))
-            muzBalk.tekst('\ud83c\udfb5 Opslaan\u2026')
+            muzBalk.tekst(T('\ud83c\udfb5 Opslaan\u2026'))
             tracks.push({ naam, artiest: '', data })
             await bewaarMuziek(uid, tracks)
             huidigIdx = tracks.length - 1
             window._muzBezig = false
             muzBalk.weg()
             render()
-          } catch(err) { window._muzBezig = false; muzBalk.weg(); alert('Opslaan mislukt: ' + err.message) }
+          } catch(err) { window._muzBezig = false; muzBalk.weg(); alert(T('Opslaan mislukt: {fout}', { fout: err.message })) }
         })()
       }
     }
@@ -859,7 +860,7 @@ function maakFotoTitel(keyPrefix, uid) {
     const tekst = localStorage.getItem(TKEY) || ''
     bar.innerHTML = ''
     const el = document.createElement('div')
-    el.textContent = tekst || '+ Titel toevoegen'
+    el.textContent = tekst || T('+ Titel toevoegen')
     el.style.cssText = tekst
       ? 'font-size:13px;font-weight:600;color:var(--text);cursor:pointer;'
       : 'font-size:12px;color:rgba(255,255,255,0.35);cursor:pointer;'
@@ -871,7 +872,7 @@ function maakFotoTitel(keyPrefix, uid) {
     const inp = document.createElement('input')
     inp.value = localStorage.getItem(TKEY) || ''
     inp.maxLength = 40
-    inp.placeholder = 'Titel boven de fotos...'
+    inp.placeholder = T('Titel boven de fotos...')
     inp.style.cssText = 'width:100%;background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;'
     const opslaan = () => {
       const v = inp.value.trim()
@@ -910,7 +911,7 @@ function renderFotoGrid(c, stijl, aantalFotos) {
     inp.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;'
     inp.addEventListener('change', function() {
       const file = this.files[0]; if (!file) return
-      if (file.size > 10*1024*1024) { alert('Max 10MB'); return }
+      if (file.size > 10*1024*1024) { alert(T('Max 10MB')); return }
       const celIdx = idx
       const reader = new FileReader()
       reader.onload = ev => {
@@ -925,13 +926,13 @@ function renderFotoGrid(c, stijl, aantalFotos) {
           try {
             await slaFotoOp(KEY+celIdx+'_'+uid, fotoData(canvas,0.85))
           } catch(err) {
-            alert('Opslaan van de foto is mislukt. Probeer het opnieuw.')
+            alert(T('Opslaan van de foto is mislukt. Probeer het opnieuw.'))
             return
           }
           const cel = document.getElementById('foto-cel-'+stijl+'-'+celIdx)
           if (cel) tekenCel(cel, celIdx)
         }
-        tmpImg.onerror = () => alert('Deze foto kan niet worden gelezen.\n\nOp een iPhone: zet Instellingen > Camera > Indelingen op "Meest compatibel", of gebruik een schermafbeelding.')
+        tmpImg.onerror = () => alert(T('Deze foto kan niet worden gelezen.\n\nOp een iPhone: zet Instellingen > Camera > Indelingen op "Meest compatibel", of gebruik een schermafbeelding.'))
         tmpImg.src = ev.target.result
       }
       reader.readAsDataURL(file)
@@ -963,7 +964,7 @@ function renderFotoGrid(c, stijl, aantalFotos) {
       // Knop: wissel tussen cover (bijsnijden) en contain (volledig zichtbaar)
       const fitBtn = document.createElement('button')
       fitBtn.textContent = huidigeFit === 'cover' ? '⊞' : '⊡'
-      fitBtn.title = huidigeFit === 'cover' ? 'Volledig tonen' : 'Beeldvullend'
+      fitBtn.title = huidigeFit === 'cover' ? T('Volledig tonen') : T('Beeldvullend')
       fitBtn.style.cssText = 'position:absolute;bottom:4px;left:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.65);border:none;color:white;font-size:11px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;padding:0;'
       fitBtn.addEventListener('click', e => {
         e.stopPropagation()
@@ -971,7 +972,7 @@ function renderFotoGrid(c, stijl, aantalFotos) {
         img.style.objectFit = nieuw
         localStorage.setItem(fitKey, nieuw)
         fitBtn.textContent = nieuw === 'cover' ? '⊞' : '⊡'
-        fitBtn.title = nieuw === 'cover' ? 'Volledig tonen' : 'Beeldvullend'
+        fitBtn.title = nieuw === 'cover' ? T('Volledig tonen') : T('Beeldvullend')
         cel.style.background = nieuw === 'contain' ? '#000' : 'rgba(192,132,252,0.06)'
       })
 
@@ -1057,7 +1058,7 @@ function renderFotoFeatured(c) {
     inp.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;'
     inp.addEventListener('change', function() {
       const file = this.files[0]; if (!file) return
-      if (file.size > 10*1024*1024) { alert('Max 10MB'); return }
+      if (file.size > 10*1024*1024) { alert(T('Max 10MB')); return }
       const celIdx = i
       const reader = new FileReader()
       reader.onload = ev => {
@@ -1072,7 +1073,7 @@ function renderFotoFeatured(c) {
           try {
             await slaFotoOp(KEY+celIdx+'_'+uid, fotoData(canvas,0.85))
           } catch(err) {
-            alert('Opslaan van de foto is mislukt. Probeer het opnieuw.')
+            alert(T('Opslaan van de foto is mislukt. Probeer het opnieuw.'))
             return
           }
           const cel = document.getElementById('foto-cel-featured-'+celIdx)
@@ -1195,7 +1196,7 @@ function renderFotoZwevend(c) {
     inp.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;'
     inp.addEventListener('change', function() {
       const file = this.files[0]; if (!file) return
-      if (file.size > 10*1024*1024) { alert('Max 10MB'); return }
+      if (file.size > 10*1024*1024) { alert(T('Max 10MB')); return }
       const celIdx = i
       const reader = new FileReader()
       reader.onload = ev => {
@@ -1209,7 +1210,7 @@ function renderFotoZwevend(c) {
           try {
             await slaFotoOp(KEY+celIdx+'_'+uid, fotoData(canvas,0.85))
           } catch(err) {
-            alert('Opslaan van de foto is mislukt. Probeer het opnieuw.')
+            alert(T('Opslaan van de foto is mislukt. Probeer het opnieuw.'))
             return
           }
           tekenZwevend(celIdx)
@@ -1308,7 +1309,7 @@ function renderFotoPolaroid(c) {
     inp.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;'
     inp.addEventListener('change', function() {
       const file = this.files[0]; if (!file) return
-      if (file.size > 10*1024*1024) { alert('Max 10MB'); return }
+      if (file.size > 10*1024*1024) { alert(T('Max 10MB')); return }
       const celIdx = i
       const reader = new FileReader()
       reader.onload = ev => {
@@ -1322,7 +1323,7 @@ function renderFotoPolaroid(c) {
           try {
             await slaFotoOp(KEY+celIdx+'_'+uid, fotoData(canvas,0.85))
           } catch(err) {
-            alert('Opslaan van de foto is mislukt. Probeer het opnieuw.')
+            alert(T('Opslaan van de foto is mislukt. Probeer het opnieuw.'))
             return
           }
           tekenPolaroid(celIdx)
@@ -1422,16 +1423,16 @@ function renderPoll(c, uid) {
   function toonInvoer() {
     c.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:6px">
-        <input id="pv" placeholder="Jouw vraag..." maxlength="120" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;outline:none;width:100%">
-        <input id="po1" placeholder="Optie 1" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:13px;outline:none;width:100%">
-        <input id="po2" placeholder="Optie 2" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:13px;outline:none;width:100%">
-        <input id="po3" placeholder="Optie 3 (optioneel)" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:7px 10px;color:rgba(255,255,255,0.5);font-size:13px;outline:none;width:100%">
-        <button id="pok" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:9px;color:#1a0a2e;font-weight:600;cursor:pointer">Opslaan ✓</button>
+        <input id="pv" placeholder="${T('Jouw vraag...')}" maxlength="120" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;outline:none;width:100%">
+        <input id="po1" placeholder="${T('Optie 1')}" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:13px;outline:none;width:100%">
+        <input id="po2" placeholder="${T('Optie 2')}" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:13px;outline:none;width:100%">
+        <input id="po3" placeholder="${T('Optie 3 (optioneel)')}" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:7px 10px;color:rgba(255,255,255,0.5);font-size:13px;outline:none;width:100%">
+        <button id="pok" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:9px;color:#1a0a2e;font-weight:600;cursor:pointer">${T('Opslaan ✓')}</button>
       </div>`
     document.getElementById('pok').onclick = () => {
       const v = document.getElementById('pv').value.trim()
       const opts = ['po1','po2','po3'].map(id => document.getElementById(id).value.trim()).filter(Boolean)
-      if (!v || opts.length < 2) { alert('Vul een vraag en minstens 2 opties in'); return }
+      if (!v || opts.length < 2) { alert(T('Vul een vraag en minstens 2 opties in')); return }
       const nieuw = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), vraag: v, opties: opts.map(t => ({ tekst: t, stemmen: 0 })), gestemd: false }
       localStorage.setItem(key, JSON.stringify(nieuw))
       toonPoll(nieuw)
@@ -1454,8 +1455,8 @@ function renderPoll(c, uid) {
       <div style="font-size:14px;font-weight:600;margin-bottom:8px">${escH(data.vraag)}</div>
       <div style="display:flex;flex-direction:column;gap:6px">${opties}</div>
       <div style="display:flex;justify-content:space-between;margin-top:8px">
-        <span style="font-size:11px;color:rgba(255,255,255,0.8)" style="font-size:11px;color:rgba(255,255,255,0.7)">${tot} stemmen</span>
-        <button id="prst" style="background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;color:rgba(255,255,255,0.7);font-size:11px;cursor:pointer">✏️ Bewerken</button>
+        <span style="font-size:11px;color:rgba(255,255,255,0.8)" style="font-size:11px;color:rgba(255,255,255,0.7)">${T('{n} stemmen', { n: tot })}</span>
+        <button id="prst" style="background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;color:rgba(255,255,255,0.7);font-size:11px;cursor:pointer">${T('✏️ Bewerken')}</button>
       </div>`
     document.getElementById('prst').onclick = toonInvoer
     if (!data.gestemd) {
@@ -1505,20 +1506,20 @@ function renderQuoteWidget(c, uid) {
     const hf = cfg ? cfg.font : FONTS[0][0]
     c.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:7px;position:relative;z-index:2">
-        <textarea id="qi" placeholder="Jouw quote..." rows="3" style="${inp};resize:none;font-family:inherit">${cfg?String(cfg.tekst||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'):''}</textarea>
+        <textarea id="qi" placeholder="${T('Jouw quote...')}" rows="3" style="${inp};resize:none;font-family:inherit">${cfg?String(cfg.tekst||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'):''}</textarea>
         <select id="qf" style="${inp}">${FONTS.map(f=>`<option value="${f[0]}" ${hf===f[0]?'selected':''} style="font-family:${f[0]}">${f[1]}</option>`).join('')}</select>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:rgba(255,255,255,0.6)">Grootte</span>
+          <span style="font-size:11px;color:rgba(255,255,255,0.6)">${T('Grootte')}</span>
           <input id="qg" type="range" min="12" max="40" value="${hg}" style="flex:1;accent-color:var(--accent)">
           <span id="qgl" style="font-size:11px;color:var(--accent);min-width:28px">${hg}px</span>
         </div>
-        <button id="qok" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:8px;color:#1a0a2e;font-weight:600;cursor:pointer">Opslaan \u2713</button>
+        <button id="qok" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:8px;color:#1a0a2e;font-weight:600;cursor:pointer">${T('Opslaan \u2713')}</button>
       </div>`
     const sl = document.getElementById('qg')
     sl.oninput = () => { document.getElementById('qgl').textContent = sl.value + 'px' }
     document.getElementById('qok').onclick = () => {
       const tk = document.getElementById('qi').value.trim()
-      if (!tk) { alert('Vul een quote in'); return }
+      if (!tk) { alert(T('Vul een quote in')); return }
       cfg = { tekst: tk, grootte: parseInt(sl.value,10), font: document.getElementById('qf').value }
       localStorage.setItem(key, JSON.stringify(cfg))
       toonQuote(cfg)
@@ -1530,7 +1531,7 @@ function renderQuoteWidget(c, uid) {
     c.innerHTML = `
       <div style="text-align:center;position:relative;z-index:2;padding:6px 4px">
         <div style="font-size:${q.grootte}px;line-height:1.35;font-family:${q.font};color:var(--text);white-space:pre-wrap;text-shadow:0 1px 4px rgba(0,0,0,0.7)">${escH(q.tekst)}</div>
-        <button id="qwij" style="margin-top:8px;background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;color:rgba(255,255,255,0.7);font-size:11px;cursor:pointer">\u270F Wijzigen</button>
+        <button id="qwij" style="margin-top:8px;background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;color:rgba(255,255,255,0.7);font-size:11px;cursor:pointer">${T('\u270F Wijzigen')}</button>
       </div>`
     document.getElementById('qwij').onclick = toonInvoer
   }
@@ -1568,7 +1569,7 @@ async function zetWidgetAchtergrond(c, sleutel) {
   const knop = document.createElement('button')
   knop.className = 'wbg-knop'
   knop.textContent = '\u{1F5BC}'
-  knop.title = data ? 'Achtergrond aanpassen' : 'Achtergrondfoto kiezen'
+  knop.title = data ? T('Achtergrond aanpassen') : T('Achtergrondfoto kiezen')
   knop.style.cssText = 'position:absolute;top:4px;right:4px;z-index:6;background:rgba(0,0,0,0.5);border:none;border-radius:50%;width:22px;height:22px;min-width:22px;min-height:22px;padding:0;font-size:11px;line-height:1;color:#fff;cursor:pointer;opacity:0.65'
   c.appendChild(knop)
 
@@ -1590,11 +1591,11 @@ async function zetWidgetAchtergrond(c, sleutel) {
           cv.width = w; cv.height = h
           cv.getContext('2d').drawImage(img,0,0,w,h)
           try { await slaFotoOp(sleutel, cv.toDataURL('image/jpeg',0.8)) }
-          catch(err) { alert('Opslaan van de achtergrond is mislukt.'); return }
+          catch(err) { alert(T('Opslaan van de achtergrond is mislukt.')); return }
           localStorage.setItem(posKey, JSON.stringify({ s:100, x:50, y:50 }))
           zetWidgetAchtergrond(c, sleutel)
         }
-        img.onerror = () => alert('Deze foto kan niet worden gelezen.')
+        img.onerror = () => alert(T('Deze foto kan niet worden gelezen.'))
         img.src = ev.target.result
       }
       lezer.readAsDataURL(f)
@@ -1608,13 +1609,13 @@ async function zetWidgetAchtergrond(c, sleutel) {
     const bar = document.createElement('div')
     bar.className = 'wbg-bewerk'
     bar.style.cssText = 'position:absolute;left:0;right:0;bottom:0;z-index:8;background:rgba(0,0,0,0.85);padding:7px 9px;display:flex;flex-direction:column;gap:6px'
-    bar.innerHTML = '<div style="font-size:10px;color:rgba(255,255,255,0.7);text-align:center">Sleep om te verschuiven</div>'
-      + '<div style="display:flex;align-items:center;gap:7px"><span style="font-size:11px;color:rgba(255,255,255,0.6)">Zoom</span>'
+    bar.innerHTML = '<div style="font-size:10px;color:rgba(255,255,255,0.7);text-align:center">' + T('Sleep om te verschuiven') + '</div>'
+      + '<div style="display:flex;align-items:center;gap:7px"><span style="font-size:11px;color:rgba(255,255,255,0.6)">' + T('Zoom') + '</span>'
       + '<input class="wbg-zoom" type="range" min="100" max="300" value="' + p.s + '" style="flex:1;accent-color:var(--accent)">'
       + '<span class="wbg-zl" style="font-size:11px;color:var(--accent);min-width:34px">' + p.s + '%</span></div>'
-      + '<div style="display:flex;gap:6px"><button class="wbg-ok" style="flex:1;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:7px;padding:6px;color:#1a0a2e;font-weight:600;font-size:12px;cursor:pointer;min-height:32px">Klaar</button>'
-      + '<button class="wbg-an" style="flex:1;background:rgba(255,255,255,0.12);border:none;border-radius:7px;padding:6px;color:#fff;font-size:12px;cursor:pointer;min-height:32px">Annuleren</button>'
-      + '<button class="wbg-vv" style="background:rgba(255,255,255,0.12);border:none;border-radius:7px;padding:6px 9px;color:#fff;font-size:12px;cursor:pointer;min-height:32px">Wissen</button></div>'
+      + '<div style="display:flex;gap:6px"><button class="wbg-ok" style="flex:1;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:7px;padding:6px;color:#1a0a2e;font-weight:600;font-size:12px;cursor:pointer;min-height:32px">' + T('Klaar') + '</button>'
+      + '<button class="wbg-an" style="flex:1;background:rgba(255,255,255,0.12);border:none;border-radius:7px;padding:6px;color:#fff;font-size:12px;cursor:pointer;min-height:32px">' + T('Annuleren') + '</button>'
+      + '<button class="wbg-vv" style="background:rgba(255,255,255,0.12);border:none;border-radius:7px;padding:6px 9px;color:#fff;font-size:12px;cursor:pointer;min-height:32px">' + T('Wissen') + '</button></div>'
     c.appendChild(bar)
     knop.style.display = 'none'
 
@@ -1662,7 +1663,7 @@ async function zetWidgetAchtergrond(c, sleutel) {
     bar.querySelector('.wbg-ok').onclick = () => { localStorage.setItem(posKey, JSON.stringify(p)); sluit() }
     bar.querySelector('.wbg-an').onclick = () => { pas(begin); sluit() }
     bar.querySelector('.wbg-vv').onclick = async () => {
-      if (!confirm('Achtergrondfoto verwijderen?')) return
+      if (!confirm(T('Achtergrondfoto verwijderen?'))) return
       try { await wisFotoUitDB(sleutel) } catch(e) {}
       localStorage.removeItem(posKey)
       sluit()
@@ -1686,17 +1687,17 @@ function renderAftel(c, uid) {
     const deft = cfg && cfg.tijd ? cfg.tijd : '00:00'
     c.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:8px">
-        <input id="afb" placeholder="Bijv. Zomervakantie 🌞" maxlength="80" value="${cfg?String(cfg.bericht||'').replace(/"/g,'&quot;'):''}" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;outline:none;width:100%">
+        <input id="afb" placeholder="${T('Bijv. Zomervakantie 🌞')}" maxlength="80" value="${cfg?String(cfg.bericht||'').replace(/"/g,'&quot;'):''}" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;outline:none;width:100%">
         <input id="afd" type="date" value="${cfg?cfg.datum:def}" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;outline:none;width:100%;color-scheme:dark">
         <input id="aft" type="time" value="${deft}" style="background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;outline:none;width:100%;color-scheme:dark">
-        <button id="afok" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:9px;color:#1a0a2e;font-weight:600;cursor:pointer">Opslaan ✓</button>
+        <button id="afok" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:9px;color:#1a0a2e;font-weight:600;cursor:pointer">${T('Opslaan ✓')}</button>
       </div>`
     document.getElementById('afok').onclick = () => {
       const b = document.getElementById('afb').value.trim()
       const dt = document.getElementById('afd').value
-      if (!dt) { alert('Kies een datum'); return }
+      if (!dt) { alert(T('Kies een datum')); return }
       const tj = (document.getElementById('aft').value || '00:00')
-      cfg = { bericht: b||'Aftellen...', datum: dt, tijd: tj }
+      cfg = { bericht: b||T('Aftellen...'), datum: dt, tijd: tj }
       localStorage.setItem(key, JSON.stringify(cfg))
       toonTimer(cfg)
     }
@@ -1708,7 +1709,7 @@ function renderAftel(c, uid) {
       <div style="text-align:center">
         <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--accent)">${escH(cr.bericht)}</div>
         <div id="atd" style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap"></div>
-        <button id="atw" style="margin-top:8px;background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;color:rgba(255,255,255,0.7);font-size:11px;cursor:pointer">✏️ Wijzigen</button>
+        <button id="atw" style="margin-top:8px;background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;color:rgba(255,255,255,0.7);font-size:11px;cursor:pointer">${T('✏️ Wijzigen')}</button>
       </div>`
     document.getElementById('atw').onclick = toonInvoer
     const blok = (n,l) => `<div style="display:flex;flex-direction:column;align-items:center;background:rgba(192,132,252,0.1);border-radius:8px;padding:5px 7px;min-width:42px"><span style="font-size:18px;font-weight:700;color:var(--accent);font-family:monospace">${String(n).padStart(2,'0')}</span><span style="font-size:9px;color:rgba(255,255,255,0.75)">${l}</span></div>`
@@ -1716,9 +1717,9 @@ function renderAftel(c, uid) {
     const upd = () => {
       const el = document.getElementById('atd'); if(!el){clearInterval(tr);return}
       const diff = new Date(cr.datum+'T'+(cr.tijd||'00:00')+':00') - new Date()
-      if (diff <= 0) { el.innerHTML = '🎉 Het is zover!'; clearInterval(tr); return }
+      if (diff <= 0) { el.innerHTML = T('🎉 Het is zover!'); clearInterval(tr); return }
       const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000)
-      el.innerHTML = blok(d,'dagen')+blok(h,'uur')+blok(m,'min')+blok(s,'sec')
+      el.innerHTML = blok(d,T('dagen'))+blok(h,T('uur'))+blok(m,T('min'))+blok(s,T('sec'))
     }
     upd(); tr = setInterval(upd, 1000)
   }
@@ -1740,17 +1741,17 @@ function renderOptel(c, uid) {
     const inp = 'background:rgba(255,255,255,0.07);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;outline:none;width:100%'
     c.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:8px">
-        <input id="opb" placeholder="Bijv. Samen sinds \u2764" maxlength="80" value="${cfg?String(cfg.bericht||'').replace(/"/g,'&quot;'):''}" style="${inp}">
+        <input id="opb" placeholder="${T('Bijv. Samen sinds \u2764')}" maxlength="80" value="${cfg?String(cfg.bericht||'').replace(/"/g,'&quot;'):''}" style="${inp}">
         <input id="opd" type="date" value="${def}" style="${inp};color-scheme:dark">
         <input id="opt" type="time" value="${deft}" style="${inp};color-scheme:dark">
-        <button id="opok" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:9px;color:#1a0a2e;font-weight:600;cursor:pointer">Opslaan \u2713</button>
+        <button id="opok" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:9px;color:#1a0a2e;font-weight:600;cursor:pointer">${T('Opslaan \u2713')}</button>
       </div>`
     document.getElementById('opok').onclick = () => {
       const b = document.getElementById('opb').value.trim()
       const dt = document.getElementById('opd').value
-      if (!dt) { alert('Kies een datum'); return }
+      if (!dt) { alert(T('Kies een datum')); return }
       const tj = document.getElementById('opt').value || '00:00'
-      cfg = { bericht: b||'Optellen...', datum: dt, tijd: tj }
+      cfg = { bericht: b||T('Optellen...'), datum: dt, tijd: tj }
       localStorage.setItem(key, JSON.stringify(cfg))
       toonTeller(cfg)
     }
@@ -1762,7 +1763,7 @@ function renderOptel(c, uid) {
       <div style="text-align:center">
         <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--accent)">${escH(cr.bericht)}</div>
         <div id="optd" style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap"></div>
-        <button id="optw" style="margin-top:8px;background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;color:rgba(255,255,255,0.7);font-size:11px;cursor:pointer">\u270F Wijzigen</button>
+        <button id="optw" style="margin-top:8px;background:none;border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;color:rgba(255,255,255,0.7);font-size:11px;cursor:pointer">${T('\u270F Wijzigen')}</button>
       </div>`
     document.getElementById('optw').onclick = toonInvoer
     const blok = (n,l) => `<div style="display:flex;flex-direction:column;align-items:center;background:rgba(192,132,252,0.1);border-radius:8px;padding:5px 7px;min-width:42px"><span style="font-size:18px;font-weight:700;color:var(--accent);font-family:monospace">${String(n).padStart(2,'0')}</span><span style="font-size:9px;color:rgba(255,255,255,0.75)">${l}</span></div>`
@@ -1770,9 +1771,9 @@ function renderOptel(c, uid) {
     const upd = () => {
       const el = document.getElementById('optd'); if(!el){clearInterval(tr);return}
       const diff = new Date() - new Date(cr.datum+'T'+(cr.tijd||'00:00')+':00')
-      if (diff < 0) { el.innerHTML = 'Die datum ligt nog in de toekomst'; return }
+      if (diff < 0) { el.innerHTML = T('Die datum ligt nog in de toekomst'); return }
       const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000)
-      el.innerHTML = blok(d,'dagen')+blok(h,'uur')+blok(m,'min')+blok(s,'sec')
+      el.innerHTML = blok(d,T('dagen'))+blok(h,T('uur'))+blok(m,T('min'))+blok(s,T('sec'))
     }
     upd(); tr = setInterval(upd, 1000)
   }
@@ -1795,12 +1796,12 @@ async function renderGastenboek(c, uid) {
 
   const wanneer = iso => {
     const s = Math.floor((Date.now() - new Date(iso)) / 1000)
-    if (s < 60) return 'zojuist'
-    if (s < 3600) return Math.floor(s/60) + ' min geleden'
-    if (s < 86400) return Math.floor(s/3600) + ' uur geleden'
-    if (s < 172800) return 'gisteren'
-    if (s < 604800) return Math.floor(s/86400) + ' dagen geleden'
-    return new Date(iso).toLocaleDateString('nl-NL', { day:'numeric', month:'short' })
+    if (s < 60) return T('zojuist')
+    if (s < 3600) return T('{n} min geleden', { n: Math.floor(s/60) })
+    if (s < 86400) return T('{n} uur geleden', { n: Math.floor(s/3600) })
+    if (s < 172800) return T('gisteren')
+    if (s < 604800) return T('{n} dagen geleden', { n: Math.floor(s/86400) })
+    return new Date(iso).toLocaleDateString(T.locale, { day:'numeric', month:'short' })
   }
 
   // De omslag-beweging staat één keer in de pagina.
@@ -1881,8 +1882,8 @@ async function renderGastenboek(c, uid) {
     <div id="gbl" class="gb-blad" style="flex:1;min-height:0;overflow:hidden"></div>
     <div id="gbl-nav" style="display:flex;align-items:center;gap:8px;font-size:12px;color:#8a7f6d;padding:4px 0 2px"></div>
     <div style="display:flex;align-items:center;gap:8px;border-top:1px solid rgba(90,70,40,0.25);padding-top:8px">
-      <input id="gbi" maxlength="300" placeholder="Schrijf iets in het boek..." style="flex:1;min-width:0;background:transparent;border:0;outline:0;font-family:inherit;font-size:14px;color:#2f2a20;padding:2px 0">
-      <button id="gbs" title="Plaatsen" style="background:transparent;border:0;cursor:pointer;font-size:17px;line-height:1;color:#4a5a7a;padding:2px 4px">\u2712</button>
+      <input id="gbi" maxlength="300" placeholder="${T('Schrijf iets in het boek...')}" style="flex:1;min-width:0;background:transparent;border:0;outline:0;font-family:inherit;font-size:14px;color:#2f2a20;padding:2px 0">
+      <button id="gbs" title="${T('Plaatsen')}" style="background:transparent;border:0;cursor:pointer;font-size:17px;line-height:1;color:#4a5a7a;padding:2px 4px">\u2712</button>
     </div>`
 
   let alles = []
@@ -1913,7 +1914,7 @@ async function renderGastenboek(c, uid) {
       `<button data-blader="${richting}" style="background:transparent;border:0;font-family:inherit;font-size:16px;line-height:1;padding:2px 6px;color:#4a5a7a;cursor:${uit?'default':'pointer'};opacity:${uit?0.25:1}" ${uit?'disabled':''}>${teken}</button>`
     nav.innerHTML =
       knop('terug', '\u2039', blad === 0) +
-      `<span style="margin:0 auto">blz. ${blad + 1} van ${bladen()}</span>` +
+      `<span style="margin:0 auto">${T('blz. {n} van {m}', { n: blad + 1, m: bladen() })}</span>` +
       knop('vooruit', '\u203A', blad >= bladen() - 1)
     nav.querySelectorAll('[data-blader]').forEach(b => {
       b.addEventListener('click', () => blader(b.dataset.blader))
@@ -1924,7 +1925,7 @@ async function renderGastenboek(c, uid) {
     const l = c.querySelector('#gbl')
     if (!l) return
     if (!alles.length) {
-      l.innerHTML = '<div style="font-size:14px;font-style:italic;color:#8a7f6d;padding:14px 4px">Dit boek is nog leeg.</div>'
+      l.innerHTML = '<div style="font-size:14px;font-style:italic;color:#8a7f6d;padding:14px 4px">' + T('Dit boek is nog leeg.') + '</div>'
       tekenNav()
       return
     }
@@ -2023,7 +2024,7 @@ async function renderGastenboek(c, uid) {
   let bewaardIets = false
   try { bewaardIets = localStorage.getItem(gbSleutel) !== null } catch (e) {}
   if (bewaardIets || !navigator.onLine) toon(leesGb(), true)
-  else { const l = c.querySelector('#gbl'); if (l) l.innerHTML = '<div style="font-size:14px;font-style:italic;color:#8a7f6d;padding:14px 4px">Bladzijden laden\u2026</div>' }
+  else { const l = c.querySelector('#gbl'); if (l) l.innerHTML = '<div style="font-size:14px;font-style:italic;color:#8a7f6d;padding:14px 4px">' + T('Bladzijden laden\u2026') + '</div>' }
   ververs(false).catch(e => console.warn('[gastenboek] ophalen mislukt', e))
   // v127: is er weer internet, dan het boek opnieuw ophalen (het laatst getekende boek)
   window._gbVerversen = async () => { if (!c.isConnected) return; await ververs(false) }
@@ -2057,7 +2058,7 @@ async function renderGastenboek(c, uid) {
 // Hoelang berichten bewaard worden kies je zelf (1 dag t/m 1 jaar). De server rekent met
 // het kortste van jouw keuze en die van je vriend, en past het ook toe op berichten die er al
 // zijn (sql/berichten-bewaren.sql: profiles.bewaar_dagen en zet_bewaartermijn).
-const BEWAAR_KEUZES = [[1, '1 dag'], [7, '7 dagen'], [31, '31 dagen'], [90, '90 dagen'], [365, '1 jaar']]
+const BEWAAR_KEUZES = [[1, T('1 dag')], [7, T('7 dagen')], [31, T('31 dagen')], [90, T('90 dagen')], [365, T('1 jaar')]]
 function sluitMenu() {
   const m = document.getElementById('fibroMenu')
   if (m) m.remove()
@@ -2081,10 +2082,11 @@ window.openMenu = function() {
     m.appendChild(b)
     return b
   }
-  item('\u23F3 Berichten bewaren', openBewaren)
-  item('\u{1F4E6} Mijn gegevens downloaden', () => openAccount('gegevens'))
-  item('\u2139\uFE0F Over Fibro', () => { window.location.href = 'over.html' })
-  item('\u{1F5D1}\uFE0F Account verwijderen', () => openAccount('verwijderen')).style.color = '#fca5a5'
+  item(T('\u23F3 Berichten bewaren'), openBewaren)
+  item(T('\u{1F310} Taal / Language'), openTaal) // v142
+  item(T('\u{1F4E6} Mijn gegevens downloaden'), () => openAccount('gegevens'))
+  item(T('\u2139\uFE0F Over Fibro'), () => { window.location.href = 'over.html' })
+  item(T('\u{1F5D1}\uFE0F Account verwijderen'), () => openAccount('verwijderen')).style.color = '#fca5a5'
   document.body.appendChild(m)
   knop.setAttribute('aria-expanded', 'true')
   m.querySelector('button').focus()
@@ -2116,20 +2118,20 @@ async function openBewaren() {
   kaart.style.cssText = 'width:100%;max-width:480px;background:#1a0a2e;border:0.5px solid var(--border);border-radius:20px 20px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));color:var(--text)'
   const titel = document.createElement('h2')
   titel.id = 'bewarenTitel'
-  titel.textContent = '\u23F3 Berichten bewaren'
+  titel.textContent = T('\u23F3 Berichten bewaren')
   titel.style.cssText = 'font-size:18px;margin:0 0 8px;color:var(--accent)'
   const uitleg = document.createElement('p')
-  uitleg.textContent = 'Na deze tijd verdwijnen berichten, bij jou \u00E9n bij je vriend. Kiezen jullie iets anders, dan geldt het kortste. Dit geldt ook voor berichten die er al zijn.'
+  uitleg.textContent = T('Na deze tijd verdwijnen berichten, bij jou \u00E9n bij je vriend. Kiezen jullie iets anders, dan geldt het kortste. Dit geldt ook voor berichten die er al zijn.')
   uitleg.style.cssText = 'font-size:14px;line-height:1.5;margin:0 0 14px;color:var(--text)'
   const lijst = document.createElement('div')
   lijst.setAttribute('role', 'radiogroup')
-  lijst.setAttribute('aria-label', 'Bewaartijd')
+  lijst.setAttribute('aria-label', T('Bewaartijd'))
   lijst.style.cssText = 'display:flex;flex-direction:column;gap:8px'
   const status = document.createElement('div')
   status.setAttribute('role', 'status')
   status.style.cssText = 'min-height:22px;font-size:13px;margin-top:12px;color:var(--text)'
   const sluit = document.createElement('button')
-  sluit.textContent = 'Sluiten'
+  sluit.textContent = T('Sluiten')
   sluit.style.cssText = 'margin-top:8px;width:100%;min-height:44px;border-radius:12px;border:0.5px solid var(--border);background:rgba(255,255,255,0.08);color:var(--text);font-size:15px;cursor:pointer;font-family:inherit'
   const dicht = () => { achter.remove(); document.removeEventListener('keydown', esc, true) }
   const esc = (e) => { if (e.key === 'Escape') dicht() }
@@ -2142,21 +2144,22 @@ async function openBewaren() {
     for (const [dagen, b] of knoppen) {
       const aan = dagen === huidig
       b.setAttribute('aria-checked', aan ? 'true' : 'false')
-      b.textContent = (aan ? '\u25C9  ' : '\u25CB  ') + BEWAAR_KEUZES.find(k => k[0] === dagen)[1] + (dagen === 31 ? ' (standaard)' : '')
+      b.textContent = (aan ? '\u25C9  ' : '\u25CB  ') + BEWAAR_KEUZES.find(k => k[0] === dagen)[1] + (dagen === 31 ? T(' (standaard)') : '')
       b.style.borderColor = aan ? 'var(--accent)' : 'var(--border)'
       b.style.background = aan ? 'rgba(192,132,252,0.18)' : 'rgba(255,255,255,0.05)'
     }
   }
   const kies = async (dagen) => {
     if (bezig || dagen === huidig) return
-    if (navigator.onLine === false) { status.textContent = '\u{1F4F4} Geen internet. Probeer het later opnieuw.'; return }
+    if (navigator.onLine === false) { status.textContent = T('\u{1F4F4} Geen internet. Probeer het later opnieuw.'); return }
     bezig = true
-    status.textContent = 'Even kijken\u2026'
+    status.textContent = T('Even kijken\u2026')
     try {
       const tel = await supabase.rpc('zet_bewaartermijn', { p_dagen: dagen, p_tellen: true })
       if (tel.error) throw tel.error
       const n = Number(tel.data) || 0
-      if (n > 0 && !confirm(n + (n === 1 ? ' bericht is' : ' berichten zijn') + ' ouder dan ' + BEWAAR_KEUZES.find(k => k[0] === dagen)[1] + ' en ' + (n === 1 ? 'verdwijnt' : 'verdwijnen') + ' meteen, ook bij je vrienden.\n\nDoorgaan?')) {
+      const tijd = BEWAAR_KEUZES.find(k => k[0] === dagen)[1]
+      if (n > 0 && !confirm(n === 1 ? T('{n} bericht is ouder dan {tijd} en verdwijnt meteen, ook bij je vrienden.\n\nDoorgaan?', { n, tijd }) : T('{n} berichten zijn ouder dan {tijd} en verdwijnen meteen, ook bij je vrienden.\n\nDoorgaan?', { n, tijd }))) {
         status.textContent = ''
         return
       }
@@ -2165,12 +2168,12 @@ async function openBewaren() {
       huidig = dagen
       try { localStorage.setItem(sleutel, String(dagen)) } catch (e) {}
       teken()
-      status.textContent = '\u2713 Opgeslagen' + (n > 0 ? ' (' + n + (n === 1 ? ' bericht' : ' berichten') + ' verwijderd)' : '')
+      status.textContent = T('\u2713 Opgeslagen') + (n > 0 ? ' ' + (n === 1 ? T('({n} bericht verwijderd)', { n }) : T('({n} berichten verwijderd)', { n })) : '')
     } catch (e) {
       console.warn('[bewaren] opslaan mislukt', e)
       status.textContent = /zet_bewaartermijn|function|PGRST202/i.test(String((e && (e.message || e.code)) || ''))
-        ? '\u26A0\uFE0F Dit kan nog niet: de server is nog niet bijgewerkt.'
-        : '\u26A0\uFE0F Opslaan lukte niet. Probeer het later opnieuw.'
+        ? T('\u26A0\uFE0F Dit kan nog niet: de server is nog niet bijgewerkt.')
+        : T('\u26A0\uFE0F Opslaan lukte niet. Probeer het later opnieuw.')
     } finally { bezig = false }
   }
   for (const [dagen] of BEWAAR_KEUZES) {
@@ -2187,11 +2190,11 @@ async function openBewaren() {
   teken()
   ;(knoppen.find(k => k[0] === huidig) || knoppen[2])[1].focus()
   // De huidige keuze van de server (de bewaarde waarde staat er al)
-  if (navigator.onLine === false) { if (!huidig) status.textContent = '\u{1F4F4} Geen internet.'; return }
+  if (navigator.onLine === false) { if (!huidig) status.textContent = T('\u{1F4F4} Geen internet.'); return }
   try {
     const { data, error } = await supabase.from('profiles').select('bewaar_dagen').eq('id', uid).single()
     if (error) {
-      if (error.code === '42703') status.textContent = '\u26A0\uFE0F Dit kan nog niet: de server is nog niet bijgewerkt.'
+      if (error.code === '42703') status.textContent = T('\u26A0\uFE0F Dit kan nog niet: de server is nog niet bijgewerkt.')
       return
     }
     const d = Number(data && data.bewaar_dagen)
@@ -2201,6 +2204,55 @@ async function openBewaren() {
       teken()
     }
   } catch (e) {}
+}
+
+// v142: de taal kiezen (Nederlands of Engels). Het menu-item heet in beide talen 'Taal / Language',
+// zodat je het ook terugvindt als je de andere taal niet leest. Kiezen = opslaan en de pagina opnieuw laden.
+function openTaal() {
+  const achter = document.createElement('div')
+  achter.id = 'taalScherm'
+  achter.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center'
+  const kaart = document.createElement('div')
+  kaart.setAttribute('role', 'dialog')
+  kaart.setAttribute('aria-modal', 'true')
+  kaart.setAttribute('aria-labelledby', 'taalTitel')
+  kaart.style.cssText = 'width:100%;max-width:480px;background:#1a0a2e;border:0.5px solid var(--border);border-radius:20px 20px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));color:var(--text)'
+  const titel = document.createElement('h2')
+  titel.id = 'taalTitel'
+  titel.textContent = T('\u{1F310} Taal / Language')
+  titel.style.cssText = 'font-size:18px;margin:0 0 14px;color:var(--accent)'
+  const lijst = document.createElement('div')
+  lijst.setAttribute('role', 'radiogroup')
+  lijst.setAttribute('aria-labelledby', 'taalTitel')
+  lijst.style.cssText = 'display:flex;flex-direction:column;gap:8px'
+  const knoppen = []
+  for (const [code, naam] of [['nl', 'Nederlands'], ['en', 'English']]) {
+    const aan = code === T.taal
+    const b = document.createElement('button')
+    b.setAttribute('role', 'radio')
+    b.setAttribute('aria-checked', aan ? 'true' : 'false')
+    b.setAttribute('lang', code)
+    b.textContent = (aan ? '◉  ' : '○  ') + naam
+    b.style.cssText = 'width:100%;min-height:44px;text-align:left;border-radius:12px;border:0.5px solid ' + (aan ? 'var(--accent)' : 'var(--border)') + ';background:' + (aan ? 'rgba(192,132,252,0.18)' : 'rgba(255,255,255,0.05)') + ';color:var(--text);font-size:15px;padding:10px 14px;cursor:pointer;font-family:inherit'
+    b.onclick = () => { if (code === T.taal) { dicht(); return } b.textContent = '⏳  ' + naam; T.kies(code) }
+    knoppen.push(b)
+    lijst.appendChild(b)
+  }
+  const uitleg = document.createElement('p')
+  uitleg.textContent = T('Nog niet alles is in het Engels: sommige schermen zijn nog Nederlands.')
+  uitleg.style.cssText = 'font-size:13px;line-height:1.5;margin:12px 0 0;color:var(--text);opacity:0.8'
+  const sluit = document.createElement('button')
+  sluit.textContent = T('Sluiten')
+  sluit.style.cssText = 'margin-top:12px;width:100%;min-height:44px;border-radius:12px;border:0.5px solid var(--border);background:rgba(255,255,255,0.08);color:var(--text);font-size:15px;cursor:pointer;font-family:inherit'
+  const dicht = () => { achter.remove(); document.removeEventListener('keydown', esc, true) }
+  const esc = (e) => { if (e.key === 'Escape') dicht() }
+  document.addEventListener('keydown', esc, true)
+  sluit.onclick = dicht
+  achter.onclick = (e) => { if (e.target === achter) dicht() }
+  kaart.append(titel, lijst, uitleg, sluit)
+  achter.appendChild(kaart)
+  document.body.appendChild(achter)
+  ;(knoppen.find(b => b.getAttribute('aria-checked') === 'true') || knoppen[0]).focus()
 }
 
 // v135: mijn gegevens downloaden en account verwijderen (account.js, pas laden bij een tik;
@@ -2214,7 +2266,7 @@ async function openAccount(wat) {
     else m.openGegevens(uid)
   } catch (e) {
     console.warn('[account] laden mislukt', e)
-    alert(navigator.onLine === false ? 'Geen internet. Probeer het later opnieuw.' : 'Dit lukte niet. Probeer het later opnieuw.')
+    alert(navigator.onLine === false ? T('Geen internet. Probeer het later opnieuw.') : T('Dit lukte niet. Probeer het later opnieuw.'))
   }
 }
 
@@ -2222,7 +2274,7 @@ async function openAccount(wat) {
 // UITLOGGEN
 // ════════════════════════════════
 window.uitloggen = async function() {
-  if (!confirm('Weet je zeker dat je wilt uitloggen?')) return
+  if (!confirm(T('Weet je zeker dat je wilt uitloggen?'))) return
   const btn = document.getElementById('uitlogBtn')
   if (btn) { btn.textContent = '⏳'; btn.disabled = true }
   try {
@@ -2270,7 +2322,7 @@ function toonHero(profiel) {
   // Eigen naam staat lokaal (bewust niet op de server), dus die gaat voor.
   let lokaleNaam = ''
   try { lokaleNaam = String(JSON.parse(localStorage.getItem('fibro_profiel_' + window._uid) || '{}').naam || '').trim() } catch(e) {}
-  const naam = lokaleNaam || profiel?.display_name || profiel?.username || 'Jij'
+  const naam = lokaleNaam || profiel?.display_name || profiel?.username || T('Jij')
   document.getElementById('heroNaam').textContent = naam
   document.getElementById('heroUsername').textContent = '@' + (profiel?.username || '')
   const bioEl = document.getElementById('heroBio')
@@ -2346,9 +2398,9 @@ init().then(() => {
     homeGrid.innerHTML = `
       <div class="leeg-staat">
         <div class="leeg-staat-icon">🧩</div>
-        <div class="leeg-staat-titel">Geen widgets actief</div>
-        <div class="leeg-staat-sub">Ga naar je profiel en zet widgets aan om ze hier te zien.</div>
-        <button class="leeg-staat-btn" onclick="window.location.href='profiel.html#widgets'">Widgets instellen ⚙️</button>
+        <div class="leeg-staat-titel">${T('Geen widgets actief')}</div>
+        <div class="leeg-staat-sub">${T('Ga naar je profiel en zet widgets aan om ze hier te zien.')}</div>
+        <button class="leeg-staat-btn" onclick="window.location.href='profiel.html#widgets'">${T('Widgets instellen ⚙️')}</button>
       </div>`
   }
 
@@ -2374,8 +2426,8 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <script src="swipe.js?v=95"></script>
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=131"; startBelLuisteraar()</script>
-<script type="module">import { beschermOpslag } from "./opslag.js?v=1"; beschermOpslag()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=142"; startBelLuisteraar()</script>
+<script type="module">import { beschermOpslag } from "./opslag.js?v=2"; beschermOpslag()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=131"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=131"; startOngelezen()</script>

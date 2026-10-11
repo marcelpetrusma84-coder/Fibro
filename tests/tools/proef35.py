@@ -106,9 +106,10 @@ with sync_playwright() as pw:
         print('1. Menu')
         p.click('#menuBtn'); p.wait_for_timeout(300)
         items = p.evaluate(MENU)
-        check('vier keuzes in de goede volgorde', len(items) == 4 and 'Berichten bewaren' in items[0] and 'Mijn gegevens downloaden' in items[1]
-              and 'Over Fibro' in items[2] and 'Account verwijderen' in items[3], items)
-        kleur = p.evaluate("() => getComputedStyle(document.querySelectorAll('#fibroMenu [role=menuitem]')[3] || document.body).color")
+        # v142: 'Taal / Language' kwam erbij (na Berichten bewaren)
+        check('vijf keuzes in de goede volgorde', len(items) == 5 and 'Berichten bewaren' in items[0] and 'Taal / Language' in items[1]
+              and 'Mijn gegevens downloaden' in items[2] and 'Over Fibro' in items[3] and 'Account verwijderen' in items[4], items)
+        kleur = p.evaluate("() => getComputedStyle(document.querySelectorAll('#fibroMenu [role=menuitem]')[4] || document.body).color")
         check('Account verwijderen in het rood', kleur == 'rgb(252, 165, 165)', kleur)
         p.keyboard.press('Escape'); p.wait_for_timeout(200)
 

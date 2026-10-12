@@ -34,6 +34,8 @@
    Wie de grote bol pakt wordt de jager: groter en sneller. De ander wordt
    bang en verliest een druppel bij een tik. Drie druppels kwijt = af. */
 
+// v147: teksten ook in het Engels (taal.js). Hier heet de vertaler 'vertaal': T is de vakjesmaat.
+const vertaal = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 const FONT_URL = 'lettertypen/press-start-2p.css?v=1' // v118: eigen repo
 
 // ═══════════════ Doolhoven ═══════════════
@@ -339,11 +341,11 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       <div class="scherm">
         <canvas class="doek"></canvas>
         <div class="laag startLaag">
-          <button class="knop groot kSpeel" type="button" aria-label="Start">▶</button>
-          <button class="knop kGeluid" type="button" aria-label="Geluid">🔊</button>
+          <button class="knop groot kSpeel" type="button" aria-label="${vertaal('Start')}">▶</button>
+          <button class="knop kGeluid" type="button" aria-label="${vertaal('Geluid')}">🔊</button>
         </div>
         <div class="laag eindLaag" hidden>
-          <button class="knop groot kOpnieuw" type="button" aria-label="Opnieuw">↻</button>
+          <button class="knop groot kOpnieuw" type="button" aria-label="${vertaal('Opnieuw')}">↻</button>
         </div>
       </div>
     </div>`
@@ -354,7 +356,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   const ctx = doek.getContext('2d')
   const startLaag = wrap.querySelector('.startLaag')
   const eindLaag = wrap.querySelector('.eindLaag')
-  if (!ctx) { wrap.innerHTML = '<p class="fout">Dit toestel kan het spel niet tekenen.</p>'; return }
+  if (!ctx) { wrap.innerHTML = '<p class="fout">' + vertaal('Dit toestel kan het spel niet tekenen.') + '</p>'; return }
 
   // Zelfde kanaalnaam bij beide spelers → straks dezelfde bollen
   const kanaalNaam = (spelKanaal && (spelKanaal.topic || spelKanaal.subTopic)) || 'los'
@@ -372,7 +374,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   const kanaalOk = !!(spelKanaal && typeof spelKanaal.on === 'function' && typeof spelKanaal.send === 'function')
   const leider = !!benIkSpeler1 || !kanaalOk
   const ik = leider ? 0 : 1, ander = 1 - ik
-  const NAAM = String(vriendNaam || 'je vriend').toUpperCase().slice(0, 12)
+  const NAAM = String(vriendNaam || vertaal('je vriend')).toUpperCase().slice(0, 12)
   let laatsteVanAnder = -Infinity     // tijd van het laatste bericht van de ander
   let etKlok = 0, klaarKlok = 0, laatsteEt = -Infinity, laatsteDir = null, nuSturen = false
   let mijnGegeten = [], gevraagdeBol = 0, bolTeller = 0
@@ -1133,7 +1135,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     }
     if (!s.uit) {
       const top = cy + dy - 7.5 * u - 5
-      if (kanaalOk && s.i === ik && staat === 'aftellen') tekst('JIJ', cx, top - 10, s.kleur, 7)
+      if (kanaalOk && s.i === ik && staat === 'aftellen') tekst(vertaal('JIJ'), cx, top - 10, s.kleur, 7)
       for (let n = 0; n < s.levens; n++) {
         const lx = cx + (n - (CFG.levens - 1) / 2) * 6
         ctx.drawImage(druppelBeeld[s.i], lx - 4, top - 4 + Math.sin(tijd * 4 + n) * 0.8, 8, 8)
@@ -1224,10 +1226,10 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   // Onder de uitleg en de eindstand: op wie we wachten.
   function tekenStatus() {
     let regel = '', tweede = ''
-    if (!kanaalOk) regel = 'OEFENEN TEGEN DE COMPUTER'
-    else if (!anderIsEr()) regel = 'WACHT OP ' + NAAM
-    else if (!leider) regel = NAAM + ' START HET SPEL'
-    if (kanaalOk && !leider && geluidAan && geluid.kan && !geluid.ontgrendeld) tweede = 'TIK HIER VOOR GELUID'
+    if (!kanaalOk) regel = vertaal('OEFENEN TEGEN DE COMPUTER')
+    else if (!anderIsEr()) regel = vertaal('WACHT OP {naam}', { naam: NAAM })
+    else if (!leider) regel = vertaal('{naam} START HET SPEL', { naam: NAAM })
+    if (kanaalOk && !leider && geluidAan && geluid.kan && !geluid.ontgrendeld) tweede = vertaal('TIK HIER VOOR GELUID')
     if (regel) tekst(regel, W / 2, H - 94, '#e9ddff', 7)
     if (tweede) tekst(tweede, W / 2, H - 78, ECTO, 7)
   }
@@ -1432,7 +1434,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     m.className = 'fout'
     m.style.cssText = 'position:absolute;inset:auto 8px 8px 8px;background:rgba(20,10,38,.95);' +
       'border:2px solid #ff4d6d;border-radius:10px;padding:10px;z-index:9'
-    m.textContent = 'Er ging iets mis: ' + (e && e.message ? e.message : e)
+    m.textContent = vertaal('Er ging iets mis: {fout}', { fout: e && e.message ? e.message : e })
     wrap.appendChild(m)
   }
 

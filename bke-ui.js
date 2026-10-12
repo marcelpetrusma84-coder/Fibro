@@ -1,9 +1,11 @@
 // bke-ui.js - boter-kaas-en-eieren voor Fibro.
 // Het spel tekent zichzelf in #spelInhoud en praat met de tegenstander via
 // het spelkanaal dat chat.html aanlevert.
+// v147: teksten ook in het Engels (taal.js)
+const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v147)
 
 export function start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
-  vriendNaam = vriendNaam || 'vriend'
+  vriendNaam = vriendNaam || T('vriend')
   document.getElementById('spelTitelBar').textContent = '⭕ Tic-Tac-Toe'
   const inhoud = document.getElementById('spelInhoud')
   let bord = Array(9).fill(null)
@@ -16,10 +18,10 @@ export function start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
 
   inhoud.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;gap:20px;">
-      <div id="bke-status" style="color:white;font-size:16px;font-weight:600;">Jij bent ${mijnSymbool}${mijnBeurt ? ' — jouw beurt!' : ' — wachten...'}</div>
+      <div id="bke-status" style="color:white;font-size:16px;font-weight:600;">${mijnBeurt ? T('Jij bent {s} — jouw beurt!', { s: mijnSymbool }) : T('Jij bent {s} — wachten...', { s: mijnSymbool })}</div>
       <div id="bke-score" style="color:rgba(255,255,255,0.75);font-size:13px;margin-top:-12px;"></div>
       <div id="bke-bord" style="display:grid;grid-template-columns:repeat(3,80px);grid-template-rows:repeat(3,80px);gap:6px;background:rgba(255,255,255,0.1);padding:6px;border-radius:12px;"></div>
-      <button id="bke-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Opnieuw spelen</button>
+      <button id="bke-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">${T('↻ Opnieuw spelen')}</button>
     </div>`
 
   const bordEl = document.getElementById('bke-bord')
@@ -30,7 +32,7 @@ export function start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
 
   function toonScore() {
     const naam = vriendNaam
-    scoreEl.textContent = 'Jij ' + scoreIk + ' \u00b7 ' + naam + ' ' + scoreVriend + ' \u00b7 ' + scoreGelijk + ' gelijk'
+    scoreEl.textContent = T('Jij {ik} \u00b7 {naam} {vriend} \u00b7 {gelijk} gelijk', { ik: scoreIk, naam, vriend: scoreVriend, gelijk: scoreGelijk })
   }
 
   function nieuweRonde() {
@@ -77,13 +79,13 @@ export function start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
     const winnaar = checkWinnaar(bord)
     if (winnaar) {
       gameOver = true
-      if (winnaar === 'gelijk') { scoreGelijk++; statusEl.textContent = "🤝 Gelijkspel!"; Bordgeluid.geluid('remise') }
-      else if (winnaar === mijnSymbool) { scoreIk++; statusEl.textContent = "🎉 Jij wint!"; Bordgeluid.geluid('win') }
-      else { scoreVriend++; statusEl.textContent = "😢 " + (vriendNaam) + " wint!"; Bordgeluid.geluid('verlies') }
-      opnieuwBtn.textContent = '\u21bb Volgende ronde'
+      if (winnaar === 'gelijk') { scoreGelijk++; statusEl.textContent = T('🤝 Gelijkspel!'); Bordgeluid.geluid('remise') }
+      else if (winnaar === mijnSymbool) { scoreIk++; statusEl.textContent = T('🎉 Jij wint!'); Bordgeluid.geluid('win') }
+      else { scoreVriend++; statusEl.textContent = T('😢 {naam} wint!', { naam: vriendNaam }); Bordgeluid.geluid('verlies') }
+      opnieuwBtn.textContent = T('\u21bb Volgende ronde')
       opnieuwBtn.style.display = 'block'
     } else {
-      statusEl.textContent = mijnBeurt ? 'Jouw beurt!' : 'Wachten op ' + vriendNaam + '...'
+      statusEl.textContent = mijnBeurt ? T('Jouw beurt!') : T('Wachten op {naam}...', { naam: vriendNaam })
     }
     toonScore()
     tekenBord()

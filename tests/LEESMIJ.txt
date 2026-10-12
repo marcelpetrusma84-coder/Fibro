@@ -45,7 +45,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          taal3 = Engels portie 2: Chat, reacties, antwoorden, melden (testscript_taal3.py),
                          taal4 = Engels portie 3: Profiel, T('context|tekst') (testscript_taal4.py),
                          taal5 = Engels portie 4: Mijn gegevens, account verwijderen, Face ID-herstel, moderatie,
-                                 spelen tegen de computer, Over Fibro, balkjes (testscript_taal5.py))
+                                 spelen tegen de computer, Over Fibro, balkjes (testscript_taal5.py),
+                         taal6 = Engels portie 5: de spellen zelf (testscript_taal6.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -166,10 +167,17 @@ tools/proef43.py         twee talen per scherm (v143 en verder): Nederlands prec
                          (proef36 wacht sinds v145 16 s op de kast: de woordenlijst kwam erbij, 9 s was net te kort.)
                          python3 -I proef43.py <scratch met tools/server.py> <map> <poort> [oude map|-] [filter]
                          MAG_WEG: tekst die in het Nederlands bewust weg is (v146: 'Taal instellen' uit Binnenkort).
+tools/proef44.py         de spellen in twee talen (v147): elk spel wordt echt gespeeld (alleen via spel.html, samen via
+                         een proefpagina spelproef.html met een nagemaakt spelkanaal), met stilstaande klok en vaste
+                         Math.random. Tekst = zichtbaar + title/aria-label + wat op een canvas getekend wordt.
+                         Nederlands precies gelijk aan de oude code; Engels zonder Nederlandse woorden of fouten.
+                         Duurt lang (een uur of zo): elk spel drie keer. TOON=1 laat alle teksten zien.
+                         python3 -I proef44.py <scratch met tools/server.py> <map> <poort> [oude map|-] [filter]
 tools/taalcheck.py       heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.
                          python3 -I taalcheck.py <map> <poort> <bestand...>
+                         Ook vertaal('...') telt: zo heet T in spellen die zelf al een T hebben (frameteller, tegelmaat).
                          Regels voor nieuwe teksten: T('één vaste tekst', { n }) - nooit T(a ? 'x' : 'y'), maar
                          a ? T('x') : T('y'); geen T(`...`). In html: data-t (tekst, ook met <b>/<span>) of
                          data-t-attr="placeholder,title". Een pagina die af is krijgt <html data-taal>.

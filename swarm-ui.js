@@ -2,11 +2,13 @@
 // Speler 1 rekent het spel uit en stuurt de stand (sw-st); speler 2 stuurt positie en schoten (sw-in)
 // en knoppen (sw-cmd). Het spel start pas als allebei op dezelfde knop hebben gedrukt.
 // Geluiden: geluid/swarm/<naam>.wav (vervangbaar door eigen opnames); anders ingebouwde klanken. Tekent zichzelf in #spelInhoud via het spelkanaal van chat.html.
+// v147: teksten ook in het Engels (taal.js). De banners gaan in het Nederlands over de lijn en worden pas op het scherm vertaald.
+const vertaal = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // T is hier de frameteller
 
 export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) {
-vriendNaam = vriendNaam || 'vriend'
+vriendNaam = vriendNaam || vertaal('vriend')
 // solo: alleen spelen (spel.html). Het tweede schip doet niet mee; rechtsboven staat je record.
-if (solo) vriendNaam = 'Record'
+if (solo) vriendNaam = vertaal('Record')
 isActief = isActief || (() => true)
 const HOST = !!benIkSpeler1
 document.getElementById('spelTitelBar').textContent = '\u{1FAB2} The Swarm'
@@ -16,7 +18,7 @@ inhoud.innerHTML = `
 <style>@keyframes swdrup{0%{transform:scaleY(.35)}60%{transform:scaleY(1)}100%{transform:scaleY(.35)}}</style>
 <div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;width:${BREED};color:white;font-size:12px;box-sizing:border-box;">
-    <span><span style="color:${HOST ? '#2ee8ff' : '#ff9a1f'};">&#9679;</span> Jij: <b id="sw-mij">0</b></span>
+    <span><span style="color:${HOST ? '#2ee8ff' : '#ff9a1f'};">&#9679;</span> ${vertaal('Jij')}: <b id="sw-mij">0</b></span>
     <span id="sw-lv" style="color:var(--accent);text-align:center;"></span>
     <span><b id="sw-vr">0</b> :<span id="sw-vnaam"></span> <span style="color:${HOST ? '#ff9a1f' : '#2ee8ff'};">&#9679;</span></span>
     <button id="sw-snd" style="background:none;border:none;font-size:16px;cursor:pointer;padding:0 2px;">\u{1F50A}</button>
@@ -29,19 +31,19 @@ inhoud.innerHTML = `
     <div id="sw-titel" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,0.35);font-family:'Courier New',monospace;text-align:center;">
       <div style="font-size:15px;font-weight:900;letter-spacing:8px;color:#ff3050;text-shadow:0 0 6px #ff1030,0 0 16px #ff1030;">THE</div>
       <div style="position:relative;font-size:42px;font-weight:900;letter-spacing:4px;color:#b6ff3a;text-shadow:0 0 4px #6dff1a,0 0 16px #3a9a00,0 3px 0 #1a4a00;line-height:1;">SWARM<div id="sw-drup" style="position:absolute;left:6px;right:6px;top:92%;height:20px;"></div></div>
-      <div style="margin:16px 0 4px;font-size:12px;color:#ffb0c0;letter-spacing:1px;">samen tegen de zwerm</div>
-      <button id="sw-verhaal" style="font-family:'Courier New',monospace;font-weight:bold;font-size:15px;padding:9px 18px;border-radius:8px;min-width:200px;cursor:pointer;background:rgba(20,0,10,0.75);border:2px solid #8dff2a;color:#b6ff3a;box-shadow:0 0 10px rgba(141,255,42,0.4);">&#9654; Verhaal &middot; 5 levels</button>
-      <button id="sw-eindeloos" style="font-family:'Courier New',monospace;font-weight:bold;font-size:15px;padding:9px 18px;border-radius:8px;min-width:200px;cursor:pointer;background:rgba(20,0,10,0.75);border:2px solid #ff3050;color:#ff8098;box-shadow:0 0 10px rgba(255,48,80,0.4);">&#8734; Eindeloos</button>
+      <div style="margin:16px 0 4px;font-size:12px;color:#ffb0c0;letter-spacing:1px;">${vertaal('samen tegen de zwerm')}</div>
+      <button id="sw-verhaal" style="font-family:'Courier New',monospace;font-weight:bold;font-size:15px;padding:9px 18px;border-radius:8px;min-width:200px;cursor:pointer;background:rgba(20,0,10,0.75);border:2px solid #8dff2a;color:#b6ff3a;box-shadow:0 0 10px rgba(141,255,42,0.4);">&#9654; ${vertaal('Verhaal \u00b7 5 levels')}</button>
+      <button id="sw-eindeloos" style="font-family:'Courier New',monospace;font-weight:bold;font-size:15px;padding:9px 18px;border-radius:8px;min-width:200px;cursor:pointer;background:rgba(20,0,10,0.75);border:2px solid #ff3050;color:#ff8098;box-shadow:0 0 10px rgba(255,48,80,0.4);">&#8734; ${vertaal('Eindeloos')}</button>
       <div id="sw-klaar" style="font-size:12px;color:#ffe060;max-width:88%;min-height:32px;line-height:1.35;"></div>
     </div>
     <div id="sw-eind" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,0.65);color:white;font-family:'Courier New',monospace;font-weight:bold;text-align:center;font-size:13px;">
       <div id="sw-eind-tekst"></div>
       <div id="sw-klaar2" style="font-size:12px;color:#ffe060;max-width:88%;"></div>
-      <button id="sw-verder" style="font-family:'Courier New',monospace;font-weight:bold;font-size:15px;padding:9px 18px;border-radius:8px;min-width:200px;cursor:pointer;background:rgba(20,0,10,0.75);border:2px solid #ff3050;color:#ff8098;display:none;">&#8734; Door: eindeloos</button>
-      <button id="sw-opnieuw" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:700;cursor:pointer;">&#8635; Naar het titelscherm</button>
+      <button id="sw-verder" style="font-family:'Courier New',monospace;font-weight:bold;font-size:15px;padding:9px 18px;border-radius:8px;min-width:200px;cursor:pointer;background:rgba(20,0,10,0.75);border:2px solid #ff3050;color:#ff8098;display:none;">&#8734; ${vertaal('Door: eindeloos')}</button>
+      <button id="sw-opnieuw" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:700;cursor:pointer;">&#8635; ${vertaal('Naar het titelscherm')}</button>
     </div>
   </div>
-  <div style="color:rgba(255,255,255,0.4);font-size:11px;">Veeg om te lopen &middot; tik om te schieten &middot; red je maatje door bij hem te staan</div>
+  <div style="color:rgba(255,255,255,0.4);font-size:11px;">${vertaal('Veeg om te lopen \u00b7 tik om te schieten \u00b7 red je maatje door bij hem te staan')}</div>
 </div>`
 document.getElementById('sw-vnaam').textContent = vriendNaam
 ;(() => { const d = document.getElementById('sw-drup'); for (let i = 0; i < 13; i++) { const s = document.createElement('span'); s.style.cssText = 'position:absolute;top:0;left:' + (i * 7.8 + Math.random() * 3) + '%;width:3px;height:' + (5 + Math.random() * 15) + 'px;background:linear-gradient(#b6ff3a,#3a9a00);border-radius:0 0 3px 3px;transform-origin:top;animation:swdrup ' + (1.6 + Math.random() * 2.4) + 's ease-in-out ' + (Math.random() * 2) + 's infinite;box-shadow:0 0 4px #6dff1a;'; d.appendChild(s) } })()
@@ -440,14 +442,20 @@ if(gst!=='titel')HE.forEach((h,i)=>{if(solo&&h===OT)return;for(let k=0;k<5;k++){
 const dkC=mk(W,H),elTitel=document.getElementById('sw-titel'),elVerder=document.getElementById('sw-verder');
 const elMij=document.getElementById('sw-mij'),elVr=document.getElementById('sw-vr'),elLv=document.getElementById('sw-lv'),elMsg=document.getElementById('sw-msg'),elEind=document.getElementById('sw-eind'),elEindT=document.getElementById('sw-eind-tekst');
 let uiMsg=null,uiEind=null,uiKlaar=null;const elKlaar=document.getElementById('sw-klaar'),elKlaar2=document.getElementById('sw-klaar2'),elBV=document.getElementById('sw-verhaal'),elBE=document.getElementById('sw-eindeloos');
-function ui(){if(T%5)return;elMij.textContent=ME.sc;elVr.textContent=solo?solo.record():OT.sc;elLv.textContent=gst==='titel'?'':(gm==='e'?'Golf '+(ewv+1):'Level '+(lv+1))+' \u00b7 '+cur.n;elTitel.style.display=gst==='titel'?'flex':'none';const mi=HOST?0:1,ik=rdy[mi],zij=rdy[1-mi],NM={verhaal:'Verhaal',eindeloos:'Eindeloos',verder:'Door: eindeloos'};
-const kt=solo?'Kies een spel.':ik&&ik===zij?'Daar gaan we!':ik?'\u2714 Jij bent klaar voor '+NM[ik]+'. Wachten op '+vriendNaam+'...':zij?vriendNaam+' wil '+NM[zij]+' spelen. Druk ook op '+NM[zij]+'!':'Kies samen een spel. Het start als jullie allebei klaar zijn.';
-if(kt!==uiKlaar){uiKlaar=kt;elKlaar.textContent=kt;elKlaar2.textContent=gst==='klaar'&&gm==='v'?kt.replace('Kies samen een spel. Het start als jullie allebei klaar zijn.','Allebei op Door drukken om verder te spelen.'):'';
-elBV.textContent=(ik==='verhaal'?'\u2714 ':'\u25B6 ')+'Verhaal \u00b7 5 levels'+(zij==='verhaal'?' \u2190':'');elBE.textContent=(ik==='eindeloos'?'\u2714 ':'\u221E ')+'Eindeloos'+(zij==='eindeloos'?' \u2190':'');elVerder.textContent=(ik==='verder'?'\u2714 ':'\u221E ')+'Door: eindeloos'+(zij==='verder'?' \u2190':'');
+const SW_NAAM={'Koningin':vertaal('Koningin'),'Wespenkoning':vertaal('Wespenkoning'),'Spinnenmoeder':vertaal('Spinnenmoeder'),'Motvorst':vertaal('Motvorst'),'Zwermhart':vertaal('Zwermhart'),
+'Het huis':vertaal('Het huis'),'De blokhut':vertaal('De blokhut'),'Het riool':vertaal('Het riool'),'Het lab':vertaal('Het lab'),'De andere kant':vertaal('De andere kant')};
+const SW_TEKST={'DE STROOM VALT UIT!':vertaal('DE STROOM VALT UIT!'),'BAAS VERSLAGEN!':vertaal('BAAS VERSLAGEN!'),'DE ZWERM IS VERSLAGEN!':vertaal('DE ZWERM IS VERSLAGEN!'),'LEVEL GEHAALD!':vertaal('LEVEL GEHAALD!'),'EINDELOZE MODUS':vertaal('EINDELOZE MODUS'),'GERED!':vertaal('GERED!')};
+const swNaam=n=>SW_NAAM[n]||n,swGroot=u=>{for(const n in SW_NAAM)if(n.toUpperCase()===u)return SW_NAAM[n].toUpperCase();return u};
+function swBanner(t){let m;if(SW_TEKST[t])return SW_TEKST[t];if((m=/^GOLF (\d+)$/.exec(t)))return vertaal('GOLF {n}',{n:m[1]});if((m=/^FASE (\d+)!$/.exec(t)))return vertaal('FASE {n}!',{n:m[1]});
+if((m=/^EINDBAAS: (.+)$/.exec(t)))return vertaal('EINDBAAS: {naam}',{naam:swGroot(m[1])});if((m=/^LEVEL (\d+) \u00b7 (.+)$/.exec(t)))return 'LEVEL '+m[1]+' \u00b7 '+swGroot(m[2]);return swGroot(t)}
+function ui(){if(T%5)return;elMij.textContent=ME.sc;elVr.textContent=solo?solo.record():OT.sc;elLv.textContent=gst==='titel'?'':(gm==='e'?vertaal('Golf {n}',{n:ewv+1}):'Level '+(lv+1))+' \u00b7 '+swNaam(cur.n);elTitel.style.display=gst==='titel'?'flex':'none';const mi=HOST?0:1,ik=rdy[mi],zij=rdy[1-mi],NM={verhaal:vertaal('Verhaal'),eindeloos:vertaal('Eindeloos'),verder:vertaal('Door: eindeloos')};
+const kt=solo?vertaal('Kies een spel.'):ik&&ik===zij?vertaal('Daar gaan we!'):ik?vertaal('\u2714 Jij bent klaar voor {spel}. Wachten op {naam}...',{spel:NM[ik],naam:vriendNaam}):zij?vertaal('{naam} wil {spel} spelen. Druk ook op {spel}!',{naam:vriendNaam,spel:NM[zij]}):vertaal('Kies samen een spel. Het start als jullie allebei klaar zijn.');
+if(kt!==uiKlaar){uiKlaar=kt;elKlaar.textContent=kt;elKlaar2.textContent=gst==='klaar'&&gm==='v'?kt.replace(vertaal('Kies samen een spel. Het start als jullie allebei klaar zijn.'),vertaal('Allebei op Door drukken om verder te spelen.')):'';
+elBV.textContent=(ik==='verhaal'?'\u2714 ':'\u25B6 ')+vertaal('Verhaal \u00b7 5 levels')+(zij==='verhaal'?' \u2190':'');elBE.textContent=(ik==='eindeloos'?'\u2714 ':'\u221E ')+vertaal('Eindeloos')+(zij==='eindeloos'?' \u2190':'');elVerder.textContent=(ik==='verder'?'\u2714 ':'\u221E ')+vertaal('Door: eindeloos')+(zij==='verder'?' \u2190':'');
 elBV.style.background=ik==='verhaal'?'rgba(141,255,42,0.3)':'rgba(20,0,10,0.75)';elBE.style.background=ik==='eindeloos'?'rgba(255,48,80,0.3)':'rgba(20,0,10,0.75)';elVerder.style.background=ik==='verder'?'rgba(255,48,80,0.3)':'rgba(20,0,10,0.75)'}
-let m='';if(gst==='titel')m='';else if(gst==='aftel')m='START IN '+Math.max(1,Math.ceil(stT/60));else if(!HOST&&lastSnap&&performance.now()-lastSnap>4000)m='WACHTEN OP '+vriendNaam.toUpperCase()+'...';else if(bannerT>0)m=banner;else if(ME.dn&&gst==='spel')m='GERAAKT! WACHT OP DE VOLGENDE GOLF';
+let m='';if(gst==='titel')m='';else if(gst==='aftel')m=vertaal('START IN {n}',{n:Math.max(1,Math.ceil(stT/60))});else if(!HOST&&lastSnap&&performance.now()-lastSnap>4000)m=vertaal('WACHTEN OP {naam}...',{naam:vriendNaam.toUpperCase()});else if(bannerT>0)m=swBanner(banner);else if(ME.dn&&gst==='spel')m=vertaal('GERAAKT! WACHT OP DE VOLGENDE GOLF');
 if(m!==uiMsg){elMsg.textContent=m;uiMsg=m}
-const e=(gst==='over'||gst==='klaar')?gst:'';if(e!==uiEind){uiEind=e;if(e){const tt=e==='klaar'?'GEWONNEN!':'GAME OVER';elEindT.innerHTML='<div style="font-size:26px;color:'+(e==='klaar'?'#8dff2a':'#ff4060')+';text-shadow:0 0 10px currentColor;">'+tt+'</div><div style="margin-top:8px;">'+(gm==='e'?'Golf '+(ewv+1):'Level '+(lv+1))+' \u00b7 '+cur.n+'</div>'+(solo?'<div style="margin-top:4px;">Score: '+ME.sc+'</div><div style="margin-top:4px;color:#ffe060;">'+(soloNieuw?'\u{1F3C6} NIEUW RECORD!':'Record: '+solo.record())+'</div>':'<div style="margin-top:4px;">Jij: '+ME.sc+' \u00b7 '+esc(vriendNaam)+': '+OT.sc+'</div><div style="margin-top:4px;color:#ffe060;">Samen: '+(ME.sc+OT.sc)+'</div>');elVerder.style.display=e==='klaar'&&gm==='v'?'':'none';elEind.style.display='flex'}else elEind.style.display='none'}}
+const e=(gst==='over'||gst==='klaar')?gst:'';if(e!==uiEind){uiEind=e;if(e){const tt=e==='klaar'?vertaal('GEWONNEN!'):'GAME OVER';elEindT.innerHTML='<div style="font-size:26px;color:'+(e==='klaar'?'#8dff2a':'#ff4060')+';text-shadow:0 0 10px currentColor;">'+tt+'</div><div style="margin-top:8px;">'+(gm==='e'?vertaal('Golf {n}',{n:ewv+1}):'Level '+(lv+1))+' \u00b7 '+swNaam(cur.n)+'</div>'+(solo?'<div style="margin-top:4px;">Score: '+ME.sc+'</div><div style="margin-top:4px;color:#ffe060;">'+(soloNieuw?vertaal('\u{1F3C6} NIEUW RECORD!'):'Record: '+solo.record())+'</div>':'<div style="margin-top:4px;">'+vertaal('Jij')+': '+ME.sc+' \u00b7 '+esc(vriendNaam)+': '+OT.sc+'</div><div style="margin-top:4px;color:#ffe060;">'+vertaal('Samen: {n}',{n:ME.sc+OT.sc})+'</div>');elVerder.style.display=e==='klaar'&&gm==='v'?'':'none';elEind.style.display='flex'}else elEind.style.display='none'}}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';')}
 function send(ev,payload){try{spelKanaal.send({type:'broadcast',event:ev,payload})}catch(e){}}
 function net(){if(HOST)send('sw-st',snap());else send('sw-in',{x:r1(ME.tx),n:shotN})}

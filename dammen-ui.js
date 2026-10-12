@@ -1,6 +1,8 @@
 // dammen-ui.js — speelscherm voor internationaal dammen (10x10) in Fibro
 // Slagen kies je stap voor stap. Zetten reizen via het spelkanaal; raakt er een
 // bericht zoek, dan haalt de wachtende speler de stand vanzelf opnieuw op.
+// v147: teksten ook in het Engels (taal.js)
+const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v147)
 
 export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
     const titel = document.getElementById('spelTitelBar')
@@ -8,7 +10,7 @@ export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         const inhoud = document.getElementById('spelInhoud')
         const VAKJE = 32
         const mijnKleur = benIkSpeler1 ? 'w' : 'z'
-        const naam = vriendNaam || 'vriend'
+        const naam = vriendNaam || T('vriend')
 
         let staat = Dammen.nieuweSpelStaat()
         let spelId = 0, nr = 0, gameOver = false
@@ -18,8 +20,8 @@ export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
         <div id="dam-status" style="color:white;font-size:14px;font-weight:600;text-align:center;min-height:20px;"></div>
         <div id="dam-bord" style="display:grid;grid-template-columns:repeat(10,${VAKJE}px);grid-template-rows:repeat(10,${VAKJE}px);border:3px solid #3a2a5e;border-radius:6px;overflow:hidden;touch-action:manipulation;"></div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.6);text-align:center;">Slaan is verplicht. De slag met de meeste stukken gaat voor.</div>
-        <button id="dam-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Opnieuw spelen</button>
+        <div style="font-size:11px;color:rgba(255,255,255,0.6);text-align:center;">${T('Slaan is verplicht. De slag met de meeste stukken gaat voor.')}</div>
+        <button id="dam-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">${T('↻ Opnieuw spelen')}</button>
         </div>`
         const bordEl = document.getElementById('dam-bord')
         const statusEl = document.getElementById('dam-status')
@@ -96,14 +98,14 @@ export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         function toonStatus(moetSlaan) {
             if (gameOver) return
                 if (melding) { statusEl.textContent = melding; return }
-                if (staat.aanZet !== mijnKleur) { statusEl.textContent = 'Wachten op ' + naam + '...'; return }
-                if (geselecteerd && pad.length) { statusEl.textContent = 'Tik op het volgende groene stipje'; return }
+                if (staat.aanZet !== mijnKleur) { statusEl.textContent = T('Wachten op {naam}...', { naam }); return }
+                if (geselecteerd && pad.length) { statusEl.textContent = T('Tik op het volgende groene stipje'); return }
                 if (moetSlaan) {
                     const n = mijnKetens().ketens[0].filter(s => s.geslagen).length
-                    statusEl.textContent = 'Jouw beurt — je moet slaan' + (n > 1 ? ' (' + n + ' stukken)' : '') + '!'
+                    statusEl.textContent = n > 1 ? T('Jouw beurt — je moet slaan ({n} stukken)!', { n }) : T('Jouw beurt — je moet slaan!')
                     return
                 }
-                statusEl.textContent = 'Jouw beurt'
+                statusEl.textContent = T('Jouw beurt')
         }
 
         bordEl.addEventListener('click', e => {
@@ -130,7 +132,7 @@ export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
                     if (ketens.some(kt => zelfde(kt[0].van, [r, k]))) { geselecteerd = [r, k]; pad = [] }
                     else {
                         geselecteerd = null; pad = []
-                        melding = verplichtSlaan ? 'Deze schijf kan niet slaan. Kies een schijf met een gouden rand.' : 'Deze schijf kan niet bewegen.'
+                        melding = verplichtSlaan ? T('Deze schijf kan niet slaan. Kies een schijf met een gouden rand.') : T('Deze schijf kan niet bewegen.')
                     }
                 } else { geselecteerd = null; pad = [] }
                 tekenBord()
@@ -149,7 +151,7 @@ export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
             try { Bordgeluid.dammen(Dammen, staat, laatsteKeten, mijnKleur) } catch (e) {}
             if (Dammen.heeftGeenZetten(staat, staat.aanZet)) {
                 gameOver = true
-                statusEl.textContent = staat.aanZet !== mijnKleur ? '🎉 Jij wint — ' + naam + ' kan niet meer zetten!' : '😢 ' + naam + ' wint!'
+                statusEl.textContent = staat.aanZet !== mijnKleur ? T('🎉 Jij wint — {naam} kan niet meer zetten!', { naam }) : T('😢 {naam} wint!', { naam })
                 opnieuwBtn.style.display = 'block'
             }
             tekenBord()

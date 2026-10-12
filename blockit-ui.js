@@ -5,14 +5,16 @@
 // Een vierkant laadt je volgende steen: veeg hem omlaag en hij boort door alles heen en ontploft.
 // Hoe groter het vierkant dat je weghaalt, hoe groter die explosie.
 // Bomstenen zitten willekeurig in de wachtrij en ontploffen zodra ze landen.
+// v147: teksten ook in het Engels (taal.js)
+const vertaal = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v147); T is hier al een steenvorm
 
 // Tekst veilig in HTML zetten (namen komen van andere gebruikers)
 const htmlVeilig = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
 export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) {
-    vriendNaam = vriendNaam || 'vriend'
+    vriendNaam = vriendNaam || vertaal('vriend')
     // solo: alleen spelen (spel.html). Eén eigen bak; rechtsboven staat je record.
-    if (solo) vriendNaam = 'Record'
+    if (solo) vriendNaam = vertaal('Record')
     isActief = isActief || (() => true)
     document.getElementById('spelTitelBar').textContent = '🟪 Block It'
     const inhoud = document.getElementById('spelInhoud')
@@ -59,7 +61,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     <canvas id="bi-canvas" style="display:block;touch-action:none;border-radius:12px;"></canvas>
     <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;">
     <button id="bi-geluid" style="background:rgba(255,255,255,0.12);border:none;border-radius:8px;color:white;padding:4px 12px;font-size:16px;cursor:pointer;">🔊</button>
-    <div style="color:rgba(255,255,255,0.45);font-size:11px;text-align:center;">Veeg om te schuiven, tik om te draaien, veeg snel omlaag om te laten vallen</div>
+    <div style="color:rgba(255,255,255,0.45);font-size:11px;text-align:center;">${vertaal('Veeg om te schuiven, tik om te draaien, veeg snel omlaag om te laten vallen')}</div>
     </div>
     </div>`
 
@@ -459,11 +461,11 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
                         lockTimer = 0
                         if (stuk.bom) {
                             geluid.crushKlaar()
-                            meld(stuk.crush ? '💣⚡ Bom én geladen! Veeg omlaag voor een extra grote knal'
-                            : '💣 Bom! Waar hij landt, ontploft hij')
+                            meld(stuk.crush ? vertaal('💣⚡ Bom én geladen! Veeg omlaag voor een extra grote knal')
+                            : vertaal('💣 Bom! Waar hij landt, ontploft hij'))
                         } else if (stuk.crush) {
                             geluid.crushKlaar()
-                            meld('⚡ Geladen (explosie ' + stuk.crush + ')! Veeg snel omlaag')
+                            meld(vertaal('⚡ Geladen (explosie {n})! Veeg snel omlaag', { n: stuk.crush }))
                         }
                         stuurStuk()
                         return
@@ -507,7 +509,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
             if (modus === 'versus') {
                 if (r.aanval > 0) {
                     spelKanaal.send({ type: 'broadcast', event: 'bi-aanval', payload: { rijen: r.aanval } })
-                    zweef(KOL / 2, 3, 'AANVAL! ' + r.aanval + (r.aanval === 1 ? ' rij' : ' rijen'), VRIEND_KLEUR, 0.9)
+                    zweef(KOL / 2, 3, r.aanval === 1 ? vertaal('AANVAL! {n} rij', { n: r.aanval }) : vertaal('AANVAL! {n} rijen', { n: r.aanval }), VRIEND_KLEUR, 0.9)
                     geluid.aanval()
                 }
                 stuurVeld()
@@ -613,7 +615,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
                         deeltjes.push({ x: x + Math.random(), y: yy, vx: (Math.random() - 0.5) * 3, vy: -Math.random() * 3, leven: 0.7, kleur: CRUSH_KLEUR, grootte: 0.14 })
                     }
                 }
-                zweef(m.x, m.y - 1.5, e.geplet ? 'CRUSH! ' + e.geplet + ' weg' : 'CRUSH!', spelerKleur, 1.15)
+                zweef(m.x, m.y - 1.5, e.geplet ? vertaal('CRUSH! {n} weg', { n: e.geplet }) : 'CRUSH!', spelerKleur, 1.15)
                 ringen.push({ x: m.x, y: m.y, max: 6, kleur: '#ffffff', leven: 1 })
                 schok(1)
                 stoot = 1
@@ -630,7 +632,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
                 ringen.push({ x: cx, y: cy, max: straal * 2 + 9, kleur: BOM_KLEUR, leven: 1 })
                 ringen.push({ x: cx, y: cy, max: straal * 2 + 5, kleur: '#ffd23f', leven: 1 })
                 ringen.push({ x: cx, y: cy, max: straal * 2 + 2, kleur: '#ffffff', leven: 1 })
-                zweef(cx, cy - 1.2, 'BOEM!' + (e.geplet ? ' ' + e.geplet + ' weg' : ''), BOM_KLEUR, 2.1)
+                zweef(cx, cy - 1.2, e.geplet ? vertaal('BOEM! {n} weg', { n: e.geplet }) : vertaal('BOEM!'), BOM_KLEUR, 2.1)
                 flits = { kleur: '#ffffff', a: 0.7 }
                 setTimeout(() => { flits = { kleur: BOM_KLEUR, a: 0.5 } }, 90)
                 schok(1)
@@ -642,14 +644,14 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
                 for (let y = e.y; y < e.y + e.k; y++) for (let x = e.x; x < e.x + e.k; x++) spat(x, y, kleur.licht, 1)
                     flits = { kleur: kleur.basis, a: e.k >= 4 ? 0.42 : 0.22 }
                     ringen.push({ x: cx, y: cy, max: e.k * 0.9, kleur: kleur.basis, leven: 1 })
-                    zweef(cx, cy, '+' + e.punten + (e.punten === 1 ? ' PUNT!' : ' PUNTEN!'), kleur.basis, e.k >= 4 ? 1.35 : 1)
-                    if (modus !== 'versus') zweef(cx, cy + 1.3, e.speler === IK ? 'Jij' : vriendNaam, spelerKleur, 0.7)
-                        if (e.keten > 1) zweef(cx, cy + 2.5, 'KETTING x' + e.keten, '#ffffff', 0.85)
+                    zweef(cx, cy, e.punten === 1 ? vertaal('+{n} PUNT!', { n: e.punten }) : vertaal('+{n} PUNTEN!', { n: e.punten }), kleur.basis, e.k >= 4 ? 1.35 : 1)
+                    if (modus !== 'versus') zweef(cx, cy + 1.3, e.speler === IK ? vertaal('Jij') : vriendNaam, spelerKleur, 0.7)
+                        if (e.keten > 1) zweef(cx, cy + 2.5, vertaal('KETTING x{n}', { n: e.keten }), '#ffffff', 0.85)
                             geluid.vierkant(e.kleur, e.keten)
                             if (e.dikte > 0) {
                                 for (let i = 0; i < 24; i++) spat(e.x - e.dikte + Math.random() * (e.k + e.dikte * 2), e.y - e.dikte + Math.random() * (e.k + e.dikte * 2), '#ffffff', 2)
                                     ringen.push({ x: cx, y: cy, max: e.k + e.dikte * 2 + 1, kleur: '#ffffff', leven: 1 })
-                                    zweef(cx, cy - 1.6, 'SCHOKGOLF!', '#ffffff', 1.5)
+                                    zweef(cx, cy - 1.6, vertaal('SCHOKGOLF!'), '#ffffff', 1.5)
                                     geluid.schokgolf(e.k)
                                     schok(1)
                             } else {
@@ -657,7 +659,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
                                 schok(0.35)
                             }
                             if (e.beloning) {
-                                zweef(cx, cy + 3.6, 'VOLGENDE VEEG: EXPLOSIE ' + e.beloning, CRUSH_KLEUR, 0.85)
+                                zweef(cx, cy + 3.6, vertaal('VOLGENDE VEEG: EXPLOSIE {n}', { n: e.beloning }), CRUSH_KLEUR, 0.85)
                                 if (e.speler === IK) geluid.ontgrendeld()
                             }
             }
@@ -755,9 +757,9 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
 
     // ── Spelvorm kiezen, starten en eindigen ──
     const SPELVORMEN = [
-        { modus: 'samen', titel: 'Gedeelde bak', uitleg: 'Samen in één bak, gemengde kleuren' },
-        { modus: 'eigen', titel: 'Gedeelde bak, eigen kleuren', uitleg: 'Jij koraal en amber, ' + vriendNaam + ' mint en blauw' },
-        { modus: 'versus', titel: 'Twee velden', uitleg: 'Ieder een eigen bak. Vierkanten sturen rijen naar je vriend' }
+        { modus: 'samen', titel: vertaal('Gedeelde bak'), uitleg: vertaal('Samen in één bak, gemengde kleuren') },
+        { modus: 'eigen', titel: vertaal('Gedeelde bak, eigen kleuren'), uitleg: vertaal('Jij koraal en amber, {naam} mint en blauw', { naam: vriendNaam }) },
+        { modus: 'versus', titel: vertaal('Twee velden'), uitleg: vertaal('Ieder een eigen bak. Vierkanten sturen rijen naar je vriend') }
     ]
 
     function naamVan(m) {
@@ -774,11 +776,11 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         keuzeEl.innerHTML = ''
         keuzeEl.style.display = 'flex'
         if (!vriendAanwezig) {
-            statusEl.textContent = '⏳ Wachten tot ' + vriendNaam + ' in het spel zit...'
+            statusEl.textContent = vertaal('⏳ Wachten tot {naam} in het spel zit...', { naam: vriendNaam })
             return
         }
         if (benIkHost) {
-            statusEl.textContent = 'Kies een spelvorm'
+            statusEl.textContent = vertaal('Kies een spelvorm')
             for (const v of SPELVORMEN) {
                 const knop = document.createElement('button')
                 knop.style.cssText = KNOP_STIJL
@@ -790,7 +792,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
                 keuzeEl.appendChild(knop)
             }
         } else {
-            statusEl.textContent = '⏳ Wachten tot ' + vriendNaam + ' een spelvorm kiest...'
+            statusEl.textContent = vertaal('⏳ Wachten tot {naam} een spelvorm kiest...', { naam: vriendNaam })
         }
     }
 
@@ -806,12 +808,12 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
 
     function aftellen() {
         let tel = 3
-        statusEl.textContent = naamVan(modus) + ': start in ' + tel + '...'
+        statusEl.textContent = vertaal('{spel}: start in {n}...', { spel: naamVan(modus), n: tel })
         geluid.tel()
         aftelInterval = setInterval(() => {
             tel--
             if (tel > 0) {
-                statusEl.textContent = naamVan(modus) + ': start in ' + tel + '...'
+                statusEl.textContent = vertaal('{spel}: start in {n}...', { spel: naamVan(modus), n: tel })
                 geluid.tel()
             } else {
                 clearInterval(aftelInterval)
@@ -841,13 +843,13 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         if (solo) {
             const nieuw = solo.nieuweScore(mij)
             scores[ANDER] = solo.record()
-            statusEl.textContent = (nieuw ? '🏆 Nieuw record: ' : 'Je bak liep vol. Score: ') + mij
-        } else if (ikVerloor === true) statusEl.textContent = '😢 Je bak liep vol. ' + vriendNaam + ' wint!'
-            else if (ikVerloor === false) statusEl.textContent = '🎉 De bak van ' + vriendNaam + ' liep vol. Jij wint!'
+            statusEl.textContent = nieuw ? vertaal('🏆 Nieuw record: {n}', { n: mij }) : vertaal('Je bak liep vol. Score: {n}', { n: mij })
+        } else if (ikVerloor === true) statusEl.textContent = vertaal('😢 Je bak liep vol. {naam} wint!', { naam: vriendNaam })
+            else if (ikVerloor === false) statusEl.textContent = vertaal('🎉 De bak van {naam} liep vol. Jij wint!', { naam: vriendNaam })
                 else {
-                    statusEl.textContent = mij === vriend ? '🤝 Gelijkspel! ' + mij + ' - ' + vriend
-                    : mij > vriend ? '🎉 Jij wint! ' + mij + ' - ' + vriend
-                    : '😢 ' + vriendNaam + ' wint! ' + mij + ' - ' + vriend
+                    statusEl.textContent = mij === vriend ? vertaal('🤝 Gelijkspel! {ik} - {vriend}', { ik: mij, vriend })
+                    : mij > vriend ? vertaal('🎉 Jij wint! {ik} - {vriend}', { ik: mij, vriend })
+                    : vertaal('😢 {naam} wint! {ik} - {vriend}', { naam: vriendNaam, ik: mij, vriend })
                 }
                 const gespeeld = modus
                 setTimeout(() => {
@@ -856,7 +858,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
                         const rij = inhoud.querySelector('div')
                         const opnieuw = document.createElement('button')
                         opnieuw.className = 'bi-herstart'
-                        opnieuw.textContent = '↻ Opnieuw'
+                        opnieuw.textContent = vertaal('↻ Opnieuw')
                         opnieuw.style.cssText = KNOP_STIJL + 'text-align:center;margin-top:4px;'
                         opnieuw.onclick = () => {
                             spelKanaal.send({ type: 'broadcast', event: 'bi-herstart', payload: { modus: gespeeld } })
@@ -866,7 +868,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
                         if (benIkHost && !solo) {
                             const ander = document.createElement('button')
                             ander.className = 'bi-herstart'
-                            ander.textContent = 'Andere spelvorm'
+                            ander.textContent = vertaal('Andere spelvorm')
                             ander.style.cssText = 'background:rgba(255,255,255,0.12);border:none;border-radius:10px;padding:8px 18px;color:white;font-weight:600;cursor:pointer;'
                             ander.onclick = () => {
                                 spelKanaal.send({ type: 'broadcast', event: 'bi-keuze', payload: {} })
@@ -1183,7 +1185,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     function tekenHud() {
         const wb = Math.min(170, B * 0.34)
         const pb = (B - wb - 24) / 2
-        tekenSpeler(IK, 'Jij', MIJN_KLEUR, 6, 4, pb, HUD_H - 12)
+        tekenSpeler(IK, vertaal('Jij'), MIJN_KLEUR, 6, 4, pb, HUD_H - 12)
         tekenSpeler(ANDER, vriendNaam, VRIEND_KLEUR, B - 6 - pb, 4, pb, HUD_H - 12)
 
         const wx = (B - wb) / 2, wy = 4, wh = HUD_H - 12
@@ -1196,7 +1198,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         ctx.textAlign = 'center'
         ctx.fillStyle = '#a99cc9'
         ctx.font = '500 10px ' + FONT
-        ctx.fillText(modus === 'versus' ? 'Jouw volgende' : 'Volgende', B / 2, wy + 12)
+        ctx.fillText(modus === 'versus' ? vertaal('Jouw volgende') : vertaal('Volgende'), B / 2, wy + 12)
         const vakB = (wb - 8) / 3
         const mini = Math.max(4, Math.min(10, vakB / 4.5, (wh - 18) / 2.3))
         wachtrij.slice(0, 3).forEach((data, n) => {
@@ -1246,7 +1248,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         let balk = 'rgba(255,255,255,0.08)'
         if (bomNu) {
             ctx.fillStyle = Math.sin(nu() / 70) > 0 ? BOM_KLEUR : '#ffffff'
-            ctx.fillText('💣 BOM!', x + b - 8, y + 16)
+            ctx.fillText(vertaal('💣 BOM!'), x + b - 8, y + 16)
             balk = BOM_KLEUR
         } else if (crushNu) {
             ctx.fillStyle = Math.sin(nu() / 70) > 0 ? CRUSH_KLEUR : '#ffffff'
@@ -1254,12 +1256,12 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
             balk = CRUSH_KLEUR
         } else if (lading[i]) {
             ctx.fillStyle = CRUSH_KLEUR
-            ctx.fillText('Explosie ' + lading[i] + ' bij volgende', x + b - 8, y + 16)
+            ctx.fillText(vertaal('Explosie {n} bij volgende', { n: lading[i] }), x + b - 8, y + 16)
             balk = 'rgba(255,224,102,0.35)'
         } else {
             ctx.fillStyle = '#a99cc9'
             ctx.font = '500 10px ' + FONT
-            ctx.fillText('Maak een vierkant', x + b - 8, y + 16)
+            ctx.fillText(vertaal('Maak een vierkant'), x + b - 8, y + 16)
         }
         ctx.textAlign = 'left'
         rondeRect(x + 10, y + h - 9, b - 20, 4, 2)

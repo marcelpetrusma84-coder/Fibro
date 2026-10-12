@@ -1,12 +1,14 @@
 // pong-ui.js - Pong voor Fibro.
 // Tekent zichzelf in #spelInhoud en praat met de tegenstander via het
 // spelkanaal dat chat.html aanlevert. De host rekent de bal uit.
+// v147: teksten ook in het Engels (taal.js)
+const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v147)
 
 export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
   // isActief() zegt of Pong nog het geopende spel is; zonder die controle blijft
   // het spel naar aanrakingen luisteren nadat je het gesloten hebt.
   isActief = isActief || (() => true)
-  vriendNaam = vriendNaam || 'vriend'
+  vriendNaam = vriendNaam || T('vriend')
   let pongTrail = null
   document.getElementById('spelTitelBar').textContent = '🏓 Neo Paddle'
   const inhoud = document.getElementById('spelInhoud')
@@ -194,8 +196,8 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
       <div id="pong-status" style="color:#00f0ff;font-size:14px;font-weight:700;letter-spacing:1px;text-shadow:0 0 8px #00f0ff;"></div>
       <div id="pong-match" style="font-size:12px;font-weight:700;letter-spacing:1px;min-height:15px;"></div>
       <canvas id="pong-canvas" width="${BREEDTE}" height="${HOOGTE}" style="background:#050510;border:2px solid #ff00cc;border-radius:8px;touch-action:none;box-shadow:0 0 30px rgba(255,0,204,0.5),0 0 60px rgba(255,0,204,0.2),inset 0 0 30px rgba(0,0,0,0.8);"></canvas>
-      <div style="font-size:11px;color:rgba(255,255,255,0.6);">Sleep om je paddle te bewegen</div>
-      <button id="pong-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Opnieuw spelen</button>
+      <div style="font-size:11px;color:rgba(255,255,255,0.6);">${T('Sleep om je paddle te bewegen')}</div>
+      <button id="pong-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">${T('↻ Opnieuw spelen')}</button>
     </div>`
 
   const canvas = document.getElementById('pong-canvas')
@@ -210,7 +212,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     const naamEl = document.createElement('span'); naamEl.id = 'pong-naam'; naamEl.textContent = vriendNaam
     mijnScoreEl.textContent = mijnScore; vriendScoreEl.textContent = vriendScore
     statusEl.textContent = ''
-    statusEl.append('Jij: ', mijnScoreEl, ' — ', naamEl, ': ', vriendScoreEl)
+    statusEl.append(T('Jij: '), mijnScoreEl, ' — ', naamEl, ': ', vriendScoreEl)
   }
   const matchEl = document.getElementById('pong-match')
   const opnieuwBtn = document.getElementById('pong-opnieuw')
@@ -446,16 +448,16 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     ctx.fillRect(0, 0, BREEDTE, HOOGTE)
     ctx.save()
     ctx.textAlign = "center"; ctx.textBaseline = "middle"
-    const winNaam = winnaar ? "JIJ" : vriendNaam.toUpperCase()
-    const verliesNaam = winnaar ? vriendNaam.toUpperCase() : "JIJ"
+    const winNaam = winnaar ? T('JIJ') : vriendNaam.toUpperCase()
+    const verliesNaam = winnaar ? vriendNaam.toUpperCase() : T('JIJ')
     ctx.font = "bold 14px monospace"; ctx.fillStyle = winnaar ? "#00f0ff" : "#ff00cc"; ctx.shadowColor = winnaar ? "#00f0ff" : "#ff00cc"; ctx.shadowBlur = 20
-    ctx.fillText("WINNAAR", BREEDTE/2, HOOGTE/2 - 60)
+    ctx.fillText(T('WINNAAR'), BREEDTE/2, HOOGTE/2 - 60)
     ctx.font = "bold 32px monospace"
     ctx.fillText(winNaam, BREEDTE/2, HOOGTE/2 - 30)
     ctx.font = "bold 48px monospace"; ctx.shadowBlur = 40
     ctx.fillText(mijnScore + " — " + vriendScore, BREEDTE/2, HOOGTE/2 + 20)
     ctx.font = "bold 14px monospace"; ctx.fillStyle = winnaar ? "#ff00cc" : "#00f0ff"; ctx.shadowColor = winnaar ? "#ff00cc" : "#00f0ff"; ctx.shadowBlur = 20
-    ctx.fillText("VERLIEZER", BREEDTE/2, HOOGTE/2 + 60)
+    ctx.fillText(T('VERLIEZER'), BREEDTE/2, HOOGTE/2 + 60)
     ctx.font = "bold 20px monospace"
     ctx.fillText(verliesNaam, BREEDTE/2, HOOGTE/2 + 82)
     ctx.restore()
@@ -465,7 +467,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
       gameOver = true
       controleerLevel()
       const winnaar = mijnScore >= WIN_SCORE
-    statusEl.textContent = winnaar ? '🎉 Jij wint!' : '😢 ' + (vriendNaam) + ' wint!'
+    statusEl.textContent = winnaar ? T('🎉 Jij wint!') : T('😢 {naam} wint!', { naam: vriendNaam })
 
       opnieuwBtn.style.display = 'block'
       if (animatieFrame) cancelAnimationFrame(animatieFrame)
@@ -477,8 +479,8 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     if (mijnScoreEl) { mijnScoreEl.textContent = mijnScore; vriendScoreEl.textContent = vriendScore }
     // Matchpoint: laat zien wanneer iemand op winst staat
     if (!gameOver && (mijnScore === WIN_SCORE - 1 || vriendScore === WIN_SCORE - 1)) {
-      const wie = mijnScore === WIN_SCORE - 1 && vriendScore === WIN_SCORE - 1 ? 'BESLISSEND PUNT'
-        : mijnScore === WIN_SCORE - 1 ? 'JIJ STAAT OP WINST' : 'LET OP: TEGENSTANDER OP WINST'
+      const wie = mijnScore === WIN_SCORE - 1 && vriendScore === WIN_SCORE - 1 ? T('BESLISSEND PUNT')
+        : mijnScore === WIN_SCORE - 1 ? T('JIJ STAAT OP WINST') : T('LET OP: TEGENSTANDER OP WINST')
       matchEl.textContent = wie
       matchEl.style.color = mijnScore === WIN_SCORE - 1 ? '#00f0ff' : '#ff00cc'
       matchEl.style.textShadow = '0 0 8px ' + matchEl.style.color
@@ -627,13 +629,13 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
   }
 
   // Start: toon wachtscherm en meld dat ik klaar ben
-  statusEl.textContent = 'Wachten op tegenstander...'
+  statusEl.textContent = T('Wachten op tegenstander...')
   ctx.clearRect(0, 0, BREEDTE, HOOGTE)
   ctx.fillStyle = 'rgba(255,255,255,0.6)'
   ctx.font = '16px sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText('Wachten...', BREEDTE/2, HOOGTE/2)
+  ctx.fillText(T('Wachten...'), BREEDTE/2, HOOGTE/2)
   // Meld na klein moment dat ik klaar ben (kanaal moet subscribed zijn)
   setTimeout(meldIkBenKlaar, 800)
   // Blijf melden tot de ander reageert (voor het geval de ander later klaar is)

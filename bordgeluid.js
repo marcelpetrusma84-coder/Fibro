@@ -1,5 +1,6 @@
 // bordgeluid.js — geluidjes voor schaken en dammen (Web Audio, geen bestanden nodig)
 // Aan/uit wordt onthouden in localStorage onder 'fibro_spelgeluid'.
+// v147: het knopje ook in het Engels (taal.js)
 
 const SLEUTEL = 'fibro_spelgeluid'
 let _ctx = null
@@ -129,7 +130,8 @@ export function dammen(Dammen, staat, keten, mijnKleur) {
 export function knop(naastEl) {
     if (!naastEl || !naastEl.parentElement) return
         const b = document.createElement('button')
-        const zet = () => { b.textContent = aan() ? '🔊 Geluid aan' : '🔇 Geluid uit' }
+        const T = window.T || (s => s)
+        const zet = () => { b.textContent = aan() ? T('🔊 Geluid aan') : T('🔇 Geluid uit') }
         b.style.cssText = 'background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.2);border-radius:14px;padding:3px 12px;color:#fff;font-size:12px;cursor:pointer;'
         b.addEventListener('click', () => {
             try { localStorage.setItem(SLEUTEL, aan() ? 'uit' : 'aan') } catch (e) {}

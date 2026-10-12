@@ -1,8 +1,10 @@
 // schaken-ui.js - spel voor Fibro, losgetrokken uit chat.html.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
+// v147: teksten ook in het Engels (taal.js)
+const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v147)
 
 export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
-  vriendNaam = vriendNaam || 'vriend'
+  vriendNaam = vriendNaam || T('vriend')
   document.getElementById('spelTitelBar').textContent = '♟️ Chess'
   const inhoud = document.getElementById('spelInhoud')
 
@@ -23,7 +25,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       <div id="sch-status" style="color:white;font-size:14px;font-weight:600;text-align:center;min-height:20px;"></div>
       <div id="sch-bord" style="display:grid;grid-template-columns:repeat(8,38px);grid-template-rows:repeat(8,38px);border:3px solid #3a2a5e;border-radius:6px;overflow:hidden;"></div>
       <div id="sch-promotie" style="display:none;gap:8px;background:rgba(0,0,0,0.85);padding:10px;border-radius:10px;"></div>
-      <button id="sch-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Opnieuw spelen</button>
+      <button id="sch-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">${T('↻ Opnieuw spelen')}</button>
     </div>`
 
   const bordEl = document.getElementById('sch-bord')
@@ -146,17 +148,16 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     if (Schaak.isSchaakmat(staat, volgendeKleur)) {
       gameOver = true
       const ikWin = volgendeKleur !== mijnKleur
-      statusEl.textContent = ikWin ? '🎉 Schaakmat — Jij wint!' : '😢 Schaakmat — ' + (vriendNaam) + ' wint!'
+      statusEl.textContent = ikWin ? T('🎉 Schaakmat — Jij wint!') : T('😢 Schaakmat — {naam} wint!', { naam: vriendNaam })
       opnieuwBtn.style.display = 'block'
     } else if (Schaak.isPat(staat, volgendeKleur)) {
       gameOver = true
-      statusEl.textContent = '🤝 Pat — gelijkspel!'
+      statusEl.textContent = T('🤝 Pat — gelijkspel!')
       opnieuwBtn.style.display = 'block'
     } else if (Schaak.staatInSchaak(staat, volgendeKleur)) {
-      statusEl.textContent = (volgendeKleur === mijnKleur ? 'Jij staat schaak! ' : vriendNaam + ' staat schaak! ') +
-        (volgendeKleur === mijnKleur ? 'Jouw beurt' : 'Wachten...')
+      statusEl.textContent = volgendeKleur === mijnKleur ? T('Jij staat schaak! Jouw beurt') : T('{naam} staat schaak! Wachten...', { naam: vriendNaam })
     } else {
-      statusEl.textContent = volgendeKleur === mijnKleur ? 'Jouw beurt' : 'Wachten op ' + vriendNaam + '...'
+      statusEl.textContent = volgendeKleur === mijnKleur ? T('Jouw beurt') : T('Wachten op {naam}...', { naam: vriendNaam })
     }
     tekenBord()
   }
@@ -198,6 +199,6 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     naBeurtControle()
   })
 
-  statusEl.textContent = mijnKleur === 'w' ? 'Jouw beurt (wit begint)' : 'Wachten op ' + vriendNaam + ' (wit begint)...'
+  statusEl.textContent = mijnKleur === 'w' ? T('Jouw beurt (wit begint)') : T('Wachten op {naam} (wit begint)...', { naam: vriendNaam })
   tekenBord()
 }

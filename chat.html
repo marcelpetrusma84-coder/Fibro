@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=5"></script>
+<script src="taal.js?v=6"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Chat</title>
@@ -382,8 +382,8 @@ window.veiligeUrl = function(v){
   import { stuurRapport } from './rapport.js?v=95'
   import * as Schaak from './schaak.js?v=95'
   import * as Dammen from './dammen.js?v=95'
-  import * as Bordgeluid from './bordgeluid.js?v=95'
-  import * as DammenUI from './dammen-ui.js?v=96'
+  import * as Bordgeluid from './bordgeluid.js?v=147'
+  import * as DammenUI from './dammen-ui.js?v=147'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=144'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
@@ -1891,18 +1891,18 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // te doen zodra een spel gekozen is, staat het klaar tegen de tijd dat de
   // ander accepteert. Spellen die nog in chat.html zitten hoeven niets.
   const SPEL_BESTAND = {
-    botkaaseiren: './bke-ui.js?v=96',
-    dammen: './dammen-ui.js?v=96',
-    pong: './pong-ui.js?v=115',
-    vieroprij: './vieroprij-ui.js?v=115',
-    schaken: './schaken-ui.js?v=96',
-    flappybird: './flappy-ui.js?v=115',
-    breakout: './blockit-ui.js?v=115',
-    spaceinvaders: './invaders-ui.js?v=115',
-    swarm: './swarm-ui.js?v=109',
-    endlessrunner: './runner-gunner-ui.js?v=128',
-    pacman: './ecto-ui.js?v=118',
-    pinball: './twin-snakes-ui.js?v=118'
+    botkaaseiren: './bke-ui.js?v=147',
+    dammen: './dammen-ui.js?v=147',
+    pong: './pong-ui.js?v=147',
+    vieroprij: './vieroprij-ui.js?v=147',
+    schaken: './schaken-ui.js?v=147',
+    flappybird: './flappy-ui.js?v=147',
+    breakout: './blockit-ui.js?v=147',
+    spaceinvaders: './invaders-ui.js?v=147',
+    swarm: './swarm-ui.js?v=147',
+    endlessrunner: './runner-gunner-ui.js?v=147',
+    pacman: './ecto-ui.js?v=147',
+    pinball: './twin-snakes-ui.js?v=147'
   }
   const _alGeladen = {}
   function laadSpelAlvast(spelType) {
@@ -2113,19 +2113,19 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Boter-Kaas-Eieren ───
   async function startBotKaasEieren() {
-    const m = await import('./bke-ui.js?v=96')
+    const m = await import('./bke-ui.js?v=147')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend') })
   }
 
   // ─── Vier op een rij ───
   async function startVierOpEenRij() {
-    const m = await import('./vieroprij-ui.js?v=115')
+    const m = await import('./vieroprij-ui.js?v=147')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend') })
   }
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await import('./schaken-ui.js?v=96')
+    const m = await import('./schaken-ui.js?v=147')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend') })
   }
 
@@ -2134,7 +2134,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Pong ───
   async function startPong() {
-    const m = await import('./pong-ui.js?v=115')
+    const m = await import('./pong-ui.js?v=147')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'pong' })
   }
 
@@ -2229,43 +2229,43 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Flappy Bird Multiplayer ───
   async function startFlappyBird() {
-    const m = await import('./flappy-ui.js?v=115')
+    const m = await import('./flappy-ui.js?v=147')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'flappybird' })
   }
 
   // ─── Block It Multiplayer ───
 async function startBlockIt() {
-    const m = await import('./blockit-ui.js?v=115')
+    const m = await import('./blockit-ui.js?v=147')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'breakout' })
 }
 
 // ─── Space Invaders Multiplayer ───
   async function startSpaceInvaders() {
-    const m = await import('./invaders-ui.js?v=115')
+    const m = await import('./invaders-ui.js?v=147')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'spaceinvaders' })
   }
 
 // ─── The Swarm Multiplayer ───
   async function startSwarm() {
-    const m = await import('./swarm-ui.js?v=109')
+    const m = await import('./swarm-ui.js?v=147')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'swarm' })
   }
 
   // ─── Runner & Gunner (vakje Endless Runner) ───
   // ─── Spookjes (vakje Pac-Man) ───
   async function startEcto() {
-    const m = await import('./ecto-ui.js?v=118')
+    const m = await import('./ecto-ui.js?v=147')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'pacman' })
   }
 
   async function startRunnerGunner() {
-    const m = await import('./runner-gunner-ui.js?v=128')
+    const m = await import('./runner-gunner-ui.js?v=147')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'endlessrunner' })
   }
 
   // ─── Twin Snakes (vakje Pinball) ───
   async function startTwinSnakes() {
-    const m = await import('./twin-snakes-ui.js?v=118')
+    const m = await import('./twin-snakes-ui.js?v=147')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'pinball' })
   }
 

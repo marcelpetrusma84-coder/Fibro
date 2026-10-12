@@ -4,13 +4,15 @@ import { maakGeluid } from './flappy-geluid.js?v=86'
 // Grot-level: rotsen, plafond en grond zijn massief.
 // Scherpe punten, spijkers, fakkelvuur en vallende rotsen zijn dodelijk.
 // Je bent ook af als je links uit beeld wordt geduwd.
+// v147: teksten ook in het Engels (taal.js)
+const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v147)
 
 // Tekst veilig in HTML zetten (namen komen van andere gebruikers)
 const htmlVeilig = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
 export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) {
     // solo: alleen spelen (spel.html). Geen vriend; aan het eind telt je record.
-    vriendNaam = vriendNaam || 'vriend'
+    vriendNaam = vriendNaam || T('vriend')
     isActief = isActief || (() => true)
     document.getElementById('spelTitelBar').textContent = '🦇 Flapper'
     const inhoud = document.getElementById('spelInhoud')
@@ -30,10 +32,10 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     // Na hoeveel rotsen elk gevaar begint
     const LEVEL_PUNTEN = 6, LEVEL_SPIJKERS = 12, LEVEL_FAKKELS = 18, LEVEL_VALLEND = 24
     const MELDINGEN = {
-        [LEVEL_PUNTEN]: 'Pas op: scherpe punten!',
-        [LEVEL_SPIJKERS]: 'Pas op: spijkers!',
-        [LEVEL_FAKKELS]: 'Pas op: fakkels!',
-        [LEVEL_VALLEND]: 'Pas op: vallende rotsen!'
+        [LEVEL_PUNTEN]: T('Pas op: scherpe punten!'),
+        [LEVEL_SPIJKERS]: T('Pas op: spijkers!'),
+        [LEVEL_FAKKELS]: T('Pas op: fakkels!'),
+        [LEVEL_VALLEND]: T('Pas op: vallende rotsen!')
     }
     const benIkHost = benIkSpeler1
 
@@ -46,7 +48,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     <div style="font-size:22px;">🦇</div>
     <div id="fb-score-mij" style="font-weight:700;font-size:18px;color:#60a5fa;">🪙 0</div>
           <div id="fb-harten-mij" style="font-size:12px;letter-spacing:1px;">❤️❤️❤️</div>
-    <div id="fb-label-mij" style="opacity:0.6;font-size:11px;">${solo ? 'Record ' + solo.record() : 'Jij'}</div>
+    <div id="fb-label-mij" style="opacity:0.6;font-size:11px;">${solo ? T('Record {n}', { n: solo.record() }) : T('Jij')}</div>
     </div>
     <div style="color:white;font-size:12px;text-align:center;${solo ? 'display:none;' : ''}">
     <div style="font-size:22px;">🦇</div>
@@ -56,7 +58,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     </div>
     </div>
     <button id="fb-geluid" style="background:rgba(255,255,255,0.12);border:none;border-radius:8px;color:white;padding:4px 12px;font-size:16px;cursor:pointer;">🔊</button>
-      <div style="color:rgba(255,255,255,0.4);font-size:11px;">Tik om te vliegen. Pak muntjes! Punten en vuur kosten een hartje.</div>
+      <div style="color:rgba(255,255,255,0.4);font-size:11px;">${T('Tik om te vliegen. Pak muntjes! Punten en vuur kosten een hartje.')}</div>
     </div>`
 
     const canvas = document.getElementById('fb-canvas')
@@ -324,7 +326,7 @@ function verliesHart(uit) {
     } else {
         mijnVogel.vy = -4
     }
-    const tekst = mijnHarten === 1 ? '💔 Laatste hartje!' : '💔 Nog ' + mijnHarten + ' hartjes'
+    const tekst = mijnHarten === 1 ? T('💔 Laatste hartje!') : T('💔 Nog {n} hartjes', { n: mijnHarten })
     statusEl.textContent = tekst
     setTimeout(() => { if (statusEl.textContent === tekst) statusEl.textContent = '' }, 1500)
     stuurLeven()
@@ -333,7 +335,7 @@ function verliesHart(uit) {
 
 function krijgHart() {
     mijnHarten = Math.min(mijnHarten + 1, START_HARTEN)
-    const tekst = '💖 Extra hartje!'
+    const tekst = T('💖 Extra hartje!')
     statusEl.textContent = tekst
     setTimeout(() => { if (statusEl.textContent === tekst) statusEl.textContent = '' }, 1500)
     stuurLeven()
@@ -713,8 +715,8 @@ function uitBeeld(v) {
                 if (geraakt || uit) {
                     mijnVogel.dood = true; mijnHarten = 0; stuurLeven(); toonStand()
                     spelKanaal.send({ type: 'broadcast', event: 'fb-dood', payload: {} })
-                    geluid.af(geraakt); const reden = geraakt ? '💥 Geraakt!' : '💀 Uit beeld!'
-                    statusEl.textContent = vriendVogel.dood ? '' : `${reden} ${vriendNaam} vliegt nog...`
+                    geluid.af(geraakt); const reden = geraakt ? T('💥 Geraakt!') : T('💀 Uit beeld!')
+                    statusEl.textContent = vriendVogel.dood ? '' : T('{reden} {naam} vliegt nog...', { reden, naam: vriendNaam })
                     controleerEinde()
                 } else {
                     pakMunten()
@@ -764,19 +766,19 @@ function uitBeeld(v) {
             if (solo) {
                 const nieuw = solo.nieuweScore(mijnScore)
                 geluid.einde(nieuw ? 1 : 0)
-                statusEl.textContent = (nieuw ? '🏆 Nieuw record: ' : '🪙 Score: ') + mijnScore
+                statusEl.textContent = nieuw ? T('🏆 Nieuw record: {n}', { n: mijnScore }) : T('🪙 Score: {n}', { n: mijnScore })
                 const lab = document.getElementById('fb-label-mij')
-                if (lab) lab.textContent = 'Record ' + solo.record()
+                if (lab) lab.textContent = T('Record {n}', { n: solo.record() })
             } else {
             const gelijkspel = mijnScore === vriendScore
             const ikWin = mijnScore > vriendScore
-            geluid.einde(gelijkspel ? 0 : ikWin ? 1 : -1); statusEl.textContent = gelijkspel ? '🤝 Gelijkspel!' : ikWin ? '🎉 Jij wint!' : '😢 ' + vriendNaam + ' wint!'
+            geluid.einde(gelijkspel ? 0 : ikWin ? 1 : -1); statusEl.textContent = gelijkspel ? T('🤝 Gelijkspel!') : ikWin ? T('🎉 Jij wint!') : T('😢 {naam} wint!', { naam: vriendNaam })
             }
             setTimeout(() => {
                 inhoud.querySelectorAll('button.fb-herstart').forEach(b => b.remove())
                 const btn = document.createElement('button')
                 btn.className = 'fb-herstart'
-                btn.textContent = '↻ Opnieuw'
+                btn.textContent = T('↻ Opnieuw')
                 btn.style.cssText = 'background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:700;cursor:pointer;margin-top:8px;display:block;'
                 btn.onclick = () => {
                     spelKanaal.send({ type: 'broadcast', event: 'fb-herstart', payload: {} })
@@ -804,11 +806,11 @@ function uitBeeld(v) {
 
     // ── Aftellen ──
     teken()
-    geluid.tel(); statusEl.textContent = `Start in ${aftellen}...`
+    geluid.tel(); statusEl.textContent = T('Start in {n}...', { n: aftellen })
     aftelInterval = setInterval(() => {
         aftellen--
         if (aftellen > 0) {
-            geluid.tel(); statusEl.textContent = `Start in ${aftellen}...`
+            geluid.tel(); statusEl.textContent = T('Start in {n}...', { n: aftellen })
         } else {
             clearInterval(aftelInterval)
             window._spelAftelInterval = null; geluid.start()
@@ -852,7 +854,7 @@ function uitBeeld(v) {
     })
     spelKanaal.on('broadcast', { event: 'fb-dood' }, () => {
         vriendVogel.dood = true; geluid.vriendAf(); vriendHarten = 0; toonStand()
-        if (!mijnVogel.dood) statusEl.textContent = `${vriendNaam} is af. Hou vol!`
+        if (!mijnVogel.dood) statusEl.textContent = T('{naam} is af. Hou vol!', { naam: vriendNaam })
             controleerEinde()
     })
     spelKanaal.on('broadcast', { event: 'fb-score-host' }, (msg) => {

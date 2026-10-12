@@ -1,11 +1,13 @@
 // vieroprij-ui.js - spel voor Fibro, losgetrokken uit chat.html.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
+// v147: teksten ook in het Engels (taal.js)
+const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v147)
 
 // Tekst veilig in HTML zetten (namen komen van andere gebruikers)
 const htmlVeilig = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
 export function start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
-  vriendNaam = vriendNaam || 'vriend'
+  vriendNaam = vriendNaam || T('vriend')
   document.getElementById('spelTitelBar').textContent = '🔴 Four in a Row'
   const inhoud = document.getElementById('spelInhoud')
   const KOLOMMEN = 7
@@ -20,10 +22,10 @@ export function start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
 
   inhoud.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
-      <div id="vor-status" style="color:white;font-size:15px;font-weight:600;text-align:center;">Jij speelt <span style="color:${KLEUR_HEX[mijnKleur]}">●</span> ${mijnKleur}${mijnBeurt ? ' — jouw beurt!' : ' — wachten...'}</div>
+      <div id="vor-status" style="color:white;font-size:15px;font-weight:600;text-align:center;">${T('Jij speelt')} <span style="color:${KLEUR_HEX[mijnKleur]}">●</span> ${mijnKleur === 'rood' ? T('rood') : T('geel')}${mijnBeurt ? T(' — jouw beurt!') : T(' — wachten...')}</div>
       <div id="vor-score" style="color:rgba(255,255,255,0.75);font-size:13px;margin-top:-10px;"></div>
       <div id="vor-bord" style="display:grid;grid-template-columns:repeat(${KOLOMMEN},38px);grid-template-rows:repeat(${RIJEN},38px);gap:4px;background:#1e3a8a;padding:8px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,0.4);"></div>
-      <button id="vor-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Opnieuw spelen</button>
+      <button id="vor-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">${T('↻ Opnieuw spelen')}</button>
     </div>`
 
   const bordEl = document.getElementById('vor-bord')
@@ -34,7 +36,7 @@ export function start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
 
   function toonScore() {
     const naam = vriendNaam
-    scoreEl.textContent = 'Jij ' + scoreIk + ' \u00b7 ' + naam + ' ' + scoreVriend + ' \u00b7 ' + scoreGelijk + ' gelijk'
+    scoreEl.textContent = T('Jij {ik} \u00b7 {naam} {vriend} \u00b7 {gelijk} gelijk', { ik: scoreIk, naam, vriend: scoreVriend, gelijk: scoreGelijk })
   }
 
   function nieuweRonde() {
@@ -114,15 +116,15 @@ export function start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
     const winnaar = checkWinnaar()
     if (winnaar) {
       gameOver = true
-      if (winnaar === 'gelijk') { scoreGelijk++; statusEl.textContent = "🤝 Gelijkspel — bord vol!"; Bordgeluid.geluid('remise') }
-      else if (winnaar === mijnKleur) { scoreIk++; statusEl.textContent = "🎉 Jij wint!"; Bordgeluid.geluid('win') }
-      else { scoreVriend++; statusEl.textContent = "😢 " + (vriendNaam) + " wint!"; Bordgeluid.geluid('verlies') }
-      opnieuwBtn.textContent = '\u21bb Volgende ronde'
+      if (winnaar === 'gelijk') { scoreGelijk++; statusEl.textContent = T('🤝 Gelijkspel — bord vol!'); Bordgeluid.geluid('remise') }
+      else if (winnaar === mijnKleur) { scoreIk++; statusEl.textContent = T('🎉 Jij wint!'); Bordgeluid.geluid('win') }
+      else { scoreVriend++; statusEl.textContent = T('😢 {naam} wint!', { naam: vriendNaam }); Bordgeluid.geluid('verlies') }
+      opnieuwBtn.textContent = T('\u21bb Volgende ronde')
       opnieuwBtn.style.display = 'block'
     } else {
       statusEl.innerHTML = mijnBeurt
-        ? 'Jouw beurt! <span style="color:' + KLEUR_HEX[mijnKleur] + '">●</span>'
-        : 'Wachten op ' + htmlVeilig(vriendNaam) + '...'
+        ? T('Jouw beurt!') + ' <span style="color:' + KLEUR_HEX[mijnKleur] + '">●</span>'
+        : T('Wachten op {naam}...', { naam: htmlVeilig(vriendNaam) })
     }
     toonScore()
     tekenBord()

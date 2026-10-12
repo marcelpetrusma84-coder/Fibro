@@ -4,6 +4,8 @@
    Beide spelers zitten in hetzelfde spelkanaal; uit de naam daarvan komt
    de seed, dus jullie rennen op precies dezelfde baan. */
 
+// v147: teksten ook in het Engels (taal.js). Hier heet de vertaler 'vertaal' (T is in de tegelcode al een maat).
+const vertaal = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 // v124: Phaser 3.80.1 staat in de eigen repo (phaser.min.js), niet meer via cdnjs.
 // Het adres wordt bepaald vanaf dit bestand, zodat het vanaf elke pagina klopt.
 const PHASER_URL = new URL('./phaser.min.js?v=1', import.meta.url).href
@@ -131,7 +133,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   if (getComputedStyle(inhoud).position === 'static') inhoud.style.position = 'relative'
   zetStijl()
 
-  const naamVriend = String(vriendNaam || 'je vriend').replace(/[<>&"]/g, '')
+  const naamVriend = String(vriendNaam || vertaal('je vriend')).replace(/[<>&"]/g, '')
   const wrap = document.createElement('div')
   wrap.className = 'rg'
   wrap.innerHTML = `
@@ -143,20 +145,20 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       <div class="laag">
         <div>
           <h1>RUNNER &amp; GUNNER</h1>
-          <p>${spelKanaal ? 'Jij en ' + naamVriend + ' rennen op dezelfde baan. Wie komt het verst?' : 'Hoe ver kom jij?'}</p>
+          <p>${spelKanaal ? vertaal('Jij en {naam} rennen op dezelfde baan. Wie komt het verst?', { naam: naamVriend }) : vertaal('Hoe ver kom jij?')}</p>
           <div class="rol"></div>
           <div class="keuze">
-            <button class="kRunner" aria-pressed="true"><canvas class="pop"></canvas><b>RUNNER</b><small>Springt hoger.</small></button>
-            <button class="kGunner" aria-pressed="false"><canvas class="pop"></canvas><b>GUNNER</b><small>Sterker kanon.</small></button>
+            <button class="kRunner" aria-pressed="true"><canvas class="pop"></canvas><b>RUNNER</b><small>${vertaal('Springt hoger.')}</small></button>
+            <button class="kGunner" aria-pressed="false"><canvas class="pop"></canvas><b>GUNNER</b><small>${vertaal('Sterker kanon.')}</small></button>
           </div>
           <button class="knop">START</button>
-          <div><button class="geluidKnop" type="button">GELUID: AAN</button></div>
+          <div><button class="geluidKnop" type="button">${vertaal('GELUID: AAN')}</button></div>
         </div>
       </div>
     </div>
     <div class="bediening" aria-hidden="true">
-      <div class="zone zSpring"><b>SPRING</b><small>tik = springen<br>nog eens = dubbel<br>omlaag vegen = glijden</small></div>
-      <div class="zone zSchiet"><b>SCHIET</b><small>tik = schieten</small></div>
+      <div class="zone zSpring"><b>${vertaal('SPRING')}</b><small>${vertaal('tik = springen<br>nog eens = dubbel<br>omlaag vegen = glijden')}</small></div>
+      <div class="zone zSchiet"><b>${vertaal('SCHIET')}</b><small>${vertaal('tik = schieten')}</small></div>
     </div>`
   inhoud.appendChild(wrap)
 
@@ -172,7 +174,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   const zX = wrap.querySelector('.zSchiet')
 
   try { await laadPhaser() } catch (e) {
-    wrap.innerHTML = '<p class="fout">Het spel kon niet laden.<br>Controleer je verbinding en probeer opnieuw.</p>'
+    wrap.innerHTML = '<p class="fout">' + vertaal('Het spel kon niet laden.<br>Controleer je verbinding en probeer opnieuw.') + '</p>'
     return
   }
   if (!isActief() || !wrap.isConnected) { wrap.remove(); return }
@@ -390,7 +392,7 @@ var BIOOM_LENGTE = 16;               // stukken baan per gebied
 var LAAG_B = 512, LAAG_H = 360;      // maat van een achtergrondlaag, dubbele scherpte
 
 var BIOMEN = [
-  { id:'stad', naam:'NEON STAD', donker:false,
+  { id:'stad', naam:vertaal('NEON STAD'), donker:false,
     lucht:['#07051a','#1d0b3c','#4a1250','#8a2a62'], neon:'#ff3d9a', neon2:'#22e6ff',
     grond:{ boven:'#4b5184', vlak:'#262a4a', donker:'#141630', lijn:'#22e6ff' },
     blok:{ rand:'#0c0e22', vlak:'#4a507c', licht:'#7c83b8', schaduw:'#2c3058', accent:'#ff3d9a', motief:'band' },
@@ -400,32 +402,32 @@ var BIOMEN = [
     grond:{ boven:'#2a8a4e', vlak:'#1c2c24', donker:'#0e1812', lijn:'#9dff6a' },
     blok:{ rand:'#1a0f08', vlak:'#7a4a28', licht:'#a8703e', schaduw:'#4e2c16', accent:'#7dff5a', motief:'kruis' },
     vloei:['#9dff3a','#3a8a1a'], maan:{x:0.78,y:46,r:26,kleur:'#e8ffd8'}, sterren:true },
-  { id:'riool', naam:'NEON RIOOL', donker:true,
+  { id:'riool', naam:vertaal('NEON RIOOL'), donker:true,
     lucht:['#020409','#060d18','#0a1626','#0e1e32'], neon:'#3dff9a', neon2:'#2a8aff',
     grond:{ boven:'#3e5062', vlak:'#1c2632', donker:'#0e141c', lijn:'#3dff9a' },
     blok:{ rand:'#140a04', vlak:'#7c4a2c', licht:'#a86a3e', schaduw:'#4a2a16', accent:'#3dff9a', motief:'streep' },
     vloei:['#5aff4a','#1e6a2a'], maan:null, sterren:false },
-  { id:'woestijn', naam:'NEON WOESTIJN', donker:false,
+  { id:'woestijn', naam:vertaal('NEON WOESTIJN'), donker:false,
     lucht:['#0c0626','#2a1052','#6a2a6a','#d8663e'], neon:'#ff8a2a', neon2:'#ff3d9a',
     grond:{ boven:'#b06a4a', vlak:'#5a3236', donker:'#2e1a22', lijn:'#ffa24a' },
     blok:{ rand:'#1e0e0a', vlak:'#b07446', licht:'#d89a62', schaduw:'#7a4a2a', accent:'#ff8a2a', motief:'lijn' },
     vloei:['#3a1a2a','#1a0a14'], maan:{x:0.7,y:40,r:30,kleur:'#ffe8c8'}, sterren:true },
-  { id:'tempel', naam:'NEON TEMPEL', donker:true,
+  { id:'tempel', naam:vertaal('NEON TEMPEL'), donker:true,
     lucht:['#05080a','#0c1614','#16241e','#223328'], neon:'#ffd24a', neon2:'#5affd2',
     grond:{ boven:'#6a7458', vlak:'#2e3530', donker:'#161c18', lijn:'#ffd24a' },
     blok:{ rand:'#0e120e', vlak:'#6e7660', licht:'#98a084', schaduw:'#44493a', accent:'#ffd24a', motief:'glyph' },
     vloei:['#ffd24a','#6a4a0a'], maan:null, sterren:false },
-  { id:'server', naam:'SERVERHAL', donker:false,
+  { id:'server', naam:vertaal('SERVERHAL'), donker:false,
     lucht:['#0a0816','#1a1630','#2c2448','#40305e'], neon:'#c46aff', neon2:'#3dffcf',
     grond:{ boven:'#5c6284', vlak:'#2a2d44', donker:'#15172a', lijn:'#c46aff' },
     blok:{ rand:'#08080f', vlak:'#262a3c', licht:'#3c4260', schaduw:'#181a28', accent:'#3dffcf', motief:'leds' },
     vloei:['#c46aff','#3a1a5a'], maan:null, sterren:false },
-  { id:'ijs', naam:'IJSGROT', donker:true,
+  { id:'ijs', naam:vertaal('IJSGROT'), donker:true,
     lucht:['#020612','#061430','#0c2450','#12366e'], neon:'#7af0ff', neon2:'#ffffff',
     grond:{ boven:'#a8e6ff', vlak:'#2c6aa0', donker:'#123a62', lijn:'#ffffff' },
     blok:{ rand:'#0a2448', vlak:'#7ecbf0', licht:'#d8f6ff', schaduw:'#3e8ac0', accent:'#ffffff', motief:'ijs' },
     vloei:['#7af0ff','#1a5a9a'], maan:null, sterren:false },
-  { id:'magma', naam:'MAGMAFABRIEK', donker:false,
+  { id:'magma', naam:vertaal('MAGMAFABRIEK'), donker:false,
     lucht:['#070202','#200606','#4a0e06','#9a2a08'], neon:'#ff6a1a', neon2:'#ffd23a',
     grond:{ boven:'#4a3434', vlak:'#221616', donker:'#120a0a', lijn:'#ff6a1a' },
     blok:{ rand:'#0a0606', vlak:'#3a3232', licht:'#5a4e4e', schaduw:'#221c1c', accent:'#ff7a1a', motief:'kern' },
@@ -1336,7 +1338,7 @@ var Spel=new Phaser.Class({
       scoreVak.textContent=String(this.getoond).padStart(7,"0");
     }
     if(s.x<this.camX+8||s.y>HOOG+80)this.verliesLeven();
-    metersVak.textContent=meter+"M  "+this.muntTal+" MUNTEN";
+    metersVak.textContent=vertaal('{m}M  {n} MUNTEN',{m:meter,n:this.muntTal});
     netwerkStap(this,tijd,dt);
   },
 
@@ -1361,9 +1363,8 @@ var Spel=new Phaser.Class({
     stuurEinde(this);
     laag.querySelector("h1").textContent="GAME OVER";
     scoreVak.textContent=String(this.score).padStart(7,"0");
-    laag.querySelector("p").textContent="SCORE "+String(this.score).padStart(7,"0")+
-      " — "+m+" meter, "+this.muntTal+" munten.";
-    startKnop.textContent="OPNIEUW";
+    laag.querySelector("p").textContent=vertaal('SCORE {score} — {m} meter, {n} munten.',{score:String(this.score).padStart(7,"0"),m:m,n:this.muntTal});
+    startKnop.textContent=vertaal('OPNIEUW');
     laag.hidden=false;startKnop.focus({preventScroll:true});
     naEinde();
   }
@@ -1408,7 +1409,7 @@ function zetAanraking(scene){
   }
   function toonAnder() {
     if (!spelKanaal) { anderVak.hidden = true; return }   // v128: alleen spelen, geen medespeler
-    if (!ander) { anderVak.textContent = NAAM + ': NOG NIET GESTART'; return }
+    if (!ander) { anderVak.textContent = vertaal('{naam}: NOG NIET GESTART', { naam: NAAM }); return }
     const sc = String(ander.s || 0).padStart(7, '0')
     anderVak.textContent = ander.d ? NAAM + ': GAME OVER ' + sc
       : NAAM + ' ' + sc + '  ' + '\u2665'.repeat(Math.max(0, ander.l || 0))
@@ -1517,7 +1518,7 @@ function zetAanraking(scene){
   let partnerKlaar = !kanaalOk, laatsteKlaar = 0, aftellen = false, klaarKlok = 0, ronde = 0
   if (!leider) wrap.classList.add('volger')
   const geldig = h => (h === 'runner' || h === 'gunner') ? h : null
-  const KLEUR = { runner: 'GROEN', gunner: 'PAARS' }
+  const KLEUR = { runner: vertaal('GROEN'), gunner: vertaal('PAARS') }
   let anderHeld = null           // wat de ander gekozen heeft, voor zover we weten
 
   /* zelfde figuur? dan speelt de genodigde in de tweede kleur */
@@ -1532,14 +1533,15 @@ function zetAanraking(scene){
     if (leider) {
       startKnop.hidden = false
       startKnop.disabled = !partnerKlaar
-      startKnop.textContent = partnerKlaar ? (ronde ? 'OPNIEUW' : 'START') : 'WACHT OP ' + NAAM
-      if (partnerKlaar && anderHeld) regel = NAAM + ' KIEST ' + anderHeld.toUpperCase()
+      startKnop.textContent = partnerKlaar ? (ronde ? vertaal('OPNIEUW') : 'START') : vertaal('WACHT OP {naam}', { naam: NAAM })
+      if (partnerKlaar && anderHeld) regel = vertaal('{naam} KIEST {held}', { naam: NAAM, held: anderHeld.toUpperCase() })
     } else {
       startKnop.hidden = true
-      regel = NAAM + ' START HET SPEL'
+      regel = vertaal('{naam} START HET SPEL', { naam: NAAM })
     }
     if (anderHeld && anderHeld === held)
-      regel += ' — ALLEBEI ' + held.toUpperCase() + ', ' + (leider ? NAAM + ' IS ' : 'JIJ BENT ') + KLEUR[held]
+      regel += leider ? vertaal(' — ALLEBEI {held}, {naam} IS {kleur}', { held: held.toUpperCase(), naam: NAAM, kleur: KLEUR[held] })
+        : vertaal(' — ALLEBEI {held}, JIJ BENT {kleur}', { held: held.toUpperCase(), kleur: KLEUR[held] })
     rolVak.textContent = regel
     tekenPops()
   }
@@ -1588,7 +1590,7 @@ function zetAanraking(scene){
       }
       h1.textContent = String(n)
       GELUID.speel('tel')
-      p.textContent = 'JIJ BENT ' + held.toUpperCase() + (mijnHuid().endsWith('B') ? ' (' + KLEUR[held] + ')' : '')
+      p.textContent = vertaal('JIJ BENT {held}', { held: held.toUpperCase() }) + (mijnHuid().endsWith('B') ? ' (' + KLEUR[held] + ')' : '')
       n--; setTimeout(stap, AFTEL)
     }
     stap()
@@ -1621,7 +1623,7 @@ function zetAanraking(scene){
   }
 
   const geluidKnop = wrap.querySelector('.geluidKnop')
-  const toonGeluid = () => { geluidKnop.textContent = 'GELUID: ' + (GELUID.staatAan() ? 'AAN' : 'UIT') }
+  const toonGeluid = () => { geluidKnop.textContent = GELUID.staatAan() ? vertaal('GELUID: AAN') : vertaal('GELUID: UIT') }
   toonGeluid()
   geluidKnop.addEventListener('click', e => { e.stopPropagation(); GELUID.zet(!GELUID.staatAan()); toonGeluid(); if (GELUID.staatAan() && laag.hidden) GELUID.muziek(true) })
   const wekGeluid = () => GELUID.wek()

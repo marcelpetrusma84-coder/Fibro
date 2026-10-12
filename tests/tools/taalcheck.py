@@ -1,5 +1,5 @@
 # taalcheck.py - heeft elke Nederlandse tekst een Engelse vertaling? (v142, 11 oktober 2026)
-# Zoekt alle sleutels: T('...') en vt('...') in de code, data-t / data-t-attr in de html (via Chromium, zonder
+# Zoekt alle sleutels: T('...'), vt('...') en vertaal('...') (v147: spellen) in de code, data-t / data-t-attr in de html (via Chromium, zonder
 # scripts: DOMParser), plus de vaste lijstjes die met T(variabele) vertaald worden (widgettitels, steden).
 # Vergelijkt met taal-en.js: ontbrekend = FOUT, overbodig = melding, invulplekken {..} en html-tags moeten
 # gelijk zijn, en in attributen geen ". Elke T( moet met een enkele '...'-tekst beginnen.
@@ -39,7 +39,7 @@ TOEGESTAAN = ('w.titel', 'stad.naam', 's)', 'nl,', 's, v)', 'r)', 'g.naam', "'le
 for p in BESTANDEN:
     s = open(os.path.join(MAP, p), encoding='utf-8').read()
     if p == 'taal.js': continue
-    for m in re.finditer(r"(?:(?<=window\.)|(?<![\w.$]))(T|vt)\(", s):
+    for m in re.finditer(r"(?:(?<=window\.)|(?<![\w.$]))(T|vt|vertaal)\(", s):  # vertaal: in spellen die T zelf gebruiken
         rest = s[m.end():]
         if rest.startswith("'"):
             k = re.match(r"'((?:[^'\\\n]|\\.)*)'", rest)

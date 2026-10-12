@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="nl" data-taal>
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="../huisregel.js?v=1"></script>
-<script src="../taal.js?v=5"></script>
+<script src="../taal.js?v=6"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Runner &amp; Gunner — 16bit</title>
 <link href="../lettertypen/press-start-2p.css?v=1" rel="stylesheet">
@@ -114,20 +114,20 @@
     <div class="laag" id="laag">
       <div>
         <h1>RUNNER &amp; GUNNER</h1>
-        <p>Links tikken springt, omlaag vegen glijdt, rechts tikken schiet.</p>
+        <p data-t>Links tikken springt, omlaag vegen glijdt, rechts tikken schiet.</p>
         <div class="keuze" id="keuze">
-          <button id="kRunner" aria-pressed="true"><b>RUNNER</b><small>Licht. Springt hoog. Schiet snel.</small></button>
-          <button id="kGunner" aria-pressed="false"><b>GUNNER</b><small>Zwaar. Lage sprong. Lange glijpartij.</small></button>
+          <button id="kRunner" aria-pressed="true"><b>RUNNER</b><small data-t>Licht. Springt hoog. Schiet snel.</small></button>
+          <button id="kGunner" aria-pressed="false"><b>GUNNER</b><small data-t>Zwaar. Lage sprong. Lange glijpartij.</small></button>
         </div>
         <button class="knop" id="startKnop">START</button>
       </div>
     </div>
   </div>
   <div class="bediening" id="bediening" aria-hidden="true">
-    <div class="zone" id="zSpring"><b>SPRING</b><small>tik = springen<br>nog eens = dubbel<br>omlaag vegen = glijden</small></div>
-    <div class="zone" id="zSchiet"><b>SCHIET</b><small>tik = schieten</small></div>
+    <div class="zone" id="zSpring"><b data-t>SPRING</b><small data-t>tik = springen<br>nog eens = dubbel<br>omlaag vegen = glijden</small></div>
+    <div class="zone" id="zSchiet"><b data-t>SCHIET</b><small data-t>tik = schieten</small></div>
   </div>
-  <p class="voet">Toetsen: <b>spatie</b> springen, twee keer voor dubbelsprong.
+  <p class="voet" data-t>Toetsen: <b>spatie</b> springen, twee keer voor dubbelsprong.
     <b>omlaag</b> glijden. <b>X</b> schieten. Schiet blokken kapot om erdoor te komen.</p>
 </div>
 
@@ -135,9 +135,11 @@
 <script>
 (function(){
 "use strict";
+// v147: teksten ook in het Engels (taal.js)
+var vertaal = window.T || function (s, v) { return String(s).replace(/\{(\w+)\}/g, function (m, k) { return (v && k in v) ? v[k] : m }) };
 var veld=document.getElementById("veld");
 if(!window.Phaser){
-  veld.innerHTML='<p class="fout">Phaser kon niet laden.</p>';return;
+  veld.innerHTML='<p class="fout">'+vertaal('Phaser kon niet laden.')+'</p>';return;
 }
 var laag=document.getElementById("laag"),startKnop=document.getElementById("startKnop");
 var kRunner=document.getElementById("kRunner"),kGunner=document.getElementById("kGunner");
@@ -665,7 +667,7 @@ var Spel=new Phaser.Class({
     }
 
     if(s.x<this.camX+8||s.y>HOOG+80)this.verliesLeven();
-    metersVak.textContent=meter+"M  "+this.muntTal+" MUNTEN";
+    metersVak.textContent=vertaal('{m}M  {n} MUNTEN',{m:meter,n:this.muntTal});
   },
 
   verliesLeven:function(){
@@ -686,9 +688,8 @@ var Spel=new Phaser.Class({
     this.scene.pause();
     laag.querySelector("h1").textContent="GAME OVER";
     scoreVak.textContent=String(this.score).padStart(7,"0");
-    laag.querySelector("p").textContent="SCORE "+String(this.score).padStart(7,"0")+
-      " — "+m+" meter, "+this.muntTal+" munten.";
-    startKnop.textContent="OPNIEUW";
+    laag.querySelector("p").textContent=vertaal('SCORE {score} — {m} meter, {n} munten.',{score:String(this.score).padStart(7,"0"),m:m,n:this.muntTal});
+    startKnop.textContent=vertaal('OPNIEUW');
     laag.hidden=false;startKnop.focus({preventScroll:true});
   }
 });

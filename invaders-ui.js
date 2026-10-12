@@ -1,11 +1,13 @@
 // invaders-ui.js - spel voor Fibro, losgetrokken uit chat.html.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
+// v147: teksten ook in het Engels (taal.js)
+const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v147)
 
 // Tekst veilig in HTML zetten (namen komen van andere gebruikers)
 const htmlVeilig = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
 export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
-  vriendNaam = vriendNaam || 'vriend'
+  vriendNaam = vriendNaam || T('vriend')
   isActief = isActief || (() => true)
   document.getElementById('spelTitelBar').textContent = '👾 Space Invaders'
   const inhoud = document.getElementById('spelInhoud')
@@ -15,13 +17,13 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
   inhoud.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;">
       <div style="display:flex;justify-content:space-between;width:${B}px;color:white;font-size:12px;padding:0 4px;">
-        <span>🚀 Jij: <b id="si-score-mij">0</b></span>
+        <span>🚀 ${T('Jij')}: <b id="si-score-mij">0</b></span>
         <span id="si-level" style="color:var(--accent);">Level 1</span>
         <span>👾 ${htmlVeilig(vriendNaam)}: <b id="si-score-vriend">0</b></span>
       </div>
       <canvas id="si-canvas" width="${B}" height="${H}" style="border-radius:10px;border:2px solid rgba(255,255,255,0.15);display:block;touch-action:none;"></canvas>
       <div id="si-status" style="color:white;font-size:13px;font-weight:600;min-height:18px;text-align:center;"></div>
-      <div style="color:rgba(255,255,255,0.4);font-size:11px;">← Tik links/rechts om te bewegen · Midden om te schieten</div>
+      <div style="color:rgba(255,255,255,0.4);font-size:11px;">${T('← Tik links/rechts om te bewegen · Midden om te schieten')}</div>
     </div>`
 
   const canvas = document.getElementById('si-canvas')
@@ -306,12 +308,12 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     cancelAnimationFrame(animFrame)
     teken()
     const totaalMij = mijnScore, totaalVriend = vriendScore
-    statusEl.textContent = totaalMij > totaalVriend ? '🎉 Jij wint! ' + totaalMij + ' vs ' + totaalVriend
-      : totaalMij < totaalVriend ? '😢 ' + vriendNaam + ' wint!'
-      : '🤝 Gelijkspel!'
+    statusEl.textContent = totaalMij > totaalVriend ? T('🎉 Jij wint! {ik} vs {vriend}', { ik: totaalMij, vriend: totaalVriend })
+      : totaalMij < totaalVriend ? T('😢 {naam} wint!', { naam: vriendNaam })
+      : T('🤝 Gelijkspel!')
     setTimeout(() => {
       const btn = document.createElement('button')
-      btn.textContent = '↻ Opnieuw'
+      btn.textContent = T('↻ Opnieuw')
       btn.style.cssText = 'background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:700;cursor:pointer;margin-top:8px;'
       btn.onclick = () => { spelKanaal.send({ type: 'broadcast', event: 'si-herstart', payload: {} }); herstart() }
       statusEl.after(btn)
@@ -420,11 +422,11 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
 
   // ── Start ──
   maakAliens()
-  statusEl.textContent = 'Start in 3...'
+  statusEl.textContent = T('Start in {n}...', { n: 3 })
   let tel = 3
   const startInterval = setInterval(() => {
     tel--
-    if (tel > 0) statusEl.textContent = 'Start in ' + tel + '...'
+    if (tel > 0) statusEl.textContent = T('Start in {n}...', { n: tel })
     else {
       clearInterval(startInterval)
       statusEl.textContent = ''

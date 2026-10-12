@@ -21,6 +21,8 @@
      tegen de computer.
 */
 
+// v147: teksten ook in het Engels (taal.js). Hier heet de vertaler 'vertaal': T is de tegelmaat.
+const vertaal = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 const FONT_URL = 'lettertypen/press-start-2p.css?v=1' // v118: eigen repo
 const KLANK_HZ = 22050
 
@@ -59,12 +61,12 @@ const BUREN = [[1, 0], [-1, 0], [0, 1], [0, -1]]
 // veld voor allebei precies even moeilijk is. 'start' is de richting waarin
 // de slang van de uitnodiger begint (standaard omhoog).
 const LEVELS = [
-  { naam: 'OPEN VELD', kleur: '#b44dff', muren: [] },
-  { naam: 'BLOKJES', kleur: '#3d7bff', muren: [[4, 7, 2, 2], [14, 7, 2, 2], [9, 3, 2, 2], [9, 13, 2, 2]] },
-  { naam: 'MIDDENMUUR', kleur: '#ffd23d', muren: [[3, 13, 6, 2]] },
-  { naam: 'KAMERS', kleur: '#7dff6a', muren: [[9, 3, 2, 8], [2, 13, 6, 2]] },
+  { naam: vertaal('OPEN VELD'), kleur: '#b44dff', muren: [] },
+  { naam: vertaal('BLOKJES'), kleur: '#3d7bff', muren: [[4, 7, 2, 2], [14, 7, 2, 2], [9, 3, 2, 2], [9, 13, 2, 2]] },
+  { naam: vertaal('MIDDENMUUR'), kleur: '#ffd23d', muren: [[3, 13, 6, 2]] },
+  { naam: vertaal('KAMERS'), kleur: '#7dff6a', muren: [[9, 3, 2, 8], [2, 13, 6, 2]] },
   { naam: 'ZIGZAG', kleur: '#ff8a3d', start: 'R', muren: [[0, 6, 13, 1], [7, 11, 13, 1]] },
-  { naam: 'DOOLHOF', kleur: '#e8f0ff', muren: [[6, 4, 8, 1], [2, 8, 1, 5], [17, 8, 1, 5], [6, 9, 3, 1], [11, 9, 3, 1], [8, 13, 4, 2]] },
+  { naam: vertaal('DOOLHOF'), kleur: '#e8f0ff', muren: [[6, 4, 8, 1], [2, 8, 1, 5], [17, 8, 1, 5], [6, 9, 3, 1], [11, 9, 3, 1], [8, 13, 4, 2]] },
 ]
 
 // ═══════════════ Hulpjes zonder spelstand ═══════════════
@@ -264,11 +266,11 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       <div class="scherm">
         <canvas class="doek"></canvas>
         <div class="laag startLaag">
-          <button class="knop groot kSpeel" type="button" aria-label="Start">▶</button>
-          <button class="knop kGeluid" type="button" aria-label="Geluid">🔊</button>
+          <button class="knop groot kSpeel" type="button" aria-label="${vertaal('Start')}">▶</button>
+          <button class="knop kGeluid" type="button" aria-label="${vertaal('Geluid')}">🔊</button>
         </div>
         <div class="laag eindLaag" hidden>
-          <button class="knop groot kOpnieuw" type="button" aria-label="Volgende ronde">↻</button>
+          <button class="knop groot kOpnieuw" type="button" aria-label="${vertaal('Volgende ronde')}">↻</button>
         </div>
       </div>
     </div>`
@@ -279,14 +281,14 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   const ctx = doek.getContext('2d')
   const startLaag = wrap.querySelector('.startLaag')
   const eindLaag = wrap.querySelector('.eindLaag')
-  if (!ctx) { wrap.innerHTML = '<p class="fout">Dit toestel kan het spel niet tekenen.</p>'; return }
+  if (!ctx) { wrap.innerHTML = '<p class="fout">' + vertaal('Dit toestel kan het spel niet tekenen.') + '</p>'; return }
 
   // ═══════════════ Spelstand ═══════════════
   // Samen spelen: wie ben ik, en wie beslist er
   const kanaalOk = !!(spelKanaal && typeof spelKanaal.on === 'function' && typeof spelKanaal.send === 'function')
   const leider = !!benIkSpeler1 || !kanaalOk
   const ik = leider ? 0 : 1, ander = 1 - ik
-  const NAAM = String(vriendNaam || 'je vriend').toUpperCase().slice(0, 12)
+  const NAAM = String(vriendNaam || vertaal('je vriend')).toUpperCase().slice(0, 12)
   const tegenNaam = kanaalOk ? NAAM : 'COMPUTER'
   const aiAan = [false, !kanaalOk]
 
@@ -978,7 +980,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     for (const i of [0, 1]) {
       const links = i === 0
       const x = links ? 8 : W - 8, al = links ? 'left' : 'right'
-      tekst(i === ik ? 'JIJ' : tegenNaam, x, 10, KLEUR[i], 6, al, false)
+      tekst(i === ik ? vertaal('JIJ') : tegenNaam, x, 10, KLEUR[i], 6, al, false)
       tekst(String(winst[i]), x, 24, KLEUR[i], 11, al, false)
       const ax = links ? x + 36 : x - 36
       tekenAppelOp(ax, 24, 0.62)
@@ -1012,9 +1014,9 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     ctx.restore()
     tekenAppelOp(150, y, 1.1)
     tekst('+1', 190, y + 1, BLAD, 11)
-    const regels = ['EET APPELS EN GROEI', 'BOTS NIET TEGEN MUREN', 'OF TEGEN EEN SLANG', 'WIE OVERBLIJFT WINT', 'ELKE RONDE EEN NIEUW LEVEL']
+    const regels = [vertaal('EET APPELS EN GROEI'), vertaal('BOTS NIET TEGEN MUREN'), vertaal('OF TEGEN EEN SLANG'), vertaal('WIE OVERBLIJFT WINT'), vertaal('ELKE RONDE EEN NIEUW LEVEL')]
     regels.forEach((r, n) => tekst(r, W / 2, py + 92 + n * 18, '#e9ddff', 7, 'center', false))
-    tekst('VEEG OF GEBRUIK DE PIJLTJES', W / 2, py + ph - 16, LEVELS[lv].kleur, 6, 'center', false)
+    tekst(vertaal('VEEG OF GEBRUIK DE PIJLTJES'), W / 2, py + ph - 16, LEVELS[lv].kleur, 6, 'center', false)
   }
 
   function tekenAftel() {
@@ -1031,7 +1033,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       const [hx, hy] = midden(s.lijf[0])
       const boven = s.dir !== 'D'
       const ty = boven ? hy - 22 : hy + 22
-      tekst('JIJ', hx, ty, s.kleur, 7)
+      tekst(vertaal('JIJ'), hx, ty, s.kleur, 7)
       ctx.fillStyle = s.kleur
       ctx.beginPath()
       if (boven) { ctx.moveTo(hx - 4, ty + 7); ctx.lineTo(hx + 4, ty + 7); ctx.lineTo(hx, ty + 12) }
@@ -1042,10 +1044,10 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
 
   function tekenEinde() {
     ctx.fillStyle = 'rgba(5,2,12,0.8)'; ctx.fillRect(0, HUD, W, H - HUD)
-    let kop = 'RONDE GESTOPT', kleur = '#e9ddff'
-    if (uitslag === ik) { kop = 'JIJ WINT!'; kleur = KLEUR[ik] }
-    else if (uitslag === ander) { kop = tegenNaam + ' WINT!'; kleur = KLEUR[ander] }
-    else if (uitslag === -1) kop = 'GELIJKSPEL!'
+    let kop = vertaal('RONDE GESTOPT'), kleur = '#e9ddff'
+    if (uitslag === ik) { kop = vertaal('JIJ WINT!'); kleur = KLEUR[ik] }
+    else if (uitslag === ander) { kop = vertaal('{naam} WINT!', { naam: tegenNaam }); kleur = KLEUR[ander] }
+    else if (uitslag === -1) kop = vertaal('GELIJKSPEL!')
     const groot = kop.length > 16 ? 10 : 12
     tekst(kop, W / 2, H * 0.24, kleur, groot)
     // de stand
@@ -1053,8 +1055,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     tekst(String(winst[0]), W / 2 - 44, sy, KLEUR[0], 24)
     tekst('-', W / 2, sy, '#e9ddff', 16, 'center', false)
     tekst(String(winst[1]), W / 2 + 44, sy, KLEUR[1], 24)
-    tekst(ik === 0 ? 'JIJ' : tegenNaam, W / 2 - 44, sy + 24, KLEUR[0], 6, 'center', false)
-    tekst(ik === 1 ? 'JIJ' : tegenNaam, W / 2 + 44, sy + 24, KLEUR[1], 6, 'center', false)
+    tekst(ik === 0 ? vertaal('JIJ') : tegenNaam, W / 2 - 44, sy + 24, KLEUR[0], 6, 'center', false)
+    tekst(ik === 1 ? vertaal('JIJ') : tegenNaam, W / 2 + 44, sy + 24, KLEUR[1], 6, 'center', false)
     // appels deze ronde
     const ay = H * 0.5
     for (const i of [0, 1]) {
@@ -1066,17 +1068,17 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     const volgende = rondeNr + 1
     const vlv = (volgende - 1) % LEVELS.length
     const vnr = vlv + 1 + Math.floor((volgende - 1) / LEVELS.length) * LEVELS.length
-    tekst('VOLGENDE: LEVEL ' + vnr, W / 2, H * 0.6, '#e9ddff', 7, 'center', false)
+    tekst(vertaal('VOLGENDE: LEVEL {n}', { n: vnr }), W / 2, H * 0.6, '#e9ddff', 7, 'center', false)
     tekst(LEVELS[vlv].naam, W / 2, H * 0.6 + 16, LEVELS[vlv].kleur, 7, 'center', false)
   }
 
   // Onder de uitleg en de eindstand: op wie we wachten.
   function tekenStatus() {
     let regel = '', tweede = ''
-    if (!kanaalOk) regel = 'OEFENEN TEGEN DE COMPUTER'
-    else if (!anderIsEr()) regel = 'WACHT OP ' + NAAM
-    else if (!leider) regel = NAAM + ' START HET SPEL'
-    if (kanaalOk && !leider && geluidAan && geluid.kan && !geluid.ontgrendeld) tweede = 'TIK HIER VOOR GELUID'
+    if (!kanaalOk) regel = vertaal('OEFENEN TEGEN DE COMPUTER')
+    else if (!anderIsEr()) regel = vertaal('WACHT OP {naam}', { naam: NAAM })
+    else if (!leider) regel = vertaal('{naam} START HET SPEL', { naam: NAAM })
+    if (kanaalOk && !leider && geluidAan && geluid.kan && !geluid.ontgrendeld) tweede = vertaal('TIK HIER VOOR GELUID')
     if (regel) tekst(regel, W / 2, H - 100, '#e9ddff', 7)
     if (tweede) tekst(tweede, W / 2, H - 84, BLAD, 7)
   }
@@ -1240,7 +1242,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     m.className = 'fout'
     m.style.cssText = 'position:absolute;inset:auto 8px 8px 8px;background:rgba(20,10,38,.95);' +
       'border:2px solid #ff4d6d;border-radius:10px;padding:10px;z-index:9'
-    m.textContent = 'Er ging iets mis: ' + (e && e.message ? e.message : e)
+    m.textContent = vertaal('Er ging iets mis: {fout}', { fout: e && e.message ? e.message : e })
     wrap.appendChild(m)
   }
 

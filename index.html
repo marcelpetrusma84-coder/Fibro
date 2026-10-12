@@ -2360,7 +2360,7 @@ async function init() {
   const bewaard = leesProfielCache(uid)
   if (bewaard) { window._profiel = bewaard; toonHero(bewaard) }
   // v132: alle kolommen behalve wallpaper_data (gemiddeld 1,5 MB; Home gebruikt die niet)
-  const KOLOMMEN = 'id,username,display_name,bio,mood,theme,avatar_url,created_at,updated_at,achtergrond_kleur,achtergrond_type,achtergrond_url,animatie,lettertype,accent_kleur,accent_kleur2,widgets,stickers,niveau,public_key,geblokkeerd,online_status,offline_emoji,offline_bericht,laatst_gezien,avatar_data,muziek_titel,muziek_artiest,profiel_quote,widget_layout,is_plus,is_moderator,toon_online'
+  const KOLOMMEN = 'id,username,display_name,bio,mood,theme,avatar_url,created_at,updated_at,achtergrond_kleur,achtergrond_type,achtergrond_url,animatie,lettertype,accent_kleur,accent_kleur2,widgets,stickers,niveau,public_key,geblokkeerd,online_status,offline_emoji,offline_bericht,laatst_gezien,avatar_data,muziek_titel,muziek_artiest,profiel_quote,widget_layout,is_plus,is_moderator,toon_online,taal'
   const vers = supabase.from('profiles').select(KOLOMMEN).eq('id', uid).single()
     .then(r => (r.error && r.error.code === '42703') ? supabase.from('profiles').select('*').eq('id', uid).single() : r) // kolom bestaat niet (meer)
     .then(({ data: profiel }) => {
@@ -2368,6 +2368,12 @@ async function init() {
     window._profiel = profiel
     toonHero(profiel)
     bewaarProfielCache(uid, profiel)
+    // v148: je taal staat ook in je profiel, zodat een pushmelding in jouw taal komt (stuur-push
+    // kiest de tekst, zie sql/taal.sql). Alleen schrijven als hij anders is dan wat er staat.
+    if ('taal' in profiel && profiel.taal !== T.taal && !profiel.geblokkeerd) {
+      supabase.from('profiles').update({ taal: T.taal }).eq('id', uid)
+        .then(({ error }) => { if (!error) { profiel.taal = T.taal; bewaarProfielCache(uid, profiel) } }, () => {})
+    }
     const moodEl = document.querySelector('#profiel-sectie .widget-blok[data-id="mood"] .widget-inhoud')
     if (moodEl) renderProfiel('mood', moodEl)
   }, () => {})

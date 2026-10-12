@@ -46,7 +46,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          taal4 = Engels portie 3: Profiel, T('context|tekst') (testscript_taal4.py),
                          taal5 = Engels portie 4: Mijn gegevens, account verwijderen, Face ID-herstel, moderatie,
                                  spelen tegen de computer, Over Fibro, balkjes (testscript_taal5.py),
-                         taal6 = Engels portie 5: de spellen zelf (testscript_taal6.py))
+                         taal6 = Engels portie 5: de spellen zelf (testscript_taal6.py),
+                         push = pushmeldingen in de taal van de ontvanger: Home zet profiles.taal (testscript_push.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -173,6 +174,13 @@ tools/proef44.py         de spellen in twee talen (v147): elk spel wordt echt ge
                          Nederlands precies gelijk aan de oude code; Engels zonder Nederlandse woorden of fouten.
                          Duurt lang (een uur of zo): elk spel drie keer. TOON=1 laat alle teksten zien.
                          python3 -I proef44.py <scratch met tools/server.py> <map> <poort> [oude map|-] [filter]
+tools/proef45.py         Home zet je taal in je profiel (v148, profiles.taal uit sql/taal.sql): alleen als hij anders
+                         is, niet bij een geblokkeerd account, en zonder de kolom (SQL niet gedraaid) niets.
+                         python3 -I proef45.py <scratch met tools/server.py> <map> <poort>
+tools/proef46.mjs        de functie stuur-push (supabase/functions/stuur-push/index.ts, v148) in Node met een
+                         nagemaakte Supabase: inlogpas verplicht, alleen naar een vriend, geen zelfgekozen tekst,
+                         de tekst in de taal van de ontvanger. Nodig: npm install typescript (in een eigen map).
+                         node proef46.mjs <index.ts> <map met node_modules>
 tools/taalcheck.py       heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

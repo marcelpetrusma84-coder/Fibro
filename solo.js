@@ -389,7 +389,7 @@ export const SOLO_SPELLEN = {
   // Ghost Tag heeft zelf al een computerspookje: zonder kanaal speel je daartegen.
   // gewoneScherpte: op telefoons niet op dubbele scherpte tekenen (4x minder beeldpunten).
   pacman:       { naam: 'Ghost Tag',     icon: '👻', bestand: './ecto-ui.js?v=147',    zonderKanaal: true, gewoneScherpte: true, meetFps: true },
-  breakout:     { naam: 'Block It',      icon: '🟪', bestand: './blockit-ui.js?v=147',  bot: stilBot, arcade: true },
+  breakout:     { naam: 'Block It',      icon: '🟪', bestand: './blockit-ui.js?v=148',  bot: stilBot, arcade: true },
   swarm:        { naam: 'The Swarm',     icon: '🪲', bestand: './swarm-ui.js?v=147',    bot: stilBot, arcade: true },
   // Twin Snakes heeft net als Ghost Tag al een eigen computerslang.
   pinball:      { naam: 'Twin Snakes',   icon: '🐍', bestand: './twin-snakes-ui.js?v=147', zonderKanaal: true },

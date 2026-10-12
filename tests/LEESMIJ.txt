@@ -47,7 +47,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          taal5 = Engels portie 4: Mijn gegevens, account verwijderen, Face ID-herstel, moderatie,
                                  spelen tegen de computer, Over Fibro, balkjes (testscript_taal5.py),
                          taal6 = Engels portie 5: de spellen zelf (testscript_taal6.py),
-                         push = pushmeldingen in de taal van de ontvanger: Home zet profiles.taal (testscript_push.py))
+                         push = pushmeldingen in de taal van de ontvanger: Home zet profiles.taal (testscript_push.py),
+                         blockit = Block It: lading blijft een getal, '+n RIJEN!' in het Engels (testscript_blockit.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)

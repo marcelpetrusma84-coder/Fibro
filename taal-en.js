@@ -1,10 +1,11 @@
-// taal-en.js - de Engelse woordenlijst van Fibro (v6, 11 oktober 2026, v147)
+// taal-en.js - de Engelse woordenlijst van Fibro (v7, 13 oktober 2026, v148)
 // Wordt alleen geladen als de taal Engels is (zie taal.js). Links staat de Nederlandse tekst precies zoals
 // in de code of de html (de sleutel), rechts de Engelse. {n}, {naam} enz. zijn invulplekken; {app} is de
 // naam van de app (staat op een plek: APP in taal.js). Ontbreekt een zin, dan blijft hij Nederlands.
 // v142: inloggen, uitnodiging, Home met widgets en menu. v143: Vrienden, profiel van een vriend, blokkeren, meldingen, bellen. v144: Chat. v145: Profiel.
 // v146: Mijn gegevens, account verwijderen, Face ID-herstel, moderatie, spelen tegen de computer, Over Fibro.
 // v147: de spellen zelf (alle twaalf), ook de losse Runner & Gunner-pagina.
+// v148: Block It '+n RIJEN!'.
 window.FIBRO_EN = {
 
 // ---- Overal ----
@@ -1171,4 +1172,8 @@ window.FIBRO_EN = {
 // ---- Schaken: begin (schaken-ui) ----
   "Jouw beurt (wit begint)": "Your turn (white starts)",
   "Wachten op {naam} (wit begint)...": "Waiting for {naam} (white starts)...",
+
+// ---- Block It: rijen erbij (blockit-ui, v148) ----
+  "+{n} RIJ!": "+{n} ROW!",
+  "+{n} RIJEN!": "+{n} ROWS!",
 }

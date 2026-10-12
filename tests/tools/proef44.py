@@ -1,6 +1,6 @@
 import subprocess, sys, time, json, os, random, re
 from playwright.sync_api import sync_playwright
-# proef44: de spellen in twee talen (v147). Elk spel wordt echt gespeeld, met een vaste klok en een vaste
+# proef44: de spellen in twee talen (v147; v148: Block It krijgt rijen van de vriend). Elk spel wordt echt gespeeld, met een vaste klok en een vaste
 # Math.random, zodat oud en nieuw precies hetzelfde spel spelen. Tekst = zichtbare tekst + title/aria-label
 # + alles wat met fillText/strokeText op een canvas getekend wordt, verzameld over het hele spel.
 #  - Nederlands: precies dezelfde teksten als de oude code. Geen nieuwe fouten.
@@ -88,7 +88,8 @@ SPELLEN = [
     ('samen: neo paddle host', 'spelproef.html?mod=pong-ui.js&rol=host', [('tijd', 3000)]),
     ('samen: flapper host', 'spelproef.html?mod=flappy-ui.js&rol=host', [('tijd', 1500), ('tik', 4), ('tijd', 1500), ('stuur', 'fb-dood', {})] + [('tijd', 1500)] * 10),
     ('samen: space invaders host', 'spelproef.html?mod=invaders-ui.js&rol=host', [('tijd', 1000)] + LANG * 3),
-    ('samen: block it host', 'spelproef.html?mod=blockit-ui.js&rol=host', [('tijd', 1500), ('stuur', 'bi-hier', {}), ('tijd', 500), ('knop', 'Twee velden|Two boards')] + LANG * 4),
+    ('samen: block it host', 'spelproef.html?mod=blockit-ui.js&rol=host', [('tijd', 1500), ('stuur', 'bi-hier', {}), ('tijd', 500), ('knop', 'Twee velden|Two boards'), ('tijd', 4000),
+        ('stuur', 'bi-aanval', {'rijen': 1}), ('tijd', 300), ('stuur', 'bi-aanval', {'rijen': 2}), ('tijd', 300)] + LANG * 4),  # v148: rijen van de vriend
     ('samen: block it host gedeeld', 'spelproef.html?mod=blockit-ui.js&rol=host', [('tijd', 1500), ('stuur', 'bi-hier', {}), ('tijd', 500), ('knop', 'eigen kleuren|own colours')] + [('tijd', 1500), ('tik', 2)] * 10 + LANG * 4),
     ('samen: block it gast', 'spelproef.html?mod=blockit-ui.js&rol=gast', [('tijd', 1500)]),
     ('samen: the swarm host', 'spelproef.html?mod=swarm-ui.js&rol=host', [('tijd', 1000), ('knop', 'sw-verhaal'), ('tijd', 500), ('stuur', 'sw-cmd', {'c': 'verhaal'}), ('tijd', 500)] + [('tijd', 1500), ('tik', 3)] * 20 + LANG * 4),

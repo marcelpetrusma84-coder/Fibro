@@ -6,6 +6,7 @@
 // Hoe groter het vierkant dat je weghaalt, hoe groter die explosie.
 // Bomstenen zitten willekeurig in de wachtrij en ontploffen zodra ze landen.
 // v147: teksten ook in het Engels (taal.js)
+// v148: de lading van een steen blijft een getal (er stond 'CRUSH true' en 'explosie true'); '+n RIJEN!' ook in het Engels
 const vertaal = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v147); T is hier al een steenvorm
 
 // Tekst veilig in HTML zetten (namen komen van andere gebruikers)
@@ -161,7 +162,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
 
     function maakStuk(data, x) {
         return {
-            vorm: data.vorm, k: data.k, crush: !!data.crush, bom: !!data.bom,
+            vorm: data.vorm, k: data.k, crush: Number(data.crush) || 0, bom: !!data.bom,
             cellen: VORMEN[data.vorm].map(c => [c[0], c[1]]), x, y: 0
         }
     }
@@ -419,7 +420,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
             stoot = Math.max(stoot, 0.6)
             geluid.rommel()
             if (rooster[0].some(c => c !== null)) overloop = true
-                zweef(KOL / 2, RIJ - 3, '+' + n + (n === 1 ? ' RIJ!' : ' RIJEN!'), '#ff4d6d', 1.1)
+                zweef(KOL / 2, RIJ - 3, n === 1 ? vertaal('+{n} RIJ!', { n }) : vertaal('+{n} RIJEN!', { n }), '#ff4d6d', 1.1)
                 stuurVeld()
                 if (overloop) verloren()
     }

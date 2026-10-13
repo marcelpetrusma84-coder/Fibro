@@ -1,5 +1,5 @@
 // proef47: de functie get-turn-credentials (v149) met een nagemaakte Supabase, in Node.
-// Zonder TURN_GEHEIM 503, zonder/valse inlogpas 401, geblokkeerd 403, en een goed pasje:
+// Zonder (bruikbaar) TURN_GEHEIM 503 (alleen a-z telt, v149b), zonder/valse inlogpas 401, geblokkeerd 403, en een goed pasje:
 // gebruikersnaam <verloopt>:<uid> (24 uur), wachtwoord = base64(HMAC-SHA1(geheim, gebruikersnaam)),
 // nagerekend met node:crypto. Met PROEF_PASJE=<bestand> schrijft hij een goed pasje weg, zodat
 // een echte coturn het kan narekenen (turnutils_uclient -u <gebruikersnaam> -w <wachtwoord>).
@@ -17,7 +17,7 @@ js = js.replace(/^import \{ createClient \} from "npm:@supabase\/supabase-js@2";
 if (/^import /m.test(js)) throw new Error('import niet vervangen')
 
 const A = 'aaaaaaaa-0000-0000-0000-000000000001', G = 'gggggggg-0000-0000-0000-000000000002', Z = 'zzzzzzzz-0000-0000-0000-000000000003'
-const GEHEIM = 'proefgeheim-niet-echt-0123456789'
+const GEHEIM = 'proefgeheimnietechtabcdefgh'
 const DB = {
   tokens: { 'pas-a': A, 'pas-g': G, 'pas-z': Z },
   profiles: [{ id: A, username: 'Bram', geblokkeerd: false }, { id: G, username: 'Lotte', geblokkeerd: true }],
@@ -80,6 +80,12 @@ await proef('goed pasje (POST, zoals supabase.functions.invoke)', 'pas-a', u => 
 await proef('account zonder profiel: wel een pasje', 'pas-z', u => u.status === 200 && u.data.iceServers[0].username.endsWith(':' + Z))
 env.TURN_GEHEIM = '  ' + GEHEIM + '\n'
 await proef('geheim met spaties/enter eromheen telt als hetzelfde', 'pas-a', u => u.status === 200 && u.data.iceServers[0].credential === hmac(GEHEIM, u.data.iceServers[0].username))
+env.TURN_GEHEIM = 'Proef geheim\u200b niet ECHT abcd efgh\r\n'
+await proef('hoofdletters, spaties, onzichtbare tekens: alleen a-z telt', 'pas-a', u => u.status === 200 && u.data.iceServers[0].credential === hmac(GEHEIM, u.data.iceServers[0].username))
+env.TURN_GEHEIM = 'proefgeheimx'
+await proef('te kort geheim (minder dan 16 letters): 503', 'pas-a', u => u.status === 503 && !u.data.iceServers && vragen === 0)
+env.TURN_GEHEIM = '1234-5678 9012 3456 7890'
+await proef('geheim zonder letters: 503', 'pas-a', u => u.status === 503 && !u.data.iceServers)
 env.TURN_GEHEIM = GEHEIM
 profielFout = true
 await proef('database-fout: 500, geen pasje', 'pas-a', u => u.status === 500 && !u.data.iceServers)

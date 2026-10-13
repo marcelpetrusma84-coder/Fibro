@@ -11,7 +11,10 @@
 // Alleen een ingelogde gebruiker krijgt een pasje, een geblokkeerd account niet.
 // Het geheim staat als secret TURN_GEHEIM in Supabase (Edge Functions -> Secrets) en op de server
 // (/etc/turnserver.conf, static-auth-secret), nooit in de repo.
-// Zonder TURN_GEHEIM: status 503; de app belt dan alleen rechtstreeks (STUN), zoals zonder TURN.
+// Het geheim bestaat alleen uit kleine letters a-z. Van TURN_GEHEIM telt alleen dat: hoofdletters
+// worden klein, en spaties, enters en andere tekens die er bij het overtypen of plakken op een
+// telefoon in sluipen, tellen niet mee (13 okt: drie keer overtypen ging mis).
+// Zonder (bruikbaar) TURN_GEHEIM: status 503; de app belt dan alleen rechtstreeks (STUN).
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 // Waar de postbode staat. Komt er een domein bij (TLS op 443), dan hier een regel
@@ -50,8 +53,8 @@ async function maakWachtwoord(geheim: string, gebruikersnaam: string) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const geheim = (Deno.env.get("TURN_GEHEIM") || "").trim();
-    if (!geheim) return antwoord({ ok: false, reden: "server nog niet ingesteld" }, 503);
+    const geheim = (Deno.env.get("TURN_GEHEIM") || "").toLowerCase().replace(/[^a-z]/g, "");
+    if (geheim.length < 16) return antwoord({ ok: false, reden: "server nog niet ingesteld" }, 503);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL"),

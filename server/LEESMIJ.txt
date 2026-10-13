@@ -57,13 +57,25 @@ Het geheim en de pasjes
 -----------------------
 - Het geheim staat op twee plekken: /etc/turnserver.conf (static-auth-secret) en als secret
   TURN_GEHEIM in Supabase (Edge Functions -> Secrets). Nooit in de repo of in een chat.
+- Het geheim bestaat alleen uit kleine letters a-z (sinds 13 okt: 32 letters uit
+  abcdefghkpqstxyz, geen letters die op elkaar lijken). get-turn-credentials gebruikt van
+  TURN_GEHEIM alleen de letters a-z (hoofdletters worden klein; spaties, enters en onzichtbare
+  tekens tellen niet), zodat overtypen of plakken op een telefoon minder snel misgaat.
+  Supabase kan alleen op de telefoon; het geheim gaat daar met de hand (of Live Tekst) heen.
+  Nieuw geheim maken + laten zien tot Enter, dan alleen de vingerafdruk:
+    NIEUW=$(head -c 4000 /dev/urandom | tr -dc 'abcdefghkpqstxyz' | head -c 32)
+    sudo sed -i "s/^static-auth-secret=.*/static-auth-secret=$NIEUW/" /etc/turnserver.conf
+    sudo systemctl restart coturn; clear; echo "$NIEUW"; read -r; clear
+    echo "VINGERAFDRUK: $(printf '%s' "$NIEUW" | sha256sum | cut -c1-12)"; unset NIEUW
 - supabase/functions/get-turn-credentials maakt voor een ingelogde gebruiker een pasje:
   gebruikersnaam <verloopt>:<uid> (24 uur geldig), wachtwoord base64(HMAC-SHA1(geheim, naam)).
 - Geheim vervangen: op de server de regel static-auth-secret aanpassen + coturn herstarten,
   en tegelijk TURN_GEHEIM in Supabase. Tot beide gelijk zijn, kan niemand via de postbode.
 - Vergelijken zonder het geheim te laten zien: Supabase toont bij een secret een "digest"
-  (SHA-256). Op de server:
+  (gewone SHA-256 van de waarde zoals ingevuld; nagekeken met abc -> ba7816bf...). Op de server:
     sudo grep -oP '^static-auth-secret=\K.+' /etc/turnserver.conf | tr -d '\n' | sha256sum
+  Gelijk = precies goed ingevuld. Ongelijk kan toch werken (hoofdletter, spatie: telt niet);
+  de echte proef is een pasje van de functie dat coturn accepteert.
 
 Nakijken
 --------

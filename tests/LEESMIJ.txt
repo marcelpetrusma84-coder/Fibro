@@ -182,7 +182,14 @@ tools/proef46.mjs        de functie stuur-push (supabase/functions/stuur-push/in
                          nagemaakte Supabase: inlogpas verplicht, alleen naar een vriend, geen zelfgekozen tekst,
                          de tekst in de taal van de ontvanger. Nodig: npm install typescript (in een eigen map).
                          node proef46.mjs <index.ts> <map met node_modules>
-tools/taalcheck.py       heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
+tools/proef47.mjs        de functie get-turn-credentials (v149, eigen TURN-server) in Node met een nagemaakte
+                         Supabase: zonder TURN_GEHEIM 503, inlogpas verplicht, geblokkeerd 403, pasje
+                         <verloopt>:<uid> (24 uur) met wachtwoord base64(HMAC-SHA1(geheim, gebruikersnaam)),
+                         nagerekend met node:crypto. PROEF_PASJE=<bestand> schrijft het pasje weg; daarmee kan
+                         een echte coturn het narekenen (apt install coturn; turnserver -c <conf met hetzelfde
+                         geheim>; turnutils_uclient -u <gebruikersnaam> -w <wachtwoord> -y <adres>).
+                         node proef47.mjs <index.ts> <map met node_modules>
+tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.
                          python3 -I taalcheck.py <map> <poort> <bestand...>

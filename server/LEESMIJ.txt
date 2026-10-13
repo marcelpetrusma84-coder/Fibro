@@ -1,0 +1,89 @@
+Eigen TURN/STUN-server voor Fibro ("de postbode bij het hek") - opgezet 13 oktober 2026
+=====================================================================================
+
+Waarvoor: als twee toestellen niet rechtstreeks met elkaar kunnen praten (gastennetwerk,
+streng mobiel netwerk), geeft de TURN-server de versleutelde gegevens door (bellen, sync,
+foto via p2p). STUN (de "spiegel") vertelt een toestel zijn buitenadres. Beide doet coturn.
+Op de server staan geen berichten, foto's of accounts.
+
+De server
+---------
+- TransIP VPS V1 (1 vCPU, 1 GB, 100 GB NVMe), EUR 5 p/m excl. btw, geen extra's.
+- Ubuntu 26.04 LTS. IPv4 136.144.154.200, IPv6 2a01:7c8:fff7:61:5054:ff:febf:4d50.
+- Inloggen alleen met de SSH-sleutel van de Deck (~/.ssh/id_ed25519, met wachtwoordzin):
+    ssh marcelpetrusma@136.144.154.200
+  Wachtwoord-login staat uit (zo geleverd door TransIP), sudo zonder wachtwoord.
+- Nog geen domein. Komt er een domein bij: TLS op 443 (zie onder).
+
+Zo is hij ingesteld (in deze volgorde, op de server)
+----------------------------------------------------
+1. Bijwerken en herstarten:
+     sudo apt-get update && sudo env DEBIAN_FRONTEND=noninteractive apt-get -y \
+       -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold full-upgrade
+     sudo reboot
+2. Automatische updates, met 's nachts een herstart als dat nodig is (03:30 servertijd = UTC):
+     /etc/apt/apt.conf.d/20auto-upgrades:
+       APT::Periodic::Update-Package-Lists "1";
+       APT::Periodic::Unattended-Upgrade "1";
+     /etc/apt/apt.conf.d/52fibro-upgrades:
+       Unattended-Upgrade::Automatic-Reboot "true";
+       Unattended-Upgrade::Automatic-Reboot-Time "03:30";
+       Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+       Unattended-Upgrade::Remove-Unused-Dependencies "true";
+     sudo systemctl enable --now unattended-upgrades apt-daily.timer apt-daily-upgrade.timer
+3. De muur (ufw):
+     sudo ufw default deny incoming && sudo ufw default allow outgoing
+     sudo ufw limit 22/tcp comment 'ssh'
+     sudo ufw allow 3478/udp comment 'turn'
+     sudo ufw allow 3478/tcp comment 'turn'
+     sudo ufw allow 49152:49999/udp comment 'turn-relay'
+     sudo ufw --force enable
+   (49152-49999 moet gelijk blijven aan min-port/max-port in turnserver.conf.)
+   De VPS-firewall in het controlepaneel van TransIP is (nog) niet gebruikt; zet je die aan,
+   dan moeten daar dezelfde poorten open.
+4. coturn (4.6.1 uit Ubuntu):
+     sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y coturn && sudo systemctl stop coturn
+5. Instellingen: server/turnserver.conf uit deze repo (zonder geheim) naar de server
+   (vanaf de Deck: scp ~/Fibro/server/turnserver.conf marcelpetrusma@136.144.154.200:), dan op de
+   server het geheim erbij en op zijn plek (eigenaar root, groep turnserver, 640). Een bestaand
+   geheim blijft hetzelfde; het origineel van Ubuntu staat in /etc/turnserver.conf.origineel:
+     GEHEIM=$(sudo grep -oP '^static-auth-secret=\K.+' /etc/turnserver.conf)
+     [ -n "$GEHEIM" ] || GEHEIM=$(openssl rand -hex 32)
+     { cat turnserver.conf; echo "static-auth-secret=$GEHEIM"; } | sudo tee /etc/turnserver.conf.nieuw >/dev/null
+     sudo chown root:turnserver /etc/turnserver.conf.nieuw && sudo chmod 640 /etc/turnserver.conf.nieuw
+     sudo mv /etc/turnserver.conf.nieuw /etc/turnserver.conf && sudo systemctl restart coturn; unset GEHEIM
+
+Het geheim en de pasjes
+-----------------------
+- Het geheim staat op twee plekken: /etc/turnserver.conf (static-auth-secret) en als secret
+  TURN_GEHEIM in Supabase (Edge Functions -> Secrets). Nooit in de repo of in een chat.
+- supabase/functions/get-turn-credentials maakt voor een ingelogde gebruiker een pasje:
+  gebruikersnaam <verloopt>:<uid> (24 uur geldig), wachtwoord base64(HMAC-SHA1(geheim, naam)).
+- Geheim vervangen: op de server de regel static-auth-secret aanpassen + coturn herstarten,
+  en tegelijk TURN_GEHEIM in Supabase. Tot beide gelijk zijn, kan niemand via de postbode.
+- Vergelijken zonder het geheim te laten zien: Supabase toont bij een secret een "digest"
+  (SHA-256). Op de server:
+    sudo grep -oP '^static-auth-secret=\K.+' /etc/turnserver.conf | tr -d '\n' | sha256sum
+
+Nakijken
+--------
+- Draait hij?           systemctl is-active coturn
+- Logboek:              sudo journalctl -u coturn -n 50 --no-pager
+- Luistert hij?         sudo ss -lunpt | grep turnserver
+- Muur:                 sudo ufw status verbose
+- Proef vanaf een pc: op de server een testpasje van 1 uur maken en de testregel in de
+  Chrome-console plakken (about:blank, Ctrl+Shift+J). Goed = "relay/udp":"136.144.154.200".
+    U="$(( $(date +%s) + 3600 )):test"
+    P=$(printf '%s' "$U" | openssl dgst -sha1 -hmac "$(sudo grep -oP '^static-auth-secret=\K.+' /etc/turnserver.conf)" -binary | base64)
+    (testregel: new RTCPeerConnection met iceServers turn:136.144.154.200:3478?transport=udp/tcp,
+     username U, credential P; createDataChannel, createOffer, setLocalDescription, en de
+     kandidaten (type/relayProtocol) na 6 s laten zien.)
+  13 okt vanaf de Deck (thuis): relay/udp en relay/tcp 136.144.154.200, srflx via eigen STUN.
+
+Later: domein en TLS op 443
+---------------------------
+Voor de strengste netwerken (alleen 443 open): domein bij TransIP, A-record turn.<domein>
+naar 136.144.154.200, certificaat met Let's Encrypt (certbot), in turnserver.conf no-tls weg
+en tls-listening-port=443, cert=..., pkey=..., ufw allow 443/tcp, en in
+get-turn-credentials de regel "turns:turn.<domein>:443?transport=tcp" erbij. Een
+certificaat moet coturn kunnen lezen (groep turnserver) en na verlenging herstart worden.

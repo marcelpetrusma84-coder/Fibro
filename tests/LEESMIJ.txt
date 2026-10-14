@@ -196,6 +196,13 @@ tools/proef48.py         ice-config.js v149: spiegel (STUN) alleen de eigen serv
                          (server/turnserver.conf) met een pasje uit het geheugen. Nep-functie rekent het pasje
                          net zo uit. Oude map als controle: 6 van 20. Nodig: apt-get install coturn.
                          python3 -I proef48.py <map> <scratch>
+tools/proef49.py         videobellen (v150) met de echte bellen.html en bellen.js: camera in HD (1280x720, was 640x480;
+                         verstuurd groeit mee met de verbinding, in de werkmap na +-40 s 1280x720), geen (vrije) camera
+                         = verder met alleen geluid + melding (NL/EN), geen leeg eigen-beeldvakje, en je ziet de ander
+                         wel (beller vraagt dan om video van de ander: recvonly), beeld van de ander andersom (rechtop op
+                         breed of omgekeerd) = heel beeld (contain), microfoon geweigerd = melding zoals vroeger. Camera's:
+                         Chromium nep-camera, rechtop canvas-camera, of geen. Oude map als controle: 6 van 17.
+                         python3 -I proef49.py <map>
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

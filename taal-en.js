@@ -491,6 +491,7 @@ window.FIBRO_EN = {
   "Videobellen...": "Video calling...",
   "Aan het bellen...": "Calling...",
   "Geen toegang tot microfoon/camera.": "No access to the microphone/camera.",
+  "Geen camera beschikbaar: je belt met alleen geluid.": "No camera available: you're calling with sound only.",
 
 // ---- Chat (chat.html, reacties.js, reply.js) ----
   "Fibro — Chat": "{app} — Chat",

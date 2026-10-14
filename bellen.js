@@ -1,6 +1,7 @@
 // bellen.js — WebRTC P2P audio/video bellen via Supabase Realtime signaling
 // Gebruikt het bewezen spel-patroon: gedeeld kanaal met gesorteerde IDs
 // v143: meldingen ook in het Engels (taal.js)
+// v150: camera in HD (1280x720) als dat kan, en zonder (vrije) camera verder met alleen geluid
 import { supabase } from './supabase.js?v=95'
 import { ICE_SERVERS, iceReady } from './ice-config.js?v=149'
 import { houOpen } from './lijntjes.js?v=1'
@@ -17,12 +18,32 @@ let onOproepCallback = null
 let onEindCallback = null
 let onVerbondenCallback = null
 let onVideoStatusCallback = null
+let onGeenCameraCallback = null
 let videoActiefLokaal = false
 let videoSender = null
 let geinitialiseerd = false
 let gesprekKlaar = null   // belofte: klaar zodra het gesprekskanaal echt open is
 let iceBuffer = []        // ICE-gegevens die binnenkomen voordat offer/answer verwerkt is
+let videoGewenst = false  // v150: met video gebeld/opgenomen (ook als de eigen camera niet lukte)
 const BELLEN_VERSIE = 105 // gaat mee in elk signaal: zo toont het log welke versie de ander draait
+
+// v150: zonder wens gaf de browser meestal 640x480: wazig op een groot scherm. 'ideal' = als het kan.
+const CAMERA = { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30, max: 30 } }
+const GELUID = { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+
+// Microfoon (en camera). Lukt de camera niet (geen camera, of hij is in gebruik), dan verder met
+// alleen geluid in plaats van het hele gesprek te stoppen (v150, fout 21). De ander kan wel video sturen.
+async function haalMicEnCamera(video) {
+  try {
+    return await navigator.mediaDevices.getUserMedia({ audio: GELUID, video: video ? CAMERA : false })
+  } catch (e) {
+    if (!video) throw e
+    console.warn('[bellen] camera lukt niet (' + (e && e.name) + '), verder met alleen geluid')
+    const s = await navigator.mediaDevices.getUserMedia({ audio: GELUID, video: false })
+    if (onGeenCameraCallback) { try { onGeenCameraCallback() } catch (er) {} }
+    return s
+  }
+}
 
 // Soort ICE-adres uit een kandidaat halen: host (eigen netwerk), srflx (via de router), relay (via TURN)
 function kandidaatSoort(k) {
@@ -44,6 +65,7 @@ export function initBellen(userId, callbacks = {}) {
   onEindCallback = callbacks.onEind || null
   onVerbondenCallback = callbacks.onVerbonden || null
   onVideoStatusCallback = callbacks.onVideoStatus || null
+  onGeenCameraCallback = callbacks.onGeenCamera || null
   geinitialiseerd = true
   luisterNaarUitnodigingen()
 }
@@ -165,8 +187,9 @@ export async function belOp(naarVriendId, video = false, spelModus = false) {
   await iceReady // TURN-servers eerst binnen laten komen
   vriendId = naarVriendId
   isInitiator = true
+  videoGewenst = !!video
   try {
-    lokaleStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video })
+    lokaleStream = await haalMicEnCamera(video)
   } catch(e) { alert(window.T ? window.T('Geen toegang tot microfoon/camera.') : 'Geen toegang tot microfoon/camera.'); return false }
   const lokaalEl = document.getElementById('lokaalMedia')
   if (lokaalEl) lokaalEl.srcObject = lokaleStream
@@ -190,8 +213,9 @@ export async function belOp(naarVriendId, video = false, spelModus = false) {
 
 export async function accepteerOproep(video = false) {
   await iceReady // TURN-servers eerst binnen laten komen
+  videoGewenst = !!video
   try {
-    lokaleStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video })
+    lokaleStream = await haalMicEnCamera(video)
   } catch(e) { alert(window.T ? window.T('Geen toegang tot microfoon/camera.') : 'Geen toegang tot microfoon/camera.'); return false }
   // Zorg dat het gesprekkanaal echt open is (bij paginawissel kan het nog ontbreken,
   // en bij een spel is het misschien net pas geopend)
@@ -265,6 +289,8 @@ function maakPeerConnection() {
 
 async function maakEnStuurOffer() {
   maakPeerConnection()
+  // Met video gebeld maar de eigen camera lukte niet: toch om video van de ander vragen (v150)
+  if (videoGewenst && lokaleStream && !lokaleStream.getVideoTracks().length) peerConnection.addTransceiver('video', { direction: 'recvonly' })
   const offer = await peerConnection.createOffer()
   await peerConnection.setLocalDescription(offer)
   await stuurSignaal('offer', offer)
@@ -293,7 +319,7 @@ export async function schakelVideo(aanzetten) {
   if (lokaleStream === null || peerConnection === null) return false
   try {
     if (aanzetten) {
-      const videoStream = await navigator.mediaDevices.getUserMedia({ video: true })
+      const videoStream = await navigator.mediaDevices.getUserMedia({ video: CAMERA })
       const videoTrack = videoStream.getVideoTracks()[0]
       const oudeVideo = lokaleStream.getVideoTracks()[0]
       if (oudeVideo) { lokaleStream.removeTrack(oudeVideo); oudeVideo.stop() }
@@ -357,6 +383,7 @@ function beeindigGesprek(doorOns) {
   if (lokaalEl) lokaalEl.srcObject = null
   vriendId = null
   isInitiator = false
+  videoGewenst = false
   videoSender = null
   videoActiefLokaal = false
   if (onEindCallback) onEindCallback(doorOns)
@@ -404,13 +431,13 @@ export async function wisselCamera() {
     const inst = oud.getSettings ? oud.getSettings() : {}
     const pogingen = []
     // Telefoon: voor <-> achter
-    if (inst.facingMode === 'user') pogingen.push({ facingMode: { exact: 'environment' } })
-    else if (inst.facingMode === 'environment') pogingen.push({ facingMode: { exact: 'user' } })
+    if (inst.facingMode === 'user') pogingen.push(Object.assign({}, CAMERA, { facingMode: { exact: 'environment' } }))
+    else if (inst.facingMode === 'environment') pogingen.push(Object.assign({}, CAMERA, { facingMode: { exact: 'user' } }))
     // Anders (of als dat niet lukt): de volgende camera in de lijst
     try {
       const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput' && d.deviceId)
       const i = cams.findIndex(d => d.deviceId === inst.deviceId)
-      if (cams.length > 1) pogingen.push({ deviceId: { exact: cams[(i + 1) % cams.length].deviceId } })
+      if (cams.length > 1) pogingen.push(Object.assign({}, CAMERA, { deviceId: { exact: cams[(i + 1) % cams.length].deviceId } }))
     } catch (e) {}
     if (!pogingen.length) return false
     const senders = peerConnection.getSenders()
@@ -428,7 +455,7 @@ export async function wisselCamera() {
     if (!nieuw) {
       // Andere camera lukt niet: de oude weer aanzetten
       try {
-        const s = await navigator.mediaDevices.getUserMedia({ video: inst.deviceId ? { deviceId: { exact: inst.deviceId } } : true })
+        const s = await navigator.mediaDevices.getUserMedia({ video: inst.deviceId ? Object.assign({}, CAMERA, { deviceId: { exact: inst.deviceId } }) : CAMERA })
         nieuw = s.getVideoTracks()[0] || null
       } catch (e) { console.warn('Camera wisselen: oude camera terugzetten mislukt', e && e.name) }
     }

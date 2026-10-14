@@ -2,7 +2,7 @@
 // Stap A: presence ✓ | Stap B: DataChannel ping-pong
 // Zelfde signaling-patroon als bellen.js: gedeeld kanaal met gesorteerde IDs
 import { supabase } from './supabase.js?v=95'
-import { ICE_SERVERS, iceReady } from './ice-config.js?v=106'
+import { ICE_SERVERS, iceReady } from './ice-config.js?v=149'
 import { startParen, opOnline, opNieuwePagina, onlineVrienden, vrienden as parenVrienden } from './paren.js?v=2'
 
 let huidigeUserId = null

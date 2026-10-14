@@ -1,33 +1,48 @@
 // ice-config.js — Gedeelde WebRTC ICE-servers
 // Basis: STUN. TURN wordt toegevoegd via edge function 'get-turn-credentials'.
 // Geen keys in dit bestand — die staan veilig als secrets in Supabase.
+// v149: STUN (de spiegel) en TURN (de postbode) zijn allebei onze eigen server bij TransIP (NL),
+// niet meer Google/Cloudflare. Het pasje voor de postbode is 24 uur geldig; de app bewaart het
+// 12 uur op dit toestel (localStorage, voor alle tabbladen samen), zodat niet elke pagina de
+// edge function aanroept. Uitloggen wist het (account.js wist alle fibro_-sleutels).
 import { supabase } from './supabase.js?v=95'
 
 const FUNCTIE_URL = 'https://qmgatbphiplrfxrljtbe.supabase.co/functions/v1/get-turn-credentials'
 const ANON_KEY = 'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
-// TURN-gegevens 10 minuten bewaren in dit tabblad, zodat niet elke pagina de edge function aanroept
-const TURN_CACHE = 'fibro_turn_cache'
-const TURN_CACHE_MS = 10 * 60 * 1000
+const EIGEN_SERVER = '136.144.154.200'
+// TURN-pasje 12 uur bewaren op dit toestel; met minder dan een uur geldigheid over: een nieuw
+const TURN_CACHE = 'fibro_turn_pasje'
+const TURN_CACHE_MS = 12 * 60 * 60 * 1000
+const MIN_OVER_MS = 60 * 60 * 1000
 
 export const ICE_SERVERS = {
   iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun.cloudflare.com:3478' },
+    { urls: 'stun:' + EIGEN_SERVER + ':3478' },
   ]
+}
+
+function bewaardPasje(uid) {
+  try {
+    const c = JSON.parse(localStorage.getItem(TURN_CACHE) || 'null')
+    const nu = Date.now()
+    if (!c || c.uid !== uid || typeof c.tijd !== 'number' || !Array.isArray(c.turn) || !c.turn.length) return null
+    if (nu < c.tijd || nu - c.tijd >= TURN_CACHE_MS) return null // te oud (of de klok ging terug)
+    if (typeof c.verloopt === 'number' && c.verloopt * 1000 - nu < MIN_OVER_MS) return null
+    return c
+  } catch (e) { return null }
 }
 
 async function laadTurnServers() {
   try {
+    try { sessionStorage.removeItem('fibro_turn_cache') } catch (e) {} // v106-v148: per tabblad, 10 min
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) { console.log('[ice] Niet ingelogd — alleen STUN'); return }
-    try {
-      const c = JSON.parse(sessionStorage.getItem(TURN_CACHE) || 'null')
-      if (c && c.uid === session.user.id && Date.now() - c.tijd < TURN_CACHE_MS && Array.isArray(c.turn) && c.turn.length) {
-        ICE_SERVERS.iceServers.push(...c.turn)
-        console.log('[ice] TURN uit tabblad-geheugen:', c.turn.length, 'server(s)')
-        return
-      }
-    } catch (e) {}
+    const c = bewaardPasje(session.user.id)
+    if (c) {
+      ICE_SERVERS.iceServers.push(...c.turn)
+      console.log('[ice] TURN uit toestel-geheugen:', c.turn.length, 'server(s), nog', Math.round((TURN_CACHE_MS - (Date.now() - c.tijd)) / 60000), 'min')
+      return
+    }
     // Directe fetch i.p.v. invoke, zodat we status + foutmelding kunnen zien
     const resp = await fetch(FUNCTIE_URL, {
       headers: {
@@ -55,7 +70,10 @@ async function laadTurnServers() {
       else if (turn[1]) kies.push(turn[1])
       ICE_SERVERS.iceServers.push(...kies)
       console.log('[ice] TURN geladen:', kies.length, 'van', turn.length, 'server(s):', kies.map(s => [].concat(s.urls).join(' ')).join(', '))
-      try { sessionStorage.setItem(TURN_CACHE, JSON.stringify({ uid: session.user.id, tijd: Date.now(), turn: kies })) } catch (e) {}
+      if (kies.length) {
+        const verloopt = typeof data.verloopt === 'number' ? data.verloopt : null
+        try { localStorage.setItem(TURN_CACHE, JSON.stringify({ uid: session.user.id, tijd: Date.now(), verloopt, turn: kies })) } catch (e) {}
+      }
     } else {
       console.warn('[ice] Onverwacht antwoord:', tekst.slice(0, 200))
     }

@@ -2,7 +2,7 @@
 // Foto's gaan rechtstreeks van apparaat naar apparaat, NIET via de server,
 // zolang beide kanten tegelijk online zijn (fase 1 — geen offline-fallback nog).
 
-import { ICE_SERVERS } from './ice-config.js?v=106'
+import { ICE_SERVERS } from './ice-config.js?v=149'
 // v121 (stap B deel 4): aanwezigheid en signalen gaan via paren.js, een afgeschermd
 // kanaal per vriendenpaar, in plaats van het openbare kanaal fibro-aanwezigheid.
 import { startParen, isOnline, heeftKenmerk, opBericht, stuurNaar, zetKenmerk } from './paren.js?v=2'

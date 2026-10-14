@@ -2,7 +2,7 @@
 // Gebruikt het bewezen spel-patroon: gedeeld kanaal met gesorteerde IDs
 // v143: meldingen ook in het Engels (taal.js)
 import { supabase } from './supabase.js?v=95'
-import { ICE_SERVERS, iceReady } from './ice-config.js?v=106'
+import { ICE_SERVERS, iceReady } from './ice-config.js?v=149'
 import { houOpen } from './lijntjes.js?v=1'
 
 let lokaleStream = null

@@ -71,6 +71,10 @@ Het geheim en de pasjes
   gebruikersnaam <verloopt>:<uid> (24 uur geldig), wachtwoord base64(HMAC-SHA1(geheim, naam)).
 - Geheim vervangen: op de server de regel static-auth-secret aanpassen + coturn herstarten,
   en tegelijk TURN_GEHEIM in Supabase. Tot beide gelijk zijn, kan niemand via de postbode.
+  De app (ice-config.js, sinds v149) bewaart een pasje 12 uur op het toestel (localStorage
+  fibro_turn_pasje): na een nieuw geheim kan een toestel tot 12 uur een oud pasje proberen
+  (dan alleen rechtstreeks). Uitloggen en weer inloggen wist het pasje.
+- De app gebruikt als spiegel (STUN) ook deze server: stun:136.144.154.200:3478 (sinds v149).
 - Vergelijken zonder het geheim te laten zien: Supabase toont bij een secret een "digest"
   (gewone SHA-256 van de waarde zoals ingevuld; nagekeken met abc -> ba7816bf...). Op de server:
     sudo grep -oP '^static-auth-secret=\K.+' /etc/turnserver.conf | tr -d '\n' | sha256sum

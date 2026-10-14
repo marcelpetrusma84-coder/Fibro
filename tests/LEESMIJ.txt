@@ -189,6 +189,13 @@ tools/proef47.mjs        de functie get-turn-credentials (v149, eigen TURN-serve
                          een echte coturn het narekenen (apt install coturn; turnserver -c <conf met hetzelfde
                          geheim>; turnutils_uclient -u <gebruikersnaam> -w <wachtwoord> -y <adres>).
                          node proef47.mjs <index.ts> <map met node_modules>
+tools/proef48.py         ice-config.js v149: spiegel (STUN) alleen de eigen server, TURN-pasje 12 uur op het toestel
+                         (localStorage fibro_turn_pasje, alle tabbladen; nieuw bij <1 uur geldig, ander account,
+                         klok terug, kapot), 503/niet ingelogd/opslag geblokkeerd, uitloggen (wisOpslag uit
+                         account.js) wist het, en een gesprek met de echte bellen.js alleen via een echte coturn
+                         (server/turnserver.conf) met een pasje uit het geheugen. Nep-functie rekent het pasje
+                         net zo uit. Oude map als controle: 6 van 20. Nodig: apt-get install coturn.
+                         python3 -I proef48.py <map> <scratch>
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

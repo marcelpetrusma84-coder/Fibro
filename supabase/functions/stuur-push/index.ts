@@ -6,6 +6,9 @@
 // (friendships, status accepted; blokkeren haalt de vriendschap weg). Een geblokkeerd account
 // stuurt niets. Zo kan niemand meer met een zelfgekozen tekst meldingen naar een account sturen.
 // type: 'bericht' (standaard) of 'buzz'. Het type gaat mee naar de service worker (trillen).
+// v151 (15 oktober 2026): ook 'oproep', 'oproep-video' en 'gemist' (bellen). Een oproep opent het
+// belscherm (bellen.html, inkomend: opnemen of weigeren) en leeft maar 45 s bij de pushdienst: staat
+// de telefoon uit, dan komt er later geen 'belt je' meer binnen. 'gemist' vervangt hem (zelfde tag).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push";
 
@@ -24,7 +27,21 @@ const TEKSTEN: Record<string, Record<string, Tekst>> = {
     nl: { title: "⚡ Buzz!", body: "{naam} buzzt je!" },
     en: { title: "⚡ Buzz!", body: "{naam} is buzzing you!" },
   },
+  oproep: {
+    nl: { title: "Fibro", body: "📞 {naam} belt je" },
+    en: { title: "Fibro", body: "📞 {naam} is calling you" },
+  },
+  "oproep-video": {
+    nl: { title: "Fibro", body: "📹 {naam} belt je (video)" },
+    en: { title: "Fibro", body: "📹 {naam} is video calling you" },
+  },
+  gemist: {
+    nl: { title: "Fibro", body: "📵 Gemiste oproep van {naam}" },
+    en: { title: "Fibro", body: "📵 Missed call from {naam}" },
+  },
 };
+// Hoe lang de pushdienst een melding bewaart als de telefoon even onbereikbaar is (seconden)
+const LEVENSDUUR: Record<string, number> = { oproep: 45, "oproep-video": 45, gemist: 24 * 60 * 60 };
 const IEMAND: Record<string, string> = { nl: "Iemand", en: "Someone" };
 
 function antwoord(data: unknown, status = 200) {
@@ -96,16 +113,23 @@ Deno.serve(async (req) => {
     }
 
     // 5. De tekst, in de taal van de ontvanger.
-    const soort = type === "buzz" ? "buzz" : "bericht";
+    const soort = Object.hasOwn(TEKSTEN, String(type)) ? String(type) : "bericht";
     const taal = ontvanger.taal === "en" ? "en" : "nl";
     const tekst = TEKSTEN[soort][taal];
     const naam = String(ik.username || IEMAND[taal]).slice(0, 40);
-    const payload = JSON.stringify({
+    const bellen = soort === "oproep" || soort === "oproep-video";
+    const melding: Record<string, string> = {
       title: tekst.title,
       body: tekst.body.replace("{naam}", naam),
-      url: "/Fibro/chat.html",
+      url: bellen
+        ? "/Fibro/bellen.html?vriend=" + encodeURIComponent(afzender) + "&naam=" + encodeURIComponent(naam) +
+          "&inkomend=1" + (soort === "oproep-video" ? "&video=1" : "")
+        : "/Fibro/chat.html",
       type: soort,
-    });
+    };
+    if (bellen || soort === "gemist") melding.tag = "oproep-" + afzender;
+    const payload = JSON.stringify(melding);
+    const opties = LEVENSDUUR[soort] ? { TTL: LEVENSDUUR[soort], urgency: bellen ? "high" : "normal" } : undefined;
 
     webpush.setVapidDetails(
       "mailto:beheer@fibro.app",
@@ -116,7 +140,7 @@ Deno.serve(async (req) => {
     let verstuurd = 0;
     for (const rij of subs) {
       try {
-        await webpush.sendNotification(rij.subscription, payload);
+        await webpush.sendNotification(rij.subscription, payload, opties);
         verstuurd++;
       } catch (e) {
         console.error("Push fout:", e && e.statusCode ? e.statusCode : e);

@@ -203,6 +203,10 @@ tools/proef49.py         videobellen (v150) met de echte bellen.html en bellen.j
                          breed of omgekeerd) = heel beeld (contain), microfoon geweigerd = melding zoals vroeger. Camera's:
                          Chromium nep-camera, rechtop canvas-camera, of geen. Oude map als controle: 6 van 17.
                          python3 -I proef49.py <map>
+tools/proef50.mjs        de functie stuur-push (v151) met belmeldingen: oproep / oproep-video (opent bellen.html met
+                         inkomend=1, TTL 45 s, urgency high) en gemist (opent de chat, 1 dag), tag oproep-<beller> zodat
+                         gemist de belt-je-melding vervangt; bericht/buzz precies als vroeger (proef46 moet ook slagen).
+                         Oude functie als controle: 7 fout. node proef50.mjs <index.ts> <map met node_modules>
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

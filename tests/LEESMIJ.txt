@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 15 oktober 2026 (v153: stickers met beweging en geluid).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 15 oktober 2026 (v154: het Stickerlab in Profiel).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -53,7 +53,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  pushmelding bij bellen (testscript_ice/video/push2/oproep.py),
                          belregels = v152: belregels in de chat, alleen gemist telt als ongelezen (testscript_belregels.py),
                          stickers = v153: nieuwe stickerkeuze (6 vellen, 2 eigen, 4 winkel), stickerfx.js (beweging en geluid),
-                                 fxsticker:<vel>-<nr> in het bericht (testscript_stickers.py))
+                                 fxsticker:<vel>-<nr> in het bericht (testscript_stickers.py),
+                         stickerlab = v154: Stickerlab in Profiel -> Stickers, eigen stickers op het toestel (testscript_stickerlab.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -246,6 +247,18 @@ tools/proef53.py         stickers met beweging en geluid (v153) in de echte chat
                          v153 ook: proef23 stuurt de sticker nu via de stickerkeuze (testvel via ctx.route op stickervellen.js);
                          proef43 'chat: stickerkeuze' vervangt 'chat: eigen sticker' (het oude venster is weg; tegen de oude
                          map horen de nieuwe NL-teksten bij MAG_ERBIJ en de oude emoji-tabbladen bij MAG_WEG).
+tools/proef54.py         het Stickerlab in Profiel (v154) met de echte profiel.html, eigenstickers.js en stickermaker.js. Maakt zelf
+                         testplaatjes (PIL): effen achtergrond, drukke achtergrond (ruis), al doorzichtige png, een tekstbestand.
+                         A: bovenaan 'Je eigen chatstickers', 2 vellen van 12, oud uploadvak weg. B: achtergrond weg (hoeken
+                         doorzichtig, midden vol), witte rand aan/uit, kiezen = geluid, tikken = beweging + geluid, bewaard in
+                         FibroDB 'eigensticker_<uid>_e1-01'. C: met je vinger (lijn met de muis; eerst scroll_into_view, anders
+                         valt het werkvlak buiten beeld), alles houden. D: aanpassen. E: verwijderen (twee keer tikken).
+                         F: Escape/annuleren bewaren niets. G: geen afbeelding, al doorzichtig. H: na verversen nog daar, ander
+                         account ziet ze niet (inlogpas zetten op manifest.json: login.html stuurt met een pas meteen door).
+                         I: Engels. J: chat, tekst bij Eigen. FOTO=<map> maakt schermafbeeldingen. Oude map als controle: 3 van 34.
+                         python3 -I proef54.py <map>
+                         v154 ook: proef43 'profiel: stickers' (nieuwe EN-woorden, MAG_ERBIJ/MAG_WEG; koppen staan in hoofdletters
+                         in innerText) en 'chat: stickerkeuze'; proef53 de nieuwe tekst bij Eigen.
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

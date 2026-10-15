@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=11"></script>
+<script src="taal.js?v=12"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Profiel</title>
@@ -436,20 +436,12 @@ input, textarea { font-size:16px !important; }
   </div>
 </div>
 <div class="panel" id="panel-stickers">
+  <div class="section"><div class="section-label" data-t>Je eigen chatstickers</div><div id="eigenStickers"></div></div>
   <div class="section"><div class="section-label" data-t>Actieve stickers</div><div class="sticker-galerij" id="actieveStickers"></div></div>
   <div class="section"><div class="section-label" data-t>Natuur & Planten</div><div class="sticker-galerij" id="stickerNatuur"></div></div>
   <div class="section"><div class="section-label" data-t>Sfeer & Magie</div><div class="sticker-galerij" id="stickerMagie"></div></div>
   <div class="section"><div class="section-label" data-t>Muziek & Kunst</div><div class="sticker-galerij" id="stickerKunst"></div></div>
   <div class="section"><div class="section-label" data-t>Dieren</div><div class="sticker-galerij" id="stickerDieren"></div></div>
-  <div class="section">
-    <div class="section-label" data-t>Eigen sticker uploaden</div>
-    <div class="upload-zone" onclick="document.getElementById('stickerUpload').click()">
-      <div class="upload-icon">🎨</div>
-      <div class="upload-text" data-t>Upload je eigen sticker</div>
-      <div class="upload-formats" data-t>PNG, WEBP, SVG, GIF — max 2MB</div>
-    </div>
-    <input type="file" id="stickerUpload" accept="image/*" style="display:none"/>
-  </div>
 </div>
 </main>
 <div class="bottom-nav" role="navigation" aria-label="Menu">
@@ -521,6 +513,7 @@ import { laadThema, bewaarThemaCache } from './thema.js?v=130'
 import { startHeartbeat } from './heartbeat.js?v=117'
 import { initSync } from './sync.js?v=149'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=149'
+import { startStickermaker } from './stickermaker.js?v=154'
 
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
@@ -861,6 +854,7 @@ async function init(){
     onStatus: (vriendId, status) => console.log('P2P status:', vriendId, status)
   })
   bouwFontGrid();bouwStickerGrids();bouwAvatarPicker();updateWidgetToggles();updateActieveStickers()
+  startStickermaker(document.getElementById('eigenStickers'), huidigeUser.id) // v154: Stickerlab (eigen stickers)
   document.getElementById('editNaam').oninput=updatePreview
   document.getElementById('editBio').oninput=updatePreview
 }

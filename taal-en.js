@@ -1,4 +1,4 @@
-// taal-en.js - de Engelse woordenlijst van Fibro (v9, 15 oktober 2026, v153)
+// taal-en.js - de Engelse woordenlijst van Fibro (v10, 15 oktober 2026, v154)
 // Wordt alleen geladen als de taal Engels is (zie taal.js). Links staat de Nederlandse tekst precies zoals
 // in de code of de html (de sleutel), rechts de Engelse. {n}, {naam} enz. zijn invulplekken; {app} is de
 // naam van de app (staat op een plek: APP in taal.js). Ontbreekt een zin, dan blijft hij Nederlands.
@@ -8,6 +8,7 @@
 // v148: Block It '+n RIJEN!'.
 // v152: belregels in de chat (belregel.js), Over Fibro: ook wanneer en hoe lang je belde.
 // v153: de nieuwe stickerkeuze in de chat (stickerkeuze.js).
+// v154: het Stickerlab in Profiel (stickermaker.js).
 window.FIBRO_EN = {
 
 // ---- Overal ----
@@ -1206,4 +1207,47 @@ window.FIBRO_EN = {
   "Vel {n} is nog leeg. Hier komen binnenkort stickers die bewegen en geluid maken.": "Sheet {n} is still empty. Stickers that move and make sounds are coming here soon.",
   "Hier komen je eigen stickers. Je kunt ze binnenkort zelf maken in Profiel.": "Your own stickers will go here. Soon you'll be able to make them yourself in Profile.",
   "Hier komen stickervellen uit de winkel. De winkel komt later.": "Sticker sheets from the shop will go here. The shop is coming later.",
+// ---- Stickerlab in Profiel (stickermaker.js, v154) ----
+  "Je eigen chatstickers": "Your own chat stickers",
+  "Maak een sticker van je eigen afbeelding, met een beweging en een geluid. Je stickers staan alleen op dit toestel. Versturen naar vrienden komt binnenkort.": "Make a sticker from your own picture, with a movement and a sound. Your stickers are only on this device. Sending them to friends is coming soon.",
+  "{n} van 12": "{n} of 12",
+  "Sticker {naam} aanpassen": "Edit sticker {naam}",
+  "Sticker aanpassen": "Edit sticker",
+  "Nieuwe sticker in eigen vel {v}, plek {n}": "New sticker in your own sheet {v}, spot {n}",
+  "Nieuwe sticker": "New sticker",
+  "Andere afbeelding": "Other picture",
+  "Een foto of plaatje van je toestel. Heeft hij een effen achtergrond, dan haalt {app} die zelf weg.": "A photo or picture from your device. If it has a plain background, {app} removes it for you.",
+  "Uitknippen": "Cut out",
+  "Achtergrond weg": "Remove background",
+  "Met je vinger": "With your finger",
+  "Alles houden": "Keep everything",
+  "Je afbeelding": "Your picture",
+  "Hoe streng": "How strict",
+  "Opnieuw tekenen": "Draw again",
+  "Witte rand": "White border",
+  "Kies eerst een afbeelding.": "Choose a picture first.",
+  "Speel je sticker af": "Play your sticker",
+  "Bijvoorbeeld: Blije kat": "For example: Happy cat",
+  "Je sticker": "Your sticker",
+  "Beweging": "Movement",
+  "Naam": "Name",
+  "Verwijderen": "Delete",
+  "Bewaren": "Save",
+  "Afbeelding laden…": "Loading picture…",
+  "Deze afbeelding is te groot (meer dan 30 MB).": "This picture is too big (more than 30 MB).",
+  "Dit bestand is geen afbeelding die {app} kan openen.": "This file isn't a picture {app} can open.",
+  "Deze afbeelding heeft al geen achtergrond.": "This picture already has no background.",
+  "Alles wat op de kleur van de rand lijkt, wordt doorzichtig.": "Everything that looks like the colour of the edge becomes see-through.",
+  "Trek met je vinger een lijn om wat je wilt houden.": "Draw a line with your finger around what you want to keep.",
+  "De hele afbeelding wordt de sticker.": "The whole picture becomes the sticker.",
+  "Er blijft niets over.": "Nothing is left.",
+  "Er blijft niets over van de afbeelding. Zet ‘Hoe streng’ lager of knip met je vinger.": "Nothing is left of the picture. Turn ‘How strict’ down or cut it out with your finger.",
+  "Er blijft niets over van de afbeelding.": "Nothing is left of the picture.",
+  "Trek eerst met je vinger een lijn om wat je wilt houden.": "First draw a line with your finger around what you want to keep.",
+  "Bewaren lukte niet. Is er genoeg ruimte op je toestel?": "Saving didn't work. Is there enough space on your device?",
+  "Sticker bewaard": "Sticker saved",
+  "Echt verwijderen?": "Really delete?",
+  "Verwijderen lukte niet.": "Deleting didn't work.",
+  "Sticker verwijderd": "Sticker deleted",
+  "Je eigen stickers maak je in Profiel, bij Stickers. Versturen naar vrienden komt binnenkort.": "You make your own stickers in Profile, under Stickers. Sending them to friends is coming soon.",
 }

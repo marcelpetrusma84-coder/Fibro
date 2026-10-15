@@ -104,7 +104,7 @@ SCHERMEN = [
     ('chat: melden', 'chat.html?vriend=' + BRAM, "() => { toonChatMenu(); document.getElementById('cmMeld').click() }", ['Tap the messages you want to report (max 5)', 'Cancel', 'Report']),
     # v153: het oude venster 'Eigen sticker toevoegen' is weg; nu de stickerkeuze (vakje Eigen open)
     ('chat: stickerkeuze', 'chat.html?vriend=' + BRAM, "() => { toggleStickers(); const v = document.querySelector('#stickerGrid .sk-vak[data-vak=\\'e1\\']'); if (v) v.click() }",
-        ['Fibro sheets', 'Your own', 'Shop', 'Sheet 1', 'Your own sheet 2', 'Shop slot 4', 'Your own stickers will go here']),
+        ['Fibro sheets', 'Your own', 'Shop', 'Sheet 1', 'Your own sheet 2', 'Shop slot 4', 'You make your own stickers in Profile']),
     ('chat: screenshot', 'chat.html?vriend=' + BRAM, "() => { document.getElementById('screenshotModal').classList.add('show') }", ['Screenshot permission', 'Both people have to agree', '20 minutes', 'Agree']),
     ('chat: spellen', 'chat.html?vriend=' + BRAM, "() => { toggleSpelMenu() }", ['Play together', 'Chess', 'Twin Snakes']),
     # v145: Profiel (elk tabblad)
@@ -127,7 +127,7 @@ SCHERMEN = [
     ('over', 'over.html', "() => { document.getElementById('technisch').open = true }", ['About Fibro', '← Back', 'What is Fibro?', 'digital living room', 'Why Fibro exists', 'How your data works', 'Your recovery code',
         'Keep it somewhere other than your phone.', 'Your data and your account', 'Download my data', 'To be honest', 'Coming soon', 'under construction', 'Turn off buzz', 'Technical', 'House rule: active. Nothing blocked.']),
     ('home: geen internet', 'index.html', "() => { Object.defineProperty(navigator, 'onLine', { get: () => false, configurable: true }); window.dispatchEvent(new Event('offline')) }", ['No internet · you\'re seeing what\'s saved on this device']),
-    ('profiel: stickers', 'profiel.html', "() => { switchTab('stickers') }", ['Active stickers', 'No stickers chosen yet', 'Nature & Plants', 'Mood & Magic', 'Animals', 'Upload your own sticker']),
+    ('profiel: stickers', 'profiel.html', "() => { switchTab('stickers') }", ['Your own chat stickers', 'Your own sheet 2', '0 of 12', 'Active stickers', 'No stickers chosen yet', 'Nature & Plants', 'Mood & Magic', 'Animals']),
 ]
 NL_WOORDEN = ['Vrienden', 'Uitnodigen', 'Geblokkeerd', 'terug', 'Stuur een bericht', 'Chat openen', 'Gastenboek', 'GASTENBOEK', 'dagen', 'geleden', 'Vriendschap',
               'Bellen', 'Annuleer', 'Kies hoe', 'Belt je op', 'Wat wil je doen', 'Blokkeren', 'Deblokkeren', 'Verwijderen', 'Annuleren', 'Sluiten', 'buzzt',
@@ -144,6 +144,13 @@ MAG_ERBIJ |= {'Vellen van Fibro', 'Eigen', 'Winkel', '+', '\U0001F6CD\uFE0F', '1
               'Vel 1', 'Vel 2', 'Vel 3', 'Vel 4', 'Vel 5', 'Vel 6', 'Eigen vel 1', 'Eigen vel 2', 'Winkelvak 1', 'Winkelvak 2', 'Winkelvak 3', 'Winkelvak 4',
               'Hier komen je eigen stickers. Je kunt ze binnenkort zelf maken in Profiel.'}
 MAG_WEG |= {'\U0001F642', '\u2764\uFE0F', '\U0001F436', '\U0001F431', '\U0001F476', '\U0001F466', '\U0001F467', '\u2B50', '\u2795'}
+# v154: het Stickerlab bovenaan Profiel -> Stickers (het oude uploadvak deed niets); in de chat een nieuwe tekst bij Eigen
+MAG_ERBIJ |= {'Je eigen chatstickers', 'Maak een sticker van je eigen afbeelding, met een beweging en een geluid. Je stickers staan alleen op dit toestel. Versturen naar vrienden komt binnenkort.',
+              '0 van 12', 'Je eigen stickers maak je in Profiel, bij Stickers. Versturen naar vrienden komt binnenkort.'}
+MAG_ERBIJ |= {'Nieuwe sticker in eigen vel %d, plek %d' % (v, n) for v in (1, 2) for n in range(1, 13)}
+MAG_ERBIJ |= {'JE EIGEN CHATSTICKERS'}; MAG_WEG |= {'EIGEN STICKER UPLOADEN'}  # (koppen staan in hoofdletters)
+MAG_WEG |= {'Eigen sticker uploaden', 'Upload je eigen sticker', 'PNG, WEBP, SVG, GIF \u2014 max 2MB', '\U0001F3A8',
+            'Hier komen je eigen stickers. Je kunt ze binnenkort zelf maken in Profiel.'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

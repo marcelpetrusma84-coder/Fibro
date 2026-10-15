@@ -1,4 +1,4 @@
-// stickerkeuze.js - de stickerkeuze in de chat (v153, 15 oktober 2026)
+// stickerkeuze.js - de stickerkeuze in de chat (v153, 15 oktober 2026; v154: tekst bij Eigen)
 // Twee rijen van zes vakjes: bovenaan de zes vellen van Fibro (stickervellen.js), daaronder twee
 // vakjes voor eigen stickers en vier voor vellen uit de winkel. Elk vel heeft 12 stickers; op de
 // telefoon 4 naast elkaar, op een breed scherm 6. Een leeg vakje zegt wat er later komt.
@@ -115,7 +115,7 @@ export function maakStickerkeuze(el, { onKies } = {}) {
     }
     const p = document.createElement('div'); p.className = 'sk-leeg'
     if (v.soort === 'fibro') p.textContent = T('Vel {n} is nog leeg. Hier komen binnenkort stickers die bewegen en geluid maken.', { n: v.n })
-    else if (v.soort === 'eigen') p.textContent = T('Hier komen je eigen stickers. Je kunt ze binnenkort zelf maken in Profiel.')
+    else if (v.soort === 'eigen') p.textContent = T('Je eigen stickers maak je in Profiel, bij Stickers. Versturen naar vrienden komt binnenkort.')
     else p.textContent = T('Hier komen stickervellen uit de winkel. De winkel komt later.')
     inhoud.appendChild(p)
   }

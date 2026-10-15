@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 15 oktober 2026 (v152: belregels in de chat).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 15 oktober 2026 (v153: stickers met beweging en geluid).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -51,7 +51,9 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          blockit = Block It: lading blijft een getal, '+n RIJEN!' in het Engels (testscript_blockit.py),
                          ice, video, push2, oproep = v149-v151: eigen spiegel/pasje, HD-video, stuur-push met belmeldingen,
                                  pushmelding bij bellen (testscript_ice/video/push2/oproep.py),
-                         belregels = v152: belregels in de chat, alleen gemist telt als ongelezen (testscript_belregels.py))
+                         belregels = v152: belregels in de chat, alleen gemist telt als ongelezen (testscript_belregels.py),
+                         stickers = v153: nieuwe stickerkeuze (6 vellen, 2 eigen, 4 winkel), stickerfx.js (beweging en geluid),
+                                 fxsticker:<vel>-<nr> in het bericht (testscript_stickers.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -230,6 +232,20 @@ tools/proef52.py         belregels in de chat (v152). A: echte bellen.html/belle
                          gemiste oproep van de ander, bericht erna sluit niet aan, niet te melden, rare inhoud = 'Oproep'.
                          C: Home, widget Laatste bericht. D: ongelezen.js telt alleen een gemiste oproep (titel '(n) ...').
                          Oude map als controle: 2 van 27. python3 -I proef52.py <map>
+tools/proef53.py         stickers met beweging en geluid (v153) in de echte chat.html (REST nagebootst zoals proef52, Realtime
+                         zoals proef30). Legt een testvel f1 (12 stickers, PIL-plaatjes) in een eigen www-map over de map heen.
+                         A: stickerkeuze (12 vakjes in 2 rijen van 6, labels, lege vakjes zeggen wat er komt, 4 naast elkaar,
+                         < 340 px hoog, onthoudt het vakje; oude tabbladen/venster/fibro_custom_stickers weg). B: versturen =
+                         geluid, keuze dicht, alleen fxsticker:f1-03 en dat versleuteld. C: oude berichten: 120 px, stil;
+                         onbekend/raar = '🖼️ Sticker' als tekst; oude lossticker uit stickers/ weer zichtbaar (veiligeUrl liet
+                         alleen https/data/blob toe). D: tikken = beweging + geluid. E: nieuw via Realtime: van de ander
+                         beweging + geluid, van jezelf alleen beweging. F: Engels. Geluid tellen: alleen bronnen in de
+                         AudioContext van stickerfx.js (de enige met een compressor), niet het stille ontgrendel-toontje.
+                         FOTO=<map> maakt schermafbeeldingen. Oude map als controle: 5 van 28.
+                         python3 -I proef53.py <map>
+                         v153 ook: proef23 stuurt de sticker nu via de stickerkeuze (testvel via ctx.route op stickervellen.js);
+                         proef43 'chat: stickerkeuze' vervangt 'chat: eigen sticker' (het oude venster is weg; tegen de oude
+                         map horen de nieuwe NL-teksten bij MAG_ERBIJ en de oude emoji-tabbladen bij MAG_WEG).
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

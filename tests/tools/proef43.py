@@ -102,7 +102,9 @@ SCHERMEN = [
     ('chat: gesprek', 'chat.html?vriend=' + BRAM, '', ['encrypted message — tap Restore key', 'Game invite: ♟️ Chess', 'Message deleted',
         '[your message]', 'message no longer available', 'Not sent · tap to try again', 'No key on this device', 'Send photo', '● active', 'Call', 'More']),
     ('chat: melden', 'chat.html?vriend=' + BRAM, "() => { toonChatMenu(); document.getElementById('cmMeld').click() }", ['Tap the messages you want to report (max 5)', 'Cancel', 'Report']),
-    ('chat: eigen sticker', 'chat.html?vriend=' + BRAM, "() => { openStickerUpload() }", ['Add your own sticker', 'Choose image', 'Choose a sound (optional)', 'Jingle', 'Heart', 'Save ✓']),
+    # v153: het oude venster 'Eigen sticker toevoegen' is weg; nu de stickerkeuze (vakje Eigen open)
+    ('chat: stickerkeuze', 'chat.html?vriend=' + BRAM, "() => { toggleStickers(); const v = document.querySelector('#stickerGrid .sk-vak[data-vak=\\'e1\\']'); if (v) v.click() }",
+        ['Fibro sheets', 'Your own', 'Shop', 'Sheet 1', 'Your own sheet 2', 'Shop slot 4', 'Your own stickers will go here']),
     ('chat: screenshot', 'chat.html?vriend=' + BRAM, "() => { document.getElementById('screenshotModal').classList.add('show') }", ['Screenshot permission', 'Both people have to agree', '20 minutes', 'Agree']),
     ('chat: spellen', 'chat.html?vriend=' + BRAM, "() => { toggleSpelMenu() }", ['Play together', 'Chess', 'Twin Snakes']),
     # v145: Profiel (elk tabblad)
@@ -137,6 +139,11 @@ NL_WOORDEN = ['Vrienden', 'Uitnodigen', 'Geblokkeerd', 'terug', 'Stuur een beric
               'Tegen de computer', 'Wat is Fibro', 'Eerlijk gezegd', 'herstelcode', 'Technisch', 'Huisregel', 'Geen internet']
 MAG_ERBIJ = set()
 MAG_WEG = {'Taal instellen'}  # v146: uit 'Binnenkort' op Over Fibro (is nu klaar)
+# v153: de nieuwe stickerkeuze (alleen te zien in 'chat: stickerkeuze'); de oude emoji-tabbladen zijn weg
+MAG_ERBIJ |= {'Vellen van Fibro', 'Eigen', 'Winkel', '+', '\U0001F6CD\uFE0F', '1', '2', '3', '4', '5', '6', 'Stickervellen',
+              'Vel 1', 'Vel 2', 'Vel 3', 'Vel 4', 'Vel 5', 'Vel 6', 'Eigen vel 1', 'Eigen vel 2', 'Winkelvak 1', 'Winkelvak 2', 'Winkelvak 3', 'Winkelvak 4',
+              'Hier komen je eigen stickers. Je kunt ze binnenkort zelf maken in Profiel.'}
+MAG_WEG |= {'\U0001F642', '\u2764\uFE0F', '\U0001F436', '\U0001F431', '\U0001F476', '\U0001F466', '\U0001F467', '\u2B50', '\u2795'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')
@@ -171,8 +178,8 @@ with sync_playwright() as pw:
             o = scherm(br, BO, 'nl', pad, actie)
             erbij = [l[2:] for l in difflib.ndiff(zonder(o[0]), zonder(n[0])) if l.startswith('+ ')]
             eraf = [l[2:] for l in difflib.ndiff(zonder(o[0]), zonder(n[0])) if l.startswith('- ')]
-            check('NL: niets weg of anders', all(x.strip() in MAG_WEG for x in eraf), eraf[:6])
-            check('NL: niets erbij', all(x.strip() in MAG_ERBIJ for x in erbij), erbij[:6])
+            check('NL: niets weg of anders', all(x.strip() in MAG_WEG for x in eraf), [x for x in eraf if x.strip() not in MAG_WEG][:6])
+            check('NL: niets erbij', all(x.strip() in MAG_ERBIJ for x in erbij), [x for x in erbij if x.strip() not in MAG_ERBIJ][:6])
             check('NL: geen nieuwe fouten', len(n[1]) <= len(o[1]), (n[1][:3], o[1][:3]))
         check('NL: geen vertaling gezocht', not n[2], n[2][:3])
         e = scherm(br, B, 'en', pad, actie)

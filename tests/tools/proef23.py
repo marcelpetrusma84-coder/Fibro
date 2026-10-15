@@ -35,6 +35,11 @@ NV = "u => { try { return JSON.parse(localStorage.getItem('fibro_nietverstuurd_'
 RIJEN = "() => [...document.querySelectorAll('#messages .msg-nietverstuurd')].map(r => r.innerText.replace(/\\s+/g, ' '))"
 with sync_playwright() as pw:
     br = pw.chromium.launch(); ctx = br.new_context(service_workers='block'); ctx.route('**/*supabase.co/**', supa)
+    # v153: een vel met een sticker (de echte vellen kunnen nog leeg zijn)
+    def vellen(route):
+        t = open(os.path.join(MAP, 'stickervellen.js')).read().replace("  { id: 'f1', stickers: [] },", "  { id: 'f1', stickers: [ { nr: '01', naam: ['Test', 'Test'], b: 'stuiter', g: 'boing' } ] },")
+        route.fulfill(status=200, body=t, headers={'content-type': 'text/javascript'})
+    ctx.route('**/stickervellen.js*', vellen)
     p = ctx.new_page(); p.on('pageerror', lambda e: print('   PAGEERROR', str(e)[:200])); p.on('dialog', lambda d: d.accept())
     p.goto(B + 'login.html'); p.evaluate("t => localStorage.setItem('sb-qmgatbphiplrfxrljtbe-auth-token', t)", TOKEN)
     k = p.evaluate("""async uid => { const c = await import('./crypto.js?v=95'); const ik = await c.genereerKeypair(); const v = await c.genereerKeypair();
@@ -50,9 +55,9 @@ with sync_playwright() as pw:
     check('bericht blijft staan als niet verstuurd', len(r) == 1 and 'Hallo daar' in r[0] and 'Niet verstuurd' in r[0], r)
     check('bewaard op dit toestel', nv and len(nv) == 1 and nv[0]['tekst'] == 'Hallo daar', nv)
     print('2. Ook een sticker')
-    p.evaluate("() => window.sendStickerMetGeluid('\\u{1F600}', 'blij')"); p.wait_for_timeout(1200)
+    p.evaluate("() => toggleStickers()"); p.click('#stickerGrid .sk-vak[data-vak="f1"]'); p.click('#stickerGrid .sk-sticker >> nth=0'); p.wait_for_timeout(1200)
     r = p.evaluate(RIJEN)
-    check('sticker blijft staan als niet verstuurd', len(r) == 2 and 'sticker' in r[1], r)
+    check('sticker blijft staan als niet verstuurd', len(r) == 2 and 'Sticker' in r[1], r)
     print('3. Verversen: nog steeds daar')
     openChat(); r = p.evaluate(RIJEN)
     check('na verversen nog allebei zichtbaar', len(r) == 2, r)

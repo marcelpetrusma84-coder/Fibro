@@ -1,4 +1,4 @@
-// taal-en.js - de Engelse woordenlijst van Fibro (v8, 15 oktober 2026, v152)
+// taal-en.js - de Engelse woordenlijst van Fibro (v9, 15 oktober 2026, v153)
 // Wordt alleen geladen als de taal Engels is (zie taal.js). Links staat de Nederlandse tekst precies zoals
 // in de code of de html (de sleutel), rechts de Engelse. {n}, {naam} enz. zijn invulplekken; {app} is de
 // naam van de app (staat op een plek: APP in taal.js). Ontbreekt een zin, dan blijft hij Nederlands.
@@ -7,6 +7,7 @@
 // v147: de spellen zelf (alle twaalf), ook de losse Runner & Gunner-pagina.
 // v148: Block It '+n RIJEN!'.
 // v152: belregels in de chat (belregel.js), Over Fibro: ook wanneer en hoe lang je belde.
+// v153: de nieuwe stickerkeuze in de chat (stickerkeuze.js).
 window.FIBRO_EN = {
 
 // ---- Overal ----
@@ -1193,4 +1194,16 @@ window.FIBRO_EN = {
   "📹 Videogesprek": "📹 Video call",
   "📞 Oproep": "📞 Call",
   "📹 Video-oproep": "📹 Video call",
+// ---- Stickerkeuze in de chat (stickerkeuze.js, v153) ----
+  "Stickervellen": "Sticker sheets",
+  "Vellen van {app}": "{app} sheets",
+  "Eigen": "Your own",
+  "Winkel": "Shop",
+  "Vel {n}": "Sheet {n}",
+  "Eigen vel {n}": "Your own sheet {n}",
+  "Winkelvak {n}": "Shop slot {n}",
+  "Stuur sticker {naam}": "Send sticker {naam}",
+  "Vel {n} is nog leeg. Hier komen binnenkort stickers die bewegen en geluid maken.": "Sheet {n} is still empty. Stickers that move and make sounds are coming here soon.",
+  "Hier komen je eigen stickers. Je kunt ze binnenkort zelf maken in Profiel.": "Your own stickers will go here. Soon you'll be able to make them yourself in Profile.",
+  "Hier komen stickervellen uit de winkel. De winkel komt later.": "Sticker sheets from the shop will go here. The shop is coming later.",
 }

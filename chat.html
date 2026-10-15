@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=10"></script>
+<script src="taal.js?v=11"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Chat</title>
@@ -89,17 +89,10 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .emoji-toggle-row { display:flex; gap:8px; padding:6px 14px 0; }
 .input-area { padding:6px 14px 10px; display:flex; gap:8px; align-items:center; }
 .emoji-grid { width:100%; background:rgba(0,0,0,0.85); border-top:0.5px solid var(--border); display:none; }
-#stickerGrid { width:100%; background:rgba(0,0,0,0.85); border-top:0.5px solid var(--border); max-height:220px; overflow-y:auto; }
-.sticker-tab-row { display:flex; gap:0; border-bottom:0.5px solid var(--border); }
-.sticker-tab { flex-shrink:0; padding:6px 8px; font-size:13px; text-align:center; cursor:pointer; color:var(--muted); border:none; background:transparent; border-bottom:2px solid transparent; transition:all 0.2s; }
-.sticker-tab.actief { color:var(--accent); border-bottom-color:var(--accent); }
-.sticker-sectie { display:none; flex-wrap:wrap; gap:6px; padding:10px 12px; }
-.sticker-sectie.actief { display:flex; }
-.sticker-knop { font-size:28px; cursor:pointer; padding:4px 6px; border-radius:10px; transition:transform 0.1s; background:transparent; border:none; }
-.sticker-knop:active { transform:scale(0.85); }
-.pack-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:3px; padding:6px 10px; }
-.pack-sticker { width:100%; height:56px; border-radius:8px; cursor:pointer; border:1.5px solid transparent; transition:border-color 0.15s,transform 0.1s; display:block; background-repeat:no-repeat; background-color:transparent; }
-.pack-sticker:active { transform:scale(0.9); border-color:var(--accent); }
+#stickerGrid { width:100%; background:rgba(0,0,0,0.85); border-top:0.5px solid var(--border); }
+.fx-wrap { padding:4px; }
+.fx-sticker { width:120px; height:120px; object-fit:contain; display:block; cursor:pointer; -webkit-tap-highlight-color:transparent; -webkit-user-drag:none; user-select:none; }
+.fx-tijd { font-size:12px; color:var(--muted); margin-top:2px; text-align:right; }
 .msg-input { flex:1; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-family:inherit; font-size:16px !important; outline:none; }
 .msg-input::placeholder { color:var(--muted); }
 .msg-input:focus { border-color:var(--accent); }
@@ -136,16 +129,6 @@ body.heeft-wallpaper { background-size:cover; background-position:center; backgr
 .block,.edit-vak,.bottom-nav,.top-bar,.bubble,.vriend-item,.modal { backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
 .p-name,.p-bio,.block-title,.nav-item,.chat-name,.vriend-naam,.chat-status { text-shadow:0 1px 4px rgba(0,0,0,0.9); }
 button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44px; }
-.sticker-upload-btn { width:44px; height:44px; border-radius:50%; background:var(--card); border:0.5px solid var(--accent); cursor:pointer; font-size:20px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.geluidsbib-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:4px 0; }
-.geluid-item { background:var(--card); border:1.5px solid var(--border); border-radius:12px; padding:10px 6px; cursor:pointer; text-align:center; transition:border-color 0.2s; }
-.geluid-item.actief { border-color:var(--accent); background:rgba(192,132,252,0.12); }
-.geluid-item .geluid-icon { font-size:22px; margin-bottom:4px; }
-.geluid-item .geluid-naam { font-size:11px; color:var(--muted); }
-.sticker-preview-groot { font-size:64px; text-align:center; padding:10px; }
-.sticker-preview-img { width:80px; height:80px; object-fit:cover; border-radius:12px; display:block; margin:0 auto 8px; }
-.custom-sticker { width:44px; height:44px; object-fit:cover; border-radius:10px; cursor:pointer; border:1.5px solid var(--border); }
-.custom-sticker:hover { border-color:var(--accent); }
 @keyframes vorPuls { from { transform:scale(1); } to { transform:scale(1.08); } }
 .spel-keuze-btn { display:flex; flex-direction:column; align-items:center; gap:5px; background:var(--card); border:0.5px solid var(--border); border-radius:12px; padding:10px 4px; cursor:pointer; font-size:10px; color:var(--text); font-family:inherit; text-align:center; line-height:1.2; }
 .spel-keuze-btn:active { transform:scale(0.94); }
@@ -211,40 +194,7 @@ window.veiligeUrl = function(v){
   </div>
   <div class="input-wrap">
     <div class="emoji-grid" id="emojiGrid"></div>
-    <div id="stickerGrid" style="display:none;">
-      <div class="sticker-tab-row" style="overflow-x:auto;display:flex;gap:0;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
-        <button class="sticker-tab actief" onclick="toonStickerTab('emoji')" style="flex-shrink:0;">🙂</button>
-        <button class="sticker-tab" onclick="toonStickerTab('hart')" style="flex-shrink:0;">❤️</button>
-        <button class="sticker-tab" onclick="toonStickerTab('hond')" style="flex-shrink:0;">🐶</button>
-        <button class="sticker-tab" onclick="toonStickerTab('kat')" style="flex-shrink:0;">🐱</button>
-        <button class="sticker-tab" onclick="toonStickerTab('baby')" style="flex-shrink:0;">👶</button>
-        <button class="sticker-tab" onclick="toonStickerTab('boy')" style="flex-shrink:0;">👦</button>
-        <button class="sticker-tab" onclick="toonStickerTab('girl')" style="flex-shrink:0;">👧</button>
-        <button class="sticker-tab" onclick="toonStickerTab('eigen')" style="flex-shrink:0;">⭐</button>
-      </div>
-      <div class="sticker-sectie actief" id="sticker-emoji">
-        <div class="pack-grid" style="grid-template-columns:repeat(4,1fr);">
-          <img src="stickers/emoji_0_0.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/emoji_0_0.webp','blij')" loading="lazy">
-          <img src="stickers/emoji_0_1.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/emoji_0_1.webp','cool')" loading="lazy">
-          <img src="stickers/emoji_0_2.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/emoji_0_2.webp','stil')" loading="lazy">
-          <img src="stickers/emoji_0_3.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/emoji_0_3.webp','boos')" loading="lazy">
-          <img src="stickers/emoji_1_0.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/emoji_1_0.webp','verdriet')" loading="lazy">
-          <img src="stickers/emoji_1_1.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/emoji_1_1.webp','wow')" loading="lazy">
-          <img src="stickers/emoji_1_2.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/emoji_1_2.webp','feest')" loading="lazy">
-          <img src="stickers/emoji_1_3.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/emoji_1_3.webp','kus')" loading="lazy">
-        </div>
-      </div>
-      <div class="sticker-sectie" id="sticker-hart"><div class="pack-grid" style="grid-template-columns:repeat(4,1fr);"><img src="stickers/hart_0_0.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/hart_0_0.webp','hart')" loading="lazy"><img src="stickers/hart_0_1.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/hart_0_1.webp','kus')" loading="lazy"><img src="stickers/hart_0_2.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/hart_0_2.webp','blij')" loading="lazy"><img src="stickers/hart_0_3.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/hart_0_3.webp','feest')" loading="lazy"></div></div>
-      <div class="sticker-sectie" id="sticker-hond"><div class="pack-grid" style="grid-template-columns:repeat(4,1fr);"><img src="stickers/hond_0_0.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/hond_0_0.webp','blij')" loading="lazy"><img src="stickers/hond_0_1.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/hond_0_1.webp','cool')" loading="lazy"><img src="stickers/hond_0_2.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/hond_0_2.webp','stil')" loading="lazy"><img src="stickers/hond_0_3.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/hond_0_3.webp','boos')" loading="lazy"></div></div>
-      <div class="sticker-sectie" id="sticker-kat"><div class="pack-grid" style="grid-template-columns:repeat(4,1fr);"><img src="stickers/kat_0_0.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/kat_0_0.webp','blij')" loading="lazy"><img src="stickers/kat_0_1.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/kat_0_1.webp','cool')" loading="lazy"><img src="stickers/kat_0_2.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/kat_0_2.webp','stil')" loading="lazy"><img src="stickers/kat_0_3.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/kat_0_3.webp','boos')" loading="lazy"></div></div>
-      <div class="sticker-sectie" id="sticker-baby"><div class="pack-grid" style="grid-template-columns:repeat(4,1fr);"><img src="stickers/baby_0_0.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/baby_0_0.webp','blij')" loading="lazy"><img src="stickers/baby_0_1.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/baby_0_1.webp','verdriet')" loading="lazy"><img src="stickers/baby_0_2.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/baby_0_2.webp','stil')" loading="lazy"><img src="stickers/baby_0_3.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/baby_0_3.webp','boos')" loading="lazy"></div></div>
-      <div class="sticker-sectie" id="sticker-boy"><div class="pack-grid" style="grid-template-columns:repeat(4,1fr);"><img src="stickers/anime_boy_0_0.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/anime_boy_0_0.webp','blij')" loading="lazy"><img src="stickers/anime_boy_0_1.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/anime_boy_0_1.webp','cool')" loading="lazy"><img src="stickers/anime_boy_0_2.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/anime_boy_0_2.webp','wow')" loading="lazy"><img src="stickers/anime_boy_0_3.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/anime_boy_0_3.webp','stil')" loading="lazy"></div></div>
-      <div class="sticker-sectie" id="sticker-girl"><div class="pack-grid" style="grid-template-columns:repeat(4,1fr);"><img src="stickers/anime_girl_0_0.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/anime_girl_0_0.webp','blij')" loading="lazy"><img src="stickers/anime_girl_0_1.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/anime_girl_0_1.webp','cool')" loading="lazy"><img src="stickers/anime_girl_0_2.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/anime_girl_0_2.webp','wow')" loading="lazy"><img src="stickers/anime_girl_0_3.webp" style="width:100%;height:56px;object-fit:contain;border-radius:8px;cursor:pointer;border:1.5px solid transparent;" onclick="sendLosStickerMetGeluid('stickers/anime_girl_0_3.webp','stil')" loading="lazy"></div></div>
-      <div class="sticker-sectie" id="sticker-eigen">
-        <div id="eigenStickerWrap" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-        <button style="font-size:24px;padding:6px;background:rgba(192,132,252,0.1);border:1.5px dashed var(--accent);border-radius:10px;cursor:pointer;" onclick="openStickerUpload()">➕</button>
-      </div>
-    </div>
+    <div id="stickerGrid" style="display:none;"></div>
     <div id="spelMenuGrid" style="display:none;padding:14px 12px;background:rgba(0,0,0,0.85);border-top:0.5px solid var(--border);max-height:280px;overflow-y:auto;">
       <div style="font-size:12px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;text-align:center;" data-t>🎮 Speel samen</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
@@ -329,24 +279,6 @@ window.veiligeUrl = function(v){
   </div>
 </div>
 
-<div class="modal-bg" id="stickerUploadModal">
-  <div class="modal" style="max-width:340px;">
-    <div class="modal-icon">🎨</div>
-    <div class="modal-title" data-t>Eigen sticker toevoegen</div>
-    <input type="file" id="stickerFileInput" accept="image/*" style="display:none" onchange="previewStickerUpload(this)">
-    <button class="modal-btn confirm" style="width:100%;margin-bottom:10px;" onclick="document.getElementById('stickerFileInput').click()" data-t>📁 Kies afbeelding</button>
-    <div id="stickerPreviewWrap" style="display:none;margin-bottom:10px;">
-      <img id="stickerPreviewImg" class="sticker-preview-img">
-    </div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;text-align:left;" data-t>Kies een geluid (optioneel):</div>
-    <div class="geluidsbib-grid" id="geluidsBibGrid"></div>
-    <div class="modal-btns" style="margin-top:12px;">
-      <button class="modal-btn cancel" onclick="sluitStickerUpload()" data-t>Annuleer</button>
-      <button class="modal-btn confirm" onclick="slaCustomStickerOp()" data-t>Opslaan ✓</button>
-    </div>
-  </div>
-</div>
-
 <div class="buzz-overlay" id="buzzOverlay"><div class="buzz-overlay-inner"><svg viewBox="0 0 24 24" width="110" height="110" fill="#facc15" style="filter:drop-shadow(0 0 18px rgba(250,204,21,0.9))"><path d="M13 2 L4 14 h6 l-1 8 9-12 h-6 z"/></svg></div></div>
 <div id="oproepModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
   <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#c084fc,#f0abfc);display:flex;align-items:center;justify-content:center;font-size:44px;animation:pulse 1.2s ease-in-out infinite;overflow:hidden;" id="oproepAvatar">👤</div>
@@ -385,6 +317,9 @@ window.veiligeUrl = function(v){
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
   import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=152'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
+  import { maakStickerkeuze } from './stickerkeuze.js?v=153'
+  import { zoekSticker } from './stickervellen.js?v=153'
+  import { speel as speelFx, speelGeluid as speelFxGeluid, naamVan as fxNaam } from './stickerfx.js?v=153'
   import { stuurRapport } from './rapport.js?v=95'
   import * as Schaak from './schaak.js?v=95'
   import * as Dammen from './dammen.js?v=95'
@@ -1233,6 +1168,27 @@ console.timeLog('[chat] berichten', 'opgehaald')
       container.appendChild(row); return
     }
 
+    // v153: sticker met beweging en geluid. In het bericht staat alleen de code (fxsticker:f1-01);
+    // het plaatje, de beweging en het geluid staan op het toestel (stickervellen.js, stickerfx.js).
+    if (content.startsWith('fxsticker:')) {
+      const st = zoekSticker(content.slice(10))
+      if (st) {
+        row.innerHTML = `
+        <div class="msg-av-sm">${esc(avatar)}</div>
+        <div class="fx-wrap">
+          <img class="fx-sticker" width="120" height="120" alt="${esc(fxNaam(st))}" src="${st.src}">
+          <div class="fx-tijd">${tijd}</div>
+        </div>`
+        const img = row.querySelector('.fx-sticker')
+        img.dataset.fx = st.vel + '-' + st.nr
+        container.appendChild(row)
+        // nieuw bericht: bewegen; geluid alleen bij de ontvanger (de verstuurder hoorde het al bij het versturen)
+        if (metGeluid) speelFx(img, st, !isMijn)
+        return
+      }
+      content = T('\u{1F5BC}\uFE0F Sticker') // onbekende sticker (nieuwer vel dan dit toestel kent): gewoon als tekst
+    }
+
     if (content.startsWith('lossticker:')) {
       const srcClean = content.replace('lossticker:','').split(':').slice(0,-1).join(':')
       const geluidClean = content.split(':').pop()
@@ -1240,7 +1196,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       row.innerHTML = `
         <div class="msg-av-sm">${esc(avatar)}</div>
         <div style="padding:4px;">
-          <img src="${veiligeUrl(srcClean)}" style="width:80px;height:80px;object-fit:contain;border-radius:12px;display:block;">
+          <img src="${/^stickers\/[a-z0-9_]+\.webp$/.test(srcClean) ? srcClean : veiligeUrl(srcClean)}" style="width:80px;height:80px;object-fit:contain;border-radius:12px;display:block;">
           <div style="font-size:12px;color:var(--muted);margin-top:2px;text-align:right;">${tijd}</div>
         </div>`
       container.appendChild(row); return
@@ -1384,7 +1340,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   const bewaarNV = a => { try { localStorage.setItem(nvSleutel(), JSON.stringify(a.slice(-50))) } catch (e) {} }
   function nvOmschrijving(tekst) {
     if (tekst.startsWith('sticker:')) return (tekst.split(':')[1] || '') + T(' (sticker)')
-    if (tekst.startsWith('lossticker:') || tekst.startsWith('customsticker:')) return T('\u{1F5BC}\uFE0F Sticker')
+    if (tekst.startsWith('lossticker:') || tekst.startsWith('customsticker:') || tekst.startsWith('fxsticker:')) return T('\u{1F5BC}\uFE0F Sticker')
     return tekst
   }
   function tekenNV(item) {
@@ -1462,33 +1418,22 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (!(await verstuur(vriendId, tekst, antwoordOp, true))) nietVerstuurd(vriendId, tekst, antwoordOp, true)
   }
 
-  // ─── Sticker versturen (versleuteld + cache) ───
-  window.sendLosStickerMetGeluid = async function(src, emotieId) {
-    if (!geselecteerdeVriend) return
-    speelEmotieGeluid(emotieId)
+  // ─── Sticker versturen (v153): alleen de code van de sticker gaat mee, versleuteld ───
+  async function stuurFxSticker(st) {
+    if (!geselecteerdeVriend || !st) return
+    speelFxGeluid(st.g)
     document.getElementById('stickerGrid').style.display = 'none'
-    const tekst = 'lossticker:' + src + ':' + emotieId
+    const tekst = 'fxsticker:' + st.vel + '-' + st.nr
     const vriendId = geselecteerdeVriend.id
     if (!(await verstuur(vriendId, tekst))) nietVerstuurd(vriendId, tekst)
   }
-
-  window.sendStickerMetGeluid = async function(emoji, emotieId) {
-    if (!geselecteerdeVriend) return
-    speelEmotieGeluid(emotieId)
-    document.getElementById('stickerGrid').style.display = 'none'
-    const tekst = 'sticker:' + emoji + ':' + emotieId
-    const vriendId = geselecteerdeVriend.id
-    if (!(await verstuur(vriendId, tekst))) nietVerstuurd(vriendId, tekst)
-  }
-
-  window.sendCustomSticker = async function(sticker) {
-    if (!geselecteerdeVriend) return
-    if (sticker.geluid) speelGeluidById(sticker.geluid)
-    document.getElementById('stickerGrid').style.display = 'none'
-    const tekst = 'customsticker:' + JSON.stringify({ image: sticker.image, geluid: sticker.geluid })
-    const vriendId = geselecteerdeVriend.id
-    if (!(await verstuur(vriendId, tekst))) nietVerstuurd(vriendId, tekst)
-  }
+  maakStickerkeuze(document.getElementById('stickerGrid'), { onKies: stuurFxSticker })
+  // Tik op een sticker in de chat: nog een keer bewegen en klinken
+  document.getElementById('messages').addEventListener('click', e => {
+    const img = e.target && e.target.closest ? e.target.closest('.fx-sticker') : null
+    const st = img ? zoekSticker(img.dataset.fx) : null
+    if (st) speelFx(img, st, true)
+  })
 
   // ─── Buzz (niet versleuteld) ───
   // ─── Foto functies ───
@@ -2163,13 +2108,6 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
 
-  window.toonStickerTab = function(tabId) {
-    document.querySelectorAll('.sticker-tab').forEach(t => t.classList.remove('actief'))
-    document.querySelectorAll('.sticker-sectie').forEach(s => s.classList.remove('actief'))
-    document.querySelector(`.sticker-tab[onclick*="${tabId}"]`).classList.add('actief')
-    document.getElementById('sticker-' + tabId).classList.add('actief')
-  }
-
   window.showScreenshotModal = function() {
     if (screenshotAllowed) {
       document.getElementById('privacyBar').classList.add('show')
@@ -2379,67 +2317,8 @@ async function startBlockIt() {
   }
   function speelGeluidById(id) { const g=GELUIDEN.find(g=>g.id===id); if(g) g.speel() }
 
-  // ─── Sticker upload ───
-  let geselecteerdGeluid = null
-  let stickerImageData = null
-
-  window.openStickerUpload = function() {
-    geselecteerdGeluid=null; stickerImageData=null
-    document.getElementById('stickerPreviewWrap').style.display='none'
-    document.getElementById('stickerFileInput').value=''
-    bouwGeluidsBib()
-    document.getElementById('stickerUploadModal').classList.add('show')
-  }
-  window.sluitStickerUpload = function() { document.getElementById('stickerUploadModal').classList.remove('show') }
-  window.previewStickerUpload = function(input) {
-    const file=input.files[0]; if(!file) return
-    const reader=new FileReader()
-    reader.onload=(e) => {
-      const origImg=new Image()
-      origImg.onload=() => {
-        const canvas=document.createElement('canvas')
-        const MAX=80, ratio=Math.min(MAX/origImg.width,MAX/origImg.height)
-        canvas.width=Math.round(origImg.width*ratio); canvas.height=Math.round(origImg.height*ratio)
-        canvas.getContext('2d').drawImage(origImg,0,0,canvas.width,canvas.height)
-        stickerImageData=canvas.toDataURL('image/webp',0.5)
-        document.getElementById('stickerPreviewImg').src=stickerImageData
-        document.getElementById('stickerPreviewWrap').style.display='block'
-      }
-      origImg.src=e.target.result
-    }
-    reader.readAsDataURL(file)
-  }
-  function bouwGeluidsBib() {
-    const grid=document.getElementById('geluidsBibGrid'); grid.innerHTML=''
-    GELUIDEN.forEach(g => {
-      const div=document.createElement('div'); div.className='geluid-item'; div.id='geluid-'+g.id
-      div.innerHTML=`<div class="geluid-icon">${g.icon}</div><div class="geluid-naam">${T(g.naam)}</div>`
-      div.onclick=() => {
-        document.querySelectorAll('.geluid-item').forEach(i=>i.classList.remove('actief'))
-        div.classList.add('actief'); geselecteerdGeluid=g.id; g.speel()
-      }
-      grid.appendChild(div)
-    })
-  }
-  window.slaCustomStickerOp = function() {
-    if (!stickerImageData) { alert(T('Kies eerst een afbeelding!')); return }
-    const bestaand=JSON.parse(localStorage.getItem('fibro_custom_stickers')||'[]')
-    bestaand.push({ image:stickerImageData, geluid:geselecteerdGeluid||null })
-    localStorage.setItem('fibro_custom_stickers',JSON.stringify(bestaand))
-    sluitStickerUpload(); laadCustomStickers()
-  }
-  function laadCustomStickers() {
-    const stickers=JSON.parse(localStorage.getItem('fibro_custom_stickers')||'[]')
-    const eigenWrap=document.getElementById('eigenStickerWrap')
-    if (eigenWrap) eigenWrap.innerHTML=''
-    stickers.forEach(s => {
-      const wrap=document.createElement('span'); wrap.className='custom-sticker-wrap'
-      const img=document.createElement('img'); img.src=s.image; img.className='custom-sticker'
-      img.onclick=()=>sendCustomSticker(s); wrap.appendChild(img)
-      if (eigenWrap) eigenWrap.appendChild(wrap)
-    })
-  }
-  setTimeout(()=>laadCustomStickers(),500)
+  // v153: de oude eigen stickers (80 pixels, in localStorage) zijn weg; ook van het toestel opruimen
+  try { localStorage.removeItem('fibro_custom_stickers') } catch (e) {}
 
   // ─── Reset encryptie sleutels ───
   window.resetSleutels = async function() {

@@ -2,6 +2,7 @@
 // Gebruikt het bewezen spel-patroon: gedeeld kanaal met gesorteerde IDs
 // v143: meldingen ook in het Engels (taal.js)
 // v150: camera in HD (1280x720) als dat kan, en zonder (vrije) camera verder met alleen geluid
+// v151: pushmelding bij bellen ('belt je'), en 'gemiste oproep' als niemand opnam (stuur-push)
 import { supabase } from './supabase.js?v=95'
 import { ICE_SERVERS, iceReady } from './ice-config.js?v=149'
 import { houOpen } from './lijntjes.js?v=1'
@@ -26,6 +27,51 @@ let gesprekKlaar = null   // belofte: klaar zodra het gesprekskanaal echt open i
 let iceBuffer = []        // ICE-gegevens die binnenkomen voordat offer/answer verwerkt is
 let videoGewenst = false  // v150: met video gebeld/opgenomen (ook als de eigen camera niet lukte)
 const BELLEN_VERSIE = 105 // gaat mee in elk signaal: zo toont het log welke versie de ander draait
+
+// v151: pushmelding naar de vriend. De tekst maakt stuur-push zelf (in de taal van de ontvanger);
+// 'gemist' heeft dezelfde tag als 'belt je' en vervangt die melding op de telefoon van de ander.
+const PUSH_URL = 'https://qmgatbphiplrfxrljtbe.supabase.co/functions/v1/stuur-push'
+let belMeldingNaar = null  // naar wie een 'belt je'-melding ging, tot er opgenomen of opgegeven is
+let belPas = null          // inlogpas van dat moment (voor 'gemist', ook als de pagina net sluit)
+let oproepBezig = null     // het versturen van 'belt je' (eerst klaar, dan pas 'gemist')
+let opgenomen = false      // de ander nam op ('geaccepteerd')
+
+async function stuurOproepMelding(naar, type) {
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session || belMeldingNaar !== naar || opgenomen) return // al opgenomen of opgehangen
+    belPas = session.access_token
+    await fetch(PUSH_URL, { method: 'POST', keepalive: true,
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + belPas },
+      body: JSON.stringify({ receiver_id: naar, type }) })
+  } catch (e) { console.log('[bellen] belmelding versturen mislukt:', e) }
+}
+
+// Niemand nam op (en de ander weigerde ook niet): 'gemiste oproep'. direct = de pagina sluit net.
+function meldGemist(direct) {
+  const naar = belMeldingNaar
+  belMeldingNaar = null
+  if (!naar || opgenomen) return null
+  const stuur = () => {
+    if (!belPas) return
+    return fetch(PUSH_URL, { method: 'POST', keepalive: true,
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + belPas },
+      body: JSON.stringify({ receiver_id: naar, type: 'gemist' }) }).catch(e => console.log('[bellen] gemist versturen mislukt:', e))
+  }
+  return direct ? stuur() : Promise.resolve(oproepBezig).then(stuur)
+}
+// Pagina dicht terwijl het nog overgaat: toch 'gemist' (keepalive: het verzoek overleeft het sluiten)
+window.addEventListener('pagehide', () => { if (belMeldingNaar && !opgenomen) meldGemist(true) })
+
+// De pushmelding van een oproep van deze vriend weghalen (opgenomen, geweigerd of verbonden)
+export async function sluitBelMelding(vanId) {
+  try {
+    if (!vanId || !('serviceWorker' in navigator)) return
+    const reg = await navigator.serviceWorker.getRegistration()
+    if (!reg || !reg.getNotifications) return
+    for (const n of await reg.getNotifications({ tag: 'oproep-' + vanId })) n.close()
+  } catch (e) {}
+}
 
 // v150: zonder wens gaf de browser meestal 640x480: wazig op een groot scherm. 'ideal' = als het kan.
 const CAMERA = { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30, max: 30 } }
@@ -138,6 +184,7 @@ async function verwerkSignaal(type, data, v) {
   else console.log('Signaal ontvangen:', type, '(versie ander: ' + (v || 'oud') + ')')
   if (type === 'geaccepteerd') {
     if (!isInitiator) return
+    opgenomen = true // v151: geen 'gemiste oproep' meer
     await maakEnStuurOffer()
   }
   if (type === 'offer') {
@@ -170,7 +217,7 @@ async function verwerkSignaal(type, data, v) {
     if (!peerConnection || !peerConnection.remoteDescription) { iceBuffer.push(data); return }
     try { await peerConnection.addIceCandidate(new RTCIceCandidate(data)) } catch(e) { console.warn('ICE fout:', e) }
   }
-  if (type === 'ophangen') { beeindigGesprek(false) }
+  if (type === 'ophangen') { belMeldingNaar = null; beeindigGesprek(false) } // geweigerd: geen 'gemist'
   if (type === 'video-status') {
     if (onVideoStatusCallback) onVideoStatusCallback(data.actief)
   }
@@ -188,6 +235,7 @@ export async function belOp(naarVriendId, video = false, spelModus = false) {
   vriendId = naarVriendId
   isInitiator = true
   videoGewenst = !!video
+  belMeldingNaar = null; opgenomen = false; oproepBezig = null
   try {
     lokaleStream = await haalMicEnCamera(video)
   } catch(e) { alert(window.T ? window.T('Geen toegang tot microfoon/camera.') : 'Geen toegang tot microfoon/camera.'); return false }
@@ -201,10 +249,16 @@ export async function belOp(naarVriendId, video = false, spelModus = false) {
   const verstuurd = await uitnodiging.send({ type: 'broadcast', event: 'uitnodiging', payload: { van: huidigeUserId, video, spel: spelModus } })
   if (verstuurd !== 'ok') console.warn('[bellen] uitnodiging niet verstuurd:', verstuurd)
   supabase.removeChannel(uitnodiging)
+  // v151: ook een pushmelding ('belt je'), voor als Fibro bij de ander niet open staat (niet bij een spel)
+  if (!spelModus) {
+    belMeldingNaar = naarVriendId
+    oproepBezig = stuurOproepMelding(naarVriendId, video ? 'oproep-video' : 'oproep')
+  }
   // Zonder timeout blijft de microfoon oneindig aan als niemand opneemt
   stopBelTimeout()
   belTimeout = setTimeout(() => {
     console.log('Niemand nam op — gesprek beëindigd na timeout')
+    meldGemist(false)
     stuurSignaal('ophangen', {})
     beeindigGesprek(true)
   }, BEL_TIMEOUT_MS)
@@ -221,12 +275,14 @@ export async function accepteerOproep(video = false) {
   // en bij een spel is het misschien net pas geopend)
   if (gesprekKlaar) await gesprekKlaar
   if (!gesprekKanaal && vriendId) await openGesprekKanaal(vriendId)
+  sluitBelMelding(vriendId) // v151: de 'belt je'-melding is nu niet meer nodig
   maakPeerConnection()
   await stuurSignaal('geaccepteerd', {})
   return true
 }
 
 export async function weigerooproep() {
+  sluitBelMelding(vriendId) // v151
   await stuurSignaal('ophangen', {})
   // Kanaal opruimen — anders lekt elk geweigerd gesprek een open Supabase-kanaal
   if (gesprekKanaal) { supabase.removeChannel(gesprekKanaal); gesprekKanaal = null }
@@ -355,8 +411,10 @@ export function isVideoActiefLokaal() {
 }
 
 export async function hangOp() {
+  const gemist = meldGemist(false) // v151: opgehangen voordat de ander opnam
   await stuurSignaal('ophangen', {})
   beeindigGesprek(true)
+  if (gemist) await Promise.race([gemist, wachtMs(2000)]) // daarna pas naar een andere pagina
 }
 
 function beeindigGesprek(doorOns) {
@@ -384,6 +442,7 @@ function beeindigGesprek(doorOns) {
   vriendId = null
   isInitiator = false
   videoGewenst = false
+  belMeldingNaar = null; opgenomen = false; oproepBezig = null // belPas blijft: 'gemist' kan nog onderweg zijn
   videoSender = null
   videoActiefLokaal = false
   if (onEindCallback) onEindCallback(doorOns)

@@ -100,13 +100,17 @@ self.addEventListener('push', function(event) {
   const data = event.data ? event.data.json() : {}
   const title = data.title || 'Fibro'
   const isBuzz = data.type === 'buzz'
+  // v151: oproep ('belt je') blijft staan tot je erop tikt; 'gemist' vervangt hem (zelfde tag van de server)
+  const isOproep = data.type === 'oproep' || data.type === 'oproep-video'
+  const tag = typeof data.tag === 'string' && data.tag ? data.tag : (isBuzz ? 'buzz' : undefined)
   const options = {
     body: data.body || 'Je hebt een nieuw bericht',
     icon: isBuzz ? '/Fibro/icon-buzz.png' : '/Fibro/icon-192.png',
     badge: '/Fibro/icon-192.png',
-    vibrate: isBuzz ? [300, 80, 300, 80, 300, 80, 500] : [200, 100, 200],
-    tag: isBuzz ? 'buzz' : undefined,
-    renotify: isBuzz,
+    vibrate: isBuzz ? [300, 80, 300, 80, 300, 80, 500] : isOproep ? [700, 300, 700, 300, 700, 300, 700] : [200, 100, 200],
+    tag: tag,
+    renotify: !!tag,
+    requireInteraction: isOproep,
     data: { url: data.url || '/chat.html' }
   }
   event.waitUntil(self.registration.showNotification(title, options))

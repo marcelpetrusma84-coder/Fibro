@@ -207,6 +207,14 @@ tools/proef50.mjs        de functie stuur-push (v151) met belmeldingen: oproep /
                          inkomend=1, TTL 45 s, urgency high) en gemist (opent de chat, 1 dag), tag oproep-<beller> zodat
                          gemist de belt-je-melding vervangt; bericht/buzz precies als vroeger (proef46 moet ook slagen).
                          Oude functie als controle: 7 fout. node proef50.mjs <index.ts> <map met node_modules>
+tools/proef51.py         pushmelding bij bellen (v151) met de echte bellen.html, bellen.js en service-worker.js: oproep
+                         (of oproep-video) bij bellen, gemist als niemand opnam (beltijd versneld) of de beller ophing,
+                         niets extra bij opnemen of weigeren, niets bij een spel; de portier toont de oproep met tag
+                         (blijft staan), gemist vervangt hem, sluitBelMelding haalt alleen die weg (CDP
+                         ServiceWorker.deliverPushMessage, localhost-server, channel='chromium': de kale headless weigert
+                         meldingen). Pagina dicht tijdens overgaan = poging (keepalive + CORS-voorvraag), telt niet mee.
+                         Let op: tijdens time.sleep handelt Playwright niets af; wacht met page.wait_for_timeout.
+                         Oude map als controle: 1 van 11. python3 -I proef51.py <map>
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

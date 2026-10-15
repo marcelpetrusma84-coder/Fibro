@@ -140,7 +140,7 @@ function stopBeltoon() {
 </script>
 <script type="module">
 import { supabase } from './supabase.js?v=95'
-import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo } from './bellen.js?v=150'
+import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo, sluitBelMelding } from './bellen.js?v=151'
 
 const params = new URLSearchParams(window.location.search)
 const vriendId = params.get('vriend')
@@ -237,6 +237,7 @@ function startTimer() {
   document.getElementById('knoppen-gesprek').style.display = 'flex'
   document.getElementById('status').textContent = T('Verbonden')
   document.getElementById('tijd').style.display = 'block'
+  sluitBelMelding(vriendId) // v151: een late 'belt je'-melding hoort er nu niet meer
   if (videoModus) {
     document.getElementById('remoteMedia').style.display = 'block'
     // v150: zonder eigen camera (alleen geluid) geen leeg zwart vakje
@@ -268,6 +269,7 @@ window.startBellen = async (video) => {
 window.annuleer = async () => { stopBeltoon(); await hangOp(); window.location.href = 'chat.html' }
 window.weiger = async () => {
   stopBeltoon()
+  sluitBelMelding(vriendId) // v151: de pushmelding weg
   if (wachtKanaal) {
     // Via het wachtkanaal, zodat de beller het echt hoort
     try { await wachtKanaal.send({ type: 'broadcast', event: 'signaal', payload: { type: 'ophangen', data: {} } }) } catch (e) {}

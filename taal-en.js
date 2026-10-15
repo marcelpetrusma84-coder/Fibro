@@ -1,4 +1,4 @@
-// taal-en.js - de Engelse woordenlijst van Fibro (v10, 15 oktober 2026, v154)
+// taal-en.js - de Engelse woordenlijst van Fibro (v11, 15 oktober 2026, v155)
 // Wordt alleen geladen als de taal Engels is (zie taal.js). Links staat de Nederlandse tekst precies zoals
 // in de code of de html (de sleutel), rechts de Engelse. {n}, {naam} enz. zijn invulplekken; {app} is de
 // naam van de app (staat op een plek: APP in taal.js). Ontbreekt een zin, dan blijft hij Nederlands.
@@ -9,6 +9,7 @@
 // v152: belregels in de chat (belregel.js), Over Fibro: ook wanneer en hoe lang je belde.
 // v153: de nieuwe stickerkeuze in de chat (stickerkeuze.js).
 // v154: het Stickerlab in Profiel (stickermaker.js).
+// v155: eigen stickers versturen in de chat (stickerkeuze.js, chat.html).
 window.FIBRO_EN = {
 
 // ---- Overal ----
@@ -1250,4 +1251,11 @@ window.FIBRO_EN = {
   "Verwijderen lukte niet.": "Deleting didn't work.",
   "Sticker verwijderd": "Sticker deleted",
   "Je eigen stickers maak je in Profiel, bij Stickers. Versturen naar vrienden komt binnenkort.": "You make your own stickers in Profile, under Stickers. Sending them to friends is coming soon.",
+// ---- Eigen stickers in de chat (v155) ----
+  "Maak een sticker van je eigen afbeelding, met een beweging en een geluid. Je stickers staan op dit toestel. Je vrienden krijgen ze vanzelf zodra jullie allebei online zijn.": "Make a sticker from your own picture, with a movement and a sound. Your stickers are on this device. Your friends get them automatically as soon as you're both online.",
+  "Je eigen stickers maak je in Profiel, bij Stickers.": "You make your own stickers in Profile, under Stickers.",
+  "Eigen sticker": "Own sticker",
+  "Sticker komt eraan": "Sticker on its way",
+  "Komt binnen zodra jullie allebei online zijn": "Arrives as soon as you're both online",
+  "Sticker": "Sticker",
 }

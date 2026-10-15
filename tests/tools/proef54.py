@@ -221,7 +221,7 @@ with sync_playwright() as pw:
     en = ev("() => ({ label: document.querySelector('#panel-stickers .section-label').textContent, kop: document.querySelector('.sm-velkop b').textContent, teller: document.querySelector('.sm-velkop span').textContent, uitleg: document.querySelector('.sm-uitleg').textContent })")
     klik('#eigenStickers .sm-plek[data-code="e1-03"]'); kies(tmp + '/effen.png')
     en2 = ev("() => ({ titel: document.getElementById('smTitel').textContent, modi: [...document.querySelectorAll('.sm-segment button')].map(b => b.textContent), hint: document.querySelector('.sm-hint').textContent, bewaar: document.querySelector('.sm-onder .sm-knop.hoofd').textContent, rand: document.querySelector('.sm-vink span').textContent, beweging: document.getElementById('smBeweging').selectedOptions[0].textContent })")
-    check('Engels: vellen', isinstance(en, dict) and en['label'] == 'Your own chat stickers' and en['kop'] == 'Your own sheet 1' and en['teller'] == '1 of 12' and en['uitleg'].startswith('Make a sticker from your own picture'), en)
+    check('Engels: vellen', isinstance(en, dict) and en['label'] == 'Your own chat stickers' and en['kop'] == 'Your own sheet 1' and en['teller'] == '1 of 12' and en['uitleg'].startswith('Make a sticker from your own picture') and 'automatically' in en['uitleg'], en)
     check('Engels: maker', isinstance(en2, dict) and en2['titel'] == 'New sticker' and en2['modi'] == ['Remove background', 'With your finger', 'Keep everything'] and en2['hint'].startswith('Everything that looks like') and en2['bewaar'] == 'Save' and en2['rand'] == 'White border' and en2['beweging'] == 'Bounce', en2)
     check('H/I: geen fouten op de pagina', p.fouten == [], p.fouten)
     ctx.close()
@@ -234,7 +234,7 @@ with sync_playwright() as pw:
     p.goto(BASIS + 'chat.html'); p.wait_for_timeout(2500)
     ev("() => { const v = document.querySelector('#stickerGrid .sk-vak[data-vak=\"e1\"]'); if (v) v.click() }"); p.wait_for_timeout(200)  # (de chat zelf is nog dicht)
     t = ev("() => { const i = document.querySelector('#stickerGrid .sk-inhoud'); return i ? i.innerText.trim() : null }")
-    check('chat, vakje Eigen: je maakt ze in Profiel, versturen komt binnenkort', t == 'Je eigen stickers maak je in Profiel, bij Stickers. Versturen naar vrienden komt binnenkort.', t)
+    check('chat, vakje Eigen zonder eigen stickers: je maakt ze in Profiel', t == 'Je eigen stickers maak je in Profiel, bij Stickers.', t)
     check('J: geen fouten op de pagina', p.fouten == [], p.fouten)
     ctx.close(); br.close(); srv.terminate()
 

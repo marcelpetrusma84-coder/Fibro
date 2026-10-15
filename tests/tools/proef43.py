@@ -149,6 +149,11 @@ MAG_ERBIJ |= {'Je eigen chatstickers', 'Maak een sticker van je eigen afbeelding
               '0 van 12', 'Je eigen stickers maak je in Profiel, bij Stickers. Versturen naar vrienden komt binnenkort.'}
 MAG_ERBIJ |= {'Nieuwe sticker in eigen vel %d, plek %d' % (v, n) for v in (1, 2) for n in range(1, 13)}
 MAG_ERBIJ |= {'JE EIGEN CHATSTICKERS'}; MAG_WEG |= {'EIGEN STICKER UPLOADEN'}  # (koppen staan in hoofdletters)
+# v155: je eigen stickers gaan nu mee naar je vrienden (andere uitleg in Profiel en bij Eigen in de chat)
+MAG_ERBIJ |= {'Maak een sticker van je eigen afbeelding, met een beweging en een geluid. Je stickers staan op dit toestel. Je vrienden krijgen ze vanzelf zodra jullie allebei online zijn.',
+              'Je eigen stickers maak je in Profiel, bij Stickers.'}
+MAG_WEG |= {'Maak een sticker van je eigen afbeelding, met een beweging en een geluid. Je stickers staan alleen op dit toestel. Versturen naar vrienden komt binnenkort.',
+            'Je eigen stickers maak je in Profiel, bij Stickers. Versturen naar vrienden komt binnenkort.'}
 MAG_WEG |= {'Eigen sticker uploaden', 'Upload je eigen sticker', 'PNG, WEBP, SVG, GIF \u2014 max 2MB', '\U0001F3A8',
             'Hier komen je eigen stickers. Je kunt ze binnenkort zelf maken in Profiel.'}
 

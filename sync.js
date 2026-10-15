@@ -1,4 +1,5 @@
 // sync.js — P2P widget-sync via WebRTC DataChannel (v146: vraag over muziek via relay ook in het Engels)
+// v155: ook je eigen stickers (eigenstickers.js) gaan mee, en de vriend van de open chat gaat voor (syncMetVriend).
 // Stap A: presence ✓ | Stap B: DataChannel ping-pong
 // Zelfde signaling-patroon als bellen.js: gedeeld kanaal met gesorteerde IDs
 import { supabase } from './supabase.js?v=95'
@@ -27,6 +28,7 @@ let anderKlaar = false       // de vriend heeft alles van mij (v106)
 // v112: de video van een vriend wordt pas opgehaald als iemand hem wil zien
 let videoVraag = null        // { vriendId, opVoortgang, resolve, reject, timer }
 let voorkeurVriend = null    // met deze vriend eerst verbinden (voor een videovraag)
+let chatVriend = null        // v155: de vriend van de open chat gaat voor (syncMetVriend)
 let manifestVan = null       // van welke vriend het laatste manifest binnenkwam
 let laatsteVideoHash = null  // video volgens dat manifest (null = geen video)
 
@@ -232,6 +234,7 @@ function onlineVeranderd() {
     toonDebugBadge()
   }
   if (syncPartnerId && !onlineGebruikers.has(syncPartnerId)) stopSync()
+  if (naarChatVriend(false)) return
   checkSyncStart()
 }
 
@@ -253,9 +256,8 @@ async function laadVrienden() {
 function checkSyncStart() {
   if (syncPartnerId) return
   const kan = (id) => vrienden.has(id) && !inRust(id) && !inPauze(id)
-  const ander = (voorkeurVriend && onlineGebruikers.has(voorkeurVriend) && kan(voorkeurVriend))
-    ? voorkeurVriend
-    : [...onlineGebruikers].find(kan)
+  const eerst = [voorkeurVriend, chatVriend].find((id) => id && onlineGebruikers.has(id) && kan(id))
+  const ander = eerst || [...onlineGebruikers].find(kan)
   if (!ander) { planPauze(); return }
   syncPartnerId = ander
   isInitiator = huidigeUserId < ander
@@ -550,6 +552,27 @@ function hashString(s) {
   return h.toString(16)
 }
 
+// v155: eigen stickers (eigenstickers.js, 'eigensticker_<uid>_<code>'). Wat meegaat is een klein pakketje:
+// het plaatje (WebP/PNG), de beweging, het geluid en de naam. De vingerafdruk is die van het pakketje, dus
+// een andere beweging of naam komt ook mee. Hoogstens 2 x 12 stickers.
+const STICKER_CODE = /^e[12]-(0[1-9]|1[0-2])$/
+const STICKER_DATA = /^data:image\/(webp|png);base64,/
+const MAX_STICKER_CHUNKS = 40 // 480 kB; een sticker is meestal 10-60 kB
+function stickerPakket(rec) {
+  return JSON.stringify({ d: rec.data, b: String(rec.b || 'geen'), g: String(rec.g || 'geen'), n: String(rec.naam || '').slice(0, 30) })
+}
+async function verzamelEigenStickers() {
+  const uit = {}
+  const pre = 'eigensticker_' + huidigeUserId + '_'
+  for (const key of await dbListKeys(pre)) {
+    const code = key.slice(pre.length)
+    if (!STICKER_CODE.test(code)) continue
+    const rec = await dbGet(key)
+    if (rec && typeof rec.data === 'string' && STICKER_DATA.test(rec.data)) uit[code] = hashString(stickerPakket(rec))
+  }
+  return uit
+}
+
 async function verzamelEigenFotos() {
   // Foto's van de home-widgets staan in localStorage als pfoto_<stijl>_<idx>_<uid>
   // itemId = key ZONDER uid-suffix, zodat de ontvanger apparaat-onafhankelijke ids cachet
@@ -624,6 +647,8 @@ async function eigenVideoHash(metaHash) {
   const layoutJson = localStorage.getItem('fibro_widgets_profiel_' + huidigeUserId) || '[]'
   const fotos = await verzamelEigenFotos()
   const muziek = await verzamelEigenMuziek()
+  let stickers = {}
+  try { stickers = await verzamelEigenStickers() } catch (e) { console.warn('[sync] stickers verzamelen mislukt', e) }
   // Weergavenaam reist mee over P2P: hij staat bewust niet op de server.
   let eigenNaam = ''
   try { eigenNaam = String(JSON.parse(localStorage.getItem('fibro_profiel_' + huidigeUserId) || '{}').naam || '').slice(0, 40) } catch(e) {}
@@ -673,7 +698,8 @@ async function eigenVideoHash(metaHash) {
     klein,
     wbg,
                                 blokstijl: eigenBlokstijl,
-          naam: eigenNaam
+          naam: eigenNaam,
+    stickers
   }
   dataChannel.send(JSON.stringify({ type: 'manifest', data: manifest }))
   zetP2pStatus('manifest gestuurd')
@@ -716,6 +742,20 @@ async function verwerkP2pBericht(bericht) {
     for (const itemId of Object.keys(fotos)) {
       const fCached = await dbGet('vriend_' + syncPartnerId + '_foto_' + itemId)
       if (!fCached || fCached.hash !== fotos[itemId].hash) nodig.push('foto:' + itemId)
+    }
+    // v155: eigen stickers van de vriend: alleen wat nieuw of anders is; wat hij weggooide hier ook weg.
+    // Een vriend met een oudere Fibro stuurt geen 'stickers' mee: dan niets opruimen.
+    const st = bericht.data.stickers
+    if (st && typeof st === 'object' && !Array.isArray(st)) {
+      const sPre = 'vriend_' + syncPartnerId + '_sticker_'
+      const geldig = Object.keys(st).filter((c) => STICKER_CODE.test(c) && typeof st[c] === 'string' && st[c].length <= 16).slice(0, 24)
+      for (const code of geldig) {
+        const sc = await dbGet(sPre + code)
+        if (!sc || sc.hash !== st[code]) nodig.push('sticker:' + code)
+      }
+      for (const key of await dbListKeys(sPre)) {
+        if (!geldig.includes(key.slice(sPre.length))) { await dbDelete(key); console.log('[sync] Sticker weg bij vriend:', key) }
+      }
     }
     // Achtergrondfoto's achter tekstwidgets (v79)
                                 // Blokstijl van de vriend (v80): streng controleren, dan bewaren
@@ -846,6 +886,8 @@ async function verwerkP2pBericht(bericht) {
       } else if (item.startsWith('foto:')) {
         const itemId = item.slice(5)
         await stuurFotoInChunks(itemId)
+      } else if (item.startsWith('sticker:')) {
+        await stuurStickerInChunks(item.slice(8)) // v155 (klein: ook via relay)
                     } else if (item.startsWith('wbg:')) {
                         await stuurWbgInChunks(item.slice(4))
       } else if (item.startsWith('muziek:')) {
@@ -912,7 +954,9 @@ function isGeldigeChunk(b) {
   // VALIDATIE (bug #5): alle velden checken vóór gebruik.
   // Zonder deze check kon een peer bijv. totaal=1e9 sturen → new Array(1e9) → crash
   if (typeof b.itemId !== 'string' || b.itemId.length > 200) return false
-  if (!b.itemId.startsWith('pfoto_') && !b.itemId.startsWith('muziek_') && b.itemId !== 'video' && !/^widgetbg_(poll|quote|aftel|optel)$/.test(b.itemId)) return false
+  const isSticker = /^sticker_e[12]-(0[1-9]|1[0-2])$/.test(b.itemId) // v155
+  if (!isSticker && !b.itemId.startsWith('pfoto_') && !b.itemId.startsWith('muziek_') && b.itemId !== 'video' && !/^widgetbg_(poll|quote|aftel|optel)$/.test(b.itemId)) return false
+  if (isSticker && (!Number.isInteger(b.totaal) || b.totaal > MAX_STICKER_CHUNKS)) return false
   if (typeof b.hash !== 'string' || b.hash.length > 16) return false
   if (!Number.isInteger(b.totaal) || b.totaal < 1 || b.totaal > MAX_CHUNKS_PER_ITEM) return false
   if (!Number.isInteger(b.volgnr) || b.volgnr < 0 || b.volgnr >= b.totaal) return false
@@ -943,6 +987,23 @@ async function stuurFotoInChunks(itemId) {
       type: 'chunk', itemId, hash, volgnr: i, totaal,
       data: data.slice(i * CHUNK_TEKST, (i + 1) * CHUNK_TEKST)
     }))
+  }
+}
+
+async function stuurStickerInChunks(code) {
+  // Alleen eigen stickers met een geldige code (bug #5: nooit willekeurige sleutels)
+  if (typeof code !== 'string' || !STICKER_CODE.test(code)) { console.warn('[sync] sticker-verzoek geweigerd:', code); return }
+  const rec = await dbGet('eigensticker_' + huidigeUserId + '_' + code)
+  if (!rec || typeof rec.data !== 'string' || !STICKER_DATA.test(rec.data)) { console.warn('[sync] sticker niet gevonden:', code); return }
+  const data = stickerPakket(rec)
+  const hash = hashString(data)
+  const totaal = Math.ceil(data.length / CHUNK_TEKST)
+  if (totaal > MAX_STICKER_CHUNKS) { console.warn('[sync] sticker te groot:', code); return }
+  const itemId = 'sticker_' + code
+  for (let i = 0; i < totaal; i++) {
+    while (dataChannel && dataChannel.bufferedAmount > 512 * 1024) await new Promise((r) => setTimeout(r, 20))
+    if (!dataChannel || dataChannel.readyState !== 'open') return
+    dataChannel.send(JSON.stringify({ type: 'chunk', itemId, hash, volgnr: i, totaal, data: data.slice(i * CHUNK_TEKST, (i + 1) * CHUNK_TEKST) }))
   }
 }
 
@@ -1095,6 +1156,22 @@ async function verwerkChunk(bericht) {
                                                 opslagRecord.id = 'vriend_' + syncPartnerId + '_wbg_' + sl
                                                 opslagRecord.pos = wbgPosWacht[sl] || ''
                                                 delete wbgPosWacht[sl]
+                                            }
+                                            if (itemId.startsWith('sticker_')) {
+                                                // v155: pakketje van een eigen sticker van de vriend: streng nakijken, dan bewaren
+                                                let s = null
+                                                try { s = JSON.parse(compleet) } catch (e) {}
+                                                if (!s || typeof s.d !== 'string' || s.d.length > 600000 || !/^data:image\/(webp|png);base64,[A-Za-z0-9+/=]+$/.test(s.d)) {
+                                                    console.warn('[sync] sticker van vriend klopt niet, niet opgeslagen:', itemId)
+                                                    delete chunkBuffers[itemId]
+                                                    return
+                                                }
+                                                const woord = (w) => (typeof w === 'string' && /^[a-z]{1,20}$/.test(w)) ? w : 'geen'
+                                                opslagRecord.id = 'vriend_' + syncPartnerId + '_sticker_' + itemId.slice(8)
+                                                opslagRecord.data = s.d
+                                                opslagRecord.b = woord(s.b)
+                                                opslagRecord.g = woord(s.g)
+                                                opslagRecord.naam = typeof s.n === 'string' ? s.n.slice(0, 30) : ''
                                             }
                                             await dbPut(opslagRecord)
     delete chunkBuffers[itemId]
@@ -1342,6 +1419,31 @@ export function vraagVriendVideo(vriendId, opVoortgang) {
       checkSyncStart()
     }
   })
+}
+
+// v155: de vriend van de open chat gaat voor. Open je een chat, dan synct Fibro eerst met die vriend
+// (stickers, profiel); is hij nog niet online, dan zodra hij online komt. Al verbonden met hem: het lijstje
+// opnieuw sturen, zodat een net gemaakte sticker meteen meegaat. null = geen chat meer open.
+function naarChatVriend(gebruiker) {
+  if (!heeftSlot || !chatVriend || syncPartnerId === chatVriend || videoVraag) return false
+  if (!vrienden.has(chatVriend) || !onlineGebruikers.has(chatVriend) || inRust(chatVriend)) return false
+  if (gebruiker) wisPauze(chatVriend)
+  else if (inPauze(chatVriend)) return false
+  console.log('[sync] Eerst de vriend van de chat:', chatVriend)
+  if (syncPartnerId) stopSync()
+  checkSyncStart()
+  return true
+}
+export function syncMetVriend(vriendId) {
+  chatVriend = (typeof vriendId === 'string' && vriendId) ? vriendId : null
+  if (!chatVriend || !heeftSlot) return
+  if (syncPartnerId === chatVriend) {
+    if (dataChannel && dataChannel.readyState === 'open' && manifestVan === chatVriend) {
+      stuurManifest().catch((e) => console.log('[sync] Manifest afgebroken:', e && e.message))
+    }
+    return
+  }
+  naarChatVriend(true)
 }
 
 function stopSync() {

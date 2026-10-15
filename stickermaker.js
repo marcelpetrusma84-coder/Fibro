@@ -2,9 +2,9 @@
 // Twee eigen vellen van 12 plekken. Tik op een lege plek: kies een afbeelding, knip hem uit (effen
 // achtergrond weg, met je vinger, of alles houden), witte rand eromheen, kies een beweging en een geluid
 // (stickerfx.js) en bewaar hem op dit toestel (eigenstickers.js). Tik op een sticker om hem aan te passen
-// of te verwijderen. Versturen naar vrienden komt in een volgende stap.
+// of te verwijderen. v155: je vrienden krijgen ze vanzelf (sync.js) zodra jullie allebei online zijn.
 // Gebruik: startStickermaker(element, uid)
-import { EIGEN_VELLEN, PER_VEL, maakCode, leesEigen, bewaarEigen, wisEigen, laadAfbeelding, bekijkRand, achtergrondWeg, knipMetLijn, maakSticker } from './eigenstickers.js?v=154'
+import { EIGEN_VELLEN, PER_VEL, maakCode, leesEigen, bewaarEigen, wisEigen, laadAfbeelding, bekijkRand, achtergrondWeg, knipMetLijn, maakSticker } from './eigenstickers.js?v=155'
 import { BEWEGINGEN, GELUIDEN, naamVan, speel } from './stickerfx.js?v=153'
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
@@ -88,7 +88,7 @@ export async function startStickermaker(houder, uid) {
   houder.append(vellen)
   function tekenVellen() {
     vellen.textContent = ''
-    vellen.append(el('p', { class: 'sm-uitleg', text: T('Maak een sticker van je eigen afbeelding, met een beweging en een geluid. Je stickers staan alleen op dit toestel. Versturen naar vrienden komt binnenkort.') }))
+    vellen.append(el('p', { class: 'sm-uitleg', text: T('Maak een sticker van je eigen afbeelding, met een beweging en een geluid. Je stickers staan op dit toestel. Je vrienden krijgen ze vanzelf zodra jullie allebei online zijn.') }))
     EIGEN_VELLEN.forEach((vel, vi) => {
       const aantal = Object.keys(eigen).filter(c => c.startsWith(vel + '-')).length
       const kop = el('div', { class: 'sm-velkop' }, el('b', { text: T('Eigen vel {n}', { n: vi + 1 }) }), el('span', { text: T('{n} van 12', { n: aantal }) }))

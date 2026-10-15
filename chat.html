@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=12"></script>
+<script src="taal.js?v=13"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Chat</title>
@@ -93,6 +93,8 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .fx-wrap { padding:4px; }
 .fx-sticker { width:120px; height:120px; object-fit:contain; display:block; cursor:pointer; -webkit-tap-highlight-color:transparent; -webkit-user-drag:none; user-select:none; }
 .fx-tijd { font-size:12px; color:var(--muted); margin-top:2px; text-align:right; }
+.fx-wacht { border:1.5px dashed rgba(192,132,252,0.5); border-radius:18px; box-sizing:border-box; padding:34px; opacity:0.8; cursor:default; }
+.fx-wachttekst { font-size:12px; color:var(--text); opacity:0.8; margin-top:4px; max-width:120px; }
 .msg-input { flex:1; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-family:inherit; font-size:16px !important; outline:none; }
 .msg-input::placeholder { color:var(--muted); }
 .msg-input:focus { border-color:var(--accent); }
@@ -308,7 +310,7 @@ window.veiligeUrl = function(v){
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { laadWallpaper } from './wallpaper.js?v=95'
   import { supabase } from './supabase.js?v=95'
-  import { initSync } from './sync.js?v=149'
+  import { initSync, syncMetVriend } from './sync.js?v=155'
   import { startHeartbeat } from './heartbeat.js?v=117'
   import { startMeldingen } from './meldingen.js?v=143'
   import { houOpen } from './lijntjes.js?v=1'
@@ -317,7 +319,8 @@ window.veiligeUrl = function(v){
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
   import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=152'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
-  import { maakStickerkeuze } from './stickerkeuze.js?v=154'
+  import { maakStickerkeuze } from './stickerkeuze.js?v=155'
+  import { isCode as isEigenCode, zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel } from './eigenstickers.js?v=155'
   import { zoekSticker } from './stickervellen.js?v=153'
   import { speel as speelFx, speelGeluid as speelFxGeluid, naamVan as fxNaam } from './stickerfx.js?v=153'
   import { stuurRapport } from './rapport.js?v=95'
@@ -876,6 +879,7 @@ window.veiligeUrl = function(v){
   window.openChat = async function(vriendId, vriendNaam, vriendAvatar, vriendPubKey) {
     geselecteerdeVriend = { id: vriendId, naam: vriendNaam, avatar: vriendAvatar }
     window.geselecteerdeVriend = geselecteerdeVriend
+    syncMetVriend(vriendId) // v155: stickers en profiel eerst met deze vriend
     vriendPublicKey = vriendPubKey || null
     werkVerzendknopBij()
 
@@ -1141,7 +1145,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const belGemist = isBel && !isMijn && isGemist(content)
     if (isBel) content = belregelTekst(content, isMijn)
     if (!window._tekstPerId) window._tekstPerId = {}
-    window._tekstPerId[bericht.id] = content
+    // v155: bij een sticker in een antwoord of melding '🖼️ Sticker', niet de code erachter
+    const tekstVanBericht = /^(fxsticker|lossticker|customsticker|packsticker):/.test(content) ? T('\u{1F5BC}\uFE0F Sticker') : content
+    window._tekstPerId[bericht.id] = tekstVanBericht
     const vorige = container.lastElementChild
     const zelfdeAfzender = vorige && vorige.classList.contains('msg-row') && vorige.dataset.sid === String(bericht.sender_id)
     const row = document.createElement('div')
@@ -1152,7 +1158,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     row.dataset.tijd = tijd
     if (isVerwijderd) row.dataset.verwijderd = '1'
     if (bericht.antwoord_op) row.dataset.aop = bericht.antwoord_op
-    if (!isMijn && !isVerwijderd) { row.dataset.mtekst = String(content).slice(0, 500); row.dataset.meldbaar = '1' }
+    if (!isMijn && !isVerwijderd) { row.dataset.mtekst = String(tekstVanBericht).slice(0, 500); row.dataset.meldbaar = '1' }
 
     if (isBel) {
       // Geen msg-row: dan sluit het volgende bericht niet aan (avatar blijft) en komt er geen foto bij
@@ -1170,20 +1176,34 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
     // v153: sticker met beweging en geluid. In het bericht staat alleen de code (fxsticker:f1-01);
     // het plaatje, de beweging en het geluid staan op het toestel (stickervellen.js, stickerfx.js).
+    // v155: eigen stickers (fxsticker:e1-03) staan bij de verstuurder in Profiel en komen via sync.js bij de
+    // vriend ('vriend_<id>_sticker_<code>'). Nog niet binnen: een plaatsvervanger die vanzelf bijwerkt.
     if (content.startsWith('fxsticker:')) {
-      const st = zoekSticker(content.slice(10))
-      if (st) {
+      const code = content.slice(10)
+      const eigenCode = isEigenCode(code)
+      const vast = eigenCode ? null : zoekSticker(code)
+      if (vast || eigenCode) {
         row.innerHTML = `
         <div class="msg-av-sm">${esc(avatar)}</div>
         <div class="fx-wrap">
-          <img class="fx-sticker" width="120" height="120" alt="${esc(fxNaam(st))}" src="${st.src}">
+          <img class="fx-sticker" width="120" height="120" alt="">
           <div class="fx-tijd">${tijd}</div>
         </div>`
         const img = row.querySelector('.fx-sticker')
-        img.dataset.fx = st.vel + '-' + st.nr
-        container.appendChild(row)
-        // nieuw bericht: bewegen; geluid alleen bij de ontvanger (de verstuurder hoorde het al bij het versturen)
-        if (metGeluid) speelFx(img, st, !isMijn)
+        container.appendChild(row) // meteen op zijn plek: een eigen sticker opzoeken op het toestel duurt even
+        const st = vast || await (isMijn ? zoekEigenSticker(huidigeUser.id, code) : zoekVriendSticker(bericht.sender_id, code))
+        if (st) {
+          toonFx(img, st, code)
+          // nieuw bericht: bewegen; geluid alleen bij de ontvanger (de verstuurder hoorde het al bij het versturen)
+          if (metGeluid) speelFx(img, st, !isMijn)
+        } else if (!isMijn) {
+          wachtOpFx(img, vriendStickerSleutel(bericht.sender_id, code))
+        } else {
+          // een eigen sticker die je intussen weggooide
+          row.innerHTML = `
+        <div class="msg-av-sm">${esc(avatar)}</div>
+        <div class="bubble out"><span class="bubble-content">${esc(T('\u{1F5BC}\uFE0F Sticker'))}</span><span class="bubble-time">${tijd} ✓✓</span></div>`
+        }
         return
       }
       content = T('\u{1F5BC}\uFE0F Sticker') // onbekende sticker (nieuwer vel dan dit toestel kent): gewoon als tekst
@@ -1425,15 +1445,50 @@ console.timeLog('[chat] berichten', 'opgehaald')
     document.getElementById('stickerGrid').style.display = 'none'
     const tekst = 'fxsticker:' + st.vel + '-' + st.nr
     const vriendId = geselecteerdeVriend.id
+    if (st.vel.startsWith('e')) syncMetVriend(vriendId) // v155: eigen sticker: het lijstje meteen (opnieuw) naar de vriend
     if (!(await verstuur(vriendId, tekst))) nietVerstuurd(vriendId, tekst)
   }
-  maakStickerkeuze(document.getElementById('stickerGrid'), { onKies: stuurFxSticker })
+  const stickerKeuze = maakStickerkeuze(document.getElementById('stickerGrid'), { onKies: stuurFxSticker, uid: () => huidigeUser && huidigeUser.id })
+  // Een sticker in de chat laten zien (beweging en geluid staan erbij, voor het tikken)
+  function toonFx(img, st, code) {
+    img.classList.remove('fx-wacht')
+    delete img.dataset.wacht
+    const tekst = img.parentElement && img.parentElement.querySelector('.fx-wachttekst')
+    if (tekst) tekst.remove()
+    img.src = st.src
+    img.alt = Array.isArray(st.naam) ? fxNaam(st) : (st.naam || T('Sticker'))
+    img.dataset.fx = code
+    img.dataset.b = st.b
+    img.dataset.g = st.g
+  }
+  function wachtOpFx(img, sleutel) {
+    img.classList.add('fx-wacht')
+    img.dataset.wacht = sleutel
+    img.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><text x="12" y="17" font-size="15" text-anchor="middle">\u23F3</text></svg>')
+    img.alt = T('Sticker komt eraan')
+    const tekst = document.createElement('div')
+    tekst.className = 'fx-wachttekst'
+    tekst.textContent = T('Komt binnen zodra jullie allebei online zijn')
+    img.after(tekst)
+  }
   // Tik op een sticker in de chat: nog een keer bewegen en klinken
   document.getElementById('messages').addEventListener('click', e => {
     const img = e.target && e.target.closest ? e.target.closest('.fx-sticker') : null
-    const st = img ? zoekSticker(img.dataset.fx) : null
-    if (st) speelFx(img, st, true)
+    if (img && img.dataset.b) speelFx(img, { b: img.dataset.b, g: img.dataset.g }, true)
   })
+  // v155: een sticker van de vriend is binnen (sync.js meldt het op 'fibro-vriend-data'): plaatsvervangers bijwerken
+  try {
+    const vriendData = new BroadcastChannel('fibro-vriend-data')
+    vriendData.onmessage = async (e) => {
+      const id = e && e.data && e.data.id
+      if (typeof id !== 'string' || !id.includes('_sticker_')) return
+      const wachtend = document.querySelectorAll('#messages img.fx-sticker[data-wacht="' + CSS.escape(id) + '"]')
+      if (!wachtend.length) return
+      const m = /^vriend_(.+)_sticker_(e[12]-\d{2})$/.exec(id)
+      const st = m ? await zoekVriendSticker(m[1], m[2]) : null
+      if (st) wachtend.forEach(img => { toonFx(img, st, m[2]); speelFx(img, st, false) })
+    }
+  } catch (e) {}
 
   // ─── Buzz (niet versleuteld) ───
   // ─── Foto functies ───
@@ -1704,6 +1759,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (geselecteerdeVriend) {
       geselecteerdeVriend = null
       window.geselecteerdeVriend = null
+      syncMetVriend(null)
       vriendPublicKey = null
       werkVerzendknopBij()
       document.getElementById('chatScherm').style.display = 'none'
@@ -1748,6 +1804,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (grid.style.display === 'none') {
       grid.style.display = 'flex'
       emojiGrid.style.display = 'none'
+      if (stickerKeuze) stickerKeuze.vernieuw() // v155: net gemaakte eigen stickers erbij
     } else {
       grid.style.display = 'none'
     }

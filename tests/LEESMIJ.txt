@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 15 oktober 2026 (v154: het Stickerlab in Profiel).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 15 oktober 2026 (v155: eigen stickers slim gesynct).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -54,7 +54,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          belregels = v152: belregels in de chat, alleen gemist telt als ongelezen (testscript_belregels.py),
                          stickers = v153: nieuwe stickerkeuze (6 vellen, 2 eigen, 4 winkel), stickerfx.js (beweging en geluid),
                                  fxsticker:<vel>-<nr> in het bericht (testscript_stickers.py),
-                         stickerlab = v154: Stickerlab in Profiel -> Stickers, eigen stickers op het toestel (testscript_stickerlab.py))
+                         stickerlab = v154: Stickerlab in Profiel -> Stickers, eigen stickers op het toestel (testscript_stickerlab.py),
+                         stickersync = v155: eigen stickers via sync.js naar vrienden, chat-vriend eerst, versturen (testscript_stickersync.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -259,6 +260,20 @@ tools/proef54.py         het Stickerlab in Profiel (v154) met de echte profiel.h
                          python3 -I proef54.py <map>
                          v154 ook: proef43 'profiel: stickers' (nieuwe EN-woorden, MAG_ERBIJ/MAG_WEG; koppen staan in hoofdletters
                          in innerText) en 'chat: stickerkeuze'; proef53 de nieuwe tekst bij Eigen.
+tools/proef55.py         eigen stickers slim gesynct (v155) met DRIE echte toestellen (drie Chromium-contexten) en de echte chat.html,
+                         sync.js, paren.js en WebRTC (Chromium-vlag --disable-features=WebRtcHideLocalIpsWithMdns, geen TURN: 503).
+                         Supabase nagebootst: REST via ctx.route, per gebruiker te zien aan de inlogpas (access_token tok_<uid>);
+                         Realtime via route_web_socket met een nep-Phoenix-server die presence (presence_state na het aanmelden,
+                         presence_diff; opnieuw volgen = oud eruit en nieuw erin in EEN diff, anders lijkt de vriend even weg) en
+                         broadcast tussen de toestellen doorgeeft. LET OP: supabase-js stuurt een broadcast BINAIR (soort 3, zes
+                         lengtes + codering, dan join_ref/ref/topic/event/metadata/inhoud); de server stuurt hem als JSON door.
+                         Nieuwe berichten (postgres_changes) komen 0,3 s na het antwoord op de POST, zoals echt (anders is het
+                         eigen bericht er voordat de chat het in zijn geheugen heeft: '[eigen bericht]').
+                         1 voorrang chat-vriend, 2 wat er binnenkomt, 3 versturen (beweegt/klinkt bij de vriend, bericht klein),
+                         4 plaatsvervanger die vanzelf de sticker wordt, 5 weggooien, 6 antwoord/melden '🖼️ Sticker'.
+                         LOG=1 laat [sync]/[paren]/[ice] uit de console zien. Duurt ruim een minuut. Oude map als controle.
+                         python3 -I proef55.py <map>
+                         v155 ook: proef54 (tekst bij Eigen zonder stickers), proef43 (nieuwe uitleg in MAG_ERBIJ/MAG_WEG).
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

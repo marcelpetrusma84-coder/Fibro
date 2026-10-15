@@ -1,4 +1,5 @@
 // eigenstickers.js - je eigen stickers: bewaren op dit toestel en het plaatje maken (v154, 15 oktober 2026)
+// v155: ook de stickers van een vriend opzoeken ('vriend_<id>_sticker_<code>', binnengekomen via sync.js).
 // Een eigen sticker staat in de toesteldatabase van Fibro (IndexedDB 'FibroDB', bak 'fotos'), onder
 // 'eigensticker_<jouw id>_<vel>-<nr>' (vel e1 of e2, nr 01 t/m 12). Het id staat in de naam, dus
 // 'account verwijderen' (account.js) gooit ze mee weg en een ander account op dit toestel ziet ze niet.
@@ -56,6 +57,26 @@ function schrijf(doe) {
     tx.onabort = () => nee(tx.error || new Error('opslaan mislukt'))
   }))
 }
+// Eén sticker opzoeken voor de chat: { vel, nr, naam, b, g, src } of null
+function leesEen(sleutel, code) {
+  return openDB().then(db => new Promise(ok => {
+    const q = db.transaction('fotos').objectStore('fotos').get(sleutel)
+    q.onsuccess = () => {
+      const v = q.result
+      if (!v || typeof v.data !== 'string' || !/^data:image\/(webp|png);base64,/.test(v.data)) return ok(null)
+      ok({ vel: code.slice(0, 2), nr: code.slice(3), naam: String(v.naam || '').slice(0, 30), b: String(v.b || 'geen'), g: String(v.g || 'geen'), src: v.data })
+    }
+    q.onerror = () => ok(null)
+  })).catch(() => null)
+}
+export function zoekEigenSticker(uid, code) {
+  return (uid && isCode(code)) ? leesEen(voorvoegsel(uid) + code, code) : Promise.resolve(null)
+}
+export const vriendStickerSleutel = (vriendId, code) => 'vriend_' + vriendId + '_sticker_' + code
+export function zoekVriendSticker(vriendId, code) {
+  return (vriendId && isCode(code)) ? leesEen(vriendStickerSleutel(vriendId, code), code) : Promise.resolve(null)
+}
+
 export function bewaarEigen(uid, code, s) {
   if (!uid || !isCode(code)) return Promise.reject(new Error('ongeldig'))
   return schrijf(st => st.put({ id: voorvoegsel(uid) + code, data: s.data, b: s.b, g: s.g, naam: String(s.naam || '').slice(0, 30), tijd: Date.now() }))

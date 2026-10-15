@@ -1,9 +1,12 @@
-// stickerkeuze.js - de stickerkeuze in de chat (v153, 15 oktober 2026; v154: tekst bij Eigen)
+// stickerkeuze.js - de stickerkeuze in de chat (v153, 15 oktober 2026; v154: tekst bij Eigen;
+// v155: de vakjes Eigen tonen je eigen stickers uit Profiel en je kunt ze versturen)
 // Twee rijen van zes vakjes: bovenaan de zes vellen van Fibro (stickervellen.js), daaronder twee
 // vakjes voor eigen stickers en vier voor vellen uit de winkel. Elk vel heeft 12 stickers; op de
 // telefoon 4 naast elkaar, op een breed scherm 6. Een leeg vakje zegt wat er later komt.
-// Gebruik: maakStickerkeuze(element, { onKies: sticker => ... }); sticker = zoekSticker('f1-01').
+// Gebruik: const k = maakStickerkeuze(element, { onKies: sticker => ..., uid: () => id }); k.vernieuw() leest
+// je eigen stickers opnieuw (bij het openen). sticker = { vel, nr, naam, b, g, src }.
 import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=153'
+import { leesEigen } from './eigenstickers.js?v=155'
 import { speelBeweging } from './stickerfx.js?v=153'
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
@@ -44,8 +47,9 @@ function vakken() {
   return uit
 }
 
-export function maakStickerkeuze(el, { onKies } = {}) {
-  if (!el) return
+export function maakStickerkeuze(el, { onKies, uid } = {}) {
+  if (!el) return null
+  let eigen = {} // je eigen stickers: { 'e1-01': { code, data, b, g, naam } }
   zetStijl()
   const alle = vakken()
   let gekozen = null
@@ -86,7 +90,6 @@ export function maakStickerkeuze(el, { onKies } = {}) {
       } else { b.textContent = String(v.n); b.classList.add('leeg') }
     } else if (v.soort === 'eigen') {
       b.setAttribute('aria-label', T('Eigen vel {n}', { n: v.n }))
-      b.textContent = '+'; b.classList.add('stippel', 'leeg')
     } else {
       b.setAttribute('aria-label', T('Winkelvak {n}', { n: v.n }))
       b.textContent = '\u{1F6CD}️'; b.classList.add('stippel', 'leeg')
@@ -95,6 +98,21 @@ export function maakStickerkeuze(el, { onKies } = {}) {
     knoppen[v.id] = b
     ;(v.soort === 'fibro' ? rij1 : rij2).appendChild(b)
   })
+
+  // eigen stickers van een vel, op volgorde
+  const eigenVan = vel => Object.keys(eigen).filter(c => c.startsWith(vel + '-')).sort().map(c => eigen[c])
+  function zetEigenVakjes() {
+    for (const v of alle) {
+      if (v.soort !== 'eigen') continue
+      const b = knoppen[v.id], eerste = eigenVan(v.id)[0]
+      b.textContent = ''
+      if (eerste) {
+        const img = document.createElement('img'); img.alt = ''; img.src = eerste.data
+        b.appendChild(img); b.classList.remove('stippel', 'leeg')
+      } else { b.textContent = '+'; b.classList.add('stippel', 'leeg') }
+    }
+  }
+  zetEigenVakjes()
 
   function toonInhoud(v) {
     inhoud.textContent = ''
@@ -113,9 +131,23 @@ export function maakStickerkeuze(el, { onKies } = {}) {
       inhoud.appendChild(raster)
       return
     }
+    if (v.soort === 'eigen' && eigenVan(v.id).length) {
+      const raster = document.createElement('div'); raster.className = 'sk-raster'
+      eigenVan(v.id).forEach(s => {
+        const st = { vel: v.id, nr: s.code.slice(3), naam: s.naam, b: s.b, g: s.g, src: s.data }
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'sk-sticker'
+        b.setAttribute('aria-label', T('Stuur sticker {naam}', { naam: s.naam || T('Eigen sticker') }))
+        const img = document.createElement('img'); img.src = s.data; img.alt = ''
+        b.appendChild(img)
+        b.addEventListener('click', () => { speelBeweging(img, st.b); if (onKies) onKies(st) })
+        raster.appendChild(b)
+      })
+      inhoud.appendChild(raster)
+      return
+    }
     const p = document.createElement('div'); p.className = 'sk-leeg'
     if (v.soort === 'fibro') p.textContent = T('Vel {n} is nog leeg. Hier komen binnenkort stickers die bewegen en geluid maken.', { n: v.n })
-    else if (v.soort === 'eigen') p.textContent = T('Je eigen stickers maak je in Profiel, bij Stickers. Versturen naar vrienden komt binnenkort.')
+    else if (v.soort === 'eigen') p.textContent = T('Je eigen stickers maak je in Profiel, bij Stickers.')
     else p.textContent = T('Hier komen stickervellen uit de winkel. De winkel komt later.')
     inhoud.appendChild(p)
   }
@@ -144,4 +176,16 @@ export function maakStickerkeuze(el, { onKies } = {}) {
   })
 
   kies(gekozen)
+
+  // je eigen stickers (opnieuw) lezen: bij het openen van de keuze, want je maakt ze in Profiel
+  async function vernieuw() {
+    const id = typeof uid === 'function' ? uid() : uid
+    if (!id) return
+    try { eigen = await leesEigen(id) } catch (e) { eigen = {} }
+    zetEigenVakjes()
+    const v = alle.find(x => x.id === gekozen)
+    if (v && v.soort === 'eigen') toonInhoud(v)
+  }
+  vernieuw()
+  return { vernieuw }
 }

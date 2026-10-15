@@ -1,4 +1,4 @@
-// taal-en.js - de Engelse woordenlijst van Fibro (v7, 13 oktober 2026, v148)
+// taal-en.js - de Engelse woordenlijst van Fibro (v8, 15 oktober 2026, v152)
 // Wordt alleen geladen als de taal Engels is (zie taal.js). Links staat de Nederlandse tekst precies zoals
 // in de code of de html (de sleutel), rechts de Engelse. {n}, {naam} enz. zijn invulplekken; {app} is de
 // naam van de app (staat op een plek: APP in taal.js). Ontbreekt een zin, dan blijft hij Nederlands.
@@ -6,6 +6,7 @@
 // v146: Mijn gegevens, account verwijderen, Face ID-herstel, moderatie, spelen tegen de computer, Over Fibro.
 // v147: de spellen zelf (alle twaalf), ook de losse Runner & Gunner-pagina.
 // v148: Block It '+n RIJEN!'.
+// v152: belregels in de chat (belregel.js), Over Fibro: ook wanneer en hoe lang je belde.
 window.FIBRO_EN = {
 
 // ---- Overal ----
@@ -940,7 +941,7 @@ window.FIBRO_EN = {
   "Daar kun je ook je <strong>🗑️ Account verwijderen</strong>. Dan is alles meteen en voorgoed weg: je profiel, je vrienden, je gastenboek en je gesprekken, ook bij je vrienden. Wat er op je toestel van je stond, wist de app ook. Terughalen kan niet, ook niet door mij.": "That's also where you can <strong>🗑️ Delete account</strong>. Then everything is gone immediately and for good: your profile, your friends, your guestbook and your conversations, for your friends too. The app also wipes what was on your device. It can't be undone, not even by me.",
   "Eerlijk gezegd": "To be honest",
   "Volledige privacy bestaat niet, en ik ga niet doen alsof wel. Een paar dingen die je moet weten:": "Complete privacy doesn't exist, and I'm not going to pretend it does. A few things you should know:",
-  "Wat wél op de server staat: je gebruikersnaam (daar herkennen vrienden je aan), je profielfoto en achtergrondfoto, je kleuren en mood, of je online bent, en met wie je bevriend bent.": "What is stored on the server: your username (that's how friends recognise you), your profile photo and background photo, your colours and mood, whether you're online, and who you're friends with.",
+  "Wat wél op de server staat: je gebruikersnaam (daar herkennen vrienden je aan), je profielfoto en achtergrondfoto, je kleuren en mood, of je online bent, met wie je bevriend bent, en wanneer en hoe lang je met wie belde.": "What is stored on the server: your username (that's how friends recognise you), your profile photo and background photo, your colours and mood, whether you're online, who you're friends with, and when and for how long you called whom.",
   "De server ziet niet wát je schrijft, maar wel wie met wie berichten stuurt en wanneer.": "The server doesn't see what you write, but it does see who sends messages to whom, and when.",
   "Gastenboekberichten zijn niet versleuteld. Je vrienden lezen ze, en op de server zijn ze leesbaar.": "Guestbook messages are not encrypted. Your friends read them, and they can be read on the server.",
   "Als een directe verbinding niet lukt, loopt een gesprek via een tussenserver: onze eigen server bij TransIP in Nederland. Versleuteld, maar het gaat er wel langs.": "If a direct connection doesn't work, a call goes through a relay server: our own server at TransIP in the Netherlands. Encrypted, but it does pass through it.",
@@ -1177,4 +1178,19 @@ window.FIBRO_EN = {
 // ---- Block It: rijen erbij (blockit-ui, v148) ----
   "+{n} RIJ!": "+{n} ROW!",
   "+{n} RIJEN!": "+{n} ROWS!",
+
+// ---- Belregels in de chat (belregel.js, v152) ----
+  "📞 Oproep · niet opgenomen": "📞 Call · no answer",
+  "📹 Video-oproep · niet opgenomen": "📹 Video call · no answer",
+  "📵 Gemiste oproep": "📵 Missed call",
+  "📵 Gemiste video-oproep": "📵 Missed video call",
+  "📞 Oproep · geweigerd": "📞 Call · declined",
+  "📹 Video-oproep · geweigerd": "📹 Video call · declined",
+  "📵 Oproep geweigerd": "📵 Call declined",
+  "📵 Video-oproep geweigerd": "📵 Video call declined",
+  "📞 Gesprek · {duur}": "📞 Call · {duur}",
+  "📹 Videogesprek · {duur}": "📹 Video call · {duur}",
+  "📹 Videogesprek": "📹 Video call",
+  "📞 Oproep": "📞 Call",
+  "📹 Video-oproep": "📹 Video call",
 }

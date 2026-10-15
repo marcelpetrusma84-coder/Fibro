@@ -5,6 +5,8 @@
 // Open je een gesprek, dan telt alles van die vriend als gelezen. Dat staat
 // in de database (tabel laatst_gelezen), dus je telefoon en je pc zijn het
 // met elkaar eens. De tabel en de twee functies staan in sql/ongelezen.sql.
+// v152: van de belregels (bellen, zie belregel.js) telt alleen een gemiste oproep mee;
+// de database telt net zo (sql/belregels.sql).
 import { supabase } from './supabase.js?v=95'
 import { houOpen } from './lijntjes.js?v=1'
 
@@ -27,6 +29,7 @@ export async function startOngelezen() {
       const m = p && p.new
       if (!m || m.receiver_id !== mijnId || !m.sender_id || m.sender_id === mijnId) return
       if (leestNu(m.sender_id)) { markeer(m.sender_id); return }
+      if (!telt(m.content)) return // v152: gesprek of geweigerd: geen rood bolletje
       aantallen.set(m.sender_id, (aantallen.get(m.sender_id) || 0) + 1)
       toon()
     }), haalOp)
@@ -42,6 +45,11 @@ export async function startOngelezen() {
   if (lijst && window.MutationObserver) new MutationObserver(toon).observe(lijst, { childList: true })
   kijkOpenVriend(false)
   toon()
+}
+
+// v152: 'oproep:...' telt alleen als het een gemiste oproep is
+function telt(inhoud) {
+  return typeof inhoud !== 'string' || !inhoud.startsWith('oproep:') || inhoud.startsWith('oproep:gemist:')
 }
 
 function openGesprek() {

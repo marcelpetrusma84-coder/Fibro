@@ -3,9 +3,11 @@
 // v143: meldingen ook in het Engels (taal.js)
 // v150: camera in HD (1280x720) als dat kan, en zonder (vrije) camera verder met alleen geluid
 // v151: pushmelding bij bellen ('belt je'), en 'gemiste oproep' als niemand opnam (stuur-push)
+// v152: na het gesprek zet de beller een regel in de chat (gemist, geweigerd of gesprek met duur)
 import { supabase } from './supabase.js?v=95'
 import { ICE_SERVERS, iceReady } from './ice-config.js?v=149'
 import { houOpen } from './lijntjes.js?v=1'
+import { maakBelregel } from './belregel.js?v=152'
 
 let lokaleStream = null
 let remoteStream = null
@@ -61,7 +63,47 @@ function meldGemist(direct) {
   return direct ? stuur() : Promise.resolve(oproepBezig).then(stuur)
 }
 // Pagina dicht terwijl het nog overgaat: toch 'gemist' (keepalive: het verzoek overleeft het sluiten)
-window.addEventListener('pagehide', () => { if (belMeldingNaar && !opgenomen) meldGemist(true) })
+window.addEventListener('pagehide', () => {
+  if (belMeldingNaar && !opgenomen) meldGemist(true)
+  if (belregelNaar) schrijfBelregel(opgenomen ? 'gesprek' : 'gemist', true) // v152: poging, niet zeker
+})
+
+// v152: de belregel in de chat. Alleen de beller schrijft hem (niet bij een spel), een keer per
+// gesprek, als gewoon bericht (sender = ik, receiver = de ander). Inhoud: zie belregel.js.
+const REST_URL = 'https://qmgatbphiplrfxrljtbe.supabase.co/rest/v1/messages'
+const SLEUTEL = 'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf' // de openbare sleutel uit supabase.js
+let belregelNaar = null    // naar wie de regel moet, tot hij geschreven is
+let belregelVideo = false  // met video gebeld
+let geweigerd = false      // de ander weigerde ('ophangen' voordat er opgenomen was)
+let verbondenOp = 0        // tijdstip waarop de verbinding er was (voor de duur)
+let belregelBezig = null   // het wegschrijven; bellen.html wacht erop voordat het naar de chat gaat
+
+function schrijfBelregel(soort, paginaSluit) {
+  const naar = belregelNaar
+  belregelNaar = null
+  if (!naar || !huidigeUserId) return null
+  const sec = soort === 'gesprek' && verbondenOp ? (Date.now() - verbondenOp) / 1000 : 0
+  const rij = { sender_id: huidigeUserId, receiver_id: naar, content: maakBelregel(soort, belregelVideo, sec) }
+  if (paginaSluit) {
+    // De pagina gaat dicht: supabase-js haalt het niet meer, een keepalive-verzoek misschien wel
+    if (!belPas) return null
+    try {
+      fetch(REST_URL, { method: 'POST', keepalive: true,
+        headers: { 'Content-Type': 'application/json', 'apikey': SLEUTEL, 'Authorization': 'Bearer ' + belPas, 'Prefer': 'return=minimal' },
+        body: JSON.stringify(rij) }).catch(() => {})
+    } catch (e) {}
+    return null
+  }
+  belregelBezig = supabase.from('messages').insert(rij)
+    .then(({ error }) => { if (error) console.warn('[bellen] belregel niet opgeslagen:', error.message) },
+      e => console.warn('[bellen] belregel niet opgeslagen:', e))
+  return belregelBezig
+}
+
+// bellen.html: eerst de belregel weg laten gaan, dan pas naar de chat (hoogstens ms wachten)
+export function wachtOpBelregel(ms = 2000) {
+  return belregelBezig ? Promise.race([belregelBezig, wachtMs(ms)]) : Promise.resolve()
+}
 
 // De pushmelding van een oproep van deze vriend weghalen (opgenomen, geweigerd of verbonden)
 export async function sluitBelMelding(vanId) {
@@ -217,7 +259,10 @@ async function verwerkSignaal(type, data, v) {
     if (!peerConnection || !peerConnection.remoteDescription) { iceBuffer.push(data); return }
     try { await peerConnection.addIceCandidate(new RTCIceCandidate(data)) } catch(e) { console.warn('ICE fout:', e) }
   }
-  if (type === 'ophangen') { belMeldingNaar = null; beeindigGesprek(false) } // geweigerd: geen 'gemist'
+  if (type === 'ophangen') { // geweigerd: geen 'gemist' (v152: wel de regel 'geweigerd' in de chat)
+    if (isInitiator && !opgenomen) geweigerd = true
+    belMeldingNaar = null; beeindigGesprek(false)
+  }
   if (type === 'video-status') {
     if (onVideoStatusCallback) onVideoStatusCallback(data.actief)
   }
@@ -236,6 +281,7 @@ export async function belOp(naarVriendId, video = false, spelModus = false) {
   isInitiator = true
   videoGewenst = !!video
   belMeldingNaar = null; opgenomen = false; oproepBezig = null
+  belregelNaar = null; geweigerd = false; verbondenOp = 0
   try {
     lokaleStream = await haalMicEnCamera(video)
   } catch(e) { alert(window.T ? window.T('Geen toegang tot microfoon/camera.') : 'Geen toegang tot microfoon/camera.'); return false }
@@ -253,6 +299,7 @@ export async function belOp(naarVriendId, video = false, spelModus = false) {
   if (!spelModus) {
     belMeldingNaar = naarVriendId
     oproepBezig = stuurOproepMelding(naarVriendId, video ? 'oproep-video' : 'oproep')
+    belregelNaar = naarVriendId; belregelVideo = !!video // v152: na afloop een regel in de chat
   }
   // Zonder timeout blijft de microfoon oneindig aan als niemand opneemt
   stopBelTimeout()
@@ -337,6 +384,7 @@ function maakPeerConnection() {
     if (pc !== peerConnection) return // oude, al vervangen connectie: negeren
     if (pc.connectionState === 'connected') {
       stopBelTimeout()
+      if (!verbondenOp) verbondenOp = Date.now() // v152: de duur telt vanaf de eerste verbinding
       if (onVerbondenCallback) onVerbondenCallback()
     }
     if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) { beeindigGesprek(false) }
@@ -413,12 +461,16 @@ export function isVideoActiefLokaal() {
 export async function hangOp() {
   const gemist = meldGemist(false) // v151: opgehangen voordat de ander opnam
   await stuurSignaal('ophangen', {})
-  beeindigGesprek(true)
-  if (gemist) await Promise.race([gemist, wachtMs(2000)]) // daarna pas naar een andere pagina
+  beeindigGesprek(true) // v152: schrijft ook de belregel
+  const wacht = [gemist, belregelBezig].filter(Boolean)
+  if (wacht.length) await Promise.race([Promise.all(wacht), wachtMs(2000)]) // daarna pas naar een andere pagina
 }
 
 function beeindigGesprek(doorOns) {
   stopBelTimeout()
+  // v152: de regel in de chat (alleen als wij belden; daarna is belregelNaar leeg)
+  if (belregelNaar) schrijfBelregel(opgenomen ? 'gesprek' : geweigerd ? 'geweigerd' : 'gemist', false)
+  geweigerd = false; verbondenOp = 0
   if (lokaleStream) { lokaleStream.getTracks().forEach(t => t.stop()); lokaleStream = null }
   if (peerConnection) {
     // Handlers loskoppelen vóór close(): voorkomt na-ijlende events op dode connectie

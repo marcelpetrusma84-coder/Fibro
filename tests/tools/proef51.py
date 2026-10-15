@@ -57,7 +57,7 @@ def route(r):
     return r.fulfill(status=404, body='')
 
 INIT = ('const O = window.RTCPeerConnection; window.__pcs = []; window.RTCPeerConnection = class extends O { constructor(...a) { super(...a); window.__pcs.push(this) } };'
-        ' const st = window.setTimeout; window.setTimeout = (f, ms, ...a) => st(f, ms >= 40000 ? 2500 : ms, ...a);'  # 45 s beltijd: versneld
+        ' const st = window.setTimeout; window.setTimeout = (f, ms, ...a) => st(f, ms >= 40000 ? 10000 : ms, ...a);'  # 45 s beltijd: versneld (v152: 10 s; 2,5 s was te kort om eerst het belscherm te laden)
         ' try { localStorage.setItem("fibro_taal", "nl") } catch (e) {}')
 PAGINA_BEL = '<!doctype html><html><body><script type="module">import * as B from "./bellen.js?v=@@V@@"; window.BEL = B; window.__klaar = 1</script></body></html>'
 SW_PAGINA = '<!doctype html><html><body><script>navigator.serviceWorker.register("./service-worker.js?v=95").then(() => navigator.serviceWorker.ready).then(() => { window.__sw = 1 })</script></body></html>'
@@ -130,7 +130,7 @@ with sync_playwright() as pw:
     ctx.close()
     # 3 niemand neemt op (beltijd versneld)
     pushes.clear(); ctx = context(); a = bel(ctx)
-    wacht_op(a, lambda: len(pushes) >= 2, 12)
+    wacht_op(a, lambda: len(pushes) >= 2, 20)
     check('niemand nam op: oproep, daarna gemist', soorten() == [('oproep', 'B'), ('gemist', 'B')] and pushes[1][2] == 'tok-' + A, soorten())
     ctx.close()
     # 4 de beller hangt op voor het opnemen

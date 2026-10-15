@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=9"></script>
+<script src="taal.js?v=10"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
@@ -140,7 +140,7 @@ function stopBeltoon() {
 </script>
 <script type="module">
 import { supabase } from './supabase.js?v=95'
-import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo, sluitBelMelding } from './bellen.js?v=151'
+import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo, sluitBelMelding, wachtOpBelregel } from './bellen.js?v=152'
 
 const params = new URLSearchParams(window.location.search)
 const vriendId = params.get('vriend')
@@ -150,6 +150,9 @@ let timer = null, sec = 0, micAan = true, videoModus = false
 let wachtKanaal = null
 function gesprekKanaalNaam(a, b) { const ids = [a, b].sort(); return 'belgesprek_' + ids[0] + '_' + ids[1] }
 function sluitWachtKanaal() { if (wachtKanaal) { supabase.removeChannel(wachtKanaal); wachtKanaal = null } }
+// v152: na het gesprek naar de chat met deze vriend (daar staat de belregel), niet naar de lijst
+let anderId = vriendId
+function naarChat() { window.location.href = anderId ? 'chat.html?vriend=' + encodeURIComponent(anderId) : 'chat.html' }
 
 document.getElementById('naam').textContent = vriendNaam
 
@@ -175,6 +178,7 @@ initBellen(session.user.id, {
     setTimeout(() => { if (timer) document.getElementById('status').textContent = T('Verbonden') }, 1500)
   },
   onOproep: async (info) => {
+    anderId = info.van || anderId
     const { data: v } = await supabase.from('profiles').select('username, avatar_url').eq('id', info.van).single() // v132: alleen wat hier getoond wordt
     document.getElementById('avatar').textContent = v?.avatar_url || '👤'
     document.getElementById('naam').textContent = belNaam(info.van, v?.username)
@@ -188,7 +192,8 @@ initBellen(session.user.id, {
     const wasVerbonden = !!timer
     clearInterval(timer)
     if (!wasVerbonden && !doorOns) document.getElementById('status').textContent = T('Niet opgenomen')
-    setTimeout(() => window.location.href = 'chat.html', wasVerbonden ? 800 : 1500)
+    // v152: eerst de belregel weg laten gaan (hoogstens 2 s), dan naar de chat
+    Promise.all([wachtOpBelregel(), new Promise(r => setTimeout(r, wasVerbonden ? 800 : 1500))]).then(naarChat)
   }
 })
 
@@ -215,11 +220,11 @@ if (vriendId && !params.get('inkomend')) {
       stopBeltoon(); sluitWachtKanaal()
       document.getElementById('knoppen-inkomend').style.display = 'none'
       document.getElementById('status').textContent = T('Gemiste oproep')
-      setTimeout(() => window.location.href = 'chat.html', 1500)
+      setTimeout(naarChat, 1500)
     })
     .subscribe()
   // Niemand neemt op: na de beltijd terug naar de chat
-  setTimeout(() => { if (!timer && wachtKanaal) { stopBeltoon(); sluitWachtKanaal(); window.location.href = 'chat.html' } }, 46000)
+  setTimeout(() => { if (!timer && wachtKanaal) { stopBeltoon(); sluitWachtKanaal(); naarChat() } }, 46000)
   // Laad beller info
   const { data: v } = await supabase.from('profiles').select('username, avatar_url').eq('id', vriendId).single() // v132: alleen wat hier getoond wordt
   if (v) {
@@ -266,7 +271,7 @@ window.startBellen = async (video) => {
   const gelukt = await belOp(vriendId, video)
   if (gelukt) startBeltoon('uitgaand')
 }
-window.annuleer = async () => { stopBeltoon(); await hangOp(); window.location.href = 'chat.html' }
+window.annuleer = async () => { stopBeltoon(); await hangOp(); naarChat() }
 window.weiger = async () => {
   stopBeltoon()
   sluitBelMelding(vriendId) // v151: de pushmelding weg
@@ -277,7 +282,7 @@ window.weiger = async () => {
   } else {
     await weigerooproep()
   }
-  window.location.href = 'chat.html'
+  naarChat()
 }
 let alOpgenomen = false
 window.neem = async (video) => {
@@ -300,7 +305,7 @@ window.neem = async (video) => {
 }
 // Al opgenomen in de chat: hier meteen verbinden
 if (vriendId && params.get('inkomend') && params.get('opnemen') === '1') window.neem(videoModus)
-window.hangop = async () => { stopBeltoon(); await hangOp(); window.location.href = 'chat.html' }
+window.hangop = async () => { stopBeltoon(); await hangOp(); naarChat() }
 window.togMic = () => { micAan = toggleMic(); document.getElementById('micBtn').textContent = micAan ? '🎤' : '🔇' }
 window.togCam = async () => {
   const camAan = isVideoActiefLokaal()

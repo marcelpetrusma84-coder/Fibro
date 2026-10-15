@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 11 oktober 2026 (Fibro in twee talen, portie 4: gegevens, account, moderatie, spel, Over Fibro).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 15 oktober 2026 (v152: belregels in de chat).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -48,7 +48,10 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  spelen tegen de computer, Over Fibro, balkjes (testscript_taal5.py),
                          taal6 = Engels portie 5: de spellen zelf (testscript_taal6.py),
                          push = pushmeldingen in de taal van de ontvanger: Home zet profiles.taal (testscript_push.py),
-                         blockit = Block It: lading blijft een getal, '+n RIJEN!' in het Engels (testscript_blockit.py))
+                         blockit = Block It: lading blijft een getal, '+n RIJEN!' in het Engels (testscript_blockit.py),
+                         ice, video, push2, oproep = v149-v151: eigen spiegel/pasje, HD-video, stuur-push met belmeldingen,
+                                 pushmelding bij bellen (testscript_ice/video/push2/oproep.py),
+                         belregels = v152: belregels in de chat, alleen gemist telt als ongelezen (testscript_belregels.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -215,6 +218,18 @@ tools/proef51.py         pushmelding bij bellen (v151) met de echte bellen.html,
                          meldingen). Pagina dicht tijdens overgaan = poging (keepalive + CORS-voorvraag), telt niet mee.
                          Let op: tijdens time.sleep handelt Playwright niets af; wacht met page.wait_for_timeout.
                          Oude map als controle: 1 van 11. python3 -I proef51.py <map>
+                         v152: de versnelde beltijd is 10 s (was 2,5 s: in de werkmap liep die soms al af voordat het
+                         belscherm van de gebelde geladen was, dan gaf 'vriend weigerde' MIS, ook op de oude code).
+tools/proef52.py         belregels in de chat (v152). A: echte bellen.html/bellen.js (nep-Supabase zoals proef51, inserts
+                         via expose_binding, wegschrijven duurt 600 ms): de beller schrijft precies een regel in messages:
+                         oproep:gemist:<a|v>:0 (niemand nam op / beller hing op), oproep:geweigerd (belscherm en
+                         weigerooproep), oproep:gesprek:<a|v>:<seconden>; de gebelde niets, spel niets; bellen.html wacht
+                         op het wegschrijven en gaat naar chat.html?vriend=<ander> (beide kanten). Pagina dicht tijdens het
+                         gesprek: keepalive naar /rest/v1/messages = poging (INFO; in de werkmap 1 van 3).
+                         B: echte chat.html (REST nagebootst zoals proef23): regels in het midden, NL en EN, rood bij een
+                         gemiste oproep van de ander, bericht erna sluit niet aan, niet te melden, rare inhoud = 'Oproep'.
+                         C: Home, widget Laatste bericht. D: ongelezen.js telt alleen een gemiste oproep (titel '(n) ...').
+                         Oude map als controle: 2 van 27. python3 -I proef52.py <map>
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

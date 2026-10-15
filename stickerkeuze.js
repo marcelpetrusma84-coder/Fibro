@@ -1,11 +1,11 @@
 // stickerkeuze.js - de stickerkeuze in de chat (v153, 15 oktober 2026; v154: tekst bij Eigen;
-// v155: de vakjes Eigen tonen je eigen stickers uit Profiel en je kunt ze versturen)
+// v155: de vakjes Eigen tonen je eigen stickers uit Profiel en je kunt ze versturen; v156: vel 1)
 // Twee rijen van zes vakjes: bovenaan de zes vellen van Fibro (stickervellen.js), daaronder twee
 // vakjes voor eigen stickers en vier voor vellen uit de winkel. Elk vel heeft 12 stickers; op de
 // telefoon 4 naast elkaar, op een breed scherm 6. Een leeg vakje zegt wat er later komt.
 // Gebruik: const k = maakStickerkeuze(element, { onKies: sticker => ..., uid: () => id }); k.vernieuw() leest
 // je eigen stickers opnieuw (bij het openen). sticker = { vel, nr, naam, b, g, src }.
-import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=153'
+import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=156'
 import { leesEigen } from './eigenstickers.js?v=155'
 import { speelBeweging } from './stickerfx.js?v=153'
 
@@ -24,10 +24,10 @@ const STIJL = `
 .sk-vak[aria-selected="true"] { border:2px solid var(--accent); opacity:1; background:rgba(192,132,252,0.14); }
 .sk-vak img { width:32px; height:32px; object-fit:contain; pointer-events:none; }
 .sk-vak:focus-visible, .sk-sticker:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
-.sk-inhoud { border-top:0.5px solid var(--border); padding-top:8px; max-height:172px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+.sk-inhoud { border-top:0.5px solid var(--border); padding-top:8px; max-height:216px; overflow-y:auto; -webkit-overflow-scrolling:touch; } /* v156: een heel vel (3 rijen) zonder schuiven */
 .sk-raster { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:6px; }
 @media (min-width:600px) { .sk-raster { grid-template-columns:repeat(6, minmax(0, 1fr)); } }
-.sk-sticker { height:72px; min-width:0; border:0; border-radius:10px; background:transparent; padding:2px; cursor:pointer; display:flex; align-items:center; justify-content:center; -webkit-tap-highlight-color:transparent; }
+.sk-sticker { height:64px; min-width:0; border:0; border-radius:10px; background:transparent; padding:2px; cursor:pointer; display:flex; align-items:center; justify-content:center; -webkit-tap-highlight-color:transparent; }
 .sk-sticker:active { background:rgba(192,132,252,0.14); }
 .sk-sticker img { max-width:100%; max-height:100%; object-fit:contain; pointer-events:none; }
 .sk-leeg { font-size:14px; line-height:1.45; color:var(--text); opacity:0.85; text-align:center; padding:14px 12px 16px; }

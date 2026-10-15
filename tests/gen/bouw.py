@@ -1,4 +1,5 @@
 # bouw.py - maakt een maak-<naam>.py voor Fibro (zie overdracht: Generator)
+# v156: nieuwe bestanden mogen ook plaatjes zijn (geen tekst): die gaan als base64 mee en worden als bytes geschreven.
 import os, re, sys, json, zlib, base64, hashlib, binascii, difflib
 
 SAMENVOEG = 3  # wijzigingen die hoogstens zoveel regels uit elkaar liggen: een stuk
@@ -197,7 +198,13 @@ def main():
             tekst = tekst.replace(anker, vervang, 1)
         uit[p] = tekst.encode('utf-8')
     for p in sorted(nw):
-        uit[p] = nw[p].encode('utf-8')
+        if isinstance(nw[p], dict):  # plaatje (v156)
+            try:
+                uit[p] = base64.b64decode(nw[p]['b64'], validate=True)
+            except Exception:
+                stop('plaatje %s is beschadigd. Plaats het script opnieuw.' % p)
+        else:
+            uit[p] = nw[p].encode('utf-8')
     for p in sorted(uit):
         if md5(uit[p]) != NIEUW_MD5[p]:
             stop('uitkomst van %s klopt niet' % p)
@@ -257,7 +264,10 @@ def bouw(naam, oudmap, nieuwmap, gewijzigd, nieuwe, oude_v, beschrijving, vereis
             raise SystemExit('nieuw bestand bestaat al in oudmap: ' + p)
         n = lees(os.path.join(nieuwmap, p))
         nieuw_md5[p], rg[p] = md5(n), regels(n)
-        data['nieuw'][p] = n.decode('utf-8')
+        if os.path.splitext(p)[1].lower() in ('.webp', '.png', '.jpg', '.jpeg', '.gif', '.woff2'):
+            data['nieuw'][p] = {'b64': base64.b64encode(n).decode('ascii')}  # plaatje (v156)
+        else:
+            data['nieuw'][p] = n.decode('utf-8')
     ver = {p: md5(lees(os.path.join(oudmap, p))) for p in vereist}
     blob = base64.b64encode(zlib.compress(json.dumps(data, ensure_ascii=True, sort_keys=True).encode('ascii'), 9)).decode('ascii')
     rijen = [blob[i:i + 60] for i in range(0, len(blob), 60)]

@@ -37,7 +37,8 @@ for n in os.listdir(MAP):
     os.symlink(os.path.join(MAP, n), os.path.join(fib, n))
 os.makedirs(fib + '/stickers/f1')
 if os.path.isdir(MAP + '/stickers'):
-    for n in os.listdir(MAP + '/stickers'): os.symlink(os.path.join(MAP, 'stickers', n), os.path.join(fib, 'stickers', n))
+    for n in os.listdir(MAP + '/stickers'):
+        if n != 'f1': os.symlink(os.path.join(MAP, 'stickers', n), os.path.join(fib, 'stickers', n))  # v156: het echte vel 1 vervangen we
 TEST = [('Grote ogen', 'Big eyes', 'groei', 'boing'), ('Vampier', 'Vampire', 'wiebel', 'slurp'), ('Error 404', 'Error 404', 'glitch', 'error'),
         ('Ugh', 'Ugh', 'knik', 'klets'), ('Drama!', 'Drama!', 'stuiter', 'popcorn'), ('Lit!', 'Lit!', 'flakker', 'vuur'),
         ('Alert!', 'Alert!', 'schud', 'alarm'), ('Huh?', 'Huh?', 'kantel', 'huh'), ('Idee!', 'Idea!', 'oplichten', 'ting'),
@@ -51,6 +52,8 @@ if not os.path.exists(fib + '/stickers/emoji_0_0.webp'): Image.new('RGBA', (64, 
 vellen = open(MAP + '/stickervellen.js').read() if os.path.exists(MAP + '/stickervellen.js') else "export const FIBRO_VELLEN = [ { id: 'f1', stickers: [] } ]\nexport function zoekSticker(){return null}\n"
 regel = "  { id: 'f1', stickers: [] },"
 gevuld = "  { id: 'f1', stickers: [\n" + ''.join("    { nr: '%02d', naam: [%s, %s], b: '%s', g: '%s' },\n" % (i + 1, json.dumps(a), json.dumps(b), c, e) for i, (a, b, c, e) in enumerate(TEST)) + "  ] },"
+# v156: vel 1 is in het echt al gevuld; het testvel komt ervoor in de plaats (wat er ook staat)
+vellen = re.sub(r"^  \{ id: 'f1', stickers: \[.*?\] \},$", lambda m: regel, vellen, count=1, flags=re.S | re.M)
 open(fib + '/stickervellen.js', 'w').write(vellen.replace(regel, gevuld))
 
 # ── nep-REST ──
@@ -192,7 +195,7 @@ with sync_playwright() as pw:
     klik(p, '#stickerGrid .sk-vak[data-vak="f1"]')
     maat1 = p.evaluate("() => Math.round(document.getElementById('stickerGrid').getBoundingClientRect().height)")
     if FOTO: p.screenshot(path=FOTO + '/keuze-vel1.png')
-    check('niet te hoog (< 340 px) en niet breder dan het scherm', maat1 < 340 and maat['sw'] <= maat['cw'] and maat['doc'] <= 390, (maat1, maat))
+    check('niet te hoog (< 380 px) en niet breder dan het scherm', maat1 < 380 and maat['sw'] <= maat['cw'] and maat['doc'] <= 390, (maat1, maat))
     oud = p.evaluate("() => ({ tab: document.querySelectorAll('.sticker-tab').length, venster: !!document.getElementById('stickerUploadModal'), eigen: localStorage.getItem('fibro_custom_stickers') })")
     check('oude tabbladen, oud venster en oude eigen stickers weg', oud == {'tab': 0, 'venster': False, 'eigen': None}, oud)
 

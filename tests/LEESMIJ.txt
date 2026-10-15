@@ -2,12 +2,12 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 15 oktober 2026 (v155: eigen stickers slim gesynct).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v156: stickervel 1).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
 
-gen/bouw.py              generator: bouw(naam, oudmap, nieuwmap, gewijzigd, nieuwe, oude_v,
+gen/bouw.py              generator (v156: nieuwe plaatjes .webp/.png/... gaan als base64 mee): bouw(naam, oudmap, nieuwmap, gewijzigd, nieuwe, oude_v,
                          beschrijving, vereist, uitpad) -> maakt maak-<naam>.py
                          (controleert alles en schrijft pas als alles klopt; slaat tests/ over
                          bij het zoeken naar oude ?v=-verwijzingen)
@@ -55,7 +55,9 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          stickers = v153: nieuwe stickerkeuze (6 vellen, 2 eigen, 4 winkel), stickerfx.js (beweging en geluid),
                                  fxsticker:<vel>-<nr> in het bericht (testscript_stickers.py),
                          stickerlab = v154: Stickerlab in Profiel -> Stickers, eigen stickers op het toestel (testscript_stickerlab.py),
-                         stickersync = v155: eigen stickers via sync.js naar vrienden, chat-vriend eerst, versturen (testscript_stickersync.py))
+                         stickersync = v155: eigen stickers via sync.js naar vrienden, chat-vriend eerst, versturen (testscript_stickersync.py),
+                         vel1 = v156: stickervel 1 (12 plaatjes stickers/f1/NN.webp, 384 x 384) (testscript_vel1.py: met plaatjes
+                                 duizenden inhoudsregels, daarvan alleen elke 40e gemuteerd))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -274,6 +276,13 @@ tools/proef55.py         eigen stickers slim gesynct (v155) met DRIE echte toest
                          LOG=1 laat [sync]/[paren]/[ice] uit de console zien. Duurt ruim een minuut. Oude map als controle.
                          python3 -I proef55.py <map>
                          v155 ook: proef54 (tekst bij Eigen zonder stickers), proef43 (nieuwe uitleg in MAG_ERBIJ/MAG_WEG).
+tools/proef56.py         stickervel 1 (v156) in de echte chat.html: 12 stickers in vakje 1 met de goede namen (NL/EN), plaatjes
+                         384 x 384 laden, beweging en geluid bestaan, een heel vel past zonder schuiven, versturen = fxsticker:f1-NN
+                         versleuteld met geluid, binnenkomende sticker staat in de chat. FOTO=<map>. Oude map als controle: 2 van 11.
+                         python3 -I proef56.py <map>
+                         v156 ook: proef53 vervangt het echte vel 1 door zijn testvel (regex op de regel { id: 'f1', ... });
+                         het vel zelf is gemaakt met knip2.py en afwerken2.py (in de werkmap van 16 okt, niet in de repo):
+                         oude witte rand(en) eraf op gemeten dikte, uitsteeksels behouden, één nieuwe gelijke rand.
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

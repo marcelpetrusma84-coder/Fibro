@@ -1,4 +1,4 @@
-// stickerfx.js - beweging en geluid bij stickers (v153, 15 oktober 2026; v160: geluiden als mp3)
+// stickerfx.js - beweging en geluid bij stickers (v153, 15 oktober 2026; v160: geluiden als mp3; v161: 12 eigen geluiden)
 // De bibliotheek: 15 bewegingen en 19 geluiden (met "geen"), dezelfde als in het Stickerlab van 15 okt.
 // Een sticker onthoudt alleen de namen (bijv. beweging 'stuiter', geluid 'boing'); dit bestand speelt ze af.
 // Geluiden worden met code gemaakt (Web Audio). v160: daarvan zijn mp3's gemaakt (geluiden/<naam>.mp3, met
@@ -6,6 +6,8 @@
 // de mp3; lukt dat niet (geen internet, nog niet binnen), dan het code-geluid zoals voorheen.
 // Let op: tests/tools/geluiden.py neemt alles tussen '/* ---------- geluiden (Web Audio)' en
 // '/* ---------- afspelen' op. Verander je daar een geluid, maak dan de mp3's opnieuw en verhoog MP3_VERSIE.
+// v161: twaalf geluiden bestaan alleen als mp3 (mp3: true, gemaakt met tests/tools/geluiden2.py), voor stickervel 1.
+// Lukt de mp3 niet, dan klinkt hun 'terug'-geluid (het geluid dat die sticker voorheen had).
 // Namen staan hier in twee talen ([Nederlands, Engels]); de taal volgt window.T.taal (taal.js).
 // Op de iPhone mag een pagina pas geluid maken na een tik: daarom zet de eerste tik op de pagina
 // het geluid alvast klaar (zie onderaan).
@@ -233,6 +235,19 @@ export const GELUIDEN = {
     toon(u, { f0: 1000, f1: 1900, t: t + 0.32, duur: 0.18, piek: 0.2, a: 0.02 })
     toon(u, { f0: 1900, f1: 550, t: t + 0.5, duur: 0.4, piek: 0.2, a: 0.01 })
   } },
+  // v161: alleen als mp3 (tests/tools/geluiden2.py); zonder mp3 het terug-geluid
+  lach:     { naam: ['Lachen', 'Laughing'], mp3: true, terug: 'boing' },
+  ssst:     { naam: ['Ssst', 'Shh'], mp3: true, terug: 'pling' },
+  snurk:    { naam: ['Snurken', 'Snoring'], mp3: true, terug: 'ting' },
+  moe:      { naam: ['Moeie zucht', 'Tired sigh'], mp3: true, terug: 'zucht' },
+  huil:     { naam: ['Huilen', 'Crying'], mp3: true, terug: 'drama' },
+  hartklop: { naam: ['Hartklop', 'Heartbeat'], mp3: true, terug: 'pling' },
+  grom:     { naam: ['Grommen', 'Growl'], mp3: true, terug: 'zoemer' },
+  schrik:   { naam: ['Schrik', 'Startle'], mp3: true, terug: 'alarm' },
+  uitval:   { naam: ['Uitvallen', 'Power down'], mp3: true, terug: 'error' },
+  druk:     { naam: ['Druk druk', 'Busy busy'], mp3: true, terug: 'popcorn' },
+  spook:    { naam: ['Spookgeluid', 'Ghostly'], mp3: true, terug: 'huh' },
+  sluw:     { naam: ['Sluipen', 'Sneaky'], mp3: true, terug: 'fluit' },
 }
 
 /* ---------- afspelen ---------- */
@@ -248,14 +263,15 @@ export function speelBeweging(el, beweging) {
 }
 // Het geluid met code (Web Audio): de terugval als de mp3 niet lukt
 function speelCode(geluid) {
-  const g = GELUIDEN[geluid]
-  if (!g || geluid === 'geen') return
+  let g = GELUIDEN[geluid]
+  if (g && g.mp3) g = GELUIDEN[g.terug] // v161: alleen als mp3: dan het terug-geluid
+  if (!g || !g.f || geluid === 'geen') return
   if (!audio()) return
   try { g.f(master, ctx.currentTime + 0.02) } catch (e) { console.warn('[stickerfx]', e) }
 }
 
 /* ---------- geluiden als mp3 (v160) ---------- */
-// De 18 mp3's samen zijn ongeveer 0,25 MB en komen van dezelfde plek als de app (GitHub), niet van de server. Ze
+// De 30 mp3's samen zijn ongeveer 0,55 MB (v161) en komen van dezelfde plek als de app (GitHub), niet van de server. Ze
 // worden een keer opgehaald en als blob bewaard zolang de pagina open is. Afspelen gaat met een paar <audio>-
 // spelers, zodat geluiden over elkaar heen kunnen. Een iPhone laat een speler pas geluid maken als hij een keer bij
 // een tik is gestart: daarom start de eerste tik op de pagina ze allemaal even met een stil geluidje (zegenen).

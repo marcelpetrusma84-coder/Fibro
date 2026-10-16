@@ -1,12 +1,13 @@
-# proef60: de stickergeluiden als mp3 (v160), met de echte profiel.html en stickerfx.js.
-# A. de bestanden: 18 mp3's (een per geluid, niet 'geen'), elk speelbaar, 0,1-2,2 s, even hard (piek 0,3-0,9),
-#    samen minder dan 350 kB.
-# B. Profiel -> Stickers, echte klik op Boos: de mp3 zoemer.mp3 klinkt (een <audio>-speler met een blob), geen
-#    code-geluid; na de eerste tik worden alle 18 opgehaald; het geluid wordt niet meteen weer stilgezet door het
+# proef60: de stickergeluiden als mp3 (v160; v161: 12 eigen geluiden voor vel 1, alleen als mp3), echte profiel.html en stickerfx.js.
+# A. de bestanden: 30 mp3's (een per geluid, niet 'geen'), elk speelbaar, 0,1-2,3 s, even hard (gemiddeld -25 tot -18 dB,
+#    piek hoogstens 0,9; een vol geluid zoals Grommen heeft een lagere piek),
+#    samen minder dan 650 kB.
+# B. Profiel -> Stickers, echte klik op Boos: de mp3 grom.mp3 klinkt (een <audio>-speler met een blob), geen
+#    code-geluid; na de eerste tik worden alle 30 opgehaald; het geluid wordt niet meteen weer stilgezet door het
 #    klaarzetten (zegenen) van dezelfde tik.
 # C. alle 12 stickers van vel 1: precies hun eigen mp3 (zelfde inhoud als geluiden/<g>.mp3).
 # D. twee snel achter elkaar: allebei hoorbaar (twee spelers tegelijk).
-# E. geen mp3 te krijgen (geen internet): het code-geluid klinkt, geen fouten.
+# E. geen mp3 te krijgen (geen internet): het code-geluid klinkt (bij een alleen-mp3-geluid het terug-geluid), geen fouten.
 # F. mp3's nog onderweg (traag): eerst het code-geluid na hoogstens 0,4 s, daarna de mp3.
 # G. op de iPhone telt alleen het loslaten als tik: een touchend (zonder pointerdown) zet de vier spelers klaar.
 # Oude map als controle: daar zijn er geen mp3's (A t/m D en F, G MIS).
@@ -17,8 +18,8 @@ from playwright.sync_api import sync_playwright
 MAP = os.path.abspath(sys.argv[1])
 UID = 'aaaaaaaa-0000-4000-8000-000000000001'
 TOKEN = json.dumps({"access_token": "x", "refresh_token": "y", "token_type": "bearer", "expires_in": 3600, "expires_at": int(time.time()) + 3600, "user": {"id": UID}})
-VEL1_G = ['boing', 'pling', 'ting', 'zucht', 'drama', 'pling', 'zoemer', 'alarm', 'error', 'popcorn', 'huh', 'fluit']
-NAMEN = ['boing', 'pling', 'pop', 'popcorn', 'sprong', 'tsjirp', 'boem', 'alarm', 'huh', 'ting', 'klets', 'zucht', 'slurp', 'vuur', 'zoemer', 'error', 'drama', 'fluit']
+VEL1_G = ['lach', 'ssst', 'snurk', 'moe', 'huil', 'hartklop', 'grom', 'schrik', 'uitval', 'druk', 'spook', 'sluw']
+NAMEN = ['boing', 'pling', 'pop', 'popcorn', 'sprong', 'tsjirp', 'boem', 'alarm', 'huh', 'ting', 'klets', 'zucht', 'slurp', 'vuur', 'zoemer', 'error', 'drama', 'fluit'] + VEL1_G
 uitslag = []
 def check(naam, ok, info=''):
     ok = bool(ok); uitslag.append(ok); print(('OK   ' if ok else 'MIS  ') + naam + ('  | ' + str(info)[:240] if info != '' else ''))
@@ -80,14 +81,16 @@ with sync_playwright() as pw:
     ctx, p = profiel()
     info = ev(p, """async namen => { const c = new OfflineAudioContext(1, 44100, 44100); const uit = {};
       for (const n of namen) { try { const r = await fetch('geluiden/' + n + '.mp3?v=160'); const ab = await r.arrayBuffer(); const b = await c.decodeAudioData(ab.slice(0));
-        const d = b.getChannelData(0); let piek = 0; for (let i = 0; i < d.length; i++) piek = Math.max(piek, Math.abs(d[i]));
-        uit[n] = [r.status, ab.byteLength, Math.round(b.duration * 1000) / 1000, Math.round(piek * 1000) / 1000, b.numberOfChannels] } catch (e) { uit[n] = String(e) } }
+        const d = b.getChannelData(0); let piek = 0, som = 0; for (let i = 0; i < d.length; i++) { piek = Math.max(piek, Math.abs(d[i])); som += d[i] * d[i] }
+        const rms = Math.round(200 * Math.log10(Math.sqrt(som / d.length) || 1e-9)) / 10
+        uit[n] = [r.status, ab.byteLength, Math.round(b.duration * 1000) / 1000, Math.round(piek * 1000) / 1000, b.numberOfChannels, rms] } catch (e) { uit[n] = String(e) } }
       return uit }""", NAMEN)
-    goed = isinstance(info, dict) and all(isinstance(v, list) and v[0] == 200 and 0.1 <= v[2] <= 2.2 and 0.3 <= v[3] <= 0.9 and v[4] == 1 for v in info.values())
-    check('18 mp3s, elk speelbaar, 0,1-2,2 s, piek 0,3-0,9, mono', goed and len(info) == 18, info)
+    goed = isinstance(info, dict) and all(isinstance(v, list) and v[0] == 200 and 0.1 <= v[2] <= 2.3 and v[3] <= 0.9 and -25 <= v[5] <= -18 and v[4] == 1 for v in info.values())
+    slecht = {k: v for k, v in info.items() if not (isinstance(v, list) and v[0] == 200 and 0.1 <= v[2] <= 2.3 and v[3] <= 0.9 and -25 <= v[5] <= -18 and v[4] == 1)} if isinstance(info, dict) else info
+    check('30 mp3s, elk speelbaar, 0,1-2,3 s, even hard (-25 tot -18 dB), piek hoogstens 0,9, mono', goed and len(info) == 30, slecht)
     totaal = sum(v[1] for v in info.values()) if goed else None
-    check('samen minder dan 350 kB', totaal and totaal < 350 * 1024, totaal)
-    lijst = ev(p, "async () => Object.keys((await import('./stickerfx.js?v=160')).GELUIDEN).filter(n => n !== 'geen').sort()")
+    check('samen minder dan 650 kB', totaal and totaal < 650 * 1024, totaal)
+    lijst = ev(p, "async () => Object.keys((await import('./stickerfx.js?v=161')).GELUIDEN).filter(n => n !== 'geen').sort()")
     check('precies een mp3 per geluid uit stickerfx.js', lijst == sorted(NAMEN), lijst)
     ctx.close()
 
@@ -102,10 +105,10 @@ with sync_playwright() as pw:
     check('het geluid speelt echt (niet meteen stilgezet door het klaarzetten)', speelt == [True, 'blob:'], speelt)
     p.wait_for_timeout(1500)
     gehaald = sorted(set(re.sub(r'.*/geluiden/([a-z]+)\.mp3.*', r'\1', u) for u in p.verzoeken))
-    check('na de eerste tik zijn alle 18 opgehaald', gehaald == sorted(NAMEN), gehaald)
-    check('elk bestand maar een keer opgehaald', len(p.verzoeken) == 18, len(p.verzoeken))
-    ok = ev(p, VERGELIJK, [ev(p, "() => window.__mp3[0].src"), 'zoemer'])  # (haalt zoemer.mp3 zelf nog een keer op)
-    check('het is zoemer.mp3', ok is True, ok)
+    check('na de eerste tik zijn alle 30 opgehaald', gehaald == sorted(NAMEN), gehaald)
+    check('elk bestand maar een keer opgehaald', len(p.verzoeken) == 30, len(p.verzoeken))
+    ok = ev(p, VERGELIJK, [ev(p, "() => window.__mp3[0].src"), 'grom'])  # (haalt grom.mp3 zelf nog een keer op)
+    check('het is grom.mp3 (v161: Boos gromt)', ok is True, ok)
 
     # ── C. alle 12 van vel 1 ──
     print('C. alle 12 stickers van vel 1')
@@ -162,7 +165,7 @@ with sync_playwright() as pw:
     ev(p, "() => document.dispatchEvent(new Event('touchend'))"); p.wait_for_timeout(300)
     check('een tweede tik doet het niet nog eens (ze zijn vrij)', ev(p, "window.__zegen") == 4, ev(p, "window.__zegen"))
     p.wait_for_timeout(1500)
-    ev(p, "async () => { const f = await import('./stickerfx.js?v=160'); f.speelGeluid('pling') }"); p.wait_for_timeout(300)
+    ev(p, "async () => { const f = await import('./stickerfx.js?v=161'); f.speelGeluid('pling') }"); p.wait_for_timeout(300)
     check('een binnenkomend geluid (zonder tik) speelt daarna als mp3', ev(p, "window.__mp3.length") == 1, ev(p, "[window.__mp3.length, window.__code]"))
     check('geen fouten (G)', p.fouten == [], p.fouten)
     ctx.close()

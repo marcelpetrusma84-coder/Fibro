@@ -78,10 +78,10 @@ with sync_playwright() as pw:
     check('vakje 1 toont de eerste sticker', ico == 'stickers/f1/01.webp', ico)
     hel = ev(p, "() => { const i = document.querySelector('#stickerGrid .sk-inhoud'); return i ? [i.scrollHeight, i.clientHeight, Math.round(document.getElementById('stickerGrid').getBoundingClientRect().height)] : null }")
     check('het hele vel (3 rijen) past zonder schuiven, keuze niet te hoog', isinstance(hel, list) and hel[0] <= hel[1] + 1 and hel[2] < 380, hel)
-    fx = ev(p, """async () => { const v = await import('./stickervellen.js?v=156'); const f = await import('./stickerfx.js?v=160');
+    fx = ev(p, """async () => { const v = await import('./stickervellen.js?v=161'); const f = await import('./stickerfx.js?v=161');
       return v.FIBRO_VELLEN[0].stickers.map(s => [s.nr, !!f.BEWEGINGEN[s.b] && s.b !== 'geen', !!f.GELUIDEN[s.g] && s.g !== 'geen', s.naam[1]]) }""")
     check('elke sticker: een bestaande beweging en een geluid, Engelse naam', isinstance(fx, list) and len(fx) == 12 and all(x[1] and x[2] for x in fx) and [x[3] for x in fx] == NAMEN_EN, fx)
-    check('Ssst heeft het gekozen geluid (Pling pling)', ev(p, "async () => (await import('./stickervellen.js?v=156')).zoekSticker('f1-02').g") == 'pling', '')
+    check('Ssst heeft zijn eigen geluid (ssst, v161)', ev(p, "async () => (await import('./stickervellen.js?v=161')).zoekSticker('f1-02').g") == 'ssst', '')
     binnen = ev(p, "() => { const i = document.querySelector('#messages .fx-sticker'); return i ? [i.getAttribute('src'), i.alt] : null }")
     check('binnengekomen sticker (Boos) staat in de chat', binnen == ['stickers/f1/07.webp', 'Boos'], binnen)
     if FOTO: p.screenshot(path=FOTO + '/vel1-in-chat.png')

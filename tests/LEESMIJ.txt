@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v160: stickergeluiden als mp3, geluid klaarzetten ook bij loslaten).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v161: eigen geluiden voor stickervel 1, alleen als mp3).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -66,7 +66,10 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          mp3 = v160: de 18 stickergeluiden als mp3 (geluiden/<naam>.mp3, gemaakt met tools/geluiden.py),
                                  geluid klaarzetten ook bij touchend/click. In VIER stukken (maak-mp3-1..4.py, elk hoogstens
                                  ~130 kB om in Kate te plakken: de download lukte niet), stappen in <S>/stap1-3
-                                 (testscript_mp3.py <S> <script> <basis> <nieuw> <stuk>: elke 20e inhoudsregel))
+                                 (testscript_mp3.py <S> <script> <basis> <nieuw> <stuk>: elke 20e inhoudsregel),
+                         vel1geluid = v161: 12 eigen geluiden voor vel 1 (tools/geluiden2.py, alleen als mp3; mp3: true en een
+                                 terug-geluid in stickerfx.js), ook in de keuzelijst van het Stickerlab. Vier stukken zoals mp3
+                                 (testscript_vel1geluid.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -313,7 +316,13 @@ tools/geluiden.py        maakt de mp3's van de stickergeluiden uit stickerfx.js 
                          ffmpeg libmp3lame 128 kbps mono. Opnieuw maken: python3 -I geluiden.py <map> <map>/geluiden,
                          daarna MP3_VERSIE in stickerfx.js ophogen (de mp3's worden opgehaald met ?v=MP3_VERSIE).
                          (ting.mp3 kwam een keer net anders uit: de offline-weergave is niet altijd bit-gelijk.)
-tools/proef60.py         de stickergeluiden als mp3 (v160), echte profiel.html: 18 bestanden speelbaar en even hard, Boos =
+tools/geluiden2.py       de 12 eigen geluiden van vel 1 (v161) met numpy/scipy: lachen, ssst, snurken, moeie zucht, huilen,
+                         hartklop, grommen + stoom, schrik, uitvallen, toetsen + telefoon, spookgeluid, sluipen. Vaste
+                         toevalsreeks (zelfde uitkomst bij elke run, de volgorde hoort erbij), even hard (RMS -21 dB, piek
+                         hoogstens -1 dB), 128 kbps. Namen alleen kleine letters (sync.js laat alleen [a-z] door als geluid).
+                         Beluisterd door Marcel op de luisterpagina 'Geluiden stickervel 1' (16 okt 2026, 'klinkt goed').
+                         python3 -I geluiden2.py <map>/geluiden   (geluiden.py slaat de mp3: true-geluiden over)
+tools/proef60.py         de stickergeluiden als mp3 (v160; v161: 30 bestanden, even hard gemeten als gemiddelde luidheid), echte profiel.html: 18 bestanden speelbaar en even hard, Boos =
                          zoemer.mp3 (geen code-geluid), alle 18 opgehaald na de eerste tik, elke sticker van vel 1 zijn eigen
                          mp3, twee tegelijk, geen mp3 te krijgen = code-geluid, traag = eerst code-geluid (0,4 s) en daarna mp3,
                          touchend zegent de vier spelers. Oude map als controle: 7 van 21.   python3 -I proef60.py <map>

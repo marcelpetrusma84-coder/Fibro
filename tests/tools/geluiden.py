@@ -7,6 +7,7 @@
 # (libmp3lame, 128 kbps, mono, zonder ID3-tag) naar <uitmap>/<naam>.mp3. (128: kleiner script; bij deze korte
 # mono-geluidjes geen hoorbaar verschil met 192.)
 # Verander je een geluid in stickerfx.js: dit opnieuw draaien en MP3_VERSIE ophogen.
+# v161: geluiden met mp3: true (alleen als mp3, gemaakt met geluiden2.py) slaat dit over.
 # python3 -I geluiden.py <map met stickerfx.js> <uitmap>
 import sys, os, json, struct, subprocess, tempfile, socket, time, shutil, math
 from playwright.sync_api import sync_playwright
@@ -57,7 +58,7 @@ try:
     with sync_playwright() as pw:
         br = pw.chromium.launch(args=['--no-proxy-server'])
         p = br.new_page(); p.goto('http://127.0.0.1:%d/Fibro/manifest.json' % poort)
-        namen = p.evaluate("async () => Object.keys((await import('./stickerfx.js?v=' + Date.now())).GELUIDEN).filter(n => n !== 'geen')")
+        namen = p.evaluate("async () => { const G = (await import('./stickerfx.js?v=' + Date.now())).GELUIDEN; return Object.keys(G).filter(n => n !== 'geen' && !G[n].mp3) }")  # (de alleen-mp3-geluiden worden hieronder overgeslagen)
         ruw = p.evaluate(JS, [namen, SR])
         br.close()
 finally:

@@ -7,6 +7,7 @@
 // Let op: tests/tools/geluiden.py neemt alles tussen '/* ---------- geluiden (Web Audio)' en
 // '/* ---------- afspelen' op. Verander je daar een geluid, maak dan de mp3's opnieuw en verhoog MP3_VERSIE.
 // v161: twaalf geluiden bestaan alleen als mp3 (mp3: true, gemaakt met tests/tools/geluiden2.py), voor stickervel 1.
+// v164: nog twaalf, voor stickervel 2 (tests/tools/geluiden3.py).
 // Lukt de mp3 niet, dan klinkt hun 'terug'-geluid (het geluid dat die sticker voorheen had).
 // Namen staan hier in twee talen ([Nederlands, Engels]); de taal volgt window.T.taal (taal.js).
 // Op de iPhone mag een pagina pas geluid maken na een tik: daarom zet de eerste tik op de pagina
@@ -248,6 +249,19 @@ export const GELUIDEN = {
   druk:     { naam: ['Druk druk', 'Busy busy'], mp3: true, terug: 'popcorn' },
   spook:    { naam: ['Spookgeluid', 'Ghostly'], mp3: true, terug: 'huh' },
   sluw:     { naam: ['Sluipen', 'Sneaky'], mp3: true, terug: 'fluit' },
+  // v164: alleen als mp3 (tests/tools/geluiden3.py), voor stickervel 2
+  peins:    { naam: ['Nadenken', 'Pondering'], mp3: true, terug: 'huh' },
+  laden:    { naam: ['Vastloper', 'Crash'], mp3: true, terug: 'error' },
+  tiktak:   { naam: ['Tik tak', 'Tick tock'], mp3: true, terug: 'fluit' },
+  zzz:      { naam: ['Snurken met belletje', 'Snore and bubble'], mp3: true, terug: 'ting' },
+  hmm:      { naam: ['Hm?', 'Hm?'], mp3: true, terug: 'huh' },
+  idee:     { naam: ['Idee!', 'Idea!'], mp3: true, terug: 'ting' },
+  sirene:   { naam: ['Sirene', 'Siren'], mp3: true, terug: 'alarm' },
+  facepalm: { naam: ['Facepalm', 'Facepalm'], mp3: true, terug: 'zucht' },
+  krekels:  { naam: ['Krekels', 'Crickets'], mp3: true, terug: 'tsjirp' },
+  ontploft: { naam: ['Ontploffing', 'Explosion'], mp3: true, terug: 'boem' },
+  winnaar:  { naam: ['Fanfare', 'Fanfare'], mp3: true, terug: 'ting' },
+  loser:    { naam: ['Treurige trombone', 'Sad trombone'], mp3: true, terug: 'zucht' },
 }
 
 /* ---------- afspelen ---------- */

@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v163: aangepaste of weggegooide eigen sticker blijft in de chat staan als '[plaatje] Sticker').
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v164: stickervel 2, voor beurtspellen, met 12 eigen geluiden).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -76,7 +76,13 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  (fibro_serversticker_<ik>_<vriend>, fibro_stickerbij_<ik>_<vriend>) (testscript_versie.py),
                          stickertekst = v163: alleen chat.html: een aangepaste of weggegooide eigen sticker verdwijnt niet meer
                                  uit de chat, het bericht blijft staan als tekstballon '[plaatje] Sticker' (U+1F5BC), zodat het
-                                 gesprek blijft kloppen (functie fxAlsTekst; haalFxRijWeg is weg) (testscript_stickertekst.py))
+                                 gesprek blijft kloppen (functie fxAlsTekst; haalFxRijWeg is weg) (testscript_stickertekst.py),
+                         vel2 = v164: stickervel 2 (voor beurtspellen): 12 plaatjes stickers/f2/NN.webp (384 x 384, geknipt
+                                 uit plaatjes van Marcel met knip2.py/afwerken2.py, zie de overdracht) en 12 eigen geluiden
+                                 (tools/geluiden3.py, alleen als mp3, mp3: true en een terug-geluid in stickerfx.js); ?v=164
+                                 voor stickerfx, stickervellen, stickerkeuze, stickerwidget, stickermaker. In stukken van
+                                 ~130 kB (maak-vel2-1..N.py; de groepen kiest maak_vel2.py zelf op grootte), stappen in
+                                 <S>/stap1.. (testscript_vel2.py <S> <script> <basis> <nieuw> <stuk>: elke 20e inhoudsregel))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -329,6 +335,9 @@ tools/geluiden2.py       de 12 eigen geluiden van vel 1 (v161) met numpy/scipy: 
                          hoogstens -1 dB), 128 kbps. Namen alleen kleine letters (sync.js laat alleen [a-z] door als geluid).
                          Beluisterd door Marcel op de luisterpagina 'Geluiden stickervel 1' (16 okt 2026, 'klinkt goed').
                          python3 -I geluiden2.py <map>/geluiden   (geluiden.py slaat de mp3: true-geluiden over)
+tools/geluiden3.py       de 12 eigen geluiden van vel 2 (v164), zelfde werkwijze als geluiden2.py (eigen toevalsreeks):
+                         nadenken, vastloper, tik tak, snurken met belletje, hm?, idee!, sirene, facepalm, krekels,
+                         ontploffing, fanfare, treurige trombone.   python3 -I geluiden3.py <map>/geluiden
 tools/proef60.py         de stickergeluiden als mp3 (v160; v161: 30 bestanden, even hard gemeten als gemiddelde luidheid), echte profiel.html: 18 bestanden speelbaar en even hard, Boos =
                          zoemer.mp3 (geen code-geluid), alle 18 opgehaald na de eerste tik, elke sticker van vel 1 zijn eigen
                          mp3, twee tegelijk, geen mp3 te krijgen = code-geluid, traag = eerst code-geluid (0,4 s) en daarna mp3,
@@ -348,6 +357,12 @@ tools/proef62.py         als proef61, voor v163: aangepast of weggegooid = de st
                          tekstballon '[plaatje] Sticker' (zelfde data-mid, met tijd; eigen ballon met vinkjes), bij allebei,
                          bij de vriend live na de sync en ook na opnieuw openen; evenveel berichten als ervoor.
                          Oude map (v162) als controle: 22 van 28.   python3 -I proef62.py <map>
+tools/proef63.py         stickervel 2 (v164) in de echte chat.html, naar proef56: 12 stickers in vakje 2 (NL/EN-namen,
+                         384 x 384), eigen mp3 per sticker (bestaat, speelbaar, 0,5-2,6 s, -25 tot -18 dB, piek <= 0,9,
+                         samen < 400 kB, terug-geluid met code), na de eerste tik opgehaald, echte klik = mp3 + fxsticker:f2-12
+                         (versleuteld), binnenkomend Winnaar!, Profiel-blok 'Stickervel 2'; vel 1 ongewijzigd.
+                         Oude map als controle: 3 van 18.   python3 -I proef63.py <map>
+                         (proef53 kijkt sinds v164 naar vel 3 voor 'leeg vel'.)
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

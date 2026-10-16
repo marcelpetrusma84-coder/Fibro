@@ -1,4 +1,5 @@
-// stickervellen.js - de stickervellen van Fibro (v153, 15 oktober 2026; v156: vel 1; v161: eigen geluiden voor vel 1)
+// stickervellen.js - de stickervellen van Fibro (v153, 15 oktober 2026; v156: vel 1; v161: eigen geluiden voor vel 1;
+// v164: vel 2, voor beurtspellen, met eigen geluiden)
 // Zes vaste vakjes (f1 t/m f6), elk voor een vel van 12 stickers. Een vel dat nog leeg is, toont
 // "binnenkort". Een sticker staat in stickers/<vel>/<nr>.webp en heeft een naam ([Nederlands, Engels]),
 // een beweging (b) en een geluid (g) uit stickerfx.js.
@@ -21,7 +22,21 @@ export const FIBRO_VELLEN = [
     { nr: '11', naam: ['Spookje', 'Spooked'], b: 'zweef', g: 'spook' },
     { nr: '12', naam: ['Sluw', 'Sly'], b: 'kantel', g: 'sluw' },
   ] },
-  { id: 'f2', stickers: [] },
+  // v164: vel 2, om te sturen tijdens een beurtspel (en gewoon in de chat). Geluiden: tests/tools/geluiden3.py
+  { id: 'f2', stickers: [
+    { nr: '01', naam: ['Ik denk na', 'Let me think'], b: 'kantel', g: 'peins' },
+    { nr: '02', naam: ['Even laden\u2026', 'Loading\u2026'], b: 'glitch', g: 'laden' },
+    { nr: '03', naam: ['Wachten\u2026', 'Waiting\u2026'], b: 'draai', g: 'tiktak' },
+    { nr: '04', naam: ['Zzz', 'Zzz'], b: 'zweef', g: 'zzz' },
+    { nr: '05', naam: ['Huh?', 'Huh?'], b: 'wiebel', g: 'hmm' },
+    { nr: '06', naam: ['Idee!', 'Idea!'], b: 'oplichten', g: 'idee' },
+    { nr: '07', naam: ['Pas op!', 'Watch out!'], b: 'schud', g: 'sirene' },
+    { nr: '08', naam: ['Ugh', 'Ugh'], b: 'knik', g: 'facepalm' },
+    { nr: '09', naam: ['Krekels\u2026', 'Crickets\u2026'], b: 'stuiter', g: 'krekels' },
+    { nr: '10', naam: ['Mind blown', 'Mind blown'], b: 'ontplof', g: 'ontploft' },
+    { nr: '11', naam: ['Winnaar!', 'Winner!'], b: 'groei', g: 'winnaar' },
+    { nr: '12', naam: ['Loser', 'Loser'], b: 'hup', g: 'loser' },
+  ] },
   { id: 'f3', stickers: [] },
   { id: 'f4', stickers: [] },
   { id: 'f5', stickers: [] },

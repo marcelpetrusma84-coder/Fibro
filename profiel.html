@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=13"></script>
+<script src="taal.js?v=14"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Profiel</title>
@@ -437,6 +437,7 @@ input, textarea { font-size:16px !important; }
 </div>
 <div class="panel" id="panel-stickers">
   <div class="section"><div class="section-label" data-t>Je eigen chatstickers</div><div id="eigenStickers"></div></div>
+  <div id="fibroStickers"></div>
   <div class="section"><div class="section-label" data-t>Actieve stickers</div><div class="sticker-galerij" id="actieveStickers"></div></div>
   <div class="section"><div class="section-label" data-t>Natuur & Planten</div><div class="sticker-galerij" id="stickerNatuur"></div></div>
   <div class="section"><div class="section-label" data-t>Sfeer & Magie</div><div class="sticker-galerij" id="stickerMagie"></div></div>
@@ -513,7 +514,8 @@ import { laadThema, bewaarThemaCache } from './thema.js?v=130'
 import { startHeartbeat } from './heartbeat.js?v=117'
 import { initSync } from './sync.js?v=155'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=149'
-import { startStickermaker } from './stickermaker.js?v=155'
+import { startStickermaker } from './stickermaker.js?v=157'
+import { tekenFibroVellen, stickerWidgetDef } from './stickerwidget.js?v=157'
 
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
@@ -854,7 +856,8 @@ async function init(){
     onStatus: (vriendId, status) => console.log('P2P status:', vriendId, status)
   })
   bouwFontGrid();bouwStickerGrids();bouwAvatarPicker();updateWidgetToggles();updateActieveStickers()
-  startStickermaker(document.getElementById('eigenStickers'), huidigeUser.id) // v154: Stickerlab (eigen stickers)
+  startStickermaker(document.getElementById('eigenStickers'), huidigeUser.id, stickerWidgets) // v154: Stickerlab (eigen stickers)
+  tekenFibroVellen(document.getElementById('fibroStickers'), stickerWidgets) // v157: stickervel 1 enz., met knopje voor Home
   document.getElementById('editNaam').oninput=updatePreview
   document.getElementById('editBio').oninput=updatePreview
 }
@@ -906,6 +909,8 @@ window.testTogglePlus = async function() {
 }
 
 window.toggleWidget=function(naam){const toggle=document.getElementById('widget-'+naam);if(actieveWidgets.includes(naam)){actieveWidgets=actieveWidgets.filter(w=>w!==naam);toggle.classList.remove('on');toggle.classList.add('off')}else{actieveWidgets.push(naam);toggle.classList.remove('off');toggle.classList.add('on')}}
+// v157: stickers als widget op Home (stickerwidget.js): aan of uit zoals de widgets, bewaard met Opslaan
+const stickerWidgets={aan:n=>actieveWidgets.includes(n),zet:(n,aan)=>{actieveWidgets=actieveWidgets.filter(w=>w!==n);if(aan)actieveWidgets.push(n)}}
 function updateWidgetToggles(){actieveWidgets.forEach(w=>{const el=document.getElementById('widget-'+w);if(el){el.classList.remove('off');el.classList.add('on')}})}
 function bouwStickerGrids(){bouwStickerGrid('stickerNatuur',stickers.natuur);bouwStickerGrid('stickerMagie',stickers.magie);bouwStickerGrid('stickerKunst',stickers.kunst);bouwStickerGrid('stickerDieren',stickers.dieren)}
 function bouwStickerGrid(id,lijst){const grid=document.getElementById(id);grid.innerHTML='';lijst.forEach(s=>{const div=document.createElement('div');div.className='sticker-item'+(actieveStickers.includes(s)?' selected':'');div.textContent=s;div.onclick=()=>{if(actieveStickers.includes(s)){actieveStickers=actieveStickers.filter(x=>x!==s);div.classList.remove('selected')}else{actieveStickers.push(s);div.classList.add('selected')};updateActieveStickers()};grid.appendChild(div)})}
@@ -1010,7 +1015,8 @@ window.slaAllesOp=async function(){
     spel_pinball:      { id:'spel_pinball',      icon:'🐍', titel:'Twin Snakes',   w:2, h:1 },
     spel_endlessrunner: { id:'spel_endlessrunner', icon:'🏃', titel:'Runner & Gunner', w:2, h:1 }
   }
-  const wLayout = actieveWidgets.filter(n => WMAP[n]).map((n, i) => ({ ...WMAP[n], volgorde: i, aan: true }))
+  // v157: een sticker (sticker_f1-05, sticker_e1-03) is een klein vakje zonder kop (stickerwidget.js)
+  const wLayout = actieveWidgets.map(n => WMAP[n] || stickerWidgetDef(n)).filter(Boolean).map((d, i) => ({ ...d, volgorde: i, aan: true }))
   localStorage.setItem('fibro_widgets_profiel_' + _profielUid(), JSON.stringify(wLayout))
 
 

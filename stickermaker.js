@@ -3,9 +3,11 @@
 // achtergrond weg, met je vinger, of alles houden), witte rand eromheen, kies een beweging en een geluid
 // (stickerfx.js) en bewaar hem op dit toestel (eigenstickers.js). Tik op een sticker om hem aan te passen
 // of te verwijderen. v155: je vrienden krijgen ze vanzelf (sync.js) zodra jullie allebei online zijn.
-// Gebruik: startStickermaker(element, uid)
+// v157: onder elke sticker een knopje (stickerwidget.js): aan + Opslaan = de sticker staat op Home.
+// Gebruik: startStickermaker(element, uid, widgets)   (widgets = { aan(id), zet(id, aan) } uit profiel.html)
 import { EIGEN_VELLEN, PER_VEL, maakCode, leesEigen, bewaarEigen, wisEigen, laadAfbeelding, bekijkRand, achtergrondWeg, knipMetLijn, maakSticker } from './eigenstickers.js?v=155'
 import { BEWEGINGEN, GELUIDEN, naamVan, speel } from './stickerfx.js?v=153'
+import { maakSchakelaar, widgetId, zetStijl as zetWidgetStijl } from './stickerwidget.js?v=157'
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 const STANDAARD = { b: 'stuiter', g: 'boing' }
@@ -20,6 +22,7 @@ const STIJL = `
 .sm-plek { aspect-ratio:1; min-width:0; border-radius:14px; border:1px dashed rgba(192,132,252,0.45); background:transparent; color:var(--accent); font-size:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:4px; -webkit-tap-highlight-color:transparent; }
 .sm-plek.vol { border:1px solid var(--border); background:var(--card); }
 .sm-plek img { width:100%; height:100%; object-fit:contain; pointer-events:none; }
+.sw-cel > .sm-plek { width:100%; box-sizing:border-box; }
 .sm-plek:focus-visible, .sm-scherm button:focus-visible, .sm-scherm select:focus-visible, .sm-scherm input:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .sm-status { font-size:14px; color:var(--accent); min-height:1.2em; margin:0; }
 .sm-scherm { position:fixed; inset:0; z-index:60; background:rgba(10,3,20,0.82); display:flex; align-items:flex-start; justify-content:center; overflow-y:auto; -webkit-overflow-scrolling:touch;
@@ -75,9 +78,10 @@ function el(tag, attrs = {}, ...kind) {
   return e
 }
 
-export async function startStickermaker(houder, uid) {
+export async function startStickermaker(houder, uid, widgets = null) {
   if (!houder || !uid) return
   zetStijl()
+  zetWidgetStijl()
   let eigen = {}
   try { eigen = await leesEigen(uid) } catch (e) { console.warn('[stickermaker] lezen mislukt', e) }
 
@@ -89,10 +93,11 @@ export async function startStickermaker(houder, uid) {
   function tekenVellen() {
     vellen.textContent = ''
     vellen.append(el('p', { class: 'sm-uitleg', text: T('Maak een sticker van je eigen afbeelding, met een beweging en een geluid. Je stickers staan op dit toestel. Je vrienden krijgen ze vanzelf zodra jullie allebei online zijn.') }))
+    if (widgets) vellen.append(el('p', { class: 'sm-uitleg', text: T('Met het knopje \u{1F3E0} onder een sticker zet je hem op Home (druk daarna op Opslaan).') }))
     EIGEN_VELLEN.forEach((vel, vi) => {
       const aantal = Object.keys(eigen).filter(c => c.startsWith(vel + '-')).length
       const kop = el('div', { class: 'sm-velkop' }, el('b', { text: T('Eigen vel {n}', { n: vi + 1 }) }), el('span', { text: T('{n} van 12', { n: aantal }) }))
-      const raster = el('div', { class: 'sm-raster' })
+      const raster = el('div', { class: 'sm-raster', style: 'align-items:start' })
       for (let nr = 1; nr <= PER_VEL; nr++) {
         const code = maakCode(vel, nr), s = eigen[code]
         const knop = el('button', { type: 'button', class: 'sm-plek' + (s ? ' vol' : ''), 'data-code': code })
@@ -104,7 +109,9 @@ export async function startStickermaker(houder, uid) {
           knop.textContent = '+'
         }
         knop.addEventListener('click', () => open(code, knop))
-        raster.append(knop)
+        const cel = el('div', { class: 'sw-cel' }, knop)
+        if (s && widgets) cel.append(maakSchakelaar(widgetId(code), s.naam ? T('{naam} op Home', { naam: s.naam }) : T('Sticker {n} van eigen vel {v} op Home', { n: nr, v: vi + 1 }), widgets))
+        raster.append(cel)
       }
       vellen.append(el('div', {}, kop, raster))
     })
@@ -323,6 +330,7 @@ export async function startStickermaker(houder, uid) {
     clearTimeout(wisKlok)
     try { await wisEigen(uid, code) } catch (e) { toonFout(T('Verwijderen lukte niet.')); return }
     delete eigen[code]
+    if (widgets) widgets.zet(widgetId(code), false) // v157: weg van Home (na Opslaan)
     const c = code
     dicht(); tekenVellen()
     status.textContent = T('Sticker verwijderd')

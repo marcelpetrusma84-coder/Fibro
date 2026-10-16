@@ -1,4 +1,4 @@
-// taal-en.js - de Engelse woordenlijst van Fibro (v11, 15 oktober 2026, v155)
+// taal-en.js - de Engelse woordenlijst van Fibro (v12, 16 oktober 2026, v157)
 // Wordt alleen geladen als de taal Engels is (zie taal.js). Links staat de Nederlandse tekst precies zoals
 // in de code of de html (de sleutel), rechts de Engelse. {n}, {naam} enz. zijn invulplekken; {app} is de
 // naam van de app (staat op een plek: APP in taal.js). Ontbreekt een zin, dan blijft hij Nederlands.
@@ -10,6 +10,7 @@
 // v153: de nieuwe stickerkeuze in de chat (stickerkeuze.js).
 // v154: het Stickerlab in Profiel (stickermaker.js).
 // v155: eigen stickers versturen in de chat (stickerkeuze.js, chat.html).
+// v157: stickers als widget op Home (stickerwidget.js, stickermaker.js).
 window.FIBRO_EN = {
 
 // ---- Overal ----
@@ -1258,4 +1259,11 @@ window.FIBRO_EN = {
   "Sticker komt eraan": "Sticker on its way",
   "Komt binnen zodra jullie allebei online zijn": "Arrives as soon as you're both online",
   "Sticker": "Sticker",
+// ---- Stickers als widget op Home (v157) ----
+  "Stickervel {n}": "Sticker sheet {n}",
+  "Tik op een sticker: hij beweegt en maakt geluid. Zet het knopje 🏠 aan en druk op Opslaan, dan staat hij op Home.": "Tap a sticker: it moves and makes a sound. Turn on the 🏠 switch and tap Save to put it on Home.",
+  "Met het knopje 🏠 onder een sticker zet je hem op Home (druk daarna op Opslaan).": "Use the 🏠 switch under a sticker to put it on Home (then tap Save).",
+  "Speel sticker {naam}": "Play sticker {naam}",
+  "{naam} op Home": "{naam} on Home",
+  "Sticker {n} van eigen vel {v} op Home": "Sticker {n} of your own sheet {v} on Home",
 }

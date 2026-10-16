@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=13"></script>
+<script src="taal.js?v=14"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Profiel</title>
@@ -419,6 +419,14 @@ body.heeft-wallpaper::before { display:block; }
         el.style.cursor = 'pointer'
         el.onclick = () => { location.href = 'spel.html?spel=' + encodeURIComponent(spel) }
         grid.appendChild(el)
+        continue
+      }
+      // v157: sticker van de vriend (stickerwidget.js): tik = beweging en geluid
+      if (/^sticker_/.test(w.id || '')) {
+        el.innerHTML = '<div class="widget-inhoud"></div>'
+        grid.appendChild(el)
+        try { await (await import('./stickerwidget.js?v=157')).tekenStickerWidget(el.querySelector('.widget-inhoud'), w.id, { vriendId }) }
+        catch (e) { console.warn('[stickerwidget]', e); el.remove() }
         continue
       }
       // v129: poll/timer/quote zonder inhoud: zeggen dat er nog niets staat (in plaats van alleen een icoon)

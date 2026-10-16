@@ -1,6 +1,6 @@
 import subprocess, sys, time, json, os, difflib
 from playwright.sync_api import sync_playwright
-# proef43: Fibro in twee talen, alle pagina's (v143 en verder). Per scherm:
+# proef43: Fibro in twee talen, alle pagina's (v143 en verder; v157: stickervel 1 en knopjes in Profiel). Per scherm:
 #  - Nederlands: precies dezelfde tekst (zichtbare tekst, titel, en de attributen title/aria-label/placeholder)
 #    als de oude code; alleen wat in MAG_ERBIJ staat mag erbij. Geen nieuwe fouten in de console.
 #  - Engels: geen '[taal] nog geen vertaling', geen woorden uit NL_WOORDEN, wel de VERWACHT-woorden; lang="en".
@@ -127,7 +127,7 @@ SCHERMEN = [
     ('over', 'over.html', "() => { document.getElementById('technisch').open = true }", ['About Fibro', '← Back', 'What is Fibro?', 'digital living room', 'Why Fibro exists', 'How your data works', 'Your recovery code',
         'Keep it somewhere other than your phone.', 'Your data and your account', 'Download my data', 'To be honest', 'Coming soon', 'under construction', 'Turn off buzz', 'Technical', 'House rule: active. Nothing blocked.']),
     ('home: geen internet', 'index.html', "() => { Object.defineProperty(navigator, 'onLine', { get: () => false, configurable: true }); window.dispatchEvent(new Event('offline')) }", ['No internet · you\'re seeing what\'s saved on this device']),
-    ('profiel: stickers', 'profiel.html', "() => { switchTab('stickers') }", ['Your own chat stickers', 'Your own sheet 2', '0 of 12', 'Active stickers', 'No stickers chosen yet', 'Nature & Plants', 'Mood & Magic', 'Animals']),
+    ('profiel: stickers', 'profiel.html', "() => { switchTab('stickers') }", ['Your own chat stickers', 'Your own sheet 2', '0 of 12', 'Sticker sheet 1', 'Tap a sticker: it moves', 'Use the \U0001F3E0 switch', 'Active stickers', 'No stickers chosen yet', 'Nature & Plants', 'Mood & Magic', 'Animals']),
 ]
 NL_WOORDEN = ['Vrienden', 'Uitnodigen', 'Geblokkeerd', 'terug', 'Stuur een bericht', 'Chat openen', 'Gastenboek', 'GASTENBOEK', 'dagen', 'geleden', 'Vriendschap',
               'Bellen', 'Annuleer', 'Kies hoe', 'Belt je op', 'Wat wil je doen', 'Blokkeren', 'Deblokkeren', 'Verwijderen', 'Annuleren', 'Sluiten', 'buzzt',
@@ -156,6 +156,11 @@ MAG_WEG |= {'Maak een sticker van je eigen afbeelding, met een beweging en een g
             'Je eigen stickers maak je in Profiel, bij Stickers. Versturen naar vrienden komt binnenkort.'}
 MAG_WEG |= {'Eigen sticker uploaden', 'Upload je eigen sticker', 'PNG, WEBP, SVG, GIF \u2014 max 2MB', '\U0001F3A8',
             'Hier komen je eigen stickers. Je kunt ze binnenkort zelf maken in Profiel.'}
+# v157: stickervel 1 onder je eigen stickers, en bij elke sticker een knopje voor Home (stickerwidget.js)
+VEL1 = ['Tranen van het lachen', 'Ssst', 'Slaap lekker', 'Kapot', 'Huilen', 'Verliefd', 'Boos', 'Geschrokken', 'Offline', 'Druk', 'Spookje', 'Sluw']
+MAG_ERBIJ |= {'STICKERVEL 1', '\U0001F3E0', 'Met het knopje \U0001F3E0 onder een sticker zet je hem op Home (druk daarna op Opslaan).',
+              'Tik op een sticker: hij beweegt en maakt geluid. Zet het knopje \U0001F3E0 aan en druk op Opslaan, dan staat hij op Home.'}
+MAG_ERBIJ |= {'Speel sticker ' + n for n in VEL1} | {n + ' op Home' for n in VEL1}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

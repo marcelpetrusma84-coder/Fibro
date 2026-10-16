@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v156: stickervel 1).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v157: stickers als widget op Home).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -57,7 +57,9 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          stickerlab = v154: Stickerlab in Profiel -> Stickers, eigen stickers op het toestel (testscript_stickerlab.py),
                          stickersync = v155: eigen stickers via sync.js naar vrienden, chat-vriend eerst, versturen (testscript_stickersync.py),
                          vel1 = v156: stickervel 1 (12 plaatjes stickers/f1/NN.webp, 384 x 384) (testscript_vel1.py: met plaatjes
-                                 duizenden inhoudsregels, daarvan alleen elke 40e gemuteerd))
+                                 duizenden inhoudsregels, daarvan alleen elke 40e gemuteerd),
+                         stickerwidget = v157: stickervel 1 in Profiel onder je eigen stickers, bij elke sticker een knopje
+                                 voor Home, stickerwidget.js (testscript_stickerwidget.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -283,6 +285,15 @@ tools/proef56.py         stickervel 1 (v156) in de echte chat.html: 12 stickers 
                          v156 ook: proef53 vervangt het echte vel 1 door zijn testvel (regex op de regel { id: 'f1', ... });
                          het vel zelf is gemaakt met knip2.py en afwerken2.py (in de werkmap van 16 okt, niet in de repo):
                          oude witte rand(en) eraf op gemeten dikte, uitsteeksels behouden, één nieuwe gelijke rand.
+tools/proef57.py         stickers als widget op Home (v157), echte profiel.html, index.html en vriend-profiel.html:
+                         A. Profiel -> Stickers: 'Stickervel 1' onder je eigen stickers, elke sticker een knopje (role=switch,
+                         data-widget=sticker_<code>), alleen onder gevulde eigen plekken; tik = beweging + geluid; aan + Opslaan
+                         = 'sticker_<code>' (w 1, h 1, geenHeader) in fibro_widgets_profiel_<uid>; eigen sticker weg = van Home af.
+                         B. Home: 1 kolom, plaatje, weggegooide eigen sticker niet getoond, tik/Enter = afspelen (z-index 5 tijdens
+                         de beweging), ingedrukt houden + slepen = volgorde (zonder afspelen), Engels. C. vriend: Fibro-sticker,
+                         eigen sticker van de vriend, zandloper die vanzelf bijwerkt (BroadcastChannel 'fibro-vriend-data').
+                         FOTO=<map>. Oude map als controle: 10 van 31.   python3 -I proef57.py <map>
+                         v157 ook: proef43 'profiel: stickers' (nieuwe teksten in MAG_ERBIJ, EN-woorden erbij).
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

@@ -1,6 +1,7 @@
 # bouw.py - maakt een maak-<naam>.py voor Fibro (zie overdracht: Generator)
 # v156: nieuwe bestanden mogen ook plaatjes zijn (geen tekst): die gaan als base64 mee en worden als bytes geschreven.
 # v160: ook geluiden (.mp3, .wav).
+# v167: ook een bestaand plaatje of geluid vervangen (gewijzigd, als base64; de oude md5 wordt eerst nagekeken).
 import os, re, sys, json, zlib, base64, hashlib, binascii, difflib
 
 SAMENVOEG = 3  # wijzigingen die hoogstens zoveel regels uit elkaar liggen: een stuk
@@ -191,6 +192,12 @@ def main():
     # 5. Aanpassen, eerst alleen in het geheugen
     uit = {}
     for p in sorted(gew):
+        if isinstance(gew[p], dict):  # v167: plaatje of geluid vervangen
+            try:
+                uit[p] = base64.b64decode(gew[p]['b64'], validate=True)
+            except Exception:
+                stop('bestand %s is beschadigd. Plaats het script opnieuw.' % p)
+            continue
         tekst = lees(p).decode('utf-8')
         for k, (anker, vervang) in enumerate(gew[p], 1):
             n = tel(tekst, anker)
@@ -259,7 +266,10 @@ def bouw(naam, oudmap, nieuwmap, gewijzigd, nieuwe, oude_v, beschrijving, vereis
     for p in gewijzigd:
         o, n = lees(os.path.join(oudmap, p)), lees(os.path.join(nieuwmap, p))
         oud_md5[p], nieuw_md5[p], rg[p] = md5(o), md5(n), regels(n)
-        data['gewijzigd'][p] = stukken(o.decode('utf-8'), n.decode('utf-8'))
+        if os.path.splitext(p)[1].lower() in ('.webp', '.png', '.jpg', '.jpeg', '.gif', '.woff2', '.mp3', '.wav'):
+            data['gewijzigd'][p] = {'b64': base64.b64encode(n).decode('ascii')}  # v167: plaatje of geluid vervangen
+        else:
+            data['gewijzigd'][p] = stukken(o.decode('utf-8'), n.decode('utf-8'))
     for p in nieuwe:
         if os.path.exists(os.path.join(oudmap, p)):
             raise SystemExit('nieuw bestand bestaat al in oudmap: ' + p)

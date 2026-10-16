@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v166: stickervel 4, moderne handgebaren, met 12 eigen geluiden).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v167: nieuw plaatje voor sticker f4-05, Alsjeblieft).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -87,7 +87,10 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  stickers/f3/NN.webp, geluiden met tools/geluiden4.py, ?v=165 (testscript_vel3.py),
                          vel4 = v166: stickervel 4 (moderne handgebaren), zoals vel3: plaatjes stickers/f4/NN.webp (uit drie
                                  plaatjes van Marcel, eigen knip op de lichte rand), geluiden met tools/geluiden5.py, ?v=166
-                                 (testscript_vel4.py))
+                                 (testscript_vel4.py),
+                         gebed = v167: nieuw plaatje voor f4-05 (Alsjeblieft, gevouwen handen), los geknipt uit een plaatje van
+                                 Marcel; bouw.py kan sindsdien ook een bestaand plaatje/geluid vervangen (base64)
+                                 (testscript_gebed.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)

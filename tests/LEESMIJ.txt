@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v167: nieuw plaatje voor sticker f4-05, Alsjeblieft).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v168: bolletje met het aantal ongelezen op het icoon van de app).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -90,7 +90,11 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  (testscript_vel4.py),
                          gebed = v167: nieuw plaatje voor f4-05 (Alsjeblieft, gevouwen handen), los geknipt uit een plaatje van
                                  Marcel; bouw.py kan sindsdien ook een bestaand plaatje/geluid vervangen (base64)
-                                 (testscript_gebed.py))
+                                 (testscript_gebed.py),
+                         badge = v168: ongelezen.js?v=168 zet het totaal ook op het icoon van de app (navigator.setAppBadge;
+                                 iPhone, Windows/Mac) en bewaart het in het kastje 'fibro-badge' (sleutel fibro-badge-teller);
+                                 service-worker.js telt er bij een push (bericht, buzz, gemist) een bij. Alles gelezen: bolletje
+                                 weg en de meldingen ook, behalve een oproep die overgaat (Android: stipje weg) (testscript_badge.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -383,6 +387,11 @@ tools/proef64.py         stickervel 3 (v165), zoals proef63 maar voor vakje 3 (h
                          (geldt voor v165; sinds v166 zijn er 67 geluiden en vier vellen: gebruik dan proef65)
 tools/proef65.py         stickervel 4 (v166), zoals proef64 maar voor vakje 4 (moderne handgebaren), met vel 1-3
                          ongewijzigd en 67 geluiden. Oude map als controle: 3 van 18.   python3 -I proef65.py <map>
+tools/proef66.py         het bolletje op het icoon (v168), echte vrienden.html, ongelezen.js en service-worker.js: 3 ongelezen =
+                         setAppBadge(3) en het kastje 3; alles gelezen = clearAppBadge, kastje 0, gewone melding weg, oproep die
+                         overgaat blijft; pushmeldingen via DevTools (ServiceWorker.deliverPushMessage): bericht/buzz/gemist +1,
+                         'belt je' niet. Meldingen werken niet in de kale headless-browser: draaien met een (onzichtbaar) scherm.
+                         Oude map als controle: 5 van 14.   xvfb-run -a python3 -I proef66.py <map>
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

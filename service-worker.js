@@ -10,6 +10,19 @@ const CACHE_VERSION = 'fibro-v31' // v31: lettertypen met size-adjust (zelfde ?v
 // 0,4 seconde op internet; daarna de bewaarde kopie. Zie hieronder bij 'Html-pagina's'.
 const WACHT_MS = 400
 const MAX_LEEFTIJD = 7 * 24 * 3600 * 1000 // een oudere kopie: gewoon wachten op internet
+// v168: het bolletje op het icoon van de app (iPhone, Windows/Mac). ongelezen.js zet het juiste aantal zodra Fibro
+// open is en bewaart het in dit kastje; komt er een pushmelding (bericht, buzz, gemiste oproep) terwijl Fibro dicht
+// is, dan telt de portier er een bij. Het kastje blijft staan bij een nieuwe CACHE_VERSION.
+const BADGE_KAST = 'fibro-badge', BADGE_SLEUTEL = 'fibro-badge-teller'
+async function badgeEenErbij() {
+  try {
+    const kast = await caches.open(BADGE_KAST)
+    const oud = await kast.match(BADGE_SLEUTEL)
+    const n = (oud ? (parseInt(await oud.text(), 10) || 0) : 0) + 1
+    await kast.put(BADGE_SLEUTEL, new Response(String(n)))
+    if (self.navigator && self.navigator.setAppBadge) await self.navigator.setAppBadge(n)
+  } catch (e) {}
+}
 
 self.addEventListener('install', function(event) {
   self.skipWaiting()
@@ -19,7 +32,7 @@ self.addEventListener('activate', function(event) {
   event.waitUntil(
     caches.keys().then(keys =>
     Promise.all(keys
-    .filter(key => key !== CACHE_VERSION)
+    .filter(key => key !== CACHE_VERSION && key !== BADGE_KAST)
     .map(key => caches.delete(key)))
     ).then(() => clients.claim())
   )
@@ -113,7 +126,9 @@ self.addEventListener('push', function(event) {
     requireInteraction: isOproep,
     data: { url: data.url || '/chat.html' }
   }
-  event.waitUntil(self.registration.showNotification(title, options))
+  // v168: een bericht, buzz of gemiste oproep telt mee in het bolletje op het icoon ('belt je' niet)
+  const telt = !data.type || data.type === 'bericht' || data.type === 'buzz' || data.type === 'gemist'
+  event.waitUntil(Promise.all([self.registration.showNotification(title, options), telt ? badgeEenErbij() : null]))
 });
 
 self.addEventListener('notificationclick', function(event) {

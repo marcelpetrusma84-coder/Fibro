@@ -7,6 +7,10 @@
 // met elkaar eens. De tabel en de twee functies staan in sql/ongelezen.sql.
 // v152: van de belregels (bellen, zie belregel.js) telt alleen een gemiste oproep mee;
 // de database telt net zo (sql/belregels.sql).
+// v168: het totaal ook op het icoon van de app: op de iPhone (en Windows/Mac) een rood bolletje met het getal
+// (navigator.setAppBadge). Het getal gaat ook in een kastje ('fibro-badge'), zodat de portier (service-worker.js)
+// er een bij kan tellen als er een pushmelding komt terwijl Fibro dicht is. Alles gelezen: het bolletje weg en de
+// meldingen van berichten ook (Android toont een stipje op het icoon zolang er een melding van Fibro staat).
 import { supabase } from './supabase.js?v=95'
 import { houOpen } from './lijntjes.js?v=1'
 
@@ -146,8 +150,33 @@ function toon() {
     if (naam) naam.style.fontWeight = n ? '700' : ''
   }
 
+  zetAppBadge(totaal) // v168
+
   // Titel van het tabblad in de browser
   const kaal = document.title.replace(/^\(\d+\+?\) /, '')
   const titel = totaal ? '(' + (totaal > 99 ? '99+' : totaal) + ') ' + kaal : kaal
   if (document.title !== titel) document.title = titel
+}
+
+// v168: het bolletje op het icoon van de app. Zelfde kastje en sleutel als in service-worker.js.
+const BADGE_KAST = 'fibro-badge', BADGE_SLEUTEL = 'fibro-badge-teller'
+let laatsteBadge = null
+function zetAppBadge(totaal) {
+  if (totaal === laatsteBadge) return
+  laatsteBadge = totaal
+  try {
+    if (navigator.setAppBadge) (totaal ? navigator.setAppBadge(totaal) : navigator.clearAppBadge()).catch(() => {})
+  } catch (e) {}
+  try {
+    if (window.caches) caches.open(BADGE_KAST).then(k => k.put(BADGE_SLEUTEL, new Response(String(totaal)))).catch(() => {})
+  } catch (e) {}
+  // Alles gelezen: de meldingen weg (een oproep die nog overgaat blijft staan)
+  if (!totaal) {
+    try {
+      if (navigator.serviceWorker) navigator.serviceWorker.getRegistration()
+        .then(r => r ? r.getNotifications() : [])
+        .then(lijst => { for (const m of lijst || []) if (!m.requireInteraction) m.close() })
+        .catch(() => {})
+    } catch (e) {}
+  }
 }

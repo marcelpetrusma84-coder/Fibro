@@ -1,5 +1,6 @@
 // stickervellen.js - de stickervellen van Fibro (v153, 15 oktober 2026; v156: vel 1; v161: eigen geluiden voor vel 1;
-// v164: vel 2, voor beurtspellen, met eigen geluiden; v165: vel 3, handgebaren)
+// v164: vel 2, voor beurtspellen, met eigen geluiden; v165: vel 3, handgebaren;
+// v166: vel 4, moderne handgebaren)
 // Zes vaste vakjes (f1 t/m f6), elk voor een vel van 12 stickers. Een vel dat nog leeg is, toont
 // "binnenkort". Een sticker staat in stickers/<vel>/<nr>.webp en heeft een naam ([Nederlands, Engels]),
 // een beweging (b) en een geluid (g) uit stickerfx.js.
@@ -52,7 +53,21 @@ export const FIBRO_VELLEN = [
     { nr: '11', naam: ['Yes!', 'Yes!'], b: 'hup', g: 'yes' },
     { nr: '12', naam: ['Leef lang!', 'Live long!'], b: 'zweef', g: 'warp' },
   ] },
-  { id: 'f4', stickers: [] },
+  // v166: vel 4, moderne handgebaren (witte cartoonhandschoenen). Geluiden: tests/tools/geluiden5.py
+  { id: 'f4', stickers: [
+    { nr: '01', naam: ['Liefde!', 'Love!'], b: 'hartslag', g: 'liefde' },
+    { nr: '02', naam: ['Heerlijk!', "Chef's kiss"], b: 'kantel', g: 'kus' },
+    { nr: '03', naam: ['High five!', 'High five!'], b: 'schud', g: 'vijf' },
+    { nr: '04', naam: ['Succes!', 'Good luck!'], b: 'wiebel', g: 'geluk' },
+    { nr: '05', naam: ['Alsjeblieft', 'Please'], b: 'knik', g: 'engel' },
+    { nr: '06', naam: ['Twijfel\u2026', 'Not sure\u2026'], b: 'zweef', g: 'twijfel' },
+    { nr: '07', naam: ['Boks!', 'Bump!'], b: 'duw', g: 'boks' },
+    { nr: '08', naam: ['Wat?', 'What?'], b: 'stuiter', g: 'wat' },
+    { nr: '09', naam: ['Raak!', 'Gotcha!'], b: 'hup', g: 'pieuw' },
+    { nr: '10', naam: ['Momentje', 'One moment'], b: 'groei', g: 'ahum' },
+    { nr: '11', naam: ['Jij!', 'You!'], b: 'oplichten', g: 'jij' },
+    { nr: '12', naam: ['Deal!', 'Deal!'], b: 'schud', g: 'deal' },
+  ] },
   { id: 'f5', stickers: [] },
   { id: 'f6', stickers: [] },
 ]

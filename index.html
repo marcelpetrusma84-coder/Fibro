@@ -551,7 +551,7 @@ function renderProfiel(id, c) {
     renderSpelWidget(c, id.slice(5))
   } else if (id.startsWith('sticker_')) {
     // v157: sticker als widget (Profiel > Stickers): tik = beweging en geluid. Pas laden als hij er staat.
-    import('./stickerwidget.js?v=165').then(m => m.tekenStickerWidget(c, id, { uid: window._uid })).catch(e => console.warn('[stickerwidget]', e))
+    import('./stickerwidget.js?v=166').then(m => m.tekenStickerWidget(c, id, { uid: window._uid })).catch(e => console.warn('[stickerwidget]', e))
   }
 }
 

@@ -8,6 +8,7 @@
 // '/* ---------- afspelen' op. Verander je daar een geluid, maak dan de mp3's opnieuw en verhoog MP3_VERSIE.
 // v161: twaalf geluiden bestaan alleen als mp3 (mp3: true, gemaakt met tests/tools/geluiden2.py), voor stickervel 1.
 // v164: nog twaalf, voor stickervel 2 (tests/tools/geluiden3.py). v165: en twaalf voor vel 3 (geluiden4.py).
+// v166: en twaalf voor vel 4 (geluiden5.py).
 // Lukt de mp3 niet, dan klinkt hun 'terug'-geluid (het geluid dat die sticker voorheen had).
 // Namen staan hier in twee talen ([Nederlands, Engels]); de taal volgt window.T.taal (taal.js).
 // Op de iPhone mag een pagina pas geluid maken na een tik: daarom zet de eerste tik op de pagina
@@ -275,6 +276,19 @@ export const GELUIDEN = {
   applaus:  { naam: ['Applaus', 'Applause'], mp3: true, terug: 'klets' },
   yes:      { naam: ['Yes!', 'Yes!'], mp3: true, terug: 'sprong' },
   warp:     { naam: ['Ruimteschip', 'Starship'], mp3: true, terug: 'ting' },
+  // v166: alleen als mp3 (tests/tools/geluiden5.py), voor stickervel 4
+  liefde:   { naam: ['Harp met hartje', 'Harp and heartbeat'], mp3: true, terug: 'pling' },
+  kus:      { naam: ['Smakkerd', 'Kiss smack'], mp3: true, terug: 'pop' },
+  vijf:     { naam: ['Handklap', 'High five'], mp3: true, terug: 'klets' },
+  geluk:    { naam: ['Speeldoos', 'Music box'], mp3: true, terug: 'ting' },
+  engel:    { naam: ['Koortje', 'Choir'], mp3: true, terug: 'ting' },
+  twijfel:  { naam: ['Twijfelen', 'Hesitant'], mp3: true, terug: 'huh' },
+  boks:     { naam: ['Boks', 'Fist bump'], mp3: true, terug: 'boem' },
+  wat:      { naam: ['Wat?', 'What?'], mp3: true, terug: 'huh' },
+  pieuw:    { naam: ['Pieuw!', 'Pew!'], mp3: true, terug: 'sprong' },
+  ahum:     { naam: ['Ahum', 'Ahem'], mp3: true, terug: 'ting' },
+  jij:      { naam: ['Orkestklap', 'Orchestra hit'], mp3: true, terug: 'boem' },
+  deal:     { naam: ['Kassa', 'Cash register'], mp3: true, terug: 'ting' },
 }
 
 /* ---------- afspelen ---------- */

@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v162: eigen stickers met versie, offline 1 sticker via de server).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v163: aangepaste of weggegooide eigen sticker blijft in de chat staan als '[plaatje] Sticker').
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -73,7 +73,10 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          versie = v162: eigen stickers met versie in het bericht (fxsticker:e1-03@<tijd36>): aangepast of
                                  weggegooid = weg uit de chat bij allebei (grafsteen vriend_<id>_stickerweg_<code>); vriend offline:
                                  1 sticker met het plaatje in het bericht (#<pakket>), daarna wachten tot een rechtstreekse sync
-                                 (fibro_serversticker_<ik>_<vriend>, fibro_stickerbij_<ik>_<vriend>) (testscript_versie.py))
+                                 (fibro_serversticker_<ik>_<vriend>, fibro_stickerbij_<ik>_<vriend>) (testscript_versie.py),
+                         stickertekst = v163: alleen chat.html: een aangepaste of weggegooide eigen sticker verdwijnt niet meer
+                                 uit de chat, het bericht blijft staan als tekstballon '[plaatje] Sticker' (U+1F5BC), zodat het
+                                 gesprek blijft kloppen (functie fxAlsTekst; haalFxRijWeg is weg) (testscript_stickertekst.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -339,7 +342,12 @@ tools/proef61.py         eigen stickers met versie (v162), twee echte toestellen
                          met plaatje via de server (in de eigen cache alleen de code), tweede klein; zelfde vingerafdruk als de
                          sync (geen tweede download); na de sync weer een vrij; oud bericht zonder versie toont de huidige.
                          Oude map als controle: 12 van 22.   python3 -I proef61.py <map>
+                         Geldt voor v162. Sinds v163 blijft het bericht staan als '[plaatje] Sticker': gebruik dan proef62.
                          Let op: een bericht met plaatje is ~6-85 kB en staat ook in fibro_chatlog (laatste 50 per vriend).
+tools/proef62.py         als proef61, voor v163: aangepast of weggegooid = de sticker weg, maar het bericht blijft staan als
+                         tekstballon '[plaatje] Sticker' (zelfde data-mid, met tijd; eigen ballon met vinkjes), bij allebei,
+                         bij de vriend live na de sync en ook na opnieuw openen; evenveel berichten als ervoor.
+                         Oude map (v162) als controle: 22 van 28.   python3 -I proef62.py <map>
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

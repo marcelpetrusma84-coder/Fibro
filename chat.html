@@ -1197,10 +1197,11 @@ console.timeLog('[chat] berichten', 'opgehaald')
         if (eigenCode && !isMijn && fx.pakket) { try { await bewaarVriendSticker(bericht.sender_id, code, fx.pakket) } catch (e) {} }
         const st = vast || await (isMijn ? zoekEigenSticker(huidigeUser.id, code) : zoekVriendSticker(bericht.sender_id, code))
         if (eigenCode && fx.versie) {
-          // v162: met versie: aangepast of weggegooid = weg uit de chat; nieuwer dan wat er staat = wachten
+          // v162: met versie: nieuwer dan wat er staat = wachten
+          // v163: aangepast of weggegooid = het bericht blijft staan als '🖼️ Sticker' (was: weg uit de chat)
           img.dataset.fx = code; img.dataset.versie = String(fx.versie)
           const staat = await fxStaat(st, fx.versie, isMijn ? null : bericht.sender_id, code)
-          if (staat === 'weg') { haalFxRijWeg(row); return }
+          if (staat === 'weg') { fxAlsTekst(row); return }
           if (staat === 'wacht') { wachtOpFx(img, vriendStickerSleutel(bericht.sender_id, code)); return }
         }
         if (st) {
@@ -1210,10 +1211,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
         } else if (!isMijn) {
           wachtOpFx(img, vriendStickerSleutel(bericht.sender_id, code))
         } else {
-          // een eigen sticker die je intussen weggooide
-          row.innerHTML = `
-        <div class="msg-av-sm">${esc(avatar)}</div>
-        <div class="bubble out"><span class="bubble-content">${esc(T('\u{1F5BC}\uFE0F Sticker'))}</span><span class="bubble-time">${tijd} ✓✓</span></div>`
+          fxAlsTekst(row) // een eigen sticker die je intussen weggooide
         }
         return
       }
@@ -1526,16 +1524,17 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (weg && weg.tijd >= versie) return 'weg'
     return 'wacht'
   }
-  // Een bericht uit de chat halen (alleen op dit scherm; op de server blijft het staan tot het verloopt)
-  function haalFxRijWeg(row) {
-    if (!row || !row.parentElement) return
-    const volgende = row.nextElementSibling, vorige = row.previousElementSibling
-    if (volgende && volgende.classList.contains('gegroepeerd') && !(vorige && vorige.classList.contains('msg-row') && vorige.dataset.sid === volgende.dataset.sid))
-      volgende.classList.remove('gegroepeerd')
-    row.remove()
+  // v163: een eigen sticker die intussen is aangepast of weggegooid: het bericht blijft staan, als '🖼️ Sticker'
+  // (zoals een onbekende sticker), zodat het gesprek blijft kloppen. De oude sticker zelf is niet meer te zien.
+  function fxAlsTekst(row) {
+    if (!row) return
+    const uit = row.classList.contains('out')
+    const av = row.querySelector('.msg-av-sm')
+    row.innerHTML = `${av ? av.outerHTML : ''}
+        <div class="bubble ${uit ? 'out' : 'in'}"><span class="bubble-content">${esc(T('\u{1F5BC}\uFE0F Sticker'))}</span><span class="bubble-time">${esc(row.dataset.tijd || '')}${uit ? ' ✓✓' : ''}</span></div>`
   }
   // v155: een sticker van de vriend is binnen (sync.js meldt het op 'fibro-vriend-data'): plaatsvervangers bijwerken
-  // v162: ook een aangepaste of weggegooide sticker (grafsteen): berichten met een oude versie verdwijnen
+  // v162: ook een aangepaste of weggegooide sticker (grafsteen): berichten met een oude versie veranderen (v163) in '🖼️ Sticker'
   try {
     const vriendData = new BroadcastChannel('fibro-vriend-data')
     vriendData.onmessage = async (e) => {
@@ -1553,7 +1552,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
         const versie = Number(img.dataset.versie) || null
         if (!versie) { if (st && img.dataset.wacht) { toonFx(img, st, code); speelFx(img, st, false) } continue }
         const staat = await fxStaat(st, versie, vid, code)
-        if (staat === 'weg') haalFxRijWeg(img.closest('.msg-row'))
+        if (staat === 'weg') fxAlsTekst(img.closest('.msg-row'))
         else if (staat === 'toon' && img.dataset.wacht) { toonFx(img, st, code); speelFx(img, st, false) }
       }
     }

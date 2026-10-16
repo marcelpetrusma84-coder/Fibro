@@ -1,5 +1,10 @@
 // eigenstickers.js - je eigen stickers: bewaren op dit toestel en het plaatje maken (v154, 15 oktober 2026)
 // v155: ook de stickers van een vriend opzoeken ('vriend_<id>_sticker_<code>', binnengekomen via sync.js).
+// v162: versies. Een eigen sticker heeft een 'tijd' (moment van bewaren); die gaat mee in het bericht
+// (fxsticker:e1-03@<tijd in het 36-tallig stelsel>). Pas je de sticker aan of gooi je hem weg, dan klopt de versie in
+// oude berichten niet meer en verdwijnen die uit de chat (chat.html). Bij de vriend komt de tijd mee via sync.js
+// (pakketje met t) en een weggegooide sticker laat een grafsteen achter ('vriend_<id>_stickerweg_<code>' met de
+// laatste tijd). Is de vriend offline, dan kan een pakketje een keer mee in het bericht zelf (#<pakket>).
 // Een eigen sticker staat in de toesteldatabase van Fibro (IndexedDB 'FibroDB', bak 'fotos'), onder
 // 'eigensticker_<jouw id>_<vel>-<nr>' (vel e1 of e2, nr 01 t/m 12). Het id staat in de naam, dus
 // 'account verwijderen' (account.js) gooit ze mee weg en een ander account op dit toestel ziet ze niet.
@@ -64,7 +69,7 @@ function leesEen(sleutel, code) {
     q.onsuccess = () => {
       const v = q.result
       if (!v || typeof v.data !== 'string' || !/^data:image\/(webp|png);base64,/.test(v.data)) return ok(null)
-      ok({ vel: code.slice(0, 2), nr: code.slice(3), naam: String(v.naam || '').slice(0, 30), b: String(v.b || 'geen'), g: String(v.g || 'geen'), src: v.data })
+      ok({ vel: code.slice(0, 2), nr: code.slice(3), naam: String(v.naam || '').slice(0, 30), b: String(v.b || 'geen'), g: String(v.g || 'geen'), src: v.data, tijd: Number(v.tijd) || 0 })
     }
     q.onerror = () => ok(null)
   })).catch(() => null)
@@ -75,6 +80,59 @@ export function zoekEigenSticker(uid, code) {
 export const vriendStickerSleutel = (vriendId, code) => 'vriend_' + vriendId + '_sticker_' + code
 export function zoekVriendSticker(vriendId, code) {
   return (vriendId && isCode(code)) ? leesEen(vriendStickerSleutel(vriendId, code), code) : Promise.resolve(null)
+}
+
+/* ---------- versies (v162) ---------- */
+export const fxCode = (code, tijd) => code + '@' + Math.max(0, Math.floor(Number(tijd) || 0)).toString(36)
+// 'e1-03@kz3x1a#{...}' (wat na 'fxsticker:' staat) -> { code, versie (getal of null), pakket (tekst of null) }
+export function leesFx(rest) {
+  const t = String(rest || ''), h = t.indexOf('#')
+  const kop = h < 0 ? t : t.slice(0, h), pakket = h < 0 ? null : t.slice(h + 1)
+  const a = kop.indexOf('@'), code = a < 0 ? kop : kop.slice(0, a), v = a < 0 ? '' : kop.slice(a + 1)
+  const versie = /^[0-9a-z]{1,12}$/.test(v) ? parseInt(v, 36) : null
+  return { code, versie: versie && versie > 0 ? versie : null, pakket }
+}
+// Het pakketje van een sticker, precies zoals sync.js het maakt (zelfde volgorde: d, b, g, n, t), en zijn vingerafdruk
+export function stickerPakket(rec) {
+  return JSON.stringify({ d: rec.data, b: String(rec.b || 'geen'), g: String(rec.g || 'geen'), n: String(rec.naam || '').slice(0, 30), t: Number(rec.tijd) || 0 })
+}
+export function vinger(tekst) {
+  let h = 5381
+  for (let i = 0; i < tekst.length; i++) h = ((h << 5) + h + tekst.charCodeAt(i)) >>> 0
+  return h.toString(16)
+}
+export const vriendStickerWegSleutel = (vriendId, code) => 'vriend_' + vriendId + '_stickerweg_' + code
+function leesRuw(sleutel) {
+  return openDB().then(db => new Promise(ok => {
+    const q = db.transaction('fotos').objectStore('fotos').get(sleutel)
+    q.onsuccess = () => ok(q.result || null); q.onerror = () => ok(null)
+  })).catch(() => null)
+}
+// Grafsteen van een weggegooide sticker van een vriend: { tijd } of null
+export async function zoekWeg(vriendId, code) {
+  if (!vriendId || !isCode(code)) return null
+  const r = await leesRuw(vriendStickerWegSleutel(vriendId, code))
+  return r ? { tijd: Number(r.tijd) || 0 } : null
+}
+const DATA_PLAATJE = /^data:image\/(webp|png);base64,[A-Za-z0-9+/=]+$/
+// Een pakketje dat in een bericht meekwam (de vriend was offline) bewaren, zoals sync.js dat doet. Alleen als het
+// nieuwer is dan wat er al staat (en nieuwer dan een grafsteen). true = bewaard, false = niet nodig, null = klopt niet.
+export async function bewaarVriendSticker(vriendId, code, pakket) {
+  if (!vriendId || !isCode(code) || typeof pakket !== 'string' || pakket.length > 700000) return null
+  let s = null
+  try { s = JSON.parse(pakket) } catch (e) { return null }
+  if (!s || typeof s.d !== 'string' || s.d.length > 600000 || !DATA_PLAATJE.test(s.d)) return null
+  const t = Number(s.t)
+  if (!Number.isFinite(t) || t <= 0) return null
+  const sleutel = vriendStickerSleutel(vriendId, code)
+  const oud = await leesRuw(sleutel)
+  if (oud && Number(oud.tijd) >= t) return false
+  const weg = await zoekWeg(vriendId, code)
+  if (weg && weg.tijd >= t) return false
+  const woord = w => (typeof w === 'string' && /^[a-z]{1,20}$/.test(w)) ? w : 'geen'
+  await schrijf(st => st.put({ id: sleutel, data: s.d, b: woord(s.b), g: woord(s.g), naam: typeof s.n === 'string' ? s.n.slice(0, 30) : '', tijd: t, hash: vinger(pakket), ontvangen: Date.now() }))
+  try { const k = new BroadcastChannel('fibro-vriend-data'); k.postMessage({ id: sleutel }); k.close() } catch (e) {}
+  return true
 }
 
 export function bewaarEigen(uid, code, s) {

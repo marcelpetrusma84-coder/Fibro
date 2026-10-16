@@ -1,4 +1,4 @@
-// stickerwidget.js - stickers als widget op Home (v157, 16 oktober 2026; v160: stickerfx.js met mp3-geluiden)
+// stickerwidget.js - stickers als widget op Home (v157, 16 oktober 2026; v160: stickerfx.js met mp3-geluiden; v162: versies)
 // In Profiel, bij Stickers, staat onder elke sticker (je eigen stickers en de stickervellen van Fibro) een
 // knopje met een huisje, net als bij de widgets. Aan + Opslaan = de sticker staat op Home, bij 'Jouw profiel',
 // en je vrienden zien hem op jouw profiel. Daar gedraagt hij zich als een widget (verslepen door hem
@@ -7,7 +7,7 @@
 // (eigen sticker). Een eigen sticker van een vriend komt via de sync (sync.js); is hij er nog niet, dan
 // staat er een zandlopertje dat vanzelf bijwerkt (vriend-profiel.html ververst de widgets).
 import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=161'
-import { zoekEigenSticker, zoekVriendSticker } from './eigenstickers.js?v=155'
+import { zoekEigenSticker, zoekVriendSticker } from './eigenstickers.js?v=162'
 import { BEWEGINGEN, speel } from './stickerfx.js?v=161'
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))

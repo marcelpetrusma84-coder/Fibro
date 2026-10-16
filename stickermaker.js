@@ -1,13 +1,13 @@
-// stickermaker.js - het Stickerlab in Profiel, bij Stickers (v154, 15 oktober 2026; v160: mp3-geluiden via stickerfx.js)
+// stickermaker.js - het Stickerlab in Profiel, bij Stickers (v154, 15 oktober 2026; v160: mp3-geluiden via stickerfx.js; v162: eigenstickers.js met versies)
 // Twee eigen vellen van 12 plekken. Tik op een lege plek: kies een afbeelding, knip hem uit (effen
 // achtergrond weg, met je vinger, of alles houden), witte rand eromheen, kies een beweging en een geluid
 // (stickerfx.js) en bewaar hem op dit toestel (eigenstickers.js). Tik op een sticker om hem aan te passen
 // of te verwijderen. v155: je vrienden krijgen ze vanzelf (sync.js) zodra jullie allebei online zijn.
 // v157: onder elke sticker een knopje (stickerwidget.js): aan + Opslaan = de sticker staat op Home.
 // Gebruik: startStickermaker(element, uid, widgets)   (widgets = { aan(id), zet(id, aan) } uit profiel.html)
-import { EIGEN_VELLEN, PER_VEL, maakCode, leesEigen, bewaarEigen, wisEigen, laadAfbeelding, bekijkRand, achtergrondWeg, knipMetLijn, maakSticker } from './eigenstickers.js?v=155'
+import { EIGEN_VELLEN, PER_VEL, maakCode, leesEigen, bewaarEigen, wisEigen, laadAfbeelding, bekijkRand, achtergrondWeg, knipMetLijn, maakSticker } from './eigenstickers.js?v=162'
 import { BEWEGINGEN, GELUIDEN, naamVan, speel } from './stickerfx.js?v=161'
-import { maakSchakelaar, widgetId, zetStijl as zetWidgetStijl } from './stickerwidget.js?v=161'
+import { maakSchakelaar, widgetId, zetStijl as zetWidgetStijl } from './stickerwidget.js?v=162'
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 const STANDAARD = { b: 'stuiter', g: 'boing' }

@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v161: eigen geluiden voor stickervel 1, alleen als mp3).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v162: eigen stickers met versie, offline 1 sticker via de server).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -69,7 +69,11 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  (testscript_mp3.py <S> <script> <basis> <nieuw> <stuk>: elke 20e inhoudsregel),
                          vel1geluid = v161: 12 eigen geluiden voor vel 1 (tools/geluiden2.py, alleen als mp3; mp3: true en een
                                  terug-geluid in stickerfx.js), ook in de keuzelijst van het Stickerlab. Vier stukken zoals mp3
-                                 (testscript_vel1geluid.py))
+                                 (testscript_vel1geluid.py)),
+                         versie = v162: eigen stickers met versie in het bericht (fxsticker:e1-03@<tijd36>): aangepast of
+                                 weggegooid = weg uit de chat bij allebei (grafsteen vriend_<id>_stickerweg_<code>); vriend offline:
+                                 1 sticker met het plaatje in het bericht (#<pakket>), daarna wachten tot een rechtstreekse sync
+                                 (fibro_serversticker_<ik>_<vriend>, fibro_stickerbij_<ik>_<vriend>) (testscript_versie.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -330,6 +334,12 @@ tools/proef58.py         Opslaan in Profiel houdt je volgorde van Home (v158), e
                          fibro_widgets_profiel_<uid> stond houdt zijn plek (ook countdown = afteltimer, fotos = fotos_3x3),
                          nieuw komt achteraan, uitgezet gaat weg; zonder of met kapotte indeling de volgorde van Profiel;
                          echt slepen op Home en daarna Opslaan. Oude map als controle: 8 van 13.   python3 -I proef58.py <map>
+tools/proef61.py         eigen stickers met versie (v162), twee echte toestellen zoals proef55: versie in het bericht, aanpassen
+                         = weg bij allebei (bij de vriend live, na de sync), weggooien = grafsteen, vriend offline = eerste sticker
+                         met plaatje via de server (in de eigen cache alleen de code), tweede klein; zelfde vingerafdruk als de
+                         sync (geen tweede download); na de sync weer een vrij; oud bericht zonder versie toont de huidige.
+                         Oude map als controle: 12 van 22.   python3 -I proef61.py <map>
+                         Let op: een bericht met plaatje is ~6-85 kB en staat ook in fibro_chatlog (laatste 50 per vriend).
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

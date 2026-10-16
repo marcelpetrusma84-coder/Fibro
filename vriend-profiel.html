@@ -146,7 +146,7 @@ body.heeft-wallpaper::before { display:block; }
   import { supabase } from './supabase.js?v=95'
   import { wisVriendData } from './opruimen.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
-  import { initSync, vraagVriendVideo } from './sync.js?v=155'
+  import { initSync, vraagVriendVideo } from './sync.js?v=162'
   import { eisSessie, startBewaking } from './sessie.js?v=95'
   import { startMeldingen } from './meldingen.js?v=143'
   pasBlokstijlToe()
@@ -425,7 +425,7 @@ body.heeft-wallpaper::before { display:block; }
       if (/^sticker_/.test(w.id || '')) {
         el.innerHTML = '<div class="widget-inhoud"></div>'
         grid.appendChild(el)
-        try { await (await import('./stickerwidget.js?v=161')).tekenStickerWidget(el.querySelector('.widget-inhoud'), w.id, { vriendId }) }
+        try { await (await import('./stickerwidget.js?v=162')).tekenStickerWidget(el.querySelector('.widget-inhoud'), w.id, { vriendId }) }
         catch (e) { console.warn('[stickerwidget]', e); el.remove() }
         continue
       }

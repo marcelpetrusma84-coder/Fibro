@@ -1,5 +1,9 @@
 // sync.js — P2P widget-sync via WebRTC DataChannel (v146: vraag over muziek via relay ook in het Engels)
 // v155: ook je eigen stickers (eigenstickers.js) gaan mee, en de vriend van de open chat gaat voor (syncMetVriend).
+// v162: het pakketje van een sticker heeft ook zijn versie (t = tijd van bewaren); weggooien laat bij de vriend een
+// grafsteen achter; Fibro onthoudt welke versie een vriend al heeft (fibro_stickerbij_<ik>_<vriend>) en een sticker
+// die via de server meeging (de vriend was offline, fibro_serversticker_<ik>_<vriend>) telt weer af zodra jullie
+// rechtstreeks verbonden zijn (zie chat.html).
 // Stap A: presence ✓ | Stap B: DataChannel ping-pong
 // Zelfde signaling-patroon als bellen.js: gedeeld kanaal met gesorteerde IDs
 import { supabase } from './supabase.js?v=95'
@@ -558,8 +562,17 @@ function hashString(s) {
 const STICKER_CODE = /^e[12]-(0[1-9]|1[0-2])$/
 const STICKER_DATA = /^data:image\/(webp|png);base64,/
 const MAX_STICKER_CHUNKS = 40 // 480 kB; een sticker is meestal 10-60 kB
-function stickerPakket(rec) {
-  return JSON.stringify({ d: rec.data, b: String(rec.b || 'geen'), g: String(rec.g || 'geen'), n: String(rec.naam || '').slice(0, 30) })
+function stickerPakket(rec) { // v162: met t (de versie); precies zo in eigenstickers.js
+  return JSON.stringify({ d: rec.data, b: String(rec.b || 'geen'), g: String(rec.g || 'geen'), n: String(rec.naam || '').slice(0, 30), t: Number(rec.tijd) || 0 })
+}
+// v162: welke versie van een eigen sticker een vriend al heeft (rechtstreeks gestuurd of via de server)
+function zetStickerBij(vriendId, code, tijd) {
+  try {
+    const k = 'fibro_stickerbij_' + huidigeUserId + '_' + vriendId
+    const m = JSON.parse(localStorage.getItem(k) || '{}') || {}
+    m[code] = Number(tijd) || 0
+    localStorage.setItem(k, JSON.stringify(m))
+  } catch (e) {}
 }
 async function verzamelEigenStickers() {
   const uit = {}
@@ -714,6 +727,7 @@ async function verwerkP2pBericht(bericht) {
   }
   if (bericht.type === 'manifest') {
     let videoNodig = false
+    try { localStorage.removeItem('fibro_serversticker_' + huidigeUserId + '_' + syncPartnerId) } catch (e) {} // v162: weer rechtstreeks verbonden
     // Naam van de vriend lokaal bewaren; laatste verbinding is leidend.
     try {
       const binnen = String(bericht.data?.naam || '').slice(0, 40).trim()
@@ -754,7 +768,12 @@ async function verwerkP2pBericht(bericht) {
         if (!sc || sc.hash !== st[code]) nodig.push('sticker:' + code)
       }
       for (const key of await dbListKeys(sPre)) {
-        if (!geldig.includes(key.slice(sPre.length))) { await dbDelete(key); console.log('[sync] Sticker weg bij vriend:', key) }
+        if (!geldig.includes(key.slice(sPre.length))) {
+          // v162: een grafsteen met de laatste versie, zodat berichten met die (of een oudere) versie verdwijnen
+          const oud = await dbGet(key)
+          await dbPut({ id: 'vriend_' + syncPartnerId + '_stickerweg_' + key.slice(sPre.length), tijd: Number(oud && oud.tijd) || 0 })
+          await dbDelete(key); console.log('[sync] Sticker weg bij vriend:', key)
+        }
       }
     }
     // Achtergrondfoto's achter tekstwidgets (v79)
@@ -1005,6 +1024,7 @@ async function stuurStickerInChunks(code) {
     if (!dataChannel || dataChannel.readyState !== 'open') return
     dataChannel.send(JSON.stringify({ type: 'chunk', itemId, hash, volgnr: i, totaal, data: data.slice(i * CHUNK_TEKST, (i + 1) * CHUNK_TEKST) }))
   }
+  zetStickerBij(syncPartnerId, code, rec.tijd) // v162
 }
 
 async function stuurWbgInChunks(sl) {
@@ -1172,6 +1192,8 @@ async function verwerkChunk(bericht) {
                                                 opslagRecord.b = woord(s.b)
                                                 opslagRecord.g = woord(s.g)
                                                 opslagRecord.naam = typeof s.n === 'string' ? s.n.slice(0, 30) : ''
+                                                const t = Number(s.t) // v162: de versie
+                                                opslagRecord.tijd = Number.isFinite(t) && t > 0 ? t : 0
                                             }
                                             await dbPut(opslagRecord)
     delete chunkBuffers[itemId]

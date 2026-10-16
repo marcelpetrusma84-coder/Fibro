@@ -310,7 +310,8 @@ window.veiligeUrl = function(v){
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { laadWallpaper } from './wallpaper.js?v=95'
   import { supabase } from './supabase.js?v=95'
-  import { initSync, syncMetVriend } from './sync.js?v=155'
+  import { initSync, syncMetVriend } from './sync.js?v=162'
+  import { isOnline as vriendIsOnline } from './paren.js?v=2'
   import { startHeartbeat } from './heartbeat.js?v=117'
   import { startMeldingen } from './meldingen.js?v=143'
   import { houOpen } from './lijntjes.js?v=1'
@@ -319,8 +320,8 @@ window.veiligeUrl = function(v){
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
   import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=152'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
-  import { maakStickerkeuze } from './stickerkeuze.js?v=161'
-  import { isCode as isEigenCode, zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel } from './eigenstickers.js?v=155'
+  import { maakStickerkeuze } from './stickerkeuze.js?v=162'
+  import { isCode as isEigenCode, zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel, fxCode, leesFx, stickerPakket, bewaarVriendSticker, zoekWeg } from './eigenstickers.js?v=162'
   import { zoekSticker } from './stickervellen.js?v=161'
   import { speel as speelFx, speelGeluid as speelFxGeluid, naamVan as fxNaam } from './stickerfx.js?v=161'
   import { stuurRapport } from './rapport.js?v=95'
@@ -1179,7 +1180,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     // v155: eigen stickers (fxsticker:e1-03) staan bij de verstuurder in Profiel en komen via sync.js bij de
     // vriend ('vriend_<id>_sticker_<code>'). Nog niet binnen: een plaatsvervanger die vanzelf bijwerkt.
     if (content.startsWith('fxsticker:')) {
-      const code = content.slice(10)
+      const fx = leesFx(content.slice(10)) // v162: code, versie en eventueel het pakketje
+      const code = fx.code
       const eigenCode = isEigenCode(code)
       const vast = eigenCode ? null : zoekSticker(code)
       if (vast || eigenCode) {
@@ -1191,7 +1193,16 @@ console.timeLog('[chat] berichten', 'opgehaald')
         </div>`
         const img = row.querySelector('.fx-sticker')
         container.appendChild(row) // meteen op zijn plek: een eigen sticker opzoeken op het toestel duurt even
+        // v162: het plaatje kwam mee in het bericht (de vriend was offline): eerst bewaren, als het nieuwer is
+        if (eigenCode && !isMijn && fx.pakket) { try { await bewaarVriendSticker(bericht.sender_id, code, fx.pakket) } catch (e) {} }
         const st = vast || await (isMijn ? zoekEigenSticker(huidigeUser.id, code) : zoekVriendSticker(bericht.sender_id, code))
+        if (eigenCode && fx.versie) {
+          // v162: met versie: aangepast of weggegooid = weg uit de chat; nieuwer dan wat er staat = wachten
+          img.dataset.fx = code; img.dataset.versie = String(fx.versie)
+          const staat = await fxStaat(st, fx.versie, isMijn ? null : bericht.sender_id, code)
+          if (staat === 'weg') { haalFxRijWeg(row); return }
+          if (staat === 'wacht') { wachtOpFx(img, vriendStickerSleutel(bericht.sender_id, code)); return }
+        }
         if (st) {
           toonFx(img, st, code)
           // nieuw bericht: bewegen; geluid alleen bij de ontvanger (de verstuurder hoorde het al bij het versturen)
@@ -1409,7 +1420,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
         ;({ data, error } = await supabase.from('messages').insert(velden).select('id').single())
       }
       if (error || !data?.id) { console.error('Versturen mislukt:', error); return false }
-      slaBerichtCacheOp(data.id, tekst)
+      // v162: een eigen sticker met het plaatje erin (de vriend was offline): in de eigen cache alleen de code
+      const pak = tekst.startsWith('fxsticker:') ? tekst.indexOf('#') : -1
+      slaBerichtCacheOp(data.id, pak > 0 ? tekst.slice(0, pak) : tekst)
+      if (pak > 0) { const fx = leesFx(tekst.slice(10, pak)); serverStickerVerstuurd(vriendId, fx.code, fx.versie) }
       if (pling) stuurPling(vriendId)
       return true
     } catch (e) { console.error('Versturen mislukt:', e); return false }
@@ -1439,13 +1453,39 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   // ─── Sticker versturen (v153): alleen de code van de sticker gaat mee, versleuteld ───
+  // v162: bij een eigen sticker ook zijn versie (fxsticker:e1-03@<versie>). Is de vriend offline en heeft hij deze versie
+  // nog niet, dan gaat het plaatje een keer mee in het bericht (#<pakket>, versleuteld, 20-60 kB via de server). Daarna
+  // wachten de volgende tot jullie weer rechtstreeks verbonden zijn (sync.js wist dan fibro_serversticker_<ik>_<vriend>).
+  const serverStickerSleutel = vriendId => 'fibro_serversticker_' + huidigeUser.id + '_' + vriendId
+  const stickerBijSleutel = vriendId => 'fibro_stickerbij_' + huidigeUser.id + '_' + vriendId
+  function vriendHeeftAl(vriendId, code, versie) {
+    try { return (JSON.parse(localStorage.getItem(stickerBijSleutel(vriendId)) || '{}') || {})[code] === versie } catch (e) { return false }
+  }
+  function serverStickerVerstuurd(vriendId, code, versie) {
+    try {
+      localStorage.setItem(serverStickerSleutel(vriendId), String(Date.now()))
+      const m = JSON.parse(localStorage.getItem(stickerBijSleutel(vriendId)) || '{}') || {}
+      m[code] = versie; localStorage.setItem(stickerBijSleutel(vriendId), JSON.stringify(m))
+    } catch (e) {}
+  }
   async function stuurFxSticker(st) {
     if (!geselecteerdeVriend || !st) return
     speelFxGeluid(st.g)
     document.getElementById('stickerGrid').style.display = 'none'
-    const tekst = 'fxsticker:' + st.vel + '-' + st.nr
+    let tekst = 'fxsticker:' + st.vel + '-' + st.nr
     const vriendId = geselecteerdeVriend.id
-    if (st.vel.startsWith('e')) syncMetVriend(vriendId) // v155: eigen sticker: het lijstje meteen (opnieuw) naar de vriend
+    if (st.vel.startsWith('e')) {
+      const code = st.vel + '-' + st.nr
+      const eigen = await zoekEigenSticker(huidigeUser.id, code)
+      if (!eigen) return
+      tekst = 'fxsticker:' + fxCode(code, eigen.tijd)
+      let serverBezig = true
+      try { serverBezig = !!localStorage.getItem(serverStickerSleutel(vriendId)) } catch (e) {}
+      if (!vriendIsOnline(vriendId) && !serverBezig && !vriendHeeftAl(vriendId, code, eigen.tijd)) {
+        tekst += '#' + stickerPakket({ data: eigen.src, b: eigen.b, g: eigen.g, naam: eigen.naam, tijd: eigen.tijd })
+      }
+      syncMetVriend(vriendId) // v155: eigen sticker: het lijstje meteen (opnieuw) naar de vriend
+    }
     if (!(await verstuur(vriendId, tekst))) nietVerstuurd(vriendId, tekst)
   }
   const stickerKeuze = maakStickerkeuze(document.getElementById('stickerGrid'), { onKies: stuurFxSticker, uid: () => huidigeUser && huidigeUser.id })
@@ -1476,17 +1516,46 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const img = e.target && e.target.closest ? e.target.closest('.fx-sticker') : null
     if (img && img.dataset.b) speelFx(img, { b: img.dataset.b, g: img.dataset.g }, true)
   })
+  // v162: past de versie van een eigen sticker in een bericht nog bij de sticker? 'toon', 'weg' of 'wacht'
+  // vriendId null = je eigen sticker (die staat er, of je hebt hem aangepast of weggegooid)
+  async function fxStaat(st, versie, vriendId, code) {
+    if (!vriendId) return st && st.tijd === versie ? 'toon' : 'weg'
+    if (st && st.tijd === versie) return 'toon'
+    if (st && st.tijd > versie) return 'weg'
+    const weg = await zoekWeg(vriendId, code)
+    if (weg && weg.tijd >= versie) return 'weg'
+    return 'wacht'
+  }
+  // Een bericht uit de chat halen (alleen op dit scherm; op de server blijft het staan tot het verloopt)
+  function haalFxRijWeg(row) {
+    if (!row || !row.parentElement) return
+    const volgende = row.nextElementSibling, vorige = row.previousElementSibling
+    if (volgende && volgende.classList.contains('gegroepeerd') && !(vorige && vorige.classList.contains('msg-row') && vorige.dataset.sid === volgende.dataset.sid))
+      volgende.classList.remove('gegroepeerd')
+    row.remove()
+  }
   // v155: een sticker van de vriend is binnen (sync.js meldt het op 'fibro-vriend-data'): plaatsvervangers bijwerken
+  // v162: ook een aangepaste of weggegooide sticker (grafsteen): berichten met een oude versie verdwijnen
   try {
     const vriendData = new BroadcastChannel('fibro-vriend-data')
     vriendData.onmessage = async (e) => {
       const id = e && e.data && e.data.id
-      if (typeof id !== 'string' || !id.includes('_sticker_')) return
-      const wachtend = document.querySelectorAll('#messages img.fx-sticker[data-wacht="' + CSS.escape(id) + '"]')
-      if (!wachtend.length) return
-      const m = /^vriend_(.+)_sticker_(e[12]-\d{2})$/.exec(id)
-      const st = m ? await zoekVriendSticker(m[1], m[2]) : null
-      if (st) wachtend.forEach(img => { toonFx(img, st, m[2]); speelFx(img, st, false) })
+      const m = typeof id === 'string' ? /^vriend_(.+)_(sticker|stickerweg)_(e[12]-\d{2})$/.exec(id) : null
+      if (!m) return
+      const vid = m[1], code = m[3], wachtSleutel = vriendStickerSleutel(vid, code)
+      const imgs = [...document.querySelectorAll('#messages img.fx-sticker')].filter(img => {
+        const rij = img.closest('[data-sid]')
+        return rij && rij.dataset.sid === vid && (img.dataset.fx === code || img.dataset.wacht === wachtSleutel)
+      })
+      if (!imgs.length) return
+      const st = await zoekVriendSticker(vid, code)
+      for (const img of imgs) {
+        const versie = Number(img.dataset.versie) || null
+        if (!versie) { if (st && img.dataset.wacht) { toonFx(img, st, code); speelFx(img, st, false) } continue }
+        const staat = await fxStaat(st, versie, vid, code)
+        if (staat === 'weg') haalFxRijWeg(img.closest('.msg-row'))
+        else if (staat === 'toon' && img.dataset.wacht) { toonFx(img, st, code); speelFx(img, st, false) }
+      }
     }
   } catch (e) {}
 

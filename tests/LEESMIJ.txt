@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v157: stickers als widget op Home).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v158: Opslaan in Profiel houdt je volgorde van Home).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -59,7 +59,8 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          vel1 = v156: stickervel 1 (12 plaatjes stickers/f1/NN.webp, 384 x 384) (testscript_vel1.py: met plaatjes
                                  duizenden inhoudsregels, daarvan alleen elke 40e gemuteerd),
                          stickerwidget = v157: stickervel 1 in Profiel onder je eigen stickers, bij elke sticker een knopje
-                                 voor Home, stickerwidget.js (testscript_stickerwidget.py))
+                                 voor Home, stickerwidget.js (testscript_stickerwidget.py),
+                         volgorde = v158: Opslaan in Profiel houdt je eigen volgorde van Home (testscript_volgorde.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -294,6 +295,10 @@ tools/proef57.py         stickers als widget op Home (v157), echte profiel.html,
                          eigen sticker van de vriend, zandloper die vanzelf bijwerkt (BroadcastChannel 'fibro-vriend-data').
                          FOTO=<map>. Oude map als controle: 10 van 31.   python3 -I proef57.py <map>
                          v157 ook: proef43 'profiel: stickers' (nieuwe teksten in MAG_ERBIJ, EN-woorden erbij).
+tools/proef58.py         Opslaan in Profiel houdt je volgorde van Home (v158), echte profiel.html en index.html: wat al in
+                         fibro_widgets_profiel_<uid> stond houdt zijn plek (ook countdown = afteltimer, fotos = fotos_3x3),
+                         nieuw komt achteraan, uitgezet gaat weg; zonder of met kapotte indeling de volgorde van Profiel;
+                         echt slepen op Home en daarna Opslaan. Oude map als controle: 8 van 13.   python3 -I proef58.py <map>
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

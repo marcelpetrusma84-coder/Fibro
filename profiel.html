@@ -1016,8 +1016,19 @@ window.slaAllesOp=async function(){
     spel_endlessrunner: { id:'spel_endlessrunner', icon:'🏃', titel:'Runner & Gunner', w:2, h:1 }
   }
   // v157: een sticker (sticker_f1-05, sticker_e1-03) is een klein vakje zonder kop (stickerwidget.js)
-  const wLayout = actieveWidgets.map(n => WMAP[n] || stickerWidgetDef(n)).filter(Boolean).map((d, i) => ({ ...d, volgorde: i, aan: true }))
-  localStorage.setItem('fibro_widgets_profiel_' + _profielUid(), JSON.stringify(wLayout))
+  // v158: je eigen volgorde van Home (ingedrukt houden en slepen, volgorde.js) blijft staan. Widgets die al op
+  // Home stonden houden hun plek, nieuwe komen achteraan (in de volgorde waarin je ze aanzette), uitgezette gaan weg.
+  const wSleutel = 'fibro_widgets_profiel_' + _profielUid()
+  let wOud = []
+  try { wOud = JSON.parse(localStorage.getItem(wSleutel) || '[]') } catch (e) {}
+  if (!Array.isArray(wOud)) wOud = []
+  const wPlek = new Map()
+  wOud.filter(w => w && typeof w.id === 'string').sort((a, b) => (Number(a.volgorde) || 0) - (Number(b.volgorde) || 0))
+    .forEach(w => { if (!wPlek.has(w.id)) wPlek.set(w.id, wPlek.size) })
+  const wDefs = actieveWidgets.map(n => WMAP[n] || stickerWidgetDef(n)).filter(Boolean)
+  const wRang = (d, i) => wPlek.has(d.id) ? wPlek.get(d.id) : wPlek.size + i
+  const wLayout = wDefs.map((d, i) => ({ d, r: wRang(d, i) })).sort((a, b) => a.r - b.r).map(({ d }, i) => ({ ...d, volgorde: i, aan: true }))
+  localStorage.setItem(wSleutel, JSON.stringify(wLayout))
 
 
   // ── Alleen technische sync naar Supabase (geen PII) ──

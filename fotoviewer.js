@@ -1,9 +1,10 @@
-// fotoviewer.js — Fibro  (v2; v5 11-10-2026: ook in het Engels)
+// fotoviewer.js — Fibro  (v2; v5 11-10-2026: ook in het Engels; v6 16-10-2026: stickers niet)
 //
 // Klik op een foto in een widget en hij opent groot over de pagina heen.
 // Staan er meer foto's in dezelfde widget, dan kun je doorbladeren met de
 // pijltjes, de pijltjestoetsen of een veegbeweging.
 // v4: naar beneden vegen sluit de foto (de foto zakt mee met je vinger).
+// v6: een sticker als widget (stickerwidget.js, .sw-blok) is geen foto: tikken speelt hem af.
 //
 // Werkt op elke pagina met widgets, zonder dat de fotowidgets zelf iets
 // hoeven te weten: de klik wordt opgevangen op documentniveau. Ook foto's
@@ -13,7 +14,7 @@
 // Anders zou op je eigen pagina tegelijk de bestandskiezer opengaan.
 // Een foto vervangen gaat daar met het kruisje wissen en dan de plus.
 //
-// Inhaken:  <script src="./fotoviewer.js?v=5"></script>  vlak voor </body>
+// Inhaken:  <script src="./fotoviewer.js?v=6"></script>  vlak voor </body>
 
 (function () {
   'use strict'
@@ -29,6 +30,8 @@
     if (!img.closest('.widget-blok')) return false
     // Avatars in het gastenboek en andere kleine plaatjes overslaan.
     if (img.closest('#gbl') || img.closest('#gbwLijst')) return false
+    // Stickers (v6): tikken = beweging en geluid, niet groot openen
+    if (img.closest('.sw-blok')) return false
     if (img.getBoundingClientRect().width < MINIMALE_BREEDTE) return false
     if (!img.src) return false
     if (img.src.indexOf('data:image') !== 0 && !/^https?:|^blob:/.test(img.src)) return false
@@ -211,6 +214,7 @@
   var stijl = document.createElement('style')
   stijl.textContent =
     '.widget-blok img { pointer-events: auto !important; cursor: zoom-in }' +
-    '#gbl img, #gbwLijst img { pointer-events: none !important; cursor: default }'
+    '#gbl img, #gbwLijst img { pointer-events: none !important; cursor: default }' +
+    '.widget-blok.sw-blok img { pointer-events: none !important; cursor: inherit }'
   document.head.appendChild(stijl)
 })()

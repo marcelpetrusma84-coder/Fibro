@@ -9,6 +9,10 @@
 #    slepen = andere volgorde (bewaard) zonder af te spelen. Engels.
 # C. Profiel van een vriend: sticker van Fibro, eigen sticker van de vriend, en een zandloper voor een eigen
 #    sticker die nog niet binnen is; komt hij binnen (sync), dan verschijnt hij vanzelf. Tik = afspelen.
+# D. (v159) echt tikken op een aanraakscherm (telefoon), op Home en bij een vriend: beweging en geluid, en de
+#    fotoviewer gaat NIET open (die ving in v157 de tik op het plaatje op). Ook B en C klikken nu echt met de muis
+#    op het plaatje (in v157 klikte de proef via code op het blok, daardoor viel dat niet op). Een foto gaat wel
+#    nog groot open.
 # Oude map als controle: daar bestaat dit niet (bijna alles MIS).
 # python3 -I proef57.py <map>     (FOTO=<map> maakt schermafbeeldingen)
 import sys, os, time, json, socket, subprocess, tempfile, shutil
@@ -61,6 +65,7 @@ ZET_TEKST = """async ([id, data]) => {
     r.onsuccess = () => ok(r.result); r.onerror = () => nee(r.error) })
   await new Promise(ok => { const tx = db.transaction('fotos', 'readwrite'); tx.objectStore('fotos').put({ id, data }); tx.oncomplete = ok }) }"""
 SPEELT = "sel => { const i = document.querySelector(sel); return !!(i && i.getAnimations().length) }"
+VIEWER = "() => { const v = document.getElementById('fibro-fotoviewer'); return !!(v && getComputedStyle(v).display !== 'none') }"
 
 www = tempfile.mkdtemp(); os.symlink(MAP, www + '/Fibro')
 with sync_playwright() as pw:
@@ -161,11 +166,12 @@ with sync_playwright() as pw:
     check('zonder kaartje eromheen, beweging wordt niet afgeknipt', naakt == ['rgba(0, 0, 0, 0)', 'none', 'visible'], naakt)
     if FOTO: p.screenshot(path=FOTO + '/b-home.png', full_page=True)
     voor = ev(p, "window.__fxosc || 0")
-    ev(p, "() => document.querySelector('#profiel-sectie .widget-blok[data-id=\"sticker_f1-07\"]').click()")
+    p.click('#profiel-sectie .widget-blok[data-id="sticker_f1-07"] img', force=True)  # echte muisklik midden op het plaatje
     beweegt = ev(p, SPEELT, '#profiel-sectie .widget-blok[data-id="sticker_f1-07"] img')
     boven = ev(p, "() => document.querySelector('#profiel-sectie .widget-blok[data-id=\"sticker_f1-07\"]').style.zIndex")
     p.wait_for_timeout(400)
-    check('tik op Boos: beweging en geluid, tijdens de beweging bovenop', beweegt is True and boven == '5' and ev(p, "window.__fxosc || 0") > voor, (beweegt, boven, voor))
+    check('klik op Boos: beweging en geluid, tijdens de beweging bovenop', beweegt is True and boven == '5' and ev(p, "window.__fxosc || 0") > voor, (beweegt, boven, voor))
+    check('de fotoviewer gaat niet open', ev(p, VIEWER) is False, '')
     p.wait_for_timeout(900)
     check('na de beweging weer gewoon', ev(p, "() => document.querySelector('#profiel-sectie .widget-blok[data-id=\"sticker_f1-07\"]').style.zIndex") == '', '')
     voor = ev(p, "window.__fxosc || 0")
@@ -209,9 +215,9 @@ with sync_playwright() as pw:
         [None, 'Sticker komt eraan', 'span 1']], vr)
     if FOTO: p.screenshot(path=FOTO + '/c-vriend.png', full_page=True)
     voor = ev(p, "window.__fxosc || 0")
-    ev(p, "() => document.querySelector('#vriendWidgetGrid .widget-blok[aria-label=\"Speel sticker Hondje\"]').click()")
+    p.click('#vriendWidgetGrid .widget-blok[aria-label="Speel sticker Hondje"] img', force=True)
     beweegt = ev(p, SPEELT, '#vriendWidgetGrid .widget-blok[aria-label="Speel sticker Hondje"] img'); p.wait_for_timeout(300)
-    check('tik op de sticker van de vriend: beweging en geluid', beweegt is True and ev(p, "window.__fxosc || 0") > voor, (beweegt, voor))
+    check('klik op de sticker van de vriend: beweging en geluid, geen fotoviewer', beweegt is True and ev(p, "window.__fxosc || 0") > voor and ev(p, VIEWER) is False, (beweegt, voor))
     # de ontbrekende sticker komt binnen via de sync (sync.js bewaart hem en meldt het op 'fibro-vriend-data')
     ev(p, ZET, ['vriend_' + FID + '_sticker_e2-01', 'stickers/f1/12.webp', {'b': 'kantel', 'g': 'fluit', 'naam': 'Vosje'}])
     ev(p, "id => { const k = new BroadcastChannel('fibro-vriend-data'); k.postMessage({ id }); k.close() }", 'vriend_' + FID + '_sticker_e2-01')
@@ -219,6 +225,50 @@ with sync_playwright() as pw:
     except Exception: pass
     check('komt hij binnen, dan staat hij er vanzelf', ev(p, "() => !!document.querySelector('#vriendWidgetGrid .widget-blok[aria-label=\"Speel sticker Vosje\"] img') && !document.querySelector('#vriendWidgetGrid .sw-wacht')") is True, '')
     check('geen fouten (vriend)', p.fouten == [], p.fouten)
+    ctx.close()
+
+    # ── D. echt tikken op een telefoon ──
+    print('D. tikken op een aanraakscherm')
+    ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, device_scale_factor=3)
+    ctx.route('**/*supabase.co/**', supa); ctx.add_init_script(TELLER)
+    p = ctx.new_page(); p.fouten = []; p.on('pageerror', lambda e: p.fouten.append(str(e)[:200])); p.on('dialog', lambda d: d.dismiss())
+    p.goto(BASIS + 'manifest.json')
+    p.evaluate("([t]) => { localStorage.setItem('sb-qmgatbphiplrfxrljtbe-auth-token', t); localStorage.setItem('fibro_opslagtip_later', String(Date.now())) }", [TOKEN])
+    ev(p, ZET, ['eigensticker_' + UID + '_e1-01', 'stickers/f1/03.webp', {'b': 'stuiter', 'g': 'boing', 'naam': 'Blije kat', 'tijd': 1}])
+    ev(p, "([u, l]) => localStorage.setItem('fibro_widgets_profiel_' + u, JSON.stringify(l))", [UID, [
+        {'id': 'sticker_f1-07', 'w': 1, 'h': 1, 'geenHeader': True, 'volgorde': 0, 'aan': True},
+        {'id': 'sticker_e1-01', 'w': 1, 'h': 1, 'geenHeader': True, 'volgorde': 1, 'aan': True},
+        {'id': 'fotos_groot', 'icon': '*', 'titel': 'Grote foto', 'w': 4, 'h': 2, 'volgorde': 2, 'aan': True}]])
+    ev(p, ZET, ['pfoto_groot_0_' + UID, 'stickers/f1/09.webp', {}])
+    p.goto(BASIS + 'index.html')
+    try: p.wait_for_function("() => document.querySelectorAll('#profiel-sectie .sw-sticker').length >= 2", timeout=12000)
+    except Exception: pass
+    p.wait_for_timeout(1200)
+    for code, naam in [('f1-07', 'Boos'), ('e1-01', 'Blije kat')]:
+        for keer in (1, 2):
+            voor = ev(p, "window.__fxosc || 0")
+            p.tap('#profiel-sectie .widget-blok[data-id="sticker_' + code + '"]', force=True)
+            beweegt = ev(p, SPEELT, '#profiel-sectie .widget-blok[data-id="sticker_' + code + '"] img'); p.wait_for_timeout(400)
+            check('Home, tik %d op %s: beweging en geluid, geen fotoviewer' % (keer, naam), beweegt is True and ev(p, "window.__fxosc || 0") > voor and ev(p, VIEWER) is False, (beweegt, voor))
+            p.wait_for_timeout(1300)
+    foto = ev(p, "() => { const i = document.querySelector('#profiel-sectie .widget-blok[data-id=\"fotos_groot\"] img'); return i ? i.getAttribute('src').slice(0, 11) : null }")
+    if foto:
+        ev(p, "() => { const v = document.getElementById('fibro-fotoviewer'); if (v) v.style.display = 'none' }")
+        p.tap('#profiel-sectie .widget-blok[data-id="fotos_groot"] img', force=True); p.wait_for_timeout(500)
+        check('een foto gaat wel nog groot open', ev(p, VIEWER) is True, foto)
+    else:
+        check('een foto gaat wel nog groot open (geen foto getekend)', False, foto)
+    check('geen fouten (tikken op Home)', p.fouten == [], p.fouten)
+    ev(p, ZET_TEKST, ['vriend_' + FID + '_layout', json.dumps([{'id': 'sticker_f1-03', 'w': 1, 'h': 1, 'geenHeader': True, 'volgorde': 0, 'aan': True}])])
+    p.goto(BASIS + 'vriend-profiel.html?id=' + FID)
+    try: p.wait_for_function("() => !!document.querySelector('#vriendWidgetGrid .sw-sticker')", timeout=12000)
+    except Exception: pass
+    p.wait_for_timeout(1000)
+    voor = ev(p, "window.__fxosc || 0")
+    p.tap('#vriendWidgetGrid .sw-blok', force=True)
+    beweegt = ev(p, SPEELT, '#vriendWidgetGrid .sw-blok img'); p.wait_for_timeout(400)
+    check('vriend, tik: beweging en geluid, geen fotoviewer', beweegt is True and ev(p, "window.__fxosc || 0") > voor and ev(p, VIEWER) is False, (beweegt, voor))
+    check('geen fouten (tikken bij een vriend)', p.fouten == [], p.fouten)
     ctx.close()
     br.close(); srv.terminate()
 shutil.rmtree(www, ignore_errors=True)

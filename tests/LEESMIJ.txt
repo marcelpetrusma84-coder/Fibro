@@ -2,12 +2,12 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v159: tikken op een sticker op Home speelt hem af, niet de fotoviewer).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v160: stickergeluiden als mp3, geluid klaarzetten ook bij loslaten).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
 
-gen/bouw.py              generator (v156: nieuwe plaatjes .webp/.png/... gaan als base64 mee): bouw(naam, oudmap, nieuwmap, gewijzigd, nieuwe, oude_v,
+gen/bouw.py              generator (v156: nieuwe plaatjes .webp/.png/... gaan als base64 mee; v160: ook .mp3/.wav): bouw(naam, oudmap, nieuwmap, gewijzigd, nieuwe, oude_v,
                          beschrijving, vereist, uitpad) -> maakt maak-<naam>.py
                          (controleert alles en schrijft pas als alles klopt; slaat tests/ over
                          bij het zoeken naar oude ?v=-verwijzingen)
@@ -62,7 +62,11 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  voor Home, stickerwidget.js (testscript_stickerwidget.py),
                          volgorde = v158: Opslaan in Profiel houdt je eigen volgorde van Home (testscript_volgorde.py),
                          tikken = v159: fotoviewer.js v6 slaat stickers over, zodat een tik op Home en bij een vriend de
-                                 sticker afspeelt (testscript_tikken.py))
+                                 sticker afspeelt (testscript_tikken.py),
+                         mp3 = v160: de 18 stickergeluiden als mp3 (geluiden/<naam>.mp3, gemaakt met tools/geluiden.py),
+                                 geluid klaarzetten ook bij touchend/click. In VIER stukken (maak-mp3-1..4.py, elk hoogstens
+                                 ~130 kB om in Kate te plakken: de download lukte niet), stappen in <S>/stap1-3
+                                 (testscript_mp3.py <S> <script> <basis> <nieuw> <stuk>: elke 20e inhoudsregel))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -301,6 +305,18 @@ tools/proef57.py         stickers als widget op Home (v157), echte profiel.html,
                          ving fotoviewer.js die tik op (opende de sticker groot) en de proef klikte via code op het blok, dus
                          dat viel niet op. Les: altijd echt klikken/tikken (p.click/p.tap op het plaatje), niet el.click().
                          Oude map (v158) als controle: 31 van 40.
+                         v160: de TELLER in proef53-57 telt ook een gestarte mp3 (<audio data-stickerfx> met een blob, niet
+                         tijdens het zegenen); anders telt de beltoon (beltoon.js speelt ook een blob) per ongeluk mee.
+tools/geluiden.py        maakt de mp3's van de stickergeluiden uit stickerfx.js (v160): Chromium speelt alles tussen
+                         '/* ---------- geluiden (Web Audio)' en '/* ---------- afspelen' af in een OfflineAudioContext
+                         (vaste toevalsreeks), stilte eraf, elk geluid even hard (RMS -21 dB, piek hoogstens -1 dB),
+                         ffmpeg libmp3lame 128 kbps mono. Opnieuw maken: python3 -I geluiden.py <map> <map>/geluiden,
+                         daarna MP3_VERSIE in stickerfx.js ophogen (de mp3's worden opgehaald met ?v=MP3_VERSIE).
+                         (ting.mp3 kwam een keer net anders uit: de offline-weergave is niet altijd bit-gelijk.)
+tools/proef60.py         de stickergeluiden als mp3 (v160), echte profiel.html: 18 bestanden speelbaar en even hard, Boos =
+                         zoemer.mp3 (geen code-geluid), alle 18 opgehaald na de eerste tik, elke sticker van vel 1 zijn eigen
+                         mp3, twee tegelijk, geen mp3 te krijgen = code-geluid, traag = eerst code-geluid (0,4 s) en daarna mp3,
+                         touchend zegent de vier spelers. Oude map als controle: 7 van 21.   python3 -I proef60.py <map>
 tools/proef58.py         Opslaan in Profiel houdt je volgorde van Home (v158), echte profiel.html en index.html: wat al in
                          fibro_widgets_profiel_<uid> stond houdt zijn plek (ook countdown = afteltimer, fotos = fotos_3x3),
                          nieuw komt achteraan, uitgezet gaat weg; zonder of met kapotte indeling de volgorde van Profiel;

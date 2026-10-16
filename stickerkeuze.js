@@ -1,5 +1,5 @@
 // stickerkeuze.js - de stickerkeuze in de chat (v153, 15 oktober 2026; v154: tekst bij Eigen;
-// v155: de vakjes Eigen tonen je eigen stickers uit Profiel en je kunt ze versturen; v156: vel 1)
+// v155: de vakjes Eigen tonen je eigen stickers uit Profiel en je kunt ze versturen; v156: vel 1; v160: mp3-geluiden)
 // Twee rijen van zes vakjes: bovenaan de zes vellen van Fibro (stickervellen.js), daaronder twee
 // vakjes voor eigen stickers en vier voor vellen uit de winkel. Elk vel heeft 12 stickers; op de
 // telefoon 4 naast elkaar, op een breed scherm 6. Een leeg vakje zegt wat er later komt.
@@ -7,7 +7,7 @@
 // je eigen stickers opnieuw (bij het openen). sticker = { vel, nr, naam, b, g, src }.
 import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=156'
 import { leesEigen } from './eigenstickers.js?v=155'
-import { speelBeweging } from './stickerfx.js?v=153'
+import { speelBeweging } from './stickerfx.js?v=160'
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 const naamVan = n => Array.isArray(n) ? ((window.T && window.T.taal === 'en') ? n[1] : n[0]) : ''

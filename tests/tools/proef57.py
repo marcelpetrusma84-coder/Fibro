@@ -48,6 +48,11 @@ TELLER = """
   AudioScheduledSourceNode.prototype.start = function () {
     if (this.context && this.context.__fx && !(this.buffer && this.buffer.length <= 1)) window.__fxosc++
     return start.apply(this, arguments) }
+  // v160: de geluiden zijn mp3's (<audio data-stickerfx> met een blob-adres): die tellen ook (niet het stille zegenen)
+  const speel = HTMLMediaElement.prototype.play
+  HTMLMediaElement.prototype.play = function () {
+    if (this.dataset && this.dataset.stickerfx && !this._zegen && String(this.src || '').startsWith('blob:')) { window.__fxosc++; window.__fxmp3 = (window.__fxmp3 || 0) + 1 }
+    return speel.apply(this, arguments) }
 })()
 """
 # een plaatje als data-URL (zoals een eigen sticker op het toestel staat) en in de toesteldatabase zetten

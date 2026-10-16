@@ -1,7 +1,11 @@
-// stickerfx.js - beweging en geluid bij stickers (v153, 15 oktober 2026)
+// stickerfx.js - beweging en geluid bij stickers (v153, 15 oktober 2026; v160: geluiden als mp3)
 // De bibliotheek: 15 bewegingen en 19 geluiden (met "geen"), dezelfde als in het Stickerlab van 15 okt.
 // Een sticker onthoudt alleen de namen (bijv. beweging 'stuiter', geluid 'boing'); dit bestand speelt ze af.
-// Geluiden worden met code gemaakt (Web Audio): geen geluidsbestanden, dus niets extra te downloaden.
+// Geluiden worden met code gemaakt (Web Audio). v160: daarvan zijn mp3's gemaakt (geluiden/<naam>.mp3, met
+// tests/tools/geluiden.py), die klinken hetzelfde en spelen op de iPhone ook als hij op stil staat. Fibro speelt
+// de mp3; lukt dat niet (geen internet, nog niet binnen), dan het code-geluid zoals voorheen.
+// Let op: tests/tools/geluiden.py neemt alles tussen '/* ---------- geluiden (Web Audio)' en
+// '/* ---------- afspelen' op. Verander je daar een geluid, maak dan de mp3's opnieuw en verhoog MP3_VERSIE.
 // Namen staan hier in twee talen ([Nederlands, Engels]); de taal volgt window.T.taal (taal.js).
 // Op de iPhone mag een pagina pas geluid maken na een tik: daarom zet de eerste tik op de pagina
 // het geluid alvast klaar (zie onderaan).
@@ -242,11 +246,101 @@ export function speelBeweging(el, beweging) {
     el.animate(bw.kf, { duration: bw.ms, easing: bw.easing || 'ease', fill: 'none' })
   } catch (e) {}
 }
-export function speelGeluid(geluid) {
+// Het geluid met code (Web Audio): de terugval als de mp3 niet lukt
+function speelCode(geluid) {
   const g = GELUIDEN[geluid]
   if (!g || geluid === 'geen') return
   if (!audio()) return
   try { g.f(master, ctx.currentTime + 0.02) } catch (e) { console.warn('[stickerfx]', e) }
+}
+
+/* ---------- geluiden als mp3 (v160) ---------- */
+// De 18 mp3's samen zijn ongeveer 0,25 MB en komen van dezelfde plek als de app (GitHub), niet van de server. Ze
+// worden een keer opgehaald en als blob bewaard zolang de pagina open is. Afspelen gaat met een paar <audio>-
+// spelers, zodat geluiden over elkaar heen kunnen. Een iPhone laat een speler pas geluid maken als hij een keer bij
+// een tik is gestart: daarom start de eerste tik op de pagina ze allemaal even met een stil geluidje (zegenen).
+// Op de iPhone telt alleen het loslaten als tik (touchend/click, zie beltoon.js), niet het neerzetten (pointerdown):
+// tot v159 zette Fibro het geluid alleen bij pointerdown klaar, daardoor bleef het op de iPhone vaak op slot.
+const MP3_VERSIE = 160
+const MP3_WACHT_MS = 400 // nog aan het ophalen: zo lang wachten, daarna het code-geluid
+const SPELERS = 4
+// Een stil stukje van 50 ms als blob (Safari speelt een blob betrouwbaarder af dan een data-adres, zie beltoon.js)
+let stilUrl = null
+function stil() {
+  if (stilUrl) return stilUrl
+  const sr = 22050, n = Math.floor(sr * 0.05), buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf)
+  const zet = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)) }
+  zet(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); zet(8, 'WAVE'); zet(12, 'fmt '); v.setUint32(16, 16, true)
+  v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true)
+  v.setUint16(32, 2, true); v.setUint16(34, 16, true); zet(36, 'data'); v.setUint32(40, n * 2, true)
+  stilUrl = URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }))
+  return stilUrl
+}
+const mp3 = {} // naam -> { url: blob-adres of null, klaar: belofte }
+function haalMp3(naam) {
+  if (!GELUIDEN[naam] || naam === 'geen') return null
+  if (!mp3[naam]) {
+    const m = mp3[naam] = { url: null }
+    m.klaar = fetch('geluiden/' + naam + '.mp3?v=' + MP3_VERSIE)
+      .then(r => (r.ok ? r.blob() : null))
+      .then(b => { if (b && b.size) m.url = URL.createObjectURL(b); return m.url })
+      .catch(() => null)
+  }
+  return mp3[naam]
+}
+function haalAlleMp3() { try { Object.keys(GELUIDEN).forEach(haalMp3) } catch (e) {} }
+const spelers = []
+let beurt = 0
+function nieuweSpeler() {
+  const a = new Audio()
+  a.preload = 'auto'
+  try { a.disableRemotePlayback = true } catch (e) {}
+  a.dataset.stickerfx = '1'
+  spelers.push(a)
+  return a
+}
+function speler() {
+  if (spelers.length < SPELERS) return nieuweSpeler()
+  const vrij = spelers.find(a => !a._zegen && (a.paused || a.ended))
+  if (vrij) return vrij
+  return spelers[beurt++ % SPELERS] // alle vier bezig: de volgende in de rij
+}
+function speelMp3(geluid, url) {
+  const a = speler()
+  a._zegen = false
+  try { if (a.src !== url) a.src = url; a.currentTime = 0 } catch (e) {}
+  let p
+  try { p = a.play() } catch (e) { p = Promise.reject(e) }
+  if (p && typeof p.then === 'function') p.then(() => { a._vrij = true }, e => { if (!e || e.name !== 'AbortError') speelCode(geluid) })
+}
+export function speelGeluid(geluid) {
+  const g = GELUIDEN[geluid]
+  if (!g || geluid === 'geen') return
+  const m = haalMp3(geluid)
+  if (m && m.url) return speelMp3(geluid, m.url)
+  // nog niet binnen: heel even wachten, anders het code-geluid
+  let gedaan = false
+  const terug = setTimeout(() => { if (!gedaan) { gedaan = true; speelCode(geluid) } }, MP3_WACHT_MS)
+  m.klaar.then(url => {
+    if (gedaan) return
+    gedaan = true; clearTimeout(terug)
+    if (url) speelMp3(geluid, url); else speelCode(geluid)
+  })
+}
+// Bij elke tik tot alle spelers vrij zijn: een tik die (op de iPhone) niet telt, mislukt en de volgende probeert opnieuw
+function zegenSpelers() {
+  haalAlleMp3()
+  while (spelers.length < SPELERS) nieuweSpeler()
+  for (const a of spelers) {
+    if (a._vrij || a._zegen || !a.paused) continue
+    a._zegen = true
+    try {
+      a.src = stil()
+      const p = a.play()
+      if (p && typeof p.then === 'function') p.then(() => { a._vrij = true; if (a._zegen) { a.pause(); a._zegen = false } }, () => { a._zegen = false })
+      else { a._vrij = true; a._zegen = false }
+    } catch (e) { a._zegen = false }
+  }
 }
 // Speel een sticker af: beweging op el (een <img>), en het geluid als metGeluid niet false is.
 export function speel(el, sticker, metGeluid = true) {
@@ -260,9 +354,11 @@ export function speel(el, sticker, metGeluid = true) {
 // 1 sample ontgrendelt het geluid op de iPhone (zoals in meldingen.js). Na de achtergrond (iPhone:
 // 'interrupted') zet de volgende tik het weer aan.
 function klaarzetten() {
+  zegenSpelers() // v160: de mp3-spelers
   if (ctx && ctx.state === 'running') return
   if (!audio()) return
   try { const s = ctx.createBufferSource(); s.buffer = ctx.createBuffer(1, 1, 22050); s.connect(ctx.destination); s.start(0) } catch (e) {}
 }
-document.addEventListener('pointerdown', klaarzetten, { passive: true, capture: true })
-document.addEventListener('keydown', klaarzetten, { capture: true })
+// v160: ook touchend en click, want op de iPhone telt alleen het loslaten als tik
+for (const soort of ['pointerdown', 'touchend', 'click', 'keydown']) document.addEventListener(soort, klaarzetten, { passive: true, capture: true })
+setTimeout(haalAlleMp3, 1200) // v160: de mp3's alvast ophalen, de pagina gaat voor

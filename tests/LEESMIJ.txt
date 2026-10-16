@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v164: stickervel 2, voor beurtspellen, met 12 eigen geluiden).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v165: stickervel 3, handgebaren, met 12 eigen geluiden).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -82,7 +82,9 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  (tools/geluiden3.py, alleen als mp3, mp3: true en een terug-geluid in stickerfx.js); ?v=164
                                  voor stickerfx, stickervellen, stickerkeuze, stickerwidget, stickermaker. In stukken van
                                  ~130 kB (maak-vel2-1..N.py; de groepen kiest maak_vel2.py zelf op grootte), stappen in
-                                 <S>/stap1.. (testscript_vel2.py <S> <script> <basis> <nieuw> <stuk>: elke 20e inhoudsregel))
+                                 <S>/stap1.. (testscript_vel2.py <S> <script> <basis> <nieuw> <stuk>: elke 20e inhoudsregel),
+                         vel3 = v165: stickervel 3 (handgebaren met witte cartoonhandschoenen), zoals vel2: plaatjes
+                                 stickers/f3/NN.webp, geluiden met tools/geluiden4.py, ?v=165 (testscript_vel3.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -338,6 +340,9 @@ tools/geluiden2.py       de 12 eigen geluiden van vel 1 (v161) met numpy/scipy: 
 tools/geluiden3.py       de 12 eigen geluiden van vel 2 (v164), zelfde werkwijze als geluiden2.py (eigen toevalsreeks):
                          nadenken, vastloper, tik tak, snurken met belletje, hm?, idee!, sirene, facepalm, krekels,
                          ontploffing, fanfare, treurige trombone.   python3 -I geluiden3.py <map>/geluiden
+tools/geluiden4.py       de 12 eigen geluiden van vel 3 (v165, handgebaren), zelfde werkwijze: top!, boe!, die kant op,
+                         halt!, vrede, oke!, rockgitaar, opladen, ding dong, applaus, yes!, ruimteschip.
+                         python3 -I geluiden4.py <map>/geluiden
 tools/proef60.py         de stickergeluiden als mp3 (v160; v161: 30 bestanden, even hard gemeten als gemiddelde luidheid), echte profiel.html: 18 bestanden speelbaar en even hard, Boos =
                          zoemer.mp3 (geen code-geluid), alle 18 opgehaald na de eerste tik, elke sticker van vel 1 zijn eigen
                          mp3, twee tegelijk, geen mp3 te krijgen = code-geluid, traag = eerst code-geluid (0,4 s) en daarna mp3,
@@ -362,7 +367,10 @@ tools/proef63.py         stickervel 2 (v164) in de echte chat.html, naar proef56
                          samen < 400 kB, terug-geluid met code), na de eerste tik opgehaald, echte klik = mp3 + fxsticker:f2-12
                          (versleuteld), binnenkomend Winnaar!, Profiel-blok 'Stickervel 2'; vel 1 ongewijzigd.
                          Oude map als controle: 3 van 18.   python3 -I proef63.py <map>
-                         (proef53 kijkt sinds v164 naar vel 3 voor 'leeg vel'.)
+                         (proef53 kijkt sinds v165 naar vel 4 voor 'leeg vel'. proef63 geldt voor v164: sinds v165 zijn er
+                         55 geluiden en drie vellen; gebruik dan proef64.)
+tools/proef64.py         stickervel 3 (v165), zoals proef63 maar voor vakje 3 (handgebaren), met vel 1 en 2 ongewijzigd en
+                         55 geluiden. Oude map als controle: 3 van 18.   python3 -I proef64.py <map>
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

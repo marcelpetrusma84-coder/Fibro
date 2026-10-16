@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v170: stickers in een beurtspel, een per beurt).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v171: een sticker als mood).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -103,7 +103,13 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  van de chat) in plaats van de emoji's; per beurt een sticker (na een zet, 'zet' of 'opnieuw', eigen
                                  of van de vriend, weer een); 'spelsticker' { code } over het spelkanaal; groot midden in beeld
                                  (#spelStickerGroot, 2,5 s, beweging en geluid, gloed cyaan = jij, roze = vriend); van de vriend
-                                 telt ook maar een per beurt (testscript_spelsticker.py))
+                                 telt ook maar een per beurt (testscript_spelsticker.py),
+                         moodsticker = v171: nieuw moodsticker.js?v=171 (leesMood, tekenMoodSticker: een <span> met achtergrond,
+                                 geen <img>, zodat fotoviewer.js hem niet opent). Profiel -> Mood: de stickerkeuze in plaats van
+                                 de emoji-lijst; opslaan: offline_emoji 'fxsticker:<code>' en (weer) mood '<emoji of sticker> <tekst>'
+                                 naar de server (mood ging niet meer mee, vrienden zagen een oude). Home (Mood-widget) en het profiel
+                                 van een vriend: de sticker, tik = beweging en geluid; eigen sticker van de vriend nog niet binnen =
+                                 zandloper die vanzelf bijwerkt. Onder je naam alleen de tekst (testscript_moodsticker.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -409,6 +415,11 @@ tools/proef68.py         stickers in een beurtspel (v170), echte chat.html met n
                          wel stickerknop; echte klik op een sticker = 'spelsticker' { code }, groot midden in beeld met geluid,
                          knop dicht tot een zet (echte klik op het bord); van de vriend een per beurt; na 2,5 s weg; tekst
                          werkt nog. Oude map als controle: 5 van 15.   python3 -I proef68.py <map>
+tools/proef69.py         een sticker als mood (v171), echte profiel.html, index.html en vriend-profiel.html: stickerkeuze bij Mood,
+                         kiezen (echte klik), Opslaan stuurt mood en offline_emoji 'fxsticker:f2-11', opnieuw openen; Home: de
+                         Mood-widget met sticker, echte tik = beweging en geluid, geen fotoviewer; onder je naam alleen tekst;
+                         vriend: sticker, tik, tekst, 'offline'-regel zonder code, eigen sticker = zandloper die vanzelf bijwerkt,
+                         oude emoji-mood werkt nog. Oude map als controle: 2 van 17.   python3 -I proef69.py <map>  (FOTO=<map>)
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

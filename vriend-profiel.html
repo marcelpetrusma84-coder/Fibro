@@ -149,6 +149,7 @@ body.heeft-wallpaper::before { display:block; }
   import { initSync, vraagVriendVideo } from './sync.js?v=162'
   import { eisSessie, startBewaking } from './sessie.js?v=95'
   import { startMeldingen } from './meldingen.js?v=143'
+  import { leesMood, isMoodSticker, tekenMoodSticker } from './moodsticker.js?v=171' // v171: een sticker als mood
   pasBlokstijlToe()
 
   var vriendId = null
@@ -277,11 +278,15 @@ body.heeft-wallpaper::before { display:block; }
     document.getElementById('profielBio').textContent = data.bio || ''
     document.getElementById('paginaTitel').textContent = naam
 
-    // Mood splitsen in emoji + tekst
+    // Mood splitsen in emoji + tekst (v171: of een sticker, moodsticker.js: tik = beweging en geluid)
     const mood = data.mood || ''
+    const ms = leesMood(mood)
     const moodEmoji = mood.match(/^\p{Emoji}/u)?.[0] || '💭'
-    const moodTekst = mood.replace(/^\p{Emoji}\s*/u, '') || T('Geen mood')
-    document.getElementById('moodEmoji').textContent = moodEmoji
+    const moodTekst = (ms.code ? ms.tekst : mood.replace(/^\p{Emoji}\s*/u, '')) || T('Geen mood')
+    const moodEl = document.getElementById('moodEmoji')
+    if (ms.code) {
+      if (moodEl.dataset.sticker !== ms.code) { moodEl.dataset.sticker = ms.code; tekenMoodSticker(moodEl, ms.code, { vriendId: data.id || vriendId }) }
+    } else { delete moodEl.dataset.sticker; moodEl.textContent = moodEmoji }
     document.getElementById('moodTekst').textContent = moodTekst
 
     // Online status
@@ -290,7 +295,7 @@ body.heeft-wallpaper::before { display:block; }
     dot.classList.toggle('online', online)
     document.getElementById('onlineLabel').textContent = online
       ? 'Online'
-      : (data.offline_bericht ? `${data.offline_emoji || '💤'} ${data.offline_bericht}` : T('Offline'))
+      : (data.offline_bericht ? `${isMoodSticker(data.offline_emoji) ? '' : (data.offline_emoji || '💤') + ' '}${data.offline_bericht}` : T('Offline'))
 
     // Kleuren
     if (vKleur(data.accent_kleur)) document.documentElement.style.setProperty('--accent', vKleur(data.accent_kleur))
@@ -874,6 +879,7 @@ async function renderVriendMuziek(el) {
     const naam = vriendNaam(T('Vriend'))
     document.getElementById('profielNaam').textContent = naam
     document.getElementById('paginaTitel').textContent = naam
+    delete document.getElementById('moodEmoji').dataset.sticker
     document.getElementById('moodEmoji').textContent = '\u{1F4F4}'
     document.getElementById('moodTekst').textContent = T('Dit profiel staat nog niet op dit toestel')
     toonAvatar(null, '\u{1F464}')

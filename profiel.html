@@ -475,13 +475,15 @@ input, textarea { font-size:16px !important; }
     if (g('usernameWeergave')) g('usernameWeergave').textContent = naam
     if (g('previewUsername')) g('previewUsername').textContent = '@' + naam
     var mood = String(lokaal.mood || p.mood || '')
-    var moodEmoji = (mood.match(/^\p{Emoji}/u) || [])[0] || '\ud83d\ude0a'
-    var moodTekst = mood.replace(/^\p{Emoji}\s*/u, '')
+    var ms = /^fxsticker:((?:f[1-6]|e[12])-(?:0[1-9]|1[0-2]))(?:\s+|$)/.exec(mood) // v171: een sticker als mood
+    var moodEmoji = ms ? 'fxsticker:' + ms[1] : ((mood.match(/^\p{Emoji}/u) || [])[0] || '\ud83d\ude0a')
+    var moodTekst = ms ? mood.slice(ms[0].length) : mood.replace(/^\p{Emoji}\s*/u, '')
     var online = (p.toon_online == null ? true : !!p.toon_online) ? 'Online' : 'Offline'
     g('editNaam').value = lokaal.naam || ''
     g('editBio').value = lokaal.bio || ''
     g('editMood').value = moodTekst
-    g('moodEmojiGekozen').textContent = moodEmoji
+    g('moodEmojiGekozen').textContent = ms ? '\ud83c\udfa8' : moodEmoji // v171: het plaatje komt zodra de pagina geladen is
+    g('moodEmojiGekozen').dataset.waarde = moodEmoji
     g('onlineDot').style.background = online === 'Online' ? '#22c55e' : '#6b7280'
     g('onlineLabel').textContent = online
     if (g('previewNaam')) g('previewNaam').textContent = lokaal.naam || p.username || T('Jouw naam')
@@ -516,6 +518,8 @@ import { initSync } from './sync.js?v=162'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=149'
 import { startStickermaker } from './stickermaker.js?v=166'
 import { tekenFibroVellen, stickerWidgetDef } from './stickerwidget.js?v=166'
+import { maakStickerkeuze } from './stickerkeuze.js?v=166' // v171: een sticker als mood
+import { leesMood, tekenMoodSticker } from './moodsticker.js?v=171'
 
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
@@ -815,14 +819,15 @@ async function init(){
     if (prevUsername) prevUsername.textContent = '@' + loginNaam
     if(!zelfVeranderd('editBio'))document.getElementById('editBio').value=lokaal.bio||''
     const opgeslagenMood = lokaal.mood || profiel.mood || ''
-    // Scheidt emoji van tekst
-    const moodEmoji = opgeslagenMood.match(/^\p{Emoji}/u)?.[0] || '😊'
-    const moodTekst = opgeslagenMood.replace(/^\p{Emoji}\s*/u, '')
-    if(!zelfVeranderd('editMood')&&!(vroeg&&document.getElementById('moodEmojiGekozen').textContent!==vroeg.moodEmoji)){
+    // Scheidt emoji (v171: of een sticker, 'fxsticker:f2-04') van tekst
+    const ms = leesMood(opgeslagenMood)
+    const moodEmoji = ms.code ? 'fxsticker:' + ms.code : (opgeslagenMood.match(/^\p{Emoji}/u)?.[0] || '😊')
+    const moodTekst = ms.code ? ms.tekst : opgeslagenMood.replace(/^\p{Emoji}\s*/u, '')
+    if(!zelfVeranderd('editMood')&&!(vroeg&&moodWaarde()!==vroeg.moodEmoji)){
     gekozenMoodEmoji = moodEmoji
-    document.getElementById('moodEmojiGekozen').textContent = moodEmoji
+    toonMoodKeuze(moodEmoji)
     document.getElementById('editMood').value = moodTekst
-    } else gekozenMoodEmoji = document.getElementById('moodEmojiGekozen').textContent || gekozenMoodEmoji
+    } else { gekozenMoodEmoji = moodWaarde() || gekozenMoodEmoji; toonMoodKeuze(gekozenMoodEmoji) }
     if(!(vroeg&&document.getElementById('onlineLabel').textContent!==vroeg.online)){
     isOnline = profiel.toon_online ?? true
     document.getElementById('onlineDot').style.background = isOnline ? '#22c55e' : '#6b7280'
@@ -965,7 +970,7 @@ async function haalWallpaperDataOp() {
 window.slaAllesOp=async function(){
   const naam=document.getElementById('editNaam').value.trim()
   const bio=document.getElementById('editBio').value.trim()
-  const mood = gekozenMoodEmoji + ' ' + document.getElementById('editMood').value.trim()
+  const mood = (gekozenMoodEmoji + ' ' + document.getElementById('editMood').value.trim()).trim()
   const avatar=document.getElementById('avatarEmoji').textContent
   const accentKleur=document.getElementById('accentHex').value
   const accentKleur2=document.getElementById('accent2Hex').value
@@ -1051,7 +1056,10 @@ window.slaAllesOp=async function(){
     online_status:isOnline,
     toon_online:isOnline,
     offline_emoji:gekozenMoodEmoji,
-    offline_bericht:document.getElementById('editMood').value.trim() || 'Offline'
+    offline_bericht:document.getElementById('editMood').value.trim() || 'Offline',
+    // v171: ook de mood zelf (emoji of sticker + tekst): die laat het profiel van een vriend zien. Hij ging niet
+    // meer mee, dus vrienden zagen een oude mood.
+    mood:(gekozenMoodEmoji + ' ' + document.getElementById('editMood').value.trim()).trim()
   }
   if(!vorigeVingers||!vingers.a||vingers.a!==vorigeVingers.a)rij.avatar_data=avatarData
   if(!vorigeVingers||!vingers.w||vingers.w!==vorigeVingers.w)rij.wallpaper_data=wallpaperData
@@ -1114,57 +1122,40 @@ window.toggleOnlineStatus = async function() {
 }
 init()
 
-  // ─── Mood emoji picker ───
-  const MOOD_EMOJIS = [
-    // Blij
-    '😊','😄','😁','🥰','😍','🤩','😎','🥳','😇','🤗',
-    // Verdrietig
-    '😢','😭','😔','😞','🥺','😟','💔','😪','😩','🫂',
-    // Boos
-    '😠','😤','🤬','😒','🙄','😑','😶','🫠','💢','😾',
-    // Moe
-    '😴','🥱','😪','🫥','😵','🤯','🥴','😵‍💫','🤒','🤕',
-    // Grappig
-    '😂','🤣','😜','🤪','😝','🤡','🫣','🤭','😏','😈',
-    // Lief
-    '🥰','😘','💕','❤️','🫶','💝','💖','💗','🌸','✨',
-    // Koel
-    '😎','🤙','👑','🔥','⚡','💫','🌟','🎯','🚀','💪',
-    // Natuur
-    '🌈','🌊','🌿','🦋','🌙','⭐','🌻','🍀','🌺','🦄',
-  ]
-
+  // ─── Mood: een sticker (v171; was een emoji-lijst) ───
+  // Het knopje toont je keuze (data-waarde = 'fxsticker:f2-04', of een oude emoji); de keuze is de stickerkeuze
+  // van de chat (stickerkeuze.js). Opslaan zet 'fxsticker:f2-04 tekst' in mood en 'fxsticker:f2-04' in offline_emoji.
   let gekozenMoodEmoji = '😊'
+  let moodKeuze = null
+  function moodWaarde() {
+    const el = document.getElementById('moodEmojiGekozen')
+    return el.dataset.waarde || el.textContent
+  }
+  function toonMoodKeuze(waarde) {
+    const el = document.getElementById('moodEmojiGekozen')
+    el.dataset.waarde = waarde
+    const m = leesMood(waarde)
+    if (m.code) tekenMoodSticker(el, m.code, { uid: huidigeUser && huidigeUser.id, grootte: 34, tik: false })
+    else el.textContent = waarde
+  }
 
   function bouwMoodPicker() {
     const picker = document.getElementById('moodEmojiPicker')
+    if (moodKeuze) { moodKeuze.vernieuw(); return }
     picker.innerHTML = ''
-    MOOD_EMOJIS.forEach(emoji => {
-      const span = document.createElement('span')
-      span.className = 'mood-emoji-opt' + (emoji === gekozenMoodEmoji ? ' actief' : '')
-      span.textContent = emoji
-      span.onclick = () => {
-        gekozenMoodEmoji = emoji
-        document.getElementById('moodEmojiGekozen').textContent = emoji
-        document.querySelectorAll('.mood-emoji-opt').forEach(s => s.classList.remove('actief'))
-        span.classList.add('actief')
-        // Update preview
-        const previewMood = document.getElementById('previewMood')
-        if (previewMood) previewMood.textContent = emoji + ' ' + (document.getElementById('editMood').value || '')
-      }
-      picker.appendChild(span)
-    })
+    moodKeuze = maakStickerkeuze(picker, { uid: () => huidigeUser && huidigeUser.id, onKies: st => {
+      gekozenMoodEmoji = 'fxsticker:' + st.vel + '-' + st.nr
+      toonMoodKeuze(gekozenMoodEmoji)
+      picker.style.display = 'none'
+    } })
   }
 
   window.toggleMoodPicker = function() {
     const picker = document.getElementById('moodEmojiPicker')
-    const open = picker.style.display === 'flex'
-    picker.style.display = open ? 'none' : 'flex'
+    const open = picker.style.display !== 'none'
+    picker.style.display = open ? 'none' : 'block'
     if (!open) bouwMoodPicker()
   }
-
-  // Initialiseer mood picker
-  bouwMoodPicker()
 
   // Mood preview updaten bij typen
   document.getElementById('editMood').addEventListener('input', () => {

@@ -2089,9 +2089,19 @@ console.timeLog('[chat] berichten', 'opgehaald')
       pingOntvangen = true
       startSpelBel()
     })
+    // v170: bij een beurtspel per beurt een sticker (zie 'stickers in een beurtspel'); elke zet geeft er weer een vrij
+    spelStickerVrij()
+    if (SPELCHAT_SPELLEN.includes(spelType)) {
+      const kanaal = spelKanaal, stuur = kanaal.send.bind(kanaal)
+      kanaal.send = function (m, o) { if (m && (m.event === 'zet' || m.event === 'opnieuw')) spelStickerVrij(); return stuur(m, o) }
+      kanaal.on('broadcast', { event: 'zet' }, () => spelStickerVrij())
+      kanaal.on('broadcast', { event: 'opnieuw' }, () => spelStickerVrij())
+      kanaal.on('broadcast', { event: 'spelsticker' }, (msg) => toonSpelSticker(msg && msg.payload && msg.payload.code, false))
+    }
     spelKanaal.subscribe()
     startSpelHartslag()
-    // v169: de chatbalk (emoji's en een invoervak) alleen bij de beurtspellen; bij de snelle spellen zit hij in de weg
+    // v169: de chatbalk alleen bij de beurtspellen; bij de snelle spellen zit hij in de weg
+    // v170: in de balk stickers in plaats van emoji's
     if (SPELCHAT_SPELLEN.includes(spelType)) bouwSpelChatUI()
 
     // Start spel-audiobel automatisch
@@ -2118,6 +2128,51 @@ console.timeLog('[chat] berichten', 'opgehaald')
     setTimeout(function(){ b.style.opacity = '0'; setTimeout(function(){ if (b.parentNode) b.parentNode.removeChild(b) }, 1000) }, 6000)
   }
 
+  // ─── v170: stickers in een beurtspel ───
+  // In plaats van de emoji's een knop met de stickerkeuze (dezelfde als in de chat). Per beurt mag je een sticker
+  // sturen: daarna is de knop dicht tot er een zet gedaan is (door jou of je vriend). De sticker komt groot midden in
+  // beeld, met beweging en geluid, bij jullie allebei, en verdwijnt na 2,5 s. Over het spelkanaal gaat alleen de code
+  // ('spelsticker' { code }). Stuurt je vriend er meer per beurt (een oudere of aangepaste app), dan telt alleen de eerste.
+  let spelStickerMag = true, spelStickerVriendMag = true, spelStickerKeuze = null
+  const SPELSTICKER_CODE = /^(f[1-6]|e[12])-\d{2}$/
+  function spelStickerVrij() {
+    spelStickerMag = true; spelStickerVriendMag = true
+    const k = document.getElementById('spelStickerKnop')
+    if (k) { k.disabled = false; k.style.opacity = '1' }
+  }
+  function stuurSpelSticker(st) {
+    const paneel = document.getElementById('spelStickerPaneel')
+    if (paneel) paneel.style.display = 'none'
+    if (!spelKanaal || !st || !spelStickerMag) return
+    const code = st.vel + '-' + st.nr
+    if (!SPELSTICKER_CODE.test(code)) return
+    spelStickerMag = false
+    const k = document.getElementById('spelStickerKnop')
+    if (k) { k.disabled = true; k.style.opacity = '0.35' }
+    try { spelKanaal.send({ type: 'broadcast', event: 'spelsticker', payload: { code } }) } catch (e) {}
+    toonSpelSticker(code, true, st)
+  }
+  async function toonSpelSticker(code, vanMij, st) {
+    if (typeof code !== 'string' || !SPELSTICKER_CODE.test(code)) return
+    if (!vanMij) { if (!spelStickerVriendMag) return; spelStickerVriendMag = false }
+    if (!st) st = isEigenCode(code) ? (geselecteerdeVriend ? await zoekVriendSticker(geselecteerdeVriend.id, code) : null) : zoekSticker(code)
+    const overlay = document.getElementById('spelOverlay')
+    if (!overlay || !spelActief) return
+    if (!st) { toonSpelChat(T('\u{1F5BC}\uFE0F Sticker'), vanMij); return } // eigen sticker die nog niet binnen is
+    const oud = document.getElementById('spelStickerGroot')
+    if (oud) oud.remove()
+    const vak = document.createElement('div')
+    vak.id = 'spelStickerGroot'
+    vak.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;pointer-events:none;transition:opacity .5s'
+    const img = document.createElement('img')
+    img.src = st.src; img.alt = ''; img.width = 200; img.height = 200
+    img.style.cssText = 'width:min(200px,50vw);height:min(200px,50vw);object-fit:contain;display:block;filter:drop-shadow(0 0 16px ' + (vanMij ? '#00f0ff' : '#ff00cc') + ')'
+    vak.appendChild(img)
+    overlay.appendChild(vak)
+    speelFx(img, st, true)
+    setTimeout(() => { vak.style.opacity = '0'; setTimeout(() => vak.remove(), 600) }, 2500)
+  }
+
   function bouwSpelChatUI() {
     var overlay = document.getElementById('spelOverlay')
     if (overlay === null) return
@@ -2130,14 +2185,26 @@ console.timeLog('[chat] berichten', 'opgehaald')
     laag.style.cssText = 'display:flex;flex-direction:column;'
     var rij = document.createElement('div')
     rij.style.cssText = 'display:flex;gap:6px;pointer-events:auto;align-items:center'
-    var emojis = ['👍','😂','🎉','😮','🔥','😅']
-    emojis.forEach(function(e){
-      var b = document.createElement('button')
-      b.textContent = e
-      b.style.cssText = 'font-size:20px;background:#ffffff22;border:1px solid #ffffff44;border-radius:10px;padding:4px 8px;cursor:pointer'
-      b.onclick = function(){ verstuurSpelChat(e) }
-      rij.appendChild(b)
-    })
+    // v170: in plaats van de emoji's een knop met de stickers (per beurt een)
+    var paneel = document.createElement('div')
+    paneel.id = 'spelStickerPaneel'
+    paneel.style.cssText = 'display:none;pointer-events:auto;background:rgba(0,0,0,0.88);border:0.5px solid var(--border);border-radius:14px;max-height:55vh;overflow-y:auto'
+    var knop = document.createElement('button')
+    knop.id = 'spelStickerKnop'
+    knop.type = 'button'
+    knop.textContent = '\u{1F3A8}'
+    knop.setAttribute('aria-label', T('Stickervellen'))
+    knop.style.cssText = 'font-size:20px;background:#ffffff22;border:1px solid #ffffff44;border-radius:10px;padding:4px 10px;cursor:pointer;transition:opacity .2s'
+    knop.onclick = function () {
+      if (!spelStickerMag) return
+      var dicht = paneel.style.display === 'none'
+      paneel.style.display = dicht ? 'block' : 'none'
+      if (!dicht) return
+      if (!spelStickerKeuze) spelStickerKeuze = maakStickerkeuze(paneel, { onKies: stuurSpelSticker, uid: () => huidigeUser && huidigeUser.id })
+      else spelStickerKeuze.vernieuw()
+    }
+    if (!spelStickerMag) { knop.disabled = true; knop.style.opacity = '0.35' }
+    rij.appendChild(knop)
     var inp = document.createElement('input')
     inp.type = 'text'
     inp.placeholder = T('Bericht...')
@@ -2145,6 +2212,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     inp.onkeydown = function(ev){ if (ev.key === 'Enter') { verstuurSpelChat(inp.value.trim()); inp.value = '' } }
     rij.appendChild(inp)
     wrap.appendChild(laag)
+    wrap.appendChild(paneel)
     wrap.appendChild(rij)
     overlay.appendChild(wrap)
   }
@@ -2201,6 +2269,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     document.getElementById('spelOverlay').classList.remove('open')
     document.getElementById('spelInhoud').innerHTML = ''
     var scw = document.getElementById('spelChatWrap'); if (scw) scw.remove()
+    var ssg = document.getElementById('spelStickerGroot'); if (ssg) ssg.remove() // v170
+    spelStickerKeuze = null
     if (spelKanaal) { supabase.removeChannel(spelKanaal); spelKanaal = null }
     // Stop eventuele loopende animaties (Pong, Flappy Bird)
     if (window._spelAnimFrame) { cancelAnimationFrame(window._spelAnimFrame); window._spelAnimFrame = null }

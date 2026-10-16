@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v169: chatbalk in een spel alleen bij de beurtspellen).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v170: stickers in een beurtspel, een per beurt).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -98,7 +98,12 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          spelchat = v169: alleen chat.html: de chatbalk in een spel (emoji's en een invoervak, bouwSpelChatUI)
                                  alleen bij de beurtspellen (SPELCHAT_SPELLEN: botkaaseiren, vieroprij, schaken, dammen). De
                                  'verberg de balk'-code in twin-snakes-ui, ecto-ui en runner-gunner-ui doet nu niets meer
-                                 (onschuldig, niet weggehaald: geen nieuwe ?v=) (testscript_spelchat.py))
+                                 (onschuldig, niet weggehaald: geen nieuwe ?v=) (testscript_spelchat.py),
+                         spelsticker = v170: alleen chat.html: in de chatbalk van een beurtspel een stickerknop (de stickerkeuze
+                                 van de chat) in plaats van de emoji's; per beurt een sticker (na een zet, 'zet' of 'opnieuw', eigen
+                                 of van de vriend, weer een); 'spelsticker' { code } over het spelkanaal; groot midden in beeld
+                                 (#spelStickerGroot, 2,5 s, beweging en geluid, gloed cyaan = jij, roze = vriend); van de vriend
+                                 telt ook maar een per beurt (testscript_spelsticker.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -399,6 +404,11 @@ tools/proef66.py         het bolletje op het icoon (v168), echte vrienden.html, 
 tools/proef67.py         de chatbalk in een spel (v169), echte chat.html met nep-Realtime: per spel speelMee, dan #spelChatWrap;
                          de 4 beurtspellen wel (en een emoji-knop stuurt 'spelchat'), de 7 snelle spellen niet (Space Invaders
                          is nog niet speelbaar). Oude map als controle: 6 van 13.   python3 -I proef67.py <map>
+                         (geldt voor v169; sinds v170 zijn er geen emoji-knoppen meer: de emoji-check is dan MIS, zie proef68)
+tools/proef68.py         stickers in een beurtspel (v170), echte chat.html met nep-Realtime, boter-kaas-en-eieren: geen emoji's,
+                         wel stickerknop; echte klik op een sticker = 'spelsticker' { code }, groot midden in beeld met geluid,
+                         knop dicht tot een zet (echte klik op het bord); van de vriend een per beurt; na 2,5 s weg; tekst
+                         werkt nog. Oude map als controle: 5 van 15.   python3 -I proef68.py <map>
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

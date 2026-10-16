@@ -2091,10 +2091,14 @@ console.timeLog('[chat] berichten', 'opgehaald')
     })
     spelKanaal.subscribe()
     startSpelHartslag()
-    bouwSpelChatUI()
+    // v169: de chatbalk (emoji's en een invoervak) alleen bij de beurtspellen; bij de snelle spellen zit hij in de weg
+    if (SPELCHAT_SPELLEN.includes(spelType)) bouwSpelChatUI()
 
     // Start spel-audiobel automatisch
   }
+
+  // v169: spellen met een chatbalk: de beurtspellen (daar heb je tijd om iets te sturen)
+  const SPELCHAT_SPELLEN = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen']
 
   window.verstuurSpelChat = function(tekst) {
     if (spelKanaal === null) return

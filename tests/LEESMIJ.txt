@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v168: bolletje met het aantal ongelezen op het icoon van de app).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v169: chatbalk in een spel alleen bij de beurtspellen).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -94,7 +94,11 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                          badge = v168: ongelezen.js?v=168 zet het totaal ook op het icoon van de app (navigator.setAppBadge;
                                  iPhone, Windows/Mac) en bewaart het in het kastje 'fibro-badge' (sleutel fibro-badge-teller);
                                  service-worker.js telt er bij een push (bericht, buzz, gemist) een bij. Alles gelezen: bolletje
-                                 weg en de meldingen ook, behalve een oproep die overgaat (Android: stipje weg) (testscript_badge.py))
+                                 weg en de meldingen ook, behalve een oproep die overgaat (Android: stipje weg) (testscript_badge.py),
+                         spelchat = v169: alleen chat.html: de chatbalk in een spel (emoji's en een invoervak, bouwSpelChatUI)
+                                 alleen bij de beurtspellen (SPELCHAT_SPELLEN: botkaaseiren, vieroprij, schaken, dammen). De
+                                 'verberg de balk'-code in twin-snakes-ui, ecto-ui en runner-gunner-ui doet nu niets meer
+                                 (onschuldig, niet weggehaald: geen nieuwe ?v=) (testscript_spelchat.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -392,6 +396,9 @@ tools/proef66.py         het bolletje op het icoon (v168), echte vrienden.html, 
                          overgaat blijft; pushmeldingen via DevTools (ServiceWorker.deliverPushMessage): bericht/buzz/gemist +1,
                          'belt je' niet. Meldingen werken niet in de kale headless-browser: draaien met een (onzichtbaar) scherm.
                          Oude map als controle: 5 van 14.   xvfb-run -a python3 -I proef66.py <map>
+tools/proef67.py         de chatbalk in een spel (v169), echte chat.html met nep-Realtime: per spel speelMee, dan #spelChatWrap;
+                         de 4 beurtspellen wel (en een emoji-knop stuurt 'spelchat'), de 7 snelle spellen niet (Space Invaders
+                         is nog niet speelbaar). Oude map als controle: 6 van 13.   python3 -I proef67.py <map>
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

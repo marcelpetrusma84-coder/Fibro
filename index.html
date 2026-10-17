@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=14"></script>
+<script src="taal.js?v=15"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>/* v130: zoomen mag weer; iPhone zoomt bij invoervakken kleiner dan 16px vanzelf in */@supports (-webkit-touch-callout: none){input,textarea,select{font-size:16px !important}}</style>
@@ -2083,21 +2083,40 @@ window.openMenu = function() {
   const m = document.createElement('div')
   m.id = 'fibroMenu'
   m.setAttribute('role', 'menu')
-  m.style.cssText = 'position:fixed;z-index:10000;top:' + Math.round(r.bottom + 8) + 'px;right:' + Math.max(12, Math.round(window.innerWidth - r.right)) + 'px;min-width:220px;background:rgba(26,10,46,0.97);border:0.5px solid var(--border);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,0.5)'
-  const item = (tekst, actie) => {
+  const boven = Math.round(r.bottom + 8)
+  m.style.cssText = 'position:fixed;z-index:10000;top:' + boven + 'px;right:' + Math.max(12, Math.round(window.innerWidth - r.right)) + 'px;min-width:240px;max-height:calc(100vh - ' + (boven + 12) + 'px);overflow-y:auto;background:rgba(26,10,46,0.97);border:0.5px solid var(--border);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,0.5)'
+  // v178: in groepjes met een kopje (Instellingen, Accountinstellingen, Mijn Fibro)
+  const groep = (kop, id) => {
+    const g = document.createElement('div')
+    g.setAttribute('role', 'group')
+    g.setAttribute('aria-labelledby', id)
+    if (m.childElementCount) g.style.cssText = 'border-top:0.5px solid var(--border);margin-top:4px'
+    const k = document.createElement('div')
+    k.id = id
+    k.textContent = kop
+    k.style.cssText = 'font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);padding:10px 12px 2px'
+    g.appendChild(k)
+    m.appendChild(g)
+    return g
+  }
+  const item = (g, tekst, actie) => {
     const b = document.createElement('button')
     b.setAttribute('role', 'menuitem')
     b.textContent = tekst
     b.style.cssText = 'display:block;width:100%;min-height:44px;text-align:left;background:none;border:none;border-radius:10px;color:var(--text);font-size:15px;padding:10px 12px;cursor:pointer;font-family:inherit'
     b.onclick = () => { sluitMenu(); actie() }
-    m.appendChild(b)
+    g.appendChild(b)
     return b
   }
-  item(T('\u23F3 Berichten bewaren'), openBewaren)
-  item(T('\u{1F310} Taal / Language'), openTaal) // v142
-  item(T('\u{1F4E6} Mijn gegevens downloaden'), () => openAccount('gegevens'))
-  item(T('\u2139\uFE0F Over Fibro'), () => { window.location.href = 'over.html' })
-  item(T('\u{1F5D1}\uFE0F Account verwijderen'), () => openAccount('verwijderen')).style.color = '#fca5a5'
+  let g = groep(T('Instellingen'), 'menuKopInstellingen')
+  item(g, T('\u{1F310} Taal / Language'), openTaal) // v142
+  item(g, T('\u23F3 Berichten bewaren'), openBewaren)
+  g = groep(T('Accountinstellingen'), 'menuKopAccount')
+  item(g, T('\u{1F4E6} Mijn gegevens downloaden'), () => openAccount('gegevens'))
+  item(g, T('\u{1F5D1}\uFE0F Account verwijderen'), () => openAccount('verwijderen')).style.color = '#fca5a5'
+  g = groep(T('Mijn Fibro'), 'menuKopFibro')
+  item(g, T('\u2139\uFE0F Over Fibro'), () => { window.location.href = 'over.html' })
+  item(g, T('\u{1F4F2} Fibro als app installeren'), openAppUitleg) // v178
   document.body.appendChild(m)
   knop.setAttribute('aria-expanded', 'true')
   m.querySelector('button').focus()
@@ -2215,6 +2234,78 @@ async function openBewaren() {
       teken()
     }
   } catch (e) {}
+}
+
+// v178: uitleg om Fibro als app op het beginscherm te zetten, voor de iPhone (Safari) en Android (Chrome).
+// Het toestel waarop je kijkt staat bovenaan. Draait Fibro al als app (los van de browser), dan staat dat erboven.
+function openAppUitleg() {
+  const achter = document.createElement('div')
+  achter.id = 'appScherm'
+  achter.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center'
+  const kaart = document.createElement('div')
+  kaart.setAttribute('role', 'dialog')
+  kaart.setAttribute('aria-modal', 'true')
+  kaart.setAttribute('aria-labelledby', 'appTitel')
+  kaart.tabIndex = -1
+  kaart.style.cssText = 'width:100%;max-width:480px;max-height:88vh;overflow-y:auto;outline:none;background:#1a0a2e;border:0.5px solid var(--border);border-radius:20px 20px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));color:var(--text)'
+  const titel = document.createElement('h2')
+  titel.id = 'appTitel'
+  titel.textContent = T('\u{1F4F2} Fibro als app installeren')
+  titel.style.cssText = 'font-size:18px;margin:0 0 10px;color:var(--accent)'
+  const alinea = (html, stijl) => {
+    const e = document.createElement('p')
+    e.innerHTML = html
+    e.style.cssText = 'font-size:14px;line-height:1.5;margin:0 0 12px;' + (stijl || '')
+    return e
+  }
+  const blok = (kop, stappen, noot) => {
+    const d = document.createElement('section')
+    d.style.cssText = 'border:0.5px solid var(--border);border-radius:14px;padding:12px 14px;margin:0 0 12px;background:rgba(255,255,255,0.04)'
+    const h = document.createElement('h3')
+    h.textContent = kop
+    h.style.cssText = 'font-size:15px;margin:0 0 8px;color:var(--text)'
+    const ol = document.createElement('ol')
+    ol.style.cssText = 'margin:0;padding-left:20px;font-size:14px;line-height:1.5'
+    for (const stap of stappen) { const li = document.createElement('li'); li.innerHTML = stap; li.style.marginBottom = '6px'; ol.appendChild(li) }
+    d.append(h, ol)
+    if (noot) d.appendChild(alinea(noot, 'margin:8px 0 0;font-size:13px;opacity:0.85'))
+    return d
+  }
+  let alApp = false
+  try { alApp = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true } catch (e) {}
+  const ua = navigator.userAgent || ''
+  const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  const android = !ios && /Android/.test(ua)
+  const iphone = blok('iPhone \u00B7 Safari', [
+    T('Open Fibro in <b>Safari</b>.'),
+    T('Tik op de deelknop (vierkantje met pijl omhoog). Bij nieuwere iPhones eerst op <b>\u2022\u2022\u2022</b> naast het adres en dan op <b>Deel</b>.'),
+    T('Kies <b>Zet op beginscherm</b>. Zie je <b>Open als webapp</b>, laat dat dan aan staan.'),
+    T('Tik op <b>Voeg toe</b>.'),
+    T('Open Fibro daarna via het nieuwe icoon. Dat heeft eigen opslag: log daar opnieuw in en herstel je sleutel met Face ID (of je herstelcode).'),
+  ], T('Op de iPhone krijg je alleen zo meldingen.'))
+  iphone.id = 'appIphone'
+  const droid = blok('Android \u00B7 Chrome', [
+    T('Open Fibro in <b>Chrome</b>.'),
+    T('Tik rechtsboven op <b>\u22EE</b> (drie puntjes).'),
+    T('Kies <b>App installeren</b> of <b>Toevoegen aan startscherm</b> en dan <b>Installeren</b>.'),
+    T('Open Fibro daarna via het nieuwe icoon.'),
+  ])
+  droid.id = 'appAndroid'
+  const sluit = document.createElement('button')
+  sluit.textContent = T('Sluiten')
+  sluit.style.cssText = 'margin-top:4px;width:100%;min-height:44px;border-radius:12px;border:0.5px solid var(--border);background:rgba(255,255,255,0.08);color:var(--text);font-size:15px;cursor:pointer;font-family:inherit'
+  const dicht = () => { achter.remove(); document.removeEventListener('keydown', esc, true) }
+  const esc = (e) => { if (e.key === 'Escape') dicht() }
+  document.addEventListener('keydown', esc, true)
+  sluit.onclick = dicht
+  achter.onclick = (e) => { if (e.target === achter) dicht() }
+  kaart.appendChild(titel)
+  if (alApp) kaart.appendChild(alinea(T('\u2713 Je gebruikt Fibro nu al als app.'), 'color:#86efac;font-weight:600'))
+  kaart.appendChild(alinea(T('Zet Fibro op het beginscherm van je telefoon. Dan opent Fibro als een gewone app: over het hele scherm, met meldingen en een bolletje bij ongelezen berichten.')))
+  kaart.append(...(android ? [droid, iphone] : [iphone, droid]), sluit)
+  achter.appendChild(kaart)
+  document.body.appendChild(achter)
+  kaart.focus()
 }
 
 // v142: de taal kiezen (Nederlands of Engels). Het menu-item heet in beide talen 'Taal / Language',

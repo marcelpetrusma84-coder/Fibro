@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 17 oktober 2026 (v177: Ghost Tag alleen spelen net als samen spelen).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 17 oktober 2026 (v178: het menu op Home in groepjes, uitleg app installeren).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -142,7 +142,15 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  zonder gewoneScherpte (volle scherpte; geen spel gebruikt het nog). Waarom: Marcel vond de spookjes
                                  bij alleen spelen te traag op de iPhone; ze liepen even snel (nagemeten, 100%), maar op 30 beeldjes
                                  leek het trager, en samen spelen (60, volle scherpte) liep op dezelfde iPhone altijd goed.
-                                 ecto-ui.js?v=177 (solo.js, chat.html 2x), solo.js?v=177 (spel.html) (testscript_alleenalssamen.py))
+                                 ecto-ui.js?v=177 (solo.js, chat.html 2x), solo.js?v=177 (spel.html) (testscript_alleenalssamen.py),
+                         menu = v178: index.html: het menu (☰) in drie groepjes (role=group met een kopje): Instellingen (Taal /
+                                 Language, Berichten bewaren), Accountinstellingen (Mijn gegevens downloaden, Account verwijderen),
+                                 Mijn Fibro (Over Fibro, nieuw: Fibro als app installeren = openAppUitleg: stappen voor iPhone/Safari
+                                 en Android/Chrome, het eigen toestel bovenaan, 'al als app' bij display-mode standalone of
+                                 navigator.standalone). Het menu schuift zelf op een klein scherm (max-height). 16 nieuwe woorden
+                                 in taal-en.js: taal-en.js?v=15 (taal.js, 2x) en taal.js?v=15 in alle 12 pagina's. proef43: de
+                                 menu-items worden op tekst gekozen (niet meer op plek), twee nieuwe schermen en MAG_ERBIJ/MAG_WEG
+                                 (testscript_menu.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -474,6 +482,11 @@ tools/proef73.py         Ghost Tag alleen spelen net als samen spelen (v177), na
                          de titel, en de spookjes lopen precies even snel als het hoort (ook bij een 6x tragere processor;
                          de proef zet daarvoor in een kopie van ecto-ui.js een regel die de spelers laat zien). Oude map als
                          controle: 4 van 6.   python3 -I proef73.py <map>
+tools/proef74.py         het menu op Home in groepjes en de uitleg 'Fibro als app installeren' (v178), echte index.html, echte
+                         klikken: drie kopjes en de items in de goede groep, focus op het eerste, elk item doet nog wat het
+                         deed; uitleg: iPhone eerst op een iPhone (eerst 'Tik om te beginnen' wegtikken), Android eerst op
+                         Android, 'al als app' bij navigator.standalone, dicht met Escape/Sluiten/ernaast; klein liggend scherm:
+                         menu schuift; Engels. Oude map als controle: 6 van 19.   python3 -I proef74.py <map>
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

@@ -1,4 +1,4 @@
-import subprocess, sys, time, json, os, difflib
+import subprocess, sys, time, json, os, difflib, re
 from playwright.sync_api import sync_playwright
 # proef43: Fibro in twee talen, alle pagina's (v143 en verder; v157: stickervel 1 en knopjes in Profiel). Per scherm:
 #  - Nederlands: precies dezelfde tekst (zichtbare tekst, titel, en de attributen title/aria-label/placeholder)
@@ -118,8 +118,12 @@ SCHERMEN = [
     ('profiel: kleur', 'profiel.html', "() => { switchTab('kleur') }", ['Accent colour', 'Second accent colour', 'Blocks', 'Transparency', 'Rounded corners', 'tilt with your phone', 'Your bio here', 'Button example']),
     ('profiel: widgets', 'profiel.html', "() => { switchTab('widgets') }", ['Active widgets', 'Guestbook', 'Friends leave messages', 'Photo grid', 'Featured + 4 small', 'Games', 'Play against the computer', 'Upload music']),
     # v146: Mijn gegevens, account verwijderen, moderatie, spelen tegen de computer, Over Fibro, balkjes
-    ('home: mijn gegevens', 'index.html', "async () => { openMenu(); [...document.querySelectorAll('#fibroMenu [role=menuitem]')][2].click() }", ['My data', 'You get one file', 'Get data', 'Close']),
-    ('home: account verwijderen', 'index.html', "async () => { openMenu(); [...document.querySelectorAll('#fibroMenu [role=menuitem]')][4].click() }", ['Delete account', 'will be deleted immediately', 'Download my data first', 'Delete account permanently', 'To confirm, type your username: Marcel']),
+    ('home: mijn gegevens', 'index.html', "async () => { openMenu(); [...document.querySelectorAll('#fibroMenu [role=menuitem]')].find(b => /gegevens|my data/i.test(b.textContent)).click() }", ['My data', 'You get one file', 'Get data', 'Close']),
+    ('home: account verwijderen', 'index.html', "async () => { openMenu(); [...document.querySelectorAll('#fibroMenu [role=menuitem]')].find(b => /Account verwijderen|Delete account/.test(b.textContent)).click() }", ['Delete account', 'will be deleted immediately', 'Download my data first', 'Delete account permanently', 'To confirm, type your username: Marcel']),
+    # v178: het menu in groepjes en de uitleg om Fibro als app te installeren (de oude code heeft die nog niet)
+    ('home: menu', 'index.html', "() => { openMenu() }", ['Settings', 'Account settings', 'My Fibro', 'Language / Taal', 'Keep messages', 'Download my data', 'Delete account', 'About Fibro', 'Install Fibro as an app']),
+    ('home: app installeren', 'index.html', "() => { openMenu(); const b = [...document.querySelectorAll('#fibroMenu [role=menuitem]')].find(b => /als app|as an app/.test(b.textContent)); if (b) b.click() }",
+        ['Install Fibro as an app', "Add Fibro to your phone's home screen", 'Open Fibro in Safari', 'Add to Home Screen', 'Open as Web App', 'only way to get notifications', 'Open Fibro in Chrome', 'three dots', 'Install app', 'Then open Fibro from the new icon', 'Close']),
     ('moderatie', 'moderatie.html', '', ['Moderation', 'Reports', 'Blocks', 'New', 'Handled', 'All', 'Warned', 'Reported by @Bram', 'Inappropriate content', 'No reason given', 'Handled', 'Warn', 'Block']),
     ('moderatie: blokkades', 'moderatie.html', "() => { kiesTab('blokkades') }", ['Block someone', 'username', 'Search', 'Active', 'Earlier (log)', 'Until', 'By @', 'Lift', 'Expired on']),
     ('spel: schaken', 'spel.html?spel=schaken', '', ['Chess', 'Against the computer. Choose a level:', 'Easy', 'Normal', 'Hard', 'Back']),
@@ -165,6 +169,23 @@ MAG_ERBIJ |= {'Speel sticker ' + n for n in VEL1} | {n + ' op Home' for n in VEL
 MAG_WEG |= {'ACTIEVE STICKERS', 'Nog geen stickers gekozen', 'NATUUR & PLANTEN', 'SFEER & MAGIE', 'MUZIEK & KUNST', 'DIEREN',
             'Sticker board', 'Collage van stickers'}
 MAG_WEG |= {'\U0001F33F', '\U0001F338', '\U0001F33A', '\U0001F33B', '\U0001F340', '\U0001F331', '\U0001F33E', '\U0001F343', '\U0001F334', '\U0001F30A', '\U0001F342', '\U0001F339', '\U0001F337', '\U0001F33C', '\U0001F341', '\u2728', '\U0001F52E', '\U0001F319', '\u2B50', '\U0001F4AB', '\U0001F31F', '\U0001F52F', '\U0001F320', '\U0001F30C', '\U0001FA84', '\U0001F48E', '\U0001F308', '\u26A1', '\U0001F525', '\U0001F300', '\U0001F3B5', '\U0001F3B8', '\U0001F3A8', '\U0001F3AD', '\U0001F3AC', '\U0001F4F7', '\U0001F3AA', '\U0001F3AF', '\U0001F3B2', '\U0001F3B9', '\U0001F941', '\U0001F3BA', '\U0001F3BB', '\U0001F5BC', '\u270F', '\U0001F98B', '\U0001F98A', '\U0001F431', '\U0001F43A', '\U0001F984', '\U0001F409', '\U0001F981', '\U0001F43B', '\U0001F99D', '\U0001F994', '\U0001F427', '\U0001F985', '\U0001F420', '\U0001F42C', '\U0001F98B'}
+
+# v178: het menu in groepjes (twee items van plek gewisseld) en de nieuwe uitleg 'Fibro als app installeren'
+MAG_ERBIJ |= {'INSTELLINGEN', 'ACCOUNTINSTELLINGEN', 'MIJN FIBRO', '\U0001F4F2 Fibro als app installeren', '\U0001F310 Taal / Language',
+              '\U0001F5D1\uFE0F Account verwijderen', 'iPhone \u00B7 Safari', 'Android \u00B7 Chrome', 'Sluiten'}
+MAG_ERBIJ |= {re.sub(r'<[^>]+>', '', x) for x in [
+    'Zet Fibro op het beginscherm van je telefoon. Dan opent Fibro als een gewone app: over het hele scherm, met meldingen en een bolletje bij ongelezen berichten.',
+    'Open Fibro in <b>Safari</b>.',
+    'Tik op de deelknop (vierkantje met pijl omhoog). Bij nieuwere iPhones eerst op <b>\u2022\u2022\u2022</b> naast het adres en dan op <b>Deel</b>.',
+    'Kies <b>Zet op beginscherm</b>. Zie je <b>Open als webapp</b>, laat dat dan aan staan.',
+    'Tik op <b>Voeg toe</b>.',
+    'Open Fibro daarna via het nieuwe icoon. Dat heeft eigen opslag: log daar opnieuw in en herstel je sleutel met Face ID (of je herstelcode).',
+    'Op de iPhone krijg je alleen zo meldingen.',
+    'Open Fibro in <b>Chrome</b>.',
+    'Tik rechtsboven op <b>\u22EE</b> (drie puntjes).',
+    'Kies <b>App installeren</b> of <b>Toevoegen aan startscherm</b> en dan <b>Installeren</b>.',
+    'Open Fibro daarna via het nieuwe icoon.']}
+MAG_WEG |= {'\u23F3 Berichten bewaren', '\U0001F310 Taal / Language', '\U0001F4E6 Mijn gegevens downloaden', '\u2139\uFE0F Over Fibro', '\U0001F5D1\uFE0F Account verwijderen'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

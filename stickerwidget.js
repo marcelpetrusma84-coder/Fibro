@@ -8,7 +8,7 @@
 // staat er een zandlopertje dat vanzelf bijwerkt (vriend-profiel.html ververst de widgets).
 import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=166'
 import { zoekEigenSticker, zoekVriendSticker } from './eigenstickers.js?v=162'
-import { BEWEGINGEN, speel } from './stickerfx.js?v=166'
+import { BEWEGINGEN, speel } from './stickerfx.js?v=180'
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 

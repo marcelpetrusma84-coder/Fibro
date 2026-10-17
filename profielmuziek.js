@@ -6,39 +6,32 @@
 // Mag de browser nog geen geluid maken (iPhone: pas na een tik), dan begint het bij de eerste tik op de pagina.
 // Rechtsonder staat een knopje: pauze of verder. Zelf gepauzeerd = in deze sessie niet meer vanzelf voor dit nummer.
 // Kom je terug op de pagina, dan gaat het verder waar het was (sessionStorage).
-// Gaat er ander geluid van Fibro spelen (de muziekspeler, een video met geluid, de beltoon), dan pauzeert het
-// profielnummer; stickergeluidjes niet (die zijn kort). Gaat de app naar de achtergrond, dan pauzeert het ook.
-// Instelling 'Muziek vanzelf afspelen' (menu > Instellingen): localStorage fibro_muziek_auto = '0' is uit.
+// Gaat de app naar de achtergrond, dan pauzeert het.
+// v180: wat er verder klinkt regelt geluidregelaar.js (nooit twee geluiden tegelijk; onderbroken = later verder). Het
+// nummer dat vanzelf start heet __fibroAuto: klinkt er al iets, dan wacht het. Twee instellingen (menu > Instellingen):
+// fibro_muziek_auto = '0' (je eigen nummer niet vanzelf; dan ook geen knopje) en fibro_muziek_auto_vrienden = '0' (dat
+// van een vriend niet vanzelf; het knopje met ▶ staat er wel). Stil 's nachts: tussen 23:00 en 07:00 niets vanzelf.
 //
-// Gebruik: speelProfielMuziek({ data: 'data:audio/...', titel: 'Mijn nummer', sleutel: 'eigen' of 'vriend_<id>' })
+// Gebruik: speelProfielMuziek({ data: 'data:audio/...', titel: 'Mijn nummer', sleutel: 'eigen' of 'vriend_<id>', vriend })
 
+import './geluidregelaar.js?v=180'
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
-const AUTO = 'fibro_muziek_auto'
+const AUTO = 'fibro_muziek_auto', AUTO_VRIENDEN = 'fibro_muziek_auto_vrienden'
 
-export function autoAan() {
-  try { return localStorage.getItem(AUTO) !== '0' } catch (e) { return true }
+export function autoAan(vriend) {
+  try { return localStorage.getItem(vriend ? AUTO_VRIENDEN : AUTO) !== '0' } catch (e) { return true }
 }
-export function zetAuto(aan) {
-  try { localStorage.setItem(AUTO, aan ? '1' : '0') } catch (e) {}
-  if (!aan && huidige) huidige.stop()
+export function zetAuto(aan, vriend) {
+  try { localStorage.setItem(vriend ? AUTO_VRIENDEN : AUTO, aan ? '1' : '0') } catch (e) {}
+  if (!aan && !vriend && huidige && !huidige.vriend) huidige.stop()
+}
+export function nacht(nu) {
+  const u = (nu || new Date()).getHours()
+  return u >= 23 || u < 7
 }
 
 let huidige = null
 let beurt = 0
-
-// Ander geluid van Fibro merken, ook van een <audio> die niet in de pagina hangt (zoals de muziekspeler): play() van
-// elk ander media-element meldt zich bij het profielnummer.
-let gehaakt = false
-function haakPlay() {
-  if (gehaakt) return
-  gehaakt = true
-  const speel = HTMLMediaElement.prototype.play
-  HTMLMediaElement.prototype.play = function () {
-    const r = speel.apply(this, arguments)
-    try { if (huidige && this !== huidige.audio) huidige.ander(this) } catch (e) {}
-    return r
-  }
-}
 
 function sessie(sleutel, waarde) {
   try {
@@ -48,10 +41,12 @@ function sessie(sleutel, waarde) {
   return null
 }
 
-export async function speelProfielMuziek({ data, titel, sleutel }) {
+export async function speelProfielMuziek({ data, titel, sleutel, vriend = false }) {
   const mijn = ++beurt
   if (huidige) huidige.stop()
-  if (!data || !/^data:audio\//.test(String(data)) || !autoAan()) return null
+  if (!data || !/^data:audio\//.test(String(data))) return null
+  if (!vriend && !autoAan(false)) return null // je eigen muziek uit: geen knopje
+  const vanzelf = () => autoAan(vriend) && !nacht()
   let url
   try { url = URL.createObjectURL(await (await fetch(data)).blob()) } catch (e) { return null }
   if (mijn !== beurt) { URL.revokeObjectURL(url); return null }  // intussen opnieuw gevraagd
@@ -59,6 +54,7 @@ export async function speelProfielMuziek({ data, titel, sleutel }) {
   const POS = 'fibro_muziek_pos_' + sleutel, PAUZE = 'fibro_muziek_pauze_' + sleutel
   const audio = new Audio()
   audio.dataset.profielmuziek = '1'
+  audio.dataset.fibroTitel = titel || T('Nummer')
   audio.loop = true
   audio.preload = 'auto'
   audio.volume = 0.7
@@ -89,7 +85,8 @@ export async function speelProfielMuziek({ data, titel, sleutel }) {
 
   let wachtOpTik = false, wasSpelend = false, weg = false
   const probeer = () => {
-    if (weg || !autoAan()) return
+    if (weg || !vanzelf()) return
+    audio.__fibroAuto = true // vanzelf: klinkt er al iets, dan wacht het (geluidregelaar.js)
     const p = audio.play()
     if (p && p.then) p.then(() => { stopWachten() }, () => { if (!wachtOpTik) startWachten() })
   }
@@ -105,21 +102,14 @@ export async function speelProfielMuziek({ data, titel, sleutel }) {
 
   knop.addEventListener('click', () => {
     stopWachten()
-    if (audio.paused) { sessie(PAUZE, null); const p = audio.play(); if (p && p.catch) p.catch(() => {}) }
+    if (audio.paused) { sessie(PAUZE, null); audio.__fibroAuto = false; const p = audio.play(); if (p && p.catch) p.catch(() => {}) }
     else { sessie(PAUZE, '1'); audio.pause() }
   })
   audio.addEventListener('play', toon)
   audio.addEventListener('pause', toon)
-  // Ander geluid van Fibro (niet de stickers): het profielnummer pauzeert. Eerst even kijken of het echt speelt: een stil
-  // ontgrendel-geluidje (beltoon.js speelt op de eerste tik 50 ms stilte) of een stille video telt niet.
-  const anderGeluid = (t) => {
-    if (!t || t === audio || (t.dataset && t.dataset.stickerfx)) return
-    setTimeout(() => { if (!weg && !t.paused && !t.ended && !t.muted && t.volume > 0 && !audio.paused) audio.pause() }, 300)
-  }
-  haakPlay()
   const zicht = () => {
     if (document.hidden) { wasSpelend = !audio.paused; if (wasSpelend) audio.pause() }
-    else if (wasSpelend && autoAan() && sessie(PAUZE) !== '1') { wasSpelend = false; const p = audio.play(); if (p && p.catch) p.catch(() => {}) }
+    else if (wasSpelend && sessie(PAUZE) !== '1') { wasSpelend = false; audio.__fibroAuto = true; const p = audio.play(); if (p && p.catch) p.catch(() => {}) }
   }
   document.addEventListener('visibilitychange', zicht)
   const bewaarPlek = () => { try { if (audio.currentTime > 0) sessie(POS, audio.currentTime.toFixed(1)) } catch (e) {} }
@@ -127,7 +117,7 @@ export async function speelProfielMuziek({ data, titel, sleutel }) {
   const plekTimer = setInterval(bewaarPlek, 2000)
 
   huidige = {
-    audio, knop, ander: anderGeluid,
+    audio, knop, vriend,
     stop() {
       weg = true
       bewaarPlek()

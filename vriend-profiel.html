@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=16"></script>
+<script src="taal.js?v=17"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Profiel</title>
@@ -148,8 +148,8 @@ body.heeft-wallpaper::before { display:block; }
   import { haalVriendFotos } from './vriendfotos.js?v=2'
   import { initSync, vraagVriendVideo } from './sync.js?v=162'
   import { eisSessie, startBewaking } from './sessie.js?v=95'
-  import { startMeldingen } from './meldingen.js?v=143'
-  import { leesMood, isMoodSticker, tekenMoodSticker } from './moodsticker.js?v=171' // v171: een sticker als mood
+  import { startMeldingen } from './meldingen.js?v=180'
+  import { leesMood, isMoodSticker, tekenMoodSticker } from './moodsticker.js?v=180' // v171: een sticker als mood
   pasBlokstijlToe()
 
   var vriendId = null
@@ -275,11 +275,11 @@ body.heeft-wallpaper::before { display:block; }
   let profielMuziekGestart = false
   async function startVriendMuziek(naam) {
     try {
-      if (localStorage.getItem('fibro_muziek_auto') === '0' || !vriendId) return
+      if (!vriendId) return // v180: ook als 'Muziek van vrienden vanzelf' uit staat: dan het knopje met \u25B6
       const data = await laadFotoUitDB('vriend_' + vriendId + '_muziek_profiel')
       if (!data) return
-      const m = await import('./profielmuziek.js?v=179')
-      await m.speelProfielMuziek({ data, titel: T('Muziek van {naam}', { naam }), sleutel: 'vriend_' + vriendId })
+      const m = await import('./profielmuziek.js?v=180')
+      await m.speelProfielMuziek({ data, titel: T('Muziek van {naam}', { naam }), sleutel: 'vriend_' + vriendId, vriend: true })
     } catch (e) { console.warn('[profielmuziek]', e) }
   }
 
@@ -444,7 +444,7 @@ body.heeft-wallpaper::before { display:block; }
       if (/^sticker_/.test(w.id || '')) {
         el.innerHTML = '<div class="widget-inhoud"></div>'
         grid.appendChild(el)
-        try { await (await import('./stickerwidget.js?v=166')).tekenStickerWidget(el.querySelector('.widget-inhoud'), w.id, { vriendId }) }
+        try { await (await import('./stickerwidget.js?v=180')).tekenStickerWidget(el.querySelector('.widget-inhoud'), w.id, { vriendId }) }
         catch (e) { console.warn('[stickerwidget]', e); el.remove() }
         continue
       }
@@ -739,6 +739,12 @@ async function renderVriendMuziek(el) {
 
       if (audio) { audio.pause(); audio.src = '' }
       audio = new Audio(t.data)
+      // v180: voor geluidregelaar.js, en de knop volgt de speler
+      audio.dataset.fibroGeluid = 'muziek'
+      audio.dataset.fibroTitel = t.naam || ''
+      { const a = audio
+        a.onplay = () => { if (a !== audio) return; const b = el.querySelector('#vm-play'); if (b) b.textContent = '\u23F8' }
+        a.onpause = () => { if (a !== audio) return; const b = el.querySelector('#vm-play'); if (b) b.textContent = '\u25B6' } }
       audio.ontimeupdate = () => {
         const prog = el.querySelector('#vm-prog'), tijd = el.querySelector('#vm-tijd')
         if (prog && audio.duration) prog.style.width = (audio.currentTime / audio.duration * 100) + '%'
@@ -1362,5 +1368,6 @@ startMeldingen()
   </div>
 <script src="./fotoviewer.js?v=6"></script>
 <script type="module" src="offline.js?v=146"></script>
+<script type="module" src="geluidregelaar.js?v=180"></script>
 </body>
 </html>

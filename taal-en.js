@@ -193,6 +193,9 @@ window.FIBRO_EN = {
   "🎵 Muziek vanzelf afspelen": "🎵 Play music automatically",
   "aan": "on",
   "uit": "off",
+  // v180: twee schakelaars voor profielmuziek (geluidregelaar)
+  "🎵 Mijn muziek vanzelf": "🎵 My music automatically",
+  "🎵 Muziek van vrienden vanzelf": "🎵 Friends' music automatically",
   "Nog niet alles is in het Engels: sommige schermen zijn nog Nederlands.": "Not everything is in English yet: some screens are still in Dutch.",
   "Na deze tijd verdwijnen berichten, bij jou én bij je vriend. Kiezen jullie iets anders, dan geldt het kortste. Dit geldt ook voor berichten die er al zijn.": "After this time, messages disappear, for you and for your friend. If you each choose something different, the shortest applies. This also applies to messages that already exist.",
   "Bewaartijd": "How long to keep",

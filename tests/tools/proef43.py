@@ -121,7 +121,7 @@ SCHERMEN = [
     ('home: mijn gegevens', 'index.html', "async () => { openMenu(); [...document.querySelectorAll('#fibroMenu [role=menuitem]')].find(b => /gegevens|my data/i.test(b.textContent)).click() }", ['My data', 'You get one file', 'Get data', 'Close']),
     ('home: account verwijderen', 'index.html', "async () => { openMenu(); [...document.querySelectorAll('#fibroMenu [role=menuitem]')].find(b => /Account verwijderen|Delete account/.test(b.textContent)).click() }", ['Delete account', 'will be deleted immediately', 'Download my data first', 'Delete account permanently', 'To confirm, type your username: Marcel']),
     # v178: het menu in groepjes en de uitleg om Fibro als app te installeren (de oude code heeft die nog niet)
-    ('home: menu', 'index.html', "() => { openMenu() }", ['Settings', 'Account settings', 'My Fibro', 'Language / Taal', 'Keep messages', 'Play music automatically: on', 'Download my data', 'Delete account', 'About Fibro', 'Install Fibro as an app']),
+    ('home: menu', 'index.html', "() => { openMenu() }", ['Settings', 'Account settings', 'My Fibro', 'Language / Taal', 'Keep messages', 'My music automatically: on', "Friends' music automatically: on", 'Download my data', 'Delete account', 'About Fibro', 'Install Fibro as an app']),
     ('home: app installeren', 'index.html', "() => { openMenu(); const b = [...document.querySelectorAll('#fibroMenu [role=menuitem]')].find(b => /als app|as an app/.test(b.textContent)); if (b) b.click() }",
         ['Install Fibro as an app', "Add Fibro to your phone's home screen", 'Open Fibro in Safari', 'Add to Home Screen', 'Open as Web App', 'only way to get notifications', 'Open Fibro in Chrome', 'three dots', 'Install app', 'Then open Fibro from the new icon', 'Close']),
     ('moderatie', 'moderatie.html', '', ['Moderation', 'Reports', 'Blocks', 'New', 'Handled', 'All', 'Warned', 'Reported by @Bram', 'Inappropriate content', 'No reason given', 'Handled', 'Warn', 'Block']),
@@ -192,6 +192,10 @@ MAG_WEG |= {'MUZIEK UPLOADEN'}
 MAG_ERBIJ |= {'PROFIELMUZIEK', 'Dit nummer speelt vanzelf op je Home en als vrienden je profiel bekijken. Je vrienden krijgen het als jullie allebei online zijn.',
               'Upload een muziekbestand', 'MP3, M4A, OGG \u2014 wordt verkleind naar 128kbps', '\U0001F3B5', '\U0001F3B5 Muziek vanzelf afspelen: aan'}
 MAG_WEG |= {'Upload een muziekbestand', 'MP3, M4A, OGG \u2014 wordt verkleind naar 128kbps', '\U0001F3B5'}
+
+# v180: twee schakelaars in plaats van een
+MAG_ERBIJ |= {'\U0001F3B5 Mijn muziek vanzelf: aan', '\U0001F3B5 Muziek van vrienden vanzelf: aan'}
+MAG_WEG |= {'\U0001F3B5 Muziek vanzelf afspelen: aan'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

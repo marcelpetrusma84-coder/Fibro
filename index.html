@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=16"></script>
+<script src="taal.js?v=17"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>/* v130: zoomen mag weer; iPhone zoomt bij invoervakken kleiner dan 16px vanzelf in */@supports (-webkit-touch-callout: none){input,textarea,select{font-size:16px !important}}</style>
@@ -212,7 +212,7 @@ import { initSync } from './sync.js?v=162'
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
 import { bewaardeSessieZonderInternet } from './offline.js?v=146'
-import { startMeldingen } from './meldingen.js?v=143'
+import { startMeldingen } from './meldingen.js?v=180'
 import { haalPrivateKeyOp } from './crypto.js?v=95'
 import { isBelregel, belregelTekst } from './belregel.js?v=152'
 pasBlokstijlToe()
@@ -511,7 +511,7 @@ function renderProfiel(id, c) {
     // v171: een sticker als mood (moodsticker.js): tik = beweging en geluid
     const sticker = /^fxsticker:((?:f[1-6]|e[12])-(?:0[1-9]|1[0-2]))$/.exec(emoji)
     c.innerHTML = `<div style="display:flex;align-items:center;gap:10px"><span class="mood-plek" style="font-size:28px;line-height:1">${sticker ? '' : escH(emoji)}</span><span style="font-size:14px">${escH(tekst)}</span></div>`
-    if (sticker) import('./moodsticker.js?v=171').then(m => m.tekenMoodSticker(c.querySelector('.mood-plek'), sticker[1], { uid: window._uid })).catch(e => console.warn('[moodsticker]', e))
+    if (sticker) import('./moodsticker.js?v=180').then(m => m.tekenMoodSticker(c.querySelector('.mood-plek'), sticker[1], { uid: window._uid })).catch(e => console.warn('[moodsticker]', e))
 
   } else if (id === 'muziek') {
     renderMuziekPlayer(c)
@@ -558,7 +558,7 @@ function renderProfiel(id, c) {
     renderSpelWidget(c, id.slice(5))
   } else if (id.startsWith('sticker_')) {
     // v157: sticker als widget (Profiel > Stickers): tik = beweging en geluid. Pas laden als hij er staat.
-    import('./stickerwidget.js?v=166').then(m => m.tekenStickerWidget(c, id, { uid: window._uid })).catch(e => console.warn('[stickerwidget]', e))
+    import('./stickerwidget.js?v=180').then(m => m.tekenStickerWidget(c, id, { uid: window._uid })).catch(e => console.warn('[stickerwidget]', e))
   }
 }
 
@@ -751,6 +751,13 @@ function renderMuziekPlayer(c) {
     if (heeftTracks && track.data) {
       if (audio) { audio.pause(); audio.src = '' }
       audio = new Audio(track.data)
+      // v180: voor geluidregelaar.js (soort en titel), en de knop volgt de speler, ook als de regelaar hem pauzeert
+      // of later laat verder spelen
+      audio.dataset.fibroGeluid = 'muziek'
+      audio.dataset.fibroTitel = track.naam || ''
+      { const a = audio
+        a.onplay = () => { if (a !== audio) return; const b = document.getElementById('muz-play'); if (b) b.textContent = '\u23F8' }
+        a.onpause = () => { if (a !== audio) return; const b = document.getElementById('muz-play'); if (b) b.textContent = '\u25B6' } }
       audio.ontimeupdate = () => {
         const prog = document.getElementById('muz-prog')
         const tijdEl = document.getElementById('muz-tijd')
@@ -2111,26 +2118,33 @@ window.openMenu = function() {
   let g = groep(T('Instellingen'), 'menuKopInstellingen')
   item(g, T('\u{1F310} Taal / Language'), openTaal) // v142
   item(g, T('\u23F3 Berichten bewaren'), openBewaren)
-  // v179: muziek vanzelf afspelen (je eigen profielnummer op Home, dat van een vriend op zijn profiel), aan of uit
-  const muz = document.createElement('button')
-  muz.setAttribute('role', 'menuitemcheckbox')
-  muz.style.cssText = 'display:block;width:100%;min-height:44px;text-align:left;background:none;border:none;border-radius:10px;color:var(--text);font-size:15px;padding:10px 12px;cursor:pointer;font-family:inherit'
-  const muzTekst = () => {
-    let aan = true
-    try { aan = localStorage.getItem('fibro_muziek_auto') !== '0' } catch (e) {}
-    muz.textContent = T('\u{1F3B5} Muziek vanzelf afspelen') + ': ' + (aan ? T('aan') : T('uit'))
-    muz.setAttribute('aria-checked', aan ? 'true' : 'false')
-    return aan
+  // v179/v180: muziek vanzelf afspelen, aan of uit: je eigen profielnummer op Home, en dat van vrienden op hun profiel
+  // (uit = daar alleen het knopje met \u25B6). Tussen 23:00 en 07:00 speelt er niets vanzelf (profielmuziek.js).
+  const schakelaar = (sleutel, tekst, opKlik) => {
+    const b = document.createElement('button')
+    b.setAttribute('role', 'menuitemcheckbox')
+    b.style.cssText = 'display:block;width:100%;min-height:44px;text-align:left;background:none;border:none;border-radius:10px;color:var(--text);font-size:15px;padding:10px 12px;cursor:pointer;font-family:inherit'
+    const zet = () => {
+      let aan = true
+      try { aan = localStorage.getItem(sleutel) !== '0' } catch (e) {}
+      b.textContent = tekst + ': ' + (aan ? T('aan') : T('uit'))
+      b.setAttribute('aria-checked', aan ? 'true' : 'false')
+      return aan
+    }
+    zet()
+    b.onclick = () => {
+      const aan = !zet()
+      try { localStorage.setItem(sleutel, aan ? '1' : '0') } catch (e) {}
+      zet()
+      if (opKlik) opKlik(aan)
+    }
+    g.appendChild(b)
   }
-  muzTekst()
-  muz.onclick = async () => {
-    const aan = !muzTekst()
-    try { localStorage.setItem('fibro_muziek_auto', aan ? '1' : '0') } catch (e) {}
-    muzTekst()
+  schakelaar('fibro_muziek_auto', T('\u{1F3B5} Mijn muziek vanzelf'), async (aan) => {
     if (aan) { try { sessionStorage.removeItem('fibro_muziek_pauze_eigen') } catch (e) {} }
-    try { const m = await import('./profielmuziek.js?v=179'); if (aan) startProfielMuziek(); else m.zetAuto(false) } catch (e) {}
-  }
-  g.appendChild(muz)
+    try { const m = await import('./profielmuziek.js?v=180'); if (aan) startProfielMuziek(); else m.zetAuto(false) } catch (e) {}
+  })
+  schakelaar('fibro_muziek_auto_vrienden', T('\u{1F3B5} Muziek van vrienden vanzelf'))
   g = groep(T('Accountinstellingen'), 'menuKopAccount')
   item(g, T('\u{1F4E6} Mijn gegevens downloaden'), () => openAccount('gegevens'))
   item(g, T('\u{1F5D1}\uFE0F Account verwijderen'), () => openAccount('verwijderen')).style.color = '#fca5a5'
@@ -2551,7 +2565,7 @@ async function startProfielMuziek() {
     const data = await laadUitDB('muziek_track')
     if (!data) return
     const titel = await laadUitDB('muziek_titel')
-    const m = await import('./profielmuziek.js?v=179')
+    const m = await import('./profielmuziek.js?v=180')
     await m.speelProfielMuziek({ data, titel, sleutel: 'eigen' })
   } catch (e) { console.warn('[profielmuziek]', e) }
 }
@@ -2572,10 +2586,11 @@ if ('serviceWorker' in navigator) {
 <script src="swipe.js?v=95"></script>
 <script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=152"; startBelLuisteraar()</script>
 <script type="module">import { beschermOpslag } from "./opslag.js?v=2"; beschermOpslag()</script>
+<script type="module" src="geluidregelaar.js?v=180"></script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=143"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=168"; startOngelezen()</script>
-<script type="module">import { checkTimers } from "./timer-melding.js?v=143"; setTimeout(checkTimers,4000)</script>
+<script type="module">import { checkTimers } from "./timer-melding.js?v=180"; setTimeout(checkTimers,4000)</script>
 <script src="./fotoviewer.js?v=6"></script>
 <script type="module" src="blokkade.js?v=2"></script>
 </body>

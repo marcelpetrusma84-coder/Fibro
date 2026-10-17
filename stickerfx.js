@@ -302,13 +302,31 @@ export function speelBeweging(el, beweging) {
     el.animate(bw.kf, { duration: bw.ms, easing: bw.easing || 'ease', fill: 'none' })
   } catch (e) {}
 }
+// v180: nooit twee stickergeluiden door elkaar, en de muziek wacht even (geluidregelaar.js op Home en bij vrienden).
+// Elk code-geluid krijgt een eigen volumeknop (stuk): een nieuw geluid draait het vorige snel dicht; een mp3 stopt de
+// andere spelers. Met de gebeurtenis 'fibro-geluid' { soort: 'kort', ms } pauzeert de muziek zolang (zonder regelaar
+// op de pagina gebeurt er niets).
+let vorigStuk = null
+const CODE_MS = 1500 // zo lang duurt een code-geluid hoogstens ongeveer
+function meldKort(ms) {
+  try { window.dispatchEvent(new CustomEvent('fibro-geluid', { detail: { soort: 'kort', ms } })) } catch (e) {}
+}
+function stilVorige(behalve) {
+  for (const b of spelers) if (b !== behalve && !b._zegen && !b.paused) { try { b.pause() } catch (e) {} }
+  if (vorigStuk && ctx) { try { vorigStuk.gain.setTargetAtTime(0, ctx.currentTime, 0.02) } catch (e) {} vorigStuk = null }
+}
 // Het geluid met code (Web Audio): de terugval als de mp3 niet lukt
 function speelCode(geluid) {
   let g = GELUIDEN[geluid]
   if (g && g.mp3) g = GELUIDEN[g.terug] // v161: alleen als mp3: dan het terug-geluid
   if (!g || !g.f || geluid === 'geen') return
   if (!audio()) return
-  try { g.f(master, ctx.currentTime + 0.02) } catch (e) { console.warn('[stickerfx]', e) }
+  stilVorige(null)
+  meldKort(CODE_MS)
+  try {
+    const stuk = ctx.createGain(); stuk.connect(master); vorigStuk = stuk
+    g.f(stuk, ctx.currentTime + 0.02)
+  } catch (e) { console.warn('[stickerfx]', e) }
 }
 
 /* ---------- geluiden als mp3 (v160) ---------- */
@@ -365,7 +383,11 @@ function speler() {
 function speelMp3(geluid, url) {
   const a = speler()
   a._zegen = false
+  stilVorige(a) // v180: het vorige stickergeluid stopt
   try { if (a.src !== url) a.src = url; a.currentTime = 0 } catch (e) {}
+  meldKort(CODE_MS) // de muziek pauzeert meteen; zodra de lengte bekend is precies zo lang
+  const duur = () => { if (isFinite(a.duration) && a.duration > 0) meldKort(Math.round(a.duration * 1000) + 150) }
+  if (isFinite(a.duration) && a.duration > 0 && a.src === url) duur(); else a.addEventListener('loadedmetadata', duur, { once: true })
   let p
   try { p = a.play() } catch (e) { p = Promise.reject(e) }
   if (p && typeof p.then === 'function') p.then(() => { a._vrij = true }, e => { if (!e || e.name !== 'AbortError') speelCode(geluid) })

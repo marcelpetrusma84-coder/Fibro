@@ -63,7 +63,9 @@ document.addEventListener('touchstart', ontgrendelAudio, { once: true, passive: 
 document.addEventListener('click', ontgrendelAudio, { once: true })
 
 // Buzzgeluid: lage zaagtand die snel aan-uit pulseert.
+// v180: de muziek pauzeert zolang (geluidregelaar.js, gebeurtenis 'fibro-geluid'), zodat nooit twee geluiden door elkaar klinken
 function speelBuzz() {
+  try { window.dispatchEvent(new CustomEvent('fibro-geluid', { detail: { soort: 'kort', ms: 1150 } })) } catch (e) {}
   try {
     const AC = window.AudioContext || window.webkitAudioContext
     if (!AC) return

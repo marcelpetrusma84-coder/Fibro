@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 17 oktober 2026 (v179: profielmuziek speelt vanzelf).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 17 oktober 2026 (v180: de geluidsregelaar).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -161,7 +161,23 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  los van de pagina; na 300 ms nog bezig, dus niet de 50 ms stilte van beltoon.js) pauzeert hem,
                                  stickers niet; achtergrond = pauze. Menu > Instellingen: '🎵 Muziek vanzelf afspelen: aan/uit'
                                  (menuitemcheckbox, localStorage fibro_muziek_auto). 12 nieuwe woorden: taal-en.js?v=16 en
-                                 taal.js?v=16 in alle 12 pagina's (testscript_profielmuziek.py))
+                                 taal.js?v=16 in alle 12 pagina's (testscript_profielmuziek.py),
+                         geluidregelaar = v180: nieuw geluidregelaar.js?v=180 (Home en vriend-profiel laden hem, profielmuziek.js
+                                 ook): nooit twee geluiden tegelijk. play() van elk media-element (haak op HTMLMediaElement) en de
+                                 gebeurtenissen 'play'/'volumechange' van spelers in de pagina; soort: data-profielmuziek =
+                                 achtergrond, data-fibro-geluid="muziek" (de muziekspelers op Home en bij een vriend), <video>,
+                                 onbekend (telt pas als hij na 250 ms nog klinkt: niet de 50 ms stilte van beltoon.js); srcObject
+                                 (gesprek) nooit. Wat begint, pauzeert wat speelde (systeempauze, __fibroSysteem) en legt het op een
+                                 stapel; stopt het nieuwe (pauze van jou, klaar, weg), dan na 350 ms het bovenste van de stapel
+                                 verder (niet als de pagina verborgen is). Zelf gepauzeerd = van de stapel af. Profielmuziek die
+                                 vanzelf start (__fibroAuto) wacht onderaan als er al iets klinkt. Kort geluid: gebeurtenis
+                                 'fibro-geluid' { soort: 'kort', ms } (stickerfx.js: elk geluid, het vorige stopt; meldingen.js: de
+                                 buzz). Faden 250/600 ms (niet op iPhone/iPad). Media Session: titel (data-fibro-titel), play/pause/
+                                 stop. window.fibroGeluid.stand() voor de proeven. profielmuziek.js: stil 's nachts (23-7) en twee
+                                 schakelaars in het menu: fibro_muziek_auto (eigen) en fibro_muziek_auto_vrienden (uit = bij een
+                                 vriend het knopje met ▶). De muziekspelers: knop volgt play/pause. ?v=180: meldingen, timer-melding,
+                                 stickerfx, stickerkeuze, stickerwidget, stickermaker, moodsticker, profielmuziek; taal-en.js?v=17
+                                 en taal.js?v=17 in alle 12 pagina's (testscript_geluidregelaar.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -506,6 +522,12 @@ tools/proef75.py         profielmuziek (v179), echte profiel.html, index.html en
                          Oude map als controle: 3 van 17.   python3 -I proef75.py <map>
                          Let op (v179): proef69 geeft 16 van 17 op een werkmap uit upload-alles (geen stickerplaatjes); met
                          stickers/ erbij 17 van 17.
+tools/proef76.py         de geluidsregelaar (v180), echte index.html en vriend-profiel.html, echte klikken; op Home profielmuziek,
+                         muziekspeler, video-widget (webm met geluid via ffmpeg) en een sticker (plaatje en geluiden maakt de proef
+                         zelf). Speler/video/sticker/kort geluid/beltoon onderbreken en daarna verder; stil ontgrendel-geluidje
+                         niet; zelf gepauzeerd blijft; faden; Media Session; 's nachts (getHours = 23); twee schakelaars; bij een
+                         vriend. Oude map als controle: 4 van 19.   python3 -I proef76.py <map>
+                         (sinds v180 staat in proef75 'Mijn muziek vanzelf' in plaats van 'Muziek vanzelf afspelen')
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

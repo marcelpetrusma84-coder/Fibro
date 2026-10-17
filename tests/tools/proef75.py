@@ -5,7 +5,7 @@
 #    opnieuw Home = blijft gepauzeerd (deze sessie), tik = verder.
 # C. Home (browser wil eerst een tik, zoals de iPhone; nagebootst): eerst stil, na de eerste echte tik op de pagina speelt het.
 # D. Ander geluid (bijv. de muziekspeler) pauzeert het profielnummer; een stickergeluidje niet.
-# E. Menu > Instellingen: 'Muziek vanzelf afspelen: aan' (menuitemcheckbox); echte klik = uit, muziek en knopje weg,
+# E. Menu > Instellingen: 'Mijn muziek vanzelf: aan' (v180; in v179 'Muziek vanzelf afspelen'); echte klik = uit, muziek en knopje weg,
 #    opnieuw Home = stil; weer aan = speelt.
 # F. Profiel van een vriend: zijn nummer (van sync.js, vriend_<id>_muziek_profiel) speelt vanzelf, 'Muziek van Bram'.
 # G. Profiel: weghalen (echte klik) = weg, Home blijft stil. Geen fouten.
@@ -105,12 +105,12 @@ def werkB(p):
     try: p.click('#menuBtn', timeout=3000); wacht(p, 300)
     except Exception: pass
     m1 = ev(p, "() => { const b = document.querySelector('#fibroMenu [role=menuitemcheckbox]'); return b ? [b.textContent, b.getAttribute('aria-checked'), b.closest('[role=group]').querySelector('div').textContent] : null }")
-    check("E. menu > Instellingen: 'Muziek vanzelf afspelen: aan'", m1 == ['\U0001F3B5 Muziek vanzelf afspelen: aan', 'true', 'Instellingen'], m1)
+    check("E. menu > Instellingen: 'Mijn muziek vanzelf: aan' (sinds v180)", m1 == ['\U0001F3B5 Mijn muziek vanzelf: aan', 'true', 'Instellingen'], m1)
     try: p.click('#fibroMenu [role=menuitemcheckbox]', timeout=3000)
     except Exception: pass
     wacht(p, 800)
     m2 = ev(p, "() => { const b = document.querySelector('#fibroMenu [role=menuitemcheckbox]'); return [b ? b.textContent : null, !!document.getElementById('profielMuziekKnop'), !!(window.__pm && !window.__pm.paused)] }")
-    check("E. echte klik: 'uit', muziek en knopje weg", isinstance(m2, list) and m2[0] == '\U0001F3B5 Muziek vanzelf afspelen: uit' and not m2[1] and not m2[2], m2)
+    check("E. echte klik: 'uit', muziek en knopje weg", isinstance(m2, list) and m2[0] == '\U0001F3B5 Mijn muziek vanzelf: uit' and not m2[1] and not m2[2], m2)
     p.goto(B + 'index.html'); wacht(p, 3000); e3 = ev(p, STAAT)
     check('E. opnieuw Home: stil, geen knopje', isinstance(e3, dict) and not e3['speelt'] and e3['knop'] is None, e3)
     try: p.click('#menuBtn', timeout=3000); wacht(p, 300); p.click('#fibroMenu [role=menuitemcheckbox]', timeout=3000)

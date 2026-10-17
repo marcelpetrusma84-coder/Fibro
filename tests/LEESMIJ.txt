@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v172: stickers zonder internet).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 17 oktober 2026 (v173: de oude emoji-stickers weg uit Profiel).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -117,7 +117,14 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  stickervellen.js (import van de nieuwste ?v= die hij in de pagina's tegenkomt) en uit de tabel
                                  GELUIDEN in de tekst van stickerfx.js (niet importeren: dat zet geluid klaar bij elke tik) met
                                  MP3_VERSIE. Een nieuw vel doet zo vanzelf mee (binnen 6 uur, of meteen als je hem opent). Een
-                                 BESTAAND plaatje vervangen: het getal in MEDIA_KAST omhoog (testscript_mediakast.py))
+                                 BESTAAND plaatje vervangen: het getal in MEDIA_KAST omhoog (testscript_mediakast.py),
+                         emojiweg = v173: alleen profiel.html: de oude emoji-stickers weg (Actieve stickers, Natuur & Planten,
+                                 Sfeer & Magie, Muziek & Kunst, Dieren; de lijst stickers, actieveStickers, bouwStickerGrid(s),
+                                 updateActieveStickers, css .sticker-galerij/.sticker-item) en de widget 'Sticker board' (deed al
+                                 niets: niet in WMAP, dus nooit op Home). Ze stonden alleen op het toestel (fibro_profiel_<id>.stickers),
+                                 niet op de server. Een oud 'stickerboard' in de widgets valt bij het laden weg. De Engelse teksten
+                                 in taal-en.js blijven staan (onschuldig; anders taal.js?v= in alle 12 pagina's). proef43: de weggehaalde
+                                 teksten en emoji's staan in MAG_WEG (testscript_emojiweg.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -434,6 +441,11 @@ tools/proef70.py         stickers zonder internet (v172), echte portier, server 
                          Chat: vakjes 1, 4 en 5 (echte klikken) laden, sticker versturen = mp3; weer online: nieuwe ?v= van een
                          mp3 ruimt de oude op; 'fibro-media-2' = oude kast weg, alles opnieuw, vervangen plaatje is het nieuwe.
                          Oude map als controle: 1 van 13.   python3 -I proef70.py <map>  (±50 s)
+tools/proef71.py         de oude emoji-stickers weg (v173), echte profiel.html met een oud profiel op het toestel (emoji's en
+                         'stickerboard'): Stickers en Widgets (echte klikken) zonder emoji-vakken en zonder Sticker board, eigen
+                         stickers en vel 1-4 nog wel; Mood-keuze werkt; Opslaan (echte klik): geen 'stickers', geen 'stickerboard'.
+                         Oude map als controle: 8 van 13.   python3 -I proef71.py <map>
+                         (sinds v173 is in proef54 de check 'emoji-versiering er nog' MIS: die is bewust weg)
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

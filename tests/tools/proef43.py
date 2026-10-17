@@ -127,7 +127,7 @@ SCHERMEN = [
     ('over', 'over.html', "() => { document.getElementById('technisch').open = true }", ['About Fibro', '← Back', 'What is Fibro?', 'digital living room', 'Why Fibro exists', 'How your data works', 'Your recovery code',
         'Keep it somewhere other than your phone.', 'Your data and your account', 'Download my data', 'To be honest', 'Coming soon', 'under construction', 'Turn off buzz', 'Technical', 'House rule: active. Nothing blocked.']),
     ('home: geen internet', 'index.html', "() => { Object.defineProperty(navigator, 'onLine', { get: () => false, configurable: true }); window.dispatchEvent(new Event('offline')) }", ['No internet · you\'re seeing what\'s saved on this device']),
-    ('profiel: stickers', 'profiel.html', "() => { switchTab('stickers') }", ['Your own chat stickers', 'Your own sheet 2', '0 of 12', 'Sticker sheet 1', 'Tap a sticker: it moves', 'Use the \U0001F3E0 switch', 'Active stickers', 'No stickers chosen yet', 'Nature & Plants', 'Mood & Magic', 'Animals']),
+    ('profiel: stickers', 'profiel.html', "() => { switchTab('stickers') }", ['Your own chat stickers', 'Your own sheet 2', '0 of 12', 'Sticker sheet 1', 'Tap a sticker: it moves', 'Use the \U0001F3E0 switch']),  # v173: de emoji-vakken zijn weg
 ]
 NL_WOORDEN = ['Vrienden', 'Uitnodigen', 'Geblokkeerd', 'terug', 'Stuur een bericht', 'Chat openen', 'Gastenboek', 'GASTENBOEK', 'dagen', 'geleden', 'Vriendschap',
               'Bellen', 'Annuleer', 'Kies hoe', 'Belt je op', 'Wat wil je doen', 'Blokkeren', 'Deblokkeren', 'Verwijderen', 'Annuleren', 'Sluiten', 'buzzt',
@@ -161,6 +161,10 @@ VEL1 = ['Tranen van het lachen', 'Ssst', 'Slaap lekker', 'Kapot', 'Huilen', 'Ver
 MAG_ERBIJ |= {'STICKERVEL 1', '\U0001F3E0', 'Met het knopje \U0001F3E0 onder een sticker zet je hem op Home (druk daarna op Opslaan).',
               'Tik op een sticker: hij beweegt en maakt geluid. Zet het knopje \U0001F3E0 aan en druk op Opslaan, dan staat hij op Home.'}
 MAG_ERBIJ |= {'Speel sticker ' + n for n in VEL1} | {n + ' op Home' for n in VEL1}
+# v173: de oude emoji-stickers en de widget 'Sticker board' zijn weg uit Profiel (koppen staan in hoofdletters)
+MAG_WEG |= {'ACTIEVE STICKERS', 'Nog geen stickers gekozen', 'NATUUR & PLANTEN', 'SFEER & MAGIE', 'MUZIEK & KUNST', 'DIEREN',
+            'Sticker board', 'Collage van stickers'}
+MAG_WEG |= {'\U0001F33F', '\U0001F338', '\U0001F33A', '\U0001F33B', '\U0001F340', '\U0001F331', '\U0001F33E', '\U0001F343', '\U0001F334', '\U0001F30A', '\U0001F342', '\U0001F339', '\U0001F337', '\U0001F33C', '\U0001F341', '\u2728', '\U0001F52E', '\U0001F319', '\u2B50', '\U0001F4AB', '\U0001F31F', '\U0001F52F', '\U0001F320', '\U0001F30C', '\U0001FA84', '\U0001F48E', '\U0001F308', '\u26A1', '\U0001F525', '\U0001F300', '\U0001F3B5', '\U0001F3B8', '\U0001F3A8', '\U0001F3AD', '\U0001F3AC', '\U0001F4F7', '\U0001F3AA', '\U0001F3AF', '\U0001F3B2', '\U0001F3B9', '\U0001F941', '\U0001F3BA', '\U0001F3BB', '\U0001F5BC', '\u270F', '\U0001F98B', '\U0001F98A', '\U0001F431', '\U0001F43A', '\U0001F984', '\U0001F409', '\U0001F981', '\U0001F43B', '\U0001F99D', '\U0001F994', '\U0001F427', '\U0001F985', '\U0001F420', '\U0001F42C', '\U0001F98B'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

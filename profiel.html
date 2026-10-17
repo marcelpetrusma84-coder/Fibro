@@ -104,9 +104,6 @@ input[type="range"]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;b
 .toggle-dot{width:16px;height:16px;background:white;border-radius:50%;position:absolute;top:2px;transition:left 0.2s;}
 .toggle.on .toggle-dot{left:18px;}
 .toggle.off .toggle-dot{left:2px;}
-.sticker-galerij{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:10px;}
-.sticker-item{aspect-ratio:1;background:var(--card);border:0.5px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;}
-.sticker-item.selected{border-color:var(--accent);background:rgba(192,132,252,0.1);}
 .profiel-preview{background:rgba(0,0,0,0.3);border-radius:14px;padding:14px;margin-bottom:14px;border:0.5px solid var(--border);}
 .preview-label{font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
 .status-msg{font-size:15px;padding:10px 14px;border-radius:10px;margin:10px 14px;display:none;}
@@ -402,7 +399,6 @@ input, textarea { font-size:16px !important; }
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🗺</div><div><div class="widget-name" data-t>Locatie</div><div class="widget-desc" data-t>Toon je stad</div></div></div><div class="toggle off" id="widget-locatie" onclick="toggleWidget('locatie')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">❓</div><div><div class="widget-name" data-t>Vragen</div><div class="widget-desc" data-t>Vrienden stellen vragen</div></div></div><div class="toggle off" id="widget-vragen" onclick="toggleWidget('vragen')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🔗</div><div><div class="widget-name" data-t>Links</div><div class="widget-desc" data-t>Handige links delen</div></div></div><div class="toggle off" id="widget-links" onclick="toggleWidget('links')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎨</div><div><div class="widget-name" data-t>Sticker board</div><div class="widget-desc" data-t>Collage van stickers</div></div></div><div class="toggle off" id="widget-stickerboard" onclick="toggleWidget('stickerboard')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏆</div><div><div class="widget-name" data-t>Achievements</div><div class="widget-desc" data-t>Badges verdienen</div></div></div><div class="toggle off" id="widget-achievements" onclick="toggleWidget('achievements')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🎮</div><div><div class="widget-name" data-t>Mini game</div><div class="widget-desc" data-t>Speel een spel op profiel</div></div></div><div class="toggle off" id="widget-game" onclick="toggleWidget('game')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">📅</div><div><div class="widget-name" data-t>Agenda</div><div class="widget-desc" data-t>Deel aankomende events</div></div></div><div class="toggle off" id="widget-agenda" onclick="toggleWidget('agenda')"><div class="toggle-dot"></div></div></div>
@@ -438,11 +434,6 @@ input, textarea { font-size:16px !important; }
 <div class="panel" id="panel-stickers">
   <div class="section"><div class="section-label" data-t>Je eigen chatstickers</div><div id="eigenStickers"></div></div>
   <div id="fibroStickers"></div>
-  <div class="section"><div class="section-label" data-t>Actieve stickers</div><div class="sticker-galerij" id="actieveStickers"></div></div>
-  <div class="section"><div class="section-label" data-t>Natuur & Planten</div><div class="sticker-galerij" id="stickerNatuur"></div></div>
-  <div class="section"><div class="section-label" data-t>Sfeer & Magie</div><div class="sticker-galerij" id="stickerMagie"></div></div>
-  <div class="section"><div class="section-label" data-t>Muziek & Kunst</div><div class="sticker-galerij" id="stickerKunst"></div></div>
-  <div class="section"><div class="section-label" data-t>Dieren</div><div class="sticker-galerij" id="stickerDieren"></div></div>
 </div>
 </main>
 <div class="bottom-nav" role="navigation" aria-label="Menu">
@@ -521,9 +512,10 @@ import { tekenFibroVellen, stickerWidgetDef } from './stickerwidget.js?v=166'
 import { maakStickerkeuze } from './stickerkeuze.js?v=166' // v171: een sticker als mood
 import { leesMood, tekenMoodSticker } from './moodsticker.js?v=171'
 
-var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek'],actieveStickers=[]
+var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek']
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
-const stickers={natuur:['🌿','🌸','🌺','🌻','🍀','🌱','🌾','🍃','🌴','🌊','🍂','🌹','🌷','🌼','🍁'],magie:['✨','🔮','🌙','⭐','💫','🌟','🔯','🌠','🌌','🪄','💎','🌈','⚡','🔥','🌀'],kunst:['🎵','🎸','🎨','🎭','🎬','📷','🎪','🎯','🎲','🎹','🥁','🎺','🎻','🖼','✏'],dieren:['🦋','🦊','🐱','🐺','🦄','🐉','🦁','🐻','🦝','🦔','🐧','🦅','🐠','🐬','🦋']}
+// v173: de oude emoji-stickers (Natuur & Planten, Sfeer & Magie, Muziek & Kunst, Dieren, 'Actieve stickers') en de
+// widget 'Sticker board' zijn weg: ze werden alleen op dit toestel bewaard en nergens getoond.
 import { LETTERTYPES, laadFont } from './lettertypes.js?v=130'
 import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=95'
 import { pasAnimatieToe } from './animatie.js?v=95'
@@ -848,8 +840,7 @@ async function init(){
     if(lokaal.bgKleur)updateBgKleur(lokaal.bgKleur)
     if(lokaal.animatie){huidigeAnimatie=lokaal.animatie;updateAnimatieUI()}
     if(lokaal.lettertype){huidigLettertype=lokaal.lettertype;document.body.style.fontFamily=lokaal.lettertype;localStorage.setItem('fibro_lettertype',lokaal.lettertype)}
-    if(lokaal.widgets)actieveWidgets=lokaal.widgets
-    if(lokaal.stickers)actieveStickers=lokaal.stickers
+    if(lokaal.widgets)actieveWidgets=lokaal.widgets.filter(w=>w!=='stickerboard') // v173: Sticker board is weg
     const bestaandeWallpaper=await laadFotoUitDB('bg_wallpaper_'+userId)
     // v138: een grote PNG-achtergrond (van een iPhone) op de achtergrond kleiner maken
     maakAchtergrondKleiner(userId,bestaandeWallpaper).then(k=>{if(!k)return;const im=document.querySelector('#uploadedWallpaper img');if(im)im.src=k;console.log('[foto] achtergrond kleiner gemaakt:',Math.round(bestaandeWallpaper.length/1024),'->',Math.round(k.length/1024),'kB')}).catch(()=>{})
@@ -860,7 +851,7 @@ async function init(){
     onFotoOntvangen: (vriendId, blob, meta) => console.log('📷 Foto ontvangen van', vriendId),
     onStatus: (vriendId, status) => console.log('P2P status:', vriendId, status)
   })
-  bouwFontGrid();bouwStickerGrids();bouwAvatarPicker();updateWidgetToggles();updateActieveStickers()
+  bouwFontGrid();bouwAvatarPicker();updateWidgetToggles()
   startStickermaker(document.getElementById('eigenStickers'), huidigeUser.id, stickerWidgets) // v154: Stickerlab (eigen stickers)
   tekenFibroVellen(document.getElementById('fibroStickers'), stickerWidgets) // v157: stickervel 1 enz., met knopje voor Home
   document.getElementById('editNaam').oninput=updatePreview
@@ -917,9 +908,6 @@ window.toggleWidget=function(naam){const toggle=document.getElementById('widget-
 // v157: stickers als widget op Home (stickerwidget.js): aan of uit zoals de widgets, bewaard met Opslaan
 const stickerWidgets={aan:n=>actieveWidgets.includes(n),zet:(n,aan)=>{actieveWidgets=actieveWidgets.filter(w=>w!==n);if(aan)actieveWidgets.push(n)}}
 function updateWidgetToggles(){actieveWidgets.forEach(w=>{const el=document.getElementById('widget-'+w);if(el){el.classList.remove('off');el.classList.add('on')}})}
-function bouwStickerGrids(){bouwStickerGrid('stickerNatuur',stickers.natuur);bouwStickerGrid('stickerMagie',stickers.magie);bouwStickerGrid('stickerKunst',stickers.kunst);bouwStickerGrid('stickerDieren',stickers.dieren)}
-function bouwStickerGrid(id,lijst){const grid=document.getElementById(id);grid.innerHTML='';lijst.forEach(s=>{const div=document.createElement('div');div.className='sticker-item'+(actieveStickers.includes(s)?' selected':'');div.textContent=s;div.onclick=()=>{if(actieveStickers.includes(s)){actieveStickers=actieveStickers.filter(x=>x!==s);div.classList.remove('selected')}else{actieveStickers.push(s);div.classList.add('selected')};updateActieveStickers()};grid.appendChild(div)})}
-function updateActieveStickers(){const grid=document.getElementById('actieveStickers');grid.innerHTML='';if(actieveStickers.length===0){grid.innerHTML='<div style="font-size:15px;color:var(--muted);padding:8px;">'+T('Nog geen stickers gekozen')+'</div>';return};actieveStickers.forEach(s=>{const div=document.createElement('div');div.className='sticker-item selected';div.textContent=s;grid.appendChild(div)})}
 // ── Haal avatar data op voor Supabase ──
 async function haalAvatarDataOp() {
   const userId = huidigeUser?.id
@@ -982,8 +970,7 @@ window.slaAllesOp=async function(){
     accentKleur, accentKleur2, bgKleur,
     animatie: huidigeAnimatie,
     lettertype: huidigLettertype,
-    widgets: actieveWidgets,
-    stickers: actieveStickers
+    widgets: actieveWidgets
   }
   localStorage.setItem('fibro_profiel_' + huidigeUser.id, JSON.stringify(lokaalProfiel))
   // losse kopie voor de andere pagina's (worden vroeg geladen, kennen de user nog niet)

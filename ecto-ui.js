@@ -3,6 +3,11 @@
    die zichzelf in #spelInhoud tekent en zichzelf opruimt zodra het spel
    gesloten wordt.
 
+   v12 (Fibro v177): alleen spelen weer net als samen spelen: geen grens van
+   30 beeldjes per seconde meer (die van v10 is weg). Op 30 beeldjes leken de
+   spookjes trager (ze liepen even snel, nagemeten), en samen spelen liep op
+   dezelfde iPhone altijd goed op 60. De teller in spel.html blijft.
+
    v11 (Fibro v176): lichter geluid. Op Android, de Steam Deck en de computer via
    Web Audio (één AudioContext, de golfjes als AudioBuffer) in plaats van 25
    <audio>-spelers; op de iPhone blijft <audio> (Web Audio is daar stil op de
@@ -1526,15 +1531,11 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   reset()
   indeling()
 
-  // v10: alleen spelen = hoogstens 30 beeldjes per seconde. Een beeldje overslaan
-  // als het vorige minder dan ~29 ms geleden was (iets ruimer dan 33 ms, want
-  // het scherm tikt niet precies): op 60 Hz elk tweede, op 120 Hz elk vierde.
-  const MIN_MS = kanaalOk ? 0 : 1000 / 30 - 4
+  // v12: geen grens meer op het aantal beeldjes (v10 tekende alleen spelen op hoogstens 30)
   let vorige = performance.now()
   function lus(nu) {
     if (!draait) return
     if (!wrap.isConnected || (isActief && !isActief())) { stop(); return }
-    if (MIN_MS && nu - vorige < MIN_MS) { requestAnimationFrame(lus); return }
     window.fibroBeeldjes = (window.fibroBeeldjes || 0) + 1 // voor de teller in spel.html
     verbergChatBalk()
     let dt = Math.min(0.1, Math.max(0, (nu - vorige) / 1000))

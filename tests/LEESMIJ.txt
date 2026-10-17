@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 17 oktober 2026 (v176: lichter geluid in Ghost Tag).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 17 oktober 2026 (v177: Ghost Tag alleen spelen net als samen spelen).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -136,7 +136,13 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  AudioContext weer aan; geluid.sluit() sluit hem. Op de iPhone/iPad blijft <audio> (Web Audio is daar
                                  stil op de stil-schakelaar), met 14 spelers in plaats van 25 (stip 2, de rest 1). Lukt Web Audio
                                  niet, dan ook <audio>. Klanken zelf ongewijzigd. ecto-ui.js?v=176 (solo.js, chat.html 2x),
-                                 solo.js?v=176 (spel.html) (testscript_geluidlicht.py))
+                                 solo.js?v=176 (spel.html) (testscript_geluidlicht.py),
+                         alleenalssamen = v177: Ghost Tag alleen spelen net als samen spelen. ecto-ui.js v12: de grens van 30
+                                 beeldjes (v10, MIN_MS) is weg; window.fibroBeeldjes blijft (teller in spel.html). solo.js: pacman
+                                 zonder gewoneScherpte (volle scherpte; geen spel gebruikt het nog). Waarom: Marcel vond de spookjes
+                                 bij alleen spelen te traag op de iPhone; ze liepen even snel (nagemeten, 100%), maar op 30 beeldjes
+                                 leek het trager, en samen spelen (60, volle scherpte) liep op dezelfde iPhone altijd goed.
+                                 ecto-ui.js?v=177 (solo.js, chat.html 2x), solo.js?v=177 (spel.html) (testscript_alleenalssamen.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -463,6 +469,11 @@ tools/proef72.py         lichter geluid in Ghost Tag (v176), echte spel.html?spe
                          en stippen als Web Audio-bronnen (< 0,5 ms per stuk), 🔇 = stil, spel uit de pagina = AudioContext dicht.
                          B (iPhone-UA): geen AudioContext, 14 <audio>-spelers, geluid klinkt. Oude map als controle: 4 van 11.
                          python3 -I proef72.py <map>
+tools/proef73.py         Ghost Tag alleen spelen net als samen spelen (v177), nagebootste iPhone (UA, scherpte 3, aanraken),
+                         echte tik op Start: ±60 beeldjes (geen grens van 30), doek op 2 beeldpunten per css-pixel, teller in
+                         de titel, en de spookjes lopen precies even snel als het hoort (ook bij een 6x tragere processor;
+                         de proef zet daarvoor in een kopie van ecto-ui.js een regel die de spelers laat zien). Oude map als
+                         controle: 4 van 6.   python3 -I proef73.py <map>
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

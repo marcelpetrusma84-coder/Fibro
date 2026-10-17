@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 17 oktober 2026 (v173: de oude emoji-stickers weg uit Profiel).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 17 oktober 2026 (v176: lichter geluid in Ghost Tag).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -118,13 +118,25 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  GELUIDEN in de tekst van stickerfx.js (niet importeren: dat zet geluid klaar bij elke tik) met
                                  MP3_VERSIE. Een nieuw vel doet zo vanzelf mee (binnen 6 uur, of meteen als je hem opent). Een
                                  BESTAAND plaatje vervangen: het getal in MEDIA_KAST omhoog (testscript_mediakast.py),
-                         emojiweg = v173: alleen profiel.html: de oude emoji-stickers weg (Actieve stickers, Natuur & Planten,
+                         menufont = v173 (uit een ander gesprek, commit 5215da3): alleen index.html: het menu (☰) altijd in
+                                 DM Sans (#fibroMenu, !important),
+                         fps30 = v174 (ander gesprek, 23c67af): Ghost Tag alleen spelen op hoogstens 30 beeldjes per seconde
+                                 (ecto-ui.js v10, MIN_MS; window.fibroBeeldjes voor de teller in spel.html); ecto-ui.js?v=174,
+                                 solo.js?v=174,
+                         emojiweg = v175 (de commit 8d25288 zegt per ongeluk v173; twee gesprekken tegelijk): alleen profiel.html: de oude emoji-stickers weg (Actieve stickers, Natuur & Planten,
                                  Sfeer & Magie, Muziek & Kunst, Dieren; de lijst stickers, actieveStickers, bouwStickerGrid(s),
                                  updateActieveStickers, css .sticker-galerij/.sticker-item) en de widget 'Sticker board' (deed al
                                  niets: niet in WMAP, dus nooit op Home). Ze stonden alleen op het toestel (fibro_profiel_<id>.stickers),
                                  niet op de server. Een oud 'stickerboard' in de widgets valt bij het laden weg. De Engelse teksten
                                  in taal-en.js blijven staan (onschuldig; anders taal.js?v= in alle 12 pagina's). proef43: de weggehaalde
-                                 teksten en emoji's staan in MAG_WEG (testscript_emojiweg.py))
+                                 teksten en emoji's staan in MAG_WEG (testscript_emojiweg.py),
+                         geluidlicht = v176: ecto-ui.js v11: het geluid van Ghost Tag lichter. Niet op de iPhone/iPad: Web Audio
+                                 (één AudioContext, elk golfje als AudioBuffer met het volume erin, een geluidje = een
+                                 AudioBufferSourceNode; de sirene loopt rond met loop = true). Elke echte tik zet een stilgevallen
+                                 AudioContext weer aan; geluid.sluit() sluit hem. Op de iPhone/iPad blijft <audio> (Web Audio is daar
+                                 stil op de stil-schakelaar), met 14 spelers in plaats van 25 (stip 2, de rest 1). Lukt Web Audio
+                                 niet, dan ook <audio>. Klanken zelf ongewijzigd. ecto-ui.js?v=176 (solo.js, chat.html 2x),
+                                 solo.js?v=176 (spel.html) (testscript_geluidlicht.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -441,11 +453,16 @@ tools/proef70.py         stickers zonder internet (v172), echte portier, server 
                          Chat: vakjes 1, 4 en 5 (echte klikken) laden, sticker versturen = mp3; weer online: nieuwe ?v= van een
                          mp3 ruimt de oude op; 'fibro-media-2' = oude kast weg, alles opnieuw, vervangen plaatje is het nieuwe.
                          Oude map als controle: 1 van 13.   python3 -I proef70.py <map>  (±50 s)
-tools/proef71.py         de oude emoji-stickers weg (v173), echte profiel.html met een oud profiel op het toestel (emoji's en
+tools/proef71.py         de oude emoji-stickers weg (v175), echte profiel.html met een oud profiel op het toestel (emoji's en
                          'stickerboard'): Stickers en Widgets (echte klikken) zonder emoji-vakken en zonder Sticker board, eigen
                          stickers en vel 1-4 nog wel; Mood-keuze werkt; Opslaan (echte klik): geen 'stickers', geen 'stickerboard'.
                          Oude map als controle: 8 van 13.   python3 -I proef71.py <map>
-                         (sinds v173 is in proef54 de check 'emoji-versiering er nog' MIS: die is bewust weg)
+                         (sinds v175 is in proef54 de check 'emoji-versiering er nog' MIS: die is bewust weg)
+tools/proef72.py         lichter geluid in Ghost Tag (v176), echte spel.html?spel=pacman tegen de computer, echte tik op Start,
+                         16 s spelen met pijltjes. A (Android/computer): 0 <audio>-spelers, één AudioContext die loopt, aftellen
+                         en stippen als Web Audio-bronnen (< 0,5 ms per stuk), 🔇 = stil, spel uit de pagina = AudioContext dicht.
+                         B (iPhone-UA): geen AudioContext, 14 <audio>-spelers, geluid klinkt. Oude map als controle: 4 van 11.
+                         python3 -I proef72.py <map>
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

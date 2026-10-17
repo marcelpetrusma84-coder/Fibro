@@ -1995,7 +1995,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     spaceinvaders: './invaders-ui.js?v=147',
     swarm: './swarm-ui.js?v=147',
     endlessrunner: './runner-gunner-ui.js?v=147',
-    pacman: './ecto-ui.js?v=174',
+    pacman: './ecto-ui.js?v=176',
     pinball: './twin-snakes-ui.js?v=147'
   }
   const _alGeladen = {}
@@ -2415,7 +2415,7 @@ async function startBlockIt() {
   // ─── Runner & Gunner (vakje Endless Runner) ───
   // ─── Spookjes (vakje Pac-Man) ───
   async function startEcto() {
-    const m = await import('./ecto-ui.js?v=174')
+    const m = await import('./ecto-ui.js?v=176')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'pacman' })
   }
 

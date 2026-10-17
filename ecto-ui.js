@@ -3,6 +3,11 @@
    die zichzelf in #spelInhoud tekent en zichzelf opruimt zodra het spel
    gesloten wordt.
 
+   v11 (Fibro v176): lichter geluid. Op Android, de Steam Deck en de computer via
+   Web Audio (één AudioContext, de golfjes als AudioBuffer) in plaats van 25
+   <audio>-spelers; op de iPhone blijft <audio> (Web Audio is daar stil op de
+   stil-schakelaar), met 14 spelers. Zie 'Geluid'.
+
    v10 (Fibro v174): alleen spelen (tegen de computer) tekent op hoogstens 30
    beeldjes per seconde. Een vaste 30 oogt rustiger dan een telefoon die
    tussen 40 en 60 heen en weer springt. De spookjes lopen even snel (alles
@@ -389,48 +394,81 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   const veldStart = seedUit(String(kanaalNaam) + 'veld') % VELDEN.length
 
   // ═══════════════ Geluid ═══════════════
-  // Alle fragmenten worden één keer uitgerekend en daarna via <audio> gespeeld.
-  // Elk geluidje heeft een paar kopieën, zodat ze over elkaar heen kunnen.
+  // Alle fragmenten worden één keer uitgerekend en daarna gespeeld.
+  // v11 (Fibro v176): lichter. Op Android, de Steam Deck en de computer via Web Audio: één AudioContext, de golfjes
+  // rechtstreeks als AudioBuffer (geen WAV-bestandjes, geen <audio>-spelers). Een geluidje is dan een kleine bron
+  // die de audio-draad zelf mengt, zonder dat de pagina een speler hoeft terug te spoelen en te starten.
+  // Op de iPhone/iPad blijft het <audio> (Web Audio is daar stil als de schakelaar op stil staat), maar met
+  // minder kopieën: 14 spelers in plaats van 25. Lukt Web Audio niet, dan ook <audio>.
+  const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  const AC = window.AudioContext || window.webkitAudioContext
   const geluid = {
     klanken: {}, adressen: [], sirene: null, ontgrendeld: false, kan: false,
+    ctx: null, buffers: {}, sireneBron: null,
+    // [naam, golfje, kopieën (alleen bij <audio>), volume]
+    golven() {
+      const lijst = []
+      const maak = (naam, golfje, aantal, vol) => lijst.push([naam, golfje, aantal, vol])
+      maak('stip0', toonGolf({ van: 880, naar: 1100, duur: 0.05, vorm: 'square', vol: 0.3 }), 2, 0.5)
+      maak('stip1', toonGolf({ van: 620, naar: 480, duur: 0.05, vorm: 'square', vol: 0.3 }), 2, 0.5)
+      const auSoorten = [
+        { van: 330, naar: 150, f1: 950, f2: 420, duur: 0.3, piep: [700, 260] },   // oeeef
+        { van: 260, naar: 380, f1: 600, f2: 1100, duur: 0.26, piep: [520, 900] }, // auw?
+        { van: 420, naar: 170, f1: 1200, f2: 500, duur: 0.34, piep: [880, 300] }, // woeps
+      ]
+      auSoorten.forEach((s, n) => maak('au' + n, mengGolf([
+        { golf: stemGolf(s) },
+        { golf: toonGolf({ van: s.piep[0], naar: s.piep[1], duur: 0.12, vorm: 'triangle', vol: 0.18 }), na: 0.02 },
+      ]), 1, 0.85))
+      maak('bol', mengGolf([
+        { golf: toonGolf({ van: 180, naar: 1200, duur: 0.5, vorm: 'sawtooth', vol: 0.26 }) },
+        { golf: toonGolf({ van: 300, naar: 1600, duur: 0.45, vorm: 'square', vol: 0.16 }), na: 0.06 },
+      ]), 1, 0.8)
+      maak('uit', mengGolf([523, 392, 330, 262, 196].map((f, n) => (
+        { golf: toonGolf({ van: f, duur: 0.2, vorm: 'triangle', vol: 0.3 }), na: n * 0.15 }
+      ))), 1, 0.8)
+      maak('winst', mengGolf([523, 659, 784, 1047, 784, 1047].map((f, n) => (
+        { golf: toonGolf({ van: f, duur: 0.16, vorm: 'square', vol: 0.24 }), na: n * 0.11 }
+      ))), 1, 0.8)
+      maak('telLaag', toonGolf({ van: 440, duur: 0.12, vorm: 'square', vol: 0.26 }), 1, 0.7)
+      maak('telHoog', toonGolf({ van: 880, duur: 0.3, vorm: 'square', vol: 0.26 }), 1, 0.7)
+      maak('jachtEind', toonGolf({ van: 900, naar: 300, duur: 0.25, vorm: 'triangle', vol: 0.22 }), 1, 0.7)
+      return lijst
+    },
     bouw() {
-      if (typeof Audio === 'undefined' || !window.URL || !URL.createObjectURL) return
-      const maak = (naam, golfje, aantal, vol) => {
-        const adres = wavAdres(golfje)
-        this.adressen.push(adres)
-        const els = []
-        for (let n = 0; n < aantal; n++) {
-          const a = new Audio(adres)
-          a.preload = 'auto'; a.volume = vol
-          els.push(a)
+      let lijst
+      try { lijst = this.golven() } catch (e) { console.warn('[spookjes] geluid kon niet gebouwd worden', e); return }
+      if (!IOS && AC) {
+        try {
+          const ctx = new AC()
+          const buffer = (golfje, vol) => {
+            const b = ctx.createBuffer(1, golfje.length, KLANK_HZ), d = b.getChannelData(0)
+            for (let i = 0; i < golfje.length; i++) d[i] = golfje[i] * vol
+            return b
+          }
+          for (const [naam, golfje, , vol] of lijst) this.buffers[naam] = buffer(golfje, vol)
+          this.buffers.sirene = buffer(sireneGolf(), 0.35)
+          this.ctx = ctx; this.kan = true
+          return
+        } catch (e) {
+          console.warn('[spookjes] Web Audio lukt niet, dan <audio>', e)
+          try { if (this.ctx) this.ctx.close() } catch (e2) {}
+          this.ctx = null; this.buffers = {}
         }
-        this.klanken[naam] = { els, i: 0 }
       }
+      if (typeof Audio === 'undefined' || !window.URL || !URL.createObjectURL) return
       try {
-        maak('stip0', toonGolf({ van: 880, naar: 1100, duur: 0.05, vorm: 'square', vol: 0.3 }), 4, 0.5)
-        maak('stip1', toonGolf({ van: 620, naar: 480, duur: 0.05, vorm: 'square', vol: 0.3 }), 4, 0.5)
-        const auSoorten = [
-          { van: 330, naar: 150, f1: 950, f2: 420, duur: 0.3, piep: [700, 260] },   // oeeef
-          { van: 260, naar: 380, f1: 600, f2: 1100, duur: 0.26, piep: [520, 900] }, // auw?
-          { van: 420, naar: 170, f1: 1200, f2: 500, duur: 0.34, piep: [880, 300] }, // woeps
-        ]
-        auSoorten.forEach((s, n) => maak('au' + n, mengGolf([
-          { golf: stemGolf(s) },
-          { golf: toonGolf({ van: s.piep[0], naar: s.piep[1], duur: 0.12, vorm: 'triangle', vol: 0.18 }), na: 0.02 },
-        ]), 2, 0.85))
-        maak('bol', mengGolf([
-          { golf: toonGolf({ van: 180, naar: 1200, duur: 0.5, vorm: 'sawtooth', vol: 0.26 }) },
-          { golf: toonGolf({ van: 300, naar: 1600, duur: 0.45, vorm: 'square', vol: 0.16 }), na: 0.06 },
-        ]), 2, 0.8)
-        maak('uit', mengGolf([523, 392, 330, 262, 196].map((f, n) => (
-          { golf: toonGolf({ van: f, duur: 0.2, vorm: 'triangle', vol: 0.3 }), na: n * 0.15 }
-        ))), 1, 0.8)
-        maak('winst', mengGolf([523, 659, 784, 1047, 784, 1047].map((f, n) => (
-          { golf: toonGolf({ van: f, duur: 0.16, vorm: 'square', vol: 0.24 }), na: n * 0.11 }
-        ))), 1, 0.8)
-        maak('telLaag', toonGolf({ van: 440, duur: 0.12, vorm: 'square', vol: 0.26 }), 2, 0.7)
-        maak('telHoog', toonGolf({ van: 880, duur: 0.3, vorm: 'square', vol: 0.26 }), 2, 0.7)
-        maak('jachtEind', toonGolf({ van: 900, naar: 300, duur: 0.25, vorm: 'triangle', vol: 0.22 }), 2, 0.7)
+        for (const [naam, golfje, aantal, vol] of lijst) {
+          const adres = wavAdres(golfje)
+          this.adressen.push(adres)
+          const els = []
+          for (let n = 0; n < aantal; n++) {
+            const a = new Audio(adres)
+            a.preload = 'auto'; a.volume = vol
+            els.push(a)
+          }
+          this.klanken[naam] = { els, i: 0 }
+        }
         const sAdres = wavAdres(sireneGolf())
         this.adressen.push(sAdres)
         this.sirene = new Audio(sAdres)
@@ -440,7 +478,17 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     },
     // Moet tijdens een echte tik gebeuren, anders blijft geluid op slot (iPhone).
     ontgrendel() {
-      if (this.ontgrendeld || !this.kan) return
+      if (!this.kan) return
+      if (this.ctx) {
+        // Web Audio: elke tik mag hem weer aanzetten (na de achtergrond kan hij stilstaan)
+        if (this.ctx.state !== 'running') { try { const p = this.ctx.resume(); if (p && p.catch) p.catch(() => {}) } catch (e) {} }
+        if (!this.ontgrendeld) {
+          this.ontgrendeld = true
+          try { const s = this.ctx.createBufferSource(); s.buffer = this.ctx.createBuffer(1, 1, KLANK_HZ); s.connect(this.ctx.destination); s.start(0) } catch (e) {}
+        }
+        return
+      }
+      if (this.ontgrendeld) return
       this.ontgrendeld = true
       const alles = [this.sirene]
       for (const naam in this.klanken) alles.push(...this.klanken[naam].els)
@@ -455,6 +503,12 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     },
     speel(naam) {
       if (!geluidAan || !this.kan) return
+      if (this.ctx) {
+        const b = this.buffers[naam]
+        if (!b || this.ctx.state !== 'running') return
+        try { const s = this.ctx.createBufferSource(); s.buffer = b; s.connect(this.ctx.destination); s.start() } catch (e) {}
+        return
+      }
       const k = this.klanken[naam]
       if (!k) return
       const a = k.els[k.i++ % k.els.length]
@@ -473,12 +527,27 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     aftel(n) { this.speel(n ? 'telLaag' : 'telHoog') },
     jachtEinde() { this.speel('jachtEind') },
     jachtStart() {
-      if (!geluidAan || !this.kan || !this.sirene) return
+      if (!geluidAan || !this.kan) return
+      if (this.ctx) {
+        this.jachtStop()
+        if (this.ctx.state !== 'running' || !this.buffers.sirene) return
+        try {
+          const s = this.ctx.createBufferSource(); s.buffer = this.buffers.sirene; s.loop = true
+          s.connect(this.ctx.destination); s.start(); this.sireneBron = s
+        } catch (e) {}
+        return
+      }
+      if (!this.sirene) return
       try { this.sirene.currentTime = 0; const p = this.sirene.play(); if (p && p.catch) p.catch(() => {}) } catch (e) {}
     },
-    jachtStop() { if (this.sirene) { try { this.sirene.pause() } catch (e) {} } },
+    jachtStop() {
+      if (this.sireneBron) { try { this.sireneBron.stop() } catch (e) {} this.sireneBron = null }
+      if (this.sirene) { try { this.sirene.pause() } catch (e) {} }
+    },
     sluit() {
       this.jachtStop()
+      if (this.ctx) { try { const p = this.ctx.close(); if (p && p.catch) p.catch(() => {}) } catch (e) {} }
+      this.ctx = null; this.buffers = {}
       for (const naam in this.klanken) for (const a of this.klanken[naam].els) { try { a.pause(); a.src = '' } catch (e) {} }
       if (this.sirene) { try { this.sirene.src = '' } catch (e) {} }
       for (const adres of this.adressen) { try { URL.revokeObjectURL(adres) } catch (e) {} }

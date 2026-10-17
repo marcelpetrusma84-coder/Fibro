@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 17 oktober 2026 (v178: het menu op Home in groepjes, uitleg app installeren).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 17 oktober 2026 (v179: profielmuziek speelt vanzelf).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -150,7 +150,18 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  navigator.standalone). Het menu schuift zelf op een klein scherm (max-height). 16 nieuwe woorden
                                  in taal-en.js: taal-en.js?v=15 (taal.js, 2x) en taal.js?v=15 in alle 12 pagina's. proef43: de
                                  menu-items worden op tekst gekozen (niet meer op plek), twee nieuwe schermen en MAG_ERBIJ/MAG_WEG
-                                 (testscript_menu.py))
+                                 (testscript_menu.py),
+                         profielmuziek = v179: nieuw profielmuziek.js?v=179 (speelProfielMuziek, autoAan, zetAuto). 'Muziek uploaden'
+                                 (bij Widgets) is verhuisd naar het tabblad Profiel als 'Profielmuziek' (zelfde opslag:
+                                 muziek_track + muziek_titel, zonder id; sync.js stuurt hem als 'profiel'), met 'Nu: <titel>' en
+                                 '🗑️ Nummer weghalen'. Home speelt je eigen nummer vanzelf, vriend-profiel.html dat van de vriend
+                                 (vriend_<id>_muziek_profiel, 'Muziek van <naam>'); herhalen; knopje rechtsonder (pauze/verder);
+                                 zelf gepauzeerd = deze sessie niet meer vanzelf; plek onthouden (sessionStorage); geen geluid
+                                 toegestaan = start bij de eerste echte tik; ander geluid (play() van een ander media-element, ook
+                                 los van de pagina; na 300 ms nog bezig, dus niet de 50 ms stilte van beltoon.js) pauzeert hem,
+                                 stickers niet; achtergrond = pauze. Menu > Instellingen: '🎵 Muziek vanzelf afspelen: aan/uit'
+                                 (menuitemcheckbox, localStorage fibro_muziek_auto). 12 nieuwe woorden: taal-en.js?v=16 en
+                                 taal.js?v=16 in alle 12 pagina's (testscript_profielmuziek.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -487,6 +498,14 @@ tools/proef74.py         het menu op Home in groepjes en de uitleg 'Fibro als ap
                          deed; uitleg: iPhone eerst op een iPhone (eerst 'Tik om te beginnen' wegtikken), Android eerst op
                          Android, 'al als app' bij navigator.standalone, dicht met Escape/Sluiten/ernaast; klein liggend scherm:
                          menu schuift; Engels. Oude map als controle: 6 van 19.   python3 -I proef74.py <map>
+tools/proef75.py         profielmuziek (v179), echte profiel.html, index.html en vriend-profiel.html: Profielmuziek in het tabblad
+                         Profiel, uploaden (echt wav-bestand), 'Nu: ...'; Home speelt vanzelf en herhaalt, knopje (echte tik =
+                         pauze, blijft gepauzeerd na opnieuw openen, tik = verder); browser die eerst een tik wil (nagebootst:
+                         play() weigert tot een echte invoer, want Chromium zet hier zelf al 'userActivation' aan); ander
+                         geluid pauzeert, sticker niet; menu-schakelaar uit/aan; vriend: 'Muziek van Bram'; weghalen.
+                         Oude map als controle: 3 van 17.   python3 -I proef75.py <map>
+                         Let op (v179): proef69 geeft 16 van 17 op een werkmap uit upload-alles (geen stickerplaatjes); met
+                         stickers/ erbij 17 van 17.
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

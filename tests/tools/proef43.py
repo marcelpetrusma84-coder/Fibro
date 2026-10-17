@@ -110,18 +110,18 @@ SCHERMEN = [
     # v145: Profiel (elk tabblad)
     ('profiel: profiel', 'profiel.html', '', ['My profile', 'Save', 'Profile', 'Background', 'Animation', 'Font', 'Colour', 'Tap your avatar to change it',
         'Information', 'Display name', 'Your name', 'Username', 'your login name', "can't be changed", 'characters left', 'Write something about yourself',
-        'How are you feeling today?']),
+        'How are you feeling today?', 'Profile music', 'plays automatically on your Home', 'Upload a music file']),
     ('profiel: achtergrond', 'profiel.html', "() => { switchTab('achtergrond') }", ['Background type', 'Your own upload', 'Background colour']),
     ('profiel: wallpaper', 'profiel.html', "() => { switchTab('achtergrond'); setAchtergrondType('wallpaper') }", ['Choose a wallpaper', 'Night', 'Ocean', 'Sunset', 'Forest']),
     ('profiel: animatie', 'profiel.html', "() => { switchTab('animatie') }", ['Choose an animation', 'None', 'Stars', 'Snow', 'Rain', 'Leaves', 'Bubbles', 'Butterflies', 'Fireflies']),
     ('profiel: lettertype', 'profiel.html', "() => { switchTab('lettertype') }", ['Choose your font', 'Life is beautiful & special', 'Standard', 'Typewriter', 'Bubbles', 'Felt pen']),
     ('profiel: kleur', 'profiel.html', "() => { switchTab('kleur') }", ['Accent colour', 'Second accent colour', 'Blocks', 'Transparency', 'Rounded corners', 'tilt with your phone', 'Your bio here', 'Button example']),
-    ('profiel: widgets', 'profiel.html', "() => { switchTab('widgets') }", ['Active widgets', 'Guestbook', 'Friends leave messages', 'Photo grid', 'Featured + 4 small', 'Games', 'Play against the computer', 'Upload music']),
+    ('profiel: widgets', 'profiel.html', "() => { switchTab('widgets') }", ['Active widgets', 'Guestbook', 'Friends leave messages', 'Photo grid', 'Featured + 4 small', 'Games', 'Play against the computer']),  # v179: Upload music staat nu bij Profiel
     # v146: Mijn gegevens, account verwijderen, moderatie, spelen tegen de computer, Over Fibro, balkjes
     ('home: mijn gegevens', 'index.html', "async () => { openMenu(); [...document.querySelectorAll('#fibroMenu [role=menuitem]')].find(b => /gegevens|my data/i.test(b.textContent)).click() }", ['My data', 'You get one file', 'Get data', 'Close']),
     ('home: account verwijderen', 'index.html', "async () => { openMenu(); [...document.querySelectorAll('#fibroMenu [role=menuitem]')].find(b => /Account verwijderen|Delete account/.test(b.textContent)).click() }", ['Delete account', 'will be deleted immediately', 'Download my data first', 'Delete account permanently', 'To confirm, type your username: Marcel']),
     # v178: het menu in groepjes en de uitleg om Fibro als app te installeren (de oude code heeft die nog niet)
-    ('home: menu', 'index.html', "() => { openMenu() }", ['Settings', 'Account settings', 'My Fibro', 'Language / Taal', 'Keep messages', 'Download my data', 'Delete account', 'About Fibro', 'Install Fibro as an app']),
+    ('home: menu', 'index.html', "() => { openMenu() }", ['Settings', 'Account settings', 'My Fibro', 'Language / Taal', 'Keep messages', 'Play music automatically: on', 'Download my data', 'Delete account', 'About Fibro', 'Install Fibro as an app']),
     ('home: app installeren', 'index.html', "() => { openMenu(); const b = [...document.querySelectorAll('#fibroMenu [role=menuitem]')].find(b => /als app|as an app/.test(b.textContent)); if (b) b.click() }",
         ['Install Fibro as an app', "Add Fibro to your phone's home screen", 'Open Fibro in Safari', 'Add to Home Screen', 'Open as Web App', 'only way to get notifications', 'Open Fibro in Chrome', 'three dots', 'Install app', 'Then open Fibro from the new icon', 'Close']),
     ('moderatie', 'moderatie.html', '', ['Moderation', 'Reports', 'Blocks', 'New', 'Handled', 'All', 'Warned', 'Reported by @Bram', 'Inappropriate content', 'No reason given', 'Handled', 'Warn', 'Block']),
@@ -186,6 +186,12 @@ MAG_ERBIJ |= {re.sub(r'<[^>]+>', '', x) for x in [
     'Kies <b>App installeren</b> of <b>Toevoegen aan startscherm</b> en dan <b>Installeren</b>.',
     'Open Fibro daarna via het nieuwe icoon.']}
 MAG_WEG |= {'\u23F3 Berichten bewaren', '\U0001F310 Taal / Language', '\U0001F4E6 Mijn gegevens downloaden', '\u2139\uFE0F Over Fibro', '\U0001F5D1\uFE0F Account verwijderen'}
+
+# v179: 'Muziek uploaden' (bij Widgets) is verhuisd naar het tabblad Profiel als 'Profielmuziek'; in het menu een schakelaar
+MAG_WEG |= {'MUZIEK UPLOADEN'}
+MAG_ERBIJ |= {'PROFIELMUZIEK', 'Dit nummer speelt vanzelf op je Home en als vrienden je profiel bekijken. Je vrienden krijgen het als jullie allebei online zijn.',
+              'Upload een muziekbestand', 'MP3, M4A, OGG \u2014 wordt verkleind naar 128kbps', '\U0001F3B5', '\U0001F3B5 Muziek vanzelf afspelen: aan'}
+MAG_WEG |= {'Upload een muziekbestand', 'MP3, M4A, OGG \u2014 wordt verkleind naar 128kbps', '\U0001F3B5'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

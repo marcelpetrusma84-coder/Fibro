@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=15"></script>
+<script src="taal.js?v=16"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Profiel</title>
@@ -206,6 +206,22 @@ input, textarea { font-size:16px !important; }
       <div id="moodEmojiPicker" style="display:none;flex-wrap:wrap;gap:6px;padding:10px;background:var(--card);border:0.5px solid var(--border);border-radius:12px;margin-bottom:8px;">
       </div>
     </div>
+  </div>
+  <!-- v179: profielmuziek (stond eerst als 'Muziek uploaden' bij Widgets); speelt vanzelf op Home en bij vrienden -->
+  <div class="section">
+    <div class="section-label" data-t>Profielmuziek</div>
+    <div style="font-size:14px;line-height:1.5;margin-bottom:10px;" data-t>Dit nummer speelt vanzelf op je Home en als vrienden je profiel bekijken. Je vrienden krijgen het als jullie allebei online zijn.</div>
+    <div class="upload-zone" onclick="document.getElementById('muziekUpload').click()">
+      <div class="upload-icon">🎵</div>
+      <div class="upload-text" id="muziekUploadTekst" data-t>Upload een muziekbestand</div>
+      <div class="upload-formats" data-t>MP3, M4A, OGG — wordt verkleind naar 128kbps</div>
+    </div>
+    <input type="file" id="muziekUpload" accept="audio/*,.mp3,.m4a,.ogg,.wav,audio/mpeg,audio/mp4" style="display:none" onchange="verwerkMuziek(event)"/>
+    <div id="muziekNu" style="display:none;align-items:center;gap:10px;margin-top:10px;font-size:14px;">
+      <span id="muziekNuTitel" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      <button type="button" onclick="wisMuziek()" style="min-height:40px;padding:0 14px;border-radius:10px;border:0.5px solid var(--border);background:rgba(255,255,255,0.06);color:#fca5a5;font-size:14px;cursor:pointer;font-family:inherit;" data-t>🗑️ Nummer weghalen</button>
+    </div>
+    <div class="status-msg" id="muziekStatus"></div>
   </div>
 </div>
 <div class="panel" id="panel-achtergrond">
@@ -419,16 +435,6 @@ input, textarea { font-size:16px !important; }
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🪲</div><div><div class="widget-name" data-t>The Swarm</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_swarm" onclick="toggleWidget('spel_swarm')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏃</div><div><div class="widget-name" data-t>Runner &amp; Gunner</div><div class="widget-desc" data-t>Speel alleen</div></div></div><div class="toggle off" id="widget-spel_endlessrunner" onclick="toggleWidget('spel_endlessrunner')"><div class="toggle-dot"></div></div></div>
     </div>
-  </div>
-  <div class="section">
-    <div class="section-label" data-t>Muziek uploaden</div>
-    <div class="upload-zone" onclick="document.getElementById('muziekUpload').click()">
-      <div class="upload-icon">🎵</div>
-      <div class="upload-text" id="muziekUploadTekst" data-t>Upload een muziekbestand</div>
-      <div class="upload-formats" data-t>MP3, M4A, OGG — wordt verkleind naar 128kbps</div>
-    </div>
-    <input type="file" id="muziekUpload" accept="audio/*,.mp3,.m4a,.ogg,.wav,audio/mpeg,audio/mp4" style="display:none" onchange="verwerkMuziek(event)"/>
-    <div class="status-msg" id="muziekStatus"></div>
   </div>
 </div>
 <div class="panel" id="panel-stickers">
@@ -743,6 +749,7 @@ window.verwerkMuziek = async function(event) {
     await slaFotoOp('muziek_track', data)
     await slaFotoOp('muziek_titel', file.name.replace(/\.[^.]+$/, ''))
     document.getElementById('muziekUploadTekst').textContent = file.name
+    toonMuziekNu(file.name.replace(/\.[^.]+$/, '')) // v179
     status.className = 'status-msg success'
     status.textContent = T('Muziek opgeslagen ({kb} KB)', { kb: Math.round(data.length * 0.75 / 1024) })
   } catch(err) {
@@ -752,6 +759,35 @@ window.verwerkMuziek = async function(event) {
     window._muzBezig = false
     muzBalk.weg()
   }
+}
+
+// v179: welk profielnummer er nu staat, en weghalen
+function toonMuziekNu(titel) {
+  const rij = document.getElementById('muziekNu')
+  if (!rij) return
+  if (!titel) { rij.style.display = 'none'; return }
+  document.getElementById('muziekNuTitel').textContent = T('Nu: {titel}', { titel })
+  rij.style.display = 'flex'
+}
+async function toonHuidigeMuziek() {
+  try {
+    const data = await laadFotoUitDB('muziek_track')
+    if (!data) return
+    toonMuziekNu((await laadFotoUitDB('muziek_titel')) || T('Nummer'))
+  } catch (e) {}
+}
+window.wisMuziek = async function() {
+  if (!confirm(T('Je profielnummer weghalen?'))) return
+  try {
+    const db = await openDB()
+    await new Promise(klaar => { const tx = db.transaction('fotos', 'readwrite'); const st = tx.objectStore('fotos'); st.delete('muziek_track'); st.delete('muziek_titel'); tx.oncomplete = klaar; tx.onerror = klaar })
+    try { localStorage.removeItem('muziek_track') } catch (e) {}
+    toonMuziekNu(null)
+    document.getElementById('muziekUploadTekst').textContent = T('Upload een muziekbestand')
+    const status = document.getElementById('muziekStatus')
+    status.className = 'status-msg success'
+    status.textContent = T('Nummer weggehaald')
+  } catch (e) {}
 }
 
 function audioBufferToWav(buffer) {
@@ -851,7 +887,7 @@ async function init(){
     onFotoOntvangen: (vriendId, blob, meta) => console.log('📷 Foto ontvangen van', vriendId),
     onStatus: (vriendId, status) => console.log('P2P status:', vriendId, status)
   })
-  bouwFontGrid();bouwAvatarPicker();updateWidgetToggles()
+  bouwFontGrid();bouwAvatarPicker();updateWidgetToggles();toonHuidigeMuziek()
   startStickermaker(document.getElementById('eigenStickers'), huidigeUser.id, stickerWidgets) // v154: Stickerlab (eigen stickers)
   tekenFibroVellen(document.getElementById('fibroStickers'), stickerWidgets) // v157: stickervel 1 enz., met knopje voor Home
   document.getElementById('editNaam').oninput=updatePreview

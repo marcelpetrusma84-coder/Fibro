@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=15"></script>
+<script src="taal.js?v=16"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Profiel</title>
@@ -270,9 +270,23 @@ body.heeft-wallpaper::before { display:block; }
     } catch(e) { return false }
   }
 
+  // v179: het profielnummer van je vriend speelt vanzelf (profielmuziek.js), als het al op dit toestel staat (sync.js
+  // haalt het over een rechtstreekse verbinding). Uit te zetten op Home bij ☰ > Instellingen > Muziek vanzelf afspelen.
+  let profielMuziekGestart = false
+  async function startVriendMuziek(naam) {
+    try {
+      if (localStorage.getItem('fibro_muziek_auto') === '0' || !vriendId) return
+      const data = await laadFotoUitDB('vriend_' + vriendId + '_muziek_profiel')
+      if (!data) return
+      const m = await import('./profielmuziek.js?v=179')
+      await m.speelProfielMuziek({ data, titel: T('Muziek van {naam}', { naam }), sleutel: 'vriend_' + vriendId })
+    } catch (e) { console.warn('[profielmuziek]', e) }
+  }
+
   // ── Profiel data tonen ──
   function toonProfielData(data) {
     const naam = vriendNaam(data.username)
+    if (!profielMuziekGestart) { profielMuziekGestart = true; startVriendMuziek(naam) }
     document.getElementById('profielNaam').textContent = naam
     document.getElementById('profielUsername').textContent = heeftVriendNaam() ? '@' + (data.username || '') : ''
     document.getElementById('profielBio').textContent = data.bio || ''

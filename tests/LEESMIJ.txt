@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v171: een sticker als mood).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 16 oktober 2026 (v172: stickers zonder internet).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -109,7 +109,15 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  de emoji-lijst; opslaan: offline_emoji 'fxsticker:<code>' en (weer) mood '<emoji of sticker> <tekst>'
                                  naar de server (mood ging niet meer mee, vrienden zagen een oude). Home (Mood-widget) en het profiel
                                  van een vriend: de sticker, tik = beweging en geluid; eigen sticker van de vriend nog niet binnen =
-                                 zandloper die vanzelf bijwerkt. Onder je naam alleen de tekst (testscript_moodsticker.py))
+                                 zandloper die vanzelf bijwerkt. Onder je naam alleen de tekst (testscript_moodsticker.py),
+                         mediakast = v172: de portier (service-worker.js) bewaart stickers/f1..f9/NN.webp en geluiden/<naam>.mp3
+                                 in een eigen kast MEDIA_KAST = 'fibro-media-1' (eerst uit de kast; de eerste keer van internet
+                                 met cache 'no-cache'; een andere ?v= van dezelfde mp3 gaat eruit; Range-vragen niet). De kast blijft
+                                 bij een nieuwe CACHE_VERSION staan. kastvullen.js?v=172 haalt ze alvast op: welke, leest hij uit
+                                 stickervellen.js (import van de nieuwste ?v= die hij in de pagina's tegenkomt) en uit de tabel
+                                 GELUIDEN in de tekst van stickerfx.js (niet importeren: dat zet geluid klaar bij elke tik) met
+                                 MP3_VERSIE. Een nieuw vel doet zo vanzelf mee (binnen 6 uur, of meteen als je hem opent). Een
+                                 BESTAAND plaatje vervangen: het getal in MEDIA_KAST omhoog (testscript_mediakast.py))
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -420,6 +428,12 @@ tools/proef69.py         een sticker als mood (v171), echte profiel.html, index.
                          Mood-widget met sticker, echte tik = beweging en geluid, geen fotoviewer; onder je naam alleen tekst;
                          vriend: sticker, tik, tekst, 'offline'-regel zonder code, eigen sticker = zandloper die vanzelf bijwerkt,
                          oude emoji-mood werkt nog. Oude map als controle: 2 van 17.   python3 -I proef69.py <map>  (FOTO=<map>)
+tools/proef70.py         stickers zonder internet (v172), echte portier, server met max-age=600 (zoals GitHub), een proef-vel 5
+                         (2 stickers in een kopie van stickervellen.js): Home online -> alle 116 plaatjes en geluiden in de
+                         mediakast (ook vel 1 en 5, nooit geopend) -> Chat online -> server uit, offline, browsercache leeg ->
+                         Chat: vakjes 1, 4 en 5 (echte klikken) laden, sticker versturen = mp3; weer online: nieuwe ?v= van een
+                         mp3 ruimt de oude op; 'fibro-media-2' = oude kast weg, alles opnieuw, vervangen plaatje is het nieuwe.
+                         Oude map als controle: 1 van 13.   python3 -I proef70.py <map>  (±50 s)
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

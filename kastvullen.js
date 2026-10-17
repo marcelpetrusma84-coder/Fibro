@@ -5,6 +5,9 @@
 // internet, op de achtergrond, de pagina's na en alles wat ze laden (scripts, spellen,
 // lettertypen), en haalt alleen wat nog ontbreekt. Wat al in de kast ligt, kost geen
 // internet. Hoogstens eens per 6 uur.
+// v172: ook de plaatjes en geluiden van de stickers (de portier bewaart ze in zijn eigen kast 'fibro-media-<n>').
+// Welke dat zijn, leest dit bestand uit stickervellen.js en stickerfx.js, en wel de versies die de pagina's nu laden
+// (de nieuwste ?v= die het onderweg tegenkomt). Een nieuw stickervel of een nieuw geluid doet dus vanzelf mee.
 
 const PAGINAS = ['index.html', 'chat.html', 'vrienden.html', 'profiel.html', 'vriend-profiel.html', 'spel.html']
 const WACHT_UUR = 6
@@ -24,9 +27,11 @@ export async function vulKast() {
     if (!navigator.onLine || !('serviceWorker' in navigator) || !navigator.serviceWorker.controller || !window.caches) return
     let vorige = null
     try { vorige = JSON.parse(localStorage.getItem(STEMPEL) || 'null') } catch (e) {}
-    const naam = (await caches.keys()).find(k => /^fibro-v\d+$/.test(k))
+    const kasten = await caches.keys()
+    const naam = kasten.find(k => /^fibro-v\d+$/.test(k))
     if (!naam) return
-    if (vorige && vorige.kast === naam && Date.now() - vorige.tijd < WACHT_UUR * 3600000) return
+    const media = kasten.find(k => /^fibro-media-\d+$/.test(k)) // v172: alleen bij een nieuwe portier
+    if (vorige && vorige.kast === naam && vorige.media === media && Date.now() - vorige.tijd < WACHT_UUR * 3600000) return
     const kast = await caches.open(naam)
     const basis = new URL('./', location.href)
     const gezien = new Set()
@@ -44,6 +49,8 @@ export async function vulKast() {
     let gehaald = 0
     let mislukt = 0 // geen verbinding: de volgende keer opnieuw
     const ontbreekt = [] // bestaat niet (404): melden, niet steeds opnieuw proberen
+    let vellen = null, fx = null // v172: stickervellen.js en stickerfx.js zoals de pagina's ze laden
+    const versieVan = u => (u ? Number(u.searchParams.get('v')) || 0 : -1)
     while (rij.length) {
       if (!navigator.onLine) return // halverwege internet kwijt: de volgende keer verder
       const u = rij.shift()
@@ -71,11 +78,45 @@ export async function vulKast() {
       let tekst = ''
       try { tekst = await res.text() } catch (e) { continue }
       if (tekst.length > MAX_TEKST) continue
+      if (/\/stickervellen\.js$/.test(u.pathname) && versieVan(u) > versieVan(vellen)) vellen = u
+      if (/\/stickerfx\.js$/.test(u.pathname) && versieVan(u) > versieVan(fx && fx.u)) fx = { u, tekst }
       for (const m of tekst.matchAll(VERWIJZING)) voegToe(m[1], u)
       for (const m of tekst.matchAll(LETTER)) voegToe(m[1], u)
     }
-    if (!mislukt) {
-      try { localStorage.setItem(STEMPEL, JSON.stringify({ kast: naam, tijd: Date.now() })) } catch (e) {}
+    // v172: de stickerplaatjes en -geluiden. Een oude portier (nog zonder mediakast) slaat dit over; de volgende
+    // keer opnieuw (geen stempel).
+    if (media) {
+      const mkast = await caches.open(media)
+      const adressen = []
+      if (vellen) {
+        try {
+          const sv = await import(vellen.href) // alleen een tabel, verder doet dit bestand niets
+          for (const v of sv.FIBRO_VELLEN) for (const s of v.stickers) adressen.push(new URL(sv.stickerSrc(v.id, s.nr), basis).href)
+        } catch (e) { mislukt++ }
+      }
+      if (fx) {
+        // stickerfx.js zelf niet laden (dat zet bij elke tik geluid klaar); de namen staan in de tabel GELUIDEN,
+        // elk geluid als mp3 in geluiden/<naam>.mp3?v=<MP3_VERSIE> (zoals haalMp3 in stickerfx.js)
+        const versie = /\bMP3_VERSIE\s*=\s*(\d+)/.exec(fx.tekst)
+        const tabel = /\bGELUIDEN\s*=\s*\{([\s\S]*?)\n\}/.exec(fx.tekst)
+        if (versie && tabel) {
+          for (const m of tabel[1].matchAll(/^ {2}([\w$]+):\s*\{\s*naam:/gm)) {
+            if (m[1] !== 'geen') adressen.push(new URL('geluiden/' + m[1] + '.mp3?v=' + versie[1], basis).href)
+          }
+        }
+      }
+      for (const a of adressen) {
+        if (!navigator.onLine) return
+        if (await mkast.match(a)) continue
+        try {
+          const r = await fetch(a) // via de portier, en die legt hem in de mediakast
+          if (r.ok) gehaald++; else ontbreekt.push(new URL(a).pathname)
+        } catch (e) { mislukt++ }
+        await new Promise(k => setTimeout(k, 50))
+      }
+    }
+    if (!mislukt && media) {
+      try { localStorage.setItem(STEMPEL, JSON.stringify({ kast: naam, media, tijd: Date.now() })) } catch (e) {}
     }
     if (gehaald || mislukt) console.log('[kast] ' + gehaald + ' bestand(en) erbij gelegd voor gebruik zonder internet' + (mislukt ? ', ' + mislukt + ' mislukt' : ''))
     if (ontbreekt.length) console.warn('[kast] niet gevonden:', ontbreekt.join(', '))

@@ -23,6 +23,23 @@ async function badgeEenErbij() {
     if (self.navigator && self.navigator.setAppBadge) await self.navigator.setAppBadge(n)
   } catch (e) {}
 }
+// v172: de plaatjes en geluiden van de stickers (stickers/f1..f6/01..12.webp en geluiden/<naam>.mp3?v=...) in een
+// eigen kast, zodat ze ook zonder internet werken en niet steeds opnieuw bij GitHub nagevraagd worden. Ze veranderen
+// (bijna) nooit. Een nieuw stickervel (nieuwe namen) hoeft hier niets: die komen vanzelf in de kast (en kastvullen.js
+// haalt ze alvast op). Vervang je een BESTAAND plaatje (zoals stickers/f4/05.webp in v167), verhoog dan het getal
+// hieronder: de oude kast gaat weg en alles komt opnieuw binnen (±2,5 MB per toestel). Een vervangen mp3: zoals altijd
+// MP3_VERSIE in stickerfx.js (de oude versie gaat hier dan vanzelf uit de kast). De kast blijft bij een nieuwe
+// CACHE_VERSION staan.
+const MEDIA_KAST = 'fibro-media-1'
+const IS_MEDIA = /\/(stickers\/f[1-9]\/\d{2}\.webp|geluiden\/[a-z0-9-]+\.mp3)$/
+async function ruimOudeVersiesOp(kast, url) { // hetzelfde bestand met een andere ?v= (oude MP3_VERSIE) eruit
+  try {
+    for (const k of await kast.keys()) {
+      const u = new URL(k.url)
+      if (u.pathname === url.pathname && u.search !== url.search) await kast.delete(k)
+    }
+  } catch (e) {}
+}
 
 self.addEventListener('install', function(event) {
   self.skipWaiting()
@@ -32,9 +49,10 @@ self.addEventListener('activate', function(event) {
   event.waitUntil(
     caches.keys().then(keys =>
     Promise.all(keys
-    .filter(key => key !== CACHE_VERSION && key !== BADGE_KAST)
+    .filter(key => key !== CACHE_VERSION && key !== BADGE_KAST && key !== MEDIA_KAST)
     .map(key => caches.delete(key)))
-    ).then(() => clients.claim())
+    ).then(() => caches.open(MEDIA_KAST)) // v172: alvast aanmaken, zodat kastvullen.js weet dat deze portier stickers bewaart
+    .then(() => clients.claim())
   )
 })
 
@@ -68,6 +86,24 @@ self.addEventListener('fetch', function(event) {
               const res = await fetch(req)
               if (res.ok) cache.put(req, res.clone())
                 return res
+          })
+        )
+        return
+      }
+      // Stickerplaatjes en stickergeluiden (v172): uit de eigen kast; de eerste keer van internet (niet uit de
+      // browsercache, die kan na een vervanging nog de oude hebben) en dan in de kast. Een vraag om een stukje van een
+      // bestand (Range, bijv. een <audio> die zelf afspeelt) laat de portier aan de browser over.
+      if (IS_MEDIA.test(url.pathname) && !req.headers.has('range')) {
+        event.respondWith(
+          caches.open(MEDIA_KAST).then(async function(kast) {
+            const hit = await kast.match(req.url)
+            if (hit) return hit
+            const res = await fetch(req, { cache: 'no-cache' })
+            if (res.ok && res.status === 200 && res.type === 'basic') {
+              const bewaren = kast.put(req.url, res.clone()).then(() => ruimOudeVersiesOp(kast, url)).catch(() => {})
+              try { event.waitUntil(bewaren) } catch (e) {} // de portier niet stilleggen voordat het bewaard is
+            }
+            return res
           })
         )
         return

@@ -2432,7 +2432,8 @@ startMeldingen()
 
 // v127: met internet, op de achtergrond, de kast van de portier aanvullen (alle spellen
 // en pagina's), zodat ze ook zonder internet werken. Zie kastvullen.js.
-setTimeout(() => { import('./kastvullen.js?v=149').then(m => m.vulKast()).catch(() => {}) }, 6000)
+// v172: ook de plaatjes en geluiden van de stickers.
+setTimeout(() => { import('./kastvullen.js?v=172').then(m => m.vulKast()).catch(() => {}) }, 6000)
 </script>
 
 <script>

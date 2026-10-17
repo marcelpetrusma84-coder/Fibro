@@ -75,6 +75,9 @@
 
   /* PROFIEL SECTIE LABEL */
   .sectie-label { padding:4px 14px 0; font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; }
+
+  /* v173: het menu (☰) altijd in DM Sans, ook als je in Profiel een ander lettertype kiest (#fibroMenu wint van *{...!important}) */
+  #fibroMenu, #fibroMenu * { font-family:'DM Sans',sans-serif !important; }
 </style>
 <script>
 function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}

@@ -45,7 +45,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
 <script type="module">
   import * as Bordgeluid from './bordgeluid.js?v=147'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=148'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=174'
 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   const inhoud = document.getElementById('spelInhoud')
@@ -132,13 +132,16 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
   }
 
   // Toont rechts naast de titel hoeveel beeldjes per seconde de telefoon haalt.
+  // v174: telt het spel zelf zijn getekende beeldjes (window.fibroBeeldjes, Ghost Tag
+  // op hoogstens 30), dan die; anders elk beeldje van het scherm.
   function meetBeeldjes() {
-    let n = 0, sinds = performance.now()
+    let n = 0, sinds = performance.now(), begin = window.fibroBeeldjes || 0
     const tel = nu => {
       n++
       if (nu - sinds >= 1000) {
-        titel.textContent = spel.icon + ' ' + spel.naam + ' · ' + Math.round(n * 1000 / (nu - sinds)) + ' fps'
-        n = 0; sinds = nu
+        const eigen = typeof window.fibroBeeldjes === 'number' ? window.fibroBeeldjes - begin : n
+        titel.textContent = spel.icon + ' ' + spel.naam + ' · ' + Math.round(eigen * 1000 / (nu - sinds)) + ' fps'
+        n = 0; sinds = nu; begin = window.fibroBeeldjes || 0
       }
       requestAnimationFrame(tel)
     }

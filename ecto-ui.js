@@ -3,6 +3,11 @@
    die zichzelf in #spelInhoud tekent en zichzelf opruimt zodra het spel
    gesloten wordt.
 
+   v10 (Fibro v174): alleen spelen (tegen de computer) tekent op hoogstens 30
+   beeldjes per seconde. Een vaste 30 oogt rustiger dan een telefoon die
+   tussen 40 en 60 heen en weer springt. De spookjes lopen even snel (alles
+   rekent met de echte tijd). Samen spelen blijft zo snel als het toestel kan.
+
    v9: heet nu Ghost Tag.
 
    v8: bochten afsnijden. Veeg je net nadat je een zijgang voorbij bent, dan
@@ -1452,10 +1457,16 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   reset()
   indeling()
 
+  // v10: alleen spelen = hoogstens 30 beeldjes per seconde. Een beeldje overslaan
+  // als het vorige minder dan ~29 ms geleden was (iets ruimer dan 33 ms, want
+  // het scherm tikt niet precies): op 60 Hz elk tweede, op 120 Hz elk vierde.
+  const MIN_MS = kanaalOk ? 0 : 1000 / 30 - 4
   let vorige = performance.now()
   function lus(nu) {
     if (!draait) return
     if (!wrap.isConnected || (isActief && !isActief())) { stop(); return }
+    if (MIN_MS && nu - vorige < MIN_MS) { requestAnimationFrame(lus); return }
+    window.fibroBeeldjes = (window.fibroBeeldjes || 0) + 1 // voor de teller in spel.html
     verbergChatBalk()
     let dt = Math.min(0.1, Math.max(0, (nu - vorige) / 1000))
     vorige = nu

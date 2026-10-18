@@ -11,6 +11,8 @@
 //    'past niet meer' (bijv. de vriend begon opnieuw) te onderscheiden van 'onderweg veranderd'.
 //  Oude berichten ('e2e:<data>') blijven gewoon leesbaar. Een oudere app ziet een v2-bericht als 🔒.
 //  De sleutelparen (P-256) blijven dezelfde: niemand hoeft opnieuw te beginnen.
+// v182 (18 oktober 2026): eigenPubliekeSleutel() (de publieke sleutel uit de geheime op dit toestel, voor de
+//  vingerafdruk in een uitnodigingslink) en isZelfdeSleutel() (een korte vingerafdruk uit een link telt ook).
 
 const SLEUTEL_PREFIX = 'fibro_privkey_'
 const V2 = 'e2e:2:'
@@ -198,6 +200,23 @@ export async function ontsleutel(blob, mijnPrivKeyB64, afzenderPubKeyB64, ctx) {
 // ─── Vingerafdruk van een publieke sleutel (om te zien of de sleutel van een vriend veranderde) ───
 export async function sleutelVingerafdruk(publicKeyB64) {
   return hex(await crypto.subtle.digest('SHA-256', b64NaarBuffer(publicKeyB64)))
+}
+
+// v182: klopt een onthouden vingerafdruk met die van nu? Een onthouden vingerafdruk kan kort zijn (de eerste
+// 32 tekens, uit een uitnodigingslink); dan moet de vingerafdruk van nu daarmee beginnen.
+export function isZelfdeSleutel(onthouden, nu) {
+  if (typeof onthouden !== 'string' || typeof nu !== 'string' || !/^[0-9a-f]{64}$/.test(nu)) return false
+  if (onthouden.length === 64) return onthouden === nu
+  return /^[0-9a-f]{32}$/.test(onthouden) && nu.startsWith(onthouden)
+}
+
+// v182: de publieke sleutel (SPKI, base64) die bij de geheime sleutel op dit toestel hoort. Zo zet de app in een
+// uitnodigingslink de vingerafdruk van de sleutel die hij echt gebruikt, niet wat de server zegt.
+export async function eigenPubliekeSleutel(privateKeyB64) {
+  const priv = await crypto.subtle.importKey('pkcs8', b64NaarBuffer(privateKeyB64), { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits'])
+  const j = await crypto.subtle.exportKey('jwk', priv)
+  const pub = await crypto.subtle.importKey('jwk', { kty: 'EC', crv: 'P-256', x: j.x, y: j.y, ext: true }, { name: 'ECDH', namedCurve: 'P-256' }, true, [])
+  return bufferNaarB64(await crypto.subtle.exportKey('spki', pub))
 }
 
 // ─── Hulpfuncties ───

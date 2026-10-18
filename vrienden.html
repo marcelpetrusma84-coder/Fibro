@@ -540,6 +540,7 @@ startMeldingen()
 </script>
 <script type="module">
   import { supabase } from './supabase.js?v=95'
+  import { haalPrivateKeyOp, eigenPubliekeSleutel, sleutelVingerafdruk } from './crypto.js?v=182'
 
   const DUUR = 20 * 60 // 20 minuten in seconden
   // Het adres van de uitnodigingspagina staat alleen hier (later: eigen domein)
@@ -600,7 +601,14 @@ startMeldingen()
     document.getElementById('qr-laden').style.display = 'none'
     document.getElementById('qr-sectie').style.display = 'block'
     document.getElementById('token-display').textContent = token
-    const inviteUrl = UITNODIGING_ADRES + '?token=' + token
+    // v182: achter het hekje de (korte) vingerafdruk van mijn sleutel. Wat na # staat gaat nooit naar een server;
+    // de nieuwe vriend onthoudt hem, en zo merkt zijn chat het als de server ooit een andere sleutel van mij laat zien.
+    let vinger = ''
+    try {
+      const priv = user ? haalPrivateKeyOp(user.id) : null
+      if (priv) vinger = (await sleutelVingerafdruk(await eigenPubliekeSleutel(priv))).slice(0, 32)
+    } catch (e) { vinger = '' }
+    const inviteUrl = UITNODIGING_ADRES + '?token=' + token + (vinger ? '#s=' + vinger : '')
     const linkVeld = document.getElementById('invite-link')
     if (linkVeld) linkVeld.value = inviteUrl
 

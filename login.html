@@ -148,7 +148,7 @@
 
 <script type="module">
   import { createClient } from './supabase-lib.js?v=1'
-  import { genereerKeypair, slaPrivateKeyOp, haalPrivateKeyOp, ontsleutelPrivateKey, normaliseerHerstelSleutel, versleutelPrivateKey } from './crypto.js?v=181'
+  import { genereerKeypair, slaPrivateKeyOp, haalPrivateKeyOp, ontsleutelPrivateKey, normaliseerHerstelSleutel, versleutelPrivateKey, maakHerstelSleutel } from './crypto.js?v=182'
   import { passkeyStatus, lijstDozen, maakDoos, openDoos, sleutelPastBij } from './passkey-kluis.js?v=2'
 
   const supabase = createClient(
@@ -453,11 +453,7 @@
     setTimeout(() => { window.location.href = 'index.html' }, 800)
   }
 
-  function maakHerstelSleutel() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-    const deel = n => Array.from({length:n}, () => chars[Math.floor(Math.random()*chars.length)]).join('')
-    return 'FIBRO-'+deel(4)+'-'+deel(4)+'-'+deel(4)
-  }
+  // v182: maakHerstelSleutel komt uit crypto.js (crypto.getRandomValues); hier stond een versie met Math.random.
 
   function bepaalNiveau(jaar) {
     const leeftijd = new Date().getFullYear() - parseInt(jaar)

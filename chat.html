@@ -322,7 +322,7 @@ window.veiligeUrl = function(v){
   import { startMeldingen } from './meldingen.js?v=180'
   import { houOpen } from './lijntjes.js?v=1'
   import { haalVriendFotos, zetAvatar, geldigeFoto } from './vriendfotos.js?v=2'
-  import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk } from './crypto.js?v=181'
+  import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel } from './crypto.js?v=182'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
   import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=152'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
@@ -894,6 +894,8 @@ window.veiligeUrl = function(v){
   // zeggen). Is de sleutel daarna anders, dan staat er een gele balk bovenin de chat tot je op Begrepen tikt.
   // Versturen kan gewoon. Dat gebeurt als een vriend opnieuw begon zonder herstel, of als iemand de sleutel op
   // de server verwisselde om mee te lezen: daarom vraag je het even aan je vriend.
+  // v182: kwam je via een uitnodigingslink, dan staat hier al de (korte) vingerafdruk uit die link (invite.html):
+  // die ging buiten de server om. Klopt hij, dan wordt hij de lange van nu; klopt hij niet, dan meteen de balk.
   const vriendSleutelSleutel = id => 'fibro_vriendsleutel_' + huidigeUser.id + '_' + id
   async function controleerVriendSleutel(vriendId, pub) {
     const balk = document.getElementById('sleutelBalk')
@@ -904,8 +906,8 @@ window.veiligeUrl = function(v){
     if (!geselecteerdeVriend || geselecteerdeVriend.id !== vriendId || vriendPublicKey !== pub) return
     let oud = null
     try { oud = localStorage.getItem(vriendSleutelSleutel(vriendId)) } catch (e) {}
-    if (!oud) { try { localStorage.setItem(vriendSleutelSleutel(vriendId), nu) } catch (e) {} }
-    if (!oud || oud === nu) { balk.style.display = 'none'; return }
+    if (!oud || (oud !== nu && isZelfdeSleutel(oud, nu))) { try { localStorage.setItem(vriendSleutelSleutel(vriendId), nu) } catch (e) {} }
+    if (!oud || isZelfdeSleutel(oud, nu)) { balk.style.display = 'none'; return }
     const naam = geselecteerdeVriend.naam || ''
     balk.querySelector('.sb-tekst').textContent = T('\u26A0\uFE0F De sleutel van {naam} is veranderd. Dat gebeurt als {naam} opnieuw begon zonder herstel. Verwachtte je dat niet? Vraag het {naam} even, bijvoorbeeld door te bellen.', { naam })
     balk.querySelector('.sb-knop').onclick = () => {
@@ -2587,7 +2589,7 @@ async function startBlockIt() {
     // Wis private key uit localStorage
     localStorage.removeItem('fibro_privkey_' + huidigeUser.id)
     // Genereer nieuw keypair
-    const { genereerKeypair, slaPrivateKeyOp } = await import('./crypto.js?v=181')
+    const { genereerKeypair, slaPrivateKeyOp } = await import('./crypto.js?v=182')
     const keypair = await genereerKeypair()
     slaPrivateKeyOp(huidigeUser.id, keypair.privateKeyB64)
     // Sla public key op in Supabase

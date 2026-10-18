@@ -1,5 +1,6 @@
 // proef77.mjs - versleuteling v2 (v181) in crypto.js, zonder browser (Node 20+ heeft Web Crypto).
 // Gebruik: node tests/tools/proef77.mjs <map met crypto.js> [<map met de oude crypto.js>]
+// v182: eigenPubliekeSleutel, isZelfdeSleutel, herstelcode zonder Math.random.
 // Met de oude map erbij worden oude berichten (v1) met de oude code gemaakt en met de nieuwe gelezen,
 // en kijkt de proef wat een oudere app van een nieuw bericht maakt.
 // Zonder tweede map: alleen de nieuwe code. Als controle met de oude code als eerste map: bijna alles MIS.
@@ -96,6 +97,19 @@ await check('herstelcode-kluis werkt nog (versleutelPrivateKey / ontsleutelPriva
   const code = c.maakHerstelSleutel(), k = await c.versleutelPrivateKey(L.privateKeyB64, code)
   return (await c.ontsleutelPrivateKey(k, code)) === L.privateKeyB64 })
 await check('geen hashHerstelSleutel meer (die hash hoort niet naar de server)', () => [typeof c.hashHerstelSleutel === 'undefined', typeof c.hashHerstelSleutel])
+// v182: de vingerafdruk in een uitnodigingslink
+await check('v182: eigen publieke sleutel uit de geheime = de echte', async () => {
+  const a = await c.eigenPubliekeSleutel(L.privateKeyB64), b = await c.eigenPubliekeSleutel(B.privateKeyB64)
+  return [a === L.publicKeyB64 && b === B.publicKeyB64, a.slice(0, 30)] })
+await check('v182: isZelfdeSleutel: lang gelijk, kort begin goed, korter/ander/rommel niet', async () => {
+  const f = await c.sleutelVingerafdruk(B.publicKeyB64), g = await c.sleutelVingerafdruk(D.publicKeyB64)
+  const r = [c.isZelfdeSleutel(f, f), c.isZelfdeSleutel(f.slice(0, 32), f), !c.isZelfdeSleutel(f.slice(0, 31), f), !c.isZelfdeSleutel(g.slice(0, 32), f),
+             !c.isZelfdeSleutel(g, f), !c.isZelfdeSleutel('', f), !c.isZelfdeSleutel(f.slice(0, 32).toUpperCase(), f), !c.isZelfdeSleutel(null, f), !c.isZelfdeSleutel(f, 'x')]
+  return [r.every(Boolean), r.join()] })
+await check('v182: herstelcode uit echte willekeur (crypto.getRandomValues), 12 tekens uit 32', () => {
+  const echt = Math.random; let n = 0; Math.random = () => { n++; return echt() }
+  const codes = Array.from({ length: 50 }, () => c.maakHerstelSleutel()); Math.random = echt
+  return [n === 0 && codes.every(x => /^FIBRO-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/.test(x)) && new Set(codes).size === 50, n + ' ' + codes[0]] })
 
 if (o) {
   const oudBlob = await o.versleutel('Een oud bericht van Bram', B.privateKeyB64, L.publicKeyB64)

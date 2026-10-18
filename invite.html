@@ -136,7 +136,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 
 <script type="module">
 import { createClient } from './supabase-lib.js?v=1'
-import { genereerKeypair, slaPrivateKeyOp, versleutelPrivateKey } from './crypto.js?v=181'
+import { genereerKeypair, slaPrivateKeyOp, versleutelPrivateKey, maakHerstelSleutel } from './crypto.js?v=182'
 import { passkeyStatus, maakDoos } from './passkey-kluis.js?v=2'
 
 const supabase = createClient(
@@ -166,10 +166,19 @@ window.nieuweNaam = function() {
   setTimeout(() => input.style.transform = '', 200)
 }
 
-function maakHerstelSleutel() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  const deel = n => Array.from({length:n}, () => chars[Math.floor(Math.random()*chars.length)]).join('')
-  return 'FIBRO-'+deel(4)+'-'+deel(4)+'-'+deel(4)
+// v182: maakHerstelSleutel komt uit crypto.js (crypto.getRandomValues); hier stond een versie met Math.random,
+// en die is niet geschikt voor een geheime code.
+
+// v182: de vingerafdruk van de sleutel van de uitnodiger staat achter het hekje van de link (#s=, zie vrienden.html).
+// Na het vriend worden onthoudt dit toestel hem als de sleutel van die vriend (chat.html vergelijkt hem).
+const LINK_VINGER = (() => { try { const m = /(?:^#|&)s=([0-9a-f]{32})(?:&|$)/.exec(location.hash || ''); return m ? m[1] : '' } catch (e) { return '' } })()
+function onthoudSleutelUitLink(mij, ander) {
+  if (!LINK_VINGER || !mij || !ander || mij === ander) return
+  try {
+    const k = 'fibro_vriendsleutel_' + mij + '_' + ander
+    const oud = localStorage.getItem(k) || ''
+    if (!(oud.length === 64 && oud.startsWith(LINK_VINGER))) localStorage.setItem(k, LINK_VINGER)
+  } catch (e) {}
 }
 
 function bepaalNiveau(jaar) {
@@ -298,6 +307,7 @@ window.registreren = async function() {
 
     if (uitnodigerData?.created_by && uitnodigerData.created_by !== data.user.id) {
       await supabase.rpc('maak_vriendschap_via_invite', { token_in: token })
+      onthoudSleutelUitLink(data.user.id, uitnodigerData.created_by) // v182
     }
 
     await supabase.rpc('gebruik_invite', { token_in: token, gebruiker: data.user.id })
@@ -391,6 +401,7 @@ window.voegToe = async function() {
   if (!bestaat) {
     await supabase.rpc('maak_vriendschap_via_invite', { token_in: token })
   }
+  onthoudSleutelUitLink(mij, ander) // v182
   // Markeer token als gebruikt
   await supabase.rpc('gebruik_invite', { token_in: token, gebruiker: mij })
 

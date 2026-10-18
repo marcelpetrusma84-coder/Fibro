@@ -213,7 +213,7 @@ import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
 import { bewaardeSessieZonderInternet } from './offline.js?v=146'
 import { startMeldingen } from './meldingen.js?v=180'
-import { haalPrivateKeyOp } from './crypto.js?v=181'
+import { haalPrivateKeyOp } from './crypto.js?v=182'
 import { isBelregel, belregelTekst } from './belregel.js?v=152'
 pasBlokstijlToe()
 
@@ -2397,7 +2397,7 @@ async function openAccount(wat) {
   const uid = window._uid
   if (!uid) return
   try {
-    const m = await import('./account.js?v=3')
+    const m = await import('./account.js?v=4')
     if (wat === 'verwijderen') m.openVerwijderen(uid)
     else m.openGegevens(uid)
   } catch (e) {

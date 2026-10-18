@@ -192,6 +192,15 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  meer naar zet_herstelsleutel. ?v=181: crypto.js (chat, index, login, invite, account.js),
                                  reacties.js (chat); account.js?v=3 (index); taal-en.js?v=18 en taal.js?v=18 in alle 12
                                  pagina's (testscript_versleuteling.py)
+                         sleutelcontrole = v182: versleuteling stap 2, onzichtbaar. vrienden.html zet in de uitnodigingslink achter
+                                 het hekje #s=<32 tekens> = het begin van de vingerafdruk (SHA-256 van de SPKI) van de sleutel op dit
+                                 toestel (crypto.js eigenPubliekeSleutel: uit de geheime sleutel, niet van de server); geen sleutel =
+                                 geen #s=. invite.html onthoudt hem na het vriend worden als fibro_vriendsleutel_<ik>_<uitnodiger>
+                                 (alleen 32 kleine hex-tekens; een lange die ermee begint blijft staan). chat.html vergelijkt met
+                                 isZelfdeSleutel (kort = begin): klopt = de lange van nu, anders meteen de gele balk. Herstelcode op
+                                 login.html en invite.html uit crypto.js (crypto.getRandomValues; de eigen versies met Math.random
+                                 zijn weg). ?v=182: crypto.js (chat 2x, index, login, invite, vrienden, account.js); account.js?v=4
+                                 (index) (testscript_sleutelcontrole.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -546,7 +555,9 @@ tools/proef77.mjs        versleuteling v2 (v181) in crypto.js zonder browser (No
                          omgedraaid/andere ontvanger/veranderd teken/veranderde tijd = vervalst, tijd > 15 min = 'tijd',
                          andere sleutel = onleesbaar, reactie vast aan het bericht, 120 kB, vingerafdruk, herstelcode-kluis.
                          Met de oude map erbij: oude berichten leesbaar, een oudere app ziet 🔒, oude sleutelparen werken.
-                         node proef77.mjs <map> [<oude map>]. Oude map als eerste map (controle): 4 van 24.
+                         node proef77.mjs <map> [<oude map>]  (oude map = code van voor v181, bijv. v180).
+                         v182: ook eigenPubliekeSleutel, isZelfdeSleutel en herstelcode zonder Math.random (27 met oude map).
+                         Controle met v180 als eerste map (zonder tweede): 3 van 23.
 tools/proef78.py         versleuteling v2 in de chat (v181), echte chat.html, berichten gemaakt met de nieuwe crypto.js
                          (naast de proef in de repo, ook als de oude map getest wordt): v2/eigen/v1 leesbaar, omgedraaid en
                          veranderd = 'klopt niet', verzendtijd, 'niet versleuteld' (ook een sticker-code: geen plaatje),
@@ -555,6 +566,12 @@ tools/proef78.py         versleuteling v2 in de chat (v181), echte chat.html, be
                          Engels, geen hash van de herstelcode in login/invite, server-tijd zonder zone = UTC. Oude map: 4 van 26.
                          python3 -I proef78.py <scratch> <map> <poort>
                          (sinds v181 maakt proef35 de berichten met afzender en ontvanger)
+tools/proef79.py         versleuteling stap 2 (v182), echte vrienden.html, invite.html, login.html en chat.html: de link heeft
+                         #s= met het begin van de vingerafdruk van de eigen sleutel (zonder sleutel geen #s=); bestaand en
+                         nieuw account onthouden hem (rommel niet, een passende lange blijft); registreren op invite.html en
+                         login.html zonder een enkele Math.random; chat: passend = geen balk en wordt lang, server laat een
+                         andere sleutel zien = meteen de balk. Oude map (v181) als controle: 6 van 12 (registreren gebruikte
+                         daar 24 keer Math.random).   python3 -I proef79.py <scratch> <map> <poort>
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

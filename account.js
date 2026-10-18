@@ -10,7 +10,7 @@
 //   staat (ook je sleutel) en ga je naar het inlogscherm. Van een ander account op dit
 //   toestel blijft alles staan.
 import { supabase } from './supabase.js?v=95'
-import { haalPrivateKeyOp, ontsleutel, ONLEESBAAR, VERVALST } from './crypto.js?v=181'
+import { haalPrivateKeyOp, ontsleutel, ONLEESBAAR, VERVALST } from './crypto.js?v=182'
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v2, v146)
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i

@@ -24,6 +24,8 @@ from PIL import Image, ImageDraw
 
 MAP = os.path.abspath(sys.argv[1])
 UID = 'aaaaaaaa-0000-4000-8000-000000000001'; FID = 'f1a00000-0000-4000-8000-000000000009'
+# v181: berichten versleuteld zoals in het echt (nepslot.py); zonder slot toont de nieuwe chat geen sticker meer
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); import nepslot; NEP = nepslot.Nep(MAP, UID, FID)
 TOKEN = json.dumps({"access_token": "x", "refresh_token": "y", "token_type": "bearer", "expires_in": 3600, "expires_at": int(time.time()) + 3600, "user": {"id": UID}})
 uitslag = []
 FOTO = os.environ.get('FOTO')  # FOTO=<map>: schermafbeeldingen van de keuze en de chat
@@ -62,7 +64,7 @@ staat = {'pub': None, 'rijen': [], 'posts': []}
 def berichten():
     uit = []
     for i, (van, inhoud) in enumerate(staat['rijen']):
-        uit.append({'id': 'm%02d' % i, 'sender_id': van, 'receiver_id': FID if van == UID else UID, 'content': inhoud,
+        uit.append({'id': 'm%02d' % i, 'sender_id': van, 'receiver_id': FID if van == UID else UID, 'content': NEP.inhoud(van, inhoud, iso(i)),
                     'created_at': iso(i), 'expires_at': '2026-11-15T00:00:00.000Z', 'antwoord_op': None})
     return list(reversed(uit))
 def supa(route):
@@ -157,9 +159,7 @@ with sync_playwright() as pw:
         p.goto(BASIS + 'login.html'); p.evaluate("t => localStorage.setItem('sb-qmgatbphiplrfxrljtbe-auth-token', t)", TOKEN)
         p.evaluate("t => localStorage.setItem('fibro_taal', t)", taal)
         if voor: p.evaluate(voor)
-        k = p.evaluate("""async uid => { const c = await import('./crypto.js?v=95'); const ik = await c.genereerKeypair(); const v = await c.genereerKeypair();
-          c.slaPrivateKeyOp(uid, ik.privateKeyB64); return v.publicKeyB64 }""", UID)
-        staat['pub'] = k
+        p.evaluate("([u, k]) => localStorage.setItem('fibro_privkey_' + u, k)", [UID, NEP.ik.priv]); staat['pub'] = NEP.vriend.pub
         p.goto(BASIS + 'chat.html'); p.wait_for_function("() => document.querySelectorAll('#vriendenLijst .vriend-item').length === 1", timeout=15000)
         p.click('#vriendenLijst .vriend-item'); p.wait_for_timeout(2000)
         return ctx, p
@@ -252,14 +252,14 @@ with sync_playwright() as pw:
         p.wait_for_timeout(200)
     p.wait_for_timeout(1500)
     voor = p.evaluate("window.__fxosc || 0")
-    n = bezorg({"id": "mrt1", "sender_id": FID, "receiver_id": UID, "content": "fxsticker:f1-11", "created_at": iso(40), "antwoord_op": None, "expires_at": "2026-11-15T00:00:00.000Z"})
+    n = bezorg({"id": "mrt1", "sender_id": FID, "receiver_id": UID, "content": NEP.inhoud(FID, "fxsticker:f1-11", iso(40)), "created_at": iso(40), "antwoord_op": None, "expires_at": "2026-11-15T00:00:00.000Z"})
     p.wait_for_timeout(300)
     nw = p.evaluate("() => { const i = [...document.querySelectorAll('#messages .fx-sticker')].pop(); return i ? { src: i.getAttribute('src'), anim: i.getAnimations().length } : null }")
     na = p.evaluate("window.__fxosc || 0")
     check('nieuwe sticker van de ander: beweging + geluid', n and nw and nw['src'] == 'stickers/f1/11.webp' and nw['anim'] >= 1 and na > voor, (n, nw, voor, na))
     p.wait_for_timeout(1500)
     voor = p.evaluate("window.__fxosc || 0")
-    bezorg({"id": "mrt2", "sender_id": UID, "receiver_id": FID, "content": "fxsticker:f1-12", "created_at": iso(41), "antwoord_op": None, "expires_at": "2026-11-15T00:00:00.000Z"})
+    bezorg({"id": "mrt2", "sender_id": UID, "receiver_id": FID, "content": NEP.inhoud(UID, "fxsticker:f1-12", iso(41)), "created_at": iso(41), "antwoord_op": None, "expires_at": "2026-11-15T00:00:00.000Z"})
     p.wait_for_timeout(300)
     nw = p.evaluate("() => { const i = [...document.querySelectorAll('#messages .fx-sticker')].pop(); return i ? { src: i.getAttribute('src'), anim: i.getAnimations().length } : null }")
     na = p.evaluate("window.__fxosc || 0")

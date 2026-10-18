@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
   <script src="huisregel.js?v=1"></script>
-  <script src="taal.js?v=17"></script>
+  <script src="taal.js?v=18"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title data-t>Fibro — Inloggen</title>
   <style>
@@ -148,7 +148,7 @@
 
 <script type="module">
   import { createClient } from './supabase-lib.js?v=1'
-  import { genereerKeypair, slaPrivateKeyOp, haalPrivateKeyOp, ontsleutelPrivateKey, normaliseerHerstelSleutel, versleutelPrivateKey } from './crypto.js?v=95'
+  import { genereerKeypair, slaPrivateKeyOp, haalPrivateKeyOp, ontsleutelPrivateKey, normaliseerHerstelSleutel, versleutelPrivateKey } from './crypto.js?v=181'
   import { passkeyStatus, lijstDozen, maakDoos, openDoos, sleutelPastBij } from './passkey-kluis.js?v=2'
 
   const supabase = createClient(
@@ -292,8 +292,7 @@
   // Reserve voor wie geen Face ID-herstel kan of wil: de oude herstelcode
   async function maakHerstelcodeReserve(userId, privateKeyB64) {
     const code = maakHerstelSleutel()
-    const hsHash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code)))).map(b => b.toString(16).padStart(2, '0')).join('')
-    await supabase.rpc('zet_herstelsleutel', { hash_in: hsHash })
+    // v181: geen vingerafdruk (hash) van de code meer naar de server; die deed daar niets (zie sql/rechten-ronde2.sql)
     const kluisBlob = await versleutelPrivateKey(privateKeyB64, code)
     await supabase.from('sleutel_kluis').upsert({ user_id: userId, blob: kluisBlob })
     return code
@@ -522,8 +521,6 @@
         public_key: keypair.publicKeyB64
       })
       if (!metFaceId) {
-      const hsHash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(herstelsleutel)))).map(b=>b.toString(16).padStart(2,'0')).join('')
-      await supabase.rpc('zet_herstelsleutel', { hash_in: hsHash })
       // Sleutelkluis vullen: private key versleuteld met de herstelsleutel
       const kluisBlob = await versleutelPrivateKey(keypair.privateKeyB64, herstelsleutel)
       await supabase.from('sleutel_kluis').upsert({ user_id: data.user.id, blob: kluisBlob })

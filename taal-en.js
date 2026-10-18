@@ -575,6 +575,11 @@ window.FIBRO_EN = {
   "[eigen bericht]": "[your message]",
   "[kan niet lezen — sleutels komen niet overeen]": "[can't read — keys don't match]",
   "[versleuteld bericht — tik op het beginscherm op Sleutel terugzetten]": "[encrypted message — tap Restore key on the home screen]",
+  // v181: versleuteling v2 (crypto.js): waarschuwingen in de chat
+  "⚠️ Dit bericht klopt niet: het is onderweg veranderd.": "⚠️ This message doesn't add up: it was changed on the way.",
+  "⚠️ verzendtijd klopt niet": "⚠️ send time doesn't match",
+  "⚠️ niet versleuteld": "⚠️ not encrypted",
+  "⚠️ De sleutel van {naam} is veranderd. Dat gebeurt als {naam} opnieuw begon zonder herstel. Verwachtte je dat niet? Vraag het {naam} even, bijvoorbeeld door te bellen.": "⚠️ {naam}'s key has changed. This happens when {naam} started over without recovery. Not expecting this? Check with {naam}, for example by calling.",
   "bericht niet meer beschikbaar": "message no longer available",
   "Bericht NIET verstuurd.\n\nDit apparaat heeft geen sleutel voor jouw account, dus het bericht kan niet versleuteld worden. Ga naar het beginscherm en tik op Sleutel terugzetten (Face ID of herstelcode).": "Message NOT sent.\n\nThis device doesn't have a key for your account, so the message can't be encrypted. Go to the home screen and tap Restore key (Face ID or recovery code).",
   "Bericht NIET verstuurd.\n\nDe sleutel van deze vriend is nog niet bekend. Probeer het opnieuw zodra hij een keer online is geweest.": "Message NOT sent.\n\nThis friend's key isn't known yet. Try again once they have been online.",

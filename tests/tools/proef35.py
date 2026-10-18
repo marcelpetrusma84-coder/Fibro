@@ -54,10 +54,11 @@ VULLEN = """async ([u, bram, lotte, ander]) => {
   const ik = await c.genereerKeypair(), br = await c.genereerKeypair(), lo = await c.genereerKeypair(), fout = await c.genereerKeypair()
   c.slaPrivateKeyOp(u, ik.privateKeyB64)
   localStorage.setItem('fibro_privkey_' + ander, 'sleutel-van-een-ander-account')
-  const naarBram = await c.versleutel('Hoi Bram, hoe is het?', ik.privateKeyB64, br.publicKeyB64)
-  const vanBram = await c.versleutel('Goed! En met jou?', br.privateKeyB64, ik.publicKeyB64)
-  const uitCache = await c.versleutel('Dit staat ook in mijn geheugen', ik.privateKeyB64, br.publicKeyB64)
-  const vanLotte = await c.versleutel('Met een sleutel die niet meer klopt', lo.privateKeyB64, fout.publicKeyB64)
+  // v181: met afzender en ontvanger (versleuteling v2); de oude code laat die extra gegevens gewoon liggen
+  const naarBram = await c.versleutel('Hoi Bram, hoe is het?', ik.privateKeyB64, br.publicKeyB64, { soort: 'bericht', van: u, naar: bram })
+  const vanBram = await c.versleutel('Goed! En met jou?', br.privateKeyB64, ik.publicKeyB64, { soort: 'bericht', van: bram, naar: u })
+  const uitCache = await c.versleutel('Dit staat ook in mijn geheugen', ik.privateKeyB64, br.publicKeyB64, { soort: 'bericht', van: u, naar: bram })
+  const vanLotte = await c.versleutel('Met een sleutel die niet meer klopt', lo.privateKeyB64, fout.publicKeyB64, { soort: 'bericht', van: lotte, naar: u })
   localStorage.setItem('fibro_msg_cache_' + u, JSON.stringify({ m3: 'Dit staat ook in mijn geheugen' }))
   const t = (h) => new Date(Date.now() - h * 3600000).toISOString()
   const gegevens = {

@@ -11,6 +11,8 @@ from playwright.sync_api import sync_playwright
 
 MAP = os.path.abspath(sys.argv[1]); FOTO = os.environ.get('FOTO')
 UID = 'aaaaaaaa-0000-4000-8000-000000000001'; FID = 'f1a00000-0000-4000-8000-000000000009'
+# v181: binnenkomende berichten versleuteld zoals in het echt (nepslot.py); zonder slot toont de chat geen sticker meer
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); import nepslot; NEP = nepslot.Nep(MAP, UID, FID)
 TOKEN = json.dumps({"access_token": "x", "refresh_token": "y", "token_type": "bearer", "expires_in": 3600, "expires_at": int(time.time()) + 3600, "user": {"id": UID}})
 NAMEN = ['Ik denk na', 'Even laden\u2026', 'Wachten\u2026', 'Zzz', 'Huh?', 'Idee!', 'Pas op!', 'Ugh', 'Krekels\u2026', 'Mind blown', 'Winnaar!', 'Loser']
 GELUID = ['peins', 'laden', 'tiktak', 'zzz', 'hmm', 'idee', 'sirene', 'facepalm', 'krekels', 'ontploft', 'winnaar', 'loser']
@@ -25,7 +27,7 @@ def supa(route):
         staat['posts'].append(json.loads(route.request.post_data or '{}'))
         return route.fulfill(status=201, json={"id": "mnieuw%d" % len(staat['posts'])})
     if '/rest/v1/messages' in u and m == 'GET':
-        return route.fulfill(status=200, json=[{'id': 'm%02d' % i, 'sender_id': FID, 'receiver_id': UID, 'content': c, 'created_at': '2026-10-16T00:%02d:00.000Z' % i,
+        return route.fulfill(status=200, json=[{'id': 'm%02d' % i, 'sender_id': FID, 'receiver_id': UID, 'content': NEP.inhoud(FID, c, '2026-10-16T00:%02d:00.000Z' % i), 'created_at': '2026-10-16T00:%02d:00.000Z' % i,
                                                 'expires_at': '2026-11-15T00:00:00.000Z', 'antwoord_op': None} for i, c in enumerate(staat['rijen'])][::-1])
     if '/rest/v1/friendships' in u: return route.fulfill(status=200, json=[{"user_id": UID, "friend_id": FID, "status": "accepted"}])
     if '/rest/v1/profiles' in u and m == 'GET':
@@ -79,8 +81,7 @@ with sync_playwright() as pw:
         p.on('response', lambda r: (p.mp3urls.append(r.url), (p.mp3fout.append(r.url) if r.status != 200 else None)) if '/geluiden/' in r.url else None)
         p.goto(BASIS + 'manifest.json')
         p.evaluate("([t, l]) => { localStorage.setItem('sb-qmgatbphiplrfxrljtbe-auth-token', t); localStorage.setItem('fibro_taal', l) }", [TOKEN, taal])
-        staat['pub'] = p.evaluate("""async uid => { const c = await import('./crypto.js?v=95'); const ik = await c.genereerKeypair(); const v = await c.genereerKeypair();
-          c.slaPrivateKeyOp(uid, ik.privateKeyB64); return v.publicKeyB64 }""", UID)
+        p.evaluate("([u, k]) => localStorage.setItem('fibro_privkey_' + u, k)", [UID, NEP.ik.priv]); staat['pub'] = NEP.vriend.pub
         p.goto(BASIS + 'chat.html')
         try: p.wait_for_function("() => document.querySelectorAll('#vriendenLijst .vriend-item').length === 1", timeout=15000); p.click('#vriendenLijst .vriend-item')
         except Exception: pass

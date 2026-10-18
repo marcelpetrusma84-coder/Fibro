@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=17"></script>
+<script src="taal.js?v=18"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Chat</title>
@@ -82,6 +82,11 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .belregel.gemist .belregel-tekst { color:#fca5a5; border-color:rgba(248,113,113,0.55); }
 .nieuw-knop { position:fixed; bottom:calc(230px + env(safe-area-inset-bottom,0px)); left:50%; transform:translateX(-50%); z-index:11; background:rgba(139,79,192,0.95); color:#fff; border:0.5px solid rgba(192,132,252,0.5); border-radius:20px; padding:6px 14px; font-size:12px; font-family:'DM Sans',sans-serif; cursor:pointer; display:none; box-shadow:0 2px 12px rgba(0,0,0,0.4); }
 .e2e-sys { display:none; color:#22c55e; border-color:rgba(34,197,94,0.3); background:rgba(34,197,94,0.08); font-size:11px; }
+/* v181: waarschuwing onder een bericht (niet versleuteld, verzendtijd klopt niet) en de balk bij een nieuwe sleutel van een vriend */
+.bubble-waarschuwing { display:block; font-size:11px; color:#fbbf24; margin-top:3px; }
+.sleutel-balk { display:flex; gap:10px; align-items:center; background:rgba(251,191,36,0.14); border-bottom:1px solid rgba(251,191,36,0.6); color:#fde68a; padding:10px 12px; font-size:13px; line-height:1.4; flex-shrink:0; }
+.sleutel-balk .sb-tekst { flex:1; }
+.sleutel-balk .sb-knop { background:#fbbf24; color:#1a1426; border:0; border-radius:8px; padding:8px 12px; font-size:13px; font-weight:600; cursor:pointer; flex-shrink:0; }
 .emoji-grid { display:flex; flex-wrap:wrap; gap:6px; padding:10px 14px; background:rgba(0,0,0,0.3); border-top:0.5px solid var(--border); }
 .e-opt { font-size:22px; cursor:pointer; padding:4px; border-radius:8px; transition:background 0.2s; }
 .e-opt:hover { background:rgba(192,132,252,0.2); }
@@ -190,6 +195,7 @@ window.veiligeUrl = function(v){
 </div>
 
 <div id="chatScherm" style="display:none; flex:1; min-height:0; flex-direction:column; overflow:hidden;">
+  <div id="sleutelBalk" class="sleutel-balk" role="alert" style="display:none"><span class="sb-tekst"></span><button type="button" class="sb-knop" data-t>Begrepen</button></div>
   <button class="nieuw-knop" id="nieuwKnop" onclick="naarNieuwste()" data-t>↓ nieuwe berichten</button>
   <div class="messages" id="messages">
     <div class="sys-msg e2e-sys" id="chatSysBericht" data-t>🔒 End-to-end versleuteld gesprek</div>
@@ -316,7 +322,7 @@ window.veiligeUrl = function(v){
   import { startMeldingen } from './meldingen.js?v=180'
   import { houOpen } from './lijntjes.js?v=1'
   import { haalVriendFotos, zetAvatar, geldigeFoto } from './vriendfotos.js?v=2'
-  import { versleutel, ontsleutel, haalPrivateKeyOp } from './crypto.js?v=95'
+  import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk } from './crypto.js?v=181'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
   import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=152'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
@@ -329,7 +335,7 @@ window.veiligeUrl = function(v){
   import * as Dammen from './dammen.js?v=95'
   import * as Bordgeluid from './bordgeluid.js?v=147'
   import * as DammenUI from './dammen-ui.js?v=147'
-  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=144'
+  import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   pasBlokstijlToe()
@@ -402,6 +408,13 @@ window.veiligeUrl = function(v){
     const s = String((b && b.created_at) || '').replace(' ', 'T').replace(/([+-]\d\d)$/, '$1:00')
     const t = Date.parse(s)
     return isNaN(t) ? 0 : t
+  }
+  // v181: de tijd van de server voor de controle van de verzendtijd (crypto.js). Staat er geen tijdzone bij,
+  // dan is het UTC (zo schrijft de database hem); zonder deze regel zou de browser hem als Nederlandse tijd lezen.
+  function serverTijdVan(b) {
+    const s = String((b && b.created_at) || '').trim()
+    if (!s || /(Z|[+-]\d\d(:?\d\d)?)$/i.test(s)) return berichtTijd(b)
+    return berichtTijd({ created_at: s + 'Z' })
   }
   function nieuwsteEerst(a, b) {
     return berichtTijd(b) - berichtTijd(a) || String(b.created_at).localeCompare(String(a.created_at))
@@ -532,7 +545,7 @@ window.veiligeUrl = function(v){
     initSync(huidigeUser.id)
     mijnPrivateKey = haalPrivateKeyOp(huidigeUser.id)
     werkVerzendknopBij()
-    initReacties({ supabase, versleutel, ontsleutel, mijnId: () => huidigeUser.id, geefSleutels: () => ({ mijn: mijnPrivateKey, vriend: vriendPublicKey }), herteken: () => tekenReacties(document.getElementById('messages')) })
+    initReacties({ supabase, versleutel, ontsleutelBericht, mijnId: () => huidigeUser.id, geefSleutels: () => ({ mijn: mijnPrivateKey, vriend: vriendPublicKey }), herteken: () => tekenReacties(document.getElementById('messages')) })
     startLangIndrukken(document.getElementById('messages'), (row, x, y) => toonVerwijderMenu(row, x, y))
     // v120: alleen de velden die de chat gebruikt (geen achtergrond), en tegelijk met de
     // vriendenlijst ophalen in plaats van ervoor. .then() start het verzoek meteen.
@@ -827,7 +840,7 @@ window.veiligeUrl = function(v){
     // Al een chat geopend vanuit de bewaarde lijst? Dan de verse sleutel van die vriend gebruiken.
     if (geselecteerdeVriend) {
       const vers = data.find(v => v.id === geselecteerdeVriend.id)
-      if (vers && (vers.public_key || null) !== vriendPublicKey) { vriendPublicKey = vers.public_key || null; werkVerzendknopBij() }
+      if (vers && (vers.public_key || null) !== vriendPublicKey) { vriendPublicKey = vers.public_key || null; werkVerzendknopBij(); controleerVriendSleutel(geselecteerdeVriend.id, vriendPublicKey) }
     }
     werkOnlineBij(data)
     startOnlineTimer()
@@ -876,6 +889,32 @@ window.veiligeUrl = function(v){
     alleChatsBezig = false
   }
 
+  // ─── v181: is de sleutel van deze vriend veranderd? ───
+  // Per toestel onthoudt Fibro een vingerafdruk van de sleutel van elke vriend (de eerste keer zonder iets te
+  // zeggen). Is de sleutel daarna anders, dan staat er een gele balk bovenin de chat tot je op Begrepen tikt.
+  // Versturen kan gewoon. Dat gebeurt als een vriend opnieuw begon zonder herstel, of als iemand de sleutel op
+  // de server verwisselde om mee te lezen: daarom vraag je het even aan je vriend.
+  const vriendSleutelSleutel = id => 'fibro_vriendsleutel_' + huidigeUser.id + '_' + id
+  async function controleerVriendSleutel(vriendId, pub) {
+    const balk = document.getElementById('sleutelBalk')
+    if (!balk || !huidigeUser) return
+    if (!vriendId || !pub || pub.length <= 10) { balk.style.display = 'none'; return }
+    let nu
+    try { nu = await sleutelVingerafdruk(pub) } catch (e) { return }
+    if (!geselecteerdeVriend || geselecteerdeVriend.id !== vriendId || vriendPublicKey !== pub) return
+    let oud = null
+    try { oud = localStorage.getItem(vriendSleutelSleutel(vriendId)) } catch (e) {}
+    if (!oud) { try { localStorage.setItem(vriendSleutelSleutel(vriendId), nu) } catch (e) {} }
+    if (!oud || oud === nu) { balk.style.display = 'none'; return }
+    const naam = geselecteerdeVriend.naam || ''
+    balk.querySelector('.sb-tekst').textContent = T('\u26A0\uFE0F De sleutel van {naam} is veranderd. Dat gebeurt als {naam} opnieuw begon zonder herstel. Verwachtte je dat niet? Vraag het {naam} even, bijvoorbeeld door te bellen.', { naam })
+    balk.querySelector('.sb-knop').onclick = () => {
+      try { localStorage.setItem(vriendSleutelSleutel(vriendId), nu) } catch (e) {}
+      balk.style.display = 'none'
+    }
+    balk.style.display = 'flex'
+  }
+
   // ─── Chat openen ───
   window.openChat = async function(vriendId, vriendNaam, vriendAvatar, vriendPubKey) {
     geselecteerdeVriend = { id: vriendId, naam: vriendNaam, avatar: vriendAvatar }
@@ -883,6 +922,7 @@ window.veiligeUrl = function(v){
     syncMetVriend(vriendId) // v155: stickers en profiel eerst met deze vriend
     vriendPublicKey = vriendPubKey || null
     werkVerzendknopBij()
+    controleerVriendSleutel(vriendId, vriendPublicKey) // v181
 
     document.getElementById('chatAv').textContent = vriendAvatar
     zetAvatar(document.getElementById('chatAv'), vriendAvatar, vriendFotos.get(vriendId)) // v134
@@ -1116,20 +1156,37 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const avatar = isMijn ? (huidigProfiel?.avatar_url || '👤') : geselecteerdeVriend.avatar
 
     // ── E2E: Ontsleutel de content ──
+    // v181: versleuteling v2 (crypto.js): afzender, ontvanger en verzendtijd zitten vast aan het bericht.
+    // Onderweg veranderd = een waarschuwing in plaats van het bericht; verzendtijd klopt niet = een label.
+    // Je eigen berichten zijn nu ook zonder het geheugen van dit toestel te lezen (ander toestel, nieuwe browser).
+    // Een bericht zonder slot dat geen belregel, buzz, spel-uitnodiging of 'verwijderd' is, wordt als gewone
+    // tekst getoond (nooit als sticker of plaatje) met het label 'niet versleuteld'.
     let content = bericht.content
+    let waarschuwing = ''
+    let onversleuteld = false
     if (content && content.startsWith('e2e:')) {
-      if (isMijn) {
-        const cached = haalBerichtCacheOp(bericht.id)
-        content = cached !== null ? cached : T('[eigen bericht]')
+      const cached = isMijn ? haalBerichtCacheOp(bericht.id) : null
+      if (cached !== null) {
+        content = cached
       } else if (mijnPrivateKey && vriendPublicKey && vriendPublicKey.length > 10) {
         try {
-          content = await ontsleutel(content, mijnPrivateKey, vriendPublicKey)
+          const r = await ontsleutelBericht(content, mijnPrivateKey, vriendPublicKey,
+            { soort: 'bericht', van: bericht.sender_id, naar: bericht.receiver_id, serverTijd: serverTijdVan(bericht) })
+          if (r.status === 'vervalst') content = T('\u26A0\uFE0F Dit bericht klopt niet: het is onderweg veranderd.')
+          else if (r.status === 'onleesbaar') content = isMijn ? T('[eigen bericht]') : T('[kan niet lezen — sleutels komen niet overeen]')
+          else {
+            content = r.tekst
+            if (r.status === 'tijd') waarschuwing = T('\u26A0\uFE0F verzendtijd klopt niet')
+          }
         } catch(e) {
-          content = T('[kan niet lezen — sleutels komen niet overeen]')
+          content = isMijn ? T('[eigen bericht]') : T('[kan niet lezen — sleutels komen niet overeen]')
         }
       } else {
-        content = T('[versleuteld bericht — tik op het beginscherm op Sleutel terugzetten]')
+        content = isMijn ? T('[eigen bericht]') : T('[versleuteld bericht — tik op het beginscherm op Sleutel terugzetten]')
       }
+    } else if (typeof content === 'string' && content !== 'verwijderd:' && content !== 'buzz:' && !content.startsWith('spelinvite:') && !isBelregel(content)) {
+      onversleuteld = true
+      waarschuwing = T('\u26A0\uFE0F niet versleuteld')
     }
 
     // Voor iedereen verwijderd: inhoud is 'verwijderd:' (zie sql/berichten-verwijderen.sql)
@@ -1179,7 +1236,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     // het plaatje, de beweging en het geluid staan op het toestel (stickervellen.js, stickerfx.js).
     // v155: eigen stickers (fxsticker:e1-03) staan bij de verstuurder in Profiel en komen via sync.js bij de
     // vriend ('vriend_<id>_sticker_<code>'). Nog niet binnen: een plaatsvervanger die vanzelf bijwerkt.
-    if (content.startsWith('fxsticker:')) {
+    if (!onversleuteld && content.startsWith('fxsticker:')) {
       const fx = leesFx(content.slice(10)) // v162: code, versie en eventueel het pakketje
       const code = fx.code
       const eigenCode = isEigenCode(code)
@@ -1218,7 +1275,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       content = T('\u{1F5BC}\uFE0F Sticker') // onbekende sticker (nieuwer vel dan dit toestel kent): gewoon als tekst
     }
 
-    if (content.startsWith('lossticker:')) {
+    if (!onversleuteld && content.startsWith('lossticker:')) {
       const srcClean = content.replace('lossticker:','').split(':').slice(0,-1).join(':')
       const geluidClean = content.split(':').pop()
       if (!isMijn && metGeluid && geluidClean) speelEmotieGeluid(geluidClean)
@@ -1231,7 +1288,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       container.appendChild(row); return
     }
 
-    if (content.startsWith('packsticker:')) {
+    if (!onversleuteld && content.startsWith('packsticker:')) {
       try {
         const d = JSON.parse(content.replace('packsticker:', ''))
         if (!isMijn && metGeluid && d.geluid) speelEmotieGeluid(d.geluid)
@@ -1249,7 +1306,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       } catch(e) {}
     }
 
-    if (content.startsWith('customsticker:')) {
+    if (!onversleuteld && content.startsWith('customsticker:')) {
       try {
         const d = JSON.parse(content.replace('customsticker:', ''))
         if (!isMijn && metGeluid && d.geluid) speelGeluidById(d.geluid)
@@ -1263,7 +1320,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       } catch(e) {}
     }
 
-    if (content.startsWith('sticker:')) {
+    if (!onversleuteld && content.startsWith('sticker:')) {
       const delen = content.split(':')
       const stickerEmoji = delen[1] || content.replace('sticker:','')
       const emotieId = delen[2] || null
@@ -1279,7 +1336,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     } else {
       row.innerHTML = `
         <div class="msg-av-sm">${esc(avatar)}</div>
-        <div class="bubble ${isMijn ? 'out' : 'in'}${isVerwijderd ? ' verwijderd' : ''}${emojiNiveau(content) ? ' emoji-' + emojiNiveau(content) : ''}"><span class="bubble-content">${esc(content)}</span><span class="bubble-time">${tijd} ${isMijn ? '✓✓' : ''}</span></div>`
+        <div class="bubble ${isMijn ? 'out' : 'in'}${isVerwijderd ? ' verwijderd' : ''}${emojiNiveau(content) ? ' emoji-' + emojiNiveau(content) : ''}"><span class="bubble-content">${esc(content)}</span>${waarschuwing ? '<span class="bubble-waarschuwing">' + esc(waarschuwing) + '</span>' : ''}<span class="bubble-time">${tijd} ${isMijn ? '✓✓' : ''}</span></div>`
     }
     if (bericht.antwoord_op) {
       const bub = row.querySelector(".bubble")
@@ -1309,7 +1366,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // Versleutelen is verplicht: zonder sleutels gaat er niets de deur uit.
   // Geeft de versleutelde inhoud terug, of null (dan is er al een melding gegeven).
-  async function versleutelOfStop(tekst) {
+  // v181: met afzender en ontvanger (crypto.js v2), en alleen voor de vriend van de open chat: zijn sleutel is
+  // de enige die hier klaarstaat. Is er intussen een andere chat open, dan blijft het bericht wachten.
+  async function versleutelOfStop(tekst, vriendId) {
+    if (!vriendId || !geselecteerdeVriend || geselecteerdeVriend.id !== vriendId) return null
     if (!mijnPrivateKey) {
       alert(T('Bericht NIET verstuurd.\n\nDit apparaat heeft geen sleutel voor jouw account, dus het bericht kan niet versleuteld worden. Ga naar het beginscherm en tik op Sleutel terugzetten (Face ID of herstelcode).'))
       return null
@@ -1319,7 +1379,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       return null
     }
     try {
-      return await versleutel(tekst, mijnPrivateKey, vriendPublicKey)
+      return await versleutel(tekst, mijnPrivateKey, vriendPublicKey, { soort: 'bericht', van: huidigeUser.id, naar: vriendId })
     } catch (e) {
       console.error('[chat] versleutelen mislukt:', e)
       alert(T('Bericht NIET verstuurd: versleutelen mislukt.'))
@@ -1405,7 +1465,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
   // Geeft true als het bericht echt op de server staat.
   async function verstuur(vriendId, tekst, antwoordOp, pling) {
-    const content = await versleutelOfStop(tekst)
+    const content = await versleutelOfStop(tekst, vriendId)
     if (content === null) return false
     if (!navigator.onLine) return false
     const velden = { sender_id: huidigeUser.id, receiver_id: vriendId, content, expires_at: new Date(Date.now() + 31*24*60*60*1000).toISOString() }
@@ -1830,6 +1890,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       syncMetVriend(null)
       vriendPublicKey = null
       werkVerzendknopBij()
+      const sb = document.getElementById('sleutelBalk'); if (sb) sb.style.display = 'none' // v181
       document.getElementById('chatScherm').style.display = 'none'
       document.getElementById('vriendenSelectie').style.display = 'block'
       document.getElementById('chatNaam').textContent = T('Selecteer een vriend')
@@ -2526,7 +2587,7 @@ async function startBlockIt() {
     // Wis private key uit localStorage
     localStorage.removeItem('fibro_privkey_' + huidigeUser.id)
     // Genereer nieuw keypair
-    const { genereerKeypair, slaPrivateKeyOp } = await import('./crypto.js?v=95')
+    const { genereerKeypair, slaPrivateKeyOp } = await import('./crypto.js?v=181')
     const keypair = await genereerKeypair()
     slaPrivateKeyOp(huidigeUser.id, keypair.privateKeyB64)
     // Sla public key op in Supabase

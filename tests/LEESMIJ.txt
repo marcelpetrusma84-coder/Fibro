@@ -178,6 +178,20 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  vriend het knopje met ▶). De muziekspelers: knop volgt play/pause. ?v=180: meldingen, timer-melding,
                                  stickerfx, stickerkeuze, stickerwidget, stickermaker, moodsticker, profielmuziek; taal-en.js?v=17
                                  en taal.js?v=17 in alle 12 pagina's (testscript_geluidregelaar.py))
+                         versleuteling = v181: versleuteling v2 (stap 1). crypto.js: nieuwe berichten en reacties als
+                                 'e2e:2:<tijd>:<sleutel-id>:<data>'; sleutel via HKDF uit ECDH; afzender, ontvanger (reactie: het
+                                 bericht) en verzendtijd vast aan de versleuteling (AES-GCM additional data); ontsleutelBericht geeft
+                                 { tekst, status }: open, v1, v2, tijd (meer dan 15 min verschil met de server), onleesbaar (sleutel-id
+                                 past niet), vervalst (onderweg veranderd). Oude 'e2e:' blijven leesbaar; een oudere app ziet 🔒.
+                                 versleutel() zonder afzender/ontvanger weigert. sleutelVingerafdruk(); base64 in stukjes (Safari);
+                                 hashHerstelSleutel weg. chat.html: eigen berichten ook zonder geheugen leesbaar; labels 'niet
+                                 versleuteld' (geen belregel/buzz/spel/verwijderd; nooit als sticker of plaatje) en 'verzendtijd
+                                 klopt niet'; gele balk als de sleutel van een vriend verandert (fibro_vriendsleutel_<ik>_<vriend>,
+                                 de eerste keer stil onthouden; versturen kan gewoon); versturen alleen voor de open chat.
+                                 reacties.js en account.js (export) ook v2. login.html/invite.html: geen hash van de herstelcode
+                                 meer naar zet_herstelsleutel. ?v=181: crypto.js (chat, index, login, invite, account.js),
+                                 reacties.js (chat); account.js?v=3 (index); taal-en.js?v=18 en taal.js?v=18 in alle 12
+                                 pagina's (testscript_versleuteling.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -528,6 +542,25 @@ tools/proef76.py         de geluidsregelaar (v180), echte index.html en vriend-p
                          niet; zelf gepauzeerd blijft; faden; Media Session; 's nachts (getHours = 23); twee schakelaars; bij een
                          vriend. Oude map als controle: 4 van 19.   python3 -I proef76.py <map>
                          (sinds v180 staat in proef75 'Mijn muziek vanzelf' in plaats van 'Muziek vanzelf afspelen')
+tools/proef77.mjs        versleuteling v2 (v181) in crypto.js zonder browser (Node 20+): heen en weer, eigen bericht terug,
+                         omgedraaid/andere ontvanger/veranderd teken/veranderde tijd = vervalst, tijd > 15 min = 'tijd',
+                         andere sleutel = onleesbaar, reactie vast aan het bericht, 120 kB, vingerafdruk, herstelcode-kluis.
+                         Met de oude map erbij: oude berichten leesbaar, een oudere app ziet 🔒, oude sleutelparen werken.
+                         node proef77.mjs <map> [<oude map>]. Oude map als eerste map (controle): 4 van 24.
+tools/proef78.py         versleuteling v2 in de chat (v181), echte chat.html, berichten gemaakt met de nieuwe crypto.js
+                         (naast de proef in de repo, ook als de oude map getest wordt): v2/eigen/v1 leesbaar, omgedraaid en
+                         veranderd = 'klopt niet', verzendtijd, 'niet versleuteld' (ook een sticker-code: geen plaatje),
+                         belregel/spel/verwijderd zonder label, versturen en reactie (echt ingedrukt houden) als e2e:2:,
+                         reactie van Bram en een verplaatste reactie, gele balk bij een nieuwe sleutel (Begrepen, verversen),
+                         Engels, geen hash van de herstelcode in login/invite, server-tijd zonder zone = UTC. Oude map: 4 van 26.
+                         python3 -I proef78.py <scratch> <map> <poort>
+                         (sinds v181 maakt proef35 de berichten met afzender en ontvanger)
+tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
+                         versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
+                         tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij
+                         is, zodat de controle hetzelfde blijft); belregel/buzz/spel/verwijderd/e2e: nooit. Sinds v181 toont
+                         de chat een bericht zonder slot als tekst met 'niet versleuteld': proef12, 53, 56, 63, 64 en 65
+                         versleutelen hun binnenkomende berichten daarom hiermee (sleutels in Python, niet meer in de pagina).
 tools/taalcheck.py      heeft elke Nederlandse tekst een Engelse vertaling in taal-en.js? Zoekt T('...')/vt('...') in
                          de code en data-t/data-t-attr in de html (Chromium, DOMParser), plus vaste lijstjes
                          (widgettitels, steden). Ook: invulplekken {..} en html-tags gelijk, geen " in attributen.

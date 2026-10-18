@@ -1,5 +1,7 @@
 import { kiesAntwoordOp } from './reply.js?v=144'
 // v144: ook in het Engels (taal.js)
+// v181: versleuteling v2 (crypto.js): een reactie zit vast aan wie hem gaf en bij welk bericht hij hoort.
+// Onderweg veranderd of verplaatst = een waarschuwingsteken in plaats van de reactie.
 const T = window.T || (s => s)
 let _ctx = null
 
@@ -27,7 +29,10 @@ export async function leesInhoud(r){
   const sl = _ctx.geefSleutels()
   if(!sl||!sl.mijn||!sl.vriend) return T('onleesbaar')
   try{
-    return await _ctx.ontsleutel(r.inhoud, sl.mijn, sl.vriend)
+    const u = await _ctx.ontsleutelBericht(r.inhoud, sl.mijn, sl.vriend, { soort: 'reactie', van: r.user_id, bij: String(r.bericht_id) })
+    if(u.status === 'vervalst') return '\u26A0\uFE0F'
+    if(u.status === 'onleesbaar') return T('onleesbaar')
+    return u.tekst
   }catch(e){
     return T('onleesbaar')
   }
@@ -40,7 +45,7 @@ export async function zetReactie(berichtId, soort, tekst){
   if(!inhoud) return false
   if(!sl||!sl.mijn||!sl.vriend){ console.warn('sleutels ontbreken'); return false }
   {
-    try{ inhoud = await _ctx.versleutel(inhoud, sl.mijn, sl.vriend) }catch(e){ console.warn('versleutelen mislukt'); return false }
+    try{ inhoud = await _ctx.versleutel(inhoud, sl.mijn, sl.vriend, { soort: 'reactie', van: _ctx.mijnId(), bij: String(berichtId) }) }catch(e){ console.warn('versleutelen mislukt'); return false }
   }
   await verwijderReactie(berichtId)
   const { error } = await _ctx.supabase.from('reacties').insert({

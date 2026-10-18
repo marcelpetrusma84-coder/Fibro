@@ -10,13 +10,12 @@
 //   staat (ook je sleutel) en ga je naar het inlogscherm. Van een ander account op dit
 //   toestel blijft alles staan.
 import { supabase } from './supabase.js?v=95'
-import { haalPrivateKeyOp, ontsleutel } from './crypto.js?v=95'
+import { haalPrivateKeyOp, ontsleutel, ONLEESBAAR, VERVALST } from './crypto.js?v=181'
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v2, v146)
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
 const NIET_TE_LEZEN = T('(niet te lezen op dit toestel)')
-// wat ontsleutel() teruggeeft als het niet lukt (crypto.js)
-const ONLEESBAAR = '\u{1F512} [versleuteld bericht — kan niet lezen]'
+// wat ontsleutel() teruggeeft als het niet lukt: ONLEESBAAR en VERVALST (crypto.js, v3 / v181)
 
 function foutTekst(e) {
   return String((e && e.message) || '') + ' ' + String((e && e.code) || '')
@@ -112,8 +111,8 @@ async function maakLeesbaar(data, uid) {
       const pub = sleutelVan(ander)
       if (priv && pub && String(pub).length > 10) {
         try {
-          const t = await ontsleutel(c, priv, pub)
-          if (typeof t === 'string' && t !== ONLEESBAAR) tekst = t
+          const t = await ontsleutel(c, priv, pub, { soort: 'bericht', van: m.sender_id, naar: m.receiver_id })
+          if (typeof t === 'string' && t !== ONLEESBAAR && t !== VERVALST) tekst = t
         } catch (e) {}
       }
     }

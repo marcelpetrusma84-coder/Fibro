@@ -3,9 +3,13 @@
 #  1. foto kiezen, 'Gebruik deze foto', Opslaan: de foto gaat naar de server en staat in het rondje (Profiel en Home)
 #  2. emoji kiezen, Opslaan: op de server avatar_data leeg en avatar_url de emoji; de foto is weg van het toestel;
 #     opnieuw Profiel en Home: de emoji (geen foto)
-#  3. wel een foto kiezen maar niet op 'Gebruik deze foto' tikken, dan Opslaan: de emoji blijft, geen foto naar de server
-#  4. weer een foto (met 'Gebruik deze foto'): de foto is terug
-# Geen paginafouten. Oude map (v184) als controle: stap 2 en 3 MIS (de foto blijft).
+#  3. (v186) foto kiezen zonder op 'Gebruik deze foto' te tikken, dan Opslaan: de foto is je avatar (zo werkte het tot v184;
+#     in v185 bleef de emoji staan). Meteen na het kiezen staat hij al in het rondje.
+#  4. (v186) foto kiezen en meteen Opslaan (de foto is nog niet klaar): de foto gaat mee
+#  5. (v186) foto kiezen en daarna toch een emoji (zelfde bezoek), Opslaan: de emoji, de foto weg van het toestel
+#  6. (v186) hetzelfde bestand nog een keer kiezen (zelfde bezoek): werkt (het invoerveld wordt leeggemaakt)
+#  7. weer een foto (met 'Gebruik deze foto'): de foto is terug
+# Geen paginafouten. Oude map als controle: v184 stap 2 MIS (de foto blijft), v185 stap 3, 4 en 6 MIS.
 # python3 -I proef82.py <map>
 import sys, os, time, json, socket, subprocess, tempfile, shutil
 from playwright.sync_api import sync_playwright
@@ -84,12 +88,34 @@ with sync_playwright() as pw:
     h = home()
     check('Home: de emoji, geen foto (ook bovenaan)', isinstance(h, dict) and not h['foto'] and h['tekst'] == '\U0001F98A' and h['top'] == '\U0001F98A', h)
 
-    print('3. Foto gekozen, niet gebruikt')
-    profiel(); kiesFoto(FOTO2, gebruik=False); post = opslaan()
-    check('Opslaan zonder "Gebruik deze foto": geen foto naar de server, emoji blijft', isinstance(post, dict) and not post.get('avatar_data') and ev(p, DB, UID) == [] and ev(p, RONDJE) == {'foto': False, 'tekst': '\U0001F98A'},
-          (post and {k: str(v)[:30] for k, v in post.items()}, ev(p, DB, UID), ev(p, RONDJE)))
+    print('3. Foto kiezen zonder "Gebruik deze foto"')
+    profiel(); kiesFoto(FOTO2, gebruik=False)
+    meteen = ev(p, RONDJE); post = opslaan()
+    check('meteen na het kiezen staat de foto in het rondje', isinstance(meteen, dict) and meteen['foto'], meteen)
+    check('Opslaan: de foto gaat naar de server en blijft je avatar', isinstance(post, dict) and str(post.get('avatar_data') or '').startswith('data:image/') and ev(p, RONDJE) == {'foto': True, 'tekst': ''},
+          (post and str(post.get('avatar_data'))[:30], ev(p, RONDJE)))
+    profiel(); r = ev(p, RONDJE); h = home()
+    check('opnieuw Profiel en Home: de foto', isinstance(r, dict) and r['foto'] and isinstance(h, dict) and h['foto'], (r, h))
 
-    print('4. Weer een foto')
+    print('4. Foto kiezen en meteen Opslaan')
+    profiel(); kiesEmoji('\U0001F98A'); opslaan()
+    p.click('.avatar-ring'); p.wait_for_timeout(200); p.click('#tabFoto'); p.wait_for_timeout(200)
+    n = len(posts); p.set_input_files('#fotoInput', FOTO1); p.click('.save-top-btn'); p.wait_for_timeout(2500)
+    post = posts[-1] if len(posts) > n else None
+    check('meteen Opslaan na het kiezen: de foto gaat toch mee', isinstance(post, dict) and str(post.get('avatar_data') or '').startswith('data:image/'), post and str(post.get('avatar_data'))[:30])
+
+    print('5. Foto en daarna toch een emoji')
+    profiel(); kiesFoto(FOTO2, gebruik=False); kiesEmoji('\U0001F984'); post = opslaan()
+    check('foto, dan emoji, Opslaan: de emoji wint, foto weg', isinstance(post, dict) and post.get('avatar_url') == '\U0001F984' and 'avatar_data' in post and post['avatar_data'] is None and ev(p, DB, UID) == [],
+          (post and {k: str(v)[:20] for k, v in post.items() if k.startswith('avatar')}, ev(p, DB, UID)))
+
+    print('6. Hetzelfde bestand nog een keer')
+    profiel(); kiesFoto(FOTO3, gebruik=False); kiesEmoji('\U0001F984'); kiesFoto(FOTO3, gebruik=False)
+    r = ev(p, RONDJE); post = opslaan()
+    check('hetzelfde bestand opnieuw kiezen werkt', isinstance(r, dict) and r['foto'] and isinstance(post, dict) and str(post.get('avatar_data') or '').startswith('data:image/'), (r, post and str(post.get('avatar_data'))[:30]))
+
+    print('7. Weer een foto')
+    profiel(); kiesEmoji('\U0001F98A'); opslaan()
     profiel(); kiesFoto(FOTO3); post = opslaan()
     profiel(); r = ev(p, RONDJE)
     check('weer een foto: naar de server en in het rondje', isinstance(post, dict) and str(post.get('avatar_data') or '').startswith('data:image/') and isinstance(r, dict) and r['foto'], (post and str(post.get('avatar_data'))[:30], r))

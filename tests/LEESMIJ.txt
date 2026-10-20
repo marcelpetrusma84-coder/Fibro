@@ -222,6 +222,12 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  en avatar_url = de emoji (hoogstens 8 tekens; ging nooit mee, dus vrienden zagen hem niet). Een
                                  gekozen foto komt pas op het toestel bij 'Gebruik deze foto' (was: meteen bij het kiezen).
                                  FIBRO_VERSIE 185 (testscript_avatar.py)
+                         avatarfoto = v186: na v185 lukte een foto als avatar niet meer als je (zoals altijd) alleen een foto koos en
+                                 op Opslaan tikte: de emoji bleef in het rondje staan en won. Nu is een gekozen foto meteen je avatar
+                                 (rondje + toestel, verwerkFoto); 'Gebruik deze foto' sluit alleen; daarna toch een emoji = emoji
+                                 wint (window._avatarKeuze telt de keuzes); hetzelfde bestand opnieuw kiezen werkt (invoerveld leeg);
+                                 Opslaan wacht op een foto die nog bezig is (window._avatarFotoBezig). FIBRO_VERSIE 186
+                                 (testscript_avatarfoto.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -605,6 +611,8 @@ tools/proef82.py         avatar van foto naar emoji en terug (v185), echte profi
                          wat Opslaan stuurt: foto naar de server en in het rondje; emoji = avatar_data leeg, avatar_url emoji,
                          foto weg van het toestel, Profiel en Home tonen de emoji; foto kiezen zonder 'Gebruik deze foto' =
                          emoji blijft; weer een foto. Oude map (v184) als controle: 5 van 10.   python3 -I proef82.py <map>
+                         Sinds v186 (15 controles): foto kiezen zonder 'Gebruik deze foto' + Opslaan = foto; meteen Opslaan; foto
+                         dan emoji = emoji; zelfde bestand opnieuw. Oude map (v185) als controle: 9 van 15.
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

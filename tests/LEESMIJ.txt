@@ -215,6 +215,13 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  eerst. ?v=184: profielmuziek.js (index.html 2x, vriend-profiel.html); FIBRO_VERSIE 184.
                                  proef80 laadt bouw.py nu met -B (liet een map tests/gen/__pycache__ achter)
                                  (testscript_muziekknop.py)
+                         avatar = v185: je avatar van een foto weer in een emoji veranderen werkte niet: de foto bleef op het
+                                 toestel (IndexedDB avatar_thumbnail_<id>, avatar_volledig_<id>), ging bij elk Opslaan weer naar de
+                                 server en won bij het laden. Nu (profiel.html): staat er bij Opslaan een emoji in het rondje (geen
+                                 <img>), dan gaan de foto's van het toestel (wisEigenAvatarFoto), gaat avatar_data leeg naar de server
+                                 en avatar_url = de emoji (hoogstens 8 tekens; ging nooit mee, dus vrienden zagen hem niet). Een
+                                 gekozen foto komt pas op het toestel bij 'Gebruik deze foto' (was: meteen bij het kiezen).
+                                 FIBRO_VERSIE 185 (testscript_avatar.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -594,6 +601,10 @@ tools/proef81.py         het muziekknopje verslepen (v184), echte profiel.html (
                          nagebootste vinger (CDP Input.dispatchTouchEvent) en de muis: oude plek, volgen, niet schuiven of vegen,
                          vastklikken links/rechts, slepen is geen tik, tikken = pauze/verder, onthouden, grenzen boven en onder,
                          draaien, bij een vriend, muis. Oude map (v183) als controle: 4 van 18.   python3 -I proef81.py <map>
+tools/proef82.py         avatar van foto naar emoji en terug (v185), echte profiel.html en index.html, nep-server die onthoudt
+                         wat Opslaan stuurt: foto naar de server en in het rondje; emoji = avatar_data leeg, avatar_url emoji,
+                         foto weg van het toestel, Profiel en Home tonen de emoji; foto kiezen zonder 'Gebruik deze foto' =
+                         emoji blijft; weer een foto. Oude map (v184) als controle: 5 van 10.   python3 -I proef82.py <map>
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

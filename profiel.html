@@ -904,8 +904,9 @@ b.addEventListener('click',function(e){if(ver){e.stopPropagation();e.preventDefa
 window.switchTab=function(tab){document.querySelectorAll('.main-tab').forEach((t,i)=>{const tabs=['profiel','achtergrond','animatie','lettertype','kleur','widgets','stickers'];t.classList.toggle('active',tabs[i]===tab)});document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('panel-'+tab).classList.add('active');if(tab==='animatie')startAnimatiePreview();else stopAnimatiePreview()}
 function bouwAvatarPicker(){const picker=document.getElementById('avatarPicker');picker.innerHTML='';avatarEmojis.forEach(e=>{const span=document.createElement('span');span.className='emoji-opt';span.textContent=e;span.onclick=()=>{document.getElementById('avatarEmoji').textContent=e;(document.getElementById('previewAvatar')||{}).textContent=e;document.getElementById('avatarPickerWrap').style.display='none'};picker.appendChild(span)})}
 window.switchAvatarTab=function(tab){if(tab==='emoji'){document.getElementById('avatarEmojiTab').style.display='block';document.getElementById('avatarFotoTab').style.display='none';document.getElementById('tabEmoji').style.cssText='flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;';document.getElementById('tabFoto').style.cssText='flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;'}else{document.getElementById('avatarEmojiTab').style.display='none';document.getElementById('avatarFotoTab').style.display='block';document.getElementById('tabFoto').style.cssText='flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;';document.getElementById('tabEmoji').style.cssText='flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;'}}
-window.verwerkFoto=async function(event){const file=event.target.files[0];if(!file)return;const volledig=await comprimeerFoto(file,1080,0.85);const thumbnail=await comprimeerFoto(file,160,0.85);const userId=huidigeUser.id;await slaFotoOp('avatar_volledig_'+userId,volledig);await slaFotoOp('avatar_thumbnail_'+userId,thumbnail);document.getElementById('fotoPreview').src=volledig;document.getElementById('fotoPreviewWrap').style.display='block';window._fotoVolledig=volledig;window._fotoThumbnail=thumbnail}
-window.bevestigFoto=function(){const src=window._fotoThumbnail;document.getElementById('avatarEmoji').innerHTML=`<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;(document.getElementById('previewAvatar')||{}).innerHTML=`<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;document.getElementById('avatarPickerWrap').style.display='none';window._fotoAvatar=src}
+// v185: een gekozen foto komt pas op dit toestel als je op 'Gebruik deze foto' tikt (was: meteen, ook als je hem niet koos)
+window.verwerkFoto=async function(event){const file=event.target.files[0];if(!file)return;const volledig=await comprimeerFoto(file,1080,0.85);const thumbnail=await comprimeerFoto(file,160,0.85);document.getElementById('fotoPreview').src=volledig;document.getElementById('fotoPreviewWrap').style.display='block';window._fotoVolledig=volledig;window._fotoThumbnail=thumbnail}
+window.bevestigFoto=async function(){const src=window._fotoThumbnail;if(!src||!huidigeUser)return;const uid=huidigeUser.id;if(await slaFotoOp('avatar_volledig_'+uid,window._fotoVolledig)===null)return;if(await slaFotoOp('avatar_thumbnail_'+uid,src)===null)return;document.getElementById('avatarEmoji').innerHTML=`<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;(document.getElementById('previewAvatar')||{}).innerHTML=`<img src="${src}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;document.getElementById('avatarPickerWrap').style.display='none';window._fotoAvatar=src}
 window.toggleAvatarPicker=function(){const w=document.getElementById('avatarPickerWrap');w.style.display=w.style.display==='none'?'block':'none'}
 window.setAchtergrondType=function(type){document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));document.getElementById('type-'+type).classList.add('active');document.getElementById('bg-kleur-sectie').style.display=type==='kleur'?'block':'none';document.getElementById('bg-gradient-sectie').style.display=type==='gradient'?'block':'none';document.getElementById('bg-wallpaper-sectie').style.display=type==='wallpaper'?'block':'none';document.getElementById('bg-upload-sectie').style.display=type==='upload'?'block':'none'}
 window.updateBgKleur=function(k){document.getElementById('bgKleurPicker').value=k;document.getElementById('bgKleurHex').value=k;document.documentElement.style.setProperty('--bg',k)}
@@ -944,6 +945,22 @@ window.toggleWidget=function(naam){const toggle=document.getElementById('widget-
 // v157: stickers als widget op Home (stickerwidget.js): aan of uit zoals de widgets, bewaard met Opslaan
 const stickerWidgets={aan:n=>actieveWidgets.includes(n),zet:(n,aan)=>{actieveWidgets=actieveWidgets.filter(w=>w!==n);if(aan)actieveWidgets.push(n)}}
 function updateWidgetToggles(){actieveWidgets.forEach(w=>{const el=document.getElementById('widget-'+w);if(el){el.classList.remove('off');el.classList.add('on')}})}
+// v185: je eigen avatarfoto van dit toestel weghalen (je koos een emoji)
+async function wisEigenAvatarFoto() {
+  const userId = huidigeUser?.id
+  if (!userId) return
+  try {
+    const db = await openDB()
+    await new Promise(resolve => {
+      const tx = db.transaction('fotos', 'readwrite')
+      const st = tx.objectStore('fotos')
+      st.delete('avatar_thumbnail_' + userId)
+      st.delete('avatar_volledig_' + userId)
+      tx.oncomplete = resolve; tx.onerror = resolve; tx.onabort = resolve
+    })
+  } catch (e) {}
+}
+
 // ── Haal avatar data op voor Supabase ──
 async function haalAvatarDataOp() {
   const userId = huidigeUser?.id
@@ -1064,6 +1081,11 @@ window.slaAllesOp=async function(){
   // dit toestel de vorige keer stuurde. updated_at is het etiket waaraan vrienden zien dat ze je foto's
   // opnieuw moeten ophalen (vriend-profiel, vriendfotos.js): dat gaat dus ook alleen mee als er een foto
   // veranderd is. Zo zet een ander toestel met een oude achtergrond die ook niet meer terug.
+  // v185: staat er een emoji in het rondje (geen foto), dan heb je een emoji gekozen: de foto gaat weg, op dit toestel
+  // en op de server (avatar_data leeg), en de emoji gaat naar de server (avatar_url), zodat vrienden hem ook zien.
+  // Was: de foto bleef op het toestel staan en ging bij elk Opslaan weer mee, dus de emoji kwam nooit door.
+  const emojiAvatar=!document.querySelector('#avatarEmoji img')&&avatar.trim().length>0
+  if(emojiAvatar)await wisEigenAvatarFoto()
   const avatarData=await haalAvatarDataOp()
   const wallpaperData=await haalWallpaperDataOp()
   const vorigeVingers=leesFotoVingers(huidigeUser.id)
@@ -1084,6 +1106,7 @@ window.slaAllesOp=async function(){
     // meer mee, dus vrienden zagen een oude mood.
     mood:(gekozenMoodEmoji + ' ' + document.getElementById('editMood').value.trim()).trim()
   }
+  if(emojiAvatar)rij.avatar_url=Array.from(avatar.trim()).slice(0,8).join('') // v185
   if(!vorigeVingers||!vingers.a||vingers.a!==vorigeVingers.a)rij.avatar_data=avatarData
   if(!vorigeVingers||!vingers.w||vingers.w!==vorigeVingers.w)rij.wallpaper_data=wallpaperData
   if('avatar_data' in rij||'wallpaper_data' in rij)rij.updated_at=new Date().toISOString()
@@ -1096,7 +1119,7 @@ window.slaAllesOp=async function(){
   try{if(huidigLettertype)localStorage.setItem('fibro_font',huidigLettertype);else localStorage.removeItem('fibro_font')}catch(e){}
   pasLettertypeLiveToe(huidigLettertype)
   try{pasAnimatieToe(huidigeAnimatie)}catch(e){}
-  if(!error){const nieuw=Object.assign({},profiel||{},{accent_kleur:accentKleur,accent_kleur2:accentKleur2,achtergrond_kleur:bgKleur,lettertype:huidigLettertype,animatie:huidigeAnimatie,online_status:isOnline,toon_online:isOnline,offline_emoji:gekozenMoodEmoji,offline_bericht:document.getElementById('editMood').value.trim()||'Offline',avatar_data:avatarData});profiel=nieuw;bewaarProfielCache(huidigeUser.id,nieuw)}
+  if(!error){const nieuw=Object.assign({},profiel||{},{accent_kleur:accentKleur,accent_kleur2:accentKleur2,achtergrond_kleur:bgKleur,lettertype:huidigLettertype,animatie:huidigeAnimatie,online_status:isOnline,toon_online:isOnline,offline_emoji:gekozenMoodEmoji,offline_bericht:document.getElementById('editMood').value.trim()||'Offline',avatar_data:avatarData},rij.avatar_url?{avatar_url:rij.avatar_url}:{});profiel=nieuw;bewaarProfielCache(huidigeUser.id,nieuw)}
   const msg=document.getElementById('statusMsg')
   if(error){msg.className='status-msg error';msg.textContent=T('✗ Opslaan mislukt: {fout}',{fout:error.message})}
   else{msg.className='status-msg success';msg.textContent=T('✓ Profiel opgeslagen!');setTimeout(()=>msg.className='status-msg',2000)}

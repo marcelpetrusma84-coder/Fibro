@@ -201,6 +201,11 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  login.html en invite.html uit crypto.js (crypto.getRandomValues; de eigen versies met Math.random
                                  zijn weg). ?v=182: crypto.js (chat 2x, index, login, invite, vrienden, account.js); account.js?v=4
                                  (index) (testscript_sleutelcontrole.py)
+                         versienummer = v183: onderaan in het menu (☰) op Home 'Fibro v183 · 20 okt 2026' (gewone tekst, geen knop,
+                                 id menuVersie; Engels '20 Oct 2026'). Het staat in index.html: const FIBRO_VERSIE = 183 en const
+                                 FIBRO_DATUM = '2026-10-20'. VANAF NU zet elk script het nummer precies een hoger met de datum van
+                                 die dag (index.html doet dus altijd mee): bouw.py (versie_nagekeken) maakt anders geen script
+                                 (testscript_versienummer.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -572,6 +577,10 @@ tools/proef79.py         versleuteling stap 2 (v182), echte vrienden.html, invit
                          login.html zonder een enkele Math.random; chat: passend = geen balk en wordt lang, server laat een
                          andere sleutel zien = meteen de balk. Oude map (v181) als controle: 6 van 12 (registreren gebruikte
                          daar 24 keer Math.random).   python3 -I proef79.py <scratch> <map> <poort>
+tools/proef80.py         het versienummer onderaan in het menu (v183), echte index.html, echte klikken: tekst uit FIBRO_VERSIE/
+                         FIBRO_DATUM, laatste in het menu, geen knop, knoppen en focus zoals in v182, tikken laat het menu open,
+                         Engels, 320 px; bouw.py weigert een script zonder precies een hoger nummer, met een oudere datum of
+                         zonder index.html. Oude map (v182) als controle: 7 van 19.   python3 -I proef80.py <map>
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

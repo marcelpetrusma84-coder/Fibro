@@ -2,6 +2,8 @@
 # v156: nieuwe bestanden mogen ook plaatjes zijn (geen tekst): die gaan als base64 mee en worden als bytes geschreven.
 # v160: ook geluiden (.mp3, .wav).
 # v167: ook een bestaand plaatje of geluid vervangen (gewijzigd, als base64; de oude md5 wordt eerst nagekeken).
+# v183: elk script zet het versienummer in index.html (FIBRO_VERSIE, onderaan in het menu) een hoger, met de datum
+#       van vandaag of later (FIBRO_DATUM). Anders maakt bouw() geen script (versie_nagekeken).
 import os, re, sys, json, zlib, base64, hashlib, binascii, difflib
 
 SAMENVOEG = 3  # wijzigingen die hoogstens zoveel regels uit elkaar liggen: een stuk
@@ -261,7 +263,35 @@ main()
 '''
 
 
+def versie_van(map):
+    """(nummer, datum) uit index.html, of None als hij er nog niet in staat (voor v183)."""
+    t = lees(os.path.join(map, 'index.html')).decode('utf-8', 'replace')
+    n = re.findall(r'^const FIBRO_VERSIE = (\d+)$', t, re.M)
+    d = re.findall(r"^const FIBRO_DATUM = '(\d{4}-\d{2}-\d{2})'$", t, re.M)
+    if not n and not d:
+        return None
+    if len(n) != 1 or len(d) != 1:
+        raise SystemExit('index.html: FIBRO_VERSIE en FIBRO_DATUM moeten er elk precies een keer in staan')
+    return int(n[0]), d[0]
+
+
+def versie_nagekeken(oudmap, nieuwmap, gewijzigd):
+    """v183: het versienummer moet precies een omhoog, met een datum die niet ouder is."""
+    import datetime
+    nw = versie_van(nieuwmap)
+    if nw is None:
+        raise SystemExit('index.html (nieuw): geen FIBRO_VERSIE/FIBRO_DATUM')
+    datetime.date.fromisoformat(nw[1])
+    od = versie_van(oudmap)
+    if 'index.html' not in gewijzigd:
+        raise SystemExit('index.html moet bij elk script mee (versienummer omhoog)')
+    if od is not None and (nw[0] != od[0] + 1 or nw[1] < od[1]):
+        raise SystemExit('versienummer: was v%d (%s), nu v%d (%s); moet v%d zijn met een datum vanaf %s' % (od[0], od[1], nw[0], nw[1], od[0] + 1, od[1]))
+    return nw
+
+
 def bouw(naam, oudmap, nieuwmap, gewijzigd, nieuwe, oude_v, beschrijving, vereist, uitpad):
+    versie_nagekeken(oudmap, nieuwmap, gewijzigd)
     oud_md5, nieuw_md5, rg, data = {}, {}, {}, {'gewijzigd': {}, 'nieuw': {}}
     for p in gewijzigd:
         o, n = lees(os.path.join(oudmap, p)), lees(os.path.join(nieuwmap, p))

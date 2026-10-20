@@ -2076,6 +2076,16 @@ async function renderGastenboek(c, uid) {
 // Hoelang berichten bewaard worden kies je zelf (1 dag t/m 1 jaar). De server rekent met
 // het kortste van jouw keuze en die van je vriend, en past het ook toe op berichten die er al
 // zijn (sql/berichten-bewaren.sql: profiles.bewaar_dagen en zet_bewaartermijn).
+// v183: het versienummer en de datum van deze versie, onderaan in het menu. Zo zie je op elk toestel welke versie
+// er echt draait (een telefoon kan een oude pagina nog even vasthouden). Elk maak-script zet het nummer een hoger:
+// tests/gen/bouw.py maakt geen script als het hier niet omhoog gaat.
+const FIBRO_VERSIE = 183
+const FIBRO_DATUM = '2026-10-20'
+function versieTekst() {
+  let d = FIBRO_DATUM
+  try { d = new Date(FIBRO_DATUM + 'T12:00:00').toLocaleDateString(T.locale || 'nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) } catch (e) {}
+  return (T.app || 'Fibro') + ' v' + FIBRO_VERSIE + ' \u00B7 ' + d
+}
 const BEWAAR_KEUZES = [[1, T('1 dag')], [7, T('7 dagen')], [31, T('31 dagen')], [90, T('90 dagen')], [365, T('1 jaar')]]
 function sluitMenu() {
   const m = document.getElementById('fibroMenu')
@@ -2151,6 +2161,12 @@ window.openMenu = function() {
   g = groep(T('Mijn Fibro'), 'menuKopFibro')
   item(g, T('\u2139\uFE0F Over Fibro'), () => { window.location.href = 'over.html' })
   item(g, T('\u{1F4F2} Fibro als app installeren'), openAppUitleg) // v178
+  // v183: onderaan het versienummer (gewone tekst, geen knop)
+  const versie = document.createElement('div')
+  versie.id = 'menuVersie'
+  versie.textContent = versieTekst()
+  versie.style.cssText = 'border-top:0.5px solid var(--border);margin-top:4px;padding:10px 12px 6px;font-size:12px;color:var(--text);opacity:0.65;text-align:center;user-select:text;-webkit-user-select:text'
+  m.appendChild(versie)
   document.body.appendChild(m)
   knop.setAttribute('aria-expanded', 'true')
   m.querySelector('button').focus()

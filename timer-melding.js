@@ -1,4 +1,4 @@
-import { toonMelding } from './meldingen.js?v=180'
+import { toonMelding } from './meldingen.js?v=187'
 // v143: ook in het Engels (taal.js)
 
 function openDB(){

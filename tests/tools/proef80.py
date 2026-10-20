@@ -65,8 +65,8 @@ with sync_playwright() as pw:
     check('onderaan het menu: ' + VERWACHT_NL, isinstance(v, dict) and v['tekst'] == VERWACHT_NL and v['laatste'] and v['zichtbaar'], v)
     check('gewone tekst: geen knop, niet in de tab-volgorde', isinstance(v, dict) and not v['knop'] and v['tab'] < 0 and v['rol'] is None, v)
     kn = ev(p, KNOPPEN)
-    check('de knoppen in het menu zijn dezelfde als in v182', kn == ['\U0001F310 Taal / Language', '⏳ Berichten bewaren', '\U0001F3B5 Mijn muziek vanzelf: aan',
-                                                                     '\U0001F3B5 Muziek van vrienden vanzelf: aan', '\U0001F4E6 Mijn gegevens downloaden',
+    check('de knoppen in het menu zijn dezelfde als in v182 (sinds v187 met de buzz-schakelaar)', kn == ['\U0001F310 Taal / Language', '⏳ Berichten bewaren', '\U0001F3B5 Mijn muziek vanzelf: aan',
+                                                                     '\U0001F3B5 Muziek van vrienden vanzelf: aan'] + (['⚡ Buzz schudt en trilt: aan'] if 'fibro_buzz_schud' in idx else []) + ['\U0001F4E6 Mijn gegevens downloaden',
                                                                      '\U0001F5D1️ Account verwijderen', 'ℹ️ Over Fibro', '\U0001F4F2 Fibro als app installeren'], kn)
     check('de focus staat nog op het eerste item', ev(p, "() => document.activeElement && document.activeElement.textContent") == '\U0001F310 Taal / Language')
     if FOTO and isinstance(v, dict): p.screenshot(path=os.path.join(FOTO, 'menu-versie-nl.png'))

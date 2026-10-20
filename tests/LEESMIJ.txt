@@ -228,6 +228,15 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  wint (window._avatarKeuze telt de keuzes); hetzelfde bestand opnieuw kiezen werkt (invoerveld leeg);
                                  Opslaan wacht op een foto die nog bezig is (window._avatarFotoBezig). FIBRO_VERSIE 186
                                  (testscript_avatarfoto.py)
+                         rustigebuzz = v187: menu > Instellingen > '⚡ Buzz schudt en trilt' (schakelaar, standaard aan; localStorage
+                                 fibro_buzz_schud = '0' is uit). Uit = een buzz is alleen een melding: meldingen.js (buzzRustig) geen
+                                 buzzgeluid, niet trillen, niet schudden, wel '⚡ Bram buzzt je!'; chat.html ontvangBuzz doet niets
+                                 (de regel '📳 ... stuurt een buzz!' blijft); service-worker.js leest de keuze uit het kastje
+                                 'fibro-badge' (sleutel 'fibro-buzz-rustig', gezet door meldingen.js bewaarBuzzKeuze bij het starten
+                                 en bij de klik): de pushmelding trilt dan als een bericht [200,100,200] met het gewone icoon.
+                                 ?v=187: meldingen.js (index, chat, profiel, vriend-profiel, vrienden, timer-melding.js),
+                                 timer-melding.js (index); taal-en.js?v=19 en taal.js?v=19 in alle 12 pagina's; FIBRO_VERSIE 187.
+                                 proef76 en proef80 tellen sinds v187 de buzz-schakelaar mee (testscript_rustigebuzz.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -613,6 +622,12 @@ tools/proef82.py         avatar van foto naar emoji en terug (v185), echte profi
                          emoji blijft; weer een foto. Oude map (v184) als controle: 5 van 10.   python3 -I proef82.py <map>
                          Sinds v186 (15 controles): foto kiezen zonder 'Gebruik deze foto' + Opslaan = foto; meteen Opslaan; foto
                          dan emoji = emoji; zelfde bestand opnieuw. Oude map (v185) als controle: 9 van 15.
+tools/proef83.py         'Buzz schudt en trilt' (v187), echte index.html en chat.html, buzz via nagebootste Realtime (zoals proef53):
+                         schakelaar in Instellingen, aan = geluid/trillen/schudden/melding, echte klik = uit (bewaard + kastje),
+                         uit = alleen de melding (Home en chat; in de chat wel de regel), weer aan in de chat = zoals altijd,
+                         pushmelding via de echte portier (CDP ServiceWorker.deliverPushMessage; de volledige Chromium met
+                         channel='chromium', de kale headless-versie kan geen meldingen), Engels. Oude map (v186): 2 van 10.
+                         python3 -I proef83.py <map>
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=18"></script>
+<script src="taal.js?v=19"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>/* v130: zoomen mag weer; iPhone zoomt bij invoervakken kleiner dan 16px vanzelf in */@supports (-webkit-touch-callout: none){input,textarea,select{font-size:16px !important}}</style>
@@ -212,7 +212,7 @@ import { initSync } from './sync.js?v=162'
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
 import { bewaardeSessieZonderInternet } from './offline.js?v=146'
-import { startMeldingen } from './meldingen.js?v=180'
+import { startMeldingen } from './meldingen.js?v=187'
 import { haalPrivateKeyOp } from './crypto.js?v=182'
 import { isBelregel, belregelTekst } from './belregel.js?v=152'
 pasBlokstijlToe()
@@ -2079,7 +2079,7 @@ async function renderGastenboek(c, uid) {
 // v183: het versienummer en de datum van deze versie, onderaan in het menu. Zo zie je op elk toestel welke versie
 // er echt draait (een telefoon kan een oude pagina nog even vasthouden). Elk maak-script zet het nummer een hoger:
 // tests/gen/bouw.py maakt geen script als het hier niet omhoog gaat.
-const FIBRO_VERSIE = 186
+const FIBRO_VERSIE = 187
 const FIBRO_DATUM = '2026-10-20'
 function versieTekst() {
   let d = FIBRO_DATUM
@@ -2155,6 +2155,10 @@ window.openMenu = function() {
     try { const m = await import('./profielmuziek.js?v=184'); if (aan) startProfielMuziek(); else m.zetAuto(false) } catch (e) {}
   })
   schakelaar('fibro_muziek_auto_vrienden', T('\u{1F3B5} Muziek van vrienden vanzelf'))
+  // v187: uit = een buzz is alleen een melding (geen buzzgeluid, niet trillen, geen schuddend scherm), zie meldingen.js
+  schakelaar('fibro_buzz_schud', T('\u26A1 Buzz schudt en trilt'), async () => {
+    try { (await import('./meldingen.js?v=187')).bewaarBuzzKeuze() } catch (e) {}
+  })
   g = groep(T('Accountinstellingen'), 'menuKopAccount')
   item(g, T('\u{1F4E6} Mijn gegevens downloaden'), () => openAccount('gegevens'))
   item(g, T('\u{1F5D1}\uFE0F Account verwijderen'), () => openAccount('verwijderen')).style.color = '#fca5a5'
@@ -2606,7 +2610,7 @@ if ('serviceWorker' in navigator) {
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=143"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=168"; startOngelezen()</script>
-<script type="module">import { checkTimers } from "./timer-melding.js?v=180"; setTimeout(checkTimers,4000)</script>
+<script type="module">import { checkTimers } from "./timer-melding.js?v=187"; setTimeout(checkTimers,4000)</script>
 <script src="./fotoviewer.js?v=6"></script>
 <script type="module" src="blokkade.js?v=2"></script>
 </body>

@@ -145,6 +145,11 @@ self.addEventListener('fetch', function(event) {
       }
       // Al het andere (afbeeldingen e.d.): browser regelt het zelf
 })
+// v187: 'Buzz schudt en trilt' uit (menu > Instellingen; meldingen.js zet de keuze in het kastje 'fibro-badge'): een
+// buzz trilt dan zoals een gewoon bericht en krijgt het gewone icoon.
+async function buzzRustig() {
+  try { const k = await caches.open(BADGE_KAST); const r = await k.match('fibro-buzz-rustig'); return !!r && (await r.text()) === '1' } catch (e) { return false }
+}
 self.addEventListener('push', function(event) {
   const data = event.data ? event.data.json() : {}
   const title = data.title || 'Fibro'
@@ -152,19 +157,22 @@ self.addEventListener('push', function(event) {
   // v151: oproep ('belt je') blijft staan tot je erop tikt; 'gemist' vervangt hem (zelfde tag van de server)
   const isOproep = data.type === 'oproep' || data.type === 'oproep-video'
   const tag = typeof data.tag === 'string' && data.tag ? data.tag : (isBuzz ? 'buzz' : undefined)
-  const options = {
-    body: data.body || 'Je hebt een nieuw bericht',
-    icon: isBuzz ? '/Fibro/icon-buzz.png' : '/Fibro/icon-192.png',
-    badge: '/Fibro/icon-192.png',
-    vibrate: isBuzz ? [300, 80, 300, 80, 300, 80, 500] : isOproep ? [700, 300, 700, 300, 700, 300, 700] : [200, 100, 200],
-    tag: tag,
-    renotify: !!tag,
-    requireInteraction: isOproep,
-    data: { url: data.url || '/chat.html' }
-  }
   // v168: een bericht, buzz of gemiste oproep telt mee in het bolletje op het icoon ('belt je' niet)
   const telt = !data.type || data.type === 'bericht' || data.type === 'buzz' || data.type === 'gemist'
-  event.waitUntil(Promise.all([self.registration.showNotification(title, options), telt ? badgeEenErbij() : null]))
+  event.waitUntil((async () => {
+    const schud = isBuzz && !(await buzzRustig())
+    const options = {
+      body: data.body || 'Je hebt een nieuw bericht',
+      icon: schud ? '/Fibro/icon-buzz.png' : '/Fibro/icon-192.png',
+      badge: '/Fibro/icon-192.png',
+      vibrate: schud ? [300, 80, 300, 80, 300, 80, 500] : isOproep ? [700, 300, 700, 300, 700, 300, 700] : [200, 100, 200],
+      tag: tag,
+      renotify: !!tag,
+      requireInteraction: isOproep,
+      data: { url: data.url || '/chat.html' }
+    }
+    await Promise.all([self.registration.showNotification(title, options), telt ? badgeEenErbij() : null])
+  })())
 });
 
 self.addEventListener('notificationclick', function(event) {

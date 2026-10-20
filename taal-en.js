@@ -579,6 +579,8 @@ window.FIBRO_EN = {
   "⚠️ Dit bericht klopt niet: het is onderweg veranderd.": "⚠️ This message doesn't add up: it was changed on the way.",
   "⚠️ verzendtijd klopt niet": "⚠️ send time doesn't match",
   "⚠️ niet versleuteld": "⚠️ not encrypted",
+  // v187: menu > Instellingen
+  "⚡ Buzz schudt en trilt": "⚡ Buzz shakes and vibrates",
   "⚠️ De sleutel van {naam} is veranderd. Dat gebeurt als {naam} opnieuw begon zonder herstel. Verwachtte je dat niet? Vraag het {naam} even, bijvoorbeeld door te bellen.": "⚠️ {naam}'s key has changed. This happens when {naam} started over without recovery. Not expecting this? Check with {naam}, for example by calling.",
   "bericht niet meer beschikbaar": "message no longer available",
   "Bericht NIET verstuurd.\n\nDit apparaat heeft geen sleutel voor jouw account, dus het bericht kan niet versleuteld worden. Ga naar het beginscherm en tik op Sleutel terugzetten (Face ID of herstelcode).": "Message NOT sent.\n\nThis device doesn't have a key for your account, so the message can't be encrypted. Go to the home screen and tap Restore key (Face ID or recovery code).",

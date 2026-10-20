@@ -5,6 +5,17 @@ import { startParen, opOnline } from './paren.js?v=2'
 import { houOpen } from './lijntjes.js?v=1'
 
 const BUZZ_UIT = 'fibro_buzz_uit'
+// v187: menu > Instellingen > 'Buzz schudt en trilt'. Uit (localStorage fibro_buzz_schud = '0') = een buzz is alleen een
+// melding: geen buzzgeluid, niet trillen, het scherm schudt niet. Ook in de chat (chat.html) en bij een pushmelding:
+// service-worker.js leest de keuze uit het kastje 'fibro-badge' (sleutel 'fibro-buzz-rustig'); dan trilt de melding
+// zoals bij een gewoon bericht en heeft hij het gewone icoon.
+export const BUZZ_SCHUD = 'fibro_buzz_schud'
+export function buzzRustig() {
+  try { return localStorage.getItem(BUZZ_SCHUD) === '0' } catch (e) { return false }
+}
+export function bewaarBuzzKeuze() {
+  try { if (window.caches) caches.open('fibro-badge').then(k => k.put('fibro-buzz-rustig', new Response(buzzRustig() ? '1' : '0'))).catch(() => {}) } catch (e) {}
+}
 const ONLINE_UIT = 'fibro_online_melding_uit'
 let laatsteBuzz = 0
 let mKanaal = null
@@ -103,11 +114,13 @@ function buzzBinnen(vanNaam, vanId) {
   const nu = Date.now()
   if (nu - laatsteBuzz < 5000) return   // rem: max 1 buzz per 5 sec
   laatsteBuzz = nu
-  zorgVoorSchudStijl()
-  speelBuzz()
-  if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200])
-  document.body.classList.add('fibro-schudt')
-  setTimeout(() => document.body.classList.remove('fibro-schudt'), 700)
+  if (!buzzRustig()) { // v187: rustig = alleen de melding hieronder
+    zorgVoorSchudStijl()
+    speelBuzz()
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200])
+    document.body.classList.add('fibro-schudt')
+    setTimeout(() => document.body.classList.remove('fibro-schudt'), 700)
+  }
   toonMelding(T('\u26a1 {naam} buzzt je!', { naam: vanNaam || T('Iemand') }), 'rgba(250,204,21,0.7)', vanId ? () => { window.location.href = 'chat.html?vriend=' + vanId } : null)
 }
 
@@ -187,6 +200,7 @@ export async function startMeldingen() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
     eigenId = session.user.id
+    bewaarBuzzKeuze() // v187: de keuze ook voor de portier (pushmeldingen)
     startBuzzLuisteraar()
     startOnlineLuisteraar()
     console.log('[meldingen] actief')

@@ -137,7 +137,7 @@ with sync_playwright() as pw:
           and isinstance(d2, dict) and d2['pm'] is False and isinstance(d3, dict) and d3['pm'], (d1, d2 and d2['pm'], d3 and d3['pm']))
     # F. menu en vrienden
     klik(p, '#menuBtn'); p.wait_for_timeout(300)
-    f1 = ev(p, "() => [...document.querySelectorAll('#fibroMenu [role=menuitemcheckbox]')].map(b => [b.textContent, b.getAttribute('aria-checked')])")
+    f1 = ev(p, "() => [...document.querySelectorAll('#fibroMenu [role=menuitemcheckbox]')].filter(b => b.textContent.includes('uziek')).map(b => [b.textContent, b.getAttribute('aria-checked')])")  # v187: alleen de muziek-schakelaars
     check("F. menu: 'Mijn muziek vanzelf: aan' en 'Muziek van vrienden vanzelf: aan'", f1 == [['\U0001F3B5 Mijn muziek vanzelf: aan', 'true'], ['\U0001F3B5 Muziek van vrienden vanzelf: aan', 'true']], f1)
     p.goto(B + 'vriend-profiel.html?id=' + FID); p.wait_for_timeout(3500); v1 = ev(p, STAND)
     check('F. bij een vriend: zijn nummer speelt vanzelf', isinstance(v1, dict) and v1['pm'] and 'Muziek van Bram' in (v1['knop'] or ''), v1)
@@ -147,7 +147,7 @@ with sync_playwright() as pw:
     p.goto(B + 'index.html'); p.wait_for_timeout(2500)
     klik(p, '#menuBtn'); p.wait_for_timeout(300)
     klik(p, '#fibroMenu [role=menuitemcheckbox]:has-text("vrienden")'); p.wait_for_timeout(300)
-    f2 = ev(p, "() => [...document.querySelectorAll('#fibroMenu [role=menuitemcheckbox]')].map(b => b.textContent)")
+    f2 = ev(p, "() => [...document.querySelectorAll('#fibroMenu [role=menuitemcheckbox]')].filter(b => b.textContent.includes('uziek')).map(b => b.textContent)")
     p.goto(B + 'vriend-profiel.html?id=' + FID); p.wait_for_timeout(3500); v4 = ev(p, STAND)
     klik(p, '#profielMuziekKnop'); p.wait_for_timeout(800); v5 = ev(p, STAND)
     check("F. 'Muziek van vrienden vanzelf: uit' (echte klik): bij een vriend stil met ▶; tik = speelt", isinstance(f2, list) and len(f2) == 2 and f2[1].endswith('uit')

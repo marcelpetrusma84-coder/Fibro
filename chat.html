@@ -1546,7 +1546,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
       }
       syncMetVriend(vriendId) // v155: eigen sticker: het lijstje meteen (opnieuw) naar de vriend
     }
-    if (!(await verstuur(vriendId, tekst))) nietVerstuurd(vriendId, tekst)
+    // v189: ook een sticker geeft een pushmelding, zoals een tekstbericht ('Je hebt een nieuw bericht'; wat erin staat
+    // blijft geheim). Lukt versturen pas later (niet verstuurd, tik = opnieuw), dan komt de melding ook dan.
+    if (!(await verstuur(vriendId, tekst, null, true))) nietVerstuurd(vriendId, tekst, null, true)
   }
   const stickerKeuze = maakStickerkeuze(document.getElementById('stickerGrid'), { onKies: stuurFxSticker, uid: () => huidigeUser && huidigeUser.id })
   // Een sticker in de chat laten zien (beweging en geluid staan erbij, voor het tikken)

@@ -244,6 +244,10 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  taal-en.js?v=20 en taal.js?v=20 in alle 12 pagina's; FIBRO_VERSIE 188. proef83 luistert nu eerst en
                                  zet dan pas aan (ServiceWorker.enable), en wacht tot 5 s op de aanmelding van de portier (die werd onder
                                  drukte soms gemist) (testscript_offlinestip.py)
+                         stickerpush = v189: ook een sticker geeft een pushmelding (chat.html stuurFxSticker: verstuur(..., pling =
+                                 true), ook als hij pas later lukt via 'Niet verstuurd'). De server kiest de tekst (soort 'bericht':
+                                 'Je hebt een nieuw bericht 💬'); wat erin staat blijft geheim. FIBRO_VERSIE 189
+                                 (testscript_stickerpush.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -640,6 +644,9 @@ tools/proef84.py         het rode offline-stipje op Home (v188), echte index.htm
                          tik = Profiel; nieuw toestel + server offline = stipje zodra het profiel binnen is (profiel 1,5 s later via
                          een vertraagde fetch in de pagina); server online + toestel offline = eerst stipje, dan weg; weer Online;
                          Engels; 320 px. Oude map (v187) als controle: 2 van 11.   python3 -I proef84.py <map>
+tools/proef85.py         pushmelding bij een sticker (v189), echte chat.html, echte klikken: sticker = versleuteld + melding (soort
+                         bericht), tekst nog steeds, server weg = 'Niet verstuurd' zonder melding en na de tik wel, buzz eigen
+                         melding. Oude map (v188) als controle: 4 van 6.   python3 -I proef85.py <map>
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

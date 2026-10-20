@@ -98,7 +98,7 @@ SCHERMEN = [
     ('home: blokkade-balk', 'index.html?blokkadetest=1', '', ['Your account is blocked until', 'Reason: Voorbeeld', 'You can still read your messages']),
     ('home: buzz-melding', 'index.html', "() => { window.testBuzz() }", ['Test is buzzing you!']),
     # v144: Chat
-    ('chat: lijst', 'chat.html', '', ['Who do you want to chat with?', 'Select a friend', 'Choose who you want to chat with below', 'Bram', '← back']),
+    ('chat: lijst', 'chat.html', '', ['Who do you want to chat with?', 'Chat', 'Bram', '← back']),  # v191: bovenaan alleen 'Chat'
     ('chat: gesprek', 'chat.html?vriend=' + BRAM, '', ['encrypted message — tap Restore key', 'Game invite: ♟️ Chess', 'Message deleted',
         '[your message]', 'message no longer available', 'Not sent · tap to try again', 'No key on this device', 'Send photo', '● active', 'Call', 'More']),
     ('chat: melden', 'chat.html?vriend=' + BRAM, "() => { toonChatMenu(); document.getElementById('cmMeld').click() }", ['Tap the messages you want to report (max 5)', 'Cancel', 'Report']),
@@ -205,6 +205,9 @@ MAG_ERBIJ |= {'\U0001F58D\uFE0F', 'Stijl', 'Mijn stijl', 'Ga naar Stijl en zet w
               'Nog geen vrienden. Nodig iemand uit via Vrienden!', 'Je eigen stickers maak je in Stijl, bij Stickers.'}
 MAG_WEG |= {'Fibro \u2014 Profiel', 'Fibro \u2013 Mijn profiel', 'Onderdelen van je profiel', 'Fibro v189 \u00B7 20 okt 2026'}  # titel, hoofdtitel, lijst, menu
 MAG_ERBIJ |= {'Fibro \u2014 Stijl', 'Fibro \u2013 Mijn stijl', 'Onderdelen van je stijl', 'Fibro v190 \u00B7 21 okt 2026'}
+# v191: bovenaan de Chat-lijst alleen 'Chat' (was 'Selecteer een vriend' + 'Kies hieronder met wie je wilt chatten')
+MAG_WEG |= {'Selecteer een vriend', 'Kies hieronder met wie je wilt chatten', 'Fibro v190 \u00B7 21 okt 2026'}
+MAG_ERBIJ |= {'Chat', 'Fibro v191 \u00B7 21 okt 2026'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

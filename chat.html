@@ -41,6 +41,9 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .chat-info { flex:1; }
 .chat-name { font-size:14px; font-weight:500; }
 .chat-status { font-size:15px; color:var(--muted); margin-top:2px; }
+/* v191: zonder gekozen vriend staat bovenaan alleen 'Chat', als titel zoals 'Vrienden' op de pagina Vrienden */
+.chat-name.als-titel { font-family:"Playfair Display",serif; font-style:italic; font-size:18px; font-weight:400; color:var(--accent); }
+.chat-status:empty { display:none; }
 .lock-btn { font-size:14px; padding:4px 10px; border-radius:20px; border:0.5px solid var(--border); background:none; color:var(--muted); cursor:pointer; font-family:'DM Sans',sans-serif; }
 .screenshot-banner { background:rgba(192,132,252,0.12); border-bottom:0.5px solid rgba(192,132,252,0.25); padding:7px 14px; font-size:14px; color:var(--accent2); display:none; align-items:center; gap:8px; }
 .screenshot-banner.show { display:flex; }
@@ -171,8 +174,8 @@ window.veiligeUrl = function(v){
   <button class="back-btn" onclick="gaTerug()" data-t>← terug</button>
   <div class="chat-av" id="chatAv">💬</div>
   <div class="chat-info">
-    <div class="chat-name" id="chatNaam" data-t>Selecteer een vriend</div>
-    <div class="chat-status" id="chatStatus" data-t>Kies hieronder met wie je wilt chatten</div>
+    <div class="chat-name als-titel" id="chatNaam" data-t>Chat</div>
+    <div class="chat-status" id="chatStatus"></div>
   </div>
   <div id="belKnoppen" style="display:none; margin-left:auto; display:flex; gap:8px; flex-shrink:0;">
     <button onclick="if(geselecteerdeVriend)window.location.href='bellen.html?vriend='+geselecteerdeVriend.id+'&naam='+encodeURIComponent(geselecteerdeVriend.naam)" title="Bellen" data-t-attr="title" style="background:rgba(34,197,94,0.15); border:0.5px solid rgba(34,197,94,0.4); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;">📞</button>
@@ -929,6 +932,7 @@ window.veiligeUrl = function(v){
     document.getElementById('chatAv').textContent = vriendAvatar
     zetAvatar(document.getElementById('chatAv'), vriendAvatar, vriendFotos.get(vriendId)) // v134
     document.getElementById('chatNaam').textContent = vriendNaam
+    document.getElementById('chatNaam').classList.remove('als-titel') // v191
     document.getElementById('chatStatus').textContent = T('● actief')
 
     const versleuteldLabel = (mijnPrivateKey && vriendPublicKey)
@@ -1898,8 +1902,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
       const sb = document.getElementById('sleutelBalk'); if (sb) sb.style.display = 'none' // v181
       document.getElementById('chatScherm').style.display = 'none'
       document.getElementById('vriendenSelectie').style.display = 'block'
-      document.getElementById('chatNaam').textContent = T('Selecteer een vriend')
-      document.getElementById('chatStatus').textContent = T('Kies hieronder met wie je wilt chatten')
+      document.getElementById('chatNaam').textContent = T('Chat') // v191: was 'Selecteer een vriend' + 'Kies hieronder met wie je wilt chatten'
+      document.getElementById('chatNaam').classList.add('als-titel')
+      document.getElementById('chatStatus').textContent = ''
       zetAvatar(document.getElementById('chatAv'), '💬', null) // v134
       document.getElementById('belKnoppen').style.display = 'none'
       if (realtimeKanaal) { realtimeKanaal.stop(); realtimeKanaal = null }

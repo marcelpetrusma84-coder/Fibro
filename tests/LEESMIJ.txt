@@ -255,6 +255,11 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  iemand uit via Vrienden!' (de uitnodiging zat nooit in je profiel). Het profiel van een vriend heet nog
                                  Profiel. taal-en.js?v=21 (in taal.js), taal.js?v=21 (alle 12 pagina's), stickerkeuze.js?v=190.
                                  proef43 kent de nieuwe teksten (MAG_WEG/MAG_ERBIJ v190). FIBRO_VERSIE 190, 21 okt (testscript_stijltab.py)
+                         chatkop = v191: bovenaan de Chat-lijst alleen 'Chat', als titel zoals 'Vrienden' op de pagina Vrienden (klasse
+                                 als-titel op #chatNaam: Playfair Display, schuin, 18 px, accentkleur); de tweede regel is leeg en dan
+                                 verborgen (.chat-status:empty). Was 'Selecteer een vriend' + 'Kies hieronder met wie je wilt chatten'
+                                 (die sleutels staan nog ongebruikt in taal-en.js). Een gesprek: naam + '● actief' zoals altijd; terug:
+                                 weer 'Chat'. proef43 aangepast. FIBRO_VERSIE 191 (testscript_chatkop.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -658,6 +663,10 @@ tools/proef86.py         tabblad Stijl (v190), echte pagina's in het Nederlands 
                          onderaan op 5 pagina's, tik opent profiel.html (actief), titel/kop/hoofdtitel/lijst van profiel.html,
                          Home zonder widgets, Chat zonder vrienden, eigen stickervel leeg, het profiel van een vriend blijft
                          Profiel; geen paginafouten. Oude map (v189) als controle: 12 van 46.   python3 -I proef86.py <map>
+tools/proef87.py         Chat-lijst bovenaan alleen 'Chat' (v191), echte chat.html in het Nederlands en het Engels, echte tikken: titel
+                         zoals Vrienden (letter, maat, schuin), geen tweede regel, oude zinnen weg; tik op een vriend = naam + actief
+                         in de gewone letter; terug = weer 'Chat'; ook via chat.html?vriend=. Oude map (v190) als controle: 10 van 34.
+                         python3 -I proef87.py <map>
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

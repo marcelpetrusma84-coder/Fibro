@@ -206,6 +206,15 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  FIBRO_DATUM = '2026-10-20'. VANAF NU zet elk script het nummer precies een hoger met de datum van
                                  die dag (index.html doet dus altijd mee): bouw.py (versie_nagekeken) maakt anders geen script
                                  (testscript_versienummer.py)
+                         muziekknop = v184: het knopje van de profielmuziek (profielmuziek.js, op Home en bij een vriend) is te
+                                 verslepen met je vinger of de muis (pointer events, 8 px drempel, touch-action:none, data-geen-swipe
+                                 voor swipe.js). Loslaten = vast aan de dichtstbijzijnde zijkant (12 px), op de hoogte van loslaten,
+                                 tussen 64 px van boven en 84 px van onder (plus de veilige rand van de iPhone). Bewaard per toestel:
+                                 localStorage fibro_muziek_knop_plek = { kant: 'links'|'rechts', y: 0..1 }; bij draaien opnieuw
+                                 neergezet. Na slepen geen tik; gewoon tikken = pauze/verder. Nooit verplaatst = rechtsonder zoals
+                                 eerst. ?v=184: profielmuziek.js (index.html 2x, vriend-profiel.html); FIBRO_VERSIE 184.
+                                 proef80 laadt bouw.py nu met -B (liet een map tests/gen/__pycache__ achter)
+                                 (testscript_muziekknop.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -581,6 +590,10 @@ tools/proef80.py         het versienummer onderaan in het menu (v183), echte ind
                          FIBRO_DATUM, laatste in het menu, geen knop, knoppen en focus zoals in v182, tikken laat het menu open,
                          Engels, 320 px; bouw.py weigert een script zonder precies een hoger nummer, met een oudere datum of
                          zonder index.html. Oude map (v182) als controle: 7 van 19.   python3 -I proef80.py <map>
+tools/proef81.py         het muziekknopje verslepen (v184), echte profiel.html (uploaden), index.html en vriend-profiel.html, met
+                         nagebootste vinger (CDP Input.dispatchTouchEvent) en de muis: oude plek, volgen, niet schuiven of vegen,
+                         vastklikken links/rechts, slepen is geen tik, tikken = pauze/verder, onthouden, grenzen boven en onder,
+                         draaien, bij een vriend, muis. Oude map (v183) als controle: 4 van 18.   python3 -I proef81.py <map>
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

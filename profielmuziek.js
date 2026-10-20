@@ -12,6 +12,12 @@
 // fibro_muziek_auto = '0' (je eigen nummer niet vanzelf; dan ook geen knopje) en fibro_muziek_auto_vrienden = '0' (dat
 // van een vriend niet vanzelf; het knopje met ▶ staat er wel). Stil 's nachts: tussen 23:00 en 07:00 niets vanzelf.
 //
+// v184: het knopje is met je vinger (of de muis) te verslepen. Loslaten = het klikt vast aan de dichtstbijzijnde zijkant,
+// op de hoogte waar je het losliet, altijd tussen de balk bovenaan en de balk onderaan. Die plek geldt op dit toestel
+// voor Home en het profiel van een vriend (localStorage fibro_muziek_knop_plek: { kant, y }; y = 0 bovenaan tot 1
+// onderaan, zodat het ook klopt na draaien of op een ander scherm). Gewoon tikken = pauze of verder, zoals altijd.
+// Nooit verplaatst = de oude plek rechtsonder.
+//
 // Gebruik: speelProfielMuziek({ data: 'data:audio/...', titel: 'Mijn nummer', sleutel: 'eigen' of 'vriend_<id>', vriend })
 
 import './geluidregelaar.js?v=180'
@@ -32,6 +38,105 @@ export function nacht(nu) {
 
 let huidige = null
 let beurt = 0
+
+// ─── v184: de plek van het knopje ───
+const PLEK = 'fibro_muziek_knop_plek'
+const RAND = 12      // px van de zijkant
+const BOVEN = 64     // px vrij voor de balk bovenaan
+const ONDER = 84     // px vrij voor de balk onderaan (zoals de oude plek)
+const DREMPEL = 8    // px bewegen voordat het slepen begint (minder = gewoon een tik)
+function leesPlek() {
+  try {
+    const p = JSON.parse(localStorage.getItem(PLEK) || 'null')
+    if (p && (p.kant === 'links' || p.kant === 'rechts') && typeof p.y === 'number' && p.y >= 0 && p.y <= 1) return p
+  } catch (e) {}
+  return null
+}
+function bewaarKnopPlek(p) { try { localStorage.setItem(PLEK, JSON.stringify(p)) } catch (e) {} }
+let veilig = null
+function veiligeRand() {  // de inham van de iPhone (notch, streep onderaan)
+  if (veilig) return veilig
+  const meet = (kant) => {
+    const d = document.createElement('div')
+    d.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;left:0;top:0;width:1px;height:env(safe-area-inset-' + kant + ', 0px)'
+    document.body.appendChild(d); const h = d.offsetHeight || 0; d.remove(); return h
+  }
+  veilig = { boven: meet('top'), onder: meet('bottom') }
+  return veilig
+}
+function hoogteGrenzen(knop) {
+  const v = veiligeRand(), h = knop.offsetHeight || 40
+  const min = v.boven + BOVEN, max = window.innerHeight - v.onder - ONDER - h
+  if (max >= min) return { min, max }
+  const m = Math.max(0, Math.min(min, window.innerHeight - h))  // heel laag scherm (liggend): zo goed als het gaat
+  return { min: m, max: m }
+}
+const tussen = (x, a, b) => Math.min(Math.max(x, a), Math.max(a, b))
+function zetPlek(knop, p) {
+  if (!p) return
+  const g = hoogteGrenzen(knop)
+  knop.style.bottom = 'auto'
+  knop.style.top = Math.round(g.min + p.y * (g.max - g.min)) + 'px'
+  if (p.kant === 'links') { knop.style.left = RAND + 'px'; knop.style.right = 'auto' }
+  else { knop.style.right = RAND + 'px'; knop.style.left = 'auto' }
+}
+function maakVersleepbaar(knop) {
+  knop.dataset.geenSwipe = '1'           // swipe.js: niet naar een andere pagina vegen
+  knop.style.touchAction = 'none'        // de browser schuift de pagina niet mee
+  knop.style.userSelect = 'none'
+  knop.style.webkitUserSelect = 'none'
+  knop.style.webkitTouchCallout = 'none'
+  zetPlek(knop, leesPlek())
+  let sleep = null, versleept = false, snapTimer = 0
+  const stil = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  knop.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return
+    const r = knop.getBoundingClientRect()
+    sleep = { id: e.pointerId, x: e.clientX, y: e.clientY, dx: e.clientX - r.left, dy: e.clientY - r.top, bezig: false }
+    try { knop.setPointerCapture(e.pointerId) } catch (x) {}
+  })
+  knop.addEventListener('pointermove', (e) => {
+    if (!sleep || e.pointerId !== sleep.id) return
+    if (!sleep.bezig) {
+      if (Math.hypot(e.clientX - sleep.x, e.clientY - sleep.y) < DREMPEL) return
+      sleep.bezig = true
+      clearTimeout(snapTimer)
+      knop.style.transition = 'none'
+      knop.style.right = 'auto'; knop.style.bottom = 'auto'
+      knop.style.transform = 'scale(1.06)'
+    }
+    e.preventDefault()
+    const g = hoogteGrenzen(knop)
+    knop.style.left = Math.round(tussen(e.clientX - sleep.dx, 0, window.innerWidth - knop.offsetWidth)) + 'px'
+    knop.style.top = Math.round(tussen(e.clientY - sleep.dy, g.min, g.max)) + 'px'
+  })
+  const los = (e) => {
+    if (!sleep || e.pointerId !== sleep.id) return
+    const was = sleep.bezig
+    sleep = null
+    if (!was) return
+    versleept = true
+    setTimeout(() => { versleept = false }, 400)
+    knop.style.transform = ''  // eerst weer gewone maat, dan meten
+    const r = knop.getBoundingClientRect(), g = hoogteGrenzen(knop)
+    const p = { kant: (r.left + r.width / 2) < window.innerWidth / 2 ? 'links' : 'rechts',
+                y: g.max > g.min ? Math.round(((tussen(r.top, g.min, g.max) - g.min) / (g.max - g.min)) * 1000) / 1000 : 1 }
+    bewaarKnopPlek(p)
+    if (stil()) { knop.style.transition = ''; zetPlek(knop, p); return }
+    // eerst schuiven naar de kant, daarna vastzetten (rechts gemeten vanaf de rechterkant: het knopje wordt soms breder)
+    knop.style.transition = 'left 0.2s ease, top 0.2s ease'
+    knop.style.left = (p.kant === 'links' ? RAND : window.innerWidth - knop.offsetWidth - RAND) + 'px'
+    knop.style.top = Math.round(g.min + p.y * (g.max - g.min)) + 'px'
+    snapTimer = setTimeout(() => { knop.style.transition = ''; zetPlek(knop, p) }, 220)
+  }
+  knop.addEventListener('pointerup', los)
+  knop.addEventListener('pointercancel', los)
+  // na slepen geen tik (geen pauze of verder)
+  knop.addEventListener('click', (e) => { if (versleept) { versleept = false; e.stopImmediatePropagation(); e.preventDefault() } }, true)
+  const opnieuw = () => zetPlek(knop, leesPlek())  // draaien of ander venster: weer netjes binnen de balken
+  window.addEventListener('resize', opnieuw)
+  return () => { clearTimeout(snapTimer); window.removeEventListener('resize', opnieuw) }
+}
 
 function sessie(sleutel, waarde) {
   try {
@@ -82,6 +187,7 @@ export async function speelProfielMuziek({ data, titel, sleutel, vriend = false 
   }
   toon()
   document.body.appendChild(knop)
+  const stopSlepen = maakVersleepbaar(knop) // v184
 
   let wachtOpTik = false, wasSpelend = false, weg = false
   const probeer = () => {
@@ -125,6 +231,7 @@ export async function speelProfielMuziek({ data, titel, sleutel, vriend = false 
       clearInterval(plekTimer)
       document.removeEventListener('visibilitychange', zicht)
       window.removeEventListener('pagehide', bewaarPlek)
+      stopSlepen()
       try { audio.pause(); audio.removeAttribute('src'); audio.load() } catch (e) {}
       try { URL.revokeObjectURL(url) } catch (e) {}
       knop.remove()

@@ -108,7 +108,7 @@ def probeer(oud_nr, oud_dt, nieuw_nr, nieuw_dt, gewijzigd=('index.html',)):
         open(os.path.join(d, k, 'index.html'), 'w').write('\n'.join(regels + ['<!-- %s -->' % k, '</html>', '']))
     code = ("import sys; sys.path.insert(0, %r); import bouw; bouw.bouw('proef', %r, %r, %r, [], [], 'proef', [], %r)"
             % (GEN, d + '/oud', d + '/nieuw', list(gewijzigd), d + '/maak-proef.py'))
-    r = subprocess.run([sys.executable, '-I', '-c', code], capture_output=True, text=True, timeout=30)
+    r = subprocess.run([sys.executable, '-I', '-B', '-c', code], capture_output=True, text=True, timeout=30)  # -B: geen __pycache__ in tests/gen (v184)
     gemaakt = os.path.exists(d + '/maak-proef.py'); shutil.rmtree(d, ignore_errors=True)
     return gemaakt, (r.stdout + r.stderr).strip().splitlines()[-1:] if (r.stdout + r.stderr).strip() else ''
 g = probeer(183, '2026-10-20', 184, '2026-10-21'); check('bouw.py: v183 -> v184 met een latere datum: script gemaakt', g[0] is True, g)

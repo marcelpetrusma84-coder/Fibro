@@ -2079,7 +2079,7 @@ async function renderGastenboek(c, uid) {
 // v183: het versienummer en de datum van deze versie, onderaan in het menu. Zo zie je op elk toestel welke versie
 // er echt draait (een telefoon kan een oude pagina nog even vasthouden). Elk maak-script zet het nummer een hoger:
 // tests/gen/bouw.py maakt geen script als het hier niet omhoog gaat.
-const FIBRO_VERSIE = 183
+const FIBRO_VERSIE = 184
 const FIBRO_DATUM = '2026-10-20'
 function versieTekst() {
   let d = FIBRO_DATUM
@@ -2152,7 +2152,7 @@ window.openMenu = function() {
   }
   schakelaar('fibro_muziek_auto', T('\u{1F3B5} Mijn muziek vanzelf'), async (aan) => {
     if (aan) { try { sessionStorage.removeItem('fibro_muziek_pauze_eigen') } catch (e) {} }
-    try { const m = await import('./profielmuziek.js?v=180'); if (aan) startProfielMuziek(); else m.zetAuto(false) } catch (e) {}
+    try { const m = await import('./profielmuziek.js?v=184'); if (aan) startProfielMuziek(); else m.zetAuto(false) } catch (e) {}
   })
   schakelaar('fibro_muziek_auto_vrienden', T('\u{1F3B5} Muziek van vrienden vanzelf'))
   g = groep(T('Accountinstellingen'), 'menuKopAccount')
@@ -2581,7 +2581,7 @@ async function startProfielMuziek() {
     const data = await laadUitDB('muziek_track')
     if (!data) return
     const titel = await laadUitDB('muziek_titel')
-    const m = await import('./profielmuziek.js?v=180')
+    const m = await import('./profielmuziek.js?v=184')
     await m.speelProfielMuziek({ data, titel, sleutel: 'eigen' })
   } catch (e) { console.warn('[profielmuziek]', e) }
 }

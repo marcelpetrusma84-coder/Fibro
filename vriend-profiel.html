@@ -278,7 +278,7 @@ body.heeft-wallpaper::before { display:block; }
       if (!vriendId) return // v180: ook als 'Muziek van vrienden vanzelf' uit staat: dan het knopje met \u25B6
       const data = await laadFotoUitDB('vriend_' + vriendId + '_muziek_profiel')
       if (!data) return
-      const m = await import('./profielmuziek.js?v=180')
+      const m = await import('./profielmuziek.js?v=184')
       await m.speelProfielMuziek({ data, titel: T('Muziek van {naam}', { naam }), sleutel: 'vriend_' + vriendId, vriend: true })
     } catch (e) { console.warn('[profielmuziek]', e) }
   }

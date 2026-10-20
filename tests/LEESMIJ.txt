@@ -237,6 +237,13 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  ?v=187: meldingen.js (index, chat, profiel, vriend-profiel, vrienden, timer-melding.js),
                                  timer-melding.js (index); taal-en.js?v=19 en taal.js?v=19 in alle 12 pagina's; FIBRO_VERSIE 187.
                                  proef76 en proef80 tellen sinds v187 de buzz-schakelaar mee (testscript_rustigebuzz.py)
+                         offlinestip = v188: op Home een rood stipje rechtsonder op je avatar als je op offline staat (Profiel >
+                                 Online/Offline). index.html: .hero-av-wrap met knop #offlineStip (aria-label/title met uitleg, tik =
+                                 profiel.html); window.werkOfflineStipBij(p): eerst fibro_ik_offline op dit toestel, zodra het verse
+                                 profiel binnen is toon_online (false = offline); ook bij pageshow (terug uit Profiel). Een nieuwe zin:
+                                 taal-en.js?v=20 en taal.js?v=20 in alle 12 pagina's; FIBRO_VERSIE 188. proef83 luistert nu eerst en
+                                 zet dan pas aan (ServiceWorker.enable), en wacht tot 5 s op de aanmelding van de portier (die werd onder
+                                 drukte soms gemist) (testscript_offlinestip.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -628,6 +635,11 @@ tools/proef83.py         'Buzz schudt en trilt' (v187), echte index.html en chat
                          pushmelding via de echte portier (CDP ServiceWorker.deliverPushMessage; de volledige Chromium met
                          channel='chromium', de kale headless-versie kan geen meldingen), Engels. Oude map (v186): 2 van 10.
                          python3 -I proef83.py <map>
+tools/proef84.py         het rode offline-stipje op Home (v188), echte index.html en profiel.html, nep-server die onthoudt wat
+                         Profiel en de hartslag schrijven: online geen stipje; echte klik Offline = stipje op de avatar met uitleg,
+                         tik = Profiel; nieuw toestel + server offline = stipje zodra het profiel binnen is (profiel 1,5 s later via
+                         een vertraagde fetch in de pagina); server online + toestel offline = eerst stipje, dan weg; weer Online;
+                         Engels; 320 px. Oude map (v187) als controle: 2 van 11.   python3 -I proef84.py <map>
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

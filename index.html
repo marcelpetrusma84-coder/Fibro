@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=19"></script>
+<script src="taal.js?v=20"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>/* v130: zoomen mag weer; iPhone zoomt bij invoervakken kleiner dan 16px vanzelf in */@supports (-webkit-touch-callout: none){input,textarea,select{font-size:16px !important}}</style>
@@ -42,6 +42,10 @@
   .profile-hero { padding:12px 16px 14px; display:flex; gap:14px; align-items:flex-start; }
   .hero-av { width:100px; height:100px; border-radius:50%; background:rgba(192,132,252,0.15); border:2px solid var(--accent); display:flex; align-items:center; justify-content:center; font-size:42px; flex-shrink:0; overflow:hidden; }
   .hero-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+  /* v188: rood stipje op je avatar als je op offline staat (Profiel > Online/Offline). Home ziet alleen jij. */
+  .hero-av-wrap { position:relative; flex-shrink:0; }
+  .offline-stip { position:absolute; right:2px; bottom:2px; width:24px; height:24px; padding:0; border-radius:50%; background:#ef4444; border:3px solid var(--bg); box-sizing:border-box; cursor:pointer; }
+  .offline-stip[hidden] { display:none; }
   .hero-info { flex:1; min-width:0; }
   .hero-naam { font-size:18px; font-weight:600; }
   .hero-username { font-size:13px; color:var(--muted); margin-top:2px; }
@@ -122,7 +126,10 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 
 
 <div class="profile-hero">
-  <div class="hero-av" id="heroAvatar">👤</div>
+  <div class="hero-av-wrap">
+    <div class="hero-av" id="heroAvatar">👤</div>
+    <button type="button" class="offline-stip" id="offlineStip" hidden onclick="window.location.href='profiel.html'"></button>
+  </div>
   <div class="hero-info">
     <div class="hero-naam" id="heroNaam" data-t>Laden...</div>
     <div class="hero-username" id="heroUsername"></div>
@@ -131,6 +138,24 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
     <div class="hero-badge" id="heroBadge" style="display:none"></div>
   </div>
 </div>
+<script>
+// v188: het rode stipje op je avatar als je op offline staat. Eerst de keuze op dit toestel (fibro_ik_offline, gezet door
+// Profiel en door heartbeat.js); zodra het verse profiel binnen is telt dat (toon_online = false is offline).
+window.werkOfflineStipBij = function (p) {
+  var stip = document.getElementById('offlineStip')
+  if (!stip) return
+  var off = false
+  if (p && typeof p.toon_online === 'boolean') off = !p.toon_online
+  else { try { off = localStorage.getItem('fibro_ik_offline') === '1' } catch (e) {} }
+  var vertaal = window.T || function (s) { return s }
+  var tekst = vertaal('Je staat op offline: vrienden zien je niet online. Tik om het te veranderen.')
+  stip.setAttribute('aria-label', tekst)
+  stip.title = tekst
+  stip.hidden = !off
+}
+window.werkOfflineStipBij(null)
+window.addEventListener('pageshow', function (e) { if (e.persisted) window.werkOfflineStipBij(null) }) // terug uit Profiel
+</script>
 <script>
 // v129: de kop (naam, @naam, bio, mood, avatar) meteen uit het geheugen van dit toestel tonen,
 // nog voordat de rest van de pagina geladen is. Het verse profiel werkt hem daarna bij.
@@ -2079,7 +2104,7 @@ async function renderGastenboek(c, uid) {
 // v183: het versienummer en de datum van deze versie, onderaan in het menu. Zo zie je op elk toestel welke versie
 // er echt draait (een telefoon kan een oude pagina nog even vasthouden). Elk maak-script zet het nummer een hoger:
 // tests/gen/bouw.py maakt geen script als het hier niet omhoog gaat.
-const FIBRO_VERSIE = 187
+const FIBRO_VERSIE = 188
 const FIBRO_DATUM = '2026-10-20'
 function versieTekst() {
   let d = FIBRO_DATUM
@@ -2524,6 +2549,7 @@ async function init() {
     if (!profiel) return
     window._profiel = profiel
     toonHero(profiel)
+    if (window.werkOfflineStipBij) window.werkOfflineStipBij(profiel) // v188
     bewaarProfielCache(uid, profiel)
     // v148: je taal staat ook in je profiel, zodat een pushmelding in jouw taal komt (stuur-push
     // kiest de tekst, zie sql/taal.sql). Alleen schrijven als hij anders is dan wat er staat.

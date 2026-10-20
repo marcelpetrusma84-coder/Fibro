@@ -160,10 +160,13 @@ with sync_playwright() as pw:
     p.evaluate("t => { localStorage.setItem('sb-qmgatbphiplrfxrljtbe-auth-token', t); localStorage.setItem('fibro_taal', 'nl'); localStorage.setItem('fibro_opslagtip_later', String(Date.now())) }", TOKEN)
     p.goto(B + 'index.html'); p.wait_for_timeout(3000)
     reg = ev(p, "async () => { const r = await navigator.serviceWorker.ready; return r.scope }")
-    cdp = ctx.new_cdp_session(p); cdp.send('ServiceWorker.enable')
-    regs = {}
+    cdp = ctx.new_cdp_session(p); regs = {}
+    # v188: eerst luisteren, dan aanzetten (de aanmeldingen komen meteen bij het aanzetten; anders soms gemist)
     cdp.on('ServiceWorker.workerRegistrationUpdated', lambda e: [regs.__setitem__(r['scopeURL'], r['registrationId']) for r in e['registrations']])
-    p.wait_for_timeout(800)
+    cdp.send('ServiceWorker.enable')
+    for i in range(25):  # v188: tot 5 s wachten op de aanmelding (onder drukte duurde 0,8 s soms te kort)
+        p.wait_for_timeout(200)
+        if regs: break
     rid = regs.get(reg) or (list(regs.values())[0] if regs else None)
     def push(rustig):
         p.evaluate("async r => { localStorage.setItem('fibro_buzz_schud', r ? '0' : '1'); const k = await caches.open('fibro-badge'); await k.put('fibro-buzz-rustig', new Response(r ? '1' : '0'))"

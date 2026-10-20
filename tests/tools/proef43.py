@@ -104,11 +104,11 @@ SCHERMEN = [
     ('chat: melden', 'chat.html?vriend=' + BRAM, "() => { toonChatMenu(); document.getElementById('cmMeld').click() }", ['Tap the messages you want to report (max 5)', 'Cancel', 'Report']),
     # v153: het oude venster 'Eigen sticker toevoegen' is weg; nu de stickerkeuze (vakje Eigen open)
     ('chat: stickerkeuze', 'chat.html?vriend=' + BRAM, "() => { toggleStickers(); const v = document.querySelector('#stickerGrid .sk-vak[data-vak=\\'e1\\']'); if (v) v.click() }",
-        ['Fibro sheets', 'Your own', 'Shop', 'Sheet 1', 'Your own sheet 2', 'Shop slot 4', 'You make your own stickers in Profile']),
+        ['Fibro sheets', 'Your own', 'Shop', 'Sheet 1', 'Your own sheet 2', 'Shop slot 4', 'You make your own stickers in Style']),
     ('chat: screenshot', 'chat.html?vriend=' + BRAM, "() => { document.getElementById('screenshotModal').classList.add('show') }", ['Screenshot permission', 'Both people have to agree', '20 minutes', 'Agree']),
     ('chat: spellen', 'chat.html?vriend=' + BRAM, "() => { toggleSpelMenu() }", ['Play together', 'Chess', 'Twin Snakes']),
     # v145: Profiel (elk tabblad)
-    ('profiel: profiel', 'profiel.html', '', ['My profile', 'Save', 'Profile', 'Background', 'Animation', 'Font', 'Colour', 'Tap your avatar to change it',
+    ('profiel: profiel', 'profiel.html', '', ['My style', 'Save', 'Profile', 'Background', 'Animation', 'Font', 'Colour', 'Tap your avatar to change it',
         'Information', 'Display name', 'Your name', 'Username', 'your login name', "can't be changed", 'characters left', 'Write something about yourself',
         'How are you feeling today?', 'Profile music', 'plays automatically on your Home', 'Upload a music file']),
     ('profiel: achtergrond', 'profiel.html', "() => { switchTab('achtergrond') }", ['Background type', 'Your own upload', 'Background colour']),
@@ -137,7 +137,7 @@ NL_WOORDEN = ['Vrienden', 'Uitnodigen', 'Geblokkeerd', 'terug', 'Stuur een beric
               'Bellen', 'Annuleer', 'Kies hoe', 'Belt je op', 'Wat wil je doen', 'Blokkeren', 'Deblokkeren', 'Verwijderen', 'Annuleren', 'Sluiten', 'buzzt',
               'Je account', 'Reden', 'Nog geen', 'Spelen', 'Laden', 'Verbinden', 'jouw netwerk',
               'Selecteer', 'chatten', 'versleuteld', 'Bericht', 'bericht', 'Niet verstuurd', 'Geen sleutel', 'Melden', 'Speel samen', 'Akkoord', 'toestemming', 'Kies',
-              'Mijn profiel', 'Opslaan', 'Achtergrond', 'Lettertype', 'Kleur', 'Informatie', 'Weergavenaam', 'tekens over', 'Sterren', 'Sneeuw', 'Vlinders',
+              'Mijn profiel', 'Mijn stijl', 'Opslaan', 'Achtergrond', 'Lettertype', 'Kleur', 'Informatie', 'Weergavenaam', 'tekens over', 'Sterren', 'Sneeuw', 'Vlinders',
               'Blokken', 'Doorzichtigheid', 'Actieve', 'Speel tegen', 'Dieren', 'Natuur', 'Typemachine', 'Standaard', 'Het leven',
               'Mijn gegevens', 'Gegevens ophalen', 'definitief', 'Moderatie', 'Rapporten', 'Behandeld', 'Gemeld door', 'Opheffen', 'Makkelijk', 'Moeilijk',
               'Tegen de computer', 'Wat is Fibro', 'Eerlijk gezegd', 'herstelcode', 'Technisch', 'Huisregel', 'Geen internet']
@@ -196,6 +196,15 @@ MAG_WEG |= {'Upload een muziekbestand', 'MP3, M4A, OGG \u2014 wordt verkleind na
 # v180: twee schakelaars in plaats van een
 MAG_ERBIJ |= {'\U0001F3B5 Mijn muziek vanzelf: aan', '\U0001F3B5 Muziek van vrienden vanzelf: aan'}
 MAG_WEG |= {'\U0001F3B5 Muziek vanzelf afspelen: aan'}
+
+# v190: het tabblad onderaan heet Stijl met een waskrijtje (was Profiel met een poppetje); Profiel heet nu Mijn stijl;
+# verwijzingen naar die pagina mee, en uitnodigen gaat via Vrienden
+MAG_WEG |= {'\U0001F464', 'Profiel', 'Mijn profiel', 'Ga naar je profiel en zet widgets aan om ze hier te zien.',
+            'Nog geen vrienden. Nodig iemand uit via je profiel!', 'Je eigen stickers maak je in Profiel, bij Stickers.'}
+MAG_ERBIJ |= {'\U0001F58D\uFE0F', 'Stijl', 'Mijn stijl', 'Ga naar Stijl en zet widgets aan om ze hier te zien.',
+              'Nog geen vrienden. Nodig iemand uit via Vrienden!', 'Je eigen stickers maak je in Stijl, bij Stickers.'}
+MAG_WEG |= {'Fibro \u2014 Profiel', 'Fibro \u2013 Mijn profiel', 'Onderdelen van je profiel', 'Fibro v189 \u00B7 20 okt 2026'}  # titel, hoofdtitel, lijst, menu
+MAG_ERBIJ |= {'Fibro \u2014 Stijl', 'Fibro \u2013 Mijn stijl', 'Onderdelen van je stijl', 'Fibro v190 \u00B7 21 okt 2026'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

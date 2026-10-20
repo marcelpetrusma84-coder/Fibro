@@ -147,7 +147,7 @@ export function maakStickerkeuze(el, { onKies, uid } = {}) {
     }
     const p = document.createElement('div'); p.className = 'sk-leeg'
     if (v.soort === 'fibro') p.textContent = T('Vel {n} is nog leeg. Hier komen binnenkort stickers die bewegen en geluid maken.', { n: v.n })
-    else if (v.soort === 'eigen') p.textContent = T('Je eigen stickers maak je in Profiel, bij Stickers.')
+    else if (v.soort === 'eigen') p.textContent = T('Je eigen stickers maak je in Stijl, bij Stickers.')
     else p.textContent = T('Hier komen stickervellen uit de winkel. De winkel komt later.')
     inhoud.appendChild(p)
   }

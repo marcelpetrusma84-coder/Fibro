@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=20"></script>
+<script src="taal.js?v=21"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>/* v130: zoomen mag weer; iPhone zoomt bij invoervakken kleiner dan 16px vanzelf in */@supports (-webkit-touch-callout: none){input,textarea,select{font-size:16px !important}}</style>
@@ -223,7 +223,7 @@ window.addEventListener('pageshow', function (e) { if (e.persisted) window.werkO
     <div class="nav-icon">💬</div><div class="nav-label" data-t>Chat</div>
   </div>
   <div class="nav-item" onclick="window.location.href='profiel.html'">
-    <div class="nav-icon">👤</div><div class="nav-label" data-t>Profiel</div>
+    <div class="nav-icon">🖍️</div><div class="nav-label" data-t>Stijl</div>
   </div>
 </div>
 </div>
@@ -2104,8 +2104,8 @@ async function renderGastenboek(c, uid) {
 // v183: het versienummer en de datum van deze versie, onderaan in het menu. Zo zie je op elk toestel welke versie
 // er echt draait (een telefoon kan een oude pagina nog even vasthouden). Elk maak-script zet het nummer een hoger:
 // tests/gen/bouw.py maakt geen script als het hier niet omhoog gaat.
-const FIBRO_VERSIE = 189
-const FIBRO_DATUM = '2026-10-20'
+const FIBRO_VERSIE = 190
+const FIBRO_DATUM = '2026-10-21'
 function versieTekst() {
   let d = FIBRO_DATUM
   try { d = new Date(FIBRO_DATUM + 'T12:00:00').toLocaleDateString(T.locale || 'nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) } catch (e) {}
@@ -2588,7 +2588,7 @@ init().then(() => {
       <div class="leeg-staat">
         <div class="leeg-staat-icon">🧩</div>
         <div class="leeg-staat-titel">${T('Geen widgets actief')}</div>
-        <div class="leeg-staat-sub">${T('Ga naar je profiel en zet widgets aan om ze hier te zien.')}</div>
+        <div class="leeg-staat-sub">${T('Ga naar Stijl en zet widgets aan om ze hier te zien.')}</div>
         <button class="leeg-staat-btn" onclick="window.location.href='profiel.html#widgets'">${T('Widgets instellen ⚙️')}</button>
       </div>`
   }

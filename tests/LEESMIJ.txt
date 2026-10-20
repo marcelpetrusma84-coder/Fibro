@@ -248,6 +248,13 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  true), ook als hij pas later lukt via 'Niet verstuurd'). De server kiest de tekst (soort 'bericht':
                                  'Je hebt een nieuw bericht 💬'); wat erin staat blijft geheim. FIBRO_VERSIE 189
                                  (testscript_stickerpush.py)
+                         stijltab = v190: het tabblad onderaan heet Stijl / Style met een waskrijtje (U+1F58D U+FE0F; was Profiel
+                                 met een poppetje) op Home, Vrienden, Chat, Profiel en het profiel van een vriend. profiel.html heet
+                                 nu 'Fibro — Stijl' met de kop 'Mijn stijl'; het eerste onderdeel daarin blijft 'Profiel' (avatar, mood).
+                                 Verwijzingen mee: 'Ga naar Stijl en zet widgets aan', 'Je eigen stickers maak je in Stijl', en 'Nodig
+                                 iemand uit via Vrienden!' (de uitnodiging zat nooit in je profiel). Het profiel van een vriend heet nog
+                                 Profiel. taal-en.js?v=21 (in taal.js), taal.js?v=21 (alle 12 pagina's), stickerkeuze.js?v=190.
+                                 proef43 kent de nieuwe teksten (MAG_WEG/MAG_ERBIJ v190). FIBRO_VERSIE 190, 21 okt (testscript_stijltab.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -647,6 +654,10 @@ tools/proef84.py         het rode offline-stipje op Home (v188), echte index.htm
 tools/proef85.py         pushmelding bij een sticker (v189), echte chat.html, echte klikken: sticker = versleuteld + melding (soort
                          bericht), tekst nog steeds, server weg = 'Niet verstuurd' zonder melding en na de tik wel, buzz eigen
                          melding. Oude map (v188) als controle: 4 van 6.   python3 -I proef85.py <map>
+tools/proef86.py         tabblad Stijl (v190), echte pagina's in het Nederlands en het Engels, echte tikken: waskrijtje + Stijl/Style
+                         onderaan op 5 pagina's, tik opent profiel.html (actief), titel/kop/hoofdtitel/lijst van profiel.html,
+                         Home zonder widgets, Chat zonder vrienden, eigen stickervel leeg, het profiel van een vriend blijft
+                         Profiel; geen paginafouten. Oude map (v189) als controle: 12 van 46.   python3 -I proef86.py <map>
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

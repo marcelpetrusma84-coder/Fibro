@@ -13,10 +13,10 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=20"></script>
+<script src="taal.js?v=21"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title data-t>Fibro — Profiel</title>
+<title data-t>Fibro — Stijl</title>
 <meta http-equiv="cache-control" content="no-cache">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
@@ -135,12 +135,12 @@ input, textarea { font-size:16px !important; }
 </head>
 <body>
 <div class="top-bar" role="banner">
-  <span class="top-title" data-t>Mijn profiel</span>
+  <span class="top-title" data-t>Mijn stijl</span>
   <button class="save-top-btn" onclick="slaAllesOp()" data-t>Opslaan</button>
 </div>
-<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0" data-t>Fibro – Mijn profiel</h1>
+<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0" data-t>Fibro – Mijn stijl</h1>
 
-<div class="main-tabs" tabindex="0" aria-label="Onderdelen van je profiel" data-t-attr="aria-label">
+<div class="main-tabs" tabindex="0" aria-label="Onderdelen van je stijl" data-t-attr="aria-label">
   <div class="main-tab active" onclick="switchTab('profiel')" data-t>👤 Profiel</div>
   <div class="main-tab" onclick="switchTab('achtergrond')" data-t>🖼 Achtergrond</div>
   <div class="main-tab" onclick="switchTab('animatie')" data-t>✨ Animatie</div>
@@ -446,7 +446,7 @@ input, textarea { font-size:16px !important; }
   <div class="nav-item" onclick="window.location.href='index.html'" data-t><div class="nav-icon">🏠</div>Home</div>
   <div class="nav-item" onclick="window.location.href='vrienden.html'" data-t><div class="nav-icon">👥</div>Vrienden</div>
   <div class="nav-item" onclick="window.location.href='chat.html'" data-t><div class="nav-icon">💬</div>Chat</div>
-  <div class="nav-item active" data-t><div class="nav-icon">👤</div>Profiel</div>
+  <div class="nav-item active" data-t><div class="nav-icon">🖍️</div>Stijl</div>
 </div>
 <script>
 // v129: de tekst (naam, @naam, bio, mood, online) meteen uit het geheugen van dit toestel tonen,
@@ -515,7 +515,7 @@ import { initSync } from './sync.js?v=162'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=149'
 import { startStickermaker } from './stickermaker.js?v=180'
 import { tekenFibroVellen, stickerWidgetDef } from './stickerwidget.js?v=180'
-import { maakStickerkeuze } from './stickerkeuze.js?v=180' // v171: een sticker als mood
+import { maakStickerkeuze } from './stickerkeuze.js?v=190' // v171: een sticker als mood
 import { leesMood, tekenMoodSticker } from './moodsticker.js?v=180'
 
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek']

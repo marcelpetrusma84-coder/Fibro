@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=20"></script>
+<script src="taal.js?v=21"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Chat</title>
@@ -241,7 +241,7 @@ window.veiligeUrl = function(v){
   <div class="nav-item" onclick="window.location.href='index.html'" data-t><div class="nav-icon">🏠</div>Home</div>
   <div class="nav-item" onclick="window.location.href='vrienden.html'" data-t><div class="nav-icon">👥</div>Vrienden</div>
   <div class="nav-item active" data-t><div class="nav-icon">💬</div>Chat</div>
-  <div class="nav-item" onclick="window.location.href='profiel.html'" data-t><div class="nav-icon">👤</div>Profiel</div>
+  <div class="nav-item" onclick="window.location.href='profiel.html'" data-t><div class="nav-icon">🖍️</div>Stijl</div>
 </div>
 
 </div>
@@ -326,7 +326,7 @@ window.veiligeUrl = function(v){
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
   import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=152'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
-  import { maakStickerkeuze } from './stickerkeuze.js?v=180'
+  import { maakStickerkeuze } from './stickerkeuze.js?v=190'
   import { isCode as isEigenCode, zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel, fxCode, leesFx, stickerPakket, bewaarVriendSticker, zoekWeg } from './eigenstickers.js?v=162'
   import { zoekSticker } from './stickervellen.js?v=166'
   import { speel as speelFx, speelGeluid as speelFxGeluid, naamVan as fxNaam } from './stickerfx.js?v=180'
@@ -810,7 +810,7 @@ window.veiligeUrl = function(v){
     if (!error && friendships && friendships.length === 0) { try { localStorage.removeItem(vriendenCacheSleutel()) } catch (e) {} }
     if ((error || !friendships) && bewaard) return // v125: ophalen mislukt (geen internet): de bewaarde lijst blijft staan
     if (error || !friendships || friendships.length === 0) {
-      container.innerHTML = `<div class="geen-vrienden">${T('Nog geen vrienden. Nodig iemand uit via je profiel!')}</div>`
+      container.innerHTML = `<div class="geen-vrienden">${T('Nog geen vrienden. Nodig iemand uit via Vrienden!')}</div>`
       return
     }
 

@@ -400,7 +400,8 @@ export const SOLO_SPELLEN = {
   endlessrunner: { naam: 'Runner & Gunner', icon: '🏃', bestand: './runner-gunner-ui.js?v=147', zonderKanaal: true },
   flappybird:   { naam: 'Flapper',       icon: '🦇', bestand: './flappy-ui.js?v=147',   bot: stilBot, arcade: true },
   // v192: Neon Raiders start zonder kanaal meteen alleen, met een eigen startscherm; arcade: het record komt van spel.html.
-  // v193: het hele spel (7 levels). Let op: versie 194 van dit bestand is al gebruikt (de schaak-PR van valentijnpeters, 21 okt 2026);
-  // spel.html laadt nu versie 193. Een volgende aanpassing aan solo.js neemt dus een nummer dat nog nooit gebruikt is (195 of hoger).
-  shmup:        { naam: 'Neon Raiders',  icon: '🚀', bestand: './neon-raiders-ui.js?v=193', zonderKanaal: true, arcade: true },
+  // v193: het hele spel (7 levels). v194: ook samen vanuit de chat (daar met spelKanaal).
+  // Let op: versie 194 van dit bestand was al gebruikt (de schaak-PR van valentijnpeters, 21 okt 2026); daarom laadt
+  // spel.html in v193 versie 193 en in v194 versie 195. Een volgende aanpassing aan solo.js neemt 196 of hoger.
+  shmup:        { naam: 'Neon Raiders',  icon: '🚀', bestand: './neon-raiders-ui.js?v=194', zonderKanaal: true, arcade: true },
 }

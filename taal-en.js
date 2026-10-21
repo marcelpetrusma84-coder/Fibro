@@ -11,7 +11,7 @@
 // v154: het Stickerlab in Profiel (stickermaker.js).
 // v155: eigen stickers versturen in de chat (stickerkeuze.js, chat.html).
 // v157: stickers als widget op Home (stickerwidget.js, stickermaker.js).
-// v192: Neon Raiders (neon-raiders-ui.js). v193: het hele spel (7 levels).
+// v192: Neon Raiders (neon-raiders-ui.js). v193: het hele spel (7 levels). v194: samen spelen.
 window.FIBRO_EN = {
 
 // ---- Overal ----
@@ -1231,6 +1231,20 @@ window.FIBRO_EN = {
   "VERDER: LEVEL {n}": "CONTINUE: LEVEL {n}",
   "Alle zeven levels gehaald. Bonus voor je levens: {n}.": "All seven levels cleared. Bonus for your lives: {n}.",
   "Je kwam tot level {n}.": "You made it to level {n}.",
+// v194: samen spelen
+  "SAMEN MET {naam}": "TOGETHER WITH {naam}",
+  "RECHTSTREEKS VERBONDEN": "CONNECTED DIRECTLY",
+  "VERBONDEN VIA DE SERVER": "CONNECTED VIA THE SERVER",
+  "VERBONDEN (RESERVE)": "CONNECTED (BACKUP)",
+  "VERBINDING ZOEKEN…": "CONNECTING…",
+  "Jullie schepen zijn neergeschoten. Jullie kwamen tot level {n}.": "Both your ships were shot down. You made it to level {n}.",
+  "{naam}: SCORE {score}": "{naam}: SCORE {score}",
+  "Kijk mee met {naam}. Bij het volgende level doe je weer mee.": "Watch {naam}. You'll rejoin at the next level.",
+  "{naam} PAUZEERT": "{naam} PAUSED",
+  "Even wachten…": "Hold on…",
+  "{naam}: VERBINDING WEG": "{naam}: CONNECTION LOST",
+  "{naam} IS TERUG": "{naam} IS BACK",
+  "{naam}: GAME OVER": "{naam}: GAME OVER",
 // ---- Runner & Gunner (runner-gunner-ui, spellen/runner-gunner.html) ----
   "Jij en {naam} rennen op dezelfde baan. Wie komt het verst?": "You and {naam} run on the same track. Who gets the furthest?",
   "Hoe ver kom jij?": "How far can you get?",

@@ -1,4 +1,5 @@
 /* Neon Raiders — schietspel (shmup) voor Fibro. v193 (21 oktober 2026): het hele spel, alleen spelen.
+   v194: samen spelen vanuit de chat (twee schepen tegen dezelfde aliens), zie 'samen spelen' hieronder.
    Zeven levels, elk met een eigen omgeving, eigen vijanden en een eigen eindbaas:
      1 Aarde (je ziet de grond, TITAN)        2 Stratosfeer (hoog boven de wolken, ZEPHYR)
      3 Ruimte (VORTEX)                        4 Moederschip (binnen in een groot ruimteschip, REACTOR)
@@ -11,8 +12,20 @@
    Besturing: een vinger slepen = vliegen; een tweede vinger tikken of ingedrukt houden = schieten. Met de muis: slepen =
    vliegen en schieten. De tegel linksboven: wapen wisselen of een power-up gebruiken (even slow motion).
    Toetsen: pijltjes of WASD = vliegen, spatie = schieten, Q = de tegel, 1-6 = kiezen in de tegel.
-   De golven komen uit een vaste toevalsreeks per level en alles wat telt hangt alleen van de speltijd af:
-   later (v194) spelen twee spelers samen precies hetzelfde level. */
+   De golven komen uit een vaste toevalsreeks per level en alles wat telt hangt alleen van de speltijd af,
+   zodat twee spelers samen precies hetzelfde level spelen.
+
+   Samen spelen (v194): de berichten gaan rechtstreeks van telefoon naar telefoon (spelnet.js: WebRTC, met de
+   eigen TURN-server als reserve; Supabase alleen voor het opzetten, en als laatste reserve 4 berichten per seconde).
+   Elke telefoon speelt het level zelf af (zelfde golven, zelfde vijanden met hetzelfde nummer). Over de lijn gaan:
+     - je eigen schip (plek, schieten, wapen, schild, levens, score), 20 keer per seconde;
+     - wat jouw kogels raken (vijandnummer + schade): de ander trekt dat ook af, zo gaan vijanden bij allebei dood;
+     - opgepakte power-ups (weg bij de ander), een bom, geraakt, af, pauze.
+   De uitnodiger is de scheidsrechter: zijn speltijd is de maat (de ander loopt iets sneller of langzamer tot het
+   klopt), de eindbaas komt pas als hij hem ook heeft, en van de levens van de baas telt steeds de laagste stand.
+   Wie het hoogste level heeft, bepaalt het level. Vijanden mikken op het dichtstbijzijnde schip. Ben je af, dan
+   kijk je mee en doe je bij het volgende level weer mee (2 levens). Allebei af = game over. Samen is de baas 1,4 keer
+   zo sterk en geeft de tegel geen slow motion (de tijd moet bij allebei gelijk lopen). */
 
 
 const vertaal = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
@@ -61,6 +74,13 @@ function zetStijl() {
   .nr .combo{font-size:8px;color:var(--geel);text-shadow:0 0 6px var(--geel);min-height:12px}
   .nr .levens{display:flex;gap:3px;justify-content:flex-end;margin-top:2px}
   .nr .levens svg{width:11px;height:13px;filter:drop-shadow(0 0 3px var(--cyaan))}
+  .nr .p1.p2{color:var(--roze);text-shadow:0 0 6px var(--roze)}
+  .nr .levens.p2 svg{filter:drop-shadow(0 0 3px var(--roze))}
+  .nr .anderRij{display:flex;align-items:baseline;gap:5px;justify-content:flex-end;margin-top:4px;font-size:6px;color:var(--roze);text-shadow:0 0 6px var(--roze)}
+  .nr .anderRij.p1{color:var(--cyaan);text-shadow:0 0 6px var(--cyaan)}
+  .nr .anderRij[hidden]{display:none}
+  .nr .anderRij .aScore{font-size:8px;color:#fff;letter-spacing:1px}
+  .nr .anderRij.uit{opacity:.5}
   .nr .tegel{position:absolute;top:6px;left:6px;width:46px;height:46px;z-index:4;padding:0;cursor:pointer;
     background:rgba(20,15,46,.82);border:2px solid var(--cyaan);border-radius:8px;box-shadow:0 0 10px rgba(94,231,224,.55),inset 0 0 8px rgba(94,231,224,.25);
     display:flex;align-items:center;justify-content:center;touch-action:none;-webkit-tap-highlight-color:transparent}
@@ -96,6 +116,9 @@ function zetStijl() {
   .nr .knop:active{transform:translate(2px,2px)}
   .nr .knoppen{display:flex;flex-direction:column;align-items:center;gap:10px}
   .nr .knop.tweede{background:var(--roze);box-shadow:0 0 12px rgba(255,93,158,.7),3px 3px 0 #a3305f}
+  .nr .knop:disabled{opacity:.4;cursor:default;box-shadow:none;transform:none}
+  .nr .laag p.rol{color:var(--cyaan);text-shadow:0 0 6px var(--cyaan);font-size:8px}
+  .nr .laag p.rol:empty{display:none}
   .nr .knop[hidden]{display:none}
   .nr .klein{font-family:inherit;font-size:8px;color:var(--zacht);background:none;border:1px solid var(--rand);border-radius:0;padding:6px 10px;margin:10px 4px 0;cursor:pointer}
   .nr .bord{position:absolute;left:0;right:0;top:36%;text-align:center;pointer-events:none;z-index:3;
@@ -326,7 +349,7 @@ function golfHulp(r) {
   const h = {
     g, op,
     bord(t) { op(t, s => s.levelBord()) },
-    baas(t) { op(t, s => s.startBaas()) },
+    baas(t) { g.push({ t, f: s => s.startBaas(), baas: true }) },
     lijn(t, n, x, soort) { for (let i = 0; i < n; i++) op(t + i * 0.28, s => s.maak(soort || 'dart', { x, fase: i * 0.7 })) },
     zwaai(t, n, kant) { for (let i = 0; i < n; i++) op(t + i * 0.3, s => s.maak('zwaai', { kant, y: 70 + i * 10 })) },
     vorm(t, n) { for (let i = 0; i < n; i++) { const k = i - (n - 1) / 2; op(t + Math.abs(k) * 0.22, s => s.maak('dart', { x: 180 + k * 34, fase: 0, recht: true })) } },
@@ -484,22 +507,24 @@ const TEKENAAR = {
 
   /* ---- vaste texturen: het schip, kogels, effecten, capsules ---- */
   tekenVast() {
-    this.teken('schip', 36, 44, g => {
+    // v194: twee schepen: 'schip' (speler 1, cyaan) en 'schip2' (speler 2, roze)
+    for (const [key, K] of [['schip', { licht: '#ff5d9e', streep: '#5ee7e0', glas: ['#ffffff', '#8ff6ff', '#1aa7b8', '#0b3c48'], gloed: '#5ee7e0' }],
+                            ['schip2', { licht: '#5ee7e0', streep: '#ff5d9e', glas: ['#ffffff', '#ffc2e0', '#d8337a', '#4a0b2a'], gloed: '#ff5d9e' }]]) this.teken(key, 36, 44, g => {
       g.fillStyle = lin(g, 0, 16, 0, 36, ['#6b778b', '#3a4354'])
       veelhoek(g, [14, 15, 2, 30, 1, 35, 6, 36, 14, 32]); g.fill()
       veelhoek(g, [22, 15, 34, 30, 35, 35, 30, 36, 22, 32]); g.fill()
       lijn(g, '#a8b6ca', 0.7, [14, 15, 2, 30]); lijn(g, '#a8b6ca', 0.7, [22, 15, 34, 30])
-      g.fillStyle = '#ff5d9e'; veelhoek(g, [4, 31, 7, 28, 8, 30, 5, 33]); g.fill(); veelhoek(g, [32, 31, 29, 28, 28, 30, 31, 33]); g.fill()
-      g.fillStyle = '#5ee7e0'; veelhoek(g, [9, 27, 13, 22, 13, 24, 10, 28]); g.fill(); veelhoek(g, [27, 27, 23, 22, 23, 24, 26, 28]); g.fill()
+      g.fillStyle = K.licht; veelhoek(g, [4, 31, 7, 28, 8, 30, 5, 33]); g.fill(); veelhoek(g, [32, 31, 29, 28, 28, 30, 31, 33]); g.fill()
+      g.fillStyle = K.streep; veelhoek(g, [9, 27, 13, 22, 13, 24, 10, 28]); g.fill(); veelhoek(g, [27, 27, 23, 22, 23, 24, 26, 28]); g.fill()
       g.fillStyle = lin(g, 8, 0, 15, 0, ['#2a303c', '#5e6a7e', '#2a303c']); rondRect(g, 8.5, 25, 6, 16, 2); g.fill()
       g.fillStyle = lin(g, 21, 0, 28, 0, ['#2a303c', '#5e6a7e', '#2a303c']); rondRect(g, 21.5, 25, 6, 16, 2); g.fill()
       g.fillStyle = '#12151c'; g.fillRect(9.5, 40, 4, 2.5); g.fillRect(22.5, 40, 4, 2.5)
       g.fillStyle = lin(g, 12, 0, 24, 0, ['#5d6878', '#e8eef5', '#c3cdd9', '#4b5566'])
       veelhoek(g, [18, 0, 21.5, 9, 23, 20, 23, 33, 21, 41, 15, 41, 13, 33, 13, 20, 14.5, 9]); g.fill()
       lijn(g, 'rgba(25,32,45,.75)', 0.5, [13.5, 22, 22.5, 22]); lijn(g, 'rgba(25,32,45,.75)', 0.5, [13.3, 30, 22.7, 30]); lijn(g, 'rgba(25,32,45,.6)', 0.5, [18, 24, 18, 40])
-      g.fillStyle = rad(g, 17.2, 11, 6, ['#ffffff', '#8ff6ff', '#1aa7b8', '#0b3c48']); g.beginPath(); g.ellipse(18, 12, 2.7, 5.6, 0, 0, 7); g.fill()
-      g.fillStyle = '#5ee7e0'; g.fillRect(17.3, 31, 1.4, 7)
-    }, '#5ee7e0', 5)
+      g.fillStyle = rad(g, 17.2, 11, 6, K.glas); g.beginPath(); g.ellipse(18, 12, 2.7, 5.6, 0, 0, 7); g.fill()
+      g.fillStyle = K.streep; g.fillRect(17.3, 31, 1.4, 7)
+    }, K.gloed, 5)
     for (const [key, L] of [['vlam0', 10], ['vlam1', 15]]) {
       this.teken(key, 36, 16, g => {
         for (const x of [11.5, 24.5]) {
@@ -1397,6 +1422,11 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
   try { autovuur = localStorage.getItem('nr-autovuur') === 'aan' } catch (e) {}
   let bereikt = 1   // hoogste level dat je ooit bereikt hebt (op dit toestel)
   try { bereikt = Math.min(AANTAL_LEVELS, Math.max(1, parseInt(localStorage.getItem('nr-bereikt'), 10) || 1)) } catch (e) {}
+  // v194: samen spelen (vanuit de chat). De uitnodiger is speler 1 (cyaan) en de scheidsrechter; de ander speler 2 (roze).
+  const samen = !!(spelKanaal && typeof spelKanaal.on === 'function' && typeof spelKanaal.send === 'function')
+  const leider = !samen || !!benIkSpeler1
+  const NAAMV = (String(vriendNaam || '').trim().toUpperCase().slice(0, 10)) || (leider ? 'P2' : 'P1')
+  const IKP = leider ? 'P1' : 'P2'
   const wrap = document.createElement('div')
   wrap.className = 'nr'
   wrap.innerHTML = `
@@ -1405,7 +1435,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
         <canvas class="tIcoon"></canvas><span class="stip"><i></i><i></i><i></i></span><span class="extra"></span>
       </button>
       <div class="arsenaal" hidden></div>
-      <div class="hud" aria-hidden="true"><div class="scoreRij"><span class="p1">P1</span><span class="score">0000000</span></div><div class="combo"></div><div class="levens"></div></div>
+      <div class="hud" aria-hidden="true"><div class="scoreRij"><span class="p1">P1</span><span class="score">0000000</span></div><div class="combo"></div><div class="levens"></div><div class="anderRij" hidden><span class="aNaam"></span><span class="aScore"></span><span class="aLevens"></span></div></div>
       <div class="meldbalk" aria-live="polite"></div><span class="hoek l"></span><span class="hoek r"></span>
       <div class="baas" hidden aria-hidden="true"><span class="baasNaam"></span><div class="balk"><i></i></div></div>
       <div class="bord" aria-live="polite"></div>
@@ -1416,7 +1446,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
           <p class="uitleg">${vertaal('Sleep met één vinger om te vliegen. Tik of houd een tweede vinger op het scherm om te schieten.')}</p>
           <p class="uitleg2">${vertaal('De tegel linksboven: wapen wisselen of een power-up gebruiken.')}</p>
           <p class="record"></p>
-          <div class="knoppen"><button type="button" class="knop startKnop">START</button><button type="button" class="knop tweede verderKnop" hidden></button></div>
+          <p class="rol"></p>
+          <div class="knoppen"><button type="button" class="knop startKnop"${samen ? (leider ? ' disabled' : ' hidden') : ''}>START</button><button type="button" class="knop tweede verderKnop" hidden></button></div>
           <div><button type="button" class="klein autoKnop">${autovuur ? vertaal('AUTOVUUR: AAN') : vertaal('AUTOVUUR: UIT')}</button><button type="button" class="klein geluidKnop">${GELUID.staatAan() ? vertaal('GELUID: AAN') : vertaal('GELUID: UIT')}</button></div>
         </div>
       </div>
@@ -1448,6 +1479,14 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
   const baasBalk = baasVak.querySelector('.balk i')
   const bordVak = wrap.querySelector('.bord')
   const balkVak = wrap.querySelector('.meldbalk')
+  const rolVak = laag.querySelector('.rol')
+  const anderRij = wrap.querySelector('.anderRij')
+  if (!leider) { p1Vak.classList.add('p2'); levensVak.classList.add('p2') } else anderRij.classList.add('p2')
+  if (samen) {
+    anderRij.classList.toggle('p1', !leider)
+    anderRij.querySelector('.aNaam').textContent = NAAMV
+    sub.textContent = vertaal('SAMEN MET {naam}', { naam: NAAMV })
+  }
 
   try { await laadPhaser() } catch (e) {
     wrap.innerHTML = '<p class="fout">' + vertaal('Het spel kon niet laden.<br>Controleer je verbinding en probeer opnieuw.') + '</p>'
@@ -1455,6 +1494,56 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
   }
   if (!isActief() || !wrap.isConnected) { wrap.remove(); return }
   const Phaser = window.Phaser
+
+  /* ---------- samen spelen: de lijn naar de ander (spelnet.js) ---------- */
+  let net = null, ronde = 0
+  let partnerKlaar = !samen, laatsteKlaar = 0, netModus = samen ? 'zoeken' : 'alleen', verbindGedaan = false, klaarKlok = 0
+  if (samen) {
+    try {
+      const { maakSpelNet } = await import('./spelnet.js?v=194')
+      net = maakSpelNet({ spelKanaal, host: leider, naam: 'nr', isActief: () => isActief() && wrap.isConnected,
+        opBericht: ontvangBericht, opModus: m => { netModus = m; werkStartscherm() } })
+    } catch (e) {
+      wrap.innerHTML = '<p class="fout">' + vertaal('Het spel kon niet laden.<br>Controleer je verbinding en probeer opnieuw.') + '</p>'
+      return
+    }
+    if (!isActief() || !wrap.isConnected) { net.sluit(); wrap.remove(); return }
+  }
+  function ontvangBericht(m) {
+    if (!isActief() || !wrap.isConnected) return
+    if (m.t === 'klaar') {                       // de ander staat op het startscherm (alleen de uitnodiger let erop)
+      if (!leider) return
+      laatsteKlaar = performance.now()
+      if (!partnerKlaar && !aftellen) { partnerKlaar = true; werkStartscherm() }
+      if (!verbindGedaan) { verbindGedaan = true; net.verbind() }
+      return
+    }
+    if (m.t === 'start') {                       // de uitnodiger start (of opnieuw)
+      if (leider || !((m.r | 0) > ronde)) return
+      ronde = m.r | 0
+      startRonde(m.l | 0)
+      return
+    }
+    // de uitnodiger speelt al (zijn startbericht kwam niet aan): meedoen in zijn level
+    if (m.t === 's' && !leider && (m.r | 0) > ronde && !aftellen && !laag.hidden) { ronde = m.r | 0; startRonde(m.l | 0); return }
+    if (huidige && huidige.samen) huidige.ontvang(m)
+  }
+  function modusTekst() {
+    return netModus === 'direct' ? vertaal('RECHTSTREEKS VERBONDEN') : netModus === 'turn' ? vertaal('VERBONDEN VIA DE SERVER')
+      : netModus === 'supabase' ? vertaal('VERBONDEN (RESERVE)') : vertaal('VERBINDING ZOEKEN…')
+  }
+  function werkStartscherm() {
+    if (!samen) return
+    if (leider) {
+      const klaar = partnerKlaar && netModus !== 'zoeken'
+      startKnop.disabled = !klaar
+      verderKnop.disabled = !klaar
+      rolVak.textContent = partnerKlaar ? modusTekst() : vertaal('WACHT OP {naam}', { naam: NAAMV })
+    } else {
+      startKnop.hidden = true; verderKnop.hidden = true
+      rolVak.textContent = vertaal('{naam} START HET SPEL', { naam: NAAMV }) + (netModus !== 'zoeken' ? ' · ' + modusTekst() : '')
+    }
+  }
 
   let W = 360, H = 640
   let spel = null, huidige = null, beginLevel = 1
@@ -1473,7 +1562,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
   window.addEventListener('orientationchange', indeling)
 
   function tekenLevens(n) {
-    const schip = '<svg viewBox="0 0 12 14"><path fill="#5ee7e0" d="M6 0L7.6 4 7.8 8 12 11 12 12.5 7.8 11.5 7 14H5L4.2 11.5 0 12.5V11L4.2 8 4.4 4Z"/></svg>'
+    const schip = '<svg viewBox="0 0 12 14"><path fill="' + (leider ? '#5ee7e0' : '#ff5d9e') + '" d="M6 0L7.6 4 7.8 8 12 11 12 12.5 7.8 11.5 7 14H5L4.2 11.5 0 12.5V11L4.2 8 4.4 4Z"/></svg>'
     let uit = ''
     for (let i = 0; i < Math.max(0, Math.min(n, 6)); i++) uit += schip
     levensVak.innerHTML = uit
@@ -1561,14 +1650,14 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
     if (!huidige || huidige.voorbij || huidige.pauze) return
     bouwArsenaal()
     arsenaal.hidden = false; tegel.classList.add('open'); tegel.setAttribute('aria-expanded', 'true')
-    huidige.tijdSchaal = 0.3
+    if (!samen) huidige.tijdSchaal = 0.3   // samen geen slow motion: de tijd loopt bij allebei gelijk
     GELUID.speel('wissel')
     clearTimeout(arsenaalKlok); arsenaalKlok = setTimeout(sluitArsenaal, 3200)
   }
   function sluitArsenaal() {
     clearTimeout(arsenaalKlok)
     arsenaal.hidden = true; tegel.classList.remove('open'); tegel.setAttribute('aria-expanded', 'false')
-    if (huidige) huidige.tijdSchaal = 1
+    if (huidige && !samen) huidige.tijdSchaal = 1
   }
   function wisselArsenaal() { if (arsenaal.hidden) openArsenaal(); else sluitArsenaal() }
   function kiesUitArsenaal(soort) {
@@ -1596,6 +1685,17 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
     balkVak.classList.remove('aan'); void balkVak.offsetWidth; balkVak.classList.add('aan')
     clearTimeout(balkKlok); balkKlok = setTimeout(() => balkVak.classList.remove('aan'), ms || 3500)
   }
+  /* samen: de score en levens van de ander, rechtsboven onder die van jou */
+  const aScoreVak = anderRij.querySelector('.aScore'), aLevensVak = anderRij.querySelector('.aLevens')
+  function werkAnderRij(a) {
+    const sc = String(a.score || 0).padStart(7, '0'), lv = a.uit ? 'GAME OVER' : '\u00d7' + Math.max(0, a.levens || 0)
+    if (aScoreVak.textContent !== sc) aScoreVak.textContent = sc
+    if (aLevensVak.textContent !== lv) aLevensVak.textContent = lv
+    anderRij.classList.toggle('uit', !!(a.uit || a.weg))
+  }
+  function toonAnderEinde(score) {
+    if (samen && !laag.hidden && !aftellen) uitleg2.textContent = vertaal('{naam}: SCORE {score}', { naam: NAAMV, score: String(score || 0).padStart(7, '0') })
+  }
   function bewaarBereikt(n) {
     if (n <= bereikt) return
     bereikt = Math.min(AANTAL_LEVELS, n)
@@ -1621,11 +1721,18 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       this.voorraad = { bom: 2, schild: 0 }
       this.herlaad = 0; this.raketKlok = 0; this.straalAan = false
       this.voorbij = false; this.pauze = false
-      this.baas = null; this.dropTel = 0; this.dtNu = 0
+      this.baas = null; this.dtNu = 0
+      this.perId = new Map()
+      // v194: samen spelen
+      this.samen = samen; this.host = leider; this.uit = false
+      this.pauzeEigen = false; this.pauzeAnder = false
+      this.ander = null; this.kogelsA = []; this.anderSt = { herlaad: 0, raketKlok: 0 }
+      this.uitgaand = []; this.raakBuf = new Map(); this.stuurKlok = 0
 
       this.cameras.main.setZoom(R).setOrigin(0, 0)   // de wereld is W x H; het beeld heeft R keer zoveel punten
-      this.schaduw = this.add.image(0, 0, 'schip').setTint(0x000000).setAlpha(0.35).setDepth(-5).setScale(0.8 * SB)
-      this.speler = this.add.image(W / 2, H - 90, 'schip').setDepth(20).setScale(SB)
+      const mijnSchip = leider ? 'schip' : 'schip2'
+      this.schaduw = this.add.image(0, 0, mijnSchip).setTint(0x000000).setAlpha(0.35).setDepth(-5).setScale(0.8 * SB)
+      this.speler = this.add.image(samen ? W / 2 + (leider ? -50 : 50) : W / 2, H - 90, mijnSchip).setDepth(20).setScale(SB)
       this.vlam = this.add.image(0, 0, 'vlam0').setDepth(19).setScale(SB).setOrigin(0.5, 6 / 28).setBlendMode(Phaser.BlendModes.ADD)
       this.bel = this.add.image(0, 0, 'schildBel').setDepth(21).setScale(SB).setVisible(false).setBlendMode(Phaser.BlendModes.ADD)
       this.baasG = this.add.graphics().setDepth(31)
@@ -1634,12 +1741,23 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       this.fx = this.add.graphics().setDepth(25).setBlendMode(Phaser.BlendModes.ADD)
       this.vonken = {}
       for (const k of ['#5ee7e0', '#ff5d9e', '#ff3dd2', '#ffd23c', '#ffffff', '#b6ff3c', '#4aa3ff', '#ff4848', '#ffa53c', '#7fd4ff']) this.vonkVoor(k)
+      if (samen) {   // het schip van de ander, met naam, vlam en schild
+        const zijn = leider ? 'schip2' : 'schip'
+        this.anderSchaduw = this.add.image(0, 0, zijn).setTint(0x000000).setAlpha(0.3).setDepth(-5).setScale(0.8 * SB).setVisible(false)
+        this.anderSpr = this.add.image(W / 2 + (leider ? 50 : -50), H - 90, zijn).setDepth(19.6).setScale(SB).setVisible(false)
+        this.anderVlam = this.add.image(0, 0, 'vlam0').setDepth(19.5).setScale(SB).setOrigin(0.5, 6 / 28).setBlendMode(Phaser.BlendModes.ADD).setVisible(false)
+        this.anderBel = this.add.image(0, 0, 'schildBel').setDepth(21).setScale(SB).setVisible(false).setBlendMode(Phaser.BlendModes.ADD)
+        this.anderNaam = this.add.text(0, 0, NAAMV, { fontFamily: '"Press Start 2P",monospace', fontSize: '6px', color: leider ? '#ffb3d1' : '#b8fdff', stroke: '#07051a', strokeThickness: 2 })
+          .setOrigin(0.5, 0).setDepth(32).setResolution(R).setVisible(false)
+        anderRij.hidden = false; anderRij.classList.remove('uit')
+        anderRij.querySelector('.aScore').textContent = '0000000'; anderRij.querySelector('.aLevens').textContent = ''
+      }
       tekenLevens(this.levens)
       scoreVak.textContent = '0000000'; comboVak.textContent = ''
       baasVak.hidden = true
       this.startLevel(beginLevel)
       werkTegelBij()
-      if (window.__fibroProef) window.__neonRaiders = { scene: this, W, H, vingers, vuurtNu, toets }   // alleen in de proeven (tests/tools/proef88.py)
+      if (window.__fibroProef) window.__neonRaiders = { scene: this, W, H, vingers, vuurtNu, toets, net, ronde: () => ronde }   // alleen in de proeven (tests/tools/proef88.py, proef90.py)
     }
     vonkVoor(k) {
       if (!this.vonken[k]) {
@@ -1658,8 +1776,11 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       for (const v of this.vijanden) this.ruimVijand(v)
       for (const k of this.kogelsV.concat(this.kogelsS)) this.weg(k.spr)
       for (const b of this.buit) this.weg(b.spr)
-      this.vijanden = []; this.kogelsV = []; this.kogelsS = []; this.buit = []; this.hekken = []
+      for (const k of this.kogelsA) this.weg(k.spr)
+      this.vijanden = []; this.kogelsV = []; this.kogelsS = []; this.kogelsA = []; this.buit = []; this.hekken = []
+      this.perId.clear(); this.raakBuf.clear(); this.golfId = null; this.baasTel = 0
       this.hekG.clear(); this.fx.clear(); this.baasG.clear(); baasVak.hidden = true
+      if (this.baas && !this.baas.weg) this.ruimBaas()
       this.baas = null; this.golfStop = false; this.baasWacht = 0; this.klok = 0; this.golfNr = 0; this.overgang = 0
       this.golven = golvenVoor(n)
       this.snelK = 1 + (n - 1) * 0.035
@@ -1682,9 +1803,21 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       for (const key of this.textures.getTextureKeys()) if (key.startsWith('b_') && key !== 'b_kapot') this.textures.remove(key)
       this[BAZEN[L.baas].teken]()
       if (!this.textures.exists('b_kapot')) this.baas_titan()
-      p1Vak.textContent = 'P1 · L' + n
+      p1Vak.textContent = IKP + ' · L' + n
       GELUID.muziek(false); GELUID.muziek(true, L.lied)
       bewaarBereikt(n)
+      if (this.samen && this.uit) {   // af geweest: bij een nieuw level doe je weer mee
+        this.uit = false; this.levens = 2; tekenLevens(this.levens)
+        this.speler.setVisible(true).setPosition(W / 2, H - 70); this.vlam.setVisible(true); this.schaduw.setVisible(this.schaduwAan)
+        this.onraakbaar = 3
+      }
+      if (this.uit) this.schaduw.setVisible(false)
+    }
+    /* de baas meteen weghalen (als de ander al naar het volgende level is) */
+    ruimBaas() {
+      const b = this.baas; if (!b) return
+      b.weg = true
+      try { b.romp.destroy(); if (b.schaduw) b.schaduw.destroy(); b.delen.forEach(d => { d.spr.destroy(); d.label.destroy() }) } catch (e) {}
     }
     levelBord() { const L = this.L; bord('LEVEL ' + L.nr, L.naam(), L.kleur, true) }
     /* na de eindbaas: bonus, en door naar het volgende level (of gewonnen na level 7) */
@@ -1712,7 +1845,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
 
     /* ---- de speler duwen (vanuit de vinger) ---- */
     duw(dx, dy) {
-      if (this.voorbij || this.pauze) return
+      if (this.voorbij || this.pauze || this.uit) return
       this.speler.x = Phaser.Math.Clamp(this.speler.x + dx, 18, W - 18)
       this.speler.y = Phaser.Math.Clamp(this.speler.y + dy, 70, H - 24)
     }
@@ -1732,6 +1865,9 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       const S = SOORT[soort], L = this.L
       const hp = Math.max(1, Math.round(S.hp * L.zwaar * 10) / 10)
       const v = { soort, hp, max: hp, r: S.r, punten: Math.round(S.punten * (1 + (L.nr - 1) * 0.1)), t: 0, x: o.x == null ? W / 2 : o.x, y: o.y == null ? -30 : o.y, o, vx: 0, vy: 0, schiet: 0, grond: !!S.grond }
+      // v194: elke vijand een nummer, bij allebei hetzelfde: uit een golf (golfnummer en volgorde), anders van de baas
+      v.id = o.id != null ? o.id : this.golfId != null ? this.golfId * 16 + (this.golfSub++) : 'b' + (this.baasTel++)
+      this.perId.set(v.id, v)
       if (soort === 'zwaai') { v.x = o.kant < 0 ? -20 : W + 20; v.y = o.y || 80; v.vx = o.kant < 0 ? 170 : -170; v.vy = 10 }
       if (soort === 'tank' || soort === 'loper') { v.y = -24; v.vx = (v.x < W / 2 ? 1 : -1) * 8 }
       if (soort === 'kolos') v.y = -50
@@ -1756,7 +1892,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
 
     vijandStap(v, dt) {
       v.t += dt
-      const sp = this.speler, gs = this.grondSnelheid
+      const sp = this.doel(v.x, v.y), gs = this.grondSnelheid
       switch (v.soort) {
         case 'dart': {
           const snel = v.o.snel || 1
@@ -1864,6 +2000,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       if (v.dood) return
       this.weg(v.spr); if (v.loop) this.weg(v.loop); if (v.schaduw) this.weg(v.schaduw)
       v.dood = true
+      if (this.perId.get(v.id) === v) this.perId.delete(v.id)
     }
     hekStap() {
       const g = this.hekG; g.clear()
@@ -1878,7 +2015,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
         g.fillStyle(0xff4848, 0.25 * f); g.fillRect(h.a.x, y - 5, h.b.x - h.a.x, 10)
         g.fillStyle(0xff4848, 0.7 * f); g.fillRect(h.a.x, y - 2, h.b.x - h.a.x, 4)
         g.fillStyle(0xffffff, 0.9); g.fillRect(h.a.x, y - 0.6, h.b.x - h.a.x, 1.2)
-        if (Math.abs(sp.y - y) < 7 && sp.x > h.a.x && sp.x < h.b.x) this.geraakt()
+        if (!this.uit && Math.abs(sp.y - y) < 7 && sp.x > h.a.x && sp.x < h.b.x) this.geraakt()
         if (!h.zoem && y > 0) { h.zoem = true; GELUID.speel('hek') }
       }
     }
@@ -1892,7 +2029,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       return k
     }
     mik(x, y, key, snelheid, extraHoek) {
-      const a = Math.atan2(this.speler.y - y, this.speler.x - x) + (extraHoek || 0)
+      const d = this.doel(x, y)
+      const a = Math.atan2(d.y - y, d.x - x) + (extraHoek || 0)
       this.kogel(x, y, key, Math.cos(a) * snelheid, Math.sin(a) * snelheid)
       GELUID.speel('vijandSchiet')
     }
@@ -1928,7 +2066,20 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
         if (st.aan <= 0) st.wacht = pauze
       } else { st.wacht -= dt; if (st.wacht <= 0) { st.aan = duur; st.tik = 0 } }
     }
-    laserStart(b, bron) { if (b.laser || bron.dood) return; b.laser = { t: 0, x: this.speler.x, bron }; GELUID.speel('richt') }
+    laserStart(b, bron) {
+      if (b.laser || bron.dood) return
+      const d = this.doel(bron.x, bron.y)
+      b.laser = { t: 0, x: d.x, bron, wie: d === this.speler ? 'ik' : 'ander' }; GELUID.speel('richt')
+    }
+    /* v194: op wie mikt een vijand? Op het dichtstbijzijnde schip (alleen spelen: altijd op jou) */
+    doel(x, y) {
+      if (!this.samen) return this.speler
+      const a = this.anderLeeft() ? this.anderSpr : null
+      if (this.uit || !a) return a || this.speler
+      const sp = this.speler
+      return (a.x - x) ** 2 + (a.y - y) ** 2 < (sp.x - x) ** 2 + (sp.y - y) ** 2 ? a : sp
+    }
+    anderLeeft() { return !!(this.samen && this.ander && this.ander.zichtbaar) }
 
     schot(key, x, y, vx, vy, dmg, extra) {
       const k = Object.assign({ spr: this.pak(key).setDepth(15).setBlendMode(Phaser.BlendModes.ADD), x, y, vx, vy, dmg, r: 6 }, extra || {})
@@ -1938,47 +2089,57 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
     vuur(dt) {
       const sp = this.speler, niv = this.niveau[this.wapen] || 1
       this.herlaad -= dt; this.raketKlok -= dt
-      const straal = this.wapen === 'straal'
-      if (straal !== this.straalAan || !vuurtNu() || this.overgang) { if (this.straalAan) GELUID.straal(false); this.straalAan = false }
-      if (!vuurtNu() || this.overgang) return
+      const straal = this.wapen === 'straal', mag = vuurtNu() && !this.overgang && !this.uit
+      if (straal !== this.straalAan || !mag) { if (this.straalAan) GELUID.straal(false); this.straalAan = false }
+      if (!mag) return
       if (straal) { if (!this.straalAan) { this.straalAan = true; GELUID.straal(true) } return }
       if (this.herlaad > 0) return
-      if (this.wapen === 'puls') {
-        this.herlaad = 0.11
+      const geluid = this.salvo(this, sp.x, sp.y, this.wapen, niv, (key, x, y, vx, vy, dmg, extra) => this.schot(key, x, y, vx, vy, dmg, extra))
+      if (geluid) GELUID.speel(geluid)
+    }
+    /* één salvo van een wapen (ook voor de kogels van de ander, die alleen te zien zijn); st houdt herlaad en raketKlok bij */
+    salvo(st, x, y, wapen, niv, schot) {
+      if (wapen === 'puls') {
+        st.herlaad = 0.11
         const rijen = niv === 1 ? [0] : niv === 2 ? [-6, 6] : [-10, 0, 10]
-        rijen.forEach(dx => this.schot('puls', sp.x + dx, sp.y - 16, 0, -620, 1))
-        if (niv === 3) { this.schot('puls', sp.x - 14, sp.y - 6, -90, -580, 0.7); this.schot('puls', sp.x + 14, sp.y - 6, 90, -580, 0.7) }
-        GELUID.speel('puls')
-      } else if (this.wapen === 'spreid') {
-        this.herlaad = 0.17
+        rijen.forEach(dx => schot('puls', x + dx, y - 16, 0, -620, 1))
+        if (niv === 3) { schot('puls', x - 14, y - 6, -90, -580, 0.7); schot('puls', x + 14, y - 6, 90, -580, 0.7) }
+        return 'puls'
+      } else if (wapen === 'spreid') {
+        st.herlaad = 0.17
         const n = niv === 1 ? 3 : niv === 2 ? 5 : 7, br = niv === 3 ? 0.9 : 0.7
-        for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + (i - (n - 1) / 2) * (br / (n - 1)); this.schot('spreidKogel', sp.x, sp.y - 12, Math.cos(a) * 470, Math.sin(a) * 470, 0.75) }
-        GELUID.speel('spreid')
-      } else if (this.wapen === 'raket') {
-        this.herlaad = 0.16
-        this.schot('puls', sp.x, sp.y - 16, 0, -620, 0.6)
-        if (this.raketKlok <= 0) {
-          this.raketKlok = niv === 1 ? 0.55 : niv === 2 ? 0.42 : 0.3
+        for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + (i - (n - 1) / 2) * (br / (n - 1)); schot('spreidKogel', x, y - 12, Math.cos(a) * 470, Math.sin(a) * 470, 0.75) }
+        return 'spreid'
+      } else if (wapen === 'raket') {
+        st.herlaad = 0.16
+        schot('puls', x, y - 16, 0, -620, 0.6)
+        if (st.raketKlok <= 0) {
+          st.raketKlok = niv === 1 ? 0.55 : niv === 2 ? 0.42 : 0.3
           const paar = niv === 3 ? [-14, -6, 6, 14] : [-10, 10]
-          paar.forEach(dx => this.schot('raketKogel', sp.x + dx, sp.y - 4, dx * 6, -160, 3, { raket: true, leeft: 0 }))
-          GELUID.speel('raket')
+          paar.forEach(dx => schot('raketKogel', x + dx, y - 4, dx * 6, -160, 3, { raket: true, leeft: 0 }))
+          return 'raket'
         }
       }
+      return null
     }
     /* de straal raakt het eerste doel recht voor je */
     straalStap(dt) {
       const g = this.straalG; g.clear()
-      if (!this.straalAan) return
-      const sp = this.speler, niv = this.niveau.straal || 1, breed = 8 + niv * 6, dps = 10 + niv * 6
+      if (this.straalAan) this.straalVan(this.speler, this.niveau.straal || 1, dt, true)
+      const a = this.ander
+      if (a && a.zichtbaar && WAPENS[a.w] === 'straal' && (a.f & 1)) this.straalVan(this.anderSpr, a.n || 1, dt, false)
+    }
+    straalVan(sp, niv, dt, echt) {
+      const g = this.straalG, breed = 8 + niv * 6, dps = 10 + niv * 6
       let doel = null, eind = -20
       for (const d of this.doelen()) { if (Math.abs(d.x - sp.x) < d.r + breed / 2 && d.y < sp.y - 10 && d.y > eind) { eind = d.y; doel = d } }
       const top = doel ? doel.y + doel.r * 0.4 : -20
-      const flikker = 0.85 + Math.random() * 0.15
+      const flikker = (0.85 + Math.random() * 0.15) * (echt ? 1 : 0.7)
       g.fillStyle(0xb6ff3c, 0.18 * flikker); g.fillRect(sp.x - breed, top, breed * 2, sp.y - 14 - top)
       g.fillStyle(0xb6ff3c, 0.55 * flikker); g.fillRect(sp.x - breed / 2, top, breed, sp.y - 14 - top)
-      g.fillStyle(0xffffff, 0.9); g.fillRect(sp.x - 1.5, top, 3, sp.y - 14 - top)
+      g.fillStyle(0xffffff, echt ? 0.9 : 0.6); g.fillRect(sp.x - 1.5, top, 3, sp.y - 14 - top)
       if (doel) {
-        this.raak(doel, dps * dt, true)
+        if (echt) this.raak(doel, dps * dt, true)   // de straal van de ander raakt hier niets: wat hij raakt, komt via de lijn
         if (Math.random() < 0.5) this.vonken['#b6ff3c'].explode(1, sp.x + (Math.random() - 0.5) * breed, top)
       }
     }
@@ -1991,21 +2152,26 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
     }
 
     /* ---- raken, ontploffen, punten ---- */
-    raak(d, schade, stil) {
+    /* bron: niets = mijn kogels (de ander krijgt het door), 'bom' = mijn bom (de ander doet de bom zelf na), 'ander' = van de ander */
+    raak(d, schade, stil, bron) {
       if (d.dood) return
-      if (d.baasdeel) { this.raakBaas(d, schade, stil); return }
+      if (this.samen && !bron && d.id != null) this.raakBuf.set(d.id, (this.raakBuf.get(d.id) || 0) + schade)
+      if (d.baasdeel) { this.raakBaas(d, schade, stil, bron); return }
       d.hp -= schade
-      if (!stil || Math.random() < 0.08) { d.spr.setTintFill(0xffffff); d.flits = 0.05; GELUID.speel('raak') }
-      if (d.hp <= 0) this.dood(d)
+      if (!stil || Math.random() < 0.08) { d.spr.setTintFill(0xffffff); d.flits = 0.05; if (bron !== 'ander') GELUID.speel('raak') }
+      if (d.hp <= 0) this.dood(d, bron === 'ander')
     }
     kleurenVan(v) { const S = SOORT[v.soort], p = PALET[this.L.pal]; return S.kleur || [p.licht, p.oog, '#ffffff'] }
-    dood(v) {
+    dood(v, vanAnder) {
       const groot = v.soort === 'kolos' ? 3 : (v.soort === 'schutter' || v.soort === 'tank' || v.soort === 'spuger' || v.soort === 'loper' || v.soort === 'muurkanon' || v.soort === 'meteoor') ? 1.6 : 1
       this.ontplof(v.x, v.y, groot, this.kleurenVan(v))
-      this.punten(v.punten, v.x, v.y, v.soort === 'kolos')
-      if (v.soort === 'drager') this.laatVallen(v.x, v.y, v.o.buit)
-      if (v.soort === 'kolos') { this.laatVallen(v.x - 16, v.y, this.dropTel++ % 2 ? 'bom' : 'schild'); this.laatVallen(v.x + 16, v.y, WAPENS[this.dropTel++ % 4]) }
-      if (v.soort === 'meteoor') for (const r of [-1, 1]) this.maak('meteoorK', { x: v.x + r * 8, y: v.y, vx: r * 55 + v.o.vx * 0.5, vy: v.o.vy * 0.8, draai: r * 2.4 })
+      if (!vanAnder) this.punten(v.punten, v.x, v.y, v.soort === 'kolos')   // de punten zijn voor wie hem neerschiet
+      if (v.soort === 'drager') this.laatVallen(v.x, v.y, v.o.buit, v.id + ':0')
+      if (v.soort === 'kolos') {   // v194: welke power-ups hangt af van het nummer van de kolos (bij allebei gelijk)
+        const k = typeof v.id === 'number' ? v.id : 0
+        this.laatVallen(v.x - 16, v.y, k % 2 ? 'bom' : 'schild', v.id + ':0'); this.laatVallen(v.x + 16, v.y, WAPENS[(k >> 1) % 4], v.id + ':1')
+      }
+      if (v.soort === 'meteoor') for (const r of [-1, 1]) this.maak('meteoorK', { id: v.id + (r < 0 ? 'a' : 'b'), x: v.x + r * 8, y: v.y, vx: r * 55 + v.o.vx * 0.5, vy: v.o.vy * 0.8, draai: r * 2.4 })
       if (v.soort === 'mijn') this.ring(v.x, v.y, 6, 70, 'orbO', v.t)
       this.ruimVijand(v)
     }
@@ -2034,13 +2200,14 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
     }
 
     /* ---- power-ups ---- */
-    laatVallen(x, y, soort) {
+    laatVallen(x, y, soort, id) {
       if (!soort) return
-      const b = { soort, x, y, t: 0, spr: this.pak('cap_' + soort).setDepth(16) }
+      const b = { soort, x, y, t: 0, id, spr: this.pak('cap_' + soort).setDepth(16) }
       b.spr.setPosition(x, y)
       this.buit.push(b)
     }
     pakBuit(b) {
+      if (this.samen && b.id != null) this.uitgaand.push(['p', b.id])   // bij de ander verdwijnt hij
       const s = b.soort, namen = NAAM()
       let tekst = namen[s]
       if (WAPENS.includes(s)) {
@@ -2067,9 +2234,21 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       this.tweens.add({ targets: ring, scale: 70, alpha: 0, duration: 900, onComplete: () => ring.destroy() })
       for (const k of this.kogelsV) { this.vonken['#ffd23c'].explode(2, k.x, k.y); this.weg(k.spr); k.dood = true }
       this.kogelsV = []
-      for (const d of this.doelen()) this.raak(d, d.baasdeel ? 30 : 40)
+      for (const d of this.doelen()) this.raak(d, d.baasdeel ? 30 : 40, false, this.samen ? 'bom' : undefined)
       this.onraakbaar = Math.max(this.onraakbaar, 1.2)
+      if (this.samen) this.uitgaand.push(['b', Math.round(sp.x), Math.round(sp.y)])
       werkTegelBij()
+    }
+    /* de ander gooit een bom: hier gebeurt hetzelfde (minder fel), zonder punten */
+    bomVanAnder(x, y) {
+      GELUID.speel('bom')
+      this.cameras.main.flash(160, 255, 240, 160)
+      this.cameras.main.shake(300, 0.01)
+      const ring = this.add.circle(x, y, 10, 0xffe14a, 0.2).setStrokeStyle(5, 0xffe14a, 1).setDepth(28).setBlendMode(Phaser.BlendModes.ADD)
+      this.tweens.add({ targets: ring, scale: 70, alpha: 0, duration: 900, onComplete: () => ring.destroy() })
+      for (const k of this.kogelsV) { this.vonken['#ffd23c'].explode(2, k.x, k.y); this.weg(k.spr); k.dood = true }
+      this.kogelsV = []
+      for (const d of this.doelen()) this.raak(d, d.baasdeel ? 30 : 40, true, 'ander')
     }
     gebruikSchild() {
       if (!(this.voorraad.schild > 0) || this.schild > 0 || this.voorbij) return
@@ -2081,11 +2260,12 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
 
     /* ---- geraakt worden ---- */
     geraakt() {
-      if (this.onraakbaar > 0 || this.voorbij || this.godmode || this.overgang) return
+      if (this.onraakbaar > 0 || this.voorbij || this.godmode || this.overgang || this.uit) return
       if (this.schild > 0) return
       this.levens--
       tekenLevens(this.levens)
       const sp = this.speler
+      if (this.samen) this.uitgaand.push(['h'])
       this.ontplof(sp.x, sp.y, 2.4, ['#5ee7e0', '#ffffff', '#ff5d9e'])
       GELUID.speel('pijn')
       this.cameras.main.flash(180, 255, 80, 140)
@@ -2094,9 +2274,24 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       for (const k of this.kogelsV) { this.weg(k.spr); k.dood = true }
       this.kogelsV = []
       werkTegelBij()
-      if (this.levens <= 0) { this.einde(false); return }
+      if (this.levens <= 0) { if (this.samen) this.uitGaan(); else this.einde(false); return }
       sp.setPosition(W / 2, H - 70)
       this.onraakbaar = 2.6
+    }
+    /* samen: je laatste leven is op. Je kijkt mee; bij het volgende level doe je weer mee. Allebei af = game over. */
+    uitGaan() {
+      this.uit = true
+      this.speler.setVisible(false); this.vlam.setVisible(false); this.schaduw.setVisible(false); this.bel.setVisible(false)
+      if (this.straalAan) { GELUID.straal(false); this.straalAan = false }
+      sluitArsenaal()
+      this.uitgaand.push(['u'])
+      if (!this.anderSpeeltNog()) { this.einde(false); return }
+      bord('GAME OVER', vertaal('Kijk mee met {naam}. Bij het volgende level doe je weer mee.', { naam: NAAMV }), '#ff5d9e', true)
+    }
+    /* speelt de ander nog (in dit spel, niet af, en nog verbonden)? */
+    anderSpeeltNog() {
+      const a = this.ander
+      return !!(a && a.ronde === ronde && !a.uit && !a.weg)
     }
 
     /* ---- de eindbaas ---- */
@@ -2112,9 +2307,10 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       b.romp = this.add.image(b.x, b.y, def.romp).setDepth(9).setScale(SB)
       if (this.schaduwAan) b.schaduw = this.add.image(b.x, b.y, def.romp).setDepth(-6).setTint(0x000000).setAlpha(0.3).setScale(0.7 * SB)
       const stijl = { fontFamily: '"Press Start 2P",monospace', fontSize: '6px', color: '#ffffff', stroke: '#07051a', strokeThickness: 2 }
-      const sterker = 1 + (n - 1) * 0.12
-      b.delen = def.delen.map(p => {
-        const d = Object.assign({}, p, { hp: Math.round(p.hp * sterker), max: Math.round(p.hp * sterker), baasdeel: true, dood: false, x: 0, y: 0 })
+      const sterker = (1 + (n - 1) * 0.12) * (this.samen ? 1.4 : 1)   // samen: twee schepen, dus een sterkere baas
+      b.delen = def.delen.map((p, i) => {
+        const d = Object.assign({}, p, { id: 'B' + i, hp: Math.round(p.hp * sterker), max: Math.round(p.hp * sterker), baasdeel: true, dood: false, x: 0, y: 0 })
+        this.perId.set(d.id, d)
         d.spr = this.add.image(0, 0, p.key).setDepth(p.kern ? 11 : 10).setScale(SB).setFlipX(!!p.spiegel)
         d.label = this.add.text(0, 0, p.label(), stijl).setOrigin(0.5, 1).setDepth(32).setResolution(R).setVisible(false)
         b.d[p.naam] = d
@@ -2124,16 +2320,16 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       baasNaamVak.textContent = def.naam
       baasBalk.style.width = '100%'
     }
-    raakBaas(d, schade, stil) {
+    raakBaas(d, schade, stil, bron) {
       const b = this.baas; if (!b || b.dood || !b.binnen) return
-      if (d.kern && b.fase === 1) { schade *= 0.2; if (!stil || Math.random() < 0.1) GELUID.speel('ketsen') }
+      if (d.kern && b.fase === 1) { schade *= 0.2; if (bron !== 'ander' && (!stil || Math.random() < 0.1)) GELUID.speel('ketsen') }
       d.hp -= schade
-      if (!stil || Math.random() < 0.1) { d.spr.setTintFill(0xffffff); d.flits = 0.05; if (!d.kern || b.fase > 1) GELUID.speel('raak') }
+      if (!stil || Math.random() < 0.1) { d.spr.setTintFill(0xffffff); d.flits = 0.05; if ((!d.kern || b.fase > 1) && bron !== 'ander') GELUID.speel('raak') }
       if (d.hp <= 0) {
         d.dood = true
         if (d.kern) { this.baasSterft(); return }
         this.ontplof(d.x, d.y, 2.5, ['#ffd23c', '#ff3dd2', '#ffffff'])
-        this.punten(3000, d.x, d.y, true)
+        if (bron !== 'ander') this.punten(3000, d.x, d.y, true)
         d.spr.setTexture('b_kapot').clearTint().setScale(SB).setFlipX(false); d.label.setVisible(false)
         if (b.laser && b.laser.bron === d) b.laser = null
       }
@@ -2195,7 +2391,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
         if (L.bron.dood) b.laser = null
         else {
           if (L.t > 0.9 && !L.vuur) { L.vuur = true; GELUID.speel('laser') }
-          if (L.vuur) L.x += Phaser.Math.Clamp(this.speler.x - L.x, -(38 + this.level * 4) * dt, (38 + this.level * 4) * dt)
+          const wie = L.wie === 'ander' && this.anderLeeft() ? this.anderSpr : this.speler
+          if (L.vuur) L.x += Phaser.Math.Clamp(wie.x - L.x, -(38 + this.level * 4) * dt, (38 + this.level * 4) * dt)
           if (L.t > 2.3) b.laser = null
         }
       }
@@ -2210,7 +2407,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       g.fillStyle(0xff3dd2, 0.25 * f); g.fillRect(L.x - 22, top, 44, H - top)
       g.fillStyle(0xff3dd2, 0.6 * f); g.fillRect(L.x - 12, top, 24, H - top)
       g.fillStyle(0xffffff, 0.95); g.fillRect(L.x - 4, top, 8, H - top)
-      if (Math.abs(this.speler.x - L.x) < 15 && this.speler.y > top) this.geraakt()
+      if (!this.uit && Math.abs(this.speler.x - L.x) < 15 && this.speler.y > top) this.geraakt()
     }
     baasSterft() {
       const b = this.baas
@@ -2250,8 +2447,11 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
 
     /* ---- elke tik ---- */
     update(tijd, delta) {
+      if (this.voorbij) return
+      if (this.samen) this.netStap(delta)
       if (this.pauze || this.voorbij) return
-      const dt = Math.min(delta, 50) / 1000 * this.tijdSchaal
+      this.dtEcht = Math.min(delta, 50) / 1000
+      const dt = Math.min(delta, 50) / 1000 * this.tijdSchaal * (this.samen ? this.syncTempo() : 1)
       this.dtNu = dt
       this.klok += dt
       if (!this.zuinig && this.klok > 5 && this.klok < 6 && this.game.loop.actualFps < 40) {
@@ -2263,11 +2463,17 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       for (const l of this.lagen) if (!l.spec.vast) l.obj.tilePositionY -= l.spec.v * rem * R * dt
 
       // golven
-      while (!this.golfStop && this.golfNr < this.golven.length && this.golven[this.golfNr].t <= this.klok) this.golven[this.golfNr++].f(this)
+      while (!this.golfStop && this.golfNr < this.golven.length && this.golven[this.golfNr].t <= this.klok) {
+        this.golfId = this.golfNr; this.golfSub = 0
+        this.golven[this.golfNr++].f(this)
+        this.golfId = null
+      }
       if (this.golfStop && !this.baas) {
         this.baasWacht += dt
         const lucht = this.vijanden.some(v => !v.dood && !v.grond)
-        if (this.baasWacht > 6 || (!lucht && this.baasWacht > 1.5)) this.baasKomt()
+        // samen: de baas komt bij speler 2 pas als hij er bij de uitnodiger ook is
+        const a = this.ander, volg = this.samen && !this.host && a && !a.weg && a.ronde === ronde && a.level === this.level
+        if (volg ? (a.baas || this.baasWacht > 12) : (this.baasWacht > 6 || (!lucht && this.baasWacht > 1.5))) this.baasKomt()
       }
 
       // speler: toetsen
@@ -2282,6 +2488,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
 
       // schieten
       this.vuur(dt)
+      if (this.samen) this.anderStap(dt, tijd)
 
       // vijanden
       for (const v of this.vijanden) if (!v.dood && !this.vijandStap(v, dt)) this.ruimVijand(v)
@@ -2292,7 +2499,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       // kogels van de speler
       const doelen = this.doelen()
       const b = this.baas, blok = b && b.binnen && !b.dood && b.def.blok
-      for (const k of this.kogelsS) {
+      for (const lijst of this.kogelsA.length ? [this.kogelsS, this.kogelsA] : [this.kogelsS]) for (const k of lijst) {
         if (k.raket) {
           k.leeft += dt
           if (k.leeft > 0.12) {
@@ -2313,18 +2520,19 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
           if (d.dood) continue
           const rr = d.r + k.r
           if ((d.x - k.x) ** 2 + (d.y - k.y) ** 2 < rr * rr) {
-            this.raak(d, k.dmg)
+            if (k.dmg) this.raak(d, k.dmg)   // de kogels van de ander (dmg 0) raken hier niets: dat komt via de lijn
             k.dood = true
-            this.vonken[k.raket ? '#ffa53c' : this.wapen === 'spreid' ? '#ff5d9e' : '#5ee7e0'].explode(3, k.x, k.y)
+            this.vonken[k.raket ? '#ffa53c' : k.spr.texture.key === 'spreidKogel' ? '#ff5d9e' : '#5ee7e0'].explode(3, k.x, k.y)
             break
           }
         }
         // de romp van de baas houdt kogels tegen
         if (!k.dood && blok && Math.abs(k.x - b.x) < blok.b && k.y < b.y + blok.onder && k.y > b.y - blok.boven) {
-          k.dood = true; this.vonken['#ffffff'].explode(2, k.x, k.y); GELUID.speel('ketsen')
+          k.dood = true; this.vonken['#ffffff'].explode(2, k.x, k.y); if (k.dmg) GELUID.speel('ketsen')
         }
       }
       this.kogelsS = this.kogelsS.filter(k => { if (k.dood) this.weg(k.spr); return !k.dood })
+      if (this.kogelsA.length) this.kogelsA = this.kogelsA.filter(k => { if (k.dood) this.weg(k.spr); return !k.dood })
       this.straalStap(dt)
 
       // kogels van de vijand
@@ -2334,6 +2542,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
         k.x += k.vx * dt; k.y += k.vy * dt
         k.spr.setPosition(k.x, k.y)
         if (k.y < -80 || k.x < -30 || k.x > W + 30 || k.y > H + 30) { k.dood = true; continue }
+        if (this.uit) continue
         const dx = k.x - sp.x, dy = k.y - sp.y
         if (this.schild > 0 && dx * dx + dy * dy < 26 * 26) { k.dood = true; this.vonken['#7fd4ff'].explode(4, k.x, k.y); continue }
         if (dx * dx + dy * dy < (hit + k.r) * (hit + k.r)) { k.dood = true; this.geraakt(); break }
@@ -2341,7 +2550,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       this.kogelsV = this.kogelsV.filter(k => { if (k.dood) this.weg(k.spr); return !k.dood })
 
       // botsen met vijanden in de lucht
-      for (const v of this.vijanden) {
+      if (!this.uit) for (const v of this.vijanden) {
         if (v.dood || v.grond) continue
         const rr = v.r + (this.schild > 0 ? 20 : 8)
         if ((v.x - sp.x) ** 2 + (v.y - sp.y) ** 2 < rr * rr) {
@@ -2353,9 +2562,10 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
 
       // buit
       for (const bt of this.buit) {
+        if (bt.dood) continue   // (de ander pakte hem net)
         bt.t += dt; bt.y += 55 * dt; bt.x += Math.sin(bt.t * 3) * 20 * dt
         bt.spr.setPosition(bt.x, bt.y).setScale((1 + Math.sin(bt.t * 8) * 0.08) * SB)
-        if ((bt.x - sp.x) ** 2 + (bt.y - sp.y) ** 2 < 30 * 30) { bt.dood = true; this.pakBuit(bt) }
+        if (!this.uit && (bt.x - sp.x) ** 2 + (bt.y - sp.y) ** 2 < 30 * 30) { bt.dood = true; this.pakBuit(bt) }
         else if (bt.y > H + 30) bt.dood = true
       }
       this.buit = this.buit.filter(bt => { if (bt.dood) this.weg(bt.spr); return !bt.dood })
@@ -2370,19 +2580,189 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
     }
 
     /* ---- pauze (app op de achtergrond) ---- */
-    pauzeer() {
-      if (this.pauze || this.voorbij) return
-      this.pauze = true
-      GELUID.muziek(false); GELUID.straal(false); this.straalAan = false
-      sluitArsenaal()
-      bord(vertaal('GEPAUZEERD'), vertaal('Tik om verder te gaan'), '#5ee7e0', true)
+    /* samen: pauzeert de een, dan wacht de ander ook (vanAnder); verder gaat het als niemand meer pauzeert */
+    pauzeer(vanAnder) {
+      if (this.voorbij) return
+      if (vanAnder) this.pauzeAnder = true
+      else if (!this.pauzeEigen) { this.pauzeEigen = true; if (this.samen) net.stuurNu({ t: 'z', r: ronde, p: 1 }) }
+      if (!this.pauze) {
+        this.pauze = true
+        GELUID.muziek(false); GELUID.straal(false); this.straalAan = false
+        sluitArsenaal()
+      }
+      this.toonPauze()
+    }
+    toonPauze() {
+      if (this.pauzeEigen) bord(vertaal('GEPAUZEERD'), vertaal('Tik om verder te gaan'), '#5ee7e0', true)
+      else bord(vertaal('{naam} PAUZEERT', { naam: NAAMV }), vertaal('Even wachten…'), '#ff5d9e', true)
       bordVak.className = 'bord vast'
     }
-    hervat() {
-      if (!this.pauze) return
+    hervat(vanAnder) {
+      if (vanAnder) { if (!this.pauzeAnder) return; this.pauzeAnder = false }
+      else { if (!this.pauzeEigen) return; this.pauzeEigen = false; if (this.samen) net.stuurZeker({ t: 'z', r: ronde, p: 0 }) }
+      if (!this.pauze || this.voorbij) return
+      if (this.pauzeEigen || this.pauzeAnder) { this.toonPauze(); return }
       this.pauze = false
       bordVak.className = 'bord'
       GELUID.muziek(true, this.baas && this.baas.binnen && !this.baas.dood ? Object.assign({}, BAASLIED, { grond: this.L.lied.grond || 0 }) : this.L.lied)
+    }
+
+    /* ================= samen spelen ================= */
+    /* elke tik: kijken of de ander er nog is, en (20 keer per seconde, via de reserve 4 keer) berichten sturen */
+    netStap(delta) {
+      const a = this.ander, nu = performance.now()
+      const geduld = this.pauzeAnder ? 30000 : net.rechtstreeks() ? 4000 : 6000
+      if (a && !a.weg && nu - a.ontvangen > geduld) {
+        a.weg = true; a.zichtbaar = false; werkAnderRij(a)
+        if (!a.uit) balk(vertaal('{naam}: VERBINDING WEG', { naam: NAAMV }), '#ff5d9e', 3500)
+        if (this.pauzeAnder) this.hervat(true)
+        if (this.uit) { this.einde(false); return }
+      }
+      // op de echte klok (Phaser maakt delta glad als het beeld hapert)
+      if (nu - this.stuurKlok < (net.rechtstreeks() ? 50 : 250)) return
+      this.stuurKlok = nu
+      this.stuurUit()
+      net.stuurSnel(this.stand())
+    }
+    stuurUit() {
+      if (this.raakBuf.size) { for (const [id, sch] of this.raakBuf) this.uitgaand.push(['r', id, Math.round(sch * 100) / 100]); this.raakBuf.clear() }
+      if (this.uitgaand.length) { net.stuurZeker({ t: 'e', r: ronde, l: this.level, e: this.uitgaand }); this.uitgaand = [] }
+    }
+    /* mijn stand: plek, vlaggen (1 schiet, 2 schild, 4 knippert, 8 af, 16 pauze, 32 baas, 64 wissel van level), wapen, score */
+    stand() {
+      const sp = this.speler, b = this.baas
+      let f = 0
+      if (vuurtNu() && !this.overgang && !this.uit) f |= 1
+      if (this.schild > 0) f |= 2
+      if (this.onraakbaar > 0 && this.onraakbaar < 50) f |= 4
+      if (this.uit) f |= 8
+      if (this.pauze) f |= 16
+      if (b) f |= 32
+      if (this.overgang) f |= 64
+      const m = { t: 's', r: ronde, l: this.level, k: Math.round(this.klok * 1000) / 1000, x: Math.round(sp.x * 10) / 10, y: Math.round(sp.y * 10) / 10, f,
+        w: WAPENS.indexOf(this.wapen), n: this.niveau[this.wapen] || 1, sc: this.score, lv: this.levens }
+      if (b && b.binnen && !b.dood) m.bh = b.delen.map(d => Math.round(Math.max(0, d.hp) * 10) / 10)
+      return m
+    }
+    /* een bericht van de ander */
+    ontvang(m) {
+      const nu = performance.now()
+      if (m.t === 's') {
+        if (this.voorbij || (m.r | 0) !== ronde || typeof m.x !== 'number' || typeof m.y !== 'number') return
+        let a = this.ander
+        const nieuw = !a
+        if (!a) a = this.ander = { tempo: 1, vx: 0, vy: 0, snap: true, score: 0, levens: 3 }
+        const l = Math.min(AANTAL_LEVELS, Math.max(1, m.l | 0)), k = +m.k || 0
+        if (!nieuw && !a.weg && a.level === l) {
+          const dtw = (nu - a.ontvangen) / 1000
+          if (dtw > 0.015) {
+            a.tempo = a.tempo * 0.8 + Phaser.Math.Clamp((k - a.klok) / dtw, 0, 6) * 0.2
+            a.vx = Phaser.Math.Clamp((m.x - a.x) / dtw, -900, 900); a.vy = Phaser.Math.Clamp((m.y - a.y) / dtw, -900, 900)
+          }
+        } else { a.vx = 0; a.vy = 0; a.snap = true }
+        if (a.weg) { a.weg = false; if (!this.voorbij) balk(vertaal('{naam} IS TERUG', { naam: NAAMV }), '#5ee7e0', 2500) }
+        a.ronde = m.r | 0; a.level = l; a.klok = k; a.ontvangen = nu
+        a.x = m.x; a.y = m.y; a.f = m.f | 0; a.w = m.w | 0; a.n = m.n | 0
+        a.uit = !!(a.f & 8); a.pauze = !!(a.f & 16); a.baas = !!(a.f & 32)
+        a.score = m.sc | 0; a.levens = m.lv | 0
+        werkAnderRij(a)
+        if (a.uit && this.uit) { this.einde(false); return }      // allebei af
+        if (l > this.level) this.naarLevel(l)                     // wie het hoogste level heeft, bepaalt het level
+        else if (l === this.level && Array.isArray(m.bh)) this.baasSamen(m.bh)
+        return
+      }
+      if (m.t === 'e') {
+        if ((m.r | 0) !== ronde || !Array.isArray(m.e)) return
+        const zelfde = (m.l | 0) === this.level && !this.voorbij
+        for (const e of m.e.slice(0, 400)) {
+          if (!Array.isArray(e)) continue
+          if (e[0] === 'u') {
+            if (this.ander) { this.ander.uit = true; werkAnderRij(this.ander) }
+            if (this.voorbij) continue
+            if (this.uit) this.einde(false)
+            else balk(vertaal('{naam}: GAME OVER', { naam: NAAMV }), '#ff5d9e', 3000)
+          } else if (e[0] === 'x') {
+            if (this.ander) { this.ander.score = e[1] | 0; werkAnderRij(this.ander) }
+            if (this.voorbij) toonAnderEinde(e[1] | 0)
+          } else if (!zelfde) continue
+          else if (e[0] === 'r') { const d = this.perId.get(e[1]); if (d && !d.dood) this.raak(d, Math.max(0, Math.min(500, +e[2] || 0)), true, 'ander') }
+          else if (e[0] === 'p') { const bt = this.buit.find(x => x.id === e[1] && !x.dood); if (bt) { bt.dood = true; this.vonkVoor(KLEUR[bt.soort]).explode(10, bt.x, bt.y) } }
+          else if (e[0] === 'b') this.bomVanAnder(Phaser.Math.Clamp(+e[1] || 0, 0, W), Phaser.Math.Clamp(+e[2] || 0, 0, H))
+          else if (e[0] === 'h') { if (this.anderLeeft()) this.ontplof(this.anderSpr.x, this.anderSpr.y, 2, leider ? ['#ff5d9e', '#ffffff', '#5ee7e0'] : ['#5ee7e0', '#ffffff', '#ff5d9e']) }
+        }
+        return
+      }
+      if (m.t === 'z' && (m.r | 0) === ronde) { if (m.p) this.pauzeer(true); else this.hervat(true) }
+    }
+    /* de baas: van elk onderdeel telt de laagste stand van ons tweeën */
+    baasSamen(bh) {
+      const b = this.baas
+      if (!b || !b.binnen || b.dood || bh.length !== b.delen.length) return
+      let anders = false
+      b.delen.forEach((d, i) => {
+        const hp = +bh[i]
+        if (d.dood || !(hp < d.hp - 0.05)) return
+        d.hp = hp; anders = true
+        if (d.hp <= 0) this.raakBaas(d, 0, true, 'ander')
+      })
+      if (anders && this.baas && !this.baas.dood) this.werkBaasBalkBij()
+    }
+    /* de ander is al in een hoger level: meteen mee */
+    naarLevel(n) {
+      if (this.overgang || this.voorbij || n > AANTAL_LEVELS || n <= this.level) return
+      if (this.baas && this.baas.sterft > 0) return   // mijn baas is al stuk: het volgende level komt vanzelf
+      this.overgang = 1
+      if (this.straalAan) { GELUID.straal(false); this.straalAan = false }
+      this.cameras.main.fadeOut(300, 7, 5, 26)
+      this.time.delayedCall(330, () => {
+        if (this.voorbij) return
+        this.startLevel(n)
+        this.onraakbaar = Math.max(this.onraakbaar, 2)
+        this.cameras.main.fadeIn(500, 7, 5, 26)
+      })
+    }
+    /* speler 2 volgt de speltijd van de uitnodiger: iets sneller of langzamer, of (na een grote sprong) meteen gelijk */
+    syncTempo() {
+      if (this.host) return 1
+      const a = this.ander
+      if (!a || a.weg || a.ronde !== ronde || a.level !== this.level || a.pauze || this.overgang || (a.f & 64)) return 1
+      const schat = a.klok + Math.min(1.5, (performance.now() - a.ontvangen) / 1000) * a.tempo
+      const verschil = schat - this.klok
+      if (Math.abs(verschil) > 2) { this.springKlok(schat); return 1 }
+      return Phaser.Math.Clamp(1 + verschil * 0.6, 0.8, 1.25)
+    }
+    springKlok(k) {
+      // vooruit: golven die al lang voorbij zijn overslaan (anders komen ze allemaal tegelijk); de baas-golf blijft
+      while (k > this.klok && !this.golfStop && this.golfNr < this.golven.length && this.golven[this.golfNr].t < k - 1.5 && !this.golven[this.golfNr].baas) this.golfNr++
+      this.klok = k
+    }
+    /* het schip van de ander: zachtjes naar de laatste plek (een beetje vooruit), met vlam, schild, naam en kogels */
+    anderStap(dt, tijd) {
+      const a = this.ander, s = this.anderSpr
+      const zien = !!(a && !a.weg && !a.uit && a.ronde === ronde && a.level === this.level && !(a.f & 64))
+      if (a) a.zichtbaar = zien
+      if (!zien) {
+        if (s.visible) { s.setVisible(false); this.anderVlam.setVisible(false); this.anderNaam.setVisible(false); this.anderBel.setVisible(false); this.anderSchaduw.setVisible(false) }
+        return
+      }
+      const oud = Math.min((performance.now() - a.ontvangen) / 1000, net.rechtstreeks() ? 0.15 : 0.3)
+      const tx = Phaser.Math.Clamp(a.x + a.vx * oud, 18, W - 18), ty = Phaser.Math.Clamp(a.y + a.vy * oud, 70, H - 24)
+      if (a.snap || !s.visible || Math.abs(tx - s.x) + Math.abs(ty - s.y) > 160) { s.setPosition(tx, ty); a.snap = false }
+      else { const k = Math.min(1, (this.dtEcht || 0.016) * 14); s.x += (tx - s.x) * k; s.y += (ty - s.y) * k }
+      s.setVisible(true).setAlpha((a.f & 4) && Math.floor(tijd / 80) % 2 ? 0.35 : 1)
+      this.anderVlam.setVisible(true).setTexture(Math.floor(tijd / 60) % 2 ? 'vlam1' : 'vlam0').setPosition(s.x, s.y + 19)
+      this.anderNaam.setVisible(true).setPosition(Math.round(s.x), Math.round(s.y - 34))
+      this.anderBel.setVisible(!!(a.f & 2)).setPosition(s.x, s.y).setRotation(-tijd / 300)
+      this.anderSchaduw.setVisible(!!this.schaduwAan).setPosition(s.x + 16, s.y + 24)
+      // de kogels van de ander: alleen om te zien (wat ze raken, komt via de lijn)
+      const st = this.anderSt; st.herlaad -= dt; st.raketKlok -= dt
+      const w = WAPENS[a.w] || 'puls'
+      if ((a.f & 1) && w !== 'straal' && st.herlaad <= 0) this.salvo(st, s.x, s.y, w, Math.min(3, Math.max(1, a.n || 1)), (key, x, y, vx, vy, dmg, extra) => this.schotA(key, x, y, vx, vy, extra))
+    }
+    schotA(key, x, y, vx, vy, extra) {
+      const k = Object.assign({ spr: this.pak(key).setDepth(14).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.75), x, y, vx, vy, dmg: 0, r: 6 }, extra || {})
+      k.spr.setPosition(x, y).setRotation(Math.atan2(vy, vx) + Math.PI / 2)
+      this.kogelsA.push(k)
     }
 
     einde(gewonnen) {
@@ -2391,11 +2771,15 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       GELUID.muziek(false); GELUID.straal(false)
       sluitArsenaal()
       this.straalG.clear(); this.fx.clear(); this.hekG.clear()
-      for (const k of this.kogelsS.concat(this.kogelsV)) this.weg(k.spr)
-      this.kogelsS = []; this.kogelsV = []
+      for (const k of this.kogelsS.concat(this.kogelsV, this.kogelsA)) this.weg(k.spr)
+      this.kogelsS = []; this.kogelsV = []; this.kogelsA = []
       if (gewonnen) { this.score += this.levens * 10000; GELUID.speel('klaar') } else GELUID.speel('einde')
       scoreVak.textContent = String(this.score).padStart(7, '0')
-      toonEinde(gewonnen, this.score, this.levens, this.level)
+      if (this.samen) {   // het laatste nieuws (ook mijn eindscore) meteen naar de ander; daarna stuurt dit spel niets meer
+        this.uitgaand.push(['x', this.score])
+        this.stuurUit()
+      }
+      toonEinde(gewonnen, this.score, this.levens, this.level, this.ander ? this.ander.score : 0)
     }
   }
   Object.assign(Spel.prototype, TEKENAAR)
@@ -2406,18 +2790,21 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
     recordVak.textContent = r ? vertaal('RECORD {n}', { n: String(r).padStart(7, '0') }) : ''
   }
   function toonVerder() {
-    verderKnop.hidden = bereikt <= 1
+    verderKnop.hidden = bereikt <= 1 || !leider
     verderKnop.textContent = vertaal('VERDER: LEVEL {n}', { n: bereikt })
   }
-  function toonEinde(gewonnen, score, levens, level) {
+  function toonEinde(gewonnen, score, levens, level, anderScore) {
     const nieuw = solo && typeof solo.nieuweScore === 'function' ? solo.nieuweScore(score) : false
     h1.innerHTML = gewonnen ? vertaal('GEWONNEN!') + '<span>NEON RAIDERS</span>' : 'GAME<span>OVER</span>'
     sub.textContent = 'SCORE ' + String(score).padStart(7, '0') + (nieuw ? ' · ' + vertaal('NIEUW RECORD!') : '')
     uitleg.textContent = gewonnen ? vertaal('Alle zeven levels gehaald. Bonus voor je levens: {n}.', { n: getal(levens * 10000) })
+      : samen ? vertaal('Jullie schepen zijn neergeschoten. Jullie kwamen tot level {n}.', { n: level })
       : vertaal('Je schip is neergeschoten.') + ' ' + vertaal('Je kwam tot level {n}.', { n: level })
-    uitleg2.textContent = vertaal('De tegel linksboven: wapen wisselen of een power-up gebruiken.') + toetsUitleg
+    uitleg2.textContent = samen ? vertaal('{naam}: SCORE {score}', { naam: NAAMV, score: String(anderScore || 0).padStart(7, '0') })
+      : vertaal('De tegel linksboven: wapen wisselen of een power-up gebruiken.') + toetsUitleg
     toonRecord(); toonVerder()
     startKnop.textContent = vertaal('OPNIEUW')
+    werkStartscherm()
     laag.hidden = false
     try { startKnop.focus({ preventScroll: true }) } catch (e) {}
   }
@@ -2426,7 +2813,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
   const aanraak = window.matchMedia && window.matchMedia('(pointer:coarse)').matches
   const toetsUitleg = aanraak ? '' : ' ' + vertaal('Toetsen: pijltjes = vliegen, spatie = schieten, Q = tegel.')
   uitleg2.textContent += toetsUitleg
-  toonAuto(); toonGeluid(); toonRecord(); toonVerder(); werkTegelBij()
+  toonAuto(); toonGeluid(); toonRecord(); toonVerder(); werkTegelBij(); werkStartscherm()
   autoKnop.addEventListener('click', e => { e.stopPropagation(); autovuur = !autovuur; try { localStorage.setItem('nr-autovuur', autovuur ? 'aan' : 'uit') } catch (x) {} toonAuto() })
   geluidKnop.addEventListener('click', e => { e.stopPropagation(); GELUID.zet(!GELUID.staatAan()); toonGeluid() })
 
@@ -2435,6 +2822,12 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
     if (aftellen) return
     GELUID.wek()
     aftellen = true
+    partnerKlaar = !samen
+    if (samen) {   // (de ander kan opnieuw starten terwijl dit spel nog loopt)
+      sluitArsenaal(); laag.hidden = false; rolVak.textContent = ''
+      if (huidige) { try { huidige.voorbij = true } catch (e) {} }
+      GELUID.muziek(false); GELUID.straal(false)
+    }
     beginLevel = Math.min(AANTAL_LEVELS, Math.max(1, level || 1))
     indeling()
     H = Math.round(Math.min(800, Math.max(560, W * veld.clientHeight / Math.max(1, veld.clientWidth))) / 2) * 2
@@ -2464,8 +2857,17 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
     }
     stap()
   }
-  startKnop.addEventListener('click', e => { e.stopPropagation(); startRonde(1) })
-  verderKnop.addEventListener('click', e => { e.stopPropagation(); startRonde(bereikt) })
+  function begin(level) {
+    if (aftellen) return
+    if (samen) {   // samen: alleen de uitnodiger start, voor allebei
+      if (!leider || !partnerKlaar || netModus === 'zoeken') return
+      ronde++
+      net.stuurZeker({ t: 'start', l: level, r: ronde })
+    }
+    startRonde(level)
+  }
+  startKnop.addEventListener('click', e => { e.stopPropagation(); begin(1) })
+  verderKnop.addEventListener('click', e => { e.stopPropagation(); begin(bereikt) })
 
   const zichtbaarheid = () => { if (document.hidden && huidige) huidige.pauzeer() }
   document.addEventListener('visibilitychange', zichtbaarheid)
@@ -2474,8 +2876,16 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
 
   /* ---------- opruimen zodra het spel gesloten wordt ---------- */
   const waker = setInterval(() => {
-    if (isActief() && wrap.isConnected) return
+    if (isActief() && wrap.isConnected) {
+      if (samen && !leider && !laag.hidden && !aftellen) {   // ik sta op het startscherm: de uitnodiger kan starten
+        klaarKlok += 300
+        if (klaarKlok >= 900) { klaarKlok = 0; net.stuurSnel({ t: 'klaar' }) }
+      }
+      if (samen && leider && partnerKlaar && !aftellen && performance.now() - laatsteKlaar > 3500) { partnerKlaar = false; werkStartscherm() }
+      return
+    }
     clearInterval(waker)
+    if (net) net.sluit()
     clearTimeout(arsenaalKlok)
     GELUID.stop()
     window.removeEventListener('keydown', toetsNeer)
@@ -2488,5 +2898,5 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
     if (wrap.isConnected) wrap.remove()
   }, 300)
 
-  return { _proef: { scene: () => huidige, spel: () => spel, start: startRonde } }
+  return { _proef: { scene: () => huidige, spel: () => spel, start: startRonde, net: () => net, modus: () => netModus, ronde: () => ronde } }
 }

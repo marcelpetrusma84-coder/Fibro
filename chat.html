@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=23"></script>
+<script src="taal.js?v=24"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Chat</title>
@@ -2067,7 +2067,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     swarm: './swarm-ui.js?v=147',
     endlessrunner: './runner-gunner-ui.js?v=147',
     pacman: './ecto-ui.js?v=177',
-    pinball: './twin-snakes-ui.js?v=147'
+    pinball: './twin-snakes-ui.js?v=147',
+    shmup: './neon-raiders-ui.js?v=194'
   }
   const _alGeladen = {}
   function laadSpelAlvast(spelType) {
@@ -2114,7 +2115,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // Accepteer uitnodiging → open het spel
   window.speelMee = async function(spelType, sessieId, starterId) {
-    const beschikbaar = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball']
+    const beschikbaar = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball', 'shmup']
     if (!beschikbaar.includes(spelType)) {
       alert(T('🚧 {spel} komt binnenkort beschikbaar!', { spel: SPEL_INFO[spelType]?.naam || spelType }))
       return
@@ -2144,6 +2145,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     else if (spelType === 'endlessrunner') await startRunnerGunner()
     else if (spelType === 'pacman') await startEcto()
     else if (spelType === 'pinball') await startTwinSnakes()
+    else if (spelType === 'shmup') await startNeonRaiders()
     if (spelActief !== spelType) return   // ondertussen gesloten
 
     spelKanaal.on('broadcast', { event: 'spelchat' }, (msg) => {
@@ -2499,6 +2501,14 @@ async function startBlockIt() {
   async function startTwinSnakes() {
     const m = await import('./twin-snakes-ui.js?v=147')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'pinball' })
+  }
+
+  // ─── Neon Raiders (vakje Neon Raiders, v194: samen) ───
+  // De berichten tijdens het spel gaan rechtstreeks tussen de telefoons (spelnet.js); het spelkanaal
+  // is alleen voor het opzetten, of als reserve (hooguit 4 berichten per seconde).
+  async function startNeonRaiders() {
+    const m = await import('./neon-raiders-ui.js?v=194')
+    await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'shmup' })
   }
 
   // ─── Geluidsbibliotheek ───

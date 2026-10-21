@@ -284,6 +284,22 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  schaak-worker.js, schaken-ui.js?v=149, bordgeluid.js?v=148, solo-bord.js?v=3); die zette
                                  spel.html op solo.js versie 194, v193 zet het op solo.js?v=193 (194 blijft bezet).
                                  FIBRO_VERSIE 193 (testscript_neonraiders2.py)
+                         neonraiders3 = v194: Neon Raiders samen spelen vanuit de chat (chat.html: 'shmup' in beschikbaar, SPEL_BESTAND,
+                                 startNeonRaiders). Nieuw: spelnet.js?v=194, de lijn tussen de twee telefoons: WebRTC DataChannels
+                                 'zeker' (op volgorde) en 'snel' (mag wegvallen) met ice-config.js (eigen STUN/TURN); het spelkanaal
+                                 (Supabase) alleen voor het opzetten (events nr-sig) en, als het binnen 10 s niet rechtstreeks lukt,
+                                 als reserve: event nr-pak, hooguit 4 per seconde (snel = alleen de nieuwste, zeker = alles).
+                                 In het spel: de uitnodiger (P1, cyaan 'schip') start; speler 2 ('schip2', roze) stuurt 'klaar'.
+                                 Elk speelt het level zelf (vijanden met hetzelfde nummer: golfnummer * 16 + volgorde, 'b'+n van de
+                                 baas, 'B'+i de onderdelen); over de lijn: stand ('s', 20 per seconde: plek, vlaggen, wapen, score,
+                                 levens van de baas), gebeurtenissen ('e': r = raak id schade, p = power-up gepakt, b = bom, h =
+                                 geraakt, u = af, x = eindscore), pauze ('z'), 'klaar' en 'start'. Speler 2 volgt de speltijd van
+                                 de uitnodiger (syncTempo, springKlok), de baas komt als hij er bij de uitnodiger is, van de baas
+                                 telt de laagste stand (baasSamen), het hoogste level telt (naarLevel). Vijanden mikken op het
+                                 dichtstbijzijnde schip (doel). Af = meekijken, nieuw level = weer mee (2 levens), allebei af =
+                                 game over. Samen: geen slow motion bij de tegel, de baas 1,4 keer zo sterk. Kolos-buit hangt af van zijn nummer.
+                                 neon-raiders-ui.js?v=194 (solo.js?v=195 want 194 was al gebruikt, spel.html, chat.html), taal-en.js?v=24 en taal.js?v=24
+                                 (alle 12 pagina's). proef90 nieuw. FIBRO_VERSIE 194 (testscript_neonraiders3.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -703,6 +719,17 @@ tools/proef89.py         Neon Raiders, het hele spel (v193): alle 7 levels versn
                          level met nieuwe achtergrond (oude ag_-texturen weg) en nr-bereikt; na level 7 GEWONNEN!; opnieuw
                          laden: knop VERDER: LEVEL 7 begint level 7 met de gewone uitrusting. Duurt ±10 minuten.
                          Oude map (v192): bijna alles MIS.   python3 -I proef89.py <map>
+tools/proef90.py         Neon Raiders samen (v194): twee pagina's in een browser via een proefpagina (nrsamen.html, wordt gemaakt) met
+                         een nagemaakt spelkanaal (BroadcastChannel) en echte WebRTC (spelnet.js, echte ice-config.js).
+                         A wachtkamer: 'BRAM START HET SPEL' / 'WACHT OP MARCEL' -> 'RECHTSTREEKS VERBONDEN' + START.
+                         B samen: allebei level 1, schip van de ander op de goede plek, speltijd gelijk, dezelfde vijanden
+                         (nummers), schoten van speler 2 doden ook bij de uitnodiger (zonder punten voor hem), zijn score
+                         rechtsboven, power-up weg bij de ander, bom van de ander, niets via het spelkanaal.
+                         C baas bij allebei, schade telt, laagste stand telt, pauze bij de een = wachten bij de ander, kern
+                         kapot = allebei level 2. D af = meekijken, nieuw level = weer mee (2 levens), allebei af = game over
+                         met de score van de ander, OPNIEUW = ronde 2. E zonder WebRTC: 'VERBONDEN (RESERVE)' na ±11 s,
+                         hooguit 4 berichten per seconde via het spelkanaal, schip van de ander te zien. Duurt ±5 minuten.
+                         Oude map (v193): bijna alles MIS.   python3 -I proef90.py <map>
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

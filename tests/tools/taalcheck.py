@@ -11,7 +11,7 @@ VAST = {  # met T(variabele) vertaald: deze moeten er ook in staan
  'index.html': ['Wereldklok', 'Datum', 'Online vrienden', 'Laatste bericht', 'Batterij', 'Activiteit', 'Poll', 'Afteltimer', 'Gastenboek', 'Mood',
                 'Muziek player', 'Quote', 'Video', 'Foto grid 3×3', 'Foto grid 2×2', 'Grote foto', 'Foto strip', 'Portret strip', 'Uitgelicht + 4 klein',
                 'Polaroid grid', 'Zwevende Polaroids', 'Opteltimer', 'Tic-Tac-Toe', 'Four in a Row', 'Flapper', 'Chess', 'Draughts', 'Neo Paddle',
-                'Ghost Tag', 'Block It', 'The Swarm', 'Twin Snakes', 'Runner & Gunner',
+                'Ghost Tag', 'Block It', 'The Swarm', 'Twin Snakes', 'Runner & Gunner', 'Neon Raiders',
                 'Amsterdam', 'Londen', 'New York', 'Los Angeles', 'Tokio', 'Dubai', 'Sydney', 'Parijs', 'Berlijn', 'Moskou', 'Bangkok', 'Singapore',
                 'Hong Kong', 'Mumbai', 'São Paulo', 'Kaapstad', 'Mexico-Stad', 'Chicago', 'Seoul', 'Istanbul'],
  'moderatie.html': ['Ongewenste berichten', 'Bedreiging of intimidatie', 'Ongepaste inhoud', 'Iets anders',  # T(r.reden)

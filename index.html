@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=21"></script>
+<script src="taal.js?v=22"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>/* v130: zoomen mag weer; iPhone zoomt bij invoervakken kleiner dan 16px vanzelf in */@supports (-webkit-touch-callout: none){input,textarea,select{font-size:16px !important}}</style>
@@ -589,7 +589,7 @@ function renderProfiel(id, c) {
 
 // ── Spelwidget: tikken opent het spel tegen de computer (spel.html) ──
 function renderSpelWidget(c, spel) {
-  const ICONEN = { botkaaseiren: '⭕', vieroprij: '🔴', schaken: '♟️', dammen: '⚫', pong: '🏓', pacman: '👻', breakout: '🟪', flappybird: '🦇', swarm: '🪲', endlessrunner: '🏃', pinball: '🐍' }
+  const ICONEN = { botkaaseiren: '⭕', vieroprij: '🔴', schaken: '♟️', dammen: '⚫', pong: '🏓', pacman: '👻', breakout: '🟪', flappybird: '🦇', swarm: '🪲', endlessrunner: '🏃', pinball: '🐍', shmup: '🚀' }
   const icon = ICONEN[spel] || '🎮'
   c.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:100%;"><span style="font-size:30px;line-height:1">' + icon + '</span><span style="font-size:13px;font-weight:600;color:#fff">' + T('▶ Spelen') + '</span></div>'
   const blok = c.closest('.widget-blok') || c
@@ -2104,7 +2104,7 @@ async function renderGastenboek(c, uid) {
 // v183: het versienummer en de datum van deze versie, onderaan in het menu. Zo zie je op elk toestel welke versie
 // er echt draait (een telefoon kan een oude pagina nog even vasthouden). Elk maak-script zet het nummer een hoger:
 // tests/gen/bouw.py maakt geen script als het hier niet omhoog gaat.
-const FIBRO_VERSIE = 191
+const FIBRO_VERSIE = 192
 const FIBRO_DATUM = '2026-10-21'
 function versieTekst() {
   let d = FIBRO_DATUM

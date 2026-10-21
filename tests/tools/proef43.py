@@ -208,6 +208,9 @@ MAG_ERBIJ |= {'Fibro \u2014 Stijl', 'Fibro \u2013 Mijn stijl', 'Onderdelen van j
 # v191: bovenaan de Chat-lijst alleen 'Chat' (was 'Selecteer een vriend' + 'Kies hieronder met wie je wilt chatten')
 MAG_WEG |= {'Selecteer een vriend', 'Kies hieronder met wie je wilt chatten', 'Fibro v190 \u00B7 21 okt 2026'}
 MAG_ERBIJ |= {'Chat', 'Fibro v191 \u00B7 21 okt 2026'}
+# v192: Neon Raiders in Stijl > Widgets (alleen spelen)
+MAG_WEG |= {'Fibro v191 \u00B7 21 okt 2026'}
+MAG_ERBIJ |= {'\U0001F680', 'Neon Raiders', 'Speel alleen', 'Fibro v192 \u00B7 21 okt 2026'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

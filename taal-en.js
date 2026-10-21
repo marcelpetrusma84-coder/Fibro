@@ -11,6 +11,7 @@
 // v154: het Stickerlab in Profiel (stickermaker.js).
 // v155: eigen stickers versturen in de chat (stickerkeuze.js, chat.html).
 // v157: stickers als widget op Home (stickerwidget.js, stickermaker.js).
+// v192: Neon Raiders (neon-raiders-ui.js).
 window.FIBRO_EN = {
 
 // ---- Overal ----
@@ -1183,6 +1184,37 @@ window.FIBRO_EN = {
   "GELIJKSPEL!": "DRAW!",
   "VOLGENDE: LEVEL {n}": "NEXT: LEVEL {n}",
 
+// ---- Neon Raiders (neon-raiders-ui, v192) ----
+  "Neon Raiders": "Neon Raiders",
+  "PULS": "PULSE",
+  "SPREID": "SPREAD",
+  "STRAAL": "BEAM",
+  "RAKET": "ROCKET",
+  "BOM": "BOMB",
+  "SCHILD": "SHIELD",
+  "+1 LEVEN": "+1 LIFE",
+  "AARDE": "EARTH",
+  "Wapen wisselen of power-up gebruiken": "Switch weapon or use a power-up",
+  "LEVEL 1 · AARDE": "LEVEL 1 · EARTH",
+  "Sleep met één vinger om te vliegen. Tik of houd een tweede vinger op het scherm om te schieten.": "Drag one finger to fly. Tap or hold a second finger on the screen to shoot.",
+  "De tegel linksboven: wapen wisselen of een power-up gebruiken.": "The tile in the top left: switch weapons or use a power-up.",
+  "Toetsen: pijltjes = vliegen, spatie = schieten, Q = tegel.": "Keys: arrows = fly, space = shoot, Q = tile.",
+  "WAARSCHUWING": "WARNING",
+  "WOEDEND": "ENRAGED",
+  "GEPAUZEERD": "PAUSED",
+  "Tik om verder te gaan": "Tap to continue",
+  "RECORD {n}": "HIGH SCORE {n}",
+  "GEHAALD!": "CLEARED!",
+  "NIEUW RECORD!": "NEW HIGH SCORE!",
+  "TITAN is verslagen. Bonus voor je levens: {n}.": "TITAN is defeated. Bonus for your lives: {n}.",
+  "Je schip is neergeschoten.": "Your ship was shot down.",
+  "De volgende levels komen binnenkort.": "The next levels are coming soon.",
+  "AUTOVUUR: AAN": "AUTO FIRE: ON",
+  "AUTOVUUR: UIT": "AUTO FIRE: OFF",
+  "KANON L": "CANNON L",
+  "KANON R": "CANNON R",
+  "KERN": "CORE",
+  "EINDBAAS NADERT: {naam}": "BOSS APPROACHING: {naam}",
 // ---- Runner & Gunner (runner-gunner-ui, spellen/runner-gunner.html) ----
   "Jij en {naam} rennen op dezelfde baan. Wie komt het verst?": "You and {naam} run on the same track. Who gets the furthest?",
   "Hoe ver kom jij?": "How far can you get?",

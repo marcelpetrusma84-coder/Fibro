@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=21"></script>
+<script src="taal.js?v=22"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Stijl</title>
@@ -434,6 +434,7 @@ input, textarea { font-size:16px !important; }
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🟪</div><div><div class="widget-name" data-t>Block It</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_breakout" onclick="toggleWidget('spel_breakout')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🪲</div><div><div class="widget-name" data-t>The Swarm</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_swarm" onclick="toggleWidget('spel_swarm')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏃</div><div><div class="widget-name" data-t>Runner &amp; Gunner</div><div class="widget-desc" data-t>Speel alleen</div></div></div><div class="toggle off" id="widget-spel_endlessrunner" onclick="toggleWidget('spel_endlessrunner')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🚀</div><div><div class="widget-name" data-t>Neon Raiders</div><div class="widget-desc" data-t>Speel alleen</div></div></div><div class="toggle off" id="widget-spel_shmup" onclick="toggleWidget('spel_shmup')"><div class="toggle-dot"></div></div></div>
     </div>
   </div>
 </div>
@@ -1081,7 +1082,8 @@ window.slaAllesOp=async function(){
     spel_breakout:     { id:'spel_breakout',     icon:'🟪', titel:'Block It',      w:2, h:1 },
     spel_swarm:        { id:'spel_swarm',        icon:'🪲', titel:'The Swarm',     w:2, h:1 },
     spel_pinball:      { id:'spel_pinball',      icon:'🐍', titel:'Twin Snakes',   w:2, h:1 },
-    spel_endlessrunner: { id:'spel_endlessrunner', icon:'🏃', titel:'Runner & Gunner', w:2, h:1 }
+    spel_endlessrunner: { id:'spel_endlessrunner', icon:'🏃', titel:'Runner & Gunner', w:2, h:1 },
+    spel_shmup:        { id:'spel_shmup',        icon:'🚀', titel:'Neon Raiders',  w:2, h:1 }   // v192
   }
   // v157: een sticker (sticker_f1-05, sticker_e1-03) is een klein vakje zonder kop (stickerwidget.js)
   // v158: je eigen volgorde van Home (ingedrukt houden en slepen, volgorde.js) blijft staan. Widgets die al op

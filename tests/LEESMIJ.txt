@@ -260,6 +260,18 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  verborgen (.chat-status:empty). Was 'Selecteer een vriend' + 'Kies hieronder met wie je wilt chatten'
                                  (die sleutels staan nog ongebruikt in taal-en.js). Een gesprek: naam + '● actief' zoals altijd; terug:
                                  weer 'Chat'. proef43 aangepast. FIBRO_VERSIE 191 (testscript_chatkop.py)
+                         neonraiders = v192: nieuw spel Neon Raiders (neon-raiders-ui.js), stap 1: alleen spelen, level 1 (aarde,
+                                 grond zichtbaar) met eindbaas TITAN. Phaser en Press Start 2P zoals Runner & Gunner; alles in code
+                                 getekend, gedetailleerd (naar een plaatje van Marcel: metalen schepen, rand om het veld, balkjes per
+                                 onderdeel van de baas, 'eindbaas nadert'-balk) op dubbele scherpte (R = 2 op telefoons, 1 op een
+                                 gewoon scherm); onder 40 beeldjes per seconde een zuinige stand (geen nevel, minder vonken). Geluid
+                                 met Web Audio. Een vinger slepen = vliegen, tweede vinger = schieten (muis: slepen =
+                                 vliegen en schieten; toetsen pijltjes/WASD, spatie, Q = tegel). Tegel linksboven = arsenaal (wapens
+                                 puls/spreid/straal/raket, bom, schild) met slow motion. Golven uit een vaste toevalsreeks (straks
+                                 samen spelen). solo.js?v=192 (shmup, zonderKanaal + arcade: record via spel.html), spel.html,
+                                 Stijl > Widgets (spel_shmup), Home-icoon. taal-en.js?v=22 (in taal.js), taal.js?v=22 (alle 12
+                                 pagina's). In de chat zegt Neon Raiders nog 'komt binnenkort'. proef43 kent de nieuwe teksten (v192).
+                                 FIBRO_VERSIE 192 (testscript_neonraiders.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -667,6 +679,13 @@ tools/proef87.py         Chat-lijst bovenaan alleen 'Chat' (v191), echte chat.ht
                          zoals Vrienden (letter, maat, schuin), geen tweede regel, oude zinnen weg; tik op een vriend = naam + actief
                          in de gewone letter; terug = weer 'Chat'; ook via chat.html?vriend=. Oude map (v190) als controle: 10 van 34.
                          python3 -I proef87.py <map>
+tools/proef88.py         Neon Raiders (v192) via spel.html?spel=shmup, Nederlands en Engels, nagebootste iPhone met echte
+                         aanrakingen (twee vingers via CDP Input.dispatchTouchEvent): startscherm, START, slepen = vliegen, een
+                         vinger schiet niet, tweede vinger wel, loslaten stopt; tegel = arsenaal + slow motion, bom, wapen
+                         wisselen, capsule oppakken; pauze op de achtergrond; eindbaas komt en wordt verslagen (record bewaard);
+                         game over. Het spel zet window.__neonRaiders alleen als window.__fibroProef = true (init-script).
+                         Swiftshader-Chromium haalt ±20 beeldjes: de baas duurt ±40 s. Oude map (v191): 2 van 8.
+                         python3 -I proef88.py <map>
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

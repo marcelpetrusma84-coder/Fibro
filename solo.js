@@ -4,7 +4,7 @@
 // hetzelfde terugstuurt als een vriend zou doen. De spelbestanden zelf hoeven
 // daardoor niet te veranderen. Er gaat niets over het internet.
 
-import { damBot, schaakBot } from './solo-bord.js?v=2'
+import { damBot, schaakBot } from './solo-bord.js?v=3'
 
 export const NIVEAUS = ['makkelijk', 'normaal', 'moeilijk']
 
@@ -13,6 +13,7 @@ export function maakSoloKanaal(maakBot, niveau, motor) {
   const luisteraars = {}
   let dicht = false
   const kanaal = {
+    isSolo: true,
     on(soort, filter, fn) {
       const ev = filter && filter.event
       if (ev) (luisteraars[ev] = luisteraars[ev] || []).push(fn)
@@ -383,7 +384,7 @@ export function stilBot() {
 export const SOLO_SPELLEN = {
   botkaaseiren: { naam: 'Tic-Tac-Toe',   icon: '⭕', bestand: './bke-ui.js?v=147',      bot: bkeBot },
   vieroprij:    { naam: 'Four in a Row', icon: '🔴', bestand: './vieroprij-ui.js?v=147', bot: vorBot },
-  schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=148',  bot: schaakBot, motor: './schaak.js?v=95', motorNaam: 'Schaak' },
+  schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=149',  bot: schaakBot, motor: './schaak.js?v=95', motorNaam: 'Schaak' },
   dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=147',   bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
   pong:         { naam: 'Neo Paddle',    icon: '🏓', bestand: './pong-ui.js?v=147',     bot: pongBot },
   // Ghost Tag heeft zelf al een computerspookje: zonder kanaal speel je daartegen.

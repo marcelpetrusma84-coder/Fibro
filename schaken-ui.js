@@ -1,11 +1,17 @@
 import { stukSVG, registreerSlag, veroverdePunten } from './schaak-stukken.js?v=1'
+const SETTINGS_KEY = 'fibro_chess_settings_v1'
+const READABLE_NAMES = { P:'pawn', N:'knight', B:'bishop', R:'rook', Q:'queen', K:'king' }
+function readSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')
+    const thinking = Number(saved.thinking ?? 7)
+    return { thinking:Number.isFinite(thinking) ? Math.min(7,Math.max(0,thinking)) : 7, pieces:['small','medium','large'].includes(saved.pieces) ? saved.pieces : 'medium', board:['classic','wood','marble'].includes(saved.board) ? saved.board : 'classic' }
+  } catch { return { thinking:7, pieces:'medium', board:'classic' } }
+}
 // schaken-ui.js - spel voor Fibro, losgetrokken uit chat.html.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
-// v147: teksten ook in het Engels (taal.js)
-const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v147)
-
 export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
-  vriendNaam = vriendNaam || T('vriend')
+  vriendNaam = vriendNaam || 'Opponent'
   document.getElementById('spelTitelBar').textContent = '♟️ Chess'
   const inhoud = document.getElementById('spelInhoud')
 
@@ -21,6 +27,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   let generatie = 0
   let wachtrij = Promise.resolve()
   const minderBeweging = matchMedia('(prefers-reduced-motion: reduce)')
+  const instellingen = readSettings()
   let laatsteZet = null        // voor highlight van laatste zet
 
   // Bord wordt altijd getoond met wit onderaan vanuit perspectief van de witte speler,
@@ -47,7 +54,26 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-vangst-stukken .sch-figuur { width:22px; height:24px; }
       .sch-promo-btn .sch-figuur { width:40px; height:40px; }
       .sch-legenda { font-size:11px; color:#eee1cf; text-align:center; }
-      .sch-zoom { border:1px solid #ffffff35; background:linear-gradient(135deg,#544065,#2a2038); color:white; padding:10px 16px; border-radius:12px; min-height:44px; cursor:pointer; }
+      .sch-zoom { border:1px solid #ffffff35; background:linear-gradient(135deg,#544065,#2a2038); color:white; padding:10px 16px; border-radius:12px; min-height:44px; cursor:pointer; touch-action:manipulation; user-select:none; -webkit-touch-callout:none; }
+      .sch-acties { position:relative; z-index:5; }
+      .sch-menu { position:absolute; z-index:6; left:50%; bottom:calc(100% + 8px); transform:translateX(-50%); box-sizing:border-box; width:min(340px,calc(100vw - 24px)); max-height:min(68dvh,480px); overflow:auto; padding:15px; border:1px solid #e8d7bd88; border-radius:16px; background:linear-gradient(145deg,#30243a,#17121f); color:#fff8ed; box-shadow:0 16px 40px #000b; text-align:left; }
+      .sch-menu[hidden] { display:none; }
+      .sch-menu h2 { font-size:17px; margin:0 0 12px; }
+      .sch-menu label,.sch-menu legend { font-size:13px; font-weight:650; }
+      .sch-menu fieldset { border:0; padding:0; margin:12px 0; }
+      .sch-menu input[type="range"] { display:block; width:100%; min-height:36px; accent-color:#ddb477; }
+      .sch-menu-opties { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-top:7px; }
+      .sch-keuze { min-height:40px; padding:6px 3px; border:1px solid #ffffff40; border-radius:8px; background:#ffffff0b; color:inherit; font:inherit; font-size:11px; cursor:pointer; }
+      .sch-keuze[aria-pressed="true"] { border-color:#f2cf97; background:linear-gradient(135deg,#71533e,#45364f); box-shadow:inset 0 0 0 1px #f2cf9780; }
+      .sch-menu-hint { color:#d8c9b5; font-size:11px; line-height:1.45; }
+      .sch-board-wood { background:repeating-linear-gradient(3deg,#6c462d 0 3px,#a87346 4px 7px,#774b30 8px 11px,#bd8c59 12px 13px)!important; }
+      .sch-board-wood .sch-vak { background-image:repeating-linear-gradient(2deg,transparent 0 5px,#52351c22 6px,#fff5dd24 8px,transparent 10px)!important; }
+      .sch-board-marble { background:repeating-linear-gradient(132deg,#d8d4cf 0 3px,#85818c 4px 6px,#ede8dc 7px 11px,#696876 12px 14px)!important; }
+      .sch-board-marble .sch-vak:nth-child(odd) { filter:contrast(1.02) brightness(1.15); }
+      .sch-board-marble .sch-vak:nth-child(even) { filter:contrast(1.08) brightness(.72); }
+      .sch-pieces-small .sch-stuk { width:72%; }
+      .sch-pieces-medium .sch-stuk { width:88%; }
+      .sch-pieces-large .sch-stuk { width:100%; }
     </style>
     <div class="sch-spel">
       <div id="sch-status" role="status" aria-live="polite" style="color:white;font-size:14px;font-weight:600;text-align:center;min-height:20px;"></div>
@@ -55,22 +81,38 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       <div class="sch-frame"><div id="sch-bord" role="group" aria-label="Chess"></div></div>
       <div class="sch-vangst" id="sch-eigen"></div>
       <div class="sch-legenda"></div>
-      <button class="sch-zoom" type="button" aria-pressed="false">⤢</button>
+      <div class="sch-acties">
+        <button class="sch-zoom" type="button" aria-pressed="false" aria-haspopup="dialog" aria-expanded="false">⤢ Enlarge board</button>
+        <section class="sch-menu" id="sch-menu" role="dialog" aria-label="Chess settings" hidden>
+          <h2>Chess settings</h2>
+          <fieldset><legend>Computer thinking time</legend>
+            <label for="sch-denktijd">Maximum: <output id="sch-denktijd-waarde">7 seconds</output></label>
+            <input id="sch-denktijd" type="range" min="0" max="7" step="1" value="7" aria-describedby="sch-denktijd-hint">
+            <p class="sch-menu-hint" id="sch-denktijd-hint">0 = instant. Otherwise, the computer varies its thinking time up to the selected maximum.</p>
+          </fieldset>
+          <fieldset><legend>Piece size</legend><div class="sch-menu-opties" data-options="pieces">
+            <button class="sch-keuze" type="button" data-value="small">Smaller</button><button class="sch-keuze" type="button" data-value="medium">Default</button><button class="sch-keuze" type="button" data-value="large">Larger</button>
+          </div></fieldset>
+          <fieldset><legend>Board style</legend><div class="sch-menu-opties" data-options="board">
+            <button class="sch-keuze" type="button" data-value="classic">Classic</button><button class="sch-keuze" type="button" data-value="wood">Wood grain</button><button class="sch-keuze" type="button" data-value="marble">Marble / granite</button>
+          </div></fieldset>
+          <p class="sch-menu-hint">Press and hold “Enlarge board” for 3 seconds to open these settings. Tap it briefly to resize the board.</p>
+        </section>
+      </div>
       <div id="sch-promotie" style="display:none;gap:8px;background:rgba(0,0,0,0.85);padding:10px;border-radius:10px;"></div>
-      <button id="sch-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">${T('↻ Opnieuw spelen')}</button>
+      <button id="sch-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Play again</button>
     </div>`
 
   const bordEl = document.getElementById('sch-bord')
   const statusEl = document.getElementById('sch-status')
-  const opnieuwBtn = document.getElementById('sch-opnieuw'); Bordgeluid.knop(statusEl)
+  const opnieuwBtn = document.getElementById('sch-opnieuw'); Bordgeluid.knop(statusEl, { language:'en' })
   const promotieEl = document.getElementById('sch-promotie')
 
   const spelEl = inhoud.querySelector('.sch-spel')
   const zoomBtn = inhoud.querySelector('.sch-zoom')
-  const engels = document.documentElement.lang.startsWith('en')
-  inhoud.querySelector('.sch-legenda').textContent = engels ? 'Pawn 1 · Knight 3 · Bishop 3 · Rook 5 · Queen 9' : 'Pion 1 · Paard 3 · Loper 3 · Toren 5 · Dame 9'
+  inhoud.querySelector('.sch-legenda').textContent = 'Pawn 1 · Knight 3 · Bishop 3 · Rook 5 · Queen 9'
   function tekenVeroverd() {
-    for (const [id,kleur,naam] of [['sch-eigen',mijnKleur,engels ? 'You' : 'Jij'],['sch-tegenstander',vriendKleur,vriendNaam]]) {
+    for (const [id,kleur,naam] of [['sch-eigen',mijnKleur,'You'],['sch-tegenstander',vriendKleur,vriendNaam]]) {
       const paneel = document.getElementById(id)
       paneel.replaceChildren()
       const kop = document.createElement('div')
@@ -79,11 +121,11 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       label.textContent = naam
       const score = document.createElement('span')
       const punten = veroverdePunten(veroverd[kleur])
-      score.textContent = engels ? `Captured: ${punten} ${punten === 1 ? 'point' : 'points'}` : `Veroverd: ${punten} ${punten === 1 ? 'punt' : 'punten'}`
+      score.textContent = `Captured: ${punten} ${punten === 1 ? 'point' : 'points'}`
       kop.append(label,score)
       const lijst = document.createElement('div')
       lijst.className = 'sch-vangst-stukken'
-      lijst.setAttribute('aria-label', `${score.textContent} (${veroverd[kleur].join(', ')})`)
+      lijst.setAttribute('aria-label', `${score.textContent} (${veroverd[kleur].map(stuk => READABLE_NAMES[stuk[1]]).join(', ')})`)
       lijst.innerHTML = veroverd[kleur].map(stukSVG).join('')
       if (!veroverd[kleur].length) lijst.textContent = '—'
       paneel.append(kop,lijst)
@@ -92,10 +134,66 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   function vergroot(aan) {
     spelEl.classList.toggle('sch-groot', aan)
     zoomBtn.setAttribute('aria-pressed', String(aan))
-    zoomBtn.textContent = aan ? (engels ? '⤡ Smaller board' : '⤡ Bord verkleinen') : (engels ? '⤢ Enlarge board' : '⤢ Bord vergroten')
+    zoomBtn.textContent = aan ? '⤡ Smaller board' : '⤢ Enlarge board'
   }
   vergroot(false)
-  zoomBtn.addEventListener('click', () => vergroot(!spelEl.classList.contains('sch-groot')))
+  const menu = inhoud.querySelector('#sch-menu')
+  const acties = inhoud.querySelector('.sch-acties')
+  let langeDruk = null, menuDruk = false, onderdrukKlik = false
+  function bewaarInstellingen() {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(instellingen)) } catch {}
+    spelEl.classList.toggle('sch-pieces-small', instellingen.pieces === 'small')
+    spelEl.classList.toggle('sch-pieces-medium', instellingen.pieces === 'medium')
+    spelEl.classList.toggle('sch-pieces-large', instellingen.pieces === 'large')
+    bordEl.classList.toggle('sch-board-wood', instellingen.board === 'wood')
+    bordEl.classList.toggle('sch-board-marble', instellingen.board === 'marble')
+    bordEl.classList.toggle('sch-board-classic', instellingen.board === 'classic')
+  }
+  function toonMenu(aan) {
+    menu.hidden = !aan
+    zoomBtn.setAttribute('aria-expanded', String(aan))
+    if (aan) menu.querySelector('input').focus()
+  }
+  function kiesMenuOptie(groep, waarde) {
+    instellingen[groep] = waarde
+    menu.querySelectorAll(`[data-options="${groep}"] .sch-keuze`).forEach(button => button.setAttribute('aria-pressed', String(button.dataset.value === waarde)))
+    bewaarInstellingen()
+  }
+  bewaarInstellingen()
+  const denktijd = menu.querySelector('#sch-denktijd')
+  const denktijdWaarde = menu.querySelector('#sch-denktijd-waarde')
+  menu.querySelector('#sch-denktijd').closest('fieldset').hidden = !spelKanaal.isSolo
+  denktijd.value = String(instellingen.thinking)
+  denktijdWaarde.value = instellingen.thinking === 0 ? 'Instant' : `${instellingen.thinking} seconds`
+  denktijd.addEventListener('input', () => {
+    instellingen.thinking = Number(denktijd.value)
+    denktijdWaarde.value = instellingen.thinking === 0 ? 'Instant' : `${instellingen.thinking} seconds`
+    bewaarInstellingen()
+    if (spelKanaal.isSolo) spelKanaal.send({ type:'broadcast', event:'bot-instellingen', payload:{ thinkingMs:instellingen.thinking * 1000 } })
+  })
+  menu.querySelectorAll('.sch-keuze').forEach(button => button.addEventListener('click', () => kiesMenuOptie(button.closest('[data-options]').dataset.options, button.dataset.value)))
+  for (const group of ['pieces','board']) menu.querySelectorAll(`[data-options="${group}"] .sch-keuze`).forEach(button => button.setAttribute('aria-pressed', String(button.dataset.value === instellingen[group])))
+  if (spelKanaal.isSolo) spelKanaal.send({ type:'broadcast', event:'bot-instellingen', payload:{ thinkingMs:instellingen.thinking * 1000 } })
+  function openMenuLater() {
+    clearTimeout(langeDruk)
+    menuDruk = false
+    onderdrukKlik = true
+    toonMenu(!menu.hidden)
+    setTimeout(() => { onderdrukKlik = false }, 450)
+  }
+  zoomBtn.addEventListener('pointerdown', event => {
+    if (event.button !== undefined && event.button !== 0) return
+    menuDruk = false
+    langeDruk = setTimeout(() => { menuDruk = true; openMenuLater() }, 3000)
+  })
+  for (const event of ['pointerup','pointercancel','pointerleave']) zoomBtn.addEventListener(event, () => clearTimeout(langeDruk))
+  zoomBtn.addEventListener('contextmenu', event => event.preventDefault())
+  zoomBtn.addEventListener('click', () => {
+    if (onderdrukKlik || menuDruk) { menuDruk = false; return }
+    vergroot(!spelEl.classList.contains('sch-groot'))
+  })
+  spelEl.addEventListener('pointerdown', event => { if (!acties.contains(event.target)) toonMenu(false) })
+  menu.addEventListener('keydown', event => { if (event.key === 'Escape') { toonMenu(false); zoomBtn.focus() } })
   const vingers = new Map()
   let afstand = 0, negeerKlikTot = 0
   const meetAfstand = () => {
@@ -175,7 +273,8 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         vakje.type = 'button'
         vakje.className = 'sch-vak'
         vakje.style.background = `linear-gradient(145deg,#ffffff18,#00000018),${achtergrond}`
-        vakje.setAttribute('aria-label', `${String.fromCharCode(97+k)}${8-r} ${staat.bord[r][k] || ''}`)
+        const stukNaam = staat.bord[r][k] ? `${staat.bord[r][k][0] === 'w' ? 'white' : 'black'} ${READABLE_NAMES[staat.bord[r][k][1]]}` : 'empty'
+        vakje.setAttribute('aria-label', `${String.fromCharCode(97+k)}${8-r}, ${stukNaam}`)
         vakje.setAttribute('aria-pressed', String(Boolean(isGeselecteerd)))
         vakje.dataset.r = r
         vakje.dataset.k = k
@@ -260,7 +359,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     promotieOpen = true
     promotieEl.style.display = 'flex'
     promotieEl.innerHTML = ['Q','R','B','N'].map(t =>
-      `<button class="sch-promo-btn ${kleur === 'w' ? 'sch-wit' : 'sch-zwart'}" data-t="${t}" style="font-size:28px;background:#b6a18a;border:1px solid var(--accent);border-radius:8px;padding:6px 10px;cursor:pointer;">${stukSVG(kleur+t)}</button>`
+      `<button class="sch-promo-btn ${kleur === 'w' ? 'sch-wit' : 'sch-zwart'}" data-t="${t}" aria-label="Promote to ${READABLE_NAMES[t]}" style="font-size:28px;background:#b6a18a;border:1px solid var(--accent);border-radius:8px;padding:6px 10px;cursor:pointer;">${stukSVG(kleur+t)}</button>`
     ).join('')
     promotieEl.querySelectorAll('.sch-promo-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -276,16 +375,16 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     if (Schaak.isSchaakmat(staat, volgendeKleur)) {
       gameOver = true
       const ikWin = volgendeKleur !== mijnKleur
-      statusEl.textContent = ikWin ? T('🎉 Schaakmat — Jij wint!') : T('😢 Schaakmat — {naam} wint!', { naam: vriendNaam })
+      statusEl.textContent = ikWin ? '🎉 Checkmate — you win!' : `😢 Checkmate — ${vriendNaam} wins!`
       opnieuwBtn.style.display = 'block'
     } else if (Schaak.isPat(staat, volgendeKleur)) {
       gameOver = true
-      statusEl.textContent = T('🤝 Pat — gelijkspel!')
+      statusEl.textContent = '🤝 Stalemate — draw!'
       opnieuwBtn.style.display = 'block'
     } else if (Schaak.staatInSchaak(staat, volgendeKleur)) {
-      statusEl.textContent = volgendeKleur === mijnKleur ? T('Jij staat schaak! Jouw beurt') : T('{naam} staat schaak! Wachten...', { naam: vriendNaam })
+      statusEl.textContent = volgendeKleur === mijnKleur ? 'You are in check — your turn' : `${vriendNaam} is in check — waiting...`
     } else {
-      statusEl.textContent = volgendeKleur === mijnKleur ? T('Jouw beurt') : T('Wachten op {naam}...', { naam: vriendNaam })
+      statusEl.textContent = volgendeKleur === mijnKleur ? 'Your turn' : `Waiting for ${vriendNaam}...`
     }
     tekenBord()
   }
@@ -344,6 +443,6 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     naBeurtControle()
   })
 
-  statusEl.textContent = mijnKleur === 'w' ? T('Jouw beurt (wit begint)') : T('Wachten op {naam} (wit begint)...', { naam: vriendNaam })
+  statusEl.textContent = mijnKleur === 'w' ? 'Your turn (White moves first)' : `Waiting for ${vriendNaam} (White moves first)...`
   tekenBord()
 }

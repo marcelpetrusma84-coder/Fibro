@@ -31,7 +31,7 @@ for(let i=0;i<25;i++) {
   if(i!==0) latest.onmessage({data:reply}) // first iteration simulates a stuck worker
   advance(7000)
   assert.equal(results.length,1)
-  const delay=results[0].at-start; assert(delay>=1400 && delay<=7000); delays.push(Math.round(delay))
+  const delay=results[0].at-start; assert(delay>=1000 && delay<=7000); delays.push(Math.round(delay))
   assert(Schaak.alleLegaleZetten(state,'z').some(z=>JSON.stringify(z)===JSON.stringify(results[0].p.zet)))
   bot.stop(); assert.equal(timers.size,0)
 }

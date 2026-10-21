@@ -185,6 +185,7 @@ export function schaakBot({ stuur, niveau, isDicht, motor: Schaak }) {
   let timer = null
   let deadline = null
   let worker = null
+  let thinkingMs = 7000
   function annuleer() {
     clearTimeout(timer)
     clearTimeout(deadline)
@@ -196,8 +197,6 @@ export function schaakBot({ stuur, niveau, isDicht, motor: Schaak }) {
     const r0 = ronde
     annuleer()
     const begin = performance.now()
-    // Most moves take 1.4–4 seconds; occasionally a longer pause, up to 7.
-    const wacht = 1400 + Math.random() ** 1.6 * 5400
     const opties = Schaak.alleLegaleZetten(staat, IK)
     let beste = opties[Math.floor(Math.random() * opties.length)]
     let verzonden = false
@@ -210,8 +209,10 @@ export function schaakBot({ stuur, niveau, isDicht, motor: Schaak }) {
       Schaak.voerZetUit(staat, beste, 'Q')
       stuur('zet', { zet: beste, promotieStuk: 'Q' })
     }
+    if (thinkingMs === 0) { zetNu(); return }
+    const wacht = thinkingMs <= 1000 ? 1000 : 1000 + Math.random() ** 1.6 * (thinkingMs - 1000)
     const plan = () => { timer = setTimeout(zetNu, Math.max(0, wacht - (performance.now() - begin))) }
-    deadline = setTimeout(zetNu, 7000)
+    deadline = setTimeout(zetNu, Math.max(1000, thinkingMs))
     try {
       worker = new Worker(new URL('./schaak-worker.js?v=1', import.meta.url), { type:'module' })
       worker.onmessage = ({ data }) => { if (data) beste = data; worker?.terminate(); worker = null; plan() }
@@ -221,7 +222,10 @@ export function schaakBot({ stuur, niveau, isDicht, motor: Schaak }) {
   }
   return {
     ontvang(event, p) {
-      if (event === 'zet') {
+      if (event === 'bot-instellingen') {
+        const next = Number(p.thinkingMs)
+        if (Number.isFinite(next)) { thinkingMs = Math.min(7000, Math.max(0, next)); if (staat.aanZet === IK && !klaar()) denk() }
+      } else if (event === 'zet') {
         if (!p.zet || staat.aanZet === IK) return
         const stuk = staat.bord[p.zet.van[0]] && staat.bord[p.zet.van[0]][p.zet.van[1]]
         if (!stuk || stuk[0] === IK) return

@@ -5,8 +5,8 @@ function readSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')
     const thinking = Number(saved.thinking ?? 7)
-    return { thinking:Number.isFinite(thinking) ? Math.min(7,Math.max(0,thinking)) : 7, pieces:['small','medium','large'].includes(saved.pieces) ? saved.pieces : 'medium', board:['classic','wood','marble'].includes(saved.board) ? saved.board : 'classic' }
-  } catch { return { thinking:7, pieces:'medium', board:'classic' } }
+    return { thinking:Number.isFinite(thinking) ? Math.min(7,Math.max(0,thinking)) : 7, pieces:['small','medium','large'].includes(saved.pieces) ? saved.pieces : 'medium', board:['classic','wood','marble'].includes(saved.board) ? saved.board : 'classic', showAttackRoutes:saved.showAttackRoutes === true }
+  } catch { return { thinking:7, pieces:'medium', board:'classic', showAttackRoutes:false } }
 }
 // schaken-ui.js - spel voor Fibro, losgetrokken uit chat.html.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
@@ -19,6 +19,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   const mijnKleur = benIkSpeler1 ? 'w' : 'z'
   const vriendKleur = benIkSpeler1 ? 'z' : 'w'
   let veroverd = { w:[], z:[] }
+  let routeStuk = null
   let geselecteerd = null      // [r,k] van geselecteerd stuk
   let mogelijkeZetten = []     // legale zetten voor geselecteerd stuk
   let gameOver = false
@@ -54,7 +55,9 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-vangst-stukken .sch-figuur { width:22px; height:24px; }
       .sch-promo-btn .sch-figuur { width:40px; height:40px; }
       .sch-legenda { font-size:11px; color:#eee1cf; text-align:center; }
-      .sch-zoom { border:1px solid #ffffff35; background:linear-gradient(135deg,#544065,#2a2038); color:white; padding:10px 16px; border-radius:12px; min-height:44px; cursor:pointer; touch-action:manipulation; user-select:none; -webkit-touch-callout:none; }
+      .sch-zoom { position:relative; overflow:hidden; border:1px solid #ffffff35; background:linear-gradient(135deg,#544065,#2a2038); color:white; padding:10px 16px; border-radius:12px; min-height:44px; cursor:pointer; touch-action:manipulation; user-select:none; -webkit-touch-callout:none; }
+      .sch-zoom::after { content:""; position:absolute; height:3px; left:10px; right:10px; bottom:3px; background:#f5ce86; transform:scaleX(0); transform-origin:left; transition:transform 1s linear; }
+      .sch-zoom.sch-lange-druk::after { transform:scaleX(1); }
       .sch-acties { position:relative; z-index:5; }
       .sch-menu { position:absolute; z-index:6; left:50%; bottom:calc(100% + 8px); transform:translateX(-50%); box-sizing:border-box; width:min(340px,calc(100vw - 24px)); max-height:min(68dvh,480px); overflow:auto; padding:15px; border:1px solid #e8d7bd88; border-radius:16px; background:linear-gradient(145deg,#30243a,#17121f); color:#fff8ed; box-shadow:0 16px 40px #000b; text-align:left; }
       .sch-menu[hidden] { display:none; }
@@ -66,6 +69,12 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-keuze { min-height:40px; padding:6px 3px; border:1px solid #ffffff40; border-radius:8px; background:#ffffff0b; color:inherit; font:inherit; font-size:11px; cursor:pointer; }
       .sch-keuze[aria-pressed="true"] { border-color:#f2cf97; background:linear-gradient(135deg,#71533e,#45364f); box-shadow:inset 0 0 0 1px #f2cf9780; }
       .sch-menu-hint { color:#d8c9b5; font-size:11px; line-height:1.45; }
+      .sch-attack-toggle { display:flex; align-items:center; gap:9px; min-height:44px; font-size:13px; font-weight:650; }
+      .sch-attack-toggle input { width:20px; height:20px; accent-color:#ddb477; }
+      .sch-threat::before { content:""; position:absolute; z-index:0; inset:0; pointer-events:none; background:radial-gradient(ellipse at 50% 60%,#ffe18fbb 0,#ffc85c88 35%,#ffb52b35 62%,transparent 80%); box-shadow:inset 0 0 14px #ffe293aa; animation:sch-threat-pulse 1.5s ease-in-out infinite alternate; }
+      .sch-threat .sch-stuk { filter:drop-shadow(0 0 5px #fff1b8) drop-shadow(0 0 10px #ffbb45) drop-shadow(0 3px 2px #000b); }
+      @keyframes sch-threat-pulse { from { opacity:.62; } to { opacity:1; } }
+      @media (prefers-reduced-motion:reduce) { .sch-threat::before { animation:none; } }
       .sch-board-wood { background:repeating-linear-gradient(3deg,#6c462d 0 3px,#a87346 4px 7px,#774b30 8px 11px,#bd8c59 12px 13px)!important; }
       .sch-board-wood .sch-vak { background-image:repeating-linear-gradient(2deg,transparent 0 5px,#52351c22 6px,#fff5dd24 8px,transparent 10px)!important; }
       .sch-board-marble { background:repeating-linear-gradient(132deg,#d8d4cf 0 3px,#85818c 4px 6px,#ede8dc 7px 11px,#696876 12px 14px)!important; }
@@ -93,6 +102,8 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
           <fieldset><legend>Piece size</legend><div class="sch-menu-opties" data-options="pieces">
             <button class="sch-keuze" type="button" data-value="small">Smaller</button><button class="sch-keuze" type="button" data-value="medium">Default</button><button class="sch-keuze" type="button" data-value="large">Larger</button>
           </div></fieldset>
+          <label class="sch-attack-toggle"><input id="sch-aanvalsroutes" type="checkbox"> Show attack routes</label>
+          <p class="sch-menu-hint">Highlights opposing pieces that the last moved piece can legally capture.</p>
           <fieldset><legend>Board style</legend><div class="sch-menu-opties" data-options="board">
             <button class="sch-keuze" type="button" data-value="classic">Classic</button><button class="sch-keuze" type="button" data-value="wood">Wood grain</button><button class="sch-keuze" type="button" data-value="marble">Marble / granite</button>
           </div></fieldset>
@@ -139,7 +150,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   vergroot(false)
   const menu = inhoud.querySelector('#sch-menu')
   const acties = inhoud.querySelector('.sch-acties')
-  let langeDruk = null, menuDruk = false, onderdrukKlik = false
+  let voortgangTimer = null, menuTimer = null, menuDruk = false, onderdrukKlik = false
   function bewaarInstellingen() {
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(instellingen)) } catch {}
     spelEl.classList.toggle('sch-pieces-small', instellingen.pieces === 'small')
@@ -173,23 +184,47 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   })
   menu.querySelectorAll('.sch-keuze').forEach(button => button.addEventListener('click', () => kiesMenuOptie(button.closest('[data-options]').dataset.options, button.dataset.value)))
   for (const group of ['pieces','board']) menu.querySelectorAll(`[data-options="${group}"] .sch-keuze`).forEach(button => button.setAttribute('aria-pressed', String(button.dataset.value === instellingen[group])))
+  const aanvalToggle = menu.querySelector('#sch-aanvalsroutes')
+  aanvalToggle.checked = instellingen.showAttackRoutes
+  aanvalToggle.addEventListener('change', () => {
+    instellingen.showAttackRoutes = aanvalToggle.checked
+    bewaarInstellingen()
+    tekenBord()
+  })
   if (spelKanaal.isSolo) spelKanaal.send({ type:'broadcast', event:'bot-instellingen', payload:{ thinkingMs:instellingen.thinking * 1000 } })
   function openMenuLater() {
-    clearTimeout(langeDruk)
-    menuDruk = false
+    menuDruk = true
     onderdrukKlik = true
-    toonMenu(!menu.hidden)
-    setTimeout(() => { onderdrukKlik = false }, 450)
+    zoomBtn.classList.add('sch-lange-druk')
+    toonMenu(true)
   }
   zoomBtn.addEventListener('pointerdown', event => {
     if (event.button !== undefined && event.button !== 0) return
+    event.preventDefault()
+    if (event.pointerId !== undefined && zoomBtn.setPointerCapture) {
+      try { zoomBtn.setPointerCapture(event.pointerId) } catch {}
+    }
     menuDruk = false
-    langeDruk = setTimeout(() => { menuDruk = true; openMenuLater() }, 3000)
+    zoomBtn.classList.remove('sch-lange-druk')
+    clearTimeout(voortgangTimer)
+    clearTimeout(menuTimer)
+    voortgangTimer = setTimeout(() => zoomBtn.classList.add('sch-lange-druk'), 2000)
+    menuTimer = setTimeout(openMenuLater, 3000)
   })
-  for (const event of ['pointerup','pointercancel','pointerleave']) zoomBtn.addEventListener(event, () => clearTimeout(langeDruk))
+  zoomBtn.addEventListener('pointermove', event => {
+    if (menuTimer && (Math.abs(event.movementX || 0) > 12 || Math.abs(event.movementY || 0) > 12)) eindigLangeDruk()
+  })
+  function eindigLangeDruk() {
+    clearTimeout(voortgangTimer)
+    clearTimeout(menuTimer)
+    zoomBtn.classList.remove('sch-lange-druk')
+    if (menuDruk) onderdrukKlik = true
+  }
+  for (const event of ['pointerup','pointercancel','lostpointercapture']) zoomBtn.addEventListener(event, eindigLangeDruk)
+  window.addEventListener('blur', eindigLangeDruk)
   zoomBtn.addEventListener('contextmenu', event => event.preventDefault())
   zoomBtn.addEventListener('click', () => {
-    if (onderdrukKlik || menuDruk) { menuDruk = false; return }
+    if (onderdrukKlik || menuDruk) { menuDruk = false; onderdrukKlik = false; return }
     vergroot(!spelEl.classList.contains('sch-groot'))
   })
   spelEl.addEventListener('pointerdown', event => { if (!acties.contains(event.target)) toonMenu(false) })
@@ -255,6 +290,14 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     bordEl.innerHTML = ''
     const rijen = rijVolgorde()
     const kols = kolVolgorde()
+    const bedreigdeVelden = new Set()
+    const route = routeStuk && staat.bord[routeStuk[0]]?.[routeStuk[1]]
+    if (instellingen.showAttackRoutes && route) {
+      for (const zet of Schaak.legaleZetten(staat, routeStuk[0], routeStuk[1])) {
+        const doel = staat.bord[zet.naar[0]][zet.naar[1]]
+        if (doel && doel[0] !== route[0]) bedreigdeVelden.add(`${zet.naar[0]},${zet.naar[1]}`)
+      }
+    }
 
     for (const r of rijen) {
       for (const k of kols) {
@@ -272,9 +315,11 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
 
         vakje.type = 'button'
         vakje.className = 'sch-vak'
+        const bedreigd = bedreigdeVelden.has(`${r},${k}`)
+        if (bedreigd) vakje.classList.add('sch-threat')
         vakje.style.background = `linear-gradient(145deg,#ffffff18,#00000018),${achtergrond}`
         const stukNaam = staat.bord[r][k] ? `${staat.bord[r][k][0] === 'w' ? 'white' : 'black'} ${READABLE_NAMES[staat.bord[r][k][1]]}` : 'empty'
-        vakje.setAttribute('aria-label', `${String.fromCharCode(97+k)}${8-r}, ${stukNaam}`)
+        vakje.setAttribute('aria-label', `${String.fromCharCode(97+k)}${8-r}, ${stukNaam}${bedreigd ? `, can be captured by ${route[0] === 'w' ? 'white' : 'black'} ${READABLE_NAMES[route[1]]}` : ''}`)
         vakje.setAttribute('aria-pressed', String(Boolean(isGeselecteerd)))
         vakje.dataset.r = r
         vakje.dataset.k = k
@@ -346,6 +391,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     if (!await animeerZet(zet)) return
     registreerSlag(staat, zet, veroverd)
     Schaak.voerZetUit(staat, zet, promotieStuk)
+    routeStuk = zet.naar.slice()
     laatsteZet = zet
     geselecteerd = null
     mogelijkeZetten = []
@@ -405,6 +451,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       if (!geldig || !await animeerZet(geldig)) return
       registreerSlag(staat, geldig, veroverd)
       Schaak.voerZetUit(staat, geldig, ['Q','R','B','N'].includes(promotieStuk) ? promotieStuk : 'Q')
+      routeStuk = geldig.naar.slice()
       laatsteZet = geldig
       geselecteerd = null
       mogelijkeZetten = []
@@ -418,6 +465,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     promotieOpen = false
     promotieEl.style.display = 'none'
     veroverd = { w:[], z:[] }
+    routeStuk = null
     staat = Schaak.nieuweSpelStaat()
     geselecteerd = null
     mogelijkeZetten = []
@@ -433,6 +481,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     promotieOpen = false
     promotieEl.style.display = 'none'
     veroverd = { w:[], z:[] }
+    routeStuk = null
     staat = Schaak.nieuweSpelStaat()
     geselecteerd = null
     mogelijkeZetten = []

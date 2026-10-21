@@ -609,7 +609,11 @@ window.veiligeUrl = function(v){
 
     // Start bel-signalering — inkomende oproepen overal ontvangen
     initBellen(huidigeUser.id, {
-      onVerbonden: () => { if (spelActief === 'schaken') zetSpelVideoStatus({ eigen: isVideoActiefLokaal() }) },
+      onVerbonden: () => {
+        if (spelActief !== 'schaken') return
+        zetSpelVideoStatus({ eigen: isVideoActiefLokaal() })
+        activeerAangevraagdeSpelCamera()
+      },
       onVideoStatus: (actief) => { if (spelActief === 'schaken') zetSpelVideoStatus({ ander: actief }) },
       onEind: () => { if (spelActief === 'schaken') resetSpelVideo() },
       onOproep: async (info) => {
@@ -2339,8 +2343,12 @@ console.timeLog('[chat] berichten', 'opgehaald')
     stopSpelHartslag()
     laatstePing = Date.now()
     pingOntvangen = false
+    const stuurPing = () => { if (spelKanaal) { try { spelKanaal.send({ type: 'broadcast', event: 'ping', payload: {} }) } catch (e) {} } }
+    // Do not make the audio/video link wait for the first three-second interval.
+    // This also makes a freshly tapped webcam button work as soon as both boards open.
+    stuurPing()
     spelPingTimer = setInterval(() => {
-      if (spelKanaal) { try { spelKanaal.send({ type: 'broadcast', event: 'ping', payload: {} }) } catch (e) {} }
+      stuurPing()
     }, 3000)
     spelWachtTimer = setInterval(() => {
       // Pas waarschuwen als we ooit een hartslag hebben gehad; anders speelt de
@@ -2670,7 +2678,7 @@ async function startBlockIt() {
 
   // ─── Spel audiobel ───
   let spelBelActief = false
-  let spelEigenVideo = false, spelAnderVideo = false
+  let spelEigenVideo = false, spelAnderVideo = false, spelVideoAanvragen = false, spelVideoBezig = false
 
   function zetSpelVideoStatus({ eigen, ander } = {}) {
     if (typeof eigen === 'boolean') spelEigenVideo = eigen
@@ -2691,7 +2699,7 @@ async function startBlockIt() {
   }
 
   function resetSpelVideo() {
-    spelEigenVideo = false; spelAnderVideo = false
+    spelEigenVideo = false; spelAnderVideo = false; spelVideoAanvragen = false; spelVideoBezig = false
     const overlay = document.getElementById('spelOverlay')
     if (overlay) overlay.classList.remove('sch-video-modus')
     const eigenVideo = document.getElementById('lokaalMedia')
@@ -2700,14 +2708,40 @@ async function startBlockIt() {
     if (anderVideo) anderVideo.style.display = 'none'
   }
 
-  // Called only by the chess board's camera icon. A WebRTC audio link already
-  // exists during a friend game; this adds or removes just the local video track.
+  async function activeerAangevraagdeSpelCamera() {
+    if (!spelVideoAanvragen || spelVideoBezig || spelActief !== 'schaken') return false
+    spelVideoBezig = true
+    const ok = await schakelVideo(true)
+    spelVideoBezig = false
+    if (ok) {
+      spelVideoAanvragen = false
+      zetSpelVideoStatus({ eigen:true })
+    }
+    return ok
+  }
+
+  // Called only by the chess board's camera icon. A tap may happen before the
+  // automatic game call has finished its WebRTC handshake, so remember it and
+  // switch the camera on as soon as `onVerbonden` fires.
   window.FibroChessVideo = async function () {
-    if (spelActief !== 'schaken' || !spelBelActief) return { ok:false, reason:'connecting' }
+    if (spelActief !== 'schaken') return { ok:false, reason:'connecting' }
     const wasAan = isVideoActiefLokaal()
-    const ok = await schakelVideo(!wasAan)
-    if (ok) zetSpelVideoStatus({ eigen:!wasAan })
-    return { ok, eigen:ok ? !wasAan : wasAan }
+    if (wasAan) {
+      const ok = await schakelVideo(false)
+      if (ok) zetSpelVideoStatus({ eigen:false })
+      return { ok, eigen:false }
+    }
+    spelVideoAanvragen = true
+    if (!spelBelActief) await startSpelBel()
+    // The opponent's automatic accept and the ICE handshake take a moment on
+    // mobile. Keep this same user gesture alive in the flow instead of making
+    // the player repeatedly tap the camera icon.
+    const stopOm = Date.now() + 10000
+    while (Date.now() < stopOm && spelVideoAanvragen && spelActief === 'schaken') {
+      if (await activeerAangevraagdeSpelCamera()) return { ok:true, eigen:true }
+      await new Promise(resolve => setTimeout(resolve, 300))
+    }
+    return { ok:false, reason:'connecting' }
   }
 
   async function startSpelBel() {

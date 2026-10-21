@@ -42,10 +42,10 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
 
   inhoud.innerHTML = `
     <style>
-      .sch-spel { display:flex; flex-direction:column; align-items:center; gap:8px; width:100%; }
-      .sch-frame { box-sizing:border-box; container-type:inline-size; width:min(360px,calc(100vw - 32px),calc(100dvh - 290px)); padding:7px; border-radius:12px;
+      .sch-spel { display:flex; flex-direction:column; align-items:center; flex:none; gap:8px; width:100%; }
+      .sch-frame { box-sizing:border-box; container-type:inline-size; flex:none; width:min(360px,82vw,calc(100% - 12px),max(180px,calc(100dvh - 290px))); padding:7px; border-radius:12px; transition:width .25s ease;
         background:linear-gradient(135deg,#d9ae76,#765032 45%,#39271e); box-shadow:0 9px 0 #39271e,0 12px 0 #211811,0 22px 30px #0008,inset 0 1px 1px #fff9; }
-      .sch-spel.sch-groot .sch-frame { width:min(calc(100vw - 4px),calc(100dvh - 260px)); }
+      .sch-spel.sch-groot .sch-frame { width:min(720px,calc(100% - 12px),max(320px,calc(100dvh - 380px))); }
       #sch-bord { display:grid; grid-template-columns:repeat(8,1fr); aspect-ratio:1; width:100%; touch-action:none; user-select:none; }
       .sch-vak { border:0; border-radius:0; padding:0; min-width:0; position:relative; display:grid; place-items:center; cursor:pointer; aspect-ratio:1; }
       .sch-vak:focus-visible { outline:3px solid #55dfff; outline-offset:-3px; z-index:2; }
@@ -62,10 +62,20 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-vangst-waarde { color:#f5d59c; font-size:10px; font-weight:750; line-height:1; text-shadow:0 1px 2px #000; }
       .sch-promo-btn .sch-figuur { width:40px; height:40px; }
       .sch-legenda { font-size:11px; color:#eee1cf; text-align:center; }
-      .sch-zoom { position:relative; overflow:hidden; border:1px solid #ffffff35; background:linear-gradient(135deg,#544065,#2a2038); color:white; padding:10px 16px; border-radius:12px; min-height:44px; cursor:pointer; touch-action:manipulation; user-select:none; -webkit-touch-callout:none; }
+      .sch-board-tools { display:flex; align-items:center; gap:6px; padding:4px; border:1px solid #b7c7e435; border-radius:16px; background:linear-gradient(145deg,#273044ee,#131a28f5); box-shadow:inset 0 1px 0 #ffffff16,0 5px 16px #0004; }
+      .sch-board-label { padding-inline:8px 3px; color:#b6c4d9; font-size:10px; font-weight:750; letter-spacing:.08em; text-transform:uppercase; }
+      .sch-size-switch { display:flex; align-items:center; gap:3px; }
+      .sch-size-switch button,.sch-settings { position:relative; display:inline-flex; align-items:center; justify-content:center; gap:6px; overflow:hidden; border:1px solid transparent; background:transparent; color:#bfcce0; padding:8px 10px; border-radius:11px; min-height:40px; font:inherit; font-size:12px; font-weight:650; cursor:pointer; touch-action:manipulation; user-select:none; -webkit-touch-callout:none; transition:background .18s ease,color .18s ease,box-shadow .18s ease,transform .18s ease; }
+      .sch-size-switch button[aria-pressed="true"] { background:linear-gradient(135deg,#beece3,#79bcb9); border-color:#d0fff055; color:#102f33; box-shadow:inset 0 1px 0 #ffffff80,0 2px 7px #0004; }
+      .sch-board-tools svg { width:17px; height:17px; flex:none; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+      .sch-settings { width:40px; padding:8px; border-inline-start-color:#d2e2ff20; }
+      .sch-board-tools button:focus-visible { outline:2px solid #9af2df; outline-offset:3px; }
+      .sch-board-tools button:active { transform:scale(.95); }
+      @media (hover:hover) { .sch-board-tools button:hover { background-color:#ffffff16; color:#fff; } .sch-size-switch button[aria-pressed="true"]:hover { color:#102f33; filter:brightness(1.07); } }
+      @media (prefers-reduced-motion:reduce) { .sch-frame,.sch-board-tools button { transition:none; } }
       .sch-zoom::after { content:""; position:absolute; height:3px; left:10px; right:10px; bottom:3px; background:#f5ce86; transform:scaleX(0); transform-origin:left; transition:transform 1s linear; }
       .sch-zoom.sch-lange-druk::after { transform:scaleX(1); }
-      .sch-acties { position:relative; z-index:5; }
+      .sch-acties { position:relative; z-index:5; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:8px; }
       .sch-video { margin-left:7px; min-height:44px; padding:10px 13px; border:1px solid #78e7cb99; border-radius:12px; background:linear-gradient(135deg,#164d4c,#267967); color:#eafff9; font:inherit; font-weight:700; cursor:pointer; transition:transform .16s ease,filter .2s ease,box-shadow .2s ease; }
       .sch-video:active, .sch-video.is-connecting { transform:translateY(2px) scale(.965); filter:brightness(.9); box-shadow:inset 0 3px 8px #001d1aaa; }
       .sch-video.is-connecting { animation:sch-video-pulse 1.05s ease-in-out infinite; }
@@ -132,7 +142,14 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       <div class="sch-vangst" id="sch-eigen"></div>
       <div class="sch-legenda"></div>
       <div class="sch-acties">
-        <button class="sch-zoom" type="button" aria-pressed="false" aria-haspopup="dialog" aria-expanded="false">⤢ Enlarge board</button>
+        <div class="sch-board-tools">
+          <span class="sch-board-label">Board</span>
+          <div class="sch-size-switch" role="group" aria-label="Board size">
+            <button class="sch-compact" type="button" aria-pressed="true" aria-label="Compact board"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 9h5V4m11 5h-5V4M4 15h5v5m11-5h-5v5"/></svg><span>Compact</span></button>
+            <button class="sch-zoom" type="button" aria-pressed="false" aria-label="Full width board" aria-haspopup="dialog" aria-expanded="false"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m6 0h5v-5"/></svg><span>Full width</span></button>
+          </div>
+          <button class="sch-settings" type="button" aria-label="Chess settings" aria-haspopup="dialog" aria-expanded="false" aria-controls="sch-menu"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="#1e293b"/><circle cx="15" cy="17" r="3" fill="#1e293b"/></svg></button>
+        </div>
         ${isVriendPartij ? '<button class="sch-video" id="sch-video" type="button" aria-pressed="false">📹 Webcam</button>' : ''}
         <section class="sch-menu" id="sch-menu" role="dialog" aria-label="Chess settings" hidden>
           <h2>Chess settings</h2>
@@ -156,7 +173,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
           <fieldset><legend>Board style</legend><div class="sch-menu-opties" data-options="board">
             <button class="sch-keuze" type="button" data-value="classic">Classic</button><button class="sch-keuze" type="button" data-value="wood">Wood grain</button><button class="sch-keuze" type="button" data-value="marble">Marble / granite</button><button class="sch-keuze" type="button" data-value="glass">Glass plate</button>
           </div></fieldset>
-          <p class="sch-menu-hint">Press and hold “Enlarge board” for 3 seconds to open these settings. Tap it briefly to resize the board.</p>
+          <p class="sch-menu-hint">Choose Compact or Full width to resize the board. Each camera can be resized separately by tapping its image. Open settings with the sliders button, or hold Full width for 3 seconds.</p>
         </section>
       </div>
       <div id="sch-promotie" style="display:none;gap:8px;background:rgba(0,0,0,0.85);padding:10px;border-radius:10px;"></div>
@@ -184,6 +201,8 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
 
   const spelEl = inhoud.querySelector('.sch-spel')
   const zoomBtn = inhoud.querySelector('.sch-zoom')
+  const compactBtn = inhoud.querySelector('.sch-compact')
+  const settingsBtn = inhoud.querySelector('.sch-settings')
   const videoBtn = inhoud.querySelector('#sch-video')
   if (videoBtn) {
     const videoKnopThuis = videoBtn.parentElement
@@ -276,12 +295,14 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   function vergroot(aan) {
     spelEl.classList.toggle('sch-groot', aan)
     zoomBtn.setAttribute('aria-pressed', String(aan))
-    zoomBtn.textContent = aan ? '⤡ Smaller board' : '⤢ Enlarge board'
+    compactBtn.setAttribute('aria-pressed', String(!aan))
   }
   vergroot(false)
   const menu = inhoud.querySelector('#sch-menu')
   const soundTheme = menu.querySelector('#sch-sound-theme')
   const acties = inhoud.querySelector('.sch-acties')
+  // Keep board sizing within reach above the board, including camera mode.
+  mediaControls.insertAdjacentElement('afterend', acties)
   let voortgangTimer = null, menuTimer = null, menuDruk = false, onderdrukKlik = false
   function bewaarInstellingen() {
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(instellingen)) } catch {}
@@ -297,6 +318,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   function toonMenu(aan) {
     menu.hidden = !aan
     zoomBtn.setAttribute('aria-expanded', String(aan))
+    settingsBtn.setAttribute('aria-expanded', String(aan))
     if (aan) menu.querySelector('input').focus()
   }
   function toonCheckmateOverlay() {
@@ -414,10 +436,12 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   zoomBtn.addEventListener('contextmenu', event => event.preventDefault())
   zoomBtn.addEventListener('click', () => {
     if (onderdrukKlik || menuDruk) { menuDruk = false; onderdrukKlik = false; return }
-    vergroot(!spelEl.classList.contains('sch-groot'))
+    vergroot(true)
   })
+  compactBtn.addEventListener('click', () => vergroot(false))
+  settingsBtn.addEventListener('click', () => toonMenu(menu.hidden))
   spelEl.addEventListener('pointerdown', event => { if (!acties.contains(event.target)) toonMenu(false) })
-  menu.addEventListener('keydown', event => { if (event.key === 'Escape') { toonMenu(false); zoomBtn.focus() } })
+  menu.addEventListener('keydown', event => { if (event.key === 'Escape') { toonMenu(false); settingsBtn.focus() } })
   const vingers = new Map()
   let afstand = 0, negeerKlikTot = 0
   const meetAfstand = () => {

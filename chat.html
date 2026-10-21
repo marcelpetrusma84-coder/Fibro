@@ -152,18 +152,16 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 .spel-video-vak .video-etiket { position:absolute; z-index:2; left:9px; bottom:8px; padding:4px 8px; border-radius:9px; background:#07121dcc; color:#e9fffb; font-size:11px; font-weight:700; }
 .spel-video-wachten { position:absolute; inset:0; z-index:1; display:grid; place-items:center; padding:20px; color:#b9d8d5; font-size:13px; text-align:center; }
 .spel-video-wachten[hidden] { display:none; }
-.spel-video-vak.is-expanded { position:relative; z-index:4; width:var(--spel-video-expanded-size,min(calc(100vw - 24px),460px)); height:var(--spel-video-expanded-size,min(calc(100vw - 24px),460px)); min-height:var(--spel-video-expanded-size,min(calc(100vw - 24px),460px)); flex:0 0 var(--spel-video-expanded-size,min(calc(100vw - 24px),460px)); margin:8px 12px; cursor:default; border-width:2px; box-shadow:0 18px 42px #000b,inset 0 0 0 1px #ffffff30; }
 .spel-video-vak.is-seen { border-color:#55ef9e; box-shadow:inset 0 0 0 2px #55ef9e88,inset 0 0 24px #0009,0 0 22px #3de88770; }
 .spel-video-vak.is-seen::after { content:'Visible to friend'; position:absolute; z-index:3; top:8px; right:8px; padding:4px 8px; border-radius:999px; background:#103e2ed9; color:#baffd8; font-size:10px; font-weight:800; letter-spacing:.02em; }
 .spel-overlay.sch-video-modus { justify-content:stretch; padding:53px 0 8px; overflow-y:auto; overscroll-behavior:contain; }
 .spel-overlay.sch-video-modus .spel-video-vak { display:block; }
 .spel-overlay.sch-video-modus #spelInhoud { flex:0 0 auto; width:100% !important; height:auto !important; min-height:0; }
 .spel-overlay.sch-video-modus #spelInhoud .sch-spel { gap:3px; }
-.spel-overlay.sch-video-modus #spelInhoud .sch-vangst, .spel-overlay.sch-video-modus #spelInhoud .sch-legenda, .spel-overlay.sch-video-modus #spelInhoud .sch-zoom { display:none; }
-.spel-overlay.sch-video-modus #spelInhoud .sch-acties { display:block; line-height:0; }
+.spel-overlay.sch-video-modus #spelInhoud .sch-vangst, .spel-overlay.sch-video-modus #spelInhoud .sch-legenda { display:none; }
 .spel-overlay.sch-video-modus #spelInhoud .sch-video { margin:2px 0 0; min-height:32px; padding:5px 9px; font-size:11px; line-height:1.2; }
 .spel-overlay.sch-video-modus #spelInhoud .sch-video.sch-video-stop { width:29px; height:29px; min-height:29px; margin:0; padding:0; font-size:14px; line-height:1; }
-.spel-overlay.sch-video-modus #spelInhoud .sch-frame { width:min(35dvh,calc(100vw - 112px)); padding:4px; border-radius:9px; box-shadow:0 5px 0 #39271e,0 8px 0 #211811,0 13px 20px #0008; }
+.spel-overlay.sch-video-modus #spelInhoud .sch-frame { border-radius:9px; box-shadow:0 5px 0 #39271e,0 8px 0 #211811,0 13px 20px #0008; }
 .spel-overlay.sch-video-modus .spel-titel-bar { top:11px; }
 .spel-overlay.sch-video-modus .spel-sluit-btn { top:8px; }
 #spelMenuGrid { display:none; padding:10px 8px; background:var(--card); border-radius:16px 16px 0 0; border-top:0.5px solid var(--border); max-height:260px; overflow-y:auto; grid-template-columns:repeat(3,1fr); gap:8px; }
@@ -172,6 +170,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 <link rel="stylesheet" href="android-fix.css?v=1">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="stijl.css?v=3">
+<link rel="stylesheet" href="chess-layout.css?v=1">
 </head>
 <body>
 <script>
@@ -368,6 +367,7 @@ window.veiligeUrl = function(v){
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { nieuweSpelSessie, isNieuwsteSpelSessie } from './spelsessie.js?v=1'
+  import { mountChessLayout } from './chess-layout.js?v=1'
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -2107,7 +2107,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=147',
     pong: './pong-ui.js?v=147',
     vieroprij: './vieroprij-ui.js?v=147',
-    schaken: './schaken-ui.js?v=158',
+    schaken: './schaken-ui.js?v=161',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=148',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -2416,6 +2416,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (window._spelAnimFrame) { cancelAnimationFrame(window._spelAnimFrame); window._spelAnimFrame = null }
     if (window._spelAftelInterval) { clearInterval(window._spelAftelInterval); window._spelAftelInterval = null }
     spelActief = null
+    spelCameraLayout?.destroy()
+    spelCameraLayout = null
     stopSpelBel()
   }
 
@@ -2433,8 +2435,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await import('./schaken-ui.js?v=158')
+    const m = await import('./schaken-ui.js?v=161')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend') })
+    spelCameraLayout?.destroy()
+    spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })
   }
 
   // ─── Dammen (internationaal, 10x10) ───
@@ -2712,32 +2716,11 @@ async function startBlockIt() {
 
   // ─── Spel audiobel ───
   let spelBelActief = false
+  let spelCameraLayout = null
   let spelEigenVideo = false, spelAnderVideo = false, spelMijnVideoGezien = false, spelVideoAanvragen = false, spelVideoBezig = false
 
   function zetSpelVideoVoortgang(tekst, bezig = true) {
     window.dispatchEvent(new CustomEvent('fibro-chess-video-progress', { detail: { tekst, bezig } }))
-  }
-
-  function schakelSpelVideoFormaat(vak) {
-    if (!vak || !vak.offsetParent) return
-    const wordtGroot = !vak.classList.contains('is-expanded')
-    document.querySelectorAll('.spel-video-vak.is-expanded').forEach(el => el.classList.remove('is-expanded'))
-    if (!wordtGroot) return
-    const frame = document.querySelector('#spelInhoud .sch-frame')
-    const bordMaat = Math.round(frame?.getBoundingClientRect().width || Math.min(innerWidth - 24, 460))
-    const maat = Math.max(180, Math.min(bordMaat, innerWidth - 24, innerHeight - 24))
-    vak.style.setProperty('--spel-video-expanded-size', maat + 'px')
-    vak.classList.add('is-expanded')
-  }
-
-  for (const vak of document.querySelectorAll('.spel-video-vak')) {
-    vak.tabIndex = 0
-    vak.setAttribute('role', 'button')
-    vak.setAttribute('aria-label', 'Enlarge or restore camera view')
-    vak.addEventListener('click', () => schakelSpelVideoFormaat(vak))
-    vak.addEventListener('keydown', event => {
-      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); schakelSpelVideoFormaat(vak) }
-    })
   }
 
   function zetSpelVideoStatus({ eigen, ander, gezien } = {}) {
@@ -2753,6 +2736,7 @@ async function startBlockIt() {
     if (!overlay) return
     const toon = spelActief === 'schaken' && (spelEigenVideo || spelAnderVideo)
     overlay.classList.toggle('sch-video-modus', toon)
+    spelCameraLayout?.sync()
     if (eigenWacht) eigenWacht.hidden = spelEigenVideo
     if (anderWacht) anderWacht.hidden = spelAnderVideo
     if (eigenVideo) eigenVideo.style.display = spelEigenVideo ? 'block' : 'none'

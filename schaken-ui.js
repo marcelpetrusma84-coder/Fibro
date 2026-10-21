@@ -66,6 +66,8 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-zoom::after { content:""; position:absolute; height:3px; left:10px; right:10px; bottom:3px; background:#f5ce86; transform:scaleX(0); transform-origin:left; transition:transform 1s linear; }
       .sch-zoom.sch-lange-druk::after { transform:scaleX(1); }
       .sch-acties { position:relative; z-index:5; }
+      .sch-video { margin-left:7px; min-height:44px; padding:10px 13px; border:1px solid #78e7cb99; border-radius:12px; background:linear-gradient(135deg,#164d4c,#267967); color:#eafff9; font:inherit; font-weight:700; cursor:pointer; }
+      .sch-video[aria-pressed="true"] { background:linear-gradient(135deg,#51d6ad,#d9ffdc); color:#06352a; box-shadow:0 0 14px #51d6ad88; }
       .sch-menu { position:absolute; z-index:6; left:50%; bottom:calc(100% + 8px); transform:translateX(-50%); box-sizing:border-box; width:min(340px,calc(100vw - 24px)); max-height:min(78dvh,620px); overflow:auto; overscroll-behavior:contain; scrollbar-color:#9b8264 #211c2b; padding:15px; border:1px solid #e8d7bd88; border-radius:16px; background:linear-gradient(145deg,#30243a,#17121f); color:#fff8ed; box-shadow:0 16px 40px #000b; text-align:left; }
       .sch-menu[hidden] { display:none; }
       .sch-menu h2 { font-size:17px; margin:0 0 12px; }
@@ -124,6 +126,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       <div class="sch-legenda"></div>
       <div class="sch-acties">
         <button class="sch-zoom" type="button" aria-pressed="false" aria-haspopup="dialog" aria-expanded="false">⤢ Enlarge board</button>
+        ${isVriendPartij ? '<button class="sch-video" id="sch-video" type="button" aria-pressed="false">📹 Webcam</button>' : ''}
         <section class="sch-menu" id="sch-menu" role="dialog" aria-label="Chess settings" hidden>
           <h2>Chess settings</h2>
           <fieldset><legend>Computer thinking time</legend>
@@ -169,6 +172,27 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
 
   const spelEl = inhoud.querySelector('.sch-spel')
   const zoomBtn = inhoud.querySelector('.sch-zoom')
+  const videoBtn = inhoud.querySelector('#sch-video')
+  if (videoBtn) {
+    const pasVideoKnopAan = event => {
+      const eigen = Boolean(event?.detail?.eigen)
+      videoBtn.setAttribute('aria-pressed', String(eigen))
+      videoBtn.textContent = eigen ? '📹 Webcam on' : '📹 Webcam'
+    }
+    window.addEventListener('fibro-chess-video-state', pasVideoKnopAan)
+    videoBtn.addEventListener('click', async () => {
+      videoBtn.disabled = true
+      const antwoord = await window.FibroChessVideo?.()
+      videoBtn.disabled = false
+      if (!antwoord?.ok) {
+        statusEl.textContent = antwoord?.reason === 'connecting'
+          ? 'The voice connection is still starting. Try the webcam again in a moment.'
+          : 'Your camera could not be started. Check camera permission and try again.'
+        return
+      }
+      pasVideoKnopAan({ detail:antwoord })
+    })
+  }
   inhoud.querySelector('.sch-legenda').textContent = 'Pawn 1 · Knight 3 · Bishop 3 · Rook 5 · Queen 9'
   function tekenVeroverd() {
     for (const [id,kleur,naam] of [['sch-eigen',mijnKleur,'You'],['sch-tegenstander',vriendKleur,vriendNaam]]) {

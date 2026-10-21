@@ -146,6 +146,21 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 .spel-overlay.open { display:flex; }
 .spel-sluit-btn { position:absolute; top:16px; right:16px; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.12); border:none; color:white; font-size:20px; cursor:pointer; z-index:10; display:flex; align-items:center; justify-content:center; }
 .spel-titel-bar { position:absolute; top:16px; left:16px; font-size:14px; color:white; font-weight:600; opacity:0.8; }
+.spel-video-vak { display:none; position:relative; flex:1 1 0; min-height:0; width:min(100% - 24px,460px); margin:8px 12px; overflow:hidden; border:1px solid rgba(151,240,221,.55); border-radius:15px; background:linear-gradient(145deg,#111827,#0a1220); box-shadow:inset 0 0 24px #0009,0 7px 18px #0006; }
+.spel-video-vak video { width:100%; height:100%; min-height:0; object-fit:cover; background:#080b11; transform:scaleX(-1); }
+.spel-video-vak.remote video { transform:none; }
+.spel-video-vak .video-etiket { position:absolute; z-index:2; left:9px; bottom:8px; padding:4px 8px; border-radius:9px; background:#07121dcc; color:#e9fffb; font-size:11px; font-weight:700; }
+.spel-video-wachten { position:absolute; inset:0; z-index:1; display:grid; place-items:center; padding:20px; color:#b9d8d5; font-size:13px; text-align:center; }
+.spel-overlay.sch-video-modus { justify-content:stretch; padding:53px 0 8px; }
+.spel-overlay.sch-video-modus .spel-video-vak { display:block; }
+.spel-overlay.sch-video-modus #spelInhoud { flex:0 0 auto; width:100% !important; height:auto !important; min-height:0; }
+.spel-overlay.sch-video-modus #spelInhoud .sch-spel { gap:3px; }
+.spel-overlay.sch-video-modus #spelInhoud .sch-vangst, .spel-overlay.sch-video-modus #spelInhoud .sch-legenda, .spel-overlay.sch-video-modus #spelInhoud .sch-zoom { display:none; }
+.spel-overlay.sch-video-modus #spelInhoud .sch-acties { display:block; line-height:0; }
+.spel-overlay.sch-video-modus #spelInhoud .sch-video { margin:2px 0 0; min-height:32px; padding:5px 9px; font-size:11px; line-height:1.2; }
+.spel-overlay.sch-video-modus #spelInhoud .sch-frame { width:min(35dvh,calc(100vw - 112px)); padding:4px; border-radius:9px; box-shadow:0 5px 0 #39271e,0 8px 0 #211811,0 13px 20px #0008; }
+.spel-overlay.sch-video-modus .spel-titel-bar { top:11px; }
+.spel-overlay.sch-video-modus .spel-sluit-btn { top:8px; }
 #spelMenuGrid { display:none; padding:10px 8px; background:var(--card); border-radius:16px 16px 0 0; border-top:0.5px solid var(--border); max-height:260px; overflow-y:auto; grid-template-columns:repeat(3,1fr); gap:8px; }
 #spelMenuGrid.open { display:grid; }
 </style>
@@ -310,7 +325,13 @@ window.veiligeUrl = function(v){
   <audio id="remoteAudio" autoplay playsinline style="display:none;"></audio>
   <button id="spelMuteBtn" onclick="toggleSpelMic()" style="position:absolute;top:10px;right:56px;z-index:10;background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:none;">🎤</button>
   <audio id="spelRemoteAudio" autoplay playsinline style="display:none;"></audio>
+  <div class="spel-video-vak remote" id="spelVideoAnder">
+    <video id="remoteMedia" autoplay playsinline></video><div class="spel-video-wachten" id="spelVideoAnderWachten">Waiting for your friend’s camera…</div><span class="video-etiket" id="spelVideoAnderNaam">Friend</span>
+  </div>
   <div id="spelInhoud" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"></div>
+  <div class="spel-video-vak" id="spelVideoEigen">
+    <video id="lokaalMedia" autoplay playsinline muted></video><div class="spel-video-wachten" id="spelVideoEigenWachten">Your camera is off</div><span class="video-etiket">You</span>
+  </div>
 </div>
 
 <script src="beltoon.js?v=7"></script>
@@ -327,7 +348,7 @@ window.veiligeUrl = function(v){
   import { haalVriendFotos, zetAvatar, geldigeFoto } from './vriendfotos.js?v=2'
   import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel } from './crypto.js?v=182'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
-  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera } from './bellen.js?v=152'
+  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera, schakelVideo, isVideoActiefLokaal } from './bellen.js?v=152'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
   import { maakStickerkeuze } from './stickerkeuze.js?v=190'
   import { isCode as isEigenCode, zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel, fxCode, leesFx, stickerPakket, bewaarVriendSticker, zoekWeg } from './eigenstickers.js?v=162'
@@ -588,6 +609,9 @@ window.veiligeUrl = function(v){
 
     // Start bel-signalering — inkomende oproepen overal ontvangen
     initBellen(huidigeUser.id, {
+      onVerbonden: () => { if (spelActief === 'schaken') zetSpelVideoStatus({ eigen: isVideoActiefLokaal() }) },
+      onVideoStatus: (actief) => { if (spelActief === 'schaken') zetSpelVideoStatus({ ander: actief }) },
+      onEind: () => { if (spelActief === 'schaken') resetSpelVideo() },
       onOproep: async (info) => {
         window._inkomendVanId = info.van
         window._inkomendVideo = info.videoModus || false
@@ -2060,7 +2084,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=147',
     pong: './pong-ui.js?v=147',
     vieroprij: './vieroprij-ui.js?v=147',
-    schaken: './schaken-ui.js?v=153',
+    schaken: './schaken-ui.js?v=154',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=148',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -2125,6 +2149,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (!sessieId) sessieId = Date.now().toString(36)
 
     spelActief = spelType
+    resetSpelVideo()
+    const videoNaam = document.getElementById('spelVideoAnderNaam')
+    if (videoNaam) videoNaam.textContent = (geselecteerdeVriend && geselecteerdeVriend.naam) || T('Friend')
     const overlay = document.getElementById('spelOverlay')
     overlay.classList.add('open')
 
@@ -2364,7 +2391,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await import('./schaken-ui.js?v=153')
+    const m = await import('./schaken-ui.js?v=154')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend') })
   }
 
@@ -2643,6 +2670,45 @@ async function startBlockIt() {
 
   // ─── Spel audiobel ───
   let spelBelActief = false
+  let spelEigenVideo = false, spelAnderVideo = false
+
+  function zetSpelVideoStatus({ eigen, ander } = {}) {
+    if (typeof eigen === 'boolean') spelEigenVideo = eigen
+    if (typeof ander === 'boolean') spelAnderVideo = ander
+    const overlay = document.getElementById('spelOverlay')
+    const eigenWacht = document.getElementById('spelVideoEigenWachten')
+    const anderWacht = document.getElementById('spelVideoAnderWachten')
+    const eigenVideo = document.getElementById('lokaalMedia')
+    const anderVideo = document.getElementById('remoteMedia')
+    if (!overlay) return
+    const toon = spelActief === 'schaken' && (spelEigenVideo || spelAnderVideo)
+    overlay.classList.toggle('sch-video-modus', toon)
+    if (eigenWacht) eigenWacht.hidden = spelEigenVideo
+    if (anderWacht) anderWacht.hidden = spelAnderVideo
+    if (eigenVideo) eigenVideo.style.display = spelEigenVideo ? 'block' : 'none'
+    if (anderVideo) anderVideo.style.display = spelAnderVideo ? 'block' : 'none'
+    window.dispatchEvent(new CustomEvent('fibro-chess-video-state', { detail: { eigen:spelEigenVideo, ander:spelAnderVideo } }))
+  }
+
+  function resetSpelVideo() {
+    spelEigenVideo = false; spelAnderVideo = false
+    const overlay = document.getElementById('spelOverlay')
+    if (overlay) overlay.classList.remove('sch-video-modus')
+    const eigenVideo = document.getElementById('lokaalMedia')
+    const anderVideo = document.getElementById('remoteMedia')
+    if (eigenVideo) eigenVideo.style.display = 'none'
+    if (anderVideo) anderVideo.style.display = 'none'
+  }
+
+  // Called only by the chess board's camera icon. A WebRTC audio link already
+  // exists during a friend game; this adds or removes just the local video track.
+  window.FibroChessVideo = async function () {
+    if (spelActief !== 'schaken' || !spelBelActief) return { ok:false, reason:'connecting' }
+    const wasAan = isVideoActiefLokaal()
+    const ok = await schakelVideo(!wasAan)
+    if (ok) zetSpelVideoStatus({ eigen:!wasAan })
+    return { ok, eigen:ok ? !wasAan : wasAan }
+  }
 
   async function startSpelBel() {
     if (spelBelActief) return
@@ -2668,6 +2734,7 @@ async function startBlockIt() {
     if (!spelBelActief) return
     spelBelActief = false
     document.getElementById('spelMuteBtn').style.display = 'none'
+    resetSpelVideo()
     hangOp().catch(() => {})
   }
 
@@ -2774,7 +2841,6 @@ async function verstuurMelding(reden) {
 }
 </script>
 <script src="swipe.js?v=95"></script>
-<audio id="remoteMedia" autoplay playsinline></audio>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=168"; startOngelezen()</script>
 <script type="module" src="blokkade.js?v=2"></script>
 </body>

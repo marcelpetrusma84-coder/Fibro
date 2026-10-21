@@ -336,7 +336,7 @@ window.veiligeUrl = function(v){
   import { stuurRapport } from './rapport.js?v=95'
   import * as Schaak from './schaak.js?v=95'
   import * as Dammen from './dammen.js?v=95'
-  import * as Bordgeluid from './bordgeluid.js?v=147'
+  import * as Bordgeluid from './bordgeluid.js?v=148'
   import * as DammenUI from './dammen-ui.js?v=147'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
@@ -2060,7 +2060,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=147',
     pong: './pong-ui.js?v=147',
     vieroprij: './vieroprij-ui.js?v=147',
-    schaken: './schaken-ui.js?v=147',
+    schaken: './schaken-ui.js?v=149',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=148',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -2364,7 +2364,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await import('./schaken-ui.js?v=147')
+    const m = await import('./schaken-ui.js?v=149')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend') })
   }
 

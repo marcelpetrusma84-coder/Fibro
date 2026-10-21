@@ -183,21 +183,49 @@ export function schaakBot({ stuur, niveau, isDicht, motor: Schaak }) {
   let staat = Schaak.nieuweSpelStaat()
   let ronde = 0
   let timer = null
+  let deadline = null
+  let worker = null
+  let thinkingMs = 7000
+  function annuleer() {
+    clearTimeout(timer)
+    clearTimeout(deadline)
+    worker?.terminate()
+    worker = null
+  }
   const klaar = () => Schaak.alleLegaleZetten(staat, staat.aanZet).length === 0
   function denk() {
     const r0 = ronde
-    clearTimeout(timer)
-    timer = setTimeout(() => {
+    annuleer()
+    const begin = performance.now()
+    const opties = Schaak.alleLegaleZetten(staat, IK)
+    let beste = opties[Math.floor(Math.random() * opties.length)]
+    let verzonden = false
+    function zetNu() {
+      if (verzonden) return
+      verzonden = true
+      annuleer()
       if (isDicht() || r0 !== ronde || staat.aanZet !== IK || klaar()) return
-      const zet = schaakKies(Schaak, staat, niveau)
-      if (!zet) return
-      Schaak.voerZetUit(staat, zet, 'Q')
-      stuur('zet', { zet, promotieStuk: 'Q' })
-    }, bedenktijd(niveau))
+      if (!beste) return
+      Schaak.voerZetUit(staat, beste, 'Q')
+      stuur('zet', { zet: beste, promotieStuk: 'Q' })
+    }
+    if (thinkingMs === 0) { zetNu(); return }
+    const wacht = thinkingMs <= 1000 ? 1000 : 1000 + Math.random() ** 1.6 * (thinkingMs - 1000)
+    const plan = () => { timer = setTimeout(zetNu, Math.max(0, wacht - (performance.now() - begin))) }
+    deadline = setTimeout(zetNu, Math.max(1000, thinkingMs))
+    try {
+      worker = new Worker(new URL('./schaak-worker.js?v=1', import.meta.url), { type:'module' })
+      worker.onmessage = ({ data }) => { if (data) beste = data; worker?.terminate(); worker = null; plan() }
+      worker.onerror = () => { worker?.terminate(); worker = null; plan() }
+      worker.postMessage({ staat:kopieStaat(staat), niveau })
+    } catch { plan() }
   }
   return {
     ontvang(event, p) {
-      if (event === 'zet') {
+      if (event === 'bot-instellingen') {
+        const next = Number(p.thinkingMs)
+        if (Number.isFinite(next)) { thinkingMs = Math.min(7000, Math.max(0, next)); if (staat.aanZet === IK && !klaar()) denk() }
+      } else if (event === 'zet') {
         if (!p.zet || staat.aanZet === IK) return
         const stuk = staat.bord[p.zet.van[0]] && staat.bord[p.zet.van[0]][p.zet.van[1]]
         if (!stuk || stuk[0] === IK) return
@@ -205,10 +233,10 @@ export function schaakBot({ stuur, niveau, isDicht, motor: Schaak }) {
         if (staat.aanZet === IK && !klaar()) denk()
       } else if (event === 'opnieuw') {
         ronde++
-        clearTimeout(timer)
+        annuleer()
         staat = Schaak.nieuweSpelStaat()
       }
     },
-    stop() { clearTimeout(timer) },
+    stop() { ronde++; annuleer() },
   }
 }

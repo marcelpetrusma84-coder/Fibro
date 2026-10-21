@@ -127,11 +127,12 @@ export function dammen(Dammen, staat, keten, mijnKleur) {
 }
 
 // Klein knopje 🔊/🔇 onder de statusregel
-export function knop(naastEl) {
+export function knop(naastEl, { language } = {}) {
     if (!naastEl || !naastEl.parentElement) return
         const b = document.createElement('button')
         const T = window.T || (s => s)
-        const zet = () => { b.textContent = aan() ? T('🔊 Geluid aan') : T('🔇 Geluid uit') }
+        const engels = language === 'en'
+        const zet = () => { b.textContent = engels ? (aan() ? '🔊 Sound on' : '🔇 Sound off') : (aan() ? T('🔊 Geluid aan') : T('🔇 Geluid uit')) }
         b.style.cssText = 'background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.2);border-radius:14px;padding:3px 12px;color:#fff;font-size:12px;cursor:pointer;'
         b.addEventListener('click', () => {
             try { localStorage.setItem(SLEUTEL, aan() ? 'uit' : 'aan') } catch (e) {}

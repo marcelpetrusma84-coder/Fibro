@@ -5,8 +5,8 @@ function readSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')
     const thinking = Number(saved.thinking ?? 7)
-    return { thinking:Number.isFinite(thinking) ? Math.min(7,Math.max(0,thinking)) : 7, pieces:['small','medium','large'].includes(saved.pieces) ? saved.pieces : 'medium', board:['classic','wood','marble'].includes(saved.board) ? saved.board : 'classic', showAttackRoutes:saved.showAttackRoutes === true }
-  } catch { return { thinking:7, pieces:'medium', board:'classic', showAttackRoutes:false } }
+    return { thinking:Number.isFinite(thinking) ? Math.min(7,Math.max(0,thinking)) : 7, pieces:['small','medium','large'].includes(saved.pieces) ? saved.pieces : 'medium', board:['classic','wood','marble'].includes(saved.board) ? saved.board : 'classic', showAttackRoutes:saved.showAttackRoutes === true, exaggerate:saved.exaggerate === true }
+  } catch { return { thinking:7, pieces:'medium', board:'classic', showAttackRoutes:false, exaggerate:false } }
 }
 // schaken-ui.js - spel voor Fibro, losgetrokken uit chat.html.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
@@ -73,6 +73,9 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-attack-toggle input { width:20px; height:20px; accent-color:#ddb477; }
       .sch-threat::before { content:""; position:absolute; z-index:0; inset:0; pointer-events:none; background:radial-gradient(ellipse at 50% 60%,#ffe18fbb 0,#ffc85c88 35%,#ffb52b35 62%,transparent 80%); box-shadow:inset 0 0 14px #ffe293aa; animation:sch-threat-pulse 1.5s ease-in-out infinite alternate; }
       .sch-threat .sch-stuk { filter:drop-shadow(0 0 5px #fff1b8) drop-shadow(0 0 10px #ffbb45) drop-shadow(0 3px 2px #000b); }
+      .sch-threat-exaggerated { z-index:2; }
+      .sch-threat-exaggerated::before { background:radial-gradient(ellipse at 50% 55%,#ff8b8bdd 0,#f3263bba 36%,#a80021a8 67%,transparent 88%); box-shadow:inset 0 0 16px #ff5369d9,0 0 9px #fa354e99; }
+      .sch-threat-exaggerated .sch-stuk { transform:scale(1.14); filter:sepia(1) saturate(9) brightness(1.05) hue-rotate(315deg) drop-shadow(0 0 5px #ff243dcc) drop-shadow(0 0 11px #f00b) drop-shadow(0 3px 2px #000b); }
       @keyframes sch-threat-pulse { from { opacity:.62; } to { opacity:1; } }
       @media (prefers-reduced-motion:reduce) { .sch-threat::before { animation:none; } }
       .sch-board-wood { background:repeating-linear-gradient(3deg,#6c462d 0 3px,#a87346 4px 7px,#774b30 8px 11px,#bd8c59 12px 13px)!important; }
@@ -103,6 +106,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
             <button class="sch-keuze" type="button" data-value="small">Smaller</button><button class="sch-keuze" type="button" data-value="medium">Default</button><button class="sch-keuze" type="button" data-value="large">Larger</button>
           </div></fieldset>
           <label class="sch-attack-toggle"><input id="sch-aanvalsroutes" type="checkbox"> Show attack routes</label>
+          <label class="sch-attack-toggle" id="sch-exaggerate-wrap" hidden><input id="sch-exaggerate" type="checkbox"> Exaggerate</label>
           <p class="sch-menu-hint">Highlights opposing pieces that the last moved piece can legally capture.</p>
           <fieldset><legend>Board style</legend><div class="sch-menu-opties" data-options="board">
             <button class="sch-keuze" type="button" data-value="classic">Classic</button><button class="sch-keuze" type="button" data-value="wood">Wood grain</button><button class="sch-keuze" type="button" data-value="marble">Marble / granite</button>
@@ -185,9 +189,19 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   menu.querySelectorAll('.sch-keuze').forEach(button => button.addEventListener('click', () => kiesMenuOptie(button.closest('[data-options]').dataset.options, button.dataset.value)))
   for (const group of ['pieces','board']) menu.querySelectorAll(`[data-options="${group}"] .sch-keuze`).forEach(button => button.setAttribute('aria-pressed', String(button.dataset.value === instellingen[group])))
   const aanvalToggle = menu.querySelector('#sch-aanvalsroutes')
+  const exaggerateToggle = menu.querySelector('#sch-exaggerate')
+  const exaggerateWrap = menu.querySelector('#sch-exaggerate-wrap')
   aanvalToggle.checked = instellingen.showAttackRoutes
+  exaggerateWrap.hidden = !instellingen.showAttackRoutes
+  exaggerateToggle.checked = instellingen.exaggerate
   aanvalToggle.addEventListener('change', () => {
     instellingen.showAttackRoutes = aanvalToggle.checked
+    exaggerateWrap.hidden = !instellingen.showAttackRoutes
+    bewaarInstellingen()
+    tekenBord()
+  })
+  exaggerateToggle.addEventListener('change', () => {
+    instellingen.exaggerate = exaggerateToggle.checked
     bewaarInstellingen()
     tekenBord()
   })
@@ -316,7 +330,10 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         vakje.type = 'button'
         vakje.className = 'sch-vak'
         const bedreigd = bedreigdeVelden.has(`${r},${k}`)
-        if (bedreigd) vakje.classList.add('sch-threat')
+        if (bedreigd) {
+          vakje.classList.add('sch-threat')
+          if (instellingen.exaggerate) vakje.classList.add('sch-threat-exaggerated')
+        }
         vakje.style.background = `linear-gradient(145deg,#ffffff18,#00000018),${achtergrond}`
         const stukNaam = staat.bord[r][k] ? `${staat.bord[r][k][0] === 'w' ? 'white' : 'black'} ${READABLE_NAMES[staat.bord[r][k][1]]}` : 'empty'
         vakje.setAttribute('aria-label', `${String.fromCharCode(97+k)}${8-r}, ${stukNaam}${bedreigd ? `, can be captured by ${route[0] === 'w' ? 'white' : 'black'} ${READABLE_NAMES[route[1]]}` : ''}`)

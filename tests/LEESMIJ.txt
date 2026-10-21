@@ -308,6 +308,13 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  staan. solo.js?v=196 (spel.html; 194 en 195 waren al gebruikt), chat.html (2 keer
                                  schaken-ui.js?v=195), taal-en.js?v=25 en taal.js?v=25 (alle 12 pagina's).
                                  proef91 nieuw. FIBRO_VERSIE 195 (testscript_schaaktaal.py)
+                         spelversies = v196: elk spel een eigen versienummer, los van het nummer van Fibro. Nieuw bestand
+                                 spelversies.js?v=1 (SPEL_VERSIES: Neon Raiders v3, Schaken v2, de rest v1; vulSpelVersies()), in
+                                 Stijl > Widgets > Spellen (profiel.html) staat het nummer ('v3') tussen de tekst en de toggle-knop.
+                                 Regel voor elk nieuw maak-script: raakt het een spel aan, zet dan het nummer van dat spel in
+                                 spelversies.js een hoger (en FIBRO_VERSIE ook, zoals altijd). Geen nieuwe vertaling nodig (het
+                                 label voor schermlezers 'versie 3' / 'version 3' zit in spelversies.js zelf). proef92 nieuw,
+                                 proef43 kent v1/v2/v3 en Fibro v196. FIBRO_VERSIE 196 (testscript_spelversies.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -747,6 +754,10 @@ tools/proef91.py         het vernieuwde schaken in twee talen (v195): echte spel
                          taal; 3 s drukken = instellingen in de goede taal, bedenktijd Meteen / 1 seconde / 3 seconden,
                          kort tikken = Bord kleiner; de computer antwoordt; samen: zet komt aan, d4 e5 dxe5 = Geslagen: 1 punt
                          bij allebei. Oude map (v194): 8 van 19.   python3 -I proef91.py <map>
+tools/proef92.py         het versienummer van elk spel (v196): echte profiel.html, tabblad Widgets, lijst Spellen: 12 nummers
+                         tussen de tekst en de toggle-knop op een regel (390 en 320 px, geen zijwaarts scrollen), de waarden
+                         kloppen met spelversies.js, elk spel uit chat.html staat erin, niet gelijk aan het appnummer (196),
+                         de toggle werkt nog, label 'versie 3' / 'version 3'. Oude map (v195): 13 MIS.   python3 -I proef92.py <map>
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

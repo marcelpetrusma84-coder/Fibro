@@ -220,6 +220,9 @@ MAG_ERBIJ |= {'Fibro v194 \u00B7 21 okt 2026'}
 # v195: het vernieuwde schaken weer in twee talen (alleen het versienummer verandert op de schermen)
 MAG_WEG |= {'Fibro v194 \u00B7 21 okt 2026'}
 MAG_ERBIJ |= {'Fibro v195 \u00B7 21 okt 2026'}
+# v196: bij elk spel in Stijl > Widgets een eigen versienummer (spelversies.js), los van het nummer van Fibro
+MAG_WEG |= {'Fibro v195 \u00B7 21 okt 2026'}
+MAG_ERBIJ |= {'Fibro v196 \u00B7 21 okt 2026', 'v1', 'v2', 'v3', 'versie 1', 'versie 2', 'versie 3'}  # (label voor schermlezers: Nederlands; Engels 'version N' staat in spelversies.js)
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

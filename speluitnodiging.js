@@ -6,6 +6,7 @@
 // gelijk aan die in de chat, met Ghost Tag en Twin Snakes erbij.
 import { supabase } from './supabase.js?v=95'
 import { houOpen } from './lijntjes.js?v=1'
+import { isNieuwsteSpelSessie } from './spelsessie.js?v=1'
 
 const SPEL_INFO = {
   botkaaseiren: { icon: '⭕', naam: 'Tic-Tac-Toe' },
@@ -25,11 +26,13 @@ const SPEL_INFO = {
 
 let kanaal = null
 let timer = null
+let huidigeUserId = null
 
 export async function startSpelUitnodigingLuisteraar() {
   if (window.location.pathname.includes('chat.html')) return
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return
+  huidigeUserId = session.user.id
   if (kanaal) kanaal.stop()
   // v131: via houOpen (lijntjes.js): gaat weer open als de server het sluit
   kanaal = houOpen('speluitnodiging-' + session.user.id, () => supabase
@@ -60,6 +63,7 @@ function toonPopup(vanId, vanNaam, vanAvatar, spelType, sessieId) {
   sessieId = alsId(sessieId)
   if (!vanId || !sessieId) return
   if (typeof spelType !== 'string' || !/^[a-z0-9]{1,30}$/.test(spelType)) return
+  if (!isNieuwsteSpelSessie(huidigeUserId, vanId, sessieId)) return
   const T = window.T || (s => s)
   const naam = String(vanNaam || T('Iemand')).slice(0, 40)
   const oud = document.getElementById('globaalSpelPopup')

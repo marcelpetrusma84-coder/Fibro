@@ -66,7 +66,14 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-zoom::after { content:""; position:absolute; height:3px; left:10px; right:10px; bottom:3px; background:#f5ce86; transform:scaleX(0); transform-origin:left; transition:transform 1s linear; }
       .sch-zoom.sch-lange-druk::after { transform:scaleX(1); }
       .sch-acties { position:relative; z-index:5; }
-      .sch-video { margin-left:7px; min-height:44px; padding:10px 13px; border:1px solid #78e7cb99; border-radius:12px; background:linear-gradient(135deg,#164d4c,#267967); color:#eafff9; font:inherit; font-weight:700; cursor:pointer; }
+      .sch-video { margin-left:7px; min-height:44px; padding:10px 13px; border:1px solid #78e7cb99; border-radius:12px; background:linear-gradient(135deg,#164d4c,#267967); color:#eafff9; font:inherit; font-weight:700; cursor:pointer; transition:transform .16s ease,filter .2s ease,box-shadow .2s ease; }
+      .sch-video:active, .sch-video.is-connecting { transform:translateY(2px) scale(.965); filter:brightness(.9); box-shadow:inset 0 3px 8px #001d1aaa; }
+      .sch-video.is-connecting { animation:sch-video-pulse 1.05s ease-in-out infinite; }
+      .sch-video.is-connecting::first-letter { display:inline-block; }
+      .sch-media-controls { display:flex; align-items:center; justify-content:center; gap:6px; }
+      .sch-video.sch-video-stop { position:static; z-index:5; width:29px; height:29px; min-height:29px; margin:0; padding:0; border-radius:9px; font-size:14px; line-height:1; transform:none; box-shadow:0 3px 10px #0009; }
+      .sch-video.sch-video-stop:active { transform:translateY(2px) scale(.94); }
+      @keyframes sch-video-pulse { 50% { box-shadow:0 0 0 5px #78e7cb25,0 0 18px #78e7cb80; filter:brightness(1.14); } }
       .sch-video[aria-pressed="true"] { background:linear-gradient(135deg,#51d6ad,#d9ffdc); color:#06352a; box-shadow:0 0 14px #51d6ad88; }
       .sch-menu { position:absolute; z-index:6; left:50%; bottom:calc(100% + 8px); transform:translateX(-50%); box-sizing:border-box; width:min(340px,calc(100vw - 24px)); max-height:min(78dvh,620px); overflow:auto; overscroll-behavior:contain; scrollbar-color:#9b8264 #211c2b; padding:15px; border:1px solid #e8d7bd88; border-radius:16px; background:linear-gradient(145deg,#30243a,#17121f); color:#fff8ed; box-shadow:0 16px 40px #000b; text-align:left; }
       .sch-menu[hidden] { display:none; }
@@ -163,6 +170,11 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   const bordEl = document.getElementById('sch-bord')
   const statusEl = document.getElementById('sch-status')
   const opnieuwBtn = document.getElementById('sch-opnieuw'); Bordgeluid.knop(statusEl, { language:'en' })
+  const geluidBtn = statusEl.nextElementSibling
+  const mediaControls = document.createElement('div')
+  mediaControls.className = 'sch-media-controls'
+  statusEl.insertAdjacentElement('afterend', mediaControls)
+  if (geluidBtn) mediaControls.append(geluidBtn)
   const promotieEl = document.getElementById('sch-promotie')
   const checkmateEl = inhoud.querySelector('#sch-checkmate')
   const noobDialog = inhoud.querySelector('#sch-noob-dialog')
@@ -174,19 +186,55 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   const zoomBtn = inhoud.querySelector('.sch-zoom')
   const videoBtn = inhoud.querySelector('#sch-video')
   if (videoBtn) {
+    const videoKnopThuis = videoBtn.parentElement
+    const videoKnopVolgende = videoBtn.nextSibling
+    const zetVideoKnopPlek = eigen => {
+      if (eigen) {
+        mediaControls.append(videoBtn)
+        videoBtn.classList.add('sch-video-stop')
+        videoBtn.textContent = '📹'
+        videoBtn.title = 'Turn webcam off'
+        videoBtn.setAttribute('aria-label', 'Turn webcam off')
+      } else {
+        if (videoKnopVolgende?.parentNode === videoKnopThuis) videoKnopThuis.insertBefore(videoBtn, videoKnopVolgende)
+        else videoKnopThuis.append(videoBtn)
+        videoBtn.classList.remove('sch-video-stop')
+        videoBtn.textContent = '📹 Webcam'
+        videoBtn.title = ''
+        videoBtn.setAttribute('aria-label', 'Turn webcam on')
+      }
+    }
     const pasVideoKnopAan = event => {
       const eigen = Boolean(event?.detail?.eigen)
+      videoBtn.classList.remove('is-connecting')
+      videoBtn.disabled = false
       videoBtn.setAttribute('aria-pressed', String(eigen))
-      videoBtn.textContent = eigen ? '📹 Webcam on' : '📹 Webcam'
+      zetVideoKnopPlek(eigen)
+    }
+    const toonVideoVoortgang = event => {
+      const detail = event?.detail || {}
+      if (!detail.tekst) return
+      statusEl.textContent = detail.tekst
+      videoBtn.classList.toggle('is-connecting', Boolean(detail.bezig))
+      videoBtn.disabled = false
+      if (detail.bezig) videoBtn.textContent = '📹 Connecting…'
+      else if (videoBtn.getAttribute('aria-pressed') !== 'true') zetVideoKnopPlek(false)
     }
     window.addEventListener('fibro-chess-video-state', pasVideoKnopAan)
-    videoBtn.addEventListener('click', async () => {
+    window.addEventListener('fibro-chess-video-progress', toonVideoVoortgang)
+    videoBtn.addEventListener('click', async event => {
+      event.stopPropagation()
+      videoBtn.classList.add('is-connecting')
+      videoBtn.textContent = '📹 Connecting…'
+      statusEl.textContent = 'Starting your camera connection…'
       videoBtn.disabled = true
       const antwoord = await window.FibroChessVideo?.()
       videoBtn.disabled = false
       if (!antwoord?.ok) {
+        videoBtn.classList.remove('is-connecting')
+        videoBtn.textContent = '📹 Webcam'
         statusEl.textContent = antwoord?.reason === 'connecting'
-          ? 'The voice connection is still starting. Try the webcam again in a moment.'
+          ? 'Still connecting to your friend. Keep the game open and try again in a moment.'
           : 'Your camera could not be started. Check camera permission and try again.'
         return
       }

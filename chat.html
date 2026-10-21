@@ -146,18 +146,23 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 .spel-overlay.open { display:flex; }
 .spel-sluit-btn { position:absolute; top:16px; right:16px; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.12); border:none; color:white; font-size:20px; cursor:pointer; z-index:10; display:flex; align-items:center; justify-content:center; }
 .spel-titel-bar { position:absolute; top:16px; left:16px; font-size:14px; color:white; font-weight:600; opacity:0.8; }
-.spel-video-vak { display:none; position:relative; flex:1 1 0; min-height:0; width:min(100% - 24px,460px); margin:8px 12px; overflow:hidden; border:1px solid rgba(151,240,221,.55); border-radius:15px; background:linear-gradient(145deg,#111827,#0a1220); box-shadow:inset 0 0 24px #0009,0 7px 18px #0006; }
+.spel-video-vak { display:none; position:relative; flex:1 1 0; min-height:0; width:min(100% - 24px,460px); margin:8px 12px; overflow:hidden; border:1px solid rgba(151,240,221,.55); border-radius:15px; background:linear-gradient(145deg,#111827,#0a1220); box-shadow:inset 0 0 24px #0009,0 7px 18px #0006; cursor:default; transition:border-color .25s ease,box-shadow .25s ease,transform .22s ease; }
 .spel-video-vak video { width:100%; height:100%; min-height:0; object-fit:cover; background:#080b11; transform:scaleX(-1); }
 .spel-video-vak.remote video { transform:none; }
 .spel-video-vak .video-etiket { position:absolute; z-index:2; left:9px; bottom:8px; padding:4px 8px; border-radius:9px; background:#07121dcc; color:#e9fffb; font-size:11px; font-weight:700; }
 .spel-video-wachten { position:absolute; inset:0; z-index:1; display:grid; place-items:center; padding:20px; color:#b9d8d5; font-size:13px; text-align:center; }
-.spel-overlay.sch-video-modus { justify-content:stretch; padding:53px 0 8px; }
+.spel-video-wachten[hidden] { display:none; }
+.spel-video-vak.is-expanded { position:relative; z-index:4; width:var(--spel-video-expanded-size,min(calc(100vw - 24px),460px)); height:var(--spel-video-expanded-size,min(calc(100vw - 24px),460px)); min-height:var(--spel-video-expanded-size,min(calc(100vw - 24px),460px)); flex:0 0 var(--spel-video-expanded-size,min(calc(100vw - 24px),460px)); margin:8px 12px; cursor:default; border-width:2px; box-shadow:0 18px 42px #000b,inset 0 0 0 1px #ffffff30; }
+.spel-video-vak.is-seen { border-color:#55ef9e; box-shadow:inset 0 0 0 2px #55ef9e88,inset 0 0 24px #0009,0 0 22px #3de88770; }
+.spel-video-vak.is-seen::after { content:'Visible to friend'; position:absolute; z-index:3; top:8px; right:8px; padding:4px 8px; border-radius:999px; background:#103e2ed9; color:#baffd8; font-size:10px; font-weight:800; letter-spacing:.02em; }
+.spel-overlay.sch-video-modus { justify-content:stretch; padding:53px 0 8px; overflow-y:auto; overscroll-behavior:contain; }
 .spel-overlay.sch-video-modus .spel-video-vak { display:block; }
 .spel-overlay.sch-video-modus #spelInhoud { flex:0 0 auto; width:100% !important; height:auto !important; min-height:0; }
 .spel-overlay.sch-video-modus #spelInhoud .sch-spel { gap:3px; }
 .spel-overlay.sch-video-modus #spelInhoud .sch-vangst, .spel-overlay.sch-video-modus #spelInhoud .sch-legenda, .spel-overlay.sch-video-modus #spelInhoud .sch-zoom { display:none; }
 .spel-overlay.sch-video-modus #spelInhoud .sch-acties { display:block; line-height:0; }
 .spel-overlay.sch-video-modus #spelInhoud .sch-video { margin:2px 0 0; min-height:32px; padding:5px 9px; font-size:11px; line-height:1.2; }
+.spel-overlay.sch-video-modus #spelInhoud .sch-video.sch-video-stop { width:29px; height:29px; min-height:29px; margin:0; padding:0; font-size:14px; line-height:1; }
 .spel-overlay.sch-video-modus #spelInhoud .sch-frame { width:min(35dvh,calc(100vw - 112px)); padding:4px; border-radius:9px; box-shadow:0 5px 0 #39271e,0 8px 0 #211811,0 13px 20px #0008; }
 .spel-overlay.sch-video-modus .spel-titel-bar { top:11px; }
 .spel-overlay.sch-video-modus .spel-sluit-btn { top:8px; }
@@ -326,7 +331,7 @@ window.veiligeUrl = function(v){
   <button id="spelMuteBtn" onclick="toggleSpelMic()" style="position:absolute;top:10px;right:56px;z-index:10;background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:none;">🎤</button>
   <audio id="spelRemoteAudio" autoplay playsinline style="display:none;"></audio>
   <div class="spel-video-vak remote" id="spelVideoAnder">
-    <video id="remoteMedia" autoplay playsinline></video><div class="spel-video-wachten" id="spelVideoAnderWachten">Waiting for your friend’s camera…</div><span class="video-etiket" id="spelVideoAnderNaam">Friend</span>
+    <video id="remoteMedia" autoplay playsinline></video><div class="spel-video-wachten" id="spelVideoAnderWachten">Your friend can switch on their camera whenever they are ready.</div><span class="video-etiket" id="spelVideoAnderNaam">Friend</span>
   </div>
   <div id="spelInhoud" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"></div>
   <div class="spel-video-vak" id="spelVideoEigen">
@@ -348,7 +353,7 @@ window.veiligeUrl = function(v){
   import { haalVriendFotos, zetAvatar, geldigeFoto } from './vriendfotos.js?v=2'
   import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel } from './crypto.js?v=182'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
-  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera, schakelVideo, isVideoActiefLokaal } from './bellen.js?v=152'
+  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera, schakelVideo, isVideoActiefLokaal } from './bellen.js?v=153'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
   import { maakStickerkeuze } from './stickerkeuze.js?v=190'
   import { isCode as isEigenCode, zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel, fxCode, leesFx, stickerPakket, bewaarVriendSticker, zoekWeg } from './eigenstickers.js?v=162'
@@ -362,6 +367,7 @@ window.veiligeUrl = function(v){
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
+  import { nieuweSpelSessie, isNieuwsteSpelSessie } from './spelsessie.js?v=1'
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -615,7 +621,19 @@ window.veiligeUrl = function(v){
         activeerAangevraagdeSpelCamera()
       },
       onVideoStatus: (actief) => { if (spelActief === 'schaken') zetSpelVideoStatus({ ander: actief }) },
-      onEind: () => { if (spelActief === 'schaken') resetSpelVideo() },
+      onEigenVideoOntvangen: (actief) => { if (spelActief === 'schaken') zetSpelVideoStatus({ gezien: actief }) },
+      onEind: async () => {
+        spelBelActief = false
+        if (spelActief !== 'schaken') return
+        // Een weggevallen vriendverbinding mag de eigen preview niet uitzetten.
+        // Heropen alleen de lokale camera; een volgende ping probeert de peer weer.
+        if (spelEigenVideo) {
+          spelMijnVideoGezien = false
+          const lokaalOk = await schakelVideo(true)
+          if (lokaalOk) zetSpelVideoStatus({ eigen:true, gezien:false })
+          else resetSpelVideo()
+        } else resetSpelVideo()
+      },
       onOproep: async (info) => {
         window._inkomendVanId = info.van
         window._inkomendVideo = info.videoModus || false
@@ -2029,6 +2047,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ── Toon de uitnodiging popup ──
   function toonSpelUitnodigingPopup(vanId, vanNaam, vanAvatar, spelType, sessieId) {
+    if (!isNieuwsteSpelSessie(huidigeUser?.id, vanId, sessieId)) return
     sluitSpelUitnodiging() // sluit eventueel vorige
 
     const info = SPEL_INFO[spelType] || { icon: '🎮', naam: spelType }
@@ -2088,7 +2107,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=147',
     pong: './pong-ui.js?v=147',
     vieroprij: './vieroprij-ui.js?v=147',
-    schaken: './schaken-ui.js?v=154',
+    schaken: './schaken-ui.js?v=158',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=148',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -2111,7 +2130,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     document.getElementById('spelMenuGrid').style.display = 'none'
 
     const info = SPEL_INFO[spelType] || { icon: '🎮', naam: spelType }
-    const sessieId = Date.now().toString(36)
+    const sessieId = nieuweSpelSessie()
     const avatar = huidigProfiel?.avatar_data || huidigProfiel?.avatar_url || '🎮'
 
     // Stuur uitnodiging naar vriend via zijn persoonlijke kanaal
@@ -2151,6 +2170,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     sluitSpelUitnodiging()
 
     if (!sessieId) sessieId = Date.now().toString(36)
+    if (!isNieuwsteSpelSessie(huidigeUser?.id, geselecteerdeVriend?.id, sessieId)) return
+    if (spelActief) window.sluitSpel(true)
 
     spelActief = spelType
     resetSpelVideo()
@@ -2189,6 +2210,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
     spelKanaal.on('broadcast', { event: 'ping' }, () => {
       laatstePing = Date.now()
       pingOntvangen = true
+      if (spelHerstellen) {
+        spelHerstellen = false
+        if (!spelEigenVideo) window.dispatchEvent(new CustomEvent('fibro-chess-video-progress', { detail: { bezig:false, tekst:'Ready.' } }))
+      }
       startSpelBel()
     })
     // v170: bij een beurtspel per beurt een sticker (zie 'stickers in een beurtspel'); elke zet geeft er weer een vrij
@@ -2322,7 +2347,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ── Tegenstander weg? ──
   // Netjes stoppen stuurt een bericht. Wegvallen merken we aan het uitblijven
   // van de hartslag die beide kanten elke 3 seconden sturen.
-  let spelPingTimer = null, spelWachtTimer = null, laatstePing = 0, pingOntvangen = false
+  let spelPingTimer = null, spelWachtTimer = null, laatstePing = 0, pingOntvangen = false, spelHerstellen = false
 
   function toonSpelMelding(tekst) {
     const inhoud = document.getElementById('spelInhoud')
@@ -2343,6 +2368,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     stopSpelHartslag()
     laatstePing = Date.now()
     pingOntvangen = false
+    spelHerstellen = false
     const stuurPing = () => { if (spelKanaal) { try { spelKanaal.send({ type: 'broadcast', event: 'ping', payload: {} }) } catch (e) {} } }
     // Do not make the audio/video link wait for the first three-second interval.
     // This also makes a freshly tapped webcam button work as soon as both boards open.
@@ -2354,7 +2380,14 @@ console.timeLog('[chat] berichten', 'opgehaald')
       // Pas waarschuwen als we ooit een hartslag hebben gehad; anders speelt de
       // ander misschien op een oudere versie die nog geen hartslag stuurt.
       if (!pingOntvangen || !spelActief) return
-      if (Date.now() - laatstePing > 10000) {
+      const stilSinds = Date.now() - laatstePing
+      // Mobiele browsers kunnen de tab kort afremmen. Toon eerst herstelstatus
+      // en geef Realtime voldoende tijd om zelf opnieuw verbinding te maken.
+      if (stilSinds > 15000 && !spelHerstellen) {
+        spelHerstellen = true
+        if (!spelEigenVideo) window.dispatchEvent(new CustomEvent('fibro-chess-video-progress', { detail: { bezig:false, tekst:'Keeping the game connected…' } }))
+      }
+      if (stilSinds > 45000) {
         stopSpelHartslag()
         toonSpelMelding(T('De verbinding met {naam} is weggevallen.<br>Het spel is gestopt.', { naam: esc((geselecteerdeVriend && geselecteerdeVriend.naam) || T('je vriend')) }))
       }
@@ -2364,6 +2397,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   function stopSpelHartslag() {
     clearInterval(spelPingTimer); spelPingTimer = null
     clearInterval(spelWachtTimer); spelWachtTimer = null
+    spelHerstellen = false
   }
 
   window.sluitSpel = function(stil) {
@@ -2399,7 +2433,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await import('./schaken-ui.js?v=154')
+    const m = await import('./schaken-ui.js?v=158')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend') })
   }
 
@@ -2678,16 +2712,44 @@ async function startBlockIt() {
 
   // ─── Spel audiobel ───
   let spelBelActief = false
-  let spelEigenVideo = false, spelAnderVideo = false, spelVideoAanvragen = false, spelVideoBezig = false
+  let spelEigenVideo = false, spelAnderVideo = false, spelMijnVideoGezien = false, spelVideoAanvragen = false, spelVideoBezig = false
 
-  function zetSpelVideoStatus({ eigen, ander } = {}) {
+  function zetSpelVideoVoortgang(tekst, bezig = true) {
+    window.dispatchEvent(new CustomEvent('fibro-chess-video-progress', { detail: { tekst, bezig } }))
+  }
+
+  function schakelSpelVideoFormaat(vak) {
+    if (!vak || !vak.offsetParent) return
+    const wordtGroot = !vak.classList.contains('is-expanded')
+    document.querySelectorAll('.spel-video-vak.is-expanded').forEach(el => el.classList.remove('is-expanded'))
+    if (!wordtGroot) return
+    const frame = document.querySelector('#spelInhoud .sch-frame')
+    const bordMaat = Math.round(frame?.getBoundingClientRect().width || Math.min(innerWidth - 24, 460))
+    const maat = Math.max(180, Math.min(bordMaat, innerWidth - 24, innerHeight - 24))
+    vak.style.setProperty('--spel-video-expanded-size', maat + 'px')
+    vak.classList.add('is-expanded')
+  }
+
+  for (const vak of document.querySelectorAll('.spel-video-vak')) {
+    vak.tabIndex = 0
+    vak.setAttribute('role', 'button')
+    vak.setAttribute('aria-label', 'Enlarge or restore camera view')
+    vak.addEventListener('click', () => schakelSpelVideoFormaat(vak))
+    vak.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); schakelSpelVideoFormaat(vak) }
+    })
+  }
+
+  function zetSpelVideoStatus({ eigen, ander, gezien } = {}) {
     if (typeof eigen === 'boolean') spelEigenVideo = eigen
     if (typeof ander === 'boolean') spelAnderVideo = ander
+    if (typeof gezien === 'boolean') spelMijnVideoGezien = gezien
     const overlay = document.getElementById('spelOverlay')
     const eigenWacht = document.getElementById('spelVideoEigenWachten')
     const anderWacht = document.getElementById('spelVideoAnderWachten')
     const eigenVideo = document.getElementById('lokaalMedia')
     const anderVideo = document.getElementById('remoteMedia')
+    const eigenVak = document.getElementById('spelVideoEigen')
     if (!overlay) return
     const toon = spelActief === 'schaken' && (spelEigenVideo || spelAnderVideo)
     overlay.classList.toggle('sch-video-modus', toon)
@@ -2695,22 +2757,33 @@ async function startBlockIt() {
     if (anderWacht) anderWacht.hidden = spelAnderVideo
     if (eigenVideo) eigenVideo.style.display = spelEigenVideo ? 'block' : 'none'
     if (anderVideo) anderVideo.style.display = spelAnderVideo ? 'block' : 'none'
+    if (eigenVak) eigenVak.classList.toggle('is-seen', spelEigenVideo && spelMijnVideoGezien)
     window.dispatchEvent(new CustomEvent('fibro-chess-video-state', { detail: { eigen:spelEigenVideo, ander:spelAnderVideo } }))
+    if (spelEigenVideo) {
+      const tekst = spelMijnVideoGezien
+        ? 'Your friend can see you.'
+        : (spelAnderVideo ? 'Your camera is on.' : 'Your camera is on · Your friend can join whenever ready.')
+      zetSpelVideoVoortgang(tekst, false)
+    }
   }
 
   function resetSpelVideo() {
-    spelEigenVideo = false; spelAnderVideo = false; spelVideoAanvragen = false; spelVideoBezig = false
+    spelEigenVideo = false; spelAnderVideo = false; spelMijnVideoGezien = false; spelVideoAanvragen = false; spelVideoBezig = false
     const overlay = document.getElementById('spelOverlay')
     if (overlay) overlay.classList.remove('sch-video-modus')
     const eigenVideo = document.getElementById('lokaalMedia')
     const anderVideo = document.getElementById('remoteMedia')
+    const eigenVak = document.getElementById('spelVideoEigen')
     if (eigenVideo) eigenVideo.style.display = 'none'
     if (anderVideo) anderVideo.style.display = 'none'
+    if (eigenVak) eigenVak.classList.remove('is-seen')
+    document.querySelectorAll('.spel-video-vak.is-expanded').forEach(el => el.classList.remove('is-expanded'))
   }
 
   async function activeerAangevraagdeSpelCamera() {
     if (!spelVideoAanvragen || spelVideoBezig || spelActief !== 'schaken') return false
     spelVideoBezig = true
+    zetSpelVideoVoortgang('Requesting camera permission…')
     const ok = await schakelVideo(true)
     spelVideoBezig = false
     if (ok) {
@@ -2732,16 +2805,13 @@ async function startBlockIt() {
       return { ok, eigen:false }
     }
     spelVideoAanvragen = true
-    if (!spelBelActief) await startSpelBel()
-    // The opponent's automatic accept and the ICE handshake take a moment on
-    // mobile. Keep this same user gesture alive in the flow instead of making
-    // the player repeatedly tap the camera icon.
-    const stopOm = Date.now() + 10000
-    while (Date.now() < stopOm && spelVideoAanvragen && spelActief === 'schaken') {
-      if (await activeerAangevraagdeSpelCamera()) return { ok:true, eigen:true }
-      await new Promise(resolve => setTimeout(resolve, 300))
-    }
-    return { ok:false, reason:'connecting' }
+    zetSpelVideoVoortgang('Opening your camera…')
+    const lokaalOk = await activeerAangevraagdeSpelCamera()
+    if (!lokaalOk) return { ok:false, reason:'camera' }
+    // De lokale preview staat nu al aan. De verbinding mag rustig op de
+    // achtergrond volgen en bepaalt alleen wanneer de groene rand verschijnt.
+    if (!spelBelActief) startSpelBel().catch(()=>{})
+    return { ok:true, eigen:true }
   }
 
   async function startSpelBel() {

@@ -183,17 +183,41 @@ export function schaakBot({ stuur, niveau, isDicht, motor: Schaak }) {
   let staat = Schaak.nieuweSpelStaat()
   let ronde = 0
   let timer = null
+  let deadline = null
+  let worker = null
+  function annuleer() {
+    clearTimeout(timer)
+    clearTimeout(deadline)
+    worker?.terminate()
+    worker = null
+  }
   const klaar = () => Schaak.alleLegaleZetten(staat, staat.aanZet).length === 0
   function denk() {
     const r0 = ronde
-    clearTimeout(timer)
-    timer = setTimeout(() => {
+    annuleer()
+    const begin = performance.now()
+    // Most moves take 1.4–4 seconds; occasionally a longer pause, up to 7.
+    const wacht = 1400 + Math.random() ** 1.6 * 5400
+    const opties = Schaak.alleLegaleZetten(staat, IK)
+    let beste = opties[Math.floor(Math.random() * opties.length)]
+    let verzonden = false
+    function zetNu() {
+      if (verzonden) return
+      verzonden = true
+      annuleer()
       if (isDicht() || r0 !== ronde || staat.aanZet !== IK || klaar()) return
-      const zet = schaakKies(Schaak, staat, niveau)
-      if (!zet) return
-      Schaak.voerZetUit(staat, zet, 'Q')
-      stuur('zet', { zet, promotieStuk: 'Q' })
-    }, bedenktijd(niveau))
+      if (!beste) return
+      Schaak.voerZetUit(staat, beste, 'Q')
+      stuur('zet', { zet: beste, promotieStuk: 'Q' })
+    }
+    const plan = () => { timer = setTimeout(zetNu, Math.max(0, wacht - (performance.now() - begin))) }
+    deadline = setTimeout(zetNu, 7000)
+    try {
+      worker = new Worker(new URL('./schaak-worker.js?v=1', import.meta.url), { type:'module' })
+      worker.onmessage = ({ data }) => { if (data) beste = data; worker?.terminate(); worker = null; plan() }
+      worker.onerror = () => { worker?.terminate(); worker = null; plan() }
+      worker.postMessage({ staat:kopieStaat(staat), niveau })
+    } catch { plan() }
   }
   return {
     ontvang(event, p) {
@@ -205,10 +229,10 @@ export function schaakBot({ stuur, niveau, isDicht, motor: Schaak }) {
         if (staat.aanZet === IK && !klaar()) denk()
       } else if (event === 'opnieuw') {
         ronde++
-        clearTimeout(timer)
+        annuleer()
         staat = Schaak.nieuweSpelStaat()
       }
     },
-    stop() { clearTimeout(timer) },
+    stop() { ronde++; annuleer() },
   }
 }

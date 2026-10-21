@@ -272,6 +272,18 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  Stijl > Widgets (spel_shmup), Home-icoon. taal-en.js?v=22 (in taal.js), taal.js?v=22 (alle 12
                                  pagina's). In de chat zegt Neon Raiders nog 'komt binnenkort'. proef43 kent de nieuwe teksten (v192).
                                  FIBRO_VERSIE 192 (testscript_neonraiders.py)
+                         neonraiders2 = v193: het hele Neon Raiders, alleen spelen: 7 levels (Aarde, Stratosfeer, Ruimte, Moederschip,
+                                 Diepe ruimte, Xeron lucht, Xeron grond), elk met eigen achtergrondlagen (achtergrond_<soort>),
+                                 vijandkleuren (PALET), golven (GOLVEN[n], rng(1000 + n)) en eindbaas (BAZEN: TITAN, ZEPHYR, VORTEX,
+                                 REACTOR, ZOGGOTH PRIME, ZWERMKONINGIN, OVERLORD; onderdelen met schild beschermen de kern). Nieuwe
+                                 vijanden: meteoren (splitsen), mijnen, muurkanonnen, laserhekken, zwermen, spugers (zuurbogen),
+                                 lopers, vijandelijke raketten. Na een baas door naar het volgende level; hoogste level in
+                                 localStorage nr-bereikt (knop VERDER). neon-raiders-ui.js?v=193 (solo.js?v=193, spel.html),
+                                 taal-en.js?v=23 en taal.js?v=23 (alle 12 pagina's). proef88 bijgewerkt, proef89 nieuw.
+                                 Gemaakt na de merge van PR #1 en #2 van valentijnpeters (README, schaken: schaak-stukken.js,
+                                 schaak-worker.js, schaken-ui.js?v=149, bordgeluid.js?v=148, solo-bord.js?v=3); die zette
+                                 spel.html op solo.js versie 194, v193 zet het op solo.js?v=193 (194 blijft bezet).
+                                 FIBRO_VERSIE 193 (testscript_neonraiders2.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -679,13 +691,18 @@ tools/proef87.py         Chat-lijst bovenaan alleen 'Chat' (v191), echte chat.ht
                          zoals Vrienden (letter, maat, schuin), geen tweede regel, oude zinnen weg; tik op een vriend = naam + actief
                          in de gewone letter; terug = weer 'Chat'; ook via chat.html?vriend=. Oude map (v190) als controle: 10 van 34.
                          python3 -I proef87.py <map>
-tools/proef88.py         Neon Raiders (v192) via spel.html?spel=shmup, Nederlands en Engels, nagebootste iPhone met echte
+tools/proef88.py         Neon Raiders (v192; v193: na de baas door naar level 2, game over in level 2, VERDER) via spel.html?spel=shmup, Nederlands en Engels, nagebootste iPhone met echte
                          aanrakingen (twee vingers via CDP Input.dispatchTouchEvent): startscherm, START, slepen = vliegen, een
                          vinger schiet niet, tweede vinger wel, loslaten stopt; tegel = arsenaal + slow motion, bom, wapen
                          wisselen, capsule oppakken; pauze op de achtergrond; eindbaas komt en wordt verslagen (record bewaard);
                          game over. Het spel zet window.__neonRaiders alleen als window.__fibroProef = true (init-script).
                          Swiftshader-Chromium haalt ±20 beeldjes: de baas duurt ±40 s. Oude map (v191): 2 van 8.
                          python3 -I proef88.py <map>
+tools/proef89.py         Neon Raiders, het hele spel (v193): alle 7 levels versneld (tijdSchaal 4, onkwetsbaar, spatie = schieten):
+                         golven zonder fouten tot de eindbaas (juiste naam), onderdelen kapot = fase 2/3, kern kapot = volgend
+                         level met nieuwe achtergrond (oude ag_-texturen weg) en nr-bereikt; na level 7 GEWONNEN!; opnieuw
+                         laden: knop VERDER: LEVEL 7 begint level 7 met de gewone uitrusting. Duurt ±10 minuten.
+                         Oude map (v192): bijna alles MIS.   python3 -I proef89.py <map>
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

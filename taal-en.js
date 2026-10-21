@@ -11,7 +11,7 @@
 // v154: het Stickerlab in Profiel (stickermaker.js).
 // v155: eigen stickers versturen in de chat (stickerkeuze.js, chat.html).
 // v157: stickers als widget op Home (stickerwidget.js, stickermaker.js).
-// v192: Neon Raiders (neon-raiders-ui.js).
+// v192: Neon Raiders (neon-raiders-ui.js). v193: het hele spel (7 levels).
 window.FIBRO_EN = {
 
 // ---- Overal ----
@@ -1195,7 +1195,6 @@ window.FIBRO_EN = {
   "+1 LEVEN": "+1 LIFE",
   "AARDE": "EARTH",
   "Wapen wisselen of power-up gebruiken": "Switch weapon or use a power-up",
-  "LEVEL 1 · AARDE": "LEVEL 1 · EARTH",
   "Sleep met één vinger om te vliegen. Tik of houd een tweede vinger op het scherm om te schieten.": "Drag one finger to fly. Tap or hold a second finger on the screen to shoot.",
   "De tegel linksboven: wapen wisselen of een power-up gebruiken.": "The tile in the top left: switch weapons or use a power-up.",
   "Toetsen: pijltjes = vliegen, spatie = schieten, Q = tegel.": "Keys: arrows = fly, space = shoot, Q = tile.",
@@ -1206,15 +1205,32 @@ window.FIBRO_EN = {
   "RECORD {n}": "HIGH SCORE {n}",
   "GEHAALD!": "CLEARED!",
   "NIEUW RECORD!": "NEW HIGH SCORE!",
-  "TITAN is verslagen. Bonus voor je levens: {n}.": "TITAN is defeated. Bonus for your lives: {n}.",
   "Je schip is neergeschoten.": "Your ship was shot down.",
-  "De volgende levels komen binnenkort.": "The next levels are coming soon.",
   "AUTOVUUR: AAN": "AUTO FIRE: ON",
   "AUTOVUUR: UIT": "AUTO FIRE: OFF",
   "KANON L": "CANNON L",
   "KANON R": "CANNON R",
   "KERN": "CORE",
   "EINDBAAS NADERT: {naam}": "BOSS APPROACHING: {naam}",
+  "STRATOSFEER": "STRATOSPHERE",
+  "RUIMTE": "SPACE",
+  "MOEDERSCHIP": "MOTHERSHIP",
+  "DIEPE RUIMTE": "DEEP SPACE",
+  "XERON · LUCHT": "XERON · SKY",
+  "XERON · GROND": "XERON · SURFACE",
+  "MOTOR L": "ENGINE L",
+  "MOTOR R": "ENGINE R",
+  "TOREN": "TURRET",
+  "BRUG": "BRIDGE",
+  "GENERATOR": "GENERATOR",
+  "VLEUGEL L": "WING L",
+  "VLEUGEL R": "WING R",
+  "KOP": "HEAD",
+  "LEVEL {n} · {naam}": "LEVEL {n} · {naam}",
+  "BONUS {n}": "BONUS {n}",
+  "VERDER: LEVEL {n}": "CONTINUE: LEVEL {n}",
+  "Alle zeven levels gehaald. Bonus voor je levens: {n}.": "All seven levels cleared. Bonus for your lives: {n}.",
+  "Je kwam tot level {n}.": "You made it to level {n}.",
 // ---- Runner & Gunner (runner-gunner-ui, spellen/runner-gunner.html) ----
   "Jij en {naam} rennen op dezelfde baan. Wie komt het verst?": "You and {naam} run on the same track. Who gets the furthest?",
   "Hoe ver kom jij?": "How far can you get?",

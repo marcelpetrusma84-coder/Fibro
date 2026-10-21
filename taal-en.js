@@ -12,6 +12,7 @@
 // v155: eigen stickers versturen in de chat (stickerkeuze.js, chat.html).
 // v157: stickers als widget op Home (stickerwidget.js, stickermaker.js).
 // v192: Neon Raiders (neon-raiders-ui.js). v193: het hele spel (7 levels). v194: samen spelen.
+// v195: het vernieuwde schaken (schaken-ui.js, van valentijnpeters) weer in twee talen.
 window.FIBRO_EN = {
 
 // ---- Overal ----
@@ -1283,6 +1284,43 @@ window.FIBRO_EN = {
 // ---- Schaken: begin (schaken-ui) ----
   "Jouw beurt (wit begint)": "Your turn (white starts)",
   "Wachten op {naam} (wit begint)...": "Waiting for {naam} (white starts)...",
+// v195: het vernieuwde schaken (van valentijnpeters, PR #2): bord, geslagen stukken, instellingen, aanvalsroutes
+  "Schaakbord": "Chessboard",
+  "⤢ Bord groter": "⤢ Enlarge board",
+  "⤡ Bord kleiner": "⤡ Smaller board",
+  "Schaakinstellingen": "Chess settings",
+  "Bedenktijd van de computer": "Computer thinking time",
+  "Hoogstens:": "Maximum:",
+  "Meteen": "Instant",
+  "{n} seconde": "{n} second",
+  "{n} seconden": "{n} seconds",
+  "0 = meteen. Anders denkt de computer steeds anders lang na, tot hoogstens de gekozen tijd.": "0 = instant. Otherwise, the computer varies its thinking time up to the selected maximum.",
+  "Grootte van de stukken": "Piece size",
+  "Kleiner": "Smaller",
+  "Standaard": "Default",
+  "Groter": "Larger",
+  "Aanvalsroutes tonen": "Show attack routes",
+  "Extra duidelijk": "Exaggerate",
+  "Licht de stukken op die het laatst verzette stuk mag slaan.": "Highlights opposing pieces that the last moved piece can legally capture.",
+  "Soort bord": "Board style",
+  "Klassiek": "Classic",
+  "Hout": "Wood grain",
+  "Marmer / graniet": "Marble / granite",
+  "Houd “Bord groter” 3 seconden ingedrukt voor deze instellingen. Kort tikken maakt het bord groter of kleiner.": "Press and hold “Enlarge board” for 3 seconds to open these settings. Tap it briefly to resize the board.",
+  "Pion 1 · Paard 3 · Loper 3 · Toren 5 · Dame 9": "Pawn 1 · Knight 3 · Bishop 3 · Rook 5 · Queen 9",
+  "Geslagen: {n} punt": "Captured: {n} point",
+  "Geslagen: {n} punten": "Captured: {n} points",
+  "pion": "pawn",
+  "paard": "knight",
+  "loper": "bishop",
+  "toren": "rook",
+  "dame": "queen",
+  "koning": "king",
+  "witte {stuk}": "white {stuk}",
+  "zwarte {stuk}": "black {stuk}",
+  "leeg": "empty",
+  ", kan geslagen worden door {stuk}": ", can be captured by {stuk}",
+  "Promoveren tot {stuk}": "Promote to {stuk}",
 
 // ---- Block It: rijen erbij (blockit-ui, v148) ----
   "+{n} RIJ!": "+{n} ROW!",

@@ -300,6 +300,14 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  game over. Samen: geen slow motion bij de tegel, de baas 1,4 keer zo sterk. Kolos-buit hangt af van zijn nummer.
                                  neon-raiders-ui.js?v=194 (solo.js?v=195 want 194 was al gebruikt, spel.html, chat.html), taal-en.js?v=24 en taal.js?v=24
                                  (alle 12 pagina's). proef90 nieuw. FIBRO_VERSIE 194 (testscript_neonraiders3.py)
+                         schaaktaal = v195: het vernieuwde schaken (PR #2 van valentijnpeters: schaak-stukken.js, bewegende zetten,
+                                 geslagen stukken met punten, instellingen via 3 s drukken op 'Bord groter', aanvalsroutes) weer in
+                                 twee talen: schaken-ui.js?v=195 via T() (taal.js), Nederlands als sleutel, Engels in taal-en.js
+                                 (zijn Engelse zinnen); de stukken heten pion/paard/loper/toren/dame/koning ('witte {stuk}' enz.)
+                                 voor de labels; de knop geluid weer via T; 'Extra duidelijk' alleen als de aanvalsroutes aan
+                                 staan. solo.js?v=196 (spel.html; 194 en 195 waren al gebruikt), chat.html (2 keer
+                                 schaken-ui.js?v=195), taal-en.js?v=25 en taal.js?v=25 (alle 12 pagina's).
+                                 proef91 nieuw. FIBRO_VERSIE 195 (testscript_schaaktaal.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -426,6 +434,9 @@ tools/proef44.py         de spellen in twee talen (v147): elk spel wordt echt ge
                          Nederlands precies gelijk aan de oude code; Engels zonder Nederlandse woorden of fouten.
                          Duurt lang (een uur of zo): elk spel drie keer. TOON=1 laat alle teksten zien.
                          python3 -I proef44.py <scratch met tools/server.py> <map> <poort> [oude map|-] [filter]
+                         v195: bij schaken (en schaken gast) geeft 'NL: dezelfde teksten als de oude code' FOUT met de nieuwe
+                         Nederlandse teksten als 'nieuw extra' tegen v194 (toen was het vernieuwde schaken alleen Engels):
+                         zo hoort het; het Engels moet wel helemaal OK zijn. Zie proef91.
 tools/proef45.py         Home zet je taal in je profiel (v148, profiles.taal uit sql/taal.sql): alleen als hij anders
                          is, niet bij een geblokkeerd account, en zonder de kolom (SQL niet gedraaid) niets.
                          python3 -I proef45.py <scratch met tools/server.py> <map> <poort>
@@ -730,6 +741,12 @@ tools/proef90.py         Neon Raiders samen (v194): twee pagina's in een browser
                          met de score van de ander, OPNIEUW = ronde 2. E zonder WebRTC: 'VERBONDEN (RESERVE)' na ±11 s,
                          hooguit 4 berichten per seconde via het spelkanaal, schip van de ander te zien. Duurt ±5 minuten.
                          Oude map (v193): bijna alles MIS.   python3 -I proef90.py <map>
+tools/proef91.py         het vernieuwde schaken in twee talen (v195): echte spel.html tegen de computer en een proefpagina
+                         schaaksamen.html (wordt gemaakt, twee pagina's met een nagemaakt spelkanaal). NL en EN: status, Jij,
+                         Geslagen, puntenregel, Bord groter, geluid, veldnamen (a1, witte toren), geen woorden uit de andere
+                         taal; 3 s drukken = instellingen in de goede taal, bedenktijd Meteen / 1 seconde / 3 seconden,
+                         kort tikken = Bord kleiner; de computer antwoordt; samen: zet komt aan, d4 e5 dxe5 = Geslagen: 1 punt
+                         bij allebei. Oude map (v194): 8 van 19.   python3 -I proef91.py <map>
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

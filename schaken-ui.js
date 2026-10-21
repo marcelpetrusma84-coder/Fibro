@@ -1,6 +1,10 @@
 import { stukSVG, registreerSlag, veroverdePunten } from './schaak-stukken.js?v=1'
 const SETTINGS_KEY = 'fibro_chess_settings_v1'
-const READABLE_NAMES = { P:'pawn', N:'knight', B:'bishop', R:'rook', Q:'queen', K:'king' }
+// v195: alle teksten weer via taal.js (Nederlands, en Engels uit taal-en.js), zoals de andere spellen
+const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
+const STUKNAAM = { P: () => T('pion'), N: () => T('paard'), B: () => T('loper'), R: () => T('toren'), Q: () => T('dame'), K: () => T('koning') }
+const stukMetKleur = stuk => stuk[0] === 'w' ? T('witte {stuk}', { stuk: STUKNAAM[stuk[1]]() }) : T('zwarte {stuk}', { stuk: STUKNAAM[stuk[1]]() })
+const seconden = n => n === 0 ? T('Meteen') : n === 1 ? T('{n} seconde', { n }) : T('{n} seconden', { n })
 function readSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')
@@ -10,8 +14,11 @@ function readSettings() {
 }
 // schaken-ui.js - spel voor Fibro, losgetrokken uit chat.html.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
+// v147: teksten ook in het Engels (taal.js). 21 okt 2026: nieuwe stukken, bewegende zetten, geslagen stukken met
+// punten, instellingen (lang drukken op 'Bord groter') en aanvalsroutes, van valentijnpeters (PR #2).
+// v195: die nieuwe teksten weer in het Nederlands en het Engels.
 export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
-  vriendNaam = vriendNaam || 'Opponent'
+  vriendNaam = vriendNaam || T('vriend')
   document.getElementById('spelTitelBar').textContent = '♟️ Chess'
   const inhoud = document.getElementById('spelInhoud')
 
@@ -71,6 +78,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-menu-hint { color:#d8c9b5; font-size:11px; line-height:1.45; }
       .sch-attack-toggle { display:flex; align-items:center; gap:9px; min-height:44px; font-size:13px; font-weight:650; }
       .sch-attack-toggle input { width:20px; height:20px; accent-color:#ddb477; }
+      .sch-attack-toggle[hidden] { display:none; }
       .sch-threat::before { content:""; position:absolute; z-index:0; inset:0; pointer-events:none; background:radial-gradient(ellipse at 50% 60%,#ffe18fbb 0,#ffc85c88 35%,#ffb52b35 62%,transparent 80%); box-shadow:inset 0 0 14px #ffe293aa; animation:sch-threat-pulse 1.5s ease-in-out infinite alternate; }
       .sch-threat .sch-stuk { filter:drop-shadow(0 0 5px #fff1b8) drop-shadow(0 0 10px #ffbb45) drop-shadow(0 3px 2px #000b); }
       .sch-threat-exaggerated { z-index:2; }
@@ -90,44 +98,44 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     <div class="sch-spel">
       <div id="sch-status" role="status" aria-live="polite" style="color:white;font-size:14px;font-weight:600;text-align:center;min-height:20px;"></div>
       <div class="sch-vangst" id="sch-tegenstander"></div>
-      <div class="sch-frame"><div id="sch-bord" role="group" aria-label="Chess"></div></div>
+      <div class="sch-frame"><div id="sch-bord" role="group" aria-label="${T('Schaakbord')}"></div></div>
       <div class="sch-vangst" id="sch-eigen"></div>
       <div class="sch-legenda"></div>
       <div class="sch-acties">
-        <button class="sch-zoom" type="button" aria-pressed="false" aria-haspopup="dialog" aria-expanded="false">⤢ Enlarge board</button>
-        <section class="sch-menu" id="sch-menu" role="dialog" aria-label="Chess settings" hidden>
-          <h2>Chess settings</h2>
-          <fieldset><legend>Computer thinking time</legend>
-            <label for="sch-denktijd">Maximum: <output id="sch-denktijd-waarde">7 seconds</output></label>
+        <button class="sch-zoom" type="button" aria-pressed="false" aria-haspopup="dialog" aria-expanded="false">${T('⤢ Bord groter')}</button>
+        <section class="sch-menu" id="sch-menu" role="dialog" aria-label="${T('Schaakinstellingen')}" hidden>
+          <h2>${T('Schaakinstellingen')}</h2>
+          <fieldset><legend>${T('Bedenktijd van de computer')}</legend>
+            <label for="sch-denktijd">${T('Hoogstens:')} <output id="sch-denktijd-waarde">${seconden(7)}</output></label>
             <input id="sch-denktijd" type="range" min="0" max="7" step="1" value="7" aria-describedby="sch-denktijd-hint">
-            <p class="sch-menu-hint" id="sch-denktijd-hint">0 = instant. Otherwise, the computer varies its thinking time up to the selected maximum.</p>
+            <p class="sch-menu-hint" id="sch-denktijd-hint">${T('0 = meteen. Anders denkt de computer steeds anders lang na, tot hoogstens de gekozen tijd.')}</p>
           </fieldset>
-          <fieldset><legend>Piece size</legend><div class="sch-menu-opties" data-options="pieces">
-            <button class="sch-keuze" type="button" data-value="small">Smaller</button><button class="sch-keuze" type="button" data-value="medium">Default</button><button class="sch-keuze" type="button" data-value="large">Larger</button>
+          <fieldset><legend>${T('Grootte van de stukken')}</legend><div class="sch-menu-opties" data-options="pieces">
+            <button class="sch-keuze" type="button" data-value="small">${T('Kleiner')}</button><button class="sch-keuze" type="button" data-value="medium">${T('Standaard')}</button><button class="sch-keuze" type="button" data-value="large">${T('Groter')}</button>
           </div></fieldset>
-          <label class="sch-attack-toggle"><input id="sch-aanvalsroutes" type="checkbox"> Show attack routes</label>
-          <label class="sch-attack-toggle" id="sch-exaggerate-wrap" hidden><input id="sch-exaggerate" type="checkbox"> Exaggerate</label>
-          <p class="sch-menu-hint">Highlights opposing pieces that the last moved piece can legally capture.</p>
-          <fieldset><legend>Board style</legend><div class="sch-menu-opties" data-options="board">
-            <button class="sch-keuze" type="button" data-value="classic">Classic</button><button class="sch-keuze" type="button" data-value="wood">Wood grain</button><button class="sch-keuze" type="button" data-value="marble">Marble / granite</button>
+          <label class="sch-attack-toggle"><input id="sch-aanvalsroutes" type="checkbox"> ${T('Aanvalsroutes tonen')}</label>
+          <label class="sch-attack-toggle" id="sch-exaggerate-wrap" hidden><input id="sch-exaggerate" type="checkbox"> ${T('Extra duidelijk')}</label>
+          <p class="sch-menu-hint">${T('Licht de stukken op die het laatst verzette stuk mag slaan.')}</p>
+          <fieldset><legend>${T('Soort bord')}</legend><div class="sch-menu-opties" data-options="board">
+            <button class="sch-keuze" type="button" data-value="classic">${T('Klassiek')}</button><button class="sch-keuze" type="button" data-value="wood">${T('Hout')}</button><button class="sch-keuze" type="button" data-value="marble">${T('Marmer / graniet')}</button>
           </div></fieldset>
-          <p class="sch-menu-hint">Press and hold “Enlarge board” for 3 seconds to open these settings. Tap it briefly to resize the board.</p>
+          <p class="sch-menu-hint">${T('Houd “Bord groter” 3 seconden ingedrukt voor deze instellingen. Kort tikken maakt het bord groter of kleiner.')}</p>
         </section>
       </div>
       <div id="sch-promotie" style="display:none;gap:8px;background:rgba(0,0,0,0.85);padding:10px;border-radius:10px;"></div>
-      <button id="sch-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Play again</button>
+      <button id="sch-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">${T('↻ Opnieuw spelen')}</button>
     </div>`
 
   const bordEl = document.getElementById('sch-bord')
   const statusEl = document.getElementById('sch-status')
-  const opnieuwBtn = document.getElementById('sch-opnieuw'); Bordgeluid.knop(statusEl, { language:'en' })
+  const opnieuwBtn = document.getElementById('sch-opnieuw'); Bordgeluid.knop(statusEl)
   const promotieEl = document.getElementById('sch-promotie')
 
   const spelEl = inhoud.querySelector('.sch-spel')
   const zoomBtn = inhoud.querySelector('.sch-zoom')
-  inhoud.querySelector('.sch-legenda').textContent = 'Pawn 1 · Knight 3 · Bishop 3 · Rook 5 · Queen 9'
+  inhoud.querySelector('.sch-legenda').textContent = T('Pion 1 · Paard 3 · Loper 3 · Toren 5 · Dame 9')
   function tekenVeroverd() {
-    for (const [id,kleur,naam] of [['sch-eigen',mijnKleur,'You'],['sch-tegenstander',vriendKleur,vriendNaam]]) {
+    for (const [id,kleur,naam] of [['sch-eigen',mijnKleur,T('Jij')],['sch-tegenstander',vriendKleur,vriendNaam]]) {
       const paneel = document.getElementById(id)
       paneel.replaceChildren()
       const kop = document.createElement('div')
@@ -136,11 +144,11 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       label.textContent = naam
       const score = document.createElement('span')
       const punten = veroverdePunten(veroverd[kleur])
-      score.textContent = `Captured: ${punten} ${punten === 1 ? 'point' : 'points'}`
+      score.textContent = punten === 1 ? T('Geslagen: {n} punt', { n: punten }) : T('Geslagen: {n} punten', { n: punten })
       kop.append(label,score)
       const lijst = document.createElement('div')
       lijst.className = 'sch-vangst-stukken'
-      lijst.setAttribute('aria-label', `${score.textContent} (${veroverd[kleur].map(stuk => READABLE_NAMES[stuk[1]]).join(', ')})`)
+      lijst.setAttribute('aria-label', veroverd[kleur].length ? `${score.textContent} (${veroverd[kleur].map(stuk => STUKNAAM[stuk[1]]()).join(', ')})` : score.textContent)
       lijst.innerHTML = veroverd[kleur].map(stukSVG).join('')
       if (!veroverd[kleur].length) lijst.textContent = '—'
       paneel.append(kop,lijst)
@@ -149,7 +157,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   function vergroot(aan) {
     spelEl.classList.toggle('sch-groot', aan)
     zoomBtn.setAttribute('aria-pressed', String(aan))
-    zoomBtn.textContent = aan ? '⤡ Smaller board' : '⤢ Enlarge board'
+    zoomBtn.textContent = aan ? T('⤡ Bord kleiner') : T('⤢ Bord groter')
   }
   vergroot(false)
   const menu = inhoud.querySelector('#sch-menu')
@@ -179,10 +187,10 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   const denktijdWaarde = menu.querySelector('#sch-denktijd-waarde')
   menu.querySelector('#sch-denktijd').closest('fieldset').hidden = !spelKanaal.isSolo
   denktijd.value = String(instellingen.thinking)
-  denktijdWaarde.value = instellingen.thinking === 0 ? 'Instant' : `${instellingen.thinking} seconds`
+  denktijdWaarde.value = seconden(instellingen.thinking)
   denktijd.addEventListener('input', () => {
     instellingen.thinking = Number(denktijd.value)
-    denktijdWaarde.value = instellingen.thinking === 0 ? 'Instant' : `${instellingen.thinking} seconds`
+    denktijdWaarde.value = seconden(instellingen.thinking)
     bewaarInstellingen()
     if (spelKanaal.isSolo) spelKanaal.send({ type:'broadcast', event:'bot-instellingen', payload:{ thinkingMs:instellingen.thinking * 1000 } })
   })
@@ -335,8 +343,8 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
           if (instellingen.exaggerate) vakje.classList.add('sch-threat-exaggerated')
         }
         vakje.style.background = `linear-gradient(145deg,#ffffff18,#00000018),${achtergrond}`
-        const stukNaam = staat.bord[r][k] ? `${staat.bord[r][k][0] === 'w' ? 'white' : 'black'} ${READABLE_NAMES[staat.bord[r][k][1]]}` : 'empty'
-        vakje.setAttribute('aria-label', `${String.fromCharCode(97+k)}${8-r}, ${stukNaam}${bedreigd ? `, can be captured by ${route[0] === 'w' ? 'white' : 'black'} ${READABLE_NAMES[route[1]]}` : ''}`)
+        const stukNaam = staat.bord[r][k] ? stukMetKleur(staat.bord[r][k]) : T('leeg')
+        vakje.setAttribute('aria-label', `${String.fromCharCode(97+k)}${8-r}, ${stukNaam}${bedreigd ? T(', kan geslagen worden door {stuk}', { stuk: stukMetKleur(route) }) : ''}`)
         vakje.setAttribute('aria-pressed', String(Boolean(isGeselecteerd)))
         vakje.dataset.r = r
         vakje.dataset.k = k
@@ -422,7 +430,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     promotieOpen = true
     promotieEl.style.display = 'flex'
     promotieEl.innerHTML = ['Q','R','B','N'].map(t =>
-      `<button class="sch-promo-btn ${kleur === 'w' ? 'sch-wit' : 'sch-zwart'}" data-t="${t}" aria-label="Promote to ${READABLE_NAMES[t]}" style="font-size:28px;background:#b6a18a;border:1px solid var(--accent);border-radius:8px;padding:6px 10px;cursor:pointer;">${stukSVG(kleur+t)}</button>`
+      `<button class="sch-promo-btn ${kleur === 'w' ? 'sch-wit' : 'sch-zwart'}" data-t="${t}" aria-label="${T('Promoveren tot {stuk}', { stuk: STUKNAAM[t]() })}" style="font-size:28px;background:#b6a18a;border:1px solid var(--accent);border-radius:8px;padding:6px 10px;cursor:pointer;">${stukSVG(kleur+t)}</button>`
     ).join('')
     promotieEl.querySelectorAll('.sch-promo-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -438,16 +446,16 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     if (Schaak.isSchaakmat(staat, volgendeKleur)) {
       gameOver = true
       const ikWin = volgendeKleur !== mijnKleur
-      statusEl.textContent = ikWin ? '🎉 Checkmate — you win!' : `😢 Checkmate — ${vriendNaam} wins!`
+      statusEl.textContent = ikWin ? T('🎉 Schaakmat — Jij wint!') : T('😢 Schaakmat — {naam} wint!', { naam: vriendNaam })
       opnieuwBtn.style.display = 'block'
     } else if (Schaak.isPat(staat, volgendeKleur)) {
       gameOver = true
-      statusEl.textContent = '🤝 Stalemate — draw!'
+      statusEl.textContent = T('🤝 Pat — gelijkspel!')
       opnieuwBtn.style.display = 'block'
     } else if (Schaak.staatInSchaak(staat, volgendeKleur)) {
-      statusEl.textContent = volgendeKleur === mijnKleur ? 'You are in check — your turn' : `${vriendNaam} is in check — waiting...`
+      statusEl.textContent = volgendeKleur === mijnKleur ? T('Jij staat schaak! Jouw beurt') : T('{naam} staat schaak! Wachten...', { naam: vriendNaam })
     } else {
-      statusEl.textContent = volgendeKleur === mijnKleur ? 'Your turn' : `Waiting for ${vriendNaam}...`
+      statusEl.textContent = volgendeKleur === mijnKleur ? T('Jouw beurt') : T('Wachten op {naam}...', { naam: vriendNaam })
     }
     tekenBord()
   }
@@ -509,6 +517,6 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     naBeurtControle()
   })
 
-  statusEl.textContent = mijnKleur === 'w' ? 'Your turn (White moves first)' : `Waiting for ${vriendNaam} (White moves first)...`
+  statusEl.textContent = mijnKleur === 'w' ? T('Jouw beurt (wit begint)') : T('Wachten op {naam} (wit begint)...', { naam: vriendNaam })
   tekenBord()
 }

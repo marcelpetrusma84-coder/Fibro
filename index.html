@@ -180,9 +180,12 @@ window.addEventListener('pageshow', function (e) { if (e.persisted) window.werkO
     var bio = String(lokaal.bio || '').trim() || String(p.bio || '').trim()
     zet('heroBio', bio.length > 100 ? bio.slice(0, 100) + '...' : bio)
     var mood = document.getElementById('heroMood')
-    if (mood && (p.offline_emoji || p.offline_bericht)) {
+    // "Offline" is the old default value for an empty mood, not this user's live
+    // availability. Do not present it as a status in the profile header.
+    var moodTekst = String(p.offline_bericht || '').trim()
+    if (mood && moodTekst && moodTekst.toLowerCase() !== 'offline') {
       // v171: een sticker als mood (fxsticker:...) staat hier niet, alleen de tekst
-      [/^fxsticker:/.test(p.offline_emoji || '') ? '' : (p.offline_emoji || ''), p.offline_bericht || ''].forEach(function (t) { var s = document.createElement('span'); s.textContent = t; mood.appendChild(s) })
+      [/^fxsticker:/.test(p.offline_emoji || '') ? '' : (p.offline_emoji || ''), moodTekst].forEach(function (t) { var s = document.createElement('span'); s.textContent = t; mood.appendChild(s) })
     }
     var av = document.getElementById('heroAvatar'), top = document.getElementById('topAvatar')
     var data = String(p.avatar_data || '').trim()
@@ -2512,10 +2515,15 @@ function toonHero(profiel) {
   const bioTekst = lokaleBio || String(profiel?.bio || '').trim()
   bioEl.textContent = bioTekst.length > 100 ? bioTekst.slice(0,100) + '...' : bioTekst
   const moodEl = document.getElementById('heroMood')
-  if (profiel?.offline_emoji || profiel?.offline_bericht) {
+  const moodTekst = String(profiel?.offline_bericht || '').trim()
+  // The legacy default "Offline" means no mood. The red avatar indicator is the
+  // actual offline setting, controlled by `toon_online`.
+  if (moodTekst && moodTekst.toLowerCase() !== 'offline') {
     moodEl.innerHTML = ''
     // v171: een sticker als mood (fxsticker:...) staat hier niet, alleen de tekst
-    for (const tk of [/^fxsticker:/.test(profiel.offline_emoji || '') ? '' : (profiel.offline_emoji || ''), profiel.offline_bericht || '']) { const s = document.createElement('span'); s.textContent = tk; moodEl.appendChild(s) }
+    for (const tk of [/^fxsticker:/.test(profiel.offline_emoji || '') ? '' : (profiel.offline_emoji || ''), moodTekst]) { const s = document.createElement('span'); s.textContent = tk; moodEl.appendChild(s) }
+  } else {
+    moodEl.innerHTML = ''
   }
 }
 

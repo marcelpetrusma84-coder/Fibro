@@ -1,17 +1,20 @@
-import { stukSVG, registreerSlag, veroverdePunten } from './schaak-stukken.js?v=1'
+import { stukSVG, registreerSlag, veroverdePunten, STUKPUNTEN } from './schaak-stukken.js?v=1'
 const SETTINGS_KEY = 'fibro_chess_settings_v1'
 const READABLE_NAMES = { P:'pawn', N:'knight', B:'bishop', R:'rook', Q:'queen', K:'king' }
 function readSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')
     const thinking = Number(saved.thinking ?? 7)
-    return { thinking:Number.isFinite(thinking) ? Math.min(7,Math.max(0,thinking)) : 7, pieces:['small','medium','large'].includes(saved.pieces) ? saved.pieces : 'medium', board:['classic','wood','marble'].includes(saved.board) ? saved.board : 'classic', showAttackRoutes:saved.showAttackRoutes === true, exaggerate:saved.exaggerate === true }
-  } catch { return { thinking:7, pieces:'medium', board:'classic', showAttackRoutes:false, exaggerate:false } }
+    return { ...saved, thinking:Number.isFinite(thinking) ? Math.min(7,Math.max(0,thinking)) : 7, pieces:['small','medium','large'].includes(saved.pieces) ? saved.pieces : 'medium', board:['classic','wood','marble','glass'].includes(saved.board) ? saved.board : 'classic', soundTheme:['classic','wood'].includes(saved.soundTheme) ? saved.soundTheme : 'classic', showAttackRoutes:saved.showAttackRoutes === true, exaggerate:saved.exaggerate === true, pointsPerPiece:saved.pointsPerPiece === true, noobMode:saved.noobMode === true }
+  } catch { return { thinking:7, pieces:'medium', board:'classic', soundTheme:'classic', showAttackRoutes:false, exaggerate:false, pointsPerPiece:false, noobMode:false } }
 }
 // schaken-ui.js - spel voor Fibro, losgetrokken uit chat.html.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
 export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
   vriendNaam = vriendNaam || 'Opponent'
+  // Coaching aids can reveal tactical information to one player only. Keep them
+  // for computer games, where there is no fairness concern.
+  const isVriendPartij = !spelKanaal.isSolo
   document.getElementById('spelTitelBar').textContent = '♟️ Chess'
   const inhoud = document.getElementById('spelInhoud')
 
@@ -26,6 +29,8 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   let bezig = false
   let promotieOpen = false
   let generatie = 0
+  let checkmateTimers = []
+  let pendingNoobMove = null
   let wachtrij = Promise.resolve()
   const minderBeweging = matchMedia('(prefers-reduced-motion: reduce)')
   const instellingen = readSettings()
@@ -53,18 +58,21 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-vangst-kop { display:flex; justify-content:space-between; gap:8px; font-size:12px; }
       .sch-vangst-stukken { display:flex; flex-wrap:wrap; gap:0; min-height:24px; align-items:center; }
       .sch-vangst-stukken .sch-figuur { width:22px; height:24px; }
+      .sch-vangst-stuk { display:inline-flex; align-items:center; gap:1px; min-height:26px; }
+      .sch-vangst-waarde { color:#f5d59c; font-size:10px; font-weight:750; line-height:1; text-shadow:0 1px 2px #000; }
       .sch-promo-btn .sch-figuur { width:40px; height:40px; }
       .sch-legenda { font-size:11px; color:#eee1cf; text-align:center; }
       .sch-zoom { position:relative; overflow:hidden; border:1px solid #ffffff35; background:linear-gradient(135deg,#544065,#2a2038); color:white; padding:10px 16px; border-radius:12px; min-height:44px; cursor:pointer; touch-action:manipulation; user-select:none; -webkit-touch-callout:none; }
       .sch-zoom::after { content:""; position:absolute; height:3px; left:10px; right:10px; bottom:3px; background:#f5ce86; transform:scaleX(0); transform-origin:left; transition:transform 1s linear; }
       .sch-zoom.sch-lange-druk::after { transform:scaleX(1); }
       .sch-acties { position:relative; z-index:5; }
-      .sch-menu { position:absolute; z-index:6; left:50%; bottom:calc(100% + 8px); transform:translateX(-50%); box-sizing:border-box; width:min(340px,calc(100vw - 24px)); max-height:min(68dvh,480px); overflow:auto; padding:15px; border:1px solid #e8d7bd88; border-radius:16px; background:linear-gradient(145deg,#30243a,#17121f); color:#fff8ed; box-shadow:0 16px 40px #000b; text-align:left; }
+      .sch-menu { position:absolute; z-index:6; left:50%; bottom:calc(100% + 8px); transform:translateX(-50%); box-sizing:border-box; width:min(340px,calc(100vw - 24px)); max-height:min(78dvh,620px); overflow:auto; overscroll-behavior:contain; scrollbar-color:#9b8264 #211c2b; padding:15px; border:1px solid #e8d7bd88; border-radius:16px; background:linear-gradient(145deg,#30243a,#17121f); color:#fff8ed; box-shadow:0 16px 40px #000b; text-align:left; }
       .sch-menu[hidden] { display:none; }
       .sch-menu h2 { font-size:17px; margin:0 0 12px; }
       .sch-menu label,.sch-menu legend { font-size:13px; font-weight:650; }
       .sch-menu fieldset { border:0; padding:0; margin:12px 0; }
       .sch-menu input[type="range"] { display:block; width:100%; min-height:36px; accent-color:#ddb477; }
+      .sch-menu select { box-sizing:border-box; width:100%; min-height:42px; margin-top:7px; padding:8px 10px; border:1px solid #ffffff40; border-radius:8px; background:#211c2b; color:#fff8ed; font:inherit; }
       .sch-menu-opties { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-top:7px; }
       .sch-keuze { min-height:40px; padding:6px 3px; border:1px solid #ffffff40; border-radius:8px; background:#ffffff0b; color:inherit; font:inherit; font-size:11px; cursor:pointer; }
       .sch-keuze[aria-pressed="true"] { border-color:#f2cf97; background:linear-gradient(135deg,#71533e,#45364f); box-shadow:inset 0 0 0 1px #f2cf9780; }
@@ -83,6 +91,27 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-board-marble { background:repeating-linear-gradient(132deg,#d8d4cf 0 3px,#85818c 4px 6px,#ede8dc 7px 11px,#696876 12px 14px)!important; }
       .sch-board-marble .sch-vak:nth-child(odd) { filter:contrast(1.02) brightness(1.15); }
       .sch-board-marble .sch-vak:nth-child(even) { filter:contrast(1.08) brightness(.72); }
+      .sch-board-glass { position:relative; isolation:isolate; background:linear-gradient(145deg,#e8fbff88,#73b5cc66 42%,#263f5b99)!important; }
+      .sch-board-glass .sch-vak.sch-licht { background:linear-gradient(145deg,#e3fbff,#a9e4f2 48%,#75bdd8)!important; box-shadow:inset 0 1px 4px #fff9,inset 0 -3px 8px #143f5a66; }
+      .sch-board-glass .sch-vak.sch-donker { background:linear-gradient(145deg,#759db5,#46677f 52%,#2a405d)!important; box-shadow:inset 0 1px 4px #e4faff66,inset 0 -3px 8px #101c31aa; }
+      .sch-board-glass .sch-ivoor { color:#fffdf3; --sch-line:#332315; }
+      .sch-board-glass .sch-ebben { color:#17202d; --sch-line:#f8fcff; }
+      .sch-board-glass .sch-figuur { stroke-width:2.4; }
+      .sch-board-glass .sch-stuk { filter:drop-shadow(0 1px 1px #fff9) drop-shadow(0 2px 2px #06101dcc); }
+      .sch-frame.sch-frame-glass { border:1px solid #e4faffb0; background:linear-gradient(145deg,#d8f8ff99,#6698b8bb 48%,#1f3555ee); box-shadow:0 8px 0 #182941,0 12px 0 #102034,0 22px 34px #0009,inset 0 1px 2px #fff; }
+      .sch-checkmate { position:fixed; z-index:20; inset:0; display:grid; place-items:center; pointer-events:none; background:radial-gradient(ellipse at center,#07122255,transparent 72%); opacity:1; transition:opacity .7s ease,transform .7s ease; }
+      .sch-checkmate[hidden] { display:none; }
+      .sch-checkmate-text { margin:0; padding:.14em .28em .22em; color:transparent; font-family:Impact,"Arial Black",system-ui,sans-serif; font-size:clamp(52px,15vw,150px); font-weight:1000; letter-spacing:.07em; line-height:1; text-align:center; -webkit-text-stroke:1px #f4fbff; background:linear-gradient(180deg,#fff 0%,#9da8b2 15%,#f8ffff 25%,#65717c 39%,#f2f7fb 52%,#77818b 66%,#fff 79%,#88939e 100%); background-clip:text; -webkit-background-clip:text; filter:drop-shadow(0 2px 0 #fff) drop-shadow(0 4px 0 #63707c) drop-shadow(0 7px 0 #222d37) drop-shadow(0 12px 13px #000c); text-shadow:0 1px 0 #fff,0 2px 0 #aeb8c1,0 3px 0 #59636d,0 5px 0 #252d35,0 12px 22px #000c; }
+      .sch-checkmate-fade { opacity:0; transform:scale(1.08); }
+      @media (prefers-reduced-motion:reduce) { .sch-checkmate { transition:none; } }
+      .sch-noob-dialog { position:fixed; z-index:24; inset:0; display:grid; place-items:center; padding:20px; background:#070b14b8; }
+      .sch-noob-dialog[hidden] { display:none; }
+      .sch-noob-card { width:min(360px,100%); padding:20px; border:1px solid #f2cf97a0; border-radius:16px; background:linear-gradient(145deg,#30243a,#17121f); color:#fff8ed; box-shadow:0 18px 48px #000c; }
+      .sch-noob-card h2 { margin:0 0 8px; font-size:18px; }
+      .sch-noob-card p { margin:0 0 16px; color:#e5d8c8; font-size:13px; line-height:1.5; }
+      .sch-noob-buttons { display:flex; justify-content:flex-end; gap:8px; }
+      .sch-noob-buttons button { min-height:42px; padding:8px 12px; border:1px solid #ffffff55; border-radius:9px; background:#ffffff10; color:inherit; font:inherit; cursor:pointer; }
+      .sch-noob-buttons button:last-child { background:linear-gradient(135deg,#f2c987,#d79d63); color:#211729; font-weight:750; }
       .sch-pieces-small .sch-stuk { width:72%; }
       .sch-pieces-medium .sch-stuk { width:88%; }
       .sch-pieces-large .sch-stuk { width:100%; }
@@ -105,16 +134,26 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
           <fieldset><legend>Piece size</legend><div class="sch-menu-opties" data-options="pieces">
             <button class="sch-keuze" type="button" data-value="small">Smaller</button><button class="sch-keuze" type="button" data-value="medium">Default</button><button class="sch-keuze" type="button" data-value="large">Larger</button>
           </div></fieldset>
+          <label for="sch-sound-theme">Sound theme</label>
+          <select id="sch-sound-theme"><option value="classic">Classic (default)</option><option value="wood">Wooden board</option></select>
+          <p class="sch-menu-hint">Choose how each piece sounds when it lands on the board.</p>
           <label class="sch-attack-toggle"><input id="sch-aanvalsroutes" type="checkbox"> Show attack routes</label>
           <label class="sch-attack-toggle" id="sch-exaggerate-wrap" hidden><input id="sch-exaggerate" type="checkbox"> Exaggerate</label>
           <p class="sch-menu-hint">Highlights opposing pieces that the last moved piece can legally capture.</p>
+          <label class="sch-attack-toggle"><input id="sch-points-per-piece" type="checkbox"> Points per piece</label>
+          <label class="sch-attack-toggle"><input id="sch-noob-mode" type="checkbox"> Noob (kids) mode</label>
+          <p class="sch-menu-hint">Warns before your move leaves one of your pieces open to capture. Illegal moves that expose your king stay blocked.</p>
           <fieldset><legend>Board style</legend><div class="sch-menu-opties" data-options="board">
-            <button class="sch-keuze" type="button" data-value="classic">Classic</button><button class="sch-keuze" type="button" data-value="wood">Wood grain</button><button class="sch-keuze" type="button" data-value="marble">Marble / granite</button>
+            <button class="sch-keuze" type="button" data-value="classic">Classic</button><button class="sch-keuze" type="button" data-value="wood">Wood grain</button><button class="sch-keuze" type="button" data-value="marble">Marble / granite</button><button class="sch-keuze" type="button" data-value="glass">Glass plate</button>
           </div></fieldset>
           <p class="sch-menu-hint">Press and hold “Enlarge board” for 3 seconds to open these settings. Tap it briefly to resize the board.</p>
         </section>
       </div>
       <div id="sch-promotie" style="display:none;gap:8px;background:rgba(0,0,0,0.85);padding:10px;border-radius:10px;"></div>
+      <div class="sch-checkmate" id="sch-checkmate" role="status" aria-live="assertive" hidden><h2 class="sch-checkmate-text">CHECKMATE</h2></div>
+      <div class="sch-noob-dialog" id="sch-noob-dialog" role="alertdialog" aria-modal="true" aria-labelledby="sch-noob-title" aria-describedby="sch-noob-message" hidden>
+        <div class="sch-noob-card"><h2 id="sch-noob-title">Noob mode tip</h2><p id="sch-noob-message"></p><div class="sch-noob-buttons"><button type="button" id="sch-noob-cancel">Cancel move</button><button type="button" id="sch-noob-continue">Play anyway</button></div></div>
+      </div>
       <button id="sch-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">↻ Play again</button>
     </div>`
 
@@ -122,6 +161,11 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   const statusEl = document.getElementById('sch-status')
   const opnieuwBtn = document.getElementById('sch-opnieuw'); Bordgeluid.knop(statusEl, { language:'en' })
   const promotieEl = document.getElementById('sch-promotie')
+  const checkmateEl = inhoud.querySelector('#sch-checkmate')
+  const noobDialog = inhoud.querySelector('#sch-noob-dialog')
+  const noobMessage = inhoud.querySelector('#sch-noob-message')
+  const noobCancel = inhoud.querySelector('#sch-noob-cancel')
+  const noobContinue = inhoud.querySelector('#sch-noob-continue')
 
   const spelEl = inhoud.querySelector('.sch-spel')
   const zoomBtn = inhoud.querySelector('.sch-zoom')
@@ -140,8 +184,19 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       kop.append(label,score)
       const lijst = document.createElement('div')
       lijst.className = 'sch-vangst-stukken'
-      lijst.setAttribute('aria-label', `${score.textContent} (${veroverd[kleur].map(stuk => READABLE_NAMES[stuk[1]]).join(', ')})`)
-      lijst.innerHTML = veroverd[kleur].map(stukSVG).join('')
+      lijst.setAttribute('aria-label', `${score.textContent} (${veroverd[kleur].map(stuk => `${READABLE_NAMES[stuk[1]]}${instellingen.pointsPerPiece ? `, ${STUKPUNTEN[stuk[1]]} points` : ''}`).join(', ')})`)
+      for (const stuk of veroverd[kleur]) {
+        const item = document.createElement('span')
+        item.className = 'sch-vangst-stuk'
+        item.innerHTML = stukSVG(stuk)
+        if (instellingen.pointsPerPiece) {
+          const waarde = document.createElement('span')
+          waarde.className = 'sch-vangst-waarde'
+          waarde.textContent = String(STUKPUNTEN[stuk[1]] ?? 0)
+          item.append(waarde)
+        }
+        lijst.append(item)
+      }
       if (!veroverd[kleur].length) lijst.textContent = '—'
       paneel.append(kop,lijst)
     }
@@ -153,6 +208,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   }
   vergroot(false)
   const menu = inhoud.querySelector('#sch-menu')
+  const soundTheme = menu.querySelector('#sch-sound-theme')
   const acties = inhoud.querySelector('.sch-acties')
   let voortgangTimer = null, menuTimer = null, menuDruk = false, onderdrukKlik = false
   function bewaarInstellingen() {
@@ -163,11 +219,28 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     bordEl.classList.toggle('sch-board-wood', instellingen.board === 'wood')
     bordEl.classList.toggle('sch-board-marble', instellingen.board === 'marble')
     bordEl.classList.toggle('sch-board-classic', instellingen.board === 'classic')
+    bordEl.classList.toggle('sch-board-glass', instellingen.board === 'glass')
+    spelEl.querySelector('.sch-frame').classList.toggle('sch-frame-glass', instellingen.board === 'glass')
   }
   function toonMenu(aan) {
     menu.hidden = !aan
     zoomBtn.setAttribute('aria-expanded', String(aan))
     if (aan) menu.querySelector('input').focus()
+  }
+  function toonCheckmateOverlay() {
+    checkmateTimers.forEach(clearTimeout)
+    checkmateEl.hidden = false
+    checkmateEl.classList.remove('sch-checkmate-fade')
+    checkmateTimers = [
+      setTimeout(() => checkmateEl.classList.add('sch-checkmate-fade'), 2300),
+      setTimeout(() => { checkmateEl.hidden = true; checkmateEl.classList.remove('sch-checkmate-fade') }, 3000),
+    ]
+  }
+  function wisCheckmateOverlay() {
+    checkmateTimers.forEach(clearTimeout)
+    checkmateTimers = []
+    checkmateEl.hidden = true
+    checkmateEl.classList.remove('sch-checkmate-fade')
   }
   function kiesMenuOptie(groep, waarde) {
     instellingen[groep] = waarde
@@ -188,15 +261,27 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   })
   menu.querySelectorAll('.sch-keuze').forEach(button => button.addEventListener('click', () => kiesMenuOptie(button.closest('[data-options]').dataset.options, button.dataset.value)))
   for (const group of ['pieces','board']) menu.querySelectorAll(`[data-options="${group}"] .sch-keuze`).forEach(button => button.setAttribute('aria-pressed', String(button.dataset.value === instellingen[group])))
+  soundTheme.value = instellingen.soundTheme
+  soundTheme.addEventListener('change', () => {
+    instellingen.soundTheme = soundTheme.value
+    bewaarInstellingen()
+    Bordgeluid.previewSchaakGeluid(instellingen.soundTheme)
+  })
   const aanvalToggle = menu.querySelector('#sch-aanvalsroutes')
   const exaggerateToggle = menu.querySelector('#sch-exaggerate')
   const exaggerateWrap = menu.querySelector('#sch-exaggerate-wrap')
   aanvalToggle.checked = instellingen.showAttackRoutes
-  exaggerateWrap.hidden = !instellingen.showAttackRoutes
-  exaggerateToggle.checked = instellingen.exaggerate
+  exaggerateWrap.hidden = !instellingen.showAttackRoutes && !isVriendPartij
+  exaggerateToggle.checked = !isVriendPartij && instellingen.exaggerate
+  exaggerateToggle.disabled = isVriendPartij
+  if (isVriendPartij) {
+    exaggerateWrap.hidden = false
+    exaggerateWrap.title = 'Unavailable when playing a friend.'
+    exaggerateWrap.append(' (computer games only)')
+  }
   aanvalToggle.addEventListener('change', () => {
     instellingen.showAttackRoutes = aanvalToggle.checked
-    exaggerateWrap.hidden = !instellingen.showAttackRoutes
+    exaggerateWrap.hidden = !instellingen.showAttackRoutes && !isVriendPartij
     bewaarInstellingen()
     tekenBord()
   })
@@ -204,6 +289,24 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     instellingen.exaggerate = exaggerateToggle.checked
     bewaarInstellingen()
     tekenBord()
+  })
+  const puntenPerStukToggle = menu.querySelector('#sch-points-per-piece')
+  puntenPerStukToggle.checked = instellingen.pointsPerPiece
+  puntenPerStukToggle.addEventListener('change', () => {
+    instellingen.pointsPerPiece = puntenPerStukToggle.checked
+    bewaarInstellingen()
+    tekenVeroverd()
+  })
+  const noobToggle = menu.querySelector('#sch-noob-mode')
+  noobToggle.checked = !isVriendPartij && instellingen.noobMode
+  noobToggle.disabled = isVriendPartij
+  if (isVriendPartij) {
+    const noobWrap = noobToggle.closest('label')
+    if (noobWrap) { noobWrap.title = 'Unavailable when playing a friend.'; noobWrap.append(' (computer games only)') }
+  }
+  noobToggle.addEventListener('change', () => {
+    instellingen.noobMode = noobToggle.checked
+    bewaarInstellingen()
   })
   if (spelKanaal.isSolo) spelKanaal.send({ type:'broadcast', event:'bot-instellingen', payload:{ thinkingMs:instellingen.thinking * 1000 } })
   function openMenuLater() {
@@ -328,11 +431,11 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         if (isGeselecteerd) achtergrond = '#7ec8e3'
 
         vakje.type = 'button'
-        vakje.className = 'sch-vak'
+        vakje.className = `sch-vak ${isLicht ? 'sch-licht' : 'sch-donker'}`
         const bedreigd = bedreigdeVelden.has(`${r},${k}`)
         if (bedreigd) {
           vakje.classList.add('sch-threat')
-          if (instellingen.exaggerate) vakje.classList.add('sch-threat-exaggerated')
+          if (!isVriendPartij && instellingen.exaggerate) vakje.classList.add('sch-threat-exaggerated')
         }
         vakje.style.background = `linear-gradient(145deg,#ffffff18,#00000018),${achtergrond}`
         const stukNaam = staat.bord[r][k] ? `${staat.bord[r][k][0] === 'w' ? 'white' : 'black'} ${READABLE_NAMES[staat.bord[r][k][1]]}` : 'empty'
@@ -372,7 +475,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   })
 
   function vakjeKlik(r, k) {
-    if (bezig || promotieOpen || gameOver || staat.aanZet !== mijnKleur) return
+    if (bezig || promotieOpen || !noobDialog.hidden || gameOver || staat.aanZet !== mijnKleur) return
 
     // Als er al een stuk geselecteerd is en dit is een geldige zet
     if (geselecteerd) {
@@ -380,6 +483,10 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       if (zet) {
         uitvoerenZet(zet)
         return
+      }
+      const doel = staat.bord[r][k]
+      if (!isVriendPartij && instellingen.noobMode && (!doel || doel[0] !== mijnKleur)) {
+        statusEl.textContent = 'Noob mode: only legal moves are allowed, so your king can never be left in check.'
       }
     }
 
@@ -395,7 +502,46 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     tekenBord()
   }
 
-  async function uitvoerenZet(zet, promotieStuk) {
+  function bedreigdeEigenStukken(spelStaat, kleur) {
+    const bedreigd = new Map()
+    for (const reactie of Schaak.alleLegaleZetten(spelStaat, kleur === 'w' ? 'z' : 'w')) {
+      const [r,k] = reactie.type === 'enpassant' ? [reactie.van[0],reactie.naar[1]] : reactie.naar
+      const slachtoffer = spelStaat.bord[r][k]
+      if (slachtoffer && slachtoffer[0] === kleur && slachtoffer[1] !== 'K') {
+        bedreigd.set(`${r},${k}`, slachtoffer)
+      }
+    }
+    return bedreigd
+  }
+
+  function nieuweBedreigingen(zet, promotieStuk) {
+    const voor = bedreigdeEigenStukken(staat, mijnKleur)
+    const simulatie = { ...staat, bord:staat.bord.map(rij => rij.slice()), rokade:{ ...staat.rokade } }
+    Schaak.voerZetUit(simulatie, zet, promotieStuk || 'Q')
+    if (Schaak.isSchaakmat(simulatie, simulatie.aanZet)) return []
+    const na = bedreigdeEigenStukken(simulatie, mijnKleur)
+    return [...na].filter(([veld,stuk]) => voor.get(veld) !== stuk).map(([veld,stuk]) => {
+      const [r,k] = veld.split(',').map(Number)
+      return `${READABLE_NAMES[stuk[1]]} on ${String.fromCharCode(97+k)}${8-r}`
+    })
+  }
+
+  noobCancel.addEventListener('click', () => {
+    pendingNoobMove = null
+    noobDialog.hidden = true
+    geselecteerd = null
+    mogelijkeZetten = []
+    statusEl.textContent = 'Move cancelled. Choose a safer move.'
+    tekenBord()
+  })
+  noobContinue.addEventListener('click', () => {
+    const pending = pendingNoobMove
+    pendingNoobMove = null
+    noobDialog.hidden = true
+    if (pending) uitvoerenZet(pending.zet, pending.promotieStuk, true)
+  })
+
+  async function uitvoerenZet(zet, promotieStuk, noobConfirmed = false) {
     const stuk = staat.bord[zet.van[0]][zet.van[1]]
     const isPromotie = Schaak.typeVan(stuk) === 'P' && (zet.naar[0] === 0 || zet.naar[0] === 7)
 
@@ -403,6 +549,17 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       // Toon promotie-keuze voordat de zet wordt afgerond
       toonPromotieKeuze(zet)
       return
+    }
+
+    if (!isVriendPartij && instellingen.noobMode && !noobConfirmed) {
+      const bedreigingen = nieuweBedreigingen(zet, promotieStuk)
+      if (bedreigingen.length) {
+        pendingNoobMove = { zet, promotieStuk }
+        noobMessage.textContent = `After this move, your ${bedreigingen.slice(0,3).join(', ')}${bedreigingen.length > 3 ? ` and ${bedreigingen.length - 3} more piece(s)` : ''} could be captured. Play this move anyway?`
+        noobDialog.hidden = false
+        noobCancel.focus()
+        return
+      }
     }
 
     if (!await animeerZet(zet)) return
@@ -434,11 +591,11 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   }
 
   function naBeurtControle() {
-    const volgendeKleur = staat.aanZet; Bordgeluid.schaak(Schaak, staat, laatsteZet, mijnKleur)
+    const volgendeKleur = staat.aanZet; Bordgeluid.schaak(Schaak, staat, laatsteZet, mijnKleur, instellingen.soundTheme)
     if (Schaak.isSchaakmat(staat, volgendeKleur)) {
       gameOver = true
-      const ikWin = volgendeKleur !== mijnKleur
-      statusEl.textContent = ikWin ? '🎉 Checkmate — you win!' : `😢 Checkmate — ${vriendNaam} wins!`
+      statusEl.textContent = ''
+      toonCheckmateOverlay()
       opnieuwBtn.style.display = 'block'
     } else if (Schaak.isPat(staat, volgendeKleur)) {
       gameOver = true
@@ -478,6 +635,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
 
   spelKanaal.on('broadcast', { event: 'opnieuw' }, () => {
     generatie++
+    wisCheckmateOverlay()
     bezig = false
     promotieOpen = false
     promotieEl.style.display = 'none'
@@ -494,6 +652,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
 
   opnieuwBtn.addEventListener('click', () => {
     generatie++
+    wisCheckmateOverlay()
     bezig = false
     promotieOpen = false
     promotieEl.style.display = 'none'
@@ -511,4 +670,5 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
 
   statusEl.textContent = mijnKleur === 'w' ? 'Your turn (White moves first)' : `Waiting for ${vriendNaam} (White moves first)...`
   tekenBord()
+  if (new URLSearchParams(location.search).has('settings')) toonMenu(true)
 }

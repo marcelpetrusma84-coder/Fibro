@@ -14,6 +14,7 @@
 // v192: Neon Raiders (neon-raiders-ui.js). v193: het hele spel (7 levels). v194: samen spelen.
 // v195: het vernieuwde schaken (schaken-ui.js, van valentijnpeters) weer in twee talen.
 // v197: schaken met webcam, een vriend uitnodigen vanuit spelen tegen de computer, nieuwe instellingen (PR #3 van valentijnpeters).
+// v198: de knop voor geluid dat de browser tegenhoudt (bellen.js).
 window.FIBRO_EN = {
 
 // ---- Overal ----
@@ -1468,4 +1469,6 @@ window.FIBRO_EN = {
   "Uitnodigen ›": "Invite ›",
   "Uitnodiging voor schaken versturen…": "Sending chess invitation…",
   "De uitnodiging kon niet verstuurd worden. Probeer het opnieuw.": "The invitation could not be sent. Please try again.",
+// ---- Bellen v198: tegengehouden geluid ----
+  "🔊 Tik hier voor geluid": "🔊 Tap here for sound",
 }

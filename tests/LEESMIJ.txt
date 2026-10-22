@@ -339,6 +339,18 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  chess-layout.css?v=1; taal-en.js?v=26 en taal.js?v=26 (alle 12 pagina's). proef91 aangepast (twee
                                  knoppen in plaats van 'Bord groter'), proef92 (Schaken v3, Fibro 197+), proef43 (v197, v2 weg,
                                  'Tegen een vriend'), proef93 nieuw. FIBRO_VERSIE 197, 22 okt (testscript_schaakpr3.py)
+                         webcamgeluid = v198: melding van Tijn over v197. (1) bellen.js schakelVideo: de uitkomst is wat de camera
+                                 echt doet (heeftLokaleVideo); een mislukte stap richting de vriend (replaceTrack/offer/signaal)
+                                 gaf 'mislukt' terwijl de camera aan stond (scherm 'uit', lampje aan). chat.html: spelEigenVideo =
+                                 altijd heeftLokaleVideo(); event 'fibro-eigen-video-gestopt' als de camera vanzelf stopt.
+                                 bellen.html togCam volgt ook heeftLokaleVideo(). schaken-ui.js: uitzetten zegt niet meer 'Je
+                                 camera gaat aan…', daarna weer de beurt (spelStatusTekst). (2) bellen.js speelAf: geluid/beeld van
+                                 de ander dat play() tegenhoudt (NotAllowedError) gaf stilte zonder melding; nu een knop
+                                 #fibroGeluidKnop '🔊 Tik hier voor geluid' onderaan (elke pagina met bellen.js), een tik speelt het
+                                 af (speelGeblokkeerdAf), weg bij einde gesprek. BELLEN_VERSIE 107. ?v=198: bellen.js (chat,
+                                 bellen.html, bel-luisteraar.js), bel-luisteraar.js (index, vrienden, profiel), schaken-ui.js (chat
+                                 2x, solo.js), solo.js (spel.html); spelversies.js?v=3 (Schaken v4); taal-en.js?v=27 en taal.js?v=27
+                                 (alle 12 pagina's). proef94 nieuw, proef43 (v198, v4). FIBRO_VERSIE 198 (testscript_webcamgeluid.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -795,6 +807,11 @@ tools/proef93.py         PR #3 van valentijnpeters (v197), NL en EN. A: twee ECH
                          en beginnersstand uit tegen een vriend, punten per stuk, snelmat = SCHAAKMAT + wie won, geen woorden
                          uit de andere taal. D: een onEind, alle ?v= gelijk, CACHE_VERSION ongewijzigd. Oude map (v196):
                          10 van 40.   python3 -I proef93.py <map> [nl|en|alles]
+tools/proef94.py         v198 (melding van Tijn), twee echte chat.html's zoals proef93: A. createOffer faalt bij Marcel: camera
+                         aan en het scherm zegt aan (videomodus, 'Webcam uitzetten'), weer uit = echt uit en de beurt in de
+                         status; B. play() geeft NotAllowedError zonder tik: knop 'Tik hier voor geluid', echte tik = geluid,
+                         knop weg; C. zonder blokkade geen knop, spel dicht geen knop. NL en EN. Oude map (v197): 4 van 7.
+                         python3 -I proef94.py <map> [nl|en|alles]
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

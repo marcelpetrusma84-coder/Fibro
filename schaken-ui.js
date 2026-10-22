@@ -18,6 +18,7 @@ function readSettings() {
 // punten, instellingen (lang drukken op 'Bord groter') en aanvalsroutes, van valentijnpeters (PR #2).
 // v195: die nieuwe teksten weer in het Nederlands en het Engels.
 // v197: webcam tegen een vriend, beginnersstand, punten per stuk, glazen bord, houten geluid, SCHAAKMAT (PR #3 van valentijnpeters), in twee talen.
+// v198: webcamknop en status volgen de echte camera (melding van Tijn); na uitzetten weer de beurt in de status.
 export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
   vriendNaam = vriendNaam || T('vriend')
   // Hulpjes die tactiek verraden (Extra duidelijk, beginnersstand) alleen tegen de computer;
@@ -253,21 +254,22 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     window.addEventListener('fibro-chess-video-progress', toonVideoVoortgang)
     videoBtn.addEventListener('click', async event => {
       event.stopPropagation()
+      // v198: uitzetten zegt niet meer 'Je camera gaat aan…', en na uitzetten staat de beurt weer in de status;
+      // de knop volgt wat de camera echt doet (antwoord.eigen), ook als er iets misging
+      const wasAan = videoBtn.getAttribute('aria-pressed') === 'true'
       videoBtn.classList.add('is-connecting')
-      videoBtn.textContent = T('📹 Verbinden…')
-      statusEl.textContent = T('Je camera gaat aan…')
+      if (!wasAan) { videoBtn.textContent = T('📹 Verbinden…'); statusEl.textContent = T('Je camera gaat aan…') }
       videoBtn.disabled = true
       const antwoord = await window.FibroChessVideo?.()
       videoBtn.disabled = false
+      pasVideoKnopAan({ detail:{ eigen:Boolean(antwoord?.eigen) } })
       if (!antwoord?.ok) {
-        videoBtn.classList.remove('is-connecting')
-        videoBtn.textContent = T('📹 Webcam')
         statusEl.textContent = antwoord?.reason === 'connecting'
           ? T('Nog bezig met verbinden met je vriend. Houd het spel open en probeer het zo nog eens.')
           : T('Je camera kon niet aan. Kijk of Fibro je camera mag gebruiken en probeer het opnieuw.')
         return
       }
-      pasVideoKnopAan({ detail:antwoord })
+      if (!antwoord.eigen) statusEl.textContent = spelStatusTekst()
     })
   }
     inhoud.querySelector('.sch-legenda').textContent = T('Pion 1 · Paard 3 · Loper 3 · Toren 5 · Dame 9')
@@ -698,6 +700,15 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         uitvoerenZet(zet, btn.dataset.t)
       })
     })
+  }
+
+  // v198: de status van het spel zelf (zonder geluid), om terug te zetten na een cameramelding
+  function spelStatusTekst() {
+    const k = staat.aanZet
+    if (Schaak.isSchaakmat(staat, k)) return k !== mijnKleur ? T('🎉 Schaakmat — Jij wint!') : T('😢 Schaakmat — {naam} wint!', { naam: vriendNaam })
+    if (Schaak.isPat(staat, k)) return T('🤝 Pat — gelijkspel!')
+    if (Schaak.staatInSchaak(staat, k)) return k === mijnKleur ? T('Jij staat schaak! Jouw beurt') : T('{naam} staat schaak! Wachten...', { naam: vriendNaam })
+    return k === mijnKleur ? T('Jouw beurt') : T('Wachten op {naam}...', { naam: vriendNaam })
   }
 
   function naBeurtControle() {

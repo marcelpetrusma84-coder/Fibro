@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=26"></script>
+<script src="taal.js?v=27"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>/* v130: zoomen mag weer; iPhone zoomt bij invoervakken kleiner dan 16px vanzelf in */@supports (-webkit-touch-callout: none){input,textarea,select{font-size:16px !important}}</style>
@@ -2107,7 +2107,7 @@ async function renderGastenboek(c, uid) {
 // v183: het versienummer en de datum van deze versie, onderaan in het menu. Zo zie je op elk toestel welke versie
 // er echt draait (een telefoon kan een oude pagina nog even vasthouden). Elk maak-script zet het nummer een hoger:
 // tests/gen/bouw.py maakt geen script als het hier niet omhoog gaat.
-const FIBRO_VERSIE = 197
+const FIBRO_VERSIE = 198
 const FIBRO_DATUM = '2026-10-22'
 function versieTekst() {
   let d = FIBRO_DATUM
@@ -2638,7 +2638,7 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <script src="swipe.js?v=95"></script>
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=197"; startBelLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=198"; startBelLuisteraar()</script>
 <script type="module">import { beschermOpslag } from "./opslag.js?v=2"; beschermOpslag()</script>
 <script type="module" src="geluidregelaar.js?v=180"></script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>

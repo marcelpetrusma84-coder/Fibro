@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=26"></script>
+<script src="taal.js?v=27"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Chat</title>
@@ -352,7 +352,7 @@ window.veiligeUrl = function(v){
   import { haalVriendFotos, zetAvatar, geldigeFoto } from './vriendfotos.js?v=2'
   import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel } from './crypto.js?v=182'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
-  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera, schakelVideo, isVideoActiefLokaal } from './bellen.js?v=197'
+  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera, schakelVideo, heeftLokaleVideo } from './bellen.js?v=198'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
   import { maakStickerkeuze } from './stickerkeuze.js?v=190'
   import { isCode as isEigenCode, zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel, fxCode, leesFx, stickerPakket, bewaarVriendSticker, zoekWeg } from './eigenstickers.js?v=162'
@@ -617,7 +617,7 @@ window.veiligeUrl = function(v){
     initBellen(huidigeUser.id, {
       onVerbonden: () => {
         if (spelActief !== 'schaken') return
-        zetSpelVideoStatus({ eigen: isVideoActiefLokaal() })
+        zetSpelVideoStatus()
         activeerAangevraagdeSpelCamera()
       },
       onVideoStatus: (actief) => { if (spelActief === 'schaken') zetSpelVideoStatus({ ander: actief }) },
@@ -2106,7 +2106,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=147',
     pong: './pong-ui.js?v=147',
     vieroprij: './vieroprij-ui.js?v=147',
-    schaken: './schaken-ui.js?v=197',
+    schaken: './schaken-ui.js?v=198',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=148',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -2436,7 +2436,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await import('./schaken-ui.js?v=197')
+    const m = await import('./schaken-ui.js?v=198')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend') })
     spelCameraLayout?.destroy()
     spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })
@@ -2733,7 +2733,9 @@ async function startBlockIt() {
   }
 
   function zetSpelVideoStatus({ eigen, ander, gezien } = {}) {
-    if (typeof eigen === 'boolean') spelEigenVideo = eigen
+    // v198: 'mijn camera staat aan' is altijd wat de camera echt doet (bellen.js heeftLokaleVideo), niet wat een
+    // stap ervoor dacht: een mislukte stap richting de vriend liet hier 'uit' staan terwijl de camera aan was (Tijn)
+    spelEigenVideo = heeftLokaleVideo()
     if (typeof ander === 'boolean') spelAnderVideo = ander
     if (typeof gezien === 'boolean') spelMijnVideoGezien = gezien
     const overlay = document.getElementById('spelOverlay')
@@ -2779,27 +2781,26 @@ async function startBlockIt() {
     zetSpelVideoVoortgang(T('Toestemming voor de camera vragen…'))
     const ok = await schakelVideo(true)
     spelVideoBezig = false
-    if (ok) {
-      spelVideoAanvragen = false
-      zetSpelVideoStatus({ eigen:true })
-    }
+    if (ok) spelVideoAanvragen = false
+    zetSpelVideoStatus()
     return ok
   }
 
   // Alleen voor de webcamknop van het schaakbord. Wie tikt voordat het gesprek van het spel
   // verbonden is: de camera gaat meteen aan (eigen beeld), de vriend ziet hem zodra onVerbonden komt.
+  // v198: stopt de camera vanzelf (andere app, toestemming weg), dan klopt de knop en het vakje meteen weer
+  window.addEventListener('fibro-eigen-video-gestopt', () => { if (spelActief === 'schaken') zetSpelVideoStatus() })
   window.FibroChessVideo = async function () {
     if (spelActief !== 'schaken') return { ok:false, reason:'connecting' }
-    const wasAan = isVideoActiefLokaal()
-    if (wasAan) {
+    if (heeftLokaleVideo()) {
       const ok = await schakelVideo(false)
-      if (ok) zetSpelVideoStatus({ eigen:false })
-      return { ok, eigen:false }
+      zetSpelVideoStatus()
+      return { ok, eigen:heeftLokaleVideo() }
     }
     spelVideoAanvragen = true
     zetSpelVideoVoortgang(T('Je camera openen…'))
     const lokaalOk = await activeerAangevraagdeSpelCamera()
-    if (!lokaalOk) return { ok:false, reason:'camera' }
+    if (!lokaalOk) return { ok:false, reason:'camera', eigen:heeftLokaleVideo() }
     // De lokale preview staat nu al aan. De verbinding mag rustig op de
     // achtergrond volgen en bepaalt alleen wanneer de groene rand verschijnt.
     if (!spelBelActief) startSpelBel().catch(()=>{})

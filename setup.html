@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+  <meta name="theme-color" content="#1a0a2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Set up Fibro on this device</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="setup.css?v=1">
+  <script type="module" src="setup.js?v=1"></script>
+</head>
+<body>
+  <main>
+    <header><a class="brand" href="index.html"><img src="icon-192.png" width="48" height="48" alt=""><span>Fibro</span></a><a class="skip" href="index.html">Go to Home ↗</a></header>
+    <section class="intro">
+      <p class="eyebrow" id="setup-eyebrow">YOUR DEVICE · YOUR FIBRO</p>
+      <h1>Keep Fibro<br>close by.</h1>
+      <p>Find your Home, guestbook and key recovery again with a couple of simple shortcuts.</p>
+    </section>
+    <div class="cards">
+      <section class="card install-card" aria-labelledby="install-title">
+        <span class="step">01 · APP ICON</span>
+        <div class="app-preview"><img src="icon-192.png" width="72" height="72" alt="Fibro app icon"><span>Fibro</span></div>
+        <h2 id="install-title">A place on your home screen.</h2>
+        <p>Install Fibro to open it from its own icon on your phone or computer.</p>
+        <button class="primary" id="install-button" type="button">Show install steps</button>
+        <p class="hint" id="install-hint">Your browser will ask you to confirm installation.</p>
+      </section>
+      <section class="card folder-card" aria-labelledby="folder-title">
+        <span class="step">02 · COMPUTER FOLDER</span>
+        <div class="folder-preview" aria-hidden="true"><img src="icon-192.png" width="30" height="30" alt=""><span>Fibro</span><span class="folder-links">Home ↗<br>Key recovery ↗</span></div>
+        <h2 id="folder-title">Your two useful links, together.</h2>
+        <p>Save a Fibro folder with links to Home and key recovery, plus the Fibro icon. Choose Desktop to keep it within reach.</p>
+        <button class="primary" id="folder-button" type="button" hidden>Choose where to save the folder</button>
+        <button class="secondary" id="download-button" type="button">Download shortcut folder (.zip)</button>
+        <p class="hint">Extract the ZIP first. On Windows use the .url links; on Mac use .webloc. Fibro.html works in either browser.</p>
+      </section>
+    </div>
+    <p class="status" id="setup-status" role="status" aria-live="polite" hidden></p>
+    <section class="links" aria-label="Your Fibro pages">
+      <a href="index.html"><span class="link-icon" aria-hidden="true">⌂</span><span><strong>Home</strong><small>Your profile and guestbook</small></span><span aria-hidden="true">↗</span></a>
+      <a href="login.html#herstellen"><span class="link-icon" aria-hidden="true">♧</span><span><strong>Key recovery</strong><small>Restore your key on this device</small></span><span aria-hidden="true">↗</span></a>
+    </section>
+    <section class="instructions" id="install-steps" aria-labelledby="steps-title" tabindex="-1">
+      <h2 id="steps-title">A little help for your device</h2>
+      <details data-platform="ios"><summary>iPhone or iPad</summary><ol><li>Open Fibro in Safari.</li><li>Open the Share menu. If needed, open the browser's More menu first.</li><li>Choose <strong>Add to Home Screen</strong>, keep <strong>Open as Web App</strong> enabled if shown, and tap <strong>Add</strong>.</li></ol><p>On a new app installation you may need to sign in and restore your key with Face ID or your recovery code.</p></details>
+      <details data-platform="android"><summary>Android</summary><ol><li>Open Fibro in Chrome or your usual browser.</li><li>Open the browser menu and choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li><li>Confirm and open the new Fibro icon.</li></ol></details>
+      <details data-platform="desktop"><summary>Windows, Mac or Linux</summary><ol><li>In Chrome or Edge, use the browser's install icon or its app installation menu.</li><li>On Safari for Mac, choose <strong>File → Add to Dock</strong> when available.</li><li>You can also use the shortcut folder above without installing the app.</li></ol></details>
+      <p class="hint">Where supported, hold or right-click the installed Fibro icon to find Home and Key recovery. Both links are also available from Fibro's Home menu. To make a folder on your phone's home screen, group the icons yourself using your phone's controls.</p>
+    </section>
+    <footer><p>The folder contains public links and icons only. Your private key, password and recovery code stay out of it.</p><p>Key recovery restores your existing key. These shortcuts do not create or replace encryption keys.</p><a class="continue" href="index.html">Continue to Home <span aria-hidden="true">→</span></a></footer>
+  </main>
+</body>
+</html>

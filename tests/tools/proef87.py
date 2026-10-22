@@ -5,6 +5,7 @@
 #  2. tik op de vriend: bovenaan zijn naam in de gewone letter (14 px, niet schuin) en '● actief' eronder
 #  3. tik op '← terug': weer 'Chat' als titel, geen tweede regel
 #  4. chat.html?vriend=<id> (rechtstreeks een gesprek, zoals na een pushmelding): naam + '● actief'; terug: 'Chat'
+# v199: '● actief' is weg (een groen stipje bij de foto als de vriend online is, zie proef95); 2 en 4 kijken daarnaar.
 # Geen paginafouten. Oude map (v190) als controle: bijna alles MIS.
 # python3 -I proef87.py <map>
 import sys, os, time, json, socket, subprocess, tempfile
@@ -70,7 +71,7 @@ try:
             # 2. tik op de vriend
             p.locator('.vriend-item').first.tap(); p.wait_for_timeout(1500)
             k = ev(p, KOP)
-            check('gesprek: naam + actief', isinstance(k, dict) and k['naam'] == 'Bram' and k['status'] == ('● actief' if NL else '● active') and k['statusZichtbaar'], (k.get('naam'), k.get('status')) if isinstance(k, dict) else k)
+            check('gesprek: naam, geen "actief" meer (v199)', isinstance(k, dict) and k['naam'] == 'Bram' and k['status'] == '' and not k['statusZichtbaar'], (k.get('naam'), k.get('status')) if isinstance(k, dict) else k)
             check('gesprek: naam in de gewone letter (14 px, niet schuin)', isinstance(k, dict) and k['maat'] == '14px' and k['schuin'] == 'normal', (k.get('maat'), k.get('schuin')) if isinstance(k, dict) else k)
             # 3. terug
             p.locator('.back-btn').tap(); p.wait_for_timeout(800)
@@ -78,7 +79,7 @@ try:
             # 4. rechtstreeks naar een gesprek
             p.goto(B + 'chat.html?vriend=' + FID); p.wait_for_timeout(3000)
             k = ev(p, KOP)
-            check('rechtstreeks: naam + actief, gewone letter', isinstance(k, dict) and k['naam'] == 'Bram' and k['statusZichtbaar'] and k['maat'] == '14px', (k.get('naam'), k.get('status'), k.get('maat')) if isinstance(k, dict) else k)
+            check('rechtstreeks: naam (zonder actief), gewone letter', isinstance(k, dict) and k['naam'] == 'Bram' and not k['statusZichtbaar'] and k['maat'] == '14px', (k.get('naam'), k.get('status'), k.get('maat')) if isinstance(k, dict) else k)
             p.locator('.back-btn').tap(); p.wait_for_timeout(800)
             k = ev(p, KOP); titel(k, 'rechtstreeks, terug')
             check('geen paginafouten (' + taal + ')', not fouten, fouten[:3])

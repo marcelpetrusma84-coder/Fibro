@@ -57,6 +57,10 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .vriend-item .vriend-av { position:relative; }
 .vriend-av .online-dot { position:absolute; bottom:-1px; right:-1px; width:11px; height:11px; border-radius:50%; background:#4ade80; border:2px solid var(--bg); display:none; }
 .vriend-item.is-online .online-dot { display:block; }
+/* v199: ook bovenin het gesprek een groen stipje bij de foto als de vriend online is (was de tekst '● actief', altijd) */
+#chatAv { position:relative; }
+#chatAv .online-dot { position:absolute; bottom:-1px; right:-1px; width:11px; height:11px; border-radius:50%; background:#4ade80; border:2px solid var(--bg); display:none; }
+#chatAv.is-online .online-dot { display:block; }
 .vriend-av { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:18px; }
 .vriend-naam { font-size:14px; font-weight:500; }
 .vriend-username { font-size:14px; color:var(--muted); margin-top:2px; }
@@ -730,6 +734,8 @@ window.veiligeUrl = function(v){
     const container = document.getElementById('vriendenLijst')
     if (!container || !Array.isArray(profielen)) return
     const online = new Set(profielen.filter(isGebruikerOnline).map(p => String(p.id)))
+    onlineVrienden = online
+    werkKopStipBij() // v199
     const rijen = [...container.querySelectorAll('.vriend-item[data-vid]')]
     if (!rijen.length) return
     rijen.forEach(el => {
@@ -747,6 +753,17 @@ window.veiligeUrl = function(v){
     const gesorteerd = [...rijen].sort((a, b) =>
       (b.classList.contains('is-online') ? 1 : 0) - (a.classList.contains('is-online') ? 1 : 0) || plek(a) - plek(b))
     if (gesorteerd.some((el, i) => el !== rijen[i])) gesorteerd.forEach(el => container.appendChild(el))
+  }
+
+  // v199: het groene stipje bij de foto bovenin het gesprek (dezelfde regel als de lijst)
+  let onlineVrienden = new Set()
+  function werkKopStipBij() {
+    const av = document.getElementById('chatAv')
+    if (!av) return
+    if (!av.querySelector('.online-dot')) { const stip = document.createElement('span'); stip.className = 'online-dot'; av.appendChild(stip) }
+    const aan = !!geselecteerdeVriend && onlineVrienden.has(String(geselecteerdeVriend.id))
+    av.classList.toggle('is-online', aan)
+    if (aan) av.title = T('🟢 {naam} is online', { naam: geselecteerdeVriend.naam }); else av.removeAttribute('title')
   }
 
   // Elke 2 min (en bij terugkomen in de app) de status opnieuw ophalen (v117: was 30 s)
@@ -978,7 +995,8 @@ window.veiligeUrl = function(v){
     zetAvatar(document.getElementById('chatAv'), vriendAvatar, vriendFotos.get(vriendId)) // v134
     document.getElementById('chatNaam').textContent = vriendNaam
     document.getElementById('chatNaam').classList.remove('als-titel') // v191
-    document.getElementById('chatStatus').textContent = T('● actief')
+    document.getElementById('chatStatus').textContent = '' // v199: geen '● actief' meer; online = groen stipje bij de foto
+    werkKopStipBij()
 
     const versleuteldLabel = (mijnPrivateKey && vriendPublicKey)
       ? T('🔒 End-to-end versleuteld')
@@ -1951,6 +1969,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       document.getElementById('chatNaam').classList.add('als-titel')
       document.getElementById('chatStatus').textContent = ''
       zetAvatar(document.getElementById('chatAv'), '💬', null) // v134
+      werkKopStipBij() // v199: geen vriend gekozen = geen stipje
       document.getElementById('belKnoppen').style.display = 'none'
       if (realtimeKanaal) { realtimeKanaal.stop(); realtimeKanaal = null }
       if (reactieKanaal) { reactieKanaal.stop(); reactieKanaal = null }

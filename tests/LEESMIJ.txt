@@ -351,6 +351,13 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  bellen.html, bel-luisteraar.js), bel-luisteraar.js (index, vrienden, profiel), schaken-ui.js (chat
                                  2x, solo.js), solo.js (spel.html); spelversies.js?v=3 (Schaken v4); taal-en.js?v=27 en taal.js?v=27
                                  (alle 12 pagina's). proef94 nieuw, proef43 (v198, v4). FIBRO_VERSIE 198 (testscript_webcamgeluid.py)
+                         onlinestip = v199: alleen chat.html: in een gesprek bovenin geen '● actief' meer (stond er altijd, ook als de
+                                 vriend offline was), maar een groen stipje rechtsonder op de foto (#chatAv .online-dot, klasse
+                                 is-online, title '🟢 {naam} is online') als de vriend online is: dezelfde regel als de lijst
+                                 (isGebruikerOnline: online_status + laatst_gezien < 5 min, zelf offline = niemand online), bijgewerkt
+                                 met de lijst (werkOnlineBij, elke 2 min en bij terugkomen) en bij openChat/terug (werkKopStipBij).
+                                 Geen nieuwe vertaling ('● actief' blijft ongebruikt in taal-en.js). proef87 (geen actief), proef43
+                                 (v199), proef95 nieuw. FIBRO_VERSIE 199 (testscript_onlinestip.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -812,6 +819,10 @@ tools/proef94.py         v198 (melding van Tijn), twee echte chat.html's zoals p
                          status; B. play() geeft NotAllowedError zonder tik: knop 'Tik hier voor geluid', echte tik = geluid,
                          knop weg; C. zonder blokkade geen knop, spel dicht geen knop. NL en EN. Oude map (v197): 4 van 7.
                          python3 -I proef94.py <map> [nl|en|alles]
+tools/proef95.py         groen stipje bij de foto bovenin een gesprek (v199), echte chat.html, NL en EN, echte tikken: Bram online
+                         = stipje rechtsonder + title, geen 'actief'; offline bij de volgende ronde = weg; terug en Lotte (offline)
+                         = geen; zelf offline (heartbeat-antwoord toon_online false) = geen; met een avatarfoto staat het erop.
+                         Oude map (v198): 7 van 13.   python3 -I proef95.py <map>
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

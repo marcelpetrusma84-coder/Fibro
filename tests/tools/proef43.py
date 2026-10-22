@@ -100,7 +100,7 @@ SCHERMEN = [
     # v144: Chat
     ('chat: lijst', 'chat.html', '', ['Who do you want to chat with?', 'Chat', 'Bram', '← back']),  # v191: bovenaan alleen 'Chat'
     ('chat: gesprek', 'chat.html?vriend=' + BRAM, '', ['encrypted message — tap Restore key', 'Game invite: ♟️ Chess', 'Message deleted',
-        '[your message]', 'message no longer available', 'Not sent · tap to try again', 'No key on this device', 'Send photo', '● active', 'Call', 'More']),
+        '[your message]', 'message no longer available', 'Not sent · tap to try again', 'No key on this device', 'Send photo', 'Call', 'More']),  # v199: '● active' weg
     ('chat: melden', 'chat.html?vriend=' + BRAM, "() => { toonChatMenu(); document.getElementById('cmMeld').click() }", ['Tap the messages you want to report (max 5)', 'Cancel', 'Report']),
     # v153: het oude venster 'Eigen sticker toevoegen' is weg; nu de stickerkeuze (vakje Eigen open)
     ('chat: stickerkeuze', 'chat.html?vriend=' + BRAM, "() => { toggleStickers(); const v = document.querySelector('#stickerGrid .sk-vak[data-vak=\\'e1\\']'); if (v) v.click() }",
@@ -229,6 +229,9 @@ MAG_ERBIJ |= {'Fibro v197 \u00B7 22 okt 2026', '\u265F Tegen een vriend'}  # spe
 # v198: webcam-status en tegengehouden geluid (melding van Tijn); op de schermen alleen het versienummer en Schaken v4
 MAG_WEG |= {'Fibro v197 \u00B7 22 okt 2026', 'v3', 'versie 3'}
 MAG_ERBIJ |= {'Fibro v198 \u00B7 22 okt 2026', 'v4', 'versie 4'}
+# v199: in een gesprek geen '\u25CF actief' meer (groen stipje bij de foto als de vriend online is)
+MAG_WEG |= {'Fibro v198 \u00B7 22 okt 2026', '\u25CF actief'}
+MAG_ERBIJ |= {'Fibro v199 \u00B7 22 okt 2026', '\U0001F7E2 Bram is online'}  # (title bij de foto)
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

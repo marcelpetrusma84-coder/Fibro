@@ -1,4 +1,7 @@
 # proef96: alleen nog het OPEN slotje bij een vriend, met uitleg als je erop tikt (v200, slotuitleg.js).
+# v201: op Vrienden helemaal geen slotje meer (die lijst haalt public_key niet op: het stond er altijd open). De nep-server
+# geeft sinds v201 alleen de gevraagde kolommen terug (alleen()), anders zag de proef dat niet. De uitleg wordt in de
+# Chat-lijst getest.
 # Echte vrienden.html en chat.html, nagebootste telefoon met echte tikken, Nederlands en Engels. Drie vrienden: Bram met
 # sleutel, Lotte zonder, en <b>Kees</b> zonder (een naam met html: moet als tekst blijven).
 #  1. Vrienden: bij Bram geen slotje (geen 🔒 meer op de pagina); bij Lotte een knop 🔓 met label
@@ -22,19 +25,25 @@ def iso(sec): return time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(time.time()
 PROF = {BRAM: {"id": BRAM, "username": "Bram", "avatar_url": "\U0001F438", "public_key": "MFkw-nep-sleutel", "online_status": False, "laatst_gezien": iso(9000), "updated_at": iso(9000)},
         LOTTE: {"id": LOTTE, "username": "Lotte", "avatar_url": "\U0001F98A", "public_key": None, "online_status": False, "laatst_gezien": iso(9000), "updated_at": iso(9000)},
         KEES: {"id": KEES, "username": "<b>Kees</b>", "avatar_url": "\U0001F43B", "public_key": None, "online_status": False, "laatst_gezien": iso(9000), "updated_at": iso(9000)}}
+import urllib.parse, re
+def alleen(u, d):   # v201: geef alleen de kolommen terug die de pagina vraagt (zoals de echte server); anders mist de proef
+    sel = urllib.parse.parse_qs(urllib.parse.urlparse(u).query).get('select', ['*'])[0]  # wat bv. Vrienden niet ophaalt
+    if sel.strip() == '*': return d
+    namen = set(re.findall(r'[a-z_]+', sel))
+    return {k: v for k, v in d.items() if k in namen}
 def supa(route):
     u = route.request.url; m = route.request.method
     obj = 'vnd.pgrst.object' in (route.request.headers.get('accept') or '')
     if '/rest/v1/profiles' in u and m == 'PATCH': e = {"toon_online": True}; return route.fulfill(status=200, json=e if obj else [e])
     if '/rest/v1/profiles' in u and m == 'GET':
-        if 'in.' in u: return route.fulfill(status=200, json=list(PROF.values()))
+        if 'in.' in u: return route.fulfill(status=200, json=[alleen(u, x) for x in PROF.values()])
         for i in PROF:
-            if i in u: return route.fulfill(status=200, json=PROF[i] if obj else [PROF[i]])
+            if i in u: return route.fulfill(status=200, json=alleen(u, PROF[i]) if obj else [alleen(u, PROF[i])])
         e = {"id": UID, "username": "Marcel", "toon_online": True}; return route.fulfill(status=200, json=e if obj else [e])
     if '/rest/v1/friendships' in u:
         rijen = [{"user_id": UID, "friend_id": i, "status": "accepted"} for i in PROF]
         if 'profiles' in u:
-            for r in rijen: r["profiles"] = PROF[r["friend_id"]]
+            for r in rijen: r["profiles"] = alleen(u, PROF[r["friend_id"]])
         return route.fulfill(status=200, json=rijen)
     if '/rest/v1/rpc/' in u: return route.fulfill(status=200, json=[])
     if '/functions/v1/' in u: return route.fulfill(status=200, json={})
@@ -62,36 +71,16 @@ try:
             vragen = []; p.on('dialog', lambda d: (vragen.append(d.message), d.dismiss()))
             p.goto(B + 'manifest.json')
             p.evaluate("([t, l]) => { localStorage.setItem('sb-qmgatbphiplrfxrljtbe-auth-token', t); localStorage.setItem('fibro_taal', l); localStorage.setItem('fibro_opslagtip_later', String(Date.now())) }", [TOKEN, taal])
-            # ---- Vrienden ----
+            # ---- Vrienden (v201: helemaal geen slotje meer) ----
             p.goto(B + 'vrienden.html'); p.wait_for_timeout(2500)
             r = ev(p, RIJ, '.friend-row')
-            bram = next((x for x in r if 'Bram' in x['tekst']), None) if isinstance(r, list) else None
-            lotte = next((x for x in r if 'Lotte' in x['tekst']), None) if isinstance(r, list) else None
-            check('%s 1 Vrienden: Bram zonder slotje, Lotte met open slotje (label)' % taal, bram and lotte and not bram['open'] and not bram['dicht'] and lotte['open'] and lotte['label'] == t['label']
-                  and '\U0001F512' not in ev(p, "document.body.innerHTML"), (bram, lotte))
-            url0 = p.url
-            try: p.locator('.friend-row', has_text='Lotte').locator('.slot-open').tap(timeout=4000)
-            except Exception: pass
-            p.wait_for_timeout(900)
-            u = ev(p, UITLEG)
-            check('%s 2a tik op het slotje: uitleg in de goede taal, op Vrienden gebleven, geen ontvrienden-vraag' % taal,
-                  isinstance(u, dict) and u['kop'] == t['kop'] and t['zin'] in u['tekst'] and t['zin2'] in u['tekst'] and u['knop'] == t['knop'] and u['focus'] and p.url == url0 and not vragen, (u, p.url[-40:], vragen))
-            try: p.get_by_role('button', name=t['knop']).tap(timeout=3000)
-            except Exception: pass
-            p.wait_for_timeout(300); dicht1 = ev(p, UITLEG) is None
-            try: p.locator('.friend-row', has_text='Lotte').locator('.slot-open').tap(timeout=4000)
-            except Exception: pass
-            p.wait_for_timeout(300); p.keyboard.press('Escape'); p.wait_for_timeout(300); dicht2 = ev(p, UITLEG) is None
-            check('%s 2b "%s" sluit, Escape sluit ook' % (taal, t['knop']), dicht1 and dicht2, (dicht1, dicht2))
-            try: p.locator('.friend-row', has_text='<b>Kees</b>').locator('.slot-open').tap(timeout=4000)
-            except Exception: pass
-            p.wait_for_timeout(500); u = ev(p, UITLEG)
-            check('%s 5 een naam met html blijft tekst in de uitleg' % taal, isinstance(u, dict) and u['kop'] == t['kees'] and not u['b'], u)
-            p.keyboard.press('Escape'); p.wait_for_timeout(300)
+            html = ev(p, "document.body.innerHTML")
+            check('%s 1 Vrienden: bij niemand een slotje (geen 🔒, geen 🔓)' % taal, isinstance(r, list) and len(r) == 3 and not any(x['open'] or x['dicht'] for x in r)
+                  and '\U0001F512' not in html and '\U0001F513' not in html, r)
             try:
                 with p.expect_navigation(timeout=5000): p.locator('.friend-row', has_text='Lotte').locator('div').nth(2).tap()
             except Exception: pass
-            check('%s 3 tik op de rij van Lotte (niet op het slotje): naar haar profiel' % taal, 'vriend-profiel.html' in p.url and LOTTE in p.url, p.url[-70:])
+            check('%s 3 tik op de rij van Lotte: naar haar profiel' % taal, 'vriend-profiel.html' in p.url and LOTTE in p.url, p.url[-70:])
             # ---- Chat ----
             p.goto(B + 'chat.html'); p.wait_for_timeout(2500)
             r = ev(p, RIJ, '#vriendenLijst .vriend-item')
@@ -103,6 +92,19 @@ try:
             u = ev(p, UITLEG); gesprek = ev(p, "getComputedStyle(document.getElementById('chatScherm')).display !== 'none'")
             check('%s 4a Chat-lijst: Bram zonder slotje, Lotte met; tik = uitleg en geen gesprek' % taal,
                   bram and lotte and not bram['open'] and not bram['dicht'] and lotte['open'] and isinstance(u, dict) and u['kop'] == t['kop'] and gesprek is False, (bram, lotte, u, gesprek))
+            check('%s 2a uitleg in de goede taal (titel, twee zinnen, knop met focus), geen vraag' % taal,
+                  isinstance(u, dict) and t['zin'] in u['tekst'] and t['zin2'] in u['tekst'] and u['knop'] == t['knop'] and u['focus'] and not vragen, (u, vragen))
+            try: p.get_by_role('button', name=t['knop']).tap(timeout=3000)
+            except Exception: pass
+            p.wait_for_timeout(300); dicht1 = ev(p, UITLEG) is None
+            try: p.locator('#vriendenLijst .vriend-item', has_text='Lotte').locator('.slot-open').tap(timeout=4000)
+            except Exception: pass
+            p.wait_for_timeout(300); p.keyboard.press('Escape'); p.wait_for_timeout(300); dicht2 = ev(p, UITLEG) is None
+            check('%s 2b "%s" sluit, Escape sluit ook' % (taal, t['knop']), dicht1 and dicht2, (dicht1, dicht2))
+            try: p.locator('#vriendenLijst .vriend-item', has_text='<b>Kees</b>').locator('.slot-open').tap(timeout=4000)
+            except Exception: pass
+            p.wait_for_timeout(500); u = ev(p, UITLEG)
+            check('%s 5 een naam met html blijft tekst in de uitleg' % taal, isinstance(u, dict) and u['kop'] == t['kees'] and not u['b'], u)
             p.keyboard.press('Escape'); p.wait_for_timeout(300)
             try: p.locator('#vriendenLijst .vriend-item', has_text='Lotte').locator('.vriend-naam').tap(timeout=4000)
             except Exception: pass

@@ -364,6 +364,11 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  Begrepen, Escape of naast tikken sluit; pointerdown/click stoppen bij de knop, dus geen profiel,
                                  gesprek of ontvrienden). 4 nieuwe zinnen: taal-en.js?v=28 en taal.js?v=28 (alle 12 pagina's).
                                  proef43 (v200, 🔒 weg), proef96 nieuw. FIBRO_VERSIE 200 (testscript_slotje.py)
+                         geenslot = v201: alleen vrienden.html: geen slotje meer op Vrienden. Die lijst haalt public_key niet op (VELDEN),
+                                 dus het slotje stond daar bij iedereen open (ook al voor v200; gemeld door Marcel). In de Chat-lijst
+                                 blijft het open slotje met uitleg (die haalt public_key wel op). proef96: de nep-server geeft nu
+                                 alleen de gevraagde kolommen terug (alleen()), Vrienden zonder slotje, de uitleg getest in de
+                                 Chat-lijst; proef43 (v201). FIBRO_VERSIE 201 (testscript_geenslot.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -833,6 +838,7 @@ tools/proef96.py         alleen het open slotje met uitleg (v200), echte vriende
                          (sleutel) geen slotje, Lotte en <b>Kees</b> (geen sleutel) een knop 🔓; tik = uitleg, op de pagina
                          blijven, geen ontvrienden-vraag; Begrepen en Escape sluiten; html in een naam blijft tekst; tik op de rij
                          = profiel (Vrienden) of gesprek (Chat). Oude map (v199): 7 van 15.   python3 -I proef96.py <map>
+                         v201: Vrienden zonder slotje, uitleg in de Chat-lijst; alleen gevraagde kolommen. Oude map (v200): 13 van 15.
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

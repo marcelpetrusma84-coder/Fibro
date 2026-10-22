@@ -235,6 +235,9 @@ MAG_ERBIJ |= {'Fibro v199 \u00B7 22 okt 2026', '\U0001F7E2 Bram is online'}  # (
 # v200: geen dicht slotje meer bij een vriend; een open slotje is een knop met uitleg (slotuitleg.js)
 MAG_WEG |= {'Fibro v199 \u00B7 22 okt 2026', '\U0001F512'}
 MAG_ERBIJ |= {'Fibro v200 \u00B7 22 okt 2026', 'Nog geen versleuteling met Lotte \u2014 tik voor uitleg / Nog geen versleuteling met Lotte \u2014 tik voor uitleg'}  # (title / aria-label)
+# v201: op Vrienden geen slotje meer (die lijst haalt public_key niet op; het stond er altijd open)
+MAG_WEG |= {'Fibro v200 \u00B7 22 okt 2026', '\U0001F513', 'Nog geen versleuteling met Lotte \u2014 tik voor uitleg / Nog geen versleuteling met Lotte \u2014 tik voor uitleg'}
+MAG_ERBIJ |= {'Fibro v201 \u00B7 22 okt 2026'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

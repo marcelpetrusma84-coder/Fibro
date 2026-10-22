@@ -10,6 +10,8 @@
 #     'Geslagen: 1 punt' bij wit (Jij) en bij zwart onder de tegenstander
 #  E. geen paginafouten, geen '[taal] nog geen vertaling'
 # Oude map (v194) als controle: daar is het Nederlands nog Engels, dus de Nederlandse controles MIS.
+# v197: de knop 'Bord groter' is twee knoppen geworden (Compact / Hele breedte, PR #3); A1 en B3 kijken daarnaar. Het
+# nieuwe van v197 zelf (webcam, beginnersstand, SCHAAKMAT ...) staat in proef93.
 # python3 -I proef91.py <map>
 import sys, os, time, socket, subprocess, tempfile, re
 from playwright.sync_api import sync_playwright
@@ -28,7 +30,7 @@ const h = []
 const kanaal = { topic: 'realtime:spel_x', on(t, f, cb) { h.push([f && f.event, cb]); return kanaal },
   send(m) { bc.postMessage({ van: rol, m: JSON.parse(JSON.stringify(m)) }); return Promise.resolve('ok') }, subscribe(fn) { if (fn) fn('SUBSCRIBED'); return kanaal } }
 bc.onmessage = e => { const d = e.data; if (d.van === rol) return; h.filter(x => x[0] === d.m.event).forEach(x => x[1]({ type: 'broadcast', event: d.m.event, payload: d.m.payload })) }
-const Schaak = await import('./schaak.js?v=95'), Bordgeluid = await import('./bordgeluid.js?v=148')
+const Schaak = await import('./schaak.js?v=95'), Bordgeluid = await import('./bordgeluid.js?v=' + (((await (await fetch('./chat.html')).text()).match(/bordgeluid\.js\?v=(\d+)/) || [])[1] || '148'))
 const chat = await (await fetch('./chat.html')).text()
 const versie = (chat.match(/schaken-ui\.js\?v=(\d+)/) || [])[1] || '149'
 const m = await import('./schaken-ui.js?v=' + versie)
@@ -45,11 +47,11 @@ B = 'http://127.0.0.1:%d/Fibro/' % poort
 fouten, taalfout = [], []
 T = {
   'nl': dict(status='Jouw beurt (wit begint)', jij='Jij', geslagen0='Geslagen: 0 punten', geslagen1='Geslagen: 1 punt', legenda='Pion 1 · Paard 3 · Loper 3 · Toren 5 · Dame 9',
-             groter='⤢ Bord groter', kleiner='⤡ Bord kleiner', geluid='Geluid', veld='a1, witte toren', menu=['Schaakinstellingen', 'Bedenktijd van de computer', 'Grootte van de stukken', 'Kleiner', 'Standaard', 'Groter', 'Aanvalsroutes tonen', 'Soort bord', 'Klassiek', 'Hout', 'Marmer / graniet'],
+             groter='Hele breedte', kleiner='Compact', geluid='Geluid', veld='a1, witte toren', menu=['Schaakinstellingen', 'Bedenktijd van de computer', 'Grootte van de stukken', 'Kleiner', 'Standaard', 'Groter', 'Aanvalsroutes tonen', 'Soort bord', 'Klassiek', 'Hout', 'Marmer / graniet'],
              meteen='Meteen', een='1 seconde', drie='3 seconden', wacht='Wachten op Bram', beurt='Jouw beurt',
              vreemd=['Your turn', 'Captured', 'Enlarge', 'Smaller', 'Chess settings', 'Piece size', 'Board style', 'Pawn', 'seconds', 'Play again', 'Sound', 'white rook', 'Waiting']),
   'en': dict(status='Your turn (white starts)', jij='You', geslagen0='Captured: 0 points', geslagen1='Captured: 1 point', legenda='Pawn 1 · Knight 3 · Bishop 3 · Rook 5 · Queen 9',
-             groter='⤢ Enlarge board', kleiner='⤡ Smaller board', geluid='Sound', veld='a1, white rook', menu=['Chess settings', 'Computer thinking time', 'Piece size', 'Smaller', 'Default', 'Larger', 'Show attack routes', 'Board style', 'Classic', 'Wood grain', 'Marble / granite'],
+             groter='Full width', kleiner='Compact', geluid='Sound', veld='a1, white rook', menu=['Chess settings', 'Computer thinking time', 'Piece size', 'Smaller', 'Default', 'Larger', 'Show attack routes', 'Board style', 'Classic', 'Wood grain', 'Marble / granite'],
              meteen='Instant', een='1 second', drie='3 seconds', wacht='Waiting for Bram', beurt='Your turn',
              vreemd=['Jouw beurt', 'Geslagen', 'Bord groter', 'Schaakinstellingen', 'Bedenktijd', 'Pion', 'seconden', 'Opnieuw', 'Geluid', 'witte toren', 'Wachten']),
 }
@@ -97,9 +99,10 @@ try:
             pg.evaluate("v => { const s = document.querySelector('#sch-denktijd'); s.value = '0'; s.dispatchEvent(new Event('input', { bubbles: true })) }", '0')
             pg.click('#sch-status'); pg.wait_for_timeout(200)   # ergens anders in het spel tikken sluit het menu
             dicht = pg.evaluate("document.querySelector('#sch-menu').hidden")
-            pg.click('.sch-zoom'); pg.wait_for_timeout(200); k1 = pg.inner_text('.sch-zoom')
-            pg.click('.sch-zoom'); pg.wait_for_timeout(200); k2 = pg.inner_text('.sch-zoom')
-            check('%s B3 tikken naast het menu sluit het; kort tikken: "%s" en weer terug' % (taal, t['kleiner']), dicht and k1 == t['kleiner'] and k2 == t['groter'], (dicht, k1, k2))
+            # v197: twee knoppen (Compact / Hele breedte) met aria-pressed in plaats van een knop die van tekst wisselt
+            pg.click('.sch-zoom'); pg.wait_for_timeout(200); k1 = (pg.get_attribute('.sch-zoom', 'aria-pressed'), pg.evaluate("document.querySelector('.sch-spel').classList.contains('sch-groot')"))
+            pg.click('.sch-compact'); pg.wait_for_timeout(200); k2 = (pg.get_attribute('.sch-zoom', 'aria-pressed'), pg.evaluate("document.querySelector('.sch-spel').classList.contains('sch-groot')"))
+            check('%s B3 tikken naast het menu sluit het; "%s" maakt het bord groot, "%s" weer klein' % (taal, t['groter'], t['kleiner']), dicht and k1 == ('true', True) and k2 == ('false', False), (dicht, k1, k2))
             # C. zetten: e4, de computer antwoordt; daarna zo mogelijk slaan
             klik(pg, 6, 4); klik(pg, 4, 4)
             antw = wacht(pg, "document.querySelector('#sch-status').textContent.trim() === %r" % t['beurt'], 12000)

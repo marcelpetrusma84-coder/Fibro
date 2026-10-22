@@ -40,6 +40,31 @@ function tok(t, freq = 1400, vol = 0.35) {
         osc.start(t); osc.stop(t + 0.1)
 }
 
+// A softer, low-passed wooden placement with a short body resonance.
+function houtenTok(t, freq = 650, vol = 0.25) {
+    const c = _ctx
+    const lengte = Math.floor(c.sampleRate * 0.075)
+    const buf = c.createBuffer(1, lengte, c.sampleRate)
+    const data = buf.getChannelData(0)
+    for (let i = 0; i < lengte; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / lengte, 4)
+    const bron = c.createBufferSource()
+    bron.buffer = buf
+    const filter = c.createBiquadFilter()
+    filter.type = 'lowpass'; filter.frequency.value = freq; filter.Q.value = 0.7
+    const gain = c.createGain()
+    gain.gain.value = vol * 1.35
+    bron.connect(filter); filter.connect(gain); gain.connect(c.destination)
+    bron.start(t)
+    const osc = c.createOscillator(), og = c.createGain()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(125 + Math.random() * 18, t)
+    osc.frequency.exponentialRampToValueAtTime(62 + Math.random() * 8, t + 0.12)
+    og.gain.setValueAtTime(vol * 0.8, t)
+    og.gain.exponentialRampToValueAtTime(0.001, t + 0.13)
+    osc.connect(og); og.connect(c.destination)
+    osc.start(t); osc.stop(t + 0.14)
+}
+
 function toon(t, freq, duur, vol = 0.18, type = 'triangle') {
     const c = _ctx
     const osc = c.createOscillator(), g = c.createGain()
@@ -63,7 +88,19 @@ const GELUIDEN = {
     remise:   t => { tok(t, 1500); toon(t + 0.15, 587, 0.3, 0.14, 'sine'); toon(t + 0.45, 523, 0.5, 0.14, 'sine') },
 }
 
-function speel(naam, extra) {
+const HOUT_GELUIDEN = {
+    zet:      t => houtenTok(t),
+    damzet:   t => houtenTok(t, 600),
+    slag:     t => { houtenTok(t, 560, 0.34); houtenTok(t + 0.085, 760, 0.23) },
+    rokade:   t => { houtenTok(t, 680, 0.23); houtenTok(t + 0.13, 560, 0.24) },
+    schaak:   t => { houtenTok(t); toon(t + 0.1, 988, 0.18); toon(t + 0.19, 1319, 0.28) },
+    promotie: t => { houtenTok(t); [784, 988, 1175, 1568].forEach((f, i) => toon(t + 0.09 + i * 0.07, f, 0.22, 0.14)) },
+    win:      t => { houtenTok(t); [523, 659, 784, 1047].forEach((f, i) => toon(t + 0.12 + i * 0.12, f, i === 3 ? 0.6 : 0.2, 0.18)) },
+    verlies:  t => { houtenTok(t); [392, 311, 262].forEach((f, i) => toon(t + 0.15 + i * 0.22, f, i === 2 ? 0.6 : 0.25, 0.15, 'sine')) },
+    remise:   t => { houtenTok(t); toon(t + 0.15, 587, 0.3, 0.14, 'sine'); toon(t + 0.45, 523, 0.5, 0.14, 'sine') },
+}
+
+function speel(naam, extra, thema = 'classic') {
     if (!naam || !aan()) return
         try {
             const c = ctx()
@@ -74,7 +111,7 @@ function speel(naam, extra) {
                     for (let i = 0; i < n; i++) tok(t + i * 0.09, 1100 + i * 150, 0.4)
                         return
                 }
-                GELUIDEN[naam](t)
+                ;(thema === 'wood' ? HOUT_GELUIDEN : GELUIDEN)[naam](t)
         } catch (e) {}
 }
 
@@ -114,8 +151,12 @@ export function geluid(naam) {
   try { speel(naam) } catch (e) {}
 }
 
-export function schaak(Schaak, staat, zet, mijnKleur) {
-    try { speel(kiesSchaakGeluid(Schaak, staat, zet, mijnKleur)) } catch (e) {}
+export function previewSchaakGeluid(thema = 'classic') {
+  try { speel('zet', undefined, thema) } catch (e) {}
+}
+
+export function schaak(Schaak, staat, zet, mijnKleur, thema = 'classic') {
+    try { speel(kiesSchaakGeluid(Schaak, staat, zet, mijnKleur), undefined, thema) } catch (e) {}
 }
 
 export function dammen(Dammen, staat, keten, mijnKleur) {

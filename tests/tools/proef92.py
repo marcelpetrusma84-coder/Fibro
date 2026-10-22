@@ -6,7 +6,7 @@
 #  D. de toggle-knop werkt nog (klik = aan/uit) en het nummer blijft staan; ook op een smal scherm (320 px) past alles
 #     zonder zijwaarts scrollen, en de rij blijft een rij
 #  E. Engels: het label voor schermlezers is 'version 3'; Nederlands 'versie 3'; geen paginafouten
-# Oude map (v195) als controle: geen nummers (A-D MIS).
+# Oude map (v195) als controle: geen nummers (A-D MIS). v197: B2/C1 verwachten Schaken v3 en Fibro v197 of hoger.
 # python3 -I proef92.py <map>
 import sys, os, time, json, socket, subprocess, tempfile, re
 from playwright.sync_api import sync_playwright
@@ -74,15 +74,16 @@ try:
     bron = lees('spelversies.js')
     kaart = {m.group(1): int(m.group(2)) for m in re.finditer(r'^\s+([a-z]+):\s*(\d+),', bron, re.M)}
     check('B1: spelversies.js heeft 12 spellen', len(kaart) == 12, kaart)
-    check('B2: Neon Raiders v3, Schaken v2, de rest v1', kaart.get('shmup') == 3 and kaart.get('schaken') == 2 and all(n == 1 for k, n in kaart.items() if k not in ('shmup', 'schaken')), kaart)
+    # v197: Schaken v3 (PR #3); sindsdien: elk nummer hoogstens omhoog sinds v196 (Neon Raiders 3, Schaken 3, de rest 1)
+    check('B2: Neon Raiders v3+, Schaken v3+, de rest v1+', kaart.get('shmup', 0) >= 3 and kaart.get('schaken', 0) >= 3 and all(n >= 1 for n in kaart.values()), kaart)
     check('B3: wat het scherm toont = wat spelversies.js zegt', len(rijen) == 12 and all(r['versie'] == 'v%s' % kaart.get(r['naam']) and r['spel'] == r['naam'] for r in rijen), [(r['naam'], r['versie']) for r in rijen])
     chat = lees('chat.html')
     in_chat = set(re.findall(r"startSpel\('([a-z]+)'\)", chat))
     check('B4: elk spel uit het speelmenu van chat.html staat in spelversies.js', in_chat <= set(kaart), sorted(in_chat - set(kaart)))
     check('B5: elk spel in spelversies.js is een spel uit de widgetlijst', set(kaart) == {r['naam'] for r in rijen}, sorted(set(kaart) ^ {r['naam'] for r in rijen}))
     idx = lees('index.html'); m = re.search(r'const FIBRO_VERSIE = (\d+)', idx); fv = int(m.group(1)) if m else 0
-    check('C1: FIBRO_VERSIE is 196 en geen enkel spelnummer is gelijk aan het appnummer', fv == 196 and all(n != fv for n in kaart.values()), (fv, kaart))
-    check('C2: de app-versie staat niet in de spellijst (alleen spelnummers, geen "196" of "195")', len(rijen) == 12 and all(r['versie'] not in ('v196', 'v195') for r in rijen))
+    check('C1: FIBRO_VERSIE is 197 of hoger en geen enkel spelnummer is gelijk aan het appnummer', fv >= 197 and all(n != fv for n in kaart.values()), (fv, kaart))
+    check('C2: de app-versie staat niet in de spellijst (alleen spelnummers, geen "196" of "195")', len(rijen) == 12 and all(r['versie'] not in ('v%d' % fv, 'v196', 'v195') for r in rijen))
     check('D1: de toggle-knop werkt nog (uit -> aan -> uit) en het nummer blijft v3', tog and 'off' in tog[0] and 'on' in tog[1] and 'off' in tog[2] and tog[3] == 'v3', tog)
     check('D2: geen zijwaarts scrollen op 390 px', scrol <= 0, scrol)
     check('E1: Nederlands: label "versie 3" voor schermlezers', len(rijen) == 12 and [r for r in rijen if r['naam'] == 'shmup'][0]['label'] == 'versie 3', [r['label'] for r in rijen][:3])

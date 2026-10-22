@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 17 oktober 2026 (v180: de geluidsregelaar).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 22 oktober 2026 (v197: PR #3 van valentijnpeters).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -315,6 +315,30 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  spelversies.js een hoger (en FIBRO_VERSIE ook, zoals altijd). Geen nieuwe vertaling nodig (het
                                  label voor schermlezers 'versie 3' / 'version 3' zit in spelversies.js zelf). proef92 nieuw,
                                  proef43 kent v1/v2/v3 en Fibro v196. FIBRO_VERSIE 196 (testscript_spelversies.py)
+                         schaakpr3 = v197: PR #3 van valentijnpeters (5 commits, 'latest chess changes', gemaakt op de stand van
+                                 v192: botste met v193-v196 in chat.html, schaken-ui.js, solo.js en spel.html; daarom samengevoegd
+                                 in dit script en een merge-commit met 'git merge -s ours --no-commit' (zie de overdracht), zodat
+                                 GitHub de PR als samengevoegd ziet). Wat erin zit: schaken tegen een vriend met webcam (chat.html:
+                                 #spelVideoAnder/#spelVideoEigen, window.FibroChessVideo, groene rand als de ander je ziet via het
+                                 nieuwe signaal 'video-ontvangen' in bellen.js; tik op een beeld = groter, chess-layout.js/.css);
+                                 bellen.js: de eigen camera ook zonder verbinding (schakelVideo), haalGespreksStream; spelsessie.js:
+                                 een oudere uitnodiging (tijd-sessie) opent geen spel meer (chat.html, speluitnodiging.js);
+                                 hartslag meteen en pas na 45 s 'verbinding weg'; spel.html: knop 'Tegen een vriend' bij schaken
+                                 (vriendenlijst, uitnodiging zoals in de chat); schaken-ui.js: werkbalk Bord / Compact / Hele breedte
+                                 / schuifjes, geluid van de stukken (klassiek of hout, bordgeluid.js previewSchaakGeluid), glazen
+                                 plaat, punten per stuk, beginnersstand (vraag voor een zet die een stuk weggeeft) en Extra
+                                 duidelijk alleen tegen de computer, SCHAAKMAT groot in beeld; index.html: de oude mood 'Offline'
+                                 niet meer onder je naam. Door Claude erbij: alle nieuwe teksten via T() in twee talen (57 zinnen,
+                                 'Je vriend ziet je' via data-gezien/data-t-attr), het instellingenmenu klapt naar beneden open (omhoog
+                                 viel de bovenkant buiten beeld), in de status blijft staan wie won, initBellen had twee keer onEind
+                                 (de tweede won: samengevoegd), bellen.js zonder fout als het gesprek tijdens het opnemen al eindigde,
+                                 service-worker.js NIET naar fibro-v33 (de ?v= regelen het; anders haalt elk toestel alles opnieuw).
+                                 ?v=197: bellen.js (chat, bellen.html, bel-luisteraar.js), bel-luisteraar.js en speluitnodiging.js
+                                 (index, vrienden, profiel, spel.html), bordgeluid.js (chat, spel.html), schaken-ui.js (chat 2x,
+                                 solo.js), solo.js (spel.html); spelversies.js?v=2 (Schaken v3); spelsessie.js?v=1, chess-layout.js?v=1,
+                                 chess-layout.css?v=1; taal-en.js?v=26 en taal.js?v=26 (alle 12 pagina's). proef91 aangepast (twee
+                                 knoppen in plaats van 'Bord groter'), proef92 (Schaken v3, Fibro 197+), proef43 (v197, v2 weg,
+                                 'Tegen een vriend'), proef93 nieuw. FIBRO_VERSIE 197, 22 okt (testscript_schaakpr3.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -754,10 +778,23 @@ tools/proef91.py         het vernieuwde schaken in twee talen (v195): echte spel
                          taal; 3 s drukken = instellingen in de goede taal, bedenktijd Meteen / 1 seconde / 3 seconden,
                          kort tikken = Bord kleiner; de computer antwoordt; samen: zet komt aan, d4 e5 dxe5 = Geslagen: 1 punt
                          bij allebei. Oude map (v194): 8 van 19.   python3 -I proef91.py <map>
+                         v197: 'Bord groter' is twee knoppen (Compact / Hele breedte, aria-pressed); A1 en B3 kijken daarnaar.
 tools/proef92.py         het versienummer van elk spel (v196): echte profiel.html, tabblad Widgets, lijst Spellen: 12 nummers
                          tussen de tekst en de toggle-knop op een regel (390 en 320 px, geen zijwaarts scrollen), de waarden
                          kloppen met spelversies.js, elk spel uit chat.html staat erin, niet gelijk aan het appnummer (196),
                          de toggle werkt nog, label 'versie 3' / 'version 3'. Oude map (v195): 13 MIS.   python3 -I proef92.py <map>
+                         v197: verwacht Schaken v3 en Fibro v197 of hoger.
+tools/proef93.py         PR #3 van valentijnpeters (v197), NL en EN. A: twee ECHTE chat.html's (Marcel, Bram; twee contexten,
+                         Chromium nep-camera) met een nep-Realtime die broadcasts doorgeeft (websocket + /api/broadcast):
+                         schaken via speelMee met een tijd-sessie, het spelgesprek komt vanzelf, webcam aan = Bram ziet Marcel,
+                         groene rand + 'Je vriend ziet je.' bij Marcel, Bram ook aan, Marcel uit, tik = groter/terug, zet komt
+                         aan, sluiten = camera uit, oudere uitnodiging opent niets. B: spel.html tegen de computer: werkbalk,
+                         schuifjes = instellingen helemaal in beeld, glas/hout, beginnersstand (Bf1-a6 na e4: vraag, Zet
+                         terugnemen = geen zet), 'Tegen een vriend' = broadcast + spelinvite-bericht + chat.html?spelVriend=...
+                         C: proefpagina (reduced motion: een tabblad op de achtergrond laat animaties liggen): Extra duidelijk
+                         en beginnersstand uit tegen een vriend, punten per stuk, snelmat = SCHAAKMAT + wie won, geen woorden
+                         uit de andere taal. D: een onEind, alle ?v= gelijk, CACHE_VERSION ongewijzigd. Oude map (v196):
+                         10 van 40.   python3 -I proef93.py <map> [nl|en|alles]
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

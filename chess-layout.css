@@ -1,0 +1,58 @@
+.chess-media-layout {
+  --chess-board-width: min(460px, calc(100vw - 24px));
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  justify-content: flex-start;
+  padding-block: 48px 12px;
+  scroll-padding-block: 48px 12px;
+}
+
+.chess-media-layout > #spelInhoud {
+  flex: 0 0 auto;
+  height: auto !important;
+  margin-block: auto;
+}
+
+.chess-media-layout .chess-camera[role="button"] {
+  box-sizing: border-box;
+  position: relative;
+  inset: auto;
+  inline-size: var(--chess-board-width);
+  max-inline-size: calc(100% - 12px);
+  block-size: 0;
+  min-block-size: 88px;
+  flex: 1 0 88px;
+  aspect-ratio: auto;
+  margin-block: 8px;
+  margin-inline: auto;
+  transform: none;
+  cursor: default;
+}
+
+.chess-media-layout .chess-camera[role="button"].is-expanded {
+  inline-size: var(--chess-board-width);
+  block-size: auto;
+  min-block-size: 0;
+  flex: 0 0 auto;
+  aspect-ratio: 1;
+}
+
+.chess-media-layout .chess-camera[role="button"] video {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 0;
+  object-fit: cover;
+  cursor: default;
+}
+
+.chess-media-layout .chess-camera[role="button"]:focus-visible {
+  outline: 2px solid #baffed;
+  outline-offset: 3px;
+}
+
+.chess-media-layout [hidden] {
+  display: none;
+}

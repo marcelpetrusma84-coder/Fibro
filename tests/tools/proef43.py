@@ -223,6 +223,9 @@ MAG_ERBIJ |= {'Fibro v195 \u00B7 21 okt 2026'}
 # v196: bij elk spel in Stijl > Widgets een eigen versienummer (spelversies.js), los van het nummer van Fibro
 MAG_WEG |= {'Fibro v195 \u00B7 21 okt 2026'}
 MAG_ERBIJ |= {'Fibro v196 \u00B7 21 okt 2026', 'v1', 'v2', 'v3', 'versie 1', 'versie 2', 'versie 3'}  # (label voor schermlezers: Nederlands; Engels 'version N' staat in spelversies.js)
+# v197: PR #3 van valentijnpeters (schaken met webcam enz.): het versienummer, Schaken v3 en de knop 'Tegen een vriend'
+MAG_WEG |= {'Fibro v196 \u00B7 21 okt 2026', 'v2', 'versie 2'}  # Schaken v2 -> v3, geen spel meer op v2
+MAG_ERBIJ |= {'Fibro v197 \u00B7 22 okt 2026', '\u265F Tegen een vriend'}  # spel.html?spel=schaken: knop 'Tegen een vriend'
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

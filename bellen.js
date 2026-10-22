@@ -21,6 +21,7 @@ let onOproepCallback = null
 let onEindCallback = null
 let onVerbondenCallback = null
 let onVideoStatusCallback = null
+let onEigenVideoOntvangenCallback = null
 let onGeenCameraCallback = null
 let videoActiefLokaal = false
 let videoSender = null
@@ -28,7 +29,7 @@ let geinitialiseerd = false
 let gesprekKlaar = null   // belofte: klaar zodra het gesprekskanaal echt open is
 let iceBuffer = []        // ICE-gegevens die binnenkomen voordat offer/answer verwerkt is
 let videoGewenst = false  // v150: met video gebeld/opgenomen (ook als de eigen camera niet lukte)
-const BELLEN_VERSIE = 105 // gaat mee in elk signaal: zo toont het log welke versie de ander draait
+const BELLEN_VERSIE = 106 // gaat mee in elk signaal: zo toont het log welke versie de ander draait
 
 // v151: pushmelding naar de vriend. De tekst maakt stuur-push zelf (in de taal van de ontvanger);
 // 'gemist' heeft dezelfde tag als 'belt je' en vervangt die melding op de telefoon van de ander.
@@ -133,6 +134,20 @@ async function haalMicEnCamera(video) {
   }
 }
 
+// Een camera die al als lokale preview draait behouden wanneer het audiogesprek
+// later begint. Zo verdwijnt het eigen beeld niet tijdens de WebRTC-handshake.
+async function haalGespreksStream(video) {
+  const vorigeStream = lokaleStream
+  const voorbereid = vorigeStream?.getVideoTracks().find(track => track.readyState === 'live') || null
+  const stream = await haalMicEnCamera(video)
+  if (voorbereid && !stream.getVideoTracks().length) stream.addTrack(voorbereid)
+  else if (voorbereid) voorbereid.stop()
+  if (vorigeStream && vorigeStream !== stream) {
+    vorigeStream.getTracks().forEach(track => { if (track !== voorbereid) track.stop() })
+  }
+  return stream
+}
+
 // Soort ICE-adres uit een kandidaat halen: host (eigen netwerk), srflx (via de router), relay (via TURN)
 function kandidaatSoort(k) {
   const m = / typ ([a-z]+)/.exec((k && k.candidate) || '')
@@ -153,6 +168,7 @@ export function initBellen(userId, callbacks = {}) {
   onEindCallback = callbacks.onEind || null
   onVerbondenCallback = callbacks.onVerbonden || null
   onVideoStatusCallback = callbacks.onVideoStatus || null
+  onEigenVideoOntvangenCallback = callbacks.onEigenVideoOntvangen || null
   onGeenCameraCallback = callbacks.onGeenCamera || null
   geinitialiseerd = true
   luisterNaarUitnodigingen()
@@ -266,6 +282,9 @@ async function verwerkSignaal(type, data, v) {
   if (type === 'video-status') {
     if (onVideoStatusCallback) onVideoStatusCallback(data.actief)
   }
+  if (type === 'video-ontvangen') {
+    if (onEigenVideoOntvangenCallback) onEigenVideoOntvangenCallback(Boolean(data.actief))
+  }
 }
 
 let belTimeout = null
@@ -283,7 +302,7 @@ export async function belOp(naarVriendId, video = false, spelModus = false) {
   belMeldingNaar = null; opgenomen = false; oproepBezig = null
   belregelNaar = null; geweigerd = false; verbondenOp = 0
   try {
-    lokaleStream = await haalMicEnCamera(video)
+    lokaleStream = await haalGespreksStream(video)
   } catch(e) { alert(window.T ? window.T('Geen toegang tot microfoon/camera.') : 'Geen toegang tot microfoon/camera.'); return false }
   const lokaalEl = document.getElementById('lokaalMedia')
   if (lokaalEl) lokaalEl.srcObject = lokaleStream
@@ -316,13 +335,14 @@ export async function accepteerOproep(video = false) {
   await iceReady // TURN-servers eerst binnen laten komen
   videoGewenst = !!video
   try {
-    lokaleStream = await haalMicEnCamera(video)
+    lokaleStream = await haalGespreksStream(video)
   } catch(e) { alert(window.T ? window.T('Geen toegang tot microfoon/camera.') : 'Geen toegang tot microfoon/camera.'); return false }
   // Zorg dat het gesprekkanaal echt open is (bij paginawissel kan het nog ontbreken,
   // en bij een spel is het misschien net pas geopend)
   if (gesprekKlaar) await gesprekKlaar
   if (!gesprekKanaal && vriendId) await openGesprekKanaal(vriendId)
   sluitBelMelding(vriendId) // v151: de 'belt je'-melding is nu niet meer nodig
+  if (!lokaleStream) return false // v197: intussen opgehangen (bijv. het spel net dicht): geen gesprek meer opzetten
   maakPeerConnection()
   await stuurSignaal('geaccepteerd', {})
   return true
@@ -340,7 +360,8 @@ export async function weigerooproep() {
 function maakPeerConnection() {
   if (peerConnection) { peerConnection.close(); peerConnection = null }
   peerConnection = new RTCPeerConnection(ICE_SERVERS)
-  lokaleStream.getTracks().forEach(track => {
+  // v197: lokaleStream kan leeg zijn als het gesprek tijdens het wachten al eindigde (gaf 'getTracks of null')
+  if (lokaleStream) lokaleStream.getTracks().forEach(track => {
     const sender = peerConnection.addTrack(track, lokaleStream)
     // Gesprek begint met video: onthoud de videobron, dan werken de cameraknoppen meteen goed
     if (track.kind === 'video') { videoSender = sender; videoActiefLokaal = true }
@@ -356,6 +377,9 @@ function maakPeerConnection() {
       if (track.kind === 'video') {
         remoteEl.style.display = 'block'
         remoteEl.play().catch(()=>{})
+        const bevestigOntvangst = () => stuurSignaal('video-ontvangen', { actief:true }).catch(()=>{})
+        if (track.muted) track.addEventListener('unmute', bevestigOntvangst, { once:true })
+        else bevestigOntvangst()
       }
     }
     const audioEl = document.getElementById('remoteAudio')
@@ -363,7 +387,10 @@ function maakPeerConnection() {
     track.onended = () => {
       if (!remoteStream) return // gesprek is al afgelopen
       remoteStream.getTracks().forEach(t => { if (t.kind === 'video' && t.readyState === 'ended') remoteStream.removeTrack(t) })
-      if (remoteEl && remoteStream.getVideoTracks().length === 0) remoteEl.style.display = 'none'
+      if (remoteEl && remoteStream.getVideoTracks().length === 0) {
+        remoteEl.style.display = 'none'
+        stuurSignaal('video-ontvangen', { actief:false }).catch(()=>{})
+      }
     }
   }
   peerConnection.onicecandidate = async (event) => {
@@ -385,6 +412,7 @@ function maakPeerConnection() {
     if (pc.connectionState === 'connected') {
       stopBelTimeout()
       if (!verbondenOp) verbondenOp = Date.now() // v152: de duur telt vanaf de eerste verbinding
+      stuurSignaal('video-status', { actief:videoActiefLokaal }).catch(()=>{})
       if (onVerbondenCallback) onVerbondenCallback()
     }
     if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) { beeindigGesprek(false) }
@@ -420,33 +448,38 @@ async function leegIceBuffer() {
 }
 
 export async function schakelVideo(aanzetten) {
-  if (lokaleStream === null || peerConnection === null) return false
   try {
     if (aanzetten) {
       const videoStream = await navigator.mediaDevices.getUserMedia({ video: CAMERA })
       const videoTrack = videoStream.getVideoTracks()[0]
+      if (!videoTrack) return false
+      if (!lokaleStream) lokaleStream = new MediaStream()
       const oudeVideo = lokaleStream.getVideoTracks()[0]
       if (oudeVideo) { lokaleStream.removeTrack(oudeVideo); oudeVideo.stop() }
       lokaleStream.addTrack(videoTrack)
-      if (videoSender) {
-        await videoSender.replaceTrack(videoTrack)
-      } else {
-        videoSender = peerConnection.addTrack(videoTrack, lokaleStream)
+      if (peerConnection) {
+        if (videoSender) await videoSender.replaceTrack(videoTrack)
+        else videoSender = peerConnection.addTrack(videoTrack, lokaleStream)
       }
       const lokaalEl = document.getElementById('lokaalMedia')
-      if (lokaalEl) lokaalEl.srcObject = lokaleStream
+      if (lokaalEl) { lokaalEl.srcObject = lokaleStream; lokaalEl.play().catch(()=>{}) }
       videoActiefLokaal = true
     } else {
+      if (!lokaleStream) return true
       const track = lokaleStream.getVideoTracks()[0]
       if (track) { lokaleStream.removeTrack(track); track.stop() }
-      if (videoSender) await videoSender.replaceTrack(null)
+      if (videoSender && peerConnection) await videoSender.replaceTrack(null)
       videoActiefLokaal = false
     }
-    // Renegotiation alleen nodig als de sender nieuw is aangemaakt
-    const offer = await peerConnection.createOffer()
-    await peerConnection.setLocalDescription(offer)
-    await stuurSignaal('offer-renegotiate', offer)
-    await stuurSignaal('video-status', { actief: videoActiefLokaal })
+    // De lokale preview werkt ook zonder vriendverbinding. Zodra er een peer is,
+    // wordt dezelfde track toegevoegd en bevestigt de ontvanger het beeld.
+    if (peerConnection) {
+      const offer = await peerConnection.createOffer()
+      await peerConnection.setLocalDescription(offer)
+      await stuurSignaal('offer-renegotiate', offer)
+      await stuurSignaal('video-status', { actief: videoActiefLokaal })
+      if (!videoActiefLokaal && onEigenVideoOntvangenCallback) onEigenVideoOntvangenCallback(false)
+    }
     return true
   } catch(e) {
     console.warn('schakelVideo fout:', e)

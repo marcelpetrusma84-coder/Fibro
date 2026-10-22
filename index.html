@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=25"></script>
+<script src="taal.js?v=26"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>/* v130: zoomen mag weer; iPhone zoomt bij invoervakken kleiner dan 16px vanzelf in */@supports (-webkit-touch-callout: none){input,textarea,select{font-size:16px !important}}</style>
@@ -180,9 +180,12 @@ window.addEventListener('pageshow', function (e) { if (e.persisted) window.werkO
     var bio = String(lokaal.bio || '').trim() || String(p.bio || '').trim()
     zet('heroBio', bio.length > 100 ? bio.slice(0, 100) + '...' : bio)
     var mood = document.getElementById('heroMood')
-    if (mood && (p.offline_emoji || p.offline_bericht)) {
+    // "Offline" is the old default value for an empty mood, not this user's live
+    // availability. Do not present it as a status in the profile header.
+    var moodTekst = String(p.offline_bericht || '').trim()
+    if (mood && moodTekst && moodTekst.toLowerCase() !== 'offline') {
       // v171: een sticker als mood (fxsticker:...) staat hier niet, alleen de tekst
-      [/^fxsticker:/.test(p.offline_emoji || '') ? '' : (p.offline_emoji || ''), p.offline_bericht || ''].forEach(function (t) { var s = document.createElement('span'); s.textContent = t; mood.appendChild(s) })
+      [/^fxsticker:/.test(p.offline_emoji || '') ? '' : (p.offline_emoji || ''), moodTekst].forEach(function (t) { var s = document.createElement('span'); s.textContent = t; mood.appendChild(s) })
     }
     var av = document.getElementById('heroAvatar'), top = document.getElementById('topAvatar')
     var data = String(p.avatar_data || '').trim()
@@ -2104,8 +2107,8 @@ async function renderGastenboek(c, uid) {
 // v183: het versienummer en de datum van deze versie, onderaan in het menu. Zo zie je op elk toestel welke versie
 // er echt draait (een telefoon kan een oude pagina nog even vasthouden). Elk maak-script zet het nummer een hoger:
 // tests/gen/bouw.py maakt geen script als het hier niet omhoog gaat.
-const FIBRO_VERSIE = 196
-const FIBRO_DATUM = '2026-10-21'
+const FIBRO_VERSIE = 197
+const FIBRO_DATUM = '2026-10-22'
 function versieTekst() {
   let d = FIBRO_DATUM
   try { d = new Date(FIBRO_DATUM + 'T12:00:00').toLocaleDateString(T.locale || 'nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) } catch (e) {}
@@ -2512,10 +2515,15 @@ function toonHero(profiel) {
   const bioTekst = lokaleBio || String(profiel?.bio || '').trim()
   bioEl.textContent = bioTekst.length > 100 ? bioTekst.slice(0,100) + '...' : bioTekst
   const moodEl = document.getElementById('heroMood')
-  if (profiel?.offline_emoji || profiel?.offline_bericht) {
+  const moodTekst = String(profiel?.offline_bericht || '').trim()
+  // The legacy default "Offline" means no mood. The red avatar indicator is the
+  // actual offline setting, controlled by `toon_online`.
+  if (moodTekst && moodTekst.toLowerCase() !== 'offline') {
     moodEl.innerHTML = ''
     // v171: een sticker als mood (fxsticker:...) staat hier niet, alleen de tekst
-    for (const tk of [/^fxsticker:/.test(profiel.offline_emoji || '') ? '' : (profiel.offline_emoji || ''), profiel.offline_bericht || '']) { const s = document.createElement('span'); s.textContent = tk; moodEl.appendChild(s) }
+    for (const tk of [/^fxsticker:/.test(profiel.offline_emoji || '') ? '' : (profiel.offline_emoji || ''), moodTekst]) { const s = document.createElement('span'); s.textContent = tk; moodEl.appendChild(s) }
+  } else {
+    moodEl.innerHTML = ''
   }
 }
 
@@ -2630,11 +2638,11 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <script src="swipe.js?v=95"></script>
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=152"; startBelLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=197"; startBelLuisteraar()</script>
 <script type="module">import { beschermOpslag } from "./opslag.js?v=2"; beschermOpslag()</script>
 <script type="module" src="geluidregelaar.js?v=180"></script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=143"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=197"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=168"; startOngelezen()</script>
 <script type="module">import { checkTimers } from "./timer-melding.js?v=187"; setTimeout(checkTimers,4000)</script>
 <script src="./fotoviewer.js?v=6"></script>

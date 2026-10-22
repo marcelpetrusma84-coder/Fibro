@@ -10,7 +10,7 @@
 export const SPEL_VERSIES = {
   botkaaseiren: 1,   // Tic-Tac-Toe
   vieroprij: 1,      // Four in a Row
-  schaken: 2,        // Chess
+  schaken: 3,        // Chess (v3 = v197: webcam, vriend uitnodigen, nieuwe instellingen, PR #3 van Tijn)
   dammen: 1,         // Draughts
   pong: 1,           // Neo Paddle
   pacman: 1,         // Ghost Tag

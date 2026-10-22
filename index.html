@@ -2188,11 +2188,12 @@ window.openMenu = function() {
     try { (await import('./meldingen.js?v=187')).bewaarBuzzKeuze() } catch (e) {}
   })
   g = groep(T('Accountinstellingen'), 'menuKopAccount')
+  item(g, T('\u{1F511} Key recovery'), () => { window.location.href = 'login.html#herstellen' })
   item(g, T('\u{1F4E6} Mijn gegevens downloaden'), () => openAccount('gegevens'))
   item(g, T('\u{1F5D1}\uFE0F Account verwijderen'), () => openAccount('verwijderen')).style.color = '#fca5a5'
   g = groep(T('Mijn Fibro'), 'menuKopFibro')
   item(g, T('\u2139\uFE0F Over Fibro'), () => { window.location.href = 'over.html' })
-  item(g, T('\u{1F4F2} Fibro als app installeren'), openAppUitleg) // v178
+  item(g, T('\u{1F4F2} Install Fibro & shortcuts'), () => { window.location.href = 'setup.html' })
   // v183: onderaan het versienummer (gewone tekst, geen knop)
   const versie = document.createElement('div')
   versie.id = 'menuVersie'

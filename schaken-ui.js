@@ -5,8 +5,8 @@ function readSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')
     const thinking = Number(saved.thinking ?? 7)
-    return { ...saved, thinking:Number.isFinite(thinking) ? Math.min(7,Math.max(0,thinking)) : 7, pieces:['small','medium','large'].includes(saved.pieces) ? saved.pieces : 'medium', board:['classic','wood','marble','glass'].includes(saved.board) ? saved.board : 'classic', soundTheme:['classic','wood'].includes(saved.soundTheme) ? saved.soundTheme : 'classic', showAttackRoutes:saved.showAttackRoutes === true, exaggerate:saved.exaggerate === true, pointsPerPiece:saved.pointsPerPiece === true, noobMode:saved.noobMode === true }
-  } catch { return { thinking:7, pieces:'medium', board:'classic', soundTheme:'classic', showAttackRoutes:false, exaggerate:false, pointsPerPiece:false, noobMode:false } }
+    return { ...saved, thinking:Number.isFinite(thinking) ? Math.min(7,Math.max(0,thinking)) : 7, pieces:['small','medium','large'].includes(saved.pieces) ? saved.pieces : 'medium', board:['classic','wood','marble','glass'].includes(saved.board) ? saved.board : 'classic', soundTheme:['classic','wood'].includes(saved.soundTheme) ? saved.soundTheme : 'classic', showAttackRoutes:saved.showAttackRoutes === true, exaggerate:saved.exaggerate === true, pointsPerPiece:saved.pointsPerPiece === true, noobMode:saved.noobMode === true, camerasAtTop:saved.camerasAtTop === true }
+  } catch { return { thinking:7, pieces:'medium', board:'classic', soundTheme:'classic', showAttackRoutes:false, exaggerate:false, pointsPerPiece:false, noobMode:false, camerasAtTop:false } }
 }
 // schaken-ui.js - spel voor Fibro, losgetrokken uit chat.html.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
@@ -81,11 +81,11 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-video.is-connecting { animation:sch-video-pulse 1.05s ease-in-out infinite; }
       .sch-video.is-connecting::first-letter { display:inline-block; }
       .sch-media-controls { display:flex; align-items:center; justify-content:center; gap:6px; }
-      .sch-video.sch-video-stop { position:static; z-index:5; width:29px; height:29px; min-height:29px; margin:0; padding:0; border-radius:9px; font-size:14px; line-height:1; transform:none; box-shadow:0 3px 10px #0009; }
+      .sch-video.sch-video-stop { position:static; z-index:5; width:29px; min-width:29px; height:29px; min-height:29px; margin:0; padding:0; border-radius:9px; font-size:14px; line-height:1; transform:none; box-shadow:0 3px 10px #0009; }
       .sch-video.sch-video-stop:active { transform:translateY(2px) scale(.94); }
       @keyframes sch-video-pulse { 50% { box-shadow:0 0 0 5px #78e7cb25,0 0 18px #78e7cb80; filter:brightness(1.14); } }
       .sch-video[aria-pressed="true"] { background:linear-gradient(135deg,#51d6ad,#d9ffdc); color:#06352a; box-shadow:0 0 14px #51d6ad88; }
-      .sch-menu { position:absolute; z-index:6; left:50%; bottom:calc(100% + 8px); transform:translateX(-50%); box-sizing:border-box; width:min(340px,calc(100vw - 24px)); max-height:min(78dvh,620px); overflow:auto; overscroll-behavior:contain; scrollbar-color:#9b8264 #211c2b; padding:15px; border:1px solid #e8d7bd88; border-radius:16px; background:linear-gradient(145deg,#30243a,#17121f); color:#fff8ed; box-shadow:0 16px 40px #000b; text-align:left; }
+      .sch-menu { position:fixed; z-index:80; left:50%; top:50%; transform:translate(-50%,-50%); box-sizing:border-box; width:min(340px,calc(100vw - 48px)); max-height:min(78dvh,620px); overflow:auto; overscroll-behavior:contain; scrollbar-color:#9b8264 #211c2b; padding:15px; border:1px solid #e8d7bd88; border-radius:16px; background:linear-gradient(145deg,#30243a,#17121f); color:#fff8ed; box-shadow:0 16px 40px #000b; text-align:left; }
       .sch-menu[hidden] { display:none; }
       .sch-menu h2 { font-size:17px; margin:0 0 12px; }
       .sch-menu label,.sch-menu legend { font-size:13px; font-weight:650; }
@@ -164,6 +164,8 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
           <label for="sch-sound-theme">Sound theme</label>
           <select id="sch-sound-theme"><option value="classic">Classic (default)</option><option value="wood">Wooden board</option></select>
           <p class="sch-menu-hint">Choose how each piece sounds when it lands on the board.</p>
+          <label class="sch-attack-toggle"><input id="sch-cameras-at-top" type="checkbox"> Keep webcams together at the top</label>
+          <p class="sch-menu-hint">Place both camera views above the board. Tap either view to resize it.</p>
           <label class="sch-attack-toggle"><input id="sch-aanvalsroutes" type="checkbox"> Show attack routes</label>
           <label class="sch-attack-toggle" id="sch-exaggerate-wrap" hidden><input id="sch-exaggerate" type="checkbox"> Exaggerate</label>
           <p class="sch-menu-hint">Highlights opposing pieces that the last moved piece can legally capture.</p>
@@ -314,6 +316,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     bordEl.classList.toggle('sch-board-classic', instellingen.board === 'classic')
     bordEl.classList.toggle('sch-board-glass', instellingen.board === 'glass')
     spelEl.querySelector('.sch-frame').classList.toggle('sch-frame-glass', instellingen.board === 'glass')
+    spelEl.dataset.cameraLayout = instellingen.camerasAtTop ? 'top' : 'around'
   }
   function toonMenu(aan) {
     menu.hidden = !aan
@@ -360,6 +363,12 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     instellingen.soundTheme = soundTheme.value
     bewaarInstellingen()
     Bordgeluid.previewSchaakGeluid(instellingen.soundTheme)
+  })
+  const cameraLayoutToggle = menu.querySelector('#sch-cameras-at-top')
+  cameraLayoutToggle.checked = instellingen.camerasAtTop
+  cameraLayoutToggle.addEventListener('change', () => {
+    instellingen.camerasAtTop = cameraLayoutToggle.checked
+    bewaarInstellingen()
   })
   const aanvalToggle = menu.querySelector('#sch-aanvalsroutes')
   const exaggerateToggle = menu.querySelector('#sch-exaggerate')

@@ -28,5 +28,21 @@
       "purpose": "maskable"
     }
   ],
-  "scope": "./"
+  "scope": "./",
+  "shortcuts": [
+    {
+      "name": "Home",
+      "short_name": "Home",
+      "description": "Open your Fibro home and guestbook",
+      "url": "./index.html",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Key recovery",
+      "short_name": "Key recovery",
+      "description": "Restore your Fibro key on this device",
+      "url": "./login.html#herstellen",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
 }

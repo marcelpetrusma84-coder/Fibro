@@ -56,7 +56,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
 <script type="module">
   import * as Bordgeluid from './bordgeluid.js?v=149'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=198'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=200'
   import { supabase } from './supabase.js?v=95'
   import { startSpelUitnodigingLuisteraar } from './speluitnodiging.js?v=143'
   import { nieuweSpelSessie } from './spelsessie.js?v=1'
@@ -176,15 +176,15 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     if (error) { lijst.textContent = 'Your friends could not be loaded. Please try again.'; return }
     const ids = (relaties || []).map(r => r.user_id === user.id ? r.friend_id : r.user_id).filter(Boolean)
     if (!ids.length) { lijst.textContent = 'You have no friends to invite yet.'; return }
-    const { data: vrienden, error: vriendFout } = await supabase.from('profiles').select('id,username,display_name,avatar_url,avatar_data').in('id', ids)
+    const { data: vrienden, error: vriendFout } = await supabase.from('profiles').select('id,username,avatar_url,avatar_data').in('id', ids)
     if (vriendFout || !vrienden?.length) { lijst.textContent = 'Your friends could not be loaded. Please try again.'; return }
     lijst.textContent = ''
-    vrienden.sort((a, b) => String(a.display_name || a.username || '').localeCompare(String(b.display_name || b.username || ''))).forEach(vriend => {
+    vrienden.sort((a, b) => String(a.username || '').localeCompare(String(b.username || ''))).forEach(vriend => {
       const knop = document.createElement('button'); knop.className = 'vriend-rij'; knop.type = 'button'
       const avatar = document.createElement('span'); avatar.className = 'vriend-avatar'
       if (/^data:image\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=]+$/i.test(String(vriend.avatar_data || ''))) { const img = document.createElement('img'); img.src = vriend.avatar_data; img.alt = ''; avatar.append(img) }
       else avatar.textContent = vriend.avatar_url || '👤'
-      const naam = document.createElement('span'); naam.textContent = vriend.display_name || vriend.username || 'Friend'; naam.style.cssText = 'font-weight:650;flex:1'
+      const naam = document.createElement('span'); naam.textContent = vriend.username || 'Friend'; naam.style.cssText = 'font-weight:650;flex:1'
       const pijl = document.createElement('span'); pijl.textContent = 'Invite ›'; pijl.style.cssText = 'color:#85f3c4;font-size:12px'
       knop.append(avatar, naam, pijl)
       knop.onclick = () => verstuurSchaakUitnodiging(vriend, lijst)

@@ -298,6 +298,10 @@
     return code
   }
 
+  window.voltooiRegistratie = function() {
+    window.location.href = 'setup.html?welcome=1'
+  }
+
   function regKnop(tekst, hoofd) {
     const k = document.createElement('button')
     k.textContent = tekst
@@ -319,7 +323,7 @@
     c.style.cssText = "background:var(--bg);border:1.5px solid var(--accent);border-radius:10px;padding:16px;font-size:18px;letter-spacing:2px;color:var(--accent);font-family:'DM Mono',monospace;margin-bottom:12px;"
     c.textContent = code
     const t2 = document.createElement('div'); t2.style.cssText = 'font-size:11px;color:var(--danger,#f87171);margin-bottom:20px;'; t2.textContent = T('Dit zie je maar een keer! Schrijf het op.')
-    const verder = regKnop(T('Ga naar inloggen'), true); verder.onclick = () => window.switchTab('inloggen')
+    const verder = regKnop(T('Continue to device setup'), true); verder.onclick = window.voltooiRegistratie
     blok.append(t1, c, t2, verder)
     vak.append(blok)
   }
@@ -346,7 +350,7 @@
         await maakDoos(supabase, { userId, gebruikersnaam: username, privateKeyB64 })
         melding.style.color = '#4ade80'; melding.textContent = T('Face ID-herstel staat aan.')
         ja.remove(); nee.remove()
-        const verder = regKnop(T('Ga naar inloggen'), true); verder.onclick = () => window.switchTab('inloggen')
+        const verder = regKnop(T('Continue to device setup'), true); verder.onclick = window.voltooiRegistratie
         blok.append(verder)
       } catch (e) {
         melding.style.color = '#f87171'; melding.textContent = faceIdFoutTekst(e)
@@ -534,7 +538,7 @@
           ${herstelsleutel}
         </div>
         <div style="font-size:11px;color:var(--danger);margin-bottom:20px;">${T('⚠ Dit zie je maar één keer! Schrijf het op.')}</div>
-        <button class="btn btn-primary" onclick="switchTab('inloggen')">${T('Ga naar inloggen')}</button>
+        <button class="btn btn-primary" onclick="voltooiRegistratie()">${T('Continue to device setup')}</button>
       </div>
     `
   }
@@ -570,6 +574,21 @@ window.herstelMetSleutel = async function() {
       if (!kluis || !kluis.blob) { toonBericht(msg,'error',T('Geen sleutelkluis gevonden voor dit account.')); return }
 
       const priv = await ontsleutelPrivateKey(kluis.blob, code)
+      // Never replace a working device key with an old or unrelated backup.
+      let publiek
+      try {
+        const { data: profiel, error: profielFout } = await supabase.from('profiles')
+          .select('public_key').eq('id', userId).single()
+        if (profielFout || !profiel?.public_key) throw new Error('profile-key-unavailable')
+        publiek = profiel.public_key
+      } catch {
+        toonBericht(msg, 'error', T('Recovery could not verify your account key. Try again when you are online.'))
+        return
+      }
+      if (!(await sleutelPastBij(priv, publiek))) {
+        toonBericht(msg, 'error', T('This recovery key no longer matches your account. Your device key was not changed.'))
+        return
+      }
       slaPrivateKeyOp(userId, priv)
       sessionStorage.removeItem('fibro_sleutel_mist')
       toonBericht(msg,'success',T('Gelukt! Je berichten zijn weer leesbaar.'))
@@ -614,11 +633,12 @@ window.herstelMetSleutel = async function() {
   }
 
   supabase.auth.getSession().then(({ data: { session } }) => {
+    // A recovery shortcut must stay usable even when this device already has a key.
+    if (window.location.hash === '#herstellen') return
     const params = new URLSearchParams(window.location.search)
     if (session && !params.get('logout')) {
       naInloggenFaceId(session.user.id, '').finally(() => {
-        // Via 'Sleutel terugzetten' en nog steeds geen sleutel: op het tabblad Herstel blijven
-        if (window.location.hash === '#herstellen' && !haalPrivateKeyOp(session.user.id)) return
+        if (window.location.hash === '#herstellen') return
         window.location.href = 'index.html'
       })
     }

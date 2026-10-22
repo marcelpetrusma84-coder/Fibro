@@ -1477,4 +1477,12 @@ window.FIBRO_EN = {
   "🔓 Nog geen versleuteling met {naam}": "🔓 No encryption with {naam} yet",
   "{naam} heeft nog geen sleutel voor versleutelde berichten. Daarom kun je {naam} nu nog geen berichten sturen. Er leest niemand mee: Fibro stuurt nooit iets onversleuteld.": "{naam} doesn't have a key for encrypted messages yet. That's why you can't send {naam} messages right now. Nobody is reading along: Fibro never sends anything unencrypted.",
   "Dit lost zich vanzelf op als {naam} Fibro opent en opnieuw inlogt. Daarna verdwijnt het open slotje.": "This fixes itself when {naam} opens Fibro and logs in again. After that the open padlock disappears.",
+// ---- Versleutelde spelchat en herstelsleutel-controle (v202, PR #4 van valentijnpeters) ----
+  "Je vriend heeft nog een oude Fibro. Chatten in het spel lukt pas als je vriend Fibro sluit en opnieuw opent.": "Your friend still has an old version of Fibro. Chatting in the game works once your friend closes Fibro and opens it again.",
+  "Niet verstuurd: de sleutel van dit toestel ontbreekt.": "Not sent: the key for this device is missing.",
+  "Niet verstuurd: {naam} heeft nog geen sleutel.": "Not sent: {naam} doesn't have a key yet.",
+  "Niet verstuurd: de sleutel van {naam} is veranderd. Kijk eerst in de chat.": "Not sent: {naam}'s key has changed. Check the chat first.",
+  "Niet verstuurd. Controleer je internet en probeer het opnieuw.": "Not sent. Check your internet connection and try again.",
+  "Fibro kon je accountsleutel niet controleren. Probeer het opnieuw als je internet hebt.": "Fibro could not verify your account key. Try again when you are online.",
+  "Deze herstelsleutel hoort niet meer bij je account. De sleutel op dit toestel is niet veranderd.": "This recovery key no longer matches your account. The key on this device was not changed.",
 }

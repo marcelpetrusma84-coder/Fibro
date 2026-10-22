@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 22 oktober 2026 (v197: PR #3 van valentijnpeters).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 23 oktober 2026 (v202: stap 1 van PR #4 van valentijnpeters).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -369,6 +369,21 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  blijft het open slotje met uitleg (die haalt public_key wel op). proef96: de nep-server geeft nu
                                  alleen de gevraagde kolommen terug (alleen()), Vrienden zonder slotje, de uitleg getest in de
                                  Chat-lijst; proef43 (v201). FIBRO_VERSIE 201 (testscript_geenslot.py)
+                         spelcrypto = v202: stap 1 van PR #4 van valentijnpeters, overgenomen uit zijn eigen commit b3d69bf en NIET
+                                 uit de kop van de PR (b6f381e): na zijn samenvoeging met main ontbraken daar stukken in bellen.js
+                                 (9 functies), chat.html (imports, hartslag-variabelen) en schaken-ui.js (de schakelaar
+                                 #sch-cameras-at-top), zodat de Chat-lijst leeg bleef en schaken niet startte. Spelchat en
+                                 spelstickers versleuteld: nieuw spelchat-crypto.js?v=1 (maakSpelChatCrypto: crypto.js v2 met soort
+                                 'bericht', binnenin { v:1, sessie: spelKanaalNaam, type, id, data }; elk id maar een keer; een
+                                 onthouden vingerafdruk moet kloppen; geen sleutel = niets versturen, nooit leesbare tekst). chat.html:
+                                 stuurBeveiligdeSpelInhoud en toonSpelChatStatus (#spelChatStatus onder de chatbalk, met de reden:
+                                 geen sleutel bij de vriend, sleutel veranderd, geen eigen sleutel, geen internet); het vak wordt pas
+                                 leeg als het bericht weg is; leesbare tekst of sticker van een oude app = niet tonen, wel een
+                                 regeltje. login.html: herstelMetSleutel vergelijkt de sleutel eerst met profiles.public_key
+                                 (sleutelPastBij, zoals Face ID-herstel al deed). Nieuw: docs/security-review-2026-10-22.md en
+                                 tests/security/*.mjs (van Tijn; test-key-recovery zoekt nu de Nederlandse tekst). 7 nieuwe zinnen:
+                                 taal-en.js?v=29 en taal.js?v=29 (alle 12 pagina's). Geen spelnummer omhoog (geen spelbestand
+                                 veranderd). proef97 nieuw, proef43 (v202). FIBRO_VERSIE 202, 23 okt (testscript_spelcrypto.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -839,6 +854,13 @@ tools/proef96.py         alleen het open slotje met uitleg (v200), echte vriende
                          blijven, geen ontvrienden-vraag; Begrepen en Escape sluiten; html in een naam blijft tekst; tik op de rij
                          = profiel (Vrienden) of gesprek (Chat). Oude map (v199): 7 van 15.   python3 -I proef96.py <map>
                          v201: Vrienden zonder slotje, uitleg in de Chat-lijst; alleen gevraagde kolommen. Oude map (v200): 13 van 15.
+tools/proef97.py         versleutelde spelchat en spelstickers (v202), twee echte chat.html's met de nep-Realtime van proef94,
+                         Boter-Kaas-Eieren, NL en EN: een zin met html komt als tekst aan, over Realtime alleen ciphertext,
+                         hetzelfde of een beschadigd pakket nog eens = niets, sticker, oude app (leesbaar) = regeltje, geen
+                         sleutel bij de vriend / veranderde sleutel / geen eigen sleutel = niet verstuurd, tekst blijft staan.
+                         Oude map (v201): 5 van 21.   python3 -I proef97.py <map> [nl|en|alles]
+security/*.mjs           (v202, van valentijnpeters) Node-tests, te draaien vanuit de map zelf: node tests/security/test-crypto.mjs,
+                         test-game-crypto.mjs (spelchat-crypto.js), test-key-recovery.mjs (het herstel in login.html)
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

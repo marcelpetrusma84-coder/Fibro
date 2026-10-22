@@ -238,6 +238,9 @@ MAG_ERBIJ |= {'Fibro v200 \u00B7 22 okt 2026', 'Nog geen versleuteling met Lotte
 # v201: op Vrienden geen slotje meer (die lijst haalt public_key niet op; het stond er altijd open)
 MAG_WEG |= {'Fibro v200 \u00B7 22 okt 2026', '\U0001F513', 'Nog geen versleuteling met Lotte \u2014 tik voor uitleg / Nog geen versleuteling met Lotte \u2014 tik voor uitleg'}
 MAG_ERBIJ |= {'Fibro v201 \u00B7 22 okt 2026'}
+# v202: spelchat en spelstickers versleuteld, herstelsleutel eerst gecontroleerd (stap 1 van PR #4); op de schermen alleen het versienummer
+MAG_WEG |= {'Fibro v201 \u00B7 22 okt 2026'}
+MAG_ERBIJ |= {'Fibro v202 \u00B7 23 okt 2026'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
   <script src="huisregel.js?v=1"></script>
-  <script src="taal.js?v=28"></script>
+  <script src="taal.js?v=29"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title data-t>Fibro — Inloggen</title>
   <style>
@@ -570,6 +570,22 @@ window.herstelMetSleutel = async function() {
       if (!kluis || !kluis.blob) { toonBericht(msg,'error',T('Geen sleutelkluis gevonden voor dit account.')); return }
 
       const priv = await ontsleutelPrivateKey(kluis.blob, code)
+      // v202: nooit een werkende sleutel vervangen door een oude of verkeerde reservekopie: eerst controleren dat
+      // deze sleutel past bij de publieke sleutel van het account, zoals Face ID-herstel al deed (PR #4 van valentijnpeters)
+      let publiek
+      try {
+        const { data: profiel, error: profielFout } = await supabase.from('profiles')
+          .select('public_key').eq('id', userId).single()
+        if (profielFout || !profiel?.public_key) throw new Error('profile-key-unavailable')
+        publiek = profiel.public_key
+      } catch {
+        toonBericht(msg, 'error', T('Fibro kon je accountsleutel niet controleren. Probeer het opnieuw als je internet hebt.'))
+        return
+      }
+      if (!(await sleutelPastBij(priv, publiek))) {
+        toonBericht(msg, 'error', T('Deze herstelsleutel hoort niet meer bij je account. De sleutel op dit toestel is niet veranderd.'))
+        return
+      }
       slaPrivateKeyOp(userId, priv)
       sessionStorage.removeItem('fibro_sleutel_mist')
       toonBericht(msg,'success',T('Gelukt! Je berichten zijn weer leesbaar.'))

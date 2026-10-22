@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=27"></script>
+<script src="taal.js?v=28"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
@@ -305,6 +305,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   import { initSync } from './sync.js?v=162'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { haalVriendFotos, zetAvatar } from './vriendfotos.js?v=2'
+  import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
   pasBlokstijlToe()
 
   function isGebruikerOnline(profiel) {
@@ -402,7 +403,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
         (heeftWeergavenaam ? '<div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:1px;">@' + vEsc(p.username || '') + '</div>' : '') +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
-        '<span style="font-size:16px;opacity:0.6;">' + (p.public_key ? '🔒' : '🔓') + '</span>' +
+        (p.public_key ? '' : slotKnopHtml(vEsc(p2pNaam || p.username || ''))) + // v200: alleen het open slotje, met uitleg
         '<span class="chat-knop" data-cid="' + vEsc(p.id) + '" data-cnaam="' + vEsc(p2pNaam || p.username) + '" data-cav="' + vEsc(p.avatar_url || '👤') + '" style="position:relative;display:inline-flex;align-items:center;">' +
         '<span style="font-size:22px;line-height:1;cursor:pointer;">💬</span>' +
         '<span style="position:absolute;bottom:-1px;right:-2px;width:9px;height:9px;border-radius:50%;background:' + stipKleur + ';border:1.5px solid rgba(0,0,0,0.5);"></span>' +
@@ -475,6 +476,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
       rij.addEventListener('contextmenu', function (e) { e.preventDefault() })
       rij.addEventListener('click', () => vraagGeblokkeerde(rij, userId))
     })
+    koppelSlotjes(container) // v200
     container.querySelectorAll('.chat-knop').forEach(knop => {
       knop.addEventListener('click', e => {
         e.stopPropagation()

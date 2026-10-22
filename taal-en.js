@@ -15,6 +15,7 @@
 // v195: het vernieuwde schaken (schaken-ui.js, van valentijnpeters) weer in twee talen.
 // v197: schaken met webcam, een vriend uitnodigen vanuit spelen tegen de computer, nieuwe instellingen (PR #3 van valentijnpeters).
 // v198: de knop voor geluid dat de browser tegenhoudt (bellen.js).
+// v200: alleen het open slotje bij een vriend, met uitleg (slotuitleg.js).
 window.FIBRO_EN = {
 
 // ---- Overal ----
@@ -1471,4 +1472,9 @@ window.FIBRO_EN = {
   "De uitnodiging kon niet verstuurd worden. Probeer het opnieuw.": "The invitation could not be sent. Please try again.",
 // ---- Bellen v198: tegengehouden geluid ----
   "🔊 Tik hier voor geluid": "🔊 Tap here for sound",
+// ---- Open slotje bij een vriend (v200, slotuitleg.js) ----
+  "Nog geen versleuteling met {naam} — tik voor uitleg": "No encryption with {naam} yet — tap for an explanation",
+  "🔓 Nog geen versleuteling met {naam}": "🔓 No encryption with {naam} yet",
+  "{naam} heeft nog geen sleutel voor versleutelde berichten. Daarom kun je {naam} nu nog geen berichten sturen. Er leest niemand mee: Fibro stuurt nooit iets onversleuteld.": "{naam} doesn't have a key for encrypted messages yet. That's why you can't send {naam} messages right now. Nobody is reading along: Fibro never sends anything unencrypted.",
+  "Dit lost zich vanzelf op als {naam} Fibro opent en opnieuw inlogt. Daarna verdwijnt het open slotje.": "This fixes itself when {naam} opens Fibro and logs in again. After that the open padlock disappears.",
 }

@@ -232,6 +232,9 @@ MAG_ERBIJ |= {'Fibro v198 \u00B7 22 okt 2026', 'v4', 'versie 4'}
 # v199: in een gesprek geen '\u25CF actief' meer (groen stipje bij de foto als de vriend online is)
 MAG_WEG |= {'Fibro v198 \u00B7 22 okt 2026', '\u25CF actief'}
 MAG_ERBIJ |= {'Fibro v199 \u00B7 22 okt 2026', '\U0001F7E2 Bram is online'}  # (title bij de foto)
+# v200: geen dicht slotje meer bij een vriend; een open slotje is een knop met uitleg (slotuitleg.js)
+MAG_WEG |= {'Fibro v199 \u00B7 22 okt 2026', '\U0001F512'}
+MAG_ERBIJ |= {'Fibro v200 \u00B7 22 okt 2026', 'Nog geen versleuteling met Lotte \u2014 tik voor uitleg / Nog geen versleuteling met Lotte \u2014 tik voor uitleg'}  # (title / aria-label)
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

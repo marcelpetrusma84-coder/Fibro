@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=27"></script>
+<script src="taal.js?v=28"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Chat</title>
@@ -372,6 +372,7 @@ window.veiligeUrl = function(v){
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { nieuweSpelSessie, isNieuwsteSpelSessie } from './spelsessie.js?v=1'
   import { mountChessLayout } from './chess-layout.js?v=1'
+  import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -841,7 +842,7 @@ window.veiligeUrl = function(v){
         </div>
         <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
           <button class="bel-knop" data-bid="${esc(vriend.id)}" data-bnaam="${esc(vriendWeergaveNaam(vriend))}" style="background:#22c55e;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">📞</button>
-          <span style="font-size:12px;color:${vriend.public_key ? '#22c55e' : '#f87171'}">${vriend.public_key ? '🔒' : '🔓'}</span>
+          ${vriend.public_key ? '' : slotKnopHtml(esc(vriendWeergaveNaam(vriend)))}
         </div>
       </div>
     `).join('')
@@ -851,6 +852,7 @@ window.veiligeUrl = function(v){
         openChat(el.dataset.vid, el.dataset.vnaam, el.dataset.vav, el.dataset.vkey)
       })
     })
+    koppelSlotjes(container) // v200: alleen het open slotje, tik = uitleg
     container.querySelectorAll('.bel-knop').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation()

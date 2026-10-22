@@ -358,6 +358,12 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  met de lijst (werkOnlineBij, elke 2 min en bij terugkomen) en bij openChat/terug (werkKopStipBij).
                                  Geen nieuwe vertaling ('● actief' blijft ongebruikt in taal-en.js). proef87 (geen actief), proef43
                                  (v199), proef95 nieuw. FIBRO_VERSIE 199 (testscript_onlinestip.py)
+                         slotje = v200: bij een vriend op Vrienden en in de Chat-lijst geen dicht slotje 🔒 meer (normaal, ruis), alleen
+                                 nog het open slotje 🔓 als de vriend geen public_key heeft, als knop: tik = uitleg (nieuw
+                                 slotuitleg.js?v=1: slotKnopHtml, koppelSlotjes, toonSlotUitleg; dialoog #slotUitleg met
+                                 Begrepen, Escape of naast tikken sluit; pointerdown/click stoppen bij de knop, dus geen profiel,
+                                 gesprek of ontvrienden). 4 nieuwe zinnen: taal-en.js?v=28 en taal.js?v=28 (alle 12 pagina's).
+                                 proef43 (v200, 🔒 weg), proef96 nieuw. FIBRO_VERSIE 200 (testscript_slotje.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -823,6 +829,10 @@ tools/proef95.py         groen stipje bij de foto bovenin een gesprek (v199), ec
                          = stipje rechtsonder + title, geen 'actief'; offline bij de volgende ronde = weg; terug en Lotte (offline)
                          = geen; zelf offline (heartbeat-antwoord toon_online false) = geen; met een avatarfoto staat het erop.
                          Oude map (v198): 7 van 13.   python3 -I proef95.py <map>
+tools/proef96.py         alleen het open slotje met uitleg (v200), echte vrienden.html en chat.html, NL en EN, echte tikken: Bram
+                         (sleutel) geen slotje, Lotte en <b>Kees</b> (geen sleutel) een knop 🔓; tik = uitleg, op de pagina
+                         blijven, geen ontvrienden-vraag; Begrepen en Escape sluiten; html in een naam blijft tekst; tik op de rij
+                         = profiel (Vrienden) of gesprek (Chat). Oude map (v199): 7 van 15.   python3 -I proef96.py <map>
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

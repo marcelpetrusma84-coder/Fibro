@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="nl" data-taal style="background:#1a0a2e;">
+<head>
 <script>
   const f = localStorage.getItem('fibro_lettertype')
   if (f) {
@@ -9,11 +10,10 @@
     if (/^[a-z0-9-]+$/.test(fsl)) document.write('<link rel="stylesheet" href="lettertypen/' + fsl + '.css?v=1">')
   }
 </script>
-<head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=22"></script>
+<script src="taal.js?v=27"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
@@ -140,7 +140,7 @@ function stopBeltoon() {
 </script>
 <script type="module">
 import { supabase } from './supabase.js?v=95'
-import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo, sluitBelMelding, wachtOpBelregel } from './bellen.js?v=154'
+import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo, sluitBelMelding, wachtOpBelregel } from './bellen.js?v=198'
 
 const params = new URLSearchParams(window.location.search)
 const vriendId = params.get('vriend')
@@ -166,7 +166,10 @@ function belNaam(vriendId, username) {
   } catch(e) {}
   return username || T('Vriend')
 }
-if (!session) { window.location.href = 'login.html' }
+if (!session) {
+  window.location.replace('login.html')
+  throw new Error('Geen actieve sessie; doorsturen naar loginpagina.')
+}
 
 initBellen(session.user.id, {
   onVerbonden: () => { stopBeltoon(); startTimer() },
@@ -234,9 +237,11 @@ if (vriendId && !params.get('inkomend')) {
 }
 
 function startTimer() {
+  if (timer) return
   // iOS fix: audio moet gestart worden na gebruikersinteractie
   const audioEl = document.getElementById('remoteAudio')
   if (audioEl) { audioEl.play().catch(e => console.log('audio play:', e)) }
+  sluitWachtKanaal()
   document.getElementById('knoppen-bellen').style.display = 'none'
   document.getElementById('knoppen-inkomend').style.display = 'none'
   document.getElementById('knoppen-gesprek').style.display = 'flex'
@@ -309,11 +314,11 @@ window.hangop = async () => { stopBeltoon(); await hangOp(); naarChat() }
 window.togMic = () => { micAan = toggleMic(); document.getElementById('micBtn').textContent = micAan ? '🎤' : '🔇' }
 window.togCam = async () => {
   const camAan = isVideoActiefLokaal()
-  const ok = await schakelVideo(!camAan)
-  if (ok) {
-    document.getElementById('camBtn').textContent = !camAan ? '📷' : '🚫'
-    document.getElementById('lokaalMedia').style.display = !camAan ? 'block' : 'none'
-  }
+  await schakelVideo(!camAan)
+  // v198: knop en eigen beeld volgen wat de camera echt doet (ook als de stap naar de vriend mislukte)
+  const aan = heeftLokaleVideo()
+  document.getElementById('camBtn').textContent = aan ? '📷' : '🚫'
+  document.getElementById('lokaalMedia').style.display = aan ? 'block' : 'none'
   toonWissel()
 }
 // Camera wisselen: knop alleen zichtbaar als je video aan hebt en er meer dan een camera is

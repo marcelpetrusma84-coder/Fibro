@@ -211,6 +211,24 @@ MAG_ERBIJ |= {'Chat', 'Fibro v191 \u00B7 21 okt 2026'}
 # v192: Neon Raiders in Stijl > Widgets (alleen spelen)
 MAG_WEG |= {'Fibro v191 \u00B7 21 okt 2026'}
 MAG_ERBIJ |= {'\U0001F680', 'Neon Raiders', 'Speel alleen', 'Fibro v192 \u00B7 21 okt 2026'}
+# v193: het hele Neon Raiders (alleen het versienummer verandert op de schermen)
+MAG_WEG |= {'Fibro v192 \u00B7 21 okt 2026'}
+MAG_ERBIJ |= {'Fibro v193 \u00B7 21 okt 2026'}
+# v194: Neon Raiders samen vanuit de chat (alleen het versienummer verandert op de schermen)
+MAG_WEG |= {'Fibro v193 \u00B7 21 okt 2026'}
+MAG_ERBIJ |= {'Fibro v194 \u00B7 21 okt 2026'}
+# v195: het vernieuwde schaken weer in twee talen (alleen het versienummer verandert op de schermen)
+MAG_WEG |= {'Fibro v194 \u00B7 21 okt 2026'}
+MAG_ERBIJ |= {'Fibro v195 \u00B7 21 okt 2026'}
+# v196: bij elk spel in Stijl > Widgets een eigen versienummer (spelversies.js), los van het nummer van Fibro
+MAG_WEG |= {'Fibro v195 \u00B7 21 okt 2026'}
+MAG_ERBIJ |= {'Fibro v196 \u00B7 21 okt 2026', 'v1', 'v2', 'v3', 'versie 1', 'versie 2', 'versie 3'}  # (label voor schermlezers: Nederlands; Engels 'version N' staat in spelversies.js)
+# v197: PR #3 van valentijnpeters (schaken met webcam enz.): het versienummer, Schaken v3 en de knop 'Tegen een vriend'
+MAG_WEG |= {'Fibro v196 \u00B7 21 okt 2026', 'v2', 'versie 2'}  # Schaken v2 -> v3, geen spel meer op v2
+MAG_ERBIJ |= {'Fibro v197 \u00B7 22 okt 2026', '\u265F Tegen een vriend'}  # spel.html?spel=schaken: knop 'Tegen een vriend'
+# v198: webcam-status en tegengehouden geluid (melding van Tijn); op de schermen alleen het versienummer en Schaken v4
+MAG_WEG |= {'Fibro v197 \u00B7 22 okt 2026', 'v3', 'versie 3'}
+MAG_ERBIJ |= {'Fibro v198 \u00B7 22 okt 2026', 'v4', 'versie 4'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

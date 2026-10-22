@@ -47,131 +47,7 @@ let geinitialiseerd = false
 let gesprekKlaar = null   // belofte: klaar zodra het gesprekskanaal echt open is
 let iceBuffer = []        // ICE-gegevens die binnenkomen voordat offer/answer verwerkt is
 let videoGewenst = false  // v150: met video gebeld/opgenomen (ook als de eigen camera niet lukte)
-const BELLEN_VERSIE = 154 // media state follows actual tracks; queued camera negotiation and audio recovery
-
-function actieveTracks(stream, kind, ontvangen = false) {
-  return !!stream?.getTracks().some(track => track.kind === kind && track.readyState === 'live' && track.enabled && (!ontvangen || !track.muted))
-}
-
-export function getMediaStatus() {
-  return {
-    localVideo: actieveTracks(lokaleStream, 'video'),
-    remoteVideo: !remoteVideoUit && actieveTracks(remoteStream, 'video', true),
-    localAudio: actieveTracks(lokaleStream, 'audio'),
-    localAudioAvailable: !!lokaleStream?.getAudioTracks().some(track => track.readyState === 'live'),
-    remoteAudio: actieveTracks(remoteStream, 'audio', true),
-    audioBlocked: audioGeblokkeerd,
-    connected: peerConnection?.connectionState === 'connected'
-  }
-}
-
-function meldMediaStatus() {
-  if (!remoteStream?.getAudioTracks().some(track => track.readyState === 'live')) audioGeblokkeerd = false
-  const status = getMediaStatus()
-  videoActiefLokaal = status.localVideo
-  const key = JSON.stringify(status)
-  if (key === laatsteMediaStatus) return
-  laatsteMediaStatus = key
-  if (onMediaStatusCallback) { try { onMediaStatusCallback(status) } catch (e) { console.warn('Media status callback:', e) } }
-}
-
-function volgStream(stream) {
-  if (!stream) return
-  const volgTrack = track => {
-    if (gevolgdeTracks.has(track)) return
-    gevolgdeTracks.add(track)
-    for (const type of ['mute', 'unmute', 'ended']) track.addEventListener(type, meldMediaStatus)
-  }
-  stream.getTracks().forEach(volgTrack)
-  if (!gevolgdeStreams.has(stream)) {
-    gevolgdeStreams.add(stream)
-    stream.addEventListener('addtrack', event => { volgTrack(event.track); meldMediaStatus() })
-    stream.addEventListener('removetrack', meldMediaStatus)
-  }
-}
-
-// One audio sink avoids echo; video is always muted, including when tracks arrive later.
-export async function hervatGeluid() {
-  const audioEl = document.getElementById('remoteAudio')
-  if (!audioEl || !remoteStream?.getAudioTracks().some(track => track.readyState === 'live')) {
-    audioGeblokkeerd = false
-    meldMediaStatus()
-    return true
-  }
-  const stream = remoteStream
-  audioEl.srcObject = stream
-  audioEl.muted = false
-  try {
-    await audioEl.play()
-    if (remoteStream !== stream) return false
-    audioGeblokkeerd = false
-    meldMediaStatus()
-    return true
-  } catch (e) {
-    if (remoteStream !== stream) return false
-    audioGeblokkeerd = true
-    meldMediaStatus()
-    return false
-  }
-}
-
-function stopHerstelTimer() {
-  clearTimeout(herstelTimer)
-  herstelTimer = null
-}
-
-function stopOnderhandelingTimer() {
-  clearTimeout(onderhandelingTimer)
-  onderhandelingTimer = null
-  onderhandelingPogingen = 0
-}
-
-function planOnderhandeling(pc) {
-  if (pc !== peerConnection || !onderhandelingWacht || onderhandelingTimer || pc.signalingState !== 'stable') return
-  const pauzes = [1000, 2000, 5000, 10000]
-  const ms = pauzes[Math.min(onderhandelingPogingen++, pauzes.length - 1)]
-  onderhandelingTimer = setTimeout(() => {
-    onderhandelingTimer = null
-    if (pc === peerConnection) onderhandelCamera().catch(() => {})
-  }, ms)
-}
-
-// Wait for the current offer/answer exchange rather than interrupting a working camera.
-async function onderhandelCamera() {
-  const pc = peerConnection
-  if (!onderhandelingWacht || !pc || !pc.localDescription || pc.signalingState !== 'stable' || maakOfferBezig) return
-  onderhandelingWacht = false
-  clearTimeout(onderhandelingTimer)
-  onderhandelingTimer = null
-  maakOfferBezig = true
-  try {
-    const track = lokaleStream?.getVideoTracks().find(item => item.readyState === 'live' && item.enabled) || null
-    if (videoSender && videoSender.track !== track) await videoSender.replaceTrack(track)
-    const audio = lokaleStream?.getAudioTracks().find(item => item.readyState === 'live') || null
-    if (audioSender && audio && audioSender.track !== audio) await audioSender.replaceTrack(audio)
-    if (pc !== peerConnection) return
-    const offer = await pc.createOffer()
-    if (pc !== peerConnection || pc.signalingState !== 'stable') { onderhandelingWacht = true; return }
-    await pc.setLocalDescription(offer)
-    if (pc !== peerConnection) return
-    const verzonden = await stuurSignaal('offer-renegotiate', pc.localDescription || offer)
-    if (!verzonden && pc === peerConnection) throw new Error('Camera signaling is reconnecting')
-    onderhandelingPogingen = 0
-  } catch (e) {
-    if (pc === peerConnection) {
-      onderhandelingWacht = true
-      if (pc.signalingState === 'have-local-offer') {
-        try { await pc.setLocalDescription({ type:'rollback' }) } catch (rollbackError) {}
-      }
-    }
-    console.warn('Camera negotiation will resume:', e)
-  } finally {
-    if (pc === peerConnection) {
-      maakOfferBezig = false
-      planOnderhandeling(pc)
-    }
-  }
-}
+const BELLEN_VERSIE = 107 // gaat mee in elk signaal: zo toont het log welke versie de ander draait
 
 // v151: pushmelding naar de vriend. De tekst maakt stuur-push zelf (in de taal van de ontvanger);
 // 'gemist' heeft dezelfde tag als 'belt je' en vervangt die melding op de telefoon van de ander.
@@ -553,6 +429,7 @@ export async function accepteerOproep(video = false) {
   if (epoch !== gesprekEpoch) return false
   if (!gesprekKanaal && vriendId) await openGesprekKanaal(vriendId)
   sluitBelMelding(vriendId) // v151: de 'belt je'-melding is nu niet meer nodig
+  if (!lokaleStream) return false // v197: intussen opgehangen (bijv. het spel net dicht): geen gesprek meer opzetten
   maakPeerConnection()
   await stuurSignaal('geaccepteerd', {})
   return true
@@ -568,20 +445,11 @@ export async function weigerooproep() {
 }
 
 function maakPeerConnection() {
-  stopHerstelTimer()
-  stopOnderhandelingTimer()
-  const oud = peerConnection
-  const pc = new RTCPeerConnection(ICE_SERVERS)
-  peerConnection = pc
-  if (oud) oud.close()
-  videoSender = null
-  audioSender = null
-  negeerOffer = false
-  maakOfferBezig = false
-  audioGeblokkeerd = false
-  volgStream(lokaleStream)
-  lokaleStream.getTracks().forEach(track => {
-    const sender = pc.addTrack(track, lokaleStream)
+  if (peerConnection) { peerConnection.close(); peerConnection = null }
+  peerConnection = new RTCPeerConnection(ICE_SERVERS)
+  // v197: lokaleStream kan leeg zijn als het gesprek tijdens het wachten al eindigde (gaf 'getTracks of null')
+  if (lokaleStream) lokaleStream.getTracks().forEach(track => {
+    const sender = peerConnection.addTrack(track, lokaleStream)
     // Gesprek begint met video: onthoud de videobron, dan werken de cameraknoppen meteen goed
     if (track.kind === 'video') { videoSender = sender; videoActiefLokaal = true }
     if (track.kind === 'audio') audioSender = sender
@@ -604,17 +472,21 @@ function maakPeerConnection() {
       remoteEl.srcObject = remoteStream
       remoteEl.muted = true
       if (track.kind === 'video') {
-        remoteEl.style.display = track.muted ? 'none' : 'block'
-        remoteEl.play().catch(()=>{})
+        remoteEl.style.display = 'block'
+        speelAf(remoteEl)
+        const bevestigOntvangst = () => stuurSignaal('video-ontvangen', { actief:true }).catch(()=>{})
+        if (track.muted) track.addEventListener('unmute', bevestigOntvangst, { once:true })
+        else bevestigOntvangst()
       }
     }
-    const updateOntvangst = () => {
-      if (pc !== peerConnection || remoteStream !== ontvangenStream) return
-      meldMediaStatus()
-      if (track.kind === 'video') {
-        const actief = getMediaStatus().remoteVideo
-        if (remoteEl) remoteEl.style.display = actief ? 'block' : 'none'
-        stuurSignaal('video-ontvangen', { actief }).catch(()=>{})
+    const audioEl = document.getElementById('remoteAudio')
+    if (audioEl) { audioEl.srcObject = remoteStream; speelAf(audioEl) }
+    track.onended = () => {
+      if (!remoteStream) return // gesprek is al afgelopen
+      remoteStream.getTracks().forEach(t => { if (t.kind === 'video' && t.readyState === 'ended') remoteStream.removeTrack(t) })
+      if (remoteEl && remoteStream.getVideoTracks().length === 0) {
+        remoteEl.style.display = 'none'
+        stuurSignaal('video-ontvangen', { actief:false }).catch(()=>{})
       }
       if (track.kind === 'audio' && !track.muted) hervatGeluid().catch(()=>{})
     }
@@ -705,60 +577,87 @@ async function leegIceBuffer() {
   }
 }
 
-export function schakelVideo(aanzetten) {
-  const epoch = mediaEpoch
-  const werk = cameraWerk.then(() => zetVideo(Boolean(aanzetten), epoch))
-  cameraWerk = werk.catch(() => {})
-  return werk
+// v198: de uitkomst is wat de camera ECHT doet (heeftLokaleVideo), niet of de vriend de wijziging kreeg.
+// Eerst ging een mislukte stap richting de vriend (replaceTrack, offer, signaal) als 'mislukt' terug,
+// terwijl de camera al aan stond: het scherm zei 'uit' en het lampje brandde. Melding van Tijn.
+export async function schakelVideo(aanzetten) {
+  if (aanzetten) {
+    let videoTrack = null
+    try {
+      const videoStream = await navigator.mediaDevices.getUserMedia({ video: CAMERA })
+      videoTrack = videoStream.getVideoTracks()[0] || null
+    } catch (e) { console.warn('schakelVideo: geen camera:', e) }
+    if (!videoTrack) return heeftLokaleVideo()
+    if (!lokaleStream) lokaleStream = new MediaStream()
+    const oudeVideo = lokaleStream.getVideoTracks()[0]
+    if (oudeVideo) { lokaleStream.removeTrack(oudeVideo); oudeVideo.stop() }
+    lokaleStream.addTrack(videoTrack)
+    // Stopt de camera vanzelf (andere app, toestemming ingetrokken): de pagina hoort het
+    videoTrack.addEventListener('ended', () => {
+      if (lokaleStream && lokaleStream.getVideoTracks().includes(videoTrack)) videoActiefLokaal = false
+      window.dispatchEvent(new CustomEvent('fibro-eigen-video-gestopt'))
+    })
+    const lokaalEl = document.getElementById('lokaalMedia')
+    if (lokaalEl) { lokaalEl.srcObject = lokaleStream; lokaalEl.play().catch(()=>{}) }
+    videoActiefLokaal = true
+  } else {
+    const track = lokaleStream ? lokaleStream.getVideoTracks()[0] : null
+    if (track) { lokaleStream.removeTrack(track); track.stop() }
+    videoActiefLokaal = false
+  }
+  // De lokale preview werkt ook zonder vriendverbinding. Zodra er een peer is, gaat dezelfde track mee en
+  // bevestigt de ontvanger het beeld. Lukt dit deel niet, dan blijft de camera zoals hij is (een volgende
+  // verbinding neemt hem vanzelf mee, zie maakPeerConnection).
+  if (peerConnection) {
+    try {
+      const track = aanzetten && lokaleStream ? lokaleStream.getVideoTracks()[0] : null
+      if (videoSender) await videoSender.replaceTrack(track)
+      else if (track) videoSender = peerConnection.addTrack(track, lokaleStream)
+      const offer = await peerConnection.createOffer()
+      await peerConnection.setLocalDescription(offer)
+      await stuurSignaal('offer-renegotiate', offer)
+      await stuurSignaal('video-status', { actief: videoActiefLokaal })
+    } catch (e) { console.warn('schakelVideo: de vriend kreeg de wijziging niet:', e) }
+    if (!videoActiefLokaal && onEigenVideoOntvangenCallback) onEigenVideoOntvangenCallback(false)
+  }
+  return aanzetten ? heeftLokaleVideo() : !heeftLokaleVideo()
 }
 
-async function zetVideo(aanzetten, epoch) {
-  if (epoch !== mediaEpoch) return false
-  try {
-    if (aanzetten) {
-      const bestaand = lokaleStream?.getVideoTracks().find(track => track.readyState === 'live')
-      const videoTrack = bestaand || (await navigator.mediaDevices.getUserMedia({ video: CAMERA })).getVideoTracks()[0]
-      if (!videoTrack) return false
-      if (epoch !== mediaEpoch) { if (!bestaand) videoTrack.stop(); return false }
-      videoTrack.enabled = true
-      if (!lokaleStream) lokaleStream = new MediaStream()
-      const oudeVideo = lokaleStream.getVideoTracks()[0]
-      if (oudeVideo && oudeVideo !== videoTrack) { lokaleStream.removeTrack(oudeVideo); oudeVideo.stop() }
-      if (!lokaleStream.getVideoTracks().includes(videoTrack)) lokaleStream.addTrack(videoTrack)
-      volgStream(lokaleStream)
-      if (peerConnection) {
-        try {
-          if (videoSender) await videoSender.replaceTrack(videoTrack)
-          else videoSender = peerConnection.addTrack(videoTrack, lokaleStream)
-          const transceiver = peerConnection.getTransceivers?.().find(item => item.sender === videoSender)
-          if (transceiver && transceiver.direction !== 'sendrecv') transceiver.direction = 'sendrecv'
-        } catch (e) { console.warn('Camera preview is ready; sending will retry:', e) }
-      }
-      const lokaalEl = document.getElementById('lokaalMedia')
-      if (epoch !== mediaEpoch) return false
-      if (lokaalEl) { lokaalEl.srcObject = lokaleStream; lokaalEl.muted = true; lokaalEl.play().catch(()=>{}) }
-      videoActiefLokaal = true
-    } else {
-      if (!lokaleStream) { videoActiefLokaal = false; meldMediaStatus(); return true }
-      const track = lokaleStream.getVideoTracks()[0]
-      if (track) { lokaleStream.removeTrack(track); track.stop() }
-      if (videoSender && peerConnection) { try { await videoSender.replaceTrack(null) } catch (e) { console.warn('Camera sender is reconnecting:', e) } }
-      videoActiefLokaal = false
-    }
-    meldMediaStatus()
-    // De lokale preview werkt ook zonder vriendverbinding. Zodra er een peer is,
-    // wordt dezelfde track toegevoegd en bevestigt de ontvanger het beeld.
-    if (peerConnection) {
-      onderhandelingWacht = true
-      onderhandelCamera().catch(() => {})
-      stuurSignaal('video-status', { actief: videoActiefLokaal }).catch(() => {})
-      if (!videoActiefLokaal && onEigenVideoOntvangenCallback) onEigenVideoOntvangenCallback(false)
-    }
-    return true
-  } catch(e) {
-    console.warn('schakelVideo fout:', e)
-    return false
+// v198: geluid van de ander dat de browser tegenhoudt (geen tik gehad, vooral iPhone) werd stil genegeerd:
+// je hoorde je vriend niet en wist niet waarom. Nu komt er een knop 'Tik hier voor geluid'; een tik speelt
+// alles wat tegengehouden werd alsnog af. Werkt op elke pagina die bellen.js gebruikt.
+const geblokkeerd = new Set()
+function speelAf(el) {
+  if (!el) return
+  const p = el.play()
+  if (p && p.then) p.then(() => { geblokkeerd.delete(el); werkGeluidKnopBij() }, (e) => {
+    if (e && e.name === 'NotAllowedError') { geblokkeerd.add(el); werkGeluidKnopBij() }
+  })
+}
+export async function speelGeblokkeerdAf() {
+  for (const el of [...geblokkeerd]) {
+    if (!el.isConnected || !el.srcObject) { geblokkeerd.delete(el); continue }
+    try { await el.play(); geblokkeerd.delete(el) } catch (e) {}
   }
+  werkGeluidKnopBij()
+  return geblokkeerd.size === 0
+}
+export function isGeluidGeblokkeerd() {
+  return [...geblokkeerd].some(el => el.isConnected && el.srcObject)
+}
+function werkGeluidKnopBij() {
+  let knop = document.getElementById('fibroGeluidKnop')
+  if (!isGeluidGeblokkeerd()) { if (knop) knop.remove(); return }
+  if (knop) return
+  const T = window.T || (s => s)
+  knop = document.createElement('button')
+  knop.id = 'fibroGeluidKnop'
+  knop.type = 'button'
+  knop.textContent = T('🔊 Tik hier voor geluid')
+  knop.setAttribute('aria-live', 'polite')
+  knop.style.cssText = 'position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:2147483000;min-height:48px;padding:12px 20px;border:1px solid #ffffff60;border-radius:24px;background:linear-gradient(135deg,#ffcc4d,#ff8a3d);color:#2a1300;font:inherit;font-size:15px;font-weight:700;box-shadow:0 8px 24px #0009;cursor:pointer'
+  knop.addEventListener('click', () => { speelGeblokkeerdAf() })
+  document.body.appendChild(knop)
 }
 
 export function isVideoActiefLokaal() {
@@ -809,6 +708,7 @@ function beeindigGesprek(doorOns, behoudCamera = false) {
   // Media-elementen leegmaken zodat de browser streams echt vrijgeeft
   const remoteEl = document.getElementById('remoteMedia')
   if (remoteEl) { remoteEl.srcObject = null; remoteEl.style.display = 'none' }
+  geblokkeerd.clear(); werkGeluidKnopBij() // v198
   const audioEl = document.getElementById('remoteAudio')
   if (audioEl) audioEl.srcObject = null
   const lokaalEl = document.getElementById('lokaalMedia')

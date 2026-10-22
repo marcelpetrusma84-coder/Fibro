@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 17 oktober 2026 (v180: de geluidsregelaar).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 22 oktober 2026 (v197: PR #3 van valentijnpeters).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -272,6 +272,85 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  Stijl > Widgets (spel_shmup), Home-icoon. taal-en.js?v=22 (in taal.js), taal.js?v=22 (alle 12
                                  pagina's). In de chat zegt Neon Raiders nog 'komt binnenkort'. proef43 kent de nieuwe teksten (v192).
                                  FIBRO_VERSIE 192 (testscript_neonraiders.py)
+                         neonraiders2 = v193: het hele Neon Raiders, alleen spelen: 7 levels (Aarde, Stratosfeer, Ruimte, Moederschip,
+                                 Diepe ruimte, Xeron lucht, Xeron grond), elk met eigen achtergrondlagen (achtergrond_<soort>),
+                                 vijandkleuren (PALET), golven (GOLVEN[n], rng(1000 + n)) en eindbaas (BAZEN: TITAN, ZEPHYR, VORTEX,
+                                 REACTOR, ZOGGOTH PRIME, ZWERMKONINGIN, OVERLORD; onderdelen met schild beschermen de kern). Nieuwe
+                                 vijanden: meteoren (splitsen), mijnen, muurkanonnen, laserhekken, zwermen, spugers (zuurbogen),
+                                 lopers, vijandelijke raketten. Na een baas door naar het volgende level; hoogste level in
+                                 localStorage nr-bereikt (knop VERDER). neon-raiders-ui.js?v=193 (solo.js?v=193, spel.html),
+                                 taal-en.js?v=23 en taal.js?v=23 (alle 12 pagina's). proef88 bijgewerkt, proef89 nieuw.
+                                 Gemaakt na de merge van PR #1 en #2 van valentijnpeters (README, schaken: schaak-stukken.js,
+                                 schaak-worker.js, schaken-ui.js?v=149, bordgeluid.js?v=148, solo-bord.js?v=3); die zette
+                                 spel.html op solo.js versie 194, v193 zet het op solo.js?v=193 (194 blijft bezet).
+                                 FIBRO_VERSIE 193 (testscript_neonraiders2.py)
+                         neonraiders3 = v194: Neon Raiders samen spelen vanuit de chat (chat.html: 'shmup' in beschikbaar, SPEL_BESTAND,
+                                 startNeonRaiders). Nieuw: spelnet.js?v=194, de lijn tussen de twee telefoons: WebRTC DataChannels
+                                 'zeker' (op volgorde) en 'snel' (mag wegvallen) met ice-config.js (eigen STUN/TURN); het spelkanaal
+                                 (Supabase) alleen voor het opzetten (events nr-sig) en, als het binnen 10 s niet rechtstreeks lukt,
+                                 als reserve: event nr-pak, hooguit 4 per seconde (snel = alleen de nieuwste, zeker = alles).
+                                 In het spel: de uitnodiger (P1, cyaan 'schip') start; speler 2 ('schip2', roze) stuurt 'klaar'.
+                                 Elk speelt het level zelf (vijanden met hetzelfde nummer: golfnummer * 16 + volgorde, 'b'+n van de
+                                 baas, 'B'+i de onderdelen); over de lijn: stand ('s', 20 per seconde: plek, vlaggen, wapen, score,
+                                 levens van de baas), gebeurtenissen ('e': r = raak id schade, p = power-up gepakt, b = bom, h =
+                                 geraakt, u = af, x = eindscore), pauze ('z'), 'klaar' en 'start'. Speler 2 volgt de speltijd van
+                                 de uitnodiger (syncTempo, springKlok), de baas komt als hij er bij de uitnodiger is, van de baas
+                                 telt de laagste stand (baasSamen), het hoogste level telt (naarLevel). Vijanden mikken op het
+                                 dichtstbijzijnde schip (doel). Af = meekijken, nieuw level = weer mee (2 levens), allebei af =
+                                 game over. Samen: geen slow motion bij de tegel, de baas 1,4 keer zo sterk. Kolos-buit hangt af van zijn nummer.
+                                 neon-raiders-ui.js?v=194 (solo.js?v=195 want 194 was al gebruikt, spel.html, chat.html), taal-en.js?v=24 en taal.js?v=24
+                                 (alle 12 pagina's). proef90 nieuw. FIBRO_VERSIE 194 (testscript_neonraiders3.py)
+                         schaaktaal = v195: het vernieuwde schaken (PR #2 van valentijnpeters: schaak-stukken.js, bewegende zetten,
+                                 geslagen stukken met punten, instellingen via 3 s drukken op 'Bord groter', aanvalsroutes) weer in
+                                 twee talen: schaken-ui.js?v=195 via T() (taal.js), Nederlands als sleutel, Engels in taal-en.js
+                                 (zijn Engelse zinnen); de stukken heten pion/paard/loper/toren/dame/koning ('witte {stuk}' enz.)
+                                 voor de labels; de knop geluid weer via T; 'Extra duidelijk' alleen als de aanvalsroutes aan
+                                 staan. solo.js?v=196 (spel.html; 194 en 195 waren al gebruikt), chat.html (2 keer
+                                 schaken-ui.js?v=195), taal-en.js?v=25 en taal.js?v=25 (alle 12 pagina's).
+                                 proef91 nieuw. FIBRO_VERSIE 195 (testscript_schaaktaal.py)
+                         spelversies = v196: elk spel een eigen versienummer, los van het nummer van Fibro. Nieuw bestand
+                                 spelversies.js?v=1 (SPEL_VERSIES: Neon Raiders v3, Schaken v2, de rest v1; vulSpelVersies()), in
+                                 Stijl > Widgets > Spellen (profiel.html) staat het nummer ('v3') tussen de tekst en de toggle-knop.
+                                 Regel voor elk nieuw maak-script: raakt het een spel aan, zet dan het nummer van dat spel in
+                                 spelversies.js een hoger (en FIBRO_VERSIE ook, zoals altijd). Geen nieuwe vertaling nodig (het
+                                 label voor schermlezers 'versie 3' / 'version 3' zit in spelversies.js zelf). proef92 nieuw,
+                                 proef43 kent v1/v2/v3 en Fibro v196. FIBRO_VERSIE 196 (testscript_spelversies.py)
+                         schaakpr3 = v197: PR #3 van valentijnpeters (5 commits, 'latest chess changes', gemaakt op de stand van
+                                 v192: botste met v193-v196 in chat.html, schaken-ui.js, solo.js en spel.html; daarom samengevoegd
+                                 in dit script en een merge-commit met 'git merge -s ours --no-commit' (zie de overdracht), zodat
+                                 GitHub de PR als samengevoegd ziet). Wat erin zit: schaken tegen een vriend met webcam (chat.html:
+                                 #spelVideoAnder/#spelVideoEigen, window.FibroChessVideo, groene rand als de ander je ziet via het
+                                 nieuwe signaal 'video-ontvangen' in bellen.js; tik op een beeld = groter, chess-layout.js/.css);
+                                 bellen.js: de eigen camera ook zonder verbinding (schakelVideo), haalGespreksStream; spelsessie.js:
+                                 een oudere uitnodiging (tijd-sessie) opent geen spel meer (chat.html, speluitnodiging.js);
+                                 hartslag meteen en pas na 45 s 'verbinding weg'; spel.html: knop 'Tegen een vriend' bij schaken
+                                 (vriendenlijst, uitnodiging zoals in de chat); schaken-ui.js: werkbalk Bord / Compact / Hele breedte
+                                 / schuifjes, geluid van de stukken (klassiek of hout, bordgeluid.js previewSchaakGeluid), glazen
+                                 plaat, punten per stuk, beginnersstand (vraag voor een zet die een stuk weggeeft) en Extra
+                                 duidelijk alleen tegen de computer, SCHAAKMAT groot in beeld; index.html: de oude mood 'Offline'
+                                 niet meer onder je naam. Door Claude erbij: alle nieuwe teksten via T() in twee talen (57 zinnen,
+                                 'Je vriend ziet je' via data-gezien/data-t-attr), het instellingenmenu klapt naar beneden open (omhoog
+                                 viel de bovenkant buiten beeld), in de status blijft staan wie won, initBellen had twee keer onEind
+                                 (de tweede won: samengevoegd), bellen.js zonder fout als het gesprek tijdens het opnemen al eindigde,
+                                 service-worker.js NIET naar fibro-v33 (de ?v= regelen het; anders haalt elk toestel alles opnieuw).
+                                 ?v=197: bellen.js (chat, bellen.html, bel-luisteraar.js), bel-luisteraar.js en speluitnodiging.js
+                                 (index, vrienden, profiel, spel.html), bordgeluid.js (chat, spel.html), schaken-ui.js (chat 2x,
+                                 solo.js), solo.js (spel.html); spelversies.js?v=2 (Schaken v3); spelsessie.js?v=1, chess-layout.js?v=1,
+                                 chess-layout.css?v=1; taal-en.js?v=26 en taal.js?v=26 (alle 12 pagina's). proef91 aangepast (twee
+                                 knoppen in plaats van 'Bord groter'), proef92 (Schaken v3, Fibro 197+), proef43 (v197, v2 weg,
+                                 'Tegen een vriend'), proef93 nieuw. FIBRO_VERSIE 197, 22 okt (testscript_schaakpr3.py)
+                         webcamgeluid = v198: melding van Tijn over v197. (1) bellen.js schakelVideo: de uitkomst is wat de camera
+                                 echt doet (heeftLokaleVideo); een mislukte stap richting de vriend (replaceTrack/offer/signaal)
+                                 gaf 'mislukt' terwijl de camera aan stond (scherm 'uit', lampje aan). chat.html: spelEigenVideo =
+                                 altijd heeftLokaleVideo(); event 'fibro-eigen-video-gestopt' als de camera vanzelf stopt.
+                                 bellen.html togCam volgt ook heeftLokaleVideo(). schaken-ui.js: uitzetten zegt niet meer 'Je
+                                 camera gaat aan…', daarna weer de beurt (spelStatusTekst). (2) bellen.js speelAf: geluid/beeld van
+                                 de ander dat play() tegenhoudt (NotAllowedError) gaf stilte zonder melding; nu een knop
+                                 #fibroGeluidKnop '🔊 Tik hier voor geluid' onderaan (elke pagina met bellen.js), een tik speelt het
+                                 af (speelGeblokkeerdAf), weg bij einde gesprek. BELLEN_VERSIE 107. ?v=198: bellen.js (chat,
+                                 bellen.html, bel-luisteraar.js), bel-luisteraar.js (index, vrienden, profiel), schaken-ui.js (chat
+                                 2x, solo.js), solo.js (spel.html); spelversies.js?v=3 (Schaken v4); taal-en.js?v=27 en taal.js?v=27
+                                 (alle 12 pagina's). proef94 nieuw, proef43 (v198, v4). FIBRO_VERSIE 198 (testscript_webcamgeluid.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -398,6 +477,9 @@ tools/proef44.py         de spellen in twee talen (v147): elk spel wordt echt ge
                          Nederlands precies gelijk aan de oude code; Engels zonder Nederlandse woorden of fouten.
                          Duurt lang (een uur of zo): elk spel drie keer. TOON=1 laat alle teksten zien.
                          python3 -I proef44.py <scratch met tools/server.py> <map> <poort> [oude map|-] [filter]
+                         v195: bij schaken (en schaken gast) geeft 'NL: dezelfde teksten als de oude code' FOUT met de nieuwe
+                         Nederlandse teksten als 'nieuw extra' tegen v194 (toen was het vernieuwde schaken alleen Engels):
+                         zo hoort het; het Engels moet wel helemaal OK zijn. Zie proef91.
 tools/proef45.py         Home zet je taal in je profiel (v148, profiles.taal uit sql/taal.sql): alleen als hij anders
                          is, niet bij een geblokkeerd account, en zonder de kolom (SQL niet gedraaid) niets.
                          python3 -I proef45.py <scratch met tools/server.py> <map> <poort>
@@ -679,13 +761,57 @@ tools/proef87.py         Chat-lijst bovenaan alleen 'Chat' (v191), echte chat.ht
                          zoals Vrienden (letter, maat, schuin), geen tweede regel, oude zinnen weg; tik op een vriend = naam + actief
                          in de gewone letter; terug = weer 'Chat'; ook via chat.html?vriend=. Oude map (v190) als controle: 10 van 34.
                          python3 -I proef87.py <map>
-tools/proef88.py         Neon Raiders (v192) via spel.html?spel=shmup, Nederlands en Engels, nagebootste iPhone met echte
+tools/proef88.py         Neon Raiders (v192; v193: na de baas door naar level 2, game over in level 2, VERDER) via spel.html?spel=shmup, Nederlands en Engels, nagebootste iPhone met echte
                          aanrakingen (twee vingers via CDP Input.dispatchTouchEvent): startscherm, START, slepen = vliegen, een
                          vinger schiet niet, tweede vinger wel, loslaten stopt; tegel = arsenaal + slow motion, bom, wapen
                          wisselen, capsule oppakken; pauze op de achtergrond; eindbaas komt en wordt verslagen (record bewaard);
                          game over. Het spel zet window.__neonRaiders alleen als window.__fibroProef = true (init-script).
                          Swiftshader-Chromium haalt ±20 beeldjes: de baas duurt ±40 s. Oude map (v191): 2 van 8.
                          python3 -I proef88.py <map>
+tools/proef89.py         Neon Raiders, het hele spel (v193): alle 7 levels versneld (tijdSchaal 4, onkwetsbaar, spatie = schieten):
+                         golven zonder fouten tot de eindbaas (juiste naam), onderdelen kapot = fase 2/3, kern kapot = volgend
+                         level met nieuwe achtergrond (oude ag_-texturen weg) en nr-bereikt; na level 7 GEWONNEN!; opnieuw
+                         laden: knop VERDER: LEVEL 7 begint level 7 met de gewone uitrusting. Duurt ±10 minuten.
+                         Oude map (v192): bijna alles MIS.   python3 -I proef89.py <map>
+tools/proef90.py         Neon Raiders samen (v194): twee pagina's in een browser via een proefpagina (nrsamen.html, wordt gemaakt) met
+                         een nagemaakt spelkanaal (BroadcastChannel) en echte WebRTC (spelnet.js, echte ice-config.js).
+                         A wachtkamer: 'BRAM START HET SPEL' / 'WACHT OP MARCEL' -> 'RECHTSTREEKS VERBONDEN' + START.
+                         B samen: allebei level 1, schip van de ander op de goede plek, speltijd gelijk, dezelfde vijanden
+                         (nummers), schoten van speler 2 doden ook bij de uitnodiger (zonder punten voor hem), zijn score
+                         rechtsboven, power-up weg bij de ander, bom van de ander, niets via het spelkanaal.
+                         C baas bij allebei, schade telt, laagste stand telt, pauze bij de een = wachten bij de ander, kern
+                         kapot = allebei level 2. D af = meekijken, nieuw level = weer mee (2 levens), allebei af = game over
+                         met de score van de ander, OPNIEUW = ronde 2. E zonder WebRTC: 'VERBONDEN (RESERVE)' na ±11 s,
+                         hooguit 4 berichten per seconde via het spelkanaal, schip van de ander te zien. Duurt ±5 minuten.
+                         Oude map (v193): bijna alles MIS.   python3 -I proef90.py <map>
+tools/proef91.py         het vernieuwde schaken in twee talen (v195): echte spel.html tegen de computer en een proefpagina
+                         schaaksamen.html (wordt gemaakt, twee pagina's met een nagemaakt spelkanaal). NL en EN: status, Jij,
+                         Geslagen, puntenregel, Bord groter, geluid, veldnamen (a1, witte toren), geen woorden uit de andere
+                         taal; 3 s drukken = instellingen in de goede taal, bedenktijd Meteen / 1 seconde / 3 seconden,
+                         kort tikken = Bord kleiner; de computer antwoordt; samen: zet komt aan, d4 e5 dxe5 = Geslagen: 1 punt
+                         bij allebei. Oude map (v194): 8 van 19.   python3 -I proef91.py <map>
+                         v197: 'Bord groter' is twee knoppen (Compact / Hele breedte, aria-pressed); A1 en B3 kijken daarnaar.
+tools/proef92.py         het versienummer van elk spel (v196): echte profiel.html, tabblad Widgets, lijst Spellen: 12 nummers
+                         tussen de tekst en de toggle-knop op een regel (390 en 320 px, geen zijwaarts scrollen), de waarden
+                         kloppen met spelversies.js, elk spel uit chat.html staat erin, niet gelijk aan het appnummer (196),
+                         de toggle werkt nog, label 'versie 3' / 'version 3'. Oude map (v195): 13 MIS.   python3 -I proef92.py <map>
+                         v197: verwacht Schaken v3 en Fibro v197 of hoger.
+tools/proef93.py         PR #3 van valentijnpeters (v197), NL en EN. A: twee ECHTE chat.html's (Marcel, Bram; twee contexten,
+                         Chromium nep-camera) met een nep-Realtime die broadcasts doorgeeft (websocket + /api/broadcast):
+                         schaken via speelMee met een tijd-sessie, het spelgesprek komt vanzelf, webcam aan = Bram ziet Marcel,
+                         groene rand + 'Je vriend ziet je.' bij Marcel, Bram ook aan, Marcel uit, tik = groter/terug, zet komt
+                         aan, sluiten = camera uit, oudere uitnodiging opent niets. B: spel.html tegen de computer: werkbalk,
+                         schuifjes = instellingen helemaal in beeld, glas/hout, beginnersstand (Bf1-a6 na e4: vraag, Zet
+                         terugnemen = geen zet), 'Tegen een vriend' = broadcast + spelinvite-bericht + chat.html?spelVriend=...
+                         C: proefpagina (reduced motion: een tabblad op de achtergrond laat animaties liggen): Extra duidelijk
+                         en beginnersstand uit tegen een vriend, punten per stuk, snelmat = SCHAAKMAT + wie won, geen woorden
+                         uit de andere taal. D: een onEind, alle ?v= gelijk, CACHE_VERSION ongewijzigd. Oude map (v196):
+                         10 van 40.   python3 -I proef93.py <map> [nl|en|alles]
+tools/proef94.py         v198 (melding van Tijn), twee echte chat.html's zoals proef93: A. createOffer faalt bij Marcel: camera
+                         aan en het scherm zegt aan (videomodus, 'Webcam uitzetten'), weer uit = echt uit en de beurt in de
+                         status; B. play() geeft NotAllowedError zonder tik: knop 'Tik hier voor geluid', echte tik = geluid,
+                         knop weg; C. zonder blokkade geen knop, spel dicht geen knop. NL en EN. Oude map (v197): 4 van 7.
+                         python3 -I proef94.py <map> [nl|en|alles]
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),
                          versleutel(tekst, priv_van, pub_naar, van, naar, tijd_ms, soort) en Nep(map, uid, fid).inhoud(van,
                          tekst, created_at): versleutelt alleen op een map met v2 (op de oude map blijft de tekst zoals hij

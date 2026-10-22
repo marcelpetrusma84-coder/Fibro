@@ -1,4 +1,4 @@
-# proef88: Neon Raiders (v192), alleen spelen via spel.html?spel=shmup, op een nagebootste telefoon met echte aanrakingen
+# proef88: Neon Raiders (v192, bijgewerkt v193), alleen spelen via spel.html?spel=shmup, op een nagebootste telefoon met echte aanrakingen
 # (twee vingers tegelijk via CDP Input.dispatchTouchEvent, dus echte pointer-gebeurtenissen):
 #  1. startscherm in het Nederlands en het Engels (geen Nederlandse woorden in het Engels), knoppen AUTOVUUR en GELUID
 #  2. START: aftellen, dan draait het spel (Phaser-canvas in het veld)
@@ -6,8 +6,8 @@
 #  4. de tegel linksboven: arsenaal open + slow motion; bom gebruiken (voorraad -1, kogels van de vijand weg); dicht;
 #     wapen wisselen; een capsule oppakken (drager neerschieten, schip erheen) geeft het wapen
 #  5. pauze als de app op de achtergrond gaat, tik = verder
-#  6. de eindbaas TITAN komt (met balk), verslaan = 'LEVEL 1 GEHAALD!' en het record staat op het toestel
-#  7. game over als de levens op zijn
+#  6. de eindbaas TITAN komt (met balk), verslaan = 'LEVEL 1 GEHAALD!' en (v193) door naar level 2, bereikt level bewaard
+#  7. game over als de levens op zijn (v193: 'Je kwam tot level 2'), record bewaard, knop VERDER: LEVEL 2
 #  8. Stijl > Widgets kent Neon Raiders (spel_shmup) en Home heeft het icoon (in de code)
 # Geen paginafouten. Oude map (v191) als controle: bijna alles MIS (het spel bestaat daar nog niet).
 # Alleen voor de proef: window.__fibroProef = true laat het spel window.__neonRaiders zetten (scene, vingers, vuurtNu);
@@ -121,24 +121,26 @@ try:
             except Exception: baas = False
             check('eindbaas TITAN komt, met balk', baas and pg.evaluate("!document.querySelector('.nr .baas').hidden"))
             touch('touchStart', [(0, 195, 760), (1, 300, 500)])
+            gezien = ''
             for i in range(160):
                 pg.wait_for_timeout(500)
-                pg.evaluate("(() => { const s = %s; if (!s.baas || !s.baas.binnen || s.baas.dood) return; const d = s.baas.delen.find(d => !d.dood && d.naam !== 'kern') || s.baas.delen[2]; s.speler.x = d.x })()" % S)
-                if pg.evaluate("!document.querySelector('.nr .laag').hidden"): break
+                pg.evaluate("(() => { const s = %s; if (!s.baas || !s.baas.binnen || s.baas.dood) return; const d = s.baas.delen.find(d => !d.dood && !d.kern) || s.baas.delen.find(d => d.kern); s.speler.x = d.x })()" % S)
+                bt = pg.inner_text('.nr .bord')
+                if 'GEHAALD' in bt: gezien = bt.replace('\n', ' ')
+                if pg.evaluate(S + '.level') == 2: break
             touch('touchEnd', [(0, 195, 760), (1, 300, 500)])
-            h1 = pg.inner_text('.nr .laag h1').replace('\n', ' ')
-            check('eindbaas verslagen: LEVEL 1 GEHAALD!', 'GEHAALD' in h1, h1)
-            rec = pg.evaluate("Object.keys(localStorage).filter(k => k.startsWith('fibro_record_shmup')).map(k => +localStorage.getItem(k))")
-            check('record op het toestel bewaard', rec and rec[0] == pg.evaluate(S + '.score') and rec[0] > 20000, rec)
+            check('eindbaas verslagen: LEVEL 1 GEHAALD!', 'LEVEL 1' in gezien and 'GEHAALD' in gezien, gezien)
+            check('v193: door naar level 2 (Stratosfeer), wapens blijven', pg.evaluate(S + '.level') == 2 and pg.evaluate(S + '.niveau.puls') >= 2 and 'L2' in pg.inner_text('.nr .p1'), pg.inner_text('.nr .p1'))
+            check('v193: bereikt level 2 bewaard', pg.evaluate("localStorage.getItem('nr-bereikt')") == '2')
             # 7. game over
-            pg.tap('.nr .knop')
-            pg.wait_for_timeout(2600)
-            try: pg.wait_for_function('!!(window.__neonRaiders.scene && window.__neonRaiders.scene.speler && !window.__neonRaiders.scene.voorbij)', timeout=8000)
-            except Exception: pass
-            pg.evaluate("(() => { const s = %s; s.levens = 1; s.onraakbaar = 0; s.schild = 0; s.geraakt() })()" % S)
+            pg.wait_for_timeout(1500)
+            pg.evaluate("(() => { const s = %s; s.godmode = false; s.levens = 1; s.onraakbaar = 0; s.schild = 0; s.overgang = 0; s.geraakt() })()" % S)
             pg.wait_for_timeout(400)
             h1 = pg.inner_text('.nr .laag h1').replace('\n', ' ')
-            check('game over als de levens op zijn', 'GAME' in h1 and 'OVER' in h1 and not pg.evaluate("document.querySelector('.nr .laag').hidden"), h1)
+            check('game over als de levens op zijn', 'GAME' in h1 and 'OVER' in h1 and not pg.evaluate("document.querySelector('.nr .laag').hidden") and 'level 2' in pg.inner_text('.nr .laag'), h1)
+            rec = pg.evaluate("Object.keys(localStorage).filter(k => k.startsWith('fibro_record_shmup')).map(k => +localStorage.getItem(k))")
+            check('record op het toestel bewaard', rec and rec[0] == pg.evaluate(S + '.score') and rec[0] > 20000, rec)
+            check('v193: knop VERDER: LEVEL 2', not pg.evaluate("document.querySelector('.nr .verderKnop').hidden") and 'LEVEL 2' in pg.inner_text('.nr .verderKnop'), pg.inner_text('.nr .verderKnop'))
         ctx.close()
         br.close()
 finally:

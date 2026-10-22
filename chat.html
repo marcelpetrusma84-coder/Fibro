@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=22"></script>
+<script src="taal.js?v=27"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Chat</title>
@@ -155,7 +155,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 .spel-audio-start { position:absolute; top:10px; right:100px; z-index:10; max-width:calc(100% - 160px); min-height:36px; padding:6px 12px; border:1px solid #92e8d577; border-radius:999px; background:linear-gradient(145deg,#285e59,#163b42); color:#e7fff8; font:600 12px system-ui,sans-serif; cursor:pointer; }
 .spel-audio-start[hidden] { display:none; }
 .spel-video-vak.is-seen { border-color:#55ef9e; box-shadow:inset 0 0 0 2px #55ef9e88,inset 0 0 24px #0009,0 0 22px #3de88770; }
-.spel-video-vak.is-seen::after { content:'Visible to friend'; position:absolute; z-index:3; top:8px; right:8px; padding:4px 8px; border-radius:999px; background:#103e2ed9; color:#baffd8; font-size:10px; font-weight:800; letter-spacing:.02em; }
+.spel-video-vak.is-seen::after { content:attr(data-gezien); position:absolute; z-index:3; top:8px; right:8px; padding:4px 8px; border-radius:999px; background:#103e2ed9; color:#baffd8; font-size:10px; font-weight:800; letter-spacing:.02em; }
 .spel-overlay.sch-video-modus { justify-content:stretch; padding:53px 0 8px; overflow-y:auto; overscroll-behavior:contain; }
 .spel-overlay.sch-video-modus .spel-video-vak { display:block; }
 .spel-overlay.sch-video-modus #spelInhoud { flex:0 0 auto; width:100% !important; height:auto !important; min-height:0; }
@@ -333,11 +333,11 @@ window.veiligeUrl = function(v){
   <button id="spelAudioStartBtn" class="spel-audio-start" type="button" onclick="hervatSpelGeluid()" hidden>🔊 Enable voice sound</button>
   <audio id="spelRemoteAudio" autoplay playsinline style="display:none;"></audio>
   <div class="spel-video-vak remote" id="spelVideoAnder">
-    <video id="remoteMedia" autoplay playsinline muted></video><div class="spel-video-wachten" id="spelVideoAnderWachten">Your friend can switch on their camera whenever they are ready.</div><span class="video-etiket" id="spelVideoAnderNaam">Friend</span>
+    <video id="remoteMedia" autoplay playsinline></video><div class="spel-video-wachten" id="spelVideoAnderWachten" data-t>Je vriend kan de camera aanzetten wanneer hij of zij wil.</div><span class="video-etiket" id="spelVideoAnderNaam">Vriend</span>
   </div>
   <div id="spelInhoud" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"></div>
-  <div class="spel-video-vak" id="spelVideoEigen">
-    <video id="lokaalMedia" autoplay playsinline muted></video><div class="spel-video-wachten" id="spelVideoEigenWachten">Your camera is off</div><span class="video-etiket">You</span>
+  <div class="spel-video-vak" id="spelVideoEigen" data-gezien="Je vriend ziet je" data-t-attr="data-gezien">
+    <video id="lokaalMedia" autoplay playsinline muted></video><div class="spel-video-wachten" id="spelVideoEigenWachten" data-t>Je camera staat uit</div><span class="video-etiket" data-t>Jij</span>
   </div>
 </div>
 
@@ -356,7 +356,7 @@ window.veiligeUrl = function(v){
   import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel } from './crypto.js?v=182'
   import { maakSpelChatCrypto } from './spelchat-crypto.js?v=1'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
-  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon } from './bellen.js?v=154'
+  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera, schakelVideo, heeftLokaleVideo } from './bellen.js?v=198'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
   import { maakStickerkeuze } from './stickerkeuze.js?v=190'
   import { isCode as isEigenCode, zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel, fxCode, leesFx, stickerPakket, bewaarVriendSticker, zoekWeg } from './eigenstickers.js?v=162'
@@ -365,7 +365,7 @@ window.veiligeUrl = function(v){
   import { stuurRapport } from './rapport.js?v=95'
   import * as Schaak from './schaak.js?v=95'
   import * as Dammen from './dammen.js?v=95'
-  import * as Bordgeluid from './bordgeluid.js?v=149'
+  import * as Bordgeluid from './bordgeluid.js?v=197'
   import * as DammenUI from './dammen-ui.js?v=147'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
@@ -622,13 +622,28 @@ window.veiligeUrl = function(v){
     initBellen(huidigeUser.id, {
       onVerbonden: () => {
         if (spelActief !== 'schaken') return
-        syncSpelMedia()
+        zetSpelVideoStatus()
         activeerAangevraagdeSpelCamera()
       },
-      onMediaStatus: status => syncSpelMedia(status),
-      onVideoStatus: actief => {
-        spelAnderCameraGewenst = Boolean(actief)
-        if (spelActief === 'schaken') syncSpelMedia()
+      onVideoStatus: (actief) => { if (spelActief === 'schaken') zetSpelVideoStatus({ ander: actief }) },
+      onEigenVideoOntvangen: (actief) => { if (spelActief === 'schaken') zetSpelVideoStatus({ gezien: actief }) },
+      onEind: async () => {
+        // v197: een object mag maar een onEind hebben (in PR #3 stonden er twee; de tweede won). Eerst het
+        // belscherm (beller hing op voordat er werd opgenomen), dan het spelgesprek.
+        if (window._belTimer) clearInterval(window._belTimer)
+        window.FibroBeltoon?.stop()
+        clearTimeout(window._oproepVerloop)
+        document.getElementById('oproepModal').style.display = 'none'
+        spelBelActief = false
+        if (spelActief !== 'schaken') return
+        // Een weggevallen vriendverbinding mag de eigen preview niet uitzetten.
+        // Heropen alleen de lokale camera; een volgende ping probeert de peer weer.
+        if (spelEigenVideo) {
+          spelMijnVideoGezien = false
+          const lokaalOk = await schakelVideo(true)
+          if (lokaalOk) zetSpelVideoStatus({ eigen:true, gezien:false })
+          else resetSpelVideo()
+        } else resetSpelVideo()
       },
       onEigenVideoOntvangen: (actief) => { if (spelActief === 'schaken') zetSpelVideoStatus({ gezien: actief }) },
       onOproep: async (info) => {
@@ -675,17 +690,6 @@ window.veiligeUrl = function(v){
           window.FibroBeltoon?.stop()
           document.getElementById('oproepModal').style.display = 'none'
         }, 47000)
-      },
-      onEind: async () => {
-        if (window._belTimer) clearInterval(window._belTimer)
-        // Beller hing op (of gaf het op) voordat er werd opgenomen
-        window.FibroBeltoon?.stop()
-        clearTimeout(window._oproepVerloop)
-        document.getElementById('oproepModal').style.display = 'none'
-        spelBelActief = false
-        spelBelProbeerNa = Date.now() + 3000
-        spelAnderCameraGewenst = false
-        syncSpelMedia()
       }
     })
 
@@ -2118,14 +2122,15 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=147',
     pong: './pong-ui.js?v=147',
     vieroprij: './vieroprij-ui.js?v=147',
-    schaken: './schaken-ui.js?v=163',
+    schaken: './schaken-ui.js?v=198',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=148',
     spaceinvaders: './invaders-ui.js?v=147',
     swarm: './swarm-ui.js?v=147',
     endlessrunner: './runner-gunner-ui.js?v=147',
     pacman: './ecto-ui.js?v=177',
-    pinball: './twin-snakes-ui.js?v=147'
+    pinball: './twin-snakes-ui.js?v=147',
+    shmup: './neon-raiders-ui.js?v=194'
   }
   const _alGeladen = {}
   function laadSpelAlvast(spelType) {
@@ -2172,8 +2177,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // Accepteer uitnodiging → open het spel
   window.speelMee = async function(spelType, sessieId, starterId) {
-    if (!huidigeUser || !geselecteerdeVriend?.id) return
-    const beschikbaar = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball']
+    const beschikbaar = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball', 'shmup']
     if (!beschikbaar.includes(spelType)) {
       alert(T('🚧 {spel} komt binnenkort beschikbaar!', { spel: SPEL_INFO[spelType]?.naam || spelType }))
       return
@@ -2194,7 +2198,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     spelActief = spelType
     resetSpelVideo()
     const videoNaam = document.getElementById('spelVideoAnderNaam')
-    if (videoNaam) videoNaam.textContent = spelVriendUsername()
+    if (videoNaam) videoNaam.textContent = (geselecteerdeVriend && geselecteerdeVriend.naam) || T('Vriend')
     const overlay = document.getElementById('spelOverlay')
     overlay.classList.add('open')
 
@@ -2220,7 +2224,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     else if (spelType === 'endlessrunner') await startRunnerGunner()
     else if (spelType === 'pacman') await startEcto()
     else if (spelType === 'pinball') await startTwinSnakes()
-    if (spelActief !== spelType || spelKanaal !== verbinding) return // ondertussen gesloten of vervangen
+    else if (spelType === 'shmup') await startNeonRaiders()
+    if (spelActief !== spelType) return   // ondertussen gesloten
 
     spelKanaal.on('broadcast', { event: 'spelchat' }, async (msg) => {
       const tekst = await chatBeveiliging.open('spelchat', msg.payload)
@@ -2230,10 +2235,18 @@ console.timeLog('[chat] berichten', 'opgehaald')
     })
 
     spelKanaal.on('broadcast', { event: 'verlaten' }, () => {
-      if (spelKanaal !== verbinding) return
-      toonSpelVerbindingStatus('left')
-      toonSpelMelding(T('{naam} heeft het spel verlaten.', { naam: esc(spelVriendUsername()) }))
-      verbinding.stop()
+      stopSpelHartslag()
+      toonSpelMelding(T('{naam} heeft het spel verlaten.', { naam: esc((geselecteerdeVriend && geselecteerdeVriend.naam) || T('Je vriend')) }))
+    })
+
+    spelKanaal.on('broadcast', { event: 'ping' }, () => {
+      laatstePing = Date.now()
+      pingOntvangen = true
+      if (spelHerstellen) {
+        spelHerstellen = false
+        if (!spelEigenVideo) window.dispatchEvent(new CustomEvent('fibro-chess-video-progress', { detail: { bezig:false, tekst:T('Klaar.') } }))
+      }
+      startSpelBel()
     })
     // v170: bij een beurtspel per beurt een sticker (zie 'stickers in een beurtspel'); elke zet geeft er weer een vrij
     spelStickerVrij()
@@ -2447,6 +2460,42 @@ console.timeLog('[chat] berichten', 'opgehaald')
     inhoud.appendChild(box)
   }
 
+  function startSpelHartslag() {
+    stopSpelHartslag()
+    laatstePing = Date.now()
+    pingOntvangen = false
+    spelHerstellen = false
+    const stuurPing = () => { if (spelKanaal) { try { spelKanaal.send({ type: 'broadcast', event: 'ping', payload: {} }) } catch (e) {} } }
+    // Meteen een hartslag (niet pas na 3 s): dan begint de lijn voor geluid en beeld eerder,
+    // en werkt de webcamknop zodra beide borden open zijn. (PR #3 van valentijnpeters)
+    stuurPing()
+    spelPingTimer = setInterval(() => {
+      stuurPing()
+    }, 3000)
+    spelWachtTimer = setInterval(() => {
+      // Pas waarschuwen als we ooit een hartslag hebben gehad; anders speelt de
+      // ander misschien op een oudere versie die nog geen hartslag stuurt.
+      if (!pingOntvangen || !spelActief) return
+      const stilSinds = Date.now() - laatstePing
+      // Mobiele browsers kunnen de tab kort afremmen. Toon eerst herstelstatus
+      // en geef Realtime voldoende tijd om zelf opnieuw verbinding te maken.
+      if (stilSinds > 15000 && !spelHerstellen) {
+        spelHerstellen = true
+        if (!spelEigenVideo) window.dispatchEvent(new CustomEvent('fibro-chess-video-progress', { detail: { bezig:false, tekst:T('Verbinding met het spel vasthouden…') } }))
+      }
+      if (stilSinds > 45000) {
+        stopSpelHartslag()
+        toonSpelMelding(T('De verbinding met {naam} is weggevallen.<br>Het spel is gestopt.', { naam: esc((geselecteerdeVriend && geselecteerdeVriend.naam) || T('je vriend')) }))
+      }
+    }, 2000)
+  }
+
+  function stopSpelHartslag() {
+    clearInterval(spelPingTimer); spelPingTimer = null
+    clearInterval(spelWachtTimer); spelWachtTimer = null
+    spelHerstellen = false
+  }
+
   window.sluitSpel = function(stil) {
     // stil = true: niet melden aan de ander (die is zelf al gestopt)
     const verbinding = spelKanaal
@@ -2488,8 +2537,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await import('./schaken-ui.js?v=163')
-    m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
+    const m = await import('./schaken-ui.js?v=198')
+    m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend') })
     spelCameraLayout?.destroy()
     spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })
   }
@@ -2625,6 +2674,14 @@ async function startBlockIt() {
   async function startTwinSnakes() {
     const m = await import('./twin-snakes-ui.js?v=147')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'pinball' })
+  }
+
+  // ─── Neon Raiders (vakje Neon Raiders, v194: samen) ───
+  // De berichten tijdens het spel gaan rechtstreeks tussen de telefoons (spelnet.js); het spelkanaal
+  // is alleen voor het opzetten, of als reserve (hooguit 4 berichten per seconde).
+  async function startNeonRaiders() {
+    const m = await import('./neon-raiders-ui.js?v=194')
+    await m.start({ spelKanaal, benIkSpeler1, vriendNaam: (geselecteerdeVriend && geselecteerdeVriend.naam) || T('vriend'), isActief: () => spelActief === 'shmup' })
   }
 
   // ─── Geluidsbibliotheek ───
@@ -2814,7 +2871,9 @@ async function startBlockIt() {
   }
 
   function zetSpelVideoStatus({ eigen, ander, gezien } = {}) {
-    if (typeof eigen === 'boolean') spelEigenVideo = eigen
+    // v198: 'mijn camera staat aan' is altijd wat de camera echt doet (bellen.js heeftLokaleVideo), niet wat een
+    // stap ervoor dacht: een mislukte stap richting de vriend liet hier 'uit' staan terwijl de camera aan was (Tijn)
+    spelEigenVideo = heeftLokaleVideo()
     if (typeof ander === 'boolean') spelAnderVideo = ander
     if (typeof gezien === 'boolean') {
       const media = getMediaStatus()
@@ -2846,8 +2905,8 @@ async function startBlockIt() {
     window.dispatchEvent(new CustomEvent('fibro-chess-video-state', { detail: { eigen:spelEigenVideo, ander:spelAnderVideo } }))
     if (spelEigenVideo) {
       const tekst = spelMijnVideoGezien
-        ? 'Your friend can see you.'
-        : (spelAnderVideo ? 'Your camera is on.' : 'Your camera is on · Your friend can join whenever ready.')
+        ? T('Je vriend ziet je.')
+        : (spelAnderVideo ? T('Je camera staat aan.') : T('Je camera staat aan · Je vriend kan de camera ook aanzetten.'))
       zetSpelVideoVoortgang(tekst, false)
     }
   }
@@ -2871,33 +2930,29 @@ async function startBlockIt() {
   async function activeerAangevraagdeSpelCamera() {
     if (!spelVideoAanvragen || spelVideoBezig || spelActief !== 'schaken') return false
     spelVideoBezig = true
-    zetSpelVideoVoortgang('Requesting camera permission…')
+    zetSpelVideoVoortgang(T('Toestemming voor de camera vragen…'))
     const ok = await schakelVideo(true)
     spelVideoBezig = false
-    if (ok || getMediaStatus().localVideo) {
-      spelVideoAanvragen = false
-      syncSpelMedia()
-      return true
-    }
-    return false
+    if (ok) spelVideoAanvragen = false
+    zetSpelVideoStatus()
+    return ok
   }
 
-  // Called only by the chess board's camera icon. A tap may happen before the
-  // automatic game call has finished its WebRTC handshake, so remember it and
-  // switch the camera on as soon as `onVerbonden` fires.
+  // Alleen voor de webcamknop van het schaakbord. Wie tikt voordat het gesprek van het spel
+  // verbonden is: de camera gaat meteen aan (eigen beeld), de vriend ziet hem zodra onVerbonden komt.
+  // v198: stopt de camera vanzelf (andere app, toestemming weg), dan klopt de knop en het vakje meteen weer
+  window.addEventListener('fibro-eigen-video-gestopt', () => { if (spelActief === 'schaken') zetSpelVideoStatus() })
   window.FibroChessVideo = async function () {
     if (spelActief !== 'schaken') return { ok:false, reason:'connecting' }
-    hervatGeluid()
-    const wasAan = isVideoActiefLokaal()
-    if (wasAan) {
+    if (heeftLokaleVideo()) {
       const ok = await schakelVideo(false)
-      syncSpelMedia()
-      return { ok, eigen:false }
+      zetSpelVideoStatus()
+      return { ok, eigen:heeftLokaleVideo() }
     }
     spelVideoAanvragen = true
-    zetSpelVideoVoortgang('Opening your camera…')
+    zetSpelVideoVoortgang(T('Je camera openen…'))
     const lokaalOk = await activeerAangevraagdeSpelCamera()
-    if (!lokaalOk) return { ok:false, reason:'camera' }
+    if (!lokaalOk) return { ok:false, reason:'camera', eigen:heeftLokaleVideo() }
     // De lokale preview staat nu al aan. De verbinding mag rustig op de
     // achtergrond volgen en bepaalt alleen wanneer de groene rand verschijnt.
     if (!spelBelActief) startSpelBel(true).catch(()=>{})

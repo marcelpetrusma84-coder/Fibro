@@ -1,5 +1,7 @@
 // Shared sizing for the chess board and its independently resizable cameras.
 const mountedLayouts = new WeakMap()
+// v197: teksten via taal.js (Nederlands, Engels uit taal-en.js)
+const T = s => (window.T ? window.T(s) : s)
 const CONTROL_SELECTOR = 'button, a, input, select, textarea, summary, [contenteditable], [role="button"]'
 
 export function mountChessLayout({ root, cameraSelector, frameSelector = '#spelInhoud .sch-frame' }) {
@@ -139,7 +141,9 @@ export function mountChessLayout({ root, cameraSelector, frameSelector = '#spelI
     const attributes = new Map(['role', 'tabindex', 'aria-label', 'aria-pressed'].map(name => [name, camera.getAttribute(name)]))
 
     const updateLabel = () => {
-      updateCameraLabel(camera)
+      const expanded = camera.classList.contains('is-expanded')
+      camera.setAttribute('aria-pressed', String(expanded))
+      camera.setAttribute('aria-label', expanded ? T('Camerabeeld weer kleiner') : T('Camerabeeld groter'))
     }
     const toggle = () => {
       camera.classList.toggle('is-expanded')

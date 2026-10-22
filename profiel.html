@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=22"></script>
+<script src="taal.js?v=27"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Stijl</title>
@@ -98,6 +98,7 @@ input[type="range"]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;b
 .widget-icon{font-size:18px;}
 .widget-name{font-size:15px;}
 .widget-desc{font-size:15px;color:var(--muted);margin-top:2px;}
+.widget-versie{font-size:13px;color:var(--muted);margin:0 12px 0 auto;padding-left:8px;flex-shrink:0;white-space:nowrap}
 .toggle{width:36px;height:20px;border-radius:10px;position:relative;cursor:pointer;flex-shrink:0;transition:background 0.2s;}
 .toggle.on{background:var(--accent);}
 .toggle.off{background:rgba(255,255,255,0.15);}
@@ -423,18 +424,18 @@ input, textarea { font-size:16px !important; }
   <div class="section">
     <div class="section-label" data-t>Spellen</div>
     <div class="widget-list">
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⭕</div><div><div class="widget-name" data-t>Tic-Tac-Toe</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_botkaaseiren" onclick="toggleWidget('spel_botkaaseiren')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🔴</div><div><div class="widget-name" data-t>Four in a Row</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_vieroprij" onclick="toggleWidget('spel_vieroprij')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">♟️</div><div><div class="widget-name" data-t>Chess</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_schaken" onclick="toggleWidget('spel_schaken')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⚫</div><div><div class="widget-name" data-t>Draughts</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_dammen" onclick="toggleWidget('spel_dammen')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏓</div><div><div class="widget-name" data-t>Neo Paddle</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_pong" onclick="toggleWidget('spel_pong')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">👻</div><div><div class="widget-name" data-t>Ghost Tag</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_pacman" onclick="toggleWidget('spel_pacman')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🐍</div><div><div class="widget-name" data-t>Twin Snakes</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_pinball" onclick="toggleWidget('spel_pinball')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🦇</div><div><div class="widget-name" data-t>Flapper</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_flappybird" onclick="toggleWidget('spel_flappybird')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🟪</div><div><div class="widget-name" data-t>Block It</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_breakout" onclick="toggleWidget('spel_breakout')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🪲</div><div><div class="widget-name" data-t>The Swarm</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_swarm" onclick="toggleWidget('spel_swarm')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏃</div><div><div class="widget-name" data-t>Runner &amp; Gunner</div><div class="widget-desc" data-t>Speel alleen</div></div></div><div class="toggle off" id="widget-spel_endlessrunner" onclick="toggleWidget('spel_endlessrunner')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🚀</div><div><div class="widget-name" data-t>Neon Raiders</div><div class="widget-desc" data-t>Speel alleen</div></div></div><div class="toggle off" id="widget-spel_shmup" onclick="toggleWidget('spel_shmup')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⭕</div><div><div class="widget-name" data-t>Tic-Tac-Toe</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="botkaaseiren"></div><div class="toggle off" id="widget-spel_botkaaseiren" onclick="toggleWidget('spel_botkaaseiren')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🔴</div><div><div class="widget-name" data-t>Four in a Row</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="vieroprij"></div><div class="toggle off" id="widget-spel_vieroprij" onclick="toggleWidget('spel_vieroprij')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">♟️</div><div><div class="widget-name" data-t>Chess</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="schaken"></div><div class="toggle off" id="widget-spel_schaken" onclick="toggleWidget('spel_schaken')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⚫</div><div><div class="widget-name" data-t>Draughts</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="dammen"></div><div class="toggle off" id="widget-spel_dammen" onclick="toggleWidget('spel_dammen')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏓</div><div><div class="widget-name" data-t>Neo Paddle</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="pong"></div><div class="toggle off" id="widget-spel_pong" onclick="toggleWidget('spel_pong')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">👻</div><div><div class="widget-name" data-t>Ghost Tag</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="pacman"></div><div class="toggle off" id="widget-spel_pacman" onclick="toggleWidget('spel_pacman')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🐍</div><div><div class="widget-name" data-t>Twin Snakes</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="pinball"></div><div class="toggle off" id="widget-spel_pinball" onclick="toggleWidget('spel_pinball')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🦇</div><div><div class="widget-name" data-t>Flapper</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="widget-versie" data-spelversie="flappybird"></div><div class="toggle off" id="widget-spel_flappybird" onclick="toggleWidget('spel_flappybird')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🟪</div><div><div class="widget-name" data-t>Block It</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="widget-versie" data-spelversie="breakout"></div><div class="toggle off" id="widget-spel_breakout" onclick="toggleWidget('spel_breakout')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🪲</div><div><div class="widget-name" data-t>The Swarm</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="widget-versie" data-spelversie="swarm"></div><div class="toggle off" id="widget-spel_swarm" onclick="toggleWidget('spel_swarm')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏃</div><div><div class="widget-name" data-t>Runner &amp; Gunner</div><div class="widget-desc" data-t>Speel alleen</div></div></div><div class="widget-versie" data-spelversie="endlessrunner"></div><div class="toggle off" id="widget-spel_endlessrunner" onclick="toggleWidget('spel_endlessrunner')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🚀</div><div><div class="widget-name" data-t>Neon Raiders</div><div class="widget-desc" data-t>Speel alleen</div></div></div><div class="widget-versie" data-spelversie="shmup"></div><div class="toggle off" id="widget-spel_shmup" onclick="toggleWidget('spel_shmup')"><div class="toggle-dot"></div></div></div>
     </div>
   </div>
 </div>
@@ -1257,9 +1258,10 @@ startMeldingen()
 </script>
 <script src="swipe.js?v=95"></script>
 
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=152"; startBelLuisteraar()</script>
+<script type="module">import { vulSpelVersies } from "./spelversies.js?v=3"; vulSpelVersies()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=198"; startBelLuisteraar()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=143"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=197"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=168"; startOngelezen()</script>
 <script>
 /* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */

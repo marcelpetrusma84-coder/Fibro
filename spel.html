@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=22"></script>
+<script src="taal.js?v=27"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title data-t>Fibro — Spel</title>
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -55,10 +55,10 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 </div>
 
 <script type="module">
-  import * as Bordgeluid from './bordgeluid.js?v=149'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=200'
+  import * as Bordgeluid from './bordgeluid.js?v=197'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=198'
   import { supabase } from './supabase.js?v=95'
-  import { startSpelUitnodigingLuisteraar } from './speluitnodiging.js?v=143'
+  import { startSpelUitnodigingLuisteraar } from './speluitnodiging.js?v=197'
   import { nieuweSpelSessie } from './spelsessie.js?v=1'
 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -136,7 +136,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
         <div class="niveau-naam">${esc(spel.naam)}</div>
         <div class="niveau-sub">${T('Tegen de computer. Kies een niveau:')}</div>
         ${NIVEAUS.map(n => `<button class="niveau-btn${n === vorige ? ' gekozen' : ''}" data-niveau="${n}">${NAMEN[n]}</button>`).join('')}
-        ${spelId === 'schaken' ? '<button class="niveau-btn vriend" id="vriendKnop" type="button">♟ Friend</button>' : ''}
+        ${spelId === 'schaken' ? `<button class="niveau-btn vriend" id="vriendKnop" type="button">${T('♟ Tegen een vriend')}</button>` : ''}
       </div>`
     inhoud.querySelectorAll('.niveau-btn').forEach(knop => {
       knop.onclick = () => {
@@ -159,33 +159,33 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     const kop = document.createElement('div')
     kop.className = 'vriend-kop'
     const tekst = document.createElement('div')
-    const titel = document.createElement('h2'); titel.textContent = 'Play against a friend'
-    const sub = document.createElement('p'); sub.textContent = 'Choose a friend to send a chess invitation.'; sub.style.cssText = 'margin-top:5px;color:rgba(255,255,255,.65);font-size:13px;line-height:1.4'
+    const titel = document.createElement('h2'); titel.textContent = T('Spelen tegen een vriend')
+    const sub = document.createElement('p'); sub.textContent = T('Kies een vriend om uit te nodigen voor schaken.'); sub.style.cssText = 'margin-top:5px;color:rgba(255,255,255,.65);font-size:13px;line-height:1.4'
     tekst.append(titel, sub)
-    const sluit = document.createElement('button'); sluit.className = 'vriend-sluit'; sluit.type = 'button'; sluit.textContent = '×'; sluit.setAttribute('aria-label', 'Close')
+    const sluit = document.createElement('button'); sluit.className = 'vriend-sluit'; sluit.type = 'button'; sluit.textContent = '×'; sluit.setAttribute('aria-label', T('Sluiten'))
     sluit.onclick = () => modal.remove()
     kop.append(tekst, sluit)
     const lijst = document.createElement('div')
-    lijst.textContent = 'Loading friends…'; lijst.style.cssText = 'color:rgba(255,255,255,.7);padding:10px 0;font-size:14px'
+    lijst.textContent = T('Vrienden laden…'); lijst.style.cssText = 'color:rgba(255,255,255,.7);padding:10px 0;font-size:14px'
     kaart.append(kop, lijst); modal.append(kaart); document.body.append(modal)
     modal.onclick = event => { if (event.target === modal) modal.remove() }
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { lijst.textContent = 'Log in to invite a friend.'; return }
+    if (!user) { lijst.textContent = T('Log in om een vriend uit te nodigen.'); return }
     const { data: relaties, error } = await supabase.from('friendships').select('user_id, friend_id').or(`user_id.eq.${user.id},friend_id.eq.${user.id}`).eq('status', 'accepted')
-    if (error) { lijst.textContent = 'Your friends could not be loaded. Please try again.'; return }
+    if (error) { lijst.textContent = T('Je vrienden konden niet geladen worden. Probeer het opnieuw.'); return }
     const ids = (relaties || []).map(r => r.user_id === user.id ? r.friend_id : r.user_id).filter(Boolean)
-    if (!ids.length) { lijst.textContent = 'You have no friends to invite yet.'; return }
-    const { data: vrienden, error: vriendFout } = await supabase.from('profiles').select('id,username,avatar_url,avatar_data').in('id', ids)
-    if (vriendFout || !vrienden?.length) { lijst.textContent = 'Your friends could not be loaded. Please try again.'; return }
+    if (!ids.length) { lijst.textContent = T('Je hebt nog geen vrienden om uit te nodigen.'); return }
+    const { data: vrienden, error: vriendFout } = await supabase.from('profiles').select('id,username,display_name,avatar_url,avatar_data').in('id', ids)
+    if (vriendFout || !vrienden?.length) { lijst.textContent = T('Je vrienden konden niet geladen worden. Probeer het opnieuw.'); return }
     lijst.textContent = ''
     vrienden.sort((a, b) => String(a.username || '').localeCompare(String(b.username || ''))).forEach(vriend => {
       const knop = document.createElement('button'); knop.className = 'vriend-rij'; knop.type = 'button'
       const avatar = document.createElement('span'); avatar.className = 'vriend-avatar'
       if (/^data:image\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=]+$/i.test(String(vriend.avatar_data || ''))) { const img = document.createElement('img'); img.src = vriend.avatar_data; img.alt = ''; avatar.append(img) }
       else avatar.textContent = vriend.avatar_url || '👤'
-      const naam = document.createElement('span'); naam.textContent = vriend.username || 'Friend'; naam.style.cssText = 'font-weight:650;flex:1'
-      const pijl = document.createElement('span'); pijl.textContent = 'Invite ›'; pijl.style.cssText = 'color:#85f3c4;font-size:12px'
+      const naam = document.createElement('span'); naam.textContent = vriend.display_name || vriend.username || T('Vriend'); naam.style.cssText = 'font-weight:650;flex:1'
+      const pijl = document.createElement('span'); pijl.textContent = T('Uitnodigen ›'); pijl.style.cssText = 'color:#85f3c4;font-size:12px'
       knop.append(avatar, naam, pijl)
       knop.onclick = () => verstuurSchaakUitnodiging(vriend, lijst)
       lijst.append(knop)
@@ -195,17 +195,17 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
   async function verstuurSchaakUitnodiging(vriend, lijst) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user || !vriend?.id) return
-    lijst.textContent = 'Sending chess invitation…'
+    lijst.textContent = T('Uitnodiging voor schaken versturen…')
     const [{ data: profiel }, sessieId] = await Promise.all([
       supabase.from('profiles').select('username,avatar_url,avatar_data').eq('id', user.id).single(),
       Promise.resolve(nieuweSpelSessie())
     ])
     const kanaal = supabase.channel('speluitnodiging-' + vriend.id, { config: { private: true } })
     const verstuurd = await kanaal.send({ type: 'broadcast', event: 'speluitnodiging', payload: {
-      van: user.id, vanNaam: profiel?.username || 'Friend', vanAvatar: profiel?.avatar_data || profiel?.avatar_url || '♟️', spelType: 'schaken', sessieId
+      van: user.id, vanNaam: profiel?.username || T('Vriend'), vanAvatar: profiel?.avatar_data || profiel?.avatar_url || '♟️', spelType: 'schaken', sessieId
     } })
     supabase.removeChannel(kanaal)
-    if (verstuurd !== 'ok') { lijst.textContent = 'The invitation could not be sent. Please try again.'; return }
+    if (verstuurd !== 'ok') { lijst.textContent = T('De uitnodiging kon niet verstuurd worden. Probeer het opnieuw.'); return }
     await supabase.from('messages').insert({ sender_id:user.id, receiver_id:vriend.id, content:'spelinvite:schaken:' + user.id + ':' + sessieId })
     const q = new URLSearchParams({ spelVriend:vriend.id, spelType:'schaken', sessieId, starterId:user.id })
     location.href = 'chat.html?' + q.toString()

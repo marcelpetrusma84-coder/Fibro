@@ -59,6 +59,7 @@ A profile-centered space where visitors can leave short personal messages.
 - Private reactions
 - 1-on-1 chat
 - Voice and video calls (planned)
+- Games
 
 ### Safety
 - External links are copyable but not clickable

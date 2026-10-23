@@ -11,7 +11,7 @@ import {
 const COLOR_STYLES = ['#55aaff', '#ff626d', '#53dc8c']
 const LABELS = { K:'King', Q:'Queen', R:'Rook', B:'Bishop', N:'Knight', P:'Pawn' }
 
-export function start({ gameChannel = null, players = [], userId = null, localPreview = false, inviteThird = null } = {}) {
+export function start({ gameChannel = null, players = [], userId = null, localPreview = false, inviteThird = null, testMode = false, testStream = null, onTestCameraChange = null, onReturnToTwoPlayer = null } = {}) {
   const root = document.getElementById('spelInhoud')
   if (!root) throw new Error('The chess game surface is missing.')
   if (players.length !== 3) throw new TypeError('Three player identities are required.')
@@ -20,6 +20,8 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
     : { id:String(player.id), username:String(player.username || THREE_PLAYER_NAMES[index]) })
   const myPlayer = roster.findIndex(player => player.id === userId)
   if (!localPreview && myPlayer < 0) throw new TypeError('Your account is not in the chess roster.')
+  root.classList.add('chess3-layout')
+  document.getElementById('spelOverlay')?.classList.add('chess3-board-layout')
   let state = newThreePlayerGame()
   let selected = null
   let highlighted = []
@@ -34,7 +36,7 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
   status.setAttribute('aria-live', 'polite')
   const cameraRow = document.createElement('div')
   cameraRow.className = 'chess3-cameras'
-  cameraRow.hidden = localPreview
+  cameraRow.hidden = localPreview && !testMode
   const controls = document.createElement('div')
   controls.className = 'chess3-controls'
   const boardWrap = document.createElement('div')
@@ -51,7 +53,17 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
   heading.className = 'chess3-heading'
   heading.innerHTML = '<span class="chess3-kicker">FIBRO · THREE PLAYER</span><h2>Three-player chess</h2><p>Capture a king to eliminate that player. The last king standing wins. When a third player joins mid-match, everyone starts from this opening position.</p>'
   controls.innerHTML = '<span class="chess3-turns" aria-label="Turn order"><b>BLUE</b><i>→</i><b>RED</b><i>→</i><b>GREEN</b></span>'
-  if (localPreview && inviteThird) {
+  if (testMode) {
+    const resetButton = document.createElement('button')
+    resetButton.type = 'button'; resetButton.className = 'chess3-reset'; resetButton.textContent = '↻ Reset 96-square board'
+    controls.append(resetButton)
+    if (onReturnToTwoPlayer) {
+      const backButton = document.createElement('button')
+      backButton.type = 'button'; backButton.className = 'chess3-return'; backButton.textContent = '← Back to 2-player test'
+      backButton.addEventListener('click', () => onReturnToTwoPlayer())
+      controls.append(backButton)
+    }
+  } else if (localPreview && inviteThird) {
     const inviteButton = document.createElement('button')
     inviteButton.type = 'button'; inviteButton.className = 'chess3-invite'; inviteButton.textContent = 'Invite a third player'
     inviteButton.addEventListener('click', () => inviteThird())
@@ -60,22 +72,51 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
   root.replaceChildren()
   root.append(heading, cameraRow, controls, status, boardWrap, captureBar)
   root.insertAdjacentHTML('afterbegin', `<style>
-    .chess3-shell{color:#f8fbff}.chess3-heading{text-align:center;margin:0 auto 12px;max-width:620px}.chess3-heading h2{margin:3px 0;font-size:clamp(20px,4vw,28px);letter-spacing:-.04em}.chess3-heading p{margin:3px 0;color:#b9c6d6;font-size:13px}.chess3-kicker{color:#81e6cb;font-size:10px;font-weight:850;letter-spacing:.18em}.chess3-status{min-height:24px;margin:6px 0 10px;text-align:center;color:#fff;font-weight:750}.chess3-status[data-player="0"]{color:#7ac4ff}.chess3-status[data-player="1"]{color:#ff9095}.chess3-status[data-player="2"]{color:#76eba5}.chess3-controls{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin:8px 0 12px}.chess3-turns{display:flex;align-items:center;gap:9px;border:1px solid #bccae738;border-radius:999px;padding:8px 13px;background:linear-gradient(145deg,#20293a,#141a27);box-shadow:inset 0 1px #ffffff17,0 4px 12px #0005;font-size:10px;letter-spacing:.12em}.chess3-turns b:nth-of-type(1){color:#7ac4ff}.chess3-turns b:nth-of-type(2){color:#ff9095}.chess3-turns b:nth-of-type(3){color:#76eba5}.chess3-turns i{color:#93a1b3;font-style:normal}.chess3-invite,.chess3-camera button{border:1px solid #82ead088;border-radius:12px;background:linear-gradient(145deg,#baffeb,#58cdb7 60%,#37a994);color:#092a2b;font:inherit;font-size:12px;font-weight:800;padding:9px 13px;cursor:pointer;box-shadow:inset 0 1px #fff9,0 4px 0 #267c70,0 8px 16px #0004}.chess3-frame{width:min(740px,94vw,calc(100dvh - 210px));margin:auto;padding:9px;border:1px solid #d8e9ff70;border-radius:18px;background:linear-gradient(145deg,#d8e4f3,#5a6a7e 55%,#243143);box-shadow:inset 0 1px #fff,0 8px 0 #192331,0 12px 28px #0009}.chess3-board{display:block;width:100%;height:auto;overflow:visible;touch-action:manipulation}.chess3-cell polygon{stroke:#18223570;stroke-width:.035;transition:filter .12s ease}.chess3-cell[role="button"]{cursor:pointer;outline:none}.chess3-cell[role="button"]:focus-visible polygon{stroke:#7bf0d9;stroke-width:.13}.chess3-cell .chess3-piece{font-family:"Noto Sans Symbols 2","Segoe UI Symbol",serif;font-size:.78px;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#101722;stroke-width:.035;stroke-linejoin:round;filter:drop-shadow(0 .045px .055px #000b);pointer-events:none}.chess3-cell[data-player="0"] .chess3-piece{fill:#55aaff}.chess3-cell[data-player="1"] .chess3-piece{fill:#ff626d}.chess3-cell[data-player="2"] .chess3-piece{fill:#53dc8c}.chess3-cell.is-selected polygon{stroke:#ffe68d;stroke-width:.14;filter:brightness(1.25)}.chess3-cell.is-legal polygon{stroke:#b5ffdb;stroke-width:.10;filter:brightness(1.18)}.chess3-cell.is-capture polygon{stroke:#ff8a8f;stroke-width:.13}.chess3-capturebar{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin:12px auto;color:#d5dfed;font-size:12px}.chess3-captures{min-width:100px;padding:7px 10px;border:1px solid #bccae725;border-radius:12px;background:linear-gradient(145deg,#252b3b,#151a25)}.chess3-captures strong{font-size:11px}.chess3-eliminated{opacity:.45;text-decoration:line-through}.chess3-cameras{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;width:min(740px,94vw);margin:8px auto}.chess3-camera{position:relative;width:min(220px,29vw);aspect-ratio:16/9;overflow:hidden;border:1px solid #ffffff36;border-radius:15px;background:linear-gradient(145deg,#20293a,#111721);box-shadow:inset 0 1px #fff2,0 5px 14px #0006}.chess3-camera video{display:none;width:100%;height:100%;object-fit:cover}.chess3-camera.has-video video{display:block}.chess3-camera-name{position:absolute;left:8px;bottom:7px;border-radius:999px;padding:4px 8px;background:#07111dcc;color:#fff;font-size:11px;font-weight:750}.chess3-camera[data-player="0"]{outline-color:#55aaff}.chess3-camera[data-player="1"]{outline-color:#ff626d}.chess3-camera[data-player="2"]{outline-color:#53dc8c}.chess3-camera.has-video{outline:2px solid currentColor}.chess3-camera[data-player="0"].has-video{color:#55aaff}.chess3-camera[data-player="1"].has-video{color:#ff626d}.chess3-camera[data-player="2"].has-video{color:#53dc8c}.chess3-camera button{position:absolute;inset:auto 7px 7px auto;padding:6px 8px;font-size:10px}.chess3-camera.has-video button{background:linear-gradient(145deg,#ffc6cc,#fb6875);color:#3d0d17;border-color:#ffb3be}.chess3-camera-wait{position:absolute;inset:0;display:grid;place-items:center;padding:10px;text-align:center;color:#c1ccdc;font-size:11px;pointer-events:none}.chess3-camera.has-video .chess3-camera-wait{display:none}@media(max-width:560px){.chess3-frame{width:min(96vw,calc(100dvh - 235px));padding:5px;border-radius:12px}.chess3-camera{width:calc(50% - 6px)}.chess3-cameras{gap:7px}.chess3-heading p{font-size:12px}}@media(prefers-reduced-motion:reduce){.chess3-cell polygon{transition:none}}
+    .chess3-shell{color:#f8fbff}.chess3-heading{text-align:center;margin:0 auto 12px;max-width:620px}.chess3-heading h2{margin:3px 0;font-size:clamp(20px,4vw,28px);letter-spacing:-.04em}.chess3-heading p{margin:3px 0;color:#b9c6d6;font-size:13px}.chess3-kicker{color:#81e6cb;font-size:10px;font-weight:850;letter-spacing:.18em}.chess3-status{min-height:24px;margin:6px 0 10px;text-align:center;color:#fff;font-weight:750}.chess3-status[data-player="0"]{color:#7ac4ff}.chess3-status[data-player="1"]{color:#ff9095}.chess3-status[data-player="2"]{color:#76eba5}.chess3-controls{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin:8px 0 12px}.chess3-turns{display:flex;align-items:center;gap:9px;border:1px solid #bccae738;border-radius:999px;padding:8px 13px;background:linear-gradient(145deg,#20293a,#141a27);box-shadow:inset 0 1px #ffffff17,0 4px 12px #0005;font-size:10px;letter-spacing:.12em}.chess3-turns b:nth-of-type(1){color:#7ac4ff}.chess3-turns b:nth-of-type(2){color:#ff9095}.chess3-turns b:nth-of-type(3){color:#76eba5}.chess3-turns i{color:#93a1b3;font-style:normal}.chess3-invite,.chess3-camera button,.chess3-reset,.chess3-return{border:1px solid #82ead088;border-radius:12px;background:linear-gradient(145deg,#baffeb,#58cdb7 60%,#37a994);color:#092a2b;font:inherit;font-size:12px;font-weight:800;padding:9px 13px;cursor:pointer;box-shadow:inset 0 1px #fff9,0 4px 0 #267c70,0 8px 16px #0004}.chess3-reset{background:linear-gradient(145deg,#ffe98a,#ffc629 60%,#e69a00);border-color:#ffec9a;color:#211800;box-shadow:inset 0 1px #fff9,0 4px 0 #9a6500,0 8px 16px #0004}.chess3-return{background:linear-gradient(145deg,#242424,#101010);border-color:#ffd400;color:#ffe34a;box-shadow:inset 0 1px #ffffff33,0 4px 0 #050505,0 8px 16px #0004}.chess3-frame{width:min(740px,94vw,calc(100dvh - 210px));margin:auto;padding:9px;border:1px solid #d8e9ff70;border-radius:18px;background:linear-gradient(145deg,#d8e4f3,#5a6a7e 55%,#243143);box-shadow:inset 0 1px #fff,0 8px 0 #192331,0 12px 28px #0009}.chess3-board{display:block;width:100%;height:auto;overflow:visible;touch-action:manipulation}.chess3-cell polygon{stroke:#18223570;stroke-width:.035;transition:filter .12s ease}.chess3-cell[role="button"]{cursor:pointer;outline:none}.chess3-cell[role="button"]:focus-visible polygon{stroke:#7bf0d9;stroke-width:.13}.chess3-cell .chess3-piece{font-family:"Noto Sans Symbols 2","Segoe UI Symbol",serif;font-size:.78px;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#101722;stroke-width:.035;stroke-linejoin:round;filter:drop-shadow(0 .045px .055px #000b);pointer-events:none}.chess3-cell[data-player="0"] .chess3-piece{fill:#55aaff}.chess3-cell[data-player="1"] .chess3-piece{fill:#ff626d}.chess3-cell[data-player="2"] .chess3-piece{fill:#53dc8c}.chess3-cell.is-selected polygon{stroke:#ffe68d;stroke-width:.14;filter:brightness(1.25)}.chess3-cell.is-legal polygon{stroke:#b5ffdb;stroke-width:.10;filter:brightness(1.18)}.chess3-cell.is-capture polygon{stroke:#ff8a8f;stroke-width:.13}.chess3-capturebar{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin:12px auto;color:#d5dfed;font-size:12px}.chess3-captures{min-width:100px;padding:7px 10px;border:1px solid #bccae725;border-radius:12px;background:linear-gradient(145deg,#252b3b,#151a25)}.chess3-captures strong{font-size:11px}.chess3-eliminated{opacity:.45;text-decoration:line-through}.chess3-cameras{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;width:min(740px,94vw);margin:8px auto}.chess3-camera{position:relative;width:min(220px,29vw);aspect-ratio:16/9;overflow:hidden;border:1px solid #ffffff36;border-radius:15px;background:linear-gradient(145deg,#20293a,#111721);box-shadow:inset 0 1px #fff2,0 5px 14px #0006}.chess3-camera video{display:none;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}.chess3-camera.has-video video{display:block}.chess3-camera-name{position:absolute;left:8px;bottom:7px;border-radius:999px;padding:4px 8px;background:#07111dcc;color:#fff;font-size:11px;font-weight:750}.chess3-camera[data-player="0"]{outline-color:#55aaff}.chess3-camera[data-player="1"]{outline-color:#ff626d}.chess3-camera[data-player="2"]{outline-color:#53dc8c}.chess3-camera.has-video{outline:2px solid currentColor}.chess3-camera[data-player="0"].has-video{color:#55aaff}.chess3-camera[data-player="1"].has-video{color:#ff626d}.chess3-camera[data-player="2"].has-video{color:#53dc8c}.chess3-camera button{position:absolute;inset:auto 7px 7px auto;padding:6px 8px;font-size:10px}.chess3-camera.has-video button{background:linear-gradient(145deg,#ffc6cc,#fb6875);color:#3d0d17;border-color:#ffb3be}.chess3-camera-wait{position:absolute;inset:0;display:grid;place-items:center;padding:10px;text-align:center;color:#c1ccdc;font-size:11px;pointer-events:none}.chess3-camera.has-video .chess3-camera-wait{display:none}.chess3-test-note{width:min(740px,94vw);margin:5px auto;padding:7px 10px;border:1px solid #ffd40099;border-radius:10px;background:repeating-linear-gradient(135deg,#171717 0 8px,#242424 8px 16px);color:#ffe34a;font-size:10px;font-weight:850;letter-spacing:.1em;text-align:center}@media(max-width:560px){.chess3-frame{width:min(96vw,calc(100dvh - 255px));padding:5px;border-radius:12px}.chess3-camera{width:calc(50% - 6px)}.chess3-cameras{gap:7px}.chess3-heading p{font-size:12px}}@media(prefers-reduced-motion:reduce){.chess3-cell polygon{transition:none}}
   </style>`)
+
+  if (testMode) {
+    const note = document.createElement('div')
+    note.className = 'chess3-test-note'
+    note.textContent = 'TEST DUMMY · LOCAL SIMULATION · 3 CAMERA TILES · NO INVITES SENT'
+    root.insertBefore(note, cameraRow)
+  }
 
   const cameraTiles = roster.map((player, index) => {
     const tile = document.createElement('section'); tile.className = 'chess3-camera'; tile.dataset.player = String(index)
     const video = document.createElement('video'); video.autoplay = true; video.playsInline = true; video.muted = true
-    const wait = document.createElement('span'); wait.className = 'chess3-camera-wait'; wait.textContent = player.id === userId ? 'Your camera is off' : `${player.username} can turn on their camera`
-    const label = document.createElement('span'); label.className = 'chess3-camera-name'; label.textContent = `${THREE_PLAYER_NAMES[index]} · ${player.username}`
+    const wait = document.createElement('span'); wait.className = 'chess3-camera-wait'; wait.textContent = testMode ? 'Local camera mirror is off' : (player.id === userId ? 'Your camera is off' : `${player.username} can turn on their camera`)
+    const label = document.createElement('span'); label.className = 'chess3-camera-name'; label.textContent = `${THREE_PLAYER_NAMES[index]} · ${player.id === userId && testMode ? 'YOU · TEST' : (testMode ? `TEST · ${player.username}` : player.username)}`
     tile.append(video, wait, label)
     if (player.id === userId) {
-      const button = document.createElement('button'); button.type='button'; button.textContent='Turn on camera'; button.setAttribute('aria-pressed','false')
+      const button = document.createElement('button'); button.type='button'; button.textContent=testMode && testStream ? 'Turn test cameras off' : 'Turn on camera'; button.setAttribute('aria-pressed',String(Boolean(testMode && testStream)))
       button.addEventListener('click', () => toggleCamera(button, tile, video))
       tile.append(button)
     }
     cameraRow.append(tile)
     return { tile, video, wait, player }
+  })
+
+  function paintTestCamera(stream) {
+    localStream = stream || null
+    for (const item of cameraTiles) {
+      item.video.srcObject = localStream
+      item.tile.classList.toggle('has-video', Boolean(localStream))
+      item.wait.textContent = localStream ? '' : 'Local camera mirror is off'
+      item.video.style.display = localStream ? 'block' : 'none'
+      if (localStream) item.video.play().catch(() => {})
+      const button = item.tile.querySelector('button')
+      if (button) {
+        button.textContent = localStream ? 'Turn test cameras off' : 'Turn test cameras on'
+        button.setAttribute('aria-pressed', String(Boolean(localStream)))
+      }
+    }
+  }
+  if (testMode && testStream) paintTestCamera(testStream)
+  const resetButton = controls.querySelector('.chess3-reset')
+  resetButton?.addEventListener('click', () => {
+    state = newThreePlayerGame(); selected = null; highlighted = []; draw()
+    status.textContent = '96-square board reset to the opening position.'
   })
 
   function boardViewBox() {
@@ -89,7 +130,8 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
   function draw() {
     const cells = state.board.cells.map(cell => {
       const piece = state.pieces.get(cell.id)
-      const points = threePlayerCellPolygon(cell).map(point => point.join(',')).join(' ')
+      const points = threePlayerCellPolygon(cell)
+      const pointList = points.map(point => point.join(',')).join(' ')
       const fill = cell.shade ? '#52647b' : '#edf2f5'
       const moves = highlighted.includes(cell.id)
       const capture = moves && state.pieces.has(cell.id)
@@ -98,7 +140,7 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
       const center = cell.corners.reduce((sum, point) => [sum[0]+point[0]/4, sum[1]+point[1]/4], [0,0])
       const xy = [center[0]+center[1]*.5, center[1]*Math.sqrt(3)/2]
       const glyph = piece ? `<text class="chess3-piece" x="${xy[0]}" y="${xy[1]}">${THREE_PLAYER_SYMBOLS[piece.type]}</text>` : ''
-      return `<g class="${classes}" data-cell-id="${cell.id}" data-player="${piece?.player ?? ''}" role="button" tabindex="0" aria-label="${title}, ${cell.id}"><title>${title}</title><polygon points="${points.map(p=>`${p[0]},${p[1]}`).join(' ')}" fill="${fill}"/>${glyph}</g>`
+      return `<g class="${classes}" data-cell-id="${cell.id}" data-player="${piece?.player ?? ''}" role="button" tabindex="0" aria-label="${title}, ${cell.id}"><title>${title}</title><polygon points="${pointList}" fill="${fill}"/>${glyph}</g>`
     }).join('')
     svg.innerHTML = cells
     const turn = state.winner === null ? state.turn : state.winner
@@ -153,6 +195,26 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
   draw()
 
   async function toggleCamera(button, tile, video) {
+    if (testMode) {
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop())
+        paintTestCamera(null)
+        onTestCameraChange?.(null)
+        status.textContent = 'All three test camera tiles are off. The board remains playable.'
+        return
+      }
+      button.disabled = true; button.textContent = 'Starting test cameras…'
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false })
+        paintTestCamera(localStream)
+        onTestCameraChange?.(localStream)
+        status.textContent = 'All three camera tiles now mirror your local webcam.'
+      } catch (error) {
+        button.textContent = 'Turn test cameras on'
+        status.textContent = error?.name === 'NotAllowedError' ? 'Camera permission was declined. You can still test the board.' : 'Camera unavailable. Check browser permission and retry.'
+      } finally { button.disabled = false }
+      return
+    }
     if (localStream) {
       localStream.getTracks().forEach(track => track.stop()); localStream = null
       for (const pc of peers.values()) {
@@ -255,14 +317,22 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
   }
 
   const controller = {
-    state,
-    destroy() {
+    get state() { return state },
+    setTestCamera(stream) {
+      if (!testMode || destroyed) return false
+      paintTestCamera(stream)
+      onTestCameraChange?.(stream || null)
+      return true
+    },
+    destroy({ preserveCamera = false } = {}) {
       if (destroyed) return
       destroyed = true
-      localStream?.getTracks().forEach(track => track.stop())
+      if (!preserveCamera) localStream?.getTracks().forEach(track => track.stop())
       peers.forEach(pc => pc.close())
       peers.clear(); pendingIce.clear()
       root.replaceChildren()
+      root.classList.remove('chess3-layout')
+      document.getElementById('spelOverlay')?.classList.remove('chess3-board-layout')
     }
   }
   return controller

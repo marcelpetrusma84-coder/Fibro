@@ -156,6 +156,27 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 .spel-video-vak .video-etiket { position:absolute; z-index:2; left:9px; bottom:8px; padding:4px 8px; border-radius:9px; background:#07121dcc; color:#e9fffb; font-size:11px; font-weight:700; }
 .spel-video-wachten { position:absolute; inset:0; z-index:1; display:grid; place-items:center; padding:20px; color:#b9d8d5; font-size:13px; text-align:center; }
 .spel-video-wachten[hidden] { display:none; }
+.fibro-test-badge { display:none; position:absolute; z-index:15; top:50px; left:50%; transform:translateX(-50%); width:max-content; max-width:calc(100% - 86px); padding:7px 12px; border:2px solid #ffd400; border-radius:9px; background:repeating-linear-gradient(135deg,#161616 0 8px,#262626 8px 16px); color:#ffe34a; box-shadow:0 4px 18px #000b,inset 0 0 0 1px #000; font:900 10px/1.2 system-ui,sans-serif; letter-spacing:.11em; text-align:center; }
+.fibro-test-badge strong { display:inline-block; margin-right:5px; color:#101010; background:#ffdf00; padding:3px 5px; border-radius:4px; }
+.fibro-test-live-status { display:none; position:absolute; z-index:15; top:84px; left:50%; transform:translateX(-50%); width:max-content; max-width:calc(100% - 36px); padding:5px 10px; border:1px solid #ffe34a88; border-radius:999px; background:#171506eb; color:#fff2a3; box-shadow:0 4px 14px #0008; font:650 11px/1.3 system-ui,sans-serif; text-align:center; }
+.fibro-test-hint { padding:0 8px 6px; color:var(--muted); font-size:10px; line-height:1.35; text-align:center; }
+.fibro-test-hint kbd { padding:2px 5px; border:1px solid #e2b90080; border-radius:5px; background:#1c190d; color:#ffe34a; font:800 10px ui-monospace,monospace; letter-spacing:.04em; }
+.spel-overlay.fibro-test-mode .fibro-test-badge { display:block; }
+.spel-overlay.fibro-test-mode .fibro-test-live-status { display:block; }
+.spel-overlay.fibro-test-mode { background:rgba(0,0,0,.96); }
+.spel-overlay.fibro-test-mode .spel-video-vak { border:2px solid #ffd400; box-shadow:inset 0 0 20px #0009,0 0 0 2px #171717,0 0 20px #ffcf0050; }
+.spel-overlay.fibro-test-mode .video-etiket { background:#141414ed; color:#ffe34a; border:1px solid #ffd400; }
+.spel-overlay.fibro-test-mode #spelVideoEigen.is-seen::after { content:'LOCAL TEST MIRROR'; background:#201d05; color:#ffe34a; border:1px solid #ffd400; }
+.spel-overlay.fibro-test-mode.sch-video-modus { padding-top:87px; }
+.spel-overlay.fibro-test-mode.sch-video-modus .spel-titel-bar { top:13px; }
+.spel-overlay.fibro-test-mode.sch-video-modus .spel-video-vak { flex:0 0 auto; width:min(100% - 28px,460px); min-height:clamp(96px,18dvh,170px); height:clamp(96px,18dvh,170px); }
+.spel-overlay.fibro-test-mode.sch-video-modus #spelInhoud { padding-top:5px; }
+.spel-overlay.fibro-test-mode.sch-video-modus .fibro-test-live-status { top:81px; }
+.spel-overlay.chess3-board-layout { align-items:stretch; justify-content:flex-start; padding:53px 0 18px; overflow-y:auto; overscroll-behavior:contain; }
+.spel-overlay.chess3-board-layout.fibro-test-mode { padding-top:92px; }
+.spel-overlay.chess3-board-layout .fibro-test-live-status { top:81px; }
+.spel-overlay.chess3-board-layout #spelInhoud { box-sizing:border-box; flex:0 0 auto; width:100% !important; height:auto !important; min-height:0; display:flex !important; flex-direction:column; align-items:center; justify-content:flex-start; padding:0 14px 22px; }
+.spel-overlay.chess3-board-layout #spelInhoud .chess3-frame { flex:none; width:min(740px,94vw,calc(100dvh - 235px)); }
 .spel-audio-start { position:absolute; top:10px; right:100px; z-index:10; max-width:calc(100% - 160px); min-height:36px; padding:6px 12px; border:1px solid #92e8d577; border-radius:999px; background:linear-gradient(145deg,#285e59,#163b42); color:#e7fff8; font:600 12px system-ui,sans-serif; cursor:pointer; }
 .spel-audio-start[hidden] { display:none; }
 .spel-video-vak.is-seen { border-color:#55ef9e; box-shadow:inset 0 0 0 2px #55ef9e88,inset 0 0 24px #0009,0 0 22px #3de88770; }
@@ -229,6 +250,7 @@ window.veiligeUrl = function(v){
     <div class="sys-msg e2e-sys" id="chatSysBericht" data-t>🔒 End-to-end versleuteld gesprek</div>
   </div>
   <div class="input-wrap">
+    <div class="fibro-test-hint" role="note">One-person chess test: type <kbd>FIBRO TEST</kbd> · local only, no invite is sent.</div>
     <div class="emoji-grid" id="emojiGrid"></div>
     <div id="stickerGrid" style="display:none;"></div>
     <div id="spelMenuGrid" style="display:none;padding:14px 12px;background:rgba(0,0,0,0.85);border-top:0.5px solid var(--border);max-height:280px;overflow-y:auto;">
@@ -332,6 +354,8 @@ window.veiligeUrl = function(v){
 <div class="spel-overlay" id="spelOverlay">
   <div class="spel-titel-bar" id="spelTitelBar"></div>
   <button class="spel-sluit-btn" onclick="sluitSpel()">✕</button>
+  <div class="fibro-test-badge" id="fibroTestBadge" role="status" aria-live="polite"><strong>TEST DUMMY</strong> FIBRO TEST · LOCAL SIMULATION · NO INVITES SENT</div>
+  <div class="fibro-test-live-status" id="fibroTestLiveStatus">Local test ready</div>
   <audio id="remoteAudio" autoplay playsinline style="display:none;"></audio>
   <button id="spelMuteBtn" onclick="toggleSpelMic()" style="position:absolute;top:10px;right:56px;z-index:10;background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:none;">🎤</button>
   <button id="spelAudioStartBtn" class="spel-audio-start" type="button" onclick="hervatSpelGeluid()" hidden>🔊 Enable voice sound</button>
@@ -377,6 +401,7 @@ window.veiligeUrl = function(v){
   import { nieuweSpelSessie, isNieuwsteSpelSessie } from './spelsessie.js?v=1'
   import { mountChessLayout } from './chess-layout.js?v=3'
   import { maakSpelVerbinding } from './spelverbinding.js?v=1'
+  import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=1'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
   pasBlokstijlToe()
 
@@ -1469,15 +1494,25 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const inp = document.getElementById('msgInput')
     const knop = document.getElementById('sendBtn')
     if (!inp || !knop) return
+    if (!inp.dataset.fibroTestInput) {
+      inp.dataset.fibroTestInput = '1'
+      inp.addEventListener('input', werkVerzendknopBij)
+    }
     let reden = ''
     if (!mijnPrivateKey) reden = T('Geen sleutel op dit apparaat')
     else if (!geselecteerdeVriend) reden = T('Kies eerst een vriend')
     else if (!vriendPublicKey || vriendPublicKey.length <= 10) reden = T('Sleutels laden...')
-    const kan = reden === ''
-    inp.disabled = !kan
+    const testCommand = isFibroTestCommand(inp.value)
+    const kan = testCommand || reden === ''
+    // Keep the field available so the one-person local test can start even
+    // when no friend or encryption key is selected.
+    inp.disabled = false
     knop.disabled = !kan
     knop.style.opacity = kan ? '' : '0.4'
-    inp.placeholder = kan ? T('Stuur een bericht...') : reden
+    inp.placeholder = testCommand ? 'Start a local chess test' : (reden || T('Stuur een bericht...'))
+    knop.textContent = testCommand ? '🧪' : '➤'
+    knop.title = testCommand ? 'Start local chess test' : ''
+    knop.setAttribute('aria-label', testCommand ? 'Start local chess test' : 'Send')
   }
   window.werkVerzendknopBij = werkVerzendknopBij
 
@@ -1572,8 +1607,19 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   window.sendMsg = async function() {
-    if (!geselecteerdeVriend) return
     const input = document.getElementById('msgInput')
+    if (isFibroTestCommand(input.value)) {
+      // Call getUserMedia directly in this user gesture before any await so
+      // browsers can present their normal camera permission prompt.
+      const cameraRequest = navigator.mediaDevices?.getUserMedia
+        ? navigator.mediaDevices.getUserMedia({ video:true, audio:false })
+        : Promise.reject(new Error('Camera access is not available in this browser.'))
+      input.value = ''
+      werkVerzendknopBij()
+      startFibroTest(cameraRequest)
+      return
+    }
+    if (!geselecteerdeVriend) return
     const tekst = input.value.trim()
     if (!tekst) return
     speelPlop('uit')
@@ -2043,6 +2089,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
   let spelChatCrypto = null
   let spelSessieId = null
   let spelSpelers = null
+  let fibroChessTest = null
+  let fibroTestThreeController = null
+  let spelSchaakDrieController = null
 
   // Games use the app username; personal P2P display names stay in the chat.
   function spelVriendUsername(vriendId = spelTegenstander?.id || geselecteerdeVriend?.id) {
@@ -2582,15 +2631,26 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   window.sluitSpel = function(stil) {
     // stil = true: niet melden aan de ander (die is zelf al gestopt)
+    const wasFibroTest = Boolean(fibroChessTest?.active)
     const verbinding = spelKanaal
     spelKanaal = null
     spelChatCrypto = null
-    if (!stil && verbinding && spelActief) {
+    if (!wasFibroTest && !stil && verbinding && spelActief) {
       // Allow the explicit leave message to reach the server before disposing.
       Promise.resolve(verbinding.send({ type:'broadcast', event:'verlaten', payload:{} }))
         .catch(() => {}).finally(() => verbinding.stop())
     } else {
       verbinding?.stop()
+    }
+    if (wasFibroTest) {
+      fibroChessTest.stream?.getTracks?.().forEach(track => track.stop())
+      fibroChessTest = null
+      const own = document.getElementById('lokaalMedia'), mirror = document.getElementById('remoteMedia')
+      if (own) own.srcObject = null
+      if (mirror) mirror.srcObject = null
+      document.getElementById('spelOverlay').classList.remove('fibro-test-mode')
+      document.querySelector('#spelVideoEigen .video-etiket').textContent = 'You'
+      document.getElementById('spelVideoAnderNaam').textContent = 'Friend'
     }
     document.getElementById('spelOverlay').classList.remove('open')
     document.getElementById('spelInhoud').innerHTML = ''
@@ -2601,9 +2661,13 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (window._spelAnimFrame) { cancelAnimationFrame(window._spelAnimFrame); window._spelAnimFrame = null }
     if (window._spelAftelInterval) { clearInterval(window._spelAftelInterval); window._spelAftelInterval = null }
     spelActief = null
+    spelSchaakDrieController?.destroy?.()
+    spelSchaakDrieController = null
+    fibroTestThreeController = null
     spelCameraLayout?.destroy()
     spelCameraLayout = null
-    stopSpelBel()
+    if (!wasFibroTest) stopSpelBel()
+    else resetSpelVideo()
     spelTegenstander = null
   }
 
@@ -2619,17 +2683,180 @@ console.timeLog('[chat] berichten', 'opgehaald')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
 
+  function setFibroTestStatus(message) {
+    const status = document.getElementById('fibroTestLiveStatus')
+    if (status && fibroChessTest?.active) status.textContent = message
+  }
+
+  async function toonFibroTestCamera(stream) {
+    if (!fibroChessTest?.active) { stream?.getTracks?.().forEach(track => track.stop()); return false }
+    fibroChessTest.stream = stream || null
+    const overlay = document.getElementById('spelOverlay')
+    const own = document.getElementById('lokaalMedia')
+    const mirror = document.getElementById('remoteMedia')
+    const ownFrame = document.getElementById('spelVideoEigen')
+    const ownWait = document.getElementById('spelVideoEigenWachten')
+    const mirrorWait = document.getElementById('spelVideoAnderWachten')
+    if (stream) {
+      for (const video of [own, mirror]) {
+        video.srcObject = stream
+        video.style.display = 'block'
+        await video.play().catch(() => {})
+      }
+      if (ownWait) { ownWait.hidden = true; ownWait.textContent = '' }
+      if (mirrorWait) { mirrorWait.hidden = true; mirrorWait.textContent = '' }
+      ownFrame?.classList.add('is-seen')
+      spelEigenVideo = true; spelAnderVideo = true; spelMijnVideoGezien = true
+      overlay?.classList.add('sch-video-modus')
+      spelCameraLayout?.sync()
+      window.dispatchEvent(new CustomEvent('fibro-chess-video-state', { detail:{ eigen:true, ander:true, test:true } }))
+      setFibroTestStatus('Camera is live · both test windows mirror your device')
+      return true
+    }
+    if (own) { own.srcObject = null; own.style.display = 'none' }
+    if (mirror) { mirror.srcObject = null; mirror.style.display = 'none' }
+    ownFrame?.classList.remove('is-seen')
+    if (ownWait) { ownWait.hidden = false; ownWait.textContent = 'Your camera is off · tap the camera button to retry' }
+    if (mirrorWait) { mirrorWait.hidden = false; mirrorWait.textContent = 'Test player camera mirrors your local camera when enabled' }
+    spelEigenVideo = false; spelAnderVideo = false; spelMijnVideoGezien = false
+    overlay?.classList.remove('sch-video-modus')
+    spelCameraLayout?.sync()
+    window.dispatchEvent(new CustomEvent('fibro-chess-video-state', { detail:{ eigen:false, ander:false, test:true } }))
+    return true
+  }
+
+  async function setFibroTestCamera(enabled) {
+    if (!fibroChessTest?.active) return { ok:false, reason:'closed' }
+    if (!enabled) {
+      const stream = fibroChessTest.stream
+      fibroChessTest.stream = null
+      stream?.getTracks().forEach(track => track.stop())
+      fibroTestThreeController?.setTestCamera?.(null)
+      await toonFibroTestCamera(null)
+      setFibroTestStatus('Camera off · the local test game is still running')
+      return { ok:true, eigen:false, test:true }
+    }
+    if (fibroChessTest.stream?.getVideoTracks?.().some(track => track.readyState === 'live')) {
+      return { ok:await toonFibroTestCamera(fibroChessTest.stream), eigen:true, test:true }
+    }
+    setFibroTestStatus('Requesting your camera permission…')
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false })
+      if (!fibroChessTest?.active) { stream.getTracks().forEach(track => track.stop()); return { ok:false, reason:'closed' } }
+      await toonFibroTestCamera(stream)
+      fibroTestThreeController?.setTestCamera?.(stream)
+      return { ok:true, eigen:true, test:true }
+    } catch (error) {
+      setFibroTestStatus(error?.name === 'NotAllowedError' ? 'Camera permission was declined · you can still test the boards' : 'Camera unavailable · check browser permissions and retry')
+      return { ok:false, reason:'camera', test:true }
+    }
+  }
+
+  async function startFibroTest(cameraRequest = null) {
+    const previousTest = fibroChessTest
+    if (previousTest?.active) window.sluitSpel(true)
+    else if (spelActief) window.sluitSpel(true)
+    const runId = `fibro-test-${Date.now().toString(36)}`
+    fibroChessTest = { active:true, runId, stage:'two', stream:null }
+    spelSessieId = runId
+    spelSpelers = null
+    spelTegenstander = { id:'fibro-test-black', username:'Test Player · Black' }
+    spelChatCrypto = null
+    spelActief = 'schaken'
+    benIkSpeler1 = true
+    resetSpelVideo()
+    document.getElementById('spelOverlay').classList.add('open', 'fibro-test-mode')
+    document.getElementById('spelTitelBar').textContent = '♟ Chess · Local test'
+    document.getElementById('spelVideoAnderNaam').textContent = 'TEST PLAYER · BLACK'
+    document.querySelector('#spelVideoEigen .video-etiket').textContent = 'YOU · TEST'
+    document.getElementById('spelVideoAnderWachten').textContent = 'Test player camera mirrors your local camera when enabled'
+    setFibroTestStatus('Starting local opponent · no invitations or messages are sent')
+    spelKanaal = maakSchaakTestKanaal(Schaak, {
+      responseDelayMs:() => 700 + Math.floor(Math.random() * 1900),
+      onStatus:setFibroTestStatus
+    })
+    await startSchaken()
+    spelCameraLayout?.destroy()
+    spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })
+    setFibroTestStatus('Local test ready · move White to see the test opponent reply')
+    if (cameraRequest) {
+      cameraRequest.then(stream => {
+        if (fibroChessTest?.runId !== runId) { stream.getTracks().forEach(track => track.stop()); return }
+        return toonFibroTestCamera(stream)
+      }).catch(error => {
+        if (fibroChessTest?.runId !== runId) return
+        setFibroTestStatus(error?.name === 'NotAllowedError' ? 'Camera permission was declined · tap the camera button to retry' : 'Camera unavailable · tap the camera button to retry')
+      })
+    } else {
+      setFibroTestStatus('Local test ready · tap the camera button to enable your webcam')
+    }
+  }
+
+  async function joinFibroTestAsThirdPlayer() {
+    if (!fibroChessTest?.active || fibroChessTest.stage !== 'two') return
+    const runId = fibroChessTest.runId
+    fibroChessTest.stage = 'three'
+    fibroTestThreeController = null
+    spelKanaal?.stop?.()
+    spelKanaal = null
+    spelChatCrypto = null
+    spelActief = 'schakendrie'
+    spelTegenstander = { id:'fibro-test-red', username:'Test Player · Red' }
+    spelSpelers = ['fibro-test-you', 'fibro-test-red', 'fibro-test-green']
+    benIkSpeler1 = true
+    spelCameraLayout?.destroy(); spelCameraLayout = null
+    document.getElementById('spelOverlay').classList.remove('sch-video-modus')
+    for (const id of ['lokaalMedia', 'remoteMedia']) {
+      const video = document.getElementById(id)
+      if (video) { video.srcObject = null; video.style.display = 'none' }
+    }
+    await startSchakenDrie(spelSpelers)
+    if (fibroChessTest?.runId !== runId || fibroChessTest.stage !== 'three') return
+    setFibroTestStatus('96-square three-player board · all three seats are under your control')
+  }
+
+  async function returnToFibroTwoPlayerTest() {
+    if (!fibroChessTest?.active) return
+    const stream = fibroChessTest.stream
+    spelSchaakDrieController?.destroy?.({ preserveCamera:true })
+    spelSchaakDrieController = null
+    fibroTestThreeController = null
+    spelCameraLayout?.destroy(); spelCameraLayout = null
+    fibroChessTest.stage = 'two'
+    spelActief = 'schaken'
+    spelTegenstander = { id:'fibro-test-black', username:'Test Player · Black' }
+    spelSpelers = null
+    benIkSpeler1 = true
+    spelKanaal = maakSchaakTestKanaal(Schaak, {
+      responseDelayMs:() => 700 + Math.floor(Math.random() * 1900),
+      onStatus:setFibroTestStatus
+    })
+    await startSchaken()
+    spelCameraLayout?.destroy()
+    spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })
+    document.getElementById('spelOverlay').classList.add('fibro-test-mode')
+    document.getElementById('spelTitelBar').textContent = '♟ Chess · Local test'
+    document.getElementById('spelVideoAnderNaam').textContent = 'TEST PLAYER · BLACK'
+    document.querySelector('#spelVideoEigen .video-etiket').textContent = 'YOU · TEST'
+    if (stream?.getVideoTracks?.().some(track => track.readyState === 'live')) await toonFibroTestCamera(stream)
+    else await toonFibroTestCamera(null)
+    setFibroTestStatus('Back in two-player test · White to move')
+  }
+
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await import('./schaken-ui.js?v=201')
-    m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), onInviteThird:nodigDerdeSchaakSpelerUit })
+    const m = await import('./schaken-ui.js?v=203')
+    m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: fibroChessTest?.active ? 'Test Player · Black' : spelVriendUsername(), testMode:Boolean(fibroChessTest?.active), onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer : nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
     spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })
   }
 
   async function startSchakenDrie(players) {
-    const m = await import('./schaken-drie-ui.js?v=3')
-    m.start({ gameChannel:spelKanaal, players, userId:huidigeUser.id })
+    const m = await import('./schaken-drie-ui.js?v=7')
+    const testMode = Boolean(fibroChessTest?.active)
+    const controller = m.start({ gameChannel:testMode ? null : spelKanaal, players, userId:testMode ? 'fibro-test-you' : huidigeUser.id, localPreview:testMode, testMode, testStream:fibroChessTest?.stream || null, onTestCameraChange:stream => { if (fibroChessTest?.active) fibroChessTest.stream = stream }, onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null })
+    spelSchaakDrieController = controller
+    fibroTestThreeController = testMode ? controller : null
     spelCameraLayout?.destroy()
     spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.chess3-camera' })
   }
@@ -2925,6 +3152,12 @@ async function startBlockIt() {
     const actief = Boolean(spelActief)
     const audioKnop = document.getElementById('spelAudioStartBtn')
     if (audioKnop) audioKnop.hidden = !actief || !status.audioBlocked
+    if (fibroChessTest?.active) {
+      const micKnop = document.getElementById('spelMuteBtn')
+      if (micKnop) micKnop.style.display = 'none'
+      if (audioKnop) audioKnop.hidden = true
+      return
+    }
     const micKnop = document.getElementById('spelMuteBtn')
     if (micKnop && actief) {
       micKnop.textContent = status.localAudio ? '🎤' : '🔇'
@@ -3031,6 +3264,10 @@ async function startBlockIt() {
   // automatic game call has finished its WebRTC handshake, so remember it and
   // switch the camera on as soon as `onVerbonden` fires.
   window.FibroChessVideo = async function () {
+    if (fibroChessTest?.active && fibroChessTest.stage === 'two') {
+      const wasAan = fibroChessTest.stream?.getVideoTracks?.().some(track => track.readyState === 'live')
+      return setFibroTestCamera(!wasAan)
+    }
     if (spelActief !== 'schaken') return { ok:false, reason:'connecting' }
     hervatGeluid()
     const wasAan = isVideoActiefLokaal()

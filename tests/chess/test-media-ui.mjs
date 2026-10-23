@@ -38,7 +38,7 @@ function setup() {
     async schakelVideo() { return captureResult }
   })
   vm.runInContext(`
-    let spelActief = 'schaken', spelCameraLayout = null;
+    let spelActief = 'schaken', spelCameraLayout = null, fibroChessTest = null;
     let spelEigenVideo = false, spelAnderVideo = false, spelMijnVideoGezien = false;
     let spelVideoAanvragen = true, spelVideoBezig = false, spelAnderCameraGewenst = false;
     ${functions}
@@ -47,6 +47,7 @@ function setup() {
       seen(value) { zetSpelVideoStatus({ gezien: value }) },
       requested(value) { spelAnderCameraGewenst = value; syncSpelMedia() },
       setGame(value) { spelActief = value },
+      setTestMode(value) { fibroChessTest = value ? { active:true } : null; syncSpelMedia() },
       state() { return { spelVideoAanvragen, spelVideoBezig } }
     };
   `, context, { filename: 'chat-media-ui.js' })
@@ -55,6 +56,14 @@ function setup() {
     status(patch) { mediaStatus = { ...mediaStatus, ...patch }; context.api.sync() },
     set captureResult(value) { captureResult = value }
   }
+}
+
+{
+  const app = setup(), mic = app.elements.get('spelMuteBtn'), audio = app.elements.get('spelAudioStartBtn')
+  audio.hidden = false
+  app.api.setTestMode(true)
+  assert.equal(mic.style.display, 'none', 'the local test does not expose the real call microphone')
+  assert.equal(audio.hidden, true, 'the local webcam mirror does not claim to be a voice connection')
 }
 
 {

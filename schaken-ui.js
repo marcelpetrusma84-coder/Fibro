@@ -10,7 +10,7 @@ function readSettings() {
 }
 // schaken-ui.js - spel voor Fibro, losgetrokken uit chat.html.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
-export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam, onInviteThird = null }) {
+export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam, onInviteThird = null, testMode = false }) {
   vriendNaam = vriendNaam || 'Opponent'
   // Coaching aids can reveal tactical information to one player only. Keep them
   // for computer games, where there is no fairness concern.
@@ -206,8 +206,8 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
           ${isVriendPartij ? `<section class="sch-menu-section" aria-labelledby="sch-three-player-heading">
             <h3 id="sch-three-player-heading">Three-player chess</h3>
             <label class="sch-attack-toggle"><input id="sch-three-player-enabled" type="checkbox"> Allow a third-player invite in this match</label>
-            <p class="sch-menu-hint">Recommended: enable this before the first move. You can also invite someone later during a two-player match. If they accept, everyone starts a fresh three-player game from the opening position.</p>
-            <button class="sch-keuze" id="sch-three-player-invite" type="button" hidden>＋ Invite a third player now</button>
+            <p class="sch-menu-hint">${testMode ? 'Local test only: joining switches to the 96-square board. No real player is contacted.' : 'Recommended: enable this before the first move. You can also invite someone later during a two-player match. If they accept, everyone starts a fresh three-player game from the opening position.'}</p>
+            <button class="sch-keuze" id="sch-three-player-invite" type="button" hidden>${testMode ? '＋ Join as third test player' : '＋ Invite a third player now'}</button>
           </section>` : ''}
           <p class="sch-menu-hint">Resize the board with Compact or Full width. Hold Full width for 3 seconds to reopen these settings.</p>
         </section>
@@ -395,7 +395,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     bewaarInstellingen()
     if (spelKanaal.isSolo) spelKanaal.send({ type:'broadcast', event:'bot-instellingen', payload:{ thinkingMs:instellingen.thinking * 1000 } })
   })
-  menu.querySelectorAll('.sch-keuze').forEach(button => button.addEventListener('click', () => kiesMenuOptie(button.closest('[data-options]').dataset.options, button.dataset.value)))
+  menu.querySelectorAll('[data-options] .sch-keuze').forEach(button => button.addEventListener('click', () => kiesMenuOptie(button.closest('[data-options]').dataset.options, button.dataset.value)))
   for (const group of ['pieces','board']) menu.querySelectorAll(`[data-options="${group}"] .sch-keuze`).forEach(button => button.setAttribute('aria-pressed', String(button.dataset.value === instellingen[group])))
   soundTheme.value = instellingen.soundTheme
   soundTheme.addEventListener('change', () => {

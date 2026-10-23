@@ -110,7 +110,11 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
       ${localPreview ? `<section class="chess3-rules-test"><h3>${testMode ? 'In FIBRO TEST' : 'In this local preview'}</h3><p><strong>You control all three colours.</strong> After moving Blue, play a Red move, then a Green move.</p>${testMode ? '<p>The three camera tiles mirror your own webcam. No invitations are sent. <strong>Reset</strong> restores the opening; <strong>Back to 2-player test</strong> returns to the regular test board.</p>' : ''}</section>` : ''}
     </div>
     <footer class="chess3-rules-footer"><button class="chess3-rules-done" type="button">Got it — back to the game</button></footer>`
-  rulesButton.addEventListener('click', () => { if (!rulesDialog.open) rulesDialog.showModal() })
+  rulesButton.addEventListener('click', () => {
+    if (rulesDialog.open) return
+    rulesDialog.showModal()
+    rulesDialog.scrollTop = 0
+  })
   rulesDialog.querySelectorAll('.chess3-rules-close, .chess3-rules-done').forEach(button => button.addEventListener('click', () => rulesDialog.close()))
   rulesDialog.addEventListener('click', event => {
     if (event.target !== rulesDialog) return
@@ -129,7 +133,7 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
     .chess3-rules-button{min-height:36px;min-width:64px;padding:7px 10px;border:1px solid #b0d7ff70;border-radius:11px;background:linear-gradient(145deg,#34455e,#192535);color:#e4f3ff;font:750 11px system-ui,sans-serif;cursor:pointer;box-shadow:inset 0 1px #ffffff30,0 3px 0 #0d1521,0 6px 12px #0005}
     .chess3-rules-button:active{transform:translateY(2px);box-shadow:inset 0 1px #ffffff20,0 1px 0 #0d1521}
     .chess3-rules-button:focus-visible,.chess3-rules button:focus-visible{outline:2px solid #a8f5df;outline-offset:3px}
-    .chess3-rules{box-sizing:border-box;width:min(650px,calc(100vw - 24px));max-height:88dvh;padding:0;overflow:auto;overscroll-behavior:contain;scrollbar-color:#8fcae4 #151e2e;border:1px solid #bfdeff;border-radius:22px;background:radial-gradient(ellipse at 0 0,#3b527a66,transparent 55%),linear-gradient(145deg,#222d40,#101825 70%);color:#eef5ff;box-shadow:inset 0 1px #ffffff33,0 5px 0 #080e18,0 24px 80px #000c;font:14px/1.55 system-ui,sans-serif;text-align:left}
+    .chess3-rules{position:fixed;inset:0;margin:auto;box-sizing:border-box;width:min(650px,calc(100vw - 24px));max-height:88dvh;padding:0;overflow:auto;overscroll-behavior:contain;scrollbar-color:#8fcae4 #151e2e;border:1px solid #bfdeff;border-radius:22px;background:radial-gradient(ellipse at 0 0,#3b527a66,transparent 55%),linear-gradient(145deg,#222d40,#101825 70%);color:#eef5ff;box-shadow:inset 0 1px #ffffff33,0 5px 0 #080e18,0 24px 80px #000c;font:14px/1.55 system-ui,sans-serif;text-align:left}
     .chess3-rules:not([open]){display:none}.chess3-rules::backdrop{background:#050a146e;backdrop-filter:blur(6px) brightness(.66)}
     .chess3-rules-header{position:sticky;top:0;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px 22px 16px;border-bottom:1px solid #c4dfff22;background:linear-gradient(145deg,#26344af7,#182234f7);backdrop-filter:blur(12px)}
     .chess3-rules-header h2{margin:4px 0 0;font-size:clamp(20px,4vw,27px);line-height:1.15;letter-spacing:-.035em}

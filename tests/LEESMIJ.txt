@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 23 oktober 2026 (v204: de achtergrond meteen delen).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 23 oktober 2026 (v205: geen 'Vriendschap beeindigen' op een vriendprofiel).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -409,6 +409,12 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  op <html data-vriend-profiel>. vriend-profiel.html: data-vriend-profiel, verbergWallpaper. index.html:
                                  <html style="background:var(--bg,#1a0a2e)">. 6 nieuwe zinnen: taal-en.js?v=30 en taal.js?v=30 (alle
                                  12 pagina's). proef99 nieuw, proef43 (v204). FIBRO_VERSIE 204 (testscript_achtergrond.py)
+                         geenontvriend = v205 (op verzoek van Marcel): alleen vriend-profiel.html: onderaan geen knop 'Vriendschap
+                                 beeindigen' meer (#ontvriend-btn, window.ontvriend en de import van wisVriendData weg; een lege
+                                 ruimte van 44 px blijft). Een vriend verwijderen of blokkeren kan op Vrienden (lang drukken,
+                                 kiesVriendActie). De vertalingen blijven in taal-en.js staan (onschuldig; anders taal.js?v= in alle
+                                 12 pagina's). proef100 nieuw, proef43 (v205, 'End friendship' niet meer verwacht). FIBRO_VERSIE 205
+                                 (testscript_geenontvriend.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -897,6 +903,9 @@ tools/proef99.py         de achtergrond meteen bewaren en delen (v204): echte pr
                          openen; Home met het verloop; video = melding; Opslaan stuurt het verloop, niet de foto; geen
                          verbinding = regel, Opslaan alsnog; vriend zonder achtergrond = niet je eigen foto; Engels.
                          Oude map (v203) als controle.   python3 -I proef99.py <map>
+tools/proef100.py        geen 'Vriendschap beeindigen' op een vriendprofiel (v205), NL en EN: geen knop, geen tekst, geen
+                         window.ontvriend, naam en chatknop wel; Vrienden lang drukken = Verwijderen uit vriendenlijst en
+                         Blokkeren. Oude map (v204): 3 van 5.   python3 -I proef100.py <map>
 security/*.mjs           (v202, van valentijnpeters) Node-tests, te draaien vanuit de map zelf: node tests/security/test-crypto.mjs,
                          test-game-crypto.mjs (spelchat-crypto.js), test-key-recovery.mjs (het herstel in login.html)
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),

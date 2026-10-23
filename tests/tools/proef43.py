@@ -91,8 +91,8 @@ SCHERMEN = [
     ('vrienden: uitnodigen', 'vrienden.html', "() => { openInviteModal() }", ['Invite a friend', 'Create a QR code', 'Close']),
     ('vrienden: keuzemenu vriend', 'vrienden.html', "async () => { const m = await import('./persoonblok.js?v=' + (document.querySelector('script[type=module]').textContent.match(/persoonblok\\.js\\?v=(\\d+)/) || [0, 2])[1]); m.kiesVriendActie('Bram') }", ['What do you want to do?', 'Block', 'Remove from friends list', 'Cancel']),
     ('vrienden: keuzemenu geblokkeerd', 'vrienden.html', "async () => { const m = await import('./persoonblok.js?v=' + (document.querySelector('script[type=module]').textContent.match(/persoonblok\\.js\\?v=(\\d+)/) || [0, 2])[1]); m.kiesGeblokkeerdActie('Kees') }", ['Unblock', 'Remove', 'Cancel']),
-    ('vriend-profiel', 'vriend-profiel.html?id=' + BRAM, '', ['← back', 'Online', 'Zin in', 'Send a message', 'Open chat', 'Pizza of pasta?', 'COUNTDOWN', 'days', 'hours', 'No quote yet', 'GUESTBOOK', 'just now', '10 min ago', 'p. 1 of 2', '▶ Play', 'End friendship']),
-    ('vriend-profiel offline', 'vriend-profiel.html?id=' + LOTTE, '', ['Slapen', 'No mood', 'End friendship']),
+    ('vriend-profiel', 'vriend-profiel.html?id=' + BRAM, '', ['← back', 'Online', 'Zin in', 'Send a message', 'Open chat', 'Pizza of pasta?', 'COUNTDOWN', 'days', 'hours', 'No quote yet', 'GUESTBOOK', 'just now', '10 min ago', 'p. 1 of 2', '▶ Play']),
+    ('vriend-profiel offline', 'vriend-profiel.html?id=' + LOTTE, '', ['Slapen', 'No mood']),
     ('bellen: kiezen', 'bellen.html?vriend=' + BRAM + '&naam=Bram', '', ['← back', 'Choose how you want to call', 'Call', 'Video call', 'Cancel']),
     ('bellen: inkomend', 'bellen.html?vriend=' + BRAM + '&naam=Bram&inkomend=1', '', ['← back', 'Is calling you']),
     ('home: blokkade-balk', 'index.html?blokkadetest=1', '', ['Your account is blocked until', 'Reason: Voorbeeld', 'You can still read your messages']),
@@ -247,6 +247,9 @@ MAG_ERBIJ |= {'Fibro v203 \u00B7 23 okt 2026'}
 # v204: de achtergrond meteen bewaren en delen (uitleg op het tabblad Achtergrond); Gradient en wallpapers werken; geen video
 MAG_WEG |= {'Fibro v203 \u00B7 23 okt 2026'}
 MAG_ERBIJ |= {'Fibro v204 \u00B7 23 okt 2026', 'Wat je hier kiest, geldt meteen, ook op je profiel bij je vrienden.'}
+# v205: onderaan het profiel van een vriend geen 'Vriendschap beeindigen' meer (dat kan op Vrienden, lang drukken)
+MAG_WEG |= {'Fibro v204 \u00B7 23 okt 2026', 'Vriendschap beeindigen'}
+MAG_ERBIJ |= {'Fibro v205 \u00B7 23 okt 2026'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

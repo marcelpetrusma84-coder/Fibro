@@ -5,7 +5,7 @@
 // fibro-v30: supabase.js wacht zonder internet niet meer op een verlopen inlogpas.
 // supabase.js wordt bijna overal geladen (?v=95); een nieuwe CACHE_VERSION zorgt dat
 // iedereen de nieuwe ophaalt. kastvullen.js vult de kast daarna vanzelf weer aan.
-const CACHE_VERSION = 'fibro-v31' // v31: lettertypen met size-adjust (zelfde ?v=1)
+const CACHE_VERSION = 'fibro-v36' // v36: stable friend games, camera layout, and recovered media state
 // v139 (zonder nieuwe CACHE_VERSION, de kast blijft vol): html-pagina's wachten hoogstens
 // 0,4 seconde op internet; daarna de bewaarde kopie. Zie hieronder bij 'Html-pagina's'.
 const WACHT_MS = 400

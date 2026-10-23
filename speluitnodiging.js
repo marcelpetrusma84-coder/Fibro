@@ -12,6 +12,7 @@ const SPEL_INFO = {
   botkaaseiren: { icon: '⭕', naam: 'Tic-Tac-Toe' },
   vieroprij: { icon: '🔴', naam: 'Four in a Row' },
   schaken: { icon: '♟️', naam: 'Chess' },
+  schakendrie: { icon: '♟️♟️♟️', naam: 'Three-player chess' },
   dammen: { icon: '⚫', naam: 'Draughts' },
   pong: { icon: '🏓', naam: 'Neo Paddle' },
   flappybird: { icon: '🦇', naam: 'Flapper' },
@@ -39,7 +40,7 @@ export async function startSpelUitnodigingLuisteraar() {
     .channel('speluitnodiging-' + session.user.id, { config: { broadcast: { self: false }, private: true } })
     .on('broadcast', { event: 'speluitnodiging' }, (msg) => {
       const p = (msg && msg.payload) || {}
-      toonPopup(p.van, p.vanNaam, p.vanAvatar, p.spelType, p.sessieId)
+      toonPopup(p.van, p.vanNaam, p.vanAvatar, p.spelType, p.sessieId, p.players)
     }))
 }
 
@@ -58,7 +59,7 @@ function maak(tag, stijl, tekst) {
   return el
 }
 
-function toonPopup(vanId, vanNaam, vanAvatar, spelType, sessieId) {
+function toonPopup(vanId, vanNaam, vanAvatar, spelType, sessieId, players = null) {
   vanId = alsId(vanId)
   sessieId = alsId(sessieId)
   if (!vanId || !sessieId) return
@@ -81,7 +82,18 @@ function toonPopup(vanId, vanNaam, vanAvatar, spelType, sessieId) {
   knoppen.append(ja, nee)
   popup.append(maak('div', 'font-size:40px;', info.icon), regel, maak('div', 'color:#aaa;font-size:13px;', info.naam), knoppen)
   document.body.appendChild(popup)
-  ja.onclick = () => {
+  ja.onclick = async () => {
+    if (spelType === 'schakendrie') {
+      const roster = Array.isArray(players) && players.length === 3 && players.every(id => typeof id === 'string' && id.length <= 100) && new Set(players).size === 3 ? players : null
+      if (!roster || !roster.includes(huidigeUserId) || !roster.includes(vanId)) return popup.remove()
+      const accepted = supabase.channel('speluitnodiging-' + vanId, { config:{ private:true } })
+      const sent = await accepted.send({ type:'broadcast', event:'schaken-drie-accepted', payload:{ host:vanId, invited:huidigeUserId, players:roster, sessieId } })
+      await supabase.removeChannel(accepted)
+      if (sent !== 'ok') return
+      const q = new URLSearchParams({ spelVriend: vanId, spelType, sessieId, starterId: vanId, players:JSON.stringify(roster) })
+      window.location.href = 'chat.html?' + q.toString()
+      return
+    }
     const q = new URLSearchParams({ spelVriend: vanId, spelType, sessieId, starterId: vanId })
     window.location.href = 'chat.html?' + q.toString()
   }

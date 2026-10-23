@@ -45,7 +45,7 @@ export function newThreePlayerGame() {
       const sector = sectors[side]
       for (let file = 0; file < 4; file++) {
         pieces.set(cellId(sector, 3, file), { color:COLORS[player], type:army[side * 4 + file], player })
-        pieces.set(cellId(sector, 2, file), { color:COLORS[player], type:'P', player })
+        pieces.set(cellId(sector, 2, file), { color:COLORS[player], type:'P', player, hasMoved:false })
       }
     }
   }
@@ -96,11 +96,9 @@ export function legalThreePlayerMoves(state, fromId) {
   }
   if (piece.type === 'N') {
     const leaps = []
-    for (const a of [u, scale(u,-1), v, scale(v,-1)]) {
-      for (const b of [v, scale(v,-1), u, scale(u,-1)]) {
-        if (Math.abs(a[0] * b[0] + a[1] * b[1]) > 0) continue
-        leaps.push(add(scale(a,2), b))
-      }
+    for (const su of [-1, 1]) for (const sv of [-1, 1]) {
+      leaps.push(add(scale(u, 2 * su), scale(v, sv)))
+      leaps.push(add(scale(v, 2 * sv), scale(u, su)))
     }
     return [...new Set(leaps.map(delta => targetAt(state, from, delta)?.id).filter(Boolean))]
       .filter(id => state.pieces.get(id)?.player !== piece.player)
@@ -112,7 +110,7 @@ export function legalThreePlayerMoves(state, fromId) {
     if (one && !state.pieces.has(one.id)) {
       moves.push(one.id)
       const two = targetAt(state, from, direction, 2)
-      if (from.row === 2 && two && !state.pieces.has(two.id)) moves.push(two.id)
+      if (!piece.hasMoved && from.row === 2 && two && !state.pieces.has(two.id)) moves.push(two.id)
     }
     for (const captureDirection of [add(direction, v), add(direction, scale(v,-1))]) {
       const target = targetAt(state, from, captureDirection)
@@ -132,8 +130,13 @@ export function applyThreePlayerMove(state, fromId, toId, promoteTo = 'Q') {
   state.pieces.delete(fromId)
   state.pieces.delete(toId)
   const promoted = piece.type === 'P' && to.row === 3 && to.sector !== piece.player * 2 && to.sector !== piece.player * 2 + 1
-  state.pieces.set(toId, { ...piece, type:promoted ? (['Q','R','B','N'].includes(promoteTo) ? promoteTo : 'Q') : piece.type })
-  if (captured?.type === 'K') state.active[captured.player] = false
+  state.pieces.set(toId, { ...piece, hasMoved:true, type:promoted ? (['Q','R','B','N'].includes(promoteTo) ? promoteTo : 'Q') : piece.type })
+  if (captured?.type === 'K') {
+    state.active[captured.player] = false
+    for (const [id, remaining] of state.pieces) {
+      if (remaining.player === captured.player) state.pieces.delete(id)
+    }
+  }
   state.lastMove = { from:fromId, to:toId, captured, promoted }
   state.ply++
   const survivors = state.active.map((active, player) => active ? player : -1).filter(player => player >= 0)

@@ -2079,19 +2079,15 @@ console.timeLog('[chat] berichten', 'opgehaald')
       .on('broadcast', { event: 'speluitnodiging' }, (msg) => {
         const { van, vanNaam, vanAvatar, spelType, sessieId, players } = msg.payload
         toonSpelUitnodigingPopup(van, vanNaam, vanAvatar, spelType, sessieId, players)
-      }))
-    spelGlobaalKanaal.on('broadcast', { event:'schaken-drie-accepted' }, async message => {
+      })
+      .on('broadcast', { event:'schaken-drie-accepted' }, async message => {
       const payload = message?.payload || {}
       const roster = valideerSchaakDrieSpelers(payload.players)
       if (!roster || payload.host !== huidigeUser?.id || !roster.includes(huidigeUser?.id) || spelActief !== 'schaken') return
-      const opponent = roster.find(id => id !== huidigeUser.id && id !== payload.invited)
-      spelKanaal?.send({ type:'broadcast', event:'schaken-drie-start', payload:{ host:huidigeUser.id, players:roster, sessieId:payload.sessieId } })
-      if (opponent) {
-        const mail = supabase.channel('speluitnodiging-' + payload.invited, { config:{ private:true } })
-        mail.send({ type:'broadcast', event:'speluitnodiging', payload:{ van:huidigeUser.id, spelType:'schakendrie', sessieId:payload.sessieId, players:roster } }).finally(() => supabase.removeChannel(mail))
-      }
+      await spelKanaal?.send({ type:'broadcast', event:'schaken-drie-start', payload:{ host:huidigeUser.id, players:roster, sessieId:payload.sessieId } })
+      await new Promise(resolve => setTimeout(resolve, 250))
       await window.speelMee('schakendrie', payload.sessieId, huidigeUser.id, roster)
-    })
+      }))
   }
 
   // ── Toon de uitnodiging popup ──
@@ -2109,20 +2105,22 @@ console.timeLog('[chat] berichten', 'opgehaald')
     balk.style.transition = 'none'
     balk.style.width = '100%'
 
-    document.getElementById('spelUitnodigingAccepteer').onclick = () => {
+    document.getElementById('spelUitnodigingAccepteer').onclick = async () => {
       sluitSpelUitnodiging()
       // Open chat met die vriend als die nog niet open is
       if (geselecteerdeVriend?.id !== vanId) {
         const vriend = (window._vriendenData || []).find(v => v.id === vanId)
         if (vriend) {
-          openChat(vriend.id, vriendWeergaveNaam(vriend), vriend.avatar_url || '👤', vriend.public_key || '')
+          await openChat(vriend.id, vriendWeergaveNaam(vriend), vriend.avatar_url || '👤', vriend.public_key || '')
         }
       }
       if (spelType === 'schakendrie') {
         const roster = valideerSchaakDrieSpelers(players)
         if (!roster || !roster.includes(huidigeUser?.id)) return
         const accepted = supabase.channel('speluitnodiging-' + vanId, { config:{ private:true } })
-        accepted.send({ type:'broadcast', event:'schaken-drie-accepted', payload:{ host:vanId, invited:huidigeUser.id, players:roster, sessieId } }).finally(() => supabase.removeChannel(accepted))
+        const sent = await accepted.send({ type:'broadcast', event:'schaken-drie-accepted', payload:{ host:vanId, invited:huidigeUser.id, players:roster, sessieId } })
+        await supabase.removeChannel(accepted)
+        if (sent !== 'ok') return
         speelMee(spelType, sessieId, vanId, roster)
       } else speelMee(spelType, sessieId, vanId, players)
     }
@@ -2148,6 +2146,64 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (popup) popup.style.display = 'none'
   }
 
+  function kiesDerdeSchaakVriend() {
+    const uitgesloten = new Set([huidigeUser?.id, spelTegenstander?.id])
+    const vrienden = (window._vriendenData || []).filter(vriend => vriend?.id && !uitgesloten.has(vriend.id))
+    if (!vrienden.length) {
+      alert(T('You need another accepted friend before you can invite a third player.'))
+      return Promise.resolve(null)
+    }
+    return new Promise(resolve => {
+      const backdrop = document.createElement('div')
+      backdrop.style.cssText = 'position:fixed;inset:0;z-index:10010;display:grid;place-items:center;padding:18px;background:#080a12cc;backdrop-filter:blur(8px)'
+      const card = document.createElement('section')
+      card.setAttribute('role','dialog'); card.setAttribute('aria-modal','true'); card.setAttribute('aria-label',T('Invite a third chess player'))
+      card.style.cssText = 'width:min(420px,100%);max-height:80vh;overflow:auto;padding:20px;border:1px solid #a9f2db;border-radius:20px;background:linear-gradient(145deg,#29243b,#10131d);color:#fff;box-shadow:0 22px 70px #000b'
+      const title = document.createElement('h2'); title.textContent = T('Invite a third player'); title.style.cssText='margin:0 0 6px;font-size:21px'
+      const hint = document.createElement('p'); hint.textContent=T('Choose an accepted friend to join this chess match.'); hint.style.cssText='margin:0 0 14px;color:#bdc7d8;font-size:13px'
+      const list = document.createElement('div'); list.style.cssText='display:grid;gap:8px'
+      const finish = value => { backdrop.remove(); resolve(value) }
+      vrienden.forEach(vriend => {
+        const button = document.createElement('button'); button.type='button'
+        button.style.cssText='display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:10px 12px;border:1px solid #a9f2db55;border-radius:12px;background:linear-gradient(145deg,#ffffff12,#ffffff05);color:#fff;font:inherit;text-align:left;cursor:pointer'
+        const name = document.createElement('span'); name.textContent = vriendWeergaveNaam(vriend) || vriend.username || T('Friend'); name.style.flex='1'
+        const invite = document.createElement('strong'); invite.textContent=T('Invite'); invite.style.color='#a9f2db'
+        button.append(name, invite); button.onclick=()=>finish(vriend); list.append(button)
+      })
+      const cancel = document.createElement('button'); cancel.type='button'; cancel.textContent=T('Cancel'); cancel.style.cssText='margin-top:12px;min-height:42px;padding:8px 14px;border:1px solid #fff3;border-radius:11px;background:#ffffff0b;color:#fff;font:inherit;cursor:pointer'; cancel.onclick=()=>finish(null)
+      backdrop.addEventListener('click',event=>{if(event.target===backdrop)finish(null)})
+      card.append(title,hint,list,cancel); backdrop.append(card); document.body.append(backdrop); list.querySelector('button')?.focus()
+    })
+  }
+
+  async function nodigDerdeSchaakSpelerUit() {
+    if (spelActief !== 'schaken' || !spelKanaal || !huidigeUser?.id || !spelTegenstander?.id || !spelSessieId) return
+    const vriend = await kiesDerdeSchaakVriend()
+    if (!vriend) return
+    const roster = [huidigeUser.id, spelTegenstander.id, vriend.id]
+    const { error } = await supabase.rpc('create_chess_three_session', { p_session_id:spelSessieId, p_player_ids:roster })
+    if (error) {
+      console.warn('[chess3] session setup failed:', error)
+      alert(T('Three-player chess is not ready yet. The Supabase migration must be applied first.'))
+      return
+    }
+    const invitation = supabase.channel('speluitnodiging-' + vriend.id, { config:{ private:true } })
+    const sent = await invitation.send({ type:'broadcast', event:'speluitnodiging', payload:{
+      van:huidigeUser.id, vanNaam:huidigProfiel?.username || T('Friend'), vanAvatar:huidigProfiel?.avatar_data || huidigProfiel?.avatar_url || '♟️',
+      spelType:'schakendrie', sessieId:spelSessieId, players:roster
+    } })
+    await supabase.removeChannel(invitation)
+    if (sent !== 'ok') { alert(T('The invitation could not be sent. Try again.')); return }
+    await supabase.from('messages').insert({ sender_id:huidigeUser.id, receiver_id:vriend.id, content:'spelinvite:schakendrie:' + huidigeUser.id + ':' + spelSessieId })
+    alert(T('Three-player invitation sent to {name}. Your current game will switch when they accept.', { name: vriendWeergaveNaam(vriend) || vriend.username || T('your friend') }))
+  }
+
+  function valideerSchaakDrieSpelers(players) {
+    if (!Array.isArray(players) || players.length !== 3 || players.some(id => typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id))) return null
+    const roster = [...new Set(players)]
+    return roster.length === 3 ? roster : null
+  }
+
   function spelKanaalNaam(sessieId, spelType = '') {
     if (spelType === 'schakendrie') return 'spel3_' + sessieId
     const ids = [huidigeUser.id, spelTegenstander.id].sort()
@@ -2164,7 +2220,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     pong: './pong-ui.js?v=147',
     vieroprij: './vieroprij-ui.js?v=147',
     schaken: './schaken-ui.js?v=199',
-    schakendrie: './schaken-drie-ui.js?v=1',
+    schakendrie: './schaken-drie-ui.js?v=2',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=148',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -2230,7 +2286,6 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
     if (!sessieId) sessieId = Date.now().toString(36)
     if (!isNieuwsteSpelSessie(huidigeUser?.id, geselecteerdeVriend?.id, sessieId)) return
-    if (spelActief) window.sluitSpel(true)
 
     if (spelType === 'schakendrie') {
       players = valideerSchaakDrieSpelers(players)
@@ -2241,6 +2296,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
         return
       }
     }
+    if (spelActief) window.sluitSpel(true)
     spelSessieId = sessieId
     spelSpelers = spelType === 'schakendrie' ? players : null
     const opponentId = spelType === 'schakendrie' ? players.find(id => id !== huidigeUser.id) : geselecteerdeVriend?.id
@@ -2256,8 +2312,6 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (videoNaam) videoNaam.textContent = spelVriendUsername()
     const overlay = document.getElementById('spelOverlay')
     overlay.classList.add('open')
-
-    benIkSpeler1 = starterId ? (starterId === huidigeUser.id) : (huidigeUser.id < spelTegenstander.id)
 
     benIkSpeler1 = spelType === 'schakendrie' ? players[0] === huidigeUser.id : (starterId ? (starterId === huidigeUser.id) : (huidigeUser.id < spelTegenstander.id))
 
@@ -2565,9 +2619,16 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ─── Schaken ───
   async function startSchaken() {
     const m = await import('./schaken-ui.js?v=199')
-    m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
+    m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), onInviteThird:nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
     spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })
+  }
+
+  async function startSchakenDrie(players) {
+    const m = await import('./schaken-drie-ui.js?v=2')
+    m.start({ gameChannel:spelKanaal, players, userId:huidigeUser.id })
+    spelCameraLayout?.destroy()
+    spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.chess3-camera' })
   }
 
   // ─── Dammen (internationaal, 10x10) ───

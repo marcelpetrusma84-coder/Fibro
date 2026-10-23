@@ -6,8 +6,7 @@ import {
   THREE_PLAYER_COLORS,
   THREE_PLAYER_NAMES,
   THREE_PLAYER_SYMBOLS
-} from './schaak-drie.js?v=1'
-import { ICE_SERVERS, iceReady } from './ice-config.js?v=1'
+} from './schaak-drie.js?v=2'
 
 const COLOR_STYLES = ['#55aaff', '#ff626d', '#53dc8c']
 const LABELS = { K:'King', Q:'Queen', R:'Rook', B:'Bishop', N:'Knight', P:'Pawn' }
@@ -26,6 +25,7 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
   let highlighted = []
   let destroyed = false
   let localStream = null
+  let iceServers = { iceServers:[] }
   const peers = new Map()
   const pendingIce = new Map()
   const status = document.createElement('div')
@@ -34,6 +34,7 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
   status.setAttribute('aria-live', 'polite')
   const cameraRow = document.createElement('div')
   cameraRow.className = 'chess3-cameras'
+  cameraRow.hidden = localPreview
   const controls = document.createElement('div')
   controls.className = 'chess3-controls'
   const boardWrap = document.createElement('div')
@@ -165,7 +166,9 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
     }
     button.disabled = true; button.textContent='Starting camera…'
     try {
-      await iceReady
+      const ice = await import('./ice-config.js?v=1')
+      await ice.iceReady
+      iceServers = ice.ICE_SERVERS
       localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false })
       video.srcObject = localStream; await video.play().catch(() => {})
       tile.classList.add('has-video')
@@ -183,7 +186,7 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
   }
   function ensurePeer(peerId) {
     if (peers.has(peerId)) return peers.get(peerId)
-    const pc = new RTCPeerConnection(ICE_SERVERS)
+    const pc = new RTCPeerConnection(iceServers)
     const transceiver = pc.addTransceiver('video', { direction:localStream ? 'sendrecv' : 'recvonly' })
     const stream = new MediaStream()
     pc.ontrack = event => {

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl" data-taal style="background:#1a0a2e">
+<html lang="nl" data-taal style="background:var(--bg,#1a0a2e)">
 <script>
   const f = localStorage.getItem('fibro_lettertype')
   if (f) {
@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=22"></script>
+<script src="taal.js?v=30"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>/* v130: zoomen mag weer; iPhone zoomt bij invoervakken kleiner dan 16px vanzelf in */@supports (-webkit-touch-callout: none){input,textarea,select{font-size:16px !important}}</style>
@@ -28,6 +28,8 @@
   * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
   .top-bar, .profile-hero, .sectie-label, .leeg-staat, .widget, .hero-info { text-shadow:0 1px 3px rgba(0,0,0,0.85); }
   body { background:transparent; color:var(--text); font-family:'DM Sans',sans-serif; max-width:480px; margin:0 auto; min-height:100dvh; overflow-x:hidden; position:relative; }
+  /* v204: de vaste kleur in <html style> ging altijd voor, dus Home liet je eigen achtergrondkleur nooit zien;
+     nu staat daar var(--bg) (met #1a0a2e voor het eerste moment) */
   html { background:var(--bg); }
   #fibro-animatie-canvas { background:var(--bg); }
   #content-laag { position:relative; z-index:1; }
@@ -44,7 +46,7 @@
   .hero-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
   /* v188: rood stipje op je avatar als je op offline staat (Profiel > Online/Offline). Home ziet alleen jij. */
   .hero-av-wrap { position:relative; flex-shrink:0; }
-  .offline-stip { position:absolute; right:2px; bottom:2px; width:24px; height:24px; padding:0; border-radius:50%; background:#ef4444; border:3px solid var(--bg); box-sizing:border-box; cursor:pointer; }
+  .offline-stip { position:absolute; right:2px; bottom:2px; width:24px; height:24px; padding:0; border-radius:50%; background:#ef4444; border:3px solid var(--bg-kleur, var(--bg)); box-sizing:border-box; cursor:pointer; }
   .offline-stip[hidden] { display:none; }
   .hero-info { flex:1; min-width:0; }
   .hero-naam { font-size:18px; font-weight:600; }
@@ -180,9 +182,12 @@ window.addEventListener('pageshow', function (e) { if (e.persisted) window.werkO
     var bio = String(lokaal.bio || '').trim() || String(p.bio || '').trim()
     zet('heroBio', bio.length > 100 ? bio.slice(0, 100) + '...' : bio)
     var mood = document.getElementById('heroMood')
-    if (mood && (p.offline_emoji || p.offline_bericht)) {
+    // "Offline" is the old default value for an empty mood, not this user's live
+    // availability. Do not present it as a status in the profile header.
+    var moodTekst = String(p.offline_bericht || '').trim()
+    if (mood && moodTekst && moodTekst.toLowerCase() !== 'offline') {
       // v171: een sticker als mood (fxsticker:...) staat hier niet, alleen de tekst
-      [/^fxsticker:/.test(p.offline_emoji || '') ? '' : (p.offline_emoji || ''), p.offline_bericht || ''].forEach(function (t) { var s = document.createElement('span'); s.textContent = t; mood.appendChild(s) })
+      [/^fxsticker:/.test(p.offline_emoji || '') ? '' : (p.offline_emoji || ''), moodTekst].forEach(function (t) { var s = document.createElement('span'); s.textContent = t; mood.appendChild(s) })
     }
     var av = document.getElementById('heroAvatar'), top = document.getElementById('topAvatar')
     var data = String(p.avatar_data || '').trim()
@@ -229,7 +234,7 @@ window.addEventListener('pageshow', function (e) { if (e.persisted) window.werkO
 </div>
 
 <script type="module">
-import { laadThema } from './thema.js?v=130'
+import { laadThema } from './thema.js?v=204'
 import { pasBlokstijlToe } from './blokstijl.js?v=95'
 import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=95'
 import { startHeartbeat } from './heartbeat.js?v=117'
@@ -2104,8 +2109,8 @@ async function renderGastenboek(c, uid) {
 // v183: het versienummer en de datum van deze versie, onderaan in het menu. Zo zie je op elk toestel welke versie
 // er echt draait (een telefoon kan een oude pagina nog even vasthouden). Elk maak-script zet het nummer een hoger:
 // tests/gen/bouw.py maakt geen script als het hier niet omhoog gaat.
-const FIBRO_VERSIE = 192
-const FIBRO_DATUM = '2026-10-21'
+const FIBRO_VERSIE = 205
+const FIBRO_DATUM = '2026-10-23'
 function versieTekst() {
   let d = FIBRO_DATUM
   try { d = new Date(FIBRO_DATUM + 'T12:00:00').toLocaleDateString(T.locale || 'nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) } catch (e) {}
@@ -2512,10 +2517,15 @@ function toonHero(profiel) {
   const bioTekst = lokaleBio || String(profiel?.bio || '').trim()
   bioEl.textContent = bioTekst.length > 100 ? bioTekst.slice(0,100) + '...' : bioTekst
   const moodEl = document.getElementById('heroMood')
-  if (profiel?.offline_emoji || profiel?.offline_bericht) {
+  const moodTekst = String(profiel?.offline_bericht || '').trim()
+  // The legacy default "Offline" means no mood. The red avatar indicator is the
+  // actual offline setting, controlled by `toon_online`.
+  if (moodTekst && moodTekst.toLowerCase() !== 'offline') {
     moodEl.innerHTML = ''
     // v171: een sticker als mood (fxsticker:...) staat hier niet, alleen de tekst
-    for (const tk of [/^fxsticker:/.test(profiel.offline_emoji || '') ? '' : (profiel.offline_emoji || ''), profiel.offline_bericht || '']) { const s = document.createElement('span'); s.textContent = tk; moodEl.appendChild(s) }
+    for (const tk of [/^fxsticker:/.test(profiel.offline_emoji || '') ? '' : (profiel.offline_emoji || ''), moodTekst]) { const s = document.createElement('span'); s.textContent = tk; moodEl.appendChild(s) }
+  } else {
+    moodEl.innerHTML = ''
   }
 }
 
@@ -2621,7 +2631,10 @@ startMeldingen()
 // v127: met internet, op de achtergrond, de kast van de portier aanvullen (alle spellen
 // en pagina's), zodat ze ook zonder internet werken. Zie kastvullen.js.
 // v172: ook de plaatjes en geluiden van de stickers.
-setTimeout(() => { import('./kastvullen.js?v=172').then(m => m.vulKast()).catch(() => {}) }, 6000)
+// v203 (sneller): al kort nadat Home klaar is (was: na 6 seconden), en na elke update meteen (FIBRO_VERSIE). Dan staan
+// de scripts van Chat en Vrienden al klaar als je daarheen gaat.
+const startKast = () => setTimeout(() => { import('./kastvullen.js?v=203').then(m => m.vulKast(FIBRO_VERSIE)).catch(() => {}) }, 1500)
+if (document.readyState === 'complete') startKast(); else window.addEventListener('load', startKast, { once: true })
 </script>
 
 <script>
@@ -2630,11 +2643,11 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <script src="swipe.js?v=95"></script>
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=152"; startBelLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=198"; startBelLuisteraar()</script>
 <script type="module">import { beschermOpslag } from "./opslag.js?v=2"; beschermOpslag()</script>
 <script type="module" src="geluidregelaar.js?v=180"></script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=143"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=197"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=168"; startOngelezen()</script>
 <script type="module">import { checkTimers } from "./timer-melding.js?v=187"; setTimeout(checkTimers,4000)</script>
 <script src="./fotoviewer.js?v=6"></script>

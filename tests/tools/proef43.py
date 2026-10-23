@@ -91,8 +91,8 @@ SCHERMEN = [
     ('vrienden: uitnodigen', 'vrienden.html', "() => { openInviteModal() }", ['Invite a friend', 'Create a QR code', 'Close']),
     ('vrienden: keuzemenu vriend', 'vrienden.html', "async () => { const m = await import('./persoonblok.js?v=' + (document.querySelector('script[type=module]').textContent.match(/persoonblok\\.js\\?v=(\\d+)/) || [0, 2])[1]); m.kiesVriendActie('Bram') }", ['What do you want to do?', 'Block', 'Remove from friends list', 'Cancel']),
     ('vrienden: keuzemenu geblokkeerd', 'vrienden.html', "async () => { const m = await import('./persoonblok.js?v=' + (document.querySelector('script[type=module]').textContent.match(/persoonblok\\.js\\?v=(\\d+)/) || [0, 2])[1]); m.kiesGeblokkeerdActie('Kees') }", ['Unblock', 'Remove', 'Cancel']),
-    ('vriend-profiel', 'vriend-profiel.html?id=' + BRAM, '', ['← back', 'Online', 'Zin in', 'Send a message', 'Open chat', 'Pizza of pasta?', 'COUNTDOWN', 'days', 'hours', 'No quote yet', 'GUESTBOOK', 'just now', '10 min ago', 'p. 1 of 2', '▶ Play', 'End friendship']),
-    ('vriend-profiel offline', 'vriend-profiel.html?id=' + LOTTE, '', ['Slapen', 'No mood', 'End friendship']),
+    ('vriend-profiel', 'vriend-profiel.html?id=' + BRAM, '', ['← back', 'Online', 'Zin in', 'Send a message', 'Open chat', 'Pizza of pasta?', 'COUNTDOWN', 'days', 'hours', 'No quote yet', 'GUESTBOOK', 'just now', '10 min ago', 'p. 1 of 2', '▶ Play']),
+    ('vriend-profiel offline', 'vriend-profiel.html?id=' + LOTTE, '', ['Slapen', 'No mood']),
     ('bellen: kiezen', 'bellen.html?vriend=' + BRAM + '&naam=Bram', '', ['← back', 'Choose how you want to call', 'Call', 'Video call', 'Cancel']),
     ('bellen: inkomend', 'bellen.html?vriend=' + BRAM + '&naam=Bram&inkomend=1', '', ['← back', 'Is calling you']),
     ('home: blokkade-balk', 'index.html?blokkadetest=1', '', ['Your account is blocked until', 'Reason: Voorbeeld', 'You can still read your messages']),
@@ -100,7 +100,7 @@ SCHERMEN = [
     # v144: Chat
     ('chat: lijst', 'chat.html', '', ['Who do you want to chat with?', 'Chat', 'Bram', '← back']),  # v191: bovenaan alleen 'Chat'
     ('chat: gesprek', 'chat.html?vriend=' + BRAM, '', ['encrypted message — tap Restore key', 'Game invite: ♟️ Chess', 'Message deleted',
-        '[your message]', 'message no longer available', 'Not sent · tap to try again', 'No key on this device', 'Send photo', '● active', 'Call', 'More']),
+        '[your message]', 'message no longer available', 'Not sent · tap to try again', 'No key on this device', 'Send photo', 'Call', 'More']),  # v199: '● active' weg
     ('chat: melden', 'chat.html?vriend=' + BRAM, "() => { toonChatMenu(); document.getElementById('cmMeld').click() }", ['Tap the messages you want to report (max 5)', 'Cancel', 'Report']),
     # v153: het oude venster 'Eigen sticker toevoegen' is weg; nu de stickerkeuze (vakje Eigen open)
     ('chat: stickerkeuze', 'chat.html?vriend=' + BRAM, "() => { toggleStickers(); const v = document.querySelector('#stickerGrid .sk-vak[data-vak=\\'e1\\']'); if (v) v.click() }",
@@ -211,6 +211,45 @@ MAG_ERBIJ |= {'Chat', 'Fibro v191 \u00B7 21 okt 2026'}
 # v192: Neon Raiders in Stijl > Widgets (alleen spelen)
 MAG_WEG |= {'Fibro v191 \u00B7 21 okt 2026'}
 MAG_ERBIJ |= {'\U0001F680', 'Neon Raiders', 'Speel alleen', 'Fibro v192 \u00B7 21 okt 2026'}
+# v193: het hele Neon Raiders (alleen het versienummer verandert op de schermen)
+MAG_WEG |= {'Fibro v192 \u00B7 21 okt 2026'}
+MAG_ERBIJ |= {'Fibro v193 \u00B7 21 okt 2026'}
+# v194: Neon Raiders samen vanuit de chat (alleen het versienummer verandert op de schermen)
+MAG_WEG |= {'Fibro v193 \u00B7 21 okt 2026'}
+MAG_ERBIJ |= {'Fibro v194 \u00B7 21 okt 2026'}
+# v195: het vernieuwde schaken weer in twee talen (alleen het versienummer verandert op de schermen)
+MAG_WEG |= {'Fibro v194 \u00B7 21 okt 2026'}
+MAG_ERBIJ |= {'Fibro v195 \u00B7 21 okt 2026'}
+# v196: bij elk spel in Stijl > Widgets een eigen versienummer (spelversies.js), los van het nummer van Fibro
+MAG_WEG |= {'Fibro v195 \u00B7 21 okt 2026'}
+MAG_ERBIJ |= {'Fibro v196 \u00B7 21 okt 2026', 'v1', 'v2', 'v3', 'versie 1', 'versie 2', 'versie 3'}  # (label voor schermlezers: Nederlands; Engels 'version N' staat in spelversies.js)
+# v197: PR #3 van valentijnpeters (schaken met webcam enz.): het versienummer, Schaken v3 en de knop 'Tegen een vriend'
+MAG_WEG |= {'Fibro v196 \u00B7 21 okt 2026', 'v2', 'versie 2'}  # Schaken v2 -> v3, geen spel meer op v2
+MAG_ERBIJ |= {'Fibro v197 \u00B7 22 okt 2026', '\u265F Tegen een vriend'}  # spel.html?spel=schaken: knop 'Tegen een vriend'
+# v198: webcam-status en tegengehouden geluid (melding van Tijn); op de schermen alleen het versienummer en Schaken v4
+MAG_WEG |= {'Fibro v197 \u00B7 22 okt 2026', 'v3', 'versie 3'}
+MAG_ERBIJ |= {'Fibro v198 \u00B7 22 okt 2026', 'v4', 'versie 4'}
+# v199: in een gesprek geen '\u25CF actief' meer (groen stipje bij de foto als de vriend online is)
+MAG_WEG |= {'Fibro v198 \u00B7 22 okt 2026', '\u25CF actief'}
+MAG_ERBIJ |= {'Fibro v199 \u00B7 22 okt 2026', '\U0001F7E2 Bram is online'}  # (title bij de foto)
+# v200: geen dicht slotje meer bij een vriend; een open slotje is een knop met uitleg (slotuitleg.js)
+MAG_WEG |= {'Fibro v199 \u00B7 22 okt 2026', '\U0001F512'}
+MAG_ERBIJ |= {'Fibro v200 \u00B7 22 okt 2026', 'Nog geen versleuteling met Lotte \u2014 tik voor uitleg / Nog geen versleuteling met Lotte \u2014 tik voor uitleg'}  # (title / aria-label)
+# v201: op Vrienden geen slotje meer (die lijst haalt public_key niet op; het stond er altijd open)
+MAG_WEG |= {'Fibro v200 \u00B7 22 okt 2026', '\U0001F513', 'Nog geen versleuteling met Lotte \u2014 tik voor uitleg / Nog geen versleuteling met Lotte \u2014 tik voor uitleg'}
+MAG_ERBIJ |= {'Fibro v201 \u00B7 22 okt 2026'}
+# v202: spelchat en spelstickers versleuteld, herstelsleutel eerst gecontroleerd (stap 1 van PR #4); op de schermen alleen het versienummer
+MAG_WEG |= {'Fibro v201 \u00B7 22 okt 2026'}
+MAG_ERBIJ |= {'Fibro v202 \u00B7 23 okt 2026'}
+# v203: Fibro sneller (kast eerder en na elke update, Vrienden meteen uit het geheugen); op de schermen alleen het versienummer
+MAG_WEG |= {'Fibro v202 \u00B7 23 okt 2026'}
+MAG_ERBIJ |= {'Fibro v203 \u00B7 23 okt 2026'}
+# v204: de achtergrond meteen bewaren en delen (uitleg op het tabblad Achtergrond); Gradient en wallpapers werken; geen video
+MAG_WEG |= {'Fibro v203 \u00B7 23 okt 2026'}
+MAG_ERBIJ |= {'Fibro v204 \u00B7 23 okt 2026', 'Wat je hier kiest, geldt meteen, ook op je profiel bij je vrienden.'}
+# v205: onderaan het profiel van een vriend geen 'Vriendschap beeindigen' meer (dat kan op Vrienden, lang drukken)
+MAG_WEG |= {'Fibro v204 \u00B7 23 okt 2026', 'Vriendschap beeindigen'}
+MAG_ERBIJ |= {'Fibro v205 \u00B7 23 okt 2026'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=22"></script>
+<script src="taal.js?v=30"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
@@ -38,7 +38,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 .f-avatar.blue { border-color:rgba(56,189,248,0.4); background:rgba(56,189,248,0.1); }
 .f-avatar.pink { border-color:rgba(244,114,182,0.4); background:rgba(244,114,182,0.1); }
 .f-avatar.orange { border-color:rgba(245,158,74,0.4); background:rgba(245,158,74,0.1); }
-.online-dot { width:10px; height:10px; border-radius:50%; background:#4ade80; border:2px solid var(--bg); position:absolute; bottom:1px; right:1px; }
+.online-dot { width:10px; height:10px; border-radius:50%; background:#4ade80; border:2px solid var(--bg-kleur, var(--bg)); position:absolute; bottom:1px; right:1px; }
 .online-dot.off { background:var(--muted); }
 .f-info { flex:1; }
 .f-name { font-size:14px; font-weight:500; }
@@ -295,7 +295,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 
 <script type="module">
 
-  import { laadThema } from './thema.js?v=130'
+  import { laadThema } from './thema.js?v=204'
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { startMeldingen } from './meldingen.js?v=187'
@@ -316,7 +316,33 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     return sec < 300 // heartbeat elke 2 min (heartbeat.js)
   }
 
+  // v203 (sneller): wie is er ingelogd op dit toestel? Alleen om meteen de lijst van de vorige keer te kunnen tonen,
+  // zoals Home dat met zijn kop doet; de echte inlog komt daarna (supabase.auth.getSession).
+  function uidVanToestel() {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)
+        if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+          const v = JSON.parse(localStorage.getItem(k) || 'null')
+          if (v && v.user && typeof v.user.id === 'string') return v.user.id
+        }
+      }
+    } catch (e) {}
+    return null
+  }
+  function bewaardeLijst(userId) {
+    try {
+      const b = JSON.parse(localStorage.getItem('fibro_vriendenpagina_' + userId) || 'null')
+      if (b && Array.isArray(b.data)) return { data: b.data, geblokkeerd: Array.isArray(b.geblokkeerd) ? b.geblokkeerd : [] }
+    } catch (e) {}
+    return null
+  }
+
   async function init() {
+    // v203: meteen de lijst van de vorige keer (van dit toestel), zonder op de server te wachten; de verse komt erna
+    const snelId = uidVanToestel()
+    const snel = snelId && bewaardeLijst(snelId)
+    if (snel && (snel.data.length || snel.geblokkeerd.length)) tekenLijst(snelId, snel.data, snel.geblokkeerd, true)
     // v127: zonder internet eerst de bewaarde lijst tonen, zonder op de server te wachten
     // (een bijna verlopen inlogpas kan anders tot 30 seconden ophouden)
     const zonderNet = bewaardeSessieZonderInternet()
@@ -338,6 +364,9 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
       .select('friend_id, profiles!friendships_friend_id_fkey(' + velden + ')')
       .eq('user_id', userId)
       .eq('status', 'accepted')
+    // v203 (sneller): de geblokkeerden tegelijk vragen, niet pas als de vriendenlijst binnen is
+    const geblokBelofte = navigator.onLine ? haalGeblokkeerden() : null
+    if (geblokBelofte) geblokBelofte.catch(() => {}) // (wordt hieronder alleen gebruikt als de lijst lukt)
     let antwoord = navigator.onLine
       ? await vraag(VELDEN + ', avatar_versie')
       : { data: null, error: { message: 'geen internet' } }
@@ -350,7 +379,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     const lijstSleutel = 'fibro_vriendenpagina_' + userId
     let geblokkeerd = []
     if (!error && data) {
-      geblokkeerd = await haalGeblokkeerden()
+      geblokkeerd = await (geblokBelofte || haalGeblokkeerden())
       try { localStorage.setItem(lijstSleutel, JSON.stringify({ data, geblokkeerd })) } catch (e) {}
     } else {
       let bewaard = null
@@ -362,14 +391,25 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
       }
     }
     if (error && !navigator.onLine) {
+      laatsteLijst = null
       container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);font-size:15px;line-height:1.8;">' + T('📴 Geen internet.<br>Je vriendenlijst staat nog niet op dit toestel. Open Vrienden een keer met internet.') + '</div>'
       return
     }
     if (error || !data || (data.length === 0 && geblokkeerd.length === 0)) {
+      laatsteLijst = null
       container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);font-size:15px;line-height:1.8;">' + T('👥 Nog geen vrienden.<br>Klik op <strong style="color:var(--accent)">+ Uitnodigen</strong> om iemand uit te nodigen!') + '</div>'
       return
     }
+    tekenLijst(userId, data, geblokkeerd, false)
+  }
 
+  // v203: de lijst tekenen, uit laadVrienden gehaald, zodat ook de bewaarde lijst meteen kan. Is de lijst precies
+  // hetzelfde als wat er al staat (meestal: de bewaarde lijst klopte nog), dan blijft alles staan zoals het is (geen
+  // knipperen, een vinger op een rij blijft op die rij); alleen de foto's worden dan nog nagekeken.
+  // vanToestel: de lijst van de vorige keer; dan alleen foto's van dit toestel, niets van de server.
+  let laatsteLijst = null
+  function tekenLijst(userId, data, geblokkeerd, vanToestel) {
+    const container = document.getElementById('vriendenLijst')
     const gesorteerd = [...data].sort((a, b) => (isGebruikerOnline(b.profiles) ? 1 : 0) - (isGebruikerOnline(a.profiles) ? 1 : 0))
     const online = gesorteerd.filter(f => isGebruikerOnline(f.profiles))
     const offline = gesorteerd.filter(f => !isGebruikerOnline(f.profiles))
@@ -402,7 +442,8 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
         (heeftWeergavenaam ? '<div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:1px;">@' + vEsc(p.username || '') + '</div>' : '') +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
-        '<span style="font-size:16px;opacity:0.6;">' + (p.public_key ? '🔒' : '🔓') + '</span>' +
+        // v201: geen slotje meer op Vrienden. Deze lijst haalt public_key niet op (VELDEN), dus het slotje stond hier
+        // altijd open, ook al lang voor v200. In de Chat-lijst staat het open slotje nog wel, alleen als het echt zo is.
         '<span class="chat-knop" data-cid="' + vEsc(p.id) + '" data-cnaam="' + vEsc(p2pNaam || p.username) + '" data-cav="' + vEsc(p.avatar_url || '👤') + '" style="position:relative;display:inline-flex;align-items:center;">' +
         '<span style="font-size:22px;line-height:1;cursor:pointer;">💬</span>' +
         '<span style="position:absolute;bottom:-1px;right:-2px;width:9px;height:9px;border-radius:50%;background:' + stipKleur + ';border:1.5px solid rgba(0,0,0,0.5);"></span>' +
@@ -428,7 +469,9 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     if (online.length > 0) html += '<div class="section-label">🟢 Online (' + online.length + ')</div>' + online.map(bouwRij).join('')
     if (offline.length > 0) html += '<div class="section-label">' + T('⚫ Offline ({n})', { n: offline.length }) + '</div>' + offline.map(bouwRij).join('')
     if (geblokkeerd.length > 0) html += '<div class="section-label">' + T('🚫 Geblokkeerd ({n})', { n: geblokkeerd.length }) + '</div>' + geblokkeerd.map(bouwGeblokkeerdRij).join('')
-    container.innerHTML = html
+    const zelfde = html === laatsteLijst && !!container.querySelector('.friend-row, .blok-rij')
+    laatsteLijst = html
+    if (!zelfde) container.innerHTML = html
 
     // v134: avatarfoto's van vrienden (vriendfotos.js): eerst wat op dit toestel staat, nieuwe later
     const zetFotos = (fotos) => {
@@ -437,7 +480,10 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
         if (f || el.dataset.foto) zetAvatar(el, el.dataset.emoji, f)
       }
     }
-    haalVriendFotos(userId, data.map(f => f && f.profiles).filter(Boolean), zetFotos).then(zetFotos).catch(e => console.warn('[vrienden] vriendfoto\'s', e))
+    // v203: bij de lijst van de vorige keer alleen de foto's van dit toestel (zonder updated_at haalt vriendfotos.js niets)
+    const fotoVrienden = data.map(f => f && f.profiles).filter(Boolean).map(p => vanToestel ? { id: p.id } : p)
+    haalVriendFotos(userId, fotoVrienden, zetFotos).then(zetFotos).catch(e => console.warn('[vrienden] vriendfoto\'s', e))
+    if (zelfde) return // alles staat er al, met de knoppen
 
     // Klikgedrag via listeners in plaats van onclick-attributen
     container.querySelectorAll('.friend-row').forEach(rij => {
@@ -709,9 +755,9 @@ function filterVrienden() {
 }
 </script>
 
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=152"; startBelLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=198"; startBelLuisteraar()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=143"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=197"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=168"; startOngelezen()</script>
 <script src="swipe.js?v=95"></script>
 <script type="module" src="offline.js?v=146"></script>

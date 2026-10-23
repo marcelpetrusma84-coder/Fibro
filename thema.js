@@ -111,15 +111,25 @@ export function bewaarThemaCache(uid, data) {
 }
 const zelfdeThema = (a, b) => THEMA_VELDEN.every(k => (a[k] == null ? null : a[k]) === (b[k] == null ? null : b[k]))
 
+// v204: de achtergrondkleur kan ook een kleurverloop zijn ('linear-gradient(135deg,#..,#..)', van Gradient of een van de
+// wallpapers in Profiel). --bg-kleur is dan de eerste kleur, voor wat geen verloop kan zijn (de rand om een stipje).
+// Op het profiel van een vriend (<html data-vriend-profiel>) nooit je eigen achtergrond: daar hoort die van de vriend
+// (vriend-profiel.html zet hem zelf). Voor v204 stond daar je eigen foto als de vriend er geen had.
+function zetAchtergrondKleur(v) {
+  const m = /^linear-gradient\(135deg,\s*(#[0-9a-f]{3,8})/i.exec(String(v))
+  document.documentElement.style.setProperty('--bg', v)
+  document.documentElement.style.setProperty('--bg-kleur', m ? m[1] : v)
+}
+const isVriendProfiel = () => document.documentElement.hasAttribute('data-vriend-profiel')
+
 async function pasThemaToe(data, uid) {
   if (data.accent_kleur) document.documentElement.style.setProperty('--accent', data.accent_kleur)
   if (data.accent_kleur2) document.documentElement.style.setProperty('--accent2', data.accent_kleur2)
   if (data.lettertype) { const lt = nieuweLetter(data.lettertype); laadFont(String(lt).split(",")[0].replace(/['"]/g, "").trim()); pasLettertypeToe(lt) }
   pasAnimatieToe(data.animatie)
+  if (isVriendProfiel()) return
   const heeftWallpaper = await laadWallpaper(uid)
-  if (!heeftWallpaper && data.achtergrond_kleur) {
-    document.documentElement.style.setProperty('--bg', data.achtergrond_kleur)
-  }
+  if (!heeftWallpaper && data.achtergrond_kleur) zetAchtergrondKleur(data.achtergrond_kleur)
 }
 
 export async function laadThema() {

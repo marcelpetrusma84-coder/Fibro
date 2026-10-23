@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=22"></script>
+<script src="taal.js?v=30"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Stijl</title>
@@ -98,6 +98,7 @@ input[type="range"]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;b
 .widget-icon{font-size:18px;}
 .widget-name{font-size:15px;}
 .widget-desc{font-size:15px;color:var(--muted);margin-top:2px;}
+.widget-versie{font-size:13px;color:var(--muted);margin:0 12px 0 auto;padding-left:8px;flex-shrink:0;white-space:nowrap}
 .toggle{width:36px;height:20px;border-radius:10px;position:relative;cursor:pointer;flex-shrink:0;transition:background 0.2s;}
 .toggle.on{background:var(--accent);}
 .toggle.off{background:rgba(255,255,255,0.15);}
@@ -233,6 +234,8 @@ input, textarea { font-size:16px !important; }
       <button class="type-btn" id="type-wallpaper" onclick="setAchtergrondType('wallpaper')" data-t>🖼 Wallpaper</button>
       <button class="type-btn" id="type-upload" onclick="setAchtergrondType('upload')" data-t>📤 Eigen upload</button>
     </div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-top:-4px;" data-t>Wat je hier kiest, geldt meteen, ook op je profiel bij je vrienden.</div>
+    <div id="bgDeelStatus" role="status" aria-live="polite" hidden style="font-size:13px;line-height:1.5;margin-top:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,0.06);"></div>
   </div>
   <div id="bg-kleur-sectie" class="section">
     <div class="section-label" data-t>Achtergrondkleur</div>
@@ -261,10 +264,10 @@ input, textarea { font-size:16px !important; }
       <div id="gradientPreview" class="gradient-preview"></div>
       <div style="display:flex;gap:10px;">
         <div style="flex:1;"><label class="field-label" data-t>Kleur 1</label>
-          <div class="color-row"><input type="color" id="grad1Picker" value="#1a0a2e" oninput="updateGradient()"/><input class="color-input" id="grad1Hex" value="#1a0a2e" oninput="updateGradient()"/></div>
+          <div class="color-row"><input type="color" id="grad1Picker" value="#1a0a2e" oninput="updateGradient(this)"/><input class="color-input" id="grad1Hex" value="#1a0a2e" oninput="updateGradient(this)"/></div>
         </div>
         <div style="flex:1;"><label class="field-label" data-t>Kleur 2</label>
-          <div class="color-row"><input type="color" id="grad2Picker" value="#0f172a" oninput="updateGradient()"/><input class="color-input" id="grad2Hex" value="#0f172a" oninput="updateGradient()"/></div>
+          <div class="color-row"><input type="color" id="grad2Picker" value="#0f172a" oninput="updateGradient(this)"/><input class="color-input" id="grad2Hex" value="#0f172a" oninput="updateGradient(this)"/></div>
         </div>
       </div>
     </div>
@@ -288,7 +291,7 @@ input, textarea { font-size:16px !important; }
       <div style="font-size:15px;color:var(--muted);line-height:1.6;" data-t>Wordt gebruikt als wallpaper op je home pagina</div>
       <div style="font-size:14px;color:rgba(243,232,255,0.3);margin-top:8px;" data-t>JPG · PNG · WEBP · GIF — max 10MB</div>
     </div>
-    <input type="file" id="bgUpload" accept="image/*,video/mp4" style="display:none" onchange="uploadAchtergrond(this)"/>
+    <input type="file" id="bgUpload" accept="image/*" style="display:none" onchange="uploadAchtergrond(this)"/>
     <div id="uploadPreview" style="display:none;margin-top:4px;">
       <div class="section-label" data-t>Huidige wallpaper</div>
       <div style="position:relative;border-radius:14px;overflow:hidden;border:1.5px solid var(--accent);">
@@ -423,18 +426,18 @@ input, textarea { font-size:16px !important; }
   <div class="section">
     <div class="section-label" data-t>Spellen</div>
     <div class="widget-list">
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⭕</div><div><div class="widget-name" data-t>Tic-Tac-Toe</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_botkaaseiren" onclick="toggleWidget('spel_botkaaseiren')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🔴</div><div><div class="widget-name" data-t>Four in a Row</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_vieroprij" onclick="toggleWidget('spel_vieroprij')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">♟️</div><div><div class="widget-name" data-t>Chess</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_schaken" onclick="toggleWidget('spel_schaken')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⚫</div><div><div class="widget-name" data-t>Draughts</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_dammen" onclick="toggleWidget('spel_dammen')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏓</div><div><div class="widget-name" data-t>Neo Paddle</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_pong" onclick="toggleWidget('spel_pong')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">👻</div><div><div class="widget-name" data-t>Ghost Tag</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_pacman" onclick="toggleWidget('spel_pacman')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🐍</div><div><div class="widget-name" data-t>Twin Snakes</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="toggle off" id="widget-spel_pinball" onclick="toggleWidget('spel_pinball')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🦇</div><div><div class="widget-name" data-t>Flapper</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_flappybird" onclick="toggleWidget('spel_flappybird')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🟪</div><div><div class="widget-name" data-t>Block It</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_breakout" onclick="toggleWidget('spel_breakout')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🪲</div><div><div class="widget-name" data-t>The Swarm</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="toggle off" id="widget-spel_swarm" onclick="toggleWidget('spel_swarm')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏃</div><div><div class="widget-name" data-t>Runner &amp; Gunner</div><div class="widget-desc" data-t>Speel alleen</div></div></div><div class="toggle off" id="widget-spel_endlessrunner" onclick="toggleWidget('spel_endlessrunner')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🚀</div><div><div class="widget-name" data-t>Neon Raiders</div><div class="widget-desc" data-t>Speel alleen</div></div></div><div class="toggle off" id="widget-spel_shmup" onclick="toggleWidget('spel_shmup')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⭕</div><div><div class="widget-name" data-t>Tic-Tac-Toe</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="botkaaseiren"></div><div class="toggle off" id="widget-spel_botkaaseiren" onclick="toggleWidget('spel_botkaaseiren')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🔴</div><div><div class="widget-name" data-t>Four in a Row</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="vieroprij"></div><div class="toggle off" id="widget-spel_vieroprij" onclick="toggleWidget('spel_vieroprij')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">♟️</div><div><div class="widget-name" data-t>Chess</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="schaken"></div><div class="toggle off" id="widget-spel_schaken" onclick="toggleWidget('spel_schaken')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">⚫</div><div><div class="widget-name" data-t>Draughts</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="dammen"></div><div class="toggle off" id="widget-spel_dammen" onclick="toggleWidget('spel_dammen')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏓</div><div><div class="widget-name" data-t>Neo Paddle</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="pong"></div><div class="toggle off" id="widget-spel_pong" onclick="toggleWidget('spel_pong')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">👻</div><div><div class="widget-name" data-t>Ghost Tag</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="pacman"></div><div class="toggle off" id="widget-spel_pacman" onclick="toggleWidget('spel_pacman')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🐍</div><div><div class="widget-name" data-t>Twin Snakes</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="pinball"></div><div class="toggle off" id="widget-spel_pinball" onclick="toggleWidget('spel_pinball')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🦇</div><div><div class="widget-name" data-t>Flapper</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="widget-versie" data-spelversie="flappybird"></div><div class="toggle off" id="widget-spel_flappybird" onclick="toggleWidget('spel_flappybird')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🟪</div><div><div class="widget-name" data-t>Block It</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="widget-versie" data-spelversie="breakout"></div><div class="toggle off" id="widget-spel_breakout" onclick="toggleWidget('spel_breakout')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🪲</div><div><div class="widget-name" data-t>The Swarm</div><div class="widget-desc" data-t>Speel alleen, haal je record</div></div></div><div class="widget-versie" data-spelversie="swarm"></div><div class="toggle off" id="widget-spel_swarm" onclick="toggleWidget('spel_swarm')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🏃</div><div><div class="widget-name" data-t>Runner &amp; Gunner</div><div class="widget-desc" data-t>Speel alleen</div></div></div><div class="widget-versie" data-spelversie="endlessrunner"></div><div class="toggle off" id="widget-spel_endlessrunner" onclick="toggleWidget('spel_endlessrunner')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🚀</div><div><div class="widget-name" data-t>Neon Raiders</div><div class="widget-desc" data-t>Speel alleen</div></div></div><div class="widget-versie" data-spelversie="shmup"></div><div class="toggle off" id="widget-spel_shmup" onclick="toggleWidget('spel_shmup')"><div class="toggle-dot"></div></div></div>
     </div>
   </div>
 </div>
@@ -510,7 +513,7 @@ function _profielUid() {
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
 import { startMeldingen } from './meldingen.js?v=187'
-import { laadThema, bewaarThemaCache } from './thema.js?v=130'
+import { laadThema, bewaarThemaCache } from './thema.js?v=204'
 import { startHeartbeat } from './heartbeat.js?v=117'
 import { initSync } from './sync.js?v=162'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=149'
@@ -874,14 +877,14 @@ async function init(){
 
     if(lokaal.accentKleur)updateAccent(lokaal.accentKleur)
     if(lokaal.accentKleur2)updateAccent2(lokaal.accentKleur2)
-    if(lokaal.bgKleur)updateBgKleur(lokaal.bgKleur)
+    toonAchtergrondKeuze(lokaal.bgKleur||profiel?.achtergrond_kleur,true) // v204: ook een gradient of wallpaper
     if(lokaal.animatie){huidigeAnimatie=lokaal.animatie;updateAnimatieUI()}
     if(lokaal.lettertype){huidigLettertype=lokaal.lettertype;document.body.style.fontFamily=lokaal.lettertype;localStorage.setItem('fibro_lettertype',lokaal.lettertype)}
     if(lokaal.widgets)actieveWidgets=lokaal.widgets.filter(w=>w!=='stickerboard') // v173: Sticker board is weg
     const bestaandeWallpaper=await laadFotoUitDB('bg_wallpaper_'+userId)
     // v138: een grote PNG-achtergrond (van een iPhone) op de achtergrond kleiner maken
     maakAchtergrondKleiner(userId,bestaandeWallpaper).then(k=>{if(!k)return;const im=document.querySelector('#uploadedWallpaper img');if(im)im.src=k;console.log('[foto] achtergrond kleiner gemaakt:',Math.round(bestaandeWallpaper.length/1024),'->',Math.round(k.length/1024),'kB')}).catch(()=>{})
-    if(bestaandeWallpaper){document.getElementById('uploadedWallpaper').innerHTML=`<img src="${bestaandeWallpaper}" style="width:100%;height:100%;object-fit:cover;">`;document.getElementById('uploadPreview').style.display='block';zetWallpaperLaag(bestaandeWallpaper)}
+    if(bestaandeWallpaper){document.getElementById('uploadedWallpaper').innerHTML=`<img src="${bestaandeWallpaper}" style="width:100%;height:100%;object-fit:cover;">`;document.getElementById('uploadPreview').style.display='block';zetWallpaperLaag(bestaandeWallpaper);heeftEigenFoto=true;setAchtergrondType('upload')}
   }
   // P2P foto-sync initialiseren
   if (huidigeUser?.id) initP2pFoto(huidigeUser.id, {
@@ -933,14 +936,95 @@ window.verwerkFoto=async function(event){
 window.bevestigFoto=async function(){if(window._avatarFotoBezig){try{await window._avatarFotoBezig}catch(e){}}document.getElementById('avatarPickerWrap').style.display='none'}
 window.toggleAvatarPicker=function(){const w=document.getElementById('avatarPickerWrap');w.style.display=w.style.display==='none'?'block':'none'}
 window.setAchtergrondType=function(type){document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));document.getElementById('type-'+type).classList.add('active');document.getElementById('bg-kleur-sectie').style.display=type==='kleur'?'block':'none';document.getElementById('bg-gradient-sectie').style.display=type==='gradient'?'block':'none';document.getElementById('bg-wallpaper-sectie').style.display=type==='wallpaper'?'block':'none';document.getElementById('bg-upload-sectie').style.display=type==='upload'?'block':'none'}
-window.updateBgKleur=function(k){document.getElementById('bgKleurPicker').value=k;document.getElementById('bgKleurHex').value=k;document.documentElement.style.setProperty('--bg',k)}
-window.updateBgKleurHex=function(v){if(/^#[0-9a-f]{6}$/i.test(v))updateBgKleur(v)}
-window.updateGradient=function(){const k1=document.getElementById('grad1Picker').value,k2=document.getElementById('grad2Picker').value;document.getElementById('gradientPreview').style.background=`linear-gradient(135deg,${k1},${k2})`;document.documentElement.style.setProperty('--bg',k1)}
-window.selectWallpaper=function(naam,el){document.querySelectorAll('.wallpaper-cell').forEach(c=>c.classList.remove('selected'));el.classList.add('selected')}
+// ── v204: de achtergrond ──
+// Wat je op het tabblad Achtergrond kiest, geldt meteen: op dit toestel en voor je vrienden, zonder Opslaan (dat
+// vergat iedereen, en dan zagen vrienden je achtergrond nooit). Een eigen foto gaat als wallpaper_data naar de server;
+// een kleur, een gradient of een van de 6 wallpapers als achtergrond_kleur: '#rrggbb' of 'linear-gradient(135deg,#..,#..)'
+// (een kleurverloop is tekst, geen foto: geen extra dataverbruik). Een eigen foto gaat voor; kies je daarna toch een
+// kleur, dan vraagt Fibro eerst of de foto weg mag. Gradient en wallpapers deden voor v204 niets (alleen een voorbeeld);
+// een video als achtergrond werd nergens bewaard en kan niet meer. Lukt delen niet (geen internet), dan zegt een regel
+// dat, en gaat het mee met Opslaan (dat stuurt achtergrond_kleur altijd, en de foto als die anders is dan de vorige keer).
+const WALLPAPERS={'fibro-nacht':['#1a0a2e','#4a044e'],oceaan:['#042f2e','#0f172a'],zonsondergang:['#450a0a','#2d1f14'],woud:['#14532d','#042f2e'],galaxy:['#1e1b4b','#4a044e'],noir:['#1c1917','#030712']}
+const KLEURCODE=/^#[0-9a-f]{6}$/i
+const verloop=(a,b)=>'linear-gradient(135deg,'+a.toLowerCase()+','+b.toLowerCase()+')'
+function leesVerloop(v){const m=/^linear-gradient\(135deg,(#[0-9a-f]{6}),(#[0-9a-f]{6})\)$/i.exec(String(v||''));return m?[m[1].toLowerCase(),m[2].toLowerCase()]:null}
+let achtergrondWaarde=null // wat er nu gekozen is ('#rrggbb' of een verloop)
+let heeftEigenFoto=false
+function zetBg(v){const k=leesVerloop(v);document.documentElement.style.setProperty('--bg',v);document.documentElement.style.setProperty('--bg-kleur',k?k[0]:v)}
+// De keuze laten zien (bij het openen en na een keuze). Bewaart niets.
+function toonAchtergrondKeuze(v,metType){
+  const k=leesVerloop(v)
+  if(!k&&!KLEURCODE.test(String(v||'')))v='#1a0a2e'
+  achtergrondWaarde=k?verloop(k[0],k[1]):String(v).toLowerCase()
+  if(!heeftEigenFoto)zetBg(achtergrondWaarde)
+  const naam=k&&Object.keys(WALLPAPERS).find(n=>WALLPAPERS[n][0]===k[0]&&WALLPAPERS[n][1]===k[1])
+  document.querySelectorAll('.wallpaper-cell').forEach(c=>c.classList.toggle('selected',!!naam&&(c.getAttribute('onclick')||'').includes("'"+naam+"'")))
+  if(!k){document.getElementById('bgKleurPicker').value=achtergrondWaarde;document.getElementById('bgKleurHex').value=achtergrondWaarde}
+  if(k){document.getElementById('grad1Picker').value=k[0];document.getElementById('grad1Hex').value=k[0];document.getElementById('grad2Picker').value=k[1];document.getElementById('grad2Hex').value=k[1]}
+  document.getElementById('gradientPreview').style.background=verloop(document.getElementById('grad1Picker').value,document.getElementById('grad2Picker').value)
+  if(metType)setAchtergrondType(heeftEigenFoto?'upload':naam?'wallpaper':k?'gradient':'kleur')
+}
+function zetDeelStatus(tekst,soort){const el=document.getElementById('bgDeelStatus');if(!el)return;el.textContent=tekst||'';el.hidden=!tekst;el.style.color=soort==='fout'?'#fca5a5':soort==='goed'?'#86efac':'var(--muted)'}
+// Lokaal bewaren (Home en de andere pagina's lezen het thema uit fibro_thema_<id>), alleen de achtergrond
+function bewaarAchtergrondLokaal(v){
+  const uid=huidigeUser&&huidigeUser.id;if(!uid)return
+  try{const l=JSON.parse(localStorage.getItem('fibro_profiel_'+uid)||'{}')||{};l.bgKleur=v;localStorage.setItem('fibro_profiel_'+uid,JSON.stringify(l))}catch(e){}
+  try{const t=JSON.parse(localStorage.getItem('fibro_thema_'+uid)||'null');if(t&&typeof t==='object'){t.achtergrond_kleur=v;localStorage.setItem('fibro_thema_'+uid,JSON.stringify(t))}}catch(e){}
+}
+// Naar de server, zodat vrienden het zien. Een kleur pas na een korte pauze (de kleurkiezer stuurt bij elk beetje
+// schuiven), een foto meteen.
+let teDelen={},deelTimer=null
+function deelAchtergrond(velden,ms){Object.assign(teDelen,velden);clearTimeout(deelTimer);deelTimer=setTimeout(()=>{stuurAchtergrond().catch(()=>{})},ms==null?700:ms)}
+async function stuurAchtergrond(){
+  const velden=teDelen;teDelen={}
+  if(!huidigeUser||!Object.keys(velden).length)return false
+  zetDeelStatus(T('Bezig met delen…'),'bezig')
+  const rij=Object.assign({},velden)
+  if('wallpaper_data' in rij)rij.updated_at=new Date().toISOString() // het etiket waaraan vrienden zien dat er een andere foto is
+  let fout=null
+  try{const r=await supabase.from('profiles').update(rij).eq('id',huidigeUser.id);fout=r.error}catch(e){fout=e}
+  if(fout){zetDeelStatus(T('Niet gedeeld: geen verbinding. Fibro probeert het opnieuw als je op Opslaan drukt.'),'fout');return false}
+  if('wallpaper_data' in rij){const v=leesFotoVingers(huidigeUser.id),w=await fotoVinger(rij.wallpaper_data);if(v&&w){v.w=w;bewaarFotoVingers(huidigeUser.id,v)}}
+  zetDeelStatus(T('✓ Bewaard. Je vrienden zien je achtergrond ook.'),'goed')
+  return true
+}
+// Een kleur, gradient of wallpaper kiezen (door jou)
+async function kiesAchtergrond(v){
+  const k=leesVerloop(v);v=k?verloop(k[0],k[1]):String(v||'').toLowerCase()
+  if(!k&&!KLEURCODE.test(v))return
+  if(heeftEigenFoto){
+    if(!confirm(T('Je eigen achtergrondfoto weghalen en deze achtergrond gebruiken?'))){toonAchtergrondKeuze(achtergrondWaarde);return}
+    await wisEigenAchtergrondFoto()
+    teDelen.wallpaper_data=null
+  }else if(v===achtergrondWaarde)return
+  toonAchtergrondKeuze(v)
+  bewaarAchtergrondLokaal(v)
+  deelAchtergrond({achtergrond_kleur:v})
+}
+async function wisEigenAchtergrondFoto(){
+  const userId=huidigeUser.id;const db=await openDB()
+  await new Promise(resolve=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').delete('bg_wallpaper_'+userId);tx.oncomplete=resolve;tx.onerror=resolve})
+  heeftEigenFoto=false
+  weghaalWallpaperLaag();document.body.style.backgroundImage='';document.body.style.background=''
+  zetBg(achtergrondWaarde||'#1a0a2e')
+  document.getElementById('uploadPreview').style.display='none';document.getElementById('uploadedWallpaper').innerHTML='';document.getElementById('bgUpload').value=''
+}
+window.updateBgKleur=function(k){kiesAchtergrond(k)}
+window.updateBgKleurHex=function(v){if(KLEURCODE.test(v))kiesAchtergrond(v)}
+window.updateGradient=function(el){
+  // uit een tekstvak: alleen een volledige kleurcode; die gaat dan ook in de kleurkiezer ernaast
+  if(el&&/Hex$/.test(el.id)){if(!KLEURCODE.test(el.value))return;document.getElementById(el.id.replace('Hex','Picker')).value=el.value}
+  const k1=document.getElementById('grad1Picker').value,k2=document.getElementById('grad2Picker').value
+  if(!el||!/Hex$/.test(el.id)){document.getElementById('grad1Hex').value=k1;document.getElementById('grad2Hex').value=k2}
+  document.getElementById('gradientPreview').style.background=verloop(k1,k2)
+  kiesAchtergrond(verloop(k1,k2))
+}
+window.selectWallpaper=function(naam,el){const w=WALLPAPERS[naam];if(w)kiesAchtergrond(verloop(w[0],w[1]))}
 window.zetWallpaperLaag=function(url){let laag=document.getElementById('fibro-wallpaper');if(!laag){laag=document.createElement('div');laag.id='fibro-wallpaper';laag.style.cssText='position:fixed;inset:0;z-index:-1;background-size:cover;background-position:center;background-repeat:no-repeat;pointer-events:none;';document.body.prepend(laag)}laag.style.backgroundImage='url('+url+')';document.body.style.backgroundImage='';document.body.style.background='transparent';document.documentElement.style.setProperty('--bg','transparent')};
 window.weghaalWallpaperLaag=function(){const laag=document.getElementById('fibro-wallpaper');if(laag)laag.remove()};
-window.uploadAchtergrond=async function(input){const bestand=input.files[0];if(!bestand)return;if(bestand.size>10*1024*1024){alert(T('Bestand te groot! Max 10MB.'));return};const userId=huidigeUser.id;if(bestand.type.startsWith('video')){const url=URL.createObjectURL(bestand);document.getElementById('uploadedWallpaper').innerHTML=`<video src="${url}" autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>`;document.getElementById('uploadPreview').style.display='block';zetWallpaperLaag(url);return};const gecomprimeerd=await comprimeerFoto(bestand,1080,0.85);await slaFotoOp('bg_wallpaper_'+userId,gecomprimeerd);document.getElementById('uploadedWallpaper').innerHTML=`<img src="${gecomprimeerd}" style="width:100%;height:100%;object-fit:cover;">`;document.getElementById('uploadPreview').style.display='block';zetWallpaperLaag(gecomprimeerd)}
-window.verwijderWallpaper=async function(){const userId=huidigeUser.id;const db=await openDB();await new Promise(resolve=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').delete('bg_wallpaper_'+userId);tx.oncomplete=resolve});weghaalWallpaperLaag();document.body.style.backgroundImage='';document.documentElement.style.setProperty('--bg','#1a0a2e');document.getElementById('uploadPreview').style.display='none';document.getElementById('uploadedWallpaper').innerHTML='';document.getElementById('bgUpload').value=''}
+// v204: alleen een foto (een video werd nergens bewaard en vrienden zagen hem nooit); de foto gaat meteen naar je vrienden
+window.uploadAchtergrond=async function(input){const bestand=input.files[0];if(!bestand)return;if(!/^image\//.test(String(bestand.type||''))){alert(T('Alleen een foto kan als achtergrond (geen video).'));input.value='';return};if(bestand.size>10*1024*1024){alert(T('Bestand te groot! Max 10MB.'));return};const userId=huidigeUser.id;const gecomprimeerd=await comprimeerFoto(bestand,1080,0.85);if(!gecomprimeerd){input.value='';return};await slaFotoOp('bg_wallpaper_'+userId,gecomprimeerd);document.getElementById('uploadedWallpaper').innerHTML=`<img src="${gecomprimeerd}" style="width:100%;height:100%;object-fit:cover;">`;document.getElementById('uploadPreview').style.display='block';zetWallpaperLaag(gecomprimeerd);heeftEigenFoto=true;input.value='';deelAchtergrond({wallpaper_data:gecomprimeerd},0)}
+window.verwijderWallpaper=async function(){await wisEigenAchtergrondFoto();toonAchtergrondKeuze(achtergrondWaarde,true);deelAchtergrond({wallpaper_data:null},0)}
 var deeltjes=[]
 window.selectAnimatie=function(naam){huidigeAnimatie=naam;updateAnimatieUI();startAnimatiePreview()}
 function updateAnimatieUI(){document.querySelectorAll('.anim-cell').forEach(c=>c.classList.remove('selected'));const el=document.getElementById('anim-'+huidigeAnimatie);if(el)el.classList.add('selected')}
@@ -1039,7 +1123,7 @@ window.slaAllesOp=async function(){
   const avatar=document.getElementById('avatarEmoji').textContent
   const accentKleur=document.getElementById('accentHex').value
   const accentKleur2=document.getElementById('accent2Hex').value
-  const bgKleur=document.getElementById('bgKleurHex').value
+  const bgKleur=achtergrondWaarde||document.getElementById('bgKleurHex').value // v204: ook een gradient of wallpaper
 
   // ── Alles lokaal opslaan ──
   const lokaalProfiel = {
@@ -1257,9 +1341,10 @@ startMeldingen()
 </script>
 <script src="swipe.js?v=95"></script>
 
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=152"; startBelLuisteraar()</script>
+<script type="module">import { vulSpelVersies } from "./spelversies.js?v=3"; vulSpelVersies()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=198"; startBelLuisteraar()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=143"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=197"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=168"; startOngelezen()</script>
 <script>
 /* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */

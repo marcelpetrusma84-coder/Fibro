@@ -4,7 +4,7 @@
 // hetzelfde terugstuurt als een vriend zou doen. De spelbestanden zelf hoeven
 // daardoor niet te veranderen. Er gaat niets over het internet.
 
-import { damBot, schaakBot } from './solo-bord.js?v=1'
+import { damBot, schaakBot } from './solo-bord.js?v=3'
 
 export const NIVEAUS = ['makkelijk', 'normaal', 'moeilijk']
 
@@ -13,6 +13,7 @@ export function maakSoloKanaal(maakBot, niveau, motor) {
   const luisteraars = {}
   let dicht = false
   const kanaal = {
+    isSolo: true,
     on(soort, filter, fn) {
       const ev = filter && filter.event
       if (ev) (luisteraars[ev] = luisteraars[ev] || []).push(fn)
@@ -383,7 +384,7 @@ export function stilBot() {
 export const SOLO_SPELLEN = {
   botkaaseiren: { naam: 'Tic-Tac-Toe',   icon: '⭕', bestand: './bke-ui.js?v=147',      bot: bkeBot },
   vieroprij:    { naam: 'Four in a Row', icon: '🔴', bestand: './vieroprij-ui.js?v=147', bot: vorBot },
-  schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=147',  bot: schaakBot, motor: './schaak.js?v=95', motorNaam: 'Schaak' },
+  schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=198',  bot: schaakBot, motor: './schaak.js?v=95', motorNaam: 'Schaak' },
   dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=147',   bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
   pong:         { naam: 'Neo Paddle',    icon: '🏓', bestand: './pong-ui.js?v=147',     bot: pongBot },
   // Ghost Tag heeft zelf al een computerspookje: zonder kanaal speel je daartegen.
@@ -399,5 +400,9 @@ export const SOLO_SPELLEN = {
   endlessrunner: { naam: 'Runner & Gunner', icon: '🏃', bestand: './runner-gunner-ui.js?v=147', zonderKanaal: true },
   flappybird:   { naam: 'Flapper',       icon: '🦇', bestand: './flappy-ui.js?v=147',   bot: stilBot, arcade: true },
   // v192: Neon Raiders start zonder kanaal meteen alleen, met een eigen startscherm; arcade: het record komt van spel.html.
-  shmup:        { naam: 'Neon Raiders',  icon: '🚀', bestand: './neon-raiders-ui.js?v=192', zonderKanaal: true, arcade: true },
+  // v193: het hele spel (7 levels). v194: ook samen vanuit de chat (daar met spelKanaal).
+  // Let op: versie 194 van dit bestand was al gebruikt (de schaak-PR van valentijnpeters, 21 okt 2026); daarom laadt
+  // spel.html in v193 versie 193 en in v194 versie 195. v195 (schaken weer in twee talen): versie 196. Een volgende
+  // aanpassing aan solo.js neemt 197 of hoger.
+  shmup:        { naam: 'Neon Raiders',  icon: '🚀', bestand: './neon-raiders-ui.js?v=194', zonderKanaal: true, arcade: true },
 }

@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=29"></script>
+<script src="taal.js?v=30"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
@@ -38,7 +38,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 .f-avatar.blue { border-color:rgba(56,189,248,0.4); background:rgba(56,189,248,0.1); }
 .f-avatar.pink { border-color:rgba(244,114,182,0.4); background:rgba(244,114,182,0.1); }
 .f-avatar.orange { border-color:rgba(245,158,74,0.4); background:rgba(245,158,74,0.1); }
-.online-dot { width:10px; height:10px; border-radius:50%; background:#4ade80; border:2px solid var(--bg); position:absolute; bottom:1px; right:1px; }
+.online-dot { width:10px; height:10px; border-radius:50%; background:#4ade80; border:2px solid var(--bg-kleur, var(--bg)); position:absolute; bottom:1px; right:1px; }
 .online-dot.off { background:var(--muted); }
 .f-info { flex:1; }
 .f-name { font-size:14px; font-weight:500; }
@@ -295,7 +295,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 
 <script type="module">
 
-  import { laadThema } from './thema.js?v=130'
+  import { laadThema } from './thema.js?v=204'
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { startMeldingen } from './meldingen.js?v=187'

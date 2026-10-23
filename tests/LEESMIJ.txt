@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 23 oktober 2026 (v203: Fibro sneller).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 23 oktober 2026 (v204: de achtergrond meteen delen).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -394,6 +394,21 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  dan de verse; is die precies hetzelfde (laatsteLijst), dan blijven de rijen staan; haalGeblokkeerden
                                  tegelijk met de vriendenlijst. Geen nieuwe teksten, service-worker.js niet veranderd.
                                  proef98 nieuw, proef43 (v203). FIBRO_VERSIE 203 (testscript_sneller.py)
+                         achtergrond = v204 (gemeld door Marcel: de achtergrond van een vriend was niet te zien). Wat er mis was: een
+                                 eigen foto ging pas met Opslaan naar de server (vrienden zagen hem dus vaak nooit), een video werd
+                                 nergens bewaard, Gradient en de 6 wallpapers deden niets, op het profiel van een vriend zonder foto
+                                 stond je eigen foto, een weggehaalde foto bleef bij een vriend staan tot het volgende bezoek, en Home
+                                 liet je achtergrondkleur nooit zien (<html style="background:#1a0a2e"> ging voor). Nu: profiel.html:
+                                 elke keuze op het tabblad Achtergrond geldt meteen (toonAchtergrondKeuze, kiesAchtergrond,
+                                 deelAchtergrond/stuurAchtergrond: supabase update van achtergrond_kleur en/of wallpaper_data +
+                                 updated_at, kleur na 700 ms, foto meteen; regel #bgDeelStatus; de vingers van v137 bijgewerkt), een
+                                 kleur, gradient of wallpaper als achtergrond_kleur ('#rrggbb' of 'linear-gradient(135deg,#..,#..)',
+                                 WALLPAPERS), met een eigen foto eerst een vraag (confirm), alleen foto's (accept="image/*", melding
+                                 bij een video), Opslaan stuurt achtergrondWaarde. thema.js?v=204 (5 pagina's): --bg-kleur (eerste
+                                 kleur van een verloop, voor de rand om een stipje in chat/index/vrienden), niets aan de achtergrond
+                                 op <html data-vriend-profiel>. vriend-profiel.html: data-vriend-profiel, verbergWallpaper. index.html:
+                                 <html style="background:var(--bg,#1a0a2e)">. 6 nieuwe zinnen: taal-en.js?v=30 en taal.js?v=30 (alle
+                                 12 pagina's). proef99 nieuw, proef43 (v204). FIBRO_VERSIE 204 (testscript_achtergrond.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -875,6 +890,13 @@ tools/proef98.py         Fibro sneller (v203), eigen server zoals GitHub Pages (
                          opnieuw, update (chat.html met nieuw ?v=, FIBRO_VERSIE +1) = meteen opnieuw; B. Vrienden: lijst van
                          de vorige keer binnen 1,2 s bij een trage server, daarna de verse, ongewijzigd = rijen blijven,
                          geblokkeerden tegelijk gevraagd. Oude map (v202) als controle.   python3 -I proef98.py <map>
+tools/proef99.py         de achtergrond meteen bewaren en delen (v204): echte profiel.html (Marcel) en vriend-profiel.html (Bram),
+                         nep-Supabase die de profielen bijhoudt (PATCH = update, POST = upsert, select geeft alleen die
+                         kolommen): foto zonder Opslaan naar de server, Bram ziet hem; gradient met een foto (vraag nee/ja), Bram
+                         ziet het verloop en niet de oude foto of zijn eigen; Oceaan en een kleur bewaard en terug bij opnieuw
+                         openen; Home met het verloop; video = melding; Opslaan stuurt het verloop, niet de foto; geen
+                         verbinding = regel, Opslaan alsnog; vriend zonder achtergrond = niet je eigen foto; Engels.
+                         Oude map (v203) als controle.   python3 -I proef99.py <map>
 security/*.mjs           (v202, van valentijnpeters) Node-tests, te draaien vanuit de map zelf: node tests/security/test-crypto.mjs,
                          test-game-crypto.mjs (spelchat-crypto.js), test-key-recovery.mjs (het herstel in login.html)
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),

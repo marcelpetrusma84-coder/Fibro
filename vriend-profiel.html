@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl" data-taal style="background:#1a0a2e;">
+<html lang="nl" data-taal data-vriend-profiel style="background:#1a0a2e;">
 <script>
   const f = localStorage.getItem('fibro_lettertype')
   if (f) {
@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=29"></script>
+<script src="taal.js?v=30"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Profiel</title>
@@ -141,7 +141,7 @@ body.heeft-wallpaper::before { display:block; }
 </div>
 
 <script type="module">
-  import { laadThema } from './thema.js?v=130'
+  import { laadThema } from './thema.js?v=204'
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { wisVriendData } from './opruimen.js?v=95'
@@ -221,6 +221,7 @@ body.heeft-wallpaper::before { display:block; }
   }
 
   // ── Wallpaper tonen ──
+  // v204: alleen die van de vriend; je eigen achtergrond komt hier niet meer (thema.js kijkt naar data-vriend-profiel)
   function toonWallpaper(dataUrl) {
     dataUrl = vAfb(dataUrl)
     if (!dataUrl) return
@@ -231,6 +232,16 @@ body.heeft-wallpaper::before { display:block; }
     // Maak kaarten iets donkerder voor leesbaarheid
     document.documentElement.style.setProperty('--card', 'rgba(0,0,0,0.65)')
     document.documentElement.style.setProperty('--border', 'rgba(255,255,255,0.15)')
+  }
+  // v204: de vriend heeft (nu) geen foto: een foto van de vorige keer weer weghalen (die bleef staan tot het volgende bezoek),
+  // dan is zijn kleur of verloop (--bg) weer te zien
+  function verbergWallpaper() {
+    const bg = document.getElementById('wallpaperBg')
+    if (bg) bg.style.backgroundImage = ''
+    document.body.style.background = ''
+    document.body.classList.remove('heeft-wallpaper')
+    document.documentElement.style.removeProperty('--card')
+    document.documentElement.style.removeProperty('--border')
   }
 
   // ── Avatar tonen (foto of emoji) ──
@@ -989,7 +1000,10 @@ async function renderVriendMuziek(el) {
     if (data.wallpaper_data && data.wallpaper_data.startsWith('data:')) {
       toonWallpaper(data.wallpaper_data)
       if (!bewaard.wallpaper) await slaFotoOp('vriend_wallpaper_' + vriendId, data.wallpaper_data)
-    } else if (!bewaard.wallpaper) await wisFotoUitDB('vriend_wallpaper_' + vriendId)
+    } else {
+      verbergWallpaper() // v204
+      if (!bewaard.wallpaper) await wisFotoUitDB('vriend_wallpaper_' + vriendId)
+    }
 
     // ── Cache bijwerken ──
     try {

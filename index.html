@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl" data-taal style="background:#1a0a2e">
+<html lang="nl" data-taal style="background:var(--bg,#1a0a2e)">
 <script>
   const f = localStorage.getItem('fibro_lettertype')
   if (f) {
@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=29"></script>
+<script src="taal.js?v=30"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>/* v130: zoomen mag weer; iPhone zoomt bij invoervakken kleiner dan 16px vanzelf in */@supports (-webkit-touch-callout: none){input,textarea,select{font-size:16px !important}}</style>
@@ -28,6 +28,8 @@
   * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
   .top-bar, .profile-hero, .sectie-label, .leeg-staat, .widget, .hero-info { text-shadow:0 1px 3px rgba(0,0,0,0.85); }
   body { background:transparent; color:var(--text); font-family:'DM Sans',sans-serif; max-width:480px; margin:0 auto; min-height:100dvh; overflow-x:hidden; position:relative; }
+  /* v204: de vaste kleur in <html style> ging altijd voor, dus Home liet je eigen achtergrondkleur nooit zien;
+     nu staat daar var(--bg) (met #1a0a2e voor het eerste moment) */
   html { background:var(--bg); }
   #fibro-animatie-canvas { background:var(--bg); }
   #content-laag { position:relative; z-index:1; }
@@ -44,7 +46,7 @@
   .hero-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
   /* v188: rood stipje op je avatar als je op offline staat (Profiel > Online/Offline). Home ziet alleen jij. */
   .hero-av-wrap { position:relative; flex-shrink:0; }
-  .offline-stip { position:absolute; right:2px; bottom:2px; width:24px; height:24px; padding:0; border-radius:50%; background:#ef4444; border:3px solid var(--bg); box-sizing:border-box; cursor:pointer; }
+  .offline-stip { position:absolute; right:2px; bottom:2px; width:24px; height:24px; padding:0; border-radius:50%; background:#ef4444; border:3px solid var(--bg-kleur, var(--bg)); box-sizing:border-box; cursor:pointer; }
   .offline-stip[hidden] { display:none; }
   .hero-info { flex:1; min-width:0; }
   .hero-naam { font-size:18px; font-weight:600; }
@@ -232,7 +234,7 @@ window.addEventListener('pageshow', function (e) { if (e.persisted) window.werkO
 </div>
 
 <script type="module">
-import { laadThema } from './thema.js?v=130'
+import { laadThema } from './thema.js?v=204'
 import { pasBlokstijlToe } from './blokstijl.js?v=95'
 import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=95'
 import { startHeartbeat } from './heartbeat.js?v=117'
@@ -2107,7 +2109,7 @@ async function renderGastenboek(c, uid) {
 // v183: het versienummer en de datum van deze versie, onderaan in het menu. Zo zie je op elk toestel welke versie
 // er echt draait (een telefoon kan een oude pagina nog even vasthouden). Elk maak-script zet het nummer een hoger:
 // tests/gen/bouw.py maakt geen script als het hier niet omhoog gaat.
-const FIBRO_VERSIE = 203
+const FIBRO_VERSIE = 204
 const FIBRO_DATUM = '2026-10-23'
 function versieTekst() {
   let d = FIBRO_DATUM

@@ -244,6 +244,9 @@ MAG_ERBIJ |= {'Fibro v202 \u00B7 23 okt 2026'}
 # v203: Fibro sneller (kast eerder en na elke update, Vrienden meteen uit het geheugen); op de schermen alleen het versienummer
 MAG_WEG |= {'Fibro v202 \u00B7 23 okt 2026'}
 MAG_ERBIJ |= {'Fibro v203 \u00B7 23 okt 2026'}
+# v204: de achtergrond meteen bewaren en delen (uitleg op het tabblad Achtergrond); Gradient en wallpapers werken; geen video
+MAG_WEG |= {'Fibro v203 \u00B7 23 okt 2026'}
+MAG_ERBIJ |= {'Fibro v204 \u00B7 23 okt 2026', 'Wat je hier kiest, geldt meteen, ook op je profiel bij je vrienden.'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

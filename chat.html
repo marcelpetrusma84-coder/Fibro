@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
-<script src="taal.js?v=29"></script>
+<script src="taal.js?v=30"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Chat</title>
@@ -55,11 +55,11 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .vriend-item { display:flex; align-items:center; gap:12px; padding:12px; border:0.5px solid var(--border); border-radius:var(--blok-hoek,12px); margin-bottom:8px; cursor:pointer; background:var(--blok-kleur,var(--card)); transform:var(--blok-kantel,none); box-shadow:var(--blok-schaduw,none); transition:border-color 0.2s; } /* v130: blokstijl zoals de rest van de app */
 .vriend-item:hover { border-color:var(--accent); }
 .vriend-item .vriend-av { position:relative; }
-.vriend-av .online-dot { position:absolute; bottom:-1px; right:-1px; width:11px; height:11px; border-radius:50%; background:#4ade80; border:2px solid var(--bg); display:none; }
+.vriend-av .online-dot { position:absolute; bottom:-1px; right:-1px; width:11px; height:11px; border-radius:50%; background:#4ade80; border:2px solid var(--bg-kleur, var(--bg)); display:none; }
 .vriend-item.is-online .online-dot { display:block; }
 /* v199: ook bovenin het gesprek een groen stipje bij de foto als de vriend online is (was de tekst '● actief', altijd) */
 #chatAv { position:relative; }
-#chatAv .online-dot { position:absolute; bottom:-1px; right:-1px; width:11px; height:11px; border-radius:50%; background:#4ade80; border:2px solid var(--bg); display:none; }
+#chatAv .online-dot { position:absolute; bottom:-1px; right:-1px; width:11px; height:11px; border-radius:50%; background:#4ade80; border:2px solid var(--bg-kleur, var(--bg)); display:none; }
 #chatAv.is-online .online-dot { display:block; }
 .vriend-av { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:18px; }
 .vriend-naam { font-size:14px; font-weight:500; }
@@ -344,7 +344,7 @@ window.veiligeUrl = function(v){
 
 <script src="beltoon.js?v=7"></script>
 <script type="module">
-  import { laadThema } from './thema.js?v=130'
+  import { laadThema } from './thema.js?v=204'
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { laadWallpaper } from './wallpaper.js?v=95'
   import { supabase } from './supabase.js?v=95'

@@ -5,12 +5,12 @@ function readSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')
     const thinking = Number(saved.thinking ?? 7)
-    return { ...saved, thinking:Number.isFinite(thinking) ? Math.min(7,Math.max(0,thinking)) : 7, pieces:['small','medium','large'].includes(saved.pieces) ? saved.pieces : 'medium', board:['classic','wood','marble','glass'].includes(saved.board) ? saved.board : 'classic', soundTheme:['classic','wood'].includes(saved.soundTheme) ? saved.soundTheme : 'classic', showAttackRoutes:saved.showAttackRoutes === true, exaggerate:saved.exaggerate === true, pointsPerPiece:saved.pointsPerPiece === true, noobMode:saved.noobMode === true, camerasAtTop:saved.camerasAtTop === true }
-  } catch { return { thinking:7, pieces:'medium', board:'classic', soundTheme:'classic', showAttackRoutes:false, exaggerate:false, pointsPerPiece:false, noobMode:false, camerasAtTop:false } }
+    return { ...saved, thinking:Number.isFinite(thinking) ? Math.min(7,Math.max(0,thinking)) : 7, pieces:['small','medium','large'].includes(saved.pieces) ? saved.pieces : 'medium', board:['classic','wood','marble','glass'].includes(saved.board) ? saved.board : 'classic', soundTheme:['classic','wood'].includes(saved.soundTheme) ? saved.soundTheme : 'classic', showAttackRoutes:saved.showAttackRoutes === true, exaggerate:saved.exaggerate === true, pointsPerPiece:saved.pointsPerPiece === true, noobMode:saved.noobMode === true, camerasAtTop:saved.camerasAtTop === true, threePlayer:saved.threePlayer === true }
+  } catch { return { thinking:7, pieces:'medium', board:'classic', soundTheme:'classic', showAttackRoutes:false, exaggerate:false, pointsPerPiece:false, noobMode:false, camerasAtTop:false, threePlayer:false } }
 }
 // schaken-ui.js - spel voor Fibro, losgetrokken uit chat.html.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
-export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
+export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam, onInviteThird = null }) {
   vriendNaam = vriendNaam || 'Opponent'
   // Coaching aids can reveal tactical information to one player only. Keep them
   // for computer games, where there is no fairness concern.
@@ -203,6 +203,12 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
             <label class="sch-attack-toggle"><input id="sch-cameras-at-top" type="checkbox"> Keep webcams together at the top</label>
             <p class="sch-menu-hint">Place both camera views above the board. Tap either view to resize it.</p>
           </section>
+          ${isVriendPartij ? `<section class="sch-menu-section" aria-labelledby="sch-three-player-heading">
+            <h3 id="sch-three-player-heading">Three-player chess</h3>
+            <label class="sch-attack-toggle"><input id="sch-three-player-enabled" type="checkbox"> Enable third-player invite</label>
+            <p class="sch-menu-hint">Invite one more friend to switch this match to a three-army, 96-square board.</p>
+            <button class="sch-keuze" id="sch-three-player-invite" type="button" hidden>＋ Invite a third player</button>
+          </section>` : ''}
           <p class="sch-menu-hint">Resize the board with Compact or Full width. Hold Full width for 3 seconds to reopen these settings.</p>
         </section>
       </div>
@@ -403,6 +409,25 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     instellingen.camerasAtTop = cameraLayoutToggle.checked
     bewaarInstellingen()
   })
+  const threePlayerToggle = menu.querySelector('#sch-three-player-enabled')
+  const threePlayerInvite = menu.querySelector('#sch-three-player-invite')
+  if (threePlayerToggle && threePlayerInvite) {
+    threePlayerToggle.checked = instellingen.threePlayer
+    threePlayerInvite.hidden = !threePlayerToggle.checked
+    threePlayerInvite.disabled = typeof onInviteThird !== 'function'
+    threePlayerToggle.addEventListener('change', () => {
+      instellingen.threePlayer = threePlayerToggle.checked
+      threePlayerInvite.hidden = !threePlayerToggle.checked
+      bewaarInstellingen()
+    })
+    threePlayerInvite.addEventListener('click', async () => {
+      if (typeof onInviteThird !== 'function') return
+      threePlayerInvite.disabled = true
+      try { await onInviteThird() }
+      catch (error) { console.warn('[chess] Third-player invitation failed:', error) }
+      finally { threePlayerInvite.disabled = false }
+    })
+  }
   const aanvalToggle = menu.querySelector('#sch-aanvalsroutes')
   const exaggerateToggle = menu.querySelector('#sch-exaggerate')
   const exaggerateWrap = menu.querySelector('#sch-exaggerate-wrap')

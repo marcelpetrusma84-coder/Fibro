@@ -75,7 +75,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       @media (prefers-reduced-motion:reduce) { .sch-frame,.sch-board-tools button { transition:none; } }
       .sch-zoom::after { content:""; position:absolute; height:3px; left:10px; right:10px; bottom:3px; background:#f5ce86; transform:scaleX(0); transform-origin:left; transition:transform 1s linear; }
       .sch-zoom.sch-lange-druk::after { transform:scaleX(1); }
-      .sch-acties { position:relative; z-index:5; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:8px; }
+      .sch-acties { position:relative; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:8px; }
       .sch-video { margin-left:7px; min-height:44px; padding:10px 13px; border:1px solid #78e7cb99; border-radius:12px; background:linear-gradient(135deg,#164d4c,#267967); color:#eafff9; font:inherit; font-weight:700; cursor:pointer; transition:transform .16s ease,filter .2s ease,box-shadow .2s ease; }
       .sch-video:active, .sch-video.is-connecting { transform:translateY(2px) scale(.965); filter:brightness(.9); box-shadow:inset 0 3px 8px #001d1aaa; }
       .sch-video.is-connecting { animation:sch-video-pulse 1.05s ease-in-out infinite; }
@@ -85,19 +85,35 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-video.sch-video-stop:active { transform:translateY(2px) scale(.94); }
       @keyframes sch-video-pulse { 50% { box-shadow:0 0 0 5px #78e7cb25,0 0 18px #78e7cb80; filter:brightness(1.14); } }
       .sch-video[aria-pressed="true"] { background:linear-gradient(135deg,#51d6ad,#d9ffdc); color:#06352a; box-shadow:0 0 14px #51d6ad88; }
-      .sch-menu { position:fixed; z-index:80; left:50%; top:50%; transform:translate(-50%,-50%); box-sizing:border-box; width:min(340px,calc(100vw - 48px)); max-height:min(78dvh,620px); overflow:auto; overscroll-behavior:contain; scrollbar-color:#9b8264 #211c2b; padding:15px; border:1px solid #e8d7bd88; border-radius:16px; background:linear-gradient(145deg,#30243a,#17121f); color:#fff8ed; box-shadow:0 16px 40px #000b; text-align:left; }
+      .sch-menu-backdrop { position:fixed; z-index:999; inset:0; background:linear-gradient(145deg,#070912c9,#0d0815dc); -webkit-backdrop-filter:blur(8px) saturate(.68); backdrop-filter:blur(8px) saturate(.68); }
+      .sch-menu-backdrop[hidden] { display:none; }
+      .sch-menu-backdrop:not([hidden]) { animation:sch-backdrop-enter .22s ease-out both; }
+      .sch-menu { position:fixed; z-index:1000; left:50%; top:50%; transform:translate(-50%,-50%); box-sizing:border-box; width:min(500px,calc(100vw - 28px)); max-height:min(86dvh,760px); overflow:auto; overscroll-behavior:contain; scrollbar-color:#78d9c0 #171a27; padding:clamp(18px,4vw,26px); border:1px solid #baf8e2; border-radius:24px; background:radial-gradient(ellipse at 8% 0%,#7352a44d,transparent 44%),linear-gradient(145deg,#28243a 0%,#171522 52%,#10131d 100%); color:#f6f5ff; box-shadow:0 0 0 1px #bdffe233,0 0 34px #7ae6d51c,0 2px 0 #ffffff26 inset,0 5px 0 #0b0c13,0 12px 0 #07080d,0 30px 80px #000e; text-align:left; }
+      .sch-menu:not([hidden]) { animation:sch-menu-enter .28s cubic-bezier(.18,.78,.24,1) both; }
       .sch-menu[hidden] { display:none; }
-      .sch-menu h2 { font-size:17px; margin:0 0 12px; }
-      .sch-menu label,.sch-menu legend { font-size:13px; font-weight:650; }
-      .sch-menu fieldset { border:0; padding:0; margin:12px 0; }
-      .sch-menu input[type="range"] { display:block; width:100%; min-height:36px; accent-color:#ddb477; }
-      .sch-menu select { box-sizing:border-box; width:100%; min-height:42px; margin-top:7px; padding:8px 10px; border:1px solid #ffffff40; border-radius:8px; background:#211c2b; color:#fff8ed; font:inherit; }
-      .sch-menu-opties { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-top:7px; }
-      .sch-keuze { min-height:40px; padding:6px 3px; border:1px solid #ffffff40; border-radius:8px; background:#ffffff0b; color:inherit; font:inherit; font-size:11px; cursor:pointer; }
-      .sch-keuze[aria-pressed="true"] { border-color:#f2cf97; background:linear-gradient(135deg,#71533e,#45364f); box-shadow:inset 0 0 0 1px #f2cf9780; }
-      .sch-menu-hint { color:#d8c9b5; font-size:11px; line-height:1.45; }
-      .sch-attack-toggle { display:flex; align-items:center; gap:9px; min-height:44px; font-size:13px; font-weight:650; }
-      .sch-attack-toggle input { width:20px; height:20px; accent-color:#ddb477; }
+      @keyframes sch-backdrop-enter { from { opacity:0; } to { opacity:1; } }
+      @keyframes sch-menu-enter { from { opacity:0; transform:translate(-50%,-47%) scale(.975); } to { opacity:1; transform:translate(-50%,-50%) scale(1); } }
+      .sch-menu h2 { margin:0; font-size:clamp(22px,5vw,28px); line-height:1.1; letter-spacing:-.035em; }
+      .sch-menu-lead { margin:7px 0 19px; color:#c6c9d9; font-size:13px; line-height:1.45; }
+      .sch-menu-section { margin-top:13px; padding:15px; border:1px solid #c2d3ff20; border-radius:17px; background:linear-gradient(145deg,#ffffff0b,#8db9ff05); box-shadow:inset 0 1px 0 #ffffff10,0 5px 12px #0002; }
+      .sch-menu-section h3 { margin:0 0 12px; color:#a9f2db; font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+      .sch-menu label,.sch-menu legend { color:#f0eff8; font-size:13px; font-weight:650; }
+      .sch-menu fieldset { min-width:0; border:0; padding:0; margin:0 0 14px; }
+      .sch-menu fieldset:last-child { margin-bottom:0; }
+      .sch-menu input[type="range"] { display:block; width:100%; min-height:38px; accent-color:#7fe0c6; }
+      .sch-menu select { box-sizing:border-box; width:100%; min-height:44px; margin-top:8px; padding:9px 12px; border:1px solid #b9c8ef55; border-radius:12px; background:linear-gradient(145deg,#25283a,#171a27); color:#fff; font:inherit; box-shadow:inset 0 1px 0 #ffffff12,0 3px 7px #0003; }
+      .sch-menu-opties { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:9px; }
+      .sch-menu-opties[data-options="board"] { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .sch-keuze { min-height:44px; padding:8px 7px; border:1px solid #c3c9df3b; border-radius:12px; background:linear-gradient(145deg,#ffffff10,#ffffff06); color:inherit; font:inherit; font-size:12px; font-weight:650; cursor:pointer; box-shadow:inset 0 1px 0 #ffffff0c,0 3px 7px #0002; transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease; }
+      .sch-keuze[aria-pressed="true"] { border-color:#8bf0d2; background:linear-gradient(145deg,#baffeb,#58cdb7 60%,#37a994); color:#092a2b; box-shadow:inset 0 1px 0 #ffffffc9,0 3px 0 #267c70,0 7px 14px #58d9bc30; transform:translateY(-1px); }
+      .sch-menu-hint { margin:5px 0 0; color:#bfc2d2; font-size:11px; line-height:1.5; }
+      .sch-attack-toggle { display:flex; align-items:center; gap:10px; min-height:42px; padding:7px 9px; border:1px solid #d4d8f117; border-radius:11px; background:#ffffff06; font-size:13px; font-weight:650; }
+      .sch-attack-toggle + .sch-attack-toggle { margin-top:6px; }
+      .sch-attack-toggle input { width:19px; height:19px; flex:none; accent-color:#72dbc0; }
+      .sch-menu button:focus-visible,.sch-menu select:focus-visible,.sch-menu input:focus-visible { outline:2px solid #91f1d7; outline-offset:3px; }
+      @media (hover:hover) { .sch-keuze:not([aria-pressed="true"]):hover { border-color:#91f1d788; background:linear-gradient(145deg,#ffffff19,#ffffff0b); transform:translateY(-1px); } }
+      @media (max-width:420px) { .sch-menu { padding:17px; border-radius:20px; } .sch-menu-section { padding:12px; } .sch-menu-opties { gap:6px; } .sch-keuze { font-size:11px; padding-inline:4px; } }
+      @media (prefers-reduced-motion:reduce) { .sch-menu:not([hidden]),.sch-menu-backdrop:not([hidden]) { animation:none; } .sch-keuze { transition:none; } }
       .sch-threat::before { content:""; position:absolute; z-index:0; inset:0; pointer-events:none; background:radial-gradient(ellipse at 50% 60%,#ffe18fbb 0,#ffc85c88 35%,#ffb52b35 62%,transparent 80%); box-shadow:inset 0 0 14px #ffe293aa; animation:sch-threat-pulse 1.5s ease-in-out infinite alternate; }
       .sch-threat .sch-stuk { filter:drop-shadow(0 0 5px #fff1b8) drop-shadow(0 0 10px #ffbb45) drop-shadow(0 3px 2px #000b); }
       .sch-threat-exaggerated { z-index:2; }
@@ -151,31 +167,43 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
           <button class="sch-settings" type="button" aria-label="Chess settings" aria-haspopup="dialog" aria-expanded="false" aria-controls="sch-menu"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="#1e293b"/><circle cx="15" cy="17" r="3" fill="#1e293b"/></svg></button>
         </div>
         ${isVriendPartij ? '<button class="sch-video" id="sch-video" type="button" aria-pressed="false">📹 Webcam</button>' : ''}
-        <section class="sch-menu" id="sch-menu" role="dialog" aria-label="Chess settings" hidden>
+        <div class="sch-menu-backdrop" id="sch-menu-backdrop" hidden aria-hidden="true"></div>
+        <section class="sch-menu" id="sch-menu" role="dialog" aria-modal="true" aria-label="Chess settings" hidden>
           <h2>Chess settings</h2>
-          <fieldset><legend>Computer thinking time</legend>
-            <label for="sch-denktijd">Maximum: <output id="sch-denktijd-waarde">7 seconds</output></label>
-            <input id="sch-denktijd" type="range" min="0" max="7" step="1" value="7" aria-describedby="sch-denktijd-hint">
-            <p class="sch-menu-hint" id="sch-denktijd-hint">0 = instant. Otherwise, the computer varies its thinking time up to the selected maximum.</p>
-          </fieldset>
-          <fieldset><legend>Piece size</legend><div class="sch-menu-opties" data-options="pieces">
-            <button class="sch-keuze" type="button" data-value="small">Smaller</button><button class="sch-keuze" type="button" data-value="medium">Default</button><button class="sch-keuze" type="button" data-value="large">Larger</button>
-          </div></fieldset>
-          <label for="sch-sound-theme">Sound theme</label>
-          <select id="sch-sound-theme"><option value="classic">Classic (default)</option><option value="wood">Wooden board</option></select>
-          <p class="sch-menu-hint">Choose how each piece sounds when it lands on the board.</p>
-          <label class="sch-attack-toggle"><input id="sch-cameras-at-top" type="checkbox"> Keep webcams together at the top</label>
-          <p class="sch-menu-hint">Place both camera views above the board. Tap either view to resize it.</p>
-          <label class="sch-attack-toggle"><input id="sch-aanvalsroutes" type="checkbox"> Show attack routes</label>
-          <label class="sch-attack-toggle" id="sch-exaggerate-wrap" hidden><input id="sch-exaggerate" type="checkbox"> Exaggerate</label>
-          <p class="sch-menu-hint">Highlights opposing pieces that the last moved piece can legally capture.</p>
-          <label class="sch-attack-toggle"><input id="sch-points-per-piece" type="checkbox"> Points per piece</label>
-          <label class="sch-attack-toggle"><input id="sch-noob-mode" type="checkbox"> Noob (kids) mode</label>
-          <p class="sch-menu-hint">Warns before your move leaves one of your pieces open to capture. Illegal moves that expose your king stay blocked.</p>
-          <fieldset><legend>Board style</legend><div class="sch-menu-opties" data-options="board">
-            <button class="sch-keuze" type="button" data-value="classic">Classic</button><button class="sch-keuze" type="button" data-value="wood">Wood grain</button><button class="sch-keuze" type="button" data-value="marble">Marble / granite</button><button class="sch-keuze" type="button" data-value="glass">Glass plate</button>
-          </div></fieldset>
-          <p class="sch-menu-hint">Choose Compact or Full width to resize the board. Each camera can be resized separately by tapping its image. Open settings with the sliders button, or hold Full width for 3 seconds.</p>
+          <p class="sch-menu-lead">Make the board, pieces and game feel your own.</p>
+          <section class="sch-menu-section" aria-labelledby="sch-gameplay-heading">
+            <h3 id="sch-gameplay-heading">Gameplay</h3>
+            <fieldset><legend>Computer thinking time</legend>
+              <label for="sch-denktijd">Maximum: <output id="sch-denktijd-waarde">7 seconds</output></label>
+              <input id="sch-denktijd" type="range" min="0" max="7" step="1" value="7" aria-describedby="sch-denktijd-hint">
+              <p class="sch-menu-hint" id="sch-denktijd-hint">0 = instant. Otherwise, the computer varies its thinking time up to the selected maximum.</p>
+            </fieldset>
+            <fieldset><legend>Piece size</legend><div class="sch-menu-opties" data-options="pieces">
+              <button class="sch-keuze" type="button" data-value="small">Smaller</button><button class="sch-keuze" type="button" data-value="medium">Default</button><button class="sch-keuze" type="button" data-value="large">Larger</button>
+            </div></fieldset>
+            <label class="sch-attack-toggle"><input id="sch-noob-mode" type="checkbox"> Noob (kids) mode</label>
+            <p class="sch-menu-hint">Warns before your move leaves one of your pieces open to capture. Illegal moves that expose your king stay blocked.</p>
+            <label class="sch-attack-toggle"><input id="sch-aanvalsroutes" type="checkbox"> Show attack routes</label>
+            <label class="sch-attack-toggle" id="sch-exaggerate-wrap" hidden><input id="sch-exaggerate" type="checkbox"> Exaggerate</label>
+            <p class="sch-menu-hint">Highlights opposing pieces that the last moved piece can legally capture.</p>
+          </section>
+          <section class="sch-menu-section" aria-labelledby="sch-board-heading">
+            <h3 id="sch-board-heading">Board & captures</h3>
+            <fieldset><legend>Board style</legend><div class="sch-menu-opties" data-options="board">
+              <button class="sch-keuze" type="button" data-value="classic">Classic</button><button class="sch-keuze" type="button" data-value="wood">Wood grain</button><button class="sch-keuze" type="button" data-value="marble">Marble / granite</button><button class="sch-keuze" type="button" data-value="glass">Glass plate</button>
+            </div></fieldset>
+            <label class="sch-attack-toggle"><input id="sch-points-per-piece" type="checkbox"> Points per piece</label>
+            <p class="sch-menu-hint">Show each captured piece’s value in the Captured panels.</p>
+          </section>
+          <section class="sch-menu-section" aria-labelledby="sch-media-heading">
+            <h3 id="sch-media-heading">Sound & cameras</h3>
+            <label for="sch-sound-theme">Sound theme</label>
+            <select id="sch-sound-theme"><option value="classic">Classic (default)</option><option value="wood">Wooden board</option></select>
+            <p class="sch-menu-hint">Choose how each piece sounds when it lands on the board.</p>
+            <label class="sch-attack-toggle"><input id="sch-cameras-at-top" type="checkbox"> Keep webcams together at the top</label>
+            <p class="sch-menu-hint">Place both camera views above the board. Tap either view to resize it.</p>
+          </section>
+          <p class="sch-menu-hint">Resize the board with Compact or Full width. Hold Full width for 3 seconds to reopen these settings.</p>
         </section>
       </div>
       <div id="sch-promotie" style="display:none;gap:8px;background:rgba(0,0,0,0.85);padding:10px;border-radius:10px;"></div>
@@ -301,6 +329,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   }
   vergroot(false)
   const menu = inhoud.querySelector('#sch-menu')
+  const menuBackdrop = inhoud.querySelector('#sch-menu-backdrop')
   const soundTheme = menu.querySelector('#sch-sound-theme')
   const acties = inhoud.querySelector('.sch-acties')
   // Keep board sizing within reach above the board, including camera mode.
@@ -320,9 +349,13 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   }
   function toonMenu(aan) {
     menu.hidden = !aan
+    menuBackdrop.hidden = !aan
     zoomBtn.setAttribute('aria-expanded', String(aan))
     settingsBtn.setAttribute('aria-expanded', String(aan))
-    if (aan) menu.querySelector('input').focus()
+    if (aan) {
+      const eersteBediening = [...menu.querySelectorAll('button,input,select')].find(el => !el.disabled && !el.closest('[hidden]') && el.getClientRects().length)
+      eersteBediening?.focus()
+    }
   }
   function toonCheckmateOverlay() {
     checkmateTimers.forEach(clearTimeout)
@@ -449,8 +482,17 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   })
   compactBtn.addEventListener('click', () => vergroot(false))
   settingsBtn.addEventListener('click', () => toonMenu(menu.hidden))
+  menuBackdrop.addEventListener('click', () => { toonMenu(false); settingsBtn.focus() })
   spelEl.addEventListener('pointerdown', event => { if (!acties.contains(event.target)) toonMenu(false) })
-  menu.addEventListener('keydown', event => { if (event.key === 'Escape') { toonMenu(false); settingsBtn.focus() } })
+  menu.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { toonMenu(false); settingsBtn.focus(); return }
+    if (event.key !== 'Tab') return
+    const bediening = [...menu.querySelectorAll('button,input,select')].filter(el => !el.disabled && !el.closest('[hidden]') && el.getClientRects().length)
+    if (!bediening.length) return
+    const eerste = bediening[0], laatste = bediening.at(-1)
+    if (event.shiftKey && document.activeElement === eerste) { event.preventDefault(); laatste.focus() }
+    else if (!event.shiftKey && document.activeElement === laatste) { event.preventDefault(); eerste.focus() }
+  })
   const vingers = new Map()
   let afstand = 0, negeerKlikTot = 0
   const meetAfstand = () => {

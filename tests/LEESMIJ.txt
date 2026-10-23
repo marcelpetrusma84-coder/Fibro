@@ -2,7 +2,7 @@ Fibro - gereedschap van Claude (tests/)
 =======================================
 Deze map hoort NIET bij de app: geen enkele pagina laadt iets uit tests/.
 Het is het gereedschap waarmee Claude wijzigingen voorbereidt en controleert
-voordat Marcel ze op de Steam Deck uitvoert. Stand: 23 oktober 2026 (v202: stap 1 van PR #4 van valentijnpeters).
+voordat Marcel ze op de Steam Deck uitvoert. Stand: 23 oktober 2026 (v203: Fibro sneller).
 
 Voor Claude: kopieer tests/ naar een eigen werkmap (niet in ~/Fibro werken).
 Alle id's en namen in de testjes zijn nep (aaaaaaaa-..., bbbb0001, cccc0002, Bram, Lotte).
@@ -384,6 +384,16 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  tests/security/*.mjs (van Tijn; test-key-recovery zoekt nu de Nederlandse tekst). 7 nieuwe zinnen:
                                  taal-en.js?v=29 en taal.js?v=29 (alle 12 pagina's). Geen spelnummer omhoog (geen spelbestand
                                  veranderd). proef97 nieuw, proef43 (v202). FIBRO_VERSIE 202, 23 okt (testscript_spelcrypto.py)
+                         sneller = v203: Fibro sneller (gemeten met een nagebootste telefoon, zie proef98). (1) kastvullen.js?v=203:
+                                 begint 1,5 s na 'load' van Home (was: 6 s), eerst chat.html en vrienden.html, na elke update meteen
+                                 opnieuw (vulKast(FIBRO_VERSIE), versie in het stempel fibro_kast_gevuld; was: pas na 6 uur), de
+                                 pagina's zelf altijd vers (cache: 'no-cache'; de kopie in de kast kon van voor een update zijn en dan
+                                 werden nieuwe scripts niet gevonden), de allereerste keer wachten op de portier (controllerchange,
+                                 hoogstens 15 s). (2) vrienden.html: meteen de lijst van de vorige keer (fibro_vriendenpagina_<id>,
+                                 uidVanToestel uit het inlog-token, tekenLijst(..., vanToestel) met alleen foto's van het toestel),
+                                 dan de verse; is die precies hetzelfde (laatsteLijst), dan blijven de rijen staan; haalGeblokkeerden
+                                 tegelijk met de vriendenlijst. Geen nieuwe teksten, service-worker.js niet veranderd.
+                                 proef98 nieuw, proef43 (v203). FIBRO_VERSIE 203 (testscript_sneller.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -859,6 +869,12 @@ tools/proef97.py         versleutelde spelchat en spelstickers (v202), twee echt
                          hetzelfde of een beschadigd pakket nog eens = niets, sticker, oude app (leesbaar) = regeltje, geen
                          sleutel bij de vriend / veranderde sleutel / geen eigen sleutel = niet verstuurd, tekst blijft staan.
                          Oude map (v201): 5 van 21.   python3 -I proef97.py <map> [nl|en|alles]
+tools/proef98.py         Fibro sneller (v203), eigen server zoals GitHub Pages (max-age=600, Vary, logboek), echte portier en
+                         kastvullen.js, nep-Supabase met vertraging (async Playwright): A. kast begint < 4 s na load, alle
+                         scripts van Chat en Vrienden erin, Chat daarna zonder scripts van de server, zelfde versie = niet
+                         opnieuw, update (chat.html met nieuw ?v=, FIBRO_VERSIE +1) = meteen opnieuw; B. Vrienden: lijst van
+                         de vorige keer binnen 1,2 s bij een trage server, daarna de verse, ongewijzigd = rijen blijven,
+                         geblokkeerden tegelijk gevraagd. Oude map (v202) als controle.   python3 -I proef98.py <map>
 security/*.mjs           (v202, van valentijnpeters) Node-tests, te draaien vanuit de map zelf: node tests/security/test-crypto.mjs,
                          test-game-crypto.mjs (spelchat-crypto.js), test-key-recovery.mjs (het herstel in login.html)
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),

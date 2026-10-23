@@ -241,6 +241,9 @@ MAG_ERBIJ |= {'Fibro v201 \u00B7 22 okt 2026'}
 # v202: spelchat en spelstickers versleuteld, herstelsleutel eerst gecontroleerd (stap 1 van PR #4); op de schermen alleen het versienummer
 MAG_WEG |= {'Fibro v201 \u00B7 22 okt 2026'}
 MAG_ERBIJ |= {'Fibro v202 \u00B7 23 okt 2026'}
+# v203: Fibro sneller (kast eerder en na elke update, Vrienden meteen uit het geheugen); op de schermen alleen het versienummer
+MAG_WEG |= {'Fibro v202 \u00B7 23 okt 2026'}
+MAG_ERBIJ |= {'Fibro v203 \u00B7 23 okt 2026'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

@@ -2107,7 +2107,7 @@ async function renderGastenboek(c, uid) {
 // v183: het versienummer en de datum van deze versie, onderaan in het menu. Zo zie je op elk toestel welke versie
 // er echt draait (een telefoon kan een oude pagina nog even vasthouden). Elk maak-script zet het nummer een hoger:
 // tests/gen/bouw.py maakt geen script als het hier niet omhoog gaat.
-const FIBRO_VERSIE = 202
+const FIBRO_VERSIE = 203
 const FIBRO_DATUM = '2026-10-23'
 function versieTekst() {
   let d = FIBRO_DATUM
@@ -2629,7 +2629,10 @@ startMeldingen()
 // v127: met internet, op de achtergrond, de kast van de portier aanvullen (alle spellen
 // en pagina's), zodat ze ook zonder internet werken. Zie kastvullen.js.
 // v172: ook de plaatjes en geluiden van de stickers.
-setTimeout(() => { import('./kastvullen.js?v=172').then(m => m.vulKast()).catch(() => {}) }, 6000)
+// v203 (sneller): al kort nadat Home klaar is (was: na 6 seconden), en na elke update meteen (FIBRO_VERSIE). Dan staan
+// de scripts van Chat en Vrienden al klaar als je daarheen gaat.
+const startKast = () => setTimeout(() => { import('./kastvullen.js?v=203').then(m => m.vulKast(FIBRO_VERSIE)).catch(() => {}) }, 1500)
+if (document.readyState === 'complete') startKast(); else window.addEventListener('load', startKast, { once: true })
 </script>
 
 <script>

@@ -2099,7 +2099,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const popup = document.getElementById('spelUitnodigingPopup')
     document.getElementById('spelUitnodigingIcoon').textContent = info.icon
     document.getElementById('spelUitnodigingTitel').textContent = T('{naam} nodigt je uit!', { naam: spelVriendUsername(vanId) })
-    document.getElementById('spelUitnodigingSubtitel').textContent = T('{spel} — Automatisch weigeren in 30s', { spel: info.naam })
+    document.getElementById('spelUitnodigingSubtitel').textContent = spelType === 'schakendrie'
+      ? T('Three-player chess — starts from the opening position')
+      : T('{spel} — Automatically declines in 30s', { spel: info.naam })
 
     const balk = document.getElementById('spelUitnodigingBalk')
     balk.style.transition = 'none'
@@ -2180,6 +2182,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (spelActief !== 'schaken' || !spelKanaal || !huidigeUser?.id || !spelTegenstander?.id || !spelSessieId) return
     const vriend = await kiesDerdeSchaakVriend()
     if (!vriend) return
+    if (!window.confirm(T('When {name} accepts, this two-player position will end and everyone will start a new three-player game from the opening position. Send the invitation?', { name: vriendWeergaveNaam(vriend) || vriend.username || T('your friend') }))) return
     const roster = [huidigeUser.id, spelTegenstander.id, vriend.id]
     const { error } = await supabase.rpc('create_chess_three_session', { p_session_id:spelSessieId, p_player_ids:roster })
     if (error) {
@@ -2195,7 +2198,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     await supabase.removeChannel(invitation)
     if (sent !== 'ok') { alert(T('The invitation could not be sent. Try again.')); return }
     await supabase.from('messages').insert({ sender_id:huidigeUser.id, receiver_id:vriend.id, content:'spelinvite:schakendrie:' + huidigeUser.id + ':' + spelSessieId })
-    alert(T('Three-player invitation sent to {name}. Your current game will switch when they accept.', { name: vriendWeergaveNaam(vriend) || vriend.username || T('your friend') }))
+    alert(T('Three-player invitation sent to {name}. If they accept, everyone starts a new game from the opening position.', { name: vriendWeergaveNaam(vriend) || vriend.username || T('your friend') }))
   }
 
   function valideerSchaakDrieSpelers(players) {
@@ -2219,8 +2222,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=147',
     pong: './pong-ui.js?v=147',
     vieroprij: './vieroprij-ui.js?v=147',
-    schaken: './schaken-ui.js?v=200',
-    schakendrie: './schaken-drie-ui.js?v=2',
+    schaken: './schaken-ui.js?v=201',
+    schakendrie: './schaken-drie-ui.js?v=3',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=148',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -2618,14 +2621,14 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await import('./schaken-ui.js?v=200')
+    const m = await import('./schaken-ui.js?v=201')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), onInviteThird:nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
     spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })
   }
 
   async function startSchakenDrie(players) {
-    const m = await import('./schaken-drie-ui.js?v=2')
+    const m = await import('./schaken-drie-ui.js?v=3')
     m.start({ gameChannel:spelKanaal, players, userId:huidigeUser.id })
     spelCameraLayout?.destroy()
     spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.chess3-camera' })

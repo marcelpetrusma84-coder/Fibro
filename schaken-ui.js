@@ -205,9 +205,9 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
           </section>
           ${isVriendPartij ? `<section class="sch-menu-section" aria-labelledby="sch-three-player-heading">
             <h3 id="sch-three-player-heading">Three-player chess</h3>
-            <label class="sch-attack-toggle"><input id="sch-three-player-enabled" type="checkbox"> Enable third-player invite</label>
-            <p class="sch-menu-hint">Invite one more friend to switch this match to a three-army, 96-square board.</p>
-            <button class="sch-keuze" id="sch-three-player-invite" type="button" hidden>＋ Invite a third player</button>
+            <label class="sch-attack-toggle"><input id="sch-three-player-enabled" type="checkbox"> Allow a third-player invite in this match</label>
+            <p class="sch-menu-hint">Recommended: enable this before the first move. You can also invite someone later during a two-player match. If they accept, everyone starts a fresh three-player game from the opening position.</p>
+            <button class="sch-keuze" id="sch-three-player-invite" type="button" hidden>＋ Invite a third player now</button>
           </section>` : ''}
           <p class="sch-menu-hint">Resize the board with Compact or Full width. Hold Full width for 3 seconds to reopen these settings.</p>
         </section>

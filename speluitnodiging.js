@@ -80,7 +80,8 @@ function toonPopup(vanId, vanNaam, vanAvatar, spelType, sessieId, players = null
   const nee = maak('button', 'background:rgba(255,255,255,0.1);color:#aaa;border:none;border-radius:16px;padding:8px 18px;font-size:14px;cursor:pointer;', T('Weigeren'))
   ja.id = 'gspAccepteer'; nee.id = 'gspWeiger'
   knoppen.append(ja, nee)
-  popup.append(maak('div', 'font-size:40px;', info.icon), regel, maak('div', 'color:#aaa;font-size:13px;', info.naam), knoppen)
+  const detail = spelType === 'schakendrie' ? T('Three-player chess · starts from the opening position') : info.naam
+  popup.append(maak('div', 'font-size:40px;', info.icon), regel, maak('div', 'color:#aaa;font-size:13px;', detail), knoppen)
   document.body.appendChild(popup)
   ja.onclick = async () => {
     if (spelType === 'schakendrie') {

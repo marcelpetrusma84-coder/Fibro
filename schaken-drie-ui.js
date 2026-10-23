@@ -49,7 +49,7 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
   captureBar.className = 'chess3-capturebar'
   const heading = document.createElement('header')
   heading.className = 'chess3-heading'
-  heading.innerHTML = '<span class="chess3-kicker">FIBRO · THREE PLAYER</span><h2>Three-player chess</h2><p>Capture a king to eliminate that player. The last king standing wins.</p>'
+  heading.innerHTML = '<span class="chess3-kicker">FIBRO · THREE PLAYER</span><h2>Three-player chess</h2><p>Capture a king to eliminate that player. The last king standing wins. When a third player joins mid-match, everyone starts from this opening position.</p>'
   controls.innerHTML = '<span class="chess3-turns" aria-label="Turn order"><b>BLUE</b><i>→</i><b>RED</b><i>→</i><b>GREEN</b></span>'
   if (localPreview && inviteThird) {
     const inviteButton = document.createElement('button')

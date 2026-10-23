@@ -710,12 +710,14 @@ window.veiligeUrl = function(v){
     const spelType   = urlParams.get('spelType')
     const sessieId   = urlParams.get('sessieId')
     const starterId  = urlParams.get('starterId')
+    let invitedPlayers = null
+    try { invitedPlayers = JSON.parse(urlParams.get('players') || 'null') } catch {}
     if (spelVriend && spelType && sessieId) {
       // Open chat met die vriend en start het spel
       const vriend = (window._vriendenData || []).find(v => v.id === spelVriend)
       if (vriend) {
         await openChat(vriend.id, vriendWeergaveNaam(vriend), vriend.avatar_url || '👤', vriend.public_key || '')
-        setTimeout(() => speelMee(spelType, sessieId, starterId || spelVriend), 800)
+        setTimeout(() => speelMee(spelType, sessieId, starterId || spelVriend, invitedPlayers), 800)
       }
       // Verwijder URL params zodat herlaad niet opnieuw triggert
       window.history.replaceState({}, '', 'chat.html')
@@ -2039,6 +2041,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
   let spelActief = null
   let spelTegenstander = null
   let spelChatCrypto = null
+  let spelSessieId = null
+  let spelSpelers = null
 
   // Games use the app username; personal P2P display names stay in the chat.
   function spelVriendUsername(vriendId = spelTegenstander?.id || geselecteerdeVriend?.id) {
@@ -2054,6 +2058,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     botkaaseiren:   { icon: '⭕', naam: 'Tic-Tac-Toe' },
     vieroprij:      { icon: '🔴', naam: 'Four in a Row' },
     schaken:        { icon: '♟️', naam: 'Chess' },
+    schakendrie:    { icon: '♟️♟️♟️', naam: 'Three-player chess' },
     dammen:         { icon: '⚫', naam: 'Draughts' },
     pong:           { icon: '🏓', naam: 'Neo Paddle' },
     flappybird:     { icon: '🦇', naam: 'Flapper' },
@@ -2072,13 +2077,25 @@ console.timeLog('[chat] berichten', 'opgehaald')
     spelGlobaalKanaal = houOpen('speluitnodiging-' + userId, () => supabase
       .channel('speluitnodiging-' + userId, { config: { broadcast: { self: false }, private: true } })
       .on('broadcast', { event: 'speluitnodiging' }, (msg) => {
-        const { van, vanNaam, vanAvatar, spelType, sessieId } = msg.payload
-        toonSpelUitnodigingPopup(van, vanNaam, vanAvatar, spelType, sessieId)
+        const { van, vanNaam, vanAvatar, spelType, sessieId, players } = msg.payload
+        toonSpelUitnodigingPopup(van, vanNaam, vanAvatar, spelType, sessieId, players)
       }))
+    spelGlobaalKanaal.on('broadcast', { event:'schaken-drie-accepted' }, async message => {
+      const payload = message?.payload || {}
+      const roster = valideerSchaakDrieSpelers(payload.players)
+      if (!roster || payload.host !== huidigeUser?.id || !roster.includes(huidigeUser?.id) || spelActief !== 'schaken') return
+      const opponent = roster.find(id => id !== huidigeUser.id && id !== payload.invited)
+      spelKanaal?.send({ type:'broadcast', event:'schaken-drie-start', payload:{ host:huidigeUser.id, players:roster, sessieId:payload.sessieId } })
+      if (opponent) {
+        const mail = supabase.channel('speluitnodiging-' + payload.invited, { config:{ private:true } })
+        mail.send({ type:'broadcast', event:'speluitnodiging', payload:{ van:huidigeUser.id, spelType:'schakendrie', sessieId:payload.sessieId, players:roster } }).finally(() => supabase.removeChannel(mail))
+      }
+      await window.speelMee('schakendrie', payload.sessieId, huidigeUser.id, roster)
+    })
   }
 
   // ── Toon de uitnodiging popup ──
-  function toonSpelUitnodigingPopup(vanId, vanNaam, vanAvatar, spelType, sessieId) {
+  function toonSpelUitnodigingPopup(vanId, vanNaam, vanAvatar, spelType, sessieId, players = null) {
     if (!isNieuwsteSpelSessie(huidigeUser?.id, vanId, sessieId)) return
     sluitSpelUitnodiging() // sluit eventueel vorige
 
@@ -2101,7 +2118,13 @@ console.timeLog('[chat] berichten', 'opgehaald')
           openChat(vriend.id, vriendWeergaveNaam(vriend), vriend.avatar_url || '👤', vriend.public_key || '')
         }
       }
-      speelMee(spelType, sessieId, vanId)
+      if (spelType === 'schakendrie') {
+        const roster = valideerSchaakDrieSpelers(players)
+        if (!roster || !roster.includes(huidigeUser?.id)) return
+        const accepted = supabase.channel('speluitnodiging-' + vanId, { config:{ private:true } })
+        accepted.send({ type:'broadcast', event:'schaken-drie-accepted', payload:{ host:vanId, invited:huidigeUser.id, players:roster, sessieId } }).finally(() => supabase.removeChannel(accepted))
+        speelMee(spelType, sessieId, vanId, roster)
+      } else speelMee(spelType, sessieId, vanId, players)
     }
 
     laadSpelAlvast(spelType)
@@ -2125,7 +2148,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (popup) popup.style.display = 'none'
   }
 
-  function spelKanaalNaam(sessieId) {
+  function spelKanaalNaam(sessieId, spelType = '') {
+    if (spelType === 'schakendrie') return 'spel3_' + sessieId
     const ids = [huidigeUser.id, spelTegenstander.id].sort()
     return 'spel_' + ids[0] + '_' + ids[1] + '_' + sessieId
   }
@@ -2140,6 +2164,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     pong: './pong-ui.js?v=147',
     vieroprij: './vieroprij-ui.js?v=147',
     schaken: './schaken-ui.js?v=199',
+    schakendrie: './schaken-drie-ui.js?v=1',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=148',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -2193,9 +2218,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   // Accepteer uitnodiging → open het spel
-  window.speelMee = async function(spelType, sessieId, starterId) {
+  window.speelMee = async function(spelType, sessieId, starterId, players = null) {
     if (!huidigeUser || !geselecteerdeVriend?.id) return
-    const beschikbaar = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball', 'shmup']
+    const beschikbaar = ['botkaaseiren', 'vieroprij', 'schaken', 'schakendrie', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball', 'shmup']
     if (!beschikbaar.includes(spelType)) {
       alert(T('🚧 {spel} komt binnenkort beschikbaar!', { spel: SPEL_INFO[spelType]?.naam || spelType }))
       return
@@ -2207,11 +2232,23 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (!isNieuwsteSpelSessie(huidigeUser?.id, geselecteerdeVriend?.id, sessieId)) return
     if (spelActief) window.sluitSpel(true)
 
-    spelTegenstander = { id: geselecteerdeVriend?.id, username: spelVriendUsername(geselecteerdeVriend?.id) }
+    if (spelType === 'schakendrie') {
+      players = valideerSchaakDrieSpelers(players)
+      if (!players?.includes(huidigeUser.id) || !players?.includes(geselecteerdeVriend.id)) return
+      const { data: room, error: roomError } = await supabase.from('chess_three_sessions').select('player_ids').eq('session_id', sessieId).maybeSingle()
+      if (roomError || !room?.player_ids || room.player_ids.length !== 3 || room.player_ids.some(id => !players.includes(id))) {
+        alert(T('Three-player chess is not ready yet. The Supabase migration must be applied first.'))
+        return
+      }
+    }
+    spelSessieId = sessieId
+    spelSpelers = spelType === 'schakendrie' ? players : null
+    const opponentId = spelType === 'schakendrie' ? players.find(id => id !== huidigeUser.id) : geselecteerdeVriend?.id
+    spelTegenstander = { id:opponentId, username:spelVriendUsername(opponentId) }
     let vingerafdruk = null
     try { vingerafdruk = localStorage.getItem(vriendSleutelSleutel(spelTegenstander.id)) } catch {}
-    const chatBeveiliging = maakSpelChatCrypto({ mijnId:huidigeUser.id, vriendId:spelTegenstander.id,
-      mijnPrivateKey, vriendPublicKey, sessie:spelKanaalNaam(sessieId), vingerafdruk })
+    const chatBeveiliging = spelType === 'schakendrie' ? null : maakSpelChatCrypto({ mijnId:huidigeUser.id, vriendId:spelTegenstander.id,
+      mijnPrivateKey, vriendPublicKey, sessie:spelKanaalNaam(sessieId, spelType), vingerafdruk })
     spelChatCrypto = chatBeveiliging
     spelActief = spelType
     resetSpelVideo()
@@ -2222,17 +2259,20 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
     benIkSpeler1 = starterId ? (starterId === huidigeUser.id) : (huidigeUser.id < spelTegenstander.id)
 
+    benIkSpeler1 = spelType === 'schakendrie' ? players[0] === huidigeUser.id : (starterId ? (starterId === huidigeUser.id) : (huidigeUser.id < spelTegenstander.id))
+
     const verbinding = maakSpelVerbinding({
       client:supabase,
-      naam:spelKanaalNaam(sessieId),
+      naam:spelKanaalNaam(sessieId, spelType),
       onStatus:status => { if (spelKanaal === verbinding) toonSpelVerbindingStatus(status) },
-      onActivity:() => { if (spelKanaal === verbinding && spelActief) startSpelBel() }
+      onActivity:() => { if (spelKanaal === verbinding && spelActief === 'schaken') startSpelBel() }
     })
     spelKanaal = verbinding
 
     if (spelType === 'botkaaseiren') await startBotKaasEieren()
     else if (spelType === 'vieroprij') await startVierOpEenRij()
     else if (spelType === 'schaken') await startSchaken()
+    else if (spelType === 'schakendrie') await startSchakenDrie(players)
     else if (spelType === 'dammen') await startDammen()
     else if (spelType === 'pong') await startPong()
     else if (spelType === 'flappybird') await startFlappyBird()
@@ -2245,7 +2285,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     else if (spelType === 'shmup') await startNeonRaiders()
     if (spelActief !== spelType || spelKanaal !== verbinding) return // ondertussen gesloten of vervangen
 
-    spelKanaal.on('broadcast', { event: 'spelchat' }, async (msg) => {
+    if (chatBeveiliging) spelKanaal.on('broadcast', { event: 'spelchat' }, async (msg) => {
       const tekst = await chatBeveiliging.open('spelchat', msg.payload)
       if (spelKanaal !== verbinding) return
       if (tekst !== null) toonSpelChat(tekst, false)
@@ -2257,6 +2297,12 @@ console.timeLog('[chat] berichten', 'opgehaald')
       toonSpelVerbindingStatus('left')
       toonSpelMelding(T('{naam} heeft het spel verlaten.', { naam: esc(spelVriendUsername()) }))
       verbinding.stop()
+    })
+    if (spelType === 'schaken') spelKanaal.on('broadcast', { event:'schaken-drie-start' }, async message => {
+      const payload = message?.payload || {}
+      const roster = valideerSchaakDrieSpelers(payload.players)
+      if (spelKanaal !== verbinding || !roster?.includes(huidigeUser.id) || !roster.includes(geselecteerdeVriend?.id) || !payload.sessieId) return
+      await window.speelMee('schakendrie', payload.sessieId, payload.host, roster)
     })
     // v170: bij een beurtspel per beurt een sticker (zie 'stickers in een beurtspel'); elke zet geeft er weer een vrij
     spelStickerVrij()

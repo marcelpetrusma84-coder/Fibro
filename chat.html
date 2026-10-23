@@ -2219,7 +2219,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=147',
     pong: './pong-ui.js?v=147',
     vieroprij: './vieroprij-ui.js?v=147',
-    schaken: './schaken-ui.js?v=199',
+    schaken: './schaken-ui.js?v=200',
     schakendrie: './schaken-drie-ui.js?v=2',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=148',
@@ -2618,7 +2618,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await import('./schaken-ui.js?v=199')
+    const m = await import('./schaken-ui.js?v=200')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), onInviteThird:nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
     spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })

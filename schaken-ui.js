@@ -85,7 +85,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-video.sch-video-stop:active { transform:translateY(2px) scale(.94); }
       @keyframes sch-video-pulse { 50% { box-shadow:0 0 0 5px #78e7cb25,0 0 18px #78e7cb80; filter:brightness(1.14); } }
       .sch-video[aria-pressed="true"] { background:linear-gradient(135deg,#51d6ad,#d9ffdc); color:#06352a; box-shadow:0 0 14px #51d6ad88; }
-      .sch-menu-backdrop { position:fixed; z-index:999; inset:0; background:linear-gradient(145deg,#070912c9,#0d0815dc); -webkit-backdrop-filter:blur(8px) saturate(.68); backdrop-filter:blur(8px) saturate(.68); }
+      .sch-menu-backdrop { position:fixed; z-index:999; inset:0; background:linear-gradient(145deg,#07091265,#0d08157a); -webkit-backdrop-filter:blur(6px) saturate(.72) brightness(.74); backdrop-filter:blur(6px) saturate(.72) brightness(.74); }
       .sch-menu-backdrop[hidden] { display:none; }
       .sch-menu-backdrop:not([hidden]) { animation:sch-backdrop-enter .22s ease-out both; }
       .sch-menu { position:fixed; z-index:1000; left:50%; top:50%; transform:translate(-50%,-50%); box-sizing:border-box; width:min(500px,calc(100vw - 28px)); max-height:min(86dvh,760px); overflow:auto; overscroll-behavior:contain; scrollbar-color:#78d9c0 #171a27; padding:clamp(18px,4vw,26px); border:1px solid #baf8e2; border-radius:24px; background:radial-gradient(ellipse at 8% 0%,#7352a44d,transparent 44%),linear-gradient(145deg,#28243a 0%,#171522 52%,#10131d 100%); color:#f6f5ff; box-shadow:0 0 0 1px #bdffe233,0 0 34px #7ae6d51c,0 2px 0 #ffffff26 inset,0 5px 0 #0b0c13,0 12px 0 #07080d,0 30px 80px #000e; text-align:left; }

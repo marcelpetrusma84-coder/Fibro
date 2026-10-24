@@ -5,7 +5,7 @@
 // telefoon 4 naast elkaar, op een breed scherm 6. Een leeg vakje zegt wat er later komt.
 // Gebruik: const k = maakStickerkeuze(element, { onKies: sticker => ..., uid: () => id }); k.vernieuw() leest
 // je eigen stickers opnieuw (bij het openen). sticker = { vel, nr, naam, b, g, src }.
-import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=208'
+import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=215'
 import { leesEigen } from './eigenstickers.js?v=162'
 import { speelBeweging } from './stickerfx.js?v=214'
 

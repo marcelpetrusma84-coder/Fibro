@@ -274,6 +274,9 @@ MAG_ERBIJ |= {'Fibro v213 \u00B7 24 okt 2026'}
 # v214: stuk 6: de 35 geluiden in stickerfx.js (in de keuzelijst van het Stickerlab)
 MAG_WEG |= {'Fibro v213 \u00B7 24 okt 2026'}
 MAG_ERBIJ |= {'Fibro v214 \u00B7 24 okt 2026'}
+# v215: acht stickers van vel 5 met een meme-geluid (op de schermen alleen het versienummer)
+MAG_WEG |= {'Fibro v214 \u00B7 24 okt 2026'}
+MAG_ERBIJ |= {'Fibro v215 \u00B7 24 okt 2026'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

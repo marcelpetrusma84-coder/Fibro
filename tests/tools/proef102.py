@@ -111,8 +111,8 @@ with sync_playwright() as pw:
           [x for x in b['nieuw'] if not (x[1] and x[2] == list(NIEUW[x[0]]))][:4] if isinstance(b, dict) else b)
     VELLEN = ['lach,ssst,snurk,moe,huil,hartklop,grom,schrik,uitval,druk,spook,sluw', 'peins,laden,tiktak,zzz,hmm,idee,sirene,facepalm,krekels,ontploft,winnaar,loser',
               'duimop,boe,pijl,halt,vrede,oke,rock,kracht,hallo,applaus,yes,warp', 'liefde,kus,vijf,geluk,engel,twijfel,boks,wat,pieuw,ahum,jij,deal',
-              'lach,boing,schrik,liefde,yes,zoemer,pijl,rock,loser,facepalm,winnaar,moe']
-    check('B de geluiden van vel 1-5 ongewijzigd', isinstance(b, dict) and b['vellen'] == VELLEN, b['vellen'] if isinstance(b, dict) else b)
+              'lach,boing,ooh,dankbaar,tadaa,fout,zoefweg,rock,gameover,kras,hoorn,moe']  # v215: vel 5 met acht meme-geluiden
+    check('B de geluiden van vel 1-5 (vel 5 sinds v215 met acht meme-geluiden)', isinstance(b, dict) and b['vellen'] == VELLEN, b['vellen'] if isinstance(b, dict) else b)
     # C. het Stickerlab
     try: p.click('#eigenStickers .sm-plek[data-code="e1-01"]', timeout=3000)
     except Exception: pass

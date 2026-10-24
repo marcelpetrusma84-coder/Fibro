@@ -541,7 +541,7 @@ function renderProfiel(id, c) {
     // v171: een sticker als mood (moodsticker.js): tik = beweging en geluid
     const sticker = /^fxsticker:((?:f[1-6]|e[12])-(?:0[1-9]|1[0-2]))$/.exec(emoji)
     c.innerHTML = `<div style="display:flex;align-items:center;gap:10px"><span class="mood-plek" style="font-size:28px;line-height:1">${sticker ? '' : escH(emoji)}</span><span style="font-size:14px">${escH(tekst)}</span></div>`
-    if (sticker) import('./moodsticker.js?v=214').then(m => m.tekenMoodSticker(c.querySelector('.mood-plek'), sticker[1], { uid: window._uid })).catch(e => console.warn('[moodsticker]', e))
+    if (sticker) import('./moodsticker.js?v=215').then(m => m.tekenMoodSticker(c.querySelector('.mood-plek'), sticker[1], { uid: window._uid })).catch(e => console.warn('[moodsticker]', e))
 
   } else if (id === 'muziek') {
     renderMuziekPlayer(c)
@@ -588,7 +588,7 @@ function renderProfiel(id, c) {
     renderSpelWidget(c, id.slice(5))
   } else if (id.startsWith('sticker_')) {
     // v157: sticker als widget (Profiel > Stickers): tik = beweging en geluid. Pas laden als hij er staat.
-    import('./stickerwidget.js?v=214').then(m => m.tekenStickerWidget(c, id, { uid: window._uid })).catch(e => console.warn('[stickerwidget]', e))
+    import('./stickerwidget.js?v=215').then(m => m.tekenStickerWidget(c, id, { uid: window._uid })).catch(e => console.warn('[stickerwidget]', e))
   }
 }
 
@@ -2109,7 +2109,7 @@ async function renderGastenboek(c, uid) {
 // v183: het versienummer en de datum van deze versie, onderaan in het menu. Zo zie je op elk toestel welke versie
 // er echt draait (een telefoon kan een oude pagina nog even vasthouden). Elk maak-script zet het nummer een hoger:
 // tests/gen/bouw.py maakt geen script als het hier niet omhoog gaat.
-const FIBRO_VERSIE = 214
+const FIBRO_VERSIE = 215
 const FIBRO_DATUM = '2026-10-24'
 function versieTekst() {
   let d = FIBRO_DATUM

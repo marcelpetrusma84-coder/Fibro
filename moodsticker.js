@@ -5,7 +5,7 @@
 // bewegen en geluid maken. Op de kleine plekken (onder je naam, de vriendenlijst) staat alleen de tekst.
 // De sticker is een <span> met een achtergrondplaatje, geen <img>: zo opent fotoviewer.js hem niet als foto.
 // Een eigen sticker van een vriend komt via de sync (sync.js); tot dan een zandlopertje dat vanzelf bijwerkt.
-import { zoekSticker } from './stickervellen.js?v=208'
+import { zoekSticker } from './stickervellen.js?v=215'
 import { zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel } from './eigenstickers.js?v=162'
 import { speel } from './stickerfx.js?v=214'
 

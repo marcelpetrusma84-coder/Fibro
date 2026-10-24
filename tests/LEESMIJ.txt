@@ -432,6 +432,11 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  ?v=214 voor stickerfx, stickerkeuze, stickerwidget, stickermaker en moodsticker). Tussenstanden in
                                  <S>/stap1-5 (testscript_meme.py <S> <script> <basis> <nieuw> <stuk>: elke 20e inhoudsregel; het
                                  leest de vereiste mp3 uit het script zelf). proef102 nieuw, proef43 (v209-v214). FIBRO_VERSIE 209-214
+                         vel5geluid = v215 (op voorstel van Claude, Marcel akkoord): acht stickers van vel 5 krijgen een meme-geluid
+                                 (OMG! ooh, Bedankt! dankbaar, Gelukt! tadaa, Nee! fout, Ben zo terug zoefweg, Noob gameover, Cringe kras,
+                                 GOAT hoorn); LOL, rolf, Vibing en Meh houden hun geluid. stickervellen.js?v=215 en de keten (stickerkeuze,
+                                 stickerwidget, stickermaker, moodsticker). proef103 nieuw, proef102 (vel 5), proef43 (v215).
+                                 FIBRO_VERSIE 215 (testscript_vel5geluid.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -940,12 +945,18 @@ tools/proef101.py        stickervel 5 (v206-v208, chattaal), echte chat.html, na
                          geluid + fxsticker:f5-12 versleuteld; C. Profiel 'Stickervel 5'; D. kastvullen.js met de echte portier:
                          de 12 plaatjes in de mediakast, ook zonder internet; E. Engels, geen fouten.
                          Oude map (v205) als controle.   python3 -I proef101.py <map>
-                         (geldt voor v208-v213: 67 geluiden; sinds v214 zijn er 102: B 'geen nieuwe geluiden' is dan MIS)
+                         (geldt voor v208-v213: 67 geluiden; sinds v214 zijn er 102: B 'geen nieuwe geluiden' is dan MIS, en sinds
+                         v215 heeft GOAT (f5-11) het geluid hoorn: zie proef103)
 tools/proef102.py        de meme-geluiden (v209-v214), echte profiel.html en stickermaker.js: A. 35 mp3's speelbaar, 0,5-2,7 s, even
                          hard, ~64 kbps, geen ID3, samen < 520 kB; B. 102 geluiden, elk nieuw mp3 met terug-geluid, namen NL/EN,
                          vel 1-5 gelijk; C. Stickerlab: de 35 in de keuzelijst, plaatje + Ba-dum-tss kiezen = mp3 klinkt, bewaren
                          = geluid 'badumtss'; D. na de eerste tik opgehaald; E. kastvullen.js met de echte portier: in de mediakast,
                          ook zonder internet; F. Engels, geen fouten. Oude map (v208) als controle.   python3 -I proef102.py <map>
+                         (sinds v215 verwacht B de nieuwe geluiden van vel 5; op v214 is die ene controle MIS)
+tools/proef103.py        acht stickers van vel 5 met een meme-geluid (v215), echte chat.html: A. de geluiden, namen en bewegingen
+                         van vel 5, twaalf verschillende; B. OMG!, Noob en GOAT versturen = precies dat mp3-bestand klinkt (herkend
+                         aan de SHA-1 van de blob: hoorn.mp3 en boing.mp3 zijn even groot), versleuteld; C. binnengekomen Ben zo
+                         terug aantikken = zoefweg; D. Engels, geen fouten. Oude map (v214) als controle.   python3 -I proef103.py <map>
 security/*.mjs           (v202, van valentijnpeters) Node-tests, te draaien vanuit de map zelf: node tests/security/test-crypto.mjs,
                          test-game-crypto.mjs (spelchat-crypto.js), test-key-recovery.mjs (het herstel in login.html)
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),

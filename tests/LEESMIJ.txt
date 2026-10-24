@@ -415,6 +415,15 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  kiesVriendActie). De vertalingen blijven in taal-en.js staan (onschuldig; anders taal.js?v= in alle
                                  12 pagina's). proef100 nieuw, proef43 (v205, 'End friendship' niet meer verwacht). FIBRO_VERSIE 205
                                  (testscript_geenontvriend.py)
+                         vel5 = v206, v207 en v208 (op verzoek van Marcel): stickervel 5, chattaal (lol, rolf, omg, thx, vinkje,
+                                 no!, brb, vibing, noob, cringe, GOAT, meh): 12 plaatjes stickers/f5/NN.webp (384 x 384, geknipt uit
+                                 twee plaatjes van Marcel met tools/knip5.py, zonder achtergrond), met geluiden die er al waren
+                                 (stickerfx.js blijft gelijk, nog 67 geluiden). In DRIE stukken van hoogstens ~130 kB, en sinds v183 is
+                                 elk script een eigen versie: maak-vel5-1.py = v206 (plaatjes 01-04), maak-vel5-2.py = v207 (05-09),
+                                 maak-vel5-3.py = v208 (10-12 en de code: vel 5 in stickervellen.js, ?v=208 voor stickervellen,
+                                 stickerkeuze, stickerwidget, stickermaker en moodsticker; die laden het vel). Tussenstanden in
+                                 <S>/stap1 en stap2 (testscript_vel5.py <S> <script> <basis> <nieuw> <stuk>: elke 20e inhoudsregel).
+                                 proef101 nieuw, proef53 (leeg vel is nu vel 6), proef43 (v206-v208). FIBRO_VERSIE 206, 207 en 208
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -679,6 +688,11 @@ tools/geluiden4.py       de 12 eigen geluiden van vel 3 (v165, handgebaren), zel
 tools/geluiden5.py       de 12 eigen geluiden van vel 4 (v166, moderne handgebaren), zelfde werkwijze: harp met hartje,
                          smakkerd, handklap, speeldoos, koortje, twijfelen, boks, wat?, pieuw!, ahum, orkestklap, kassa.
                          python3 -I geluiden5.py <map>/geluiden
+tools/knip5.py           de 12 plaatjes van vel 5 (v206-v208) uit twee plaatjes van Marcel (niet in de repo): per vakje alles wat
+                         van buitenaf te bereiken is zonder de witte rand over te steken is achtergrond (ook de paarse kruizen),
+                         ingesloten stukjes achtergrond eruit, bij 'noob' een stukje witte rand getekend (daar lag een paarse
+                         streep over de rand); 380 px in 384 x 384, strakke rand van ~1 px, WebP 78 (samen ~210 kB). Geeft
+                         precies dezelfde bestanden.   python3 -I knip5.py <map met plaat1.png en plaat2.png> <uitmap> [controle.png]
 tools/proef60.py         de stickergeluiden als mp3 (v160; v161: 30 bestanden, even hard gemeten als gemiddelde luidheid), echte profiel.html: 18 bestanden speelbaar en even hard, Boos =
                          zoemer.mp3 (geen code-geluid), alle 18 opgehaald na de eerste tik, elke sticker van vel 1 zijn eigen
                          mp3, twee tegelijk, geen mp3 te krijgen = code-geluid, traag = eerst code-geluid (0,4 s) en daarna mp3,
@@ -703,13 +717,14 @@ tools/proef63.py         stickervel 2 (v164) in de echte chat.html, naar proef56
                          samen < 400 kB, terug-geluid met code), na de eerste tik opgehaald, echte klik = mp3 + fxsticker:f2-12
                          (versleuteld), binnenkomend Winnaar!, Profiel-blok 'Stickervel 2'; vel 1 ongewijzigd.
                          Oude map als controle: 3 van 18.   python3 -I proef63.py <map>
-                         (proef53 kijkt sinds v166 naar vel 5 voor 'leeg vel'. proef63 geldt voor v164: sinds v165 zijn er
-                         55 geluiden en drie vellen; gebruik dan proef64.)
+                         (proef53 kijkt sinds v166 naar vel 5 en sinds v208 naar vel 6 voor 'leeg vel'. proef63 geldt voor v164:
+                         sinds v165 zijn er 55 geluiden en drie vellen; gebruik dan proef64.)
 tools/proef64.py         stickervel 3 (v165), zoals proef63 maar voor vakje 3 (handgebaren), met vel 1 en 2 ongewijzigd en
                          55 geluiden. Oude map als controle: 3 van 18.   python3 -I proef64.py <map>
                          (geldt voor v165; sinds v166 zijn er 67 geluiden en vier vellen: gebruik dan proef65)
 tools/proef65.py         stickervel 4 (v166), zoals proef64 maar voor vakje 4 (moderne handgebaren), met vel 1-3
                          ongewijzigd en 67 geluiden. Oude map als controle: 3 van 18.   python3 -I proef65.py <map>
+                         (geldt voor v166-v207; sinds v208 zijn er vijf vellen: gebruik dan proef101)
 tools/proef66.py         het bolletje op het icoon (v168), echte vrienden.html, ongelezen.js en service-worker.js: 3 ongelezen =
                          setAppBadge(3) en het kastje 3; alles gelezen = clearAppBadge, kastje 0, gewone melding weg, oproep die
                          overgaat blijft; pushmeldingen via DevTools (ServiceWorker.deliverPushMessage): bericht/buzz/gemist +1,
@@ -906,6 +921,13 @@ tools/proef99.py         de achtergrond meteen bewaren en delen (v204): echte pr
 tools/proef100.py        geen 'Vriendschap beeindigen' op een vriendprofiel (v205), NL en EN: geen knop, geen tekst, geen
                          window.ontvriend, naam en chatknop wel; Vrienden lang drukken = Verwijderen uit vriendenlijst en
                          Blokkeren. Oude map (v204): 3 van 5.   python3 -I proef100.py <map>
+tools/proef101.py        stickervel 5 (v206-v208, chattaal), echte chat.html, naar proef65: A. de 12 plaatjes (WebP 384 x 384,
+                         samen < 300 kB) zonder achtergrond: rand doorzichtig, dekt 40-85%, buitenkant overal wit, geen paarse
+                         resten; B. vakje 5: namen NL/EN, plaatjes laden, past zonder schuiven, bestaande bewegingen en geluiden
+                         (12 verschillende, nog 67), vel 1-4 gelijk, vel 6 leeg, binnenkomend GOAT, Meh versturen =
+                         geluid + fxsticker:f5-12 versleuteld; C. Profiel 'Stickervel 5'; D. kastvullen.js met de echte portier:
+                         de 12 plaatjes in de mediakast, ook zonder internet; E. Engels, geen fouten.
+                         Oude map (v205) als controle.   python3 -I proef101.py <map>
 security/*.mjs           (v202, van valentijnpeters) Node-tests, te draaien vanuit de map zelf: node tests/security/test-crypto.mjs,
                          test-game-crypto.mjs (spelchat-crypto.js), test-key-recovery.mjs (het herstel in login.html)
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),

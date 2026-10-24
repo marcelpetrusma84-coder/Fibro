@@ -250,6 +250,16 @@ MAG_ERBIJ |= {'Fibro v204 \u00B7 23 okt 2026', 'Wat je hier kiest, geldt meteen,
 # v205: onderaan het profiel van een vriend geen 'Vriendschap beeindigen' meer (dat kan op Vrienden, lang drukken)
 MAG_WEG |= {'Fibro v204 \u00B7 23 okt 2026', 'Vriendschap beeindigen'}
 MAG_ERBIJ |= {'Fibro v205 \u00B7 23 okt 2026'}
+# v206 en v207: stickervel 5, stuk 1 en 2 (alleen plaatjes; op de schermen alleen het versienummer)
+MAG_WEG |= {'Fibro v205 \u00B7 23 okt 2026'}
+MAG_ERBIJ |= {'Fibro v206 \u00B7 24 okt 2026'}
+MAG_WEG |= {'Fibro v206 \u00B7 24 okt 2026'}
+MAG_ERBIJ |= {'Fibro v207 \u00B7 24 okt 2026'}
+# v208: stickervel 5 (chattaal) in de stickerkeuze en in Profiel
+MAG_WEG |= {'Fibro v207 \u00B7 24 okt 2026'}
+MAG_ERBIJ |= {'Fibro v208 \u00B7 24 okt 2026', 'STICKERVEL 5'}  # (Profiel -> Stickers: het blok van vel 5)
+VEL5 = ['LOL', 'Rollen van het lachen', 'OMG!', 'Bedankt!', 'Gelukt!', 'Nee!', 'Ben zo terug', 'Vibing', 'Noob', 'Cringe', 'GOAT', 'Meh']
+MAG_ERBIJ |= {'Speel sticker ' + n for n in VEL5} | {n + ' op Home' for n in VEL5}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

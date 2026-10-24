@@ -148,7 +148,7 @@ body.heeft-wallpaper::before { display:block; }
   import { initSync, vraagVriendVideo } from './sync.js?v=162'
   import { eisSessie, startBewaking } from './sessie.js?v=95'
   import { startMeldingen } from './meldingen.js?v=187'
-  import { leesMood, isMoodSticker, tekenMoodSticker } from './moodsticker.js?v=208' // v171: een sticker als mood
+  import { leesMood, isMoodSticker, tekenMoodSticker } from './moodsticker.js?v=214' // v171: een sticker als mood
   pasBlokstijlToe()
 
   var vriendId = null
@@ -454,7 +454,7 @@ body.heeft-wallpaper::before { display:block; }
       if (/^sticker_/.test(w.id || '')) {
         el.innerHTML = '<div class="widget-inhoud"></div>'
         grid.appendChild(el)
-        try { await (await import('./stickerwidget.js?v=208')).tekenStickerWidget(el.querySelector('.widget-inhoud'), w.id, { vriendId }) }
+        try { await (await import('./stickerwidget.js?v=214')).tekenStickerWidget(el.querySelector('.widget-inhoud'), w.id, { vriendId }) }
         catch (e) { console.warn('[stickerwidget]', e); el.remove() }
         continue
       }

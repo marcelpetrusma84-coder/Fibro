@@ -7,7 +7,7 @@
 // Een eigen sticker van een vriend komt via de sync (sync.js); tot dan een zandlopertje dat vanzelf bijwerkt.
 import { zoekSticker } from './stickervellen.js?v=208'
 import { zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel } from './eigenstickers.js?v=162'
-import { speel } from './stickerfx.js?v=180'
+import { speel } from './stickerfx.js?v=214'
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 export const MOOD_STICKER = /^fxsticker:((?:f[1-6]|e[12])-(?:0[1-9]|1[0-2]))(?:\s+|$)/

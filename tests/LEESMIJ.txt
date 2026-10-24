@@ -424,6 +424,14 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  stickerkeuze, stickerwidget, stickermaker en moodsticker; die laden het vel). Tussenstanden in
                                  <S>/stap1 en stap2 (testscript_vel5.py <S> <script> <basis> <nieuw> <stuk>: elke 20e inhoudsregel).
                                  proef101 nieuw, proef53 (leeg vel is nu vel 6), proef43 (v206-v208). FIBRO_VERSIE 206, 207 en 208
+                         meme = v209 t/m v214 (op verzoek van Marcel): 35 meme-, montage- en emotiegeluiden in stickerfx.js (mp3: true
+                                 en een terug-geluid; nu 102 geluiden), te kiezen voor eigen stickers in het Stickerlab. Gemaakt met
+                                 tools/geluiden6.py (64 kbps: de helft van de andere, niet te horen). Marcel koos ze uit 48 proefgeluiden
+                                 op een luisterpagina (24 okt). In ZES stukken, elk een versie: maak-meme-1..5.py = v209-v213 (alleen
+                                 mp3's, verdeeld op grootte, zie maak_meme.py), maak-meme-6.py = v214 (de laatste mp3's en de code:
+                                 ?v=214 voor stickerfx, stickerkeuze, stickerwidget, stickermaker en moodsticker). Tussenstanden in
+                                 <S>/stap1-5 (testscript_meme.py <S> <script> <basis> <nieuw> <stuk>: elke 20e inhoudsregel; het
+                                 leest de vereiste mp3 uit het script zelf). proef102 nieuw, proef43 (v209-v214). FIBRO_VERSIE 209-214
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -688,6 +696,10 @@ tools/geluiden4.py       de 12 eigen geluiden van vel 3 (v165, handgebaren), zel
 tools/geluiden5.py       de 12 eigen geluiden van vel 4 (v166, moderne handgebaren), zelfde werkwijze: harp met hartje,
                          smakkerd, handklap, speeldoos, koortje, twijfelen, boks, wat?, pieuw!, ahum, orkestklap, kassa.
                          python3 -I geluiden5.py <map>/geluiden
+tools/geluiden6.py       de 35 meme-, montage- en emotiegeluiden (v209-v214), zelfde werkwijze als geluiden5.py maar 64 kbps; een
+                         harde klap (pijp, roffel) wordt zacht begrensd zodat ze even hard zijn. Er staan 48 geluiden in (de 13 die
+                         Marcel niet koos ook, want ze delen de toevalsreeks); alleen KEUZE wordt geschreven, met 'alle' ook de rest
+                         (de luisterpagina). Geeft precies dezelfde bestanden.   python3 -I geluiden6.py <map>/geluiden [alle]
 tools/knip5.py           de 12 plaatjes van vel 5 (v206-v208) uit twee plaatjes van Marcel (niet in de repo): per vakje alles wat
                          van buitenaf te bereiken is zonder de witte rand over te steken is achtergrond (ook de paarse kruizen),
                          ingesloten stukjes achtergrond eruit, bij 'noob' een stukje witte rand getekend (daar lag een paarse
@@ -928,6 +940,12 @@ tools/proef101.py        stickervel 5 (v206-v208, chattaal), echte chat.html, na
                          geluid + fxsticker:f5-12 versleuteld; C. Profiel 'Stickervel 5'; D. kastvullen.js met de echte portier:
                          de 12 plaatjes in de mediakast, ook zonder internet; E. Engels, geen fouten.
                          Oude map (v205) als controle.   python3 -I proef101.py <map>
+                         (geldt voor v208-v213: 67 geluiden; sinds v214 zijn er 102: B 'geen nieuwe geluiden' is dan MIS)
+tools/proef102.py        de meme-geluiden (v209-v214), echte profiel.html en stickermaker.js: A. 35 mp3's speelbaar, 0,5-2,7 s, even
+                         hard, ~64 kbps, geen ID3, samen < 520 kB; B. 102 geluiden, elk nieuw mp3 met terug-geluid, namen NL/EN,
+                         vel 1-5 gelijk; C. Stickerlab: de 35 in de keuzelijst, plaatje + Ba-dum-tss kiezen = mp3 klinkt, bewaren
+                         = geluid 'badumtss'; D. na de eerste tik opgehaald; E. kastvullen.js met de echte portier: in de mediakast,
+                         ook zonder internet; F. Engels, geen fouten. Oude map (v208) als controle.   python3 -I proef102.py <map>
 security/*.mjs           (v202, van valentijnpeters) Node-tests, te draaien vanuit de map zelf: node tests/security/test-crypto.mjs,
                          test-game-crypto.mjs (spelchat-crypto.js), test-key-recovery.mjs (het herstel in login.html)
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),

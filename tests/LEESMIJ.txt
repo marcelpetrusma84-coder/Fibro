@@ -441,6 +441,15 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  scherm (Steam Deck, tablet; was daar 6 naast elkaar in 2 rijen). Alleen stickerkeuze.js (de regel
                                  @media (min-width:600px) weg), stickerkeuze.js?v=216 in chat.html en profiel.html. proef104 nieuw,
                                  proef43 (v216). FIBRO_VERSIE 216 (testscript_raster.py)
+                         knoppen = v217 (op verzoek van Marcel): op de Stijl-pagina (profiel.html) de stippellijnen wit met een
+                                 schaduw (was licht paars) en de knoppen duidelijker, ook op een lichte achtergrondfoto. De kiesvakken
+                                 (.upload-zone: avatarfoto, muziek en, met de nieuwe klasse groot, de eigen achtergrond) een witte
+                                 stippellijn van 2 px, box-shadow buiten en binnen, een donker vlak; de lege plekken van het Stickerlab
+                                 (stickermaker.js, .sm-plek) ook, plus een drop-shadow en een wit plusje. De typeknoppen (Kleur,
+                                 Gradient, Wallpaper, Eigen upload) donker glas met een witte rand; de gekozen gevuld met het verloop van
+                                 de accentkleur, donkere letters. 'Nummer weghalen' klasse wis-knop (donker, rode rand). Geen nieuwe
+                                 teksten. stickermaker.js?v=217 in profiel.html. proef105 nieuw, proef43 (v217). FIBRO_VERSIE 217
+                                 (testscript_knoppen.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -965,6 +974,14 @@ tools/proef104.py        de stickerkeuze altijd 4 naast elkaar (v216), echte cha
                          1280 x 800 (Steam Deck): 4 kolommen, 12 stickers in 3 rijen van 4 met gelijke afstanden, even hoog, het
                          hele vel zonder schuiven, keuze <= 380 px, niet breder dan het scherm. Oude map (v215): tablet en Steam
                          Deck MIS (6 naast elkaar).   python3 -I proef104.py <map>
+tools/proef105.py        witte stippellijnen met schaduw en duidelijkere knoppen op de Stijl-pagina (v217), echte profiel.html en
+                         stickermaker.js op een zelf getekende lichte ruimtefoto en op de donkere achtergrond, telefoon en Steam
+                         Deck: A. kiesvakken en 24 lege plekken: witte stippellijn >= 2 px, schaduw, donker vlak, wit plusje, geen
+                         paars; B. gemeten in de schermafdruk (dubbele scherpte): lijn tegen vlak, plusje en bestandssoorten >= 3:1;
+                         C. typeknoppen en Nummer weghalen donker met witte/rode rand, gekozen knop gevuld, letters >= 4,5:1;
+                         D. kiesvakken openen het kiesvenster, Nummer weghalen = wisMuziek, lege plek opent het Stickerlab, volle
+                         plek zonder stippel; E. gele accentkleur; F. Engels; G. geen fouten. Oude map (v216): A, B, C, E MIS.
+                         python3 -I proef105.py <map>
 security/*.mjs           (v202, van valentijnpeters) Node-tests, te draaien vanuit de map zelf: node tests/security/test-crypto.mjs,
                          test-game-crypto.mjs (spelchat-crypto.js), test-key-recovery.mjs (het herstel in login.html)
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),

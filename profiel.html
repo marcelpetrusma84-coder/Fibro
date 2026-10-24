@@ -64,16 +64,21 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:non
 input[type="range"]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid rgba(255,255,255,0.4);}
 .gradient-preview{width:100%;height:50px;border-radius:10px;margin-bottom:10px;border:0.5px solid var(--border);}
 .type-btns{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
-.type-btn{font-size:14px;padding:6px 14px;border-radius:20px;border:0.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;}
-.type-btn.active{background:rgba(192,132,252,0.15);border-color:var(--accent);color:var(--accent);}
+/* v217: de knoppen duidelijk zichtbaar, ook op een lichte achtergrondfoto: donker glas met een witte rand en schaduw;
+   de gekozen knop gevuld in de accentkleur met donkere letters en een witte rand */
+.type-btn{font-size:14px;font-weight:500;padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.7);background:rgba(0,0,0,0.5);color:#ffffff;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.type-btn.active{background:linear-gradient(135deg,var(--accent),var(--accent2));border:1.5px solid #ffffff;color:#1a0a2e;font-weight:600;}
 .wallpaper-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;}
 .wallpaper-cell{aspect-ratio:16/10;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;position:relative;}
 .wallpaper-cell.selected{border-color:var(--accent);}
 .wallpaper-label{position:absolute;bottom:4px;left:6px;font-size:15px;color:white;text-shadow:0 1px 3px rgba(0,0,0,0.8);}
-.upload-zone{border:1px dashed rgba(192,132,252,0.4);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;}
+/* v217: de stippellijn wit met een schaduw (was licht paars), zodat hij op elke achtergrond te zien is */
+.upload-zone{border:2px dashed rgba(255,255,255,0.9);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;background:rgba(0,0,0,0.4);box-shadow:0 2px 10px rgba(0,0,0,0.55),inset 0 0 10px rgba(0,0,0,0.45);}
+.upload-zone.groot{border-radius:16px;padding:40px 20px;margin-bottom:14px;}
+.wis-knop{min-height:44px;padding:0 14px;border-radius:10px;border:1px solid rgba(252,165,165,0.8);background:rgba(0,0,0,0.55);color:#fecaca;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
 .upload-icon{font-size:28px;margin-bottom:8px;}
 .upload-text{font-size:15px;color:var(--muted);line-height:1.5;}
-.upload-formats{font-size:15px;color:rgba(243,232,255,0.3);margin-top:4px;}
+.upload-formats{font-size:15px;color:rgba(255,255,255,0.9);margin-top:4px;}
 .anim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
 .anim-cell{background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;}
 .anim-cell.selected{border-color:var(--accent);background:rgba(192,132,252,0.1);}
@@ -220,7 +225,7 @@ input, textarea { font-size:16px !important; }
     <input type="file" id="muziekUpload" accept="audio/*,.mp3,.m4a,.ogg,.wav,audio/mpeg,audio/mp4" style="display:none" onchange="verwerkMuziek(event)"/>
     <div id="muziekNu" style="display:none;align-items:center;gap:10px;margin-top:10px;font-size:14px;">
       <span id="muziekNuTitel" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
-      <button type="button" onclick="wisMuziek()" style="min-height:40px;padding:0 14px;border-radius:10px;border:0.5px solid var(--border);background:rgba(255,255,255,0.06);color:#fca5a5;font-size:14px;cursor:pointer;font-family:inherit;" data-t>🗑️ Nummer weghalen</button>
+      <button type="button" class="wis-knop" onclick="wisMuziek()" data-t>🗑️ Nummer weghalen</button>
     </div>
     <div class="status-msg" id="muziekStatus"></div>
   </div>
@@ -285,11 +290,11 @@ input, textarea { font-size:16px !important; }
   </div>
   <div id="bg-upload-sectie" class="section" style="display:none;">
     <div class="section-label" data-t>Upload eigen achtergrond</div>
-    <div onclick="document.getElementById('bgUpload').click()" style="border:2px dashed rgba(192,132,252,0.5);border-radius:16px;padding:40px 20px;text-align:center;cursor:pointer;margin-bottom:14px;background:rgba(192,132,252,0.04);">
+    <div class="upload-zone groot" onclick="document.getElementById('bgUpload').click()">
       <div style="font-size:52px;margin-bottom:12px;">🖼️</div>
       <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;" data-t>Kies een afbeelding</div>
       <div style="font-size:15px;color:var(--muted);line-height:1.6;" data-t>Wordt gebruikt als wallpaper op je home pagina</div>
-      <div style="font-size:14px;color:rgba(243,232,255,0.3);margin-top:8px;" data-t>JPG · PNG · WEBP · GIF — max 10MB</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.9);margin-top:8px;" data-t>JPG · PNG · WEBP · GIF — max 10MB</div>
     </div>
     <input type="file" id="bgUpload" accept="image/*" style="display:none" onchange="uploadAchtergrond(this)"/>
     <div id="uploadPreview" style="display:none;margin-top:4px;">
@@ -517,7 +522,7 @@ import { laadThema, bewaarThemaCache } from './thema.js?v=204'
 import { startHeartbeat } from './heartbeat.js?v=117'
 import { initSync } from './sync.js?v=162'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=149'
-import { startStickermaker } from './stickermaker.js?v=215'
+import { startStickermaker } from './stickermaker.js?v=217'
 import { tekenFibroVellen, stickerWidgetDef } from './stickerwidget.js?v=215'
 import { maakStickerkeuze } from './stickerkeuze.js?v=216' // v171: een sticker als mood
 import { leesMood, tekenMoodSticker } from './moodsticker.js?v=215'

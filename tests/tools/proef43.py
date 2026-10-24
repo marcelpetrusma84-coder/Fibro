@@ -280,6 +280,9 @@ MAG_ERBIJ |= {'Fibro v215 \u00B7 24 okt 2026'}
 # v216: de stickerkeuze altijd 4 naast elkaar (op de schermen alleen het versienummer)
 MAG_WEG |= {'Fibro v215 \u00B7 24 okt 2026'}
 MAG_ERBIJ |= {'Fibro v216 \u00B7 24 okt 2026'}
+# v217: witte stippellijnen met schaduw en duidelijkere knoppen op de Stijl-pagina (geen nieuwe teksten; alleen het versienummer)
+MAG_WEG |= {'Fibro v216 \u00B7 24 okt 2026'}
+MAG_ERBIJ |= {'Fibro v217 \u00B7 24 okt 2026'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

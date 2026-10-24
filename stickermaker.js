@@ -19,8 +19,10 @@ const STIJL = `
 .sm-velkop { display:flex; justify-content:space-between; align-items:baseline; font-size:14px; color:var(--text); margin-bottom:6px; }
 .sm-velkop span { font-size:13px; opacity:0.75; font-variant-numeric:tabular-nums; }
 .sm-raster { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:8px; }
-.sm-plek { aspect-ratio:1; min-width:0; border-radius:14px; border:1px dashed rgba(192,132,252,0.45); background:transparent; color:var(--accent); font-size:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:4px; -webkit-tap-highlight-color:transparent; }
-.sm-plek.vol { border:1px solid var(--border); background:var(--card); }
+/* v217: een lege plek met een witte stippellijn en een wit plusje, met schaduw (was licht paars): ook op een lichte foto te zien */
+.sm-plek { aspect-ratio:1; min-width:0; border-radius:14px; border:2px dashed rgba(255,255,255,0.9); background:rgba(0,0,0,0.25); color:#ffffff; font-size:28px; font-weight:600; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:4px; -webkit-tap-highlight-color:transparent; box-shadow:0 2px 8px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.4); }
+.sm-plek:not(.vol) { filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8)); }
+.sm-plek.vol { border:1px solid var(--border); background:var(--card); box-shadow:none; }
 .sm-plek img { width:100%; height:100%; object-fit:contain; pointer-events:none; }
 .sw-cel > .sm-plek { width:100%; box-sizing:border-box; }
 .sm-plek:focus-visible, .sm-scherm button:focus-visible, .sm-scherm select:focus-visible, .sm-scherm input:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }

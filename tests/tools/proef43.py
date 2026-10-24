@@ -277,6 +277,9 @@ MAG_ERBIJ |= {'Fibro v214 \u00B7 24 okt 2026'}
 # v215: acht stickers van vel 5 met een meme-geluid (op de schermen alleen het versienummer)
 MAG_WEG |= {'Fibro v214 \u00B7 24 okt 2026'}
 MAG_ERBIJ |= {'Fibro v215 \u00B7 24 okt 2026'}
+# v216: de stickerkeuze altijd 4 naast elkaar (op de schermen alleen het versienummer)
+MAG_WEG |= {'Fibro v215 \u00B7 24 okt 2026'}
+MAG_ERBIJ |= {'Fibro v216 \u00B7 24 okt 2026'}
 
 def ctx_maken(br, taal):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 900}, locale='nl-NL')

@@ -43,4 +43,18 @@ assert(sendFunction.indexOf('isFibroTestCommand(input.value)') < sendFunction.in
 assert(sendFunction.includes('getUserMedia({ video:true, audio:false })'), 'the test requests local video without microphone audio')
 assert(chat.includes('NO INVITES SENT'), 'the app makes the local-only status obvious')
 
+// Preloading, the real test flow, and the standalone preview must load the same
+// version. Otherwise the cache-first service worker can revive the old board.
+const preview = await readFile(new URL('../../chess-three-preview.html', import.meta.url), 'utf8')
+const renderer = await readFile(new URL('../../schaken-drie-ui.js', import.meta.url), 'utf8')
+const uiImports = [...(chat + preview).matchAll(/\.\/schaken-drie-ui\.js\?v=(\d+)/g)]
+assert.equal(uiImports.length, 3, 'preload, launch, and preview all declare the renderer version')
+assert.equal(new Set(uiImports.map(match => match[1])).size, 1, 'all entry points use one renderer version')
+assert(Number(uiImports[0][1]) >= 18, 'cached pre-reference renderers are replaced')
+assert(renderer.includes("'./schaak-drie.js?v=10'"), 'the original board uses the corrected seam topology')
+assert(renderer.includes('THREE_PLAYER_BOARD_ARTWORK'), 'FIBRO TEST renders the original source artwork')
+assert(chat.includes("spelSpelers = ['fibro-test-you', 'fibro-test-black', 'fibro-test-red']"), 'test identities follow the white/black/red roster')
+assert(chat.includes('onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer'), 'the regular two-player settings invite enters the local three-player flow')
+assert(chat.includes('onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null'), 'the three-player flow can return to the two-player test')
+
 console.log('Fibro local chess test mode tests passed')

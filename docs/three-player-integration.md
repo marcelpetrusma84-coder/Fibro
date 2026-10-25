@@ -40,13 +40,17 @@ geen `file://`. Webcams vereisen browsertoestemming en een veilige context.
    `main`; bewaar ook de overige kanaalregels. Deze visuele correctie voegt geen
    nieuwe migratie toe. FIBRO TEST heeft deze SQL niet nodig.
 2. Publiceer de volledige branch inclusief SVG-assets. Chat/preload/preview laden
-   renderer `v=18`, engine `v=10` en artworkmodule `v=1`; behoud consistente
+   renderer `v=19`, engine `v=10` en artworkmodule `v=1`; behoud consistente
    importversies wegens de cache-first service worker. De SVG's worden niet
    expliciet offline voorgecachet.
 3. Voer alle schaak- en beveiligingstests uit, ook na een merge met nieuwere main.
 4. Controleer naast de lokale test echte accounts, uitnodiging/acceptatie en
    beeld/geluid op verschillende apparaten. Een lokale test bewijst geen
    verbinding via NAT/TURN tussen drie echte apparaten.
+
+Tijdens een lopende partij zijn de stukken van de twee wachtende spelers 80%
+dekkend. De actieve speler blijft volledig zichtbaar, met een zachte spotlight
+langs diens buitenste thuisrand. Dit volgt elke beurt en verdwijnt na de winst.
 
 ### Bewuste spelregelvariant
 
@@ -103,10 +107,14 @@ start directly with three seats.
 
 Real invitations require the existing `sql/schaken-drie-spelers.sql` migration.
 Review its replacement realtime authorization function against any newer main
-changes. Deploy every SVG asset and keep UI `v=18`, engine `v=10` and artwork
+changes. Deploy every SVG asset and keep UI `v=19`, engine `v=10` and artwork
 `v=1` imports consistent. Run every test individually using the commands above,
 including after merging main. Separately verify three real devices and their
 audio/video connections; the local test does not validate NAT/TURN behavior.
+
+The active army stays fully opaque; the other two armies use 80% opacity.
+A soft spotlight follows the active player's outer home edge. The turn effect
+ends when the game has a winner.
 
 The artwork matches the reference; the rules remain the explicitly selected
 Fibro king-capture variant: capture a king to eliminate its army, last king wins,

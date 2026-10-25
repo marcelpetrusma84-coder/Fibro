@@ -2272,7 +2272,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     pong: './pong-ui.js?v=147',
     vieroprij: './vieroprij-ui.js?v=147',
     schaken: './schaken-ui.js?v=201',
-    schakendrie: './schaken-drie-ui.js?v=18',
+    schakendrie: './schaken-drie-ui.js?v=19',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=148',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -2852,7 +2852,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   async function startSchakenDrie(players) {
-    const m = await import('./schaken-drie-ui.js?v=18')
+    const m = await import('./schaken-drie-ui.js?v=19')
     const testMode = Boolean(fibroChessTest?.active)
     const controller = m.start({ gameChannel:testMode ? null : spelKanaal, players, userId:testMode ? 'fibro-test-you' : huidigeUser.id, localPreview:testMode, testMode, testStream:fibroChessTest?.stream || null, onTestCameraChange:stream => { if (fibroChessTest?.active) fibroChessTest.stream = stream }, onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null })
     spelSchaakDrieController = controller

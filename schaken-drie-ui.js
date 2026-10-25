@@ -3,12 +3,36 @@ import {
   legalThreePlayerMoves,
   newThreePlayerGame,
   threePlayerCellPolygon,
+  THREE_PLAYER_OUTLINE,
   THREE_PLAYER_NAMES
 } from './schaak-drie.js?v=10'
 import { THREE_PLAYER_VIEWBOX, THREE_PLAYER_BOARD_ARTWORK, threePlayerPieceArtwork } from './schaak-drie-artwork.js?v=1'
 
 const COLOR_STYLES = ['#fff', '#c4c7ce', '#ff7777']
 const LABELS = { K:'King', Q:'Queen', R:'Rook', B:'Bishop', N:'Knight', P:'Pawn' }
+
+function turnSpotlight(player) {
+  const edges = [[4,5], [3,2], [1,0]]
+  const colors = ['#fff0bd', '#9bdcff', '#ffa4a8']
+  const [start, end] = edges[player].map(index => THREE_PLAYER_OUTLINE[index])
+  const midpoint = start.map((value, index) => (value + end[index]) / 2)
+  const inward = point => point.map(value => value * .76)
+  const band = [start, end, inward(end), inward(start)].map(point => point.join(',')).join(' ')
+  const path = `M ${start.join(' ')} L ${end.join(' ')}`
+  return `<g class="chess3-turn-spotlight" data-player="${player}" aria-hidden="true" pointer-events="none">
+    <defs>
+      <linearGradient id="chess3-turn-wash" gradientUnits="userSpaceOnUse" x1="${midpoint[0]}" y1="${midpoint[1]}" x2="${inward(midpoint)[0]}" y2="${inward(midpoint)[1]}">
+        <stop stop-color="${colors[player]}" stop-opacity=".24"/>
+        <stop offset="1" stop-color="${colors[player]}" stop-opacity="0"/>
+      </linearGradient>
+      <filter id="chess3-turn-glow" filterUnits="userSpaceOnUse" x="-500" y="-450" width="1000" height="900"><feGaussianBlur stdDeviation="10"/></filter>
+    </defs>
+    <polygon points="${band}" fill="url(#chess3-turn-wash)"/>
+    <path d="${path}" fill="none" stroke="${colors[player]}" stroke-width="22" stroke-linecap="round" opacity=".72" filter="url(#chess3-turn-glow)"/>
+    <path d="${path}" fill="none" stroke="${colors[player]}" stroke-width="6" stroke-linecap="round" opacity=".95"/>
+    <path d="${path}" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".85"/>
+  </g>`
+}
 
 export function start({ gameChannel = null, players = [], userId = null, localPreview = false, inviteThird = null, testMode = false, testStream = null, onTestCameraChange = null, onReturnToTwoPlayer = null } = {}) {
   const root = document.getElementById('spelInhoud')
@@ -129,6 +153,13 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
 
   root.insertAdjacentHTML('afterbegin', `<style>
     .chess3-cameras[hidden]{display:none}.chess3-artwork-credit{margin:14px 0 0;color:#aab7c8;font-size:10px;text-align:center}.chess3-artwork-credit a{color:inherit}
+    .chess3-cell .chess3-piece{opacity:.8;transition:opacity .22s ease}
+    .chess3-board[data-turn="0"] .chess3-cell[data-player="0"] .chess3-piece,
+    .chess3-board[data-turn="1"] .chess3-cell[data-player="1"] .chess3-piece,
+    .chess3-board[data-turn="2"] .chess3-cell[data-player="2"] .chess3-piece,
+    .chess3-board[data-turn="finished"] .chess3-piece{opacity:1}
+    .chess3-turn-spotlight{pointer-events:none}
+    @media(prefers-reduced-motion:reduce){.chess3-cell .chess3-piece{transition:none}}
     .chess3-help-actions{display:inline-flex;align-items:center;gap:8px;flex-wrap:nowrap}
     .chess3-rules-button{min-height:36px;min-width:64px;padding:7px 10px;border:1px solid #b0d7ff70;border-radius:11px;background:linear-gradient(145deg,#34455e,#192535);color:#e4f3ff;font:750 11px system-ui,sans-serif;cursor:pointer;box-shadow:inset 0 1px #ffffff30,0 3px 0 #0d1521,0 6px 12px #0005}
     .chess3-rules-button:active{transform:translateY(2px);box-shadow:inset 0 1px #ffffff20,0 1px 0 #0d1521}
@@ -193,6 +224,7 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
   })
 
   function draw() {
+    svg.dataset.turn = state.winner === null ? String(state.turn) : 'finished'
     const cells = state.board.cells.map(cell => {
       const piece = state.pieces.get(cell.id)
       const points = threePlayerCellPolygon(cell)
@@ -204,7 +236,8 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
       const glyph = piece ? threePlayerPieceArtwork(piece, points) : ''
       return `<g class="${classes}" data-cell-id="${cell.id}" data-player="${piece?.player ?? ''}" role="button" tabindex="0" aria-label="${title}, ${cell.id}"><title>${title}</title><polygon points="${pointList}" fill="transparent"/>${glyph}</g>`
     }).join('')
-    svg.innerHTML = `<image class="chess3-original-board" href="${THREE_PLAYER_BOARD_ARTWORK}" x="-458" y="-396" width="916" height="792" aria-hidden="true"/>${cells}`
+    const spotlight = state.winner === null ? turnSpotlight(state.turn) : ''
+    svg.innerHTML = `<image class="chess3-original-board" href="${THREE_PLAYER_BOARD_ARTWORK}" x="-458" y="-396" width="916" height="792" aria-hidden="true"/>${spotlight}${cells}`
     const turn = state.winner === null ? state.turn : state.winner
     if (state.winner !== null) status.textContent = `${roster[state.winner].username} wins — last king standing.`
     else if (!state.active[myPlayer] && !localPreview) status.textContent = `${roster[myPlayer].username} has been eliminated. ${roster[turn].username} to move.`

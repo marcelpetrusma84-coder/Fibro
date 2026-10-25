@@ -267,6 +267,7 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
   draw()
 
   async function toggleCamera(button, tile, video) {
+    if (destroyed) return
     if (testMode) {
       if (localStream) {
         localStream.getTracks().forEach(track => track.stop())
@@ -277,7 +278,9 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
       }
       button.disabled = true; button.textContent = 'Starting test cameras…'
       try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false })
+        const stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false })
+        if (destroyed) { stream.getTracks().forEach(track => track.stop()); return }
+        localStream = stream
         paintTestCamera(localStream)
         onTestCameraChange?.(localStream)
         status.textContent = 'All three camera tiles now mirror your local webcam.'
@@ -302,9 +305,13 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
     try {
       const ice = await import('./ice-config.js?v=1')
       await ice.iceReady
+      if (destroyed) return
       iceServers = ice.ICE_SERVERS
-      localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false })
+      const stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false })
+      if (destroyed) { stream.getTracks().forEach(track => track.stop()); return }
+      localStream = stream
       video.srcObject = localStream; await video.play().catch(() => {})
+      if (destroyed) return
       tile.classList.add('has-video')
       button.textContent='Turn camera off'; button.setAttribute('aria-pressed','true')
       await Promise.all(roster.filter(player => player.id !== userId).map(player => addPeerTrack(player.id)))

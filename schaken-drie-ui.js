@@ -6,14 +6,24 @@ import {
   THREE_PLAYER_OUTLINE,
   THREE_PLAYER_NAMES
 } from './schaak-drie.js?v=10'
-import { THREE_PLAYER_VIEWBOX, THREE_PLAYER_BOARD_ARTWORK, threePlayerPieceArtwork } from './schaak-drie-artwork.js?v=2'
+import { THREE_PLAYER_VIEWBOX, THREE_PLAYER_BOARD_ARTWORK, threePlayerPieceArtwork } from './schaak-drie-artwork.js?v=3'
 
 const COLOR_STYLES = ['#fff', '#c4c7ce', '#ff7777']
 const LABELS = { K:'King', Q:'Queen', R:'Rook', B:'Bishop', N:'Knight', P:'Pawn' }
+const TURN_LIGHT_COLORS = ['#fff0bd', '#9bdcff', '#ffa4a8']
+
+function pieceLighting(player) {
+  // Shadows point away from the active home edge, towards the board's centre.
+  const [dx, dy] = [[0,-6], [5.2,3], [-5.2,3]][player] || [0,2]
+  const rim = player === null ? '' : `<feDropShadow dx="${-dx / 6}" dy="${-dy / 6}" stdDeviation=".2" flood-color="${TURN_LIGHT_COLORS[player]}" flood-opacity=".35"/>`
+  return `<defs><filter id="chess3-piece-light" filterUnits="objectBoundingBox" primitiveUnits="userSpaceOnUse" x="-35%" y="-35%" width="170%" height="170%" color-interpolation-filters="sRGB">
+    ${rim}<feDropShadow dx="${dx}" dy="${dy}" stdDeviation="1.2" flood-color="#0a1020" flood-opacity=".44"/>
+  </filter></defs>`
+}
 
 function turnSpotlight(player) {
   const edges = [[4,5], [3,2], [1,0]]
-  const colors = ['#fff0bd', '#9bdcff', '#ffa4a8']
+  const colors = TURN_LIGHT_COLORS
   const [start, end] = edges[player].map(index => THREE_PLAYER_OUTLINE[index])
   const midpoint = start.map((value, index) => (value + end[index]) / 2)
   const inward = point => point.map(value => value * .76)
@@ -154,6 +164,7 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
   root.insertAdjacentHTML('afterbegin', `<style>
     .chess3-cameras[hidden]{display:none}.chess3-artwork-credit{margin:14px 0 0;color:#aab7c8;font-size:10px;text-align:center}.chess3-artwork-credit a{color:inherit}
     .chess3-cell .chess3-piece{opacity:.8;transition:opacity .22s ease}
+    .chess3-board .chess3-cell .chess3-piece{filter:url(#chess3-piece-light)}
     .chess3-board[data-turn="0"] .chess3-cell[data-player="0"] .chess3-piece,
     .chess3-board[data-turn="1"] .chess3-cell[data-player="1"] .chess3-piece,
     .chess3-board[data-turn="2"] .chess3-cell[data-player="2"] .chess3-piece,
@@ -237,7 +248,7 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
       return `<g class="${classes}" data-cell-id="${cell.id}" data-player="${piece?.player ?? ''}" role="button" tabindex="0" aria-label="${title}, ${cell.id}"><title>${title}</title><polygon points="${pointList}" fill="transparent"/>${glyph}</g>`
     }).join('')
     const spotlight = state.winner === null ? turnSpotlight(state.turn) : ''
-    svg.innerHTML = `<image class="chess3-original-board" href="${THREE_PLAYER_BOARD_ARTWORK}" x="-458" y="-396" width="916" height="792" aria-hidden="true"/>${spotlight}${cells}`
+    svg.innerHTML = `<image class="chess3-original-board" href="${THREE_PLAYER_BOARD_ARTWORK}" x="-458" y="-396" width="916" height="792" aria-hidden="true"/>${pieceLighting(state.winner === null ? state.turn : null)}${spotlight}${cells}`
     const turn = state.winner === null ? state.turn : state.winner
     if (state.winner !== null) status.textContent = `${roster[state.winner].username} wins — last king standing.`
     else if (!state.active[myPlayer] && !localPreview) status.textContent = `${roster[myPlayer].username} has been eliminated. ${roster[turn].username} to move.`

@@ -11,6 +11,6 @@ export function threePlayerPieceArtwork(piece, polygon) {
   if (!kind || !colour) return ''
   const center = polygon.reduce((sum, point) => [sum[0] + point[0] / 4, sum[1] + point[1] / 4], [0,0])
   const size = 64
-  const href = new URL(`./assets/chess-three/glass/${kind}-${colour}.svg`, import.meta.url).href
+  const href = new URL(`./assets/chess-three/glass/${kind}-${colour}.svg?v=2`, import.meta.url).href
   return `<image class="chess3-piece" href="${href}" x="${center[0] - size / 2}" y="${center[1] - size / 2}" width="${size}" height="${size}" aria-hidden="true"/>`
 }

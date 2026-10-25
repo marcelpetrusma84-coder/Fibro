@@ -32,7 +32,9 @@ for (const [id, piece] of game.pieces) {
   const svg = await readFile(new URL(file), 'utf8')
   assert(svg.includes('viewBox="0 0 45 45"'))
   assert(svg.includes('fill="url(#glass-body)"'), 'the body uses translucent glass')
-  assert(svg.includes('stop-opacity="0.4"') || svg.includes('stop-opacity="0.38"') || svg.includes('stop-opacity="0.46"'), 'glass transmits the board rather than dimming its whole outline')
+  const body = svg.match(/<linearGradient id="glass-body"[\s\S]*?<\/linearGradient>/)[0]
+  const opacity = [...body.matchAll(/stop-opacity="([\d.]+)"/g)].map(match => Number(match[1]))
+  assert(opacity.length && opacity.every(value => value >= .8 && value < 1), 'glass is dense enough for contrast while retaining some translucency')
   assert(svg.includes('stroke="url(#glass-rim)"'), 'the contour keeps a crisp luminous rim')
   assert(!svg.includes('<!DOCTYPE'), 'material assets have no external DTD dependency')
   const original = await readFile(new URL(file.replace('/glass/', '/')), 'utf8')

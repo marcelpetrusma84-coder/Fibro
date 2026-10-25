@@ -10,12 +10,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 45 45">
 <!-- Glass/neon material adaptation. Original paths and attribution retained. CC BY-SA 3.0. -->
 <defs>
-  <linearGradient id="glass-body" gradientUnits="userSpaceOnUse" x1="7" y1="8" x2="36" y2="37"><stop offset="0" stop-color="#c8d3db" stop-opacity="0.76"/><stop offset="0.23" stop-color="#4c535a" stop-opacity="0.7"/><stop offset="0.5" stop-color="#0a0e13" stop-opacity="0.82"/><stop offset="0.76" stop-color="#69747e" stop-opacity="0.46"/><stop offset="1" stop-color="#dce7ed" stop-opacity="0.8"/></linearGradient>
+  <linearGradient id="glass-body" gradientUnits="userSpaceOnUse" x1="7" y1="8" x2="36" y2="37"><stop offset="0" stop-color="#c8d3db" stop-opacity="0.93"/><stop offset="0.23" stop-color="#4c535a" stop-opacity="0.91"/><stop offset="0.5" stop-color="#0a0e13" stop-opacity="0.96"/><stop offset="0.76" stop-color="#69747e" stop-opacity="0.84"/><stop offset="1" stop-color="#dce7ed" stop-opacity="0.94"/></linearGradient>
   <linearGradient id="glass-rim" gradientUnits="userSpaceOnUse" x1="8" y1="8" x2="36" y2="40"><stop stop-color="#edfcff"/><stop offset=".5" stop-color="#71818e"/><stop offset="1" stop-color="#caefff"/></linearGradient>
-  <filter id="neon-halo" filterUnits="userSpaceOnUse" x="0" y="0" width="45" height="45"><feGaussianBlur stdDeviation=".7"/></filter>
+  <filter id="neon-halo" filterUnits="userSpaceOnUse" x="0" y="0" width="45" height="45"><feGaussianBlur stdDeviation=".45"/></filter>
 </defs>
-<ellipse cx="22.5" cy="40" rx="11" ry="1.1" fill="#a3dfff" opacity=".32" filter="url(#neon-halo)"/>
-<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#a3dfff" stroke-width="2.3" opacity=".68" filter="url(#neon-halo)">
+<ellipse cx="22.5" cy="40" rx="11" ry="1.1" fill="#a3dfff" opacity=".18" filter="url(#neon-halo)"/>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#a3dfff" stroke-width="2.3" opacity=".45" filter="url(#neon-halo)">
 		<path d="M 22.5,9
 			C 20.29,9 18.5,10.79 18.5,13 C 18.5,13.89 18.79,14.71 19.28,15.38
 			C 17.33,16.5 16,18.59 16,21 C 16,23.03 16.94,24.84 18.41,26.03
@@ -26,7 +26,7 @@
 			C 26.21,14.71 26.5,13.89 26.5,13 C 26.5,10.79 24.71,9 22.5,9
 		Z"/>
 	</g>
-<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#111b26" stroke-width="2.4" opacity=".86">
+<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#111b26" stroke-width="2.4" opacity=".96">
 		<path d="M 22.5,9
 			C 20.29,9 18.5,10.79 18.5,13 C 18.5,13.89 18.79,14.71 19.28,15.38
 			C 17.33,16.5 16,18.59 16,21 C 16,23.03 16.94,24.84 18.41,26.03

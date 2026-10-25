@@ -40,7 +40,7 @@ geen `file://`. Webcams vereisen browsertoestemming en een veilige context.
    `main`; bewaar ook de overige kanaalregels. Deze visuele correctie voegt geen
    nieuwe migratie toe. FIBRO TEST heeft deze SQL niet nodig.
 2. Publiceer de volledige branch inclusief SVG-assets. Chat/preload/preview laden
-   renderer `v=20`, engine `v=10` en artworkmodule `v=2`; behoud consistente
+   renderer `v=21`, engine `v=10` en artworkmodule `v=3`; behoud consistente
    importversies wegens de cache-first service worker. De SVG's worden niet
    expliciet offline voorgecachet.
 3. Voer alle schaak- en beveiligingstests uit, ook na een merge met nieuwere main.
@@ -55,6 +55,9 @@ De stukken hebben nu rood glas, grijs rookglas en wit melkglas met scherpe
 neonranden. De doorschijnendheid zit in de vulling; de oorspronkelijke contouren
 en het bord blijven behouden. Neem ook `assets/chess-three/glass/` mee bij deploy.
 De materialen zijn reproduceerbaar met `node tools/generate-chess-glass.mjs`.
+De vulling is voor beter contrast 82–98% dekkend, met een getemperde halo en een
+donkere contour. Slagschaduw valt van de actieve thuisrand af, met een lichte
+reflectie aan de kant van die rand. Dit verandert mee met iedere beurt.
 
 ### Bewuste spelregelvariant
 
@@ -111,8 +114,8 @@ start directly with three seats.
 
 Real invitations require the existing `sql/schaken-drie-spelers.sql` migration.
 Review its replacement realtime authorization function against any newer main
-changes. Deploy every SVG asset and keep UI `v=20`, engine `v=10` and artwork
-`v=2` imports consistent. Run every test individually using the commands above,
+changes. Deploy every SVG asset and keep UI `v=21`, engine `v=10` and artwork
+`v=3` imports consistent. Run every test individually using the commands above,
 including after merging main. Separately verify three real devices and their
 audio/video connections; the local test does not validate NAT/TURN behavior.
 
@@ -122,6 +125,9 @@ ends when the game has a winner.
 The original piece contours now use translucent red glass, gray smoke glass and
 milky white glass with crisp neon rims. Deploy `assets/chess-three/glass/` too;
 `node tools/generate-chess-glass.mjs` reproduces these material derivatives.
+Denser 82–98% body fills, reduced halos and dark contours improve contrast.
+Cast shadows point away from the active home-edge light; a subtle facing rim
+picks up that light's colour. Material URLs are versioned independently too.
 
 The artwork matches the reference; the rules remain the explicitly selected
 Fibro king-capture variant: capture a king to eliminate its army, last king wins,

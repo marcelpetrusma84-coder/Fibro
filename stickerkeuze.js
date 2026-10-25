@@ -1,13 +1,13 @@
 // stickerkeuze.js - de stickerkeuze in de chat (v153, 15 oktober 2026; v154: tekst bij Eigen;
 // v155: de vakjes Eigen tonen je eigen stickers uit Profiel en je kunt ze versturen; v156: vel 1; v160: mp3-geluiden; v162: eigenstickers.js met versies)
 // Twee rijen van zes vakjes: bovenaan de zes vellen van Fibro (stickervellen.js), daaronder twee
-// vakjes voor eigen stickers en vier voor vellen uit de winkel. Elk vel heeft 12 stickers; op de
-// telefoon 4 naast elkaar, op een breed scherm 6. Een leeg vakje zegt wat er later komt.
+// vakjes voor eigen stickers en vier voor vellen uit de winkel. Elk vel heeft 12 stickers, altijd 4 naast
+// elkaar in 3 rijen (v216; was op een breed scherm 6 naast elkaar in 2 rijen). Een leeg vakje zegt wat er later komt.
 // Gebruik: const k = maakStickerkeuze(element, { onKies: sticker => ..., uid: () => id }); k.vernieuw() leest
 // je eigen stickers opnieuw (bij het openen). sticker = { vel, nr, naam, b, g, src }.
-import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=166'
+import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=215'
 import { leesEigen } from './eigenstickers.js?v=162'
-import { speelBeweging } from './stickerfx.js?v=180'
+import { speelBeweging } from './stickerfx.js?v=214'
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 const naamVan = n => Array.isArray(n) ? ((window.T && window.T.taal === 'en') ? n[1] : n[0]) : ''
@@ -26,7 +26,7 @@ const STIJL = `
 .sk-vak:focus-visible, .sk-sticker:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .sk-inhoud { border-top:0.5px solid var(--border); padding-top:8px; max-height:216px; overflow-y:auto; -webkit-overflow-scrolling:touch; } /* v156: een heel vel (3 rijen) zonder schuiven */
 .sk-raster { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:6px; }
-@media (min-width:600px) { .sk-raster { grid-template-columns:repeat(6, minmax(0, 1fr)); } }
+/* v216: ook op een breed scherm (Steam Deck, tablet) 4 naast elkaar, zoals op de telefoon (was: 6 vanaf 600 px) */
 .sk-sticker { height:64px; min-width:0; border:0; border-radius:10px; background:transparent; padding:2px; cursor:pointer; display:flex; align-items:center; justify-content:center; -webkit-tap-highlight-color:transparent; }
 .sk-sticker:active { background:rgba(192,132,252,0.14); }
 .sk-sticker img { max-width:100%; max-height:100%; object-fit:contain; pointer-events:none; }

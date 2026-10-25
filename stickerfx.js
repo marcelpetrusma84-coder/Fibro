@@ -8,7 +8,8 @@
 // '/* ---------- afspelen' op. Verander je daar een geluid, maak dan de mp3's opnieuw en verhoog MP3_VERSIE.
 // v161: twaalf geluiden bestaan alleen als mp3 (mp3: true, gemaakt met tests/tools/geluiden2.py), voor stickervel 1.
 // v164: nog twaalf, voor stickervel 2 (tests/tools/geluiden3.py). v165: en twaalf voor vel 3 (geluiden4.py).
-// v166: en twaalf voor vel 4 (geluiden5.py).
+// v166: en twaalf voor vel 4 (geluiden5.py). v209-v214: 35 meme-, montage- en emotiegeluiden (geluiden6.py, 64 kbps),
+// voor eigen stickers in het Stickerlab (en later voor een vel).
 // Lukt de mp3 niet, dan klinkt hun 'terug'-geluid (het geluid dat die sticker voorheen had).
 // Namen staan hier in twee talen ([Nederlands, Engels]); de taal volgt window.T.taal (taal.js).
 // Op de iPhone mag een pagina pas geluid maken na een tik: daarom zet de eerste tik op de pagina
@@ -289,6 +290,42 @@ export const GELUIDEN = {
   ahum:     { naam: ['Ahum', 'Ahem'], mp3: true, terug: 'ting' },
   jij:      { naam: ['Orkestklap', 'Orchestra hit'], mp3: true, terug: 'boem' },
   deal:     { naam: ['Kassa', 'Cash register'], mp3: true, terug: 'ting' },
+  // v209-v214: alleen als mp3 (tests/tools/geluiden6.py, 64 kbps), meme-, montage- en emotiegeluiden die Marcel koos
+  hoorn:     { naam: ['Luchthoorn', 'Air horn'], mp3: true, terug: 'alarm' },  // meme
+  badumtss:  { naam: ['Ba-dum-tss', 'Ba dum tss'], mp3: true, terug: 'klets' },  // meme
+  kras:      { naam: ['Platenkras', 'Record scratch'], mp3: true, terug: 'error' },  // meme
+  spanning:  { naam: ['Spanningsakkoord', 'Suspense sting'], mp3: true, terug: 'drama' },  // meme
+  glijfluit: { naam: ['Glijfluit', 'Slide whistle'], mp3: true, terug: 'fluit' },  // cartoon
+  pijp:      { naam: ['Vallende pijp', 'Falling pipe'], mp3: true, terug: 'boem' },  // cartoon
+  zoefweg:   { naam: ['Zoef weg', 'Run away'], mp3: true, terug: 'fluit' },  // cartoon
+  gameover:  { naam: ['Game over', 'Game over'], mp3: true, terug: 'zucht' },  // game
+  levelup:   { naam: ['Level up', 'Level up'], mp3: true, terug: 'sprong' },  // game
+  fout:      { naam: ['Fout antwoord', 'Wrong answer'], mp3: true, terug: 'zoemer' },  // game
+  ooh:       { naam: ['Ooooh!', 'Ooooh!'], mp3: true, terug: 'huh' },  // stem
+  aww:       { naam: ['Awww', 'Awww'], mp3: true, terug: 'zucht' },  // stem
+  bruh:      { naam: ['Bruh', 'Bruh'], mp3: true, terug: 'zucht' },  // stem
+  viool:     { naam: ['Treurige viool', 'Sad violin'], mp3: true, terug: 'zucht' },  // muziekje
+  tadaa:     { naam: ['Ta-daa!', 'Ta-da!'], mp3: true, terug: 'ting' },  // muziekje
+  bling:     { naam: ['Bling', 'Bling'], mp3: true, terug: 'ting' },  // montage
+  clown:     { naam: ['Clowntoeter', 'Clown horn'], mp3: true, terug: 'pop' },  // montage
+  piep:      { naam: ['Piepbeestje', 'Squeaky toy'], mp3: true, terug: 'pling' },  // montage
+  kazoo:     { naam: ['Kazoo', 'Kazoo'], mp3: true, terug: 'zucht' },  // montage
+  uitglijden: { naam: ['Uitglijden', 'Slip and fall'], mp3: true, terug: 'boem' },  // montage
+  slowmo:    { naam: ['Slow motion', 'Slow motion'], mp3: true, terug: 'drama' },  // montage
+  storing:   { naam: ['Glitch', 'Glitch'], mp3: true, terug: 'error' },  // montage
+  roffel:    { naam: ['Tromgeroffel', 'Drum roll'], mp3: true, terug: 'boem' },  // montage
+  woesj:     { naam: ['Woesj', 'Whoosh'], mp3: true, terug: 'fluit' },  // montage
+  woehoe:    { naam: ['Woehoe!', 'Woohoo!'], mp3: true, terug: 'sprong' },  // emotie
+  bang:      { naam: ['Bang', 'Scared'], mp3: true, terug: 'alarm' },  // emotie
+  verrast:   { naam: ['Oh!', 'Oh!'], mp3: true, terug: 'ting' },  // emotie
+  ieuw:      { naam: ['Ieuw!', 'Eww!'], mp3: true, terug: 'slurp' },  // emotie
+  giechel:   { naam: ['Giechel', 'Giggle'], mp3: true, terug: 'pling' },  // emotie
+  trots:     { naam: ['Trots', 'Proud'], mp3: true, terug: 'ting' },  // emotie
+  geeuw:     { naam: ['Geeuw', 'Yawn'], mp3: true, terug: 'zucht' },  // emotie
+  bluergh:   { naam: ['Misselijk', 'Queasy'], mp3: true, terug: 'slurp' },  // emotie
+  argh:      { naam: ['Argh!', 'Argh!'], mp3: true, terug: 'zoemer' },  // emotie
+  ontroerd:  { naam: ['Ontroerd', 'Touched'], mp3: true, terug: 'ting' },  // emotie
+  dankbaar:  { naam: ['Dankbaar', 'Grateful'], mp3: true, terug: 'ting' },  // emotie
 }
 
 /* ---------- afspelen ---------- */

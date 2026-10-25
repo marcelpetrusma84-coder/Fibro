@@ -415,6 +415,41 @@ gen/maak_*.py            voorbeeld-aanroepen (offline2 = 5918294, pas = 197b002,
                                  kiesVriendActie). De vertalingen blijven in taal-en.js staan (onschuldig; anders taal.js?v= in alle
                                  12 pagina's). proef100 nieuw, proef43 (v205, 'End friendship' niet meer verwacht). FIBRO_VERSIE 205
                                  (testscript_geenontvriend.py)
+                         vel5 = v206, v207 en v208 (op verzoek van Marcel): stickervel 5, chattaal (lol, rolf, omg, thx, vinkje,
+                                 no!, brb, vibing, noob, cringe, GOAT, meh): 12 plaatjes stickers/f5/NN.webp (384 x 384, geknipt uit
+                                 twee plaatjes van Marcel met tools/knip5.py, zonder achtergrond), met geluiden die er al waren
+                                 (stickerfx.js blijft gelijk, nog 67 geluiden). In DRIE stukken van hoogstens ~130 kB, en sinds v183 is
+                                 elk script een eigen versie: maak-vel5-1.py = v206 (plaatjes 01-04), maak-vel5-2.py = v207 (05-09),
+                                 maak-vel5-3.py = v208 (10-12 en de code: vel 5 in stickervellen.js, ?v=208 voor stickervellen,
+                                 stickerkeuze, stickerwidget, stickermaker en moodsticker; die laden het vel). Tussenstanden in
+                                 <S>/stap1 en stap2 (testscript_vel5.py <S> <script> <basis> <nieuw> <stuk>: elke 20e inhoudsregel).
+                                 proef101 nieuw, proef53 (leeg vel is nu vel 6), proef43 (v206-v208). FIBRO_VERSIE 206, 207 en 208
+                         meme = v209 t/m v214 (op verzoek van Marcel): 35 meme-, montage- en emotiegeluiden in stickerfx.js (mp3: true
+                                 en een terug-geluid; nu 102 geluiden), te kiezen voor eigen stickers in het Stickerlab. Gemaakt met
+                                 tools/geluiden6.py (64 kbps: de helft van de andere, niet te horen). Marcel koos ze uit 48 proefgeluiden
+                                 op een luisterpagina (24 okt). In ZES stukken, elk een versie: maak-meme-1..5.py = v209-v213 (alleen
+                                 mp3's, verdeeld op grootte, zie maak_meme.py), maak-meme-6.py = v214 (de laatste mp3's en de code:
+                                 ?v=214 voor stickerfx, stickerkeuze, stickerwidget, stickermaker en moodsticker). Tussenstanden in
+                                 <S>/stap1-5 (testscript_meme.py <S> <script> <basis> <nieuw> <stuk>: elke 20e inhoudsregel; het
+                                 leest de vereiste mp3 uit het script zelf). proef102 nieuw, proef43 (v209-v214). FIBRO_VERSIE 209-214
+                         vel5geluid = v215 (op voorstel van Claude, Marcel akkoord): acht stickers van vel 5 krijgen een meme-geluid
+                                 (OMG! ooh, Bedankt! dankbaar, Gelukt! tadaa, Nee! fout, Ben zo terug zoefweg, Noob gameover, Cringe kras,
+                                 GOAT hoorn); LOL, rolf, Vibing en Meh houden hun geluid. stickervellen.js?v=215 en de keten (stickerkeuze,
+                                 stickerwidget, stickermaker, moodsticker). proef103 nieuw, proef102 (vel 5), proef43 (v215).
+                                 FIBRO_VERSIE 215 (testscript_vel5geluid.py)
+                         raster = v216 (op verzoek van Marcel): de stickerkeuze altijd 4 naast elkaar in 3 rijen, ook op een breed
+                                 scherm (Steam Deck, tablet; was daar 6 naast elkaar in 2 rijen). Alleen stickerkeuze.js (de regel
+                                 @media (min-width:600px) weg), stickerkeuze.js?v=216 in chat.html en profiel.html. proef104 nieuw,
+                                 proef43 (v216). FIBRO_VERSIE 216 (testscript_raster.py)
+                         knoppen = v217 (op verzoek van Marcel): op de Stijl-pagina (profiel.html) de stippellijnen wit met een
+                                 schaduw (was licht paars) en de knoppen duidelijker, ook op een lichte achtergrondfoto. De kiesvakken
+                                 (.upload-zone: avatarfoto, muziek en, met de nieuwe klasse groot, de eigen achtergrond) een witte
+                                 stippellijn van 2 px, box-shadow buiten en binnen, een donker vlak; de lege plekken van het Stickerlab
+                                 (stickermaker.js, .sm-plek) ook, plus een drop-shadow en een wit plusje. De typeknoppen (Kleur,
+                                 Gradient, Wallpaper, Eigen upload) donker glas met een witte rand; de gekozen gevuld met het verloop van
+                                 de accentkleur, donkere letters. 'Nummer weghalen' klasse wis-knop (donker, rode rand). Geen nieuwe
+                                 teksten. stickermaker.js?v=217 in profiel.html. proef105 nieuw, proef43 (v217). FIBRO_VERSIE 217
+                                 (testscript_knoppen.py)
 gen/testscript.py        veiligheids- en mutatietests:
                          python3 -I testscript.py <scratch> <script> [basismap]
                          (verwacht <scratch>/nieuw = gewenste uitkomst)
@@ -679,6 +714,15 @@ tools/geluiden4.py       de 12 eigen geluiden van vel 3 (v165, handgebaren), zel
 tools/geluiden5.py       de 12 eigen geluiden van vel 4 (v166, moderne handgebaren), zelfde werkwijze: harp met hartje,
                          smakkerd, handklap, speeldoos, koortje, twijfelen, boks, wat?, pieuw!, ahum, orkestklap, kassa.
                          python3 -I geluiden5.py <map>/geluiden
+tools/geluiden6.py       de 35 meme-, montage- en emotiegeluiden (v209-v214), zelfde werkwijze als geluiden5.py maar 64 kbps; een
+                         harde klap (pijp, roffel) wordt zacht begrensd zodat ze even hard zijn. Er staan 48 geluiden in (de 13 die
+                         Marcel niet koos ook, want ze delen de toevalsreeks); alleen KEUZE wordt geschreven, met 'alle' ook de rest
+                         (de luisterpagina). Geeft precies dezelfde bestanden.   python3 -I geluiden6.py <map>/geluiden [alle]
+tools/knip5.py           de 12 plaatjes van vel 5 (v206-v208) uit twee plaatjes van Marcel (niet in de repo): per vakje alles wat
+                         van buitenaf te bereiken is zonder de witte rand over te steken is achtergrond (ook de paarse kruizen),
+                         ingesloten stukjes achtergrond eruit, bij 'noob' een stukje witte rand getekend (daar lag een paarse
+                         streep over de rand); 380 px in 384 x 384, strakke rand van ~1 px, WebP 78 (samen ~210 kB). Geeft
+                         precies dezelfde bestanden.   python3 -I knip5.py <map met plaat1.png en plaat2.png> <uitmap> [controle.png]
 tools/proef60.py         de stickergeluiden als mp3 (v160; v161: 30 bestanden, even hard gemeten als gemiddelde luidheid), echte profiel.html: 18 bestanden speelbaar en even hard, Boos =
                          zoemer.mp3 (geen code-geluid), alle 18 opgehaald na de eerste tik, elke sticker van vel 1 zijn eigen
                          mp3, twee tegelijk, geen mp3 te krijgen = code-geluid, traag = eerst code-geluid (0,4 s) en daarna mp3,
@@ -703,13 +747,14 @@ tools/proef63.py         stickervel 2 (v164) in de echte chat.html, naar proef56
                          samen < 400 kB, terug-geluid met code), na de eerste tik opgehaald, echte klik = mp3 + fxsticker:f2-12
                          (versleuteld), binnenkomend Winnaar!, Profiel-blok 'Stickervel 2'; vel 1 ongewijzigd.
                          Oude map als controle: 3 van 18.   python3 -I proef63.py <map>
-                         (proef53 kijkt sinds v166 naar vel 5 voor 'leeg vel'. proef63 geldt voor v164: sinds v165 zijn er
-                         55 geluiden en drie vellen; gebruik dan proef64.)
+                         (proef53 kijkt sinds v166 naar vel 5 en sinds v208 naar vel 6 voor 'leeg vel'. proef63 geldt voor v164:
+                         sinds v165 zijn er 55 geluiden en drie vellen; gebruik dan proef64.)
 tools/proef64.py         stickervel 3 (v165), zoals proef63 maar voor vakje 3 (handgebaren), met vel 1 en 2 ongewijzigd en
                          55 geluiden. Oude map als controle: 3 van 18.   python3 -I proef64.py <map>
                          (geldt voor v165; sinds v166 zijn er 67 geluiden en vier vellen: gebruik dan proef65)
 tools/proef65.py         stickervel 4 (v166), zoals proef64 maar voor vakje 4 (moderne handgebaren), met vel 1-3
                          ongewijzigd en 67 geluiden. Oude map als controle: 3 van 18.   python3 -I proef65.py <map>
+                         (geldt voor v166-v207; sinds v208 zijn er vijf vellen: gebruik dan proef101)
 tools/proef66.py         het bolletje op het icoon (v168), echte vrienden.html, ongelezen.js en service-worker.js: 3 ongelezen =
                          setAppBadge(3) en het kastje 3; alles gelezen = clearAppBadge, kastje 0, gewone melding weg, oproep die
                          overgaat blijft; pushmeldingen via DevTools (ServiceWorker.deliverPushMessage): bericht/buzz/gemist +1,
@@ -906,6 +951,37 @@ tools/proef99.py         de achtergrond meteen bewaren en delen (v204): echte pr
 tools/proef100.py        geen 'Vriendschap beeindigen' op een vriendprofiel (v205), NL en EN: geen knop, geen tekst, geen
                          window.ontvriend, naam en chatknop wel; Vrienden lang drukken = Verwijderen uit vriendenlijst en
                          Blokkeren. Oude map (v204): 3 van 5.   python3 -I proef100.py <map>
+tools/proef101.py        stickervel 5 (v206-v208, chattaal), echte chat.html, naar proef65: A. de 12 plaatjes (WebP 384 x 384,
+                         samen < 300 kB) zonder achtergrond: rand doorzichtig, dekt 40-85%, buitenkant overal wit, geen paarse
+                         resten; B. vakje 5: namen NL/EN, plaatjes laden, past zonder schuiven, bestaande bewegingen en geluiden
+                         (12 verschillende, nog 67), vel 1-4 gelijk, vel 6 leeg, binnenkomend GOAT, Meh versturen =
+                         geluid + fxsticker:f5-12 versleuteld; C. Profiel 'Stickervel 5'; D. kastvullen.js met de echte portier:
+                         de 12 plaatjes in de mediakast, ook zonder internet; E. Engels, geen fouten.
+                         Oude map (v205) als controle.   python3 -I proef101.py <map>
+                         (geldt voor v208-v213: 67 geluiden; sinds v214 zijn er 102: B 'geen nieuwe geluiden' is dan MIS, en sinds
+                         v215 heeft GOAT (f5-11) het geluid hoorn: zie proef103)
+tools/proef102.py        de meme-geluiden (v209-v214), echte profiel.html en stickermaker.js: A. 35 mp3's speelbaar, 0,5-2,7 s, even
+                         hard, ~64 kbps, geen ID3, samen < 520 kB; B. 102 geluiden, elk nieuw mp3 met terug-geluid, namen NL/EN,
+                         vel 1-5 gelijk; C. Stickerlab: de 35 in de keuzelijst, plaatje + Ba-dum-tss kiezen = mp3 klinkt, bewaren
+                         = geluid 'badumtss'; D. na de eerste tik opgehaald; E. kastvullen.js met de echte portier: in de mediakast,
+                         ook zonder internet; F. Engels, geen fouten. Oude map (v208) als controle.   python3 -I proef102.py <map>
+                         (sinds v215 verwacht B de nieuwe geluiden van vel 5; op v214 is die ene controle MIS)
+tools/proef103.py        acht stickers van vel 5 met een meme-geluid (v215), echte chat.html: A. de geluiden, namen en bewegingen
+                         van vel 5, twaalf verschillende; B. OMG!, Noob en GOAT versturen = precies dat mp3-bestand klinkt (herkend
+                         aan de SHA-1 van de blob: hoorn.mp3 en boing.mp3 zijn even groot), versleuteld; C. binnengekomen Ben zo
+                         terug aantikken = zoefweg; D. Engels, geen fouten. Oude map (v214) als controle.   python3 -I proef103.py <map>
+tools/proef104.py        de stickerkeuze altijd 4 naast elkaar (v216), echte chat.html op 360 x 740, 390 x 844, 768 x 1024 en
+                         1280 x 800 (Steam Deck): 4 kolommen, 12 stickers in 3 rijen van 4 met gelijke afstanden, even hoog, het
+                         hele vel zonder schuiven, keuze <= 380 px, niet breder dan het scherm. Oude map (v215): tablet en Steam
+                         Deck MIS (6 naast elkaar).   python3 -I proef104.py <map>
+tools/proef105.py        witte stippellijnen met schaduw en duidelijkere knoppen op de Stijl-pagina (v217), echte profiel.html en
+                         stickermaker.js op een zelf getekende lichte ruimtefoto en op de donkere achtergrond, telefoon en Steam
+                         Deck: A. kiesvakken en 24 lege plekken: witte stippellijn >= 2 px, schaduw, donker vlak, wit plusje, geen
+                         paars; B. gemeten in de schermafdruk (dubbele scherpte): lijn tegen vlak, plusje en bestandssoorten >= 3:1;
+                         C. typeknoppen en Nummer weghalen donker met witte/rode rand, gekozen knop gevuld, letters >= 4,5:1;
+                         D. kiesvakken openen het kiesvenster, Nummer weghalen = wisMuziek, lege plek opent het Stickerlab, volle
+                         plek zonder stippel; E. gele accentkleur; F. Engels; G. geen fouten. Oude map (v216): A, B, C, E MIS.
+                         python3 -I proef105.py <map>
 security/*.mjs           (v202, van valentijnpeters) Node-tests, te draaien vanuit de map zelf: node tests/security/test-crypto.mjs,
                          test-game-crypto.mjs (spelchat-crypto.js), test-key-recovery.mjs (het herstel in login.html)
 tools/nepslot.py         berichten versleutelen zoals crypto.js v2, in Python (pakket cryptography): Sleutelpaar(),

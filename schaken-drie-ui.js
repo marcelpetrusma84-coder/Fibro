@@ -6,7 +6,7 @@ import {
   THREE_PLAYER_OUTLINE,
   THREE_PLAYER_NAMES
 } from './schaak-drie.js?v=10'
-import { THREE_PLAYER_VIEWBOX, THREE_PLAYER_BOARD_ARTWORK, threePlayerPieceArtwork } from './schaak-drie-artwork.js?v=1'
+import { THREE_PLAYER_VIEWBOX, THREE_PLAYER_BOARD_ARTWORK, threePlayerPieceArtwork } from './schaak-drie-artwork.js?v=2'
 
 const COLOR_STYLES = ['#fff', '#c4c7ce', '#ff7777']
 const LABELS = { K:'King', Q:'Queen', R:'Rook', B:'Bishop', N:'Knight', P:'Pawn' }

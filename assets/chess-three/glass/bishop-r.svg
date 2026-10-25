@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+	Futó (fehér)
+	Eredeti: http://en.wikipedia.org/wiki/File:Chess_blt45.svg
+	Felhasználási feltételek: Nevezd meg! - Így add tovább! (Creative Commons)
+	Uray M. János
+	2013-2018
+-->
+
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="128" height="128" viewBox="0 0 45 45">
+<!-- Glass/neon material adaptation. Original paths and attribution retained. CC BY-SA 3.0. -->
+<defs>
+  <linearGradient id="glass-body" gradientUnits="userSpaceOnUse" x1="7" y1="8" x2="36" y2="37"><stop offset="0" stop-color="#ffcfda" stop-opacity="0.92"/><stop offset="0.23" stop-color="#f7194c" stop-opacity="0.72"/><stop offset="0.5" stop-color="#930825" stop-opacity="0.4"/><stop offset="0.76" stop-color="#ff103e" stop-opacity="0.78"/><stop offset="1" stop-color="#ffb0c5" stop-opacity="0.9"/></linearGradient>
+  <linearGradient id="glass-rim" gradientUnits="userSpaceOnUse" x1="8" y1="8" x2="36" y2="40"><stop stop-color="#fff0f4"/><stop offset=".5" stop-color="#ff0643"/><stop offset="1" stop-color="#ff7c9b"/></linearGradient>
+  <filter id="neon-halo" filterUnits="userSpaceOnUse" x="0" y="0" width="45" height="45"><feGaussianBlur stdDeviation=".7"/></filter>
+</defs>
+<ellipse cx="22.5" cy="40" rx="11" ry="1.1" fill="#ff1652" opacity=".32" filter="url(#neon-halo)"/>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#ff1652" stroke-width="2.3" opacity=".68" filter="url(#neon-halo)">
+		<!-- bojt -->
+		<circle cx="22.5" cy="8" r="2.5"/>
+		<!-- test -->
+		<path d="M 15,32 C 17.5,34.5 27.5,34.5 30,32 C 30.5,30.5 30,30 30,30 C 30,27.5 27.5,26 27.5,26 C 33,24.5 33.5,14.5 22.5,10.5 C 11.5,14.5 12,24.5 17.5,26 C 17.5,26 15,27.5 15,30 C 15,30 14.5,30.5 15,32 Z"/>
+		<!-- talp -->
+		<path d="M 9,36 C 12.39,35.03 19.11,36.43 22.5,34 C 25.89,36.43 32.61,35.03 36,36 C 36,36 37.65,36.54 39,38 C 38.32,38.97 37.35,38.99 36,38.5 C 32.61,37.53 25.89,38.96 22.5,37.5 C 19.11,38.96 12.39,37.53 9,38.5 C 7.646,38.99 6.677,38.97 6,38 C 7.354,36.06 9,36 9,36 Z"/>
+	</g>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke="#111b26" stroke-width="2.4" opacity=".86">
+		<!-- bojt -->
+		<circle cx="22.5" cy="8" r="2.5"/>
+		<!-- test -->
+		<path d="M 15,32 C 17.5,34.5 27.5,34.5 30,32 C 30.5,30.5 30,30 30,30 C 30,27.5 27.5,26 27.5,26 C 33,24.5 33.5,14.5 22.5,10.5 C 11.5,14.5 12,24.5 17.5,26 C 17.5,26 15,27.5 15,30 C 15,30 14.5,30.5 15,32 Z"/>
+		<!-- talp -->
+		<path d="M 9,36 C 12.39,35.03 19.11,36.43 22.5,34 C 25.89,36.43 32.61,35.03 36,36 C 36,36 37.65,36.54 39,38 C 38.32,38.97 37.35,38.99 36,38.5 C 32.61,37.53 25.89,38.96 22.5,37.5 C 19.11,38.96 12.39,37.53 9,38.5 C 7.646,38.99 6.677,38.97 6,38 C 7.354,36.06 9,36 9,36 Z"/>
+	</g>
+
+	<!-- alap -->
+	<g fill="url(#glass-body)" stroke="url(#glass-rim)" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">
+		<!-- bojt -->
+		<circle cx="22.5" cy="8" r="2.5"/>
+		<!-- test -->
+		<path d="M 15,32 C 17.5,34.5 27.5,34.5 30,32 C 30.5,30.5 30,30 30,30 C 30,27.5 27.5,26 27.5,26 C 33,24.5 33.5,14.5 22.5,10.5 C 11.5,14.5 12,24.5 17.5,26 C 17.5,26 15,27.5 15,30 C 15,30 14.5,30.5 15,32 Z"/>
+		<!-- talp -->
+		<path d="M 9,36 C 12.39,35.03 19.11,36.43 22.5,34 C 25.89,36.43 32.61,35.03 36,36 C 36,36 37.65,36.54 39,38 C 38.32,38.97 37.35,38.99 36,38.5 C 32.61,37.53 25.89,38.96 22.5,37.5 C 19.11,38.96 12.39,37.53 9,38.5 C 7.646,38.99 6.677,38.97 6,38 C 7.354,36.06 9,36 9,36 Z"/>
+	</g>
+	<!-- vonalak -->
+	<g fill="none" stroke="#79152d" stroke-width="1.5" stroke-linecap="round">
+		<path d="M 17.5,26 L 27.5,26"/>
+		<path d="M 15.0,30 L 30.0,30"/>
+		<!-- kereszt -->
+		<path d="M 22.5,15 L 22.5,22 M 20,17.5 L 25,17.5"/>
+	</g>
+
+</svg>

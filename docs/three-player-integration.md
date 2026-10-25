@@ -40,7 +40,7 @@ geen `file://`. Webcams vereisen browsertoestemming en een veilige context.
    `main`; bewaar ook de overige kanaalregels. Deze visuele correctie voegt geen
    nieuwe migratie toe. FIBRO TEST heeft deze SQL niet nodig.
 2. Publiceer de volledige branch inclusief SVG-assets. Chat/preload/preview laden
-   renderer `v=19`, engine `v=10` en artworkmodule `v=1`; behoud consistente
+   renderer `v=20`, engine `v=10` en artworkmodule `v=2`; behoud consistente
    importversies wegens de cache-first service worker. De SVG's worden niet
    expliciet offline voorgecachet.
 3. Voer alle schaak- en beveiligingstests uit, ook na een merge met nieuwere main.
@@ -51,6 +51,10 @@ geen `file://`. Webcams vereisen browsertoestemming en een veilige context.
 Tijdens een lopende partij zijn de stukken van de twee wachtende spelers 80%
 dekkend. De actieve speler blijft volledig zichtbaar, met een zachte spotlight
 langs diens buitenste thuisrand. Dit volgt elke beurt en verdwijnt na de winst.
+De stukken hebben nu rood glas, grijs rookglas en wit melkglas met scherpe
+neonranden. De doorschijnendheid zit in de vulling; de oorspronkelijke contouren
+en het bord blijven behouden. Neem ook `assets/chess-three/glass/` mee bij deploy.
+De materialen zijn reproduceerbaar met `node tools/generate-chess-glass.mjs`.
 
 ### Bewuste spelregelvariant
 
@@ -107,14 +111,17 @@ start directly with three seats.
 
 Real invitations require the existing `sql/schaken-drie-spelers.sql` migration.
 Review its replacement realtime authorization function against any newer main
-changes. Deploy every SVG asset and keep UI `v=19`, engine `v=10` and artwork
-`v=1` imports consistent. Run every test individually using the commands above,
+changes. Deploy every SVG asset and keep UI `v=20`, engine `v=10` and artwork
+`v=2` imports consistent. Run every test individually using the commands above,
 including after merging main. Separately verify three real devices and their
 audio/video connections; the local test does not validate NAT/TURN behavior.
 
 The active army stays fully opaque; the other two armies use 80% opacity.
 A soft spotlight follows the active player's outer home edge. The turn effect
 ends when the game has a winner.
+The original piece contours now use translucent red glass, gray smoke glass and
+milky white glass with crisp neon rims. Deploy `assets/chess-three/glass/` too;
+`node tools/generate-chess-glass.mjs` reproduces these material derivatives.
 
 The artwork matches the reference; the rules remain the explicitly selected
 Fibro king-capture variant: capture a king to eliminate its army, last king wins,

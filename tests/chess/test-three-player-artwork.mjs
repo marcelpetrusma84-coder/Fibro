@@ -31,7 +31,13 @@ for (const [id, piece] of game.pieces) {
   const file = markup.match(/href="([^"]+)"/)[1]
   const svg = await readFile(new URL(file), 'utf8')
   assert(svg.includes('viewBox="0 0 45 45"'))
-  if (piece.color === 'red') assert(svg.includes('fill="#F66"'))
-  if (piece.color === 'white') assert(svg.includes('fill="#FFF"'))
+  assert(svg.includes('fill="url(#glass-body)"'), 'the body uses translucent glass')
+  assert(svg.includes('stop-opacity="0.4"') || svg.includes('stop-opacity="0.38"') || svg.includes('stop-opacity="0.46"'), 'glass transmits the board rather than dimming its whole outline')
+  assert(svg.includes('stroke="url(#glass-rim)"'), 'the contour keeps a crisp luminous rim')
+  assert(!svg.includes('<!DOCTYPE'), 'material assets have no external DTD dependency')
+  const original = await readFile(new URL(file.replace('/glass/', '/')), 'utf8')
+  for (const path of original.matchAll(/\bd="([^"]+)"/g)) {
+    assert(svg.includes(`d="${path[1]}"`), 'the material preserves every original piece contour')
+  }
 }
 console.log('Three-player reference artwork tests passed')

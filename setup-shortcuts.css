@@ -1,0 +1,32 @@
+.fibro-shortcuts{margin:0 0 18px;padding:14px;border:1px solid #cda8ff75;border-radius:17px;background:linear-gradient(135deg,#62428642,#271638d9);box-shadow:inset 0 1px #ffffff1f,0 4px 0 #160b2680,0 10px 24px #0003;color:var(--text,#f3e8ff);font:13px/1.5 'DM Sans',system-ui,sans-serif}
+.fibro-shortcuts-label{display:flex;align-items:flex-start;gap:11px;cursor:pointer}
+.fibro-shortcuts-label input{flex:none;appearance:auto;accent-color:#c084fc;width:21px;height:21px;margin-top:3px;cursor:pointer}
+.fibro-shortcuts-label strong{display:block;font-size:13px;font-weight:750}
+.fibro-shortcuts-label small{display:block;margin-top:2px;color:#d8c6ea;font-size:11px}
+.fibro-shortcuts-brand{flex:none;width:30px;height:30px;margin-left:auto;border-radius:8px;box-shadow:0 2px 8px #0005}
+.fibro-shortcuts-details{margin-top:14px}
+.fibro-shortcuts-details[hidden],.fibro-shortcuts [hidden]{display:none!important}
+.fibro-shortcuts-links{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.fibro-shortcuts-link{display:flex;align-items:center;gap:9px;min-height:64px;padding:10px;border:1px solid #e1c5ff40;border-radius:12px;background:linear-gradient(145deg,#ffffff12,#ffffff04);color:inherit;text-decoration:none;box-shadow:inset 0 1px #ffffff12,0 3px 6px #0002}
+.fibro-shortcuts-link img{width:30px;height:30px;border-radius:7px;flex:none}
+.fibro-shortcuts-link span{font-size:12px;font-weight:700}
+.fibro-shortcuts-link small{display:block;font-size:10px;font-weight:400;color:#d4c1e4}
+.fibro-shortcuts-note{margin:11px 0 0;color:#d8c6ea;font-size:11px;line-height:1.5}
+.fibro-shortcuts-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.fibro-shortcuts button{min-height:40px;padding:8px 11px;border:1px solid #d9b6ff7a;border-radius:10px;background:linear-gradient(145deg,#e4c5ff,#b47cdf);box-shadow:inset 0 1px #fff7,0 3px 0 #634178;color:#21112e;font:700 12px 'DM Sans',system-ui,sans-serif;cursor:pointer}
+.fibro-shortcuts button:active{transform:translateY(2px);box-shadow:inset 0 1px #fff7,0 1px 0 #634178}
+.fibro-shortcuts button:disabled{opacity:.65;cursor:wait}
+.fibro-shortcuts button.secondary{color:#f3e8ff;background:linear-gradient(145deg,#68408770,#351d4a70);box-shadow:inset 0 1px #ffffff1c,0 3px 0 #1a1026}
+.fibro-shortcuts :is(button,a,input,summary):focus-visible{outline:2px solid #efd2ff;outline-offset:3px}
+.fibro-shortcuts-status{margin:10px 0 0;font-size:12px;line-height:1.5}
+.fibro-shortcuts-status:empty{display:none}
+.fibro-shortcuts-status[data-kind=success]{color:#a7f3c9}
+.fibro-shortcuts-status[data-kind=error]{color:#ffd49d}
+.fibro-shortcuts-steps{margin-top:12px;padding:10px;border:1px solid #e1c5ff30;border-radius:10px;background:#130c1f40}
+.fibro-shortcuts-steps summary{cursor:pointer;font-size:12px;font-weight:700}
+.fibro-shortcuts-steps ol{padding-left:20px;margin:9px 0 0;font-size:11px;line-height:1.6}
+.fibro-shortcuts-address{overflow-wrap:anywhere;font-size:10px;color:#c3afda;margin-top:9px}
+@media(max-width:350px){.fibro-shortcuts{margin-inline:10px;padding:12px}.fibro-shortcuts-brand{display:none}.fibro-shortcuts-links{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.fibro-shortcuts button:active{transform:none}}
+
+.fibro-shortcuts-fallback{margin-top:14px;padding:0 12px 12px;border:1px solid #d9b6ff45;border-radius:12px;background:#160d22a0}

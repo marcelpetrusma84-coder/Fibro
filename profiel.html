@@ -138,25 +138,49 @@ input, textarea { font-size:16px !important; }
 <link rel="stylesheet" href="android-fix.css?v=1">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="stijl.css?v=3">
+<link rel="stylesheet" href="profile-controls.css?v=2">
+<script src="profile-controls.js?v=2"></script>
+<link rel="stylesheet" href="app-depth.css?v=2">
 </head>
-<body>
+<body data-fibro-page="style">
 <div class="top-bar" role="banner">
   <span class="top-title" data-t>Mijn stijl</span>
   <button class="save-top-btn" onclick="slaAllesOp()" data-t>Opslaan</button>
 </div>
 <main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0" data-t>Fibro – Mijn stijl</h1>
 
-<div class="main-tabs" tabindex="0" aria-label="Onderdelen van je stijl" data-t-attr="aria-label">
-  <div class="main-tab active" onclick="switchTab('profiel')" data-t>👤 Profiel</div>
-  <div class="main-tab" onclick="switchTab('achtergrond')" data-t>🖼 Achtergrond</div>
-  <div class="main-tab" onclick="switchTab('animatie')" data-t>✨ Animatie</div>
-  <div class="main-tab" onclick="switchTab('lettertype')" data-t>🔤 Lettertype</div>
-  <div class="main-tab" onclick="switchTab('kleur')" data-t>💜 Kleur</div>
-  <div class="main-tab" onclick="switchTab('widgets')" data-t>🧩 Widgets</div>
-  <div class="main-tab" onclick="switchTab('stickers')" data-t>🎨 Stickers</div>
-</div>
+<nav class="profile-nav" aria-label="Onderdelen van je stijl" data-t-attr="aria-label">
+  <div class="profile-nav-rail">
+    <button type="button" class="profile-nav-arrow" id="profile-nav-previous" aria-label="Vorige onderdelen" data-t-attr="aria-label" disabled><span aria-hidden="true">‹</span></button>
+    <div class="main-tabs" role="tablist" aria-label="Onderdelen van je stijl" data-t-attr="aria-label">
+      <div class="profile-tab-group" role="presentation">
+        <span class="profile-tab-group-label" aria-hidden="true" data-t>Persoonlijk</span>
+        <div class="profile-tab-group-buttons" role="presentation">
+          <button type="button" role="tab" id="tab-profiel" class="main-tab active" data-panel="profiel" aria-controls="panel-profiel" aria-selected="true" tabindex="0" onclick="switchTab('profiel')" data-t>👤 Profiel</button>
+        </div>
+      </div>
+      <div class="profile-tab-group" role="presentation">
+        <span class="profile-tab-group-label" aria-hidden="true" data-t>Uiterlijk</span>
+        <div class="profile-tab-group-buttons" role="presentation">
+          <button type="button" role="tab" id="tab-achtergrond" class="main-tab" data-panel="achtergrond" aria-controls="panel-achtergrond" aria-selected="false" tabindex="-1" onclick="switchTab('achtergrond')" data-t>🖼 Achtergrond</button>
+          <button type="button" role="tab" id="tab-animatie" class="main-tab" data-panel="animatie" aria-controls="panel-animatie" aria-selected="false" tabindex="-1" onclick="switchTab('animatie')" data-t>✨ Animatie</button>
+          <button type="button" role="tab" id="tab-lettertype" class="main-tab" data-panel="lettertype" aria-controls="panel-lettertype" aria-selected="false" tabindex="-1" onclick="switchTab('lettertype')" data-t>🔤 Lettertype</button>
+          <button type="button" role="tab" id="tab-kleur" class="main-tab" data-panel="kleur" aria-controls="panel-kleur" aria-selected="false" tabindex="-1" onclick="switchTab('kleur')" data-t>💜 Kleur</button>
+        </div>
+      </div>
+      <div class="profile-tab-group" role="presentation">
+        <span class="profile-tab-group-label" aria-hidden="true" data-t>Inhoud</span>
+        <div class="profile-tab-group-buttons" role="presentation">
+          <button type="button" role="tab" id="tab-widgets" class="main-tab" data-panel="widgets" aria-controls="panel-widgets" aria-selected="false" tabindex="-1" onclick="switchTab('widgets')" data-t>🧩 Widgets</button>
+          <button type="button" role="tab" id="tab-stickers" class="main-tab" data-panel="stickers" aria-controls="panel-stickers" aria-selected="false" tabindex="-1" onclick="switchTab('stickers')" data-t>🎨 Stickers</button>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="profile-nav-arrow" id="profile-nav-next" aria-label="Volgende onderdelen" data-t-attr="aria-label"><span aria-hidden="true">›</span></button>
+  </div>
+</nav>
 <div class="status-msg" id="statusMsg"></div>
-<div class="panel active" id="panel-profiel">
+<div class="panel active" id="panel-profiel" role="tabpanel" aria-labelledby="tab-profiel" aria-hidden="false">
   <div class="section">
     <div class="section-label" data-t>Avatar</div>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
@@ -204,10 +228,10 @@ input, textarea { font-size:16px !important; }
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
         <div id="moodEmojiGekozen" style="font-size:28px;min-width:44px;text-align:center;cursor:pointer;background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:6px;" onclick="toggleMoodPicker()">😊</div>
         <input class="field" id="editMood" placeholder="Hoe voel je je vandaag?" data-t-attr="placeholder" style="flex:1;margin:0;"/>
-        <div onclick="toggleOnlineStatus()" id="onlineToggle" style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--card);border:0.5px solid var(--border);border-radius:20px;padding:6px 12px;flex-shrink:0;">
-          <div id="onlineDot" style="width:10px;height:10px;border-radius:50%;background:#22c55e;"></div>
-          <span id="onlineLabel" style="font-size:12px;color:var(--text);">Online</span>
-        </div>
+        <button type="button" role="switch" aria-checked="true" data-online="true" onclick="toggleOnlineStatus()" id="onlineToggle">
+          <span id="onlineDot" aria-hidden="true"></span>
+          <span id="onlineLabel">Online</span>
+        </button>
       </div>
       <div id="moodEmojiPicker" style="display:none;flex-wrap:wrap;gap:6px;padding:10px;background:var(--card);border:0.5px solid var(--border);border-radius:12px;margin-bottom:8px;">
       </div>
@@ -230,7 +254,7 @@ input, textarea { font-size:16px !important; }
     <div class="status-msg" id="muziekStatus"></div>
   </div>
 </div>
-<div class="panel" id="panel-achtergrond">
+<div class="panel" id="panel-achtergrond" role="tabpanel" aria-labelledby="tab-achtergrond" aria-hidden="true">
   <div class="section">
     <div class="section-label" data-t>Type achtergrond</div>
     <div class="type-btns">
@@ -307,7 +331,7 @@ input, textarea { font-size:16px !important; }
     </div>
   </div>
 </div>
-<div class="panel" id="panel-animatie">
+<div class="panel" id="panel-animatie" role="tabpanel" aria-labelledby="tab-animatie" aria-hidden="true">
   <div class="section">
     <div class="section-label" data-t>Live preview</div>
     <div class="anim-preview"><canvas id="previewCanvas"></canvas></div>
@@ -327,13 +351,13 @@ input, textarea { font-size:16px !important; }
     </div>
   </div>
 </div>
-<div class="panel" id="panel-lettertype">
+<div class="panel" id="panel-lettertype" role="tabpanel" aria-labelledby="tab-lettertype" aria-hidden="true">
   <div class="section">
     <div class="section-label" data-t>Kies je lettertype</div>
     <div class="font-grid" id="fontGrid"></div>
   </div>
 </div>
-<div class="panel" id="panel-kleur">
+<div class="panel" id="panel-kleur" role="tabpanel" aria-labelledby="tab-kleur" aria-hidden="true">
   <div class="section">
     <div class="section-label" data-t>Accentkleur</div>
     <div class="card">
@@ -395,7 +419,7 @@ input, textarea { font-size:16px !important; }
     </div>
   </div>
 </div>
-<div class="panel" id="panel-widgets">
+<div class="panel" id="panel-widgets" role="tabpanel" aria-labelledby="tab-widgets" aria-hidden="true">
   <div class="section">
     <div class="section-label" data-t>Actieve widgets</div>
     <div class="widget-list">
@@ -415,10 +439,12 @@ input, textarea { font-size:16px !important; }
     <div style="margin-top:24px;text-align:center;">
       <span onclick="testTogglePlus()" id="testPlusLink" style="display:none;font-size:11px;color:rgba(255,255,255,0.15);cursor:pointer;">🔧 test</span>
     </div>
+    <div class="widget-list widget-list-secondary">
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">⏰</div><div><div class="widget-name" data-t>Countdown</div><div class="widget-desc" data-t>Aftellen naar een datum</div></div></div><div class="toggle off" id="widget-countdown" onclick="toggleWidget('countdown')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">📊</div><div><div class="widget-name" data-t>Poll</div><div class="widget-desc" data-t>Laat vrienden stemmen</div></div></div><div class="toggle off" id="widget-poll" onclick="toggleWidget('poll')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">⏱</div><div><div class="widget-name" data-t>Opteltimer</div><div class="widget-desc" data-t>Tellen sinds een datum</div></div></div><div class="toggle off" id="widget-opteltimer" onclick="toggleWidget('opteltimer')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">✍</div><div><div class="widget-name" data-t>Quote</div><div class="widget-desc" data-t>Favoriete citaat tonen</div></div></div><div class="toggle off" id="widget-quote" onclick="toggleWidget('quote')"><div class="toggle-dot"></div></div></div>
+    </div>
     <div style="display:none;">
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🗺</div><div><div class="widget-name" data-t>Locatie</div><div class="widget-desc" data-t>Toon je stad</div></div></div><div class="toggle off" id="widget-locatie" onclick="toggleWidget('locatie')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">❓</div><div><div class="widget-name" data-t>Vragen</div><div class="widget-desc" data-t>Vrienden stellen vragen</div></div></div><div class="toggle off" id="widget-vragen" onclick="toggleWidget('vragen')"><div class="toggle-dot"></div></div></div>
@@ -446,7 +472,7 @@ input, textarea { font-size:16px !important; }
     </div>
   </div>
 </div>
-<div class="panel" id="panel-stickers">
+<div class="panel" id="panel-stickers" role="tabpanel" aria-labelledby="tab-stickers" aria-hidden="true">
   <div class="section"><div class="section-label" data-t>Je eigen chatstickers</div><div id="eigenStickers"></div></div>
   <div id="fibroStickers"></div>
 </div>
@@ -490,8 +516,7 @@ input, textarea { font-size:16px !important; }
     g('editMood').value = moodTekst
     g('moodEmojiGekozen').textContent = ms ? '\ud83c\udfa8' : moodEmoji // v171: het plaatje komt zodra de pagina geladen is
     g('moodEmojiGekozen').dataset.waarde = moodEmoji
-    g('onlineDot').style.background = online === 'Online' ? '#22c55e' : '#6b7280'
-    g('onlineLabel').textContent = online
+    toonOnlineLamp(online === 'Online')
     if (g('previewNaam')) g('previewNaam').textContent = lokaal.naam || p.username || T('Jouw naam')
     if (g('previewBio')) g('previewBio').textContent = lokaal.bio || T('Jouw bio verschijnt hier')
     if (g('bioTeller')) g('bioTeller').textContent = T('{n} tekens over', { n: 100 - (lokaal.bio || '').length })
@@ -526,8 +551,10 @@ import { startStickermaker } from './stickermaker.js?v=217'
 import { tekenFibroVellen, stickerWidgetDef } from './stickerwidget.js?v=215'
 import { maakStickerkeuze } from './stickerkeuze.js?v=216' // v171: een sticker als mood
 import { leesMood, tekenMoodSticker } from './moodsticker.js?v=215'
+import { maakWidgetWijzigingsBewaking } from './profile-unsaved.js?v=2'
 
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek']
+const widgetBewaking = maakWidgetWijzigingsBewaking({ getWidgets: () => actieveWidgets })
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
 // v173: de oude emoji-stickers (Natuur & Planten, Sfeer & Magie, Muziek & Kunst, Dieren, 'Actieve stickers') en de
 // widget 'Sticker board' zijn weg: ze werden alleen op dit toestel bewaard en nergens getoond.
@@ -867,8 +894,7 @@ async function init(){
     } else { gekozenMoodEmoji = moodWaarde() || gekozenMoodEmoji; toonMoodKeuze(gekozenMoodEmoji) }
     if(!(vroeg&&document.getElementById('onlineLabel').textContent!==vroeg.online)){
     isOnline = profiel.toon_online ?? true
-    document.getElementById('onlineDot').style.background = isOnline ? '#22c55e' : '#6b7280'
-    document.getElementById('onlineLabel').textContent = isOnline ? 'Online' : 'Offline'
+    toonOnlineLamp(isOnline)
     }
 
     const userId=huidigeUser.id
@@ -885,7 +911,8 @@ async function init(){
     toonAchtergrondKeuze(lokaal.bgKleur||profiel?.achtergrond_kleur,true) // v204: ook een gradient of wallpaper
     if(lokaal.animatie){huidigeAnimatie=lokaal.animatie;updateAnimatieUI()}
     if(lokaal.lettertype){huidigLettertype=lokaal.lettertype;document.body.style.fontFamily=lokaal.lettertype;localStorage.setItem('fibro_lettertype',lokaal.lettertype)}
-    if(lokaal.widgets)actieveWidgets=lokaal.widgets.filter(w=>w!=='stickerboard') // v173: Sticker board is weg
+    actieveWidgets=widgetBewaking.initialize(Array.isArray(lokaal.widgets)?lokaal.widgets.filter(w=>w!=='stickerboard'):['gastenboek','mood','muziek']) // v173: Sticker board is weg
+    widgetBewaking.changed()
     const bestaandeWallpaper=await laadFotoUitDB('bg_wallpaper_'+userId)
     // v138: een grote PNG-achtergrond (van een iPhone) op de achtergrond kleiner maken
     maakAchtergrondKleiner(userId,bestaandeWallpaper).then(k=>{if(!k)return;const im=document.querySelector('#uploadedWallpaper img');if(im)im.src=k;console.log('[foto] achtergrond kleiner gemaakt:',Math.round(bestaandeWallpaper.length/1024),'->',Math.round(k.length/1024),'kB')}).catch(()=>{})
@@ -896,6 +923,7 @@ async function init(){
     onFotoOntvangen: (vriendId, blob, meta) => console.log('📷 Foto ontvangen van', vriendId),
     onStatus: (vriendId, status) => console.log('P2P status:', vriendId, status)
   })
+  if(!widgetBewaking.initialized){actieveWidgets=widgetBewaking.initialize(['gastenboek','mood','muziek']);widgetBewaking.changed()}
   bouwFontGrid();bouwAvatarPicker();updateWidgetToggles();toonHuidigeMuziek()
   startStickermaker(document.getElementById('eigenStickers'), huidigeUser.id, stickerWidgets) // v154: Stickerlab (eigen stickers)
   tekenFibroVellen(document.getElementById('fibroStickers'), stickerWidgets) // v157: stickervel 1 enz., met knopje voor Home
@@ -904,13 +932,19 @@ async function init(){
 }
 function updateBioTeller(){const el=document.getElementById('bioTeller');if(el)el.textContent=T('{n} tekens over',{n:100-document.getElementById('editBio').value.length})}
 function updatePreview(){updateBioTeller();(document.getElementById('previewNaam')||{}).textContent=document.getElementById('editNaam').value||T('Jouw naam');(document.getElementById('previewBio')||{}).textContent=document.getElementById('editBio').value||T('Jouw bio verschijnt hier')}
-document.addEventListener('DOMContentLoaded',function(){const b=document.querySelector('.main-tabs');if(!b)return;let neer=false,x0=0,s0=0,ver=0;
-b.addEventListener('wheel',function(e){if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){b.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});
-b.addEventListener('mousedown',function(e){neer=true;ver=0;x0=e.pageX;s0=b.scrollLeft;b.style.cursor='grabbing'});
-window.addEventListener('mousemove',function(e){if(!neer)return;const d=e.pageX-x0;if(Math.abs(d)>3)ver=1;b.scrollLeft=s0-d;e.preventDefault()});
-window.addEventListener('mouseup',function(){if(!neer)return;neer=false;b.style.cursor='';if(ver)setTimeout(function(){ver=0},50)});
-b.addEventListener('click',function(e){if(ver){e.stopPropagation();e.preventDefault()}},true)})
-window.switchTab=function(tab){document.querySelectorAll('.main-tab').forEach((t,i)=>{const tabs=['profiel','achtergrond','animatie','lettertype','kleur','widgets','stickers'];t.classList.toggle('active',tabs[i]===tab)});document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('panel-'+tab).classList.add('active');if(tab==='animatie')startAnimatiePreview();else stopAnimatiePreview()}
+window.switchTab=function(tab){
+  const panel=document.getElementById('panel-'+tab)
+  if(!panel)return
+  document.querySelectorAll('.main-tab').forEach(button=>{
+    const selected=button.dataset.panel===tab
+    button.classList.toggle('active',selected)
+    button.setAttribute('aria-selected',String(selected))
+    button.tabIndex=selected?0:-1
+    if(selected)button.scrollIntoView({block:'nearest',inline:'nearest',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})
+  })
+  document.querySelectorAll('.panel').forEach(item=>{const active=item===panel;item.classList.toggle('active',active);item.setAttribute('aria-hidden',String(!active))})
+  if(tab==='animatie')startAnimatiePreview();else stopAnimatiePreview()
+}
 function bouwAvatarPicker(){const picker=document.getElementById('avatarPicker');picker.innerHTML='';avatarEmojis.forEach(e=>{const span=document.createElement('span');span.className='emoji-opt';span.textContent=e;span.onclick=()=>{window._avatarKeuze=(window._avatarKeuze||0)+1;document.getElementById('avatarEmoji').textContent=e;(document.getElementById('previewAvatar')||{}).textContent=e;document.getElementById('avatarPickerWrap').style.display='none'};picker.appendChild(span)})}
 window.switchAvatarTab=function(tab){if(tab==='emoji'){document.getElementById('avatarEmojiTab').style.display='block';document.getElementById('avatarFotoTab').style.display='none';document.getElementById('tabEmoji').style.cssText='flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;';document.getElementById('tabFoto').style.cssText='flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;'}else{document.getElementById('avatarEmojiTab').style.display='none';document.getElementById('avatarFotoTab').style.display='block';document.getElementById('tabFoto').style.cssText='flex:1;padding:7px;border-radius:20px;background:rgba(192,132,252,0.2);border:0.5px solid var(--accent);color:var(--accent);font-size:14px;cursor:pointer;';document.getElementById('tabEmoji').style.cssText='flex:1;padding:7px;border-radius:20px;background:var(--card);border:0.5px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;'}}
 // v186: een gekozen foto is meteen je avatar: in het rondje en op dit toestel. Kiezen en Opslaan is genoeg (zo werkte
@@ -1054,10 +1088,10 @@ window.testTogglePlus = async function() {
   alert('Fibro+ test-status (bevestigd uit database): ' + (bijgewerkt.is_plus ? 'AAN' : 'UIT') + '\n\nHerlaad index.html om het effect te zien.')
 }
 
-window.toggleWidget=function(naam){const toggle=document.getElementById('widget-'+naam);if(actieveWidgets.includes(naam)){actieveWidgets=actieveWidgets.filter(w=>w!==naam);toggle.classList.remove('on');toggle.classList.add('off')}else{actieveWidgets.push(naam);toggle.classList.remove('off');toggle.classList.add('on')}}
+window.toggleWidget=function(naam){const toggle=document.getElementById('widget-'+naam);if(actieveWidgets.includes(naam)){actieveWidgets=actieveWidgets.filter(w=>w!==naam);toggle.classList.remove('on');toggle.classList.add('off')}else{actieveWidgets.push(naam);toggle.classList.remove('off');toggle.classList.add('on')};widgetBewaking.changed()}
 // v157: stickers als widget op Home (stickerwidget.js): aan of uit zoals de widgets, bewaard met Opslaan
-const stickerWidgets={aan:n=>actieveWidgets.includes(n),zet:(n,aan)=>{actieveWidgets=actieveWidgets.filter(w=>w!==n);if(aan)actieveWidgets.push(n)}}
-function updateWidgetToggles(){actieveWidgets.forEach(w=>{const el=document.getElementById('widget-'+w);if(el){el.classList.remove('off');el.classList.add('on')}})}
+const stickerWidgets={aan:n=>actieveWidgets.includes(n),zet:(n,aan)=>{actieveWidgets=actieveWidgets.filter(w=>w!==n);if(aan)actieveWidgets.push(n);widgetBewaking.changed()}}
+function updateWidgetToggles(){widgetBewaking.syncToggles()}
 // v185: je eigen avatarfoto van dit toestel weghalen (je koos een emoji)
 async function wisEigenAvatarFoto() {
   const userId = huidigeUser?.id
@@ -1122,6 +1156,7 @@ async function haalWallpaperDataOp() {
 }
 
 window.slaAllesOp=async function(){
+  const opgeslagenWidgets = [...actieveWidgets]
   const naam=document.getElementById('editNaam').value.trim()
   const bio=document.getElementById('editBio').value.trim()
   const mood = (gekozenMoodEmoji + ' ' + document.getElementById('editMood').value.trim()).trim()
@@ -1237,7 +1272,7 @@ window.slaAllesOp=async function(){
   if(!error){const nieuw=Object.assign({},profiel||{},{accent_kleur:accentKleur,accent_kleur2:accentKleur2,achtergrond_kleur:bgKleur,lettertype:huidigLettertype,animatie:huidigeAnimatie,online_status:isOnline,toon_online:isOnline,offline_emoji:gekozenMoodEmoji,offline_bericht:document.getElementById('editMood').value.trim()||'Offline',avatar_data:avatarData},rij.avatar_url?{avatar_url:rij.avatar_url}:{});profiel=nieuw;bewaarProfielCache(huidigeUser.id,nieuw)}
   const msg=document.getElementById('statusMsg')
   if(error){msg.className='status-msg error';msg.textContent=T('✗ Opslaan mislukt: {fout}',{fout:error.message})}
-  else{msg.className='status-msg success';msg.textContent=T('✓ Profiel opgeslagen!');setTimeout(()=>msg.className='status-msg',2000)}
+  else{widgetBewaking.markSaved(opgeslagenWidgets);msg.className='status-msg success';msg.textContent=T('✓ Profiel opgeslagen!');setTimeout(()=>msg.className='status-msg',2000)}
   window.scrollTo(0,0)
 }
 window.uitloggen=async function(){sessionStorage.setItem('fibro_bewust_uitloggen','1');localStorage.removeItem('fibro_lettertype');localStorage.removeItem('fibro_lettertype');try{localStorage.removeItem('fibro_thema_'+huidigeUser.id);localStorage.removeItem('fibro_profielcache_'+huidigeUser.id)}catch(e){};try{const u=huidigeUser.id;Object.keys(localStorage).forEach(k=>{if(k.startsWith('fibro_chatlog_'+u+'_')||k==='fibro_chatvrienden_'+u||k==='fibro_gastenboek_'+u||k==='fibro_vriendenpagina_'+u||k==='fibro_chatlogs_bewaard_'+u||k.startsWith('fibro_vriendgb_'+u+'_')||k==='fibro_nietverstuurd_'+u||(k.startsWith('vriend_cache_')&&k.endsWith('_'+u)))localStorage.removeItem(k)})}catch(e){};await supabase.auth.signOut({scope:'local'});window.location.href='login.html'}
@@ -1274,8 +1309,7 @@ let isOnline = window._profielVroeg ? window._profielVroeg.online === 'Online' :
 window.toggleOnlineStatus = async function() {
   isOnline = !isOnline
   try { localStorage.setItem('fibro_ik_offline', isOnline ? '0' : '1') } catch (e) {}
-  document.getElementById('onlineDot').style.background = isOnline ? '#22c55e' : '#6b7280'
-  document.getElementById('onlineLabel').textContent = isOnline ? 'Online' : 'Offline'
+  toonOnlineLamp(isOnline)
   await supabase.from('profiles').update({
     online_status: isOnline,
     toon_online: isOnline
@@ -1346,7 +1380,7 @@ startMeldingen()
 </script>
 <script src="swipe.js?v=95"></script>
 
-<script type="module">import { vulSpelVersies } from "./spelversies.js?v=3"; vulSpelVersies()</script>
+<script type="module">import { vulSpelVersies } from "./spelversies.js?v=4"; vulSpelVersies()</script>
 <script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=198"; startBelLuisteraar()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=197"; startSpelUitnodigingLuisteraar()</script>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TEST · Setup shortcuts</title><link rel="stylesheet" href="../../setup-shortcuts.css?v=3"><style>body{max-width:480px;margin:25px auto;padding:12px;background:#1a0a2e;color:#f3e8ff;font:14px system-ui,sans-serif}h1{font-size:18px;color:#ffe080}#test-metrics{padding:12px;border:1px solid #ffe080;font:12px monospace;white-space:pre-wrap}</style></head>
+<body><h1>TEST · Setup shortcuts</h1><p>Simulated folder access and intercepted downloads. No operating-system files are written and no permission picker opens.</p><p id="test-case"></p><pre id="test-metrics"></pre><div id="fixture"></div>
+<script type="module">
+import { startSetupSnelkoppelingen } from '../../setup-shortcuts.js?v=4'
+const scenario = new URLSearchParams(location.search).get('case') || 'download'
+const metrics = { picker:0, downloads:0, writes:0, saved:0, requests:0, queries:0 }
+const render = () => { document.getElementById('test-metrics').textContent = JSON.stringify(metrics, null, 2) }
+document.getElementById('test-case').textContent = 'Scenario: ' + scenario
+render()
+const folders = new Map()
+const missing = () => Object.assign(new Error('Not found'), { name:'NotFoundError' })
+const parent = {
+  kind:'directory', name:'Bureaublad (TEST)',
+  async queryPermission() { metrics.queries++; render(); return scenario === 'denied' ? 'prompt' : 'granted' },
+  async requestPermission() { metrics.requests++; render(); throw Error('Default flow must not ask permission') },
+  async getDirectoryHandle(name, options = {}) {
+    if (!options.create) { if (folders.has(name)) return folders.get(name); throw missing() }
+    if (scenario === 'failure') throw Object.assign(new Error('Denied'), { name:'NotAllowedError' })
+    const files = new Map()
+    const folder = { async getFileHandle(filename, fileOptions = {}) {
+      if (!fileOptions.create) { if (files.has(filename)) return files.get(filename); throw missing() }
+      const file = { async createWritable() { return { async write() { metrics.writes++; render() }, async close() {}, async abort() {} } } }
+      files.set(filename, file); return file
+    } }
+    folders.set(name, folder); return folder
+  }
+}
+const testPage = {
+  getElementById:document.getElementById.bind(document), body:document.body,
+  createElement(tag) { const element = document.createElement(tag); if (tag === 'a') element.addEventListener('click', event => { event.preventDefault(); metrics.downloads++; render() }); return element }
+}
+const view = {
+  location:new URL('../../setup.html', location.href), fetch:window.fetch.bind(window), URL:window.URL,
+  setTimeout:window.setTimeout.bind(window), isSecureContext:true,
+  showDirectoryPicker:scenario === 'mobile' ? undefined : async options => {
+    metrics.picker++; render(); if (options.startIn !== 'desktop') throw Error('Must start at Desktop')
+    if (scenario === 'download') throw Object.assign(new Error('Cancelled'), { name:'AbortError' })
+    return parent
+  },
+  T:(key, values = {}) => key.replace(/\{(\w+)\}/g, (_, name) => values[name] ?? '{' + name + '}')
+}
+document.getElementById('fixture').id = 'setup-shortcuts-slot'
+startSetupSnelkoppelingen({ view, page:testPage, device:{ userAgent:scenario === 'mobile' ? 'iPhone' : 'Windows', platform:scenario === 'mobile' ? 'iPhone' : 'Win32', maxTouchPoints:0 }, storage:{
+  load:async () => ['remembered','denied','failure'].includes(scenario) ? parent : null,
+  save:async () => { metrics.saved++; render(); return true }
+} })
+</script></body></html>

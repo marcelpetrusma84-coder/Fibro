@@ -27,14 +27,15 @@ export function spelVersie(naam) {
   return Object.prototype.hasOwnProperty.call(SPEL_VERSIES, naam) ? SPEL_VERSIES[naam] : null
 }
 
-// Zet "v3" in elk element met data-spelversie="<spelnaam>" (zo staat het in het widgetmenu op Profiel,
+// Zet "v3.0" in elk element met data-spelversie="<spelnaam>" (zo staat het in het widgetmenu op Profiel,
 // tussen de tekst en de toggle-knop). Een spel zonder nummer krijgt niets.
 export function vulSpelVersies(wortel) {
   const w = typeof T === 'function' && T.taal === 'en' ? 'version' : 'versie'
   for (const el of (wortel || document).querySelectorAll('[data-spelversie]')) {
     const n = spelVersie(el.getAttribute('data-spelversie'))
     if (n === null) { el.textContent = ''; continue }
-    el.textContent = 'v' + n
-    el.setAttribute('aria-label', w + ' ' + n)
+    const label = Number.isInteger(n) ? n.toFixed(1) : String(n)
+    el.textContent = 'v' + label
+    el.setAttribute('aria-label', w + ' ' + label)
   }
 }

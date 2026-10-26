@@ -900,6 +900,9 @@ async function init(){
     const userId=huidigeUser.id
     const opgeslagenFoto=await laadFotoUitDB('avatar_thumbnail_'+userId)
     if(opgeslagenFoto){document.getElementById('avatarEmoji').innerHTML=`<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;(document.getElementById('previewAvatar')||{}).innerHTML=`<img src="${opgeslagenFoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`}
+    // v218: geen foto op dit toestel, maar wel op de server (gekozen op een ander toestel): die foto tonen en hier bewaren.
+    // Was: dan stond hier de oude emoji (avatar_url), en Opslaan op dit toestel wiste de foto overal.
+    else if(/^data:image\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=]+$/i.test(String(profiel.avatar_data||'').trim())){const f=String(profiel.avatar_data).trim();const im=`<img src="${f}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;document.getElementById('avatarEmoji').innerHTML=im;(document.getElementById('previewAvatar')||{}).innerHTML=im;await slaFotoOp('avatar_thumbnail_'+userId,f)}
     else{const av=lokaal.avatar||profiel.avatar_url||'🌿';document.getElementById('avatarEmoji').textContent=av;(document.getElementById('previewAvatar')||{}).textContent=av}
 
     ;(document.getElementById('previewNaam')||{}).textContent=document.getElementById('editNaam').value||profiel.username||T('Jouw naam')

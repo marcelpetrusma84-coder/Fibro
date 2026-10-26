@@ -111,3 +111,9 @@ See `docs/CONTRIBUTING.md` for details.
 ## License
 
 MIT License
+
+Exception: the three-player chess artwork, adapted board geometry, and reference
+fixture use CC BY-SA 3.0. See [artwork attribution](assets/chess-three/README.md).
+
+For three-player chess setup, FIBRO TEST, and validation commands, see the
+[integration handoff](docs/three-player-integration.md).

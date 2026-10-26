@@ -29,6 +29,7 @@
   margin-inline: auto;
   transform: none;
   cursor: default;
+  touch-action: none;
 }
 
 .chess-media-layout .chess-camera[role="button"].is-expanded {
@@ -37,6 +38,41 @@
   min-block-size: 0;
   flex: 0 0 auto;
   aspect-ratio: 1;
+}
+
+/* The board remains the width reference when both cameras sit above it. */
+.chess-media-layout > .chess-camera-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  container-type: inline-size;
+  inline-size: var(--chess-board-width);
+  max-inline-size: calc(100% - 12px);
+  flex: none;
+  margin: 8px auto;
+}
+
+.chess-media-layout:has(> .chess-camera-group:not([hidden])) > #spelInhoud {
+  margin-block: 0;
+}
+
+.chess-media-layout .chess-camera-group > .chess-camera[role="button"] {
+  inline-size: 100%;
+  max-inline-size: 100%;
+  block-size: auto;
+  min-block-size: 0;
+  flex: none;
+  aspect-ratio: 16 / 10;
+  margin: 0;
+}
+
+.chess-media-layout .chess-camera-group > .chess-camera[role="button"].is-expanded {
+  grid-column: 1 / -1;
+  aspect-ratio: 1;
+}
+
+@container (width < 300px) {
+  .chess-camera-group > .chess-camera { grid-column: 1 / -1; }
 }
 
 .chess-media-layout .chess-camera[role="button"] video {
@@ -55,4 +91,68 @@
 
 .chess-media-layout [hidden] {
   display: none;
+}
+
+/* Game chat occupies its own row instead of floating over the chess squares. */
+.chess-media-layout > #spelChatWrap {
+  position: relative !important;
+  inset: auto !important;
+  box-sizing: border-box;
+  inline-size: var(--chess-board-width);
+  max-inline-size: calc(100% - 12px);
+  flex: none;
+  margin: 12px auto 4px;
+  padding: 10px;
+  border: 1px solid #a5c7db30;
+  border-radius: 15px;
+  background: linear-gradient(145deg,#16202f,#0c1420);
+  pointer-events: auto !important;
+}
+
+.chess-scroll-rail { display:none; }
+
+@media (max-width:900px), (pointer:coarse) {
+  .chess-media-layout { padding-inline-end:28px !important; scrollbar-width:none; }
+  .chess-media-layout::-webkit-scrollbar { display:none; }
+  .chess-media-layout .chess-scroll-rail:not([hidden]) {
+    position:fixed;
+    z-index:70;
+    inset-inline-end:max(3px,env(safe-area-inset-right));
+    inset-block-start:clamp(82px,20dvh,150px);
+    block-size:min(56dvh,420px);
+    inline-size:24px;
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    padding:4px 2px;
+    border:1px solid #96d3d735;
+    border-radius:16px;
+    background:linear-gradient(160deg,#1a2b3deb,#0b1624e8);
+    box-shadow:0 3px 14px #0005,inset 0 1px 0 #e0ffff20;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  .chess-scroll-rail button {
+    display:grid;
+    place-items:center;
+    block-size:30px;
+    flex:none;
+    inline-size:100%;
+    min-inline-size:0;
+    min-block-size:0;
+    padding:0;
+    border:0;
+    border-radius:9px;
+    background:transparent;
+    color:#c5eee8;
+    font:600 16px system-ui,sans-serif;
+    touch-action:manipulation;
+  }
+  .chess-scroll-rail button:active { background:#8ef6d82b; }
+  .chess-scroll-track { position:relative; flex:1; min-block-size:44px; touch-action:none; }
+  .chess-scroll-track::before { content:''; position:absolute; inset-block:0; inset-inline:7px; border-radius:9px; background:#a4d8e51a; }
+  .chess-scroll-thumb { position:absolute; inset-block-start:0; inset-inline:5px; block-size:var(--scroll-thumb-height,28px); translate:0 var(--scroll-thumb-offset,0); border-radius:9px; background:linear-gradient(#b2f8e0,#65bbb9); box-shadow:0 0 8px #9bfade35; pointer-events:none; }
+  .chess-scroll-rail.is-dragging .chess-scroll-thumb { background:#dbfff2; box-shadow:0 0 12px #9bfade80; }
+  .chess-scroll-rail :focus-visible { outline:2px solid #a2f6df; outline-offset:2px; }
 }

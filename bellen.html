@@ -140,7 +140,7 @@ function stopBeltoon() {
 </script>
 <script type="module">
 import { supabase } from './supabase.js?v=95'
-import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo, sluitBelMelding, wachtOpBelregel } from './bellen.js?v=198'
+import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo, sluitBelMelding, wachtOpBelregel } from './bellen.js?v=155'
 
 const params = new URLSearchParams(window.location.search)
 const vriendId = params.get('vriend')
@@ -310,7 +310,7 @@ window.togMic = () => { micAan = toggleMic(); document.getElementById('micBtn').
 window.togCam = async () => {
   const camAan = isVideoActiefLokaal()
   await schakelVideo(!camAan)
-  // v198: knop en eigen beeld volgen wat de camera echt doet (ook als de stap naar de vriend mislukte)
+  // De knop volgt de cameratrack zelf, ook als signalering naar de andere speler opnieuw probeert.
   const aan = heeftLokaleVideo()
   document.getElementById('camBtn').textContent = aan ? '📷' : '🚫'
   document.getElementById('lokaalMedia').style.display = aan ? 'block' : 'none'

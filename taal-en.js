@@ -1485,6 +1485,10 @@ window.FIBRO_EN = {
   "Niet verstuurd. Controleer je internet en probeer het opnieuw.": "Not sent. Check your internet connection and try again.",
   "Fibro kon je accountsleutel niet controleren. Probeer het opnieuw als je internet hebt.": "Fibro could not verify your account key. Try again when you are online.",
   "Deze herstelsleutel hoort niet meer bij je account. De sleutel op dit toestel is niet veranderd.": "This recovery key no longer matches your account. The key on this device was not changed.",
+  "Spel met je vriend openen…": "Joining your friend's game…",
+  "Verbinding herstellen; je spel blijft open.": "Reconnecting — your game stays open.",
+  "Wachten op internet; je spel blijft open.": "Waiting for internet — your game stays open.",
+  "Wachten op je vriend; je spel blijft open.": "Waiting for your friend — your game stays open.",
 // ---- Achtergrond meteen bewaren en delen (v204) ----
   "Wat je hier kiest, geldt meteen, ook op je profiel bij je vrienden.": "What you choose here applies straight away, also on your profile for your friends.",
   "Bezig met delen…": "Sharing…",

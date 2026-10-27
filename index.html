@@ -39,6 +39,10 @@
   /* TOP BAR */
   .top-bar { display:flex; align-items:center; justify-content:space-between; padding:14px 16px 10px; }
   .top-logo { font-family:'Playfair Display',serif; font-style:italic; font-size:20px; color:var(--accent); }
+/* v222: tijdens de beta: tik op het labeltje om een fout of idee te melden (terugmelden.js) */
+.beta-label { font:700 11px/1 'DM Sans',sans-serif; letter-spacing:.08em; text-transform:uppercase; color:#1e0d32; background:linear-gradient(145deg,#f0d7ff,#cc9bf5); border:1px solid #f6e8ff; border-radius:999px; padding:5px 9px; min-height:26px; cursor:pointer; box-shadow:0 2px 0 #6c458a; }
+.beta-label:active { transform:translateY(1px); box-shadow:none; }
+.beta-label:focus-visible { outline:3px solid #fff; outline-offset:3px; }
   .top-av { width:38px; height:38px; border-radius:50%; background:rgba(192,132,252,0.15); border:1.5px solid var(--accent); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; overflow:hidden; }
 
   /* PROFIEL HERO */
@@ -119,7 +123,10 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 
 <div id="content-laag">
 <div class="top-bar" role="banner">
-  <div class="top-logo">Fibro</div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="top-logo">Fibro</div>
+    <button type="button" class="beta-label" id="betaLabel" onclick="window.openFibroTerugmelden()" aria-label="Beta: fout of idee melden" data-t-attr="aria-label" data-t>beta</button>
+  </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <button id="uitlogBtn" onclick="window.uitloggen()" title="Uitloggen" data-t-attr="title" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.08);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.7);padding:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
     <button id="menuBtn" onclick="window.openMenu()" title="Menu" aria-label="Menu" aria-haspopup="true" aria-expanded="false" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.08);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.7);padding:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
@@ -2125,6 +2132,11 @@ function sluitMenu() {
   const k = document.getElementById('menuBtn')
   if (k) k.setAttribute('aria-expanded', 'false')
 }
+// v222: fout of idee melden (terugmelden.js wordt pas geladen als je het opent)
+window.openFibroTerugmelden = function (soort) {
+  import('./terugmelden.js?v=1').then(m => m.openTerugmelden(soort)).catch(e => console.warn('[terugmelden]', e))
+}
+window.FIBRO_EN = Object.assign(window.FIBRO_EN || {}, { '\u{1F4AC} Fout of idee melden': '\u{1F4AC} Report a problem or idea', 'Beta: fout of idee melden': 'Beta: report a problem or idea', 'beta': 'beta' })
 window.openMenu = function() {
   if (document.getElementById('fibroMenu')) { sluitMenu(); return }
   const knop = document.getElementById('menuBtn')
@@ -2197,6 +2209,7 @@ window.openMenu = function() {
   g = groep(T('Mijn Fibro'), 'menuKopFibro')
   item(g, T('\u2139\uFE0F Over Fibro'), () => { window.location.href = 'over.html' })
   item(g, T('\u{1F4F2} Fibro als app installeren'), openAppUitleg) // v178
+  item(g, T('\u{1F4AC} Fout of idee melden'), () => window.openFibroTerugmelden()) // v222
   // v183: onderaan het versienummer (gewone tekst, geen knop)
   const versie = document.createElement('div')
   versie.id = 'menuVersie'

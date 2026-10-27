@@ -18,7 +18,14 @@ window.FIBRO_EN = Object.assign(window.FIBRO_EN || {}, {
   '{n}× · laatst {tijd}': '{n}× · last {tijd}', 'eerst {tijd}': 'first {tijd}',
   'Vastgelopen': 'Crashed', 'Mislukt': 'Failed', 'Stapel en bron': 'Stack and source',
   '✓ Opgelost, wissen': '✓ Fixed, delete', 'Alles wissen': 'Delete all', 'Zeker? Tik nog een keer': 'Sure? Tap again',
-  'Gewist ✓': 'Deleted ✓', 'Wissen mislukt.': 'Deleting failed.', '↻ Vernieuwen': '↻ Refresh'
+  'Gewist ✓': 'Deleted ✓', 'Wissen mislukt.': 'Deleting failed.', '↻ Vernieuwen': '↻ Refresh',
+  // v222: Feedback
+  '💬 Feedback': '💬 Feedback', 'Wat testers zelf melden via ☰ → Fout of idee melden, of het beta-labeltje op Home.': 'What testers report themselves via ☰ → Report a problem or idea, or the beta label on Home.',
+  'Nieuw': 'New', 'Alles': 'All', 'Feedback laden...': 'Loading feedback...', 'Geen nieuwe feedback 🎉': 'No new feedback 🎉', 'Nog geen feedback': 'No feedback yet',
+  'Feedback laden mislukt. Is sql/terugmeldingen.sql al uitgevoerd in Supabase?': 'Loading feedback failed. Has sql/terugmeldingen.sql been run in Supabase?',
+  '🐞 Fout': '🐞 Problem', '💡 Idee': '💡 Idea', 'status|nieuw': 'new', 'status|gelezen': 'read', 'status|opgelost': 'fixed',
+  '✓ Gelezen': '✓ Read', '✓ Opgelost': '✓ Fixed', 'Wissen': 'Delete', 'van @{naam}': 'from @{naam}', 'onbekend': 'unknown',
+  'plek|home': 'Home', 'plek|vrienden': 'Friends', 'plek|chat': 'Chat', 'plek|stijl': 'My style', 'plek|spel': 'A game', 'plek|bellen': 'Calling', 'plek|vriendprofiel': "Friend's profile", 'plek|account': 'Logging in / account', 'plek|anders': 'Something else'
 })
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -64,9 +71,19 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .msg.error { background:rgba(248,113,113,0.15); border:0.5px solid #f87171; color:#f87171; }
 .msg.success { background:rgba(34,197,94,0.15); border:0.5px solid #22c55e; color:#22c55e; }
 .status-badge.gewaarschuwd { background:rgba(251,191,36,0.1); color:#fbbf24; border:0.5px solid rgba(251,191,36,0.3); }
-.tabs { display:flex; gap:8px; margin-bottom:14px; }
-.tab-btn { flex:1; padding:9px; border-radius:10px; border:0.5px solid var(--border); background:none; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer; }
+.tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+.tab-btn { flex:1 1 40%; min-height:44px; padding:9px; border-radius:10px; border:0.5px solid var(--border); background:none; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer; }
 .tab-btn.actief { background:var(--card); color:var(--text); border-color:var(--accent); font-weight:600; }
+/* v222: feedback van testers */
+.fb-filter { display:flex; gap:8px; }
+.fb-filter button { min-height:36px; padding:6px 14px; border-radius:20px; border:0.5px solid var(--border); background:none; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:12px; cursor:pointer; }
+.fb-filter button[aria-pressed="true"] { background:var(--accent); color:#1a0a2e; border-color:var(--accent); font-weight:600; }
+.fb-tekst { font-size:14px; line-height:1.5; white-space:pre-wrap; word-break:break-word; margin:4px 0 8px; }
+.fb-acties { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.fb-acties .knop { flex:1 1 auto; min-height:40px; }
+.fb-kaart.gelezen, .fb-kaart.opgelost { opacity:.75; }
+.status-badge.opgelost { background:rgba(34,197,94,0.1); color:#22c55e; border:0.5px solid rgba(34,197,94,0.3); }
+.status-badge.gelezen { background:rgba(255,255,255,0.06); color:var(--muted); border:0.5px solid var(--border); }
 /* v221: foutmeldingen */
 .fout-uitleg { font-size:12px; color:var(--muted); line-height:1.5; margin-bottom:10px; }
 .fout-balk { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
@@ -128,6 +145,7 @@ select.veld option { background:#1a0a2e; }
     <button class="tab-btn actief" id="tabRapporten" onclick="kiesTab('rapporten')" data-t>🚩 Rapporten</button>
     <button class="tab-btn" id="tabBlokkades" onclick="kiesTab('blokkades')"><span data-t>🚫 Blokkades</span> <span id="aantalActief"></span></button>
     <button class="tab-btn" id="tabFouten" onclick="kiesTab('fouten')"><span data-t>🐞 Fouten</span> <span id="aantalFouten"></span></button>
+    <button class="tab-btn" id="tabFeedback" onclick="kiesTab('feedback')"><span data-t>💬 Feedback</span> <span id="aantalFeedback"></span></button>
   </div>
 
   <div id="msg" class="msg" style="display:none"></div>
@@ -182,6 +200,19 @@ select.veld option { background:#1a0a2e; }
     </div>
     <div id="foutenLijst"><div class="laden" data-t>Foutmeldingen laden...</div></div>
   </div>
+
+  <div id="deelFeedback" style="display:none">
+    <div class="fout-uitleg" data-t>Wat testers zelf melden via ☰ → Fout of idee melden, of het beta-labeltje op Home.</div>
+    <div class="fout-balk">
+      <div class="fb-filter" role="group">
+        <button type="button" id="fbFilterNieuw" aria-pressed="true" onclick="filterFeedback('nieuw')" data-t>Nieuw</button>
+        <button type="button" id="fbFilterAlles" aria-pressed="false" onclick="filterFeedback('alles')" data-t>Alles</button>
+      </div>
+      <div class="fout-samen"></div>
+      <button class="knop grijs" onclick="laadFeedback()" data-t>↻ Vernieuwen</button>
+    </div>
+    <div id="feedbackLijst"><div class="laden" data-t>Feedback laden...</div></div>
+  </div>
 </div>
 
 <div class="venster-achter" id="blokVenster">
@@ -228,7 +259,7 @@ async function init() {
   }
   mijnId = session.user.id
   document.getElementById('inhoud').style.display = 'block'
-  await Promise.all([laadRapporten(), laadBlokkades(), laadFouten()])
+  await Promise.all([laadRapporten(), laadBlokkades(), laadFouten(), laadFeedback()])
 }
 
 // ─── Rapporten ───
@@ -361,7 +392,7 @@ window.bevestigBlokkade = async function() {
   const naam = teBlokkeren.naam
   sluitVenster()
   toonMsg(T('@{naam} is geblokkeerd 🚫', { naam }), 'success')
-  await Promise.all([laadRapporten(), laadBlokkades(), laadFouten()])
+  await Promise.all([laadRapporten(), laadBlokkades(), laadFouten(), laadFeedback()])
 }
 
 window.zoekGebruiker = async function() {
@@ -458,9 +489,104 @@ window.kiesTab = function(tab) {
   document.getElementById('deelRapporten').style.display = tab === 'rapporten' ? 'block' : 'none'
   document.getElementById('deelBlokkades').style.display = tab === 'blokkades' ? 'block' : 'none'
   document.getElementById('deelFouten').style.display = tab === 'fouten' ? 'block' : 'none'
+  document.getElementById('deelFeedback').style.display = tab === 'feedback' ? 'block' : 'none'
   document.getElementById('tabRapporten').classList.toggle('actief', tab === 'rapporten')
   document.getElementById('tabBlokkades').classList.toggle('actief', tab === 'blokkades')
   document.getElementById('tabFouten').classList.toggle('actief', tab === 'fouten')
+  document.getElementById('tabFeedback').classList.toggle('actief', tab === 'feedback')
+}
+
+// ─── Feedback van testers (v222, terugmelden.js + sql/terugmeldingen.sql) ───
+let alleFeedback = []
+let feedbackFilter = 'nieuw'
+let wisFeedbackKlaar = { id: null, tijd: 0 }
+const FB_STATUS = ['nieuw', 'gelezen', 'opgelost']
+const FB_PLEK = ['home', 'vrienden', 'chat', 'stijl', 'spel', 'bellen', 'vriendprofiel', 'account', 'anders']
+const FB_PLEK_NL = { home: 'Home', vrienden: 'Vrienden', chat: 'Chat', stijl: 'Mijn stijl', spel: 'Een spel', bellen: 'Bellen', vriendprofiel: 'Profiel van een vriend', account: 'Inloggen of account', anders: 'Iets anders' }
+
+async function laadFeedback() {
+  const lijst = document.getElementById('feedbackLijst')
+  const { data, error } = await supabase
+    .from('terugmeldingen')
+    .select('id, created_at, user_id, soort, tekst, pagina, toestel, status, van:user_id(username)')
+    .order('created_at', { ascending: false })
+    .limit(1000)
+  if (error) {
+    lijst.innerHTML = '<div class="geen-rapporten">' + mEsc(T('Feedback laden mislukt. Is sql/terugmeldingen.sql al uitgevoerd in Supabase?')) + '</div>'
+    return
+  }
+  alleFeedback = data || []
+  toonFeedback()
+}
+window.laadFeedback = laadFeedback
+
+window.filterFeedback = function(f) {
+  feedbackFilter = f === 'alles' ? 'alles' : 'nieuw'
+  document.getElementById('fbFilterNieuw').setAttribute('aria-pressed', String(feedbackFilter === 'nieuw'))
+  document.getElementById('fbFilterAlles').setAttribute('aria-pressed', String(feedbackFilter === 'alles'))
+  toonFeedback()
+}
+
+function plekNaam(p) {
+  if (!p) return ''
+  return FB_PLEK.includes(p) ? (T.taal === 'en' ? T('plek|' + p) : FB_PLEK_NL[p]) : p
+}
+
+function toonFeedback() {
+  const lijst = document.getElementById('feedbackLijst')
+  const nieuw = alleFeedback.filter(f => f.status === 'nieuw').length
+  document.getElementById('aantalFeedback').textContent = nieuw ? '(' + nieuw + ')' : ''
+  const zicht = feedbackFilter === 'nieuw' ? alleFeedback.filter(f => f.status === 'nieuw') : alleFeedback
+  if (!zicht.length) {
+    lijst.innerHTML = '<div class="geen-rapporten">' + mEsc(T(feedbackFilter === 'nieuw' ? 'Geen nieuwe feedback 🎉' : 'Nog geen feedback')) + '</div>'
+    return
+  }
+  lijst.innerHTML = zicht.map(f => {
+    const st = FB_STATUS.includes(f.status) ? f.status : 'nieuw'
+    const id = Number(f.id) || 0
+    const naam = f.van?.username || T('onbekend')
+    const wis = wisFeedbackKlaar.id === id && Date.now() - wisFeedbackKlaar.tijd < 4000
+    return `
+      <div class="rapport-kaart fb-kaart ${st}">
+        <div class="fout-kop">
+          <span class="fout-chip ${f.soort === 'idee' ? '' : 'fout'}">${mEsc(T(f.soort === 'idee' ? '💡 Idee' : '🐞 Fout'))}</span>
+          ${f.pagina ? `<span class="fout-chip">${mEsc(plekNaam(f.pagina))}</span>` : ''}
+          <span class="status-badge ${st}">${mEsc(T('status|' + st))}</span>
+        </div>
+        <div class="fb-tekst">${mEsc(f.tekst)}</div>
+        <div class="fout-klein">${mEsc(T('van @{naam}', { naam }))} · ${mEsc(datum(f.created_at))}</div>
+        ${f.toestel ? `<div class="fout-klein">${mEsc(f.toestel)}</div>` : ''}
+        <div class="fb-acties">
+          ${st === 'nieuw' ? `<button class="knop grijs" onclick="zetFeedback(${id}, 'gelezen')">${mEsc(T('✓ Gelezen'))}</button>` : ''}
+          ${st !== 'opgelost' ? `<button class="knop" onclick="zetFeedback(${id}, 'opgelost')">${mEsc(T('✓ Opgelost'))}</button>` : ''}
+          <button class="knop ${wis ? 'rood' : 'grijs'}" onclick="wisFeedback(${id})">${mEsc(T(wis ? 'Zeker? Tik nog een keer' : 'Wissen'))}</button>
+        </div>
+      </div>`
+  }).join('')
+}
+
+window.zetFeedback = async function(id, status) {
+  if (!FB_STATUS.includes(status)) return
+  const { error } = await supabase.from('terugmeldingen').update({ status }).eq('id', id)
+  if (error) { toonMsg(T('Actie mislukt.'), 'error'); return }
+  const f = alleFeedback.find(x => x.id === id)
+  if (f) f.status = status
+  toonFeedback()
+}
+
+window.wisFeedback = async function(id) {
+  if (wisFeedbackKlaar.id !== id || Date.now() - wisFeedbackKlaar.tijd > 4000) {
+    wisFeedbackKlaar = { id, tijd: Date.now() }
+    toonFeedback()
+    setTimeout(() => { if (wisFeedbackKlaar.id === id) { wisFeedbackKlaar = { id: null, tijd: 0 }; toonFeedback() } }, 4100)
+    return
+  }
+  wisFeedbackKlaar = { id: null, tijd: 0 }
+  const { error } = await supabase.from('terugmeldingen').delete().eq('id', id)
+  if (error) { toonMsg(T('Wissen mislukt.'), 'error'); return }
+  alleFeedback = alleFeedback.filter(x => x.id !== id)
+  toonMsg(T('Gewist ✓'), 'success')
+  toonFeedback()
 }
 
 // ─── Foutmeldingen (v221, foutmelder.js + sql/foutmeldingen.sql) ───

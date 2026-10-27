@@ -6,7 +6,7 @@
   <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
   <script src="taal.js?v=30"></script>
-<script>Object.assign(window.FIBRO_EN ||= {}, { 'Verder met setup': 'Continue setup' })</script>
+<script>Object.assign(window.FIBRO_EN ||= {}, { 'Verder met setup': 'Continue setup', 'Fibro is vanaf 16 jaar.': 'Fibro is for ages 16 and up.', 'Fibro is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.': "Fibro is for ages 16 and up. If you're younger, you can't create an account yet." })</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title data-t>Fibro — Inloggen</title>
   <style>
@@ -110,7 +110,8 @@
         </div>
         <div class="field">
           <label data-t>Geboortejaar</label>
-          <input type="number" id="reg-jaar" placeholder="bijv. 2005" data-t-attr="placeholder" min="1900" max="2025" />
+          <input type="number" id="reg-jaar" placeholder="bijv. 2005" data-t-attr="placeholder" min="1900" max="2010" />
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;" data-t>Fibro is vanaf 16 jaar.</div>
         </div>
         <div class="field" style="display:flex;align-items:flex-start;gap:10px;margin-top:4px;">
           <input type="checkbox" id="reg-akkoord" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;" />
@@ -477,6 +478,8 @@
     if (wachtwoord.length < 8) { toonBericht(msg,'error',T('Wachtwoord minimaal 8 tekens.')); return }
     const jaarNum = parseInt(jaar)
     if (jaarNum < 1900 || jaarNum > new Date().getFullYear()) { toonBericht(msg,'error',T('Geldig geboortejaar invullen.')); return }
+    // v225: Fibro is vanaf 16 jaar (in Nederland mag je onder de 16 alleen met toestemming van een ouder; zie Over Fibro)
+    if (new Date().getFullYear() - jaarNum < 16) { toonBericht(msg,'error',T('Fibro is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.')); return }
 
     btn.disabled = true
     btn.innerHTML = '<span class="spinner"></span>' + T('🔒 Encryptie voorbereiden...')

@@ -2136,7 +2136,7 @@ function sluitMenu() {
 window.openFibroTerugmelden = function (soort) {
   import('./terugmelden.js?v=1').then(m => m.openTerugmelden(soort)).catch(e => console.warn('[terugmelden]', e))
 }
-window.FIBRO_EN = Object.assign(window.FIBRO_EN || {}, { '\u{1F4AC} Fout of idee melden': '\u{1F4AC} Report a problem or idea', 'Beta: fout of idee melden': 'Beta: report a problem or idea', 'beta': 'beta' })
+window.FIBRO_EN = Object.assign(window.FIBRO_EN || {}, { '\u{1F4AC} Fout of idee melden': '\u{1F4AC} Report a problem or idea', 'Beta: fout of idee melden': 'Beta: report a problem or idea', 'beta': 'beta', 'Moderator': 'Moderator', '\u{1F6E1}\uFE0F Moderatie': '\u{1F6E1}\uFE0F Moderation' })
 window.openMenu = function() {
   if (document.getElementById('fibroMenu')) { sluitMenu(); return }
   const knop = document.getElementById('menuBtn')
@@ -2210,6 +2210,11 @@ window.openMenu = function() {
   item(g, T('\u2139\uFE0F Over Fibro'), () => { window.location.href = 'over.html' })
   item(g, T('\u{1F4F2} Fibro als app installeren'), openAppUitleg) // v178
   item(g, T('\u{1F4AC} Fout of idee melden'), () => window.openFibroTerugmelden()) // v222
+  // v223: alleen voor moderators (is_moderator in je profiel). De pagina zelf controleert het nog eens bij de server.
+  if (window._profiel && window._profiel.is_moderator === true) {
+    g = groep(T('Moderator'), 'menuKopModerator')
+    item(g, T('\u{1F6E1}\uFE0F Moderatie'), () => { window.location.href = 'moderatie.html' })
+  }
   // v183: onderaan het versienummer (gewone tekst, geen knop)
   const versie = document.createElement('div')
   versie.id = 'menuVersie'

@@ -109,6 +109,7 @@ export async function hervatGeluid() {
     return true
   } catch (e) {
     if (remoteStream !== stream) return false
+    meldMediaFout('geluid afspelen', e)
     audioGeblokkeerd = true
     meldMediaStatus()
     return false
@@ -262,6 +263,22 @@ export async function sluitBelMelding(vanId) {
 const CAMERA = { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30, max: 30 } }
 const GELUID = { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
 
+// v224: microfoon-, camera- en geluidsfouten die hier worden opgevangen (het gesprek gaat dan stil verder) toch
+// doorgeven aan de foutmelder (foutmelder.js), zodat ze op Moderatie > Fouten staan. Met de naam van de fout
+// (NotAllowedError, NotFoundError, ...), waar het gebeurde en of de browser al toestemming had.
+export function meldMediaFout(waar, e) {
+  try {
+    const f = window.__fibroFoutmelder
+    if (!f || !f.meld) return
+    const tekst = ((e && e.name) || 'Fout') + ': ' + ((e && e.message) || String(e || ''))
+    const extra = (window.isSecureContext === false ? ' · GEEN https' : '') + (navigator.mediaDevices ? '' : ' · geen mediaDevices')
+    const stuur = st => f.meld('belofte', tekst, 'bellen.js ' + waar + ' · toestemming microfoon: ' + st + extra, e && e.stack)
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'microphone' }).then(r => stuur(r.state), () => stuur('onbekend'))
+    } else stuur('onbekend')
+  } catch (x) {}
+}
+
 // Microfoon (en camera). Lukt de camera niet (geen camera, of hij is in gebruik), dan verder met
 // alleen geluid in plaats van het hele gesprek te stoppen (v150, fout 21). De ander kan wel video sturen.
 async function haalMicEnCamera(video) {
@@ -270,6 +287,7 @@ async function haalMicEnCamera(video) {
   } catch (e) {
     if (!video) throw e
     console.warn('[bellen] camera lukt niet (' + (e && e.name) + '), verder met alleen geluid')
+    meldMediaFout('camera', e)
     const s = await navigator.mediaDevices.getUserMedia({ audio: GELUID, video: false })
     if (onGeenCameraCallback) { try { onGeenCameraCallback() } catch (er) {} }
     return s
@@ -282,6 +300,7 @@ async function haalGespreksStream(video, epoch = gesprekEpoch) {
   let stream
   try { stream = await haalMicEnCamera(video) }
   catch (e) {
+    meldMediaFout(spelGesprek ? 'microfoon (spel)' : 'microfoon (gesprek)', e)
     // Camera-only players can still join. Never discard an already working preview
     // just because this device has no microphone or microphone permission was denied.
     if (!actieveTracks(lokaleStream, 'video') && !spelGesprek) throw e
@@ -865,6 +884,7 @@ export async function activeerMicrofoon() {
     meldMediaStatus()
     return true
   } catch (e) {
+    meldMediaFout('microfoon (knop)', e)
     meldMediaStatus()
     return false
   }

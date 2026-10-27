@@ -4,7 +4,23 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
+<script src="foutmelder.js?v=1"></script>
 <script src="taal.js?v=30"></script>
+<script>
+// v221: woorden van het tabblad Foutmeldingen (alleen gebruikt als Engels gekozen is)
+window.FIBRO_EN = Object.assign(window.FIBRO_EN || {}, {
+  '🐞 Fouten': '🐞 Errors',
+  'Wat er technisch misging in de app, van alle gebruikers. Geen namen en geen berichten: alleen pagina, toestel en de foutregel. Meldingen ouder dan 30 dagen gaan vanzelf weg.': 'What went wrong technically in the app, for all users. No names and no messages: only page, device and the error line. Reports older than 30 days are removed automatically.',
+  'Foutmeldingen laden...': 'Loading error reports...',
+  'Geen foutmeldingen 🎉': 'No error reports 🎉',
+  'Foutmeldingen laden mislukt. Is sql/foutmeldingen.sql al uitgevoerd in Supabase?': 'Loading error reports failed. Has sql/foutmeldingen.sql been run in Supabase?',
+  'soorten': 'kinds', 'meldingen': 'reports', 'laatste 24 uur': 'last 24 hours',
+  '{n}× · laatst {tijd}': '{n}× · last {tijd}', 'eerst {tijd}': 'first {tijd}',
+  'Vastgelopen': 'Crashed', 'Mislukt': 'Failed', 'Stapel en bron': 'Stack and source',
+  '✓ Opgelost, wissen': '✓ Fixed, delete', 'Alles wissen': 'Delete all', 'Zeker? Tik nog een keer': 'Sure? Tap again',
+  'Gewist ✓': 'Deleted ✓', 'Wissen mislukt.': 'Deleting failed.', '↻ Vernieuwen': '↻ Refresh'
+})
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Moderatie</title>
 <meta name="theme-color" content="#c084fc">
@@ -51,6 +67,21 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .tabs { display:flex; gap:8px; margin-bottom:14px; }
 .tab-btn { flex:1; padding:9px; border-radius:10px; border:0.5px solid var(--border); background:none; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer; }
 .tab-btn.actief { background:var(--card); color:var(--text); border-color:var(--accent); font-weight:600; }
+/* v221: foutmeldingen */
+.fout-uitleg { font-size:12px; color:var(--muted); line-height:1.5; margin-bottom:10px; }
+.fout-balk { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+.fout-samen { font-size:12px; color:var(--muted); flex:1; min-width:0; }
+.fout-kop { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
+.fout-chip { font-size:11px; padding:2px 8px; border-radius:20px; border:0.5px solid var(--border); color:var(--text); background:rgba(255,255,255,0.04); }
+.fout-chip.fout { color:#f87171; border-color:rgba(248,113,113,0.4); }
+.fout-chip.belofte { color:#fbbf24; border-color:rgba(251,191,36,0.4); }
+.fout-tal { font-size:12px; color:var(--accent); font-weight:600; margin-left:auto; font-variant-numeric:tabular-nums; }
+.fout-bericht { font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace; font-size:12.5px; line-height:1.45; word-break:break-word; margin-bottom:6px; }
+.fout-klein { font-size:11px; color:var(--muted); line-height:1.5; word-break:break-word; }
+.fout-kaart details { margin-top:8px; }
+.fout-kaart summary { font-size:12px; color:var(--accent); cursor:pointer; }
+.fout-kaart pre { margin-top:6px; padding:8px; border-radius:8px; background:rgba(0,0,0,0.3); font-size:11px; line-height:1.4; white-space:pre-wrap; word-break:break-word; max-height:220px; overflow:auto; }
+.fout-kaart .knop { margin-top:10px; }
 .sectie-kop { font-size:13px; color:var(--muted); margin:16px 0 8px; text-transform:uppercase; letter-spacing:0.05em; }
 .blok-kaart { background:var(--card); border:0.5px solid var(--border); border-radius:14px; padding:12px 14px; margin-bottom:10px; }
 .blok-kaart.oud { opacity:0.6; }
@@ -96,6 +127,7 @@ select.veld option { background:#1a0a2e; }
   <div class="tabs">
     <button class="tab-btn actief" id="tabRapporten" onclick="kiesTab('rapporten')" data-t>🚩 Rapporten</button>
     <button class="tab-btn" id="tabBlokkades" onclick="kiesTab('blokkades')"><span data-t>🚫 Blokkades</span> <span id="aantalActief"></span></button>
+    <button class="tab-btn" id="tabFouten" onclick="kiesTab('fouten')"><span data-t>🐞 Fouten</span> <span id="aantalFouten"></span></button>
   </div>
 
   <div id="msg" class="msg" style="display:none"></div>
@@ -139,6 +171,16 @@ select.veld option { background:#1a0a2e; }
 
     <div class="sectie-kop" data-t>Eerder (logboek)</div>
     <div id="blokkadesEerder"></div>
+  </div>
+
+  <div id="deelFouten" style="display:none">
+    <div class="fout-uitleg" data-t>Wat er technisch misging in de app, van alle gebruikers. Geen namen en geen berichten: alleen pagina, toestel en de foutregel. Meldingen ouder dan 30 dagen gaan vanzelf weg.</div>
+    <div class="fout-balk">
+      <div class="fout-samen" id="foutenSamen"></div>
+      <button class="knop grijs" onclick="laadFouten()" data-t>↻ Vernieuwen</button>
+      <button class="knop rood" id="foutenAllesWissen" onclick="wisAlleFouten()" data-t>Alles wissen</button>
+    </div>
+    <div id="foutenLijst"><div class="laden" data-t>Foutmeldingen laden...</div></div>
   </div>
 </div>
 
@@ -186,7 +228,7 @@ async function init() {
   }
   mijnId = session.user.id
   document.getElementById('inhoud').style.display = 'block'
-  await Promise.all([laadRapporten(), laadBlokkades()])
+  await Promise.all([laadRapporten(), laadBlokkades(), laadFouten()])
 }
 
 // ─── Rapporten ───
@@ -319,7 +361,7 @@ window.bevestigBlokkade = async function() {
   const naam = teBlokkeren.naam
   sluitVenster()
   toonMsg(T('@{naam} is geblokkeerd 🚫', { naam }), 'success')
-  await Promise.all([laadRapporten(), laadBlokkades()])
+  await Promise.all([laadRapporten(), laadBlokkades(), laadFouten()])
 }
 
 window.zoekGebruiker = async function() {
@@ -415,8 +457,104 @@ window.deblokkeerVlag = async function(id) {
 window.kiesTab = function(tab) {
   document.getElementById('deelRapporten').style.display = tab === 'rapporten' ? 'block' : 'none'
   document.getElementById('deelBlokkades').style.display = tab === 'blokkades' ? 'block' : 'none'
+  document.getElementById('deelFouten').style.display = tab === 'fouten' ? 'block' : 'none'
   document.getElementById('tabRapporten').classList.toggle('actief', tab === 'rapporten')
   document.getElementById('tabBlokkades').classList.toggle('actief', tab === 'blokkades')
+  document.getElementById('tabFouten').classList.toggle('actief', tab === 'fouten')
+}
+
+// ─── Foutmeldingen (v221, foutmelder.js + sql/foutmeldingen.sql) ───
+// Dezelfde fout (pagina, soort, foutregel en bron) staat als een kaart, met hoe vaak en wanneer het laatst.
+let foutGroepen = []
+let wisAllesKlaar = 0
+
+async function laadFouten() {
+  const lijst = document.getElementById('foutenLijst')
+  const { data, error } = await supabase
+    .from('foutmeldingen')
+    .select('id, created_at, pagina, soort, bericht, bron, stapel, toestel')
+    .order('created_at', { ascending: false })
+    .limit(2000)
+  if (error) {
+    lijst.innerHTML = '<div class="geen-rapporten">' + mEsc(T('Foutmeldingen laden mislukt. Is sql/foutmeldingen.sql al uitgevoerd in Supabase?')) + '</div>'
+    document.getElementById('foutenSamen').textContent = ''
+    return
+  }
+  const groepen = new Map()
+  for (const r of data || []) {
+    const sleutel = [r.pagina, r.soort, r.bericht, r.bron || ''].join('\u0001')
+    let g = groepen.get(sleutel)
+    if (!g) { g = { pagina: r.pagina, soort: r.soort, bericht: r.bericht, bron: r.bron, stapel: r.stapel, laatst: r.created_at, eerst: r.created_at, ids: [], toestellen: new Map() }; groepen.set(sleutel, g) }
+    g.ids.push(r.id)
+    if (r.created_at < g.eerst) g.eerst = r.created_at
+    if (r.toestel) g.toestellen.set(r.toestel, (g.toestellen.get(r.toestel) || 0) + 1)
+    if (!g.stapel && r.stapel) g.stapel = r.stapel
+  }
+  foutGroepen = [...groepen.values()].sort((a, b) => (a.laatst < b.laatst ? 1 : -1))
+  toonFouten(data || [])
+}
+window.laadFouten = laadFouten
+
+function toonFouten(rijen) {
+  const lijst = document.getElementById('foutenLijst')
+  const dag = Date.now() - 24 * 3600 * 1000
+  const recent = rijen.filter(r => new Date(r.created_at).getTime() > dag).length
+  document.getElementById('aantalFouten').textContent = foutGroepen.length ? '(' + foutGroepen.length + ')' : ''
+  document.getElementById('foutenSamen').textContent = foutGroepen.length
+    ? foutGroepen.length + ' ' + T('soorten') + ' · ' + rijen.length + ' ' + T('meldingen') + ' · ' + T('laatste 24 uur') + ': ' + recent
+    : ''
+  document.getElementById('foutenAllesWissen').style.display = foutGroepen.length ? '' : 'none'
+  if (!foutGroepen.length) { lijst.innerHTML = '<div class="geen-rapporten">' + mEsc(T('Geen foutmeldingen 🎉')) + '</div>'; return }
+  lijst.innerHTML = foutGroepen.map((g, i) => {
+    const toestellen = [...g.toestellen.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4)
+      .map(([t, n]) => mEsc(t) + (n > 1 ? ' (' + n + '×)' : '')).join('<br>')
+    const soort = g.soort === 'belofte' ? 'belofte' : 'fout'
+    return `
+      <div class="rapport-kaart fout-kaart">
+        <div class="fout-kop">
+          <span class="fout-chip ${soort}">${mEsc(T(soort === 'belofte' ? 'Mislukt' : 'Vastgelopen'))}</span>
+          <span class="fout-chip">${mEsc(g.pagina)}</span>
+          <span class="fout-tal">${mEsc(T('{n}× · laatst {tijd}', { n: g.ids.length, tijd: datum(g.laatst) }))}</span>
+        </div>
+        <div class="fout-bericht">${mEsc(g.bericht)}</div>
+        ${g.bron ? `<div class="fout-klein">${mEsc(g.bron)}</div>` : ''}
+        ${toestellen ? `<div class="fout-klein">${toestellen}</div>` : ''}
+        ${g.ids.length > 1 ? `<div class="fout-klein">${mEsc(T('eerst {tijd}', { tijd: datum(g.eerst) }))}</div>` : ''}
+        ${g.stapel ? `<details><summary>${mEsc(T('Stapel en bron'))}</summary><pre>${mEsc(g.stapel)}</pre></details>` : ''}
+        <button class="knop grijs" onclick="wisFoutGroep(${i})">${mEsc(T('✓ Opgelost, wissen'))}</button>
+      </div>`
+  }).join('')
+}
+
+async function wisIds(ids) {
+  for (let i = 0; i < ids.length; i += 200) {
+    const { error } = await supabase.from('foutmeldingen').delete().in('id', ids.slice(i, i + 200))
+    if (error) return false
+  }
+  return true
+}
+
+window.wisFoutGroep = async function(i) {
+  const g = foutGroepen[i]
+  if (!g) return
+  if (!(await wisIds(g.ids))) { toonMsg(T('Wissen mislukt.'), 'error'); return }
+  toonMsg(T('Gewist ✓'), 'success')
+  await laadFouten()
+}
+
+window.wisAlleFouten = async function() {
+  const knop = document.getElementById('foutenAllesWissen')
+  if (Date.now() - wisAllesKlaar > 4000) {
+    wisAllesKlaar = Date.now()
+    knop.textContent = T('Zeker? Tik nog een keer')
+    setTimeout(() => { if (Date.now() - wisAllesKlaar >= 4000) knop.textContent = T('Alles wissen') }, 4100)
+    return
+  }
+  wisAllesKlaar = 0
+  knop.textContent = T('Alles wissen')
+  if (!(await wisIds(foutGroepen.flatMap(g => g.ids)))) { toonMsg(T('Wissen mislukt.'), 'error'); return }
+  toonMsg(T('Gewist ✓'), 'success')
+  await laadFouten()
 }
 
 document.getElementById('zoekNaam').addEventListener('keydown', e => { if (e.key === 'Enter') window.zoekGebruiker() })

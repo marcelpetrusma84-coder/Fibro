@@ -20,7 +20,7 @@ export const SPEL_VERSIES = {
   breakout: 1,       // Block It
   swarm: 1,          // The Swarm
   endlessrunner: 1,  // Runner & Gunner
-  shmup: 3,          // Neon Raiders
+  shmup: 4,          // Neon Raiders
 }
 
 export function spelVersie(naam) {

@@ -6,6 +6,7 @@
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
 <script src="taal.js?v=30"></script>
+<script>Object.assign(window.FIBRO_EN ||= {}, { 'Alleen het jaar. Fibro is vanaf 16 jaar.': 'Only the year. Fibro is for ages 16 and up.', 'Fibro is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.': "Fibro is for ages 16 and up. If you're younger, you can't create an account yet." }) // v225</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
@@ -89,8 +90,8 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 
     <div class="field">
       <label data-t>Geboortejaar</label>
-      <input class="input" type="number" id="geboortejaar" placeholder="bijv. 2005" min="1900" max="2025" data-t-attr="placeholder">
-      <div class="hint" data-t>Alleen het jaar — voor leeftijdsinstellingen</div>
+      <input class="input" type="number" id="geboortejaar" placeholder="bijv. 2005" min="1900" max="2010" data-t-attr="placeholder">
+      <div class="hint" data-t>Alleen het jaar. Fibro is vanaf 16 jaar.</div>
     </div>
 
     <div style="display:flex;align-items:flex-start;gap:10px;margin:12px 0;">
@@ -256,6 +257,10 @@ window.registreren = async function() {
   const jaarNum = parseInt(jaar)
   if (jaarNum < 1900 || jaarNum > new Date().getFullYear()) {
     msg.className='msg error'; msg.textContent=T('Vul een geldig geboortejaar in.'); return
+  }
+  // v225: Fibro is vanaf 16 jaar
+  if (new Date().getFullYear() - jaarNum < 16) {
+    msg.className='msg error'; msg.textContent=T('Fibro is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.'); return
   }
 
   btn.textContent = T('🔒 Encryptie voorbereiden...')

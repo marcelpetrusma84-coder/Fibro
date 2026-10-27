@@ -26,7 +26,8 @@ let startY = 0
 let bezig = false
 
 // Elementen die zelf horizontaal schuiven: die mogen de veeg houden.
-const NIET_SWIPEN = '.main-tabs, .sticker-galerij, #spelOverlay, [data-geen-swipe]'
+// v220: ook het menu onderin (daar schuif je met menuschuif.js van knopje naar knopje)
+const NIET_SWIPEN = '.main-tabs, .sticker-galerij, #spelOverlay, [data-geen-swipe], .bottom-nav'
 let negeer = false
 
 document.addEventListener('touchstart', (e) => {

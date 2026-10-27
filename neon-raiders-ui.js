@@ -28,6 +28,11 @@
    zo sterk en geeft de tegel geen slow motion (de tijd moet bij allebei gelijk lopen). */
 
 
+import { maakNeonMuis, muisPunt } from './neon-raiders-input.js?v=2'
+import { supabase } from './supabase.js?v=95'
+import { maakNeonScoreService } from './neon-raiders-scores.js?v=3'
+import { maakNeonScorebord } from './neon-raiders-scoreboard.js?v=2'
+
 const vertaal = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 const PHASER_URL = new URL('./phaser.min.js?v=1', import.meta.url).href
 const FONT_URL = 'lettertypen/press-start-2p.css?v=1'
@@ -119,6 +124,8 @@ function zetStijl() {
   .nr .knop:disabled{opacity:.4;cursor:default;box-shadow:none;transform:none}
   .nr .laag p.rol{color:var(--cyaan);text-shadow:0 0 6px var(--cyaan);font-size:8px}
   .nr .laag p.rol:empty{display:none}
+  .nr .laag p.muisUitleg{color:var(--cyaan);max-width:38ch}
+  @media (pointer:coarse){.nr .laag p.muisUitleg{display:none}}
   .nr .knop[hidden]{display:none}
   .nr .klein{font-family:inherit;font-size:8px;color:var(--zacht);background:none;border:1px solid var(--rand);border-radius:0;padding:6px 10px;margin:10px 4px 0;cursor:pointer}
   .nr .bord{position:absolute;left:0;right:0;top:36%;text-align:center;pointer-events:none;z-index:3;
@@ -1409,7 +1416,7 @@ const KLEURSOORT = new Set(['dart', 'zwaai', 'schutter', 'kolos', 'tank', 'loop'
 const MET_SCHADUW = new Set(['stad', 'lucht', 'schip', 'alienlucht', 'aliengrond'])
 
 /* ================= het spel ================= */
-export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) {
+export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo, scoreService: scoreServiceKeuze }) {
   const inhoud = document.getElementById('spelInhoud')
   const titel = document.getElementById('spelTitelBar')
   if (!inhoud) return
@@ -1447,8 +1454,9 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
           <p class="uitleg2">${vertaal('De tegel linksboven: wapen wisselen of een power-up gebruiken.')}</p>
           <p class="record"></p>
           <p class="rol"></p>
+          <p class="muisUitleg"></p>
           <div class="knoppen"><button type="button" class="knop startKnop"${samen ? (leider ? ' disabled' : ' hidden') : ''}>START</button><button type="button" class="knop tweede verderKnop" hidden></button></div>
-          <div><button type="button" class="klein autoKnop">${autovuur ? vertaal('AUTOVUUR: AAN') : vertaal('AUTOVUUR: UIT')}</button><button type="button" class="klein geluidKnop">${GELUID.staatAan() ? vertaal('GELUID: AAN') : vertaal('GELUID: UIT')}</button></div>
+          <div><button type="button" class="klein autoKnop">${autovuur ? vertaal('AUTOVUUR: AAN') : vertaal('AUTOVUUR: UIT')}</button><button type="button" class="klein geluidKnop">${GELUID.staatAan() ? vertaal('GELUID: AAN') : vertaal('GELUID: UIT')}</button><button type="button" class="klein scoresKnop">${vertaal('Scores')}</button></div>
         </div>
       </div>
     </div>`
@@ -1465,6 +1473,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
   const verderKnop = laag.querySelector('.verderKnop')
   const autoKnop = laag.querySelector('.autoKnop')
   const geluidKnop = laag.querySelector('.geluidKnop')
+  const scoresKnop = laag.querySelector('.scoresKnop')
   const tegel = wrap.querySelector('.tegel')
   const tegelIcoon = tegel.querySelector('.tIcoon')
   const tegelStip = tegel.querySelectorAll('.stip i')
@@ -1547,6 +1556,10 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
 
   let W = 360, H = 640
   let spel = null, huidige = null, beginLevel = 1
+  const scoreService = scoreServiceKeuze || maakNeonScoreService({ supabase })
+  const scorebord = maakNeonScorebord({ service: scoreService, T: vertaal,
+    isActief: () => isActief() && wrap.isConnected, onOpen: () => wisBesturing() })
+  scoresKnop.addEventListener('click', e => { e.stopPropagation(); scorebord.open() })
 
   /* ---------- indeling: een staand veld dat in de ruimte past ---------- */
   function indeling() {
@@ -1571,40 +1584,78 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
   /* ---------- bediening: vinger, muis, toetsen ---------- */
   const vingers = new Map()   // pointerId -> { rol: 'stuur' | 'vuur', x, y }
   let toets = { l: 0, r: 0, o: 0, n: 0, vuur: 0 }
+  let muisOpslag
+  try { muisOpslag = window.localStorage } catch (e) {}
+  const muisBesturing = maakNeonMuis({ opslag: muisOpslag })
+  const muisUitleg = laag.querySelector('.muisUitleg')
+  function toonMuisBesturing() {
+    muisUitleg.textContent = (muisBesturing.modus === 'volgen'
+      ? vertaal('MUIS: VOLGEN · Linkermuisknop = schieten.')
+      : vertaal('MUIS: SLEPEN · Houd de linkermuisknop ingedrukt om te vliegen en schieten.')) + ' ' +
+      vertaal('Dubbelklik op je eigen schip om de muisstand te wisselen.')
+  }
+  toonMuisBesturing()
   function stuurVinger() { for (const [id, v] of vingers) if (v.rol === 'stuur') return id; return null }
   function schaal() { return W / Math.max(1, veld.clientWidth) }
+  function wereldPunt(e) {
+    const canvas = veld.querySelector(':scope > canvas')
+    return muisPunt(e, (canvas || veld).getBoundingClientRect(), W, H)
+  }
+  function wisBesturing() {
+    vingers.clear(); muisBesturing.leeg()
+    for (const code of Object.keys(toets)) toets[code] = 0
+  }
   veld.addEventListener('pointerdown', e => {
     if (e.target.closest('.tegel,.arsenaal,.laag')) return
+    if (e.pointerType === 'mouse' && e.button !== 0) return
     e.preventDefault()
     GELUID.wek()
     try { veld.setPointerCapture(e.pointerId) } catch (x) {}
     const muis = e.pointerType === 'mouse'
-    const rol = (stuurVinger() === null) ? 'stuur' : 'vuur'
-    vingers.set(e.pointerId, { rol, x: e.clientX, y: e.clientY, muis })
+    muisBesturing.neer(e, wereldPunt(e))
+    if (!muis || muisBesturing.modus === 'slepen') {
+      const rol = (stuurVinger() === null) ? 'stuur' : 'vuur'
+      vingers.set(e.pointerId, { rol, x: e.clientX, y: e.clientY, muis })
+    }
     if (huidige && huidige.pauze) huidige.hervat()
   })
   veld.addEventListener('pointermove', e => {
+    if (e.target.closest('.tegel,.arsenaal,.laag')) return
+    muisBesturing.beweeg(e, wereldPunt(e))
     const v = vingers.get(e.pointerId); if (!v) return
+    if (v.muis && !(e.buttons & 1)) { vingers.delete(e.pointerId); return }
     if (v.rol === 'stuur' && huidige) huidige.duw((e.clientX - v.x) * schaal() * 1.15, (e.clientY - v.y) * schaal() * 1.15)
     v.x = e.clientX; v.y = e.clientY
   })
-  const los = e => { vingers.delete(e.pointerId) }
+  const los = e => { vingers.delete(e.pointerId); muisBesturing.los(e) }
   veld.addEventListener('pointerup', los)
-  veld.addEventListener('pointercancel', los)
+  veld.addEventListener('pointercancel', e => { vingers.delete(e.pointerId); muisBesturing.leeg() })
+  veld.addEventListener('lostpointercapture', e => { vingers.delete(e.pointerId); muisBesturing.verlorenVangst() })
+  veld.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && !veld.hasPointerCapture(e.pointerId)) muisBesturing.leeg() })
+  veld.addEventListener('dblclick', e => {
+    if (!huidige || !laag.hidden || huidige.voorbij || huidige.uit || huidige.pauze || e.target.closest('.tegel,.arsenaal,.laag')) return
+    const schip = huidige.speler
+    if (!muisBesturing.wissel(e, wereldPunt(e), { x: schip.x, y: schip.y, width: schip.displayWidth, height: schip.displayHeight })) return
+    e.preventDefault()
+    wisBesturing(); toonMuisBesturing()
+    balk(muisBesturing.modus === 'volgen' ? vertaal('MUIS: VOLGEN · Linkermuisknop = schieten.') : vertaal('MUIS: SLEPEN · Ingedrukt houden = vliegen en schieten.'), '#5ee7e0', 3500)
+  })
   /* iOS: geen zoom of tekstselectie bij dubbeltikken in het veld */
   const stopTouch = e => { if (e.target.closest('.laag button')) return; e.preventDefault() }
   veld.addEventListener('touchstart', stopTouch, { passive: false })
   veld.addEventListener('touchend', stopTouch, { passive: false })
   function vuurtNu() {
     if (autovuur || toets.vuur) return true
+    if (muisBesturing.modus === 'volgen' && muisBesturing.vuurt) return true
     for (const v of vingers.values()) if (v.rol === 'vuur' || v.muis) return true
     return false
   }
   const TOETS = { ArrowLeft: 'l', KeyA: 'l', ArrowRight: 'r', KeyD: 'r', ArrowUp: 'o', KeyW: 'o', ArrowDown: 'n', KeyS: 'n', Space: 'vuur', KeyJ: 'vuur' }
   function toetsNeer(e) {
     if (!isActief() || !wrap.isConnected) return
+    if (document.querySelector('.nr-scoreboard[open]')) return
     GELUID.wek()
-    if (TOETS[e.code]) { toets[TOETS[e.code]] = 1; if (laag.hidden) e.preventDefault() }
+    if (TOETS[e.code]) { toets[TOETS[e.code]] = 1; if (TOETS[e.code] !== 'vuur') muisBesturing.stopVolgen(); if (laag.hidden) e.preventDefault() }
     if (e.code === 'KeyQ' || e.code === 'Tab') { e.preventDefault(); if (laag.hidden) wisselArsenaal() }
     if (/^Digit[1-6]$/.test(e.code) && !arsenaal.hidden) { const k = arsenaal.querySelectorAll('button')[+e.code.slice(5) - 1]; if (k && !k.disabled) k.click() }
     if (e.code === 'Escape' && !arsenaal.hidden) sluitArsenaal()
@@ -1612,6 +1663,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
   function toetsOp(e) { if (TOETS[e.code]) toets[TOETS[e.code]] = 0 }
   window.addEventListener('keydown', toetsNeer)
   window.addEventListener('keyup', toetsOp)
+  window.addEventListener('blur', wisBesturing)
 
   /* ---------- de tegel en het arsenaal ---------- */
   let arsenaalKlok = null
@@ -1716,6 +1768,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       this.vijanden = []; this.kogelsV = []; this.kogelsS = []; this.buit = []; this.hekken = []
       this.lagen = []
       this.score = 0; this.getoond = 0; this.combo = 1; this.comboTijd = 0
+      this.scoreRondeId = crypto.randomUUID()
+      this.scoreEigenaar = scoreService.captureOwner()
       this.levens = 3; this.onraakbaar = 2.2; this.schild = 0
       this.niveau = { puls: 1 }; this.wapen = 'puls'
       this.voorraad = { bom: 2, schild: 0 }
@@ -2480,6 +2534,10 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       const sp = this.speler
       const kx = toets.r - toets.l, ky = toets.n - toets.o
       if (kx || ky) this.duw(kx * 250 * dt / Math.max(0.3, this.tijdSchaal), ky * 250 * dt / Math.max(0.3, this.tijdSchaal))
+      else {
+        const muisStap = muisBesturing.stap(sp, dt / Math.max(0.3, this.tijdSchaal))
+        if (muisStap) this.duw(muisStap.x, muisStap.y)
+      }
       this.schaduw.setPosition(sp.x + 16, sp.y + 24)
       this.vlam.setTexture(Math.floor(tijd / 60) % 2 ? 'vlam0' : 'vlam1').setPosition(sp.x, sp.y + 19)
       if (this.onraakbaar > 0) { this.onraakbaar -= dt; sp.setAlpha(Math.floor(this.onraakbaar * 12) % 2 ? 0.35 : 1) } else sp.setAlpha(1)
@@ -2774,6 +2832,11 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       for (const k of this.kogelsS.concat(this.kogelsV, this.kogelsA)) this.weg(k.spr)
       this.kogelsS = []; this.kogelsV = []; this.kogelsA = []
       if (gewonnen) { this.score += this.levens * 10000; GELUID.speel('klaar') } else GELUID.speel('einde')
+      // Eén eindscore per ronde, voor solo én samen. De eigen score telt; nooit die van de ander.
+      const scoreRonde = { id: this.scoreRondeId, score: this.score, playedAt: new Date().toISOString(), level: this.level,
+        won: gewonnen, mode: this.samen ? 'co-op' : 'solo' }
+      Promise.resolve(this.scoreEigenaar).then(ownerId => scoreService.saveRun({ ...scoreRonde, ownerId }))
+        .catch(error => console.warn('[nr-score]', error))
       scoreVak.textContent = String(this.score).padStart(7, '0')
       if (this.samen) {   // het laatste nieuws (ook mijn eindscore) meteen naar de ander; daarna stuurt dit spel niets meer
         this.uitgaand.push(['x', this.score])
@@ -2839,7 +2902,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       if (n === 0) {
         GELUID.speel('go'); aftellen = false
         laag.hidden = true
-        vingers.clear()
+        wisBesturing()
         huidige = null
         if (spel) { try { spel.destroy(true) } catch (e) {} spel = null }
         spel = new Phaser.Game({
@@ -2869,7 +2932,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
   startKnop.addEventListener('click', e => { e.stopPropagation(); begin(1) })
   verderKnop.addEventListener('click', e => { e.stopPropagation(); begin(bereikt) })
 
-  const zichtbaarheid = () => { if (document.hidden && huidige) huidige.pauzeer() }
+  const zichtbaarheid = () => { if (document.hidden) { wisBesturing(); if (huidige) huidige.pauzeer() } }
   document.addEventListener('visibilitychange', zichtbaarheid)
   const wekGeluid = () => GELUID.wek()
   wrap.addEventListener('pointerdown', wekGeluid)
@@ -2885,11 +2948,13 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       return
     }
     clearInterval(waker)
+    scorebord.destroy()
     if (net) net.sluit()
     clearTimeout(arsenaalKlok)
     GELUID.stop()
     window.removeEventListener('keydown', toetsNeer)
     window.removeEventListener('keyup', toetsOp)
+    window.removeEventListener('blur', wisBesturing)
     window.removeEventListener('resize', indeling)
     window.removeEventListener('orientationchange', indeling)
     document.removeEventListener('visibilitychange', zichtbaarheid)

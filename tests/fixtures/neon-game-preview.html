@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="nl" data-taal>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TEST · Neon Raiders bediening</title>
+  <script src="../../taal.js?v=31"></script>
+  <script src="../../controller.js?v=1"></script>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#08040f;color:white;font:12px system-ui,sans-serif}
+    header{position:relative;z-index:10;display:flex;justify-content:center;gap:14px;flex-wrap:wrap;padding:8px;background:#231e08;color:#ffe365;border-bottom:2px solid #ffe365}
+    button{font:inherit;color:inherit;background:#ffffff18;border:1px solid #ffe36580;border-radius:6px;padding:3px 8px;cursor:pointer}
+    #spelInhoud{position:absolute;inset:35px 0 35px;display:flex;align-items:center;justify-content:center}
+    footer{position:fixed;bottom:0;left:0;right:0;padding:8px;text-align:center;color:#b6cad6;font-variant-numeric:tabular-nums}
+    .nr-scoreboard .nr-sb-eyebrow::after{content:' · TEST';color:#ffe365}
+  </style>
+</head>
+<body>
+  <header><strong>TEST · Geen echte scores</strong><label><input type="checkbox" id="invulnerable" checked> Onkwetsbaar</label><button id="end-run" type="button">Ronde afronden</button><span id="saved-runs">0 testrondes opgeslagen</span></header>
+  <div id="spelInhoud"></div>
+  <footer id="input-diagnostics">Start een ronde om de muisbesturing te testen.</footer>
+  <script type="module">
+    import { start } from '../../neon-raiders-ui.js?v=219'
+    const runs = []
+    const testService = {
+      async captureOwner(){return 'test'},
+      async saveRun(run){
+        if(!runs.some(item=>item.id===run.id))runs.push({...run,playedAt:new Date().toISOString(),isSelf:true,name:'TEST Pilot'})
+        document.getElementById('saved-runs').textContent=runs.length+' testrondes opgeslagen'
+        return {savedLocal:true,synced:false,status:'local'}
+      },
+      async loadBoards(){return {personal:[...runs].sort((a,b)=>b.score-a.score).slice(0,10),friends:[],global:null,status:'local'}}
+    }
+    const game = await start({isActief:()=>true,scoreService:testService})
+    document.getElementById('end-run').addEventListener('click',()=>game?._proef.scene()?.einde(false))
+    setInterval(()=>{
+      const scene=game?._proef.scene()
+      if(!scene?.speler)return
+      if(document.getElementById('invulnerable').checked)scene.onraakbaar=60
+      document.getElementById('input-diagnostics').textContent=
+        `TEST · Schip x=${Math.round(scene.speler.x)} y=${Math.round(scene.speler.y)} · Kogels=${scene.kogelsS.length} · Score=${scene.score} · ${scene.pauze?'Pauze':scene.voorbij?'Ronde afgerond':'Speelt'}`
+    },100)
+  </script>
+</body>
+</html>

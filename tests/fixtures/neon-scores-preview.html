@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TEST · Neon Raiders scores</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;background:#090716;color:#ecf8ff;font:16px/1.6 system-ui,sans-serif;padding:24px}main{width:min(540px,100%);padding:28px;border:1px solid #577c81;border-radius:20px;background:linear-gradient(140deg,#142e35,#171329);box-shadow:0 18px 70px #0008}main>strong{display:inline-block;background:repeating-linear-gradient(135deg,#ffe365 0 14px,#1d1909 14px 28px);padding:3px;border-radius:5px}main>strong span{display:block;padding:2px 8px;background:#ffe365;color:#151200;font-size:13px;letter-spacing:.05em}h1{font-size:26px;line-height:1.25}p{color:#afc2d7}button,select{font:inherit;padding:9px 14px;border:1px solid #65d8d2;border-radius:10px;color:#e9ffff;background:#143238;cursor:pointer}label{display:block;margin-bottom:18px}small{display:block;margin-top:18px;color:#b7aee0}
+    .nr-scoreboard .nr-sb-eyebrow::after{content:" · TEST · SYNTHETIC SCORES";color:#ffe365}
+  </style>
+</head>
+<body>
+  <main>
+    <strong><span>TEST · SYNTHETIC SCORES</span></strong>
+    <h1>Neon Raiders scoreboards</h1>
+    <p>This preview uses made-up scores and names. It does not read an account or send scores to Fibro.</p>
+    <label>Preview state <select id="preview-state"><option value="online">Online</option><option value="offline">Offline</option><option value="setup">Shared scores not activated yet</option><option value="local">Not signed in</option><option value="empty">Empty</option></select></label>
+    <button id="show-scores" type="button">View scores</button>
+    <small>Desktop: your top 10 on the left, friends on the right. Phone: the same two lists stacked for readable dates and times.</small>
+  </main>
+  <script type="module">
+    import { maakNeonScorebord } from '../../neon-raiders-scoreboard.js?v=2'
+    const state = document.getElementById('preview-state')
+    const dates = Array.from({length:10}, (_,index) => new Date(Date.UTC(2026,9,27-index,18,index*4)).toISOString())
+    const personal = dates.map((playedAt,index) => ({id:'personal-'+index,score:487650-index*29730,playedAt,name:'TEST Pilot',isSelf:true}))
+    const friends = dates.map((playedAt,index) => ({id:'friend-'+index,score:587750-index*29230,playedAt,name:['TEST Nova','TEST Pilot','TEST Orbit'][index%3],isSelf:index%3===1}))
+    const service = {async loadBoards(){await new Promise(resolve=>setTimeout(resolve,180));return {personal:state.value==='empty'?[]:personal,friends:['local','setup','empty'].includes(state.value)?[]:friends,global:['local','setup','empty'].includes(state.value)?null:{score:987650},status:state.value==='empty'?'online':state.value}}}
+    const dictionary = {'Neon Raiders scores':'Neon Raiders scores','Scores':'Scores','Sluiten':'Close','Scores laden…':'Loading scores…','Jouw top 10':'Your top 10','Jouw beste rondes':'Your best runs','Vrienden top 10':'Friends top 10','Jij en je vrienden':'You and your friends','Hoogste score op Fibro':'Fibro high score','Dag en tijd zijn in jouw lokale tijdzone.':'Dates and times use your local time zone.','Vernieuwen':'Refresh','Datum onbekend':'Date unknown','Jij':'You','Vriend':'Friend','De online lijst komt hier zodra die beschikbaar is.':'The online leaderboard appears here when available.','Nog geen scores. Speel een ronde om de lijst te vullen.':'No scores yet. Play a run to fill the list.','Nog geen Fibro-record.':'No Fibro record yet.','Het Fibro-record verschijnt zodra je online lijst beschikbaar is.':'The Fibro record appears when the online leaderboard is available.','De tien hoogste scores, met de beste score bovenaan.':'The ten highest scores, best score first.','Jouw scores worden bewaard. De gedeelde scorelijsten worden nog klaargezet.':'Your scores are saved. Shared leaderboards are being prepared.','Jouw scores staan op dit apparaat. Log in voor de gedeelde scorelijsten.':'Your scores are on this device. Sign in for shared leaderboards.','Jouw scores blijven bewaard. De online lijsten worden vernieuwd zodra je verbinding terug is.':'Your scores stay saved. Online leaderboards refresh when your connection returns.'}
+    const T = Object.assign(key=>dictionary[key]||key,{locale:'en-GB',taal:'en'})
+    const scoreboard = maakNeonScorebord({service,T})
+    document.getElementById('show-scores').addEventListener('click',()=>scoreboard.open())
+    scoreboard.open()
+  </script>
+</body>
+</html>

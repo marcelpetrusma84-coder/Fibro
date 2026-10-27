@@ -394,7 +394,7 @@ window.veiligeUrl = function(v){
   import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel } from './crypto.js?v=182'
   import { maakSpelChatCrypto } from './spelchat-crypto.js?v=1'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
-  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon } from './bellen.js?v=155'
+  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon } from './bellen.js?v=156'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
   import { maakStickerkeuze } from './stickerkeuze.js?v=216'
   import { isCode as isEigenCode, zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel, fxCode, leesFx, stickerPakket, bewaarVriendSticker, zoekWeg } from './eigenstickers.js?v=162'
@@ -3152,6 +3152,7 @@ async function startBlockIt() {
   // ─── Spel audiobel ───
   let spelBelActief = false
   let spelBelProbeerNa = 0
+  let spelGeluidControle = null // v224: na 20 s kijken of er geluid is (zie startSpelBel)
   let spelCameraLayout = null
   let spelEigenVideo = false, spelAnderVideo = false, spelMijnVideoGezien = false, spelVideoAanvragen = false, spelVideoBezig = false
   let spelAnderCameraGewenst = false
@@ -3303,6 +3304,19 @@ async function startBlockIt() {
     const tegenstanderId = spelTegenstander.id
     const partij = spelKanaal
     spelBelActief = true
+    // v224: spraak tijdens spellen werkte nog nooit (geen prompt, geen geluid). Staat er na 20 seconden geen goed
+    // geluid, dan gaat de stand naar de foutmelder (Moderatie > Fouten): verbonden, eigen microfoon, geluid van de ander.
+    clearTimeout(spelGeluidControle)
+    spelGeluidControle = setTimeout(() => {
+      if (!spelBelActief || spelKanaal !== partij) return
+      const st = getMediaStatus()
+      if (st.connected && st.localAudio && st.remoteAudio && !st.audioBlocked) return
+      const ja = b => b ? 'ja' : 'nee'
+      window.__fibroFoutmelder?.meld('belofte', 'Spelgesprek: na 20 s nog geen goed geluid',
+        'chat.html startSpelBel · verbonden=' + ja(st.connected) + ' · eigen mic=' + ja(st.localAudio) +
+        ' · mic beschikbaar=' + ja(st.localAudioAvailable) + ' · geluid ander=' + ja(st.remoteAudio) +
+        ' · afspelen geblokkeerd=' + ja(st.audioBlocked) + ' · speler1=' + ja(benIkSpeler1) + ' · ' + spelActief)
+    }, 20000)
     document.getElementById('spelMuteBtn').style.display = 'flex'
     document.getElementById('spelMuteBtn').style.alignItems = 'center'
     document.getElementById('spelMuteBtn').style.justifyContent = 'center'
@@ -3323,6 +3337,7 @@ async function startBlockIt() {
   }
 
   function stopSpelBel() {
+    clearTimeout(spelGeluidControle)
     spelBelActief = false
     spelBelProbeerNa = 0
     document.getElementById('spelMuteBtn').style.display = 'none'

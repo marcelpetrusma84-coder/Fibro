@@ -1,0 +1,78 @@
+# Bouwt de Android-app (APK) van Fibro. De app is een 'Trusted Web Activity': hij opent
+# https://marcelpetrusma84-coder.github.io/Fibro/ in Chrome, zonder adresbalk zodra assetlinks.json klopt.
+# Wijzigingen aan de website zelf hoeven dus GEEN nieuwe APK: de app laat altijd de nieuwste versie zien.
+# Uitleg: android/LEESMIJ.md
+#
+# Nodig (GitHub > Settings > Secrets and variables > Actions):
+#   FIBRO_APK_KEYSTORE    de Fibro-sleutel als base64-tekst
+#   FIBRO_APK_WACHTWOORD  het wachtwoord van die sleutel
+# Starten: Actions > Android-APK > Run workflow. De APK staat daarna onderaan de run bij 'Artifacts'.
+name: Android-APK
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - 'android/**'
+      - '.github/workflows/android-apk.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Fibro-sleutel neerzetten
+        env:
+          KEYSTORE: ${{ secrets.FIBRO_APK_KEYSTORE }}
+          WACHTWOORD: ${{ secrets.FIBRO_APK_WACHTWOORD }}
+        run: |
+          if [ -n "$KEYSTORE" ] && [ -n "$WACHTWOORD" ]; then
+            echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/fibro-release.keystore"
+            echo "FIBRO_KEYSTORE_PAD=$RUNNER_TEMP/fibro-release.keystore" >> "$GITHUB_ENV"
+            echo "FIBRO_APK_WACHTWOORD=$WACHTWOORD" >> "$GITHUB_ENV"
+            echo "SOORT=fibro" >> "$GITHUB_ENV"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "::error::Geheim FIBRO_APK_KEYSTORE of FIBRO_APK_WACHTWOORD ontbreekt (Settings > Secrets and variables > Actions)"
+            exit 1
+          else
+            echo "::warning::Geen Fibro-sleutel: dit wordt een test-APK (debug-sleutel), niet om uit te delen."
+            echo "SOORT=test" >> "$GITHUB_ENV"
+          fi
+
+      - name: APK bouwen
+        working-directory: android
+        run: gradle --no-daemon assembleRelease
+
+      - name: Controleren en hernoemen
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          test -f "$APK"
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs "$APK" | tee certs.txt
+          if [ "$SOORT" = "fibro" ]; then
+            # moet gelijk zijn aan de vingerafdruk in android/assetlinks.json
+            VERWACHT=52bf92fb79e4998ee0c4a86ed9e35abe5594d70777727aee8affcc2ab6e272cf
+            grep -i "SHA-256 digest" certs.txt | grep -qi "$VERWACHT" \
+              || { echo "::error::De APK is niet met de Fibro-sleutel ondertekend"; exit 1; }
+          fi
+          mkdir -p uit && cp "$APK" "uit/fibro-$SOORT.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fibro-apk-${{ env.SOORT }}
+          path: uit/*.apk
+          retention-days: 30

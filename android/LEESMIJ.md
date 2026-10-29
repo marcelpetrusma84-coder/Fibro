@@ -35,3 +35,11 @@ bestand `.nojekyll`. Zonder die repo werkt de app ook, maar dan met een smalle a
 - Vingerafdruk van de sleutel (SHA-256): `52:BF:92:FB:79:E4:99:8E:E0:C4:A8:6E:D9:E3:5A:BE:55:94:D7:07:77:72:7A:EE:8A:FF:CC:2A:B6:E2:72:CF`
 - Gemaakt met Bubblewrap (`twa-manifest.json`). Versie ophogen: `versionCode` en `versionName`
   in `app/build.gradle`.
+
+## App en webapp naast elkaar
+
+De APK vervangt de webversie niet. Fibro in de browser, of als icoon op het startscherm via
+"Toevoegen aan startscherm", blijft gewoon werken. Links naar Fibro, bijvoorbeeld een uitnodiging
+in WhatsApp, openen in de browser en niet in de app, omdat de app geen link-filter heeft. De app
+opent alleen via zijn eigen icoon. Op dezelfde telefoon gebruiken de app en Chrome dezelfde gegevens,
+zoals de inlog en de sleutels.

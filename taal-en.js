@@ -1204,6 +1204,17 @@ window.FIBRO_EN = {
   "BOTS NIET TEGEN MUREN": "DO NOT HIT THE WALLS",
   "OF TEGEN EEN SLANG": "OR A SNAKE",
   "WIE OVERBLIJFT WINT": "LAST ONE LEFT WINS",
+// v157 (camerafilters)
+  "Camerafilter": "Camera filter",
+  "Geen": "None",
+  "Oude film": "Old film",
+  "Oude tv": "Old TV",
+  "3D-bril": "3D glasses",
+  "Beveiliging": "Security cam",
+  "Nieuws": "News",
+  "Kop": "Headline",
+  "Plek": "Location",
+  "Lopende balk": "Ticker",
 // v2 (Twin Snakes): spelvormen, nieuw level, teksten
   "ARENA": "ARENA",
   "LEVELS": "LEVELS",

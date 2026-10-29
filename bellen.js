@@ -4,13 +4,26 @@
 // v150: camera in HD (1280x720) als dat kan, en zonder (vrije) camera verder met alleen geluid
 // v151: pushmelding bij bellen ('belt je'), en 'gemiste oproep' als niemand opnam (stuur-push)
 // v152: na het gesprek zet de beller een regel in de chat (gemist, geweigerd of gesprek met duur)
+// v157: camerafilters (camerafilters.js): oude film, oude tv, 3D-anaglyph, beveiligingscamera, nieuwsbalk. Standaard 'geen'.
 import { supabase } from './supabase.js?v=95'
 import { ICE_SERVERS, iceReady } from './ice-config.js?v=149'
 import { houOpen } from './lijntjes.js?v=1'
 import { maakBelregel } from './belregel.js?v=152'
+import { maakCameraFilter, bouwFilterKiezer, FILTERS as CAMERA_FILTERS } from './camerafilters.js?v=1'
 
 let lokaleStream = null
 let remoteStream = null
+// v157: camerafilters. 'geen' = geen tekenvel en de rauwe track; bellen zonder filter werkt dan precies als voorheen.
+const cameraFilter = maakCameraFilter()
+try { const f0 = localStorage.getItem('fibro-camerafilter'); if (f0) cameraFilter.kies(f0) } catch (e) {}
+// De track die we echt versturen/tonen voor een rauwe camera-track: rauw bij 'geen', anders die van het filter-tekenvel.
+function stuurbareVideo(raw) { cameraFilter.zetBron(raw || null); return cameraFilter.uitTrack() }
+// De stroom voor de lokale preview (#lokaalMedia): bij 'geen' gewoon lokaleStream, anders het bewerkte beeld.
+function previewStroom() {
+  const raw = lokaleStream && lokaleStream.getVideoTracks().find(t => t.readyState === 'live' && t.enabled)
+  if (!raw || cameraFilter.huidig() === 'geen') return lokaleStream
+  const t = stuurbareVideo(raw); const ms = new MediaStream(); if (t) ms.addTrack(t); return ms
+}
 let peerConnection = null
 let uitnodigingKanaal = null
 let gesprekKanaal = null
@@ -146,7 +159,8 @@ async function onderhandelCamera() {
   onderhandelingTimer = null
   maakOfferBezig = true
   try {
-    const track = lokaleStream?.getVideoTracks().find(item => item.readyState === 'live' && item.enabled) || null
+    const raw = lokaleStream?.getVideoTracks().find(item => item.readyState === 'live' && item.enabled) || null
+    const track = raw ? stuurbareVideo(raw) : null
     if (videoSender && videoSender.track !== track) await videoSender.replaceTrack(track)
     const audio = lokaleStream?.getAudioTracks().find(item => item.readyState === 'live') || null
     if (audioSender && audio && audioSender.track !== audio) await audioSender.replaceTrack(audio)
@@ -526,7 +540,7 @@ export async function belOp(naarVriendId, video = false, spelModus = false) {
     lokaleStream = stream
   } catch(e) { alert(window.T ? window.T('Geen toegang tot microfoon/camera.') : 'Geen toegang tot microfoon/camera.'); return false }
   const lokaalEl = document.getElementById('lokaalMedia')
-  if (lokaalEl) { lokaalEl.srcObject = lokaleStream; lokaalEl.muted = true }
+  if (lokaalEl) { lokaalEl.srcObject = previewStroom(); lokaalEl.muted = true }
   meldMediaStatus()
   // Eerst het gesprekskanaal echt open, dan pas uitnodigen: bij een spel neemt de ander
   // meteen op, en dat antwoord mag niet aankomen voordat wij luisteren
@@ -654,7 +668,7 @@ function maakPeerConnection() {
     } else console.log('Eigen ice: klaar met verzamelen')
   }
   const lokaalEl = document.getElementById('lokaalMedia')
-  if (lokaalEl) { lokaalEl.srcObject = lokaleStream; lokaalEl.muted = true }
+  if (lokaalEl) { lokaalEl.srcObject = previewStroom(); lokaalEl.muted = true }
   pc.oniceconnectionstatechange = () => { console.log('ICE state:', pc.iceConnectionState) }
   pc.onsignalingstatechange = () => {
     if (pc === peerConnection && pc.signalingState === 'stable') onderhandelCamera().catch(() => {})
@@ -747,20 +761,22 @@ async function zetVideo(aanzetten, epoch) {
       volgStream(lokaleStream)
       if (peerConnection) {
         try {
-          if (videoSender) await videoSender.replaceTrack(videoTrack)
-          else videoSender = peerConnection.addTrack(videoTrack, lokaleStream)
+          const stuurTrack = stuurbareVideo(videoTrack)
+          if (videoSender) await videoSender.replaceTrack(stuurTrack)
+          else videoSender = peerConnection.addTrack(stuurTrack, lokaleStream)
           const transceiver = peerConnection.getTransceivers?.().find(item => item.sender === videoSender)
           if (transceiver && transceiver.direction !== 'sendrecv') transceiver.direction = 'sendrecv'
         } catch (e) { console.warn('Camera preview is ready; sending will retry:', e) }
       }
       const lokaalEl = document.getElementById('lokaalMedia')
       if (epoch !== mediaEpoch) return false
-      if (lokaalEl) { lokaalEl.srcObject = lokaleStream; lokaalEl.muted = true; lokaalEl.play().catch(()=>{}) }
+      if (lokaalEl) { lokaalEl.srcObject = previewStroom(); lokaalEl.muted = true; lokaalEl.play().catch(()=>{}) }
       videoActiefLokaal = true
     } else {
       if (!lokaleStream) { videoActiefLokaal = false; meldMediaStatus(); return true }
       const track = lokaleStream.getVideoTracks()[0]
       if (track) { lokaleStream.removeTrack(track); track.stop() }
+      cameraFilter.zetBron(null)
       if (videoSender && peerConnection) { try { await videoSender.replaceTrack(null) } catch (e) { console.warn('Camera sender is reconnecting:', e) } }
       videoActiefLokaal = false
     }
@@ -831,7 +847,7 @@ function beeindigGesprek(doorOns, behoudCamera = false) {
   const audioEl = document.getElementById('remoteAudio')
   if (audioEl) audioEl.srcObject = null
   const lokaalEl = document.getElementById('lokaalMedia')
-  if (lokaalEl) lokaalEl.srcObject = lokaleStream
+  if (lokaalEl) lokaalEl.srcObject = previewStroom()
   vriendId = null
   isInitiator = false
   videoGewenst = false
@@ -969,7 +985,7 @@ export async function wisselCamera() {
     videoActiefLokaal = true
     meldMediaStatus()
     const lokaalEl = document.getElementById('lokaalMedia')
-    if (lokaalEl) { lokaalEl.srcObject = lokaleStream; lokaalEl.play().catch(() => {}) }
+    if (lokaalEl) { lokaalEl.srcObject = previewStroom(); lokaalEl.play().catch(() => {}) }
     const nieuwInst = nieuw.getSettings ? nieuw.getSettings() : {}
     return nieuwInst.deviceId !== inst.deviceId
   } catch (e) {
@@ -978,4 +994,32 @@ export async function wisselCamera() {
   } finally {
     bezigMetWisselen = false
   }
+}
+
+// ═══════════════ v157: camerafilters ═══════════════
+export { CAMERA_FILTERS }
+export function huidigCameraFilter() { return cameraFilter.huidig() }
+export function nieuwsfilterTekst() { return cameraFilter.nieuwsTekst() }
+export function zetNieuwsfilterTekst(t) { cameraFilter.zetNieuwsTekst(t) }
+
+// Een filter kiezen: onthouden, de preview bijwerken en (als er een gesprek loopt) de verstuurde track vervangen.
+export function zetCameraFilter(id) {
+  cameraFilter.kies(id)
+  try { localStorage.setItem('fibro-camerafilter', cameraFilter.huidig()) } catch (e) {}
+  const raw = lokaleStream && lokaleStream.getVideoTracks().find(t => t.readyState === 'live' && t.enabled)
+  const lokaalEl = document.getElementById('lokaalMedia')
+  if (lokaalEl) { lokaalEl.srcObject = previewStroom(); lokaalEl.muted = true; lokaalEl.play().catch(() => {}) }
+  if (videoSender && peerConnection && raw) { try { videoSender.replaceTrack(stuurbareVideo(raw)) } catch (e) {} }
+  return cameraFilter.huidig()
+}
+
+// Een knop met een uitklapmenu om een filter te kiezen; de UI zelf zit in camerafilters.js.
+export function bouwFilterKnop(container) {
+  return bouwFilterKiezer(container, {
+    huidig: () => cameraFilter.huidig(),
+    kies: (id) => zetCameraFilter(id),
+    tekst: () => cameraFilter.nieuwsTekst(),
+    zetTekst: (t) => zetNieuwsfilterTekst(t),
+  })
+}
 }

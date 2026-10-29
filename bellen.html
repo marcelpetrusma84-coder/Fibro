@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=30"></script>
+<script src="taal.js?v=36"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
@@ -77,6 +77,7 @@ body.knoppen-weg #knoppen-gesprek, body.knoppen-weg .terug-btn, body.knoppen-weg
     <button class="bel-btn btn-mic" id="micBtn" onclick="togMic()">🎤</button>
     <button class="bel-btn btn-mic" id="camBtn" onclick="togCam()">📷</button>
     <button class="bel-btn btn-mic" id="wisselBtn" onclick="wisselCam()" title="Andere camera" data-t-attr="title" style="display:none">🔄</button>
+    <span id="filterKnopPlek" style="position:relative;display:inline-flex"></span>
     <button class="bel-btn btn-ophangen" onclick="hangop()">📵</button>
   </div>
 </div>
@@ -141,7 +142,7 @@ function stopBeltoon() {
 </script>
 <script type="module">
 import { supabase } from './supabase.js?v=95'
-import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo, sluitBelMelding, wachtOpBelregel } from './bellen.js?v=156'
+import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo, sluitBelMelding, wachtOpBelregel, bouwFilterKnop } from './bellen.js?v=157'
 
 const params = new URLSearchParams(window.location.search)
 const vriendId = params.get('vriend')
@@ -168,6 +169,8 @@ function belNaam(vriendId, username) {
   return username || T('Vriend')
 }
 if (!session) { window.location.href = 'login.html' }
+
+try { bouwFilterKnop(document.getElementById('filterKnopPlek')) } catch (e) {}   // v157: camerafilter-knop in de gespreksbalk
 
 initBellen(session.user.id, {
   onVerbonden: () => { stopBeltoon(); startTimer() },

@@ -3,6 +3,8 @@
    één ingang, start(), die zichzelf in #spelInhoud tekent en zichzelf
    opruimt zodra het spel gesloten wordt.
 
+   v3 (29 okt 2026): elk veld een eigen ondergrond (gras, zand, steen, sneeuw) en muren als voorwerpen (kratten,
+     stenen blokken, ijskristallen).
    v2 (29 okt 2026): drie spelvormen (levels, classic, zonder muren), level 5 is nu ARENA, en het veld
      en de slangen zien er rijker uit.
    v1: eerste versie.
@@ -62,13 +64,15 @@ const BUREN = [[1, 0], [-1, 0], [0, 1], [0, -1]]
 // muurtje komt vanzelf een kopie aan de overkant (180° gedraaid), zodat het
 // veld voor allebei precies even moeilijk is. 'start' is de richting waarin
 // de slang van de uitnodiger begint (standaard omhoog).
+// v3: elk veld heeft een eigen ondergrond (bodem: gras/zand/steen/sneeuw) en de muren zien eruit als een voorwerp
+// (blok: krat/steen/kristal/riet). De ondergrond en de muren worden één keer getekend op de veldlaag.
 const LEVELS = [
-  { naam: vertaal('OPEN VELD'), kleur: '#b44dff', muren: [] },
-  { naam: vertaal('BLOKJES'), kleur: '#3d7bff', muren: [[4, 7, 2, 2], [14, 7, 2, 2], [9, 3, 2, 2], [9, 13, 2, 2]] },
-  { naam: vertaal('MIDDENMUUR'), kleur: '#ffd23d', muren: [[3, 13, 6, 2]] },
-  { naam: vertaal('KAMERS'), kleur: '#7dff6a', muren: [[9, 3, 2, 8], [2, 13, 6, 2]] },
-  { naam: vertaal('ARENA'), kleur: '#ff8a3d', muren: [[7, 9, 6, 1], [6, 11, 1, 6]] },   // v2: gebroken ring rond het midden (met gaten in de hoeken)
-  { naam: vertaal('DOOLHOF'), kleur: '#e8f0ff', muren: [[6, 4, 8, 1], [2, 8, 1, 5], [17, 8, 1, 5], [6, 9, 3, 1], [11, 9, 3, 1], [8, 13, 4, 2]] },
+  { naam: vertaal('OPEN VELD'), kleur: '#b44dff', bodem: 'gras', blok: 'krat', muren: [] },
+  { naam: vertaal('BLOKJES'), kleur: '#3d7bff', bodem: 'zand', blok: 'krat', muren: [[4, 7, 2, 2], [14, 7, 2, 2], [9, 3, 2, 2], [9, 13, 2, 2]] },
+  { naam: vertaal('MIDDENMUUR'), kleur: '#ffd23d', bodem: 'gras', blok: 'steen', muren: [[3, 13, 6, 2]] },
+  { naam: vertaal('KAMERS'), kleur: '#7dff6a', bodem: 'steen', blok: 'krat', muren: [[9, 3, 2, 8], [2, 13, 6, 2]] },
+  { naam: vertaal('ARENA'), kleur: '#ff8a3d', bodem: 'zand', blok: 'steen', muren: [[7, 9, 6, 1], [6, 11, 1, 6]] },   // v2: gebroken ring rond het midden (met gaten in de hoeken)
+  { naam: vertaal('DOOLHOF'), kleur: '#e8f0ff', bodem: 'sneeuw', blok: 'kristal', muren: [[6, 4, 8, 1], [2, 8, 1, 5], [17, 8, 1, 5], [6, 9, 3, 1], [11, 9, 3, 1], [8, 13, 4, 2]] },
 ]
 
 // v2: drie spelvormen. 'levels' = elke ronde een ander veld (hierboven). 'classic' = altijd een leeg veld,
@@ -79,6 +83,80 @@ const MODI = [
   { id: 'muurloos', naam: vertaal('ZONDER MUREN'), uitleg: vertaal('Geen rand: je komt er aan de overkant weer in'), kleur: '#7dff6a' },
 ]
 function modusVan(id) { return MODI.find(m => m.id === id) || MODI[0] }
+
+// ═══════════════ Ondergrond en voorwerpen tekenen ═══════════════
+// Een vaste toevalsreeks (zodat de grond er elke keer hetzelfde uitziet en in de veldlaag bewaard kan blijven).
+function zaadReeks(z) {
+  let a = z >>> 0
+  return () => { a = (a + 0x6D2B79F5) >>> 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296 }
+}
+
+// De ondergrond van het hele speelveld (x0,y0 = linksboven in beeldpunten).
+function tekenBodem(g, soort, x0, y0) {
+  const r = zaadReeks(soort === 'gras' ? 7 : soort === 'zand' ? 23 : soort === 'steen' ? 51 : 97)
+  const PALET = {
+    gras:   { a: '#1f6b2e', b: '#17571f', tuf: ['#2f8a3c', '#124a1a', '#3aa247'] },
+    zand:   { a: '#c8a560', b: '#b8914c', tuf: ['#d8bb7a', '#a87f3e', '#e3cf98'] },
+    steen:  { a: '#3a4150', b: '#323847', tuf: ['#464e5e', '#2a2f3b', '#515a6b'] },
+    sneeuw: { a: '#dfe9f4', b: '#cfdcec', tuf: ['#ffffff', '#bcd0e6', '#eef5ff'] },
+  }
+  const P = PALET[soort] || PALET.gras
+  for (let y = 0; y < RIJEN; y++) for (let x = 0; x < KOLOM; x++) {   // dambordpatroon van twee tinten
+    g.fillStyle = (x + y) % 2 ? P.a : P.b
+    g.fillRect(x0 + x * T, y0 + y * T, T, T)
+  }
+  for (let y = 0; y < RIJEN; y++) for (let x = 0; x < KOLOM; x++) {   // textuur per vakje
+    const cx = x0 + x * T, cy = y0 + y * T
+    if (soort === 'gras') {
+      for (let n = 0; n < 3; n++) {
+        const gx = cx + r() * T, gy = cy + T * (0.55 + r() * 0.4), hgt = T * (0.2 + r() * 0.22)
+        g.strokeStyle = P.tuf[(r() * 3) | 0]; g.lineWidth = 1
+        g.beginPath(); g.moveTo(gx, gy); g.lineTo(gx + (r() - 0.5) * 3, gy - hgt); g.stroke()
+      }
+    } else if (soort === 'zand') {
+      for (let n = 0; n < 3; n++) { g.fillStyle = P.tuf[(r() * 3) | 0]; g.globalAlpha = 0.5 + r() * 0.5; g.fillRect(cx + r() * T, cy + r() * T, 1.2, 1.2) }
+      g.globalAlpha = 1
+    } else if (soort === 'steen') {
+      g.strokeStyle = 'rgba(0,0,0,0.25)'; g.lineWidth = 1; g.strokeRect(cx + 0.5, cy + 0.5, T - 1, T - 1)
+      if (r() < 0.4) { g.strokeStyle = P.tuf[(r() * 3) | 0]; g.beginPath(); g.moveTo(cx + r() * T, cy + r() * T); g.lineTo(cx + T * (0.3 + r() * 0.5), cy + T * (0.3 + r() * 0.5)); g.stroke() }
+    } else if (soort === 'sneeuw') {
+      if (r() < 0.5) { g.fillStyle = P.tuf[(r() * 3) | 0]; g.globalAlpha = 0.6 + r() * 0.4; g.beginPath(); g.arc(cx + r() * T, cy + r() * T, 0.7 + r(), 0, Math.PI * 2); g.fill() }
+      g.globalAlpha = 1
+    }
+  }
+}
+
+// Eén vakje muur, getekend als een voorwerp. px,py = linksboven, s = tegelmaat.
+function tekenVoorwerp(g, soort, px, py, s) {
+  const bx = px + 1, by = py + 1, bs = s - 2
+  if (soort === 'krat') {
+    const grad = g.createLinearGradient(0, by, 0, by + bs)
+    grad.addColorStop(0, '#b5793b'); grad.addColorStop(1, '#8a551f')
+    g.fillStyle = grad; g.fillRect(bx, by, bs, bs)
+    g.strokeStyle = '#5e3813'; g.lineWidth = Math.max(1.5, bs * 0.12); g.strokeRect(bx + g.lineWidth / 2, by + g.lineWidth / 2, bs - g.lineWidth, bs - g.lineWidth)
+    g.strokeStyle = 'rgba(94,56,19,0.8)'; g.lineWidth = Math.max(1, bs * 0.07)
+    g.beginPath(); g.moveTo(bx, by); g.lineTo(bx + bs, by + bs); g.moveTo(bx + bs, by); g.lineTo(bx, by + bs); g.stroke()
+    g.fillStyle = 'rgba(255,220,150,0.4)'; g.fillRect(bx + bs * 0.12, by + bs * 0.12, bs * 0.76, Math.max(1, bs * 0.1))
+    g.fillStyle = '#4a2c0f'
+    for (const [fx, fy] of [[0.18, 0.18], [0.82, 0.18], [0.18, 0.82], [0.82, 0.82]]) g.fillRect(bx + bs * fx - 1, by + bs * fy - 1, 2, 2)
+  } else if (soort === 'steen') {
+    const grad = g.createLinearGradient(0, by, 0, by + bs)
+    grad.addColorStop(0, '#8d94a3'); grad.addColorStop(1, '#5a616f')
+    g.fillStyle = grad; g.fillRect(bx, by, bs, bs)
+    g.strokeStyle = '#3c414d'; g.lineWidth = Math.max(1.5, bs * 0.1); g.strokeRect(bx + g.lineWidth / 2, by + g.lineWidth / 2, bs - g.lineWidth, bs - g.lineWidth)
+    g.fillStyle = 'rgba(255,255,255,0.28)'; g.fillRect(bx + bs * 0.1, by + bs * 0.1, bs * 0.8, Math.max(1, bs * 0.12))
+    g.strokeStyle = 'rgba(40,44,54,0.7)'; g.lineWidth = 1
+    g.beginPath(); g.moveTo(bx, by + bs * 0.52); g.lineTo(bx + bs, by + bs * 0.52); g.moveTo(bx + bs * 0.5, by); g.lineTo(bx + bs * 0.5, by + bs * 0.52); g.stroke()
+  } else if (soort === 'kristal') {
+    g.fillStyle = 'rgba(150,210,255,0.9)'
+    g.beginPath(); g.moveTo(px + s / 2, by); g.lineTo(bx + bs, py + s / 2); g.lineTo(px + s / 2, by + bs); g.lineTo(bx, py + s / 2); g.closePath(); g.fill()
+    g.strokeStyle = '#eaf6ff'; g.lineWidth = Math.max(1, bs * 0.08); g.stroke()
+    g.strokeStyle = 'rgba(255,255,255,0.8)'; g.lineWidth = 1
+    g.beginPath(); g.moveTo(px + s / 2, by + bs * 0.18); g.lineTo(px + s / 2, by + bs * 0.82); g.moveTo(bx + bs * 0.2, py + s / 2); g.lineTo(bx + bs * 0.8, py + s / 2); g.stroke()
+  } else {
+    g.fillStyle = 'rgba(120,120,140,0.9)'; g.fillRect(bx, by, bs, bs)
+  }
+}
 
 // ═══════════════ Hulpjes zonder spelstand ═══════════════
 const idx = (x, y) => y * KOLOM + x
@@ -442,7 +520,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       lv = 0
       rondje = r - 1                       // leeg veld: elke ronde iets sneller
       const m = modusVan(spelmodus)
-      veld = { naam: m.naam, kleur: m.kleur, muren: [], start: 'U' }
+      veld = { naam: m.naam, kleur: m.kleur, muren: [], start: 'U',
+               bodem: spelmodus === 'muurloos' ? 'zand' : 'gras', blok: 'krat' }
       randloos = spelmodus === 'muurloos'
     }
     muren = bouwMuren(veld)
@@ -912,46 +991,36 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     veldLaag = c
     g.setTransform(res, 0, 0, res, 0, 0)
     const kl = veld.kleur, vy = HUD, vh = RIJEN * T
-    // v2: diepteverloop + een zachte gloed in de velddkleur, i.p.v. een platte vlakte
+    // v3: een echte ondergrond (gras, zand, steen of sneeuw) in plaats van een platte vlakte
     g.fillStyle = DONKER; g.fillRect(0, 0, W, H)
-    const grad = g.createLinearGradient(0, vy, 0, vy + vh)
-    grad.addColorStop(0, '#0c0722'); grad.addColorStop(0.5, '#08041a'); grad.addColorStop(1, '#060310')
-    g.fillStyle = grad; g.fillRect(0, vy, W, vh)
-    const rg = g.createRadialGradient(W / 2, vy + vh * 0.42, T, W / 2, vy + vh * 0.42, W * 0.8)
-    rg.addColorStop(0, rgba(kl, 0.13)); rg.addColorStop(1, 'rgba(0,0,0,0)')
+    tekenBodem(g, veld.bodem || 'gras', 0, vy)
+    // zachte donkere randen voor diepte
+    const rg = g.createRadialGradient(W / 2, vy + vh * 0.45, T * 3, W / 2, vy + vh * 0.45, W * 0.9)
+    rg.addColorStop(0, 'rgba(0,0,0,0)'); rg.addColorStop(1, 'rgba(0,0,0,0.38)')
     g.fillStyle = rg; g.fillRect(0, vy, W, vh)
-    // fijne rasterlijnen
-    g.strokeStyle = rgba(kl, 0.05); g.lineWidth = 1
-    for (let x = 1; x < KOLOM; x++) { g.beginPath(); g.moveTo(x * T + 0.5, vy); g.lineTo(x * T + 0.5, vy + vh); g.stroke() }
-    for (let y = 1; y < RIJEN; y++) { g.beginPath(); g.moveTo(0, vy + y * T + 0.5); g.lineTo(W, vy + y * T + 0.5); g.stroke() }
-    // stipjes op de kruispunten
-    g.fillStyle = rgba(kl, 0.18)
-    for (let y = 0; y < RIJEN; y++) for (let x = 0; x < KOLOM; x++) {
-      if (!muren[idx(x, y)]) g.fillRect(x * T + T / 2 - 0.75, vy + y * T + T / 2 - 0.75, 1.5, 1.5)
+    // de muren als voorwerpen (per vakje), met een zachte slagschaduw eronder
+    const blok = veld.blok || 'krat'
+    g.save()
+    for (const [x0, y0, w, h] of muurBlokken(veld)) {
+      g.fillStyle = 'rgba(0,0,0,0.28)'
+      g.fillRect(x0 * T + 2, vy + y0 * T + 3, w * T, h * T)   // schaduw
     }
-    // rand: een dubbele neonlijn (behalve zonder muren, dan is er geen rand)
+    for (const [x0, y0, w, h] of muurBlokken(veld)) {
+      for (let yy = y0; yy < y0 + h; yy++) for (let xx = x0; xx < x0 + w; xx++) {
+        tekenVoorwerp(g, blok, xx * T, vy + yy * T, T)
+      }
+    }
+    g.restore()
+    // rand van het veld: een nette lijst (behalve zonder muren, dan een streepjesrand)
     g.save()
     if (!randloos) {
-      g.shadowColor = kl; g.shadowBlur = 10 * res
-      g.strokeStyle = rgba(kl, 0.5); g.lineWidth = 3; g.strokeRect(1.5, vy + 1.5, W - 3, vh - 3)
-      g.shadowBlur = 5 * res
-      g.strokeStyle = kl; g.lineWidth = 1.5; g.strokeRect(2.5, vy + 2.5, W - 5, vh - 5)
+      g.strokeStyle = 'rgba(0,0,0,0.55)'; g.lineWidth = 4; g.strokeRect(2, vy + 2, W - 4, vh - 4)
+      g.shadowColor = kl; g.shadowBlur = 8 * res
+      g.strokeStyle = kl; g.lineWidth = 1.5; g.strokeRect(1, vy + 1, W - 2, vh - 2)
     } else {
-      // zonder muren: een streepjesrand, als teken dat je er doorheen loopt
       g.shadowColor = kl; g.shadowBlur = 6 * res
-      g.strokeStyle = rgba(kl, 0.5); g.lineWidth = 2; g.setLineDash([T * 0.5, T * 0.5])
+      g.strokeStyle = rgba(kl, 0.6); g.lineWidth = 2; g.setLineDash([T * 0.5, T * 0.5])
       g.strokeRect(1.5, vy + 1.5, W - 3, vh - 3); g.setLineDash([])
-    }
-    // muurblokken: een neon-tegel met donkere kern, lichte bovenrand en gloed
-    for (const [x, y, w, h] of muurBlokken(veld)) {
-      const bx = x * T + 1.5, by = vy + y * T + 1.5, bw = w * T - 3, bh = h * T - 3
-      const mg = g.createLinearGradient(0, by, 0, by + bh)
-      mg.addColorStop(0, rgba(kl, 0.42)); mg.addColorStop(1, rgba(kl, 0.14))
-      g.shadowColor = kl; g.shadowBlur = 7 * res
-      g.fillStyle = mg; g.fillRect(bx, by, bw, bh)
-      g.shadowBlur = 0
-      g.strokeStyle = rgba(kl, 0.9); g.lineWidth = 1.3; g.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1)
-      g.fillStyle = 'rgba(255,255,255,0.22)'; g.fillRect(bx + 1.5, by + 1.5, bw - 3, Math.max(1.5, bh * 0.16))
     }
     g.restore()
   }

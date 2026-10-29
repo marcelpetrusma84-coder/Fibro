@@ -395,7 +395,7 @@ export const SOLO_SPELLEN = {
   breakout:     { naam: 'Block It',      icon: '🟪', bestand: './blockit-ui.js?v=149',  bot: stilBot, arcade: true },
   swarm:        { naam: 'The Swarm',     icon: '🪲', bestand: './swarm-ui.js?v=147',    bot: stilBot, arcade: true },
   // Twin Snakes heeft net als Ghost Tag al een eigen computerslang.
-  pinball:      { naam: 'Twin Snakes',   icon: '🐍', bestand: './twin-snakes-ui.js?v=148', zonderKanaal: true },
+  pinball:      { naam: 'Twin Snakes',   icon: '🐍', bestand: './twin-snakes-ui.js?v=149', zonderKanaal: true },
   // Runner & Gunner start zonder kanaal meteen alleen: geen vriend nodig om te starten.
   endlessrunner: { naam: 'Runner & Gunner', icon: '🏃', bestand: './runner-gunner-ui.js?v=148', zonderKanaal: true },
   flappybird:   { naam: 'Flapper',       icon: '🦇', bestand: './flappy-ui.js?v=147',   bot: stilBot, arcade: true },

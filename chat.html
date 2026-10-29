@@ -2289,7 +2289,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     swarm: './swarm-ui.js?v=147',
     endlessrunner: './runner-gunner-ui.js?v=148',
     pacman: './ecto-ui.js?v=177',
-    pinball: './twin-snakes-ui.js?v=148',
+    pinball: './twin-snakes-ui.js?v=149',
     shmup: './neon-raiders-ui.js?v=220'
   }
   const _alGeladen = {}
@@ -3000,7 +3000,7 @@ async function startBlockIt() {
 
   // ─── Twin Snakes (vakje Pinball) ───
   async function startTwinSnakes() {
-    const m = await import('./twin-snakes-ui.js?v=148')
+    const m = await import('./twin-snakes-ui.js?v=149')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'pinball' })
   }
 

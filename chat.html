@@ -2287,7 +2287,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     breakout: './blockit-ui.js?v=148',
     spaceinvaders: './invaders-ui.js?v=147',
     swarm: './swarm-ui.js?v=147',
-    endlessrunner: './runner-gunner-ui.js?v=147',
+    endlessrunner: './runner-gunner-ui.js?v=148',
     pacman: './ecto-ui.js?v=177',
     pinball: './twin-snakes-ui.js?v=147',
     shmup: './neon-raiders-ui.js?v=220'
@@ -2994,7 +2994,7 @@ async function startBlockIt() {
   }
 
   async function startRunnerGunner() {
-    const m = await import('./runner-gunner-ui.js?v=147')
+    const m = await import('./runner-gunner-ui.js?v=148')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'endlessrunner' })
   }
 

@@ -397,7 +397,7 @@ export const SOLO_SPELLEN = {
   // Twin Snakes heeft net als Ghost Tag al een eigen computerslang.
   pinball:      { naam: 'Twin Snakes',   icon: '🐍', bestand: './twin-snakes-ui.js?v=147', zonderKanaal: true },
   // Runner & Gunner start zonder kanaal meteen alleen: geen vriend nodig om te starten.
-  endlessrunner: { naam: 'Runner & Gunner', icon: '🏃', bestand: './runner-gunner-ui.js?v=147', zonderKanaal: true },
+  endlessrunner: { naam: 'Runner & Gunner', icon: '🏃', bestand: './runner-gunner-ui.js?v=148', zonderKanaal: true },
   flappybird:   { naam: 'Flapper',       icon: '🦇', bestand: './flappy-ui.js?v=147',   bot: stilBot, arcade: true },
   // v192: Neon Raiders start zonder kanaal meteen alleen, met een eigen startscherm; arcade: het record komt van spel.html.
   // v193: het hele spel (7 levels). v194: ook samen vanuit de chat (daar met spelKanaal).

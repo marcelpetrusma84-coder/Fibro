@@ -404,5 +404,5 @@ export const SOLO_SPELLEN = {
   // Let op: versie 194 van dit bestand was al gebruikt (de schaak-PR van valentijnpeters, 21 okt 2026); daarom laadt
   // spel.html in v193 versie 193 en in v194 versie 195. v195 (schaken weer in twee talen): versie 196. Een volgende
   // aanpassing aan solo.js neemt 197 of hoger.
-  shmup:        { naam: 'Neon Raiders',  icon: '🚀', bestand: './neon-raiders-ui.js?v=219', zonderKanaal: true, arcade: true },
+  shmup:        { naam: 'Neon Raiders',  icon: '🚀', bestand: './neon-raiders-ui.js?v=220', zonderKanaal: true, arcade: true },
 }

@@ -1249,6 +1249,13 @@ window.FIBRO_EN = {
   "{naam}: VERBINDING WEG": "{naam}: CONNECTION LOST",
   "{naam} IS TERUG": "{naam} IS BACK",
   "{naam}: GAME OVER": "{naam}: GAME OVER",
+// v220: terughalen, schild
+  "SCHILD AAN": "SHIELD ON",
+  "Wacht tot {naam} je komt halen, of doe bij het volgende level weer mee.": "Wait for {naam} to rescue you, or rejoin at the next level.",
+  "HAAL {naam} TERUG: VLIEG NAAR DE CIRKEL": "RESCUE {naam}: FLY TO THE CIRCLE",
+  "{naam} IS GERED!": "{naam} RESCUED!",
+  "GERED DOOR {naam}!": "RESCUED BY {naam}!",
+  "HIER": "HERE",
 // ---- Runner & Gunner (runner-gunner-ui, spellen/runner-gunner.html) ----
   "Jij en {naam} rennen op dezelfde baan. Wie komt het verst?": "You and {naam} run on the same track. Who gets the furthest?",
   "Hoe ver kom jij?": "How far can you get?",

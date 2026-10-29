@@ -1,0 +1,92 @@
+# Elke nacht een versleutelde kopie van de Fibro-database (Supabase, gratis plan: daar zijn geen back-ups).
+# Uitleg en terugzetten: docs/backup.md
+#
+# Nodig (GitHub > Settings > Secrets and variables > Actions):
+#   FIBRO_DB_WACHTWOORD   het wachtwoord van de database bij Supabase
+#   FIBRO_BACKUP_WACHTZIN zelfgekozen wachtzin; elke kopie wordt daarmee versleuteld (AES-256)
+# De repo is openbaar: zonder de wachtzin is een kopie onleesbaar, ook voor wie hem downloadt.
+name: Database-back-up
+
+on:
+  schedule:
+    - cron: '17 2 * * *'   # elke nacht om 02:17 UTC (03:17 of 04:17 in Nederland)
+  workflow_dispatch: {}     # ook met de hand te starten (Actions > Database-back-up > Run workflow)
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PGHOST: aws-1-eu-north-1.pooler.supabase.com   # Supabase > Connect > Shared pooler (sessie, IPv4)
+      PGPORT: '5432'
+      PGUSER: postgres.qmgatbphiplrfxrljtbe
+      PGDATABASE: postgres
+      PGSSLMODE: require
+      PGMAJOR: '17'                                   # zelfde hoofdversie als Supabase (show server_version)
+    steps:
+      - name: Geheimen aanwezig?
+        env:
+          WACHTWOORD: ${{ secrets.FIBRO_DB_WACHTWOORD }}
+          WACHTZIN: ${{ secrets.FIBRO_BACKUP_WACHTZIN }}
+        run: |
+          [ -n "$WACHTWOORD" ] || { echo "::error::Geheim FIBRO_DB_WACHTWOORD ontbreekt (Settings > Secrets and variables > Actions)"; exit 1; }
+          [ -n "$WACHTZIN" ] || { echo "::error::Geheim FIBRO_BACKUP_WACHTZIN ontbreekt (Settings > Secrets and variables > Actions)"; exit 1; }
+          [ "${#WACHTZIN}" -ge 12 ] || { echo "::error::FIBRO_BACKUP_WACHTZIN is te kort: gebruik minstens 12 tekens"; exit 1; }
+          echo "Beide geheimen zijn er."
+
+      - name: pg_dump ${{ env.PGMAJOR }} installeren
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common >/dev/null
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y >/dev/null
+          sudo apt-get install -y -qq "postgresql-client-$PGMAJOR" >/dev/null
+          "/usr/lib/postgresql/$PGMAJOR/bin/pg_dump" --version
+
+      - name: Kopie maken en controleren
+        env:
+          PGPASSWORD: ${{ secrets.FIBRO_DB_WACHTWOORD }}
+        run: |
+          set -eu
+          BIN="/usr/lib/postgresql/$PGMAJOR/bin"
+          umask 077
+          # public = alles van Fibro; auth = de accounts; storage = de lijst met bestanden (niet de bestanden zelf)
+          "$BIN/pg_dump" --format=custom --compress=9 --no-owner --no-privileges \
+            --schema=public --schema=auth --schema=storage --file=fibro.dump
+          "$BIN/pg_restore" --list fibro.dump > inhoud.txt
+          for tabel in profiles messages friendships; do
+            grep -q "TABLE DATA public $tabel " inhoud.txt || { echo "::error::Tabel $tabel ontbreekt in de kopie"; exit 1; }
+          done
+          echo "Tabellen met gegevens in de kopie: $(grep -c 'TABLE DATA' inhoud.txt)"
+          echo "Grootte: $(du -h fibro.dump | cut -f1)"
+
+      - name: Versleutelen
+        env:
+          WACHTZIN: ${{ secrets.FIBRO_BACKUP_WACHTZIN }}
+        run: |
+          set -eu
+          umask 077
+          NAAM="fibro-$(date -u +%Y-%m-%d_%H%M).dump.gpg"
+          printf '%s' "$WACHTZIN" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 \
+            --symmetric --cipher-algo AES256 --output "$NAAM" fibro.dump
+          # controle: met de wachtzin weer te openen en gelijk aan het origineel
+          printf '%s' "$WACHTZIN" | gpg --batch --quiet --pinentry-mode loopback --passphrase-fd 0 \
+            --decrypt "$NAAM" | cmp - fibro.dump
+          shred -u fibro.dump inhoud.txt
+          mkdir uit && mv "$NAAM" uit/
+          echo "Versleuteld: $NAAM"
+
+      - name: Bewaren (30 dagen)
+        uses: actions/upload-artifact@v4
+        with:
+          name: fibro-database-backup-${{ github.run_number }}
+          path: uit/*.gpg
+          retention-days: 30
+          if-no-files-found: error
+          compression-level: 0

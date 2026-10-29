@@ -1,71 +1,54 @@
 # Back-up van de Fibro-database
 
-Fibro draait op het gratis plan van Supabase. Daar maakt Supabase geen dagelijkse back-ups. Daarom maakt onze
-eigen server bij TransIP (dezelfde als de TURN-server) elke nacht een kopie.
+Fibro draait op het gratis plan van Supabase. Daar maakt Supabase geen dagelijkse back-ups. Daarom maakt GitHub
+elke nacht een **versleutelde** kopie: `.github/workflows/database-backup.yml`.
 
-- Script: `tools/backup/fibro-backup.sh` → op de server `/usr/local/bin/fibro-backup.sh`
-- Instellingen: `/etc/fibro-backup.conf` (zonder wachtwoord)
-- Wachtwoord: alleen in `/root/.pgpass` (alleen root kan het lezen)
-- Kopieën: `/var/backups/fibro/fibro-JJJJ-MM-DD_UUMM.dump`, de nieuwste 14 blijven staan
-- Logboek: `/var/backups/fibro/logboek.txt` (één regel per nacht: `GOED` of `FOUT`)
-- Wanneer: elke nacht om 03:17 (`/etc/cron.d/fibro-backup`)
-
-In de kopie zitten de schema's `public` (alles van Fibro), `auth` (de accounts) en `storage` (de lijst met
-bestanden, niet de bestanden zelf). Berichten staan erin zoals op de server: versleuteld.
+- **Wanneer:** elke nacht om 02:17 UTC (03:17 of 04:17 in Nederland). Ook met de hand: GitHub → **Actions** →
+  **Database-back-up** → **Run workflow**.
+- **Wat:** de schema's `public` (alles van Fibro), `auth` (de accounts) en `storage` (de lijst met bestanden, niet de
+  bestanden zelf). Berichten staan erin zoals op de server: versleuteld.
+- **Versleuteld:** met AES-256 en de wachtzin `FIBRO_BACKUP_WACHTZIN`. De repo is openbaar; zonder die wachtzin is
+  een kopie onleesbaar, ook voor wie hem downloadt. **Bewaar de wachtzin op papier.** Zonder wachtzin kan niemand de
+  kopie openen, ook jij niet.
+- **Hoe lang:** elke kopie blijft 30 dagen staan, bij de run onder **Actions** (onderaan: *Artifacts*).
+- **Controle:** de workflow stopt met een rode foutmelding als een geheim ontbreekt, als de kopie niet te lezen is,
+  als `profiles`, `messages` of `friendships` ontbreekt, of als de versleutelde kopie niet terug te openen is.
 
 ## Eén keer instellen
 
-Nodig: de Postgres-versie van Supabase (`show server_version;` in de SQL Editor) en de gegevens van de
-**Session pooler** (Supabase → **Connect** → Session pooler): host, poort en gebruiker. De pooler werkt via IPv4.
+GitHub → repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**:
 
-Op de server (als root), voor Debian of Ubuntu, met `17` als voorbeeld voor de versie:
+| Naam | Inhoud |
+|---|---|
+| `FIBRO_DB_WACHTWOORD` | het wachtwoord van de database bij Supabase (Supabase → Connect → *Reset database password* als je het niet meer weet; de app gebruikt dit wachtwoord niet) |
+| `FIBRO_BACKUP_WACHTZIN` | een zelfgekozen wachtzin van minstens 12 tekens, bijvoorbeeld vier losse woorden |
 
-```sh
-# 1. pg_dump in dezelfde hoofdversie als Supabase
-apt-get update && apt-get install -y postgresql-common
-/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
-apt-get install -y postgresql-client-17
-
-# 2. het script
-curl -fsSL https://raw.githubusercontent.com/marcelpetrusma84-coder/Fibro/main/tools/backup/fibro-backup.sh -o /usr/local/bin/fibro-backup.sh
-chmod 755 /usr/local/bin/fibro-backup.sh
-
-# 3. instellingen (geen wachtwoord)
-cat > /etc/fibro-backup.conf <<'CONF'
-PGHOST=aws-0-eu-central-1.pooler.supabase.com
-PGPORT=5432
-PGUSER=postgres.qmgatbphiplrfxrljtbe
-PGDATABASE=postgres
-PGMAJOR=17
-BEWAAR=14
-CONF
-
-# 4. het wachtwoord (vraagt erom; het verschijnt niet op het scherm)
-read -rs -p 'Databasewachtwoord: ' W; echo
-printf '%s:%s:%s:%s:%s\n' "$(. /etc/fibro-backup.conf; echo $PGHOST)" 5432 postgres "$(. /etc/fibro-backup.conf; echo $PGUSER)" "$W" > /root/.pgpass
-chmod 600 /root/.pgpass; unset W
-
-# 5. proef
-/usr/local/bin/fibro-backup.sh
-
-# 6. elke nacht om 03:17
-echo '17 3 * * * root /usr/local/bin/fibro-backup.sh >/dev/null 2>&1' > /etc/cron.d/fibro-backup
-```
+Verbinding (geen geheim, staat in de workflow): Supabase → **Connect** → *Shared pooler*:
+`aws-1-eu-north-1.pooler.supabase.com`, poort `5432`, gebruiker `postgres.qmgatbphiplrfxrljtbe`, Postgres 17.
+Verandert er iets aan het project, pas dan `PGHOST`, `PGUSER` of `PGMAJOR` in de workflow aan.
 
 ## Kijken of het werkt
 
-```sh
-tail -n 5 /var/backups/fibro/logboek.txt
-ls -lh /var/backups/fibro/
-```
+GitHub → **Actions** → **Database-back-up**: een groen vinkje per nacht. Een rood kruis: klik erop, de foutmelding
+zegt wat er mis is.
 
 ## Terugzetten
 
-Altijd eerst in een **nieuwe, lege** database (een nieuw Supabase-project of een eigen Postgres), nooit zomaar
-over de live database heen:
+1. GitHub → **Actions** → **Database-back-up** → kies een run → onderaan bij *Artifacts* downloaden en uitpakken
+   (zip). Daarin staat `fibro-JJJJ-MM-DD_UUMM.dump.gpg`.
+2. Ontsleutelen (vraagt om de wachtzin):
+   ```sh
+   gpg --output fibro.dump --decrypt fibro-JJJJ-MM-DD_UUMM.dump.gpg
+   ```
+3. Altijd eerst terugzetten in een **nieuwe, lege** database (een nieuw Supabase-project of een eigen Postgres 17),
+   nooit zomaar over de live database heen:
+   ```sh
+   pg_restore --no-owner --no-privileges -d "postgresql://…nieuwe database…" fibro.dump
+   ```
+   Een paar meldingen over schema's die al bestaan zijn normaal.
 
-```sh
-pg_restore --no-owner --no-privileges -d "postgresql://…nieuwe database…" /var/backups/fibro/fibro-JJJJ-MM-DD_UUMM.dump
-```
+## Later: op de eigen server
 
-Een paar meldingen over schema's die al bestaan zijn normaal.
+`tools/backup/fibro-backup.sh` doet hetzelfde op een eigen Linux-server (bijvoorbeeld de TransIP-server), met
+`/etc/fibro-backup.conf`, het wachtwoord in `/root/.pgpass` en een cron-regel. Handig zodra Fibro naar een eigen
+server verhuist. De uitleg staat bovenin het script.

@@ -6,6 +6,9 @@
 // Hoe groter het vierkant dat je weghaalt, hoe groter die explosie.
 // Bomstenen zitten willekeurig in de wachtrij en ontploffen zodra ze landen.
 // v147: teksten ook in het Engels (taal.js)
+// v149: spelvorm 'zwarte blokken' (schakelaar in het menu): om de paar stenen vallen er zwarte blokken in de bak. Ze horen
+//       bij geen kleur (tellen nooit mee in een vierkant) en gaan alleen weg door een explosie: een bom, een geladen steen
+//       of de schokgolf van een vierkant van 4x4 of groter. En een uitleg (knop ❓, de eerste keer vanzelf).
 // v148: de lading van een steen blijft een getal (er stond 'CRUSH true' en 'explosie true'); '+n RIJEN!' ook in het Engels
 const vertaal = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v147); T is hier al een steenvorm
 
@@ -30,6 +33,9 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     const BOM_KANS = 1 / 12           // hoe vaak er een bomsteen in de wachtrij zit
     const HUD_H = 66
     const CRUSH_KLEUR = '#ffe066'
+    const ZWART = 9                   // v149: een zwart blok in het rooster (als teken '9')
+    const ZWART_KLEUR = { basis: '#26262f', licht: '#4b4b5c', donker: '#0b0b10' }
+    const ZWART_ELKE = 5              // om de zoveel gelande stenen vallen er zwarte blokken bij
     const BOM_KLEUR = '#ff9f1c'
     const KLEUREN = [
         { basis: '#ff4d6d', licht: '#ff9aae', donker: '#9d1537' },
@@ -62,12 +68,14 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     <canvas id="bi-canvas" style="display:block;touch-action:none;border-radius:12px;"></canvas>
     <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;">
     <button id="bi-geluid" style="background:rgba(255,255,255,0.12);border:none;border-radius:8px;color:white;padding:4px 12px;font-size:16px;cursor:pointer;">🔊</button>
+    <button id="bi-uitleg" aria-label="${htmlVeilig(vertaal('Hoe speel je Block It?'))}" style="background:rgba(255,255,255,0.12);border:none;border-radius:8px;color:white;padding:4px 12px;font-size:16px;cursor:pointer;">❓</button>
     <div style="color:rgba(255,255,255,0.45);font-size:11px;text-align:center;">${vertaal('Veeg om te schuiven, tik om te draaien, veeg snel omlaag om te laten vallen')}</div>
     </div>
     </div>`
 
     const canvas = document.getElementById('bi-canvas')
     const ctx = canvas.getContext('2d')
+    const hoofdCtx = ctx
     const statusEl = document.getElementById('bi-status')
     const keuzeEl = document.getElementById('bi-keuze')
     const geluidKnop = document.getElementById('bi-geluid')
@@ -93,6 +101,9 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     let laatsteStukSync = 0, laatste = 0, animFrame = null, aftelInterval = null, pingInterval = null
     let gastAntwoorden = new Map()
     let vriendAanwezig = false
+    let zwartAan = false              // v149: spelvorm zwarte blokken aan?
+    try { zwartAan = localStorage.getItem('bi-zwart') === 'aan' } catch (e) {}
+    let zwartTeller = 0, zwartGolven = 0
     let cel = 16, celV = 10, B = 300, H = 400, gx = 6, gy = HUD_H + 6, vgx = 0, vgy = 0
 
     function leegRooster(kol) {
@@ -126,6 +137,8 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         starttijd = nu()
         stoot = 0
         gastAntwoorden = new Map()
+        zwartTeller = 0
+        zwartGolven = 0
         deeltjes = []
         teksten = []
         ringen = []
@@ -224,7 +237,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         for (let y = 0; y < RIJ; y++) {
             for (let x = 0; x < KOL; x++) {
                 const c = rooster[y][x]
-                if (c === null) continue
+                if (c === null || c === ZWART) continue   // v149: zwart hoort bij geen kleur
                     let n = 1
                     if (y > 0 && x > 0 && rooster[y - 1][x] === c && rooster[y][x - 1] === c && rooster[y - 1][x - 1] === c) {
                         n = Math.min(dp[y - 1][x], dp[y][x - 1], dp[y - 1][x - 1]) + 1
@@ -332,9 +345,34 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
                 }
                 laatVallen()
                 const aanval = overloop ? 0 : vierkantenInBak(speler, effecten)
+                if (!overloop) zwartErbij(effecten)
                 // Raakt een blok de bovenkant van het speelveld? Dan is het spel voorbij.
                 if (rooster[0].some(c => c !== null)) overloop = true
                     return { effecten, overloop, aanval }
+    }
+
+    /* v149: zwarte blokken. Om de ZWART_ELKE gelande stenen vallen er 1 tot 3 in willekeurige kolommen (eerst 1,
+       later meer). Ze vallen tot op de stapel. */
+    function zwartErbij(effecten) {
+        if (!zwartAan) return
+        zwartTeller++
+        if (zwartTeller % ZWART_ELKE) return
+        zwartGolven++
+        const aantal = Math.min(3, 1 + Math.floor(zwartGolven / 4))
+        const kolommen = []
+        while (kolommen.length < Math.min(aantal, KOL)) {
+            const x = Math.floor(Math.random() * KOL)
+            if (!kolommen.includes(x)) kolommen.push(x)
+        }
+        const cellen = []
+        for (const x of kolommen) {
+            let y = RIJ - 1
+            while (y >= 0 && rooster[y][x] !== null) y--
+            if (y < 0) continue
+            rooster[y][x] = ZWART
+            cellen.push([x, y])
+        }
+        if (cellen.length) effecten.push({ t: 'zwart', cellen })
     }
 
     function vierkantenInBak(speler, effecten) {
@@ -639,6 +677,13 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
                 schok(1)
                 stoot = 1.6
                 geluid.bom()
+            } else if (e.t === 'zwart') {
+                for (const [x, y] of e.cellen) {
+                    if (y >= 0 && y < RIJ) pop[y][x] = 1
+                    spat(x, y, '#8a8aa0', 1)
+                }
+                zweef(KOL / 2, 2.5, e.cellen.length === 1 ? vertaal('⬛ Zwart blok!') : vertaal('⬛ {n} zwarte blokken!', { n: e.cellen.length }), '#b9b9cc', 0.8)
+                geluid.rommel()
             } else if (e.t === 'vierkant') {
                 const kleur = KLEUREN[e.kleur]
                 const cx = e.x + e.k / 2, cy = e.y + e.k / 2
@@ -764,9 +809,134 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     ]
 
     function naamVan(m) {
-        if (solo) return 'Block It'
+        const extra = zwartAan ? ' ⬛' : ''
+        if (solo) return 'Block It' + extra
         const v = SPELVORMEN.find(s => s.modus === m)
-        return v ? v.titel : ''
+        return v ? v.titel + extra : ''
+    }
+
+    /* v149: de schakelaar voor zwarte blokken en de knop voor de uitleg, onder elkaar in het menu */
+    const KNOP2_STIJL = 'background:rgba(255,255,255,0.12);border:none;border-radius:10px;padding:8px 14px;color:white;font-weight:600;cursor:pointer;text-align:left;'
+    function zwartKnop() {
+        const knop = document.createElement('button')
+        knop.className = 'bi-zwartknop'
+        knop.style.cssText = KNOP2_STIJL
+        const teken = () => {
+            knop.innerHTML = '<div style="font-size:14px;">' + htmlVeilig(zwartAan ? vertaal('⬛ Zwarte blokken: AAN') : vertaal('⬛ Zwarte blokken: UIT')) + '</div>'
+                + '<div style="font-size:11px;font-weight:500;opacity:0.75;">' + htmlVeilig(vertaal('Ze vallen erbij en gaan alleen weg door een explosie')) + '</div>'
+            knop.style.outline = zwartAan ? '2px solid #ff4d6d' : 'none'
+        }
+        knop.onclick = () => {
+            zwartAan = !zwartAan
+            try { localStorage.setItem('bi-zwart', zwartAan ? 'aan' : 'uit') } catch (e) {}
+            teken()
+        }
+        teken()
+        return knop
+    }
+    function uitlegKnop() {
+        const knop = document.createElement('button')
+        knop.style.cssText = KNOP2_STIJL + 'text-align:center;'
+        knop.textContent = vertaal('❓ Hoe speel je Block It?')
+        knop.onclick = () => toonUitleg()
+        return knop
+    }
+    /* alleen spelen: kiezen tussen gewoon en zwarte blokken */
+    /* v149: de uitleg. Zes korte pagina's, elk met een plaatje van een stukje bak (met dezelfde blokjes als in het spel).
+       Rooster: '.' leeg, 0-3 een kleur, 9 zwart, B een bom. kader = [x, y, grootte] wordt omlijnd. */
+    const UITLEG = [
+        { titel: vertaal('1. Stenen besturen'), tekst: vertaal('Veeg naar links of rechts om de steen te schuiven. Tik om hem te draaien. Veeg snel omlaag en hij valt meteen. Met toetsen: pijltjes schuiven, pijltje omhoog draait, spatie laat vallen.'),
+          rooster: ['..111..', '...1...', '.......', '.......', '2...300', '22.3300'], pijlen: true },
+        { titel: vertaal('2. Vierkanten maken'), tekst: vertaal('Maak een vierkant van minstens 3 bij 3 blokjes in één kleur. Het verdwijnt en je krijgt punten. Valt er daarna meteen nog een vierkant, dan is het een ketting: dubbele punten.'),
+          rooster: ['.......', '.......', '.000...', '.0003..', '.00033.', '2211332'], kader: [1, 2, 3] },
+        { titel: vertaal('3. Groot vierkant = explosie'), tekst: vertaal('Een vierkant van 4 bij 4 of groter geeft een schokgolf: ook de blokjes eromheen gaan weg. Je volgende steen is dan geladen ⚡. Veeg hem snel omlaag: hij boort door alles heen en ontploft onderaan.'),
+          rooster: ['.......', '.2222..', '.2222..', '.22221.', '.22221.', '3300113'], kader: [1, 1, 4] },
+        { titel: vertaal('4. Bommen 💣'), tekst: vertaal('Soms krijg je een bom. Waar hij landt, ontploft hij en maakt hij een rond gat in je stapel. Handig als je bak te vol raakt.'),
+          rooster: ['...B...', '.......', '1..2..3', '12.2.33', '1102233', '1002203'] },
+        { titel: vertaal('5. Zwarte blokken ⬛'), tekst: vertaal('In de spelvorm Zwarte blokken vallen er om de paar stenen zwarte blokken in je bak. Ze horen bij geen kleur, dus ze tellen nooit mee in een vierkant. Ze gaan alleen weg door een explosie: een bom, een geladen steen, of de schokgolf van een vierkant van 4 bij 4.'),
+          rooster: ['..B....', '.......', '9..9...', '19.2.9.', '1192933', '9102209'] },
+        { titel: vertaal('6. Einde en spelvormen'), tekst: vertaal('Raakt je stapel de bovenkant, dan is het spel voorbij. Samen spelen kan in één gedeelde bak (met gemengde of eigen kleuren), of met twee velden: dan stuurt elk vierkant van jou rijen naar je vriend.'),
+          rooster: ['..3....', '.13.2..', '1132290', '1932201', '1102233', '9102203'], grens: true }
+    ]
+    let uitlegEl = null
+    function toonUitleg(start = 0) {
+        if (uitlegEl) uitlegEl.remove()
+        uitlegEl = document.createElement('div')
+        uitlegEl.className = 'bi-uitleg'
+        uitlegEl.style.cssText = 'position:fixed;inset:0;z-index:10050;background:rgba(10,4,26,0.92);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;font-family:' + FONT + ';'
+        uitlegEl.innerHTML = `<div style="width:min(360px,100%);background:#1d1140;border:1px solid rgba(198,184,255,0.3);border-radius:16px;padding:16px;box-sizing:border-box;color:white;display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;"><b class="bi-u-titel" style="font-size:16px;"></b>
+              <button class="bi-u-sluit" aria-label="${htmlVeilig(vertaal('Sluiten'))}" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;">✕</button></div>
+            <canvas class="bi-u-plaat" style="align-self:center;border-radius:10px;"></canvas>
+            <div class="bi-u-tekst" style="font-size:13px;line-height:1.5;opacity:0.9;min-height:96px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <button class="bi-u-terug" style="${KNOP2_STIJL}text-align:center;">${htmlVeilig(vertaal('← Terug'))}</button>
+              <span class="bi-u-nr" style="font-size:12px;opacity:0.6;"></span>
+              <button class="bi-u-verder" style="${KNOP_STIJL}text-align:center;"></button></div></div>`
+        inhoud.appendChild(uitlegEl)
+        let blad = start
+        const plaat = uitlegEl.querySelector('.bi-u-plaat'), pc = plaat.getContext('2d')
+        const sluit = () => {
+            if (uitlegEl) { uitlegEl.remove(); uitlegEl = null }
+            try { localStorage.setItem('bi-uitleg', 'gezien') } catch (e) {}
+        }
+        const tekenBlad = () => {
+            const u = UITLEG[blad]
+            uitlegEl.querySelector('.bi-u-titel').textContent = u.titel
+            uitlegEl.querySelector('.bi-u-tekst').textContent = u.tekst
+            uitlegEl.querySelector('.bi-u-nr').textContent = (blad + 1) + ' / ' + UITLEG.length
+            uitlegEl.querySelector('.bi-u-terug').style.visibility = blad ? 'visible' : 'hidden'
+            uitlegEl.querySelector('.bi-u-verder').textContent = blad === UITLEG.length - 1 ? vertaal('Spelen!') : vertaal('Verder →')
+            const c = 30, kol = u.rooster[0].length, rij = u.rooster.length
+            const dpr = Math.min(window.devicePixelRatio || 1, 2)
+            plaat.width = Math.round((kol * c + 12) * dpr); plaat.height = Math.round((rij * c + 12) * dpr)
+            plaat.style.width = (kol * c + 12) + 'px'; plaat.style.height = (rij * c + 12) + 'px'
+            pc.setTransform(dpr, 0, 0, dpr, 0, 0)
+            pc.fillStyle = 'rgba(8,4,22,0.85)'; pc.fillRect(0, 0, kol * c + 12, rij * c + 12)
+            if (u.grens) { pc.fillStyle = '#ff4d6d'; pc.fillRect(6, 4, kol * c, 3) }
+            u.rooster.forEach((r, y) => [...r].forEach((t, x) => {
+                if (t === '.') return
+                if (t === 'B') tekenBom(6 + x * c, 6 + y * c, c, pc)
+                else tekenBlok(6 + x * c, 6 + y * c, c, Number(t), 1, 1, pc)
+            }))
+            if (u.kader) {
+                const [x, y, k] = u.kader
+                pc.strokeStyle = '#ffffff'; pc.lineWidth = 3; pc.setLineDash([6, 4])
+                pc.strokeRect(6 + x * c - 1, 6 + y * c - 1, k * c + 2, k * c + 2); pc.setLineDash([])
+            }
+            if (u.pijlen) {
+                pc.fillStyle = '#ffe066'; pc.font = 'bold 22px ' + FONT; pc.textAlign = 'center'; pc.textBaseline = 'middle'
+                pc.fillText('←', 6 + 0.9 * c, 6 + 0.6 * c); pc.fillText('→', 6 + 6.1 * c, 6 + 0.6 * c); pc.fillText('↓', 6 + 3.5 * c, 6 + 2.6 * c); pc.fillText('↻', 6 + 5 * c, 6 + 1.6 * c)
+            }
+        }
+        uitlegEl.querySelector('.bi-u-sluit').onclick = sluit
+        uitlegEl.querySelector('.bi-u-terug').onclick = () => { if (blad > 0) { blad--; tekenBlad() } }
+        uitlegEl.querySelector('.bi-u-verder').onclick = () => { if (blad < UITLEG.length - 1) { blad++; tekenBlad() } else sluit() }
+        uitlegEl.addEventListener('pointerdown', e => e.stopPropagation())
+        tekenBlad()
+    }
+
+    function toonSoloKeuze() {
+        clearInterval(aftelInterval)
+        verwijderKnoppen()
+        resetStaat(null)
+        resize()
+        keuzeEl.innerHTML = ''
+        keuzeEl.style.display = 'flex'
+        statusEl.textContent = vertaal('Kies een spelvorm')
+        for (const [z, titel, uitleg] of [[false, vertaal('Gewoon'), vertaal('Maak vierkanten van één kleur')],
+                                         [true, vertaal('⬛ Zwarte blokken'), vertaal('Ze vallen erbij en gaan alleen weg door een explosie')]]) {
+            const knop = document.createElement('button')
+            knop.style.cssText = KNOP_STIJL
+            knop.innerHTML = '<div style="font-size:15px;">' + htmlVeilig(titel) + '</div><div style="font-size:11px;font-weight:500;opacity:0.75;">' + htmlVeilig(uitleg) + '</div>'
+            knop.onclick = () => {
+                zwartAan = z
+                try { localStorage.setItem('bi-zwart', z ? 'aan' : 'uit') } catch (e) {}
+                beginSpel('versus')
+            }
+            keuzeEl.appendChild(knop)
+        }
+        keuzeEl.appendChild(uitlegKnop())
     }
 
     function toonKeuze() {
@@ -778,22 +948,26 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         keuzeEl.style.display = 'flex'
         if (!vriendAanwezig) {
             statusEl.textContent = vertaal('⏳ Wachten tot {naam} in het spel zit...', { naam: vriendNaam })
+            keuzeEl.appendChild(uitlegKnop())
             return
         }
         if (benIkHost) {
             statusEl.textContent = vertaal('Kies een spelvorm')
+            keuzeEl.appendChild(zwartKnop())
             for (const v of SPELVORMEN) {
                 const knop = document.createElement('button')
                 knop.style.cssText = KNOP_STIJL
                 knop.innerHTML = '<div style="font-size:15px;">' + htmlVeilig(v.titel) + '</div><div style="font-size:11px;font-weight:500;opacity:0.75;">' + htmlVeilig(v.uitleg) + '</div>'
                 knop.onclick = () => {
-                    spelKanaal.send({ type: 'broadcast', event: 'bi-modus', payload: { modus: v.modus } })
+                    spelKanaal.send({ type: 'broadcast', event: 'bi-modus', payload: { modus: v.modus, zwart: zwartAan } })
                     beginSpel(v.modus)
                 }
                 keuzeEl.appendChild(knop)
             }
+            keuzeEl.appendChild(uitlegKnop())
         } else {
             statusEl.textContent = vertaal('⏳ Wachten tot {naam} een spelvorm kiest...', { naam: vriendNaam })
+            keuzeEl.appendChild(uitlegKnop())
         }
     }
 
@@ -862,10 +1036,18 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
                         opnieuw.textContent = vertaal('↻ Opnieuw')
                         opnieuw.style.cssText = KNOP_STIJL + 'text-align:center;margin-top:4px;'
                         opnieuw.onclick = () => {
-                            spelKanaal.send({ type: 'broadcast', event: 'bi-herstart', payload: { modus: gespeeld } })
+                            spelKanaal.send({ type: 'broadcast', event: 'bi-herstart', payload: { modus: gespeeld, zwart: zwartAan } })
                             beginSpel(gespeeld)
                         }
                         rij.appendChild(opnieuw)
+                        if (solo) {   // v149: alleen spelen: terug naar de keuze (gewoon of zwarte blokken)
+                            const ander = document.createElement('button')
+                            ander.className = 'bi-herstart'
+                            ander.textContent = vertaal('Andere spelvorm')
+                            ander.style.cssText = 'background:rgba(255,255,255,0.12);border:none;border-radius:10px;padding:8px 18px;color:white;font-weight:600;cursor:pointer;'
+                            ander.onclick = () => toonSoloKeuze()
+                            rij.appendChild(ander)
+                        }
                         if (benIkHost && !solo) {
                             const ander = document.createElement('button')
                             ander.className = 'bi-herstart'
@@ -919,8 +1101,8 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         ctx.closePath()
     }
 
-    function tekenBlok(x, y, s, k, alpha = 1, schaal = 1) {
-        const kleur = KLEUREN[k]
+    function tekenBlok(x, y, s, k, alpha = 1, schaal = 1, ctx = hoofdCtx) {   // v149: ctx kan ook een ander canvas zijn (uitleg)
+        const kleur = k === ZWART ? ZWART_KLEUR : KLEUREN[k]
         const g = Math.max(1, s * 0.05)
         const bs = s * schaal - g * 2
         const bx = x + (s - s * schaal) / 2 + g
@@ -943,10 +1125,18 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         ctx.fillRect(bx + bevel, by + bevel, bs - bevel * 2, bs - bevel * 2)
         ctx.fillStyle = 'rgba(255,255,255,0.16)'
         ctx.fillRect(bx + bevel, by + bevel, bs - bevel * 2, (bs - bevel * 2) * 0.38)
+        if (k === ZWART) {   // v149: zwart blok: vier klinknagels en een rode rand, zodat je ziet dat het anders is
+            const n = Math.max(1, bs * 0.08)
+            ctx.fillStyle = '#8a8aa0'
+            for (const [px, py] of [[0.28, 0.28], [0.72, 0.28], [0.28, 0.72], [0.72, 0.72]]) ctx.fillRect(bx + bs * px - n / 2, by + bs * py - n / 2, n, n)
+            ctx.strokeStyle = 'rgba(255,77,109,0.55)'
+            ctx.lineWidth = Math.max(1, bs * 0.06)
+            ctx.strokeRect(bx + ctx.lineWidth / 2, by + ctx.lineWidth / 2, bs - ctx.lineWidth, bs - ctx.lineWidth)
+        }
         ctx.globalAlpha = 1
     }
 
-    function tekenBom(x, y, s) {
+    function tekenBom(x, y, s, ctx = hoofdCtx) {
         const cx = x + s / 2, cy = y + s * 0.56, r = s * 0.36
         ctx.save()
         ctx.fillStyle = '#1b1b24'
@@ -1329,6 +1519,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     window.addEventListener('resize', resize)
 
     function opruimen() {
+        if (uitlegEl) { uitlegEl.remove(); uitlegEl = null }
         window.removeEventListener('keydown', opToets)
         window.removeEventListener('resize', resize)
         clearInterval(aftelInterval)
@@ -1345,15 +1536,19 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
             spelKanaal.send({ type: 'broadcast', event: 'bi-hier', payload: {} })
             if (!modus) toonKeuze()
         }
-        if (benIkHost && modus) spelKanaal.send({ type: 'broadcast', event: 'bi-modus', payload: { modus } })
+        if (benIkHost && modus) spelKanaal.send({ type: 'broadcast', event: 'bi-modus', payload: { modus, zwart: zwartAan } })
     })
     spelKanaal.on('broadcast', { event: 'bi-modus' }, (msg) => {
         if (benIkHost) return
             if (modus === msg.payload.modus && !gameOver) return
+                zwartAan = !!msg.payload.zwart   // v149: de uitnodiger kiest
                 beginSpel(msg.payload.modus)
     })
     spelKanaal.on('broadcast', { event: 'bi-keuze' }, () => toonKeuze())
-    spelKanaal.on('broadcast', { event: 'bi-herstart' }, (msg) => beginSpel(msg.payload.modus || modus))
+    spelKanaal.on('broadcast', { event: 'bi-herstart' }, (msg) => {
+        if (!benIkHost && 'zwart' in msg.payload) zwartAan = !!msg.payload.zwart
+        beginSpel(msg.payload.modus || modus)
+    })
 
     // Gedeelde bak
     spelKanaal.on('broadcast', { event: 'bi-vraag' }, (msg) => {
@@ -1420,7 +1615,11 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     })
 
     // ── Start ──
-    if (solo) beginSpel('versus')
+    document.getElementById('bi-uitleg').onclick = (e) => { e.stopPropagation(); toonUitleg() }
+    let uitlegGezien = false
+    try { uitlegGezien = localStorage.getItem('bi-uitleg') === 'gezien' } catch (e) {}
+    if (!uitlegGezien) setTimeout(() => { if (isActief() && !bezig) toonUitleg() }, 300)   // v149: de eerste keer vanzelf
+    if (solo) toonSoloKeuze()   // v149: eerst kiezen: gewoon of zwarte blokken
     else {
         toonKeuze()
         spelKanaal.send({ type: 'broadcast', event: 'bi-hier', payload: {} })
@@ -1434,6 +1633,11 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     }, 1200)
     animFrame = requestAnimationFrame(lus)
     window._spelAnimFrame = animFrame
+    if (window.__fibroProef) window.__blockIt = {   // alleen in de proeven (tests/tools/proef222.py)
+        staat: () => ({ rooster: rooster.map(r => r.slice()), zwartAan, bezig, modus, gameOver, zwartTeller }),
+        zetRooster: t => uitTekst(t, rooster), grootsteVierkant, laatVallen,
+        bom: (x, y) => { bomStuk[IK] = true; const r = landInBak(IK, [[x, y]], 0, false, true); speelEffecten(r.effecten); return r }
+    }
 }
 
 // ── Geluid (Web Audio, geen bestanden nodig) ──

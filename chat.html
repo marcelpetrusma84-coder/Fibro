@@ -2525,6 +2525,18 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const overlay = document.getElementById('spelOverlay')
     if (!overlay || !spelActief) return
     if (!st) { toonSpelChat(T('\u{1F5BC}\uFE0F Sticker'), vanMij); return } // eigen sticker die nog niet binnen is
+    // v171: een sticker die in beeld is wordt niet meer onderbroken. Stuurt de ander er intussen ook een,
+    // dan wacht die in de rij en komt hij direct daarna in beeld.
+    if (spelStickerBezig) { if (spelStickerRij.length < 4) spelStickerRij.push({ st, vanMij }); return }
+    toonSpelStickerGroot(overlay, st, vanMij)
+  }
+  let spelStickerBezig = false, spelStickerRij = [], spelStickerTimers = []
+  function spelStickerStop() { // bij het sluiten van het spel: rij leeg en timers weg
+    spelStickerTimers.forEach(clearTimeout); spelStickerTimers = []
+    spelStickerRij = []; spelStickerBezig = false
+  }
+  function toonSpelStickerGroot(overlay, st, vanMij) {
+    spelStickerBezig = true
     const oud = document.getElementById('spelStickerGroot')
     if (oud) oud.remove()
     const vak = document.createElement('div')
@@ -2536,7 +2548,16 @@ console.timeLog('[chat] berichten', 'opgehaald')
     vak.appendChild(img)
     overlay.appendChild(vak)
     speelFx(img, st, true)
-    setTimeout(() => { vak.style.opacity = '0'; setTimeout(() => vak.remove(), 600) }, 2500)
+    spelStickerTimers.push(setTimeout(() => {
+      vak.style.opacity = '0'
+      spelStickerTimers.push(setTimeout(() => {
+        vak.remove()
+        spelStickerBezig = false
+        const volgende = spelStickerRij.shift()
+        const ov = document.getElementById('spelOverlay')
+        if (volgende && ov && spelActief) toonSpelStickerGroot(ov, volgende.st, volgende.vanMij)
+      }, 600))
+    }, 2500))
   }
 
   function bouwSpelChatUI() {
@@ -2666,6 +2687,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     document.getElementById('spelInhoud').innerHTML = ''
     var scw = document.getElementById('spelChatWrap'); if (scw) scw.remove()
     var ssg = document.getElementById('spelStickerGroot'); if (ssg) ssg.remove() // v170
+    spelStickerStop() // v171
     spelStickerKeuze = null
     // Stop eventuele loopende animaties (Pong, Flappy Bird)
     if (window._spelAnimFrame) { cancelAnimationFrame(window._spelAnimFrame); window._spelAnimFrame = null }

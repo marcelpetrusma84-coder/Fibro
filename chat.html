@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=32"></script>
+<script src="taal.js?v=33"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2287,7 +2287,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     breakout: './blockit-ui.js?v=148',
     spaceinvaders: './invaders-ui.js?v=147',
     swarm: './swarm-ui.js?v=147',
-    endlessrunner: './runner-gunner-ui.js?v=147',
+    endlessrunner: './runner-gunner-ui.js?v=148',
     pacman: './ecto-ui.js?v=177',
     pinball: './twin-snakes-ui.js?v=147',
     shmup: './neon-raiders-ui.js?v=220'
@@ -2994,7 +2994,7 @@ async function startBlockIt() {
   }
 
   async function startRunnerGunner() {
-    const m = await import('./runner-gunner-ui.js?v=147')
+    const m = await import('./runner-gunner-ui.js?v=148')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'endlessrunner' })
   }
 

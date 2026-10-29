@@ -1,4 +1,5 @@
-/* Runner & Gunner — als spel in de Fibro-chat.
+/* Runner & Gunner — als spel in de Fibro-chat. v148 (29 okt 2026): knop SCHERM (vanzelf/liggend/rechtop), maat terughalen
+   met een hart, 5 seconden kiezen bij een nieuw spel samen.
    Zelfde opbouw als pong-ui.js: één ingang, start(), die zichzelf in
    #spelInhoud tekent en zichzelf opruimt zodra het spel gesloten wordt.
    Beide spelers zitten in hetzelfde spelkanaal; uit de naam daarvan komt
@@ -42,7 +43,8 @@ function zetStijl() {
   .rg *{box-sizing:border-box}
   .rg .veld{position:relative;overflow:hidden;border:2px solid var(--rand);border-radius:6px;
     background:#07051a;touch-action:none;-webkit-tap-highlight-color:transparent;flex:none}
-  .rg .veld canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+  .rg .veld{display:flex;align-items:center;justify-content:center}
+  .rg .veld canvas{display:block;flex:none;image-rendering:pixelated;image-rendering:crisp-edges}
   .rg .hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;
     padding:8px 9px;pointer-events:none;z-index:2}
   .rg .score{font-size:13px;color:#fff;text-shadow:2px 2px 0 #0b1020;letter-spacing:1px}
@@ -81,6 +83,8 @@ function zetStijl() {
   .rg .geluidKnop{font-family:inherit;font-size:8px;color:var(--zacht);background:none;border:1px solid var(--rand);
     border-radius:0;padding:6px 10px;margin-top:12px;cursor:pointer}
   .rg.telt .geluidKnop{display:none}
+  .rg.kiest .knop,.rg.kiest .geluidKnop,.rg.kiest .rol{display:none}
+  .rg.kiest .laag h1{color:#ffd27a}
   .rg.klein .geluidKnop{margin-top:6px;padding:4px 8px;font-size:7px}
   .rg .fout{padding:18px;color:var(--roze);font-size:10px;line-height:2;text-align:center}
   /* klein veld: startscherm compacter */
@@ -152,7 +156,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
             <button class="kGunner" aria-pressed="false"><canvas class="pop"></canvas><b>GUNNER</b><small>${vertaal('Sterker kanon.')}</small></button>
           </div>
           <button class="knop">START</button>
-          <div><button class="geluidKnop" type="button">${vertaal('GELUID: AAN')}</button></div>
+          <div><button class="geluidKnop" type="button">${vertaal('GELUID: AAN')}</button> <button class="geluidKnop standKnop" type="button"></button></div>
         </div>
       </div>
     </div>
@@ -186,7 +190,32 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   let spel = null
 
   /* ---------- indeling: past het veld in de ruimte die de chat overlaat ---------- */
+  /* v148: schermstand kiezen in het menu (VANZELF / LIGGEND / RECHTOP). Past de gekozen stand niet bij hoe het scherm nu
+     staat (bijvoorbeeld liggend gekozen, maar de telefoon draait niet mee), dan draaien we het hele spel een kwartslag. */
+  const STANDEN = ['vanzelf', 'liggend', 'rechtop']
+  let stand = 'vanzelf'
+  try { const s0 = localStorage.getItem('rg-stand'); if (STANDEN.includes(s0)) stand = s0 } catch (e) {}
+  let draai = 0                   // 0, 90 (met de klok mee) of -90
+  function zetDraai() {
+    const pb = inhoud.clientWidth, ph = inhoud.clientHeight
+    draai = (stand === 'liggend' && ph > pb) ? 90 : (stand === 'rechtop' && pb > ph) ? -90 : 0
+    const st = wrap.style
+    if (!draai) { st.inset = ''; st.top = st.left = st.width = st.height = st.transform = st.transformOrigin = ''; return }
+    st.inset = 'auto'; st.width = ph + 'px'; st.height = pb + 'px'; st.transformOrigin = '0 0'
+    if (draai === 90) { st.top = '0'; st.left = pb + 'px'; st.transform = 'rotate(90deg)' }
+    else { st.top = ph + 'px'; st.left = '0'; st.transform = 'rotate(-90deg)' }
+  }
+  /* een plek op het scherm (clientX/Y) omrekenen naar een plek in het (gedraaide) veld */
+  function inVeld(e) {
+    const r = veld.getBoundingClientRect()
+    if (draai === 90) return { x: e.clientY - r.top, y: r.right - e.clientX, b: r.height }
+    if (draai === -90) return { x: r.bottom - e.clientY, y: e.clientX - r.left, b: r.height }
+    return { x: e.clientX - r.left, y: e.clientY - r.top, b: r.width }
+  }
   function indeling() {
+    const wasDraai = draai
+    zetDraai()
+    if (wasDraai !== draai && spel) setTimeout(() => { try { spel.scale.refresh() } catch (e) {} }, 0)
     const volB = wrap.clientWidth, volH = wrap.clientHeight
     const liggend = volB > volH
     const W = volB - 20, H = volH - 52 - 64
@@ -1358,17 +1387,31 @@ var Spel=new Phaser.Class({
 
   einde:function(){
     var m=Math.floor(this.camX/16);
+    this.af=true;this.hart=null;
     this.scene.pause();
     GELUID.muziek(false);GELUID.speel('einde');
     stuurEinde(this);
     laag.querySelector("h1").textContent="GAME OVER";
     scoreVak.textContent=String(this.score).padStart(7,"0");
-    laag.querySelector("p").textContent=vertaal('SCORE {score} — {m} meter, {n} munten.',{score:String(this.score).padStart(7,"0"),m:m,n:this.muntTal});
+    this.eindTekst=vertaal('SCORE {score} — {m} meter, {n} munten.',{score:String(this.score).padStart(7,"0"),m:m,n:this.muntTal});
+    toonEindTekst();
     startKnop.textContent=vertaal('OPNIEUW');
     laag.hidden=false;startKnop.focus({preventScroll:true});
     naEinde();
   }
 });
+
+/* v148: de ander heeft het hart gepakt: je rent verder met 1 leven, vanaf waar je af ging */
+Spel.prototype.terug=function(){
+  this.af=false;this.levens=1;
+  tekenHarten(1,this.h.levens);
+  laag.hidden=true;
+  this.speler.setPosition(this.camX+90,40);this.speler.setVelocity(0,0);
+  this.stopGlijden();this.onraakbaar=2500;
+  this.scene.resume();
+  GELUID.muziek(true);GELUID.speel('dikke');
+  toonBord(vertaal('{naam} HEEFT JE GERED!',{naam:NAAM}),'#5ee7e0');
+};
 
 function ring(scene,x,y){
   var c=scene.add.circle(x,y,4).setStrokeStyle(1,P.cyaan,1).setDepth(4);
@@ -1380,12 +1423,14 @@ function zetAanraking(scene){
   scene.vinger=false;
   var start={};
   scene.input.on("pointerdown",function(p){
+    if(draai)return;   // v148: gedraaid scherm: de bediening op het veld gaat via veldDraaiBediening (hieronder)
     var links=p.x<scene.scale.width/2;
     start[p.id]={y:p.y,t:scene.time.now,geveegd:false,links:links};
     if(links){scene.vinger=true;scene.spring();}
     else scene.schiet();
   });
   scene.input.on("pointermove",function(p){
+    if(draai)return;
     var s=start[p.id];
     if(!s||s.geveegd||!s.links)return;
     if(p.y-s.y>26*SCHERP&&scene.time.now-s.t<420){s.geveegd=true;scene.glij();}
@@ -1420,7 +1465,7 @@ function zetAanraking(scene){
     if (!p || typeof p.x !== 'number') return
     ander = { x: p.x, y: p.y, f: p.f | 0, h: ['runner','gunner','runnerB','gunnerB'].indexOf(p.h) >= 0 ? p.h : 'runner',
               s: p.s | 0, l: p.l | 0, d: !!p.d, v: +p.v || 92, tijd: performance.now() }
-    toonAnder()
+    toonAnder(); toonEindTekst()
   })
 
   function maakGeest(scene) {
@@ -1448,6 +1493,7 @@ function zetAanraking(scene){
       stuur({ x: Math.round(s.x), y: Math.round(s.y), f: +s.texture.key.split('_').pop() || 0,
               h: scene.huid || held, s: scene.score, l: scene.levens, v: scene.h.loop, d: 0 })
     }
+    hartStap(scene, dt)
     const g = scene.geest, nm = scene.geestNaam, pijl = scene.pijl
     const oud = ander ? performance.now() - ander.tijd : 1e9
     if (!ander || ander.d || oud > 3000) { g.setVisible(false); nm.setVisible(false); pijl.setVisible(false); return }
@@ -1469,6 +1515,62 @@ function zetAanraking(scene){
       pijl.setPosition(links ? 4 : BREED - 4, Math.max(40, Math.min(150, Math.round(g.y))))
       pijl.setVisible(true)
     }
+  }
+
+  /* v148: terughalen. Is de ander af (en nog in het spel), dan komt er bij jou een roze hart op de baan met zijn naam.
+     Pak je het, dan rent hij verder met 1 leven. Mis je het, dan komt er een paar seconden later een nieuw. */
+  function anderRentNog() { return !!(spelKanaal && ander && !ander.d && performance.now() - ander.tijd < 4000) }
+  function anderWachtOpHulp() { return !!(spelKanaal && ander && ander.d && performance.now() - ander.tijd < 4000) }
+  function maakHartTextuur(scene) {
+    if (scene.textures.exists('redhart')) return
+    const vorm = [[1,0],[2,0],[5,0],[6,0],[0,1],[1,1],[2,1],[3,1],[4,1],[5,1],[6,1],[7,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[7,2],
+      [1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[2,4],[3,4],[4,4],[5,4],[3,5],[4,5]]
+    const g = scene.make.graphics({ x: 0, y: 0, add: false }), k = 3 * SCHERP
+    g.fillStyle(0xffffff, 1)   // witte rand
+    for (const [x, y] of vorm) for (const [ox, oy] of [[0, 1], [2, 1], [1, 0], [1, 2]]) g.fillRect((x + ox) * k, (y + oy) * k, k, k)
+    g.fillStyle(P.roze, 1); for (const [x, y] of vorm) g.fillRect((x + 1) * k, (y + 1) * k, k, k)
+    g.generateTexture('redhart', 10 * k, 8 * k); g.destroy()
+  }
+  function hartStap(scene, dt) {
+    const nu = performance.now(), s = scene.speler
+    if (scene.af || !anderWachtOpHulp()) {
+      if (scene.hart) { scene.hart.destroy(); scene.hartNaam.destroy(); scene.hart = null }
+      scene.hartVolgende = 0
+      return
+    }
+    if (!scene.hart) {
+      if (!scene.hartVolgende) scene.hartVolgende = nu + 1200
+      if (nu < scene.hartVolgende) return
+      maakHartTextuur(scene)
+      const y = Math.max(28, Math.min(HOOG - 34, Math.round(s.y - 6)))
+      scene.hart = scene.add.image(scene.camX + BREED + 24, y, 'redhart').setScale(1 / SCHERP).setDepth(6)
+      scene.hart.basisY = y; scene.hart.t = 0
+      scene.hartNaam = scene.add.text(0, 0, NAAM, { fontFamily: '"Press Start 2P",monospace', fontSize: '6px', color: '#ffb3d1', stroke: '#0d1326', strokeThickness: 2 }).setOrigin(0.5, 1).setDepth(7)
+    }
+    const h = scene.hart
+    h.t += dt
+    const dx = h.x - s.x, dy = h.y - s.y
+    if (Math.abs(dx) < 70) { h.basisY += Math.max(-1, Math.min(1, -dy / 40)) * 140 * dt / 1000; h.x -= Math.sign(dx) * 30 * dt / 1000 }   // trekt een beetje naar je toe
+    h.y = h.basisY + Math.sin(h.t / 160) * 3
+    h.setScale((1 + Math.sin(h.t / 120) * 0.08) / SCHERP)
+    scene.hartNaam.setPosition(Math.round(h.x), Math.round(h.y - 12))
+    if (dx * dx + dy * dy < 20 * 20) {             // gepakt
+      stuurBericht('rg-red', { r: ronde })
+      scene.spat(h.x, h.y, [P.roze, P.wit], 18)
+      GELUID.speel('dikke')
+      scene.zweef(h.x, h.y - 10, vertaal('{naam} GERED!', { naam: NAAM }), '#ffb3d1')
+      h.destroy(); scene.hartNaam.destroy(); scene.hart = null
+      scene.hartVolgende = nu + 5000                // even wachten tot de ander weer rent
+      return
+    }
+    if (h.x < scene.camX - 20) { h.destroy(); scene.hartNaam.destroy(); scene.hart = null; scene.hartVolgende = nu + 2500 }   // gemist
+  }
+
+  /* de tekst onder GAME OVER: zolang de ander nog rent, kan hij je terughalen */
+  function toonEindTekst() {
+    if (!huidige || !huidige.af || aftellen || kiezen || laag.hidden) return
+    const t = huidige.eindTekst + (anderRentNog() ? ' ' + vertaal('{naam} kan je nog terughalen door het hart te pakken.', { naam: NAAM }) : '')
+    const p = laag.querySelector('p'); if (p.textContent !== t) p.textContent = t
   }
 
   function stuurEinde(scene) {
@@ -1502,6 +1604,27 @@ function zetAanraking(scene){
   })
   ;['pointerup', 'pointercancel', 'pointerleave'].forEach(n => zX.addEventListener(n, () => zX.classList.remove('in')))
 
+  /* v148: het spel is een kwartslag gedraaid: Phaser rekent de vinger dan verkeerd om, dus hier zelf.
+     Linkerhelft van het veld = springen (omlaag vegen = glijden), rechterhelft = schieten. */
+  const draaiVingers = new Map()
+  veld.addEventListener('pointerdown', e => {
+    if (!draai || !speeltNu() || e.target.closest('.laag')) return
+    const p = inVeld(e), links = p.x < p.b / 2
+    draaiVingers.set(e.pointerId, { y: p.y, t: performance.now(), geveegd: false, links })
+    if (links) { huidige.vinger = true; huidige.spring() } else huidige.schiet()
+  })
+  veld.addEventListener('pointermove', e => {
+    const v0 = draaiVingers.get(e.pointerId)
+    if (!draai || !v0 || v0.geveegd || !v0.links) return
+    const p = inVeld(e)
+    if (p.y - v0.y > 26 && performance.now() - v0.t < 420) { v0.geveegd = true; if (speeltNu()) huidige.glij() }
+  })
+  const losDraai = e => {
+    draaiVingers.delete(e.pointerId)
+    if (huidige) huidige.vinger = [...draaiVingers.values()].some(x => x.links)
+  }
+  ;['pointerup', 'pointercancel'].forEach(n => veld.addEventListener(n, losDraai))
+
   /* iOS zoomt bij een dubbeltik via touch-gebeurtenissen */
   ;[zS, zX, veld].forEach(el => {
     const stop = e => { if (e.target.closest('.knop,.keuze')) return; e.preventDefault() }
@@ -1515,7 +1638,7 @@ function zetAanraking(scene){
   const leider = !!benIkSpeler1 || !kanaalOk
   const rolVak = wrap.querySelector('.rol')
   const AFTEL = 700
-  let partnerKlaar = !kanaalOk, laatsteKlaar = 0, aftellen = false, klaarKlok = 0, ronde = 0
+  let partnerKlaar = !kanaalOk, laatsteKlaar = 0, aftellen = false, klaarKlok = 0, ronde = 0, afKlok = 0, kiezen = false
   if (!leider) wrap.classList.add('volger')
   const geldig = h => (h === 'runner' || h === 'gunner') ? h : null
   const KLEUR = { runner: vertaal('GROEN'), gunner: vertaal('PAARS') }
@@ -1530,6 +1653,7 @@ function zetAanraking(scene){
   }
   function werkStartscherm() {
     let regel = ''
+    if (kiezen) { tekenPops(); return }   // v148: tijdens de kiestijd alleen de plaatjes bijwerken
     if (leider) {
       startKnop.hidden = false
       startKnop.disabled = !partnerKlaar
@@ -1574,6 +1698,33 @@ function zetAanraking(scene){
   }
   function naEinde() { werkStartscherm() }
 
+  /* v148: kiestijd. Allebei zien 'KIES JE SPELER' en 5..1; tikken op RUNNER of GUNNER kan nog. Daarna start de uitnodiger
+     (de genodigde wacht op het startbericht, zoals altijd). */
+  const KIESTIJD = 5
+  let kiesKlok = null
+  function kiesFase(daarna) {
+    if (kiezen || aftellen) return
+    kiezen = true
+    wrap.classList.add('kiest')
+    const h1 = laag.querySelector('h1'), p = laag.querySelector('p')
+    laag.hidden = false
+    let n = KIESTIJD
+    const stap = () => {
+      if (!isActief() || !wrap.isConnected) { clearInterval(kiesKlok); return }
+      if (n === 0) {
+        clearInterval(kiesKlok); kiezen = false; wrap.classList.remove('kiest')
+        if (daarna) daarna()
+        else { h1.textContent = 'RUNNER & GUNNER'; p.textContent = vertaal('{naam} START HET SPEL', { naam: NAAM }) }
+        return
+      }
+      h1.textContent = vertaal('KIES JE SPELER')
+      p.textContent = vertaal('Nog {n} seconden. Tik op RUNNER of GUNNER.', { n })
+      GELUID.speel('tel')
+      n--
+    }
+    stap(); clearInterval(kiesKlok); kiesKlok = setInterval(stap, 1000)
+  }
+
   function aftel(daarna) {
     aftellen = true
     wrap.classList.add('telt')
@@ -1613,15 +1764,36 @@ function zetAanraking(scene){
       anderHeld = h
       if (!laag.hidden && !aftellen) werkStartscherm()
     })
+    spelKanaal.on('broadcast', { event: 'rg-kies' }, msg => {   // v148: de uitnodiger begint een nieuw spel: kiestijd
+      if (leider || aftellen || kiezen || laag.hidden) return
+      if (huidige && huidige.af === false && speeltNu()) return
+      kiesFase(null)
+    })
+    spelKanaal.on('broadcast', { event: 'rg-red' }, msg => {   // v148: de ander pakte het hart
+      const r = msg && msg.payload && msg.payload.r
+      if (r !== ronde || aftellen || kiezen || !huidige || !huidige.af) return
+      huidige.terug()
+    })
     spelKanaal.on('broadcast', { event: 'rg-start' }, msg => {
       if (leider || aftellen || laag.hidden) return
       const h = geldig(msg && msg.payload && msg.payload.h)
       if (!h) return
       anderHeld = h
+      if (kiezen) { clearInterval(kiesKlok); kiezen = false; wrap.classList.remove('kiest') }
       aftel(startRonde)
     })
   }
 
+  const standKnop = wrap.querySelector('.standKnop')
+  const STANDTEKST = { vanzelf: vertaal('SCHERM: VANZELF'), liggend: vertaal('SCHERM: LIGGEND'), rechtop: vertaal('SCHERM: RECHTOP') }
+  const toonStand = () => { standKnop.textContent = STANDTEKST[stand] }
+  toonStand()
+  standKnop.addEventListener('click', e => {
+    e.stopPropagation()
+    stand = STANDEN[(STANDEN.indexOf(stand) + 1) % STANDEN.length]
+    try { localStorage.setItem('rg-stand', stand) } catch (er) {}
+    toonStand(); indeling()
+  })
   const geluidKnop = wrap.querySelector('.geluidKnop')
   const toonGeluid = () => { geluidKnop.textContent = GELUID.staatAan() ? vertaal('GELUID: AAN') : vertaal('GELUID: UIT') }
   toonGeluid()
@@ -1632,11 +1804,17 @@ function zetAanraking(scene){
 
   startKnop.addEventListener('click', () => {
     GELUID.wek()
-    if (!leider || aftellen || !partnerKlaar) return
+    if (!leider || aftellen || kiezen || !partnerKlaar) return
     partnerKlaar = !kanaalOk
-    const h = held
-    ;[0, 250, 500].forEach(ms => setTimeout(() => stuurBericht('rg-start', { h }), ms))
-    aftel(startRonde)
+    const echtStarten = () => {
+      const h = held
+      ;[0, 250, 500].forEach(ms => setTimeout(() => stuurBericht('rg-start', { h }), ms))
+      aftel(startRonde)
+    }
+    if (kanaalOk && ronde > 0) {   // v148: nieuw spel samen: eerst allebei 5 seconden om je speler te kiezen
+      ;[0, 250, 500].forEach(ms => setTimeout(() => stuurBericht('rg-kies', { n: KIESTIJD, r: ronde }), ms))
+      kiesFase(echtStarten)
+    } else echtStarten()
   })
   werkStartscherm()
 
@@ -1654,10 +1832,19 @@ function zetAanraking(scene){
       type: Phaser.AUTO, width: BREED * SCHERP, height: HOOG * SCHERP, parent: veld,
       pixelArt: true, roundPixels: true, backgroundColor: '#07051a',
       input: { activePointers: 3 },
-      scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+      scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.NO_CENTER },   // v148: centreren doet de stijl (.veld is flex): Phaser rekent bij een gedraaid spel verkeerd
       physics: { default: 'arcade', arcade: { gravity: { y: ZWAARTE } } },
       scene: [Spel]
     })
+    // v148: Phaser meet de ruimte met getBoundingClientRect; bij een gedraaid spel is dat de gedraaide maat.
+    // Daarom de maat zonder draaien (clientWidth/clientHeight) gebruiken: die klopt altijd.
+    spel.scale.getParentBounds = function () {
+      const ps = this.parentSize, w = veld.clientWidth, hh = veld.clientHeight
+      if (ps.width !== w || ps.height !== hh) { ps.setSize(w, hh); return true }
+      return false
+    }
+    spel.events.once('ready', () => { try { spel.scale.refresh() } catch (e) {} })
+    setTimeout(() => { try { if (spel) spel.scale.refresh() } catch (e) {} }, 50)
     GELUID.muziek(true)
   }
 
@@ -1665,6 +1852,8 @@ function zetAanraking(scene){
   const waker = setInterval(() => {
     if (isActief() && wrap.isConnected) {
       document.body.classList.toggle('rg-vol', wrap.classList.contains('liggend') && laag.hidden)
+      afKlok += 300
+      if (afKlok >= 1200) { afKlok = 0; if (huidige && huidige.af && !aftellen && !kiezen) stuurEinde(huidige) }   // v148: 'ik ben af' blijven melden
       if (!leider && !aftellen && !laag.hidden) {
         klaarKlok += 300
         if (klaarKlok >= 900) { klaarKlok = 0; stuurBericht('rg-klaar', { h: held }) }

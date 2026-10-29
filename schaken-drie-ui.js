@@ -10,6 +10,9 @@ import { THREE_PLAYER_VIEWBOX, THREE_PLAYER_BOARD_ARTWORK, threePlayerPieceArtwo
 
 const COLOR_STYLES = ['#fff', '#c4c7ce', '#ff7777']
 const LABELS = { K:'King', Q:'Queen', R:'Rook', B:'Bishop', N:'Knight', P:'Pawn' }
+// v22: gebruikersnamen komen van andere spelers. Overal waar een naam in innerHTML/SVG belandt, eerst veilig maken,
+// anders kan een naam als <img src=x onerror=...> code uitvoeren bij de anderen.
+const veilig = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]))
 const TURN_LIGHT_COLORS = ['#fff0bd', '#9bdcff', '#ffa4a8']
 
 function pieceLighting(player) {
@@ -243,7 +246,7 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
       const moves = highlighted.includes(cell.id)
       const capture = moves && state.pieces.has(cell.id)
       const classes = ['chess3-cell', selected === cell.id ? 'is-selected' : '', moves ? 'is-legal' : '', capture ? 'is-capture' : ''].filter(Boolean).join(' ')
-      const title = piece ? `${roster[piece.player].username}: ${LABELS[piece.type]}${state.active[piece.player] ? '' : ' (eliminated)'}` : 'Empty square'
+      const title = piece ? `${veilig(roster[piece.player].username)}: ${LABELS[piece.type]}${state.active[piece.player] ? '' : ' (eliminated)'}` : 'Empty square'
       const glyph = piece ? threePlayerPieceArtwork(piece, points) : ''
       return `<g class="${classes}" data-cell-id="${cell.id}" data-player="${piece?.player ?? ''}" role="button" tabindex="0" aria-label="${title}, ${cell.id}"><title>${title}</title><polygon points="${pointList}" fill="transparent"/>${glyph}</g>`
     }).join('')
@@ -257,7 +260,7 @@ export function start({ gameChannel = null, players = [], userId = null, localPr
     captureBar.replaceChildren(...roster.map((player, index) => {
       const entry = document.createElement('div'); entry.className = 'chess3-captures' + (state.active[index] ? '' : ' chess3-eliminated')
       const count = [...state.pieces.values()].filter(piece => piece.player === index).length
-      entry.innerHTML = `<strong style="color:${COLOR_STYLES[index]}">${THREE_PLAYER_NAMES[index]}</strong> · ${player.username}<br>${count} pieces${state.active[index] ? '' : ' · eliminated'}`
+      entry.innerHTML = `<strong style="color:${COLOR_STYLES[index]}">${veilig(THREE_PLAYER_NAMES[index])}</strong> · ${veilig(player.username)}<br>${count} pieces${state.active[index] ? '' : ' · eliminated'}`
       return entry
     }))
   }

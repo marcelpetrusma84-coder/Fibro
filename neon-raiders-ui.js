@@ -1,4 +1,5 @@
-/* Neon Raiders — schietspel (shmup) voor Fibro. v193 (21 oktober 2026): het hele spel, alleen spelen.
+/* Neon Raiders — schietspel (shmup) voor Fibro. v220 (29 okt 2026): terughalen, schild valt vaker en gaat meteen aan, eigen kleur per schip, laserwaarschuwing.
+   v193 (21 oktober 2026): het hele spel, alleen spelen.
    v194: samen spelen vanuit de chat (twee schepen tegen dezelfde aliens), zie 'samen spelen' hieronder.
    Zeven levels, elk met een eigen omgeving, eigen vijanden en een eigen eindbaas:
      1 Aarde (je ziet de grond, TITAN)        2 Stratosfeer (hoog boven de wolken, ZEPHYR)
@@ -24,7 +25,8 @@
    De uitnodiger is de scheidsrechter: zijn speltijd is de maat (de ander loopt iets sneller of langzamer tot het
    klopt), de eindbaas komt pas als hij hem ook heeft, en van de levens van de baas telt steeds de laagste stand.
    Wie het hoogste level heeft, bepaalt het level. Vijanden mikken op het dichtstbijzijnde schip. Ben je af, dan
-   kijk je mee en doe je bij het volgende level weer mee (2 levens). Allebei af = game over. Samen is de baas 1,4 keer
+   kijk je mee en doe je bij het volgende level weer mee (2 levens). v220: of de ander haalt je eerder terug: hij
+   vliegt naar de cirkel waar je neerging en blijft er 2 seconden in, dan doe je mee met 1 leven. Allebei af = game over. Samen is de baas 1,4 keer
    zo sterk en geeft de tegel geen slow motion (de tijd moet bij allebei gelijk lopen). */
 
 
@@ -177,6 +179,9 @@ const ICOON = {
   schild: ['#######', '#.....#', '#..w..#', '#.www.#', '.#.w.#.', '..#.#..', '...#...'],
   leven: ['.##.##.', '#######', '#######', '.#####.', '..###..', '...#...', '.......'],
 }
+const SCHILD_VAN = new Set(['schutter', 'spuger', 'loper', 'tank', 'muurkanon'])   // v220: deze laten soms een schild vallen
+const WRAK_STRAAL = 30, WRAK_TIJD = 2   // v220: terughalen: zo groot is de cirkel, zo lang moet je erin blijven
+const LASER_RICHT = 1.5   // v220: zo lang waarschuwt de eindbaas voor zijn laser (was 0.9 s)
 const KLEUR = { puls: '#5ee7e0', spreid: '#ff5d9e', straal: '#b6ff3c', raket: '#ffa53c', bom: '#ffe14a', schild: '#7fd4ff', leven: '#ff4f86' }
 const WAPENS = ['puls', 'spreid', 'straal', 'raket']
 const NAAM = () => ({ puls: vertaal('PULS'), spreid: vertaal('SPREID'), straal: vertaal('STRAAL'), raket: vertaal('RAKET'),
@@ -515,30 +520,37 @@ const TEKENAAR = {
   /* ---- vaste texturen: het schip, kogels, effecten, capsules ---- */
   tekenVast() {
     // v194: twee schepen: 'schip' (speler 1, cyaan) en 'schip2' (speler 2, roze)
-    for (const [key, K] of [['schip', { licht: '#ff5d9e', streep: '#5ee7e0', glas: ['#ffffff', '#8ff6ff', '#1aa7b8', '#0b3c48'], gloed: '#5ee7e0' }],
-                            ['schip2', { licht: '#5ee7e0', streep: '#ff5d9e', glas: ['#ffffff', '#ffc2e0', '#d8337a', '#4a0b2a'], gloed: '#ff5d9e' }]]) this.teken(key, 36, 44, g => {
-      g.fillStyle = lin(g, 0, 16, 0, 36, ['#6b778b', '#3a4354'])
+    // v220: elk schip een eigen kleur romp en vleugels (cyaan / roze), zodat je samen meteen ziet wie wie is
+    for (const [key, K] of [['schip', { licht: '#ff5d9e', streep: '#5ee7e0', glas: ['#ffffff', '#8ff6ff', '#1aa7b8', '#0b3c48'], gloed: '#5ee7e0',
+                                        vleugel: ['#3fb6c8', '#155a6b'], rand: '#a8f4ff', romp: ['#2f7a8c', '#dffbff', '#9fe6f0', '#2a6a7a'] }],
+                            ['schip2', { licht: '#5ee7e0', streep: '#ff5d9e', glas: ['#ffffff', '#ffc2e0', '#d8337a', '#4a0b2a'], gloed: '#ff5d9e',
+                                         vleugel: ['#d8478c', '#6e1640'], rand: '#ffc2e0', romp: ['#8c2f5c', '#ffe3f0', '#f0a3c6', '#7a2a50'] }]]) this.teken(key, 36, 44, g => {
+      g.fillStyle = lin(g, 0, 16, 0, 36, K.vleugel)
       veelhoek(g, [14, 15, 2, 30, 1, 35, 6, 36, 14, 32]); g.fill()
       veelhoek(g, [22, 15, 34, 30, 35, 35, 30, 36, 22, 32]); g.fill()
-      lijn(g, '#a8b6ca', 0.7, [14, 15, 2, 30]); lijn(g, '#a8b6ca', 0.7, [22, 15, 34, 30])
+      lijn(g, K.rand, 0.7, [14, 15, 2, 30]); lijn(g, K.rand, 0.7, [22, 15, 34, 30])
       g.fillStyle = K.licht; veelhoek(g, [4, 31, 7, 28, 8, 30, 5, 33]); g.fill(); veelhoek(g, [32, 31, 29, 28, 28, 30, 31, 33]); g.fill()
       g.fillStyle = K.streep; veelhoek(g, [9, 27, 13, 22, 13, 24, 10, 28]); g.fill(); veelhoek(g, [27, 27, 23, 22, 23, 24, 26, 28]); g.fill()
       g.fillStyle = lin(g, 8, 0, 15, 0, ['#2a303c', '#5e6a7e', '#2a303c']); rondRect(g, 8.5, 25, 6, 16, 2); g.fill()
       g.fillStyle = lin(g, 21, 0, 28, 0, ['#2a303c', '#5e6a7e', '#2a303c']); rondRect(g, 21.5, 25, 6, 16, 2); g.fill()
       g.fillStyle = '#12151c'; g.fillRect(9.5, 40, 4, 2.5); g.fillRect(22.5, 40, 4, 2.5)
-      g.fillStyle = lin(g, 12, 0, 24, 0, ['#5d6878', '#e8eef5', '#c3cdd9', '#4b5566'])
+      g.fillStyle = lin(g, 12, 0, 24, 0, K.romp)
       veelhoek(g, [18, 0, 21.5, 9, 23, 20, 23, 33, 21, 41, 15, 41, 13, 33, 13, 20, 14.5, 9]); g.fill()
       lijn(g, 'rgba(25,32,45,.75)', 0.5, [13.5, 22, 22.5, 22]); lijn(g, 'rgba(25,32,45,.75)', 0.5, [13.3, 30, 22.7, 30]); lijn(g, 'rgba(25,32,45,.6)', 0.5, [18, 24, 18, 40])
       g.fillStyle = rad(g, 17.2, 11, 6, K.glas); g.beginPath(); g.ellipse(18, 12, 2.7, 5.6, 0, 0, 7); g.fill()
       g.fillStyle = K.streep; g.fillRect(17.3, 31, 1.4, 7)
     }, K.gloed, 5)
-    for (const [key, L] of [['vlam0', 10], ['vlam1', 15]]) {
-      this.teken(key, 36, 16, g => {
-        for (const x of [11.5, 24.5]) {
-          g.fillStyle = lin(g, 0, 0, 0, L, ['rgba(255,255,255,1)', 'rgba(150,240,255,.95)', 'rgba(70,150,255,.55)', 'rgba(60,90,255,0)'])
-          g.beginPath(); g.ellipse(x, 0, 2.6, L, 0, 0, Math.PI); g.fill()
-        }
-      }, '#4ab8ff', 4)
+    // vlammen: blauw voor speler 1 (vlam0/vlam1), roze voor speler 2 (vlam0b/vlam1b)
+    for (const [achter, kl, gl] of [['', ['rgba(255,255,255,1)', 'rgba(150,240,255,.95)', 'rgba(70,150,255,.55)', 'rgba(60,90,255,0)'], '#4ab8ff'],
+                                    ['b', ['rgba(255,255,255,1)', 'rgba(255,190,225,.95)', 'rgba(255,70,160,.55)', 'rgba(255,40,140,0)'], '#ff5d9e']]) {
+      for (const [key, L] of [['vlam0', 10], ['vlam1', 15]]) {
+        this.teken(key + achter, 36, 16, g => {
+          for (const x of [11.5, 24.5]) {
+            g.fillStyle = lin(g, 0, 0, 0, L, kl)
+            g.beginPath(); g.ellipse(x, 0, 2.6, L, 0, 0, Math.PI); g.fill()
+          }
+        }, gl, 4)
+      }
     }
     this.teken('puls', 4, 22, g => { g.fillStyle = lin(g, 0, 0, 0, 22, ['#ffffff', '#b8fdff', '#5ee7e0', 'rgba(94,231,224,0)']); rondRect(g, 0.4, 0, 3.2, 22, 1.6); g.fill() }, '#5ee7e0', 4)
     this.teken('spreidKogel', 10, 14, g => { g.fillStyle = '#ff5d9e'; veelhoek(g, [5, 0, 10, 7, 5, 14, 0, 7]); g.fill(); g.fillStyle = '#ffffff'; veelhoek(g, [5, 3, 7, 7, 5, 11, 3, 7]); g.fill() }, '#ff5d9e', 5)
@@ -1785,6 +1797,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
 
       this.cameras.main.setZoom(R).setOrigin(0, 0)   // de wereld is W x H; het beeld heeft R keer zoveel punten
       const mijnSchip = leider ? 'schip' : 'schip2'
+      this.mijnVlam = leider ? '' : 'b'; this.zijnVlam = leider ? 'b' : ''
       this.schaduw = this.add.image(0, 0, mijnSchip).setTint(0x000000).setAlpha(0.35).setDepth(-5).setScale(0.8 * SB)
       this.speler = this.add.image(samen ? W / 2 + (leider ? -50 : 50) : W / 2, H - 90, mijnSchip).setDepth(20).setScale(SB)
       this.vlam = this.add.image(0, 0, 'vlam0').setDepth(19).setScale(SB).setOrigin(0.5, 6 / 28).setBlendMode(Phaser.BlendModes.ADD)
@@ -1804,6 +1817,11 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
         this.anderNaam = this.add.text(0, 0, NAAMV, { fontFamily: '"Press Start 2P",monospace', fontSize: '6px', color: leider ? '#ffb3d1' : '#b8fdff', stroke: '#07051a', strokeThickness: 2 })
           .setOrigin(0.5, 0).setDepth(32).setResolution(R).setVisible(false)
         anderRij.hidden = false; anderRij.classList.remove('uit')
+        // v220: terughalen. Waar een schip neerging, staat een cirkel; de ander vliegt erin en blijft er 2 seconden.
+        this.wrak = null
+        this.wrakG = this.add.graphics().setDepth(22).setBlendMode(Phaser.BlendModes.ADD)
+        this.wrakNaam = this.add.text(0, 0, '', { fontFamily: '"Press Start 2P",monospace', fontSize: '6px', color: '#ffffff', stroke: '#07051a', strokeThickness: 2 })
+          .setOrigin(0.5, 1).setDepth(32).setResolution(R).setVisible(false)
         anderRij.querySelector('.aScore').textContent = '0000000'; anderRij.querySelector('.aLevens').textContent = ''
       }
       tekenLevens(this.levens)
@@ -1826,6 +1844,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
     /* ---- een level beginnen: achtergrond, golven, muziek ---- */
     startLevel(n) {
       this.level = n
+      this.wrak = null
       const L = this.L = LEVELS[n]
       for (const v of this.vijanden) this.ruimVijand(v)
       for (const k of this.kogelsV.concat(this.kogelsS)) this.weg(k.spr)
@@ -2221,6 +2240,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       this.ontplof(v.x, v.y, groot, this.kleurenVan(v))
       if (!vanAnder) this.punten(v.punten, v.x, v.y, v.soort === 'kolos')   // de punten zijn voor wie hem neerschiet
       if (v.soort === 'drager') this.laatVallen(v.x, v.y, v.o.buit, v.id + ':0')
+      // v220: grote vijanden laten soms een schild vallen. Het nummer van de vijand beslist, dus bij allebei dezelfde.
+      if (SCHILD_VAN.has(v.soort) && typeof v.id === 'number' && v.id % 8 === 3) this.laatVallen(v.x, v.y, 'schild', v.id + ':s')
       if (v.soort === 'kolos') {   // v194: welke power-ups hangt af van het nummer van de kolos (bij allebei gelijk)
         const k = typeof v.id === 'number' ? v.id : 0
         this.laatVallen(v.x - 16, v.y, k % 2 ? 'bom' : 'schild', v.id + ':0'); this.laatVallen(v.x + 16, v.y, WAPENS[(k >> 1) % 4], v.id + ':1')
@@ -2270,6 +2291,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
         else { this.niveau[s] = was + 1; tekst += ' ' + this.niveau[s] }
         if (!was) this.wapen = s
         GELUID.speel('pak')
+      } else if (s === 'schild' && !(this.schild > 0) && !this.uit) {   // v220: geen schild aan? dan gaat hij meteen aan
+        this.schild = 9; tekst = vertaal('SCHILD AAN'); GELUID.speel('schild')
       } else if (s === 'bom' || s === 'schild') { this.voorraad[s] = Math.min(9, (this.voorraad[s] || 0) + 1); tekst += ' +1'; GELUID.speel('pak') }
       else if (s === 'leven') { this.levens = Math.min(6, this.levens + 1); tekenLevens(this.levens); GELUID.speel('leven') }
       const t = this.add.text(b.x, b.y - 14, tekst, { fontFamily: '"Press Start 2P",monospace', fontSize: '8px', color: '#ffffff', stroke: KLEUR[s], strokeThickness: 3 }).setOrigin(0.5).setDepth(40).setResolution(R)
@@ -2338,9 +2361,63 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       this.speler.setVisible(false); this.vlam.setVisible(false); this.schaduw.setVisible(false); this.bel.setVisible(false)
       if (this.straalAan) { GELUID.straal(false); this.straalAan = false }
       sluitArsenaal()
-      this.uitgaand.push(['u'])
+      const sp = this.speler
+      this.uitgaand.push(['u', Math.round(sp.x), Math.round(sp.y)])
       if (!this.anderSpeeltNog()) { this.einde(false); return }
-      bord('GAME OVER', vertaal('Kijk mee met {naam}. Bij het volgende level doe je weer mee.', { naam: NAAMV }), '#ff5d9e', true)
+      this.wrak = { x: sp.x, y: sp.y, eigen: true, t: 0, voortgang: 0 }
+      bord('GAME OVER', vertaal('Wacht tot {naam} je komt halen, of doe bij het volgende level weer mee.', { naam: NAAMV }), '#ff5d9e', true)
+    }
+    /* v220: de cirkel waar een schip neerging. Is het de ander: vlieg erin en blijf er 2 s, dan is hij terug.
+       Is het je eigen schip: je ziet waar de ander je moet komen halen. */
+    wrakStap(dt, tijd) {
+      const w = this.wrak, g = this.wrakG
+      g.clear()
+      if (!w || this.voorbij) { this.wrakNaam.setVisible(false); return }
+      w.t += dt
+      const a = this.ander
+      if (w.eigen ? !this.uit : (this.uit || !a || a.weg || (w.t > 1.5 && !a.uit))) { this.wrak = null; this.wrakNaam.setVisible(false); return }
+      // de kleur van het schip dat er ligt: speler 1 cyaan, speler 2 roze
+      const zijnKleur = (w.eigen ? leider : !leider) ? 0x5ee7e0 : 0xff5d9e
+      const tik = 0.5 + 0.5 * Math.sin(tijd / 140)
+      if (!w.eigen && !this.overgang) {
+        const sp = this.speler, erin = (sp.x - w.x) ** 2 + (sp.y - w.y) ** 2 < WRAK_STRAAL * WRAK_STRAAL
+        w.voortgang = erin ? w.voortgang + dt : Math.max(0, w.voortgang - dt * 0.6)
+        if (erin && Math.floor(w.t * 6) !== Math.floor((w.t - dt) * 6)) this.vonkVoor(w.eigen ? '#5ee7e0' : '#ffffff').explode(2, w.x, w.y)
+        if (w.voortgang >= WRAK_TIJD) { this.redAnder(w); return }
+      }
+      g.fillStyle(zijnKleur, 0.08 + 0.08 * tik); g.fillCircle(w.x, w.y, WRAK_STRAAL)
+      g.lineStyle(2, zijnKleur, 0.55 + 0.45 * tik)
+      for (let i = 0; i < 12; i++) { const a0 = i * Math.PI / 6 + tijd / 900; g.beginPath(); g.arc(w.x, w.y, WRAK_STRAAL, a0, a0 + Math.PI / 10); g.strokePath() }
+      if (w.voortgang > 0) {   // hoe ver het terughalen is: een witte boog rondom
+        g.lineStyle(4, 0xffffff, 0.95); g.beginPath()
+        g.arc(w.x, w.y, WRAK_STRAAL + 5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, w.voortgang / WRAK_TIJD)); g.strokePath()
+      }
+      g.fillStyle(0xffffff, 0.5 + 0.5 * tik); g.fillRect(w.x - 1.5, w.y - 7, 3, 14); g.fillRect(w.x - 7, w.y - 1.5, 14, 3)   // een plusje in het midden
+      this.wrakNaam.setText(w.eigen ? vertaal('HIER') : NAAMV).setColor(zijnKleur === 0x5ee7e0 ? '#b8fdff' : '#ffb3d1')
+        .setPosition(Math.round(w.x), Math.round(w.y - WRAK_STRAAL - 4)).setVisible(true)
+    }
+    /* ik heb de ander teruggehaald */
+    redAnder(w) {
+      this.wrak = null; this.wrakG.clear(); this.wrakNaam.setVisible(false)
+      this.uitgaand.push(['g'])
+      if (this.ander) { this.ander.uit = false; this.ander.gered = performance.now(); werkAnderRij(this.ander) }
+      this.vonkVoor('#ffffff').explode(24, w.x, w.y)
+      GELUID.speel('leven')
+      balk(vertaal('{naam} IS GERED!', { naam: NAAMV }), '#5ee7e0', 3000)
+    }
+    /* de ander heeft mij teruggehaald: met 1 leven weer meedoen, op de plek waar ik neerging */
+    gered() {
+      if (!this.uit || this.voorbij) return
+      const w = this.wrak
+      this.uit = false; this.wrak = null; this.wrakG.clear(); this.wrakNaam.setVisible(false)
+      this.levens = 1; tekenLevens(this.levens)
+      this.speler.setVisible(true).setPosition(w ? w.x : W / 2, w ? w.y : H - 70)
+      this.vlam.setVisible(true); this.schaduw.setVisible(!!this.schaduwAan)
+      this.onraakbaar = 3
+      this.vonkVoor('#ffffff').explode(24, this.speler.x, this.speler.y)
+      GELUID.speel('leven')
+      bord(vertaal('GERED DOOR {naam}!', { naam: NAAMV }), '', '#5ee7e0')
+      werkTegelBij()
     }
     /* speelt de ander nog (in dit spel, niet af, en nog verbonden)? */
     anderSpeeltNog() {
@@ -2444,10 +2521,11 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
         const L = b.laser; L.t += dt
         if (L.bron.dood) b.laser = null
         else {
-          if (L.t > 0.9 && !L.vuur) { L.vuur = true; GELUID.speel('laser') }
+          if (L.t > LASER_RICHT - 0.45 && !L.piep) { L.piep = true; GELUID.speel('richt') }   // tweede piep: nu wegwezen
+          if (L.t > LASER_RICHT && !L.vuur) { L.vuur = true; GELUID.speel('laser') }
           const wie = L.wie === 'ander' && this.anderLeeft() ? this.anderSpr : this.speler
           if (L.vuur) L.x += Phaser.Math.Clamp(wie.x - L.x, -(38 + this.level * 4) * dt, (38 + this.level * 4) * dt)
-          if (L.t > 2.3) b.laser = null
+          if (L.t > LASER_RICHT + 1.4) b.laser = null
         }
       }
     }
@@ -2456,12 +2534,29 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       g.clear()
       if (!b || !b.laser || b.sterft > 0) return
       const L = b.laser, top = L.bron.y + (L.bron.laserY || 16)
-      if (!L.vuur) { g.lineStyle(1, 0xff4848, 0.4 + 0.4 * Math.sin(L.t * 40)); g.lineBetween(L.x, top, L.x, H); return }
+      if (!L.vuur) { this.laserTeken(g, L, top); return }
       const f = 0.85 + Math.random() * 0.15
       g.fillStyle(0xff3dd2, 0.25 * f); g.fillRect(L.x - 22, top, 44, H - top)
       g.fillStyle(0xff3dd2, 0.6 * f); g.fillRect(L.x - 12, top, 24, H - top)
       g.fillStyle(0xffffff, 0.95); g.fillRect(L.x - 4, top, 8, H - top)
       if (!this.uit && Math.abs(this.speler.x - L.x) < 15 && this.speler.y > top) this.geraakt()
+    }
+    /* v220: de waarschuwing voor de laser. Waar hij straks schiet, kleurt een rode baan op die steeds feller knippert,
+       met stippellijnen langs de randen, een gevarendriehoek onderin en een bol die oplaadt bij het kanon. */
+    laserTeken(g, L, top) {
+      const p = Math.min(1, L.t / LASER_RICHT)            // 0 = net begonnen, 1 = hij schiet
+      const knip = Math.sin(L.t * (14 + p * 30)) > 0      // knippert steeds sneller
+      g.fillStyle(0xff2a2a, (knip ? 0.1 : 0.04) + p * 0.12); g.fillRect(L.x - 22, top, 44, H - top)
+      g.lineStyle(1.5, 0xff4848, knip ? 0.95 : 0.45)
+      for (let y = top; y < H; y += 14) { g.lineBetween(L.x - 22, y, L.x - 22, Math.min(H, y + 7)); g.lineBetween(L.x + 22, y, L.x + 22, Math.min(H, y + 7)) }
+      g.lineStyle(1, 0xffffff, 0.25 + 0.5 * p); g.lineBetween(L.x, top, L.x, H)
+      g.fillStyle(0xff3dd2, 0.35 + 0.4 * p); g.fillCircle(L.x, top, 3 + p * 11)   // de bol laadt op
+      g.fillStyle(0xffffff, 0.6 + 0.4 * p); g.fillCircle(L.x, top, 1.5 + p * 4)
+      if (knip || p > 0.8) {   // gevarendriehoek met uitroepteken, onderin de baan
+        const y = H - 130, k = 13   // boven de balk onderin, op de hoogte waar je meestal vliegt
+        g.fillStyle(0xff2a2a, 0.9); g.fillTriangle(L.x, y - k, L.x - k, y + k * 0.75, L.x + k, y + k * 0.75)
+        g.fillStyle(0xffffff, 1); g.fillRect(L.x - 1.5, y - 5, 3, 8); g.fillRect(L.x - 1.5, y + 5, 3, 3)
+      }
     }
     baasSterft() {
       const b = this.baas
@@ -2539,14 +2634,14 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
         if (muisStap) this.duw(muisStap.x, muisStap.y)
       }
       this.schaduw.setPosition(sp.x + 16, sp.y + 24)
-      this.vlam.setTexture(Math.floor(tijd / 60) % 2 ? 'vlam0' : 'vlam1').setPosition(sp.x, sp.y + 19)
+      this.vlam.setTexture((Math.floor(tijd / 60) % 2 ? 'vlam0' : 'vlam1') + this.mijnVlam).setPosition(sp.x, sp.y + 19)
       if (this.onraakbaar > 0) { this.onraakbaar -= dt; sp.setAlpha(Math.floor(this.onraakbaar * 12) % 2 ? 0.35 : 1) } else sp.setAlpha(1)
       if (this.schild > 0) { this.schild -= dt; this.bel.setVisible(this.schild > 2 || Math.floor(this.schild * 8) % 2 === 0).setPosition(sp.x, sp.y).setRotation(tijd / 300) }
       else this.bel.setVisible(false)
 
       // schieten
       this.vuur(dt)
-      if (this.samen) this.anderStap(dt, tijd)
+      if (this.samen) { this.anderStap(dt, tijd); this.wrakStap(dt, tijd) }
 
       // vijanden
       for (const v of this.vijanden) if (!v.dood && !this.vijandStap(v, dt)) this.ruimVijand(v)
@@ -2721,7 +2816,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
         if (a.weg) { a.weg = false; if (!this.voorbij) balk(vertaal('{naam} IS TERUG', { naam: NAAMV }), '#5ee7e0', 2500) }
         a.ronde = m.r | 0; a.level = l; a.klok = k; a.ontvangen = nu
         a.x = m.x; a.y = m.y; a.f = m.f | 0; a.w = m.w | 0; a.n = m.n | 0
-        a.uit = !!(a.f & 8); a.pauze = !!(a.f & 16); a.baas = !!(a.f & 32)
+        a.uit = !!(a.f & 8) && !(a.gered && nu - a.gered < 1500); a.pauze = !!(a.f & 16); a.baas = !!(a.f & 32)   // v220: net gered
         a.score = m.sc | 0; a.levens = m.lv | 0
         werkAnderRij(a)
         if (a.uit && this.uit) { this.einde(false); return }      // allebei af
@@ -2738,13 +2833,17 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
             if (this.ander) { this.ander.uit = true; werkAnderRij(this.ander) }
             if (this.voorbij) continue
             if (this.uit) this.einde(false)
-            else balk(vertaal('{naam}: GAME OVER', { naam: NAAMV }), '#ff5d9e', 3000)
+            else if (zelfde && typeof e[1] === 'number' && typeof e[2] === 'number') {   // v220: zijn plek, om hem terug te halen
+              this.wrak = { x: Phaser.Math.Clamp(e[1], 30, W - 30), y: Phaser.Math.Clamp(e[2], 100, H - 40), eigen: false, t: 0, voortgang: 0 }
+              balk(vertaal('HAAL {naam} TERUG: VLIEG NAAR DE CIRKEL', { naam: NAAMV }), '#ff5d9e', 4500)
+            } else balk(vertaal('{naam}: GAME OVER', { naam: NAAMV }), '#ff5d9e', 3000)
           } else if (e[0] === 'x') {
             if (this.ander) { this.ander.score = e[1] | 0; werkAnderRij(this.ander) }
             if (this.voorbij) toonAnderEinde(e[1] | 0)
           } else if (!zelfde) continue
           else if (e[0] === 'r') { const d = this.perId.get(e[1]); if (d && !d.dood) this.raak(d, Math.max(0, Math.min(500, +e[2] || 0)), true, 'ander') }
           else if (e[0] === 'p') { const bt = this.buit.find(x => x.id === e[1] && !x.dood); if (bt) { bt.dood = true; this.vonkVoor(KLEUR[bt.soort]).explode(10, bt.x, bt.y) } }
+          else if (e[0] === 'g') this.gered()
           else if (e[0] === 'b') this.bomVanAnder(Phaser.Math.Clamp(+e[1] || 0, 0, W), Phaser.Math.Clamp(+e[2] || 0, 0, H))
           else if (e[0] === 'h') { if (this.anderLeeft()) this.ontplof(this.anderSpr.x, this.anderSpr.y, 2, leider ? ['#ff5d9e', '#ffffff', '#5ee7e0'] : ['#5ee7e0', '#ffffff', '#ff5d9e']) }
         }
@@ -2808,7 +2907,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       if (a.snap || !s.visible || Math.abs(tx - s.x) + Math.abs(ty - s.y) > 160) { s.setPosition(tx, ty); a.snap = false }
       else { const k = Math.min(1, (this.dtEcht || 0.016) * 14); s.x += (tx - s.x) * k; s.y += (ty - s.y) * k }
       s.setVisible(true).setAlpha((a.f & 4) && Math.floor(tijd / 80) % 2 ? 0.35 : 1)
-      this.anderVlam.setVisible(true).setTexture(Math.floor(tijd / 60) % 2 ? 'vlam1' : 'vlam0').setPosition(s.x, s.y + 19)
+      this.anderVlam.setVisible(true).setTexture((Math.floor(tijd / 60) % 2 ? 'vlam1' : 'vlam0') + this.zijnVlam).setPosition(s.x, s.y + 19)
       this.anderNaam.setVisible(true).setPosition(Math.round(s.x), Math.round(s.y - 34))
       this.anderBel.setVisible(!!(a.f & 2)).setPosition(s.x, s.y).setRotation(-tijd / 300)
       this.anderSchaduw.setVisible(!!this.schaduwAan).setPosition(s.x + 16, s.y + 24)

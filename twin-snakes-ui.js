@@ -3,6 +3,8 @@
    één ingang, start(), die zichzelf in #spelInhoud tekent en zichzelf
    opruimt zodra het spel gesloten wordt.
 
+   v2 (29 okt 2026): drie spelvormen (levels, classic, zonder muren), level 5 is nu ARENA, en het veld
+     en de slangen zien er rijker uit.
    v1: eerste versie.
    - Twee slangen op één veld. Een appel geeft een punt en maakt je twee
      stukjes langer.
@@ -65,9 +67,18 @@ const LEVELS = [
   { naam: vertaal('BLOKJES'), kleur: '#3d7bff', muren: [[4, 7, 2, 2], [14, 7, 2, 2], [9, 3, 2, 2], [9, 13, 2, 2]] },
   { naam: vertaal('MIDDENMUUR'), kleur: '#ffd23d', muren: [[3, 13, 6, 2]] },
   { naam: vertaal('KAMERS'), kleur: '#7dff6a', muren: [[9, 3, 2, 8], [2, 13, 6, 2]] },
-  { naam: 'ZIGZAG', kleur: '#ff8a3d', start: 'R', muren: [[0, 6, 13, 1], [7, 11, 13, 1]] },
+  { naam: vertaal('ARENA'), kleur: '#ff8a3d', muren: [[7, 9, 6, 1], [6, 11, 1, 6]] },   // v2: gebroken ring rond het midden (met gaten in de hoeken)
   { naam: vertaal('DOOLHOF'), kleur: '#e8f0ff', muren: [[6, 4, 8, 1], [2, 8, 1, 5], [17, 8, 1, 5], [6, 9, 3, 1], [11, 9, 3, 1], [8, 13, 4, 2]] },
 ]
+
+// v2: drie spelvormen. 'levels' = elke ronde een ander veld (hierboven). 'classic' = altijd een leeg veld,
+// de rand is dodelijk. 'muurloos' = leeg veld zonder rand: ga je eraf, dan kom je er aan de overkant weer in.
+const MODI = [
+  { id: 'levels', naam: vertaal('LEVELS'), uitleg: vertaal('Elke ronde een nieuw veld'), kleur: '#b44dff' },
+  { id: 'classic', naam: vertaal('CLASSIC'), uitleg: vertaal('Leeg veld, de rand is dodelijk'), kleur: '#5ff4ff' },
+  { id: 'muurloos', naam: vertaal('ZONDER MUREN'), uitleg: vertaal('Geen rand: je komt er aan de overkant weer in'), kleur: '#7dff6a' },
+]
+function modusVan(id) { return MODI.find(m => m.id === id) || MODI[0] }
 
 // ═══════════════ Hulpjes zonder spelstand ═══════════════
 const idx = (x, y) => y * KOLOM + x
@@ -81,9 +92,9 @@ function meng(h1, h2, t) {
 }
 
 // Alle muurblokken van een veld, met hun gespiegelde kopie erbij.
-function muurBlokken(lv) {
+function muurBlokken(veld) {
   const uit = []
-  for (const [x, y, w, h] of LEVELS[lv].muren) {
+  for (const [x, y, w, h] of veld.muren) {
     uit.push([x, y, w, h])
     const m = [KOLOM - x - w, RIJEN - y - h, w, h]
     if (m[0] !== x || m[1] !== y) uit.push(m)
@@ -91,17 +102,17 @@ function muurBlokken(lv) {
   return uit
 }
 
-function bouwMuren(lv) {
+function bouwMuren(veld) {
   const m = new Uint8Array(KOLOM * RIJEN)
-  for (const [x0, y0, w, h] of muurBlokken(lv)) {
+  for (const [x0, y0, w, h] of muurBlokken(veld)) {
     for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) if (binnen(x, y)) m[idx(x, y)] = 1
   }
   return m
 }
 
 // Beginplek: de uitnodiger linksonder, de genodigde precies gespiegeld rechtsboven.
-function startSlang(lv, i) {
-  const d0 = LEVELS[lv].start || 'U'
+function startSlang(veld, i) {
+  const d0 = veld.start || 'U'
   const [dx, dy] = RICHT[d0]
   const lijf = []
   for (let n = 0; n < CFG.startLengte; n++) lijf.push([3 - dx * n, 23 - dy * n])
@@ -245,6 +256,15 @@ function zetStijl() {
     color:var(--kop);border-color:var(--kop);box-shadow:0 0 18px rgba(95,244,255,.55)}
   .tsnk .knop:active{transform:scale(.94)}
   .tsnk .knop:disabled{opacity:.35;box-shadow:none;cursor:default}
+  .tsnk .startLaag{flex-direction:column;gap:9px}
+  .tsnk .modusRij{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;max-width:94%}
+  .tsnk .mKnop{font-family:inherit;font-size:9px;line-height:1.5;color:var(--tekst);
+    background:rgba(20,10,38,.82);border:2px solid rgba(233,221,255,.28);border-radius:9px;
+    padding:6px 9px;cursor:pointer;text-align:center;min-width:72px}
+  .tsnk .mKnop b{display:block;font-size:10px;margin-bottom:2px}
+  .tsnk .mKnop small{display:block;font-size:7px;opacity:.72;line-height:1.5;max-width:92px}
+  .tsnk .mKnop[aria-pressed="true"]{border-color:var(--k);color:#fff;box-shadow:0 0 10px var(--k)}
+  .tsnk .startRij{display:flex;gap:12px;justify-content:center;align-items:center}
   .tsnk .fout{font-size:10px;line-height:2;text-align:center;color:#ff9db5}
   `
   document.head.appendChild(st)
@@ -266,8 +286,11 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       <div class="scherm">
         <canvas class="doek"></canvas>
         <div class="laag startLaag">
-          <button class="knop groot kSpeel" type="button" aria-label="${vertaal('Start')}">▶</button>
-          <button class="knop kGeluid" type="button" aria-label="${vertaal('Geluid')}">🔊</button>
+          <div class="modusRij" role="group" aria-label="${vertaal('Spelvorm')}"></div>
+          <div class="startRij">
+            <button class="knop groot kSpeel" type="button" aria-label="${vertaal('Start')}">▶</button>
+            <button class="knop kGeluid" type="button" aria-label="${vertaal('Geluid')}">🔊</button>
+          </div>
         </div>
         <div class="laag eindLaag" hidden>
           <button class="knop groot kOpnieuw" type="button" aria-label="${vertaal('Volgende ronde')}">↻</button>
@@ -294,7 +317,11 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
 
   let staat = 'start', aftel = 0, laatsteTel = 4, tijd = 0, eindTijd = 0, rondeTijd = 0
   let rondeNr = 0, lv = 0, rondje = 0
-  let muren = bouwMuren(0)
+  let spelmodus = 'levels'
+  try { const m0 = localStorage.getItem('tsnk-modus'); if (m0 && modusVan(m0).id === m0) spelmodus = m0 } catch (e) {}
+  let veld = LEVELS[0]
+  let randloos = false
+  let muren = bouwMuren(veld)
   let slangen = []
   let appel = null, appelTeller = 0
   let appels = [0, 0], winst = [0, 0], uitslag = null
@@ -397,7 +424,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
 
   // ═══════════════ Opzetten ═══════════════
   function maakSlang(i) {
-    const st = startSlang(lv, i)
+    const st = startSlang(veld, i)
     return {
       i, kleur: KLEUR[i], lijf: st.lijf, dir: st.dir, wacht: [], groei: 0,
       oudeStaart: null, dood: false, doodFlits: 0, n: 0, remote: kanaalOk && i === ander,
@@ -406,15 +433,25 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
 
   function reset() {
     const r = Math.max(1, rondeNr)
-    lv = (r - 1) % LEVELS.length
-    rondje = Math.floor((r - 1) / LEVELS.length)
-    muren = bouwMuren(lv)
+    if (spelmodus === 'levels') {
+      lv = (r - 1) % LEVELS.length
+      rondje = Math.floor((r - 1) / LEVELS.length)
+      veld = LEVELS[lv]
+      randloos = false
+    } else {
+      lv = 0
+      rondje = r - 1                       // leeg veld: elke ronde iets sneller
+      const m = modusVan(spelmodus)
+      veld = { naam: m.naam, kleur: m.kleur, muren: [], start: 'U' }
+      randloos = spelmodus === 'muurloos'
+    }
+    muren = bouwMuren(veld)
     slangen = [maakSlang(0), maakSlang(1)]
     appel = null; appels = [0, 0]; uitslag = null
     stapKlok = 0; stapNr = 0; rondeTijd = 0; eindeOp = null; doodTijd = [null, null]
     gegetenAppel = -1; gemeldeHap = null; laatsteN = -1
     deeltjes = []; schud = 0; flits = 0
-    wrap.style.setProperty('--muur', LEVELS[lv].kleur)
+    wrap.style.setProperty('--muur', veld.kleur)
   }
 
   const levelNummer = () => lv + 1 + rondje * LEVELS.length
@@ -447,7 +484,12 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   }
 
   // ═══════════════ Spelregels ═══════════════
-  function nieuwKop(s) { const [dx, dy] = RICHT[s.dir]; return [s.lijf[0][0] + dx, s.lijf[0][1] + dy] }
+  function nieuwKop(s) {
+    const [dx, dy] = RICHT[s.dir]
+    let x = s.lijf[0][0] + dx, y = s.lijf[0][1] + dy
+    if (randloos) { x = (x + KOLOM) % KOLOM; y = (y + RIJEN) % RIJEN }   // v2: zonder muren loop je er aan de overkant weer in
+    return [x, y]
+  }
 
   function volgendeRichting(s) {
     while (s.wacht.length) {
@@ -619,7 +661,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     startRonde()
     if (kanaalOk) {
       const r = rondeNr
-      ;[0, 250, 500].forEach(ms => setTimeout(() => { if (rondeNr === r) stuur('ts-start', { r }) }, ms))
+      ;[0, 250, 500].forEach(ms => setTimeout(() => { if (rondeNr === r) stuur('ts-start', { r, m: spelmodus }) }, ms))
     }
   }
 
@@ -681,7 +723,11 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   function schrijfLijf(lijf) {
     let s = ''
     for (let k = 1; k < lijf.length; k++) {
-      const dx = lijf[k][0] - lijf[k - 1][0], dy = lijf[k][1] - lijf[k - 1][1]
+      let dx = lijf[k][0] - lijf[k - 1][0], dy = lijf[k][1] - lijf[k - 1][1]
+      if (randloos) {   // v2: een stap over de naad
+        if (dx === KOLOM - 1) dx = -1; else if (dx === -(KOLOM - 1)) dx = 1
+        if (dy === RIJEN - 1) dy = -1; else if (dy === -(RIJEN - 1)) dy = 1
+      }
       s += dx === 1 ? 'R' : dx === -1 ? 'L' : dy === 1 ? 'D' : 'U'
     }
     return s
@@ -695,6 +741,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     const lijf = [[x, y]]
     for (const c of str) {
       x += RICHT[c][0]; y += RICHT[c][1]
+      if (randloos) { x = (x + KOLOM) % KOLOM; y = (y + RIJEN) % RIJEN }
       if (!binnen(x, y)) return null
       lijf.push([x, y])
     }
@@ -703,7 +750,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
 
   function stuurTs() {
     const s = slangen[ik]
-    const p = { r: rondeNr, n: s.n, h: s.lijf[0].slice(), s: schrijfLijf(s.lijf), d: s.dir, g: s.groei, dd: s.dood ? 1 : 0 }
+    const p = { r: rondeNr, n: s.n, h: s.lijf[0].slice(), s: schrijfLijf(s.lijf), d: s.dir, g: s.groei, dd: s.dood ? 1 : 0, m: spelmodus }
     // Klok erbij, en de klok van de ander terug: zo meet hij hoe lang berichten onderweg zijn.
     p.t = rond3(tijd)
     if (hunKlok !== null) { p.et = hunKlok; p.eh = rond3(tijd - hunKlokOp) }
@@ -811,6 +858,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       if (!inRonde || p.r !== rondeNr) {
         // Startsein gemist? Dan start het eerste bericht van de uitnodiger de ronde.
         if (leider || inRonde || !Number.isInteger(p.r) || p.r <= rondeNr) return
+        if (p.m && modusVan(p.m).id === p.m) spelmodus = p.m
         startRonde(p.r)
       }
       neemSlangOver(p)
@@ -818,6 +866,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       else neemStandOver(p)
     } else if (soort === 'ts-start') {
       if (leider || inRonde || !Number.isInteger(p.r) || p.r <= rondeNr) return
+      if (p.m && modusVan(p.m).id === p.m) spelmodus = p.m
       startRonde(p.r)
     } else if (soort === 'ts-einde') {
       if (!leider && p.r === rondeNr) neemEindeOver(p)
@@ -854,7 +903,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   // Het veld zelf (achtergrond, rand, muren) verandert alleen per level:
   // dat tekenen we één keer op een aparte laag.
   function bouwVeldLaag() {
-    const sleutel = lv + ':' + laatsteMaat
+    const sleutel = spelmodus + ':' + lv + ':' + laatsteMaat
     veldLaagVoor = sleutel
     const c = document.createElement('canvas')
     c.width = Math.max(1, Math.round(W * res)); c.height = Math.max(1, Math.round(H * res))
@@ -862,20 +911,47 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     if (!g) { veldLaag = null; return }
     veldLaag = c
     g.setTransform(res, 0, 0, res, 0, 0)
-    const kl = LEVELS[lv].kleur
+    const kl = veld.kleur, vy = HUD, vh = RIJEN * T
+    // v2: diepteverloop + een zachte gloed in de velddkleur, i.p.v. een platte vlakte
     g.fillStyle = DONKER; g.fillRect(0, 0, W, H)
-    g.fillStyle = rgba(kl, 0.16)
+    const grad = g.createLinearGradient(0, vy, 0, vy + vh)
+    grad.addColorStop(0, '#0c0722'); grad.addColorStop(0.5, '#08041a'); grad.addColorStop(1, '#060310')
+    g.fillStyle = grad; g.fillRect(0, vy, W, vh)
+    const rg = g.createRadialGradient(W / 2, vy + vh * 0.42, T, W / 2, vy + vh * 0.42, W * 0.8)
+    rg.addColorStop(0, rgba(kl, 0.13)); rg.addColorStop(1, 'rgba(0,0,0,0)')
+    g.fillStyle = rg; g.fillRect(0, vy, W, vh)
+    // fijne rasterlijnen
+    g.strokeStyle = rgba(kl, 0.05); g.lineWidth = 1
+    for (let x = 1; x < KOLOM; x++) { g.beginPath(); g.moveTo(x * T + 0.5, vy); g.lineTo(x * T + 0.5, vy + vh); g.stroke() }
+    for (let y = 1; y < RIJEN; y++) { g.beginPath(); g.moveTo(0, vy + y * T + 0.5); g.lineTo(W, vy + y * T + 0.5); g.stroke() }
+    // stipjes op de kruispunten
+    g.fillStyle = rgba(kl, 0.18)
     for (let y = 0; y < RIJEN; y++) for (let x = 0; x < KOLOM; x++) {
-      if (!muren[idx(x, y)]) g.fillRect(x * T + T / 2 - 0.75, HUD + y * T + T / 2 - 0.75, 1.5, 1.5)
+      if (!muren[idx(x, y)]) g.fillRect(x * T + T / 2 - 0.75, vy + y * T + T / 2 - 0.75, 1.5, 1.5)
     }
+    // rand: een dubbele neonlijn (behalve zonder muren, dan is er geen rand)
     g.save()
-    g.shadowColor = kl; g.shadowBlur = 8 * res
-    g.strokeStyle = kl; g.lineWidth = 1.5
-    g.strokeRect(0.75, HUD + 0.75, W - 1.5, RIJEN * T - 1.5)
-    for (const [x, y, w, h] of muurBlokken(lv)) {
-      g.fillStyle = rgba(kl, 0.22)
-      g.fillRect(x * T + 1.5, HUD + y * T + 1.5, w * T - 3, h * T - 3)
-      g.strokeRect(x * T + 1.5, HUD + y * T + 1.5, w * T - 3, h * T - 3)
+    if (!randloos) {
+      g.shadowColor = kl; g.shadowBlur = 10 * res
+      g.strokeStyle = rgba(kl, 0.5); g.lineWidth = 3; g.strokeRect(1.5, vy + 1.5, W - 3, vh - 3)
+      g.shadowBlur = 5 * res
+      g.strokeStyle = kl; g.lineWidth = 1.5; g.strokeRect(2.5, vy + 2.5, W - 5, vh - 5)
+    } else {
+      // zonder muren: een streepjesrand, als teken dat je er doorheen loopt
+      g.shadowColor = kl; g.shadowBlur = 6 * res
+      g.strokeStyle = rgba(kl, 0.5); g.lineWidth = 2; g.setLineDash([T * 0.5, T * 0.5])
+      g.strokeRect(1.5, vy + 1.5, W - 3, vh - 3); g.setLineDash([])
+    }
+    // muurblokken: een neon-tegel met donkere kern, lichte bovenrand en gloed
+    for (const [x, y, w, h] of muurBlokken(veld)) {
+      const bx = x * T + 1.5, by = vy + y * T + 1.5, bw = w * T - 3, bh = h * T - 3
+      const mg = g.createLinearGradient(0, by, 0, by + bh)
+      mg.addColorStop(0, rgba(kl, 0.42)); mg.addColorStop(1, rgba(kl, 0.14))
+      g.shadowColor = kl; g.shadowBlur = 7 * res
+      g.fillStyle = mg; g.fillRect(bx, by, bw, bh)
+      g.shadowBlur = 0
+      g.strokeStyle = rgba(kl, 0.9); g.lineWidth = 1.3; g.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1)
+      g.fillStyle = 'rgba(255,255,255,0.22)'; g.fillRect(bx + 1.5, by + 1.5, bw - 3, Math.max(1.5, bh * 0.16))
     }
     g.restore()
   }
@@ -912,26 +988,50 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     tekenAppelOp(cx, cy, (0.92 + 0.07 * Math.sin(tijd * 6)) * (0.3 + 0.7 * opkomst))
   }
 
+  // Grid-cellen a en b naast elkaar op het scherm? (dus niet over de naad gesprongen)
+  const naast = (a, b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) === 1
+
   // Een slang is één dikke lijn door de middens van zijn vakjes. Tussen twee
-  // stappen schuiven kop en staart mee, zodat hij vloeiend loopt.
+  // stappen schuiven kop en staart mee, zodat hij vloeiend loopt. v2: mooier
+  // getekend (gloed, donkere onderrand, lichte rug, segment-ribbels) en zonder
+  // muren in losse stukken geknipt waar hij over de naad springt.
   function tekenSlang(s) {
     const f = staat === 'spel' && !s.dood ? Math.min(1, stapKlok) : 1
     const L = s.lijf
-    const kop = L.length > 1 ? tussen(midden(L[1]), midden(L[0]), f) : midden(L[0])
-    const pt = [kop]
-    for (let k = 1; k < L.length; k++) pt.push(midden(L[k]))
-    if (s.oudeStaart && f < 1) pt.push(tussen(midden(s.oudeStaart), midden(L[L.length - 1]), f))
-    const kleur = s.dood ? meng(s.kleur, '#2a2440', 0.55) : s.kleur
-    const pad = () => {
-      ctx.beginPath(); ctx.moveTo(pt[0][0], pt[0][1])
-      for (let k = 1; k < pt.length; k++) ctx.lineTo(pt[k][0], pt[k][1])
+    const kopAdj = L.length > 1 && naast(L[0], L[1])
+    const kop = kopAdj ? tussen(midden(L[1]), midden(L[0]), f) : midden(L[0])
+    const punten = [kop], cellen = [L[0]]
+    for (let k = 1; k < L.length; k++) { punten.push(midden(L[k])); cellen.push(L[k]) }
+    if (s.oudeStaart && f < 1) {
+      const laatst = L[L.length - 1]
+      if (naast(s.oudeStaart, laatst)) { punten.push(tussen(midden(s.oudeStaart), midden(laatst), f)); cellen.push(s.oudeStaart) }
     }
+    // in losse stukken knippen waar de slang over de naad springt
+    const stukken = []; let huidig = [punten[0]]
+    for (let k = 1; k < punten.length; k++) {
+      if (!naast(cellen[k - 1], cellen[k])) { stukken.push(huidig); huidig = [] }
+      huidig.push(punten[k])
+    }
+    if (huidig.length) stukken.push(huidig)
+    const kleur = s.dood ? meng(s.kleur, '#2a2440', 0.55) : s.kleur
+    const licht = meng(kleur, '#ffffff', 0.4), donker = meng(kleur, DONKER, 0.4)
+    const pad = (pts) => { ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let k = 1; k < pts.length; k++) ctx.lineTo(pts[k][0], pts[k][1]) }
     ctx.save()
     if (s.doodFlits > 0 && Math.floor(s.doodFlits * 10) % 2) ctx.globalAlpha = 0.45
     ctx.lineCap = 'round'; ctx.lineJoin = 'round'
-    pad(); ctx.strokeStyle = rgba(kleur, 0.2); ctx.lineWidth = T * 1.05; ctx.stroke()
-    pad(); ctx.strokeStyle = kleur; ctx.lineWidth = T * 0.66; ctx.stroke()
-    pad(); ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = T * 0.16; ctx.stroke()
+    for (const pts of stukken) {
+      ctx.save(); ctx.shadowColor = kleur; ctx.shadowBlur = (s.dood ? 2 : 7) * res
+      pad(pts); ctx.strokeStyle = rgba(kleur, 0.22); ctx.lineWidth = T * 1.02; ctx.stroke()
+      ctx.restore()
+      pad(pts); ctx.strokeStyle = donker; ctx.lineWidth = T * 0.78; ctx.stroke()
+      pad(pts); ctx.strokeStyle = kleur; ctx.lineWidth = T * 0.62; ctx.stroke()
+      pad(pts); ctx.strokeStyle = rgba(licht, 0.9); ctx.lineWidth = T * 0.14; ctx.stroke()
+      if (!s.dood) {   // segment-ribbels: een gestippelde donkere lijn langs het lijf
+        ctx.save(); ctx.setLineDash([Math.max(1, T * 0.12), T * 0.5]); ctx.lineDashOffset = -(s.n % 100) * T * 0.62
+        pad(pts); ctx.strokeStyle = rgba(donker, 0.5); ctx.lineWidth = T * 0.58; ctx.stroke()
+        ctx.restore()
+      }
+    }
     const [hx, hy] = kop
     const [dx, dy] = RICHT[s.dir]
     // tongetje, af en toe
@@ -944,6 +1044,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       ctx.moveTo(px, py); ctx.lineTo(px + (dx + dy) * T * 0.12, py + (dy - dx) * T * 0.12)
       ctx.stroke()
     }
+    if (!s.dood) { ctx.save(); ctx.shadowColor = kleur; ctx.shadowBlur = 8 * res; ctx.fillStyle = kleur; ctx.beginPath(); ctx.arc(hx, hy, T * 0.46, 0, Math.PI * 2); ctx.fill(); ctx.restore() }
     ctx.fillStyle = kleur
     ctx.beginPath(); ctx.arc(hx, hy, T * 0.44, 0, Math.PI * 2); ctx.fill()
     // oogjes
@@ -975,7 +1076,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
 
   function tekenHud() {
     ctx.fillStyle = '#0d0619'; ctx.fillRect(0, 0, W, HUD)
-    const kl = LEVELS[lv].kleur
+    const kl = veld.kleur
     ctx.fillStyle = rgba(kl, 0.6); ctx.fillRect(0, HUD - 1, W, 1)
     for (const i of [0, 1]) {
       const links = i === 0
@@ -986,8 +1087,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       tekenAppelOp(ax, 24, 0.62)
       tekst(String(appels[i]), links ? ax + 8 : ax - 8, 25, '#e9ddff', 7, al, false)
     }
-    tekst('LEVEL ' + levelNummer(), W / 2, 11, '#e9ddff', 7, 'center', false)
-    tekst(LEVELS[lv].naam, W / 2, 24, kl, 6, 'center', false)
+    tekst(spelmodus === 'levels' ? 'LEVEL ' + levelNummer() : vertaal('RONDE {n}', { n: rondeNr }), W / 2, 11, '#e9ddff', 7, 'center', false)
+    tekst(veld.naam, W / 2, 24, kl, 6, 'center', false)
   }
 
   function paneel(px, py, pw, ph, rand) {
@@ -1000,7 +1101,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   function tekenUitleg() {
     ctx.fillStyle = 'rgba(5,2,12,0.72)'; ctx.fillRect(0, HUD, W, H - HUD)
     const px = 22, py = 62, pw = W - 44, ph = 212
-    paneel(px, py, pw, ph, LEVELS[lv].kleur)
+    paneel(px, py, pw, ph, veld.kleur)
     const x0 = W / 2 - (11 * 13) / 2
     tekst('TWIN', x0, py + 24, KLEUR[0], 13, 'left')
     tekst('SNAKES', x0 + 5 * 13, py + 24, KLEUR[1], 13, 'left')
@@ -1014,16 +1115,19 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     ctx.restore()
     tekenAppelOp(150, y, 1.1)
     tekst('+1', 190, y + 1, BLAD, 11)
-    const regels = [vertaal('EET APPELS EN GROEI'), vertaal('BOTS NIET TEGEN MUREN'), vertaal('OF TEGEN EEN SLANG'), vertaal('WIE OVERBLIJFT WINT'), vertaal('ELKE RONDE EEN NIEUW LEVEL')]
+    const slot = spelmodus === 'muurloos' ? vertaal('GEEN RAND: LOOP EROMHEEN')
+      : spelmodus === 'classic' ? vertaal('PAS OP VOOR DE RAND')
+      : vertaal('ELKE RONDE EEN NIEUW LEVEL')
+    const regels = [vertaal('EET APPELS EN GROEI'), vertaal('BOTS NIET TEGEN EEN SLANG'), vertaal('WIE OVERBLIJFT WINT'), slot]
     regels.forEach((r, n) => tekst(r, W / 2, py + 92 + n * 18, '#e9ddff', 7, 'center', false))
-    tekst(vertaal('VEEG OF GEBRUIK DE PIJLTJES'), W / 2, py + ph - 16, LEVELS[lv].kleur, 6, 'center', false)
+    tekst(vertaal('VEEG OF GEBRUIK DE PIJLTJES'), W / 2, py + ph - 16, veld.kleur, 6, 'center', false)
   }
 
   function tekenAftel() {
     ctx.fillStyle = 'rgba(5,2,12,0.45)'; ctx.fillRect(0, HUD, W, H - HUD)
-    const kl = LEVELS[lv].kleur
-    tekst('LEVEL ' + levelNummer(), W / 2, H * 0.34, '#e9ddff', 14)
-    tekst(LEVELS[lv].naam, W / 2, H * 0.34 + 24, kl, 9)
+    const kl = veld.kleur
+    tekst(spelmodus === 'levels' ? 'LEVEL ' + levelNummer() : modusVan(spelmodus).naam, W / 2, H * 0.34, '#e9ddff', spelmodus === 'levels' ? 14 : 11)
+    tekst(veld.naam, W / 2, H * 0.34 + 24, kl, 9)
     const tel = Math.max(1, Math.ceil(aftel))
     tekst(String(tel), W / 2, H * 0.52, kl, 30)
     // welke slang ben ik?
@@ -1065,11 +1169,15 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       tekst(String(appels[i]), cx + 4, ay + 1, '#e9ddff', 9, 'left', false)
     }
     // wat komt er
-    const volgende = rondeNr + 1
-    const vlv = (volgende - 1) % LEVELS.length
-    const vnr = vlv + 1 + Math.floor((volgende - 1) / LEVELS.length) * LEVELS.length
-    tekst(vertaal('VOLGENDE: LEVEL {n}', { n: vnr }), W / 2, H * 0.6, '#e9ddff', 7, 'center', false)
-    tekst(LEVELS[vlv].naam, W / 2, H * 0.6 + 16, LEVELS[vlv].kleur, 7, 'center', false)
+    if (spelmodus === 'levels') {
+      const volgende = rondeNr + 1
+      const vlv = (volgende - 1) % LEVELS.length
+      const vnr = vlv + 1 + Math.floor((volgende - 1) / LEVELS.length) * LEVELS.length
+      tekst(vertaal('VOLGENDE: LEVEL {n}', { n: vnr }), W / 2, H * 0.6, '#e9ddff', 7, 'center', false)
+      tekst(LEVELS[vlv].naam, W / 2, H * 0.6 + 16, LEVELS[vlv].kleur, 7, 'center', false)
+    } else {
+      tekst(modusVan(spelmodus).naam, W / 2, H * 0.6 + 8, veld.kleur, 8, 'center', false)
+    }
   }
 
   // Onder de uitleg en de eindstand: op wie we wachten.
@@ -1084,7 +1192,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   }
 
   function teken() {
-    if (!veldLaag || veldLaagVoor !== lv + ':' + laatsteMaat) bouwVeldLaag()
+    if (!veldLaag || veldLaagVoor !== spelmodus + ':' + lv + ':' + laatsteMaat) bouwVeldLaag()
     ctx.setTransform(1, 0, 0, 1, 0, 0)
     if (veldLaag) ctx.drawImage(veldLaag, 0, 0)
     else { ctx.fillStyle = DONKER; ctx.fillRect(0, 0, doek.width, doek.height) }
@@ -1197,6 +1305,33 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
   kOpnieuw.addEventListener('click', leiderStart)
   kSpeel.hidden = !leider
   kOpnieuw.hidden = !leider
+  // v2: de drie spelvormen. Alleen de uitnodiger kiest; de gast krijgt de keuze via het startsein.
+  const modusRij = wrap.querySelector('.modusRij')
+  const mKnoppen = {}
+  if (leider) {
+    for (const m of MODI) {
+      const knop = document.createElement('button')
+      knop.type = 'button'; knop.className = 'mKnop'
+      knop.style.setProperty('--k', m.kleur)
+      knop.innerHTML = '<b>' + m.naam + '</b><small>' + m.uitleg + '</small>'
+      knop.addEventListener('click', e => {
+        e.stopPropagation(); geluid.ontgrendel()
+        if (staat !== 'start') return
+        spelmodus = m.id
+        try { localStorage.setItem('tsnk-modus', m.id) } catch (er) {}
+        reset(); werkModusKnoppen()
+      })
+      mKnoppen[m.id] = knop
+      modusRij.appendChild(knop)
+    }
+  } else {
+    modusRij.hidden = true
+  }
+  function werkModusKnoppen() {
+    for (const m of MODI) if (mKnoppen[m.id]) mKnoppen[m.id].setAttribute('aria-pressed', String(m.id === spelmodus))
+  }
+  werkModusKnoppen()
+
   let knopStand = ''
   function werkKnoppen() {
     const mag = !kanaalOk || anderIsEr()
@@ -1207,6 +1342,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     knopStand = stand
     kSpeel.disabled = !mag; kOpnieuw.disabled = !mag
     startLaag.hidden = !toonStart
+    if (leider) modusRij.hidden = !toonStart
     eindLaag.hidden = !toonEind
   }
   wrap.querySelector('.kGeluid').addEventListener('click', e => {
@@ -1289,6 +1425,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
       get eindTijd() { return eindTijd }, get muren() { return muren }, get tijd() { return tijd },
       startRonde, update, teken, reset, zet, stap, leiderStart, ontvang, tempo, anderIsEr,
       zetAI: (i, v) => { aiAan[i] = v },
+      get modus() { return spelmodus }, get randloos() { return randloos }, get veld() { return veld },
+      zetModus: (m) => { spelmodus = m; reset() },
       zetAppel: (x, y) => { appel = { id: ++appelTeller, x, y, sinds: tijd } },
     },
   }

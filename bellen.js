@@ -1022,4 +1022,3 @@ export function bouwFilterKnop(container) {
     zetTekst: (t) => zetNieuwsfilterTekst(t),
   })
 }
-}

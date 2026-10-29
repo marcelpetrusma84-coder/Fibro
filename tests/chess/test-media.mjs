@@ -174,6 +174,9 @@ function setup(userId = 'a') {
     supabase, ICE_SERVERS: {}, iceReady: Promise.resolve(),
     houOpen(name, factory) { return factory().subscribe() },
     maakBelregel() { return 'test call' }, alert() {},
+    // camerafilters.js (v157) staat in deze test altijd op 'geen': dan geeft het filter de rauwe track terug
+    maakCameraFilter() { let bron = null; return { zetBron(t) { bron = t || null }, uitTrack() { return bron }, kies() {}, huidig: () => 'geen', nieuwsTekst: () => ({}), zetNieuwsTekst() {} } },
+    bouwFilterKiezer() {}, CAMERA_FILTERS: [],
     fetch() { throw new Error('Unexpected network request in media tests') },
     setTimeout: clock.setTimeout, clearTimeout: clock.clearTimeout,
     Date: class extends Date { static now() { return clock.now() } }, queueMicrotask

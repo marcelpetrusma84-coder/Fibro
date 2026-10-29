@@ -6,11 +6,19 @@
 # Nodig (GitHub > Settings > Secrets and variables > Actions):
 #   FIBRO_APK_KEYSTORE    de Fibro-sleutel als base64-tekst
 #   FIBRO_APK_WACHTWOORD  het wachtwoord van die sleutel
-# Starten: Actions > Android-APK > Run workflow. De APK staat daarna onderaan de run bij 'Artifacts'.
+# Starten: Actions > Android-APK > Run workflow, of vanzelf na een wijziging in android/ op main.
+# Op main komt de APK daarna onder de vaste downloadlink (die ook in apk.js staat):
+#   https://github.com/marcelpetrusma84-coder/Fibro/releases/download/apk-nieuwste/fibro.apk
+# en ook onderaan de run bij 'Artifacts'.
 name: Android-APK
 
 on:
   workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android-apk.yml'
   pull_request:
     paths:
       - 'android/**'
@@ -23,6 +31,8 @@ jobs:
   apk:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    permissions:
+      contents: write   # alleen nodig voor de stap 'Downloadlink bijwerken' (een release), en die draait alleen op main
     steps:
       - uses: actions/checkout@v4
 
@@ -76,3 +86,20 @@ jobs:
           name: fibro-apk-${{ env.SOORT }}
           path: uit/*.apk
           retention-days: 30
+
+      - name: Downloadlink bijwerken (release apk-nieuwste)
+        if: env.SOORT == 'fibro' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          cp uit/fibro-fibro.apk uit/fibro.apk
+          VERSIE=$(grep -m1 -oE 'versionName "[^"]+"' android/app/build.gradle | cut -d'"' -f2)
+          NOTITIE="Fibro-app voor Android, versie $VERSIE (gebouwd uit ${GITHUB_SHA::7}). Installeren: download fibro.apk op een Android-telefoon (Android 7 of nieuwer) en open het bestand."
+          if gh release view apk-nieuwste >/dev/null 2>&1; then
+            gh release upload apk-nieuwste uit/fibro.apk --clobber
+            gh release edit apk-nieuwste --title "Fibro-app $VERSIE (Android)" --notes "$NOTITIE" --latest
+          else
+            gh release create apk-nieuwste uit/fibro.apk --target "$GITHUB_SHA" --title "Fibro-app $VERSIE (Android)" --notes "$NOTITIE" --latest
+          fi
+          echo "Downloadlink: https://github.com/${GITHUB_REPOSITORY}/releases/download/apk-nieuwste/fibro.apk" >> "$GITHUB_STEP_SUMMARY"

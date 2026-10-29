@@ -6,6 +6,7 @@
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
 <script src="taal.js?v=30"></script>
+<script src="apk.js?v=1"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Alleen het jaar. Fibro is vanaf 16 jaar.': 'Only the year. Fibro is for ages 16 and up.', 'Fibro is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.': "Fibro is for ages 16 and up. If you're younger, you can't create an account yet." }) // v225</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
@@ -218,8 +219,18 @@ async function init() {
     return
   }
   document.getElementById('laadScherm').style.display = 'none'
-  document.getElementById('uitnodigingScherm').style.display = 'block'
   nieuweNaam()
+  // Android in de browser: eerst de keuze tussen de app (aanbevolen) en de browser (apk.js)
+  if (window.FibroApk && FibroApk.toonDownload() && !FibroApk.webGekozen()) {
+    const kaart = FibroApk.keuze({
+      naam: profiel?.username || '',
+      onWeb: () => { document.getElementById('uitnodigingScherm').style.display = 'block' }
+    })
+    const scherm = document.getElementById('uitnodigingScherm')
+    scherm.parentNode.insertBefore(kaart, scherm)
+    return
+  }
+  document.getElementById('uitnodigingScherm').style.display = 'block'
 }
 
 function toonFout() {
@@ -317,13 +328,25 @@ window.registreren = async function() {
     }
 
     await supabase.rpc('gebruik_invite', { token_in: token, gebruiker: data.user.id })
+    try { window.FibroApk && FibroApk.vergeetUitnodiging() } catch (e) {} // gebruikt: niet meer laten wachten voor de app
   }
 
   document.getElementById('uitnodigingScherm').style.display = 'none'
   if (metFaceId && data.user) { toonFaceIdNaInvite(data.user.id, naam, keypair.privateKeyB64); return }
   document.getElementById('herstelCode').textContent = herstelsleutel
   document.getElementById('bevestigNaam').textContent = naam
+  toonAppKaart(document.getElementById('herstelScherm').querySelector('.btn'))
   document.getElementById('herstelScherm').style.display = 'block'
+}
+
+// Android in de browser: na het aanmelden nog een keer de app aanbieden (dezelfde inlog, apk.js)
+function toonAppKaart(voor) {
+  try {
+    if (!voor || !window.FibroApk || !FibroApk.toonDownload() || document.getElementById('appKaartNaAanmelden')) return
+    const k = FibroApk.kaart()
+    k.id = 'appKaartNaAanmelden'
+    voor.parentNode.insertBefore(k, voor)
+  } catch (e) {}
 }
 
 // --- Face ID-herstel na registreren (zie passkey-kluis.js) ---
@@ -350,6 +373,7 @@ async function toonHerstelcodeReserve(userId, naam, privateKeyB64, paneel) {
     paneel.remove()
     document.getElementById('herstelCode').textContent = code
     document.getElementById('bevestigNaam').textContent = naam
+    toonAppKaart(document.getElementById('herstelScherm').querySelector('.btn'))
     document.getElementById('herstelScherm').style.display = 'block'
   } catch (e) {
     paneel.textContent = T('Herstelcode maken mislukt. Je kunt Face ID-herstel later aanzetten na het inloggen.')
@@ -381,6 +405,7 @@ function toonFaceIdNaInvite(userId, naam, privateKeyB64) {
       nee.remove()
       ja.disabled = false; ja.textContent = T('Verder naar Fibro')
       ja.onclick = () => { window.location.href = 'index.html' }
+      toonAppKaart(ja)
     } catch (e) {
       melding.style.color = '#f87171'; melding.textContent = faceIdFoutTekst(e)
       ja.disabled = false; nee.disabled = false; ja.textContent = T('Opnieuw proberen')

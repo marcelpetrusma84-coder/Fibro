@@ -6,6 +6,8 @@
   <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
   <script src="taal.js?v=30"></script>
+  <script src="apk.js?v=1"></script>
+  <script>try { FibroApk.hervatUitnodiging() } catch (e) {} // in de app: een uitnodiging die wacht (apk.js)</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Verder met setup': 'Continue setup', 'Fibro is vanaf 16 jaar.': 'Fibro is for ages 16 and up.', 'Fibro is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.': "Fibro is for ages 16 and up. If you're younger, you can't create an account yet." })</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title data-t>Fibro — Inloggen</title>
@@ -147,6 +149,8 @@
       <button class="btn btn-primary" onclick="herstelMetFaceId()" data-t>Herstel met Face ID</button>
     </div>
   </div>
+  <div id="apkPlek"></div>
+  <script>try { if (FibroApk.toonDownload()) { var k = FibroApk.kaart(); if (k) document.getElementById('apkPlek').appendChild(k) } } catch (e) {} // Android in de browser: de app aanbieden</script>
 </div>
 
 <script type="module">

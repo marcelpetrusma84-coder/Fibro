@@ -1,0 +1,49 @@
+{
+  "packageId": "nl.fibro.app",
+  "host": "marcelpetrusma84-coder.github.io",
+  "name": "Fibro",
+  "launcherName": "Fibro",
+  "display": "standalone",
+  "themeColor": "#1A0A2E",
+  "themeColorDark": "#1A0A2E",
+  "navigationColor": "#1A0A2E",
+  "navigationColorDark": "#1A0A2E",
+  "navigationDividerColor": "#1A0A2E",
+  "navigationDividerColorDark": "#1A0A2E",
+  "backgroundColor": "#1A0A2E",
+  "enableNotifications": true,
+  "startUrl": "/Fibro/index.html",
+  "iconUrl": "https://marcelpetrusma84-coder.github.io/Fibro/icon-512.png",
+  "maskableIconUrl": "https://marcelpetrusma84-coder.github.io/Fibro/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./fibro-release.keystore",
+    "alias": "fibro"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://marcelpetrusma84-coder.github.io/Fibro/",
+  "minSdkVersion": 24,
+  "orientation": "portrait",
+  "fingerprints": [
+    {
+      "name": "fibro-release",
+      "value": "52:BF:92:FB:79:E4:99:8E:E0:C4:A8:6E:D9:E3:5A:BE:55:94:D7:07:77:72:7A:EE:8A:FF:CC:2A:B6:E2:72:CF"
+    }
+  ],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "displayOverride": [],
+  "appVersion": "1.0.0",
+  "webManifestUrl": "https://marcelpetrusma84-coder.github.io/Fibro/manifest.json"
+}

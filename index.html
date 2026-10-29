@@ -15,6 +15,7 @@
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
 <script src="taal.js?v=30"></script>
+<script src="apk.js?v=1"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>/* v130: zoomen mag weer; iPhone zoomt bij invoervakken kleiner dan 16px vanzelf in */@supports (-webkit-touch-callout: none){input,textarea,select{font-size:16px !important}}</style>
@@ -149,6 +150,8 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
     <div class="hero-badge" id="heroBadge" style="display:none"></div>
   </div>
 </div>
+<div id="apkPlek" style="padding:0 16px"></div>
+<script>try { if (FibroApk.toonDownload()) { var apkKaart = FibroApk.kaart({ sluitbaar: true }); if (apkKaart) document.getElementById('apkPlek').appendChild(apkKaart) } } catch (e) {} // Android in de browser: de app aanbieden (apk.js)</script>
 <script>
 // v188: het rode stipje op je avatar als je op offline staat. Eerst de keuze op dit toestel (fibro_ik_offline, gezet door
 // Profiel en door heartbeat.js); zodra het verse profiel binnen is telt dat (toon_online = false is offline).

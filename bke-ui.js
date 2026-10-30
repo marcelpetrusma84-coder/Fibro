@@ -3,7 +3,7 @@
 // het spelkanaal dat chat.html aanlevert.
 // v147: teksten ook in het Engels (taal.js)
 // 30 okt 2026 (Tic-Tac-Toe v2): een houten bord (eiken, met nerf en negen uitgefreesde vakjes) en houten stukken:
-// X is licht esdoornhout, O donker notenhout. Een nieuw stuk wordt neergelegd (kleine val), op je beurt zie je
+// X is rood geverfd hout, O blauw geverfd hout (de nerf schijnt erdoor). Een nieuw stuk wordt neergelegd (kleine val), op je beurt zie je
 // waar je stuk zou komen, en bij winst lichten de drie stukken op. Alles met CSS en SVG, geen plaatjes.
 // De spelregels en de berichten naar de tegenstander zijn niet veranderd.
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v147)
@@ -41,8 +41,8 @@ const STIJL = `
 
 // Gedeelde SVG-definities: houtkleuren, nerf in de stukken en een glanslicht. Eén keer per pagina.
 const DEFS = `<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
-  <linearGradient id="bkeEsdoorn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f8deb0"/><stop offset=".55" stop-color="#ddb06f"/><stop offset="1" stop-color="#b98146"/></linearGradient>
-  <linearGradient id="bkeNoot" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a6438"/><stop offset=".5" stop-color="#6b3f1f"/><stop offset="1" stop-color="#43250f"/></linearGradient>
+  <linearGradient id="bkeRood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a74"/><stop offset=".5" stop-color="#e2412f"/><stop offset="1" stop-color="#a5221a"/></linearGradient>
+  <linearGradient id="bkeBlauw" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fb4ff"/><stop offset=".5" stop-color="#2f6fd6"/><stop offset="1" stop-color="#1b3f8c"/></linearGradient>
   <filter id="bkeNerf" filterUnits="userSpaceOnUse" x="0" y="0" width="66" height="66">
     <feTurbulence type="fractalNoise" baseFrequency="0.02 0.35" numOctaves="2" seed="3" result="r"/>
     <feColorMatrix in="r" values="0 0 0 0 0.25  0 0 0 0 0.12  0 0 0 0 0.04  0 0 0 0.6 -0.12" result="lijn"/>
@@ -54,13 +54,13 @@ const DEFS = `<svg width="0" height="0" style="position:absolute" aria-hidden="t
 // Een houten stuk als SVG. X: twee gekruiste latjes. O: een ring. Met een randje en een glansstreep.
 function stukSvg(symbool) {
   if (symbool === 'X') {
-    const lat = hoek => `<rect x="27" y="4" width="12" height="58" rx="6" transform="rotate(${hoek} 33 33)" fill="url(#bkeEsdoorn)" stroke="#7d5126" stroke-width="1.5" filter="url(#bkeNerf)"/>`
+    const lat = hoek => `<rect x="27" y="4" width="12" height="58" rx="6" transform="rotate(${hoek} 33 33)" fill="url(#bkeRood)" stroke="#6e150f" stroke-width="1.5" filter="url(#bkeNerf)"/>`
     return `<svg class="bke-stuk" viewBox="0 0 66 66" aria-hidden="true">${lat(45)}${lat(-45)}
       <path d="M17 13 L23 19" stroke="rgba(255,255,255,0.55)" stroke-width="2.5" stroke-linecap="round"/></svg>`
   }
   return `<svg class="bke-stuk" viewBox="0 0 66 66" aria-hidden="true">
-    <circle cx="33" cy="33" r="22" fill="none" stroke="#2e1808" stroke-width="15.5"/>
-    <circle cx="33" cy="33" r="22" fill="none" stroke="url(#bkeNoot)" stroke-width="13" filter="url(#bkeNerf)"/>
+    <circle cx="33" cy="33" r="22" fill="none" stroke="#0f2457" stroke-width="15.5"/>
+    <circle cx="33" cy="33" r="22" fill="none" stroke="url(#bkeBlauw)" stroke-width="13" filter="url(#bkeNerf)"/>
     <path d="M18 22 A19 19 0 0 1 30 13" fill="none" stroke="rgba(255,225,190,0.5)" stroke-width="2.5" stroke-linecap="round"/></svg>`
 }
 

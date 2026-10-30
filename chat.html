@@ -2277,7 +2277,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // te doen zodra een spel gekozen is, staat het klaar tegen de tijd dat de
   // ander accepteert. Spellen die nog in chat.html zitten hoeven niets.
   const SPEL_BESTAND = {
-    botkaaseiren: './bke-ui.js?v=238',
+    botkaaseiren: './bke-ui.js?v=239',
     dammen: './dammen-ui.js?v=147',
     pong: './pong-ui.js?v=237',
     vieroprij: './vieroprij-ui.js?v=147',
@@ -2705,7 +2705,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Boter-Kaas-Eieren ───
   async function startBotKaasEieren() {
-    const m = await import('./bke-ui.js?v=238')
+    const m = await import('./bke-ui.js?v=239')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
 

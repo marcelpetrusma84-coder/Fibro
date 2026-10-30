@@ -7,7 +7,7 @@ const lees = p => readFileSync(new URL('../../' + p, import.meta.url), 'utf8')
 const bke = lees('bke-ui.js')
 
 // 1. Hout: een plank met vakjes, twee houtsoorten, nerf, neerleggen en oplichten bij winst
-for (const stuk of ['.bke-plank', '.bke-vak', 'bkeEsdoorn', 'bkeNoot', 'bkeNerf', '@keyframes bkeLeg', '.bke-vak.win', 'prefers-reduced-motion'])
+for (const stuk of ['.bke-plank', '.bke-vak', 'bkeRood', 'bkeBlauw', 'bkeNerf', '@keyframes bkeLeg', '.bke-vak.win', 'prefers-reduced-motion'])
   assert.ok(bke.includes(stuk), 'bke-ui.js bevat ' + stuk)
 // De nerf-filter mag de stukken niet afsnijden (de O had een vierkant randje met objectBoundingBox)
 assert.match(bke, /<filter id="bkeNerf" filterUnits="userSpaceOnUse" x="0" y="0" width="66" height="66">/)

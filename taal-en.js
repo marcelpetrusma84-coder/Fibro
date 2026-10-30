@@ -1077,6 +1077,16 @@ window.FIBRO_EN = {
   "Nieuw record! ": "New record! ",
   "Game over": "Game over",
 
+// 30 okt 2026: Tic-Tac-Toe v2 (houten bord): namen van de vakjes voor schermlezers
+  "Speelbord": "Game board",
+  "boven": "top",
+  "midden": "middle",
+  "onder": "bottom",
+  "links": "left",
+  "rechts": "right",
+  "{plek}: {s}": "{plek}: {s}",
+  "{plek}: leeg": "{plek}: empty",
+
 // ---- Flapper (flappy-ui) ----
   "Pas op: scherpe punten!": "Watch out: sharp points!",
   "Pas op: spijkers!": "Watch out: spikes!",

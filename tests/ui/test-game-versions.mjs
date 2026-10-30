@@ -15,7 +15,8 @@ for (const language of ['nl', 'en']) {
   const labels = Object.keys(SPEL_VERSIES).map(element)
   const unknown = element('not-a-game')
   vulSpelVersies({ querySelectorAll: () => [...labels, unknown] })
-  assert.equal(labels[0].textContent, 'v1.0', 'the initial game version includes its minor number')
+  const first = SPEL_VERSIES[Object.keys(SPEL_VERSIES)[0]]
+  assert.equal(labels[0].textContent, 'v' + first.toFixed(1), 'a whole game version includes its minor number')
   for (const label of labels) {
     assert.match(label.textContent, /^v\d+\.\d+$/u, 'every game has a major.minor display label')
     assert.equal(label.attributes.get('aria-label'), `${language === 'en' ? 'version' : 'versie'} ${label.textContent.slice(1)}`)

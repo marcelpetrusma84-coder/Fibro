@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=37"></script>
+<script src="taal.js?v=38"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2277,7 +2277,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // te doen zodra een spel gekozen is, staat het klaar tegen de tijd dat de
   // ander accepteert. Spellen die nog in chat.html zitten hoeven niets.
   const SPEL_BESTAND = {
-    botkaaseiren: './bke-ui.js?v=147',
+    botkaaseiren: './bke-ui.js?v=239',
     dammen: './dammen-ui.js?v=147',
     pong: './pong-ui.js?v=237',
     vieroprij: './vieroprij-ui.js?v=147',
@@ -2705,7 +2705,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Boter-Kaas-Eieren ───
   async function startBotKaasEieren() {
-    const m = await import('./bke-ui.js?v=147')
+    const m = await import('./bke-ui.js?v=239')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
 

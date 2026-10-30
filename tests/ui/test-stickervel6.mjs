@@ -47,6 +47,10 @@ for (const s of vel.stickers) {
   assert.equal(zoekSticker('f6-' + s.nr)?.nr, s.nr, 'zoekSticker vindt f6-' + s.nr)
 }
 
+// 2b. Even groot als de andere vellen: de stickers vullen samen ~60% van hun vak (vel 1-5: mediaan 44-66%).
+//     Dat meten we hier ruw aan de grootte van de WebP-bestanden niet; knip6.py zet VULLING = 0.60.
+assert.match(lees('tests/tools/knip6.py'), /^VULLING = 0\.60\b/m, 'knip6.py maakt de stickers even groot als de andere vellen')
+
 // 3. Het nieuwe geluid 'censuur': in de tabel, met een terug-geluid dat bestaat, en een kleine mp3
 {
   const r = geluidRegel('censuur')

@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 BRON, MODEL, UIT = sys.argv[1], sys.argv[2], sys.argv[3]; CONTROLE = sys.argv[4] if len(sys.argv) > 4 else None
 KWAL, STEIL = 78, 2.5
+VULLING = 0.60    # hoeveel van het vak van 384 x 384 een sticker vult, zoals op de andere vellen
 RAND_ZACHT = 3.0  # het masker komt van ~95 px: flink vervagen en dan strak afsnijden geeft een gladde rand zonder trapjes
 os.makedirs(UIT, exist_ok=True)
 if MODEL.endswith('.pth'):
@@ -64,7 +65,11 @@ for i, (k, (sy, sx)) in enumerate(groot):
     rgba = Image.fromarray(rgb).convert('RGBA'); rgba.putalpha(alfa)
     ys, xs = np.where(np.asarray(alfa) > 127)
     rgba = rgba.crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1))
+    # Even groot als de andere vellen: die vullen ~60% van het vak (vel 1-5: mediaan 44-66%). Ronde, volle gezichtjes
+    # zouden op 380 px ~73% vullen en groter lijken. Dus zo schalen dat de sticker ~60% van het vak vult (nooit > 380 px).
     zijde = max(rgba.size); schaal = 380 / zijde
+    vulling = (np.asarray(rgba)[..., 3] > 127).sum() * schaal ** 2 / 384 ** 2
+    schaal *= min(1.0, (VULLING / vulling) ** 0.5)
     g = rgba.resize((max(1, round(rgba.width * schaal)), max(1, round(rgba.height * schaal))), Image.LANCZOS)
     a = np.asarray(g).astype(np.float32)
     a[..., 3] = np.clip((a[..., 3] / 255 - 0.5) * STEIL + 0.5, 0, 1) * 255   # strakke rand van ~1 px

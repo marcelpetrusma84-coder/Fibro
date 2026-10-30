@@ -144,6 +144,7 @@ body.heeft-wallpaper::before { display:block; }
 <script type="module">
   import { laadThema } from './thema.js?v=234'
   import * as GB from './gastenboekstijl.js?v=1'
+  import { spelIcoonHtml } from './spelicoon.js?v=1' // 30 okt 2026: plaatjes uit de spellen
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
@@ -446,7 +447,7 @@ body.heeft-wallpaper::before { display:block; }
       // v129: spel van de vriend: tikken = zelf spelen tegen de computer (zoals op Home)
       if ((w.id || '').startsWith('spel_')) {
         const spel = w.id.slice(5)
-        el.innerHTML = '<div class="widget-inhoud" style="flex-direction:row;gap:10px;cursor:pointer"><span style="font-size:30px;line-height:1">' + vEsc(w.icon || '\u{1F3AE}') + '</span><span style="font-size:13px;font-weight:600;color:#fff">' + T('\u25B6 Spelen') + '</span></div>'
+        el.innerHTML = '<div class="widget-inhoud" style="flex-direction:row;gap:10px;cursor:pointer"><span style="font-size:30px;line-height:1">' + (spelIcoonHtml(spel, 40) || vEsc(w.icon || '\u{1F3AE}')) + '</span><span style="font-size:13px;font-weight:600;color:#fff">' + T('\u25B6 Spelen') + '</span></div>'
         el.style.cursor = 'pointer'
         el.onclick = () => { location.href = 'spel.html?spel=' + encodeURIComponent(spel) }
         grid.appendChild(el)

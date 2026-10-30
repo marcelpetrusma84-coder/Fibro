@@ -252,6 +252,7 @@ import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=95'
 import { startHeartbeat } from './heartbeat.js?v=117'
 import { meldToestel } from './toestel.js?v=1'
 import * as GB from './gastenboekstijl.js?v=1'
+import { spelIcoonHtml } from './spelicoon.js?v=1' // 30 okt 2026: plaatjes uit de spellen
 import { initSync } from './sync.js?v=162'
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -372,7 +373,7 @@ function tekenGrid(containerId, layout, renderFn) {
     } else {
       el.innerHTML = `
         <div class="widget-header">
-          <span class="widget-icon-sm">${w.icon}</span>
+          <span class="widget-icon-sm">${(String(w.id || '').startsWith('spel_') && spelIcoonHtml(String(w.id).slice(5), 18)) || w.icon}</span>
           <span class="widget-titel">${T(w.titel)}</span>
         </div>
         <div class="widget-inhoud"></div>`
@@ -609,7 +610,8 @@ function renderProfiel(id, c) {
 // ── Spelwidget: tikken opent het spel tegen de computer (spel.html) ──
 function renderSpelWidget(c, spel) {
   const ICONEN = { botkaaseiren: '⭕', vieroprij: '🔴', schaken: '♟️', dammen: '⚫', pong: '🏓', pacman: '👻', breakout: '🟪', flappybird: '🦇', swarm: '🪲', endlessrunner: '🏃', pinball: '🐍', shmup: '🚀' }
-  const icon = ICONEN[spel] || '🎮'
+  // 30 okt 2026: een plaatje uit het spel zelf (spelicoon.js); de emoji alleen als er (nog) geen plaatje is
+  const icon = spelIcoonHtml(spel, 40) || ICONEN[spel] || '🎮'
   c.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:100%;"><span style="font-size:30px;line-height:1">' + icon + '</span><span style="font-size:13px;font-weight:600;color:#fff">' + T('▶ Spelen') + '</span></div>'
   const blok = c.closest('.widget-blok') || c
   blok.style.cursor = 'pointer'

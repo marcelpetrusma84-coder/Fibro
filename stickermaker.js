@@ -9,6 +9,7 @@ import { EIGEN_VELLEN, PER_VEL, maakCode, leesEigen, bewaarEigen, wisEigen, laad
 import { BEWEGINGEN, GELUIDEN, naamVan, speel } from './stickerfx.js?v=214'
 import { maakSchakelaar, widgetId, zetStijl as zetWidgetStijl } from './stickerwidget.js?v=215'
 import { KWAST_MIN, KWAST_MAX, KWAST_STANDAARD, kwastStraal, voegPuntToe, tekenStreek, pasStrekenToe } from './stickerkwast.js?v=1'
+import { kanHet as kanOnderwerp, laadKnipper } from './onderwerp.js?v=1'
 
 // v231: bijwerken met je vinger (weghalen / terugzetten, met een grootte), ook na 'Achtergrond weg'
 Object.assign(window.FIBRO_EN ||= {}, {
@@ -19,7 +20,16 @@ Object.assign(window.FIBRO_EN ||= {}, {
   'Veeg met je vinger over wat weg moet.': 'Swipe your finger over what should go.',
   'Veeg met je vinger over wat terug moet komen.': 'Swipe your finger over what should come back.',
   'Trek met je vinger een lijn om wat je wilt houden. Daarna kun je nog bijwerken.': 'Draw a line around what you want to keep with your finger. You can touch it up afterwards.',
-  'Kwastgrootte': 'Brush size'
+  'Kwastgrootte': 'Brush size',
+  // v232: tik op het onderwerp (onderwerp.js)
+  '✨ Tik op het onderwerp': '✨ Tap the subject', '👆 Aanwijzen': '👆 Point',
+  'Tik of druk op wat je als sticker wilt. Daarna kun je nog bijwerken.': 'Tap or press on what you want as a sticker. You can touch it up afterwards.',
+  'Tik op nog een stuk om het erbij te nemen.': 'Tap another part to add it.',
+  'De slimme knipper wordt geladen. Dat gebeurt maar één keer en kan even duren (± 45 MB).': 'Loading the smart cutter. This only happens once and may take a moment (± 45 MB).',
+  'Even denken…': 'Thinking…',
+  'Dit toestel of deze browser kan dit niet. Kies een andere manier.': "This device or browser can't do this. Choose another way.",
+  'Het slimme knippen lukte niet. Probeer het nog eens, of kies een andere manier.': "Smart cutting didn't work. Try again, or choose another way.",
+  'Tik eerst op het onderwerp.': 'Tap the subject first.'
 })
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
@@ -147,16 +157,18 @@ export async function startStickermaker(houder, uid, widgets = null) {
   const kiesUitleg = el('p', { class: 'sm-klein', text: T('Een foto of plaatje van je toestel. Heeft hij een effen achtergrond, dan haalt {app} die zelf weg.') })
   const stapKies = el('div', { class: 'sm-stap' }, kiesKnop, kiesUitleg, bestand)
 
-  const MODI = [['achtergrond', T('Achtergrond weg')], ['vinger', T('Lijn eromheen')], ['alles', T('Alles houden')]]
+  const MODI = [['onderwerp', T('✨ Tik op het onderwerp')], ['achtergrond', T('Achtergrond weg')], ['vinger', T('Lijn eromheen')], ['alles', T('Alles houden')]]
   const segment = el('div', { class: 'sm-segment', role: 'radiogroup', 'aria-label': T('Begin met') })
   const modusKnop = {}
   MODI.forEach(([m, tekst]) => { const b = el('button', { type: 'button', role: 'radio', 'data-modus': m, text: tekst }); b.addEventListener('click', () => zetModus(m)); modusKnop[m] = b; segment.append(b) })
+  segment.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))' // v232: vier keuzes, twee per rij
+  if (!kanOnderwerp()) modusKnop.onderwerp.hidden = true
   const werk = el('canvas', { class: 'sm-werk sm-ruit', 'aria-label': T('Je afbeelding') })
   const hint = el('p', { class: 'sm-hint' })
   const schuif = el('input', { type: 'range', min: '10', max: '120', step: '5', value: '45', id: 'smStreng' })
   const schuifRij = el('label', { class: 'sm-schuif' }, el('span', { text: T('Hoe streng') }), schuif)
   // v231: bijwerken met je vinger: lijn (alleen bij 'Lijn eromheen'), weghalen of terugzetten, met een grootte
-  const GEREEDSCHAP = [['lijn', T('✂️ Lijn')], ['gum', T('🧽 Weghalen')], ['terug', T('🖌️ Terugzetten')]]
+  const GEREEDSCHAP = [['wijs', T('👆 Aanwijzen')], ['lijn', T('✂️ Lijn')], ['gum', T('🧽 Weghalen')], ['terug', T('🖌️ Terugzetten')]]
   const tuig = el('div', { class: 'sm-segment', role: 'radiogroup', 'aria-label': T('Bijwerken met je vinger') })
   const tuigKnop = {}
   GEREEDSCHAP.forEach(([g, tekst]) => { const b = el('button', { type: 'button', role: 'radio', 'data-tuig': g, text: tekst }); b.addEventListener('click', () => zetTuig(g)); tuigKnop[g] = b; tuig.append(b) })
@@ -193,6 +205,7 @@ export async function startStickermaker(houder, uid, widgets = null) {
   // toestand van de maker
   let code = null, terugNaar = null, bron = null, rand = null, modus = 'achtergrond', lijn = null, tekent = false
   let tuigNu = 'gum', streken = [], streek = null, begin = null, beginSleutel = '', uit = null // v231
+  let stippen = [], onderwerpUit = null, onderwerpVersie = 0, denkt = false, tikBegin = null // v232
   let resultaat = null, wisZeker = false, wisKlok = null
 
   function toonFout(t) { fout.textContent = t || '' }
@@ -250,6 +263,7 @@ export async function startStickermaker(houder, uid, widgets = null) {
     if (!bron) return
     rand = bekijkRand(bron)
     lijn = null; streken = []; streek = null; begin = null; beginSleutel = ''
+    stippen = []; onderwerpUit = null; onderwerpVersie++
     werk.width = bron.width; werk.height = bron.height
     stapKnip.hidden = false
     zetModus((rand.doorzichtig || rand.effen) ? 'achtergrond' : 'vinger')
@@ -261,39 +275,54 @@ export async function startStickermaker(houder, uid, widgets = null) {
     schuifRij.hidden = m !== 'achtergrond' || (rand && rand.doorzichtig)
     if (m === 'achtergrond') hint.textContent = (rand && rand.doorzichtig) ? T('Deze afbeelding heeft al geen achtergrond.') : T('Alles wat op de kleur van de rand lijkt, wordt doorzichtig.')
     else if (m === 'vinger') hint.textContent = T('Trek met je vinger een lijn om wat je wilt houden. Daarna kun je nog bijwerken.')
+    else if (m === 'onderwerp') hint.textContent = T('Tik of druk op wat je als sticker wilt. Daarna kun je nog bijwerken.')
     else hint.textContent = T('De hele afbeelding wordt de sticker.')
     tuigKnop.lijn.hidden = m !== 'vinger'
-    tuig.style.gridTemplateColumns = m === 'vinger' ? '' : 'repeat(2, minmax(0, 1fr))'
-    zetTuig(m === 'vinger' && !lijn ? 'lijn' : (tuigNu === 'lijn' ? 'gum' : tuigNu), true)
+    tuigKnop.wijs.hidden = m !== 'onderwerp'
+    tuig.style.gridTemplateColumns = (m === 'vinger' || m === 'onderwerp') ? '' : 'repeat(2, minmax(0, 1fr))'
+    const zelfde = (tuigNu === 'lijn' && m === 'vinger') || (tuigNu === 'wijs' && m === 'onderwerp')
+    zetTuig(m === 'vinger' && !lijn ? 'lijn' : m === 'onderwerp' && !onderwerpUit ? 'wijs' : (tuigNu === 'lijn' || tuigNu === 'wijs') && !zelfde ? 'gum' : tuigNu, true)
+    if (m === 'onderwerp') laadKnipper().catch(() => {}) // alvast laden, zodat de eerste tik sneller gaat
     verwerk()
   }
   function zetTuig(g, stil) {
     if (g === 'lijn' && modus !== 'vinger') g = 'gum'
+    if (g === 'wijs' && modus !== 'onderwerp') g = 'gum'
     tuigNu = g
     for (const [k, b] of Object.entries(tuigKnop)) b.setAttribute('aria-checked', k === g ? 'true' : 'false')
-    tuigHint.textContent = g === 'lijn' ? T('Trek met je vinger een lijn om wat je wilt houden.') : g === 'gum' ? T('Veeg met je vinger over wat weg moet.') : T('Veeg met je vinger over wat terug moet komen.')
-    kwastRij.hidden = g === 'lijn'
+    tuigHint.textContent = g === 'lijn' ? T('Trek met je vinger een lijn om wat je wilt houden.') : g === 'wijs' ? (onderwerpUit ? T('Tik op nog een stuk om het erbij te nemen.') : T('Tik of druk op wat je als sticker wilt. Daarna kun je nog bijwerken.')) : g === 'gum' ? T('Veeg met je vinger over wat weg moet.') : T('Veeg met je vinger over wat terug moet komen.')
+    kwastRij.hidden = g === 'lijn' || g === 'wijs'
     if (!stil) teken()
   }
   function zetKnoppen() {
-    ongedaan.disabled = !streken.length
-    opnieuw.disabled = !streken.length && !(modus === 'vinger' && lijn)
+    const stipjes = modus === 'onderwerp' && stippen.length
+    ongedaan.disabled = !streken.length && !stipjes
+    opnieuw.disabled = !streken.length && !(modus === 'vinger' && lijn) && !stipjes
   }
   schuif.addEventListener('input', () => verwerk())
   randVink.addEventListener('change', () => verwerk())
-  opnieuw.addEventListener('click', () => { streken = []; streek = null; if (modus === 'vinger') { lijn = null; zetTuig('lijn', true) } verwerk() })
-  ongedaan.addEventListener('click', () => { if (streken.length) { streken.pop(); verwerk() } })
+  opnieuw.addEventListener('click', () => {
+    streken = []; streek = null
+    if (modus === 'vinger') { lijn = null; zetTuig('lijn', true) }
+    if (modus === 'onderwerp') { stippen = []; onderwerpUit = null; onderwerpVersie++; zetTuig('wijs', true) }
+    verwerk()
+  })
+  ongedaan.addEventListener('click', () => {
+    if (streken.length) { streken.pop(); verwerk(); return }
+    if (modus === 'onderwerp' && stippen.length && !denkt) { stippen.pop(); knipOnderwerp() }
+  })
   const toonBol = () => { const d = Number(kwast.value); kwastBolletje.style.width = kwastBolletje.style.height = d + 'px' }
   kwast.addEventListener('input', () => { toonBol(); if (!uit) return; teken(); const r = werk.getBoundingClientRect(); cirkel([werk.width / 2, werk.height / 2], kwastStraal(kwast.value, werk.width, r.width)) })
   toonBol()
 
   // uitknippen en het voorbeeld maken. v231: begin (achtergrond weg / lijn / alles) + de streken van de kwast
   function maakBegin() {
-    const sleutel = modus + '|' + (modus === 'achtergrond' ? schuif.value : '') + '|' + (modus === 'vinger' && lijn ? lijn.length + ':' + lijn[0] + ':' + lijn[lijn.length - 1] : '')
+    const sleutel = modus + '|' + (modus === 'onderwerp' ? 'o' + onderwerpVersie : '') + '|' + (modus === 'achtergrond' ? schuif.value : '') + '|' + (modus === 'vinger' && lijn ? lijn.length + ':' + lijn[0] + ':' + lijn[lijn.length - 1] : '')
     if (begin && sleutel === beginSleutel) return begin
     beginSleutel = sleutel
     if (modus === 'achtergrond') begin = achtergrondWeg(bron, Number(schuif.value))
     else if (modus === 'alles') begin = bron
+    else if (modus === 'onderwerp') begin = onderwerpUit
     else begin = (lijn && lijn.length >= 3 && !tekent) ? knipMetLijn(bron, lijn) : null
     return begin
   }
@@ -304,7 +333,7 @@ export async function startStickermaker(houder, uid, widgets = null) {
     uit = b ? pasStrekenToe(b, bron, streken) : null
     teken()
     zetKnoppen()
-    if (!uit) { zetVoorbeeld(null); voorbeeldLeeg.textContent = T('Trek met je vinger een lijn om wat je wilt houden.'); return }
+    if (!uit) { zetVoorbeeld(null); voorbeeldLeeg.textContent = modus === 'onderwerp' ? T('Tik eerst op het onderwerp.') : T('Trek met je vinger een lijn om wat je wilt houden.'); return }
     maakVoorbeeld()
   }
   function maakVoorbeeld() {
@@ -321,11 +350,54 @@ export async function startStickermaker(houder, uid, widgets = null) {
     if (!bron) return
     const p = werk.getContext('2d')
     p.clearRect(0, 0, werk.width, werk.height)
-    const vaag = tuigNu === 'terug' || (modus === 'vinger' && tuigNu === 'lijn')
-    if (!uit) { p.drawImage(bron, 0, 0); tekenLijn(p, false); return }
+    const vaag = tuigNu === 'terug' || tuigNu === 'wijs' || (modus === 'vinger' && tuigNu === 'lijn')
+    if (!uit) { p.drawImage(bron, 0, 0); tekenLijn(p, false); tekenStippen(p); return }
     if (vaag) { p.globalAlpha = 0.25; p.drawImage(bron, 0, 0); p.globalAlpha = 1 }
     p.drawImage(uit, 0, 0)
     if (modus === 'vinger' && tuigNu === 'lijn') tekenLijn(p, !tekent)
+    if (tuigNu === 'wijs') tekenStippen(p)
+  }
+  // v232: waar je getikt hebt (alleen bij 'Tik op het onderwerp')
+  function tekenStippen(p) {
+    if (modus !== 'onderwerp') return
+    const r = Math.max(4, werk.width / 70)
+    p.save()
+    for (const s of stippen) {
+      p.beginPath(); p.arc(s.x, s.y, r, 0, Math.PI * 2)
+      p.fillStyle = '#c084fc'; p.fill()
+      p.lineWidth = Math.max(1.5, r / 3); p.strokeStyle = '#ffffff'; p.stroke()
+    }
+    p.restore()
+  }
+  // v232: het onderwerp opnieuw uitknippen met alle stippen (de eerste keer wordt de knipper geladen)
+  async function knipOnderwerp() {
+    if (!bron) return
+    if (!stippen.length) { onderwerpUit = null; onderwerpVersie++; zetTuig('wijs', true); verwerk(); return }
+    denkt = true
+    const voor = hint.textContent
+    const vanBron = bron
+    try {
+      let k = null
+      const klaar = laadKnipper().then(x => { k = x })
+      await Promise.race([klaar, new Promise(r => setTimeout(r, 300))])
+      hint.textContent = k ? T('Even denken…') : T('De slimme knipper wordt geladen. Dat gebeurt maar één keer en kan even duren (± 45 MB).')
+      await klaar
+      hint.textContent = T('Even denken…')
+      await new Promise(r => requestAnimationFrame(() => setTimeout(r, 20))) // eerst de tekst laten zien
+      if (bron !== vanBron) return
+      k.zetAfbeelding(bron)
+      onderwerpUit = k.knip(stippen)
+      onderwerpVersie++
+      hint.textContent = voor
+      zetTuig('wijs', true)
+      verwerk()
+    } catch (e) {
+      stippen.pop()
+      hint.textContent = voor
+      toonFout(e && e.message === 'te-oud' ? T('Dit toestel of deze browser kan dit niet. Kies een andere manier.') : T('Het slimme knippen lukte niet. Probeer het nog eens, of kies een andere manier.'))
+      console.warn('[onderwerp]', e)
+      teken(); zetKnoppen()
+    } finally { denkt = false }
   }
   // een rondje waar je vinger is, zo groot als de kwast
   function cirkel(q, r) {
@@ -353,6 +425,11 @@ export async function startStickermaker(houder, uid, widgets = null) {
   }
   werk.addEventListener('pointerdown', e => {
     if (!bron) return
+    if (modus === 'onderwerp' && tuigNu === 'wijs') { // v232: een tik (of lang drukken) telt bij het loslaten
+      e.preventDefault()
+      tikBegin = { id: e.pointerId, q: punt(e), x: e.clientX, y: e.clientY }
+      return
+    }
     if (modus === 'vinger' && tuigNu === 'lijn') {
       e.preventDefault()
       try { werk.setPointerCapture(e.pointerId) } catch (x) {}
@@ -382,6 +459,15 @@ export async function startStickermaker(houder, uid, widgets = null) {
     lijn.push(q)
     const p = werk.getContext('2d'); p.clearRect(0, 0, werk.width, werk.height); p.drawImage(bron, 0, 0); tekenLijn(p, false)
   })
+  werk.addEventListener('pointerup', e => {
+    if (!tikBegin || tikBegin.id !== e.pointerId) return
+    const t = tikBegin; tikBegin = null
+    if (Math.hypot(e.clientX - t.x, e.clientY - t.y) > 24 || denkt) return // geschoven, of nog bezig
+    stippen.push({ x: t.q[0], y: t.q[1], erbij: true })
+    teken()
+    knipOnderwerp()
+  })
+  werk.addEventListener('pointercancel', () => { tikBegin = null })
   const klaarMetTekenen = () => {
     if (streek) { streek = null; teken(); zetKnoppen(); maakVoorbeeld(); return }
     if (!tekent) return
@@ -399,7 +485,7 @@ export async function startStickermaker(houder, uid, widgets = null) {
   kiesG.addEventListener('change', () => { if (resultaat) speel(voorbeeldImg, { b: 'geen', g: kiesG.value }) })
 
   bewaar.addEventListener('click', async () => {
-    if (!resultaat) { toonFout(modus === 'vinger' && bron ? T('Trek eerst met je vinger een lijn om wat je wilt houden.') : T('Kies eerst een afbeelding.')); return }
+    if (!resultaat) { toonFout(modus === 'onderwerp' && bron ? T('Tik eerst op het onderwerp.') : modus === 'vinger' && bron ? T('Trek eerst met je vinger een lijn om wat je wilt houden.') : T('Kies eerst een afbeelding.')); return }
     const s = { data: resultaat, b: kiesB.value, g: kiesG.value, naam: naam.value.trim().slice(0, 30) }
     try {
       await bewaarEigen(uid, code, s)

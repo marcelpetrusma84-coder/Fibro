@@ -20,6 +20,25 @@ mediabunny.js
 Mediabunny. Licentie: MPL-2.0. https://github.com/Vanilagy/mediabunny
 
 
+onderwerp/ (MediaPipe Tasks Vision + MagicTouch)
+------------------------------------------------
+Voor 'Tik op het onderwerp' in het Stickerlab (onderwerp.js, stickermaker.js). Wordt pas geladen als iemand
+die keuze gebruikt. Draait helemaal op het toestel; de foto gaat nergens heen.
+Licentie: Apache 2.0, volledige tekst in onderwerp/LICENSE.txt. Copyright Google LLC.
+
+onderwerp/vision_bundle.mjs, onderwerp/wasm/vision_wasm_internal.js en .wasm:
+npm-pakket @mediapipe/tasks-vision 1.2.0 (https://www.npmjs.com/package/@mediapipe/tasks-vision),
+ongewijzigd. Alleen de SIMD-versie van de wasm (toestellen zonder SIMD zien de knop niet).
+sha512 vision_bundle.mjs: 4af85f54161164ea9419715a1399845df6365df7c48e7ca12392255e86a675ac3ce6bc74a5b248f3d9da2108cc00d9fb0c8e9e141f1d225d6884a33bebbf36bf
+sha512 vision_wasm_internal.js: 63ed4770c51e8efc86257000649bc80ebb003289982840d2d124328021dc9051a07ce2ea4b2ad76c5f08ffcaf73bd052b84492ef56c2b853dd6748641282c7c1
+sha512 vision_wasm_internal.wasm: 5eddbdf7b9614ced2036f3f58b4047b87b61c2bff673462d8e7dfbfe2cba23e48c6cbf1dffd325b0215121929e35d5367269896abf5b9ec5ee33d55e14513fcf
+
+onderwerp/interactive_segmentation.task: het model MagicTouch (int8), ongewijzigd, van
+https://storage.googleapis.com/mediapipe-models/interactive_segmenter_v2/magic_touch/int8/latest/interactive_segmentation.task
+(gedownload 30 oktober 2026). Modelkaart: Apache 2.0. Niet bedoeld voor het uitknippen van mensen zonder
+hun toestemming, en niet voor bewaking of herkenning (zie ook de spelregels).
+sha512: e5369da112ec4af6530d5cf582c2d62653fee3a4e594a468f994519b9b7d03ef77feb96a15435b918019172b13f4e5ec245c798c5d6f776ac743a99771c24b75
+
 qrcode.min.js
 -------------
 QRCode.js 1.0.0 (davidshimjs), gebruikt op vrienden.html (uitnodigings-QR).

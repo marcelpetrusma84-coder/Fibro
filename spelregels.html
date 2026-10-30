@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="nl" data-taal style="background:#1a0a2e">
+<script>
+  const f = localStorage.getItem('fibro_lettertype')
+  if (f) {
+    document.write("<style>*{font-family:" + f + " !important}</style>")
+    var fn = f.split(",")[0].replace(/[\x27\x22]/g, "").trim()
+    var fsl = fn.toLowerCase().replace(/ /g, "-") // v118: lettertype uit de eigen repo
+    if (/^[a-z0-9-]+$/.test(fsl)) document.write('<link rel="stylesheet" href="lettertypen/' + fsl + '.css?v=1">')
+  }
+</script>
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<script src="huisregel.js?v=1"></script>
+<script src="foutmelder.js?v=1"></script>
+<script src="taal.js?v=30"></script>
+<script>
+// v229: de spelregels in het Engels (alleen gebruikt als Engels gekozen is)
+window.FIBRO_EN = Object.assign(window.FIBRO_EN || {}, {
+"Spelregels van Fibro": "Fibro house rules",
+"Fibro – Spelregels van Fibro": "Fibro – Fibro house rules",
+"Fibro — Spelregels": "Fibro — House rules",
+"← Terug": "← Back",
+"Waarom spelregels?": "Why rules?",
+"Fibro is een huiskamer voor jou en je vrienden. In een huiskamer gelden een paar huisregels, zodat iedereen zich er thuis voelt. Door een account te maken ga je met deze regels akkoord.": "Fibro is a living room for you and your friends. A living room has a few house rules, so everyone feels at home. By creating an account, you agree to these rules.",
+"Kort gezegd: doe tegen anderen zoals je wilt dat ze tegen jou doen.": "In short: treat others the way you want to be treated.",
+"Wie mag erop": "Who can join",
+"Fibro is vanaf 16 jaar. Vul je echte geboortejaar in.": "Fibro is for ages 16 and up. Enter your real year of birth.",
+"Eén account per persoon. Doe je niet voor als iemand anders.": "One account per person. Don't pretend to be someone else.",
+"Geef je wachtwoord en je herstelcode aan niemand, ook niet aan vrienden.": "Never give your password or recovery code to anyone, not even friends.",
+"Wat niet mag": "What is not allowed",
+"Pesten, bedreigen, intimideren of iemand blijven lastigvallen. Ook niet als grap.": "Bullying, threatening, intimidating or harassing someone. Not even as a joke.",
+"Haat: iemand uitschelden of buitensluiten om afkomst, geloof, huidskleur, geslacht, seksuele voorkeur, een beperking of leeftijd.": "Hate: insulting or excluding someone because of their background, religion, skin colour, gender, sexual orientation, disability or age.",
+"Seksuele berichten, foto’s of video’s sturen naar iemand die daar niet om gevraagd heeft.": "Sending sexual messages, photos or videos to someone who didn't ask for them.",
+"Foto’s, video’s of berichten van een ander doorsturen of laten zien zonder dat die persoon dat goedvindt. Een naaktfoto van iemand anders delen is strafbaar.": "Forwarding or showing someone else's photos, videos or messages without their permission. Sharing a nude photo of someone else is a crime.",
+"Alles wat strafbaar is, zoals geweld, drugs of wapens verkopen, of iemand oplichten.": "Anything illegal, such as violence, selling drugs or weapons, or scamming someone.",
+"Iemand aanmoedigen om zichzelf iets aan te doen.": "Encouraging someone to hurt themselves.",
+"Spam, reclame en nepaccounts.": "Spam, advertising and fake accounts.",
+"Proberen Fibro te hacken of kapot te maken. Vind je een fout? Meld hem via ☰ → Fout of idee melden.": "Trying to hack or break Fibro. Found a bug? Report it via ☰ → Report a problem or idea.",
+"Nooit, zonder uitzondering": "Never, no exceptions",
+"Seksuele inhoud met of over iemand die jonger is dan 18. Een account dat dit doet, wordt meteen voor altijd geblokkeerd, en het wordt gemeld bij de politie.": "Sexual content involving or about anyone under 18. An account that does this is blocked forever right away, and it is reported to the police.",
+"Je profiel en je gastenboek": "Your profile and guestbook",
+"Je profiel, je foto’s en je gastenboek zien al je vrienden. Gastenboekberichten zijn niet versleuteld. Zet er dus niets in wat je niet aan iedereen in je vriendenlijst wilt laten zien.": "All your friends can see your profile, your photos and your guestbook. Guestbook messages are not encrypted. So don't post anything there that you wouldn't want everyone on your friends list to see.",
+"Gebeurt er iets vervelends?": "Something wrong?",
+"Blokkeren: in Vrienden kun je iemand blokkeren. Dan kan die persoon je niet meer bereiken in Fibro.": "Block: in Friends you can block someone. Then that person can no longer reach you in Fibro.",
+"Melden: in een chat kies je in het menu Bericht melden. Je tikt de berichten aan (hoogstens 5) en kiest een reden.": "Report: in a chat, choose Report message in the menu. Tap the messages (up to 5) and choose a reason.",
+"Let op: je berichten zijn versleuteld, de moderator kan ze normaal niet lezen. De berichten die jij meldt, stuurt je toestel wél leesbaar naar de moderator. Anders kan die niet beoordelen wat er gebeurd is.": "Note: your messages are encrypted, so the moderator normally can't read them. The messages you report are sent to the moderator readable. Otherwise they can't judge what happened.",
+"Is iemand in gevaar? Bel 112. Bij bedreiging of misbruik kun je ook de politie bellen (0900-8844). Gaat het om naaktfoto’s of seksueel misbruik online, dan helpt Helpwanted.nl. Denk je aan zelfdoding, of maak je je zorgen om iemand? Bel of chat met 113 (0800-0113).": "Is someone in danger? Call 112. For threats or abuse, you can also call the Dutch police (0900-8844). For nude photos or sexual abuse online, Helpwanted.nl can help. Thinking about suicide, or worried about someone? Call or chat with 113 (0800-0113). Outside the Netherlands, contact the emergency services and helplines in your country.",
+"Wat de moderator doet": "What the moderator does",
+"De moderator bekijkt elke melding.": "The moderator looks at every report.",
+"Houdt iemand zich niet aan de regels, dan kan de moderator een waarschuwing geven of het account blokkeren: voor een dag, drie dagen, een week, een maand of voor altijd. Je ziet dan waarom.": "If someone breaks the rules, the moderator can give a warning or block the account: for a day, three days, a week, a month or forever. You'll see why.",
+"Bij iets ernstigs, zoals een echte bedreiging of misbruik van kinderen, volgt meteen een blokkade voor altijd.": "For something serious, like a real threat or child abuse, the account is blocked forever right away.",
+"Denk je dat er een fout is gemaakt? Laat het weten via ☰ → Fout of idee melden.": "Think a mistake was made? Let us know via ☰ → Report a problem or idea.",
+"Bèta": "Beta",
+"Fibro is nog in de bètafase. Er kan nog iets misgaan, en deze spelregels kunnen nog veranderen. Bij een grote verandering hoor je dat in de app. Je kunt je account altijd verwijderen via ☰ → Account verwijderen.": "Fibro is still in beta. Things can go wrong, and these rules may still change. If something big changes, you'll hear about it in the app. You can always delete your account via ☰ → Delete account.",
+"Laatst bijgewerkt: 30 oktober 2026": "Last updated: 30 October 2026"
+})
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title data-t>Fibro — Spelregels</title>
+<link href="lettertypen/basis.css?v=1" rel="stylesheet">
+<style>
+  :root { --bg:#1a0a2e; --text:#e5e5e5; --muted:#9488a8; --accent:#c084fc; --accent2:#f47fbf; --border:rgba(255,255,255,0.12); --card:rgba(255,255,255,0.05); }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; max-width:480px; margin:0 auto; min-height:100dvh; padding-bottom:80px; }
+  .top-bar { display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:0.5px solid var(--border); }
+  .back-btn { font-size:13px; color:var(--muted); cursor:pointer; padding:6px 12px; border:0.5px solid var(--border); border-radius:20px; background:none; font-family:inherit; color:var(--text); }
+  .top-title { font-family:'Playfair Display',serif; font-style:italic; font-size:18px; color:var(--accent); }
+  .wrap { padding:20px 16px; }
+  .blok { background:var(--card); border:0.5px solid var(--border); border-radius:14px; padding:18px; margin-bottom:14px; }
+  h2 { font-size:16px; color:var(--accent); margin-bottom:10px; font-weight:600; }
+  p { font-size:14px; line-height:1.65; color:var(--text); margin-bottom:10px; }
+  p:last-child { margin-bottom:0; }
+  ul { margin:8px 0 0 18px; }
+  li { font-size:14px; line-height:1.6; margin-bottom:6px; }
+
+  .belangrijk { border-color:rgba(248,113,113,0.45); background:rgba(248,113,113,0.08); }
+  .belangrijk h2 { color:#f87171; }
+</style>
+<link rel="stylesheet" href="android-fix.css?v=1">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="stijl.css?v=3">
+</head>
+<body>
+<div class="top-bar" role="banner">
+  <button class="back-btn" onclick="history.length>1?history.back():location.href='index.html'" data-t>← Terug</button>
+  <div class="top-title" data-t>Spelregels van Fibro</div>
+</div>
+<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0" data-t>Fibro – Spelregels van Fibro</h1>
+
+<div class="wrap">
+
+  <div class="blok">
+    <h2 data-t>Waarom spelregels?</h2>
+    <p data-t>Fibro is een huiskamer voor jou en je vrienden. In een huiskamer gelden een paar huisregels, zodat iedereen zich er thuis voelt. Door een account te maken ga je met deze regels akkoord.</p>
+    <p data-t>Kort gezegd: doe tegen anderen zoals je wilt dat ze tegen jou doen.</p>
+  </div>
+  <div class="blok">
+    <h2 data-t>Wie mag erop</h2>
+    <ul>
+      <li data-t>Fibro is vanaf 16 jaar. Vul je echte geboortejaar in.</li>
+      <li data-t>Eén account per persoon. Doe je niet voor als iemand anders.</li>
+      <li data-t>Geef je wachtwoord en je herstelcode aan niemand, ook niet aan vrienden.</li>
+    </ul>
+  </div>
+  <div class="blok">
+    <h2 data-t>Wat niet mag</h2>
+    <ul>
+      <li data-t>Pesten, bedreigen, intimideren of iemand blijven lastigvallen. Ook niet als grap.</li>
+      <li data-t>Haat: iemand uitschelden of buitensluiten om afkomst, geloof, huidskleur, geslacht, seksuele voorkeur, een beperking of leeftijd.</li>
+      <li data-t>Seksuele berichten, foto’s of video’s sturen naar iemand die daar niet om gevraagd heeft.</li>
+      <li data-t>Foto’s, video’s of berichten van een ander doorsturen of laten zien zonder dat die persoon dat goedvindt. Een naaktfoto van iemand anders delen is strafbaar.</li>
+      <li data-t>Alles wat strafbaar is, zoals geweld, drugs of wapens verkopen, of iemand oplichten.</li>
+      <li data-t>Iemand aanmoedigen om zichzelf iets aan te doen.</li>
+      <li data-t>Spam, reclame en nepaccounts.</li>
+      <li data-t>Proberen Fibro te hacken of kapot te maken. Vind je een fout? Meld hem via ☰ → Fout of idee melden.</li>
+    </ul>
+  </div>
+  <div class="blok belangrijk">
+    <h2 data-t>Nooit, zonder uitzondering</h2>
+    <p data-t>Seksuele inhoud met of over iemand die jonger is dan 18. Een account dat dit doet, wordt meteen voor altijd geblokkeerd, en het wordt gemeld bij de politie.</p>
+  </div>
+  <div class="blok">
+    <h2 data-t>Je profiel en je gastenboek</h2>
+    <p data-t>Je profiel, je foto’s en je gastenboek zien al je vrienden. Gastenboekberichten zijn niet versleuteld. Zet er dus niets in wat je niet aan iedereen in je vriendenlijst wilt laten zien.</p>
+  </div>
+  <div class="blok">
+    <h2 data-t>Gebeurt er iets vervelends?</h2>
+    <ul>
+      <li data-t>Blokkeren: in Vrienden kun je iemand blokkeren. Dan kan die persoon je niet meer bereiken in Fibro.</li>
+      <li data-t>Melden: in een chat kies je in het menu Bericht melden. Je tikt de berichten aan (hoogstens 5) en kiest een reden.</li>
+      <li data-t>Let op: je berichten zijn versleuteld, de moderator kan ze normaal niet lezen. De berichten die jij meldt, stuurt je toestel wél leesbaar naar de moderator. Anders kan die niet beoordelen wat er gebeurd is.</li>
+      <li data-t>Is iemand in gevaar? Bel 112. Bij bedreiging of misbruik kun je ook de politie bellen (0900-8844). Gaat het om naaktfoto’s of seksueel misbruik online, dan helpt Helpwanted.nl. Denk je aan zelfdoding, of maak je je zorgen om iemand? Bel of chat met 113 (0800-0113).</li>
+    </ul>
+  </div>
+  <div class="blok">
+    <h2 data-t>Wat de moderator doet</h2>
+    <ul>
+      <li data-t>De moderator bekijkt elke melding.</li>
+      <li data-t>Houdt iemand zich niet aan de regels, dan kan de moderator een waarschuwing geven of het account blokkeren: voor een dag, drie dagen, een week, een maand of voor altijd. Je ziet dan waarom.</li>
+      <li data-t>Bij iets ernstigs, zoals een echte bedreiging of misbruik van kinderen, volgt meteen een blokkade voor altijd.</li>
+      <li data-t>Denk je dat er een fout is gemaakt? Laat het weten via ☰ → Fout of idee melden.</li>
+    </ul>
+  </div>
+  <div class="blok">
+    <h2 data-t>Bèta</h2>
+    <p data-t>Fibro is nog in de bètafase. Er kan nog iets misgaan, en deze spelregels kunnen nog veranderen. Bij een grote verandering hoor je dat in de app. Je kunt je account altijd verwijderen via ☰ → Account verwijderen.</p>
+    <p data-t>Laatst bijgewerkt: 30 oktober 2026</p>
+  </div>
+
+</div>
+</main>
+<script src="swipe.js?v=96"></script>
+</body>
+</html>

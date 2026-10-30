@@ -9,6 +9,7 @@
 <script src="apk.js?v=1"></script>
 <script src="registratie.js?v=1"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Alleen het jaar. Fibro is vanaf 16 jaar.': 'Only the year. Fibro is for ages 16 and up.', 'Fibro is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.': "Fibro is for ages 16 and up. If you're younger, you can't create an account yet." }) // v225</script>
+<script>Object.assign(window.FIBRO_EN ||= {}, { 'Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Fibro</a>': 'I agree to the <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">{app} house rules</a>' }) // v229: met een link naar de spelregels</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { // v226: bèta en de registratie-schakelaar (registratie.js)
   '🧪 Fibro is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.': "🧪 Fibro is still in beta: things can go wrong. After signing up, turn on recovery (Face ID, fingerprint or your recovery key). Without recovery you can't read your messages on a new device.",
   'Nieuwe accounts maak je nu alleen met een uitnodiging. Vraag iemand die al op Fibro zit om een uitnodigingslink.': 'New accounts can only be created with an invitation right now. Ask someone who is already on Fibro for an invitation link.',
@@ -110,7 +111,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
     <div style="display:flex;align-items:flex-start;gap:10px;margin:12px 0;">
       <input type="checkbox" id="akkoord" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;">
       <label for="akkoord" style="font-size:12px;line-height:1.5;cursor:pointer;color:var(--muted);" data-t>
-        Ik ga akkoord met de <span style="color:var(--accent)">spelregels van Fibro</span>
+        Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Fibro</a>
       </label>
     </div>
 

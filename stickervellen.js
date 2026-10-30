@@ -1,7 +1,7 @@
 // stickervellen.js - de stickervellen van Fibro (v153, 15 oktober 2026; v156: vel 1; v161: eigen geluiden voor vel 1;
 // v164: vel 2, voor beurtspellen, met eigen geluiden; v165: vel 3, handgebaren;
 // v166: vel 4, moderne handgebaren; v206-v208: vel 5, chattaal (lol, brb, GOAT ...), met geluiden die er al waren;
-// v215: acht stickers van vel 5 met een van de meme-geluiden van v214)
+// v215: acht stickers van vel 5 met een van de meme-geluiden van v214; 30 okt 2026: vel 6, emoji-gezichtjes)
 // Zes vaste vakjes (f1 t/m f6), elk voor een vel van 12 stickers. Een vel dat nog leeg is, toont
 // "binnenkort". Een sticker staat in stickers/<vel>/<nr>.webp en heeft een naam ([Nederlands, Engels]),
 // een beweging (b) en een geluid (g) uit stickerfx.js.
@@ -85,7 +85,22 @@ export const FIBRO_VELLEN = [
     { nr: '11', naam: ['GOAT', 'GOAT'], b: 'oplichten', g: 'hoorn' },
     { nr: '12', naam: ['Meh', 'Meh'], b: 'kantel', g: 'moe' },
   ] },
-  { id: 'f6', stickers: [] },
+  // 30 okt 2026: vel 6, emoji-gezichtjes, uit een plaatje van Marcel (tests/tools/knip6.py; 4 keer vergroot met EDSR).
+  // Geluiden die er al waren, plus 'censuur' (tests/tools/geluiden7.py) voor Vloeken.
+  { id: 'f6', stickers: [
+    { nr: '01', naam: ['Dubbel van het lachen', 'Cracking up'], b: 'hup', g: 'giechel' },
+    { nr: '02', naam: ['Grijns', 'Big grin'], b: 'groei', g: 'woehoe' },
+    { nr: '03', naam: ['Oeps\u2026', 'Yikes\u2026'], b: 'schud', g: 'spanning' },
+    { nr: '04', naam: ['Bleh!', 'Bleh!'], b: 'wiebel', g: 'kazoo' },
+    { nr: '05', naam: ['Blij', 'Happy'], b: 'zweef', g: 'aww' },
+    { nr: '06', naam: ['Snif', 'Sniff'], b: 'knik', g: 'viool' },
+    { nr: '07', naam: ['Knipoog', 'Wink'], b: 'kantel', g: 'bling' },
+    { nr: '08', naam: ['Gekkie', 'Silly'], b: 'draai', g: 'boing' },
+    { nr: '09', naam: ['Incognito', 'Incognito'], b: 'stuiter', g: 'clown' },
+    { nr: '10', naam: ['Kusje', 'Kiss'], b: 'hartslag', g: 'kus' },
+    { nr: '11', naam: ['Dikke kus', 'Big kiss'], b: 'oplichten', g: 'liefde' },
+    { nr: '12', naam: ['Vloeken', 'Cursing'], b: 'schud', g: 'censuur' },
+  ] },
 ]
 
 export const PER_VEL = 12

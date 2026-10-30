@@ -5,9 +5,9 @@
 // elkaar in 3 rijen (v216; was op een breed scherm 6 naast elkaar in 2 rijen). Een leeg vakje zegt wat er later komt.
 // Gebruik: const k = maakStickerkeuze(element, { onKies: sticker => ..., uid: () => id }); k.vernieuw() leest
 // je eigen stickers opnieuw (bij het openen). sticker = { vel, nr, naam, b, g, src }.
-import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=215'
+import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=235'
 import { leesEigen } from './eigenstickers.js?v=162'
-import { speelBeweging } from './stickerfx.js?v=214'
+import { speelBeweging } from './stickerfx.js?v=235'
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 const naamVan = n => Array.isArray(n) ? ((window.T && window.T.taal === 'en') ? n[1] : n[0]) : ''

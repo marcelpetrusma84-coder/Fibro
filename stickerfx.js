@@ -9,7 +9,7 @@
 // v161: twaalf geluiden bestaan alleen als mp3 (mp3: true, gemaakt met tests/tools/geluiden2.py), voor stickervel 1.
 // v164: nog twaalf, voor stickervel 2 (tests/tools/geluiden3.py). v165: en twaalf voor vel 3 (geluiden4.py).
 // v166: en twaalf voor vel 4 (geluiden5.py). v209-v214: 35 meme-, montage- en emotiegeluiden (geluiden6.py, 64 kbps),
-// voor eigen stickers in het Stickerlab (en later voor een vel).
+// voor eigen stickers in het Stickerlab (en later voor een vel). 30 okt 2026: 'censuur' voor vel 6 (geluiden7.py).
 // Lukt de mp3 niet, dan klinkt hun 'terug'-geluid (het geluid dat die sticker voorheen had).
 // Namen staan hier in twee talen ([Nederlands, Engels]); de taal volgt window.T.taal (taal.js).
 // Op de iPhone mag een pagina pas geluid maken na een tik: daarom zet de eerste tik op de pagina
@@ -326,6 +326,8 @@ export const GELUIDEN = {
   argh:      { naam: ['Argh!', 'Argh!'], mp3: true, terug: 'zoemer' },  // emotie
   ontroerd:  { naam: ['Ontroerd', 'Touched'], mp3: true, terug: 'ting' },  // emotie
   dankbaar:  { naam: ['Dankbaar', 'Grateful'], mp3: true, terug: 'ting' },  // emotie
+  // 30 okt 2026: alleen als mp3 (tests/tools/geluiden7.py), voor stickervel 6 (Vloeken)
+  censuur:   { naam: ['Piep! (gecensureerd)', 'Bleep! (censored)'], mp3: true, terug: 'zoemer' },
 }
 
 /* ---------- afspelen ---------- */

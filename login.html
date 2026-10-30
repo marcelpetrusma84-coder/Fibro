@@ -7,8 +7,16 @@
 <script src="foutmelder.js?v=1"></script>
   <script src="taal.js?v=30"></script>
   <script src="apk.js?v=1"></script>
+  <script src="registratie.js?v=1"></script>
   <script>try { FibroApk.hervatUitnodiging() } catch (e) {} // in de app: een uitnodiging die wacht (apk.js)</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Verder met setup': 'Continue setup', 'Fibro is vanaf 16 jaar.': 'Fibro is for ages 16 and up.', 'Fibro is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.': "Fibro is for ages 16 and up. If you're younger, you can't create an account yet." })</script>
+<script>Object.assign(window.FIBRO_EN ||= {}, { // v226: bèta en de registratie-schakelaar (registratie.js)
+  '🧪 Fibro is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.': "🧪 Fibro is still in beta: things can go wrong. After signing up, turn on recovery (Face ID, fingerprint or your recovery key). Without recovery you can't read your messages on a new device.",
+  'Nieuwe accounts maak je nu alleen met een uitnodiging. Vraag iemand die al op Fibro zit om een uitnodigingslink.': 'New accounts can only be created with an invitation right now. Ask someone who is already on Fibro for an invitation link.',
+  'Er kunnen op dit moment geen nieuwe accounts gemaakt worden. Probeer het later nog eens.': "New accounts can't be created at the moment. Please try again later.",
+  'Account aanmaken lukt nu niet. Probeer het later nog eens.': "Creating an account doesn't work right now. Please try again later.",
+  'Deze uitnodiging is verlopen of al gebruikt. Vraag om een nieuwe uitnodigingslink.': 'This invitation has expired or was already used. Ask for a new invitation link.'
+})</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title data-t>Fibro — Inloggen</title>
   <style>
@@ -45,6 +53,7 @@
     .message { padding:12px 16px; border-radius:8px; font-size:13px; margin-bottom:16px; display:none; }
     .message.error { background:rgba(255,92,92,0.1); border:1px solid rgba(255,92,92,0.3); color:var(--danger); display:block; }
     .message.success { background:rgba(192,132,252,0.1); border:1px solid rgba(192,132,252,0.3); color:var(--accent); display:block; }
+    .beta-info { font-size:12px; color:#fbbf24; line-height:1.6; margin-bottom:16px; padding:10px 12px; border:1px solid rgba(251,191,36,0.3); background:rgba(251,191,36,0.08); border-radius:8px; }
     .herstelsleutel-info { font-size:12px; color:var(--text-muted); line-height:1.6; margin-top:16px; padding:12px; border:1px dashed var(--border); border-radius:8px; }
     .spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(13,13,15,0.3); border-top-color:#0d0d0f; border-radius:50%; animation:spin 0.6s linear infinite; margin-right:8px; vertical-align:middle; }
     @keyframes spin { to{transform:rotate(360deg)} }
@@ -98,6 +107,7 @@
     <div class="panel" id="panel-registreren">
       <div class="message" id="reg-msg"></div>
       <div id="reg-form">
+        <div class="beta-info" data-t>🧪 Fibro is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.</div>
         <div class="field">
           <label data-t>Gebruikersnaam</label>
           <div style="display:flex;gap:8px;align-items:center;">
@@ -162,6 +172,19 @@
     'https://qmgatbphiplrfxrljtbe.supabase.co',
     'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
   )
+
+  // v226: mag je hier een account maken? (registratie.js, sql/registratie-schakelaar.sql). Op deze pagina heb je
+  // geen uitnodiging, dus bij 'uitnodiging' en 'dicht' komt er uitleg in plaats van het formulier.
+  function registratieGeweigerd(tekst) {
+    document.getElementById('reg-form').style.display = 'none'
+    toonBericht(document.getElementById('reg-msg'), 'error', T(tekst))
+  }
+  try {
+    FibroRegistratie.haalStand(supabase).then(stand => {
+      const tekst = FibroRegistratie.melding(stand, false)
+      if (tekst) registratieGeweigerd(tekst)
+    })
+  } catch (e) {}
 
   // ── E2E: Controleer en maak keypair aan als die ontbreekt ──
   async function controleerKeypair(userId) {
@@ -511,8 +534,13 @@
     })
 
     if (error) {
+      btn.disabled=false; btn.textContent=T('Account aanmaken')
+      if (window.FibroRegistratie && FibroRegistratie.isGeweigerd(error)) { // v226: de schakelaar staat niet (meer) op open
+        registratieGeweigerd(FibroRegistratie.weigerTekst(await FibroRegistratie.haalStand(supabase), false))
+        return
+      }
       toonBericht(msg,'error', error.message.includes('already') ? T('Gebruikersnaam al in gebruik.') : error.message)
-      btn.disabled=false; btn.textContent=T('Account aanmaken'); return
+      return
     }
 
     T.bewaar() // v142: de taal van dit scherm is de taal van het nieuwe account (later te veranderen in het menu)

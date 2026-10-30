@@ -10,6 +10,7 @@
   <script src="registratie.js?v=1"></script>
   <script>try { FibroApk.hervatUitnodiging() } catch (e) {} // in de app: een uitnodiging die wacht (apk.js)</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Verder met setup': 'Continue setup', 'Fibro is vanaf 16 jaar.': 'Fibro is for ages 16 and up.', 'Fibro is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.': "Fibro is for ages 16 and up. If you're younger, you can't create an account yet." })</script>
+<script>Object.assign(window.FIBRO_EN ||= {}, { 'Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Fibro</a>': 'I agree to the <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">{app} house rules</a>' }) // v229: met een link naar de spelregels</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { // v226: bèta en de registratie-schakelaar (registratie.js)
   '🧪 Fibro is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.': "🧪 Fibro is still in beta: things can go wrong. After signing up, turn on recovery (Face ID, fingerprint or your recovery key). Without recovery you can't read your messages on a new device.",
   'Nieuwe accounts maak je nu alleen met een uitnodiging. Vraag iemand die al op Fibro zit om een uitnodigingslink.': 'New accounts can only be created with an invitation right now. Ask someone who is already on Fibro for an invitation link.',
@@ -128,7 +129,7 @@
         <div class="field" style="display:flex;align-items:flex-start;gap:10px;margin-top:4px;">
           <input type="checkbox" id="reg-akkoord" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;" />
           <label for="reg-akkoord" style="text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;cursor:pointer;" data-t>
-            Ik ga akkoord met de <span style="color:var(--accent)">spelregels van Fibro</span>
+            Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Fibro</a>
           </label>
         </div>
         <button class="btn btn-primary" onclick="registreren()" id="reg-btn" data-t>Account aanmaken</button>

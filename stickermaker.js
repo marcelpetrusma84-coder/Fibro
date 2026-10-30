@@ -8,6 +8,19 @@
 import { EIGEN_VELLEN, PER_VEL, maakCode, leesEigen, bewaarEigen, wisEigen, laadAfbeelding, bekijkRand, achtergrondWeg, knipMetLijn, maakSticker } from './eigenstickers.js?v=162'
 import { BEWEGINGEN, GELUIDEN, naamVan, speel } from './stickerfx.js?v=214'
 import { maakSchakelaar, widgetId, zetStijl as zetWidgetStijl } from './stickerwidget.js?v=215'
+import { KWAST_MIN, KWAST_MAX, KWAST_STANDAARD, kwastStraal, voegPuntToe, tekenStreek, pasStrekenToe } from './stickerkwast.js?v=1'
+
+// v231: bijwerken met je vinger (weghalen / terugzetten, met een grootte), ook na 'Achtergrond weg'
+Object.assign(window.FIBRO_EN ||= {}, {
+  'Begin met': 'Start with', 'Lijn eromheen': 'Line around it',
+  'Bijwerken met je vinger': 'Touch up with your finger',
+  '✂️ Lijn': '✂️ Line', '🧽 Weghalen': '🧽 Erase', '🖌️ Terugzetten': '🖌️ Restore', 'Grootte': 'Size',
+  '↶ Ongedaan maken': '↶ Undo', 'Opnieuw beginnen': 'Start over',
+  'Veeg met je vinger over wat weg moet.': 'Swipe your finger over what should go.',
+  'Veeg met je vinger over wat terug moet komen.': 'Swipe your finger over what should come back.',
+  'Trek met je vinger een lijn om wat je wilt houden. Daarna kun je nog bijwerken.': 'Draw a line around what you want to keep with your finger. You can touch it up afterwards.',
+  'Kwastgrootte': 'Brush size'
+})
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 const STANDAARD = { b: 'stuiter', g: 'boing' }
@@ -50,6 +63,10 @@ const STIJL = `
 .sm-werk { display:block; max-width:100%; max-height:300px; margin:0 auto; touch-action:none; cursor:crosshair; }
 .sm-hint { margin:0; font-size:14px; line-height:1.45; color:var(--text); }
 .sm-schuif { display:grid; grid-template-columns:auto minmax(0, 1fr); align-items:center; gap:10px; font-size:14px; color:var(--text); }
+.sm-kwast { grid-template-columns:auto minmax(0, 1fr) 44px; }
+.sm-bol { justify-self:center; display:block; border-radius:50%; border:2px solid #ffffff; box-shadow:0 0 0 1px rgba(0,0,0,0.6); max-width:44px; max-height:44px; box-sizing:border-box; }
+.sm-segment button[hidden] { display:none; }
+.sm-knop:disabled { opacity:0.45; cursor:default; }
 .sm-vink { display:flex; align-items:center; gap:10px; font-size:15px; color:var(--text); cursor:pointer; min-height:44px; }
 .sm-vink input { width:22px; height:22px; accent-color:var(--accent); }
 .sm-rij { display:flex; flex-wrap:wrap; gap:8px; }
@@ -130,18 +147,29 @@ export async function startStickermaker(houder, uid, widgets = null) {
   const kiesUitleg = el('p', { class: 'sm-klein', text: T('Een foto of plaatje van je toestel. Heeft hij een effen achtergrond, dan haalt {app} die zelf weg.') })
   const stapKies = el('div', { class: 'sm-stap' }, kiesKnop, kiesUitleg, bestand)
 
-  const MODI = [['achtergrond', T('Achtergrond weg')], ['vinger', T('Met je vinger')], ['alles', T('Alles houden')]]
-  const segment = el('div', { class: 'sm-segment', role: 'radiogroup', 'aria-label': T('Uitknippen') })
+  const MODI = [['achtergrond', T('Achtergrond weg')], ['vinger', T('Lijn eromheen')], ['alles', T('Alles houden')]]
+  const segment = el('div', { class: 'sm-segment', role: 'radiogroup', 'aria-label': T('Begin met') })
   const modusKnop = {}
   MODI.forEach(([m, tekst]) => { const b = el('button', { type: 'button', role: 'radio', 'data-modus': m, text: tekst }); b.addEventListener('click', () => zetModus(m)); modusKnop[m] = b; segment.append(b) })
   const werk = el('canvas', { class: 'sm-werk sm-ruit', 'aria-label': T('Je afbeelding') })
   const hint = el('p', { class: 'sm-hint' })
   const schuif = el('input', { type: 'range', min: '10', max: '120', step: '5', value: '45', id: 'smStreng' })
   const schuifRij = el('label', { class: 'sm-schuif' }, el('span', { text: T('Hoe streng') }), schuif)
-  const opnieuw = el('button', { type: 'button', class: 'sm-knop', text: T('Opnieuw tekenen') })
+  // v231: bijwerken met je vinger: lijn (alleen bij 'Lijn eromheen'), weghalen of terugzetten, met een grootte
+  const GEREEDSCHAP = [['lijn', T('✂️ Lijn')], ['gum', T('🧽 Weghalen')], ['terug', T('🖌️ Terugzetten')]]
+  const tuig = el('div', { class: 'sm-segment', role: 'radiogroup', 'aria-label': T('Bijwerken met je vinger') })
+  const tuigKnop = {}
+  GEREEDSCHAP.forEach(([g, tekst]) => { const b = el('button', { type: 'button', role: 'radio', 'data-tuig': g, text: tekst }); b.addEventListener('click', () => zetTuig(g)); tuigKnop[g] = b; tuig.append(b) })
+  const tuigHint = el('p', { class: 'sm-hint' })
+  const kwast = el('input', { type: 'range', min: String(KWAST_MIN), max: String(KWAST_MAX), step: '2', value: String(KWAST_STANDAARD), id: 'smKwast', 'aria-label': T('Kwastgrootte') })
+  const kwastBolletje = el('span', { class: 'sm-bol', 'aria-hidden': 'true' })
+  const kwastRij = el('label', { class: 'sm-schuif sm-kwast' }, el('span', { text: T('Grootte') }), kwast, kwastBolletje)
+  const ongedaan = el('button', { type: 'button', class: 'sm-knop', text: T('↶ Ongedaan maken') })
+  const opnieuw = el('button', { type: 'button', class: 'sm-knop', text: T('Opnieuw beginnen') })
   const randVink = el('input', { type: 'checkbox', id: 'smRand' }); randVink.checked = true
   const randRij = el('label', { class: 'sm-vink' }, randVink, el('span', { text: T('Witte rand') }))
-  const stapKnip = el('div', { class: 'sm-stap' }, el('div', { class: 'sm-label', text: T('Uitknippen') }), segment, werk, hint, schuifRij, el('div', { class: 'sm-rij' }, opnieuw), randRij)
+  const stapKnip = el('div', { class: 'sm-stap' }, el('div', { class: 'sm-label', text: T('Begin met') }), segment, hint, schuifRij, werk,
+    el('div', { class: 'sm-label', text: T('Bijwerken met je vinger') }), tuig, tuigHint, kwastRij, el('div', { class: 'sm-rij' }, ongedaan, opnieuw), randRij)
 
   const voorbeeldImg = el('img', { alt: '' })
   const voorbeeldLeeg = el('span', { class: 'sm-leeg', text: T('Kies eerst een afbeelding.') })
@@ -164,6 +192,7 @@ export async function startStickermaker(houder, uid, widgets = null) {
 
   // toestand van de maker
   let code = null, terugNaar = null, bron = null, rand = null, modus = 'achtergrond', lijn = null, tekent = false
+  let tuigNu = 'gum', streken = [], streek = null, begin = null, beginSleutel = '', uit = null // v231
   let resultaat = null, wisZeker = false, wisKlok = null
 
   function toonFout(t) { fout.textContent = t || '' }
@@ -220,7 +249,7 @@ export async function startStickermaker(houder, uid, widgets = null) {
     kiesKnop.textContent = T('Andere afbeelding'); kiesKnop.className = 'sm-knop'; kiesUitleg.hidden = true
     if (!bron) return
     rand = bekijkRand(bron)
-    lijn = null
+    lijn = null; streken = []; streek = null; begin = null; beginSleutel = ''
     werk.width = bron.width; werk.height = bron.height
     stapKnip.hidden = false
     zetModus((rand.doorzichtig || rand.effen) ? 'achtergrond' : 'vinger')
@@ -230,39 +259,80 @@ export async function startStickermaker(houder, uid, widgets = null) {
     modus = m
     for (const [k, b] of Object.entries(modusKnop)) b.setAttribute('aria-checked', k === m ? 'true' : 'false')
     schuifRij.hidden = m !== 'achtergrond' || (rand && rand.doorzichtig)
-    opnieuw.parentElement.hidden = m !== 'vinger'
     if (m === 'achtergrond') hint.textContent = (rand && rand.doorzichtig) ? T('Deze afbeelding heeft al geen achtergrond.') : T('Alles wat op de kleur van de rand lijkt, wordt doorzichtig.')
-    else if (m === 'vinger') hint.textContent = T('Trek met je vinger een lijn om wat je wilt houden.')
+    else if (m === 'vinger') hint.textContent = T('Trek met je vinger een lijn om wat je wilt houden. Daarna kun je nog bijwerken.')
     else hint.textContent = T('De hele afbeelding wordt de sticker.')
+    tuigKnop.lijn.hidden = m !== 'vinger'
+    tuig.style.gridTemplateColumns = m === 'vinger' ? '' : 'repeat(2, minmax(0, 1fr))'
+    zetTuig(m === 'vinger' && !lijn ? 'lijn' : (tuigNu === 'lijn' ? 'gum' : tuigNu), true)
     verwerk()
+  }
+  function zetTuig(g, stil) {
+    if (g === 'lijn' && modus !== 'vinger') g = 'gum'
+    tuigNu = g
+    for (const [k, b] of Object.entries(tuigKnop)) b.setAttribute('aria-checked', k === g ? 'true' : 'false')
+    tuigHint.textContent = g === 'lijn' ? T('Trek met je vinger een lijn om wat je wilt houden.') : g === 'gum' ? T('Veeg met je vinger over wat weg moet.') : T('Veeg met je vinger over wat terug moet komen.')
+    kwastRij.hidden = g === 'lijn'
+    if (!stil) teken()
+  }
+  function zetKnoppen() {
+    ongedaan.disabled = !streken.length
+    opnieuw.disabled = !streken.length && !(modus === 'vinger' && lijn)
   }
   schuif.addEventListener('input', () => verwerk())
   randVink.addEventListener('change', () => verwerk())
-  opnieuw.addEventListener('click', () => { lijn = null; verwerk() })
+  opnieuw.addEventListener('click', () => { streken = []; streek = null; if (modus === 'vinger') { lijn = null; zetTuig('lijn', true) } verwerk() })
+  ongedaan.addEventListener('click', () => { if (streken.length) { streken.pop(); verwerk() } })
+  const toonBol = () => { const d = Number(kwast.value); kwastBolletje.style.width = kwastBolletje.style.height = d + 'px' }
+  kwast.addEventListener('input', () => { toonBol(); if (!uit) return; teken(); const r = werk.getBoundingClientRect(); cirkel([werk.width / 2, werk.height / 2], kwastStraal(kwast.value, werk.width, r.width)) })
+  toonBol()
 
-  // uitknippen en het voorbeeld maken
+  // uitknippen en het voorbeeld maken. v231: begin (achtergrond weg / lijn / alles) + de streken van de kwast
+  function maakBegin() {
+    const sleutel = modus + '|' + (modus === 'achtergrond' ? schuif.value : '') + '|' + (modus === 'vinger' && lijn ? lijn.length + ':' + lijn[0] + ':' + lijn[lijn.length - 1] : '')
+    if (begin && sleutel === beginSleutel) return begin
+    beginSleutel = sleutel
+    if (modus === 'achtergrond') begin = achtergrondWeg(bron, Number(schuif.value))
+    else if (modus === 'alles') begin = bron
+    else begin = (lijn && lijn.length >= 3 && !tekent) ? knipMetLijn(bron, lijn) : null
+    return begin
+  }
   function verwerk() {
     if (!bron) return
     toonFout('')
-    const p = werk.getContext('2d')
-    p.clearRect(0, 0, werk.width, werk.height)
-    let knip = null
-    if (modus === 'achtergrond') knip = achtergrondWeg(bron, Number(schuif.value))
-    else if (modus === 'alles') knip = bron
-    else if (lijn && lijn.length >= 3 && !tekent) knip = knipMetLijn(bron, lijn)
-    if (modus === 'vinger') {
-      if (knip) { p.globalAlpha = 0.25; p.drawImage(bron, 0, 0); p.globalAlpha = 1; p.drawImage(knip, 0, 0) }
-      else p.drawImage(bron, 0, 0)
-      tekenLijn(p, !tekent && !!knip)
-    } else p.drawImage(knip, 0, 0)
-    if (!knip) { zetVoorbeeld(null); voorbeeldLeeg.textContent = T('Trek met je vinger een lijn om wat je wilt houden.'); return }
+    const b = maakBegin()
+    uit = b ? pasStrekenToe(b, bron, streken) : null
+    teken()
+    zetKnoppen()
+    if (!uit) { zetVoorbeeld(null); voorbeeldLeeg.textContent = T('Trek met je vinger een lijn om wat je wilt houden.'); return }
+    maakVoorbeeld()
+  }
+  function maakVoorbeeld() {
     try {
-      zetVoorbeeld(maakSticker(knip, { rand: randVink.checked }).data)
+      zetVoorbeeld(maakSticker(uit, { rand: randVink.checked }).data)
     } catch (e) {
       zetVoorbeeld(null)
       voorbeeldLeeg.textContent = T('Er blijft niets over.')
-      toonFout(modus === 'achtergrond' ? T('Er blijft niets over van de afbeelding. Zet ‘Hoe streng’ lager of knip met je vinger.') : T('Er blijft niets over van de afbeelding.'))
+      toonFout(modus === 'achtergrond' && !streken.length ? T('Er blijft niets over van de afbeelding. Zet ‘Hoe streng’ lager of knip met je vinger.') : T('Er blijft niets over van de afbeelding.'))
     }
+  }
+  // het werkvlak: bij lijn en terugzetten de hele afbeelding vaag erachter, zodat je ziet wat er was
+  function teken() {
+    if (!bron) return
+    const p = werk.getContext('2d')
+    p.clearRect(0, 0, werk.width, werk.height)
+    const vaag = tuigNu === 'terug' || (modus === 'vinger' && tuigNu === 'lijn')
+    if (!uit) { p.drawImage(bron, 0, 0); tekenLijn(p, false); return }
+    if (vaag) { p.globalAlpha = 0.25; p.drawImage(bron, 0, 0); p.globalAlpha = 1 }
+    p.drawImage(uit, 0, 0)
+    if (modus === 'vinger' && tuigNu === 'lijn') tekenLijn(p, !tekent)
+  }
+  // een rondje waar je vinger is, zo groot als de kwast
+  function cirkel(q, r) {
+    const p = werk.getContext('2d'), dik = Math.max(1.5, werk.width / 260)
+    p.save(); p.lineWidth = dik * 2; p.strokeStyle = 'rgba(0,0,0,0.6)'
+    p.beginPath(); p.arc(q[0], q[1], r, 0, Math.PI * 2); p.stroke()
+    p.lineWidth = dik; p.strokeStyle = '#ffffff'; p.stroke(); p.restore()
   }
   function tekenLijn(p, dicht) {
     if (!lijn || lijn.length < 2) return
@@ -282,12 +352,30 @@ export async function startStickermaker(houder, uid, widgets = null) {
     return [Math.max(0, Math.min(werk.width, (e.clientX - r.left) * werk.width / r.width)), Math.max(0, Math.min(werk.height, (e.clientY - r.top) * werk.height / r.height))]
   }
   werk.addEventListener('pointerdown', e => {
-    if (!bron || modus !== 'vinger') return
+    if (!bron) return
+    if (modus === 'vinger' && tuigNu === 'lijn') {
+      e.preventDefault()
+      try { werk.setPointerCapture(e.pointerId) } catch (x) {}
+      tekent = true; lijn = [punt(e)]; verwerk()
+      return
+    }
+    if (!uit) return
+    // v231: de kwast (weghalen of terugzetten)
     e.preventDefault()
     try { werk.setPointerCapture(e.pointerId) } catch (x) {}
-    tekent = true; lijn = [punt(e)]; verwerk()
+    const r = werk.getBoundingClientRect()
+    streek = { soort: tuigNu === 'terug' ? 'terug' : 'gum', r: kwastStraal(kwast.value, werk.width, r.width), punten: [punt(e)] }
+    streken.push(streek)
+    tekenStreek(uit, bron, streek, 0)
+    teken(); cirkel(streek.punten[0], streek.r)
   })
   werk.addEventListener('pointermove', e => {
+    if (streek) {
+      const q = punt(e)
+      if (voegPuntToe(streek, q)) tekenStreek(uit, bron, streek, streek.punten.length - 1)
+      teken(); cirkel(q, streek.r)
+      return
+    }
     if (!tekent) return
     const q = punt(e), v = lijn[lijn.length - 1]
     if (Math.hypot(q[0] - v[0], q[1] - v[1]) < werk.width / 200) return
@@ -295,9 +383,11 @@ export async function startStickermaker(houder, uid, widgets = null) {
     const p = werk.getContext('2d'); p.clearRect(0, 0, werk.width, werk.height); p.drawImage(bron, 0, 0); tekenLijn(p, false)
   })
   const klaarMetTekenen = () => {
+    if (streek) { streek = null; teken(); zetKnoppen(); maakVoorbeeld(); return }
     if (!tekent) return
     tekent = false
     if (lijn.length < 8) lijn = null
+    if (lijn) zetTuig('gum', true) // de lijn staat: nu kun je bijwerken
     verwerk()
   }
   werk.addEventListener('pointerup', klaarMetTekenen)

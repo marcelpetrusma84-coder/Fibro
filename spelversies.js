@@ -8,7 +8,7 @@
 // Stand bij het begin van het tellen (v196): Neon Raiders v3 (v192 eerste, v193 alle 7 levels, v194 samen spelen),
 // Schaken v2 (het vernieuwde schaken van Tijn, v195 weer in twee talen); de rest begint op v1.
 export const SPEL_VERSIES = {
-  botkaaseiren: 1,   // Tic-Tac-Toe
+  botkaaseiren: 2,   // Tic-Tac-Toe (v2 = 30 okt 2026: houten bord en houten stukken)
   vieroprij: 1,      // Four in a Row
   schaken: 4,        // Chess (v3 = v197: webcam, vriend uitnodigen, nieuwe instellingen, PR #3 van Tijn;
                      //  v4 = v198: webcam-status volgt de echte camera, knop voor tegengehouden geluid)

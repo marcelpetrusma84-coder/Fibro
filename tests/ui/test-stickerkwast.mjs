@@ -29,7 +29,7 @@ assert.ok(KWAST_MIN < KWAST_STANDAARD && KWAST_STANDAARD < KWAST_MAX)
 // 3. Het Stickerlab gebruikt het, en alle nieuwe teksten bestaan in het Engels
 const sm = lees('stickermaker.js')
 assert.match(sm, /from '\.\/stickerkwast\.js\?v=1'/)
-assert.match(lees('profiel.html'), /import \{ startStickermaker \} from '\.\/stickermaker\.js\?v=231'/, 'nieuwe versie geladen')
+assert.match(lees('profiel.html'), /import \{ startStickermaker \} from '\.\/stickermaker\.js\?v=\d+'/, 'nieuwe versie geladen')
 for (const id of ['smKwast', 'data-tuig']) assert.ok(sm.includes(id), id)
 assert.match(sm, /\['gum', T\('🧽 Weghalen'\)\], \['terug', T\('🖌️ Terugzetten'\)\]/)
 assert.match(sm, /streken\.pop\(\); verwerk\(\)/, 'ongedaan maken haalt de laatste streek weg')

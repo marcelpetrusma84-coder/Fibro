@@ -881,8 +881,8 @@ window.veiligeUrl = function(v){
           ${heeftWeergaveNaam(vriend) ? `<div class="vriend-username">@${esc(vriend.username)}</div>` : ''}
         </div>
         <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-          <button class="bel-knop" data-bid="${esc(vriend.id)}" data-bnaam="${esc(vriendWeergaveNaam(vriend))}" style="background:#22c55e;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">📞</button>
           ${vriend.public_key ? '' : slotKnopHtml(esc(vriendWeergaveNaam(vriend)))}
+          <button class="bel-knop" data-bid="${esc(vriend.id)}" data-bnaam="${esc(vriendWeergaveNaam(vriend))}" style="background:#22c55e;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">📞</button>
         </div>
       </div>
     `).join('')

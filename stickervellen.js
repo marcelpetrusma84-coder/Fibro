@@ -3,7 +3,7 @@
 // v166: vel 4, moderne handgebaren; v206-v208: vel 5, chattaal (lol, brb, GOAT ...), met geluiden die er al waren;
 // v215: acht stickers van vel 5 met een van de meme-geluiden van v214; 30 okt 2026: vel 6, emoji-gezichtjes)
 // Zes vaste vakjes (f1 t/m f6), elk voor een vel van 12 stickers. De volgorde in FIBRO_VELLEN bepaalt het nummer
-// op het scherm (30 okt 2026: f6 staat vooraan). Een vel dat nog leeg is, toont
+// op het scherm (30 okt 2026: volgorde f6, f1, f2, f5, f3, f4). Een vel dat nog leeg is, toont
 // "binnenkort". Een sticker staat in stickers/<vel>/<nr>.webp en heeft een naam ([Nederlands, Engels]),
 // een beweging (b) en een geluid (g) uit stickerfx.js.
 // Voorbeeld van een gevuld vel:
@@ -59,6 +59,23 @@ export const FIBRO_VELLEN = [
     { nr: '11', naam: ['Winnaar!', 'Winner!'], b: 'groei', g: 'winnaar' },
     { nr: '12', naam: ['Loser', 'Loser'], b: 'hup', g: 'loser' },
   ] },
+  // 30 okt 2026: op verzoek van Marcel staat f5 (chattaal) op plek 4, en f3 en f4 (handgebaren) op plek 5 en 6.
+  // v206-v208: vel 5, chattaal, uit twee plaatjes van Marcel (tests/tools/knip5.py). v215: acht kregen een meme-geluid
+  // (was: schrik, liefde, yes, zoemer, pijl, loser, facepalm, winnaar).
+  { id: 'f5', stickers: [
+    { nr: '01', naam: ['LOL', 'LOL'], b: 'hup', g: 'lach' },
+    { nr: '02', naam: ['Rollen van het lachen', 'ROFL'], b: 'draai', g: 'boing' },
+    { nr: '03', naam: ['OMG!', 'OMG!'], b: 'duw', g: 'ooh' },
+    { nr: '04', naam: ['Bedankt!', 'Thanks!'], b: 'hartslag', g: 'dankbaar' },
+    { nr: '05', naam: ['Gelukt!', 'Done!'], b: 'stuiter', g: 'tadaa' },
+    { nr: '06', naam: ['Nee!', 'No!'], b: 'schud', g: 'fout' },
+    { nr: '07', naam: ['Ben zo terug', 'Be right back'], b: 'flakker', g: 'zoefweg' },
+    { nr: '08', naam: ['Vibing', 'Vibing'], b: 'wiebel', g: 'rock' },
+    { nr: '09', naam: ['Noob', 'Noob'], b: 'glitch', g: 'gameover' },
+    { nr: '10', naam: ['Cringe', 'Cringe'], b: 'knik', g: 'kras' },
+    { nr: '11', naam: ['GOAT', 'GOAT'], b: 'oplichten', g: 'hoorn' },
+    { nr: '12', naam: ['Meh', 'Meh'], b: 'kantel', g: 'moe' },
+  ] },
   // v165: vel 3, handgebaren met witte cartoonhandschoenen. Geluiden: tests/tools/geluiden4.py
   { id: 'f3', stickers: [
     { nr: '01', naam: ['Duim omhoog', 'Thumbs up'], b: 'hup', g: 'duimop' },
@@ -88,22 +105,6 @@ export const FIBRO_VELLEN = [
     { nr: '10', naam: ['Momentje', 'One moment'], b: 'groei', g: 'ahum' },
     { nr: '11', naam: ['Jij!', 'You!'], b: 'oplichten', g: 'jij' },
     { nr: '12', naam: ['Deal!', 'Deal!'], b: 'schud', g: 'deal' },
-  ] },
-  // v206-v208: vel 5, chattaal, uit twee plaatjes van Marcel (tests/tools/knip5.py). v215: acht kregen een meme-geluid
-  // (was: schrik, liefde, yes, zoemer, pijl, loser, facepalm, winnaar).
-  { id: 'f5', stickers: [
-    { nr: '01', naam: ['LOL', 'LOL'], b: 'hup', g: 'lach' },
-    { nr: '02', naam: ['Rollen van het lachen', 'ROFL'], b: 'draai', g: 'boing' },
-    { nr: '03', naam: ['OMG!', 'OMG!'], b: 'duw', g: 'ooh' },
-    { nr: '04', naam: ['Bedankt!', 'Thanks!'], b: 'hartslag', g: 'dankbaar' },
-    { nr: '05', naam: ['Gelukt!', 'Done!'], b: 'stuiter', g: 'tadaa' },
-    { nr: '06', naam: ['Nee!', 'No!'], b: 'schud', g: 'fout' },
-    { nr: '07', naam: ['Ben zo terug', 'Be right back'], b: 'flakker', g: 'zoefweg' },
-    { nr: '08', naam: ['Vibing', 'Vibing'], b: 'wiebel', g: 'rock' },
-    { nr: '09', naam: ['Noob', 'Noob'], b: 'glitch', g: 'gameover' },
-    { nr: '10', naam: ['Cringe', 'Cringe'], b: 'knik', g: 'kras' },
-    { nr: '11', naam: ['GOAT', 'GOAT'], b: 'oplichten', g: 'hoorn' },
-    { nr: '12', naam: ['Meh', 'Meh'], b: 'kantel', g: 'moe' },
   ] },
 ]
 

@@ -26,7 +26,7 @@ assert.deepEqual(vel.stickers.map(s => s.nr), ['01', '02', '03', '04', '05', '06
 
 // 1b. Op verzoek van Marcel staat dit vel vooraan (Vel 1); de andere volgen in hun oude volgorde.
 //     De id's blijven: f1-01 is nog steeds 'Tranen van het lachen' (dat staat in oude berichten en moods).
-assert.deepEqual(FIBRO_VELLEN.map(v => v.id), ['f6', 'f1', 'f2', 'f3', 'f4', 'f5'])
+assert.deepEqual(FIBRO_VELLEN.map(v => v.id), ['f6', 'f1', 'f2', 'f5', 'f3', 'f4']) // 30 okt: f5 op plek 4, f3 en f4 op 5 en 6
 assert.equal(zoekSticker('f1-01').naam[0], 'Tranen van het lachen')
 assert.equal(zoekSticker('f6-12').naam[0], 'Vloeken')
 

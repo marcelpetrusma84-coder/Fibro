@@ -48,7 +48,7 @@ assert.match(sm, /import \{ kanHet as kanOnderwerp, laadKnipper \} from '\.\/ond
 assert.match(sm, /\['onderwerp', T\('✨ Tik op het onderwerp'\)\]/)
 assert.match(sm, /if \(!kanOnderwerp\(\)\) modusKnop\.onderwerp\.hidden = true/, 'oude toestellen zien de knop niet')
 assert.doesNotMatch(sm, /^import .*vision_bundle/m, 'de bibliotheek wordt niet meteen geladen')
-assert.match(lees('profiel.html'), /stickermaker\.js\?v=235'/)
+assert.match(lees('profiel.html'), /stickermaker\.js\?v=236'/)
 {
   const blok = sm.match(/Object\.assign\(window\.FIBRO_EN \|\|= \{\}, (\{[\s\S]*?\})\)\n/)[1]
   const en = new Function('return ' + blok)()

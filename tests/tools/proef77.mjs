@@ -9,7 +9,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-const map = process.argv[2], oudMap = process.argv[3]
+// 30 okt 2026: zonder map (zoals in de testlijst) test hij de crypto.js van deze repo.
+const map = process.argv[2] || new URL('../..', import.meta.url).pathname, oudMap = process.argv[3]
 if (!map) { console.log('gebruik: node proef77.mjs <map> [<oude map>]'); process.exit(2) }
 const werk = mkdtempSync(join(tmpdir(), 'proef77-'))
 async function laad(m, naam) {

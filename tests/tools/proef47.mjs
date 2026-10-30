@@ -9,9 +9,20 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { createRequire } from 'node:module'
-const require = createRequire(path.join(path.resolve(process.argv[3] || '.'), 'x.js'))
-const ts = require('typescript')
-const bron = fs.readFileSync(process.argv[2], 'utf8')
+// 30 okt 2026: zonder argumenten (zoals in de testlijst: for f in $(find tests -name '*.mjs')) zoekt hij zelf
+// supabase/functions/get-turn-credentials/index.ts in deze repo, en typescript 5 in de opgegeven map, de repo of een map hoger.
+// Geen (bruikbare) typescript: OVERGESLAGEN, met uitleg, en geen fout (het is gereedschap, geen onderdeel van Fibro).
+const REPO = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..')
+let ts = null
+for (const m of [process.argv[3], REPO, path.dirname(REPO), '.'].filter(Boolean)) {
+  try { const t = createRequire(path.join(path.resolve(m), 'x.js'))('typescript'); if (t && t.ScriptTarget) { ts = t; break } } catch (e) {}
+}
+if (!ts) {
+  console.log('proef47: OVERGESLAGEN - typescript 5 niet gevonden. Zo draai je hem wel: npm install typescript@5 in een map,')
+  console.log('  dan: node tests/tools/proef47.mjs supabase/functions/get-turn-credentials/index.ts <die map>')
+  process.exit(0)
+}
+const bron = fs.readFileSync(process.argv[2] || path.join(REPO, 'supabase/functions/get-turn-credentials/index.ts'), 'utf8')
 let js = ts.transpileModule(bron, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText
 js = js.replace(/^import \{ createClient \} from "npm:@supabase\/supabase-js@2";$/m, 'const { createClient } = globalThis.__nep;')
 if (/^import /m.test(js)) throw new Error('import niet vervangen')

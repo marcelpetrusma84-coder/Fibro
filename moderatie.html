@@ -19,6 +19,18 @@ window.FIBRO_EN = Object.assign(window.FIBRO_EN || {}, {
   'Vastgelopen': 'Crashed', 'Mislukt': 'Failed', 'Stapel en bron': 'Stack and source',
   '✓ Opgelost, wissen': '✓ Fixed, delete', 'Alles wissen': 'Delete all', 'Zeker? Tik nog een keer': 'Sure? Tap again',
   'Gewist ✓': 'Deleted ✓', 'Wissen mislukt.': 'Deleting failed.', '↻ Vernieuwen': '↻ Refresh',
+  // v226: Bèta (sql/registratie-schakelaar.sql)
+  '🧪 Bèta': '🧪 Beta', 'Nieuwe accounts': 'New accounts', 'Open': 'Open', 'Alleen met uitnodiging': 'Invitation only', 'Dicht': 'Closed',
+  'Iedereen kan een account maken.': 'Anyone can create an account.',
+  'Alleen wie een uitnodiging van een Fibro-gebruiker heeft, kan een account maken.': 'Only people with an invitation from a Fibro user can create an account.',
+  'Niemand kan een account maken. Inloggen werkt gewoon.': 'Nobody can create an account. Logging in still works.',
+  'Gewijzigd: {tijd}': 'Changed: {tijd}', 'Nieuwe accounts: {stand} ✓': 'New accounts: {stand} ✓', 'Omzetten mislukt.': 'Changing failed.',
+  'Accounts': 'Accounts', 'Laatste 24 uur': 'Last 24 hours', 'Via uitnodiging': 'Via invitation',
+  'Nieuwe accounts per dag (laatste 14 dagen)': 'New accounts per day (last 14 days)', 'Nog geen nieuwe accounts in de laatste 14 dagen': 'No new accounts in the last 14 days',
+  'Wie nodigde wie uit (laatste 100)': 'Who invited whom (last 100)', 'Nog geen gebruikte uitnodigingen': 'No used invitations yet',
+  'nieuw account': 'new account', 'werden vrienden': 'became friends', 'verwijderd account': 'deleted account',
+  'Bèta-overzicht laden mislukt. Is sql/registratie-schakelaar.sql al uitgevoerd in Supabase?': 'Loading the beta overview failed. Has sql/registratie-schakelaar.sql been run in Supabase?',
+  'Bèta-overzicht laden...': 'Loading beta overview...',
   // v222: Feedback
   '💬 Feedback': '💬 Feedback', 'Wat testers zelf melden via ☰ → Fout of idee melden, of het beta-labeltje op Home.': 'What testers report themselves via ☰ → Report a problem or idea, or the beta label on Home.',
   'Nieuw': 'New', 'Alles': 'All', 'Feedback laden...': 'Loading feedback...', 'Geen nieuwe feedback 🎉': 'No new feedback 🎉', 'Nog geen feedback': 'No feedback yet',
@@ -84,6 +96,20 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .fb-kaart.gelezen, .fb-kaart.opgelost { opacity:.75; }
 .status-badge.opgelost { background:rgba(34,197,94,0.1); color:#22c55e; border:0.5px solid rgba(34,197,94,0.3); }
 .status-badge.gelezen { background:rgba(255,255,255,0.06); color:var(--muted); border:0.5px solid var(--border); }
+/* v226: bèta */
+.stand-keuze { display:flex; gap:6px; margin-bottom:8px; }
+.stand-keuze button { flex:1; min-height:44px; padding:8px 6px; border-radius:10px; border:0.5px solid var(--border); background:none; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:12px; cursor:pointer; }
+.stand-keuze button[aria-pressed="true"] { background:var(--accent); color:#1a0a2e; border-color:var(--accent); font-weight:600; }
+.stand-keuze button[aria-pressed="true"].dicht { background:#f87171; border-color:#f87171; }
+.stand-keuze button:disabled { opacity:0.5; cursor:default; }
+.dag-rij { display:flex; align-items:center; gap:10px; font-size:12px; margin-bottom:6px; }
+.dag-naam { width:84px; flex-shrink:0; color:var(--muted); }
+.dag-balk { flex:1; height:8px; border-radius:4px; background:rgba(255,255,255,0.06); overflow:hidden; }
+.dag-balk span { display:block; height:100%; background:var(--accent); border-radius:4px; }
+.dag-tal { width:28px; text-align:right; font-variant-numeric:tabular-nums; }
+.uitn-rij { padding:8px 0; border-bottom:0.5px solid var(--border); font-size:13px; word-break:break-word; }
+.uitn-rij:last-child { border-bottom:none; }
+.uitn-klein { font-size:11px; color:var(--muted); margin-top:2px; }
 /* v221: foutmeldingen */
 .fout-uitleg { font-size:12px; color:var(--muted); line-height:1.5; margin-bottom:10px; }
 .fout-balk { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
@@ -146,6 +172,7 @@ select.veld option { background:#1a0a2e; }
     <button class="tab-btn" id="tabBlokkades" onclick="kiesTab('blokkades')"><span data-t>🚫 Blokkades</span> <span id="aantalActief"></span></button>
     <button class="tab-btn" id="tabFouten" onclick="kiesTab('fouten')"><span data-t>🐞 Fouten</span> <span id="aantalFouten"></span></button>
     <button class="tab-btn" id="tabFeedback" onclick="kiesTab('feedback')"><span data-t>💬 Feedback</span> <span id="aantalFeedback"></span></button>
+    <button class="tab-btn" id="tabBeta" onclick="kiesTab('beta')"><span data-t>🧪 Bèta</span> <span id="standKort"></span></button>
   </div>
 
   <div id="msg" class="msg" style="display:none"></div>
@@ -213,6 +240,33 @@ select.veld option { background:#1a0a2e; }
     </div>
     <div id="feedbackLijst"><div class="laden" data-t>Feedback laden...</div></div>
   </div>
+
+  <div id="deelBeta" style="display:none">
+    <div class="sectie-kop" style="margin-top:0" data-t>Nieuwe accounts</div>
+    <div class="stand-keuze" role="group">
+      <button type="button" id="standOpen" aria-pressed="false" onclick="zetStand('open')" data-t>Open</button>
+      <button type="button" id="standUitnodiging" aria-pressed="false" onclick="zetStand('uitnodiging')" data-t>Alleen met uitnodiging</button>
+      <button type="button" id="standDicht" class="dicht" aria-pressed="false" onclick="zetStand('dicht')" data-t>Dicht</button>
+    </div>
+    <div class="fout-uitleg" id="standUitleg"></div>
+
+    <div class="stats">
+      <div class="stat-kaart"><div class="stat-getal" id="betaAccounts">—</div><div class="stat-label" data-t>Accounts</div></div>
+      <div class="stat-kaart"><div class="stat-getal" id="betaDag">—</div><div class="stat-label" data-t>Laatste 24 uur</div></div>
+      <div class="stat-kaart"><div class="stat-getal" id="betaUitn">—</div><div class="stat-label" data-t>Via uitnodiging</div></div>
+    </div>
+
+    <div class="fout-balk">
+      <div class="fout-samen"></div>
+      <button class="knop grijs" onclick="laadBeta()" data-t>↻ Vernieuwen</button>
+    </div>
+
+    <div class="sectie-kop" data-t>Nieuwe accounts per dag (laatste 14 dagen)</div>
+    <div id="betaPerDag"><div class="laden" data-t>Bèta-overzicht laden...</div></div>
+
+    <div class="sectie-kop" data-t>Wie nodigde wie uit (laatste 100)</div>
+    <div class="rapport-kaart" id="betaUitnodigingen"><div class="laden" data-t>Bèta-overzicht laden...</div></div>
+  </div>
 </div>
 
 <div class="venster-achter" id="blokVenster">
@@ -259,7 +313,7 @@ async function init() {
   }
   mijnId = session.user.id
   document.getElementById('inhoud').style.display = 'block'
-  await Promise.all([laadRapporten(), laadBlokkades(), laadFouten(), laadFeedback()])
+  await Promise.all([laadRapporten(), laadBlokkades(), laadFouten(), laadFeedback(), laadBeta()])
 }
 
 // ─── Rapporten ───
@@ -490,10 +544,84 @@ window.kiesTab = function(tab) {
   document.getElementById('deelBlokkades').style.display = tab === 'blokkades' ? 'block' : 'none'
   document.getElementById('deelFouten').style.display = tab === 'fouten' ? 'block' : 'none'
   document.getElementById('deelFeedback').style.display = tab === 'feedback' ? 'block' : 'none'
+  document.getElementById('deelBeta').style.display = tab === 'beta' ? 'block' : 'none'
   document.getElementById('tabRapporten').classList.toggle('actief', tab === 'rapporten')
   document.getElementById('tabBlokkades').classList.toggle('actief', tab === 'blokkades')
   document.getElementById('tabFouten').classList.toggle('actief', tab === 'fouten')
   document.getElementById('tabFeedback').classList.toggle('actief', tab === 'feedback')
+  document.getElementById('tabBeta').classList.toggle('actief', tab === 'beta')
+}
+
+// ─── Bèta: wie mag een account maken, en hoe groeit Fibro (v226, sql/registratie-schakelaar.sql) ───
+const STAND_NAAM = { open: 'Open', uitnodiging: 'Alleen met uitnodiging', dicht: 'Dicht' }
+const STAND_UITLEG = {
+  open: 'Iedereen kan een account maken.',
+  uitnodiging: 'Alleen wie een uitnodiging van een Fibro-gebruiker heeft, kan een account maken.',
+  dicht: 'Niemand kan een account maken. Inloggen werkt gewoon.'
+}
+let betaStand = null
+
+function toonStand(stand, gewijzigd) {
+  betaStand = STAND_NAAM[stand] ? stand : null
+  document.getElementById('standOpen').setAttribute('aria-pressed', String(stand === 'open'))
+  document.getElementById('standUitnodiging').setAttribute('aria-pressed', String(stand === 'uitnodiging'))
+  document.getElementById('standDicht').setAttribute('aria-pressed', String(stand === 'dicht'))
+  const uitleg = betaStand ? T(STAND_UITLEG[stand]) + (gewijzigd ? ' · ' + T('Gewijzigd: {tijd}', { tijd: datum(gewijzigd) }) : '') : ''
+  document.getElementById('standUitleg').textContent = uitleg
+  document.getElementById('standKort').textContent = stand === 'dicht' ? '🔴' : stand === 'uitnodiging' ? '🟡' : ''
+}
+
+async function laadBeta() {
+  const perDag = document.getElementById('betaPerDag')
+  const uitn = document.getElementById('betaUitnodigingen')
+  const knoppen = document.querySelectorAll('.stand-keuze button')
+  const { data, error } = await supabase.rpc('beta_overzicht')
+  if (error || !data) {
+    perDag.innerHTML = '<div class="geen-rapporten">' + mEsc(T('Bèta-overzicht laden mislukt. Is sql/registratie-schakelaar.sql al uitgevoerd in Supabase?')) + '</div>'
+    uitn.innerHTML = ''
+    uitn.style.display = 'none'
+    knoppen.forEach(b => { b.disabled = true })
+    return
+  }
+  knoppen.forEach(b => { b.disabled = false })
+  toonStand(data.stand, data.gewijzigd_op)
+  const getal = v => (v !== null && v !== undefined && Number.isFinite(Number(v)) ? String(Number(v)) : '—')
+  document.getElementById('betaAccounts').textContent = getal(data.accounts)
+  document.getElementById('betaDag').textContent = getal(data.laatste_24_uur)
+  document.getElementById('betaUitn').textContent = getal(data.via_uitnodiging)
+
+  const dagen = Array.isArray(data.per_dag) ? data.per_dag : []
+  const meest = Math.max(1, ...dagen.map(d => Number(d.aantal) || 0))
+  perDag.innerHTML = dagen.length
+    ? dagen.map(d => {
+        const n = Number(d.aantal) || 0
+        const dag = new Date(String(d.dag) + 'T12:00:00').toLocaleDateString(T.locale, { weekday: 'short', day: 'numeric', month: 'short' })
+        return `<div class="dag-rij"><span class="dag-naam">${mEsc(dag)}</span><span class="dag-balk"><span style="width:${Math.round(n / meest * 100)}%"></span></span><span class="dag-tal">${n}</span></div>`
+      }).join('')
+    : '<div class="geen-rapporten">' + mEsc(T('Nog geen nieuwe accounts in de laatste 14 dagen')) + '</div>'
+
+  const lijst = Array.isArray(data.uitnodigingen) ? data.uitnodigingen : []
+  uitn.style.display = ''
+  uitn.innerHTML = lijst.length
+    ? lijst.map(u => {
+        const van = u.uitgenodigd_door ? '@' + u.uitgenodigd_door : T('verwijderd account')
+        const naar = u.gebruikt_door ? '@' + u.gebruikt_door : T('verwijderd account')
+        const wat = u.nieuw_account ? T('nieuw account') : T('werden vrienden')
+        return `<div class="uitn-rij">${mEsc(van)} → ${mEsc(naar)}<div class="uitn-klein">${mEsc(wat)}${u.wanneer ? ' · ' + mEsc(datum(u.wanneer)) : ''}</div></div>`
+      }).join('')
+    : '<div class="geen-rapporten" style="padding:16px">' + mEsc(T('Nog geen gebruikte uitnodigingen')) + '</div>'
+}
+window.laadBeta = laadBeta
+
+window.zetStand = async function(stand) {
+  if (!STAND_NAAM[stand] || stand === betaStand) return
+  const knoppen = document.querySelectorAll('.stand-keuze button')
+  knoppen.forEach(b => { b.disabled = true })
+  const { data, error } = await supabase.rpc('zet_registratie_stand', { stand_in: stand })
+  knoppen.forEach(b => { b.disabled = false })
+  if (error || data !== stand) { toonMsg(T('Omzetten mislukt.'), 'error'); return }
+  toonMsg(T('Nieuwe accounts: {stand} ✓', { stand: T(STAND_NAAM[stand]) }), 'success')
+  await laadBeta()
 }
 
 // ─── Feedback van testers (v222, terugmelden.js + sql/terugmeldingen.sql) ───

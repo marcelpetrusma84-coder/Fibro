@@ -1087,6 +1087,11 @@ window.FIBRO_EN = {
   "{plek}: {s}": "{plek}: {s}",
   "{plek}: leeg": "{plek}: empty",
 
+// 30 okt 2026: Four in a Row v2 (plastic speelgoed): de kolommen als knoppen
+  "Kolommen": "Columns",
+  "Kolom {n}": "Column {n}",
+  "Kolom {n} (vol)": "Column {n} (full)",
+
 // ---- Flapper (flappy-ui) ----
   "Pas op: scherpe punten!": "Watch out: sharp points!",
   "Pas op: spijkers!": "Watch out: spikes!",

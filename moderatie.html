@@ -31,6 +31,16 @@ window.FIBRO_EN = Object.assign(window.FIBRO_EN || {}, {
   'nieuw account': 'new account', 'werden vrienden': 'became friends', 'verwijderd account': 'deleted account',
   'Bèta-overzicht laden mislukt. Is sql/registratie-schakelaar.sql al uitgevoerd in Supabase?': 'Loading the beta overview failed. Has sql/registratie-schakelaar.sql been run in Supabase?',
   'Bèta-overzicht laden...': 'Loading beta overview...',
+  // v227: bèta-cijfers (alleen totalen)
+  'Nieuw, 24 uur': 'New, 24 hours', 'Actief': 'Active', '24 uur': '24 hours', '7 dagen': '7 days', '30 dagen': '30 days',
+  'Alleen totalen, nooit per persoon. Wie helemaal offline staat, telt niet mee.': 'Totals only, never per person. People who are fully offline are not counted.',
+  'Actieve mensen per dag (laatste 14 dagen)': 'Active people per day (last 14 days)',
+  'Nog geen cijfers: het tellen begint zodra sql/registratie-schakelaar.sql is uitgevoerd.': 'No numbers yet: counting starts once sql/registratie-schakelaar.sql has been run.',
+  'Komen nieuwe mensen terug?': 'Do new people come back?', 'Na een dag': 'After a day', 'Na een week': 'After a week',
+  '{terug} van {van} ({pct}%)': '{terug} of {van} ({pct}%)', 'nog te vroeg': 'too early to tell',
+  'Na een dag: van de accounts van 2 tot 30 dagen oud. Na een week: van de accounts van 8 tot 60 dagen oud.': 'After a day: of accounts 2 to 30 days old. After a week: of accounts 8 to 60 days old.',
+  'Leeftijd': 'Age', 'jonger dan 16': 'under 16', '50+': '50+',
+  'Jonger dan 16: accounts van vóór de leeftijdsgrens, of een verkeerd ingevuld jaar.': 'Under 16: accounts from before the age limit, or a wrongly entered year.',
   // v222: Feedback
   '💬 Feedback': '💬 Feedback', 'Wat testers zelf melden via ☰ → Fout of idee melden, of het beta-labeltje op Home.': 'What testers report themselves via ☰ → Report a problem or idea, or the beta label on Home.',
   'Nieuw': 'New', 'Alles': 'All', 'Feedback laden...': 'Loading feedback...', 'Geen nieuwe feedback 🎉': 'No new feedback 🎉', 'Nog geen feedback': 'No feedback yet',
@@ -107,6 +117,10 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .dag-balk { flex:1; height:8px; border-radius:4px; background:rgba(255,255,255,0.06); overflow:hidden; }
 .dag-balk span { display:block; height:100%; background:var(--accent); border-radius:4px; }
 .dag-tal { width:28px; text-align:right; font-variant-numeric:tabular-nums; }
+.dag-rij.waarschuw .dag-naam, .dag-rij.waarschuw .dag-tal { color:#f87171; }
+.dag-rij.waarschuw .dag-balk span { background:#f87171; }
+.terug-rij { display:flex; justify-content:space-between; gap:10px; font-size:14px; padding:6px 0; }
+.terug-rij span:last-child { font-variant-numeric:tabular-nums; color:var(--accent); font-weight:600; }
 .uitn-rij { padding:8px 0; border-bottom:0.5px solid var(--border); font-size:13px; word-break:break-word; }
 .uitn-rij:last-child { border-bottom:none; }
 .uitn-klein { font-size:11px; color:var(--muted); margin-top:2px; }
@@ -252,7 +266,7 @@ select.veld option { background:#1a0a2e; }
 
     <div class="stats">
       <div class="stat-kaart"><div class="stat-getal" id="betaAccounts">—</div><div class="stat-label" data-t>Accounts</div></div>
-      <div class="stat-kaart"><div class="stat-getal" id="betaDag">—</div><div class="stat-label" data-t>Laatste 24 uur</div></div>
+      <div class="stat-kaart"><div class="stat-getal" id="betaDag">—</div><div class="stat-label" data-t>Nieuw, 24 uur</div></div>
       <div class="stat-kaart"><div class="stat-getal" id="betaUitn">—</div><div class="stat-label" data-t>Via uitnodiging</div></div>
     </div>
 
@@ -260,6 +274,27 @@ select.veld option { background:#1a0a2e; }
       <div class="fout-samen"></div>
       <button class="knop grijs" onclick="laadBeta()" data-t>↻ Vernieuwen</button>
     </div>
+
+    <div class="sectie-kop" data-t>Actief</div>
+    <div class="fout-uitleg" data-t>Alleen totalen, nooit per persoon. Wie helemaal offline staat, telt niet mee.</div>
+    <div class="stats">
+      <div class="stat-kaart"><div class="stat-getal" id="actief24">—</div><div class="stat-label" data-t>24 uur</div></div>
+      <div class="stat-kaart"><div class="stat-getal" id="actief7">—</div><div class="stat-label" data-t>7 dagen</div></div>
+      <div class="stat-kaart"><div class="stat-getal" id="actief30">—</div><div class="stat-label" data-t>30 dagen</div></div>
+    </div>
+
+    <div class="sectie-kop" data-t>Actieve mensen per dag (laatste 14 dagen)</div>
+    <div id="betaActiefPerDag"></div>
+
+    <div class="sectie-kop" data-t>Komen nieuwe mensen terug?</div>
+    <div class="rapport-kaart">
+      <div class="terug-rij"><span data-t>Na een dag</span><span id="terugDag">—</span></div>
+      <div class="terug-rij"><span data-t>Na een week</span><span id="terugWeek">—</span></div>
+      <div class="fout-klein" style="margin-top:6px" data-t>Na een dag: van de accounts van 2 tot 30 dagen oud. Na een week: van de accounts van 8 tot 60 dagen oud.</div>
+    </div>
+
+    <div class="sectie-kop" data-t>Leeftijd</div>
+    <div id="betaLeeftijd"></div>
 
     <div class="sectie-kop" data-t>Nieuwe accounts per dag (laatste 14 dagen)</div>
     <div id="betaPerDag"><div class="laden" data-t>Bèta-overzicht laden...</div></div>
@@ -590,15 +625,25 @@ async function laadBeta() {
   document.getElementById('betaDag').textContent = getal(data.laatste_24_uur)
   document.getElementById('betaUitn').textContent = getal(data.via_uitnodiging)
 
-  const dagen = Array.isArray(data.per_dag) ? data.per_dag : []
-  const meest = Math.max(1, ...dagen.map(d => Number(d.aantal) || 0))
-  perDag.innerHTML = dagen.length
-    ? dagen.map(d => {
-        const n = Number(d.aantal) || 0
-        const dag = new Date(String(d.dag) + 'T12:00:00').toLocaleDateString(T.locale, { weekday: 'short', day: 'numeric', month: 'short' })
-        return `<div class="dag-rij"><span class="dag-naam">${mEsc(dag)}</span><span class="dag-balk"><span style="width:${Math.round(n / meest * 100)}%"></span></span><span class="dag-tal">${n}</span></div>`
-      }).join('')
-    : '<div class="geen-rapporten">' + mEsc(T('Nog geen nieuwe accounts in de laatste 14 dagen')) + '</div>'
+  const dagNaam = d => new Date(String(d) + 'T12:00:00').toLocaleDateString(T.locale, { weekday: 'short', day: 'numeric', month: 'short' })
+  const perDagLijst = v => (Array.isArray(v) ? v : []).map(d => ({ naam: dagNaam(d.dag), n: Number(d.aantal) || 0 }))
+  perDag.innerHTML = balkjes(perDagLijst(data.per_dag)) || '<div class="geen-rapporten">' + mEsc(T('Nog geen nieuwe accounts in de laatste 14 dagen')) + '</div>'
+
+  // v227: actief, terugkomen, leeftijd (alleen totalen)
+  document.getElementById('actief24').textContent = getal(data.actief_24u)
+  document.getElementById('actief7').textContent = getal(data.actief_7d)
+  document.getElementById('actief30').textContent = getal(data.actief_30d)
+  document.getElementById('betaActiefPerDag').innerHTML = balkjes(perDagLijst(data.actief_per_dag))
+    || '<div class="geen-rapporten" style="padding:16px">' + mEsc(T('Nog geen cijfers: het tellen begint zodra sql/registratie-schakelaar.sql is uitgevoerd.')) + '</div>'
+  document.getElementById('terugDag').textContent = terugTekst(data.terug_dag)
+  document.getElementById('terugWeek').textContent = terugTekst(data.terug_week)
+  const lt = data.leeftijd || {}
+  const groepen = [['onder_16', T('jonger dan 16')], ['16_17', '16–17'], ['18_24', '18–24'], ['25_34', '25–34'], ['35_49', '35–49'], ['50_plus', T('50+')], ['onbekend', T('onbekend')]]
+    .map(([k, naam]) => ({ k, naam, n: Number(lt[k]) || 0, waarschuw: k === 'onder_16' }))
+    .filter(g => g.n > 0 || (g.k !== 'onder_16' && g.k !== 'onbekend')) // die twee alleen als ze er zijn
+  const jong = Number(lt.onder_16) || 0
+  document.getElementById('betaLeeftijd').innerHTML = balkjes(groepen)
+    + (jong ? '<div class="fout-klein" style="color:#f87171;margin-top:4px">' + mEsc(T('Jonger dan 16: accounts van vóór de leeftijdsgrens, of een verkeerd ingevuld jaar.')) + '</div>' : '')
 
   const lijst = Array.isArray(data.uitnodigingen) ? data.uitnodigingen : []
   uitn.style.display = ''
@@ -612,6 +657,20 @@ async function laadBeta() {
     : '<div class="geen-rapporten" style="padding:16px">' + mEsc(T('Nog geen gebruikte uitnodigingen')) + '</div>'
 }
 window.laadBeta = laadBeta
+
+// Balkjes: [{ naam, n, waarschuw }] -> html (leeg als er niets is)
+function balkjes(rijen) {
+  if (!rijen.length) return ''
+  const meest = Math.max(1, ...rijen.map(r => r.n))
+  return rijen.map(r => `<div class="dag-rij${r.waarschuw ? ' waarschuw' : ''}"><span class="dag-naam">${mEsc(r.naam)}</span><span class="dag-balk"><span style="width:${Math.round(r.n / meest * 100)}%"></span></span><span class="dag-tal">${r.n}</span></div>`).join('')
+}
+
+// { van, terug } -> '3 van 4 (75%)', of 'nog te vroeg'
+function terugTekst(t) {
+  const van = Number(t && t.van) || 0, terug = Number(t && t.terug) || 0
+  if (!van) return T('nog te vroeg')
+  return T('{terug} van {van} ({pct}%)', { terug, van, pct: Math.round(terug / van * 100) })
+}
 
 window.zetStand = async function(stand) {
   if (!STAND_NAAM[stand] || stand === betaStand) return

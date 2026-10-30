@@ -15,6 +15,15 @@
 --
 -- Verder: beta_overzicht() voor de moderatiepagina: aantal accounts, nieuwe accounts per dag (laatste 14 dagen)
 -- en wie wie heeft uitgenodigd (laatste 100). Alleen voor moderators.
+--
+-- Bèta-cijfers (v227), alleen totalen, nooit per persoon en nooit hoe lang iemand de app gebruikt:
+--   - actieve mensen per dag: de tabel actief_per_dag telt per dag hoeveel mensen Fibro openden. Er staat alleen
+--     een datum en een getal in, geen namen. Het tellen gebeurt als laatst_gezien (de heartbeat, voor het groene
+--     bolletje) voor het eerst op een nieuwe dag verandert. Wie 'helemaal offline' staat, telt niet mee: daar
+--     verandert laatst_gezien niet (bescherm_online in sql/profielvelden.sql). Oudere dagen dan 400 gaan weg.
+--   - actief in de laatste 24 uur, 7 dagen en 30 dagen (uit laatst_gezien, ook zonder wie offline staat);
+--   - komen nieuwe mensen terug: na een dag, en na een week;
+--   - leeftijdsgroepen, uit het geboortejaar dat bij het aanmelden al werd bewaard.
 begin;
 
 do $$
@@ -27,6 +36,11 @@ begin
   end if;
   if to_regclass('public.invite_tokens') is null then
     raise exception 'STOP: de tabel invite_tokens ontbreekt; er is niets aangepast';
+  end if;
+  if (select count(*) from information_schema.columns
+       where table_schema = 'public' and table_name = 'profiles'
+         and column_name in ('laatst_gezien', 'toon_online')) <> 2 then
+    raise exception 'STOP: profiles.laatst_gezien of profiles.toon_online ontbreekt (sql/toon-online.sql); er is niets aangepast';
   end if;
 end $$;
 
@@ -122,7 +136,52 @@ create trigger fibro_registratie_controle
   before insert on auth.users
   for each row execute function public.controleer_nieuw_account();
 
--- 5. Het overzicht voor de moderatiepagina
+-- 5. Actieve mensen per dag: alleen een datum en een getal
+create table if not exists public.actief_per_dag (
+  dag date primary key,
+  aantal integer not null default 0 check (aantal >= 0)
+);
+alter table public.actief_per_dag enable row level security;
+revoke all on public.actief_per_dag from public, anon, authenticated;
+
+create or replace function public.tel_actieve_dag()
+returns trigger
+language plpgsql
+security definer
+set search_path to 'public'
+as $$
+declare
+  nu_gezien timestamptz;
+  oud_gezien timestamptz;
+  dag_nu date;
+begin
+  nu_gezien := new.laatst_gezien::timestamptz;
+  oud_gezien := old.laatst_gezien::timestamptz;
+  -- alleen een echt teken van leven van nu (geen zelf ingevulde datum ver weg)
+  if nu_gezien is null or nu_gezien < now() - interval '10 minutes' or nu_gezien > now() + interval '10 minutes' then
+    return null;
+  end if;
+  dag_nu := (nu_gezien at time zone 'Europe/Amsterdam')::date;
+  -- vandaag al geteld?
+  if oud_gezien is not null and (oud_gezien at time zone 'Europe/Amsterdam')::date >= dag_nu then
+    return null;
+  end if;
+  insert into actief_per_dag (dag, aantal) values (dag_nu, 1)
+  on conflict (dag) do update set aantal = actief_per_dag.aantal + 1;
+  delete from actief_per_dag where dag < dag_nu - 400;
+  return null;
+end;
+$$;
+revoke execute on function public.tel_actieve_dag() from public, anon, authenticated;
+
+drop trigger if exists fibro_tel_actieve_dag on public.profiles;
+create trigger fibro_tel_actieve_dag
+  after update of laatst_gezien on public.profiles
+  for each row
+  when (new.laatst_gezien is distinct from old.laatst_gezien)
+  execute function public.tel_actieve_dag();
+
+-- 6. Het overzicht voor de moderatiepagina
 create or replace function public.beta_overzicht()
 returns jsonb
 language plpgsql
@@ -158,6 +217,47 @@ begin
            group by 1
         ) d
     ), '[]'::jsonb),
+    -- v227: bèta-cijfers, alleen totalen. Wie 'helemaal offline' staat, telt niet mee.
+    'actief_24u', (select count(*) from profiles p
+                    where coalesce(p.toon_online, true) and p.laatst_gezien::timestamptz > now() - interval '24 hours'),
+    'actief_7d', (select count(*) from profiles p
+                   where coalesce(p.toon_online, true) and p.laatst_gezien::timestamptz > now() - interval '7 days'),
+    'actief_30d', (select count(*) from profiles p
+                    where coalesce(p.toon_online, true) and p.laatst_gezien::timestamptz > now() - interval '30 days'),
+    'actief_per_dag', coalesce((
+      select jsonb_agg(jsonb_build_object('dag', a.dag, 'aantal', a.aantal) order by a.dag desc)
+        from actief_per_dag a
+       where a.dag > (now() at time zone 'Europe/Amsterdam')::date - 14
+    ), '[]'::jsonb),
+    -- komen nieuwe mensen terug? 'van' = nieuwe accounts die oud genoeg zijn om het te weten,
+    -- 'terug' = daarvan zijn er zoveel minstens een dag (of een week) na het aanmelden nog in Fibro geweest
+    'terug_dag', (
+      select jsonb_build_object('van', count(*), 'terug', count(*) filter (where p.laatst_gezien::timestamptz >= u.created_at + interval '1 day'))
+        from auth.users u join profiles p on p.id = u.id
+       where coalesce(p.toon_online, true)
+         and u.created_at <= now() - interval '2 days' and u.created_at > now() - interval '30 days'
+    ),
+    'terug_week', (
+      select jsonb_build_object('van', count(*), 'terug', count(*) filter (where p.laatst_gezien::timestamptz >= u.created_at + interval '7 days'))
+        from auth.users u join profiles p on p.id = u.id
+       where coalesce(p.toon_online, true)
+         and u.created_at <= now() - interval '8 days' and u.created_at > now() - interval '60 days'
+    ),
+    'leeftijd', (
+      select jsonb_build_object(
+               'onder_16', count(*) filter (where l < 16),
+               '16_17', count(*) filter (where l between 16 and 17),
+               '18_24', count(*) filter (where l between 18 and 24),
+               '25_34', count(*) filter (where l between 25 and 34),
+               '35_49', count(*) filter (where l between 35 and 49),
+               '50_plus', count(*) filter (where l >= 50),
+               'onbekend', count(*) filter (where l is null))
+        from (
+          select case when (u.raw_user_meta_data ->> 'geboortejaar') ~ '^[0-9]{4}$'
+                      then extract(year from now())::int - (u.raw_user_meta_data ->> 'geboortejaar')::int end as l
+            from auth.users u
+        ) leeftijden
+    ),
     'uitnodigingen', coalesce((
       select jsonb_agg(r order by r.wanneer desc)
         from (

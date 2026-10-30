@@ -75,6 +75,24 @@ assert.match(moderatie, /\$\{mEsc\(van\)\} → \$\{mEsc\(naar\)\}/, 'namen van g
   for (const z of zinnen) assert.ok(moderatie.includes("'" + z + "':"), 'moderatie: Engelse vertaling van: ' + z)
 }
 
+// 5b. Bèta-cijfers (v227): ook de vaste teksten van het tabblad in het Engels, en de eerlijke zin op Over Fibro
+{
+  const blok = moderatie.slice(moderatie.indexOf('<div id="deelBeta"'), moderatie.indexOf('<div class="venster-achter"'))
+  const vast = [...blok.matchAll(/data-t[^>]*>([^<]+)</g)].map(m => m[1].trim()).filter(Boolean)
+  assert.ok(vast.length >= 20, 'vaste teksten gevonden')
+  for (const z of vast) assert.ok(moderatie.includes("'" + z + "':"), 'moderatie: Engelse vertaling van: ' + z)
+  for (const id of ['actief24', 'actief7', 'actief30', 'betaActiefPerDag', 'terugDag', 'terugWeek', 'betaLeeftijd']) assert.ok(blok.includes('id="' + id + '"'), id)
+  const over = lees('over.html')
+  const zin = 'Voor de bèta ziet de moderator alleen totalen'
+  assert.ok(over.includes('<li data-t>' + zin), 'Over Fibro: eerlijk over de bèta-cijfers')
+  assert.ok(over.includes("{ '" + zin), 'Over Fibro: ook in het Engels')
+  const terug = new Function('T', moderatie.match(/function terugTekst\(t\) \{[\s\S]*?\n\}/)[0] + '; return terugTekst')(
+    (k, v) => k.replace(/\{(\w+)\}/g, (_, n) => v[n]))
+  assert.equal(terug({ van: 4, terug: 3 }), '3 van 4 (75%)')
+  assert.equal(terug({ van: 0, terug: 0 }), 'nog te vroeg')
+  assert.equal(terug(null), 'nog te vroeg')
+}
+
 // 6. De SQL: alles of niets, de controle in de database, de juiste rechten
 assert.match(sql, /^begin;$/m); assert.match(sql, /^commit;$/m)
 assert.match(sql, /create trigger fibro_registratie_controle\s+before insert on auth\.users/)
@@ -94,6 +112,18 @@ for (const f of ['zet_registratie_stand', 'beta_overzicht']) {
   assert.match(poort, /i\.expires_at is null or i\.expires_at > now\(\)/)
   assert.match(poort, /not public\.is_geblokkeerd\(i\.created_by\)/, 'een uitnodiging van een geblokkeerd account telt niet')
   assert.doesNotMatch(poort, /update invite_tokens/, 'de poortwachter boekt de uitnodiging niet af')
+}
+
+{
+  // v227: tellen per dag, alleen een datum en een getal
+  assert.match(sql, /create table if not exists public\.actief_per_dag \(\s+dag date primary key,\s+aantal integer/)
+  assert.doesNotMatch(sql.slice(sql.indexOf('create table if not exists public.actief_per_dag'), sql.indexOf('alter table public.actief_per_dag')), /user|uuid|_id/, 'geen personen in actief_per_dag')
+  assert.match(sql, /revoke all on public\.actief_per_dag from public, anon, authenticated/)
+  assert.match(sql, /after update of laatst_gezien on public\.profiles/)
+  assert.match(sql, /nu_gezien < now\(\) - interval '10 minutes' or nu_gezien > now\(\) \+ interval '10 minutes'/, 'geen zelf ingevulde datums')
+  const lijf = sql.slice(sql.indexOf('function public.beta_overzicht('))
+  for (const k of ['actief_24u', 'actief_7d', 'actief_30d', 'actief_per_dag', 'terug_dag', 'terug_week', 'leeftijd']) assert.ok(lijf.includes("'" + k + "'"), 'beta_overzicht: ' + k)
+  assert.equal((lijf.match(/coalesce\(p\.toon_online, true\)/g) || []).length, 5, 'wie helemaal offline staat, telt nergens mee')
 }
 
 console.log('test-registratie: alles goed')

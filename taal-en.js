@@ -16,6 +16,7 @@
 // v197: schaken met webcam, een vriend uitnodigen vanuit spelen tegen de computer, nieuwe instellingen (PR #3 van valentijnpeters).
 // v198: de knop voor geluid dat de browser tegenhoudt (bellen.js).
 // v200: alleen het open slotje bij een vriend, met uitleg (slotuitleg.js).
+// 30 okt 2026: Neo Paddle v2 en de levels van Neo Paddle.
 window.FIBRO_EN = {
 
 // ---- Overal ----
@@ -1056,6 +1057,25 @@ window.FIBRO_EN = {
   "LET OP: TEGENSTANDER OP WINST": "WATCH OUT: OPPONENT AT MATCH POINT",
   "Wachten op tegenstander...": "Waiting for opponent...",
   "Wachten...": "Waiting...",
+  // 30 okt 2026: Neo Paddle v2 (blokjes en power-ups) en de levels voor alleen (neopaddle-levels.js, spel.html)
+  "Sleep om je paddle te bewegen. Breek blokjes: vang groene power-ups, ontwijk rode.": "Drag to move your paddle. Break blocks: catch green power-ups, dodge red ones.",
+  "{naam}: {effect}": "{naam}: {effect}",
+  "Of speel alleen de levels:": "Or play the levels on your own:",
+  "🧱 Levels": "🧱 Levels",
+  "Levels": "Levels",
+  "Haal alle blokjes weg. Vang groene power-ups, ontwijk rode.": "Clear all the blocks. Catch green power-ups, dodge red ones.",
+  "Level {n} (nog dicht)": "Level {n} (locked)",
+  "Level {n}: {naam}": "Level {n}: {naam}",
+  "Sleep om je paddle te bewegen. Tik om de bal weg te schieten.": "Drag to move your paddle. Tap to launch the ball.",
+  "Level {n}": "Level {n}",
+  "Score {n}": "Score {n}",
+  "Bal kwijt!": "Ball lost!",
+  "Tik om te starten": "Tap to start",
+  "Level gehaald!": "Level cleared!",
+  "Volgend level ›": "Next level ›",
+  "Alles uitgespeeld!": "You beat every level!",
+  "Nieuw record! ": "New record! ",
+  "Game over": "Game over",
 
 // ---- Flapper (flappy-ui) ----
   "Pas op: scherpe punten!": "Watch out: sharp points!",

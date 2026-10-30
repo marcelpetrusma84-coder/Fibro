@@ -9,7 +9,9 @@ const regels = lees('spelregels.html'), over = lees('over.html'), index = lees('
 // 1. De pagina volgt de huisregels van de andere pagina's
 assert.match(regels, /<html lang="nl" data-taal/)
 assert.equal(regels.match(/<meta http-equiv="Content-Security-Policy"[^>]*>/)[0], over.match(/<meta http-equiv="Content-Security-Policy"[^>]*>/)[0], 'dezelfde huisregel als Over Fibro')
-for (const s of ['huisregel.js?v=1', 'foutmelder.js?v=1', 'taal.js?v=30']) assert.ok(regels.includes('<script src="' + s + '"></script>'), s)
+for (const s of ['huisregel.js?v=1', 'foutmelder.js?v=1']) assert.ok(regels.includes('<script src="' + s + '"></script>'), s)
+// taal.js: het ?v=-nummer gaat omhoog bij elke nieuwe vertaling (30 okt 2026: 37), dus alleen of hij er is
+assert.match(regels, /<script src="taal\.js\?v=\d+"><\/script>/, 'taal.js')
 assert.match(regels, /<meta name="viewport"/)
 assert.doesNotMatch(regels, /https?:\/\/(?!qmgatbphiplrfxrljtbe\.supabase\.co)/, 'geen externe adressen')
 

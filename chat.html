@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=36"></script>
+<script src="taal.js?v=37"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2279,7 +2279,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   const SPEL_BESTAND = {
     botkaaseiren: './bke-ui.js?v=147',
     dammen: './dammen-ui.js?v=147',
-    pong: './pong-ui.js?v=147',
+    pong: './pong-ui.js?v=237',
     vieroprij: './vieroprij-ui.js?v=147',
     schaken: './schaken-ui.js?v=201',
     schakendrie: './schaken-drie-ui.js?v=22',
@@ -2898,7 +2898,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Pong ───
   async function startPong() {
-    const m = await import('./pong-ui.js?v=147')
+    const m = await import('./pong-ui.js?v=237')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'pong' })
   }
 

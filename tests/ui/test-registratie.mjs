@@ -126,4 +126,46 @@ for (const f of ['zet_registratie_stand', 'beta_overzicht']) {
   assert.equal((lijf.match(/coalesce\(p\.toon_online, true\)/g) || []).length, 5, 'wie helemaal offline staat, telt nergens mee')
 }
 
+// v228: soort toestel (toestel.js), alleen per dag opgeteld
+{
+  const { soortToestel, meldToestel, SOORTEN } = await import(new URL('../../toestel.js', import.meta.url))
+  const t = (ua, extra = {}, app = false) => soortToestel({ userAgent: ua, maxTouchPoints: 0, ...extra }, app)
+  assert.equal(t('Mozilla/5.0 (Linux; Android 14; Pixel 8) Chrome/130 Mobile', {}, true), 'android_app')
+  assert.equal(t('Mozilla/5.0 (Linux; Android 14; Pixel 8) Chrome/130 Mobile'), 'android_web')
+  assert.equal(t('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Mobile/15E148'), 'iphone')
+  assert.equal(t('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605', { maxTouchPoints: 5 }), 'iphone', 'iPad doet zich voor als Mac')
+  assert.equal(t('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605'), 'computer')
+  assert.equal(t('Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130'), 'computer')
+  assert.equal(t('Mozilla/5.0 (X11; Linux x86_64) Chrome/130'), 'computer')
+  assert.equal(t('Mozilla/5.0 (X11; Linux x86_64; Steam Deck) Chrome/130'), 'computer')
+  assert.equal(t('KaiOS/2.5'), 'anders')
+  assert.equal(t(undefined), 'anders')
+  for (const s of SOORTEN) assert.ok(sql.includes("'" + s + "'"), 'SQL kent ' + s)
+
+  const m = new Map(), opslag = { getItem: k => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)) }
+  const gemeld = []
+  const sb = { rpc: async (naam, args) => { gemeld.push([naam, args]); return { error: null } } }
+  const nav = { userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)' }
+  const dag1 = new Date('2026-10-30T10:00:00Z'), dag1laat = new Date('2026-10-30T23:30:00Z'), dag2 = new Date('2026-10-31T08:00:00Z')
+  assert.equal(await meldToestel(sb, { nav, inApp: false, opslag, nu: dag1 }), true)
+  assert.equal(await meldToestel(sb, { nav, inApp: false, opslag, nu: dag1 }), false, 'een keer per dag')
+  assert.equal(await meldToestel(sb, { nav, inApp: false, opslag, nu: dag1laat }), true, '00:30 in Nederland is al de volgende dag')
+  assert.equal(await meldToestel(sb, { nav, inApp: false, opslag, nu: dag2 }), false)
+  assert.deepEqual(gemeld, [['tel_toestel', { soort_in: 'iphone' }], ['tel_toestel', { soort_in: 'iphone' }]])
+  const kapot = { rpc: async () => { throw new Error('geen internet') } }
+  assert.equal(await meldToestel(kapot, { nav, inApp: false, opslag: { getItem: () => null, setItem() {} }, nu: dag1 }), false, 'een fout breekt Home niet')
+
+  const index = lees('index.html')
+  assert.match(index, /import \{ meldToestel \} from '\.\/toestel\.js\?v=1'/)
+  assert.match(index, /meldToestel\(supabase\)\.catch\(\(\) => \{\}\)/)
+
+  const tabel = sql.slice(sql.indexOf('create table if not exists public.toestel_per_dag'), sql.indexOf('alter table public.toestel_per_dag'))
+  assert.doesNotMatch(tabel, /user|uuid|_id/, 'geen personen in toestel_per_dag')
+  assert.match(sql, /revoke all on public\.toestel_per_dag from public, anon, authenticated/)
+  const tel = sql.slice(sql.indexOf('function public.tel_toestel('), sql.indexOf('$$;', sql.indexOf('function public.tel_toestel(')))
+  assert.match(tel, /toon_online = false\) then return/, 'wie helemaal offline staat, telt niet mee')
+  assert.match(tel, /where toestel_per_dag\.aantal < \(select count\(\*\) from profiles\)/, 'nooit meer dan het aantal accounts')
+  assert.ok(lees('over.html').includes('op wat voor soort toestel Fibro gebruikt wordt'), 'Over Fibro noemt het toestel')
+}
+
 console.log('test-registratie: alles goed')

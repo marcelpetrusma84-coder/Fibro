@@ -23,7 +23,9 @@
 --     verandert laatst_gezien niet (bescherm_online in sql/profielvelden.sql). Oudere dagen dan 400 gaan weg.
 --   - actief in de laatste 24 uur, 7 dagen en 30 dagen (uit laatst_gezien, ook zonder wie offline staat);
 --   - komen nieuwe mensen terug: na een dag, en na een week;
---   - leeftijdsgroepen, uit het geboortejaar dat bij het aanmelden al werd bewaard.
+--   - leeftijdsgroepen, uit het geboortejaar dat bij het aanmelden al werd bewaard;
+--   - (v228) soort toestel: Android-app, Android in de browser, iPhone/iPad, computer. Alleen per dag opgeteld
+--     (tabel toestel_per_dag: datum, soort, aantal), zie 5b.
 begin;
 
 do $$
@@ -181,6 +183,39 @@ create trigger fibro_tel_actieve_dag
   when (new.laatst_gezien is distinct from old.laatst_gezien)
   execute function public.tel_actieve_dag();
 
+-- 5b. Soort toestel per dag (v228): alleen datum, soort en aantal. Home (toestel.js) meldt een keer per dag per
+--     toestel het soort; niet wie, en geen merk, model of browser. Wie 'helemaal offline' staat, telt niet mee.
+--     Een dag kan nooit meer van een soort hebben dan er accounts zijn. Oudere dagen dan 400 gaan weg.
+create table if not exists public.toestel_per_dag (
+  dag date not null,
+  soort text not null check (soort in ('android_app', 'android_web', 'iphone', 'computer', 'anders')),
+  aantal integer not null default 0 check (aantal >= 0),
+  primary key (dag, soort)
+);
+alter table public.toestel_per_dag enable row level security;
+revoke all on public.toestel_per_dag from public, anon, authenticated;
+
+create or replace function public.tel_toestel(soort_in text)
+returns void
+language plpgsql
+security definer
+set search_path to 'public'
+as $$
+declare
+  dag_nu date := (now() at time zone 'Europe/Amsterdam')::date;
+begin
+  if auth.uid() is null then return; end if;
+  if soort_in is null or soort_in not in ('android_app', 'android_web', 'iphone', 'computer', 'anders') then return; end if;
+  if exists (select 1 from profiles where id = auth.uid() and toon_online = false) then return; end if;
+  insert into toestel_per_dag (dag, soort, aantal) values (dag_nu, soort_in, 1)
+  on conflict (dag, soort) do update set aantal = toestel_per_dag.aantal + 1
+   where toestel_per_dag.aantal < (select count(*) from profiles);
+  delete from toestel_per_dag where dag < dag_nu - 400;
+end;
+$$;
+revoke execute on function public.tel_toestel(text) from public, anon;
+grant execute on function public.tel_toestel(text) to authenticated;
+
 -- 6. Het overzicht voor de moderatiepagina
 create or replace function public.beta_overzicht()
 returns jsonb
@@ -257,6 +292,17 @@ begin
                       then extract(year from now())::int - (u.raw_user_meta_data ->> 'geboortejaar')::int end as l
             from auth.users u
         ) leeftijden
+    ),
+    -- v228: soort toestel, de laatste 7 dagen (vandaag meegeteld) opgeteld, en vandaag apart
+    'toestellen', jsonb_build_object(
+      'dagen', (select count(distinct t.dag) from toestel_per_dag t
+                 where t.dag > (now() at time zone 'Europe/Amsterdam')::date - 7),
+      'week', coalesce((select jsonb_object_agg(x.soort, x.n) from (
+                 select t.soort, sum(t.aantal) as n from toestel_per_dag t
+                  where t.dag > (now() at time zone 'Europe/Amsterdam')::date - 7
+                  group by t.soort) x), '{}'::jsonb),
+      'vandaag', coalesce((select jsonb_object_agg(t.soort, t.aantal) from toestel_per_dag t
+                 where t.dag = (now() at time zone 'Europe/Amsterdam')::date), '{}'::jsonb)
     ),
     'uitnodigingen', coalesce((
       select jsonb_agg(r order by r.wanneer desc)

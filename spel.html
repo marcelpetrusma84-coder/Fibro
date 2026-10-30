@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=36"></script>
+<script src="taal.js?v=37"></script>
 <script src="controller.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title data-t>Fibro — Spel</title>
@@ -33,6 +33,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 .niveau-sub { font-size:13px; color:rgba(255,255,255,0.7); margin-bottom:6px; }
 .niveau-btn { width:220px; padding:12px 0; border-radius:12px; border:0.5px solid var(--border); background:var(--card); color:white; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; }
 .niveau-btn.gekozen { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; }
+.niveau-btn.levels { background:#050510; border:2px solid #00f0ff; color:#00f0ff; box-shadow:0 0 14px rgba(0,240,255,0.35); }
 .niveau-btn.vriend { margin-top:4px; background:linear-gradient(135deg,#20b9ad,#42d392); border:1px solid rgba(182,255,227,0.58); color:#05231c; box-shadow:0 7px 20px rgba(34,197,148,0.22); }
 .niveau-btn:active { transform:scale(0.96); }
 .melding { color:white; text-align:center; padding:24px; line-height:1.5; }
@@ -58,7 +59,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
 <script type="module">
   import * as Bordgeluid from './bordgeluid.js?v=197'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=222'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=237'
   import { supabase } from './supabase.js?v=95'
   import { startSpelUitnodigingLuisteraar } from './speluitnodiging.js?v=197'
   import { nieuweSpelSessie } from './spelsessie.js?v=1'
@@ -100,6 +101,9 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
       try { localStorage.setItem(recordSleutel, String(n)) } catch (e) {}
       return true
     },
+    // 30 okt 2026: een spel kan zelf iets onthouden (Neo Paddle: welke levels open staan), per account op dit toestel
+    lees(naam, standaard) { try { const w = localStorage.getItem(recordSleutel + '_' + naam); return w === null ? standaard : w } catch (e) { return standaard } },
+    bewaar(naam, waarde) { try { localStorage.setItem(recordSleutel + '_' + naam, String(waarde)) } catch (e) {} },
   }
 
 
@@ -139,6 +143,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
         <div class="niveau-sub">${T('Tegen de computer. Kies een niveau:')}</div>
         ${NIVEAUS.map(n => `<button class="niveau-btn${n === vorige ? ' gekozen' : ''}" data-niveau="${n}">${NAMEN[n]}</button>`).join('')}
         ${spelId === 'schaken' ? `<button class="niveau-btn vriend" id="vriendKnop" type="button">${T('♟ Tegen een vriend')}</button>` : ''}
+        ${spel.levels ? `<div class="niveau-sub" style="margin-top:10px">${T('Of speel alleen de levels:')}</div><button class="niveau-btn levels" id="levelsKnop" type="button">${T('🧱 Levels')}</button>` : ''}
       </div>`
     inhoud.querySelectorAll('.niveau-btn').forEach(knop => {
       knop.onclick = () => {
@@ -149,6 +154,20 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     })
     const vriendKnop = document.getElementById('vriendKnop')
     if (vriendKnop) vriendKnop.onclick = kiesVriendVoorSchaken
+    const levelsKnop = document.getElementById('levelsKnop')
+    if (levelsKnop) levelsKnop.onclick = startLevels
+  }
+
+  // 30 okt 2026: Neo Paddle heeft ook levels voor alleen (alle blokjes weg). Zonder computer en zonder kanaal.
+  async function startLevels() {
+    inhoud.innerHTML = '<div class="melding">' + T('Laden...') + '</div>'
+    try {
+      const m = await import(spel.levels)
+      m.start({ solo, isActief: () => true })
+    } catch (e) {
+      console.error('[solo] levels starten mislukt', e)
+      inhoud.innerHTML = '<div class="melding">' + T('Het spel kon niet starten.') + '<br><button onclick="location.reload()">' + T('Opnieuw proberen') + '</button></div>'
+    }
   }
 
   async function kiesVriendVoorSchaken() {

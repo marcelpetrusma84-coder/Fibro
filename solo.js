@@ -312,6 +312,9 @@ export function vorBot({ stuur, niveau, isDicht }) {
 // Neo Paddle. Jij bent de host: jouw scherm rekent de bal uit en stuurt
 // 'balstaat'. De computer is de gast: zijn paddle staat boven (y = 20) en hij
 // stuurt alleen zijn plek ('paddle'). Maten zoals in pong-ui.js.
+// Neo Paddle v2 (30 okt 2026): de computer antwoordt met v: 2, dus er komen blokjes en power-ups. Hij let op de
+// bal die het eerst bij hem is, weet hoe breed zijn paddle is en pakt een goede power-up als er even geen bal komt.
+// 'Omgekeerd' doet hem niets (hij is een computer).
 // ─────────────────────────────────────────────
 const PONG = { B: 280, PB: 60, LIJN: 34, BAL: 8 }
 const PONG_NIVEAU = {
@@ -336,27 +339,35 @@ export function pongVoorspel(bal, lijnY) {
 export function pongBot({ stuur, niveau, isDicht }) {
   const n = PONG_NIVEAU[niveau] || PONG_NIVEAU.normaal
   let x = PONG.B / 2 - PONG.PB / 2
-  let bal = null, balTijd = 0
+  let ballen = [], balTijd = 0
+  let capsules = []
+  let breedte = PONG.PB
   let richting = 0, afwijking = 0
   let vorigeX = null
   const tik = setInterval(() => {
     if (isDicht()) { clearInterval(tik); return }
     let doel = PONG.B / 2
-    if (bal) {
-      // Bal doorrekenen sinds het laatste bericht (60 beelden per seconde).
+    if (ballen.length) {
+      // Ballen doorrekenen sinds het laatste bericht (60 beelden per seconde).
       const f = Math.min((Date.now() - balTijd) / 16.7, 6)
-      const nu = { x: bal.x + bal.vx * f, y: bal.y + bal.vy * f, vx: bal.vx, vy: bal.vy }
-      const r = nu.vy < 0 ? -1 : 1
+      const nu = ballen.map(b => ({ x: b.x + b.vx * f, y: b.y + b.vy * f, vx: b.vx, vy: b.vy }))
+      // Neo Paddle v2: er kunnen meer ballen zijn. Let op de bal die het eerst bij mij is.
+      let eerst = null, frames = Infinity
+      for (const b of nu) if (b.vy < 0) { const fr = (b.y - PONG.LIJN) / -b.vy; if (fr >= 0 && fr < frames) { frames = fr; eerst = b } }
+      const r = eerst ? -1 : 1
       if (r !== richting) {
         richting = r
         // Elke keer dat de bal eraan komt een nieuwe kleine misser.
         afwijking = (Math.random() * 2 - 1) * n.fout
       }
-      const aan = pongVoorspel(nu, PONG.LIJN)
-      if (aan !== null) doel = aan + afwijking
-      else doel = PONG.B / 2 + (nu.x - PONG.B / 2) * n.rust * 5
+      const aan = eerst ? pongVoorspel(eerst, PONG.LIJN) : null
+      // Een goede power-up die naar mij toe valt, terwijl er even geen bal aankomt: die pakken
+      const goed = capsules.find(c => c.vy < 0 && c.goed)
+      if (aan !== null && !(goed && frames > 70)) doel = aan + afwijking
+      else if (goed) doel = goed.x
+      else doel = PONG.B / 2 + (nu[0].x - PONG.B / 2) * n.rust * 5
     }
-    const gewenst = Math.max(0, Math.min(PONG.B - PONG.PB, doel - PONG.PB / 2))
+    const gewenst = Math.max(0, Math.min(PONG.B - breedte, doel - breedte / 2))
     const stap = Math.max(-n.snel, Math.min(n.snel, gewenst - x))
     x += stap
     const afgerond = Math.round(x * 10) / 10
@@ -364,9 +375,16 @@ export function pongBot({ stuur, niveau, isDicht }) {
   }, 50)
   return {
     ontvang(event, p) {
-      if (event === 'pong-klaar') stuur('pong-klaar-terug', {})
-      else if (event === 'balstaat' && p.bal) { bal = p.bal; balTijd = Date.now() }
-      else if (event === 'opnieuw') { bal = null; richting = 0 }
+      if (event === 'pong-klaar') stuur('pong-klaar-terug', { v: 2 })
+      else if (event === 'balstaat') {
+        if (Array.isArray(p.ballen) && p.ballen.length) ballen = p.ballen.map(a => ({ x: a[0], y: a[1], vx: a[2], vy: a[3] }))
+        else if (p.bal) ballen = [p.bal]
+        // Neo Paddle v2: mijn paddle (boven) kan breder of smaller zijn; goede power-ups vang ik graag
+        breedte = (p.eff && p.eff.boven && p.eff.boven.b) || PONG.PB
+        capsules = Array.isArray(p.caps) ? p.caps.map(c => ({ x: c[0], vy: c[2], goed: ['groot', 'schild', 'traag', 'multibal', 'vuur'].includes(c[3]) })) : []
+        balTijd = Date.now()
+      }
+      else if (event === 'opnieuw') { ballen = []; richting = 0 }
     },
     stop() { clearInterval(tik) },
   }
@@ -386,7 +404,8 @@ export const SOLO_SPELLEN = {
   vieroprij:    { naam: 'Four in a Row', icon: '🔴', bestand: './vieroprij-ui.js?v=147', bot: vorBot },
   schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=199',  bot: schaakBot, motor: './schaak.js?v=95', motorNaam: 'Schaak' },
   dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=147',   bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
-  pong:         { naam: 'Neo Paddle',    icon: '🏓', bestand: './pong-ui.js?v=147',     bot: pongBot },
+  // 30 okt 2026: Neo Paddle v2 (blokjes en power-ups) en levels voor alleen (spel.html toont een knop 🧱 Levels).
+  pong:         { naam: 'Neo Paddle',    icon: '🏓', bestand: './pong-ui.js?v=237',     bot: pongBot, levels: './neopaddle-levels.js?v=1' },
   // Ghost Tag heeft zelf al een computerspookje: zonder kanaal speel je daartegen.
   // gewoneScherpte: op telefoons niet op dubbele scherpte tekenen (4x minder beeldpunten). Sinds v177 gebruikt
   // geen spel het meer (spel.html kent het nog).

@@ -251,6 +251,7 @@ import { pasBlokstijlToe } from './blokstijl.js?v=95'
 import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=95'
 import { startHeartbeat } from './heartbeat.js?v=117'
 import { meldToestel } from './toestel.js?v=1'
+import * as GB from './gastenboekstijl.js?v=1'
 import { initSync } from './sync.js?v=162'
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -1918,61 +1919,29 @@ async function renderGastenboek(c, uid) {
     } catch (e) {}
   }
 
-  // Papier: warme ondergrond, blauwe liniatuur, rode kantlijn, vouw links.
-  const papier = [
-    'display:flex',
-    'flex-direction:column',
-    'align-items:stretch',
-    'text-align:left',
-    'gap:0',
-    'background-color:#f3ead6',
-    'background-image:repeating-linear-gradient(transparent,transparent 25px,rgba(70,90,130,0.16) 25px,rgba(70,90,130,0.16) 26px),linear-gradient(90deg,rgba(120,90,60,0.22),rgba(120,90,60,0) 22px)',
-    'border-radius:4px 10px 10px 4px',
-    'box-shadow:inset 3px 0 6px rgba(90,60,30,0.18),0 2px 10px rgba(0,0,0,0.35)',
-    'font-family:Georgia,"Iowan Old Style","Times New Roman",serif',
-    'color:#3a3226',
-    'padding:12px 14px 12px 26px',
-    'position:relative',
-    'perspective:900px'
-  ].join(';')
-
-  c.style.cssText += ';' + papier
-
-  c.innerHTML = `
-    <div style="position:absolute;top:0;bottom:0;left:18px;width:1px;background:rgba(170,60,60,0.35)"></div>
-    <div id="gbl" class="gb-blad" style="flex:1;min-height:0;overflow:hidden"></div>
-    <div id="gbl-nav" style="display:flex;align-items:center;gap:8px;font-size:12px;color:#8a7f6d;padding:4px 0 2px"></div>
-    <div style="display:flex;align-items:center;gap:8px;border-top:1px solid rgba(90,70,40,0.25);padding-top:8px">
-      <input id="gbi" maxlength="300" placeholder="${T('Schrijf iets in het boek...')}" style="flex:1;min-width:0;background:transparent;border:0;outline:0;font-family:inherit;font-size:14px;color:#2f2a20;padding:2px 0">
-      <button id="gbs" title="${T('Plaatsen')}" style="background:transparent;border:0;cursor:pointer;font-size:17px;line-height:1;color:#4a5a7a;padding:2px 4px">\u2712</button>
-    </div>`
+  // v235: het uiterlijk staat in gastenboekstijl.js (ook gebruikt door vriend-profiel.html):
+  // lijntjes die precies bij de tekst passen, of zonder lijntjes (Profiel > Widgets)
+  const papier = GB.papierAan(uid)
+  c.style.cssText += ';' + GB.containerStijl(papier)
+  c.innerHTML = GB.binnenHtml({ papier, lijstId: 'gbl', navId: 'gbl-nav', invoerId: 'gbi', knopId: 'gbs', plaatsHouder: T('Schrijf iets in het boek...'), plaatsenTitel: T('Plaatsen') })
+  const opDeLijntjes = GB.houdOpDeLijntjes(c, c.querySelector('#gbl'), c.querySelector('#gbl-nav'), papier)
 
   let alles = []
   let blad = 0
 
   const bladen = () => Math.max(1, Math.ceil(alles.length / 4))
 
-  const tekenBericht = e => {
-    const avSrc = veiligeAfbeelding(e.author?.avatar_data)
-    const av = avSrc
-      ? `<img src="${avSrc}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;filter:sepia(0.25)">`
-      : `<div style="width:22px;height:22px;border-radius:50%;background:rgba(74,90,122,0.15);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">${escH(e.author?.avatar_url||'\u270D')}</div>`
-    return `<div style="padding:7px 0;border-bottom:1px solid rgba(90,70,40,0.12)">
-      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
-        ${av}
-        <span style="font-size:13px;font-weight:700;color:#33415c">${escH(e.author?.username||'?')}</span>
-        <span style="font-size:11px;color:#9a8f7c;margin-left:auto">${escH(wanneer(e.created_at))}</span>
-      </div>
-      <div style="font-size:14px;line-height:1.45;word-break:break-word;padding-left:29px">${escH(e.content)}</div>
-    </div>`
-  }
+  const tekenBericht = e => GB.berichtHtml({
+    papier, avSrc: veiligeAfbeelding(e.author?.avatar_data), avTekst: escH(e.author?.avatar_url || '\u270D'),
+    naam: escH(e.author?.username || '?'), tijd: escH(wanneer(e.created_at)), tekst: escH(e.content)
+  })
 
   const tekenNav = () => {
     const nav = c.querySelector('#gbl-nav')
     if (!nav) return
-    if (alles.length <= 4) { nav.innerHTML = ''; return }
+    if (alles.length <= 4) { nav.innerHTML = ''; opDeLijntjes(true); return }
     const knop = (richting, teken, uit) =>
-      `<button data-blader="${richting}" style="background:transparent;border:0;font-family:inherit;font-size:16px;line-height:1;padding:2px 6px;color:#4a5a7a;cursor:${uit?'default':'pointer'};opacity:${uit?0.25:1}" ${uit?'disabled':''}>${teken}</button>`
+      `<button data-blader="${richting}" style="${GB.bladerKnopStijl(papier, uit)}" ${uit?'disabled':''}>${teken}</button>`
     nav.innerHTML =
       knop('terug', '\u2039', blad === 0) +
       `<span style="margin:0 auto">${T('blz. {n} van {m}', { n: blad + 1, m: bladen() })}</span>` +
@@ -1980,13 +1949,14 @@ async function renderGastenboek(c, uid) {
     nav.querySelectorAll('[data-blader]').forEach(b => {
       b.addEventListener('click', () => blader(b.dataset.blader))
     })
+    opDeLijntjes(true)
   }
 
   const tekenBlad = richting => {
     const l = c.querySelector('#gbl')
     if (!l) return
     if (!alles.length) {
-      l.innerHTML = '<div style="font-size:14px;font-style:italic;color:#8a7f6d;padding:14px 4px">' + T('Dit boek is nog leeg.') + '</div>'
+      l.innerHTML = GB.leegHtml(papier, T('Dit boek is nog leeg.'))
       tekenNav()
       return
     }
@@ -2085,7 +2055,7 @@ async function renderGastenboek(c, uid) {
   let bewaardIets = false
   try { bewaardIets = localStorage.getItem(gbSleutel) !== null } catch (e) {}
   if (bewaardIets || !navigator.onLine) toon(leesGb(), true)
-  else { const l = c.querySelector('#gbl'); if (l) l.innerHTML = '<div style="font-size:14px;font-style:italic;color:#8a7f6d;padding:14px 4px">' + T('Bladzijden laden\u2026') + '</div>' }
+  else { const l = c.querySelector('#gbl'); if (l) l.innerHTML = GB.leegHtml(papier, T('Bladzijden laden\u2026')) }
   ververs(false).catch(e => console.warn('[gastenboek] ophalen mislukt', e))
   // v127: is er weer internet, dan het boek opnieuw ophalen (het laatst getekende boek)
   window._gbVerversen = async () => { if (!c.isConnected) return; await ververs(false) }

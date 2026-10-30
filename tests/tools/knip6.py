@@ -1,8 +1,10 @@
-# knip6.py <bron.png> <EDSR_x4.pb> <uitmap> [controle.png] : stickervel 6 uit het plaatje van Marcel (30 okt 2026).
+# knip6.py <bron.png> <model> <uitmap> [controle.png] : stickervel 6 uit het plaatje van Marcel (30 okt 2026).
+# <model> = RealESRGAN_x4plus_anime_6B.pth (scherpst; github.com/xinntao/Real-ESRGAN, BSD-3, via esrgan.py hiernaast; nodig: torch)
+#        of RealESRGAN_x4plus.pth, of EDSR_x4.pb (de eerste versie, zachter). Modellen staan niet in de repo (gereedschap).
 # <bron.png> (471 x 328, 12 grote emoji-stickers met een witte rand op donkerblauw, 4 x 3, met kleine stickertjes
 # ertussen) staat niet in de repo. <uitmap>/01.webp .. 12.webp = stickers/f6/. controle.png: alle 12 op een
 # ruitjespatroon en op een donkere chat.
-# Het plaatje is klein (elke sticker ~95 px). Daarom vergroten we 4 keer met het model EDSR_x4 (OpenCV dnn_superres;
+# Het plaatje is klein (elke sticker ~95 px). Daarom vergroten we 4 keer: met Real-ESRGAN (anime_6B, het scherpst) of EDSR_x4 (OpenCV dnn_superres;
 # het model komt van github.com/Saafke/EDSR_Tensorflow, Apache 2.0, en staat niet in de repo: het is alleen gereedschap).
 # Nodig: Pillow, numpy, scipy, opencv-contrib-python-headless.
 # Werkwijze (zoals knip5.py): de witte rand van elke sticker zoeken; alles binnen die rand is de sticker. Buiten de
@@ -13,11 +15,19 @@ import numpy as np
 from PIL import Image, ImageFilter
 from scipy import ndimage as nd
 import cv2
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 BRON, MODEL, UIT = sys.argv[1], sys.argv[2], sys.argv[3]; CONTROLE = sys.argv[4] if len(sys.argv) > 4 else None
 KWAL, STEIL = 78, 2.5
+RAND_ZACHT = 3.0  # het masker komt van ~95 px: flink vervagen en dan strak afsnijden geeft een gladde rand zonder trapjes
 os.makedirs(UIT, exist_ok=True)
-sr = cv2.dnn_superres.DnnSuperResImpl_create(); sr.readModel(MODEL); sr.setModel('edsr', 4)
+if MODEL.endswith('.pth'):
+    import esrgan
+    net = esrgan.laad(MODEL, 6 if 'anime' in MODEL else 23)
+    def vier_keer(rgb): return esrgan.vergroot(net, rgb)
+else:
+    sr = cv2.dnn_superres.DnnSuperResImpl_create(); sr.readModel(MODEL); sr.setModel('edsr', 4)
+    def vier_keer(rgb): return cv2.cvtColor(sr.upsample(cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)), cv2.COLOR_BGR2RGB)
 
 beeld = np.asarray(Image.open(BRON).convert('RGB')).astype(np.int16)
 H, W = beeld.shape[:2]
@@ -49,10 +59,8 @@ for i, (k, (sy, sx)) in enumerate(groot):
     buiten = ~voor
     voor = voor & ~(eigen & ~echtwit & nd.binary_dilation(buiten, iterations=1))
     vak[~voor] = 255                                 # buiten de sticker: wit, zodat er geen blauw de rand in lekt
-    # 4 keer vergroten (EDSR verwacht BGR)
-    bgr = cv2.cvtColor(vak.astype(np.uint8), cv2.COLOR_RGB2BGR)
-    rgb = cv2.cvtColor(sr.upsample(bgr), cv2.COLOR_BGR2RGB)
-    alfa = Image.fromarray((voor * 255).astype(np.uint8)).resize((rgb.shape[1], rgb.shape[0]), Image.BICUBIC).filter(ImageFilter.GaussianBlur(1.2))
+    rgb = vier_keer(vak.astype(np.uint8))           # 4 keer vergroten
+    alfa = Image.fromarray((voor * 255).astype(np.uint8)).resize((rgb.shape[1], rgb.shape[0]), Image.BICUBIC).filter(ImageFilter.GaussianBlur(RAND_ZACHT))
     rgba = Image.fromarray(rgb).convert('RGBA'); rgba.putalpha(alfa)
     ys, xs = np.where(np.asarray(alfa) > 127)
     rgba = rgba.crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1))

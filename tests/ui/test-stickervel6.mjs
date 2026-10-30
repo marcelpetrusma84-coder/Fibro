@@ -24,6 +24,12 @@ const vel = FIBRO_VELLEN.find(v => v.id === 'f6')
 assert.ok(vel, 'vel f6 bestaat')
 assert.deepEqual(vel.stickers.map(s => s.nr), ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'])
 
+// 1b. Op verzoek van Marcel staat dit vel vooraan (Vel 1); de andere volgen in hun oude volgorde.
+//     De id's blijven: f1-01 is nog steeds 'Tranen van het lachen' (dat staat in oude berichten en moods).
+assert.deepEqual(FIBRO_VELLEN.map(v => v.id), ['f6', 'f1', 'f2', 'f3', 'f4', 'f5'])
+assert.equal(zoekSticker('f1-01').naam[0], 'Tranen van het lachen')
+assert.equal(zoekSticker('f6-12').naam[0], 'Vloeken')
+
 // 2. Per sticker: plaatje, naam, beweging, geluid
 for (const s of vel.stickers) {
   const bestand = 'stickers/f6/' + s.nr + '.webp'

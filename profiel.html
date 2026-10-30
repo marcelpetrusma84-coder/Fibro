@@ -15,6 +15,7 @@
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
 <script src="taal.js?v=30"></script>
+<script>Object.assign(window.FIBRO_EN ||= {}, { 'Vuurwerk': 'Fireworks', 'Onweer': 'Thunderstorm', 'Glitter': 'Glitter' }) // v234: nieuwe animaties</script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Stijl</title>
@@ -349,6 +350,9 @@ input, textarea { font-size:16px !important; }
       <div class="anim-cell" id="anim-vlinders" onclick="selectAnimatie('vlinders')"><div class="anim-icon">🦋</div><div class="anim-name" data-t>Vlinders</div></div>
       <div class="anim-cell" id="anim-vuurvliegjes" onclick="selectAnimatie('vuurvliegjes')"><div class="anim-icon">✨</div><div class="anim-name" data-t>Vuurvliegjes</div></div>
       <div class="anim-cell" id="anim-confetti" onclick="selectAnimatie('confetti')"><div class="anim-icon">🎉</div><div class="anim-name" data-t>Confetti</div></div>
+      <div class="anim-cell" id="anim-vuurwerk" onclick="selectAnimatie('vuurwerk')"><div class="anim-icon">🎆</div><div class="anim-name" data-t>Vuurwerk</div></div>
+      <div class="anim-cell" id="anim-onweer" onclick="selectAnimatie('onweer')"><div class="anim-icon">⛈️</div><div class="anim-name" data-t>Onweer</div></div>
+      <div class="anim-cell" id="anim-glitter" onclick="selectAnimatie('glitter')"><div class="anim-icon">💎</div><div class="anim-name" data-t>Glitter</div></div>
     </div>
   </div>
 </div>
@@ -544,7 +548,7 @@ function _profielUid() {
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
 import { startMeldingen } from './meldingen.js?v=187'
-import { laadThema, bewaarThemaCache } from './thema.js?v=204'
+import { laadThema, bewaarThemaCache } from './thema.js?v=234'
 import { startHeartbeat } from './heartbeat.js?v=117'
 import { initSync } from './sync.js?v=162'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=149'
@@ -561,7 +565,7 @@ const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','�
 // widget 'Sticker board' zijn weg: ze werden alleen op dit toestel bewaard en nergens getoond.
 import { LETTERTYPES, laadFont } from './lettertypes.js?v=130'
 import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=95'
-import { pasAnimatieToe } from './animatie.js?v=95'
+import { pasAnimatieToe, startOp as startAnimatieOp } from './animatie.js?v=234'
 window.blokAangepast = function(){
   const s = {
     kleur: document.getElementById("blokKleur").value,
@@ -1071,8 +1075,10 @@ window.verwijderWallpaper=async function(){await wisEigenAchtergrondFoto();toonA
 var deeltjes=[]
 window.selectAnimatie=function(naam){huidigeAnimatie=naam;updateAnimatieUI();startAnimatiePreview()}
 function updateAnimatieUI(){document.querySelectorAll('.anim-cell').forEach(c=>c.classList.remove('selected'));const el=document.getElementById('anim-'+huidigeAnimatie);if(el)el.classList.add('selected')}
-function startAnimatiePreview(){stopAnimatiePreview();const canvas=document.getElementById('previewCanvas');if(!canvas)return;const ctx=canvas.getContext('2d');canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;if(huidigeAnimatie==='geen'){ctx.clearRect(0,0,canvas.width,canvas.height);return};deeltjes=[];for(let i=0;i<60;i++)deeltjes.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*0.5,vy:Math.random()*0.8+0.2,grootte:Math.random()*3+1,alpha:Math.random(),kleur:huidigeAnimatie==='confetti'?`hsl(${Math.random()*360},80%,60%)`:'white'});function teken(){ctx.clearRect(0,0,canvas.width,canvas.height);deeltjes.forEach(d=>{ctx.globalAlpha=d.alpha;ctx.fillStyle=d.kleur;if(huidigeAnimatie==='sterren'||huidigeAnimatie==='vuurvliegjes'){ctx.beginPath();ctx.arc(d.x,d.y,d.grootte,0,Math.PI*2);ctx.fill();d.alpha=0.3+Math.sin(Date.now()*0.003+d.x)*0.7}else if(huidigeAnimatie==='sneeuw'||huidigeAnimatie==='bubbels'){ctx.beginPath();ctx.arc(d.x,d.y,d.grootte+1,0,Math.PI*2);ctx.fill();d.y+=d.vy*0.5;d.x+=Math.sin(Date.now()*0.001+d.y)*0.3}else if(huidigeAnimatie==='regen'){ctx.fillRect(d.x,d.y,1,d.grootte*4);d.y+=d.vy*3;d.x+=0.5}else{ctx.fillRect(d.x,d.y,d.grootte*2,d.grootte);d.y+=d.vy;d.x+=Math.sin(Date.now()*0.002+d.y)*0.8};if(d.y>canvas.height)d.y=-10;if(d.x>canvas.width)d.x=0;if(d.x<0)d.x=canvas.width});ctx.globalAlpha=1;animFrame=requestAnimationFrame(teken)};teken()}
-function stopAnimatiePreview(){if(animFrame){cancelAnimationFrame(animFrame);animFrame=null}}
+// v234: het voorbeeld gebruikt dezelfde tekencode als de echte achtergrond (animatie.js)
+let stopVoorbeeld=null
+function startAnimatiePreview(){stopAnimatiePreview();const canvas=document.getElementById('previewCanvas');if(!canvas)return;canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;stopVoorbeeld=startAnimatieOp(canvas,huidigeAnimatie)}
+function stopAnimatiePreview(){if(stopVoorbeeld){stopVoorbeeld();stopVoorbeeld=null}}
 // v129: elk lettertype laat zichzelf zien (ook als er al een ander lettertype voor de hele pagina geldt),
 // en wordt pas geladen als het in beeld komt. Kiezen = meteen de hele pagina in dat lettertype.
 function pasLettertypeLiveToe(fam){document.querySelectorAll('style').forEach(st=>{if(st.id==='fibro-font-style'||/^\s*\*\s*\{\s*font-family:/.test(st.textContent))st.remove()});if(!fam){document.body.style.fontFamily='';return}try{laadFont(String(fam).split(',')[0].replace(/['"]/g,'').trim())}catch(e){}const st=document.createElement('style');st.id='fibro-font-style';st.textContent='* { font-family: '+fam+' !important; }';document.head.appendChild(st);document.body.style.fontFamily=fam}

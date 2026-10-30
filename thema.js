@@ -1,5 +1,5 @@
 import { supabase } from './supabase.js?v=95'
-import { pasAnimatieToe } from './animatie.js?v=95'
+import { pasAnimatieToe } from './animatie.js?v=234'
 import { laadFont } from './lettertypes.js?v=130'
 
 // ========================

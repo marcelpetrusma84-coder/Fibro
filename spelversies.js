@@ -22,7 +22,7 @@ export const SPEL_VERSIES = {
   breakout: 1,       // Block It
   swarm: 1,          // The Swarm
   endlessrunner: 1,  // Runner & Gunner
-  shmup: 4,          // Neon Raiders
+  shmup: 5,          // Neon Raiders (v5: VERDER pas na 3 seconden OPNIEUW vasthouden)
 }
 
 export function spelVersie(naam) {

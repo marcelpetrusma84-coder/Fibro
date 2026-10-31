@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=44"></script>
+<script src="taal.js?v=46"></script>
 <script src="apk.js?v=1"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -151,6 +151,7 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
   </div>
 </div>
 <div id="apkPlek" style="padding:0 16px"></div>
+<div id="beginschermTip" style="padding:0 16px"></div>
 <script>try { if (FibroApk.toonDownload()) { var apkKaart = FibroApk.kaart({ sluitbaar: true }); if (apkKaart) document.getElementById('apkPlek').appendChild(apkKaart) } } catch (e) {} // Android in de browser: de app aanbieden (apk.js)</script>
 <script>
 // v188: het rode stipje op je avatar als je op offline staat. Eerst de keuze op dit toestel (fibro_ik_offline, gezet door
@@ -2323,77 +2324,43 @@ async function openBewaren() {
   } catch (e) {}
 }
 
-// v178: uitleg om Fibro als app op het beginscherm te zetten, voor de iPhone (Safari) en Android (Chrome).
-// Het toestel waarop je kijkt staat bovenaan. Draait Fibro al als app (los van de browser), dan staat dat erboven.
+// v178: uitleg om Fibro als app op het beginscherm te zetten. v248: met tekeningen, per toestel en iOS-versie
+// (beginscherm.js; ook gebruikt door Profiel > Meldingen aanzetten).
 function openAppUitleg() {
-  const achter = document.createElement('div')
-  achter.id = 'appScherm'
-  achter.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center'
-  const kaart = document.createElement('div')
-  kaart.setAttribute('role', 'dialog')
-  kaart.setAttribute('aria-modal', 'true')
-  kaart.setAttribute('aria-labelledby', 'appTitel')
-  kaart.tabIndex = -1
-  kaart.style.cssText = 'width:100%;max-width:480px;max-height:88vh;overflow-y:auto;outline:none;background:#1a0a2e;border:0.5px solid var(--border);border-radius:20px 20px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));color:var(--text)'
-  const titel = document.createElement('h2')
-  titel.id = 'appTitel'
-  titel.textContent = T('\u{1F4F2} Fibro als app installeren')
-  titel.style.cssText = 'font-size:18px;margin:0 0 10px;color:var(--accent)'
-  const alinea = (html, stijl) => {
-    const e = document.createElement('p')
-    e.innerHTML = html
-    e.style.cssText = 'font-size:14px;line-height:1.5;margin:0 0 12px;' + (stijl || '')
-    return e
-  }
-  const blok = (kop, stappen, noot) => {
-    const d = document.createElement('section')
-    d.style.cssText = 'border:0.5px solid var(--border);border-radius:14px;padding:12px 14px;margin:0 0 12px;background:rgba(255,255,255,0.04)'
-    const h = document.createElement('h3')
-    h.textContent = kop
-    h.style.cssText = 'font-size:15px;margin:0 0 8px;color:var(--text)'
-    const ol = document.createElement('ol')
-    ol.style.cssText = 'margin:0;padding-left:20px;font-size:14px;line-height:1.5'
-    for (const stap of stappen) { const li = document.createElement('li'); li.innerHTML = stap; li.style.marginBottom = '6px'; ol.appendChild(li) }
-    d.append(h, ol)
-    if (noot) d.appendChild(alinea(noot, 'margin:8px 0 0;font-size:13px;opacity:0.85'))
-    return d
-  }
-  let alApp = false
-  try { alApp = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true } catch (e) {}
-  const ua = navigator.userAgent || ''
-  const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-  const android = !ios && /Android/.test(ua)
-  const iphone = blok('iPhone \u00B7 Safari', [
-    T('Open Fibro in <b>Safari</b>.'),
-    T('Tik op de deelknop (vierkantje met pijl omhoog). Bij nieuwere iPhones eerst op <b>\u2022\u2022\u2022</b> naast het adres en dan op <b>Deel</b>.'),
-    T('Kies <b>Zet op beginscherm</b>. Zie je <b>Open als webapp</b>, laat dat dan aan staan.'),
-    T('Tik op <b>Voeg toe</b>.'),
-    T('Open Fibro daarna via het nieuwe icoon. Dat heeft eigen opslag: log daar opnieuw in en herstel je sleutel met Face ID (of je herstelcode).'),
-  ], T('Op de iPhone krijg je alleen zo meldingen.'))
-  iphone.id = 'appIphone'
-  const droid = blok('Android \u00B7 Chrome', [
-    T('Open Fibro in <b>Chrome</b>.'),
-    T('Tik rechtsboven op <b>\u22EE</b> (drie puntjes).'),
-    T('Kies <b>App installeren</b> of <b>Toevoegen aan startscherm</b> en dan <b>Installeren</b>.'),
-    T('Open Fibro daarna via het nieuwe icoon.'),
-  ])
-  droid.id = 'appAndroid'
-  const sluit = document.createElement('button')
-  sluit.textContent = T('Sluiten')
-  sluit.style.cssText = 'margin-top:4px;width:100%;min-height:44px;border-radius:12px;border:0.5px solid var(--border);background:rgba(255,255,255,0.08);color:var(--text);font-size:15px;cursor:pointer;font-family:inherit'
-  const dicht = () => { achter.remove(); document.removeEventListener('keydown', esc, true) }
-  const esc = (e) => { if (e.key === 'Escape') dicht() }
-  document.addEventListener('keydown', esc, true)
-  sluit.onclick = dicht
-  achter.onclick = (e) => { if (e.target === achter) dicht() }
-  kaart.appendChild(titel)
-  if (alApp) kaart.appendChild(alinea(T('\u2713 Je gebruikt Fibro nu al als app.'), 'color:#86efac;font-weight:600'))
-  kaart.appendChild(alinea(T('Zet Fibro op het beginscherm van je telefoon. Dan opent Fibro als een gewone app: over het hele scherm, met meldingen en een bolletje bij ongelezen berichten.')))
-  kaart.append(...(android ? [droid, iphone] : [iphone, droid]), sluit)
-  achter.appendChild(kaart)
-  document.body.appendChild(achter)
-  kaart.focus()
+  import('./beginscherm.js?v=1').then(m => m.openBeginschermUitleg()).catch(e => console.warn('[beginscherm]', e))
 }
+
+// v248: tip voor wie Fibro op de iPhone in Safari gebruikt (niet als app): dan krijg je geen meldingen.
+// Wegtikken = een week niet meer.
+async function toonBeginschermTip() {
+  const plek = document.getElementById('beginschermTip')
+  if (!plek) return
+  let m
+  try { m = await import('./beginscherm.js?v=1') } catch (e) { return }
+  if (!m.iphoneZonderApp()) return
+  try { if (Date.now() - Number(localStorage.getItem('fibro_tip_beginscherm') || 0) < 7 * 86400000) return } catch (e) {}
+  const kaart = document.createElement('div')
+  kaart.className = 'beginscherm-tip'
+  kaart.setAttribute('role', 'note')
+  kaart.style.cssText = 'display:flex;align-items:center;gap:10px;margin:8px 0 4px;padding:10px 12px;border-radius:14px;border:1px solid rgba(192,132,252,0.45);background:rgba(192,132,252,0.1);font-size:13.5px;line-height:1.4'
+  const tekst = document.createElement('div')
+  tekst.style.cssText = 'flex:1;min-width:0'
+  tekst.innerHTML = T('\u{1F514} <b>Meldingen op je iPhone?</b> Zet Fibro op je beginscherm.')
+  const hoe = document.createElement('button')
+  hoe.type = 'button'
+  hoe.textContent = T('Hoe?')
+  hoe.style.cssText = 'flex-shrink:0;min-height:36px;padding:6px 14px;border-radius:18px;border:none;background:var(--accent,#c084fc);color:#1a0a2e;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit'
+  hoe.onclick = () => m.openBeginschermUitleg({ reden: 'meldingen' })
+  const weg = document.createElement('button')
+  weg.type = 'button'
+  weg.textContent = '\u00D7'
+  weg.setAttribute('aria-label', T('Tip sluiten'))
+  weg.style.cssText = 'flex-shrink:0;width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,0.1);color:var(--text,#fff);font-size:18px;cursor:pointer'
+  weg.onclick = () => { try { localStorage.setItem('fibro_tip_beginscherm', String(Date.now())) } catch (e) {}; kaart.remove() }
+  kaart.append(tekst, hoe, weg)
+  plek.appendChild(kaart)
+}
+toonBeginschermTip()
 
 // v142: de taal kiezen (Nederlands of Engels). Het menu-item heet in beide talen 'Taal / Language',
 // zodat je het ook terugvindt als je de andere taal niet leest. Kiezen = opslaan en de pagina opnieuw laden.

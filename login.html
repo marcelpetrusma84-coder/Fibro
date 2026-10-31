@@ -5,7 +5,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
   <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
-  <script src="taal.js?v=44"></script>
+  <script src="taal.js?v=46"></script>
   <script src="apk.js?v=1"></script>
   <script src="registratie.js?v=1"></script>
   <script>try { FibroApk.hervatUitnodiging() } catch (e) {} // in de app: een uitnodiging die wacht (apk.js)</script>
@@ -107,6 +107,14 @@
     <!-- REGISTREREN -->
     <div class="panel" id="panel-registreren">
       <div class="message" id="reg-msg"></div>
+      <!-- v248: op een iPhone in Safari eerst Fibro op het beginscherm zetten en daar het account maken: de app op het
+           beginscherm heeft eigen opslag, dus anders moet je daar opnieuw inloggen en je sleutel terugzetten (beginscherm.js) -->
+      <div id="reg-beginscherm" hidden style="margin-bottom:16px;padding:14px;border-radius:12px;border:1px solid rgba(192,132,252,0.5);background:rgba(192,132,252,0.1);">
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px;" data-t>📲 Gebruik je een iPhone?</div>
+        <div style="font-size:13.5px;line-height:1.5;margin-bottom:12px;" data-t>Zet Fibro eerst op je beginscherm en maak daar je account aan. Dan krijg je meldingen, en hoef je later niet opnieuw in te loggen.</div>
+        <button type="button" class="btn btn-primary" id="reg-beginscherm-hoe" style="margin-bottom:6px;" data-t>Laat zien hoe</button>
+        <button type="button" id="reg-beginscherm-toch" style="display:block;width:100%;background:none;border:none;color:var(--text);opacity:0.75;font-size:13px;text-decoration:underline;cursor:pointer;padding:8px;font-family:inherit;" data-t>Toch hier verdergaan</button>
+      </div>
       <div id="reg-form">
         <div class="beta-info" data-t>🧪 Fibro is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.</div>
         <div class="field">
@@ -712,6 +720,21 @@ window.herstelMetSleutel = async function() {
     } catch(e) {}
   }
   laadWallpaper()
+</script>
+<script type="module">
+// v248: de kaart 'Gebruik je een iPhone?' bij Registreren, alleen op een iPhone in Safari (niet als app)
+import { iphoneZonderApp, openBeginschermUitleg } from './beginscherm.js?v=1'
+const kaart = document.getElementById('reg-beginscherm')
+let weg = false
+try { weg = sessionStorage.getItem('fibro_reg_beginscherm_weg') === '1' } catch (e) {}
+if (kaart && iphoneZonderApp() && !weg) {
+  kaart.hidden = false
+  document.getElementById('reg-beginscherm-hoe').onclick = () => openBeginschermUitleg({ reden: 'account' })
+  document.getElementById('reg-beginscherm-toch').onclick = () => {
+    kaart.hidden = true
+    try { sessionStorage.setItem('fibro_reg_beginscherm_weg', '1') } catch (e) {}
+  }
+}
 </script>
 </body>
 </html>

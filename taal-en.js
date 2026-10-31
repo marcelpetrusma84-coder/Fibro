@@ -1691,4 +1691,8 @@ window.FIBRO_EN = {
   "MUIS: SLEPEN · Houd de linkermuisknop ingedrukt om te vliegen en schieten.": "MOUSE: DRAG · Hold the left mouse button to fly and fire.",
   "Dubbelklik op je eigen schip om de muisstand te wisselen.": "Double-click your own ship to switch mouse mode.",
   "MUIS: SLEPEN · Ingedrukt houden = vliegen en schieten.": "MOUSE: DRAG · Hold to fly and fire.",
+// ---- Neon Raiders: bereikt level bij iedere score ----
+  "Level {n}": "Level {n}",
+  "Level {n} · Uitgespeeld": "Level {n} · Completed",
+  "Level onbekend": "Level unknown",
 }

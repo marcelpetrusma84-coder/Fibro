@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=46"></script>
+<script src="taal.js?v=47"></script>
 <script src="controller.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title data-t>Fibro — Spel</title>
@@ -58,10 +58,11 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 </div>
 
 <script type="module">
-  import * as Bordgeluid from './bordgeluid.js?v=197'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=241'
+  import * as Bordgeluid from './bordgeluid.js?v=200'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=244'
   import { supabase } from './supabase.js?v=95'
   import { startSpelUitnodigingLuisteraar } from './speluitnodiging.js?v=197'
+  import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=3'
   import { nieuweSpelSessie } from './spelsessie.js?v=1'
 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -91,6 +92,19 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     } catch (e) {}
     return 'lokaal'
   }
+  const spelT = (tekst, waarden) => spelId === 'schaken' ? schaakT(tekst, waarden) : T(tekst, waarden)
+  const spelNaam = () => spelId === 'schaken' ? schaakT('Schaken') : spel.naam
+  if (spelId === 'schaken') {
+    const paginaTaal = maakSchaakTaal()
+    const vertaalPagina = () => {
+      const knop = document.getElementById('sluitKnop')
+      knop.title = schaakT('Terug')
+      knop.setAttribute('aria-label', schaakT('Terug'))
+      document.title = 'Fibro — ' + schaakT('Schaken')
+    }
+    paginaTaal.subscribe(vertaalPagina)
+    vertaalPagina()
+  }
   const recordSleutel = 'fibro_record_' + spelId + '_' + accountId()
   const solo = {
     record() { try { return parseInt(localStorage.getItem(recordSleutel), 10) || 0 } catch (e) { return 0 } },
@@ -108,9 +122,9 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
 
   if (!spel) {
-    inhoud.innerHTML = '<div class="melding">' + T('Dit spel kan nog niet alleen gespeeld worden.') + '<br><button onclick="location.href=\'index.html\'">' + T('Terug') + '</button></div>'
+    inhoud.innerHTML = '<div class="melding">' + spelT('Dit spel kan nog niet alleen gespeeld worden.') + '<br><button onclick="location.href=\'index.html\'">' + spelT('Terug') + '</button></div>'
   } else {
-    document.title = 'Fibro — ' + spel.naam
+    document.title = 'Fibro — ' + spelNaam()
     // Ghost Tag, Twin Snakes, Runner & Gunner en Neon Raiders hebben een eigen startscherm.
     if (spel.zonderKanaal) start('normaal')
     else if (spel.arcade) startScherm()
@@ -119,12 +133,12 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
   // Arcadespellen: geen niveau, wel een startknop (dan mag het geluid meteen aan).
   function startScherm() {
-    titel.textContent = spel.icon + ' ' + spel.naam
+    titel.textContent = spel.icon + ' ' + spelNaam()
     inhoud.innerHTML = `
       <div class="niveau-kaart">
         <div class="niveau-icon">${esc(spel.icon)}</div>
-        <div class="niveau-naam">${esc(spel.naam)}</div>
-        <div class="niveau-sub">${T('Jouw record: {n}', { n: solo.record() })}</div>
+        <div class="niveau-naam">${esc(spelNaam())}</div>
+        <div class="niveau-sub">${spelT('Jouw record: {n}', { n: solo.record() })}</div>
         <button class="niveau-btn gekozen" id="startKnop">▶ Start</button>
       </div>`
     document.getElementById('startKnop').onclick = () => start('normaal')
@@ -134,16 +148,16 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     const sleutel = 'fibro_solo_niveau_' + spelId
     let vorige = 'normaal'
     try { vorige = localStorage.getItem(sleutel) || 'normaal' } catch (e) {}
-    const NAMEN = { makkelijk: T('Makkelijk'), normaal: T('Normaal'), moeilijk: T('Moeilijk') }
-    titel.textContent = spel.icon + ' ' + spel.naam
+    const NAMEN = { makkelijk: spelT('Makkelijk'), normaal: spelT('Normaal'), moeilijk: spelT('Moeilijk') }
+    titel.textContent = spel.icon + ' ' + spelNaam()
     inhoud.innerHTML = `
       <div class="niveau-kaart">
         <div class="niveau-icon">${esc(spel.icon)}</div>
-        <div class="niveau-naam">${esc(spel.naam)}</div>
-        <div class="niveau-sub">${T('Tegen de computer. Kies een niveau:')}</div>
+        <div class="niveau-naam">${esc(spelNaam())}</div>
+        <div class="niveau-sub">${spelT('Tegen de computer. Kies een niveau:')}</div>
         ${NIVEAUS.map(n => `<button class="niveau-btn${n === vorige ? ' gekozen' : ''}" data-niveau="${n}">${NAMEN[n]}</button>`).join('')}
-        ${spelId === 'schaken' ? `<button class="niveau-btn vriend" id="vriendKnop" type="button">${T('♟ Tegen een vriend')}</button>` : ''}
-        ${spel.levels ? `<div class="niveau-sub" style="margin-top:10px">${T('Of speel alleen de levels:')}</div><button class="niveau-btn levels" id="levelsKnop" type="button">${T('🧱 Levels')}</button>` : ''}
+        ${spelId === 'schaken' ? `<button class="niveau-btn vriend" id="vriendKnop" type="button">${spelT('♟ Tegen een vriend')}</button>` : ''}
+        ${spel.levels ? `<div class="niveau-sub" style="margin-top:10px">${spelT('Of speel alleen de levels:')}</div><button class="niveau-btn levels" id="levelsKnop" type="button">${spelT('🧱 Levels')}</button>` : ''}
       </div>`
     inhoud.querySelectorAll('.niveau-btn').forEach(knop => {
       knop.onclick = () => {
@@ -160,13 +174,13 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
   // 30 okt 2026: Neo Paddle heeft ook levels voor alleen (alle blokjes weg). Zonder computer en zonder kanaal.
   async function startLevels() {
-    inhoud.innerHTML = '<div class="melding">' + T('Laden...') + '</div>'
+    inhoud.innerHTML = '<div class="melding">' + spelT('Laden...') + '</div>'
     try {
       const m = await import(spel.levels)
       m.start({ solo, isActief: () => true })
     } catch (e) {
       console.error('[solo] levels starten mislukt', e)
-      inhoud.innerHTML = '<div class="melding">' + T('Het spel kon niet starten.') + '<br><button onclick="location.reload()">' + T('Opnieuw proberen') + '</button></div>'
+      inhoud.innerHTML = '<div class="melding">' + spelT('Het spel kon niet starten.') + '<br><button onclick="location.reload()">' + spelT('Opnieuw proberen') + '</button></div>'
     }
   }
 
@@ -180,33 +194,33 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     const kop = document.createElement('div')
     kop.className = 'vriend-kop'
     const tekst = document.createElement('div')
-    const titel = document.createElement('h2'); titel.textContent = T('Spelen tegen een vriend')
-    const sub = document.createElement('p'); sub.textContent = T('Kies een vriend om uit te nodigen voor schaken.'); sub.style.cssText = 'margin-top:5px;color:rgba(255,255,255,.65);font-size:13px;line-height:1.4'
+    const titel = document.createElement('h2'); titel.textContent = spelT('Spelen tegen een vriend')
+    const sub = document.createElement('p'); sub.textContent = spelT('Kies een vriend om uit te nodigen voor schaken.'); sub.style.cssText = 'margin-top:5px;color:rgba(255,255,255,.65);font-size:13px;line-height:1.4'
     tekst.append(titel, sub)
-    const sluit = document.createElement('button'); sluit.className = 'vriend-sluit'; sluit.type = 'button'; sluit.textContent = '×'; sluit.setAttribute('aria-label', T('Sluiten'))
+    const sluit = document.createElement('button'); sluit.className = 'vriend-sluit'; sluit.type = 'button'; sluit.textContent = '×'; sluit.setAttribute('aria-label', spelT('Sluiten'))
     sluit.onclick = () => modal.remove()
     kop.append(tekst, sluit)
     const lijst = document.createElement('div')
-    lijst.textContent = T('Vrienden laden…'); lijst.style.cssText = 'color:rgba(255,255,255,.7);padding:10px 0;font-size:14px'
+    lijst.textContent = spelT('Vrienden laden…'); lijst.style.cssText = 'color:rgba(255,255,255,.7);padding:10px 0;font-size:14px'
     kaart.append(kop, lijst); modal.append(kaart); document.body.append(modal)
     modal.onclick = event => { if (event.target === modal) modal.remove() }
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { lijst.textContent = T('Log in om een vriend uit te nodigen.'); return }
+    if (!user) { lijst.textContent = spelT('Log in om een vriend uit te nodigen.'); return }
     const { data: relaties, error } = await supabase.from('friendships').select('user_id, friend_id').or(`user_id.eq.${user.id},friend_id.eq.${user.id}`).eq('status', 'accepted')
-    if (error) { lijst.textContent = T('Je vrienden konden niet geladen worden. Probeer het opnieuw.'); return }
+    if (error) { lijst.textContent = spelT('Je vrienden konden niet geladen worden. Probeer het opnieuw.'); return }
     const ids = (relaties || []).map(r => r.user_id === user.id ? r.friend_id : r.user_id).filter(Boolean)
-    if (!ids.length) { lijst.textContent = T('Je hebt nog geen vrienden om uit te nodigen.'); return }
+    if (!ids.length) { lijst.textContent = spelT('Je hebt nog geen vrienden om uit te nodigen.'); return }
     const { data: vrienden, error: vriendFout } = await supabase.from('profiles').select('id,username,display_name,avatar_url,avatar_data').in('id', ids)
-    if (vriendFout || !vrienden?.length) { lijst.textContent = T('Je vrienden konden niet geladen worden. Probeer het opnieuw.'); return }
+    if (vriendFout || !vrienden?.length) { lijst.textContent = spelT('Je vrienden konden niet geladen worden. Probeer het opnieuw.'); return }
     lijst.textContent = ''
     vrienden.sort((a, b) => String(a.display_name || a.username || '').localeCompare(String(b.display_name || b.username || ''))).forEach(vriend => {
       const knop = document.createElement('button'); knop.className = 'vriend-rij'; knop.type = 'button'
       const avatar = document.createElement('span'); avatar.className = 'vriend-avatar'
       if (/^data:image\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=]+$/i.test(String(vriend.avatar_data || ''))) { const img = document.createElement('img'); img.src = vriend.avatar_data; img.alt = ''; avatar.append(img) }
       else avatar.textContent = vriend.avatar_url || '👤'
-      const naam = document.createElement('span'); naam.textContent = vriend.display_name || vriend.username || T('Vriend'); naam.style.cssText = 'font-weight:650;flex:1'
-      const pijl = document.createElement('span'); pijl.textContent = T('Uitnodigen ›'); pijl.style.cssText = 'color:#85f3c4;font-size:12px'
+      const naam = document.createElement('span'); naam.textContent = vriend.display_name || vriend.username || spelT('Vriend'); naam.style.cssText = 'font-weight:650;flex:1'
+      const pijl = document.createElement('span'); pijl.textContent = spelT('Uitnodigen ›'); pijl.style.cssText = 'color:#85f3c4;font-size:12px'
       knop.append(avatar, naam, pijl)
       knop.onclick = () => verstuurSchaakUitnodiging(vriend, lijst)
       lijst.append(knop)
@@ -216,17 +230,17 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
   async function verstuurSchaakUitnodiging(vriend, lijst) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user || !vriend?.id) return
-    lijst.textContent = T('Uitnodiging voor schaken versturen…')
+    lijst.textContent = spelT('Uitnodiging voor schaken versturen…')
     const [{ data: profiel }, sessieId] = await Promise.all([
       supabase.from('profiles').select('username,avatar_url,avatar_data').eq('id', user.id).single(),
       Promise.resolve(nieuweSpelSessie())
     ])
     const kanaal = supabase.channel('speluitnodiging-' + vriend.id, { config: { private: true } })
     const verstuurd = await kanaal.send({ type: 'broadcast', event: 'speluitnodiging', payload: {
-      van: user.id, vanNaam: profiel?.username || T('Vriend'), vanAvatar: profiel?.avatar_data || profiel?.avatar_url || '♟️', spelType: 'schaken', sessieId
+      van: user.id, vanNaam: profiel?.username || spelT('Vriend'), vanAvatar: profiel?.avatar_data || profiel?.avatar_url || '♟️', spelType: 'schaken', sessieId
     } })
     supabase.removeChannel(kanaal)
-    if (verstuurd !== 'ok') { lijst.textContent = T('De uitnodiging kon niet verstuurd worden. Probeer het opnieuw.'); return }
+    if (verstuurd !== 'ok') { lijst.textContent = spelT('De uitnodiging kon niet verstuurd worden. Probeer het opnieuw.'); return }
     await supabase.from('messages').insert({ sender_id:user.id, receiver_id:vriend.id, content:'spelinvite:schaken:' + user.id + ':' + sessieId })
     const q = new URLSearchParams({ spelVriend:vriend.id, spelType:'schaken', sessieId, starterId:user.id })
     location.href = 'chat.html?' + q.toString()
@@ -241,7 +255,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
       n++
       if (nu - sinds >= 1000) {
         const eigen = typeof window.fibroBeeldjes === 'number' ? window.fibroBeeldjes - begin : n
-        titel.textContent = spel.icon + ' ' + spel.naam + ' · ' + Math.round(eigen * 1000 / (nu - sinds)) + ' fps'
+        titel.textContent = spel.icon + ' ' + spelNaam() + ' · ' + Math.round(eigen * 1000 / (nu - sinds)) + ' fps'
         n = 0; sinds = nu; begin = window.fibroBeeldjes || 0
       }
       requestAnimationFrame(tel)
@@ -250,7 +264,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
   }
 
   async function start(niveau) {
-    inhoud.innerHTML = '<div class="melding">' + T('Laden...') + '</div>'
+    inhoud.innerHTML = '<div class="melding">' + spelT('Laden...') + '</div>'
     try {
       const m = await import(spel.bestand)
       // Zware spellen op de telefoon: tekenen op gewone scherpte in plaats van
@@ -263,12 +277,12 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
       const extra = spel.motorNaam ? { [spel.motorNaam]: motor } : {}
       kanaal = spel.zonderKanaal ? null : maakSoloKanaal(spel.bot, niveau, motor)
       // Jij bent altijd speler 1 en begint de eerste ronde.
-      m.start({ ...extra, Bordgeluid, spelKanaal: kanaal, benIkSpeler1: true, vriendNaam: T('Computer'), isActief: () => true, solo: spel.arcade ? solo : undefined })
+      m.start({ ...extra, Bordgeluid, spelKanaal: kanaal, benIkSpeler1: true, vriendNaam: spelT('Computer'), isActief: () => true, solo: spel.arcade ? solo : undefined })
       if (kanaal) kanaal.subscribe()
       if (spel.meetFps) meetBeeldjes()
     } catch (e) {
       console.error('[solo] starten mislukt', e)
-      inhoud.innerHTML = '<div class="melding">' + T('Het spel kon niet starten.') + '<br><button onclick="location.reload()">' + T('Opnieuw proberen') + '</button></div>'
+      inhoud.innerHTML = '<div class="melding">' + spelT('Het spel kon niet starten.') + '<br><button onclick="location.reload()">' + spelT('Opnieuw proberen') + '</button></div>'
     }
   }
 </script>

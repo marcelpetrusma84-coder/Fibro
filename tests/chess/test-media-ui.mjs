@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import vm from 'node:vm'
+import { vertaalSchaak } from '../../schaak-taal.js'
 
 // Exercise the actual chat UI functions without loading an authenticated page,
 // media devices, or network. Assertions are on the visible labels and controls.
@@ -12,7 +13,7 @@ const functions = functionNames.map(name => {
   return match[0]
 }).join('\n')
 
-function setup() {
+function setup(language = 'nl') {
   const elements = new Map(), events = []
   function element(id) {
     const classes = new Set()
@@ -31,6 +32,8 @@ function setup() {
   let mediaStatus = { localVideo: false, remoteVideo: false, localAudio: true, localAudioAvailable: true, remoteAudio: false, audioBlocked: false, connected: false }
   let captureResult = true
   const context = vm.createContext({
+    schaakT: (key, values) => vertaalSchaak(key, values, language),
+    spelT: (key, values) => vertaalSchaak(key, values, language),
     document: { getElementById: id => elements.get(id) || null },
     window: { dispatchEvent(event) { events.push(event) } },
     CustomEvent: class { constructor(type, init) { this.type = type; this.detail = init.detail } },
@@ -76,15 +79,15 @@ function setup() {
   assert.equal(app.elements.get('lokaalMedia').style.display, 'block')
   assert.equal(app.api.state().spelVideoAanvragen, false)
   assert.equal(app.api.state().spelVideoBezig, false)
-  assert.ok(app.events.some(event => event.type === 'fibro-chess-video-progress' && event.detail.tekst.startsWith('Your camera is on')))
+  assert.ok(app.events.some(event => event.type === 'fibro-chess-video-progress' && event.detail.tekst.startsWith('Je camera staat aan')))
 }
 
 {
   const app = setup()
   app.api.sync()
-  assert.match(app.elements.get('spelVideoAnderWachten').textContent, /can switch on/)
+  assert.match(app.elements.get('spelVideoAnderWachten').textContent, /kan de camera/)
   app.api.requested(true)
-  assert.match(app.elements.get('spelVideoAnderWachten').textContent, /Waiting for/)
+  assert.match(app.elements.get('spelVideoAnderWachten').textContent, /Wachten op/)
   app.status({ remoteVideo: true })
   assert.equal(app.elements.get('spelVideoAnderWachten').hidden, true, 'actual video clears the placeholder even if the status signal was lost')
   assert.equal(app.elements.get('spelVideoAnderWachten').textContent, '')
@@ -99,10 +102,10 @@ function setup() {
   assert.equal(button.hidden, false, 'blocked audio has a visible user action')
   app.status({ audioBlocked: false, localAudio: false })
   assert.equal(button.hidden, true)
-  assert.equal(mic.title, 'Unmute microphone')
+  assert.equal(mic.title, 'Microfoon aanzetten')
   assert.equal(mic.attributes['aria-pressed'], 'false')
   app.status({ localAudioAvailable: false })
-  assert.equal(mic.title, 'Enable microphone')
+  assert.equal(mic.title, 'Microfoon inschakelen')
   app.api.setGame(null)
   app.status({ audioBlocked: true })
   assert.equal(button.hidden, true, 'the game audio action is hidden when no game is active')
@@ -120,6 +123,20 @@ function setup() {
   assert.equal(ownFrame.classList.contains('is-seen'), false, 'a late acknowledgement cannot make a disconnected camera green')
   app.status({ localVideo: false, connected: true })
   assert.equal(ownFrame.classList.contains('is-seen'), false)
+}
+
+{
+  const app = setup('en')
+  app.status({ localVideo:true, audioBlocked:true, localAudio:false })
+  assert.ok(app.events.some(event => event.detail.tekst?.startsWith('Your camera is on')))
+  assert.match(app.elements.get('spelVideoAnderWachten').textContent, /can switch on/)
+  assert.equal(app.elements.get('spelMuteBtn').title, 'Unmute microphone')
+  app.status({ localAudioAvailable:false })
+  assert.equal(app.elements.get('spelMuteBtn').title, 'Enable microphone')
+  app.api.requested(true)
+  assert.match(app.elements.get('spelVideoAnderWachten').textContent, /Waiting for/)
+  app.status({ localVideo:false })
+  assert.match(app.elements.get('spelVideoEigenWachten').textContent, /Your camera is off/)
 }
 
 console.log('PASS: camera labels follow live tracks, remote picture clears placeholder, audio playback action, microphone state, and confirmed camera border.')

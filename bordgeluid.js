@@ -2,7 +2,7 @@
 // Aan/uit wordt onthouden in localStorage onder 'fibro_spelgeluid'.
 // v147: het knopje ook in het Engels (taal.js)
 
-import { renderCaptureSound } from './schaak-slaggeluid.js?v=1'
+import { renderCaptureSound } from './schaak-slaggeluid.js?v=2'
 
 const SLEUTEL = 'fibro_spelgeluid'
 let _ctx = null

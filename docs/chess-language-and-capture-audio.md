@@ -10,12 +10,14 @@ spelregels, punten, camera’s en toegankelijkheidslabels; hij begint geen nieuw
 partij en verplaatst of herstart geen camerastreams. Gebruikersnamen blijven intact.
 
 Bij slaan komt de waarde van het **veroverde** stuk uit de stelling vóór de zet:
-pion 1, paard/loper 3, toren 5 en dame 9. Eigen veroveringen krijgen een warme
-positieve klank; eigen verliezen een donkere, dalende dreun. Gewicht, resonantie
-en staart nemen toe met de waarde. De dame heeft een duidelijke belonings- of
-verliesklank. Het zijn gefilterde materiaalimpacts en lage resonanties, zonder
-de oude hoge schaak-/promotiepiepjes bovenop een slag. Klassiek/Hout en de
-bestaande geluidsknop blijven werken. Alle geluidsbronnen stoppen en worden opgeruimd.
+pion 1, paard/loper 3, toren 5 en dame 9. Eigen veroveringen krijgen een heldere
+chimeklank met metalen resonanties, een zachte aanslag en een natuurlijke uitklank.
+Hoge boventonen doven eerder uit dan de grondtoon. Waardevollere stukken hebben
+een rijkere en langere klank; de dame krijgt een duidelijke beloningsklank.
+Eigen verliezen houden hun donkere, dalende dreun met gefilterde materiaalruis
+en lage resonanties. Er klinken geen oude schaak-/promotiepiepjes bovenop een slag.
+Klassiek/Hout en de bestaande geluidsknop blijven werken. Alle geluidsbronnen
+stoppen en worden opgeruimd.
 
 In een echte driespelerspartij volgt het geluid de ingelogde speler. Als de twee
 andere spelers elkaar slaan, klinkt alleen de gewone zet. In FIBRO TEST is jouw
@@ -52,7 +54,7 @@ the game, selection, other settings and camera streams. Real usernames are
 never translated.
 
 Capture audio uses the captured piece’s value (1 / 3 / 5 / 9). Capturing rewards
-you with a warm positive impact; losing a piece uses a darker falling impact.
+you with a metallic chime and naturally decaying resonances; losing a piece uses a darker falling impact.
 Larger values add weight, resonance and duration rather than high-pitched UI
 bleeps. Queen captures have distinct reward/loss voicings. Existing mute and
 Classic/Wood choices apply. Another two opponents capturing each other is

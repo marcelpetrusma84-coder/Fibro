@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=40"></script>
+<script src="taal.js?v=42"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
@@ -304,7 +304,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   import { startHeartbeat } from './heartbeat.js?v=117'
   import { wisVriendData } from './opruimen.js?v=95'
   import { blokkeerPersoon, kiesVriendActie, kiesGeblokkeerdActie, deblokkeerPersoon, verwijderGeblokkeerde, haalGeblokkeerden } from './persoonblok.js?v=3'
-  import { initSync } from './sync.js?v=162'
+  import { initSync } from './sync.js?v=246'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { haalVriendFotos, zetAvatar } from './vriendfotos.js?v=2'
   pasBlokstijlToe()
@@ -369,9 +369,11 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     // v203 (sneller): de geblokkeerden tegelijk vragen, niet pas als de vriendenlijst binnen is
     const geblokBelofte = navigator.onLine ? haalGeblokkeerden() : null
     if (geblokBelofte) geblokBelofte.catch(() => {}) // (wordt hieronder alleen gebruikt als de lijst lukt)
+    // v246: ook profiel_versie (sql/profiel-versie.sql); bestaat die kolom nog niet, dan zonder
     let antwoord = navigator.onLine
-      ? await vraag(VELDEN + ', avatar_versie')
+      ? await vraag(VELDEN + ', avatar_versie, profiel_versie')
       : { data: null, error: { message: 'geen internet' } }
+    if (antwoord.error && antwoord.error.code === '42703') antwoord = await vraag(VELDEN + ', avatar_versie')
     if (antwoord.error && antwoord.error.code === '42703') antwoord = await vraag(VELDEN)
     let { data, error } = antwoord
 
@@ -410,7 +412,23 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   // knipperen, een vinger op een rij blijft op die rij); alleen de foto's worden dan nog nagekeken.
   // vanToestel: de lijst van de vorige keer; dan alleen foto's van dit toestel, niets van de server.
   let laatsteLijst = null
+  // v246: heeft deze vriend iets nieuws op zijn profiel? Uit sync.js (fibro_syncbij_<ik>_<vriend> = { t, v, oud, nieuw })
+  // en de vingerafdruk die de vriend op de server zet (profiel_versie).
+  //   'onderweg': op de server staat een andere vingerafdruk dan wat hier binnen is (en ook geen eerdere) -> nog niet binnen
+  //   'nieuw':    er kwam iets nieuws binnen dat je nog niet bekeken hebt (vriend-profiel.html zet het uit)
+  function profielStand(p, userId) {
+    let bij = null
+    try { bij = JSON.parse(localStorage.getItem('fibro_syncbij_' + userId + '_' + p.id) || 'null') } catch (e) {}
+    if (!bij || typeof bij !== 'object' || typeof bij.v !== 'string') return ''
+    const bekend = [bij.v].concat(Array.isArray(bij.oud) ? bij.oud : [])
+    if (typeof p.profiel_versie === 'string' && p.profiel_versie && !bekend.includes(p.profiel_versie)) return 'onderweg'
+    return bij.nieuw ? 'nieuw' : ''
+  }
+  let laatsteTeken = null
+  window.addEventListener('fibro-sync-bijgewerkt', () => { if (laatsteTeken) tekenLijst(...laatsteTeken) })
+  window.addEventListener('storage', e => { if (laatsteTeken && e.key && e.key.startsWith('fibro_syncbij_')) tekenLijst(...laatsteTeken) })
   function tekenLijst(userId, data, geblokkeerd, vanToestel) {
+    laatsteTeken = [userId, data, geblokkeerd, vanToestel]
     const container = document.getElementById('vriendenLijst')
     const gesorteerd = [...data].sort((a, b) => (isGebruikerOnline(b.profiles) ? 1 : 0) - (isGebruikerOnline(a.profiles) ? 1 : 0))
     const online = gesorteerd.filter(f => isGebruikerOnline(f.profiles))
@@ -420,6 +438,12 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     // worden voordat het via innerHTML op het scherm komt.
     const vEsc = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')
 
+    // v246: de regel onder de naam als een vriend iets nieuws op zijn profiel heeft
+    function profielRegel(stand) {
+      if (stand === 'nieuw') return '<div class="profiel-stand nieuw" style="font-size:12px;font-weight:600;color:var(--accent2,#7ee0ff);margin-top:2px;">\u2728 ' + T('Profiel geüpdatet') + '</div>'
+      if (stand === 'onderweg') return '<div class="profiel-stand onderweg" style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px;line-height:1.3;white-space:normal;">\u{1F504} ' + T('Profiel geüpdatet · zie je zodra jullie allebei online zijn') + '</div>'
+      return ''
+    }
     function bouwRij(f) {
       const p = f.profiles
       const avatar = vEsc(p.avatar_url || '👤')
@@ -442,6 +466,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
         '<div style="flex:1;min-width:0;">' +
         '<div style="font-size:14px;font-weight:600;color:#f3e8ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + naam + '</div>' +
         (heeftWeergavenaam ? '<div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:1px;">@' + vEsc(p.username || '') + '</div>' : '') +
+        profielRegel(profielStand(p, userId)) +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
         // v201: geen slotje meer op Vrienden. Deze lijst haalt public_key niet op (VELDEN), dus het slotje stond hier

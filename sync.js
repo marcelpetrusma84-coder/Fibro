@@ -201,6 +201,7 @@ export function initSync(userId, callbacks = {}) {
       heeftSlot = true
       console.log('[sync] Slot verkregen - sync actief in dit tabblad (v122)')
       laadVrienden().then(() => startPresence())
+      startProfielVersie()
     } else if (!nu && heeftSlot) {
       heeftSlot = false
       console.log('[sync] Slot verloren - sync gestopt')
@@ -210,6 +211,7 @@ export function initSync(userId, callbacks = {}) {
     heeftSlot = true
     console.log('[sync] Slot verkregen - sync actief in dit tabblad (v122)')
     laadVrienden().then(() => startPresence())
+    startProfielVersie()
   } else {
     console.log('[sync] Ander tabblad heeft de sync - dit tabblad wacht')
   }
@@ -656,7 +658,15 @@ async function eigenVideoHash(metaHash) {
   return h
 }
 
-        async function stuurManifest() {
+// v246: het overzicht van je eigen profiel (wat er via sync meegaat), los van het versturen, zodat er ook een
+// vingerafdruk van gemaakt kan worden (publiceerProfielVersie).
+async function stuurManifest() {
+  const manifest = await maakManifest()
+  dataChannel.send(JSON.stringify({ type: 'manifest', data: manifest }))
+  zetP2pStatus('manifest gestuurd')
+}
+
+        async function maakManifest() {
   const layoutJson = localStorage.getItem('fibro_widgets_profiel_' + huidigeUserId) || '[]'
   const fotos = await verzamelEigenFotos()
   const muziek = await verzamelEigenMuziek()
@@ -714,8 +724,62 @@ async function eigenVideoHash(metaHash) {
           naam: eigenNaam,
     stickers
   }
-  dataChannel.send(JSON.stringify({ type: 'manifest', data: manifest }))
-  zetP2pStatus('manifest gestuurd')
+  return manifest
+}
+
+// v246: vingerafdruk van een profiel-overzicht. Afzender en ontvanger rekenen hem op dezelfde manier uit (na JSON
+// heen en terug, sleutels gesorteerd), zodat de code die een vriend op de server zet (profiles.profiel_versie)
+// gelijk is aan die van het overzicht dat jij van hem kreeg. Alleen codes, geen inhoud.
+export function vingerafdrukVan(manifest) {
+  const sorteer = x => Array.isArray(x) ? x.map(sorteer)
+    : (x && typeof x === 'object') ? Object.keys(x).sort().reduce((o, k) => { o[k] = sorteer(x[k]); return o }, {})
+    : x
+  const tekst = JSON.stringify(sorteer(JSON.parse(JSON.stringify(manifest || {}))))
+  return 'p1-' + hashString(tekst) + hashString(tekst.length + ':' + [...tekst].reverse().join(''))
+}
+
+// v246: je eigen vingerafdruk op de server zetten (profiles.profiel_versie, sql/profiel-versie.sql), zodat vrienden
+// op de pagina Vrienden zien dat je iets nieuws hebt, ook als jullie nog niet tegelijk online waren. Alleen als hij
+// anders is dan de vorige keer, en hoogstens eens per 90 seconden uitrekenen (ook over paginawissels heen).
+let profielVersieKolom = true
+let profielVersieBezig = false
+async function publiceerProfielVersie() {
+  if (!huidigeUserId || !profielVersieKolom || !heeftSlot || profielVersieBezig) return
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return
+  const uid = huidigeUserId
+  const klok = 'fibro_profielversie_klok_' + uid, sl = 'fibro_profielversie_' + uid
+  try {
+    if (Date.now() - Number(localStorage.getItem(klok) || 0) < 90000) return
+    localStorage.setItem(klok, String(Date.now()))
+  } catch (e) {}
+  profielVersieBezig = true
+  try {
+    const v = vingerafdrukVan(await maakManifest())
+    let vorige = null
+    try { vorige = localStorage.getItem(sl) } catch (e) {}
+    if (v === vorige || uid !== huidigeUserId) return
+    const { data, error } = await supabase.from('profiles').update({ profiel_versie: v }).eq('id', uid).select('id')
+    if (error) {
+      // Kolom bestaat nog niet (SQL nog niet uitgevoerd): deze keer niet meer proberen
+      if (error.code === '42703' || error.code === 'PGRST204' || /profiel_versie/.test(error.message || '')) profielVersieKolom = false
+      console.log('[sync] profielversie niet gezet:', error.code || '', error.message || '')
+      return
+    }
+    if (Array.isArray(data) && data.length) {
+      try { localStorage.setItem(sl, v) } catch (e) {}
+      console.log('[sync] profielversie gezet')
+    }
+  } catch (e) {
+    console.log('[sync] profielversie mislukt:', e && e.message)
+  } finally {
+    profielVersieBezig = false
+  }
+}
+let profielVersieTimer = null
+function startProfielVersie() {
+  if (profielVersieTimer) return
+  setTimeout(publiceerProfielVersie, 5000)
+  profielVersieTimer = setInterval(publiceerProfielVersie, 3 * 60 * 1000)
 }
 
 async function verwerkP2pBericht(bericht) {
@@ -879,6 +943,25 @@ async function verwerkP2pBericht(bericht) {
       else if (videoNodig) nodig.push('video')
       else videoVraagKlaar()
     }
+    // v245/v246: wat weet ik van het profiel van deze vriend? fibro_syncbij_<ik>_<vriend> = { t, v, oud, nieuw }:
+    // t = wanneer ik zijn overzicht voor het laatst rechtstreeks kreeg (en om het nieuwe vroeg), v = de vingerafdruk
+    // daarvan (zie vingerafdrukVan), oud = de vorige paar vingerafdrukken, nieuw = er kwam iets nieuws binnen dat ik
+    // nog niet bekeken heb (vriend-profiel.html zet het weer uit). Vrienden en vriend-profiel laten het zien.
+    try {
+      const nu = Date.now(), sl = 'fibro_syncbij_' + huidigeUserId + '_' + syncPartnerId
+      let vorig = null
+      try { vorig = JSON.parse(localStorage.getItem(sl) || 'null') } catch (e) {}
+      if (typeof vorig === 'number') vorig = { t: vorig }
+      if (!vorig || typeof vorig !== 'object') vorig = null
+      const v = vingerafdrukVan(bericht.data)
+      const anders = !!(vorig && typeof vorig.v === 'string' && vorig.v !== v)
+      const oud = vorig && typeof vorig.v === 'string' && anders
+        ? [vorig.v].concat(Array.isArray(vorig.oud) ? vorig.oud : []).filter(x => typeof x === 'string').slice(0, 5)
+        : (vorig && Array.isArray(vorig.oud) ? vorig.oud.slice(0, 5) : [])
+      const nieuw = anders || !!(vorig && vorig.v === v && vorig.nieuw)
+      localStorage.setItem(sl, JSON.stringify({ t: nu, v, oud, nieuw }))
+      window.dispatchEvent(new CustomEvent('fibro-sync-bijgewerkt', { detail: { vriendId: syncPartnerId, tijd: nu, nieuw } }))
+    } catch (e) {}
     if (nodig.length) {
       dataChannel.send(JSON.stringify({ type: 'geef', items: nodig }))
       zetP2pStatus('vraag ' + nodig.length + ' item(s)')

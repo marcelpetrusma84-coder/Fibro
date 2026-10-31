@@ -1399,21 +1399,27 @@ function renderFotoPolaroid(c) {
     document.body.appendChild(inp)
   }
 
-  async function tekenPolaroid(i) {
-    const old = document.getElementById('polaroid-'+i)
-    if (old) old.remove()
+  // v243 (31 okt 2026): elke foto heeft vanaf het begin een vaste plek (polaroid-0 t/m polaroid-5) die wordt vervangen
+  // zodra de foto geladen is. Vroeger bleven er zes lege plekhouders tussen de foto's staan (de foto's laden in
+  // willekeurige volgorde): dan braken de rijen verkeerd af (3, 2, 1 in plaats van 3 en 3) en stonden de foto's door
+  // elkaar.
+  const plek = i => fotoWrap.querySelector('[data-polaroid="' + i + '"]')
+  function maakFrame(i) {
+    const frame = document.createElement('div')
+    frame.id = 'polaroid-'+i
+    frame.dataset.polaroid = i
+    frame.style.cssText = `background:#fffef0;padding:5px 5px 16px;border-radius:2px;box-shadow:0 3px 8px rgba(0,0,0,0.4);transform:rotate(${ROTATIES[i % ROTATIES.length]}deg);cursor:pointer;width:calc(33% - 4px);aspect-ratio:0.85;display:flex;flex-direction:column;overflow:hidden;position:relative;flex-shrink:0;`
+    return frame
+  }
 
+  async function tekenPolaroid(i) {
     let foto = await laadFotoUitDB(KEY+i+'_'+uid)
     if (!foto) {
       const oudLS = localStorage.getItem(KEY+i+'_'+uid)
       if (oudLS) { foto = oudLS; try { await slaFotoOp(KEY+i+'_'+uid, oudLS); localStorage.removeItem(KEY+i+'_'+uid) } catch(e) {} }
     }
     const fitKey = KEY+i+'_fit_'+uid
-    const rot = ROTATIES[i % ROTATIES.length]
-
-    const frame = document.createElement('div')
-    frame.id = 'polaroid-'+i
-    frame.style.cssText = `background:#fffef0;padding:5px 5px 16px;border-radius:2px;box-shadow:0 3px 8px rgba(0,0,0,0.4);transform:rotate(${rot}deg);cursor:pointer;width:calc(33% - 4px);aspect-ratio:0.85;display:flex;flex-direction:column;overflow:hidden;position:relative;flex-shrink:0;`
+    const frame = maakFrame(i)
 
     const fotoEl = document.createElement('div')
     fotoEl.style.cssText = 'flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(192,132,252,0.1);position:relative;'
@@ -1457,15 +1463,15 @@ function renderFotoPolaroid(c) {
       if (inp) { inp.value=''; inp.click() }
     })
 
-    const children = [...fotoWrap.children]
-    if (children[i]) fotoWrap.insertBefore(frame, children[i])
+    const oud = plek(i)
+    if (oud) oud.replaceWith(frame)
     else fotoWrap.appendChild(frame)
   }
 
   c.innerHTML = ''
   c.appendChild(maakFotoTitel(KEY, uid))
   c.appendChild(fotoWrap)
-  for (let i = 0; i < N; i++) fotoWrap.appendChild(document.createElement('div'))
+  for (let i = 0; i < N; i++) fotoWrap.appendChild(maakFrame(i))   // lege polaroids tot de foto's er zijn
   for (let i = 0; i < N; i++) tekenPolaroid(i)
 }
 

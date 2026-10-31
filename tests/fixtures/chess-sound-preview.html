@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101323">
+<title>Fibro · Schaakgeluiden testen</title>
+<link rel="icon" href="../../icon.svg" type="image/svg+xml">
+<style>
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 25% 0,#32345c,transparent 60%),#0c101d;color:#eef2ff;font-family:system-ui,sans-serif;min-height:100vh;padding:clamp(16px,4vw,44px)}main{max-width:860px;margin:auto}header{margin-bottom:26px}.badge{display:inline-block;font:750 11px system-ui;letter-spacing:.12em;color:#ffe28a;border:1px solid #e3b95e70;border-radius:7px;background:#e3b95e15;padding:6px 9px}h1{font-size:clamp(26px,4vw,38px);letter-spacing:-.04em;margin:15px 0 9px}p{color:#bec7dc;line-height:1.6;margin:0;max-width:650px}.controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 0 22px}select{background:#222b41;color:#fff;border:1px solid #92aed45e;border-radius:9px;padding:9px;font:inherit}.grid{display:grid;gap:13px}.card{display:grid;grid-template-columns:minmax(130px,1fr) 1fr 1fr;align-items:center;gap:14px;border:1px solid #adc9ff34;border-top-color:#c0d5ff61;border-radius:18px;background:linear-gradient(135deg,#28364b,#1b2034 70%);box-shadow:0 8px 0 #050b1975,0 17px 30px #0003,inset 0 1px 0 #ffffff0c;padding:20px}.piece{display:flex;align-items:center;gap:14px}.icon{font-size:43px;line-height:1;color:#fff3d1;text-shadow:1px 3px 0 #091020,0 5px 10px #0008}.piece strong{display:block;font-size:17px}.points{display:block;color:#aabbd7;font-size:12px;margin-top:4px}button{font:650 13px system-ui;cursor:pointer;min-height:48px;border-radius:11px;padding:10px 14px;transition:transform .15s,filter .15s;border:1px solid #ffffff38;color:#eef8ff;box-shadow:0 4px 0 #0005,inset 0 1px 0 #fff3}.win{background:linear-gradient(145deg,#285e59,#153e3e)}.loss{background:linear-gradient(145deg,#793c50,#482b43)}button:hover{filter:brightness(1.18)}button:active{transform:translateY(3px);box-shadow:0 1px 0 #0004}button:focus-visible,select:focus-visible{outline:3px solid #ffdf83;outline-offset:4px}button:disabled{cursor:default;opacity:.65}.card.playing{border-color:#f4daa0;box-shadow:0 8px 0 #050b1975,0 0 28px #e2c87920}#status{min-height:55px;padding:20px 0;color:#e3d6b0;font-size:14px;line-height:1.5}.foot{font-size:12px;border-top:1px solid #adc9ff26;padding-top:18px}a{color:#a8e5e1;text-underline-offset:4px}.legend{display:grid;grid-template-columns:minmax(130px,1fr) 1fr 1fr;gap:14px;padding:0 20px 10px;color:#aebbd2;font-size:11px;letter-spacing:.04em}.legend span:nth-child(2){color:#8be3c2}.legend span:nth-child(3){color:#f1a6b9}@media(max-width:560px){.card{grid-template-columns:1fr 1fr;padding:16px;gap:12px}.piece{grid-column:1/-1}.legend{display:none}button{font-size:12px}.controls{font-size:13px}}@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body><main>
+<header><span class="badge">FIBRO · LUISTERTEST</span><h1>Hoor wat je verovert.</h1><p>De waarde van het stuk bepaalt het gewicht van het geluid. Positief hoor je een chime-instrument; bij verlies een donkere dreun.</p></header>
+<div class="controls"><label for="theme">Materiaal</label><select id="theme"><option value="classic">Klassiek · heldere resonantie</option><option value="wood">Hout · warm en gedempt</option></select><span id="sound-anchor"></span></div>
+<div class="legend" aria-hidden="true"><span>STUKWAARDE</span><span>JIJ VEROVERT</span><span>JIJ VERLIEST</span></div>
+<div class="grid" id="sounds"></div>
+<div id="status" role="status" aria-live="polite">Klik op een klank om te luisteren. Er wordt geen partij gestart.</div>
+<p class="foot">Dit zijn de echte geluiden van het schaakspel. Je bestaande geluidsknop blijft van toepassing. <a href="../../chat.html?test=FIBRO%20TEST">Open FIBRO TEST ↗</a></p>
+</main>
+<script type="module">
+import * as Bordgeluid from '../../bordgeluid.js?v=200'
+const pieces=[['Pion','♟',1],['Paard / loper','♞',3],['Toren','♜',5],['Dame','♛',9]]
+const durations={win:{1:830,3:1170,5:1540,9:2120},loss:{1:350,3:680,5:1020,9:1550}}
+const grid=document.getElementById('sounds'),status=document.getElementById('status')
+Bordgeluid.knop(document.getElementById('sound-anchor'),{language:'nl'})
+for(const [name,icon,value] of pieces){
+  const card=document.createElement('section');card.className='card'
+  const piece=document.createElement('div');piece.className='piece'
+  const glyph=document.createElement('span');glyph.className='icon';glyph.textContent=icon;glyph.setAttribute('aria-hidden','true')
+  const label=document.createElement('div'),title=document.createElement('strong'),points=document.createElement('span');title.textContent=name;points.className='points';points.textContent=value+(value===1?' punt':' punten');label.append(title,points);piece.append(glyph,label);card.append(piece)
+  for(const [outcome,text] of [['win','Gepakt · positief'],['loss','Afgepakt · negatief']]){
+    const button=document.createElement('button');button.type='button';button.className=outcome;button.textContent='▶ '+text;button.setAttribute('aria-label',name+' · '+value+' '+(value===1?'punt':'punten')+' · '+text)
+    button.addEventListener('click',()=>{
+      const played=Bordgeluid.capturePiece({value,outcome,theme:document.getElementById('theme').value})
+      if(!played){status.textContent='Geluid staat uit of is niet beschikbaar. Zet hierboven Geluid aan en probeer opnieuw.';return}
+      status.textContent=(outcome==='win'?'Jij verovert: ':'Jij verliest: ')+name.toLowerCase()+' · '+value+' '+(value===1?'punt':'punten')
+      card.classList.add('playing');grid.querySelectorAll('button').forEach(node=>node.disabled=true)
+      setTimeout(()=>{card.classList.remove('playing');grid.querySelectorAll('button').forEach(node=>node.disabled=false)},durations[outcome][value])
+    });card.append(button)
+  }grid.append(card)
+}
+</script>
+</body></html>

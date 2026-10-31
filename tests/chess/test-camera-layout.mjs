@@ -90,9 +90,11 @@ globalThis.cancelAnimationFrame = () => {}
 globalThis.getComputedStyle = node => ({ display: node.visible ? 'block' : 'none' })
 
 const { mountChessLayout } = await import('../../chess-layout.js')
+const { maakSchaakTaal } = await import('../../schaak-taal.js')
 const root = new Node()
 const remote = new Node(), own = new Node(), content = new Node(), game = new Node(), board = new Node(), chat = new Node()
 remote.className = own.className = 'camera'
+own.setAttribute('lang', 'fr')
 game.className = 'sch-spel'
 board.className = 'sch-frame'
 game.dataset.cameraLayout = 'around'
@@ -131,9 +133,21 @@ assert.equal(root.querySelector('.chess-camera-group').hidden, true, 'turning ca
 remote.visible = own.visible = true
 layout.sync()
 assert.equal(root.querySelector('.chess-camera-group').hidden, false, 'saved top layout becomes visible when cameras turn on')
+const taal = maakSchaakTaal({ storage:{getItem:()=>null,setItem(){}},eventTarget:window })
+const groupedCameras = [...group.children]
+taal.setLanguage('en')
+assert.equal(own.getAttribute('aria-label'),'Restore camera view','expanded camera label changes language in place')
+assert.equal(remote.getAttribute('aria-label'),'Show larger camera view')
+assert.equal(group.getAttribute('aria-label'),'Player cameras')
+assert.equal(root.querySelector('.chess-scroll-rail').getAttribute('aria-label'),'Game scrolling')
+assert.deepEqual(group.children,groupedCameras,'changing language never remounts a camera')
+assert.equal(own.classList.contains('is-expanded'),true,'changing language preserves camera size')
+taal.setLanguage('nl'); taal.destroy()
+assert.equal(own.getAttribute('aria-label'),'Cameraweergave herstellen')
 layout.destroy()
 assert.deepEqual(root.children, originalOrder, 'cleanup restores the exact original DOM')
 assert.equal(own.classList.contains('is-expanded'), false)
+assert.equal(own.getAttribute('lang'),'fr','cleanup restores the camera language from before chess')
 layout = mountChessLayout({ root, cameraSelector: '.camera' })
 assert.ok(root.querySelector('.chess-camera-group'), 'mounting again respects the current setting')
 layout.destroy()

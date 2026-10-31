@@ -39,12 +39,12 @@ export function maakSchaakTestKanaal(Schaak, { responseDelayMs = 850, onStatus =
     if (state.aanZet !== 'z') return
     const choices = Schaak.alleLegaleZetten(state, 'z')
     if (!choices.length) {
-      onStatus('The test opponent has no legal reply. Restart the local test game to continue.')
+      onStatus('De testtegenstander heeft geen legale zet meer. Begin een nieuwe lokale testpartij om verder te gaan.')
       return
     }
-    onStatus('Test opponent is choosing a move…')
+    onStatus('De testtegenstander kiest een zet…')
     const delay = typeof responseDelayMs === 'function' ? responseDelayMs() : responseDelayMs
-    onStatus(`Test opponent is thinking${delay > 0 ? ` · ${Math.ceil(delay / 1000)}s` : ''}…`)
+    onStatus(delay > 0 ? 'De testtegenstander denkt · {n}s…' : 'De testtegenstander denkt…', { n:Math.ceil(delay / 1000) })
     const timer = setTimeout(() => {
       timers.delete(timer)
       if (stopped || state.aanZet !== 'z') return
@@ -53,7 +53,7 @@ export function maakSchaakTestKanaal(Schaak, { responseDelayMs = 850, onStatus =
       // Randomize among legal replies so repeated test runs feel less scripted.
       const reply = currentChoices[Math.floor(Math.random() * currentChoices.length)]
       Schaak.voerZetUit(state, reply, 'Q')
-      onStatus('Local test opponent moved. No other player is connected.')
+      onStatus('De lokale testtegenstander heeft gezet. Er is geen andere speler verbonden.')
       dispatch('zet', { zet: reply, promotieStuk: 'Q', testOnly: true })
     }, Math.max(0, Number(delay) || 0))
     timers.add(timer)
@@ -74,7 +74,7 @@ export function maakSchaakTestKanaal(Schaak, { responseDelayMs = 850, onStatus =
         timers.forEach(clearTimeout)
         timers.clear()
         state = Schaak.nieuweSpelStaat()
-        onStatus('Local test game restarted.')
+        onStatus('De lokale testpartij is opnieuw gestart.')
         dispatch('opnieuw', {})
       }
       return Promise.resolve('ok')

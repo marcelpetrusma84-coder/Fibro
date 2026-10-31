@@ -879,6 +879,13 @@ async function verwerkP2pBericht(bericht) {
       else if (videoNodig) nodig.push('video')
       else videoVraagKlaar()
     }
+    // v245: wanneer kreeg ik voor het laatst rechtstreeks het overzicht van deze vriend (en vroeg ik wat nieuw is)?
+    // vriend-profiel.html laat het zien ("Foto's en widgets bijgewerkt: ..."). Alleen een tijd, per vriend.
+    try {
+      const nu = Date.now()
+      localStorage.setItem('fibro_syncbij_' + huidigeUserId + '_' + syncPartnerId, String(nu))
+      window.dispatchEvent(new CustomEvent('fibro-sync-bijgewerkt', { detail: { vriendId: syncPartnerId, tijd: nu } }))
+    } catch (e) {}
     if (nodig.length) {
       dataChannel.send(JSON.stringify({ type: 'geef', items: nodig }))
       zetP2pStatus('vraag ' + nodig.length + ' item(s)')

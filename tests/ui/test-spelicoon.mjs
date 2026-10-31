@@ -1,5 +1,6 @@
 // Plaatjes van de spellen (30 okt 2026): in het spelmenu van de chat, de widgetlijst in Profiel en de spelwidgets
 // op Home en bij een vriend staat een stukje uit het spel zelf (spelicoon/<spel>.webp, spelicoon.js).
+// v2 (31 okt 2026): alleen het losse speelstuk op een doorzichtige achtergrond, zonder ronde tegel eromheen.
 import { readFileSync, existsSync } from 'node:fs'
 import assert from 'node:assert/strict'
 
@@ -15,7 +16,8 @@ for (const spel of SI.SPELLEN) {
   assert.ok(existsSync(pad(f)), f)
   const b = readFileSync(pad(f))
   assert.equal(b.toString('ascii', 0, 4) + b.toString('ascii', 8, 12), 'RIFFWEBP', f + ' is WebP')
-  assert.equal(b.toString('ascii', 12, 16), 'VP8X', f + ' heeft doorzichtige hoeken')
+  assert.equal(b.toString('ascii', 12, 16), 'VP8X', f + ' heeft een doorzichtige achtergrond')
+  assert.ok(b[20] & 0x10, f + ': met alfakanaal')
   assert.deepEqual([1 + b.readUIntLE(24, 3), 1 + b.readUIntLE(27, 3)], [128, 128], f + ' is 128 x 128')
   assert.ok(b.length < 12000, f + ' is klein')
 }
@@ -39,4 +41,7 @@ for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /im
 assert.match(lees('index.html'), /const icon = spelIcoonHtml\(spel, 40\) \|\| ICONEN\[spel\]/)
 assert.match(lees('vriend-profiel.html'), /spelIcoonHtml\(spel, 40\) \|\| vEsc\(w\.icon/)
 
+assert.ok(SI.VERSIE >= 2)
+for (const f of ['chat.html', 'profiel.html', 'spelicoon.js']) assert.ok(!lees(f).includes('border-radius:22%'), f + ': geen ronde tegel meer')
+for (const f of ['index.html', 'vriend-profiel.html']) assert.ok(lees(f).includes("spelicoon.js?v=" + SI.VERSIE + "'"), f + ': spelicoon.js met de nieuwe versie')
 console.log('ok: plaatjes uit de spellen (' + SI.SPELLEN.length + ')')

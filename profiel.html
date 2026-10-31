@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=44"></script>
+<script src="taal.js?v=45"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Vuurwerk': 'Fireworks', 'Onweer': 'Thunderstorm', 'Glitter': 'Glitter' }) // v234: nieuwe animaties</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Gastenboek zonder lijntjes': 'Guestbook without lines', 'Gewoon in je eigen kleuren, zonder lijntjespapier': 'Plain, in your own colours, without lined paper' }) // v235</script>
 <script src="verbinding.js?v=3"></script>
@@ -238,6 +238,15 @@ input, textarea { font-size:16px !important; }
       </div>
       <div id="moodEmojiPicker" style="display:none;flex-wrap:wrap;gap:6px;padding:10px;background:var(--card);border:0.5px solid var(--border);border-radius:12px;margin-bottom:8px;">
       </div>
+    </div>
+  </div>
+  <!-- v248: meldingen aanzetten (er was geen knop: Fibro vroeg het alleen direct na het inloggen). Op de iPhone kan het
+       alleen als Fibro op het beginscherm staat: dan eerst de uitleg met tekeningen (beginscherm.js). -->
+  <div class="section">
+    <div class="section-label" data-t>Meldingen</div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px;">
+      <div id="meldStatus" style="font-size:14px;line-height:1.45;" aria-live="polite"></div>
+      <button type="button" id="meldKnop" onclick="meldingenAanzetten()" style="min-height:44px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit;" data-t>🔔 Meldingen aanzetten</button>
     </div>
   </div>
   <!-- v179: profielmuziek (stond eerst als 'Muziek uploaden' bij Widgets); speelt vanzelf op Home en bij vrienden -->
@@ -1293,10 +1302,51 @@ window.slaAllesOp=async function(){
 }
 window.uitloggen=async function(){sessionStorage.setItem('fibro_bewust_uitloggen','1');localStorage.removeItem('fibro_lettertype');localStorage.removeItem('fibro_lettertype');try{localStorage.removeItem('fibro_thema_'+huidigeUser.id);localStorage.removeItem('fibro_profielcache_'+huidigeUser.id)}catch(e){};try{const u=huidigeUser.id;Object.keys(localStorage).forEach(k=>{if(k.startsWith('fibro_chatlog_'+u+'_')||k==='fibro_chatvrienden_'+u||k==='fibro_gastenboek_'+u||k==='fibro_vriendenpagina_'+u||k==='fibro_chatlogs_bewaard_'+u||k.startsWith('fibro_vriendgb_'+u+'_')||k==='fibro_nietverstuurd_'+u||(k.startsWith('vriend_cache_')&&k.endsWith('_'+u)))localStorage.removeItem(k)})}catch(e){};await supabase.auth.signOut({scope:'local'});window.location.href='login.html'}
 
+// v248: de stand van de meldingen op dit toestel, en de knop
+let beginschermModule = null
+async function toonMeldStand() {
+  const st = document.getElementById('meldStatus'), knop = document.getElementById('meldKnop')
+  if (!st || !knop) return
+  let bs = null
+  try { bs = beginschermModule = await import('./beginscherm.js?v=1') } catch (e) {}
+  const toestemming = ('Notification' in window) ? Notification.permission : 'nvt'
+  let aan = false
+  try {
+    if (toestemming === 'granted' && 'serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.getRegistration()
+      aan = !!(reg && reg.pushManager && await reg.pushManager.getSubscription())
+    }
+  } catch (e) {}
+  if (bs && bs.iphoneZonderApp()) {
+    st.innerHTML = T('Op de iPhone werken meldingen alleen als Fibro op je <b>beginscherm</b> staat.')
+    knop.textContent = T('\u{1F4F2} Laat zien hoe')
+  } else if (aan) {
+    st.innerHTML = T('\u2713 Meldingen staan aan op dit toestel.')
+    knop.textContent = T('\u{1F514} Opnieuw instellen')
+  } else if (toestemming === 'denied') {
+    st.innerHTML = T('Meldingen zijn uitgezet in de instellingen van je telefoon of browser. Zet ze daar aan voor Fibro (iPhone: Instellingen > Meldingen > Fibro), en tik dan hier.')
+    knop.textContent = T('\u{1F514} Meldingen aanzetten')
+  } else {
+    st.innerHTML = T('Krijg een melding als een vriend je een bericht stuurt of uitnodigt voor een spel.')
+    knop.textContent = T('\u{1F514} Meldingen aanzetten')
+  }
+}
+window.meldingenAanzetten = async function () {
+  const bs = beginschermModule
+  if (bs && bs.iphoneZonderApp()) { bs.openBeginschermUitleg({ reden: 'meldingen' }); return }
+  // Eerst de toestemming vragen, meteen bij de tik: de iPhone laat de vraag anders niet zien
+  try { if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission() } catch (e) {}
+  await window.activeerPushNotificaties()
+  toonMeldStand()
+}
+toonMeldStand()
+
 window.activeerPushNotificaties = async function() {
   try {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      alert(T('Push notificaties worden niet ondersteund op dit apparaat.'))
+      // v248: op een iPhone als app, maar met een te oude iOS (meldingen kunnen pas vanaf iOS 16.4)
+      const ios = /iPhone|iPad|iPod/.test(navigator.userAgent || '')
+      alert(ios ? T('Meldingen werken op de iPhone vanaf iOS 16.4. Werk je iPhone bij en probeer het opnieuw.') : T('Push notificaties worden niet ondersteund op dit apparaat.'))
       return
     }
     const reg = await navigator.serviceWorker.register('./service-worker.js?v=95')

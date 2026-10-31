@@ -7,7 +7,8 @@
      5 Diepe ruimte (ZOGGOTH PRIME)           6 Xeron, lucht (andere planeet hoog in de lucht, ZWERMKONINGIN)
      7 Xeron, grond (je ziet de grond, OVERLORD)
    Na een eindbaas vlieg je door naar het volgende level (score, levens en wapens blijven). Het hoogste bereikte level
-   wordt onthouden: 'VERDER' begint daar opnieuw (met de gewone uitrusting).
+   wordt onthouden: houd na een ronde OPNIEUW drie seconden ingedrukt om VERDER te tonen;
+   dat begint bij het hoogst bereikte level (met de gewone uitrusting).
    Stijl: neon synthwave in vectorstijl (alles in code getekend, geen plaatjes) met een retro-arcade-HUD; Phaser 3.80.1
    uit de eigen repo, het lettertype Press Start 2P, geluid en muziek met Web Audio.
    Besturing: een vinger slepen = vliegen; een tweede vinger tikken of ingedrukt houden = schieten. Met de muis: slepen =
@@ -34,6 +35,7 @@ import { maakNeonMuis, muisPunt } from './neon-raiders-input.js?v=2'
 import { supabase } from './supabase.js?v=95'
 import { maakNeonScoreService } from './neon-raiders-scores.js?v=3'
 import { maakNeonScorebord } from './neon-raiders-scoreboard.js?v=2'
+import { koppelNeonVerder } from './neon-raiders-verder.js?v=1'
 
 const vertaal = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 const PHASER_URL = new URL('./phaser.min.js?v=1', import.meta.url).href
@@ -121,6 +123,10 @@ function zetStijl() {
   .nr .knop{font-family:inherit;font-size:11px;color:#07051a;background:var(--cyaan);border:none;border-radius:0;padding:11px 22px;cursor:pointer;
     box-shadow:0 0 12px rgba(94,231,224,.7),3px 3px 0 #1c9aa2}
   .nr .knop:active{transform:translate(2px,2px)}
+  .nr .startKnop{position:relative;overflow:hidden;touch-action:none}
+  .nr .startKnop.nr-vasthouden::after{content:'';position:absolute;inset:auto 0 0;height:4px;background:var(--roze);transform:scaleX(0);transform-origin:left;animation:nr-verder-wacht 3s linear forwards}
+  @keyframes nr-verder-wacht{to{transform:scaleX(1)}}
+  @media(prefers-reduced-motion:reduce){.nr .startKnop.nr-vasthouden::after{animation:none;transform:scaleX(1)}}
   .nr .knoppen{display:flex;flex-direction:column;align-items:center;gap:10px}
   .nr .knop.tweede{background:var(--roze);box-shadow:0 0 12px rgba(255,93,158,.7),3px 3px 0 #a3305f}
   .nr .knop:disabled{opacity:.4;cursor:default;box-shadow:none;transform:none}
@@ -1483,6 +1489,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
   const recordVak = laag.querySelector('.record')
   const startKnop = laag.querySelector('.startKnop')
   const verderKnop = laag.querySelector('.verderKnop')
+  let verderBediening = null, opnieuwScherm = false
   const autoKnop = laag.querySelector('.autoKnop')
   const geluidKnop = laag.querySelector('.geluidKnop')
   const scoresKnop = laag.querySelector('.scoresKnop')
@@ -1559,6 +1566,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
       const klaar = partnerKlaar && netModus !== 'zoeken'
       startKnop.disabled = !klaar
       verderKnop.disabled = !klaar
+      if (!klaar) verderBediening?.cancel()
       rolVak.textContent = partnerKlaar ? modusTekst() : vertaal('WACHT OP {naam}', { naam: NAAMV })
     } else {
       startKnop.hidden = true; verderKnop.hidden = true
@@ -1570,7 +1578,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
   let spel = null, huidige = null, beginLevel = 1
   const scoreService = scoreServiceKeuze || maakNeonScoreService({ supabase })
   const scorebord = maakNeonScorebord({ service: scoreService, T: vertaal,
-    isActief: () => isActief() && wrap.isConnected, onOpen: () => wisBesturing() })
+    isActief: () => isActief() && wrap.isConnected, onOpen: () => { wisBesturing(); verderBediening?.cancel() } })
   scoresKnop.addEventListener('click', e => { e.stopPropagation(); scorebord.open() })
 
   /* ---------- indeling: een staand veld dat in de ruimte past ---------- */
@@ -2952,10 +2960,12 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
     recordVak.textContent = r ? vertaal('RECORD {n}', { n: String(r).padStart(7, '0') }) : ''
   }
   function toonVerder() {
-    verderKnop.hidden = bereikt <= 1 || !leider
+    verderKnop.hidden = true
+    verderBediening?.reset()
     verderKnop.textContent = vertaal('VERDER: LEVEL {n}', { n: bereikt })
   }
   function toonEinde(gewonnen, score, levens, level, anderScore) {
+    opnieuwScherm = true
     const nieuw = solo && typeof solo.nieuweScore === 'function' ? solo.nieuweScore(score) : false
     h1.innerHTML = gewonnen ? vertaal('GEWONNEN!') + '<span>NEON RAIDERS</span>' : 'GAME<span>OVER</span>'
     sub.textContent = 'SCORE ' + String(score).padStart(7, '0') + (nieuw ? ' · ' + vertaal('NIEUW RECORD!') : '')
@@ -2982,6 +2992,8 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
   let aftellen = false
   function startRonde(level) {
     if (aftellen) return
+    opnieuwScherm = false
+    toonVerder()
     GELUID.wek()
     aftellen = true
     partnerKlaar = !samen
@@ -3028,8 +3040,14 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
     }
     startRonde(level)
   }
-  startKnop.addEventListener('click', e => { e.stopPropagation(); begin(1) })
-  verderKnop.addEventListener('click', e => { e.stopPropagation(); begin(bereikt) })
+  const magVerder = () => opnieuwScherm && bereikt > 1 && leider && !aftellen && !laag.hidden &&
+    !startKnop.hidden && !startKnop.disabled && isActief() && wrap.isConnected
+  verderBediening = koppelNeonVerder({ startKnop, verderKnop, kanTonen:magVerder,
+    onStart:() => { if (isActief() && wrap.isConnected) begin(1) } })
+  verderKnop.addEventListener('click', e => {
+    e.stopPropagation()
+    if (!verderKnop.hidden && magVerder()) begin(bereikt)
+  })
 
   const zichtbaarheid = () => { if (document.hidden) { wisBesturing(); if (huidige) huidige.pauzeer() } }
   document.addEventListener('visibilitychange', zichtbaarheid)
@@ -3048,6 +3066,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
     }
     clearInterval(waker)
     scorebord.destroy()
+    verderBediening.destroy()
     if (net) net.sluit()
     clearTimeout(arsenaalKlok)
     GELUID.stop()

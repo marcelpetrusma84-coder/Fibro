@@ -10,8 +10,10 @@ const sync = lees('sync.js'), vp = lees('vriend-profiel.html')
 
 // 1. sync.js bewaart alleen een tijd per vriend, op het moment dat het manifest van de vriend verwerkt is
 const blok = sync.slice(sync.indexOf("if (bericht.type === 'manifest')"), sync.indexOf("if (bericht.type === 'geef')"))
-assert.match(blok, /localStorage\.setItem\('fibro_syncbij_' \+ huidigeUserId \+ '_' \+ syncPartnerId, String\(nu\)\)/)
-assert.match(blok, /new CustomEvent\('fibro-sync-bijgewerkt', \{ detail: \{ vriendId: syncPartnerId, tijd: nu \} \}\)/)
+// v246: { t, v, oud, nieuw } in plaats van alleen de tijd (zie test-profiel-versie.mjs)
+assert.match(blok, /const nu = Date\.now\(\), sl = 'fibro_syncbij_' \+ huidigeUserId \+ '_' \+ syncPartnerId/)
+assert.match(blok, /localStorage\.setItem\(sl, JSON\.stringify\(\{ t: nu, v, oud, nieuw \}\)\)/)
+assert.match(blok, /new CustomEvent\('fibro-sync-bijgewerkt', \{ detail: \{ vriendId: syncPartnerId, tijd: nu, nieuw \} \}\)/)
 assert.ok(blok.indexOf("fibro_syncbij_") < blok.indexOf("type: 'geef', items: nodig"), 'de tijd wordt gezet voordat de nieuwe dingen gevraagd worden')
 
 // 2. De tijd leesbaar maken (de echte functie uit vriend-profiel.html)

@@ -71,8 +71,9 @@ assert.match(vrienden, /vraag\(VELDEN \+ ', avatar_versie, profiel_versie'\)/)
 assert.match(vrienden, /if \(antwoord\.error && antwoord\.error\.code === '42703'\) antwoord = await vraag\(VELDEN \+ ', avatar_versie'\)/)
 
 // 4. Het profiel bekijken = gezien
-const regel = knip(vp, 'function toonSyncRegel() {', '\n  window.addEventListener')
+const regel = knip(vp, 'function markeerGezien() {', '\n  window.addEventListener')
 assert.match(regel, /if \(bij && typeof bij === 'object' && bij\.nieuw\) \{ bij\.nieuw = false; localStorage\.setItem\(sl, JSON\.stringify\(bij\)\) \}/)
+assert.match(vp, /const naam = vriendNaam\(data\.username\)\n    markeerGezien\(\)/, 'het profiel openen = gezien')
 
 // 5. SQL: herhaalbaar, kort, alleen een kolom
 assert.match(sql, /alter table public\.profiles add column if not exists profiel_versie text;/)

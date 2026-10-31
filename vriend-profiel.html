@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=43"></script>
+<script src="taal.js?v=44"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Profiel</title>
@@ -49,8 +49,6 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .online-badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); margin-top:5px; }
 .online-dot { width:8px; height:8px; border-radius:50%; background:#6b7280; }
 .online-dot.online { background:#22c55e; }
-.sync-regel { font-size:11px; color:var(--muted); margin-top:4px; line-height:1.35; }
-.sync-regel .sync-uitleg { display:block; opacity:0.8; }
 .blocks { padding:12px 14px; display:flex; flex-direction:column; gap:10px; }
 .block { background:var(--card); border:0.5px solid var(--border); border-radius:14px; padding:13px 14px; backdrop-filter:blur(12px); }
 .block-title { font-size:12px; font-weight:500; color:var(--accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px; }
@@ -113,7 +111,6 @@ body.heeft-wallpaper::before { display:block; }
       <div class="online-dot" id="onlineDot"></div>
       <span id="onlineLabel" data-t>Laden...</span>
     </div>
-    <div class="sync-regel" id="syncRegel" hidden><span id="syncWanneer"></span><span class="sync-uitleg" id="syncUitleg"></span></div>
   </div>
 </div>
 
@@ -300,46 +297,21 @@ body.heeft-wallpaper::before { display:block; }
   }
 
   // ── Profiel data tonen ──
-  // v245: wanneer kwamen de foto's en widgets van deze vriend voor het laatst rechtstreeks binnen (sync.js bewaart
-  // fibro_syncbij_<ik>_<vriend>). Die komen alleen als jullie allebei online zijn; zo zie je waarom iets nieuws er nog
-  // niet is. Naam, bio en mood komen via de server en staan er altijd meteen.
-  let syncNaam = ''
-  function syncWanneer(t) {
-    const d = new Date(t), nu = new Date(), s = Math.floor((nu - d) / 1000)
-    if (s < 60) return T('zojuist')
-    if (s < 3600) return T('{n} min geleden', { n: Math.floor(s / 60) })
-    const tijd = d.toLocaleTimeString(T.locale, { hour: '2-digit', minute: '2-digit' })
-    const gisteren = new Date(nu); gisteren.setDate(nu.getDate() - 1)
-    if (d.toDateString() === nu.toDateString()) return T('vandaag {tijd}', { tijd })
-    if (d.toDateString() === gisteren.toDateString()) return T('gisteren {tijd}', { tijd })
-    return d.toLocaleDateString(T.locale, { day: 'numeric', month: 'short' }) + ' ' + tijd
-  }
-  function toonSyncRegel() {
-    const regel = document.getElementById('syncRegel')
-    if (!regel || !vriendId) return
-    // v246: { t, v, oud, nieuw } (sync.js); je bekijkt het profiel nu, dus wat nieuw was is gezien (Vrienden: ✨ weg)
-    let t = 0
+  // v248: wanneer de foto's en widgets van een vriend binnenkwamen, staat nu in de vriendenlijst (vrienden.html).
+  // Hier alleen: je bekijkt het profiel, dus wat nieuw was is gezien (op Vrienden gaat "✨ Profiel geüpdatet" weg).
+  function markeerGezien() {
+    if (!vriendId) return
     try {
       const sl = 'fibro_syncbij_' + _eigenUid() + '_' + vriendId
       const bij = JSON.parse(localStorage.getItem(sl) || 'null')
-      t = typeof bij === 'number' ? bij : Number(bij && bij.t) || 0
       if (bij && typeof bij === 'object' && bij.nieuw) { bij.nieuw = false; localStorage.setItem(sl, JSON.stringify(bij)) }
     } catch (e) {}
-    document.getElementById('syncWanneer').textContent = t > 0
-      ? T('Foto\'s en widgets bijgewerkt: {wanneer}', { wanneer: syncWanneer(t) })
-      : T('Foto\'s en widgets nog niet bijgewerkt')
-    document.getElementById('syncUitleg').textContent =
-      T('Nieuwe foto\'s en widgets van {naam} komen binnen als jullie allebei online zijn.', { naam: syncNaam || T('je vriend') })
-    regel.hidden = false
   }
-  window.addEventListener('fibro-sync-bijgewerkt', e => { if (e.detail && e.detail.vriendId === vriendId) toonSyncRegel() })
-  window.addEventListener('storage', e => { if (e.key && e.key.startsWith('fibro_syncbij_')) toonSyncRegel() })
-  setInterval(toonSyncRegel, 30000)
+  window.addEventListener('fibro-sync-bijgewerkt', e => { if (e.detail && e.detail.vriendId === vriendId) markeerGezien() })
 
   function toonProfielData(data) {
     const naam = vriendNaam(data.username)
-    syncNaam = naam
-    toonSyncRegel()
+    markeerGezien()
     if (!profielMuziekGestart) { profielMuziekGestart = true; startVriendMuziek(naam) }
     document.getElementById('profielNaam').textContent = naam
     document.getElementById('profielUsername').textContent = heeftVriendNaam() ? '@' + (data.username || '') : ''

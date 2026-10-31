@@ -6,9 +6,12 @@
 // rechtstreeks verbonden zijn (zie chat.html).
 // Stap A: presence ✓ | Stap B: DataChannel ping-pong
 // Zelfde signaling-patroon als bellen.js: gedeeld kanaal met gesorteerde IDs
+// v247: om de beurt met alle online vrienden (syncbeurt.js): eerst vragen ('syncbeurt' via paren.js), dan verbinden;
+// klaar met een vriend (alles binnen, aan beide kanten), dan door naar de volgende.
 import { supabase } from './supabase.js?v=95'
 import { ICE_SERVERS, iceReady } from './ice-config.js?v=149'
-import { startParen, opOnline, opNieuwePagina, onlineVrienden, vrienden as parenVrienden } from './paren.js?v=2'
+import { startParen, opOnline, opNieuwePagina, onlineVrienden, vrienden as parenVrienden, opBericht, stuurNaar, zetKenmerk, heeftKenmerk } from './paren.js?v=2'
+import * as SB from './syncbeurt.js?v=1'
 
 let huidigeUserId = null
 let onlineGebruikers = new Set()
@@ -226,6 +229,8 @@ function startPresence() {
   presenceBezig = true
   opOnline(onlineVeranderd)
   opNieuwePagina(vriendNieuwePagina)
+  opBericht('syncbeurt', beurtBericht)   // v247
+  zetKenmerk('syncbeurt', true)          // v247: vrienden zien dat deze pagina om de beurt synct
   onlineVeranderd()
 }
 
@@ -240,7 +245,9 @@ function onlineVeranderd() {
     toonDebugBadge()
   }
   if (syncPartnerId && !onlineGebruikers.has(syncPartnerId)) stopSync()
+  if (wachtOp && !onlineGebruikers.has(wachtOp)) { wachtOp = null; clearTimeout(wachtTimer) }
   if (naarChatVriend(false)) return
+  if (syncPartnerId) { probeerVolgende(); return } // v247
   checkSyncStart()
 }
 
@@ -259,17 +266,177 @@ async function laadVrienden() {
   console.log('[sync] Vrienden geladen:', vrienden.size)
 }
 
+// ── Om de beurt (v247, syncbeurt.js) ──
+// klaarOp: wanneer het met elke vriend voor het laatst helemaal klaar was (ook over paginawissels heen).
+// bezigTot: tot wanneer een vriend 'nee' zei. wachtOp: wie ik net gevraagd heb.
+let wachtOp = null, wachtNr = 0, wachtTimer = null, beurtTimer = null
+const bezigTot = {}
+function klaarSleutel() { return 'fibro_sync_klaar_' + huidigeUserId }
+function leesKlaarOp() {
+  try { const k = JSON.parse(localStorage.getItem(klaarSleutel()) || '{}'); return k && typeof k === 'object' ? k : {} }
+  catch (e) { return {} }
+}
+function zetKlaarOp(id, tijd) {
+  const k = leesKlaarOp()
+  k[id] = tijd
+  for (const x of Object.keys(k)) if (!vrienden.has(x) && x !== id) delete k[x]
+  try { localStorage.setItem(klaarSleutel(), JSON.stringify(k)) } catch (e) {}
+}
+// Vrienden die volgens de server (profiel_versie, bewaard door de pagina Vrienden) iets nieuws hebben
+function vriendenMetNieuws() {
+  const uit = new Set()
+  try {
+    const l = JSON.parse(localStorage.getItem('fibro_vriendenpagina_' + huidigeUserId) || 'null')
+    for (const f of (l && Array.isArray(l.data) ? l.data : [])) {
+      const p = f && f.profiles
+      if (!p || typeof p.id !== 'string' || typeof p.profiel_versie !== 'string' || !p.profiel_versie) continue
+      let bij = null
+      try { bij = JSON.parse(localStorage.getItem('fibro_syncbij_' + huidigeUserId + '_' + p.id) || 'null') } catch (e) {}
+      const bekend = bij && typeof bij === 'object' ? [bij.v].concat(Array.isArray(bij.oud) ? bij.oud : []) : []
+      if (!bekend.includes(p.profiel_versie)) uit.add(p.id)
+    }
+  } catch (e) {}
+  return uit
+}
+const magNu = (id) => vrienden.has(id) && onlineGebruikers.has(id) && !inRust(id) && !inPauze(id)
+const beschermd = (id) => !!id && (id === chatVriend || id === voorkeurVriend || !!(videoVraag && videoVraag.vriendId === id))
+function beurtGegevens(behalve) {
+  const kandidaten = [...onlineGebruikers].filter(magNu)
+  return { kandidaten, voorkeur: [voorkeurVriend, chatVriend].filter(Boolean), klaarOp: leesKlaarOp(), bezigTot,
+    nieuw: vriendenMetNieuws(), achteraan: new Set(kandidaten.filter((id) => !heeftKenmerk(id, 'syncbeurt'))), nu: Date.now(), behalve }
+}
+function planBeurt(g) {
+  clearTimeout(beurtTimer)
+  beurtTimer = null
+  const m = SB.volgendeMoment(g)
+  if (m === Infinity) return
+  beurtTimer = setTimeout(() => { beurtTimer = null; if (syncPartnerId) probeerVolgende(); else checkSyncStart() }, Math.max(0, m - Date.now()) + 200)
+}
+
 function checkSyncStart() {
+  if (syncPartnerId || wachtOp) return
+  const g = beurtGegevens(null)
+  const ander = SB.kiesVolgende(g)
+  if (!ander) { planPauze(); planBeurt(g); return }
+  vraagBeurt(ander)
+}
+
+// Eerst vragen of de vriend wil (en kan). Een vriend met een oudere Fibro kent de vraag niet (geen kenmerk
+// 'syncbeurt'): dan meteen verbinden, zoals vroeger.
+async function vraagBeurt(id) {
+  if (!heeftKenmerk(id, 'syncbeurt')) { beginMet(id); return }
+  wachtOp = id
+  const nr = ++wachtNr
+  clearTimeout(wachtTimer)
+  wachtTimer = setTimeout(() => {
+    if (wachtOp !== id || wachtNr !== nr) return
+    console.log('[sync] Geen antwoord van', id, '- later opnieuw')
+    wachtOp = null
+    bezigTot[id] = Date.now() + 20000
+    checkSyncStart()
+  }, SB.VRAAG_MS)
+  console.log('[sync] Vraag om te syncen:', id)
+  const r = await stuurNaar(id, 'syncbeurt', { type: 'vraag' }).catch(() => 'fout')
+  if (r !== 'ok' && wachtOp === id && wachtNr === nr) { clearTimeout(wachtTimer); wachtOp = null; beginMet(id) }
+}
+
+function beginMet(ander) {
+  if (wachtOp === ander) { wachtOp = null; clearTimeout(wachtTimer) }
   if (syncPartnerId) return
-  const kan = (id) => vrienden.has(id) && !inRust(id) && !inPauze(id)
-  const eerst = [voorkeurVriend, chatVriend].find((id) => id && onlineGebruikers.has(id) && kan(id))
-  const ander = eerst || [...onlineGebruikers].find(kan)
-  if (!ander) { planPauze(); return }
   syncPartnerId = ander
   isInitiator = huidigeUserId < ander
   console.log('[sync] Start sync met', ander, '- initiator:', isInitiator)
   zetP2pStatus('verbinden...')
   openSyncKanaal(ander).catch((e) => console.log('[sync] Synckanaal openen mislukt:', e && e.message))
+}
+
+// Een vriend vraagt, of antwoordt (alleen het tabblad met de sync doet mee)
+function beurtBericht(data, van) {
+  if (!heeftSlot || !data || typeof data.type !== 'string' || !van || van === huidigeUserId || !vrienden.has(van)) return
+  if (data.type === 'vraag') {
+    const b = SB.beslisVraag({ van, partner: syncPartnerId, klaar: !!(syncPartnerId && eigenKlaar && anderKlaar),
+      beschermd: beschermd(syncPartnerId), wachtOp, inRust: inRust(van) })
+    stuurNaar(van, 'syncbeurt', { type: b.antwoord, reden: b.reden || null }).catch(() => {})
+    console.log('[sync] Vraag van', van, '->', b.antwoord, b.reden || '')
+    if (b.antwoord !== 'ja') return
+    if (b.stopEerst && syncPartnerId) stopSync()
+    if (wachtOp) { wachtOp = null; clearTimeout(wachtTimer) }
+    wisPauze(van)
+    beginMet(van)
+  } else if (data.type === 'ja') {
+    if (wachtOp === van) beginMet(van)
+  } else if (data.type === 'nee') {
+    if (wachtOp !== van) return
+    wachtOp = null
+    clearTimeout(wachtTimer)
+    const reden = ['bezig', 'wacht', 'rust'].includes(data.reden) ? data.reden : 'bezig'
+    bezigTot[van] = Date.now() + SB.wachtNaNee(reden)
+    setTimeout(checkSyncStart, 300)
+  }
+}
+
+// Klaar met deze vriend (alles binnen, aan beide kanten)? Dan onthouden en door naar de volgende.
+function naKlaar() {
+  if (syncPartnerId && eigenKlaar && !anderKlaar) wachtOpOudeVriend()
+  if (!syncPartnerId || !eigenKlaar || !anderKlaar) return
+  zetKlaarOp(syncPartnerId, Date.now())
+  setTimeout(() => { if (syncPartnerId) probeerVolgende(); else checkSyncStart() }, 2500)
+}
+// Een vriend met een oudere Fibro (geen kenmerk 'syncbeurt') stuurt na het ophalen geen 'klaar'. Ben ik klaar en
+// vraagt hij 15 s niets meer, dan is hij het ook.
+let laatsteGeef = 0, oudKlaarTimer = null
+function wachtOpOudeVriend() {
+  clearTimeout(oudKlaarTimer)
+  const partner = syncPartnerId
+  if (!partner || !eigenKlaar || anderKlaar || heeftKenmerk(partner, 'syncbeurt')) return
+  oudKlaarTimer = setTimeout(() => {
+    if (syncPartnerId !== partner || !eigenKlaar || anderKlaar) return
+    if (Date.now() - laatsteGeef < 15000) { wachtOpOudeVriend(); return }
+    console.log('[sync] Vriend met een oudere Fibro is stil - klaar')
+    anderKlaar = true
+    controleerRust()
+    naKlaar()
+  }, 15000)
+}
+function probeerVolgende() {
+  if (!heeftSlot || !syncPartnerId || !eigenKlaar || !anderKlaar || wachtOp || beschermd(syncPartnerId)) return
+  const g = beurtGegevens(syncPartnerId)
+  const volgende = SB.kiesVolgende(g)
+  if (!volgende) { planBeurt(g); return }
+  console.log('[sync] Klaar met', syncPartnerId, '- door naar', volgende)
+  stopSync()
+  vraagBeurt(volgende)
+}
+
+// Wat ik bij de vriend heb opgevraagd: zodra alles binnen is, ben ik klaar. Komt er iets niet (de vriend kon het
+// niet vinden, of het mag niet via relay), dan na een poos zonder nieuwe stukjes toch klaar.
+let wachtItems = null, itemKlok = null
+function verwachtItems(nodig) {
+  eigenKlaar = false
+  wachtItems = new Set(nodig.filter((n) => n !== 'video' && !(isRelayConnection && n.startsWith('muziek:'))))
+  zetItemKlok(15000)
+  if (!wachtItems.size) itemsBinnen()
+}
+function zetItemKlok(ms) {
+  clearTimeout(itemKlok)
+  itemKlok = setTimeout(() => { if (wachtItems) { console.log('[sync] Niet alles kwam binnen - toch klaar:', [...wachtItems].join(', ')); itemsBinnen() } }, ms)
+}
+function itemBinnen(naam) {
+  if (!wachtItems) return
+  wachtItems.delete(naam)
+  if (!wachtItems.size) itemsBinnen()
+  else zetItemKlok(10000)
+}
+function itemsBinnen() {
+  clearTimeout(itemKlok)
+  itemKlok = null
+  wachtItems = null
+  if (eigenKlaar || !dataChannel || dataChannel.readyState !== 'open') return
+  zetP2pStatus('alles binnen')
+  eigenKlaar = true
+  try { dataChannel.send(JSON.stringify({ type: 'klaar' })) } catch (e) {}
+  controleerRust()
+  naKlaar()
 }
 
 // v121: het synckanaal is afgeschermd (private): alleen jij en die vriend kunnen erin.
@@ -318,6 +485,18 @@ async function openSyncKanaal(anderId) {
         return
       }
       if (status === 'SUBSCRIBED') clearTimeout(kanaalTimer)
+      // v247: ook de kant die op het offer wacht, wacht niet eeuwig (kwam de vriend niet, dan hing de sync hier vast)
+      if (status === 'SUBSCRIBED' && !isInitiator) {
+        clearTimeout(syncTimeout)
+        syncTimeout = setTimeout(() => {
+          if (dataChannel && dataChannel.readyState === 'open') return
+          console.log('[sync] Sync timeout — geen offer na 35 sec')
+          const partner = syncPartnerId
+          stopSync()
+          mislukking(partner, 'Geen offer')
+          setTimeout(checkSyncStart, 500)
+        }, 35000)
+      }
       if (status === 'SUBSCRIBED' && isInitiator) {
         offerRetryCount = 0
         startOfferRetry()
@@ -433,6 +612,7 @@ function koppelDataChannel(kanaal) {
   dataChannel = kanaal
   dataChannel.onopen = async () => {
     console.log('[sync] DataChannel OPEN')
+    clearTimeout(syncTimeout) // v247 (wachtende kant)
     zetP2pStatus('P2P open')
     // Detecteer TURN/relay verbinding
     eigenKlaar = false
@@ -787,6 +967,7 @@ async function verwerkP2pBericht(bericht) {
   if (bericht.type === 'klaar') {
     anderKlaar = true
     controleerRust()
+    naKlaar() // v247
     return
   }
   if (bericht.type === 'manifest') {
@@ -885,12 +1066,18 @@ async function verwerkP2pBericht(bericht) {
       const mCached = await dbGet('vriend_' + syncPartnerId + '_muziek_' + itemId)
       if (!mCached || mCached.hash !== muziek[itemId].hash) muziekNodig.push('muziek:' + itemId)
     }
+    // v247: onthouden dat de muziek van deze vriend wacht op een rechtstreekse verbinding (vriend-profiel.html zegt het)
+    const relaySleutel = 'fibro_muziekrelay_' + huidigeUserId + '_' + syncPartnerId
     if (muziekNodig.length && !isRelayConnection) {
       nodig.push(...muziekNodig)
+      try { localStorage.removeItem(relaySleutel) } catch (e) {}
     } else if (muziekNodig.length && isRelayConnection) {
       console.log('[sync] Relay-verbinding - muziek overgeslagen (geen Fibro+)')
       zetP2pStatus('muziek niet opgehaald (relay)')
       window._muziekGeblokkeerdDoorRelay = true
+      try { localStorage.setItem(relaySleutel, String(Date.now())) } catch (e) {}
+    } else {
+      try { localStorage.removeItem(relaySleutel) } catch (e) {}
     }
     // Opruimen foto's: gecachte foto's die niet meer in het manifest staan zijn verwijderd bij de vriend
     const fotoPrefix = 'vriend_' + syncPartnerId + '_foto_'
@@ -965,14 +1152,17 @@ async function verwerkP2pBericht(bericht) {
     if (nodig.length) {
       dataChannel.send(JSON.stringify({ type: 'geef', items: nodig }))
       zetP2pStatus('vraag ' + nodig.length + ' item(s)')
+      verwachtItems(nodig) // v247: klaar zodra alles binnen is
     } else {
       zetP2pStatus('alles up-to-date')
       eigenKlaar = true
       try { dataChannel.send(JSON.stringify({ type: 'klaar' })) } catch (e) {}
       controleerRust()
+      naKlaar() // v247
     }
   }
   if (bericht.type === 'geef') {
+    laatsteGeef = Date.now() // v247
     // VALIDATIE (bug #5): items moet een lijst van bekende, korte strings zijn
     if (!Array.isArray(bericht.items) || bericht.items.length > 300) return
     for (const item of bericht.items) {
@@ -1027,11 +1217,13 @@ async function verwerkP2pBericht(bericht) {
       await dbPut({ id: 'vriend_' + syncPartnerId + '_layout', hash: bericht.hash, data: bericht.data, ontvangen: Date.now() })
       console.log('[sync] Layout van vriend opgeslagen')
       zetP2pStatus('layout ontvangen \u2713')
+      itemBinnen('layout')
     } else if (bericht.itemId.startsWith('muziek_')) {
       const muziekItemId = bericht.itemId.slice(7) // 'profiel' of 'playlist'
       await dbPut({ id: 'vriend_' + syncPartnerId + '_muziek_' + muziekItemId, hash: bericht.hash, data: bericht.data, ontvangen: Date.now() })
       console.log('[sync] Muziek van vriend opgeslagen:', muziekItemId)
       zetP2pStatus('muziek ' + muziekItemId + ' ontvangen \u2713')
+      itemBinnen('muziek:' + muziekItemId)
     } else if (bericht.itemId.startsWith('klein_')) {
       const sl = bericht.itemId.slice(6)
       if (!['quote','aftel','optel','poll'].includes(sl)) return
@@ -1039,10 +1231,12 @@ async function verwerkP2pBericht(bericht) {
       await dbPut({ id: 'vriend_' + syncPartnerId + '_' + sl, hash: bericht.hash, data: bericht.data, ontvangen: Date.now() })
       console.log('[sync] Widget van vriend opgeslagen:', sl)
       zetP2pStatus(sl + ' ontvangen \u2713')
+      itemBinnen('klein:' + sl)
     } else if (bericht.itemId === 'videometa') {
       await dbPut({ id: 'vriend_' + syncPartnerId + '_video_meta', hash: bericht.hash, dataHash: bericht.dataHash || null, data: bericht.data, ontvangen: Date.now() })
       console.log('[sync] Video-info van vriend opgeslagen')
       zetP2pStatus('video-info ontvangen \u2713')
+      itemBinnen('videometa')
     }
   }
 }
@@ -1212,6 +1406,7 @@ async function verwerkChunk(bericht) {
     buf.delen[volgnr] = data
     buf.ontvangen++
   }
+  if (wachtItems) zetItemKlok(10000) // v247: er komt nog iets binnen
   if (itemId === 'video' && videoVraag && videoVraag.vriendId === syncPartnerId) {
     zetVideoTimer(30000) // zolang er stukjes binnenkomen, niet opgeven
     try { videoVraag.opVoortgang(buf.ontvangen / buf.totaal) } catch (e) {}
@@ -1281,6 +1476,9 @@ async function verwerkChunk(bericht) {
                                             await dbPut(opslagRecord)
     delete chunkBuffers[itemId]
     console.log('[sync] Item compleet opgeslagen:', itemId)
+    // v247: welk opgevraagd ding was dit?
+    itemBinnen(itemId.startsWith('pfoto_') ? 'foto:' + itemId : itemId.startsWith('sticker_') ? 'sticker:' + itemId.slice(8)
+      : itemId.startsWith('widgetbg_') ? 'wbg:' + itemId.slice(9) : itemId.startsWith('muziek_') ? 'muziek:' + itemId.slice(7) : itemId)
     if (itemId === 'video' && videoVraag && videoVraag.vriendId === syncPartnerId) videoVraagKlaar()
     zetP2pStatus(statusLabel + ' \u2713')
   }
@@ -1572,6 +1770,11 @@ function stopSync() {
   anderKlaar = false
   manifestVan = null
   laatsteVideoHash = null
+  wachtItems = null // v247
+  clearTimeout(itemKlok)
+  itemKlok = null
+  clearTimeout(oudKlaarTimer)
+  laatsteGeef = 0
   zetP2pStatus('')
 }
 

@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=42"></script>
+<script src="taal.js?v=43"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Profiel</title>
@@ -151,7 +151,7 @@ body.heeft-wallpaper::before { display:block; }
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
-  import { initSync, vraagVriendVideo } from './sync.js?v=246'
+  import { initSync, vraagVriendVideo } from './sync.js?v=247'
   import { eisSessie, startBewaking } from './sessie.js?v=95'
   import { startMeldingen } from './meldingen.js?v=187'
   import { leesMood, isMoodSticker, tekenMoodSticker } from './moodsticker.js?v=236' // v171: een sticker als mood
@@ -503,7 +503,13 @@ body.heeft-wallpaper::before { display:block; }
         continue
       }
       // v129: poll/timer/quote zonder inhoud: zeggen dat er nog niets staat (in plaats van alleen een icoon)
-      const leegTekst = { poll: T('Nog geen poll'), afteltimer: T('Nog geen datum'), opteltimer: T('Nog geen datum'), quote: T('Nog geen quote') }[w.id]
+      // v247: muziek die nog niet op dit toestel staat: zeggen waarom (via de relay gaat geen muziek mee, sync.js)
+      let muziekRelay = false
+      try { muziekRelay = !!localStorage.getItem('fibro_muziekrelay_' + _eigenUid() + '_' + vriendId) } catch (e) {}
+      const muziekTekst = muziekRelay
+        ? T('De muziek komt binnen zodra jullie telefoons elkaar rechtstreeks kunnen bereiken (bijvoorbeeld allebei op wifi).')
+        : T('De muziek komt binnen zodra jullie allebei online zijn.')
+      const leegTekst = { poll: T('Nog geen poll'), afteltimer: T('Nog geen datum'), opteltimer: T('Nog geen datum'), quote: T('Nog geen quote'), muziek: muziekTekst }[w.id]
       el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">' + vEsc(w.icon || '🧩') + '</span><span class="widget-titel">' + vEsc(w.titel ? T(w.titel) : w.id) + '</span></div><div class="widget-inhoud">' + (leegTekst ? '<div style="font-size:13px;color:var(--muted)">' + leegTekst + '</div>' : '<div class="wi-icon">' + vEsc(w.icon || '🧩') + '</div>') + '</div>'
       grid.appendChild(el)
     }

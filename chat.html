@@ -157,6 +157,9 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 .spel-keuze-btn:active { transform:scale(0.94); }
 .spel-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:200; align-items:center; justify-content:center; flex-direction:column; }
 .spel-overlay.open { display:flex; }
+.spel-wacht-draai { width:34px; height:34px; border-radius:50%; border:3px solid #ffffff2a; border-top-color:var(--accent,#c9a0ff); animation:spelWachtDraai 0.9s linear infinite; }
+@keyframes spelWachtDraai { to { transform:rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spel-wacht-draai { animation-duration:2.4s; } }
 .spel-sluit-btn { position:absolute; top:16px; right:16px; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.12); border:none; color:white; font-size:20px; cursor:pointer; z-index:10; display:flex; align-items:center; justify-content:center; }
 .spel-titel-bar { position:absolute; top:16px; left:16px; font-size:14px; color:white; font-weight:600; opacity:0.8; }
 .spel-video-vak { display:none; position:relative; flex:1 1 0; min-height:0; width:min(100% - 24px,460px); margin:8px 12px; overflow:hidden; border:1px solid rgba(151,240,221,.55); border-radius:15px; background:linear-gradient(145deg,#111827,#0a1220); box-shadow:inset 0 0 24px #0009,0 7px 18px #0006; cursor:default; transition:border-color .25s ease,box-shadow .25s ease,transform .22s ease; }
@@ -410,7 +413,7 @@ window.veiligeUrl = function(v){
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { nieuweSpelSessie, isNieuwsteSpelSessie } from './spelsessie.js?v=1'
   import { mountChessLayout } from './chess-layout.js?v=3'
-  import { maakSpelVerbinding } from './spelverbinding.js?v=1'
+  import { maakSpelVerbinding } from './spelverbinding.js?v=2'
   import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=1'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
   pasBlokstijlToe()
@@ -2380,10 +2383,27 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const verbinding = maakSpelVerbinding({
       client:supabase,
       naam:spelKanaalNaam(sessieId, spelType),
-      onStatus:status => { if (spelKanaal === verbinding) toonSpelVerbindingStatus(status) },
+      onStatus:status => {
+        if (spelKanaal !== verbinding) return
+        toonSpelVerbindingStatus(status)
+        if (status === 'connected' && spelWachtKlaar) { const klaar = spelWachtKlaar; spelWachtKlaar = null; klaar(true) }
+      },
       onActivity:() => { if (spelKanaal === verbinding && spelActief === 'schaken') startSpelBel() }
     })
     spelKanaal = verbinding
+
+    // v241: het spel begint pas als je vriend er ook is. Tot dan staat er een wachtscherm voor het spel,
+    // en de berichten van je vriend worden bewaard (hold) tot het spel klaarstaat (release).
+    // Schaken met drie spelers heeft een eigen wachtkamer.
+    const wachtOpVriend = spelType !== 'schakendrie'
+    if (wachtOpVriend) {
+      verbinding.hold()
+      toonSpelWachtscherm()
+      const vriendIsEr = new Promise(klaar => { spelWachtKlaar = klaar })
+      verbinding.subscribe()
+      if (!await vriendIsEr || spelActief !== spelType || spelKanaal !== verbinding) return
+      document.getElementById('spelWachtscherm')?.remove()
+    }
 
     if (spelType === 'botkaaseiren') await startBotKaasEieren()
     else if (spelType === 'vieroprij') await startVierOpEenRij()
@@ -2435,6 +2455,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       })
     }
     spelKanaal.subscribe()
+    if (wachtOpVriend) verbinding.release()
     // v169: de chatbalk alleen bij de beurtspellen; bij de snelle spellen zit hij in de weg
     // v170: in de balk stickers in plaats van emoji's
     if (SPELCHAT_SPELLEN.includes(spelType)) bouwSpelChatUI()
@@ -2622,7 +2643,45 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // A quiet phone is not evidence that the other player left. Only the explicit
   // leave event ends a game; connection recovery keeps the current board alive.
+  // v241: het wachtscherm voor het spel, tot je vriend er is (zie speelMee)
+  let spelWachtKlaar = null
+  function toonSpelWachtscherm() {
+    const inhoud = document.getElementById('spelInhoud')
+    if (!inhoud) return
+    document.getElementById('spelWachtscherm')?.remove()
+    const scherm = document.createElement('div')
+    scherm.id = 'spelWachtscherm'
+    scherm.setAttribute('role', 'status')
+    scherm.setAttribute('aria-live', 'polite')
+    scherm.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:16px;max-width:min(88vw,360px);padding:26px 22px;border-radius:18px;background:rgba(20,20,40,0.92);border:1px solid #ffffff22;box-shadow:0 10px 40px #0008;text-align:center;'
+    const draai = document.createElement('div')
+    draai.className = 'spel-wacht-draai'
+    draai.setAttribute('aria-hidden', 'true')
+    const tekst = document.createElement('div')
+    tekst.id = 'spelWachtTekst'
+    tekst.style.cssText = 'color:#fff;font-size:16px;font-weight:600;line-height:1.45'
+    tekst.textContent = T('⏳ Wachten tot {naam} in het spel zit...', { naam: spelVriendUsername() })
+    const extra = document.createElement('div')
+    extra.id = 'spelWachtExtra'
+    extra.style.cssText = 'color:#cae6e5;font-size:13px;line-height:1.4'
+    extra.hidden = true
+    const knop = document.createElement('button')
+    knop.type = 'button'
+    knop.textContent = T('Annuleren')
+    knop.style.cssText = 'background:#ffffff1f;border:1px solid #ffffff44;border-radius:10px;padding:9px 22px;color:#fff;font-weight:600;cursor:pointer;'
+    knop.onclick = () => window.sluitSpel()
+    scherm.append(draai, tekst, extra, knop)
+    inhoud.appendChild(scherm)
+  }
+
   function toonSpelVerbindingStatus(status) {
+    const wachtExtra = document.getElementById('spelWachtExtra')
+    if (wachtExtra) { // nog op het wachtscherm: daar de verbinding laten zien
+      const tekstenWacht = { reconnecting:'Verbinding herstellen; je spel blijft open.', offline:'Wachten op internet; je spel blijft open.' }
+      wachtExtra.textContent = tekstenWacht[status] ? T(tekstenWacht[status]) : ''
+      wachtExtra.hidden = !tekstenWacht[status]
+      return
+    }
     const inhoud = document.getElementById('spelInhoud')
     const plek = inhoud?.querySelector('.sch-spel') || inhoud
     if (!plek || !spelActief) return
@@ -2666,6 +2725,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const verbinding = spelKanaal
     spelKanaal = null
     spelChatCrypto = null
+    if (spelWachtKlaar) { const klaar = spelWachtKlaar; spelWachtKlaar = null; klaar(false) } // v241: wachten gestopt
     if (!wasFibroTest && !stil && verbinding && spelActief) {
       // Allow the explicit leave message to reach the server before disposing.
       Promise.resolve(verbinding.send({ type:'broadcast', event:'verlaten', payload:{} }))

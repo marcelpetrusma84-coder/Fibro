@@ -101,8 +101,10 @@ for (const [i, l] of NPK.LEVELS.entries()) {
   bot.ontvang('balstaat', { ballen: [[140, 200, 1, -3, 0]], eff: { boven: { b: 90 } }, caps: [[50, 100, -1.7, 'groot']] })
   bot.stop()
   const pong = lees('pong-ui.js')
-  assert.match(pong, /const PROTOCOL = 2/)
-  assert.match(pong, /blokkenAan = anderVersie >= PROTOCOL/, 'alleen blokjes als de ander v2 heeft')
+  // v3 (31 okt 2026): de host kiest Klassiek of Blokjes; de keuze alleen als de ander blokjes kent (v2 of hoger)
+  assert.match(pong, /const PROTOCOL = 3/)
+  assert.match(pong, /if \(anderVersie >= 2\) \{ toonModusKeuze/, 'alleen kiezen als de ander blokjes kent')
+  assert.match(pong, /if \(benIkHost\) blokkenAan = m === 'blokjes'/)
   assert.match(pong, /\bbal: eerste \?/, "de balstaat houdt 'bal' voor een oudere versie aan de andere kant")
 }
 

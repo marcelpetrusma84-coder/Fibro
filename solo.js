@@ -405,7 +405,7 @@ export const SOLO_SPELLEN = {
   schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=199',  bot: schaakBot, motor: './schaak.js?v=95', motorNaam: 'Schaak' },
   dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=147',   bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
   // 30 okt 2026: Neo Paddle v2 (blokjes en power-ups) en levels voor alleen (spel.html toont een knop 🧱 Levels).
-  pong:         { naam: 'Neo Paddle',    icon: '🏓', bestand: './pong-ui.js?v=237',     bot: pongBot, levels: './neopaddle-levels.js?v=1' },
+  pong:         { naam: 'Neo Paddle',    icon: '🏓', bestand: './pong-ui.js?v=241',     bot: pongBot, levels: './neopaddle-levels.js?v=1' },
   // Ghost Tag heeft zelf al een computerspookje: zonder kanaal speel je daartegen.
   // gewoneScherpte: op telefoons niet op dubbele scherpte tekenen (4x minder beeldpunten). Sinds v177 gebruikt
   // geen spel het meer (spel.html kent het nog).

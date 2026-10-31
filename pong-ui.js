@@ -7,9 +7,13 @@
 // Groot/klein, omgekeerd, krachtveld (houdt 1 bal tegen), slow motion, drie ballen, vuurbal. In elke golf blokjes
 // zijn minstens twee kolommen leeg: er is altijd een doorgang naar de tegenstander. Is een golf op, dan komt de
 // volgende. Alleen als beide kanten deze versie hebben (de 'pong-klaar'-melding draagt v: 2); anders gewoon Pong.
+// 31 okt 2026 (Neo Paddle v3): twee spelvormen. Klassiek = de 7 levels met obstakels zoals vroeger (zonder blokjes),
+// Blokjes = blokjes en power-ups. De host kiest (tegen de computer: jij); de gast ziet 'wacht tot ... kiest'.
+// Protocol 3: de host stuurt 'pong-modus'. Een gast met protocol 2 wacht daar niet op (die krijgt het via de balstaat).
 import * as NPK from './neopaddle.js?v=1'
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v147)
-const PROTOCOL = 2
+const PROTOCOL = 3
+const MODI = ['klassiek', 'blokjes']
 
 export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
   // isActief() zegt of Pong nog het geopende spel is; zonder die controle blijft
@@ -41,6 +45,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
   // De host beslist (blokkenAan) en rekent alles uit, in zijn eigen beeld: 'onder' = de host, 'boven' = de gast.
   let anderVersie = 1
   let blokkenAan = false
+  let modus = null                        // 'klassiek' of 'blokjes', gekozen door de host
   let golfNr = 0, golfPauze = 0
   let blokken = []
   let capsules = []                      // { x, y, vy, soort }
@@ -244,9 +249,25 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
       <div id="pong-status" style="color:#00f0ff;font-size:14px;font-weight:700;letter-spacing:1px;text-shadow:0 0 8px #00f0ff;"></div>
       <div id="pong-match" style="font-size:12px;font-weight:700;letter-spacing:1px;min-height:15px;"></div>
-      <canvas id="pong-canvas" width="${BREEDTE}" height="${HOOGTE}" style="background:#050510;border:2px solid #ff00cc;border-radius:8px;touch-action:none;box-shadow:0 0 30px rgba(255,0,204,0.5),0 0 60px rgba(255,0,204,0.2),inset 0 0 30px rgba(0,0,0,0.8);"></canvas>
+      <div style="position:relative;line-height:0;">
+        <canvas id="pong-canvas" width="${BREEDTE}" height="${HOOGTE}" style="background:#050510;border:2px solid #ff00cc;border-radius:8px;touch-action:none;box-shadow:0 0 30px rgba(255,0,204,0.5),0 0 60px rgba(255,0,204,0.2),inset 0 0 30px rgba(0,0,0,0.8);"></canvas>
+        <div id="pong-keuze" style="display:none;position:absolute;inset:2px;border-radius:7px;background:rgba(5,5,16,0.94);flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;line-height:1.3;">
+          <div style="color:#00f0ff;font:bold 15px monospace;letter-spacing:1px;text-shadow:0 0 10px #00f0ff;">${T('Kies een spelvorm')}</div>
+          <button type="button" class="pong-modus" data-modus="klassiek" style="width:100%;max-width:220px;padding:12px;border-radius:12px;border:2px solid #ff00cc;background:#12051c;color:#fff;cursor:pointer;box-shadow:0 0 14px rgba(255,0,204,0.45);">
+            <div style="pointer-events:none;font:bold 17px monospace;color:#ff00cc;text-shadow:0 0 8px #ff00cc;">🔺 ${T('Klassiek')}</div>
+            <div style="pointer-events:none;font-size:12px;color:rgba(255,255,255,0.75);margin-top:4px;">${T('7 levels met obstakels')}</div>
+          </button>
+          <button type="button" class="pong-modus" data-modus="blokjes" style="width:100%;max-width:220px;padding:12px;border-radius:12px;border:2px solid #00f0ff;background:#04141c;color:#fff;cursor:pointer;box-shadow:0 0 14px rgba(0,240,255,0.45);">
+            <div style="pointer-events:none;font:bold 17px monospace;color:#00f0ff;text-shadow:0 0 8px #00f0ff;">🧱 ${T('Blokjes')}</div>
+            <div style="pointer-events:none;font-size:12px;color:rgba(255,255,255,0.75);margin-top:4px;">${T('Blokjes breken en power-ups')}</div>
+          </button>
+        </div>
+      </div>
       <div id="pong-uitleg" style="font-size:11px;color:rgba(255,255,255,0.6);text-align:center;max-width:280px;">${T('Sleep om je paddle te bewegen')}</div>
-      <button id="pong-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">${T('↻ Opnieuw spelen')}</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+        <button id="pong-opnieuw" style="display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 22px;color:#1a0a2e;font-weight:600;cursor:pointer;">${T('↻ Opnieuw spelen')}</button>
+        <button id="pong-andere" style="display:none;background:#ffffff1f;border:1px solid #ffffff44;border-radius:10px;padding:10px 18px;color:#fff;font-weight:600;cursor:pointer;">${T('Andere spelvorm')}</button>
+      </div>
     </div>`
 
   const canvas = document.getElementById('pong-canvas')
@@ -266,6 +287,8 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
   }
   const matchEl = document.getElementById('pong-match')
   const opnieuwBtn = document.getElementById('pong-opnieuw')
+  const andereBtn = document.getElementById('pong-andere')
+  const keuzeEl = document.getElementById('pong-keuze')
 
   function tekenPaddle(x, y, b, e) {
     // omgekeerd = oranje, vuur = rood-oranje gloed, anders cyaan
@@ -660,6 +683,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
       const winnaar = mijnScore >= WIN_SCORE
       statusEl.textContent = winnaar ? T('🎉 Jij wint!') : T('😢 {naam} wint!', { naam: vriendNaam })
       opnieuwBtn.style.display = 'block'
+      if (benIkHost && anderVersie >= 2) andereBtn.style.display = 'block'
       if (animatieFrame) cancelAnimationFrame(animatieFrame)
     }
   }
@@ -729,6 +753,12 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
   spelKanaal.on('broadcast', { event: 'balstaat' }, msg => {
     if (benIkHost) return
     const p = msg.payload || {}
+    // Wachtte ik nog op de keuze van de host, maar is zijn spel al begonnen: dan meteen meedoen
+    if (wachtOpModus) {
+      wachtOpModus = false
+      zetModus(Array.isArray(p.blok) ? 'blokjes' : 'klassiek')
+      beginGast = true
+    }
     if (Array.isArray(p.ballen) && p.ballen.length) {
       ballen = p.ballen.map(a => ({ x: a[0], y: HOOGTE - a[1], vx: a[2], vy: -a[3], vuur: a[4] }))
     } else if (p.bal) {
@@ -748,7 +778,9 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
     }
     updateScoreUI()
     checkWinst()
+    if (beginGast) { beginGast = false; bouwScoreRegel(); herstartLoop() }
   })
+  let beginGast = false
 
   function gastLoop() {
     if (gameOver) { tekenEindScherm(); return }
@@ -765,25 +797,71 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
   spelKanaal.on('broadcast', { event: 'level-update' }, msg => {
     huidigLevel = msg.payload.level
   })
-  spelKanaal.on('broadcast', { event: 'opnieuw' }, () => {
+  spelKanaal.on('broadcast', { event: 'opnieuw' }, msg => {
+    const m = msg && msg.payload && msg.payload.modus
+    if (!benIkHost && MODI.includes(m)) zetModus(m)
     mijnScore = 0; vriendScore = 0
     gameOver = false
-    opnieuwBtn.style.display = 'none'
+    opnieuwBtn.style.display = 'none'; andereBtn.style.display = 'none'
     resetExtra()
     resetBal(benIkHost ? 1 : -1)
     updateScoreUI()
     herstartLoop()
   })
 
-  opnieuwBtn.addEventListener('click', () => {
+  function nieuwPotje() {
     mijnScore = 0; vriendScore = 0
     gameOver = false
-    opnieuwBtn.style.display = 'none'
+    opnieuwBtn.style.display = 'none'; andereBtn.style.display = 'none'
     resetExtra()
     resetBal(1)
     updateScoreUI()
-    spelKanaal.send({ type: 'broadcast', event: 'opnieuw', payload: {} })
+    spelKanaal.send({ type: 'broadcast', event: 'opnieuw', payload: modus ? { modus } : {} })
     herstartLoop()
+  }
+  opnieuwBtn.addEventListener('click', nieuwPotje)
+  // Na een potje kan de host een andere spelvorm kiezen (en dan begint er meteen een nieuw potje)
+  andereBtn.addEventListener('click', () => {
+    if (!benIkHost) return
+    opnieuwBtn.style.display = 'none'; andereBtn.style.display = 'none'
+    toonModusKeuze(() => {
+      // een andere spelvorm begint weer bij level 1
+      huidigLevel = 1
+      spelKanaal.send({ type: 'broadcast', event: 'level-update', payload: { level: 1 } })
+      nieuwPotje()
+    })
+  })
+
+  // ── Spelvorm: Klassiek (de 7 levels met obstakels) of Blokjes (blokjes en power-ups) ──
+  function zetModus(m) {
+    modus = m
+    if (benIkHost) blokkenAan = m === 'blokjes'
+    uitlegEl.textContent = m === 'blokjes'
+      ? T('Sleep om je paddle te bewegen. Breek blokjes: vang groene power-ups, ontwijk rode.')
+      : T('Sleep om je paddle te bewegen')
+  }
+  function toonModusKeuze(klaar) {
+    keuzeEl.style.display = 'flex'
+    statusEl.textContent = T('Kies een spelvorm')
+    keuzeEl.querySelectorAll('.pong-modus').forEach(knop => {
+      knop.onclick = () => {
+        if (!isActief()) return
+        keuzeEl.style.display = 'none'
+        zetModus(knop.dataset.modus)
+        resetExtra()
+        spelKanaal.send({ type: 'broadcast', event: 'pong-modus', payload: { modus } })
+        klaar()
+      }
+    })
+  }
+  // De gast: de host heeft gekozen
+  let wachtOpModus = false
+  spelKanaal.on('broadcast', { event: 'pong-modus' }, msg => {
+    if (benIkHost) return
+    const m = msg && msg.payload && msg.payload.modus
+    if (!MODI.includes(m)) return
+    zetModus(m)
+    if (wachtOpModus) { wachtOpModus = false; startAftellen() }
   })
 
   // ── Wachtkamer: wacht tot beide spelers klaar zijn ──
@@ -814,11 +892,30 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
   function checkBeideKlaar() {
     if (ikKlaarGemeld && anderKlaar && !beideKlaar) {
       beideKlaar = true
-      // De host beslist: blokjes en power-ups alleen als de ander ze ook kent
-      if (benIkHost) { blokkenAan = anderVersie >= PROTOCOL; resetExtra() }
-      if (anderVersie >= PROTOCOL) uitlegEl.textContent = T('Sleep om je paddle te bewegen. Breek blokjes: vang groene power-ups, ontwijk rode.')
+      if (benIkHost) {
+        // De host kiest de spelvorm. Kent de ander geen blokjes (versie 1): gewoon Klassiek.
+        if (anderVersie >= 2) { toonModusKeuze(() => { pongModusHerhaal(); startAftellen() }); return }
+        zetModus('klassiek'); resetExtra(); startAftellen(); return
+      }
+      // De gast: een host met versie 3 kiest eerst; versie 2 speelt altijd met blokjes, versie 1 zonder
+      if (anderVersie >= 3) {
+        if (modus) { startAftellen(); return }
+        wachtOpModus = true
+        statusEl.textContent = T('⏳ Wachten tot {naam} een spelvorm kiest...', { naam: vriendNaam })
+        return
+      }
+      zetModus(anderVersie >= 2 ? 'blokjes' : 'klassiek')
       startAftellen()
     }
+  }
+
+  // De keuze nog een paar keer sturen (een bericht kan kwijtraken)
+  function pongModusHerhaal() {
+    let n = 0
+    const klok = setInterval(() => {
+      if (++n > 3 || !isActief()) { clearInterval(klok); return }
+      spelKanaal.send({ type: 'broadcast', event: 'pong-modus', payload: { modus } })
+    }, 700)
   }
 
   function startAftellen() {

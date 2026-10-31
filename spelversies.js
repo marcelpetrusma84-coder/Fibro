@@ -13,7 +13,8 @@ export const SPEL_VERSIES = {
   schaken: 4,        // Chess (v3 = v197: webcam, vriend uitnodigen, nieuwe instellingen, PR #3 van Tijn;
                      //  v4 = v198: webcam-status volgt de echte camera, knop voor tegengehouden geluid)
   dammen: 1,         // Draughts
-  pong: 2,           // Neo Paddle (v2 = 30 okt 2026: blokjes en power-ups, levels voor alleen)
+  pong: 3,           // Neo Paddle (v2 = 30 okt 2026: blokjes en power-ups, levels voor alleen;
+                     //  v3 = 31 okt 2026: kies Klassiek (de oude 7 levels met obstakels) of Blokjes)
   pacman: 1,         // Ghost Tag
   pinball: 1,        // Twin Snakes
   flappybird: 1,     // Flapper

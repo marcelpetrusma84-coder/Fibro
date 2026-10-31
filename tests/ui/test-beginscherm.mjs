@@ -55,3 +55,28 @@ for (const m of stukken.matchAll(/\bT\('((?:[^'\\]|\\.)*)'/g)) assert.ok(Object.
 for (const k of ['Meldingen', '🔔 Meldingen aanzetten']) assert.ok(EN[k], 'Engels voor ' + k)
 delete globalThis.window
 console.log('ok: Fibro op het beginscherm, met tekeningen; Meldingen aanzetten op Profiel')
+
+// 6. v248b: al bij het aanmelden (login.html > Registreren) en op de setup-pagina
+{
+  const login = lees('login.html'), setup = lees('setup.html'), bs2 = lees('beginscherm.js')
+  assert.match(login, /<div id="reg-beginscherm" hidden/, 'de kaart staat standaard verborgen')
+  assert.ok(login.indexOf('id="reg-beginscherm"') < login.indexOf('id="reg-form"'), 'boven het formulier')
+  assert.match(login, /import \{ iphoneZonderApp, openBeginschermUitleg \} from '\.\/beginscherm\.js\?v=1'/)
+  assert.match(login, /if \(kaart && iphoneZonderApp\(\) && !weg\) \{/, 'alleen op een iPhone in Safari')
+  assert.match(login, /openBeginschermUitleg\(\{ reden: 'account' \}\)/)
+  assert.match(login, /sessionStorage\.setItem\('fibro_reg_beginscherm_weg', '1'\)/, 'Toch hier verdergaan: weg')
+  assert.match(bs2, /if \(reden === 'account'\) \{\n      \/\/ nog geen account: dat maak je meteen in de app\n      lijst\.appendChild\(el\('li', '', T\('Tik op <b>Registreren<\/b> en maak daar je account\.'\)\)\)/,
+    'bij het aanmelden: daarna in de app registreren (niet opnieuw inloggen)')
+  assert.match(setup, /if \(blok && !t\.app && \(t\.ios \|\| t\.android\)\) \{/, 'setup: alleen op een telefoon, niet als app')
+  assert.match(setup, /openBeginschermUitleg\(\{ reden: 'setup' \}\)/)
+  globalThis.window = {}
+  new Function('window', lees('taal-en.js'))(globalThis.window)
+  const EN = globalThis.window.FIBRO_EN
+  for (const m of login.matchAll(/<(?:div|button)[^>]*data-t>([^<]+)<\/(?:div|button)>/g)) if (/beginscherm|iPhone|Laat zien hoe|Toch hier/.test(m[1])) assert.ok(EN[m[1].trim()], 'Engels voor ' + m[1].slice(0, 40))
+  for (const m of (setup + bs2).matchAll(/\bT\('((?:[^'\\]|\\.)*)'/g)) {
+    const k = m[1].replace(/\\u\{([0-9A-F]+)\}/gi, (x, h) => String.fromCodePoint(parseInt(h, 16))).replace(/\\u([0-9a-fA-F]{4})/g, (x, h) => String.fromCharCode(parseInt(h, 16))).replace(/\\'/g, "'")
+    assert.ok(Object.prototype.hasOwnProperty.call(EN, k), 'Engels voor ' + k.slice(0, 50))
+  }
+  delete globalThis.window
+  console.log('ok: ook bij het aanmelden en op de setup-pagina')
+}

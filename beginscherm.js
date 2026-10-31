@@ -132,7 +132,8 @@ function stappenAndroid() {
   ]
 }
 
-// De uitleg openen. reden: 'meldingen' (Profiel > Meldingen aanzetten op een iPhone in Safari) of leeg.
+// De uitleg openen. reden: 'meldingen' (Profiel > Meldingen aanzetten op een iPhone in Safari), 'account' (aanmelden op
+// een iPhone in Safari: eerst op het beginscherm, dan daar het account maken), 'setup' (na het aanmelden) of leeg.
 export function openBeginschermUitleg({ reden = '' } = {}) {
   document.getElementById('beginschermScherm')?.remove()
   const t = toestel()
@@ -148,12 +149,15 @@ export function openBeginschermUitleg({ reden = '' } = {}) {
   const el = (tag, css, html) => { const e = document.createElement(tag); if (css) e.style.cssText = css; if (html != null) e.innerHTML = html; return e }
   const titel = el('h2', 'font-size:18px;margin:0 0 10px;color:var(--accent,#c084fc)')
   titel.id = 'bsTitel'
-  titel.textContent = reden === 'meldingen' ? T('\u{1F514} Meldingen op je iPhone') : T('\u{1F4F2} Fibro op je beginscherm zetten')
+  titel.textContent = reden === 'meldingen' ? T('\u{1F514} Meldingen op je iPhone')
+    : reden === 'account' ? T('\u{1F4F2} Eerst Fibro op je beginscherm') : T('\u{1F4F2} Fibro op je beginscherm zetten')
   kaart.appendChild(titel)
   const alinea = (html, css = '') => kaart.appendChild(el('p', 'font-size:14px;line-height:1.5;margin:0 0 12px;' + css, html))
   if (t.app) alinea(T('✓ Je gebruikt Fibro nu al als app.'), 'color:#86efac;font-weight:600')
   if (reden === 'meldingen') {
     alinea(T('Op de iPhone werken meldingen <b>alleen</b> als Fibro op je beginscherm staat. Zo zet je Fibro daar neer:'))
+  } else if (reden === 'account') {
+    alinea(T('Maak je account in de app op je beginscherm. Dan hoef je daarna niet opnieuw in te loggen, en kun je meteen meldingen aanzetten.'))
   } else {
     alinea(T('Dan opent Fibro als een gewone app: over het hele scherm, met meldingen en een bolletje bij ongelezen berichten.'))
   }
@@ -201,7 +205,10 @@ export function openBeginschermUitleg({ reden = '' } = {}) {
     daarna.textContent = ''
     daarna.appendChild(el('div', 'font-weight:700;margin-bottom:4px', esc(T('Daarna, in de app:'))))
     const lijst = el('ul', 'margin:0;padding-left:18px')
-    if (soort === 'iphone') {
+    if (reden === 'account') {
+      // nog geen account: dat maak je meteen in de app
+      lijst.appendChild(el('li', '', T('Tik op <b>Registreren</b> en maak daar je account.')))
+    } else if (soort === 'iphone') {
       lijst.appendChild(el('li', '', T('Log opnieuw in. De app op je beginscherm heeft eigen opslag.')))
       lijst.appendChild(el('li', '', T('Zet je sleutel terug met Face ID of je herstelcode, zodat je je berichten kunt lezen.')))
     }

@@ -175,7 +175,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 .spel-overlay.fibro-test-mode { background:rgba(0,0,0,.96); }
 .spel-overlay.fibro-test-mode .spel-video-vak { border:2px solid #ffd400; box-shadow:inset 0 0 20px #0009,0 0 0 2px #171717,0 0 20px #ffcf0050; }
 .spel-overlay.fibro-test-mode .video-etiket { background:#141414ed; color:#ffe34a; border:1px solid #ffd400; }
-.spel-overlay.fibro-test-mode #spelVideoEigen.is-seen::after { content:'LOCAL TEST MIRROR'; background:#201d05; color:#ffe34a; border:1px solid #ffd400; }
+.spel-overlay.fibro-test-mode #spelVideoEigen.is-seen::after { content:var(--chess-test-mirror,'LOKALE TESTSPIEGEL'); background:#201d05; color:#ffe34a; border:1px solid #ffd400; }
 .spel-overlay.fibro-test-mode.sch-video-modus { padding-top:87px; }
 .spel-overlay.fibro-test-mode.sch-video-modus .spel-titel-bar { top:13px; }
 .spel-overlay.fibro-test-mode.sch-video-modus .spel-video-vak { flex:0 0 auto; width:min(100% - 28px,460px); min-height:clamp(96px,18dvh,170px); height:clamp(96px,18dvh,170px); }
@@ -260,7 +260,7 @@ window.veiligeUrl = function(v){
     <div class="sys-msg e2e-sys" id="chatSysBericht" data-t>🔒 End-to-end versleuteld gesprek</div>
   </div>
   <div class="input-wrap">
-    <div class="fibro-test-hint" role="note">One-person chess test: type <kbd>FIBRO TEST</kbd> · local only, no invite is sent.</div>
+    <div class="fibro-test-hint" role="note"><span data-sch-text="Schaaktest voor één persoon: typ">Schaaktest voor één persoon: typ</span> <kbd>FIBRO TEST</kbd> · <span data-sch-text="alleen lokaal, zonder uitnodigingen.">alleen lokaal, zonder uitnodigingen.</span></div>
     <div class="emoji-grid" id="emojiGrid"></div>
     <div id="stickerGrid" style="display:none;"></div>
     <div id="spelMenuGrid" style="display:none;padding:14px 12px;background:rgba(0,0,0,0.85);border-top:0.5px solid var(--border);max-height:280px;overflow-y:auto;">
@@ -268,7 +268,7 @@ window.veiligeUrl = function(v){
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
         <button class="spel-keuze-btn" onclick="startSpel('botkaaseiren')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/botkaaseiren.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span>Tic-Tac-Toe</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('vieroprij')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/vieroprij.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span>Four in a Row</span></button>
-        <button class="spel-keuze-btn" onclick="startSpel('schaken')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/schaken.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span>Chess</span></button>
+        <button class="spel-keuze-btn" onclick="startSpel('schaken')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/schaken.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span id="chessGameName">Schaken</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('dammen')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/dammen.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span>Draughts</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('pong')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/pong.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span>Neo Paddle</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('flappybird')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/flappybird.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span>Flapper</span></button>
@@ -364,18 +364,18 @@ window.veiligeUrl = function(v){
 <div class="spel-overlay" id="spelOverlay">
   <div class="spel-titel-bar" id="spelTitelBar"></div>
   <button class="spel-sluit-btn" onclick="sluitSpel()">✕</button>
-  <div class="fibro-test-badge" id="fibroTestBadge" role="status" aria-live="polite"><strong>TEST DUMMY</strong> FIBRO TEST · LOCAL SIMULATION · NO INVITES SENT</div>
-  <div class="fibro-test-live-status" id="fibroTestLiveStatus">Local test ready</div>
+  <div class="fibro-test-badge" id="fibroTestBadge" role="status" aria-live="polite"><strong>TEST DUMMY</strong> <span id="fibroTestBadgeText">FIBRO TEST · LOKALE SIMULATIE · GEEN UITNODIGINGEN</span></div>
+  <div class="fibro-test-live-status" id="fibroTestLiveStatus">Lokale test gereed</div>
   <audio id="remoteAudio" autoplay playsinline style="display:none;"></audio>
   <button id="spelMuteBtn" onclick="toggleSpelMic()" style="position:absolute;top:10px;right:56px;z-index:10;background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:none;">🎤</button>
-  <button id="spelAudioStartBtn" class="spel-audio-start" type="button" onclick="hervatSpelGeluid()" hidden>🔊 Enable voice sound</button>
+  <button id="spelAudioStartBtn" class="spel-audio-start" type="button" onclick="hervatSpelGeluid()" hidden>🔊 Spraakgeluid inschakelen</button>
   <audio id="spelRemoteAudio" autoplay playsinline style="display:none;"></audio>
   <div class="spel-video-vak remote" id="spelVideoAnder">
-    <video id="remoteMedia" autoplay playsinline muted></video><div class="spel-video-wachten" id="spelVideoAnderWachten">Your friend can switch on their camera whenever they are ready.</div><span class="video-etiket" id="spelVideoAnderNaam">Friend</span>
+    <video id="remoteMedia" autoplay playsinline muted></video><div class="spel-video-wachten" id="spelVideoAnderWachten">Je vriend kan de camera aanzetten zodra die klaar is.</div><span class="video-etiket" id="spelVideoAnderNaam">Vriend</span>
   </div>
   <div id="spelInhoud" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"></div>
   <div class="spel-video-vak" id="spelVideoEigen">
-    <video id="lokaalMedia" autoplay playsinline muted></video><div class="spel-video-wachten" id="spelVideoEigenWachten">Your camera is off</div><span class="video-etiket">You</span>
+    <video id="lokaalMedia" autoplay playsinline muted></video><div class="spel-video-wachten" id="spelVideoEigenWachten">Je camera staat uit</div><span class="video-etiket">Jij</span>
   </div>
 </div>
 
@@ -403,15 +403,16 @@ window.veiligeUrl = function(v){
   import { stuurRapport } from './rapport.js?v=95'
   import * as Schaak from './schaak.js?v=95'
   import * as Dammen from './dammen.js?v=95'
-  import * as Bordgeluid from './bordgeluid.js?v=197'
+  import * as Bordgeluid from './bordgeluid.js?v=199'
   import * as DammenUI from './dammen-ui.js?v=147'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { nieuweSpelSessie, isNieuwsteSpelSessie } from './spelsessie.js?v=1'
-  import { mountChessLayout } from './chess-layout.js?v=3'
+  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=3'
+  import { mountChessLayout } from './chess-layout.js?v=4'
   import { maakSpelVerbinding } from './spelverbinding.js?v=1'
-  import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=1'
+  import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=2'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
   pasBlokstijlToe()
 
@@ -2100,14 +2101,20 @@ console.timeLog('[chat] berichten', 'opgehaald')
   let spelSessieId = null
   let spelSpelers = null
   let fibroChessTest = null
+  let laatsteFibroTestStatus = { sleutel:'Lokale test gereed', waarden:{} }
+  let laatsteSpelVerbindingStatus = null
   let fibroTestThreeController = null
   let spelSchaakDrieController = null
+
+  function spelT(tekst, waarden) {
+    return ['schaken','schakendrie'].includes(spelActief) ? schaakT(tekst, waarden) : T(tekst, waarden)
+  }
 
   // Games use the app username; personal P2P display names stay in the chat.
   function spelVriendUsername(vriendId = spelTegenstander?.id || geselecteerdeVriend?.id) {
     const bewaard = spelTegenstander?.id === vriendId ? spelTegenstander?.username : ''
     const profiel = (window._vriendenData || []).find(vriend => vriend.id === vriendId)
-    return String(bewaard || profiel?.username || '').trim() || T('Friend')
+    return String(bewaard || profiel?.username || '').trim() || spelT('Vriend')
   }
   let benIkSpeler1 = false
   let spelGlobaalKanaal = null   // altijd actief na inloggen
@@ -2116,8 +2123,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
   const SPEL_INFO = {
     botkaaseiren:   { icon: '⭕', naam: 'Tic-Tac-Toe' },
     vieroprij:      { icon: '🔴', naam: 'Four in a Row' },
-    schaken:        { icon: '♟️', naam: 'Chess' },
-    schakendrie:    { icon: '♟️♟️♟️', naam: 'Three-player chess' },
+    schaken:        { icon: '♟️', naam: schaakT('Schaken') },
+    schakendrie:    { icon: '♟️♟️♟️', naam: schaakT('Schaken met drie spelers') },
     dammen:         { icon: '⚫', naam: 'Draughts' },
     pong:           { icon: '🏓', naam: 'Neo Paddle' },
     flappybird:     { icon: '🦇', naam: 'Flapper' },
@@ -2159,7 +2166,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     document.getElementById('spelUitnodigingIcoon').textContent = info.icon
     document.getElementById('spelUitnodigingTitel').textContent = T('{naam} nodigt je uit!', { naam: spelVriendUsername(vanId) })
     document.getElementById('spelUitnodigingSubtitel').textContent = spelType === 'schakendrie'
-      ? T('Three-player chess — starts from the opening position')
+      ? schaakT('Schaken met drie spelers — begint vanaf de beginstelling')
       : T('{spel} — Automatically declines in 30s', { spel: info.naam })
 
     const balk = document.getElementById('spelUitnodigingBalk')
@@ -2211,27 +2218,27 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const uitgesloten = new Set([huidigeUser?.id, spelTegenstander?.id])
     const vrienden = (window._vriendenData || []).filter(vriend => vriend?.id && !uitgesloten.has(vriend.id))
     if (!vrienden.length) {
-      alert(T('You need another accepted friend before you can invite a third player.'))
+      alert(schaakT('Je hebt nog een andere geaccepteerde vriend nodig om een derde speler uit te nodigen.'))
       return Promise.resolve(null)
     }
     return new Promise(resolve => {
       const backdrop = document.createElement('div')
       backdrop.style.cssText = 'position:fixed;inset:0;z-index:10010;display:grid;place-items:center;padding:18px;background:#080a12cc;backdrop-filter:blur(8px)'
       const card = document.createElement('section')
-      card.setAttribute('role','dialog'); card.setAttribute('aria-modal','true'); card.setAttribute('aria-label',T('Invite a third chess player'))
+      card.setAttribute('role','dialog'); card.setAttribute('aria-modal','true'); card.setAttribute('aria-label',schaakT('Nodig een derde schaakspeler uit'))
       card.style.cssText = 'width:min(420px,100%);max-height:80vh;overflow:auto;padding:20px;border:1px solid #a9f2db;border-radius:20px;background:linear-gradient(145deg,#29243b,#10131d);color:#fff;box-shadow:0 22px 70px #000b'
-      const title = document.createElement('h2'); title.textContent = T('Invite a third player'); title.style.cssText='margin:0 0 6px;font-size:21px'
-      const hint = document.createElement('p'); hint.textContent=T('Choose an accepted friend to join this chess match.'); hint.style.cssText='margin:0 0 14px;color:#bdc7d8;font-size:13px'
+      const title = document.createElement('h2'); title.textContent = schaakT('Nodig een derde speler uit'); title.style.cssText='margin:0 0 6px;font-size:21px'
+      const hint = document.createElement('p'); hint.textContent=schaakT('Kies een geaccepteerde vriend voor deze schaakpartij.'); hint.style.cssText='margin:0 0 14px;color:#bdc7d8;font-size:13px'
       const list = document.createElement('div'); list.style.cssText='display:grid;gap:8px'
       const finish = value => { backdrop.remove(); resolve(value) }
       vrienden.forEach(vriend => {
         const button = document.createElement('button'); button.type='button'
         button.style.cssText='display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:10px 12px;border:1px solid #a9f2db55;border-radius:12px;background:linear-gradient(145deg,#ffffff12,#ffffff05);color:#fff;font:inherit;text-align:left;cursor:pointer'
-        const name = document.createElement('span'); name.textContent = vriendWeergaveNaam(vriend) || vriend.username || T('Friend'); name.style.flex='1'
-        const invite = document.createElement('strong'); invite.textContent=T('Invite'); invite.style.color='#a9f2db'
+        const name = document.createElement('span'); name.textContent = vriendWeergaveNaam(vriend) || vriend.username || spelT('Vriend'); name.style.flex='1'
+        const invite = document.createElement('strong'); invite.textContent=schaakT('Uitnodigen'); invite.style.color='#a9f2db'
         button.append(name, invite); button.onclick=()=>finish(vriend); list.append(button)
       })
-      const cancel = document.createElement('button'); cancel.type='button'; cancel.textContent=T('Cancel'); cancel.style.cssText='margin-top:12px;min-height:42px;padding:8px 14px;border:1px solid #fff3;border-radius:11px;background:#ffffff0b;color:#fff;font:inherit;cursor:pointer'; cancel.onclick=()=>finish(null)
+      const cancel = document.createElement('button'); cancel.type='button'; cancel.textContent=schaakT('Annuleren'); cancel.style.cssText='margin-top:12px;min-height:42px;padding:8px 14px;border:1px solid #fff3;border-radius:11px;background:#ffffff0b;color:#fff;font:inherit;cursor:pointer'; cancel.onclick=()=>finish(null)
       backdrop.addEventListener('click',event=>{if(event.target===backdrop)finish(null)})
       card.append(title,hint,list,cancel); backdrop.append(card); document.body.append(backdrop); list.querySelector('button')?.focus()
     })
@@ -2241,23 +2248,23 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (spelActief !== 'schaken' || !spelKanaal || !huidigeUser?.id || !spelTegenstander?.id || !spelSessieId) return
     const vriend = await kiesDerdeSchaakVriend()
     if (!vriend) return
-    if (!window.confirm(T('When {name} accepts, this two-player position will end and everyone will start a new three-player game from the opening position. Send the invitation?', { name: vriendWeergaveNaam(vriend) || vriend.username || T('your friend') }))) return
+    if (!window.confirm(schaakT('Als {name} accepteert, eindigt deze tweespelerspartij en begint iedereen een nieuwe partij met drie spelers vanaf de beginstelling. Uitnodiging versturen?', { name: vriendWeergaveNaam(vriend) || vriend.username || schaakT('je vriend') }))) return
     const roster = [huidigeUser.id, spelTegenstander.id, vriend.id]
     const { error } = await supabase.rpc('create_chess_three_session', { p_session_id:spelSessieId, p_player_ids:roster })
     if (error) {
       console.warn('[chess3] session setup failed:', error)
-      alert(T('Three-player chess is not ready yet. The Supabase migration must be applied first.'))
+      alert(schaakT('Schaken met drie spelers is nog niet beschikbaar. De server moet eerst worden bijgewerkt.'))
       return
     }
     const invitation = supabase.channel('speluitnodiging-' + vriend.id, { config:{ private:true } })
     const sent = await invitation.send({ type:'broadcast', event:'speluitnodiging', payload:{
-      van:huidigeUser.id, vanNaam:huidigProfiel?.username || T('Friend'), vanAvatar:huidigProfiel?.avatar_data || huidigProfiel?.avatar_url || '♟️',
+      van:huidigeUser.id, vanNaam:huidigProfiel?.username || spelT('Vriend'), vanAvatar:huidigProfiel?.avatar_data || huidigProfiel?.avatar_url || '♟️',
       spelType:'schakendrie', sessieId:spelSessieId, players:roster
     } })
     await supabase.removeChannel(invitation)
-    if (sent !== 'ok') { alert(T('The invitation could not be sent. Try again.')); return }
+    if (sent !== 'ok') { alert(schaakT('De uitnodiging kon niet worden verstuurd. Probeer het opnieuw.')); return }
     await supabase.from('messages').insert({ sender_id:huidigeUser.id, receiver_id:vriend.id, content:'spelinvite:schakendrie:' + huidigeUser.id + ':' + spelSessieId })
-    alert(T('Three-player invitation sent to {name}. If they accept, everyone starts a new game from the opening position.', { name: vriendWeergaveNaam(vriend) || vriend.username || T('your friend') }))
+    alert(schaakT('De uitnodiging voor drie spelers is verstuurd naar {name}. Als die accepteert, begint iedereen een nieuwe partij vanaf de beginstelling.', { name: vriendWeergaveNaam(vriend) || vriend.username || schaakT('je vriend') }))
   }
 
   function valideerSchaakDrieSpelers(players) {
@@ -2281,8 +2288,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=147',
     pong: './pong-ui.js?v=241',
     vieroprij: './vieroprij-ui.js?v=240',
-    schaken: './schaken-ui.js?v=201',
-    schakendrie: './schaken-drie-ui.js?v=22',
+    schaken: './schaken-ui.js?v=252',
+    schakendrie: './schaken-drie-ui.js?v=24',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=149',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -2354,7 +2361,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       if (!players?.includes(huidigeUser.id) || !players?.includes(geselecteerdeVriend.id)) return
       const { data: room, error: roomError } = await supabase.from('chess_three_sessions').select('player_ids').eq('session_id', sessieId).maybeSingle()
       if (roomError || !room?.player_ids || room.player_ids.length !== 3 || room.player_ids.some(id => !players.includes(id))) {
-        alert(T('Three-player chess is not ready yet. The Supabase migration must be applied first.'))
+        alert(schaakT('Schaken met drie spelers is nog niet beschikbaar. De server moet eerst worden bijgewerkt.'))
         return
       }
     }
@@ -2459,10 +2466,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
     } catch (e) {
       if (spelKanaal !== kanaal) return false
       const naam = spelVriendUsername()
-      if (e?.message === 'missing-key' && !mijnPrivateKey) toonSpelChatStatus(T('Niet verstuurd: de sleutel van dit toestel ontbreekt.'))
-      else if (e?.message === 'missing-key') toonSpelChatStatus(T('Niet verstuurd: {naam} heeft nog geen sleutel.', { naam }))
-      else if (e?.message === 'changed-key') toonSpelChatStatus(T('Niet verstuurd: de sleutel van {naam} is veranderd. Kijk eerst in de chat.', { naam }))
-      else toonSpelChatStatus(T('Niet verstuurd. Controleer je internet en probeer het opnieuw.'))
+      if (e?.message === 'missing-key' && !mijnPrivateKey) toonSpelChatStatus(spelT('Niet verstuurd: de sleutel van dit toestel ontbreekt.'))
+      else if (e?.message === 'missing-key') toonSpelChatStatus(spelT('Niet verstuurd: {naam} heeft nog geen sleutel.', { naam }))
+      else if (e?.message === 'changed-key') toonSpelChatStatus(spelT('Niet verstuurd: de sleutel van {naam} is veranderd. Kijk eerst in de chat.', { naam }))
+      else toonSpelChatStatus(spelT('Niet verstuurd. Controleer je internet en probeer het opnieuw.'))
       return false
     }
   }
@@ -2580,7 +2587,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     knop.id = 'spelStickerKnop'
     knop.type = 'button'
     knop.textContent = '\u{1F3A8}'
-    knop.setAttribute('aria-label', T('Stickervellen'))
+    knop.setAttribute('aria-label', spelT('Stickervellen'))
     knop.style.cssText = 'font-size:20px;background:#ffffff22;border:1px solid #ffffff44;border-radius:10px;padding:4px 10px;cursor:pointer;transition:opacity .2s'
     knop.onclick = function () {
       if (!spelStickerMag) return
@@ -2595,7 +2602,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     var inp = document.createElement('input')
     inp.type = 'text'
     inp.maxLength = 2000
-    inp.placeholder = T('Bericht...')
+    inp.placeholder = spelT('Bericht...')
     inp.style.cssText = 'flex:1;min-width:60px;padding:8px 10px;border-radius:10px;border:1px solid #ffffff44;background:#000000aa;color:#fff;font-size:15px'
     let versturen = false
     inp.onkeydown = async function(ev) {
@@ -2623,6 +2630,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // A quiet phone is not evidence that the other player left. Only the explicit
   // leave event ends a game; connection recovery keeps the current board alive.
   function toonSpelVerbindingStatus(status) {
+    laatsteSpelVerbindingStatus = status
     const inhoud = document.getElementById('spelInhoud')
     const plek = inhoud?.querySelector('.sch-spel') || inhoud
     if (!plek || !spelActief) return
@@ -2641,7 +2649,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       offline:'Wachten op internet; je spel blijft open.',
       waiting:'Wachten op je vriend; je spel blijft open.'
     }
-    melding.textContent = teksten[status] ? T(teksten[status]) : ''
+    melding.textContent = teksten[status] ? spelT(teksten[status]) : ''
     melding.hidden = !teksten[status]
   }
 
@@ -2652,7 +2660,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     box.style.cssText = 'position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(5,5,16,0.88);text-align:center;padding:20px;'
     box.innerHTML = '<div style="font-size:15px;color:#fff;font-weight:600;line-height:1.4">' + tekst + '</div>'
     const knop = document.createElement('button')
-    knop.textContent = T('Sluiten')
+    knop.textContent = spelT('Sluiten')
     knop.style.cssText = 'background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 24px;color:#1a0a2e;font-weight:600;cursor:pointer;'
     knop.onclick = () => sluitSpel(true)
     box.appendChild(knop)
@@ -2680,8 +2688,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
       if (own) own.srcObject = null
       if (mirror) mirror.srcObject = null
       document.getElementById('spelOverlay').classList.remove('fibro-test-mode')
-      document.querySelector('#spelVideoEigen .video-etiket').textContent = 'You'
-      document.getElementById('spelVideoAnderNaam').textContent = 'Friend'
+      document.querySelector('#spelVideoEigen .video-etiket').textContent = schaakT('Jij')
+      document.getElementById('spelVideoAnderNaam').textContent = schaakT('Vriend')
     }
     document.getElementById('spelOverlay').classList.remove('open')
     document.getElementById('spelInhoud').innerHTML = ''
@@ -2693,6 +2701,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (window._spelAnimFrame) { cancelAnimationFrame(window._spelAnimFrame); window._spelAnimFrame = null }
     if (window._spelAftelInterval) { clearInterval(window._spelAftelInterval); window._spelAftelInterval = null }
     spelActief = null
+    laatsteSpelVerbindingStatus = null
+    document.getElementById('spelOverlay').removeAttribute('lang')
+    document.querySelector('#spelOverlay .spel-sluit-btn')?.removeAttribute('aria-label')
+    document.getElementById('spelOverlay').style.removeProperty('--chess-test-mirror')
     spelSchaakDrieController?.destroy?.()
     spelSchaakDrieController = null
     fibroTestThreeController = null
@@ -2715,9 +2727,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
 
-  function setFibroTestStatus(message) {
+  function setFibroTestStatus(message, waarden = {}) {
+    laatsteFibroTestStatus = { sleutel:message, waarden }
     const status = document.getElementById('fibroTestLiveStatus')
-    if (status && fibroChessTest?.active) status.textContent = message
+    if (status && fibroChessTest?.active) status.textContent = schaakT(message, waarden)
   }
 
   async function toonFibroTestCamera(stream) {
@@ -2742,14 +2755,14 @@ console.timeLog('[chat] berichten', 'opgehaald')
       overlay?.classList.add('sch-video-modus')
       spelCameraLayout?.sync()
       window.dispatchEvent(new CustomEvent('fibro-chess-video-state', { detail:{ eigen:true, ander:true, test:true } }))
-      setFibroTestStatus('Camera is live · both test windows mirror your device')
+      setFibroTestStatus('De camera staat aan · beide testvensters tonen je eigen beeld')
       return true
     }
     if (own) { own.srcObject = null; own.style.display = 'none' }
     if (mirror) { mirror.srcObject = null; mirror.style.display = 'none' }
     ownFrame?.classList.remove('is-seen')
-    if (ownWait) { ownWait.hidden = false; ownWait.textContent = 'Your camera is off · tap the camera button to retry' }
-    if (mirrorWait) { mirrorWait.hidden = false; mirrorWait.textContent = 'Test player camera mirrors your local camera when enabled' }
+    if (ownWait) { ownWait.hidden = false; ownWait.textContent = schaakT('Je camera staat uit · tik op de cameraknop om het opnieuw te proberen') }
+    if (mirrorWait) { mirrorWait.hidden = false; mirrorWait.textContent = schaakT('De camera van de testspeler toont jouw eigen beeld als je de camera aanzet') }
     spelEigenVideo = false; spelAnderVideo = false; spelMijnVideoGezien = false
     overlay?.classList.remove('sch-video-modus')
     spelCameraLayout?.sync()
@@ -2765,13 +2778,13 @@ console.timeLog('[chat] berichten', 'opgehaald')
       stream?.getTracks().forEach(track => track.stop())
       fibroTestThreeController?.setTestCamera?.(null)
       await toonFibroTestCamera(null)
-      setFibroTestStatus('Camera off · the local test game is still running')
+      setFibroTestStatus('Camera uit · de lokale testpartij gaat verder')
       return { ok:true, eigen:false, test:true }
     }
     if (fibroChessTest.stream?.getVideoTracks?.().some(track => track.readyState === 'live')) {
       return { ok:await toonFibroTestCamera(fibroChessTest.stream), eigen:true, test:true }
     }
-    setFibroTestStatus('Requesting your camera permission…')
+    setFibroTestStatus('Toestemming voor je camera aanvragen…')
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false })
       if (!fibroChessTest?.active) { stream.getTracks().forEach(track => track.stop()); return { ok:false, reason:'closed' } }
@@ -2779,7 +2792,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       fibroTestThreeController?.setTestCamera?.(stream)
       return { ok:true, eigen:true, test:true }
     } catch (error) {
-      setFibroTestStatus(error?.name === 'NotAllowedError' ? 'Camera permission was declined · you can still test the boards' : 'Camera unavailable · check browser permissions and retry')
+      setFibroTestStatus(error?.name === 'NotAllowedError' ? 'Cameratoestemming is geweigerd · je kunt de borden gewoon testen' : 'Camera niet beschikbaar · controleer de browsertoestemming en probeer het opnieuw')
       return { ok:false, reason:'camera', test:true }
     }
   }
@@ -2792,35 +2805,36 @@ console.timeLog('[chat] berichten', 'opgehaald')
     fibroChessTest = { active:true, runId, stage:'two', stream:null }
     spelSessieId = runId
     spelSpelers = null
-    spelTegenstander = { id:'fibro-test-black', username:'Test Player · Black' }
+    spelTegenstander = { id:'fibro-test-black', username:schaakT('Testspeler · Zwart') }
     spelChatCrypto = null
     spelActief = 'schaken'
     benIkSpeler1 = true
     resetSpelVideo()
     document.getElementById('spelOverlay').classList.add('open', 'fibro-test-mode')
-    document.getElementById('spelTitelBar').textContent = '♟ Chess · Local test'
-    document.getElementById('spelVideoAnderNaam').textContent = 'TEST PLAYER · BLACK'
-    document.querySelector('#spelVideoEigen .video-etiket').textContent = 'YOU · TEST'
-    document.getElementById('spelVideoAnderWachten').textContent = 'Test player camera mirrors your local camera when enabled'
-    setFibroTestStatus('Starting local opponent · no invitations or messages are sent')
+    document.getElementById('spelTitelBar').textContent = schaakT('♟ Schaken · Lokale test')
+    document.getElementById('spelVideoAnderNaam').textContent = schaakT('TESTSPELER · ZWART')
+    document.querySelector('#spelVideoEigen .video-etiket').textContent = schaakT('JIJ · TEST')
+    document.getElementById('spelVideoAnderWachten').textContent = schaakT('De camera van de testspeler toont jouw eigen beeld als je de camera aanzet')
+    setFibroTestStatus('Lokale tegenstander starten · er worden geen uitnodigingen of berichten verstuurd')
     spelKanaal = maakSchaakTestKanaal(Schaak, {
       responseDelayMs:() => 700 + Math.floor(Math.random() * 1900),
       onStatus:setFibroTestStatus
     })
     await startSchaken()
+    werkSchaakOmgevingTaalBij()
     spelCameraLayout?.destroy()
     spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })
-    setFibroTestStatus('Local test ready · move White to see the test opponent reply')
+    setFibroTestStatus('Lokale test gereed · speel met wit om de reactie van de testspeler te zien')
     if (cameraRequest) {
       cameraRequest.then(stream => {
         if (fibroChessTest?.runId !== runId) { stream.getTracks().forEach(track => track.stop()); return }
         return toonFibroTestCamera(stream)
       }).catch(error => {
         if (fibroChessTest?.runId !== runId) return
-        setFibroTestStatus(error?.name === 'NotAllowedError' ? 'Camera permission was declined · tap the camera button to retry' : 'Camera unavailable · tap the camera button to retry')
+        setFibroTestStatus(error?.name === 'NotAllowedError' ? 'Cameratoestemming is geweigerd · tik op de cameraknop om het opnieuw te proberen' : 'Camera niet beschikbaar · tik op de cameraknop om het opnieuw te proberen')
       })
     } else {
-      setFibroTestStatus('Local test ready · tap the camera button to enable your webcam')
+      setFibroTestStatus('Lokale test gereed · tik op de cameraknop om je webcam aan te zetten')
     }
   }
 
@@ -2833,7 +2847,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     spelKanaal = null
     spelChatCrypto = null
     spelActief = 'schakendrie'
-    spelTegenstander = { id:'fibro-test-black', username:'Test Player · Black' }
+    spelTegenstander = { id:'fibro-test-black', username:schaakT('Testspeler · Zwart') }
     spelSpelers = ['fibro-test-you', 'fibro-test-black', 'fibro-test-red']
     benIkSpeler1 = true
     spelCameraLayout?.destroy(); spelCameraLayout = null
@@ -2844,7 +2858,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     }
     await startSchakenDrie(spelSpelers)
     if (fibroChessTest?.runId !== runId || fibroChessTest.stage !== 'three') return
-    setFibroTestStatus('96-square three-player board · all three seats are under your control')
+    setFibroTestStatus('Driespelersbord met 96 velden · jij bestuurt alle drie de spelers')
   }
 
   async function returnToFibroTwoPlayerTest() {
@@ -2856,7 +2870,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     spelCameraLayout?.destroy(); spelCameraLayout = null
     fibroChessTest.stage = 'two'
     spelActief = 'schaken'
-    spelTegenstander = { id:'fibro-test-black', username:'Test Player · Black' }
+    spelTegenstander = { id:'fibro-test-black', username:schaakT('Testspeler · Zwart') }
     spelSpelers = null
     benIkSpeler1 = true
     spelKanaal = maakSchaakTestKanaal(Schaak, {
@@ -2864,33 +2878,36 @@ console.timeLog('[chat] berichten', 'opgehaald')
       onStatus:setFibroTestStatus
     })
     await startSchaken()
+    werkSchaakOmgevingTaalBij()
     spelCameraLayout?.destroy()
     spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })
     document.getElementById('spelOverlay').classList.add('fibro-test-mode')
-    document.getElementById('spelTitelBar').textContent = '♟ Chess · Local test'
-    document.getElementById('spelVideoAnderNaam').textContent = 'TEST PLAYER · BLACK'
-    document.querySelector('#spelVideoEigen .video-etiket').textContent = 'YOU · TEST'
+    document.getElementById('spelTitelBar').textContent = schaakT('♟ Schaken · Lokale test')
+    document.getElementById('spelVideoAnderNaam').textContent = schaakT('TESTSPELER · ZWART')
+    document.querySelector('#spelVideoEigen .video-etiket').textContent = schaakT('JIJ · TEST')
     if (stream?.getVideoTracks?.().some(track => track.readyState === 'live')) await toonFibroTestCamera(stream)
     else await toonFibroTestCamera(null)
-    setFibroTestStatus('Back in two-player test · White to move')
+    setFibroTestStatus('Terug in de tweespelerstest · wit is aan zet')
   }
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await import('./schaken-ui.js?v=203')
-    m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: fibroChessTest?.active ? 'Test Player · Black' : spelVriendUsername(), testMode:Boolean(fibroChessTest?.active), onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer : nodigDerdeSchaakSpelerUit })
+    const m = await import('./schaken-ui.js?v=252')
+    m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: fibroChessTest?.active ? schaakT('Testspeler · Zwart') : spelVriendUsername(), testMode:Boolean(fibroChessTest?.active), onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer : nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
     spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })
+    werkSchaakOmgevingTaalBij()
   }
 
   async function startSchakenDrie(players) {
-    const m = await import('./schaken-drie-ui.js?v=22')
+    const m = await import('./schaken-drie-ui.js?v=24')
     const testMode = Boolean(fibroChessTest?.active)
-    const controller = m.start({ gameChannel:testMode ? null : spelKanaal, players, userId:testMode ? 'fibro-test-you' : huidigeUser.id, localPreview:testMode, testMode, testStream:fibroChessTest?.stream || null, onTestCameraChange:stream => { if (fibroChessTest?.active) fibroChessTest.stream = stream }, onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null })
+    const controller = m.start({ Bordgeluid, gameChannel:testMode ? null : spelKanaal, players, userId:testMode ? 'fibro-test-you' : huidigeUser.id, localPreview:testMode, testMode, testStream:fibroChessTest?.stream || null, onTestCameraChange:stream => { if (fibroChessTest?.active) fibroChessTest.stream = stream }, onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null })
     spelSchaakDrieController = controller
     fibroTestThreeController = testMode ? controller : null
     spelCameraLayout?.destroy()
     spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.chess3-camera' })
+    werkSchaakOmgevingTaalBij()
   }
 
   // ─── Dammen (internationaal, 10x10) ───
@@ -3184,7 +3201,10 @@ async function startBlockIt() {
   function syncSpelMedia(status = getMediaStatus()) {
     const actief = Boolean(spelActief)
     const audioKnop = document.getElementById('spelAudioStartBtn')
-    if (audioKnop) audioKnop.hidden = !actief || !status.audioBlocked
+    if (audioKnop) {
+      audioKnop.hidden = !actief || !status.audioBlocked
+      audioKnop.textContent = ['schaken','schakendrie'].includes(spelActief) ? schaakT('🔊 Spraakgeluid inschakelen') : '🔊 Enable voice sound'
+    }
     if (fibroChessTest?.active) {
       const micKnop = document.getElementById('spelMuteBtn')
       if (micKnop) micKnop.style.display = 'none'
@@ -3194,7 +3214,7 @@ async function startBlockIt() {
     const micKnop = document.getElementById('spelMuteBtn')
     if (micKnop && actief) {
       micKnop.textContent = status.localAudio ? '🎤' : '🔇'
-      micKnop.title = status.localAudioAvailable ? (status.localAudio ? 'Mute microphone' : 'Unmute microphone') : 'Enable microphone'
+      micKnop.title = status.localAudioAvailable ? (status.localAudio ? spelT('Microfoon dempen') : spelT('Microfoon aanzetten')) : spelT('Microfoon inschakelen')
       micKnop.setAttribute('aria-label', micKnop.title)
       micKnop.setAttribute('aria-pressed', String(Boolean(status.localAudio)))
     }
@@ -3220,8 +3240,9 @@ async function startBlockIt() {
     for (const type of ['loadeddata', 'playing', 'emptied']) video?.addEventListener(type, () => syncSpelMedia())
   }
 
-  function zetSpelVideoVoortgang(tekst, bezig = true) {
-    window.dispatchEvent(new CustomEvent('fibro-chess-video-progress', { detail: { tekst, bezig } }))
+  function zetSpelVideoVoortgang(sleutel, bezig = true, waarden = {}) {
+    const tekst = spelT(sleutel, waarden)
+    window.dispatchEvent(new CustomEvent('fibro-chess-video-progress', { detail: { tekst, sleutel, waarden, bezig } }))
   }
 
   function zetSpelVideoStatus({ eigen, ander, gezien } = {}) {
@@ -3243,13 +3264,13 @@ async function startBlockIt() {
     spelCameraLayout?.sync()
     if (eigenWacht) {
       eigenWacht.hidden = spelEigenVideo
-      eigenWacht.textContent = spelEigenVideo ? '' : 'Your camera is off'
+      eigenWacht.textContent = spelEigenVideo ? '' : schaakT('Je camera staat uit')
     }
     if (anderWacht) {
       anderWacht.hidden = spelAnderVideo
       anderWacht.textContent = spelAnderVideo ? '' : (spelAnderCameraGewenst
-        ? 'Waiting for your friend’s camera picture…'
-        : 'Your friend can switch on their camera whenever they are ready.')
+        ? schaakT('Wachten op het camerabeeld van je vriend…')
+        : schaakT('Je vriend kan de camera aanzetten zodra die klaar is.'))
     }
     if (eigenVideo) eigenVideo.style.display = spelEigenVideo ? 'block' : 'none'
     if (anderVideo) anderVideo.style.display = spelAnderVideo ? 'block' : 'none'
@@ -3257,8 +3278,8 @@ async function startBlockIt() {
     window.dispatchEvent(new CustomEvent('fibro-chess-video-state', { detail: { eigen:spelEigenVideo, ander:spelAnderVideo } }))
     if (spelEigenVideo) {
       const tekst = spelMijnVideoGezien
-        ? 'Your friend can see you.'
-        : (spelAnderVideo ? 'Your camera is on.' : 'Your camera is on · Your friend can join whenever ready.')
+        ? 'Je vriend kan je zien.'
+        : (spelAnderVideo ? 'Je camera staat aan.' : 'Je camera staat aan · je vriend kan aansluiten zodra die klaar is.')
       zetSpelVideoVoortgang(tekst, false)
     }
   }
@@ -3282,7 +3303,7 @@ async function startBlockIt() {
   async function activeerAangevraagdeSpelCamera() {
     if (!spelVideoAanvragen || spelVideoBezig || spelActief !== 'schaken') return false
     spelVideoBezig = true
-    zetSpelVideoVoortgang('Requesting camera permission…')
+    zetSpelVideoVoortgang('Toestemming voor je camera aanvragen…')
     const ok = await schakelVideo(true)
     try { bouwFilterKnop(document.getElementById('spelVideoEigen')) } catch (e) {}   // v157: camerafilter-knop op je eigen beeld
     spelVideoBezig = false
@@ -3311,7 +3332,7 @@ async function startBlockIt() {
       return { ok, eigen:false }
     }
     spelVideoAanvragen = true
-    zetSpelVideoVoortgang('Opening your camera…')
+    zetSpelVideoVoortgang('Je camera openen…')
     const lokaalOk = await activeerAangevraagdeSpelCamera()
     if (!lokaalOk) return { ok:false, reason:'camera' }
     // De lokale preview staat nu al aan. De verbinding mag rustig op de
@@ -3378,7 +3399,7 @@ async function startBlockIt() {
         const ok = await activeerMicrofoon()
         if (spelKanaal !== partij || !spelActief) return
         if (ok && !spelBelActief) startSpelBel(true).catch(()=>{})
-        if (!ok) zetSpelVideoVoortgang('Microphone is off. You can continue playing.', false)
+        if (!ok) zetSpelVideoVoortgang('De microfoon staat uit. Je kunt verder spelen.', false)
       } finally { knop.disabled = false; syncSpelMedia() }
       return
     }
@@ -3386,6 +3407,47 @@ async function startBlockIt() {
     document.getElementById('spelMuteBtn').textContent = aan ? '🎤' : '🔇'
     syncSpelMedia()
   }
+
+  function werkSchaakOmgevingTaalBij() {
+    for (const marker of document.querySelectorAll('.fibro-test-hint [data-sch-text]')) marker.textContent = schaakT(marker.getAttribute('data-sch-text'))
+    const naam = document.getElementById('chessGameName')
+    if (naam) naam.textContent = schaakT('Schaken')
+    SPEL_INFO.schaken.naam = schaakT('Schaken')
+    SPEL_INFO.schakendrie.naam = schaakT('Schaken met drie spelers')
+    const overlay = document.getElementById('spelOverlay')
+    if (['schaken','schakendrie'].includes(spelActief)) {
+      overlay?.setAttribute('lang', leesSchaakTaal())
+      overlay?.querySelector('.spel-sluit-btn')?.setAttribute('aria-label', schaakT('Terug'))
+      const input = document.querySelector('#spelChatWrap input')
+      if (input) input.placeholder = schaakT('Bericht...')
+      document.getElementById('spelStickerKnop')?.setAttribute('aria-label', schaakT('Stickervellen'))
+      const audio = document.getElementById('spelAudioStartBtn')
+      if (audio) audio.textContent = schaakT('🔊 Spraakgeluid inschakelen')
+      if (laatsteSpelVerbindingStatus) toonSpelVerbindingStatus(laatsteSpelVerbindingStatus)
+      if (!fibroChessTest?.active) {
+        const label = document.querySelector('#spelVideoEigen .video-etiket')
+        if (label) label.textContent = schaakT('Jij')
+        syncSpelMedia()
+      }
+    }
+    if (fibroChessTest?.active) {
+      const badge = document.getElementById('fibroTestBadgeText')
+      if (badge) badge.textContent = schaakT('FIBRO TEST · LOKALE SIMULATIE · GEEN UITNODIGINGEN')
+      overlay?.style.setProperty('--chess-test-mirror', JSON.stringify(schaakT('LOKALE TESTSPIEGEL')))
+      setFibroTestStatus(laatsteFibroTestStatus.sleutel, laatsteFibroTestStatus.waarden)
+      const ownLabel = document.querySelector('#spelVideoEigen .video-etiket')
+      if (ownLabel) ownLabel.textContent = schaakT('JIJ · TEST')
+      const otherLabel = document.getElementById('spelVideoAnderNaam')
+      if (otherLabel) otherLabel.textContent = schaakT('TESTSPELER · ZWART')
+      const ownWait = document.getElementById('spelVideoEigenWachten')
+      const otherWait = document.getElementById('spelVideoAnderWachten')
+      if (ownWait && !ownWait.hidden) ownWait.textContent = schaakT('Je camera staat uit · tik op de cameraknop om het opnieuw te proberen')
+      if (otherWait && !otherWait.hidden) otherWait.textContent = schaakT('De camera van de testspeler toont jouw eigen beeld als je de camera aanzet')
+    }
+  }
+  const schaakOmgevingTaal = maakSchaakTaal()
+  schaakOmgevingTaal.subscribe(werkSchaakOmgevingTaalBij)
+  werkSchaakOmgevingTaalBij()
 
   const launchParameters = new URLSearchParams(location.search)
   if (isFibroTestCommand(launchParameters.get('test'))) {

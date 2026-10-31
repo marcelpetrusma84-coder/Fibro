@@ -2,6 +2,8 @@
 // Aan/uit wordt onthouden in localStorage onder 'fibro_spelgeluid'.
 // v147: het knopje ook in het Engels (taal.js)
 
+import { renderCaptureSound } from './schaak-slaggeluid.js?v=1'
+
 const SLEUTEL = 'fibro_spelgeluid'
 let _ctx = null
 let _vorige = null   // aantallen stukken na de vorige zet, om promotie te herkennen
@@ -155,8 +157,23 @@ export function previewSchaakGeluid(thema = 'classic') {
   try { speel('zet', undefined, thema) } catch (e) {}
 }
 
-export function schaak(Schaak, staat, zet, mijnKleur, thema = 'classic') {
-    try { speel(kiesSchaakGeluid(Schaak, staat, zet, mijnKleur), undefined, thema) } catch (e) {}
+export function capturePiece({ value, outcome, theme = 'classic' } = {}) {
+    if (!aan() || ![1,3,5,9].includes(value) || !['win','loss'].includes(outcome)) return false
+    try {
+        const c = ctx()
+        return c ? Boolean(renderCaptureSound(c, { value, outcome, theme }, c.currentTime + .02)) : false
+    } catch { return false }
+}
+
+export function schaak(Schaak, staat, zet, mijnKleur, thema = 'classic', capture = null) {
+    try {
+        const naam = kiesSchaakGeluid(Schaak, staat, zet, mijnKleur)
+        // Always update the existing selector's promotion history, but don't
+        // layer its old check/promotion bleeps over the new capture voice.
+        if (capture && [1,3,5,9].includes(capture.value) && ['win','loss'].includes(capture.outcome)) {
+            capturePiece({ ...capture, theme:thema })
+        } else speel(naam, undefined, thema)
+    } catch (e) {}
 }
 
 export function dammen(Dammen, staat, keten, mijnKleur) {
@@ -172,8 +189,13 @@ export function knop(naastEl, { language } = {}) {
     if (!naastEl || !naastEl.parentElement) return
         const b = document.createElement('button')
         const T = window.T || (s => s)
-        const engels = language === 'en'
-        const zet = () => { b.textContent = engels ? (aan() ? '🔊 Sound on' : '🔇 Sound off') : (aan() ? T('🔊 Geluid aan') : T('🔇 Geluid uit')) }
+        let taal = language === 'en' || language === 'nl' ? language : null
+        const zet = () => {
+            const tekst = aan() ? '🔊 Geluid aan' : '🔇 Geluid uit'
+            b.textContent = taal === 'en' ? (aan() ? '🔊 Sound on' : '🔇 Sound off') : taal === 'nl' ? tekst : T(tekst)
+        }
+        // A chess language change updates this label only, never the sound preference.
+        b.setLanguage = value => { if (value === 'nl' || value === 'en') { taal = value; zet() } }
         b.style.cssText = 'background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.2);border-radius:14px;padding:3px 12px;color:#fff;font-size:12px;cursor:pointer;'
         b.addEventListener('click', () => {
             try { localStorage.setItem(SLEUTEL, aan() ? 'uit' : 'aan') } catch (e) {}
@@ -184,4 +206,5 @@ export function knop(naastEl, { language } = {}) {
         naastEl.insertAdjacentElement('afterend', b)
         // iOS en Chrome: geluid mag pas na een tik; zet het alvast klaar bij de eerste tik
         document.addEventListener('pointerdown', () => { if (aan()) ctx() }, { once: true })
+        return b
 }

@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=46"></script>
+<script src="taal.js?v=47"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2290,7 +2290,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     endlessrunner: './runner-gunner-ui.js?v=148',
     pacman: './ecto-ui.js?v=177',
     pinball: './twin-snakes-ui.js?v=149',
-    shmup: './neon-raiders-ui.js?v=220'
+    shmup: './neon-raiders-ui.js?v=221'
   }
   const _alGeladen = {}
   function laadSpelAlvast(spelType) {
@@ -3027,7 +3027,7 @@ async function startBlockIt() {
   }
 
   async function startNeonRaiders() {
-    const m = await import('./neon-raiders-ui.js?v=220')
+    const m = await import('./neon-raiders-ui.js?v=221')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'shmup' })
   }
 

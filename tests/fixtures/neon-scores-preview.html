@@ -19,14 +19,15 @@
     <small>Desktop: your top 10 on the left, friends on the right. Phone: the same two lists stacked for readable dates and times.</small>
   </main>
   <script type="module">
-    import { maakNeonScorebord } from '../../neon-raiders-scoreboard.js?v=2'
+    import { maakNeonScorebord } from '../../neon-raiders-scoreboard.js?v=3'
     const state = document.getElementById('preview-state')
     const dates = Array.from({length:10}, (_,index) => new Date(Date.UTC(2026,9,27-index,18,index*4)).toISOString())
-    const personal = dates.map((playedAt,index) => ({id:'personal-'+index,score:487650-index*29730,playedAt,name:'TEST Pilot',isSelf:true}))
-    const friends = dates.map((playedAt,index) => ({id:'friend-'+index,score:587750-index*29230,playedAt,name:['TEST Nova','TEST Pilot','TEST Orbit'][index%3],isSelf:index%3===1}))
-    const service = {async loadBoards(){await new Promise(resolve=>setTimeout(resolve,180));return {personal:state.value==='empty'?[]:personal,friends:['local','setup','empty'].includes(state.value)?[]:friends,global:['local','setup','empty'].includes(state.value)?null:{score:987650},status:state.value==='empty'?'online':state.value}}}
+    const personal = dates.map((playedAt,index) => ({id:'personal-'+index,score:487650-index*29730,playedAt,level:7-index%7,won:index===0,name:'TEST Pilot',isSelf:true}))
+    const friends = dates.map((playedAt,index) => ({id:'friend-'+index,score:587750-index*29230,playedAt,level:6-index%6,won:false,name:['TEST Nova','TEST Pilot','TEST Orbit'][index%3],isSelf:index%3===1}))
+    const service = {async loadBoards(){await new Promise(resolve=>setTimeout(resolve,180));return {personal:state.value==='empty'?[]:personal,friends:['local','setup','empty'].includes(state.value)?[]:friends,global:['local','setup','empty'].includes(state.value)?null:{score:987650,level:7,won:true},status:state.value==='empty'?'online':state.value}}}
     const dictionary = {'Neon Raiders scores':'Neon Raiders scores','Scores':'Scores','Sluiten':'Close','Scores laden…':'Loading scores…','Jouw top 10':'Your top 10','Jouw beste rondes':'Your best runs','Vrienden top 10':'Friends top 10','Jij en je vrienden':'You and your friends','Hoogste score op Fibro':'Fibro high score','Dag en tijd zijn in jouw lokale tijdzone.':'Dates and times use your local time zone.','Vernieuwen':'Refresh','Datum onbekend':'Date unknown','Jij':'You','Vriend':'Friend','De online lijst komt hier zodra die beschikbaar is.':'The online leaderboard appears here when available.','Nog geen scores. Speel een ronde om de lijst te vullen.':'No scores yet. Play a run to fill the list.','Nog geen Fibro-record.':'No Fibro record yet.','Het Fibro-record verschijnt zodra je online lijst beschikbaar is.':'The Fibro record appears when the online leaderboard is available.','De tien hoogste scores, met de beste score bovenaan.':'The ten highest scores, best score first.','Jouw scores worden bewaard. De gedeelde scorelijsten worden nog klaargezet.':'Your scores are saved. Shared leaderboards are being prepared.','Jouw scores staan op dit apparaat. Log in voor de gedeelde scorelijsten.':'Your scores are on this device. Sign in for shared leaderboards.','Jouw scores blijven bewaard. De online lijsten worden vernieuwd zodra je verbinding terug is.':'Your scores stay saved. Online leaderboards refresh when your connection returns.'}
-    const T = Object.assign(key=>dictionary[key]||key,{locale:'en-GB',taal:'en'})
+    Object.assign(dictionary,{"Level {n}": "Level {n}", "Level {n} · Uitgespeeld": "Level {n} · Completed", "Level onbekend": "Level unknown"})
+    const T = Object.assign((key,values)=>String(dictionary[key]||key).replace(/\{(\w+)\}/g,(match,name)=>values?.[name]??match),{locale:'en-GB',taal:'en'})
     const scoreboard = maakNeonScorebord({service,T})
     document.getElementById('show-scores').addEventListener('click',()=>scoreboard.open())
     scoreboard.open()

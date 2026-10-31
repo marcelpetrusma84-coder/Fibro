@@ -32,8 +32,8 @@
 
 import { maakNeonMuis, muisPunt } from './neon-raiders-input.js?v=2'
 import { supabase } from './supabase.js?v=95'
-import { maakNeonScoreService } from './neon-raiders-scores.js?v=3'
-import { maakNeonScorebord } from './neon-raiders-scoreboard.js?v=2'
+import { maakNeonScoreService } from './neon-raiders-scores.js?v=4'
+import { maakNeonScorebord } from './neon-raiders-scoreboard.js?v=3'
 
 const vertaal = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 const PHASER_URL = new URL('./phaser.min.js?v=1', import.meta.url).href

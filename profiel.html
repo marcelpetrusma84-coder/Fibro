@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=42"></script>
+<script src="taal.js?v=43"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Vuurwerk': 'Fireworks', 'Onweer': 'Thunderstorm', 'Glitter': 'Glitter' }) // v234: nieuwe animaties</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Gastenboek zonder lijntjes': 'Guestbook without lines', 'Gewoon in je eigen kleuren, zonder lijntjespapier': 'Plain, in your own colours, without lined paper' }) // v235</script>
 <script src="verbinding.js?v=3"></script>
@@ -427,6 +427,8 @@ input, textarea { font-size:16px !important; }
 </div>
 <div class="panel" id="panel-widgets" role="tabpanel" aria-labelledby="tab-widgets" aria-hidden="true">
   <div class="section">
+    <!-- v247: foto's, muziek en stickers staan per toestel (sync.js stuurt ze rechtstreeks naar vrienden) -->
+    <p class="toestel-uitleg" data-t style="font-size:13px;line-height:1.45;color:var(--muted);margin:0 0 14px;padding:10px 12px;border:0.5px solid var(--border);border-radius:10px;background:rgba(255,255,255,0.04);">📱 Je foto's, muziek en stickers staan op dit toestel en gaan rechtstreeks naar je vrienden. Gebruik je Fibro op meer toestellen, dan zien je vrienden wat er staat op het toestel dat het laatst met hen synchroniseerde.</p>
     <div class="section-label" data-t>Actieve widgets</div>
     <div class="widget-list">
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">📖</div><div><div class="widget-name" data-t>Gastenboek</div><div class="widget-desc" data-t>Vrienden laten berichten achter</div></div></div><div class="toggle on" id="widget-gastenboek" onclick="toggleWidget('gastenboek')"><div class="toggle-dot"></div></div></div>
@@ -552,7 +554,7 @@ import { eisSessie, startBewaking } from './sessie.js?v=95'
 import { startMeldingen } from './meldingen.js?v=187'
 import { laadThema, bewaarThemaCache } from './thema.js?v=234'
 import { startHeartbeat } from './heartbeat.js?v=117'
-import { initSync } from './sync.js?v=246'
+import { initSync } from './sync.js?v=247'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=149'
 import { startStickermaker } from './stickermaker.js?v=242'
 import { tekenFibroVellen, stickerWidgetDef } from './stickerwidget.js?v=236'

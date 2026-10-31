@@ -1,0 +1,15 @@
+<!doctype html><meta charset=utf-8><title>telefoon</title>
+<script>
+const q = new URLSearchParams(location.search)
+window.__vrienden = q.get('vrienden').split(','); window.__nieuw = q.get('nieuw') === '1'; window.__oud = (q.get('oud') || '').split(',')
+const ik = q.get('ik')
+localStorage.setItem('fibro_widgets_profiel_' + ik, JSON.stringify([{ id: 'quote', w: 4, h: 1 }, { id: 'gastenboek', w: 4, h: 4, notitie: 'van ' + ik }]))
+localStorage.setItem('quote_' + ik, JSON.stringify({ tekst: 'Quote van ' + ik }))
+localStorage.setItem('fibro_profiel_' + ik, JSON.stringify({ naam: ik.toUpperCase() }))
+</script>
+<script type="module">
+const oud = (q.get('oud') || '').split(',').includes(ik)
+const { initSync } = await import(oud ? './sync-oud.js' : './sync.js')
+initSync(ik)
+window.__klaar = true
+</script>

@@ -41,8 +41,9 @@ for(const outcome of ['win','loss']) {
     assert.ok(sources.length>=3,'impact, body and harmonic resonance are present')
     for(const source of sources) {
       assert(source.startTime>=4)
-      assert(source.stopTime>source.startTime && source.stopTime<5.6,'every source has a bounded tail')
-      for(const event of source.frequency.events) assert(event.value<300,'capture voices do not use high-pitched UI bleeps')
+      assert(source.stopTime>source.startTime && source.stopTime<(outcome==='win'?6.2:5.6),'every source has a bounded tail')
+      if(outcome==='loss')for(const event of source.frequency.events)assert(event.value<300,'loss voices retain their dark low-frequency impact')
+      if(outcome==='win'&&source.kind==='oscillator'){assert.equal(source.frequency.events.length,1,'chime modes ring at fixed pitches instead of electronic pitch sweeps');assert.equal(source.type,'sine');assert(source.frequency.events[0].value<=4500)}
     }
     const limiter=context.nodes.find(node=>node.kind==='compressor')
     assert(limiter && limiter.ratio.value>=4,'the sound has headroom and peak compression')
@@ -53,6 +54,15 @@ for(const outcome of ['win','loss']) {
     assert(context.nodes.every(node=>node.disconnected),'all sources, envelopes, filters and output nodes are released')
   }
 }
+
+// One bar has multiple non-harmonic partials with shorter upper-mode tails.
+const bell=new AudioContext()
+renderCaptureSound(bell,{value:1,outcome:'win'})
+const modes=bell.nodes.filter(node=>node.kind==='oscillator').sort((a,b)=>a.frequency.events[0].value-b.frequency.events[0].value)
+assert(modes.length>=3,'a chime has several resonant modes')
+const ratio=modes[1].frequency.events[0].value/modes[0].frequency.events[0].value
+assert(Math.abs(ratio-Math.round(ratio))>.1,'the modal spectrum differs from a plain harmonic UI oscillator')
+assert(modes[0].stopTime>modes[1].stopTime&&modes[1].stopTime>modes[2].stopTime,'high partials decay before the fundamental')
 
 const positive=new AudioContext(), negative=new AudioContext()
 renderCaptureSound(positive,{value:9,outcome:'win'})
@@ -81,7 +91,7 @@ const state={aanZet:'z',bord:Array.from({length:8},()=>Array(8).fill(null))}
 active.nodes=[]
 schaak(engine,state,{type:'slag'},'w','wood',{value:9,outcome:'win'})
 assert.equal(checks,1,'capture audio still advances the existing outcome/promotion selector')
-assert(frequencies(active).every(frequency=>frequency<300),'legacy capture/check bleeps are not layered over a graded capture')
+assert(active.nodes.filter(node=>node.kind==='oscillator').every(node=>node.frequency.events.length===1),'the graded chime is not mixed with the legacy pitched check/promotion effects')
 preference='uit';active.nodes=[]
 schaak(engine,state,{type:'slag'},'w','classic',{value:9,outcome:'loss'})
 assert.equal(active.nodes.length,0,'the game capture route respects mute too')

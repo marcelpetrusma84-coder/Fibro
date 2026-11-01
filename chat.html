@@ -412,8 +412,8 @@ window.veiligeUrl = function(v){
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { nieuweSpelSessie, isNieuwsteSpelSessie } from './spelsessie.js?v=1'
-  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=3'
-  import { mountChessLayout } from './chess-layout.js?v=4'
+  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=4'
+  import { mountChessLayout } from './chess-layout.js?v=5'
   import { maakSpelVerbinding } from './spelverbinding.js?v=2'
   import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=2'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
@@ -2292,8 +2292,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=147',
     pong: './pong-ui.js?v=241',
     vieroprij: './vieroprij-ui.js?v=240',
-    schaken: './schaken-ui.js?v=252',
-    schakendrie: './schaken-drie-ui.js?v=24',
+    schaken: './schaken-ui.js?v=253',
+    schakendrie: './schaken-drie-ui.js?v=25',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=149',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -2442,7 +2442,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       if (spelKanaal !== verbinding) return
       toonSpelVerbindingStatus('left')
       spelGestopt = true // v243: snelle spellen (Block It, Pong, ...) stoppen hun lus via isActief
-      toonSpelMelding(T('{naam} heeft het spel verlaten.', { naam: esc(spelVriendUsername()) }))
+      toonSpelMelding(spelT('{naam} heeft het spel verlaten.', { naam: esc(spelVriendUsername()) }))
       verbinding.stop()
     })
     if (spelType === 'schaken') spelKanaal.on('broadcast', { event:'schaken-drie-start' }, async message => {
@@ -2673,14 +2673,14 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const tekst = document.createElement('div')
     tekst.id = 'spelWachtTekst'
     tekst.style.cssText = 'color:#fff;font-size:16px;font-weight:600;line-height:1.45'
-    tekst.textContent = T('⏳ Wachten tot {naam} in het spel zit...', { naam: spelVriendUsername() })
+    tekst.textContent = spelT('⏳ Wachten tot {naam} in het spel zit...', { naam: spelVriendUsername() })
     const extra = document.createElement('div')
     extra.id = 'spelWachtExtra'
     extra.style.cssText = 'color:#cae6e5;font-size:13px;line-height:1.4'
     extra.hidden = true
     const knop = document.createElement('button')
     knop.type = 'button'
-    knop.textContent = T('Annuleren')
+    knop.textContent = spelT('Annuleren')
     knop.style.cssText = 'background:#ffffff1f;border:1px solid #ffffff44;border-radius:10px;padding:9px 22px;color:#fff;font-weight:600;cursor:pointer;'
     knop.onclick = () => window.sluitSpel()
     scherm.append(draai, tekst, extra, knop)
@@ -2689,10 +2689,54 @@ console.timeLog('[chat] berichten', 'opgehaald')
     clearTimeout(spelWachtTimer)
     spelWachtTimer = setTimeout(() => {
       if (document.getElementById('spelWachtscherm') !== scherm) return
-      tekst.textContent = T('{naam} is er na 2 minuten nog niet. Probeer het later opnieuw, of wacht nog even.', { naam: spelVriendUsername() })
+      tekst.textContent = spelT('{naam} is er na 2 minuten nog niet. Probeer het later opnieuw, of wacht nog even.', { naam: spelVriendUsername() })
       draai.style.animationPlayState = 'paused'
-      knop.textContent = T('Sluiten')
+      knop.textContent = spelT('Sluiten')
     }, SPEL_WACHT_MAX)
+  }
+
+  // v244: hoor je al 2 minuten niets van je vriend (status 'waiting': zijn app stuurt niets meer, bijvoorbeeld omdat hij
+  // naar een andere app ging en niet terugkwam), dan vragen: blijven wachten of sluiten? Komt hij terug, dan gaat de vraag weg.
+  const VRIEND_WEG_MS = 2 * 60 * 1000
+  let spelVriendWegTimer = null
+  function volgVriendWeg(status) {
+    if (status !== 'waiting') {
+      clearTimeout(spelVriendWegTimer); spelVriendWegTimer = null
+      document.getElementById('spelVriendWegVraag')?.remove()
+      return
+    }
+    if (spelVriendWegTimer || document.getElementById('spelVriendWegVraag')) return
+    spelVriendWegTimer = setTimeout(toonVriendWegVraag, VRIEND_WEG_MS)
+  }
+  function toonVriendWegVraag() {
+    spelVriendWegTimer = null
+    const inhoud = document.getElementById('spelInhoud')
+    if (!inhoud || !spelActief || spelGestopt || !spelKanaal || fibroChessTest?.active) return
+    if (laatsteSpelVerbindingStatus !== 'waiting' || document.getElementById('spelVriendWegVraag')) return
+    const box = document.createElement('div')
+    box.id = 'spelVriendWegVraag'
+    box.setAttribute('role', 'alertdialog')
+    box.style.cssText = 'position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(5,5,16,0.88);text-align:center;padding:20px;'
+    const tekst = document.createElement('div')
+    tekst.style.cssText = 'font-size:15px;color:#fff;font-weight:600;line-height:1.4;max-width:min(88vw,360px)'
+    tekst.textContent = spelT('{naam} reageert al 2 minuten niet. Misschien is {naam} weg.', { naam: spelVriendUsername() })
+    const rij = document.createElement('div')
+    rij.style.cssText = 'display:flex;gap:10px;flex-wrap:wrap;justify-content:center'
+    const wacht = document.createElement('button')
+    wacht.type = 'button'
+    wacht.textContent = spelT('Blijven wachten')
+    wacht.style.cssText = 'background:#ffffff1f;border:1px solid #ffffff44;border-radius:10px;padding:10px 20px;color:#fff;font-weight:600;cursor:pointer;min-height:44px;'
+    wacht.onclick = () => { box.remove(); if (laatsteSpelVerbindingStatus === 'waiting') volgVriendWeg('waiting') }
+    const sluit = document.createElement('button')
+    sluit.type = 'button'
+    sluit.textContent = spelT('Sluiten')
+    sluit.style.cssText = 'background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 24px;color:#1a0a2e;font-weight:600;cursor:pointer;min-height:44px;'
+    sluit.onclick = () => window.sluitSpel()
+    rij.append(wacht, sluit)
+    box.append(tekst, rij)
+    if (getComputedStyle(inhoud).position === 'static') inhoud.style.position = 'relative'
+    inhoud.appendChild(box)
+    wacht.focus()
   }
 
   function toonSpelVerbindingStatus(status) {
@@ -2700,10 +2744,11 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const wachtExtra = document.getElementById('spelWachtExtra')
     if (wachtExtra) { // nog op het wachtscherm: daar de verbinding laten zien
       const tekstenWacht = { reconnecting:'Verbinding herstellen; je spel blijft open.', offline:'Wachten op internet; je spel blijft open.' }
-      wachtExtra.textContent = tekstenWacht[status] ? T(tekstenWacht[status]) : ''
+      wachtExtra.textContent = tekstenWacht[status] ? spelT(tekstenWacht[status]) : ''
       wachtExtra.hidden = !tekstenWacht[status]
       return
     }
+    volgVriendWeg(status)
     const inhoud = document.getElementById('spelInhoud')
     const plek = inhoud?.querySelector('.sch-spel') || inhoud
     if (!plek || !spelActief) return
@@ -2757,6 +2802,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     spelChatCrypto = null
     if (spelWachtKlaar) { const klaar = spelWachtKlaar; spelWachtKlaar = null; klaar(false) } // v241: wachten gestopt
     clearTimeout(spelWachtTimer); spelWachtTimer = null
+    clearTimeout(spelVriendWegTimer); spelVriendWegTimer = null // v244
     if (!wasFibroTest && !stil && verbinding && spelActief) {
       // Allow the explicit leave message to reach the server before disposing.
       Promise.resolve(verbinding.send({ type:'broadcast', event:'verlaten', payload:{} }))
@@ -2976,7 +3022,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await import('./schaken-ui.js?v=252')
+    const m = await import('./schaken-ui.js?v=253')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: fibroChessTest?.active ? schaakT('Testspeler · Zwart') : spelVriendUsername(), testMode:Boolean(fibroChessTest?.active), onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer : nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
     spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })
@@ -2984,7 +3030,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   async function startSchakenDrie(players) {
-    const m = await import('./schaken-drie-ui.js?v=24')
+    const m = await import('./schaken-drie-ui.js?v=25')
     const testMode = Boolean(fibroChessTest?.active)
     const controller = m.start({ Bordgeluid, gameChannel:testMode ? null : spelKanaal, players, userId:testMode ? 'fibro-test-you' : huidigeUser.id, localPreview:testMode, testMode, testStream:fibroChessTest?.stream || null, onTestCameraChange:stream => { if (fibroChessTest?.active) fibroChessTest.stream = stream }, onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null })
     spelSchaakDrieController = controller

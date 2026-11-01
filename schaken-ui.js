@@ -1,4 +1,4 @@
-import { maakSchaakTaal } from './schaak-taal.js?v=3'
+import { maakSchaakTaal } from './schaak-taal.js?v=4'
 import { stukSVG, registreerSlag, veroverdePunten, STUKPUNTEN } from './schaak-stukken.js?v=1'
 const SETTINGS_KEY = 'fibro_chess_settings_v1'
 const READABLE_NAMES = { P:'pion', N:'paard', B:'loper', R:'toren', Q:'dame', K:'koning' }

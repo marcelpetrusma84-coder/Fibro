@@ -9,7 +9,7 @@ import { supabase } from './supabase.js?v=95'
 import { ICE_SERVERS, iceReady } from './ice-config.js?v=149'
 import { houOpen } from './lijntjes.js?v=1'
 import { maakBelregel } from './belregel.js?v=152'
-import { maakCameraFilter, bouwFilterKiezer, FILTERS as CAMERA_FILTERS } from './camerafilters.js?v=1'
+import { maakCameraFilter, bouwFilterKiezer, FILTERS as CAMERA_FILTERS } from './camerafilters.js?v=2'
 
 let lokaleStream = null
 let remoteStream = null
@@ -361,6 +361,7 @@ function gesprekKanaalNaam(id1, id2) {
 export function initBellen(userId, callbacks = {}) {
   if (geinitialiseerd && huidigeUserId === userId) return
   huidigeUserId = userId
+  werkNieuwsNamen()
   onOproepCallback = callbacks.onOproep || null
   onEindCallback = callbacks.onEind || null
   onVerbondenCallback = callbacks.onVerbonden || null
@@ -383,6 +384,7 @@ function luisterNaarUitnodigingen() {
       const { van, video, spel } = msg.payload
       console.log('Uitnodiging ontvangen van:', van)
       vriendId = van
+      werkNieuwsNamen()
       isInitiator = false
       spelGesprek = Boolean(spel)
       openGesprekKanaal(van)
@@ -529,6 +531,7 @@ export async function belOp(naarVriendId, video = false, spelModus = false) {
   await iceReady // TURN-servers eerst binnen laten komen
   if (epoch !== gesprekEpoch) return false
   vriendId = naarVriendId
+  werkNieuwsNamen()
   isInitiator = true
   spelGesprek = Boolean(spelModus)
   videoGewenst = !!video
@@ -917,6 +920,7 @@ export function toggleCamera() {
 // ─── Zet vriendId handmatig (voor inkomend gesprek na paginawissel) ───
 export function zetVriendId(id) {
   vriendId = id
+  werkNieuwsNamen()
 }
 
 // --- Camera wisselen tijdens een gesprek (voor/achter, of de volgende camera) ---
@@ -999,8 +1003,24 @@ export async function wisselCamera() {
 // ═══════════════ v157: camerafilters ═══════════════
 export { CAMERA_FILTERS }
 export function huidigCameraFilter() { return cameraFilter.huidig() }
-export function nieuwsfilterTekst() { return cameraFilter.nieuwsTekst() }
-export function zetNieuwsfilterTekst(t) { cameraFilter.zetNieuwsTekst(t) }
+
+// v158: FAKE NIEUWS zet de gebruikersnamen van jou en wie je belt in de balk. Eén keer per persoon opgehaald.
+const nieuwsNaamCache = new Map()
+let nieuwsNamenVraag = 0
+async function werkNieuwsNamen() {
+  const ids = [huidigeUserId, vriendId].filter(Boolean)
+  const vraag = ++nieuwsNamenVraag
+  const ontbreekt = ids.filter(id => !nieuwsNaamCache.has(id))
+  if (ontbreekt.length) {
+    try {
+      const { data } = await supabase.from('profiles').select('id, username').in('id', ontbreekt)
+      for (const r of data || []) if (r && r.id && r.username) nieuwsNaamCache.set(r.id, String(r.username))
+    } catch (e) {}
+  }
+  if (vraag !== nieuwsNamenVraag) return
+  try { cameraFilter.zetNamen(ids.map(id => nieuwsNaamCache.get(id)).filter(Boolean)) } catch (e) {}
+}
+export function nieuwsfilterNamen() { return cameraFilter.namen() }
 
 // Een filter kiezen: onthouden, de preview bijwerken en (als er een gesprek loopt) de verstuurde track vervangen.
 export function zetCameraFilter(id) {
@@ -1018,7 +1038,5 @@ export function bouwFilterKnop(container) {
   return bouwFilterKiezer(container, {
     huidig: () => cameraFilter.huidig(),
     kies: (id) => zetCameraFilter(id),
-    tekst: () => cameraFilter.nieuwsTekst(),
-    zetTekst: (t) => zetNieuwsfilterTekst(t),
   })
 }

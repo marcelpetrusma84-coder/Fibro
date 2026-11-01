@@ -1323,6 +1323,7 @@ window.FIBRO_EN = {
   "3D-bril": "3D glasses",
   "Beveiliging": "Security cam",
   "Nieuws": "News",
+  "Fake nieuws": "Fake news",
   "Kop": "Headline",
   "Plek": "Location",
   "Lopende balk": "Ticker",

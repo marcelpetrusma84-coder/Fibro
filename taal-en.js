@@ -1325,6 +1325,7 @@ window.FIBRO_EN = {
   "Nieuws": "News",
   "Fake nieuws": "Fake news",
   "16-bit": "16-bit",
+  "Fake news": "Fake news",
   "Kop": "Headline",
   "Plek": "Location",
   "Lopende balk": "Ticker",

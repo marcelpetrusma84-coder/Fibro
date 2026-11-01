@@ -14,7 +14,7 @@ for (const b of FAKE_NIEUWS) { assert.match(b, /\{a\}/, 'met een naam: ' + b); a
 assert.ok(FAKE_NIEUWS.some(b => /robs a bank/.test(b)), 'de bankoverval')
 assert.ok(FAKE_NIEUWS.some(b => /biggest cake/.test(b)), 'de grootste taart')
 for (const b of FAKE_NIEUWS) assert.ok(!/\b(het|een|en|met|van|niet)\b/.test(b.replace(/\{[ab]\}/g, '')), 'Engels: ' + b)
-assert.equal(FILTERS.find(f => f.id === 'nieuws').naam, 'Fake nieuws')
+assert.equal(FILTERS.find(f => f.id === 'nieuws').naam, 'Fake news')
 
 // 2. de balk: alle berichten, met de namen van jou en wie je belt, geen {a}/{b} meer over
 let n = 0; const vast = () => ((n = (n * 9301 + 49297) % 233280) / 233280)
@@ -28,7 +28,12 @@ assert.ok(maakNieuwsBalk([]).includes('Someone'), 'zonder namen: Someone')
 assert.ok(!maakNieuwsBalk(['x'.repeat(60)]).includes('x'.repeat(25)), 'lange namen worden ingekort')
 
 // 3. de filters
-assert.match(cf, /oudefilm\(w, h\) \{\n      const flikker[^\n]*\n      ctx\.filter = 'grayscale\(1\) contrast/, 'Oude film: echt zwart-wit')
+assert.match(cf.slice(cf.indexOf('oudefilm(w, h)'), cf.indexOf('oudetv(w, h)')), /maakGrijs\(ctx, w, h, 0\.8\)/, 'Oude film: volledig zwart-wit')
+// v3: zwart-wit zonder ctx.filter (Safari op de iPhone kent dat niet): 'saturation' met grijs
+assert.ok(!/\.filter = '[^']*grayscale/.test(cf), 'nergens grayscale via ctx.filter')
+assert.match(cf, /c\.globalCompositeOperation = 'saturation'; c\.fillStyle = '#808080'/)
+assert.match(cf, /const km = Math\.max\(8, Math\.round\(bm \* 0\.6\)\)/, 'kleiner blokje FAKE NEWS onderaan')
+assert.match(cf, /nieuws: vertaal\('Fake news'\)/)
 assert.ok(!/sepia/.test(cf.slice(cf.indexOf('oudefilm(w, h)'), cf.indexOf('oudetv(w, h)'))), 'Oude film: geen sepia meer')
 const tv = cf.slice(cf.indexOf('oudetv(w, h)'), cf.indexOf('anaglyph(w, h)'))
 assert.match(tv, /scanlijnen\(0\.5, 3\)/, 'Oude tv: duidelijke lijnen')

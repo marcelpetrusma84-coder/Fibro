@@ -2099,6 +2099,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ════════════════════════════════
   let spelKanaal = null
   let spelActief = null
+  let spelGestopt = false // v243: je vriend heeft het spel verlaten; het spel loopt dan niet door onder de melding
   let spelTegenstander = null
   let spelChatCrypto = null
   let spelSessieId = null
@@ -2379,6 +2380,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       mijnPrivateKey, vriendPublicKey, sessie:spelKanaalNaam(sessieId, spelType), vingerafdruk })
     spelChatCrypto = chatBeveiliging
     spelActief = spelType
+    spelGestopt = false
     resetSpelVideo()
     const videoNaam = document.getElementById('spelVideoAnderNaam')
     if (videoNaam) videoNaam.textContent = spelVriendUsername()
@@ -2439,6 +2441,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     spelKanaal.on('broadcast', { event: 'verlaten' }, () => {
       if (spelKanaal !== verbinding) return
       toonSpelVerbindingStatus('left')
+      spelGestopt = true // v243: snelle spellen (Block It, Pong, ...) stoppen hun lus via isActief
       toonSpelMelding(T('{naam} heeft het spel verlaten.', { naam: esc(spelVriendUsername()) }))
       verbinding.stop()
     })
@@ -2738,6 +2741,14 @@ console.timeLog('[chat] berichten', 'opgehaald')
     inhoud.appendChild(box)
   }
 
+  // v243: ga je weg uit de chat (terugknop, ander scherm, tabblad dicht) terwijl er een spel open is, dan krijgt je
+  // vriend ook 'verlaten'. Zonder dit bleef het spel bij je vriend doorlopen. Alleen bij echt weggaan (pagehide),
+  // niet bij even een andere app openen: dan kom je terug in hetzelfde spel.
+  window.addEventListener('pagehide', () => {
+    if (!spelKanaal || !spelActief || fibroChessTest?.active) return
+    try { spelKanaal.send({ type:'broadcast', event:'verlaten', payload:{} }) } catch (e) {}
+  })
+
   window.sluitSpel = function(stil) {
     // stil = true: niet melden aan de ander (die is zelf al gestopt)
     const wasFibroTest = Boolean(fibroChessTest?.active)
@@ -2773,6 +2784,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (window._spelAnimFrame) { cancelAnimationFrame(window._spelAnimFrame); window._spelAnimFrame = null }
     if (window._spelAftelInterval) { clearInterval(window._spelAftelInterval); window._spelAftelInterval = null }
     spelActief = null
+    spelGestopt = false
     laatsteSpelVerbindingStatus = null
     document.getElementById('spelOverlay').removeAttribute('lang')
     document.querySelector('#spelOverlay .spel-sluit-btn')?.removeAttribute('aria-label')
@@ -2988,7 +3000,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ─── Pong ───
   async function startPong() {
     const m = await import('./pong-ui.js?v=241')
-    m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'pong' })
+    m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'pong' && !spelGestopt })
   }
 
 
@@ -3076,48 +3088,48 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ─── Flappy Bird Multiplayer ───
   async function startFlappyBird() {
     const m = await import('./flappy-ui.js?v=147')
-    m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'flappybird' })
+    m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'flappybird' && !spelGestopt })
   }
 
   // ─── Block It Multiplayer ───
 async function startBlockIt() {
     const m = await import('./blockit-ui.js?v=149')
-    m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'breakout' })
+    m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'breakout' && !spelGestopt })
 }
 
 // ─── Space Invaders Multiplayer ───
   async function startSpaceInvaders() {
     const m = await import('./invaders-ui.js?v=147')
-    m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'spaceinvaders' })
+    m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'spaceinvaders' && !spelGestopt })
   }
 
 // ─── The Swarm Multiplayer ───
   async function startSwarm() {
     const m = await import('./swarm-ui.js?v=147')
-    m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'swarm' })
+    m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'swarm' && !spelGestopt })
   }
 
   // ─── Runner & Gunner (vakje Endless Runner) ───
   // ─── Spookjes (vakje Pac-Man) ───
   async function startEcto() {
     const m = await import('./ecto-ui.js?v=177')
-    await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'pacman' })
+    await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'pacman' && !spelGestopt })
   }
 
   async function startRunnerGunner() {
     const m = await import('./runner-gunner-ui.js?v=148')
-    await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'endlessrunner' })
+    await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'endlessrunner' && !spelGestopt })
   }
 
   // ─── Twin Snakes (vakje Pinball) ───
   async function startTwinSnakes() {
     const m = await import('./twin-snakes-ui.js?v=149')
-    await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'pinball' })
+    await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'pinball' && !spelGestopt })
   }
 
   async function startNeonRaiders() {
     const m = await import('./neon-raiders-ui.js?v=222')
-    await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'shmup' })
+    await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'shmup' && !spelGestopt })
   }
 
   // ─── Geluidsbibliotheek ───

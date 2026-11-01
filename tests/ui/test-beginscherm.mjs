@@ -61,8 +61,10 @@ console.log('ok: Fibro op het beginscherm, met tekeningen; Meldingen aanzetten o
   const login = lees('login.html'), setup = lees('setup.html'), bs2 = lees('beginscherm.js')
   assert.match(login, /<div id="reg-beginscherm" hidden/, 'de kaart staat standaard verborgen')
   assert.ok(login.indexOf('id="reg-beginscherm"') < login.indexOf('id="reg-form"'), 'boven het formulier')
-  assert.match(login, /import \{ iphoneZonderApp, openBeginschermUitleg \} from '\.\/beginscherm\.js\?v=1'/)
-  assert.match(login, /if \(kaart && iphoneZonderApp\(\) && !weg\) \{/, 'alleen op een iPhone in Safari')
+  assert.match(login, /import \{ iphoneZonderApp, openBeginschermUitleg, toestel \} from '\.\/beginscherm\.js\?v=1'/)
+  assert.match(login, /if \(kaart && \(iphoneZonderApp\(\) \|\| androidInBrowser\) && !weg\) \{/, 'op een iPhone in Safari of Android in de browser')
+  assert.match(login, /androidInBrowser = t\.android && !t\.app && !\(window\.FibroApk && FibroApk\.inApp\(\)\)/, 'Android: niet in de app of de oude APK')
+  assert.match(login, /T\('📲 Gebruik je Android\?'\)/, 'Android: eigen titel')
   assert.match(login, /openBeginschermUitleg\(\{ reden: 'account' \}\)/)
   assert.match(login, /sessionStorage\.setItem\('fibro_reg_beginscherm_weg', '1'\)/, 'Toch hier verdergaan: weg')
   assert.match(bs2, /if \(reden === 'account'\) \{\n      \/\/ nog geen account: dat maak je meteen in de app\n      lijst\.appendChild\(el\('li', '', T\('Tik op <b>Registreren<\/b> en maak daar je account\.'\)\)\)/,

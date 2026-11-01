@@ -292,5 +292,15 @@ export const SCHAAK_EN = Object.freeze({
   "Dit spel kan nog niet alleen gespeeld worden.": "This game can't be played on your own yet.",
   "Jouw record: {n}": "Your record: {n}",
   "Of speel alleen de levels:": "Or play the levels on your own:",
-  "🧱 Levels": "🧱 Levels"
+  "🧱 Levels": "🧱 Levels",
+  // v244: wachtscherm, verbinding en vriend weg (chat.html)
+  "⏳ Wachten tot {naam} in het spel zit...": "⏳ Waiting for {naam} to join the game...",
+  "{naam} is er na 2 minuten nog niet. Probeer het later opnieuw, of wacht nog even.": "{naam} still hasn't joined after 2 minutes. Try again later, or wait a little longer.",
+  "Spel met je vriend openen…": "Joining your friend's game…",
+  "Verbinding herstellen; je spel blijft open.": "Reconnecting — your game stays open.",
+  "Wachten op internet; je spel blijft open.": "Waiting for internet — your game stays open.",
+  "Wachten op je vriend; je spel blijft open.": "Waiting for your friend — your game stays open.",
+  "{naam} heeft het spel verlaten.": "{naam} has left the game.",
+  "{naam} reageert al 2 minuten niet. Misschien is {naam} weg.": "{naam} hasn't responded for 2 minutes. {naam} may have left.",
+  "Blijven wachten": "Keep waiting",
 })

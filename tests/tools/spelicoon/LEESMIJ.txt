@@ -1,0 +1,24 @@
+De plaatjes van de spellen (spelicoon/<spel>.webp), v2 van 31 oktober 2026
+==========================================================================
+
+Elk plaatje is één los speelstuk uit het spel zelf, op een doorzichtige achtergrond.
+Er wordt niets nagetekend: de stukken komen uit de echte spelbestanden.
+
+  Tic-Tac-Toe      het rode kruisje        dom.py     (de X uit bke-ui.js, na een zet)
+  Four in a Row    het gele schijfje       dom.py     (een schijf van de computer)
+  Chess            het witte paard         dom.py
+  Draughts         een witte damschijf     dom.py
+  Neo Paddle       de paddle               harnas.py  (tekenPaddle uit pong-ui.js)
+  Flapper          de vleermuis            harnas.py  (tekenVleermuis uit flappy-ui.js)
+  Ghost Tag        het spookje             harnas.py  (tekenFiguur uit ecto-ui.js)
+  Twin Snakes      de slang                harnas.py  (tekenSlang uit twin-snakes-ui.js)
+  Block It         één blokje              harnas.py  (tekenBlok uit blockit-ui.js)
+  The Swarm        een insect              canvas.py  (een sprite die het spel zelf maakt)
+  Runner & Gunner  Runner en Gunner        canvas.py  (de figuren uit het keuzescherm)
+  Neon Raiders     het ruimteschip         canvas.py  (de Phaser-textuur 'schip')
+
+Zo maak je ze opnieuw (Python met Playwright; Fibro moet draaien op http://127.0.0.1:8765/Fibro/):
+  export SPELICOON_RAW=/een/lege/map/
+  python3 dom.py; python3 canvas.py; python3 harnas.py
+  python3 tegel.py <repo>/spelicoon        (maakt ook vel.png om te bekijken)
+Daarna VERSIE in spelicoon.js een hoger, en ?v= in chat.html, profiel.html, index.html en vriend-profiel.html.

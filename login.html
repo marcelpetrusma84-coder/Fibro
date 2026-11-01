@@ -5,8 +5,8 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
   <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
-  <script src="taal.js?v=39"></script>
-  <script src="apk.js?v=1"></script>
+  <script src="taal.js?v=46"></script>
+  <script src="apk.js?v=2"></script>
   <script src="registratie.js?v=1"></script>
   <script>try { FibroApk.hervatUitnodiging() } catch (e) {} // in de app: een uitnodiging die wacht (apk.js)</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Verder met setup': 'Continue setup', 'Fibro is vanaf 16 jaar.': 'Fibro is for ages 16 and up.', 'Fibro is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.': "Fibro is for ages 16 and up. If you're younger, you can't create an account yet." })</script>
@@ -24,9 +24,11 @@
     @import url('lettertypen/basis.css?v=1');
     :root { --bg:#1a0a2e; --surface:#161618; --border:#2a2a2e; --accent:#c084fc; --accent-dim:#f0abfc; --text:#f3e8ff; --text-muted:#666660; --danger:#ff5c5c; --radius:12px; }
     * { box-sizing:border-box; margin:0; padding:0; }
-    body { background:var(--bg); color:var(--text); font-family:'DM Mono',monospace; min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px; overflow:hidden; }
+    /* v249: de pagina kan weer op en neer scrollen (overflow:hidden sneed de boven- en onderkant af als het formulier hoger
+       was dan het scherm, bijv. Registreren op een telefoon). margin:auto 0 op .container houdt hem in het midden als hij past. */
+    body { background:var(--bg); color:var(--text); font-family:'DM Mono',monospace; min-height:100dvh; display:flex; align-items:flex-start; justify-content:center; padding:24px; overflow-x:hidden; }
     body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:0; }
-    .container { width:100%; max-width:420px; position:relative; z-index:1; animation:fadeUp 0.4s ease both; }
+    .container { width:100%; max-width:420px; margin:auto 0; position:relative; z-index:1; animation:fadeUp 0.4s ease both; }
     @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
     .logo { text-align:center; margin-bottom:40px; }
     .logo h1 { font-family:'DM Serif Display',serif; font-size:48px; letter-spacing:-1px; color:var(--text); }
@@ -107,6 +109,15 @@
     <!-- REGISTREREN -->
     <div class="panel" id="panel-registreren">
       <div class="message" id="reg-msg"></div>
+      <!-- v249: ook op Android in Chrome (in plaats van de APK-download), met een eigen titel.
+           v248: op een iPhone in Safari eerst Fibro op het beginscherm zetten en daar het account maken: de app op het
+           beginscherm heeft eigen opslag, dus anders moet je daar opnieuw inloggen en je sleutel terugzetten (beginscherm.js) -->
+      <div id="reg-beginscherm" hidden style="margin-bottom:16px;padding:14px;border-radius:12px;border:1px solid rgba(192,132,252,0.5);background:rgba(192,132,252,0.1);">
+        <div id="reg-beginscherm-titel" style="font-size:15px;font-weight:700;margin-bottom:6px;" data-t>📲 Gebruik je een iPhone?</div>
+        <div style="font-size:13.5px;line-height:1.5;margin-bottom:12px;" data-t>Zet Fibro eerst op je beginscherm en maak daar je account aan. Dan krijg je meldingen, en hoef je later niet opnieuw in te loggen.</div>
+        <button type="button" class="btn btn-primary" id="reg-beginscherm-hoe" style="margin-bottom:6px;" data-t>Laat zien hoe</button>
+        <button type="button" id="reg-beginscherm-toch" style="display:block;width:100%;background:none;border:none;color:var(--text);opacity:0.75;font-size:13px;text-decoration:underline;cursor:pointer;padding:8px;font-family:inherit;" data-t>Toch hier verdergaan</button>
+      </div>
       <div id="reg-form">
         <div class="beta-info" data-t>🧪 Fibro is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.</div>
         <div class="field">
@@ -712,6 +723,25 @@ window.herstelMetSleutel = async function() {
     } catch(e) {}
   }
   laadWallpaper()
+</script>
+<script type="module">
+// v248: de kaart 'Gebruik je een iPhone?' bij Registreren, alleen op een iPhone in Safari (niet als app)
+// v249: ook op Android in de browser (niet in de app of de oude APK): 'Gebruik je Android?'. Dit vervangt de APK-download.
+import { iphoneZonderApp, openBeginschermUitleg, toestel } from './beginscherm.js?v=1'
+const kaart = document.getElementById('reg-beginscherm')
+let weg = false
+try { weg = sessionStorage.getItem('fibro_reg_beginscherm_weg') === '1' } catch (e) {}
+let androidInBrowser = false
+try { const t = toestel(); androidInBrowser = t.android && !t.app && !(window.FibroApk && FibroApk.inApp()) } catch (e) {}
+if (kaart && (iphoneZonderApp() || androidInBrowser) && !weg) {
+  if (androidInBrowser) document.getElementById('reg-beginscherm-titel').textContent = T('📲 Gebruik je Android?')
+  kaart.hidden = false
+  document.getElementById('reg-beginscherm-hoe').onclick = () => openBeginschermUitleg({ reden: 'account' })
+  document.getElementById('reg-beginscherm-toch').onclick = () => {
+    kaart.hidden = true
+    try { sessionStorage.setItem('fibro_reg_beginscherm_weg', '1') } catch (e) {}
+  }
+}
 </script>
 </body>
 </html>

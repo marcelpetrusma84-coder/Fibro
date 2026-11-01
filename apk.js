@@ -1,4 +1,7 @@
-// apk.js (v1): de Fibro-app voor Android (APK), zie android/LEESMIJ.md.
+// apk.js (v2): de Fibro-app voor Android (APK), zie android/LEESMIJ.md.
+// v2 (1 nov 2026): de APK wordt niet meer aangeboden (APK_AANBIEDEN = false). Virusscanners als Avast gaven een
+// waarschuwing bij de losse APK. Android-gebruikers zetten Fibro nu via Chrome op hun startscherm (beginscherm.js),
+// net als op de iPhone. Wie de APK al heeft, kan hem gewoon blijven gebruiken; de wachtende uitnodiging werkt nog.
 // - Een downloadknop of -kaart voor wie Fibro op een Android-telefoon in de browser opent.
 // - Op de uitnodigingspagina een keuze tussen de app (aanbevolen) en de browser.
 // - Kiest iemand bij een uitnodiging voor de app, dan wacht die uitnodiging in dit toestel
@@ -10,6 +13,7 @@
   if (window.FibroApk) return
 
   // Vaste downloadlink: de workflow Android-APK zet de nieuwste APK altijd onder deze naam.
+  var APK_AANBIEDEN = false // v2: uit; weer aan (true) als de app in de Play Store staat en APK_URL daarheen wijst
   var APK_URL = 'https://github.com/marcelpetrusma84-coder/Fibro/releases/download/apk-nieuwste/fibro.apk'
   var WACHT = 'fibro_uitnodiging_voor_app'
   var WACHT_MAX = 7 * 24 * 3600 * 1000 // een week
@@ -49,7 +53,7 @@
     try { return !!(window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches)) } catch (e) { return false }
   }
   inApp() // meteen bij het laden: de eerste pagina in de app heeft de app als referrer, en dat onthouden we
-  function toonDownload() { return isAndroid() && !inApp() }
+  function toonDownload() { return APK_AANBIEDEN && isAndroid() && !inApp() }
 
   // ── Een uitnodiging die in de app wacht ──
   function isUitnodiging(u) {

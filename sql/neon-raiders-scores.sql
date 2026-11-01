@@ -79,7 +79,7 @@ grant execute on function public.neon_raiders_save_score(uuid, bigint, timestamp
   to authenticated;
 
 -- Geen vrij kiesbare spelerparameter: de uitslag is altijd voor auth.uid().
--- Wereldrecord: onbekende speler levert UITSLUITEND {score}; ook geen id, naam of tijd.
+-- Wereldrecord: onbekende speler levert UITSLUITEND {score, level, won}; geen id, naam of tijd.
 create or replace function public.neon_raiders_boards()
 returns jsonb language plpgsql stable security definer
 set search_path = pg_catalog, pg_temp
@@ -97,7 +97,7 @@ begin
 
   select coalesce(jsonb_agg(to_jsonb(r) order by r.score desc, r.played_at, r.run_id), '[]'::jsonb)
     into personal from (
-      select s.user_id, s.run_id, s.score, s.played_at, p.username
+      select s.user_id, s.run_id, s.score, s.played_at, s.level, s.won, p.username
       from public.neon_raiders_scores s join public.profiles p on p.id = s.user_id
       where s.user_id = me
       order by s.score desc, s.played_at, s.run_id limit 10
@@ -105,7 +105,7 @@ begin
 
   select coalesce(jsonb_agg(to_jsonb(r) order by r.score desc, r.played_at, r.user_id, r.run_id), '[]'::jsonb)
     into friends from (
-      select s.user_id, s.run_id, s.score, s.played_at, p.username
+      select s.user_id, s.run_id, s.score, s.played_at, s.level, s.won, p.username
       from public.neon_raiders_scores s join public.profiles p on p.id = s.user_id
       where (s.user_id = me or public.neon_raiders_friend(me, s.user_id))
         and not coalesce(p.geblokkeerd, false)
@@ -120,7 +120,7 @@ begin
                       and b.opgeheven_op is null and b.van <= now() and (b.tot is null or b.tot > now()))
     order by s.score desc, s.played_at, s.user_id, s.run_id limit 1;
   if found then
-    world := jsonb_build_object('score', record.score);
+    world := jsonb_build_object('score', record.score, 'level', record.level, 'won', record.won);
     if record.user_id = me or public.neon_raiders_friend(me, record.user_id) then
       select p.username into record_username from public.profiles p where p.id = record.user_id;
       world := world || jsonb_build_object('user_id', record.user_id, 'username', record_username,

@@ -62,7 +62,7 @@ for (const z of ['Gastenboek zonder lijntjes', 'Gewoon in je eigen kleuren, zond
 // 5. Home en het profiel van een vriend gebruiken allebei het gedeelde bestand, zonder oude kopie van het papier
 const index = lees('index.html'), vriend = lees('vriend-profiel.html')
 for (const [naam, s] of [['index.html', index], ['vriend-profiel.html', vriend]]) {
-  assert.match(s, /import \* as GB from '\.\/gastenboekstijl\.js\?v=1'/, naam)
+  assert.match(s, /import \* as GB from '\.\/gastenboekstijl\.js\?v=\d+'/, naam)
   assert.doesNotMatch(s, /repeating-linear-gradient\(transparent,transparent 25px/, naam + ': geen oude lijntjes meer')
   assert.match(s, /GB\.houdOpDeLijntjes\(c, .*, papier\)/, naam)
 }

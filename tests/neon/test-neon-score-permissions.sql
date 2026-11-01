@@ -11,10 +11,12 @@ insert into public.friendships values
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"10000000-0000-4000-8000-000000000001"}';
 do $$ begin
-  perform public.neon_raiders_save_score('00000000-0000-4000-8000-000000000001', 100, now() - interval '1 hour');
-  perform public.neon_raiders_save_score('00000000-0000-4000-8000-000000000001', 999, now());
+  perform public.neon_raiders_save_score('00000000-0000-4000-8000-000000000001', 100, now() - interval '1 hour', 3, false);
+  perform public.neon_raiders_save_score('00000000-0000-4000-8000-000000000001', 999, now(), 7, true);
   if (select count(*) from public.neon_raiders_scores) <> 1 then raise exception 'Duplicate run counted'; end if;
   if (select score from public.neon_raiders_scores limit 1) <> 100 then raise exception 'Duplicate run updated'; end if;
+  if (select level from public.neon_raiders_scores limit 1) <> 3 or
+     (select won from public.neon_raiders_scores limit 1) then raise exception 'Duplicate changed level/result'; end if;
   begin
     perform public.neon_raiders_save_score('00000000-0000-4000-8000-000000000002', -1, now());
     raise exception 'Invalid score accepted';
@@ -31,15 +33,17 @@ do $$ begin
   exception when insufficient_privilege then null; end;
 end $$;
 set local request.jwt.claims = '{"sub":"20000000-0000-4000-8000-000000000002"}';
-select public.neon_raiders_save_score('00000000-0000-4000-8000-000000000002', 500, now());
+select public.neon_raiders_save_score('00000000-0000-4000-8000-000000000002', 500, now(), 5, false);
 set local request.jwt.claims = '{"sub":"30000000-0000-4000-8000-000000000003"}';
-select public.neon_raiders_save_score('00000000-0000-4000-8000-000000000003', 1000, now());
+select public.neon_raiders_save_score('00000000-0000-4000-8000-000000000003', 1000, now(), 6, false);
 set local request.jwt.claims = '{"sub":"10000000-0000-4000-8000-000000000001"}';
 do $$ declare boards jsonb := public.neon_raiders_boards(); begin
   if (select count(*) from public.neon_raiders_scores) <> 1 then raise exception 'RLS exposes other scores'; end if;
   if jsonb_array_length(boards->'personal') <> 1 then raise exception 'Wrong personal board'; end if;
   if jsonb_array_length(boards->'friends') <> 2 then raise exception 'Wrong friends board'; end if;
-  if boards->'global' <> '{"score":1000}'::jsonb then raise exception 'Stranger identity exposed: %', boards->'global'; end if;
+  if (boards->'personal'->0->>'level')::integer is distinct from 3 then raise exception 'Personal level missing'; end if;
+  if (boards->'friends'->0->>'level')::integer is distinct from 5 then raise exception 'Friend level missing'; end if;
+  if boards->'global' <> '{"score":1000,"level":6,"won":false}'::jsonb then raise exception 'Stranger identity exposed or result missing: %', boards->'global'; end if;
   if boards->'known_players' <> '[]'::jsonb then raise exception 'Stranger id leaked'; end if;
 end $$;
 reset role;
@@ -48,6 +52,7 @@ set local role authenticated;
 do $$ declare boards jsonb := public.neon_raiders_boards(); begin
   if boards->'global'->>'username' <> 'Friend' then raise exception 'Friend username unavailable'; end if;
   if (boards->'global'->>'score')::integer <> 500 then raise exception 'Wrong friend world record'; end if;
+  if (boards->'global'->>'level')::integer is distinct from 5 or (boards->'global'->>'won')::boolean is distinct from false then raise exception 'Friend world level/result missing'; end if;
 end $$;
 reset role;
 insert into public.mijn_blokkades values
@@ -55,7 +60,7 @@ insert into public.mijn_blokkades values
 set local role authenticated;
 do $$ declare boards jsonb := public.neon_raiders_boards(); begin
   if jsonb_array_length(boards->'friends') <> 1 then raise exception 'Blocked friend score leaked'; end if;
-  if boards->'global' <> '{"score":500}'::jsonb then raise exception 'Blocked friend identity leaked'; end if;
+  if boards->'global' <> '{"score":500,"level":5,"won":false}'::jsonb then raise exception 'Blocked friend identity leaked'; end if;
 end $$;
 reset role;
 delete from public.mijn_blokkades;
@@ -63,7 +68,7 @@ delete from public.friendships where user_id = '20000000-0000-4000-8000-00000000
 set local role authenticated;
 do $$ declare boards jsonb := public.neon_raiders_boards(); begin
   if jsonb_array_length(boards->'friends') <> 1 then raise exception 'One-way friendship allowed'; end if;
-  if boards->'global' <> '{"score":500}'::jsonb then raise exception 'Former friend identity leaked'; end if;
+  if boards->'global' <> '{"score":500,"level":5,"won":false}'::jsonb then raise exception 'Former friend identity leaked'; end if;
   if has_function_privilege('authenticated', 'public.neon_raiders_friend(uuid,uuid)', 'EXECUTE') then
     raise exception 'Private helper exposed';
   end if;
@@ -102,6 +107,13 @@ do $$ declare n integer; boards jsonb; begin
     perform public.neon_raiders_save_score('88888888-0000-4000-8000-000000000001', 1, now() + interval '1 day');
     raise exception 'Future timestamp accepted';
   exception when invalid_parameter_value then null; end;
+  perform public.neon_raiders_save_score('77777777-0000-4000-8000-000000000001', 9000, now(), 7, true);
+  boards := public.neon_raiders_boards();
+  if (boards->'personal'->0->>'level')::integer is distinct from 7 or (boards->'personal'->0->>'won')::boolean is distinct from true
+     or (boards->'friends'->0->>'level')::integer is distinct from 7 or (boards->'friends'->0->>'won')::boolean is distinct from true
+     or (boards->'global'->>'level')::integer is distinct from 7 or (boards->'global'->>'won')::boolean is distinct from true then
+    raise exception 'Completion metadata missing';
+  end if;
 end $$;
 reset role;
 rollback;

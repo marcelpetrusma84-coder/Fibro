@@ -27,6 +27,10 @@
 .nr-sb-date{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;color:#b6c5da;font-size:11px;font-variant-numeric:tabular-nums}
 .nr-sb-time{color:#91a3bc}
 .nr-sb-points{color:#fff;font-size:17px;font-weight:750;letter-spacing:-.02em;font-variant-numeric:tabular-nums;text-shadow:0 0 12px #5ee7e035;overflow-wrap:anywhere;text-align:right}
+.nr-sb-result{min-width:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.nr-sb-level{display:inline-block;max-width:100%;padding:2px 6px;border:1px solid #76fff333;border-radius:5px;background:#76fff30b;color:#aee9e4;font-size:10px;font-weight:600;line-height:1.35;overflow-wrap:anywhere;text-align:right}
+.nr-sb-friends .nr-sb-level{border-color:#ff91c533;background:#ff91c50b;color:#f2bad7}
+.nr-sb-level.nr-sb-completed{border-color:#ffe28c66;background:#ffe28c10;color:#ffe6a2}
 .nr-sb-friends .nr-sb-points{text-shadow:0 0 12px #ff91c535}
 .nr-sb-empty{min-height:100px;border-top:1px solid #ffffff13;padding:18px 0;color:#9eb0ca;font-size:13px;line-height:1.6}
 .nr-sb-global{position:relative;margin:20px 26px 0;padding:17px 20px;border:1px solid #ffe28c59;border-radius:15px;background:linear-gradient(115deg,#eeb94113,#eeb94103);box-shadow:0 7px 20px #0004,inset 0 1px 0 #ffffff13;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 20px;align-items:center}

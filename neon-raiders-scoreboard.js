@@ -24,7 +24,7 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
   if (!doc.getElementById('nr-scoreboard-css')) {
     const link = doc.createElement('link')
     link.id = 'nr-scoreboard-css'; link.rel = 'stylesheet'
-    link.href = new URL('./neon-raiders-scoreboard.css?v=2', import.meta.url).href
+    link.href = new URL('./neon-raiders-scoreboard.css?v=3', import.meta.url).href
     doc.head.appendChild(link)
   }
   const element = (tag, className, text) => {
@@ -77,6 +77,13 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
     node.append(element('span', '', date.day), element('span', 'nr-sb-time', date.time))
     return node
   }
+  function levelNode(run) {
+    const valid = Number.isInteger(run.level) && run.level >= 1 && run.level <= 7
+    const completed = valid && run.level === 7 && run.won === true
+    const label = valid ? T(completed ? 'Level {n} · Uitgespeeld' : 'Level {n}', { n: run.level })
+      : T('Level onbekend')
+    return element('span', 'nr-sb-level' + (completed ? ' nr-sb-completed' : ''), label)
+  }
   function drawList(list, rows, friends, remoteAvailable) {
     list.replaceChildren()
     const scores = Array.isArray(rows) ? rows.slice(0, 10) : []
@@ -97,7 +104,9 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
         body.appendChild(name)
       }
       body.appendChild(dateNode(row.playedAt))
-      item.append(rank, body, element('strong', 'nr-sb-points', number(row.score)))
+      const result = element('div', 'nr-sb-result')
+      result.append(element('strong', 'nr-sb-points', number(row.score)), levelNode(row))
+      item.append(rank, body, result)
       list.appendChild(item)
     })
   }
@@ -109,6 +118,7 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
     globalScore.textContent = boards.global ? number(boards.global.score) : '—'
     globalDetail.replaceChildren()
     if (boards.global) {
+      globalDetail.appendChild(levelNode(boards.global))
       // De service geeft uitsluitend een naam terug voor jezelf of een vriend.
       if (boards.global.name) globalDetail.appendChild(element('span', 'nr-sb-record-name', boards.global.name))
       else if (boards.global.isSelf) globalDetail.appendChild(element('span', 'nr-sb-record-name', T('Jij')))

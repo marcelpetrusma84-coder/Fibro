@@ -52,7 +52,7 @@ export function binnenHtml({ papier, lijstId, navId, invoerId, knopId, plaatsHou
   const rij = `height:${REGEL}px;line-height:${REGEL}px`
   return `
     ${papier ? '<div style="position:absolute;top:0;bottom:0;left:18px;width:1px;background:rgba(170,60,60,0.35);z-index:1;pointer-events:none"></div>' : ''}
-    <div id="${lijstId}" class="gb-blad" style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin${papier ? `;margin:0 -14px 0 -26px;padding:0 14px 0 26px;background-color:#f3ead6;background-image:${LIJNTJES},${VOUW};background-attachment:local,local;box-shadow:inset 3px 0 6px rgba(90,60,30,0.18);border-radius:4px 10px 0 0` : ''}"></div>
+    <div id="${lijstId}" class="gb-blad" style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin${papier ? `;margin:0 -14px 0 -26px;padding:0 14px 0 26px;background-color:#f3ead6;background-image:${LIJNTJES},${VOUW};background-attachment:local,local;box-shadow:inset 3px 0 6px rgba(90,60,30,0.18);border-radius:4px 10px 0 0` : ''}"></div>
     <div id="${navId}" style="display:flex;align-items:center;gap:8px;font-size:12px;color:${k.klein};${rij};flex-shrink:0"></div>
     <div style="display:flex;align-items:center;gap:8px;${rij};flex-shrink:0;border-top:1px solid ${k.invoerRand};box-sizing:${papier ? 'border-box' : 'content-box'}">
       <input id="${invoerId}" maxlength="300" placeholder="${plaatsHouder}" style="flex:1;min-width:0;background:transparent;border:0;outline:0;font-family:inherit;font-size:14px;color:${k.invoer};padding:0;height:${REGEL - 2}px;line-height:${REGEL - 2}px">
@@ -86,7 +86,9 @@ export function bladerKnopStijl(papier, uit) {
 }
 
 // De lijst altijd een heel aantal lijntjes hoog maken (ook als het widget groter of kleiner wordt).
-// Past een bladzijde niet, dan kun je in de lijst scrollen; de lijntjes van de lijst scrollen mee (background-attachment:
+// Past een bladzijde niet, dan kun je in de lijst scrollen (v2, 31 okt 2026: zonder overscroll-behavior:contain; daarmee
+// scrolde de pagina met de muis niet meer zodra de muis boven het gastenboek stond, ook als er in de lijst niets te
+// scrollen viel. Nu scrolt eerst de lijst en daarna gewoon de pagina); de lijntjes van de lijst scrollen mee (background-attachment:
 // local), zodat de tekst ook dan op de lijntjes blijft. Geeft een functie terug om het opnieuw te doen (bijvoorbeeld
 // als de bladerknoppen verschijnen); pas(true) zet de lijst ook weer bovenaan (een nieuwe bladzijde).
 // Zonder lijntjes (papier = false) vult de lijst gewoon de ruimte.

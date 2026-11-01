@@ -1,0 +1,20 @@
+Syncproef: een paar "telefoons" in een echte browser die met de echte sync.js met elkaar syncen
+=================================================================================================
+
+Elke telefoon is een eigen browsercontext (eigen opslag) met een klein profiel (indeling, quote, naam).
+De verbinding tussen de telefoons is echt (WebRTC in Chromium); alleen de server is nagebootst:
+  nep-supabase.js  de realtime-kanalen (signalering) gaan via de proefleider (leider.cjs)
+  nep-paren.js     iedereen is met iedereen bevriend en online; berichten ('syncbeurt') via de proefleider
+  nep-ice.js       geen STUN/TURN nodig (alles op dezelfde machine)
+
+Draaien (Node met Playwright):
+  sh maak.sh                      # kopie van sync.js + syncbeurt.js naar www/
+  node leider.cjs www 6 120 1     # 6 telefoons, hoogstens 120 s
+  OUD=u1xxx,u3xxx node leider.cjs www 5 150 1   # u1 en u3 met de oude sync.js (zet die eerst als www/sync-oud.js)
+  LOG=1 node leider.cjs ...       # ook wat elke telefoon deed
+
+Uitkomst: "volledigNa" = na hoeveel seconden elke telefoon van elke andere het overzicht had (null = niet gelukt),
+en per telefoon van wie hij iets kreeg.
+
+Gemeten op 31 oktober 2026 (v247): 3 telefoons 2 s, 4 telefoons 3 s, 6 telefoons 16 s.
+Met de oude sync.js (v246) hadden na 90 s van de 4 telefoons alleen de eerste twee elkaar.

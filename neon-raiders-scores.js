@@ -8,6 +8,9 @@ const MAX_PENDING = 100
 function cleanScore(value) {
   return Number.isSafeInteger(value) && value >= 0 && value <= MAX_SCORE
 }
+function levelOf(value) {
+  return Number.isInteger(value) && value >= 1 && value <= 7 ? value : null
+}
 function timestamp(value) {
   if (typeof value !== 'string' && typeof value !== 'number') return null
   const date = new Date(value)
@@ -19,7 +22,7 @@ function compare(a, b) {
 function unique(runs, limit = 10) {
   const seen = new Set()
   return runs.filter(run => run && typeof run.id === 'string' && cleanScore(run.score) && timestamp(run.playedAt))
-    .map(run => ({ ...run, playedAt: timestamp(run.playedAt) }))
+    .map(run => ({ ...run, playedAt: timestamp(run.playedAt), level: levelOf(run.level), won: run.won === true }))
     .sort(compare).filter(run => !seen.has(run.id) && seen.add(run.id)).slice(0, limit)
 }
 function setupError(error) {
@@ -84,7 +87,7 @@ export function maakNeonScoreService({ supabase, storage, now = () => Date.now()
     if (!row || !UUID.test(row.run_id || '') || !UUID.test(row.user_id || '') ||
       !cleanScore(row.score) || !timestamp(row.played_at)) return null
     return { id: row.user_id === uid ? row.run_id : row.user_id + ':' + row.run_id,
-      score: row.score, playedAt: timestamp(row.played_at),
+      score: row.score, playedAt: timestamp(row.played_at), level: levelOf(row.level), won: row.won === true,
       name: nameFor(uid, row.user_id, row.username), isSelf: row.user_id === uid }
   }
   async function flush(uid, state) {
@@ -154,15 +157,21 @@ export function maakNeonScoreService({ supabase, storage, now = () => Date.now()
         }
         const ownRows = Array.isArray(data.personal) ? data.personal.filter(row => row?.user_id === uid) : []
         const personal = ownRows.map(row => serverRun(row, uid)).filter(Boolean)
-        state.personal = unique([...state.personal, ...personal.map(({ name, isSelf, ...run }) => run)])
+        // Nieuwe RPC vult oude caches aan; oude RPC wist geen lokaal bekend level/uitslag.
+        const enriched = personal.map(({ name, isSelf, ...run }) => {
+          const cached = state.personal.find(item => item.id === run.id)
+          return run.level === null && cached?.level != null
+            ? { ...run, level: cached.level, won: cached.won === true } : run
+        })
+        state.personal = unique([...enriched, ...state.personal])
         write(uid, state)
         const ownUsername = ownRows[0]?.username || ''
         result.personal = localRuns(uid, state.personal, ownUsername)
         result.friends = unique((Array.isArray(data.friends) ? data.friends : []).map(row => serverRun(row, uid)).filter(Boolean))
         const global = data.global
         if (global && cleanScore(global.score)) {
-          // Een onbekende wereldrecordhouder krijgt uitsluitend een score, zelfs bij extra responsevelden.
-          result.global = { score: global.score }
+          // Onbekende recordhouder: alleen spelresultaat, ook als de response extra privévelden bevat.
+          result.global = { score: global.score, level: levelOf(global.level), won: global.won === true }
           if (UUID.test(global.user_id || '')) {
             const authorised = global.user_id === uid || (Array.isArray(data.known_players) &&
               data.known_players.some(person => person?.user_id === global.user_id))

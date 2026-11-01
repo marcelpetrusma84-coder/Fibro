@@ -41,7 +41,8 @@ function laad({ ua = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) Chrome/130', refe
 }
 
 // 1. Wie ziet de downloadknop?
-assert.equal(laad().api.toonDownload(), true, 'Android in de browser: wel')
+assert.equal(laad().api.toonDownload(), false, 'v2: de APK wordt niet meer aangeboden, ook niet op Android in de browser')
+assert.match(code, /var APK_AANBIEDEN = false/, 'v2: de APK staat uit')
 assert.equal(laad({ ua: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)' }).api.toonDownload(), false, 'iPhone: niet')
 assert.equal(laad({ ua: 'Mozilla/5.0 (X11; Linux x86_64)' }).api.toonDownload(), false, 'computer: niet')
 assert.equal(laad({ referrer: 'android-app://nl.fibro.app/' }).api.toonDownload(), false, 'in de app: niet')
@@ -133,4 +134,4 @@ assert.match(laad().api.url, /^https:\/\/github\.com\/marcelpetrusma84-coder\/Fi
   for (const s of teksten) assert.ok(en[s], 'vertaling ontbreekt: ' + s)
 }
 
-console.log('PASS: downloadknop alleen voor Android in de browser, keuze bij een uitnodiging, wachtende uitnodiging (alleen geldig, eenmalig, een week) en vertalingen')
+console.log('PASS: downloadknop uit (v2), keuze bij een uitnodiging, wachtende uitnodiging (alleen geldig, eenmalig, een week) en vertalingen')

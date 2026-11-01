@@ -199,7 +199,8 @@ export async function startStickermaker(houder, uid, widgets = null) {
   const annuleer = el('button', { type: 'button', class: 'sm-knop', text: T('Annuleren') })
   const bewaar = el('button', { type: 'button', class: 'sm-knop hoofd', text: T('Bewaren') })
   const kaart = el('div', { class: 'sm-kaart' }, el('div', { class: 'sm-kop' }, titel, sluit), stapKies, stapKnip, stapAf, el('div', { class: 'sm-onder' }, wis, annuleer, bewaar))
-  const scherm = el('div', { class: 'sm-scherm', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'smTitel', hidden: '' }, kaart)
+  // v242: data-geen-swipe: in het Stickerlab ga je met vegen (gummen, tekenen, knippen) niet naar een andere pagina (swipe.js)
+  const scherm = el('div', { class: 'sm-scherm', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'smTitel', 'data-geen-swipe': '', hidden: '' }, kaart)
   document.body.append(scherm)
 
   // toestand van de maker

@@ -1,4 +1,6 @@
-// camerafilters.js — camerafilters voor het videobellen (Fibro). v2.
+// camerafilters.js — camerafilters voor het videobellen (Fibro). v3.
+// v3 (1 nov 2026): 16-bit, zoals een Super Nintendo-spel: blokjes van ongeveer 6 pixels, beperkte kleuren met
+// rasterstipjes, en een klein spelscherm (hartjes en 1UP).
 // v2 (1 nov 2026): Oude film echt zwart-wit; Oude tv met vervorming, duidelijke lijnen en een beetje 'kapot';
 // 3D-bril duidelijker; Beveiliging zoals in tekenfilms; Nieuws is nu de zender FAKE NEWS met één balk onderaan vol
 // grappige Engelse berichten over jou en
@@ -27,6 +29,7 @@ export const FILTERS = [
   { id: 'anaglyph', naam: '3D-bril', emoji: '🔴' },
   { id: 'beveiliging', naam: 'Beveiliging', emoji: '🎥' },
   { id: 'nieuws', naam: 'Fake nieuws', emoji: '📰' },
+  { id: 'zestienbit', naam: '16-bit', emoji: '👾' },
 ]
 
 // FAKE NEWS: de berichten in de lopende balk, in het Engels. {a} = een van de namen, {b} = de ander
@@ -96,6 +99,17 @@ export function maakNieuwsBalk(namen, toeval = Math.random) {
     return b.replace(/\{a\}/g, a).replace(/\{b\}/g, ander)
   }).join('   ●   ') + '   ●   '
 }
+
+// 16-bit: rasterstipjes (Bayer 4x4) en een pixelhartje (x = rand, r = rood, w = glans)
+const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
+const HARTJE = [
+  ' xx xx ',
+  'xwrxrrx',
+  'xrrrrrx',
+  ' xrrrx ',
+  '  xrx  ',
+  '   x   ',
+]
 
 function tweeCijfers(n) { return (n < 10 ? '0' : '') + n }
 
@@ -319,6 +333,45 @@ export function maakCameraFilter() {
       ctx.fillStyle = '#c20000'; ctx.fillRect(0, by, kb, bh)
       ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.fillText(kop, kb / 2, by + bh / 2 + 1)
     },
+
+    // 6. 16-bit: eerst klein tekenen (ongeveer 6 pixels per blokje, ±100 blokjes breed: je gezicht blijft herkenbaar),
+    //    dan de kleuren terugbrengen naar 6 tinten per kleur (216 kleuren) met rasterstipjes (Bayer 4x4), grof opblazen,
+    //    een fijn raster ertussen en een klein spelscherm: drie hartjes en 1UP.
+    zestienbit(w, h) {
+      const blok = Math.max(3, Math.round(w / 106))
+      const kw = Math.max(8, Math.round(w / blok)), kh = Math.max(6, Math.round(h / blok))
+      if (klein.width !== kw || klein.height !== kh) { klein.width = kw; klein.height = kh }
+      kctx.imageSmoothingEnabled = true
+      kctx.filter = 'saturate(1.35) contrast(1.15)'
+      kctx.drawImage(video, 0, 0, kw, kh); kctx.filter = 'none'
+      const beeld = kctx.getImageData(0, 0, kw, kh), d = beeld.data
+      for (let y = 0; y < kh; y++) for (let x = 0; x < kw; x++) {
+        const i = (y * kw + x) * 4, drempel = (BAYER4[(y & 3) * 4 + (x & 3)] / 16 - 0.5) * 51
+        for (let c = 0; c < 3; c++) d[i + c] = Math.max(0, Math.min(255, Math.round((d[i + c] + drempel) / 51) * 51))
+      }
+      kctx.putImageData(beeld, 0, 0)
+      ctx.imageSmoothingEnabled = false
+      ctx.drawImage(klein, 0, 0, kw, kh, 0, 0, kw * blok, kh * blok)
+      ctx.imageSmoothingEnabled = true
+      ctx.save(); ctx.globalAlpha = 0.12; ctx.fillStyle = '#000'                 // fijn raster tussen de blokjes
+      for (let x = 0; x < w; x += blok) ctx.fillRect(x, 0, 1, h)
+      for (let y = 0; y < h; y += blok) ctx.fillRect(0, y, w, 1)
+      ctx.restore()
+      // spelscherm: drie pixelhartjes links, 1UP rechts
+      const p = Math.max(2, Math.round(blok / 2)), marge = blok * 2
+      for (let n = 0; n < 3; n++) {
+        const ox = marge + n * p * 9, oy = marge
+        for (let r = 0; r < HARTJE.length; r++) for (let c = 0; c < HARTJE[r].length; c++) {
+          if (HARTJE[r][c] === ' ') continue
+          ctx.fillStyle = HARTJE[r][c] === 'x' ? '#000' : HARTJE[r][c] === 'w' ? '#fff' : '#ff2448'
+          ctx.fillRect(ox + c * p, oy + r * p, p, p)
+        }
+      }
+      const m = Math.max(10, Math.round(w * 0.026))
+      ctx.font = m + "px 'Press Start 2P', monospace"; ctx.textBaseline = 'top'; ctx.textAlign = 'right'
+      ctx.fillStyle = '#000'; ctx.fillText('1UP', w - marge + p, marge + p)
+      ctx.fillStyle = Math.floor(tijd * 2) % 2 ? '#ffe14a' : '#ffffff'; ctx.fillText('1UP', w - marge, marge)
+    },
   }
 
   function stap(nu) {
@@ -396,7 +449,7 @@ export function bouwFilterKiezer(container, api) {
   paneel.style.cssText = 'position:absolute;bottom:60px;left:50%;transform:translateX(-50%);z-index:60;background:rgba(14,10,30,0.97);border:1px solid #3a2f66;border-radius:14px;padding:12px;width:min(300px,92vw);box-shadow:0 10px 30px rgba(0,0,0,.5);font-family:system-ui,sans-serif'
   const rij = document.createElement('div')
   rij.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;justify-content:center'
-  const NAMEN = { geen: vertaal('Geen'), oudefilm: vertaal('Oude film'), oudetv: vertaal('Oude tv'), anaglyph: vertaal('3D-bril'), beveiliging: vertaal('Beveiliging'), nieuws: vertaal('Fake nieuws') }
+  const NAMEN = { geen: vertaal('Geen'), oudefilm: vertaal('Oude film'), oudetv: vertaal('Oude tv'), anaglyph: vertaal('3D-bril'), beveiliging: vertaal('Beveiliging'), nieuws: vertaal('Fake nieuws'), zestienbit: vertaal('16-bit') }
   const chips = {}
   function werkChips() {
     const nu = api.huidig()

@@ -1324,6 +1324,7 @@ window.FIBRO_EN = {
   "Beveiliging": "Security cam",
   "Nieuws": "News",
   "Fake nieuws": "Fake news",
+  "16-bit": "16-bit",
   "Kop": "Headline",
   "Plek": "Location",
   "Lopende balk": "Ticker",

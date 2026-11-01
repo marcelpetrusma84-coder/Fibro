@@ -40,14 +40,23 @@ assert.match(cf, /const logo = 'FAKE NEWS'/)
 const bev = cf.slice(cf.indexOf('beveiliging(w, h)'), cf.indexOf('nieuws(w, h)'))
 for (const stuk of ['scanlijnen(0.45, 4)', "'CAM 01'", "'REC'", 'createRadialGradient', 'ctx.stroke()']) assert.ok(bev.includes(stuk), 'Beveiliging: ' + stuk)
 
+// 3b. 16-bit (v3): blokjes van ongeveer 6 pixels (±106 breed), 6 tinten per kleur met rasterstipjes, hartjes en 1UP
+assert.ok(FILTERS.some(f => f.id === 'zestienbit' && f.naam === '16-bit'))
+const zb = cf.slice(cf.indexOf('zestienbit(w, h)'), cf.indexOf('function stap(nu)'))
+assert.match(zb, /const blok = Math\.max\(3, Math\.round\(w \/ 106\)\)/, 'herkenbaar: ongeveer 100 blokjes breed')
+assert.match(zb, /BAYER4/, 'rasterstipjes')
+assert.match(zb, /imageSmoothingEnabled = false/, 'scherpe blokjes')
+assert.match(zb, /'1UP'/)
+assert.match(cf, /zestienbit: vertaal\('16-bit'\)/)
+
 // 4. niets meer zelf in te stellen
 assert.ok(!/zetNieuwsTekst|nieuwsTekst|fibro-nieuwsfilter|cf-nieuws/.test(cf), 'geen tekstvelden meer')
 assert.ok(!/zetNieuwsfilterTekst|nieuwsTekst\(\)/.test(bellen))
 
 // 5. bellen.js geeft de namen door (jij en wie je belt) en laadt de nieuwe versie
-assert.match(bellen, /camerafilters\.js\?v=2/)
+assert.match(bellen, /camerafilters\.js\?v=3/)
 assert.match(bellen, /supabase\.from\('profiles'\)\.select\('id, username'\)\.in\('id', ontbreekt\)/)
 assert.equal((bellen.match(/\n\s+werkNieuwsNamen\(\)\n/g) || []).length, 4, 'bij initBellen, belOp, een oproep en zetVriendId')
-for (const f of ['chat.html', 'bellen.html', 'bel-luisteraar.js']) assert.match(readFileSync(new URL('../../' + f, import.meta.url), 'utf8'), /bellen\.js\?v=158/, f)
+for (const f of ['chat.html', 'bellen.html', 'bel-luisteraar.js']) assert.match(readFileSync(new URL('../../' + f, import.meta.url), 'utf8'), /bellen\.js\?v=159/, f)
 
 console.log('ok: camerafilters v2 met FAKE NEWS (50 Engelse berichten) en een tekenfilm-beveiligingscamera')

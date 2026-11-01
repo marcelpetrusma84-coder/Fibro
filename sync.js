@@ -918,6 +918,42 @@ export function vingerafdrukVan(manifest) {
   return 'p1-' + hashString(tekst) + hashString(tekst.length + ':' + [...tekst].reverse().join(''))
 }
 
+// v249: de kenmerken van een profiel-overzicht: per onderdeel (een foto, een widget, de naam, ...) een korte code van
+// 'waar=wat'. Een vriend heeft alleen iets nieuws als er een kenmerk binnenkomt dat je nog NOOIT van hem zag. Zo geeft
+// het geen valse "Profiel geüpdatet" als je vriend op een ander toestel (of na opnieuw inloggen) een ouder of leger
+// profiel heeft: daar zit niets nieuws in. Iets weghalen telt niet als nieuw.
+export function profielKenmerken(manifest) {
+  const uit = []
+  const loop = (x, pad) => {
+    if (x === null || x === undefined) return
+    if (typeof x === 'object') { for (const k of Object.keys(x)) loop(x[k], pad ? pad + '.' + k : k); return }
+    uit.push(hashString(pad + '=' + String(x)))
+  }
+  loop(JSON.parse(JSON.stringify(manifest || {})), '')
+  return [...new Set(uit)]
+}
+const KENMERKEN_MAX = 400 // per vriend (een code is hoogstens 8 tekens)
+const VINGERAFDRUKKEN_MAX = 20 // per vriend: ook die van zijn andere toestellen
+
+// De nieuwe stand per vriend na een binnengekomen overzicht (fibro_syncbij_<ik>_<vriend>, zonder de tijd t).
+// vorig: de bewaarde stand (of null). nieuw = er zit een kenmerk in dat ik nog nooit van deze vriend zag. Zonder eerdere
+// kenmerken (de eerste keer, of een bewaarde stand van voor v249) is dit het beginpunt: niets nieuws.
+export function nieuweSyncStand(vorig, manifest) {
+  if (!vorig || typeof vorig !== 'object') vorig = null
+  const v = vingerafdrukVan(manifest)
+  const anders = !!(vorig && typeof vorig.v === 'string' && vorig.v !== v)
+  const oud = vorig && typeof vorig.v === 'string' && anders
+    ? [vorig.v].concat(Array.isArray(vorig.oud) ? vorig.oud : []).filter(x => typeof x === 'string' && x !== v).slice(0, VINGERAFDRUKKEN_MAX)
+    : (vorig && Array.isArray(vorig.oud) ? vorig.oud.filter(x => x !== v).slice(0, VINGERAFDRUKKEN_MAX) : [])
+  const kenmerken = profielKenmerken(manifest)
+  const gezien = vorig && Array.isArray(vorig.k) ? vorig.k.filter(x => typeof x === 'string') : null
+  const eerder = new Set(gezien || [])
+  const echtNieuw = !!gezien && kenmerken.some(x => !eerder.has(x))
+  const nieuw = echtNieuw || !!(gezien && vorig.nieuw)
+  const k = kenmerken.concat((gezien || []).filter(x => !kenmerken.includes(x))).slice(0, KENMERKEN_MAX)
+  return { v, oud, nieuw, k }
+}
+
 // v246: je eigen vingerafdruk op de server zetten (profiles.profiel_versie, sql/profiel-versie.sql), zodat vrienden
 // op de pagina Vrienden zien dat je iets nieuws hebt, ook als jullie nog niet tegelijk online waren. Alleen als hij
 // anders is dan de vorige keer, en hoogstens eens per 90 seconden uitrekenen (ook over paginawissels heen).
@@ -1140,13 +1176,8 @@ async function verwerkP2pBericht(bericht) {
       try { vorig = JSON.parse(localStorage.getItem(sl) || 'null') } catch (e) {}
       if (typeof vorig === 'number') vorig = { t: vorig }
       if (!vorig || typeof vorig !== 'object') vorig = null
-      const v = vingerafdrukVan(bericht.data)
-      const anders = !!(vorig && typeof vorig.v === 'string' && vorig.v !== v)
-      const oud = vorig && typeof vorig.v === 'string' && anders
-        ? [vorig.v].concat(Array.isArray(vorig.oud) ? vorig.oud : []).filter(x => typeof x === 'string').slice(0, 5)
-        : (vorig && Array.isArray(vorig.oud) ? vorig.oud.slice(0, 5) : [])
-      const nieuw = anders || !!(vorig && vorig.v === v && vorig.nieuw)
-      localStorage.setItem(sl, JSON.stringify({ t: nu, v, oud, nieuw }))
+      const { v, oud, nieuw, k } = nieuweSyncStand(vorig, bericht.data)
+      localStorage.setItem(sl, JSON.stringify({ t: nu, v, oud, nieuw, k }))
       window.dispatchEvent(new CustomEvent('fibro-sync-bijgewerkt', { detail: { vriendId: syncPartnerId, tijd: nu, nieuw } }))
     } catch (e) {}
     if (nodig.length) {

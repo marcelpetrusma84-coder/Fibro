@@ -49,8 +49,9 @@ assert.match(pub, /error\.code === '42703'/, 'zonder de kolom (SQL nog niet uitg
 assert.equal((sync.match(/\n\s+startProfielVersie\(\)\n/g) || []).length, 2, 'start in beide gevallen waarin dit tabblad de sync krijgt')
 assert.match(sync, /async function stuurManifest\(\) \{\n  const manifest = await maakManifest\(\)\n  dataChannel\.send\(JSON\.stringify\(\{ type: 'manifest', data: manifest \}\)\)/, 'het overzicht dat verstuurd wordt is hetzelfde')
 const ontvang = knip(sync, "if (bericht.type === 'manifest')", "if (bericht.type === 'geef')")
-assert.match(ontvang, /const v = vingerafdrukVan\(bericht\.data\)/)
-assert.match(ontvang, /localStorage\.setItem\(sl, JSON\.stringify\(\{ t: nu, v, oud, nieuw \}\)\)/)
+assert.match(sync, /const v = vingerafdrukVan\(manifest\)/) // v249: in nieuweSyncStand (zie test-profiel-geen-vals-nieuw.mjs)
+assert.match(ontvang, /nieuweSyncStand\(vorig, bericht\.data\)/)
+assert.match(ontvang, /localStorage\.setItem\(sl, JSON\.stringify\(\{ t: nu, v, oud, nieuw, k \}\)\)/)
 
 // 3. De stand per vriend op de pagina Vrienden (de echte functie)
 const opslag = new Map()

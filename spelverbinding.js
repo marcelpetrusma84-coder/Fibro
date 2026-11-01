@@ -23,6 +23,10 @@ export function maakSpelVerbinding({
   let tickTimer = null, rebuildTimer = null, retryCount = 0, subscribeCallback
   let lastPing = 0, lastActivity = null, errorSince = null, status
   let peerProtocol = false
+  // hold(): het spel staat nog niet klaar (we wachten tot de ander er is). Berichten worden dan bewaard
+  // en pas bij release() aan het spel gegeven, in dezelfde volgorde. Zo gaat er niets verloren.
+  let held = false
+  const heldMessages = []
 
   function report(next) {
     if (next === status || stopped) return
@@ -64,6 +68,7 @@ export function maakSpelVerbinding({
   }
 
   function dispatch(message) {
+    if (held) { heldMessages.push(message); return }
     for (const listener of [...listeners]) {
       if (listener.type === message.type &&
           (listener.filter.event === '*' || listener.filter.event === message.event)) {
@@ -243,6 +248,14 @@ export function maakSpelVerbinding({
       return api
     },
     reconnect,
+    hold() { held = true; return api },
+    release() {
+      if (!held) return api
+      held = false
+      while (heldMessages.length && !stopped) dispatch(heldMessages.shift())
+      heldMessages.length = 0
+      return api
+    },
     stop() {
       if (stopped) return Promise.resolve()
       stopped = true
@@ -254,6 +267,7 @@ export function maakSpelVerbinding({
       events?.removeEventListener('offline', offline)
       events?.removeEventListener('pageshow', visible)
       listeners.length = 0
+      heldMessages.length = 0
       history.clear(); pending.clear(); received.clear(); streams.clear()
       const channel = raw
       raw = null

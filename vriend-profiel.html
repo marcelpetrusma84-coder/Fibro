@@ -148,7 +148,7 @@ body.heeft-wallpaper::before { display:block; }
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
-  import { initSync, vraagVriendVideo } from './sync.js?v=247'
+  import { initSync, vraagVriendVideo } from './sync.js?v=250'
   import { eisSessie, startBewaking } from './sessie.js?v=95'
   import { startMeldingen } from './meldingen.js?v=187'
   import { leesMood, isMoodSticker, tekenMoodSticker } from './moodsticker.js?v=236' // v171: een sticker als mood
@@ -305,6 +305,9 @@ body.heeft-wallpaper::before { display:block; }
       const sl = 'fibro_syncbij_' + _eigenUid() + '_' + vriendId
       const bij = JSON.parse(localStorage.getItem(sl) || 'null')
       if (bij && typeof bij === 'object' && bij.nieuw) { bij.nieuw = false; localStorage.setItem(sl, JSON.stringify(bij)) }
+      const al = 'fibro_achtergrondbij_' + _eigenUid() + '_' + vriendId // v250: een andere achtergrond is nu ook gezien
+      const ach = JSON.parse(localStorage.getItem(al) || 'null')
+      if (ach && typeof ach === 'object' && ach.nieuw) { ach.nieuw = false; localStorage.setItem(al, JSON.stringify(ach)) }
     } catch (e) {}
   }
   window.addEventListener('fibro-sync-bijgewerkt', e => { if (e.detail && e.detail.vriendId === vriendId) markeerGezien() })

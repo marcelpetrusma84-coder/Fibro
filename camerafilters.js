@@ -1,4 +1,7 @@
-// camerafilters.js — camerafilters voor het videobellen (Fibro). v2.
+// camerafilters.js — camerafilters voor het videobellen (Fibro). v3.
+// v3 (1 nov 2026): zwart-wit zonder ctx.filter (werkt nu ook op de iPhone), 'Fake news' en een kleiner blokje onderaan;
+// 16-bit, zoals een Super Nintendo-spel: blokjes van ongeveer 6 pixels, beperkte kleuren met
+// rasterstipjes, en een klein spelscherm (hartjes en 1UP).
 // v2 (1 nov 2026): Oude film echt zwart-wit; Oude tv met vervorming, duidelijke lijnen en een beetje 'kapot';
 // 3D-bril duidelijker; Beveiliging zoals in tekenfilms; Nieuws is nu de zender FAKE NEWS met één balk onderaan vol
 // grappige Engelse berichten over jou en
@@ -26,7 +29,8 @@ export const FILTERS = [
   { id: 'oudetv', naam: 'Oude tv', emoji: '📺' },
   { id: 'anaglyph', naam: '3D-bril', emoji: '🔴' },
   { id: 'beveiliging', naam: 'Beveiliging', emoji: '🎥' },
-  { id: 'nieuws', naam: 'Fake nieuws', emoji: '📰' },
+  { id: 'nieuws', naam: 'Fake news', emoji: '📰' },
+  { id: 'zestienbit', naam: '16-bit', emoji: '👾' },
 ]
 
 // FAKE NEWS: de berichten in de lopende balk, in het Engels. {a} = een van de namen, {b} = de ander
@@ -95,6 +99,28 @@ export function maakNieuwsBalk(namen, toeval = Math.random) {
     const ander = lijst.length > 1 ? lijst[(i + 1) % lijst.length] : 'the neighbour'
     return b.replace(/\{a\}/g, a).replace(/\{b\}/g, ander)
   }).join('   ●   ') + '   ●   '
+}
+
+// 16-bit: rasterstipjes (Bayer 4x4) en een pixelhartje (x = rand, r = rood, w = glans)
+const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
+const HARTJE = [
+  ' xx xx ',
+  'xwrxrrx',
+  'xrrrrrx',
+  ' xrrrx ',
+  '  xrx  ',
+  '   x   ',
+]
+
+// v3: zwart-wit en meer contrast zonder ctx.filter. Safari op de iPhone kent ctx.filter niet (dan bleef Oude film in
+// kleur); 'saturation' met grijs en 'overlay' met zichzelf werken overal.
+function maakGrijs(c, w, h, extraContrast) {
+  c.save(); c.globalCompositeOperation = 'saturation'; c.fillStyle = '#808080'; c.fillRect(0, 0, w, h); c.restore()
+  if (extraContrast > 0) { c.save(); c.globalCompositeOperation = 'overlay'; c.globalAlpha = Math.min(1, extraContrast); c.drawImage(c.canvas, 0, 0, w, h); c.restore() }
+}
+function helderheid(c, w, h, factor) {
+  if (Math.abs(factor - 1) < 0.01) return
+  c.save(); c.globalAlpha = Math.min(0.5, Math.abs(factor - 1)); c.fillStyle = factor < 1 ? '#000' : '#fff'; c.fillRect(0, 0, w, h); c.restore()
 }
 
 function tweeCijfers(n) { return (n < 10 ? '0' : '') + n }
@@ -171,10 +197,10 @@ export function maakCameraFilter() {
     // 1. Oude film: echt zwart-wit, flikkerend, met grove korrel, stofjes, krassen en een donkere rand.
     oudefilm(w, h) {
       const flikker = 0.82 + Math.random() * 0.26
-      ctx.filter = 'grayscale(1) contrast(1.45) brightness(' + flikker.toFixed(2) + ')'
       const sprong = (Math.random() < 0.07) ? (Math.random() * 6 - 3) : 0
       ctx.drawImage(video, 0, sprong, w, h)
-      ctx.filter = 'none'
+      maakGrijs(ctx, w, h, 0.8)                       // volledig zwart-wit, met veel contrast
+      helderheid(ctx, w, h, flikker)
       ruis(0.22, 'overlay')
       ctx.save()
       for (let i = 0; i < 1 + ((Math.random() * 3) | 0); i++) {     // krassen
@@ -229,11 +255,11 @@ export function maakCameraFilter() {
     anaglyph(w, h) {
       const d = Math.max(4, Math.round(w * 0.03))
       hctx.globalCompositeOperation = 'source-over'; hctx.clearRect(0, 0, w, h)
-      hctx.filter = 'grayscale(1) contrast(1.35)'; hctx.drawImage(video, 0, 0, w, h); hctx.filter = 'none'
+      hctx.drawImage(video, 0, 0, w, h); maakGrijs(hctx, w, h, 0.5)
       hctx.globalCompositeOperation = 'multiply'; hctx.fillStyle = '#ff0000'; hctx.fillRect(0, 0, w, h)
       ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h); ctx.drawImage(hulp, -d, 0, w, h)
       hctx.globalCompositeOperation = 'source-over'; hctx.clearRect(0, 0, w, h)
-      hctx.filter = 'grayscale(1) contrast(1.35)'; hctx.drawImage(video, 0, 0, w, h); hctx.filter = 'none'
+      hctx.drawImage(video, 0, 0, w, h); maakGrijs(hctx, w, h, 0.5)
       hctx.globalCompositeOperation = 'multiply'; hctx.fillStyle = '#00ffff'; hctx.fillRect(0, 0, w, h)
       ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(hulp, d, 0, w, h)
       ctx.globalCompositeOperation = 'source-over'
@@ -243,9 +269,8 @@ export function maakCameraFilter() {
     // 4. Beveiligingscamera, zoals in tekenfilms: groen-zwart monitorbeeld met dikke beeldlijnen, een bolle rand,
     //    zoekerhoeken, een kruisje, groot CAM 01, een knipperende REC en de tijd. Een langzame storingsstreep.
     beveiliging(w, h) {
-      ctx.filter = 'grayscale(1) contrast(1.6) brightness(1.15)'
       ctx.drawImage(video, 0, 0, w, h)
-      ctx.filter = 'none'
+      maakGrijs(ctx, w, h, 0.9); helderheid(ctx, w, h, 1.15)
       ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = '#39ff7a'; ctx.fillRect(0, 0, w, h); ctx.restore()
       ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = 'rgba(0,60,20,0.35)'; ctx.fillRect(0, 0, w, h); ctx.restore()
       scanlijnen(0.45, 4)
@@ -308,7 +333,10 @@ export function maakCameraFilter() {
       ctx.fillStyle = 'rgba(10,18,48,0.95)'; ctx.fillRect(0, by, w, bh)
       ctx.fillStyle = '#ffd23c'; ctx.fillRect(0, by, w, 2)
       ctx.font = 'bold ' + bm + 'px ' + sans
-      const kop = 'FAKE NEWS', kb = ctx.measureText(kop).width + bm * 1.2
+      const km = Math.max(8, Math.round(bm * 0.6))                    // v3: het blokje links kleiner, meer ruimte voor de berichten
+      ctx.font = 'bold ' + km + 'px ' + sans
+      const kop = 'FAKE NEWS', kb = ctx.measureText(kop).width + km * 1.2
+      ctx.font = 'bold ' + bm + 'px ' + sans
       ctx.save(); ctx.beginPath(); ctx.rect(kb, by, w - kb, bh); ctx.clip()
       ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'
       const tekst = balkTekst, breedte = ctx.measureText(tekst).width || 1
@@ -317,7 +345,47 @@ export function maakCameraFilter() {
       if (x + breedte < w) ctx.fillText(tekst, x + breedte, by + bh / 2 + 1)
       ctx.restore()
       ctx.fillStyle = '#c20000'; ctx.fillRect(0, by, kb, bh)
+      ctx.font = 'bold ' + km + 'px ' + sans
       ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.fillText(kop, kb / 2, by + bh / 2 + 1)
+    },
+
+    // 6. 16-bit: eerst klein tekenen (ongeveer 6 pixels per blokje, ±100 blokjes breed: je gezicht blijft herkenbaar),
+    //    dan de kleuren terugbrengen naar 6 tinten per kleur (216 kleuren) met rasterstipjes (Bayer 4x4), grof opblazen,
+    //    een fijn raster ertussen en een klein spelscherm: drie hartjes en 1UP.
+    zestienbit(w, h) {
+      const blok = Math.max(3, Math.round(w / 106))
+      const kw = Math.max(8, Math.round(w / blok)), kh = Math.max(6, Math.round(h / blok))
+      if (klein.width !== kw || klein.height !== kh) { klein.width = kw; klein.height = kh }
+      kctx.imageSmoothingEnabled = true
+      kctx.filter = 'saturate(1.35) contrast(1.15)'
+      kctx.drawImage(video, 0, 0, kw, kh); kctx.filter = 'none'
+      const beeld = kctx.getImageData(0, 0, kw, kh), d = beeld.data
+      for (let y = 0; y < kh; y++) for (let x = 0; x < kw; x++) {
+        const i = (y * kw + x) * 4, drempel = (BAYER4[(y & 3) * 4 + (x & 3)] / 16 - 0.5) * 51
+        for (let c = 0; c < 3; c++) d[i + c] = Math.max(0, Math.min(255, Math.round((d[i + c] + drempel) / 51) * 51))
+      }
+      kctx.putImageData(beeld, 0, 0)
+      ctx.imageSmoothingEnabled = false
+      ctx.drawImage(klein, 0, 0, kw, kh, 0, 0, kw * blok, kh * blok)
+      ctx.imageSmoothingEnabled = true
+      ctx.save(); ctx.globalAlpha = 0.12; ctx.fillStyle = '#000'                 // fijn raster tussen de blokjes
+      for (let x = 0; x < w; x += blok) ctx.fillRect(x, 0, 1, h)
+      for (let y = 0; y < h; y += blok) ctx.fillRect(0, y, w, 1)
+      ctx.restore()
+      // spelscherm: drie pixelhartjes links, 1UP rechts
+      const p = Math.max(2, Math.round(blok / 2)), marge = blok * 2
+      for (let n = 0; n < 3; n++) {
+        const ox = marge + n * p * 9, oy = marge
+        for (let r = 0; r < HARTJE.length; r++) for (let c = 0; c < HARTJE[r].length; c++) {
+          if (HARTJE[r][c] === ' ') continue
+          ctx.fillStyle = HARTJE[r][c] === 'x' ? '#000' : HARTJE[r][c] === 'w' ? '#fff' : '#ff2448'
+          ctx.fillRect(ox + c * p, oy + r * p, p, p)
+        }
+      }
+      const m = Math.max(10, Math.round(w * 0.026))
+      ctx.font = m + "px 'Press Start 2P', monospace"; ctx.textBaseline = 'top'; ctx.textAlign = 'right'
+      ctx.fillStyle = '#000'; ctx.fillText('1UP', w - marge + p, marge + p)
+      ctx.fillStyle = Math.floor(tijd * 2) % 2 ? '#ffe14a' : '#ffffff'; ctx.fillText('1UP', w - marge, marge)
     },
   }
 
@@ -396,7 +464,7 @@ export function bouwFilterKiezer(container, api) {
   paneel.style.cssText = 'position:absolute;bottom:60px;left:50%;transform:translateX(-50%);z-index:60;background:rgba(14,10,30,0.97);border:1px solid #3a2f66;border-radius:14px;padding:12px;width:min(300px,92vw);box-shadow:0 10px 30px rgba(0,0,0,.5);font-family:system-ui,sans-serif'
   const rij = document.createElement('div')
   rij.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;justify-content:center'
-  const NAMEN = { geen: vertaal('Geen'), oudefilm: vertaal('Oude film'), oudetv: vertaal('Oude tv'), anaglyph: vertaal('3D-bril'), beveiliging: vertaal('Beveiliging'), nieuws: vertaal('Fake nieuws') }
+  const NAMEN = { geen: vertaal('Geen'), oudefilm: vertaal('Oude film'), oudetv: vertaal('Oude tv'), anaglyph: vertaal('3D-bril'), beveiliging: vertaal('Beveiliging'), nieuws: vertaal('Fake news'), zestienbit: vertaal('16-bit') }
   const chips = {}
   function werkChips() {
     const nu = api.huidig()

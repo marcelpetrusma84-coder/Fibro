@@ -14,7 +14,7 @@ for (const b of FAKE_NIEUWS) { assert.match(b, /\{a\}/, 'met een naam: ' + b); a
 assert.ok(FAKE_NIEUWS.some(b => /robs a bank/.test(b)), 'de bankoverval')
 assert.ok(FAKE_NIEUWS.some(b => /biggest cake/.test(b)), 'de grootste taart')
 for (const b of FAKE_NIEUWS) assert.ok(!/\b(het|een|en|met|van|niet)\b/.test(b.replace(/\{[ab]\}/g, '')), 'Engels: ' + b)
-assert.equal(FILTERS.find(f => f.id === 'nieuws').naam, 'Fake nieuws')
+assert.equal(FILTERS.find(f => f.id === 'nieuws').naam, 'Fake news')
 
 // 2. de balk: alle berichten, met de namen van jou en wie je belt, geen {a}/{b} meer over
 let n = 0; const vast = () => ((n = (n * 9301 + 49297) % 233280) / 233280)
@@ -28,7 +28,12 @@ assert.ok(maakNieuwsBalk([]).includes('Someone'), 'zonder namen: Someone')
 assert.ok(!maakNieuwsBalk(['x'.repeat(60)]).includes('x'.repeat(25)), 'lange namen worden ingekort')
 
 // 3. de filters
-assert.match(cf, /oudefilm\(w, h\) \{\n      const flikker[^\n]*\n      ctx\.filter = 'grayscale\(1\) contrast/, 'Oude film: echt zwart-wit')
+assert.match(cf.slice(cf.indexOf('oudefilm(w, h)'), cf.indexOf('oudetv(w, h)')), /maakGrijs\(ctx, w, h, 0\.8\)/, 'Oude film: volledig zwart-wit')
+// v3: zwart-wit zonder ctx.filter (Safari op de iPhone kent dat niet): 'saturation' met grijs
+assert.ok(!/\.filter = '[^']*grayscale/.test(cf), 'nergens grayscale via ctx.filter')
+assert.match(cf, /c\.globalCompositeOperation = 'saturation'; c\.fillStyle = '#808080'/)
+assert.match(cf, /const km = Math\.max\(8, Math\.round\(bm \* 0\.6\)\)/, 'kleiner blokje FAKE NEWS onderaan')
+assert.match(cf, /nieuws: vertaal\('Fake news'\)/)
 assert.ok(!/sepia/.test(cf.slice(cf.indexOf('oudefilm(w, h)'), cf.indexOf('oudetv(w, h)'))), 'Oude film: geen sepia meer')
 const tv = cf.slice(cf.indexOf('oudetv(w, h)'), cf.indexOf('anaglyph(w, h)'))
 assert.match(tv, /scanlijnen\(0\.5, 3\)/, 'Oude tv: duidelijke lijnen')
@@ -40,14 +45,23 @@ assert.match(cf, /const logo = 'FAKE NEWS'/)
 const bev = cf.slice(cf.indexOf('beveiliging(w, h)'), cf.indexOf('nieuws(w, h)'))
 for (const stuk of ['scanlijnen(0.45, 4)', "'CAM 01'", "'REC'", 'createRadialGradient', 'ctx.stroke()']) assert.ok(bev.includes(stuk), 'Beveiliging: ' + stuk)
 
+// 3b. 16-bit (v3): blokjes van ongeveer 6 pixels (±106 breed), 6 tinten per kleur met rasterstipjes, hartjes en 1UP
+assert.ok(FILTERS.some(f => f.id === 'zestienbit' && f.naam === '16-bit'))
+const zb = cf.slice(cf.indexOf('zestienbit(w, h)'), cf.indexOf('function stap(nu)'))
+assert.match(zb, /const blok = Math\.max\(3, Math\.round\(w \/ 106\)\)/, 'herkenbaar: ongeveer 100 blokjes breed')
+assert.match(zb, /BAYER4/, 'rasterstipjes')
+assert.match(zb, /imageSmoothingEnabled = false/, 'scherpe blokjes')
+assert.match(zb, /'1UP'/)
+assert.match(cf, /zestienbit: vertaal\('16-bit'\)/)
+
 // 4. niets meer zelf in te stellen
 assert.ok(!/zetNieuwsTekst|nieuwsTekst|fibro-nieuwsfilter|cf-nieuws/.test(cf), 'geen tekstvelden meer')
 assert.ok(!/zetNieuwsfilterTekst|nieuwsTekst\(\)/.test(bellen))
 
 // 5. bellen.js geeft de namen door (jij en wie je belt) en laadt de nieuwe versie
-assert.match(bellen, /camerafilters\.js\?v=2/)
+assert.match(bellen, /camerafilters\.js\?v=3/)
 assert.match(bellen, /supabase\.from\('profiles'\)\.select\('id, username'\)\.in\('id', ontbreekt\)/)
 assert.equal((bellen.match(/\n\s+werkNieuwsNamen\(\)\n/g) || []).length, 4, 'bij initBellen, belOp, een oproep en zetVriendId')
-for (const f of ['chat.html', 'bellen.html', 'bel-luisteraar.js']) assert.match(readFileSync(new URL('../../' + f, import.meta.url), 'utf8'), /bellen\.js\?v=158/, f)
+for (const f of ['chat.html', 'bellen.html', 'bel-luisteraar.js']) assert.match(readFileSync(new URL('../../' + f, import.meta.url), 'utf8'), /bellen\.js\?v=159/, f)
 
 console.log('ok: camerafilters v2 met FAKE NEWS (50 Engelse berichten) en een tekenfilm-beveiligingscamera')

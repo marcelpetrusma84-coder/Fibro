@@ -9,7 +9,7 @@ import { supabase } from './supabase.js?v=95'
 import { ICE_SERVERS, iceReady } from './ice-config.js?v=149'
 import { houOpen } from './lijntjes.js?v=1'
 import { maakBelregel } from './belregel.js?v=152'
-import { maakCameraFilter, bouwFilterKiezer, FILTERS as CAMERA_FILTERS } from './camerafilters.js?v=2'
+import { maakCameraFilter, bouwFilterKiezer, FILTERS as CAMERA_FILTERS } from './camerafilters.js?v=3'
 
 let lokaleStream = null
 let remoteStream = null

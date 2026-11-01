@@ -27,7 +27,7 @@ assert(Schaak.alleLegaleZetten(replica, 'z').some(move =>
   move.van[0] === events[0].zet.van[0] && move.van[1] === events[0].zet.van[1] &&
   move.naar[0] === events[0].zet.naar[0] && move.naar[1] === events[0].zet.naar[1] && move.type === events[0].zet.type
 ), 'the local opponent reply must be legal')
-assert(statuses.some(message => message.includes('thinking')), 'the test opponent reports its thinking state')
+assert(statuses.some(message => message.includes('denkt')), 'the test opponent reports its thinking state')
 
 channel.send({ type:'broadcast', event:'opnieuw', payload:{} })
 assert.equal(events.length, 1, 'restart does not create an opponent move')
@@ -41,7 +41,7 @@ const chat = await readFile(new URL('../../chat.html', import.meta.url), 'utf8')
 const sendFunction = chat.slice(chat.indexOf('window.sendMsg = async function()'), chat.indexOf('// ─── Sticker versturen'))
 assert(sendFunction.indexOf('isFibroTestCommand(input.value)') < sendFunction.indexOf('if (!geselecteerdeVriend)'), 'the local test trigger works without a selected friend')
 assert(sendFunction.includes('getUserMedia({ video:true, audio:false })'), 'the test requests local video without microphone audio')
-assert(chat.includes('NO INVITES SENT'), 'the app makes the local-only status obvious')
+assert(chat.includes('GEEN UITNODIGINGEN'), 'the app makes the local-only status obvious')
 
 // Preloading, the real test flow, and the standalone preview must load the same
 // version. Otherwise the cache-first service worker can revive the old board.

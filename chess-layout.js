@@ -1,4 +1,5 @@
 // Shared sizing for the chess board and its independently resizable cameras.
+import { maakSchaakTaal } from './schaak-taal.js?v=3'
 const mountedLayouts = new WeakMap()
 const CONTROL_SELECTOR = 'button, a, input, select, textarea, summary, [contenteditable], [role="button"]'
 
@@ -6,6 +7,8 @@ export function mountChessLayout({ root, cameraSelector, frameSelector = '#spelI
   if (!root || typeof root.querySelectorAll !== 'function') throw new TypeError('A chess layout root is required.')
   if (!cameraSelector) throw new TypeError('A camera selector is required.')
   mountedLayouts.get(root)?.destroy()
+  const taal = maakSchaakTaal()
+  const t = taal.t
 
   const hadRootClass = root.classList.contains('chess-media-layout')
   const originalWidth = root.style.getPropertyValue('--chess-board-width')
@@ -19,7 +22,8 @@ export function mountChessLayout({ root, cameraSelector, frameSelector = '#spelI
   })
   const cameraGroup = document.createElement('section')
   cameraGroup.className = 'chess-camera-group'
-  cameraGroup.setAttribute('aria-label', 'Player cameras')
+  cameraGroup.setAttribute('lang', taal.language)
+  cameraGroup.setAttribute('aria-label', t('Spelerscamera’s'))
   const listeners = new AbortController()
   const cleanups = []
   let frame = null
@@ -31,13 +35,16 @@ export function mountChessLayout({ root, cameraSelector, frameSelector = '#spelI
 
   const rail = document.createElement('nav')
   rail.className = 'chess-scroll-rail'
-  rail.setAttribute('aria-label', 'Game scrolling')
+  rail.setAttribute('lang', taal.language)
+  rail.setAttribute('aria-label', t('Door het spel scrollen'))
   const makeJump = (label, text, getTop) => {
     const button = document.createElement('button')
     button.type = 'button'
     button.textContent = text
-    button.setAttribute('aria-label', label)
-    button.title = label
+    button.setAttribute('data-sch-label', label)
+    button.setAttribute('data-sch-title', label)
+    button.setAttribute('aria-label', t(label))
+    button.title = t(label)
     button.addEventListener('click', () => root.scrollTo({ top:getTop(), behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }), { signal:listeners.signal })
     return button
   }
@@ -45,20 +52,20 @@ export function mountChessLayout({ root, cameraSelector, frameSelector = '#spelI
   track.className = 'chess-scroll-track'
   track.tabIndex = 0
   track.setAttribute('role', 'scrollbar')
-  track.setAttribute('aria-label', 'Swipe here to scroll the game')
+  track.setAttribute('aria-label', t('Veeg hier om door het spel te scrollen'))
   track.setAttribute('aria-orientation', 'vertical')
   track.setAttribute('aria-valuemin', '0')
   track.setAttribute('aria-valuemax', '100')
   if (root.id) track.setAttribute('aria-controls', root.id)
-  track.title = 'Swipe up or down here to scroll'
+  track.title = t('Veeg hier omhoog of omlaag om te scrollen')
   const thumb = document.createElement('span')
   thumb.className = 'chess-scroll-thumb'
   track.append(thumb)
   rail.append(
-    makeJump('Scroll to the top camera', '↑', () => 0),
+    makeJump('Naar de bovenste camera scrollen', '↑', () => 0),
     track,
-    makeJump('Scroll to the chess board', '♟', () => Math.max(0, root.scrollTop + (frame?.getBoundingClientRect().top || 0) - root.getBoundingClientRect().top - 112)),
-    makeJump('Scroll to the bottom', '↓', () => root.scrollHeight)
+    makeJump('Naar het schaakbord scrollen', '♟', () => Math.max(0, root.scrollTop + (frame?.getBoundingClientRect().top || 0) - root.getBoundingClientRect().top - 112)),
+    makeJump('Naar beneden scrollen', '↓', () => root.scrollHeight)
   )
   root.append(rail)
 
@@ -130,13 +137,14 @@ export function mountChessLayout({ root, cameraSelector, frameSelector = '#spelI
   function updateCameraLabel(camera) {
     const expanded = camera.classList.contains('is-expanded')
     camera.setAttribute('aria-pressed', String(expanded))
-    camera.setAttribute('aria-label', expanded ? 'Restore camera view' : 'Show larger camera view')
+    camera.setAttribute('lang', taal.language)
+    camera.setAttribute('aria-label', t(expanded ? 'Cameraweergave herstellen' : 'Grotere cameraweergave tonen'))
   }
 
   for (const camera of cameras) {
     const hadCameraClass = camera.classList.contains('chess-camera')
     const wasExpanded = camera.classList.contains('is-expanded')
-    const attributes = new Map(['role', 'tabindex', 'aria-label', 'aria-pressed'].map(name => [name, camera.getAttribute(name)]))
+    const attributes = new Map(['role', 'tabindex', 'aria-label', 'aria-pressed', 'lang'].map(name => [name, camera.getAttribute(name)]))
 
     const updateLabel = () => {
       updateCameraLabel(camera)
@@ -173,6 +181,15 @@ export function mountChessLayout({ root, cameraSelector, frameSelector = '#spelI
   }
 
   window.addEventListener('resize', sync, { passive:true, signal:listeners.signal })
+  cleanups.push(taal.subscribe(() => {
+    cameraGroup.setAttribute('aria-label', t('Spelerscamera’s'))
+    cameraGroup.setAttribute('lang', taal.language)
+    rail.setAttribute('aria-label', t('Door het spel scrollen'))
+    track.setAttribute('aria-label', t('Veeg hier om door het spel te scrollen'))
+    track.title = t('Veeg hier omhoog of omlaag om te scrollen')
+    taal.translate(rail)
+    cameras.forEach(updateCameraLabel)
+  }))
   sync()
 
   const controller = {
@@ -185,6 +202,7 @@ export function mountChessLayout({ root, cameraSelector, frameSelector = '#spelI
       mutations.disconnect()
       cancelAnimationFrame(pendingSync)
       listeners.abort()
+      taal.destroy()
       rail.remove()
       for (const { camera, anchor } of cameraHomes) {
         anchor.after(camera)

@@ -1,0 +1,13 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TEST · Neon Raiders Verder-knop</title>
+<script src="../../taal.js?v=47"></script><script src="../../controller.js?v=1"></script>
+<style>*{box-sizing:border-box}body{margin:0;background:#08040f;color:white;font:12px system-ui}header{position:relative;z-index:10;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;padding:10px;background:#231e08;color:#ffe365;border-bottom:2px solid #ffe365}button,select{font:inherit;color:inherit;background:#302c29;border:1px solid #ffe36580;border-radius:6px;padding:6px 9px}button{cursor:pointer}#spelInhoud{position:absolute;inset:85px 0 18px;display:flex;align-items:center;justify-content:center}.hint{flex-basis:100%;text-align:center;margin:0;font-size:11px}</style></head><body>
+<header><strong>TEST · Geen echte scores</strong><label for="level">Testlevel</label><select id="level"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select><button id="start-test">Start testlevel</button><button id="end-test">Ronde afronden</button><p class="hint">Rond een testlevel af. Houd OPNIEUW drie seconden ingedrukt: pas dan verschijnt VERDER. Een korte klik begint bij level 1.</p></header>
+<div id="spelInhoud"></div>
+<script type="module">
+import {start} from '../../neon-raiders-ui.js?v=222'
+const service={async captureOwner(){return 'test'},async saveRun(){return {savedLocal:true,synced:false,status:'local'}},async loadBoards(){return {personal:[],friends:[],global:null,status:'local'}}}
+const game=await start({isActief:()=>true,scoreService:service})
+document.getElementById('start-test').onclick=()=>game?._proef.start(Number(document.getElementById('level').value))
+document.getElementById('end-test').onclick=()=>game?._proef.scene()?.einde(false)
+setInterval(()=>{const scene=game?._proef.scene();if(scene?.speler&&!scene.voorbij)scene.onraakbaar=60},100)
+</script></body></html>

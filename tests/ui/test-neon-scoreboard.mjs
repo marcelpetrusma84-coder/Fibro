@@ -32,7 +32,7 @@ function documentMock() {
 function walk(node) { return [node, ...node.children.flatMap(walk)] }
 const byClass = (node, name) => walk(node).find(child => (child.className || '').split(' ').includes(name))
 const deferred = () => { let resolve, reject; const promise = new Promise((ok, fail) => { resolve = ok; reject = fail }); return { promise, resolve, reject } }
-const T = Object.assign(key => key, { locale: 'nl-NL' })
+const T = Object.assign((key, values) => key.replace(/\{(\w+)\}/g, (match, name) => values?.[name] ?? match), { locale: 'nl-NL' })
 
 assert.equal(scoreDatum(undefined), null)
 assert.equal(scoreDatum('not-a-date'), null)
@@ -50,14 +50,16 @@ const opening = board.open()
 assert.equal(opened, 1)
 assert.equal(dialog.attributes.has('open'), true)
 assert.equal(byClass(dialog, 'nr-sb-refresh').disabled, true)
-const personal = Array.from({length:12}, (_,index)=>({id:String(index),score:1200-index*10,playedAt:'2026-10-27T18:20:00Z',isSelf:true}))
+const personal = Array.from({length:12}, (_,index)=>({id:String(index),score:1200-index*10,playedAt:'2026-10-27T18:20:00Z',isSelf:true,level:index===0?7:2,won:index===0}))
 const hostile = '<img src=x onerror=alert(1)>'
-calls[0].resolve({personal,friends:[{score:8754,playedAt:'2026-10-27T18:20:00Z',name:hostile}],global:{score:98765},status:'online'})
+calls[0].resolve({personal,friends:[{score:8754,playedAt:'2026-10-27T18:20:00Z',name:hostile,level:4}],global:{score:98765,level:6,won:false},status:'online'})
 await opening
 assert.equal(byClass(dialog,'nr-sb-personal').children[2].children.length, 10, 'personal list contains no more than 10 runs')
 assert.equal(byClass(dialog,'nr-sb-name').textContent, hostile, 'names remain literal text')
 assert.equal(walk(dialog).some(node=>node.tagName==='img'), false, 'a name never becomes markup')
-assert.equal(byClass(dialog,'nr-sb-global-detail').textContent, '', 'anonymous global record shows no guessed name or date')
+assert.equal(byClass(dialog,'nr-sb-global-detail').textContent, 'Level 6', 'anonymous global record shows level but no guessed name or date')
+assert.equal(byClass(byClass(dialog,'nr-sb-personal'),'nr-sb-level').textContent, 'Level 7 · Uitgespeeld', 'a completed run is distinguished from failing in the final level')
+assert.equal(byClass(byClass(dialog,'nr-sb-friends'),'nr-sb-level').textContent, 'Level 4', 'friends runs include the level reached')
 assert.match(byClass(dialog,'nr-sb-global-score').textContent, /98[.\s,]?765/)
 assert.equal(byClass(dialog,'nr-sb-refresh').disabled, false)
 assert.ok(byClass(dialog,'nr-sb-date').children[1].textContent, 'every run includes a readable local time')
@@ -89,4 +91,28 @@ calls[5].resolve({personal:[],friends:[],global:{score:5,name:'After destroy'},s
 assert.equal(dialog.isConnected,false)
 assert.doesNotMatch(dialog.textContent,/After destroy/,'destroyed game overlays ignore pending requests')
 assert.equal(doc.head.children.length,1,'one shared stylesheet is loaded')
-console.log('PASS: score modal lists, local dates/times, literal names, anonymous global record, request races, offline cache, Escape/focus and cleanup.')
+
+const levelDoc = documentMock()
+let levelBoards
+const levels = maakNeonScorebord({host:levelDoc.body,T,service:{async loadBoards(){return levelBoards}}})
+const levelDialog = levelDoc.body.children[0]
+for (const invalid of [undefined,null,0,8,-1,1.5,'3','<img src=x>',Infinity]) {
+  const run = {score:1,level:invalid,won:true}
+  levelBoards = {personal:[run],friends:[run],global:run,status:'online'}
+  await levels.open()
+  const badges = walk(levelDialog).filter(node=>(node.className||'').split(' ').includes('nr-sb-level'))
+  assert.equal(badges.length,3)
+  assert.ok(badges.every(node=>node.textContent==='Level onbekend'), 'legacy/invalid level metadata is unknown in every board, never invented or rendered as markup')
+  assert.equal(walk(levelDialog).some(node=>node.tagName==='img'),false)
+}
+for (const run of [{score:2,level:7,won:false},{score:2,level:7,won:'true'},{score:2,level:6,won:true}]) {
+  levelBoards = {personal:[run],friends:[run],global:run,status:'online'}
+  await levels.refresh()
+  const badges = walk(levelDialog).filter(node=>(node.className||'').split(' ').includes('nr-sb-level'))
+  assert.ok(badges.every(node=>node.textContent===`Level ${run.level}`),'only a real final-level win is labelled completed')
+}
+levelBoards = {personal:[],friends:[],global:{score:3,level:7,won:true},status:'online'}
+await levels.refresh()
+assert.equal(byClass(levelDialog,'nr-sb-global-detail').textContent,'Level 7 · Uitgespeeld','even an anonymous global win can show completion without identity')
+levels.destroy()
+console.log('PASS: score modal lists, all-board levels/completion and unknown legacy metadata, local dates/times, literal names, anonymous global record, request races, offline cache, Escape/focus and cleanup.')

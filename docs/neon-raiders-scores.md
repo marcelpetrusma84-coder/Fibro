@@ -4,13 +4,14 @@
 
 Neon Raiders wordt v4.0; de appversie wordt 218. Op PC wisselt een dubbelklik op het **eigen schip** tussen de bestaande sleepstand (vliegen en schieten zolang links ingedrukt is) en de volgstand (vliegen zonder ingedrukte knop, links om te schieten). De keuze blijft lokaal bewaard. Touch, toetsenbord, controller en de optionele autovuurinstelling blijven beschikbaar.
 
-Voer **`sql/neon-raiders-scores.sql`** eenmalig uit in de Supabase SQL Editor en publiceer daarna de nieuwe bestanden. De migratie is herhaalbaar. Er zijn geen nieuwe omgevingsvariabelen, sleutels, buckets of Realtime-publicaties nodig. De bestaande tabellen `profiles`, `friendships`, `mijn_blokkades` en `blokkades`, plus `ben_ik_geblokkeerd()`, worden gebruikt.
+Voer **`sql/neon-raiders-scores.sql`** eenmalig uit in de Supabase SQL Editor en publiceer daarna de nieuwe bestanden. De migratie is herhaalbaar. Is de eerdere scoremigratie al uitgevoerd, voer dit bijgewerkte bestand dan opnieuw uit om de RPC-resultaten met level en uitslag uit te breiden; de kolommen `level` en `won` bestaan al. Er zijn geen nieuwe omgevingsvariabelen, sleutels, buckets of Realtime-publicaties nodig. De bestaande tabellen `profiles`, `friendships`, `mijn_blokkades` en `blokkades`, plus `ben_ik_geblokkeerd()`, worden gebruikt.
 
 Zonder migratie blijft spelen mogelijk en blijven nieuwe persoonlijke scores op het toestel staan. De scorelijst vermeldt dat online lijsten nog niet beschikbaar zijn. Bij het openen van de scorelijst of afronden van een volgende ronde probeert de app de wachtende scores opnieuw te versturen. Er wordt geen productie-SQL automatisch uitgevoerd vanuit de app of de tests.
 
-- Links: de tien hoogste **afgeronde rondes** van het account, met datum en tijd.
-- Rechts: de tien hoogste rondes van jezelf en je huidige wederzijds geaccepteerde, niet geblokkeerde vrienden. Meerdere rondes van dezelfde speler mogen erin staan.
-- Wereldrecord: één hoogste score. Een onbekende recordhouder levert alleen het getal; geen account-id, ronde-id, gebruikersnaam, gekozen naam of tijdstip. Een recordhouder die jijzelf of een vriend is mag herkenbaar zijn.
+- Links: de tien hoogste **afgeronde rondes** van het account, met datum, tijd en het bereikte level.
+- Rechts: de tien hoogste rondes van jezelf en je huidige wederzijds geaccepteerde, niet geblokkeerde vrienden. Iedere ronde toont het bereikte level. Meerdere rondes van dezelfde speler mogen erin staan.
+- Wereldrecord: één hoogste score. Een onbekende recordhouder levert alleen score, bereikt level en voltooiingsstatus; geen account-id, ronde-id, gebruikersnaam, gekozen naam of tijdstip. Een recordhouder die jijzelf of een vriend is mag herkenbaar zijn.
+- Een uitgespeelde ronde is herkenbaar aan `won:true` en level 7; level 7 zonder winst blijft een gestrande ronde. Oude resultaten zonder betrouwbare levelinformatie blijven onbekend, in plaats van een verzonnen level 1 te krijgen.
 - Een gelijkspel wordt deterministisch gesorteerd op oudste tijdstip, daarna account en ronde. Datum en tijd worden als UTC opgeslagen en in de tijdzone van de kijker weergegeven.
 - Gekozen namen blijven op het toestel: eigen `fibro_profiel_<uid>.naam`, vriend `vriend_naam_<vriend>_<uid>`. Daarna volgt de gegenereerde `username`. `display_name` uit de database wordt hiervoor niet gebruikt of gekopieerd.
 
@@ -26,7 +27,7 @@ Persoonlijk blijven tien records bewaard; maximaal honderd nog niet verstuurde r
 
 - `captureOwner(): Promise<uuid|null>` — bij het starten van een ronde vastleggen.
 - `saveRun({ id, ownerId, score, playedAt?, level?, won?, mode? })` — één stabiele UUID per ronde; `ownerId` is de bij de start vastgelegde waarde. Geeft `{ savedLocal, persisted, inMemory, synced, status, reason? }`.
-- `loadBoards()` — `{ personal, friends, global, status, durable }`. Rijen: `{ id, score, playedAt, name, isSelf }`. Wereldrecord: `{ score }` met alleen bij bekenden optioneel `name`, `isSelf`, `playedAt`.
+- `loadBoards()` — `{ personal, friends, global, status, durable }`. Rijen: `{ id, score, playedAt, level, won, name, isSelf }`. `level` is 1–7 of `null` bij ontbrekende/oude metadata; `won` is een boolean. Wereldrecord: `{ score, level, won }` met alleen bij bekenden optioneel `name`, `isSelf`, `playedAt`.
 - Status: `online`, `offline` (tijdelijk niet te synchroniseren), `setup` (RPC/migratie ontbreekt), `local` (niet ingelogd). `durable:false` betekent dat de huidige gegevens alleen in het paginageheugen konden worden bewaard.
 
 ## Tests
@@ -45,9 +46,9 @@ De migratie en permissions-test zijn lokaal uitgevoerd met PostgreSQL 17. Contro
 
 ## English handoff
 
-Apply `sql/neon-raiders-scores.sql` in the Supabase SQL Editor before deploying. It is repeatable and uses the existing profile, friendship and blocking schema; no new secrets or infrastructure are required. Without the migration, gameplay and local personal results remain available and the UI explains that online rankings are not ready.
+Apply `sql/neon-raiders-scores.sql` in the Supabase SQL Editor before deploying. If the earlier score migration was already applied, rerun this updated script to return level and completion data; the table columns already exist. It is repeatable and uses the existing profile, friendship and blocking schema; no new secrets or infrastructure are required. Without the migration, gameplay and local personal results remain available and the UI explains that online rankings are not ready.
 
-The two columns contain each account's best ten completed runs and the best ten runs among the viewer and current mutual, unblocked friends. The global result contains only a score for an unknown player; it includes no identity, run id or timestamp. Only a known friend or the viewer may be named. Chosen display names continue to come from existing local/P2P storage, falling back to `username`; they are never uploaded to the scoring table. Timestamps are stored in UTC and displayed locally.
+The two columns contain each account's best ten completed runs and the best ten runs among the viewer and current mutual, unblocked friends. Each run also includes the level reached and whether the game was completed. Legacy results without level metadata remain unknown rather than inventing level one. The global result contains only score, reached level and completion status for an unknown player; it includes no identity, run id or timestamp. Only a known friend or the viewer may be named. Chosen display names continue to come from existing local/P2P storage, falling back to `username`; they are never uploaded to the scoring table. Timestamps are stored in UTC and displayed locally.
 
 All writes derive ownership from the authenticated JWT and check the account captured at run start. Clients cannot update or delete results; UUIDs make retries idempotent. In-flight responses from a previous account are discarded. Personal local results and pending submissions are separated per account. Blocked storage falls back to page memory and is reported honestly.
 

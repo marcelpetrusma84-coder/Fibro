@@ -30,21 +30,25 @@ function fixture({ uid = ME, online = true, failure = null } = {}) {
     now: () => time + serial * 1000, uuid: () => id(++serial), isOnline: () => network.online })
   return { service, saved, store, network, response, session }
 }
-const row = (n, score, user = ME, username = 'GeneratedName') => ({
-  run_id: id(n), user_id: user, score, played_at: new Date(time + n * 1000).toISOString(), username
+const row = (n, score, user = ME, username = 'GeneratedName', level = 1, won = false) => ({
+  run_id: id(n), user_id: user, score, played_at: new Date(time + n * 1000).toISOString(), username, level, won
 })
 
 // Best ten completed runs, score descending, earlier date first on a tie; duplicates never count twice.
 const f = fixture({ online: false })
-await Promise.all(Array.from({ length: 14 }, (_, n) => f.service.saveRun({ score: n * 100 })))
+await Promise.all(Array.from({ length: 14 }, (_, n) => f.service.saveRun({ score: n * 100, level: n % 7 + 1, won: n === 13 })))
 let boards = await f.service.loadBoards()
 assert.equal(boards.status, 'offline')
 assert.deepEqual(boards.personal.map(r => r.score), [1300,1200,1100,1000,900,800,700,600,500,400])
 assert.ok(boards.personal.every(r => r.playedAt && r.isSelf))
+assert.equal(boards.personal[0].level, 7, 'local personal results retain the level reached')
+assert.equal(boards.personal[0].won, true, 'completion is distinct from being stranded in level seven')
 assert.equal(f.saved.length, 0)
 f.network.online = true
 await f.service.loadBoards()
 assert.equal(f.saved.length, 14, 'offline runs retry, not merely the best ten')
+assert.equal(f.saved[0].p_level, 7)
+assert.equal(f.saved[0].p_won, true)
 await f.service.loadBoards()
 assert.equal(f.saved.length, 14, 'a refreshed list does not resubmit saved runs')
 
@@ -62,23 +66,55 @@ assert.equal((await f.service.loadBoards()).personal.find(r => r.id === id(99)).
 const names = fixture()
 names.store.setItem('fibro_profiel_' + ME, JSON.stringify({ naam: 'My chosen name' }))
 names.store.setItem(`vriend_naam_${FRIEND}_${ME}`, 'P2P friend name')
-names.response.personal = [row(1, 100)]
-names.response.friends = [row(2, 700, FRIEND, 'FriendUsername'), row(1, 100)]
-names.response.global = { score: 700, user_id: FRIEND, username: 'FriendUsername', played_at: new Date(time).toISOString() }
+names.response.personal = [row(1, 100, ME, 'GeneratedName', 3)]
+names.response.friends = [row(2, 700, FRIEND, 'FriendUsername', 5), row(1, 100, ME, 'GeneratedName', 3)]
+names.response.global = { score: 700, level: 5, won: false, user_id: FRIEND, username: 'FriendUsername', played_at: new Date(time).toISOString() }
 names.response.known_players = [{ user_id: FRIEND }]
 boards = await names.service.loadBoards()
 assert.equal(boards.personal[0].name, 'My chosen name')
 assert.equal(boards.friends[0].name, 'P2P friend name')
 assert.equal(boards.global.name, 'P2P friend name')
+assert.equal(boards.personal[0].level, 3)
+assert.equal(boards.friends[0].level, 5)
+assert.equal(boards.global.level, 5)
+assert.equal(boards.global.won, false)
 names.store.items.delete(`vriend_naam_${FRIEND}_${ME}`)
 assert.equal((await names.service.loadBoards()).friends[0].name, 'FriendUsername')
 
-// Anonymous global remains score-only even if a response mistakenly contains other player fields.
-names.response.global = { score: 1000, user_id: OTHER, username: 'Private', played_at: new Date(time).toISOString() }
+// An anonymous record includes gameplay result, never identity or time, even with extra response fields.
+names.response.global = { score: 1000, level: 6, won: false, user_id: OTHER, username: 'Private', played_at: new Date(time).toISOString() }
 names.response.known_players = []
-assert.deepEqual((await names.service.loadBoards()).global, { score: 1000 })
+assert.deepEqual((await names.service.loadBoards()).global, { score: 1000, level: 6, won: false })
+names.response.global = { score: 1200, level: 7, won: true }
+assert.deepEqual((await names.service.loadBoards()).global, { score: 1200, level: 7, won: true })
 names.response.global = { score: 9000 }
-assert.deepEqual((await names.service.loadBoards()).global, { score: 9000 })
+assert.deepEqual((await names.service.loadBoards()).global, { score: 9000, level: null, won: false }, 'old responses do not invent a reached level')
+for (const level of [0, 8, 1.5, '4', null]) {
+  names.response.global = { score: 9000, level }
+  assert.equal((await names.service.loadBoards()).global.level, null)
+}
+
+// Previously cached rows gain their missing metadata when the server RPC is updated.
+const legacy = fixture()
+const old = row(1, 500)
+delete old.level; delete old.won
+legacy.response.personal = [old]
+assert.equal((await legacy.service.loadBoards()).personal[0].level, null)
+legacy.response.personal = [row(1, 500, ME, 'GeneratedName', 7, true)]
+const upgraded = await legacy.service.loadBoards()
+assert.equal(upgraded.personal[0].level, 7)
+assert.equal(upgraded.personal[0].won, true)
+
+// An old RPC response cannot erase a level/result already recorded by this device.
+const rollout = fixture({ online: false })
+const oldServerRow = row(60, 500)
+delete oldServerRow.level; delete oldServerRow.won
+await rollout.service.saveRun({ id: id(60), score: 500, playedAt: oldServerRow.played_at, level: 7, won: true })
+rollout.response.personal = [oldServerRow]
+rollout.network.online = true
+const preserved = await rollout.service.loadBoards()
+assert.equal(preserved.personal[0].level, 7)
+assert.equal(preserved.personal[0].won, true)
 
 // Missing migration and offline transport preserve local records and the retry queue.
 const missing = fixture({ failure: { code: 'PGRST202' } })
@@ -129,4 +165,4 @@ const switched = await switching.loadBoards()
 assert.deepEqual(switched.personal, [])
 assert.deepEqual(switched.friends, [])
 assert.equal(switched.global, null)
-console.log('PASS Neon Raiders scores: top ten, local retry, account isolation, names and anonymous global')
+console.log('PASS Neon Raiders scores: top ten, levels/completion, legacy upgrade, local retry, account isolation, names and anonymous global')

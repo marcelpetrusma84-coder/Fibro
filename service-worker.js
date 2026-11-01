@@ -130,13 +130,16 @@ self.addEventListener('fetch', function(event) {
           const kopie = res.clone()
           return caches.open(CACHE_VERSION).then(c => c.put(sleutel, kopie))
         }).catch(() => {}))
+        // v240: geeft de server een storing (5xx, zoals GitHubs eenhoorn-pagina "We're having a really bad day"),
+        // dan de bewaarde kopie in plaats van de foutpagina, ook als die ouder is dan een week.
         event.respondWith((async function() {
           const hit = await caches.open(CACHE_VERSION).then(c => c.match(sleutel)).catch(() => null)
           if (!hit) return netwerk // nog geen kopie: wachten, zoals vroeger
+          const goedOfKopie = netwerk.then(res => res.status >= 500 ? hit : res, () => hit)
           const leeftijd = Date.now() - Date.parse(hit.headers.get('date') || '')
-          if (!(leeftijd < MAX_LEEFTIJD)) return netwerk.catch(() => hit)
+          if (!(leeftijd < MAX_LEEFTIJD)) return goedOfKopie
           const op_tijd = await Promise.race([
-            netwerk.catch(() => null), // geen internet: meteen de kopie
+            goedOfKopie, // geen internet of een storing: meteen de kopie
             new Promise(klaar => setTimeout(() => klaar(null), WACHT_MS))
           ])
           return op_tijd || hit

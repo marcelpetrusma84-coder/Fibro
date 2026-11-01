@@ -2402,6 +2402,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       const vriendIsEr = new Promise(klaar => { spelWachtKlaar = klaar })
       verbinding.subscribe()
       if (!await vriendIsEr || spelActief !== spelType || spelKanaal !== verbinding) return
+      clearTimeout(spelWachtTimer); spelWachtTimer = null
       document.getElementById('spelWachtscherm')?.remove()
     }
 
@@ -2645,6 +2646,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // leave event ends a game; connection recovery keeps the current board alive.
   // v241: het wachtscherm voor het spel, tot je vriend er is (zie speelMee)
   let spelWachtKlaar = null
+  let spelWachtTimer = null
+  const SPEL_WACHT_MAX = 2 * 60 * 1000 // v242: twee minuten
   function toonSpelWachtscherm() {
     const inhoud = document.getElementById('spelInhoud')
     if (!inhoud) return
@@ -2672,6 +2675,14 @@ console.timeLog('[chat] berichten', 'opgehaald')
     knop.onclick = () => window.sluitSpel()
     scherm.append(draai, tekst, extra, knop)
     inhoud.appendChild(scherm)
+    // v242: na twee minuten zeggen dat de vriend er nog niet is. Het wachten gaat door: komt hij alsnog, dan begint het spel.
+    clearTimeout(spelWachtTimer)
+    spelWachtTimer = setTimeout(() => {
+      if (document.getElementById('spelWachtscherm') !== scherm) return
+      tekst.textContent = T('{naam} is er na 2 minuten nog niet. Probeer het later opnieuw, of wacht nog even.', { naam: spelVriendUsername() })
+      draai.style.animationPlayState = 'paused'
+      knop.textContent = T('Sluiten')
+    }, SPEL_WACHT_MAX)
   }
 
   function toonSpelVerbindingStatus(status) {
@@ -2726,6 +2737,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     spelKanaal = null
     spelChatCrypto = null
     if (spelWachtKlaar) { const klaar = spelWachtKlaar; spelWachtKlaar = null; klaar(false) } // v241: wachten gestopt
+    clearTimeout(spelWachtTimer); spelWachtTimer = null
     if (!wasFibroTest && !stil && verbinding && spelActief) {
       // Allow the explicit leave message to reach the server before disposing.
       Promise.resolve(verbinding.send({ type:'broadcast', event:'verlaten', payload:{} }))

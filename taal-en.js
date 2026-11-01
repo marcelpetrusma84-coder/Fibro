@@ -1138,6 +1138,7 @@ window.FIBRO_EN = {
   "Twee velden": "Two boards",
   "Ieder een eigen bak. Vierkanten sturen rijen naar je vriend": "Each your own board. Squares send rows to your friend",
   "⏳ Wachten tot {naam} in het spel zit...": "⏳ Waiting for {naam} to join the game...",
+  "{naam} is er na 2 minuten nog niet. Probeer het later opnieuw, of wacht nog even.": "{naam} still hasn't joined after 2 minutes. Try again later, or wait a little longer.",
   "Kies een spelvorm": "Choose a game mode",
   "⏳ Wachten tot {naam} een spelvorm kiest...": "⏳ Waiting for {naam} to choose a game mode...",
   "{spel}: start in {n}...": "{spel}: starting in {n}...",

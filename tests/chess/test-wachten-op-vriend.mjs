@@ -106,11 +106,15 @@ function network() {
   assert.match(deel, /spelType !== 'schakendrie'/, 'schaken met drie heeft een eigen wachtkamer')
   assert.match(chat, /status === 'connected' && spelWachtKlaar/)
   assert.match(chat, /if \(spelWachtKlaar\) \{ const klaar = spelWachtKlaar; spelWachtKlaar = null; klaar\(false\) \}/, 'sluiten stopt het wachten')
+  // v242: na twee minuten een melding, maar het wachten gaat door; de timer wordt opgeruimd bij starten en sluiten
+  assert.match(chat, /const SPEL_WACHT_MAX = 2 \* 60 \* 1000/)
+  assert.match(chat, /if \(document\.getElementById\('spelWachtscherm'\) !== scherm\) return/, 'geen melding als het wachtscherm al weg is')
+  assert.equal((chat.match(/clearTimeout\(spelWachtTimer\); spelWachtTimer = null/g) || []).length, 2, 'timer weg bij starten en bij sluiten')
   // de teksten op het wachtscherm hebben Engels
   globalThis.window = {}
   new Function('window', readFileSync(new URL('../../taal-en.js', import.meta.url), 'utf8'))(globalThis.window)
   const EN = globalThis.window.FIBRO_EN
-  for (const k of ['⏳ Wachten tot {naam} in het spel zit...', 'Annuleren', 'Verbinding herstellen; je spel blijft open.', 'Wachten op internet; je spel blijft open.'])
+  for (const k of ['⏳ Wachten tot {naam} in het spel zit...', '{naam} is er na 2 minuten nog niet. Probeer het later opnieuw, of wacht nog even.', 'Sluiten', 'Annuleren', 'Verbinding herstellen; je spel blijft open.', 'Wachten op internet; je spel blijft open.'])
     assert.ok(Object.prototype.hasOwnProperty.call(EN, k), 'Engels voor ' + k)
   delete globalThis.window
 }

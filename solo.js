@@ -411,7 +411,8 @@ export const SOLO_SPELLEN = {
   // geen spel het meer (spel.html kent het nog).
   // v177: Ghost Tag alleen spelen net als samen spelen: volle scherpte en geen grens van 30 beeldjes (zie ecto-ui.js v12).
   pacman:       { naam: 'Ghost Tag',     icon: '👻', bestand: './ecto-ui.js?v=177',    zonderKanaal: true, meetFps: true },
-  breakout:     { naam: 'Block It',      icon: '🟪', bestand: './blockit-ui.js?v=149',  bot: stilBot, arcade: true },
+  // v150 (2 nov 2026): Block It kan alleen ook tegen de computer; die zit in het spel zelf (blockit-computer.js), dus stilBot blijft.
+  breakout:     { naam: 'Block It',      icon: '🟪', bestand: './blockit-ui.js?v=150',  bot: stilBot, arcade: true },
   swarm:        { naam: 'The Swarm',     icon: '🪲', bestand: './swarm-ui.js?v=147',    bot: stilBot, arcade: true },
   // Twin Snakes heeft net als Ghost Tag al een eigen computerslang.
   pinball:      { naam: 'Twin Snakes',   icon: '🐍', bestand: './twin-snakes-ui.js?v=149', zonderKanaal: true },

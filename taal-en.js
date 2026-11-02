@@ -1236,7 +1236,7 @@ window.FIBRO_EN = {
   "Een vierkant van 4 bij 4 of groter geeft een schokgolf: ook de blokjes eromheen gaan weg. Je volgende steen is dan geladen ⚡. Veeg hem snel omlaag: hij boort door alles heen en ontploft onderaan.": "A square of 4 by 4 or bigger sends out a shockwave: the blocks around it disappear too. Your next piece is then charged ⚡. Swipe it down quickly: it drills through everything and explodes at the bottom.",
   "Soms krijg je een bom. Waar hij landt, ontploft hij en maakt hij een rond gat in je stapel. Handig als je bak te vol raakt.": "Sometimes you get a bomb. Where it lands, it explodes and blasts a round hole in your stack. Handy when your well gets too full.",
   "In de spelvorm Zwarte blokken vallen er om de paar stenen zwarte blokken in je bak. Ze horen bij geen kleur, dus ze tellen nooit mee in een vierkant. Ze gaan alleen weg door een explosie: een bom, een geladen steen, of de schokgolf van een vierkant van 4 bij 4.": "In the Black blocks mode, black blocks drop into your well every few pieces. They have no colour, so they never count towards a square. Only an explosion removes them: a bomb, a charged piece, or the shockwave of a 4 by 4 square.",
-  "Raakt je stapel de bovenkant, dan is het spel voorbij. Samen spelen kan in één gedeelde bak (met gemengde of eigen kleuren), of met twee velden: dan stuurt elk vierkant van jou rijen naar je vriend.": "When your stack reaches the top, the game is over. Together you can play in one shared well (mixed or own colours), or with two fields: then each of your squares sends rows to your friend.",
+  "Raakt je stapel de bovenkant, dan is het spel voorbij. Samen spelen kan in één gedeelde bak, of met twee velden: dan stuurt elk vierkant van jou rijen naar je vriend (of zwarte blokken, bij zwarte aanval). Alleen kun je ook tegen de computer spelen: makkelijk, normaal of moeilijk.": "If your stack reaches the top, the game is over. Together you can play in one shared well, or with two wells: then every square you make sends rows to your friend (or black blocks, with black attack). On your own you can also play against the computer: easy, normal or hard.",
   "Gewoon": "Normal",
   "Maak vierkanten van één kleur": "Make squares of one colour",
   "Ze vallen erbij en gaan alleen weg door een explosie": "They drop in and only an explosion removes them",
@@ -1519,6 +1519,22 @@ window.FIBRO_EN = {
 // ---- Block It: rijen erbij (blockit-ui, v148) ----
   "+{n} RIJ!": "+{n} ROW!",
   "+{n} RIJEN!": "+{n} ROWS!",
+
+// ---- Block It: tegen de computer en zwarte aanval (blockit-ui, v150) ----
+  "+{n} ⬛!": "+{n} ⬛!",
+  "AANVAL! {n} ⬛": "ATTACK! {n} ⬛",
+  "Een goede tegenstander": "A good opponent",
+  "Ieder een eigen bak. Vierkanten sturen zwarte blokken naar je vriend": "Each your own well. Squares send black blocks to your friend",
+  "Rustig, en maakt soms een foutje": "Takes it easy and sometimes makes a mistake",
+  "Snel en slim. Lukt het jou?": "Fast and clever. Can you beat it?",
+  "Tegen de computer": "Against the computer",
+  "Twee velden, zwarte aanval": "Two wells, black attack",
+  "Twee velden: wie houdt het langst vol?": "Two wells: who lasts the longest?",
+  "Wat je vierkanten naar je tegenstander sturen": "What your squares send to your opponent",
+  "🎯 Aanval: rijen": "🎯 Attack: rows",
+  "🎯 Aanval: zwarte blokken": "🎯 Attack: black blocks",
+  "🤖 Tegen de computer": "🤖 Against the computer",
+  "🤖 Tegen de computer: kies een niveau": "🤖 Against the computer: choose a level",
 
 // ---- Belregels in de chat (belregel.js, v152) ----
   "📞 Oproep · niet opgenomen": "📞 Call · no answer",

@@ -19,7 +19,7 @@ export const SPEL_VERSIES = {
   pacman: 1,         // Ghost Tag
   pinball: 1,        // Twin Snakes
   flappybird: 1,     // Flapper
-  breakout: 1,       // Block It
+  breakout: 2,       // Block It (v2 = 2 nov 2026: tegen de computer, zwarte aanval)
   swarm: 1,          // The Swarm
   endlessrunner: 1,  // Runner & Gunner
   shmup: 5,          // Neon Raiders (v5: VERDER pas na 3 seconden OPNIEUW vasthouden)

@@ -63,6 +63,33 @@ const narrow = wallpaperCover(300, 900, 941, 1672)
 assert.equal(narrow.height, 1)
 assert.equal(narrow.x, (1 - narrow.width) * .5)
 
+// Regression: a fixed 20px/15px tilt inverted visible triangles around the
+// pedestal on narrow phones. Exercise the renderer's actual uploaded geometry
+// and shader uniforms, rather than duplicating its safety calculation here.
+for (const [viewportWidth, viewportHeight] of [[320,568],[390,844],[1280,720],[844,390],[568,320],[320,320],[768,1024]]) {
+  const mesh = fixture({ width:Math.round(viewportWidth * 1.18), height:Math.round(viewportHeight * 1.18) })
+  mesh.load()
+  const data = mesh.calls.filter(([method, target]) => method === 'bufferData' && target === mesh.gl.ARRAY_BUFFER).at(-1)[2]
+  const indexData = mesh.calls.find(([method, target]) => method === 'bufferData' && target === mesh.gl.ELEMENT_ARRAY_BUFFER)[2]
+  const [, , strengthX, strengthY] = mesh.calls.filter(([method, name]) => method === 'uniform2f' && name === 'uStrength').at(-1)
+  const point = (index, mx, my) => {
+    const start = index * 5, depth = data[start + 4]
+    return [data[start] + mx * strengthX * depth, data[start + 1] - my * strengthY * depth]
+  }
+  const area = (a, b, c) => (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+  for (const [mx, my] of [[-1,-1],[-1,1],[1,-1],[1,1]]) {
+    for (let triangle = 0; triangle < indexData.length; triangle += 3) {
+      const [a, b, c] = indexData.slice(triangle, triangle + 3)
+      const initial = area(point(a,0,0), point(b,0,0), point(c,0,0))
+      const tilted = area(point(a,mx,my), point(b,mx,my), point(c,mx,my))
+      assert(tilted * initial > 0, `${viewportWidth}x${viewportHeight} at (${mx},${my}): triangle ${triangle / 3} retains its winding`)
+      assert(tilted / initial >= .39999, 'extreme tilt keeps a generous area margin instead of nearly collapsing a triangle')
+    }
+  }
+  assert(strengthX > 0 && strengthY > 0, 'the safety limit preserves visible differential parallax')
+  mesh.renderer.destroy()
+}
+
 const f = fixture()
 assert.equal(f.renderer.ready, false)
 assert.equal(f.canvas.style.visibility, undefined, 'canvas stays hidden in cssText until a successful draw')

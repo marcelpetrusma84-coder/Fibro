@@ -112,8 +112,30 @@ export function maakWallpaperDepth({ host, doc = host?.ownerDocument, win = doc?
       data[offset++] = px * 2 - 1; data[offset++] = 1 - py * 2
       data[offset++] = u; data[offset++] = v; data[offset++] = wallpaperDepthAt(u, v) * edge
     }
+    // A fixed pixel displacement can fold a steep slab/pedestal transition on
+    // a small phone. For each actual mesh triangle, displacement is a rank-one
+    // warp whose signed-area ratio is 1 + motion · depthGradient. Limit its
+    // worst case over BOTH motion axes to .60: every triangle then retains at
+    // least 40% of its original area for every allowed tilt, not just one axis.
+    // Recompute after the cover crop changes, preserving the strongest safe
+    // parallax on large screens without viewport-specific phone exceptions.
+    const strengthX = 40 / width, strengthY = 30 / height
+    let maximumStrain = 0
+    function strain(a, b, c) {
+      const ax = data[a], ay = data[a + 1], ad = data[a + 4]
+      const bx = data[b] - ax, by = data[b + 1] - ay, bd = data[b + 4] - ad
+      const cx = data[c] - ax, cy = data[c + 1] - ay, cd = data[c + 4] - ad
+      const area = bx * cy - by * cx
+      const dx = (bd * cy - cd * by) / area, dy = (bx * cd - cx * bd) / area
+      maximumStrain = Math.max(maximumStrain, Math.abs(strengthX * dx) + Math.abs(strengthY * dy))
+    }
+    for (let row = 0; row < rows; row++) for (let column = 0; column < columns; column++) {
+      const a = (row * (columns + 1) + column) * 5, b = a + 5, c = a + (columns + 1) * 5, d = c + 5
+      strain(a, c, b); strain(b, c, d)
+    }
+    const safeScale = Math.min(1, .60 / maximumStrain)
     gl.bindBuffer(gl.ARRAY_BUFFER, vertices); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
-    gl.uniform2f(strengthUniform, 40 / width, 30 / height)
+    gl.uniform2f(strengthUniform, strengthX * safeScale, strengthY * safeScale)
     return true
   }
   function paint(nextX = x, nextY = y) {

@@ -2,7 +2,8 @@ import { maakSchaakTaal } from './schaak-taal.js?v=7'
 import { stukSVG, registreerSlag, veroverdePunten, STUKPUNTEN } from './schaak-stukken.js?v=1'
 import { schaakFen } from './schaak-ultra-engine.js?v=1'
 import { schaakNotatie, maakUltraEvaluatieHistorie } from './schaak-ultra-historie.js?v=1'
-import { maakSchaakWallpaper } from './schaak-wallpaper.js?v=2'
+import { maakSchaakWallpaper } from './schaak-wallpaper.js?v=3'
+import { maakUltraFocus } from './schaak-ultra-focus.js?v=1'
 const SETTINGS_KEY = 'fibro_chess_settings_v1'
 const READABLE_NAMES = { P:'pion', N:'paard', B:'loper', R:'toren', Q:'dame', K:'koning' }
 
@@ -228,8 +229,35 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-pieces-small .sch-stuk { width:72%; }
       .sch-pieces-medium .sch-stuk { width:88%; }
       .sch-pieces-large .sch-stuk { width:100%; }
+      .sch-focus-restore { position:fixed; top:max(16px,env(safe-area-inset-top)); left:max(16px,env(safe-area-inset-left)); z-index:11; display:grid; place-items:center; width:38px; height:38px; border:1px solid #b6ebde66; border-radius:50%; background:linear-gradient(145deg,#263d42,#121c29); color:#dcfff4; box-shadow:0 3px 0 #080e18,0 6px 18px #0006,inset 0 1px #ffffff35; cursor:pointer; }
+      .sch-focus-restore svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+      .sch-focus-restore[hidden] { display:none; }
+      .sch-focus-restore:focus-visible,#sch-bord[tabindex="0"]:focus-visible { outline:2px solid #91f1d7; outline-offset:3px; }
+      .sch-ultra-focus-host > .spel-titel-bar { display:none; }
+      .sch-spel.sch-ultra-focus-active:not([data-ultra-focus="0"]) { gap:6px; }
+      .sch-ultra-focus-active:not([data-ultra-focus="0"]) > #sch-status,
+      .sch-ultra-focus-active:not([data-ultra-focus="0"]) .sch-media-controls,
+      .sch-ultra-focus-active:not([data-ultra-focus="0"]) .sch-vangst,
+      .sch-ultra-focus-active:not([data-ultra-focus="0"]) .sch-takeback,
+      .sch-ultra-focus-active:not([data-ultra-focus="0"]) .sch-legenda,
+      .sch-ultra-focus-active:not([data-ultra-focus="0"]) .sch-ultra-status,
+      .sch-ultra-focus-active:not([data-ultra-focus="0"]) .sch-ultra-info:has(.sch-ultra-retry[hidden]) { display:none; }
+      .sch-spel.sch-ultra-focus-active:not([data-ultra-focus="0"]) .sch-board-row { --sch-history-width:clamp(64px,17vw,90px); gap:4px; }
+      .sch-spel.sch-ultra-focus-active:not([data-ultra-focus="0"]) .sch-board-row.sch-with-evaluation { --sch-evaluation-width:40px; }
+      .sch-spel.sch-ultra-focus-active:not([data-ultra-focus="0"]) .sch-evaluation { width:36px; }
+      .sch-spel.sch-ultra-focus-active:not([data-ultra-focus="0"]) .sch-board-row .sch-frame { width:calc(100% - var(--sch-history-width) - var(--sch-evaluation-width) - 16px); }
+      .sch-spel.sch-ultra-focus-active:is([data-ultra-focus="2"],[data-ultra-focus="3"],[data-ultra-focus="4"]) .sch-board-row { --sch-history-width:0px; }
+      .sch-ultra-focus-active:is([data-ultra-focus="2"],[data-ultra-focus="3"],[data-ultra-focus="4"]) .sch-history { display:none; }
+      .sch-spel.sch-ultra-focus-active:is([data-ultra-focus="3"],[data-ultra-focus="4"]) .sch-board-row.sch-with-evaluation { --sch-evaluation-width:0px; }
+      .sch-ultra-focus-active:is([data-ultra-focus="3"],[data-ultra-focus="4"]) .sch-evaluation { display:none; }
+      .sch-spel.sch-ultra-focus-active[data-ultra-focus="3"] .sch-board-row .sch-frame { width:calc(100% - 16px); }
+      .sch-ultra-focus-active[data-ultra-focus="4"] .sch-board-tools { display:none; }
+      .sch-spel.sch-ultra-focus-active[data-ultra-focus="4"] .sch-board-row .sch-frame { width:100%; padding:2px; border-radius:8px; }
+      .sch-spel.sch-ultra-focus-active[data-ultra-focus="4"] .sch-frame.sch-has-hints { padding-top:31px; }
+      @media (prefers-reduced-motion:reduce) { .sch-ultra-focus-active .sch-frame { transition:none; } }
     </style>
     <div class="sch-spel">
+      ${isUltra ? '<button class="sch-focus-restore" id="sch-focus-restore" type="button" data-sch-label="Compact bord" aria-label="Compact bord" hidden><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 9h5V4m11 5h-5V4M4 15h5v5m11-5h-5v5"/></svg></button>' : ''}
       <div id="sch-status" role="status" aria-live="polite" style="color:white;font-size:14px;font-weight:600;text-align:center;min-height:20px;"></div>
       <div class="sch-vangst" id="sch-tegenstander"></div>
       ${isUltra ? `<div class="sch-board-row" id="sch-board-row">
@@ -1008,7 +1036,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     if (onderdrukKlik || menuDruk) { menuDruk = false; onderdrukKlik = false; return }
     vergroot(true)
   })
-  compactBtn.addEventListener('click', () => vergroot(false))
+  compactBtn.addEventListener('click', () => { ultraFocus?.setStage(0); vergroot(false) })
   settingsBtn.addEventListener('click', () => toonMenu(menu.hidden))
   menuBackdrop.addEventListener('click', () => { toonMenu(false); settingsBtn.focus() })
   spelEl.addEventListener('pointerdown', event => { if (!acties.contains(event.target)) toonMenu(false) })
@@ -1021,6 +1049,11 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     if (event.shiftKey && document.activeElement === eerste) { event.preventDefault(); laatste.focus() }
     else if (!event.shiftKey && document.activeElement === laatste) { event.preventDefault(); eerste.focus() }
   })
+  const ultraFocus = isUltra ? maakUltraFocus({
+    root:spelEl, board:bordEl, host:document.getElementById('spelOverlay') || spelEl,
+    restoreButton:inhoud.querySelector('#sch-focus-restore'),
+  }) : null
+  if (ultraFocus) opruimers.push(() => ultraFocus.destroy())
   const vingers = new Map()
   let afstand = 0, negeerKlikTot = 0
   const meetAfstand = () => {
@@ -1028,12 +1061,14 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     return Math.hypot(a.x-b.x, a.y-b.y)
   }
   bordEl.addEventListener('pointerdown', e => {
+    if (ultraFocus?.active) return
     if (e.pointerType === 'mouse') return
     vingers.set(e.pointerId, { x:e.clientX, y:e.clientY })
     e.target.setPointerCapture(e.pointerId)
     if (vingers.size === 2) { afstand = meetAfstand(); negeerKlikTot = Infinity }
   })
   bordEl.addEventListener('pointermove', e => {
+    if (ultraFocus?.active) return
     if (!vingers.has(e.pointerId)) return
     vingers.set(e.pointerId, { x:e.clientX, y:e.clientY })
     if (vingers.size !== 2) return

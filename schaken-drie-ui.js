@@ -8,7 +8,7 @@ import {
 } from './schaak-drie.js?v=10'
 import { THREE_PLAYER_VIEWBOX, THREE_PLAYER_BOARD_ARTWORK, threePlayerPieceArtwork } from './schaak-drie-artwork.js?v=3'
 import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=7'
-import { maakSchaakWallpaper } from './schaak-wallpaper.js?v=2'
+import { maakSchaakWallpaper } from './schaak-wallpaper.js?v=3'
 
 const COLOR_STYLES = ['#fff', '#c4c7ce', '#ff7777']
 const LABELS = { K:'Koning', Q:'Dame', R:'Toren', B:'Loper', N:'Paard', P:'Pion' }

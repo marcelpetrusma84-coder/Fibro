@@ -1,4 +1,4 @@
-import { maakWallpaperDepth } from './schaak-wallpaper-depth.js?v=1'
+import { maakWallpaperDepth } from './schaak-wallpaper-depth.js?v=2'
 
 const STORAGE_KEY = 'fibro_chess_wallpaper_v1'
 const CHANGE_EVENT = 'fibro-chess-wallpaper-change'

@@ -3,10 +3,14 @@
 // v147: het knopje ook in het Engels (taal.js)
 
 import { renderCaptureSound } from './schaak-slaggeluid.js?v=2'
+import { renderEvaluationSound } from './schaak-evaluatiegeluid.js?v=1'
 
 const SLEUTEL = 'fibro_spelgeluid'
 let _ctx = null
 let _vorige = null   // aantallen stukken na de vorige zet, om promotie te herkennen
+let _stukkenTot = 0
+const _analyses = new Set()
+const ANALYSE_PAUZE = .055
 
 function aan() { try { return localStorage.getItem(SLEUTEL) !== 'uit' } catch (e) { return true } }
 
@@ -18,6 +22,94 @@ function ctx() {
     }
     if (_ctx.state === 'suspended') _ctx.resume().catch(() => {})
         return _ctx
+}
+
+// Piece sounds have priority. An already sounding evaluation fades out before
+// the piece begins; a queued evaluation follows the entire piece sound/tail.
+function stukStart(c) {
+    let stilVanaf = 0
+    for (const analyse of _analyses) stilVanaf = Math.max(stilVanaf, analyse.onderbreek(c))
+    return Math.max(c.currentTime + .02, stilVanaf + .025)
+}
+
+function reserveerStuk(c, einde) {
+    _stukkenTot = Math.max(_stukkenTot, einde)
+    for (const analyse of _analyses) analyse.plan(c)
+}
+
+// One lifetime per chess board: callers cancel on reset/off and destroy on exit.
+// Multiple engine updates coalesce to the latest result, with only one timer.
+export function maakSchaakAnalyseGeluid() {
+    let wachtend = null, timer = null, stem = null, verwijderd = false
+    function wisTimer() {
+        if (timer !== null) clearTimeout(timer)
+        timer = null
+    }
+    function stopStem(c) {
+        if (!stem) return 0
+        const vorige = stem
+        stem = null
+        return vorige.cancel(c.currentTime)
+    }
+    function annuleer() {
+        wisTimer()
+        wachtend = null
+        if (stem) stopStem(_ctx)
+    }
+    function plan(c) {
+        wisTimer()
+        if (verwijderd || wachtend === null) return
+        if (!aan()) { annuleer(); return }
+        let vrijVanaf = _stukkenTot + ANALYSE_PAUZE
+        for (const analyse of _analyses) vrijVanaf = Math.max(vrijVanaf, analyse.einde(c))
+        const wachttijd = Math.max(0, vrijVanaf - c.currentTime)
+        timer = setTimeout(() => {
+            timer = null
+            if (verwijderd || wachtend === null) return
+            if (!aan()) { annuleer(); return }
+            // Timers can fire early or while the audio clock is suspended.
+            let einde = _stukkenTot + ANALYSE_PAUZE
+            for (const analyse of _analyses) einde = Math.max(einde, analyse.einde(c))
+            if (einde > c.currentTime + .001) { plan(c); return }
+            const deltaCp = wachtend
+            wachtend = null
+            const token = {}
+            try {
+                const result = renderEvaluationSound(c, { deltaCp, onended() {
+                    if (stem?.token !== token) return
+                    stem = null
+                    if (wachtend !== null) plan(c)
+                } }, c.currentTime + .012)
+                if (result) stem = { ...result, token }
+            } catch {}
+        }, wachttijd * 1000)
+        timer?.unref?.()
+    }
+    const registratie = {
+        plan, annuleer,
+        einde(c) {
+            return stem && stem.end > c.currentTime ? stem.end + ANALYSE_PAUZE : 0
+        },
+        onderbreek(c) { return stopStem(c) }
+    }
+    _analyses.add(registratie)
+    return {
+        speel(deltaCp) {
+            if (verwijderd || !Number.isFinite(deltaCp)) return false
+            // A neutral final result replaces any pending older result.
+            if (deltaCp === 0) { wachtend = null; wisTimer(); return false }
+            if (!aan()) { annuleer(); return false }
+            try {
+                const c = ctx()
+                if (!c) return false
+                wachtend = deltaCp
+                plan(c)
+                return true
+            } catch { return false }
+        },
+        annuleer,
+        destroy() { annuleer(); verwijderd = true; _analyses.delete(registratie) }
+    }
 }
 
 // Houten "tok": een kort ruisje door een filter, met een zachte lage dreun eronder
@@ -107,13 +199,19 @@ function speel(naam, extra, thema = 'classic') {
         try {
             const c = ctx()
             if (!c) return
-                const t = c.currentTime + 0.02
+                const geluiden = thema === 'wood' ? HOUT_GELUIDEN : GELUIDEN
+                if (naam !== 'damslag' && !geluiden[naam]) return
+                const t = stukStart(c)
                 if (naam === 'damslag') {
                     const n = Math.max(1, extra || 1)
                     for (let i = 0; i < n; i++) tok(t + i * 0.09, 1100 + i * 150, 0.4)
+                        reserveerStuk(c, t + (n - 1) * .09 + .1)
                         return
                 }
-                ;(thema === 'wood' ? HOUT_GELUIDEN : GELUIDEN)[naam](t)
+                geluiden[naam](t)
+                const duur = { zet:.14, damzet:.14, slag:.225, rokade:.27, schaak:.49,
+                    promotie:.54, win:1.1, verlies:1.21, remise:.97 }[naam]
+                reserveerStuk(c, t + duur)
         } catch (e) {}
 }
 
@@ -161,7 +259,10 @@ export function capturePiece({ value, outcome, theme = 'classic' } = {}) {
     if (!aan() || ![1,3,5,9].includes(value) || !['win','loss'].includes(outcome)) return false
     try {
         const c = ctx()
-        return c ? Boolean(renderCaptureSound(c, { value, outcome, theme }, c.currentTime + .02)) : false
+        if (!c) return false
+        const result = renderCaptureSound(c, { value, outcome, theme }, stukStart(c))
+        if (result) reserveerStuk(c, result.end)
+        return Boolean(result)
     } catch { return false }
 }
 
@@ -199,6 +300,7 @@ export function knop(naastEl, { language } = {}) {
         b.style.cssText = 'background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.2);border-radius:14px;padding:3px 12px;color:#fff;font-size:12px;cursor:pointer;'
         b.addEventListener('click', () => {
             try { localStorage.setItem(SLEUTEL, aan() ? 'uit' : 'aan') } catch (e) {}
+            if (!aan()) for (const analyse of _analyses) analyse.annuleer()
             zet()
             if (aan()) speel('zet')
         })

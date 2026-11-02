@@ -2,9 +2,10 @@
 // De spellen praten normaal via een Supabase-kanaal met een vriend. Hier krijgen
 // ze een nagemaakt kanaal; aan de andere kant zit een computerspeler die precies
 // hetzelfde terugstuurt als een vriend zou doen. De spelbestanden zelf hoeven
-// daardoor niet te veranderen. Er gaat niets over het internet.
+// daardoor niet te veranderen. Alleen Ultra-schaken vraagt openbare Lichess-analyses op.
 
 import { damBot, schaakBot } from './solo-bord.js?v=3'
+import { schaakUltraBot } from './schaak-ultra.js?v=3'
 
 export const NIVEAUS = ['makkelijk', 'normaal', 'moeilijk']
 
@@ -14,6 +15,7 @@ export function maakSoloKanaal(maakBot, niveau, motor) {
   let dicht = false
   const kanaal = {
     isSolo: true,
+    niveau,
     on(soort, filter, fn) {
       const ev = filter && filter.event
       if (ev) (luisteraars[ev] = luisteraars[ev] || []).push(fn)
@@ -402,7 +404,7 @@ export function stilBot() {
 export const SOLO_SPELLEN = {
   botkaaseiren: { naam: 'Tic-Tac-Toe',   icon: '⭕', bestand: './bke-ui.js?v=239',      bot: bkeBot },
   vieroprij:    { naam: 'Four in a Row', icon: '🔴', bestand: './vieroprij-ui.js?v=240', bot: vorBot },
-  schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=253',  bot: schaakBot, motor: './schaak.js?v=95', motorNaam: 'Schaak' },
+  schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=256',  niveaus:[...NIVEAUS, 'ultra'], bot: opties => opties.niveau === 'ultra' ? schaakUltraBot(opties) : schaakBot(opties), motor: './schaak.js?v=95', motorNaam: 'Schaak' },
   dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=147',   bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
   // 30 okt 2026: Neo Paddle v2 (blokjes en power-ups) en levels voor alleen (spel.html toont een knop 🧱 Levels).
   pong:         { naam: 'Neo Paddle',    icon: '🏓', bestand: './pong-ui.js?v=242',     bot: pongBot, levels: './neopaddle-levels.js?v=1' },

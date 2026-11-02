@@ -1,0 +1,43 @@
+{
+  "project": "https://github.com/nmrugg/stockfish.js",
+  "version": "19.0.1",
+  "files": [
+    {
+      "file": "stockfish-19-lite-single.js",
+      "url": "https://github.com/nmrugg/stockfish.js/releases/download/v19.0.1/stockfish-19-lite-single.js",
+      "bytes": 28230,
+      "sha256": "ccb130d7ff29408531c47d859a49f91d59d4f482d05a53eb1a3231a4f624c91a"
+    },
+    {
+      "file": "stockfish-19-lite-single.wasm",
+      "url": "https://github.com/nmrugg/stockfish.js/releases/download/v19.0.1/stockfish-19-lite-single.wasm",
+      "bytes": 1845971,
+      "sha256": "ee4f115bdb2d32cadf96cada104a05b5ec257d7ad6f57582190b49bc71f096de"
+    },
+    {
+      "file": "stockfish-19.0.1-source.tar.gz",
+      "url": "https://api.github.com/repos/nmrugg/stockfish.js/tarball/v19.0.1",
+      "bytes": 426145,
+      "sha256": "990a305ec413c84cf7ea0baa3726b90b2efa9efed02de02a9895b50ecc6c0607"
+    },
+    {
+      "file": "Copying.txt",
+      "url": "https://raw.githubusercontent.com/nmrugg/stockfish.js/v19.0.1/Copying.txt",
+      "bytes": 35821,
+      "sha256": "0b383d5a63da644f628d99c33976ea6487ed89aaa59f0b3257992deac1171e6b"
+    },
+    {
+      "file": "AUTHORS",
+      "url": "https://raw.githubusercontent.com/nmrugg/stockfish.js/v19.0.1/AUTHORS",
+      "bytes": 6881,
+      "sha256": "f81e7d74c350626766382ec67fa262c38cda00cb8b501790f95cdebb526006c1"
+    },
+    {
+      "file": "nn-61e7af4bb97d.nnue",
+      "url": "https://tests.stockfishchess.org/api/nn/nn-61e7af4bb97d.nnue",
+      "bytes": 1166381,
+      "sha256": "61e7af4bb97d51eeeb25d322916f86513b5cd3a827ce189c98c6e31946f99e5b",
+      "provenance": "Exact original NNUE bytes recovered from the unmodified release WASM data segments; SHA256 matches the network filename."
+    }
+  ]
+}

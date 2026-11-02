@@ -23,7 +23,7 @@ const handlers=['playMoveSound','receiveMove'].map(name=>{
   const match=source.match(new RegExp('  function '+name+'\\([\\s\\S]*?\\n  \\}'))
   assert.ok(match,name+' exists');return match[0]
 }).join('\n')
-for(const viewer of [0,2]) {
+for(const gradedCaptureSounds of [false,true]) for(const viewer of [0,2]) {
   const state=newThreePlayerGame();state.pieces.clear();state.turn=1
   const from=state.board.cells[0].id
   state.pieces.set(from,{type:'R',player:1})
@@ -31,16 +31,17 @@ for(const viewer of [0,2]) {
   state.pieces.set(to,{type:'Q',player:0})
   const effects=[]
   const roster=[{id:'white'},{id:'black'},{id:'red'}]
-  const context=vm.createContext({state,myPlayer:viewer,roster,userId:roster[viewer].id,localPreview:false,drieSlagEffect,applyThreePlayerMove,
-    localStorage:{getItem:()=>'{"soundTheme":"wood"}'},
+  const context=vm.createContext({state,myPlayer:viewer,roster,userId:roster[viewer].id,localPreview:false,gradedCaptureSounds,drieSlagEffect,applyThreePlayerMove,
+    localStorage:{getItem:()=>JSON.stringify({soundTheme:'wood',gradedCaptureSounds})},
     Bordgeluid:{capturePiece:effect=>effects.push({...effect}),previewSchaakGeluid:theme=>effects.push({neutral:true,theme})},draw(){}})
   vm.runInContext('let selected=null,highlighted=[];'+handlers+'\nglobalThis.receive=receiveMove',context)
   const payload={variant:'schaken-drie',ply:0,actor:'black',from,to}
   context.receive({payload})
   assert.equal(state.ply,1)
-  assert.deepEqual(effects,viewer===0?[{value:9,outcome:'loss',theme:'wood'}]:[{neutral:true,theme:'wood'}])
+  assert.deepEqual(effects,gradedCaptureSounds&&viewer===0?[{value:9,outcome:'loss',theme:'wood'}]:[{neutral:true,theme:'wood'}],
+    gradedCaptureSounds?'only the captured player hears the graded loss cue':'disabled grading keeps the original placement sound for a capture')
   context.receive({payload})
   context.receive({payload:{...payload,ply:1,actor:'red',from:'invalid'}})
   assert.equal(effects.length,1,'duplicate or invalid moves cannot replay capture audio')
 }
-console.log('PASS: three perspectives, piece weights, king elimination, neutral captures, legal remote moves and duplicate-packet rejection.')
+console.log('PASS: three perspectives, piece weights, king elimination, opt-in graded audio, original capture sounds when disabled, legal remote moves and duplicate-packet rejection.')

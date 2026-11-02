@@ -13,9 +13,9 @@ PR's bieden dezelfde onderdelen apart ter vergelijking.
    tabelkolommen bestaan al in de eerdere scoremigratie. De testfixture-SQL
    hoort uitsluitend in een lege wegwerpdatabase.
 3. Merge deze complete branch in `main` en laat de gebruikelijke deployment lopen.
-   De conflicten in de laadverwijzingen zijn opgelost: `solo.js?v=244`,
-   `bordgeluid.js?v=200`, `neon-raiders-ui.js?v=222`,
-   `schaken-ui.js?v=252` en `schaken-drie-ui.js?v=24`.
+   De conflicten in de laadverwijzingen zijn opgelost: `solo.js?v=248`,
+   `bordgeluid.js?v=201`, `neon-raiders-ui.js?v=222`,
+   `schaken-ui.js?v=256` en `schaken-drie-ui.js?v=28`.
 4. Controleer op twee echte toestellen een vriendenpartij en de online scorelijst.
    De browserproeven gebruiken lokale partijen en fictieve scores.
 
@@ -23,14 +23,15 @@ PR's bieden dezelfde onderdelen apart ter vergelijking.
 
 - Schaken begint in het Nederlands en heeft een eigen Nederlands/English-keuze.
   Wisselen behoudt de partij, instellingen, selectie en camerastreams.
-- Veroveren klinkt positief als een chime-instrument; verliezen heeft een donkere
+- De nieuwe geluidsreeks is optioneel: **Gradatie-geluiden schaakstukken** staat
+  standaard uit in de schaakinstellingen. Aangezet klinkt veroveren positief als een chime-instrument; verliezen heeft een donkere
   dreun. De waarde van het veroverde stuk bepaalt de gradatie. Beide schaakvarianten
   gebruiken het perspectief van de lokale speler.
 - Neon Raiders toont Verder voor elk ontgrendeld level pas na drie seconden
   Opnieuw vasthouden. Een korte klik begint bij level 1. Nieuwe rondes verbergen
   de optie opnieuw; annuleren en opruimen zijn getest.
 - Home toont per spel het versienummer in de titelbalk. Schaken en Neon Raiders
-  zijn v5.0. De scorelijsten tonen het bereikte level en of de ronde uitgespeeld is.
+  zijn respectievelijk v6.0 en v5.0. De scorelijsten tonen het bereikte level en of de ronde uitgespeeld is.
   Een onbekende wereldrecordhouder blijft anoniem.
 
 ## Controleren
@@ -54,9 +55,43 @@ labels and reached-level/completion metadata in Neon Raiders scoreboards. Merge
 this complete PR for a single integration. The individual PRs remain available
 for reviewing their respective parts.
 
+Original chess audio remains the default. The new **Graded chess piece sounds**
+checkbox opts into capture-value chimes/loss impacts and is remembered per device
+for both chess variants.
+
 Rerun `sql/neon-raiders-scores.sql` in Supabase to include level/completion fields
 in online board responses. It is repeatable; never run the synthetic SQL fixture
 against production. Cache-reference conflicts are already resolved. All 52 Node
 test files pass; chess/security were rerun after integration. Local browser tests
 cover both chess variants, audio, and the real Neon Raiders restart/continue flow.
 Check a real multi-device match and online rankings as the deployment smoke test.
+
+## Aanvulling 1 november: Ultra
+
+Schaken heeft nu Ultra via Lichess-cache en meegeleverde Stockfish 19, met een
+optionele live evaluatiemeter uitsluitend in solo Ultra. Zie `chess-ultra.md`
+voor werking, limieten, licentie en testen. De schaakgeluidsgradatie is opt-in
+zoals hierboven beschreven. De schaakversie is v6.0. Alle 57 Node-testbestanden
+slagen; echte browserproeven bevestigen zowel de Lichess-zet als de lokale
+Stockfish-zet en de live meter. CSP in `spel.html` staat uitsluitend het
+specifieke Lichess-evaluatie-endpoint extra toe.
+
+Ultra uses Lichess cached analysis plus bundled Stockfish 19 with an optional
+solo-only live evaluation meter. See `chess-ultra.md`. Chess is v6.0. The complete
+57-file Node suite and real browser cloud/local-engine move checks pass.
+
+### Ultra: zetverschillen, historie en geluid
+
+De definitieve evaluatie per individuele witte/zwarte zet vormt de vergelijking.
+De meter toont een grijze verschilband met drie patronen, complementaire
+plus/minwaarden en het zetnummer. Rechts staat SAN-zetgeschiedenis. Ultra heeft
+aparte standaardinstellingen: gradatiegeluiden aan, analysegeluid uit en een
+variabele denktijd tot 5 seconden. Analysegeluiden worden na stukgeluiden gepland.
+Alle 60 Node-testbestanden slagen vóór het bijwerken naar Marcels nieuwste main;
+na die integratie worden de volledige checks opnieuw uitgevoerd. Browserproeven
+bevestigen echte zetten, historie, teller, beide geluiddefaults en de denktijd5;
+320/390-pixelweergaven hebben geen horizontale overloop.
+
+Finalized per-ply differences, grey magnitude bands, SAN history, separately
+remembered Ultra defaults and sequenced evaluation sounds are included. The
+pre-integration 60-file suite passes; full checks are rerun against latest main.

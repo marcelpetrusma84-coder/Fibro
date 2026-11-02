@@ -1,9 +1,10 @@
-import { maakSchaakTaal } from './schaak-taal.js?v=7'
+import { maakSchaakTaal } from './schaak-taal.js?v=8'
 import { stukSVG, registreerSlag, veroverdePunten, STUKPUNTEN } from './schaak-stukken.js?v=1'
 import { schaakFen } from './schaak-ultra-engine.js?v=1'
 import { schaakNotatie, maakUltraEvaluatieHistorie } from './schaak-ultra-historie.js?v=1'
-import { maakSchaakWallpaper } from './schaak-wallpaper.js?v=3'
+import { maakSchaakWallpaper } from './schaak-wallpaper.js?v=4'
 import { maakUltraFocus } from './schaak-ultra-focus.js?v=1'
+import { maakUltraSwipe } from './schaak-ultra-swipe.js?v=1'
 const SETTINGS_KEY = 'fibro_chess_settings_v1'
 const READABLE_NAMES = { P:'pion', N:'paard', B:'loper', R:'toren', Q:'dame', K:'koning' }
 
@@ -119,6 +120,18 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-assistance-status:empty { display:none; }
       .sch-takeback { min-height:36px; padding:7px 11px; border:1px solid #9bb9b06b; border-radius:10px; background:#243a37; color:#e4f9ed; font:inherit; font-size:12px; cursor:pointer; }
       .sch-takeback:disabled { cursor:default; opacity:.45; }
+      .sch-swipe-takeback { --sch-swipe-progress:0; position:relative; display:none; box-sizing:border-box; flex:none; width:100%; max-width:480px; min-height:48px; margin:8px 0 2px; padding:14px 46px 14px 12px; border:1px solid #9fdac44d; border-radius:16px; overflow:hidden; touch-action:pan-y; user-select:none; -webkit-user-select:none; color:#c8e3dc; background:linear-gradient(145deg,#29463b,#132b2d 62%,#15232f); box-shadow:0 3px 0 #08171a,0 7px 15px #0005,inset 0 1px #e3fff32b; text-align:center; font:600 11px/1.5 system-ui; cursor:default; }
+      .sch-swipe-takeback[data-swipe-active="true"]:not([hidden]) { display:block; }
+      .sch-swipe-takeback::before { content:""; position:absolute; inset:0 0 0 auto; width:calc(var(--sch-swipe-progress)*100%); background:linear-gradient(270deg,#67dcb72c,#8dffe14d); pointer-events:none; }
+      .sch-swipe-takeback::after { content:""; position:absolute; top:8px; bottom:8px; left:42%; width:1px; background:linear-gradient(transparent,#b0ffdd70,transparent); pointer-events:none; }
+      .sch-swipe-label { position:relative; z-index:1; }
+      .sch-swipe-takeback[data-swipe-state="dragging"] .sch-swipe-label { opacity:0; }
+      .sch-swipe-takeback[data-swipe-state="ready"] .sch-swipe-label { position:absolute; left:54%; right:8px; top:50%; transform:translateY(-50%); font-size:10px; line-height:1.3; }
+      .sch-swipe-help { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+      .sch-swipe-thumb { position:absolute; z-index:2; top:50%; right:calc(5px + var(--sch-swipe-progress)*52%); display:grid; place-items:center; width:32px; height:32px; border-radius:11px; color:#0d3431; background:linear-gradient(145deg,#dcfff0,#79cbb5); box-shadow:0 2px 0 #487e70,inset 0 1px #fff9; transform:translateY(-50%); pointer-events:none; font-size:20px; }
+      .sch-swipe-takeback[data-swipe-state="ready"] { border-color:#a4ffe0; color:#f0fff8; box-shadow:0 3px 0 #08171a,0 0 18px #65e3b836,inset 0 1px #e3fff340; }
+      .sch-swipe-takeback[aria-disabled="true"] { opacity:.45; }
+      .sch-swipe-takeback:focus-visible { outline:2px solid #9cf5d7; outline-offset:3px; }
       .sch-wallpaper-motion { min-height:40px; margin-top:9px; padding:8px 12px; border:1px solid #9ecbbb66; border-radius:11px; background:#25453e; color:#e7fff3; font:inherit; font-size:12px; cursor:pointer; }
       .sch-wallpaper-motion[hidden] { display:none; }
       .sch-hint-piece { box-shadow:inset 0 0 0 3px #ffd16e,inset 0 0 15px #f7b83d99!important; animation:sch-hint-pulse 1.4s ease-in-out infinite alternate; }
@@ -271,7 +284,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
           <output class="sch-evaluation-ply" id="sch-evaluation-ply" data-sch-title="Telt elke zet van wit en zwart afzonderlijk."></output>
         </aside>` : ''}
         <div class="sch-frame${isUltra ? ' sch-ultra-frame' : ''}"${isUltra ? ' id="sch-ultra-frame"' : ''}><div id="sch-bord" role="group" data-sch-label="Schaken" aria-label="Schaken"></div>${isUltra ? '<button class="sch-hint-button" id="sch-ultra-hint" type="button" data-sch-label="Tip voor deze zet" aria-label="Tip voor deze zet" hidden>!</button><p class="sch-assistance-status" id="sch-ultra-assistance-status" role="status" aria-live="polite"></p>' : ''}</div>
-      ${isUltra ? '<aside class="sch-history" id="sch-history" data-sch-label="Zetgeschiedenis" aria-label="Zetgeschiedenis"><h3 data-sch-text="Zetgeschiedenis">Zetgeschiedenis</h3><div class="sch-history-scroll" id="sch-history-scroll" tabindex="0" data-sch-label="Zetgeschiedenis" aria-label="Zetgeschiedenis"><table><thead><tr><th scope="col">#</th><th scope="col" data-sch-text="Wit">Wit</th><th scope="col" data-sch-text="Zwart">Zwart</th></tr></thead><tbody id="sch-history-moves"></tbody></table><p class="sch-history-empty" id="sch-history-empty" data-sch-text="Nog geen zetten">Nog geen zetten</p></div></aside></div><div class="sch-ultra-info"><p class="sch-ultra-status" id="sch-ultra-status" role="status" aria-live="polite"></p><button class="sch-ultra-retry" id="sch-ultra-retry" type="button" data-sch-text="Opnieuw proberen" hidden>Opnieuw proberen</button></div>' : ''}
+      ${isUltra ? '<aside class="sch-history" id="sch-history" data-sch-label="Zetgeschiedenis" aria-label="Zetgeschiedenis"><h3 data-sch-text="Zetgeschiedenis">Zetgeschiedenis</h3><div class="sch-history-scroll" id="sch-history-scroll" tabindex="0" data-sch-label="Zetgeschiedenis" aria-label="Zetgeschiedenis"><table><thead><tr><th scope="col">#</th><th scope="col" data-sch-text="Wit">Wit</th><th scope="col" data-sch-text="Zwart">Zwart</th></tr></thead><tbody id="sch-history-moves"></tbody></table><p class="sch-history-empty" id="sch-history-empty" data-sch-text="Nog geen zetten">Nog geen zetten</p></div></aside></div><div class="sch-swipe-takeback" id="sch-ultra-swipe" role="button" tabindex="0" aria-disabled="true" aria-labelledby="sch-ultra-swipe-label" aria-describedby="sch-ultra-swipe-help" hidden><span class="sch-swipe-label" id="sch-ultra-swipe-label"></span><span class="sch-swipe-thumb" aria-hidden="true">←</span></div><span id="sch-ultra-swipe-help" class="sch-swipe-help" data-sch-text="Veeg van rechts naar links tot voorbij het midden. Laat daarna los.">Veeg van rechts naar links tot voorbij het midden. Laat daarna los.</span><div class="sch-ultra-info"><p class="sch-ultra-status" id="sch-ultra-status" role="status" aria-live="polite"></p><button class="sch-ultra-retry" id="sch-ultra-retry" type="button" data-sch-text="Opnieuw proberen" hidden>Opnieuw proberen</button></div>' : ''}
       <div class="sch-vangst" id="sch-eigen"></div>
       <div class="sch-legenda"></div>
       <div class="sch-acties">
@@ -508,6 +521,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   function toonMenu(aan) {
     menu.hidden = !aan
     menuBackdrop.hidden = !aan
+    ultraSwipe?.refresh()
     zoomBtn.setAttribute('aria-expanded', String(aan))
     settingsBtn.setAttribute('aria-expanded', String(aan))
     if (aan) {
@@ -685,6 +699,8 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   const ultraTakebackToggle = menu.querySelector('#sch-ultra-takeback-enabled')
   const ultraHintsToggle = menu.querySelector('#sch-ultra-hints-enabled')
   const ultraTakebackBtn = inhoud.querySelector('#sch-ultra-takeback')
+  const ultraSwipeEl = inhoud.querySelector('#sch-ultra-swipe')
+  const ultraSwipeLabel = inhoud.querySelector('#sch-ultra-swipe-label')
   const ultraHintBtn = inhoud.querySelector('#sch-ultra-hint')
   const ultraFrame = inhoud.querySelector('#sch-ultra-frame')
   const ultraAssistanceStatus = inhoud.querySelector('#sch-ultra-assistance-status')
@@ -702,6 +718,8 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   let ultraPhase = 'loading'
   let ultraSource = null
   let ultraDisposed = false
+  let ultraSwipe = null
+  let ultraSwipeState = { active:false, enabled:false, state:'disabled' }
   const ultraFenSleutel = fen => typeof fen === 'string' ? fen.trim().split(/\s+/).slice(0,4).join(' ') : ''
   const ultraAnalyseAan = () => instellingen.showUltraEvaluation === true || instellingen.ultraEvaluationSound === true
   const kopieerUltra = value => value == null ? value : JSON.parse(JSON.stringify(value))
@@ -714,13 +732,37 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   function toonUltraAssistentie() {
     if (!isUltra || ultraDisposed) return
     ultraTakebackBtn.hidden = instellingen.ultraTakeback !== true
-    ultraTakebackBtn.disabled = instellingen.ultraTakeback !== true || ultraZetten.length === 0 || bezig || promotieOpen || !!ultraTakebackPending
+    ultraTakebackBtn.disabled = !kanUltraTerugnemen()
+    ultraSwipeEl.hidden = instellingen.ultraTakeback !== true
+    ultraSwipe?.refresh()
+    toonUltraVeeg()
     const hintAan = instellingen.ultraHints === true
     ultraHintBtn.hidden = !hintAan || staat.aanZet !== mijnKleur || gameOver || promotieOpen
     ultraHintBtn.disabled = bezig || !!ultraHintPending || !!ultraTakebackPending
     ultraHintBtn.setAttribute('aria-busy', String(!!ultraHintPending))
     ultraFrame.classList.toggle('sch-has-hints', hintAan || !!ultraAssistanceStatusKey)
     ultraAssistanceStatus.textContent = ultraAssistanceStatusKey ? t(ultraAssistanceStatusKey) : ''
+  }
+  function kanUltraTerugnemen() {
+    return isUltra && !ultraDisposed && spelEl.isConnected && instellingen.ultraTakeback === true &&
+      ultraZetten.length > 0 && !bezig && !promotieOpen && !ultraTakebackPending
+  }
+  function toonUltraVeeg() {
+    if (!isUltra) return
+    const key = ultraTakebackPending ? 'Zet terugnemen…' : ultraSwipeState.state === 'ready' ? 'Laat los om je zet terug te nemen.' :
+      ultraSwipeState.enabled ? 'Veeg naar links om je zet terug te nemen.' : 'Geen zet om terug te nemen.'
+    ultraSwipeLabel.textContent = t(key)
+  }
+  function neemUltraZetTerug() {
+    if (!kanUltraTerugnemen()) return false
+    const targetPly = Math.max(...[...ultraBordMomenten].filter(([ply, moment]) => ply < ultraZetten.length && moment.staat.aanZet === mijnKleur).map(([ply]) => ply))
+    if (!Number.isSafeInteger(targetPly)) return false
+    ultraTakebackPending = { ply:ultraZetten.length, generation:ultraGeneration, targetPly }
+    wisUltraHint()
+    ultraAssistanceStatusKey = 'Zet terugnemen…'
+    toonUltraAssistentie()
+    spelKanaal.send({ type:'broadcast', event:'ultra-takeback', payload:{ ply:ultraZetten.length, generation:ultraGeneration } })
+    return true
   }
   function bewaarUltraMoment() {
     if (!isUltra) return
@@ -968,16 +1010,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       tekenBord()
       verstuurUltraAssistentie()
     })
-    ultraTakebackBtn.addEventListener('click', () => {
-      if (ultraTakebackBtn.disabled || instellingen.ultraTakeback !== true || ultraTakebackPending) return
-      const targetPly = Math.max(...[...ultraBordMomenten].filter(([ply, moment]) => ply < ultraZetten.length && moment.staat.aanZet === mijnKleur).map(([ply]) => ply))
-      if (!Number.isSafeInteger(targetPly)) return
-      ultraTakebackPending = { ply:ultraZetten.length, generation:ultraGeneration, targetPly }
-      wisUltraHint()
-      ultraAssistanceStatusKey = 'Zet terugnemen…'
-      toonUltraAssistentie()
-      spelKanaal.send({ type:'broadcast', event:'ultra-takeback', payload:{ ply:ultraZetten.length, generation:ultraGeneration } })
-    })
+    ultraTakebackBtn.addEventListener('click', neemUltraZetTerug)
     ultraHintBtn.addEventListener('click', () => {
       if (ultraHintBtn.hidden || ultraHintBtn.disabled || instellingen.ultraHints !== true) return
       ultraHint = null
@@ -988,12 +1021,19 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     })
     spelKanaal.on('broadcast', { event:'ultra-takeback-result' }, msg => ontvangUltraTakeback(msg.payload || {}))
     spelKanaal.on('broadcast', { event:'ultra-hint-result' }, msg => ontvangUltraHint(msg.payload || {}))
+    ultraSwipe = maakUltraSwipe({
+      element:ultraSwipeEl,
+      canUndo:() => kanUltraTerugnemen() && menu.hidden,
+      onUndo:neemUltraZetTerug,
+      onChange:state => { ultraSwipeState = state; toonUltraVeeg() },
+    })
     toonUltraEvaluatie()
     // Register listeners before opting in: a cached result can arrive immediately.
     spelKanaal.send({ type:'broadcast', event:'ultra-evaluatie-instelling', payload:{ enabled:ultraAnalyseAan() } })
     verstuurUltraAssistentie()
     opruimers.push(() => {
       ultraDisposed = true
+      ultraSwipe?.destroy()
       ultraEvaluation = null
       ultraWachtendeEvaluaties.clear()
       ultraAnalyseGeluid?.destroy()
@@ -1423,6 +1463,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     toonDenktijd()
     toonSchaakWallpaper()
     toonUltraEvaluatie()
+    toonUltraVeeg()
     inhoud.querySelector('.sch-legenda').textContent = t('Pion 1 · Paard 3 · Loper 3 · Toren 5 · Dame 9')
     if (statusBericht) statusEl.textContent = t(statusBericht.key, statusBericht.values?.naam !== undefined ? { ...statusBericht.values, naam:tegenstanderNaam() } : statusBericht.values)
     if (pendingNoobMove) toonNoobBericht()

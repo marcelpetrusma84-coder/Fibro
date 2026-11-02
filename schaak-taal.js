@@ -1,5 +1,5 @@
 // Chess has its own device preference. Changing it never changes Fibro's app language.
-import { SCHAAK_EN } from './schaak-taal-en.js?v=7'
+import { SCHAAK_EN } from './schaak-taal-en.js?v=8'
 
 export const SCHAAK_TAAL_KEY = 'fibro_chess_language_v1'
 export const SCHAAK_TAAL_EVENT = 'fibro-chess-language-change'

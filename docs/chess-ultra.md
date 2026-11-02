@@ -86,7 +86,8 @@ Ook deze hulp is uitsluitend voor solo Ultra, nooit voor vriendenpartijen.
 ### 4D wallpaper in alle schaakvarianten
 
 De eigen sectie **4D wallpaper → Tafelachtergrond** is beschikbaar bij alle
-niveaus, vriendenpartijen en drie spelers. Standaard uit; de afzonderlijke
+niveaus, vriendenpartijen en drie spelers. Standaard aan voor apparaten zonder
+eerdere voorkeur; een bewust opgeslagen uit-keuze blijft behouden. De afzonderlijke
 voorkeur `fibro_chess_wallpaper_v1` deelt `table`/`off` tussen deze varianten.
 De gebruiker heeft de originele walnotentafelfoto aangeleverd. De nieuwe
 3D-bewerking behoudt die kamer en tafel, met meer houtreliëf, licht en
@@ -153,7 +154,8 @@ Ultra additionally offers default-OFF takeback and origin-only hints. Undo
 restores the complete position before the last human move, including the bot's
 reply if already played, while canceling stale work. Hint clicks reuse or start
 local Stockfish analysis without extra cloud calls. All chess variants also
-have an independent default-OFF table wallpaper, using a 3D-style edit of the
+have an independent default-ON table wallpaper for devices without a saved
+preference; an explicit OFF remains respected. It uses a 3D-style edit of the
 supplied photo. A single connected depth mesh moves the nearby slab/pedestal
 more than the far room, with crop-correct image-space depth and a CSS-photo
 fallback for unsupported/lost WebGL. Rendering resolution is capped and there

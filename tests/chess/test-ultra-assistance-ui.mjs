@@ -11,6 +11,7 @@ const reader=source.match(/function readSettings\(\) \{[\s\S]*?\n\}/)[0]
 const render=source.slice(source.indexOf('export function start('),source.indexOf('  const bordEl =')).replace('export function start(','function render(')+'\nreturn {markup:inhoud.innerHTML,isUltra,instellingen,mijnKleur}; }'
 const controllerStart=source.indexOf('  // Ultra evaluation is a solo-only aid.')
 const controller=source.slice(controllerStart,source.indexOf("  if (spelKanaal.isSolo) spelKanaal.send({ type:'broadcast', event:'bot-instellingen'",controllerStart))
+const menuController=source.match(/  function toonMenu\(aan\) \{[\s\S]*?\n  \}/)[0]
 const board=source.match(/  function tekenBord\(\) \{[\s\S]*?\n  \}/)[0]
 const animation=source.match(/  async function animeerZet\(zet\) \{[\s\S]*?\n  \}/)[0]
 const received=source.slice(source.indexOf("  spelKanaal.on('broadcast', { event: 'zet' }"),source.indexOf("  spelKanaal.on('broadcast', { event: 'opnieuw' }"))
@@ -36,7 +37,7 @@ function node() {
 }
 function fixture({saved='{}',isSolo=true,niveau='ultra',state=Schaak.nieuweSpelStaat()}={}) {
   const root=node(),listeners=new Map(),sent=[],cleanups=[],sounds=[]
-  let storage=saved,clearedOverlays=0,cancelledAnimations=0,cancelledAudio=0
+  let storage=saved,clearedOverlays=0,cancelledAnimations=0,cancelledAudio=0,swipe=null
   const channel={isSolo,niveau,on(_type,{event},handler){listeners.set(event,handler)},send(message){sent.push(plain(message))}}
   const document={getElementById:id=>id==='spelInhoud'?root:node(),createElement:()=>node()}
   const context=vm.createContext({document,localStorage:{getItem:()=>storage},matchMedia:()=>({matches:true}),maakSchaakTaal:()=>({t}),console,Promise})
@@ -47,7 +48,7 @@ function fixture({saved='{}',isSolo=true,niveau='ultra',state=Schaak.nieuweSpelS
   const boardEl=select('#sch-bord')
   boardEl.getAnimations=()=>[{cancel(){cancelledAnimations++}}]
   Object.assign(context,{isUltra:result.isUltra,isVriendPartij:!isSolo,mijnKleur:'w',vriendKleur:'z',instellingen:result.instellingen,
-    menu:{querySelector:select},inhoud:{querySelector:select},spelEl:root,spelKanaal:channel,opruimers:cleanups,
+    menu:{hidden:true,querySelector:select,querySelectorAll:()=>[]},menuBackdrop:node(),zoomBtn:node(),settingsBtn:node(),inhoud:{querySelector:select},spelEl:root,spelKanaal:channel,opruimers:cleanups,
     staat:state,Schaak,schaakFen,maakUltraEvaluatieHistorie,schaakNotatie,esc:String,t,taal:{language:'nl'},
     bordEl:boardEl,veroverd:{w:[],z:[]},laatsteZet:null,routeStuk:null,geselecteerd:null,mogelijkeZetten:[],gameOver:false,
     bezig:false,promotieOpen:false,generatie:0,pendingNoobMove:null,statusBericht:{key:'Jij bent aan zet'},statusEl:node(),promotieEl:node(),noobDialog:node(),opnieuwBtn:node(),wachtrij:Promise.resolve(),
@@ -57,13 +58,23 @@ function fixture({saved='{}',isSolo=true,niveau='ultra',state=Schaak.nieuweSpelS
     toonStatus(key){context.statusBericht={key};context.statusEl.textContent=t(key)},
     Bordgeluid:{maakSchaakAnalyseGeluid:()=>({speel:value=>sounds.push(value),annuleer(){cancelledAudio++},destroy(){}}),kiesSchaakGeluid(){},schaak(){sounds.push('move')}},
     animeerZet:async()=>true,schaakSlagEffect:()=>null,registreerSlag,
-    naBeurtControle(){context.tekenBord()}
+    naBeurtControle(){context.tekenBord()},
+    maakUltraSwipe(options){
+      assert.equal(options.element,select('#sch-ultra-swipe'),'the controller owns the dedicated strip below the board')
+      swipe={options,destroyed:false,refreshes:0,
+        refresh(){this.refreshes++;this.enabled=options.canUndo();options.element.setAttribute('aria-disabled',String(!this.enabled));options.onChange({active:true,enabled:this.enabled,state:this.enabled?'idle':'disabled'})},
+        trigger(){return !this.destroyed&&options.canUndo()?options.onUndo():false},
+        ready(){options.onChange({active:true,enabled:options.canUndo(),state:'ready'})},
+        destroy(){this.destroyed=true}}
+      swipe.refresh()
+      return swipe
+    }
   })
-  vm.runInContext(board+'\n'+controller+'\n'+received+`\nglobalThis.refresh=tekenBord; globalThis.beforeMove=bewaarUltraMoment; globalThis.addMove=voegUltraZetToe; globalThis.clearHint=wisUltraHint; globalThis.reset=resetUltraHistorie;
+  vm.runInContext(board+'\n'+controller+'\n'+menuController+'\n'+received+`\nglobalThis.refresh=tekenBord; globalThis.beforeMove=bewaarUltraMoment; globalThis.addMove=voegUltraZetToe; globalThis.clearHint=wisUltraHint; globalThis.reset=resetUltraHistorie; globalThis.showMenu=toonMenu;
     globalThis.view=()=>({ply:ultraZetten.length,generation:ultraGeneration,history:[...ultraZetten],snapshots:ultraBordMomenten.size,pending:!!ultraTakebackPending,hint:ultraHint,hintPending:!!ultraHintPending,evaluation:ultraHistorie?.getSnapshot()});`,context)
   context.refresh()
   return {...result,context,select,sent,sounds,cleanups,refresh:context.refresh,view:()=>plain(context.view()),read:()=>JSON.parse(storage),
-    get state(){return context.staat},get captures(){return plain(context.veroverd)},get counters(){return {clearedOverlays,cancelledAnimations,cancelledAudio}},
+    get state(){return context.staat},get captures(){return plain(context.veroverd)},get counters(){return {clearedOverlays,cancelledAnimations,cancelledAudio}},get swipe(){return swipe},
     emit:(event,payload)=>listeners.get(event)?.({payload}),
     evaluate(cp){const view=context.view();listeners.get('ultra-evaluatie')?.({payload:{ply:view.ply,generation:view.generation,fen:schaakFen(context.staat),cp,mate:null,final:true}})},
     move(uci){const move=uciNaarZet(Schaak,context.staat,uci);assert.ok(move,'legal fixture move '+uci);context.clearHint();context.beforeMove();registreerSlag(context.staat,move.zet,context.veroverd);context.addMove(move.zet,move.promotieStuk);Schaak.voerZetUit(context.staat,move.zet,move.promotieStuk);context.laatsteZet=move.zet;context.routeStuk=move.zet.naar.slice();context.geselecteerd=null;context.mogelijkeZetten=[];context.refresh()},
@@ -76,12 +87,14 @@ for(const saved of ['{}','null','{broken','{"ultraTakeback":"true","ultraHints":
   const ui=fixture({saved})
   assert.equal(ui.instellingen.ultraTakeback,false);assert.equal(ui.instellingen.ultraHints,false)
   assert.equal(ui.select('#sch-ultra-takeback').hidden,true);assert.equal(ui.select('#sch-ultra-hint').hidden,true)
+  assert.equal(ui.select('#sch-ultra-swipe').hidden,true);assert.equal(ui.swipe.options.canUndo(),false,'the swipe respects the strict default-OFF takeback preference')
   assert.deepEqual(ui.sent.find(message=>message.event==='ultra-assistentie-instellingen').payload,{takeback:false,hints:false})
   assert.equal(ui.instellingen.ultraGradedCaptureSounds,true);assert.equal(ui.instellingen.ultraThinking,5)
 }
 for(const mode of [{isSolo:false,niveau:'ultra'},{isSolo:true,niveau:'hard'}]) {
   const ui=fixture({...mode,saved:'{"ultraTakeback":true,"ultraHints":true}'})
-  for(const id of ['#sch-ultra-takeback','#sch-ultra-hint','#sch-ultra-takeback-enabled','#sch-ultra-hints-enabled'])assert.equal(ui.select(id),null)
+  for(const id of ['#sch-ultra-takeback','#sch-ultra-hint','#sch-ultra-takeback-enabled','#sch-ultra-hints-enabled','#sch-ultra-swipe'])assert.equal(ui.select(id),null)
+  assert.equal(ui.swipe,null,'friend and ordinary-level games never mount the undo gesture')
   assert.equal(ui.sent.length,0)
 }
 const ui=fixture({saved:'{"ultraTakeback":true,"ultraHints":true,"showUltraEvaluation":true,"ultraEvaluationSound":true,"custom":"keep"}'})
@@ -179,4 +192,73 @@ assert.equal(racing.view().ply,0,'a queued old reply cannot resume after the und
 assert.match(source,/bewaarUltraMoment\(\)\s+registreerSlag\(staat, zet/)
 assert.match(source,/bewaarUltraMoment\(\)\s+registreerSlag\(staat, geldig/)
 assert.match(source,/@media \(prefers-reduced-motion:reduce\) \{ \.sch-hint-piece \{ animation:none; \} \}/)
-console.log('PASS: Ultra-only strict assistance defaults, persisted opt-ins, origin-only hints, full-state takeback before/after replies, capture/castling/promotion rollback, stale generation protection, reset and quiet audio.')
+
+// The swipe controller receives the same guarded takeback action as the normal
+// button. Its release-time eligibility is live, not a cached button state.
+const swiping=fixture({saved:'{"ultraTakeback":true,"custom":"keep"}'})
+const swipe=swiping.swipe,strip=swiping.select('#sch-ultra-swipe'),swipeLabel=swiping.select('#sch-ultra-swipe-label')
+const undoRequests=()=>swiping.sent.filter(message=>message.event==='ultra-takeback')
+assert.equal(strip.hidden,false);assert.equal(swipe.options.canUndo(),false)
+assert.equal(swipeLabel.textContent,'Geen zet om terug te nemen.')
+assert.match(swiping.markup,/<\/aside><\/div><div class="sch-swipe-takeback" id="sch-ultra-swipe" role="button" tabindex="0"/,'the strip is outside the board/history row and never covers a square')
+const swipeInitial=schaakFen(swiping.state)
+swiping.move('e2e4');swiping.move('e7e5')
+assert.equal(swipe.options.canUndo(),true);assert.ok(swipe.refreshes>1)
+assert.equal(swipeLabel.textContent,'Veeg naar links om je zet terug te nemen.')
+swipe.ready();assert.equal(swipeLabel.textContent,'Laat los om je zet terug te nemen.')
+// Opening and closing the actual settings controller must refresh the strip's
+// appearance immediately; release-time safety alone leaves a stale disabled UI.
+const beforeMenu=swipe.refreshes
+swiping.context.showMenu(true)
+assert.equal(swiping.context.menu.hidden,false);assert.equal(swiping.context.menuBackdrop.hidden,false)
+assert.equal(swiping.context.settingsBtn.getAttribute('aria-expanded'),'true')
+assert.equal(swipe.refreshes,beforeMenu+1);assert.equal(swipe.enabled,false)
+assert.equal(strip.getAttribute('aria-disabled'),'true');assert.equal(swipe.options.canUndo(),false)
+assert.equal(swipeLabel.textContent,'Geen zet om terug te nemen.');assert.equal(swipe.trigger(),false)
+swiping.context.showMenu(false)
+assert.equal(swiping.context.menu.hidden,true);assert.equal(swiping.context.menuBackdrop.hidden,true)
+assert.equal(swiping.context.settingsBtn.getAttribute('aria-expanded'),'false')
+assert.equal(swipe.refreshes,beforeMenu+2);assert.equal(swipe.enabled,true)
+assert.equal(strip.getAttribute('aria-disabled'),'false');assert.equal(swipe.options.canUndo(),true)
+assert.equal(swipeLabel.textContent,'Veeg naar links om je zet terug te nemen.')
+// Eligibility can change during a drag, before a new UI render. Both the
+// controller's canUndo and the retained callback must reject the stale release.
+for(const key of ['bezig','promotieOpen']){
+  swiping.context[key]=true
+  assert.equal(swipe.options.canUndo(),false,key+' blocks a drag that started earlier')
+  assert.equal(swipe.trigger(),false);assert.equal(swipe.options.onUndo(),false)
+  swiping.context[key]=false
+}
+swiping.context.spelEl.isConnected=false
+assert.equal(swipe.options.canUndo(),false);assert.equal(swipe.options.onUndo(),false)
+swiping.context.spelEl.isConnected=true
+swiping.context.menu.hidden=false
+assert.equal(swipe.options.canUndo(),false,'the settings dialog blocks gesture releases behind it')
+assert.equal(swipe.trigger(),false)
+swiping.context.menu.hidden=true
+swiping.toggle('#sch-ultra-takeback-enabled',false)
+assert.equal(strip.hidden,true);assert.equal(swipe.options.canUndo(),false);assert.equal(swipe.options.onUndo(),false)
+assert.equal(swiping.read().ultraTakeback,false);assert.equal(swiping.read().custom,'keep')
+assert.equal(undoRequests().length,0,'blocked releases never broadcast a takeback')
+swiping.toggle('#sch-ultra-takeback-enabled',true)
+assert.equal(strip.hidden,false);assert.equal(swipe.options.canUndo(),true)
+assert.equal(swipe.trigger(),true)
+assert.deepEqual(undoRequests().at(-1),{type:'broadcast',event:'ultra-takeback',payload:{ply:2,generation:0}})
+assert.equal(swipeLabel.textContent,'Zet terugnemen…')
+swiping.select('#sch-ultra-takeback').click()
+assert.equal(swipe.trigger(),false);assert.equal(swipe.options.onUndo(),false)
+assert.equal(undoRequests().length,1,'a swipe and button cannot duplicate an in-flight request')
+swiping.emit('ultra-takeback-result',{ok:true,ply:0,generation:1,fen:swipeInitial})
+assert.equal(schaakFen(swiping.state),swipeInitial);assert.equal(swiping.view().ply,0)
+assert.equal(swipe.options.canUndo(),false);assert.equal(swipeLabel.textContent,'Geen zet om terug te nemen.')
+swiping.move('e2e4');swiping.move('e7e5')
+swiping.select('#sch-ultra-takeback').click()
+assert.equal(swipe.trigger(),false)
+assert.equal(undoRequests().length,2,'the ordinary button shares the same pending guard in the reverse order')
+const beforeDispose=schaakFen(swiping.state)
+swiping.cleanups.forEach(cleanup=>cleanup())
+assert.equal(swipe.destroyed,true);assert.equal(swipe.options.canUndo(),false)
+assert.equal(swipe.options.onUndo(),false);assert.equal(undoRequests().length,2)
+swiping.emit('ultra-takeback-result',{ok:true,ply:0,generation:2,fen:swipeInitial})
+assert.equal(schaakFen(swiping.state),beforeDispose,'a disposed game cannot process an old swipe acknowledgement')
+console.log('PASS: Ultra-only strict assistance defaults, persisted opt-ins, origin-only hints, full-state takeback before/after replies, capture/castling/promotion rollback, stale generation protection, guarded swipe/button requests, reset and quiet audio.')

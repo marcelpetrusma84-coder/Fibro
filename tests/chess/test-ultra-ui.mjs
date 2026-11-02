@@ -25,7 +25,7 @@ function node() {
 }
 function fixture({ isSolo=true, niveau='ultra', saved='{}', benIkSpeler1=true }={}) {
   const root=node(), listeners=new Map(), sent=[], cleanups=[], audio=[]
-  let storage=saved, ply=0, created=0, cancelled=0, destroyed=0
+  let storage=saved, ply=0, created=0, cancelled=0, destroyed=0, swipe=null
   const channel = { isSolo, niveau,
     on(type, {event}, handler) { assert.equal(type, 'broadcast'); listeners.set(event, handler) },
     send(message) { assert.ok(listeners.has('ultra-evaluatie')); sent.push(JSON.parse(JSON.stringify(message))) }
@@ -36,15 +36,23 @@ function fixture({ isSolo=true, niveau='ultra', saved='{}', benIkSpeler1=true }=
   const nodes = new Map([...result.markup.matchAll(/id="([^"]+)"/g)].map(match=>['#'+match[1],node()]))
   const select = selector=>nodes.get(selector)??null
   Object.assign(context, {isUltra:result.isUltra, mijnKleur:result.mijnKleur, instellingen:result.instellingen,
-    menu:{querySelector:select}, inhoud:{querySelector:select}, spelEl:root, spelKanaal:channel, opruimers:cleanups,
+    menu:{hidden:true,querySelector:select}, inhoud:{querySelector:select}, spelEl:root, spelKanaal:channel, opruimers:cleanups,
     staat:Schaak.nieuweSpelStaat(), Schaak, schaakFen, maakUltraEvaluatieHistorie, schaakNotatie, esc:String,
     bezig:false, promotieOpen:false, gameOver:false,
     taal:{language:'nl'}, t, bewaarInstellingen(){storage=JSON.stringify(result.instellingen)},
-    Bordgeluid:{maakSchaakAnalyseGeluid(){created++; return {speel:delta=>audio.push(delta), annuleer:()=>cancelled++, destroy:()=>destroyed++}}}
+    Bordgeluid:{maakSchaakAnalyseGeluid(){created++; return {speel:delta=>audio.push(delta), annuleer:()=>cancelled++, destroy:()=>destroyed++}}},
+    // Gesture behavior and its shared takeback callback are exercised by the
+    // swipe/assistance suites; isolate that renderer from these analysis tests.
+    maakUltraSwipe(options){
+      assert.equal(options.element,select('#sch-ultra-swipe'))
+      assert.equal(typeof options.canUndo,'function');assert.equal(typeof options.onUndo,'function')
+      swipe={destroyed:false,refresh(){},destroy(){this.destroyed=true}}
+      return swipe
+    }
   })
   vm.runInContext(controller+'\nglobalThis.refresh=toonUltraEvaluatie; globalThis.addMove=voegUltraZetToe; globalThis.resetHistory=resetUltraHistorie', context)
   return {...result, select, sent, cleanups, context, audio, refresh:context.refresh, read:()=>JSON.parse(storage),
-    get state(){return context.staat}, get counts(){return {created,cancelled,destroyed}},
+    get state(){return context.staat}, get counts(){return {created,cancelled,destroyed}}, get swipe(){return swipe},
     emit:(event,payload)=>listeners.get(event)?.({payload}),
     evaluation(cp,{final=true,mate=null,fen=schaakFen(context.staat),atPly=ply}={}) { listeners.get('ultra-evaluatie')?.({payload:{cp,mate,final,fen,ply:atPly}}) },
     move(uci) { const move=uciNaarZet(Schaak,context.staat,uci); assert.ok(move); context.addMove(move.zet,move.promotieStuk); Schaak.voerZetUit(context.staat,move.zet,move.promotieStuk); ply++; context.refresh() },
@@ -69,6 +77,7 @@ for (const mode of [{isSolo:true,niveau:'hard'},{isSolo:false,niveau:'ultra'},{i
   for (const id of ['#sch-ultra-evaluation-enabled','#sch-ultra-evaluation-sound','#sch-evaluation','#sch-history']) assert.equal(ui.select(id),null)
   assert.equal(ui.sent.length,0,'ordinary and friend games never opt into analysis')
   assert.equal(ui.counts.created,0)
+  assert.equal(ui.swipe,null,'ordinary and friend games never mount the Ultra gesture')
 }
 const ui=fixture({saved:'{"showUltraEvaluation":true,"board":"glass","custom":"keep"}'})
 const toggle=ui.select('#sch-ultra-evaluation-enabled'), sound=ui.select('#sch-ultra-evaluation-sound')
@@ -142,6 +151,7 @@ assert.equal(retry.hidden,true)
 const retryCount=ui.sent.length; retry.click(); assert.equal(ui.sent.length,retryCount)
 ui.cleanups.forEach(cleanup=>cleanup())
 assert.equal(ui.sent.at(-1).payload.enabled,false); assert.equal(ui.counts.destroyed,1)
+assert.equal(ui.swipe.destroyed,true,'analysis cleanup also releases the dedicated swipe controller')
 const afterClose=ui.audio.length; ui.evaluation(900); assert.equal(ui.audio.length,afterClose)
 assert.match(source,/voegUltraZetToe\(zet, promotieStuk\)\s+Schaak\.voerZetUit\(staat, zet/)
 assert.match(source,/voegUltraZetToe\(geldig, promotie\)\s+Schaak\.voerZetUit\(staat, geldig/)

@@ -20,7 +20,9 @@ ze ten minste 40% oppervlak. Dit voorkomt vouwen op smalle telefoons.
 Alleen zichtbare achtergrond reageert op de muis. Bord, stukken, bediening,
 veroverde stukken, geschiedenis, camera’s en instellingen stoppen ook de
 resterende muisanimatie direct. Sensorkanteling blijft onafhankelijk werken.
-Standaard uit; de bestaande voorkeur en toestemming blijven behouden.
+Standaard aan bij een nieuwe of ongeldige voorkeur; een expliciete uit-keuze en
+de bestaande toestemming blijven behouden. Zie `chess-ultra-swipe.md` voor de
+latere aanvulling met terugvegen onder het bord.
 
 De rasterresolutie is begrensd tot twee miljoen pixels en DPR 1,5. Er draait
 geen extra animatielus. Ontbrekende WebGL, contextverlies of een afbeeldingsfout

@@ -8,6 +8,7 @@
 <script src="taal.js?v=49"></script>
 <script src="apk.js?v=2"></script>
 <script src="registratie.js?v=1"></script>
+<script>Object.assign(window.FIBRO_EN ||= {}, { 'Wie jou uitnodigde, heeft deze week al 5 nieuwe mensen op Fibro gebracht. Dat is het maximum. Probeer het over een paar dagen opnieuw.': 'The person who invited you has already brought 5 new people to Fibro this week. That is the maximum. Please try again in a few days.' }) // v255</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Alleen het jaar. Fibro is vanaf 16 jaar.': 'Only the year. Fibro is for ages 16 and up.', 'Fibro is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.': "Fibro is for ages 16 and up. If you're younger, you can't create an account yet." }) // v225</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Fibro</a>': 'I agree to the <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">{app} house rules</a>' }) // v229: met een link naar de spelregels</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { // v226: bèta en de registratie-schakelaar (registratie.js)
@@ -266,8 +267,14 @@ async function init() {
   // v226: staat de registratie-schakelaar op 'dicht', dan kan ook met een uitnodiging geen nieuw account
   // (registratie.js, sql/registratie-schakelaar.sql). Wie al een account heeft, kan hieronder nog inloggen.
   try {
-    const tekst = FibroRegistratie.melding(await FibroRegistratie.haalStand(supabase), true)
+    const stand = await FibroRegistratie.haalStand(supabase)
+    const tekst = FibroRegistratie.melding(stand, true)
     if (tekst) registratieGeweigerd(tekst)
+    // v255: in de stand 'uitnodiging' meteen zeggen als de uitnodiger deze week al 5 nieuwe mensen binnenhaalde
+    else if (stand === 'uitnodiging') {
+      const r = await supabase.rpc('uitnodiging_vol', { token_in: token })
+      if (r.data === true) registratieGeweigerd('Wie jou uitnodigde, heeft deze week al 5 nieuwe mensen op Fibro gebracht. Dat is het maximum. Probeer het over een paar dagen opnieuw.')
+    }
   } catch (e) {}
   // Android in de browser: eerst de keuze tussen de app (aanbevolen) en de browser (apk.js)
   if (window.FibroApk && FibroApk.toonDownload() && !FibroApk.webGekozen()) {
@@ -358,6 +365,10 @@ window.registreren = async function() {
 
   if (error && window.FibroRegistratie && FibroRegistratie.isGeweigerd(error)) {
     btn.textContent=T('Account aanmaken 🌸'); btn.disabled=false
+    // v255: heeft de uitnodiger deze week al 5 nieuwe mensen uitgenodigd? (sql/uitnodigingen-grens.sql)
+    let vol = false
+    try { const r = await supabase.rpc('uitnodiging_vol', { token_in: token }); vol = r.data === true } catch (e) {}
+    if (vol) { registratieGeweigerd('Wie jou uitnodigde, heeft deze week al 5 nieuwe mensen op Fibro gebracht. Dat is het maximum. Probeer het over een paar dagen opnieuw.'); return }
     registratieGeweigerd(FibroRegistratie.weigerTekst(await FibroRegistratie.haalStand(supabase), true))
     return
   }

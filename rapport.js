@@ -14,6 +14,8 @@ export async function stuurRapport({ melderId, gemeldeId, berichtInhoud, reden }
     console.error('Rapport versturen mislukt:', error)
     return false
   }
+  // v255: de moderators krijgen een pushmelding (zonder inhoud). Lukt dat niet, dan staat de melding toch in Moderatie.
+  try { supabase.functions.invoke('stuur-push', { body: { type: 'moderatie' } }).catch(() => {}) } catch (e) {}
   return true
 }
 

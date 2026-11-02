@@ -11,7 +11,7 @@
 //
 // Gebruik: await toonTitelscherm({ spelId: 'breakout', naam: 'Block It', ouder: element })
 //          Geeft true als je erdoor tikte, false als het scherm van buitenaf weg moest (sluitTitelscherm).
-import { SCENES } from './titelscenes.js?v=3'
+import { SCENES } from './titelscenes.js?v=4'
 import { speelTitelMuziek, stopTitelMuziek, muziekAan, zetMuziek } from './titelmuziek.js?v=4'
 
 export { stopTitelMuziek }

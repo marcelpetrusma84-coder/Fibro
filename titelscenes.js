@@ -1,4 +1,5 @@
-// titelscenes.js - de bewegende plaatjes van de titelschermen (v3, 2 nov 2026)
+// titelscenes.js - de bewegende plaatjes van de titelschermen (v4, 2 nov 2026)
+// v4: The Swarm weer met de kevers rond de lamp (allemaal groen, zonder gras), met de titel uit het spel.
 // v3: Ghost Tag met de spookjes en stippen uit het spel; Twin Snakes allebei vooruit; Neo Paddle: de bal kaatst echt.
 // v2: The Swarm, Runner & Gunner en Neon Raiders in de stijl van het spel zelf (titelstijl.js, met hun eigen titel);
 //     Block It laat zien wat er in het spel gebeurt: een steen valt, er ontstaat een vierkant van 3x3 en dat knalt.
@@ -8,7 +9,7 @@
 // De naam van het spel tekent titelscherm.js er bovenop (in het lettertype en de kleuren van 'titel').
 // Geen ctx.filter: dat kent Safari op de iPhone niet.
 
-import { maakSwarm, maakRunner, maakNeon, maakEcto } from './titelstijl.js?v=2'   // v2: drie spellen in hun eigen stijl
+import { maakRunner, maakNeon, maakEcto } from './titelstijl.js?v=2'   // v2: drie spellen in hun eigen stijl
 
 const TAU = Math.PI * 2
 
@@ -516,70 +517,46 @@ function pixelsOpScherm(ctx, wereld, b, h, vullen = true) {
     return { s, x: (b - w) / 2, y: (h - hh) / 2 }
 }
 
-// ── The Swarm: het huis uit level 1, de beestjes en de held, in de pixels van het spel ──
-function swarm(ctx, b, h, t, st) {
-    if (!st.sw) {
-        st.sw = maakSwarm()
-        st.wereld = st.sw.mk(st.sw.W, st.sw.H)
-        st.spat = []
-        st.volgendeSpat = 1.2
+// ── The Swarm: kevers zwermen rond een lamp (v4: weer het eerste plaatje, alle beestjes groen, zonder gras;
+//    met de titel uit het spel, swarmTitel) ──
+function swarm(ctx, b, h, t) {
+    lucht(ctx, b, h, ['#04110a', '#0b2614', '#020804'])
+    const lx = b / 2, ly = h * 0.6
+    const gl = ctx.createRadialGradient(lx, ly, 4, lx, ly, Math.min(b, h) * 0.45)
+    gl.addColorStop(0, 'rgba(255,240,150,0.9)'); gl.addColorStop(0.15, 'rgba(255,220,90,0.4)'); gl.addColorStop(1, 'rgba(255,200,60,0)')
+    ctx.fillStyle = gl; ctx.fillRect(0, 0, b, h)
+    ctx.fillStyle = '#fff6c2'; ctx.beginPath(); ctx.arc(lx, ly, 10, 0, TAU); ctx.fill()
+    const kever = (x, y, hoek, s, kleur) => {
+        ctx.save(); ctx.translate(x, y); ctx.rotate(hoek)
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5
+        const poot = Math.sin(t * 20 + x) * 0.3
+        for (const z of [-1, 1]) for (const p of [-0.4, 0, 0.4]) {
+            ctx.beginPath(); ctx.moveTo(p * s, 0); ctx.lineTo(p * s + poot * s * 0.3, z * s * 0.75); ctx.stroke()
+        }
+        ctx.beginPath(); ctx.moveTo(s * 0.55, -s * 0.1); ctx.lineTo(s * 0.95, -s * 0.4); ctx.moveTo(s * 0.55, s * 0.1); ctx.lineTo(s * 0.95, s * 0.4); ctx.stroke()
+        ctx.fillStyle = kleur
+        ctx.beginPath(); ctx.ellipse(0, 0, s * 0.55, s * 0.42, 0, 0, TAU); ctx.fill()
+        ctx.fillStyle = '#111'
+        ctx.beginPath(); ctx.arc(s * 0.55, 0, s * 0.2, 0, TAU); ctx.fill()
+        ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.beginPath(); ctx.moveTo(-s * 0.5, 0); ctx.lineTo(s * 0.4, 0); ctx.stroke()
+        ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.beginPath(); ctx.ellipse(-s * 0.05, -s * 0.2, s * 0.25, s * 0.09, 0, 0, TAU); ctx.fill()
+        ctx.restore()
     }
-    const S = st.sw, W = S.W, H = S.H, q = st.wereld.getContext('2d')
-    const tik = Math.floor(t * 8)
-    q.clearRect(0, 0, W, H)
-    q.drawImage(S.bg, 0, 0)
-    for (const [c, x] of S.dekking) q.drawImage(c, x, H - 2 - c.height)
-    q.fillStyle = 'rgba(140,0,30,0.10)'; q.fillRect(0, 0, W, H)   // de tint van level 1
-    const teken = (s, x, y, ga) => {   // draw() uit swarm-ui.js
-        const X = Math.round(x - s.w / 2 - s.p), Y = Math.round(y - s.h / 2 - s.p)
-        if (ga > 0) { q.globalAlpha = Math.min(1, ga); q.drawImage(s.g, X, Y); q.globalAlpha = 1 }
-        q.drawImage(s.b, X, Y)
+    const kleuren = ['#3fd16b', '#8dff2a', '#2fa84a', '#b6ff3a', '#5fbf1a']   // allemaal groen, zoals het slijm in het spel
+    for (let i = 0; i < 22; i++) {
+        const rad = Math.min(b, h) * (0.12 + (i % 7) * 0.045)
+        const snel = (0.5 + (i % 5) * 0.15) * (i % 2 ? 1 : -1)
+        const a = t * snel + i * 1.7
+        const x = lx + Math.cos(a) * rad * 1.3 + Math.sin(t * 2 + i) * 6
+        const y = ly + Math.sin(a) * rad * 0.8 + Math.cos(t * 2.4 + i) * 6
+        kever(x, y, a + (snel > 0 ? Math.PI / 2 : -Math.PI / 2), 15 + (i % 4) * 4, kleuren[i % kleuren.length])
     }
-    // de zwerm: elk beestje vliegt zijn eigen rondje
-    const soorten = ['sp', 'hg', 'ws', 'hg', 'mt', 'kv', 'sl', 'hg', 'ws', 'sp', 'br', 'hg']
-    const plekken = soorten.map((ty, i) => {
-        const fase = t * (0.45 + (i % 4) * 0.12) * (i % 2 ? 1 : -1) + i * 1.9
-        return [ty, W / 2 + Math.cos(fase) * (24 + (i % 5) * 9) + Math.sin(t * 1.7 + i) * 4, 52 + Math.sin(fase * 1.3) * (16 + (i % 3) * 8) + (ty === 'br' ? -8 : 0)]
-    })
-    for (const [ty, x, y] of plekken) teken((tik + Math.round(x)) % 2 ? S.TY[ty].A : S.TY[ty].B, x, y, 0.6)
-    // de held loopt heen en weer en schiet
-    const hx = W / 2 + Math.sin(t * 0.9) * 38, hy = H - 14
-    teken(Math.cos(t * 0.9) !== 0 && tik % 2 ? S.held.A : S.held.B, hx, hy, 0.5)
-    q.fillStyle = '#2ee8ff'
-    for (let i = 0; i < 4; i++) {
-        const v = (t * 1.6 + i * 0.25) % 1
-        const sx = Math.round(W / 2 + Math.sin((t - v * 0.6) * 0.9) * 38 + 5), sy = Math.round(hy - 10 - v * 130)
-        q.globalAlpha = 0.35; q.fillRect(sx - 1, sy - 1, 3, 5); q.globalAlpha = 1
-        q.fillRect(sx, sy, 1, 3)
-    }
-    // af en toe een groene spat (slijm), zoals splat()
-    if (t > st.volgendeSpat) {
-        const [, x, y] = plekken[Math.floor(t * 7) % plekken.length]
-        for (let i = 0; i < 14; i++) { const a = Math.random() * TAU, v = 0.3 + Math.random() * 1.6; st.spat.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - Math.random(), l: 60 + Math.random() * 50, land: Math.min(H - 3, y + 15 + Math.random() * 55), c: S.SLIME[i % 5], s: Math.random() < 0.35 ? 2 : 1 }) }
-        st.volgendeSpat = t + 0.9 + Math.random() * 0.8
-    }
-    for (const p of st.spat) {
-        if (p.y < p.land) { p.x += p.vx; p.y += p.vy; p.vy += 0.08 } else p.y = p.land
-        p.l -= 0.6
-        q.globalAlpha = Math.max(0, Math.min(1, p.l / 30)); q.fillStyle = p.c; q.fillRect(Math.round(p.x), Math.round(p.y), p.s, p.s)
-    }
-    q.globalAlpha = 1
-    st.spat = st.spat.filter(p => p.l > 0)
-    // groot op het scherm, met de scanlijnen en de donkere randen van het spel
-    ctx.fillStyle = '#15101c'; ctx.fillRect(0, 0, b, h)
-    pixelsOpScherm(ctx, st.wereld, b, h)
-    ctx.fillStyle = 'rgba(0,0,0,0.3)'
-    for (let y = 0; y < h; y += 3) ctx.fillRect(0, y, b, 1)
-    const vg = ctx.createRadialGradient(b / 2, h / 2, Math.min(b, h) * 0.3, b / 2, h / 2, Math.max(b, h) * 0.65)
-    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.6)')
-    ctx.fillStyle = vg; ctx.fillRect(0, 0, b, h)
 }
-// De titel zoals in het spel: THE (rood neon), SWARM (groen, met druppels), 'samen tegen de zwerm'
+
 function swarmTitel(ctx, b, h, t) {
     const maat = Math.min(b * 0.2, h * 0.1)
     const y = h * 0.2
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(0, y - maat * 1.2, b, maat * 2.5)
     ctx.font = '900 ' + Math.round(maat * 0.36) + "px 'Courier New', monospace"
     spatie(ctx, 'THE', b / 2, y - maat * 0.82, maat * 0.19, '#ff3050', '#ff1030')
     ctx.font = '900 ' + Math.round(maat) + "px 'Courier New', monospace"
@@ -596,9 +573,6 @@ function swarmTitel(ctx, b, h, t) {
     ctx.fillStyle = '#1a4a00'
     spatie(ctx, 'SWARM', b / 2, y + 3, maat * 0.1, '#1a4a00', null)
     spatie(ctx, 'SWARM', b / 2, y, maat * 0.1, '#b6ff3a', '#6dff1a')
-    ctx.font = Math.round(Math.max(12, maat * 0.29)) + "px 'Courier New', monospace"
-    ctx.fillStyle = '#ffb0c0'
-    ctx.fillText(vertaalTekst('samen tegen de zwerm'), b / 2, y + maat * 1.0)
     ctx.textBaseline = 'alphabetic'
 }
 // tekst met letterafstand en neongloed (zoals letter-spacing en text-shadow in het spel)

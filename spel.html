@@ -64,7 +64,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
   import { startSpelUitnodigingLuisteraar } from './speluitnodiging.js?v=197'
   import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=4'
   import { nieuweSpelSessie } from './spelsessie.js?v=1'
-  import { toonTitelscherm, stopTitelMuziek } from './titelscherm.js?v=1' // v251: titelscherm met muziek
+  import { toonTitelscherm, stopTitelMuziek } from './titelscherm.js?v=2' // v251: titelscherm met muziek
 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   const inhoud = document.getElementById('spelInhoud')
@@ -136,7 +136,9 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     document.title = 'Fibro — ' + spelNaam()
     // v251: eerst het titelscherm; één tik en je bent in het menu van het spel (de muziek speelt daar nog door).
     // Ghost Tag, Twin Snakes, Runner & Gunner en Neon Raiders hebben een eigen startscherm.
-    toonTitelscherm({ spelId, naam: spelNaam() }).then(() => {
+    // v252: kom je van Home, een profiel of een uitnodiging, dan stond het titelscherm daar al (titel=1)
+    const titelGezien = new URLSearchParams(location.search).get('titel') === '1'
+    ;(titelGezien ? Promise.resolve(true) : toonTitelscherm({ spelId, naam: spelNaam() })).then(() => {
       if (spel.zonderKanaal) start('normaal')
       else if (spel.arcade) startScherm()
       else kiesNiveau()

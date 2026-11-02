@@ -70,6 +70,14 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
   <script>document.querySelectorAll('[data-kies-taal]').forEach(function (b) { var aan = b.getAttribute('data-kies-taal') === T.taal; b.setAttribute('aria-pressed', aan ? 'true' : 'false'); if (aan) b.classList.add('aan') })</script>
   <div id="laadScherm" class="laden" data-t>Uitnodiging laden...</div>
 
+  <!-- v250: een spel dat met de uitnodiging is meegestuurd; meteen te spelen, ook zonder account -->
+  <div id="spelUitdaging" hidden style="margin:4px 0 18px;padding:14px;border-radius:16px;border:1px solid rgba(192,132,252,0.5);background:rgba(192,132,252,0.12);text-align:center;">
+    <div id="spelUitdagingIcoon" style="font-size:34px;line-height:1;margin-bottom:6px;" aria-hidden="true">🎮</div>
+    <div id="spelUitdagingTekst" style="font-size:15px;font-weight:700;line-height:1.4;margin-bottom:4px;"></div>
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px;" data-t>Probeer het meteen, ook zonder account.</div>
+    <a id="spelUitdagingKnop" class="btn" style="display:block;text-decoration:none;text-align:center;" href="#"></a>
+  </div>
+
   <div id="bestaandScherm" style="display:none; text-align:center; padding:30px 20px;">
   <div id="bestaandAvatar" style="font-size:60px; margin-bottom:12px;">👤</div>
   <h2 id="bestaandNaam" style="margin-bottom:8px;" data-t>Iemand</h2>
@@ -205,6 +213,24 @@ function bepaalNiveau(jaar) {
   return 'adults'
 }
 
+// v250: een meegestuurd spel (invite.html?token=...&spel=...). Alleen een van deze 12 (dezelfde als in solo.js).
+const MEE_SPELLEN = {
+  botkaaseiren: ['⭕', 'Tic-Tac-Toe'], vieroprij: ['🔴', 'Four in a Row'], schaken: ['♟️', 'Chess'], dammen: ['⚫', 'Draughts'],
+  pong: ['🏓', 'Neo Paddle'], pacman: ['👻', 'Ghost Tag'], breakout: ['🟪', 'Block It'], swarm: ['🪲', 'The Swarm'],
+  pinball: ['🐍', 'Twin Snakes'], endlessrunner: ['🏃', 'Runner & Gunner'], flappybird: ['🦇', 'Flapper'], shmup: ['🚀', 'Neon Raiders'],
+}
+function toonSpelUitdaging(naam) {
+  const id = urlParams.get('spel') || ''
+  if (!Object.prototype.hasOwnProperty.call(MEE_SPELLEN, id)) return
+  const [icoon, spelNaam] = MEE_SPELLEN[id]
+  document.getElementById('spelUitdagingIcoon').textContent = icoon
+  document.getElementById('spelUitdagingTekst').textContent = T('{naam} daagt je uit voor een potje {spel}!', { naam, spel: spelNaam })
+  const knop = document.getElementById('spelUitdagingKnop')
+  knop.textContent = T('▶ Speel {spel}', { spel: spelNaam })
+  knop.href = 'spel.html?spel=' + encodeURIComponent(id) + '&terug=uitnodiging'
+  document.getElementById('spelUitdaging').hidden = false
+}
+
 async function init() {
   if (!token) { toonFout(); return }
   const { data: rows, error } = await supabase
@@ -219,6 +245,7 @@ async function init() {
     .single()
   document.getElementById('uitnodigerNaam').textContent = profiel?.username || T('Iemand')
   document.getElementById('uitnodigerAvatar').textContent = profiel?.avatar_url || '👤'
+  toonSpelUitdaging(profiel?.username || T('Iemand'))
 
   const { data: { session } } = await supabase.auth.getSession()
   if (session && session.user.id !== uitnodigerData.created_by) {

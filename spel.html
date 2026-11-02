@@ -70,9 +70,16 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
   const titel = document.getElementById('spelTitelBar')
   let kanaal = null
 
+  // v250: kom je via een uitnodiging (een meegestuurd spel), dan gaat terug naar die uitnodiging
+  const vanUitnodiging = new URLSearchParams(location.search).get('terug') === 'uitnodiging'
+  function terug() {
+    if (vanUitnodiging && history.length > 1) history.back()
+    else location.href = 'index.html'
+  }
+  window.spelTerug = terug
   document.getElementById('sluitKnop').onclick = () => {
     if (kanaal) kanaal.sluit()
-    location.href = 'index.html'
+    terug()
   }
 
   const spelId = new URLSearchParams(location.search).get('spel') || ''
@@ -122,7 +129,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
 
   if (!spel) {
-    inhoud.innerHTML = '<div class="melding">' + spelT('Dit spel kan nog niet alleen gespeeld worden.') + '<br><button onclick="location.href=\'index.html\'">' + spelT('Terug') + '</button></div>'
+    inhoud.innerHTML = '<div class="melding">' + spelT('Dit spel kan nog niet alleen gespeeld worden.') + '<br><button onclick="spelTerug()">' + spelT('Terug') + '</button></div>'
   } else {
     document.title = 'Fibro — ' + spelNaam()
     // Ghost Tag, Twin Snakes, Runner & Gunner en Neon Raiders hebben een eigen startscherm.

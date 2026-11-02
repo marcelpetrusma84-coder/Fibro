@@ -70,6 +70,13 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   backdrop-filter:blur(8px);
 }
 .modal-overlay.open { display:flex; }
+/* v250: keuze voor de uitnodiging */
+.uit-keuze { display:flex; flex-direction:column; gap:8px; margin:6px 0 10px; text-align:left; }
+.uit-label { font-size:12px; color:var(--muted); font-weight:600; }
+.uit-chips { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.uit-chip { min-height:40px; border-radius:12px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.06); color:var(--text); font:inherit; font-size:13px; cursor:pointer; padding:6px 4px; }
+.uit-chip[aria-checked="true"] { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; font-weight:700; border-color:transparent; }
+.uit-spel { min-height:42px; border-radius:12px; border:1px solid rgba(255,255,255,0.18); background:#1a0a2e; color:var(--text); font:inherit; font-size:14px; padding:6px 10px; }
 
 .modal {
   background:#1a0a2e;
@@ -255,7 +262,23 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 <div class="modal-overlay" id="inviteModal" onclick="sluitModalBuiten(event)">
   <div class="modal">
     <h2 data-t>Vriend uitnodigen</h2>
-    <p data-t>Genereer een QR code. Je vriend heeft 20 minuten om zich te registreren.</p>
+    <p data-t>Kies hoe lang de link geldig is, en stuur eventueel een spel mee dat je vriend meteen kan spelen.</p>
+
+    <!-- v250: hoe lang geldig en een spel om mee te sturen -->
+    <div class="uit-keuze">
+      <div class="uit-label" data-t>Geldig</div>
+      <div class="uit-chips" id="uitDuur" role="radiogroup">
+        <button type="button" class="uit-chip" data-sec="3600" role="radio" data-t>1 uur</button>
+        <button type="button" class="uit-chip" data-sec="86400" role="radio" data-t>1 dag</button>
+        <button type="button" class="uit-chip" data-sec="259200" role="radio" data-t>3 dagen</button>
+        <button type="button" class="uit-chip" data-sec="604800" role="radio" data-t>7 dagen</button>
+      </div>
+      <label class="uit-label" for="uitSpel" data-t>Spel meesturen</label>
+      <select id="uitSpel" class="uit-spel">
+        <option value="" data-t>Geen spel</option>
+      </select>
+      <button type="button" class="modal-btn modal-btn-primary" id="uitMaak" onclick="maakUitnodiging()" data-t>Link maken</button>
+    </div>
 
     <div class="modal-status" id="modal-status"></div>
 
@@ -265,7 +288,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 
       <div class="timer-ring">
         <span class="timer-text" data-t>Geldig nog:</span>
-        <span class="timer-countdown" id="timer-display">20:00</span>
+        <span class="timer-countdown" id="timer-display">--:--</span>
       </div>
 
       <div class="progress-bar">
@@ -287,7 +310,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     </div>
 
     <!-- Laden staat -->
-    <div id="qr-laden" style="padding:20px 0; color:var(--muted); font-size:13px;" data-t>
+    <div id="qr-laden" style="display:none; padding:20px 0; color:var(--muted); font-size:13px;" data-t>
       Even laden...
     </div>
 
@@ -662,7 +685,17 @@ startMeldingen()
   import { supabase } from './supabase.js?v=95'
   import { haalPrivateKeyOp, eigenPubliekeSleutel, sleutelVingerafdruk } from './crypto.js?v=182'
 
-  const DUUR = 20 * 60 // 20 minuten in seconden
+  // v250: zelf kiezen hoe lang de link geldig is (1 uur, 1 dag, 3 dagen of 7 dagen; standaard 3 dagen)
+  const DUREN = [3600, 86400, 259200, 604800]
+  const STANDAARD_DUUR = 259200
+  let DUUR = STANDAARD_DUUR
+  // v250: een van de 12 spellen om alleen te spelen meesturen; je vriend kan het via de link meteen spelen
+  // (spel.html?spel=..., ook zonder account). Dezelfde namen als in solo.js.
+  const MEE_SPELLEN = [
+    ['botkaaseiren', '⭕', 'Tic-Tac-Toe'], ['vieroprij', '🔴', 'Four in a Row'], ['schaken', '♟️', 'Chess'], ['dammen', '⚫', 'Draughts'],
+    ['pong', '🏓', 'Neo Paddle'], ['pacman', '👻', 'Ghost Tag'], ['breakout', '🟪', 'Block It'], ['swarm', '🪲', 'The Swarm'],
+    ['pinball', '🐍', 'Twin Snakes'], ['endlessrunner', '🏃', 'Runner & Gunner'], ['flappybird', '🦇', 'Flapper'], ['shmup', '🚀', 'Neon Raiders'],
+  ]
   // Het adres van de uitnodigingspagina staat alleen hier (later: eigen domein)
   const UITNODIGING_ADRES = 'https://marcelpetrusma84-coder.github.io/Fibro/invite.html'
   let timerInterval = null
@@ -671,8 +704,33 @@ startMeldingen()
   // ========================
   // MODAL OPENEN
   // ========================
-  window.openInviteModal = async function() {
+  window.openInviteModal = function() {
     document.getElementById('inviteModal').classList.add('open')
+    zetKeuze(STANDAARD_DUUR)
+    document.getElementById('uitSpel').value = ''
+    verbergLink()
+  }
+  // De keuze: standaard 3 dagen, geen spel. Een andere keuze na het maken = de link weg, opnieuw maken.
+  function zetKeuze(sec) {
+    DUUR = DUREN.includes(sec) ? sec : STANDAARD_DUUR
+    for (const b of document.querySelectorAll('#uitDuur .uit-chip')) b.setAttribute('aria-checked', Number(b.dataset.sec) === DUUR ? 'true' : 'false')
+  }
+  function verbergLink() {
+    clearInterval(timerInterval)
+    document.getElementById('qr-sectie').style.display = 'none'
+    document.getElementById('qr-laden').style.display = 'none'
+    document.getElementById('modal-status').className = 'modal-status'
+    document.getElementById('modal-status').textContent = ''
+    document.getElementById('uitMaak').style.display = ''
+  }
+  for (const b of document.querySelectorAll('#uitDuur .uit-chip')) b.addEventListener('click', () => { zetKeuze(Number(b.dataset.sec)); verbergLink() })
+  {
+    const kies = document.getElementById('uitSpel')
+    for (const [id, icoon, naam] of MEE_SPELLEN) { const o = document.createElement('option'); o.value = id; o.textContent = icoon + ' ' + naam; kies.appendChild(o) }
+    kies.addEventListener('change', verbergLink)
+  }
+  window.maakUitnodiging = async function() {
+    document.getElementById('uitMaak').style.display = 'none'
     await genereerInvite()
   }
 
@@ -728,7 +786,9 @@ startMeldingen()
       const priv = user ? haalPrivateKeyOp(user.id) : null
       if (priv) vinger = (await sleutelVingerafdruk(await eigenPubliekeSleutel(priv))).slice(0, 32)
     } catch (e) { vinger = '' }
-    const inviteUrl = UITNODIGING_ADRES + '?token=' + token + (vinger ? '#s=' + vinger : '')
+    const meeSpel = document.getElementById('uitSpel').value
+    const spelDeel = MEE_SPELLEN.some(s => s[0] === meeSpel) ? '&spel=' + encodeURIComponent(meeSpel) : '' // v250
+    const inviteUrl = UITNODIGING_ADRES + '?token=' + token + spelDeel + (vinger ? '#s=' + vinger : '')
     const linkVeld = document.getElementById('invite-link')
     if (linkVeld) linkVeld.value = inviteUrl
 
@@ -743,11 +803,12 @@ startMeldingen()
       correctLevel: QRCode.CorrectLevel.H
     })
 
-    // Start timer
+    // Start timer (v250: gerekend vanaf de eindtijd, zodat hij ook klopt als de telefoon even sliep)
+    const eindTijd = Date.parse(verlooptOm)
     secondsLeft = DUUR
     updateTimer()
     timerInterval = setInterval(() => {
-      secondsLeft--
+      secondsLeft = Math.max(0, Math.ceil((eindTijd - Date.now()) / 1000))
       updateTimer()
       if (secondsLeft <= 0) {
         clearInterval(timerInterval)
@@ -760,12 +821,10 @@ startMeldingen()
   // TIMER UPDATEN
   // ========================
   function updateTimer() {
-    const minuten = Math.floor(secondsLeft / 60)
-    const seconden = secondsLeft % 60
     const display = document.getElementById('timer-display')
     const progress = document.getElementById('progress-fill')
 
-    display.textContent = `${String(minuten).padStart(2,'0')}:${String(seconden).padStart(2,'0')}`
+    display.textContent = tijdTekst(secondsLeft)
 
     // Kleur aanpassen
     display.className = 'timer-countdown'
@@ -775,6 +834,15 @@ startMeldingen()
     // Progress bar
     const percentage = (secondsLeft / DUUR) * 100
     progress.style.width = percentage + '%'
+  }
+
+  // v250: 2 d 23:59:59, 23:59:59 of 59:59
+  function tijdTekst(sec) {
+    const t = Math.max(0, Math.floor(sec)), d = Math.floor(t / 86400), u = Math.floor(t % 86400 / 3600), m = Math.floor(t % 3600 / 60), s = t % 60
+    const tw = n => String(n).padStart(2, '0')
+    if (d > 0) return T('{d} d', { d }) + ' ' + tw(u) + ':' + tw(m) + ':' + tw(s)
+    if (u > 0) return tw(u) + ':' + tw(m) + ':' + tw(s)
+    return tw(m) + ':' + tw(s)
   }
 
   // ========================

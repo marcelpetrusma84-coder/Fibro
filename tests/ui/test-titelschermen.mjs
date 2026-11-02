@@ -45,11 +45,16 @@ const nep = new Proxy({}, { get: (o, k) => k in o ? o[k] : (k === 'measureText' 
 // (de drie in de stijl van het spel hebben een echte pagina nodig; die test proef227.py in de browser)
 for (const [id, s] of Object.entries(SCENES)) if (!s.eigenTitel && !['pacman', 'schakendrie'].includes(id) || id === 'schakendrie') for (const t of [0, 1.3, 2.2, 7.9]) s.teken(nep, 390, 844, t, {})
 assert.ok(['swarm', 'endlessrunner', 'shmup'].every(id => typeof SCENES[id].eigenTitel === 'function'), 'drie spellen met hun eigen titel')
+// v4: The Swarm weer met de kevers rond de lamp: allemaal groen, geen gras, wel de titel uit het spel
+const swarmBron = lees('titelscenes.js').slice(lees('titelscenes.js').indexOf('// ── The Swarm: kevers zwermen rond een lamp'), lees('titelscenes.js').indexOf('function swarmTitel('))
+assert.ok(!swarmBron.includes('grassprieten') && !swarmBron.includes('#e84a3c'), 'geen gras en geen rode kevers')
+assert.match(swarmBron, /const kleuren = \['#3fd16b', '#8dff2a', '#2fa84a', '#b6ff3a', '#5fbf1a'\]/)
+for (const t of [0, 2.5]) SCENES.swarm.teken(nep, 390, 844, t, {})
 const bron = lees('titelscenes.js')
 assert.ok(!/\.filter\s*=/.test(bron), 'geen ctx.filter (kent Safari niet)')
 
 // 4. Chat: titelscherm bij het openen, het spel wacht op de tik, sluiten ruimt het op
-assert.match(chat, /import \{ toonTitelscherm, sluitTitelscherm, heeftTitelscherm, spelStart \} from '\.\/titelscherm\.js\?v=5'/)
+assert.match(chat, /import \{ toonTitelscherm, sluitTitelscherm, heeftTitelscherm, spelStart \} from '\.\/titelscherm\.js\?v=6'/)
 const mee = chat.slice(chat.indexOf('window.speelMee = async function'), chat.indexOf("if (spelType === 'botkaaseiren') await startBotKaasEieren()"))
 assert.ok(mee.indexOf('toonTitelscherm(') < mee.indexOf('const wachtOpVriend'), 'titelscherm voor het wachten')
 assert.match(mee, /if \(!await titelKlaar \|\| spelActief !== spelType \|\| spelKanaal !== verbinding\) return \/\/ v251\n    spelStart\(spelType\)/)
@@ -57,7 +62,7 @@ const sluit = chat.slice(chat.indexOf('window.sluitSpel = function(stil)'), chat
 assert.match(sluit, /sluitTitelscherm\(\)/)
 
 // 5. Alleen spelen: eerst het titelscherm, dan het menu; de muziek stopt als het spel begint
-assert.match(spel, /import \{ toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek \} from '\.\/titelscherm\.js\?v=5'/)
+assert.match(spel, /import \{ toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek \} from '\.\/titelscherm\.js\?v=6'/)
 assert.match(spel, /\(titelGezien \? Promise\.resolve\(true\) : toonTitelscherm\(\{ spelId, naam: spelNaam\(\) \}\)\)\.then\(\(\) => \{\n      if \(spel\.zonderKanaal\) start\('normaal'\)\n      else if \(spel\.arcade\) startScherm\(\)\n      else kiesNiveau\(\)/)
 assert.match(spel, /async function start\(niveau\) \{\n    spelStart\(spelId\)/)
 
@@ -83,7 +88,7 @@ assert.match(lees('titelmuziek.js'), /if \(ingebed\) \{ try \{ window\.parent\.p
 
 // 6. Engels en versienummers
 for (const k of ['Tik om te beginnen', 'Muziek uit', 'Muziek aan']) assert.ok(en.includes(JSON.stringify(k) + ':'), 'Engels: ' + k)
-assert.match(lees('titelscherm.js'), /from '\.\/titelscenes\.js\?v=3'/)
+assert.match(lees('titelscherm.js'), /from '\.\/titelscenes\.js\?v=4'/)
 assert.match(lees('titelscherm.js'), /from '\.\/titelmuziek\.js\?v=4'/)
 
 // 7. v252: op Home, het profiel van een vriend en de uitnodiging komt het titelscherm al bij je tik (muziek meteen,
@@ -93,13 +98,13 @@ for (const [f, patroon] of [['index.html', /blok\.onclick = \(\) => openSpelMetT
                             ['vriend-profiel.html', /el\.onclick = \(\) => openSpelMetTitel\(spel, 'spel\.html\?spel=' \+ encodeURIComponent\(spel\)\)/],
                             ['invite.html', /knop\.onclick = \(e\) => \{ e\.preventDefault\(\); openSpelMetTitel\(id, knop\.getAttribute\('href'\)\) \}/]]) {
   const bron = lees(f)
-  assert.match(bron, /import \{ openSpelMetTitel \} from '\.\/titelscherm\.js\?v=5'/, f + ': laadt het titelscherm meteen (dan telt je tik voor het geluid)')
+  assert.match(bron, /import \{ openSpelMetTitel \} from '\.\/titelscherm\.js\?v=6'/, f + ': laadt het titelscherm meteen (dan telt je tik voor het geluid)')
   assert.match(bron, patroon, f)
 }
 const muziek = lees('titelmuziek.js')
 assert.match(muziek, /\['pointerdown', 'touchend', 'click', 'keydown'\]/, 'geluid aan bij elke soort tik')
 assert.match(muziek, /a\.createBuffer\(1, 1, 22050\)/, 'stil geluidje voor oudere iPhones')
-for (const f of ['chat.html', 'spel.html', 'index.html', 'vriend-profiel.html', 'invite.html']) assert.ok(/titelscherm\.js\?v=5'/.test(lees(f)), f + ': titelscherm v4')
+for (const f of ['chat.html', 'spel.html', 'index.html', 'vriend-profiel.html', 'invite.html']) assert.ok(/titelscherm\.js\?v=6'/.test(lees(f)), f + ': titelscherm v4')
 
 // 8. v252: drie spellen in hun eigen stijl; titelstijl.js is gemaakt uit de spellen zelf
 const stijl = lees('titelstijl.js')

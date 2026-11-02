@@ -1,5 +1,5 @@
 # maak_titelstijl.py - maakt titelstijl.js: de tekencode van The Swarm, Runner & Gunner en Neon Raiders,
-# letterlijk gekopieerd uit de spellen zelf, zodat hun titelscherm er precies zo uitziet als het spel.
+# en Ghost Tag (v2), letterlijk gekopieerd uit de spellen zelf, zodat hun titelscherm er precies zo uitziet als het spel.
 # Gebruik (in de map van Fibro): python3 tests/gen/maak_titelstijl.py
 # Verandert een van die spellen zijn plaatjes, draai dit dan opnieuw.
 import re, sys, os
@@ -60,10 +60,25 @@ nr_sterren = nr[a - 1:b]
 a = zoek(nr, r'^  achtergrond_ruimte\(\) \{'); b = zoek(nr, r'^  \},$', a)
 nr_ruimte = nr[a - 1:b]
 
+# ── Ghost Tag ──
+ec = lees('ecto-ui.js')
+a = zoek(ec, r'^const VELDEN = \['); b = zoek(ec, r'^// ═+ Om aan te draaien')
+ec_velden = ec[a - 1:b - 1]
+a = zoek(ec, r'^const KLEUR = '); b = zoek(ec, r'^const TEGEN = ')
+ec_kleur = ec[a - 1:b]
+a = zoek(ec, r'^const SPOOK = '); b = zoek(ec, r'^const KROON = ')
+ec_spook = ec[a - 1:b]
+a = zoek(ec, r'^const wrapX = '); b = zoek(ec, r'^const pad3 = ')
+ec_hulp = ec[a - 1:b - 1]
+a = zoek(ec, r'^function pixels\('); b = zoek(ec, r'^\}$', a)
+ec_pixels = ec[a - 1:b]
+a = zoek(ec, r'^  let res = 1, doolhofLaag'); b = zoek(ec, r'^  function tekenSpeler\(s\)')
+ec_teken = ec[a - 1:b - 1]
+
 def blok(r):
     return '\n'.join(r)
 
-uit = f'''// titelstijl.js - GEMAAKT door tests/gen/maak_titelstijl.py; niet met de hand aanpassen (v1, 2 nov 2026)
+uit = f'''// titelstijl.js - GEMAAKT door tests/gen/maak_titelstijl.py; niet met de hand aanpassen (v2, 2 nov 2026; v2: ook Ghost Tag)
 //
 // In gewone woorden: de tekencode van drie spellen, letterlijk overgenomen uit het spel zelf, zodat hun titelscherm
 // in precies dezelfde stijl is: The Swarm (swarm-ui.js, pixels op 140 x 210), Runner & Gunner (runner-gunner-ui.js,
@@ -170,6 +185,26 @@ const lagen = maker.achtergrond_ruimte()
 maker.vast()
 maker.vijanden('rood'); maker.vijanden('zwart')
 return {{ tex, lagen }}
+}}
+'''
+uit += f'''
+// ── Ghost Tag ──
+export function maakEcto(resolutie) {{
+let ctx = null, tijd = 0, stippen = null
+{blok(ec_velden)}
+{blok(ec_kleur)}
+{blok(ec_spook)}
+{blok(ec_hulp)}
+{blok(ec_pixels)}
+{blok(ec_teken)}
+res = resolutie || 2
+return {{
+  KAART, KOLOM, RIJEN, T, W, KLEUR, BANG_BLAUW, CFG: {{ jagerGroot: 1.4 }}, openZonderWrap, meng,
+  zet(c, t) {{ ctx = c; tijd = t }},
+  bouw(nieuweStippen) {{ stippen = nieuweStippen; bouwDoolhof(); bouwSprites(); bouwStippen() }},
+  wisStip, tekenFiguur, tekenBol,
+  get doolhof() {{ return doolhofLaag }}, get stippenLaag() {{ return stippenLaag }}
+}}
 }}
 '''
 open(os.path.join(MAP, 'titelstijl.js'), 'w', encoding='utf-8').write(uit)

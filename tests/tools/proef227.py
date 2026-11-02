@@ -16,7 +16,7 @@ HARNAS = r"""<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta na
 <style>body{margin:0;background:#1a0a2e;color:#fff}</style></head><body>
 <script type="module">
 const q = new URLSearchParams(location.search)
-const ts = await import('./titelscherm.js?v=2'), tm = await import('./titelmuziek.js?v=2')
+const ts = await import('./titelscherm.js?v=3'), tm = await import('./titelmuziek.js?v=2')
 window.__ts = ts
 window.__tm = tm
 window.__uitkomst = null

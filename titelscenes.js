@@ -1,4 +1,5 @@
-// titelscenes.js - de bewegende plaatjes van de titelschermen (v2, 2 nov 2026)
+// titelscenes.js - de bewegende plaatjes van de titelschermen (v3, 2 nov 2026)
+// v3: Ghost Tag met de spookjes en stippen uit het spel; Twin Snakes allebei vooruit; Neo Paddle: de bal kaatst echt.
 // v2: The Swarm, Runner & Gunner en Neon Raiders in de stijl van het spel zelf (titelstijl.js, met hun eigen titel);
 //     Block It laat zien wat er in het spel gebeurt: een steen valt, er ontstaat een vierkant van 3x3 en dat knalt.
 //
@@ -7,7 +8,7 @@
 // De naam van het spel tekent titelscherm.js er bovenop (in het lettertype en de kleuren van 'titel').
 // Geen ctx.filter: dat kent Safari op de iPhone niet.
 
-import { maakSwarm, maakRunner, maakNeon } from './titelstijl.js?v=1'   // v2: drie spellen in hun eigen stijl
+import { maakSwarm, maakRunner, maakNeon, maakEcto } from './titelstijl.js?v=2'   // v2: drie spellen in hun eigen stijl
 
 const TAU = Math.PI * 2
 
@@ -287,78 +288,99 @@ function pong(ctx, b, h, t) {
     }
     ctx.globalAlpha = 1
     ctx.shadowBlur = 0
-    // batjes en bal (in het midden van het scherm, boven de vloer)
-    const vy = h * 0.5, vh = h * 0.28, mx = b * 0.12
-    const bx = b / 2 + Math.sin(t * 1.7) * (b / 2 - mx - 22)
-    const by = vy + Math.sin(t * 2.9) * vh * 0.4
-    const batje = (x, y, kleur) => {
-        ctx.fillStyle = kleur; ctx.shadowColor = kleur; ctx.shadowBlur = 18
-        rond(ctx, x - 6, y - vh * 0.16, 12, vh * 0.32, 6); ctx.fill()
-        ctx.shadowBlur = 0
+    // batjes en bal: de bal vliegt echt van batje naar batje en kaatst terug (v2)
+    const vy = h * 0.5, vh = h * 0.28, mx = b * 0.12, br = 8, bh = vh * 0.32
+    const xL = mx + 6 + br, xR = b - mx - 6 - br, boven = vy - vh * 0.42, onder = vy + vh * 0.42
+    const OVER = 1.25                                           // seconden van batje naar batje
+    const zaag = (x, p) => { const f = ((x / p) % 2 + 2) % 2; return f < 1 ? f : 2 - f }   // 0..1..0
+    const balX = tt => xL + (xR - xL) * zaag(tt, OVER)
+    const balY = tt => boven + (onder - boven) * zaag(tt + 0.37, 0.83)   // kaatst ook tegen boven- en onderkant
+    // een batje staat precies waar de bal hem raakt: links op 0, 2, 4.. x OVER, rechts op 1, 3, 5.. x OVER
+    const batY = (eerste) => {
+        const per = 2 * OVER, na = ((t - eerste) % per + per) % per
+        const vorige = t - na, volgende = vorige + per
+        return balY(vorige) + (balY(volgende) - balY(vorige)) * glad(klem(na / (per * 0.8)))
     }
-    batje(mx, vy + Math.sin(t * 2.9 - 0.4) * vh * 0.35, '#00f0ff')
-    batje(b - mx, vy + Math.sin(t * 2.9 + 0.3) * vh * 0.35, '#ff3df2')
+    const raak = (eerste) => { const per = 2 * OVER, na = ((t - eerste) % per + per) % per; return Math.max(0, 1 - Math.min(na, per - na) / 0.18) }
+    const batje = (x, y, kleur, licht) => {
+        ctx.fillStyle = licht > 0 ? '#ffffff' : kleur; ctx.shadowColor = kleur; ctx.shadowBlur = 18 + licht * 30
+        rond(ctx, x - 6, y - bh / 2, 12, bh, 6); ctx.fill()
+        ctx.shadowBlur = 0
+        if (licht > 0) { ctx.globalAlpha = licht; ctx.strokeStyle = kleur; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 14 + (1 - licht) * 30, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1 }
+    }
+    batje(mx, batY(0), '#00f0ff', raak(0))
+    batje(b - mx, batY(OVER), '#ff3df2', raak(OVER))
     for (let i = 6; i >= 0; i--) {
         const tt = t - i * 0.03
         ctx.globalAlpha = 1 - i / 7
         ctx.fillStyle = '#fff'
         ctx.shadowColor = '#fff'; ctx.shadowBlur = i ? 0 : 20
-        ctx.beginPath(); ctx.arc(b / 2 + Math.sin(tt * 1.7) * (b / 2 - mx - 22), vy + Math.sin(tt * 2.9) * vh * 0.4, 8 - i * 0.6, 0, TAU); ctx.fill()
+        ctx.beginPath(); ctx.arc(balX(tt), balY(tt), br - i * 0.6, 0, TAU); ctx.fill()
     }
     ctx.globalAlpha = 1; ctx.shadowBlur = 0
-    void bx; void by
 }
 
-// ── Ghost Tag: nacht, een doolhof van neon en zwevende spookjes ──
-function pacman(ctx, b, h, t) {
-    lucht(ctx, b, h, ['#02021a', '#0a0a3a', '#02021a'])
-    const c = Math.max(26, Math.min(b, h) / 12)
-    ctx.strokeStyle = '#2f5bff'
-    ctx.shadowColor = '#2f5bff'; ctx.shadowBlur = 12
-    ctx.lineWidth = 3
-    const r = reeks(5)
-    for (let y = 0; y < h / c; y++) for (let x = 0; x < b / c; x++) {
-        if (r() < 0.22) { rond(ctx, x * c + 6, y * c + 6, c - 12, c * (r() < 0.5 ? 1 : 2) - 12, 8); ctx.stroke() }
-    }
-    ctx.shadowBlur = 0
-    // bolletjes
-    ctx.fillStyle = '#ffd9a8'
-    for (let i = 0; i < 14; i++) {
-        const x = b * 0.08 + i * (b * 0.84 / 13)
-        if ((t * 2.5 - i * 0.4) % 6 < 3.2) continue
-        ctx.beginPath(); ctx.arc(x, h * 0.73, 4, 0, TAU); ctx.fill()
-    }
-    const spook = (x, y, kleur, kijk) => {
-        const s = Math.min(b, h) * 0.11
-        ctx.fillStyle = kleur
-        ctx.shadowColor = kleur; ctx.shadowBlur = 22
-        ctx.beginPath()
-        ctx.arc(x, y, s, Math.PI, 0)
-        const golf = 4
-        for (let i = 0; i <= golf * 2; i++) {
-            const px = x + s - (i / (golf * 2)) * s * 2
-            const py = y + s * 1.05 + (i % 2 ? -s * 0.18 : 0) + Math.sin(t * 8 + i) * s * 0.05
-            ctx.lineTo(px, py)
+// ── Ghost Tag: het doolhof, de ectoplasma-stippen en de spookjes uit het spel (v2) ──
+// Het roze spookje is de jager (boos, groter) en zit het blauwe (bang) achterna; het blauwe eet de stippen op.
+function pacman(ctx, b, h, t, st) {
+    if (!st.ec) {
+        const E = st.ec = maakEcto(2)
+        // een rondje door het doolhof: kortste wegen tussen vier hoeken
+        const punten = [[1, 1], [17, 3], [17, 19], [1, 19], [1, 1]]
+        const pad = []
+        for (let i = 0; i + 1 < punten.length; i++) {
+            const [sx, sy] = punten[i], [dx, dy] = punten[i + 1]
+            const vorige = new Map([[sx + ',' + sy, null]]), rij = [[sx, sy]]
+            for (let k = 0; k < rij.length; k++) {
+                const [x, y] = rij[k]
+                if (x === dx && y === dy) break
+                for (const [ax, ay] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                    const n = (x + ax) + ',' + (y + ay)
+                    if (!vorige.has(n) && E.openZonderWrap(x + ax, y + ay)) { vorige.set(n, [x, y]); rij.push([x + ax, y + ay]) }
+                }
+            }
+            const stuk = []
+            for (let p = [dx, dy]; p; p = vorige.get(p[0] + ',' + p[1])) stuk.unshift(p)
+            pad.push(...stuk.slice(1))
         }
-        ctx.closePath(); ctx.fill()
-        ctx.shadowBlur = 0
-        for (const dx of [-0.38, 0.38]) {
-            ctx.fillStyle = '#fff'
-            ctx.beginPath(); ctx.ellipse(x + dx * s, y - s * 0.1, s * 0.26, s * 0.32, 0, 0, TAU); ctx.fill()
-            ctx.fillStyle = '#1a1a5a'
-            ctx.beginPath(); ctx.arc(x + dx * s + kijk * s * 0.12, y - s * 0.06, s * 0.13, 0, TAU); ctx.fill()
-        }
-        // blosjes
-        ctx.fillStyle = 'rgba(255,255,255,0.35)'
-        ctx.beginPath(); ctx.ellipse(x - s * 0.55, y + s * 0.35, s * 0.12, s * 0.07, 0, 0, TAU); ctx.ellipse(x + s * 0.55, y + s * 0.35, s * 0.12, s * 0.07, 0, 0, TAU); ctx.fill()
+        st.pad = pad
+        st.ronde = -1
     }
-    const kleuren = ['#ff5a7a', '#7af0ff', '#ffb34d', '#c08bff']
-    kleuren.forEach((k, i) => {
-        const fase = t * 0.55 + i * 0.9
-        const x = b / 2 + Math.sin(fase) * b * 0.36
-        const y = h * 0.62 + Math.sin(fase * 2 + i) * h * 0.04 - (i % 2) * h * 0.08
-        spook(x, y, k, Math.cos(fase) > 0 ? 1 : -1)
-    })
+    const E = st.ec, pad = st.pad, L = pad.length
+    const plek = (afstand) => {   // waar op het rondje, met de kijkrichting
+        const a = ((afstand % L) + L) % L, i = Math.floor(a), f = a - i
+        const [x1, y1] = pad[(i + L - 1) % L], [x2, y2] = pad[i]
+        const kijk = x2 > x1 ? 'R' : x2 < x1 ? 'L' : y2 > y1 ? 'D' : 'U'
+        return [x1 + (x2 - x1) * f, y1 + (y2 - y1) * f, kijk, f >= 0.5 ? i : i - 1]   // laatste: de tegel waar hij nu is
+    }
+    const loop = t * 5.2   // tegels per seconde, net als in het spel
+    const ronde = Math.floor(loop / L)
+    if (ronde !== st.ronde) {   // een nieuw rondje: alle stippen terug
+        st.ronde = ronde
+        const stippen = new Uint8Array(E.KOLOM * E.RIJEN)
+        for (let y = 0; y < E.RIJEN; y++) for (let x = 0; x < E.KOLOM; x++) if (E.KAART[y][x] === '.') stippen[y * E.KOLOM + x] = 1
+        E.bouw(stippen)
+        st.gegeten = 0
+    }
+    const prooi = plek(loop)
+    while (st.gegeten <= prooi[3] && st.gegeten < L) {   // opgegeten stippen weg
+        const [x, y] = pad[st.gegeten]; E.wisStip(x, y); st.gegeten++
+    }
+    ctx.fillStyle = '#07030f'; ctx.fillRect(0, 0, b, h)
+    const W = E.W, HH = E.RIJEN * E.T
+    const sc = Math.min(b * 0.96 / W, h * 0.56 / HH)
+    const ox = (b - W * sc) / 2, oy = h * 0.31
+    ctx.save(); ctx.translate(ox, oy); ctx.scale(sc, sc)
+    E.zet(ctx, t)
+    ctx.drawImage(E.doolhof, 0, 0, W, HH)
+    ctx.drawImage(E.stippenLaag, 0, 0, W, HH)
+    E.tekenBol(9.5 * E.T, 9.5 * E.T, 1)
+    const T = E.T, u = T * 0.95 / 14
+    const jager = plek(loop - 3.2)
+    const bang = E.meng(E.KLEUR[0], E.BANG_BLAUW, 0.55)
+    E.tekenFiguur(ctx, (prooi[0] + 0.5) * T + (Math.random() - 0.5) * 0.9, (prooi[1] + 0.5) * T + Math.sin(t * 6) * 0.8, u, bang, 'bang', prooi[2], t * 7)
+    E.tekenFiguur(ctx, (jager[0] + 0.5) * T, (jager[1] + 0.5) * T + Math.sin(t * 6 + 2) * 0.8, u * E.CFG.jagerGroot, E.KLEUR[1], 'boos', jager[2], t * 7 + 1.3)
+    ctx.restore()
 }
 
 // ── Block It: precies zoals in het spel. Een steen valt, maakt een vierkant van 3x3 en dat knalt ──
@@ -615,7 +637,7 @@ function pinball(ctx, b, h, t) {
         const n = 26, s = Math.min(b, h) * 0.034
         const punten = []
         for (let i = 0; i < n; i++) {
-            const u = (t * 0.22 * richting + fase - i * 0.018) % 1
+            const u = (t * 0.22 + fase - i * 0.018) % 1   // v2: de kop gaat altijd voorop (de tweede slang gespiegeld)
             const uu = (u + 1) % 1
             const x = -s * 4 + uu * (b + s * 8)
             const y = yy + Math.sin(uu * 12 + t * 0.3) * h * 0.06
@@ -813,7 +835,7 @@ export const SCENES = {
     schaken: { font: 'Cinzel Decorative', css: 'cinzel-decorative', titel: '#f3dc96', rand: '#2b1d05', gloed: '#d9a83a', teken: schaken },
     dammen: { font: 'Cinzel', css: 'cinzel', titel: '#fbf3df', rand: '#2a1608', gloed: '#c98a3e', teken: dammen },
     pong: { font: 'Monoton', css: 'monoton', titel: '#7af7ff', rand: '#12002b', gloed: '#ff3df2', teken: pong },
-    pacman: { font: 'Creepster', css: 'creepster', titel: '#ffe14d', rand: '#0a0a3a', gloed: '#2f5bff', teken: pacman },
+    pacman: { font: 'Creepster', css: 'creepster', titel: '#7dff6a', rand: '#150a26', gloed: '#b44dff', teken: pacman },
     breakout: { font: 'Bungee', css: 'bungee', titel: '#c6b8ff', rand: '#1a0a2e', gloed: '#ff4d6d', teken: breakout },
     swarm: { font: 'Courier New', titel: '#b6ff3a', rand: '#1a4a00', gloed: '#6dff1a', teken: swarm, eigenTitel: swarmTitel },
     pinball: { font: 'Bagel Fat One', css: 'bagel-fat-one', titel: '#b6ff7a', rand: '#14301c', gloed: '#a35cff', teken: pinball },

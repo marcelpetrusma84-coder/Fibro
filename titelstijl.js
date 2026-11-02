@@ -1,4 +1,4 @@
-// titelstijl.js - GEMAAKT door tests/gen/maak_titelstijl.py; niet met de hand aanpassen (v1, 2 nov 2026)
+// titelstijl.js - GEMAAKT door tests/gen/maak_titelstijl.py; niet met de hand aanpassen (v2, 2 nov 2026; v2: ook Ghost Tag)
 //
 // In gewone woorden: de tekencode van drie spellen, letterlijk overgenomen uit het spel zelf, zodat hun titelscherm
 // in precies dezelfde stijl is: The Swarm (swarm-ui.js, pixels op 140 x 210), Runner & Gunner (runner-gunner-ui.js,
@@ -441,4 +441,281 @@ const lagen = maker.achtergrond_ruimte()
 maker.vast()
 maker.vijanden('rood'); maker.vijanden('zwart')
 return { tex, lagen }
+}
+
+// ── Ghost Tag ──
+export function maakEcto(resolutie) {
+let ctx = null, tijd = 0, stippen = null
+const VELDEN = [
+  {
+    naam: 'stad', muur: '#b44dff', binnen: '#150a26', achter: '#07030f',
+    start: [[1, 1, 'R'], [17, 19, 'L']],
+    kaart: [
+    '###################', '#........#........#', '#.##.###.#.###.##.#', '#.................#',
+    '#.##.#.#####.#.##.#', '#....#...#...#....#', '####.###.#.###.####', 'XXX#.#.......#.#XXX',
+    '####.#.##.##.#.####', '........#X#........', '####.#.#####.#.####', 'XXX#.#.......#.#XXX',
+    '####.#.#####.#.####', '#........#........#', '#.##.###.#.###.##.#', '#..#...........#..#',
+    '##.#.#.#####.#.#.##', '#....#...#...#....#', '#.######.#.######.#', '#.................#',
+    '###################',
+    ],
+  },
+  {
+    naam: 'riool', muur: '#3ddc84', binnen: '#0b1a12', achter: '#04100a',
+    start: [[10, 5, 'R'], [6, 19, 'L']],
+    kaart: [
+    '###################', '#........#........#', '#.#####..#..#####.#', '#.#...#..#..#...#.#',
+    '#...#.#.###.#.#...#', '###.#.#.....#.#.###', '#...#.###.###.#...#', '#.#...#.....#...#.#',
+    '#.#.#####.#####.#.#', '....#.........#....', '#.#.#####.#####.#.#', '#.#.....#.#.....#.#',
+    '#.#####.#.#.#####.#', '#.......#.#.......#', '#.#####.#.#.#####.#', '#.....#.#.#.#.....#',
+    '###.#.#.#.#.#.#.###', '#...#...#.#...#...#', '#.#############.#.#', '#.................#',
+    '###################',
+    ],
+  },
+  {
+    naam: 'tempel', muur: '#ffb347', binnen: '#241505', achter: '#0f0803',
+    start: [[2, 1, 'R'], [14, 19, 'L']],
+    kaart: [
+    '###################', '#........#........#', '#.##.##..#..##.##.#', '#.................#',
+    '#.##.#.#####.#.##.#', '#....#...#...#....#', '##.#.#.#.#.#.#.#.##', '#..#.#.#.#.#.#.#..#',
+    '#.##...#...#...##.#', '.........#.........', '#.##...#...#...##.#', '#..#.#.#.#.#.#.#..#',
+    '##.#.#.#.#.#.#.#.##', '#....#...#...#....#', '#.##.#.#####.#.##.#', '#.................#',
+    '#.##.##..#..##.##.#', '#........#........#', '#.###.#######.###.#', '#.................#',
+    '###################',
+    ],
+  },
+  {
+    naam: 'ijsgrot', muur: '#7aa2ff', binnen: '#0d1730', achter: '#04060f',
+    start: [[13, 7, 'R'], [3, 19, 'L']],
+    kaart: [
+    '###################', '#.................#', '#.###.###.###.###.#', '#.#.....#.#.....#.#',
+    '#.#.###.#.#.###.#.#', '#...#.....#...#...#', '###.#.###.#.#.#.###', '#...#...#.#...#...#',
+    '#.#####.#.#.#####.#', '.......#...#.......', '#.#####.#.#.#####.#', '#...#...#.#...#...#',
+    '###.#.###.#.#.#.###', '#...#.....#...#...#', '#.#.###.#.#.###.#.#', '#.#.....#.#.....#.#',
+    '#.###.###.###.###.#', '#.................#', '#.##.##.###.##.##.#', '#.................#',
+    '###################',
+    ],
+  },
+]
+
+let veldNr = 0
+let KAART = VELDEN[0].kaart
+let NEON = VELDEN[0].muur, MUURBINNEN = VELDEN[0].binnen, ACHTER = VELDEN[0].achter
+let STARTPLEK = VELDEN[0].start
+
+function zetVeld(n) {
+  veldNr = ((n % VELDEN.length) + VELDEN.length) % VELDEN.length
+  const v = VELDEN[veldNr]
+  KAART = v.kaart; NEON = v.muur; MUURBINNEN = v.binnen; ACHTER = v.achter
+  STARTPLEK = v.start
+}
+
+const RIJEN = KAART.length, KOLOM = KAART[0].length
+const T = 16, HUD = 32
+const W = KOLOM * T, H = RIJEN * T + HUD
+
+const KLEUR = ['#5ff4ff', '#ff6bd6']
+const BANG_BLAUW = '#2a38ff'
+const ECTO = '#7dff6a'
+const RICHT = { L: [-1, 0], R: [1, 0], U: [0, -1], D: [0, 1] }
+const TEGEN = { L: 'R', R: 'L', U: 'D', D: 'U' }
+const SPOOK = ['.....####.....', '...########...', '..##########..', '.############.',
+  '##############', '##############', '##############', '##############',
+  '##############', '##############', '##############', '##############']
+const KROON = ['#..#..#', '##.#.##', '#######', '#.#.#.#', '#######']
+const wrapX = x => ((x % KOLOM) + KOLOM) % KOLOM
+function isOpen(x, y) {
+  if (y < 0 || y >= RIJEN) return false
+  const c = KAART[y][wrapX(x)]
+  return c !== '#' && c !== 'X'
+}
+function openZonderWrap(x, y) {
+  if (x < 0 || x >= KOLOM || y < 0 || y >= RIJEN) return false
+  const c = KAART[y][x]
+  return c !== '#' && c !== 'X'
+}
+function kan(x, y, r) { const [dx, dy] = RICHT[r]; return isOpen(x + dx, y + dy) }
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255] }
+function rgba(h, a) { const [r, g, b] = hexRgb(h); return `rgba(${r},${g},${b},${a})` }
+function meng(h1, h2, t) {
+  const a = hexRgb(h1), b = hexRgb(h2)
+  return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * t).toString(16).padStart(2, '0')).join('')
+}
+function pixels(g, rijen, x0, y0, u, kleur) {
+  g.fillStyle = kleur
+  rijen.forEach((rij, r) => {
+    let c = 0
+    while (c < rij.length) {
+      if (rij[c] !== '#') { c++; continue }
+      let e = c; while (e < rij.length && rij[e] === '#') e++
+      g.fillRect(x0 + c * u, y0 + r * u, (e - c) * u + 0.05, u + 0.05)
+      c = e
+    }
+  })
+}
+  let res = 1, doolhofLaag = null, stipBeeld = null, druppelBeeld = []
+  let stippenLaag = null, stippenCtx = null, gloedBeelden = new Map()
+  let laatsteMaat = ''
+
+  function maakLaag(w, h) {
+    const c = document.createElement('canvas')
+    c.width = Math.max(1, Math.ceil(w * res)); c.height = Math.max(1, Math.ceil(h * res))
+    const g = c.getContext('2d'); g.setTransform(res, 0, 0, res, 0, 0)
+    return [c, g]
+  }
+
+  function bouwDoolhof() {
+    const [m, mg] = maakLaag(W, RIJEN * T)
+    let z = 7
+    const r2 = () => (z = (z * 16807) % 2147483647) / 2147483647
+    const d = 2
+    for (let y = 0; y < RIJEN; y++) for (let x = 0; x < KOLOM; x++) {
+      if (KAART[y][x] !== '#') continue
+      const px = x * T, py = y * T
+      const l = openZonderWrap(x - 1, y), r = openZonderWrap(x + 1, y)
+      const o = openZonderWrap(x, y - 1), b = openZonderWrap(x, y + 1)
+      mg.fillStyle = NEON; mg.fillRect(px, py, T, T)
+      mg.fillStyle = MUURBINNEN
+      mg.fillRect(px + (l ? d : 0), py + (o ? d : 0), T - (l ? d : 0) - (r ? d : 0), T - (o ? d : 0) - (b ? d : 0))
+      for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+        if (openZonderWrap(x + dx, y + dy) && !openZonderWrap(x + dx, y) && !openZonderWrap(x, y + dy)) {
+          mg.fillStyle = NEON; mg.fillRect(dx < 0 ? px : px + T - d, dy < 0 ? py : py + T - d, d, d)
+        }
+      }
+      mg.fillStyle = 'rgba(180,77,255,0.12)'
+      if (r2() < 0.55) mg.fillRect(px + 4 + Math.floor(r2() * 7), py + 4 + Math.floor(r2() * 8), 3, 1)
+      if (r2() < 0.25) mg.fillRect(px + 4 + Math.floor(r2() * 8), py + 4 + Math.floor(r2() * 8), 1, 1)
+    }
+    const [c, g] = maakLaag(W, RIJEN * T)
+    g.shadowColor = NEON; g.shadowBlur = 7 * res
+    g.drawImage(m, 0, 0, W, RIJEN * T)
+    g.shadowBlur = 0
+    g.drawImage(m, 0, 0, W, RIJEN * T)
+    doolhofLaag = c
+  }
+
+  function bouwSprites() {
+    const [c, g] = maakLaag(10, 10)
+    const gr = g.createRadialGradient(5, 5, 0, 5, 5, 5)
+    gr.addColorStop(0, rgba(ECTO, 0.6)); gr.addColorStop(1, rgba(ECTO, 0))
+    g.fillStyle = gr; g.fillRect(0, 0, 10, 10)
+    g.fillStyle = ECTO; g.fillRect(4.5, 3.2, 1, 1); g.fillRect(4, 4.2, 2, 2.2)
+    g.fillStyle = '#eaffe4'; g.fillRect(4.3, 4.6, 0.8, 0.8)
+    stipBeeld = c
+    druppelBeeld = KLEUR.map(kl => {
+      const [c2, g2] = maakLaag(8, 8)
+      const gr2 = g2.createRadialGradient(4, 4.5, 0, 4, 4.5, 4)
+      gr2.addColorStop(0, rgba(kl, 0.7)); gr2.addColorStop(1, rgba(kl, 0))
+      g2.fillStyle = gr2; g2.fillRect(0, 0, 8, 8)
+      g2.fillStyle = kl
+      g2.fillRect(3.5, 1.5, 1, 1); g2.fillRect(3, 2.5, 2, 1); g2.fillRect(2.5, 3.5, 3, 2); g2.fillRect(3, 5.5, 2, 1)
+      g2.fillStyle = '#ffffff'; g2.fillRect(3.1, 3.7, 0.8, 0.8)
+      return c2
+    })
+    gloedBeelden = new Map()
+  }
+
+  // Alle stippen staan in één laag. Een opgegeten stip wordt uit die laag
+  // gewist; dat is veel lichter dan er tweehonderd per beeldje tekenen.
+  function bouwStippen() {
+    const [c, g] = maakLaag(W, RIJEN * T)
+    stippenLaag = c; stippenCtx = g
+    if (!stippen) return
+    for (let i = 0; i < stippen.length; i++) {
+      if (!stippen[i]) continue
+      const x = i % KOLOM, y = (i / KOLOM) | 0
+      g.drawImage(stipBeeld, x * T + 3, y * T + 3, 10, 10)
+    }
+  }
+
+  function wisStip(x, y) {
+    if (stippenCtx) stippenCtx.clearRect(x * T, y * T, T, T)
+  }
+
+  // De gloed om een spookje is een vast plaatje per kleur, niet elk beeldje opnieuw.
+  function gloed(kleur) {
+    let b = gloedBeelden.get(kleur)
+    if (!b) {
+      const [c, g] = maakLaag(64, 64)
+      const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32)
+      gr.addColorStop(0, rgba(kleur, 0.4)); gr.addColorStop(1, rgba(kleur, 0))
+      g.fillStyle = gr; g.fillRect(0, 0, 64, 64)
+      b = c; gloedBeelden.set(kleur, b)
+    }
+    return b
+  }
+
+  // fase laat de rok deinen; gezicht is 'normaal', 'boos' of 'bang'
+  function tekenFiguur(g, cx, cy, u, kleur, gezicht, kijk, fase, alpha = 1, wit = false) {
+    const x0 = cx - 7 * u, y0 = cy - 7.5 * u
+    g.save()
+    g.globalAlpha = alpha
+    g.drawImage(gloed(kleur), cx - 13 * u, cy - 13 * u, 26 * u, 26 * u)
+    const lijf = wit ? '#ffffff' : kleur
+    const px = (x, y, w = 1, h = 1) => g.fillRect(x0 + x * u, y0 + y * u, w * u + 0.05, h * u + 0.05)
+    pixels(g, SPOOK, x0, y0, u, lijf)
+    g.fillStyle = lijf
+    px(-1, 6, 1, 2); px(14, 6, 1, 2)                       // armpjes
+    for (let c = 0; c < 14; c++) {                          // deinende rok
+      const laag = 1.7 + Math.sin(c * 0.85 + fase) * 1.4
+      px(c, 12, 1, Math.max(0.2, laag))
+    }
+    if (gezicht === 'bang') {
+      g.fillStyle = '#ffffff'; px(2, 4, 3, 3); px(9, 4, 3, 3)
+      g.fillStyle = '#1b1245'; px(3, 5); px(10, 5)
+      for (let i = 0; i < 8; i++) px(3 + i, i % 2 ? 8 : 9)   // zigzagmondje
+    } else if (gezicht === 'boos') {
+      g.fillStyle = '#ffffff'; px(2, 4, 4, 4); px(8, 4, 4, 4)
+      const [dx, dy] = RICHT[kijk] || [0, 1]
+      const ox = dx < 0 ? 0 : dx > 0 ? 2 : 1, oy = dy < 0 ? 0 : dy > 0 ? 2 : 1
+      g.fillStyle = '#ff2a2a'; px(2 + ox, 4 + oy, 2, 2); px(8 + ox, 4 + oy, 2, 2)
+      g.fillStyle = '#2a0014'
+      px(1, 2, 2, 1); px(3, 3, 2, 1); px(11, 2, 2, 1); px(9, 3, 2, 1)   // boze wenkbrauwen
+      px(4, 9, 6, 2)                                                     // grijns
+      g.fillStyle = '#ffffff'; px(4, 9); px(6, 9); px(8, 9); px(5, 10); px(7, 10); px(9, 10)
+    } else {
+      g.fillStyle = '#ffffff'; px(2, 3, 4, 5); px(8, 3, 4, 5)
+      const [dx, dy] = RICHT[kijk] || [0, 1]
+      const ox = dx < 0 ? 0 : dx > 0 ? 2 : 1, oy = dy < 0 ? 0 : dy > 0 ? 3 : 1.5
+      g.fillStyle = '#1b1245'; px(2 + ox, 3 + oy, 2, 2); px(8 + ox, 3 + oy, 2, 2)
+      g.fillStyle = 'rgba(255,255,255,0.85)'; px(2 + ox, 3 + oy, 0.7, 0.7); px(8 + ox, 3 + oy, 0.7, 0.7)
+      g.fillStyle = rgba('#ff6b9d', 0.5); px(0, 8, 2, 1); px(12, 8, 2, 1)   // blosjes
+      g.fillStyle = '#1b1245'; px(6, 9, 2, 2)                                // mondje
+    }
+    g.restore()
+  }
+
+  function tekenKroon(cx, cy, u) {
+    const x0 = cx - 3.5 * u, y0 = cy - 2.5 * u
+    ctx.save()
+    ctx.shadowColor = '#ffd23f'; ctx.shadowBlur = 8 * res
+    pixels(ctx, KROON, x0, y0, u, '#ffd23f')
+    ctx.shadowBlur = 0
+    ctx.fillStyle = '#ff3b6b'
+    for (const x of [1, 3, 5]) ctx.fillRect(x0 + x * u, y0 + 3 * u, u, u)
+    ctx.restore()
+  }
+
+  function tekenBol(cx, cy, s = 1) {
+    const p = 1 + 0.15 * Math.sin(tijd * 6)
+    const gr = ctx.createRadialGradient(cx, cy, 0, cx, cy, 12 * p * s)
+    gr.addColorStop(0, rgba(ECTO, 0.75)); gr.addColorStop(0.45, rgba(ECTO, 0.3)); gr.addColorStop(1, rgba(ECTO, 0))
+    ctx.fillStyle = gr; ctx.fillRect(cx - 13 * s, cy - 13 * s, 26 * s, 26 * s)
+    ctx.fillStyle = ECTO
+    ctx.beginPath(); ctx.arc(cx, cy, 4.2 * p * s, 0, Math.PI * 2); ctx.fill()
+    ctx.fillStyle = '#f2ffe9'; ctx.fillRect(cx - 2 * s, cy - 2.5 * s, 1.6 * s, 1.6 * s)
+    for (let n = 0; n < 3; n++) {
+      const h = tijd * 3 + n * 2.094
+      ctx.fillStyle = rgba(ECTO, 0.9)
+      ctx.fillRect(cx + Math.cos(h) * 8 * s - 0.75, cy + Math.sin(h) * 8 * s - 0.75, 1.5, 1.5)
+    }
+  }
+
+res = resolutie || 2
+return {
+  KAART, KOLOM, RIJEN, T, W, KLEUR, BANG_BLAUW, CFG: { jagerGroot: 1.4 }, openZonderWrap, meng,
+  zet(c, t) { ctx = c; tijd = t },
+  bouw(nieuweStippen) { stippen = nieuweStippen; bouwDoolhof(); bouwSprites(); bouwStippen() },
+  wisStip, tekenFiguur, tekenBol,
+  get doolhof() { return doolhofLaag }, get stippenLaag() { return stippenLaag }
+}
 }

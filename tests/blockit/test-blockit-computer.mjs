@@ -107,6 +107,6 @@ assert.ok(!chat.includes('blockit-ui.js?v=149'), 'geen oude versie meer in chat.
 // 10. Alle nieuwe teksten hebben een Engelse vertaling
 const en = readFileSync(new URL('../../taal-en.js', import.meta.url), 'utf8')
 for (const [, tekst] of ui.matchAll(/vertaal\('([^']+)'/g)) assert.ok(en.includes(JSON.stringify(tekst) + ':'), 'Engels voor: ' + tekst)
-assert.match(readFileSync(new URL('../../taal.js', import.meta.url), 'utf8'), /taal-en\.js\?v=48/)
+assert.ok(Number(/taal-en\.js\?v=(\d+)/.exec(readFileSync(new URL('../../taal.js', import.meta.url), 'utf8'))[1]) >= 48, 'taal-en.js minstens v48')
 
 console.log(`PASS: Block It tegen de computer (alleen gemiddeld ${makkelijk} stenen op makkelijk, ${moeilijk} op moeilijk), zwarte aanval, versies en Engels.`)

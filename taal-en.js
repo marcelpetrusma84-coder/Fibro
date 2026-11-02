@@ -1536,6 +1536,11 @@ window.FIBRO_EN = {
   "🤖 Tegen de computer": "🤖 Against the computer",
   "🤖 Tegen de computer: kies een niveau": "🤖 Against the computer: choose a level",
 
+// ---- Titelschermen van de spellen (titelscherm.js, v251) ----
+  "Tik om te beginnen": "Tap to start",
+  "Muziek uit": "Music off",
+  "Muziek aan": "Music on",
+
 // ---- Belregels in de chat (belregel.js, v152) ----
   "📞 Oproep · niet opgenomen": "📞 Call · no answer",
   "📹 Video-oproep · niet opgenomen": "📹 Video call · no answer",

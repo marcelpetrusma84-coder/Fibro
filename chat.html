@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=48"></script>
+<script src="taal.js?v=49"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -417,6 +417,7 @@ window.veiligeUrl = function(v){
   import { maakSpelVerbinding } from './spelverbinding.js?v=2'
   import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=2'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
+  import { toonTitelscherm, sluitTitelscherm, stopTitelMuziek, heeftTitelscherm } from './titelscherm.js?v=1' // v251: titelscherm met muziek
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -2386,6 +2387,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (videoNaam) videoNaam.textContent = spelVriendUsername()
     const overlay = document.getElementById('spelOverlay')
     overlay.classList.add('open')
+    // v251: eerst het titelscherm (bewegend plaatje en muziek). Ondertussen wordt al op je vriend gewacht;
+    // het spel begint pas als je het titelscherm hebt weggetikt én je vriend er is. Niet bij schaken met drie: daar
+    // kom je vanuit een schaakspel dat al open was.
+    const titelKlaar = heeftTitelscherm(spelType) && spelType !== 'schakendrie' ? toonTitelscherm({ spelId: spelType, naam: SPEL_INFO[spelType]?.naam || spelType }) : Promise.resolve(true)
 
     benIkSpeler1 = spelType === 'schakendrie' ? players[0] === huidigeUser.id : (starterId ? (starterId === huidigeUser.id) : (huidigeUser.id < spelTegenstander.id))
 
@@ -2414,6 +2419,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
       clearTimeout(spelWachtTimer); spelWachtTimer = null
       document.getElementById('spelWachtscherm')?.remove()
     }
+    if (!await titelKlaar || spelActief !== spelType || spelKanaal !== verbinding) return // v251
+    stopTitelMuziek()
 
     if (spelType === 'botkaaseiren') await startBotKaasEieren()
     else if (spelType === 'vieroprij') await startVierOpEenRij()
@@ -2820,6 +2827,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       document.querySelector('#spelVideoEigen .video-etiket').textContent = schaakT('Jij')
       document.getElementById('spelVideoAnderNaam').textContent = schaakT('Vriend')
     }
+    sluitTitelscherm() // v251
     document.getElementById('spelOverlay').classList.remove('open')
     document.getElementById('spelInhoud').innerHTML = ''
     var scw = document.getElementById('spelChatWrap'); if (scw) scw.remove()

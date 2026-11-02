@@ -96,7 +96,7 @@ class Media extends Events {
   set(matches) { this.matches = matches; this.emit('change', { matches }) }
 }
 
-function fixture({ saved = 'off', permission, secureContext = true, reduced = false, deniedStorage = false, position = 'static', isolation = 'auto', orientation = null } = {}) {
+function fixture({ saved = 'off', permission, secureContext = true, reduced = false, deniedStorage = false, noStorage = false, position = 'static', isolation = 'auto', orientation = null } = {}) {
   const document = new Document(), window = new Events(), media = new Media(reduced), frames = new Map(), observers = [], changes = []
   let nextFrame = 0, timestamp = 0, permissionCalls = 0, storageValue = saved
   window.innerWidth = 1000; window.innerHeight = 800; window.isSecureContext = secureContext
@@ -115,7 +115,7 @@ function fixture({ saved = 'off', permission, secureContext = true, reduced = fa
     setItem(key, value) { assert.equal(key, KEY); if (deniedStorage) throw Error('storage denied'); storageValue = String(value) }
   }
   const options = {
-    root, eventTarget:window, documentTarget:document, storage, reducedMotion:media,
+    root, eventTarget:window, documentTarget:document, storage:noStorage ? null : storage, reducedMotion:media,
     orientationEvent, secureContext,
     getComputedStyle:element => ({ position:element.style.getPropertyValue('position') || 'static', isolation:element.style.getPropertyValue('isolation') || 'auto' }),
     requestFrame(callback) { const id = ++nextFrame; frames.set(id, callback); return id }, cancelFrame:id => frames.delete(id),
@@ -168,9 +168,51 @@ const boundedMotion = h => {
   }
 }
 
-// Existing device preferences opt in explicitly; unrelated/legacy strings do
-// not enable a background or ask a phone for sensor access.
-for (const saved of [null, '', 'off', 'true', 'wood', '{broken']) {
+// New devices and unknown legacy strings use the enabled default. Mounting the
+// table must never trigger an iOS permission request without a user gesture.
+for (const saved of [null, '', 'true', 'wood', '{broken']) {
+  const h = fixture({ saved, permission:'granted' })
+  assert.equal(h.wallpaper.enabled, true)
+  assert.equal(h.wallpaper.motionState, 'permission')
+  assert(h.layer()); assert(h.photo())
+  assert.equal(h.permissionCalls, 0, 'the new enabled default does not prompt automatically')
+  assert.equal(h.saved, saved, 'mounting does not overwrite a missing or unknown preference')
+  assert.equal(h.window.count('deviceorientation'), 0, 'permission-gated sensors stay detached')
+  h.wallpaper.destroy(); noMotionWork(h); restored(h)
+}
+
+{
+  const h = fixture({ saved:null, noStorage:true, permission:'granted' })
+  assert.equal(h.wallpaper.enabled, true, 'missing storage uses the enabled default')
+  assert.equal(h.permissionCalls, 0)
+  await h.wallpaper.setEnabled(false)
+  const replacement = maakSchaakWallpaper(h.options)
+  assert.equal(replacement.enabled, false, 'an in-memory OFF survives a new game without storage')
+  replacement.destroy(); restored(h); noMotionWork(h)
+}
+
+{
+  const h = fixture({ saved:null, reduced:true, permission:'granted' })
+  assert.equal(h.wallpaper.enabled, true)
+  assert.equal(h.wallpaper.motionState, 'reduced')
+  assert(h.photo(), 'the new default keeps a static table for reduced-motion users')
+  assert.equal(h.permissionCalls, 0)
+  noMotionWork(h); h.wallpaper.destroy(); restored(h)
+}
+
+{
+  const h = fixture({ saved:null, orientation:{} })
+  assert.equal(h.wallpaper.enabled, true)
+  assert.equal(h.wallpaper.motionState, 'motion', 'permission-free phone sensors work from the enabled default')
+  assert.equal(h.window.count('deviceorientation'), 1)
+  assert.equal(h.permissionCalls, 0)
+  h.wallpaper.destroy(); noMotionWork(h); restored(h)
+}
+
+// An explicit OFF always wins over the enabled default and never loads a photo
+// or asks a phone for sensor access.
+{
+  const saved = 'off'
   const h = fixture({ saved, permission:'granted' })
   assert.equal(h.wallpaper.enabled, false)
   assert.equal(h.wallpaper.motionState, 'off')
@@ -221,11 +263,12 @@ for (const saved of [null, '', 'off', 'true', 'wood', '{broken']) {
 
 {
   const h = fixture({ deniedStorage:true })
-  assert.equal(h.wallpaper.enabled, false)
-  await h.wallpaper.setEnabled(true)
-  assert.equal(h.wallpaper.enabled, true, 'unavailable storage still permits an in-memory opt-in')
+  assert.equal(h.wallpaper.enabled, true, 'denied storage uses the enabled default')
   await h.wallpaper.setEnabled(false)
-  restored(h); noMotionWork(h); h.wallpaper.destroy()
+  restored(h); noMotionWork(h)
+  const replacement = maakSchaakWallpaper(h.options)
+  assert.equal(replacement.enabled, false, 'denied storage retains an explicit in-memory OFF between games')
+  replacement.destroy(); restored(h); noMotionWork(h); h.wallpaper.destroy()
 }
 
 {
@@ -460,4 +503,4 @@ for (const action of ['off','destroy','hide','reduce']) {
   assert.equal(h.window.count(), 0); assert.equal(h.document.count(), 0); assert.equal(h.media.count(), 0)
 }
 
-console.log('PASS: opt-in chess wallpaper, preserved board/camera/style identity, bounded pointer/sensor motion, explicit permissions and stale grants, reduced/hidden lifecycle, denied storage and complete disposal.')
+console.log('PASS: default-on chess wallpaper with preserved opt-out, board/camera/style identity, bounded pointer/sensor motion, explicit permissions and stale grants, reduced/hidden lifecycle, denied storage and complete disposal.')

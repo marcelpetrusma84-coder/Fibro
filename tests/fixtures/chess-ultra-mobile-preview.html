@@ -8,7 +8,8 @@
 <div style="padding:1px 10px;border:1px solid #92b5e533;border-radius:13px;background:#101322ed"><nav aria-label="Vensterbreedte"><button data-width="320">320 px</button><button data-width="390">390 px</button><button data-width="900">Desktop</button></nav>
 <nav aria-label="Focus testen"><button data-focus-key="+">Meer bord (+)</button><button data-focus-key="-">Minder bord (−)</button><button data-focus-key="Escape">Alles tonen</button><output id="focus-status" role="status" aria-live="polite">Kies eerst Ultra in het spel.</output></nav></div>
 <p>Deze proefknoppen bedienen dezelfde +/−-toetsen van het echte bord. Op de telefoon gebruik je de vingerspreid- en knijpbeweging. De snelkoppelingen werken ook wanneer je het bord met Tab focus geeft. Alleen Ultra op mobiele breedte gebruikt de vier stappen.</p>
-</section><div class="preview-window"><iframe id="phone" title="Fibro Ultra mobiele preview" src="../../spel.html?spel=schaken&amp;preview=ultra-progress-mobile"></iframe></div>
+<p><strong>Een zet terugvegen:</strong> zet Take-back aan in de schaakinstellingen en speel een zet. Sleep onder het bord vanaf de rechterkant tot links voorbij het midden en laat los. De strook licht op wanneer je ver genoeg bent. In deze preview kun je ook met de muis slepen.</p>
+</section><div class="preview-window"><iframe id="phone" title="Fibro Ultra mobiele preview" src="../../spel.html?spel=schaken&amp;preview=ultra-swipe-final-v1"></iframe></div>
 <script>
 const phone=document.getElementById('phone'),status=document.getElementById('focus-status')
 let observer
@@ -18,8 +19,15 @@ function report(){
 }
 phone.addEventListener('load',()=>{
   observer?.disconnect()
-  observer=new MutationObserver(report)
-  observer.observe(phone.contentDocument,{subtree:true,childList:true,attributes:true,attributeFilter:['data-ultra-focus']})
+  // An embedded preview may replace its frame document during loading.
+  const contents=phone.contentDocument?.documentElement
+  if(contents?.nodeType===1){
+    try{
+      observer=new MutationObserver(report)
+      observer.observe(contents,{subtree:true,childList:true,attributes:true,attributeFilter:['data-ultra-focus']})
+    }catch{observer?.disconnect();observer=null}
+  }
+  phone.contentWindow?.addEventListener('resize',report,{passive:true})
   report()
 })
 for(const button of document.querySelectorAll('[data-width]'))button.addEventListener('click',()=>{document.querySelector('main').classList.toggle('wide',button.dataset.width==='900');phone.style.width=button.dataset.width+'px'})

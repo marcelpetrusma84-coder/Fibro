@@ -34,7 +34,9 @@ export function maakSchaakWallpaper(options = {}) {
   const Observer = options.MutationObserver ?? win.MutationObserver
   const media = options.reducedMotion || win.matchMedia?.('(prefers-reduced-motion: reduce)') || { matches:false }
   const subscribers = new Set(typeof options.onChange === 'function' ? [options.onChange] : [])
-  const preference = preferences.get(win) || { value:'off' }
+  // New devices start with the table enabled. An explicit saved/in-memory OFF
+  // remains authoritative, including when storage is unavailable afterwards.
+  const preference = preferences.get(win) || { value:'table' }
   preferences.set(win, preference)
   let storage = options.storage
   if (storage === undefined) { try { storage = win.localStorage } catch { storage = null } }
@@ -157,7 +159,7 @@ export function maakSchaakWallpaper(options = {}) {
     layer.setAttribute('aria-hidden', 'true')
     layer.style.cssText = 'position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;user-select:none;background:#211912;perspective:1200px;contain:layout paint style;'
     photo = doc.createElement('div'); photo.className = 'sch-wallpaper-photo'
-    // Assign the photo only after opt-in; OFF does not fetch the image.
+    // Assign the photo only while enabled; a saved OFF does not fetch it.
     photo.style.cssText = 'position:absolute;inset:-9%;background-size:cover;background-position:center 58%;background-repeat:no-repeat;filter:brightness(.84) saturate(.97);transform-origin:50% 55%;backface-visibility:hidden;will-change:transform;'
     const imageUrl = new URL('./assets/chess/walnut-table-room-3d.png', import.meta.url).href
     photo.style.backgroundImage = `url("${imageUrl}")`

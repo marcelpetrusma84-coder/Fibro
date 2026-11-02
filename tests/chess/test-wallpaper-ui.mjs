@@ -61,6 +61,16 @@ function fixture(mode,{overlay=true}={}) {
     get disposed(){return disposed},get unsubscribed(){return unsubscribed}}
 }
 for(const mode of ['two','three']) {
+  sharedEnabled=true
+  const firstUse=fixture(mode)
+  assert.equal(firstUse.toggle.checked,true,'the enabled first-use controller is reflected in the menu')
+  assert.equal(firstUse.motion.hidden,false,'a permission-gated phone offers a user gesture')
+  assert.deepEqual(firstUse.events,['created'],'an enabled first-use background never requests permission on mounting')
+  firstUse.toggle.checked=false;firstUse.toggle.change();firstUse.dispose()
+  const savedOff=fixture(mode)
+  assert.equal(savedOff.toggle.checked,false,'an explicit OFF is preserved when the menu is mounted again')
+  assert.equal(savedOff.motion.hidden,true)
+  savedOff.dispose()
   sharedEnabled=false
   const ui=fixture(mode)
   assert.equal(ui.toggle.checked,false);assert.equal(ui.motion.hidden,true);assert.equal(ui.status.textContent,'')

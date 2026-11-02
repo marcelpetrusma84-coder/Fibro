@@ -58,12 +58,15 @@ for(const id of ['spelOverlay','spelTitelBar','spelInhoud']){const node=new Node
 globalThis.document=doc
 const settingsKey='fibro_chess_settings_v1'
 const previousSettings={soundTheme:'classic',thinking:3,board:'wood',customPreference:'keep'}
-const saved=new Map([['fibro_taal','en'],[settingsKey,JSON.stringify(previousSettings)]])
+// Keep this language fixture's deliberately small DOM free of decoration.
+// Default-ON wallpaper, its menu and sensor behavior have dedicated tests.
+const saved=new Map([['fibro_taal','en'],[settingsKey,JSON.stringify(previousSettings)],['fibro_chess_wallpaper_v1','off']])
 globalThis.localStorage={getItem:key=>saved.get(key)??null,setItem:(key,value)=>saved.set(key,String(value))}
 globalThis.window=new EventTarget()
+window.localStorage=globalThis.localStorage
 window.T=()=>{throw Error('The chess renderer must not invoke the global app translator')}
 const {start}=await import('../../schaken-drie-ui.js')
-const {maakSchaakTaal}=await import('../../schaak-taal.js?v=7')
+const {maakSchaakTaal}=await import('../../schaak-taal.js?v=8')
 const root=doc.getElementById('spelInhoud')
 const hostile='<img src=x onerror=alert(1)>'
 let stopped=0

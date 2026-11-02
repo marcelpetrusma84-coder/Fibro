@@ -417,7 +417,7 @@ window.veiligeUrl = function(v){
   import { maakSpelVerbinding } from './spelverbinding.js?v=2'
   import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=2'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
-  import { toonTitelscherm, sluitTitelscherm, stopTitelMuziek, heeftTitelscherm } from './titelscherm.js?v=1' // v251: titelscherm met muziek
+  import { toonTitelscherm, sluitTitelscherm, heeftTitelscherm, spelStart } from './titelscherm.js?v=4' // v251: titelscherm met muziek
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -2291,18 +2291,18 @@ console.timeLog('[chat] berichten', 'opgehaald')
   const SPEL_BESTAND = {
     botkaaseiren: './bke-ui.js?v=239',
     dammen: './dammen-ui.js?v=147',
-    pong: './pong-ui.js?v=241',
+    pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
     schaken: './schaken-ui.js?v=253',
     schakendrie: './schaken-drie-ui.js?v=25',
     flappybird: './flappy-ui.js?v=147',
-    breakout: './blockit-ui.js?v=150',
+    breakout: './blockit-ui.js?v=151',
     spaceinvaders: './invaders-ui.js?v=147',
-    swarm: './swarm-ui.js?v=147',
-    endlessrunner: './runner-gunner-ui.js?v=148',
-    pacman: './ecto-ui.js?v=177',
-    pinball: './twin-snakes-ui.js?v=149',
-    shmup: './neon-raiders-ui.js?v=222'
+    swarm: './swarm-ui.js?v=148',
+    endlessrunner: './runner-gunner-ui.js?v=149',
+    pacman: './ecto-ui.js?v=178',
+    pinball: './twin-snakes-ui.js?v=150',
+    shmup: './neon-raiders-ui.js?v=223'
   }
   const _alGeladen = {}
   function laadSpelAlvast(spelType) {
@@ -2420,7 +2420,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       document.getElementById('spelWachtscherm')?.remove()
     }
     if (!await titelKlaar || spelActief !== spelType || spelKanaal !== verbinding) return // v251
-    stopTitelMuziek()
+    spelStart(spelType) // v253: muziek stopt nu, of pas na het menu van het spel
 
     if (spelType === 'botkaaseiren') await startBotKaasEieren()
     else if (spelType === 'vieroprij') await startVierOpEenRij()
@@ -3053,7 +3053,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Pong ───
   async function startPong() {
-    const m = await import('./pong-ui.js?v=241')
+    const m = await import('./pong-ui.js?v=242')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'pong' && !spelGestopt })
   }
 
@@ -3147,7 +3147,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Block It Multiplayer ───
 async function startBlockIt() {
-    const m = await import('./blockit-ui.js?v=150')
+    const m = await import('./blockit-ui.js?v=151')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'breakout' && !spelGestopt })
 }
 
@@ -3159,30 +3159,30 @@ async function startBlockIt() {
 
 // ─── The Swarm Multiplayer ───
   async function startSwarm() {
-    const m = await import('./swarm-ui.js?v=147')
+    const m = await import('./swarm-ui.js?v=148')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'swarm' && !spelGestopt })
   }
 
   // ─── Runner & Gunner (vakje Endless Runner) ───
   // ─── Spookjes (vakje Pac-Man) ───
   async function startEcto() {
-    const m = await import('./ecto-ui.js?v=177')
+    const m = await import('./ecto-ui.js?v=178')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'pacman' && !spelGestopt })
   }
 
   async function startRunnerGunner() {
-    const m = await import('./runner-gunner-ui.js?v=148')
+    const m = await import('./runner-gunner-ui.js?v=149')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'endlessrunner' && !spelGestopt })
   }
 
   // ─── Twin Snakes (vakje Pinball) ───
   async function startTwinSnakes() {
-    const m = await import('./twin-snakes-ui.js?v=149')
+    const m = await import('./twin-snakes-ui.js?v=150')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'pinball' && !spelGestopt })
   }
 
   async function startNeonRaiders() {
-    const m = await import('./neon-raiders-ui.js?v=222')
+    const m = await import('./neon-raiders-ui.js?v=223')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'shmup' && !spelGestopt })
   }
 

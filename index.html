@@ -267,6 +267,7 @@ import { startMeldingen } from './meldingen.js?v=187'
 import { haalPrivateKeyOp } from './crypto.js?v=182'
 import { isBelregel, belregelTekst } from './belregel.js?v=152'
 import { vulSpelVersies } from './spelversies.js?v=12'
+import { openSpelMetTitel } from './titelscherm.js?v=4' // v252: titelscherm met muziek meteen bij je tik
 pasBlokstijlToe()
 
 // ── Waarschuw als de private key op dit apparaat ontbreekt ──
@@ -631,7 +632,7 @@ function renderSpelWidget(c, spel) {
     vulSpelVersies(kop)
   }
   blok.style.cursor = 'pointer'
-  blok.onclick = () => { location.href = 'spel.html?spel=' + encodeURIComponent(spel) }
+  blok.onclick = () => openSpelMetTitel(spel, 'spel.html?spel=' + encodeURIComponent(spel))
 }
 
 // ── IndexedDB voor muziek (FibroDB v2, zelfde als profiel.html) ──

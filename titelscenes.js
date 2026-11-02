@@ -1,9 +1,14 @@
-// titelscenes.js - de bewegende plaatjes van de titelschermen (v1, 2 nov 2026)
+// titelscenes.js - de bewegende plaatjes van de titelschermen (v3, 2 nov 2026)
+// v3: Ghost Tag met de spookjes en stippen uit het spel; Twin Snakes allebei vooruit; Neo Paddle: de bal kaatst echt.
+// v2: The Swarm, Runner & Gunner en Neon Raiders in de stijl van het spel zelf (titelstijl.js, met hun eigen titel);
+//     Block It laat zien wat er in het spel gebeurt: een steen valt, er ontstaat een vierkant van 3x3 en dat knalt.
 //
 // In gewone woorden: voor elk spel een tekening in code (dus altijd scherp, op elk scherm) die een beetje beweegt.
 // teken(ctx, b, h, t, st): b x h = grootte in beeldpunten, t = seconden sinds het begin, st = een eigen kladblok.
 // De naam van het spel tekent titelscherm.js er bovenop (in het lettertype en de kleuren van 'titel').
 // Geen ctx.filter: dat kent Safari op de iPhone niet.
+
+import { maakSwarm, maakRunner, maakNeon, maakEcto } from './titelstijl.js?v=2'   // v2: drie spellen in hun eigen stijl
 
 const TAU = Math.PI * 2
 
@@ -283,178 +288,331 @@ function pong(ctx, b, h, t) {
     }
     ctx.globalAlpha = 1
     ctx.shadowBlur = 0
-    // batjes en bal (in het midden van het scherm, boven de vloer)
-    const vy = h * 0.5, vh = h * 0.28, mx = b * 0.12
-    const bx = b / 2 + Math.sin(t * 1.7) * (b / 2 - mx - 22)
-    const by = vy + Math.sin(t * 2.9) * vh * 0.4
-    const batje = (x, y, kleur) => {
-        ctx.fillStyle = kleur; ctx.shadowColor = kleur; ctx.shadowBlur = 18
-        rond(ctx, x - 6, y - vh * 0.16, 12, vh * 0.32, 6); ctx.fill()
-        ctx.shadowBlur = 0
+    // batjes en bal: de bal vliegt echt van batje naar batje en kaatst terug (v2)
+    const vy = h * 0.5, vh = h * 0.28, mx = b * 0.12, br = 8, bh = vh * 0.32
+    const xL = mx + 6 + br, xR = b - mx - 6 - br, boven = vy - vh * 0.42, onder = vy + vh * 0.42
+    const OVER = 1.25                                           // seconden van batje naar batje
+    const zaag = (x, p) => { const f = ((x / p) % 2 + 2) % 2; return f < 1 ? f : 2 - f }   // 0..1..0
+    const balX = tt => xL + (xR - xL) * zaag(tt, OVER)
+    const balY = tt => boven + (onder - boven) * zaag(tt + 0.37, 0.83)   // kaatst ook tegen boven- en onderkant
+    // een batje staat precies waar de bal hem raakt: links op 0, 2, 4.. x OVER, rechts op 1, 3, 5.. x OVER
+    const batY = (eerste) => {
+        const per = 2 * OVER, na = ((t - eerste) % per + per) % per
+        const vorige = t - na, volgende = vorige + per
+        return balY(vorige) + (balY(volgende) - balY(vorige)) * glad(klem(na / (per * 0.8)))
     }
-    batje(mx, vy + Math.sin(t * 2.9 - 0.4) * vh * 0.35, '#00f0ff')
-    batje(b - mx, vy + Math.sin(t * 2.9 + 0.3) * vh * 0.35, '#ff3df2')
+    const raak = (eerste) => { const per = 2 * OVER, na = ((t - eerste) % per + per) % per; return Math.max(0, 1 - Math.min(na, per - na) / 0.18) }
+    const batje = (x, y, kleur, licht) => {
+        ctx.fillStyle = licht > 0 ? '#ffffff' : kleur; ctx.shadowColor = kleur; ctx.shadowBlur = 18 + licht * 30
+        rond(ctx, x - 6, y - bh / 2, 12, bh, 6); ctx.fill()
+        ctx.shadowBlur = 0
+        if (licht > 0) { ctx.globalAlpha = licht; ctx.strokeStyle = kleur; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 14 + (1 - licht) * 30, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1 }
+    }
+    batje(mx, batY(0), '#00f0ff', raak(0))
+    batje(b - mx, batY(OVER), '#ff3df2', raak(OVER))
     for (let i = 6; i >= 0; i--) {
         const tt = t - i * 0.03
         ctx.globalAlpha = 1 - i / 7
         ctx.fillStyle = '#fff'
         ctx.shadowColor = '#fff'; ctx.shadowBlur = i ? 0 : 20
-        ctx.beginPath(); ctx.arc(b / 2 + Math.sin(tt * 1.7) * (b / 2 - mx - 22), vy + Math.sin(tt * 2.9) * vh * 0.4, 8 - i * 0.6, 0, TAU); ctx.fill()
+        ctx.beginPath(); ctx.arc(balX(tt), balY(tt), br - i * 0.6, 0, TAU); ctx.fill()
     }
     ctx.globalAlpha = 1; ctx.shadowBlur = 0
-    void bx; void by
 }
 
-// ── Ghost Tag: nacht, een doolhof van neon en zwevende spookjes ──
-function pacman(ctx, b, h, t) {
-    lucht(ctx, b, h, ['#02021a', '#0a0a3a', '#02021a'])
-    const c = Math.max(26, Math.min(b, h) / 12)
-    ctx.strokeStyle = '#2f5bff'
-    ctx.shadowColor = '#2f5bff'; ctx.shadowBlur = 12
-    ctx.lineWidth = 3
-    const r = reeks(5)
-    for (let y = 0; y < h / c; y++) for (let x = 0; x < b / c; x++) {
-        if (r() < 0.22) { rond(ctx, x * c + 6, y * c + 6, c - 12, c * (r() < 0.5 ? 1 : 2) - 12, 8); ctx.stroke() }
-    }
-    ctx.shadowBlur = 0
-    // bolletjes
-    ctx.fillStyle = '#ffd9a8'
-    for (let i = 0; i < 14; i++) {
-        const x = b * 0.08 + i * (b * 0.84 / 13)
-        if ((t * 2.5 - i * 0.4) % 6 < 3.2) continue
-        ctx.beginPath(); ctx.arc(x, h * 0.73, 4, 0, TAU); ctx.fill()
-    }
-    const spook = (x, y, kleur, kijk) => {
-        const s = Math.min(b, h) * 0.11
-        ctx.fillStyle = kleur
-        ctx.shadowColor = kleur; ctx.shadowBlur = 22
-        ctx.beginPath()
-        ctx.arc(x, y, s, Math.PI, 0)
-        const golf = 4
-        for (let i = 0; i <= golf * 2; i++) {
-            const px = x + s - (i / (golf * 2)) * s * 2
-            const py = y + s * 1.05 + (i % 2 ? -s * 0.18 : 0) + Math.sin(t * 8 + i) * s * 0.05
-            ctx.lineTo(px, py)
+// ── Ghost Tag: het doolhof, de ectoplasma-stippen en de spookjes uit het spel (v2) ──
+// Het roze spookje is de jager (boos, groter) en zit het blauwe (bang) achterna; het blauwe eet de stippen op.
+function pacman(ctx, b, h, t, st) {
+    if (!st.ec) {
+        const E = st.ec = maakEcto(2)
+        // een rondje door het doolhof: kortste wegen tussen vier hoeken
+        const punten = [[1, 1], [17, 3], [17, 19], [1, 19], [1, 1]]
+        const pad = []
+        for (let i = 0; i + 1 < punten.length; i++) {
+            const [sx, sy] = punten[i], [dx, dy] = punten[i + 1]
+            const vorige = new Map([[sx + ',' + sy, null]]), rij = [[sx, sy]]
+            for (let k = 0; k < rij.length; k++) {
+                const [x, y] = rij[k]
+                if (x === dx && y === dy) break
+                for (const [ax, ay] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                    const n = (x + ax) + ',' + (y + ay)
+                    if (!vorige.has(n) && E.openZonderWrap(x + ax, y + ay)) { vorige.set(n, [x, y]); rij.push([x + ax, y + ay]) }
+                }
+            }
+            const stuk = []
+            for (let p = [dx, dy]; p; p = vorige.get(p[0] + ',' + p[1])) stuk.unshift(p)
+            pad.push(...stuk.slice(1))
         }
-        ctx.closePath(); ctx.fill()
-        ctx.shadowBlur = 0
-        for (const dx of [-0.38, 0.38]) {
-            ctx.fillStyle = '#fff'
-            ctx.beginPath(); ctx.ellipse(x + dx * s, y - s * 0.1, s * 0.26, s * 0.32, 0, 0, TAU); ctx.fill()
-            ctx.fillStyle = '#1a1a5a'
-            ctx.beginPath(); ctx.arc(x + dx * s + kijk * s * 0.12, y - s * 0.06, s * 0.13, 0, TAU); ctx.fill()
-        }
-        // blosjes
-        ctx.fillStyle = 'rgba(255,255,255,0.35)'
-        ctx.beginPath(); ctx.ellipse(x - s * 0.55, y + s * 0.35, s * 0.12, s * 0.07, 0, 0, TAU); ctx.ellipse(x + s * 0.55, y + s * 0.35, s * 0.12, s * 0.07, 0, 0, TAU); ctx.fill()
+        st.pad = pad
+        st.ronde = -1
     }
-    const kleuren = ['#ff5a7a', '#7af0ff', '#ffb34d', '#c08bff']
-    kleuren.forEach((k, i) => {
-        const fase = t * 0.55 + i * 0.9
-        const x = b / 2 + Math.sin(fase) * b * 0.36
-        const y = h * 0.62 + Math.sin(fase * 2 + i) * h * 0.04 - (i % 2) * h * 0.08
-        spook(x, y, k, Math.cos(fase) > 0 ? 1 : -1)
-    })
+    const E = st.ec, pad = st.pad, L = pad.length
+    const plek = (afstand) => {   // waar op het rondje, met de kijkrichting
+        const a = ((afstand % L) + L) % L, i = Math.floor(a), f = a - i
+        const [x1, y1] = pad[(i + L - 1) % L], [x2, y2] = pad[i]
+        const kijk = x2 > x1 ? 'R' : x2 < x1 ? 'L' : y2 > y1 ? 'D' : 'U'
+        return [x1 + (x2 - x1) * f, y1 + (y2 - y1) * f, kijk, f >= 0.5 ? i : i - 1]   // laatste: de tegel waar hij nu is
+    }
+    const loop = t * 5.2   // tegels per seconde, net als in het spel
+    const ronde = Math.floor(loop / L)
+    if (ronde !== st.ronde) {   // een nieuw rondje: alle stippen terug
+        st.ronde = ronde
+        const stippen = new Uint8Array(E.KOLOM * E.RIJEN)
+        for (let y = 0; y < E.RIJEN; y++) for (let x = 0; x < E.KOLOM; x++) if (E.KAART[y][x] === '.') stippen[y * E.KOLOM + x] = 1
+        E.bouw(stippen)
+        st.gegeten = 0
+    }
+    const prooi = plek(loop)
+    while (st.gegeten <= prooi[3] && st.gegeten < L) {   // opgegeten stippen weg
+        const [x, y] = pad[st.gegeten]; E.wisStip(x, y); st.gegeten++
+    }
+    ctx.fillStyle = '#07030f'; ctx.fillRect(0, 0, b, h)
+    const W = E.W, HH = E.RIJEN * E.T
+    const sc = Math.min(b * 0.96 / W, h * 0.56 / HH)
+    const ox = (b - W * sc) / 2, oy = h * 0.31
+    ctx.save(); ctx.translate(ox, oy); ctx.scale(sc, sc)
+    E.zet(ctx, t)
+    ctx.drawImage(E.doolhof, 0, 0, W, HH)
+    ctx.drawImage(E.stippenLaag, 0, 0, W, HH)
+    E.tekenBol(9.5 * E.T, 9.5 * E.T, 1)
+    const T = E.T, u = T * 0.95 / 14
+    const jager = plek(loop - 3.2)
+    const bang = E.meng(E.KLEUR[0], E.BANG_BLAUW, 0.55)
+    E.tekenFiguur(ctx, (prooi[0] + 0.5) * T + (Math.random() - 0.5) * 0.9, (prooi[1] + 0.5) * T + Math.sin(t * 6) * 0.8, u, bang, 'bang', prooi[2], t * 7)
+    E.tekenFiguur(ctx, (jager[0] + 0.5) * T, (jager[1] + 0.5) * T + Math.sin(t * 6 + 2) * 0.8, u * E.CFG.jagerGroot, E.KLEUR[1], 'boos', jager[2], t * 7 + 1.3)
+    ctx.restore()
 }
 
-// ── Block It: vallende blokjes in vier kleuren, af en toe een knal ──
+// ── Block It: precies zoals in het spel. Een steen valt, maakt een vierkant van 3x3 en dat knalt ──
+// Dezelfde blokjes, bak, gloed, deeltjes, ringen, flits, schok en tekst '+1 PUNT!' als in blockit-ui.js.
 const BLOK = [['#ff4d6d', '#ff9aae', '#9d1537'], ['#ffb627', '#ffd98a', '#a86a0c'], ['#2ee6a6', '#98f6d4', '#0b8560'], ['#4d9dff', '#a5ccff', '#1c49b8']]
-function blok(ctx, x, y, s, k, alpha = 1) {
+function blok(ctx, x, y, s, k, alpha = 1, schaal = 1) {   // tekenBlok uit blockit-ui.js
     const [basis, licht, donker] = BLOK[k]
-    const bev = s * 0.17
+    const g = Math.max(1, s * 0.05)
+    const bs = s * schaal - g * 2
+    const bx = x + (s - s * schaal) / 2 + g, by = y + (s - s * schaal) / 2 + g
+    const bev = Math.max(2, bs * 0.17)
     ctx.globalAlpha = alpha
-    ctx.fillStyle = donker; ctx.fillRect(x, y, s, s)
+    ctx.fillStyle = donker; ctx.fillRect(bx, by, bs, bs)
     ctx.fillStyle = licht
-    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + s, y); ctx.lineTo(x + s - bev, y + bev); ctx.lineTo(x + bev, y + bev); ctx.lineTo(x + bev, y + s - bev); ctx.lineTo(x, y + s); ctx.closePath(); ctx.fill()
-    ctx.fillStyle = basis; ctx.fillRect(x + bev, y + bev, s - bev * 2, s - bev * 2)
-    ctx.fillStyle = 'rgba(255,255,255,0.16)'; ctx.fillRect(x + bev, y + bev, s - bev * 2, (s - bev * 2) * 0.38)
+    ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx + bs, by); ctx.lineTo(bx + bs - bev, by + bev); ctx.lineTo(bx + bev, by + bev); ctx.lineTo(bx + bev, by + bs - bev); ctx.lineTo(bx, by + bs); ctx.closePath(); ctx.fill()
+    ctx.fillStyle = basis; ctx.fillRect(bx + bev, by + bev, bs - bev * 2, bs - bev * 2)
+    ctx.fillStyle = 'rgba(255,255,255,0.16)'; ctx.fillRect(bx + bev, by + bev, bs - bev * 2, (bs - bev * 2) * 0.38)
     ctx.globalAlpha = 1
 }
+const BI_KOL = 10, BI_RIJ = 14, BI_LUS = 3.4
+// de stapel (bovenaan = hoger in de bak); '.' = leeg. In kolom 3-5 ligt bijna een vierkant van mint (2).
+const BI_STAPEL = ['0.......1.', '331...0130', '3102221301', '1102223013']
+const BI_L = [[0, 1], [1, 1], [2, 1], [2, 0]]    // de L-steen uit het spel, in mint
 function breakout(ctx, b, h, t, st) {
-    lucht(ctx, b, h, ['#0d0620', '#231044', '#0d0620'])
-    const kol = 10, c = Math.min(b / kol, h / 18), x0 = (b - c * kol) / 2
-    // achtergrondraster
-    ctx.strokeStyle = 'rgba(198,184,255,0.06)'
-    for (let x = 0; x <= kol; x++) { ctx.beginPath(); ctx.moveTo(x0 + x * c, 0); ctx.lineTo(x0 + x * c, h); ctx.stroke() }
-    // regen van blokjes
-    const r = reeks(21)
-    for (let i = 0; i < 26; i++) {
-        const k = Math.floor(r() * kol), kleur = Math.floor(r() * 4), snel = 0.6 + r() * 0.8, start = r() * 10
-        const y = ((t * snel * c * 2 + start * h) % (h + c * 4)) - c * 2
-        blok(ctx, x0 + k * c, y, c, kleur, 0.35)
+    lucht(ctx, b, h, ['#1a0a2e', '#231044', '#120724'])
+    const c = Math.floor(Math.min(b * 0.86 / BI_KOL, h * 0.5 / BI_RIJ))
+    const gb = c * BI_KOL, gh = c * BI_RIJ, gx = Math.round((b - gb) / 2), gy = Math.round(h * 0.34)
+    const lt = t % BI_LUS
+    // het rooster op dit moment
+    const r = Array.from({ length: BI_RIJ }, () => new Array(BI_KOL).fill(null))
+    BI_STAPEL.forEach((rij, i) => [...rij].forEach((k, x) => { if (k !== '.') r[BI_RIJ - BI_STAPEL.length + i][x] = Number(k) }))
+    const LAND = 1.0, KNAL = 1.16
+    const yNu = Math.max(0, Math.min(10, Math.floor((lt - 0.2) / 0.08)))
+    const xNu = lt < 0.3 ? 6 : lt < 0.45 ? 5 : lt < 0.6 ? 4 : 3
+    const stuk = lt < LAND ? BI_L.map(([cx, cy]) => [xNu + cx, yNu + cy]) : null
+    const geland = BI_L.map(([cx, cy]) => [3 + cx, 10 + cy])
+    if (lt >= LAND && lt < KNAL) for (const [x, y] of geland) r[y][x] = 2
+    if (lt >= KNAL) {   // vierkant weg, de rest valt (laatVallen)
+        for (let y = 11; y < 14; y++) for (let x = 3; x < 6; x++) r[y][x] = null
+        r[13][5] = 2
     }
-    // stapel onderaan met een 3x3 dat knalt
-    const vloer = h * 0.85
-    const stapel = ['0011223300', '3011220330', '3311200331', '1122003311']
-    stapel.forEach((rij, ry) => [...rij].forEach((k, x) => blok(ctx, x0 + x * c, vloer - (4 - ry) * c, c, Number(k))))
-    const cyclus = t % 3.2
-    const plek = { x: x0 + 3 * c, y: vloer - 7 * c }
-    if (cyclus < 2.2) {
-        for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
-            const val = glad(klem(cyclus / 1.2 - y * 0.15))
-            blok(ctx, plek.x + x * c, plek.y - c * 6 * (1 - val) + y * c, c, 2)
+    // schok (schud) en dreun, zoals schok(0.35)
+    let schud = 0
+    if (lt >= KNAL) schud = Math.max(0, 0.35 - (lt - KNAL) * 1.8)
+    ctx.save()
+    if (schud > 0) { const kr = schud * schud * c * 0.9; ctx.translate((Math.random() * 2 - 1) * kr, (Math.random() * 2 - 1) * kr) }
+    // de bak (tekenBak)
+    rond(ctx, gx - 5, gy - 5, gb + 10, gh + 10, 10)
+    ctx.fillStyle = 'rgba(8,4,22,0.85)'; ctx.fill()
+    ctx.strokeStyle = 'rgba(198,184,255,0.2)'; ctx.lineWidth = 2; ctx.stroke()
+    ctx.strokeStyle = 'rgba(255,255,255,0.035)'; ctx.lineWidth = 1
+    for (let x = 1; x < BI_KOL; x++) { ctx.beginPath(); ctx.moveTo(gx + x * c + 0.5, gy); ctx.lineTo(gx + x * c + 0.5, gy + gh); ctx.stroke() }
+    // rode stippellijn bovenaan (tekenGrens)
+    ctx.save(); ctx.strokeStyle = '#ff3c5a'; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]); ctx.globalAlpha = 0.45
+    ctx.beginPath(); ctx.moveTo(gx, gy + 0.5); ctx.lineTo(gx + gb, gy + 0.5); ctx.stroke(); ctx.restore()
+    // vervagen aan het eind van de lus
+    const zicht = lt > BI_LUS - 0.45 ? Math.max(0, (BI_LUS - lt) / 0.45) : lt < 0.15 ? lt / 0.15 : 1
+    const pop = lt >= LAND && lt < KNAL ? 1 - (lt - LAND) * 5 : 0
+    for (let y = 0; y < BI_RIJ; y++) for (let x = 0; x < BI_KOL; x++) {
+        if (r[y][x] === null) continue
+        const isNieuw = lt >= LAND && lt < KNAL && geland.some(([gx2, gy2]) => gx2 === x && gy2 === y)
+        blok(ctx, gx + x * c, gy + y * c, c, r[y][x], zicht, isNieuw ? 1 + Math.max(0, pop) * 0.12 : 1)
+    }
+    if (stuk) {
+        // gloed onder je steen (tekenHalo), schaduw (stippels) en de steen zelf met een lichtende rand (tekenContour)
+        const KL = '#c6b8ff', puls = 0.55 + 0.45 * Math.sin(t * 1000 / 180)
+        ctx.save(); ctx.shadowColor = KL; ctx.shadowBlur = c * (0.6 + 0.5 * puls); ctx.fillStyle = KL; ctx.globalAlpha = 0.35 + 0.25 * puls
+        for (const [x, y] of stuk) ctx.fillRect(gx + x * c, gy + y * c, c, c)
+        ctx.restore()
+        ctx.save(); ctx.strokeStyle = KL; ctx.globalAlpha = 0.45; ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5
+        for (const [x, y] of BI_L.map(([cx, cy]) => [xNu + cx, 10 + cy])) ctx.strokeRect(gx + x * c + 3, gy + y * c + 3, c - 6, c - 6)
+        ctx.restore()
+        for (const [x, y] of stuk) blok(ctx, gx + x * c, gy + y * c, c, 2)
+        const bezet = new Set(stuk.map(([x, y]) => x + ',' + y))
+        ctx.save(); ctx.lineCap = 'round'; ctx.strokeStyle = KL; ctx.shadowColor = KL; ctx.shadowBlur = c * 0.5 * puls + 4
+        ctx.lineWidth = Math.max(2, c * 0.12); ctx.globalAlpha = 0.75 + 0.25 * puls; ctx.beginPath()
+        for (const [x, y] of stuk) {
+            const X = gx + x * c, Y = gy + y * c
+            if (!bezet.has(x + ',' + (y - 1))) { ctx.moveTo(X, Y); ctx.lineTo(X + c, Y) }
+            if (!bezet.has(x + ',' + (y + 1))) { ctx.moveTo(X, Y + c); ctx.lineTo(X + c, Y + c) }
+            if (!bezet.has((x - 1) + ',' + y)) { ctx.moveTo(X, Y); ctx.lineTo(X, Y + c) }
+            if (!bezet.has((x + 1) + ',' + y)) { ctx.moveTo(X + c, Y); ctx.lineTo(X + c, Y + c) }
         }
-        if (cyclus > 1.5) {
-            ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.setLineDash([8, 6])
-            ctx.strokeRect(plek.x - 2, plek.y - 2, c * 3 + 4, c * 3 + 4); ctx.setLineDash([])
+        ctx.stroke(); ctx.restore()
+    }
+    // de knal (speelEffecten, soort 'vierkant'): deeltjes, ringen, tekst
+    if (lt >= KNAL) {
+        const s = lt - KNAL
+        const [basis, licht] = BLOK[2]
+        const mx = gx + 4.5 * c, my = gy + 12.5 * c
+        const rr = reeks(Math.floor(t / BI_LUS) + 5)
+        for (let y = 11; y < 14; y++) for (let x = 3; x < 6; x++) for (let i = 0; i < 5; i++) {   // spat(): 5 per blokje
+            const hoek = rr() * TAU, snel = 2 + rr() * 6, grootte = 0.18 + rr() * 0.22
+            const leven = 1 - s * 1.4
+            if (leven <= 0) continue
+            const px = x + 0.5 + Math.cos(hoek) * snel * s, py = y + 0.5 + (Math.sin(hoek) * snel - 3) * s + 9 * s * s
+            const m = grootte * c * Math.max(0.2, leven)
+            ctx.globalAlpha = Math.min(1, leven * 1.5); ctx.fillStyle = licht
+            ctx.fillRect(gx + px * c - m / 2, gy + py * c - m / 2, m, m)
         }
-    } else {
-        const p = (cyclus - 2.2) / 1
-        ctx.strokeStyle = '#2ee6a6'; ctx.lineWidth = 6 * (1 - p)
-        ctx.globalAlpha = 1 - p
-        ctx.beginPath(); ctx.arc(plek.x + c * 1.5, plek.y + c * 1.5, c * (1 + p * 4), 0, TAU); ctx.stroke()
-        const rr = reeks(9)
-        for (let i = 0; i < 30; i++) {
-            const hoek = rr() * TAU, v = c * (1 + rr() * 5) * p
-            ctx.fillStyle = rr() < 0.5 ? '#98f6d4' : '#ffffff'
-            ctx.fillRect(plek.x + c * 1.5 + Math.cos(hoek) * v, plek.y + c * 1.5 + Math.sin(hoek) * v + p * p * c * 3, 5, 5)
+        for (const [max, kleur] of [[3 * 0.9, basis], [3 + 1.5, 'rgba(255,255,255,0.7)']]) {   // twee ringen
+            const leven = 1 - s * 2.2
+            if (leven <= 0) continue
+            ctx.globalAlpha = leven; ctx.strokeStyle = kleur; ctx.lineWidth = Math.max(1, c * 0.35 * leven)
+            ctx.beginPath(); ctx.arc(mx, my, (1 - leven) * max * c, 0, TAU); ctx.stroke()
+        }
+        const tl = 1 - s * 0.9   // zwevende tekst '+1 PUNT!'
+        if (tl > 0) {
+            const maat = Math.max(11, Math.round(c * 0.95))
+            ctx.font = '700 ' + maat + "px 'Chakra Petch', 'Segoe UI', system-ui, sans-serif"
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+            ctx.globalAlpha = Math.min(1, tl * 2); ctx.lineWidth = Math.max(3, maat * 0.16); ctx.strokeStyle = 'rgba(13,8,32,0.9)'
+            const tekst = vertaalTekst('+{n} PUNT!', { n: 1 })
+            ctx.strokeText(tekst, mx, my - s * 1.2 * c); ctx.fillStyle = basis; ctx.fillText(tekst, mx, my - s * 1.2 * c)
+            ctx.textBaseline = 'alphabetic'
         }
         ctx.globalAlpha = 1
     }
+    ctx.restore()
+    // flits over alles (kleur van het vierkant, 0.22)
+    if (lt >= KNAL && lt < KNAL + 0.1) { ctx.globalAlpha = 0.22 - (lt - KNAL) * 2.2; ctx.fillStyle = BLOK[2][0]; ctx.fillRect(0, 0, b, h); ctx.globalAlpha = 1 }
     void st
 }
+const vertaalTekst = (s, v) => (typeof window !== 'undefined' && window.T ? window.T(s, v) : String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v ? v[k] : m)))
 
-// ── The Swarm: kevers zwermen rond een lamp ──
-function swarm(ctx, b, h, t) {
-    lucht(ctx, b, h, ['#04110a', '#0b2614', '#020804'])
-    // grassprieten
-    ctx.strokeStyle = '#123d1f'
-    ctx.lineWidth = 3
-    const r = reeks(4)
-    for (let i = 0; i < 60; i++) {
-        const x = r() * b, hh = h * (0.06 + r() * 0.1)
-        ctx.beginPath(); ctx.moveTo(x, h); ctx.quadraticCurveTo(x + Math.sin(t + i) * 8, h - hh * 0.6, x + Math.sin(t * 1.3 + i) * 14, h - hh); ctx.stroke()
+// Een pixelwereld (vaste maat) zo groot mogelijk op het scherm, zonder zachte randen (pixelart blijft scherp)
+function pixelsOpScherm(ctx, wereld, b, h, vullen = true) {
+    const s = vullen ? Math.max(b / wereld.width, h / wereld.height) : Math.min(b / wereld.width, h / wereld.height)
+    const w = wereld.width * s, hh = wereld.height * s
+    ctx.imageSmoothingEnabled = false
+    ctx.drawImage(wereld, (b - w) / 2, (h - hh) / 2, w, hh)
+    ctx.imageSmoothingEnabled = true
+    return { s, x: (b - w) / 2, y: (h - hh) / 2 }
+}
+
+// ── The Swarm: het huis uit level 1, de beestjes en de held, in de pixels van het spel ──
+function swarm(ctx, b, h, t, st) {
+    if (!st.sw) {
+        st.sw = maakSwarm()
+        st.wereld = st.sw.mk(st.sw.W, st.sw.H)
+        st.spat = []
+        st.volgendeSpat = 1.2
     }
-    const lx = b / 2, ly = h * 0.6
-    const gl = ctx.createRadialGradient(lx, ly, 4, lx, ly, Math.min(b, h) * 0.45)
-    gl.addColorStop(0, 'rgba(255,240,150,0.9)'); gl.addColorStop(0.15, 'rgba(255,220,90,0.4)'); gl.addColorStop(1, 'rgba(255,200,60,0)')
-    ctx.fillStyle = gl; ctx.fillRect(0, 0, b, h)
-    ctx.fillStyle = '#fff6c2'; ctx.beginPath(); ctx.arc(lx, ly, 10, 0, TAU); ctx.fill()
-    const kever = (x, y, hoek, s, kleur) => {
-        ctx.save(); ctx.translate(x, y); ctx.rotate(hoek)
-        ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5
-        const poot = Math.sin(t * 20 + x) * 0.3
-        for (const z of [-1, 1]) for (const p of [-0.4, 0, 0.4]) {
-            ctx.beginPath(); ctx.moveTo(p * s, 0); ctx.lineTo(p * s + poot * s * 0.3, z * s * 0.75); ctx.stroke()
-        }
-        ctx.beginPath(); ctx.moveTo(s * 0.55, -s * 0.1); ctx.lineTo(s * 0.95, -s * 0.4); ctx.moveTo(s * 0.55, s * 0.1); ctx.lineTo(s * 0.95, s * 0.4); ctx.stroke()
-        ctx.fillStyle = kleur
-        ctx.beginPath(); ctx.ellipse(0, 0, s * 0.55, s * 0.42, 0, 0, TAU); ctx.fill()
-        ctx.fillStyle = '#111'
-        ctx.beginPath(); ctx.arc(s * 0.55, 0, s * 0.2, 0, TAU); ctx.fill()
-        ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.beginPath(); ctx.moveTo(-s * 0.5, 0); ctx.lineTo(s * 0.4, 0); ctx.stroke()
-        ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.beginPath(); ctx.ellipse(-s * 0.05, -s * 0.2, s * 0.25, s * 0.09, 0, 0, TAU); ctx.fill()
-        ctx.restore()
+    const S = st.sw, W = S.W, H = S.H, q = st.wereld.getContext('2d')
+    const tik = Math.floor(t * 8)
+    q.clearRect(0, 0, W, H)
+    q.drawImage(S.bg, 0, 0)
+    for (const [c, x] of S.dekking) q.drawImage(c, x, H - 2 - c.height)
+    q.fillStyle = 'rgba(140,0,30,0.10)'; q.fillRect(0, 0, W, H)   // de tint van level 1
+    const teken = (s, x, y, ga) => {   // draw() uit swarm-ui.js
+        const X = Math.round(x - s.w / 2 - s.p), Y = Math.round(y - s.h / 2 - s.p)
+        if (ga > 0) { q.globalAlpha = Math.min(1, ga); q.drawImage(s.g, X, Y); q.globalAlpha = 1 }
+        q.drawImage(s.b, X, Y)
     }
-    const kleuren = ['#3fd16b', '#e84a3c', '#2fa3ff', '#f2c230', '#b45cff']
-    for (let i = 0; i < 22; i++) {
-        const rad = Math.min(b, h) * (0.12 + (i % 7) * 0.045)
-        const snel = (0.5 + (i % 5) * 0.15) * (i % 2 ? 1 : -1)
-        const a = t * snel + i * 1.7
-        const x = lx + Math.cos(a) * rad * 1.3 + Math.sin(t * 2 + i) * 6
-        const y = ly + Math.sin(a) * rad * 0.8 + Math.cos(t * 2.4 + i) * 6
-        kever(x, y, a + (snel > 0 ? Math.PI / 2 : -Math.PI / 2), 15 + (i % 4) * 4, kleuren[i % kleuren.length])
+    // de zwerm: elk beestje vliegt zijn eigen rondje
+    const soorten = ['sp', 'hg', 'ws', 'hg', 'mt', 'kv', 'sl', 'hg', 'ws', 'sp', 'br', 'hg']
+    const plekken = soorten.map((ty, i) => {
+        const fase = t * (0.45 + (i % 4) * 0.12) * (i % 2 ? 1 : -1) + i * 1.9
+        return [ty, W / 2 + Math.cos(fase) * (24 + (i % 5) * 9) + Math.sin(t * 1.7 + i) * 4, 52 + Math.sin(fase * 1.3) * (16 + (i % 3) * 8) + (ty === 'br' ? -8 : 0)]
+    })
+    for (const [ty, x, y] of plekken) teken((tik + Math.round(x)) % 2 ? S.TY[ty].A : S.TY[ty].B, x, y, 0.6)
+    // de held loopt heen en weer en schiet
+    const hx = W / 2 + Math.sin(t * 0.9) * 38, hy = H - 14
+    teken(Math.cos(t * 0.9) !== 0 && tik % 2 ? S.held.A : S.held.B, hx, hy, 0.5)
+    q.fillStyle = '#2ee8ff'
+    for (let i = 0; i < 4; i++) {
+        const v = (t * 1.6 + i * 0.25) % 1
+        const sx = Math.round(W / 2 + Math.sin((t - v * 0.6) * 0.9) * 38 + 5), sy = Math.round(hy - 10 - v * 130)
+        q.globalAlpha = 0.35; q.fillRect(sx - 1, sy - 1, 3, 5); q.globalAlpha = 1
+        q.fillRect(sx, sy, 1, 3)
     }
+    // af en toe een groene spat (slijm), zoals splat()
+    if (t > st.volgendeSpat) {
+        const [, x, y] = plekken[Math.floor(t * 7) % plekken.length]
+        for (let i = 0; i < 14; i++) { const a = Math.random() * TAU, v = 0.3 + Math.random() * 1.6; st.spat.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - Math.random(), l: 60 + Math.random() * 50, land: Math.min(H - 3, y + 15 + Math.random() * 55), c: S.SLIME[i % 5], s: Math.random() < 0.35 ? 2 : 1 }) }
+        st.volgendeSpat = t + 0.9 + Math.random() * 0.8
+    }
+    for (const p of st.spat) {
+        if (p.y < p.land) { p.x += p.vx; p.y += p.vy; p.vy += 0.08 } else p.y = p.land
+        p.l -= 0.6
+        q.globalAlpha = Math.max(0, Math.min(1, p.l / 30)); q.fillStyle = p.c; q.fillRect(Math.round(p.x), Math.round(p.y), p.s, p.s)
+    }
+    q.globalAlpha = 1
+    st.spat = st.spat.filter(p => p.l > 0)
+    // groot op het scherm, met de scanlijnen en de donkere randen van het spel
+    ctx.fillStyle = '#15101c'; ctx.fillRect(0, 0, b, h)
+    pixelsOpScherm(ctx, st.wereld, b, h)
+    ctx.fillStyle = 'rgba(0,0,0,0.3)'
+    for (let y = 0; y < h; y += 3) ctx.fillRect(0, y, b, 1)
+    const vg = ctx.createRadialGradient(b / 2, h / 2, Math.min(b, h) * 0.3, b / 2, h / 2, Math.max(b, h) * 0.65)
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.6)')
+    ctx.fillStyle = vg; ctx.fillRect(0, 0, b, h)
+}
+// De titel zoals in het spel: THE (rood neon), SWARM (groen, met druppels), 'samen tegen de zwerm'
+function swarmTitel(ctx, b, h, t) {
+    const maat = Math.min(b * 0.2, h * 0.1)
+    const y = h * 0.2
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(0, y - maat * 1.2, b, maat * 2.5)
+    ctx.font = '900 ' + Math.round(maat * 0.36) + "px 'Courier New', monospace"
+    spatie(ctx, 'THE', b / 2, y - maat * 0.82, maat * 0.19, '#ff3050', '#ff1030')
+    ctx.font = '900 ' + Math.round(maat) + "px 'Courier New', monospace"
+    // druppels onder SWARM
+    const breed = ctx.measureText('SWARM').width + maat * 0.1 * 4
+    const r = reeks(13)
+    for (let i = 0; i < 13; i++) {
+        const dx = b / 2 - breed / 2 + 6 + i * (breed - 12) / 12 + r() * 3, lang = (5 + r() * 15) * maat / 42
+        const sch = 0.35 + 0.65 * Math.abs(Math.sin(t * Math.PI / (1.6 + r() * 1.5) + i))
+        const g = ctx.createLinearGradient(0, y + maat * 0.4, 0, y + maat * 0.4 + lang * sch)
+        g.addColorStop(0, '#b6ff3a'); g.addColorStop(1, '#3a9a00')
+        ctx.fillStyle = g; rond(ctx, dx, y + maat * 0.38, 3, lang * sch + 1, 1.5); ctx.fill()
+    }
+    ctx.fillStyle = '#1a4a00'
+    spatie(ctx, 'SWARM', b / 2, y + 3, maat * 0.1, '#1a4a00', null)
+    spatie(ctx, 'SWARM', b / 2, y, maat * 0.1, '#b6ff3a', '#6dff1a')
+    ctx.font = Math.round(Math.max(12, maat * 0.29)) + "px 'Courier New', monospace"
+    ctx.fillStyle = '#ffb0c0'
+    ctx.fillText(vertaalTekst('samen tegen de zwerm'), b / 2, y + maat * 1.0)
+    ctx.textBaseline = 'alphabetic'
+}
+// tekst met letterafstand en neongloed (zoals letter-spacing en text-shadow in het spel)
+function spatie(ctx, tekst, x, y, afstand, kleur, gloed) {
+    const letters = [...tekst], breedtes = letters.map(l => ctx.measureText(l).width)
+    let px = x - (breedtes.reduce((a, b) => a + b, 0) + afstand * (letters.length - 1)) / 2
+    ctx.textAlign = 'left'
+    for (let i = 0; i < letters.length; i++) {
+        if (gloed) { ctx.shadowColor = gloed; ctx.shadowBlur = 16; ctx.fillStyle = kleur; ctx.fillText(letters[i], px, y); ctx.shadowBlur = 5 }
+        ctx.fillStyle = kleur; ctx.fillText(letters[i], px, y)
+        ctx.shadowBlur = 0
+        px += breedtes[i] + afstand
+    }
+    ctx.textAlign = 'center'
 }
 
 // ── Twin Snakes: twee slangen kronkelen door de jungle ──
@@ -479,7 +637,7 @@ function pinball(ctx, b, h, t) {
         const n = 26, s = Math.min(b, h) * 0.034
         const punten = []
         for (let i = 0; i < n; i++) {
-            const u = (t * 0.22 * richting + fase - i * 0.018) % 1
+            const u = (t * 0.22 + fase - i * 0.018) % 1   // v2: de kop gaat altijd voorop (de tweede slang gespiegeld)
             const uu = (u + 1) % 1
             const x = -s * 4 + uu * (b + s * 8)
             const y = yy + Math.sin(uu * 12 + t * 0.3) * h * 0.06
@@ -506,63 +664,6 @@ function pinball(ctx, b, h, t) {
     }
     slang('#2ee66b', '#b6ff7a', 0.1, h * 0.55, 1)
     slang('#a35cff', '#f0a8ff', 0.6, h * 0.78, -1)
-}
-
-// ── Runner & Gunner: stad bij zonsondergang, een renner met een blaster ──
-function endlessrunner(ctx, b, h, t) {
-    lucht(ctx, b, h, ['#1a0b3b', '#7a1f5c', '#ff7a3d', '#ffc56b'])
-    const zon = ctx.createRadialGradient(b * 0.7, h * 0.62, 5, b * 0.7, h * 0.62, h * 0.25)
-    zon.addColorStop(0, '#fff2b0'); zon.addColorStop(0.3, '#ffd06b'); zon.addColorStop(1, 'rgba(255,160,80,0)')
-    ctx.fillStyle = zon; ctx.fillRect(0, 0, b, h)
-    const laag = (seed, snel, kleur, grond, max) => {
-        const r = reeks(seed)
-        const gebouwen = []
-        let x = 0
-        while (x < b * 2 + 200) { const w = 30 + r() * 60; gebouwen.push([x, w, (0.3 + r() * 0.7) * max, r()]); x += w + 4 }
-        const totaal = x
-        const verschuif = (t * snel) % totaal
-        ctx.fillStyle = kleur
-        for (const [gx, w, hh, ram] of gebouwen) {
-            for (const extra of [0, totaal]) {
-                const xx = gx - verschuif + extra
-                if (xx > b || xx + w < 0) continue
-                ctx.fillRect(xx, grond - hh, w, hh)
-                if (ram > 0.5 && max > h * 0.3) {
-                    ctx.fillStyle = 'rgba(255,214,120,0.6)'
-                    for (let wy = grond - hh + 8; wy < grond - 8; wy += 14) for (let wx = xx + 6; wx < xx + w - 6; wx += 12) if ((wx * 7 + wy) % 5 < 2) ctx.fillRect(wx, wy, 5, 6)
-                    ctx.fillStyle = kleur
-                }
-            }
-        }
-    }
-    const grond = h * 0.8
-    laag(1, 15, '#4a1a5a', grond, h * 0.32)
-    laag(2, 40, '#2a0c3a', grond, h * 0.42)
-    ctx.fillStyle = '#12051c'; ctx.fillRect(0, grond, b, h - grond)
-    // strepen op de grond
-    ctx.fillStyle = '#ff9a5a'
-    for (let i = 0; i < 12; i++) { const x = ((i * 90 - t * 260) % (b + 90) + b + 90) % (b + 90) - 45; ctx.fillRect(x, grond + 14, 40, 4) }
-    // renner (pixelachtig)
-    const px = b * 0.28, py = grond, s = Math.max(4, Math.min(b, h) / 66)
-    const loop = Math.sin(t * 14)
-    ctx.save(); ctx.translate(px, py - Math.abs(loop) * s * 2)
-    ctx.fillStyle = '#ffe0b8'; ctx.fillRect(-2 * s, -16 * s, 4 * s, 4 * s)
-    ctx.fillStyle = '#ff2f5a'; ctx.fillRect(-3 * s, -17 * s, 6 * s, 2 * s)
-    ctx.fillStyle = '#1fd1ff'; ctx.fillRect(-3 * s, -12 * s, 6 * s, 6 * s)
-    ctx.fillStyle = '#30304a'
-    ctx.save(); ctx.translate(0, -6 * s); ctx.rotate(loop * 0.7); ctx.fillRect(-1.2 * s, 0, 2.4 * s, 6 * s); ctx.restore()
-    ctx.save(); ctx.translate(0, -6 * s); ctx.rotate(-loop * 0.7); ctx.fillRect(-1.2 * s, 0, 2.4 * s, 6 * s); ctx.restore()
-    ctx.fillStyle = '#ffe0b8'; ctx.fillRect(2 * s, -11 * s, 5 * s, 2 * s)
-    ctx.fillStyle = '#c9c9d9'; ctx.fillRect(6 * s, -12 * s, 5 * s, 3 * s)
-    ctx.restore()
-    // kogels
-    for (let i = 0; i < 4; i++) {
-        const v = ((t * 2.2 + i * 0.25) % 1)
-        const x = px + 11 * s + v * b * 0.75, y = py - 10.5 * s - Math.abs(loop) * s * 2
-        ctx.fillStyle = '#fff38a'; ctx.shadowColor = '#ffde3b'; ctx.shadowBlur = 12
-        ctx.fillRect(x, y, 14, 3)
-    }
-    ctx.shadowBlur = 0
 }
 
 // ── Flapper: een vleermuis fladdert door een grot bij volle maan ──
@@ -619,40 +720,112 @@ function flappybird(ctx, b, h, t) {
     ctx.restore()
 }
 
-// ── Neon Raiders: sterren, een neonschip, vijanden en lasers ──
-function shmup(ctx, b, h, t) {
-    lucht(ctx, b, h, ['#000008', '#070226', '#120042'])
-    // nevel
-    const ng = ctx.createRadialGradient(b * 0.25, h * 0.35, 10, b * 0.25, h * 0.35, b * 0.7)
-    ng.addColorStop(0, 'rgba(255,0,170,0.18)'); ng.addColorStop(1, 'rgba(255,0,170,0)')
-    ctx.fillStyle = ng; ctx.fillRect(0, 0, b, h)
-    sterren(ctx, b, h, t, 120, 31, 2.5)
-    const sx = b / 2 + Math.sin(t * 1.1) * b * 0.22, sy = h * 0.8
-    const s = Math.min(b, h) * 0.06
-    // lasers
-    ctx.fillStyle = '#00f0ff'; ctx.shadowColor = '#00f0ff'; ctx.shadowBlur = 14
-    for (let i = 0; i < 5; i++) {
-        const v = (t * 3 + i * 0.2) % 1
-        const x = b / 2 + Math.sin((t - v * 0.33) * 1.1) * b * 0.22
-        ctx.fillRect(x - 2, sy - s - v * h * 0.75, 4, 18)
+// ── Runner & Gunner: de neonstad uit het spel, Runner en Gunner rennen en schieten ──
+function endlessrunner(ctx, b, h, t, st) {
+    if (!st.rg) st.rg = maakRunner()
+    const G = st.rg
+    // schaal: de laag van 360 hoog vult het onderste deel van het scherm; hele beeldpunten op het toestel
+    const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? Math.min(window.devicePixelRatio, 2) : 1
+    const k = Math.max(1, Math.round(h * 0.78 / G.LAAG_H * dpr)) / dpr
+    const top = h - G.LAAG_H * k
+    const zichtbaar = b / k
+    ctx.imageSmoothingEnabled = false
+    ctx.fillStyle = G.STAD.lucht[0]; ctx.fillRect(0, 0, b, Math.ceil(top) + 1)
+    const tegel = (beeld, snelheid, breed) => {
+        const schuif = (t * snelheid) % breed
+        for (let x = -schuif; x < zichtbaar; x += breed) ctx.drawImage(beeld, Math.floor(x * k), top, breed * k, G.LAAG_H * k)
     }
-    // vijanden
+    tegel(G.lucht, 4, 320)
+    tegel(G.ver, 18, G.LAAG_B)
+    tegel(G.dicht, 45, G.LAAG_B)
+    // de grond: tegels van 32, de bovenste rij en daaronder
+    const schuif = (t * 150) % 32
+    for (let x = -schuif; x < zichtbaar; x += 32) {
+        ctx.drawImage(G.grondT, Math.floor(x * k), top + G.GROND_Y * k, 32 * k, 32 * k)
+        ctx.drawImage(G.grondB, Math.floor(x * k), top + (G.GROND_Y + 32) * k, 32 * k, 32 * k)
+        ctx.drawImage(G.grondB, Math.floor(x * k), top + (G.GROND_Y + 64) * k, 32 * k, 32 * k)
+    }
+    // Runner en Gunner, 8 loopbeeldjes per seconde ronde
+    const nr = Math.floor(t * 12) % 8
+    const voet = top + (G.GROND_Y + 2) * k
+    const plaats = (beelden, x) => { const im = beelden[nr]; ctx.drawImage(im, Math.round(x * k), Math.round(voet - im.height * k), im.width * k, im.height * k); return im }
+    const rx = zichtbaar * 0.12, gx2 = zichtbaar * 0.12 + 58
+    plaats(G.runner, rx)
+    plaats(G.gunner, gx2)
+    // kogels uit de lopen (cyaan van Runner, oranje van Gunner)
+    for (let i = 0; i < 3; i++) {
+        const v = (t * 1.8 + i / 3) % 1
+        ctx.drawImage(G.kogelR, Math.round((rx + 40 + v * zichtbaar) * k), Math.round(voet - 34 * k), 12 * k, 6 * k)
+        const w = (t * 1.5 + i / 3 + 0.15) % 1
+        ctx.drawImage(G.kogelG, Math.round((gx2 + 46 + w * zichtbaar) * k), Math.round(voet - 36 * k), 10 * k, 10 * k)
+    }
+    ctx.imageSmoothingEnabled = true
+}
+function runnerTitel(ctx, b, h, t) {
+    const maat = Math.max(12, Math.min(b * 0.075, h * 0.05))
+    ctx.font = Math.round(maat) + "px 'Press Start 2P', monospace"
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    const y = h * 0.14 + Math.sin(t * 2) * 2
+    for (const [tekst, dy] of [['RUNNER', -maat * 0.9], ['& GUNNER', maat * 0.9]]) {
+        ctx.fillStyle = '#0b1020'; ctx.fillText(tekst, b / 2 + maat * 0.18, y + dy + maat * 0.18)   // text-shadow 2px 2px 0 #0b1020
+        ctx.fillStyle = '#5ee7e0'; ctx.fillText(tekst, b / 2, y + dy)
+    }
+    ctx.font = Math.round(maat * 0.42) + "px 'Press Start 2P', monospace"
+    ctx.fillStyle = '#ff3d9a'
+    ctx.fillText(vertaalTekst('NEON STAD'), b / 2, y + maat * 2.4)
+    ctx.textBaseline = 'alphabetic'
+}
+
+// ── Neon Raiders: de ruimte uit level 3, het schip, de vijanden en de laser uit het spel ──
+function shmup(ctx, b, h, t, st) {
+    if (!st.nr) st.nr = maakNeon()
+    const { tex, lagen } = st.nr
+    const s = Math.max(b / 360, h / 640)
+    const ox = (b - 360 * s) / 2, oy = (h - 640 * s) / 2
+    ctx.save(); ctx.translate(ox, oy); ctx.scale(s, s)
+    for (const laag of lagen) {
+        const T = tex[laag.key]
+        if (!T) continue
+        ctx.globalAlpha = laag.alpha || 1
+        ctx.globalCompositeOperation = laag.add ? 'lighter' : 'source-over'
+        if (laag.vast) { ctx.drawImage(T.c, 0, 0, T.b, T.h); continue }
+        const y = (t * laag.v) % T.h
+        ctx.drawImage(T.c, 0, y - T.h, T.b, T.h)
+        ctx.drawImage(T.c, 0, y, T.b, T.h)
+    }
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'
+    const zet = (key, x, y, schaal = 1) => { const T = tex[key]; ctx.drawImage(T.c, x - T.b * schaal / 2, y - T.h * schaal / 2, T.b * schaal, T.h * schaal) }
+    // vijanden in een V, ze zakken langzaam en wiebelen
+    for (let i = 0; i < 7; i++) {
+        const rij = Math.abs(i - 3)
+        const x = 180 + (i - 3) * 40 + Math.sin(t * 1.6 + i) * 6
+        const y = 250 - rij * 26 + Math.sin(t * 2 + i * 0.7) * 8
+        zet(i % 2 ? 'dart_zwart' : 'dart_rood', x, y, 1.15)
+    }
+    // het schip met vlam en lasers
+    const sx = 180 + Math.sin(t * 1.1) * 70, sy = 520
     for (let i = 0; i < 6; i++) {
-        const x = b * (0.15 + 0.14 * i) + Math.sin(t * 1.5 + i) * 18
-        const y = h * 0.42 + Math.sin(t * 2 + i * 0.8) * h * 0.04 + (i % 2) * h * 0.06
-        const kleur = i % 2 ? '#ff2fd6' : '#ffe14d'
-        ctx.strokeStyle = kleur; ctx.shadowColor = kleur; ctx.lineWidth = 3
-        ctx.beginPath(); ctx.moveTo(x, y + s * 0.6); ctx.lineTo(x - s * 0.6, y - s * 0.4); ctx.lineTo(x, y - s * 0.1); ctx.lineTo(x + s * 0.6, y - s * 0.4); ctx.closePath(); ctx.stroke()
+        const v = (t * 2.6 + i / 6) % 1
+        const lx = 180 + Math.sin((t - v * 0.35) * 1.1) * 70
+        zet('puls', lx - 7, sy - 30 - v * 330); zet('puls', lx + 7, sy - 30 - v * 330)
     }
-    // schip
-    ctx.shadowColor = '#00f0ff'; ctx.shadowBlur = 20
-    const vlam = s * (0.6 + 0.3 * Math.sin(t * 40))
-    ctx.fillStyle = '#ff7a1a'
-    ctx.beginPath(); ctx.moveTo(sx - s * 0.25, sy + s * 0.7); ctx.lineTo(sx, sy + s * 0.7 + vlam); ctx.lineTo(sx + s * 0.25, sy + s * 0.7); ctx.fill()
-    ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 3; ctx.fillStyle = '#071a3a'
-    ctx.beginPath(); ctx.moveTo(sx, sy - s); ctx.lineTo(sx + s * 0.9, sy + s * 0.7); ctx.lineTo(sx, sy + s * 0.35); ctx.lineTo(sx - s * 0.9, sy + s * 0.7); ctx.closePath(); ctx.fill(); ctx.stroke()
-    ctx.fillStyle = '#ff2fd6'; ctx.beginPath(); ctx.arc(sx, sy - s * 0.1, s * 0.18, 0, TAU); ctx.fill()
-    ctx.shadowBlur = 0
+    zet(Math.floor(t * 20) % 2 ? 'vlam0' : 'vlam1', sx, sy + 28)
+    zet('schip', sx, sy, 1.2)
+    ctx.restore()
+}
+function neonTitel(ctx, b, h, t) {
+    const maat = Math.max(14, Math.min(b * 0.09, h * 0.05))
+    ctx.font = Math.round(maat) + "px 'Press Start 2P', monospace"
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    const y = h * 0.15
+    const neon = (tekst, yy, kleur) => {   // text-shadow 0 0 4px, 0 0 12px, 0 0 28px in de kleur
+        ctx.fillStyle = '#ffffff'
+        for (const blur of [28, 12, 4]) { ctx.shadowColor = kleur; ctx.shadowBlur = blur * (0.85 + 0.15 * Math.sin(t * 3)); ctx.fillText(tekst, b / 2, yy) }
+        ctx.shadowBlur = 0; ctx.fillText(tekst, b / 2, yy)
+    }
+    neon('NEON', y - maat * 0.8, '#ff5d9e')
+    neon('RAIDERS', y + maat * 0.8, '#5ee7e0')
+    ctx.textBaseline = 'alphabetic'
 }
 
 // Lettertype (bestand in lettertypen/), kleuren van de titel, en de tekening
@@ -662,12 +835,12 @@ export const SCENES = {
     schaken: { font: 'Cinzel Decorative', css: 'cinzel-decorative', titel: '#f3dc96', rand: '#2b1d05', gloed: '#d9a83a', teken: schaken },
     dammen: { font: 'Cinzel', css: 'cinzel', titel: '#fbf3df', rand: '#2a1608', gloed: '#c98a3e', teken: dammen },
     pong: { font: 'Monoton', css: 'monoton', titel: '#7af7ff', rand: '#12002b', gloed: '#ff3df2', teken: pong },
-    pacman: { font: 'Creepster', css: 'creepster', titel: '#ffe14d', rand: '#0a0a3a', gloed: '#2f5bff', teken: pacman },
+    pacman: { font: 'Creepster', css: 'creepster', titel: '#7dff6a', rand: '#150a26', gloed: '#b44dff', teken: pacman },
     breakout: { font: 'Bungee', css: 'bungee', titel: '#c6b8ff', rand: '#1a0a2e', gloed: '#ff4d6d', teken: breakout },
-    swarm: { font: 'Rubik Spray Paint', css: 'rubik-spray-paint', titel: '#d6ff6b', rand: '#06200d', gloed: '#3fd16b', teken: swarm },
+    swarm: { font: 'Courier New', titel: '#b6ff3a', rand: '#1a4a00', gloed: '#6dff1a', teken: swarm, eigenTitel: swarmTitel },
     pinball: { font: 'Bagel Fat One', css: 'bagel-fat-one', titel: '#b6ff7a', rand: '#14301c', gloed: '#a35cff', teken: pinball },
-    endlessrunner: { font: 'Press Start 2P', css: 'press-start-2p', titel: '#ffe36b', rand: '#2a0c3a', gloed: '#ff2f5a', teken: endlessrunner, klein: true },
+    endlessrunner: { font: 'Press Start 2P', css: 'press-start-2p', titel: '#5ee7e0', rand: '#0b1020', gloed: '#ff3d9a', teken: endlessrunner, eigenTitel: runnerTitel },
     flappybird: { font: 'Fascinate', css: 'fascinate', titel: '#e9d8ff', rand: '#120830', gloed: '#a07aff', teken: flappybird },
-    shmup: { font: 'Orbitron', css: 'orbitron', titel: '#ffffff', rand: '#05001a', gloed: '#00f0ff', teken: shmup }
+    shmup: { font: 'Press Start 2P', css: 'press-start-2p', titel: '#ffffff', rand: '#07051a', gloed: '#5ee7e0', teken: shmup, eigenTitel: neonTitel }
 }
 SCENES.schakendrie = SCENES.schaken

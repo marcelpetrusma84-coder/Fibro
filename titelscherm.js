@@ -1,4 +1,7 @@
-// titelscherm.js - het titelscherm van elk spel (v1, 2 nov 2026)
+// titelscherm.js - het titelscherm van elk spel (v4, 2 nov 2026; v4: muziek speelt door in het menu van het spel)
+// v2: openSpelMetTitel(): op Home, het profiel van een vriend en de uitnodiging komt het titelscherm al op die pagina,
+//     meteen bij je tik. Zo kan de muziek ook op de iPhone meteen beginnen (geluid mag alleen tijdens een tik, en een
+//     nieuwe pagina telt een tik op de vorige pagina niet mee). Na je tweede tik ga je naar het spel (spel.html?titel=1).
 //
 // In gewone woorden: voordat een spel opent, zie je groot de naam van het spel op een bewegend plaatje
 // (titelscenes.js) met een eigen deuntje (titelmuziek.js). Eén tik (of Enter/spatie) en je bent in het menu van het spel.
@@ -7,8 +10,8 @@
 //
 // Gebruik: await toonTitelscherm({ spelId: 'breakout', naam: 'Block It', ouder: element })
 //          Geeft true als je erdoor tikte, false als het scherm van buitenaf weg moest (sluitTitelscherm).
-import { SCENES } from './titelscenes.js?v=1'
-import { speelTitelMuziek, stopTitelMuziek, muziekAan, zetMuziek } from './titelmuziek.js?v=1'
+import { SCENES } from './titelscenes.js?v=3'
+import { speelTitelMuziek, stopTitelMuziek, muziekAan, zetMuziek } from './titelmuziek.js?v=3'
 
 export { stopTitelMuziek }
 
@@ -16,11 +19,44 @@ const vertaal = (s, v) => (window.T ? window.T(s, v) : String(s).replace(/\{(\w+
 let huidig = null
 let naMuziekTimer = null
 
+// De namen zoals in de spellen (schaken in de taal van de schaakinstellingen is aan spel.html; hier Schaken/Chess)
+const NAMEN = { botkaaseiren: 'Tic-Tac-Toe', vieroprij: 'Four in a Row', dammen: 'Draughts', pong: 'Neo Paddle', pacman: 'Ghost Tag',
+    breakout: 'Block It', swarm: 'The Swarm', pinball: 'Twin Snakes', endlessrunner: 'Runner & Gunner', flappybird: 'Flapper', shmup: 'Neon Raiders' }
+export function titelNaam(spelId) {
+    if (spelId === 'schaken') return window.T && window.T.taal === 'en' ? 'Chess' : 'Schaken'
+    return NAMEN[spelId] || spelId
+}
+
+// Tik op een spel (Home, profiel van een vriend, uitnodiging): eerst het titelscherm hier, dan naar het spel
+export function openSpelMetTitel(spelId, adres) {
+    if (!heeftTitelscherm(spelId)) { location.href = adres; return }
+    toonTitelscherm({ spelId, naam: titelNaam(spelId) }).then(getikt => {
+        if (getikt) location.href = adres + (adres.includes('?') ? '&' : '?') + 'titel=1'
+    })
+}
+
+// v4: spellen met een eigen menu na het titelscherm. Daar speelt de muziek door tot het spel echt begint (het spel
+// stuurt dan 'fibro-spel-begint'). Bij de andere spellen begin je meteen te spelen, dus stopt de muziek bij de start.
+const MET_MENU = ['breakout', 'swarm', 'pacman', 'pinball', 'endlessrunner', 'shmup', 'pong']
+const MENU_MAX = 3 * 60 * 1000
+export function spelStart(spelId) {
+    if (!MET_MENU.includes(spelId)) stopTitelMuziek()
+}
+// Na het titelscherm op een andere pagina (Home, profiel, uitnodiging): op spel.html de muziek weer aanzetten voor het menu.
+// Op de iPhone begint hij bij de eerste tik in het menu (een nieuwe pagina mag pas na een tik geluid maken).
+export function menuMuziek(spelId) {
+    if (!heeftTitelscherm(spelId)) return
+    speelTitelMuziek(spelId)
+    clearTimeout(naMuziekTimer)
+    naMuziekTimer = setTimeout(() => stopTitelMuziek(2), MENU_MAX)
+}
+
 export function heeftTitelscherm(spelId) {
     return Object.prototype.hasOwnProperty.call(SCENES, spelId)
 }
 
 function laadLettertype(scene) {
+    if (!scene.css) return Promise.resolve()   // een gewoon lettertype (Courier New) hoeft niet geladen
     if (!document.querySelector('link[data-titelfont="' + scene.css + '"]')) {
         const l = document.createElement('link')
         l.rel = 'stylesheet'
@@ -84,6 +120,10 @@ export function toonTitelscherm({ spelId, naam, ouder }) {
     const begin = performance.now()
     let frame = 0
     const tekenTitel = (t) => {
+        if (scene.eigenTitel) {   // v2: de titel zoals in het spel zelf
+            ctx.save(); ctx.globalAlpha = glad(Math.min(1, t / 0.9)); scene.eigenTitel(ctx, b, h, t); ctx.restore()
+            return tikTekst(t)
+        }
         const regels = naam.length > 11 && naam.includes(' ') ? splits(naam) : [naam]
         let maatF = Math.min(b * (scene.klein ? 0.075 : 0.13), h * 0.11)
         ctx.font = maatF + 'px "' + scene.font + '", system-ui, sans-serif'
@@ -107,7 +147,12 @@ export function toonTitelscherm({ spelId, naam, ouder }) {
             ctx.fillStyle = scene.titel
             ctx.fillText(r, b / 2, y)
         })
-        // 'Tik om te beginnen', knipperend
+        tikTekst(t)
+    }
+    // 'Tik om te beginnen', knipperend
+    const tikTekst = (t) => {
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
         const puls = 0.75 + 0.25 * Math.sin(t * 3.4)
         ctx.globalAlpha = Math.min(1, t / 1.4) * puls
         const tm = Math.max(14, Math.min(20, b * 0.045))
@@ -125,7 +170,7 @@ export function toonTitelscherm({ spelId, naam, ouder }) {
     }
     const lus = (nu) => {
         if (!el.isConnected) return
-        const t = (nu - begin) / 1000
+        const t = Math.max(0, (nu - begin) / 1000)   // de tijd van het beeldje kan net voor het begin liggen
         ctx.save()
         try { scene.teken(ctx, b, h, t, st) } catch (e) { console.error('[titelscherm]', e) }
         ctx.restore()
@@ -151,8 +196,8 @@ export function toonTitelscherm({ spelId, naam, ouder }) {
             el.style.pointerEvents = 'none'
             setTimeout(() => { cancelAnimationFrame(frame); el.remove() }, 380)
             if (getikt) {
-                // de muziek speelt door in het menu van het spel, hooguit een minuut
-                naMuziekTimer = setTimeout(() => stopTitelMuziek(2), 60000)
+                // v4: de muziek speelt door in het menu van het spel, hooguit drie minuten
+                naMuziekTimer = setTimeout(() => stopTitelMuziek(2), MENU_MAX)
             }
             klaar(getikt)
         }

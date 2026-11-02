@@ -1819,6 +1819,7 @@ function zetAanraking(scene){
   werkStartscherm()
 
   function startRonde() {
+    try { window.dispatchEvent(new Event('fibro-spel-begint')) } catch (e) {}   // titelmuziek stopt (titelmuziek.js)
     ronde++
     indeling()
     const verh = veld.clientWidth / Math.max(1, veld.clientHeight)

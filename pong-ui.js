@@ -919,6 +919,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
   }
 
   function startAftellen() {
+    try { window.dispatchEvent(new Event('fibro-spel-begint')) } catch (e) {}   // titelmuziek stopt (titelmuziek.js)
     aftellen = 3
     geluidTik()
     tekenWachtScherm()

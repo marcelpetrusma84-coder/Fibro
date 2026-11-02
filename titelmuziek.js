@@ -1,4 +1,5 @@
-// titelmuziek.js - de muziekjes van de titelschermen (v1, 2 nov 2026)
+// titelmuziek.js - de muziekjes van de titelschermen (v3, 2 nov 2026; v2: ook 'click', en een stil geluidje voor de iPhone;
+// v3: de muziek speelt door in het menu van het spel en stopt pas bij 'fibro-spel-begint')
 //
 // In gewone woorden: een klein synthesizertje (Web Audio, geen bestanden) en voor elk spel een eigen deuntje,
 // zelf geschreven in de stijl van oude spelcomputers. Een deuntje herhaalt zich tot stop() komt.
@@ -34,15 +35,25 @@ function context() {
 
 // Bij elke tik: het geluid aanzetten (mag alleen tijdens een tik). Speelt er niets, dan na 20 seconden weer slapen,
 // zodat een stille AudioContext de telefoon niet wakker houdt.
+let stilGespeeld = false
 function ontgrendel() {
     const a = context()
     if (!a) return
     if (a.state === 'suspended') a.resume().catch(() => {})
+    if (!stilGespeeld) {   // v2: oudere iPhones openen het geluid pas echt met een (stil) geluidje tijdens de tik
+        try {
+            const bron = a.createBufferSource()
+            bron.buffer = a.createBuffer(1, 1, 22050)
+            bron.connect(a.destination)
+            bron.start(0)
+            stilGespeeld = true
+        } catch (e) {}
+    }
     clearTimeout(slaapTimer)
     slaapTimer = setTimeout(() => { if (!speelt && ac && ac.state === 'running') ac.suspend().catch(() => {}) }, 20000)
 }
 if (typeof document !== 'undefined') {
-    for (const soort of ['pointerdown', 'touchend', 'keydown']) document.addEventListener(soort, ontgrendel, { capture: true, passive: true })
+    for (const soort of ['pointerdown', 'touchend', 'click', 'keydown']) document.addEventListener(soort, ontgrendel, { capture: true, passive: true })
 }
 
 export function geluidKlaar() {
@@ -283,6 +294,9 @@ export function speelTitelMuziek(id) {
     }
     return true
 }
+// v3: een spel laat weten dat het echt begint (na zijn eigen menu): dan stopt de titelmuziek
+if (typeof window !== 'undefined') window.addEventListener('fibro-spel-begint', () => stopTitelMuziek(0.8))
+
 export function speeltNu() {
     return speelt ? speelt.id : null
 }

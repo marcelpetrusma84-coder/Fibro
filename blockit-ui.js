@@ -1248,6 +1248,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     }
 
     function beginSpel(m) {
+        try { window.dispatchEvent(new Event('fibro-spel-begint')) } catch (e) {}   // titelmuziek stopt (titelmuziek.js)
         clearInterval(aftelInterval)
         verwijderKnoppen()
         keuzeEl.style.display = 'none'

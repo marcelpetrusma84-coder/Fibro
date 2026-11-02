@@ -6,6 +6,8 @@ import { maakLichessAnalyse } from './schaak-ultra-lichess.js?v=1'
 export function schaakUltraBot({ stuur, isDicht, motor:Schaak, engineFactory = maakStockfishEngine, cloudFactory = maakLichessAnalyse, timing = {} } = {}) {
   let staat = Schaak.nieuweSpelStaat()
   let ply = 0, generation = 0, stopped = false, enabled = false, active = null, lastEvaluation = null
+  let history = [structuredClone(staat)]
+  let takebackEnabled = false, hintsEnabled = false, pendingHint = null
   let thinkingMs = 5000, replyStartedAt = null
   const now = timing.now || (() => globalThis.performance?.now() ?? Date.now())
   const random = timing.random || Math.random
@@ -16,7 +18,7 @@ export function schaakUltraBot({ stuur, isDicht, motor:Schaak, engineFactory = m
   const alive = () => !stopped && !isDicht()
   const fen = () => schaakFen(staat, Math.floor(ply / 2) + 1)
   const emit = (event, payload) => { if (alive()) stuur(event, payload) }
-  const status = (phase, source) => emit('ultra-status', { phase, ...(source ? { source } : {}) })
+  const status = (phase, source) => emit('ultra-status', { phase, generation, ...(source ? { source } : {}) })
   const current = run => alive() && active === run && run.generation === generation && !run.controller.signal.aborted && fen() === run.fen
   const finished = () => Schaak.alleLegaleZetten(staat, staat.aanZet).length === 0
 
@@ -26,19 +28,71 @@ export function schaakUltraBot({ stuur, isDicht, motor:Schaak, engineFactory = m
     if (previous?.timer !== null && previous?.timer !== undefined) cancelTimeout(previous.timer)
     previous?.controller.abort()
   }
+  function hintResult(ok, reason, choice, source) {
+    emit('ultra-hint-result', { ok, ply, fen:fen(), generation,
+      ...(ok ? { from:choice.zet.van.slice(), source } : { reason }) })
+  }
+  function finishHint(run, result) {
+    if (!pendingHint || !hintsEnabled || staat.aanZet !== 'w' ||
+        pendingHint.ply !== ply || pendingHint.generation !== generation || pendingHint.fen !== fen() ||
+        (run && !current(run))) return
+    pendingHint = null
+    const choice = legalResult(result)
+    if (choice) hintResult(true, null, choice, result.source || 'stockfish')
+    else hintResult(false, 'unavailable')
+  }
+  function requestHint(payload) {
+    if (!hintsEnabled) { hintResult(false, 'disabled'); return }
+    if (payload.ply !== ply || (payload.generation !== undefined && payload.generation !== generation)) { hintResult(false, 'stale'); return }
+    if (staat.aanZet !== 'w') { hintResult(false, 'turn'); return }
+    if (finished()) { hintResult(false, 'unavailable'); return }
+    if (pendingHint) return
+    pendingHint = { ply, generation, fen:fen() }
+    // Human-turn evaluation and hints share one local search. A cached final
+    // best move can answer without either a cloud lookup or another analysis.
+    if (lastEvaluation?.final && lastEvaluation.fen === fen() && legalResult(lastEvaluation)) finishHint(null, lastEvaluation)
+    else if (!active) void search(false)
+  }
+  function takeback(payload) {
+    const fail = reason => emit('ultra-takeback-result', { ok:false, ply, fen:fen(), generation, reason })
+    if (!takebackEnabled) { fail('disabled'); return }
+    // A bot reply can already be committed while its board animation is still
+    // pending. That immediately preceding White ply identifies the same undo.
+    const replyInTransit = payload.generation === generation && payload.ply === ply - 1 && payload.ply % 2 === 1 && ply % 2 === 0
+    if ((payload.ply !== ply && !replyInTransit) || (payload.generation !== undefined && payload.generation !== generation)) { fail('stale'); return }
+    const target = ply - (ply % 2 ? 1 : 2)
+    if (target < 0 || !history[target] || history[target].aanZet !== 'w') { fail('unavailable'); return }
+    generation++
+    pendingHint = null
+    cancel()
+    staat = structuredClone(history[target])
+    ply = target
+    history.length = target + 1
+    lastEvaluation = null
+    replyStartedAt = null
+    // Keep this game's cloud cache and request budget when revisiting a line.
+    // The acknowledgement must arrive before any fresh position evaluation.
+    const restoredGeneration = generation
+    emit('ultra-takeback-result', { ok:true, ply, fen:fen(), generation })
+    if (generation !== restoredGeneration || ply !== target) return
+    status('ready')
+    if (enabled && !active && generation === restoredGeneration && ply === target) void search(false)
+  }
   function randomTiming() {
     const value = random()
     return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0.5
   }
   function deliver(run) {
     if (!current(run) || !run.choice) return
-    active = null
     status('ready', run.result.source)
+    if (!current(run)) return
+    active = null
     Schaak.voerZetUit(staat, run.choice.zet, run.choice.promotieStuk)
     ply++
+    history[ply] = structuredClone(staat)
     replyStartedAt = null
-    emit('zet', run.choice)
-    if (enabled) void search(false)
+    emit('zet', { ...run.choice, ultraPly:ply, ultraGeneration:generation })
+    if (enabled && !active && generation === run.generation && ply === run.ply + 1) void search(false)
   }
   function planReply(run) {
     if (!current(run) || !run.choice) return
@@ -54,7 +108,8 @@ export function schaakUltraBot({ stuur, isDicht, motor:Schaak, engineFactory = m
   }
   function evaluate(run, result, final = false) {
     if (!current(run) || !result || (!Number.isFinite(result.cp) && !Number.isFinite(result.mate))) return
-    lastEvaluation = { ply:run.ply, fen:run.fen, cp:result.cp ?? null, mate:result.mate ?? null, depth:result.depth || 0, source:result.source || 'stockfish', final }
+    lastEvaluation = { ply:run.ply, fen:run.fen, cp:result.cp ?? null, mate:result.mate ?? null, depth:result.depth || 0, source:result.source || 'stockfish', final, generation:run.generation,
+      ...(final && typeof result.bestmove === 'string' ? { bestmove:result.bestmove } : {}) }
     if (enabled) emit('ultra-evaluatie', lastEvaluation)
   }
   function legalResult(result) {
@@ -68,7 +123,7 @@ export function schaakUltraBot({ stuur, isDicht, motor:Schaak, engineFactory = m
   function terminalEvaluation() {
     const mate = Schaak.isSchaakmat(staat, staat.aanZet)
       ? (staat.aanZet === 'w' ? -0 : 0) : null
-    lastEvaluation = { ply, fen:fen(), cp:mate === null ? 0 : null, mate, depth:0, source:'stockfish', final:true }
+    lastEvaluation = { ply, fen:fen(), cp:mate === null ? 0 : null, mate, depth:0, source:'stockfish', final:true, generation }
     if (enabled) emit('ultra-evaluatie', lastEvaluation)
     status('ready', 'stockfish')
   }
@@ -105,15 +160,23 @@ export function schaakUltraBot({ stuur, isDicht, motor:Schaak, engineFactory = m
       // Commit exactly one evaluation to this half-move. Streaming depth updates
       // are provisional and must not sound or become the next move's baseline.
       evaluate(run, result, true)
+      if (!current(run)) return
       if (move) {
         run.choice = choice
         run.result = result
         status('searching', result.source)
         planReply(run)
-      } else { active = null; status('ready', result.source) }
+      } else {
+        finishHint(run, result)
+        if (current(run)) { active = null; status('ready', result.source) }
+      }
     } catch (error) {
       if (!current(run)) return
       active = null
+      if (pendingHint && pendingHint.generation === generation && pendingHint.ply === ply && pendingHint.fen === fen()) {
+        pendingHint = null
+        hintResult(false, 'unavailable')
+      }
       if (error?.name !== 'AbortError') status('error', 'stockfish')
     }
   }
@@ -123,24 +186,39 @@ export function schaakUltraBot({ stuur, isDicht, motor:Schaak, engineFactory = m
       if (event === 'zet') {
         const startedAt = now()
         if (staat.aanZet !== 'w' || !payload.zet) return
+        if ((payload.ultraGeneration !== undefined && payload.ultraGeneration !== generation) ||
+            (payload.ultraPly !== undefined && payload.ultraPly !== ply)) return
         const move = payload.zet
         if (!Array.isArray(move.van) || !Array.isArray(move.naar)) return
         const valid = Schaak.alleLegaleZetten(staat, 'w').find(legal => legal.van[0] === move.van[0] && legal.van[1] === move.van[1] && legal.naar[0] === move.naar[0] && legal.naar[1] === move.naar[1] && legal.type === move.type)
         if (!valid) return
+        pendingHint = null
         cancel()
         lastEvaluation = null
         Schaak.voerZetUit(staat, valid, ['Q','R','B','N'].includes(payload.promotieStuk) ? payload.promotieStuk : 'Q')
         ply++
+        history[ply] = structuredClone(staat)
         replyStartedAt = startedAt
         void search(true)
       } else if (event === 'ultra-evaluatie-instelling') {
         enabled = payload.enabled === true
         if (!enabled) {
-          if (active && !active.move) { cancel(); status('ready', lastEvaluation?.source) }
+          if (active && !active.move && !pendingHint) { cancel(); status('ready', lastEvaluation?.source) }
         } else if (lastEvaluation?.fen === fen() && lastEvaluation.final) emit('ultra-evaluatie', lastEvaluation)
         else if (!active) void search(staat.aanZet === 'z')
       } else if (event === 'ultra-opnieuw-proberen') {
         if (!active) void search(staat.aanZet === 'z')
+      } else if (event === 'ultra-assistentie-instellingen') {
+        takebackEnabled = payload.takeback === true
+        hintsEnabled = payload.hints === true
+        if (!hintsEnabled && pendingHint) {
+          pendingHint = null
+          if (active && !active.move && !enabled) { cancel(); status('ready', lastEvaluation?.source) }
+        }
+      } else if (event === 'ultra-takeback') {
+        takeback(payload)
+      } else if (event === 'ultra-hint') {
+        requestHint(payload)
       } else if (event === 'bot-instellingen') {
         if (Number.isFinite(payload.thinkingMs)) {
           thinkingMs = Math.max(0, Math.min(7000, Math.round(payload.thinkingMs)))
@@ -151,10 +229,12 @@ export function schaakUltraBot({ stuur, isDicht, motor:Schaak, engineFactory = m
         if (!active) status('ready', lastEvaluation?.source)
       } else if (event === 'opnieuw') {
         generation++
+        pendingHint = null
         cancel()
         cloud.dispose()
         cloud = cloudFactory()
         staat = Schaak.nieuweSpelStaat()
+        history = [structuredClone(staat)]
         ply = 0
         replyStartedAt = null
         lastEvaluation = null
@@ -166,6 +246,7 @@ export function schaakUltraBot({ stuur, isDicht, motor:Schaak, engineFactory = m
       if (stopped) return
       stopped = true
       generation++
+      pendingHint = null
       cancel()
       cloud.dispose()
       engine.dispose()

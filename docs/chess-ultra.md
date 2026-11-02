@@ -66,6 +66,43 @@ Resetten of sluiten annuleert oude verzoeken en workers.
 De vastgepinde enginebestanden, oorspronkelijke GPL-licentie, auteurs,
 broncodearchief, bouwinstructies en hashes staan in `vendor/stockfish`.
 
+### Take-back en hints
+
+Twee afzonderlijke Ultra-opties staan standaard uit: `ultraTakeback` en
+`ultraHints` in de schaakinstellingen. Take-back toont een terugneemknop. Als
+Ultra nog denkt, gaat alleen jouw laatste zet terug; na zijn antwoord gaan
+beide zetten terug. Je bent daarna opnieuw met wit aan zet. Herhaald terugnemen
+kan zolang er een eerdere eigen zet is. Stelling, rokaderechten, en passant,
+promoties, veroverde stukken, geschiedenis en spelstatus worden hersteld;
+verouderde berekeningen, animaties, hints en analyseklanken worden geannuleerd.
+
+Tips & hints toont een kleine `!`-knop in de bordrand, zonder velden te bedekken.
+Een klik markeert precies één eigen stuk met een legale kansrijke zet; de
+bestemming wordt niet weggegeven. Een bestaande definitieve lokale analyse kan
+worden hergebruikt, anders rekent Stockfish lokaal. Dit doet geen extra
+Lichess-verzoek. Hints verdwijnen bij een zet, terugnemen, reset of uitschakelen.
+Ook deze hulp is uitsluitend voor solo Ultra, nooit voor vriendenpartijen.
+
+### 4D wallpaper in alle schaakvarianten
+
+De eigen sectie **4D wallpaper → Tafelachtergrond** is beschikbaar bij alle
+niveaus, vriendenpartijen en drie spelers. Standaard uit; de afzonderlijke
+voorkeur `fibro_chess_wallpaper_v1` deelt `table`/`off` tussen deze varianten.
+De gebruiker heeft de originele walnotentafelfoto aangeleverd. Die foto wordt
+alleen bij activering geladen. Foto, licht en schaduw bewegen subtiel; bord,
+stukken, bediening en camera’s blijven vast en scherp.
+
+Op de pc volgt de achtergrond de muis. Op mobiel kan hij via device-orientation
+op kantelen reageren. Hiervoor zijn HTTPS en browserondersteuning nodig; op
+iOS wordt sensortoestemming alleen vanuit een gebruikersklik gevraagd. Na een
+opgeslagen voorkeur is zo nodig **Telefoonbeweging activeren** beschikbaar.
+Weigeren behoudt de statische foto. Minder-beweging, onzichtbare tabbladen,
+uitschakelen en opruimen stoppen de bewegingslus. Sensorwaarden worden niet
+opgeslagen of verstuurd. Het effect is een eigen browserparallaximplementatie,
+geen koppeling met de Pixel 4D-app. Een fysieke telefoon blijft nodig om de
+uiteindelijke sensorbeweging op dat toestel te controleren.
+
+
 ### Proberen
 
 1. Open `spel.html?spel=schaken` en kies **Ultra**.
@@ -101,6 +138,15 @@ grading defaults ON independently from ordinary chess. Optional evaluation
 swells default OFF, sound once per finalized change and wait until piece sounds
 finish. The per-Ultra human thinking slider defaults to varied 1–5-second targets,
 including analysis time; zero removes artificial waiting while retaining search.
+
+Ultra additionally offers default-OFF takeback and origin-only hints. Undo
+restores the complete position before the last human move, including the bot's
+reply if already played, while canceling stale work. Hint clicks reuse or start
+local Stockfish analysis without extra cloud calls. All chess variants also
+have an independent default-OFF table wallpaper, using the supplied original
+photo with sensor/mouse parallax. Only the background moves. Motion permission
+is user-initiated; reduced-motion, hidden tabs and cleanup stop animation, and
+sensor values never leave the device. Real-phone motion needs device testing.
 
 Only a FEN chess position is sent to Lichess, anonymously without credentials.
 Requests are bounded, sequential, rate limited and validated. The local engine

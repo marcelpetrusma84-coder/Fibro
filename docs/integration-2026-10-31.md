@@ -13,9 +13,9 @@ PR's bieden dezelfde onderdelen apart ter vergelijking.
    tabelkolommen bestaan al in de eerdere scoremigratie. De testfixture-SQL
    hoort uitsluitend in een lege wegwerpdatabase.
 3. Merge deze complete branch in `main` en laat de gebruikelijke deployment lopen.
-   De conflicten in de laadverwijzingen zijn opgelost: `solo.js?v=247`,
+   De conflicten in de laadverwijzingen zijn opgelost: `solo.js?v=248`,
    `bordgeluid.js?v=201`, `neon-raiders-ui.js?v=222`,
-   `schaken-ui.js?v=255` en `schaken-drie-ui.js?v=27`.
+   `schaken-ui.js?v=256` en `schaken-drie-ui.js?v=28`.
 4. Controleer op twee echte toestellen een vriendenpartij en de online scorelijst.
    De browserproeven gebruiken lokale partijen en fictieve scores.
 

@@ -412,8 +412,8 @@ window.veiligeUrl = function(v){
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { nieuweSpelSessie, isNieuwsteSpelSessie } from './spelsessie.js?v=1'
-  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=6'
-  import { mountChessLayout } from './chess-layout.js?v=6'
+  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=7'
+  import { mountChessLayout } from './chess-layout.js?v=7'
   import { maakSpelVerbinding } from './spelverbinding.js?v=2'
   import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=2'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
@@ -2292,8 +2292,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=147',
     pong: './pong-ui.js?v=241',
     vieroprij: './vieroprij-ui.js?v=240',
-    schaken: './schaken-ui.js?v=255',
-    schakendrie: './schaken-drie-ui.js?v=27',
+    schaken: './schaken-ui.js?v=256',
+    schakendrie: './schaken-drie-ui.js?v=28',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=150',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -3022,7 +3022,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await import('./schaken-ui.js?v=255')
+    const m = await import('./schaken-ui.js?v=256')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: fibroChessTest?.active ? schaakT('Testspeler · Zwart') : spelVriendUsername(), testMode:Boolean(fibroChessTest?.active), onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer : nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
     spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })
@@ -3030,7 +3030,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   async function startSchakenDrie(players) {
-    const m = await import('./schaken-drie-ui.js?v=27')
+    const m = await import('./schaken-drie-ui.js?v=28')
     const testMode = Boolean(fibroChessTest?.active)
     const controller = m.start({ Bordgeluid, gameChannel:testMode ? null : spelKanaal, players, userId:testMode ? 'fibro-test-you' : huidigeUser.id, localPreview:testMode, testMode, testStream:fibroChessTest?.stream || null, onTestCameraChange:stream => { if (fibroChessTest?.active) fibroChessTest.stream = stream }, onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null })
     spelSchaakDrieController = controller

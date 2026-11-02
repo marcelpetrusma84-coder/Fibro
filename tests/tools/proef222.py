@@ -73,7 +73,7 @@ try:
             check('U2 daarna niet meer vanzelf; ❓ opent hem weer', nietVanzelf and weer)
             # Z. alleen spelen
             knoppen = s.evaluate("[...document.querySelectorAll('#bi-keuze button')].map(b => b.innerText.split('\\n')[0])")
-            check('Z1 alleen spelen: eerst kiezen (Gewoon / Zwarte blokken / uitleg)', len(knoppen) == 3 and knoppen[0] == 'Gewoon' and 'Zwarte' in knoppen[1] and 'Hoe speel' in knoppen[2], knoppen)
+            check('Z1 alleen spelen: eerst kiezen (Gewoon / Zwarte blokken / sinds v150 Tegen de computer / uitleg)', len(knoppen) == 4 and knoppen[0] == 'Gewoon' and 'Zwarte' in knoppen[1] and 'computer' in knoppen[2] and 'Hoe speel' in knoppen[3], knoppen)
             if PLAAT: s.screenshot(path=PLAAT + '/solo-keuze.png')
             s.click('#bi-keuze button >> nth=1')
             wacht(s, 'window.__blockIt.staat().bezig', 6000)

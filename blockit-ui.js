@@ -10,6 +10,11 @@
 //       bij geen kleur (tellen nooit mee in een vierkant) en gaan alleen weg door een explosie: een bom, een geladen steen
 //       of de schokgolf van een vierkant van 4x4 of groter. En een uitleg (knop ❓, de eerste keer vanzelf).
 // v148: de lading van een steen blijft een getal (er stond 'CRUSH true' en 'explosie true'); '+n RIJEN!' ook in het Engels
+// v150 (2 nov 2026): alleen spelen kan ook TEGEN DE COMPUTER (makkelijk, normaal, moeilijk), met twee velden zoals samen.
+//       De computer denkt in blockit-computer.js; hier beweegt en landt zijn steen met precies dezelfde regels als die van jou.
+//       Nieuw ook: ZWARTE AANVAL. Je vierkanten sturen dan geen rijen maar zwarte blokken naar je tegenstander
+//       (2 per rij die je anders zou sturen). Samen: spelvorm 'Twee velden, zwarte aanval'. Tegen de computer: een schakelaar.
+import { kiesZet, draaiingen, PC_NIVEAUS, PC_NIVEAU_NAMEN } from './blockit-computer.js?v=1'
 const vertaal = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v147); T is hier al een steenvorm
 
 // Tekst veilig in HTML zetten (namen komen van andere gebruikers)
@@ -104,6 +109,12 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     let zwartAan = false              // v149: spelvorm zwarte blokken aan?
     try { zwartAan = localStorage.getItem('bi-zwart') === 'aan' } catch (e) {}
     let zwartTeller = 0, zwartGolven = 0
+    // v150: zwarte aanval (vierkanten sturen zwarte blokken in plaats van rijen) en de computer als tegenstander
+    let zwartAanval = false
+    let pcNiveau = null               // null = geen computer | 'makkelijk' | 'normaal' | 'moeilijk'
+    let pc = null                     // het veld van de computer: { rooster, wachtrij, zt, zg, stuk, zet, fase, timer }
+    const PC_EMOJI = { makkelijk: '🙂', normaal: '😐', moeilijk: '😈' }
+    const ZWART_PER_RIJ = 2           // zwarte aanval: zoveel zwarte blokken per rij die je anders zou sturen
     let cel = 16, celV = 10, B = 300, H = 400, gx = 6, gy = HUD_H + 6, vgx = 0, vgy = 0
 
     function leegRooster(kol) {
@@ -118,7 +129,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         wachtrij = benIkHost || modus === 'versus' ? [nieuwStukData(), nieuwStukData(), nieuwStukData()] : []
         vriendRooster = modus === 'versus' ? leegRooster(KOL) : null
         scores = [0, 0]
-        if (solo) scores[ANDER] = solo.record()
+        if (solo && !pcNiveau) scores[ANDER] = solo.record()
         lading = [0, 0]
         ladingStuk = [0, 0]
         bom = [false, false]
@@ -143,8 +154,18 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         teksten = []
         ringen = []
         flits = null
+        // v150: tegen de computer heeft de computer een eigen bak en een eigen wachtrij
+        pc = null
+        if (modus === 'versus' && pcNiveau) {
+            pc = { rooster: vriendRooster, wachtrij: [nieuwStukData(), nieuwStukData(), nieuwStukData()], zt: 0, zg: 0, stuk: null, zet: null, fase: null, timer: 700, geland: 0 }
+        }
     }
     resetStaat(null)
+
+    // v150: twee velden naast elkaar: samen spelen of tegen de computer (alleen spelen zonder computer is één veld)
+    function tweeVelden() {
+        return modus === 'versus' && (!solo || !!pcNiveau)
+    }
 
     // In twee velden ben je zelf de baas over je bak; in de gedeelde bak is de host de baas
     function isBaas() {
@@ -358,11 +379,21 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         zwartTeller++
         if (zwartTeller % ZWART_ELKE) return
         zwartGolven++
-        const aantal = Math.min(3, 1 + Math.floor(zwartGolven / 4))
+        const cellen = zwartInBak(Math.min(3, 1 + Math.floor(zwartGolven / 4)))
+        if (cellen.length) effecten.push({ t: 'zwart', cellen })
+    }
+
+    /* v150: n zwarte blokken bovenop de stapel, elk in een andere kolom (zijn het er meer dan kolommen, dan een
+       tweede ronde). Geeft terug waar ze terechtkwamen. Werkt op 'rooster' (ook op dat van de computer, zie opComputerVeld). */
+    function zwartInBak(n) {
         const kolommen = []
-        while (kolommen.length < Math.min(aantal, KOL)) {
-            const x = Math.floor(Math.random() * KOL)
-            if (!kolommen.includes(x)) kolommen.push(x)
+        while (kolommen.length < n) {
+            const ronde = []
+            while (ronde.length < Math.min(n - kolommen.length, KOL)) {
+                const x = Math.floor(Math.random() * KOL)
+                if (!ronde.includes(x)) ronde.push(x)
+            }
+            kolommen.push(...ronde)
         }
         const cellen = []
         for (const x of kolommen) {
@@ -372,7 +403,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
             rooster[y][x] = ZWART
             cellen.push([x, y])
         }
-        if (cellen.length) effecten.push({ t: 'zwart', cellen })
+        return cellen
     }
 
     function vierkantenInBak(speler, effecten) {
@@ -463,6 +494,179 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
                 if (overloop) verloren()
     }
 
+    // v150: een aanval van je tegenstander: rijen, of bij zwarte aanval zwarte blokken
+    function krijgAanval(n) {
+        if (zwartAanval) krijgZwart(n * ZWART_PER_RIJ)
+        else krijgRijen(n)
+    }
+
+    function krijgZwart(n) {
+        if (modus !== 'versus' || gameOver || !bezig) return
+        const cellen = zwartInBak(n)
+        for (const [x, y] of cellen) {
+            pop[y][x] = 1
+            spat(x, y, '#8a8aa0', 1.4)
+        }
+        if (mijnStuk) {
+            let m = 0
+            while (!vrijInRooster(absoluut(mijnStuk)) && m++ < RIJ) mijnStuk.y--
+        }
+        schok(0.6)
+        stoot = Math.max(stoot, 0.5)
+        geluid.rommel()
+        zweef(KOL / 2, RIJ - 3, vertaal('+{n} ⬛!', { n }), '#b9b9cc', 1.1)
+        stuurVeld()
+        if (cellen.length < n || rooster[0].some(c => c !== null)) verloren()
+    }
+
+    // De tekst bij je eigen aanval
+    function aanvalTekst(n) {
+        if (zwartAanval) return vertaal('AANVAL! {n} ⬛', { n: n * ZWART_PER_RIJ })
+        return n === 1 ? vertaal('AANVAL! {n} rij', { n }) : vertaal('AANVAL! {n} rijen', { n })
+    }
+
+    // ── De computer (v150) ──
+    // Even het veld van de computer gebruiken: dan werken landInBak, geefSteen en zwartInBak op zijn bak.
+    function opComputerVeld(fn) {
+        const eigen = [rooster, wachtrij, zwartTeller, zwartGolven]
+        rooster = pc.rooster
+        wachtrij = pc.wachtrij
+        zwartTeller = pc.zt
+        zwartGolven = pc.zg
+        try {
+            return fn()
+        } finally {
+            pc.wachtrij = wachtrij
+            pc.zt = zwartTeller
+            pc.zg = zwartGolven
+            ;[rooster, wachtrij, zwartTeller, zwartGolven] = eigen
+        }
+    }
+
+    function pcCellen(stuk, dx = 0, dy = 0) {
+        return stuk.cellen.map(([cx, cy]) => [stuk.x + cx + dx, stuk.y + cy + dy])
+    }
+
+    function pcVrij(pos) {
+        for (const [x, y] of pos) {
+            if (x < 0 || x >= KOL || y >= RIJ) return false
+            if (y >= 0 && pc.rooster[y][x] !== null) return false
+        }
+        return true
+    }
+
+    function toonPcStuk() {
+        const s = pc && pc.stuk
+        vriendStuk = s ? { cellen: pcCellen(s), k: s.k, crush: s.crush, bom: s.bom } : null
+    }
+
+    function pcVerloren() {
+        if (gameOver) return
+        pc.stuk = null
+        toonEinde(false)
+    }
+
+    function pcUpdate(dt) {
+        pc.timer -= dt
+        // Meerdere stapjes in één beeldje als dat moet (snel vallen gaat zo even snel op elk scherm)
+        let veilig = 0
+        while (pc && pc.timer <= 0 && !gameOver && veilig++ < 40) pcStap()
+    }
+
+    function pcStap() {
+        const n = PC_NIVEAUS[pcNiveau] || PC_NIVEAUS.normaal
+        // Net als jouw stenen gaat de computer na een tijdje sneller (tot twee keer zo snel)
+        const sneller = Math.max(0.5, 1 - (nu() - starttijd) / 60000 * 0.08)
+        const s = pc.stuk
+        if (!s) {
+            const data = opComputerVeld(() => geefSteen(ANDER))
+            const stuk = maakStuk(data, Math.round(KOL / 2) - 2)
+            if (!pcVrij(pcCellen(stuk))) {
+                pcVerloren()
+                return
+            }
+            pc.stuk = stuk
+            pc.zet = kiesZet(pc.rooster, { vorm: stuk.vorm, cellen: VORMEN[stuk.vorm], grootte: grootteVan(stuk.vorm), k: stuk.k, bom: stuk.bom, crush: stuk.crush }, pcNiveau)
+            pc.fase = 'denk'
+            pc.timer += n.denk * sneller
+        } else if (pc.fase === 'denk') {
+            if (pc.zet && pc.zet.draai) {
+                const doel = draaiingen(VORMEN[s.vorm], grootteVan(s.vorm), s.vorm)[pc.zet.draai]
+                for (const [kx, ky] of [[0, 0], [-1, 0], [1, 0], [-2, 0], [2, 0], [0, -1]]) {
+                    if (pcVrij(doel.map(([cx, cy]) => [s.x + cx + kx, s.y + cy + ky]))) {
+                        s.cellen = doel
+                        s.x += kx
+                        s.y += ky
+                        break
+                    }
+                }
+            }
+            pc.fase = 'schuif'
+            pc.timer += n.stap * sneller
+        } else if (pc.fase === 'schuif') {
+            const doelX = pc.zet ? pc.zet.x : s.x
+            const dx = Math.sign(doelX - s.x)
+            if (dx && pcVrij(pcCellen(s, dx, 0))) {
+                s.x += dx
+                pc.timer += n.stap * sneller
+            } else {
+                pc.fase = 'val'
+                pc.timer += n.val * sneller
+            }
+        } else {
+            if (pc.zet && pc.zet.crush && s.crush) {
+                pcLand(true)
+                return
+            }
+            if (pcVrij(pcCellen(s, 0, 1))) {
+                s.y++
+                pc.timer += n.val * sneller
+            } else {
+                pcLand(false)
+                return
+            }
+        }
+        toonPcStuk()
+    }
+
+    function pcLand(isCrush) {
+        const n = PC_NIVEAUS[pcNiveau] || PC_NIVEAUS.normaal
+        const s = pc.stuk
+        const cellen = pcCellen(s)
+        pc.stuk = null
+        pc.zet = null
+        vriendStuk = null
+        pc.timer = Math.max(pc.timer, 0) + n.pauze
+        pc.geland++
+        const r = opComputerVeld(() => landInBak(ANDER, cellen, s.k, isCrush, s.bom))
+        if (r.effecten.some(e => e.t === 'bom' || e.t === 'crush')) geluid.land(0.5)
+        if (r.aanval > 0) krijgAanval(r.aanval)
+        if (r.overloop) pcVerloren()
+    }
+
+    // Jij valt de computer aan
+    function pcKrijgAanval(n) {
+        if (!pc || gameOver) return
+        let overloop = false
+        if (zwartAanval) {
+            const wil = n * ZWART_PER_RIJ
+            if (opComputerVeld(() => zwartInBak(wil)).length < wil) overloop = true
+        } else {
+            for (let i = 0; i < n; i++) {
+                if (pc.rooster[0].some(c => c !== null)) overloop = true
+                pc.rooster.shift()
+                const gat = Math.floor(Math.random() * KOL)
+                pc.rooster.push(Array.from({ length: KOL }, (_, x) => (x === gat ? null : Math.floor(Math.random() * KLEUREN.length))))
+            }
+        }
+        if (pc.stuk) {
+            let m = 0
+            while (!pcVrij(pcCellen(pc.stuk)) && m++ < RIJ) pc.stuk.y--
+            toonPcStuk()
+        }
+        if (overloop || pc.rooster[0].some(c => c !== null)) pcVerloren()
+    }
+
     // ── Eigen steen ──
     function vraagSteen() {
         if (mijnStuk || wachtOpSteen || gameOver) return
@@ -547,8 +751,9 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
             speelEffecten(r.effecten)
             if (modus === 'versus') {
                 if (r.aanval > 0) {
-                    spelKanaal.send({ type: 'broadcast', event: 'bi-aanval', payload: { rijen: r.aanval } })
-                    zweef(KOL / 2, 3, r.aanval === 1 ? vertaal('AANVAL! {n} rij', { n: r.aanval }) : vertaal('AANVAL! {n} rijen', { n: r.aanval }), VRIEND_KLEUR, 0.9)
+                    if (pcNiveau) pcKrijgAanval(r.aanval)
+                    else spelKanaal.send({ type: 'broadcast', event: 'bi-aanval', payload: { rijen: r.aanval } })
+                    zweef(KOL / 2, 3, aanvalTekst(r.aanval), VRIEND_KLEUR, 0.9)
                     geluid.aanval()
                 }
                 stuurVeld()
@@ -754,6 +959,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         }
 
         if (nu() - laatsteStukSync > 100) stuurStuk()
+        if (pc && !gameOver) pcUpdate(dt)
     }
 
     function updateEffecten(dt) {
@@ -805,13 +1011,16 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     const SPELVORMEN = [
         { modus: 'samen', titel: vertaal('Gedeelde bak'), uitleg: vertaal('Samen in één bak, gemengde kleuren') },
         { modus: 'eigen', titel: vertaal('Gedeelde bak, eigen kleuren'), uitleg: vertaal('Jij koraal en amber, {naam} mint en blauw', { naam: vriendNaam }) },
-        { modus: 'versus', titel: vertaal('Twee velden'), uitleg: vertaal('Ieder een eigen bak. Vierkanten sturen rijen naar je vriend') }
+        { modus: 'versus', titel: vertaal('Twee velden'), uitleg: vertaal('Ieder een eigen bak. Vierkanten sturen rijen naar je vriend') },
+        // v150
+        { modus: 'versus', zwartAanval: true, titel: vertaal('Twee velden, zwarte aanval'), uitleg: vertaal('Ieder een eigen bak. Vierkanten sturen zwarte blokken naar je vriend') }
     ]
 
     function naamVan(m) {
         const extra = zwartAan ? ' ⬛' : ''
+        if (pcNiveau) return vertaal('Tegen de computer') + ' ' + PC_EMOJI[pcNiveau] + (zwartAanval ? ' 🎯' : '') + extra
         if (solo) return 'Block It' + extra
-        const v = SPELVORMEN.find(s => s.modus === m)
+        const v = SPELVORMEN.find(s => s.modus === m && !!s.zwartAanval === (m === 'versus' && zwartAanval))
         return v ? v.titel + extra : ''
     }
 
@@ -829,6 +1038,24 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         knop.onclick = () => {
             zwartAan = !zwartAan
             try { localStorage.setItem('bi-zwart', zwartAan ? 'aan' : 'uit') } catch (e) {}
+            teken()
+        }
+        teken()
+        return knop
+    }
+    /* v150: tegen de computer: wat je vierkanten sturen (rijen of zwarte blokken) */
+    function aanvalKnop() {
+        const knop = document.createElement('button')
+        knop.className = 'bi-aanvalknop'
+        knop.style.cssText = KNOP2_STIJL
+        const teken = () => {
+            knop.innerHTML = '<div style="font-size:14px;">' + htmlVeilig(zwartAanval ? vertaal('🎯 Aanval: zwarte blokken') : vertaal('🎯 Aanval: rijen')) + '</div>'
+                + '<div style="font-size:11px;font-weight:500;opacity:0.75;">' + htmlVeilig(vertaal('Wat je vierkanten naar je tegenstander sturen')) + '</div>'
+            knop.style.outline = zwartAanval ? '2px solid #ff4d6d' : 'none'
+        }
+        knop.onclick = () => {
+            zwartAanval = !zwartAanval
+            try { localStorage.setItem('bi-pc-aanval', zwartAanval ? 'zwart' : 'rijen') } catch (e) {}
             teken()
         }
         teken()
@@ -855,7 +1082,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
           rooster: ['...B...', '.......', '1..2..3', '12.2.33', '1102233', '1002203'] },
         { titel: vertaal('5. Zwarte blokken ⬛'), tekst: vertaal('In de spelvorm Zwarte blokken vallen er om de paar stenen zwarte blokken in je bak. Ze horen bij geen kleur, dus ze tellen nooit mee in een vierkant. Ze gaan alleen weg door een explosie: een bom, een geladen steen, of de schokgolf van een vierkant van 4 bij 4.'),
           rooster: ['..B....', '.......', '9..9...', '19.2.9.', '1192933', '9102209'] },
-        { titel: vertaal('6. Einde en spelvormen'), tekst: vertaal('Raakt je stapel de bovenkant, dan is het spel voorbij. Samen spelen kan in één gedeelde bak (met gemengde of eigen kleuren), of met twee velden: dan stuurt elk vierkant van jou rijen naar je vriend.'),
+        { titel: vertaal('6. Einde en spelvormen'), tekst: vertaal('Raakt je stapel de bovenkant, dan is het spel voorbij. Samen spelen kan in één gedeelde bak, of met twee velden: dan stuurt elk vierkant van jou rijen naar je vriend (of zwarte blokken, bij zwarte aanval). Alleen kun je ook tegen de computer spelen: makkelijk, normaal of moeilijk.'),
           rooster: ['..3....', '.13.2..', '1132290', '1932201', '1102233', '9102203'], grens: true }
     ]
     let uitlegEl = null
@@ -919,6 +1146,9 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     function toonSoloKeuze() {
         clearInterval(aftelInterval)
         verwijderKnoppen()
+        pcNiveau = null
+        zwartAanval = false
+        vriendNaam = vertaal('Record')
         resetStaat(null)
         resize()
         keuzeEl.innerHTML = ''
@@ -936,7 +1166,52 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
             }
             keuzeEl.appendChild(knop)
         }
+        const pcKnop = document.createElement('button')   // v150
+        pcKnop.className = 'bi-pcknop'
+        pcKnop.style.cssText = KNOP_STIJL
+        pcKnop.innerHTML = '<div style="font-size:15px;">' + htmlVeilig(vertaal('🤖 Tegen de computer')) + '</div><div style="font-size:11px;font-weight:500;opacity:0.75;">'
+            + htmlVeilig(vertaal('Twee velden: wie houdt het langst vol?')) + '</div>'
+        pcKnop.onclick = () => toonPcKeuze()
+        keuzeEl.appendChild(pcKnop)
         keuzeEl.appendChild(uitlegKnop())
+    }
+
+    /* v150: tegen de computer: zwarte blokken aan/uit, wat je aanval stuurt, en het niveau (dat start meteen) */
+    function toonPcKeuze() {
+        verwijderKnoppen()
+        keuzeEl.innerHTML = ''
+        keuzeEl.style.display = 'flex'
+        statusEl.textContent = vertaal('🤖 Tegen de computer: kies een niveau')
+        try { zwartAanval = localStorage.getItem('bi-pc-aanval') === 'zwart' } catch (e) {}
+        let vorige = 'normaal'
+        try { vorige = localStorage.getItem('bi-pc-niveau') || 'normaal' } catch (e) {}
+        keuzeEl.appendChild(zwartKnop())
+        keuzeEl.appendChild(aanvalKnop())
+        const UITLEG_NIVEAU = {
+            makkelijk: [vertaal('Makkelijk'), vertaal('Rustig, en maakt soms een foutje')],
+            normaal: [vertaal('Normaal'), vertaal('Een goede tegenstander')],
+            moeilijk: [vertaal('Moeilijk'), vertaal('Snel en slim. Lukt het jou?')]
+        }
+        for (const niveau of PC_NIVEAU_NAMEN) {
+            const [titel, uitleg] = UITLEG_NIVEAU[niveau]
+            const knop = document.createElement('button')
+            knop.className = 'bi-niveau'
+            knop.dataset.niveau = niveau
+            knop.style.cssText = KNOP_STIJL + (niveau === vorige ? 'outline:2px solid #ffffff;' : '')
+            knop.innerHTML = '<div style="font-size:15px;">' + PC_EMOJI[niveau] + ' ' + htmlVeilig(titel) + '</div><div style="font-size:11px;font-weight:500;opacity:0.75;">' + htmlVeilig(uitleg) + '</div>'
+            knop.onclick = () => {
+                try { localStorage.setItem('bi-pc-niveau', niveau) } catch (e) {}
+                pcNiveau = niveau
+                vriendNaam = vertaal('Computer')
+                beginSpel('versus')
+            }
+            keuzeEl.appendChild(knop)
+        }
+        const terug = document.createElement('button')
+        terug.style.cssText = KNOP2_STIJL + 'text-align:center;'
+        terug.textContent = vertaal('← Terug')
+        terug.onclick = () => toonSoloKeuze()
+        keuzeEl.appendChild(terug)
     }
 
     function toonKeuze() {
@@ -959,7 +1234,8 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
                 knop.style.cssText = KNOP_STIJL
                 knop.innerHTML = '<div style="font-size:15px;">' + htmlVeilig(v.titel) + '</div><div style="font-size:11px;font-weight:500;opacity:0.75;">' + htmlVeilig(v.uitleg) + '</div>'
                 knop.onclick = () => {
-                    spelKanaal.send({ type: 'broadcast', event: 'bi-modus', payload: { modus: v.modus, zwart: zwartAan } })
+                    zwartAanval = !!v.zwartAanval   // v150
+                    spelKanaal.send({ type: 'broadcast', event: 'bi-modus', payload: { modus: v.modus, zwart: zwartAan, zwartAanval } })
                     beginSpel(v.modus)
                 }
                 keuzeEl.appendChild(knop)
@@ -1015,7 +1291,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         geluid.einde()
         schok(1)
         const mij = scores[IK], vriend = scores[ANDER]
-        if (solo) {
+        if (solo && !pcNiveau) {
             const nieuw = solo.nieuweScore(mij)
             scores[ANDER] = solo.record()
             statusEl.textContent = nieuw ? vertaal('🏆 Nieuw record: {n}', { n: mij }) : vertaal('Je bak liep vol. Score: {n}', { n: mij })
@@ -1036,11 +1312,11 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
                         opnieuw.textContent = vertaal('↻ Opnieuw')
                         opnieuw.style.cssText = KNOP_STIJL + 'text-align:center;margin-top:4px;'
                         opnieuw.onclick = () => {
-                            spelKanaal.send({ type: 'broadcast', event: 'bi-herstart', payload: { modus: gespeeld, zwart: zwartAan } })
+                            spelKanaal.send({ type: 'broadcast', event: 'bi-herstart', payload: { modus: gespeeld, zwart: zwartAan, zwartAanval } })
                             beginSpel(gespeeld)
                         }
                         rij.appendChild(opnieuw)
-                        if (solo) {   // v149: alleen spelen: terug naar de keuze (gewoon of zwarte blokken)
+                        if (solo) {   // v149: alleen spelen: terug naar de keuze (gewoon, zwarte blokken of tegen de computer)
                             const ander = document.createElement('button')
                             ander.className = 'bi-herstart'
                             ander.textContent = vertaal('Andere spelvorm')
@@ -1067,8 +1343,8 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         const dpr = Math.min(window.devicePixelRatio || 1, 2)
         const ruimteB = Math.max(260, Math.min(inhoud.clientWidth || window.innerWidth, window.innerWidth) - 8)
         const ruimteH = Math.max(260, window.innerHeight * 0.72 - HUD_H)
-        if (modus === 'versus' && !solo) {
-            // Eigen veld groot, veld van je vriend kleiner ernaast
+        if (tweeVelden()) {
+            // Eigen veld groot, veld van je vriend (of de computer) kleiner ernaast
             cel = Math.max(10, Math.floor(Math.min((ruimteB - 30) / (KOL * 1.6), ruimteH / RIJ)))
             celV = Math.max(6, Math.floor(cel * 0.6))
             B = cel * KOL + celV * KOL + 30
@@ -1231,12 +1507,12 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
 
         tekenHud()
 
-        // Veld van je vriend (twee velden)
-        if (modus === 'versus' && vriendRooster && !solo) {
+        // Veld van je vriend of de computer (twee velden)
+        if (tweeVelden() && vriendRooster) {
             ctx.textAlign = 'left'
             ctx.fillStyle = VRIEND_KLEUR
             ctx.font = '600 11px ' + FONT
-            ctx.fillText(vriendNaam, vgx, vgy - 8)
+            ctx.fillText(pcNiveau ? vriendNaam + ' ' + PC_EMOJI[pcNiveau] : vriendNaam, vgx, vgy - 8)
             tekenBak(vriendRooster, vgx, vgy, celV, null)
             tekenGrens(vriendRooster, vgx, vgy, celV)
             if (vriendStuk && vriendStuk.cellen) {
@@ -1421,10 +1697,13 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         ctx.textAlign = 'left'
         ctx.fillStyle = kleur
         ctx.font = '600 12px ' + FONT
-        ctx.fillText(naam.length > 12 ? naam.slice(0, 11) + '…' : naam, x + 10, y + 16)
+        const korteNaam = naam.length > 12 ? naam.slice(0, 11) + '…' : naam
+        ctx.fillText(korteNaam, x + 10, y + 16)
+        const naamB = ctx.measureText(korteNaam).width   // v150: past de tekst rechtsboven er niet naast, dan alleen het gekleurde balkje
         ctx.fillStyle = '#f4efff'
         ctx.font = '700 22px ' + FONT
         ctx.fillText(String(scores[i]), x + 10, y + 38)
+        const scoreB = ctx.measureText(String(scores[i])).width
 
         // Kleurtjes in de spelvorm met eigen kleuren
         if (modus === 'eigen') {
@@ -1437,22 +1716,28 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
         ctx.textAlign = 'right'
         ctx.font = '600 10px ' + FONT
         let balk = 'rgba(255,255,255,0.08)'
+        const echteTekst = ctx.fillText.bind(ctx)
+        const tekst = (t, tx, ty) => {   // naast de naam; past dat niet, dan naast de score; anders niet
+            const w = ctx.measureText(t).width
+            if (w + naamB + 26 <= b) echteTekst(t, tx, ty)
+            else if (w + scoreB + 26 <= b) echteTekst(t, tx, ty + 22)
+        }
         if (bomNu) {
             ctx.fillStyle = Math.sin(nu() / 70) > 0 ? BOM_KLEUR : '#ffffff'
-            ctx.fillText(vertaal('💣 BOM!'), x + b - 8, y + 16)
+            tekst(vertaal('💣 BOM!'), x + b - 8, y + 16)
             balk = BOM_KLEUR
         } else if (crushNu) {
             ctx.fillStyle = Math.sin(nu() / 70) > 0 ? CRUSH_KLEUR : '#ffffff'
-            ctx.fillText('⚡ CRUSH ' + stuk.crush, x + b - 8, y + 16)
+            tekst('⚡ CRUSH ' + stuk.crush, x + b - 8, y + 16)
             balk = CRUSH_KLEUR
         } else if (lading[i]) {
             ctx.fillStyle = CRUSH_KLEUR
-            ctx.fillText(vertaal('Explosie {n} bij volgende', { n: lading[i] }), x + b - 8, y + 16)
+            tekst(vertaal('Explosie {n} bij volgende', { n: lading[i] }), x + b - 8, y + 16)
             balk = 'rgba(255,224,102,0.35)'
         } else {
             ctx.fillStyle = '#a99cc9'
             ctx.font = '500 10px ' + FONT
-            ctx.fillText(vertaal('Maak een vierkant'), x + b - 8, y + 16)
+            tekst(vertaal('Maak een vierkant'), x + b - 8, y + 16)
         }
         ctx.textAlign = 'left'
         rondeRect(x + 10, y + h - 9, b - 20, 4, 2)
@@ -1536,17 +1821,19 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
             spelKanaal.send({ type: 'broadcast', event: 'bi-hier', payload: {} })
             if (!modus) toonKeuze()
         }
-        if (benIkHost && modus) spelKanaal.send({ type: 'broadcast', event: 'bi-modus', payload: { modus, zwart: zwartAan } })
+        if (benIkHost && modus) spelKanaal.send({ type: 'broadcast', event: 'bi-modus', payload: { modus, zwart: zwartAan, zwartAanval } })
     })
     spelKanaal.on('broadcast', { event: 'bi-modus' }, (msg) => {
         if (benIkHost) return
             if (modus === msg.payload.modus && !gameOver) return
                 zwartAan = !!msg.payload.zwart   // v149: de uitnodiger kiest
+                zwartAanval = !!msg.payload.zwartAanval   // v150
                 beginSpel(msg.payload.modus)
     })
     spelKanaal.on('broadcast', { event: 'bi-keuze' }, () => toonKeuze())
     spelKanaal.on('broadcast', { event: 'bi-herstart' }, (msg) => {
         if (!benIkHost && 'zwart' in msg.payload) zwartAan = !!msg.payload.zwart
+        if (!benIkHost) zwartAanval = !!msg.payload.zwartAanval   // v150
         beginSpel(msg.payload.modus || modus)
     })
 
@@ -1602,7 +1889,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
             lading[ANDER] = !!p.lading
             bom[ANDER] = !!p.bom
     })
-    spelKanaal.on('broadcast', { event: 'bi-aanval' }, (msg) => krijgRijen(msg.payload.rijen))
+    spelKanaal.on('broadcast', { event: 'bi-aanval' }, (msg) => krijgAanval(msg.payload.rijen))
     spelKanaal.on('broadcast', { event: 'bi-verloren' }, (msg) => {
         if (modus !== 'versus' || gameOver) return
             scores[ANDER] = msg.payload.scores
@@ -1634,7 +1921,9 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, solo }) 
     animFrame = requestAnimationFrame(lus)
     window._spelAnimFrame = animFrame
     if (window.__fibroProef) window.__blockIt = {   // alleen in de proeven (tests/tools/proef222.py)
-        staat: () => ({ rooster: rooster.map(r => r.slice()), zwartAan, bezig, modus, gameOver, zwartTeller }),
+        staat: () => ({ rooster: rooster.map(r => r.slice()), zwartAan, bezig, modus, gameOver, zwartTeller, zwartAanval, pcNiveau,
+                        pcRooster: pc ? pc.rooster.map(r => r.slice()) : null, pcGeland: pc ? pc.geland : 0, scores: scores.slice(), vriendNaam }),
+        aanvalNaarPc: n => pcKrijgAanval(n), krijgAanval: n => krijgAanval(n),
         zetRooster: t => uitTekst(t, rooster), grootsteVierkant, laatVallen,
         bom: (x, y) => { bomStuk[IK] = true; const r = landInBak(IK, [[x, y]], 0, false, true); speelEffecten(r.effecten); return r }
     }

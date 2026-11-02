@@ -66,7 +66,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
   import { startSpelUitnodigingLuisteraar } from './speluitnodiging.js?v=197'
   import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=7'
   import { nieuweSpelSessie } from './spelsessie.js?v=1'
-  import { toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek } from './titelscherm.js?v=4' // v251: titelscherm met muziek
+  import { toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek } from './titelscherm.js?v=5' // v251: titelscherm met muziek
 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   const inhoud = document.getElementById('spelInhoud')
@@ -75,7 +75,10 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
   // v250: kom je via een uitnodiging (een meegestuurd spel), dan gaat terug naar die uitnodiging
   const vanUitnodiging = new URLSearchParams(location.search).get('terug') === 'uitnodiging'
+  // v254: geopend in een venster op Home, een profiel of de uitnodiging (titelscherm.js): die pagina speelt de muziek
+  const ingebed = new URLSearchParams(location.search).get('ingebed') === '1' && window.parent !== window
   function terug() {
+    if (ingebed) { window.parent.postMessage({ fibro: 'sluit-spel' }, location.origin); return }
     if (vanUitnodiging && history.length > 1) history.back()
     else location.href = 'index.html'
   }
@@ -88,7 +91,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
   const spelId = new URLSearchParams(location.search).get('spel') || ''
   const spel = Object.prototype.hasOwnProperty.call(SOLO_SPELLEN, spelId) ? SOLO_SPELLEN[spelId] : null
-  startSpelUitnodigingLuisteraar().catch(error => console.warn('[speluitnodiging]', error))
+  if (!ingebed) startSpelUitnodigingLuisteraar().catch(error => console.warn('[speluitnodiging]', error))   // ingebed: de pagina eromheen luistert al
 
   // Record per account, alleen op dit toestel.
   function accountId() {
@@ -140,7 +143,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     // Ghost Tag, Twin Snakes, Runner & Gunner en Neon Raiders hebben een eigen startscherm.
     // v252: kom je van Home, een profiel of een uitnodiging, dan stond het titelscherm daar al (titel=1)
     const titelGezien = new URLSearchParams(location.search).get('titel') === '1'
-    if (titelGezien) menuMuziek(spelId)   // v253: de muziek ook hier in het menu
+    if (titelGezien && !ingebed) menuMuziek(spelId)   // v253: de muziek ook hier in het menu (ingebed: die speelt al)
     ;(titelGezien ? Promise.resolve(true) : toonTitelscherm({ spelId, naam: spelNaam() })).then(() => {
       if (spel.zonderKanaal) start('normaal')
       else if (spel.arcade) startScherm()
@@ -262,7 +265,8 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     if (verstuurd !== 'ok') { lijst.textContent = spelT('De uitnodiging kon niet verstuurd worden. Probeer het opnieuw.'); return }
     await supabase.from('messages').insert({ sender_id:user.id, receiver_id:vriend.id, content:'spelinvite:schaken:' + user.id + ':' + sessieId })
     const q = new URLSearchParams({ spelVriend:vriend.id, spelType:'schaken', sessieId, starterId:user.id })
-    location.href = 'chat.html?' + q.toString()
+    if (ingebed) window.parent.postMessage({ fibro: 'ga-naar', adres: 'chat.html?' + q.toString() }, location.origin)
+    else location.href = 'chat.html?' + q.toString()
   }
 
   // Toont rechts naast de titel hoeveel beeldjes per seconde de telefoon haalt.

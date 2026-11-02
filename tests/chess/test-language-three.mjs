@@ -56,12 +56,14 @@ const doc={createElement(tag){return new Node(tag,doc)},createElementNS(_ns,tag)
 doc.root=new Node('body',doc)
 for(const id of ['spelOverlay','spelTitelBar','spelInhoud']){const node=new Node('div',doc);node.setAttribute('id',id);doc.root.append(node)}
 globalThis.document=doc
-const saved=new Map([['fibro_taal','en']])
+const settingsKey='fibro_chess_settings_v1'
+const previousSettings={soundTheme:'classic',thinking:3,board:'wood',customPreference:'keep'}
+const saved=new Map([['fibro_taal','en'],[settingsKey,JSON.stringify(previousSettings)]])
 globalThis.localStorage={getItem:key=>saved.get(key)??null,setItem:(key,value)=>saved.set(key,String(value))}
 globalThis.window=new EventTarget()
 window.T=()=>{throw Error('The chess renderer must not invoke the global app translator')}
 const {start}=await import('../../schaken-drie-ui.js')
-const {maakSchaakTaal}=await import('../../schaak-taal.js?v=4')
+const {maakSchaakTaal}=await import('../../schaak-taal.js?v=7')
 const root=doc.getElementById('spelInhoud')
 const hostile='<img src=x onerror=alert(1)>'
 let stopped=0
@@ -89,6 +91,20 @@ const settingsButton=root.querySelectorAll('.chess3-rules-button').find(node=>no
 settingsButton.emit('click')
 const select=root.querySelector('#chess3-language')
 assert.equal(doc.activeElement,select)
+const gradedToggle=root.querySelector('#chess3-graded-capture-sounds')
+assert.equal(gradedToggle.checked,false,'old settings without a grading preference default to the original sounds')
+assert.equal(gradedToggle.closest('label').textContent.trim(),'Gradatie-geluiden schaakstukken')
+gradedToggle.focus();gradedToggle.checked=true;gradedToggle.emit('change')
+assert.equal(controller.state,state,'changing capture sounds keeps the actual game instance')
+assert.equal(JSON.stringify([...state.pieces]),snapshot,'changing capture sounds preserves the position')
+assert.ok(board.querySelector('.is-selected'),'changing capture sounds preserves the selected piece')
+assert.equal(doc.activeElement,gradedToggle,'the checkbox retains focus')
+assert.ok(cameraNodes.every(video=>video.srcObject===stream),'changing capture sounds preserves camera stream identity')
+assert.equal(cameraNodes.reduce((n,video)=>n+video.playCalls,0),plays,'changing capture sounds never restarts camera playback')
+assert.equal(stopped,0)
+assert.deepEqual(audio,[],'changing the preference never plays a move or capture')
+assert.deepEqual(JSON.parse(saved.get(settingsKey)),{...previousSettings,gradedCaptureSounds:true},'saving the choice preserves all existing chess preferences')
+select.focus()
 select.value='en';select.emit('change')
 assert.equal(root.getAttribute('lang'),'en')
 assert.match(root.querySelector('.chess3-heading').textContent,/Three-player chess/)
@@ -97,6 +113,8 @@ assert.equal(controller.state,state,'changing the language keeps the actual game
 assert.equal(JSON.stringify([...state.pieces]),snapshot,'language changes do not move or replace pieces')
 assert.ok(board.querySelector('.is-selected'),'the current piece selection survives')
 assert.equal(doc.activeElement,select,'the settings selector retains focus')
+assert.equal(root.querySelector('#chess3-graded-capture-sounds'),gradedToggle,'language changes retain the existing checkbox')
+assert.equal(gradedToggle.checked,true,'language changes preserve the capture-sound choice')
 assert.ok(root.querySelector('#chess3-settings').open,'the settings window stays open')
 assert.ok(cameraNodes.every(video=>video.srcObject===stream),'the same camera stream stays attached')
 assert.equal(cameraNodes.reduce((n,video)=>n+video.playCalls,0),plays,'changing labels never restarts video playback')
@@ -115,20 +133,28 @@ assert.equal(doc.activeElement.dataset.cellId,focusedId,'keyboard focus follows 
 assert.match(root.querySelector('.chess3-status').textContent,/is aan zet/,'a shared preference event updates a mounted view')
 assert.equal(state.ply,1)
 // Real board events use the local listener's perspective even when testing all three colours.
-function capture(mover,victim){
-  state.pieces.clear();state.active=[true,true,true];state.winner=null;state.turn=mover
-  const from=state.board.cells[0].id
-  state.pieces.set(from,{type:'R',player:mover})
-  const to=legalThreePlayerMoves(state,from)[0]
+function capture(mover,victim,targetState=state,targetBoard=board){
+  targetState.pieces.clear();targetState.active=[true,true,true];targetState.winner=null;targetState.turn=mover
+  const from=targetState.board.cells[0].id
+  targetState.pieces.set(from,{type:'R',player:mover})
+  const to=legalThreePlayerMoves(targetState,from)[0]
   assert.ok(to)
-  state.pieces.set(to,{type:'Q',player:victim})
-  board.emit('click',{target:board.querySelector(`[data-cell-id="${from}"]`)})
-  board.emit('click',{target:board.querySelector(`[data-cell-id="${to}"]`)})
+  targetState.pieces.set(to,{type:'Q',player:victim})
+  targetBoard.emit('click',{target:targetBoard.querySelector(`[data-cell-id="${from}"]`)})
+  targetBoard.emit('click',{target:targetBoard.querySelector(`[data-cell-id="${to}"]`)})
 }
+gradedToggle.checked=false;gradedToggle.emit('change')
+capture(0,1);assert.equal(audio.at(-1),'quiet','turning grading off uses the original sound on the very next capture')
+assert.equal(JSON.parse(saved.get(settingsKey)).gradedCaptureSounds,false)
+gradedToggle.checked=true;gradedToggle.emit('change')
 capture(0,1);assert.deepEqual(audio.at(-1),{value:9,outcome:'win',theme:'classic'})
 capture(1,0);assert.deepEqual(audio.at(-1),{value:9,outcome:'loss',theme:'classic'})
 capture(1,2);assert.equal(audio.at(-1),'quiet','a capture between the other two players never gives a fake win/loss cue')
-assert.equal(audio.length,4,'one audio effect for each valid move')
+gradedToggle.checked=false;gradedToggle.emit('change')
+capture(1,0);assert.equal(audio.at(-1),'quiet','disabling grading also restores the original sound after losing a piece')
+gradedToggle.checked=true;gradedToggle.emit('change')
+capture(1,0);assert.deepEqual(audio.at(-1),{value:9,outcome:'loss',theme:'classic'},'reenabling grading takes effect without restarting the game')
+assert.equal(audio.length,7,'one audio effect for each valid move, with no extra effects from preference changes')
 state.winner=1
 remote.setLanguage('en')
 assert.equal(root.querySelector('.chess3-status').textContent,'PersonalName wins — last king standing.','a real chosen name remains unchanged')
@@ -141,5 +167,32 @@ assert.equal(root.children.length,0)
 saved.delete('fibro_chess_language_v1')
 const fallback=start({players:['white','black','red'],userId:'white',localPreview:true})
 assert.equal(root.querySelector('.chess3-status').textContent,'Wit is aan zet · jouw zet','only fallback colour names are translated')
+assert.equal(root.querySelector('#chess3-graded-capture-sounds').checked,true,'a new mounted board restores the enabled capture-sound choice')
+assert.deepEqual(JSON.parse(saved.get(settingsKey)),{...previousSettings,gradedCaptureSounds:true},'other chess preferences survive repeated sound changes and remounting')
 fallback.destroy()
-console.log('PASS: three-player default Dutch and live English, selected move/state/focus preserved, camera stream identity, escaped usernames, rules, shared language updates and cleanup.')
+
+for(const preference of [undefined,false,'true',null]){
+  saved.set(settingsKey,JSON.stringify({...previousSettings,gradedCaptureSounds:preference}))
+  const originalSounds=start({players:['white','black','red'],userId:'white',localPreview:true,Bordgeluid:sound})
+  assert.equal(root.querySelector('#chess3-graded-capture-sounds').checked,false,'only a saved boolean true enables grading: '+String(preference))
+  capture(0,1,originalSounds.state,root.querySelector('.chess3-board'))
+  assert.equal(audio.at(-1),'quiet','missing or disabled grading keeps original capture audio')
+  originalSounds.destroy()
+}
+
+const writableStorage=globalThis.localStorage
+globalThis.localStorage={getItem(){throw Error('storage denied')},setItem(){throw Error('storage denied')}}
+const memoryOnly=start({players:['white','black','red'],userId:'white',localPreview:true,Bordgeluid:sound})
+const memoryToggle=root.querySelector('#chess3-graded-capture-sounds')
+assert.equal(memoryToggle.checked,false,'unavailable storage defaults grading off')
+memoryToggle.checked=true
+assert.doesNotThrow(()=>memoryToggle.emit('change'))
+capture(0,1,memoryOnly.state,root.querySelector('.chess3-board'))
+assert.deepEqual(audio.at(-1),{value:9,outcome:'win',theme:'classic'},'an active board can enable grading even when storage is denied')
+memoryToggle.checked=false
+assert.doesNotThrow(()=>memoryToggle.emit('change'))
+capture(0,1,memoryOnly.state,root.querySelector('.chess3-board'))
+assert.equal(audio.at(-1),'quiet','an active board can restore original sounds even when storage is denied')
+memoryOnly.destroy()
+globalThis.localStorage=writableStorage
+console.log('PASS: three-player language and opt-in capture sounds, live ON/OFF and persistence, original-sound defaults, denied storage, preserved state/selection/cameras, escaped names and cleanup.')

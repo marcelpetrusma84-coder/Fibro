@@ -22,7 +22,7 @@ function deferred() {
 
 function setup(testMode, { pendingIce = false, pendingPlayback = false } = {}) {
   const permission = deferred(), requested = deferred(), ice = deferred(), playback = deferred(), playing = deferred()
-  const effects = { captureRequests:0, stopped:0, paints:0, changes:0, signals:0, play:0 }
+  const effects = { captureRequests:0, stopped:0, paints:0, changes:0, signals:0, play:0, wallpaperStops:0, wallpaperDestroy:0 }
   const stream = { getTracks:() => [
     { stop() { effects.stopped++ } },
     { stop() { effects.stopped++ } }
@@ -39,6 +39,8 @@ function setup(testMode, { pendingIce = false, pendingPlayback = false } = {}) {
     root:{ replaceChildren() {}, classList:classes },
     rulesDialog:{ open:false }, settingsDialog:{ open:false },
     stopLanguage() {}, taal:{ destroy() {} },
+    stopWallpaper() { effects.wallpaperStops++ },
+    schaakWallpaper:{ destroy() { effects.wallpaperDestroy++ } },
     previousLanguage:null, previousTitleLanguage:null, titleSurface:null,
     setCameraButton(button, key) { button.textContent = key },
     say() {},
@@ -67,6 +69,8 @@ for (const testMode of [true, false]) {
   const capture = app.api.capture()
   await app.requested.promise
   app.api.destroy()
+  assert.equal(app.effects.wallpaperStops, 1, 'teardown removes the wallpaper subscription alongside camera cleanup')
+  assert.equal(app.effects.wallpaperDestroy, 1, 'teardown releases the wallpaper controller alongside camera cleanup')
   app.permission.resolve(app.stream)
   await capture
   assert.equal(app.effects.stopped, 2, `${testMode ? 'test' : 'live'} capture releases every late track`)

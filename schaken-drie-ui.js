@@ -7,7 +7,8 @@ import {
   THREE_PLAYER_NAMES
 } from './schaak-drie.js?v=10'
 import { THREE_PLAYER_VIEWBOX, THREE_PLAYER_BOARD_ARTWORK, threePlayerPieceArtwork } from './schaak-drie-artwork.js?v=3'
-import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=4'
+import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=7'
+import { maakSchaakWallpaper } from './schaak-wallpaper.js?v=1'
 
 const COLOR_STYLES = ['#fff', '#c4c7ce', '#ff7777']
 const LABELS = { K:'Koning', Q:'Dame', R:'Toren', B:'Loper', N:'Paard', P:'Pion' }
@@ -193,10 +194,21 @@ export function start({ Bordgeluid = null, gameChannel = null, players = [], use
   const settingsDialog = document.createElement('dialog')
   settingsDialog.id = 'chess3-settings'; settingsDialog.className = 'chess3-rules chess3-settings'
   settingsDialog.setAttribute('aria-labelledby', 'chess3-settings-title')
-  settingsDialog.innerHTML = `<header class="chess3-rules-header"><h2 id="chess3-settings-title">${tekst('Schaakinstellingen')}</h2><button type="button" class="chess3-rules-close" data-sch-label="Instellingen sluiten" aria-label="${veilig(t('Instellingen sluiten'))}">✕</button></header><div class="chess3-rules-content"><label for="chess3-language">${tekst('Taal van het schaakspel')}</label><select id="chess3-language"><option value="nl">Nederlands</option><option value="en">English</option></select><p class="chess3-rules-lead">${tekst('Deze keuze geldt alleen voor schaken op dit apparaat. Je partij en camerabeelden blijven behouden.')}</p></div><footer class="chess3-rules-footer"><button type="button" class="chess3-rules-done">${tekst('Terug naar het spel')}</button></footer>`
+  settingsDialog.innerHTML = `<header class="chess3-rules-header"><h2 id="chess3-settings-title">${tekst('Schaakinstellingen')}</h2><button type="button" class="chess3-rules-close" data-sch-label="Instellingen sluiten" aria-label="${veilig(t('Instellingen sluiten'))}">✕</button></header><div class="chess3-rules-content"><label for="chess3-language">${tekst('Taal van het schaakspel')}</label><select id="chess3-language"><option value="nl">Nederlands</option><option value="en">English</option></select><p class="chess3-rules-lead">${tekst('Deze keuze geldt alleen voor schaken op dit apparaat. Je partij en camerabeelden blijven behouden.')}</p><section><h3>${tekst('Geluid')}</h3><label class="chess3-setting-toggle"><input id="chess3-graded-capture-sounds" type="checkbox" aria-describedby="chess3-graded-capture-hint"> ${tekst('Gradatie-geluiden schaakstukken')}</label><p id="chess3-graded-capture-hint" class="chess3-rules-lead">${tekst('Standaard uit: de oorspronkelijke geluiden. Aan: positieve klanken bij veroveren en donkere klanken bij verlies. Meer punten klinkt krachtiger.')}</p></section></div><footer class="chess3-rules-footer"><button type="button" class="chess3-rules-done">${tekst('Terug naar het spel')}</button></footer>`
   const languageSelect = settingsDialog.querySelector('#chess3-language')
+  settingsDialog.querySelector('.chess3-rules-content').insertAdjacentHTML('beforeend', `<section><h3>${tekst('4D wallpaper')}</h3><label class="chess3-setting-toggle"><input id="chess3-wallpaper-enabled" type="checkbox" aria-describedby="chess3-wallpaper-hint"> ${tekst('Tafelachtergrond')}</label><p id="chess3-wallpaper-hint" class="chess3-rules-lead">${tekst('Kantel je telefoon of beweeg je muis voor diepte in de achtergrond. Het bord blijft stil.')}</p><button class="chess3-wallpaper-motion" id="chess3-wallpaper-motion" type="button" hidden>${tekst('Telefoonbeweging activeren')}</button><p id="chess3-wallpaper-status" class="chess3-rules-lead" role="status" aria-live="polite"></p></section>`)
   languageSelect.value = taal.language
   languageSelect.addEventListener('change', () => taal.setLanguage(languageSelect.value))
+  let gradedCaptureSounds = false
+  try { gradedCaptureSounds = JSON.parse(localStorage.getItem('fibro_chess_settings_v1') || '{}')?.gradedCaptureSounds === true } catch {}
+  const gradedCaptureToggle = settingsDialog.querySelector('#chess3-graded-capture-sounds')
+  gradedCaptureToggle.checked = gradedCaptureSounds
+  gradedCaptureToggle.addEventListener('change', () => {
+    gradedCaptureSounds = gradedCaptureToggle.checked
+    let saved = {}
+    try { saved = JSON.parse(localStorage.getItem('fibro_chess_settings_v1') || '{}') || {} } catch {}
+    try { localStorage.setItem('fibro_chess_settings_v1', JSON.stringify({ ...saved, gradedCaptureSounds })) } catch {}
+  })
   settingsButton.addEventListener('click', () => { if (!settingsDialog.open) settingsDialog.showModal(); languageSelect.focus() })
   settingsDialog.querySelectorAll('.chess3-rules-close, .chess3-rules-done').forEach(button => button.addEventListener('click', () => settingsDialog.close()))
   settingsDialog.addEventListener('click', event => {
@@ -207,6 +219,32 @@ export function start({ Bordgeluid = null, gameChannel = null, players = [], use
   settingsDialog.addEventListener('close', () => { if (!destroyed && settingsButton.isConnected) settingsButton.focus() })
   root.replaceChildren()
   root.append(heading, cameraRow, controls, status, boardWrap, captureBar, rulesDialog, settingsDialog)
+  const wallpaperToggle = settingsDialog.querySelector('#chess3-wallpaper-enabled')
+  const wallpaperMotionButton = settingsDialog.querySelector('#chess3-wallpaper-motion')
+  const wallpaperStatus = settingsDialog.querySelector('#chess3-wallpaper-status')
+  const schaakWallpaper = maakSchaakWallpaper({ root:document.getElementById('spelOverlay') || root })
+  function toonSchaakWallpaper() {
+    wallpaperToggle.checked = schaakWallpaper.enabled
+    const state = schaakWallpaper.motionState
+    wallpaperMotionButton.hidden = !schaakWallpaper.enabled || !['permission','denied'].includes(state)
+    const key = {
+      pointer:'Beweeg je muis voor diepte. Het bord blijft stil.',
+      motion:'Telefoonbeweging actief. Het bord blijft stil.',
+      permission:'Activeer telefoonbeweging voor diepte bij kantelen.',
+      denied:'Telefoonbeweging is niet toegestaan. Je tafelachtergrond blijft zichtbaar.',
+      reduced:'Je voorkeur voor minder beweging houdt de achtergrond stil.',
+      unavailable:'Je tafelachtergrond blijft stil op dit apparaat.'
+    }[state]
+    wallpaperStatus.textContent = schaakWallpaper.enabled && key ? t(key) : ''
+  }
+  wallpaperToggle.addEventListener('change', () => {
+    schaakWallpaper.setEnabled(wallpaperToggle.checked === true, { requestMotion:true }).then(toonSchaakWallpaper)
+  })
+  wallpaperMotionButton.addEventListener('click', () => {
+    schaakWallpaper.activateMotion().then(toonSchaakWallpaper)
+  })
+  const stopWallpaper = schaakWallpaper.subscribe(toonSchaakWallpaper)
+  toonSchaakWallpaper()
   const soundButton = Bordgeluid?.knop?.(status, { language:taal.language })
   if (soundButton) helpActions.append(soundButton)
   const soundPerspective = document.createElement('p')
@@ -217,7 +255,7 @@ export function start({ Bordgeluid = null, gameChannel = null, players = [], use
     let theme = 'classic'
     try { if (JSON.parse(localStorage.getItem('fibro_chess_settings_v1') || '{}').soundTheme === 'wood') theme = 'wood' } catch {}
     const effect = drieSlagEffect(state.lastMove?.captured, mover, myPlayer < 0 ? mover : myPlayer)
-    if (effect) Bordgeluid.capturePiece?.({ ...effect, theme })
+    if (gradedCaptureSounds && effect) Bordgeluid.capturePiece?.({ ...effect, theme })
     else Bordgeluid.previewSchaakGeluid?.(theme)
   }
   root.insertAdjacentHTML('afterbegin', `<style>
@@ -236,6 +274,8 @@ export function start({ Bordgeluid = null, gameChannel = null, players = [], use
     @media(prefers-reduced-motion:reduce){.chess3-cell .chess3-piece{transition:none}}
     .chess3-settings{width:min(460px,calc(100vw - 24px))}.chess3-settings .chess3-rules-content{padding-block:20px}.chess3-settings label{display:block;font-size:14px;font-weight:750}.chess3-settings select{box-sizing:border-box;display:block;width:100%;min-height:44px;margin-top:10px;padding:9px 12px;border:1px solid #bfd5f44d;border-radius:11px;background:#182234;color:#fff;font:inherit}.chess3-settings select:focus-visible{outline:2px solid #a8f5df;outline-offset:3px}
     .chess3-help-actions{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;max-width:100%}
+    .chess3-settings .chess3-setting-toggle{display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer}.chess3-setting-toggle input{flex:none;width:19px;height:19px;accent-color:#81e6cb}.chess3-setting-toggle input:focus-visible{outline:2px solid #a8f5df;outline-offset:3px}
+    .chess3-wallpaper-motion{min-height:40px;padding:8px 12px;border:1px solid #9ecbbb66;border-radius:11px;background:#25453e;color:#e7fff3;font:inherit;font-size:12px;cursor:pointer}.chess3-wallpaper-motion[hidden]{display:none}.chess3-wallpaper-motion:focus-visible{outline:2px solid #a8f5df;outline-offset:3px}
     .chess3-rules-button{min-height:36px;min-width:64px;padding:7px 10px;border:1px solid #b0d7ff70;border-radius:11px;background:linear-gradient(145deg,#34455e,#192535);color:#e4f3ff;font:750 11px system-ui,sans-serif;cursor:pointer;box-shadow:inset 0 1px #ffffff30,0 3px 0 #0d1521,0 6px 12px #0005}
     .chess3-rules-button:active{transform:translateY(2px);box-shadow:inset 0 1px #ffffff20,0 1px 0 #0d1521}
     .chess3-rules-button:focus-visible,.chess3-rules button:focus-visible{outline:2px solid #a8f5df;outline-offset:3px}
@@ -392,6 +432,7 @@ export function start({ Bordgeluid = null, gameChannel = null, players = [], use
     titleSurface?.setAttribute('lang', taal.language)
     languageSelect.value = taal.language
     soundButton?.setLanguage?.(taal.language)
+    toonSchaakWallpaper()
     soundPerspective.textContent = myPlayer < 0 ? t('Geluid volgt de speler die zet.') : t('Geluid vanuit jouw perspectief: {kleur}.', { kleur:t(COLORS[myPlayer]) })
     translateCameras()
     draw(true)
@@ -541,6 +582,7 @@ export function start({ Bordgeluid = null, gameChannel = null, players = [], use
       if (destroyed) return
       destroyed = true
       stopLanguage(); taal.destroy()
+      stopWallpaper(); schaakWallpaper.destroy()
       if (rulesDialog.open) rulesDialog.close()
       if (settingsDialog.open) settingsDialog.close()
       if (!preserveCamera) localStream?.getTracks().forEach(track => track.stop())

@@ -1,5 +1,7 @@
-import { maakSchaakTaal } from './schaak-taal.js?v=4'
+import { maakSchaakTaal } from './schaak-taal.js?v=6'
 import { stukSVG, registreerSlag, veroverdePunten, STUKPUNTEN } from './schaak-stukken.js?v=1'
+import { schaakFen } from './schaak-ultra-engine.js?v=1'
+import { schaakNotatie, maakUltraEvaluatieHistorie } from './schaak-ultra-historie.js?v=1'
 const SETTINGS_KEY = 'fibro_chess_settings_v1'
 const READABLE_NAMES = { P:'pion', N:'paard', B:'loper', R:'toren', Q:'dame', K:'koning' }
 
@@ -20,8 +22,9 @@ function readSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')
     const thinking = Number(saved.thinking ?? 7)
-    return { ...saved, thinking:Number.isFinite(thinking) ? Math.min(7,Math.max(0,thinking)) : 7, pieces:['small','medium','large'].includes(saved.pieces) ? saved.pieces : 'medium', board:['classic','wood','marble','glass'].includes(saved.board) ? saved.board : 'classic', soundTheme:['classic','wood'].includes(saved.soundTheme) ? saved.soundTheme : 'classic', showAttackRoutes:saved.showAttackRoutes === true, exaggerate:saved.exaggerate === true, pointsPerPiece:saved.pointsPerPiece === true, noobMode:saved.noobMode === true, camerasAtTop:saved.camerasAtTop === true, threePlayer:saved.threePlayer === true }
-  } catch { return { thinking:7, pieces:'medium', board:'classic', soundTheme:'classic', showAttackRoutes:false, exaggerate:false, pointsPerPiece:false, noobMode:false, camerasAtTop:false, threePlayer:false } }
+    const ultraThinking = typeof saved.ultraThinking === 'number' ? saved.ultraThinking : 5
+    return { ...saved, thinking:Number.isFinite(thinking) ? Math.min(7,Math.max(0,thinking)) : 7, ultraThinking:Number.isFinite(ultraThinking) ? Math.min(7,Math.max(0,ultraThinking)) : 5, pieces:['small','medium','large'].includes(saved.pieces) ? saved.pieces : 'medium', board:['classic','wood','marble','glass'].includes(saved.board) ? saved.board : 'classic', soundTheme:['classic','wood'].includes(saved.soundTheme) ? saved.soundTheme : 'classic', gradedCaptureSounds:saved.gradedCaptureSounds === true, ultraGradedCaptureSounds:typeof saved.ultraGradedCaptureSounds === 'boolean' ? saved.ultraGradedCaptureSounds : true, ultraEvaluationSound:saved.ultraEvaluationSound === true, showAttackRoutes:saved.showAttackRoutes === true, exaggerate:saved.exaggerate === true, pointsPerPiece:saved.pointsPerPiece === true, noobMode:saved.noobMode === true, camerasAtTop:saved.camerasAtTop === true, threePlayer:saved.threePlayer === true, showUltraEvaluation:saved.showUltraEvaluation === true }
+  } catch { return { thinking:7, ultraThinking:5, pieces:'medium', board:'classic', soundTheme:'classic', gradedCaptureSounds:false, ultraGradedCaptureSounds:true, ultraEvaluationSound:false, showAttackRoutes:false, exaggerate:false, pointsPerPiece:false, noobMode:false, camerasAtTop:false, threePlayer:false, showUltraEvaluation:false } }
 }
 // schaken-ui.js - spel voor Fibro, losgetrokken uit chat.html.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
@@ -36,6 +39,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   // Coaching aids can reveal tactical information to one player only. Keep them
   // for computer games, where there is no fairness concern.
   const isVriendPartij = !spelKanaal.isSolo
+  const isUltra = spelKanaal.isSolo === true && spelKanaal.niveau === 'ultra'
   document.getElementById('spelTitelBar').textContent = '♟️ ' + t('Schaken')
   const inhoud = document.getElementById('spelInhoud')
 
@@ -67,6 +71,43 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-frame { box-sizing:border-box; container-type:inline-size; flex:none; width:min(360px,82vw,calc(100% - 12px),max(180px,calc(100dvh - 290px))); padding:7px; border-radius:12px; transition:width .25s ease;
         background:linear-gradient(135deg,#d9ae76,#765032 45%,#39271e); box-shadow:0 9px 0 #39271e,0 12px 0 #211811,0 22px 30px #0008,inset 0 1px 1px #fff9; }
       .sch-spel.sch-groot .sch-frame { width:min(720px,calc(100% - 12px),max(320px,calc(100dvh - 380px))); }
+      .sch-board-row { --sch-history-width:clamp(76px,21vw,150px); --sch-evaluation-width:0px; display:flex; justify-content:center; align-items:stretch; gap:6px; width:100%; min-width:0; }
+      .sch-board-row.sch-with-evaluation { --sch-evaluation-width:50px; }
+      .sch-board-row .sch-frame { width:min(360px,calc(100% - var(--sch-history-width) - var(--sch-evaluation-width) - 12px),max(150px,calc(100dvh - 290px))); min-width:0; }
+      .sch-spel.sch-groot .sch-board-row .sch-frame { width:min(720px,calc(100% - var(--sch-history-width) - var(--sch-evaluation-width) - 12px),max(220px,calc(100dvh - 380px))); }
+      .sch-evaluation { box-sizing:border-box; display:flex; flex:none; flex-direction:column; align-items:center; gap:4px; width:44px; padding:7px 0; color:#d9e4ef; }
+      .sch-evaluation[hidden] { display:none; }
+      .sch-evaluation-score { font-size:10px; font-weight:750; font-variant-numeric:tabular-nums; white-space:nowrap; }
+      .sch-evaluation-bar { position:relative; flex:1; width:18px; min-height:70px; overflow:hidden; border:1px solid #a2abb850; border-radius:6px; background:#242631; box-shadow:0 3px 12px #0006,inset 0 1px 3px #0008; }
+      .sch-evaluation-white { position:absolute; inset:auto 0 0; height:var(--sch-white-share,50%); background:linear-gradient(90deg,#d6dccf,#fffbed); transition:height .35s ease; }
+      .sch-evaluation-delta { display:none; position:absolute; z-index:1; bottom:var(--sch-delta-bottom,50%); height:var(--sch-delta-height,0%); width:50%; pointer-events:none; box-shadow:0 0 0 1px #7b7d80b0; }
+      .sch-evaluation[data-direction="gain"] .sch-evaluation-delta,.sch-evaluation[data-direction="loss"] .sch-evaluation-delta { display:block; min-height:2px; }
+      .sch-evaluation-delta-white { left:0; background:linear-gradient(0deg,#696b6e80,#d5d6d8aa); }
+      .sch-evaluation-delta-black { right:0; background:linear-gradient(180deg,#54565a88,#c5c6c8b8); }
+      .sch-evaluation[data-magnitude="medium"] .sch-evaluation-delta { background:repeating-linear-gradient(135deg,#6c6e72dd 0 2px,#d0d1d4dd 2px 4px); }
+      .sch-evaluation[data-magnitude="large"] .sch-evaluation-delta { background:repeating-linear-gradient(45deg,#373a40f5 0 3px,#e0e1e4f5 3px 5px); box-shadow:0 0 0 1px #e0e1e4; }
+      .sch-evaluation-delta-value { min-height:10px; color:#c1c3c7; font-size:9px; line-height:1; font-variant-numeric:tabular-nums; white-space:nowrap; }
+      .sch-evaluation-ply { max-width:44px; color:#b8c9c8; font-size:9px; line-height:1.2; white-space:nowrap; }
+      .sch-evaluation-bar::after { content:""; position:absolute; inset:50% 0 auto; border-top:1px solid #82c9bcaa; }
+      .sch-evaluation-side { font-size:9px; line-height:1; }
+      .sch-evaluation[data-pending="true"] .sch-evaluation-bar { opacity:.45; }
+      .sch-history { box-sizing:border-box; contain:size; display:flex; flex:none; flex-direction:column; width:var(--sch-history-width); min-width:0; min-height:0; padding:8px 4px; border:1px solid #a6c9be35; border-radius:10px; background:linear-gradient(160deg,#2a3437,#151b24); color:#ecf1ed; }
+      .sch-history h3 { margin:0 0 7px; overflow-wrap:anywhere; font-size:10px; font-weight:750; }
+      .sch-history-scroll { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#8aa8a0 transparent; }
+      .sch-history table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:11px; font-variant-numeric:tabular-nums; }
+      .sch-history th,.sch-history td { padding:4px 1px; overflow-wrap:anywhere; text-align:left; }
+      .sch-history th { color:#a8c9c0; font-size:9px; font-weight:600; }
+      .sch-history th:first-child { width:18%; }
+      .sch-history td:first-child { color:#7e9991; font-size:9px; }
+      .sch-history tr:last-child td { background:#ffffff0a; }
+      .sch-history-empty { margin:7px 0; color:#9dafaa; font-size:10px; overflow-wrap:anywhere; }
+      .sch-ultra-info { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px; }
+      .sch-ultra-status { min-height:16px; margin:1px 0 0; color:#a8c8c2; font-size:11px; text-align:center; }
+      .sch-ultra-status[data-phase="error"] { color:#ffb6b3; }
+      .sch-ultra-retry { min-height:32px; padding:5px 10px; border:1px solid #80d8c377; border-radius:9px; background:#24443f; color:#dffff4; font:inherit; font-size:11px; cursor:pointer; }
+      .sch-ultra-retry[hidden] { display:none; }
+      .sch-ultra-retry:focus-visible { outline:2px solid #91f1d7; outline-offset:3px; }
+      @media (prefers-reduced-motion:reduce) { .sch-evaluation-white { transition:none; } }
       #sch-bord { display:grid; grid-template-columns:repeat(8,1fr); aspect-ratio:1; width:100%; touch-action:none; user-select:none; }
       .sch-vak { border:0; border-radius:0; padding:0; min-width:0; position:relative; display:grid; place-items:center; cursor:pointer; aspect-ratio:1; }
       .sch-vak:focus-visible { outline:3px solid #55dfff; outline-offset:-3px; z-index:2; }
@@ -175,7 +216,18 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     <div class="sch-spel">
       <div id="sch-status" role="status" aria-live="polite" style="color:white;font-size:14px;font-weight:600;text-align:center;min-height:20px;"></div>
       <div class="sch-vangst" id="sch-tegenstander"></div>
-      <div class="sch-frame"><div id="sch-bord" role="group" data-sch-label="Schaken" aria-label="Schaken"></div></div>
+      ${isUltra ? `<div class="sch-board-row" id="sch-board-row">
+        <aside class="sch-evaluation" id="sch-evaluation" data-sch-label="Geschat voordeel" aria-label="Geschat voordeel" hidden>
+          <output class="sch-evaluation-score" id="sch-evaluation-score" aria-live="off">—</output>
+          <span class="sch-evaluation-side" data-sch-text="Zwart">Zwart</span>
+          <output class="sch-evaluation-delta-value" id="sch-evaluation-black-delta"></output>
+          <div class="sch-evaluation-bar" aria-hidden="true"><div class="sch-evaluation-white" id="sch-evaluation-white"></div><div class="sch-evaluation-delta sch-evaluation-delta-white"></div><div class="sch-evaluation-delta sch-evaluation-delta-black"></div></div>
+          <output class="sch-evaluation-delta-value" id="sch-evaluation-white-delta"></output>
+          <span class="sch-evaluation-side" data-sch-text="Wit">Wit</span>
+          <output class="sch-evaluation-ply" id="sch-evaluation-ply" data-sch-title="Telt elke zet van wit en zwart afzonderlijk."></output>
+        </aside>` : ''}
+        <div class="sch-frame"><div id="sch-bord" role="group" data-sch-label="Schaken" aria-label="Schaken"></div></div>
+      ${isUltra ? '<aside class="sch-history" id="sch-history" data-sch-label="Zetgeschiedenis" aria-label="Zetgeschiedenis"><h3 data-sch-text="Zetgeschiedenis">Zetgeschiedenis</h3><div class="sch-history-scroll" id="sch-history-scroll" tabindex="0" data-sch-label="Zetgeschiedenis" aria-label="Zetgeschiedenis"><table><thead><tr><th scope="col">#</th><th scope="col" data-sch-text="Wit">Wit</th><th scope="col" data-sch-text="Zwart">Zwart</th></tr></thead><tbody id="sch-history-moves"></tbody></table><p class="sch-history-empty" id="sch-history-empty" data-sch-text="Nog geen zetten">Nog geen zetten</p></div></aside></div><div class="sch-ultra-info"><p class="sch-ultra-status" id="sch-ultra-status" role="status" aria-live="polite"></p><button class="sch-ultra-retry" id="sch-ultra-retry" type="button" data-sch-text="Opnieuw proberen" hidden>Opnieuw proberen</button></div>' : ''}
       <div class="sch-vangst" id="sch-eigen"></div>
       <div class="sch-legenda"></div>
       <div class="sch-acties">
@@ -202,8 +254,8 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
             <h3 id="sch-gameplay-heading"><span data-sch-text="Spelverloop">Spelverloop</span></h3>
             <fieldset><legend><span data-sch-text="Denktijd van de computer">Denktijd van de computer</span></legend>
               <label for="sch-denktijd"><span data-sch-text="Maximum:">Maximum:</span> <output id="sch-denktijd-waarde">7 seconden</output></label>
-              <input id="sch-denktijd" type="range" min="0" max="7" step="1" value="7" aria-describedby="sch-denktijd-hint">
-              <p class="sch-menu-hint" id="sch-denktijd-hint"><span data-sch-text="0 = direct. Anders wisselt de computer zijn denktijd af tot het gekozen maximum.">0 = direct. Anders wisselt de computer zijn denktijd af tot het gekozen maximum.</span></p>
+              <input id="sch-denktijd" type="range" min="0" max="7" step="1" value="${isUltra ? instellingen.ultraThinking : instellingen.thinking}" aria-describedby="sch-denktijd-hint">
+              <p class="sch-menu-hint" id="sch-denktijd-hint">${tekst(isUltra ? '0 = geen extra wachttijd. De engine heeft wel rekentijd nodig. Anders wisselt de computer zijn denktijd af tot het gekozen maximum.' : '0 = direct. Anders wisselt de computer zijn denktijd af tot het gekozen maximum.')}</p>
             </fieldset>
             <fieldset><legend><span data-sch-text="Grootte van de stukken">Grootte van de stukken</span></legend><div class="sch-menu-opties" data-options="pieces">
               <button class="sch-keuze" type="button" data-value="small"><span data-sch-text="Kleiner">Kleiner</span></button><button class="sch-keuze" type="button" data-value="medium"><span data-sch-text="Standaard">Standaard</span></button><button class="sch-keuze" type="button" data-value="large"><span data-sch-text="Groter">Groter</span></button>
@@ -213,6 +265,8 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
             <label class="sch-attack-toggle"><input id="sch-aanvalsroutes" type="checkbox"> <span data-sch-text="Aanvalsroutes tonen">Aanvalsroutes tonen</span></label>
             <label class="sch-attack-toggle" id="sch-exaggerate-wrap" hidden><input id="sch-exaggerate" type="checkbox"> <span data-sch-text="Extra nadruk">Extra nadruk</span></label>
             <p class="sch-menu-hint"><span data-sch-text="Markeert vijandelijke stukken die het laatst verplaatste stuk volgens de regels kan slaan.">Markeert vijandelijke stukken die het laatst verplaatste stuk volgens de regels kan slaan.</span></p>
+            ${isUltra ? `<label class="sch-attack-toggle"><input id="sch-ultra-evaluation-enabled" type="checkbox" aria-describedby="sch-ultra-evaluation-hint"> <span data-sch-text="Live evaluatie tonen">Live evaluatie tonen</span></label>
+            <p class="sch-menu-hint" id="sch-ultra-evaluation-hint" data-sch-text="Toont een geschatte stellingsevaluatie naast het bord. Positief is voordeel voor wit; negatief voor zwart.">Toont een geschatte stellingsevaluatie naast het bord. Positief is voordeel voor wit; negatief voor zwart.</p>` : ''}
           </section>
           <section class="sch-menu-section" aria-labelledby="sch-board-heading">
             <h3 id="sch-board-heading"><span data-sch-text="Bord en veroverde stukken">Bord en veroverde stukken</span></h3>
@@ -227,6 +281,9 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
             <label for="sch-sound-theme"><span data-sch-text="Geluidsthema">Geluidsthema</span></label>
             <select id="sch-sound-theme"><option value="classic" data-sch-text="Klassiek (standaard)">Klassiek (standaard)</option><option value="wood" data-sch-text="Houten bord">Houten bord</option></select>
             <p class="sch-menu-hint"><span data-sch-text="Kies hoe het klinkt wanneer een stuk op het bord wordt gezet.">Kies hoe het klinkt wanneer een stuk op het bord wordt gezet.</span></p>
+            <label class="sch-attack-toggle"><input id="sch-graded-capture-sounds" type="checkbox" aria-describedby="sch-graded-capture-hint"> <span data-sch-text="Gradatie-geluiden schaakstukken">Gradatie-geluiden schaakstukken</span></label>
+            <p class="sch-menu-hint" id="sch-graded-capture-hint">${tekst(isUltra ? 'Ultra: standaard aan. Positieve klanken bij veroveren en donkere klanken bij verlies; meer punten klinkt krachtiger.' : 'Standaard uit: de oorspronkelijke geluiden. Aan: positieve klanken bij veroveren en donkere klanken bij verlies. Meer punten klinkt krachtiger.')}</p>
+            ${isUltra ? '<label class="sch-attack-toggle"><input id="sch-ultra-evaluation-sound" type="checkbox" aria-describedby="sch-ultra-evaluation-sound-hint"> <span data-sch-text="Geluid bij evaluatieverandering">Geluid bij evaluatieverandering</span></label><p class="sch-menu-hint" id="sch-ultra-evaluation-sound-hint" data-sch-text="Speelt na elke zet een korte klank voor de verandering vanuit jouw perspectief. Standaard uit.">Speelt na elke zet een korte klank voor de verandering vanuit jouw perspectief. Standaard uit.</p>' : ''}
             <label class="sch-attack-toggle"><input id="sch-cameras-at-top" type="checkbox"> <span data-sch-text="Webcams samen bovenaan">Webcams samen bovenaan</span></label>
             <p class="sch-menu-hint"><span data-sch-text="Zet beide camerabeelden boven het bord. Tik op een beeld om het te vergroten of te verkleinen.">Zet beide camerabeelden boven het bord. Tik op een beeld om het te vergroten of te verkleinen.</span></p>
           </section>
@@ -425,17 +482,19 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   bewaarInstellingen()
   const denktijd = menu.querySelector('#sch-denktijd')
   const denktijdWaarde = menu.querySelector('#sch-denktijd-waarde')
+  const thinkingKey = isUltra ? 'ultraThinking' : 'thinking'
   menu.querySelector('#sch-denktijd').closest('fieldset').hidden = !spelKanaal.isSolo
-  denktijd.value = String(instellingen.thinking)
+  denktijd.value = String(instellingen[thinkingKey])
   function toonDenktijd() {
-    denktijdWaarde.value = instellingen.thinking === 0 ? t('Direct') : t(instellingen.thinking === 1 ? '{n} seconde' : '{n} seconden', { n:instellingen.thinking })
+    const thinking = instellingen[thinkingKey]
+    denktijdWaarde.value = thinking === 0 ? t('Direct') : t(thinking === 1 ? '{n} seconde' : '{n} seconden', { n:thinking })
   }
   toonDenktijd()
   denktijd.addEventListener('input', () => {
-    instellingen.thinking = Number(denktijd.value)
+    instellingen[thinkingKey] = Number(denktijd.value)
     toonDenktijd()
     bewaarInstellingen()
-    if (spelKanaal.isSolo) spelKanaal.send({ type:'broadcast', event:'bot-instellingen', payload:{ thinkingMs:instellingen.thinking * 1000 } })
+    if (spelKanaal.isSolo) spelKanaal.send({ type:'broadcast', event:'bot-instellingen', payload:{ thinkingMs:instellingen[thinkingKey] * 1000 } })
   })
   menu.querySelectorAll('[data-options] .sch-keuze').forEach(button => button.addEventListener('click', () => kiesMenuOptie(button.closest('[data-options]').dataset.options, button.dataset.value)))
   for (const group of ['pieces','board']) menu.querySelectorAll(`[data-options="${group}"] .sch-keuze`).forEach(button => button.setAttribute('aria-pressed', String(button.dataset.value === instellingen[group])))
@@ -444,6 +503,13 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     instellingen.soundTheme = soundTheme.value
     bewaarInstellingen()
     Bordgeluid.previewSchaakGeluid(instellingen.soundTheme)
+  })
+  const gradedCaptureToggle = menu.querySelector('#sch-graded-capture-sounds')
+  const gradedCaptureKey = isUltra ? 'ultraGradedCaptureSounds' : 'gradedCaptureSounds'
+  gradedCaptureToggle.checked = instellingen[gradedCaptureKey]
+  gradedCaptureToggle.addEventListener('change', () => {
+    instellingen[gradedCaptureKey] = gradedCaptureToggle.checked === true
+    bewaarInstellingen()
   })
   const cameraLayoutToggle = menu.querySelector('#sch-cameras-at-top')
   cameraLayoutToggle.checked = instellingen.camerasAtTop
@@ -514,7 +580,185 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     instellingen.noobMode = noobToggle.checked
     bewaarInstellingen()
   })
-  if (spelKanaal.isSolo) spelKanaal.send({ type:'broadcast', event:'bot-instellingen', payload:{ thinkingMs:instellingen.thinking * 1000 } })
+
+  // Ultra evaluation is a solo-only aid. A value is shown only for the current
+  // position; analysis arriving during the move animation waits for its board.
+  const ultraEvaluationToggle = menu.querySelector('#sch-ultra-evaluation-enabled')
+  const ultraSoundToggle = menu.querySelector('#sch-ultra-evaluation-sound')
+  const ultraEvaluationEl = inhoud.querySelector('#sch-evaluation')
+  const ultraEvaluationScore = inhoud.querySelector('#sch-evaluation-score')
+  const ultraEvaluationWhite = inhoud.querySelector('#sch-evaluation-white')
+  const ultraWhiteDelta = inhoud.querySelector('#sch-evaluation-white-delta')
+  const ultraBlackDelta = inhoud.querySelector('#sch-evaluation-black-delta')
+  const ultraPlyEl = inhoud.querySelector('#sch-evaluation-ply')
+  const ultraHistoryMoves = inhoud.querySelector('#sch-history-moves')
+  const ultraHistoryEmpty = inhoud.querySelector('#sch-history-empty')
+  const ultraHistoryScroll = inhoud.querySelector('#sch-history-scroll')
+  const ultraBoardRow = inhoud.querySelector('#sch-board-row')
+  const ultraStatusEl = inhoud.querySelector('#sch-ultra-status')
+  const ultraRetryBtn = inhoud.querySelector('#sch-ultra-retry')
+  const ultraHistorie = isUltra ? maakUltraEvaluatieHistorie() : null
+  const ultraAnalyseGeluid = isUltra ? Bordgeluid.maakSchaakAnalyseGeluid?.() : null
+  const ultraZetten = []
+  const ultraWachtendeEvaluaties = new Map()
+  let ultraEvaluation = null
+  let ultraPhase = 'loading'
+  let ultraSource = null
+  let ultraDisposed = false
+  const ultraFenSleutel = fen => typeof fen === 'string' ? fen.trim().split(/\s+/).slice(0,4).join(' ') : ''
+  const ultraAnalyseAan = () => instellingen.showUltraEvaluation === true || instellingen.ultraEvaluationSound === true
+  function tekenUltraHistorie() {
+    if (!isUltra) return
+    const volgLaatste = ultraHistoryScroll.scrollHeight - ultraHistoryScroll.scrollTop - ultraHistoryScroll.clientHeight < 35
+    const rijen = []
+    for (let i = 0; i < ultraZetten.length; i += 2) {
+      rijen.push(`<tr><td>${i / 2 + 1}.</td><td>${esc(ultraZetten[i])}</td><td>${esc(ultraZetten[i + 1] || '')}</td></tr>`)
+    }
+    ultraHistoryMoves.innerHTML = rijen.join('')
+    ultraHistoryEmpty.hidden = ultraZetten.length > 0
+    if (volgLaatste) ultraHistoryScroll.scrollTop = ultraHistoryScroll.scrollHeight
+  }
+  function voegUltraZetToe(zet, promotieStuk) {
+    if (!isUltra) return
+    // SAN needs the legal position before this exact move changes it.
+    ultraZetten.push(schaakNotatie(Schaak, staat, zet, promotieStuk || 'Q'))
+    tekenUltraHistorie()
+  }
+  function resetUltraHistorie() {
+    if (!isUltra) return
+    ultraZetten.length = 0
+    ultraHistorie.reset()
+    ultraWachtendeEvaluaties.clear()
+    ultraEvaluation = null
+    ultraAnalyseGeluid?.annuleer()
+    tekenUltraHistorie()
+  }
+  function verwerkUltraEvaluatie() {
+    const sleutel = ultraZetten.length + '|' + ultraFenSleutel(schaakFen(staat))
+    const payload = ultraWachtendeEvaluaties.get(sleutel)
+    if (!payload) return
+    ultraWachtendeEvaluaties.delete(sleutel)
+    const volgende = ultraHistorie.update(payload)
+    if (!volgende) return
+    ultraEvaluation = volgende
+    if (ultraEvaluation?.isNewFinal && ultraEvaluation.ply > 0 && instellingen.ultraEvaluationSound === true && Number.isFinite(ultraEvaluation.deltaCp)) {
+      ultraAnalyseGeluid?.speel(ultraEvaluation.deltaCp * (mijnKleur === 'w' ? 1 : -1))
+    }
+    // Old positions cannot become current again within this game.
+    for (const [key, waiting] of ultraWachtendeEvaluaties) if (waiting.ply < ultraZetten.length) ultraWachtendeEvaluaties.delete(key)
+  }
+  function ultraGetal(cp, precies = false) {
+    return (cp > 0 ? '+' : cp < 0 ? '−' : '') + (Math.abs(cp) / 100).toLocaleString(taal.language === 'en' ? 'en-GB' : 'nl-NL', { minimumFractionDigits:1, maximumFractionDigits:precies ? 2 : 1 })
+  }
+  function toonUltraEvaluatie() {
+    if (!isUltra || ultraDisposed) return
+    verwerkUltraEvaluatie()
+    const enabled = instellingen.showUltraEvaluation === true
+    ultraEvaluationEl.hidden = !enabled
+    ultraBoardRow.classList.toggle('sch-with-evaluation', enabled)
+    ultraPlyEl.textContent = ultraZetten.length ? t('Zet #{n}', { n:ultraZetten.length }) : t('Start')
+    const bronTekst = ultraSource === 'lichess' ? t('Ultra · Lichess') : ultraSource === 'stockfish' ? t('Ultra · Stockfish 19') : t('Ultra · Lichess + Stockfish 19')
+    const faseTekst = ultraPhase === 'error' ? t('Niet beschikbaar. Probeer het opnieuw.') : ultraPhase === 'loading' ? t('Laden...') : ultraPhase === 'searching' ? t('Denkt…') : ''
+    const statusTekst = bronTekst + (faseTekst ? ' · ' + faseTekst : '')
+    if (ultraStatusEl.textContent !== statusTekst) ultraStatusEl.textContent = statusTekst
+    ultraStatusEl.dataset.phase = ultraPhase
+    ultraRetryBtn.hidden = ultraPhase !== 'error'
+    const actueel = enabled && ultraEvaluation && ultraEvaluation.ply === ultraZetten.length && ultraFenSleutel(ultraEvaluation.fen) === ultraFenSleutel(schaakFen(staat))
+    ultraEvaluationEl.style.setProperty('--sch-delta-height', '0%')
+    ultraEvaluationEl.dataset.magnitude = ''
+    ultraEvaluationEl.dataset.direction = ''
+    ultraWhiteDelta.textContent = ''
+    ultraBlackDelta.textContent = ''
+    if (!actueel) {
+      ultraEvaluationEl.dataset.pending = 'true'
+      ultraEvaluationScore.textContent = '—'
+      ultraEvaluationWhite.style.setProperty('--sch-white-share', '50%')
+      ultraEvaluationEl.setAttribute('aria-label', t('Geschat voordeel') + ': ' + t('Wachten op evaluatie…'))
+      ultraEvaluationEl.title = enabled ? t('Evaluatie wordt bijgewerkt…') : ''
+      return
+    }
+    const { cp, mate, previousWhiteShare, whiteShare, deltaCp, direction, magnitude } = ultraEvaluation
+    const richting = mate !== null ? (mate === 0 ? (staat.aanZet === 'w' ? -1 : 1) : Math.sign(mate)) : Math.sign(cp)
+    const getal = mate !== null ? '#' + Math.abs(mate) : ultraGetal(cp)
+    const voordeel = richting > 0 ? t('Voordeel voor wit') : richting < 0 ? t('Voordeel voor zwart') : t('Gelijk')
+    const beschrijving = mate !== null ? t('Mat in {n}', { n:Math.abs(mate) }) : getal
+    const witAandeel = whiteShare
+    let verandering = ''
+    if (Number.isFinite(deltaCp) && Number.isFinite(previousWhiteShare)) {
+      const delta = ultraGetal(deltaCp, true), tegenDelta = ultraGetal(-deltaCp, true)
+      ultraWhiteDelta.textContent = delta
+      ultraBlackDelta.textContent = tegenDelta
+      ultraEvaluationEl.style.setProperty('--sch-delta-bottom', `${Math.min(previousWhiteShare, witAandeel)}%`)
+      ultraEvaluationEl.style.setProperty('--sch-delta-height', `${Math.abs(witAandeel - previousWhiteShare)}%`)
+      ultraEvaluationEl.dataset.magnitude = magnitude || ''
+      ultraEvaluationEl.dataset.direction = direction || ''
+      verandering = t('Verandering sinds de vorige zet') + ': ' + t('Wit {delta}; zwart {tegenDelta}', { delta, tegenDelta })
+      if (magnitude) verandering += ', ' + t(magnitude === 'large' ? 'Grote verandering' : magnitude === 'medium' ? 'Middelgrote verandering' : 'Kleine verandering')
+      ultraWhiteDelta.setAttribute('aria-label', verandering)
+      ultraBlackDelta.setAttribute('aria-label', verandering)
+    }
+    ultraEvaluationEl.dataset.pending = 'false'
+    ultraEvaluationScore.textContent = (richting > 0 ? '↑' : richting < 0 ? '↓' : '') + getal
+    ultraEvaluationWhite.style.setProperty('--sch-white-share', `${witAandeel}%`)
+    ultraEvaluationEl.setAttribute('aria-label', t('Geschat voordeel') + ': ' + voordeel + ', ' + beschrijving + (verandering ? '. ' + verandering : ''))
+    ultraEvaluationEl.title = voordeel + ' · ' + beschrijving + (verandering ? ' · ' + verandering : '')
+  }
+  if (isUltra) {
+    ultraRetryBtn.addEventListener('click', () => {
+      if (ultraDisposed || ultraPhase !== 'error') return
+      ultraPhase = 'loading'
+      ultraEvaluation = null
+      toonUltraEvaluatie()
+      spelKanaal.send({ type:'broadcast', event:'ultra-opnieuw-proberen', payload:{} })
+    })
+    ultraEvaluationToggle.checked = instellingen.showUltraEvaluation
+    ultraEvaluationToggle.addEventListener('change', () => {
+      instellingen.showUltraEvaluation = ultraEvaluationToggle.checked === true
+      bewaarInstellingen()
+      toonUltraEvaluatie()
+      spelKanaal.send({ type:'broadcast', event:'ultra-evaluatie-instelling', payload:{ enabled:ultraAnalyseAan() } })
+    })
+    ultraSoundToggle.checked = instellingen.ultraEvaluationSound
+    ultraSoundToggle.addEventListener('change', () => {
+      instellingen.ultraEvaluationSound = ultraSoundToggle.checked === true
+      if (!instellingen.ultraEvaluationSound) ultraAnalyseGeluid?.annuleer()
+      bewaarInstellingen()
+      toonUltraEvaluatie()
+      spelKanaal.send({ type:'broadcast', event:'ultra-evaluatie-instelling', payload:{ enabled:ultraAnalyseAan() } })
+    })
+    spelKanaal.on('broadcast', { event:'ultra-status' }, msg => {
+      if (ultraDisposed || !spelEl.isConnected) return
+      const payload = msg.payload || {}
+      if (['loading','ready','searching','error'].includes(payload.phase)) ultraPhase = payload.phase
+      if (['lichess','stockfish'].includes(payload.source)) ultraSource = payload.source
+      if (payload.phase === 'error') ultraEvaluation = null
+      toonUltraEvaluatie()
+    })
+    spelKanaal.on('broadcast', { event:'ultra-evaluatie' }, msg => {
+      if (ultraDisposed || !spelEl.isConnected || !ultraAnalyseAan()) return
+      const payload = msg.payload || {}
+      const cp = typeof payload.cp === 'number' && Number.isFinite(payload.cp) ? payload.cp : null
+      const mate = Number.isSafeInteger(payload.mate) ? payload.mate : null
+      const fen = ultraFenSleutel(payload.fen)
+      const ply = payload.ply
+      if ((!Number.isFinite(cp) && mate === null) || fen.split(' ').length !== 4 || !Number.isSafeInteger(ply) || ply < ultraZetten.length) return
+      const sleutel = ply + '|' + fen
+      const vorige = ultraWachtendeEvaluaties.get(sleutel)
+      if (!vorige?.final || payload.final === true) ultraWachtendeEvaluaties.set(sleutel, { ...payload, cp, mate, ply, final:payload.final === true })
+      toonUltraEvaluatie()
+    })
+    toonUltraEvaluatie()
+    // Register listeners before opting in: a cached result can arrive immediately.
+    spelKanaal.send({ type:'broadcast', event:'ultra-evaluatie-instelling', payload:{ enabled:ultraAnalyseAan() } })
+    opruimers.push(() => {
+      ultraDisposed = true
+      ultraEvaluation = null
+      ultraWachtendeEvaluaties.clear()
+      ultraAnalyseGeluid?.destroy()
+      try { spelKanaal.send({ type:'broadcast', event:'ultra-evaluatie-instelling', payload:{ enabled:false } }) } catch {}
+    })
+  }
+  if (spelKanaal.isSolo) spelKanaal.send({ type:'broadcast', event:'bot-instellingen', payload:{ thinkingMs:instellingen[thinkingKey] * 1000 } })
   function openMenuLater() {
     menuDruk = true
     onderdrukKlik = true
@@ -620,6 +864,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   function kolVolgorde() { return omgedraaid ? [7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7] }
 
   function tekenBord() {
+    toonUltraEvaluatie()
     tekenVeroverd()
     bordEl.innerHTML = ''
     const rijen = rijVolgorde()
@@ -782,6 +1027,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     if (!await animeerZet(zet)) return
     const slagEffect = schaakSlagEffect(staat, zet, mijnKleur)
     registreerSlag(staat, zet, veroverd)
+    voegUltraZetToe(zet, promotieStuk)
     Schaak.voerZetUit(staat, zet, promotieStuk)
     routeStuk = zet.naar.slice()
     laatsteZet = zet
@@ -816,7 +1062,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   }
 
   function naBeurtControle(slagEffect = null) {
-    const volgendeKleur = staat.aanZet; Bordgeluid.schaak(Schaak, staat, laatsteZet, mijnKleur, instellingen.soundTheme, slagEffect)
+    const volgendeKleur = staat.aanZet; Bordgeluid.schaak(Schaak, staat, laatsteZet, mijnKleur, instellingen.soundTheme, instellingen[isUltra ? 'ultraGradedCaptureSounds' : 'gradedCaptureSounds'] ? slagEffect : null)
     if (Schaak.isSchaakmat(staat, volgendeKleur)) {
       gameOver = true
       statusBericht = null
@@ -851,7 +1097,9 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       if (!geldig || !await animeerZet(geldig)) return
       const slagEffect = schaakSlagEffect(staat, geldig, mijnKleur)
       registreerSlag(staat, geldig, veroverd)
-      Schaak.voerZetUit(staat, geldig, ['Q','R','B','N'].includes(promotieStuk) ? promotieStuk : 'Q')
+      const promotie = ['Q','R','B','N'].includes(promotieStuk) ? promotieStuk : 'Q'
+      voegUltraZetToe(geldig, promotie)
+      Schaak.voerZetUit(staat, geldig, promotie)
       routeStuk = geldig.naar.slice()
       laatsteZet = geldig
       geselecteerd = null
@@ -869,6 +1117,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     veroverd = { w:[], z:[] }
     routeStuk = null
     staat = Schaak.nieuweSpelStaat()
+    resetUltraHistorie()
     geselecteerd = null
     mogelijkeZetten = []
     laatsteZet = null
@@ -886,6 +1135,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     veroverd = { w:[], z:[] }
     routeStuk = null
     staat = Schaak.nieuweSpelStaat()
+    resetUltraHistorie()
     geselecteerd = null
     mogelijkeZetten = []
     laatsteZet = null
@@ -902,6 +1152,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     languageSelect.value = taal.language
     geluidBtn?.setLanguage?.(taal.language)
     toonDenktijd()
+    toonUltraEvaluatie()
     inhoud.querySelector('.sch-legenda').textContent = t('Pion 1 · Paard 3 · Loper 3 · Toren 5 · Dame 9')
     if (statusBericht) statusEl.textContent = t(statusBericht.key, statusBericht.values?.naam !== undefined ? { ...statusBericht.values, naam:tegenstanderNaam() } : statusBericht.values)
     if (pendingNoobMove) toonNoobBericht()

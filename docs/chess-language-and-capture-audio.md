@@ -9,7 +9,15 @@ Fibro verandert niet. Een taalwissel vertaalt de bestaande bediening, status,
 spelregels, punten, camera’s en toegankelijkheidslabels; hij begint geen nieuwe
 partij en verplaatst of herstart geen camerastreams. Gebruikersnamen blijven intact.
 
-Bij slaan komt de waarde van het **veroverde** stuk uit de stelling vóór de zet:
+De oorspronkelijke geluiden zijn standaard actief bij gewone schaakniveaus;
+in Ultra staan de gradatie-geluiden standaard aan. Beide keuzes worden apart
+bewaard. Zet in de schaakinstellingen
+**Gradatie-geluiden schaakstukken** aan om de nieuwe reeks te gebruiken. Deze
+keuze wordt op dit apparaat bewaard in `fibro_chess_settings_v1.gradedCaptureSounds`
+en geldt voor twee én drie spelers. Uitzetten herstelt meteen de oorspronkelijke
+geluiden; de partij, camera’s, geluidssterkte en materiaalkeuze blijven behouden.
+
+Met deze optie aan komt bij slaan de waarde van het **veroverde** stuk uit de stelling vóór de zet:
 pion 1, paard/loper 3, toren 5 en dame 9. Eigen veroveringen krijgen een heldere
 chimeklank met metalen resonanties, een zachte aanslag en een natuurlijke uitklank.
 Hoge boventonen doven eerder uit dan de grondtoon. Waardevollere stukken hebben
@@ -53,7 +61,12 @@ both variants. Switching updates text and accessible labels while preserving
 the game, selection, other settings and camera streams. Real usernames are
 never translated.
 
-Capture audio uses the captured piece’s value (1 / 3 / 5 / 9). Capturing rewards
+Original sounds are the default for ordinary chess; Ultra defaults to graded
+capture sounds, with an independent preference. Enable **Graded chess piece sounds** in chess
+settings to use the new series. The per-device choice applies to both variants;
+turning it off immediately restores original audio without restarting the game.
+
+When enabled, capture audio uses the captured piece’s value (1 / 3 / 5 / 9). Capturing rewards
 you with a metallic chime and naturally decaying resonances; losing a piece uses a darker falling impact.
 Larger values add weight, resonance and duration rather than high-pitched UI
 bleeps. Queen captures have distinct reward/loss voicings. Existing mute and

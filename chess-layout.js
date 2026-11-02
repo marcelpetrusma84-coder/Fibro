@@ -1,5 +1,5 @@
 // Shared sizing for the chess board and its independently resizable cameras.
-import { maakSchaakTaal } from './schaak-taal.js?v=4'
+import { maakSchaakTaal } from './schaak-taal.js?v=6'
 const mountedLayouts = new WeakMap()
 const CONTROL_SELECTOR = 'button, a, input, select, textarea, summary, [contenteditable], [role="button"]'
 

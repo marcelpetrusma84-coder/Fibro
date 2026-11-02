@@ -92,6 +92,16 @@ active.nodes=[]
 schaak(engine,state,{type:'slag'},'w','wood',{value:9,outcome:'win'})
 assert.equal(checks,1,'capture audio still advances the existing outcome/promotion selector')
 assert(active.nodes.filter(node=>node.kind==='oscillator').every(node=>node.frequency.events.length===1),'the graded chime is not mixed with the legacy pitched check/promotion effects')
+active.nodes=[]
+schaak(engine,state,{type:'slag'},'w','wood',null)
+assert.equal(active.nodes.filter(node=>node.kind==='noise').length,2,'original capture audio returns when the optional effect is absent')
+assert(!active.nodes.some(node=>node.kind==='compressor'),'the graded renderer is not used by default')
+active.nodes=[]
+schaak({...engine,staatInSchaak:()=>true},state,{type:'slag'},'w','classic',null)
+assert(active.nodes.some(node=>node.kind==='oscillator'&&node.frequency.value===988),'legacy capture plus check retains its original check cue')
+active.nodes=[]
+schaak({...engine,isSchaakmat:()=>true},state,{type:'slag'},'w','classic',null)
+assert(active.nodes.some(node=>node.kind==='oscillator'&&node.frequency.value===1047),'legacy capture plus mate retains its original victory cue')
 preference='uit';active.nodes=[]
 schaak(engine,state,{type:'slag'},'w','classic',{value:9,outcome:'loss'})
 assert.equal(active.nodes.length,0,'the game capture route respects mute too')

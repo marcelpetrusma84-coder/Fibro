@@ -15,11 +15,11 @@
 <div class="controls"><label for="theme">Materiaal</label><select id="theme"><option value="classic">Klassiek · heldere resonantie</option><option value="wood">Hout · warm en gedempt</option></select><span id="sound-anchor"></span></div>
 <div class="legend" aria-hidden="true"><span>STUKWAARDE</span><span>JIJ VEROVERT</span><span>JIJ VERLIEST</span></div>
 <div class="grid" id="sounds"></div>
-<div id="status" role="status" aria-live="polite">Klik op een klank om te luisteren. Er wordt geen partij gestart.</div>
+<div id="status" role="status" aria-live="polite">Klik op een klank om te luisteren. Er wordt geen partij gestart. In een partij staat deze reeks standaard uit; zet ‘Gradatie-geluiden schaakstukken’ aan in de schaakinstellingen.</div>
 <p class="foot">Dit zijn de echte geluiden van het schaakspel. Je bestaande geluidsknop blijft van toepassing. <a href="../../chat.html?test=FIBRO%20TEST">Open FIBRO TEST ↗</a></p>
 </main>
 <script type="module">
-import * as Bordgeluid from '../../bordgeluid.js?v=200'
+import * as Bordgeluid from '../../bordgeluid.js?v=201'
 const pieces=[['Pion','♟',1],['Paard / loper','♞',3],['Toren','♜',5],['Dame','♛',9]]
 const durations={win:{1:830,3:1170,5:1540,9:2120},loss:{1:350,3:680,5:1020,9:1550}}
 const grid=document.getElementById('sounds'),status=document.getElementById('status')

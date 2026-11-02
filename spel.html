@@ -2,7 +2,7 @@
 <html lang="nl" data-taal style="background:#1a0a2e">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://lichess.org/api/cloud-eval https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=1"></script>
 <script src="foutmelder.js?v=1"></script>
 <script src="taal.js?v=48"></script>
@@ -36,6 +36,8 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 .niveau-btn.levels { background:#050510; border:2px solid #00f0ff; color:#00f0ff; box-shadow:0 0 14px rgba(0,240,255,0.35); }
 .niveau-btn.vriend { margin-top:4px; background:linear-gradient(135deg,#20b9ad,#42d392); border:1px solid rgba(182,255,227,0.58); color:#05231c; box-shadow:0 7px 20px rgba(34,197,148,0.22); }
 .niveau-btn:active { transform:scale(0.96); }
+.niveau-btn.ultra { border:1px solid #a0f6e8; background:linear-gradient(140deg,#314b62,#273047 65%,#1c5454); box-shadow:inset 0 1px #ffffff38,0 4px 0 #101d2c,0 9px 24px #51e9da20; color:#e5fff9; }
+.niveau-bron { display:block; margin-top:4px; font-size:10px; font-weight:500; color:#b3e5df; letter-spacing:.04em; }
 .melding { color:white; text-align:center; padding:24px; line-height:1.5; }
 .melding button { margin-top:16px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; border-radius:10px; padding:10px 22px; color:#1a0a2e; font-weight:600; cursor:pointer; }
 .vriend-modal { position:fixed; inset:0; z-index:30; display:flex; align-items:flex-end; justify-content:center; padding:16px; background:rgba(3,1,8,0.72); backdrop-filter:blur(10px); }
@@ -58,11 +60,11 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 </div>
 
 <script type="module">
-  import * as Bordgeluid from './bordgeluid.js?v=200'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=246'
+  import * as Bordgeluid from './bordgeluid.js?v=201'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=247'
   import { supabase } from './supabase.js?v=95'
   import { startSpelUitnodigingLuisteraar } from './speluitnodiging.js?v=197'
-  import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=4'
+  import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=6'
   import { nieuweSpelSessie } from './spelsessie.js?v=1'
 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -155,14 +157,15 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     const sleutel = 'fibro_solo_niveau_' + spelId
     let vorige = 'normaal'
     try { vorige = localStorage.getItem(sleutel) || 'normaal' } catch (e) {}
-    const NAMEN = { makkelijk: spelT('Makkelijk'), normaal: spelT('Normaal'), moeilijk: spelT('Moeilijk') }
+    const NAMEN = { makkelijk: spelT('Makkelijk'), normaal: spelT('Normaal'), moeilijk: spelT('Moeilijk'), ultra:spelT('Ultra') }
+    const niveaus = spel.niveaus || NIVEAUS
     titel.textContent = spel.icon + ' ' + spelNaam()
     inhoud.innerHTML = `
       <div class="niveau-kaart">
         <div class="niveau-icon">${esc(spel.icon)}</div>
         <div class="niveau-naam">${esc(spelNaam())}</div>
         <div class="niveau-sub">${spelT('Tegen de computer. Kies een niveau:')}</div>
-        ${NIVEAUS.map(n => `<button class="niveau-btn${n === vorige ? ' gekozen' : ''}" data-niveau="${n}">${NAMEN[n]}</button>`).join('')}
+        ${niveaus.map(n => `<button class="niveau-btn${n === vorige ? ' gekozen' : ''}${n === 'ultra' ? ' ultra' : ''}" data-niveau="${n}">${NAMEN[n]}${n === 'ultra' ? '<span class="niveau-bron">Lichess + Stockfish 19</span>' : ''}</button>`).join('')}
         ${spelId === 'schaken' ? `<button class="niveau-btn vriend" id="vriendKnop" type="button">${spelT('♟ Tegen een vriend')}</button>` : ''}
         ${spel.levels ? `<div class="niveau-sub" style="margin-top:10px">${spelT('Of speel alleen de levels:')}</div><button class="niveau-btn levels" id="levelsKnop" type="button">${spelT('🧱 Levels')}</button>` : ''}
       </div>`

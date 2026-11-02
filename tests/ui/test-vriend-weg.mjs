@@ -34,8 +34,8 @@ const scherm = deel('function toonSpelWachtscherm()', '// v244: hoor je al 2 min
 assert.doesNotMatch(scherm, /[^l]T\('/, 'het wachtscherm gebruikt overal spelT')
 assert.match(chat, /toonSpelMelding\(spelT\('\{naam\} heeft het spel verlaten\.'/)
 // nieuwe schaakteksten: verse versies, zodat iedereen ze ophaalt
-assert.match(readFileSync(new URL('../../schaak-taal.js', import.meta.url), 'utf8'), /schaak-taal-en\.js\?v=4/)
-assert.match(chat, /schaak-taal\.js\?v=4/)
+assert.match(readFileSync(new URL('../../schaak-taal.js', import.meta.url), 'utf8'), /schaak-taal-en\.js\?v=6/)
+assert.match(chat, /schaak-taal\.js\?v=6/)
 
 // de app-taal (Engels) heeft ook de nieuwe teksten
 globalThis.window = {}

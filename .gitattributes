@@ -1,0 +1,7 @@
+# Preserve exact upstream release bytes for the recorded Stockfish checksums.
+vendor/stockfish/stockfish-*.js -text
+vendor/stockfish/stockfish-*.wasm -text
+vendor/stockfish/*.nnue -text
+vendor/stockfish/*.tar.gz -text
+vendor/stockfish/Copying.txt -text
+vendor/stockfish/AUTHORS -text

@@ -1,14 +1,14 @@
 <!doctype html>
 <html lang="nl">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fibro · Ultra mobiel testen</title>
-<style>*{box-sizing:border-box}body{margin:0;padding:18px;background:#101322;color:#edf1ff;font:14px system-ui}main{max-width:1000px;margin:auto}h1{font-size:22px}p,ol{color:#bdc8dc;line-height:1.5}nav{display:flex;gap:9px;flex-wrap:wrap;margin:16px 0}button{font:inherit;padding:10px;border:1px solid #a5c9f750;border-radius:9px;background:#29334a;color:inherit;cursor:pointer}button:focus-visible{outline:3px solid #ffe09c;outline-offset:3px}output{align-self:center;color:#b6f5df}iframe{display:block;width:390px;max-width:100%;height:820px;border:1px solid #92b5e554;border-radius:16px;background:#08040f;box-shadow:0 15px 45px #0006}</style></head>
-<body><main><h1>Ultra op een klein scherm</h1><p>De echte schaakapp in een smaller venster. Kies Ultra en speel; de engine, instellingen en geluiden werken zoals in de app.</p>
+<style>*{box-sizing:border-box}body{margin:0;padding:18px;background:#101322;color:#edf1ff;font:14px system-ui}main{display:grid;grid-template-columns:minmax(280px,1fr) auto;gap:28px;align-items:start;max-width:1080px;margin:auto}.preview-guide{position:sticky;top:18px}.preview-window{min-width:0}main.wide{grid-template-columns:1fr}main.wide .preview-guide{position:static}h1{margin-top:0;font-size:22px}p,ol{color:#bdc8dc;line-height:1.5}nav{display:flex;gap:9px;flex-wrap:wrap;margin:16px 0}button{font:inherit;padding:10px;border:1px solid #a5c9f750;border-radius:9px;background:#29334a;color:inherit;cursor:pointer}button:focus-visible{outline:3px solid #ffe09c;outline-offset:3px}output{align-self:center;color:#b6f5df}iframe{display:block;width:390px;max-width:100%;height:max(560px,min(820px,calc(100dvh - 36px)));border:1px solid #92b5e554;border-radius:16px;background:#08040f;box-shadow:0 15px 45px #0006}@media(max-width:850px){main{grid-template-columns:1fr}.preview-guide{position:static}}</style></head>
+<body><main><section class="preview-guide"><h1>Ultra op een klein scherm</h1><p>De echte schaakapp in een smaller venster. Kies Ultra en speel; de engine, instellingen en geluiden werken zoals in de app.</p>
 <p>Op je telefoon: spreid twee vingers op het bord voor één stap meer bord. Laat los voordat je opnieuw spreidt. Naar elkaar toe knijpen gaat één stap terug.</p>
 <ol><li>Tekst bovenaan, geluid, veroverde stukken en terugnemen maken plaats.</li><li>De zetgeschiedenis maakt plaats.</li><li>De analysebalk maakt plaats.</li><li>De instellingenbalk maakt plaats: het bord gebruikt de volle breedte.</li></ol>
-<div style="position:sticky;top:0;z-index:2;padding:1px 10px;border:1px solid #92b5e533;border-radius:13px;background:#101322ed;backdrop-filter:blur(10px)"><nav aria-label="Vensterbreedte"><button data-width="320">320 px</button><button data-width="390">390 px</button><button data-width="900">Desktop</button></nav>
+<div style="padding:1px 10px;border:1px solid #92b5e533;border-radius:13px;background:#101322ed"><nav aria-label="Vensterbreedte"><button data-width="320">320 px</button><button data-width="390">390 px</button><button data-width="900">Desktop</button></nav>
 <nav aria-label="Focus testen"><button data-focus-key="+">Meer bord (+)</button><button data-focus-key="-">Minder bord (−)</button><button data-focus-key="Escape">Alles tonen</button><output id="focus-status" role="status" aria-live="polite">Kies eerst Ultra in het spel.</output></nav></div>
 <p>Deze proefknoppen bedienen dezelfde +/−-toetsen van het echte bord. Op de telefoon gebruik je de vingerspreid- en knijpbeweging. De snelkoppelingen werken ook wanneer je het bord met Tab focus geeft. Alleen Ultra op mobiele breedte gebruikt de vier stappen.</p>
-<iframe id="phone" title="Fibro Ultra mobiele preview" src="../../spel.html?spel=schaken&amp;preview=ultra-progress-mobile"></iframe>
+</section><div class="preview-window"><iframe id="phone" title="Fibro Ultra mobiele preview" src="../../spel.html?spel=schaken&amp;preview=ultra-progress-mobile"></iframe></div>
 <script>
 const phone=document.getElementById('phone'),status=document.getElementById('focus-status')
 let observer
@@ -22,7 +22,7 @@ phone.addEventListener('load',()=>{
   observer.observe(phone.contentDocument,{subtree:true,childList:true,attributes:true,attributeFilter:['data-ultra-focus']})
   report()
 })
-for(const button of document.querySelectorAll('[data-width]'))button.addEventListener('click',()=>{phone.style.width=button.dataset.width+'px'})
+for(const button of document.querySelectorAll('[data-width]'))button.addEventListener('click',()=>{document.querySelector('main').classList.toggle('wide',button.dataset.width==='900');phone.style.width=button.dataset.width+'px'})
 for(const button of document.querySelectorAll('[data-focus-key]'))button.addEventListener('click',()=>{
   const board=phone.contentDocument?.getElementById('sch-bord'),game=board?.closest('.sch-spel')
   if(!board||!game?.classList.contains('sch-ultra-focus-active')){status.textContent='Kies Ultra op 320 of 390 px om de stappen te testen.';return}

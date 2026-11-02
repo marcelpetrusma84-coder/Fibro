@@ -1,4 +1,4 @@
-// titelscherm.js - het titelscherm van elk spel (v2, 2 nov 2026)
+// titelscherm.js - het titelscherm van elk spel (v4, 2 nov 2026; v4: muziek speelt door in het menu van het spel)
 // v2: openSpelMetTitel(): op Home, het profiel van een vriend en de uitnodiging komt het titelscherm al op die pagina,
 //     meteen bij je tik. Zo kan de muziek ook op de iPhone meteen beginnen (geluid mag alleen tijdens een tik, en een
 //     nieuwe pagina telt een tik op de vorige pagina niet mee). Na je tweede tik ga je naar het spel (spel.html?titel=1).
@@ -11,7 +11,7 @@
 // Gebruik: await toonTitelscherm({ spelId: 'breakout', naam: 'Block It', ouder: element })
 //          Geeft true als je erdoor tikte, false als het scherm van buitenaf weg moest (sluitTitelscherm).
 import { SCENES } from './titelscenes.js?v=3'
-import { speelTitelMuziek, stopTitelMuziek, muziekAan, zetMuziek } from './titelmuziek.js?v=2'
+import { speelTitelMuziek, stopTitelMuziek, muziekAan, zetMuziek } from './titelmuziek.js?v=3'
 
 export { stopTitelMuziek }
 
@@ -33,6 +33,22 @@ export function openSpelMetTitel(spelId, adres) {
     toonTitelscherm({ spelId, naam: titelNaam(spelId) }).then(getikt => {
         if (getikt) location.href = adres + (adres.includes('?') ? '&' : '?') + 'titel=1'
     })
+}
+
+// v4: spellen met een eigen menu na het titelscherm. Daar speelt de muziek door tot het spel echt begint (het spel
+// stuurt dan 'fibro-spel-begint'). Bij de andere spellen begin je meteen te spelen, dus stopt de muziek bij de start.
+const MET_MENU = ['breakout', 'swarm', 'pacman', 'pinball', 'endlessrunner', 'shmup', 'pong']
+const MENU_MAX = 3 * 60 * 1000
+export function spelStart(spelId) {
+    if (!MET_MENU.includes(spelId)) stopTitelMuziek()
+}
+// Na het titelscherm op een andere pagina (Home, profiel, uitnodiging): op spel.html de muziek weer aanzetten voor het menu.
+// Op de iPhone begint hij bij de eerste tik in het menu (een nieuwe pagina mag pas na een tik geluid maken).
+export function menuMuziek(spelId) {
+    if (!heeftTitelscherm(spelId)) return
+    speelTitelMuziek(spelId)
+    clearTimeout(naMuziekTimer)
+    naMuziekTimer = setTimeout(() => stopTitelMuziek(2), MENU_MAX)
 }
 
 export function heeftTitelscherm(spelId) {
@@ -180,8 +196,8 @@ export function toonTitelscherm({ spelId, naam, ouder }) {
             el.style.pointerEvents = 'none'
             setTimeout(() => { cancelAnimationFrame(frame); el.remove() }, 380)
             if (getikt) {
-                // de muziek speelt door in het menu van het spel, hooguit een minuut
-                naMuziekTimer = setTimeout(() => stopTitelMuziek(2), 60000)
+                // v4: de muziek speelt door in het menu van het spel, hooguit drie minuten
+                naMuziekTimer = setTimeout(() => stopTitelMuziek(2), MENU_MAX)
             }
             klaar(getikt)
         }

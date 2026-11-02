@@ -710,6 +710,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
 
   // ═══════════════ Rondes ═══════════════
   function startRonde(r) {
+    try { window.dispatchEvent(new Event('fibro-spel-begint')) } catch (e) {}   // titelmuziek stopt (titelmuziek.js)
     geluid.init()
     rondeNr = Number.isInteger(r) ? r : rondeNr + 1
     reset()

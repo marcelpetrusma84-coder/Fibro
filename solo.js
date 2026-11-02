@@ -405,24 +405,24 @@ export const SOLO_SPELLEN = {
   schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=253',  bot: schaakBot, motor: './schaak.js?v=95', motorNaam: 'Schaak' },
   dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=147',   bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
   // 30 okt 2026: Neo Paddle v2 (blokjes en power-ups) en levels voor alleen (spel.html toont een knop 🧱 Levels).
-  pong:         { naam: 'Neo Paddle',    icon: '🏓', bestand: './pong-ui.js?v=241',     bot: pongBot, levels: './neopaddle-levels.js?v=1' },
+  pong:         { naam: 'Neo Paddle',    icon: '🏓', bestand: './pong-ui.js?v=242',     bot: pongBot, levels: './neopaddle-levels.js?v=1' },
   // Ghost Tag heeft zelf al een computerspookje: zonder kanaal speel je daartegen.
   // gewoneScherpte: op telefoons niet op dubbele scherpte tekenen (4x minder beeldpunten). Sinds v177 gebruikt
   // geen spel het meer (spel.html kent het nog).
   // v177: Ghost Tag alleen spelen net als samen spelen: volle scherpte en geen grens van 30 beeldjes (zie ecto-ui.js v12).
-  pacman:       { naam: 'Ghost Tag',     icon: '👻', bestand: './ecto-ui.js?v=177',    zonderKanaal: true, meetFps: true },
+  pacman:       { naam: 'Ghost Tag',     icon: '👻', bestand: './ecto-ui.js?v=178',    zonderKanaal: true, meetFps: true },
   // v150 (2 nov 2026): Block It kan alleen ook tegen de computer; die zit in het spel zelf (blockit-computer.js), dus stilBot blijft.
-  breakout:     { naam: 'Block It',      icon: '🟪', bestand: './blockit-ui.js?v=150',  bot: stilBot, arcade: true },
-  swarm:        { naam: 'The Swarm',     icon: '🪲', bestand: './swarm-ui.js?v=147',    bot: stilBot, arcade: true },
+  breakout:     { naam: 'Block It',      icon: '🟪', bestand: './blockit-ui.js?v=151',  bot: stilBot, arcade: true },
+  swarm:        { naam: 'The Swarm',     icon: '🪲', bestand: './swarm-ui.js?v=148',    bot: stilBot, arcade: true },
   // Twin Snakes heeft net als Ghost Tag al een eigen computerslang.
-  pinball:      { naam: 'Twin Snakes',   icon: '🐍', bestand: './twin-snakes-ui.js?v=149', zonderKanaal: true },
+  pinball:      { naam: 'Twin Snakes',   icon: '🐍', bestand: './twin-snakes-ui.js?v=150', zonderKanaal: true },
   // Runner & Gunner start zonder kanaal meteen alleen: geen vriend nodig om te starten.
-  endlessrunner: { naam: 'Runner & Gunner', icon: '🏃', bestand: './runner-gunner-ui.js?v=148', zonderKanaal: true },
+  endlessrunner: { naam: 'Runner & Gunner', icon: '🏃', bestand: './runner-gunner-ui.js?v=149', zonderKanaal: true },
   flappybird:   { naam: 'Flapper',       icon: '🦇', bestand: './flappy-ui.js?v=147',   bot: stilBot, arcade: true },
   // v192: Neon Raiders start zonder kanaal meteen alleen, met een eigen startscherm; arcade: het record komt van spel.html.
   // v193: het hele spel (7 levels). v194: ook samen vanuit de chat (daar met spelKanaal).
   // Let op: versie 194 van dit bestand was al gebruikt (de schaak-PR van valentijnpeters, 21 okt 2026); daarom laadt
   // spel.html in v193 versie 193 en in v194 versie 195. v195 (schaken weer in twee talen): versie 196. Een volgende
   // aanpassing aan solo.js neemt 197 of hoger.
-  shmup:        { naam: 'Neon Raiders',  icon: '🚀', bestand: './neon-raiders-ui.js?v=222', zonderKanaal: true, arcade: true },
+  shmup:        { naam: 'Neon Raiders',  icon: '🚀', bestand: './neon-raiders-ui.js?v=223', zonderKanaal: true, arcade: true },
 }

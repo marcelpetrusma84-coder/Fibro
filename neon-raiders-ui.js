@@ -2992,6 +2992,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief, so
   let aftellen = false
   function startRonde(level) {
     if (aftellen) return
+    try { window.dispatchEvent(new Event('fibro-spel-begint')) } catch (e) {}   // titelmuziek stopt (titelmuziek.js)
     opnieuwScherm = false
     toonVerder()
     GELUID.wek()

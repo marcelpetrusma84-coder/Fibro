@@ -1,4 +1,5 @@
-// titelmuziek.js - de muziekjes van de titelschermen (v2, 2 nov 2026; v2: ook 'click', en een stil geluidje voor de iPhone)
+// titelmuziek.js - de muziekjes van de titelschermen (v3, 2 nov 2026; v2: ook 'click', en een stil geluidje voor de iPhone;
+// v3: de muziek speelt door in het menu van het spel en stopt pas bij 'fibro-spel-begint')
 //
 // In gewone woorden: een klein synthesizertje (Web Audio, geen bestanden) en voor elk spel een eigen deuntje,
 // zelf geschreven in de stijl van oude spelcomputers. Een deuntje herhaalt zich tot stop() komt.
@@ -293,6 +294,9 @@ export function speelTitelMuziek(id) {
     }
     return true
 }
+// v3: een spel laat weten dat het echt begint (na zijn eigen menu): dan stopt de titelmuziek
+if (typeof window !== 'undefined') window.addEventListener('fibro-spel-begint', () => stopTitelMuziek(0.8))
+
 export function speeltNu() {
     return speelt ? speelt.id : null
 }

@@ -4,6 +4,7 @@
 #  T3 het muziekknopje 🔊 sluit het scherm niet en zet de muziek uit (onthouden)
 #  T5 v252: tik op een spel elders (openSpelMetTitel): titelscherm met muziek, tik, dan spel.html zonder tweede titelscherm
 #  T6 v253: de muziek speelt door in het menu van het spel (Block It: Start, dan de spelvormen) en stopt als het spel begint
+#  T8-T10 v254: het spel in een venster op de pagina: muziek in de menu's, stopt bij spelen, ✕ sluit
 #  T4 geen paginafouten
 # python3 -I proef227.py <map> [plaatjesmap]
 import sys, os, time, socket, subprocess, tempfile
@@ -17,7 +18,7 @@ HARNAS = r"""<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta na
 <style>body{margin:0;background:#1a0a2e;color:#fff}</style></head><body>
 <script type="module">
 const q = new URLSearchParams(location.search)
-const ts = await import('./titelscherm.js?v=4'), tm = await import('./titelmuziek.js?v=3')
+const ts = await import('./titelscherm.js?v=5'), tm = await import('./titelmuziek.js?v=4')
 window.__ts = ts
 window.__tm = tm
 window.__uitkomst = null
@@ -66,22 +67,36 @@ try:
             pg.evaluate("window.__ts.openSpelMetTitel('breakout', 'spel.html?spel=breakout')"); pg.wait_for_timeout(800)
             muziek = pg.evaluate('window.__tm.speeltNu()')
             pg.mouse.click(195, 500)
-            pg.wait_for_url('**/spel.html?spel=breakout&titel=1', timeout=8000); pg.wait_for_timeout(1500)
-            geenTitel = pg.evaluate("!document.querySelector('.fibro-titelscherm')")
-            menu = pg.evaluate("document.getElementById('spelInhoud').innerText")
-            check('T5 openSpelMetTitel: muziek meteen, één tik, dan het menu zonder tweede titelscherm', muziek == 'breakout' and geenTitel and 'Start' in menu, (muziek, geenTitel, menu[:60]))
+            pg.wait_for_selector('iframe.fibro-spelvenster'); fr = pg.frame_locator('iframe.fibro-spelvenster')
+            fr.locator('#startKnop').wait_for(timeout=8000); pg.wait_for_timeout(400)
+            srcOk = 'titel=1&ingebed=1' in pg.get_attribute('iframe.fibro-spelvenster', 'src')
+            geenTitel = fr.locator('.fibro-titelscherm').count() == 0
+            opStart = pg.evaluate('window.__tm.speeltNu()')
+            check('T5 v254: titelscherm met muziek, tik, dan het spel in een venster op deze pagina; muziek speelt door', muziek == 'breakout' and srcOk and geenTitel and opStart == 'breakout', (muziek, srcOk, geenTitel, opStart))
+            fr.locator('#startKnop').click(); fr.locator('#bi-keuze button').first.wait_for(timeout=8000); pg.wait_for_timeout(400)
+            inMenu = pg.evaluate('window.__tm.speeltNu()')
+            fr.locator('#bi-keuze button').first.click(); pg.wait_for_timeout(600)
+            naStart = pg.evaluate('window.__tm.speeltNu()')
+            check('T8 venster: muziek ook in het menu van Block It, stopt bij Gewoon', inMenu == 'breakout' and naStart is None, (inMenu, naStart))
+            fr.locator('#sluitKnop').click(); pg.wait_for_timeout(500)
+            check('T9 venster: ✕ sluit het venster', pg.locator('iframe.fibro-spelvenster').count() == 0)
+            pg.evaluate("window.__ts.openSpelMetTitel('schaken', 'spel.html?spel=schaken')"); pg.wait_for_timeout(600); pg.mouse.click(195, 500)
+            fr = pg.frame_locator('iframe.fibro-spelvenster'); fr.locator('.niveau-btn').first.wait_for(timeout=8000); pg.wait_for_timeout(400)
+            opNiveau = pg.evaluate('window.__tm.speeltNu()')
+            fr.locator('.niveau-btn').first.click(); pg.wait_for_timeout(800)
+            check('T10 venster: muziek bij Schaken op het niveauscherm, stopt als het bord komt', opNiveau == 'schaken' and pg.evaluate('window.__tm.speeltNu()') is None, opNiveau)
             pg.close()
             pg = ctx.new_page(); pg.on('pageerror', lambda e: fouten.append(str(e)))
             pg.goto(B + 'spel.html?spel=breakout'); pg.wait_for_selector('.fibro-titelscherm'); pg.wait_for_timeout(500)
             pg.mouse.click(195, 500); pg.wait_for_selector('#startKnop'); pg.click('#startKnop')
             pg.wait_for_selector('#bi-keuze button', timeout=8000); pg.wait_for_timeout(500)
-            sp = "import('./titelmuziek.js?v=3').then(m => m.speeltNu())"
+            sp = "import('./titelmuziek.js?v=4').then(m => m.speeltNu())"
             inMenu = pg.evaluate(sp)
             pg.click('#bi-keuze button >> nth=0'); pg.wait_for_timeout(500)
             naStart = pg.evaluate(sp)
             check('T6 muziek in het menu van Block It, stopt bij Gewoon', inMenu == 'breakout' and naStart is None, (inMenu, naStart))
             pg.goto(B + 'spel.html?spel=swarm&titel=1'); pg.wait_for_timeout(1500)
-            check('T7 na het titelscherm op Home: muziek in het menu op spel.html', pg.evaluate("import('./titelmuziek.js?v=3').then(m => m.speeltNu())") == 'swarm' and pg.evaluate("!document.querySelector('.fibro-titelscherm')"))
+            check('T7 na het titelscherm op Home: muziek in het menu op spel.html', pg.evaluate("import('./titelmuziek.js?v=4').then(m => m.speeltNu())") == 'swarm' and pg.evaluate("!document.querySelector('.fibro-titelscherm')"))
             pg.close()
         except Exception as e:
             check('proef afgebroken', False, str(e).split(chr(10))[0])

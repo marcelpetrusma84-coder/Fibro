@@ -49,7 +49,7 @@ const bron = lees('titelscenes.js')
 assert.ok(!/\.filter\s*=/.test(bron), 'geen ctx.filter (kent Safari niet)')
 
 // 4. Chat: titelscherm bij het openen, het spel wacht op de tik, sluiten ruimt het op
-assert.match(chat, /import \{ toonTitelscherm, sluitTitelscherm, heeftTitelscherm, spelStart \} from '\.\/titelscherm\.js\?v=4'/)
+assert.match(chat, /import \{ toonTitelscherm, sluitTitelscherm, heeftTitelscherm, spelStart \} from '\.\/titelscherm\.js\?v=5'/)
 const mee = chat.slice(chat.indexOf('window.speelMee = async function'), chat.indexOf("if (spelType === 'botkaaseiren') await startBotKaasEieren()"))
 assert.ok(mee.indexOf('toonTitelscherm(') < mee.indexOf('const wachtOpVriend'), 'titelscherm voor het wachten')
 assert.match(mee, /if \(!await titelKlaar \|\| spelActief !== spelType \|\| spelKanaal !== verbinding\) return \/\/ v251\n    spelStart\(spelType\)/)
@@ -57,7 +57,7 @@ const sluit = chat.slice(chat.indexOf('window.sluitSpel = function(stil)'), chat
 assert.match(sluit, /sluitTitelscherm\(\)/)
 
 // 5. Alleen spelen: eerst het titelscherm, dan het menu; de muziek stopt als het spel begint
-assert.match(spel, /import \{ toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek \} from '\.\/titelscherm\.js\?v=4'/)
+assert.match(spel, /import \{ toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek \} from '\.\/titelscherm\.js\?v=5'/)
 assert.match(spel, /\(titelGezien \? Promise\.resolve\(true\) : toonTitelscherm\(\{ spelId, naam: spelNaam\(\) \}\)\)\.then\(\(\) => \{\n      if \(spel\.zonderKanaal\) start\('normaal'\)\n      else if \(spel\.arcade\) startScherm\(\)\n      else kiesNiveau\(\)/)
 assert.match(spel, /async function start\(niveau\) \{\n    spelStart\(spelId\)/)
 
@@ -71,12 +71,20 @@ for (const [id, bestand] of [['breakout', 'blockit-ui.js'], ['swarm', 'swarm-ui.
   const v = new RegExp(bestand.replace('.', '\\.') + '\\?v=(\\d+)')
   assert.equal(v.exec(lees('solo.js'))[1], v.exec(chat)[1], bestand + ': zelfde versie in solo.js en chat.html')
 }
-assert.match(spel, /if \(titelGezien\) menuMuziek\(spelId\)/, 'na het titelscherm op Home speelt de muziek ook in het menu')
+assert.match(spel, /if \(titelGezien && !ingebed\) menuMuziek\(spelId\)/, 'na het titelscherm op Home speelt de muziek ook in het menu')
+
+// 10. v254: het spel opent in een venster op Home (iframe), zodat de muziek ook op de iPhone doorspeelt in de menu's
+assert.match(ts, /openSpelVenster\(adres \+ \(adres\.includes\('\?'\) \? '&' : '\?'\) \+ 'titel=1&ingebed=1'\)/)
+assert.match(ts, /e\.source !== venster\.contentWindow \|\| e\.origin !== location\.origin/, 'alleen berichten van ons eigen spelvenster')
+assert.match(ts, /d\.adres\.startsWith\('chat\.html\?'\)/, 'alleen naar de chat doorsturen')
+assert.match(spel, /if \(ingebed\) \{ window\.parent\.postMessage\(\{ fibro: 'sluit-spel' \}, location\.origin\); return \}/, 'sluiten: het venster gaat dicht')
+assert.match(spel, /if \(!ingebed\) startSpelUitnodigingLuisteraar\(\)/, 'geen dubbele uitnodigingen in het venster')
+assert.match(lees('titelmuziek.js'), /if \(ingebed\) \{ try \{ window\.parent\.postMessage\(\{ fibro: 'spel-begint' \}, location\.origin\) \} catch \(e\) \{\} \}/)
 
 // 6. Engels en versienummers
 for (const k of ['Tik om te beginnen', 'Muziek uit', 'Muziek aan']) assert.ok(en.includes(JSON.stringify(k) + ':'), 'Engels: ' + k)
 assert.match(lees('titelscherm.js'), /from '\.\/titelscenes\.js\?v=3'/)
-assert.match(lees('titelscherm.js'), /from '\.\/titelmuziek\.js\?v=3'/)
+assert.match(lees('titelscherm.js'), /from '\.\/titelmuziek\.js\?v=4'/)
 
 // 7. v252: op Home, het profiel van een vriend en de uitnodiging komt het titelscherm al bij je tik (muziek meteen,
 //    ook op de iPhone); daarna spel.html?...&titel=1, dat het titelscherm dan overslaat
@@ -85,13 +93,13 @@ for (const [f, patroon] of [['index.html', /blok\.onclick = \(\) => openSpelMetT
                             ['vriend-profiel.html', /el\.onclick = \(\) => openSpelMetTitel\(spel, 'spel\.html\?spel=' \+ encodeURIComponent\(spel\)\)/],
                             ['invite.html', /knop\.onclick = \(e\) => \{ e\.preventDefault\(\); openSpelMetTitel\(id, knop\.getAttribute\('href'\)\) \}/]]) {
   const bron = lees(f)
-  assert.match(bron, /import \{ openSpelMetTitel \} from '\.\/titelscherm\.js\?v=4'/, f + ': laadt het titelscherm meteen (dan telt je tik voor het geluid)')
+  assert.match(bron, /import \{ openSpelMetTitel \} from '\.\/titelscherm\.js\?v=5'/, f + ': laadt het titelscherm meteen (dan telt je tik voor het geluid)')
   assert.match(bron, patroon, f)
 }
 const muziek = lees('titelmuziek.js')
 assert.match(muziek, /\['pointerdown', 'touchend', 'click', 'keydown'\]/, 'geluid aan bij elke soort tik')
 assert.match(muziek, /a\.createBuffer\(1, 1, 22050\)/, 'stil geluidje voor oudere iPhones')
-for (const f of ['chat.html', 'spel.html', 'index.html', 'vriend-profiel.html', 'invite.html']) assert.ok(/titelscherm\.js\?v=4'/.test(lees(f)), f + ': titelscherm v4')
+for (const f of ['chat.html', 'spel.html', 'index.html', 'vriend-profiel.html', 'invite.html']) assert.ok(/titelscherm\.js\?v=5'/.test(lees(f)), f + ': titelscherm v4')
 
 // 8. v252: drie spellen in hun eigen stijl; titelstijl.js is gemaakt uit de spellen zelf
 const stijl = lees('titelstijl.js')

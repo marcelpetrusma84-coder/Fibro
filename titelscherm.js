@@ -1,4 +1,5 @@
-// titelscherm.js - het titelscherm van elk spel (v4, 2 nov 2026; v4: muziek speelt door in het menu van het spel)
+// titelscherm.js - het titelscherm van elk spel (v5, 2 nov 2026; v4: muziek speelt door in het menu van het spel;
+// v5: het spel opent in een venster op Home, zodat de muziek ook op de iPhone doorspeelt in de menu's)
 // v2: openSpelMetTitel(): op Home, het profiel van een vriend en de uitnodiging komt het titelscherm al op die pagina,
 //     meteen bij je tik. Zo kan de muziek ook op de iPhone meteen beginnen (geluid mag alleen tijdens een tik, en een
 //     nieuwe pagina telt een tik op de vorige pagina niet mee). Na je tweede tik ga je naar het spel (spel.html?titel=1).
@@ -11,7 +12,7 @@
 // Gebruik: await toonTitelscherm({ spelId: 'breakout', naam: 'Block It', ouder: element })
 //          Geeft true als je erdoor tikte, false als het scherm van buitenaf weg moest (sluitTitelscherm).
 import { SCENES } from './titelscenes.js?v=3'
-import { speelTitelMuziek, stopTitelMuziek, muziekAan, zetMuziek } from './titelmuziek.js?v=3'
+import { speelTitelMuziek, stopTitelMuziek, muziekAan, zetMuziek } from './titelmuziek.js?v=4'
 
 export { stopTitelMuziek }
 
@@ -27,11 +28,51 @@ export function titelNaam(spelId) {
     return NAMEN[spelId] || spelId
 }
 
-// Tik op een spel (Home, profiel van een vriend, uitnodiging): eerst het titelscherm hier, dan naar het spel
+// Tik op een spel (Home, profiel van een vriend, uitnodiging): eerst het titelscherm hier, dan het spel.
+// v5: het spel opent in een venster óp deze pagina (spel.html?...&titel=1&ingebed=1), niet als nieuwe pagina. Zo speelt
+// de muziek door in het menu van het spel, ook op de iPhone (een nieuwe pagina mag daar pas na een tik geluid maken).
+// De muziek stopt als het spel echt begint (spel.html stuurt dan 'spel-begint') of als je het venster sluit.
 export function openSpelMetTitel(spelId, adres) {
     if (!heeftTitelscherm(spelId)) { location.href = adres; return }
     toonTitelscherm({ spelId, naam: titelNaam(spelId) }).then(getikt => {
-        if (getikt) location.href = adres + (adres.includes('?') ? '&' : '?') + 'titel=1'
+        if (getikt) openSpelVenster(adres + (adres.includes('?') ? '&' : '?') + 'titel=1&ingebed=1')
+    })
+}
+
+let venster = null, oudeOverflow = ''
+function openSpelVenster(adres) {
+    sluitSpelVenster(true)
+    venster = document.createElement('iframe')
+    venster.className = 'fibro-spelvenster'
+    venster.title = 'Fibro'
+    venster.setAttribute('allow', 'autoplay; fullscreen; gyroscope; accelerometer')
+    // binnen het venster kent de iPhone de inkeping van het scherm niet, dus houdt het venster daar zelf rekening mee
+    venster.style.cssText = 'position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);width:100%;height:calc(100% - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));border:0;margin:0;padding:0;z-index:10045;background:#08040f;'
+    venster.src = adres
+    document.body.appendChild(venster)
+    oudeOverflow = document.documentElement.style.overflow
+    document.documentElement.style.overflow = 'hidden'
+    try { history.pushState({ fibroSpel: true }, '') } catch (e) {}
+    venster.addEventListener('load', () => { try { venster && venster.contentWindow.focus() } catch (e) {} })
+}
+function sluitSpelVenster(viaTerugknop) {
+    if (!venster) return
+    venster.remove()
+    venster = null
+    document.documentElement.style.overflow = oudeOverflow
+    stopTitelMuziek(0.3)
+    if (!viaTerugknop && history.state && history.state.fibroSpel) { try { history.back() } catch (e) {} }
+}
+if (typeof window !== 'undefined') {
+    // de terugknop van de telefoon sluit het spelvenster
+    window.addEventListener('popstate', () => { if (venster) sluitSpelVenster(true) })
+    // berichten uit het spelvenster (alleen van onze eigen pagina in dat venster)
+    window.addEventListener('message', (e) => {
+        if (!venster || e.source !== venster.contentWindow || e.origin !== location.origin) return
+        const d = e.data || {}
+        if (d.fibro === 'sluit-spel') sluitSpelVenster(false)
+        else if (d.fibro === 'spel-begint') stopTitelMuziek(0.8)
+        else if (d.fibro === 'ga-naar' && typeof d.adres === 'string' && d.adres.startsWith('chat.html?')) location.href = d.adres
     })
 }
 

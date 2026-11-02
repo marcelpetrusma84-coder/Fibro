@@ -88,11 +88,21 @@ Ook deze hulp is uitsluitend voor solo Ultra, nooit voor vriendenpartijen.
 De eigen sectie **4D wallpaper → Tafelachtergrond** is beschikbaar bij alle
 niveaus, vriendenpartijen en drie spelers. Standaard uit; de afzonderlijke
 voorkeur `fibro_chess_wallpaper_v1` deelt `table`/`off` tussen deze varianten.
-De gebruiker heeft de originele walnotentafelfoto aangeleverd. Die foto wordt
-alleen bij activering geladen. Foto, licht en schaduw bewegen subtiel; bord,
-stukken, bediening en camera’s blijven vast en scherp.
+De gebruiker heeft de originele walnotentafelfoto aangeleverd. De nieuwe
+3D-bewerking behoudt die kamer en tafel, met meer houtreliëf, licht en
+contactschaduw. De afbeelding wordt alleen bij activering geladen; de originele
+foto blijft als referentie bewaard. Een verbonden WebGL-dieptemesh laat de nabije
+tafelrand en voet sterker bewegen dan de verre kamer. Eén textuur voorkomt een
+dubbele tafelrand. Het diepteprofiel volgt de originele afbeeldingscoördinaten,
+ook wanneer `cover` de foto bijsnijdt op een brede monitor of smalle telefoon.
+De gewone CSS-foto blijft zichtbaar als WebGL ontbreekt of zijn context verliest.
+Resolutie en pixelverhouding zijn begrensd; de mesh heeft geen eigen animatielus.
 
-Op de pc volgt de achtergrond de muis. Op mobiel kan hij via device-orientation
+Op de pc volgt de achtergrond de muis alleen boven zichtbare achtergrond.
+Boven bord, stukken, bediening, geschiedenis, camera’s en instellingen stopt
+ook de resterende muisanimatie meteen; lege tussenruimten reageren wel. Bord,
+stukken, bediening en camera’s blijven vast en scherp.
+Op mobiel kan hij via device-orientation
 op kantelen reageren. Hiervoor zijn HTTPS en browserondersteuning nodig; op
 iOS wordt sensortoestemming alleen vanuit een gebruikersklik gevraagd. Na een
 opgeslagen voorkeur is zo nodig **Telefoonbeweging activeren** beschikbaar.
@@ -143,8 +153,13 @@ Ultra additionally offers default-OFF takeback and origin-only hints. Undo
 restores the complete position before the last human move, including the bot's
 reply if already played, while canceling stale work. Hint clicks reuse or start
 local Stockfish analysis without extra cloud calls. All chess variants also
-have an independent default-OFF table wallpaper, using the supplied original
-photo with sensor/mouse parallax. Only the background moves. Motion permission
+have an independent default-OFF table wallpaper, using a 3D-style edit of the
+supplied photo. A single connected depth mesh moves the nearby slab/pedestal
+more than the far room, with crop-correct image-space depth and a CSS-photo
+fallback for unsupported/lost WebGL. Rendering resolution is capped and there
+is no independent animation loop. Mouse parallax runs only over exposed
+background; entering game surfaces immediately freezes its remaining easing.
+Only the background moves. Motion permission
 is user-initiated; reduced-motion, hidden tabs and cleanup stop animation, and
 sensor values never leave the device. Real-phone motion needs device testing.
 

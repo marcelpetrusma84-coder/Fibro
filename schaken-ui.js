@@ -2,7 +2,7 @@ import { maakSchaakTaal } from './schaak-taal.js?v=7'
 import { stukSVG, registreerSlag, veroverdePunten, STUKPUNTEN } from './schaak-stukken.js?v=1'
 import { schaakFen } from './schaak-ultra-engine.js?v=1'
 import { schaakNotatie, maakUltraEvaluatieHistorie } from './schaak-ultra-historie.js?v=1'
-import { maakSchaakWallpaper } from './schaak-wallpaper.js?v=1'
+import { maakSchaakWallpaper } from './schaak-wallpaper.js?v=2'
 const SETTINGS_KEY = 'fibro_chess_settings_v1'
 const READABLE_NAMES = { P:'pion', N:'paard', B:'loper', R:'toren', Q:'dame', K:'koning' }
 

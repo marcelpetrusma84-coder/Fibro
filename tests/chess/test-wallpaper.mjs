@@ -37,7 +37,7 @@ class Events {
   listeners = new Map()
   addEventListener(type, callback) { if (!this.listeners.has(type)) this.listeners.set(type, new Set()); this.listeners.get(type).add(callback) }
   removeEventListener(type, callback) { this.listeners.get(type)?.delete(callback) }
-  emit(type, values = {}) { for (const callback of [...(this.listeners.get(type) || [])]) callback({ type, ...values }) }
+  emit(type, values = {}) { for (const callback of [...(this.listeners.get(type) || [])]) callback({ type, target:this.defaultTarget || this, ...values }) }
   dispatchEvent(event) { this.emit(event.type, event); return true }
   count(type) { return type ? this.listeners.get(type)?.size || 0 : [...this.listeners.values()].reduce((total, list) => total + list.size, 0) }
 }
@@ -64,6 +64,15 @@ class Element extends Events {
   removeChild(child) { const at = this.children.indexOf(child); if (at >= 0) this.children.splice(at, 1); child.parentNode = null; return child }
   remove() { this.parentNode?.removeChild(this) }
   contains(child) { return child === this || this.children.some(node => node.contains(child)) }
+  matches(selectors) {
+    return selectors.split(',').some(value => {
+      const selector = value.trim()
+      if (selector.startsWith('.')) return this.classList.contains(selector.slice(1))
+      const attribute = /^\[([^=\]]+)(?:="([^"]*)")?\]$/.exec(selector)
+      if (attribute) return attribute[2] === undefined ? this.attributes.has(attribute[1]) : this.getAttribute(attribute[1]) === attribute[2]
+      return this.tagName.toLowerCase() === selector
+    })
+  }
   setAttribute(name, value) { this.attributes.set(name, String(value)); if (name === 'class') this.className = value }
   getAttribute(name) { return name === 'class' ? this.className : this.attributes.get(name) ?? null }
   removeAttribute(name) { this.attributes.delete(name) }
@@ -93,6 +102,7 @@ function fixture({ saved = 'off', permission, secureContext = true, reduced = fa
   window.innerWidth = 1000; window.innerHeight = 800; window.isSecureContext = secureContext
   window.CustomEvent = class { constructor(type, { detail }) { this.type = type; this.detail = detail } }
   const root = document.createElement('main'); root._root = true; root.className = 'existing-board-root'
+  window.defaultTarget = root
   root.style.setProperty('position', position, 'important'); root.style.setProperty('isolation', isolation, 'important'); root.style.setProperty('color', 'rgb(1, 2, 3)')
   const board = document.createElement('section'), camera = document.createElement('video')
   board.className = 'existing-board'; camera.className = 'existing-camera'; camera.srcObject = { live:true }
@@ -181,7 +191,7 @@ for (const saved of [null, '', 'off', 'true', 'wood', '{broken']) {
   assert.equal(h.root.style.position, 'relative'); assert.equal(h.root.style.isolation, 'isolate')
   assert.equal(h.layer().style.pointerEvents, 'none', 'the wallpaper never intercepts board or webcam controls')
   assert.equal(h.layer().style.position, 'fixed'); assert.equal(h.layer().style.zIndex, '-1')
-  assert.match(h.photo().style.backgroundImage, /assets\/chess\/walnut-table-room\.png/)
+  assert.match(h.photo().style.backgroundImage, /assets\/chess\/walnut-table-room-3d\.png/)
   assert(h.glare()); assert(h.root.querySelector('.sch-wallpaper-shade'))
   assert.equal(h.root.querySelectorAll('.sch-wallpaper-layer').length, 1)
   const layer = h.layer(), photo = h.photo()
@@ -271,6 +281,73 @@ for (const saved of [null, '', 'off', 'true', 'wood', '{broken']) {
   h.media.set(false)
   assert.equal(h.window.count('deviceorientation'), 1)
   h.wallpaper.destroy(); noMotionWork(h); restored(h)
+}
+
+// Only exposed wallpaper follows the mouse, including gaps inside transparent
+// layout wrappers. Visible chess surfaces freeze even an in-flight eased move.
+for (const legacy of [false, true]) {
+  const h = fixture()
+  if (!legacy) h.window.PointerEvent = class {}
+  await h.wallpaper.setEnabled(true)
+  const eventName = legacy ? 'mousemove' : 'pointermove'
+  const move = (target, extra = {}) => h.window.emit(eventName, {
+    pointerType:'mouse', buttons:0, clientX:900, clientY:680, target, ...extra,
+  })
+  const layout = h.document.createElement('div'); layout.className = 'sch-spel'
+  const row = h.document.createElement('div'); row.className = 'sch-board-row'
+  layout.append(row); h.root.append(layout)
+  const initial = h.photo().style.transform
+  move(row); h.flush(1)
+  assert.notEqual(h.photo().style.transform, initial, 'blank space inside transparent chess wrappers is exposed background')
+  assert(h.frames.size > 0, 'room has some smoothing left before crossing onto a surface')
+  const surfaces = [
+    ['div', 'sch-frame'], ['div', 'sch-vangst'], ['aside', 'sch-history'], ['aside', 'sch-evaluation'],
+    ['div', 'sch-board-tools'], ['section', 'sch-menu'], ['div', 'sch-menu-backdrop'],
+    ['div', 'sch-noob-dialog'], ['div', 'sch-checkmate'], ['div', 'sch-ultra-info'],
+    ['div', 'chess3-frame'], ['header', 'chess3-heading'], ['div', 'chess3-controls'],
+    ['div', 'chess3-capturebar'], ['section', 'chess3-camera'], ['div', 'spel-video-vak'],
+    ['div', 'spel-titel-bar'], ['div', 'chess-scroll-rail'], ['div', 'fibro-test-badge'],
+    ['button', ''], ['label', ''], ['select', ''], ['video', ''], ['dialog', ''], ['a', ''],
+  ]
+  for (const [tag, name] of surfaces) {
+    const surface = h.document.createElement(tag); surface.className = name
+    const nested = h.document.createElement('span'); surface.append(nested); row.append(surface)
+    move(row, { clientX:100, clientY:80 }); h.flush(1)
+    const before = h.photo().style.transform
+    move(nested)
+    assert.equal(h.frames.size, 0, `${name || tag}: entering a surface cancels the remaining pointer animation`)
+    h.flush()
+    assert.equal(h.photo().style.transform, before, `${name || tag}: nested labels, pieces and icons cannot move the room`)
+    surface.remove()
+  }
+  const status = h.document.createElement('div'); status.setAttribute('role', 'status'); row.append(status)
+  move(status); assert.equal(h.frames.size, 0, 'status text also stays still')
+  const outside = h.document.createElement('main')
+  move(outside); assert.equal(h.frames.size, 0, 'other page content never controls this wallpaper')
+  move(row); h.flush(1)
+  h.window.emit(legacy ? 'mouseleave' : 'pointerleave', { pointerType:'mouse' })
+  assert.equal(h.frames.size, 0, 'leaving the background freezes rather than animating it back underneath the board')
+  move(row, { clientX:100, clientY:80 }); h.flush(1)
+  move(row, { buttons:1 }); assert.equal(h.frames.size, 0, 'dragging freezes existing pointer easing as well')
+  // composedPath also handles controls inside a shadow root, where event.target
+  // can be retargeted to a transparent host rather than the actual button.
+  const button = h.document.createElement('button')
+  move(row, { composedPath:() => [button, row, layout, h.root] })
+  assert.equal(h.frames.size, 0, 'shadow-DOM controls are excluded using the actual event path')
+  layout.remove(); h.wallpaper.destroy(); restored(h); noMotionWork(h)
+}
+
+{
+  const h = fixture({ orientation:{} })
+  await h.wallpaper.setEnabled(true)
+  h.window.emit('deviceorientation', { beta:10, gamma:5 })
+  h.window.emit('deviceorientation', { beta:45, gamma:35 }); h.flush(1)
+  const before = h.photo().style.transform
+  const frame = h.document.createElement('div'); frame.className = 'sch-frame'; h.root.append(frame)
+  h.window.emit('pointermove', { pointerType:'mouse', buttons:0, clientX:900, clientY:680, target:frame })
+  assert(h.frames.size > 0, 'hover exclusions do not cancel actual phone sensor movement')
+  h.flush(); assert.notEqual(h.photo().style.transform, before)
+  frame.remove(); h.wallpaper.destroy(); restored(h); noMotionWork(h)
 }
 
 for (const permission of ['denied', () => Promise.reject(Error('permission unavailable'))]) {

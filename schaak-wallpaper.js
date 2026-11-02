@@ -1,8 +1,21 @@
+import { maakWallpaperDepth } from './schaak-wallpaper-depth.js?v=1'
+
 const STORAGE_KEY = 'fibro_chess_wallpaper_v1'
 const CHANGE_EVENT = 'fibro-chess-wallpaper-change'
 const preferences = new WeakMap()
 const owners = new WeakMap()
 const clamp = (value, limit = 1) => Math.max(-limit, Math.min(limit, value))
+// Transparent layout wrappers are deliberately omitted: the exposed room in
+// their gaps is still background. Every visible game surface stops mouse motion.
+const POINTER_SURFACES = [
+  'button', 'input', 'select', 'textarea', 'label', 'a', 'summary', 'dialog', 'video', 'canvas',
+  '[contenteditable]', '[role="button"]', '[role="dialog"]', '[role="alertdialog"]', '[role="status"]',
+  '.sch-frame', '.sch-vangst', '.sch-legenda', '.sch-board-tools', '.sch-menu', '.sch-menu-backdrop',
+  '.sch-evaluation', '.sch-history', '.sch-noob-dialog', '.sch-checkmate', '.sch-ultra-info',
+  '.chess3-frame', '.chess3-heading', '.chess3-controls', '.chess3-help-actions', '.chess3-capturebar',
+  '.chess3-camera', '.chess3-test-note', '.chess-scroll-rail', '.spel-video-vak', '.spel-titel-bar',
+  '.fibro-test-badge', '.fibro-test-live-status',
+].join(',')
 
 // The decoration owns its transforms. Neither the game host nor any board,
 // camera, controls or pieces are moved when the phone changes orientation.
@@ -27,9 +40,9 @@ export function maakSchaakWallpaper(options = {}) {
   if (storage === undefined) { try { storage = win.localStorage } catch { storage = null } }
   try { const value = storage?.getItem(STORAGE_KEY); if (value === 'table' || value === 'off') preference.value = value } catch { /* retain this page's preference */ }
   let enabled = false, motionState = 'off', destroyed = false, permission = 'unknown', permissionEpoch = 0, permissionPromise = null
-  let layer = null, photo = null, glare = null, shade = null, savedRoot = null, observer = null, frame = null, motionKey = ''
+  let layer = null, photo = null, glare = null, shade = null, depth = null, savedRoot = null, observer = null, frame = null, motionKey = ''
   let x = 0, y = 0, targetX = 0, targetY = 0, baseline = null
-  let lastTouchTime = -Infinity
+  let lastTouchTime = -Infinity, inputSource = ''
   const inputTime = () => win.performance?.now?.() ?? Date.now()
   const cleanups = [], enabledCleanups = [], motionCleanups = []
   const snapshot = () => ({ enabled, motionState })
@@ -54,12 +67,13 @@ export function maakSchaakWallpaper(options = {}) {
   function paint() {
     if (!photo) return
     photo.style.transform = `translate3d(${(x * 18).toFixed(3)}px,${(y * 14).toFixed(3)}px,0) rotateX(${(y * 1.4).toFixed(3)}deg) rotateY(${(-x * 1.8).toFixed(3)}deg) rotateZ(${(x * .35).toFixed(3)}deg) scale(1.04)`
+    depth?.paint(x, y)
     glare.style.transform = `translate3d(${(-x * 26).toFixed(3)}px,${(-y * 20).toFixed(3)}px,0)`
     glare.style.opacity = String(.44 + (x - y) * .055)
     shade.style.boxShadow = `inset ${(x * 35).toFixed(2)}px ${(y * 28).toFixed(2)}px 110px 20px rgba(5,3,3,.30)`
   }
   function stopFrame() { if (frame !== null) { cancelFrame?.(frame); frame = null } }
-  function neutral() { stopFrame(); x = y = targetX = targetY = 0; baseline = null; paint() }
+  function neutral() { stopFrame(); x = y = targetX = targetY = 0; baseline = null; inputSource = ''; paint() }
   function animate() {
     frame = null
     if (!enabled || destroyed || media.matches || !motionKey || !visible()) return
@@ -69,22 +83,36 @@ export function maakSchaakWallpaper(options = {}) {
     paint()
     if (!resting) frame = requestFrame?.(animate) ?? null
   }
-  function target(nextX, nextY) {
+  function target(nextX, nextY, source = 'pointer') {
+    inputSource = source
     targetX = clamp(nextX); targetY = clamp(nextY)
     if (Math.abs(targetX - x) < .002 && Math.abs(targetY - y) < .002) return
     if (!requestFrame) { x = targetX; y = targetY; paint(); return }
     if (frame === null) frame = requestFrame(animate)
   }
+  function freezePointer() {
+    // Stop the easing too: merely ignoring a move would let the room drift
+    // underneath a board square or button until its old target was reached.
+    if (inputSource !== 'pointer') return
+    stopFrame(); targetX = x; targetY = y
+  }
+  function backgroundHit(event) {
+    const path = event.composedPath?.() || []
+    if (!path.length) for (let node = event.target; node; node = node.parentElement) path.push(node)
+    const rootIndex = path.indexOf(root)
+    return rootIndex >= 0 && !path.slice(0, rootIndex).some(node => node.matches?.(POINTER_SURFACES))
+  }
   function pointer(event) {
-    if (event.pointerType !== 'mouse' || event.buttons || !visible()) return
+    if (event.pointerType !== 'mouse' || !visible()) return
+    if (event.buttons || !backgroundHit(event)) { freezePointer(); return }
     const rect = root?.getBoundingClientRect?.() || {}
     const width = rect.width || win.innerWidth || 1, height = rect.height || win.innerHeight || 1
     if (!Number.isFinite(event.clientX) || !Number.isFinite(event.clientY)) return
     target(((event.clientX - (rect.left || 0)) / width - .5) * 2, ((event.clientY - (rect.top || 0)) / height - .5) * 2)
   }
   function mouse(event) {
-    if (event.sourceCapabilities?.firesTouchEvents || event.buttons || inputTime() - lastTouchTime < 1500) return
-    pointer({ pointerType:'mouse', buttons:0, clientX:event.clientX, clientY:event.clientY })
+    if (event.sourceCapabilities?.firesTouchEvents || inputTime() - lastTouchTime < 1500) return
+    pointer({ pointerType:'mouse', buttons:event.buttons || 0, clientX:event.clientX, clientY:event.clientY, target:event.target, composedPath:event.composedPath?.bind(event) })
   }
   function orientation(event) {
     if (!Number.isFinite(event.gamma) || !Number.isFinite(event.beta) || !visible()) return
@@ -93,7 +121,7 @@ export function maakSchaakWallpaper(options = {}) {
     const gamma = difference(event.gamma, baseline.gamma), beta = difference(event.beta, baseline.beta)
     const rawAngle = Number(win.screen?.orientation?.angle ?? win.orientation ?? 0)
     const angle = (Number.isFinite(rawAngle) ? rawAngle : 0) * Math.PI / 180
-    target((gamma * Math.cos(angle) + beta * Math.sin(angle)) / 24, (beta * Math.cos(angle) - gamma * Math.sin(angle)) / 30)
+    target((gamma * Math.cos(angle) + beta * Math.sin(angle)) / 24, (beta * Math.cos(angle) - gamma * Math.sin(angle)) / 30, 'sensor')
   }
   function stopMotion() { drain(motionCleanups); motionKey = ''; neutral() }
   function reconcile() {
@@ -110,9 +138,9 @@ export function maakSchaakWallpaper(options = {}) {
     if (!win.PointerEvent) {
       listen(win, 'mousemove', mouse, motionCleanups, { passive:true })
       listen(win, 'touchstart', () => { lastTouchTime = inputTime() }, motionCleanups, { passive:true })
-      listen(win, 'mouseleave', () => target(0, 0), motionCleanups, { passive:true })
+      listen(win, 'mouseleave', freezePointer, motionCleanups, { passive:true })
     }
-    listen(win, 'pointerleave', event => { if (event.pointerType === 'mouse') target(0, 0) }, motionCleanups, { passive:true })
+    listen(win, 'pointerleave', event => { if (event.pointerType === 'mouse') freezePointer() }, motionCleanups, { passive:true })
     const reorient = () => neutral()
     listen(win, 'orientationchange', reorient, motionCleanups)
     listen(win.screen?.orientation, 'change', reorient, motionCleanups)
@@ -130,15 +158,19 @@ export function maakSchaakWallpaper(options = {}) {
     layer.style.cssText = 'position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;user-select:none;background:#211912;perspective:1200px;contain:layout paint style;'
     photo = doc.createElement('div'); photo.className = 'sch-wallpaper-photo'
     // Assign the photo only after opt-in; OFF does not fetch the image.
-    photo.style.cssText = 'position:absolute;inset:-9%;background-size:cover;background-position:center 58%;background-repeat:no-repeat;filter:brightness(.72) saturate(.92);transform-origin:50% 55%;backface-visibility:hidden;will-change:transform;'
-    photo.style.backgroundImage = `url("${new URL('./assets/chess/walnut-table-room.png', import.meta.url).href}")`
+    photo.style.cssText = 'position:absolute;inset:-9%;background-size:cover;background-position:center 58%;background-repeat:no-repeat;filter:brightness(.84) saturate(.97);transform-origin:50% 55%;backface-visibility:hidden;will-change:transform;'
+    const imageUrl = new URL('./assets/chess/walnut-table-room-3d.png', import.meta.url).href
+    photo.style.backgroundImage = `url("${imageUrl}")`
     glare = doc.createElement('div'); glare.className = 'sch-wallpaper-glare'
     glare.style.cssText = 'position:absolute;inset:-15%;background:radial-gradient(ellipse at 34% 12%,rgba(255,235,197,.21),transparent 58%);mix-blend-mode:screen;opacity:.44;will-change:transform;'
     shade = doc.createElement('div'); shade.className = 'sch-wallpaper-shade'
-    shade.style.cssText = 'position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,8,14,.47),rgba(10,7,10,.20) 48%,rgba(7,5,12,.52));'
-    layer.append(photo, glare, shade); root.prepend(layer); paint()
+    shade.style.cssText = 'position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,8,14,.38),rgba(10,7,10,.10) 48%,rgba(7,5,12,.40));'
+    layer.append(photo, glare, shade); root.prepend(layer)
+    depth = maakWallpaperDepth({ host:photo, doc, win, imageUrl })
+    paint()
   }
   function unmount() {
+    depth?.destroy(); depth = null
     layer?.remove(); layer = photo = glare = shade = null
     if (!savedRoot) return
     for (const name of ['position','isolation']) {

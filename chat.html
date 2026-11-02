@@ -2293,8 +2293,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=147',
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
-    schaken: './schaken-ui.js?v=256',
-    schakendrie: './schaken-drie-ui.js?v=28',
+    schaken: './schaken-ui.js?v=257',
+    schakendrie: './schaken-drie-ui.js?v=29',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=151',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -3030,7 +3030,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await import('./schaken-ui.js?v=256')
+    const m = await import('./schaken-ui.js?v=257')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: fibroChessTest?.active ? schaakT('Testspeler · Zwart') : spelVriendUsername(), testMode:Boolean(fibroChessTest?.active), onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer : nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
     spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })
@@ -3038,7 +3038,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   async function startSchakenDrie(players) {
-    const m = await import('./schaken-drie-ui.js?v=28')
+    const m = await import('./schaken-drie-ui.js?v=29')
     const testMode = Boolean(fibroChessTest?.active)
     const controller = m.start({ Bordgeluid, gameChannel:testMode ? null : spelKanaal, players, userId:testMode ? 'fibro-test-you' : huidigeUser.id, localPreview:testMode, testMode, testStream:fibroChessTest?.stream || null, onTestCameraChange:stream => { if (fibroChessTest?.active) fibroChessTest.stream = stream }, onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null })
     spelSchaakDrieController = controller

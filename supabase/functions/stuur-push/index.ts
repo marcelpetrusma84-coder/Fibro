@@ -9,6 +9,8 @@
 // v151 (15 oktober 2026): ook 'oproep', 'oproep-video' en 'gemist' (bellen). Een oproep opent het
 // belscherm (bellen.html, inkomend: opnemen of weigeren) en leeft maar 45 s bij de pushdienst: staat
 // de telefoon uit, dan komt er later geen 'belt je' meer binnen. 'gemist' vervangt hem (zelfde tag).
+// v255 (2 nov 2026): type 'moderatie': na een melding (tabel rapporten) krijgen alle moderators een pushmelding
+// "Nieuwe melding in Moderatie", zonder inhoud. Mag alleen als de afzender in de laatste 2 minuten zelf een melding deed.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push";
 
@@ -39,7 +41,12 @@ const TEKSTEN: Record<string, Record<string, Tekst>> = {
     nl: { title: "Fibro", body: "📵 Gemiste oproep van {naam}" },
     en: { title: "Fibro", body: "📵 Missed call from {naam}" },
   },
+  moderatie: {
+    nl: { title: "Fibro · Moderatie", body: "🚩 Er is een nieuwe melding. Kijk in Moderatie." },
+    en: { title: "Fibro · Moderation", body: "🚩 There is a new report. Check Moderation." },
+  },
 };
+const MELDING_BINNEN_MS = 2 * 60 * 1000
 // Hoe lang de pushdienst een melding bewaart als de telefoon even onbereikbaar is (seconden)
 const LEVENSDUUR: Record<string, number> = { oproep: 45, "oproep-video": 45, gemist: 24 * 60 * 60 };
 const IEMAND: Record<string, string> = { nl: "Iemand", en: "Someone" };
@@ -50,11 +57,46 @@ function antwoord(data: unknown, status = 200) {
   });
 }
 
+// Iets vapid instellen en een melding naar alle telefoons van een lijst accounts sturen
+async function stuurNaar(supabase: any, ontvangers: { id: string; taal?: string }[], soort: string, url: string) {
+  webpush.setVapidDetails("mailto:fibro.contact@proton.me", Deno.env.get("VAPID_PUBLIC_KEY"), Deno.env.get("VAPID_PRIVATE_KEY"));
+  let verstuurd = 0;
+  for (const o of ontvangers) {
+    const taal = o.taal === "en" ? "en" : "nl";
+    const payload = JSON.stringify({ ...TEKSTEN[soort][taal], url, type: soort, tag: soort });
+    const { data: subs } = await supabase.from("push_subscriptions").select("id, subscription").eq("user_id", o.id);
+    for (const rij of subs || []) {
+      try {
+        await webpush.sendNotification(rij.subscription, payload, { TTL: 24 * 60 * 60 });
+        verstuurd++;
+      } catch (e) {
+        console.error("Push fout:", e && e.statusCode ? e.statusCode : e);
+        if (e && (e.statusCode === 404 || e.statusCode === 410)) await supabase.from("push_subscriptions").delete().eq("id", rij.id);
+      }
+    }
+  }
+  return verstuurd;
+}
+
+// v255: een nieuwe melding: alle moderators een seintje (niet de melder zelf), zonder te zeggen wat of over wie
+async function meldModerators(supabase: any, afzender: string) {
+  const sinds = new Date(Date.now() - MELDING_BINNEN_MS).toISOString();
+  const { data: recent, error: f1 } = await supabase.from("rapporten").select("id").eq("melder_id", afzender).gte("created_at", sinds).limit(1);
+  if (f1) throw f1;
+  if (!recent || recent.length === 0) return antwoord({ ok: false, reden: "geen melding" }, 403);
+  let { data: mods, error: f2 } = await supabase.from("profiles").select("id, taal").eq("is_moderator", true);
+  if (f2 && f2.code === "42703") ({ data: mods, error: f2 } = await supabase.from("profiles").select("id").eq("is_moderator", true));
+  if (f2) throw f2;
+  const ontvangers = (mods || []).filter((m: { id: string }) => m.id !== afzender);
+  const verstuurd = await stuurNaar(supabase, ontvangers, "moderatie", "/Fibro/moderatie.html");
+  return antwoord({ ok: true, verstuurd });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
     const { receiver_id, type } = await req.json();
-    if (!receiver_id) throw new Error("receiver_id ontbreekt");
+    if (!receiver_id && type !== "moderatie") throw new Error("receiver_id ontbreekt");
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL"),
@@ -69,6 +111,7 @@ Deno.serve(async (req) => {
       afzender = data && data.user ? data.user.id : null;
     }
     if (!afzender) return antwoord({ ok: false, reden: "niet ingelogd" }, 401);
+    if (type === "moderatie") return await meldModerators(supabase, afzender);
     if (afzender === receiver_id) return antwoord({ ok: false, reden: "niet naar jezelf" }, 400);
 
     // 2. Alleen naar een vriend.
@@ -132,7 +175,7 @@ Deno.serve(async (req) => {
     const opties = LEVENSDUUR[soort] ? { TTL: LEVENSDUUR[soort], urgency: bellen ? "high" : "normal" } : undefined;
 
     webpush.setVapidDetails(
-      "mailto:beheer@fibro.app",
+      "mailto:fibro.contact@proton.me",
       Deno.env.get("VAPID_PUBLIC_KEY"),
       Deno.env.get("VAPID_PRIVATE_KEY"),
     );

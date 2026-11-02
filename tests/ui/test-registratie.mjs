@@ -58,7 +58,7 @@ for (const [naam, html] of [['login.html', login], ['invite.html', invite]]) {
 assert.match(invite, /options: \{ data: \{ username: naam, geboortejaar: jaarNum, niveau, invite_token: token \} \}/, 'invite.html geeft de uitnodiging mee')
 assert.doesNotMatch(login, /invite_token/, 'login.html heeft geen uitnodiging')
 assert.match(login, /FibroRegistratie\.melding\(stand, false\)/)
-assert.match(invite, /FibroRegistratie\.melding\(await FibroRegistratie\.haalStand\(supabase\), true\)/)
+assert.match(invite, /const stand = await FibroRegistratie\.haalStand\(supabase\)\n    const tekst = FibroRegistratie\.melding\(stand, true\)/)   // v255: stand ook voor de uitnodigingsgrens
 assert.match(invite, /<div id="regFormulier">[\s\S]*id="regBtn"[\s\S]*?<\/div>/, 'het formulier staat in regFormulier')
 
 // 5. Moderatie: tabblad Bèta, alle zichtbare teksten in het Engels

@@ -21,7 +21,8 @@ assert.doesNotMatch(regels, /https?:\/\/(?!qmgatbphiplrfxrljtbe\.supabase\.co)/,
   const w = {}
   new Function('window', blok)(w)
   const en = w.FIBRO_EN
-  const teksten = [...regels.matchAll(/data-t>([^<]+)</g)].map(m => m[1])
+  // v255: een tekst mag een link bevatten (het mailadres); dan is de hele inhoud de sleutel
+  const teksten = [...regels.matchAll(/<(\w+)[^>]*\bdata-t>([\s\S]*?)<\/\1>/g)].map(m => m[2].split(/<(?:span|ul)/)[0].trim()).filter(Boolean)
   assert.ok(teksten.length >= 30, 'teksten gevonden')
   for (const t of teksten) assert.ok(typeof en[t] === 'string' && en[t].length > 0, 'Engels ontbreekt: ' + t)
 }

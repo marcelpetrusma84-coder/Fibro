@@ -1,6 +1,6 @@
 # Ultra-schaken integreren · 2 november 2026
 
-Deze wijziging bouwt op Marcels `main` **49646a1** (inclusief PR #63). Camera’s,
+Deze wijziging bouwt op Marcels `main` **4a6c506** (inclusief PR #64). Camera’s,
 wachten op vrienden, stoppen bij vertrek, uitnodigingen en Block It blijven
 behouden. PR #52 is al samengevoegd en hoeft niet opnieuw te worden overgenomen.
 
@@ -32,7 +32,7 @@ aangesproken. Zie `chess-ultra.md` voor de exacte limieten en voorkeurvelden.
 
 ## Validatie
 
-68 Node-testbestanden slagen tegen deze geïntegreerde `main` in `tests/chess`,
+73 Node-testbestanden slagen tegen deze geïntegreerde `main` in `tests/chess`,
 `tests/security`, `tests/ui`, `tests/onboarding`, `tests/neon`, `tests/sync`,
 `tests/foutmelder` en `tests/blockit`. Dit omvat Marcels nieuwe regressietests.
 Twee testverwachtingen volgen de verhoogde cacheversies; de gedragstests en
@@ -51,7 +51,7 @@ er geen horizontale overloop. Mobiele proefpagina:
 
 ## English handoff
 
-This PR is based on Marcel’s latest main `49646a1`, including PR #63, and keeps
+This PR is based on Marcel’s latest main `4a6c506`, including PR #64, and keeps
 the recent camera, waiting/leave, invitation and Block It changes. Merge it with
 the normal static deployment. No SQL, credentials, build step or isolation
 headers are required; ship the matching vendored JS/WASM pair with WASM MIME
@@ -60,7 +60,25 @@ type `application/wasm`.
 Ultra combines bounded Lichess cached analysis with bundled Stockfish 19. It
 adds opt-in live move deltas, right-hand SAN history, sequenced opt-in evaluation
 sounds and a separate variable thinking-time preference (default up to 5s).
-Capture grading defaults ON only in Ultra. All 68 integrated Node scripts pass;
+Capture grading defaults ON only in Ultra. All 73 integrated Node scripts pass;
 real browser engine/API moves and narrow layouts were checked. Full technical
 details are in `chess-ultra.md`; release sources, model, license and checksums
 are in `vendor/stockfish`.
+
+## Take-back, hints en tafelachtergrond
+
+Ultra heeft twee nieuwe hulpopties, beide standaard uit: Take-back herstelt de
+volledige stelling vóór je laatste eigen zet (ook de computerreactie gaat terug),
+Tips & hints toont een !-knop die alleen een eigen stuk aanwijst. Oude
+berekeningen, animaties en audiowachtrijen kunnen na terugnemen niet doorlopen.
+Alle schaakvarianten hebben 4D wallpaper → Tafelachtergrond. De aangeleverde
+foto beweegt subtiel met de muis of toegestane telefoonsensoren; het bord blijft
+stil. Bij minder beweging of geweigerde toestemming blijft de foto statisch.
+Sensorwaarden worden niet verstuurd. Controleer kantelen nog op een fysieke
+telefoon via HTTPS; browser- en lifecycleproeven gebruiken gesimuleerde sensoren.
+
+Default-OFF Ultra takeback/hints and an independent, default-OFF table wallpaper
+for every chess variant are included. Only the background moves; phone motion
+requires browser support, HTTPS and user-initiated permission where applicable.
+Physical phone tilt remains a device smoke test. The 73-script suite includes
+undo/hint races, complete-state restoration and wallpaper permission/cleanup.

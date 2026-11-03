@@ -1509,13 +1509,16 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   // ─── Bericht versturen (versleuteld + cache) ───
-  async function stuurPling(ontvangerId, titel, tekst, type) {
+  // v3 nov (push vanaf de server): de server stuurt de melding zelf zodra het bericht er is (trigger op messages,
+  // sql/push-vanaf-server.sql). Deze vraag is alleen nog een reserve; met het id van het bericht geeft de server per
+  // bericht hoogstens een melding (push_log), wie er ook om vraagt.
+  async function stuurPling(berichtId) {
+    if (!berichtId) return
     try {
-      const { data: { session } } = await supabase.auth.getSession()
       await fetch('https://qmgatbphiplrfxrljtbe.supabase.co/functions/v1/stuur-push', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-        body: JSON.stringify({ receiver_id: ontvangerId, title: titel || 'Fibro', body: tekst || 'Je hebt een nieuw bericht 💬', type: type || 'bericht' })
+        method: 'POST', keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message_id: berichtId })
       })
     } catch(e) { console.log('[pling] versturen mislukt:', e) }
   }
@@ -1648,7 +1651,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       const pak = tekst.startsWith('fxsticker:') ? tekst.indexOf('#') : -1
       slaBerichtCacheOp(data.id, pak > 0 ? tekst.slice(0, pak) : tekst)
       if (pak > 0) { const fx = leesFx(tekst.slice(10, pak)); serverStickerVerstuurd(vriendId, fx.code, fx.versie) }
-      if (pling) stuurPling(vriendId)
+      if (pling) stuurPling(data.id)
       return true
     } catch (e) { console.error('Versturen mislukt:', e); return false }
   }
@@ -1913,14 +1916,13 @@ console.timeLog('[chat] berichten', 'opgehaald')
     btn.classList.add('sending')
     setTimeout(() => btn.classList.remove('sending'), 400)
     if (navigator.vibrate) navigator.vibrate([100, 50, 100])
-    await supabase.from('messages').insert({
+    const { data: buzz } = await supabase.from('messages').insert({
       sender_id: huidigeUser.id,
       receiver_id: geselecteerdeVriend.id,
       content: 'buzz:',
       expires_at: new Date(Date.now() + 31*24*60*60*1000).toISOString()
-    })
-    const mijnNaam = huidigProfiel?.username || 'Iemand'
-    stuurPling(geselecteerdeVriend.id, '⚡ Buzz!', mijnNaam + ' buzzt je!', 'buzz')
+    }).select('id').single()
+    stuurPling(buzz?.id) // de server stuurt de buzz-melding ook zelf (zie stuurPling)
   }
 
   // Buzzgeluid: lage zaagtand die snel aan-uit pulseert.

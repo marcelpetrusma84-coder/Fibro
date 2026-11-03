@@ -18,9 +18,8 @@ const histories = {
     initial('1.0.0'),
   ],
   schaken:[
-    // Filled from the implementation commit before the branch is handed over.
-    // No clock-generated historical dates or guessed deployment times.
-    record('6.1.0', null, null, 'Paardroutes na 2 seconden, sterker contrast en vernieuwde versiehistorie', 'Knight routes after 2 seconds, stronger contrast and improved version history'),
+    // Actual implementation commit; separate from the deployment time.
+    record('6.1.0', '2026-11-03T23:10:04+01:00', '3e21c7752e8d1c557054847e693b92303af5b6f7', 'Paardroutes na 2 seconden, sterker contrast en vernieuwde versiehistorie', 'Knight routes after 2 seconds, stronger contrast and improved version history'),
     record('6.0.0', '2026-11-02T13:16:03+01:00', '6289a3fde4d7ad93e7c97f4924dc017fbe12fc3a', 'Ultra en live evaluatie', 'Ultra and live evaluation'),
     record('5.0.0', '2026-11-01T11:55:54+01:00', '7bf6d9768db72fb1f2de3dccf95ca82265c25709', 'Taalkeuze en gradatiegeluiden', 'Language choice and graded capture sounds'),
     record('4.0.0', '2026-10-22T19:53:19+02:00', '1c6ce6d520b10fb496253522d8919c20a938e58b', 'Betrouwbaardere camera- en geluidsstatus', 'More reliable camera and audio status'),

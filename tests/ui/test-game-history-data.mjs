@@ -38,7 +38,7 @@ for (const game of expectedGames) {
   assert.throws(() => { entries[0].summary = 'changed' }, TypeError)
 }
 assert.equal(records, 25, '24 verified main records plus the next minor release')
-assert.ok(pending <= 1)
+assert.equal(pending, 0, 'every shipped version has a real commit and timestamp')
 assert.equal(SPEL_VERSIES.schaken, '6.1.0')
 assert.equal(SPEL_VERSIES.shmup, '5.0.0')
 

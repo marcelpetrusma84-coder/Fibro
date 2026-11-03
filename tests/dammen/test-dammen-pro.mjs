@@ -142,3 +142,9 @@ assert.match(chat4, /stuurKnop\.id = 'spelChatStuur'/)
 assert.match(chat4, /stuurKnop\.onclick = function \(\) \{ verstuurInvoer\(\) \}/)
 assert.match(chat4, /if \(ev\.key !== 'Enter' \|\| ev\.isComposing\) return\n      ev\.preventDefault\(\)\n      verstuurInvoer\(\)/, 'Enter werkt nog steeds')
 console.log('verstuurknop: ok')
+
+// 14. Tijdens het typen schuiven de sticker- en emojiknop opzij
+const chat5 = lees('chat.html')
+assert.match(chat5, /inp\.addEventListener\('focus', function \(\) \{[\s\S]{0,140}zijKnoppen\(false\)/)
+assert.match(chat5, /inp\.addEventListener\('blur', function \(\) \{ zijKnoppen\(true\) \}\)/)
+console.log('opzij schuiven: ok')

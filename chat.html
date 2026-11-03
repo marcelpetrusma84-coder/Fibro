@@ -2571,7 +2571,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   function spelStickerVrij() {
     spelStickerMag = true; spelStickerVriendMag = true
     const k = document.getElementById('spelStickerKnop')
-    if (k) { k.disabled = false; k.style.opacity = '1' }
+    if (k) { k.disabled = false; if (k.getAttribute('aria-hidden') !== 'true') k.style.opacity = '1' }
   }
   async function stuurSpelSticker(st) {
     const paneel = document.getElementById('spelStickerPaneel')
@@ -2727,6 +2727,27 @@ console.timeLog('[chat] berichten', 'opgehaald')
     stuurKnop.onclick = function () { verstuurInvoer() }
     rij.appendChild(inp)
     rij.appendChild(stuurKnop)
+    // v3 nov: tijdens het typen schuiven 🎨 en 😊 opzij, zodat het tekstveld bijna de hele breedte krijgt
+    function zijKnoppen(zichtbaar) {
+      for (const b of [knop, emojiKnop]) {
+        b.style.overflow = 'hidden'
+        b.style.whiteSpace = 'nowrap'
+        b.style.transition = 'max-width .22s ease, padding .22s ease, margin .22s ease, opacity .18s ease, border-width .22s ease'
+        b.style.maxWidth = zichtbaar ? '64px' : '0px'
+        b.style.paddingLeft = b.style.paddingRight = zichtbaar ? '10px' : '0px'
+        b.style.borderWidth = zichtbaar ? '1px' : '0px'
+        b.style.marginRight = zichtbaar ? '0px' : '-6px'
+        b.style.opacity = zichtbaar ? (b === knop && !spelStickerMag ? '0.35' : '1') : '0'
+        b.tabIndex = zichtbaar ? 0 : -1
+        if (zichtbaar) b.removeAttribute('aria-hidden'); else b.setAttribute('aria-hidden', 'true')
+      }
+    }
+    inp.addEventListener('focus', function () {
+      paneel.style.display = 'none'; emojiPaneel.style.display = 'none'
+      zijKnoppen(false)
+    })
+    inp.addEventListener('blur', function () { zijKnoppen(true) })
+    zijKnoppen(true)
     wrap.appendChild(laag)
     wrap.appendChild(paneel)
     wrap.appendChild(emojiPaneel)

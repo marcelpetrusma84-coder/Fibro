@@ -54,12 +54,14 @@ const bron = lees('titelscenes.js')
 assert.ok(!/\.filter\s*=/.test(bron), 'geen ctx.filter (kent Safari niet)')
 
 // 4. Chat: titelscherm bij het openen, het spel wacht op de tik, sluiten ruimt het op
-assert.match(chat, /import \{ toonTitelscherm, sluitTitelscherm, heeftTitelscherm, spelStart \} from '\.\/titelscherm\.js\?v=6'/)
+// 3 nov 2026 (sneller): de chat laadt het titelscherm als de pagina rustig is (niet meer in het eerste laden)
+assert.match(chat, /laadModule\('\.\/titelscherm\.js\?v=6'\)\.then\(m => \(titelModule = m\)\)/)
+assert.match(chat, /laadRustig\(\(\) => laadTitelscherm\(\)\.catch\(\(\) => \{\}\)\)/)
 const mee = chat.slice(chat.indexOf('window.speelMee = async function'), chat.indexOf("if (spelType === 'botkaaseiren') await startBotKaasEieren()"))
 assert.ok(mee.indexOf('toonTitelscherm(') < mee.indexOf('const wachtOpVriend'), 'titelscherm voor het wachten')
-assert.match(mee, /if \(!await titelKlaar \|\| spelActief !== spelType \|\| spelKanaal !== verbinding\) return \/\/ v251\n    spelStart\(spelType\)/)
+assert.match(mee, /if \(!await titelKlaar \|\| spelActief !== spelType \|\| spelKanaal !== verbinding\) return \/\/ v251\n    titelModule\?\.spelStart\(spelType\)/)
 const sluit = chat.slice(chat.indexOf('window.sluitSpel = function(stil)'), chat.indexOf('// ─── Boter-Kaas-Eieren'))
-assert.match(sluit, /sluitTitelscherm\(\)/)
+assert.match(sluit, /titelModule\?\.sluitTitelscherm\(\)/)
 
 // 5. Alleen spelen: eerst het titelscherm, dan het menu; de muziek stopt als het spel begint
 assert.match(spel, /import \{ toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek \} from '\.\/titelscherm\.js\?v=6'/)

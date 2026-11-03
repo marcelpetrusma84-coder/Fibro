@@ -439,9 +439,7 @@ window.veiligeUrl = function(v){
   import { speel as speelFx, speelGeluid as speelFxGeluid, naamVan as fxNaam } from './stickerfx.js?v=235'
   import { stuurRapport } from './rapport.js?v=96'
   import * as Schaak from './schaak.js?v=95'
-  import * as Dammen from './dammen.js?v=95'
   import * as Bordgeluid from './bordgeluid.js?v=201'
-  import * as DammenUI from './dammen-ui.js?v=150'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
@@ -451,13 +449,20 @@ window.veiligeUrl = function(v){
   import { maakSpelVerbinding } from './spelverbinding.js?v=2'
   import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=2'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
-  import { toonTitelscherm, sluitTitelscherm, heeftTitelscherm, spelStart } from './titelscherm.js?v=6'
   // v256 (foutmelding 3 nov 2026): lukt het laden van een spelbestand niet (even geen internet, of net een nieuwe
   // versie op GitHub), dan na 1,2 seconde nog één keer, met een ander adres (sommige browsers onthouden een mislukte poging)
   const laadModule = url => import(url).catch(async () => {
     await new Promise(r => setTimeout(r, 1200))
     return import(url + (url.includes('?') ? '&' : '?') + 'opnieuw=' + Date.now())
   }) // v251: titelscherm met muziek
+  // v3 nov (sneller): het titelscherm (plaatjes en muziek, ~115 kB) zit niet meer in het eerste laden van de chat. Het
+  // komt binnen zodra de pagina rustig is, ruim voordat iemand een spel start; is het er bij de start nog niet, dan
+  // wacht het spel er even op.
+  let titelModule = null
+  const laadTitelscherm = () => titelModule ? Promise.resolve(titelModule)
+    : laadModule('./titelscherm.js?v=6').then(m => (titelModule = m))
+  const laadRustig = f => ('requestIdleCallback' in window ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 2500))
+  laadRustig(() => laadTitelscherm().catch(() => {}))
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -2432,7 +2437,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     // v251: eerst het titelscherm (bewegend plaatje en muziek). Ondertussen wordt al op je vriend gewacht;
     // het spel begint pas als je het titelscherm hebt weggetikt én je vriend er is. Niet bij schaken met drie: daar
     // kom je vanuit een schaakspel dat al open was.
-    const titelKlaar = heeftTitelscherm(spelType) && spelType !== 'schakendrie' ? toonTitelscherm({ spelId: spelType, naam: SPEL_INFO[spelType]?.naam || spelType }) : Promise.resolve(true)
+    const titel = titelModule || await laadTitelscherm().catch(() => null)
+    const titelKlaar = titel && titel.heeftTitelscherm(spelType) && spelType !== 'schakendrie' ? titel.toonTitelscherm({ spelId: spelType, naam: SPEL_INFO[spelType]?.naam || spelType }) : Promise.resolve(true)
 
     benIkSpeler1 = spelType === 'schakendrie' ? players[0] === huidigeUser.id : (starterId ? (starterId === huidigeUser.id) : (huidigeUser.id < spelTegenstander.id))
 
@@ -2462,7 +2468,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       document.getElementById('spelWachtscherm')?.remove()
     }
     if (!await titelKlaar || spelActief !== spelType || spelKanaal !== verbinding) return // v251
-    spelStart(spelType) // v253: muziek stopt nu, of pas na het menu van het spel
+    titelModule?.spelStart(spelType) // v253: muziek stopt nu, of pas na het menu van het spel
 
     try { // v256: kon het spel niet laden, dan een duidelijke melding in plaats van een leeg scherm
     if (spelType === 'botkaaseiren') await startBotKaasEieren()
@@ -2980,7 +2986,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       document.querySelector('#spelVideoEigen .video-etiket').textContent = schaakT('Jij')
       document.getElementById('spelVideoAnderNaam').textContent = schaakT('Vriend')
     }
-    sluitTitelscherm() // v251
+    titelModule?.sluitTitelscherm() // v251
     document.getElementById('spelOverlay').classList.remove('open')
     document.getElementById('spelInhoud').innerHTML = ''
     var scw = document.getElementById('spelChatWrap'); if (scw) scw.remove()
@@ -3204,7 +3210,11 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   // ─── Dammen (internationaal, 10x10) ───
-  function startDammen() { DammenUI.start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() }) }
+  // v3 nov (sneller): dammen pas laden als je het speelt, zoals de andere spellen
+  async function startDammen() {
+    const [Dammen, DammenUI] = await Promise.all([laadModule('./dammen.js?v=95'), laadModule('./dammen-ui.js?v=150')])
+    DammenUI.start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
+  }
 
   // ─── Pong ───
   async function startPong() {

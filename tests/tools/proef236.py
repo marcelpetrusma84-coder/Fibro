@@ -1,6 +1,8 @@
 # proef236 (3 nov 2026, v258): makkelijker contact, in echte pagina's in Chrome met een nep-server.
 #  A. Vrienden > Uitnodigen: een knop Delen (deelmenu van de telefoon) met een zin erbij: je naam, het spel, hoe lang
-#     de link werkt, en de link zelf. Zonder deelmenu (computer) geen knop. Weggetikt = niets; mislukt = kopieren.
+#     de link werkt, en de link zelf. Weggetikt = niets. Zonder deelmenu (computer, sommige apps) of als delen mislukt:
+#     de hele uitnodiging (zin + link) kopieren. De knop staat bovenaan en is ook op een kleine telefoon te zien; het
+#     venster kan scrollen (vroeger vielen de titel en Sluiten weg, en kon je er niet bij).
 #  B. Een lege chat: knop "👋 Zeg hoi" stuurt een versleuteld "Hoi! 👋" (met pushmelding) en verdwijnt.
 #     Een chat met berichten: geen knop.
 #  C. Uitnodiging aannemen met een bestaand account: daarna meteen in de chat met wie uitnodigde (met Zeg hoi).
@@ -108,15 +110,17 @@ try:
         m.evaluate("window.__gedeeld = []"); m.click('#deel-link-btn'); m.wait_for_timeout(300)
         d = m.evaluate("window.__gedeeld"); link = m.evaluate("document.getElementById('invite-link').value")
         check('A3 met spel en 1 uur', gemaakt and d and d[0]['text'] == 'Marcel nodigt je uit voor Fibro en daagt je uit voor een potje Draughts! Tik binnen 1 uur op de link om vrienden te worden:\n' + link and '&spel=dammen' in link, d)
-        # weggetikt: niets; mislukt: kopieren
+        # weggetikt: niets; mislukt: de hele uitnodiging kopieren
         m.evaluate("window.__deelFout = 'AbortError'"); st['dialogen'].clear()
+        m.evaluate("navigator.clipboard.writeText('leeg')")
         m.click('#deel-link-btn'); m.wait_for_timeout(500)
-        k1 = m.evaluate("document.getElementById('kopieer-link-btn').textContent")
+        k1 = m.evaluate("document.getElementById('deel-link-btn').textContent"); kl1 = m.evaluate("navigator.clipboard.readText().catch(() => '')")
         m.evaluate("window.__deelFout = 'NotAllowedError'")
         m.click('#deel-link-btn'); m.wait_for_timeout(500)
-        k2 = m.evaluate("document.getElementById('kopieer-link-btn').textContent")
+        k2 = m.evaluate("document.getElementById('deel-link-btn').textContent")
         klembord = m.evaluate("navigator.clipboard.readText().catch(() => '')")
-        check('A4 weggetikt: niets; lukt delen niet: kopieren', k1 == 'Kopieer' and (k2 == 'Gekopieerd!' or st['dialogen']) and (klembord == link or st['dialogen']), (k1, k2, klembord[:60], st['dialogen']))
+        check('A4 weggetikt: niets; lukt delen niet: hele uitnodiging gekopieerd', k1 == '📤 Delen' and kl1 == 'leeg' and k2.startswith('✅ Gekopieerd!')
+              and klembord == d[0]['text'] and not st['dialogen'], (k1, kl1, k2, klembord[:80], st['dialogen']))
         cm.close()
         # Engels
         st = nieuw_st()
@@ -127,12 +131,30 @@ try:
         knop = m.evaluate("document.getElementById('deel-link-btn').textContent")
         check('A5 Engels', d and d[0]['text'].startswith('Marcel invites you to Fibro! Tap the link within 7 days to become friends:\nhttps://') and knop == '📤 Share', (knop, d))
         cm.close()
-        # zonder deelmenu (computer): geen knop, wel Kopieer
+        # zonder deelmenu (computer, sommige apps): de knop staat er ook, en kopieert de hele uitnodiging
         st = nieuw_st()
         cm, m = toestel(br, MARCEL, sl, st, init=GEEN_DEEL)
         m.goto(B + 'vrienden.html'); m.wait_for_timeout(1500)
         maak_link(m)
-        check('A6 zonder deelmenu: geen knop Delen', m.evaluate("document.getElementById('deel-link-btn').hidden && typeof navigator.share !== 'function'"))
+        zichtbaar = m.evaluate("typeof navigator.share !== 'function' && document.getElementById('deel-link-btn').offsetParent !== null")
+        m.click('#deel-link-btn'); m.wait_for_timeout(500)
+        link = m.evaluate("document.getElementById('invite-link').value")
+        klembord = m.evaluate("navigator.clipboard.readText().catch(() => '')")
+        check('A6 zonder deelmenu: knop Delen kopieert de hele uitnodiging', zichtbaar and klembord == 'Marcel nodigt je uit voor Fibro! Tik binnen 3 dagen op de link om vrienden te worden:\n' + link
+              and m.evaluate("document.getElementById('deel-link-btn').textContent").startswith('✅ Gekopieerd!'), (zichtbaar, klembord[:90]))
+        cm.close()
+        # kleine telefoon (iPhone SE in Safari): Delen meteen in beeld, en het venster scrollt (titel en Sluiten bereikbaar)
+        st = nieuw_st()
+        cm, m = toestel(br, MARCEL, sl, st, init=DEEL)
+        m.set_viewport_size({'width': 375, 'height': 553})
+        m.goto(B + 'vrienden.html'); m.wait_for_timeout(1500)
+        maak_link(m); m.wait_for_timeout(300)
+        r = m.evaluate("(() => { const b = document.getElementById('deel-link-btn').getBoundingClientRect(); return { boven: b.top, onder: b.bottom, h: innerHeight } })()")
+        m.evaluate("document.getElementById('inviteModal').scrollTop = 0"); m.wait_for_timeout(100)
+        titel = m.evaluate("document.querySelector('#inviteModal h2').getBoundingClientRect().top")
+        m.evaluate("(o => { o.scrollTop = o.scrollHeight })(document.getElementById('inviteModal'))"); m.wait_for_timeout(100)
+        sluit = m.evaluate("(() => { const b = [...document.querySelectorAll('#inviteModal button')].find(x => x.textContent.trim() === 'Sluiten').getBoundingClientRect(); return b.bottom <= innerHeight && b.top >= 0 })()")
+        check('A7 kleine telefoon: Delen in beeld, titel en Sluiten te bereiken', r['boven'] >= 0 and r['onder'] <= r['h'] and titel >= 0 and sluit, (r, titel, sluit))
         cm.close()
 
         # ---- B. Lege chat: Zeg hoi ----

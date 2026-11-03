@@ -7,11 +7,15 @@ const lees = p => readFileSync(new URL('../../' + p, import.meta.url), 'utf8')
 const vrienden = lees('vrienden.html'), invite = lees('invite.html'), login = lees('login.html'), index = lees('index.html')
 const chat = lees('chat.html'), push = lees('supabase/functions/stuur-push/index.ts'), sql = lees('sql/contact-push.sql')
 
-// 1. Delen: alleen met een deelmenu, de link in de tekst zelf, weggetikt = niets
-assert.match(vrienden, /id="deel-link-btn"[^>]*hidden data-t>📤 Delen</)
-assert.match(vrienden, /document\.getElementById\('deel-link-btn'\)\.hidden = typeof navigator\.share !== 'function'/)
-assert.match(vrienden, /await navigator\.share\(\{ text: deelTekst \+ '\\n' \+ url \}\)/)
-assert.match(vrienden, /if \(e && e\.name === 'AbortError'\) return/)
+// 1. Delen: altijd zichtbaar en bovenaan (voor de QR-code); de link in de tekst zelf; weggetikt = niets;
+//    zonder deelmenu de hele uitnodiging kopieren. Het venster kan scrollen (niets valt weg op een kleine telefoon).
+assert.match(vrienden, /<div id="qr-sectie" style="display:none;">\n(\s*<!--[\s\S]*?-->\n)?\s*<button type="button" id="deel-link-btn"[^>]*data-t>📤 Delen</)
+assert.ok(!/id="deel-link-btn"[^>]*hidden/.test(vrienden), 'nooit verborgen')
+assert.match(vrienden, /const volledig = deelTekst \+ '\\n' \+ url/)
+assert.match(vrienden, /try \{ await navigator\.share\(\{ text: volledig \}\); return \}\n\s+catch \(e\) \{ if \(e && e\.name === 'AbortError'\) return \}/)
+assert.match(vrienden, /await navigator\.clipboard\.writeText\(volledig\)/)
+assert.match(vrienden, /\.modal-overlay \{[^}]*overflow-y:auto/)
+assert.match(vrienden, /\.modal \{[^}]*margin:auto/)
 
 // 2. Na het vriend worden naar de chat; het beginscherm stuurt hoogstens een keer door, alleen naar een echt id
 assert.match(invite, /const verder = vrienden \? 'chat\.html\?vriend=' \+ encodeURIComponent\(ander\) : 'vrienden\.html'/)
@@ -49,7 +53,7 @@ new Function('window', lees('taal-en.js'))(globalThis.window)
 const EN = globalThis.window.FIBRO_EN
 for (const k of ['📤 Delen', '{naam} nodigt je uit voor Fibro!', '{naam} nodigt je uit voor Fibro en daagt je uit voor een potje {spel}!',
   'Je bent uitgenodigd voor Fibro!', 'Je bent uitgenodigd voor Fibro en voor een potje {spel}!', 'Tik binnen {duur} op de link om vrienden te worden:',
-  '👋 Zeg hoi', 'Hoi! 👋', '1 uur', '1 dag', '3 dagen', '7 dagen'])
+  '👋 Zeg hoi', 'Hoi! 👋', '✅ Gekopieerd! Plak het in WhatsApp of een bericht.', 'Kopieer deze tekst:', '1 uur', '1 dag', '3 dagen', '7 dagen'])
   assert.ok(Object.hasOwn(EN, k), 'Engels voor ' + k)
 delete globalThis.window
 console.log('makkelijker contact: alles goed')

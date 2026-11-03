@@ -1750,6 +1750,7 @@ window.FIBRO_EN = {
   "Dam!": "King!",
   "Emoji's": "Emojis",
   "Versturen": "Send",
+  "Pak {n}": "Take {n}",
   "Expert": "Expert",
   "aan zet": "to move",
   "Dambord": "Draughts board",

@@ -425,7 +425,8 @@ window.veiligeUrl = function(v){
   import { initSync, syncMetVriend } from './sync.js?v=251'
   import { isOnline as vriendIsOnline } from './paren.js?v=2'
   import { startHeartbeat } from './heartbeat.js?v=117'
-  import { startMeldingen, buzzRustig } from './meldingen.js?v=187'
+  import { startMeldingen, buzzRustig } from './meldingen.js?v=188'
+  import { speelBuzz } from './buzzgeluid.js?v=1'
   import { houOpen } from './lijntjes.js?v=1'
   import { haalVriendFotos, zetAvatar, geldigeFoto } from './vriendfotos.js?v=2'
   import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel } from './crypto.js?v=182'
@@ -1930,32 +1931,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
     stuurPling(buzz?.id) // de server stuurt de buzz-melding ook zelf (zie stuurPling)
   }
 
-  // Buzzgeluid: lage zaagtand die snel aan-uit pulseert.
-  function speelBuzzGeluid() {
-    try {
-      const AC = window.AudioContext || window.webkitAudioContext
-      if (!AC) return
-      const ctx = new AC()
-      const nu = ctx.currentTime
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.type = 'sawtooth'
-      osc.frequency.setValueAtTime(95, nu)
-      osc.frequency.setValueAtTime(78, nu + 0.35)
-      osc.frequency.setValueAtTime(95, nu + 0.7)
-      // Pulseren: 14 keer per seconde aan en uit
-      gain.gain.setValueAtTime(0, nu)
-      for (let i = 0; i < 15; i++) {
-        const s = nu + i * 0.07
-        gain.gain.setValueAtTime(0.28, s)
-        gain.gain.setValueAtTime(0.02, s + 0.035)
-      }
-      gain.gain.setValueAtTime(0, nu + 1.05)
-      osc.connect(gain); gain.connect(ctx.destination)
-      osc.start(nu); osc.stop(nu + 1.1)
-      osc.onended = () => { try { ctx.close() } catch(e) {} }
-    } catch(e) { console.warn('[buzz] geluid mislukt:', e) }
-  }
+  // v3 nov: het buzzgeluid uit buzzgeluid.js (een gezegende geluidsspeler, zoals de stickers). Met een nieuwe
+  // AudioContext per buzz bleef het op de iPhone vaak stil tot je het scherm aanraakte.
+  function speelBuzzGeluid() { speelBuzz() }
 
   function ontvangBuzz() {
     if (buzzRustig()) return // v187: 'Buzz schudt en trilt' uit: alleen de regel in de chat en de melding (meldingen.js)

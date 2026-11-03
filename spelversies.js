@@ -1,44 +1,29 @@
-// spelversies.js — het versienummer van elk spel, los van het versienummer van de app (v196)
-//
-// "Fibro v196" (menu op Home) telt elke wijziging aan de app. Elk spel heeft hier zijn eigen nummer,
-// dat alleen omhoog gaat als dat spel zelf verandert (nieuwe levels, ander gedrag, een fout eruit).
-// Regel voor een nieuw maak-script: raakt het een spel aan? Zet dan het nummer van dat spel hier een hoger.
-//
-// De sleutel is de spelnaam zoals in chat.html (startSpel('shmup')) en in de widgetlijst op Profiel (spel_shmup).
-// Stand bij het begin van het tellen (v196): Neon Raiders v3 (v192 eerste, v193 alle 7 levels, v194 samen spelen),
-// Schaken v2 (het vernieuwde schaken van Tijn, v195 weer in twee talen); de rest begint op v1.
-export const SPEL_VERSIES = {
-  botkaaseiren: 2,   // Tic-Tac-Toe (v2 = 30 okt 2026: houten bord en houten stukken)
-  vieroprij: 2,      // Four in a Row (v2 = 30 okt 2026: plastic speelgoed, vallende schijven)
-  schaken: 6,        // Chess (v3 = v197: webcam, vriend uitnodigen, nieuwe instellingen, PR #3 van Tijn;
-                     //  v4 = v198: webcam-status volgt de echte camera, knop voor tegengehouden geluid;
-                     //  v5 = eigen Nederlands/English taalkeuze en waarde-/perspectiefafhankelijke slaggeluiden;
-                     //  v6 = Ultra via Lichess/Stockfish 19, optionele live evaluatie en optionele slaggeluiden)
-  dammen: 2,         // Draughts
-  pong: 3,           // Neo Paddle (v2 = 30 okt 2026: blokjes en power-ups, levels voor alleen;
-                     //  v3 = 31 okt 2026: kies Klassiek (de oude 7 levels met obstakels) of Blokjes)
-  pacman: 1,         // Ghost Tag
-  pinball: 1,        // Twin Snakes
-  flappybird: 1,     // Flapper
-  breakout: 2,       // Block It (v2 = 2 nov 2026: tegen de computer, zwarte aanval)
-  swarm: 1,          // The Swarm
-  endlessrunner: 1,  // Runner & Gunner
-  shmup: 5,          // Neon Raiders (v5: VERDER pas na 3 seconden OPNIEUW vasthouden)
-}
+// One source for compact game labels and the browsable history on Home.
+// Versions are semantic strings: a minor update such as 6.10 is never 6.1.
+import { SPEL_VERSIES, spelHistorie, versieLabel } from './spelversie-data.js?v=2'
+import { mountSpelVersie } from './spelversie-ui.js?v=2'
+export { SPEL_VERSIES, SPEL_HISTORIE, spelHistorie, versieLabel, vergelijkVersies } from './spelversie-data.js?v=2'
+
+const histories = new WeakMap()
 
 export function spelVersie(naam) {
-  return Object.prototype.hasOwnProperty.call(SPEL_VERSIES, naam) ? SPEL_VERSIES[naam] : null
+  return Object.hasOwn(SPEL_VERSIES, naam) ? SPEL_VERSIES[naam] : null
 }
 
-// Zet "v3.0" in elk element met data-spelversie="<spelnaam>" (zo staat het in het widgetmenu op Profiel,
-// tussen de tekst en de toggle-knop). Een spel zonder nummer krijgt niets.
-export function vulSpelVersies(wortel) {
-  const w = typeof T === 'function' && T.taal === 'en' ? 'version' : 'versie'
-  for (const el of (wortel || document).querySelectorAll('[data-spelversie]')) {
-    const n = spelVersie(el.getAttribute('data-spelversie'))
-    if (n === null) { el.textContent = ''; continue }
-    const label = Number.isInteger(n) ? n.toFixed(1) : String(n)
-    el.textContent = 'v' + label
-    el.setAttribute('aria-label', w + ' ' + label)
+export function vulSpelVersies(wortel = globalThis.document) {
+  const language = typeof T === 'function' && T.taal === 'en' ? 'en' : 'nl'
+  for (const element of wortel.querySelectorAll('[data-spelversie]')) {
+    const game = element.getAttribute('data-spelversie'), version = spelVersie(game)
+    const controller = histories.get(element)
+    if (version && element.getAttribute('data-spelversie-history') != null) {
+      const options = { game, currentVersion:version, history:spelHistorie(game), language }
+      if (controller) controller.update(options)
+      else histories.set(element, mountSpelVersie(element, options))
+      continue
+    }
+    if (controller) { controller.destroy(); histories.delete(element) }
+    element.textContent = version ? versieLabel(version) : ''
+    if (version) element.setAttribute('aria-label', `${language === 'en' ? 'version' : 'versie'} ${versieLabel(version).slice(1)}`)
+    else element.removeAttribute?.('aria-label')
   }
 }

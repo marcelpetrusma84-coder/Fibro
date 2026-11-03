@@ -1,11 +1,11 @@
-import { maakSchaakTaal } from './schaak-taal.js?v=9'
+import { maakSchaakTaal } from './schaak-taal.js?v=10'
 import { stukSVG, registreerSlag, veroverdePunten, STUKPUNTEN } from './schaak-stukken.js?v=1'
 import { schaakFen } from './schaak-ultra-engine.js?v=1'
 import { schaakNotatie, maakUltraEvaluatieHistorie } from './schaak-ultra-historie.js?v=1'
 import { maakSchaakWallpaper } from './schaak-wallpaper.js?v=4'
 import { maakUltraFocus } from './schaak-ultra-focus.js?v=1'
 import { maakUltraSwipe } from './schaak-ultra-swipe.js?v=1'
-import { maakPaardRoutesUI } from './schaak-paardroutes-ui.js?v=2'
+import { maakPaardRoutesUI } from './schaak-paardroutes-ui.js?v=3'
 const SETTINGS_KEY = 'fibro_chess_settings_v1'
 const READABLE_NAMES = { P:'pion', N:'paard', B:'loper', R:'toren', Q:'dame', K:'koning' }
 
@@ -144,18 +144,18 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       @media (prefers-reduced-motion:reduce) { .sch-evaluation-white { transition:none; } }
       #sch-bord { display:grid; grid-template-columns:repeat(8,1fr); aspect-ratio:1; width:100%; touch-action:none; user-select:none; }
       #sch-bord,.sch-vak,.sch-stuk { -webkit-user-select:none; -webkit-touch-callout:none; }
-      .sch-knight-marker { position:absolute; z-index:3; width:var(--knight-size); height:var(--knight-size); border:1px solid var(--knight-line); border-radius:50%; background:var(--knight-color); box-sizing:border-box; pointer-events:none; }
-      .sch-knight-depth-1 { --knight-size:68%; --knight-color:rgb(239 68 68 / .34); --knight-line:rgb(153 27 27 / .7); z-index:3; }
-      .sch-knight-depth-2 { --knight-size:51%; --knight-color:rgb(59 130 246 / .34); --knight-line:rgb(29 78 216 / .75); z-index:4; }
-      .sch-knight-depth-3 { --knight-size:35%; --knight-color:rgb(34 197 94 / .34); --knight-line:rgb(21 128 61 / .75); z-index:5; }
-      .sch-knight-depth-4 { --knight-size:21%; --knight-color:rgb(168 85 247 / .38); --knight-line:rgb(107 33 168 / .8); z-index:6; }
-      .sch-knight-enemy { border-radius:1px; }
-      .sch-knight-enemy.sch-knight-depth-1 { --knight-color:rgb(249 115 22 / .34); --knight-line:rgb(194 65 12 / .8); }
-      .sch-knight-enemy.sch-knight-depth-2 { --knight-color:rgb(6 182 212 / .34); --knight-line:rgb(14 116 144 / .8); }
-      .sch-knight-enemy.sch-knight-depth-3 { --knight-color:rgb(250 204 21 / .35); --knight-line:rgb(161 98 7 / .8); }
-      .sch-knight-enemy.sch-knight-depth-4 { --knight-color:rgb(255 255 255 / .4); --knight-line:rgb(71 85 105 / .8); }
+      .sch-knight-marker { position:absolute; z-index:3; width:var(--knight-size); height:var(--knight-size); border:2px solid var(--knight-line); border-radius:50%; background:var(--knight-color); box-shadow:0 0 0 1px #fff,0 0 0 2.5px #0b1020,0 2px 4px #0009; box-sizing:border-box; pointer-events:none; }
+      .sch-knight-depth-1 { --knight-size:72%; --knight-color:rgb(239 68 68 / .28); --knight-line:#ff7777; z-index:3; }
+      .sch-knight-depth-2 { --knight-size:54%; --knight-color:rgb(59 130 246 / .28); --knight-line:#6cb6ff; z-index:4; }
+      .sch-knight-depth-3 { --knight-size:38%; --knight-color:rgb(34 197 94 / .28); --knight-line:#64ee95; z-index:5; }
+      .sch-knight-depth-4 { --knight-size:24%; --knight-color:rgb(168 85 247 / .3); --knight-line:#d6a0ff; z-index:6; }
+      .sch-knight-enemy { border-radius:2px; }
+      .sch-knight-enemy.sch-knight-depth-1 { --knight-color:rgb(249 115 22 / .28); --knight-line:#ffad60; }
+      .sch-knight-enemy.sch-knight-depth-2 { --knight-color:rgb(6 182 212 / .28); --knight-line:#67e8f9; }
+      .sch-knight-enemy.sch-knight-depth-3 { --knight-color:rgb(250 204 21 / .28); --knight-line:#ffe568; }
+      .sch-knight-enemy.sch-knight-depth-4 { --knight-color:rgb(255 255 255 / .3); --knight-line:#fff; }
       .sch-knight-source { outline:2px solid #fff3a8; outline-offset:-3px; }
-      .sch-knight-holding::after { content:""; position:absolute; z-index:7; inset:3px; border:2px solid #baffdf; border-radius:50%; box-shadow:0 0 7px #78efbd70; pointer-events:none; animation:sch-knight-hold 3s linear both; }
+      .sch-knight-holding::after { content:""; position:absolute; z-index:7; inset:3px; border:2px solid #baffdf; border-radius:50%; box-shadow:0 0 7px #78efbd70; pointer-events:none; animation:sch-knight-hold 2s linear both; }
       @keyframes sch-knight-hold { from { transform:scale(1); opacity:.25; } to { transform:scale(.58); opacity:1; } }
       .sch-knight-route-description { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
       .sch-knight-settings { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; }
@@ -164,7 +164,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-knight-legend { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; max-width:100%; padding:7px 10px; border:1px solid #a6c9be55; border-radius:12px; color:#f1f6ee; background:linear-gradient(145deg,#223535f0,#181e2bf0); font-size:11px; }
       .sch-knight-legend[hidden] { display:none; }
       .sch-knight-legend [data-knight-legend-steps] { display:flex; align-items:center; gap:8px; }
-      .sch-knight-legend .sch-knight-marker { position:relative; display:inline-grid; place-items:center; width:21px; height:21px; color:#fff; text-shadow:0 1px 2px #000; font-weight:750; }
+      .sch-knight-legend .sch-knight-marker { position:relative; display:inline-grid; place-items:center; width:21px; height:21px; color:#fff; background:#0b1020; font-weight:800; }
       .sch-knight-legend button { width:28px; height:28px; border:1px solid #ffffff44; border-radius:8px; color:#fff; background:#ffffff10; font:inherit; cursor:pointer; }
       @media (prefers-reduced-motion:reduce) { .sch-knight-holding::after { animation:none; opacity:.8; } }
       .sch-vak { border:0; border-radius:0; padding:0; min-width:0; position:relative; display:grid; place-items:center; cursor:pointer; aspect-ratio:1; }
@@ -361,7 +361,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
           </section>
           ${!isVriendPartij ? `<section class="sch-menu-section" aria-labelledby="sch-knight-heading">
             <h3 id="sch-knight-heading" data-sch-text="Paardroutes">Paardroutes</h3>
-            <p class="sch-menu-hint" id="sch-knight-help" data-sch-text="Houd tijdens jouw beurt een paard drie seconden vast. Bolletjes zijn jouw routes; vierkantjes zijn die van de computer. De andere stukken blijven staan; tegenzetten worden niet voorspeld.">Houd tijdens jouw beurt een paard drie seconden vast. Bolletjes zijn jouw routes; vierkantjes zijn die van de computer. De andere stukken blijven staan; tegenzetten worden niet voorspeld.</p>
+            <p class="sch-menu-hint" id="sch-knight-help" data-sch-text="Houd tijdens jouw beurt een paard twee seconden vast. Bolletjes zijn jouw routes; vierkantjes zijn die van de computer. De andere stukken blijven staan; tegenzetten worden niet voorspeld.">Houd tijdens jouw beurt een paard twee seconden vast. Bolletjes zijn jouw routes; vierkantjes zijn die van de computer. De andere stukken blijven staan; tegenzetten worden niet voorspeld.</p>
             <div class="sch-knight-settings">${[1,2,3,4].map(n => `<label class="sch-knight-option"><input type="checkbox" data-knight-step="${n}" aria-describedby="sch-knight-help"${instellingen.knightRouteSteps[n-1] ? ' checked' : ''}><span data-sch-text="${n === 1 ? '1 sprong' : n + ' sprongen'}">${n === 1 ? '1 sprong' : n + ' sprongen'}</span></label>`).join('')}</div>
           </section>` : ''}
           <section class="sch-menu-section" aria-labelledby="sch-board-heading">

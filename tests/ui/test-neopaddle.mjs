@@ -126,8 +126,8 @@ for (const [i, l] of NPK.LEVELS.entries()) {
   assert.equal(versies('pong-ui.js', ['chat.html', 'solo.js']).size, 1, 'pong-ui.js: overal dezelfde versie')
   assert.equal(versies('neopaddle.js', ['pong-ui.js', 'neopaddle-levels.js']).size, 1, 'neopaddle.js: overal dezelfde versie')
   assert.match(lees('solo.js'), /levels: '\.\/neopaddle-levels\.js\?v=\d+'/)
-  const { SPEL_VERSIES } = await import(pad('spelversies.js'))
-  assert.ok(SPEL_VERSIES.pong >= 2, 'Neo Paddle heeft een hoger spelnummer')
+  const { SPEL_VERSIES, vergelijkVersies } = await import(pad('spelversies.js'))
+  assert.ok(vergelijkVersies(SPEL_VERSIES.pong, '2.0.0') >= 0, 'Neo Paddle heeft een hoger spelnummer')
 }
 
 console.log('ok: Neo Paddle v2 (blokjes, power-ups, ' + NPK.LEVELS.length + ' levels uitgespeeld)')

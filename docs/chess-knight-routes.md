@@ -1,6 +1,6 @@
 # Paardroutes in solo schaken
 
-Tijdens je eigen beurt kun je een eigen paard of een paard van de computer drie
+Tijdens je eigen beurt kun je een eigen paard of een paard van de computer twee
 seconden vasthouden. Vier onafhankelijke schakelaars in **Schaakinstellingen →
 Paardroutes** kiezen exacte sprongaantallen 1 t/m 4. Ze staan standaard allemaal
 aan en worden opgeslagen als vier booleans in `knightRouteSteps`, binnen de
@@ -33,7 +33,7 @@ van identieke stellingen per laag.
 
 ## Bediening en lifecycle
 
-Pointer Events ondersteunen muis en aanraking. Drie seconden is vereist; een
+Pointer Events ondersteunen muis en aanraking. Twee seconden is vereist; een
 korte tik blijft de gewone schaakbediening. Verplaatsing, meerdere vingers,
 annuleren, verbergen en schermwissels annuleren een lopende druk. De loslaatklik
 na een lange druk blijft geblokkeerd, ook na een schermwissel. Enter/spatie
@@ -48,7 +48,7 @@ opgeruimd bij afsluiten. De labels wisselen live tussen Nederlands en Engels.
 ## Proberen / overnemen
 
 Open `tests/fixtures/chess-ultra-mobile-preview.html`, kies Ultra en houd tijdens
-wit aan zet bijvoorbeeld g1 drie seconden vast. Probeer daarna b8 en verander
+wit aan zet bijvoorbeeld g1 twee seconden vast. Probeer daarna b8 en verander
 de vier toggles. De preview bevat ook de bestaande bordvergroting. De veegzone
 voor Take-back is in de echte app onzichtbaar; uitsluitend de testpreview toont
 de strook en voortgang. Toetsenbordfocus kan die bediening zichtbaar maken.
@@ -68,7 +68,7 @@ blijven een toestelcontrole; de touch-lifecycle is met events getest.
 
 ## English
 
-On the human turn, holding either side's knight for three seconds shows exact
+On the human turn, holding either side's knight for two seconds shows exact
 reachable destinations after 1–4 consecutive knight jumps. Four independent,
 default-ON settings persist on the device. Own routes use translucent red/blue/
 green/purple circles; opposing routes use orange/cyan/yellow/white squares.

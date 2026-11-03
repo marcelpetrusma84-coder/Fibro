@@ -1541,6 +1541,11 @@ window.FIBRO_EN = {
   "Muziek uit": "Music off",
   "Muziek aan": "Music on",
 
+// ---- Spellen: microfoon-tip en laden mislukt (chat.html, v256) ----
+  "Fibro mag je microfoon niet gebruiken. Tik op het slotje naast het adres (of op aA in Safari), zet Microfoon op Toestaan en tik dan nog eens op 🎤.": "Fibro isn't allowed to use your microphone. Tap the lock next to the address (or aA in Safari), set Microphone to Allow, then tap 🎤 again.",
+  "Fibro kon je microfoon niet openen. Tik nog eens op 🎤 en kies Toestaan.": "Fibro couldn't open your microphone. Tap 🎤 again and choose Allow.",
+  "Het spel kon niet laden. Controleer je internet en probeer het opnieuw.": "The game couldn't load. Check your internet and try again.",
+
 // ---- Belregels in de chat (belregel.js, v152) ----
   "📞 Oproep · niet opgenomen": "📞 Call · no answer",
   "📹 Video-oproep · niet opgenomen": "📹 Video call · no answer",

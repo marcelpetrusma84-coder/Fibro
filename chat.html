@@ -12,9 +12,9 @@
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
-<script src="huisregel.js?v=1"></script>
+<script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=49"></script>
+<script src="taal.js?v=50"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -397,7 +397,7 @@ window.veiligeUrl = function(v){
   import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel } from './crypto.js?v=182'
   import { maakSpelChatCrypto } from './spelchat-crypto.js?v=1'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
-  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon, bouwFilterKnop } from './bellen.js?v=159'
+  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon, bouwFilterKnop } from './bellen.js?v=160'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
   import { maakStickerkeuze } from './stickerkeuze.js?v=236'
   import { isCode as isEigenCode, zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel, fxCode, leesFx, stickerPakket, bewaarVriendSticker, zoekWeg } from './eigenstickers.js?v=162'
@@ -417,7 +417,13 @@ window.veiligeUrl = function(v){
   import { maakSpelVerbinding } from './spelverbinding.js?v=2'
   import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=2'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
-  import { toonTitelscherm, sluitTitelscherm, heeftTitelscherm, spelStart } from './titelscherm.js?v=6' // v251: titelscherm met muziek
+  import { toonTitelscherm, sluitTitelscherm, heeftTitelscherm, spelStart } from './titelscherm.js?v=6'
+  // v256 (foutmelding 3 nov 2026): lukt het laden van een spelbestand niet (even geen internet, of net een nieuwe
+  // versie op GitHub), dan na 1,2 seconde nog één keer, met een ander adres (sommige browsers onthouden een mislukte poging)
+  const laadModule = url => import(url).catch(async () => {
+    await new Promise(r => setTimeout(r, 1200))
+    return import(url + (url.includes('?') ? '&' : '?') + 'opnieuw=' + Date.now())
+  }) // v251: titelscherm met muziek
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -2422,6 +2428,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (!await titelKlaar || spelActief !== spelType || spelKanaal !== verbinding) return // v251
     spelStart(spelType) // v253: muziek stopt nu, of pas na het menu van het spel
 
+    try { // v256: kon het spel niet laden, dan een duidelijke melding in plaats van een leeg scherm
     if (spelType === 'botkaaseiren') await startBotKaasEieren()
     else if (spelType === 'vieroprij') await startVierOpEenRij()
     else if (spelType === 'schaken') await startSchaken()
@@ -2436,6 +2443,12 @@ console.timeLog('[chat] berichten', 'opgehaald')
     else if (spelType === 'pacman') await startEcto()
     else if (spelType === 'pinball') await startTwinSnakes()
     else if (spelType === 'shmup') await startNeonRaiders()
+    } catch (e) {
+      console.error('[spel] starten mislukt', e)
+      try { window.__fibroFoutmelder?.meld('fout', String(e && e.message || e).slice(0, 280), 'chat.html spel starten · ' + spelType, e && e.stack) } catch (x) {}
+      if (spelActief === spelType && spelKanaal === verbinding) toonSpelMelding(T('Het spel kon niet laden. Controleer je internet en probeer het opnieuw.'))
+      return
+    }
     if (spelActief !== spelType || spelKanaal !== verbinding) return // ondertussen gesloten of vervangen
 
     if (chatBeveiliging) spelKanaal.on('broadcast', { event: 'spelchat' }, async (msg) => {
@@ -2855,13 +2868,13 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Boter-Kaas-Eieren ───
   async function startBotKaasEieren() {
-    const m = await import('./bke-ui.js?v=239')
+    const m = await laadModule('./bke-ui.js?v=239')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
 
   // ─── Vier op een rij ───
   async function startVierOpEenRij() {
-    const m = await import('./vieroprij-ui.js?v=240')
+    const m = await laadModule('./vieroprij-ui.js?v=240')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
 
@@ -3030,7 +3043,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await import('./schaken-ui.js?v=260')
+    const m = await laadModule('./schaken-ui.js?v=260')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: fibroChessTest?.active ? schaakT('Testspeler · Zwart') : spelVriendUsername(), testMode:Boolean(fibroChessTest?.active), onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer : nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
     spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })
@@ -3038,7 +3051,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   async function startSchakenDrie(players) {
-    const m = await import('./schaken-drie-ui.js?v=31')
+    const m = await laadModule('./schaken-drie-ui.js?v=31')
     const testMode = Boolean(fibroChessTest?.active)
     const controller = m.start({ Bordgeluid, gameChannel:testMode ? null : spelKanaal, players, userId:testMode ? 'fibro-test-you' : huidigeUser.id, localPreview:testMode, testMode, testStream:fibroChessTest?.stream || null, onTestCameraChange:stream => { if (fibroChessTest?.active) fibroChessTest.stream = stream }, onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null })
     spelSchaakDrieController = controller
@@ -3053,7 +3066,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Pong ───
   async function startPong() {
-    const m = await import('./pong-ui.js?v=242')
+    const m = await laadModule('./pong-ui.js?v=242')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'pong' && !spelGestopt })
   }
 
@@ -3141,48 +3154,48 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Flappy Bird Multiplayer ───
   async function startFlappyBird() {
-    const m = await import('./flappy-ui.js?v=147')
+    const m = await laadModule('./flappy-ui.js?v=147')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'flappybird' && !spelGestopt })
   }
 
   // ─── Block It Multiplayer ───
 async function startBlockIt() {
-    const m = await import('./blockit-ui.js?v=151')
+    const m = await laadModule('./blockit-ui.js?v=151')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'breakout' && !spelGestopt })
 }
 
 // ─── Space Invaders Multiplayer ───
   async function startSpaceInvaders() {
-    const m = await import('./invaders-ui.js?v=147')
+    const m = await laadModule('./invaders-ui.js?v=147')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'spaceinvaders' && !spelGestopt })
   }
 
 // ─── The Swarm Multiplayer ───
   async function startSwarm() {
-    const m = await import('./swarm-ui.js?v=148')
+    const m = await laadModule('./swarm-ui.js?v=148')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'swarm' && !spelGestopt })
   }
 
   // ─── Runner & Gunner (vakje Endless Runner) ───
   // ─── Spookjes (vakje Pac-Man) ───
   async function startEcto() {
-    const m = await import('./ecto-ui.js?v=178')
+    const m = await laadModule('./ecto-ui.js?v=178')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'pacman' && !spelGestopt })
   }
 
   async function startRunnerGunner() {
-    const m = await import('./runner-gunner-ui.js?v=149')
+    const m = await laadModule('./runner-gunner-ui.js?v=149')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'endlessrunner' && !spelGestopt })
   }
 
   // ─── Twin Snakes (vakje Pinball) ───
   async function startTwinSnakes() {
-    const m = await import('./twin-snakes-ui.js?v=150')
+    const m = await laadModule('./twin-snakes-ui.js?v=150')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'pinball' && !spelGestopt })
   }
 
   async function startNeonRaiders() {
-    const m = await import('./neon-raiders-ui.js?v=223')
+    const m = await laadModule('./neon-raiders-ui.js?v=223')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'shmup' && !spelGestopt })
   }
 
@@ -3282,7 +3295,7 @@ async function startBlockIt() {
     // Wis private key uit localStorage
     localStorage.removeItem('fibro_privkey_' + huidigeUser.id)
     // Genereer nieuw keypair
-    const { genereerKeypair, slaPrivateKeyOp } = await import('./crypto.js?v=182')
+    const { genereerKeypair, slaPrivateKeyOp } = await laadModule('./crypto.js?v=182')
     const keypair = await genereerKeypair()
     slaPrivateKeyOp(huidigeUser.id, keypair.privateKeyB64)
     // Sla public key op in Supabase
@@ -3527,6 +3540,27 @@ async function startBlockIt() {
     hangOp().catch(() => {})
   }
 
+  // v256: lukt de microfoon in een spel niet, dan een tip bovenin het spel (7 seconden). Had je 'Niet toestaan'
+  // gekozen, dan moet je dat in de browser terugdraaien; anders is nog een keer op 🎤 tikken genoeg.
+  // (T in plaats van spelT: dan staat de Engelse tekst in taal-en.js, ook bij schaken)
+  async function toonMicrofoonTip() {
+    let stand = 'onbekend'
+    try { stand = (await navigator.permissions.query({ name: 'microphone' })).state } catch (e) {}
+    const tekst = stand === 'denied'
+      ? T('Fibro mag je microfoon niet gebruiken. Tik op het slotje naast het adres (of op aA in Safari), zet Microfoon op Toestaan en tik dan nog eens op 🎤.')
+      : T('Fibro kon je microfoon niet openen. Tik nog eens op 🎤 en kies Toestaan.')
+    const inhoud = document.getElementById('spelOverlay')
+    if (!inhoud) return
+    document.getElementById('spelMicTip')?.remove()
+    const tip = document.createElement('div')
+    tip.id = 'spelMicTip'
+    tip.setAttribute('role', 'status')
+    tip.textContent = tekst
+    tip.style.cssText = 'position:absolute;top:56px;left:50%;transform:translateX(-50%);z-index:60;max-width:min(90vw,360px);padding:10px 14px;border-radius:12px;background:rgba(20,10,40,0.95);border:1px solid #ffffff33;color:#fff;font-size:13px;line-height:1.4;text-align:center;box-shadow:0 6px 20px #0008;'
+    inhoud.appendChild(tip)
+    setTimeout(() => tip.remove(), 7000)
+  }
+
   window.toggleSpelMic = async function() {
     hervatGeluid()
     if (!getMediaStatus().localAudioAvailable) {
@@ -3538,6 +3572,7 @@ async function startBlockIt() {
         if (spelKanaal !== partij || !spelActief) return
         if (ok && !spelBelActief) startSpelBel(true).catch(()=>{})
         if (!ok) zetSpelVideoVoortgang('De microfoon staat uit. Je kunt verder spelen.', false)
+        if (!ok) toonMicrofoonTip() // v256: zeggen hoe je de microfoon toestaat (foutmelding 3 nov 2026)
       } finally { knop.disabled = false; syncSpelMedia() }
       return
     }
@@ -3602,7 +3637,7 @@ async function startBlockIt() {
     startMeldingen()
   }
 </script>
-<script type="module">if (new URLSearchParams(location.search).get('test') !== 'FIBRO TEST') { const { startVriendverzoekLuisteraar } = await import('./vriendverzoek.js?v=95'); startVriendverzoekLuisteraar() }</script>
+<script type="module">if (new URLSearchParams(location.search).get('test') !== 'FIBRO TEST') { const { startVriendverzoekLuisteraar } = await import('./vriendverzoek.js?v=95').catch(() => new Promise(r => setTimeout(r, 1500)).then(() => import('./vriendverzoek.js?v=95&opnieuw=1'))); startVriendverzoekLuisteraar() }</script>
 
 <script type="module">
 import { stuurRapport } from './rapport.js?v=96'
@@ -3697,7 +3732,7 @@ async function verstuurMelding(reden) {
 </script>
 <script src="swipe.js?v=96"></script>
 <script src="menuschuif.js?v=1"></script>
-<script type="module">if (new URLSearchParams(location.search).get('test') !== 'FIBRO TEST') { const { startOngelezen } = await import('./ongelezen.js?v=168'); startOngelezen() }</script>
-<script type="module">if (new URLSearchParams(location.search).get('test') !== 'FIBRO TEST') await import('./blokkade.js?v=2')</script>
+<script type="module">if (new URLSearchParams(location.search).get('test') !== 'FIBRO TEST') { const { startOngelezen } = await import('./ongelezen.js?v=168').catch(() => new Promise(r => setTimeout(r, 1500)).then(() => import('./ongelezen.js?v=168&opnieuw=1'))); startOngelezen() }</script>
+<script type="module">if (new URLSearchParams(location.search).get('test') !== 'FIBRO TEST') await import('./blokkade.js?v=2').catch(() => new Promise(r => setTimeout(r, 1500)).then(() => import('./blokkade.js?v=2&opnieuw=1')))</script>
 </body>
 </html>

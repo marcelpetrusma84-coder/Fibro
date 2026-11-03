@@ -56,6 +56,16 @@ de strook en voortgang. Toetsenbordfocus kan die bediening zichtbaar maken.
 Normaal mergen en statisch deployen. Geen SQL, API-sleutels of nieuwe pakketten
 nodig. Alle drie de nieuwe modules `schaak-paard*.js` moeten worden meegeleverd.
 
+De integratie is gebaseerd op Marcels main **3362283**, inclusief zijn postbus-
+en pushwijzigingen. Alle **88 Node-testbestanden** slagen in chess, security, UI,
+onboarding, Neon, sync, foutmelder, Block It, bellen en dammen. Nieuwe tests
+controleren exacte sprongaantallen, eigen/vijandelijk paard, captures en
+koningsveiligheid, overlappende routes, alle toggles, lange druk en annuleren,
+schermwissels na activering, stale FEN/revisies, hertekenen, taal en opruimen.
+Echte muis-holds in de browser tonen beide vormen en kleuren; de partij blijft
+ongewijzigd en alle 32 beginstukken blijven zichtbaar. Fysieke telefoongebaren
+blijven een toestelcontrole; de touch-lifecycle is met events getest.
+
 ## English
 
 On the human turn, holding either side's knight for three seconds shows exact
@@ -72,3 +82,6 @@ preserve normal taps, suppress accidental release clicks, and cancel safely on
 movement/multitouch/lifecycle changes. FEN/revision guards reject stale work.
 The prior invisible-production swipe correction is retained. No database,
 credentials or dependency changes are required.
+Based on main `3362283`, including the latest mailbox/push changes; all 88 Node
+test files pass. Real browser holds confirmed both palettes/shapes and preserved
+pieces. Physical phone gestures remain a device smoke test.

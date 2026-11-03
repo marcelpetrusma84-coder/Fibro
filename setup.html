@@ -36,7 +36,7 @@
 <script type="module" src="setup-shortcuts.js?v=4"></script>
 <script type="module">
 // v248: Fibro op het beginscherm zetten (alleen als Fibro nog niet als app draait)
-import { toestel, openBeginschermUitleg } from './beginscherm.js?v=1'
+import { toestel, openBeginschermUitleg } from './beginscherm.js?v=2'
 const T = window.T || ((s) => s)
 const t = toestel(), blok = document.getElementById('setup-beginscherm')
 if (blok && !t.app && (t.ios || t.android)) {

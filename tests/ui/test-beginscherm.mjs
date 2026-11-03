@@ -32,7 +32,7 @@ assert.ok(!/https?:\/\//.test(bs.replace(/\/\/.*$/gm, '')), 'geen plaatjes of be
 assert.match(bs, /if \(soort === 'iphone'\) \{\n      lijst\.appendChild\(el\('li', '', T\('Log opnieuw in\./, 'opnieuw inloggen alleen op de iPhone (eigen opslag)')
 
 // 3. Home: menu en tip
-assert.match(index, /function openAppUitleg\(\) \{\n  import\('\.\/beginscherm\.js\?v=1'\)\.then\(m => m\.openBeginschermUitleg\(\)\)/)
+assert.match(index, /function openAppUitleg\(\) \{\n  import\('\.\/beginscherm\.js\?v=2'\)\.then\(m => m\.openBeginschermUitleg\(\)\)/)
 assert.match(index, /<div id="beginschermTip" style="padding:0 16px"><\/div>/)
 assert.match(index, /if \(!m\.iphoneZonderApp\(\)\) return/)
 assert.match(index, /Date\.now\(\) - Number\(localStorage\.getItem\('fibro_tip_beginscherm'\) \|\| 0\) < 7 \* 86400000/, 'weggetikt: een week niet')
@@ -61,7 +61,7 @@ console.log('ok: Fibro op het beginscherm, met tekeningen; Meldingen aanzetten o
   const login = lees('login.html'), setup = lees('setup.html'), bs2 = lees('beginscherm.js')
   assert.match(login, /<div id="reg-beginscherm" hidden/, 'de kaart staat standaard verborgen')
   assert.ok(login.indexOf('id="reg-beginscherm"') < login.indexOf('id="reg-form"'), 'boven het formulier')
-  assert.match(login, /import \{ iphoneZonderApp, openBeginschermUitleg, toestel \} from '\.\/beginscherm\.js\?v=1'/)
+  assert.match(login, /import \{ iphoneZonderApp, openBeginschermUitleg, toestel \} from '\.\/beginscherm\.js\?v=2'/)
   assert.match(login, /if \(kaart && \(iphoneZonderApp\(\) \|\| androidInBrowser\) && !weg\) \{/, 'op een iPhone in Safari of Android in de browser')
   assert.match(login, /androidInBrowser = t\.android && !t\.app && !\(window\.FibroApk && FibroApk\.inApp\(\)\)/, 'Android: niet in de app of de oude APK')
   assert.match(login, /T\('📲 Gebruik je Android\?'\)/, 'Android: eigen titel')

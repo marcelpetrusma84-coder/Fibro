@@ -241,11 +241,14 @@ async function init() {
   const data = (rows && rows.length > 0) ? rows[0] : null
   if (error || data === null) { toonFout(); return }
   uitnodigerData = data
-  const { data: profiel } = await supabase
-    .from('profielen_publiek')
-    .select('username, avatar_url')
-    .eq('id', data.created_by)
-    .single()
+  // Bugtest 3 nov 2026: naam en avatar van wie uitnodigt via uitnodiger_van_invite (alleen met een geldige uitnodiging).
+  // De oude weg (profielen_publiek) gaf iedereen zonder inloggen de lijst van alle gebruikers; die gaat dicht met
+  // sql/profielen-publiek-dicht.sql. Zolang die nog niet is uitgevoerd, valt dit terug op de oude weg.
+  let { data: uitnodigers, error: uitnodigerFout } = await supabase.rpc('uitnodiger_van_invite', { token_in: token })
+  let profiel = Array.isArray(uitnodigers) ? uitnodigers[0] || null : null
+  if (uitnodigerFout) {
+    profiel = (await supabase.from('profielen_publiek').select('username, avatar_url').eq('id', data.created_by).single()).data
+  }
   document.getElementById('uitnodigerNaam').textContent = profiel?.username || T('Iemand')
   document.getElementById('uitnodigerAvatar').textContent = profiel?.avatar_url || '👤'
   toonSpelUitdaging(profiel?.username || T('Iemand'))

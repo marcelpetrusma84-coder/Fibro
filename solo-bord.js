@@ -214,7 +214,7 @@ export function schaakBot({ stuur, niveau, isDicht, motor: Schaak }) {
     const plan = () => { timer = setTimeout(zetNu, Math.max(0, wacht - (performance.now() - begin))) }
     deadline = setTimeout(zetNu, Math.max(1000, thinkingMs))
     try {
-      worker = new Worker(new URL('./schaak-worker.js?v=1', import.meta.url), { type:'module' })
+      worker = new Worker(new URL('./schaak-worker.js?v=2', import.meta.url), { type:'module' })
       worker.onmessage = ({ data }) => { if (data) beste = data; worker?.terminate(); worker = null; plan() }
       worker.onerror = () => { worker?.terminate(); worker = null; plan() }
       worker.postMessage({ staat:kopieStaat(staat), niveau })

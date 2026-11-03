@@ -1013,6 +1013,9 @@ tools/nep-supabase.sql   kleine nabootsing van de database (PostgreSQL 16, nep-g
                          ben_ik_moderator) plus bescherm_online (sql/profielvelden.sql) en de kolommen
                          laatst_gezien en mood. Daarna o.a. een geblokkeerd account (hartslag moet nog lukken).
 tools/checkhtml.py       node --check op alle inline scripts: checkhtml.py <uitmap> <html...>
+tools/proef228.py        bugtest 3 nov 2026: spelgeluid met twee echte chat.html's (nep-camera/microfoon, nep-Realtime uit proef94):
+                         speler 2 tikt op 📹/🎤 bij dammen, BKE, vier op een rij, Neo Paddle, Block It -> verbonden en geluid;
+                         microfoonknop bij schaken uit/aan. Oude map (170862f): A1-A3 en B1 MIS. python3 -I proef228.py <map>
 tools/*.js               console-testjes voor Marcel (alert); ?v=-nummers daarin kunnen verouderd zijn
 
 Opzet nabootsing: Chromium via Playwright; www/Fibro -> symlink naar de map;

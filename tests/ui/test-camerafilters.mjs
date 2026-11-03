@@ -59,7 +59,7 @@ assert.ok(!/zetNieuwsTekst|nieuwsTekst|fibro-nieuwsfilter|cf-nieuws/.test(cf), '
 assert.ok(!/zetNieuwsfilterTekst|nieuwsTekst\(\)/.test(bellen))
 
 // 5. bellen.js geeft de namen door (jij en wie je belt) en laadt de nieuwe versie
-assert.match(bellen, /camerafilters\.js\?v=3/)
+assert.match(bellen, /camerafilters\.js\?v=4/)
 assert.match(bellen, /supabase\.from\('profiles'\)\.select\('id, username'\)\.in\('id', ontbreekt\)/)
 assert.equal((bellen.match(/\n\s+werkNieuwsNamen\(\)\n/g) || []).length, 4, 'bij initBellen, belOp, een oproep en zetVriendId')
 for (const f of ['chat.html', 'bellen.html', 'bel-luisteraar.js']) assert.match(readFileSync(new URL('../../' + f, import.meta.url), 'utf8'), /bellen\.js\?v=1(59|6\d)/, f)

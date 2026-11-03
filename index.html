@@ -2343,7 +2343,7 @@ async function openBewaren() {
 // v178: uitleg om Fibro als app op het beginscherm te zetten. v248: met tekeningen, per toestel en iOS-versie
 // (beginscherm.js; ook gebruikt door Profiel > Meldingen aanzetten).
 function openAppUitleg() {
-  import('./beginscherm.js?v=1').then(m => m.openBeginschermUitleg()).catch(e => console.warn('[beginscherm]', e))
+  import('./beginscherm.js?v=2').then(m => m.openBeginschermUitleg()).catch(e => console.warn('[beginscherm]', e))
 }
 
 // v248: tip voor wie Fibro op de iPhone in Safari gebruikt (niet als app): dan krijg je geen meldingen.
@@ -2352,7 +2352,7 @@ async function toonBeginschermTip() {
   const plek = document.getElementById('beginschermTip')
   if (!plek) return
   let m
-  try { m = await import('./beginscherm.js?v=1') } catch (e) { return }
+  try { m = await import('./beginscherm.js?v=2') } catch (e) { return }
   if (!m.iphoneZonderApp()) return
   try { if (Date.now() - Number(localStorage.getItem('fibro_tip_beginscherm') || 0) < 7 * 86400000) return } catch (e) {}
   const kaart = document.createElement('div')
@@ -2631,7 +2631,7 @@ if ('serviceWorker' in navigator) {
 </script>
 <script src="swipe.js?v=96"></script>
 <script src="menuschuif.js?v=1"></script>
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=202"; startBelLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=203"; startBelLuisteraar()</script>
 <script type="module">import { beschermOpslag } from "./opslag.js?v=2"; beschermOpslag()</script>
 <script type="module" src="geluidregelaar.js?v=180"></script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>

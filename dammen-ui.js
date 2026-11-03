@@ -11,6 +11,7 @@
 //     veldnummers, tafelachtergrond, beweging en geluid. Bewaard op dit toestel (localStorage 'fibro_dammen_inst');
 //   - eigen geluiden (dammen-geluid.js); tegen een vriend een webcamknop (de webcams staan als rondjes bovenin,
 //     dat regelt chat.html).
+// v149: de webcamrondjes zijn groter (120 px), het bord houdt daar rekening mee.
 // Het protocol over het spelkanaal is hetzelfde gebleven (zet, vraag-stand, stand, opnieuw), dus een vriend met een
 // oudere Fibro kan gewoon meespelen. Nieuw is alleen 'einde: true' in een zet die de partij beëindigt.
 import { geluid, geluidAan, zetGeluid, ontgrendel } from './dammen-geluid.js?v=1'
@@ -182,7 +183,7 @@ export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     // ── Maat ──
     function maat() {
         const breed = Math.min(inhoud.clientWidth || window.innerWidth, window.innerWidth) - 28
-        const camera = overlay && overlay.classList.contains('dam-video-modus') ? 118 : 0
+        const camera = overlay && overlay.classList.contains('dam-video-modus') ? 152 : 0
         const hoog = window.innerHeight - 250 - camera
         const ruimte = Math.max(220, Math.min(breed, hoog))
         cel = Math.max(24, Math.min(58, Math.floor(ruimte / 10.7)))

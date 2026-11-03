@@ -193,20 +193,20 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 .spel-audio-start[hidden] { display:none; }
 .spel-video-vak.is-seen { border-color:#55ef9e; box-shadow:inset 0 0 0 2px #55ef9e88,inset 0 0 24px #0009,0 0 22px #3de88770; }
 .spel-video-vak.is-seen::after { content:'Visible to friend'; position:absolute; z-index:3; top:8px; right:8px; padding:4px 8px; border-radius:999px; background:#103e2ed9; color:#baffd8; font-size:10px; font-weight:800; letter-spacing:.02em; }
-.spel-overlay.dam-video-modus #spelInhoud { padding-top:122px; box-sizing:border-box; }
-.spel-overlay.dam-video-modus .spel-video-vak { display:block; position:absolute; z-index:6; top:12px; width:90px; height:90px; min-height:0; margin:0; flex:none; overflow:visible; border:3px solid rgba(255,255,255,.28); border-radius:50%; background:radial-gradient(circle at 40% 35%,#26324a,#0b1220); box-shadow:0 6px 16px #0008; }
-.spel-overlay.dam-video-modus #spelVideoAnder { left:calc(50% - 99px); }
-.spel-overlay.dam-video-modus #spelVideoEigen { left:calc(50% + 9px); }
+.spel-overlay.dam-video-modus #spelInhoud { padding-top:156px; box-sizing:border-box; }
+.spel-overlay.dam-video-modus .spel-video-vak { display:block; position:absolute; z-index:6; top:12px; width:120px; height:120px; min-height:0; margin:0; flex:none; overflow:visible; border:3px solid rgba(255,255,255,.28); border-radius:50%; background:radial-gradient(circle at 40% 35%,#26324a,#0b1220); box-shadow:0 6px 16px #0008; }
+.spel-overlay.dam-video-modus #spelVideoAnder { left:calc(50% - 132px); }
+.spel-overlay.dam-video-modus #spelVideoEigen { left:calc(50% + 12px); }
 .spel-overlay.dam-video-modus .spel-video-vak video { border-radius:50%; width:100%; height:100%; }
 .spel-overlay.dam-video-modus .spel-video-vak .video-etiket { left:50%; bottom:-21px; transform:translateX(-50%); max-width:110px; padding:2px 8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; }
 .spel-overlay.dam-video-modus .spel-video-wachten { padding:0; font-size:0; border-radius:50%; }
-.spel-overlay.dam-video-modus .spel-video-wachten::before { content:'📷'; font-size:26px; opacity:.55; }
+.spel-overlay.dam-video-modus .spel-video-wachten::before { content:'📷'; font-size:34px; opacity:.55; }
 .spel-overlay.dam-video-modus .spel-video-vak.is-seen { border-color:#55ef9e; box-shadow:0 0 0 2px #55ef9e55,0 0 18px #3de88780; }
 .spel-overlay.dam-video-modus .spel-video-vak.is-seen::after { content:none; }
 .spel-overlay.dam-video-modus .cf-knop { position:absolute; right:-6px; bottom:-4px; z-index:4; width:30px !important; height:30px !important; font-size:14px !important; }
 .spel-overlay.dam-video-modus .cf-paneel { position:fixed !important; top:120px !important; bottom:auto !important; }
 .spel-overlay.dam-video-modus .spel-titel-bar { display:none; }
-@media (max-width:360px) { .spel-overlay.dam-video-modus .spel-video-vak { top:46px; } .spel-overlay.dam-video-modus #spelInhoud { padding-top:150px; } }
+@media (max-width:360px) { .spel-overlay.dam-video-modus .spel-video-vak { width:104px; height:104px; } .spel-overlay.dam-video-modus #spelVideoAnder { left:calc(50% - 114px); } .spel-overlay.dam-video-modus #spelInhoud { padding-top:140px; } }
 .spel-overlay.sch-video-modus { justify-content:stretch; padding:53px 0 8px; overflow-y:auto; overscroll-behavior:contain; }
 .spel-overlay.sch-video-modus .spel-video-vak { display:block; }
 .spel-overlay.sch-video-modus #spelInhoud { flex:0 0 auto; width:100% !important; height:auto !important; min-height:0; }
@@ -421,7 +421,7 @@ window.veiligeUrl = function(v){
   import * as Schaak from './schaak.js?v=95'
   import * as Dammen from './dammen.js?v=95'
   import * as Bordgeluid from './bordgeluid.js?v=201'
-  import * as DammenUI from './dammen-ui.js?v=148'
+  import * as DammenUI from './dammen-ui.js?v=149'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
@@ -2310,7 +2310,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ander accepteert. Spellen die nog in chat.html zitten hoeven niets.
   const SPEL_BESTAND = {
     botkaaseiren: './bke-ui.js?v=239',
-    dammen: './dammen-ui.js?v=148',
+    dammen: './dammen-ui.js?v=149',
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
     schaken: './schaken-ui.js?v=260',

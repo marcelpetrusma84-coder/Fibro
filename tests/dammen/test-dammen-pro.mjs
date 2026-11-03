@@ -87,18 +87,18 @@ assert.ok(!/ctx\.filter/.test(ui), 'geen ctx.filter (werkt niet op de iPhone)')
 const en = lees('taal-en.js')
 for (const m of ui.matchAll(/\bT\('((?:[^'\\]|\\.)*)'/g)) assert.ok(en.includes(JSON.stringify(m[1]) + ':'), 'Engels voor: ' + m[1])
 
-// 7. chat.html: webcams bij dammen als twee rondjes van 90 px bovenin
+// 7. chat.html: webcams bij dammen als twee rondjes van 120 px bovenin
 const chat = lees('chat.html')
-assert.match(chat, /dammen-ui\.js\?v=148/)
+assert.match(chat, /dammen-ui\.js\?v=14\d/)
 assert.match(chat, /function isVideoSpel\(\) \{\n    return spelActief === 'schaken' \|\| spelActief === 'dammen'/)
 assert.match(chat, /overlay\.classList\.toggle\('dam-video-modus', toon && spelActief === 'dammen'\)/)
-assert.match(chat, /\.dam-video-modus \.spel-video-vak \{[^}]*width:90px; height:90px;[^}]*border-radius:50%/)
+assert.match(chat, /\.dam-video-modus \.spel-video-vak \{[^}]*width:120px; height:120px;[^}]*border-radius:50%/)
 assert.match(chat, /classList\.remove\('sch-video-modus', 'dam-video-modus'\)/, 'rondjes weg bij ophangen')
 
 // 8. spel.html en solo.js: de nieuwe bot met expert
 const solo = lees('solo.js')
 assert.match(solo, /import \{ damBot \} from '\.\/dam-bot\.js\?v=1'/)
-assert.match(solo, /dammen-ui\.js\?v=148',\s+niveaus:\[\.\.\.NIVEAUS, 'expert'\]/)
+assert.match(solo, /dammen-ui\.js\?v=14\d',\s+niveaus:\[\.\.\.NIVEAUS, 'expert'\]/)
 assert.match(lees('spel.html'), /expert: 'Expert'/)
 assert.match(lees('dammen-worker.js'), /dammen-computer\.js\?v=1/)
 

@@ -89,7 +89,7 @@ for (const m of ui.matchAll(/\bT\('((?:[^'\\]|\\.)*)'/g)) assert.ok(en.includes(
 
 // 7. chat.html: webcams bij dammen als twee rondjes van 120 px bovenin
 const chat = lees('chat.html')
-assert.match(chat, /dammen-ui\.js\?v=14\d/)
+assert.match(chat, /dammen-ui\.js\?v=1[45]\d/)
 assert.match(chat, /function isVideoSpel\(\) \{\n    return spelActief === 'schaken' \|\| spelActief === 'dammen'/)
 assert.match(chat, /overlay\.classList\.toggle\('dam-video-modus', toon && spelActief === 'dammen'\)/)
 assert.match(chat, /\.dam-video-modus \.spel-video-vak \{[^}]*width:120px; height:120px;[^}]*border-radius:50%/)
@@ -98,7 +98,7 @@ assert.match(chat, /classList\.remove\('sch-video-modus', 'dam-video-modus'\)/, 
 // 8. spel.html en solo.js: de nieuwe bot met expert
 const solo = lees('solo.js')
 assert.match(solo, /import \{ damBot \} from '\.\/dam-bot\.js\?v=1'/)
-assert.match(solo, /dammen-ui\.js\?v=14\d',\s+niveaus:\[\.\.\.NIVEAUS, 'expert'\]/)
+assert.match(solo, /dammen-ui\.js\?v=1[45]\d',\s+niveaus:\[\.\.\.NIVEAUS, 'expert'\]/)
 assert.match(lees('spel.html'), /expert: 'Expert'/)
 assert.match(lees('dammen-worker.js'), /dammen-computer\.js\?v=1/)
 
@@ -148,3 +148,17 @@ const chat5 = lees('chat.html')
 assert.match(chat5, /inp\.addEventListener\('focus', function \(\) \{[\s\S]{0,140}zijKnoppen\(false\)/)
 assert.match(chat5, /inp\.addEventListener\('blur', function \(\) \{ zijKnoppen\(true\) \}\)/)
 console.log('opzij schuiven: ok')
+
+// 15. Opzij schuiven alleen op een touchscherm, en daarna echt weg (anders houdt Safari de breedte vast)
+const chat6 = lees('chat.html')
+assert.match(chat6, /matchMedia\('\(hover: none\) and \(pointer: coarse\)'\)/)
+assert.match(chat6, /if \(!opTouch\) return/)
+assert.match(chat6, /b\.style\.display = 'none' \}, 240\)/)
+console.log('balk op iPhone: ok')
+
+// 16. Geslagen met de webcamrondjes: ook een geluidje
+const ui3 = lees('dammen-ui.js')
+assert.match(ui3, /dammen-geluid\.js\?v=2/)
+assert.match(ui3, /if \(wie === 'ik' && overlay && overlay\.classList\.contains\('dam-video-modus'\)\) geluid\.geslagen\(geslagen\)/)
+assert.match(lees('dammen-geluid.js'), /geslagen\(aantal = 1\) \{/)
+console.log('geluidje bij geslagen: ok')

@@ -406,7 +406,7 @@ export const SOLO_SPELLEN = {
   botkaaseiren: { naam: 'Tic-Tac-Toe',   icon: '⭕', bestand: './bke-ui.js?v=239',      bot: bkeBot },
   vieroprij:    { naam: 'Four in a Row', icon: '🔴', bestand: './vieroprij-ui.js?v=240', bot: vorBot },
   schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=260',  niveaus:[...NIVEAUS, 'ultra'], bot: opties => opties.niveau === 'ultra' ? schaakUltraBot(opties) : schaakBot(opties), motor: './schaak.js?v=95', motorNaam: 'Schaak' },
-  dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=149',   niveaus:[...NIVEAUS, 'expert'], bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
+  dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=150',   niveaus:[...NIVEAUS, 'expert'], bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
   // 30 okt 2026: Neo Paddle v2 (blokjes en power-ups) en levels voor alleen (spel.html toont een knop 🧱 Levels).
   pong:         { naam: 'Neo Paddle',    icon: '🏓', bestand: './pong-ui.js?v=242',     bot: pongBot, levels: './neopaddle-levels.js?v=1' },
   // Ghost Tag heeft zelf al een computerspookje: zonder kanaal speel je daartegen.

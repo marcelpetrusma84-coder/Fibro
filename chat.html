@@ -425,7 +425,7 @@ window.veiligeUrl = function(v){
   import * as Schaak from './schaak.js?v=95'
   import * as Dammen from './dammen.js?v=95'
   import * as Bordgeluid from './bordgeluid.js?v=201'
-  import * as DammenUI from './dammen-ui.js?v=149'
+  import * as DammenUI from './dammen-ui.js?v=150'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
@@ -2314,7 +2314,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ander accepteert. Spellen die nog in chat.html zitten hoeven niets.
   const SPEL_BESTAND = {
     botkaaseiren: './bke-ui.js?v=239',
-    dammen: './dammen-ui.js?v=149',
+    dammen: './dammen-ui.js?v=150',
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
     schaken: './schaken-ui.js?v=260',
@@ -2727,19 +2727,40 @@ console.timeLog('[chat] berichten', 'opgehaald')
     stuurKnop.onclick = function () { verstuurInvoer() }
     rij.appendChild(inp)
     rij.appendChild(stuurKnop)
-    // v3 nov: tijdens het typen schuiven 🎨 en 😊 opzij, zodat het tekstveld bijna de hele breedte krijgt
+    // v3 nov: tijdens het typen schuiven 🎨 en 😊 opzij, zodat het tekstveld bijna de hele breedte krijgt.
+    // Alleen op een touchscherm (telefoon, tablet); op de pc blijft de balk zoals hij is.
+    // Na het wegschuiven gaan ze echt weg (display:none): Safari laat een knop anders zijn breedte houden.
+    const opTouch = typeof matchMedia === 'function' && matchMedia('(hover: none) and (pointer: coarse)').matches
+    let zijTimer = null
     function zijKnoppen(zichtbaar) {
-      for (const b of [knop, emojiKnop]) {
+      if (!opTouch) return
+      clearTimeout(zijTimer)
+      const knoppen = [knop, emojiKnop]
+      const zet = aan => {
+        for (const b of knoppen) {
+          b.style.maxWidth = aan ? '64px' : '0px'
+          b.style.minWidth = '0px'
+          b.style.paddingLeft = b.style.paddingRight = aan ? '10px' : '0px'
+          b.style.borderWidth = aan ? '1px' : '0px'
+          b.style.marginRight = aan ? '0px' : '-6px'
+          b.style.opacity = aan ? (b === knop && !spelStickerMag ? '0.35' : '1') : '0'
+        }
+      }
+      for (const b of knoppen) {
         b.style.overflow = 'hidden'
         b.style.whiteSpace = 'nowrap'
+        b.style.flexShrink = '0'
         b.style.transition = 'max-width .22s ease, padding .22s ease, margin .22s ease, opacity .18s ease, border-width .22s ease'
-        b.style.maxWidth = zichtbaar ? '64px' : '0px'
-        b.style.paddingLeft = b.style.paddingRight = zichtbaar ? '10px' : '0px'
-        b.style.borderWidth = zichtbaar ? '1px' : '0px'
-        b.style.marginRight = zichtbaar ? '0px' : '-6px'
-        b.style.opacity = zichtbaar ? (b === knop && !spelStickerMag ? '0.35' : '1') : '0'
         b.tabIndex = zichtbaar ? 0 : -1
         if (zichtbaar) b.removeAttribute('aria-hidden'); else b.setAttribute('aria-hidden', 'true')
+      }
+      if (zichtbaar) {
+        for (const b of knoppen) b.style.display = ''
+        void rij.offsetWidth                 // eerst terug in beeld (nog smal), dan uitschuiven
+        zet(true)
+      } else {
+        zet(false)
+        zijTimer = setTimeout(() => { for (const b of knoppen) b.style.display = 'none' }, 240)
       }
     }
     inp.addEventListener('focus', function () {
@@ -2747,7 +2768,6 @@ console.timeLog('[chat] berichten', 'opgehaald')
       zijKnoppen(false)
     })
     inp.addEventListener('blur', function () { zijKnoppen(true) })
-    zijKnoppen(true)
     wrap.appendChild(laag)
     wrap.appendChild(paneel)
     wrap.appendChild(emojiPaneel)

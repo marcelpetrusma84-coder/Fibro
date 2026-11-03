@@ -1019,6 +1019,11 @@ tools/proef228.py        bugtest 3 nov 2026: spelgeluid met twee echte chat.html
 tools/proef230.py        snelheid op een trage telefoon (CPU 4x trager, trage 4G, gzip zoals GitHub Pages), eerste bezoek of
                          met 'warm' het tweede. 3 nov 2026: eerste bezoek chat 4,1 s (was 4,5), tweede bezoek overal ~1 s.
                          python3 -I proef230.py <map> [rondes] [pagina,pagina] [warm]
+alle-tests.mjs           alle Node-tests in een keer (ook proef46/50/229 als typescript er is); GitHub draait hem bij elke
+                         pull request (.github/workflows/tests.yml), samen met proef228, proef231 en controleer-versies.
+tools/controleer-versies.mjs  krijgt elk veranderd script met ?v= ook een nieuw nummer? node ... <basis> [kop]
+tools/servercontrole.py  draait de STUN/TURN-server bij TransIP? (UDP, TCP, TURN 401). GitHub: elke 4 uur
+                         (.github/workflows/servercontrole.yml).
 tools/*.js               console-testjes voor Marcel (alert); ?v=-nummers daarin kunnen verouderd zijn
 
 Opzet nabootsing: Chromium via Playwright; www/Fibro -> symlink naar de map;

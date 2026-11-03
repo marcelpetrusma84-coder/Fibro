@@ -1,0 +1,59 @@
+# Automatische tests (3 nov 2026): bij elke pull request en elke wijziging op main draaien alle tests van Fibro.
+# Op de pull request zie je dan een groen vinkje (alles goed) of een rood kruis (iets mis; klik voor de uitleg).
+#  - Tests (Node): alle tests in tests/ (node tests/alle-tests.mjs), plus bij een pull request de controle of elk
+#    veranderd script ook een nieuw ?v=-nummer kreeg (tests/tools/controleer-versies.mjs).
+#  - Browsertests: twee echte Fibro's in Chrome met nep-camera en nep-server: bellen en webcam in 5 spellen
+#    (tests/tools/proef228.py) en de postbus als je niet tegelijk online bent (tests/tools/proef231.py).
+name: Tests
+
+on:
+  pull_request: {}
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  node:
+    name: Tests (Node)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Typescript (voor de tests van de pushfunctie)
+        run: npm install --no-save --no-package-lock typescript@5
+      - name: Alle tests
+        run: node tests/alle-tests.mjs
+      - name: Nieuwe ?v=-nummers bij veranderde scripts
+        if: github.event_name == 'pull_request'
+        run: node tests/tools/controleer-versies.mjs "origin/${{ github.base_ref }}" HEAD
+
+  browser:
+    name: Browsertests (bellen in spellen, postbus)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Playwright en Chrome
+        run: |
+          pip install playwright==1.*
+          python -m playwright install --with-deps chromium
+      - name: Bellen en webcam met twee spelers (5 spellen)
+        run: python -I tests/tools/proef228.py .
+      - name: Postbus (nooit tegelijk online)
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef231.py .

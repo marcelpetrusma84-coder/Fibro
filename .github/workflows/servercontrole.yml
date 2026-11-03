@@ -1,0 +1,26 @@
+# Servercontrole (3 nov 2026): draait de eigen STUN/TURN-server van Fibro bij TransIP nog? (tests/tools/servercontrole.py)
+# Elke 4 uur. Gaat het mis, dan wordt de run rood en stuurt GitHub een mail. De dagelijkse foutcontrole (geplande taak
+# van Claude, 7:32) noemt het ook in zijn overzicht. Met de hand: Actions > Servercontrole > Run workflow.
+# (Niet om 03:30 UTC: dan herstart de server soms voor updates, zie server/LEESMIJ.txt.)
+name: Servercontrole
+
+on:
+  schedule:
+    - cron: '13 */4 * * *'   # 00:13, 04:13, 08:13, 12:13, 16:13 en 20:13 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  server:
+    name: STUN en TURN bij TransIP
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: tests/tools/servercontrole.py
+          sparse-checkout-cone-mode: false
+      - name: Server bereikbaar?
+        run: python3 -I tests/tools/servercontrole.py

@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=54"></script>
+<script src="taal.js?v=55"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -422,7 +422,7 @@ window.veiligeUrl = function(v){
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { laadWallpaper } from './wallpaper.js?v=95'
   import { supabase } from './supabase.js?v=95'
-  import { initSync, syncMetVriend } from './sync.js?v=250'
+  import { initSync, syncMetVriend } from './sync.js?v=251'
   import { isOnline as vriendIsOnline } from './paren.js?v=2'
   import { startHeartbeat } from './heartbeat.js?v=117'
   import { startMeldingen, buzzRustig } from './meldingen.js?v=187'
@@ -439,9 +439,7 @@ window.veiligeUrl = function(v){
   import { speel as speelFx, speelGeluid as speelFxGeluid, naamVan as fxNaam } from './stickerfx.js?v=235'
   import { stuurRapport } from './rapport.js?v=96'
   import * as Schaak from './schaak.js?v=95'
-  import * as Dammen from './dammen.js?v=95'
   import * as Bordgeluid from './bordgeluid.js?v=201'
-  import * as DammenUI from './dammen-ui.js?v=150'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
@@ -451,13 +449,20 @@ window.veiligeUrl = function(v){
   import { maakSpelVerbinding } from './spelverbinding.js?v=2'
   import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=2'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
-  import { toonTitelscherm, sluitTitelscherm, heeftTitelscherm, spelStart } from './titelscherm.js?v=6'
   // v256 (foutmelding 3 nov 2026): lukt het laden van een spelbestand niet (even geen internet, of net een nieuwe
   // versie op GitHub), dan na 1,2 seconde nog één keer, met een ander adres (sommige browsers onthouden een mislukte poging)
   const laadModule = url => import(url).catch(async () => {
     await new Promise(r => setTimeout(r, 1200))
     return import(url + (url.includes('?') ? '&' : '?') + 'opnieuw=' + Date.now())
   }) // v251: titelscherm met muziek
+  // v3 nov (sneller): het titelscherm (plaatjes en muziek, ~115 kB) zit niet meer in het eerste laden van de chat. Het
+  // komt binnen zodra de pagina rustig is, ruim voordat iemand een spel start; is het er bij de start nog niet, dan
+  // wacht het spel er even op.
+  let titelModule = null
+  const laadTitelscherm = () => titelModule ? Promise.resolve(titelModule)
+    : laadModule('./titelscherm.js?v=6').then(m => (titelModule = m))
+  const laadRustig = f => ('requestIdleCallback' in window ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 2500))
+  laadRustig(() => laadTitelscherm().catch(() => {}))
   pasBlokstijlToe()
 
   var huidigeUser = null
@@ -1509,13 +1514,16 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   // ─── Bericht versturen (versleuteld + cache) ───
-  async function stuurPling(ontvangerId, titel, tekst, type) {
+  // v3 nov (push vanaf de server): de server stuurt de melding zelf zodra het bericht er is (trigger op messages,
+  // sql/push-vanaf-server.sql). Deze vraag is alleen nog een reserve; met het id van het bericht geeft de server per
+  // bericht hoogstens een melding (push_log), wie er ook om vraagt.
+  async function stuurPling(berichtId) {
+    if (!berichtId) return
     try {
-      const { data: { session } } = await supabase.auth.getSession()
       await fetch('https://qmgatbphiplrfxrljtbe.supabase.co/functions/v1/stuur-push', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-        body: JSON.stringify({ receiver_id: ontvangerId, title: titel || 'Fibro', body: tekst || 'Je hebt een nieuw bericht 💬', type: type || 'bericht' })
+        method: 'POST', keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message_id: berichtId })
       })
     } catch(e) { console.log('[pling] versturen mislukt:', e) }
   }
@@ -1648,7 +1656,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       const pak = tekst.startsWith('fxsticker:') ? tekst.indexOf('#') : -1
       slaBerichtCacheOp(data.id, pak > 0 ? tekst.slice(0, pak) : tekst)
       if (pak > 0) { const fx = leesFx(tekst.slice(10, pak)); serverStickerVerstuurd(vriendId, fx.code, fx.versie) }
-      if (pling) stuurPling(vriendId)
+      if (pling) stuurPling(data.id)
       return true
     } catch (e) { console.error('Versturen mislukt:', e); return false }
   }
@@ -1913,14 +1921,13 @@ console.timeLog('[chat] berichten', 'opgehaald')
     btn.classList.add('sending')
     setTimeout(() => btn.classList.remove('sending'), 400)
     if (navigator.vibrate) navigator.vibrate([100, 50, 100])
-    await supabase.from('messages').insert({
+    const { data: buzz } = await supabase.from('messages').insert({
       sender_id: huidigeUser.id,
       receiver_id: geselecteerdeVriend.id,
       content: 'buzz:',
       expires_at: new Date(Date.now() + 31*24*60*60*1000).toISOString()
-    })
-    const mijnNaam = huidigProfiel?.username || 'Iemand'
-    stuurPling(geselecteerdeVriend.id, '⚡ Buzz!', mijnNaam + ' buzzt je!', 'buzz')
+    }).select('id').single()
+    stuurPling(buzz?.id) // de server stuurt de buzz-melding ook zelf (zie stuurPling)
   }
 
   // Buzzgeluid: lage zaagtand die snel aan-uit pulseert.
@@ -2430,7 +2437,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     // v251: eerst het titelscherm (bewegend plaatje en muziek). Ondertussen wordt al op je vriend gewacht;
     // het spel begint pas als je het titelscherm hebt weggetikt én je vriend er is. Niet bij schaken met drie: daar
     // kom je vanuit een schaakspel dat al open was.
-    const titelKlaar = heeftTitelscherm(spelType) && spelType !== 'schakendrie' ? toonTitelscherm({ spelId: spelType, naam: SPEL_INFO[spelType]?.naam || spelType }) : Promise.resolve(true)
+    const titel = titelModule || await laadTitelscherm().catch(() => null)
+    const titelKlaar = titel && titel.heeftTitelscherm(spelType) && spelType !== 'schakendrie' ? titel.toonTitelscherm({ spelId: spelType, naam: SPEL_INFO[spelType]?.naam || spelType }) : Promise.resolve(true)
 
     benIkSpeler1 = spelType === 'schakendrie' ? players[0] === huidigeUser.id : (starterId ? (starterId === huidigeUser.id) : (huidigeUser.id < spelTegenstander.id))
 
@@ -2460,7 +2468,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       document.getElementById('spelWachtscherm')?.remove()
     }
     if (!await titelKlaar || spelActief !== spelType || spelKanaal !== verbinding) return // v251
-    spelStart(spelType) // v253: muziek stopt nu, of pas na het menu van het spel
+    titelModule?.spelStart(spelType) // v253: muziek stopt nu, of pas na het menu van het spel
 
     try { // v256: kon het spel niet laden, dan een duidelijke melding in plaats van een leeg scherm
     if (spelType === 'botkaaseiren') await startBotKaasEieren()
@@ -2978,7 +2986,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       document.querySelector('#spelVideoEigen .video-etiket').textContent = schaakT('Jij')
       document.getElementById('spelVideoAnderNaam').textContent = schaakT('Vriend')
     }
-    sluitTitelscherm() // v251
+    titelModule?.sluitTitelscherm() // v251
     document.getElementById('spelOverlay').classList.remove('open')
     document.getElementById('spelInhoud').innerHTML = ''
     var scw = document.getElementById('spelChatWrap'); if (scw) scw.remove()
@@ -3202,7 +3210,11 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   // ─── Dammen (internationaal, 10x10) ───
-  function startDammen() { DammenUI.start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() }) }
+  // v3 nov (sneller): dammen pas laden als je het speelt, zoals de andere spellen
+  async function startDammen() {
+    const [Dammen, DammenUI] = await Promise.all([laadModule('./dammen.js?v=95'), laadModule('./dammen-ui.js?v=150')])
+    DammenUI.start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
+  }
 
   // ─── Pong ───
   async function startPong() {

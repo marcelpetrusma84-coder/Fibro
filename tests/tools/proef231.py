@@ -157,3 +157,4 @@ finally:
     srv.terminate()
 check('D geen paginafouten', not fouten, fouten[:4])
 print('UITSLAG: %d van %d goed' % (sum(uitslag), len(uitslag)))
+sys.exit(0 if uitslag and all(uitslag) else 1)

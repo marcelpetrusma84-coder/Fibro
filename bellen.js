@@ -12,6 +12,7 @@ import { maakBelregel } from './belregel.js?v=152'
 import { maakCameraFilter, bouwFilterKiezer, FILTERS as CAMERA_FILTERS } from './camerafilters.js?v=3'
 
 let lokaleStream = null
+const antwoordVerwerkt = new WeakSet()   // v160: per verbinding het eerste antwoord
 let remoteStream = null
 // v157: camerafilters. 'geen' = geen tekenvel en de rauwe track; bellen zonder filter werkt dan precies als voorheen.
 const cameraFilter = maakCameraFilter()
@@ -493,6 +494,10 @@ async function verwerkSignaal(type, data, v) {
     if (!peerConnection) return
     if (peerConnection.signalingState !== 'have-local-offer') return
     const pc = peerConnection
+    // v160 (foutmelding 3 nov 2026): komt hetzelfde antwoord twee keer snel achter elkaar binnen, dan alleen het eerste
+    // verwerken (anders: 'Called in wrong state: stable')
+    if (antwoordVerwerkt.has(pc)) return
+    antwoordVerwerkt.add(pc)
     await pc.setRemoteDescription(new RTCSessionDescription(data))
     if (pc !== peerConnection) return
     negeerOffer = false
@@ -616,7 +621,8 @@ function maakPeerConnection() {
   maakOfferBezig = false
   audioGeblokkeerd = false
   volgStream(lokaleStream)
-  lokaleStream.getTracks().forEach(track => {
+  // v160 (foutmelding 3 nov 2026): zonder eigen stroom (geen microfoon) toch verbinden, alleen ontvangen
+  ;(lokaleStream ? lokaleStream.getTracks() : []).forEach(track => {
     const sender = pc.addTrack(track, lokaleStream)
     // Gesprek begint met video: onthoud de videobron, dan werken de cameraknoppen meteen goed
     if (track.kind === 'video') { videoSender = sender; videoActiefLokaal = true }
@@ -719,6 +725,9 @@ async function maakEnStuurOffer() {
 }
 
 async function verwerkOffer(offer) {
+  // v160 (foutmelding 3 nov 2026): een offer dat binnenkomt terwijl er geen gesprek is (al opgehangen, of nog niet
+  // opgenomen) negeren. Eerder liep dit vast op 'lokaleStream is null'.
+  if (!peerConnection && !lokaleStream) { console.warn('[bellen] offer zonder gesprek genegeerd'); return }
   if (!peerConnection) maakPeerConnection()
   const pc = peerConnection
   await pc.setRemoteDescription(new RTCSessionDescription(offer))

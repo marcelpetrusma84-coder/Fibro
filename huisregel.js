@@ -1,4 +1,6 @@
 // huisregel.js - opschrijven wat de huisregel van Fibro tegenhoudt (v1, 8 oktober 2026, v136)
+// v2 (3 nov 2026): Object.hasOwn bijleggen voor oudere browsers (Chrome tot 92, Safari tot 15.3). Schaken liep daar
+// vast (foutmelding 'Object.hasOwn is not a function'). Dit bestand wordt op elke pagina als eerste script geladen.
 // De huisregel zelf (Content-Security-Policy) staat als <meta http-equiv> bovenaan elke pagina,
 // want GitHub Pages kan geen eigen headers sturen. In gewone woorden: Fibro laadt alleen code van
 // de eigen site, en praat alleen met de eigen site en met Supabase. Plaatjes, geluid en video
@@ -6,6 +8,10 @@
 // Houdt de huisregel iets tegen, dan schrijft dit bestand dat op in localStorage 'fibro_huisregel'
 // (de laatste 20, alleen het adres zonder ?...), zodat het ook op een iPhone te zien is:
 // Over Fibro -> Technisch. Een gewoon script (geen module), direct na de huisregel geladen.
+if (typeof Object.hasOwn !== 'function') {
+  Object.defineProperty(Object, 'hasOwn', { configurable: true, writable: true,
+    value: function (o, k) { return Object.prototype.hasOwnProperty.call(Object(o), k) } })
+}
 (function () {
   var SLEUTEL = 'fibro_huisregel'
   function lees() {

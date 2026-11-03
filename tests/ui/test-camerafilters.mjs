@@ -62,6 +62,6 @@ assert.ok(!/zetNieuwsfilterTekst|nieuwsTekst\(\)/.test(bellen))
 assert.match(bellen, /camerafilters\.js\?v=3/)
 assert.match(bellen, /supabase\.from\('profiles'\)\.select\('id, username'\)\.in\('id', ontbreekt\)/)
 assert.equal((bellen.match(/\n\s+werkNieuwsNamen\(\)\n/g) || []).length, 4, 'bij initBellen, belOp, een oproep en zetVriendId')
-for (const f of ['chat.html', 'bellen.html', 'bel-luisteraar.js']) assert.match(readFileSync(new URL('../../' + f, import.meta.url), 'utf8'), /bellen\.js\?v=159/, f)
+for (const f of ['chat.html', 'bellen.html', 'bel-luisteraar.js']) assert.match(readFileSync(new URL('../../' + f, import.meta.url), 'utf8'), /bellen\.js\?v=1(59|6\d)/, f)
 
 console.log('ok: camerafilters v2 met FAKE NEWS (50 Engelse berichten) en een tekenfilm-beveiligingscamera')

@@ -205,6 +205,8 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 .spel-overlay.dam-video-modus .spel-video-vak.is-seen::after { content:none; }
 .spel-overlay.dam-video-modus .spel-video-vak { transition:border-color .15s ease,box-shadow .15s ease; }
 .spel-overlay.dam-video-modus .spel-video-vak.praat { border-color:#fcd34d; box-shadow:0 0 0 4px #fbbf2470,0 0 26px #fbbf24c0; }
+.spel-overlay.dam-video-modus .spel-video-vak.geslagen { border-color:#f87171; box-shadow:0 0 0 4px #ef444480,0 0 30px #ef4444d0; animation:damGeslagen .45s ease-in-out 3; }
+@keyframes damGeslagen { 50% { box-shadow:0 0 0 7px #ef444455,0 0 40px #ef4444; } }
 .spel-overlay.dam-video-modus .cf-knop { position:absolute; right:-6px; bottom:-4px; z-index:4; width:30px !important; height:30px !important; font-size:14px !important; }
 .spel-overlay.dam-video-modus .cf-paneel { position:fixed !important; top:120px !important; bottom:auto !important; }
 .spel-overlay.dam-video-modus .spel-titel-bar { display:none; }
@@ -3468,6 +3470,17 @@ async function startBlockIt() {
     return { volg, wek }
   })()
   window.fibroSpreekMeter = spreekMeter
+  // Word je bij dammen geslagen, dan kleurt je rondje anderhalve seconde rood (wie: 'ik' of 'ander')
+  let damGeslagenTimers = {}
+  window.addEventListener('fibro-dam-geslagen', event => {
+    if (spelActief !== 'dammen') return
+    const vakId = event.detail?.wie === 'ik' ? 'spelVideoEigen' : 'spelVideoAnder'
+    const vak = document.getElementById(vakId)
+    if (!vak) return
+    vak.classList.remove('geslagen'); void vak.offsetWidth; vak.classList.add('geslagen')
+    clearTimeout(damGeslagenTimers[vakId])
+    damGeslagenTimers[vakId] = setTimeout(() => vak.classList.remove('geslagen'), 1500)
+  })
   document.getElementById('spelOverlay').addEventListener('pointerdown', () => { if (spelActief === 'dammen') spreekMeter.wek() }, { passive:true })
 
   function zetSpelVideoVoortgang(sleutel, bezig = true, waarden = {}) {

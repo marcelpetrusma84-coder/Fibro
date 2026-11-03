@@ -120,3 +120,10 @@ assert.match(chat2, /spelVideoEigen: 'lokaalMedia', spelVideoAnder: 'remoteAudio
 assert.ok(!/analyser\.connect\(ac\.destination\)/.test(chat2), 'de meter speelt zelf geen geluid af')
 assert.match(chat2, /b\.track\.enabled && b\.track\.readyState === 'live'/, 'microfoon op stil: geen rand')
 console.log('spreekrand: ok')
+
+// 11. Geslagen worden: het rondje van wie geslagen wordt, wordt even rood
+assert.match(lees('dammen-ui.js'), /const wie = stuk\[0\] === mijnKleur \? 'ander' : 'ik'/)
+assert.match(lees('dammen-ui.js'), /new CustomEvent\('fibro-dam-geslagen'/)
+assert.match(lees('chat.html'), /\.dam-video-modus \.spel-video-vak\.geslagen \{/)
+assert.match(lees('chat.html'), /event\.detail\?\.wie === 'ik' \? 'spelVideoEigen' : 'spelVideoAnder'/)
+console.log('rode rand: ok')

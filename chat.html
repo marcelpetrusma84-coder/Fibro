@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=58"></script>
+<script src="taal.js?v=59"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -453,6 +453,7 @@ window.veiligeUrl = function(v){
   import { maakSpelVerbinding } from './spelverbinding.js?v=2'
   import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=2'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
+  import { leesReactieBericht, tekenReactieKaart, reactieKort } from './profielreacties.js?v=1' // v258
   // v256 (foutmelding 3 nov 2026): lukt het laden van een spelbestand niet (even geen internet, of net een nieuwe
   // versie op GitHub), dan na 1,2 seconde nog één keer, met een ander adres (sommige browsers onthouden een mislukte poging)
   const laadModule = url => import(url).catch(async () => {
@@ -1377,7 +1378,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (isBel) content = belregelTekst(content, isMijn)
     if (!window._tekstPerId) window._tekstPerId = {}
     // v155: bij een sticker in een antwoord of melding '🖼️ Sticker', niet de code erachter
-    const tekstVanBericht = /^(fxsticker|lossticker|customsticker|packsticker):/.test(content) ? T('\u{1F5BC}\uFE0F Sticker') : content
+    const profielReactie = !onversleuteld ? leesReactieBericht(content) : null // v258: reactie op een foto, nummer of video
+    const tekstVanBericht = /^(fxsticker|lossticker|customsticker|packsticker):/.test(content) ? T('\u{1F5BC}\uFE0F Sticker')
+      : profielReactie ? reactieKort(profielReactie) : content
     window._tekstPerId[bericht.id] = tekstVanBericht
     const vorige = container.lastElementChild
     const zelfdeAfzender = vorige && vorige.classList.contains('msg-row') && vorige.dataset.sid === String(bericht.sender_id)
@@ -1493,7 +1496,17 @@ console.timeLog('[chat] berichten', 'opgehaald')
       } catch(e) {}
     }
 
-    if (!onversleuteld && content.startsWith('sticker:')) {
+    if (profielReactie) {
+      // v258: een kaartje met het plaatje (of de naam van het nummer) en de tekst (profielreacties.js, alleen textContent)
+      row.innerHTML = `<div class="msg-av-sm">${esc(avatar)}</div><div class="bubble ${isMijn ? 'out' : 'in'} pr-bubble"></div>`
+      const bub = row.querySelector('.pr-bubble')
+      bub.appendChild(tekenReactieKaart(profielReactie, { isMijn }))
+      if (waarschuwing) { const w = document.createElement('span'); w.className = 'bubble-waarschuwing'; w.textContent = waarschuwing; bub.appendChild(w) }
+      const tijdEl = document.createElement('span')
+      tijdEl.className = 'bubble-time'
+      tijdEl.textContent = tijd + (isMijn ? ' ✓✓' : '')
+      bub.appendChild(tijdEl)
+    } else if (!onversleuteld && content.startsWith('sticker:')) {
       const delen = content.split(':')
       const stickerEmoji = delen[1] || content.replace('sticker:','')
       const emotieId = delen[2] || null

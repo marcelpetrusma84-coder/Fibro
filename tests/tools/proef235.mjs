@@ -4,6 +4,8 @@
 //    een tik opent de chat met de nieuwe vriend. Alleen als de uitnodiging net gebruikt is en jullie vrienden zijn.
 //  - 'gastenboek' { gastenboek_id }: "<naam> schreef in je gastenboek". Niet je eigen gastenboek, niet als dezelfde
 //    vriend de laatste 10 minuten al schreef, en elke rij maar een keer.
+//  - 'like' { like_id } (4 nov): "<emoji> <naam> reageerde op je foto/nummer/video", dezelfde vriend hoogstens een per
+//    10 minuten bij dezelfde eigenaar, alleen een geldige emoji en soort, alleen tussen vrienden.
 // Een app kan deze meldingen niet zelf sturen (receiver_id + type): dan 400. proef233 (spellen) blijft ook slagen.
 // node proef235.mjs [supabase/functions/stuur-push/index.ts] [map met node_modules]
 import fs from 'node:fs'
@@ -38,7 +40,7 @@ const DB = {
   profiles: [{ id: A, username: 'Marcel', taal: 'nl', geblokkeerd: false }, { id: B, username: 'Bram', taal: 'en', geblokkeerd: false },
              { id: G, username: 'Gerrit', taal: 'nl', geblokkeerd: true }, { id: C, username: 'Cor', taal: 'nl', geblokkeerd: false }],
   push_subscriptions: [{ id: 's1', user_id: B, subscription: { endpoint: 'b1' } }, { id: 's3', user_id: A, subscription: { endpoint: 'a1' } }],
-  messages: [], push_log: [], invite_tokens: [], guestbook_entries: [],
+  messages: [], push_log: [], invite_tokens: [], guestbook_entries: [], profiel_likes: [],
 }
 let verzonden = []
 function tabel(naam) {
@@ -129,6 +131,26 @@ check('gastenboek: niet eigen, oud, onbekend of van een niet-vriend', verzonden.
 verzonden = []
 const r7 = [await vraag({ receiver_id: B, type: 'vriend-nieuw' }, 'pas-a'), await vraag({ receiver_id: B, type: 'gastenboek' }, 'pas-a'), await vraag({ receiver_id: B, type: 'spel' }, 'pas-a')]
 check('vriend-nieuw, gastenboek en spel niet vanuit de app', verzonden.length === 0 && r7.every(x => x.status === 400), r7.map(x => [x.status, x.data.reden]))
+// 9. likes (sql/profiel-likes.sql): Bram vindt een foto van Marcel leuk
+const like = (n, eigenaar, liker, soort, emoji, tijd = nu()) => { DB.profiel_likes.push({ id: U(200 + n), eigenaar, liker, soort, item: 'abc' + n, emoji, created_at: tijd }); return U(200 + n) }
+verzonden = []
+id = like(1, A, B, 'foto', '❤️')
+r = await vraag({ like_id: id })
+const p9 = verzonden[0] && verzonden[0][1]
+check('like: melding naar de eigenaar, met emoji en wat', r.status === 200 && verzonden.length === 1 && verzonden[0][0] === 'a1' && p9.body === '❤️ Bram reageerde op je foto'
+  && p9.url === '/Fibro/index.html' && p9.tag === 'like-' + B && p9.type === 'like', [r, p9])
+verzonden = []; r = await vraag({ like_id: id })
+check('like: elke like maar een keer', verzonden.length === 0 && r.data.reden === 'al verstuurd', r)
+verzonden = []; r = await vraag({ like_id: like(2, A, B, 'video', '🔥') })
+check('like: dezelfde vriend binnen 10 minuten nog een like: geen nieuwe melding', verzonden.length === 0 && r.data.reden === 'net al gemeld', r)
+verzonden = []; await vraag({ like_id: like(3, B, A, 'muziek', '😂') })
+check('like: Engels, nummer', verzonden[0] && verzonden[0][1].body === '😂 Marcel reacted to your song', verzonden)
+verzonden = []
+const r10 = [await vraag({ like_id: like(4, A, C, 'foto', '❤️') }), await vraag({ like_id: like(5, B, A, 'foto', '💩') }), await vraag({ like_id: like(6, B, A, 'sticker', '❤️') }),
+             await vraag({ like_id: like(7, A, B, 'foto', '❤️', oud()) }), await vraag({ like_id: U(299) }), await vraag({ receiver_id: B, type: 'like' }, 'pas-a')]
+check('like: geen vrienden, rare emoji of soort, oud, onbekend, of vanuit de app: niets', verzonden.length === 0 &&
+  r10[0].status === 403 && r10[1].status === 400 && r10[2].status === 400 && r10[3].data.reden === 'te oud' && r10[4].status === 404 && r10[5].status === 400, r10.map(x => [x.status, x.data.reden]))
+
 // 8. berichten zoals vroeger
 verzonden = []; DB.messages.push({ id: M(1), sender_id: A, receiver_id: B, content: 'e2e:v2:q', created_at: nu() })
 await vraag({ message_id: M(1) })

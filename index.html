@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=58"></script>
+<script src="taal.js?v=59"></script>
 <script src="apk.js?v=2"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -283,7 +283,8 @@ import { startHeartbeat } from './heartbeat.js?v=117'
 import { meldToestel } from './toestel.js?v=1'
 import * as GB from './gastenboekstijl.js?v=2'
 import { spelIcoonHtml } from './spelicoon.js?v=2' // 30 okt 2026: plaatjes uit de spellen
-import { initSync } from './sync.js?v=251'
+import { initSync, lokaleVriendNaam } from './sync.js?v=251'
+import { maakProfielLikes, itemVan } from './profielreacties.js?v=1' // v258: likes op je eigen profiel
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
 import { bewaardeSessieZonderInternet } from './offline.js?v=146'
@@ -2623,9 +2624,70 @@ init().then(() => {
   if (proActief.length) {
     document.getElementById('profiel-sectie-label').style.display = 'block'
     tekenGrid('profiel-sectie', proLayout, renderProfiel); startVolgorde(document.getElementById('profiel-sectie'), ids => bewaarVolgorde(WK_PROFIEL, ids))
+    zetEigenLikes().catch(e => console.warn('[likes]', e)) // v258
   }
   startProfielMuziek() // v179
 }).catch(e => console.error('Init fout:', e))
+
+// ── v258: likes op je eigen profiel (profielreacties.js). Bij een foto (groot bekijken), je muziek en je video zie je
+// hoeveel likes er zijn; tik = van wie. De vingerafdruk is dezelfde als bij je vrienden (dezelfde tekst als sync.js
+// meestuurt). Reacties met tekst komen als bericht in de chat.
+let eigenLikes = null
+const muziekTitels = new Map()
+function mijnLikes() {
+  if (!eigenLikes && window._uid) eigenLikes = maakProfielLikes({ supabase, eigenaar: window._uid, ik: window._uid, isEigen: true,
+    namen: likeNamen, beschrijf: (soort, item) => ({ titel: muziekTitels.get(item) || '' }) })
+  return eigenLikes
+}
+async function likeNamen(ids) {
+  const uit = new Map()
+  try {
+    const { data } = await supabase.from('profiles').select('id, username, display_name').in('id', ids)
+    for (const p of data || []) {
+      let n = ''
+      try { n = lokaleVriendNaam(p.id, window._uid) || '' } catch (e) {}
+      uit.set(p.id, n || p.display_name || p.username)
+    }
+  } catch (e) {}
+  return uit
+}
+window.FibroFotoBalk = (img, balk) => {
+  const src = img && img.getAttribute('src')
+  if (!src || !src.startsWith('data:image') || !img.closest('#profiel-sectie') || !mijnLikes()) return
+  balk.appendChild(mijnLikes().balk('foto', itemVan(src), { licht: true, midden: true }))
+}
+async function zetEigenLikes() {
+  const p = mijnLikes()
+  if (!p) return
+  await p.laad()
+  const blok = id => document.querySelector('#profiel-sectie .widget-blok[data-id="' + id + '"]')
+  const zet = (b, el) => { b.style.position = 'relative'; el.style.cssText += ';position:absolute;top:4px;right:6px;z-index:5;width:auto'; b.appendChild(el) }
+  // je foto's: per fotowidget het totaal (de foto's uit de opslag, net als sync.js ze meestuurt: pfoto_<stijl>_<nr>)
+  if (p.heeftSoort('foto')) {
+    for (const b of document.querySelectorAll('#profiel-sectie .widget-blok[data-id^="fotos_"]')) {
+      let stijl = b.dataset.id.slice(6)
+      if (stijl === 'masonry') stijl = 'polaroid'
+      const items = []
+      for (let i = 0; i < 9; i++) {
+        const d = await laadUitDB('pfoto_' + stijl + '_' + i + '_' + window._uid)
+        if (typeof d === 'string' && d.startsWith('data:image')) items.push(itemVan(d))
+      }
+      if (items.length && !b.querySelector(':scope > .pr-balk')) zet(b, p.som('foto', items, { klein: true }))
+    }
+  }
+  const v = blok('video')
+  if (v && p.heeftSoort('video')) {
+    try { const m = JSON.parse(await laadUitDB('video_meta_' + window._uid) || 'null'); if (m && m.thumb) zet(v, p.balk('video', itemVan(m.thumb), { klein: true })) } catch (e) {}
+  }
+  const mz = blok('muziek')
+  if (mz && p.heeftSoort('muziek')) {
+    // alleen als er likes zijn: dan pas de vingerafdrukken van je nummers uitrekenen (dat kost even)
+    const items = []
+    for (const t of await laadMuziek(window._uid)) { const i = itemVan(t.data); muziekTitels.set(i, t.naam || ''); items.push(i) }
+    try { const los = localStorage.getItem('muziek_track') || await laadUitDB('muziek_track'); if (los) { const i = itemVan(los); muziekTitels.set(i, T('Profielmuziek')); items.push(i) } } catch (e) {}
+    if (items.length) zet(mz, p.som('muziek', items, { klein: true }))
+  }
+}
 
 // v179: je profielnummer (Profiel > tabblad Profiel > Profielmuziek) speelt vanzelf op Home, zie profielmuziek.js.
 // Uit te zetten bij ☰ > Instellingen > Muziek vanzelf afspelen.
@@ -2665,7 +2727,7 @@ if ('serviceWorker' in navigator) {
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=197"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=168"; startOngelezen()</script>
 <script type="module">import { checkTimers } from "./timer-melding.js?v=188"; setTimeout(checkTimers,4000)</script>
-<script src="./fotoviewer.js?v=6"></script>
+<script src="./fotoviewer.js?v=7"></script>
 <script type="module" src="blokkade.js?v=2"></script>
 </body>
 </html>

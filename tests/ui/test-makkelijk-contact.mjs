@@ -41,7 +41,7 @@ assert.match(chat, /async function voegBerichtToe\(bericht, metGeluid = false\) 
 assert.match(chat, /if \(!\(await verstuur\(vriendId, tekst, null, true\)\)\) nietVerstuurd\(vriendId, tekst, null, true\)\n\s+\}\n\s+container\.appendChild\(knop\)/, 'versleuteld, met melding')
 
 // 5. Meldingen alleen vanaf de server, met de triggers
-assert.match(push, /const ALLEEN_SERVER = new Set\(\["spel", "vriend-nieuw", "gastenboek"\]\)/)
+assert.match(push, /const ALLEEN_SERVER = new Set\(\["spel", "vriend-nieuw", "gastenboek"(, "like")?\]\)/)
 assert.match(sql, /after update of used_by on public\.invite_tokens\n\s+for each row\n\s+when \(old\.used_by is null and new\.used_by is not null/)
 assert.match(sql, /after insert on public\.guestbook_entries\n\s+for each row\n\s+when \(new\.author_id is not null and new\.author_id <> new\.profile_id\)/)
 assert.equal((sql.match(/exception when others then\n\s+null;/g) || []).length, 2, 'een melding houdt nooit het opslaan tegen')

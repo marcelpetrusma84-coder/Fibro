@@ -1035,6 +1035,11 @@ ui/test-makkelijk-contact.mjs  vaste afspraken daarvan (v258), en sql/contact-pu
 tools/proef237.py        meldingen meteen aanzetten (meldingen-aan.js): kaart op Home, welkomstscherm na het inschrijven, de eerste
                          tik op 'Welkom bij Fibro' op de iPhone. Nagebootste meldingen van de telefoon. 16 controles. Ook op GitHub.
 ui/test-meldingen-meteen.mjs  vaste afspraken daarvan (de vraag meteen bij de tik, alle wegen na het inschrijven).
+tools/proef238.py        likes en reacties (profielreacties.js): bij een vriend 🤍 onder foto (groot), muziek en video, vasthouden =
+                         andere emoji, 💬 Reageer = versleuteld chatbericht met plaatje; op je eigen Home wie; het kaartje in de chat.
+                         Nagebootste tabel profiel_likes. 15 controles. Ook op GitHub.
+ui/test-profiel-likes.mjs  vaste afspraken daarvan (vingerafdruk = sync.js, dezelfde emoji overal, de regels van de tabel).
+tools/proef235.mjs       (4 nov) ook 'like': melding met emoji en wat, hoogstens een per 10 minuten per vriend.
 tools/*.js               console-testjes voor Marcel (alert); ?v=-nummers daarin kunnen verouderd zijn
 
 Opzet nabootsing: Chromium via Playwright; www/Fibro -> symlink naar de map;

@@ -1780,4 +1780,5 @@ window.FIBRO_EN = {
   "Verbinden…": "Connecting…",
   "De verbinding met je vriend wordt nog opgebouwd. Probeer het zo nog eens.": "The connection with your friend is still being set up. Try again in a moment.",
   "Je camera kon niet worden gestart. Controleer de cameratoestemming en probeer het opnieuw.": "Your camera could not be started. Check the camera permission and try again.",
+  "Je microfoon staat uit. Tik op 🔇 om hem weer aan te zetten.": "Your microphone is off. Tap 🔇 to turn it back on.",
 }

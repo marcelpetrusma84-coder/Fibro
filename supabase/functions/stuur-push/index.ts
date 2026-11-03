@@ -17,6 +17,13 @@
 // Zo komt de melding ook als de afzender Fibro meteen sluit of zijn internet net wegvalt. Zonder inlogpas: het bericht
 // moet bestaan, minder dan 2 minuten oud zijn en nog geen melding hebben gehad; afzender en ontvanger komen uit het
 // bericht zelf. Oude versies van de app (receiver_id + type, met inlogpas) gebruiken hetzelfde slot.
+// v257 (3 nov 2026): meldingen voor spellen.
+//  - 'spel': een uitnodiging ("Bram daagt je uit voor Draughts"). Via { message_id } van het uitnodigingsbericht
+//    ('spelinvite:<spel>:<van>:<sessie>'); een tik opent de chat en het spel. Leeft 2 minuten (je vriend wacht).
+//  - 'spel-gemist': de uitnodiger stopte met wachten en je kwam niet. Vervangt de uitnodiging (zelfde tag).
+//  - 'spel-verlaten': je vriend ging weg uit jullie spel terwijl jij er even niet was.
+//    Deze twee met inlogpas en { receiver_id, type, spel }; alleen als er de laatste uren echt een uitnodiging tussen
+//    jullie was (gemist: van de afzender aan jou, het laatste half uur).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push";
 
@@ -47,6 +54,18 @@ const TEKSTEN: Record<string, Record<string, Tekst>> = {
     nl: { title: "Fibro", body: "📵 Gemiste oproep van {naam}" },
     en: { title: "Fibro", body: "📵 Missed call from {naam}" },
   },
+  spel: {
+    nl: { title: "Fibro", body: "🎮 {naam} daagt je uit voor {spel}!" },
+    en: { title: "Fibro", body: "🎮 {naam} challenges you to {spel}!" },
+  },
+  "spel-gemist": {
+    nl: { title: "Fibro", body: "🎮 {naam} wilde {spel} met je spelen" },
+    en: { title: "Fibro", body: "🎮 {naam} wanted to play {spel} with you" },
+  },
+  "spel-verlaten": {
+    nl: { title: "Fibro", body: "🎮 {naam} heeft jullie spel {spel} verlaten" },
+    en: { title: "Fibro", body: "🎮 {naam} left your game of {spel}" },
+  },
   moderatie: {
     nl: { title: "Fibro · Moderatie", body: "🚩 Er is een nieuwe melding. Kijk in Moderatie." },
     en: { title: "Fibro · Moderation", body: "🚩 There is a new report. Check Moderation." },
@@ -56,7 +75,25 @@ const MELDING_BINNEN_MS = 2 * 60 * 1000
 const BERICHT_VERS_MS = 2 * 60 * 1000 // een bericht krijgt alleen kort na het versturen een melding
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 // Hoe lang de pushdienst een melding bewaart als de telefoon even onbereikbaar is (seconden)
-const LEVENSDUUR: Record<string, number> = { oproep: 45, "oproep-video": 45, gemist: 24 * 60 * 60 };
+const LEVENSDUUR: Record<string, number> = { oproep: 45, "oproep-video": 45, gemist: 24 * 60 * 60, spel: 120, "spel-gemist": 24 * 60 * 60, "spel-verlaten": 60 * 60 };
+// v257: de spellen (zelfde namen als in de chat, SPEL_INFO)
+const SPELNAMEN: Record<string, { nl: string; en: string }> = {
+  botkaaseiren: { nl: "Tic-Tac-Toe", en: "Tic-Tac-Toe" }, vieroprij: { nl: "Four in a Row", en: "Four in a Row" },
+  schaken: { nl: "Schaken", en: "Chess" }, schakendrie: { nl: "Schaken met drie spelers", en: "Three-player chess" },
+  dammen: { nl: "Draughts", en: "Draughts" }, pong: { nl: "Neo Paddle", en: "Neo Paddle" }, flappybird: { nl: "Flapper", en: "Flapper" },
+  swarm: { nl: "The Swarm", en: "The Swarm" }, pacman: { nl: "Ghost Tag", en: "Ghost Tag" },
+  endlessrunner: { nl: "Runner & Gunner", en: "Runner & Gunner" }, pinball: { nl: "Twin Snakes", en: "Twin Snakes" },
+  breakout: { nl: "Block It", en: "Block It" }, shmup: { nl: "Neon Raiders", en: "Neon Raiders" },
+};
+const SESSIE = /^[A-Za-z0-9_-]{1,64}$/;
+const SPEL_RECENT_MS = 3 * 60 * 60 * 1000, GEMIST_RECENT_MS = 30 * 60 * 1000;
+// 'spelinvite:<spel>:<van>:<sessie>' -> { spel, van, sessie } of null
+function leesUitnodiging(inhoud: unknown) {
+  if (typeof inhoud !== "string" || !inhoud.startsWith("spelinvite:")) return null;
+  const [, spel, van, sessie] = inhoud.split(":");
+  if (!Object.hasOwn(SPELNAMEN, spel) || !UUID.test(van || "") || !SESSIE.test(sessie || "")) return null;
+  return { spel, van, sessie };
+}
 const IEMAND: Record<string, string> = { nl: "Iemand", en: "Someone" };
 
 function antwoord(data: unknown, status = 200) {
@@ -89,6 +126,7 @@ async function stuurNaar(supabase: any, ontvangers: { id: string; taal?: string 
 // v256: welke melding hoort bij de inhoud van een bericht (de inhoud zelf is versleuteld: alleen het begin telt)
 function soortVanBericht(inhoud: unknown): string | null {
   if (inhoud === "buzz:") return "buzz";
+  if (leesUitnodiging(inhoud)) return "spel"; // v257
   if (typeof inhoud === "string" && inhoud.startsWith("e2e:")) return "bericht";
   return null; // speluitnodiging, belregel, ... : daar hoort geen berichtmelding bij
 }
@@ -142,7 +180,9 @@ Deno.serve(async (req) => {
       const soort = soortVanBericht(b.content);
       if (!soort) return antwoord({ ok: false, reden: "geen melding nodig" });
       if (!(await pakSlot(supabase, b.id))) return antwoord({ ok: true, verstuurd: 0, reden: "al verstuurd" });
-      return await stuurVriendMelding(supabase, b.sender_id, b.receiver_id, soort);
+      const uitn = soort === "spel" ? leesUitnodiging(b.content) : null;
+      if (uitn && uitn.van !== b.sender_id) return antwoord({ ok: false, reden: "ongeldige uitnodiging" }, 400);
+      return await stuurVriendMelding(supabase, b.sender_id, b.receiver_id, soort, uitn);
     }
 
     if (!receiver_id && type !== "moderatie") throw new Error("receiver_id ontbreekt");
@@ -157,6 +197,22 @@ Deno.serve(async (req) => {
     if (!afzender) return antwoord({ ok: false, reden: "niet ingelogd" }, 401);
     if (type === "moderatie") return await meldModerators(supabase, afzender);
     if (afzender === receiver_id) return antwoord({ ok: false, reden: "niet naar jezelf" }, 400);
+
+    // v257: gemiste uitnodiging en verlaten spel: alleen als er echt een uitnodiging tussen jullie was
+    if (type === "spel-gemist" || type === "spel-verlaten") {
+      const spel = String(invoer.spel || "");
+      if (!Object.hasOwn(SPELNAMEN, spel)) return antwoord({ ok: false, reden: "onbekend spel" }, 400);
+      const gemist = type === "spel-gemist";
+      const sinds = new Date(Date.now() - (gemist ? GEMIST_RECENT_MS : SPEL_RECENT_MS)).toISOString();
+      let q = supabase.from("messages").select("id").like("content", "spelinvite:" + spel + ":%").gte("created_at", sinds);
+      q = gemist ? q.eq("sender_id", afzender).eq("receiver_id", receiver_id)
+        : q.or("and(sender_id.eq." + afzender + ",receiver_id.eq." + receiver_id + "),and(sender_id.eq." + receiver_id + ",receiver_id.eq." + afzender + ")");
+      const { data: was, error: fw } = await q.limit(1);
+      if (fw) throw fw;
+      if (!was || !was.length) return antwoord({ ok: false, reden: "geen spel" }, 403);
+      return await stuurVriendMelding(supabase, afzender, receiver_id, type, { spel, van: afzender, sessie: "" });
+    }
+    if (type === "spel") return antwoord({ ok: false, reden: "alleen met message_id" }, 400);
 
     // v256: oude versies van de app vragen zelf om een berichtmelding. Hetzelfde slot als de trigger: het nieuwste
     // bericht van de laatste 2 minuten van deze afzender aan deze ontvanger. Had dat al een melding, dan niets.
@@ -182,7 +238,8 @@ Deno.serve(async (req) => {
 
 // Een melding van afzender aan een vriend (bericht, buzz, oproep, gemist). Alleen naar een vriend, niet als de
 // afzender geblokkeerd is; tekst in de taal van de ontvanger.
-async function stuurVriendMelding(supabase: any, afzender: string, receiver_id: string, type: unknown) {
+async function stuurVriendMelding(supabase: any, afzender: string, receiver_id: string, type: unknown,
+  uitn: { spel: string; van: string; sessie: string } | null = null) {
   {
     if (afzender === receiver_id) return antwoord({ ok: false, reden: "niet naar jezelf" }, 400);
     // 2. Alleen naar een vriend.
@@ -232,18 +289,26 @@ async function stuurVriendMelding(supabase: any, afzender: string, receiver_id: 
     const tekst = TEKSTEN[soort][taal];
     const naam = String(ik.username || IEMAND[taal]).slice(0, 40);
     const bellen = soort === "oproep" || soort === "oproep-video";
+    const spelNaam = uitn && SPELNAMEN[uitn.spel] ? SPELNAMEN[uitn.spel][taal] : "";
+    const isSpel = soort === "spel" || soort === "spel-gemist" || soort === "spel-verlaten";
+    if (isSpel && !spelNaam) return antwoord({ ok: false, reden: "onbekend spel" }, 400);
     const melding: Record<string, string> = {
       title: tekst.title,
-      body: tekst.body.replace("{naam}", naam),
+      body: tekst.body.replace("{naam}", naam).replace("{spel}", spelNaam),
       url: bellen
         ? "/Fibro/bellen.html?vriend=" + encodeURIComponent(afzender) + "&naam=" + encodeURIComponent(naam) +
           "&inkomend=1" + (soort === "oproep-video" ? "&video=1" : "")
+        : soort === "spel" && uitn
+        ? "/Fibro/chat.html?spelVriend=" + encodeURIComponent(afzender) + "&spelType=" + encodeURIComponent(uitn.spel) +
+          "&sessieId=" + encodeURIComponent(uitn.sessie) + "&starterId=" + encodeURIComponent(afzender)
+        : isSpel ? "/Fibro/chat.html?vriend=" + encodeURIComponent(afzender)
         : "/Fibro/chat.html",
       type: soort,
     };
     if (bellen || soort === "gemist") melding.tag = "oproep-" + afzender;
+    if (isSpel) melding.tag = "spel-" + afzender; // v257: gemist en verlaten vervangen de uitnodiging
     const payload = JSON.stringify(melding);
-    const opties = LEVENSDUUR[soort] ? { TTL: LEVENSDUUR[soort], urgency: bellen ? "high" : "normal" } : undefined;
+    const opties = LEVENSDUUR[soort] ? { TTL: LEVENSDUUR[soort], urgency: bellen || soort === "spel" ? "high" : "normal" } : undefined;
 
     webpush.setVapidDetails(
       "mailto:fibro.contact@proton.me",

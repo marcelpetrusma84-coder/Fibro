@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=56"></script>
+<script src="taal.js?v=57"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
@@ -68,6 +68,8 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   justify-content:center;
   padding:24px;
   backdrop-filter:blur(8px);
+  overflow-y:auto; /* v258: een lang venster (na Link maken) kan scrollen op een kleine telefoon */
+  -webkit-overflow-scrolling:touch;
 }
 .modal-overlay.open { display:flex; }
 /* v250: keuze voor de uitnodiging */
@@ -87,6 +89,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   max-width:340px;
   text-align:center;
   animation:fadeUp 0.3s ease both;
+  margin:auto; /* v258: midden als het past, anders bovenaan beginnen (niets valt weg) */
 }
 
 @keyframes fadeUp {
@@ -284,6 +287,9 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 
     <!-- QR code weergave -->
     <div id="qr-sectie" style="display:none;">
+      <!-- v258: delen via het deelmenu van de telefoon (WhatsApp, Berichten, ...). Zonder deelmenu (computer, sommige
+           apps): de hele uitnodiging (zin + link) kopieren, om zelf te plakken. Bovenaan, zodat je hem meteen ziet. -->
+      <button type="button" id="deel-link-btn" class="modal-btn modal-btn-primary" onclick="deelInviteLink()" style="font-size:16px;padding:15px;margin-bottom:16px;" data-t>📤 Delen</button>
       <div id="qr-container"></div>
 
       <div class="timer-ring">
@@ -296,8 +302,6 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
       </div>
 
       <div class="token-code" id="token-display"></div>
-      <!-- v258: delen via het deelmenu van de telefoon (WhatsApp, Berichten, ...); alleen als het toestel dat kan -->
-      <button type="button" id="deel-link-btn" class="modal-btn modal-btn-primary" onclick="deelInviteLink()" style="font-size:15px;padding:14px;margin-bottom:0;" hidden data-t>📤 Delen</button>
       <div style="margin-top:12px;display:flex;gap:8px;align-items:center;background:rgba(255,255,255,0.06);border-radius:12px;padding:8px 10px;">
         <input id="invite-link" readonly style="flex:1;background:transparent;border:none;color:var(--text);font-size:12px;outline:none;" value="">
         <button id="kopieer-link-btn" onclick="kopieerInviteLink()" style="background:var(--accent);color:#1a0a2e;border:none;border-radius:10px;padding:6px 12px;font-size:12px;font-weight:bold;cursor:pointer;white-space:nowrap;" data-t>Kopieer</button>
@@ -796,7 +800,7 @@ startMeldingen()
     const linkVeld = document.getElementById('invite-link')
     if (linkVeld) linkVeld.value = inviteUrl
     deelTekst = maakDeelTekst(user ? eigenNaam(user.id) : '', meeSpel, DUUR)
-    document.getElementById('deel-link-btn').hidden = typeof navigator.share !== 'function'
+    try { document.getElementById('deel-link-btn').scrollIntoView({ block: 'nearest' }) } catch (e) {}
 
     // Maak QR code
     document.getElementById('qr-container').innerHTML = ''
@@ -894,13 +898,19 @@ startMeldingen()
   window.deelInviteLink = async function() {
     const url = document.getElementById('invite-link').value
     if (!url || secondsLeft <= 0) return
-    try {
-      // De link staat in de tekst zelf: zo komt hij in elke app mee (sommige apps laten een los url-veld weg)
-      await navigator.share({ text: deelTekst + '\n' + url })
-    } catch (e) {
-      if (e && e.name === 'AbortError') return // zelf weggetikt
-      kopieerInviteLink() // delen lukt niet op dit toestel: dan kopieren
+    // De link staat in de tekst zelf: zo komt hij in elke app mee (sommige apps laten een los url-veld weg)
+    const volledig = deelTekst + '\n' + url
+    if (typeof navigator.share === 'function') {
+      try { await navigator.share({ text: volledig }); return }
+      catch (e) { if (e && e.name === 'AbortError') return } // zelf weggetikt
     }
+    // Geen deelmenu (computer, sommige apps) of delen lukte niet: de hele uitnodiging kopieren
+    const btn = document.getElementById('deel-link-btn')
+    try {
+      await navigator.clipboard.writeText(volledig)
+      btn.textContent = T('✅ Gekopieerd! Plak het in WhatsApp of een bericht.')
+      setTimeout(() => { btn.textContent = T('📤 Delen') }, 3500)
+    } catch (e) { prompt(T('Kopieer deze tekst:'), volledig) }
   }
 
   window.nieuweInvite = async function() {

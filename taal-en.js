@@ -1792,4 +1792,6 @@ window.FIBRO_EN = {
   "Tik binnen {duur} op de link om vrienden te worden:": "Tap the link within {duur} to become friends:",
   "👋 Zeg hoi": "👋 Say hi",
   "Hoi! 👋": "Hi! 👋",
+  "✅ Gekopieerd! Plak het in WhatsApp of een bericht.": "✅ Copied! Paste it into WhatsApp or a message.",
+  "Kopieer deze tekst:": "Copy this text:",
 }

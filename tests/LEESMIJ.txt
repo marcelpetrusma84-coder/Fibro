@@ -1030,7 +1030,7 @@ tools/proef233.mjs       stuur-push v257: meldingen voor spellen (uitnodiging, g
 tools/proef234.py        de app met twee spelers: uitnodiging, gemist, verlaten (alleen als de vriend weg is). Ook op GitHub.
 tools/proef235.mjs       stuur-push v258: 'vriend-nieuw' (uitnodiging aangenomen) en 'gastenboek', alleen vanaf de server, 14 controles.
 tools/proef236.py        makkelijker contact in Chrome: Delen bij Uitnodigen, Zeg hoi in een lege chat, na een uitnodiging meteen
-                         naar de chat, na het inloggen terug naar de uitnodiging. 18 controles. Ook op GitHub.
+                         naar de chat, na het inloggen terug naar de uitnodiging, kleine telefoon. 19 controles. Ook op GitHub.
 ui/test-makkelijk-contact.mjs  vaste afspraken daarvan (v258), en sql/contact-push.sql.
 tools/*.js               console-testjes voor Marcel (alert); ?v=-nummers daarin kunnen verouderd zijn
 

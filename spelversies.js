@@ -14,7 +14,7 @@ export const SPEL_VERSIES = {
                      //  v4 = v198: webcam-status volgt de echte camera, knop voor tegengehouden geluid;
                      //  v5 = eigen Nederlands/English taalkeuze en waarde-/perspectiefafhankelijke slaggeluiden;
                      //  v6 = Ultra via Lichess/Stockfish 19, optionele live evaluatie en optionele slaggeluiden)
-  dammen: 1,         // Draughts
+  dammen: 2,         // Draughts
   pong: 3,           // Neo Paddle (v2 = 30 okt 2026: blokjes en power-ups, levels voor alleen;
                      //  v3 = 31 okt 2026: kies Klassiek (de oude 7 levels met obstakels) of Blokjes)
   pacman: 1,         // Ghost Tag

@@ -9,7 +9,7 @@ const source = readFileSync(new URL('../../schaken-drie-ui.js', import.meta.url)
 const start = source.indexOf('  async function toggleCamera(')
 const end = source.indexOf('\n  function signal(', start)
 assert(start >= 0 && end > start, 'the three-player camera handler exists')
-const handler = source.slice(start, end).replace("await import('./ice-config.js?v=1')", 'testIce')
+const handler = source.slice(start, end).replace(/await import\('\.\/ice-config\.js\?v=\d+'\)/, 'testIce')
 assert(!handler.includes('await import('), 'the harness must use its local ICE fixture')
 const destroy = source.match(/destroy\(\{ preserveCamera = false \} = \{\}\) \{[\s\S]*?\n    \}/)?.[0]
 assert(destroy, 'the three-player controller has a teardown method')

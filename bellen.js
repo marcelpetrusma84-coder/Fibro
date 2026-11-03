@@ -9,7 +9,7 @@ import { supabase } from './supabase.js?v=95'
 import { ICE_SERVERS, iceReady } from './ice-config.js?v=149'
 import { houOpen } from './lijntjes.js?v=1'
 import { maakBelregel } from './belregel.js?v=152'
-import { maakCameraFilter, bouwFilterKiezer, FILTERS as CAMERA_FILTERS } from './camerafilters.js?v=3'
+import { maakCameraFilter, bouwFilterKiezer, FILTERS as CAMERA_FILTERS } from './camerafilters.js?v=4'
 
 let lokaleStream = null
 const antwoordVerwerkt = new WeakSet()   // v160: per verbinding het eerste antwoord
@@ -61,7 +61,7 @@ let geinitialiseerd = false
 let gesprekKlaar = null   // belofte: klaar zodra het gesprekskanaal echt open is
 let iceBuffer = []        // ICE-gegevens die binnenkomen voordat offer/answer verwerkt is
 let videoGewenst = false  // v150: met video gebeld/opgenomen (ook als de eigen camera niet lukte)
-const BELLEN_VERSIE = 161 // v161: zetMic en localAudioMuted (iPhone-foutmeldingen 3 nov 2026); media state follows actual tracks; queued camera negotiation and audio recovery
+const BELLEN_VERSIE = 162 // v162: geluid niet steeds opnieuw laden (bugtest 3 nov); v161: zetMic en localAudioMuted (iPhone-foutmeldingen 3 nov 2026); media state follows actual tracks; queued camera negotiation and audio recovery
 
 function actieveTracks(stream, kind, ontvangen = false) {
   return !!stream?.getTracks().some(track => track.kind === kind && track.readyState === 'live' && track.enabled && (!ontvangen || !track.muted))
@@ -115,7 +115,9 @@ export async function hervatGeluid() {
     return true
   }
   const stream = remoteStream
-  audioEl.srcObject = stream
+  // v162 (bugtest 3 nov): alleen zetten als het een andere stroom is. Elke keer opnieuw zetten laadt het geluid opnieuw
+  // (een hapering bij elke tik op 📹 of 🎤) en breekt een play() die nog bezig is af.
+  if (audioEl.srcObject !== stream) audioEl.srcObject = stream
   audioEl.muted = false
   try {
     await audioEl.play()
@@ -125,6 +127,8 @@ export async function hervatGeluid() {
     return true
   } catch (e) {
     if (remoteStream !== stream) return false
+    // v162: AbortError = een nieuwere play() nam het over. Dat is geen blokkade (anders even onterecht de geluidsknop)
+    if (e && e.name === 'AbortError') return !audioEl.paused
     meldMediaFout('geluid afspelen', e)
     audioGeblokkeerd = true
     meldMediaStatus()

@@ -16,7 +16,7 @@
 <script src="foutmelder.js?v=1"></script>
 <script src="taal.js?v=54"></script>
 <script src="verbinding.js?v=3"></script>
-<script src="controller.js?v=1"></script>
+<script src="controller.js?v=2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Chat</title>
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -431,7 +431,7 @@ window.veiligeUrl = function(v){
   import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel } from './crypto.js?v=182'
   import { maakSpelChatCrypto } from './spelchat-crypto.js?v=1'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
-  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, zetMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon, bouwFilterKnop } from './bellen.js?v=161'
+  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, zetMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon, bouwFilterKnop } from './bellen.js?v=162'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
   import { maakStickerkeuze } from './stickerkeuze.js?v=236'
   import { isCode as isEigenCode, zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel, fxCode, leesFx, stickerPakket, bewaarVriendSticker, zoekWeg } from './eigenstickers.js?v=162'
@@ -2334,7 +2334,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
     schaken: './schaken-ui.js?v=260',
-    schakendrie: './schaken-drie-ui.js?v=31',
+    schakendrie: './schaken-drie-ui.js?v=32',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=151',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -2342,7 +2342,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     endlessrunner: './runner-gunner-ui.js?v=149',
     pacman: './ecto-ui.js?v=178',
     pinball: './twin-snakes-ui.js?v=150',
-    shmup: './neon-raiders-ui.js?v=223'
+    shmup: './neon-raiders-ui.js?v=224'
   }
   const _alGeladen = {}
   function laadSpelAlvast(spelType) {
@@ -3191,7 +3191,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   async function startSchakenDrie(players) {
-    const m = await laadModule('./schaken-drie-ui.js?v=31')
+    const m = await laadModule('./schaken-drie-ui.js?v=32')
     const testMode = Boolean(fibroChessTest?.active)
     const controller = m.start({ Bordgeluid, gameChannel:testMode ? null : spelKanaal, players, userId:testMode ? 'fibro-test-you' : huidigeUser.id, localPreview:testMode, testMode, testStream:fibroChessTest?.stream || null, onTestCameraChange:stream => { if (fibroChessTest?.active) fibroChessTest.stream = stream }, onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null })
     spelSchaakDrieController = controller
@@ -3335,7 +3335,7 @@ async function startBlockIt() {
   }
 
   async function startNeonRaiders() {
-    const m = await laadModule('./neon-raiders-ui.js?v=223')
+    const m = await laadModule('./neon-raiders-ui.js?v=224')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'shmup' && !spelGestopt })
   }
 

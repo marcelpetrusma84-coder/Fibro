@@ -478,7 +478,7 @@ export function start({ Bordgeluid = null, gameChannel = null, players = [], use
     }
     button.disabled = true; setCameraButton(button, 'Camera starten…')
     try {
-      const ice = await import('./ice-config.js?v=1')
+      const ice = await import('./ice-config.js?v=149')
       await ice.iceReady
       if (destroyed) return
       iceServers = ice.ICE_SERVERS

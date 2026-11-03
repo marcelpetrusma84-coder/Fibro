@@ -13,9 +13,10 @@
 //     dat regelt chat.html).
 // v149: de webcamrondjes zijn groter (120 px), het bord houdt daar rekening mee. Word je geslagen, dan stuurt het
 //   spel 'fibro-dam-geslagen' en kleurt je webcamrondje even rood.
+// v150: word je geslagen terwijl de webcamrondjes er staan, dan klinkt er ook een geluidje (geluid.geslagen).
 // Het protocol over het spelkanaal is hetzelfde gebleven (zet, vraag-stand, stand, opnieuw), dus een vriend met een
 // oudere Fibro kan gewoon meespelen. Nieuw is alleen 'einde: true' in een zet die de partij beëindigt.
-import { geluid, geluidAan, zetGeluid, ontgrendel } from './dammen-geluid.js?v=1'
+import { geluid, geluidAan, zetGeluid, ontgrendel } from './dammen-geluid.js?v=2'
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v147)
 
@@ -423,7 +424,11 @@ export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         // v149: wie geslagen wordt, krijgt een rode rand om zijn webcamrondje (chat.html luistert hiernaar)
         if (geslagen && stuk) {
             const wie = stuk[0] === mijnKleur ? 'ander' : 'ik'
-            setTimeout(() => window.dispatchEvent(new CustomEvent('fibro-dam-geslagen', { detail: { wie, aantal: geslagen } })), Math.max(0, vertraging - 40))
+            setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('fibro-dam-geslagen', { detail: { wie, aantal: geslagen } }))
+                // v150: word jij geslagen terwijl de webcamrondjes er staan, dan ook een geluidje
+                if (wie === 'ik' && overlay && overlay.classList.contains('dam-video-modus')) geluid.geslagen(geslagen)
+            }, Math.max(0, vertraging - 40))
         }
     }
 

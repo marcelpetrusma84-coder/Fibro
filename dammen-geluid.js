@@ -1,4 +1,4 @@
-// dammen-geluid.js - de geluiden van dammen (v1, 3 nov 2026)
+// dammen-geluid.js - de geluiden van dammen (v1, 3 nov 2026; v2: geluidje als je geslagen wordt)
 // In gewone woorden: een houten 'tok' bij een zet, een 'klak' per geslagen schijf, een belletje als je dam haalt,
 // en een deuntje bij winst, verlies of remise. Alles met Web Audio, zonder geluidsbestanden.
 // Aan of uit staat in localStorage 'fibro_dammen_geluid' (standaard aan).
@@ -90,6 +90,23 @@ export const geluid = {
         const a = context(); if (!a) return
         const t = a.currentTime + 0.1
         ;[523, 466, 392, 330].forEach((f, i) => toon(a, t + i * 0.16, f, 0.5, 0.12))
+    },
+    // v2: je wordt geslagen (alleen met de webcamrondjes): een doffe bonk met een dalend 'oei'-toontje
+    geslagen(aantal = 1) {
+        const a = context(); if (!a) return
+        const t = a.currentTime + 0.02
+        hout(a, t, { hoog: 900, laag: 110, vol: 0.6, lang: 0.12 })
+        const o = a.createOscillator(), f = a.createBiquadFilter(), g = a.createGain()
+        o.type = 'sawtooth'
+        o.frequency.setValueAtTime(520, t + 0.05)
+        o.frequency.exponentialRampToValueAtTime(170, t + 0.42)
+        f.type = 'lowpass'; f.frequency.value = 1400; f.Q.value = 3
+        g.gain.setValueAtTime(0.0001, t + 0.05)
+        g.gain.exponentialRampToValueAtTime(0.11, t + 0.08)
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45)
+        o.connect(f); f.connect(g); g.connect(a.destination)
+        o.start(t + 0.05); o.stop(t + 0.5)
+        if (aantal > 1) toon(a, t + 0.5, 196, 0.25, 0.08, 'square')   // meer dan een schijf kwijt: nog een laag toontje
     },
     remise() {
         const a = context(); if (!a) return

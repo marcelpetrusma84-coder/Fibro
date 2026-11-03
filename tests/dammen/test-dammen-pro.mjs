@@ -87,18 +87,18 @@ assert.ok(!/ctx\.filter/.test(ui), 'geen ctx.filter (werkt niet op de iPhone)')
 const en = lees('taal-en.js')
 for (const m of ui.matchAll(/\bT\('((?:[^'\\]|\\.)*)'/g)) assert.ok(en.includes(JSON.stringify(m[1]) + ':'), 'Engels voor: ' + m[1])
 
-// 7. chat.html: webcams bij dammen als twee rondjes van 90 px bovenin
+// 7. chat.html: webcams bij dammen als twee rondjes van 120 px bovenin
 const chat = lees('chat.html')
-assert.match(chat, /dammen-ui\.js\?v=148/)
+assert.match(chat, /dammen-ui\.js\?v=14\d/)
 assert.match(chat, /function isVideoSpel\(\) \{\n    return spelActief === 'schaken' \|\| spelActief === 'dammen'/)
 assert.match(chat, /overlay\.classList\.toggle\('dam-video-modus', toon && spelActief === 'dammen'\)/)
-assert.match(chat, /\.dam-video-modus \.spel-video-vak \{[^}]*width:90px; height:90px;[^}]*border-radius:50%/)
+assert.match(chat, /\.dam-video-modus \.spel-video-vak \{[^}]*width:120px; height:120px;[^}]*border-radius:50%/)
 assert.match(chat, /classList\.remove\('sch-video-modus', 'dam-video-modus'\)/, 'rondjes weg bij ophangen')
 
 // 8. spel.html en solo.js: de nieuwe bot met expert
 const solo = lees('solo.js')
 assert.match(solo, /import \{ damBot \} from '\.\/dam-bot\.js\?v=1'/)
-assert.match(solo, /dammen-ui\.js\?v=148',\s+niveaus:\[\.\.\.NIVEAUS, 'expert'\]/)
+assert.match(solo, /dammen-ui\.js\?v=14\d',\s+niveaus:\[\.\.\.NIVEAUS, 'expert'\]/)
 assert.match(lees('spel.html'), /expert: 'Expert'/)
 assert.match(lees('dammen-worker.js'), /dammen-computer\.js\?v=1/)
 
@@ -111,3 +111,40 @@ assert.match(ui2, /vooraf\[1\] === 'S' && staat\.bord\[eind\[0\]\]\[eind\[1\]\]\
 assert.match(ui2, /dm-damring/); assert.match(ui2, /dm-vonk/); assert.match(ui2, /T\('Dam!'\)/)
 assert.match(ui2, /const wacht = bezigTot - Date\.now\(\)/, 'een snel antwoord wacht tot de animatie klaar is')
 console.log('damsprong: ok')
+
+// 10. Wie praat, krijgt een gouden rand om zijn webcamrondje
+const chat2 = lees('chat.html')
+assert.match(chat2, /\.dam-video-modus \.spel-video-vak\.praat \{/)
+assert.match(chat2, /window\.fibroSpreekMeter\?\.volg\(toon && spelActief === 'dammen'\)/)
+assert.match(chat2, /spelVideoEigen: 'lokaalMedia', spelVideoAnder: 'remoteAudio'/)
+assert.ok(!/analyser\.connect\(ac\.destination\)/.test(chat2), 'de meter speelt zelf geen geluid af')
+assert.match(chat2, /b\.track\.enabled && b\.track\.readyState === 'live'/, 'microfoon op stil: geen rand')
+console.log('spreekrand: ok')
+
+// 11. Geslagen worden: het rondje van wie geslagen wordt, wordt even rood
+assert.match(lees('dammen-ui.js'), /const wie = stuk\[0\] === mijnKleur \? 'ander' : 'ik'/)
+assert.match(lees('dammen-ui.js'), /new CustomEvent\('fibro-dam-geslagen'/)
+assert.match(lees('chat.html'), /\.dam-video-modus \.spel-video-vak\.geslagen \{/)
+assert.match(lees('chat.html'), /event\.detail\?\.wie === 'ik' \? 'spelVideoEigen' : 'spelVideoAnder'/)
+console.log('rode rand: ok')
+
+// 12. De emoji's staan op de spelbalk naast de stickers en gaan meteen naar je vriend
+const chat3 = lees('chat.html')
+assert.match(chat3, /emojiKnop\.id = 'spelEmojiKnop'/)
+{ const i = chat3.indexOf('rij.appendChild(knop)'), j = chat3.indexOf('rij.appendChild(emojiKnop)'), k = chat3.indexOf('rij.appendChild(inp)'); assert.ok(i > 0 && i < j && j < k, 'emojiknop tussen de stickerknop en het tekstveld') }
+assert.match(chat3, /await verstuurSpelChat\(e\)/)
+assert.ok(lees('taal-en.js').includes('"Emoji\'s": "Emojis"'))
+console.log('emoji op de balk: ok')
+
+// 13. Een verstuurknop naast het tekstveld op de spelbalk
+const chat4 = lees('chat.html')
+assert.match(chat4, /stuurKnop\.id = 'spelChatStuur'/)
+assert.match(chat4, /stuurKnop\.onclick = function \(\) \{ verstuurInvoer\(\) \}/)
+assert.match(chat4, /if \(ev\.key !== 'Enter' \|\| ev\.isComposing\) return\n      ev\.preventDefault\(\)\n      verstuurInvoer\(\)/, 'Enter werkt nog steeds')
+console.log('verstuurknop: ok')
+
+// 14. Tijdens het typen schuiven de sticker- en emojiknop opzij
+const chat5 = lees('chat.html')
+assert.match(chat5, /inp\.addEventListener\('focus', function \(\) \{[\s\S]{0,140}zijKnoppen\(false\)/)
+assert.match(chat5, /inp\.addEventListener\('blur', function \(\) \{ zijKnoppen\(true\) \}\)/)
+console.log('opzij schuiven: ok')

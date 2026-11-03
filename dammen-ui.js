@@ -11,6 +11,8 @@
 //     veldnummers, tafelachtergrond, beweging en geluid. Bewaard op dit toestel (localStorage 'fibro_dammen_inst');
 //   - eigen geluiden (dammen-geluid.js); tegen een vriend een webcamknop (de webcams staan als rondjes bovenin,
 //     dat regelt chat.html).
+// v149: de webcamrondjes zijn groter (120 px), het bord houdt daar rekening mee. Word je geslagen, dan stuurt het
+//   spel 'fibro-dam-geslagen' en kleurt je webcamrondje even rood.
 // Het protocol over het spelkanaal is hetzelfde gebleven (zet, vraag-stand, stand, opnieuw), dus een vriend met een
 // oudere Fibro kan gewoon meespelen. Nieuw is alleen 'einde: true' in een zet die de partij beëindigt.
 import { geluid, geluidAan, zetGeluid, ontgrendel } from './dammen-geluid.js?v=1'
@@ -182,7 +184,7 @@ export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     // ── Maat ──
     function maat() {
         const breed = Math.min(inhoud.clientWidth || window.innerWidth, window.innerWidth) - 28
-        const camera = overlay && overlay.classList.contains('dam-video-modus') ? 118 : 0
+        const camera = overlay && overlay.classList.contains('dam-video-modus') ? 152 : 0
         const hoog = window.innerHeight - 250 - camera
         const ruimte = Math.max(220, Math.min(breed, hoog))
         cel = Math.max(24, Math.min(58, Math.floor(ruimte / 10.7)))
@@ -418,6 +420,11 @@ export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         const vertraging = inst.beweging ? STAPTIJD * keten.length : 0
         setTimeout(() => { geluid.zet(keten.length, geslagen); if (werdDam && !inst.beweging) geluid.dam() }, Math.max(0, vertraging - 40))
         if (werdDam && inst.beweging) setTimeout(() => { geluid.zet(1, 0); geluid.dam() }, vertraging + 60 + SPRONG - 20)   // de bovenste schijf landt
+        // v149: wie geslagen wordt, krijgt een rode rand om zijn webcamrondje (chat.html luistert hiernaar)
+        if (geslagen && stuk) {
+            const wie = stuk[0] === mijnKleur ? 'ander' : 'ik'
+            setTimeout(() => window.dispatchEvent(new CustomEvent('fibro-dam-geslagen', { detail: { wie, aantal: geslagen } })), Math.max(0, vertraging - 40))
+        }
     }
 
     function controleerEinde() {

@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=51"></script>
+<script src="taal.js?v=52"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -193,20 +193,24 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 .spel-audio-start[hidden] { display:none; }
 .spel-video-vak.is-seen { border-color:#55ef9e; box-shadow:inset 0 0 0 2px #55ef9e88,inset 0 0 24px #0009,0 0 22px #3de88770; }
 .spel-video-vak.is-seen::after { content:'Visible to friend'; position:absolute; z-index:3; top:8px; right:8px; padding:4px 8px; border-radius:999px; background:#103e2ed9; color:#baffd8; font-size:10px; font-weight:800; letter-spacing:.02em; }
-.spel-overlay.dam-video-modus #spelInhoud { padding-top:122px; box-sizing:border-box; }
-.spel-overlay.dam-video-modus .spel-video-vak { display:block; position:absolute; z-index:6; top:12px; width:90px; height:90px; min-height:0; margin:0; flex:none; overflow:visible; border:3px solid rgba(255,255,255,.28); border-radius:50%; background:radial-gradient(circle at 40% 35%,#26324a,#0b1220); box-shadow:0 6px 16px #0008; }
-.spel-overlay.dam-video-modus #spelVideoAnder { left:calc(50% - 99px); }
-.spel-overlay.dam-video-modus #spelVideoEigen { left:calc(50% + 9px); }
+.spel-overlay.dam-video-modus #spelInhoud { padding-top:156px; box-sizing:border-box; }
+.spel-overlay.dam-video-modus .spel-video-vak { display:block; position:absolute; z-index:6; top:12px; width:120px; height:120px; min-height:0; margin:0; flex:none; overflow:visible; border:3px solid rgba(255,255,255,.28); border-radius:50%; background:radial-gradient(circle at 40% 35%,#26324a,#0b1220); box-shadow:0 6px 16px #0008; }
+.spel-overlay.dam-video-modus #spelVideoAnder { left:calc(50% - 132px); }
+.spel-overlay.dam-video-modus #spelVideoEigen { left:calc(50% + 12px); }
 .spel-overlay.dam-video-modus .spel-video-vak video { border-radius:50%; width:100%; height:100%; }
 .spel-overlay.dam-video-modus .spel-video-vak .video-etiket { left:50%; bottom:-21px; transform:translateX(-50%); max-width:110px; padding:2px 8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; }
 .spel-overlay.dam-video-modus .spel-video-wachten { padding:0; font-size:0; border-radius:50%; }
-.spel-overlay.dam-video-modus .spel-video-wachten::before { content:'📷'; font-size:26px; opacity:.55; }
+.spel-overlay.dam-video-modus .spel-video-wachten::before { content:'📷'; font-size:34px; opacity:.55; }
 .spel-overlay.dam-video-modus .spel-video-vak.is-seen { border-color:#55ef9e; box-shadow:0 0 0 2px #55ef9e55,0 0 18px #3de88780; }
 .spel-overlay.dam-video-modus .spel-video-vak.is-seen::after { content:none; }
+.spel-overlay.dam-video-modus .spel-video-vak { transition:border-color .15s ease,box-shadow .15s ease; }
+.spel-overlay.dam-video-modus .spel-video-vak.praat { border-color:#fcd34d; box-shadow:0 0 0 4px #fbbf2470,0 0 26px #fbbf24c0; }
+.spel-overlay.dam-video-modus .spel-video-vak.geslagen { border-color:#f87171; box-shadow:0 0 0 4px #ef444480,0 0 30px #ef4444d0; animation:damGeslagen .45s ease-in-out 3; }
+@keyframes damGeslagen { 50% { box-shadow:0 0 0 7px #ef444455,0 0 40px #ef4444; } }
 .spel-overlay.dam-video-modus .cf-knop { position:absolute; right:-6px; bottom:-4px; z-index:4; width:30px !important; height:30px !important; font-size:14px !important; }
 .spel-overlay.dam-video-modus .cf-paneel { position:fixed !important; top:120px !important; bottom:auto !important; }
 .spel-overlay.dam-video-modus .spel-titel-bar { display:none; }
-@media (max-width:360px) { .spel-overlay.dam-video-modus .spel-video-vak { top:46px; } .spel-overlay.dam-video-modus #spelInhoud { padding-top:150px; } }
+@media (max-width:360px) { .spel-overlay.dam-video-modus .spel-video-vak { width:104px; height:104px; } .spel-overlay.dam-video-modus #spelVideoAnder { left:calc(50% - 114px); } .spel-overlay.dam-video-modus #spelInhoud { padding-top:140px; } }
 .spel-overlay.sch-video-modus { justify-content:stretch; padding:53px 0 8px; overflow-y:auto; overscroll-behavior:contain; }
 .spel-overlay.sch-video-modus .spel-video-vak { display:block; }
 .spel-overlay.sch-video-modus #spelInhoud { flex:0 0 auto; width:100% !important; height:auto !important; min-height:0; }
@@ -421,7 +425,7 @@ window.veiligeUrl = function(v){
   import * as Schaak from './schaak.js?v=95'
   import * as Dammen from './dammen.js?v=95'
   import * as Bordgeluid from './bordgeluid.js?v=201'
-  import * as DammenUI from './dammen-ui.js?v=148'
+  import * as DammenUI from './dammen-ui.js?v=149'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
@@ -2310,7 +2314,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ander accepteert. Spellen die nog in chat.html zitten hoeven niets.
   const SPEL_BESTAND = {
     botkaaseiren: './bke-ui.js?v=239',
-    dammen: './dammen-ui.js?v=148',
+    dammen: './dammen-ui.js?v=149',
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
     schaken: './schaken-ui.js?v=260',
@@ -2550,7 +2554,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (laag === null) return
     var b = document.createElement('div')
     b.textContent = tekst
-    b.style.cssText = 'max-width:70%;margin:4px 0;padding:8px 12px;border-radius:14px;font-size:15px;color:#fff;align-self:' + (vanMij ? 'flex-end' : 'flex-start') + ';background:' + (vanMij ? '#00f0ff33' : '#ff00cc33') + ';border:1px solid ' + (vanMij ? '#00f0ff' : '#ff00cc') + ';opacity:1;transition:opacity 1s'
+    var groot = emojiNiveau(tekst)   // alleen emoji's: groter, zoals in de chat
+    b.style.cssText = 'max-width:70%;margin:4px 0;padding:8px 12px;border-radius:14px;font-size:' + (groot ? [0, 34, 28, 24][groot] : 15) + 'px;color:#fff;align-self:' + (vanMij ? 'flex-end' : 'flex-start') + ';background:' + (vanMij ? '#00f0ff33' : '#ff00cc33') + ';border:1px solid ' + (vanMij ? '#00f0ff' : '#ff00cc') + ';opacity:1;transition:opacity 1s'
     laag.appendChild(b)
     while (laag.children.length > 4) laag.removeChild(laag.firstChild)
     setTimeout(function(){ b.style.opacity = '0'; setTimeout(function(){ if (b.parentNode) b.parentNode.removeChild(b) }, 1000) }, 6000)
@@ -2566,7 +2571,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   function spelStickerVrij() {
     spelStickerMag = true; spelStickerVriendMag = true
     const k = document.getElementById('spelStickerKnop')
-    if (k) { k.disabled = false; k.style.opacity = '1' }
+    if (k) { k.disabled = false; if (k.getAttribute('aria-hidden') !== 'true') k.style.opacity = '1' }
   }
   async function stuurSpelSticker(st) {
     const paneel = document.getElementById('spelStickerPaneel')
@@ -2652,30 +2657,100 @@ console.timeLog('[chat] berichten', 'opgehaald')
       if (!spelStickerMag) return
       var dicht = paneel.style.display === 'none'
       paneel.style.display = dicht ? 'block' : 'none'
+      var ep = document.getElementById('spelEmojiPaneel'); if (ep && dicht) ep.style.display = 'none'
       if (!dicht) return
       if (!spelStickerKeuze) spelStickerKeuze = maakStickerkeuze(paneel, { onKies: stuurSpelSticker, uid: () => huidigeUser && huidigeUser.id })
       else spelStickerKeuze.vernieuw()
     }
     if (!spelStickerMag) { knop.disabled = true; knop.style.opacity = '0.35' }
     rij.appendChild(knop)
+    // v3 nov: de emoji's staan weer op de balk, naast de stickers. Tik op een emoji en hij gaat meteen naar je vriend.
+    var emojiPaneel = document.createElement('div')
+    emojiPaneel.id = 'spelEmojiPaneel'
+    emojiPaneel.style.cssText = 'display:none;pointer-events:auto;flex-wrap:wrap;gap:4px;padding:8px;background:rgba(0,0,0,0.88);border:0.5px solid var(--border);border-radius:14px'
+    emojiList.forEach(function (e) {
+      if (e === '\u2764') e = '\u2764\uFE0F'   // anders een zwart hartje op sommige toestellen
+      var b = document.createElement('button')
+      b.type = 'button'
+      b.textContent = e
+      b.style.cssText = 'font-size:24px;width:42px;height:42px;background:none;border:none;border-radius:10px;cursor:pointer'
+      b.onclick = async function () {
+        emojiPaneel.style.display = 'none'
+        await verstuurSpelChat(e)
+      }
+      emojiPaneel.appendChild(b)
+    })
+    var emojiKnop = document.createElement('button')
+    emojiKnop.id = 'spelEmojiKnop'
+    emojiKnop.type = 'button'
+    emojiKnop.textContent = '\u{1F60A}'
+    emojiKnop.setAttribute('aria-label', T("Emoji's"))
+    emojiKnop.style.cssText = knop.style.cssText
+    emojiKnop.style.opacity = '1'
+    emojiKnop.onclick = function () {
+      var dicht = emojiPaneel.style.display === 'none'
+      emojiPaneel.style.display = dicht ? 'flex' : 'none'
+      if (dicht) paneel.style.display = 'none'
+    }
+    rij.appendChild(emojiKnop)
     var inp = document.createElement('input')
     inp.type = 'text'
     inp.maxLength = 2000
     inp.placeholder = spelT('Bericht...')
     inp.style.cssText = 'flex:1;min-width:60px;padding:8px 10px;border-radius:10px;border:1px solid #ffffff44;background:#000000aa;color:#fff;font-size:15px'
     let versturen = false
-    inp.onkeydown = async function(ev) {
-      if (ev.key !== 'Enter' || ev.isComposing || versturen) return
-      ev.preventDefault()
+    async function verstuurInvoer() {
       const tekst = inp.value.trim()
-      if (!tekst) return
+      if (!tekst || versturen) return
       versturen = true
+      stuurKnop.disabled = true
       try { if (await verstuurSpelChat(tekst) && inp.value.trim() === tekst) inp.value = '' }
-      finally { versturen = false }
+      finally { versturen = false; stuurKnop.disabled = false; zetStuurKnop() }
     }
+    inp.onkeydown = function(ev) {
+      if (ev.key !== 'Enter' || ev.isComposing) return
+      ev.preventDefault()
+      verstuurInvoer()
+    }
+    // v3 nov: ook een verstuurknop (op de telefoon is Enter niet altijd te vinden)
+    var stuurKnop = document.createElement('button')
+    stuurKnop.id = 'spelChatStuur'
+    stuurKnop.type = 'button'
+    stuurKnop.textContent = '\u27A4'
+    stuurKnop.setAttribute('aria-label', T('Versturen'))
+    stuurKnop.style.cssText = 'flex:none;width:40px;height:38px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent,#c084fc),var(--accent2,#f0abfc));color:#1a0a2e;font-size:18px;font-weight:700;cursor:pointer;transition:opacity .2s'
+    function zetStuurKnop() { stuurKnop.style.opacity = inp.value.trim() ? '1' : '0.45' }
+    zetStuurKnop()
+    inp.addEventListener('input', zetStuurKnop)
+    // pointerdown + preventDefault: het toetsenbord blijft open, zodat je meteen verder kunt typen
+    stuurKnop.addEventListener('pointerdown', function (ev) { ev.preventDefault() })
+    stuurKnop.onclick = function () { verstuurInvoer() }
     rij.appendChild(inp)
+    rij.appendChild(stuurKnop)
+    // v3 nov: tijdens het typen schuiven 🎨 en 😊 opzij, zodat het tekstveld bijna de hele breedte krijgt
+    function zijKnoppen(zichtbaar) {
+      for (const b of [knop, emojiKnop]) {
+        b.style.overflow = 'hidden'
+        b.style.whiteSpace = 'nowrap'
+        b.style.transition = 'max-width .22s ease, padding .22s ease, margin .22s ease, opacity .18s ease, border-width .22s ease'
+        b.style.maxWidth = zichtbaar ? '64px' : '0px'
+        b.style.paddingLeft = b.style.paddingRight = zichtbaar ? '10px' : '0px'
+        b.style.borderWidth = zichtbaar ? '1px' : '0px'
+        b.style.marginRight = zichtbaar ? '0px' : '-6px'
+        b.style.opacity = zichtbaar ? (b === knop && !spelStickerMag ? '0.35' : '1') : '0'
+        b.tabIndex = zichtbaar ? 0 : -1
+        if (zichtbaar) b.removeAttribute('aria-hidden'); else b.setAttribute('aria-hidden', 'true')
+      }
+    }
+    inp.addEventListener('focus', function () {
+      paneel.style.display = 'none'; emojiPaneel.style.display = 'none'
+      zijKnoppen(false)
+    })
+    inp.addEventListener('blur', function () { zijKnoppen(true) })
+    zijKnoppen(true)
     wrap.appendChild(laag)
     wrap.appendChild(paneel)
+    wrap.appendChild(emojiPaneel)
     wrap.appendChild(rij)
     const chatStatus = document.createElement('p')
     chatStatus.id = 'spelChatStatus'
@@ -3411,6 +3486,74 @@ async function startBlockIt() {
     return spelActief === 'schaken' || spelActief === 'dammen'
   }
 
+  // Wie praat, krijgt bij dammen een gouden rand om zijn webcamrondje. We luisteren alleen naar het volume
+  // (een AnalyserNode, niet aangesloten op de luidspreker, dus niets dubbel te horen). Microfoon op stil = geen rand.
+  const spreekMeter = (() => {
+    let ac = null, timer = null
+    const bronnen = new Map()
+    const VAKKEN = { spelVideoEigen: 'lokaalMedia', spelVideoAnder: 'remoteAudio' }
+    function wek() {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext
+        if (!ac && AC) ac = new AC()
+        if (ac && ac.state === 'suspended') ac.resume().catch(() => {})
+      } catch (e) {}
+    }
+    function koppel(vakId, stream) {
+      const track = stream?.getAudioTracks?.().find(t => t.readyState === 'live') || null
+      const oud = bronnen.get(vakId)
+      if (oud && oud.track === track) return
+      if (oud) { try { oud.bron.disconnect() } catch (e) {} bronnen.delete(vakId) }
+      if (!track || !ac) return
+      try {
+        const bron = ac.createMediaStreamSource(new MediaStream([track]))
+        const analyser = ac.createAnalyser()
+        analyser.fftSize = 512
+        bron.connect(analyser)
+        bronnen.set(vakId, { track, bron, analyser, data: new Uint8Array(analyser.fftSize), tot: 0 })
+      } catch (e) {}
+    }
+    function stap() {
+      if (spelActief !== 'dammen') { volg(false); return }
+      wek()
+      const nu = performance.now()
+      for (const [vakId, mediaId] of Object.entries(VAKKEN)) {
+        koppel(vakId, document.getElementById(mediaId)?.srcObject)
+        const b = bronnen.get(vakId)
+        let praat = false
+        if (b && b.track.enabled && b.track.readyState === 'live') {
+          b.analyser.getByteTimeDomainData(b.data)
+          let som = 0
+          for (let i = 0; i < b.data.length; i++) { const x = (b.data[i] - 128) / 128; som += x * x }
+          if (Math.sqrt(som / b.data.length) > 0.035) b.tot = nu + 350   // even blijven staan tussen woorden
+          praat = nu < b.tot
+        }
+        document.getElementById(vakId)?.classList.toggle('praat', praat)
+      }
+    }
+    function volg(aan) {
+      if (aan) { wek(); if (!timer) timer = setInterval(stap, 100); return }
+      clearInterval(timer); timer = null
+      for (const b of bronnen.values()) { try { b.bron.disconnect() } catch (e) {} }
+      bronnen.clear()
+      for (const vakId of Object.keys(VAKKEN)) document.getElementById(vakId)?.classList.remove('praat')
+    }
+    return { volg, wek }
+  })()
+  window.fibroSpreekMeter = spreekMeter
+  // Word je bij dammen geslagen, dan kleurt je rondje anderhalve seconde rood (wie: 'ik' of 'ander')
+  let damGeslagenTimers = {}
+  window.addEventListener('fibro-dam-geslagen', event => {
+    if (spelActief !== 'dammen') return
+    const vakId = event.detail?.wie === 'ik' ? 'spelVideoEigen' : 'spelVideoAnder'
+    const vak = document.getElementById(vakId)
+    if (!vak) return
+    vak.classList.remove('geslagen'); void vak.offsetWidth; vak.classList.add('geslagen')
+    clearTimeout(damGeslagenTimers[vakId])
+    damGeslagenTimers[vakId] = setTimeout(() => vak.classList.remove('geslagen'), 1500)
+  })
+  document.getElementById('spelOverlay').addEventListener('pointerdown', () => { if (spelActief === 'dammen') spreekMeter.wek() }, { passive:true })
+
   function zetSpelVideoVoortgang(sleutel, bezig = true, waarden = {}) {
     const tekst = spelT(sleutel, waarden)
     window.dispatchEvent(new CustomEvent('fibro-chess-video-progress', { detail: { tekst, sleutel, waarden, bezig } }))
@@ -3434,6 +3577,7 @@ async function startBlockIt() {
     // v3 nov: bij dammen staan de webcams als twee rondjes bovenin (dam-video-modus), bij schaken als vakken
     overlay.classList.toggle('sch-video-modus', toon && spelActief === 'schaken')
     overlay.classList.toggle('dam-video-modus', toon && spelActief === 'dammen')
+    window.fibroSpreekMeter?.volg(toon && spelActief === 'dammen')
     spelCameraLayout?.sync()
     if (eigenWacht) {
       eigenWacht.hidden = spelEigenVideo
@@ -3464,6 +3608,7 @@ async function startBlockIt() {
     if (audioKnop) audioKnop.hidden = true
     const overlay = document.getElementById('spelOverlay')
     if (overlay) overlay.classList.remove('sch-video-modus', 'dam-video-modus')
+    window.fibroSpreekMeter?.volg(false)
     const eigenVideo = document.getElementById('lokaalMedia')
     const anderVideo = document.getElementById('remoteMedia')
     const eigenVak = document.getElementById('spelVideoEigen')
@@ -3497,6 +3642,7 @@ async function startBlockIt() {
       return setFibroTestCamera(!wasAan)
     }
     if (!isVideoSpel()) return { ok:false, reason:'connecting' }
+    if (spelActief === 'dammen') spreekMeter.wek()   // in de tik zelf, anders mag het geluid op de iPhone niet
     hervatGeluid()
     const wasAan = isVideoActiefLokaal()
     if (wasAan) {

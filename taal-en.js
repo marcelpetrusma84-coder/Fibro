@@ -1747,6 +1747,7 @@ window.FIBRO_EN = {
   "Android: Chrome, drie puntjes, App installeren of Toevoegen aan startscherm. iPhone: Safari, deelicoon, Zet op beginscherm.": "Android: Chrome, three dots, Install app or Add to Home screen. iPhone: Safari, share icon, Add to Home Screen.",
 
   // dammen v148 (3 nov 2026)
+  "Dam!": "King!",
   "Expert": "Expert",
   "aan zet": "to move",
   "Dambord": "Draughts board",

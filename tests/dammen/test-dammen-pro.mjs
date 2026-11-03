@@ -103,3 +103,11 @@ assert.match(lees('spel.html'), /expert: 'Expert'/)
 assert.match(lees('dammen-worker.js'), /dammen-computer\.js\?v=1/)
 
 console.log('dammen pro: ok')
+
+// 9. De damsprong: een tweede schijf springt bovenop, daarna kroon, ring, vonkjes en 'Dam!'
+const ui2 = lees('dammen-ui.js')
+assert.match(ui2, /function damSprong\(el, kleur, \[r, k\], wacht, s, plek\)/)
+assert.match(ui2, /vooraf\[1\] === 'S' && staat\.bord\[eind\[0\]\]\[eind\[1\]\]\?\.\[1\] === 'D'\) damSprong/, 'alleen als een schijf dam wordt')
+assert.match(ui2, /dm-damring/); assert.match(ui2, /dm-vonk/); assert.match(ui2, /T\('Dam!'\)/)
+assert.match(ui2, /const wacht = bezigTot - Date\.now\(\)/, 'een snel antwoord wacht tot de animatie klaar is')
+console.log('damsprong: ok')

@@ -87,6 +87,9 @@ function zetStijl() {
 .dm-schijf.moet::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:3px solid #fbbf24;box-shadow:0 0 12px #fbbf24;animation:dm-puls 1.2s ease-in-out infinite}
 .dm-schijf.half{opacity:.32}
 @keyframes dm-puls{0%,100%{opacity:1}50%{opacity:.45}}
+.dm-damring{position:absolute;border-radius:50%;border:3px solid #fde68a;box-shadow:0 0 18px #fbbf24,inset 0 0 12px #fbbf24aa;pointer-events:none}
+.dm-vonk{position:absolute;width:7px;height:7px;border-radius:50%;background:radial-gradient(circle,#fff 0 30%,#fde047 45%,#f59e0b 70%,transparent 72%);pointer-events:none}
+.dm-damtekst{position:absolute;z-index:6;transform:translateX(-50%);font-weight:900;font-size:var(--dm-damtekst,18px);color:#fde68a;letter-spacing:.04em;white-space:nowrap;text-shadow:0 2px 0 #7c4a03,0 0 12px #f59e0b,0 0 2px #000;pointer-events:none}
 .dm-knoppen{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .dm-knop{min-height:38px;padding:8px 14px;border-radius:11px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.09);color:#fff;font:inherit;font-size:13px;font-weight:650;cursor:pointer}
 .dm-knop:active{transform:scale(.97)}
@@ -263,6 +266,7 @@ export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
             })
             const duur = STAPTIJD * (punten.length - 1) + 60
             bewogen.animate(frames, { duration: duur, easing: 'cubic-bezier(.3,.7,.3,1)' })
+            bezigTot = Date.now() + duur
             keten.forEach((sprong, i) => {
                 if (!sprong.geslagen) return
                 const oud = vorigBord[sprong.geslagen[0]][sprong.geslagen[1]]
@@ -271,10 +275,73 @@ export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
                 geest.animate([{ opacity: 1, transform: 'scale(1)' }, { opacity: 1, transform: 'scale(1)', offset: 0.5 }, { opacity: 0, transform: 'scale(.4)' }],
                     { duration: STAPTIJD * (i + 1) + 220, easing: 'ease-in', fill: 'forwards' })
             })
+            // v148: een schijf die dam wordt, krijgt een tweede schijf die er met een sprong bovenop landt
+            const eind = punten[punten.length - 1]
+            const vooraf = vorigBord[keten[0].van[0]][keten[0].van[1]]
+            if (vooraf && vooraf[1] === 'S' && staat.bord[eind[0]][eind[1]]?.[1] === 'D') damSprong(bewogen, vooraf[0], eind, duur, s, plek)
         }
         animatie = null
         tekenBalken()
         toonStatus(moetSlaan)
+    }
+
+    // De damsprong: een schijf van dezelfde kleur springt in een boog op de nieuwe dam, de onderste veert even in,
+    // dan komt de gouden kroon tevoorschijn met een gouden ring, vonkjes en het woord 'Dam!'.
+    const SPRONG = 640
+    function damSprong(el, kleur, [r, k], wacht, s, plek) {
+        const kroon = el.innerHTML
+        el.classList.remove('dam'); el.innerHTML = ''
+        const [x, y] = plek(r, k)
+        const [sr, sk] = scherm(r, k)
+        const dy = (sr < 5 ? 1 : -1) * cel * 2.3            // van de kant van het bord af, zodat hij binnen het bord blijft
+        const dx = (sk < 5 ? 1 : -1) * cel * 1.5
+        const op = -s * 0.13                                 // de bovenste schijf ligt iets hoger (zoals bij .dam)
+        const sprong = document.createElement('div')
+        sprong.className = 'dm-schijf ' + kleur
+        sprong.style.left = x + 'px'; sprong.style.top = y + 'px'; sprong.style.zIndex = '4'
+        laagEl.appendChild(sprong)
+        bezigTot = Date.now() + wacht + SPRONG + 750
+        sprong.animate([
+            { opacity: 0, transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.7)' },
+            { opacity: 1, transform: 'translate(' + dx + 'px,' + dy + 'px) scale(1)', offset: 0.14 },
+            { opacity: 1, transform: 'translate(' + (dx * 0.4) + 'px,' + (dy * 0.15 - cel * 1.5) + 'px) scale(1.45)', offset: 0.58 },
+            { opacity: 1, transform: 'translate(0px,' + (op - cel * 0.35) + 'px) scale(1.12)', offset: 0.84 },
+            { opacity: 1, transform: 'translate(0px,' + op + 'px) scale(1)' }
+        ], { duration: SPRONG, delay: wacht, easing: 'cubic-bezier(.33,.1,.45,1)', fill: 'both' })
+        setTimeout(() => {
+            if (!el.isConnected) return
+            sprong.remove()
+            el.classList.add('dam'); el.innerHTML = kroon
+            el.animate([{ transform: 'scale(1.16,.82)' }, { transform: 'scale(.95,1.06)', offset: 0.55 }, { transform: 'scale(1)' }], { duration: 300, easing: 'ease-out' })
+            const svg = el.querySelector('svg')
+            if (svg) svg.animate([{ transform: 'scale(0) rotate(-35deg)', opacity: 0 }, { transform: 'scale(1.55) rotate(8deg)', opacity: 1, offset: 0.6 }, { transform: 'scale(1) rotate(0)', opacity: 1 }],
+                { duration: 520, delay: 90, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' })
+            const mx = x + s / 2, my = y + s / 2 + op
+            const ring = document.createElement('div')
+            ring.className = 'dm-damring'
+            ring.style.cssText = 'left:' + (mx - s / 2) + 'px;top:' + (my - s / 2) + 'px;width:' + s + 'px;height:' + s + 'px'
+            laagEl.appendChild(ring)
+            ring.animate([{ transform: 'scale(.6)', opacity: 1 }, { transform: 'scale(2.4)', opacity: 0 }], { duration: 650, easing: 'ease-out', fill: 'forwards' }).onfinish = () => ring.remove()
+            for (let i = 0; i < 12; i++) {
+                const v = document.createElement('div')
+                v.className = 'dm-vonk'
+                v.style.left = (mx - 3.5) + 'px'; v.style.top = (my - 3.5) + 'px'
+                laagEl.appendChild(v)
+                const hoek = (i / 12) * Math.PI * 2 + Math.random() * 0.4, afstand = cel * (0.9 + Math.random() * 0.7)
+                v.animate([{ transform: 'translate(0,0) scale(1.2)', opacity: 1 },
+                    { transform: 'translate(' + Math.cos(hoek) * afstand + 'px,' + (Math.sin(hoek) * afstand + cel * 0.25) + 'px) scale(.2)', opacity: 0 }],
+                    { duration: 600 + Math.random() * 250, easing: 'cubic-bezier(.2,.7,.4,1)', fill: 'forwards' }).onfinish = () => v.remove()
+            }
+            const tekst = document.createElement('div')
+            tekst.className = 'dm-damtekst'
+            tekst.textContent = T('Dam!')
+            tekst.style.left = mx + 'px'; tekst.style.top = (sr < 5 ? my + s * 0.55 : my - s * 1.15) + 'px'
+            tekst.style.setProperty('--dm-damtekst', Math.max(15, Math.round(cel * 0.5)) + 'px')
+            laagEl.appendChild(tekst)
+            tekst.animate([{ transform: 'translateX(-50%) scale(.4)', opacity: 0 }, { transform: 'translateX(-50%) scale(1.15)', opacity: 1, offset: 0.2 },
+                { transform: 'translateX(-50%) scale(1)', opacity: 1, offset: 0.7 }, { transform: 'translateX(-50%) translateY(-10px)', opacity: 0 }],
+                { duration: 1300, easing: 'ease-out', fill: 'forwards' }).onfinish = () => tekst.remove()
+        }, wacht + SPRONG)
     }
 
     function tekenBalken() {
@@ -349,7 +416,8 @@ export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         // geluid
         const werdDam = stuk && stuk[1] === 'S' && staat.bord[keten[keten.length - 1].naar[0]][keten[keten.length - 1].naar[1]]?.[1] === 'D'
         const vertraging = inst.beweging ? STAPTIJD * keten.length : 0
-        setTimeout(() => { geluid.zet(keten.length, geslagen); if (werdDam) geluid.dam() }, Math.max(0, vertraging - 40))
+        setTimeout(() => { geluid.zet(keten.length, geslagen); if (werdDam && !inst.beweging) geluid.dam() }, Math.max(0, vertraging - 40))
+        if (werdDam && inst.beweging) setTimeout(() => { geluid.zet(1, 0); geluid.dam() }, vertraging + 60 + SPRONG - 20)   // de bovenste schijf landt
     }
 
     function controleerEinde() {
@@ -383,9 +451,15 @@ export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         naBeurt()
     }
 
+    // Loopt er nog een beweging (een sprong of de damsprong), dan wacht de volgende tekening tot die klaar is.
+    // Anders zou een snel antwoord van de computer de animatie halverwege wegvegen.
+    let bezigTot = 0, uitstel = null
     function naBeurt() {
         ketensCache = null; melding = ''
         opnieuwBtn.hidden = !gameOver
+        clearTimeout(uitstel)
+        const wacht = bezigTot - Date.now()
+        if (wacht > 0) { uitstel = setTimeout(() => { if (bordEl.isConnected) tekenBord() }, wacht); return }
         tekenBord()
     }
 
@@ -439,6 +513,7 @@ export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         spelId = id; nr = 0; gameOver = false; uitslag = null
         laatsteKeten = null; geselecteerd = null; pad = []; ketensCache = null; melding = ''
         stil = 0; herhaling = new Map()
+        bezigTot = 0; clearTimeout(uitstel)
         opnieuwBtn.hidden = true
         tekenBord()
     }

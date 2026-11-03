@@ -1,4 +1,5 @@
 -- profielen-publiek-dicht.sql (bugtest 3 nov 2026): de lijst van alle gebruikers is niet meer zonder inloggen te lezen.
+-- AL UITGEVOERD op 3 nov 2026 (Supabase-migratie profielen_publiek_dicht); nog een keer uitvoeren kan geen kwaad.
 -- Plakken in Supabase > SQL Editor > Run. Alles of niets: gaat er iets mis, dan verandert er niets.
 --
 -- Wat er mis was: de view profielen_publiek (id, gebruikersnaam, publieke sleutel en avatar van iedereen die niet

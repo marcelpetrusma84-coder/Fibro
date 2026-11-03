@@ -26,13 +26,16 @@ const lees = f => readFileSync(new URL('../../' + f, import.meta.url), 'utf8')
 {
   const i = lees('invite.html')
   assert.match(i, /supabase\.rpc\('uitnodiger_van_invite', \{ token_in: token \}\)/)
-  assert.ok(i.indexOf("rpc('uitnodiger_van_invite'") < i.indexOf(".from('profielen_publiek')"), 'eerst de nieuwe functie')
+  assert.doesNotMatch(i, /\.from\('profielen_publiek'\)/, 'de view is dicht en wordt niet meer gebruikt')
   const sql = lees('sql/profielen-publiek-dicht.sql')
   assert.match(sql, /create or replace function public\.uitnodiger_van_invite\(token_in text\)/)
   assert.match(sql, /and t\.is_used = false\n    and \(t\.expires_at is null or t\.expires_at > now\(\)\)/)
   assert.match(sql, /revoke all on public\.profielen_publiek from anon, authenticated;/)
   assert.match(sql, /grant execute on function public\.uitnodiger_van_invite\(text\) to anon, authenticated;/)
   assert.match(sql, /^begin;$/m); assert.match(sql, /^commit;$/m)
+  const f = lees('sql/functies-afgeschermd.sql')
+  assert.match(f, /revoke execute on function public\.handle_new_user\(\) from public, anon, authenticated;/)
+  for (const fn of ['handle_new_user', 'delete_expired_messages', 'berichten_bewaren_start']) assert.match(f, new RegExp('alter function public\\.' + fn + "\\(\\) set search_path = '';"))
 }
 
 // 4. cacheversies: hetzelfde bestand overal met dezelfde ?v= (anders twee kopieen, of een oude uit de kast)

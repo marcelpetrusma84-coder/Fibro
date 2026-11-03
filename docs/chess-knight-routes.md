@@ -1,0 +1,74 @@
+# Paardroutes in solo schaken
+
+Tijdens je eigen beurt kun je een eigen paard of een paard van de computer drie
+seconden vasthouden. Vier onafhankelijke schakelaars in **Schaakinstellingen →
+Paardroutes** kiezen exacte sprongaantallen 1 t/m 4. Ze staan standaard allemaal
+aan en worden opgeslagen als vier booleans in `knightRouteSteps`, binnen de
+bestaande apparaatinstellingen. Ongeldige gegevens vallen terug op de defaults.
+
+De functie werkt in alle vier de soloniveaus, waaronder Ultra. Vriendenpartijen
+en drie-spelerpartijen krijgen deze hulp niet.
+
+## Weergave en betekenis
+
+- Eigen paard: rode, blauwe, groene en paarse bolletjes, afnemend in grootte.
+- Computerpaard: oranje, cyaan, gele en witte vierkantjes, eveneens afnemend.
+- De vulling is halfdoorzichtig, zodat stukken eronder zichtbaar blijven. Als
+  meerdere sprongaantallen hetzelfde veld bereiken, liggen de kleinere vormen
+  boven de grotere. Er is geen beperking of uitsluiting per kwadrant.
+- Een legenda geeft de gekozen sprongaantallen aan. Een nieuwe gewone tik,
+  sluiten of een gewijzigde stelling/beurt ruimt de routes op.
+
+Het gaat om **hypothetische opeenvolgende sprongen van hetzelfde paard**. De
+andere stukken blijven staan, behalve stukken die langs een route worden
+geslagen. De tegenstander krijgt tussendoor geen gesimuleerde zetten. Het is
+daarom geen voorspelling van een echte partij en geen engine-advies.
+
+Iedere sprong gebruikt de bestaande legale-zettencontrole, inclusief de
+veiligheid van de eigen koning. Een koning wordt niet als capturebestemming
+gebruikt. Terugkeer en rondjes zijn mogelijk; de echte stelling wordt nooit
+gewijzigd. Een uitgeschakelde tussenlaag wordt nog steeds berekend als een
+latere laag aanstaat. Hoogstens vier sprongen worden doorzocht, met deduplicatie
+van identieke stellingen per laag.
+
+## Bediening en lifecycle
+
+Pointer Events ondersteunen muis en aanraking. Drie seconden is vereist; een
+korte tik blijft de gewone schaakbediening. Verplaatsing, meerdere vingers,
+annuleren, verbergen en schermwissels annuleren een lopende druk. De loslaatklik
+na een lange druk blijft geblokkeerd, ook na een schermwissel. Enter/spatie
+ondersteunen dezelfde korte/lange bediening. Tekstselectie, callouts en het
+contextmenu worden op de relevante schaakelementen onderdrukt.
+
+FEN en een revisienummer beschermen tegen verouderde timers na zetten, reset of
+terugnemen. De overlay behoudt stukken, focus van het bord en bestaande
+toegankelijkheidsbeschrijvingen. Alle timers, listeners en markeringen worden
+opgeruimd bij afsluiten. De labels wisselen live tussen Nederlands en Engels.
+
+## Proberen / overnemen
+
+Open `tests/fixtures/chess-ultra-mobile-preview.html`, kies Ultra en houd tijdens
+wit aan zet bijvoorbeeld g1 drie seconden vast. Probeer daarna b8 en verander
+de vier toggles. De preview bevat ook de bestaande bordvergroting. De veegzone
+voor Take-back is in de echte app onzichtbaar; uitsluitend de testpreview toont
+de strook en voortgang. Toetsenbordfocus kan die bediening zichtbaar maken.
+
+Normaal mergen en statisch deployen. Geen SQL, API-sleutels of nieuwe pakketten
+nodig. Alle drie de nieuwe modules `schaak-paard*.js` moeten worden meegeleverd.
+
+## English
+
+On the human turn, holding either side's knight for three seconds shows exact
+reachable destinations after 1–4 consecutive knight jumps. Four independent,
+default-ON settings persist on the device. Own routes use translucent red/blue/
+green/purple circles; opposing routes use orange/cyan/yellow/white squares.
+Sizes decrease with jump count, overlapping horizons remain visible and no
+quadrants are omitted. This is solo-only in every level, including Ultra.
+
+Other pieces stay still except captures along a branch. Each jump uses legal
+move generation and king-safety checks; the live position is immutable. These
+routes do not predict opposing replies. Holds support touch, mouse and keyboard,
+preserve normal taps, suppress accidental release clicks, and cancel safely on
+movement/multitouch/lifecycle changes. FEN/revision guards reject stale work.
+The prior invisible-production swipe correction is retained. No database,
+credentials or dependency changes are required.

@@ -5,11 +5,12 @@
 <body><main><section class="preview-guide"><h1>Ultra op een klein scherm</h1><p>De echte schaakapp in een smaller venster. Kies Ultra en speel; de engine, instellingen en geluiden werken zoals in de app.</p>
 <p>Op je telefoon: spreid twee vingers op het bord voor één stap meer bord. Laat los voordat je opnieuw spreidt. Naar elkaar toe knijpen gaat één stap terug.</p>
 <ol><li>Tekst bovenaan, geluid, veroverde stukken en terugnemen maken plaats.</li><li>De zetgeschiedenis maakt plaats.</li><li>De analysebalk maakt plaats.</li><li>De instellingenbalk maakt plaats: het bord gebruikt de volle breedte.</li></ol>
+<p><strong>Paardroutes proberen:</strong> houd tijdens jouw beurt een paard drie seconden ingedrukt, ook dat van de computer. Jouw routes krijgen halfdoorzichtige rode, blauwe, groene en paarse bolletjes; de computer krijgt oranje, cyaan, gele en witte vierkantjes. De grootte neemt af van sprong 1 tot 4. Via Schaakinstellingen → Paardroutes kies je welke sprongen zichtbaar zijn.</p>
 <div style="padding:1px 10px;border:1px solid #92b5e533;border-radius:13px;background:#101322ed"><nav aria-label="Vensterbreedte"><button data-width="320">320 px</button><button data-width="390">390 px</button><button data-width="900">Desktop</button></nav>
 <nav aria-label="Focus testen"><button data-focus-key="+">Meer bord (+)</button><button data-focus-key="-">Minder bord (−)</button><button data-focus-key="Escape">Alles tonen</button><output id="focus-status" role="status" aria-live="polite">Kies eerst Ultra in het spel.</output></nav></div>
 <p>Deze proefknoppen bedienen dezelfde +/−-toetsen van het echte bord. Op de telefoon gebruik je de vingerspreid- en knijpbeweging. De snelkoppelingen werken ook wanneer je het bord met Tab focus geeft. Alleen Ultra op mobiele breedte gebruikt de vier stappen.</p>
-<p><strong>Een zet terugvegen:</strong> zet Take-back aan in de schaakinstellingen en speel een zet. Sleep onder het bord vanaf de rechterkant tot links voorbij het midden en laat los. De strook licht op wanneer je ver genoeg bent. In deze preview kun je ook met de muis slepen.</p>
-</section><div class="preview-window"><iframe id="phone" title="Fibro Ultra mobiele preview" src="../../spel.html?spel=schaken&amp;preview=ultra-swipe-final-v1"></iframe></div>
+<p><strong>Een zet terugvegen:</strong> zet Take-back aan in de schaakinstellingen en speel een zet. Sleep onder het bord vanaf de rechterkant tot links voorbij het midden en laat los. Alleen deze testpreview toont de strook en voortgang; in de echte app is de veegzone onzichtbaar. Hier kun je ook met de muis slepen.</p>
+</section><div class="preview-window"><iframe id="phone" title="Fibro Ultra mobiele preview" src="../../spel.html?spel=schaken&amp;preview=knight-routes-v2"></iframe></div>
 <script>
 const phone=document.getElementById('phone'),status=document.getElementById('focus-status')
 let observer
@@ -22,6 +23,7 @@ phone.addEventListener('load',()=>{
   // An embedded preview may replace its frame document during loading.
   const contents=phone.contentDocument?.documentElement
   if(contents?.nodeType===1){
+    contents.setAttribute('data-sch-swipe-preview','true')
     try{
       observer=new MutationObserver(report)
       observer.observe(contents,{subtree:true,childList:true,attributes:true,attributeFilter:['data-ultra-focus']})

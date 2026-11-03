@@ -1,5 +1,16 @@
 // Dutch text is the stable key; app and opponent languages are independent.
 export const SCHAAK_EN = Object.freeze({
+  "Paardroutes": "Knight routes",
+  "Houd tijdens jouw beurt een paard drie seconden vast. Bolletjes zijn jouw routes; vierkantjes zijn die van de computer. De andere stukken blijven staan; tegenzetten worden niet voorspeld.": "On your turn, hold a knight for three seconds. Circles show your routes; squares show the computer's. Other pieces stay in place; opposing moves are not predicted.",
+  "1 sprong": "1 jump",
+  "2 sprongen": "2 jumps",
+  "3 sprongen": "3 jumps",
+  "4 sprongen": "4 jumps",
+  "Na één sprong": "After one jump",
+  "Na {n} sprongen": "After {n} jumps",
+  "Routes van jouw paard": "Your knight's routes",
+  "Routes van het paard van de computer": "The computer knight's routes",
+  "Paardroutes sluiten": "Close knight routes",
   "wit": "white",
   "zwart": "black",
   "Geluid volgt de speler die zet.": "Sound follows the player making the move.",

@@ -9,8 +9,10 @@ sleutels of pakketten nodig.
 Alleen mobiel solo Ultra heeft een afzonderlijke strook onder het bord, wanneer
 **Take-back** is aangezet. De strook blijft bereikbaar in alle vier de
 vergrotingsstanden. Begin in de rechter 30%, veeg naar links tot iets voorbij
-het midden (42% van de strookbreedte) en laat los. De markering en verlichting
-geven aan wanneer de beweging ver genoeg is. Terug naar rechts bewegen vóór
+het midden (42% van de strookbreedte) en laat los. In de echte app is deze zone
+onzichtbaar; alleen de testpreview toont de markering en verlichting om de
+beweging uit te proberen. Toetsenbordfocus maakt de bediening zichtbaar voor
+toegankelijk gebruik. Terug naar rechts bewegen vóór
 het loslaten annuleert de terugname.
 
 Er volgt maximaal één bestaande Take-back per veeg: de eigen laatste zet en,
@@ -62,8 +64,10 @@ telefoonkanteling vragen nog een controle op een toestel.
 ## English
 
 Mobile solo Ultra adds a dedicated under-board swipe strip when Take-back is
-enabled. Start in the rightmost 30%, drag left beyond the midpoint and release.
-The strip lights up at the threshold; moving back cancels. Each release invokes
+enabled. Its touch area is invisible in the actual app; only the test fixture
+shows the strip and threshold feedback. Keyboard focus reveals the control for
+accessibility. Start in the rightmost 30%, drag left beyond the midpoint and
+release; moving back cancels. Each release invokes
 the same guarded undo as the button, including an already-played bot reply.
 It stays available in every focus stage, preserves vertical scrolling, rejects
 small/wrong/multitouch gestures, and cleans up capture and visibility changes.

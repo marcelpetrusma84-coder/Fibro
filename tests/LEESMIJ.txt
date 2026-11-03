@@ -1032,6 +1032,9 @@ tools/proef235.mjs       stuur-push v258: 'vriend-nieuw' (uitnodiging aangenomen
 tools/proef236.py        makkelijker contact in Chrome: Delen bij Uitnodigen, Zeg hoi in een lege chat, na een uitnodiging meteen
                          naar de chat, na het inloggen terug naar de uitnodiging, kleine telefoon. 19 controles. Ook op GitHub.
 ui/test-makkelijk-contact.mjs  vaste afspraken daarvan (v258), en sql/contact-push.sql.
+tools/proef237.py        meldingen meteen aanzetten (meldingen-aan.js): kaart op Home, welkomstscherm na het inschrijven, de eerste
+                         tik op 'Welkom bij Fibro' op de iPhone. Nagebootste meldingen van de telefoon. 16 controles. Ook op GitHub.
+ui/test-meldingen-meteen.mjs  vaste afspraken daarvan (de vraag meteen bij de tik, alle wegen na het inschrijven).
 tools/*.js               console-testjes voor Marcel (alert); ?v=-nummers daarin kunnen verouderd zijn
 
 Opzet nabootsing: Chromium via Playwright; www/Fibro -> symlink naar de map;

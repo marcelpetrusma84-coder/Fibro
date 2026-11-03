@@ -127,3 +127,11 @@ assert.match(lees('dammen-ui.js'), /new CustomEvent\('fibro-dam-geslagen'/)
 assert.match(lees('chat.html'), /\.dam-video-modus \.spel-video-vak\.geslagen \{/)
 assert.match(lees('chat.html'), /event\.detail\?\.wie === 'ik' \? 'spelVideoEigen' : 'spelVideoAnder'/)
 console.log('rode rand: ok')
+
+// 12. De emoji's staan op de spelbalk naast de stickers en gaan meteen naar je vriend
+const chat3 = lees('chat.html')
+assert.match(chat3, /emojiKnop\.id = 'spelEmojiKnop'/)
+{ const i = chat3.indexOf('rij.appendChild(knop)'), j = chat3.indexOf('rij.appendChild(emojiKnop)'), k = chat3.indexOf('rij.appendChild(inp)'); assert.ok(i > 0 && i < j && j < k, 'emojiknop tussen de stickerknop en het tekstveld') }
+assert.match(chat3, /await verstuurSpelChat\(e\)/)
+assert.ok(lees('taal-en.js').includes('"Emoji\'s": "Emojis"'))
+console.log('emoji op de balk: ok')

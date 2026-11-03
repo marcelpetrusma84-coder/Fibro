@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=51"></script>
+<script src="taal.js?v=52"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2554,7 +2554,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (laag === null) return
     var b = document.createElement('div')
     b.textContent = tekst
-    b.style.cssText = 'max-width:70%;margin:4px 0;padding:8px 12px;border-radius:14px;font-size:15px;color:#fff;align-self:' + (vanMij ? 'flex-end' : 'flex-start') + ';background:' + (vanMij ? '#00f0ff33' : '#ff00cc33') + ';border:1px solid ' + (vanMij ? '#00f0ff' : '#ff00cc') + ';opacity:1;transition:opacity 1s'
+    var groot = emojiNiveau(tekst)   // alleen emoji's: groter, zoals in de chat
+    b.style.cssText = 'max-width:70%;margin:4px 0;padding:8px 12px;border-radius:14px;font-size:' + (groot ? [0, 34, 28, 24][groot] : 15) + 'px;color:#fff;align-self:' + (vanMij ? 'flex-end' : 'flex-start') + ';background:' + (vanMij ? '#00f0ff33' : '#ff00cc33') + ';border:1px solid ' + (vanMij ? '#00f0ff' : '#ff00cc') + ';opacity:1;transition:opacity 1s'
     laag.appendChild(b)
     while (laag.children.length > 4) laag.removeChild(laag.firstChild)
     setTimeout(function(){ b.style.opacity = '0'; setTimeout(function(){ if (b.parentNode) b.parentNode.removeChild(b) }, 1000) }, 6000)
@@ -2656,12 +2657,42 @@ console.timeLog('[chat] berichten', 'opgehaald')
       if (!spelStickerMag) return
       var dicht = paneel.style.display === 'none'
       paneel.style.display = dicht ? 'block' : 'none'
+      var ep = document.getElementById('spelEmojiPaneel'); if (ep && dicht) ep.style.display = 'none'
       if (!dicht) return
       if (!spelStickerKeuze) spelStickerKeuze = maakStickerkeuze(paneel, { onKies: stuurSpelSticker, uid: () => huidigeUser && huidigeUser.id })
       else spelStickerKeuze.vernieuw()
     }
     if (!spelStickerMag) { knop.disabled = true; knop.style.opacity = '0.35' }
     rij.appendChild(knop)
+    // v3 nov: de emoji's staan weer op de balk, naast de stickers. Tik op een emoji en hij gaat meteen naar je vriend.
+    var emojiPaneel = document.createElement('div')
+    emojiPaneel.id = 'spelEmojiPaneel'
+    emojiPaneel.style.cssText = 'display:none;pointer-events:auto;flex-wrap:wrap;gap:4px;padding:8px;background:rgba(0,0,0,0.88);border:0.5px solid var(--border);border-radius:14px'
+    emojiList.forEach(function (e) {
+      if (e === '\u2764') e = '\u2764\uFE0F'   // anders een zwart hartje op sommige toestellen
+      var b = document.createElement('button')
+      b.type = 'button'
+      b.textContent = e
+      b.style.cssText = 'font-size:24px;width:42px;height:42px;background:none;border:none;border-radius:10px;cursor:pointer'
+      b.onclick = async function () {
+        emojiPaneel.style.display = 'none'
+        await verstuurSpelChat(e)
+      }
+      emojiPaneel.appendChild(b)
+    })
+    var emojiKnop = document.createElement('button')
+    emojiKnop.id = 'spelEmojiKnop'
+    emojiKnop.type = 'button'
+    emojiKnop.textContent = '\u{1F60A}'
+    emojiKnop.setAttribute('aria-label', T("Emoji's"))
+    emojiKnop.style.cssText = knop.style.cssText
+    emojiKnop.style.opacity = '1'
+    emojiKnop.onclick = function () {
+      var dicht = emojiPaneel.style.display === 'none'
+      emojiPaneel.style.display = dicht ? 'flex' : 'none'
+      if (dicht) paneel.style.display = 'none'
+    }
+    rij.appendChild(emojiKnop)
     var inp = document.createElement('input')
     inp.type = 'text'
     inp.maxLength = 2000
@@ -2680,6 +2711,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     rij.appendChild(inp)
     wrap.appendChild(laag)
     wrap.appendChild(paneel)
+    wrap.appendChild(emojiPaneel)
     wrap.appendChild(rij)
     const chatStatus = document.createElement('p')
     chatStatus.id = 'spelChatStatus'

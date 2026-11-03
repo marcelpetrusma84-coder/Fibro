@@ -12,6 +12,8 @@ import { supabase } from './supabase.js?v=95'
 import { ICE_SERVERS, iceReady } from './ice-config.js?v=149'
 import { startParen, opOnline, opNieuwePagina, onlineVrienden, vrienden as parenVrienden, opBericht, stuurNaar, zetKenmerk, heeftKenmerk } from './paren.js?v=2'
 import * as SB from './syncbeurt.js?v=1'
+import * as Postbus from './postbus.js?v=1' // v251: kleine profielupdates ook als je niet tegelijk online bent
+import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel } from './crypto.js?v=182'
 
 let huidigeUserId = null
 let onlineGebruikers = new Set()
@@ -1017,12 +1019,56 @@ function startProfielVersie() {
   if (profielVersieTimer) return
   setTimeout(publiceerProfielVersie, 5000)
   profielVersieTimer = setInterval(publiceerProfielVersie, 3 * 60 * 1000)
+  // v251: de postbus (postbus.js) op dezelfde klok, en als Fibro weer in beeld komt
+  setTimeout(postbusRonde, 3000)
+  setInterval(postbusRonde, 3 * 60 * 1000)
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) postbusRonde() })
+}
+
+// v251 (3 nov 2026): kleine profielupdates via de postbus (postbus.js, sql/profiel-post.sql). Eerst ophalen wat
+// vrienden voor mij klaarzetten, dan mijn eigen stand klaarzetten voor vrienden die hem nog niet hebben.
+function postbusDeps() {
+  return {
+    supabase, eigenId: huidigeUserId, privateKey: haalPrivateKeyOp(huidigeUserId), ls: localStorage,
+    crypto: { versleutel, ontsleutelBericht, sleutelVingerafdruk, isZelfdeSleutel },
+    db: { get: dbGet, put: dbPut, del: dbDelete }, log: (...a) => console.log(...a),
+  }
+}
+let postbusBezig = false
+async function postbusRonde() {
+  if (!huidigeUserId || !heeftSlot || postbusBezig) return
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return
+  const klok = 'fibro_postbus_klok_' + huidigeUserId
+  try {
+    if (Date.now() - Number(localStorage.getItem(klok) || 0) < 45000) return // hoogstens eens per 45 s (ook over pagina's heen)
+    localStorage.setItem(klok, String(Date.now()))
+  } catch (e) {}
+  postbusBezig = true
+  try {
+    const deps = postbusDeps()
+    if (!deps.privateKey) return
+    const sindsRechtstreeks = id => {
+      try { const b = JSON.parse(localStorage.getItem('fibro_syncbij_' + huidigeUserId + '_' + id) || 'null'); return Number(b && typeof b === 'object' ? b.t : b) || 0 } catch (e) { return 0 }
+    }
+    const binnen = await Postbus.haalOp(deps, sindsRechtstreeks)
+    if (binnen.length) console.log('[postbus] binnen van', binnen.length, 'vriend(en)')
+    const ids = [...vrienden].filter(id => typeof id === 'string')
+    if (!ids.length) return
+    const { data } = await supabase.from('profiles').select('id, public_key').in('id', ids)
+    const gezet = await Postbus.verstuur(deps, data || [])
+    if (gezet) console.log('[postbus] klaargezet voor', gezet, 'vriend(en)')
+  } catch (e) {
+    console.log('[postbus] mislukt:', e && e.message)
+  } finally {
+    postbusBezig = false
+  }
 }
 
 async function verwerkP2pBericht(bericht) {
   if (relayCheck) await relayCheck // eerst weten of het via relay gaat (v106)
   if (bericht.type === 'klaar') {
     anderKlaar = true
+    if (syncPartnerId) Postbus.rechtstreeksKlaar(postbusDeps(), syncPartnerId).catch(() => {}) // v251
     controleerRust()
     naKlaar() // v247
     return
@@ -1030,6 +1076,7 @@ async function verwerkP2pBericht(bericht) {
   if (bericht.type === 'manifest') {
     let videoNodig = false
     try { localStorage.removeItem('fibro_serversticker_' + huidigeUserId + '_' + syncPartnerId) } catch (e) {} // v162: weer rechtstreeks verbonden
+    Postbus.wis(postbusDeps(), syncPartnerId, huidigeUserId).catch(() => {}) // v251: rechtstreeks is nieuwer dan de postbus
     // Naam van de vriend lokaal bewaren; laatste verbinding is leidend.
     try {
       const binnen = String(bericht.data?.naam || '').slice(0, 40).trim()

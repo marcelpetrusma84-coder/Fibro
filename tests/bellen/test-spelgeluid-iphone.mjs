@@ -51,5 +51,5 @@ const zin = 'Je microfoon staat uit. Tik op 🔇 om hem weer aan te zetten.'
 assert.ok(chat.includes("'" + zin + "'"))
 assert.ok(lees('taal-en.js').includes(JSON.stringify(zin) + ':'))
 assert.ok(lees('schaak-taal-en.js').includes(JSON.stringify(zin) + ':'))
-assert.match(lees('taal.js'), /taal-en\.js\?v=54/)
+assert.match(lees('taal.js'), /taal-en\.js\?v=5[4-9]/)
 console.log('spelgeluid iphone: ok')

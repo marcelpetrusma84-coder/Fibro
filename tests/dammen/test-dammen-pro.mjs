@@ -90,10 +90,11 @@ for (const m of ui.matchAll(/\bT\('((?:[^'\\]|\\.)*)'/g)) assert.ok(en.includes(
 // 7. chat.html: webcams bij dammen als twee rondjes van 120 px bovenin
 const chat = lees('chat.html')
 assert.match(chat, /dammen-ui\.js\?v=1[45]\d/)
-assert.match(chat, /function isVideoSpel\(\) \{\n    return spelActief === 'schaken' \|\| spelActief === 'dammen'/)
-assert.match(chat, /overlay\.classList\.toggle\('dam-video-modus', toon && spelActief === 'dammen'\)/)
-assert.match(chat, /\.dam-video-modus \.spel-video-vak \{[^}]*width:120px; height:120px;[^}]*border-radius:50%/)
-assert.match(chat, /classList\.remove\('sch-video-modus', 'dam-video-modus'\)/, 'rondjes weg bij ophangen')
+assert.match(chat, /const CAMERA_RONDJES = \{ dammen:'groot', botkaaseiren:'groot', vieroprij:'groot', pong:'klein', breakout:'klein' \}/)
+assert.match(chat, /overlay\.classList\.toggle\('dam-video-modus', toon && rondjes === 'groot'\)/)
+assert.match(chat, /overlay\.classList\.toggle\('klein-video-modus', toon && rondjes === 'klein'\)/)
+assert.match(chat, /\.dam-video-modus \.spel-video-vak, [^{]*\{[^}]*width:120px; height:120px;[^}]*border-radius:50%/)
+assert.match(chat, /classList\.remove\('sch-video-modus', 'dam-video-modus', 'klein-video-modus'\)/, 'rondjes weg bij ophangen')
 
 // 8. spel.html en solo.js: de nieuwe bot met expert
 const solo = lees('solo.js')
@@ -114,8 +115,8 @@ console.log('damsprong: ok')
 
 // 10. Wie praat, krijgt een gouden rand om zijn webcamrondje
 const chat2 = lees('chat.html')
-assert.match(chat2, /\.dam-video-modus \.spel-video-vak\.praat \{/)
-assert.match(chat2, /window\.fibroSpreekMeter\?\.volg\(toon && spelActief === 'dammen'\)/)
+assert.match(chat2, /\.dam-video-modus \.spel-video-vak\.praat, /)
+assert.match(chat2, /window\.fibroSpreekMeter\?\.volg\(toon && Boolean\(rondjes\)\)/)
 assert.match(chat2, /spelVideoEigen: 'lokaalMedia', spelVideoAnder: 'remoteAudio'/)
 assert.ok(!/analyser\.connect\(ac\.destination\)/.test(chat2), 'de meter speelt zelf geen geluid af')
 assert.match(chat2, /b\.track\.enabled && b\.track\.readyState === 'live'/, 'microfoon op stil: geen rand')
@@ -124,7 +125,7 @@ console.log('spreekrand: ok')
 // 11. Geslagen worden: het rondje van wie geslagen wordt, wordt even rood
 assert.match(lees('dammen-ui.js'), /const wie = stuk\[0\] === mijnKleur \? 'ander' : 'ik'/)
 assert.match(lees('dammen-ui.js'), /new CustomEvent\('fibro-dam-geslagen'/)
-assert.match(lees('chat.html'), /\.dam-video-modus \.spel-video-vak\.geslagen \{/)
+assert.match(lees('chat.html'), /\.dam-video-modus \.spel-video-vak\.geslagen, /)
 assert.match(lees('chat.html'), /event\.detail\?\.wie === 'ik' \? 'spelVideoEigen' : 'spelVideoAnder'/)
 console.log('rode rand: ok')
 
@@ -162,3 +163,11 @@ assert.match(ui3, /dammen-geluid\.js\?v=2/)
 assert.match(ui3, /if \(wie === 'ik' && overlay && overlay\.classList\.contains\('dam-video-modus'\)\) geluid\.geslagen\(geslagen\)/)
 assert.match(lees('dammen-geluid.js'), /geslagen\(aantal = 1\) \{/)
 console.log('geluidje bij geslagen: ok')
+
+// 17. Webcam ook bij vier op een rij, boter-kaas-en-eieren, Neo Paddle en Block It
+const chat7 = lees('chat.html')
+assert.match(chat7, /bouwSpelCamKnop\(\) \/\/ v3 nov/)
+assert.match(chat7, /if \(!CAMERA_RONDJES\[spelActief\] \|\| spelActief === 'dammen'\) return/, 'dammen houdt zijn eigen knop')
+assert.match(chat7, /\.spel-overlay\.klein-video-modus \.spel-video-vak \{ top:6px; width:60px; height:60px;/)
+assert.match(chat7, /document\.getElementById\('spelCamKnop'\)\?\.remove\(\)\n    if \(!wasFibroTest\) stopSpelBel\(\)/, 'knop weg bij sluiten')
+console.log('webcam bij meer spellen: ok')

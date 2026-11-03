@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=53"></script>
+<script src="taal.js?v=54"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -431,7 +431,7 @@ window.veiligeUrl = function(v){
   import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel } from './crypto.js?v=182'
   import { maakSpelChatCrypto } from './spelchat-crypto.js?v=1'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
-  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon, bouwFilterKnop } from './bellen.js?v=160'
+  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, zetMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon, bouwFilterKnop } from './bellen.js?v=161'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
   import { maakStickerkeuze } from './stickerkeuze.js?v=236'
   import { isCode as isEigenCode, zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel, fxCode, leesFx, stickerPakket, bewaarVriendSticker, zoekWeg } from './eigenstickers.js?v=162'
@@ -2500,6 +2500,11 @@ console.timeLog('[chat] berichten', 'opgehaald')
       toonSpelMelding(spelT('{naam} heeft het spel verlaten.', { naam: esc(spelVriendUsername()) }))
       verbinding.stop()
     })
+    // v3 nov (foutmelding iPhone, dammen): alleen speler 1 belt. Tikt speler 2 op 📹 of 🎤, dan vraagt die hierom.
+    spelKanaal.on('broadcast', { event: 'bel-verzoek' }, () => {
+      if (spelKanaal !== verbinding || !benIkSpeler1 || getMediaStatus().connected) return
+      startSpelBel(true).catch(()=>{})
+    })
     if (spelType === 'schaken') spelKanaal.on('broadcast', { event:'schaken-drie-start' }, async message => {
       const payload = message?.payload || {}
       const roster = valideerSchaakDrieSpelers(payload.players)
@@ -3762,13 +3767,26 @@ async function startBlockIt() {
     if (!lokaalOk) return { ok:false, reason:'camera' }
     // De lokale preview staat nu al aan. De verbinding mag rustig op de
     // achtergrond volgen en bepaalt alleen wanneer de groene rand verschijnt.
-    if (!spelBelActief) startSpelBel(true).catch(()=>{})
+    startSpelBel(true).catch(()=>{})
     return { ok:true, eigen:true }
   }
 
+  // Speler 2 belt zelf niet. Zonder dit verzoek gebeurde er bij dammen, vier op een rij enzovoort niets als speler 2
+  // op 📹 of 🎤 tikte: geen verbinding, dus geen geluid (foutmelding 3 nov 2026, iPhone, dammen, verbonden=nee).
+  function vraagSpelBelAan() {
+    const partij = spelKanaal
+    const stuur = () => {
+      if (spelKanaal !== partij || !spelActief || getMediaStatus().connected) return
+      try { Promise.resolve(partij?.send({ type:'broadcast', event:'bel-verzoek', payload:{} })).catch(()=>{}) } catch (e) {}
+    }
+    stuur()
+    setTimeout(stuur, 6000) // nog een keer, voor als het eerste verzoek net te vroeg kwam
+  }
+
   async function startSpelBel(doorGebruiker = false) {
-    if (spelBelActief) return
     if (!spelTegenstander?.id || !spelActief) return
+    if (doorGebruiker && !benIkSpeler1 && !getMediaStatus().connected) vraagSpelBelAan()
+    if (spelBelActief) return
     if (!doorGebruiker && Date.now() < spelBelProbeerNa) return
     const tegenstanderId = spelTegenstander.id
     const partij = spelKanaal
@@ -3782,7 +3800,8 @@ async function startBlockIt() {
       if (st.connected && st.localAudio && st.remoteAudio && !st.audioBlocked) return
       const ja = b => b ? 'ja' : 'nee'
       window.__fibroFoutmelder?.meld('belofte', 'Spelgesprek: na 20 s nog geen goed geluid',
-        'chat.html startSpelBel · verbonden=' + ja(st.connected) + ' · eigen mic=' + ja(st.localAudio) +
+        'chat.html startSpelBel · verbonden=' + ja(st.connected) + ' · eigen mic=' + (st.localAudio ? 'ja' : st.localAudioAvailable ? 'gedempt' : 'nee') +
+        ' · mic onderbroken=' + ja(st.localAudioMuted) +
         ' · mic beschikbaar=' + ja(st.localAudioAvailable) + ' · geluid ander=' + ja(st.remoteAudio) +
         ' · afspelen geblokkeerd=' + ja(st.audioBlocked) + ' · speler1=' + ja(benIkSpeler1) + ' · ' + spelActief)
     }, 20000)
@@ -3844,15 +3863,21 @@ async function startBlockIt() {
       try {
         const ok = await activeerMicrofoon()
         if (spelKanaal !== partij || !spelActief) return
-        if (ok && !spelBelActief) startSpelBel(true).catch(()=>{})
+        if (ok) startSpelBel(true).catch(()=>{})
         if (!ok) zetSpelVideoVoortgang('De microfoon staat uit. Je kunt verder spelen.', false)
         if (!ok) toonMicrofoonTip() // v256: zeggen hoe je de microfoon toestaat (foutmelding 3 nov 2026)
       } finally { knop.disabled = false; syncSpelMedia() }
       return
     }
-    const aan = toggleMic()
-    document.getElementById('spelMuteBtn').textContent = aan ? '🎤' : '🔇'
+    // v3 nov (foutmelding iPhone, schaken: 'eigen mic' stond uit terwijl hij er was). De knop zet de microfoon nu in
+    // de stand die erop staat: bij 🔇 aan, bij 🎤 uit. Omdraaien kon hem uitzetten als hij net tijdens de tik aanging.
+    const knop = document.getElementById('spelMuteBtn')
+    const aan = zetMic(knop.getAttribute('aria-pressed') !== 'true')
+    if (!aan) zetSpelVideoVoortgang('Je microfoon staat uit. Tik op 🔇 om hem weer aan te zetten.', false)
+    knop.textContent = aan ? '🎤' : '🔇'
     syncSpelMedia()
+    // ook bij speler 2: is er nog geen verbinding, dan alsnog vragen of je vriend belt
+    if (aan) startSpelBel(true).catch(()=>{})
   }
 
   function werkSchaakOmgevingTaalBij() {

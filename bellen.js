@@ -61,7 +61,7 @@ let geinitialiseerd = false
 let gesprekKlaar = null   // belofte: klaar zodra het gesprekskanaal echt open is
 let iceBuffer = []        // ICE-gegevens die binnenkomen voordat offer/answer verwerkt is
 let videoGewenst = false  // v150: met video gebeld/opgenomen (ook als de eigen camera niet lukte)
-const BELLEN_VERSIE = 154 // media state follows actual tracks; queued camera negotiation and audio recovery
+const BELLEN_VERSIE = 161 // v161: zetMic en localAudioMuted (iPhone-foutmeldingen 3 nov 2026); media state follows actual tracks; queued camera negotiation and audio recovery
 
 function actieveTracks(stream, kind, ontvangen = false) {
   return !!stream?.getTracks().some(track => track.kind === kind && track.readyState === 'live' && track.enabled && (!ontvangen || !track.muted))
@@ -73,6 +73,8 @@ export function getMediaStatus() {
     remoteVideo: !remoteVideoUit && actieveTracks(remoteStream, 'video', true),
     localAudio: actieveTracks(lokaleStream, 'audio'),
     localAudioAvailable: !!lokaleStream?.getAudioTracks().some(track => track.readyState === 'live'),
+    // v161: de iPhone kan de microfoon zelf onderbreken (bijvoorbeeld als de camera erbij komt); dat staat los van dempen
+    localAudioMuted: !!lokaleStream?.getAudioTracks().some(track => track.readyState === 'live' && track.muted),
     remoteAudio: actieveTracks(remoteStream, 'audio', true),
     audioBlocked: audioGeblokkeerd,
     connected: peerConnection?.connectionState === 'connected'
@@ -873,6 +875,15 @@ function beeindigGesprek(doorOns, behoudCamera = false) {
   maakOfferBezig = false
   meldMediaStatus()
   if (onEindCallback) onEindCallback(doorOns)
+}
+
+// v161: de microfoon op een vaste stand zetten (aan of uit) in plaats van omdraaien. De spelknop zet hem zo altijd
+// in de stand die op de knop staat, ook als de microfoon net tijdens de tik door het opnemen aanging.
+export function zetMic(aan) {
+  const track = lokaleStream?.getAudioTracks().find(item => item.readyState === 'live')
+  if (track) track.enabled = Boolean(aan)
+  meldMediaStatus()
+  return track ? track.enabled : false
 }
 
 export function toggleMic() {

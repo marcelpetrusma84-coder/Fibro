@@ -361,4 +361,6 @@ export const SCHAAK_EN = Object.freeze({
   "{naam} heeft het spel verlaten.": "{naam} has left the game.",
   "{naam} reageert al 2 minuten niet. Misschien is {naam} weg.": "{naam} hasn't responded for 2 minutes. {naam} may have left.",
   "Blijven wachten": "Keep waiting",
+
+  "Je microfoon staat uit. Tik op 🔇 om hem weer aan te zetten.": "Your microphone is off. Tap 🔇 to turn it back on.",
 })

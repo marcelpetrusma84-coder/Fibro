@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=55"></script>
+<script src="taal.js?v=56"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -91,6 +91,9 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .bubble.emoji-1, .bubble.emoji-2, .bubble.emoji-3 { background:transparent !important; box-shadow:none !important; border:none !important; padding:2px 4px 4px; }
 .bubble-time { float:right; font-size:11px; color:var(--muted); margin:4px 0 0 8px; line-height:1; opacity:0.75; }
 .sys-msg { text-align:center; font-size:15px; color:var(--muted); padding:3px 12px; background:var(--card); border-radius:20px; align-self:center; border:0.5px solid var(--border); }
+/* v258: in een lege chat met een tik hoi zeggen */
+.zeg-hoi { align-self:center; margin-top:12px; padding:12px 28px; border:none; border-radius:24px; font-family:inherit; font-size:17px; font-weight:600; cursor:pointer; background:linear-gradient(135deg,var(--accent,#c084fc),var(--accent2,#f0abfc)); color:#1a0a2e; box-shadow:0 4px 18px rgba(192,132,252,0.35); }
+.zeg-hoi:active { transform:scale(0.96); }
 /* v152: belregel (gebeld, gemist, geweigerd) in het midden van de chat */
 .belregel { display:flex; justify-content:center; }
 .belregel-tekst { text-align:center; font-size:14px; color:var(--text); padding:5px 14px; background:var(--card); border-radius:20px; border:0.5px solid var(--border); }
@@ -1079,6 +1082,10 @@ window.veiligeUrl = function(v){
   window.openChat = async function(vriendId, vriendNaam, vriendAvatar, vriendPubKey) {
     geselecteerdeVriend = { id: vriendId, naam: vriendNaam, avatar: vriendAvatar }
     window.geselecteerdeVriend = geselecteerdeVriend
+    try { // v258: de chat met de nieuwe vriend is open: index.html hoeft er niet meer heen te sturen
+      const nk = 'fibro_nieuwe_vriend_' + huidigeUser.id, nv = JSON.parse(localStorage.getItem(nk) || 'null')
+      if (nv && nv.id === vriendId) localStorage.removeItem(nk)
+    } catch (e) {}
     syncMetVriend(vriendId) // v155: stickers en profiel eerst met deze vriend
     vriendPublicKey = vriendPubKey || null
     werkVerzendknopBij()
@@ -1141,6 +1148,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       if (!error && data) bewaarChatlog(vriendId, [])
       voegSysBericht(T('Stuur je eerste bericht! 👋'))
       toonWachtende(vriendId) // v130
+      if (!error && data) toonZegHoi(vriendId) // v258
       return
     }
 
@@ -1154,7 +1162,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
       if (verborgen.has(bericht.id)) continue
       await voegBerichtToe(bericht)
     }
-    if (!container.querySelector('.msg-row, .belregel')) voegSysBericht(T('Stuur je eerste bericht! 👋'))
+    const leeg = !container.querySelector('.msg-row, .belregel')
+    if (leeg) voegSysBericht(T('Stuur je eerste bericht! 👋'))
     if (uitGeheugen) {
       voegSysBericht(navigator.onLine
         ? T('⚠️ Berichten ophalen lukte niet. Je ziet de berichten die op dit toestel bewaard zijn.')
@@ -1165,6 +1174,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       }, { once: true })
     }
     toonWachtende(vriendId) // v130: niet verstuurde berichten onderaan
+    if (leeg && !uitGeheugen) toonZegHoi(vriendId) // v258
     scrollNaarOnder(true); console.timeEnd('[chat] berichten')
   }
 
@@ -1312,6 +1322,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // v128: metGeluid alleen bij een nieuw binnenkomend bericht, niet bij het laden van oude berichten
   async function voegBerichtToe(bericht, metGeluid = false) {
+    document.getElementById('zegHoi')?.remove() // v258: er is een bericht, dus geen lege chat meer
     const isMijn = bericht.sender_id === huidigeUser.id
     const container = document.getElementById('messages')
     const tijd = new Date(bericht.created_at).toLocaleTimeString(T.locale, { hour:'2-digit', minute:'2-digit' })
@@ -3263,6 +3274,28 @@ console.timeLog('[chat] berichten', 'opgehaald')
     document.getElementById('screenshotBanner').classList.remove('show')
     if (bannerInterval) clearInterval(bannerInterval)
     voegSysBericht(T('Screenshot toestemming ingetrokken'))
+  }
+
+  // v258: een lege chat (bijvoorbeeld net vrienden via een uitnodiging): met een tik "Hoi! 👋" sturen.
+  // Gewoon een versleuteld bericht via verstuur(), met pushmelding; lukt het niet, dan "niet verstuurd" (tik = opnieuw).
+  function toonZegHoi(vriendId) {
+    const container = document.getElementById('messages')
+    if (!container || geselecteerdeVriend?.id !== vriendId || document.getElementById('zegHoi')) return
+    if (container.querySelector('.msg-row')) return // ook geen niet-verstuurd bericht dat nog wacht
+    const knop = document.createElement('button')
+    knop.type = 'button'
+    knop.id = 'zegHoi'
+    knop.className = 'zeg-hoi'
+    knop.textContent = T('👋 Zeg hoi')
+    knop.onclick = async () => {
+      if (geselecteerdeVriend?.id !== vriendId) return
+      knop.remove()
+      const tekst = T('Hoi! 👋')
+      speelPlop('uit')
+      if (!(await verstuur(vriendId, tekst, null, true))) nietVerstuurd(vriendId, tekst, null, true)
+    }
+    container.appendChild(knop)
+    scrollNaarOnder()
   }
 
   function voegSysBericht(tekst) {

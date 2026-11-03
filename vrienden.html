@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=55"></script>
+<script src="taal.js?v=56"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
@@ -296,6 +296,8 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
       </div>
 
       <div class="token-code" id="token-display"></div>
+      <!-- v258: delen via het deelmenu van de telefoon (WhatsApp, Berichten, ...); alleen als het toestel dat kan -->
+      <button type="button" id="deel-link-btn" class="modal-btn modal-btn-primary" onclick="deelInviteLink()" style="font-size:15px;padding:14px;margin-bottom:0;" hidden data-t>📤 Delen</button>
       <div style="margin-top:12px;display:flex;gap:8px;align-items:center;background:rgba(255,255,255,0.06);border-radius:12px;padding:8px 10px;">
         <input id="invite-link" readonly style="flex:1;background:transparent;border:none;color:var(--text);font-size:12px;outline:none;" value="">
         <button id="kopieer-link-btn" onclick="kopieerInviteLink()" style="background:var(--accent);color:#1a0a2e;border:none;border-radius:10px;padding:6px 12px;font-size:12px;font-weight:bold;cursor:pointer;white-space:nowrap;" data-t>Kopieer</button>
@@ -793,6 +795,8 @@ startMeldingen()
     const inviteUrl = UITNODIGING_ADRES + '?token=' + token + spelDeel + (vinger ? '#s=' + vinger : '')
     const linkVeld = document.getElementById('invite-link')
     if (linkVeld) linkVeld.value = inviteUrl
+    deelTekst = maakDeelTekst(user ? eigenNaam(user.id) : '', meeSpel, DUUR)
+    document.getElementById('deel-link-btn').hidden = typeof navigator.share !== 'function'
 
     // Maak QR code
     document.getElementById('qr-container').innerHTML = ''
@@ -869,6 +873,34 @@ startMeldingen()
       btn.textContent = T('Gekopieerd!')
       setTimeout(() => btn.textContent = orig, 2000)
     }).catch(() => { prompt(T('Kopieer deze link:'), veld.value) })
+  }
+
+  // v258: delen via het deelmenu van de telefoon. De zin erbij legt uit wat de link is (een losse link lijkt op spam).
+  // Je eigen naam staat lokaal (fibro_profiel_<id>.naam, zoals op het beginscherm), anders je gebruikersnaam.
+  let deelTekst = ''
+  function eigenNaam(uid) {
+    try { const n = String(JSON.parse(localStorage.getItem('fibro_profiel_' + uid) || '{}').naam || '').trim(); if (n) return n.slice(0, 40) } catch (e) {}
+    try { const p = JSON.parse(localStorage.getItem('fibro_profielcache_' + uid) || 'null'); if (p) return String(p.display_name || p.username || '').trim().slice(0, 40) } catch (e) {}
+    return ''
+  }
+  function maakDeelTekst(naam, spelId, duur) {
+    const spel = (MEE_SPELLEN.find(s => s[0] === spelId) || [])[2] || ''
+    const duurNaam = { 3600: '1 uur', 86400: '1 dag', 259200: '3 dagen', 604800: '7 dagen' }[duur] || '3 dagen'
+    const zin = naam
+      ? (spel ? T('{naam} nodigt je uit voor Fibro en daagt je uit voor een potje {spel}!', { naam, spel }) : T('{naam} nodigt je uit voor Fibro!', { naam }))
+      : (spel ? T('Je bent uitgenodigd voor Fibro en voor een potje {spel}!', { spel }) : T('Je bent uitgenodigd voor Fibro!'))
+    return zin + ' ' + T('Tik binnen {duur} op de link om vrienden te worden:', { duur: T(duurNaam) })
+  }
+  window.deelInviteLink = async function() {
+    const url = document.getElementById('invite-link').value
+    if (!url || secondsLeft <= 0) return
+    try {
+      // De link staat in de tekst zelf: zo komt hij in elke app mee (sommige apps laten een los url-veld weg)
+      await navigator.share({ text: deelTekst + '\n' + url })
+    } catch (e) {
+      if (e && e.name === 'AbortError') return // zelf weggetikt
+      kopieerInviteLink() // delen lukt niet op dit toestel: dan kopieren
+    }
   }
 
   window.nieuweInvite = async function() {

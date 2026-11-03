@@ -5,7 +5,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
   <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-  <script src="taal.js?v=55"></script>
+  <script src="taal.js?v=56"></script>
   <script src="apk.js?v=2"></script>
   <script src="registratie.js?v=1"></script>
   <script>try { FibroApk.hervatUitnodiging() } catch (e) {} // in de app: een uitnodiging die wacht (apk.js)</script>
@@ -184,6 +184,17 @@
     'https://qmgatbphiplrfxrljtbe.supabase.co',
     'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
   )
+
+  // v258: kwam je hier via een uitnodiging (invite.html > Inloggen), dan na het inloggen terug naar die uitnodiging,
+  // zodat je alsnog vrienden wordt. Alleen een adres van de uitnodigingspagina zelf; anders gewoon het beginscherm.
+  function naInloggenAdres() {
+    try {
+      const terug = sessionStorage.getItem('fibro_invite_terug') || ''
+      sessionStorage.removeItem('fibro_invite_terug')
+      if (/^invite\.html\?token=[A-Za-z0-9_-]{1,80}(&spel=[a-z]{1,20})?(#s=[0-9a-f]{32})?$/.test(terug)) return terug
+    } catch (e) {}
+    return 'index.html'
+  }
 
   // v226: mag je hier een account maken? (registratie.js, sql/registratie-schakelaar.sql). Op deze pagina heb je
   // geen uitnodiging, dus bij 'uitnodiging' en 'dicht' komt er uitleg in plaats van het formulier.
@@ -492,7 +503,7 @@
     } catch(e) { console.log('Push registratie mislukt:', e) }
 
     await naInloggenFaceId(data.user.id, username)
-    setTimeout(() => { window.location.href = 'index.html' }, 800)
+    setTimeout(() => { window.location.href = naInloggenAdres() }, 800)
   }
 
   // v182: maakHerstelSleutel komt uit crypto.js (crypto.getRandomValues); hier stond een versie met Math.random.
@@ -638,7 +649,7 @@ window.herstelMetSleutel = async function() {
       slaPrivateKeyOp(userId, priv)
       sessionStorage.removeItem('fibro_sleutel_mist')
       toonBericht(msg,'success',T('Gelukt! Je berichten zijn weer leesbaar.'))
-      setTimeout(() => { window.location.href = 'index.html' }, 1200)
+      setTimeout(() => { window.location.href = naInloggenAdres() }, 1200)
     } catch (e) {
       console.error(e)
       toonBericht(msg,'error',T('Herstelsleutel klopt niet voor dit account.'))
@@ -667,7 +678,7 @@ window.herstelMetSleutel = async function() {
     const gelukt = await ontgrendelVenster(userId, prof.public_key)
     if (gelukt) {
       toonBericht(msg, 'success', T('Gelukt! Je berichten zijn weer leesbaar.'))
-      setTimeout(() => { window.location.href = 'index.html' }, 800)
+      setTimeout(() => { window.location.href = naInloggenAdres() }, 800)
     } else {
       toonBericht(msg, 'info', T('Geannuleerd.'))
     }
@@ -685,7 +696,7 @@ window.herstelMetSleutel = async function() {
     if (window.location.hash === '#herstellen') return
     if (session && !params.get('logout')) {
       naInloggenFaceId(session.user.id, '').finally(() => {
-        window.location.href = 'index.html'
+        window.location.href = naInloggenAdres()
       })
     }
   })

@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=55"></script>
+<script src="taal.js?v=56"></script>
 <script src="apk.js?v=2"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -112,6 +112,30 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 <link rel="stylesheet" href="app-depth.css?v=2">
 </head>
 <body data-fibro-page="home">
+<script>
+// v258: net vrienden geworden via een uitnodiging (invite.html zet fibro_nieuwe_vriend_<ik>)? Dan een keer meteen
+// door naar de chat met die vriend, waar je met een tik hoi zegt. Alleen het eerste uur, en maar een keer.
+(function () {
+  try {
+    var uid = ''
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i)
+      if (k && k.indexOf('sb-') === 0 && k.slice(-11) === '-auth-token') {
+        var v = JSON.parse(localStorage.getItem(k) || 'null')
+        if (v && v.user && v.user.id) { uid = v.user.id; break }
+      }
+    }
+    if (!uid) return
+    var sleutel = 'fibro_nieuwe_vriend_' + uid
+    var nieuw = JSON.parse(localStorage.getItem(sleutel) || 'null')
+    if (!nieuw) return
+    localStorage.removeItem(sleutel)
+    var vers = typeof nieuw.t === 'number' && Date.now() - nieuw.t >= 0 && Date.now() - nieuw.t < 60 * 60 * 1000
+    if (vers && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(nieuw.id)) && nieuw.id !== uid)
+      location.replace('chat.html?vriend=' + encodeURIComponent(nieuw.id))
+  } catch (e) {}
+})()
+</script>
 <div id="sleutel-balk" style="display:none;position:sticky;top:0;z-index:9999;background:#2a1f3d;border-bottom:2px solid #c084fc;padding:14px 16px;font-family:'DM Mono',monospace;">
   <div style="max-width:640px;margin:0 auto;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
     <div style="font-size:22px;line-height:1.2;">&#128274;</div>

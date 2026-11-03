@@ -6,7 +6,7 @@ import { vertaalSchaak } from '../../schaak-taal.js'
 // Exercise the actual chat UI functions without loading an authenticated page,
 // media devices, or network. Assertions are on the visible labels and controls.
 const html = readFileSync(new URL('../../chat.html', import.meta.url), 'utf8')
-const functionNames = ['syncSpelMedia', 'zetSpelVideoVoortgang', 'zetSpelVideoStatus', 'activeerAangevraagdeSpelCamera']
+const functionNames = ['isVideoSpel', 'syncSpelMedia', 'zetSpelVideoVoortgang', 'zetSpelVideoStatus', 'activeerAangevraagdeSpelCamera']
 const functions = functionNames.map(name => {
   const match = html.match(new RegExp('  (?:async )?function ' + name + '\\([\\s\\S]*?\\n  \\}'))
   assert.ok(match, name + ' exists in chat.html')

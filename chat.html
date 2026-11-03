@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=50"></script>
+<script src="taal.js?v=51"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -193,6 +193,20 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 .spel-audio-start[hidden] { display:none; }
 .spel-video-vak.is-seen { border-color:#55ef9e; box-shadow:inset 0 0 0 2px #55ef9e88,inset 0 0 24px #0009,0 0 22px #3de88770; }
 .spel-video-vak.is-seen::after { content:'Visible to friend'; position:absolute; z-index:3; top:8px; right:8px; padding:4px 8px; border-radius:999px; background:#103e2ed9; color:#baffd8; font-size:10px; font-weight:800; letter-spacing:.02em; }
+.spel-overlay.dam-video-modus #spelInhoud { padding-top:122px; box-sizing:border-box; }
+.spel-overlay.dam-video-modus .spel-video-vak { display:block; position:absolute; z-index:6; top:12px; width:90px; height:90px; min-height:0; margin:0; flex:none; overflow:visible; border:3px solid rgba(255,255,255,.28); border-radius:50%; background:radial-gradient(circle at 40% 35%,#26324a,#0b1220); box-shadow:0 6px 16px #0008; }
+.spel-overlay.dam-video-modus #spelVideoAnder { left:calc(50% - 99px); }
+.spel-overlay.dam-video-modus #spelVideoEigen { left:calc(50% + 9px); }
+.spel-overlay.dam-video-modus .spel-video-vak video { border-radius:50%; width:100%; height:100%; }
+.spel-overlay.dam-video-modus .spel-video-vak .video-etiket { left:50%; bottom:-21px; transform:translateX(-50%); max-width:110px; padding:2px 8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; }
+.spel-overlay.dam-video-modus .spel-video-wachten { padding:0; font-size:0; border-radius:50%; }
+.spel-overlay.dam-video-modus .spel-video-wachten::before { content:'📷'; font-size:26px; opacity:.55; }
+.spel-overlay.dam-video-modus .spel-video-vak.is-seen { border-color:#55ef9e; box-shadow:0 0 0 2px #55ef9e55,0 0 18px #3de88780; }
+.spel-overlay.dam-video-modus .spel-video-vak.is-seen::after { content:none; }
+.spel-overlay.dam-video-modus .cf-knop { position:absolute; right:-6px; bottom:-4px; z-index:4; width:30px !important; height:30px !important; font-size:14px !important; }
+.spel-overlay.dam-video-modus .cf-paneel { position:fixed !important; top:120px !important; bottom:auto !important; }
+.spel-overlay.dam-video-modus .spel-titel-bar { display:none; }
+@media (max-width:360px) { .spel-overlay.dam-video-modus .spel-video-vak { top:46px; } .spel-overlay.dam-video-modus #spelInhoud { padding-top:150px; } }
 .spel-overlay.sch-video-modus { justify-content:stretch; padding:53px 0 8px; overflow-y:auto; overscroll-behavior:contain; }
 .spel-overlay.sch-video-modus .spel-video-vak { display:block; }
 .spel-overlay.sch-video-modus #spelInhoud { flex:0 0 auto; width:100% !important; height:auto !important; min-height:0; }
@@ -407,7 +421,7 @@ window.veiligeUrl = function(v){
   import * as Schaak from './schaak.js?v=95'
   import * as Dammen from './dammen.js?v=95'
   import * as Bordgeluid from './bordgeluid.js?v=201'
-  import * as DammenUI from './dammen-ui.js?v=147'
+  import * as DammenUI from './dammen-ui.js?v=148'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
@@ -672,16 +686,16 @@ window.veiligeUrl = function(v){
     // Start bel-signalering — inkomende oproepen overal ontvangen
     initBellen(huidigeUser.id, {
       onVerbonden: () => {
-        if (spelActief !== 'schaken') return
+        if (!isVideoSpel()) return
         syncSpelMedia()
         activeerAangevraagdeSpelCamera()
       },
       onMediaStatus: status => syncSpelMedia(status),
       onVideoStatus: actief => {
         spelAnderCameraGewenst = Boolean(actief)
-        if (spelActief === 'schaken') syncSpelMedia()
+        if (isVideoSpel()) syncSpelMedia()
       },
-      onEigenVideoOntvangen: (actief) => { if (spelActief === 'schaken') zetSpelVideoStatus({ gezien: actief }) },
+      onEigenVideoOntvangen: (actief) => { if (isVideoSpel()) zetSpelVideoStatus({ gezien: actief }) },
       onOproep: async (info) => {
         window._inkomendVanId = info.van
         window._inkomendVideo = info.videoModus || false
@@ -2296,7 +2310,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ander accepteert. Spellen die nog in chat.html zitten hoeven niets.
   const SPEL_BESTAND = {
     botkaaseiren: './bke-ui.js?v=239',
-    dammen: './dammen-ui.js?v=147',
+    dammen: './dammen-ui.js?v=148',
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
     schaken: './schaken-ui.js?v=260',
@@ -2861,6 +2875,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     fibroTestThreeController = null
     spelCameraLayout?.destroy()
     spelCameraLayout = null
+    document.getElementById('spelOverlay').classList.remove('dam-video-modus')
     if (!wasFibroTest) stopSpelBel()
     else resetSpelVideo()
     spelTegenstander = null
@@ -3369,7 +3384,7 @@ async function startBlockIt() {
       micKnop.setAttribute('aria-label', micKnop.title)
       micKnop.setAttribute('aria-pressed', String(Boolean(status.localAudio)))
     }
-    if (spelActief !== 'schaken') return
+    if (!isVideoSpel()) return
     if (!status.localVideo || !status.connected) spelMijnVideoGezien = false
     zetSpelVideoStatus({ eigen:status.localVideo, ander:status.remoteVideo })
   }
@@ -3391,6 +3406,11 @@ async function startBlockIt() {
     for (const type of ['loadeddata', 'playing', 'emptied']) video?.addEventListener(type, () => syncSpelMedia())
   }
 
+  // Spellen met webcambeelden: schaken (vakken) en dammen (rondjes bovenin)
+  function isVideoSpel() {
+    return spelActief === 'schaken' || spelActief === 'dammen'
+  }
+
   function zetSpelVideoVoortgang(sleutel, bezig = true, waarden = {}) {
     const tekst = spelT(sleutel, waarden)
     window.dispatchEvent(new CustomEvent('fibro-chess-video-progress', { detail: { tekst, sleutel, waarden, bezig } }))
@@ -3410,8 +3430,10 @@ async function startBlockIt() {
     const anderVideo = document.getElementById('remoteMedia')
     const eigenVak = document.getElementById('spelVideoEigen')
     if (!overlay) return
-    const toon = spelActief === 'schaken' && (spelEigenVideo || spelAnderVideo)
-    overlay.classList.toggle('sch-video-modus', toon)
+    const toon = isVideoSpel() && (spelEigenVideo || spelAnderVideo)
+    // v3 nov: bij dammen staan de webcams als twee rondjes bovenin (dam-video-modus), bij schaken als vakken
+    overlay.classList.toggle('sch-video-modus', toon && spelActief === 'schaken')
+    overlay.classList.toggle('dam-video-modus', toon && spelActief === 'dammen')
     spelCameraLayout?.sync()
     if (eigenWacht) {
       eigenWacht.hidden = spelEigenVideo
@@ -3441,7 +3463,7 @@ async function startBlockIt() {
     const audioKnop = document.getElementById('spelAudioStartBtn')
     if (audioKnop) audioKnop.hidden = true
     const overlay = document.getElementById('spelOverlay')
-    if (overlay) overlay.classList.remove('sch-video-modus')
+    if (overlay) overlay.classList.remove('sch-video-modus', 'dam-video-modus')
     const eigenVideo = document.getElementById('lokaalMedia')
     const anderVideo = document.getElementById('remoteMedia')
     const eigenVak = document.getElementById('spelVideoEigen')
@@ -3452,7 +3474,7 @@ async function startBlockIt() {
   }
 
   async function activeerAangevraagdeSpelCamera() {
-    if (!spelVideoAanvragen || spelVideoBezig || spelActief !== 'schaken') return false
+    if (!spelVideoAanvragen || spelVideoBezig || !isVideoSpel()) return false
     spelVideoBezig = true
     zetSpelVideoVoortgang('Toestemming voor je camera aanvragen…')
     const ok = await schakelVideo(true)
@@ -3474,7 +3496,7 @@ async function startBlockIt() {
       const wasAan = fibroChessTest.stream?.getVideoTracks?.().some(track => track.readyState === 'live')
       return setFibroTestCamera(!wasAan)
     }
-    if (spelActief !== 'schaken') return { ok:false, reason:'connecting' }
+    if (!isVideoSpel()) return { ok:false, reason:'connecting' }
     hervatGeluid()
     const wasAan = isVideoActiefLokaal()
     if (wasAan) {

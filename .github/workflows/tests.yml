@@ -63,3 +63,6 @@ jobs:
       - name: Buzzgeluid met de regel van de iPhone
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef232.py .
+      - name: Makkelijker contact (delen, zeg hoi, na een uitnodiging naar de chat)
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef236.py .

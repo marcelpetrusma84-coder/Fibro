@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=55"></script>
+<script src="taal.js?v=56"></script>
 <script src="apk.js?v=2"></script>
 <script src="registratie.js?v=1"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Wie jou uitnodigde, heeft deze week al 5 nieuwe mensen op Fibro gebracht. Dat is het maximum. Probeer het over een paar dagen opnieuw.': 'The person who invited you has already brought 5 new people to Fibro this week. That is the maximum. Please try again in a few days.' }) // v255</script>
@@ -313,7 +313,9 @@ window.kopieerLink = async function() {
 }
 
 window.naarLogin = function() {
-  try { sessionStorage.setItem('fibro_invite_token', token) } catch(e) {}
+  // v258: na het inloggen terug naar deze uitnodiging (login.html), zodat je alsnog vrienden wordt.
+  // Vroeger ging alleen het token in fibro_invite_token, maar niets las dat: de uitnodiging raakte zoek.
+  try { sessionStorage.setItem('fibro_invite_terug', 'invite.html' + location.search + location.hash) } catch(e) {}
   window.location.href = 'login.html'
 }
 
@@ -397,8 +399,9 @@ window.registreren = async function() {
     }
 
     if (uitnodigerData?.created_by && uitnodigerData.created_by !== data.user.id) {
-      await supabase.rpc('maak_vriendschap_via_invite', { token_in: token })
+      const { data: gelukt } = await supabase.rpc('maak_vriendschap_via_invite', { token_in: token })
       onthoudSleutelUitLink(data.user.id, uitnodigerData.created_by) // v182
+      if (gelukt === true) onthoudNieuweVriend(data.user.id, uitnodigerData.created_by) // v258
     }
 
     await supabase.rpc('gebruik_invite', { token_in: token, gebruiker: data.user.id })
@@ -503,15 +506,25 @@ window.voegToe = async function() {
     .eq('friend_id', ander)
     .maybeSingle()
 
+  let vrienden = !!bestaat
   if (!bestaat) {
-    await supabase.rpc('maak_vriendschap_via_invite', { token_in: token })
+    const { data: gelukt } = await supabase.rpc('maak_vriendschap_via_invite', { token_in: token })
+    vrienden = gelukt === true
   }
   onthoudSleutelUitLink(mij, ander) // v182
   // Markeer token als gebruikt
   await supabase.rpc('gebruik_invite', { token_in: token, gebruiker: mij })
 
   btn.textContent = T('✅ Toegevoegd!')
-  setTimeout(() => window.location.href = 'vrienden.html', 1000)
+  // v258: meteen naar de chat met wie je uitnodigde (daar zeg je met een tik hoi)
+  const verder = vrienden ? 'chat.html?vriend=' + encodeURIComponent(ander) : 'vrienden.html'
+  setTimeout(() => window.location.href = verder, 1000)
+}
+
+// v258: na het vriend worden een keer meteen naar de chat met de uitnodiger (index.html leest dit, het eerste uur)
+function onthoudNieuweVriend(mij, ander) {
+  if (!mij || !ander || mij === ander) return
+  try { localStorage.setItem('fibro_nieuwe_vriend_' + mij, JSON.stringify({ id: ander, t: Date.now() })) } catch (e) {}
 }
 
 init()

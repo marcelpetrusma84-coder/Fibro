@@ -1,4 +1,4 @@
-// stuur-push - een pushmelding naar de telefoon(s) van een vriend (v148, 12 oktober 2026)
+// stuur-push - een pushmelding naar de telefoon(s) van een vriend (v148, 12 oktober 2026; nu v258)
 //
 // v148: de tekst komt nu van de server, in de taal van de ontvanger (profiles.taal, zie
 // sql/taal.sql). Wat de app als title/body meestuurt (oudere versies doen dat nog), telt niet
@@ -24,6 +24,12 @@
 //  - 'spel-verlaten': je vriend ging weg uit jullie spel terwijl jij er even niet was.
 //    Deze twee met inlogpas en { receiver_id, type, spel }; alleen als er de laatste uren echt een uitnodiging tussen
 //    jullie was (gemist: van de afzender aan jou, het laatste half uur).
+// v258 (3 nov 2026): makkelijker contact. Twee nieuwe meldingen, allebei alleen vanaf de server (triggers in
+// sql/contact-push.sql), met alleen een id; alles komt uit de rij zelf en elke rij geeft hoogstens EEN melding (push_log).
+//  - 'vriend-nieuw': { invite_id } "Sanne heeft je uitnodiging aangenomen! Zeg hoi". Naar wie de uitnodiging maakte,
+//    zodra iemand hem gebruikt en jullie vrienden zijn. Een tik opent de chat met de nieuwe vriend.
+//  - 'gastenboek': { gastenboek_id } "Tijn schreef in je gastenboek". Niet in je eigen gastenboek, en niet opnieuw als
+//    dezelfde vriend de laatste 10 minuten al eerder schreef. Wat erin staat gaat niet mee.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push";
 
@@ -66,6 +72,14 @@ const TEKSTEN: Record<string, Record<string, Tekst>> = {
     nl: { title: "Fibro", body: "🎮 {naam} heeft jullie spel {spel} verlaten" },
     en: { title: "Fibro", body: "🎮 {naam} left your game of {spel}" },
   },
+  "vriend-nieuw": {
+    nl: { title: "Fibro", body: "🎉 {naam} heeft je uitnodiging aangenomen! Zeg hoi 👋" },
+    en: { title: "Fibro", body: "🎉 {naam} accepted your invite! Say hi 👋" },
+  },
+  gastenboek: {
+    nl: { title: "Fibro", body: "📖 {naam} schreef in je gastenboek" },
+    en: { title: "Fibro", body: "📖 {naam} wrote in your guestbook" },
+  },
   moderatie: {
     nl: { title: "Fibro · Moderatie", body: "🚩 Er is een nieuwe melding. Kijk in Moderatie." },
     en: { title: "Fibro · Moderation", body: "🚩 There is a new report. Check Moderation." },
@@ -75,7 +89,11 @@ const MELDING_BINNEN_MS = 2 * 60 * 1000
 const BERICHT_VERS_MS = 2 * 60 * 1000 // een bericht krijgt alleen kort na het versturen een melding
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 // Hoe lang de pushdienst een melding bewaart als de telefoon even onbereikbaar is (seconden)
-const LEVENSDUUR: Record<string, number> = { oproep: 45, "oproep-video": 45, gemist: 24 * 60 * 60, spel: 120, "spel-gemist": 24 * 60 * 60, "spel-verlaten": 60 * 60 };
+const LEVENSDUUR: Record<string, number> = { oproep: 45, "oproep-video": 45, gemist: 24 * 60 * 60, spel: 120, "spel-gemist": 24 * 60 * 60, "spel-verlaten": 60 * 60,
+  "vriend-nieuw": 3 * 24 * 60 * 60, gastenboek: 3 * 24 * 60 * 60 };
+const GASTENBOEK_RUST_MS = 10 * 60 * 1000; // v258: zelfde vriend, zelfde gastenboek: hoogstens een melding per 10 minuten
+// v258: deze meldingen komen alleen van de server (met een id), nooit van een app met receiver_id + type
+const ALLEEN_SERVER = new Set(["spel", "vriend-nieuw", "gastenboek"]);
 // v257: de spellen (zelfde namen als in de chat, SPEL_INFO)
 const SPELNAMEN: Record<string, { nl: string; en: string }> = {
   botkaaseiren: { nl: "Tic-Tac-Toe", en: "Tic-Tac-Toe" }, vieroprij: { nl: "Four in a Row", en: "Four in a Row" },
@@ -185,6 +203,39 @@ Deno.serve(async (req) => {
       return await stuurVriendMelding(supabase, b.sender_id, b.receiver_id, soort, uitn);
     }
 
+    // v258: iemand gebruikte een uitnodiging (trigger op invite_tokens): de maker hoort dat hij een nieuwe vriend heeft
+    if (invoer.invite_id) {
+      const id = String(invoer.invite_id);
+      if (!UUID.test(id)) return antwoord({ ok: false, reden: "ongeldige uitnodiging" }, 400);
+      const { data: u, error: fu } = await supabase.from("invite_tokens")
+        .select("id, created_by, used_by, used_at").eq("id", id).maybeSingle();
+      if (fu) throw fu;
+      if (!u || !u.created_by || !u.used_by || !u.used_at) return antwoord({ ok: false, reden: "geen uitnodiging" }, 404);
+      if (Date.now() - new Date(u.used_at).getTime() > BERICHT_VERS_MS) return antwoord({ ok: false, reden: "te oud" });
+      if (!(await pakSlot(supabase, u.id))) return antwoord({ ok: true, verstuurd: 0, reden: "al verstuurd" });
+      return await stuurVriendMelding(supabase, u.used_by, u.created_by, "vriend-nieuw");
+    }
+
+    // v258: een nieuw bericht in een gastenboek (trigger op guestbook_entries)
+    if (invoer.gastenboek_id) {
+      const id = String(invoer.gastenboek_id);
+      if (!UUID.test(id)) return antwoord({ ok: false, reden: "ongeldig gastenboekbericht" }, 400);
+      const { data: g, error: fg } = await supabase.from("guestbook_entries")
+        .select("id, profile_id, author_id, created_at").eq("id", id).maybeSingle();
+      if (fg) throw fg;
+      if (!g || !g.profile_id || !g.author_id) return antwoord({ ok: false, reden: "geen gastenboekbericht" }, 404);
+      if (g.author_id === g.profile_id) return antwoord({ ok: false, reden: "geen melding nodig" });
+      const tijd = new Date(g.created_at).getTime();
+      if (Date.now() - tijd > BERICHT_VERS_MS) return antwoord({ ok: false, reden: "te oud" });
+      const { data: eerder, error: fe } = await supabase.from("guestbook_entries").select("id")
+        .eq("profile_id", g.profile_id).eq("author_id", g.author_id).neq("id", g.id)
+        .gte("created_at", new Date(tijd - GASTENBOEK_RUST_MS).toISOString()).lte("created_at", g.created_at).limit(1);
+      if (fe) throw fe;
+      if (eerder && eerder.length) return antwoord({ ok: true, verstuurd: 0, reden: "net al gemeld" });
+      if (!(await pakSlot(supabase, g.id))) return antwoord({ ok: true, verstuurd: 0, reden: "al verstuurd" });
+      return await stuurVriendMelding(supabase, g.author_id, g.profile_id, "gastenboek");
+    }
+
     if (!receiver_id && type !== "moderatie") throw new Error("receiver_id ontbreekt");
 
     // 1. Wie stuurt er? Alleen met een geldige inlogpas.
@@ -212,7 +263,7 @@ Deno.serve(async (req) => {
       if (!was || !was.length) return antwoord({ ok: false, reden: "geen spel" }, 403);
       return await stuurVriendMelding(supabase, afzender, receiver_id, type, { spel, van: afzender, sessie: "" });
     }
-    if (type === "spel") return antwoord({ ok: false, reden: "alleen met message_id" }, 400);
+    if (ALLEEN_SERVER.has(String(type))) return antwoord({ ok: false, reden: "alleen vanaf de server" }, 400);
 
     // v256: oude versies van de app vragen zelf om een berichtmelding. Hetzelfde slot als de trigger: het nieuwste
     // bericht van de laatste 2 minuten van deze afzender aan deze ontvanger. Had dat al een melding, dan niets.
@@ -301,12 +352,15 @@ async function stuurVriendMelding(supabase: any, afzender: string, receiver_id: 
         : soort === "spel" && uitn
         ? "/Fibro/chat.html?spelVriend=" + encodeURIComponent(afzender) + "&spelType=" + encodeURIComponent(uitn.spel) +
           "&sessieId=" + encodeURIComponent(uitn.sessie) + "&starterId=" + encodeURIComponent(afzender)
-        : isSpel ? "/Fibro/chat.html?vriend=" + encodeURIComponent(afzender)
+        : isSpel || soort === "vriend-nieuw" ? "/Fibro/chat.html?vriend=" + encodeURIComponent(afzender)
+        : soort === "gastenboek" ? "/Fibro/index.html" // v258: je gastenboek staat op je beginscherm
         : "/Fibro/chat.html",
       type: soort,
     };
     if (bellen || soort === "gemist") melding.tag = "oproep-" + afzender;
     if (isSpel) melding.tag = "spel-" + afzender; // v257: gemist en verlaten vervangen de uitnodiging
+    if (soort === "vriend-nieuw") melding.tag = "vriend-" + afzender; // v258
+    if (soort === "gastenboek") melding.tag = "gastenboek-" + afzender;
     const payload = JSON.stringify(melding);
     const opties = LEVENSDUUR[soort] ? { TTL: LEVENSDUUR[soort], urgency: bellen || soort === "spel" ? "high" : "normal" } : undefined;
 

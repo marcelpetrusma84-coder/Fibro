@@ -2155,6 +2155,25 @@ console.timeLog('[chat] berichten', 'opgehaald')
   let fibroChessTest = null
   let laatsteFibroTestStatus = { sleutel:'Lokale test gereed', waarden:{} }
   let laatsteSpelVerbindingStatus = null
+  // v3 nov: pushmeldingen voor spellen. Wie nodigde uit, is de vriend er geweest, en een inlogpas voor als de pagina dichtgaat.
+  let spelUitnodiger = null, spelVriendKwam = false, spelPushPas = null
+  supabase.auth.onAuthStateChange((_, sessie) => { spelPushPas = sessie?.access_token || null })
+  // 'spel-gemist' (ik nodigde uit, mijn vriend kwam niet) of 'spel-verlaten' (ik ga weg terwijl mijn vriend er even niet
+  // is: al 20 s niets van hem gehoord, dan ziet hij het niet in het spel). De server controleert of er echt een spel was.
+  function spelPushBijWeggaan(stil) {
+    if (!spelActief || spelActief === 'schakendrie' || !spelTegenstander?.id || !spelPushPas) return
+    let soort = null
+    if (spelWachtKlaar && spelUitnodiger === huidigeUser?.id) soort = 'spel-gemist'
+    else if (!stil && spelVriendKwam && ['waiting', 'reconnecting'].includes(laatsteSpelVerbindingStatus)) soort = 'spel-verlaten'
+    if (!soort) return
+    try {
+      fetch('https://qmgatbphiplrfxrljtbe.supabase.co/functions/v1/stuur-push', {
+        method: 'POST', keepalive: true,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + spelPushPas },
+        body: JSON.stringify({ receiver_id: spelTegenstander.id, type: soort, spel: spelActief })
+      }).catch(() => {})
+    } catch (e) {}
+  }
   let fibroTestThreeController = null
   let spelSchaakDrieController = null
 
@@ -2315,7 +2334,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     } })
     await supabase.removeChannel(invitation)
     if (sent !== 'ok') { alert(schaakT('De uitnodiging kon niet worden verstuurd. Probeer het opnieuw.')); return }
-    await supabase.from('messages').insert({ sender_id:huidigeUser.id, receiver_id:vriend.id, content:'spelinvite:schakendrie:' + huidigeUser.id + ':' + spelSessieId })
+    const { data: uitnodiging3 } = await supabase.from('messages').insert({ sender_id:huidigeUser.id, receiver_id:vriend.id, content:'spelinvite:schakendrie:' + huidigeUser.id + ':' + spelSessieId }).select('id').single()
+    stuurPling(uitnodiging3?.id) // v3 nov: pushmelding 'daagt je uit' (stuur-push leest het spel uit het bericht)
     alert(schaakT('De uitnodiging voor drie spelers is verstuurd naar {name}. Als die accepteert, begint iedereen een nieuwe partij vanaf de beginstelling.', { name: vriendWeergaveNaam(vriend) || vriend.username || schaakT('je vriend') }))
   }
 
@@ -2384,11 +2404,12 @@ console.timeLog('[chat] berichten', 'opgehaald')
     supabase.removeChannel(spelUitKanaal)
 
     // Stuur ook als zichtbaar chatbericht zodat beide een record hebben
-    await supabase.from('messages').insert({
+    const { data: uitnodiging } = await supabase.from('messages').insert({
       sender_id: huidigeUser.id,
       receiver_id: geselecteerdeVriend.id,
       content: 'spelinvite:' + spelType + ':' + huidigeUser.id + ':' + sessieId
-    })
+    }).select('id').single()
+    stuurPling(uitnodiging?.id) // v3 nov: pushmelding 'daagt je uit'; een tik op de melding opent het spel
 
     // Zelf ook het spel openen
     speelMee(spelType, sessieId, huidigeUser.id)
@@ -2422,6 +2443,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     spelSpelers = spelType === 'schakendrie' ? players : null
     const opponentId = spelType === 'schakendrie' ? players.find(id => id !== huidigeUser.id) : geselecteerdeVriend?.id
     spelTegenstander = { id:opponentId, username:spelVriendUsername(opponentId) }
+    spelUitnodiger = starterId || null; spelVriendKwam = spelType === 'schakendrie' // v3 nov
+    supabase.auth.getSession().then(({ data }) => { spelPushPas = data?.session?.access_token || spelPushPas }).catch(() => {})
     let vingerafdruk = null
     try { vingerafdruk = localStorage.getItem(vriendSleutelSleutel(spelTegenstander.id)) } catch {}
     const chatBeveiliging = spelType === 'schakendrie' ? null : maakSpelChatCrypto({ mijnId:huidigeUser.id, vriendId:spelTegenstander.id,
@@ -2464,6 +2487,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       const vriendIsEr = new Promise(klaar => { spelWachtKlaar = klaar })
       verbinding.subscribe()
       if (!await vriendIsEr || spelActief !== spelType || spelKanaal !== verbinding) return
+      spelVriendKwam = true // v3 nov
       clearTimeout(spelWachtTimer); spelWachtTimer = null
       document.getElementById('spelWachtscherm')?.remove()
     }
@@ -2957,12 +2981,14 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // niet bij even een andere app openen: dan kom je terug in hetzelfde spel.
   window.addEventListener('pagehide', () => {
     if (!spelKanaal || !spelActief || fibroChessTest?.active) return
+    spelPushBijWeggaan(false) // v3 nov
     try { spelKanaal.send({ type:'broadcast', event:'verlaten', payload:{} }) } catch (e) {}
   })
 
   window.sluitSpel = function(stil) {
     // stil = true: niet melden aan de ander (die is zelf al gestopt)
     const wasFibroTest = Boolean(fibroChessTest?.active)
+    if (!wasFibroTest) spelPushBijWeggaan(stil) // v3 nov: gemiste uitnodiging of verlaten spel
     const verbinding = spelKanaal
     spelKanaal = null
     spelChatCrypto = null

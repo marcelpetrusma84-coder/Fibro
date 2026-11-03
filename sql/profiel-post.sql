@@ -1,4 +1,5 @@
 -- profiel-post.sql (3 nov 2026): de postbus voor kleine profielupdates (postbus.js).
+-- 3 nov 2026: tabel en opruimen zijn al uitgevoerd; het stuk voor mijn_gegevens staat ook los in sql/mijn-gegevens-postbus.sql.
 -- Plakken in Supabase > SQL Editor > Run. Alles of niets: gaat er iets mis, dan verandert er niets.
 --
 -- Per vriend één versleuteld pakketje met je kleine profielonderdelen (indeling van je widgets, tekstwidgets, blokstijl,

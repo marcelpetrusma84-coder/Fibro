@@ -1749,6 +1749,7 @@ window.FIBRO_EN = {
   // dammen v148 (3 nov 2026)
   "Dam!": "King!",
   "Emoji's": "Emojis",
+  "Versturen": "Send",
   "Expert": "Expert",
   "aan zet": "to move",
   "Dambord": "Draughts board",

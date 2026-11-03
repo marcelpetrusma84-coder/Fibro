@@ -135,3 +135,10 @@ assert.match(chat3, /emojiKnop\.id = 'spelEmojiKnop'/)
 assert.match(chat3, /await verstuurSpelChat\(e\)/)
 assert.ok(lees('taal-en.js').includes('"Emoji\'s": "Emojis"'))
 console.log('emoji op de balk: ok')
+
+// 13. Een verstuurknop naast het tekstveld op de spelbalk
+const chat4 = lees('chat.html')
+assert.match(chat4, /stuurKnop\.id = 'spelChatStuur'/)
+assert.match(chat4, /stuurKnop\.onclick = function \(\) \{ verstuurInvoer\(\) \}/)
+assert.match(chat4, /if \(ev\.key !== 'Enter' \|\| ev\.isComposing\) return\n      ev\.preventDefault\(\)\n      verstuurInvoer\(\)/, 'Enter werkt nog steeds')
+console.log('verstuurknop: ok')

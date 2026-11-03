@@ -2699,16 +2699,34 @@ console.timeLog('[chat] berichten', 'opgehaald')
     inp.placeholder = spelT('Bericht...')
     inp.style.cssText = 'flex:1;min-width:60px;padding:8px 10px;border-radius:10px;border:1px solid #ffffff44;background:#000000aa;color:#fff;font-size:15px'
     let versturen = false
-    inp.onkeydown = async function(ev) {
-      if (ev.key !== 'Enter' || ev.isComposing || versturen) return
-      ev.preventDefault()
+    async function verstuurInvoer() {
       const tekst = inp.value.trim()
-      if (!tekst) return
+      if (!tekst || versturen) return
       versturen = true
+      stuurKnop.disabled = true
       try { if (await verstuurSpelChat(tekst) && inp.value.trim() === tekst) inp.value = '' }
-      finally { versturen = false }
+      finally { versturen = false; stuurKnop.disabled = false; zetStuurKnop() }
     }
+    inp.onkeydown = function(ev) {
+      if (ev.key !== 'Enter' || ev.isComposing) return
+      ev.preventDefault()
+      verstuurInvoer()
+    }
+    // v3 nov: ook een verstuurknop (op de telefoon is Enter niet altijd te vinden)
+    var stuurKnop = document.createElement('button')
+    stuurKnop.id = 'spelChatStuur'
+    stuurKnop.type = 'button'
+    stuurKnop.textContent = '\u27A4'
+    stuurKnop.setAttribute('aria-label', T('Versturen'))
+    stuurKnop.style.cssText = 'flex:none;width:40px;height:38px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent,#c084fc),var(--accent2,#f0abfc));color:#1a0a2e;font-size:18px;font-weight:700;cursor:pointer;transition:opacity .2s'
+    function zetStuurKnop() { stuurKnop.style.opacity = inp.value.trim() ? '1' : '0.45' }
+    zetStuurKnop()
+    inp.addEventListener('input', zetStuurKnop)
+    // pointerdown + preventDefault: het toetsenbord blijft open, zodat je meteen verder kunt typen
+    stuurKnop.addEventListener('pointerdown', function (ev) { ev.preventDefault() })
+    stuurKnop.onclick = function () { verstuurInvoer() }
     rij.appendChild(inp)
+    rij.appendChild(stuurKnop)
     wrap.appendChild(laag)
     wrap.appendChild(paneel)
     wrap.appendChild(emojiPaneel)

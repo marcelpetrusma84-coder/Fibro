@@ -203,6 +203,8 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 .spel-overlay.dam-video-modus .spel-video-wachten::before { content:'📷'; font-size:34px; opacity:.55; }
 .spel-overlay.dam-video-modus .spel-video-vak.is-seen { border-color:#55ef9e; box-shadow:0 0 0 2px #55ef9e55,0 0 18px #3de88780; }
 .spel-overlay.dam-video-modus .spel-video-vak.is-seen::after { content:none; }
+.spel-overlay.dam-video-modus .spel-video-vak { transition:border-color .15s ease,box-shadow .15s ease; }
+.spel-overlay.dam-video-modus .spel-video-vak.praat { border-color:#fcd34d; box-shadow:0 0 0 4px #fbbf2470,0 0 26px #fbbf24c0; }
 .spel-overlay.dam-video-modus .cf-knop { position:absolute; right:-6px; bottom:-4px; z-index:4; width:30px !important; height:30px !important; font-size:14px !important; }
 .spel-overlay.dam-video-modus .cf-paneel { position:fixed !important; top:120px !important; bottom:auto !important; }
 .spel-overlay.dam-video-modus .spel-titel-bar { display:none; }
@@ -3411,6 +3413,63 @@ async function startBlockIt() {
     return spelActief === 'schaken' || spelActief === 'dammen'
   }
 
+  // Wie praat, krijgt bij dammen een gouden rand om zijn webcamrondje. We luisteren alleen naar het volume
+  // (een AnalyserNode, niet aangesloten op de luidspreker, dus niets dubbel te horen). Microfoon op stil = geen rand.
+  const spreekMeter = (() => {
+    let ac = null, timer = null
+    const bronnen = new Map()
+    const VAKKEN = { spelVideoEigen: 'lokaalMedia', spelVideoAnder: 'remoteAudio' }
+    function wek() {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext
+        if (!ac && AC) ac = new AC()
+        if (ac && ac.state === 'suspended') ac.resume().catch(() => {})
+      } catch (e) {}
+    }
+    function koppel(vakId, stream) {
+      const track = stream?.getAudioTracks?.().find(t => t.readyState === 'live') || null
+      const oud = bronnen.get(vakId)
+      if (oud && oud.track === track) return
+      if (oud) { try { oud.bron.disconnect() } catch (e) {} bronnen.delete(vakId) }
+      if (!track || !ac) return
+      try {
+        const bron = ac.createMediaStreamSource(new MediaStream([track]))
+        const analyser = ac.createAnalyser()
+        analyser.fftSize = 512
+        bron.connect(analyser)
+        bronnen.set(vakId, { track, bron, analyser, data: new Uint8Array(analyser.fftSize), tot: 0 })
+      } catch (e) {}
+    }
+    function stap() {
+      if (spelActief !== 'dammen') { volg(false); return }
+      wek()
+      const nu = performance.now()
+      for (const [vakId, mediaId] of Object.entries(VAKKEN)) {
+        koppel(vakId, document.getElementById(mediaId)?.srcObject)
+        const b = bronnen.get(vakId)
+        let praat = false
+        if (b && b.track.enabled && b.track.readyState === 'live') {
+          b.analyser.getByteTimeDomainData(b.data)
+          let som = 0
+          for (let i = 0; i < b.data.length; i++) { const x = (b.data[i] - 128) / 128; som += x * x }
+          if (Math.sqrt(som / b.data.length) > 0.035) b.tot = nu + 350   // even blijven staan tussen woorden
+          praat = nu < b.tot
+        }
+        document.getElementById(vakId)?.classList.toggle('praat', praat)
+      }
+    }
+    function volg(aan) {
+      if (aan) { wek(); if (!timer) timer = setInterval(stap, 100); return }
+      clearInterval(timer); timer = null
+      for (const b of bronnen.values()) { try { b.bron.disconnect() } catch (e) {} }
+      bronnen.clear()
+      for (const vakId of Object.keys(VAKKEN)) document.getElementById(vakId)?.classList.remove('praat')
+    }
+    return { volg, wek }
+  })()
+  window.fibroSpreekMeter = spreekMeter
+  document.getElementById('spelOverlay').addEventListener('pointerdown', () => { if (spelActief === 'dammen') spreekMeter.wek() }, { passive:true })
+
   function zetSpelVideoVoortgang(sleutel, bezig = true, waarden = {}) {
     const tekst = spelT(sleutel, waarden)
     window.dispatchEvent(new CustomEvent('fibro-chess-video-progress', { detail: { tekst, sleutel, waarden, bezig } }))
@@ -3434,6 +3493,7 @@ async function startBlockIt() {
     // v3 nov: bij dammen staan de webcams als twee rondjes bovenin (dam-video-modus), bij schaken als vakken
     overlay.classList.toggle('sch-video-modus', toon && spelActief === 'schaken')
     overlay.classList.toggle('dam-video-modus', toon && spelActief === 'dammen')
+    window.fibroSpreekMeter?.volg(toon && spelActief === 'dammen')
     spelCameraLayout?.sync()
     if (eigenWacht) {
       eigenWacht.hidden = spelEigenVideo
@@ -3464,6 +3524,7 @@ async function startBlockIt() {
     if (audioKnop) audioKnop.hidden = true
     const overlay = document.getElementById('spelOverlay')
     if (overlay) overlay.classList.remove('sch-video-modus', 'dam-video-modus')
+    window.fibroSpreekMeter?.volg(false)
     const eigenVideo = document.getElementById('lokaalMedia')
     const anderVideo = document.getElementById('remoteMedia')
     const eigenVak = document.getElementById('spelVideoEigen')
@@ -3497,6 +3558,7 @@ async function startBlockIt() {
       return setFibroTestCamera(!wasAan)
     }
     if (!isVideoSpel()) return { ok:false, reason:'connecting' }
+    if (spelActief === 'dammen') spreekMeter.wek()   // in de tik zelf, anders mag het geluid op de iPhone niet
     hervatGeluid()
     const wasAan = isVideoActiefLokaal()
     if (wasAan) {

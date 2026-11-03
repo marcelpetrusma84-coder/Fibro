@@ -111,3 +111,12 @@ assert.match(ui2, /vooraf\[1\] === 'S' && staat\.bord\[eind\[0\]\]\[eind\[1\]\]\
 assert.match(ui2, /dm-damring/); assert.match(ui2, /dm-vonk/); assert.match(ui2, /T\('Dam!'\)/)
 assert.match(ui2, /const wacht = bezigTot - Date\.now\(\)/, 'een snel antwoord wacht tot de animatie klaar is')
 console.log('damsprong: ok')
+
+// 10. Wie praat, krijgt een gouden rand om zijn webcamrondje
+const chat2 = lees('chat.html')
+assert.match(chat2, /\.dam-video-modus \.spel-video-vak\.praat \{/)
+assert.match(chat2, /window\.fibroSpreekMeter\?\.volg\(toon && spelActief === 'dammen'\)/)
+assert.match(chat2, /spelVideoEigen: 'lokaalMedia', spelVideoAnder: 'remoteAudio'/)
+assert.ok(!/analyser\.connect\(ac\.destination\)/.test(chat2), 'de meter speelt zelf geen geluid af')
+assert.match(chat2, /b\.track\.enabled && b\.track\.readyState === 'live'/, 'microfoon op stil: geen rand')
+console.log('spreekrand: ok')

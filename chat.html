@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=52"></script>
+<script src="taal.js?v=53"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2529,8 +2529,15 @@ console.timeLog('[chat] berichten', 'opgehaald')
     // Start spel-audiobel automatisch
   }
 
+  // ── BLAUWDRUK BEURTSPELLEN (zie BLAUWDRUK-BEURTSPEL.md) ──
+  // Zet een nieuw beurtspel in deze lijst, dan krijgt het tegen een vriend vanzelf:
+  //   - de chatbalk (stickers 🎨, emoji's 😊, tekstveld met ➤, knoppen schuiven opzij bij typen);
+  //   - de webcamrondjes bovenin (120 px), met de webcamknop 📹, gouden rand bij praten
+  //     en een rode rand als het spel 'fibro-spel-geslagen' meldt (beurtspel-hulp.js).
+  // Schaken staat erin voor de chatbalk, maar heeft zijn eigen webcamvakken.
+  const BEURTSPELLEN = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen']
   // v169: spellen met een chatbalk: de beurtspellen (daar heb je tijd om iets te sturen)
-  const SPELCHAT_SPELLEN = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen']
+  const SPELCHAT_SPELLEN = BEURTSPELLEN
 
   async function stuurBeveiligdeSpelInhoud(type, data) {
     const kanaal = spelKanaal, beveiliging = spelChatCrypto
@@ -3521,7 +3528,11 @@ async function startBlockIt() {
 
   // Spellen met webcambeelden: schaken (vakken) en dammen (rondjes bovenin)
   // v3 nov: webcamrondjes bovenin. 'groot' bij de beurtspellen, 'klein' bij de snelle spellen tegen elkaar.
-  const CAMERA_RONDJES = { dammen:'groot', botkaaseiren:'groot', vieroprij:'groot', pong:'klein', breakout:'klein' }
+  // Alle beurtspellen (behalve schaken, dat heeft eigen vakken) krijgen grote rondjes; een paar snelle spellen kleine.
+  const CAMERA_RONDJES = {
+    ...Object.fromEntries(BEURTSPELLEN.filter(spel => spel !== 'schaken').map(spel => [spel, 'groot'])),
+    pong:'klein', breakout:'klein'
+  }
   function isVideoSpel() {
     return spelActief === 'schaken' || (typeof CAMERA_RONDJES === 'object' && Boolean(CAMERA_RONDJES[spelActief]))
   }
@@ -3581,17 +3592,21 @@ async function startBlockIt() {
     return { volg, wek }
   })()
   window.fibroSpreekMeter = spreekMeter
-  // Word je bij dammen geslagen, dan kleurt je rondje anderhalve seconde rood (wie: 'ik' of 'ander')
+  // Word je geslagen (of verlies je iets), dan kleurt je rondje anderhalve seconde rood (wie: 'ik' of 'ander').
+  // Dammen stuurt 'fibro-dam-geslagen'; nieuwe beurtspellen sturen 'fibro-spel-geslagen' via beurtspel-hulp.js.
   let damGeslagenTimers = {}
-  window.addEventListener('fibro-dam-geslagen', event => {
-    if (spelActief !== 'dammen') return
+  function kleurRondjeRood(event) {
+    if (!CAMERA_RONDJES[spelActief]) return
     const vakId = event.detail?.wie === 'ik' ? 'spelVideoEigen' : 'spelVideoAnder'
     const vak = document.getElementById(vakId)
     if (!vak) return
     vak.classList.remove('geslagen'); void vak.offsetWidth; vak.classList.add('geslagen')
     clearTimeout(damGeslagenTimers[vakId])
     damGeslagenTimers[vakId] = setTimeout(() => vak.classList.remove('geslagen'), 1500)
-  })
+  }
+  window.addEventListener('fibro-dam-geslagen', kleurRondjeRood)
+  window.addEventListener('fibro-spel-geslagen', kleurRondjeRood)
+
   document.getElementById('spelOverlay').addEventListener('pointerdown', () => { if (CAMERA_RONDJES[spelActief]) spreekMeter.wek() }, { passive:true })
 
   // Een webcamknop bovenin (naast de microfoon) voor de spellen met rondjes die zelf geen webcamknop hebben.

@@ -90,7 +90,7 @@ for (const m of ui.matchAll(/\bT\('((?:[^'\\]|\\.)*)'/g)) assert.ok(en.includes(
 // 7. chat.html: webcams bij dammen als twee rondjes van 120 px bovenin
 const chat = lees('chat.html')
 assert.match(chat, /dammen-ui\.js\?v=1[45]\d/)
-assert.match(chat, /const CAMERA_RONDJES = \{ dammen:'groot', botkaaseiren:'groot', vieroprij:'groot', pong:'klein', breakout:'klein' \}/)
+assert.match(chat, /const CAMERA_RONDJES = \{\n    \.\.\.Object\.fromEntries\(BEURTSPELLEN[\s\S]{0,120}pong:'klein', breakout:'klein'/)
 assert.match(chat, /overlay\.classList\.toggle\('dam-video-modus', toon && rondjes === 'groot'\)/)
 assert.match(chat, /overlay\.classList\.toggle\('klein-video-modus', toon && rondjes === 'klein'\)/)
 assert.match(chat, /\.dam-video-modus \.spel-video-vak, [^{]*\{[^}]*width:120px; height:120px;[^}]*border-radius:50%/)

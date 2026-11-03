@@ -1,10 +1,11 @@
-import { maakSchaakTaal } from './schaak-taal.js?v=8'
+import { maakSchaakTaal } from './schaak-taal.js?v=9'
 import { stukSVG, registreerSlag, veroverdePunten, STUKPUNTEN } from './schaak-stukken.js?v=1'
 import { schaakFen } from './schaak-ultra-engine.js?v=1'
 import { schaakNotatie, maakUltraEvaluatieHistorie } from './schaak-ultra-historie.js?v=1'
 import { maakSchaakWallpaper } from './schaak-wallpaper.js?v=4'
 import { maakUltraFocus } from './schaak-ultra-focus.js?v=1'
 import { maakUltraSwipe } from './schaak-ultra-swipe.js?v=1'
+import { maakPaardRoutesUI } from './schaak-paardroutes-ui.js?v=2'
 const SETTINGS_KEY = 'fibro_chess_settings_v1'
 const READABLE_NAMES = { P:'pion', N:'paard', B:'loper', R:'toren', Q:'dame', K:'koning' }
 
@@ -26,8 +27,8 @@ function readSettings() {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')
     const thinking = Number(saved.thinking ?? 7)
     const ultraThinking = typeof saved.ultraThinking === 'number' ? saved.ultraThinking : 5
-    return { ...saved, thinking:Number.isFinite(thinking) ? Math.min(7,Math.max(0,thinking)) : 7, ultraThinking:Number.isFinite(ultraThinking) ? Math.min(7,Math.max(0,ultraThinking)) : 5, pieces:['small','medium','large'].includes(saved.pieces) ? saved.pieces : 'medium', board:['classic','wood','marble','glass'].includes(saved.board) ? saved.board : 'classic', soundTheme:['classic','wood'].includes(saved.soundTheme) ? saved.soundTheme : 'classic', gradedCaptureSounds:saved.gradedCaptureSounds === true, ultraGradedCaptureSounds:typeof saved.ultraGradedCaptureSounds === 'boolean' ? saved.ultraGradedCaptureSounds : true, ultraEvaluationSound:saved.ultraEvaluationSound === true, ultraTakeback:saved.ultraTakeback === true, ultraHints:saved.ultraHints === true, showAttackRoutes:saved.showAttackRoutes === true, exaggerate:saved.exaggerate === true, pointsPerPiece:saved.pointsPerPiece === true, noobMode:saved.noobMode === true, camerasAtTop:saved.camerasAtTop === true, threePlayer:saved.threePlayer === true, showUltraEvaluation:saved.showUltraEvaluation === true }
-  } catch { return { thinking:7, ultraThinking:5, pieces:'medium', board:'classic', soundTheme:'classic', gradedCaptureSounds:false, ultraGradedCaptureSounds:true, ultraEvaluationSound:false, ultraTakeback:false, ultraHints:false, showAttackRoutes:false, exaggerate:false, pointsPerPiece:false, noobMode:false, camerasAtTop:false, threePlayer:false, showUltraEvaluation:false } }
+    return { ...saved, thinking:Number.isFinite(thinking) ? Math.min(7,Math.max(0,thinking)) : 7, ultraThinking:Number.isFinite(ultraThinking) ? Math.min(7,Math.max(0,ultraThinking)) : 5, pieces:['small','medium','large'].includes(saved.pieces) ? saved.pieces : 'medium', board:['classic','wood','marble','glass'].includes(saved.board) ? saved.board : 'classic', soundTheme:['classic','wood'].includes(saved.soundTheme) ? saved.soundTheme : 'classic', gradedCaptureSounds:saved.gradedCaptureSounds === true, ultraGradedCaptureSounds:typeof saved.ultraGradedCaptureSounds === 'boolean' ? saved.ultraGradedCaptureSounds : true, ultraEvaluationSound:saved.ultraEvaluationSound === true, ultraTakeback:saved.ultraTakeback === true, ultraHints:saved.ultraHints === true, showAttackRoutes:saved.showAttackRoutes === true, exaggerate:saved.exaggerate === true, pointsPerPiece:saved.pointsPerPiece === true, noobMode:saved.noobMode === true, camerasAtTop:saved.camerasAtTop === true, threePlayer:saved.threePlayer === true, showUltraEvaluation:saved.showUltraEvaluation === true, knightRouteSteps:Array.isArray(saved.knightRouteSteps) && saved.knightRouteSteps.length === 4 && saved.knightRouteSteps.every(value => typeof value === 'boolean') ? saved.knightRouteSteps.slice() : [true,true,true,true] }
+  } catch { return { thinking:7, ultraThinking:5, pieces:'medium', board:'classic', soundTheme:'classic', gradedCaptureSounds:false, ultraGradedCaptureSounds:true, ultraEvaluationSound:false, ultraTakeback:false, ultraHints:false, showAttackRoutes:false, exaggerate:false, pointsPerPiece:false, noobMode:false, camerasAtTop:false, threePlayer:false, showUltraEvaluation:false, knightRouteSteps:[true,true,true,true] } }
 }
 // schaken-ui.js - spel voor Fibro, losgetrokken uit chat.html.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
@@ -63,6 +64,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   const minderBeweging = matchMedia('(prefers-reduced-motion: reduce)')
   const instellingen = readSettings()
   let laatsteZet = null        // voor highlight van laatste zet
+  let paardRoutesUI = null
 
   // Bord wordt altijd getoond met wit onderaan vanuit perspectief van de witte speler,
   // en zwart onderaan vanuit perspectief van de zwarte speler
@@ -130,8 +132,10 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-swipe-help { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
       .sch-swipe-thumb { position:absolute; z-index:2; top:50%; right:calc(5px + var(--sch-swipe-progress)*52%); display:grid; place-items:center; width:32px; height:32px; border-radius:11px; color:#0d3431; background:linear-gradient(145deg,#dcfff0,#79cbb5); box-shadow:0 2px 0 #487e70,inset 0 1px #fff9; transform:translateY(-50%); pointer-events:none; font-size:20px; }
       .sch-swipe-takeback[data-swipe-state="ready"] { border-color:#a4ffe0; color:#f0fff8; box-shadow:0 3px 0 #08171a,0 0 18px #65e3b836,inset 0 1px #e3fff340; }
-      .sch-swipe-takeback[aria-disabled="true"] { opacity:.45; }
-      .sch-swipe-takeback:focus-visible { outline:2px solid #9cf5d7; outline-offset:3px; }
+      .sch-swipe-takeback { opacity:0; }
+      [data-sch-swipe-preview] .sch-swipe-takeback { opacity:1; }
+      [data-sch-swipe-preview] .sch-swipe-takeback[aria-disabled="true"] { opacity:.45; }
+      .sch-swipe-takeback:focus-visible { opacity:1; outline:2px solid #9cf5d7; outline-offset:3px; }
       .sch-wallpaper-motion { min-height:40px; margin-top:9px; padding:8px 12px; border:1px solid #9ecbbb66; border-radius:11px; background:#25453e; color:#e7fff3; font:inherit; font-size:12px; cursor:pointer; }
       .sch-wallpaper-motion[hidden] { display:none; }
       .sch-hint-piece { box-shadow:inset 0 0 0 3px #ffd16e,inset 0 0 15px #f7b83d99!important; animation:sch-hint-pulse 1.4s ease-in-out infinite alternate; }
@@ -139,6 +143,30 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       @media (prefers-reduced-motion:reduce) { .sch-hint-piece { animation:none; } }
       @media (prefers-reduced-motion:reduce) { .sch-evaluation-white { transition:none; } }
       #sch-bord { display:grid; grid-template-columns:repeat(8,1fr); aspect-ratio:1; width:100%; touch-action:none; user-select:none; }
+      #sch-bord,.sch-vak,.sch-stuk { -webkit-user-select:none; -webkit-touch-callout:none; }
+      .sch-knight-marker { position:absolute; z-index:3; width:var(--knight-size); height:var(--knight-size); border:1px solid var(--knight-line); border-radius:50%; background:var(--knight-color); box-sizing:border-box; pointer-events:none; }
+      .sch-knight-depth-1 { --knight-size:68%; --knight-color:rgb(239 68 68 / .34); --knight-line:rgb(153 27 27 / .7); z-index:3; }
+      .sch-knight-depth-2 { --knight-size:51%; --knight-color:rgb(59 130 246 / .34); --knight-line:rgb(29 78 216 / .75); z-index:4; }
+      .sch-knight-depth-3 { --knight-size:35%; --knight-color:rgb(34 197 94 / .34); --knight-line:rgb(21 128 61 / .75); z-index:5; }
+      .sch-knight-depth-4 { --knight-size:21%; --knight-color:rgb(168 85 247 / .38); --knight-line:rgb(107 33 168 / .8); z-index:6; }
+      .sch-knight-enemy { border-radius:1px; }
+      .sch-knight-enemy.sch-knight-depth-1 { --knight-color:rgb(249 115 22 / .34); --knight-line:rgb(194 65 12 / .8); }
+      .sch-knight-enemy.sch-knight-depth-2 { --knight-color:rgb(6 182 212 / .34); --knight-line:rgb(14 116 144 / .8); }
+      .sch-knight-enemy.sch-knight-depth-3 { --knight-color:rgb(250 204 21 / .35); --knight-line:rgb(161 98 7 / .8); }
+      .sch-knight-enemy.sch-knight-depth-4 { --knight-color:rgb(255 255 255 / .4); --knight-line:rgb(71 85 105 / .8); }
+      .sch-knight-source { outline:2px solid #fff3a8; outline-offset:-3px; }
+      .sch-knight-holding::after { content:""; position:absolute; z-index:7; inset:3px; border:2px solid #baffdf; border-radius:50%; box-shadow:0 0 7px #78efbd70; pointer-events:none; animation:sch-knight-hold 3s linear both; }
+      @keyframes sch-knight-hold { from { transform:scale(1); opacity:.25; } to { transform:scale(.58); opacity:1; } }
+      .sch-knight-route-description { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+      .sch-knight-settings { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; }
+      .sch-knight-option { display:flex; flex-direction:column; align-items:center; gap:6px; padding:9px 3px; border:1px solid #c2d3ff33; border-radius:11px; background:linear-gradient(145deg,#ffffff0b,#ffffff03); font-size:11px!important; text-align:center; }
+      .sch-knight-option input { width:19px; height:19px; accent-color:#79e6c7; }
+      .sch-knight-legend { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; max-width:100%; padding:7px 10px; border:1px solid #a6c9be55; border-radius:12px; color:#f1f6ee; background:linear-gradient(145deg,#223535f0,#181e2bf0); font-size:11px; }
+      .sch-knight-legend[hidden] { display:none; }
+      .sch-knight-legend [data-knight-legend-steps] { display:flex; align-items:center; gap:8px; }
+      .sch-knight-legend .sch-knight-marker { position:relative; display:inline-grid; place-items:center; width:21px; height:21px; color:#fff; text-shadow:0 1px 2px #000; font-weight:750; }
+      .sch-knight-legend button { width:28px; height:28px; border:1px solid #ffffff44; border-radius:8px; color:#fff; background:#ffffff10; font:inherit; cursor:pointer; }
+      @media (prefers-reduced-motion:reduce) { .sch-knight-holding::after { animation:none; opacity:.8; } }
       .sch-vak { border:0; border-radius:0; padding:0; min-width:0; position:relative; display:grid; place-items:center; cursor:pointer; aspect-ratio:1; }
       .sch-vak:focus-visible { outline:3px solid #55dfff; outline-offset:-3px; z-index:2; }
       .sch-stuk { display:block; width:88%; aspect-ratio:1; line-height:1; pointer-events:none; position:relative; z-index:1; filter:drop-shadow(0 2px 1px #0006); }
@@ -286,6 +314,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         <div class="sch-frame${isUltra ? ' sch-ultra-frame' : ''}"${isUltra ? ' id="sch-ultra-frame"' : ''}><div id="sch-bord" role="group" data-sch-label="Schaken" aria-label="Schaken"></div>${isUltra ? '<button class="sch-hint-button" id="sch-ultra-hint" type="button" data-sch-label="Tip voor deze zet" aria-label="Tip voor deze zet" hidden>!</button><p class="sch-assistance-status" id="sch-ultra-assistance-status" role="status" aria-live="polite"></p>' : ''}</div>
       ${isUltra ? '<aside class="sch-history" id="sch-history" data-sch-label="Zetgeschiedenis" aria-label="Zetgeschiedenis"><h3 data-sch-text="Zetgeschiedenis">Zetgeschiedenis</h3><div class="sch-history-scroll" id="sch-history-scroll" tabindex="0" data-sch-label="Zetgeschiedenis" aria-label="Zetgeschiedenis"><table><thead><tr><th scope="col">#</th><th scope="col" data-sch-text="Wit">Wit</th><th scope="col" data-sch-text="Zwart">Zwart</th></tr></thead><tbody id="sch-history-moves"></tbody></table><p class="sch-history-empty" id="sch-history-empty" data-sch-text="Nog geen zetten">Nog geen zetten</p></div></aside></div><div class="sch-swipe-takeback" id="sch-ultra-swipe" role="button" tabindex="0" aria-disabled="true" aria-labelledby="sch-ultra-swipe-label" aria-describedby="sch-ultra-swipe-help" hidden><span class="sch-swipe-label" id="sch-ultra-swipe-label"></span><span class="sch-swipe-thumb" aria-hidden="true">←</span></div><span id="sch-ultra-swipe-help" class="sch-swipe-help" data-sch-text="Veeg van rechts naar links tot voorbij het midden. Laat daarna los.">Veeg van rechts naar links tot voorbij het midden. Laat daarna los.</span><div class="sch-ultra-info"><p class="sch-ultra-status" id="sch-ultra-status" role="status" aria-live="polite"></p><button class="sch-ultra-retry" id="sch-ultra-retry" type="button" data-sch-text="Opnieuw proberen" hidden>Opnieuw proberen</button></div>' : ''}
       <div class="sch-vangst" id="sch-eigen"></div>
+      ${!isVriendPartij ? '<div class="sch-knight-legend" id="sch-knight-route-legend" role="status" aria-live="polite" hidden><span data-knight-legend-label></span><span data-knight-legend-steps></span><button type="button" data-knight-close data-sch-label="Paardroutes sluiten" aria-label="Paardroutes sluiten">×</button></div>' : ''}
       <div class="sch-legenda"></div>
       <div class="sch-acties">
         ${isUltra ? '<button class="sch-takeback" id="sch-ultra-takeback" type="button" hidden disabled>↶ <span data-sch-text="Zet terugnemen">Zet terugnemen</span></button>' : ''}
@@ -330,6 +359,11 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
             <label class="sch-attack-toggle"><input id="sch-ultra-hints-enabled" type="checkbox"> <span data-sch-text="Tips &amp; hints">Tips &amp; hints</span></label>
             <p class="sch-menu-hint" data-sch-text="De !-knop markeert één eigen stuk dat je goed kunt verplaatsen. Standaard uit.">De !-knop markeert één eigen stuk dat je goed kunt verplaatsen. Standaard uit.</p>` : ''}
           </section>
+          ${!isVriendPartij ? `<section class="sch-menu-section" aria-labelledby="sch-knight-heading">
+            <h3 id="sch-knight-heading" data-sch-text="Paardroutes">Paardroutes</h3>
+            <p class="sch-menu-hint" id="sch-knight-help" data-sch-text="Houd tijdens jouw beurt een paard drie seconden vast. Bolletjes zijn jouw routes; vierkantjes zijn die van de computer. De andere stukken blijven staan; tegenzetten worden niet voorspeld.">Houd tijdens jouw beurt een paard drie seconden vast. Bolletjes zijn jouw routes; vierkantjes zijn die van de computer. De andere stukken blijven staan; tegenzetten worden niet voorspeld.</p>
+            <div class="sch-knight-settings">${[1,2,3,4].map(n => `<label class="sch-knight-option"><input type="checkbox" data-knight-step="${n}" aria-describedby="sch-knight-help"${instellingen.knightRouteSteps[n-1] ? ' checked' : ''}><span data-sch-text="${n === 1 ? '1 sprong' : n + ' sprongen'}">${n === 1 ? '1 sprong' : n + ' sprongen'}</span></label>`).join('')}</div>
+          </section>` : ''}
           <section class="sch-menu-section" aria-labelledby="sch-board-heading">
             <h3 id="sch-board-heading"><span data-sch-text="Bord en veroverde stukken">Bord en veroverde stukken</span></h3>
             <fieldset><legend><span data-sch-text="Bordstijl">Bordstijl</span></legend><div class="sch-menu-opties" data-options="board">
@@ -522,6 +556,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     menu.hidden = !aan
     menuBackdrop.hidden = !aan
     ultraSwipe?.refresh()
+    paardRoutesUI?.refresh()
     zoomBtn.setAttribute('aria-expanded', String(aan))
     settingsBtn.setAttribute('aria-expanded', String(aan))
     if (aan) {
@@ -1094,6 +1129,24 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     restoreButton:inhoud.querySelector('#sch-focus-restore'),
   }) : null
   if (ultraFocus) opruimers.push(() => ultraFocus.destroy())
+  paardRoutesUI = !isVriendPartij ? maakPaardRoutesUI({
+    Schaak, board:bordEl, root:spelEl, menu,
+    legend:inhoud.querySelector('#sch-knight-route-legend'),
+    getState:() => staat, getRevision:() => generatie, playerColor:mijnKleur,
+    getSteps:() => instellingen.knightRouteSteps.slice(),
+    saveSteps:steps => { instellingen.knightRouteSteps = steps.slice(); bewaarInstellingen() },
+    canInspect:() => staat.aanZet === mijnKleur && !bezig && !promotieOpen && !gameOver && !ultraTakebackPending && noobDialog.hidden,
+    t,
+    onInspect:candidate => {
+      if (candidate) {
+        if (isUltra) wisUltraHint()
+        geselecteerd = candidate.color === mijnKleur ? [candidate.r,candidate.k] : null
+        mogelijkeZetten = geselecteerd ? Schaak.legaleZetten(staat,candidate.r,candidate.k) : []
+      }
+      tekenBord()
+    },
+  }) : null
+  if (paardRoutesUI) opruimers.push(() => paardRoutesUI.destroy())
   const vingers = new Map()
   let afstand = 0, negeerKlikTot = 0
   const meetAfstand = () => {
@@ -1217,7 +1270,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
           vakje.append(figuur)
         }
 
-        if (isMogelijkeZet) {
+        if (isMogelijkeZet && !paardRoutesUI?.active) {
           const stip = document.createElement('div')
           const heeftStuk = !!staat.bord[r][k]
           stip.style.cssText = heeftStuk
@@ -1229,10 +1282,12 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         bordEl.appendChild(vakje)
       }
     }
+    paardRoutesUI?.refresh()
   }
 
   // Event delegation — één listener op het bord, nooit per-vakje (voorkomt iOS re-render bug)
   bordEl.addEventListener('click', (e) => {
+    if (paardRoutesUI?.shouldIgnoreClick()) return
     if (performance.now() < negeerKlikTot) return
     const vakje = e.target.closest('[data-r]')
     if (!vakje) return
@@ -1241,6 +1296,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
 
   function vakjeKlik(r, k) {
     if (bezig || promotieOpen || (isUltra && ultraTakebackPending) || !noobDialog.hidden || gameOver || staat.aanZet !== mijnKleur) return
+    paardRoutesUI?.clear()
 
     // Als er al een stuk geselecteerd is en dit is een geldige zet
     if (geselecteerd) {
@@ -1464,6 +1520,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     toonSchaakWallpaper()
     toonUltraEvaluatie()
     toonUltraVeeg()
+    paardRoutesUI?.refresh()
     inhoud.querySelector('.sch-legenda').textContent = t('Pion 1 · Paard 3 · Loper 3 · Toren 5 · Dame 9')
     if (statusBericht) statusEl.textContent = t(statusBericht.key, statusBericht.values?.naam !== undefined ? { ...statusBericht.values, naam:tegenstanderNaam() } : statusBericht.values)
     if (pendingNoobMove) toonNoobBericht()

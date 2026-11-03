@@ -37,7 +37,7 @@ function fixture({ isSolo=true, niveau='ultra', saved='{}', benIkSpeler1=true }=
   const select = selector=>nodes.get(selector)??null
   Object.assign(context, {isUltra:result.isUltra, mijnKleur:result.mijnKleur, instellingen:result.instellingen,
     menu:{hidden:true,querySelector:select}, inhoud:{querySelector:select}, spelEl:root, spelKanaal:channel, opruimers:cleanups,
-    staat:Schaak.nieuweSpelStaat(), Schaak, schaakFen, maakUltraEvaluatieHistorie, schaakNotatie, esc:String,
+    staat:Schaak.nieuweSpelStaat(), Schaak, schaakFen, maakUltraEvaluatieHistorie, schaakNotatie, paardRoutesUI:null, esc:String,
     bezig:false, promotieOpen:false, gameOver:false,
     taal:{language:'nl'}, t, bewaarInstellingen(){storage=JSON.stringify(result.instellingen)},
     Bordgeluid:{maakSchaakAnalyseGeluid(){created++; return {speel:delta=>audio.push(delta), annuleer:()=>cancelled++, destroy:()=>destroyed++}}},

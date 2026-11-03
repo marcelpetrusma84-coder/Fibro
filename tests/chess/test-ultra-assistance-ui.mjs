@@ -50,7 +50,7 @@ function fixture({saved='{}',isSolo=true,niveau='ultra',state=Schaak.nieuweSpelS
   Object.assign(context,{isUltra:result.isUltra,isVriendPartij:!isSolo,mijnKleur:'w',vriendKleur:'z',instellingen:result.instellingen,
     menu:{hidden:true,querySelector:select,querySelectorAll:()=>[]},menuBackdrop:node(),zoomBtn:node(),settingsBtn:node(),inhoud:{querySelector:select},spelEl:root,spelKanaal:channel,opruimers:cleanups,
     staat:state,Schaak,schaakFen,maakUltraEvaluatieHistorie,schaakNotatie,esc:String,t,taal:{language:'nl'},
-    bordEl:boardEl,veroverd:{w:[],z:[]},laatsteZet:null,routeStuk:null,geselecteerd:null,mogelijkeZetten:[],gameOver:false,
+    bordEl:boardEl,paardRoutesUI:null,veroverd:{w:[],z:[]},laatsteZet:null,routeStuk:null,geselecteerd:null,mogelijkeZetten:[],gameOver:false,
     bezig:false,promotieOpen:false,generatie:0,pendingNoobMove:null,statusBericht:{key:'Jij bent aan zet'},statusEl:node(),promotieEl:node(),noobDialog:node(),opnieuwBtn:node(),wachtrij:Promise.resolve(),
     stukSVG:()=>'',READABLE_NAMES:{P:'pion',N:'paard',B:'loper',R:'toren',Q:'dame',K:'koning'},kleurBijStuk:()=>'',tekenVeroverd(){},
     rijVolgorde:()=>[0,1,2,3,4,5,6,7],kolVolgorde:()=>[0,1,2,3,4,5,6,7],

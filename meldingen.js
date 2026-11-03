@@ -3,6 +3,7 @@ import { supabase } from './supabase.js?v=95'
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v143)
 import { startParen, opOnline } from './paren.js?v=2'
 import { houOpen } from './lijntjes.js?v=1'
+import { speelBuzz } from './buzzgeluid.js?v=1'
 
 const BUZZ_UIT = 'fibro_buzz_uit'
 // v187: menu > Instellingen > 'Buzz schudt en trilt'. Uit (localStorage fibro_buzz_schud = '0') = een buzz is alleen een
@@ -53,54 +54,9 @@ export function toonMelding(tekst, kleur, opKlik) {
   }, 6500)
 }
 
-// iOS/Safari laat geluid alleen toe na een aanraking. We openen de
-// audiocontext daarom bij de eerste tik en houden hem open.
-let gedeeldeCtx = null
-function ontgrendelAudio() {
-  try {
-    const AC = window.AudioContext || window.webkitAudioContext
-    if (!AC) return
-    if (!gedeeldeCtx) gedeeldeCtx = new AC()
-    if (gedeeldeCtx.state === 'suspended') gedeeldeCtx.resume()
-    // Stil toontje van 1 sample: ontgrendelt de context op iOS
-    const b = gedeeldeCtx.createBuffer(1, 1, 22050)
-    const s = gedeeldeCtx.createBufferSource()
-    s.buffer = b
-    s.connect(gedeeldeCtx.destination)
-    s.start(0)
-  } catch(e) {}
-}
-document.addEventListener('touchstart', ontgrendelAudio, { once: true, passive: true })
-document.addEventListener('click', ontgrendelAudio, { once: true })
-
-// Buzzgeluid: lage zaagtand die snel aan-uit pulseert.
-// v180: de muziek pauzeert zolang (geluidregelaar.js, gebeurtenis 'fibro-geluid'), zodat nooit twee geluiden door elkaar klinken
-function speelBuzz() {
-  try { window.dispatchEvent(new CustomEvent('fibro-geluid', { detail: { soort: 'kort', ms: 1150 } })) } catch (e) {}
-  try {
-    const AC = window.AudioContext || window.webkitAudioContext
-    if (!AC) return
-    if (!gedeeldeCtx) gedeeldeCtx = new AC()
-    const ctx = gedeeldeCtx
-    if (ctx.state === 'suspended') ctx.resume()
-    const nu = ctx.currentTime
-    const osc = ctx.createOscillator()
-    const g = ctx.createGain()
-    osc.type = 'sawtooth'
-    osc.frequency.setValueAtTime(95, nu)
-    osc.frequency.setValueAtTime(78, nu + 0.35)
-    osc.frequency.setValueAtTime(95, nu + 0.7)
-    g.gain.setValueAtTime(0, nu)
-    for (let i = 0; i < 15; i++) {
-      const s = nu + i * 0.07
-      g.gain.setValueAtTime(0.28, s)
-      g.gain.setValueAtTime(0.02, s + 0.035)
-    }
-    g.gain.setValueAtTime(0, nu + 1.05)
-    osc.connect(g); g.connect(ctx.destination)
-    osc.start(nu); osc.stop(nu + 1.1)
-  } catch(e) {}
-}
+// v188 (3 nov 2026): het buzzgeluid komt uit buzzgeluid.js. Daar klinkt het via een gewone geluidsspeler die bij elke
+// tik vrijgegeven wordt, zoals de stickergeluiden. Met Web Audio kwam het geluid op de iPhone soms pas na een tik
+// (na de achtergrond of een uitgezet scherm zette Safari het stil).
 
 function zorgVoorSchudStijl() {
   if (document.getElementById('fibro-buzz-stijl')) return

@@ -1,4 +1,4 @@
-// beltoon.js — beltoon voor een inkomende oproep (v7)
+// beltoon.js — beltoon voor een inkomende oproep (v8)
 // v7 (11 oktober 2026, v142): het welkomstscherm ook in het Engels (taal.js; zonder taal.js Nederlands)
 // Werkt met een gewoon <audio>-element i.p.v. Web Audio: de iPhone laat dat beter toe.
 // Het klankje wordt hier in code gemaakt als WAV, er zijn geen geluidsbestanden.
@@ -112,8 +112,13 @@
     uitleg.style.cssText = 'font-size:14px;opacity:0.6;'
     wekScherm.append(hallo, logo, tik, uitleg)
     // De tik zelf wordt al opgevangen door ontgrendel(); hier alleen het scherm weghalen
-    // en voorkomen dat de tik doorgaat naar wat eronder ligt
-    const weg = (e) => { e.preventDefault(); e.stopPropagation(); verbergWekScherm() }
+    // en voorkomen dat de tik doorgaat naar wat eronder ligt.
+    // v8 (4 nov 2026): staan de meldingen nog niet aan (Home, meldingen-aan.js zet dan window.FibroMeldingenBijTik), dan
+    // vraagt deze eerste tik ook meteen om meldingen. Het moet in de tik zelf, anders laat de iPhone de vraag niet zien.
+    const weg = (e) => {
+      e.preventDefault(); e.stopPropagation(); verbergWekScherm()
+      if (welkom) { try { if (typeof window.FibroMeldingenBijTik === 'function') window.FibroMeldingenBijTik() } catch (er) {} }
+    }
     wekScherm.addEventListener('click', weg)
     wekScherm.addEventListener('touchend', weg)
     document.body.appendChild(wekScherm)

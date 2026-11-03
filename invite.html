@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=57"></script>
+<script src="taal.js?v=58"></script>
 <script src="apk.js?v=2"></script>
 <script src="registratie.js?v=1"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Wie jou uitnodigde, heeft deze week al 5 nieuwe mensen op Fibro gebracht. Dat is het maximum. Probeer het over een paar dagen opnieuw.': 'The person who invited you has already brought 5 new people to Fibro this week. That is the maximum. Please try again in a few days.' }) // v255</script>
@@ -146,7 +146,15 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
       <div style="font-size:12px;color:var(--muted);margin-bottom:4px;" data-t>Jouw herstelsleutel:</div>
       <div class="herstel-code" id="herstelCode">—</div>
     </div>
-    <button onclick="kopieerCode()" id="kopieerCodeBtn" style="background:rgba(255,255,255,0.07);color:#e5e5e5;border:0.5px solid rgba(255,255,255,0.15);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 0 12px;font-family:inherit;" data-t>Code kopieren</button><div style="font-size:11px;color:#f87171;margin-bottom:16px;" data-t>Dit zie je maar een keer. Bewaar hem buiten je telefoon.</div><div style="background:rgba(255,255,255,0.05);border:0.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;" data-t>Zet Fibro op je beginscherm</div><div style="font-size:12px;color:var(--muted);line-height:1.6;" data-t>Op de iPhone werken meldingen alleen als Fibro op je beginscherm staat.<br><b>iPhone:</b> Safari, deelicoon onderin, Zet op beginscherm.<br><b>Android:</b> Chrome, drie puntjes, Toevoegen aan startscherm.</div></div>
+    <button onclick="kopieerCode()" id="kopieerCodeBtn" style="background:rgba(255,255,255,0.07);color:#e5e5e5;border:0.5px solid rgba(255,255,255,0.15);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 0 12px;font-family:inherit;" data-t>Code kopieren</button><div style="font-size:11px;color:#f87171;margin-bottom:16px;" data-t>Dit zie je maar een keer. Bewaar hem buiten je telefoon.</div>
+    <!-- v258: meldingen meteen aanzetten, met een tik (meldingen-aan.js). Niet in Safari op de iPhone: daar kan het pas
+         als Fibro op het beginscherm staat (het vak hieronder legt dat uit; Home vraagt het dan de eerste keer). -->
+    <div id="meldWelkom" hidden style="background:rgba(192,132,252,0.12);border:1px solid rgba(192,132,252,0.5);border-radius:12px;padding:14px;margin-bottom:16px;text-align:left;">
+      <div style="font-size:14px;font-weight:600;margin-bottom:6px;" data-t>🔔 Meldingen</div>
+      <div id="meldWelkomTekst" style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:10px;" data-t>Krijg een melding als een vriend je schrijft, buzzt of uitdaagt.</div>
+      <button type="button" id="meldWelkomKnop" style="width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;" data-t>🔔 Meldingen aanzetten</button>
+    </div>
+    <div style="background:rgba(255,255,255,0.05);border:0.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;" data-t>Zet Fibro op je beginscherm</div><div style="font-size:12px;color:var(--muted);line-height:1.6;" data-t>Op de iPhone werken meldingen alleen als Fibro op je beginscherm staat.<br><b>iPhone:</b> Safari, deelicoon onderin, Zet op beginscherm.<br><b>Android:</b> Chrome, drie puntjes, Toevoegen aan startscherm.</div></div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:16px;" data-t>
       Inloggen doe je met: <span style="color:var(--accent)" id="bevestigNaam">—</span>
     </div>
@@ -414,6 +422,31 @@ window.registreren = async function() {
   document.getElementById('bevestigNaam').textContent = naam
   toonAppKaart(document.getElementById('herstelScherm').querySelector('.btn'))
   document.getElementById('herstelScherm').style.display = 'block'
+  if (data.user) toonMeldWelkom(data.user.id) // v258
+}
+
+// v258: meldingen meteen na het inschrijven aanzetten, met een tik (meldingen-aan.js). Alleen als het hier kan
+// (niet in Safari op de iPhone) en ze nog niet aan staan.
+async function toonMeldWelkom(userId, plek) {
+  const vak = document.getElementById('meldWelkom')
+  if (!vak) return
+  let m
+  try { m = await import('./meldingen-aan.js?v=1') } catch (e) { return }
+  const stand = await m.meldStand()
+  if (stand !== 'uit' && stand !== 'geweigerd') return
+  const tekst = document.getElementById('meldWelkomTekst'), knop = document.getElementById('meldWelkomKnop')
+  const geweigerd = () => { tekst.textContent = T('Meldingen staan uit voor Fibro. Je kunt ze later aanzetten in Stijl > Meldingen.'); knop.remove() }
+  if (stand === 'geweigerd') geweigerd()
+  knop.onclick = async () => {
+    knop.disabled = true
+    const uit = await m.zetMeldingenAan(supabase, userId) // meteen bij de tik (de iPhone eist dat)
+    knop.disabled = false
+    if (uit === 'aan') { tekst.textContent = T('✅ Meldingen staan aan!'); knop.remove() }
+    else if (uit === 'geweigerd') geweigerd()
+    else if (uit === 'mislukt') tekst.textContent = T('⚠️ Dat lukte niet. Probeer het later nog eens, in Stijl > Meldingen.')
+  }
+  if (plek) plek.parentNode.insertBefore(vak, plek)
+  vak.hidden = false
 }
 
 // Android in de browser: na het aanmelden nog een keer de app aanbieden (dezelfde inlog, apk.js)
@@ -452,6 +485,7 @@ async function toonHerstelcodeReserve(userId, naam, privateKeyB64, paneel) {
     document.getElementById('bevestigNaam').textContent = naam
     toonAppKaart(document.getElementById('herstelScherm').querySelector('.btn'))
     document.getElementById('herstelScherm').style.display = 'block'
+    toonMeldWelkom(userId) // v258
   } catch (e) {
     paneel.textContent = T('Herstelcode maken mislukt. Je kunt Face ID-herstel later aanzetten na het inloggen.')
   }
@@ -483,6 +517,7 @@ function toonFaceIdNaInvite(userId, naam, privateKeyB64) {
       ja.disabled = false; ja.textContent = T('Verder naar Fibro')
       ja.onclick = () => { window.location.href = 'index.html' }
       toonAppKaart(ja)
+      toonMeldWelkom(userId, ja) // v258
     } catch (e) {
       melding.style.color = '#f87171'; melding.textContent = faceIdFoutTekst(e)
       ja.disabled = false; nee.disabled = false; ja.textContent = T('Opnieuw proberen')

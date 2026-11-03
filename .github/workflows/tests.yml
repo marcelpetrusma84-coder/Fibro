@@ -66,3 +66,6 @@ jobs:
       - name: Makkelijker contact (delen, zeg hoi, na een uitnodiging naar de chat)
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef236.py .
+      - name: Meldingen meteen aanzetten (Home, welkomstscherm, iPhone)
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef237.py .

@@ -1024,6 +1024,8 @@ alle-tests.mjs           alle Node-tests in een keer (ook proef46/50/229 als typ
 tools/controleer-versies.mjs  krijgt elk veranderd script met ?v= ook een nieuw nummer? node ... <basis> [kop]
 tools/servercontrole.py  draait de STUN/TURN-server bij TransIP? (UDP, TCP, TURN 401). GitHub: elke 4 uur
                          (.github/workflows/servercontrole.yml).
+tools/proef232.py        buzzgeluid op de iPhone (buzzgeluid.js): Chrome met de regel van de iPhone (alleen tijdens een tik,
+                         of een speler die al eens tijdens een tik speelde). Ook op GitHub.
 tools/proef233.mjs       stuur-push v257: meldingen voor spellen (uitnodiging, gemist, verlaten), 13 controles.
 tools/proef234.py        de app met twee spelers: uitnodiging, gemist, verlaten (alleen als de vriend weg is). Ook op GitHub.
 tools/*.js               console-testjes voor Marcel (alert); ?v=-nummers daarin kunnen verouderd zijn

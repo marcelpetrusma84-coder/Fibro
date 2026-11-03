@@ -60,3 +60,6 @@ jobs:
       - name: Pushmeldingen voor spellen (twee spelers)
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef234.py .
+      - name: Buzzgeluid met de regel van de iPhone
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef232.py .

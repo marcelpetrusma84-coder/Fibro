@@ -55,4 +55,5 @@ jobs:
       - name: Bellen en webcam met twee spelers (5 spellen)
         run: python -I tests/tools/proef228.py .
       - name: Postbus (nooit tegelijk online)
+        if: ${{ !cancelled() }}
         run: python -I tests/tools/proef231.py .

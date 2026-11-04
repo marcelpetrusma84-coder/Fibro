@@ -55,14 +55,14 @@ drop policy if exists profiel_likes_zetten on public.profiel_likes;
 create policy profiel_likes_zetten on public.profiel_likes for insert to authenticated
   with check (
     (select auth.uid()) = liker
-    and not public.is_geblokkeerd((select auth.uid()))
+    and not (select public.ben_ik_geblokkeerd()) -- v260: is_geblokkeerd is dicht voor de app (sql/geblokkeerd-regels.sql)
     and exists (select 1 from public.friendships f
                  where f.user_id = liker and f.friend_id = eigenaar and f.status = 'accepted'));
 
 drop policy if exists profiel_likes_wijzigen on public.profiel_likes;
 create policy profiel_likes_wijzigen on public.profiel_likes for update to authenticated
   using ((select auth.uid()) = liker)
-  with check ((select auth.uid()) = liker and not public.is_geblokkeerd((select auth.uid())));
+  with check ((select auth.uid()) = liker and not (select public.ben_ik_geblokkeerd())); -- v260
 
 -- Weghalen: je eigen like, of als eigenaar een like bij jou
 drop policy if exists profiel_likes_wissen on public.profiel_likes;

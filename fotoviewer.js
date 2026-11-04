@@ -1,4 +1,4 @@
-// fotoviewer.js — Fibro  (v2; v5 11-10-2026: ook in het Engels; v6 16-10-2026: stickers niet; v7 4-11-2026: likes)
+// fotoviewer.js — Fibro  (v2; v5 11-10-2026: ook in het Engels; v6 16-10-2026: stickers niet; v7 4-11-2026: likes; v8: chat)
 //
 // Klik op een foto in een widget en hij opent groot over de pagina heen.
 // Staan er meer foto's in dezelfde widget, dan kun je doorbladeren met de
@@ -17,7 +17,12 @@
 // v7: onder de grote foto een balkje (#fv-balk). De pagina vult het via window.FibroFotoBalk(img, balk) met likes en
 // 'Reageer' (profielreacties.js); zonder die functie blijft het leeg.
 //
-// Inhaken:  <script src="./fotoviewer.js?v=7"></script>  vlak voor </body>
+// v8 (v259, 4-11-2026): ook buiten widgets. Een plaatje met data-fv-groep="naam" opent ook groot; je veegt dan
+// langs alle plaatjes met dezelfde groep (in de chat: alle foto's van het gesprek). Met data-fv-tekst komt die tekst
+// onder de foto (bijvoorbeeld een reactie op een profielfoto), met data-fv-kop een klein regeltje erboven. Alleen
+// textContent, er wordt niets als html gelezen.
+//
+// Inhaken:  <script src="./fotoviewer.js?v=8"></script>  vlak voor </body>
 
 (function () {
   'use strict'
@@ -30,6 +35,7 @@
 
   function komtInAanmerking(img) {
     if (!img || img.tagName !== 'IMG') return false
+    if (img.hasAttribute('data-fv-groep')) return !!img.src // v8: de pagina vraagt er zelf om
     if (!img.closest('.widget-blok')) return false
     // Avatars in het gastenboek en andere kleine plaatjes overslaan.
     if (img.closest('#gbl') || img.closest('#gbwLijst')) return false
@@ -61,6 +67,10 @@
       '<button id="fv-sluit" aria-label="' + vt('Sluiten') + '" style="position:absolute;top:14px;right:16px;width:40px;height:40px;border:0;border-radius:50%;background:rgba(255,255,255,0.12);color:#fff;font-size:22px;line-height:1;cursor:pointer">\u00d7</button>' +
       '<button id="fv-vorige" aria-label="' + vt('Vorige foto') + '" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);width:44px;height:64px;border:0;border-radius:10px;background:rgba(255,255,255,0.10);color:#fff;font-size:26px;line-height:1;cursor:pointer">\u2039</button>' +
       '<button id="fv-volgende" aria-label="' + vt('Volgende foto') + '" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:44px;height:64px;border:0;border-radius:10px;background:rgba(255,255,255,0.10);color:#fff;font-size:26px;line-height:1;cursor:pointer">\u203a</button>' +
+      '<div id="fv-tekstvak" style="position:absolute;bottom:86px;left:16px;right:16px;display:none;text-align:center;color:#fff;max-height:22vh;overflow-y:auto">' +
+        '<div id="fv-kop" style="font-size:12px;opacity:0.7;margin-bottom:4px"></div>' +
+        '<div id="fv-tekst" style="display:inline-block;max-width:520px;background:rgba(255,255,255,0.12);border-radius:14px;padding:8px 14px;font-size:16px;line-height:1.4;white-space:pre-wrap;word-break:break-word;text-align:left"></div>' +
+      '</div>' +
       '<div id="fv-balk" style="position:absolute;bottom:42px;left:12px;right:12px;display:flex;justify-content:center"></div>' +
       '<div id="fv-teller" style="position:absolute;bottom:16px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.75);font-size:13px"></div>'
 
@@ -170,6 +180,14 @@
     var balk = overlay.querySelector('#fv-balk')
     balk.innerHTML = ''
     try { if (typeof window.FibroFotoBalk === 'function') window.FibroFotoBalk(fotos[huidig], balk) } catch (e) {}
+    // v8: tekst onder de foto (data-fv-tekst); de foto wordt dan wat lager zodat de tekst eronder past
+    var tekst = fotos[huidig].getAttribute('data-fv-tekst') || ''
+    var vak = overlay.querySelector('#fv-tekstvak')
+    overlay.querySelector('#fv-tekst').textContent = tekst
+    overlay.querySelector('#fv-kop').textContent = fotos[huidig].getAttribute('data-fv-kop') || ''
+    vak.style.display = tekst ? 'block' : 'none'
+    img.style.maxHeight = tekst ? '62vh' : '88vh'
+    img.style.marginBottom = tekst ? '18vh' : ''
   }
 
   function ga(stap) {
@@ -179,9 +197,16 @@
   }
 
   function open(img) {
-    var blok = img.closest('.widget-blok')
-    fotos = Array.prototype.slice.call(blok.querySelectorAll('img'))
-      .filter(komtInAanmerking)
+    var groep = img.getAttribute('data-fv-groep')
+    if (groep !== null) {
+      // v8: alle plaatjes van dezelfde groep, in de volgorde van de pagina
+      fotos = Array.prototype.slice.call(document.querySelectorAll('img[data-fv-groep]'))
+        .filter(function (f) { return f.getAttribute('data-fv-groep') === groep && komtInAanmerking(f) })
+    } else {
+      var blok = img.closest('.widget-blok')
+      fotos = Array.prototype.slice.call(blok.querySelectorAll('img'))
+        .filter(komtInAanmerking)
+    }
     if (!fotos.length) fotos = [img]
     huidig = Math.max(0, fotos.indexOf(img))
 
@@ -223,6 +248,7 @@
   stijl.textContent =
     '.widget-blok img { pointer-events: auto !important; cursor: zoom-in }' +
     '#gbl img, #gbwLijst img { pointer-events: none !important; cursor: default }' +
-    '.widget-blok.sw-blok img { pointer-events: none !important; cursor: inherit }'
+    '.widget-blok.sw-blok img { pointer-events: none !important; cursor: inherit }' +
+    'img[data-fv-groep] { cursor: zoom-in }'
   document.head.appendChild(stijl)
 })()

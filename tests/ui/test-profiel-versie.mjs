@@ -51,7 +51,7 @@ assert.match(sync, /async function stuurManifest\(\) \{\n  const manifest = awai
 const ontvang = knip(sync, "if (bericht.type === 'manifest')", "if (bericht.type === 'geef')")
 assert.match(sync, /const v = belangrijkeVingerafdruk\(manifest\)/) // v249b: in nieuweSyncStand (zie test-profiel-geen-vals-nieuw.mjs)
 assert.match(ontvang, /nieuweSyncStand\(vorig, bericht\.data\)/)
-assert.match(ontvang, /localStorage\.setItem\(sl, JSON\.stringify\(\{ t: nu, v, oud, nieuw, k \}\)\)/)
+assert.match(ontvang, /localStorage\.setItem\(sl, JSON\.stringify\(\{ t: nu, v, oud, nieuw, k, w, nt \}\)\)/)
 
 // 3. De stand per vriend op de pagina Vrienden (de echte functie)
 const opslag = new Map()

@@ -16,3 +16,16 @@ zet(s,[1,0],[0,1],score,'N');assert.equal(s.bord[0][1],'wN');assert.deepEqual(sc
 assert.equal(veroverdePunten(['zP','zN','zB','zR','zQ']),21)
 for(const kleur of ['w','z']) for(const type of ['P','N','B','R','Q','K'])assert(stukSVG(kleur+type).includes('<svg'))
 console.log('PASS: captures for both players; en passant; capture with promotion; points; all vector pieces')
+
+// v265: animaties bij slaan en schaakmat (schaken-ui.js)
+{
+  const { readFileSync } = await import('node:fs')
+  const ui = readFileSync(new URL('../../schaken-ui.js', import.meta.url), 'utf8')
+  const assert = (await import('node:assert/strict')).default
+  assert.match(ui, /function animeerSlag\(zet\) \{\n    const plek = zet\.type === 'enpassant' \? \[zet\.van\[0\], zet\.naar\[1\]\] : zet\.naar/, 'en passant: het juiste slachtoffer')
+  assert.match(ui, /const slag = minderBeweging\.matches \? null : animeerSlag\(zet\)/, 'geen animatie bij minder beweging')
+  assert.match(ui, /await animatie\.finished; if \(slag\) await slag \} finally \{ animatie\.cancel\(\)/, 'de aanvaller springt niet terug')
+  assert.match(ui, /if \(stuk && matKleur && stuk === matKleur \+ 'K'\) vakje\.classList\.add\('sch-koning-mat'\)/, 'de koning blijft liggen')
+  assert.match(ui, /if \(mat\) \{ \/\/ v265: eerst valt de koning om, dan SCHAAKMAT\n      const wacht = animeerSchaakmat\(volgendeKleur\)\n      checkmateTimers\.forEach\(clearTimeout\)/, 'SCHAAKMAT na de val, en opnieuw beginnen wist de wekker')
+  console.log('PASS: animaties bij slaan en schaakmat')
+}

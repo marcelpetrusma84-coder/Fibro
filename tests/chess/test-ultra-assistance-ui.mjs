@@ -178,6 +178,7 @@ const movingPiece=racing.select('#sch-bord').querySelector('[data-r="1"][data-k=
 movingPiece.animate=()=>motion
 racing.select('#sch-bord').getAnimations=()=>[motion]
 racing.context.minderBeweging={matches:false}
+racing.context.animeerSlag=()=>null // v265: geen geslagen stuk bij e7e5
 vm.runInContext(animation,racing.context)
 racing.emit('zet',{zet:reply.zet,ultraPly:2,ultraGeneration:0})
 const oldTask=racing.context.wachtrij

@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=61"></script>
+<script src="taal.js?v=62"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -459,7 +459,7 @@ window.veiligeUrl = function(v){
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
   import { leesReactieBericht, tekenReactieKaart, tekenReactieSticker, reactieKort } from './profielreacties.js?v=2' // v258; v259: als sticker
   import { startChatStatus, werkVinkjesBij, TYPEN_DUUR_MS } from './chatstatus.js?v=1' // v261: typen en gelezen-vinkjes
-  import { bewaarChatFoto, haalChatFotos } from './chatfotos.js?v=1' // v262: foto's blijven op dit toestel bewaard
+  import { bewaarChatFoto, haalChatFotos, markeerBekeken } from './chatfotos.js?v=1' // v262: foto's blijven op dit toestel bewaard
   // v256 (foutmelding 3 nov 2026): lukt het laden van een spelbestand niet (even geen internet, of net een nieuwe
   // versie op GitHub), dan na 1,2 seconde nog één keer, met een ander adres (sommige browsers onthouden een mislukte poging)
   const laadModule = url => import(url).catch(async () => {
@@ -698,10 +698,13 @@ window.veiligeUrl = function(v){
     initP2pFoto(huidigeUser.id, {
       onFotoOntvangen: (vanVriendId, blob, meta) => {
         const reeks = typeof meta?.reeks === 'string' ? meta.reeks : null
-        bewaarChatFoto(huidigeUser.id, vanVriendId, blob, { mijn: false, reeks }) // v262: ook als deze chat niet open is
-        if (geselecteerdeVriend?.id !== vanVriendId) return
-        const url = URL.createObjectURL(blob)
-        toonFotoInChat(url, false, typeof meta?.reeks === 'string' ? meta.reeks : null) // v259: in het rijtje van dezelfde keer
+        const eenmalig = meta?.eenmalig === true // v262: een keer laten zien
+        // v262: ook bewaren als deze chat niet open is
+        bewaarChatFoto(huidigeUser.id, vanVriendId, blob, { mijn: false, reeks, eenmalig }).then(id => {
+          if (geselecteerdeVriend?.id !== vanVriendId) return
+          const url = URL.createObjectURL(blob)
+          toonFotoInChat(url, false, reeks, undefined, { eenmalig, id }) // v259: in het rijtje van dezelfde keer
+        })
       },
       onStatus: (vriendId, status) => {
         if (geselecteerdeVriend?.id !== vriendId) return
@@ -1918,22 +1921,94 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (!bestanden.length || !geselecteerdeVriend) return
     const vriendId = geselecteerdeVriend.id
     if (!isVriendOnline(vriendId)) { voegSysBericht(T('Vriend is offline — foto kan niet verstuurd worden')); return }
+    // v262: bewaren in de chat, of een keer laten zien
+    const soort = await kiesFotoSoort(bestanden.length)
+    if (!soort || geselecteerdeVriend?.id !== vriendId) return
+    const eenmalig = soort === 'eenmalig'
     if (teVeel) voegSysBericht(T('Je kunt {n} foto\'s tegelijk sturen. De eerste {n} gaan nu.', { n: MAX_FOTOS }))
-    const reeks = Math.random().toString(36).slice(2, 10)
+    const reeks = eenmalig ? null : Math.random().toString(36).slice(2, 10)
     let mislukt = 0
     for (const file of bestanden) {
       if (geselecteerdeVriend?.id !== vriendId) break // intussen een andere chat geopend
       try {
         const blob = await comprimeerFoto(file)
-        await stuurFotoP2P(vriendId, blob, { bestandsnaam: file.name, reeks, aantal: bestanden.length })
-        bewaarChatFoto(huidigeUser.id, vriendId, blob, { mijn: true, reeks }) // v262
-        toonFotoInChat(URL.createObjectURL(blob), true, reeks)
+        await stuurFotoP2P(vriendId, blob, Object.assign({ bestandsnaam: file.name, aantal: bestanden.length }, reeks ? { reeks } : {}, eenmalig ? { eenmalig: true } : {}))
+        bewaarChatFoto(huidigeUser.id, vriendId, blob, { mijn: true, reeks, eenmalig }) // v262
+        toonFotoInChat(URL.createObjectURL(blob), true, reeks, undefined, { eenmalig })
       } catch(e) {
         console.error('P2P foto mislukt:', e)
         mislukt++
       }
     }
     if (mislukt) voegSysBericht(mislukt === bestanden.length ? T('Foto versturen mislukt — vriend niet bereikbaar') : T('{n} foto\'s zijn niet aangekomen', { n: mislukt }))
+  }
+
+  // v262: na het kiezen van de foto's: 💾 Bewaren of 👁️ Een keer laten zien. Geeft 'bewaren', 'eenmalig' of null.
+  function kiesFotoSoort(aantal) {
+    return new Promise(klaar => {
+      document.getElementById('fotoSoortScherm')?.remove()
+      const achter = document.createElement('div')
+      achter.id = 'fotoSoortScherm'
+      achter.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center'
+      const kaart = document.createElement('div')
+      kaart.setAttribute('role', 'dialog'); kaart.setAttribute('aria-modal', 'true'); kaart.setAttribute('aria-labelledby', 'fotoSoortTitel')
+      kaart.style.cssText = 'width:100%;max-width:480px;background:#1a0a2e;border:0.5px solid var(--border);border-radius:20px 20px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));color:var(--text);display:flex;flex-direction:column;gap:10px'
+      const titel = document.createElement('h2')
+      titel.id = 'fotoSoortTitel'
+      titel.textContent = aantal > 1 ? T('{n} foto\'s versturen', { n: aantal }) : T('Foto versturen')
+      titel.style.cssText = 'font-size:18px;margin:0 0 4px;color:var(--accent)'
+      kaart.appendChild(titel)
+      let gekozen = false
+      const dicht = (keuze) => { if (gekozen) return; gekozen = true; achter.remove(); document.removeEventListener('keydown', esc, true); klaar(keuze) }
+      const esc = (e) => { if (e.key === 'Escape') dicht(null) }
+      document.addEventListener('keydown', esc, true)
+      const knop = (soort, kop, uitleg) => {
+        const b = document.createElement('button')
+        b.className = 'foto-soort'; b.dataset.soort = soort
+        b.style.cssText = 'text-align:left;min-height:56px;padding:12px 14px;border-radius:14px;border:0.5px solid var(--border);background:rgba(255,255,255,0.06);color:var(--text);font-family:inherit;cursor:pointer'
+        const k = document.createElement('div'); k.textContent = kop; k.style.cssText = 'font-size:16px;font-weight:700'
+        const u = document.createElement('div'); u.textContent = uitleg; u.style.cssText = 'font-size:13px;opacity:0.75;margin-top:3px;line-height:1.35'
+        b.append(k, u)
+        b.onclick = () => dicht(soort)
+        kaart.appendChild(b)
+      }
+      knop('bewaren', T('\u{1F4BE} Bewaren'), T('Blijft in de chat. Je vriend kan hem op zijn telefoon opslaan.'))
+      knop('eenmalig', T('\u{1F441}\uFE0F E\u00E9n keer laten zien'), T('Je vriend kan hem \u00E9\u00E9n keer bekijken. Na het sluiten is hij weg.'))
+      const nee = document.createElement('button')
+      nee.textContent = T('Annuleren')
+      nee.style.cssText = 'min-height:44px;border-radius:12px;border:none;background:none;color:var(--text);opacity:0.8;font-size:15px;cursor:pointer;font-family:inherit'
+      nee.onclick = () => dicht(null)
+      kaart.appendChild(nee)
+      achter.onclick = (e) => { if (e.target === achter) dicht(null) }
+      achter.appendChild(kaart)
+      document.body.appendChild(achter)
+      kaart.querySelector('.foto-soort').focus()
+    })
+  }
+
+  // v262: in het grote scherm bij een foto uit de chat: 💾 Opslaan op je telefoon (niet bij een foto voor een keer)
+  window.FibroFotoBalk = function(img, balk) {
+    if (!img || img.getAttribute('data-fv-groep') !== 'chat' || img.hasAttribute('data-fv-beschermd')) return
+    const b = document.createElement('button')
+    b.id = 'fotoOpslaan'
+    b.textContent = T('\u{1F4BE} Opslaan')
+    b.style.cssText = 'min-height:36px;padding:6px 16px;border-radius:18px;border:none;background:rgba(255,255,255,0.16);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit'
+    b.onclick = async (e) => {
+      e.stopPropagation()
+      try {
+        const blob = await (await fetch(img.src)).blob()
+        const ext = /webp/.test(blob.type) ? 'webp' : /png/.test(blob.type) ? 'png' : 'jpg'
+        const naam = 'fibro-foto-' + new Date().toISOString().slice(0, 10) + '.' + ext
+        const file = new File([blob], naam, { type: blob.type || 'image/jpeg' })
+        // iPhone en Android: het deelscherm, met 'Bewaar afbeelding'. Anders gewoon downloaden.
+        if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return }
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(file); a.download = naam
+        document.body.appendChild(a); a.click(); a.remove()
+        setTimeout(() => URL.revokeObjectURL(a.href), 5000)
+      } catch (err) { if (err && err.name !== 'AbortError') console.warn('[chat] foto opslaan mislukt', err) }
+    }
+    balk.appendChild(b)
   }
 
   // v138: foto's maken in een formaat dat dit toestel echt kan. Safari (iPhone) kan geen WebP maken en
@@ -2006,15 +2081,23 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // v259: foto's van dezelfde keer (reeks) komen samen in een rijtje. Tikken = groot bekijken (fotoviewer.js v8).
   const GELDIGE_REEKS = /^[a-z0-9]{4,12}$/
   // v262: met 'wanneer' (ms) is het een bewaarde foto: die komt op de goede plek tussen de berichten, zonder te scrollen
-  function toonFotoInChat(url, isMijn, reeks, wanneer) {
+  // extra: { eenmalig, bekeken, id } (v262: een foto die je vriend maar een keer mag zien)
+  function toonFotoInChat(url, isMijn, reeks, wanneer, extra = {}) {
     const container = document.getElementById('messages')
     const bewaard = Number.isFinite(wanneer)
     const moment = bewaard ? new Date(wanneer) : new Date()
     const tijd = moment.toLocaleTimeString(T.locale, { hour: '2-digit', minute: '2-digit' })
-    const img = document.createElement('img')
-    img.src = url
-    img.alt = ''
-    img.setAttribute('data-fv-groep', 'chat')
+    const eenmalig = !!extra.eenmalig
+    if (eenmalig) reeks = null
+    let img
+    if (eenmalig && !isMijn) {
+      img = maakEenmaligVak(url, extra)
+    } else {
+      img = document.createElement('img')
+      img.src = url
+      img.alt = ''
+      img.setAttribute('data-fv-groep', 'chat')
+    }
     const sleutel = reeks && GELDIGE_REEKS.test(reeks) ? (isMijn ? 'm' : 'v') + reeks : null
     const bestaand = sleutel ? container.querySelector('.foto-reeks[data-reeks="' + sleutel + '"]') : null
     if (bestaand) {
@@ -2033,7 +2116,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       <div class="msg-av-sm">${esc(avatar)}</div>
       <div style="padding:4px;">
         <div class="foto-raster" style="display:flex;flex-wrap:wrap;gap:4px;max-width:212px;${isMijn ? 'justify-content:flex-end;' : ''}"></div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px;text-align:right;">${tijd}${isMijn ? ' <span class="vink">✓</span>' : ''}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;text-align:right;">${eenmalig && isMijn ? esc(T('\u{1F441}\uFE0F 1 keer')) + ' · ' : ''}${tijd}${isMijn ? ' <span class="vink">✓</span>' : ''}</div>
       </div>`
     if (isMijn) row.dataset.ct = moment.toISOString() // v261
     row.dataset.ts = moment.toISOString() // v262
@@ -2050,6 +2133,49 @@ console.timeLog('[chat] berichten', 'opgehaald')
     }
   }
 
+  // v262: een foto die je maar een keer mag zien: een vakje zonder de foto erin. Tik = groot (fotoviewer.js v9,
+  // beschermd: niet lang drukken om te bewaren, geen Opslaan); na het sluiten is hij weg (markeerBekeken).
+  function maakEenmaligVak(url, { bekeken, id }) {
+    const vak = document.createElement('button')
+    vak.className = 'foto-eenmalig'
+    vak.style.cssText = 'width:150px;min-height:96px;border-radius:14px;border:1.5px dashed rgba(192,132,252,0.7);background:rgba(192,132,252,0.12);color:var(--text);font-family:inherit;cursor:pointer;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px'
+    const zet = (gezien) => {
+      vak.replaceChildren()
+      const k = document.createElement('div'); k.style.cssText = 'font-size:26px;line-height:1'; k.textContent = '\u{1F441}\uFE0F'
+      const t = document.createElement('div'); t.style.cssText = 'font-size:13px;font-weight:700'
+      t.textContent = gezien ? T('Foto bekeken') : T('Foto')
+      vak.append(k, t)
+      if (!gezien) { const u = document.createElement('div'); u.style.cssText = 'font-size:11px;opacity:0.75'; u.textContent = T('Tik om 1 keer te bekijken'); vak.appendChild(u) }
+      vak.disabled = gezien
+      vak.style.opacity = gezien ? '0.55' : ''
+      vak.style.cursor = gezien ? 'default' : 'pointer'
+      vak.dataset.bekeken = gezien ? '1' : ''
+    }
+    zet(!!bekeken || !url)
+    vak.onclick = () => {
+      if (vak.dataset.bekeken || !url || !window.FibroFotoViewer) return
+      let plek = document.getElementById('eenmaligPlek')
+      if (!plek) { plek = document.createElement('div'); plek.id = 'eenmaligPlek'; plek.style.cssText = 'position:fixed;left:0;top:0;width:200px;height:200px;overflow:hidden;opacity:0;pointer-events:none'; document.body.appendChild(plek) }
+      const img = document.createElement('img')
+      img.src = url
+      img.setAttribute('data-fv-groep', 'eenmalig-' + Math.random().toString(36).slice(2, 8))
+      img.setAttribute('data-fv-beschermd', '')
+      plek.appendChild(img)
+      const dicht = (e) => {
+        if (!e.detail || !e.detail.fotos || !e.detail.fotos.includes(img)) return
+        document.removeEventListener('fibro-fotoviewer-dicht', dicht)
+        img.remove()
+        try { URL.revokeObjectURL(url) } catch (er) {}
+        url = null
+        zet(true)
+        if (id) markeerBekeken(id)
+      }
+      document.addEventListener('fibro-fotoviewer-dicht', dicht)
+      window.FibroFotoViewer.open(img)
+    }
+    return vak
+  }
+
   // v262: de bewaarde foto's van dit gesprek (chatfotos.js) tussen de berichten zetten
   let fotoUrls = []
   async function toonBewaardeFotos(vriendId) {
@@ -2059,9 +2185,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (geselecteerdeVriend?.id !== vriendId || !fotos.length) return
     const container = document.getElementById('messages')
     for (const f of fotos) {
-      const url = URL.createObjectURL(f.blob)
-      fotoUrls.push(url)
-      toonFotoInChat(url, f.mijn, f.reeks, f.tijd)
+      const url = f.blob ? URL.createObjectURL(f.blob) : null
+      if (url) fotoUrls.push(url)
+      toonFotoInChat(url, f.mijn, f.reeks, f.tijd, { eenmalig: f.eenmalig, bekeken: f.bekeken, id: f.id })
     }
     // er staat nu iets in de chat: 'Stuur je eerste bericht' en 'Zeg hoi' horen er niet meer bij
     for (const el of container.querySelectorAll('.sys-msg')) if (el.textContent === T('Stuur je eerste bericht! 👋')) el.remove()
@@ -4231,7 +4357,7 @@ async function verstuurMelding(reden) {
   alert(ok ? T('Bedankt. Je melding is doorgestuurd.') : T('Melden is niet gelukt. Probeer het later opnieuw.'))
 }
 </script>
-<script src="fotoviewer.js?v=8"></script>
+<script src="fotoviewer.js?v=9"></script>
 <script src="swipe.js?v=96"></script>
 <script src="menuschuif.js?v=1"></script>
 <script type="module">if (new URLSearchParams(location.search).get('test') !== 'FIBRO TEST') { const { startOngelezen } = await import('./ongelezen.js?v=169').catch(() => new Promise(r => setTimeout(r, 1500)).then(() => import('./ongelezen.js?v=169&opnieuw=1'))); startOngelezen() }</script>

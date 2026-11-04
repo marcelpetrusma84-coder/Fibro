@@ -1840,4 +1840,15 @@ window.FIBRO_EN = {
   "Gelezen": "Read",
   "Verstuurd": "Sent",
   "\u2713\u2713 Gelezen-vinkjes": "\u2713\u2713 Read receipts",
+  // v262: foto's bewaren of een keer laten zien
+  "{n} foto's versturen": "Send {n} photos",
+  "💾 Bewaren": "💾 Keep",
+  "Blijft in de chat. Je vriend kan hem op zijn telefoon opslaan.": "Stays in the chat. Your friend can save it to their phone.",
+  "👁️ Eén keer laten zien": "👁️ View once",
+  "Je vriend kan hem één keer bekijken. Na het sluiten is hij weg.": "Your friend can view it once. After closing, it's gone.",
+  "💾 Opslaan": "💾 Save",
+  "Foto bekeken": "Photo viewed",
+  "Foto": "Photo",
+  "Tik om 1 keer te bekijken": "Tap to view once",
+  "👁️ 1 keer": "👁️ once",
 }

@@ -10,6 +10,11 @@
 //   - sync.js ruimt ze NIET op (die kijkt naar 'vriend_<id>_foto_', met een _ direct na foto).
 // Ze blijven even lang als je berichten (menu > Berichten bewaren, fibro_bewaren_<id>, standaard 31 dagen), en per
 // vriend hoogstens de nieuwste MAX_PER_VRIEND.
+//
+// Twee soorten (de verstuurder kiest):
+//   bewaren  - blijft in de chat; je vriend kan hem op zijn telefoon opslaan (knop in het grote scherm)
+//   eenmalig - je vriend kan hem een keer openen. Na het sluiten gooit zijn toestel de foto weg en blijft er alleen
+//              '👁️ Foto bekeken' staan (markeerBekeken). Bij de verstuurder blijft hij gewoon staan.
 const MAX_PER_VRIEND = 150
 const STANDAARD_DAGEN = 31
 
@@ -31,7 +36,7 @@ export function bewaarDagen(mijnId) {
 }
 
 // Een foto bewaren. blob: de foto zoals hij verstuurd of ontvangen is. Geeft het id terug, of null.
-export async function bewaarChatFoto(mijnId, vriendId, blob, { mijn, reeks, tijd } = {}) {
+export async function bewaarChatFoto(mijnId, vriendId, blob, { mijn, reeks, tijd, eenmalig } = {}) {
   if (!GELDIG_ID.test(String(mijnId)) || !GELDIG_ID.test(String(vriendId)) || !blob || !/^image\//.test(blob.type || '')) return null
   try {
     const t = Number(tijd) || Date.now()
@@ -41,7 +46,7 @@ export async function bewaarChatFoto(mijnId, vriendId, blob, { mijn, reeks, tijd
     const db = await openDB()
     await new Promise((ok) => {
       const tx = db.transaction('fotos', 'readwrite')
-      tx.objectStore('fotos').put({ id, chatfoto: 1, bytes: data, type: blob.type, mijn: !!mijn, reeks: GELDIGE_REEKS.test(reeks || '') ? reeks : null, tijd: t })
+      tx.objectStore('fotos').put({ id, chatfoto: 1, bytes: data, type: blob.type, mijn: !!mijn, reeks: eenmalig ? null : (GELDIGE_REEKS.test(reeks || '') ? reeks : null), tijd: t, eenmalig: !!eenmalig })
       tx.oncomplete = ok; tx.onerror = ok; tx.onabort = ok
     })
     return id
@@ -66,7 +71,7 @@ export async function haalChatFotos(mijnId, vriendId) {
     const weg = []
     const houden = []
     for (const f of alle) {
-      if (!f || !f.bytes || !(f.tijd > grens)) weg.push(f && f.id)
+      if (!f || (!f.bytes && !f.bekeken) || !(f.tijd > grens)) weg.push(f && f.id)
       else houden.push(f)
     }
     while (houden.length > MAX_PER_VRIEND) weg.push(houden.shift().id)
@@ -77,6 +82,22 @@ export async function haalChatFotos(mijnId, vriendId) {
         tx.oncomplete = ok; tx.onerror = ok
       })
     }
-    return houden.map(f => ({ id: f.id, tijd: f.tijd, mijn: !!f.mijn, reeks: f.reeks || null, blob: new Blob([f.bytes], { type: /^image\//.test(f.type || '') ? f.type : 'image/jpeg' }) }))
+    return houden.map(f => ({ id: f.id, tijd: f.tijd, mijn: !!f.mijn, reeks: f.reeks || null, eenmalig: !!f.eenmalig, bekeken: !!f.bekeken,
+      blob: f.bytes ? new Blob([f.bytes], { type: /^image\//.test(f.type || '') ? f.type : 'image/jpeg' }) : null }))
   } catch (e) { console.warn('[chatfotos] ophalen mislukt', e); return [] }
+}
+
+// Een foto die je maar een keer mocht zien is bekeken: de foto zelf weg, alleen 'bekeken' blijft (voor in de chat)
+export async function markeerBekeken(id) {
+  if (typeof id !== 'string' || !id.includes('_chatfoto_')) return
+  try {
+    const db = await openDB()
+    await new Promise((ok) => {
+      const tx = db.transaction('fotos', 'readwrite')
+      const st = tx.objectStore('fotos')
+      const r = st.get(id)
+      r.onsuccess = () => { const f = r.result; if (f) { f.bytes = null; f.type = null; f.bekeken = 1; st.put(f) } }
+      tx.oncomplete = ok; tx.onerror = ok
+    })
+  } catch (e) { console.warn('[chatfotos] bekeken bewaren mislukt', e) }
 }

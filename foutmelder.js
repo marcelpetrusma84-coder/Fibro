@@ -1,4 +1,5 @@
-// foutmelder.js (v1, Fibro v221): wat er technisch misgaat in de app, naar de tabel foutmeldingen (sql/foutmeldingen.sql).
+// foutmelder.js (v2, Fibro v265): wat er technisch misgaat in de app, naar de tabel foutmeldingen (sql/foutmeldingen.sql).
+// v2: ook een script of stijl die niet laadt (pagina bleef leeg); dan één keer vanzelf opnieuw laden (zie onderaan).
 // Moderators lezen ze op Moderatie > Foutmeldingen. Staat zo vroeg mogelijk op elke pagina (direct na huisregel.js),
 // zodat ook fouten tijdens het laden meekomen.
 //
@@ -160,6 +161,41 @@
     if (r && typeof r === 'object' && (r.name || r.message)) tekst = (r.name || 'Error') + ': ' + (r.message || '')
     else { try { tekst = typeof r === 'string' ? r : JSON.stringify(r) } catch (x) { tekst = String(r) } }
     meld('belofte', tekst || 'Mislukte belofte zonder reden', '', r && r.stack)
+  })
+
+  // v265 (foutmelder v2): een stukje van de pagina dat niet binnenkomt (script of stijl), of een module die niet te
+  // laden is. Dan bleef de pagina leeg en moest je zelf opnieuw laden (vaak vlak na een update, bij wisselen van
+  // pagina). Nu: melden (soort 'fout', 'Laden mislukt: <bestand>') en de pagina één keer vanzelf opnieuw laden.
+  // Hoogstens één keer per minuut per pagina, zodat het nooit blijft herladen.
+  const HERLAAD = 'fibro_herlaad_'
+  function herstel () {
+    try {
+      if (navigator.onLine === false) return
+      const sleutel = HERLAAD + pagina()
+      const vorige = Number(sessionStorage.getItem(sleutel)) || 0
+      if (Date.now() - vorige < 60000) return
+      sessionStorage.setItem(sleutel, String(Date.now()))
+      setTimeout(function () { location.reload() }, 300)
+    } catch (e) {}
+  }
+  function bestandsnaam (adres) {
+    try { return new URL(adres, location.href).pathname.split('/').pop() || '' } catch (e) { return '' }
+  }
+  window.addEventListener('error', function (e) {
+    const el = e && e.target
+    if (!el || el === window || !el.tagName) return
+    const tag = el.tagName.toUpperCase()
+    const adres = tag === 'SCRIPT' ? el.src : (tag === 'LINK' && /stylesheet/i.test(el.rel || '') ? el.href : '')
+    if (!adres) return // een plaatje of geluid: niet erg genoeg
+    if (new URL(adres, location.href).origin !== location.origin) return // alleen onze eigen bestanden
+    meld('fout', 'Laden mislukt: ' + bestandsnaam(adres), bestandsnaam(adres))
+    herstel()
+  }, true)
+  const MODULE_MIS = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Failed to load module script/i
+  window.addEventListener('unhandledrejection', function (e) {
+    const r = e && e.reason
+    const tekst = r && r.message ? r.message : String(r || '')
+    if (MODULE_MIS.test(tekst)) herstel() // de melding zelf gaat al mee hierboven (soort 'belofte')
   })
 
   window.addEventListener('online', stuurWachtrij)

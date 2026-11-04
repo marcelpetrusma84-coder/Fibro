@@ -41,6 +41,19 @@ async function ruimOudeVersiesOp(kast, url) { // hetzelfde bestand met een ander
   } catch (e) {}
 }
 
+// v265: een script met ?v= dat (nog) niet binnenkomt: geen internet even, of vlak na een update heeft GitHub het
+// nieuwe bestand nog niet overal klaar (404). Dan bleef de pagina leeg tot je zelf opnieuw laadde. Nu wacht de portier
+// 0,8 seconde en probeert het nog één keer, niet uit de browsercache. Lukt dat ook niet, dan gaat het antwoord (of de
+// fout) gewoon door, zoals vroeger; foutmelder.js laadt de pagina dan één keer opnieuw.
+async function haalMetHerkansing(req) {
+  try {
+    const res = await fetch(req, { cache: 'no-cache' }) // niet uit de browsercache: altijd de echte nieuwste
+    if (res.ok || res.status < 500 && res.status !== 404) return res
+  } catch (e) {}
+  await new Promise(klaar => setTimeout(klaar, 800))
+  return fetch(req, { cache: 'reload' })
+}
+
 self.addEventListener('install', function(event) {
   self.skipWaiting()
 })
@@ -70,7 +83,7 @@ self.addEventListener('fetch', function(event) {
           caches.open(CACHE_VERSION).then(async function(cache) {
             const hit = await cache.match(req)
             if (hit) return hit
-              const res = await fetch(req, { cache: 'no-cache' }) // niet uit de browsercache: altijd de echte nieuwste
+              const res = await haalMetHerkansing(req) // v265: mislukt het, dan nog één keer (pagina bleef soms leeg)
               if (res.ok) cache.put(req, res.clone())
                 return res
           })

@@ -81,3 +81,6 @@ jobs:
       - name: Nieuw bij je vrienden op Home
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef241.py .
+      - name: Spraakberichtjes
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef242.py .

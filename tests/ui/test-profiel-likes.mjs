@@ -49,7 +49,7 @@ assert.match(index, /isEigen: true/)
 assert.match(index, /!img\.closest\('#profiel-sectie'\)/)
 assert.match(chat, /const profielReactie = !onversleuteld \? leesReactieBericht\(content\) : null/, 'een onversleuteld bericht wordt nooit een kaartje')
 assert.match(viewer, /if \(typeof window\.FibroFotoBalk === 'function'\) window\.FibroFotoBalk\(fotos\[huidig\], balk\)/)
-for (const [bestand, v] of [['vriend-profiel.html', 'fotoviewer.js?v=7'], ['index.html', 'fotoviewer.js?v=7'], ['chat.html', 'profielreacties.js?v=1']])
+for (const [bestand, v] of [['vriend-profiel.html', 'fotoviewer.js?v=8'], ['index.html', 'fotoviewer.js?v=8'], ['chat.html', 'profielreacties.js?v=2']])
   assert.ok(lees(bestand).includes(v), bestand + ' ' + v)
 
 // 6. Engels

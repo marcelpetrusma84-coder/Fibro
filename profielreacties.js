@@ -9,13 +9,16 @@
 // REACTIES. 💬 Reageer = een gewoon versleuteld chatbericht aan de eigenaar, met een klein plaatje van de foto of video
 // (of de naam van het nummer) erbij. Alleen jullie twee kunnen het lezen. In de chat wordt het een kaartje
 // (tekenReactieKaart, chat.html). Inhoud: 'profielreactie:' + JSON { v, s: soort, t: tekst, k: titel, p: plaatje }.
+// v2 (v259): het plaatje is groter (640 in plaats van 160 pixels), zodat het in de chat groot bekeken kan worden. Een
+// reactie met een plaatje staat in de chat als een 💬 met de foto op stickergrootte (tekenReactieSticker); tikken =
+// groot, met de reactie eronder (fotoviewer.js v8).
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 
 export const EMOJI = ['❤️', '😂', '🔥', '😍', '😮', '👏'] // dezelfde lijst als in sql/profiel-likes.sql en stuur-push
 export const SOORTEN = ['foto', 'muziek', 'video']
 export const PREFIX = 'profielreactie:'
 const MAX_TEKST = 500
-const MAX_PLAATJE = 40000
+const MAX_PLAATJE = 120000 // v259: was 40000 (160 pixels), nu genoeg voor 640 pixels
 const GELDIG_PLAATJE = /^data:image\/(jpeg|webp|png);base64,[A-Za-z0-9+/=]+$/
 const ITEM = /^[0-9a-f]{1,16}$/
 
@@ -362,7 +365,7 @@ export function leesReactieBericht(inhoud) {
 export const reactieKort = r => '\u{1F4AC} ' + r.tekst
 
 // Een klein plaatje (voor in het chatbericht): hoogstens 'max' pixels, JPEG; null als het niet lukt
-export function maakKleinPlaatje(src, max = 160) {
+export function maakKleinPlaatje(src, max = 640) { // v259: was 160
   return new Promise(klaar => {
     if (!src || !/^data:image\//.test(src)) { klaar(null); return }
     const img = new Image()
@@ -373,7 +376,8 @@ export function maakKleinPlaatje(src, max = 160) {
         c.width = Math.max(1, Math.round(img.naturalWidth * s)); c.height = Math.max(1, Math.round(img.naturalHeight * s))
         c.getContext('2d').drawImage(img, 0, 0, c.width, c.height)
         let uit = c.toDataURL('image/jpeg', 0.72)
-        if (uit.length > MAX_PLAATJE) uit = c.toDataURL('image/jpeg', 0.45)
+        if (uit.length > MAX_PLAATJE) uit = c.toDataURL('image/jpeg', 0.5)
+        if (uit.length > MAX_PLAATJE) uit = c.toDataURL('image/jpeg', 0.32)
         klaar(uit.length <= MAX_PLAATJE && GELDIG_PLAATJE.test(uit) ? uit : null)
       } catch (e) { klaar(null) }
     }
@@ -403,4 +407,25 @@ export function tekenReactieKaart(r, { isMijn }) {
   inhoud.textContent = r.tekst
   kaart.append(kop, inhoud)
   return kaart
+}
+
+// v259: een reactie met een plaatje als sticker: een 💬-wolkje en de foto op stickergrootte. Tikken = groot bekijken
+// met de reactie eronder (fotoviewer.js v8, groep 'chat': je veegt langs de andere foto's van het gesprek).
+export function tekenReactieSticker(r, { isMijn }) {
+  const blok = document.createElement('div')
+  blok.className = 'pr-sticker'
+  blok.style.cssText = 'display:flex;align-items:center;gap:6px'
+  const wolk = document.createElement('span')
+  wolk.textContent = '\u{1F4AC}'
+  wolk.style.cssText = 'font-size:30px;line-height:1;filter:drop-shadow(0 2px 6px rgba(192,132,252,0.35))'
+  const img = document.createElement('img')
+  img.src = r.plaatje
+  img.alt = ''
+  img.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:12px;display:block'
+  img.setAttribute('data-fv-groep', 'chat')
+  img.setAttribute('data-fv-tekst', reactieKort(r))
+  img.setAttribute('data-fv-kop', isMijn ? T('Je reageerde op een {wat}', { wat: watTekst(r.soort) }) : T('Reageerde op je {wat}', { wat: watTekst(r.soort) }))
+  img.title = r.tekst
+  blok.append(wolk, img) // het wolkje staat altijd voor de foto
+  return blok
 }

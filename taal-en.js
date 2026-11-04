@@ -1832,4 +1832,7 @@ window.FIBRO_EN = {
   "Reageerde op je {wat}": "Replied to your {wat}",
   "Versturen kan niet: dit toestel heeft geen sleutel voor jouw account. Ga naar het beginscherm en tik op Sleutel terugzetten.": "Can't send: this device has no key for your account. Go to the home screen and tap Restore key.",
   "Versturen kan nog niet: de sleutel van je vriend is nog niet bekend.": "Can't send yet: your friend's key isn't known yet.",
+  // v259: meerdere foto's tegelijk in de chat
+  "Je kunt {n} foto's tegelijk sturen. De eerste {n} gaan nu.": "You can send {n} photos at once. The first {n} are on their way.",
+  "{n} foto's zijn niet aangekomen": "{n} photos didn't arrive",
 }

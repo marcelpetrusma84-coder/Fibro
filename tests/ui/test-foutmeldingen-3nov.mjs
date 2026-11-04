@@ -42,6 +42,6 @@ const lees = f => readFileSync(new URL('../../' + f, import.meta.url), 'utf8')
   const en = lees('taal-en.js')
   for (const k of ['Het spel kon niet laden. Controleer je internet en probeer het opnieuw.', 'Fibro kon je microfoon niet openen. Tik nog eens op 🎤 en kies Toestaan.'])
     assert.ok(en.includes(JSON.stringify(k) + ':'), 'Engels: ' + k)
-  assert.match(lees('taal.js'), /taal-en\.js\?v=5\d/)
+  assert.match(lees('taal.js'), /taal-en\.js\?v=[5-9]\d/)
 }
 console.log('PASS: foutmeldingen 3 nov: oude browsers, bellen, spelbestanden opnieuw laden, microfoon-tip.')

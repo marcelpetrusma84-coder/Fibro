@@ -6,7 +6,7 @@
 #     vasthouden = een andere emoji. De vingerafdruk (item) is dezelfde rekensom als sync.js (djb2), hier nagerekend.
 #     Tellers van anderen zie je, namen niet. 💬 Reageer = een versleuteld chatbericht met een klein plaatje.
 #  O. Op je eigen profiel: hoeveel likes bij je foto, muziek en video, tik = van wie (met de naam).
-#  C. In de chat: de reactie als kaartje met het plaatje en de tekst.
+#  C. In de chat: de reactie als 💬 met de foto op stickergrootte (v259); tik = groot, met de reactie eronder.
 # python3 -I proef238.py <map>
 import sys, os, time, json, socket, subprocess, re, urllib.parse
 from playwright.sync_api import sync_playwright
@@ -192,11 +192,17 @@ try:
         check('O4 muziek: van wie, met de naam van het nummer', lijst and 'Bram' in tekst and 'Zomerliedje' in tekst, tekst)
         m.evaluate("document.querySelectorAll('.pr-scherm').forEach(e => e.remove())")
 
-        # ---- C: de reactie in de chat van Marcel ----
+        # ---- C: de reactie in de chat van Marcel (v259: 💬 en de foto op stickergrootte; tik = groot met de reactie eronder) ----
         m.goto(B + 'chat.html?vriend=' + BRAM)
-        kaart = wacht(m, "() => !!document.querySelector('#messages .pr-kaart')", 15000)
-        k = m.evaluate("(() => { const k = document.querySelector('#messages .pr-kaart'); if (!k) return null; const img = k.querySelector('img'); return { tekst: k.innerText, plaatje: img ? img.getAttribute('src').slice(0, 23) : null, html: k.querySelector('script') ? 'script!' : '' } })()")
-        check('C1 chat: kaartje "Reageerde op je foto", met plaatje en tekst', kaart and k and 'Reageerde op je foto' in k['tekst'] and 'Mooie foto!' in k['tekst'] and k['plaatje'] == 'data:image/jpeg;base64,', k)
+        kaart = wacht(m, "() => !!document.querySelector('#messages .pr-sticker img')", 15000)
+        k = m.evaluate("""(() => { const k = document.querySelector('#messages .pr-sticker'); if (!k) return null; const img = k.querySelector('img'); const r = img.getBoundingClientRect()
+          return { tekst: k.innerText, wolkVoor: k.firstChild.textContent === '\\u{1F4AC}', plaatje: img.getAttribute('src').slice(0, 23), b: Math.round(r.width), h: Math.round(r.height),
+                   groot: (() => { const i = new Image(); i.src = img.src; return i.naturalWidth })(), geenBubbel: !k.closest('.bubble') } })()""")
+        check('C1 chat: 💬 voor de foto, op stickergrootte (80), zonder tekstballon', kaart and k and k['wolkVoor'] and k['plaatje'] == 'data:image/jpeg;base64,' and k['b'] == 80 and k['h'] == 80 and k['geenBubbel'] and 'Mooie' not in k['tekst'], k)
+        m.click('#messages .pr-sticker img')
+        open_ = wacht(m, "() => { const v = document.getElementById('fibro-fotoviewer'); return v && v.style.display !== 'none' && document.getElementById('fv-tekstvak').style.display === 'block' }", 4000)
+        v = m.evaluate("({ tekst: document.getElementById('fv-tekst').textContent, kop: document.getElementById('fv-kop').textContent, src: document.getElementById('fv-foto').src.slice(0, 23), w: document.getElementById('fv-foto').getBoundingClientRect().width })")
+        check('C2 tik: de foto groot, met "Reageerde op je foto" en de reactie eronder', open_ and v['tekst'] == '\U0001F4AC Mooie foto!' and v['kop'] == 'Reageerde op je foto' and v['src'] == 'data:image/jpeg;base64,' and v['w'] > 100, v)
         cm.close()
         br.close()
 finally:

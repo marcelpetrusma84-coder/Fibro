@@ -47,14 +47,14 @@ function fixture({ piece = 'wN' } = {}) {
   }
 }
 
-// Three seconds means three seconds, and activation survives the square being
+// Two seconds means two seconds, and activation survives the square being
 // replaced while its stable board captures the held pointer.
 for(const pointerType of ['touch','mouse','pen']){
   const h=fixture({piece:'zN'})
   h.down({pointerType})
   assert.equal(h.source.hasPointerCapture(1),true,'capture initially preserves the original click target')
   assert.equal(h.board.hasPointerCapture(1),false)
-  h.advance(2999);assert.equal(h.holds.length,0)
+  h.advance(1999);assert.equal(h.holds.length,0)
   assert.deepEqual(h.states.at(-1),{phase:'holding',candidate:{r:7,k:1,fen:'start',piece:'zN'}})
   h.advance(1);assert.equal(h.holds.length,1);assert.deepEqual(h.holds[0],{r:7,k:1,fen:'start',piece:'zN'})
   assert.equal(h.board.hasPointerCapture(1),true,'the old square capture transfers without cancelling the hold')
@@ -121,7 +121,7 @@ for(const pointerType of ['touch','mouse','pen']){
   h.advance(4000);assert.equal(h.holds.length,0)
   h.up();assert.equal(h.control.shouldIgnoreClick(),true)
   h.win.emit('pointerup',h.pointer(2));h.advance(401)
-  h.down();h.advance(3000);assert.equal(h.holds.length,1,'a fresh single-finger hold recovers normally')
+  h.down();h.advance(2000);assert.equal(h.holds.length,1,'a fresh single-finger hold recovers normally')
   h.up();h.control.destroy()
 }
 
@@ -142,7 +142,7 @@ for(const cancellation of ['pointercancel','lostpointercapture','blur','resize',
 // even if it comes well after the ordinary 400ms post-release cooldown.
 for(const cancellation of ['blur','resize','visibilitychange']){
   const h=fixture()
-  h.down();h.advance(3000);assert.equal(h.holds.length,1)
+  h.down();h.advance(2000);assert.equal(h.holds.length,1)
   if(cancellation==='visibilitychange'){h.doc.hidden=true;h.doc.emit(cancellation)}
   else h.win.emit(cancellation)
   h.advance(2500);assert.equal(h.control.shouldIgnoreClick(),true,cancellation)
@@ -156,12 +156,12 @@ for(const cancellation of ['blur','resize','visibilitychange']){
 // fresh primary touch, mouse press or key recovers without swallowing input.
 for(const input of ['touch','mouse','keyboard']){
   const h=fixture()
-  h.down();h.advance(3000);h.win.emit('blur');h.advance(2500)
+  h.down();h.advance(2000);h.win.emit('blur');h.advance(2500)
   if(input==='keyboard'){
     h.board.emit('keydown',{key:'Enter',target:h.source});h.advance(100)
     h.win.emit('keyup',{key:'Enter',target:h.source});assert.equal(h.clicks,1)
   }else{
-    h.down({pointerType:input,pointerId:2});h.advance(3000)
+    h.down({pointerType:input,pointerId:2});h.advance(2000)
     assert.equal(h.holds.length,2,'a fresh primary pointer recovers from the missing old release')
     h.up({pointerType:input,pointerId:2})
   }
@@ -173,18 +173,18 @@ for(const input of ['touch','mouse','keyboard']){
 {
   const h=fixture()
   h.down();h.setFen('next');h.control.refresh();assert.equal(h.control.active,false)
-  h.advance(3000);assert.equal(h.holds.length,0);h.up();h.advance(401)
-  h.down();h.setAllowed(false);h.advance(3000);assert.equal(h.holds.length,0)
+  h.advance(2000);assert.equal(h.holds.length,0);h.up();h.advance(401)
+  h.down();h.setAllowed(false);h.advance(2000);assert.equal(h.holds.length,0)
   h.up();h.advance(401);h.setAllowed(true)
-  h.down({pointerType:'mouse',button:2});h.advance(3000);assert.equal(h.control.active,false)
-  h.down({isPrimary:false});h.advance(3000);assert.equal(h.control.active,false)
+  h.down({pointerType:'mouse',button:2});h.advance(2000);assert.equal(h.control.active,false)
+  h.down({isPrimary:false});h.advance(2000);assert.equal(h.control.active,false)
   h.win.emit('blur');h.down({clientX:NaN});assert.equal(h.control.active,false)
   h.down({target:h.outside});assert.equal(h.control.active,false)
   h.control.destroy()
 }
 
 // Button keyboard activation remains available on a short press; holding Space
-// or Enter has the same three-second behavior and blocks native repeat clicks.
+// or Enter has the same two-second behavior and blocks native repeat clicks.
 for(const key of ['Enter',' ']){
   const h=fixture()
   assert.equal(h.board.emit('keydown',{key,target:h.source}).prevented,true)
@@ -192,7 +192,8 @@ for(const key of ['Enter',' ']){
   h.board.emit('keydown',{key,target:h.source})
   assert.equal(h.board.emit('keydown',{key,target:h.source,repeat:true}).prevented,true)
   assert.equal(h.timers.size,1)
-  h.advance(3000);h.redraw();h.control.refresh();h.win.emit('keyup',{key,target:h.board})
+  h.advance(1999);assert.equal(h.holds.length,0,'held keys use the same two-second boundary as touch')
+  h.advance(1);h.redraw();h.control.refresh();h.win.emit('keyup',{key,target:h.board})
   assert.equal(h.holds.length,1);assert.equal(h.clicks,1,'a held key does not activate the old square')
   h.advance(401);h.board.emit('keydown',{key,target:h.source});h.board.emit('keydown',{key:'Escape',target:h.source})
   h.win.emit('keyup',{key,target:h.source});assert.equal(h.clicks,1)
@@ -208,4 +209,4 @@ for(const key of ['Enter',' ']){
   assert.equal(h.source.hasPointerCapture(1),false)
   for(const target of [h.board,h.win,h.doc])assert.equal(target.listenerCount,0,'every listener is removed')
 }
-console.log('PASS: three-second knight holds, original-target taps, stable capture/redraws, FEN/turn guards, mobile selection suppression, pinch coexistence, keyboard and complete cleanup.')
+console.log('PASS: two-second knight holds, original-target taps, stable capture/redraws, FEN/turn guards, mobile selection suppression, pinch coexistence, keyboard and complete cleanup.')

@@ -1,5 +1,5 @@
 import { berekenPaardroutes } from './schaak-paardroutes.js?v=1'
-import { maakPaardHold } from './schaak-paard-hold.js?v=2'
+import { maakPaardHold } from './schaak-paard-hold.js?v=3'
 import { schaakFen } from './schaak-ultra-engine.js?v=1'
 
 let volgendeBeschrijving = 0

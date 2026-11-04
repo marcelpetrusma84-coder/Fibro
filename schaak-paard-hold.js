@@ -1,4 +1,4 @@
-const HOLD_MS = 3000
+const HOLD_MS = 2000
 const MOVE_TOLERANCE = 12
 
 // The board owns the gesture, never a square that can disappear in a redraw.

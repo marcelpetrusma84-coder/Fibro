@@ -35,7 +35,7 @@ delete globalThis.window
 const versies = new Set(['chat.html', 'solo.js'].flatMap(f => [...lees(f).matchAll(/bke-ui\.js\?v=(\d+)/g)].map(m => m[1])))
 assert.equal(versies.size, 1, 'bke-ui.js: overal dezelfde versie')
 assert.ok(Number([...versies][0]) > 147, 'bke-ui.js: nieuwer dan v147')
-const { SPEL_VERSIES } = await import(new URL('../../spelversies.js', import.meta.url))
-assert.ok(SPEL_VERSIES.botkaaseiren >= 2)
+const { SPEL_VERSIES, vergelijkVersies } = await import(new URL('../../spelversies.js', import.meta.url))
+assert.ok(vergelijkVersies(SPEL_VERSIES.botkaaseiren, '2.0.0') >= 0)
 
 console.log('ok: Tic-Tac-Toe met houten bord en houten stukken')

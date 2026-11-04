@@ -8,6 +8,9 @@ const pad = p => new URL('../../' + p, import.meta.url)
 const lees = p => readFileSync(pad(p), 'utf8')
 const SI = await import(pad('spelicoon.js'))
 const { SPEL_VERSIES } = await import(pad('spelversies.js'))
+// De WebP-inhoud blijft v2. Alleen de JavaScript-module kreeg een nieuwe
+// cacheversie voor foutafhandeling; die twee versies lopen bewust apart.
+const MODULE_VERSIE = 3
 
 // 1. Elk spel heeft een plaatje: WebP, 128 x 128, klein
 assert.deepEqual([...SI.SPELLEN].sort(), Object.keys(SPEL_VERSIES).sort(), 'een plaatje voor elk spel')
@@ -43,5 +46,9 @@ assert.match(lees('vriend-profiel.html'), /spelIcoonHtml\(spel, 40\) \|\| vEsc\(
 
 assert.ok(SI.VERSIE >= 2)
 for (const f of ['chat.html', 'profiel.html', 'spelicoon.js']) assert.ok(!lees(f).includes('border-radius:22%'), f + ': geen ronde tegel meer')
-for (const f of ['index.html', 'vriend-profiel.html']) assert.ok(lees(f).includes("spelicoon.js?v=" + SI.VERSIE + "'"), f + ': spelicoon.js met de nieuwe versie')
+for (const f of ['index.html', 'vriend-profiel.html']) assert.ok(lees(f).includes("spelicoon.js?v=" + MODULE_VERSIE + "'"), f + ': spelicoon.js met de nieuwe moduleversie')
+for (const f of ['index.html', 'profiel.html', 'chat.html', 'vriend-profiel.html']) {
+  assert.match(lees(f), /import \{ koppelSpelIcoonFallback \} from '\.\/spelicoon\.js\?v=3'/, f + ': reserve-icoon uit de vernieuwde module')
+  assert.match(lees(f), /koppelSpelIcoonFallback\(\)/, f + ': vangt mislukte plaatjes op, ook als ze later worden toegevoegd')
+}
 console.log('ok: plaatjes uit de spellen (' + SI.SPELLEN.length + ')')

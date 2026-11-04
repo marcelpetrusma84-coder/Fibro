@@ -12,7 +12,7 @@ const sync = lees('sync.js'), vp = lees('vrienden.html'), profiel = lees('vriend
 const blok = sync.slice(sync.indexOf("if (bericht.type === 'manifest')"), sync.indexOf("if (bericht.type === 'geef')"))
 // v246: { t, v, oud, nieuw } in plaats van alleen de tijd (zie test-profiel-versie.mjs)
 assert.match(blok, /const nu = Date\.now\(\), sl = 'fibro_syncbij_' \+ huidigeUserId \+ '_' \+ syncPartnerId/)
-assert.match(blok, /localStorage\.setItem\(sl, JSON\.stringify\(\{ t: nu, v, oud, nieuw, k \}\)\)/)
+assert.match(blok, /localStorage\.setItem\(sl, JSON\.stringify\(\{ t: nu, v, oud, nieuw, k, w, nt \}\)\)/)
 assert.match(blok, /new CustomEvent\('fibro-sync-bijgewerkt', \{ detail: \{ vriendId: syncPartnerId, tijd: nu, nieuw \} \}\)/)
 assert.ok(blok.indexOf("fibro_syncbij_") < blok.indexOf("type: 'geef', items: nodig"), 'de tijd wordt gezet voordat de nieuwe dingen gevraagd worden')
 

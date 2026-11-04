@@ -958,6 +958,25 @@ export function profielKenmerken(manifest) {
 const KENMERKEN_MAX = 400 // per vriend (een code is hoogstens 8 tekens)
 const VINGERAFDRUKKEN_MAX = 20 // per vriend: ook die van zijn andere toestellen
 
+// v263: dezelfde kenmerken, maar per soort (foto, video, muziek, achtergrond), voor de strook "Nieuw bij je vrienden"
+// op Home (nieuwbij.js): zo weet je WAT er nieuw is. Dezelfde rekensom als profielKenmerken.
+const SOORT_VAN = { fotos: 'foto', video: 'video', muziek: 'muziek', wbg: 'achtergrond' }
+export function kenmerkenPerSoort(manifest) {
+  const deel = JSON.parse(JSON.stringify(belangrijkDeel(manifest)))
+  const uit = {}
+  for (const [top, soort] of Object.entries(SOORT_VAN)) {
+    const lijst = []
+    const loop = (x, pad) => {
+      if (x === null || x === undefined) return
+      if (typeof x === 'object') { for (const k of Object.keys(x)) loop(x[k], pad + '.' + k); return }
+      lijst.push(hashString(pad + '=' + String(x)))
+    }
+    loop(deel[top], top)
+    uit[soort] = [...new Set(lijst)]
+  }
+  return uit
+}
+
 // De nieuwe stand per vriend na een binnengekomen overzicht (fibro_syncbij_<ik>_<vriend>, zonder de tijd t).
 // vorig: de bewaarde stand (of null). nieuw = er zit een kenmerk in dat ik nog nooit van deze vriend zag. Zonder eerdere
 // kenmerken (de eerste keer, of een bewaarde stand van voor v249) is dit het beginpunt: niets nieuws.
@@ -974,7 +993,10 @@ export function nieuweSyncStand(vorig, manifest) {
   const echtNieuw = !!gezien && kenmerken.some(x => !eerder.has(x))
   const nieuw = echtNieuw || !!(gezien && vorig.nieuw)
   const k = kenmerken.concat((gezien || []).filter(x => !kenmerken.includes(x))).slice(0, KENMERKEN_MAX)
-  return { v, oud, nieuw, k }
+  // v263: wat er nieuw is (w), opgeteld zolang het nog niet bekeken is; erbij = er kwam nu iets nieuws bij
+  const w = new Set(nieuw && vorig && vorig.nieuw && Array.isArray(vorig.w) ? vorig.w.filter(x => Object.values(SOORT_VAN).includes(x)) : [])
+  if (echtNieuw) for (const [soort, lijst] of Object.entries(kenmerkenPerSoort(manifest))) if (lijst.some(x => !eerder.has(x))) w.add(soort)
+  return { v, oud, nieuw, k, w: [...w], erbij: echtNieuw }
 }
 
 // v246: je eigen vingerafdruk op de server zetten (profiles.profiel_versie, sql/profiel-versie.sql), zodat vrienden
@@ -1244,8 +1266,10 @@ async function verwerkP2pBericht(bericht) {
       try { vorig = JSON.parse(localStorage.getItem(sl) || 'null') } catch (e) {}
       if (typeof vorig === 'number') vorig = { t: vorig }
       if (!vorig || typeof vorig !== 'object') vorig = null
-      const { v, oud, nieuw, k } = nieuweSyncStand(vorig, bericht.data)
-      localStorage.setItem(sl, JSON.stringify({ t: nu, v, oud, nieuw, k }))
+      const { v, oud, nieuw, k, w, erbij } = nieuweSyncStand(vorig, bericht.data)
+      // v263: w = wat er nieuw is, nt = wanneer het laatst iets nieuws werd (voor de strook op Home, nieuwbij.js)
+      const nt = erbij ? nu : (nieuw && vorig && Number(vorig.nt)) || 0
+      localStorage.setItem(sl, JSON.stringify({ t: nu, v, oud, nieuw, k, w, nt }))
       window.dispatchEvent(new CustomEvent('fibro-sync-bijgewerkt', { detail: { vriendId: syncPartnerId, tijd: nu, nieuw } }))
     } catch (e) {}
     if (nodig.length) {

@@ -1851,4 +1851,12 @@ window.FIBRO_EN = {
   "Foto": "Photo",
   "Tik om 1 keer te bekijken": "Tap to view once",
   "👁️ 1 keer": "👁️ once",
+  // v263: Nieuw bij je vrienden (nieuwbij.js)
+  "✨ Nieuw bij je vrienden": "✨ New from your friends",
+  "Nieuw bij je vrienden": "New from your friends",
+  "nieuwe foto": "new photo",
+  "nieuwe video": "new video",
+  "nieuwe muziek": "new music",
+  "nieuwe achtergrond": "new background",
+  "profiel bijgewerkt": "profile updated",
 }

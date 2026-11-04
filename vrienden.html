@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=2"></script>
-<script src="taal.js?v=66"></script>
+<script src="taal.js?v=67"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
@@ -796,7 +796,10 @@ startMeldingen()
     } catch (e) { vinger = '' }
     const meeSpel = document.getElementById('uitSpel').value
     const spelDeel = MEE_SPELLEN.some(s => s[0] === meeSpel) ? '&spel=' + encodeURIComponent(meeSpel) : '' // v250
-    const inviteUrl = UITNODIGING_ADRES + '?token=' + token + spelDeel + (vinger ? '#s=' + vinger : '')
+    // v265: je weergavenaam achter het hekje (#n=), zodat de uitnodiging hem laat zien; gaat nooit naar een server
+    const naamDeel = (() => { const n = user ? eigenNaam(user.id) : ''; return n ? 'n=' + encodeURIComponent(n) : '' })()
+    const hekje = [vinger ? 's=' + vinger : '', naamDeel].filter(Boolean).join('&')
+    const inviteUrl = UITNODIGING_ADRES + '?token=' + token + spelDeel + (hekje ? '#' + hekje : '')
     const linkVeld = document.getElementById('invite-link')
     if (linkVeld) linkVeld.value = inviteUrl
     deelTekst = maakDeelTekst(user ? eigenNaam(user.id) : '', meeSpel, DUUR)

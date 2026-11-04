@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=2"></script>
-<script src="taal.js?v=66"></script>
+<script src="taal.js?v=67"></script>
 <script src="apk.js?v=2"></script>
 <script src="registratie.js?v=1"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Wie jou uitnodigde, heeft deze week al 5 nieuwe mensen op Fibro gebracht. Dat is het maximum. Probeer het over een paar dagen opnieuw.': 'The person who invited you has already brought 5 new people to Fibro this week. That is the maximum. Please try again in a few days.' }) // v255</script>
@@ -36,6 +36,16 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .fibro-logo { font-family:'DM Serif Display',serif; font-size:48px; color:#ffffff; margin-bottom:16px; text-shadow:0 2px 8px rgba(0,0,0,0.8); }
 .avatar { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:32px; margin:0 auto 12px; }
 .uitnodiger { font-size:18px; font-weight:600; margin-bottom:4px; }
+/* v265: wie uitnodigt (foto en naam) bovenaan, en wat Fibro is: een social media app voor vrienden; het spel is een voorproefje */
+.avatar img { width:100%; height:100%; border-radius:50%; object-fit:cover; display:block; }
+.avatar.met-foto { background:none; box-shadow:0 0 0 3px rgba(192,132,252,0.55), 0 6px 22px rgba(0,0,0,0.5); }
+#uitnodigingScherm .avatar, #bestaandScherm .avatar { width:96px; height:96px; font-size:44px; }
+.uitnodiger-groot { font-size:22px; font-weight:700; margin-bottom:2px; word-break:break-word; }
+.uitnodiger-gebruiker { font-size:13px; color:var(--muted); margin-bottom:6px; }
+.wat-is-fibro { text-align:left; display:grid; gap:9px; margin:4px 0 18px; padding:14px 14px; border-radius:14px; background:rgba(255,255,255,0.04); border:0.5px solid var(--border); }
+.wat-is-fibro .kop { font-size:14px; font-weight:700; color:var(--text); text-align:center; margin-bottom:2px; }
+.wat-is-fibro .rij { display:flex; gap:10px; align-items:flex-start; font-size:13.5px; line-height:1.4; color:rgba(255,255,255,0.85); }
+.wat-is-fibro .rij span:first-child { font-size:18px; line-height:1.1; flex:none; width:22px; text-align:center; }
 .uitnodiger-sub { font-size:14px; color:var(--muted); margin-bottom:20px; }
 hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 .field { margin-bottom:12px; text-align:left; }
@@ -75,12 +85,12 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
   <div id="spelUitdaging" hidden style="margin:4px 0 18px;padding:14px;border-radius:16px;border:1px solid rgba(192,132,252,0.5);background:rgba(192,132,252,0.12);text-align:center;">
     <div id="spelUitdagingIcoon" style="font-size:34px;line-height:1;margin-bottom:6px;" aria-hidden="true">🎮</div>
     <div id="spelUitdagingTekst" style="font-size:15px;font-weight:700;line-height:1.4;margin-bottom:4px;"></div>
-    <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px;" data-t>Probeer het meteen, ook zonder account.</div>
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px;" data-t>Een voorproefje van Fibro: probeer het meteen, ook zonder account.</div>
     <a id="spelUitdagingKnop" class="btn" style="display:block;text-decoration:none;text-align:center;" href="#"></a>
   </div>
 
   <div id="bestaandScherm" style="display:none; text-align:center; padding:30px 20px;">
-  <div id="bestaandAvatar" style="font-size:60px; margin-bottom:12px;">👤</div>
+  <div class="avatar" id="bestaandAvatar">👤</div>
   <h2 id="bestaandNaam" style="margin-bottom:8px;" data-t>Iemand</h2>
   <p style="color:#888; margin-bottom:24px;" data-t>wil je toevoegen als vriend op Fibro</p>
   <button id="toevoegBtn" onclick="voegToe()" style="display:block; width:100%; padding:14px; border:none; border-radius:24px; background:#5c6bc0; color:white; font-size:16px; font-weight:bold; cursor:pointer; margin-bottom:10px;" data-t>✅ Toevoegen</button>
@@ -88,9 +98,18 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 </div>
 <div id="uitnodigingScherm" style="display:none">
     <div class="avatar" id="uitnodigerAvatar">👤</div>
-    <div class="uitnodiger" id="uitnodigerNaam">...</div>
+    <div class="uitnodiger-groot" id="uitnodigerNaam">...</div>
+    <div class="uitnodiger-gebruiker" id="uitnodigerGebruiker" hidden></div>
     <div class="uitnodiger-sub" data-t>nodigt je uit op Fibro ✨</div>
-    <div class="e2e-badge" data-t>🔒 End-to-end versleuteld</div>
+    <div class="wat-is-fibro">
+      <div class="kop" data-t>Fibro: een eerlijke social media app voor vrienden</div>
+      <div class="rij"><span>💬</span><span data-t>Chatten, foto's en spraakberichtjes, end-to-end versleuteld</span></div>
+      <div class="rij"><span>📞</span><span data-t>Bellen en videobellen met je vrienden</span></div>
+      <div class="rij"><span>🎨</span><span data-t>Je eigen profiel met widgets, muziek en stickers</span></div>
+      <div class="rij"><span>🎮</span><span data-t>Samen spelletjes spelen</span></div>
+      <div class="rij"><span>🙅</span><span data-t>Geen reclame en je gegevens worden niet verkocht</span></div>
+    </div>
+    <div id="spelPlek"></div>
     <hr>
     <div class="msg" id="bericht"></div>
 
@@ -206,6 +225,26 @@ window.nieuweNaam = function() {
 
 // v182: de vingerafdruk van de sleutel van de uitnodiger staat achter het hekje van de link (#s=, zie vrienden.html).
 // Na het vriend worden onthoudt dit toestel hem als de sleutel van die vriend (chat.html vergelijkt hem).
+// v265: de weergavenaam van wie uitnodigt staat achter het hekje (#n=, vrienden.html): die gaat nooit naar een server
+const LINK_NAAM = (() => {
+  try {
+    const m = /(?:^#|&)n=([^&]*)/.exec(location.hash || '')
+    return m ? decodeURIComponent(m[1]).replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40) : ''
+  } catch (e) { return '' }
+})()
+// Foto (data:image) of emoji in een rondje; nooit als html
+function zetAvatar(el, profiel) {
+  el.textContent = ''
+  el.classList.remove('met-foto')
+  const foto = profiel && typeof profiel.avatar_data === 'string' && /^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(profiel.avatar_data) ? profiel.avatar_data : ''
+  if (foto) {
+    const img = document.createElement('img')
+    img.alt = ''
+    img.src = foto
+    el.appendChild(img)
+    el.classList.add('met-foto')
+  } else el.textContent = (profiel && profiel.avatar_url) || '👤'
+}
 const LINK_VINGER = (() => { try { const m = /(?:^#|&)s=([0-9a-f]{32})(?:&|$)/.exec(location.hash || ''); return m ? m[1] : '' } catch (e) { return '' } })()
 function onthoudSleutelUitLink(mij, ander) {
   if (!LINK_VINGER || !mij || !ander || mij === ander) return
@@ -240,6 +279,9 @@ function toonSpelUitdaging(naam) {
   knop.href = 'spel.html?spel=' + encodeURIComponent(id) + '&terug=uitnodiging'
   knop.onclick = (e) => { e.preventDefault(); openSpelMetTitel(id, knop.getAttribute('href')) }
   document.getElementById('spelUitdaging').hidden = false
+  // v265: bij iemand zonder account staat het spel onder 'wat is Fibro', als voorproefje; Fibro zelf gaat voor
+  const plek = document.getElementById('spelPlek')
+  if (plek) plek.appendChild(document.getElementById('spelUitdaging'))
 }
 
 async function init() {
@@ -254,15 +296,20 @@ async function init() {
   // (sql/profielen-publiek-dicht.sql).
   const { data: uitnodigers } = await supabase.rpc('uitnodiger_van_invite', { token_in: token })
   const profiel = Array.isArray(uitnodigers) ? uitnodigers[0] || null : null
-  document.getElementById('uitnodigerNaam').textContent = profiel?.username || T('Iemand')
-  document.getElementById('uitnodigerAvatar').textContent = profiel?.avatar_url || '👤'
-  toonSpelUitdaging(profiel?.username || T('Iemand'))
+  // v265: de weergavenaam (uit de link) groot, de gebruikersnaam eronder; de foto in het rondje
+  const toonNaam = LINK_NAAM || profiel?.username || T('Iemand')
+  document.getElementById('uitnodigerNaam').textContent = toonNaam
+  const gebruikerEl = document.getElementById('uitnodigerGebruiker')
+  if (LINK_NAAM && profiel?.username && LINK_NAAM !== profiel.username) { gebruikerEl.textContent = '@' + profiel.username; gebruikerEl.hidden = false }
+  zetAvatar(document.getElementById('uitnodigerAvatar'), profiel)
+  toonSpelUitdaging(toonNaam)
 
   const { data: { session } } = await supabase.auth.getSession()
   if (session && session.user.id !== uitnodigerData.created_by) {
-    document.getElementById('bestaandNaam').textContent = profiel?.username || T('Iemand')
-    document.getElementById('bestaandAvatar').textContent = profiel?.avatar_url || ''
+    document.getElementById('bestaandNaam').textContent = toonNaam
+    zetAvatar(document.getElementById('bestaandAvatar'), profiel)
     document.getElementById('laadScherm').style.display = 'none'
+    document.getElementById('bestaandScherm').prepend(document.getElementById('spelUitdaging')) // v265: ook hier het spel
     document.getElementById('bestaandScherm').style.display = 'block'
     return
   }

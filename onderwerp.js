@@ -1,4 +1,4 @@
-// onderwerp.js (v232): in het Stickerlab 'Tik op het onderwerp': je tikt (of drukt) op iets in je foto, en
+// onderwerp.js (v232; v2 = v265: voortgang van het laden, opVoortgang): in het Stickerlab 'Tik op het onderwerp': je tikt (of drukt) op iets in je foto, en
 // alleen dat ding blijft over. Het slimme knippen doet MediaPipe met het model MagicTouch van Google
 // (Apache 2.0, zie BIBLIOTHEKEN.txt en onderwerp/LICENSE.txt). Alles gebeurt op je eigen toestel: de foto gaat
 // nergens heen. De bibliotheek (± 15 MB) en het model (± 30 MB) worden pas geladen als iemand dit voor het eerst gebruikt.
@@ -36,16 +36,54 @@ export function zekerheidNaarAlfa(v) {
   return Math.round(Math.max(0, Math.min(1, a)) * 255)
 }
 
+// v265: hoe ver het laden is, zodat het Stickerlab dat kan laten zien ("12 van 45 MB").
+// De twee grote bestanden (programma ± 14 MB, model ± 30 MB) haalt dit bestand zelf op, stukje voor stukje.
+// Het programma komt daarna uit de browsercache als MediaPipe het opvraagt; het model gaat direct mee.
+const GROOT = [
+  { pad: WASM_MAP + '/vision_wasm_internal.wasm', schatting: 14466654 },
+  { pad: MODEL, schatting: 30525312 },
+]
+let stand = { geladen: 0, totaal: GROOT.reduce((s, b) => s + b.schatting, 0), klaar: false }
+const luisteraars = new Set()
+function meldStand() { for (const f of luisteraars) { try { f(stand) } catch (e) {} } }
+export function opVoortgang(f) { luisteraars.add(f); f(stand); return () => luisteraars.delete(f) }
+
+// Een bestand ophalen en onderweg tellen. Lukt tellen niet (geen stroom), dan gewoon in een keer.
+export async function haalMetVoortgang(adres, telBij, haal = fetch) {
+  const res = await haal(adres)
+  if (!res.ok) throw new Error('laden-' + res.status)
+  if (!res.body || !res.body.getReader) { const b = new Uint8Array(await res.arrayBuffer()); telBij(b.length); return b }
+  const lezer = res.body.getReader(), stukken = []
+  let n = 0
+  for (;;) {
+    const { done, value } = await lezer.read()
+    if (done) break
+    stukken.push(value); n += value.length; telBij(value.length)
+  }
+  const uit = new Uint8Array(n)
+  let p = 0
+  for (const s of stukken) { uit.set(s, p); p += s.length }
+  return uit
+}
+
 export function laadKnipper() {
   if (laden) return laden
   laden = (async () => {
     if (!kanHet()) throw new Error('te-oud')
-    const { FilesetResolver, InteractiveSegmenter, BrushMode } = await import(BIBLIOTHEEK)
+    stand = { geladen: 0, totaal: stand.totaal, klaar: false }; meldStand()
+    const tel = n => { stand.geladen = Math.min(stand.totaal, stand.geladen + n); meldStand() }
+    const [lib, , model] = await Promise.all([
+      import(BIBLIOTHEEK),
+      haalMetVoortgang(new URL(GROOT[0].pad, location.href).href, tel),
+      haalMetVoortgang(new URL(GROOT[1].pad, location.href).href, tel),
+    ])
+    const { FilesetResolver, InteractiveSegmenter, BrushMode } = lib
     const map = new URL(WASM_MAP, location.href).href
     const bestanden = await FilesetResolver.forVisionTasks(map)
     const seg = await InteractiveSegmenter.createFromOptions(bestanden, {
-      baseOptions: { modelAssetPath: new URL(MODEL, location.href).href, delegate: 'CPU' }
+      baseOptions: { modelAssetBuffer: model, delegate: 'CPU' }
     })
+    stand = { geladen: stand.totaal, totaal: stand.totaal, klaar: true }; meldStand()
     let huidige = null
 
     function zetAfbeelding(doek) {

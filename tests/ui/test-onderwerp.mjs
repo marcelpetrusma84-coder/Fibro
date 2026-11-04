@@ -44,7 +44,7 @@ for (const p of ['index.html', 'chat.html', 'login.html', 'over.html']) assert.d
 
 // 4. Het Stickerlab: de keuze, het laden pas bij gebruik, en de vertalingen
 const sm = lees('stickermaker.js')
-assert.match(sm, /import \{ kanHet as kanOnderwerp, laadKnipper \} from '\.\/onderwerp\.js\?v=1'/)
+assert.match(sm, /import \{ kanHet as kanOnderwerp, laadKnipper, opVoortgang \} from '\.\/onderwerp\.js\?v=2'/) // v265: v2
 assert.match(sm, /\['onderwerp', T\('✨ Tik op het onderwerp'\)\]/)
 assert.match(sm, /if \(!kanOnderwerp\(\)\) modusKnop\.onderwerp\.hidden = true/, 'oude toestellen zien de knop niet')
 assert.doesNotMatch(sm, /^import .*vision_bundle/m, 'de bibliotheek wordt niet meteen geladen')
@@ -53,12 +53,35 @@ assert.ok(Number((lees('profiel.html').match(/stickermaker\.js\?v=(\d+)'/) || []
   const blok = sm.match(/Object\.assign\(window\.FIBRO_EN \|\|= \{\}, (\{[\s\S]*?\})\)\n/)[1]
   const en = new Function('return ' + blok)()
   const nieuw = ['✨ Tik op het onderwerp', '👆 Aanwijzen', 'Tik of druk op wat je als sticker wilt. Daarna kun je nog bijwerken.',
-    'Tik op nog een stuk om het erbij te nemen.', 'De slimme knipper wordt geladen. Dat gebeurt maar één keer en kan even duren (± 45 MB).',
-    'Even denken…', 'Dit toestel of deze browser kan dit niet. Kies een andere manier.',
+    'Tik op nog een stuk om het erbij te nemen.', '⏳ Slimme knipper laden: {nu} van {totaal} MB ({pct}%) · {s} s. Dit gebeurt maar één keer.',
+    '⏳ Even denken… {s} s', 'Dit toestel of deze browser kan dit niet. Kies een andere manier.',
     'Het slimme knippen lukte niet. Probeer het nog eens, of kies een andere manier.', 'Tik eerst op het onderwerp.']
   for (const z of nieuw) {
     assert.ok(en[z], 'Engels ontbreekt: ' + z)
-    assert.ok(sm.includes("T('" + z + "')"), 'gebruikt: ' + z)
+    assert.ok(sm.includes("T('" + z + "')") || sm.includes("T('" + z + "', {"), 'gebruikt: ' + z) // v265: ook met invulplekken
   }
 }
 console.log('test-onderwerp: alles goed')
+
+// v265: voortgang van het laden (onderwerp.js v2, stickermaker.js)
+{
+  const { haalMetVoortgang, opVoortgang } = await import(pad('onderwerp.js'))
+  const stukken = [new Uint8Array([1, 2, 3]), new Uint8Array([4, 5])]
+  const nep = async () => ({ ok: true, body: { getReader: () => ({ read: async () => stukken.length ? { done: false, value: stukken.shift() } : { done: true } }) } })
+  const geteld = []
+  const uit = await haalMetVoortgang('x', n => geteld.push(n), nep)
+  assert.deepEqual([...uit], [1, 2, 3, 4, 5], 'alle stukjes, in volgorde')
+  assert.deepEqual(geteld, [3, 2], 'per stukje geteld')
+  const zonderStroom = await haalMetVoortgang('x', n => geteld.push(n), async () => ({ ok: true, arrayBuffer: async () => new Uint8Array([9, 9]).buffer }))
+  assert.deepEqual([...zonderStroom], [9, 9])
+  await assert.rejects(haalMetVoortgang('x', () => {}, async () => ({ ok: false, status: 404 })), /laden-404/)
+  let gezien = null
+  const stop = opVoortgang(s => { gezien = s })
+  assert.ok(gezien && gezien.totaal > 40 * 1048576 && gezien.klaar === false, 'meteen de stand, totaal ± 45 MB')
+  stop()
+  const sm2 = lees('stickermaker.js')
+  assert.match(sm2, /opVoortgang\(s => \{ laadStand = s \}\)/)
+  assert.match(sm2, /clearInterval\(klok\); stopVoortgang\(\)/, 'klok en luisteren stoppen altijd')
+  assert.match(sm2, /'⏳ Even denken… \{s\} s': '⏳ Thinking… \{s\} s'/)
+  console.log('PASS: voortgang van het laden en de seconden tijdens het denken')
+}

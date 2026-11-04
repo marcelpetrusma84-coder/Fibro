@@ -653,7 +653,7 @@ function renderSpelWidget(c, spel) {
   c.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:100%;"><span style="font-size:30px;line-height:1">' + icon + '</span><span style="font-size:13px;font-weight:600;color:#fff">' + T('▶ Spelen') + '</span></div>'
   const blok = c.closest('.widget-blok') || c
   const kop = blok.querySelector('.widget-header')
-  // v265: de versie (met versiehistorie) staat niet meer op de widget, maar in Mijn stijl > Spellen (profiel.html)
+  // v265: de versie staat niet meer op de widget (zo is hij net zo compact als de andere), alleen in Mijn stijl > Spellen
   if (kop) kop.classList.add('widget-header-spel')
   blok.style.cursor = 'pointer'
   blok.onclick = () => openSpelMetTitel(spel, 'spel.html?spel=' + encodeURIComponent(spel))

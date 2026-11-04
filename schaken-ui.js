@@ -622,6 +622,8 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     bewaarInstellingen()
   })
   const cameraLayoutToggle = menu.querySelector('#sch-cameras-at-top')
+  // v265: tegen een vriend staan de webcams nu als rondjes bovenin (chat.html); deze keuze geldt alleen nog in de schaaktest
+  if (!testMode) cameraLayoutToggle.closest('label').hidden = true
   cameraLayoutToggle.checked = instellingen.camerasAtTop
   cameraLayoutToggle.addEventListener('change', () => {
     instellingen.camerasAtTop = cameraLayoutToggle.checked
@@ -1241,6 +1243,12 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     return 1250
   }
 
+  // v265: wie een stuk kwijtraakt, krijgt (net als bij dammen) even een rode rand om zijn webcamrondje (chat.html)
+  function meldGeslagen(effect) {
+    if (!effect || !isVriendPartij) return
+    try { window.dispatchEvent(new CustomEvent('fibro-spel-geslagen', { detail:{ wie:effect.outcome === 'loss' ? 'ik' : 'vriend', aantal:1 } })) } catch (e) {}
+  }
+
   async function animeerZet(zet) {
     bezig = true
     if (isUltra) {
@@ -1455,6 +1463,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
 
     if (!await animeerZet(zet)) return
     const slagEffect = schaakSlagEffect(staat, zet, mijnKleur)
+    meldGeslagen(slagEffect)
     bewaarUltraMoment()
     registreerSlag(staat, zet, veroverd)
     voegUltraZetToe(zet, promotieStuk)
@@ -1536,6 +1545,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       if (!geldig || !await animeerZet(geldig)) return
       if (isUltra && replyGeneration !== undefined && replyGeneration !== ultraGeneration) return
       const slagEffect = schaakSlagEffect(staat, geldig, mijnKleur)
+      meldGeslagen(slagEffect)
       bewaarUltraMoment()
       registreerSlag(staat, geldig, veroverd)
       const promotie = ['Q','R','B','N'].includes(promotieStuk) ? promotieStuk : 'Q'

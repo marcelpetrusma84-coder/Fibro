@@ -29,3 +29,18 @@ console.log('PASS: captures for both players; en passant; capture with promotion
   assert.match(ui, /if \(mat\) \{ \/\/ v265: eerst valt de koning om, dan SCHAAKMAT\n      const wacht = animeerSchaakmat\(volgendeKleur\)\n      checkmateTimers\.forEach\(clearTimeout\)/, 'SCHAAKMAT na de val, en opnieuw beginnen wist de wekker')
   console.log('PASS: animaties bij slaan en schaakmat')
 }
+
+// v265: schaken krijgt de webcamrondjes bovenin (zoals dammen); rode rand bij een verloren stuk
+{
+  const { readFileSync } = await import('node:fs')
+  const assert = (await import('node:assert/strict')).default
+  const chat = readFileSync(new URL('../../chat.html', import.meta.url), 'utf8')
+  const ui = readFileSync(new URL('../../schaken-ui.js', import.meta.url), 'utf8')
+  assert.match(chat, /\.\.\.Object\.fromEntries\(BEURTSPELLEN\.map\(spel => \[spel, 'groot'\]\)\)/)
+  assert.match(chat, /overlay\.classList\.toggle\('sch-video-modus', toon && spelActief === 'schaken' && overlay\.classList\.contains\('fibro-test-mode'\)\)/, 'vakken alleen nog in de schaaktest')
+  assert.match(chat, /\.spel-overlay\.dam-video-modus #spelInhoud \.sch-frame \{ width:/, 'het bord past onder de rondjes')
+  assert.match(ui, /function meldGeslagen\(effect\) \{\n    if \(!effect \|\| !isVriendPartij\) return/)
+  assert.equal((ui.match(/meldGeslagen\(slagEffect\)/g) || []).length, 2, 'eigen zet en zet van de vriend')
+  assert.match(ui, /if \(!testMode\) cameraLayoutToggle\.closest\('label'\)\.hidden = true/)
+  console.log('PASS: schaken met webcamrondjes')
+}

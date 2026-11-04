@@ -211,6 +211,12 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 .spel-overlay.dam-video-modus #spelInhoud, .spel-overlay.klein-video-modus #spelInhoud { padding-top:156px; box-sizing:border-box; }
 .spel-overlay.dam-video-modus .spel-video-vak, .spel-overlay.klein-video-modus .spel-video-vak { display:block; position:absolute; z-index:6; top:12px; width:120px; height:120px; min-height:0; margin:0; flex:none; overflow:visible; border:3px solid rgba(255,255,255,.28); border-radius:50%; background:radial-gradient(circle at 40% 35%,#26324a,#0b1220); box-shadow:0 6px 16px #0008; }
 .spel-overlay.dam-video-modus #spelVideoAnder, .spel-overlay.klein-video-modus #spelVideoAnder { left:calc(50% - 132px); }
+/* v265: schaken met de webcamrondjes bovenin: het bord past eronder */
+.spel-overlay.dam-video-modus #spelInhoud .sch-frame { width:min(360px,82vw,calc(100% - 12px),max(180px,calc(100dvh - 540px))); }
+.spel-overlay.dam-video-modus #spelInhoud .sch-video { margin:2px 0 0; min-height:32px; padding:5px 9px; font-size:11px; line-height:1.2; }
+.spel-overlay.dam-video-modus #spelInhoud .sch-video.sch-video-stop { width:29px; height:29px; min-height:29px; margin:0; padding:0; font-size:14px; line-height:1; }
+.spel-overlay.dam-video-modus #spelInhoud .sch-vangst, .spel-overlay.dam-video-modus #spelInhoud .sch-legenda { display:none; }
+.spel-overlay.dam-video-modus #spelInhoud .sch-spel { gap:3px; }
 .spel-overlay.dam-video-modus #spelVideoEigen, .spel-overlay.klein-video-modus #spelVideoEigen { left:calc(50% + 12px); }
 .spel-overlay.dam-video-modus .spel-video-vak video, .spel-overlay.klein-video-modus .spel-video-vak video { border-radius:50%; width:100%; height:100%; }
 .spel-overlay.dam-video-modus .spel-video-vak .video-etiket, .spel-overlay.klein-video-modus .spel-video-vak .video-etiket { left:50%; bottom:-21px; transform:translateX(-50%); max-width:110px; padding:2px 8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; }
@@ -4024,7 +4030,7 @@ async function startBlockIt() {
   // v3 nov: webcamrondjes bovenin. 'groot' bij de beurtspellen, 'klein' bij de snelle spellen tegen elkaar.
   // Alle beurtspellen (behalve schaken, dat heeft eigen vakken) krijgen grote rondjes; een paar snelle spellen kleine.
   const CAMERA_RONDJES = {
-    ...Object.fromEntries(BEURTSPELLEN.filter(spel => spel !== 'schaken').map(spel => [spel, 'groot'])),
+    ...Object.fromEntries(BEURTSPELLEN.map(spel => [spel, 'groot'])), // v265: schaken ook (op verzoek van Marcel, zoals dammen)
     pong:'klein', breakout:'klein'
   }
   function isVideoSpel() {
@@ -4173,8 +4179,10 @@ async function startBlockIt() {
     if (!overlay) return
     const toon = isVideoSpel() && (spelEigenVideo || spelAnderVideo)
     // v3 nov: bij dammen staan de webcams als twee rondjes bovenin (dam-video-modus), bij schaken als vakken
-    overlay.classList.toggle('sch-video-modus', toon && spelActief === 'schaken')
-    const rondjes = typeof CAMERA_RONDJES === 'object' ? CAMERA_RONDJES[spelActief] : (spelActief === 'dammen' ? 'groot' : null)
+    // v265: schaken heeft nu ook de rondjes; de vakken (sch-video-modus) alleen nog bij de schaaktest voor één persoon
+    overlay.classList.toggle('sch-video-modus', toon && spelActief === 'schaken' && overlay.classList.contains('fibro-test-mode'))
+    const rondjesVanSpel = typeof CAMERA_RONDJES === 'object' ? CAMERA_RONDJES[spelActief] : null
+    const rondjes = overlay.classList.contains('sch-video-modus') ? null : rondjesVanSpel
     overlay.classList.toggle('dam-video-modus', toon && rondjes === 'groot')
     overlay.classList.toggle('klein-video-modus', toon && rondjes === 'klein')
     window.fibroSpreekMeter?.volg(toon && Boolean(rondjes))

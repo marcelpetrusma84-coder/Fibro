@@ -56,3 +56,15 @@ assert.match(lees('vriend-profiel.html'), /if \(w\.id === 'quiz'\) \{ \/\/ v265/
 const qjs = lees('quiz.js')
 assert.doesNotMatch(qjs, /innerHTML/, 'teksten van vrienden nooit als html')
 console.log('PASS: quiz.js normaliseert, controleert en telt; de quiz gaat mee naar vrienden en staat op alle pagina\'s')
+
+// v265b: de quiz van een vriend komt meteen in beeld als hij binnenkomt, en het profiel openen haalt hem op
+{
+  const vp = lees('vriend-profiel.html'), sy = lees('sync.js')
+  assert.match(sy, /function itemBinnen\(naam\) \{\n[^\n]*\n  try \{ window\.dispatchEvent\(new CustomEvent\('fibro-sync-item', \{ detail: \{ vriendId: syncPartnerId, item: naam \} \}\)\) \} catch \(e\) \{\}/)
+  assert.match(vp, /window\.addEventListener\('fibro-sync-item'/)
+  assert.match(vp, /\^\(klein\|wbg\):quiz\$/)
+  const i = vp.indexOf("vriendId = params.get('id')"), j = vp.indexOf('syncMetVriend(vriendId)')
+  assert.ok(i > 0 && j > i && j - i < 120, 'pas na het bekend worden van de vriend')
+  assert.match(vp, /import \{[^}]*syncMetVriend[^}]*\} from '\.\/sync\.js\?v=\d+'/)
+}
+console.log('PASS: quiz van een vriend wordt opgehaald en meteen getoond')

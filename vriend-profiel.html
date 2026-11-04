@@ -150,7 +150,7 @@ body.heeft-wallpaper::before { display:block; }
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
-  import { initSync, vraagVriendVideo, lokaleVriendNaam } from './sync.js?v=253'
+  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=254'
   import { versleutel, haalPrivateKeyOp } from './crypto.js?v=182'
   import { maakProfielLikes, itemVan, openReageerScherm, maakReactieBericht, maakKleinPlaatje } from './profielreacties.js?v=2' // v258
   import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -492,7 +492,8 @@ body.heeft-wallpaper::before { display:block; }
       }
       if (w.id === 'quiz') { // v265: quiz.js
         const gelukt = await renderVriendQuiz(el, vriendId)
-        if (gelukt) { grid.appendChild(el); continue }
+        if (gelukt) { grid.appendChild(el); quizWidgetEl = el; continue }
+        quizWidgetEl = el // v265b: komt de quiz (of zijn achtergrond) binnen terwijl je kijkt, dan meteen tonen
       }
       if (w.id === 'afteltimer') {
         const gelukt = await renderVriendTimer(el, vriendId, 'aftel')
@@ -569,6 +570,12 @@ body.heeft-wallpaper::before { display:block; }
 
   // v265: quiz van een vriend (quiz.js). De vragen en de achtergrond komen via P2P (sync.js 'klein:quiz' en
   // 'widgetbg_quiz'); je score blijft op je eigen toestel.
+  let quizWidgetEl = null
+  window.addEventListener('fibro-sync-item', async e => {
+    const d = e.detail || {}
+    if (d.vriendId !== vriendId || !quizWidgetEl || !/^(klein|wbg):quiz$/.test(d.item || '')) return
+    try { await renderVriendQuiz(quizWidgetEl, vriendId) } catch (x) { console.warn('[quiz]', x) }
+  })
   async function renderVriendQuiz(el, vriendId) {
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_quiz')
     if (!ruw) return false
@@ -914,6 +921,7 @@ async function renderVriendMuziek(el) {
 
     const params = new URLSearchParams(window.location.search)
     vriendId = params.get('id')
+    try { if (vriendId) syncMetVriend(vriendId) } catch (e) {} // v265b: wie het profiel van een vriend opent, krijgt zijn nieuwste profiel eerst
     // Blokstijl van de vriend tonen (v80); zonder gesyncte stijl blijft de eigen stijl staan
     ;(async () => {
       try {

@@ -1,3 +1,4 @@
+// v254 (4 november 2026): event 'fibro-sync-item' bij elk binnengekomen onderdeel van een vriend (itemBinnen)
 // v253 (4 november 2026): ook de quiz-widget (quiz_<uid>, widgetbg_quiz) gaat mee naar vrienden (quiz.js)
 // sync.js — P2P widget-sync via WebRTC DataChannel (v146: vraag over muziek via relay ook in het Engels)
 // v155: ook je eigen stickers (eigenstickers.js) gaan mee, en de vriend van de open chat gaat voor (syncMetVriend).
@@ -425,6 +426,8 @@ function zetItemKlok(ms) {
   itemKlok = setTimeout(() => { if (wachtItems) { console.log('[sync] Niet alles kwam binnen - toch klaar:', [...wachtItems].join(', ')); itemsBinnen() } }, ms)
 }
 function itemBinnen(naam) {
+  // v254: een pagina die wacht op iets van deze vriend (bijv. de quiz op vriend-profiel.html) kan het meteen tonen
+  try { window.dispatchEvent(new CustomEvent('fibro-sync-item', { detail: { vriendId: syncPartnerId, item: naam } })) } catch (e) {}
   if (!wachtItems) return
   wachtItems.delete(naam)
   if (!wachtItems.size) itemsBinnen()

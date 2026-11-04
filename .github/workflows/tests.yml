@@ -75,3 +75,6 @@ jobs:
       - name: Meerdere foto's tegelijk in de chat en groot bekijken
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef239.py .
+      - name: Aan het typen en gelezen-vinkjes
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef240.py .

@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=60"></script>
+<script src="taal.js?v=61"></script>
 <script src="apk.js?v=2"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2227,6 +2227,10 @@ window.openMenu = function() {
   schakelaar('fibro_buzz_schud', T('\u26A1 Buzz schudt en trilt'), async () => {
     try { (await import('./meldingen.js?v=188')).bewaarBuzzKeuze() } catch (e) {}
   })
+  // v261: uit = je vrienden zien niet dat jij hun bericht gelezen hebt, en jij ziet het bij hen ook niet (chatstatus.js)
+  schakelaar('fibro_leesbevestiging', T('\u2713\u2713 Gelezen-vinkjes'), async (aan) => {
+    try { (await import('./chatstatus.js?v=1')).zetLeesbevestiging(supabase, aan) } catch (e) {}
+  })
   g = groep(T('Accountinstellingen'), 'menuKopAccount')
   item(g, T('\u{1F4E6} Mijn gegevens downloaden'), () => openAccount('gegevens'))
   item(g, T('\u{1F5D1}\uFE0F Account verwijderen'), () => openAccount('verwijderen')).style.color = '#fca5a5'
@@ -2725,7 +2729,7 @@ if ('serviceWorker' in navigator) {
 <script type="module" src="geluidregelaar.js?v=180"></script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=197"; startSpelUitnodigingLuisteraar()</script>
-<script type="module">import { startOngelezen } from "./ongelezen.js?v=168"; startOngelezen()</script>
+<script type="module">import { startOngelezen } from "./ongelezen.js?v=169"; startOngelezen()</script>
 <script type="module">import { checkTimers } from "./timer-melding.js?v=188"; setTimeout(checkTimers,4000)</script>
 <script src="./fotoviewer.js?v=8"></script>
 <script type="module" src="blokkade.js?v=2"></script>

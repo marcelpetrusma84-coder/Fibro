@@ -7,6 +7,7 @@
 // met elkaar eens. De tabel en de twee functies staan in sql/ongelezen.sql.
 // v152: van de belregels (bellen, zie belregel.js) telt alleen een gemiste oproep mee;
 // de database telt net zo (sql/belregels.sql).
+// v261: na het bewaren het seintje 'fibro-gelezen' (voor de gelezen-vinkjes, chatstatus.js).
 // v168: het totaal ook op het icoon van de app: op de iPhone (en Windows/Mac) een rood bolletje met het getal
 // (navigator.setAppBadge). Het getal gaat ook in een kastje ('fibro-badge'), zodat de portier (service-worker.js)
 // er een bij kan tellen als er een pushmelding komt terwijl Fibro dicht is. Alles gelezen: het bolletje weg en de
@@ -104,7 +105,11 @@ function markeer(vriendId) {
     if (nogEens) markeer(vriendId)
   }
   supabase.rpc('markeer_gelezen', { p_vriend: vriendId })
-    .then(({ error }) => { if (error) console.warn('[ongelezen]', error.message) }, e => console.warn('[ongelezen]', e))
+    .then(({ error }) => {
+      if (error) { console.warn('[ongelezen]', error.message); return }
+      // v261: gelukt: chatstatus.js geeft de vriend een duwtje, zodat zijn vinkjes blauw worden
+      try { document.dispatchEvent(new CustomEvent('fibro-gelezen', { detail: { vriend: vriendId } })) } catch (e) {}
+    }, e => console.warn('[ongelezen]', e))
     .then(klaar)
 }
 

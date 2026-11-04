@@ -459,6 +459,7 @@ window.veiligeUrl = function(v){
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
   import { leesReactieBericht, tekenReactieKaart, tekenReactieSticker, reactieKort } from './profielreacties.js?v=2' // v258; v259: als sticker
   import { startChatStatus, werkVinkjesBij, TYPEN_DUUR_MS } from './chatstatus.js?v=1' // v261: typen en gelezen-vinkjes
+  import { bewaarChatFoto, haalChatFotos } from './chatfotos.js?v=1' // v262: foto's blijven op dit toestel bewaard
   // v256 (foutmelding 3 nov 2026): lukt het laden van een spelbestand niet (even geen internet, of net een nieuwe
   // versie op GitHub), dan na 1,2 seconde nog één keer, met een ander adres (sommige browsers onthouden een mislukte poging)
   const laadModule = url => import(url).catch(async () => {
@@ -696,6 +697,8 @@ window.veiligeUrl = function(v){
     // ── P2P foto initialiseren ──
     initP2pFoto(huidigeUser.id, {
       onFotoOntvangen: (vanVriendId, blob, meta) => {
+        const reeks = typeof meta?.reeks === 'string' ? meta.reeks : null
+        bewaarChatFoto(huidigeUser.id, vanVriendId, blob, { mijn: false, reeks }) // v262: ook als deze chat niet open is
         if (geselecteerdeVriend?.id !== vanVriendId) return
         const url = URL.createObjectURL(blob)
         toonFotoInChat(url, false, typeof meta?.reeks === 'string' ? meta.reeks : null) // v259: in het rijtje van dezelfde keer
@@ -1160,6 +1163,7 @@ window.veiligeUrl = function(v){
     stopTypen()
     gelezenTot = null
     await laadBerichten()
+    await toonBewaardeFotos(vriendId) // v262
     await tekenReacties(document.getElementById('messages'))
     startRealtime()
     haalGelezen(vriendId) // v261
@@ -1220,7 +1224,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
         : T('📴 Geen internet. Je ziet de berichten die op dit toestel bewaard zijn.'))
       // Zodra er weer internet is: de echte berichten ophalen (als deze chat nog open is)
       window.addEventListener('online', () => {
-        if (geselecteerdeVriend?.id === vriendId) laadBerichten().then(() => tekenReacties(document.getElementById('messages'))).catch(() => {})
+        if (geselecteerdeVriend?.id === vriendId) laadBerichten().then(() => toonBewaardeFotos(vriendId)).then(() => tekenReacties(document.getElementById('messages'))).catch(() => {})
       }, { once: true })
     }
     toonWachtende(vriendId) // v130: niet verstuurde berichten onderaan
@@ -1439,6 +1443,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     row.dataset.sid = String(bericht.sender_id)
     if (zelfdeAfzender) row.classList.add('gegroepeerd')
     row.dataset.tijd = tijd
+    if (bericht.created_at) row.dataset.ts = bericht.created_at // v262: om bewaarde foto's op de goede plek te zetten
     if (isMijn) row.dataset.ct = bericht.created_at || new Date().toISOString() // v261: voor de gelezen-vinkjes
     if (!isMijn) stopTypen(bericht.sender_id) // v261: zijn bericht is er, dus typt hij niet meer
     if (isVerwijderd) row.dataset.verwijderd = '1'
@@ -1921,6 +1926,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       try {
         const blob = await comprimeerFoto(file)
         await stuurFotoP2P(vriendId, blob, { bestandsnaam: file.name, reeks, aantal: bestanden.length })
+        bewaarChatFoto(huidigeUser.id, vriendId, blob, { mijn: true, reeks }) // v262
         toonFotoInChat(URL.createObjectURL(blob), true, reeks)
       } catch(e) {
         console.error('P2P foto mislukt:', e)
@@ -1999,9 +2005,12 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // v259: foto's van dezelfde keer (reeks) komen samen in een rijtje. Tikken = groot bekijken (fotoviewer.js v8).
   const GELDIGE_REEKS = /^[a-z0-9]{4,12}$/
-  function toonFotoInChat(url, isMijn, reeks) {
+  // v262: met 'wanneer' (ms) is het een bewaarde foto: die komt op de goede plek tussen de berichten, zonder te scrollen
+  function toonFotoInChat(url, isMijn, reeks, wanneer) {
     const container = document.getElementById('messages')
-    const tijd = new Date().toLocaleTimeString(T.locale, { hour: '2-digit', minute: '2-digit' })
+    const bewaard = Number.isFinite(wanneer)
+    const moment = bewaard ? new Date(wanneer) : new Date()
+    const tijd = moment.toLocaleTimeString(T.locale, { hour: '2-digit', minute: '2-digit' })
     const img = document.createElement('img')
     img.src = url
     img.alt = ''
@@ -2013,7 +2022,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       const raster = bestaand.querySelector('.foto-raster')
       raster.appendChild(img)
       zetFotoMaten(raster)
-      scrollNaarOnder(true)
+      if (!bewaard) scrollNaarOnder(true)
       return
     }
     const avatar = isMijn ? (huidigProfiel?.avatar_url || '👤') : geselecteerdeVriend.avatar
@@ -2026,11 +2035,38 @@ console.timeLog('[chat] berichten', 'opgehaald')
         <div class="foto-raster" style="display:flex;flex-wrap:wrap;gap:4px;max-width:212px;${isMijn ? 'justify-content:flex-end;' : ''}"></div>
         <div style="font-size:12px;color:var(--muted);margin-top:2px;text-align:right;">${tijd}${isMijn ? ' <span class="vink">✓</span>' : ''}</div>
       </div>`
-    if (isMijn) row.dataset.ct = new Date().toISOString() // v261
+    if (isMijn) row.dataset.ct = moment.toISOString() // v261
+    row.dataset.ts = moment.toISOString() // v262
     const raster = row.querySelector('.foto-raster')
     raster.appendChild(img)
     zetFotoMaten(raster)
-    container.appendChild(row)
+    if (bewaard) {
+      // voor het eerste bericht dat later kwam (anders onderaan)
+      const na = [...container.children].find(el => el.dataset && el.dataset.ts && Date.parse(el.dataset.ts) > wanneer)
+      container.insertBefore(row, na || null)
+    } else {
+      container.appendChild(row)
+      scrollNaarOnder(true)
+    }
+  }
+
+  // v262: de bewaarde foto's van dit gesprek (chatfotos.js) tussen de berichten zetten
+  let fotoUrls = []
+  async function toonBewaardeFotos(vriendId) {
+    for (const u of fotoUrls) { try { URL.revokeObjectURL(u) } catch (e) {} }
+    fotoUrls = []
+    const fotos = await haalChatFotos(huidigeUser.id, vriendId)
+    if (geselecteerdeVriend?.id !== vriendId || !fotos.length) return
+    const container = document.getElementById('messages')
+    for (const f of fotos) {
+      const url = URL.createObjectURL(f.blob)
+      fotoUrls.push(url)
+      toonFotoInChat(url, f.mijn, f.reeks, f.tijd)
+    }
+    // er staat nu iets in de chat: 'Stuur je eerste bericht' en 'Zeg hoi' horen er niet meer bij
+    for (const el of container.querySelectorAll('.sys-msg')) if (el.textContent === T('Stuur je eerste bericht! 👋')) el.remove()
+    document.getElementById('zegHoi')?.remove()
+    werkVinkjesBij(container, gelezenTot)
     scrollNaarOnder(true)
   }
   // Een foto alleen: groot (200); twee of meer: vierkantjes van 104 naast elkaar

@@ -3,6 +3,8 @@
 #  A. Bram kiest drie foto's tegelijk -> bij Bram en bij Marcel staan ze samen in een rijtje (vierkantjes)
 #  B. Marcel tikt op de tweede -> groot, "2 van 3"; vegen naar links = de derde, pijltje = weer terug
 #  C. Daarna nog een losse foto -> een eigen rij, groot (200), en in de viewer "4 van 4" (alle foto's van het gesprek)
+#  E. (v262) na verversen staan de foto's er nog, bij allebei, in dezelfde rijtjes (bewaard op het toestel, chatfotos.js);
+#     een foto ouder dan de bewaartijd is weg
 #  D. geen paginafouten
 # python3 -I proef239.py <map>
 import sys, os, time, json, socket, subprocess, re
@@ -182,6 +184,22 @@ try:
         m.locator('#messages .foto-reeks').nth(1).locator('img').click()
         v4 = wacht(m, VIEWER, 4000) and m.evaluate(VIEWER)
         check('C een losse foto: eigen rij, groot (200); in de viewer 4 van 4', c_m and len(rm) == 2 and rm[1]['n'] == 1 and rm[1]['b'] > 150 and v4 and v4['teller'] == '4 van 4', (rm, v4 and v4['teller']))
+        # ---- E: verversen ----
+        m.click('#fv-sluit')
+        # een foto van 40 dagen geleden erbij zetten (bewaartijd standaard 31 dagen): die moet verdwijnen
+        m.evaluate("""async ([ik, vr]) => { const c = document.createElement('canvas'); c.width = c.height = 20; const b = await new Promise(r => c.toBlob(r, 'image/png'))
+          const mod = await import('./chatfotos.js?v=1'); await mod.bewaarChatFoto(ik, vr, b, { mijn: false, tijd: Date.now() - 40 * 864e5 }) }""", [MARCEL, BRAM])
+        m.reload(); b.reload()
+        e_m = wacht(m, "() => document.querySelectorAll('#messages .foto-reeks img').length === 4", 15000)
+        e_b = wacht(b, "() => document.querySelectorAll('#messages .foto-reeks img').length === 4", 15000)
+        rm2, rb2 = m.evaluate(RIJEN), b.evaluate(RIJEN)
+        oud = m.evaluate("""async ([ik, vr]) => (await (await import('./chatfotos.js?v=1')).haalChatFotos(ik, vr)).length""", [MARCEL, BRAM])
+        check('E1 na verversen: de foto\'s staan er nog, bij allebei, in dezelfde rijtjes (3 en 1)', e_m and e_b and [r['n'] for r in rm2] == [3, 1] and [r['n'] for r in rb2] == [3, 1]
+              and all(not r['mijn'] for r in rm2) and all(r['mijn'] for r in rb2), (rm2, rb2))
+        check('E2 de foto van 40 dagen geleden is weggegooid', oud == 4, oud)
+        m.locator('#messages .foto-reeks').nth(0).locator('img').nth(0).click()
+        v5 = wacht(m, VIEWER, 4000) and m.evaluate(VIEWER)
+        check('E3 groot bekijken werkt ook na verversen (1 van 4)', v5 and v5['teller'] == '1 van 4', v5 and v5['teller'])
         cm.close(); cb.close(); br.close()
 finally:
     srv.terminate()

@@ -23,7 +23,7 @@ assert.ok(push.includes('const ALLEEN_SERVER = new Set(["spel", "vriend-nieuw", 
 
 // 3. De tabel: lezen alleen eigen likes of als eigenaar; liken alleen bij een vriend; tellers zonder namen voor vrienden
 assert.match(sql, /for select to authenticated\n\s+using \(\(select auth\.uid\(\)\) = liker or \(select auth\.uid\(\)\) = eigenaar\)/)
-assert.match(sql, /\(select auth\.uid\(\)\) = liker\n\s+and not public\.is_geblokkeerd\(\(select auth\.uid\(\)\)\)\n\s+and exists \(select 1 from public\.friendships f\n\s+where f\.user_id = liker and f\.friend_id = eigenaar and f\.status = 'accepted'\)/)
+assert.match(sql, /\(select auth\.uid\(\)\) = liker\n\s+and not \(select public\.ben_ik_geblokkeerd\(\)\).*\n\s+and exists \(select 1 from public\.friendships f\n\s+where f\.user_id = liker and f\.friend_id = eigenaar and f\.status = 'accepted'\)/)
 assert.match(sql, /returns table \(soort text, item text, emoji text, aantal integer\)/, 'tellers: geen kolom met wie')
 assert.match(sql, /revoke execute on function public\.profiel_like_tellers\(uuid\) from public, anon;/)
 assert.match(sql, /new\.eigenaar := old\.eigenaar; new\.liker := old\.liker;/, 'bij wijzigen alleen de emoji')

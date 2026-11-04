@@ -43,7 +43,7 @@ drop policy if exists profiel_post_zetten on public.profiel_post;
 create policy profiel_post_zetten on public.profiel_post for insert to authenticated
   with check (
     (select auth.uid()) = afzender
-    and not public.is_geblokkeerd((select auth.uid()))
+    and not (select public.ben_ik_geblokkeerd()) -- v260: is_geblokkeerd is dicht voor de app (sql/geblokkeerd-regels.sql)
     and exists (select 1 from public.friendships f
                  where f.user_id = afzender and f.friend_id = ontvanger and f.status = 'accepted'));
 
@@ -52,7 +52,7 @@ create policy profiel_post_vervangen on public.profiel_post for update to authen
   using ((select auth.uid()) = afzender)
   with check (
     (select auth.uid()) = afzender
-    and not public.is_geblokkeerd((select auth.uid()))
+    and not (select public.ben_ik_geblokkeerd()) -- v260: is_geblokkeerd is dicht voor de app (sql/geblokkeerd-regels.sql)
     and exists (select 1 from public.friendships f
                  where f.user_id = afzender and f.friend_id = ontvanger and f.status = 'accepted'));
 

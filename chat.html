@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=63"></script>
+<script src="taal.js?v=64"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -130,6 +130,16 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .send-btn { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .buzz-btn { width:36px; height:36px; border-radius:50%; background:var(--card); border:0.5px solid rgba(192,132,252,0.5); cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:transform 0.1s; }
 .buzz-btn:active { transform:scale(0.85); }
+/* v264: spraakberichtjes (spraak.js) */
+#spraakBtn { -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; touch-action:none; }
+#spraakBtn.neemt-op { background:#ef4444; border-color:#ef4444; transform:scale(1.25); transition:transform .12s; }
+.spraak-opname { display:flex; align-items:center; gap:10px; padding:10px 16px; font-size:15px; font-variant-numeric:tabular-nums; }
+.spraak-opname[hidden] { display:none; }
+.spraak-punt { width:12px; height:12px; border-radius:50%; background:#ef4444; animation:spraakKnipper 1s infinite; }
+.spraak-hint { margin-left:auto; font-size:13px; opacity:0.75; }
+.spraak-opname.weg .spraak-hint { color:#fca5a5; opacity:1; font-weight:700; }
+@keyframes spraakKnipper { 50% { opacity:0.25; } }
+@media (prefers-reduced-motion: reduce) { .spraak-punt { animation:none; } }
 .buzz-btn.sending { animation:buzzSpin 0.4s ease; }
 @keyframes buzzSpin { 0%{transform:rotate(0deg) scale(1)} 25%{transform:rotate(-15deg) scale(1.2)} 75%{transform:rotate(15deg) scale(1.2)} 100%{transform:rotate(0deg) scale(1)} }
 @keyframes schudScherm { 0%,100%{transform:translate(0,0) rotate(0deg)} 8%{transform:translate(-13px,5px) rotate(-1.2deg)} 16%{transform:translate(12px,-6px) rotate(1.2deg)} 24%{transform:translate(-12px,-4px) rotate(-1deg)} 32%{transform:translate(11px,5px) rotate(1deg)} 42%{transform:translate(-9px,3px) rotate(-0.7deg)} 52%{transform:translate(8px,-3px) rotate(0.7deg)} 64%{transform:translate(-6px,2px) rotate(-0.4deg)} 76%{transform:translate(4px,-2px) rotate(0.3deg)} 88%{transform:translate(-2px,1px) rotate(0deg)} }
@@ -329,10 +339,12 @@ window.veiligeUrl = function(v){
       <button class="emoji-toggle" onclick="toggleStickers()">🎨</button>
       <button class="emoji-toggle" onclick="toggleSpelMenu()">🎮</button>
       <button class="emoji-toggle" id="fotoBtn" onclick="openFotoPicker()" title="Foto versturen" data-t-attr="title">📷</button>
+      <button class="emoji-toggle" id="spraakBtn" type="button" title="Houd ingedrukt om in te spreken" aria-label="Houd ingedrukt om in te spreken" data-t-attr="title,aria-label">🎤</button>
       <button class="buzz-btn" id="buzzBtn" onclick="sendBuzz()" title="Buzz!"><svg viewBox="0 0 24 24" width="20" height="20" fill="#facc15" style="filter:drop-shadow(0 0 3px rgba(250,204,21,0.6))"><path d="M13 2 L4 14 h6 l-1 8 9-12 h-6 z"/></svg></button>
     </div>
     <div id="fotoStatus" style="display:none;padding:4px 14px;font-size:12px;color:var(--accent2);"></div>
     <input type="file" id="fotoFileInput" accept="image/*" multiple style="display:none" onchange="fotoGekozen(this)">
+    <div id="spraakBalk" class="spraak-opname" hidden role="status" aria-live="polite"><span class="spraak-punt"></span><span id="spraakTijd">0:00</span><span class="spraak-hint" id="spraakHint" data-t>← schuif om te annuleren</span></div>
     <div class="input-area">
       <input class="msg-input" id="msgInput" maxlength="2000" placeholder="Stuur een bericht..." data-t-attr="placeholder" onkeydown="if(event.key==='Enter')sendMsg()">
       <button class="send-btn" id="sendBtn" onclick="sendMsg()">➤</button>
@@ -463,7 +475,8 @@ window.veiligeUrl = function(v){
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
   import { leesReactieBericht, tekenReactieKaart, tekenReactieSticker, reactieKort } from './profielreacties.js?v=2' // v258; v259: als sticker
   import { startChatStatus, werkVinkjesBij, TYPEN_DUUR_MS } from './chatstatus.js?v=1' // v261: typen en gelezen-vinkjes
-  import { bewaarChatFoto, haalChatFotos, markeerBekeken } from './chatfotos.js?v=1' // v262: foto's blijven op dit toestel bewaard
+  import { bewaarChatFoto, haalChatFotos, markeerBekeken } from './chatfotos.js?v=2'
+  import { kanOpnemen, neemOp, maakSpeler, tijdTekst, MAX_BYTES as SPRAAK_MAX, GELDIG_TYPE as SPRAAK_TYPE } from './spraak.js?v=1' // v264: spraakberichtjes // v262: foto's blijven op dit toestel bewaard
   // v256 (foutmelding 3 nov 2026): lukt het laden van een spelbestand niet (even geen internet, of net een nieuwe
   // versie op GitHub), dan na 1,2 seconde nog één keer, met een ander adres (sommige browsers onthouden een mislukte poging)
   const laadModule = url => import(url).catch(async () => {
@@ -703,6 +716,16 @@ window.veiligeUrl = function(v){
       onFotoOntvangen: (vanVriendId, blob, meta) => {
         const reeks = typeof meta?.reeks === 'string' ? meta.reeks : null
         const eenmalig = meta?.eenmalig === true // v262: een keer laten zien
+        if (meta?.wat === 'spraak') { // v264: een spraakberichtje (niet 'soort': dat gebruikt p2pfoto.js zelf voor 'meta')
+          if (!SPRAAK_TYPE.test(blob.type || '') || blob.size > SPRAAK_MAX) return
+          const duur = Math.max(0, Math.min(600, Number(meta.duur) || 0))
+          bewaarChatFoto(huidigeUser.id, vanVriendId, blob, { mijn: false, eenmalig, soort: 'spraak', duur }).then(id => {
+            if (geselecteerdeVriend?.id !== vanVriendId) return
+            toonSpraakInChat(URL.createObjectURL(blob), false, undefined, { eenmalig, id, duur })
+          })
+          return
+        }
+        if (!/^image\//.test(blob.type || '')) return
         // v262: ook bewaren als deze chat niet open is
         bewaarChatFoto(huidigeUser.id, vanVriendId, blob, { mijn: false, reeks, eenmalig }).then(id => {
           if (geselecteerdeVriend?.id !== vanVriendId) return
@@ -1948,7 +1971,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   // v262: na het kiezen van de foto's: 💾 Bewaren of 👁️ Een keer laten zien. Geeft 'bewaren', 'eenmalig' of null.
-  function kiesFotoSoort(aantal) {
+  function kiesFotoSoort(aantal, wat = 'foto') {
+    const spraak = wat === 'spraak' // v264: hetzelfde scherm voor een spraakberichtje
     return new Promise(klaar => {
       document.getElementById('fotoSoortScherm')?.remove()
       const achter = document.createElement('div')
@@ -1959,7 +1983,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       kaart.style.cssText = 'width:100%;max-width:480px;background:#1a0a2e;border:0.5px solid var(--border);border-radius:20px 20px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));color:var(--text);display:flex;flex-direction:column;gap:10px'
       const titel = document.createElement('h2')
       titel.id = 'fotoSoortTitel'
-      titel.textContent = aantal > 1 ? T('{n} foto\'s versturen', { n: aantal }) : T('Foto versturen')
+      titel.textContent = spraak ? T('Spraakbericht versturen') : aantal > 1 ? T('{n} foto\'s versturen', { n: aantal }) : T('Foto versturen')
       titel.style.cssText = 'font-size:18px;margin:0 0 4px;color:var(--accent)'
       kaart.appendChild(titel)
       let gekozen = false
@@ -1976,8 +2000,13 @@ console.timeLog('[chat] berichten', 'opgehaald')
         b.onclick = () => dicht(soort)
         kaart.appendChild(b)
       }
-      knop('bewaren', T('\u{1F4BE} Bewaren'), T('Blijft in de chat. Je vriend kan hem op zijn telefoon opslaan.'))
-      knop('eenmalig', T('\u{1F441}\uFE0F E\u00E9n keer laten zien'), T('Je vriend kan hem \u00E9\u00E9n keer bekijken. Na het sluiten is hij weg.'))
+      if (spraak) {
+        knop('bewaren', T('\u{1F4BE} Bewaren'), T('Blijft in de chat. Je vriend kan het vaker afspelen.'))
+        knop('eenmalig', T('\u{1F442} E\u00E9n keer laten horen'), T('Je vriend kan het \u00E9\u00E9n keer afspelen. Daarna is het weg.'))
+      } else {
+        knop('bewaren', T('\u{1F4BE} Bewaren'), T('Blijft in de chat. Je vriend kan hem op zijn telefoon opslaan.'))
+        knop('eenmalig', T('\u{1F441}\uFE0F E\u00E9n keer laten zien'), T('Je vriend kan hem \u00E9\u00E9n keer bekijken. Na het sluiten is hij weg.'))
+      }
       const nee = document.createElement('button')
       nee.textContent = T('Annuleren')
       nee.style.cssText = 'min-height:44px;border-radius:12px;border:none;background:none;color:var(--text);opacity:0.8;font-size:15px;cursor:pointer;font-family:inherit'
@@ -2180,6 +2209,135 @@ console.timeLog('[chat] berichten', 'opgehaald')
     return vak
   }
 
+  // ─── v264: spraakberichtjes (spraak.js) ───
+  // Een rij in de chat met het afspeelbalkje. extra: { eenmalig, bekeken, id, duur }
+  function toonSpraakInChat(url, isMijn, wanneer, extra = {}) {
+    const container = document.getElementById('messages')
+    const bewaard = Number.isFinite(wanneer)
+    const moment = bewaard ? new Date(wanneer) : new Date()
+    const tijd = moment.toLocaleTimeString(T.locale, { hour: '2-digit', minute: '2-digit' })
+    const avatar = isMijn ? (huidigProfiel?.avatar_url || '👤') : geselecteerdeVriend.avatar
+    const row = document.createElement('div')
+    row.className = 'msg-row spraak-rij' + (isMijn ? ' out' : '')
+    row.dataset.ts = moment.toISOString()
+    if (isMijn) row.dataset.ct = moment.toISOString()
+    row.innerHTML = `<div class="msg-av-sm">${esc(avatar)}</div><div class="bubble ${isMijn ? 'out' : 'in'}"><div class="spraak-plek"></div><span class="bubble-time"></span></div>`
+    const plek = row.querySelector('.spraak-plek')
+    const tijdEl = row.querySelector('.bubble-time')
+    tijdEl.textContent = (extra.eenmalig && isMijn ? T('\u{1F442} 1 keer') + ' · ' : '') + tijd
+    if (isMijn) tijdEl.appendChild(maakVink())
+    const beluisterd = () => {
+      plek.replaceChildren()
+      const t = document.createElement('div')
+      t.className = 'spraak-beluisterd'
+      t.style.cssText = 'font-size:14px;opacity:0.7;padding:6px 2px'
+      t.textContent = T('\u{1F442} Spraakbericht beluisterd')
+      plek.appendChild(t)
+    }
+    if (!url || (extra.eenmalig && extra.bekeken && !isMijn)) beluisterd()
+    else if (extra.eenmalig && !isMijn) {
+      plek.appendChild(maakSpeler(url, extra.duur, { eenmalig: true, opKlaar: () => {
+        if (extra.id) markeerBekeken(extra.id)
+        setTimeout(() => { try { URL.revokeObjectURL(url) } catch (e) {} ; beluisterd() }, 400)
+      } }))
+    } else plek.appendChild(maakSpeler(url, extra.duur, { mijn: isMijn }))
+    if (bewaard) {
+      const na = [...container.children].find(el => el.dataset && el.dataset.ts && Date.parse(el.dataset.ts) > wanneer)
+      container.insertBefore(row, na || null)
+    } else {
+      container.appendChild(row)
+      scrollNaarOnder(true)
+    }
+    if (isMijn) werkVinkjesBij(row, gelezenTot)
+  }
+
+  // De 🎤-knop: ingedrukt houden = opnemen, loslaten = versturen, naar links schuiven = annuleren
+  ;(function spraakKnop() {
+    const knop = document.getElementById('spraakBtn')
+    const balk = document.getElementById('spraakBalk')
+    if (!knop) return
+    if (!kanOpnemen()) { knop.hidden = true; return }
+    let opname = null, startX = 0, bezig = false, losgelaten = false, weg = false
+    const toonBalk = (aan) => {
+      balk.hidden = !aan
+      document.querySelector('.input-area')?.style.setProperty('display', aan ? 'none' : '')
+      knop.classList.toggle('neemt-op', aan)
+      balk.classList.remove('weg')
+      document.getElementById('spraakHint').textContent = T('← schuif om te annuleren')
+      document.getElementById('spraakTijd').textContent = '0:00'
+    }
+    const kort = (tekst) => {
+      const st = document.getElementById('fotoStatus')
+      st.textContent = tekst; st.style.display = 'block'
+      clearTimeout(kort._t); kort._t = setTimeout(() => { st.style.display = 'none' }, 2500)
+    }
+    async function begin(x) {
+      if (bezig || !geselecteerdeVriend) return
+      const vriendId = geselecteerdeVriend.id
+      if (!isVriendOnline(vriendId)) { voegSysBericht(T('Vriend is offline — spraakbericht kan niet verstuurd worden')); return }
+      bezig = true; losgelaten = false; weg = false; startX = x
+      try {
+        opname = await neemOp({
+          opTik: d => { document.getElementById('spraakTijd').textContent = tijdTekst(d) },
+          opVol: () => klaar(),
+        })
+      } catch (e) {
+        bezig = false; opname = null
+        console.warn('[spraak] microfoon', e)
+        kort(e && e.name === 'NotAllowedError' ? T('🎤 Fibro mag de microfoon niet gebruiken. Zet het aan in de instellingen van je telefoon.') : T('🎤 Opnemen lukt niet op dit toestel.'))
+        return
+      }
+      if (losgelaten) { // de vraag om de microfoon kwam ertussen: nog niet opnemen
+        opname.annuleer(); opname = null; bezig = false
+        kort(T('🎤 Houd de knop ingedrukt om in te spreken'))
+        return
+      }
+      if (navigator.vibrate) navigator.vibrate(30)
+      toonBalk(true)
+    }
+    async function klaar() {
+      losgelaten = true
+      if (!opname) return
+      const o = opname; opname = null
+      toonBalk(false)
+      if (weg) { o.annuleer(); bezig = false; return }
+      const r = await o.stop()
+      bezig = false
+      if (!r || r.duur < 0.8 || !r.blob.size) { kort(T('🎤 Houd de knop ingedrukt om in te spreken')); return }
+      if (r.blob.size > SPRAAK_MAX) { kort(T('🎤 Dit spraakbericht is te lang.')); return }
+      const vriendId = geselecteerdeVriend?.id
+      if (!vriendId) return
+      const soort = await kiesFotoSoort(1, 'spraak')
+      if (!soort || geselecteerdeVriend?.id !== vriendId) return
+      const eenmalig = soort === 'eenmalig'
+      try {
+        await stuurFotoP2P(vriendId, r.blob, Object.assign({ wat: 'spraak', duur: Math.round(r.duur * 10) / 10 }, eenmalig ? { eenmalig: true } : {}))
+        bewaarChatFoto(huidigeUser.id, vriendId, r.blob, { mijn: true, eenmalig, soort: 'spraak', duur: r.duur })
+        toonSpraakInChat(URL.createObjectURL(r.blob), true, undefined, { eenmalig, duur: r.duur })
+      } catch (e) {
+        console.error('[spraak] versturen mislukt', e)
+        voegSysBericht(T('Spraakbericht versturen mislukt — vriend niet bereikbaar'))
+      }
+    }
+    function schuif(x) {
+      if (!opname) return
+      const nuWeg = startX - x > 80
+      if (nuWeg !== weg) {
+        weg = nuWeg
+        balk.classList.toggle('weg', weg)
+        document.getElementById('spraakHint').textContent = weg ? T('Loslaten = weggooien') : T('← schuif om te annuleren')
+      }
+    }
+    knop.addEventListener('pointerdown', e => { e.preventDefault(); try { knop.setPointerCapture(e.pointerId) } catch (er) {} ; begin(e.clientX) })
+    knop.addEventListener('pointermove', e => schuif(e.clientX))
+    knop.addEventListener('pointerup', () => klaar())
+    knop.addEventListener('pointercancel', () => { weg = true; klaar() })
+    knop.addEventListener('contextmenu', e => e.preventDefault())
+    // Toetsenbord: spatie of Enter ingedrukt houden
+    knop.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); begin(0) } })
+    knop.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); klaar() } })
+  })()
+
   // v262: de bewaarde foto's van dit gesprek (chatfotos.js) tussen de berichten zetten
   let fotoUrls = []
   async function toonBewaardeFotos(vriendId) {
@@ -2191,7 +2349,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     for (const f of fotos) {
       const url = f.blob ? URL.createObjectURL(f.blob) : null
       if (url) fotoUrls.push(url)
-      toonFotoInChat(url, f.mijn, f.reeks, f.tijd, { eenmalig: f.eenmalig, bekeken: f.bekeken, id: f.id })
+      if (f.soort === 'spraak') toonSpraakInChat(url, f.mijn, f.tijd, { eenmalig: f.eenmalig, bekeken: f.bekeken, id: f.id, duur: f.duur }) // v264
+      else toonFotoInChat(url, f.mijn, f.reeks, f.tijd, { eenmalig: f.eenmalig, bekeken: f.bekeken, id: f.id })
     }
     // er staat nu iets in de chat: 'Stuur je eerste bericht' en 'Zeg hoi' horen er niet meer bij
     for (const el of container.querySelectorAll('.sys-msg')) if (el.textContent === T('Stuur je eerste bericht! 👋')) el.remove()

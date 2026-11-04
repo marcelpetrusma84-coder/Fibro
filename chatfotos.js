@@ -1,4 +1,5 @@
 // chatfotos.js (v262, 4 nov 2026): foto's uit de chat blijven op dit toestel bewaard.
+// v2 (v264): ook spraakberichtjes (soort 'spraak', met de duur), op dezelfde manier: alleen op dit toestel.
 //
 // Foto's in de chat gaan rechtstreeks van telefoon naar telefoon (p2pfoto.js), niet via de server. Tot nu toe stonden
 // ze alleen in de chat zolang de pagina open was: na verversen waren ze weg. Nu bewaart elk toestel de foto's die het
@@ -36,8 +37,9 @@ export function bewaarDagen(mijnId) {
 }
 
 // Een foto bewaren. blob: de foto zoals hij verstuurd of ontvangen is. Geeft het id terug, of null.
-export async function bewaarChatFoto(mijnId, vriendId, blob, { mijn, reeks, tijd, eenmalig } = {}) {
-  if (!GELDIG_ID.test(String(mijnId)) || !GELDIG_ID.test(String(vriendId)) || !blob || !/^image\//.test(blob.type || '')) return null
+export async function bewaarChatFoto(mijnId, vriendId, blob, { mijn, reeks, tijd, eenmalig, soort, duur } = {}) {
+  const spraak = soort === 'spraak'
+  if (!GELDIG_ID.test(String(mijnId)) || !GELDIG_ID.test(String(vriendId)) || !blob || !(spraak ? /^audio\//.test(blob.type || '') : /^image\//.test(blob.type || ''))) return null
   try {
     const t = Number(tijd) || Date.now()
     const id = voorvoegsel(mijnId, vriendId) + t + '_' + Math.random().toString(36).slice(2, 8)
@@ -46,7 +48,8 @@ export async function bewaarChatFoto(mijnId, vriendId, blob, { mijn, reeks, tijd
     const db = await openDB()
     await new Promise((ok) => {
       const tx = db.transaction('fotos', 'readwrite')
-      tx.objectStore('fotos').put({ id, chatfoto: 1, bytes: data, type: blob.type, mijn: !!mijn, reeks: eenmalig ? null : (GELDIGE_REEKS.test(reeks || '') ? reeks : null), tijd: t, eenmalig: !!eenmalig })
+      tx.objectStore('fotos').put({ id, chatfoto: 1, bytes: data, type: blob.type, mijn: !!mijn, reeks: (eenmalig || spraak) ? null : (GELDIGE_REEKS.test(reeks || '') ? reeks : null), tijd: t, eenmalig: !!eenmalig,
+        soort: spraak ? 'spraak' : 'foto', duur: spraak ? Math.max(0, Math.min(600, Number(duur) || 0)) : undefined })
       tx.oncomplete = ok; tx.onerror = ok; tx.onabort = ok
     })
     return id
@@ -82,8 +85,12 @@ export async function haalChatFotos(mijnId, vriendId) {
         tx.oncomplete = ok; tx.onerror = ok
       })
     }
-    return houden.map(f => ({ id: f.id, tijd: f.tijd, mijn: !!f.mijn, reeks: f.reeks || null, eenmalig: !!f.eenmalig, bekeken: !!f.bekeken,
-      blob: f.bytes ? new Blob([f.bytes], { type: /^image\//.test(f.type || '') ? f.type : 'image/jpeg' }) : null }))
+    return houden.map(f => {
+      const spraak = f.soort === 'spraak'
+      const type = spraak ? (/^audio\//.test(f.type || '') ? f.type : 'audio/mp4') : (/^image\//.test(f.type || '') ? f.type : 'image/jpeg')
+      return { id: f.id, tijd: f.tijd, mijn: !!f.mijn, reeks: f.reeks || null, eenmalig: !!f.eenmalig, bekeken: !!f.bekeken,
+        soort: spraak ? 'spraak' : 'foto', duur: Number(f.duur) || 0, blob: f.bytes ? new Blob([f.bytes], { type }) : null }
+    })
   } catch (e) { console.warn('[chatfotos] ophalen mislukt', e); return [] }
 }
 

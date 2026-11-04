@@ -198,12 +198,12 @@ try:
         m.click('#fv-sluit')
         # een foto van 40 dagen geleden erbij zetten (bewaartijd standaard 31 dagen): die moet verdwijnen
         m.evaluate("""async ([ik, vr]) => { const c = document.createElement('canvas'); c.width = c.height = 20; const b = await new Promise(r => c.toBlob(r, 'image/png'))
-          const mod = await import('./chatfotos.js?v=1'); await mod.bewaarChatFoto(ik, vr, b, { mijn: false, tijd: Date.now() - 40 * 864e5 }) }""", [MARCEL, BRAM])
+          const mod = await import('./chatfotos.js?v=2'); await mod.bewaarChatFoto(ik, vr, b, { mijn: false, tijd: Date.now() - 40 * 864e5 }) }""", [MARCEL, BRAM])
         m.reload(); b.reload()
         e_m = wacht(m, "() => document.querySelectorAll('#messages .foto-reeks img').length === 4", 15000)
         e_b = wacht(b, "() => document.querySelectorAll('#messages .foto-reeks img').length === 4", 15000)
         rm2, rb2 = m.evaluate(RIJEN), b.evaluate(RIJEN)
-        oud = m.evaluate("""async ([ik, vr]) => (await (await import('./chatfotos.js?v=1')).haalChatFotos(ik, vr)).length""", [MARCEL, BRAM])
+        oud = m.evaluate("""async ([ik, vr]) => (await (await import('./chatfotos.js?v=2')).haalChatFotos(ik, vr)).length""", [MARCEL, BRAM])
         check('E1 na verversen: de foto\'s staan er nog, bij allebei, in dezelfde rijtjes (3 en 1)', e_m and e_b and [r['n'] for r in rm2] == [3, 1] and [r['n'] for r in rb2] == [3, 1]
               and all(not r['mijn'] for r in rm2) and all(r['mijn'] for r in rb2), (rm2, rb2))
         check('E2 de foto van 40 dagen geleden is weggegooid', oud == 4, oud)
@@ -231,7 +231,7 @@ try:
         m.reload()
         f4 = wacht(m, "() => !!document.querySelector('#messages .foto-eenmalig')", 15000)
         f4t = m.evaluate("document.querySelector('#messages .foto-eenmalig').innerText")
-        bytes_ = m.evaluate("""async ([ik, vr]) => (await (await import('./chatfotos.js?v=1')).haalChatFotos(ik, vr)).filter(f => f.eenmalig).map(f => [f.bekeken, !!f.blob])""", [MARCEL, BRAM])
+        bytes_ = m.evaluate("""async ([ik, vr]) => (await (await import('./chatfotos.js?v=2')).haalChatFotos(ik, vr)).filter(f => f.eenmalig).map(f => [f.bekeken, !!f.blob])""", [MARCEL, BRAM])
         check('F4 na verversen nog steeds "Foto bekeken", en de foto is van Marcels toestel weg', f4 and 'Foto bekeken' in f4t and bytes_ == [[True, False]], (f4t, bytes_))
         cm.close(); cb.close(); br.close()
 finally:

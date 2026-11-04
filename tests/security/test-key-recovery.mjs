@@ -39,6 +39,7 @@ async function recover({ publicKey = account.publicKeyB64, profileError = null,
     document: { getElementById: id => elements[id] },
     T: text => text,
     toonBericht: (el, type, text) => { el.type = type; el.text = text },
+    eerstNieuwWachtwoord: async () => {}, // v265
     normaliseerHerstelSleutel: cryptoApi.normaliseerHerstelSleutel,
     ontsleutelPrivateKey: cryptoApi.ontsleutelPrivateKey,
     sleutelPastBij,

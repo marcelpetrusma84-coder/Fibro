@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=64"></script>
+<script src="taal.js?v=65"></script>
 <script>
 // v221: woorden van het tabblad Foutmeldingen (alleen gebruikt als Engels gekozen is)
 window.FIBRO_EN = Object.assign(window.FIBRO_EN || {}, {
@@ -237,6 +237,15 @@ select.veld option { background:#1a0a2e; }
 
     <div class="sectie-kop" data-t>Eerder (logboek)</div>
     <div id="blokkadesEerder"></div>
+
+    <!-- v265: wachtwoord resetten (supabase/functions/wachtwoord-reset) -->
+    <div class="sectie-kop" data-t>Wachtwoord resetten</div>
+    <div class="fout-uitleg" data-t>Is iemand zijn wachtwoord kwijt? Vul de gebruikersnaam in. Je krijgt een tijdelijk wachtwoord om door te geven; bij het inloggen kiest hij zelf een nieuw. Berichten blijven gewoon.</div>
+    <div class="zoek-rij">
+      <input class="veld" id="resetNaam" type="text" placeholder="gebruikersnaam" data-t-attr="placeholder" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="40">
+      <button class="knop" id="resetKnop" onclick="resetWachtwoord()" data-t>Resetten</button>
+    </div>
+    <div id="resetUitkomst"></div>
   </div>
 
   <div id="deelFouten" style="display:none">
@@ -902,6 +911,57 @@ window.wisAlleFouten = async function() {
   if (!(await wisIds(foutGroepen.flatMap(g => g.ids)))) { toonMsg(T('Wissen mislukt.'), 'error'); return }
   toonMsg(T('Gewist ✓'), 'success')
   await laadFouten()
+}
+
+// ─── Wachtwoord resetten (v265) ───
+// De server maakt het tijdelijke wachtwoord; het staat alleen hier op het scherm, nergens bewaard.
+const RESET_REDEN = {
+  'niet gevonden': 'Die gebruikersnaam bestaat niet.',
+  'niet eenduidig': 'Meer dan één account past bij die naam. Typ de naam precies.',
+  'moderator': 'Het wachtwoord van een moderator kan hier niet.',
+  'geen moderator': 'Alleen moderators kunnen dit.',
+}
+window.resetWachtwoord = async function() {
+  const naam = document.getElementById('resetNaam').value.trim()
+  const uit = document.getElementById('resetUitkomst')
+  uit.textContent = ''
+  if (!naam) { toonMsg(T('Vul een gebruikersnaam in.'), 'error'); return }
+  if (!confirm(T('Het wachtwoord van {naam} vervangen door een tijdelijk wachtwoord?', { naam }))) return
+  const knop = document.getElementById('resetKnop')
+  knop.disabled = true
+  let data = null, fout = null
+  try {
+    const r = await supabase.functions.invoke('wachtwoord-reset', { body: { gebruikersnaam: naam } })
+    data = r.data; fout = r.error
+    if (fout && fout.context && typeof fout.context.json === 'function') {
+      try { data = await fout.context.json() } catch (e) {}
+    }
+  } catch (e) { fout = e }
+  knop.disabled = false
+  if (!data || !data.ok) {
+    const reden = data && RESET_REDEN[data.reden]
+    toonMsg(reden ? T(reden) : T('Resetten mislukt.'), 'error')
+    return
+  }
+  const vak = document.createElement('div')
+  vak.className = 'fout-uitleg'
+  vak.style.cssText = 'font-size:15px;color:var(--text)'
+  const regel = document.createElement('div')
+  regel.textContent = T('Tijdelijk wachtwoord voor {naam}:', { naam: data.gebruikersnaam })
+  const ww = document.createElement('div')
+  ww.id = 'resetWachtwoordTekst'
+  ww.style.cssText = "font-family:'DM Mono',monospace;font-size:20px;letter-spacing:2px;margin:6px 0;user-select:all"
+  ww.textContent = data.wachtwoord
+  const kopieer = document.createElement('button')
+  kopieer.className = 'knop grijs'
+  kopieer.textContent = T('Kopiëren')
+  kopieer.onclick = async () => {
+    try { await navigator.clipboard.writeText(data.wachtwoord); toonMsg(T('Gekopieerd ✓'), 'success') } catch (e) {}
+  }
+  vak.append(regel, ww, kopieer)
+  uit.appendChild(vak)
+  document.getElementById('resetNaam').value = ''
+  toonMsg(T('Wachtwoord gereset ✓'), 'success')
 }
 
 document.getElementById('zoekNaam').addEventListener('keydown', e => { if (e.key === 'Enter') window.zoekGebruiker() })

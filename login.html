@@ -5,7 +5,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
   <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-  <script src="taal.js?v=64"></script>
+  <script src="taal.js?v=65"></script>
   <script src="apk.js?v=2"></script>
   <script src="registratie.js?v=1"></script>
   <script>try { FibroApk.hervatUitnodiging() } catch (e) {} // in de app: een uitnodiging die wacht (apk.js)</script>
@@ -104,6 +104,29 @@
       <div style="text-align:center;margin-top:8px;">
         <span class="e2e-badge" data-t>🔒 End-to-end versleuteld</span>
       </div>
+      <!-- v265: wachtwoord vergeten: een moderator geeft een tijdelijk wachtwoord (geen echte e-mail) -->
+      <div style="text-align:center;margin-top:12px;">
+        <a href="#" id="vergeten-link" onclick="document.getElementById('vergeten-uitleg').style.display='block';this.style.display='none';return false" style="font-size:13px;color:var(--text-muted);" data-t>Wachtwoord vergeten?</a>
+        <div id="vergeten-uitleg" style="display:none;font-size:13px;color:var(--text-muted);line-height:1.5;">
+          <span data-t>Vraag de beheerder van Fibro om een tijdelijk wachtwoord. Daarmee log je in en kies je zelf een nieuw. Je berichten blijven gewoon.</span>
+          <a href="over.html" style="color:var(--accent);" data-t>Contact</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- v265: NIEUW WACHTWOORD (na inloggen met een tijdelijk wachtwoord) -->
+    <div class="panel" id="panel-nieuwwachtwoord">
+      <div class="message" id="nieuw-msg"></div>
+      <div style="font-size:14px;color:var(--text);margin-bottom:12px;" data-t>Je bent ingelogd met een tijdelijk wachtwoord. Kies nu zelf een nieuw wachtwoord.</div>
+      <div class="field">
+        <label data-t>Nieuw wachtwoord</label>
+        <input type="password" id="nieuw-wachtwoord" placeholder="••••••••" autocomplete="new-password" />
+      </div>
+      <div class="field">
+        <label data-t>Nog een keer</label>
+        <input type="password" id="nieuw-wachtwoord2" placeholder="••••••••" autocomplete="new-password" />
+      </div>
+      <button class="btn btn-primary" id="nieuw-btn" data-t>Opslaan</button>
     </div>
 
     <!-- REGISTREREN -->
@@ -476,6 +499,7 @@
       toonBericht(msg,'error',T('Ongeldige gebruikersnaam of wachtwoord.'))
       btn.disabled = false; btn.textContent = T('Inloggen'); return
     }
+    await eerstNieuwWachtwoord(data.user) // v265
 
     // ── E2E: Controleer keypair na inloggen ──
     btn.innerHTML = '<span class="spinner"></span>' + T('🔒 Encryptie controleren...')
@@ -624,6 +648,7 @@ window.herstelMetSleutel = async function() {
       const nep_email = username.toLowerCase() + '@fibro.internal'
       const { data, error } = await supabase.auth.signInWithPassword({ email: nep_email, password: wachtwoord })
       if (error) { toonBericht(msg,'error',T('Naam of wachtwoord klopt niet.')); return }
+      await eerstNieuwWachtwoord(data.user) // v265
 
       const userId = data.user.id
       const { data: kluis } = await supabase.from('sleutel_kluis').select('blob').eq('user_id', userId).maybeSingle()
@@ -666,6 +691,7 @@ window.herstelMetSleutel = async function() {
     const nep_email = username.toLowerCase() + '@fibro.internal'
     const { data, error } = await supabase.auth.signInWithPassword({ email: nep_email, password: wachtwoord })
     if (error) { toonBericht(msg, 'error', T('Naam of wachtwoord klopt niet.')); return }
+    await eerstNieuwWachtwoord(data.user) // v265
     const userId = data.user.id
     const { data: prof } = await supabase.from('profiles').select('public_key').eq('id', userId).single()
     let dozen = []
@@ -684,6 +710,37 @@ window.herstelMetSleutel = async function() {
     }
   }
 
+  // v265: ingelogd met een tijdelijk wachtwoord van een moderator (supabase/functions/wachtwoord-reset)?
+  // Dan eerst zelf een nieuw wachtwoord kiezen; daarna gaat het inloggen gewoon verder.
+  // Klaar = het seintje tijdelijk_wachtwoord gaat uit, samen met het nieuwe wachtwoord.
+  async function eerstNieuwWachtwoord(user) {
+    if (!user || !user.user_metadata || user.user_metadata.tijdelijk_wachtwoord !== true) return
+    const vorige = document.querySelector('.panel.active')
+    const tabs = document.querySelector('.tabs')
+    if (tabs) tabs.style.display = 'none'
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'))
+    document.getElementById('panel-nieuwwachtwoord').classList.add('active')
+    const msg = document.getElementById('nieuw-msg')
+    const btn = document.getElementById('nieuw-btn')
+    await new Promise(klaar => {
+      btn.onclick = async () => {
+        const w1 = document.getElementById('nieuw-wachtwoord').value
+        const w2 = document.getElementById('nieuw-wachtwoord2').value
+        if (w1.length < 8) { toonBericht(msg, 'error', T('Wachtwoord minimaal 8 tekens.')); return }
+        if (w1 !== w2) { toonBericht(msg, 'error', T('De twee wachtwoorden zijn niet hetzelfde.')); return }
+        btn.disabled = true
+        const { error } = await supabase.auth.updateUser({ password: w1, data: { tijdelijk_wachtwoord: false } })
+        btn.disabled = false
+        if (error) { toonBericht(msg, 'error', T('Opslaan mislukt. Probeer het opnieuw.')); return }
+        toonBericht(msg, 'success', T('Nieuw wachtwoord opgeslagen ✓'))
+        klaar()
+      }
+    })
+    document.getElementById('panel-nieuwwachtwoord').classList.remove('active')
+    if (tabs) tabs.style.display = ''
+    if (vorige) vorige.classList.add('active')
+  }
+
   function toonBericht(el, type, tekst) {
     el.className = 'message '+type
     el.textContent = tekst
@@ -695,7 +752,7 @@ window.herstelMetSleutel = async function() {
     // a device that already has a session/key. It never triggers key changes.
     if (window.location.hash === '#herstellen') return
     if (session && !params.get('logout')) {
-      naInloggenFaceId(session.user.id, '').finally(() => {
+      eerstNieuwWachtwoord(session.user).then(() => naInloggenFaceId(session.user.id, '')).finally(() => { // v265
         window.location.href = naInloggenAdres()
       })
     }

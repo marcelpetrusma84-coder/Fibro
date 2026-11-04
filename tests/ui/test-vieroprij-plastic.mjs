@@ -32,7 +32,7 @@ delete globalThis.window
 const versies = new Set(['chat.html', 'solo.js'].flatMap(f => [...lees(f).matchAll(/vieroprij-ui\.js\?v=(\d+)/g)].map(m => m[1])))
 assert.equal(versies.size, 1, 'vieroprij-ui.js: overal dezelfde versie')
 assert.ok(Number([...versies][0]) > 147)
-const { SPEL_VERSIES } = await import(new URL('../../spelversies.js', import.meta.url))
-assert.ok(SPEL_VERSIES.vieroprij >= 2)
+const { SPEL_VERSIES, vergelijkVersies } = await import(new URL('../../spelversies.js', import.meta.url))
+assert.ok(vergelijkVersies(SPEL_VERSIES.vieroprij, '2.0.0') >= 0)
 
 console.log('ok: Four in a Row als plastic speelgoed, met vallende schijven')

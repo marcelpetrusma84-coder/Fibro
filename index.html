@@ -67,10 +67,10 @@
   .widget-header { display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 10px 6px; border-bottom:0.5px solid var(--border); }
   .widget-icon-sm { font-size:14px; }
   .widget-titel { font-size:11px; font-weight:600; color:#ffffff; text-transform:uppercase; letter-spacing:0.07em; }
-  .widget-header-spel { justify-content:flex-start; }
+  .widget-header-spel { justify-content:flex-start; flex-wrap:wrap; gap:7px; }
   .widget-header-spel .widget-icon-sm { flex:none; }
   .widget-header-spel .widget-titel { flex:1; min-width:0; overflow-wrap:anywhere; line-height:1.35; }
-  .widget-spelversie { flex:none; margin-inline-start:auto; padding:2px 6px; border:1px solid var(--border); border-radius:6px; background:rgba(255,255,255,0.08); color:#fff; font-size:10px; font-weight:600; line-height:1.4; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .widget-header-spel > .widget-spelversie { flex:1 0 100%; width:100%; min-width:0; margin:2px 0 3px; padding:0; border:0; background:none; color:#fff; font-variant-numeric:tabular-nums; white-space:normal; }
   .widget-spelversie:empty { display:none; }
   .widget-inhoud { flex:1; min-height:0; padding:10px; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
   .widget-inhoud.foto-widget { padding:0 !important; display:flex !important; flex-direction:column !important; align-items:stretch !important; justify-content:stretch !important; overflow:visible !important; }
@@ -283,7 +283,7 @@ import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=95'
 import { startHeartbeat } from './heartbeat.js?v=117'
 import { meldToestel } from './toestel.js?v=1'
 import * as GB from './gastenboekstijl.js?v=2'
-import { spelIcoonHtml } from './spelicoon.js?v=2' // 30 okt 2026: plaatjes uit de spellen
+import { spelIcoonHtml } from './spelicoon.js?v=3' // 30 okt 2026: plaatjes uit de spellen
 import { initSync, lokaleVriendNaam } from './sync.js?v=252'
 import { maakProfielLikes, itemVan } from './profielreacties.js?v=2' // v258: likes op je eigen profiel
 import { supabase } from './supabase.js?v=95'
@@ -292,7 +292,9 @@ import { bewaardeSessieZonderInternet } from './offline.js?v=146'
 import { startMeldingen } from './meldingen.js?v=188'
 import { haalPrivateKeyOp } from './crypto.js?v=182'
 import { isBelregel, belregelTekst } from './belregel.js?v=152'
-import { vulSpelVersies } from './spelversies.js?v=14'
+import { vulSpelVersies } from './spelversies.js?v=16'
+import { koppelSpelIcoonFallback } from './spelicoon.js?v=3'
+koppelSpelIcoonFallback()
 import { openSpelMetTitel } from './titelscherm.js?v=6' // v252: titelscherm met muziek meteen bij je tik
 pasBlokstijlToe()
 
@@ -654,6 +656,7 @@ function renderSpelWidget(c, spel) {
     const versie = document.createElement('span')
     versie.className = 'widget-spelversie'
     versie.setAttribute('data-spelversie', spel)
+    versie.setAttribute('data-spelversie-history', '')
     kop.appendChild(versie)
     vulSpelVersies(kop)
   }

@@ -1901,4 +1901,8 @@ window.FIBRO_EN = {
   "De twee wachtwoorden zijn niet hetzelfde.": "The two passwords don't match.",
   "Opslaan mislukt. Probeer het opnieuw.": "Saving failed. Please try again.",
   "Nieuw wachtwoord opgeslagen ✓": "New password saved ✓",
+  // v265: quiz-widget (quiz.js, profiel.html, vriend-profiel.html)
+  "Quiz": "Quiz",
+  "Vrienden spelen jouw quiz": "Friends play your quiz",
+  "Nog geen quiz": "No quiz yet",
 }

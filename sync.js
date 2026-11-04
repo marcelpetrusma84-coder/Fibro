@@ -1,3 +1,4 @@
+// v253 (4 november 2026): ook de quiz-widget (quiz_<uid>, widgetbg_quiz) gaat mee naar vrienden (quiz.js)
 // sync.js — P2P widget-sync via WebRTC DataChannel (v146: vraag over muziek via relay ook in het Engels)
 // v155: ook je eigen stickers (eigenstickers.js) gaan mee, en de vriend van de open chat gaat voor (syncMetVriend).
 // v162: het pakketje van een sticker heeft ook zijn versie (t = tijd van bewaren); weggooien laat bij de vriend een
@@ -822,7 +823,10 @@ async function verzamelEigenMuziek() {
   return muziek
 }
 
-const WBG_WIDGETS = ['poll', 'quote', 'aftel', 'optel']
+// v265: de kleine tekstwidgets die meegaan; een quiz (tot 50 vragen) mag groter zijn dan een quote of poll
+const KLEIN_WIDGETS = ['quote', 'aftel', 'optel', 'poll', 'quiz']
+const kleinMax = sl => sl === 'quiz' ? 40000 : 20000
+const WBG_WIDGETS = ['poll', 'quote', 'aftel', 'optel', 'quiz'] // v265: quiz
         const wbgPosWacht = {}
 
 // v112: controlegetal van de eigen video onthouden bij dat van de video-info, zodat de
@@ -866,7 +870,7 @@ async function stuurManifest() {
   try { if (videoMetaHash) videoHash = await eigenVideoHash(videoMetaHash) } catch(e) {}
   // Kleine tekstwidgets: quote, afteltimer, opteltimer
   const klein = {}
-  for (const [sl, key] of [['quote','quote_'],['aftel','aftel_'],['optel','optel_'],['poll','poll_']]) {
+  for (const [sl, key] of [['quote','quote_'],['aftel','aftel_'],['optel','optel_'],['poll','poll_'],['quiz','quiz_']]) {
     try {
       const w = localStorage.getItem(key + huidigeUserId)
       if (w) klein[sl] = hashString(w)
@@ -1232,12 +1236,12 @@ async function verwerkP2pBericht(bericht) {
     // Kleine tekstwidgets
     const klein = bericht.data.klein || {}
     // v129: heeft de vriend een poll/timer/quote niet meer, dan ook hier weggooien
-    for (const sl of ['quote','aftel','optel','poll']) {
+    for (const sl of KLEIN_WIDGETS) {
       if (klein[sl]) continue
       try { if (await dbGet('vriend_' + syncPartnerId + '_' + sl)) await dbDelete('vriend_' + syncPartnerId + '_' + sl) } catch (e) {}
     }
     for (const sl of Object.keys(klein)) {
-      if (!['quote','aftel','optel','poll'].includes(sl)) continue
+      if (!KLEIN_WIDGETS.includes(sl)) continue
       const kc = await dbGet('vriend_' + syncPartnerId + '_' + sl)
       if (!kc || kc.hash !== klein[sl]) nodig.push('klein:' + sl)
     }
@@ -1310,10 +1314,10 @@ async function verwerkP2pBericht(bericht) {
         await stuurMuziekInChunks(itemId)
       } else if (item.startsWith('klein:')) {
         const sl = item.slice(6)
-        if (!['quote','aftel','optel','poll'].includes(sl)) continue
+        if (!KLEIN_WIDGETS.includes(sl)) continue
         const key = sl + '_' + huidigeUserId
         const w = localStorage.getItem(key)
-        if (w && w.length < 20000) {
+        if (w && w.length < kleinMax(sl)) {
           dataChannel.send(JSON.stringify({ type: 'item', itemId: 'klein_' + sl, hash: hashString(w), data: w }))
         }
       } else if (item === 'video') {
@@ -1349,8 +1353,8 @@ async function verwerkP2pBericht(bericht) {
       itemBinnen('muziek:' + muziekItemId)
     } else if (bericht.itemId.startsWith('klein_')) {
       const sl = bericht.itemId.slice(6)
-      if (!['quote','aftel','optel','poll'].includes(sl)) return
-      if (bericht.data.length > 20000) return
+      if (!KLEIN_WIDGETS.includes(sl)) return
+      if (typeof bericht.data !== 'string' || bericht.data.length > kleinMax(sl)) return
       await dbPut({ id: 'vriend_' + syncPartnerId + '_' + sl, hash: bericht.hash, data: bericht.data, ontvangen: Date.now() })
       console.log('[sync] Widget van vriend opgeslagen:', sl)
       zetP2pStatus(sl + ' ontvangen \u2713')
@@ -1374,7 +1378,7 @@ function isGeldigeChunk(b) {
   // Zonder deze check kon een peer bijv. totaal=1e9 sturen → new Array(1e9) → crash
   if (typeof b.itemId !== 'string' || b.itemId.length > 200) return false
   const isSticker = /^sticker_e[12]-(0[1-9]|1[0-2])$/.test(b.itemId) // v155
-  if (!isSticker && !b.itemId.startsWith('pfoto_') && !b.itemId.startsWith('muziek_') && b.itemId !== 'video' && !/^widgetbg_(poll|quote|aftel|optel)$/.test(b.itemId)) return false
+  if (!isSticker && !b.itemId.startsWith('pfoto_') && !b.itemId.startsWith('muziek_') && b.itemId !== 'video' && !/^widgetbg_(poll|quote|aftel|optel|quiz)$/.test(b.itemId)) return false
   if (isSticker && (!Number.isInteger(b.totaal) || b.totaal > MAX_STICKER_CHUNKS)) return false
   if (typeof b.hash !== 'string' || b.hash.length > 16) return false
   if (!Number.isInteger(b.totaal) || b.totaal < 1 || b.totaal > MAX_CHUNKS_PER_ITEM) return false

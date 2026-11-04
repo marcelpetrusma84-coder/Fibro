@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=2"></script>
-<script src="taal.js?v=65"></script>
+<script src="taal.js?v=66"></script>
 <script src="apk.js?v=2"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -284,7 +284,7 @@ import { startHeartbeat } from './heartbeat.js?v=117'
 import { meldToestel } from './toestel.js?v=1'
 import * as GB from './gastenboekstijl.js?v=2'
 import { spelIcoonHtml } from './spelicoon.js?v=3' // 30 okt 2026: plaatjes uit de spellen
-import { initSync, lokaleVriendNaam } from './sync.js?v=252'
+import { initSync, lokaleVriendNaam } from './sync.js?v=253'
 import { maakProfielLikes, itemVan } from './profielreacties.js?v=2' // v258: likes op je eigen profiel
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -374,6 +374,7 @@ const PROFIEL_DEFS = [
   { id:'fotos_zwevend',  icon:'📌', titel:'Zwevende Polaroids',   w:4, h:3, geenHeader:true },
   // Overige
   { id:'poll',           icon:'🗳️', titel:'Poll',                 w:4, h:3 },
+  { id:'quiz',           icon:'🧠', titel:'Quiz',                 w:4, h:2 }, // v265: quiz.js
   { id:'afteltimer',     icon:'⏳', titel:'Afteltimer',           w:4, h:2 },
   { id:'opteltimer',     icon:'⏱', titel:'Opteltimer',           w:4, h:2 },
   { id:'gastenboek',     icon:'📖', titel:'Gastenboek',           w:4, h:4 },
@@ -629,6 +630,8 @@ function renderProfiel(id, c) {
     renderQuoteWidget(c, window._uid)
   } else if (id === 'poll') {
     renderPoll(c, window._uid)
+  } else if (id === 'quiz') {
+    renderQuiz(c, window._uid)
   } else if (id === 'afteltimer') {
     renderAftel(c, window._uid)
   } else if (id === 'opteltimer') {
@@ -1519,6 +1522,26 @@ function renderFotoPolaroid(c) {
   c.appendChild(fotoWrap)
   for (let i = 0; i < N; i++) fotoWrap.appendChild(maakFrame(i))   // lege polaroids tot de foto's er zijn
   for (let i = 0; i < N; i++) tekenPolaroid(i)
+}
+
+// ════════════════════════════════
+// QUIZ (v265, quiz.js): zelf een quiz maken; vrienden spelen hem op je profiel
+// ════════════════════════════════
+async function renderQuiz(c, uid) {
+  zetWidgetAchtergrond(c, 'widgetbg_quiz_' + uid)
+  const key = 'quiz_' + uid
+  let quiz = null
+  try { quiz = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
+  let Q
+  try { Q = await import('./quiz.js?v=1') } catch (e) { console.warn('[quiz]', e); return }
+  Q.tekenQuizWidget(c, {
+    quiz, eigen: true,
+    achtergrond: () => laadUitDB('widgetbg_quiz_' + uid),
+    bewerk: () => Q.openMaker(quiz, nieuw => {
+      try { localStorage.setItem(key, JSON.stringify(nieuw)) } catch (e) {}
+      renderQuiz(c, uid)
+    }),
+  })
 }
 
 // ════════════════════════════════

@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=2"></script>
-<script src="taal.js?v=65"></script>
+<script src="taal.js?v=66"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Vuurwerk': 'Fireworks', 'Onweer': 'Thunderstorm', 'Glitter': 'Glitter' }) // v234: nieuwe animaties</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Gastenboek zonder lijntjes': 'Guestbook without lines', 'Gewoon in je eigen kleuren, zonder lijntjespapier': 'Plain, in your own colours, without lined paper' }) // v235</script>
 <script src="verbinding.js?v=3"></script>
@@ -460,6 +460,7 @@ input, textarea { font-size:16px !important; }
     <div class="widget-list widget-list-secondary">
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">⏰</div><div><div class="widget-name" data-t>Countdown</div><div class="widget-desc" data-t>Aftellen naar een datum</div></div></div><div class="toggle off" id="widget-countdown" onclick="toggleWidget('countdown')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">📊</div><div><div class="widget-name" data-t>Poll</div><div class="widget-desc" data-t>Laat vrienden stemmen</div></div></div><div class="toggle off" id="widget-poll" onclick="toggleWidget('poll')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item"><div class="widget-info"><div class="widget-icon">🧠</div><div><div class="widget-name" data-t>Quiz</div><div class="widget-desc" data-t>Vrienden spelen jouw quiz</div></div></div><div class="toggle off" id="widget-quiz" onclick="toggleWidget('quiz')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">⏱</div><div><div class="widget-name" data-t>Opteltimer</div><div class="widget-desc" data-t>Tellen sinds een datum</div></div></div><div class="toggle off" id="widget-opteltimer" onclick="toggleWidget('opteltimer')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">✍</div><div><div class="widget-name" data-t>Quote</div><div class="widget-desc" data-t>Favoriete citaat tonen</div></div></div><div class="toggle off" id="widget-quote" onclick="toggleWidget('quote')"><div class="toggle-dot"></div></div></div>
     </div>
@@ -563,7 +564,7 @@ import { eisSessie, startBewaking } from './sessie.js?v=95'
 import { startMeldingen } from './meldingen.js?v=188'
 import { laadThema, bewaarThemaCache } from './thema.js?v=234'
 import { startHeartbeat } from './heartbeat.js?v=117'
-import { initSync } from './sync.js?v=252'
+import { initSync } from './sync.js?v=253'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=149'
 import { startStickermaker } from './stickermaker.js?v=243'
 import { tekenFibroVellen, stickerWidgetDef } from './stickerwidget.js?v=236'
@@ -1216,6 +1217,7 @@ window.slaAllesOp=async function(){
     fotosmasonry:  { id:'fotos_masonry',  icon:'🗃', titel:'Polaroid grid',        w:4, h:3 },
     fotoszwevend:  { id:'fotos_zwevend',  icon:'📌', titel:'Zwevende Polaroids',   w:4, h:3, geenHeader:true },
     poll:       { id:'poll',       icon:'🗳', titel:'Poll',          w:4, h:3 },
+    quiz:       { id:'quiz',       icon:'🧠', titel:'Quiz',          w:4, h:2 }, // v265: quiz.js
     countdown:  { id:'afteltimer', icon:'⏳', titel:'Afteltimer',    w:4, h:2 },
     opteltimer: { id:'opteltimer', icon:'⏱', titel:'Opteltimer',    w:4, h:2 },
     gastenboek: { id:'gastenboek', icon:'📖', titel:'Gastenboek',    w:4, h:4 },

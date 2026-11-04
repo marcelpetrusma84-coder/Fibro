@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=2"></script>
-<script src="taal.js?v=65"></script>
+<script src="taal.js?v=66"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Profiel</title>
@@ -150,7 +150,7 @@ body.heeft-wallpaper::before { display:block; }
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
-  import { initSync, vraagVriendVideo, lokaleVriendNaam } from './sync.js?v=252'
+  import { initSync, vraagVriendVideo, lokaleVriendNaam } from './sync.js?v=253'
   import { versleutel, haalPrivateKeyOp } from './crypto.js?v=182'
   import { maakProfielLikes, itemVan, openReageerScherm, maakReactieBericht, maakKleinPlaatje } from './profielreacties.js?v=2' // v258
   import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -490,6 +490,10 @@ body.heeft-wallpaper::before { display:block; }
         const gelukt = await renderVriendPoll(el, vriendId)
         if (gelukt) { grid.appendChild(el); continue }
       }
+      if (w.id === 'quiz') { // v265: quiz.js
+        const gelukt = await renderVriendQuiz(el, vriendId)
+        if (gelukt) { grid.appendChild(el); continue }
+      }
       if (w.id === 'afteltimer') {
         const gelukt = await renderVriendTimer(el, vriendId, 'aftel')
         if (gelukt) { grid.appendChild(el); continue }
@@ -529,7 +533,7 @@ body.heeft-wallpaper::before { display:block; }
       const muziekTekst = muziekRelay
         ? T('De muziek komt binnen zodra jullie telefoons elkaar rechtstreeks kunnen bereiken (bijvoorbeeld allebei op wifi).')
         : T('De muziek komt binnen zodra jullie allebei online zijn.')
-      const leegTekst = { poll: T('Nog geen poll'), afteltimer: T('Nog geen datum'), opteltimer: T('Nog geen datum'), quote: T('Nog geen quote'), muziek: muziekTekst }[w.id]
+      const leegTekst = { quiz: T('Nog geen quiz'), poll: T('Nog geen poll'), afteltimer: T('Nog geen datum'), opteltimer: T('Nog geen datum'), quote: T('Nog geen quote'), muziek: muziekTekst }[w.id]
       el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">' + vEsc(w.icon || '🧩') + '</span><span class="widget-titel">' + vEsc(w.titel ? T(w.titel) : w.id) + '</span></div><div class="widget-inhoud">' + (leegTekst ? '<div style="font-size:13px;color:var(--muted)">' + leegTekst + '</div>' : '<div class="wi-icon">' + vEsc(w.icon || '🧩') + '</div>') + '</div>'
       grid.appendChild(el)
     }
@@ -562,6 +566,24 @@ body.heeft-wallpaper::before { display:block; }
   }
 
   const escVW = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+
+  // v265: quiz van een vriend (quiz.js). De vragen en de achtergrond komen via P2P (sync.js 'klein:quiz' en
+  // 'widgetbg_quiz'); je score blijft op je eigen toestel.
+  async function renderVriendQuiz(el, vriendId) {
+    const ruw = await laadFotoUitDB('vriend_' + vriendId + '_quiz')
+    if (!ruw) return false
+    let Q, quiz = null
+    try { Q = await import('./quiz.js?v=1') } catch (e) { console.warn('[quiz]', e); return false }
+    try { quiz = Q.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
+    if (!quiz) return false
+    await vriendAchtergrond(el, vriendId, 'quiz')
+    el.innerHTML = '<div class="widget-inhoud" style="position:relative;z-index:2;height:100%;padding:10px 8px"></div>'
+    Q.tekenQuizWidget(el.querySelector('.widget-inhoud'), {
+      quiz,
+      achtergrond: async () => { const rec = await haalRecordVP('vriend_' + vriendId + '_wbg_quiz'); return rec ? vAfb(rec.data) : null },
+    })
+    return true
+  }
 
   // Poll van een vriend. De vraag en de antwoorden komen via P2P; de stemmen
   // staan op de server. Niemand kan zien wie wat gestemd heeft, ook wij niet.

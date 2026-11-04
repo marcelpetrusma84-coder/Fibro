@@ -1,4 +1,4 @@
-// stickermaker.js - het Stickerlab in Profiel, bij Stickers (v154, 15 oktober 2026; v160: mp3-geluiden via stickerfx.js; v162: eigenstickers.js met versies)
+// stickermaker.js (v265: 'Tik op het onderwerp' laat zien hoe ver het laden is en hoe lang hij al denkt) - het Stickerlab in Profiel, bij Stickers (v154, 15 oktober 2026; v160: mp3-geluiden via stickerfx.js; v162: eigenstickers.js met versies)
 // Twee eigen vellen van 12 plekken. Tik op een lege plek: kies een afbeelding, knip hem uit (effen
 // achtergrond weg, met je vinger, of alles houden), witte rand eromheen, kies een beweging en een geluid
 // (stickerfx.js) en bewaar hem op dit toestel (eigenstickers.js). Tik op een sticker om hem aan te passen
@@ -9,7 +9,7 @@ import { EIGEN_VELLEN, PER_VEL, maakCode, leesEigen, bewaarEigen, wisEigen, laad
 import { BEWEGINGEN, GELUIDEN, naamVan, speel } from './stickerfx.js?v=235'
 import { maakSchakelaar, widgetId, zetStijl as zetWidgetStijl } from './stickerwidget.js?v=236'
 import { KWAST_MIN, KWAST_MAX, KWAST_STANDAARD, kwastStraal, voegPuntToe, tekenStreek, pasStrekenToe } from './stickerkwast.js?v=1'
-import { kanHet as kanOnderwerp, laadKnipper } from './onderwerp.js?v=1'
+import { kanHet as kanOnderwerp, laadKnipper, opVoortgang } from './onderwerp.js?v=2' // v265: voortgang
 
 // v231: bijwerken met je vinger (weghalen / terugzetten, met een grootte), ook na 'Achtergrond weg'
 Object.assign(window.FIBRO_EN ||= {}, {
@@ -25,11 +25,12 @@ Object.assign(window.FIBRO_EN ||= {}, {
   '✨ Tik op het onderwerp': '✨ Tap the subject', '👆 Aanwijzen': '👆 Point',
   'Tik of druk op wat je als sticker wilt. Daarna kun je nog bijwerken.': 'Tap or press on what you want as a sticker. You can touch it up afterwards.',
   'Tik op nog een stuk om het erbij te nemen.': 'Tap another part to add it.',
-  'De slimme knipper wordt geladen. Dat gebeurt maar één keer en kan even duren (± 45 MB).': 'Loading the smart cutter. This only happens once and may take a moment (± 45 MB).',
-  'Even denken…': 'Thinking…',
   'Dit toestel of deze browser kan dit niet. Kies een andere manier.': "This device or browser can't do this. Choose another way.",
   'Het slimme knippen lukte niet. Probeer het nog eens, of kies een andere manier.': "Smart cutting didn't work. Try again, or choose another way.",
-  'Tik eerst op het onderwerp.': 'Tap the subject first.'
+  'Tik eerst op het onderwerp.': 'Tap the subject first.',
+  // v265: laten zien hoe ver hij is
+  '⏳ Slimme knipper laden: {nu} van {totaal} MB ({pct}%) · {s} s. Dit gebeurt maar één keer.': '⏳ Loading the smart cutter: {nu} of {totaal} MB ({pct}%) · {s} s. This only happens once.',
+  '⏳ Even denken… {s} s': '⏳ Thinking… {s} s'
 })
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
@@ -377,13 +378,30 @@ export async function startStickermaker(houder, uid, widgets = null) {
     denkt = true
     const voor = hint.textContent
     const vanBron = bron
+    // v265: laten zien dat hij bezig is, en hoe lang al: bij het laden hoeveel MB binnen is, daarna de seconden
+    const begin = Date.now()
+    let laadStand = null, fase = 'laden'
+    const sec = () => Math.floor((Date.now() - begin) / 1000)
+    const toon = () => {
+      if (fase === 'laden' && laadStand && !laadStand.klaar) {
+        const mb = x => Math.round(x / 1048576)
+        hint.textContent = T('⏳ Slimme knipper laden: {nu} van {totaal} MB ({pct}%) · {s} s. Dit gebeurt maar één keer.', {
+          nu: mb(laadStand.geladen), totaal: mb(laadStand.totaal), pct: Math.floor(laadStand.geladen / laadStand.totaal * 100), s: sec() })
+      } else {
+        hint.textContent = T('⏳ Even denken… {s} s', { s: sec() })
+      }
+    }
+    const stopVoortgang = opVoortgang(s => { laadStand = s })
+    const klok = setInterval(toon, 250)
     try {
       let k = null
       const klaar = laadKnipper().then(x => { k = x })
       await Promise.race([klaar, new Promise(r => setTimeout(r, 300))])
-      hint.textContent = k ? T('Even denken…') : T('De slimme knipper wordt geladen. Dat gebeurt maar één keer en kan even duren (± 45 MB).')
+      if (k) fase = 'denken'
+      toon()
       await klaar
-      hint.textContent = T('Even denken…')
+      fase = 'denken'
+      toon()
       await new Promise(r => requestAnimationFrame(() => setTimeout(r, 20))) // eerst de tekst laten zien
       if (bron !== vanBron) return
       k.zetAfbeelding(bron)
@@ -398,7 +416,10 @@ export async function startStickermaker(houder, uid, widgets = null) {
       toonFout(e && e.message === 'te-oud' ? T('Dit toestel of deze browser kan dit niet. Kies een andere manier.') : T('Het slimme knippen lukte niet. Probeer het nog eens, of kies een andere manier.'))
       console.warn('[onderwerp]', e)
       teken(); zetKnoppen()
-    } finally { denkt = false }
+    } finally {
+      denkt = false; clearInterval(klok); stopVoortgang()
+      if (hint.textContent.startsWith('⏳')) hint.textContent = voor
+    }
   }
   // een rondje waar je vinger is, zo groot als de kwast
   function cirkel(q, r) {

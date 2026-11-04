@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=62"></script>
+<script src="taal.js?v=63"></script>
 <script src="apk.js?v=2"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -181,6 +181,7 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 </div>
 <div id="apkPlek" style="padding:0 16px"></div>
 <div id="beginschermTip" style="padding:0 16px"></div>
+<div id="nieuwBij" hidden></div><!-- v263: ✨ Nieuw bij je vrienden (nieuwbij.js) -->
 <script>try { if (FibroApk.toonDownload()) { var apkKaart = FibroApk.kaart({ sluitbaar: true }); if (apkKaart) document.getElementById('apkPlek').appendChild(apkKaart) } } catch (e) {} // Android in de browser: de app aanbieden (apk.js)</script>
 <script>
 // v188: het rode stipje op je avatar als je op offline staat. Eerst de keuze op dit toestel (fibro_ik_offline, gezet door
@@ -283,7 +284,7 @@ import { startHeartbeat } from './heartbeat.js?v=117'
 import { meldToestel } from './toestel.js?v=1'
 import * as GB from './gastenboekstijl.js?v=2'
 import { spelIcoonHtml } from './spelicoon.js?v=2' // 30 okt 2026: plaatjes uit de spellen
-import { initSync, lokaleVriendNaam } from './sync.js?v=251'
+import { initSync, lokaleVriendNaam } from './sync.js?v=252'
 import { maakProfielLikes, itemVan } from './profielreacties.js?v=2' // v258: likes op je eigen profiel
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -2563,6 +2564,9 @@ async function init() {
   startHeartbeat().catch(e => console.warn('[heartbeat]', e))
   meldToestel(supabase).catch(() => {}) // v228: soort toestel, alleen als totaal per dag (bèta-cijfers op Moderatie)
   initSync(session.user.id)
+  // v263: de strook "✨ Nieuw bij je vrienden" (nieuwbij.js): alleen wat al op dit toestel staat, de server doet niets
+  import('./nieuwbij.js?v=1').then(m => m.toonNieuwBij(document.getElementById('nieuwBij'), session.user.id))
+    .catch(e => console.warn('[nieuwbij]', e))
   werkOpslagBalkBij()
 
   // v119: het profiel van de vorige keer meteen tonen (niet wachten op de server);

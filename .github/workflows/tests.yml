@@ -78,3 +78,6 @@ jobs:
       - name: Aan het typen en gelezen-vinkjes
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef240.py .
+      - name: Nieuw bij je vrienden op Home
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef241.py .

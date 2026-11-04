@@ -116,7 +116,7 @@ assert.match(lees('vriend-profiel.html'), /const al = 'fibro_achtergrondbij_' \+
 
 // 9. sync.js gebruikt dit; overal de nieuwe sync.js
 const sync = lees('sync.js')
-assert.match(sync, /const \{ v, oud, nieuw, k \} = nieuweSyncStand\(vorig, bericht\.data\)\n      localStorage\.setItem\(sl, JSON\.stringify\(\{ t: nu, v, oud, nieuw, k \}\)\)/)
+assert.match(sync, /const \{ v, oud, nieuw, k, w, erbij \} = nieuweSyncStand\(vorig, bericht\.data\)\n[\s\S]{0,200}localStorage\.setItem\(sl, JSON\.stringify\(\{ t: nu, v, oud, nieuw, k, w, nt \}\)\)/) // v263: ook w en nt
 assert.match(sync, /const v = belangrijkeVingerafdruk\(await maakManifest\(\)\)/, 'op de server: ook alleen het belangrijke deel')
 for (const f of ['index.html', 'chat.html', 'vrienden.html', 'profiel.html', 'vriend-profiel.html'])
   assert.match(lees(f), /sync\.js\?v=25[0-9]/, f)

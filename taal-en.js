@@ -1835,4 +1835,9 @@ window.FIBRO_EN = {
   // v259: meerdere foto's tegelijk in de chat
   "Je kunt {n} foto's tegelijk sturen. De eerste {n} gaan nu.": "You can send {n} photos at once. The first {n} are on their way.",
   "{n} foto's zijn niet aangekomen": "{n} photos didn't arrive",
+  // v261: typen en gelezen-vinkjes (chatstatus.js)
+  "{naam} is aan het typen…": "{naam} is typing…",
+  "Gelezen": "Read",
+  "Verstuurd": "Sent",
+  "\u2713\u2713 Gelezen-vinkjes": "\u2713\u2713 Read receipts",
 }

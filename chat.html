@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=60"></script>
+<script src="taal.js?v=61"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -90,6 +90,10 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .bubble.emoji-3 .bubble-content { font-size:30px; line-height:1.1; }
 .bubble.emoji-1, .bubble.emoji-2, .bubble.emoji-3 { background:transparent !important; box-shadow:none !important; border:none !important; padding:2px 4px 4px; }
 .bubble-time { float:right; font-size:11px; color:var(--muted); margin:4px 0 0 8px; line-height:1; opacity:0.75; }
+/* v261: gelezen-vinkjes (chatstatus.js): ✓ = verstuurd, blauw ✓✓ = gelezen */
+.vink { letter-spacing:-0.18em; margin-left:2px; }
+.vink.gelezen { color:#38bdf8; font-weight:700; opacity:1; }
+.chat-status.typt { color:var(--accent2, #c084fc); font-style:italic; }
 .sys-msg { text-align:center; font-size:15px; color:var(--muted); padding:3px 12px; background:var(--card); border-radius:20px; align-self:center; border:0.5px solid var(--border); }
 /* v258: in een lege chat met een tik hoi zeggen */
 .zeg-hoi { align-self:center; margin-top:12px; padding:12px 28px; border:none; border-radius:24px; font-family:inherit; font-size:17px; font-weight:600; cursor:pointer; background:linear-gradient(135deg,var(--accent,#c084fc),var(--accent2,#f0abfc)); color:#1a0a2e; box-shadow:0 4px 18px rgba(192,132,252,0.35); }
@@ -454,6 +458,7 @@ window.veiligeUrl = function(v){
   import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=2'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
   import { leesReactieBericht, tekenReactieKaart, tekenReactieSticker, reactieKort } from './profielreacties.js?v=2' // v258; v259: als sticker
+  import { startChatStatus, werkVinkjesBij, TYPEN_DUUR_MS } from './chatstatus.js?v=1' // v261: typen en gelezen-vinkjes
   // v256 (foutmelding 3 nov 2026): lukt het laden van een spelbestand niet (even geen internet, of net een nieuwe
   // versie op GitHub), dan na 1,2 seconde nog één keer, met een ander adres (sommige browsers onthouden een mislukte poging)
   const laadModule = url => import(url).catch(async () => {
@@ -685,6 +690,8 @@ window.veiligeUrl = function(v){
       .eq('id', huidigeUser.id)
       .single()
       .then(r => r, e => ({ data: null, error: e }))
+
+    startTypenEnVinkjes() // v261
 
     // ── P2P foto initialiseren ──
     initP2pFoto(huidigeUser.id, {
@@ -1080,6 +1087,45 @@ window.veiligeUrl = function(v){
   }
 
   // ─── Chat openen ───
+  // ─── v261: "… is aan het typen" en gelezen-vinkjes (chatstatus.js) ───
+  let chatStatus = null, gelezenTot = null, typTimer = null, typVan = null
+  function maakVink() { const v = document.createElement('span'); v.className = 'vink'; v.textContent = '\u2713'; return v }
+  function vinkjes() { werkVinkjesBij(document.getElementById('messages'), gelezenTot) }
+  async function haalGelezen(vriendId) {
+    if (!chatStatus || !vriendId) { vinkjes(); return }
+    const t = await chatStatus.gelezenTot(vriendId)
+    if (geselecteerdeVriend?.id !== vriendId) return
+    gelezenTot = t
+    vinkjes()
+  }
+  function toonTypen(vriendId) {
+    if (!geselecteerdeVriend || geselecteerdeVriend.id !== vriendId) return
+    const el = document.getElementById('chatStatus')
+    el.textContent = T('{naam} is aan het typen…', { naam: geselecteerdeVriend.naam || T('je vriend') })
+    el.classList.add('typt')
+    typVan = vriendId
+    clearTimeout(typTimer)
+    typTimer = setTimeout(() => stopTypen(), TYPEN_DUUR_MS)
+  }
+  function stopTypen(vriendId) {
+    if (vriendId && typVan && vriendId !== typVan) return
+    clearTimeout(typTimer); typTimer = null; typVan = null
+    const el = document.getElementById('chatStatus')
+    if (el && el.classList.contains('typt')) { el.textContent = ''; el.classList.remove('typt') }
+  }
+  function startTypenEnVinkjes() {
+    if (chatStatus || !huidigeUser) return
+    chatStatus = startChatStatus({
+      supabase, mijnId: huidigeUser.id,
+      opTypen: toonTypen,
+      opGelezen: (van) => { if (geselecteerdeVriend?.id === van) haalGelezen(van) },
+    })
+    const inp = document.getElementById('msgInput')
+    inp.addEventListener('input', () => {
+      if (geselecteerdeVriend && inp.value.trim() && !isFibroTestCommand(inp.value)) chatStatus.typt(geselecteerdeVriend.id)
+    })
+  }
+
   window.openChat = async function(vriendId, vriendNaam, vriendAvatar, vriendPubKey) {
     geselecteerdeVriend = { id: vriendId, naam: vriendNaam, avatar: vriendAvatar }
     window.geselecteerdeVriend = geselecteerdeVriend
@@ -1111,9 +1157,12 @@ window.veiligeUrl = function(v){
     chatScherm.style.display = 'flex'
     chatScherm.style.flexDirection = 'column'
     document.getElementById('belKnoppen').style.display = 'flex'
+    stopTypen()
+    gelezenTot = null
     await laadBerichten()
     await tekenReacties(document.getElementById('messages'))
     startRealtime()
+    haalGelezen(vriendId) // v261
   }
 
   // ─── Berichten laden + ontsleutelen ───
@@ -1390,6 +1439,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     row.dataset.sid = String(bericht.sender_id)
     if (zelfdeAfzender) row.classList.add('gegroepeerd')
     row.dataset.tijd = tijd
+    if (isMijn) row.dataset.ct = bericht.created_at || new Date().toISOString() // v261: voor de gelezen-vinkjes
+    if (!isMijn) stopTypen(bericht.sender_id) // v261: zijn bericht is er, dus typt hij niet meer
     if (isVerwijderd) row.dataset.verwijderd = '1'
     if (bericht.antwoord_op) row.dataset.aop = bericht.antwoord_op
     if (!isMijn && !isVerwijderd) { row.dataset.mtekst = String(tekstVanBericht).slice(0, 500); row.dataset.meldbaar = '1' }
@@ -1505,7 +1556,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
       if (waarschuwing) { const w = document.createElement('div'); w.className = 'bubble-waarschuwing'; w.textContent = waarschuwing; vak.appendChild(w) }
       const tijdEl = document.createElement('div')
       tijdEl.style.cssText = 'font-size:12px;color:var(--muted);margin-top:2px;text-align:right;'
-      tijdEl.textContent = tijd + (isMijn ? ' ✓✓' : '')
+      tijdEl.textContent = tijd
+      if (isMijn) tijdEl.appendChild(maakVink()) // v261
       vak.appendChild(tijdEl)
     } else if (profielReactie) {
       // v258: een kaartje met het plaatje (of de naam van het nummer) en de tekst (profielreacties.js, alleen textContent)
@@ -1515,7 +1567,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
       if (waarschuwing) { const w = document.createElement('span'); w.className = 'bubble-waarschuwing'; w.textContent = waarschuwing; bub.appendChild(w) }
       const tijdEl = document.createElement('span')
       tijdEl.className = 'bubble-time'
-      tijdEl.textContent = tijd + (isMijn ? ' ✓✓' : '')
+      tijdEl.textContent = tijd
+      if (isMijn) tijdEl.appendChild(maakVink()) // v261
       bub.appendChild(tijdEl)
     } else if (!onversleuteld && content.startsWith('sticker:')) {
       const delen = content.split(':')
@@ -1533,7 +1586,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     } else {
       row.innerHTML = `
         <div class="msg-av-sm">${esc(avatar)}</div>
-        <div class="bubble ${isMijn ? 'out' : 'in'}${isVerwijderd ? ' verwijderd' : ''}${emojiNiveau(content) ? ' emoji-' + emojiNiveau(content) : ''}"><span class="bubble-content">${esc(content)}</span>${waarschuwing ? '<span class="bubble-waarschuwing">' + esc(waarschuwing) + '</span>' : ''}<span class="bubble-time">${tijd} ${isMijn ? '✓✓' : ''}</span></div>`
+        <div class="bubble ${isMijn ? 'out' : 'in'}${isVerwijderd ? ' verwijderd' : ''}${emojiNiveau(content) ? ' emoji-' + emojiNiveau(content) : ''}"><span class="bubble-content">${esc(content)}</span>${waarschuwing ? '<span class="bubble-waarschuwing">' + esc(waarschuwing) + '</span>' : ''}<span class="bubble-time">${tijd}${isMijn ? ' <span class="vink">✓</span>' : ''}</span></div>`
     }
     if (bericht.antwoord_op) {
       const bub = row.querySelector(".bubble")
@@ -1724,6 +1777,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     speelPlop('uit')
     input.value = ''
     const vriendId = geselecteerdeVriend.id
+    chatStatus?.verstuurd(vriendId) // v261
     const antwoordOp = geefAntwoordOp()
     wisAntwoordOp()
     document.getElementById('emojiGrid').style.display = 'none'
@@ -1814,7 +1868,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const uit = row.classList.contains('out')
     const av = row.querySelector('.msg-av-sm')
     row.innerHTML = `${av ? av.outerHTML : ''}
-        <div class="bubble ${uit ? 'out' : 'in'}"><span class="bubble-content">${esc(T('\u{1F5BC}\uFE0F Sticker'))}</span><span class="bubble-time">${esc(row.dataset.tijd || '')}${uit ? ' ✓✓' : ''}</span></div>`
+        <div class="bubble ${uit ? 'out' : 'in'}"><span class="bubble-content">${esc(T('\u{1F5BC}\uFE0F Sticker'))}</span><span class="bubble-time">${esc(row.dataset.tijd || '')}${uit ? ' <span class="vink">✓</span>' : ''}</span></div>`
+    if (uit) werkVinkjesBij(row, gelezenTot) // v261
   }
   // v155: een sticker van de vriend is binnen (sync.js meldt het op 'fibro-vriend-data'): plaatsvervangers bijwerken
   // v162: ook een aangepaste of weggegooide sticker (grafsteen): berichten met een oude versie veranderen (v163) in '🖼️ Sticker'
@@ -1969,8 +2024,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
       <div class="msg-av-sm">${esc(avatar)}</div>
       <div style="padding:4px;">
         <div class="foto-raster" style="display:flex;flex-wrap:wrap;gap:4px;max-width:212px;${isMijn ? 'justify-content:flex-end;' : ''}"></div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px;text-align:right;">${tijd} ${isMijn ? '&#10003;&#10003;' : ''}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;text-align:right;">${tijd}${isMijn ? ' <span class="vink">✓</span>' : ''}</div>
       </div>`
+    if (isMijn) row.dataset.ct = new Date().toISOString() // v261
     const raster = row.querySelector('.foto-raster')
     raster.appendChild(img)
     zetFotoMaten(raster)
@@ -2132,6 +2188,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       document.getElementById('chatNaam').textContent = T('Chat') // v191: was 'Selecteer een vriend' + 'Kies hieronder met wie je wilt chatten'
       document.getElementById('chatNaam').classList.add('als-titel')
       document.getElementById('chatStatus').textContent = ''
+      stopTypen() // v261
       zetAvatar(document.getElementById('chatAv'), '💬', null) // v134
       werkKopStipBij() // v199: geen vriend gekozen = geen stipje
       document.getElementById('belKnoppen').style.display = 'none'
@@ -4141,7 +4198,7 @@ async function verstuurMelding(reden) {
 <script src="fotoviewer.js?v=8"></script>
 <script src="swipe.js?v=96"></script>
 <script src="menuschuif.js?v=1"></script>
-<script type="module">if (new URLSearchParams(location.search).get('test') !== 'FIBRO TEST') { const { startOngelezen } = await import('./ongelezen.js?v=168').catch(() => new Promise(r => setTimeout(r, 1500)).then(() => import('./ongelezen.js?v=168&opnieuw=1'))); startOngelezen() }</script>
+<script type="module">if (new URLSearchParams(location.search).get('test') !== 'FIBRO TEST') { const { startOngelezen } = await import('./ongelezen.js?v=169').catch(() => new Promise(r => setTimeout(r, 1500)).then(() => import('./ongelezen.js?v=169&opnieuw=1'))); startOngelezen() }</script>
 <script type="module">if (new URLSearchParams(location.search).get('test') !== 'FIBRO TEST') await import('./blokkade.js?v=2').catch(() => new Promise(r => setTimeout(r, 1500)).then(() => import('./blokkade.js?v=2&opnieuw=1')))</script>
 </body>
 </html>

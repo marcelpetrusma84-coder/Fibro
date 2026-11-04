@@ -1,0 +1,21 @@
+// test-uitnodiging-sociaal.mjs (v265): de uitnodiging toont foto en weergavenaam van wie uitnodigt, en Fibro als social media
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+const lees = p => readFileSync(new URL('../../' + p, import.meta.url), 'utf8')
+const invite = lees('invite.html'), vrienden = lees('vrienden.html'), sql = lees('sql/uitnodiger-foto.sql')
+assert.match(vrienden, /return n \? 'n=' \+ encodeURIComponent\(n\) : ''/, 'naam achter het hekje, gecodeerd')
+assert.match(invite, /const LINK_NAAM = /)
+assert.match(invite, /\.slice\(0, 40\)/)
+assert.match(invite, /\/\^data:image\\\/\(png\|jpe\?g\|webp\|gif\);base64,\[A-Za-z0-9\+\/=\]\+\$\/\.test\(profiel\.avatar_data\)/, 'alleen een echte foto')
+assert.match(invite, /img\.src = foto/)
+const zet = invite.slice(invite.indexOf('function zetAvatar'), invite.indexOf('const LINK_VINGER'))
+assert.doesNotMatch(zet, /innerHTML/, 'nooit als html')
+assert.match(invite, /<div class="wat-is-fibro">/)
+assert.match(invite, /plek\.appendChild\(document\.getElementById\('spelUitdaging'\)\)/, 'spel als voorproefje onder wat Fibro is')
+assert.match(invite, /bestaandScherm'\)\.prepend\(document\.getElementById\('spelUitdaging'\)\)/, 'ook met account te zien')
+assert.match(sql, /returns table\(username text, avatar_url text, avatar_data text\)/)
+assert.match(sql, /and t\.is_used = false\n    and \(t\.expires_at is null or t\.expires_at > now\(\)\)\n    and coalesce\(p\.geblokkeerd, false\) = false/, 'dezelfde voorwaarden als voorheen')
+assert.match(sql, /grant execute on function public\.uitnodiger_van_invite\(text\) to anon, authenticated;/)
+const en = lees('taal-en.js')
+assert.ok(en.includes('"Fibro: een eerlijke social media app voor vrienden":'))
+console.log('PASS: uitnodiging met foto en naam, Fibro als social media, spel als voorproefje')

@@ -1905,4 +1905,12 @@ window.FIBRO_EN = {
   "Quiz": "Quiz",
   "Vrienden spelen jouw quiz": "Friends play your quiz",
   "Nog geen quiz": "No quiz yet",
+  // v265: uitnodiging als social media (invite.html)
+  "Fibro: een eerlijke social media app voor vrienden": "Fibro: an honest social media app for friends",
+  "Chatten, foto's en spraakberichtjes, end-to-end versleuteld": "Chat, photos and voice messages, end-to-end encrypted",
+  "Bellen en videobellen met je vrienden": "Voice and video calls with your friends",
+  "Je eigen profiel met widgets, muziek en stickers": "Your own profile with widgets, music and stickers",
+  "Samen spelletjes spelen": "Play games together",
+  "Geen reclame en je gegevens worden niet verkocht": "No ads, and your data is never sold",
+  "Een voorproefje van Fibro: probeer het meteen, ook zonder account.": "A taste of Fibro: try it right away, even without an account.",
 }

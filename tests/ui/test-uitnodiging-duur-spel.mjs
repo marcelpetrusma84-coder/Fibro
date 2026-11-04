@@ -37,13 +37,14 @@ for (const id of soloIds) {
   assert.ok(vrienden.includes("'" + naam + "'") && invite.includes("'" + naam + "'"), 'zelfde naam voor ' + id)
 }
 assert.match(vrienden, /const spelDeel = MEE_SPELLEN\.some\(s => s\[0\] === meeSpel\) \? '&spel=' \+ encodeURIComponent\(meeSpel\) : ''/, 'alleen een bekend spel in de link')
-assert.match(vrienden, /'\?token=' \+ token \+ spelDeel \+ \(vinger \? '#s=' \+ vinger : ''\)/, 'het spel voor het hekje (de vingerafdruk blijft achteraan)')
+assert.match(vrienden, /'\?token=' \+ token \+ spelDeel \+ \(hekje \? '#' \+ hekje : ''\)/, 'het spel voor het hekje (vingerafdruk en naam achter het hekje)')
+assert.match(vrienden, /\[vinger \? 's=' \+ vinger : '', naamDeel\]\.filter\(Boolean\)\.join\('&'\)/, 'v265: eerst de vingerafdruk, dan de naam')
 
 // 3. de uitnodigingspagina: alleen een bekend spel, met een knop naar spel.html
 assert.match(invite, /if \(!Object\.prototype\.hasOwnProperty\.call\(MEE_SPELLEN, id\)\) return/)
 assert.match(invite, /knop\.href = 'spel\.html\?spel=' \+ encodeURIComponent\(id\) \+ '&terug=uitnodiging'/)
-assert.match(invite, /toonSpelUitdaging\(profiel\?\.username \|\| T\('Iemand'\)\)/, 'pas na een geldige uitnodiging')
-assert.ok(invite.indexOf("toonSpelUitdaging(profiel") > invite.indexOf("if (error || data === null) { toonFout(); return }"), 'niet bij een verlopen link')
+assert.match(invite, /toonSpelUitdaging\(toonNaam\)/, 'pas na een geldige uitnodiging (v265: met de weergavenaam)')
+assert.ok(invite.indexOf("toonSpelUitdaging(toonNaam") > invite.indexOf("if (error || data === null) { toonFout(); return }"), 'niet bij een verlopen link')
 assert.match(invite, /textContent = T\('\{naam\} daagt je uit voor een potje \{spel\}!'/, 'tekst via textContent (geen html van buiten)')
 
 // 4. spel.html: terug naar de uitnodiging

@@ -10,7 +10,7 @@ const regels = lees('spelregels.html'), over = lees('over.html'), index = lees('
 assert.match(regels, /<html lang="nl" data-taal/)
 assert.equal(regels.match(/<meta http-equiv="Content-Security-Policy"[^>]*>/)[0], over.match(/<meta http-equiv="Content-Security-Policy"[^>]*>/)[0], 'dezelfde huisregel als Over Fibro')
 assert.match(regels, /<script src="huisregel\.js\?v=\d+"><\/script>/, 'huisregel.js')   // v2: Object.hasOwn voor oude browsers
-assert.ok(regels.includes('<script src="foutmelder.js?v=1"></script>'), 'foutmelder.js')
+assert.match(regels, /<script src="foutmelder\.js\?v=\d+"><\/script>/, 'foutmelder.js') // v265: v2
 // taal.js: het ?v=-nummer gaat omhoog bij elke nieuwe vertaling (30 okt 2026: 37), dus alleen of hij er is
 assert.match(regels, /<script src="taal\.js\?v=\d+"><\/script>/, 'taal.js')
 assert.match(regels, /<meta name="viewport"/)

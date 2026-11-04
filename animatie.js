@@ -1,4 +1,4 @@
-// Achtergrondanimatie voor alle paginas.
+// Achtergrondanimatie voor alle paginas. (v235 = Fibro v265: de animatie staat achter alle blokken en tekst)
 // v234: een tekenaar per doek (startOp), zodat de voorbeeldweergave op Profiel precies dezelfde code gebruikt als de
 // echte achtergrond. Nieuw: vuurwerk, onweer (regen met bliksem) en glitter.
 // Bliksem: hoogstens een flits per paar seconden, nooit snel achter elkaar, en zacht (geen fel wit scherm).
@@ -222,7 +222,10 @@ function maakCanvas() {
   if (canvas) return canvas
   canvas = document.createElement('canvas')
   canvas.id = 'fibro-animatie-canvas'
-  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;background:transparent'
+  // v265: altijd ACHTER alle blokken en tekst (Marcel). z-index -1 binnen de body, en de body een eigen stapel
+  // (isolation), zodat de animatie wel boven de achtergrond(foto) van de pagina blijft maar onder alles wat erop staat.
+  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:-1;background:transparent'
+  document.body.style.isolation = 'isolate'
   document.body.insertBefore(canvas, document.body.firstChild)
   window.addEventListener('resize', () => { if (soortNu !== 'geen') herstart() })
   return canvas

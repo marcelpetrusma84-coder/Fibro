@@ -18,7 +18,7 @@ window.FIBRO_EN = Object.assign(window.FIBRO_EN || {}, {
   '{n}× · laatst {tijd}': '{n}× · last {tijd}', 'eerst {tijd}': 'first {tijd}',
   'Vastgelopen': 'Crashed', 'Mislukt': 'Failed', 'Stapel en bron': 'Stack and source',
   '✓ Opgelost, wissen': '✓ Fixed, delete', 'Alles wissen': 'Delete all', 'Zeker? Tik nog een keer': 'Sure? Tap again',
-  'Gewist ✓': 'Deleted ✓', 'Wissen mislukt.': 'Deleting failed.', '↻ Vernieuwen': '↻ Refresh',
+  'Gewist ✓': 'Deleted ✓', 'Wissen mislukt.': 'Deleting failed.', '↻ Vernieuwen': '↻ Refresh', 'Laden…': 'Loading…', 'Bijgewerkt om {tijd}': 'Updated at {tijd}', 'Bijgewerkt om {tijd} · {n} meldingen': 'Updated at {tijd} · {n} reports',
   // v226: Bèta (sql/registratie-schakelaar.sql)
   '🧪 Bèta': '🧪 Beta', 'Nieuwe accounts': 'New accounts', 'Open': 'Open', 'Alleen met uitnodiging': 'Invitation only', 'Dicht': 'Closed',
   'Iedereen kan een account maken.': 'Anyone can create an account.',
@@ -252,7 +252,7 @@ select.veld option { background:#1a0a2e; }
     <div class="fout-uitleg" data-t>Wat er technisch misging in de app, van alle gebruikers. Geen namen en geen berichten: alleen pagina, toestel en de foutregel. Meldingen ouder dan 30 dagen gaan vanzelf weg.</div>
     <div class="fout-balk">
       <div class="fout-samen" id="foutenSamen"></div>
-      <button class="knop grijs" onclick="laadFouten()" data-t>↻ Vernieuwen</button>
+      <button class="knop grijs" onclick="vernieuw(this, laadFouten, 'fouten')" data-t>↻ Vernieuwen</button>
       <button class="knop rood" id="foutenAllesWissen" onclick="wisAlleFouten()" data-t>Alles wissen</button>
     </div>
     <div id="foutenLijst"><div class="laden" data-t>Foutmeldingen laden...</div></div>
@@ -266,7 +266,7 @@ select.veld option { background:#1a0a2e; }
         <button type="button" id="fbFilterAlles" aria-pressed="false" onclick="filterFeedback('alles')" data-t>Alles</button>
       </div>
       <div class="fout-samen"></div>
-      <button class="knop grijs" onclick="laadFeedback()" data-t>↻ Vernieuwen</button>
+      <button class="knop grijs" onclick="vernieuw(this, laadFeedback, 'feedback')" data-t>↻ Vernieuwen</button>
     </div>
     <div id="feedbackLijst"><div class="laden" data-t>Feedback laden...</div></div>
   </div>
@@ -288,7 +288,7 @@ select.veld option { background:#1a0a2e; }
 
     <div class="fout-balk">
       <div class="fout-samen"></div>
-      <button class="knop grijs" onclick="laadBeta()" data-t>↻ Vernieuwen</button>
+      <button class="knop grijs" onclick="vernieuw(this, laadBeta)" data-t>↻ Vernieuwen</button>
     </div>
 
     <div class="sectie-kop" data-t>Actief</div>
@@ -850,6 +850,31 @@ async function laadFouten() {
   toonFouten(data || [])
 }
 window.laadFouten = laadFouten
+
+// v265: een Vernieuwen-knop laat zien dat hij bezig is en wanneer hij klaar was (anders leek hij niets te doen
+// als er niets nieuws was). Naast de knop: 'Bijgewerkt om 21:22 · 3 meldingen'.
+window.vernieuw = async function(knop, laad, soort) {
+  if (!knop || knop.disabled) return
+  const tekst = knop.textContent
+  knop.disabled = true
+  knop.textContent = T('Laden…')
+  let label = knop.parentNode.querySelector('.vernieuwd')
+  if (!label) {
+    label = document.createElement('span')
+    label.className = 'vernieuwd'
+    label.style.cssText = 'font-size:12px;color:var(--muted);margin-left:8px'
+    knop.after(label)
+  }
+  try { await laad() } catch (e) { console.warn('[vernieuw]', e) }
+  knop.disabled = false
+  knop.textContent = tekst
+  const tijd = new Date().toLocaleTimeString(T.taal === 'en' ? 'en-GB' : 'nl-NL', { hour: '2-digit', minute: '2-digit' })
+  let aantal = null
+  if (soort === 'fouten') aantal = foutGroepen.reduce((n, g) => n + g.ids.length, 0)
+  if (soort === 'feedback') aantal = alleFeedback.length
+  label.textContent = aantal === null ? T('Bijgewerkt om {tijd}', { tijd })
+    : T('Bijgewerkt om {tijd} · {n} meldingen', { tijd, n: aantal })
+}
 
 function toonFouten(rijen) {
   const lijst = document.getElementById('foutenLijst')

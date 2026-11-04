@@ -84,3 +84,6 @@ jobs:
       - name: Spraakberichtjes
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef242.py .
+      - name: Quiz-widget (proef243)
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef243.py .

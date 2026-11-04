@@ -1,0 +1,13 @@
+<!doctype html><html><head><meta charset="utf-8"><base href="../../"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{background:#1a0a2e;color:#fff;font-family:sans-serif;margin:0}#w{width:340px;height:180px;margin:20px;border-radius:14px;background:rgba(255,255,255,.08);padding:10px;box-sizing:border-box}</style>
+</head><body><div id="w"></div>
+<script type="module">
+// tests/fixtures/quiz-proef.html (v265): de quiz-widget los, voor proef243.py
+import * as Q from './quiz.js?v=1'
+window.Q = Q
+const w = document.getElementById('w')
+window.teken = () => { w.textContent = ''; Q.tekenQuizWidget(w, { quiz: JSON.parse(localStorage.getItem('quiz_ik') || 'null'), eigen: true, achtergrond: () => null,
+  bewerk: () => Q.openMaker(JSON.parse(localStorage.getItem('quiz_ik') || 'null'), q => { localStorage.setItem('quiz_ik', JSON.stringify(q)); window.teken() }) }) }
+window.teken()
+window.klaar = true
+</script></body></html>

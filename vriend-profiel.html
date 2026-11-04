@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=1"></script>
-<script src="taal.js?v=58"></script>
+<script src="taal.js?v=59"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Fibro — Profiel</title>
@@ -149,7 +149,9 @@ body.heeft-wallpaper::before { display:block; }
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
-  import { initSync, vraagVriendVideo } from './sync.js?v=251'
+  import { initSync, vraagVriendVideo, lokaleVriendNaam } from './sync.js?v=251'
+  import { versleutel, haalPrivateKeyOp } from './crypto.js?v=182'
+  import { maakProfielLikes, itemVan, openReageerScherm, maakReactieBericht, maakKleinPlaatje } from './profielreacties.js?v=1' // v258
   import { eisSessie, startBewaking } from './sessie.js?v=95'
   import { startMeldingen } from './meldingen.js?v=188'
   import { leesMood, isMoodSticker, tekenMoodSticker } from './moodsticker.js?v=236' // v171: een sticker als mood
@@ -158,6 +160,46 @@ body.heeft-wallpaper::before { display:block; }
   var vriendId = null
   var huidigeUser = null
   var vriendData = null
+
+  // ── v258: likes en reageren onder foto's, muziek en video's (profielreacties.js) ──
+  // Een like staat op de server (alleen wie, bij wie, welke emoji en een vingerafdruk). Een reactie is een gewoon
+  // versleuteld chatbericht aan je vriend, met een klein plaatje erbij; in de chat wordt het een kaartje.
+  let likes = null
+  function profielLikes() {
+    if (!likes) likes = maakProfielLikes({ supabase, eigenaar: vriendId, ik: huidigeUser.id, isEigen: false, opReageer: reageer })
+    return likes
+  }
+  function naamVoorReactie() {
+    let n = ''
+    try { n = lokaleVriendNaam(vriendId, huidigeUser.id) || '' } catch (e) {}
+    return n || (vriendData && (vriendData.display_name || vriendData.username)) || T('je vriend')
+  }
+  function reageer({ soort, titel, plaatje }) {
+    openReageerScherm({
+      soort, titel, plaatje, naam: naamVoorReactie(), chatAdres: 'chat.html?vriend=' + encodeURIComponent(vriendId),
+      opVerstuur: tekst => verstuurReactie(maakReactieBericht({ soort, tekst, titel, plaatje })),
+    })
+  }
+  async function verstuurReactie(tekst) {
+    const priv = haalPrivateKeyOp(huidigeUser.id)
+    const pub = vriendData && vriendData.public_key
+    if (!priv) { alert(T('Versturen kan niet: dit toestel heeft geen sleutel voor jouw account. Ga naar het beginscherm en tik op Sleutel terugzetten.')); return false }
+    if (!pub || pub.length <= 10) { alert(T('Versturen kan nog niet: de sleutel van je vriend is nog niet bekend.')); return false }
+    const content = await versleutel(tekst, priv, pub, { soort: 'bericht', van: huidigeUser.id, naar: vriendId })
+    const { data, error } = await supabase.from('messages')
+      .insert({ sender_id: huidigeUser.id, receiver_id: vriendId, content, expires_at: new Date(Date.now() + 31 * 86400000).toISOString() })
+      .select('id').single()
+    if (error || !data || !data.id) { console.warn('[reactie] versturen mislukt', error); return false }
+    return true // de pushmelding stuurt de server zelf (trigger op messages)
+  }
+  // Een foto groot bekijken (fotoviewer.js): eronder 🤍 en 💬 Reageer
+  window.FibroFotoBalk = (img, balk) => {
+    const src = img && img.getAttribute('src')
+    if (!src || !src.startsWith('data:image') || !img.closest('#vriendWidgetGrid') || !huidigeUser || !vriendId) return
+    const extra = { licht: true, midden: true }
+    maakKleinPlaatje(src).then(t => { extra.plaatje = t })
+    balk.appendChild(profielLikes().balk('foto', itemVan(src), extra))
+  }
 
   // ── IndexedDB voor vriend cache ──
   function openDB() {
@@ -644,6 +686,12 @@ body.heeft-wallpaper::before { display:block; }
       + '<div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;font-size:20px;color:#1a0a2e;">&#9654;</div></div>'
       + '<div style="position:absolute;bottom:0;left:0;right:0;padding:6px 10px;background:linear-gradient(transparent,rgba(0,0,0,0.8));font-size:11px;color:#fff;display:flex;justify-content:space-between;">'
       + '<span>' + titel + '</span><span>' + duur + '</span></div></div>'
+    // v258: 🤍 en 💬 Reageer bovenin het plaatje (boven de afspeelknop)
+    try {
+      const extra = { titel: meta.titel || '', stijl: 'position:absolute;top:8px;left:8px;right:8px;z-index:3;' }
+      maakKleinPlaatje(vAfb(meta.thumb)).then(t => { extra.plaatje = t })
+      el.firstElementChild.appendChild(profielLikes().balk('video', itemVan(meta.thumb), extra))
+    } catch (e) { console.warn('[likes] video', e) }
     const knop = el.querySelector('.vid-play-knop')
     if (knop) knop.onclick = async () => {
       // Afspelen via een Blob-adres: iPhones spelen een lange data:-tekst slecht af.
@@ -773,6 +821,16 @@ async function renderVriendMuziek(el) {
           </div>
         </div>`
 
+      // v258: hart links, Reageer rechts, in de rij met de knoppen (het blok heeft geen ruimte voor een extra rij)
+      try {
+        const rij = el.querySelector('#vm-play').parentElement
+        const balk = profielLikes().balk('muziek', itemVan(t.data), { titel: t.naam || '', klein: true })
+        const midden = document.createElement('div')
+        midden.style.cssText = 'display:flex;align-items:center;gap:14px'
+        while (rij.firstChild) midden.appendChild(rij.firstChild)
+        rij.style.justifyContent = 'space-between'
+        rij.append(balk.querySelector('.pr-hart'), midden, balk.querySelector('.pr-reageer'))
+      } catch (e) { console.warn('[likes] muziek', e) }
       if (audio) { audio.pause(); audio.src = '' }
       audio = new Audio(t.data)
       // v180: voor geluidregelaar.js, en de knop volgt de speler
@@ -1340,7 +1398,7 @@ startMeldingen()
 </script>
 
 <div style="height:44px;"></div>
-<script src="./fotoviewer.js?v=6"></script>
+<script src="./fotoviewer.js?v=7"></script>
 <script type="module" src="offline.js?v=146"></script>
 <script type="module" src="geluidregelaar.js?v=180"></script>
 </body>

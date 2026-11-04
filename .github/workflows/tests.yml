@@ -69,3 +69,6 @@ jobs:
       - name: Meldingen meteen aanzetten (Home, welkomstscherm, iPhone)
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef237.py .
+      - name: Likes en reacties onder foto's, muziek en video's
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef238.py .

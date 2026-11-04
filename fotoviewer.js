@@ -1,4 +1,4 @@
-// fotoviewer.js — Fibro  (v2; v5 11-10-2026: ook in het Engels; v6 16-10-2026: stickers niet)
+// fotoviewer.js — Fibro  (v2; v5 11-10-2026: ook in het Engels; v6 16-10-2026: stickers niet; v7 4-11-2026: likes)
 //
 // Klik op een foto in een widget en hij opent groot over de pagina heen.
 // Staan er meer foto's in dezelfde widget, dan kun je doorbladeren met de
@@ -14,7 +14,10 @@
 // Anders zou op je eigen pagina tegelijk de bestandskiezer opengaan.
 // Een foto vervangen gaat daar met het kruisje wissen en dan de plus.
 //
-// Inhaken:  <script src="./fotoviewer.js?v=6"></script>  vlak voor </body>
+// v7: onder de grote foto een balkje (#fv-balk). De pagina vult het via window.FibroFotoBalk(img, balk) met likes en
+// 'Reageer' (profielreacties.js); zonder die functie blijft het leeg.
+//
+// Inhaken:  <script src="./fotoviewer.js?v=7"></script>  vlak voor </body>
 
 (function () {
   'use strict'
@@ -58,6 +61,7 @@
       '<button id="fv-sluit" aria-label="' + vt('Sluiten') + '" style="position:absolute;top:14px;right:16px;width:40px;height:40px;border:0;border-radius:50%;background:rgba(255,255,255,0.12);color:#fff;font-size:22px;line-height:1;cursor:pointer">\u00d7</button>' +
       '<button id="fv-vorige" aria-label="' + vt('Vorige foto') + '" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);width:44px;height:64px;border:0;border-radius:10px;background:rgba(255,255,255,0.10);color:#fff;font-size:26px;line-height:1;cursor:pointer">\u2039</button>' +
       '<button id="fv-volgende" aria-label="' + vt('Volgende foto') + '" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:44px;height:64px;border:0;border-radius:10px;background:rgba(255,255,255,0.10);color:#fff;font-size:26px;line-height:1;cursor:pointer">\u203a</button>' +
+      '<div id="fv-balk" style="position:absolute;bottom:42px;left:12px;right:12px;display:flex;justify-content:center"></div>' +
       '<div id="fv-teller" style="position:absolute;bottom:16px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.75);font-size:13px"></div>'
 
     el.addEventListener('click', function (e) {
@@ -162,6 +166,10 @@
     overlay.querySelector('#fv-volgende').style.display = meerdere ? '' : 'none'
     overlay.querySelector('#fv-teller').textContent =
       meerdere ? vt('{n} van {m}', { n: huidig + 1, m: fotos.length }) : ''
+    // v7: likes en reageren (profielreacties.js), als de pagina dat aanbiedt
+    var balk = overlay.querySelector('#fv-balk')
+    balk.innerHTML = ''
+    try { if (typeof window.FibroFotoBalk === 'function') window.FibroFotoBalk(fotos[huidig], balk) } catch (e) {}
   }
 
   function ga(stap) {

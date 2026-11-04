@@ -30,6 +30,8 @@
 //    zodra iemand hem gebruikt en jullie vrienden zijn. Een tik opent de chat met de nieuwe vriend.
 //  - 'gastenboek': { gastenboek_id } "Tijn schreef in je gastenboek". Niet in je eigen gastenboek, en niet opnieuw als
 //    dezelfde vriend de laatste 10 minuten al eerder schreef. Wat erin staat gaat niet mee.
+//  - 'like': { like_id } "❤️ Tijn reageerde op je foto" (of nummer, video), ook alleen vanaf de server (trigger op
+//    profiel_likes, sql/profiel-likes.sql). Dezelfde vriend bij dezelfde eigenaar hoogstens een melding per 10 minuten.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push";
 
@@ -80,6 +82,10 @@ const TEKSTEN: Record<string, Record<string, Tekst>> = {
     nl: { title: "Fibro", body: "📖 {naam} schreef in je gastenboek" },
     en: { title: "Fibro", body: "📖 {naam} wrote in your guestbook" },
   },
+  like: {
+    nl: { title: "Fibro", body: "{emoji} {naam} reageerde op je {wat}" },
+    en: { title: "Fibro", body: "{emoji} {naam} reacted to your {wat}" },
+  },
   moderatie: {
     nl: { title: "Fibro · Moderatie", body: "🚩 Er is een nieuwe melding. Kijk in Moderatie." },
     en: { title: "Fibro · Moderation", body: "🚩 There is a new report. Check Moderation." },
@@ -90,10 +96,16 @@ const BERICHT_VERS_MS = 2 * 60 * 1000 // een bericht krijgt alleen kort na het v
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 // Hoe lang de pushdienst een melding bewaart als de telefoon even onbereikbaar is (seconden)
 const LEVENSDUUR: Record<string, number> = { oproep: 45, "oproep-video": 45, gemist: 24 * 60 * 60, spel: 120, "spel-gemist": 24 * 60 * 60, "spel-verlaten": 60 * 60,
-  "vriend-nieuw": 3 * 24 * 60 * 60, gastenboek: 3 * 24 * 60 * 60 };
+  "vriend-nieuw": 3 * 24 * 60 * 60, gastenboek: 3 * 24 * 60 * 60, like: 24 * 60 * 60 };
 const GASTENBOEK_RUST_MS = 10 * 60 * 1000; // v258: zelfde vriend, zelfde gastenboek: hoogstens een melding per 10 minuten
 // v258: deze meldingen komen alleen van de server (met een id), nooit van een app met receiver_id + type
-const ALLEEN_SERVER = new Set(["spel", "vriend-nieuw", "gastenboek"]);
+const ALLEEN_SERVER = new Set(["spel", "vriend-nieuw", "gastenboek", "like"]);
+// v258: likes onder een foto, nummer of video (zelfde lijst als in sql/profiel-likes.sql en profielreacties.js)
+const LIKE_EMOJI = new Set(["❤️", "😂", "🔥", "😍", "😮", "👏"]);
+const LIKE_WAT: Record<string, { nl: string; en: string }> = {
+  foto: { nl: "foto", en: "photo" }, muziek: { nl: "nummer", en: "song" }, video: { nl: "video", en: "video" },
+};
+const LIKE_RUST_MS = 10 * 60 * 1000;
 // v257: de spellen (zelfde namen als in de chat, SPEL_INFO)
 const SPELNAMEN: Record<string, { nl: string; en: string }> = {
   botkaaseiren: { nl: "Tic-Tac-Toe", en: "Tic-Tac-Toe" }, vieroprij: { nl: "Four in a Row", en: "Four in a Row" },
@@ -236,6 +248,26 @@ Deno.serve(async (req) => {
       return await stuurVriendMelding(supabase, g.author_id, g.profile_id, "gastenboek");
     }
 
+    // v258: een like onder een foto, nummer of video (trigger op profiel_likes)
+    if (invoer.like_id) {
+      const id = String(invoer.like_id);
+      if (!UUID.test(id)) return antwoord({ ok: false, reden: "ongeldige like" }, 400);
+      const { data: l, error: fl } = await supabase.from("profiel_likes")
+        .select("id, eigenaar, liker, soort, emoji, created_at").eq("id", id).maybeSingle();
+      if (fl) throw fl;
+      if (!l || !l.eigenaar || !l.liker) return antwoord({ ok: false, reden: "geen like" }, 404);
+      if (!Object.hasOwn(LIKE_WAT, l.soort) || !LIKE_EMOJI.has(l.emoji)) return antwoord({ ok: false, reden: "ongeldige like" }, 400);
+      const tijd = new Date(l.created_at).getTime();
+      if (Date.now() - tijd > BERICHT_VERS_MS) return antwoord({ ok: false, reden: "te oud" });
+      const { data: eerder, error: fe } = await supabase.from("profiel_likes").select("id")
+        .eq("eigenaar", l.eigenaar).eq("liker", l.liker).neq("id", l.id)
+        .gte("created_at", new Date(tijd - LIKE_RUST_MS).toISOString()).lte("created_at", l.created_at).limit(1);
+      if (fe) throw fe;
+      if (eerder && eerder.length) return antwoord({ ok: true, verstuurd: 0, reden: "net al gemeld" });
+      if (!(await pakSlot(supabase, l.id))) return antwoord({ ok: true, verstuurd: 0, reden: "al verstuurd" });
+      return await stuurVriendMelding(supabase, l.liker, l.eigenaar, "like", null, { emoji: l.emoji, soort: l.soort });
+    }
+
     if (!receiver_id && type !== "moderatie") throw new Error("receiver_id ontbreekt");
 
     // 1. Wie stuurt er? Alleen met een geldige inlogpas.
@@ -290,7 +322,7 @@ Deno.serve(async (req) => {
 // Een melding van afzender aan een vriend (bericht, buzz, oproep, gemist). Alleen naar een vriend, niet als de
 // afzender geblokkeerd is; tekst in de taal van de ontvanger.
 async function stuurVriendMelding(supabase: any, afzender: string, receiver_id: string, type: unknown,
-  uitn: { spel: string; van: string; sessie: string } | null = null) {
+  uitn: { spel: string; van: string; sessie: string } | null = null, like: { emoji: string; soort: string } | null = null) {
   {
     if (afzender === receiver_id) return antwoord({ ok: false, reden: "niet naar jezelf" }, 400);
     // 2. Alleen naar een vriend.
@@ -345,7 +377,8 @@ async function stuurVriendMelding(supabase: any, afzender: string, receiver_id: 
     if (isSpel && !spelNaam) return antwoord({ ok: false, reden: "onbekend spel" }, 400);
     const melding: Record<string, string> = {
       title: tekst.title,
-      body: tekst.body.replace("{naam}", naam).replace("{spel}", spelNaam),
+      body: tekst.body.replace("{naam}", naam).replace("{spel}", spelNaam)
+        .replace("{emoji}", like ? like.emoji : "").replace("{wat}", like && LIKE_WAT[like.soort] ? LIKE_WAT[like.soort][taal] : ""),
       url: bellen
         ? "/Fibro/bellen.html?vriend=" + encodeURIComponent(afzender) + "&naam=" + encodeURIComponent(naam) +
           "&inkomend=1" + (soort === "oproep-video" ? "&video=1" : "")
@@ -353,7 +386,7 @@ async function stuurVriendMelding(supabase: any, afzender: string, receiver_id: 
         ? "/Fibro/chat.html?spelVriend=" + encodeURIComponent(afzender) + "&spelType=" + encodeURIComponent(uitn.spel) +
           "&sessieId=" + encodeURIComponent(uitn.sessie) + "&starterId=" + encodeURIComponent(afzender)
         : isSpel || soort === "vriend-nieuw" ? "/Fibro/chat.html?vriend=" + encodeURIComponent(afzender)
-        : soort === "gastenboek" ? "/Fibro/index.html" // v258: je gastenboek staat op je beginscherm
+        : soort === "gastenboek" || soort === "like" ? "/Fibro/index.html" // v258: je gastenboek en je profiel staan op je beginscherm
         : "/Fibro/chat.html",
       type: soort,
     };
@@ -361,6 +394,7 @@ async function stuurVriendMelding(supabase: any, afzender: string, receiver_id: 
     if (isSpel) melding.tag = "spel-" + afzender; // v257: gemist en verlaten vervangen de uitnodiging
     if (soort === "vriend-nieuw") melding.tag = "vriend-" + afzender; // v258
     if (soort === "gastenboek") melding.tag = "gastenboek-" + afzender;
+    if (soort === "like") melding.tag = "like-" + afzender;
     const payload = JSON.stringify(melding);
     const opties = LEVENSDUUR[soort] ? { TTL: LEVENSDUUR[soort], urgency: bellen || soort === "spel" ? "high" : "normal" } : undefined;
 

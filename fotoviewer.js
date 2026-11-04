@@ -1,4 +1,4 @@
-// fotoviewer.js — Fibro  (v2; v5 11-10-2026: ook in het Engels; v6 16-10-2026: stickers niet; v7 4-11-2026: likes; v8: chat)
+// fotoviewer.js — Fibro  (v2; v5 11-10-2026: ook in het Engels; v6 16-10-2026: stickers niet; v7 4-11-2026: likes; v8: chat; v9: een keer zien)
 //
 // Klik op een foto in een widget en hij opent groot over de pagina heen.
 // Staan er meer foto's in dezelfde widget, dan kun je doorbladeren met de
@@ -22,7 +22,11 @@
 // onder de foto (bijvoorbeeld een reactie op een profielfoto), met data-fv-kop een klein regeltje erboven. Alleen
 // textContent, er wordt niets als html gelezen.
 //
-// Inhaken:  <script src="./fotoviewer.js?v=8"></script>  vlak voor </body>
+// v9 (v262): window.FibroFotoViewer.open(img) opent een plaatje van buitenaf (een foto die je maar een keer mag zien,
+// chat.html). Bij sluiten komt het seintje 'fibro-fotoviewer-dicht' (detail.fotos). Een plaatje met data-fv-beschermd:
+// lang drukken om te bewaren werkt niet (een schermafbeelding maken kan altijd).
+//
+// Inhaken:  <script src="./fotoviewer.js?v=9"></script>  vlak voor </body>
 
 (function () {
   'use strict'
@@ -76,6 +80,9 @@
 
     el.addEventListener('click', function (e) {
       if (e.target === el) sluit()
+    })
+    el.addEventListener('contextmenu', function (e) {
+      if (fotos[huidig] && fotos[huidig].hasAttribute('data-fv-beschermd')) e.preventDefault()
     })
     el.querySelector('#fv-sluit').addEventListener('click', sluit)
     el.querySelector('#fv-vorige').addEventListener('click', function (e) {
@@ -187,6 +194,11 @@
     overlay.querySelector('#fv-kop').textContent = fotos[huidig].getAttribute('data-fv-kop') || ''
     vak.style.display = tekst ? 'block' : 'none'
     img.style.maxHeight = tekst ? '62vh' : '88vh'
+    // v9: beschermd = niet lang drukken om te bewaren, en niet slepen
+    var beschermd = fotos[huidig].hasAttribute('data-fv-beschermd')
+    img.style.webkitTouchCallout = beschermd ? 'none' : ''
+    img.style.webkitUserSelect = beschermd ? 'none' : ''
+    img.draggable = !beschermd
     img.style.marginBottom = tekst ? '18vh' : ''
   }
 
@@ -218,10 +230,15 @@
   }
 
   function sluit() {
-    if (!overlay) return
+    if (!overlay || overlay.style.display === 'none') return
     overlay.style.display = 'none'
     document.documentElement.style.overflow = ''
+    // v9: wie wil weten dat de foto dicht is (een foto die je maar een keer mag zien)
+    try { document.dispatchEvent(new CustomEvent('fibro-fotoviewer-dicht', { detail: { fotos: fotos.slice() } })) } catch (e) {}
+    var f = overlay.querySelector('#fv-foto')
+    if (f && fotos.some(function (x) { return x.hasAttribute('data-fv-beschermd') })) f.removeAttribute('src')
   }
+  window.FibroFotoViewer = { open: function (img) { if (komtInAanmerking(img)) open(img) }, sluit: function () { sluit() } }
 
   // Vangfase: dit draait vóór de klikafhandeling van de fotocel zelf, zodat
   // op de eigen pagina niet ook de bestandskiezer opengaat.

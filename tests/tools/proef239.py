@@ -3,6 +3,11 @@
 #  A. Bram kiest drie foto's tegelijk -> bij Bram en bij Marcel staan ze samen in een rijtje (vierkantjes)
 #  B. Marcel tikt op de tweede -> groot, "2 van 3"; vegen naar links = de derde, pijltje = weer terug
 #  C. Daarna nog een losse foto -> een eigen rij, groot (200), en in de viewer "4 van 4" (alle foto's van het gesprek)
+#  E. (v262) na verversen staan de foto's er nog, bij allebei, in dezelfde rijtjes (bewaard op het toestel, chatfotos.js);
+#     een foto ouder dan de bewaartijd is weg
+#  K. (v262) na het kiezen: een keuzescherm 💾 Bewaren / 👁️ Eén keer laten zien; groot bekijken heeft 💾 Opslaan
+#  F. (v262) een keer laten zien: bij Marcel een vakje zonder foto; tik = groot (beschermd, geen Opslaan); sluiten = 'Foto
+#     bekeken', ook na verversen, en de foto is van zijn toestel weg. Bram ziet zijn foto met '👁️ 1 keer'.
 #  D. geen paginafouten
 # python3 -I proef239.py <map>
 import sys, os, time, json, socket, subprocess, re
@@ -160,6 +165,10 @@ try:
         kleuren = ['#c084fc', '#22c55e', '#f97316', '#38bdf8']
         bestanden = [{'name': 'foto%d.png' % i, 'mimeType': 'image/png', 'buffer': base64.b64decode(b.evaluate(FOTO_JS, k))} for i, k in enumerate(kleuren)]
         b.set_input_files('#fotoFileInput', bestanden[:3])
+        k1 = wacht(b, "() => document.querySelectorAll('#fotoSoortScherm .foto-soort').length === 2", 5000)
+        kt = b.evaluate("document.getElementById('fotoSoortScherm').innerText")
+        check('K1 keuzescherm: 3 foto\'s versturen, Bewaren of Eén keer laten zien', k1 and '3 foto' in kt and 'Bewaren' in kt and 'Eén keer laten zien' in kt, kt[:120])
+        b.click('#fotoSoortScherm .foto-soort[data-soort="bewaren"]')
         a_b = wacht(b, "() => [...document.querySelectorAll('#messages .foto-reeks img')].length === 3", 30000)
         a_m = wacht(m, "() => [...document.querySelectorAll('#messages .foto-reeks img')].length === 3", 30000)
         rb, rm = b.evaluate(RIJEN), m.evaluate(RIJEN)
@@ -174,14 +183,56 @@ try:
         v2 = m.evaluate(VIEWER)
         m.click('#fv-vorige'); m.wait_for_timeout(200)
         v3 = m.evaluate(VIEWER)
+        opslaan = m.evaluate("!!document.querySelector('#fv-balk #fotoOpslaan')")
+        check('K2 groot bekijken: knop 💾 Opslaan', opslaan)
         check('B tik op de tweede: groot, 2 van 3; vegen = de derde; pijltje = terug', v1 and v1['teller'] == '2 van 3' and v1['src'] == srcs[1] and v2 and v2['teller'] == '3 van 3' and v2['src'] == srcs[2] and v3['teller'] == '2 van 3', (v1 and v1['teller'], v2 and v2['teller'], v3 and v3['teller']))
         m.click('#fv-sluit')
         b.set_input_files('#fotoFileInput', bestanden[3:])
+        wacht(b, "() => !!document.querySelector('#fotoSoortScherm .foto-soort')", 5000); b.click('#fotoSoortScherm .foto-soort[data-soort="bewaren"]')
         c_m = wacht(m, "() => document.querySelectorAll('#messages .foto-reeks').length === 2", 30000)
         rm = m.evaluate(RIJEN)
         m.locator('#messages .foto-reeks').nth(1).locator('img').click()
         v4 = wacht(m, VIEWER, 4000) and m.evaluate(VIEWER)
         check('C een losse foto: eigen rij, groot (200); in de viewer 4 van 4', c_m and len(rm) == 2 and rm[1]['n'] == 1 and rm[1]['b'] > 150 and v4 and v4['teller'] == '4 van 4', (rm, v4 and v4['teller']))
+        # ---- E: verversen ----
+        m.click('#fv-sluit')
+        # een foto van 40 dagen geleden erbij zetten (bewaartijd standaard 31 dagen): die moet verdwijnen
+        m.evaluate("""async ([ik, vr]) => { const c = document.createElement('canvas'); c.width = c.height = 20; const b = await new Promise(r => c.toBlob(r, 'image/png'))
+          const mod = await import('./chatfotos.js?v=1'); await mod.bewaarChatFoto(ik, vr, b, { mijn: false, tijd: Date.now() - 40 * 864e5 }) }""", [MARCEL, BRAM])
+        m.reload(); b.reload()
+        e_m = wacht(m, "() => document.querySelectorAll('#messages .foto-reeks img').length === 4", 15000)
+        e_b = wacht(b, "() => document.querySelectorAll('#messages .foto-reeks img').length === 4", 15000)
+        rm2, rb2 = m.evaluate(RIJEN), b.evaluate(RIJEN)
+        oud = m.evaluate("""async ([ik, vr]) => (await (await import('./chatfotos.js?v=1')).haalChatFotos(ik, vr)).length""", [MARCEL, BRAM])
+        check('E1 na verversen: de foto\'s staan er nog, bij allebei, in dezelfde rijtjes (3 en 1)', e_m and e_b and [r['n'] for r in rm2] == [3, 1] and [r['n'] for r in rb2] == [3, 1]
+              and all(not r['mijn'] for r in rm2) and all(r['mijn'] for r in rb2), (rm2, rb2))
+        check('E2 de foto van 40 dagen geleden is weggegooid', oud == 4, oud)
+        m.locator('#messages .foto-reeks').nth(0).locator('img').nth(0).click()
+        v5 = wacht(m, VIEWER, 4000) and m.evaluate(VIEWER)
+        check('E3 groot bekijken werkt ook na verversen (1 van 4)', v5 and v5['teller'] == '1 van 4', v5 and v5['teller'])
+        m.click('#fv-sluit')
+        # ---- F: een keer laten zien ----
+        groen = base64.b64decode(b.evaluate(FOTO_JS, '#ef4444'))
+        b.set_input_files('#fotoFileInput', [{'name': 'geheim.png', 'mimeType': 'image/png', 'buffer': groen}])
+        wacht(b, "() => !!document.querySelector('#fotoSoortScherm .foto-soort')", 5000); b.click('#fotoSoortScherm .foto-soort[data-soort="eenmalig"]')
+        f1 = wacht(m, "() => !!document.querySelector('#messages .foto-eenmalig')", 30000)
+        vak = m.evaluate("(() => { const v = document.querySelector('#messages .foto-eenmalig'); return { tekst: v.innerText, img: !!v.closest('.msg-row').querySelector('img'), chatGroep: document.querySelectorAll('#messages img[data-fv-groep=\"chat\"]').length } })()")
+        bram = b.evaluate("(() => { const r = [...document.querySelectorAll('#messages .foto-reeks')].pop(); return r ? r.innerText : '' })()")
+        check('F1 bij Marcel een vakje "👁️ Foto, tik om 1 keer te bekijken" zonder foto erin; Bram ziet "👁️ 1 keer"', f1 and 'Tik om 1 keer' in vak['tekst'] and not vak['img'] and vak['chatGroep'] == 4 and '1 keer' in bram, (vak, bram[:40]))
+        m.click('#messages .foto-eenmalig')
+        f2 = wacht(m, VIEWER, 4000) and m.evaluate(VIEWER)
+        bes = m.evaluate("({ teller: document.getElementById('fv-teller').textContent, opslaan: !!document.querySelector('#fv-balk #fotoOpslaan'), callout: document.getElementById('fv-foto').style.webkitTouchCallout })")
+        check('F2 tik: groot, alleen deze foto, zonder Opslaan en niet lang drukken', f2 and f2['src'].startswith('blob:') and bes['teller'] == '' and not bes['opslaan'] and bes['callout'] == 'none', bes)
+        m.click('#fv-sluit'); m.wait_for_timeout(500)
+        f3 = m.evaluate("(() => { const v = document.querySelector('#messages .foto-eenmalig'); return { tekst: v.innerText, uit: v.disabled } })()")
+        m.click('#messages .foto-eenmalig', force=True); m.wait_for_timeout(300)
+        nogEens = m.evaluate(VIEWER)
+        check('F3 na sluiten: "Foto bekeken", nog eens tikken doet niets', 'Foto bekeken' in f3['tekst'] and f3['uit'] and not nogEens, (f3, nogEens))
+        m.reload()
+        f4 = wacht(m, "() => !!document.querySelector('#messages .foto-eenmalig')", 15000)
+        f4t = m.evaluate("document.querySelector('#messages .foto-eenmalig').innerText")
+        bytes_ = m.evaluate("""async ([ik, vr]) => (await (await import('./chatfotos.js?v=1')).haalChatFotos(ik, vr)).filter(f => f.eenmalig).map(f => [f.bekeken, !!f.blob])""", [MARCEL, BRAM])
+        check('F4 na verversen nog steeds "Foto bekeken", en de foto is van Marcels toestel weg', f4 and 'Foto bekeken' in f4t and bytes_ == [[True, False]], (f4t, bytes_))
         cm.close(); cb.close(); br.close()
 finally:
     srv.terminate()

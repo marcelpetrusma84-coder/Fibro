@@ -292,7 +292,6 @@ import { bewaardeSessieZonderInternet } from './offline.js?v=146'
 import { startMeldingen } from './meldingen.js?v=188'
 import { haalPrivateKeyOp } from './crypto.js?v=182'
 import { isBelregel, belregelTekst } from './belregel.js?v=152'
-import { vulSpelVersies } from './spelversies.js?v=16'
 import { koppelSpelIcoonFallback } from './spelicoon.js?v=3'
 koppelSpelIcoonFallback()
 import { openSpelMetTitel } from './titelscherm.js?v=6' // v252: titelscherm met muziek meteen bij je tik
@@ -654,15 +653,8 @@ function renderSpelWidget(c, spel) {
   c.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:100%;"><span style="font-size:30px;line-height:1">' + icon + '</span><span style="font-size:13px;font-weight:600;color:#fff">' + T('▶ Spelen') + '</span></div>'
   const blok = c.closest('.widget-blok') || c
   const kop = blok.querySelector('.widget-header')
-  if (kop) {
-    kop.classList.add('widget-header-spel')
-    const versie = document.createElement('span')
-    versie.className = 'widget-spelversie'
-    versie.setAttribute('data-spelversie', spel)
-    versie.setAttribute('data-spelversie-history', '')
-    kop.appendChild(versie)
-    vulSpelVersies(kop)
-  }
+  // v265: de versie (met versiehistorie) staat niet meer op de widget, maar in Mijn stijl > Spellen (profiel.html)
+  if (kop) kop.classList.add('widget-header-spel')
   blok.style.cursor = 'pointer'
   blok.onclick = () => openSpelMetTitel(spel, 'spel.html?spel=' + encodeURIComponent(spel))
 }

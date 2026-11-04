@@ -49,7 +49,7 @@ function zonderJokers(s: string) {
   return s.replace(/[\\%_]/g, (m) => "\\" + m);
 }
 
-if (import.meta.main) Deno.serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return antwoord({ ok: false, reden: "alleen POST" }, 405);
   try {

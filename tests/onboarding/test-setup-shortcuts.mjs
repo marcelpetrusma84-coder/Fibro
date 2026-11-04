@@ -16,6 +16,7 @@ async function arrive({ hash = '', session = { user:{ id:'synthetic-user' } }, s
     window:{ location },
     supabase:{ auth:{ getSession:async () => ({ data:{ session } }) } },
     naInloggenFaceId:async () => { calls.push('automatic-key-flow') },
+    eerstNieuwWachtwoord:async () => {}, // v265: geen tijdelijk wachtwoord (zie tests/security/test-wachtwoord-reset.mjs)
     // v258: zonder wachtende uitnodiging is dit het beginscherm (zie tests/ui/test-makkelijk-contact.mjs)
     naInloggenAdres:() => 'index.html',
     haalPrivateKeyOp:() => { calls.push('read-device-key'); return 'synthetic-existing-key' }

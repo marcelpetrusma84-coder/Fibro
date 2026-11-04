@@ -56,7 +56,7 @@ with sync_playwright() as pw:
     p.screenshot(path=os.path.join(os.environ.get('PROEF_UIT', '/tmp'), 'proef243-vraag.png'))
     p.locator('.quiz-antwoord').nth(1).click()  # goed
     p.wait_for_timeout(250); p.screenshot(path=os.path.join(os.environ.get('PROEF_UIT', '/tmp'), 'proef243-goed.png'))
-    check(p.locator('.quiz-sticker').count() == 1 and 'f3/11' in p.locator('.quiz-sticker').get_attribute('src'), 'goed: Yes!-sticker')
+    check(p.locator('.quiz-sticker').count() == 1 and 'f5/05' in p.locator('.quiz-sticker').get_attribute('src'), 'goed: Gelukt!-sticker (vinkje)')
     check('Goed!' in p.inner_text('.quiz-uitleg'), 'goed: tekst')
     p.wait_for_selector('text=Vraag 2 van 3', timeout=4000)
     p.locator('.quiz-antwoord').nth(1).click()  # fout
@@ -68,17 +68,22 @@ with sync_playwright() as pw:
     p.wait_for_selector('.quiz-score', timeout=4000)
     check(p.inner_text('.quiz-score') == '2 van 3 goed', 'score 2 van 3')
     check(p.locator('.quiz-fout').count() == 0, 'meteen-zien: geen foutenlijst aan het eind')
+    check(p.evaluate('window.TM.speeltNu()') is None, 'zonder gekozen muziek: stil')
     p.click('.quiz-klaar')
     check(p.locator('.quiz-speler').count() == 0, 'gesloten')
 
     # pas aan het eind
     p.click('text=✏️ Bewerken')
     p.locator('.quiz-maker label:has-text("Pas aan het eind de score") input').check()
-    p.locator('.quiz-maker label:has-text("Yes!- en Nee!-sticker") input').uncheck()
+    p.locator('.quiz-maker label:has-text("Stickers bij goed en fout") input').uncheck()
+    p.select_option('.quiz-muziek', 'botkaaseiren')
+    p.screenshot(path=os.path.join(os.environ.get('PROEF_UIT', '/tmp'), 'proef243-maken.png'))
     p.click('.quiz-opslaan')
     q = p.evaluate("JSON.parse(localStorage.getItem('quiz_ik'))")
     check(q['direct'] is False and q['stickers'] is False, 'instellingen bewaard')
+    check(q['muziek'] == 'botkaaseiren', 'achtergrondmuziek bewaard')
     p.click('text=▶ Spelen')
+    check(p.evaluate('window.TM.speeltNu()') == 'botkaaseiren', 'muziek speelt tijdens de quiz')
     for keuze in (0, 0, 2):
         p.locator('.quiz-antwoord').nth(keuze).click()
         p.wait_for_timeout(400)
@@ -88,6 +93,8 @@ with sync_playwright() as pw:
     fout = p.inner_text('.quiz-fout')
     check('Hoofdstad' in fout and 'Rotterdam' in fout and 'Amsterdam' in fout, 'overzicht: jouw antwoord en het goede')
     p.screenshot(path=os.path.join(os.environ.get('PROEF_UIT', '/tmp'), 'proef243-eind.png'))
+    p.click('.quiz-klaar')
+    check(p.evaluate('window.TM.speeltNu()') is None, 'muziek stopt bij sluiten')
     b.close()
 srv.shutdown()
 if fouten:

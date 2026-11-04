@@ -1,4 +1,5 @@
-// quiz.js (v1, Fibro v265, 4 november 2026) - de quiz-widget.
+// quiz.js (v1, Fibro v265, 4 november 2026) - de quiz-widget. Met achtergrondmuziek (titelmuziek.js) en de
+// stickers 'Gelukt!' en 'Nee!'.
 // Je maakt zelf een quiz (tot 50 meerkeuzevragen) als widget op je profiel. Vrienden spelen hem op je profiel,
 // beeldvullend, met de geluiden van de stickers en (als je dat wilt) de stickers 'Yes!' en 'Nee!' bij goed of fout.
 // Twee manieren: meteen zien of het goed is, of pas aan het eind je score (met een overzicht van je fouten).
@@ -13,6 +14,7 @@
 //   speelQuiz(quiz, { achtergrond })                             spelen (beeldvullend)
 import { zoekSticker } from './stickervellen.js?v=236'
 import { speel, speelGeluid } from './stickerfx.js?v=235'
+import { DEUNTJES, speelTitelMuziek, stopTitelMuziek } from './titelmuziek.js?v=4'
 
 Object.assign(window.FIBRO_EN ||= {}, {
   'Quiz': 'Quiz', 'Nog geen quiz': 'No quiz yet', '✏️ Maak een quiz': '✏️ Make a quiz', '✏️ Bewerken': '✏️ Edit',
@@ -22,7 +24,7 @@ Object.assign(window.FIBRO_EN ||= {}, {
   'Tik op het rondje bij het goede antwoord.': 'Tap the circle next to the right answer.',
   '+ Vraag erbij': '+ Add question', '🗑 Weg': '🗑 Remove', 'Opslaan ✓': 'Save ✓', 'Annuleren': 'Cancel',
   'Meteen zien of het goed is': 'See right away if it is right', 'Pas aan het eind de score': 'Only the score at the end',
-  'Yes!- en Nee!-sticker': 'Yes! and No! sticker', 'Geluid': 'Sound',
+  'Stickers bij goed en fout': 'Stickers for right and wrong', 'Geluid': 'Sound',
   'De achtergrond kies je met de 🖼-knop op de widget.': 'Choose the background with the 🖼 button on the widget.',
   'Geef je quiz een titel.': 'Give your quiz a title.', 'Maak minstens één vraag.': 'Make at least one question.',
   'Vraag {n}: typ een vraag.': 'Question {n}: type a question.',
@@ -34,13 +36,22 @@ Object.assign(window.FIBRO_EN ||= {}, {
   '{goed} van {totaal} goed': '{goed} out of {totaal} right', 'Jouw fouten': 'Your mistakes',
   'Alles goed! 🎉': 'All right! 🎉', 'Jij: {a}': 'You: {a}', 'Goed: {a}': 'Right: {a}', 'Volgende ›': 'Next ›',
   'Quiz stoppen?': 'Stop the quiz?',
+  'Achtergrondmuziek': 'Background music', 'Geen muziek': 'No music', '▶ Luister': '▶ Listen', '■ Stop': '■ Stop',
+  'Marimba (Tic-Tac-Toe)': 'Marimba (Tic-Tac-Toe)', 'Speelgoedpiano (Four in a Row)': 'Toy piano (Four in a Row)',
 })
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 
 export const MAX_VRAGEN = 50
 export const MAX_ANTWOORDEN = 4
 const MAX_VRAAG = 150, MAX_ANTWOORD = 60, MAX_TITEL = 60
-const YES = 'f3-11', NEE = 'f5-06' // de stickers 'Yes!' en 'Nee!' (stickervellen.js)
+const YES = 'f5-05', NEE = 'f5-06' // de stickers 'Gelukt!' (vinkje) en 'Nee!' (kruis), op verzoek van Marcel
+// Achtergrondmuziek: een van de deuntjes van de spellen (titelmuziek.js), of geen
+export const MUZIEK = [
+  ['', 'Geen muziek'], ['botkaaseiren', 'Marimba (Tic-Tac-Toe)'], ['vieroprij', 'Speelgoedpiano (Four in a Row)'],
+  ['schaken', 'Chess'], ['dammen', 'Draughts'], ['pong', 'Neo Paddle'], ['pacman', 'Ghost Tag'], ['breakout', 'Block It'],
+  ['swarm', 'The Swarm'], ['pinball', 'Twin Snakes'], ['endlessrunner', 'Runner & Gunner'], ['flappybird', 'Flapper'],
+  ['shmup', 'Neon Raiders'],
+].filter(([id]) => !id || DEUNTJES[id])
 
 const tekst = (s, max) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, max)
 
@@ -65,6 +76,7 @@ export function normaliseer(q) {
     direct: q.direct !== false,
     stickers: q.stickers !== false,
     geluid: q.geluid !== false,
+    muziek: MUZIEK.some(([id]) => id && id === q.muziek) ? q.muziek : '',
   }
 }
 function maakId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8) }
@@ -164,7 +176,7 @@ export function openMaker(quiz, opslaan) {
   const bestaand = normaliseer(quiz)
   const concept = bestaand
     ? { ...bestaand, vragen: bestaand.vragen.map(r => ({ v: r.v, a: [...r.a, '', '', ''].slice(0, MAX_ANTWOORDEN), g: r.g })) }
-    : { id: maakId(), titel: '', vragen: [], direct: true, stickers: true, geluid: true }
+    : { id: maakId(), titel: '', vragen: [], direct: true, stickers: true, geluid: true, muziek: '' }
   if (!concept.vragen.length) concept.vragen.push({ v: '', a: ['', '', '', ''], g: 0 })
 
   const s = scherm(null)
@@ -198,11 +210,32 @@ export function openMaker(quiz, opslaan) {
   opties.append(
     keuze(T('Meteen zien of het goed is'), concept.direct, v => { if (v) concept.direct = true }, 'quizmodus'),
     keuze(T('Pas aan het eind de score'), !concept.direct, v => { if (v) concept.direct = false }, 'quizmodus'),
-    keuze(T('Yes!- en Nee!-sticker'), concept.stickers, v => { concept.stickers = v }),
+    keuze(T('Stickers bij goed en fout'), concept.stickers, v => { concept.stickers = v }),
     keuze(T('Geluid'), concept.geluid, v => { concept.geluid = v }),
-    el('div', 'font-size:12px;color:rgba(255,255,255,0.6)', T('De achtergrond kies je met de 🖼-knop op de widget.'))
   )
+  // achtergrondmuziek: kiezen en even luisteren
+  const muziekRij = el('label', 'display:flex;align-items:center;gap:8px;font-size:14px;flex-wrap:wrap')
+  muziekRij.appendChild(document.createTextNode(T('Achtergrondmuziek')))
+  const lijstje = el('select', VELD + ';width:auto;flex:1;min-width:160px;padding:8px 10px;font-size:14px')
+  lijstje.className = 'quiz-muziek'
+  for (const [id, naam] of MUZIEK) {
+    const o = el('option', 'color:#000', T(naam)); o.value = id; o.selected = id === concept.muziek
+    lijstje.appendChild(o)
+  }
+  const luister = el('button', GRIJSKNOP + ';padding:8px 12px;font-size:13px', T('▶ Luister'))
+  let luistert = false
+  const zetLuister = aan => { luistert = aan; luister.textContent = aan ? T('■ Stop') : T('▶ Luister'); if (!aan) stopTitelMuziek(0.2) }
+  luister.onclick = e => {
+    e.preventDefault()
+    if (luistert || !concept.muziek) { zetLuister(false); return }
+    if (speelTitelMuziek(concept.muziek)) zetLuister(true)
+  }
+  lijstje.onchange = () => { concept.muziek = lijstje.value; if (luistert) { stopTitelMuziek(0.1); if (concept.muziek) speelTitelMuziek(concept.muziek); else zetLuister(false) } }
+  muziekRij.append(lijstje, luister)
+  opties.append(muziekRij, el('div', 'font-size:12px;color:rgba(255,255,255,0.6)', T('De achtergrond kies je met de 🖼-knop op de widget.')))
   lijf.appendChild(opties)
+  const sluitMaker = s._sluit
+  s._sluit = () => { stopTitelMuziek(0.2); sluitMaker() }
 
   const vragenVak = el('div', 'display:flex;flex-direction:column;gap:14px')
   lijf.appendChild(vragenVak)
@@ -280,6 +313,9 @@ export function speelQuiz(quizIn, { achtergrond = null } = {}) {
   if (!quiz) return null
   const s = scherm(achtergrond)
   s.classList.add('quiz-speler')
+  if (quiz.muziek) { try { speelTitelMuziek(quiz.muziek) } catch (e) {} }
+  const sluitSpeler = s._sluit
+  s._sluit = () => { try { stopTitelMuziek(0.6) } catch (e) {} sluitSpeler() }
   try { if (s.requestFullscreen && !document.fullscreenElement) s.requestFullscreen().catch(() => {}) } catch (e) {}
   const geluid = naam => { if (quiz.geluid) { try { speelGeluid(naam) } catch (e) {} } }
   let nr = 0, antwoorden = [], bezig = false

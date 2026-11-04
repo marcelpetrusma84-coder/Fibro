@@ -2,7 +2,7 @@
 // Het maken en spelen in een echte browser: tests/tools/proef243.py.
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-globalThis.window = {}
+globalThis.window = { addEventListener() {}, parent: null } // titelmuziek.js luistert naar 'fibro-spel-begint'
 globalThis.document = { addEventListener() {} } // stickerfx.js zet bij het laden een luisteraar
 const wacht = globalThis.setTimeout; globalThis.setTimeout = (f, ms) => ms >= 1000 ? 0 : wacht(f, ms) // geen mp3's ophalen
 const lees = p => readFileSync(new URL('../../' + p, import.meta.url), 'utf8')
@@ -16,7 +16,11 @@ assert.equal(Q.normaliseer({ vragen: [{ v: 'x', a: ['a'], g: 0 }] }), null, 'Ã©Ã
 const q = Q.normaliseer({ titel: '  Mijn   quiz ', vragen: [{ v: 'Vraag?', a: ['', 'ja', '', 'nee'], g: 3 }, { v: '', a: ['a', 'b'], g: 0 }] })
 assert.equal(q.titel, 'Mijn quiz')
 assert.deepEqual(q.vragen, [{ v: 'Vraag?', a: ['ja', 'nee'], g: 1 }], 'lege antwoorden weg, goede antwoord schuift mee; vraag zonder tekst weg')
-assert.equal(q.direct, true); assert.equal(q.stickers, true); assert.equal(q.geluid, true)
+assert.equal(q.direct, true); assert.equal(q.stickers, true); assert.equal(q.geluid, true); assert.equal(q.muziek, '')
+assert.equal(Q.normaliseer({ vragen: q.vragen, muziek: 'schaken' }).muziek, 'schaken', 'bestaand deuntje blijft')
+assert.equal(Q.normaliseer({ vragen: q.vragen, muziek: 'onzin' }).muziek, '', 'onbekend deuntje: geen muziek')
+assert.ok(Q.MUZIEK.length >= 10 && Q.MUZIEK[0][0] === '', 'keuze: geen muziek + de deuntjes van de spellen')
+assert.match(lees('quiz.js'), /const YES = 'f5-05', NEE = 'f5-06'/, 'de stickers van Marcel: vinkje en kruis')
 const veel = Q.normaliseer({ vragen: Array.from({ length: 80 }, (_, i) => ({ v: 'v' + i + 'x'.repeat(500), a: ['a'.repeat(200), 'b', 'c', 'd', 'e'], g: 0 })) })
 assert.equal(veel.vragen.length, Q.MAX_VRAGEN, 'hoogstens 50 vragen')
 assert.ok(veel.vragen.every(r => r.v.length <= 150 && r.a.length <= 4 && r.a[0].length <= 60))

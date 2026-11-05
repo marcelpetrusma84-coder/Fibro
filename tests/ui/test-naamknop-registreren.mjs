@@ -14,10 +14,10 @@ for (const [pagina, veld] of [['login.html', 'reg-username'], ['invite.html', 'g
   assert.ok(knop, pagina + ': knop met class naam-knop gevonden')
   assert.match(knop[0], /onclick="nieuweNaam\(\)"/, pagina + ': knop maakt een nieuwe naam')
   assert.match(knop[0], /type="button"/, pagina + ': knop verstuurt geen formulier')
-  assert.equal(knop[1], '🔄 Kies een andere naam', pagina + ': duidelijke tekst op de knop')
+  assert.equal(knop[1], '🔄 Gebruikersnaam-generator', pagina + ': duidelijke tekst op de knop (v270: generator, op verzoek van Marcel)')
   assert.ok(s.indexOf('id="' + veld + '"') < s.indexOf('class="naam-knop"'), pagina + ': knop staat onder de naam')
   assert.match(s, /\.naam-knop \{[^}]*min-height:44px/, pagina + ': knop is groot genoeg om aan te tikken')
 }
-assert.match(en, /"🔄 Kies een andere naam": "🔄 Pick another name"/, 'Engelse tekst voor de knop')
+assert.match(en, /"🔄 Gebruikersnaam-generator": "🔄 Username generator"/, 'Engelse tekst voor de knop')
 assert.match(en, /"Je naam verschijnt hier": "Your name appears here"/, 'Engelse tekst voor het lege veld')
 console.log('ok: duidelijke knop voor een andere gebruikersnaam bij registreren')

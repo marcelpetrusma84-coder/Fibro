@@ -5,9 +5,9 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-<script src="taal.js?v=74"></script>
+<script src="taal.js?v=76"></script>
 <script src="apk.js?v=3"></script>
-<script src="registratie.js?v=2"></script>
+<script src="registratie.js?v=3"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Wie jou uitnodigde, heeft deze week al 5 nieuwe mensen op Stekky gebracht. Dat is het maximum. Probeer het over een paar dagen opnieuw.': 'The person who invited you has already brought 5 new people to Stekky this week. That is the maximum. Please try again in a few days.' }) // v255</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Alleen het jaar. Stekky is vanaf 16 jaar.': 'Only the year. Stekky is for ages 16 and up.', 'Stekky is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.': "Stekky is for ages 16 and up. If you're younger, you can't create an account yet." }) // v225</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Stekky</a>': 'I agree to the <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">{app} house rules</a>' }) // v229: met een link naar de spelregels</script>
@@ -43,6 +43,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .uitnodiger-groot { font-size:22px; font-weight:700; margin-bottom:2px; word-break:break-word; }
 .uitnodiger-gebruiker { font-size:13px; color:var(--muted); margin-bottom:6px; }
 .wat-is-fibro { text-align:left; display:grid; gap:9px; margin:4px 0 18px; padding:14px 14px; border-radius:14px; background:rgba(255,255,255,0.04); border:0.5px solid var(--border); }
+.beta-label { display:inline-block; vertical-align:middle; margin-left:6px; padding:2px 7px; border-radius:999px; background:rgba(251,191,36,0.16); border:1px solid rgba(251,191,36,0.45); color:#fbbf24; font:700 11px/1.3 system-ui,sans-serif; letter-spacing:.06em; text-transform:uppercase; }
 .wat-is-fibro .kop { font-size:14px; font-weight:700; color:var(--text); text-align:center; margin-bottom:2px; }
 .wat-is-fibro .rij { display:flex; gap:10px; align-items:flex-start; font-size:13.5px; line-height:1.4; color:rgba(255,255,255,0.85); }
 .wat-is-fibro .rij span:first-child { font-size:18px; line-height:1.1; flex:none; width:22px; text-align:center; }
@@ -102,7 +103,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
     <div class="uitnodiger-gebruiker" id="uitnodigerGebruiker" hidden></div>
     <div class="uitnodiger-sub" data-t>nodigt je uit op Stekky ✨</div>
     <div class="wat-is-fibro">
-      <div class="kop" data-t>Stekky: een eerlijke social media app voor vrienden</div>
+      <div class="kop"><span data-t>Stekky: een eerlijke social media app voor vrienden</span><span class="beta-label" data-t>bèta</span></div> <!-- v270: bèta hier, in plaats van het blok tekst -->
       <div class="rij"><span>💬</span><span data-t>Chatten, foto's en spraakberichtjes, end-to-end versleuteld</span></div>
       <div class="rij"><span>📞</span><span data-t>Bellen en videobellen met je vrienden</span></div>
       <div class="rij"><span>🎨</span><span data-t>Je eigen profiel met widgets, muziek en stickers</span></div>
@@ -114,13 +115,18 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
     <div class="msg" id="bericht"></div>
 
     <div id="regFormulier">
-    <div class="beta-info" data-t>🧪 Stekky is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.</div>
+
+    <!-- v270: je eigen naam (verplicht). Wordt je weergavenaam: alleen op je toestel en bij je vrienden, niet op de server -->
+    <div class="field">
+      <label for="eigennaam" data-t>Je eigen naam</label>
+      <input class="input" type="text" id="eigennaam" placeholder="bijv. Sanne de Vries" data-t-attr="placeholder" autocomplete="name" maxlength="40" />
+    </div>
 
     <div class="field">
       <label data-t>Jouw gebruikersnaam</label>
       <!-- v266: een duidelijke knop met tekst onder de naam, in plaats van de dobbelsteen ernaast -->
       <input class="input" type="text" id="gebruikersnaam" placeholder="Je naam verschijnt hier" readonly data-t-attr="placeholder" />
-      <button type="button" class="naam-knop" id="andere-naam" onclick="nieuweNaam()" data-t>🔄 Kies een andere naam</button>
+      <button type="button" class="naam-knop" id="andere-naam" onclick="nieuweNaam()" data-t>🔄 Gebruikersnaam-generator</button>
       <div class="hint" data-t>⚠️ Onthoud deze naam — je hebt hem nodig om in te loggen</div>
     </div>
 
@@ -381,6 +387,9 @@ window.registreren = async function() {
   const msg = document.getElementById('bericht')
   const btn = document.getElementById('regBtn')
 
+  const eigenNaam = FibroRegistratie.schoonEigenNaam(document.getElementById('eigennaam').value) // v270
+  const naamFout = FibroRegistratie.eigenNaamFout(eigenNaam)
+  if (naamFout) { msg.className='msg error'; msg.textContent=T(naamFout); document.getElementById('eigennaam').focus(); return }
   if (!naam || !ww || !jaar) { msg.className='msg error'; msg.textContent=T('Vul alle velden in.'); return }
   if (!akkoord) { msg.className='msg error'; msg.textContent=T('Ga akkoord met de spelregels.'); return }
   if (ww.length < 8) { msg.className='msg error'; msg.textContent=T('Wachtwoord minimaal 8 tekens.'); return }
@@ -438,6 +447,7 @@ window.registreren = async function() {
   if (data.user) {
     // ── E2E: private key lokaal opslaan, public key naar Supabase ──
     slaPrivateKeyOp(data.user.id, keypair.privateKeyB64)
+    FibroRegistratie.bewaarEigenNaam(data.user.id, eigenNaam) // v270: je eigen naam = je weergavenaam (alleen op dit toestel)
 
     await supabase.from('profiles').upsert({
       id: data.user.id,
@@ -477,7 +487,7 @@ async function toonMeldWelkom(userId, plek) {
   const vak = document.getElementById('meldWelkom')
   if (!vak) return
   let m
-  try { m = await import('./meldingen-aan.js?v=2') } catch (e) { return }
+  try { m = await import('./meldingen-aan.js?v=3') } catch (e) { return }
   const stand = await m.meldStand()
   if (stand !== 'uit' && stand !== 'geweigerd') return
   const tekst = document.getElementById('meldWelkomTekst'), knop = document.getElementById('meldWelkomKnop')

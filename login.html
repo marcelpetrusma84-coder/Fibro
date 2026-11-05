@@ -5,9 +5,9 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
   <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-  <script src="taal.js?v=74"></script>
+  <script src="taal.js?v=76"></script>
   <script src="apk.js?v=3"></script>
-  <script src="registratie.js?v=2"></script>
+  <script src="registratie.js?v=3"></script>
   <script>try { FibroApk.hervatUitnodiging() } catch (e) {} // in de app: een uitnodiging die wacht (apk.js)</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Verder met setup': 'Continue setup', 'Stekky is vanaf 16 jaar.': 'Stekky is for ages 16 and up.', 'Stekky is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.': "Stekky is for ages 16 and up. If you're younger, you can't create an account yet." })</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Stekky</a>': 'I agree to the <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">{app} house rules</a>' }) // v229: met een link naar de spelregels</script>
@@ -22,7 +22,7 @@
   <title data-t>Stekky — Inloggen</title>
   <style>
     @import url('lettertypen/basis.css?v=1');
-    :root { --bg:#1a0a2e; --surface:#161618; --border:#2a2a2e; --accent:#c084fc; --accent-dim:#f0abfc; --text:#f3e8ff; --text-muted:#666660; --danger:#ff5c5c; --radius:12px; }
+    :root { --bg:#8b3fd1; /* v270: hetzelfde paars als de knoppen (op verzoek van Marcel) */ --surface:#161618; --border:#2a2a2e; --accent:#c084fc; --accent-dim:#f0abfc; --text:#f3e8ff; --text-muted:#666660; --danger:#ff5c5c; --radius:12px; }
     * { box-sizing:border-box; margin:0; padding:0; }
     /* v249: de pagina kan weer op en neer scrollen (overflow:hidden sneed de boven- en onderkant af als het formulier hoger
        was dan het scherm, bijv. Registreren op een telefoon). margin:auto 0 op .container houdt hem in het midden als hij past. */
@@ -31,13 +31,53 @@
     .container { width:100%; max-width:420px; margin:auto 0; position:relative; z-index:1; animation:fadeUp 0.4s ease both; }
     @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
     .logo { text-align:center; margin-bottom:40px; }
-    .logo h1 { font-family:'DM Serif Display',serif; font-size:48px; letter-spacing:-1px; color:var(--text); }
-    .logo h1 span { color:var(--accent); }
-    .logo p { font-size:11px; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase; margin-top:6px; }
+    .logo h1 { font-family:'DM Serif Display',serif; font-size:48px; letter-spacing:-1px; color:#ffffff; }
+    /* v270: Stekky precies in het midden, bèta ernaast (telt niet mee voor het midden), Je eigen plekkie er recht onder */
+    .logo h1 { display:inline-block; position:relative; line-height:1; }
+    .logo h1 .beta-label { position:absolute; left:100%; top:2px; margin-left:8px; vertical-align:baseline; }
+    .logo p { margin-top:8px !important; }
+    .logo h1 span { color:#ffffff; } /* v270: het hele woord Stekky wit */
+    .beta-label { display:inline-block; vertical-align:super; margin-left:6px; padding:2px 7px; border-radius:999px; background:#fbbf24; border:1px solid #fbbf24; color:#3b0a57; font:700 11px/1.3 system-ui,sans-serif; letter-spacing:.06em; text-transform:uppercase; }
+    .logo p { font-size:11px; color:rgba(255,255,255,0.85); letter-spacing:2px; text-transform:uppercase; margin-top:6px; }
     .taalkeuze { display:flex; justify-content:center; gap:6px; margin-bottom:18px; }
     .taalkeuze button { background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); border-radius:20px; padding:6px 14px; min-height:34px; font-family:inherit; font-size:12px; cursor:pointer; }
     .taalkeuze button.aan { border-color:var(--accent); color:var(--accent); background:rgba(192,132,252,0.12); }
     .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:32px; }
+    /* v270: het vlak met het formulier is wit (een zwart vlak nodigde niet uit om je te registreren). De kleuren binnen het
+       vlak komen uit dezelfde variabelen, dus alles erin (tabs, velden, knoppen, meldingen) wordt vanzelf licht. */
+    .card { --surface:#ffffff; --bg:#f5effa; --border:#e2d4ef; --text:#2a1240; --text-muted:#7b6b8c; --accent:#8b3fd1; --danger:#d42c2c;
+      background:var(--surface); color:var(--text); border:none; box-shadow:0 18px 40px rgba(0,0,0,0.35); }
+    .card .btn-primary { color:#ffffff; }
+    .card .btn-primary:hover { background:#7a2fc0; }
+    .card .naam-knop:active { color:#ffffff; }
+    .card .spinner { border-color:rgba(255,255,255,0.35); border-top-color:#ffffff; }
+    .card .message.error { background:#fdecec; border-color:#f5b5b5; }
+    .card .message.success { background:#f3e8ff; border-color:#d9b8f7; }
+    /* v270: mooiere en duidelijkere invoervelden (gewoon lettertype, groter, duidelijke rand als je typt, oogje bij het wachtwoord) */
+    .card { font-family:'DM Sans',system-ui,-apple-system,sans-serif; }
+    .card .tab { font-family:inherit; text-transform:none; letter-spacing:0; font-size:14px; font-weight:600; min-height:40px; }
+    .card label { text-transform:none; letter-spacing:0; font-size:14px; font-weight:600; color:var(--text); margin-bottom:6px; }
+    .card .field { margin-bottom:18px; }
+    .card input[type=text], .card input[type=password], .card input[type=number] { min-height:52px; padding:12px 14px; border:1.5px solid var(--border); border-radius:12px;
+      background:#faf7fd; color:var(--text); font-family:inherit; transition:border-color .15s, box-shadow .15s, background .15s; }
+    .card input:hover { border-color:#cdb6e6; }
+    .card input:focus { border-color:var(--accent); background:#fff; box-shadow:0 0 0 4px rgba(139,63,209,0.15); }
+    .card input::placeholder { color:#b3a5c2; }
+    .card input[readonly] { background:#f3e8ff; border-style:dashed; color:var(--accent); font-weight:700; }
+    .card input.fout { border-color:var(--danger); box-shadow:0 0 0 4px rgba(212,44,44,0.12); }
+    .card input[type=number] { -moz-appearance:textfield; }
+    .card input[type=number]::-webkit-inner-spin-button, .card input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+    .card .btn { font-family:inherit; text-transform:none; letter-spacing:0; font-size:16px; font-weight:700; border-radius:12px; min-height:52px; }
+    .card .naam-knop { border-radius:12px; font-family:inherit; }
+    .card input[type=checkbox] { accent-color:var(--accent); }
+    /* de herstelsleutel: het vaste begin (FIBRO-) en het veld even hoog en in dezelfde stijl */
+    .card span:has(+ #herstelsleutel-input) { display:flex; align-items:center; min-height:52px; border:1.5px solid var(--border) !important; border-right:none !important; border-radius:12px 0 0 12px !important; background:#f3e8ff !important; font-weight:600; }
+    .card #herstelsleutel-input { border-radius:0 12px 12px 0 !important; }
+    .ww-veld { position:relative; }
+    .ww-veld input { padding-right:54px; }
+    .ww-oog { position:absolute; right:4px; top:50%; transform:translateY(-50%); width:44px; height:44px; border:none; border-radius:10px; background:transparent;
+      color:var(--text-muted); font-size:20px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .ww-oog:focus-visible { outline:2px solid var(--accent); }
     .tabs { display:flex; gap:4px; margin-bottom:28px; background:var(--bg); padding:4px; border-radius:8px; }
     .tab { flex:1; padding:8px; border:none; background:transparent; color:var(--text-muted); font-family:'DM Mono',monospace; font-size:12px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; border-radius:6px; transition:all 0.2s; }
     .tab.active { background:var(--surface); color:var(--accent); border:1px solid var(--border); }
@@ -75,8 +115,8 @@
 
 <div class="container">
   <div class="logo">
-    <h1>Stek<span>k</span>y</h1>
-    <p data-t>Jouw persoonlijke ruimte</p>
+    <h1>Stek<span>k</span>y<sup class="beta-label" data-t>bèta</sup></h1> <!-- v270: bèta hier, in plaats van het blok tekst bij registreren -->
+    <p data-t>Je eigen plekkie</p>
   </div>
 
   <div class="card">
@@ -144,12 +184,16 @@
         <button type="button" id="reg-beginscherm-toch" style="display:block;width:100%;background:none;border:none;color:var(--text);opacity:0.75;font-size:13px;text-decoration:underline;cursor:pointer;padding:8px;font-family:inherit;" data-t>Toch hier verdergaan</button>
       </div>
       <div id="reg-form">
-        <div class="beta-info" data-t>🧪 Stekky is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.</div>
+        <!-- v270: je eigen naam (verplicht). Wordt je weergavenaam: alleen op je toestel en bij je vrienden, niet op de server -->
+        <div class="field">
+          <label for="reg-eigennaam" data-t>Je eigen naam</label>
+          <input type="text" id="reg-eigennaam" placeholder="bijv. Sanne de Vries" data-t-attr="placeholder" autocomplete="name" autocapitalize="words" enterkeyhint="next" maxlength="40" />
+        </div>
         <div class="field">
           <label data-t>Gebruikersnaam</label>
           <!-- v266: een duidelijke knop met tekst onder de naam, in plaats van de dobbelsteen ernaast -->
           <input type="text" id="reg-username" placeholder="Je naam verschijnt hier" data-t-attr="placeholder" autocomplete="off" readonly style="cursor:default;" />
-          <button type="button" id="reg-andere-naam" class="naam-knop" onclick="nieuweNaam()" data-t>🔄 Kies een andere naam</button>
+          <button type="button" id="reg-andere-naam" class="naam-knop" onclick="nieuweNaam()" data-t>🔄 Gebruikersnaam-generator</button>
           <div style="font-size:11px;color:var(--text-muted);margin-top:4px;" data-t>⚠ Onthoud deze naam — je hebt hem nodig om in te loggen</div>
         </div>
         <div class="field">
@@ -158,7 +202,7 @@
         </div>
         <div class="field">
           <label data-t>Geboortejaar</label>
-          <input type="number" id="reg-jaar" placeholder="bijv. 2005" data-t-attr="placeholder" min="1900" max="2010" />
+          <input type="number" id="reg-jaar" placeholder="bijv. 2005" data-t-attr="placeholder" min="1900" max="2010" inputmode="numeric" enterkeyhint="done" />
           <div style="font-size:11px;color:var(--text-muted);margin-top:4px;" data-t>Stekky is vanaf 16 jaar.</div>
         </div>
         <div class="field" style="display:flex;align-items:flex-start;gap:10px;margin-top:4px;">
@@ -168,7 +212,6 @@
           </label>
         </div>
         <button class="btn btn-primary" onclick="registreren()" id="reg-btn" data-t>Account aanmaken</button>
-        <div class="herstelsleutel-info" data-t>💡 Na registratie zet je herstel met Face ID of je vingerafdruk aan.</div>
       </div>
     </div>
 
@@ -511,7 +554,7 @@
     // ── Push notificaties registreren ──
     try {
       if ('serviceWorker' in navigator && 'PushManager' in window) {
-        const reg = await navigator.serviceWorker.register('./service-worker.js?v=95')
+        const reg = await navigator.serviceWorker.register('./service-worker.js?v=96')
         await navigator.serviceWorker.ready
         const toestemming = await Notification.requestPermission()
         if (toestemming === 'granted') {
@@ -548,6 +591,9 @@
     const btn = document.getElementById('reg-btn')
     const msg = document.getElementById('reg-msg')
 
+    const eigenNaam = FibroRegistratie.schoonEigenNaam(document.getElementById('reg-eigennaam').value) // v270
+    const naamFout = FibroRegistratie.eigenNaamFout(eigenNaam)
+    if (naamFout) { toonBericht(msg,'error',T(naamFout)); document.getElementById('reg-eigennaam').classList.add('fout'); document.getElementById('reg-eigennaam').focus(); return }
     if (!username || !wachtwoord || !jaar) { toonBericht(msg,'error',T('Vul alle velden in.')); return }
     if (!akkoord) { toonBericht(msg,'error',T('Je moet akkoord gaan met de spelregels.')); return }
     if (wachtwoord.length < 8) { toonBericht(msg,'error',T('Wachtwoord minimaal 8 tekens.')); return }
@@ -595,6 +641,7 @@
     if (data.user) {
       // Sla private key op, public key naar Supabase
       slaPrivateKeyOp(data.user.id, keypair.privateKeyB64)
+      FibroRegistratie.bewaarEigenNaam(data.user.id, eigenNaam) // v270: je eigen naam = je weergavenaam (alleen op dit toestel)
       await supabase.from('profiles').upsert({
         id: data.user.id,
         username,
@@ -623,6 +670,22 @@
       </div>
     `
   }
+
+// v270: een oogje bij elk wachtwoordveld (tonen/verbergen), en een rode rand verdwijnt zodra je weer typt
+;(function () {
+  const t = zin => (typeof T === 'function' ? T(zin) : zin)
+  for (const veld of document.querySelectorAll('.card input[type=password]')) {
+    const doos = document.createElement('div'); doos.className = 'ww-veld'
+    veld.parentNode.insertBefore(doos, veld); doos.append(veld)
+    const oog = document.createElement('button'); oog.type = 'button'; oog.className = 'ww-oog'
+    const zet = zichtbaar => { veld.type = zichtbaar ? 'text' : 'password'; oog.textContent = zichtbaar ? '🙈' : '👁'; oog.setAttribute('aria-label', t(zichtbaar ? 'Wachtwoord verbergen' : 'Wachtwoord tonen')); oog.setAttribute('aria-pressed', String(zichtbaar)) }
+    oog.addEventListener('click', () => { zet(veld.type === 'password'); veld.focus() })
+    zet(false); doos.append(oog)
+  }
+  document.addEventListener('input', e => { if (e.target && e.target.classList) e.target.classList.remove('fout') })
+  const naam = document.getElementById('reg-eigennaam')
+  if (naam) naam.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('reg-wachtwoord')?.focus() } })
+})()
 
 window.formatHerstel = function(el) {
   let v = el.value.toUpperCase().replace(/[^A-Z0-9]/g, '')

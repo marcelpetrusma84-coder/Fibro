@@ -4,6 +4,9 @@
 // formulier dat toch niet werkt, en dat een geweigerde aanmelding een begrijpelijke melding geeft.
 // Standen: open (iedereen), uitnodiging (alleen met een geldige uitnodiging), dicht (niemand).
 // Is de SQL nog niet uitgevoerd, dan geldt 'open': dan werkt alles zoals vroeger.
+// v270 (5 nov 2026): bij het registreren vul je ook je EIGEN NAAM in (verplicht). Dat wordt je weergavenaam: die staat
+// alleen op je eigen toestel (fibro_profiel_<id>.naam) en gaat versleuteld naar je vrienden (sync.js, postbus.js).
+// De server krijgt hem niet: daar staat alleen je gebruikersnaam.
 (function () {
   const STANDEN = ['open', 'uitnodiging', 'dicht']
   const TEKST = {
@@ -46,5 +49,32 @@
     } catch (e) { return 'open' }
   }
 
-  window.FibroRegistratie = { STANDEN, TEKST, ONBEKEND, VERLOPEN, geldigeStand, melding, weigerTekst, isGeweigerd, haalStand }
+  // v270: je eigen naam. Hoogstens 40 tekens (zoals de sync en de postbus), spaties netjes.
+  const NAAM_MAX = 40
+  function schoonEigenNaam(naam) { return String(naam == null ? '' : naam).replace(/\s+/g, ' ').trim().slice(0, NAAM_MAX).trim() }
+  // De foutmelding (Nederlandse zin, de sleutel voor de vertaling), of null als de naam goed is
+  function eigenNaamFout(naam) {
+    const n = schoonEigenNaam(naam)
+    if (!n) return 'Vul je eigen naam in, zodat je vrienden weten wie je bent.'
+    if (n.length < 2) return 'Je eigen naam is te kort.'
+    return null
+  }
+  // Op dit toestel bewaren als weergavenaam (de rest van het lokale profiel blijft staan)
+  function bewaarEigenNaam(uid, naam, ls) {
+    ls = ls || window.localStorage
+    const n = schoonEigenNaam(naam)
+    if (!uid || !n) return false
+    let profiel = {}
+    try { profiel = JSON.parse(ls.getItem('fibro_profiel_' + uid) || '{}') || {} } catch (e) { profiel = {} }
+    if (typeof profiel !== 'object' || Array.isArray(profiel)) profiel = {}
+    profiel.naam = n
+    try { ls.setItem('fibro_profiel_' + uid, JSON.stringify(profiel)); return true } catch (e) { return false }
+  }
+  function heeftEigenNaam(uid, ls) {
+    ls = ls || window.localStorage
+    try { return !!schoonEigenNaam((JSON.parse(ls.getItem('fibro_profiel_' + uid) || '{}') || {}).naam) } catch (e) { return false }
+  }
+
+  window.FibroRegistratie = { STANDEN, TEKST, ONBEKEND, VERLOPEN, geldigeStand, melding, weigerTekst, isGeweigerd, haalStand,
+    NAAM_MAX, schoonEigenNaam, eigenNaamFout, bewaarEigenNaam, heeftEigenNaam }
 })()

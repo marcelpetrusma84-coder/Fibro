@@ -14,6 +14,9 @@ const MAX_LEEFTIJD = 7 * 24 * 3600 * 1000 // een oudere kopie: gewoon wachten op
 // open is en bewaart het in dit kastje; komt er een pushmelding (bericht, buzz, gemiste oproep) terwijl Fibro dicht
 // is, dan telt de portier er een bij. Het kastje blijft staan bij een nieuwe CACHE_VERSION.
 const BADGE_KAST = 'fibro-badge', BADGE_SLEUTEL = 'fibro-badge-teller'
+// v270: in een pushmelding de eigen naam van je vriend erbij ("Sanne aka ChonkyCapibara404 belt je"), zie pushnamen.js.
+// Lukt het laden niet, dan gewoon de tekst van de server.
+try { importScripts('./pushnamen.js?v=1') } catch (e) {}
 async function badgeEenErbij() {
   try {
     const kast = await caches.open(BADGE_KAST)
@@ -177,8 +180,10 @@ self.addEventListener('push', function(event) {
   const telt = !data.type || data.type === 'bericht' || data.type === 'buzz' || data.type === 'gemist'
   event.waitUntil((async () => {
     const schud = isBuzz && !(await buzzRustig())
+    let body = data.body || 'Je hebt een nieuw bericht'
+    try { if (self.FibroPushNamen) body = self.FibroPushNamen.naamInMelding(body, await self.FibroPushNamen.lees()) } catch (e) {} // v270
     const options = {
-      body: data.body || 'Je hebt een nieuw bericht',
+      body: body,
       icon: schud ? '/Fibro/icon-buzz.png' : '/Fibro/icon-192.png',
       badge: '/Fibro/icon-192.png',
       vibrate: schud ? [300, 80, 300, 80, 300, 80, 500] : isOproep ? [700, 300, 700, 300, 700, 300, 700] : [200, 100, 200],

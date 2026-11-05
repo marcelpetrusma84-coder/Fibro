@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=2"></script>
-<script src="taal.js?v=70"></script>
+<script src="taal.js?v=71"></script>
 <script src="apk.js?v=2"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2227,18 +2227,57 @@ window.openMenu = function() {
   const boven = Math.round(r.bottom + 8)
   m.style.cssText = 'position:fixed;z-index:10000;top:' + boven + 'px;right:' + Math.max(12, Math.round(window.innerWidth - r.right)) + 'px;min-width:240px;max-height:calc(100vh - ' + (boven + 12) + 'px);overflow-y:auto;background:rgba(26,10,46,0.97);border:0.5px solid var(--border);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,0.5)'
   // v178: in groepjes met een kopje (Instellingen, Accountinstellingen, Mijn Fibro)
-  const groep = (kop, id) => {
+  // v268: een kopje is een knop: tik = open- of dichtklappen (▸ dicht, ▾ open). Standaard alles dicht, zodat het
+  // menu op een scherm past; onder het kopje staat in een grijs regeltje wat erin zit. Fibro onthoudt wat je openzette
+  // (fibro_menu_open, op dit toestel).
+  let menuOpen = []
+  try { const l = JSON.parse(localStorage.getItem('fibro_menu_open') || '[]'); if (Array.isArray(l)) menuOpen = l.filter(x => typeof x === 'string') } catch (e) {}
+  const groep = (kop, id, inhoud) => {
     const g = document.createElement('div')
     g.setAttribute('role', 'group')
     g.setAttribute('aria-labelledby', id)
     if (m.childElementCount) g.style.cssText = 'border-top:0.5px solid var(--border);margin-top:4px'
-    const k = document.createElement('div')
+    const k = document.createElement('button')
+    k.type = 'button'
     k.id = id
-    k.textContent = kop
-    k.style.cssText = 'font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);padding:10px 12px 2px'
-    g.appendChild(k)
+    k.className = 'menu-kop'
+    k.setAttribute('aria-controls', id + '-lijst')
+    k.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;min-height:44px;text-align:left;background:none;border:none;border-radius:10px;padding:10px 12px;cursor:pointer;font-family:inherit;color:var(--text)'
+    const tekst = document.createElement('span')
+    tekst.style.cssText = 'flex:1;min-width:0'
+    const titel = document.createElement('span')
+    titel.textContent = kop
+    titel.style.cssText = 'display:block;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent)'
+    tekst.appendChild(titel)
+    const uitleg = document.createElement('span')
+    uitleg.className = 'menu-kop-uitleg'
+    uitleg.textContent = inhoud || ''
+    uitleg.style.cssText = 'display:block;font-size:12px;opacity:0.6;margin-top:2px'
+    if (inhoud) tekst.appendChild(uitleg)
+    const pijl = document.createElement('span')
+    pijl.setAttribute('aria-hidden', 'true')
+    pijl.style.cssText = 'font-size:14px;color:var(--accent)'
+    k.append(tekst, pijl)
+    const lijst = document.createElement('div')
+    lijst.id = id + '-lijst'
+    const zet = (open) => {
+      k.setAttribute('aria-expanded', open ? 'true' : 'false')
+      pijl.textContent = open ? '\u25BE' : '\u25B8'
+      lijst.hidden = !open
+      uitleg.style.display = open ? 'none' : 'block'
+    }
+    zet(menuOpen.includes(id))
+    k.onclick = (e) => {
+      e.stopPropagation()
+      const open = lijst.hidden
+      zet(open)
+      menuOpen = menuOpen.filter(x => x !== id).concat(open ? [id] : [])
+      try { localStorage.setItem('fibro_menu_open', JSON.stringify(menuOpen)) } catch (er) {}
+      if (open) setTimeout(() => { try { g.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) } catch (er) {} }, 0)
+    }
+    g.append(k, lijst)
     m.appendChild(g)
-    return g
+    return lijst
   }
   const item = (g, tekst, actie) => {
     const b = document.createElement('button')
@@ -2249,7 +2288,7 @@ window.openMenu = function() {
     g.appendChild(b)
     return b
   }
-  let g = groep(T('Instellingen'), 'menuKopInstellingen')
+  let g = groep(T('Instellingen'), 'menuKopInstellingen', T('Taal, berichten bewaren, muziek, buzz, vinkjes'))
   item(g, T('\u{1F310} Taal / Language'), openTaal) // v142
   item(g, T('\u23F3 Berichten bewaren'), openBewaren)
   // v179/v180: muziek vanzelf afspelen, aan of uit: je eigen profielnummer op Home, en dat van vrienden op hun profiel
@@ -2289,7 +2328,7 @@ window.openMenu = function() {
   })
   // v266: een eigen kopje Pushmeldingen: zelf kiezen welke je krijgt (standaard alles aan, zie pushmeldingen.js).
   // Berichten en bellen kun je niet uitzetten: dan werkt Fibro niet.
-  g = groep(T('Pushmeldingen'), 'menuKopPush')
+  g = groep(T('Pushmeldingen'), 'menuKopPush', T('Kies welke meldingen je krijgt'))
   {
     const vast = document.createElement('div')
     vast.textContent = T('\u{1F4AC} Berichten en \u{1F4DE} bellen: altijd aan')
@@ -2327,17 +2366,17 @@ window.openMenu = function() {
       if (uit && !bezig) for (const id in knoppen) knoppen[id](!uit.includes(id))
     })
   }
-  g = groep(T('Accountinstellingen'), 'menuKopAccount')
+  g = groep(T('Accountinstellingen'), 'menuKopAccount', T('Gegevens downloaden, account verwijderen'))
   item(g, T('\u{1F4E6} Mijn gegevens downloaden'), () => openAccount('gegevens'))
   item(g, T('\u{1F5D1}\uFE0F Account verwijderen'), () => openAccount('verwijderen')).style.color = '#fca5a5'
-  g = groep(T('Mijn Fibro'), 'menuKopFibro')
+  g = groep(T('Mijn Fibro'), 'menuKopFibro', T('Over, spelregels, app installeren, fout melden'))
   item(g, T('\u2139\uFE0F Over Fibro'), () => { window.location.href = 'over.html' })
   item(g, T('\u{1F4DC} Spelregels'), () => { window.location.href = 'spelregels.html' }) // v229
   item(g, T('\u{1F4F2} Fibro als app installeren'), openAppUitleg) // v178
   item(g, T('\u{1F4AC} Fout of idee melden'), () => window.openFibroTerugmelden()) // v222
   // v223: alleen voor moderators (is_moderator in je profiel). De pagina zelf controleert het nog eens bij de server.
   if (window._profiel && window._profiel.is_moderator === true) {
-    g = groep(T('Moderator'), 'menuKopModerator')
+    g = groep(T('Moderator'), 'menuKopModerator', T('Moderatie'))
     item(g, T('\u{1F6E1}\uFE0F Moderatie'), () => { window.location.href = 'moderatie.html' })
   }
   // v183: onderaan het versienummer (gewone tekst, geen knop)

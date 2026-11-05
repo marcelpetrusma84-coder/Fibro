@@ -31,7 +31,8 @@ function readSettings() {
   } catch { return { thinking:7, ultraThinking:5, pieces:'medium', board:'classic', soundTheme:'classic', gradedCaptureSounds:false, ultraGradedCaptureSounds:true, ultraEvaluationSound:false, ultraTakeback:false, ultraHints:false, showAttackRoutes:false, exaggerate:false, pointsPerPiece:false, noobMode:false, camerasAtTop:false, threePlayer:false, showUltraEvaluation:false, knightRouteSteps:[true,true,true,true] } }
 }
 // schaken-ui.js - spel voor Fibro, losgetrokken uit chat.html.
-// v265: animaties bij slaan (stuk vliegt weg met vonken) en schaakmat (koning valt om, schokgolf, dan SCHAAKMAT).
+// v265: animatie bij schaakmat (koning valt om, schokgolf, dan SCHAAKMAT). Slaan heeft geen eigen animatie (op verzoek
+// van Marcel weer weggehaald, v265b): de aanvaller schuift gewoon naar het vak, zoals altijd.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
 export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam, onInviteThird = null, testMode = false }) {
   const taal = maakSchaakTaal()
@@ -257,7 +258,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-frame.sch-frame-glass { border:1px solid #e4faffb0; background:linear-gradient(145deg,#d8f8ff99,#6698b8bb 48%,#1f3555ee); box-shadow:0 8px 0 #182941,0 12px 0 #102034,0 22px 34px #0009,inset 0 1px 2px #fff; }
       .sch-checkmate { position:fixed; z-index:20; inset:0; display:grid; place-items:center; pointer-events:none; background:radial-gradient(ellipse at center,#07122255,transparent 72%); opacity:1; transition:opacity .7s ease,transform .7s ease; }
       .sch-checkmate[hidden] { display:none; }
-      /* v265: animaties op verzoek van Marcel: een geslagen stuk vliegt weg met vonken, en bij schaakmat valt de koning om */
+      /* v265: bij schaakmat valt de koning om, met vonken en een schokgolf */
       .sch-koning-mat .sch-stuk { transform:rotate(90deg) translate(14%,-6%) scale(.92); filter:sepia(1) saturate(7) hue-rotate(315deg) brightness(.95) drop-shadow(0 0 6px #ff2d45) drop-shadow(0 2px 2px #000b); }
       .sch-vonk { position:fixed; z-index:30; width:7px; height:7px; margin:-3.5px 0 0 -3.5px; border-radius:50%; pointer-events:none; background:radial-gradient(circle,#fff 0 30%,#ffd36e 45%,#ff7a2f 80%,transparent); box-shadow:0 0 6px #ffb347; }
       .sch-schokgolf { position:fixed; z-index:30; border-radius:50%; pointer-events:none; border:3px solid #ff4d5e; box-shadow:0 0 18px #ff2d45, inset 0 0 12px #ff2d4599; }
@@ -1182,7 +1183,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   }
   for (const event of ['pointerup','pointercancel','lostpointercapture']) bordEl.addEventListener(event, los)
 
-  // v265: vonkjes die uit het midden van een vakje spatten (geslagen stuk), en een rode schokgolf (schaakmat)
+  // v265: vonkjes die uit het midden van een vakje spatten en een rode schokgolf (schaakmat)
   function vonken(vak, aantal = 10, vertraging = 0) {
     const r = vak.getBoundingClientRect(), cx = r.x + r.width / 2, cy = r.y + r.height / 2
     const klaar = []
@@ -1207,22 +1208,6 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     document.body.appendChild(g)
     g.animate([{ transform:'scale(.4)', opacity:1 }, { transform:'scale(4.2)', opacity:0 }], { duration:900, easing:'cubic-bezier(.15,.6,.3,1)' })
       .finished.catch(() => {}).finally(() => g.remove())
-  }
-  // Het geslagen stuk: even groot, dan draaiend weg en uit beeld, op het moment dat de aanvaller aankomt
-  function animeerSlag(zet) {
-    const plek = zet.type === 'enpassant' ? [zet.van[0], zet.naar[1]] : zet.naar
-    const slachtoffer = staat.bord[plek[0]]?.[plek[1]], aanvaller = staat.bord[zet.van[0]]?.[zet.van[1]]
-    if (!slachtoffer || !aanvaller || slachtoffer[0] === aanvaller[0]) return null
-    const vak = bordEl.querySelector(`[data-r="${plek[0]}"][data-k="${plek[1]}"]`)
-    const stuk = vak?.querySelector('.sch-stuk')
-    if (!stuk?.animate) return null
-    const kant = Math.random() < .5 ? -1 : 1
-    const a = stuk.animate([
-      { transform:'translate(0,0) rotate(0) scale(1)', opacity:1, filter:'brightness(1)' },
-      { transform:`translate(0,-6%) rotate(${kant * 12}deg) scale(1.22)`, opacity:1, filter:'brightness(1.8)', offset:.25 },
-      { transform:`translate(${kant * 120}%,-160%) rotate(${kant * 260}deg) scale(.35)`, opacity:0, filter:'brightness(1)' }
-    ], { duration:620, delay:430, easing:'cubic-bezier(.35,.1,.3,1)', fill:'forwards' })
-    return Promise.all([a.finished.catch(() => {}), vonken(vak, 12, 470)]) // blijft weg tot het bord opnieuw getekend wordt
   }
   // Schaakmat: de koning schudt, valt om en kleurt rood; daarna pas het woord SCHAAKMAT
   function animeerSchaakmat(kleur) {
@@ -1261,8 +1246,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     if (zet.type === 'rokade-kort') bewegingen.push([[zet.van[0],7],[zet.van[0],5]])
     if (zet.type === 'rokade-lang') bewegingen.push([[zet.van[0],0],[zet.van[0],3]])
     try {
-      const slag = minderBeweging.matches ? null : animeerSlag(zet) // v265
-      if (!minderBeweging.matches) await Promise.all([slag].concat(bewegingen.map(async ([van,naar]) => {
+      if (!minderBeweging.matches) await Promise.all(bewegingen.map(async ([van,naar]) => {
         const bron = bordEl.querySelector(`[data-r="${van[0]}"][data-k="${van[1]}"]`)
         const doel = bordEl.querySelector(`[data-r="${naar[0]}"][data-k="${naar[1]}"]`)
         const stuk = bron?.querySelector('.sch-stuk')
@@ -1276,8 +1260,8 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
           { transform:`translate(${x}px,${y-7}px) scale(1.12)`, offset:.8 },
           { transform:`translate(${x}px,${y}px) scale(1)`, offset:1 }
         ], { duration:680, easing:'cubic-bezier(.3,.05,.25,1)', fill:'forwards' })
-        try { await animatie.finished; if (slag) await slag } finally { animatie.cancel(); bron.style.zIndex = '' } // v265: blijft op het doelvak tot het geslagen stuk weg is
-      })))
+        try { await animatie.finished } finally { animatie.cancel(); bron.style.zIndex = '' }
+      }))
       return ronde === generatie && bordEl.isConnected
     } catch (error) {
       if (ronde !== generatie || error?.name === 'AbortError') return false

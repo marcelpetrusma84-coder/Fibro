@@ -97,7 +97,42 @@
   #fibroMenu, #fibroMenu * { font-family:'DM Sans',sans-serif !important; }
 </style>
 <script>
-function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
+// v266 (5 nov 2026): de opslag op dit toestel (IndexedDB) openen, met een wekker. Op de iPhone bleef dat openen soms hangen
+// (meestal na een tijd op de achtergrond): dan bleef Home half leeg (geen widgets, 'Opslag op dit apparaat —') tot je de app
+// afsloot. Nu: één verbinding voor de hele pagina; antwoordt het openen na 4 s niet, dan nog een keer; hangt ook dat, dan
+// meldt het dat (foutmelder) en laadt de pagina één keer vanzelf opnieuw (zoals afsluiten en opnieuw openen).
+let _fibroDB=null
+function openDB(){
+  if(_fibroDB)return _fibroDB
+  _fibroDB=new Promise((resolve,reject)=>{
+    let klaar=false
+    const probeer=poging=>{
+      let req
+      try{req=indexedDB.open('FibroDB',2)}catch(e){klaar=true;_fibroDB=null;reject('DB fout');return}
+      const wekker=setTimeout(()=>{
+        if(klaar)return
+        if(poging<1){probeer(poging+1);return}
+        klaar=true;_fibroDB=null
+        try{window.__fibroFoutmelder&&window.__fibroFoutmelder.meld('fout','Opslag op dit toestel antwoordt niet (IndexedDB)','index.html')}catch(e){}
+        try{const k='fibro_db_herladen',t=+sessionStorage.getItem(k)||0;if(Date.now()-t>60000){sessionStorage.setItem(k,String(Date.now()));location.reload()}}catch(e){}
+        reject('DB hangt')
+      },4000)
+      req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})}
+      req.onsuccess=e=>{
+        const db=e.target.result
+        if(klaar){try{db.close()}catch(x){};return}
+        klaar=true;clearTimeout(wekker)
+        db.onversionchange=()=>{try{db.close()}catch(x){};_fibroDB=null}
+        db.onclose=()=>{_fibroDB=null}
+        resolve(db)
+      }
+      req.onerror=()=>{if(klaar)return;klaar=true;clearTimeout(wekker);_fibroDB=null;reject('DB fout')}
+    }
+    probeer(0)
+  })
+  return _fibroDB
+}
+window.openDB=openDB
 async function slaFotoOp(id,data){const uid=window._uid;if(uid&&typeof id==='string'&&id.includes(uid)){const g=typeof data==='string'?data.length:(data&&data.size)||0;const nu=await metenOpslag(uid);if(nu+g>157286400){alert(T('Je profiel is vol (150 MB).\n\nVerwijder eerst een foto of nummer om ruimte te maken.'));return null}}const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}
 async function dbAlleSleutels(){const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').getAllKeys();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>resolve([])})}
 async function metenOpslag(uid){try{const alle=await dbAlleSleutels();const mijn=alle.filter(k=>typeof k==='string'&&k.includes(uid));let totaal=0;for(const k of mijn){if(k==='video_data_'+uid){try{const m=JSON.parse(await laadFotoUitDB('video_meta_'+uid)||'null');if(m&&m.grootte>0){totaal+=m.grootte;continue}}catch(e){}}const d=await laadFotoUitDB(k);if(typeof d==='string')totaal+=d.length;else if(d&&d.size)totaal+=d.size}return totaal}catch(e){console.warn('[opslag] meten mislukt',e);return 0}}
@@ -673,7 +708,7 @@ function _opWit(canvas) {
 function fotoData(canvas, kwaliteit) {
   return _kanWebp ? canvas.toDataURL('image/webp', kwaliteit) : _opWit(canvas).toDataURL('image/jpeg', kwaliteit)
 }
-function openFibroDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
+function openFibroDB(){return window.openDB()} // v266: dezelfde verbinding, met wekker (zie openDB bovenin)
 async function slaInDB(id,data){const uid=window._uid;if(uid&&typeof id==='string'&&id.includes(uid)){const g=typeof data==='string'?data.length:(data&&data.size)||0;const oudItem=await laadFotoUitDB(id);const oudG=typeof oudItem==='string'?oudItem.length:0;const nu=await metenOpslag(uid);if(nu-oudG+g>157286400){alert(T('Je profiel is vol (150 MB).'));throw new Error('Opslag vol')}}const db=await openFibroDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}
 async function laadUitDB(id){try{const db=await openFibroDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
 // Voortgangsbalk bij muziek uploaden

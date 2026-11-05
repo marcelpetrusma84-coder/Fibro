@@ -39,6 +39,16 @@
     .taalkeuze button { background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); border-radius:20px; padding:6px 14px; min-height:34px; font-family:inherit; font-size:12px; cursor:pointer; }
     .taalkeuze button.aan { border-color:var(--accent); color:var(--accent); background:rgba(192,132,252,0.12); }
     .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:32px; }
+    /* v270: het vlak met het formulier is wit (een zwart vlak nodigde niet uit om je te registreren). De kleuren binnen het
+       vlak komen uit dezelfde variabelen, dus alles erin (tabs, velden, knoppen, meldingen) wordt vanzelf licht. */
+    .card { --surface:#ffffff; --bg:#f5effa; --border:#e2d4ef; --text:#2a1240; --text-muted:#7b6b8c; --accent:#8b3fd1; --danger:#d42c2c;
+      background:var(--surface); color:var(--text); border:none; box-shadow:0 18px 40px rgba(0,0,0,0.35); }
+    .card .btn-primary { color:#ffffff; }
+    .card .btn-primary:hover { background:#7a2fc0; }
+    .card .naam-knop:active { color:#ffffff; }
+    .card .spinner { border-color:rgba(255,255,255,0.35); border-top-color:#ffffff; }
+    .card .message.error { background:#fdecec; border-color:#f5b5b5; }
+    .card .message.success { background:#f3e8ff; border-color:#d9b8f7; }
     .tabs { display:flex; gap:4px; margin-bottom:28px; background:var(--bg); padding:4px; border-radius:8px; }
     .tab { flex:1; padding:8px; border:none; background:transparent; color:var(--text-muted); font-family:'DM Mono',monospace; font-size:12px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; border-radius:6px; transition:all 0.2s; }
     .tab.active { background:var(--surface); color:var(--accent); border:1px solid var(--border); }

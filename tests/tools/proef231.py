@@ -132,7 +132,7 @@ try:
         br = p.chromium.launch(args=['--no-proxy-server'])
         sl = {}
         cm, m = toestel(br, MARCEL, sl)
-        cb, b = toestel(br, BRAM, sl)   # alleen sleutels maken; Bram opent nog niets van Fibro
+        cb, b = toestel(br, BRAM, sl)   # alleen sleutels maken; Bram opent nog niets van Stekky
         b.goto(B + 'manifest.json')
         m.evaluate("ls => { for (const [k, v] of Object.entries(ls)) localStorage.setItem(k, v) }", MARCEL_LS)
         m.goto(B + 'vrienden.html')
@@ -146,7 +146,7 @@ try:
         t0 = time.time()
         while time.time() - t0 < 25 and any(x['ontvanger'] == BRAM for x in POST): b.wait_for_timeout(500)
         b.wait_for_timeout(1500)
-        check('B Bram opent Fibro later: pakketje binnen en van de server weg', not any(x['ontvanger'] == BRAM for x in POST), len(POST))
+        check('B Bram opent Stekky later: pakketje binnen en van de server weg', not any(x['ontvanger'] == BRAM for x in POST), len(POST))
         b.goto(B + 'vriend-profiel.html?id=' + MARCEL)
         wacht(b, "() => document.body.innerText.includes('Groeten van Marcel uit de postbus')", 10000)
         tekst = b.evaluate("document.body.innerText")

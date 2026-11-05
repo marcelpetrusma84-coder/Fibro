@@ -1,5 +1,6 @@
 // foutmelder.js (v2, Fibro v265): wat er technisch misgaat in de app, naar de tabel foutmeldingen (sql/foutmeldingen.sql).
 // v2: ook een script of stijl die niet laadt (pagina bleef leeg); dan één keer vanzelf opnieuw laden (zie onderaan).
+// v3: niet melden als je de pagina net verlaat (Safari breekt dan wat nog binnenkomt af).
 // Moderators lezen ze op Moderatie > Foutmeldingen. Staat zo vroeg mogelijk op elke pagina (direct na huisregel.js),
 // zodat ook fouten tijdens het laden meekomen.
 //
@@ -181,15 +182,30 @@
   function bestandsnaam (adres) {
     try { return new URL(adres, location.href).pathname.split('/').pop() || '' } catch (e) { return '' }
   }
+  // v3 (5 nov 2026): niet melden als je de pagina net verlaat. Tik je snel door naar Chat (of gaat de app naar de
+  // achtergrond) terwijl er nog een script binnenkomt, dan breekt Safari dat af en geeft het een 'error'. Dat is geen
+  // fout: zo kwam 'Laden mislukt: beltoon.js' (dat laat op Home geladen wordt) 6x in de moderatie. Daarom 1 seconde
+  // wachten: is de pagina dan weg of verborgen, dan niets. Een script met data-fibro-stil probeert het zelf nog eens
+  // (bel-luisteraar.js) en meldt alleen als ook dat mislukt.
+  let weg = false
+  function verborgen () { try { return typeof document !== 'undefined' && document.visibilityState === 'hidden' } catch (e) { return false } }
+  window.addEventListener('pagehide', function () { weg = true })
+  window.addEventListener('beforeunload', function () { weg = true })
+  window.addEventListener('pageshow', function () { weg = false })
   window.addEventListener('error', function (e) {
     const el = e && e.target
     if (!el || el === window || !el.tagName) return
+    if (el.dataset && el.dataset.fibroStil) return
     const tag = el.tagName.toUpperCase()
     const adres = tag === 'SCRIPT' ? el.src : (tag === 'LINK' && /stylesheet/i.test(el.rel || '') ? el.href : '')
     if (!adres) return // een plaatje of geluid: niet erg genoeg
     if (new URL(adres, location.href).origin !== location.origin) return // alleen onze eigen bestanden
-    meld('fout', 'Laden mislukt: ' + bestandsnaam(adres), bestandsnaam(adres))
-    herstel()
+    if (weg || verborgen()) return
+    setTimeout(function () {
+      if (weg || verborgen()) return
+      meld('fout', 'Laden mislukt: ' + bestandsnaam(adres), bestandsnaam(adres))
+      herstel()
+    }, 1000)
   }, true)
   const MODULE_MIS = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Failed to load module script/i
   window.addEventListener('unhandledrejection', function (e) {

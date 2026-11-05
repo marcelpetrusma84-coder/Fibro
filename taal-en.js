@@ -185,6 +185,12 @@ window.FIBRO_EN = {
   "Instellingen": "Settings",
   "Accountinstellingen": "Account settings",
   "Mijn Stekky": "My {app}",
+  // v268: het menu met inklapbare kopjes, met een regeltje wat erin zit
+  "Taal, berichten bewaren, muziek, buzz, vinkjes": "Language, keeping messages, music, buzz, read receipts",
+  "Kies welke meldingen je krijgt": "Choose which notifications you get",
+  "Gegevens downloaden, account verwijderen": "Download data, delete account",
+  "Over, spelregels, app installeren, fout melden": "About, house rules, install app, report a problem",
+  "Moderatie": "Moderation",
   "📲 Stekky als app installeren": "📲 Install {app} as an app",
   "✓ Je gebruikt Stekky nu al als app.": "✓ You're already using {app} as an app.",
   "Zet Stekky op het beginscherm van je telefoon. Dan opent Stekky als een gewone app: over het hele scherm, met meldingen en een bolletje bij ongelezen berichten.": "Add {app} to your phone's home screen. Then {app} opens like a normal app: full screen, with notifications and a badge for unread messages.",

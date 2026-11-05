@@ -8,11 +8,18 @@ const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v &&
 import { initBellen, weigerooproep } from './bellen.js?v=162'
 
 // beltoon.js laden (klassiek script, zet window.FibroBeltoon)
-function laadBeltoon() {
-  if (window.FibroBeltoon || document.querySelector('script[data-fibro-beltoon]')) return
+// v205 (5 nov 2026): lukt het laden niet (Safari breekt het af, even geen internet), dan na 1,5 s nog een keer, stil.
+// Pas als ook dat mislukt, meldt foutmelder.js 'Laden mislukt: beltoon.js'.
+function laadBeltoon(herkansing = false) {
+  if (window.FibroBeltoon) return
+  if (!herkansing && document.querySelector('script[data-fibro-beltoon]')) return
   const s = document.createElement('script')
   s.src = 'beltoon.js?v=9'
   s.dataset.fibroBeltoon = '1'
+  if (!herkansing) {
+    s.dataset.fibroStil = '1' // de eerste keer niet melden (foutmelder.js)
+    s.onerror = () => { s.remove(); setTimeout(() => laadBeltoon(true), 1500) }
+  }
   document.head.appendChild(s)
 }
 

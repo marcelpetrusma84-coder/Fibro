@@ -27,7 +27,7 @@
 <link href="lettertypen/basis.css?v=1" rel="stylesheet">
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
-:root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:rgba(255,255,255,0.5); }
+:root { --bg:#8b3fd1; /* v270: zoals de inlogpagina */ --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --accent2:#f0abfc; --text:#f3e8ff; --muted:rgba(255,255,255,0.5); }
 body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); max-width:480px; margin:0 auto; min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
 .taalkeuze { display:flex; justify-content:center; gap:6px; margin:-6px 0 18px; }
 .taalkeuze button { background:rgba(255,255,255,0.05); border:0.5px solid var(--border); color:var(--text); border-radius:20px; padding:6px 14px; min-height:34px; font-family:inherit; font-size:12px; cursor:pointer; }
@@ -66,6 +66,37 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 .herstel-code { font-family:'DM Mono',monospace; font-size:20px; letter-spacing:2px; color:var(--accent); text-align:center; margin:8px 0; word-break:break-all; }
 .laden { font-size:15px; color:var(--muted); }
 .e2e-badge { display:inline-flex; align-items:center; gap:5px; background:rgba(34,197,94,0.1); border:0.5px solid rgba(34,197,94,0.3); border-radius:20px; padding:4px 10px; font-size:11px; color:#22c55e; margin-bottom:12px; }
+/* v270: dezelfde stijl als de inlogpagina: paarse achtergrond, logo wit erboven, een wit vlak met duidelijke velden */
+.logo-kop { text-align:center; margin:8px 0 22px; }
+.logo-kop h1 { position:relative; display:inline-block; font-family:'DM Serif Display',serif; font-weight:400; font-size:48px; line-height:1; letter-spacing:-1px; color:#ffffff; }
+.logo-kop .beta-label { position:absolute; left:100%; top:2px; margin-left:8px; background:#fbbf24; border-color:#fbbf24; color:#3b0a57; }
+.logo-kop p { margin-top:8px; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.85); }
+.kaart { --text:#2a1240; --muted:#7b6b8c; --border:#e2d4ef; --accent:#8b3fd1; --accent2:#b26ef0; --vak:#faf7fd;
+  background:#ffffff; color:var(--text); border:none; backdrop-filter:none; box-shadow:0 18px 40px rgba(0,0,0,0.3); }
+.kaart .taalkeuze button { background:#fff; border:1px solid var(--border); color:var(--text); }
+.kaart .taalkeuze button.aan { border-color:var(--accent); color:var(--accent); background:#f3e8ff; }
+.kaart .wat-is-fibro { background:#f7f2fc; border:1px solid var(--border); }
+.kaart .wat-is-fibro .rij { color:var(--text); }
+.kaart hr { border-top:1px solid var(--border); }
+.kaart .field { margin-bottom:18px; }
+.kaart .field label { text-transform:none; letter-spacing:0; font-size:14px; font-weight:600; color:var(--text); margin-bottom:6px; }
+.kaart .input { min-height:52px; padding:12px 14px; border:1.5px solid var(--border); border-radius:12px; background:var(--vak); color:var(--text); transition:border-color .15s, box-shadow .15s, background .15s; }
+.kaart .input:hover { border-color:#cdb6e6; }
+.kaart .input:focus { border-color:var(--accent); background:#fff; box-shadow:0 0 0 4px rgba(139,63,209,0.15); }
+.kaart .input::placeholder { color:#b3a5c2; }
+.kaart .input[readonly] { background:#f3e8ff; border-style:dashed; color:var(--accent); font-family:inherit; font-weight:700; }
+.kaart .input.fout { border-color:#d42c2c; box-shadow:0 0 0 4px rgba(212,44,44,0.12); }
+.kaart input[type=number] { -moz-appearance:textfield; }
+.kaart input[type=number]::-webkit-inner-spin-button, .kaart input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+.kaart .btn { color:#ffffff; min-height:52px; font-weight:700; }
+.kaart .naam-knop:active { color:#ffffff; }
+.kaart .msg.error { background:#fdecec; border:1px solid #f5b5b5; color:#d42c2c; }
+.kaart .msg.success { background:#ecfdf3; border:1px solid #a7e8c0; color:#15803d; }
+.kaart .herstel-box { background:#f7f2fc; }
+.kaart input[type=checkbox] { accent-color:var(--accent); }
+.ww-veld { position:relative; }
+.ww-veld .input { padding-right:54px; }
+.ww-oog { position:absolute; right:4px; top:50%; transform:translateY(-50%); width:44px; height:44px; border:none; border-radius:10px; background:transparent; color:var(--muted); font-size:20px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; }
 </style>
 <link rel="stylesheet" href="android-fix.css?v=1">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -73,8 +104,9 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 </head>
 <body>
 
+<!-- v270: zoals de inlogpagina: Stekky wit in het midden, bèta ernaast, Je eigen plekkie eronder; daaronder een wit vlak -->
+<div class="logo-kop"><h1>Stekky<sup class="beta-label" data-t>bèta</sup></h1><p data-t>Je eigen plekkie</p></div>
 <div class="kaart">
-  <div class="fibro-logo">Stekky</div>
   <div class="taalkeuze" role="group" aria-label="Taal / Language">
     <button type="button" data-kies-taal="nl" onclick="T.kies('nl')">Nederlands</button>
     <button type="button" data-kies-taal="en" onclick="T.kies('en')">English</button>
@@ -93,9 +125,9 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
   <div id="bestaandScherm" style="display:none; text-align:center; padding:30px 20px;">
   <div class="avatar" id="bestaandAvatar">👤</div>
   <h2 id="bestaandNaam" style="margin-bottom:8px;" data-t>Iemand</h2>
-  <p style="color:#888; margin-bottom:24px;" data-t>wil je toevoegen als vriend op Stekky</p>
-  <button id="toevoegBtn" onclick="voegToe()" style="display:block; width:100%; padding:14px; border:none; border-radius:24px; background:#5c6bc0; color:white; font-size:16px; font-weight:bold; cursor:pointer; margin-bottom:10px;" data-t>✅ Toevoegen</button>
-  <button onclick="window.location.href='index.html'" style="display:block; width:100%; padding:14px; border:none; border-radius:24px; background:rgba(255,255,255,0.1); color:#aaa; font-size:16px; cursor:pointer;" data-t>Annuleren</button>
+  <p style="color:var(--muted); margin-bottom:24px;" data-t>wil je toevoegen als vriend op Stekky</p>
+  <button id="toevoegBtn" onclick="voegToe()" style="display:block; width:100%; padding:14px; border:none; border-radius:24px; background:var(--accent); color:white; font-size:16px; font-weight:bold; cursor:pointer; margin-bottom:10px;" data-t>✅ Toevoegen</button>
+  <button onclick="window.location.href='index.html'" style="display:block; width:100%; padding:14px; border:none; border-radius:24px; background:var(--vak); color:var(--muted); font-size:16px; cursor:pointer;" data-t>Annuleren</button>
 </div>
 <div id="uitnodigingScherm" style="display:none">
     <div class="avatar" id="uitnodigerAvatar">👤</div>
@@ -103,7 +135,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
     <div class="uitnodiger-gebruiker" id="uitnodigerGebruiker" hidden></div>
     <div class="uitnodiger-sub" data-t>nodigt je uit op Stekky ✨</div>
     <div class="wat-is-fibro">
-      <div class="kop"><span data-t>Stekky: een eerlijke social media app voor vrienden</span><span class="beta-label" data-t>bèta</span></div> <!-- v270: bèta hier, in plaats van het blok tekst -->
+      <div class="kop" data-t>Stekky: een eerlijke social media app voor vrienden</div>
       <div class="rij"><span>💬</span><span data-t>Chatten, foto's en spraakberichtjes, end-to-end versleuteld</span></div>
       <div class="rij"><span>📞</span><span data-t>Bellen en videobellen met je vrienden</span></div>
       <div class="rij"><span>🎨</span><span data-t>Je eigen profiel met widgets, muziek en stickers</span></div>
@@ -119,7 +151,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
     <!-- v270: je eigen naam (verplicht). Wordt je weergavenaam: alleen op je toestel en bij je vrienden, niet op de server -->
     <div class="field">
       <label for="eigennaam" data-t>Je eigen naam</label>
-      <input class="input" type="text" id="eigennaam" placeholder="bijv. Sanne de Vries" data-t-attr="placeholder" autocomplete="name" maxlength="40" />
+      <input class="input" type="text" id="eigennaam" placeholder="bijv. Sanne de Vries" data-t-attr="placeholder" autocomplete="name" autocapitalize="words" enterkeyhint="next" maxlength="40" />
     </div>
 
     <div class="field">
@@ -137,7 +169,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 
     <div class="field">
       <label data-t>Geboortejaar</label>
-      <input class="input" type="number" id="geboortejaar" placeholder="bijv. 2005" min="1900" max="2010" data-t-attr="placeholder">
+      <input class="input" type="number" id="geboortejaar" placeholder="bijv. 2005" min="1900" max="2010" inputmode="numeric" enterkeyhint="done" data-t-attr="placeholder">
       <div class="hint" data-t>Alleen het jaar. Stekky is vanaf 16 jaar.</div>
     </div>
 
@@ -151,13 +183,13 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
     <button class="btn" onclick="registreren()" id="regBtn" data-t>Account aanmaken 🌸</button>
     </div>
 
-    <div style="margin-top:26px;padding-top:18px;border-top:0.5px solid rgba(255,255,255,0.12);text-align:center;">
+    <div style="margin-top:26px;padding-top:18px;border-top:1px solid var(--border);text-align:center;">
       <div style="font-size:13px;color:var(--muted);margin-bottom:4px;" data-t>Heb je al een Stekky-account?</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.35);line-height:1.5;margin-bottom:12px;" data-t>
+      <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px;" data-t>
         Kopieer deze link en open hem in Stekky op je beginscherm, of log hier in.
       </div>
-      <button onclick="kopieerLink()" id="kopieerBtn" style="background:rgba(255,255,255,0.07);color:#e5e5e5;border:0.5px solid rgba(255,255,255,0.15);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 4px 6px;font-family:inherit;" data-t>Link kopieren</button>
-      <button onclick="naarLogin()" style="background:rgba(255,255,255,0.07);color:#e5e5e5;border:0.5px solid rgba(255,255,255,0.15);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 4px 6px;font-family:inherit;" data-t>Inloggen</button>
+      <button onclick="kopieerLink()" id="kopieerBtn" style="background:var(--vak);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 4px 6px;font-family:inherit;" data-t>Link kopieren</button>
+      <button onclick="naarLogin()" style="background:var(--vak);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 4px 6px;font-family:inherit;" data-t>Inloggen</button>
     </div>
   </div>
 
@@ -170,7 +202,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
       <div style="font-size:12px;color:var(--muted);margin-bottom:4px;" data-t>Jouw herstelsleutel:</div>
       <div class="herstel-code" id="herstelCode">—</div>
     </div>
-    <button onclick="kopieerCode()" id="kopieerCodeBtn" style="background:rgba(255,255,255,0.07);color:#e5e5e5;border:0.5px solid rgba(255,255,255,0.15);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 0 12px;font-family:inherit;" data-t>Code kopieren</button><div style="font-size:11px;color:#f87171;margin-bottom:16px;" data-t>Dit zie je maar een keer. Bewaar hem buiten je telefoon.</div>
+    <button onclick="kopieerCode()" id="kopieerCodeBtn" style="background:var(--vak);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 0 12px;font-family:inherit;" data-t>Code kopieren</button><div style="font-size:11px;color:#f87171;margin-bottom:16px;" data-t>Dit zie je maar een keer. Bewaar hem buiten je telefoon.</div>
     <!-- v258: meldingen meteen aanzetten, met een tik (meldingen-aan.js). Niet in Safari op de iPhone: daar kan het pas
          als Fibro op het beginscherm staat (het vak hieronder legt dat uit; Home vraagt het dan de eerste keer). -->
     <div id="meldWelkom" hidden style="background:rgba(192,132,252,0.12);border:1px solid rgba(192,132,252,0.5);border-radius:12px;padding:14px;margin-bottom:16px;text-align:left;">
@@ -178,7 +210,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
       <div id="meldWelkomTekst" style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:10px;" data-t>Krijg een melding als een vriend je schrijft, buzzt of uitdaagt.</div>
       <button type="button" id="meldWelkomKnop" style="width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;" data-t>🔔 Meldingen aanzetten</button>
     </div>
-    <div style="background:rgba(255,255,255,0.05);border:0.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;" data-t>Zet Stekky op je beginscherm</div><div style="font-size:12px;color:var(--muted);line-height:1.6;" data-t>Op de iPhone werken meldingen alleen als Stekky op je beginscherm staat.<br><b>iPhone:</b> Safari, deelicoon onderin, Zet op beginscherm.<br><b>Android:</b> Chrome, drie puntjes, Toevoegen aan startscherm.</div></div>
+    <div style="background:var(--vak);border:0.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;" data-t>Zet Stekky op je beginscherm</div><div style="font-size:12px;color:var(--muted);line-height:1.6;" data-t>Op de iPhone werken meldingen alleen als Stekky op je beginscherm staat.<br><b>iPhone:</b> Safari, deelicoon onderin, Zet op beginscherm.<br><b>Android:</b> Chrome, drie puntjes, Toevoegen aan startscherm.</div></div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:16px;" data-t>
       Inloggen doe je met: <span style="color:var(--accent)" id="bevestigNaam">—</span>
     </div>
@@ -379,6 +411,22 @@ window.naarLogin = function() {
   window.location.href = 'login.html'
 }
 
+// v270: een oogje bij het wachtwoord (tonen/verbergen), en een rode rand verdwijnt zodra je weer typt (zoals op de inlogpagina)
+;(function () {
+  const t = zin => (typeof T === 'function' ? T(zin) : zin)
+  for (const veld of document.querySelectorAll('.kaart input[type=password]')) {
+    const doos = document.createElement('div'); doos.className = 'ww-veld'
+    veld.parentNode.insertBefore(doos, veld); doos.append(veld)
+    const oog = document.createElement('button'); oog.type = 'button'; oog.className = 'ww-oog'
+    const zet = zichtbaar => { veld.type = zichtbaar ? 'text' : 'password'; oog.textContent = zichtbaar ? '🙈' : '👁'; oog.setAttribute('aria-label', t(zichtbaar ? 'Wachtwoord verbergen' : 'Wachtwoord tonen')); oog.setAttribute('aria-pressed', String(zichtbaar)) }
+    oog.addEventListener('click', () => { zet(veld.type === 'password'); veld.focus() })
+    zet(false); doos.append(oog)
+  }
+  document.addEventListener('input', e => { if (e.target && e.target.classList) e.target.classList.remove('fout') })
+  const naam = document.getElementById('eigennaam')
+  if (naam) naam.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('wachtwoord')?.focus() } })
+})()
+
 window.registreren = async function() {
   const naam = document.getElementById('gebruikersnaam').value.trim()
   const ww = document.getElementById('wachtwoord').value
@@ -389,7 +437,7 @@ window.registreren = async function() {
 
   const eigenNaam = FibroRegistratie.schoonEigenNaam(document.getElementById('eigennaam').value) // v270
   const naamFout = FibroRegistratie.eigenNaamFout(eigenNaam)
-  if (naamFout) { msg.className='msg error'; msg.textContent=T(naamFout); document.getElementById('eigennaam').focus(); return }
+  if (naamFout) { msg.className='msg error'; msg.textContent=T(naamFout); document.getElementById('eigennaam').classList.add('fout'); document.getElementById('eigennaam').focus(); return }
   if (!naam || !ww || !jaar) { msg.className='msg error'; msg.textContent=T('Vul alle velden in.'); return }
   if (!akkoord) { msg.className='msg error'; msg.textContent=T('Ga akkoord met de spelregels.'); return }
   if (ww.length < 8) { msg.className='msg error'; msg.textContent=T('Wachtwoord minimaal 8 tekens.'); return }

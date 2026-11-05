@@ -1,4 +1,5 @@
 // beltoon.js — beltoon voor een inkomende oproep (v8)
+// v10 (6 nov 2026, v270): het tikscherm in de stijl van de inlogpagina: paars van de knoppen, Stekky wit in het midden
 // v7 (11 oktober 2026, v142): het welkomstscherm ook in het Engels (taal.js; zonder taal.js Nederlands)
 // Werkt met een gewoon <audio>-element i.p.v. Web Audio: de iPhone laat dat beter toe.
 // Het klankje wordt hier in code gemaakt als WAV, er zijn geen geluidsbestanden.
@@ -95,22 +96,24 @@
     wekScherm = document.createElement('div')
     wekScherm.style.cssText =
       'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;' +
-      'justify-content:center;gap:14px;background:rgba(26,10,46,0.94);color:#f3e8ff;' +
+      'justify-content:center;gap:14px;background:#8b3fd1;color:#ffffff;' +
       'font-family:inherit;text-align:center;padding:24px;opacity:0;transition:opacity .3s;cursor:pointer;'
     const hallo = document.createElement('div')
     hallo.textContent = welkom ? vt('Welkom bij') : ''
-    hallo.style.cssText = 'font-size:22px;opacity:0.8;' + (welkom ? '' : 'display:none;')
+    hallo.style.cssText = 'font-size:22px;opacity:0.9;' + (welkom ? '' : 'display:none;')
     const logo = document.createElement('div')
     logo.textContent = welkom ? 'Stekky 👋' : 'Stekky'
-    logo.style.cssText = 'font-size:52px;font-weight:700;background:linear-gradient(135deg,#c084fc,#f0abfc);' +
-      '-webkit-background-clip:text;background-clip:text;color:transparent;'
+    logo.style.cssText = "font-family:'DM Serif Display',Georgia,serif;font-size:56px;font-weight:400;letter-spacing:-1px;line-height:1;color:#ffffff;"
+    const plekkie = document.createElement('div') // v10: zoals op de inlogpagina
+    plekkie.textContent = vt('Je eigen plekkie')
+    plekkie.style.cssText = 'font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:0.85;margin-top:-6px;margin-bottom:18px;'
     const tik = document.createElement('div')
     tik.textContent = welkom ? vt('👆 Tik om te beginnen') : vt('👆 Tik om verder te gaan')
-    tik.style.cssText = 'font-size:20px;'
+    tik.style.cssText = 'font-size:20px;font-weight:600;padding:12px 22px;border-radius:999px;background:rgba(255,255,255,0.16);'
     const uitleg = document.createElement('div')
     uitleg.textContent = vt('🔔 Dan hoor je de beltoon als iemand belt')
-    uitleg.style.cssText = 'font-size:14px;opacity:0.6;'
-    wekScherm.append(hallo, logo, tik, uitleg)
+    uitleg.style.cssText = 'font-size:14px;opacity:0.85;'
+    wekScherm.append(hallo, logo, plekkie, tik, uitleg)
     // De tik zelf wordt al opgevangen door ontgrendel(); hier alleen het scherm weghalen
     // en voorkomen dat de tik doorgaat naar wat eronder ligt.
     // v8 (4 nov 2026): staan de meldingen nog niet aan (Home, meldingen-aan.js zet dan window.FibroMeldingenBijTik), dan

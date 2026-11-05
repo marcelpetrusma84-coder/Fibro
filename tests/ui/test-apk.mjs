@@ -92,7 +92,7 @@ assert.match(laad().api.url, /^https:\/\/github\.com\/marcelpetrusma84-coder\/Fi
   const { api, local, sessie, ctx } = laad({ href: INVITE })
   let web = 0
   const k = api.keuze({ naam: 'Bram', onWeb: () => web++ })
-  assert.ok(vind(k, 'Hoe wil je Fibro gebruiken?'))
+  assert.ok(vind(k, 'Hoe wil je Stekky gebruiken?'))
   assert.ok(vind(k, 'Aanbevolen'), 'de app staat als aanbevolen')
   const knop = vind(k, '⬇️ Download de app')
   assert.equal(knop.href, api.url)
@@ -100,7 +100,7 @@ assert.match(laad().api.url, /^https:\/\/github\.com\/marcelpetrusma84-coder\/Fi
   assert.equal(stappen.hidden, true, 'de stappen pas na het downloaden')
   knop.klik()
   assert.equal(stappen.hidden, false)
-  assert.ok(vind(k, 'Open de Fibro-app. Daar maak je je account aan en word je meteen vrienden met Bram.'))
+  assert.ok(vind(k, 'Open de Stekky-app. Daar maak je je account aan en word je meteen vrienden met Bram.'))
   assert.equal(api.wachtendeUitnodiging(), INVITE, 'na kiezen voor de app wacht de uitnodiging')
   const parent = ctx.document.createElement('div'); parent.appendChild(k)
   vind(k, '🌐 Verder in de browser').klik()

@@ -16,7 +16,7 @@ assert.match(mod, /const WERKER = '\.\/service-worker\.js\?v=95'/, 'dezelfde ser
 assert.ok(mod.includes(lees('profiel.html').match(/applicationServerKey: '([^']+)'/)[1]), 'dezelfde serversleutel als Profiel')
 
 // 2. Home: de kaart, niet in Safari op de iPhone (daar de tip voor het beginscherm), 'Nu niet' = 3 dagen
-assert.match(index, /import\('\.\/meldingen-aan\.js\?v=1'\)\.then\(m => m\.toonMeldkaart\(document\.getElementById\('beginschermTip'\), supabase, window\._uid\)\)/)
+assert.match(index, /import\('\.\/meldingen-aan\.js\?v=2'\)\.then\(m => m\.toonMeldkaart\(document\.getElementById\('beginschermTip'\), supabase, window\._uid\)\)/)
 assert.match(mod, /if \(stand === 'aan' \|\| stand === 'niet-mogelijk' \|\| stand === 'iphone-zonder-app'\) return null/)
 assert.match(mod, /const WEG_DAGEN = 3/)
 
@@ -32,15 +32,15 @@ assert.ok(!/id="meldWelkomKnop"[^>]*class="btn"/.test(invite), 'geen .btn: toonA
 assert.match(invite, /<div id="meldWelkom" hidden/, 'pas zichtbaar als het kan')
 
 // 5. Versies en Engels
-for (const [bestand, v] of [['bel-luisteraar.js', "beltoon.js?v=8"], ['chat.html', 'beltoon.js?v=8']]) assert.ok(lees(bestand).includes(v), bestand)
+for (const [bestand, v] of [['bel-luisteraar.js', "beltoon.js?v=9"], ['chat.html', 'beltoon.js?v=9']]) assert.ok(lees(bestand).includes(v), bestand)
 globalThis.window = {}
 new Function('window', lees('taal-en.js'))(globalThis.window)
 const EN = globalThis.window.FIBRO_EN
 for (const k of ['Aanzetten', 'Nu niet', '\u{1F514} <b>Zet meldingen aan</b>, dan weet je wanneer vrienden je schrijven, buzzen of uitdagen.',
-  '\u{1F515} <b>Meldingen staan uit</b> voor Fibro, dus je mist berichten van vrienden.', 'Zet ze aan in <b>Instellingen > Meldingen > Fibro</b>.',
-  'Houd het Fibro-icoon ingedrukt, kies <b>App-info > Meldingen</b> en zet ze aan.', 'Klik op het slotje naast het adres van deze pagina en zet <b>Meldingen</b> op Toestaan.',
+  '\u{1F515} <b>Meldingen staan uit</b> voor Stekky, dus je mist berichten van vrienden.', 'Zet ze aan in <b>Instellingen > Meldingen > Stekky</b>.',
+  'Houd het Stekky-icoon ingedrukt, kies <b>App-info > Meldingen</b> en zet ze aan.', 'Klik op het slotje naast het adres van deze pagina en zet <b>Meldingen</b> op Toestaan.',
   '✅ <b>Meldingen staan aan!</b>', '🔔 Meldingen', 'Krijg een melding als een vriend je schrijft, buzzt of uitdaagt.', '🔔 Meldingen aanzetten',
-  'Meldingen staan uit voor Fibro. Je kunt ze later aanzetten in Stijl > Meldingen.', '✅ Meldingen staan aan!'])
+  'Meldingen staan uit voor Stekky. Je kunt ze later aanzetten in Stijl > Meldingen.', '✅ Meldingen staan aan!'])
   assert.ok(Object.hasOwn(EN, k), 'Engels voor ' + k)
 delete globalThis.window
 console.log('meldingen meteen: alles goed')

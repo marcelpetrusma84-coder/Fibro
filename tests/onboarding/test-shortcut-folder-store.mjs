@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { laadSnelkoppelingMap, bewaarSnelkoppelingMap } from '../../shortcut-folder-store.js'
 
-const handle = { kind:'directory', name:'Fibro', getDirectoryHandle() {} }
+const handle = { kind:'directory', name:'Stekky', getDirectoryHandle() {} }
 function fakeIndexedDB({ openError = false, blocked = false, transactionError = false, requestError = false, putError = false, upgradeError = false, abortError = false, lateUpgrade = false, readValue = handle } = {}) {
   const state = { closed:0, created:0, writes:[], reads:[] }
   const database = {

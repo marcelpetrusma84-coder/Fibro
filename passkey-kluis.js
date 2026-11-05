@@ -108,12 +108,12 @@ export async function maakDoos(sb, { userId, gebruikersnaam, privateKeyB64 }) {
   if (!privateKeyB64) throw fout('geen-sleutel', T('Geen sleutel op dit toestel'))
   const bestaand = await lijstDozen(sb, userId)
   const zout = willekeurig(32)
-  const naam = String(gebruikersnaam || 'Fibro').slice(0, 60)
+  const naam = String(gebruikersnaam || 'Stekky').slice(0, 60)
   let cred
   try {
     cred = await navigator.credentials.create({ publicKey: {
-      rp: { name: 'Fibro' },
-      user: { id: new TextEncoder().encode(userId), name: naam, displayName: 'Fibro - ' + naam },
+      rp: { name: 'Stekky' },
+      user: { id: new TextEncoder().encode(userId), name: naam, displayName: 'Stekky - ' + naam },
       challenge: willekeurig(32),
       pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
       authenticatorSelection: { residentKey: 'required', requireResidentKey: true, userVerification: 'required' },
@@ -122,7 +122,7 @@ export async function maakDoos(sb, { userId, gebruikersnaam, privateKeyB64 }) {
       extensions: { prf: { eval: { first: zout } } }
     } })
   } catch (e) {
-    if (e && e.name === 'InvalidStateError') throw fout('bestaat-al', T('Voor dit account bestaat hier al een Fibro-passkey'))
+    if (e && e.name === 'InvalidStateError') throw fout('bestaat-al', T('Voor dit account bestaat hier al een Stekky-passkey'))
     if (e && e.name === 'NotAllowedError') throw fout('geannuleerd', T('Geannuleerd of niet toegestaan'))
     throw e
   }

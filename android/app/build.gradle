@@ -24,8 +24,8 @@ def twaManifest = [
     applicationId: 'nl.fibro.app',
     hostName: 'marcelpetrusma84-coder.github.io', // The domain being opened in the TWA.
     launchUrl: '/Fibro/index.html', // The start path for the TWA. Must be relative to the domain.
-    name: 'Fibro', // The application name.
-    launcherName: 'Fibro', // The name shown on the Android Launcher.
+    name: 'Stekky', // The application name.
+    launcherName: 'Stekky', // The name shown on the Android Launcher.
     themeColor: '#1A0A2E', // The color used for the status bar.
     themeColorDark: '#1A0A2E', // The color used for the dark status bar.
     navigationColor: '#1A0A2E', // The color used for the navigation bar.

@@ -14,19 +14,19 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=2"></script>
-<script src="taal.js?v=70"></script>
+<script src="taal.js?v=71"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Vuurwerk': 'Fireworks', 'Onweer': 'Thunderstorm', 'Glitter': 'Glitter' }) // v234: nieuwe animaties</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Gastenboek zonder lijntjes': 'Guestbook without lines', 'Gewoon in je eigen kleuren, zonder lijntjespapier': 'Plain, in your own colours, without lined paper' }) // v235</script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title data-t>Fibro — Stijl</title>
+<title data-t>Stekky — Stijl</title>
 <meta http-equiv="cache-control" content="no-cache">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Fibro">
+<meta name="apple-mobile-web-app-title" content="Stekky">
 <script>
 try {
   const f = localStorage.getItem("fibro_font")
@@ -150,7 +150,7 @@ input, textarea { font-size:16px !important; }
   <span class="top-title" data-t>Mijn stijl</span>
   <button class="save-top-btn" onclick="slaAllesOp()" data-t>Opslaan</button>
 </div>
-<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0" data-t>Fibro – Mijn stijl</h1>
+<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0" data-t>Stekky – Mijn stijl</h1>
 
 <nav class="profile-nav" aria-label="Onderdelen van je stijl" data-t-attr="aria-label">
   <div class="profile-nav-rail">
@@ -316,7 +316,7 @@ input, textarea { font-size:16px !important; }
   <div id="bg-wallpaper-sectie" class="section" style="display:none;">
     <div class="section-label" data-t>Kies een wallpaper</div>
     <div class="wallpaper-grid">
-      <div class="wallpaper-cell" onclick="selectWallpaper('fibro-nacht',this)" style="background:linear-gradient(135deg,#1a0a2e,#4a044e);"><span class="wallpaper-label" data-t>Fibro Nacht</span></div>
+      <div class="wallpaper-cell" onclick="selectWallpaper('fibro-nacht',this)" style="background:linear-gradient(135deg,#1a0a2e,#4a044e);"><span class="wallpaper-label" data-t>Stekky Nacht</span></div>
       <div class="wallpaper-cell" onclick="selectWallpaper('oceaan',this)" style="background:linear-gradient(135deg,#042f2e,#0f172a);"><span class="wallpaper-label" data-t>Oceaan</span></div>
       <div class="wallpaper-cell" onclick="selectWallpaper('zonsondergang',this)" style="background:linear-gradient(135deg,#450a0a,#2d1f14);"><span class="wallpaper-label" data-t>Zonsondergang</span></div>
       <div class="wallpaper-cell" onclick="selectWallpaper('woud',this)" style="background:linear-gradient(135deg,#14532d,#042f2e);"><span class="wallpaper-label" data-t>Woud</span></div>
@@ -437,7 +437,7 @@ input, textarea { font-size:16px !important; }
 <div class="panel" id="panel-widgets" role="tabpanel" aria-labelledby="tab-widgets" aria-hidden="true">
   <div class="section">
     <!-- v247: foto's, muziek en stickers staan per toestel (sync.js stuurt ze rechtstreeks naar vrienden) -->
-    <p class="toestel-uitleg" data-t style="font-size:13px;line-height:1.45;color:var(--muted);margin:0 0 14px;padding:10px 12px;border:0.5px solid var(--border);border-radius:10px;background:rgba(255,255,255,0.04);">📱 Je foto's, muziek en stickers staan op dit toestel en gaan rechtstreeks naar je vrienden. Gebruik je Fibro op meer toestellen, dan zien je vrienden wat er staat op het toestel dat het laatst met hen synchroniseerde.</p>
+    <p class="toestel-uitleg" data-t style="font-size:13px;line-height:1.45;color:var(--muted);margin:0 0 14px;padding:10px 12px;border:0.5px solid var(--border);border-radius:10px;background:rgba(255,255,255,0.04);">📱 Je foto's, muziek en stickers staan op dit toestel en gaan rechtstreeks naar je vrienden. Gebruik je Stekky op meer toestellen, dan zien je vrienden wat er staat op het toestel dat het laatst met hen synchroniseerde.</p>
     <div class="section-label" data-t>Actieve widgets</div>
     <div class="widget-list">
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">📖</div><div><div class="widget-name" data-t>Gastenboek</div><div class="widget-desc" data-t>Vrienden laten berichten achter</div></div></div><div class="toggle on" id="widget-gastenboek" onclick="toggleWidget('gastenboek')"><div class="toggle-dot"></div></div></div>
@@ -564,7 +564,7 @@ import { eisSessie, startBewaking } from './sessie.js?v=95'
 import { startMeldingen } from './meldingen.js?v=188'
 import { laadThema, bewaarThemaCache } from './thema.js?v=235'
 import { startHeartbeat } from './heartbeat.js?v=117'
-import { initSync } from './sync.js?v=254'
+import { initSync } from './sync.js?v=255'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=149'
 import { startStickermaker } from './stickermaker.js?v=243'
 import { tekenFibroVellen, stickerWidgetDef } from './stickerwidget.js?v=236'
@@ -1044,7 +1044,7 @@ async function stuurAchtergrond(){
   if('wallpaper_data' in rij)rij.updated_at=new Date().toISOString() // het etiket waaraan vrienden zien dat er een andere foto is
   let fout=null
   try{const r=await supabase.from('profiles').update(rij).eq('id',huidigeUser.id);fout=r.error}catch(e){fout=e}
-  if(fout){zetDeelStatus(T('Niet gedeeld: geen verbinding. Fibro probeert het opnieuw als je op Opslaan drukt.'),'fout');return false}
+  if(fout){zetDeelStatus(T('Niet gedeeld: geen verbinding. Stekky probeert het opnieuw als je op Opslaan drukt.'),'fout');return false}
   if('wallpaper_data' in rij){const v=leesFotoVingers(huidigeUser.id),w=await fotoVinger(rij.wallpaper_data);if(v&&w){v.w=w;bewaarFotoVingers(huidigeUser.id,v)}}
   zetDeelStatus(T('✓ Bewaard. Je vrienden zien je achtergrond ook.'),'goed')
   return true
@@ -1109,7 +1109,7 @@ window.testTogglePlus = async function() {
   const { data: bijgewerkt, error: schrijfFout } = await supabase.from('profiles').update({ is_plus: gewenst }).eq('id', huidigeUser.id).select('is_plus').single()
   if (schrijfFout) { alert('Schrijven mislukt: ' + schrijfFout.message); return }
   if (!bijgewerkt) { alert('LET OP: update leverde geen rij op — mogelijk RLS-probleem of verkeerd id.'); return }
-  alert('Fibro+ test-status (bevestigd uit database): ' + (bijgewerkt.is_plus ? 'AAN' : 'UIT') + '\n\nHerlaad index.html om het effect te zien.')
+  alert('Stekky+ test-status (bevestigd uit database): ' + (bijgewerkt.is_plus ? 'AAN' : 'UIT') + '\n\nHerlaad index.html om het effect te zien.')
 }
 
 window.toggleWidget=function(naam){const toggle=document.getElementById('widget-'+naam);if(actieveWidgets.includes(naam)){actieveWidgets=actieveWidgets.filter(w=>w!==naam);toggle.classList.remove('on');toggle.classList.add('off')}else{actieveWidgets.push(naam);toggle.classList.remove('off');toggle.classList.add('on')};widgetBewaking.changed()}
@@ -1310,7 +1310,7 @@ async function toonMeldStand() {
   const st = document.getElementById('meldStatus'), knop = document.getElementById('meldKnop')
   if (!st || !knop) return
   let bs = null
-  try { bs = beginschermModule = await import('./beginscherm.js?v=2') } catch (e) {}
+  try { bs = beginschermModule = await import('./beginscherm.js?v=3') } catch (e) {}
   const toestemming = ('Notification' in window) ? Notification.permission : 'nvt'
   let aan = false
   try {
@@ -1320,13 +1320,13 @@ async function toonMeldStand() {
     }
   } catch (e) {}
   if (bs && bs.iphoneZonderApp()) {
-    st.innerHTML = T('Op de iPhone werken meldingen alleen als Fibro op je <b>beginscherm</b> staat.')
+    st.innerHTML = T('Op de iPhone werken meldingen alleen als Stekky op je <b>beginscherm</b> staat.')
     knop.textContent = T('\u{1F4F2} Laat zien hoe')
   } else if (aan) {
     st.innerHTML = T('\u2713 Meldingen staan aan op dit toestel.')
     knop.textContent = T('\u{1F514} Opnieuw instellen')
   } else if (toestemming === 'denied') {
-    st.innerHTML = T('Meldingen zijn uitgezet in de instellingen van je telefoon of browser. Zet ze daar aan voor Fibro (iPhone: Instellingen > Meldingen > Fibro), en tik dan hier.')
+    st.innerHTML = T('Meldingen zijn uitgezet in de instellingen van je telefoon of browser. Zet ze daar aan voor Stekky (iPhone: Instellingen > Meldingen > Stekky), en tik dan hier.')
     knop.textContent = T('\u{1F514} Meldingen aanzetten')
   } else {
     st.innerHTML = T('Krijg een melding als een vriend je een bericht stuurt of uitnodigt voor een spel.')
@@ -1455,7 +1455,7 @@ import { koppelSpelIcoonFallback } from './spelicoon.js?v=3'
 koppelSpelIcoonFallback()
 vulSpelVersies()
 </script>
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=204"; startBelLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=205"; startBelLuisteraar()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=197"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=169"; startOngelezen()</script>

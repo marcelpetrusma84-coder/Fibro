@@ -36,7 +36,7 @@ function omgeving ({ online = true } = {}) {
 let ok = 0
 const test = async (naam, f) => { await f(); ok++; console.log('OK  ', naam) }
 
-await test('script van Fibro laadt niet: melden en een keer herladen, daarna een minuut niet', async () => {
+await test('script van Stekky laadt niet: melden en een keer herladen, daarna een minuut niet', async () => {
   const o = omgeving()
   const fout = { target: { tagName: 'SCRIPT', src: BASIS + 'nieuwbij.js?v=1' } }
   o.vuur('error', fout, true)
@@ -45,10 +45,10 @@ await test('script van Fibro laadt niet: melden en een keer herladen, daarna een
   assert.equal(o.verzonden.length, 1)
   assert.equal(o.verzonden[0].p_bericht, 'Laden mislukt: nieuwbij.js')
   assert.equal(o.verzonden[0].p_soort, 'fout')
-  o.vuur('error', { target: { tagName: 'SCRIPT', src: BASIS + 'sync.js?v=252' } }, true)
+  o.vuur('error', { target: { tagName: 'SCRIPT', src: BASIS + 'sync.js?v=253' } }, true)
   assert.equal(o.herladen, 1, 'niet blijven herladen')
   o.later(61000)
-  o.vuur('error', { target: { tagName: 'SCRIPT', src: BASIS + 'sync.js?v=252' } }, true)
+  o.vuur('error', { target: { tagName: 'SCRIPT', src: BASIS + 'sync.js?v=253' } }, true)
   assert.equal(o.herladen, 2, 'na een minuut mag het weer')
 })
 await test('stijlblad ook; plaatje, ander domein en de pagina zelf niet', async () => {

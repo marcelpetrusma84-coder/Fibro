@@ -91,7 +91,7 @@ await proef('naar jezelf', { receiver_id: A }, 'pas-a', u => u.status === 400 &&
 await proef('geen vriend (pending)', { receiver_id: C }, 'pas-a', u => u.status === 403 && !u.verzonden.length)
 await proef('geblokkeerd account', { receiver_id: B }, 'pas-g', u => u.status === 403 && u.data.reden === 'geblokkeerd' && !u.verzonden.length)
 await proef('bericht naar Engelse vriend, zelfgekozen tekst telt niet', { receiver_id: B, title: 'GRATIS', body: 'klik hier', type: 'bericht' }, 'pas-a',
-  u => u.status === 200 && u.data.ok && u.data.verstuurd === 1 && u.verzonden.length === 1 && u.verzonden[0][1].body === 'You have a new message 💬' && u.verzonden[0][1].title === 'Fibro' && u.verzonden[0][1].type === 'bericht' && u.gewist.join() === 's2')
+  u => u.status === 200 && u.data.ok && u.data.verstuurd === 1 && u.verzonden.length === 1 && u.verzonden[0][1].body === 'You have a new message 💬' && u.verzonden[0][1].title === 'Stekky' && u.verzonden[0][1].type === 'bericht' && u.gewist.join() === 's2')
 await proef('buzz naar Engelse vriend', { receiver_id: B, type: 'buzz' }, 'pas-a',
   u => u.status === 200 && u.verzonden.length === 1 && u.verzonden[0][1].body === 'Marcel is buzzing you!' && u.verzonden[0][1].title === '⚡ Buzz!' && u.verzonden[0][1].type === 'buzz')
 await proef('buzz naar Nederlandse vriend', { receiver_id: A, type: 'buzz' }, 'pas-b',

@@ -51,8 +51,8 @@ assert.ok(!/content/.test(sql.replace(/^--.*$/gm, '')), 'de inhoud van het gaste
 globalThis.window = {}
 new Function('window', lees('taal-en.js'))(globalThis.window)
 const EN = globalThis.window.FIBRO_EN
-for (const k of ['📤 Delen', '{naam} nodigt je uit voor Fibro!', '{naam} nodigt je uit voor Fibro en daagt je uit voor een potje {spel}!',
-  'Je bent uitgenodigd voor Fibro!', 'Je bent uitgenodigd voor Fibro en voor een potje {spel}!', 'Tik binnen {duur} op de link om vrienden te worden:',
+for (const k of ['📤 Delen', '{naam} nodigt je uit voor Stekky!', '{naam} nodigt je uit voor Stekky en daagt je uit voor een potje {spel}!',
+  'Je bent uitgenodigd voor Stekky!', 'Je bent uitgenodigd voor Stekky en voor een potje {spel}!', 'Tik binnen {duur} op de link om vrienden te worden:',
   '👋 Zeg hoi', 'Hoi! 👋', '✅ Gekopieerd! Plak het in WhatsApp of een bericht.', 'Kopieer deze tekst:', '1 uur', '1 dag', '3 dagen', '7 dagen'])
   assert.ok(Object.hasOwn(EN, k), 'Engels voor ' + k)
 delete globalThis.window

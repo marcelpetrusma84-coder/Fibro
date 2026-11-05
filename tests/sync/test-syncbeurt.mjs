@@ -14,7 +14,7 @@ assert.equal(SB.kiesVolgende({ kandidaten: ['b', 'c'], klaarOp: { b: nu - 3 * 60
 assert.equal(SB.kiesVolgende({ kandidaten: ['b', 'c'], klaarOp: { c: nu - 60e3 }, voorkeur: ['c'], nu }), 'c', 'chatvriend gaat altijd voor')
 assert.equal(SB.kiesVolgende({ kandidaten: ['b', 'c'], bezigTot: { b: nu + 1000 }, nu }), 'c', 'b zei net nee')
 assert.equal(SB.kiesVolgende({ kandidaten: ['b', 'c'], behalve: 'b', nu }), 'c')
-assert.equal(SB.kiesVolgende({ kandidaten: ['b', 'c'], achteraan: new Set(['b']), nu }), 'c', 'oudere Fibro achteraan')
+assert.equal(SB.kiesVolgende({ kandidaten: ['b', 'c'], achteraan: new Set(['b']), nu }), 'c', 'oudere Stekky achteraan')
 assert.equal(SB.kiesVolgende({ kandidaten: [], voorkeur: ['b'], nu }), null, 'voorkeur alleen als hij online is en mag')
 assert.equal(SB.volgendeMoment({ kandidaten: ['b'], klaarOp: { b: nu - 60e3 }, nu }), nu - 60e3 + SB.OPNIEUW_NA_MS)
 assert.equal(SB.volgendeMoment({ kandidaten: [], nu }), Infinity)

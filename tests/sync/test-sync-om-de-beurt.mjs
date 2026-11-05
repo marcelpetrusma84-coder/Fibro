@@ -16,7 +16,7 @@ assert.match(start, /const ander = SB\.kiesVolgende\(g\)/)
 assert.match(start, /vraagBeurt\(ander\)/)
 assert.ok(!/\[\.\.\.onlineGebruikers\]\.find\(kan\)/.test(sync), 'niet meer steeds de eerste online vriend')
 const vraag = deel('async function vraagBeurt(id) {', '\n}\n')
-assert.match(vraag, /if \(!heeftKenmerk\(id, 'syncbeurt'\)\) \{ beginMet\(id\); return \}/, 'oudere Fibro: zoals vroeger')
+assert.match(vraag, /if \(!heeftKenmerk\(id, 'syncbeurt'\)\) \{ beginMet\(id\); return \}/, 'oudere Stekky: zoals vroeger')
 assert.match(vraag, /stuurNaar\(id, 'syncbeurt', \{ type: 'vraag' \}\)/)
 assert.match(sync, /opBericht\('syncbeurt', beurtBericht\)/)
 assert.match(sync, /zetKenmerk\('syncbeurt', true\)/)
@@ -36,7 +36,7 @@ assert.match(sync, /if \(syncPartnerId\) \{ probeerVolgende\(\); return \} \/\/ 
 
 // 3. Niet meer eeuwig wachten
 assert.match(sync, /if \(status === 'SUBSCRIBED' && !isInitiator\) \{[\s\S]{0,400}?mislukking\(partner, 'Geen offer'\)[\s\S]{0,80}?\}, 35000\)/, 'de wachtende kant geeft het na 35 s op')
-assert.match(sync, /console\.log\('\[sync\] Vriend met een oudere Fibro is stil - klaar'\)/, 'een oudere Fibro stuurt geen klaar na het ophalen')
+assert.match(sync, /console\.log\('\[sync\] Vriend met een oudere Stekky is stil - klaar'\)/, 'een oudere Stekky stuurt geen klaar na het ophalen')
 
 // 4. Muziek die via de relay niet mee mocht, en de uitleg op Profiel
 assert.match(sync, /const relaySleutel = 'fibro_muziekrelay_' \+ huidigeUserId \+ '_' \+ syncPartnerId/)

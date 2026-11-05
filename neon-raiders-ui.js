@@ -34,7 +34,7 @@
 import { maakNeonMuis, muisPunt } from './neon-raiders-input.js?v=2'
 import { supabase } from './supabase.js?v=95'
 import { maakNeonScoreService } from './neon-raiders-scores.js?v=4'
-import { maakNeonScorebord } from './neon-raiders-scoreboard.js?v=3'
+import { maakNeonScorebord } from './neon-raiders-scoreboard.js?v=4'
 import { koppelNeonVerder } from './neon-raiders-verder.js?v=2'
 
 const vertaal = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))

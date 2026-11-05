@@ -57,4 +57,4 @@ assert(chat.includes("spelSpelers = ['fibro-test-you', 'fibro-test-black', 'fibr
 assert(chat.includes('onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer'), 'the regular two-player settings invite enters the local three-player flow')
 assert(chat.includes('onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null'), 'the three-player flow can return to the two-player test')
 
-console.log('Fibro local chess test mode tests passed')
+console.log('Stekky local chess test mode tests passed')

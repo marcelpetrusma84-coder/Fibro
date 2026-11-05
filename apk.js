@@ -22,24 +22,24 @@
 
   var en = window.FIBRO_EN = window.FIBRO_EN || {}
   Object.assign(en, {
-    '📱 Fibro-app voor Android': '📱 Fibro app for Android',
-    'Installeer Fibro als app, met een eigen icoon op je telefoon. Het is dezelfde Fibro, met hetzelfde account.': 'Install Fibro as an app, with its own icon on your phone. It is the same Fibro, with the same account.',
+    '📱 Stekky-app voor Android': '📱 Stekky app for Android',
+    'Installeer Stekky als app, met een eigen icoon op je telefoon. Het is dezelfde Stekky, met hetzelfde account.': 'Install Stekky as an app, with its own icon on your phone. It is the same Stekky, with the same account.',
     '⬇️ Download de app': '⬇️ Download the app',
     'Android vraagt of je apps uit deze bron wilt toestaan. Dat is normaal: de app komt niet uit de Play Store.': 'Android asks whether to allow apps from this source. That is normal: the app does not come from the Play Store.',
     'Niet nu': 'Not now',
-    'Hoe wil je Fibro gebruiken?': 'How do you want to use Fibro?',
+    'Hoe wil je Stekky gebruiken?': 'How do you want to use Stekky?',
     'Aanbevolen': 'Recommended',
-    '📱 De Fibro-app': '📱 The Fibro app',
-    'Een eigen icoon op je telefoon, en Fibro opent als een echte app. Je uitnodiging wacht in de app op je.': 'Its own icon on your phone, and Fibro opens like a real app. Your invite waits for you in the app.',
+    '📱 De Stekky-app': '📱 The Stekky app',
+    'Een eigen icoon op je telefoon, en Stekky opent als een echte app. Je uitnodiging wacht in de app op je.': 'Its own icon on your phone, and Stekky opens like a real app. Your invite waits for you in the app.',
     '🌐 Verder in de browser': '🌐 Continue in the browser',
     'Zo ga je verder:': "Here's what to do next:",
     'Wacht tot de download klaar is en tik op het bestand fibro.apk.': 'Wait until the download is done and tap the file fibro.apk.',
     'Sta installeren toe als Android erom vraagt.': 'Allow installing if Android asks.',
-    'Open de Fibro-app. Daar maak je je account aan en word je meteen vrienden met {naam}.': 'Open the Fibro app. There you create your account and immediately become friends with {naam}.',
-    'Open de Fibro-app. Daar maak je je account aan.': 'Open the Fibro app. There you create your account.',
+    'Open de Stekky-app. Daar maak je je account aan en word je meteen vrienden met {naam}.': 'Open the Stekky app. There you create your account and immediately become friends with {naam}.',
+    'Open de Stekky-app. Daar maak je je account aan.': 'Open the Stekky app. There you create your account.',
     'Lukt het niet? Ga verder in de browser': "Doesn't work? Continue in the browser",
-    'Open Fibro op je Android-telefoon om de app te installeren. Op de iPhone gebruik je Fibro in Safari: deelicoon, Zet op beginscherm.': 'Open Fibro on your Android phone to install the app. On iPhone, use Fibro in Safari: share icon, Add to Home Screen.',
-    'Je gebruikt Fibro nu al als app.': 'You are already using Fibro as an app.'
+    'Open Stekky op je Android-telefoon om de app te installeren. Op de iPhone gebruik je Stekky in Safari: deelicoon, Zet op beginscherm.': 'Open Stekky on your Android phone to install the app. On iPhone, use Stekky in Safari: share icon, Add to Home Screen.',
+    'Je gebruikt Stekky nu al als app.': 'You are already using Stekky as an app.'
   })
   function t(s, v) { return window.T ? window.T(s, v) : String(s).replace(/\{(\w+)\}/g, function (m, k) { return v && k in v ? v[k] : m }) }
 
@@ -126,8 +126,8 @@
     }
     stijl()
     var k = el('div', 'fapk')
-    k.appendChild(el('h3', '', t('📱 Fibro-app voor Android')))
-    k.appendChild(el('p', '', t('Installeer Fibro als app, met een eigen icoon op je telefoon. Het is dezelfde Fibro, met hetzelfde account.')))
+    k.appendChild(el('h3', '', t('📱 Stekky-app voor Android')))
+    k.appendChild(el('p', '', t('Installeer Stekky als app, met een eigen icoon op je telefoon. Het is dezelfde Stekky, met hetzelfde account.')))
     k.appendChild(downloadKnop())
     k.appendChild(el('p', 'fapk-klein', t('Android vraagt of je apps uit deze bron wilt toestaan. Dat is normaal: de app komt niet uit de Play Store.')))
     if (opties.sluitbaar) {
@@ -146,16 +146,16 @@
     stijl()
     var k = el('div', 'fapk')
     k.style.marginTop = '0'
-    var kop = el('h3', '', t('Hoe wil je Fibro gebruiken?'))
+    var kop = el('h3', '', t('Hoe wil je Stekky gebruiken?'))
     kop.style.fontSize = '17px'; kop.style.color = '#f3e8ff'; kop.style.marginBottom = '12px'
     k.appendChild(kop)
 
     var app = el('div')
     app.style.cssText = 'background:rgba(192,132,252,0.12);border:1px solid #c084fc;border-radius:14px;padding:14px;'
-    var titel = el('h3', '', t('📱 De Fibro-app'))
+    var titel = el('h3', '', t('📱 De Stekky-app'))
     titel.appendChild(el('span', 'fapk-badge', t('Aanbevolen')))
     app.appendChild(titel)
-    app.appendChild(el('p', '', t('Een eigen icoon op je telefoon, en Fibro opent als een echte app. Je uitnodiging wacht in de app op je.')))
+    app.appendChild(el('p', '', t('Een eigen icoon op je telefoon, en Stekky opent als een echte app. Je uitnodiging wacht in de app op je.')))
     var stappen = el('div')
     stappen.hidden = true
     app.appendChild(downloadKnop(function () {
@@ -171,8 +171,8 @@
     ol.appendChild(el('li', '', t('Wacht tot de download klaar is en tik op het bestand fibro.apk.')))
     ol.appendChild(el('li', '', t('Sta installeren toe als Android erom vraagt.')))
     ol.appendChild(el('li', '', opties.naam
-      ? t('Open de Fibro-app. Daar maak je je account aan en word je meteen vrienden met {naam}.', { naam: opties.naam })
-      : t('Open de Fibro-app. Daar maak je je account aan.')))
+      ? t('Open de Stekky-app. Daar maak je je account aan en word je meteen vrienden met {naam}.', { naam: opties.naam })
+      : t('Open de Stekky-app. Daar maak je je account aan.')))
     stappen.appendChild(ol)
     k.appendChild(stappen)
 

@@ -2,7 +2,7 @@
 //
 // In gewone woorden: zet je hem aan, dan krijg je een pushmelding als een vriend online komt. Handig, want berichten,
 // foto's en spellen gaan rechtstreeks van toestel naar toestel: dat gaat het best als jullie er allebei zijn.
-// Standaard staat hij UIT. De server houdt het rustig (sql/online-melding.sql en stuur-push, kiesOnlineOntvangers):
+// Standaard staat hij AAN. De server houdt het rustig (sql/online-melding.sql en stuur-push, kiesOnlineOntvangers):
 // alleen na minstens 30 minuten weg, niet 's nachts, niet als je zelf al online bent, dezelfde vriend hoogstens eens
 // per 3 uur, hoogstens een per 20 minuten en 6 per dag. Een nieuwe vervangt de vorige op je scherm.
 // De keuze staat in de database (chat_instellingen.melding_online), want de server beslist; hier een kopie voor het menu.
@@ -10,9 +10,9 @@ import { zetMeldingenAan } from './meldingen-aan.js?v=1'
 
 export const SLEUTEL = 'fibro_melding_online'
 
-// Staat hij aan (volgens dit toestel)? Standaard uit.
+// Staat hij aan (volgens dit toestel)? Standaard aan.
 export function onlineMeldingAan() {
-  try { return localStorage.getItem(SLEUTEL) === '1' } catch (e) { return false }
+  try { return localStorage.getItem(SLEUTEL) !== '0' } catch (e) { return true }
 }
 function bewaar(aan) { try { localStorage.setItem(SLEUTEL, aan ? '1' : '0') } catch (e) {} }
 
@@ -22,7 +22,7 @@ export async function haalOnlineKeuze(supabase, uid) {
   try {
     const { data, error } = await supabase.from('chat_instellingen').select('melding_online').eq('gebruiker_id', uid).maybeSingle()
     if (error) return null
-    const aan = !!(data && data.melding_online === true)
+    const aan = !(data && data.melding_online === false) // geen rij = aan
     bewaar(aan)
     return aan
   } catch (e) { return null }

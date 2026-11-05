@@ -7,7 +7,7 @@ const lees = f => readFileSync(new URL('../../' + f, import.meta.url), 'utf8')
 
 // 1. De database: standaard uit, en alleen na minstens 30 minuten weg (even wegklikken telt niet), nooit als onzichtbaar
 const sql = lees('sql/online-melding.sql')
-assert.match(sql, /add column if not exists melding_online boolean not null default false/, 'schakelaar standaard uit')
+assert.match(sql, /add column if not exists melding_online boolean not null default true/, 'schakelaar standaard aan')
 const when = sql.match(/create trigger online_push[\s\S]*?when \(([\s\S]*?)\)\s*execute function public\.online_push\(\)/)
 assert.ok(when, 'trigger online_push gevonden')
 assert.match(when[1], /new\.online_status is true/, 'alleen bij online komen')
@@ -41,25 +41,29 @@ const supabase = {
 }
 globalThis.__toestemming = () => { gevraagd++; return Promise.resolve(toestemming) }
 
-assert.equal(M.onlineMeldingAan(), false, 'standaard uit')
+assert.equal(M.onlineMeldingAan(), true, 'standaard aan')
 let u = await M.wisselOnlineMelding(supabase, 'u1')
+assert.deepEqual(u, { aan: false, reden: 'ok' }, 'eerste tik zet hem uit')
+assert.deepEqual(rpc.at(-1), ['zet_melding_online', { p_aan: false }])
+assert.equal(gevraagd, 0, 'uitzetten vraagt niets')
+u = await M.wisselOnlineMelding(supabase, 'u1')
 assert.deepEqual(u, { aan: true, reden: 'ok' }, 'aanzetten lukt')
 assert.equal(gevraagd, 1, 'aanzetten vraagt om toestemming voor meldingen')
 assert.deepEqual(rpc.at(-1), ['zet_melding_online', { p_aan: true }], 'keuze naar de server')
 assert.equal(M.onlineMeldingAan(), true)
 u = await M.wisselOnlineMelding(supabase, 'u1')
 assert.deepEqual(u, { aan: false, reden: 'ok' }, 'uitzetten lukt')
-assert.equal(gevraagd, 1, 'uitzetten vraagt niets')
+assert.equal(gevraagd, 1, 'uitzetten vraagt nog steeds niets')
 assert.deepEqual(rpc.at(-1), ['zet_melding_online', { p_aan: false }])
 
-toestemming = 'geweigerd'; rpc = []
+opslag.set('fibro_melding_online', '0'); toestemming = 'geweigerd'; rpc = []
 u = await M.wisselOnlineMelding(supabase, 'u1')
 assert.deepEqual(u, { aan: false, reden: 'geweigerd' }, 'geen toestemming: blijft uit')
 assert.equal(rpc.length, 0, 'en dan niets naar de server')
 assert.ok(M.uitlegOnlineMelding('geweigerd'), 'met uitleg')
 assert.equal(M.uitlegOnlineMelding('uit'), null, 'vraag weggetikt: geen extra melding')
 
-toestemming = 'aan'; rpcFout = { message: 'kapot' }
+opslag.set('fibro_melding_online', '0'); toestemming = 'aan'; rpcFout = { message: 'kapot' }
 u = await M.wisselOnlineMelding(supabase, 'u1')
 assert.deepEqual(u, { aan: false, reden: 'server' }, 'server faalt: blijft uit')
 assert.equal(M.onlineMeldingAan(), false)
@@ -67,6 +71,9 @@ assert.equal(M.onlineMeldingAan(), false)
 rij = { melding_online: true }
 assert.equal(await M.haalOnlineKeuze(supabase, 'u1'), true, 'keuze van een ander toestel overnemen')
 assert.equal(M.onlineMeldingAan(), true)
+rij = { melding_online: false }
+assert.equal(await M.haalOnlineKeuze(supabase, 'u1'), false, 'uitgezet op een ander toestel')
+assert.equal(M.onlineMeldingAan(), false)
 rij = null
-assert.equal(await M.haalOnlineKeuze(supabase, 'u1'), false, 'geen rij = uit')
+assert.equal(await M.haalOnlineKeuze(supabase, 'u1'), true, 'geen rij = aan (standaard)')
 console.log('ok: schakelaar en trigger voor de online-melding')

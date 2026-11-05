@@ -33,8 +33,8 @@
 //  - 'like': { like_id } "❤️ Tijn reageerde op je foto" (of nummer, video), ook alleen vanaf de server (trigger op
 //    profiel_likes, sql/profiel-likes.sql). Dezelfde vriend bij dezelfde eigenaar hoogstens een melding per 10 minuten.
 // v266 (5 nov 2026): 'online': { online_id } "🟢 Bram is nu online". Alleen vanaf de server (trigger op profiles in
-// sql/online-melding.sql, als iemand online komt na minstens 30 minuten weg). Alleen naar vrienden die het zelf aanzetten
-// (chat_instellingen.melding_online) en volgens slimme regels, zodat het niet irritant wordt (kiesOnlineOntvangers).
+// sql/online-melding.sql, als iemand online komt na minstens 30 minuten weg). Standaard aan; niet naar vrienden die het
+// uitzetten (chat_instellingen.melding_online = false) en volgens slimme regels, zodat het niet irritant wordt (kiesOnlineOntvangers).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push";
 
@@ -193,11 +193,13 @@ async function meldOnline(supabase: any, vriend: string) {
   const { data: terug, error: f2 } = await supabase.from("friendships").select("user_id").in("user_id", ids).eq("friend_id", vriend).eq("status", "accepted");
   if (f2) throw f2;
   const wederzijds = new Set((terug || []).map((r: { user_id: string }) => r.user_id));
-  // Wie heeft de schakelaar aan? (Bestaat de kolom nog niet, dan niemand.)
-  const { data: aan, error: f3 } = await supabase.from("chat_instellingen").select("gebruiker_id")
-    .in("gebruiker_id", ids.filter((id) => wederzijds.has(id))).eq("melding_online", true);
+  // Wie heeft de schakelaar uitgezet? Standaard (geen rij) staat hij aan. (Bestaat de kolom nog niet, dan niemand.)
+  const vrienden = ids.filter((id) => wederzijds.has(id));
+  const { data: uit, error: f3 } = await supabase.from("chat_instellingen").select("gebruiker_id")
+    .in("gebruiker_id", vrienden).eq("melding_online", false);
   if (f3) { console.error("chat_instellingen:", f3.code || f3); return antwoord({ ok: true, verstuurd: 0, reden: "geen schakelaar" }); }
-  const aanIds = (aan || []).map((r: { gebruiker_id: string }) => r.gebruiker_id);
+  const uitIds = new Set((uit || []).map((r: { gebruiker_id: string }) => r.gebruiker_id));
+  const aanIds = vrienden.filter((id) => !uitIds.has(id));
   if (!aanIds.length) return antwoord({ ok: true, verstuurd: 0, reden: "niemand wil het" });
   let { data: kandidaten, error: f4 } = await supabase.from("profiles")
     .select("id, taal, online_status, laatst_gezien, geblokkeerd").in("id", aanIds);

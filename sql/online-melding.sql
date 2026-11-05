@@ -7,7 +7,7 @@
 --
 -- Hoe het werkt:
 --  1. De schakelaar (☰ > Instellingen > Melding als een vriend online komt) staat in chat_instellingen.melding_online.
---     Standaard UIT: alleen wie hem zelf aanzet, krijgt deze meldingen.
+--     Standaard AAN (ook voor wie al een account heeft); wie hem uitzet, krijgt ze niet meer.
 --  2. Een trigger op profiles ziet dat iemand online komt (heartbeat.js zet online_status op true). Alleen als hij
 --     minstens 30 minuten weg was (laatst_gezien van VOOR deze update). Even wegklikken en terugkomen telt dus niet.
 --     Wie zichzelf onzichtbaar maakte (toon_online = false) geeft nooit een melding.
@@ -20,7 +20,7 @@ begin;
 create extension if not exists pg_net with schema extensions;
 
 -- 1. De schakelaar (chat_instellingen bestaat al: sql/gelezen-vinkjes.sql)
-alter table public.chat_instellingen add column if not exists melding_online boolean not null default false;
+alter table public.chat_instellingen add column if not exists melding_online boolean not null default true;
 
 create or replace function public.zet_melding_online(p_aan boolean)
 returns void
@@ -28,7 +28,7 @@ language sql volatile security invoker
 set search_path = ''
 as $$
   insert into public.chat_instellingen (gebruiker_id, melding_online, bijgewerkt)
-  values ((select auth.uid()), coalesce(p_aan, false), now())
+  values ((select auth.uid()), coalesce(p_aan, true), now())
   on conflict (gebruiker_id) do update set melding_online = excluded.melding_online, bijgewerkt = now()
 $$;
 revoke execute on function public.zet_melding_online(boolean) from public, anon;

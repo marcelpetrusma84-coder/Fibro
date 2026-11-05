@@ -2251,7 +2251,7 @@ window.openMenu = function() {
   schakelaar('fibro_leesbevestiging', T('\u2713\u2713 Gelezen-vinkjes'), async (aan) => {
     try { (await import('./chatstatus.js?v=1')).zetLeesbevestiging(supabase, aan) } catch (e) {}
   })
-  // v266: een pushmelding als een vriend online komt (standaard uit; de server houdt het rustig, zie online-melding.js)
+  // v266: een pushmelding als een vriend online komt (standaard aan; de server houdt het rustig, zie online-melding.js)
   {
     const b = document.createElement('button')
     b.id = 'menuOnlineMelding'

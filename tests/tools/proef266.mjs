@@ -1,6 +1,6 @@
 // proef266 (5 nov 2026): stuur-push v266, de melding "🟢 Bram is nu online" (type 'online', { online_id }, alleen vanaf
 // de server: trigger in sql/online-melding.sql). Slim en niet irritant:
-//  - alleen naar vrienden (beide kanten) die de schakelaar aan hebben (chat_instellingen.melding_online);
+//  - alleen naar vrienden (beide kanten), niet naar wie de schakelaar uitzette (standaard aan: geen rij = aan);
 //  - niet als de vriend niet echt (meer) online is of zichzelf onzichtbaar maakte (toon_online = false);
 //  - niet 's nachts (23:00 tot 8:00 in Nederland), niet als je zelf al online bent;
 //  - dezelfde vriend hoogstens eens per 3 uur; hoogstens een online-melding per 20 minuten en 6 per dag;
@@ -29,7 +29,7 @@ js += '\nglobalThis.__uurInNederland = uurInNederland;'
 const B = 'bbbbbbbb-0000-4000-8000-000000000002' // Bram komt online
 const M = 'aaaaaaaa-0000-4000-8000-000000000001' // Marcel: schakelaar aan
 const S = 'cccccccc-0000-4000-8000-000000000003' // Sanne: schakelaar uit
-const E = 'eeeeeeee-0000-4000-8000-000000000004' // Eva: schakelaar aan, Engels
+const E = 'eeeeeeee-0000-4000-8000-000000000004' // Eva: nooit iets gekozen (geen rij = aan), Engels
 const V = 'dddddddd-0000-4000-8000-000000000005' // Vreemde: schakelaar aan, maar geen vriend
 const iso = ms => new Date(ms).toISOString()
 let NU = Date.UTC(2026, 10, 5, 14, 0, 0) // 15:00 in Nederland
@@ -47,7 +47,7 @@ function begin() {
       { id: V, username: 'Vreemd', taal: 'nl', online_status: false, laatst_gezien: null, toon_online: true, geblokkeerd: false },
     ],
     chat_instellingen: [{ gebruiker_id: M, melding_online: true }, { gebruiker_id: S, melding_online: false },
-                        { gebruiker_id: E, melding_online: true }, { gebruiker_id: V, melding_online: true }],
+                        { gebruiker_id: V, melding_online: true }],
     push_subscriptions: [M, S, E, V].map((u, i) => ({ id: 's' + i, user_id: u, subscription: { endpoint: u } })),
     online_meldingen: [],
   }
@@ -88,7 +88,7 @@ const minuut = 60 * 1000
 
 // 1. Bram komt online: Marcel en Eva (schakelaar aan, wederzijdse vrienden), niet Sanne (uit) en niet Vreemd (geen vriend)
 begin(); let r = await online()
-check('online: alleen vrienden met de schakelaar aan', r.status === 200 && JSON.stringify(naar()) === JSON.stringify([M, E].sort()), [r, naar()])
+check('online: vrienden, niet wie hem uitzette (geen rij = aan)', r.status === 200 && JSON.stringify(naar()) === JSON.stringify([M, E].sort()), [r, naar()])
 const nl = verzonden.find(v => v[0] === M), en = verzonden.find(v => v[0] === E)
 check('tekst in de taal van de ontvanger', nl && nl[1].body === '🟢 Bram is nu online' && en && en[1].body === '🟢 Bram is online now', verzonden)
 check('tag online, type online, tik opent de chat', nl[1].tag === 'online' && nl[1].type === 'online' && nl[1].url === '/Fibro/chat.html?vriend=' + B, nl[1])

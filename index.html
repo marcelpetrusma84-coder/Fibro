@@ -14,7 +14,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=2"></script>
-<script src="taal.js?v=70"></script>
+<script src="taal.js?v=71"></script>
+<script src="appslot.js?v=1"></script>
 <script src="apk.js?v=2"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2251,6 +2252,12 @@ window.openMenu = function() {
   schakelaar('fibro_leesbevestiging', T('\u2713\u2713 Gelezen-vinkjes'), async (aan) => {
     try { (await import('./chatstatus.js?v=1')).zetLeesbevestiging(supabase, aan) } catch (e) {}
   })
+  // v266: Fibro op slot met Face ID, vingerafdruk of pincode (standaard uit; appslot.js)
+  if (window.FibroSlot) {
+    const b = item(g, '', () => window.FibroSlot.openInstellingen())
+    b.id = 'menuAppSlot'
+    b.textContent = T('\u{1F512} App-slot') + ': ' + window.FibroSlot.stand()
+  }
   // v266: een eigen kopje Pushmeldingen: zelf kiezen welke je krijgt (standaard alles aan, zie pushmeldingen.js).
   // Berichten en bellen kun je niet uitzetten: dan werkt Fibro niet.
   g = groep(T('Pushmeldingen'), 'menuKopPush')

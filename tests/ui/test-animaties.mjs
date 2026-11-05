@@ -44,7 +44,15 @@ assert.match(profiel, /stopVoorbeeld=startAnimatieOp\(canvas,huidigeAnimatie\)/)
 assert.doesNotMatch(profiel, /huidigeAnimatie==='sterren'\|\|/, 'geen oude kopie van de tekencode')
 
 // 5. Nieuwe versies, zodat iedereen de nieuwe code krijgt
-assert.match(lees('thema.js'), /animatie\.js\?v=234'/)
-for (const p of ['index.html', 'chat.html', 'vrienden.html', 'vriend-profiel.html', 'profiel.html']) assert.match(lees(p), /thema\.js\?v=234'/, p)
-assert.match(profiel, /animatie\.js\?v=234'/)
+assert.match(lees('thema.js'), /animatie\.js\?v=23[4-9]'/)
+for (const p of ['index.html', 'chat.html', 'vrienden.html', 'vriend-profiel.html', 'profiel.html']) assert.match(lees(p), /thema\.js\?v=23[4-9]'/, p)
+assert.match(profiel, /animatie\.js\?v=23[4-9]'/)
 console.log('test-animaties: alles goed')
+
+// v265: de animatie staat achter alle blokken en tekst (z-index -1 in een eigen stapel van de body)
+{
+  const a = lees('animatie.js')
+  assert.match(a, /pointer-events:none;z-index:-1;background:transparent'/)
+  assert.match(a, /document\.body\.style\.isolation = 'isolate'/)
+  console.log('PASS: animatie achter de blokken')
+}

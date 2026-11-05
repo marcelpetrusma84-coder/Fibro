@@ -1,5 +1,6 @@
+// v235 (5 november 2026): animatie.js?v=235 (animatie achter alle blokken)
 import { supabase } from './supabase.js?v=95'
-import { pasAnimatieToe } from './animatie.js?v=234'
+import { pasAnimatieToe } from './animatie.js?v=235'
 import { laadFont } from './lettertypes.js?v=130'
 
 // ========================

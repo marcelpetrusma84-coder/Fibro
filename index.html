@@ -295,7 +295,7 @@ import { isBelregel, belregelTekst } from './belregel.js?v=152'
 import { koppelSpelIcoonFallback } from './spelicoon.js?v=3'
 koppelSpelIcoonFallback()
 import { openSpelMetTitel } from './titelscherm.js?v=6' // v252: titelscherm met muziek meteen bij je tik
-import { onlineMeldingAan, haalOnlineKeuze, wisselOnlineMelding, uitlegOnlineMelding } from './online-melding.js?v=1' // v266
+import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=1' // v266
 pasBlokstijlToe()
 
 // ── Waarschuw als de private key op dit apparaat ontbreekt ──
@@ -2251,34 +2251,45 @@ window.openMenu = function() {
   schakelaar('fibro_leesbevestiging', T('\u2713\u2713 Gelezen-vinkjes'), async (aan) => {
     try { (await import('./chatstatus.js?v=1')).zetLeesbevestiging(supabase, aan) } catch (e) {}
   })
-  // v266: een eigen kopje Pushmeldingen, zodat je ze makkelijk vindt (en uitzet)
+  // v266: een eigen kopje Pushmeldingen: zelf kiezen welke je krijgt (standaard alles aan, zie pushmeldingen.js).
+  // Berichten en bellen kun je niet uitzetten: dan werkt Fibro niet.
   g = groep(T('Pushmeldingen'), 'menuKopPush')
-  // v266: een pushmelding als een vriend online komt (standaard aan; de server houdt het rustig, zie online-melding.js)
   {
-    const b = document.createElement('button')
-    b.id = 'menuOnlineMelding'
-    b.setAttribute('role', 'menuitemcheckbox')
-    b.style.cssText = 'display:block;width:100%;min-height:44px;text-align:left;background:none;border:none;border-radius:10px;color:var(--text);font-size:15px;padding:10px 12px;cursor:pointer;font-family:inherit'
-    const toon = (aan) => {
-      b.textContent = T('\u{1F7E2} Melding als een vriend online komt') + ': ' + (aan ? T('aan') : T('uit'))
-      b.setAttribute('aria-checked', aan ? 'true' : 'false')
-    }
-    toon(onlineMeldingAan())
-    haalOnlineKeuze(supabase, window._uid).then(aan => { if (aan !== null && b.isConnected) toon(aan) })
+    const vast = document.createElement('div')
+    vast.textContent = T('\u{1F4AC} Berichten en \u{1F4DE} bellen: altijd aan')
+    vast.style.cssText = 'padding:6px 12px 4px;font-size:13px;color:var(--text);opacity:0.65'
+    g.appendChild(vast)
+    const knoppen = {}
     let bezig = false
-    b.onclick = () => {
-      if (bezig) return
-      bezig = true
-      b.style.opacity = '0.6'
-      wisselOnlineMelding(supabase, window._uid).then(({ aan, reden }) => {
-        bezig = false
-        b.style.opacity = ''
-        toon(aan)
-        const uitleg = uitlegOnlineMelding(reden)
-        if (uitleg) alert(uitleg)
-      })
+    for (const soort of PUSH_SOORTEN) {
+      const b = document.createElement('button')
+      b.id = 'menuPush-' + soort.id
+      b.setAttribute('role', 'menuitemcheckbox')
+      b.style.cssText = 'display:block;width:100%;min-height:44px;text-align:left;background:none;border:none;border-radius:10px;color:var(--text);font-size:15px;padding:10px 12px;cursor:pointer;font-family:inherit'
+      const toon = (aan) => {
+        b.textContent = T(soort.tekst) + ': ' + (aan ? T('aan') : T('uit'))
+        b.setAttribute('aria-checked', aan ? 'true' : 'false')
+      }
+      toon(pushAan(soort.id))
+      knoppen[soort.id] = toon
+      b.onclick = () => {
+        if (bezig) return
+        bezig = true
+        b.style.opacity = '0.6'
+        wisselPush(supabase, window._uid, soort.id).then(({ aan, reden }) => {
+          bezig = false
+          b.style.opacity = ''
+          toon(aan)
+          const uitleg = uitlegPush(reden)
+          if (uitleg) alert(uitleg)
+        })
+      }
+      g.appendChild(b)
     }
-    g.appendChild(b)
+    // De keuzes van de server overnemen (bijvoorbeeld op een ander toestel veranderd)
+    haalPushKeuzes(supabase, window._uid).then(uit => {
+      if (uit && !bezig) for (const id in knoppen) knoppen[id](!uit.includes(id))
+    })
   }
   g = groep(T('Accountinstellingen'), 'menuKopAccount')
   item(g, T('\u{1F4E6} Mijn gegevens downloaden'), () => openAccount('gegevens'))

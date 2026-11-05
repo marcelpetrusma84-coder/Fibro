@@ -1,6 +1,7 @@
-// proef266 (5 nov 2026): stuur-push v266, de melding "🟢 Bram is nu online" (type 'online', { online_id }, alleen vanaf
-// de server: trigger in sql/online-melding.sql). Slim en niet irritant:
-//  - alleen naar vrienden (beide kanten), niet naar wie de schakelaar uitzette (standaard aan: geen rij = aan);
+// proef266 (5 nov 2026): stuur-push v266, zelf kiezen welke meldingen je krijgt (chat_instellingen.push_uit; berichten
+// en bellen altijd) en de melding "🟢 Bram is nu online" (type 'online', { online_id }, alleen vanaf
+// de server: trigger in sql/pushmeldingen.sql). Slim en niet irritant:
+//  - alleen naar vrienden (beide kanten), niet naar wie 'online' uitzette (standaard aan: geen rij = aan);
 //  - niet als de vriend niet echt (meer) online is of zichzelf onzichtbaar maakte (toon_online = false);
 //  - niet 's nachts (23:00 tot 8:00 in Nederland), niet als je zelf al online bent;
 //  - dezelfde vriend hoogstens eens per 3 uur; hoogstens een online-melding per 20 minuten en 6 per dag;
@@ -46,10 +47,10 @@ function begin() {
       { id: E, username: 'Eva', taal: 'en', online_status: false, laatst_gezien: null, toon_online: true, geblokkeerd: false },
       { id: V, username: 'Vreemd', taal: 'nl', online_status: false, laatst_gezien: null, toon_online: true, geblokkeerd: false },
     ],
-    chat_instellingen: [{ gebruiker_id: M, melding_online: true }, { gebruiker_id: S, melding_online: false },
-                        { gebruiker_id: V, melding_online: true }],
+    chat_instellingen: [{ gebruiker_id: M, push_uit: ['like'] }, { gebruiker_id: S, push_uit: ['online'] },
+                        { gebruiker_id: V, push_uit: [] }],
     push_subscriptions: [M, S, E, V].map((u, i) => ({ id: 's' + i, user_id: u, subscription: { endpoint: u } })),
-    online_meldingen: [],
+    online_meldingen: [], messages: [], push_log: [],
   }
 }
 let verzonden = []
@@ -69,7 +70,7 @@ function tabel(naam) {
   return q
 }
 globalThis.__nep = {
-  createClient: () => ({ auth: { getUser: async () => ({ data: { user: null } }) }, from: tabel }),
+  createClient: () => ({ auth: { getUser: async p => ({ data: { user: p === 'pas-b' ? { id: B } : null } }) }, from: tabel }),
   webpush: { setVapidDetails() {}, async sendNotification(sub, payload, opties) { verzonden.push([sub.endpoint, JSON.parse(payload), opties]) } },
 }
 let handler
@@ -103,11 +104,10 @@ check('na 3 uur: wel weer een melding', JSON.stringify(naar()) === JSON.stringif
 
 // 4. hoogstens een online-melding per 20 minuten: een andere vriend (Sanne) komt 5 minuten later online
 NU = Date.UTC(2026, 10, 5, 14, 0, 0); begin()
-DB.chat_instellingen.find(c => c.gebruiker_id === S).melding_online = true
+DB.chat_instellingen.find(c => c.gebruiker_id === S).push_uit = []
 await online() // Marcel, Sanne en Eva krijgen 'Bram is online'
 NU += 5 * minuut
 Object.assign(DB.profiles.find(p => p.id === S), { online_status: true, laatst_gezien: iso(NU) })
-DB.chat_instellingen.find(c => c.gebruiker_id === M).melding_online = true
 DB.friendships.push({ user_id: S, friend_id: M, status: 'accepted' }, { user_id: M, friend_id: S, status: 'accepted' })
 r = await online(S)
 check('binnen 20 minuten na een andere online-melding: niets', verzonden.length === 0, [r, naar()])
@@ -151,6 +151,34 @@ check('onzin-id 400; app kan online niet zelf sturen', r.status === 400 && res.s
 // 11. het logboek: per ontvanger een regel, zodat de regels de volgende keer werken
 begin(); await online()
 check('logboek: een regel per ontvanger', DB.online_meldingen.length === 2 && DB.online_meldingen.every(l => l.vriend === B))
+
+// 12. Zelf kiezen: Marcel zette buzz en likes uit. Een buzz komt dan niet, een bericht en een oproep altijd wel.
+NU = Date.UTC(2026, 10, 5, 14, 0, 0); begin()
+DB.chat_instellingen.find(c => c.gebruiker_id === M).push_uit = ['buzz', 'like']
+const bericht = (n, inhoud) => { const id = '00000000-0000-4000-8000-' + String(n).padStart(12, '0'); DB.messages.push({ id, sender_id: B, receiver_id: M, content: inhoud, created_at: iso(NU) }); return id }
+async function vraagId(body, pas) {
+  verzonden = []
+  const h = { 'Content-Type': 'application/json' }; if (pas) h.Authorization = 'Bearer ' + pas
+  const res = await handler(new Request('https://x/functions/v1/stuur-push', { method: 'POST', headers: h, body: JSON.stringify(body) }))
+  return { status: res.status, data: await res.json() }
+}
+r = await vraagId({ message_id: bericht(1, 'buzz:') })
+check('buzz uitgezet: geen melding', verzonden.length === 0 && r.data.reden === 'uitgezet', r)
+r = await vraagId({ message_id: bericht(2, 'e2e:v2:abc') })
+check('bericht: altijd een melding', verzonden.length === 1 && verzonden[0][1].type === 'bericht', r)
+r = await vraagId({ message_id: bericht(3, 'spelinvite:dammen:' + B + ':s1') })
+check('spel niet uitgezet: wel een melding', verzonden.length === 1 && verzonden[0][1].type === 'spel', r)
+DB.chat_instellingen.find(c => c.gebruiker_id === M).push_uit = ['buzz', 'like', 'spel']
+r = await vraagId({ message_id: bericht(4, 'spelinvite:dammen:' + B + ':s2') })
+check('spel uitgezet: geen uitdaging', verzonden.length === 0 && r.data.reden === 'uitgezet', r)
+// Een oproep (bellen) met inlogpas: altijd, ook als alles uit staat
+DB.chat_instellingen.find(c => c.gebruiker_id === M).push_uit = ['buzz', 'spel', 'vriend', 'gastenboek', 'like', 'online']
+r = await vraagId({ receiver_id: M, type: 'oproep' }, 'pas-b')
+check('bellen: altijd een melding', verzonden.length === 1 && verzonden[0][1].type === 'oproep', r)
+// Geen tabel of kolom (SQL nog niet uitgevoerd): gewoon sturen zoals vroeger
+delete DB.chat_instellingen
+r = await vraagId({ message_id: bericht(5, 'buzz:') })
+check('nog geen keuzes in de database: buzz komt gewoon', verzonden.length === 1, r)
 
 Date.now = realNow
 console.log(fout ? fout + ' FOUT' : 'ALLES GOED')

@@ -33,8 +33,10 @@
 //  - 'like': { like_id } "❤️ Tijn reageerde op je foto" (of nummer, video), ook alleen vanaf de server (trigger op
 //    profiel_likes, sql/profiel-likes.sql). Dezelfde vriend bij dezelfde eigenaar hoogstens een melding per 10 minuten.
 // v266 (5 nov 2026): 'online': { online_id } "🟢 Bram is nu online". Alleen vanaf de server (trigger op profiles in
-// sql/online-melding.sql, als iemand online komt na minstens 30 minuten weg). Standaard aan; niet naar vrienden die het
-// uitzetten (chat_instellingen.melding_online = false) en volgens slimme regels, zodat het niet irritant wordt (kiesOnlineOntvangers).
+// sql/pushmeldingen.sql, als iemand online komt na minstens 30 minuten weg), volgens slimme regels zodat het niet
+// irritant wordt (kiesOnlineOntvangers).
+// v266: zelf kiezen (☰ > Pushmeldingen): chat_instellingen.push_uit is wat de ontvanger uitzette (buzz, spel, vriend,
+// gastenboek, like, online). Dan geen melding (PUSH_GROEP, staatUit). Berichten en bellen gaan altijd door.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push";
 
@@ -133,6 +135,22 @@ function leesUitnodiging(inhoud: unknown) {
 }
 const IEMAND: Record<string, string> = { nl: "Iemand", en: "Someone" };
 
+// v266: welke meldingen kun je uitzetten (soort -> groep in chat_instellingen.push_uit). Niet: bericht en bellen.
+const PUSH_GROEP: Record<string, string> = {
+  buzz: "buzz", spel: "spel", "spel-gemist": "spel", "spel-verlaten": "spel", "vriend-nieuw": "vriend",
+  gastenboek: "gastenboek", like: "like", online: "online",
+};
+// Heeft de ontvanger deze soort uitgezet? Lukt het opzoeken niet (kolom bestaat nog niet), dan gewoon sturen.
+async function staatUit(supabase: any, ontvanger: string, soort: string): Promise<boolean> {
+  const groep = PUSH_GROEP[soort];
+  if (!groep) return false;
+  try {
+    const { data, error } = await supabase.from("chat_instellingen").select("push_uit").eq("gebruiker_id", ontvanger).maybeSingle();
+    if (error) { console.error("push_uit:", error.code || error); return false; }
+    return Array.isArray(data && data.push_uit) && data.push_uit.includes(groep);
+  } catch (e) { console.error("push_uit:", e); return false; }
+}
+
 // v266: de regels voor 'online', zodat zo'n melding niet irritant wordt. (Even weg en terug, korter dan 30 minuten,
 // komt hier niet eens: dat houdt de trigger al tegen.)
 const ONLINE_REGELS = {
@@ -193,12 +211,12 @@ async function meldOnline(supabase: any, vriend: string) {
   const { data: terug, error: f2 } = await supabase.from("friendships").select("user_id").in("user_id", ids).eq("friend_id", vriend).eq("status", "accepted");
   if (f2) throw f2;
   const wederzijds = new Set((terug || []).map((r: { user_id: string }) => r.user_id));
-  // Wie heeft de schakelaar uitgezet? Standaard (geen rij) staat hij aan. (Bestaat de kolom nog niet, dan niemand.)
+  // Wie heeft 'online' uitgezet? Standaard (geen rij) staat hij aan. (Bestaat de kolom nog niet, dan niemand.)
   const vrienden = ids.filter((id) => wederzijds.has(id));
-  const { data: uit, error: f3 } = await supabase.from("chat_instellingen").select("gebruiker_id")
-    .in("gebruiker_id", vrienden).eq("melding_online", false);
+  const { data: keuzes, error: f3 } = await supabase.from("chat_instellingen").select("gebruiker_id, push_uit").in("gebruiker_id", vrienden);
   if (f3) { console.error("chat_instellingen:", f3.code || f3); return antwoord({ ok: true, verstuurd: 0, reden: "geen schakelaar" }); }
-  const uitIds = new Set((uit || []).map((r: { gebruiker_id: string }) => r.gebruiker_id));
+  const uitIds = new Set((keuzes || []).filter((r: { push_uit?: string[] }) => Array.isArray(r.push_uit) && r.push_uit.includes("online"))
+    .map((r: { gebruiker_id: string }) => r.gebruiker_id));
   const aanIds = vrienden.filter((id) => !uitIds.has(id));
   if (!aanIds.length) return antwoord({ ok: true, verstuurd: 0, reden: "niemand wil het" });
   let { data: kandidaten, error: f4 } = await supabase.from("profiles")
@@ -456,6 +474,9 @@ async function stuurVriendMelding(supabase: any, afzender: string, receiver_id: 
     if (!vriendschap || vriendschap.length === 0) {
       return antwoord({ ok: false, reden: "geen vrienden" }, 403);
     }
+
+    // 2b. v266: heeft de ontvanger deze soort uitgezet (☰ > Pushmeldingen)? Berichten en bellen gaan altijd door.
+    if (await staatUit(supabase, receiver_id, String(type))) return antwoord({ ok: true, verstuurd: 0, reden: "uitgezet" });
 
     // 3. De naam van de afzender en de taal van de ontvanger, in een keer.
     // (Bestaat de kolom taal nog niet, 42703, dan zonder: alles in het Nederlands, zoals vroeger.)

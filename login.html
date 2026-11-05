@@ -5,7 +5,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
   <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-  <script src="taal.js?v=76"></script>
+  <script src="taal.js?v=77"></script>
   <script src="apk.js?v=3"></script>
   <script src="registratie.js?v=3"></script>
   <script>try { FibroApk.hervatUitnodiging() } catch (e) {} // in de app: een uitnodiging die wacht (apk.js)</script>
@@ -418,6 +418,18 @@
     return code
   }
 
+  // v270: de herstelcode kopiëren (dan kun je hem in je wachtwoordkluis of notities zetten)
+  function kopieerKnop(code) {
+    const k = document.createElement('button'); k.type = 'button'
+    k.textContent = T('📋 Kopiëren')
+    k.style.cssText = 'margin-top:10px;padding:10px 18px;min-height:44px;border-radius:999px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;'
+    k.onclick = async () => {
+      try { await navigator.clipboard.writeText(String(code).trim()); k.textContent = T('✅ Gekopieerd') }
+      catch (e) { k.textContent = T('Kopiëren lukte niet. Schrijf hem over.') }
+    }
+    return k
+  }
+
   function regKnop(tekst, hoofd) {
     const k = document.createElement('button')
     k.textContent = tekst
@@ -434,13 +446,16 @@
     catch (e) { vak.textContent = T('Herstelcode maken mislukt. Je kunt Face ID-herstel later aanzetten na het inloggen.'); return }
     vak.textContent = ''
     const blok = document.createElement('div'); blok.style.cssText = 'text-align:center;padding:8px 0;'
-    const t1 = document.createElement('div'); t1.style.cssText = 'font-size:12px;opacity:0.7;margin-bottom:12px;'; t1.textContent = T('Bewaar je herstelsleutel op een veilige plek')
+    // v270: korter: een zin, de code, kopiëren en verder
+    const h0 = document.createElement('div'); h0.style.cssText = 'font-size:18px;font-weight:700;margin-bottom:6px;'; h0.textContent = T('Je herstelcode')
+    const t1 = document.createElement('div'); t1.style.cssText = 'font-size:14px;line-height:1.5;opacity:0.85;margin-bottom:12px;'; t1.textContent = T('Schrijf hem op: zonder deze code ben je je berichten kwijt op een nieuwe telefoon.')
     const c = document.createElement('div')
     c.style.cssText = "background:var(--bg);border:1.5px solid var(--accent);border-radius:10px;padding:16px;font-size:18px;letter-spacing:2px;color:var(--accent);font-family:'DM Mono',monospace;margin-bottom:12px;"
     c.textContent = code
-    const t2 = document.createElement('div'); t2.style.cssText = 'font-size:11px;color:var(--danger,#f87171);margin-bottom:20px;'; t2.textContent = T('Dit zie je maar een keer! Schrijf het op.')
+    const kopie = kopieerKnop(code)
+    const t2 = document.createElement('div'); t2.style.cssText = 'font-size:12px;color:var(--danger,#f87171);margin:10px 0 18px;'; t2.textContent = T('Je ziet hem maar één keer.')
     const verder = regKnop(T('Verder met setup'), true); verder.onclick = () => { window.location.href = 'setup.html' }
-    blok.append(t1, c, t2, verder)
+    blok.append(h0, t1, c, kopie, t2, verder)
     vak.append(blok)
   }
 
@@ -452,7 +467,7 @@
     const ic = document.createElement('div'); ic.style.cssText = 'font-size:32px;margin-bottom:12px;'; ic.textContent = '\u{1F389}'
     const h = document.createElement('div'); h.style.cssText = 'font-size:16px;margin-bottom:8px;'; h.textContent = T('Account aangemaakt!')
     const p = document.createElement('div'); p.style.cssText = 'font-size:13px;line-height:1.6;opacity:0.85;margin-bottom:14px;'
-    p.textContent = T('Zet nu Face ID-herstel aan. Dan krijg je je berichten op een nieuw toestel terug met alleen Face ID of je vingerafdruk, zonder code.')
+    p.textContent = T('Krijg je ooit een nieuwe telefoon? Met Face ID krijg je je berichten terug.') // v270: korter, een zin
     const melding = document.createElement('div'); melding.style.cssText = 'font-size:13px;min-height:18px;margin-bottom:10px;'
     const ja = regKnop(T('Face ID-herstel aanzetten'), true)
     const nee = regKnop(T('Geen Face ID? Gebruik een herstelcode'), false)
@@ -656,19 +671,21 @@
     }
 
     if (metFaceId && data.user) { toonRegistratieFaceId(data.user.id, username, keypair.privateKeyB64); return }
+    // v270: korter: een zin, de code, kopiëren en verder
     document.getElementById('reg-form').innerHTML = `
       <div style="text-align:center;padding:8px 0;">
-        <div style="font-size:32px;margin-bottom:12px;">🎉</div>
-        <div style="font-size:16px;color:var(--text);margin-bottom:8px;">${T('Account aangemaakt!')}</div>
-        <div class="e2e-badge" style="margin:0 auto 16px;">${T('🔒 Encryptie sleutels aangemaakt')}</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">${T('Bewaar je herstelsleutel op een veilige plek')}</div>
-        <div style="background:var(--bg);border:1.5px solid var(--accent);border-radius:10px;padding:16px;font-size:18px;letter-spacing:2px;color:var(--accent);font-family:'DM Mono',monospace;margin-bottom:12px;">
+        <div style="font-size:32px;margin-bottom:10px;">🎉</div>
+        <div style="font-size:18px;font-weight:700;margin-bottom:6px;">${T('Je herstelcode')}</div>
+        <div style="font-size:14px;line-height:1.5;opacity:0.85;margin-bottom:12px;">${T('Schrijf hem op: zonder deze code ben je je berichten kwijt op een nieuwe telefoon.')}</div>
+        <div style="background:var(--bg);border:1.5px solid var(--accent);border-radius:12px;padding:16px;font-size:18px;letter-spacing:2px;color:var(--accent);font-family:'DM Mono',monospace;">
           ${herstelsleutel}
         </div>
-        <div style="font-size:11px;color:var(--danger);margin-bottom:20px;">${T('⚠ Dit zie je maar één keer! Schrijf het op.')}</div>
+        <div id="reg-kopie"></div>
+        <div style="font-size:12px;color:var(--danger);margin:10px 0 18px;">${T('Je ziet hem maar één keer.')}</div>
         <button class="btn btn-primary" onclick="window.location.href='setup.html'">${T('Verder met setup')}</button>
       </div>
     `
+    document.getElementById('reg-kopie').append(kopieerKnop(herstelsleutel))
   }
 
 // v270: een oogje bij elk wachtwoordveld (tonen/verbergen), en een rode rand verdwijnt zodra je weer typt

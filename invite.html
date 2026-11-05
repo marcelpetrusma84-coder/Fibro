@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-<script src="taal.js?v=76"></script>
+<script src="taal.js?v=77"></script>
 <script src="apk.js?v=3"></script>
 <script src="registratie.js?v=3"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Wie jou uitnodigde, heeft deze week al 5 nieuwe mensen op Stekky gebracht. Dat is het maximum. Probeer het over een paar dagen opnieuw.': 'The person who invited you has already brought 5 new people to Stekky this week. That is the maximum. Please try again in a few days.' }) // v255</script>
@@ -196,10 +196,9 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
   <div id="herstelScherm" style="display:none">
     <div style="font-size:40px;margin-bottom:12px;">🎉</div>
     <div style="font-size:18px;font-weight:600;margin-bottom:8px;" data-t>Welkom bij Stekky!</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:8px;" data-t>Bewaar je herstelsleutel op een veilige plek</div>
-    <div class="e2e-badge" style="margin:0 auto 16px;" data-t>🔒 Encryptie sleutels aangemaakt</div>
+    <!-- v270: korter: een zin en de code -->
+    <div style="font-size:14px;line-height:1.5;color:var(--muted);margin-bottom:8px;" data-t>Schrijf hem op: zonder deze code ben je je berichten kwijt op een nieuwe telefoon.</div>
     <div class="herstel-box">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;" data-t>Jouw herstelsleutel:</div>
       <div class="herstel-code" id="herstelCode">—</div>
     </div>
     <button onclick="kopieerCode()" id="kopieerCodeBtn" style="background:var(--vak);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 0 12px;font-family:inherit;" data-t>Code kopieren</button><div style="font-size:11px;color:#f87171;margin-bottom:16px;" data-t>Dit zie je maar een keer. Bewaar hem buiten je telefoon.</div>
@@ -602,7 +601,7 @@ function toonFaceIdNaInvite(userId, naam, privateKeyB64) {
   const ic = document.createElement('div'); ic.style.cssText = 'font-size:34px;margin-bottom:10px;'; ic.textContent = '\u{1F389}'
   const h = document.createElement('div'); h.style.cssText = 'font-size:17px;font-weight:600;margin-bottom:8px;'; h.textContent = T('Welkom, {naam}!', { naam })
   const p = document.createElement('div'); p.style.cssText = 'font-size:13px;line-height:1.6;opacity:0.85;margin-bottom:14px;'
-  p.textContent = T('Zet nu Face ID-herstel aan. Dan krijg je je berichten op een nieuw toestel terug met alleen Face ID of je vingerafdruk, zonder code.')
+  p.textContent = T('Krijg je ooit een nieuwe telefoon? Met Face ID krijg je je berichten terug.') // v270: korter, een zin
   const melding = document.createElement('div'); melding.style.cssText = 'font-size:13px;min-height:18px;margin-bottom:10px;'
   const ja = document.createElement('button'); ja.textContent = T('Face ID-herstel aanzetten')
   ja.style.cssText = 'width:100%;padding:13px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,var(--accent,#c084fc),var(--accent2,#f0abfc));color:#1a0a2e;'

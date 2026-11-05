@@ -65,6 +65,7 @@ GEEN_DEEL = "(() => { try { delete Navigator.prototype.share } catch (e) {} })()
 
 def toestel(br, uid, sl, st, taal='nl', init=None):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 844}, permissions=['clipboard-read', 'clipboard-write'])
+    ctx.add_init_script("(() => { const g = Storage.prototype.getItem; Storage.prototype.getItem = function (k) { return String(k).startsWith('fibro_eigennaam_gevraagd_') ? '1' : g.call(this, k) } })()")  # v270: geen vraag 'Hoe heet je?' over Home heen (eigennaam.js; die heeft een eigen test)
     ctx.route('**/*supabase.co/**', rest(uid, sl, st))
     ctx.route_web_socket('**/realtime/v1/websocket**', lambda w: None)
     ctx.route(re.compile(r'^https?://(?!127\.0\.0\.1)(?!.*supabase\.co).*'), lambda r: r.fulfill(status=204, body=''))

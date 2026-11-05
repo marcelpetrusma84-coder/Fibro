@@ -84,6 +84,7 @@ NAAM[LOTTE] = 'Lotte'; NAAM[WEG] = 'Weg'
 VRIENDENPAGINA = json.dumps({'data': [{'profiles': {'id': BRAM, 'username': 'bram', 'avatar_url': '\U0001F438'}}, {'profiles': {'id': GERRIT, 'username': 'gerrit', 'avatar_url': '\U0001F98A'}}, {'profiles': {'id': LOTTE, 'username': 'lotte', 'avatar_url': '\U0001F431'}}]})
 def toestel(br, uid, sl):
     ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 844})
+    ctx.add_init_script("(() => { const g = Storage.prototype.getItem; Storage.prototype.getItem = function (k) { return String(k).startsWith('fibro_eigennaam_gevraagd_') ? '1' : g.call(this, k) } })()")  # v270: geen vraag 'Hoe heet je?' over Home heen (eigennaam.js; die heeft een eigen test)
     ctx.route('**/*supabase.co/**', rest(uid, sl))
     ctx.route_web_socket('**/realtime/v1/websocket**', lambda w: None)
     ctx.route(re.compile(r'^https?://(?!127\.0\.0\.1)(?!.*supabase\.co).*'), lambda r: r.fulfill(status=204, body=''))

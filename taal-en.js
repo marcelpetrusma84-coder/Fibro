@@ -114,6 +114,8 @@ window.FIBRO_EN = {
   "na {n} min": "after {n} min",
   "🔒 App-slot": "🔒 App lock",
   // v270: je eigen naam bij het registreren (registratie.js, eigennaam.js)
+  "bèta": "beta",
+  "🔄 Gebruikersnaam-generator": "🔄 Username generator",
   "Je eigen naam": "Your own name",
   "bijv. Sanne de Vries": "e.g. Sam Smith",
   "Zo weten je vrienden wie je bent. Alleen je vrienden zien deze naam; hij komt niet op de server.": "So your friends know who you are. Only your friends see this name; it never goes to the server.",

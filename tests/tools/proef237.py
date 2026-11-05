@@ -71,6 +71,7 @@ def toestel(br, st, nep, ingelogd=True, taal='nl', ua=None, uid=MARCEL):
     k = {'service_workers': 'block', 'viewport': {'width': 390, 'height': 844}}
     if ua: k['user_agent'] = ua
     ctx = br.new_context(**k)
+    ctx.add_init_script("(() => { const g = Storage.prototype.getItem; Storage.prototype.getItem = function (k) { return String(k).startsWith('fibro_eigennaam_gevraagd_') ? '1' : g.call(this, k) } })()")  # v270: geen vraag 'Hoe heet je?' over Home heen (eigennaam.js; die heeft een eigen test)
     ctx.route('**/*supabase.co/**', rest(uid, st))
     ctx.route_web_socket('**/realtime/v1/websocket**', lambda w: None)
     ctx.route(re.compile(r'^https?://(?!127\.0\.0\.1)(?!.*supabase\.co).*'), lambda r: r.fulfill(status=204, body=''))
@@ -173,6 +174,7 @@ try:
         def inschrijven(pg):
             pg.goto(B + 'invite.html?token=' + TOKEN)
             wacht(pg, "() => getComputedStyle(document.getElementById('uitnodigingScherm')).display === 'block'", 15000)
+            pg.fill('#eigennaam', 'Sanne de Vries')   # v270: je eigen naam is verplicht
             pg.fill('#wachtwoord', 'geheim-1234'); pg.fill('#geboortejaar', '1990'); pg.check('#akkoord')
             pg.evaluate("registreren()")
             return wacht(pg, "() => getComputedStyle(document.getElementById('herstelScherm')).display === 'block'", 20000)

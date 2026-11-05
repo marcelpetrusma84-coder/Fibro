@@ -1,4 +1,4 @@
-import { maakSchaakTaal } from './schaak-taal.js?v=10'
+import { maakSchaakTaal } from './schaak-taal.js?v=11'
 import { stukSVG, registreerSlag, veroverdePunten, STUKPUNTEN } from './schaak-stukken.js?v=1'
 import { schaakFen } from './schaak-ultra-engine.js?v=1'
 import { schaakNotatie, maakUltraEvaluatieHistorie } from './schaak-ultra-historie.js?v=1'

@@ -8,7 +8,7 @@ const regels = lees('spelregels.html'), over = lees('over.html'), index = lees('
 
 // 1. De pagina volgt de huisregels van de andere pagina's
 assert.match(regels, /<html lang="nl" data-taal/)
-assert.equal(regels.match(/<meta http-equiv="Content-Security-Policy"[^>]*>/)[0], over.match(/<meta http-equiv="Content-Security-Policy"[^>]*>/)[0], 'dezelfde huisregel als Over Fibro')
+assert.equal(regels.match(/<meta http-equiv="Content-Security-Policy"[^>]*>/)[0], over.match(/<meta http-equiv="Content-Security-Policy"[^>]*>/)[0], 'dezelfde huisregel als Over Stekky')
 assert.match(regels, /<script src="huisregel\.js\?v=\d+"><\/script>/, 'huisregel.js')   // v2: Object.hasOwn voor oude browsers
 assert.match(regels, /<script src="foutmelder\.js\?v=\d+"><\/script>/, 'foutmelder.js') // v265: v2
 // taal.js: het ?v=-nummer gaat omhoog bij elke nieuwe vertaling (30 okt 2026: 37), dus alleen of hij er is
@@ -29,19 +29,19 @@ assert.doesNotMatch(regels, /https?:\/\/(?!qmgatbphiplrfxrljtbe\.supabase\.co)/,
 }
 
 // 3. De belangrijkste regels staan erin
-for (const z of ['Fibro is vanaf 16 jaar', 'Pesten, bedreigen', 'jonger is dan 18', 'Bericht melden', 'stuurt je toestel wél leesbaar naar de moderator', 'Bel 112', '0800-0113', 'voor een dag, drie dagen, een week, een maand of voor altijd']) {
+for (const z of ['Stekky is vanaf 16 jaar', 'Pesten, bedreigen', 'jonger is dan 18', 'Bericht melden', 'stuurt je toestel wél leesbaar naar de moderator', 'Bel 112', '0800-0113', 'voor een dag, drie dagen, een week, een maand of voor altijd']) {
   assert.ok(regels.includes(z), 'staat erin: ' + z)
 }
 
 // 4. Te vinden bij het aanmelden (in een nieuw tabblad, zodat het formulier blijft staan), op Over Fibro en op Home
-const LINK = 'Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Fibro</a>'
+const LINK = 'Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Stekky</a>'
 for (const p of ['login.html', 'invite.html']) {
   const s = lees(p)
   assert.ok(s.includes('data-t>\n            ' + LINK) || s.includes(LINK), p + ': link naar de spelregels')
   assert.ok(s.includes("'" + LINK + "': 'I agree to the <a href=\"spelregels.html\""), p + ': ook in het Engels')
-  assert.doesNotMatch(s, /<span style="color:var\(--accent\)">spelregels van Fibro<\/span>/, p + ': geen tekst zonder link meer')
+  assert.doesNotMatch(s, /<span style="color:var\(--accent\)">spelregels van Stekky<\/span>/, p + ': geen tekst zonder link meer')
 }
-assert.ok(over.includes('<a href="spelregels.html"'), 'Over Fibro verwijst naar de spelregels')
+assert.ok(over.includes('<a href="spelregels.html"'), 'Over Stekky verwijst naar de spelregels')
 assert.match(index, /item\(g, T\('\\u\{1F4DC\} Spelregels'\), \(\) => \{ window\.location\.href = 'spelregels\.html' \}\)/, 'menu op Home')
 assert.ok(index.includes("'\\u{1F4DC} Spelregels': '\\u{1F4DC} House rules'"), 'menu op Home in het Engels')
 

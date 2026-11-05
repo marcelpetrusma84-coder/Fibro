@@ -567,9 +567,9 @@ export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         const schakel = (sleutelNaam, label) => '<label class="dm-schakel"><span>' + label + '</span><input type="checkbox" data-sleutel="' + sleutelNaam + '"' + (inst[sleutelNaam] ? ' checked' : '') + '></label>'
         vak.innerHTML = '<section class="dm-paneel" role="dialog" aria-modal="true" aria-label="' + T('Daminstellingen') + '">'
             + '<h2>⚙ ' + T('Daminstellingen') + '</h2><p class="uitleg">' + T('Maak het bord en de schijven naar jouw smaak. Dit geldt op dit toestel.') + '</p>'
-            + '<fieldset><legend>' + T('Bordstijl') + '</legend>' + keuze('bord', [['hout', T('Hout')], ['walnoot', T('Walnoot')], ['marmer', T('Marmer')], ['fibro', 'Fibro']]) + '</fieldset>'
+            + '<fieldset><legend>' + T('Bordstijl') + '</legend>' + keuze('bord', [['hout', T('Hout')], ['walnoot', T('Walnoot')], ['marmer', T('Marmer')], ['fibro', 'Stekky']]) + '</fieldset>'
             + '<fieldset><legend>' + T('Grootte van de schijven') + '</legend>' + keuze('grootte', [['klein', T('Kleiner')], ['standaard', T('Standaard')], ['groot', T('Groter')]]) + '</fieldset>'
-            + '<fieldset><legend>' + T('Tafelachtergrond') + '</legend>' + keuze('tafel', [['geen', T('Geen')], ['hout', T('Houten tafel')], ['laken', T('Groen laken')], ['fibro', 'Fibro']]) + '</fieldset>'
+            + '<fieldset><legend>' + T('Tafelachtergrond') + '</legend>' + keuze('tafel', [['geen', T('Geen')], ['hout', T('Houten tafel')], ['laken', T('Groen laken')], ['fibro', 'Stekky']]) + '</fieldset>'
             + '<fieldset><legend>' + T('Hulp en weergave') + '</legend>'
             + schakel('stippen', T('Mogelijke zetten tonen (groene stipjes)'))
             + schakel('verplicht', T('Gouden rand bij een verplichte slag'))

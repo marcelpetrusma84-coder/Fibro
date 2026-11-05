@@ -13,14 +13,14 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
-<script src="foutmelder.js?v=2"></script>
-<script src="taal.js?v=70"></script>
-<script src="apk.js?v=2"></script>
+<script src="foutmelder.js?v=3"></script>
+<script src="taal.js?v=73"></script>
+<script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>/* v130: zoomen mag weer; iPhone zoomt bij invoervakken kleiner dan 16px vanzelf in */@supports (-webkit-touch-callout: none){input,textarea,select{font-size:16px !important}}</style>
-<title>Fibro</title>
-<link rel="apple-touch-icon" href="icon-192.png">
+<title>Stekky</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -97,7 +97,42 @@
   #fibroMenu, #fibroMenu * { font-family:'DM Sans',sans-serif !important; }
 </style>
 <script>
-function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
+// v266 (5 nov 2026): de opslag op dit toestel (IndexedDB) openen, met een wekker. Op de iPhone bleef dat openen soms hangen
+// (meestal na een tijd op de achtergrond): dan bleef Home half leeg (geen widgets, 'Opslag op dit apparaat —') tot je de app
+// afsloot. Nu: één verbinding voor de hele pagina; antwoordt het openen na 4 s niet, dan nog een keer; hangt ook dat, dan
+// meldt het dat (foutmelder) en laadt de pagina één keer vanzelf opnieuw (zoals afsluiten en opnieuw openen).
+let _fibroDB=null
+function openDB(){
+  if(_fibroDB)return _fibroDB
+  _fibroDB=new Promise((resolve,reject)=>{
+    let klaar=false
+    const probeer=poging=>{
+      let req
+      try{req=indexedDB.open('FibroDB',2)}catch(e){klaar=true;_fibroDB=null;reject('DB fout');return}
+      const wekker=setTimeout(()=>{
+        if(klaar)return
+        if(poging<1){probeer(poging+1);return}
+        klaar=true;_fibroDB=null
+        try{window.__fibroFoutmelder&&window.__fibroFoutmelder.meld('fout','Opslag op dit toestel antwoordt niet (IndexedDB)','index.html')}catch(e){}
+        try{const k='fibro_db_herladen',t=+sessionStorage.getItem(k)||0;if(Date.now()-t>60000){sessionStorage.setItem(k,String(Date.now()));location.reload()}}catch(e){}
+        reject('DB hangt')
+      },4000)
+      req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})}
+      req.onsuccess=e=>{
+        const db=e.target.result
+        if(klaar){try{db.close()}catch(x){};return}
+        klaar=true;clearTimeout(wekker)
+        db.onversionchange=()=>{try{db.close()}catch(x){};_fibroDB=null}
+        db.onclose=()=>{_fibroDB=null}
+        resolve(db)
+      }
+      req.onerror=()=>{if(klaar)return;klaar=true;clearTimeout(wekker);_fibroDB=null;reject('DB fout')}
+    }
+    probeer(0)
+  })
+  return _fibroDB
+}
+window.openDB=openDB
 async function slaFotoOp(id,data){const uid=window._uid;if(uid&&typeof id==='string'&&id.includes(uid)){const g=typeof data==='string'?data.length:(data&&data.size)||0;const nu=await metenOpslag(uid);if(nu+g>157286400){alert(T('Je profiel is vol (150 MB).\n\nVerwijder eerst een foto of nummer om ruimte te maken.'));return null}}const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}
 async function dbAlleSleutels(){const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').getAllKeys();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>resolve([])})}
 async function metenOpslag(uid){try{const alle=await dbAlleSleutels();const mijn=alle.filter(k=>typeof k==='string'&&k.includes(uid));let totaal=0;for(const k of mijn){if(k==='video_data_'+uid){try{const m=JSON.parse(await laadFotoUitDB('video_meta_'+uid)||'null');if(m&&m.grootte>0){totaal+=m.grootte;continue}}catch(e){}}const d=await laadFotoUitDB(k);if(typeof d==='string')totaal+=d.length;else if(d&&d.size)totaal+=d.size}return totaal}catch(e){console.warn('[opslag] meten mislukt',e);return 0}}
@@ -142,7 +177,7 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
     <div style="flex:1;min-width:220px;">
       <div style="color:#c084fc;font-size:14px;margin-bottom:4px;" data-t>Je berichten zijn hier niet leesbaar</div>
       <div style="color:#b8b0c8;font-size:12px;line-height:1.5;" data-t>
-        Je sleutel staat niet op dit apparaat. Dat is normaal als je Fibro voor het eerst
+        Je sleutel staat niet op dit apparaat. Dat is normaal als je Stekky voor het eerst
         opent in deze browser of op een nieuwe telefoon. Tik op Sleutel terugzetten en ontgrendel met Face ID
         of je vingerafdruk. Staat dat nog niet aan, gebruik dan je herstelsleutel.
       </div>
@@ -154,7 +189,7 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 <div id="content-laag">
 <div class="top-bar" role="banner">
   <div style="display:flex;align-items:center;gap:8px;">
-    <div class="top-logo">Fibro</div>
+    <div class="top-logo">Stekky</div>
     <button type="button" class="beta-label" id="betaLabel" onclick="window.openFibroTerugmelden()" aria-label="Beta: fout of idee melden" data-t-attr="aria-label" data-t>beta</button>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
@@ -163,7 +198,7 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
     <div class="top-av" id="topAvatar" onclick="window.location.href='profiel.html'" style="display:none">👤</div>
   </div>
 </div>
-<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Fibro – Home</h1>
+<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Stekky – Home</h1>
 
 
 <div class="profile-hero">
@@ -282,9 +317,10 @@ import { pasBlokstijlToe } from './blokstijl.js?v=95'
 import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=95'
 import { startHeartbeat } from './heartbeat.js?v=117'
 import { meldToestel } from './toestel.js?v=1'
+import { zetStandaardWidgets } from './standaardwidgets.js?v=2' // v267: nieuw account = meteen widgets op Home
 import * as GB from './gastenboekstijl.js?v=2'
 import { spelIcoonHtml } from './spelicoon.js?v=3' // 30 okt 2026: plaatjes uit de spellen
-import { initSync, lokaleVriendNaam } from './sync.js?v=254'
+import { initSync, lokaleVriendNaam } from './sync.js?v=255'
 import { maakProfielLikes, itemVan } from './profielreacties.js?v=2' // v258: likes op je eigen profiel
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -294,8 +330,8 @@ import { haalPrivateKeyOp } from './crypto.js?v=182'
 import { isBelregel, belregelTekst } from './belregel.js?v=152'
 import { koppelSpelIcoonFallback } from './spelicoon.js?v=3'
 koppelSpelIcoonFallback()
-import { openSpelMetTitel } from './titelscherm.js?v=6' // v252: titelscherm met muziek meteen bij je tik
-import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=1' // v266
+import { openSpelMetTitel } from './titelscherm.js?v=7' // v252: titelscherm met muziek meteen bij je tik
+import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=2' // v266
 pasBlokstijlToe()
 
 // ── Waarschuw als de private key op dit apparaat ontbreekt ──
@@ -673,7 +709,7 @@ function _opWit(canvas) {
 function fotoData(canvas, kwaliteit) {
   return _kanWebp ? canvas.toDataURL('image/webp', kwaliteit) : _opWit(canvas).toDataURL('image/jpeg', kwaliteit)
 }
-function openFibroDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
+function openFibroDB(){return window.openDB()} // v266: dezelfde verbinding, met wekker (zie openDB bovenin)
 async function slaInDB(id,data){const uid=window._uid;if(uid&&typeof id==='string'&&id.includes(uid)){const g=typeof data==='string'?data.length:(data&&data.size)||0;const oudItem=await laadFotoUitDB(id);const oudG=typeof oudItem==='string'?oudItem.length:0;const nu=await metenOpslag(uid);if(nu-oudG+g>157286400){alert(T('Je profiel is vol (150 MB).'));throw new Error('Opslag vol')}}const db=await openFibroDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}
 async function laadUitDB(id){try{const db=await openFibroDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
 // Voortgangsbalk bij muziek uploaden
@@ -2167,7 +2203,7 @@ const FIBRO_DATUM = '2026-10-27'
 function versieTekst() {
   let d = FIBRO_DATUM
   try { d = new Date(FIBRO_DATUM + 'T12:00:00').toLocaleDateString(T.locale || 'nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) } catch (e) {}
-  return (T.app || 'Fibro') + ' v' + FIBRO_VERSIE + ' \u00B7 ' + d
+  return (T.app || 'Stekky') + ' v' + FIBRO_VERSIE + ' \u00B7 ' + d
 }
 const BEWAAR_KEUZES = [[1, T('1 dag')], [7, T('7 dagen')], [31, T('31 dagen')], [90, T('90 dagen')], [365, T('1 jaar')]]
 function sluitMenu() {
@@ -2191,18 +2227,57 @@ window.openMenu = function() {
   const boven = Math.round(r.bottom + 8)
   m.style.cssText = 'position:fixed;z-index:10000;top:' + boven + 'px;right:' + Math.max(12, Math.round(window.innerWidth - r.right)) + 'px;min-width:240px;max-height:calc(100vh - ' + (boven + 12) + 'px);overflow-y:auto;background:rgba(26,10,46,0.97);border:0.5px solid var(--border);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,0.5)'
   // v178: in groepjes met een kopje (Instellingen, Accountinstellingen, Mijn Fibro)
-  const groep = (kop, id) => {
+  // v268: een kopje is een knop: tik = open- of dichtklappen (▸ dicht, ▾ open). Standaard alles dicht, zodat het
+  // menu op een scherm past; onder het kopje staat in een grijs regeltje wat erin zit. Fibro onthoudt wat je openzette
+  // (fibro_menu_open, op dit toestel).
+  let menuOpen = []
+  try { const l = JSON.parse(localStorage.getItem('fibro_menu_open') || '[]'); if (Array.isArray(l)) menuOpen = l.filter(x => typeof x === 'string') } catch (e) {}
+  const groep = (kop, id, inhoud) => {
     const g = document.createElement('div')
     g.setAttribute('role', 'group')
     g.setAttribute('aria-labelledby', id)
     if (m.childElementCount) g.style.cssText = 'border-top:0.5px solid var(--border);margin-top:4px'
-    const k = document.createElement('div')
+    const k = document.createElement('button')
+    k.type = 'button'
     k.id = id
-    k.textContent = kop
-    k.style.cssText = 'font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);padding:10px 12px 2px'
-    g.appendChild(k)
+    k.className = 'menu-kop'
+    k.setAttribute('aria-controls', id + '-lijst')
+    k.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;min-height:44px;text-align:left;background:none;border:none;border-radius:10px;padding:10px 12px;cursor:pointer;font-family:inherit;color:var(--text)'
+    const tekst = document.createElement('span')
+    tekst.style.cssText = 'flex:1;min-width:0'
+    const titel = document.createElement('span')
+    titel.textContent = kop
+    titel.style.cssText = 'display:block;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent)'
+    tekst.appendChild(titel)
+    const uitleg = document.createElement('span')
+    uitleg.className = 'menu-kop-uitleg'
+    uitleg.textContent = inhoud || ''
+    uitleg.style.cssText = 'display:block;font-size:12px;opacity:0.6;margin-top:2px'
+    if (inhoud) tekst.appendChild(uitleg)
+    const pijl = document.createElement('span')
+    pijl.setAttribute('aria-hidden', 'true')
+    pijl.style.cssText = 'font-size:14px;color:var(--accent)'
+    k.append(tekst, pijl)
+    const lijst = document.createElement('div')
+    lijst.id = id + '-lijst'
+    const zet = (open) => {
+      k.setAttribute('aria-expanded', open ? 'true' : 'false')
+      pijl.textContent = open ? '\u25BE' : '\u25B8'
+      lijst.hidden = !open
+      uitleg.style.display = open ? 'none' : 'block'
+    }
+    zet(menuOpen.includes(id))
+    k.onclick = (e) => {
+      e.stopPropagation()
+      const open = lijst.hidden
+      zet(open)
+      menuOpen = menuOpen.filter(x => x !== id).concat(open ? [id] : [])
+      try { localStorage.setItem('fibro_menu_open', JSON.stringify(menuOpen)) } catch (er) {}
+      if (open) setTimeout(() => { try { g.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) } catch (er) {} }, 0)
+    }
+    g.append(k, lijst)
     m.appendChild(g)
-    return g
+    return lijst
   }
   const item = (g, tekst, actie) => {
     const b = document.createElement('button')
@@ -2213,7 +2288,7 @@ window.openMenu = function() {
     g.appendChild(b)
     return b
   }
-  let g = groep(T('Instellingen'), 'menuKopInstellingen')
+  let g = groep(T('Instellingen'), 'menuKopInstellingen', T('Taal, berichten bewaren, muziek, buzz, vinkjes'))
   item(g, T('\u{1F310} Taal / Language'), openTaal) // v142
   item(g, T('\u23F3 Berichten bewaren'), openBewaren)
   // v179/v180: muziek vanzelf afspelen, aan of uit: je eigen profielnummer op Home, en dat van vrienden op hun profiel
@@ -2240,7 +2315,7 @@ window.openMenu = function() {
   }
   schakelaar('fibro_muziek_auto', T('\u{1F3B5} Mijn muziek vanzelf'), async (aan) => {
     if (aan) { try { sessionStorage.removeItem('fibro_muziek_pauze_eigen') } catch (e) {} }
-    try { const m = await import('./profielmuziek.js?v=184'); if (aan) startProfielMuziek(); else m.zetAuto(false) } catch (e) {}
+    try { const m = await import('./profielmuziek.js?v=185'); if (aan) startProfielMuziek(); else m.zetAuto(false) } catch (e) {}
   })
   schakelaar('fibro_muziek_auto_vrienden', T('\u{1F3B5} Muziek van vrienden vanzelf'))
   // v187: uit = een buzz is alleen een melding (geen buzzgeluid, niet trillen, geen schuddend scherm), zie meldingen.js
@@ -2253,7 +2328,7 @@ window.openMenu = function() {
   })
   // v266: een eigen kopje Pushmeldingen: zelf kiezen welke je krijgt (standaard alles aan, zie pushmeldingen.js).
   // Berichten en bellen kun je niet uitzetten: dan werkt Fibro niet.
-  g = groep(T('Pushmeldingen'), 'menuKopPush')
+  g = groep(T('Pushmeldingen'), 'menuKopPush', T('Kies welke meldingen je krijgt'))
   {
     const vast = document.createElement('div')
     vast.textContent = T('\u{1F4AC} Berichten en \u{1F4DE} bellen: altijd aan')
@@ -2291,17 +2366,39 @@ window.openMenu = function() {
       if (uit && !bezig) for (const id in knoppen) knoppen[id](!uit.includes(id))
     })
   }
-  g = groep(T('Accountinstellingen'), 'menuKopAccount')
+  // v266: sleutels van vrienden controleren met een QR-code of 60 cijfers (standaard uit; sleutelcontrole.js)
+  {
+    const b = document.createElement('button')
+    b.id = 'menuSleutelcontrole'
+    b.setAttribute('role', 'menuitemcheckbox')
+    b.style.cssText = 'display:block;width:100%;min-height:44px;text-align:left;background:none;border:none;border-radius:10px;color:var(--text);font-size:15px;padding:10px 12px;cursor:pointer;font-family:inherit'
+    const toon = (aan) => {
+      b.textContent = T('\u{1F510} Sleutels controleren') + ': ' + (aan ? T('aan') : T('uit'))
+      b.setAttribute('aria-checked', aan ? 'true' : 'false')
+    }
+    let aan = false
+    try { aan = localStorage.getItem('fibro_sleutelcontrole') === '1' } catch (e) {}
+    toon(aan)
+    b.onclick = () => {
+      aan = !aan
+      try { localStorage.setItem('fibro_sleutelcontrole', aan ? '1' : '0') } catch (e) {}
+      toon(aan)
+      if (aan) alert(T('In elke chat staat nu bovenin \u{1F510}. Tik erop om de sleutel van je vriend te controleren met een QR-code of 60 cijfers. Gecontroleerd = \u2705.'))
+    }
+    // hoort bij Instellingen (onderaan dat groepje)
+    ;(m.querySelector('#menuKopInstellingen-lijst') || g).appendChild(b)
+  }
+  g = groep(T('Accountinstellingen'), 'menuKopAccount', T('Gegevens downloaden, account verwijderen'))
   item(g, T('\u{1F4E6} Mijn gegevens downloaden'), () => openAccount('gegevens'))
   item(g, T('\u{1F5D1}\uFE0F Account verwijderen'), () => openAccount('verwijderen')).style.color = '#fca5a5'
-  g = groep(T('Mijn Fibro'), 'menuKopFibro')
-  item(g, T('\u2139\uFE0F Over Fibro'), () => { window.location.href = 'over.html' })
+  g = groep(T('Mijn Stekky'), 'menuKopFibro', T('Over, spelregels, app installeren, fout melden'))
+  item(g, T('\u2139\uFE0F Over Stekky'), () => { window.location.href = 'over.html' })
   item(g, T('\u{1F4DC} Spelregels'), () => { window.location.href = 'spelregels.html' }) // v229
-  item(g, T('\u{1F4F2} Fibro als app installeren'), openAppUitleg) // v178
+  item(g, T('\u{1F4F2} Stekky als app installeren'), openAppUitleg) // v178
   item(g, T('\u{1F4AC} Fout of idee melden'), () => window.openFibroTerugmelden()) // v222
   // v223: alleen voor moderators (is_moderator in je profiel). De pagina zelf controleert het nog eens bij de server.
   if (window._profiel && window._profiel.is_moderator === true) {
-    g = groep(T('Moderator'), 'menuKopModerator')
+    g = groep(T('Moderator'), 'menuKopModerator', T('Moderatie'))
     item(g, T('\u{1F6E1}\uFE0F Moderatie'), () => { window.location.href = 'moderatie.html' })
   }
   // v183: onderaan het versienummer (gewone tekst, geen knop)
@@ -2432,7 +2529,7 @@ async function openBewaren() {
 // v178: uitleg om Fibro als app op het beginscherm te zetten. v248: met tekeningen, per toestel en iOS-versie
 // (beginscherm.js; ook gebruikt door Profiel > Meldingen aanzetten).
 function openAppUitleg() {
-  import('./beginscherm.js?v=2').then(m => m.openBeginschermUitleg()).catch(e => console.warn('[beginscherm]', e))
+  import('./beginscherm.js?v=3').then(m => m.openBeginschermUitleg()).catch(e => console.warn('[beginscherm]', e))
 }
 
 // v248: tip voor wie Fibro op de iPhone in Safari gebruikt (niet als app): dan krijg je geen meldingen.
@@ -2441,7 +2538,7 @@ async function toonBeginschermTip() {
   const plek = document.getElementById('beginschermTip')
   if (!plek) return
   let m
-  try { m = await import('./beginscherm.js?v=2') } catch (e) { return }
+  try { m = await import('./beginscherm.js?v=3') } catch (e) { return }
   if (!m.iphoneZonderApp()) return
   try { if (Date.now() - Number(localStorage.getItem('fibro_tip_beginscherm') || 0) < 7 * 86400000) return } catch (e) {}
   const kaart = document.createElement('div')
@@ -2450,7 +2547,7 @@ async function toonBeginschermTip() {
   kaart.style.cssText = 'display:flex;align-items:center;gap:10px;margin:8px 0 4px;padding:10px 12px;border-radius:14px;border:1px solid rgba(192,132,252,0.45);background:rgba(192,132,252,0.1);font-size:13.5px;line-height:1.4'
   const tekst = document.createElement('div')
   tekst.style.cssText = 'flex:1;min-width:0'
-  tekst.innerHTML = T('\u{1F514} <b>Meldingen op je iPhone?</b> Zet Fibro op je beginscherm.')
+  tekst.innerHTML = T('\u{1F514} <b>Meldingen op je iPhone?</b> Zet Stekky op je beginscherm.')
   const hoe = document.createElement('button')
   hoe.type = 'button'
   hoe.textContent = T('Hoe?')
@@ -2467,7 +2564,7 @@ async function toonBeginschermTip() {
 }
 toonBeginschermTip()
 // v258: meldingen aanzetten met een tik (meldingen-aan.js): een kaart tot ze aan staan ('Nu niet' = 3 dagen niet)
-import('./meldingen-aan.js?v=1').then(m => m.toonMeldkaart(document.getElementById('beginschermTip'), supabase, window._uid))
+import('./meldingen-aan.js?v=2').then(m => m.toonMeldkaart(document.getElementById('beginschermTip'), supabase, window._uid))
   .catch(e => console.warn('[meldingen]', e))
 
 // v142: de taal kiezen (Nederlands of Engels). Het menu-item heet in beide talen 'Taal / Language',
@@ -2525,7 +2622,7 @@ async function openAccount(wat) {
   const uid = window._uid
   if (!uid) return
   try {
-    const m = await import('./account.js?v=4')
+    const m = await import('./account.js?v=5')
     if (wat === 'verwijderen') m.openVerwijderen(uid)
     else m.openGegevens(uid)
   } catch (e) {
@@ -2665,6 +2762,9 @@ async function init() {
 // START
 // ════════════════════════════════
 init().then(() => {
+  // v267: een nieuw account krijgt bij de eerste start Mood, foto's, Four in a Row, een sticker en het gastenboek
+  // (standaardwidgets.js). Wie al een indeling heeft (of alles uitzette) houdt die.
+  try { if (zetStandaardWidgets(localStorage, _widgetUid())) console.log('[widgets] standaard-widgets klaargezet') } catch (e) {}
   // HOME WIDGETS
   const homeLayout = laadLayout('home')
   const homeActief = homeLayout.filter(w => w.aan)
@@ -2764,7 +2864,7 @@ async function startProfielMuziek() {
     const data = await laadUitDB('muziek_track')
     if (!data) return
     const titel = await laadUitDB('muziek_titel')
-    const m = await import('./profielmuziek.js?v=184')
+    const m = await import('./profielmuziek.js?v=185')
     await m.speelProfielMuziek({ data, titel, sleutel: 'eigen' })
   } catch (e) { console.warn('[profielmuziek]', e) }
 }
@@ -2776,7 +2876,7 @@ startMeldingen()
 // v172: ook de plaatjes en geluiden van de stickers.
 // v203 (sneller): al kort nadat Home klaar is (was: na 6 seconden), en na elke update meteen (FIBRO_VERSIE). Dan staan
 // de scripts van Chat en Vrienden al klaar als je daarheen gaat.
-const startKast = () => setTimeout(() => { import('./kastvullen.js?v=203').then(m => m.vulKast(FIBRO_VERSIE)).catch(() => {}) }, 1500)
+const startKast = () => setTimeout(() => { import('./kastvullen.js?v=204').then(m => m.vulKast(FIBRO_VERSIE)).catch(() => {}) }, 1500)
 if (document.readyState === 'complete') startKast(); else window.addEventListener('load', startKast, { once: true })
 </script>
 
@@ -2787,9 +2887,9 @@ if ('serviceWorker' in navigator) {
 </script>
 <script src="swipe.js?v=96"></script>
 <script src="menuschuif.js?v=1"></script>
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=204"; startBelLuisteraar()</script>
-<script type="module">import { beschermOpslag } from "./opslag.js?v=2"; beschermOpslag()</script>
-<script type="module" src="geluidregelaar.js?v=180"></script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=206"; startBelLuisteraar()</script>
+<script type="module">import { beschermOpslag } from "./opslag.js?v=3"; beschermOpslag()</script>
+<script type="module" src="geluidregelaar.js?v=181"></script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=197"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=169"; startOngelezen()</script>

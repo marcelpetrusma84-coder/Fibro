@@ -7,7 +7,7 @@
 (function () {
   const STANDEN = ['open', 'uitnodiging', 'dicht']
   const TEKST = {
-    uitnodiging: 'Nieuwe accounts maak je nu alleen met een uitnodiging. Vraag iemand die al op Fibro zit om een uitnodigingslink.',
+    uitnodiging: 'Nieuwe accounts maak je nu alleen met een uitnodiging. Vraag iemand die al op Stekky zit om een uitnodigingslink.',
     dicht: 'Er kunnen op dit moment geen nieuwe accounts gemaakt worden. Probeer het later nog eens.'
   }
   const ONBEKEND = 'Account aanmaken lukt nu niet. Probeer het later nog eens.'

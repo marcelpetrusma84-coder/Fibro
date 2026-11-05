@@ -168,7 +168,7 @@ async function buzzRustig() {
 }
 self.addEventListener('push', function(event) {
   const data = event.data ? event.data.json() : {}
-  const title = data.title || 'Fibro'
+  const title = data.title || 'Stekky'
   const isBuzz = data.type === 'buzz'
   // v151: oproep ('belt je') blijft staan tot je erop tikt; 'gemist' vervangt hem (zelfde tag van de server)
   const isOproep = data.type === 'oproep' || data.type === 'oproep-video'

@@ -13,14 +13,14 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
-<script src="foutmelder.js?v=2"></script>
-<script src="taal.js?v=70"></script>
+<script src="foutmelder.js?v=3"></script>
+<script src="taal.js?v=73"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title data-t>Fibro - Vrienden</title>
+<title data-t>Stekky - Vrienden</title>
 <link href="lettertypen/basis.css?v=1" rel="stylesheet">
 <script defer src="qrcode.min.js?v=1"></script>
 <style>
@@ -239,7 +239,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   <span class="top-title" data-t>Vrienden</span>
   <button class="invite-btn" onclick="openInviteModal()" data-t>+ Uitnodigen</button>
 </div>
-<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0" data-t>Fibro – Vrienden</h1>
+<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0" data-t>Stekky – Vrienden</h1>
 
 
 <div class="search-bar">
@@ -249,7 +249,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   <div style="padding:20px; text-align:center; color:var(--muted); font-size:12px;" data-t>Vrienden laden...</div>
 </div>
 
-<div class="fibro-logo" data-t>Fibro - jouw netwerk</div>
+<div class="fibro-logo" data-t>Stekky - jouw netwerk</div>
 
 </main>
 <div class="bottom-nav" role="navigation" aria-label="Menu">
@@ -333,7 +333,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   import { startHeartbeat } from './heartbeat.js?v=117'
   import { wisVriendData } from './opruimen.js?v=95'
   import { blokkeerPersoon, kiesVriendActie, kiesGeblokkeerdActie, deblokkeerPersoon, verwijderGeblokkeerde, haalGeblokkeerden } from './persoonblok.js?v=3'
-  import { initSync } from './sync.js?v=254'
+  import { initSync } from './sync.js?v=255'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { haalVriendFotos, zetAvatar } from './vriendfotos.js?v=2'
   pasBlokstijlToe()
@@ -894,8 +894,8 @@ startMeldingen()
     const spel = (MEE_SPELLEN.find(s => s[0] === spelId) || [])[2] || ''
     const duurNaam = { 3600: '1 uur', 86400: '1 dag', 259200: '3 dagen', 604800: '7 dagen' }[duur] || '3 dagen'
     const zin = naam
-      ? (spel ? T('{naam} nodigt je uit voor Fibro en daagt je uit voor een potje {spel}!', { naam, spel }) : T('{naam} nodigt je uit voor Fibro!', { naam }))
-      : (spel ? T('Je bent uitgenodigd voor Fibro en voor een potje {spel}!', { spel }) : T('Je bent uitgenodigd voor Fibro!'))
+      ? (spel ? T('{naam} nodigt je uit voor Stekky en daagt je uit voor een potje {spel}!', { naam, spel }) : T('{naam} nodigt je uit voor Stekky!', { naam }))
+      : (spel ? T('Je bent uitgenodigd voor Stekky en voor een potje {spel}!', { spel }) : T('Je bent uitgenodigd voor Stekky!'))
     return zin + ' ' + T('Tik binnen {duur} op de link om vrienden te worden:', { duur: T(duurNaam) })
   }
   window.deelInviteLink = async function() {
@@ -944,7 +944,7 @@ function filterVrienden() {
 }
 </script>
 
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=204"; startBelLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=206"; startBelLuisteraar()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=197"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=169"; startOngelezen()</script>

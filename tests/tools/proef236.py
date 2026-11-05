@@ -103,13 +103,13 @@ try:
         d = m.evaluate("window.__gedeeld")
         link = m.evaluate("document.getElementById('invite-link').value")
         tekst = (d[0] or {}).get('text', '') if d else ''
-        check('A2 deelt een zin met je naam, hoe lang, en de link', len(d) == 1 and tekst == 'Marcel nodigt je uit voor Fibro! Tik binnen 3 dagen op de link om vrienden te worden:\n' + link
+        check('A2 deelt een zin met je naam, hoe lang, en de link', len(d) == 1 and tekst == 'Marcel nodigt je uit voor Stekky! Tik binnen 3 dagen op de link om vrienden te worden:\n' + link
               and link.startswith('https://marcelpetrusma84-coder.github.io/Fibro/invite.html?token=fibro-') and '#s=' in link and 'url' not in d[0], d)
         m.evaluate("sluitModal()")
         gemaakt = maak_link(m, spel='dammen', duur=3600)
         m.evaluate("window.__gedeeld = []"); m.click('#deel-link-btn'); m.wait_for_timeout(300)
         d = m.evaluate("window.__gedeeld"); link = m.evaluate("document.getElementById('invite-link').value")
-        check('A3 met spel en 1 uur', gemaakt and d and d[0]['text'] == 'Marcel nodigt je uit voor Fibro en daagt je uit voor een potje Draughts! Tik binnen 1 uur op de link om vrienden te worden:\n' + link and '&spel=dammen' in link, d)
+        check('A3 met spel en 1 uur', gemaakt and d and d[0]['text'] == 'Marcel nodigt je uit voor Stekky en daagt je uit voor een potje Draughts! Tik binnen 1 uur op de link om vrienden te worden:\n' + link and '&spel=dammen' in link, d)
         # weggetikt: niets; mislukt: de hele uitnodiging kopieren
         m.evaluate("window.__deelFout = 'AbortError'"); st['dialogen'].clear()
         m.evaluate("navigator.clipboard.writeText('leeg')")
@@ -129,7 +129,7 @@ try:
         maak_link(m, duur=604800); m.click('#deel-link-btn'); m.wait_for_timeout(300)
         d = m.evaluate("window.__gedeeld")
         knop = m.evaluate("document.getElementById('deel-link-btn').textContent")
-        check('A5 Engels', d and d[0]['text'].startswith('Marcel invites you to Fibro! Tap the link within 7 days to become friends:\nhttps://') and knop == '📤 Share', (knop, d))
+        check('A5 Engels', d and d[0]['text'].startswith('Marcel invites you to Stekky! Tap the link within 7 days to become friends:\nhttps://') and knop == '📤 Share', (knop, d))
         cm.close()
         # zonder deelmenu (computer, sommige apps): de knop staat er ook, en kopieert de hele uitnodiging
         st = nieuw_st()
@@ -140,7 +140,7 @@ try:
         m.click('#deel-link-btn'); m.wait_for_timeout(500)
         link = m.evaluate("document.getElementById('invite-link').value")
         klembord = m.evaluate("navigator.clipboard.readText().catch(() => '')")
-        check('A6 zonder deelmenu: knop Delen kopieert de hele uitnodiging', zichtbaar and klembord == 'Marcel nodigt je uit voor Fibro! Tik binnen 3 dagen op de link om vrienden te worden:\n' + link
+        check('A6 zonder deelmenu: knop Delen kopieert de hele uitnodiging', zichtbaar and klembord == 'Marcel nodigt je uit voor Stekky! Tik binnen 3 dagen op de link om vrienden te worden:\n' + link
               and m.evaluate("document.getElementById('deel-link-btn').textContent").startswith('✅ Gekopieerd!'), (zichtbaar, klembord[:90]))
         cm.close()
         # kleine telefoon (iPhone SE in Safari): Delen meteen in beeld, en het venster scrollt (titel en Sluiten bereikbaar)

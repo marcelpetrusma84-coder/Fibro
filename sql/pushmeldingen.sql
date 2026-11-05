@@ -1,0 +1,109 @@
+-- pushmeldingen.sql (5 nov 2026, v266): zelf kiezen welke pushmeldingen je krijgt, en een nieuwe melding
+-- "🟢 Bram is nu online" (slim en niet irritant).
+-- Plakken in Supabase > SQL Editor > Run. Alles of niets: gaat er iets mis, dan verandert er niets. Nog een keer
+-- uitvoeren kan geen kwaad.
+--
+-- 1. Kiezen (☰ > Pushmeldingen). In chat_instellingen.push_uit staat wat je UITzette; leeg (of geen rij) = alles aan.
+--    Uit te zetten: buzz, spel (uitdagingen, gemist, verlaten), vriend (je uitnodiging is aangenomen), gastenboek,
+--    like, online. Berichten en bellen staan er niet bij: die gaan altijd door, anders werkt Fibro niet.
+--    stuur-push kijkt hier voor elke melding (behalve berichten en bellen).
+-- 2. Online. Berichten, foto's en spellen gaan rechtstreeks van toestel naar toestel (p2p); dat werkt het best als
+--    jullie allebei online zijn. Een trigger op profiles ziet dat iemand online komt (heartbeat.js), maar alleen als hij
+--    minstens 30 minuten weg was (laatst_gezien van VOOR deze update): even wegklikken en terugkomen telt niet. Wie
+--    zichzelf onzichtbaar maakte (toon_online = false) geeft nooit een melding. stuur-push (type 'online') houdt het
+--    verder rustig: niet 's nachts, niet als je zelf al online bent, dezelfde vriend hoogstens eens per 3 uur,
+--    hoogstens een online-melding per 20 minuten en 6 per dag. Wat er verstuurd is staat in online_meldingen
+--    (alleen voor de server; na 2 dagen opgeruimd).
+
+begin;
+
+create extension if not exists pg_net with schema extensions;
+
+-- 1. Wat heb je uitgezet? (chat_instellingen bestaat al: sql/gelezen-vinkjes.sql)
+alter table public.chat_instellingen add column if not exists push_uit text[] not null default '{}';
+alter table public.chat_instellingen drop constraint if exists chat_instellingen_push_uit_check;
+alter table public.chat_instellingen add constraint chat_instellingen_push_uit_check
+  check (push_uit <@ array['buzz', 'spel', 'vriend', 'gastenboek', 'like', 'online']::text[]);
+
+-- Een soort aan- of uitzetten. Een onbekende soort (of 'bericht') kan niet.
+create or replace function public.zet_push(p_soort text, p_aan boolean)
+returns text[]
+language plpgsql volatile security invoker
+set search_path = ''
+as $$
+declare
+  uit text[];
+begin
+  if (select auth.uid()) is null then raise exception 'niet ingelogd'; end if;
+  if p_soort is null or not (p_soort = any (array['buzz', 'spel', 'vriend', 'gastenboek', 'like', 'online'])) then
+    raise exception 'onbekende soort melding';
+  end if;
+  insert into public.chat_instellingen (gebruiker_id, push_uit, bijgewerkt)
+  values ((select auth.uid()), case when coalesce(p_aan, true) then '{}'::text[] else array[p_soort] end, now())
+  on conflict (gebruiker_id) do update
+    set push_uit = case when coalesce(p_aan, true)
+                        then array_remove(public.chat_instellingen.push_uit, p_soort)
+                        else array_remove(public.chat_instellingen.push_uit, p_soort) || p_soort end,
+        bijgewerkt = now()
+  returning push_uit into uit;
+  return uit;
+end
+$$;
+revoke execute on function public.zet_push(text, boolean) from public, anon;
+grant execute on function public.zet_push(text, boolean) to authenticated;
+
+-- 2. Welke online-meldingen zijn er verstuurd (alleen de server leest en schrijft hier)
+create table if not exists public.online_meldingen (
+  id        bigint generated always as identity primary key,
+  ontvanger uuid not null references auth.users(id) on delete cascade,
+  vriend    uuid not null references auth.users(id) on delete cascade,
+  tijd      timestamptz not null default now()
+);
+create index if not exists online_meldingen_ontvanger_tijd on public.online_meldingen (ontvanger, tijd desc);
+alter table public.online_meldingen enable row level security;
+revoke all on public.online_meldingen from public, anon, authenticated;
+
+-- 3. De trigger: iemand komt online na minstens 30 minuten weg
+create or replace function public.online_push()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  begin
+    perform net.http_post(
+      url := 'https://qmgatbphiplrfxrljtbe.supabase.co/functions/v1/stuur-push',
+      body := jsonb_build_object('online_id', new.id),
+      headers := jsonb_build_object('Content-Type', 'application/json'),
+      timeout_milliseconds := 10000
+    );
+  exception when others then
+    null; -- een melding mag het online komen nooit tegenhouden
+  end;
+  return new;
+end
+$$;
+revoke execute on function public.online_push() from public, anon, authenticated;
+
+drop trigger if exists online_push on public.profiles;
+create trigger online_push
+  after update of online_status, laatst_gezien on public.profiles
+  for each row
+  when (new.online_status is true
+        and new.toon_online is not false
+        and (old.laatst_gezien is null or old.laatst_gezien < now() - interval '30 minutes'))
+  execute function public.online_push();
+
+-- 4. Elke nacht opruimen (ouder dan 2 dagen is niet meer nodig)
+select cron.unschedule('fibro-onlinemeldingen-opruimen') where exists (select 1 from cron.job where jobname = 'fibro-onlinemeldingen-opruimen');
+select cron.schedule('fibro-onlinemeldingen-opruimen', '37 3 * * *', $$delete from public.online_meldingen where tijd < now() - interval '2 days'$$);
+
+commit;
+
+-- Controle (vier keer true)
+select
+  exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'chat_instellingen' and column_name = 'push_uit') as keuzes_bestaan,
+  to_regclass('public.online_meldingen') is not null as logboek_bestaat,
+  exists (select 1 from pg_trigger where tgname = 'online_push' and tgrelid = 'public.profiles'::regclass) as trigger_staat,
+  exists (select 1 from cron.job where jobname = 'fibro-onlinemeldingen-opruimen') as opruimen_gepland;

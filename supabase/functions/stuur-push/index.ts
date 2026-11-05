@@ -32,6 +32,11 @@
 //    dezelfde vriend de laatste 10 minuten al eerder schreef. Wat erin staat gaat niet mee.
 //  - 'like': { like_id } "❤️ Tijn reageerde op je foto" (of nummer, video), ook alleen vanaf de server (trigger op
 //    profiel_likes, sql/profiel-likes.sql). Dezelfde vriend bij dezelfde eigenaar hoogstens een melding per 10 minuten.
+// v266 (5 nov 2026): 'online': { online_id } "🟢 Bram is nu online". Alleen vanaf de server (trigger op profiles in
+// sql/pushmeldingen.sql, als iemand online komt na minstens 30 minuten weg), volgens slimme regels zodat het niet
+// irritant wordt (kiesOnlineOntvangers).
+// v266: zelf kiezen (☰ > Pushmeldingen): chat_instellingen.push_uit is wat de ontvanger uitzette (buzz, spel, vriend,
+// gastenboek, like, online). Dan geen melding (PUSH_GROEP, staatUit). Berichten en bellen gaan altijd door.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push";
 
@@ -86,6 +91,10 @@ const TEKSTEN: Record<string, Record<string, Tekst>> = {
     nl: { title: "Fibro", body: "{emoji} {naam} reageerde op je {wat}" },
     en: { title: "Fibro", body: "{emoji} {naam} reacted to your {wat}" },
   },
+  online: {
+    nl: { title: "Fibro", body: "🟢 {naam} is nu online" },
+    en: { title: "Fibro", body: "🟢 {naam} is online now" },
+  },
   moderatie: {
     nl: { title: "Fibro · Moderatie", body: "🚩 Er is een nieuwe melding. Kijk in Moderatie." },
     en: { title: "Fibro · Moderation", body: "🚩 There is a new report. Check Moderation." },
@@ -99,7 +108,7 @@ const LEVENSDUUR: Record<string, number> = { oproep: 45, "oproep-video": 45, gem
   "vriend-nieuw": 3 * 24 * 60 * 60, gastenboek: 3 * 24 * 60 * 60, like: 24 * 60 * 60 };
 const GASTENBOEK_RUST_MS = 10 * 60 * 1000; // v258: zelfde vriend, zelfde gastenboek: hoogstens een melding per 10 minuten
 // v258: deze meldingen komen alleen van de server (met een id), nooit van een app met receiver_id + type
-const ALLEEN_SERVER = new Set(["spel", "vriend-nieuw", "gastenboek", "like"]);
+const ALLEEN_SERVER = new Set(["spel", "vriend-nieuw", "gastenboek", "like", "online"]);
 // v258: likes onder een foto, nummer of video (zelfde lijst als in sql/profiel-likes.sql en profielreacties.js)
 const LIKE_EMOJI = new Set(["❤️", "😂", "🔥", "😍", "😮", "👏"]);
 const LIKE_WAT: Record<string, { nl: string; en: string }> = {
@@ -125,6 +134,127 @@ function leesUitnodiging(inhoud: unknown) {
   return { spel, van, sessie };
 }
 const IEMAND: Record<string, string> = { nl: "Iemand", en: "Someone" };
+
+// v266: welke meldingen kun je uitzetten (soort -> groep in chat_instellingen.push_uit). Niet: bericht en bellen.
+const PUSH_GROEP: Record<string, string> = {
+  buzz: "buzz", spel: "spel", "spel-gemist": "spel", "spel-verlaten": "spel", "vriend-nieuw": "vriend",
+  gastenboek: "gastenboek", like: "like", online: "online",
+};
+// Heeft de ontvanger deze soort uitgezet? Lukt het opzoeken niet (kolom bestaat nog niet), dan gewoon sturen.
+async function staatUit(supabase: any, ontvanger: string, soort: string): Promise<boolean> {
+  const groep = PUSH_GROEP[soort];
+  if (!groep) return false;
+  try {
+    const { data, error } = await supabase.from("chat_instellingen").select("push_uit").eq("gebruiker_id", ontvanger).maybeSingle();
+    if (error) { console.error("push_uit:", error.code || error); return false; }
+    return Array.isArray(data && data.push_uit) && data.push_uit.includes(groep);
+  } catch (e) { console.error("push_uit:", e); return false; }
+}
+
+// v266: de regels voor 'online', zodat zo'n melding niet irritant wordt. (Even weg en terug, korter dan 30 minuten,
+// komt hier niet eens: dat houdt de trigger al tegen.)
+const ONLINE_REGELS = {
+  versMs: 2 * 60 * 1000,           // de vriend moet nu echt online zijn (laatste teken minder dan 2 minuten geleden)
+  zelfOnlineMs: 5 * 60 * 1000,     // ben je zelf online (teken minder dan 5 minuten geleden), dan zie je het al in Fibro
+  paarRustMs: 3 * 60 * 60 * 1000,  // dezelfde vriend hoogstens eens per 3 uur
+  ontvangerRustMs: 20 * 60 * 1000, // hoogstens een online-melding per 20 minuten (wie dan ook)
+  maxPerDag: 6,                    // en hoogstens 6 per 24 uur
+  stilVan: 23, stilTot: 8,         // 's nachts (23:00 tot 8:00, Nederlandse tijd) niets
+  levensduurS: 10 * 60,            // staat de telefoon uit, dan na 10 minuten niet meer bezorgen (dan klopt het niet meer)
+};
+function uurInNederland(nu: number): number {
+  try {
+    return Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Amsterdam", hour: "numeric", hourCycle: "h23" }).format(new Date(nu)));
+  } catch (_e) { return new Date(nu).getUTCHours() + 1; }
+}
+// Wie krijgt een melding dat 'vriend' online kwam? kandidaten: vrienden (beide kanten 'accepted') die de schakelaar
+// aan hebben, met hun profiel. log: verstuurde online-meldingen van de laatste 24 uur aan deze kandidaten.
+// Geeft [{ id, taal }] terug, of [] (bijvoorbeeld 's nachts).
+function kiesOnlineOntvangers(
+  { nu, vriend, kandidaten, log }: {
+    nu: number; vriend: string;
+    kandidaten: { id: string; taal?: string; online_status?: boolean; laatst_gezien?: string | null; geblokkeerd?: boolean }[];
+    log: { ontvanger: string; vriend: string; tijd: string }[];
+  },
+) {
+  const R = ONLINE_REGELS;
+  const uur = uurInNederland(nu);
+  if (uur >= R.stilVan || uur < R.stilTot) return [];
+  const uit: { id: string; taal?: string }[] = [];
+  for (const k of kandidaten) {
+    if (!k || k.id === vriend || k.geblokkeerd) continue;
+    const gezien = k.laatst_gezien ? new Date(k.laatst_gezien).getTime() : 0;
+    if (k.online_status && nu - gezien < R.zelfOnlineMs) continue; // zit zelf al in Fibro
+    const mijn = log.filter((l) => l.ontvanger === k.id).map((l) => ({ ...l, t: new Date(l.tijd).getTime() }));
+    if (mijn.some((l) => l.vriend === vriend && nu - l.t < R.paarRustMs)) continue;
+    if (mijn.some((l) => nu - l.t < R.ontvangerRustMs)) continue;
+    if (mijn.filter((l) => nu - l.t < 24 * 60 * 60 * 1000).length >= R.maxPerDag) continue;
+    uit.push({ id: k.id, taal: k.taal });
+  }
+  return uit;
+}
+
+// v266: iemand kwam online (trigger op profiles). Alles komt uit de database zelf, niet uit de vraag.
+async function meldOnline(supabase: any, vriend: string) {
+  const nu = Date.now();
+  const { data: p, error: fp } = await supabase.from("profiles")
+    .select("id, username, online_status, laatst_gezien, toon_online, geblokkeerd").eq("id", vriend).maybeSingle();
+  if (fp) throw fp;
+  if (!p) return antwoord({ ok: false, reden: "onbekend account" }, 404);
+  if (!p.online_status || p.toon_online === false || p.geblokkeerd) return antwoord({ ok: true, verstuurd: 0, reden: "niet online" });
+  if (!p.laatst_gezien || nu - new Date(p.laatst_gezien).getTime() > ONLINE_REGELS.versMs) return antwoord({ ok: true, verstuurd: 0, reden: "te oud" });
+  // Vrienden, van beide kanten bevestigd (blokkeren haalt de vriendschap weg)
+  const { data: heen, error: f1 } = await supabase.from("friendships").select("friend_id").eq("user_id", vriend).eq("status", "accepted");
+  if (f1) throw f1;
+  const ids = [...new Set((heen || []).map((r: { friend_id: string }) => r.friend_id))].filter((id) => id !== vriend);
+  if (!ids.length) return antwoord({ ok: true, verstuurd: 0, reden: "geen vrienden" });
+  const { data: terug, error: f2 } = await supabase.from("friendships").select("user_id").in("user_id", ids).eq("friend_id", vriend).eq("status", "accepted");
+  if (f2) throw f2;
+  const wederzijds = new Set((terug || []).map((r: { user_id: string }) => r.user_id));
+  // Wie heeft 'online' uitgezet? Standaard (geen rij) staat hij aan. (Bestaat de kolom nog niet, dan niemand.)
+  const vrienden = ids.filter((id) => wederzijds.has(id));
+  const { data: keuzes, error: f3 } = await supabase.from("chat_instellingen").select("gebruiker_id, push_uit").in("gebruiker_id", vrienden);
+  if (f3) { console.error("chat_instellingen:", f3.code || f3); return antwoord({ ok: true, verstuurd: 0, reden: "geen schakelaar" }); }
+  const uitIds = new Set((keuzes || []).filter((r: { push_uit?: string[] }) => Array.isArray(r.push_uit) && r.push_uit.includes("online"))
+    .map((r: { gebruiker_id: string }) => r.gebruiker_id));
+  const aanIds = vrienden.filter((id) => !uitIds.has(id));
+  if (!aanIds.length) return antwoord({ ok: true, verstuurd: 0, reden: "niemand wil het" });
+  let { data: kandidaten, error: f4 } = await supabase.from("profiles")
+    .select("id, taal, online_status, laatst_gezien, geblokkeerd").in("id", aanIds);
+  if (f4 && f4.code === "42703") ({ data: kandidaten, error: f4 } = await supabase.from("profiles").select("id, online_status, laatst_gezien, geblokkeerd").in("id", aanIds));
+  if (f4) throw f4;
+  const { data: log, error: f5 } = await supabase.from("online_meldingen").select("ontvanger, vriend, tijd")
+    .in("ontvanger", aanIds).gte("tijd", new Date(nu - 24 * 60 * 60 * 1000).toISOString());
+  if (f5) { console.error("online_meldingen:", f5.code || f5); return antwoord({ ok: true, verstuurd: 0, reden: "geen logboek" }); }
+  const ontvangers = kiesOnlineOntvangers({ nu, vriend, kandidaten: kandidaten || [], log: log || [] });
+  if (!ontvangers.length) return antwoord({ ok: true, verstuurd: 0, reden: "rustig houden" });
+
+  webpush.setVapidDetails("mailto:fibro.contact@proton.me", Deno.env.get("VAPID_PUBLIC_KEY"), Deno.env.get("VAPID_PRIVATE_KEY"));
+  let verstuurd = 0;
+  for (const o of ontvangers) {
+    // Eerst opschrijven, dan sturen: liever een melding te weinig dan twee keer dezelfde
+    const { error: fl } = await supabase.from("online_meldingen").insert({ ontvanger: o.id, vriend });
+    if (fl) { console.error("online_meldingen:", fl.code || fl); continue; }
+    const taal = o.taal === "en" ? "en" : "nl";
+    const naam = String(p.username || IEMAND[taal]).slice(0, 40);
+    const payload = JSON.stringify({
+      title: TEKSTEN.online[taal].title, body: TEKSTEN.online[taal].body.replace("{naam}", naam),
+      url: "/Fibro/chat.html?vriend=" + encodeURIComponent(vriend), type: "online",
+      tag: "online", // een nieuwe online-melding vervangt de vorige: nooit een rij op je scherm
+    });
+    const { data: subs } = await supabase.from("push_subscriptions").select("id, subscription").eq("user_id", o.id);
+    for (const rij of subs || []) {
+      try {
+        await webpush.sendNotification(rij.subscription, payload, { TTL: ONLINE_REGELS.levensduurS, urgency: "low" });
+        verstuurd++;
+      } catch (e) {
+        console.error("Push fout:", e && e.statusCode ? e.statusCode : e);
+        if (e && (e.statusCode === 404 || e.statusCode === 410)) await supabase.from("push_subscriptions").delete().eq("id", rij.id);
+      }
+    }
+  }
+  return antwoord({ ok: true, verstuurd, ontvangers: ontvangers.length });
+}
 
 function antwoord(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -268,6 +398,13 @@ Deno.serve(async (req) => {
       return await stuurVriendMelding(supabase, l.liker, l.eigenaar, "like", null, { emoji: l.emoji, soort: l.soort });
     }
 
+    // v266: iemand kwam online (trigger op profiles)
+    if (invoer.online_id) {
+      const id = String(invoer.online_id);
+      if (!UUID.test(id)) return antwoord({ ok: false, reden: "ongeldig account" }, 400);
+      return await meldOnline(supabase, id);
+    }
+
     if (!receiver_id && type !== "moderatie") throw new Error("receiver_id ontbreekt");
 
     // 1. Wie stuurt er? Alleen met een geldige inlogpas.
@@ -337,6 +474,9 @@ async function stuurVriendMelding(supabase: any, afzender: string, receiver_id: 
     if (!vriendschap || vriendschap.length === 0) {
       return antwoord({ ok: false, reden: "geen vrienden" }, 403);
     }
+
+    // 2b. v266: heeft de ontvanger deze soort uitgezet (☰ > Pushmeldingen)? Berichten en bellen gaan altijd door.
+    if (await staatUit(supabase, receiver_id, String(type))) return antwoord({ ok: true, verstuurd: 0, reden: "uitgezet" });
 
     // 3. De naam van de afzender en de taal van de ontvanger, in een keer.
     // (Bestaat de kolom taal nog niet, 42703, dan zonder: alles in het Nederlands, zoals vroeger.)

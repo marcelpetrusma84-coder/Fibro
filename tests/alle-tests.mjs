@@ -1,6 +1,6 @@
 // alle-tests.mjs (3 nov 2026): draait alle Node-tests van Fibro achter elkaar (ook op GitHub, bij elke pull request).
 // Elk bestand tests/**/*.mjs (niet tests/tools, tests/fixtures, tests/gen) met node, plus de proeven van de
-// pushfunctie (tests/tools/proef46, proef50, proef229, proef233, proef235; die slaan zichzelf over zonder typescript).
+// pushfunctie (tests/tools/proef46, proef50, proef229, proef233, proef235, proef266; die slaan zichzelf over zonder typescript).
 // Uitslag per test; eindigt met fout (exit 1) als er een mislukt.   node tests/alle-tests.mjs
 import { readdirSync, statSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
@@ -16,7 +16,7 @@ function zoek(map) {
   }
 }
 zoek(path.join(REPO, 'tests'))
-for (const t of ['proef46', 'proef50', 'proef229', 'proef233', 'proef235']) tests.push('tests/tools/' + t + '.mjs')
+for (const t of ['proef46', 'proef50', 'proef229', 'proef233', 'proef235', 'proef266']) tests.push('tests/tools/' + t + '.mjs')
 
 let goed = 0
 const mis = []

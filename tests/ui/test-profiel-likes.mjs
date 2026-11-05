@@ -19,7 +19,7 @@ assert.match(m.itemVan('x'), /^[0-9a-f]{1,16}$/, 'past in de controle van de tab
 assert.deepEqual(m.EMOJI, ['❤️', '😂', '🔥', '😍', '😮', '👏'])
 assert.ok(sql.includes("emoji in ('❤️', '😂', '🔥', '😍', '😮', '👏')") && sql.includes("soort in ('foto', 'muziek', 'video')"))
 assert.ok(push.includes('const LIKE_EMOJI = new Set(["❤️", "😂", "🔥", "😍", "😮", "👏"]);'))
-assert.ok(push.includes('const ALLEEN_SERVER = new Set(["spel", "vriend-nieuw", "gastenboek", "like"]);'), 'een app kan geen likemelding sturen')
+assert.match(push, /const ALLEEN_SERVER = new Set\(\["spel", "vriend-nieuw", "gastenboek", "like"(, "online")?\]\);/, 'een app kan geen likemelding sturen') // v266: ook online
 
 // 3. De tabel: lezen alleen eigen likes of als eigenaar; liken alleen bij een vriend; tellers zonder namen voor vrienden
 assert.match(sql, /for select to authenticated\n\s+using \(\(select auth\.uid\(\)\) = liker or \(select auth\.uid\(\)\) = eigenaar\)/)

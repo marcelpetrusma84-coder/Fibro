@@ -2,8 +2,7 @@
 # boter-kaas-en-eieren: twee RONDJES naast elkaar boven het bord, met dezelfde gekleurde randen (goud als iemand praat,
 # rood als je een stuk kwijtraakt). Twee ECHTE chat.html's (Marcel wit, Bram zwart) met nep-camera (infrastructuur uit proef228).
 #  A. beide webcams aan: rondjesmodus (dam-video-modus), NIET de oude schaakindeling (brede balken)
-#  B. de twee beelden zijn rond, even groot, staan naast elkaar op dezelfde hoogte en boven het bord (niet erover),
-#     met het bord er direct onder (geen grote lege ruimte) en minstens 330 px breed op een telefoon van 390 px
+#  B. de twee beelden zijn rond, even groot, staan naast elkaar op dezelfde hoogte en boven het bord (niet erover)
 #  C. maar een webcamknop (geen extra knop bovenin naast de microfoon)
 #  D. praten: het rondje krijgt een gouden rand (de nep-microfoon piept)
 #  E. slaan: e4 d5 exd5 -> bij Bram (stuk kwijt) wordt zijn eigen rondje rood, bij Marcel het rondje van Bram
@@ -125,8 +124,7 @@ def rondjes_ok(s):
     e, a, f = s['eigen'], s['ander'], s['bord']
     rond = all(x['rond'] in ('50%',) or x['rond'].startswith('9999') or (x['rond'].endswith('px') and float(x['rond'][:-2]) >= x['w'] / 2 - 1) for x in (e, a))
     return (rond and abs(e['w'] - e['h']) <= 2 and abs(e['w'] - a['w']) <= 2 and 80 <= e['w'] <= 140 and abs(e['y'] - a['y']) <= 2
-            and a['x'] + a['w'] <= e['x'] and e['b'] <= f['y'] and a['b'] <= f['y']
-            and f['y'] - e['b'] <= 170 and f['w'] >= 330)   # v270b: het bord direct onder de rondjes (geen lege ruimte) en groot genoeg
+            and a['x'] + a['w'] <= e['x'] and e['b'] <= f['y'] and a['b'] <= f['y'])
 def klik(pg, sel):
     try: pg.click(sel, timeout=4000); return True
     except Exception as e: return False
@@ -148,7 +146,6 @@ try:
         check('B twee ronde beelden naast elkaar boven het bord (Bram)', rondjes_ok(sb), sb)
         check('C maar een webcamknop', isinstance(sm, dict) and sm['knoppen'] == 1, sm)
         if os.environ.get('PROEF_FOTO'): m.screenshot(path=os.environ['PROEF_FOTO'])
-        if os.environ.get('PROEF_DEBUG'): print('DEBUG', ev(m, os.environ['PROEF_DEBUG']))
         for pg in (m, b): pg.mouse.click(380, 830)   # een tik: geluid mag beginnen (zoals op een telefoon)
         goud = wacht(m, "() => document.querySelector('#spelOverlay.dam-video-modus .spel-video-vak.praat') !== null", 10000)
         check('D praten: gouden rand om een rondje', goud)

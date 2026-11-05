@@ -14,7 +14,7 @@
   "enableNotifications": true,
   "startUrl": "/Fibro/index.html",
   "iconUrl": "https://marcelpetrusma84-coder.github.io/Fibro/icon-512.png",
-  "maskableIconUrl": "https://marcelpetrusma84-coder.github.io/Fibro/icon-512.png",
+  "maskableIconUrl": "https://marcelpetrusma84-coder.github.io/Fibro/icon-maskable-512.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "./fibro-release.keystore",

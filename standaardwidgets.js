@@ -1,7 +1,7 @@
-// standaardwidgets.js (v1, 5 nov 2026): wat een nieuw account meteen op Home ziet.
+// standaardwidgets.js (v2, 5 nov 2026: sticker 'Dubbel van het lachen'): wat een nieuw account meteen op Home ziet.
 //
 // In gewone woorden: wie net een account heeft, zag een lege Home ("Geen widgets actief"). Nu staan er bij de eerste
-// start vijf widgets klaar: Mood, een foto-widget (2×2), het spel Four in a Row, een sticker (Blij) en het gastenboek.
+// start vijf widgets klaar: Mood, een foto-widget (2×2), het spel Four in a Row, een sticker (Dubbel van het lachen) en het gastenboek.
 // Ze staan in "Jouw profiel", dus je vrienden zien ze ook. Je kunt ze daarna gewoon uitzetten of verslepen.
 // Alleen voor NIEUWE accounts (jonger dan 14 dagen) en alleen als er op dit toestel nog nooit een indeling bewaard is:
 // wie alles bewust uitzette of al een eigen indeling heeft, houdt die. Een ouder account op een nieuw toestel krijgt
@@ -12,11 +12,11 @@ export const STANDAARD_LAYOUT = [
   { id: 'mood',           icon: '😊', titel: 'Mood',          w: 4, h: 1 },
   { id: 'fotos_2x2',      icon: '🖼', titel: 'Foto grid 2×2', w: 2, h: 2 },
   { id: 'spel_vieroprij', icon: '🔴', titel: 'Four in a Row', w: 2, h: 1 },
-  { id: 'sticker_f6-05',  icon: '\u{1F3A8}', titel: 'Sticker', w: 1, h: 1, geenHeader: true },
+  { id: 'sticker_f6-01',  icon: '\u{1F3A8}', titel: 'Sticker', w: 1, h: 1, geenHeader: true },
   { id: 'gastenboek',     icon: '📖', titel: 'Gastenboek',    w: 4, h: 4 },
 ]
 // Dezelfde widgets zoals de schakelaars in profiel.html (Stijl) ze noemen
-export const STANDAARD_SCHAKELAARS = ['mood', 'fotos2x2', 'spel_vieroprij', 'sticker_f6-05', 'gastenboek']
+export const STANDAARD_SCHAKELAARS = ['mood', 'fotos2x2', 'spel_vieroprij', 'sticker_f6-01', 'gastenboek']
 
 const NIEUW_DAGEN = 14
 const UID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

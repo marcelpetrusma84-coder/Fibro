@@ -3672,7 +3672,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
     const m = await laadModule('./schaken-ui.js?v=266')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: fibroChessTest?.active ? schaakT('Testspeler · Zwart') : spelVriendUsername(), testMode:Boolean(fibroChessTest?.active), onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer : nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
-    spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })
+    // v270: tegen een vriend staan de webcams als twee rondjes naast elkaar boven het bord, net als bij dammen.
+    // De oude schaakindeling (brede cameravakken rond het bord) maakte van de rondjes weer balken; die geldt nu alleen in de schaaktest.
+    spelCameraLayout = fibroChessTest?.active ? mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' }) : null
     werkSchaakOmgevingTaalBij()
   }
 
@@ -4130,7 +4132,7 @@ async function startBlockIt() {
   // Dammen heeft zijn eigen knop onder het bord.
   function bouwSpelCamKnop() {
     document.getElementById('spelCamKnop')?.remove()
-    if (!CAMERA_RONDJES[spelActief] || spelActief === 'dammen') return
+    if (!CAMERA_RONDJES[spelActief] || spelActief === 'dammen' || spelActief === 'schaken') return   // v270: schaken heeft (net als dammen) een eigen webcamknop
     const overlay = document.getElementById('spelOverlay')
     if (!overlay) return
     const knop = document.createElement('button')

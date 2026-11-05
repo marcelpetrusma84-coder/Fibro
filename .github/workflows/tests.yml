@@ -87,3 +87,6 @@ jobs:
       - name: Quiz-widget (proef243)
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef243.py .
+      - name: Schaken met webcamrondjes naast elkaar, zoals dammen (gouden en rode rand)
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef270.py .

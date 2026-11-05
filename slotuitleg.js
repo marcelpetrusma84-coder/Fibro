@@ -35,8 +35,8 @@ export function toonSlotUitleg(naam) {
   kop.textContent = T('🔓 Nog geen versleuteling met {naam}', { naam })
   const p1 = document.createElement('p'), p2 = document.createElement('p')
   p1.style.cssText = p2.style.cssText = 'margin:0 0 10px;font-size:14px;line-height:1.5;color:#e4d6f5'
-  p1.textContent = T('{naam} heeft nog geen sleutel voor versleutelde berichten. Daarom kun je {naam} nu nog geen berichten sturen. Er leest niemand mee: Fibro stuurt nooit iets onversleuteld.', { naam })
-  p2.textContent = T('Dit lost zich vanzelf op als {naam} Fibro opent en opnieuw inlogt. Daarna verdwijnt het open slotje.', { naam })
+  p1.textContent = T('{naam} heeft nog geen sleutel voor versleutelde berichten. Daarom kun je {naam} nu nog geen berichten sturen. Er leest niemand mee: Stekky stuurt nooit iets onversleuteld.', { naam })
+  p2.textContent = T('Dit lost zich vanzelf op als {naam} Stekky opent en opnieuw inlogt. Daarna verdwijnt het open slotje.', { naam })
   const knop = document.createElement('button')
   knop.type = 'button'
   knop.textContent = T('Begrepen')

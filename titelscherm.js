@@ -44,7 +44,7 @@ function openSpelVenster(adres) {
     sluitSpelVenster(true)
     venster = document.createElement('iframe')
     venster.className = 'fibro-spelvenster'
-    venster.title = 'Fibro'
+    venster.title = 'Stekky'
     venster.setAttribute('allow', 'autoplay; fullscreen; gyroscope; accelerometer')
     // binnen het venster kent de iPhone de inkeping van het scherm niet, dus houdt het venster daar zelf rekening mee
     venster.style.cssText = 'position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);width:100%;height:calc(100% - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));border:0;margin:0;padding:0;z-index:10045;background:#08040f;'

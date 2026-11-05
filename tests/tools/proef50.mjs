@@ -88,7 +88,7 @@ async function proef(naam, body, pas, verwacht) {
 }
 const p = u => u.verzonden[0] && u.verzonden[0][1], o = u => u.verzonden[0] && u.verzonden[0][2]
 await proef('oproep naar Engelse vriend', { receiver_id: B, type: 'oproep' }, 'pas-a', u => u.status === 200 && u.verzonden.length === 1
-  && p(u).body === '📞 Marcel is calling you' && p(u).title === 'Fibro' && p(u).type === 'oproep' && p(u).tag === 'oproep-' + A
+  && p(u).body === '📞 Marcel is calling you' && p(u).title === 'Stekky' && p(u).type === 'oproep' && p(u).tag === 'oproep-' + A
   && p(u).url === '/Fibro/bellen.html?vriend=' + A + '&naam=Marcel&inkomend=1' && o(u).TTL === 45 && o(u).urgency === 'high')
 await proef('videooproep naar Nederlandse vriend', { receiver_id: A, type: 'oproep-video' }, 'pas-b', u => u.verzonden.length === 1
   && p(u).body === '📹 Bram belt je (video)' && p(u).url === '/Fibro/bellen.html?vriend=' + B + '&naam=Bram&inkomend=1&video=1'
@@ -101,7 +101,7 @@ await proef('gemiste oproep (Engels)', { receiver_id: B, type: 'gemist' }, 'pas-
 await proef('naam met & en ? veilig in het adres', { receiver_id: A, type: 'oproep' }, 'pas-d', u => p(u).body === '📞 Jan & Piet? belt je'
   && p(u).url === '/Fibro/bellen.html?vriend=' + D + '&naam=Jan%20%26%20Piet%3F&inkomend=1')
 await proef('bericht: zoals vroeger (geen opties, geen tag)', { receiver_id: B }, 'pas-a', u => o(u) === undefined && !('tag' in p(u))
-  && JSON.stringify(p(u)) === JSON.stringify({ title: 'Fibro', body: 'You have a new message 💬', url: '/Fibro/chat.html', type: 'bericht' }))
+  && JSON.stringify(p(u)) === JSON.stringify({ title: 'Stekky', body: 'You have a new message 💬', url: '/Fibro/chat.html', type: 'bericht' }))
 await proef('buzz: zoals vroeger', { receiver_id: B, type: 'buzz' }, 'pas-a', u => o(u) === undefined && !('tag' in p(u)) && p(u).type === 'buzz')
 await proef('vreemd type (__proto__) = bericht', { receiver_id: B, type: '__proto__' }, 'pas-a', u => u.status === 200 && p(u).type === 'bericht')
 await proef('vreemd type (constructor) = bericht', { receiver_id: B, type: 'constructor' }, 'pas-a', u => u.status === 200 && p(u).type === 'bericht')

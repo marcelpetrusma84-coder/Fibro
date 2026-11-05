@@ -405,8 +405,8 @@ export function stilBot() {
 export const SOLO_SPELLEN = {
   botkaaseiren: { naam: 'Tic-Tac-Toe',   icon: '⭕', bestand: './bke-ui.js?v=239',      bot: bkeBot },
   vieroprij:    { naam: 'Four in a Row', icon: '🔴', bestand: './vieroprij-ui.js?v=240', bot: vorBot },
-  schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=264',  niveaus:[...NIVEAUS, 'ultra'], bot: opties => opties.niveau === 'ultra' ? schaakUltraBot(opties) : schaakBot(opties), motor: './schaak.js?v=95', motorNaam: 'Schaak' },
-  dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=150',   niveaus:[...NIVEAUS, 'expert'], bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
+  schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=266',  niveaus:[...NIVEAUS, 'ultra'], bot: opties => opties.niveau === 'ultra' ? schaakUltraBot(opties) : schaakBot(opties), motor: './schaak.js?v=95', motorNaam: 'Schaak' },
+  dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=151',   niveaus:[...NIVEAUS, 'expert'], bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
   // 30 okt 2026: Neo Paddle v2 (blokjes en power-ups) en levels voor alleen (spel.html toont een knop 🧱 Levels).
   pong:         { naam: 'Neo Paddle',    icon: '🏓', bestand: './pong-ui.js?v=242',     bot: pongBot, levels: './neopaddle-levels.js?v=1' },
   // Ghost Tag heeft zelf al een computerspookje: zonder kanaal speel je daartegen.
@@ -427,5 +427,5 @@ export const SOLO_SPELLEN = {
   // Let op: versie 194 van dit bestand was al gebruikt (de schaak-PR van valentijnpeters, 21 okt 2026); daarom laadt
   // spel.html in v193 versie 193 en in v194 versie 195. v195 (schaken weer in twee talen): versie 196. Een volgende
   // aanpassing aan solo.js neemt 197 of hoger.
-  shmup:        { naam: 'Neon Raiders',  icon: '🚀', bestand: './neon-raiders-ui.js?v=224', zonderKanaal: true, arcade: true },
+  shmup:        { naam: 'Neon Raiders',  icon: '🚀', bestand: './neon-raiders-ui.js?v=225', zonderKanaal: true, arcade: true },
 }

@@ -89,3 +89,12 @@ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+vendor/jsqr/jsQR.js
+-------------------
+jsQR 1.4.0: een QR-code lezen uit een camerabeeld, voor "Sleutel controleren" in de chat (sleutelcontrole.js).
+Wordt pas geladen als iemand op "Scan de code" tikt. Draait helemaal op het toestel; het camerabeeld gaat nergens heen.
+Bron: npm-pakket jsqr@1.4.0 (https://www.npmjs.com/package/jsqr), bestand dist/jsQR.js, ongewijzigd.
+Licentie: Apache 2.0, volledige tekst in vendor/jsqr/LICENSE.txt. https://github.com/cozmo/jsQR
+sha512: fa64673b88378083a32390c9e50659f4679774dd9ae6b49ce158608a0a30bfcf1826d1cc5a1c70f23f85f19ecad2e5fed43f49de226caf2e20a0244c255d25b4

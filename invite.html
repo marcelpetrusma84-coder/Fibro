@@ -4,16 +4,16 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
-<script src="foutmelder.js?v=2"></script>
-<script src="taal.js?v=72"></script>
-<script src="apk.js?v=2"></script>
-<script src="registratie.js?v=1"></script>
-<script>Object.assign(window.FIBRO_EN ||= {}, { 'Wie jou uitnodigde, heeft deze week al 5 nieuwe mensen op Fibro gebracht. Dat is het maximum. Probeer het over een paar dagen opnieuw.': 'The person who invited you has already brought 5 new people to Fibro this week. That is the maximum. Please try again in a few days.' }) // v255</script>
-<script>Object.assign(window.FIBRO_EN ||= {}, { 'Alleen het jaar. Fibro is vanaf 16 jaar.': 'Only the year. Fibro is for ages 16 and up.', 'Fibro is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.': "Fibro is for ages 16 and up. If you're younger, you can't create an account yet." }) // v225</script>
-<script>Object.assign(window.FIBRO_EN ||= {}, { 'Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Fibro</a>': 'I agree to the <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">{app} house rules</a>' }) // v229: met een link naar de spelregels</script>
+<script src="foutmelder.js?v=3"></script>
+<script src="taal.js?v=74"></script>
+<script src="apk.js?v=3"></script>
+<script src="registratie.js?v=2"></script>
+<script>Object.assign(window.FIBRO_EN ||= {}, { 'Wie jou uitnodigde, heeft deze week al 5 nieuwe mensen op Stekky gebracht. Dat is het maximum. Probeer het over een paar dagen opnieuw.': 'The person who invited you has already brought 5 new people to Stekky this week. That is the maximum. Please try again in a few days.' }) // v255</script>
+<script>Object.assign(window.FIBRO_EN ||= {}, { 'Alleen het jaar. Stekky is vanaf 16 jaar.': 'Only the year. Stekky is for ages 16 and up.', 'Stekky is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.': "Stekky is for ages 16 and up. If you're younger, you can't create an account yet." }) // v225</script>
+<script>Object.assign(window.FIBRO_EN ||= {}, { 'Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Stekky</a>': 'I agree to the <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">{app} house rules</a>' }) // v229: met een link naar de spelregels</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { // v226: bèta en de registratie-schakelaar (registratie.js)
-  '🧪 Fibro is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.': "🧪 Fibro is still in beta: things can go wrong. After signing up, turn on recovery (Face ID, fingerprint or your recovery key). Without recovery you can't read your messages on a new device.",
-  'Nieuwe accounts maak je nu alleen met een uitnodiging. Vraag iemand die al op Fibro zit om een uitnodigingslink.': 'New accounts can only be created with an invitation right now. Ask someone who is already on Fibro for an invitation link.',
+  '🧪 Stekky is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.': "🧪 Stekky is still in beta: things can go wrong. After signing up, turn on recovery (Face ID, fingerprint or your recovery key). Without recovery you can't read your messages on a new device.",
+  'Nieuwe accounts maak je nu alleen met een uitnodiging. Vraag iemand die al op Stekky zit om een uitnodigingslink.': 'New accounts can only be created with an invitation right now. Ask someone who is already on Stekky for an invitation link.',
   'Er kunnen op dit moment geen nieuwe accounts gemaakt worden. Probeer het later nog eens.': "New accounts can't be created at the moment. Please try again later.",
   'Account aanmaken lukt nu niet. Probeer het later nog eens.': "Creating an account doesn't work right now. Please try again later.",
   'Deze uitnodiging is verlopen of al gebruikt. Vraag om een nieuwe uitnodigingslink.': 'This invitation has expired or was already used. Ask for a new invitation link.'
@@ -22,7 +22,7 @@
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title data-t>Fibro — Uitnodiging</title>
+<title data-t>Stekky — Uitnodiging</title>
 <meta name="theme-color" content="#c084fc">
 <link href="lettertypen/basis.css?v=1" rel="stylesheet">
 <style>
@@ -73,7 +73,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 <body>
 
 <div class="kaart">
-  <div class="fibro-logo">Fibro</div>
+  <div class="fibro-logo">Stekky</div>
   <div class="taalkeuze" role="group" aria-label="Taal / Language">
     <button type="button" data-kies-taal="nl" onclick="T.kies('nl')">Nederlands</button>
     <button type="button" data-kies-taal="en" onclick="T.kies('en')">English</button>
@@ -85,14 +85,14 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
   <div id="spelUitdaging" hidden style="margin:4px 0 18px;padding:14px;border-radius:16px;border:1px solid rgba(192,132,252,0.5);background:rgba(192,132,252,0.12);text-align:center;">
     <div id="spelUitdagingIcoon" style="font-size:34px;line-height:1;margin-bottom:6px;" aria-hidden="true">🎮</div>
     <div id="spelUitdagingTekst" style="font-size:15px;font-weight:700;line-height:1.4;margin-bottom:4px;"></div>
-    <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px;" data-t>Een voorproefje van Fibro: probeer het meteen, ook zonder account.</div>
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px;" data-t>Een voorproefje van Stekky: probeer het meteen, ook zonder account.</div>
     <a id="spelUitdagingKnop" class="btn" style="display:block;text-decoration:none;text-align:center;" href="#"></a>
   </div>
 
   <div id="bestaandScherm" style="display:none; text-align:center; padding:30px 20px;">
   <div class="avatar" id="bestaandAvatar">👤</div>
   <h2 id="bestaandNaam" style="margin-bottom:8px;" data-t>Iemand</h2>
-  <p style="color:#888; margin-bottom:24px;" data-t>wil je toevoegen als vriend op Fibro</p>
+  <p style="color:#888; margin-bottom:24px;" data-t>wil je toevoegen als vriend op Stekky</p>
   <button id="toevoegBtn" onclick="voegToe()" style="display:block; width:100%; padding:14px; border:none; border-radius:24px; background:#5c6bc0; color:white; font-size:16px; font-weight:bold; cursor:pointer; margin-bottom:10px;" data-t>✅ Toevoegen</button>
   <button onclick="window.location.href='index.html'" style="display:block; width:100%; padding:14px; border:none; border-radius:24px; background:rgba(255,255,255,0.1); color:#aaa; font-size:16px; cursor:pointer;" data-t>Annuleren</button>
 </div>
@@ -100,9 +100,9 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
     <div class="avatar" id="uitnodigerAvatar">👤</div>
     <div class="uitnodiger-groot" id="uitnodigerNaam">...</div>
     <div class="uitnodiger-gebruiker" id="uitnodigerGebruiker" hidden></div>
-    <div class="uitnodiger-sub" data-t>nodigt je uit op Fibro ✨</div>
+    <div class="uitnodiger-sub" data-t>nodigt je uit op Stekky ✨</div>
     <div class="wat-is-fibro">
-      <div class="kop" data-t>Fibro: een eerlijke social media app voor vrienden</div>
+      <div class="kop" data-t>Stekky: een eerlijke social media app voor vrienden</div>
       <div class="rij"><span>💬</span><span data-t>Chatten, foto's en spraakberichtjes, end-to-end versleuteld</span></div>
       <div class="rij"><span>📞</span><span data-t>Bellen en videobellen met je vrienden</span></div>
       <div class="rij"><span>🎨</span><span data-t>Je eigen profiel met widgets, muziek en stickers</span></div>
@@ -114,7 +114,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
     <div class="msg" id="bericht"></div>
 
     <div id="regFormulier">
-    <div class="beta-info" data-t>🧪 Fibro is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.</div>
+    <div class="beta-info" data-t>🧪 Stekky is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.</div>
 
     <div class="field">
       <label data-t>Jouw gebruikersnaam</label>
@@ -132,13 +132,13 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
     <div class="field">
       <label data-t>Geboortejaar</label>
       <input class="input" type="number" id="geboortejaar" placeholder="bijv. 2005" min="1900" max="2010" data-t-attr="placeholder">
-      <div class="hint" data-t>Alleen het jaar. Fibro is vanaf 16 jaar.</div>
+      <div class="hint" data-t>Alleen het jaar. Stekky is vanaf 16 jaar.</div>
     </div>
 
     <div style="display:flex;align-items:flex-start;gap:10px;margin:12px 0;">
       <input type="checkbox" id="akkoord" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;">
       <label for="akkoord" style="font-size:12px;line-height:1.5;cursor:pointer;color:var(--muted);" data-t>
-        Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Fibro</a>
+        Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Stekky</a>
       </label>
     </div>
 
@@ -146,9 +146,9 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
     </div>
 
     <div style="margin-top:26px;padding-top:18px;border-top:0.5px solid rgba(255,255,255,0.12);text-align:center;">
-      <div style="font-size:13px;color:var(--muted);margin-bottom:4px;" data-t>Heb je al een Fibro-account?</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:4px;" data-t>Heb je al een Stekky-account?</div>
       <div style="font-size:11px;color:rgba(255,255,255,0.35);line-height:1.5;margin-bottom:12px;" data-t>
-        Kopieer deze link en open hem in Fibro op je beginscherm, of log hier in.
+        Kopieer deze link en open hem in Stekky op je beginscherm, of log hier in.
       </div>
       <button onclick="kopieerLink()" id="kopieerBtn" style="background:rgba(255,255,255,0.07);color:#e5e5e5;border:0.5px solid rgba(255,255,255,0.15);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 4px 6px;font-family:inherit;" data-t>Link kopieren</button>
       <button onclick="naarLogin()" style="background:rgba(255,255,255,0.07);color:#e5e5e5;border:0.5px solid rgba(255,255,255,0.15);border-radius:14px;padding:9px 16px;font-size:13px;cursor:pointer;margin:0 4px 6px;font-family:inherit;" data-t>Inloggen</button>
@@ -157,7 +157,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 
   <div id="herstelScherm" style="display:none">
     <div style="font-size:40px;margin-bottom:12px;">🎉</div>
-    <div style="font-size:18px;font-weight:600;margin-bottom:8px;" data-t>Welkom bij Fibro!</div>
+    <div style="font-size:18px;font-weight:600;margin-bottom:8px;" data-t>Welkom bij Stekky!</div>
     <div style="font-size:13px;color:var(--muted);margin-bottom:8px;" data-t>Bewaar je herstelsleutel op een veilige plek</div>
     <div class="e2e-badge" style="margin:0 auto 16px;" data-t>🔒 Encryptie sleutels aangemaakt</div>
     <div class="herstel-box">
@@ -172,7 +172,7 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
       <div id="meldWelkomTekst" style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:10px;" data-t>Krijg een melding als een vriend je schrijft, buzzt of uitdaagt.</div>
       <button type="button" id="meldWelkomKnop" style="width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a0a2e;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;" data-t>🔔 Meldingen aanzetten</button>
     </div>
-    <div style="background:rgba(255,255,255,0.05);border:0.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;" data-t>Zet Fibro op je beginscherm</div><div style="font-size:12px;color:var(--muted);line-height:1.6;" data-t>Op de iPhone werken meldingen alleen als Fibro op je beginscherm staat.<br><b>iPhone:</b> Safari, deelicoon onderin, Zet op beginscherm.<br><b>Android:</b> Chrome, drie puntjes, Toevoegen aan startscherm.</div></div>
+    <div style="background:rgba(255,255,255,0.05);border:0.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;" data-t>Zet Stekky op je beginscherm</div><div style="font-size:12px;color:var(--muted);line-height:1.6;" data-t>Op de iPhone werken meldingen alleen als Stekky op je beginscherm staat.<br><b>iPhone:</b> Safari, deelicoon onderin, Zet op beginscherm.<br><b>Android:</b> Chrome, drie puntjes, Toevoegen aan startscherm.</div></div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:16px;" data-t>
       Inloggen doe je met: <span style="color:var(--accent)" id="bevestigNaam">—</span>
     </div>
@@ -189,8 +189,8 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 <script type="module">
 import { createClient } from './supabase-lib.js?v=1'
 import { genereerKeypair, slaPrivateKeyOp, versleutelPrivateKey, maakHerstelSleutel } from './crypto.js?v=182'
-import { passkeyStatus, maakDoos } from './passkey-kluis.js?v=2'
-import { openSpelMetTitel } from './titelscherm.js?v=6' // v252: titelscherm met muziek meteen bij je tik
+import { passkeyStatus, maakDoos } from './passkey-kluis.js?v=3'
+import { openSpelMetTitel } from './titelscherm.js?v=7' // v252: titelscherm met muziek meteen bij je tik
 
 const supabase = createClient(
   'https://qmgatbphiplrfxrljtbe.supabase.co',
@@ -327,7 +327,7 @@ async function init() {
     // v255: in de stand 'uitnodiging' meteen zeggen als de uitnodiger deze week al 5 nieuwe mensen binnenhaalde
     else if (stand === 'uitnodiging') {
       const r = await supabase.rpc('uitnodiging_vol', { token_in: token })
-      if (r.data === true) registratieGeweigerd('Wie jou uitnodigde, heeft deze week al 5 nieuwe mensen op Fibro gebracht. Dat is het maximum. Probeer het over een paar dagen opnieuw.')
+      if (r.data === true) registratieGeweigerd('Wie jou uitnodigde, heeft deze week al 5 nieuwe mensen op Stekky gebracht. Dat is het maximum. Probeer het over een paar dagen opnieuw.')
     }
   } catch (e) {}
   // Android in de browser: eerst de keuze tussen de app (aanbevolen) en de browser (apk.js)
@@ -390,7 +390,7 @@ window.registreren = async function() {
   }
   // v225: Fibro is vanaf 16 jaar
   if (new Date().getFullYear() - jaarNum < 16) {
-    msg.className='msg error'; msg.textContent=T('Fibro is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.'); return
+    msg.className='msg error'; msg.textContent=T('Stekky is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.'); return
   }
 
   btn.textContent = T('🔒 Encryptie voorbereiden...')
@@ -424,7 +424,7 @@ window.registreren = async function() {
     // v255: heeft de uitnodiger deze week al 5 nieuwe mensen uitgenodigd? (sql/uitnodigingen-grens.sql)
     let vol = false
     try { const r = await supabase.rpc('uitnodiging_vol', { token_in: token }); vol = r.data === true } catch (e) {}
-    if (vol) { registratieGeweigerd('Wie jou uitnodigde, heeft deze week al 5 nieuwe mensen op Fibro gebracht. Dat is het maximum. Probeer het over een paar dagen opnieuw.'); return }
+    if (vol) { registratieGeweigerd('Wie jou uitnodigde, heeft deze week al 5 nieuwe mensen op Stekky gebracht. Dat is het maximum. Probeer het over een paar dagen opnieuw.'); return }
     registratieGeweigerd(FibroRegistratie.weigerTekst(await FibroRegistratie.haalStand(supabase), true))
     return
   }
@@ -477,11 +477,11 @@ async function toonMeldWelkom(userId, plek) {
   const vak = document.getElementById('meldWelkom')
   if (!vak) return
   let m
-  try { m = await import('./meldingen-aan.js?v=1') } catch (e) { return }
+  try { m = await import('./meldingen-aan.js?v=2') } catch (e) { return }
   const stand = await m.meldStand()
   if (stand !== 'uit' && stand !== 'geweigerd') return
   const tekst = document.getElementById('meldWelkomTekst'), knop = document.getElementById('meldWelkomKnop')
-  const geweigerd = () => { tekst.textContent = T('Meldingen staan uit voor Fibro. Je kunt ze later aanzetten in Stijl > Meldingen.'); knop.remove() }
+  const geweigerd = () => { tekst.textContent = T('Meldingen staan uit voor Stekky. Je kunt ze later aanzetten in Stijl > Meldingen.'); knop.remove() }
   if (stand === 'geweigerd') geweigerd()
   knop.onclick = async () => {
     knop.disabled = true
@@ -513,7 +513,7 @@ async function kanFaceIdGebruiken() {
 function faceIdFoutTekst(e) {
   const c = e && e.code
   if (c === 'geannuleerd') return T('Geannuleerd. Probeer het opnieuw.')
-  if (c === 'bestaat-al') return T('Hier bestaat al een Fibro-passkey voor dit account.')
+  if (c === 'bestaat-al') return T('Hier bestaat al een Stekky-passkey voor dit account.')
   if (c === 'geen-prf') return T('Deze browser kan Face ID-herstel niet gebruiken. Kies een herstelcode.')
   return T('Mislukt: {fout}', { fout: (e && e.message) || e })
 }
@@ -560,7 +560,7 @@ function toonFaceIdNaInvite(userId, naam, privateKeyB64) {
       await maakDoos(supabase, { userId, gebruikersnaam: naam, privateKeyB64 })
       melding.style.color = '#4ade80'; melding.textContent = T('Face ID-herstel staat aan.')
       nee.remove()
-      ja.disabled = false; ja.textContent = T('Verder naar Fibro')
+      ja.disabled = false; ja.textContent = T('Verder naar Stekky')
       ja.onclick = () => { window.location.href = 'index.html' }
       toonAppKaart(ja)
       toonMeldWelkom(userId, ja) // v258

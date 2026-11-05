@@ -10,7 +10,7 @@
 // Op de iPhone werken meldingen alleen als Fibro op het beginscherm staat. In Safari zelf toont Home daarom de tip van
 // beginscherm.js ('Zet Fibro op je beginscherm'); de eerste keer vanaf het beginscherm komt deze kaart.
 // Eenmaal aan komen alle soorten binnen: berichten, buzz, bellen, spellen, nieuwe vrienden en het gastenboek.
-import { iphoneZonderApp, openBeginschermUitleg } from './beginscherm.js?v=2'
+import { iphoneZonderApp, openBeginschermUitleg } from './beginscherm.js?v=3'
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 const SERVERSLEUTEL = 'BBTo5083-joPZ8FjJW0_lIMuyUWP3T6b6cul22b971RK033GrXdRzFyPUbSE8aoTADuQmdRtVOq1CI2n3v-RLyA'
@@ -59,8 +59,8 @@ export async function zetMeldingenAan(supabase, userId) {
 // Waar zet je ze weer aan als ze geweigerd zijn?
 function instellingenTekst() {
   const ua = navigator.userAgent || ''
-  if (/iPhone|iPad|iPod/.test(ua)) return T('Zet ze aan in <b>Instellingen > Meldingen > Fibro</b>.')
-  if (/Android/.test(ua)) return T('Houd het Fibro-icoon ingedrukt, kies <b>App-info > Meldingen</b> en zet ze aan.')
+  if (/iPhone|iPad|iPod/.test(ua)) return T('Zet ze aan in <b>Instellingen > Meldingen > Stekky</b>.')
+  if (/Android/.test(ua)) return T('Houd het Stekky-icoon ingedrukt, kies <b>App-info > Meldingen</b> en zet ze aan.')
   return T('Klik op het slotje naast het adres van deze pagina en zet <b>Meldingen</b> op Toestaan.')
 }
 
@@ -96,7 +96,7 @@ export async function toonMeldkaart(plek, supabase, userId) {
   weg.title = T('Nu niet')
   weg.onclick = () => { try { localStorage.setItem(WEG_SLEUTEL, String(Date.now())) } catch (e) {}; kaart.remove() }
   const geweigerd = () => {
-    tekst.innerHTML = T('\u{1F515} <b>Meldingen staan uit</b> voor Fibro, dus je mist berichten van vrienden.') + ' ' + instellingenTekst()
+    tekst.innerHTML = T('\u{1F515} <b>Meldingen staan uit</b> voor Stekky, dus je mist berichten van vrienden.') + ' ' + instellingenTekst()
     aan.remove()
   }
   if (stand === 'geweigerd') geweigerd()

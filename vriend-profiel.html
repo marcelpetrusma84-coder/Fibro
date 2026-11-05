@@ -13,18 +13,18 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
-<script src="foutmelder.js?v=2"></script>
-<script src="taal.js?v=72"></script>
-<script src="appslot.js?v=2"></script>
+<script src="foutmelder.js?v=3"></script>
+<script src="taal.js?v=74"></script>
+<script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title data-t>Fibro — Profiel</title>
-<link rel="apple-touch-icon" href="icon-192.png">
+<title data-t>Stekky — Profiel</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Fibro">
+<meta name="apple-mobile-web-app-title" content="Stekky">
 <meta name="theme-color" content="#c084fc">
 <script>
   try {
@@ -97,7 +97,7 @@ body.heeft-wallpaper::before { display:block; }
   <button class="back-btn" onclick="history.back()" data-t>← terug</button>
   <span class="top-title" id="paginaTitel" data-t>Profiel</span>
 </div>
-<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0" data-t>Fibro – Profiel van een vriend</h1>
+<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0" data-t>Stekky – Profiel van een vriend</h1>
 
 
 <div class="profile-hero">
@@ -147,11 +147,11 @@ body.heeft-wallpaper::before { display:block; }
   import * as GB from './gastenboekstijl.js?v=2'
   import { spelIcoonHtml } from './spelicoon.js?v=3' // losse spelplaatjes; v3 vangt ontbrekende plaatjes op
   import { koppelSpelIcoonFallback } from './spelicoon.js?v=3'
-  import { openSpelMetTitel } from './titelscherm.js?v=6' // v252: titelscherm met muziek meteen bij je tik
+  import { openSpelMetTitel } from './titelscherm.js?v=7' // v252: titelscherm met muziek meteen bij je tik
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
-  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=254'
+  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=255'
   import { versleutel, haalPrivateKeyOp } from './crypto.js?v=182'
   import { maakProfielLikes, itemVan, openReageerScherm, maakReactieBericht, maakKleinPlaatje } from './profielreacties.js?v=2' // v258
   import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -337,7 +337,7 @@ body.heeft-wallpaper::before { display:block; }
       if (!vriendId) return // v180: ook als 'Muziek van vrienden vanzelf' uit staat: dan het knopje met \u25B6
       const data = await laadFotoUitDB('vriend_' + vriendId + '_muziek_profiel')
       if (!data) return
-      const m = await import('./profielmuziek.js?v=184')
+      const m = await import('./profielmuziek.js?v=185')
       await m.speelProfielMuziek({ data, titel: T('Muziek van {naam}', { naam }), sleutel: 'vriend_' + vriendId, vriend: true })
     } catch (e) { console.warn('[profielmuziek]', e) }
   }
@@ -749,10 +749,10 @@ body.heeft-wallpaper::before { display:block; }
         } catch (e) {
           const r = e && e.message
           if (r === 'afgebroken' || !plek.isConnected) return
-          meld(r === 'offline' ? T('Je vriend is nu niet online. De video kan alleen worden opgehaald als jullie allebei Fibro open hebben.')
+          meld(r === 'offline' ? T('Je vriend is nu niet online. De video kan alleen worden opgehaald als jullie allebei Stekky open hebben.')
             : r === 'relay' ? T('Jullie zijn alleen via de relay-server verbonden. Video\u2019s worden daarom niet opgehaald (dat kost te veel data).')
             : r === 'geen-video' ? T('Je vriend heeft deze video niet meer.')
-            : r === 'ander-tabblad' ? T('Fibro is ook in een ander tabblad open. Sluit dat en probeer het opnieuw.')
+            : r === 'ander-tabblad' ? T('Stekky is ook in een ander tabblad open. Sluit dat en probeer het opnieuw.')
             : T('De video kon niet worden opgehaald. Probeer het zo nog eens.'))
           return
         }
@@ -1433,6 +1433,6 @@ startMeldingen()
 <div style="height:44px;"></div>
 <script src="./fotoviewer.js?v=9"></script>
 <script type="module" src="offline.js?v=146"></script>
-<script type="module" src="geluidregelaar.js?v=180"></script>
+<script type="module" src="geluidregelaar.js?v=181"></script>
 </body>
 </html>

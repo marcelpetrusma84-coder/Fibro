@@ -98,7 +98,7 @@ assert.match(ui, /event: 'bi-aanval' \}, \(msg\) => krijgAanval\(msg\.payload\.r
 assert.match(ui, /zwartAanval: true, titel: vertaal\('Twee velden, zwarte aanval'\)/)
 assert.match(ui, /payload: \{ modus: v\.modus, zwart: zwartAan, zwartAanval \}/, 'de uitnodiger stuurt zwarte aanval mee')
 assert.match(ui, /if \(solo && !pcNiveau\) \{\n            const nieuw = solo\.nieuweScore/, 'tegen de computer telt niet als record')
-for (const [bestand, patroon] of [['solo.js', /blockit-ui\.js\?v=15\d/], ['chat.html', /blockit-ui\.js\?v=15\d/], ['spel.html', /solo\.js\?v=25\d/]]) {
+for (const [bestand, patroon] of [['solo.js', /blockit-ui\.js\?v=15\d/], ['chat.html', /blockit-ui\.js\?v=15\d/], ['spel.html', /solo\.js\?v=2[5-9]\d/]]) {
   assert.match(readFileSync(new URL('../../' + bestand, import.meta.url), 'utf8'), patroon, bestand)
 }
 const chat = readFileSync(new URL('../../chat.html', import.meta.url), 'utf8')

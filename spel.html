@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://lichess.org/api/cloud-eval https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
-<script src="foutmelder.js?v=2"></script>
-<script src="taal.js?v=72"></script>
-<script src="appslot.js?v=2"></script>
+<script src="foutmelder.js?v=3"></script>
+<script src="taal.js?v=74"></script>
+<script src="appslot.js?v=3"></script>
 <script src="controller.js?v=2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title data-t>Fibro — Spel</title>
-<link rel="apple-touch-icon" href="icon-192.png">
+<title data-t>Stekky — Spel</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -62,12 +62,12 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
 <script type="module">
   import * as Bordgeluid from './bordgeluid.js?v=201'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=259'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=261'
   import { supabase } from './supabase.js?v=95'
   import { startSpelUitnodigingLuisteraar } from './speluitnodiging.js?v=197'
-  import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=10'
+  import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=11'
   import { nieuweSpelSessie } from './spelsessie.js?v=1'
-  import { toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek } from './titelscherm.js?v=6' // v251: titelscherm met muziek
+  import { toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek } from './titelscherm.js?v=7' // v251: titelscherm met muziek
 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   const inhoud = document.getElementById('spelInhoud')
@@ -115,7 +115,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
       const knop = document.getElementById('sluitKnop')
       knop.title = schaakT('Terug')
       knop.setAttribute('aria-label', schaakT('Terug'))
-      document.title = 'Fibro — ' + schaakT('Schaken')
+      document.title = 'Stekky — ' + schaakT('Schaken')
     }
     paginaTaal.subscribe(vertaalPagina)
     vertaalPagina()
@@ -139,7 +139,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
   if (!spel) {
     inhoud.innerHTML = '<div class="melding">' + spelT('Dit spel kan nog niet alleen gespeeld worden.') + '<br><button onclick="spelTerug()">' + spelT('Terug') + '</button></div>'
   } else {
-    document.title = 'Fibro — ' + spelNaam()
+    document.title = 'Stekky — ' + spelNaam()
     // v251: eerst het titelscherm; één tik en je bent in het menu van het spel (de muziek speelt daar nog door).
     // Ghost Tag, Twin Snakes, Runner & Gunner en Neon Raiders hebben een eigen startscherm.
     // v252: kom je van Home, een profiel of een uitnodiging, dan stond het titelscherm daar al (titel=1)

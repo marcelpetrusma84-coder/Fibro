@@ -79,5 +79,5 @@ for (const f of ['index.html', 'chat.html', 'vrienden.html', 'profiel.html', 'vr
 assert.match(lees('spellen/runner-gunner.html'), /<script src="\.\.\/appslot\.js\?v=\d+"><\/script>/)
 assert.match(lees('index.html'), /b\.id = 'menuAppSlot'/, 'in het menu')
 const en = lees('taal-en.js')
-for (const zin of ['Fibro is op slot', 'Ontgrendelen', 'Pincode vergeten? Uitloggen', '🔒 App-slot']) assert.ok(en.includes(JSON.stringify(zin)), 'Engels: ' + zin)
+for (const zin of ['Stekky is op slot', 'Ontgrendelen', 'Pincode vergeten? Uitloggen', '🔒 App-slot']) assert.ok(en.includes(JSON.stringify(zin)), 'Engels: ' + zin)
 console.log('ok: app-slot')

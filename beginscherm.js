@@ -67,9 +67,9 @@ function safariBalk(versie, y = 118) {
 
 const TEKENING = {
   // iPhone, stap 1 per versie
-  ios27_1: () => scherm(`${tekst(100, 40, 'fibro.app', { a: 'middle', g: 12, k: '#8e8e93' })}${safariBalk('ios27')}${tik(100, 118, 18)}${vinger(112, 146)}`, 160),
-  ios26_1: () => scherm(`${tekst(100, 40, 'fibro.app', { a: 'middle', g: 12, k: '#8e8e93' })}${safariBalk('ios26')}${tik(179, 118)}${vinger(186, 150)}`, 160),
-  ouder_1: () => scherm(`${tekst(100, 40, 'fibro.app', { a: 'middle', g: 12, k: '#8e8e93' })}${safariBalk('ouder')}${tik(100, 118)}${vinger(108, 150)}`, 160),
+  ios27_1: () => scherm(`${tekst(100, 40, 'stekky.app', { a: 'middle', g: 12, k: '#8e8e93' })}${safariBalk('ios27')}${tik(100, 118, 18)}${vinger(112, 146)}`, 160),
+  ios26_1: () => scherm(`${tekst(100, 40, 'stekky.app', { a: 'middle', g: 12, k: '#8e8e93' })}${safariBalk('ios26')}${tik(179, 118)}${vinger(186, 150)}`, 160),
+  ouder_1: () => scherm(`${tekst(100, 40, 'stekky.app', { a: 'middle', g: 12, k: '#8e8e93' })}${safariBalk('ouder')}${tik(100, 118)}${vinger(108, 150)}`, 160),
   // iPhone, stap 2: het menuutje met Deel
   menu: (versie) => scherm(`<rect x="${versie === 'ios27' ? 30 : 70}" y="18" width="116" height="78" rx="12" fill="#fff" stroke="#d1d1d6"/>
     ${[T('Kopieer'), T('Deel'), T('Voeg bladwijzer toe')].map((r, i) => (i ? `<line x1="${versie === 'ios27' ? 30 : 70}" x2="${versie === 'ios27' ? 146 : 186}" y1="${18 + i * 26}" y2="${18 + i * 26}" stroke="#e5e5ea"/>` : '') +
@@ -78,7 +78,7 @@ const TEKENING = {
     ${safariBalk(versie, 128)}`, 160),
   // iPhone, stap 3: het deelmenu met Zet op beginscherm
   delen: () => scherm(`<rect x="14" y="14" width="172" height="120" rx="14" fill="#fff" stroke="#d1d1d6"/>
-    ${fibroIcoon(36, 34, 22)}${tekst(54, 31, 'Fibro', { g: 10.5, w: 700 })}${tekst(54, 43, 'fibro.app', { g: 8.5, k: '#8e8e93' })}
+    ${fibroIcoon(36, 34, 22)}${tekst(54, 31, 'Stekky', { g: 10.5, w: 700 })}${tekst(54, 43, 'stekky.app', { g: 8.5, k: '#8e8e93' })}
     <line x1="14" x2="186" y1="54" y2="54" stroke="#e5e5ea"/>
     ${tekst(26, 72, T('Kopieer'), { g: 10.5 })}<line x1="14" x2="186" y1="80" y2="80" stroke="#e5e5ea"/>
     ${tekst(26, 98, T('Voeg toe aan leeslijst'), { g: 10.5 })}<line x1="14" x2="186" y1="106" y2="106" stroke="#e5e5ea"/>
@@ -88,23 +88,23 @@ const TEKENING = {
   // iPhone, stap 4: Open als webapp aan, Voeg toe
   toevoegen: () => scherm(`${tekst(24, 30, T('Annuleer'), { g: 10.5, k: '#0a84ff' })}
     ${tekst(178, 30, T('Voeg toe'), { a: 'end', g: 10.5, k: '#0a84ff', w: 700 })}<rect x="128" y="15" width="57" height="21" rx="10.5" fill="none" stroke="${PAARS}" stroke-width="3"/>${vinger(170, 58)}
-    <rect x="14" y="44" width="172" height="44" rx="12" fill="#fff"/>${fibroIcoon(38, 66, 28)}${tekst(60, 63, 'Fibro', { g: 11, w: 600 })}${tekst(60, 76, 'fibro.app', { g: 8.5, k: '#8e8e93' })}
+    <rect x="14" y="44" width="172" height="44" rx="12" fill="#fff"/>${fibroIcoon(38, 66, 28)}${tekst(60, 63, 'Stekky', { g: 11, w: 600 })}${tekst(60, 76, 'stekky.app', { g: 8.5, k: '#8e8e93' })}
     <rect x="14" y="96" width="172" height="32" rx="12" fill="#fff"/>${tekst(26, 116, T('Open als webapp'), { g: 10.5 })}
     <rect x="148" y="103" width="30" height="18" rx="9" fill="#34c759"/><circle cx="169" cy="112" r="7.5" fill="#fff"/>
     <rect x="144" y="99" width="38" height="26" rx="13" fill="none" stroke="${PAARS}" stroke-width="2.5" stroke-dasharray="4 3"/>`, 140),
   // stap 5: het icoon op het beginscherm
   icoon: () => scherm(`${[0, 1, 2, 3].map((k) => [0, 1].map((r) => (k === 1 && r === 1) ? '' :
       `<rect x="${24 + k * 42}" y="${22 + r * 52}" width="30" height="30" rx="7" fill="${['#ffd60a', '#30d158', '#0a84ff', '#ff453a', '#bf5af2', '#64d2ff', '#ff9f0a', '#5e5ce6'][k + r * 4]}" opacity="0.55"/>`).join('')).join('')}
-    ${fibroIcoon(81, 89, 30)}${tik(81, 89, 19)}${tekst(81, 126, 'Fibro', { a: 'middle', g: 9.5, w: 600 })}${vinger(112, 128)}`, 140),
+    ${fibroIcoon(81, 89, 30)}${tik(81, 89, 19)}${tekst(81, 126, 'Stekky', { a: 'middle', g: 9.5, w: 600 })}${vinger(112, 128)}`, 140),
   // Android (Chrome): ⋮ rechtsboven, App installeren, Installeren
-  android_1: () => scherm(`<rect x="14" y="16" width="146" height="26" rx="13" fill="#fff" stroke="#d1d1d6"/>${tekst(30, 33, 'fibro.app', { g: 11, k: '#3a3a3c' })}
+  android_1: () => scherm(`<rect x="14" y="16" width="146" height="26" rx="13" fill="#fff" stroke="#d1d1d6"/>${tekst(30, 33, 'stekky.app', { g: 11, k: '#3a3a3c' })}
     ${tekst(177, 34, '⋮', { a: 'middle', g: 20, k: '#3a3a3c', w: 700 })}${tik(177, 29)}${vinger(170, 72)}
-    ${tekst(100, 100, 'Fibro', { a: 'middle', g: 13, k: '#8e8e93' })}`, 130),
+    ${tekst(100, 100, 'Stekky', { a: 'middle', g: 13, k: '#8e8e93' })}`, 130),
   android_2: () => scherm(`<rect x="60" y="14" width="128" height="104" rx="10" fill="#fff" stroke="#d1d1d6"/>
     ${[T('Nieuw tabblad'), T('Bladwijzers'), T('App installeren'), T('Delen…')].map((r, i) => tekst(72, 35 + i * 24, r, { g: 10.5, w: i === 2 ? 700 : 400 })).join('')}
     <rect x="63" y="70" width="122" height="22" rx="7" fill="none" stroke="${PAARS}" stroke-width="3"/>`, 130),
   android_3: () => scherm(`<rect x="22" y="22" width="156" height="92" rx="16" fill="#fff" stroke="#d1d1d6"/>
-    ${fibroIcoon(46, 50, 26)}${tekst(66, 47, T('App installeren'), { g: 11, w: 700 })}${tekst(66, 60, 'Fibro', { g: 9.5, k: '#8e8e93' })}
+    ${fibroIcoon(46, 50, 26)}${tekst(66, 47, T('App installeren'), { g: 11, w: 700 })}${tekst(66, 60, 'Stekky', { g: 9.5, k: '#8e8e93' })}
     ${tekst(84, 98, T('Annuleren'), { a: 'middle', g: 10.5, k: '#5e5ce6' })}${tekst(140, 98, T('Installeren'), { a: 'middle', g: 10.5, k: '#5e5ce6', w: 700 })}${tik(140, 94, 17)}`, 136),
 }
 
@@ -120,7 +120,7 @@ function stappenIphone(versie) {
     ...(versie === 'ouder' ? [] : [[T('Tik op <b>Deel</b>.'), TEKENING.menu(versie)]]),
     [T('Tik op <b>Zet op beginscherm</b>. Zie je het niet? Scrol dan omlaag.'), TEKENING.delen()],
     [T('Laat <b>Open als webapp</b> aan staan (groen) en tik rechtsboven op <b>Voeg toe</b>.'), TEKENING.toevoegen()],
-    [T('Klaar! Open Fibro voortaan via het <b>nieuwe icoon</b> op je beginscherm.'), TEKENING.icoon()],
+    [T('Klaar! Open Stekky voortaan via het <b>nieuwe icoon</b> op je beginscherm.'), TEKENING.icoon()],
   ]
 }
 function stappenAndroid() {
@@ -128,7 +128,7 @@ function stappenAndroid() {
     [T('Tik in Chrome rechtsboven op <b>⋮</b> (drie puntjes).'), TEKENING.android_1()],
     [T('Tik op <b>App installeren</b> (of <b>Toevoegen aan startscherm</b>).'), TEKENING.android_2()],
     [T('Tik op <b>Installeren</b>.'), TEKENING.android_3()],
-    [T('Klaar! Open Fibro voortaan via het <b>nieuwe icoon</b>.'), TEKENING.icoon()],
+    [T('Klaar! Open Stekky voortaan via het <b>nieuwe icoon</b>.'), TEKENING.icoon()],
   ]
 }
 
@@ -150,18 +150,18 @@ export function openBeginschermUitleg({ reden = '' } = {}) {
   const titel = el('h2', 'font-size:18px;margin:0 0 10px;color:var(--accent,#c084fc)')
   titel.id = 'bsTitel'
   titel.textContent = reden === 'meldingen' ? T('\u{1F514} Meldingen op je iPhone')
-    : reden === 'account' ? T('\u{1F4F2} Eerst Fibro op je beginscherm') : T('\u{1F4F2} Fibro op je beginscherm zetten')
+    : reden === 'account' ? T('\u{1F4F2} Eerst Stekky op je beginscherm') : T('\u{1F4F2} Stekky op je beginscherm zetten')
   kaart.appendChild(titel)
   const alinea = (html, css = '') => kaart.appendChild(el('p', 'font-size:14px;line-height:1.5;margin:0 0 12px;' + css, html))
-  if (t.app) alinea(T('✓ Je gebruikt Fibro nu al als app.'), 'color:#86efac;font-weight:600')
+  if (t.app) alinea(T('✓ Je gebruikt Stekky nu al als app.'), 'color:#86efac;font-weight:600')
   if (reden === 'meldingen') {
-    alinea(T('Op de iPhone werken meldingen <b>alleen</b> als Fibro op je beginscherm staat. Zo zet je Fibro daar neer:'))
+    alinea(T('Op de iPhone werken meldingen <b>alleen</b> als Stekky op je beginscherm staat. Zo zet je Stekky daar neer:'))
   } else if (reden === 'account') {
     alinea(T('Maak je account in de app op je beginscherm. Dan hoef je daarna niet opnieuw in te loggen, en kun je meteen meldingen aanzetten.'))
   } else {
-    alinea(T('Dan opent Fibro als een gewone app: over het hele scherm, met meldingen en een bolletje bij ongelezen berichten.'))
+    alinea(T('Dan opent Stekky als een gewone app: over het hele scherm, met meldingen en een bolletje bij ongelezen berichten.'))
   }
-  if (t.anderBrowser) alinea(T('Je gebruikt nu een andere browser dan Safari. Open Fibro het makkelijkst in <b>Safari</b> en volg dan deze stappen.'), 'font-size:13px;opacity:0.9')
+  if (t.anderBrowser) alinea(T('Je gebruikt nu een andere browser dan Safari. Open Stekky het makkelijkst in <b>Safari</b> en volg dan deze stappen.'), 'font-size:13px;opacity:0.9')
 
   // keuze: iPhone (met versie) of Android
   const keuzes = el('div', 'display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px')

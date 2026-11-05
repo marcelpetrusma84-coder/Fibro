@@ -1,4 +1,4 @@
-import { maakSchaakTaal } from './schaak-taal.js?v=10'
+import { maakSchaakTaal } from './schaak-taal.js?v=11'
 import { stukSVG, registreerSlag, veroverdePunten, STUKPUNTEN } from './schaak-stukken.js?v=1'
 import { schaakFen } from './schaak-ultra-engine.js?v=1'
 import { schaakNotatie, maakUltraEvaluatieHistorie } from './schaak-ultra-historie.js?v=1'
@@ -31,6 +31,8 @@ function readSettings() {
   } catch { return { thinking:7, ultraThinking:5, pieces:'medium', board:'classic', soundTheme:'classic', gradedCaptureSounds:false, ultraGradedCaptureSounds:true, ultraEvaluationSound:false, ultraTakeback:false, ultraHints:false, showAttackRoutes:false, exaggerate:false, pointsPerPiece:false, noobMode:false, camerasAtTop:false, threePlayer:false, showUltraEvaluation:false, knightRouteSteps:[true,true,true,true] } }
 }
 // schaken-ui.js - spel voor Fibro, losgetrokken uit chat.html.
+// v265: animatie bij schaakmat (koning valt om, schokgolf, dan SCHAAKMAT). Slaan heeft geen eigen animatie (op verzoek
+// van Marcel weer weggehaald, v265b): de aanvaller schuift gewoon naar het vak, zoals altijd.
 // Tekent zichzelf in #spelInhoud en praat via het spelkanaal dat chat.html aanlevert.
 export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam, onInviteThird = null, testMode = false }) {
   const taal = maakSchaakTaal()
@@ -256,6 +258,10 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-frame.sch-frame-glass { border:1px solid #e4faffb0; background:linear-gradient(145deg,#d8f8ff99,#6698b8bb 48%,#1f3555ee); box-shadow:0 8px 0 #182941,0 12px 0 #102034,0 22px 34px #0009,inset 0 1px 2px #fff; }
       .sch-checkmate { position:fixed; z-index:20; inset:0; display:grid; place-items:center; pointer-events:none; background:radial-gradient(ellipse at center,#07122255,transparent 72%); opacity:1; transition:opacity .7s ease,transform .7s ease; }
       .sch-checkmate[hidden] { display:none; }
+      /* v265: bij schaakmat valt de koning om, met vonken en een schokgolf */
+      .sch-koning-mat .sch-stuk { transform:rotate(90deg) translate(14%,-6%) scale(.92); filter:sepia(1) saturate(7) hue-rotate(315deg) brightness(.95) drop-shadow(0 0 6px #ff2d45) drop-shadow(0 2px 2px #000b); }
+      .sch-vonk { position:fixed; z-index:30; width:7px; height:7px; margin:-3.5px 0 0 -3.5px; border-radius:50%; pointer-events:none; background:radial-gradient(circle,#fff 0 30%,#ffd36e 45%,#ff7a2f 80%,transparent); box-shadow:0 0 6px #ffb347; }
+      .sch-schokgolf { position:fixed; z-index:30; border-radius:50%; pointer-events:none; border:3px solid #ff4d5e; box-shadow:0 0 18px #ff2d45, inset 0 0 12px #ff2d4599; }
       .sch-checkmate-text { margin:0; padding:.14em .28em .22em; color:transparent; font-family:Impact,"Arial Black",system-ui,sans-serif; font-size:clamp(52px,15vw,150px); font-weight:1000; letter-spacing:.07em; line-height:1; text-align:center; -webkit-text-stroke:1px #f4fbff; background:linear-gradient(180deg,#fff 0%,#9da8b2 15%,#f8ffff 25%,#65717c 39%,#f2f7fb 52%,#77818b 66%,#fff 79%,#88939e 100%); background-clip:text; -webkit-background-clip:text; filter:drop-shadow(0 2px 0 #fff) drop-shadow(0 4px 0 #63707c) drop-shadow(0 7px 0 #222d37) drop-shadow(0 12px 13px #000c); text-shadow:0 1px 0 #fff,0 2px 0 #aeb8c1,0 3px 0 #59636d,0 5px 0 #252d35,0 12px 22px #000c; }
       .sch-checkmate-fade { opacity:0; transform:scale(1.08); }
       @media (prefers-reduced-motion:reduce) { .sch-checkmate { transition:none; } }
@@ -617,6 +623,8 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     bewaarInstellingen()
   })
   const cameraLayoutToggle = menu.querySelector('#sch-cameras-at-top')
+  // v265: tegen een vriend staan de webcams nu als rondjes bovenin (chat.html); deze keuze geldt alleen nog in de schaaktest
+  if (!testMode) cameraLayoutToggle.closest('label').hidden = true
   cameraLayoutToggle.checked = instellingen.camerasAtTop
   cameraLayoutToggle.addEventListener('change', () => {
     instellingen.camerasAtTop = cameraLayoutToggle.checked
@@ -1175,6 +1183,57 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   }
   for (const event of ['pointerup','pointercancel','lostpointercapture']) bordEl.addEventListener(event, los)
 
+  // v265: vonkjes die uit het midden van een vakje spatten en een rode schokgolf (schaakmat)
+  function vonken(vak, aantal = 10, vertraging = 0) {
+    const r = vak.getBoundingClientRect(), cx = r.x + r.width / 2, cy = r.y + r.height / 2
+    const klaar = []
+    for (let i = 0; i < aantal; i++) {
+      const v = document.createElement('div')
+      v.className = 'sch-vonk'
+      v.style.left = cx + 'px'; v.style.top = cy + 'px'
+      document.body.appendChild(v)
+      const hoek = (i / aantal) * Math.PI * 2 + Math.random() * 0.5, afstand = r.width * (0.55 + Math.random() * 0.55)
+      const a = v.animate([
+        { transform:'translate(0,0) scale(1)', opacity:1 },
+        { transform:`translate(${Math.cos(hoek) * afstand}px,${Math.sin(hoek) * afstand}px) scale(.2)`, opacity:0 }
+      ], { duration:520 + Math.random() * 200, delay:vertraging, easing:'cubic-bezier(.2,.7,.3,1)', fill:'both' })
+      klaar.push(a.finished.catch(() => {}).finally(() => v.remove()))
+    }
+    return Promise.all(klaar)
+  }
+  function schokgolf(vak) {
+    const r = vak.getBoundingClientRect(), g = document.createElement('div')
+    g.className = 'sch-schokgolf'
+    g.style.left = r.x + 'px'; g.style.top = r.y + 'px'; g.style.width = r.width + 'px'; g.style.height = r.height + 'px'
+    document.body.appendChild(g)
+    g.animate([{ transform:'scale(.4)', opacity:1 }, { transform:'scale(4.2)', opacity:0 }], { duration:900, easing:'cubic-bezier(.15,.6,.3,1)' })
+      .finished.catch(() => {}).finally(() => g.remove())
+  }
+  // Schaakmat: de koning schudt, valt om en kleurt rood; daarna pas het woord SCHAAKMAT
+  function animeerSchaakmat(kleur) {
+    const vak = bordEl.querySelector('.sch-koning-mat')
+    const stuk = vak?.querySelector('.sch-stuk')
+    if (!stuk?.animate || minderBeweging.matches) return 0
+    stuk.animate([
+      { transform:'rotate(0) translate(0,0) scale(1)', filter:'none', offset:0 },
+      { transform:'rotate(-9deg) scale(1.08)', offset:.12 },
+      { transform:'rotate(9deg) scale(1.08)', offset:.24 },
+      { transform:'rotate(-7deg) scale(1.08)', offset:.36 },
+      { transform:'rotate(5deg) scale(1.05)', offset:.48 },
+      { transform:'rotate(-14deg) translate(0,-8%) scale(1.04)', offset:.6 },
+      { transform:'rotate(98deg) translate(16%,-6%) scale(.92)', offset:.88 },
+      { transform:'rotate(90deg) translate(14%,-6%) scale(.92)', offset:1 }
+    ], { duration:1300, easing:'ease-in-out' })
+    setTimeout(() => { if (vak.isConnected) { schokgolf(vak); vonken(vak, 16) } }, 1130)
+    return 1250
+  }
+
+  // v265: wie een stuk kwijtraakt, krijgt (net als bij dammen) even een rode rand om zijn webcamrondje (chat.html)
+  function meldGeslagen(effect) {
+    if (!effect || !isVriendPartij) return
+    try { window.dispatchEvent(new CustomEvent('fibro-spel-geslagen', { detail:{ wie:effect.outcome === 'loss' ? 'ik' : 'vriend', aantal:1 } })) } catch (e) {}
+  }
+
   async function animeerZet(zet) {
     bezig = true
     if (isUltra) {
@@ -1219,6 +1278,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
   function kolVolgorde() { return omgedraaid ? [7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7] }
 
   function tekenBord() {
+    const matKleur = gameOver && Schaak.isSchaakmat(staat, staat.aanZet) ? staat.aanZet : null // v265: de koning ligt
     toonUltraEvaluatie()
     tekenVeroverd()
     bordEl.innerHTML = ''
@@ -1263,6 +1323,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         vakje.dataset.k = k
 
         const stuk = staat.bord[r][k]
+        if (stuk && matKleur && stuk === matKleur + 'K') vakje.classList.add('sch-koning-mat')
         if (stuk) {
           const figuur = document.createElement('span')
           figuur.className = 'sch-stuk'
@@ -1386,6 +1447,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
 
     if (!await animeerZet(zet)) return
     const slagEffect = schaakSlagEffect(staat, zet, mijnKleur)
+    meldGeslagen(slagEffect)
     bewaarUltraMoment()
     registreerSlag(staat, zet, veroverd)
     voegUltraZetToe(zet, promotieStuk)
@@ -1425,11 +1487,12 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
 
   function naBeurtControle(slagEffect = null) {
     const volgendeKleur = staat.aanZet; Bordgeluid.schaak(Schaak, staat, laatsteZet, mijnKleur, instellingen.soundTheme, instellingen[isUltra ? 'ultraGradedCaptureSounds' : 'gradedCaptureSounds'] ? slagEffect : null)
+    let mat = false
     if (Schaak.isSchaakmat(staat, volgendeKleur)) {
       gameOver = true
+      mat = true
       statusBericht = null
       statusEl.textContent = ''
-      toonCheckmateOverlay()
       opnieuwBtn.style.display = 'block'
     } else if (Schaak.isPat(staat, volgendeKleur)) {
       gameOver = true
@@ -1441,6 +1504,12 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       toonStatus(volgendeKleur === mijnKleur ? 'Jij bent aan zet' : 'Wachten op {naam}…', { naam:tegenstanderNaam() })
     }
     tekenBord()
+    if (mat) { // v265: eerst valt de koning om, dan SCHAAKMAT
+      const wacht = animeerSchaakmat(volgendeKleur)
+      checkmateTimers.forEach(clearTimeout)
+      if (wacht) checkmateTimers = [setTimeout(toonCheckmateOverlay, wacht)]
+      else toonCheckmateOverlay()
+    }
   }
 
   function verstuurZet(zet, promotieStuk) {
@@ -1460,6 +1529,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       if (!geldig || !await animeerZet(geldig)) return
       if (isUltra && replyGeneration !== undefined && replyGeneration !== ultraGeneration) return
       const slagEffect = schaakSlagEffect(staat, geldig, mijnKleur)
+      meldGeslagen(slagEffect)
       bewaarUltraMoment()
       registreerSlag(staat, geldig, veroverd)
       const promotie = ['Q','R','B','N'].includes(promotieStuk) ? promotieStuk : 'Q'

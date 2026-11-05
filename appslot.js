@@ -1,4 +1,4 @@
-// appslot.js (v266, 5 nov 2026): Fibro op slot met Face ID, vingerafdruk of een pincode.
+// appslot.js (v266, 5 nov 2026; v3: de app heet Stekky): Stekky op slot met Face ID, vingerafdruk of een pincode.
 //
 // In gewone woorden: zet je het aan (☰ > Instellingen > 🔒 App-slot), dan vraagt Fibro om je gezicht, vingerafdruk of
 // pincode als je een tijdje weg was. Er zijn altijd twee manieren om te ontgrendelen: je pincode én Face ID of je
@@ -70,8 +70,8 @@
   function vanB64url(t) { t = String(t).replace(/-/g, '+').replace(/_/g, '/'); while (t.length % 4) t += '='; return vanB64(t) }
   function maakBiometrie() {
     return navigator.credentials.create({ publicKey: {
-      rp: { name: 'Fibro' },
-      user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'Fibro-slot', displayName: T('Fibro (app-slot)') },
+      rp: { name: 'Stekky' },
+      user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'Stekky-slot', displayName: T('Stekky (app-slot)') },
       challenge: crypto.getRandomValues(new Uint8Array(32)),
       pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
       authenticatorSelection: { authenticatorAttachment: 'platform', residentKey: 'discouraged', userVerification: 'required' },
@@ -153,7 +153,7 @@
       '<div class="fs-fout" role="alert"></div>' +
       '<button type="button" class="fs-hoofd fs-ok"></button>' +
       '<button type="button" class="fs-licht fs-vergeten"></button>'
-    overlay.querySelector('h1').textContent = T('Fibro is op slot')
+    overlay.querySelector('h1').textContent = T('Stekky is op slot')
     overlay.querySelector('.fs-uitleg').textContent = inst.cred ? T('Ontgrendel met Face ID of je vingerafdruk, of met je pincode.') : T('Typ je pincode.')
     var bio = overlay.querySelector('.fs-bio'), pin = overlay.querySelector('.fs-pin'), fout = overlay.querySelector('.fs-fout')
     var ok = overlay.querySelector('.fs-ok'), vergeten = overlay.querySelector('.fs-vergeten')
@@ -238,7 +238,7 @@
       '<div class="fs-rij"><button type="button" class="fs-annuleer"></button><button type="button" class="fs-bewaar" aria-pressed="true"></button></div></div>'
     var q = function (s) { return d.querySelector(s) }
     q('#fsTitel').textContent = T('🔒 App-slot')
-    q('.fs-p1').textContent = T('Fibro vraagt om Face ID, je vingerafdruk of een pincode als je een tijdje weg was. Meldingen komen gewoon binnen en bellen gaat altijd direct door.')
+    q('.fs-p1').textContent = T('Stekky vraagt om Face ID, je vingerafdruk of een pincode als je een tijdje weg was. Meldingen komen gewoon binnen en bellen gaat altijd direct door.')
     q('.fs-p2').textContent = T('Kies een pincode van 4 tot 6 cijfers (twee keer).')
     q('.fs-pin1').placeholder = T('Pincode'); q('.fs-pin2').placeholder = T('Nog een keer')
     q('.fs-pin1').setAttribute('aria-label', T('Pincode')); q('.fs-pin2').setAttribute('aria-label', T('Pincode nog een keer'))
@@ -262,7 +262,7 @@
       bioUitleg.hidden = keuze < 0 || kan === null
       bioUitleg.textContent = cred ? T('✅ Ontgrendelen kan met je pincode en met Face ID of je vingerafdruk.')
         : kan ? T('Na Bewaren vraagt je telefoon om Face ID of je vingerafdruk. Daarna kun je ontgrendelen met allebei: je pincode en Face ID of je vingerafdruk.')
-        : T('Dit toestel heeft geen Face ID of vingerafdruk voor Fibro. Je ontgrendelt dan alleen met je pincode.')
+        : T('Dit toestel heeft geen Face ID of vingerafdruk voor Stekky. Je ontgrendelt dan alleen met je pincode.')
     }
     teken()
     function weg() { d.remove() }

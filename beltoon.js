@@ -101,7 +101,7 @@
     hallo.textContent = welkom ? vt('Welkom bij') : ''
     hallo.style.cssText = 'font-size:22px;opacity:0.8;' + (welkom ? '' : 'display:none;')
     const logo = document.createElement('div')
-    logo.textContent = welkom ? 'Fibro 👋' : 'Fibro'
+    logo.textContent = welkom ? 'Stekky 👋' : 'Stekky'
     logo.style.cssText = 'font-size:52px;font-weight:700;background:linear-gradient(135deg,#c084fc,#f0abfc);' +
       '-webkit-background-clip:text;background-clip:text;color:transparent;'
     const tik = document.createElement('div')

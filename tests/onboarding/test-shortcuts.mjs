@@ -13,14 +13,14 @@ assert.equal(entries.length, 8)
 assert.ok(entries.every(entry => entry.data instanceof Uint8Array))
 assert.match(text('Home.url'), /URL=https:\/\/example\.com\/Fibro\/index\.html\r\n/u)
 assert.match(text('Key recovery.url'), /URL=https:\/\/example\.com\/Fibro\/login\.html#herstellen\r\n/u)
-for (const entry of entries.filter(entry => !['Fibro.ico', 'Fibro.png'].includes(entry.name))) {
+for (const entry of entries.filter(entry => !['Stekky.ico', 'Stekky.png'].includes(entry.name))) {
   assert.doesNotMatch(decoder.decode(entry.data), /private-user-id|secret-key|access_token|[?]vriend=/u)
 }
-assert.match(text('Fibro.html'), /data:image\/png;base64,/u)
-assert.match(text('Fibro.html'), /no private key, recovery code or login credentials/u)
+assert.match(text('Stekky.html'), /data:image\/png;base64,/u)
+assert.match(text('Stekky.html'), /no private key, recovery code or login credentials/u)
 assert.match(text('README.txt'), /do not bypass login/u)
-assert.deepEqual(entries.find(entry => entry.name === 'Fibro.png').data, icon)
-const ico = entries.find(entry => entry.name === 'Fibro.ico').data
+assert.deepEqual(entries.find(entry => entry.name === 'Stekky.png').data, icon)
+const ico = entries.find(entry => entry.name === 'Stekky.ico').data
 const icoHeader = new DataView(ico.buffer)
 assert.equal(icoHeader.getUint16(0, true), 0)
 assert.equal(icoHeader.getUint16(2, true), 1)
@@ -52,7 +52,7 @@ for (const [baseUrl, expected] of [
 }
 const escaped = await maakSnelkoppelingen({ baseUrl: 'https://example.com/A&B/', iconPng: icon })
 assert.ok(decoder.decode(escaped.find(entry => entry.name === 'Home.webloc').data).includes('A&amp;B'))
-assert.ok(decoder.decode(escaped.find(entry => entry.name === 'Fibro.html').data).includes('href="https://example.com/A&amp;B/index.html"'))
+assert.ok(decoder.decode(escaped.find(entry => entry.name === 'Stekky.html').data).includes('href="https://example.com/A&amp;B/index.html"'))
 await assert.rejects(maakSnelkoppelingen({ baseUrl: 'https://example.com/', iconPng: new Uint8Array(50) }), TypeError)
 
 for (const name of ['../bad', '/bad', 'a/../../bad', 'a\\bad', 'C:bad', 'a/./b', 'a\nb', 'bad.']) {
@@ -63,7 +63,7 @@ assert.throws(() => maakZip(entries, '../bad'), TypeError)
 
 // --zip-base64 lets an independent reader (for example Python zipfile) inspect
 // the actual archive without requiring child processes or temporary files.
-const archive = maakZip([...entries, { name: 'Café.txt', data: new TextEncoder().encode('☕ Fibro') }])
+const archive = maakZip([...entries, { name: 'Café.txt', data: new TextEncoder().encode('☕ Stekky') }])
 const zipHeader = new DataView(archive.buffer)
 assert.equal(zipHeader.getUint32(0, true), 0x04034b50)
 assert.equal(zipHeader.getUint32(archive.length - 22, true), 0x06054b50)
@@ -104,7 +104,7 @@ function fakeDirectory(name, { existing = new Map(), writeError = null, closeErr
   }
 }
 
-function fakeParent({ occupied = new Map(), target = fakeDirectory('Fibro'), lookupError = null,
+function fakeParent({ occupied = new Map(), target = fakeDirectory('Stekky'), lookupError = null,
   createError = null } = {}) {
   const calls = []
   return {
@@ -130,14 +130,14 @@ const smallEntries = [
   { name:'Key recovery.url', data:new TextEncoder().encode('recovery') }
 ]
 {
-  const first = fakeDirectory('Fibro'), third = fakeDirectory('Fibro 3')
+  const first = fakeDirectory('Stekky'), third = fakeDirectory('Stekky 3')
   const parent = fakeParent({ occupied:new Map([
-    ['Fibro', first], ['Fibro 2', { kind:'file' }], ['Fibro 3', third]
+    ['Stekky', first], ['Stekky 2', { kind:'file' }], ['Stekky 3', third]
   ]) })
-  assert.deepEqual(await schrijfSnelkoppelingMap(parent, smallEntries), { name:'Fibro 4', fileCount:2 })
+  assert.deepEqual(await schrijfSnelkoppelingMap(parent, smallEntries), { name:'Stekky 4', fileCount:2 })
   assert.equal(first.calls.getFile.length, 0, 'existing directories are never entered or overwritten')
   assert.equal(third.calls.getFile.length, 0)
-  assert.deepEqual(parent.calls.filter(call => call.create), [{ name:'Fibro 4', create:true }])
+  assert.deepEqual(parent.calls.filter(call => call.create), [{ name:'Stekky 4', create:true }])
   assert.deepEqual(parent.target.calls.written.map(file => file.filename), ['Home.url','Key recovery.url'])
   assert.deepEqual(parent.target.calls.closed, ['Home.url','Key recovery.url'])
   assert.deepEqual(parent.target.calls.aborted, [])
@@ -165,22 +165,22 @@ for (const stage of ['lookupError','createError']) {
   if (stage === 'lookupError') assert(!parent.calls.some(call => call.create), 'a failed lookup is not mistaken for a free name')
 }
 {
-  const occupied = new Map(Array.from({ length:100 }, (_, i) => [i ? `Fibro ${i + 1}` : 'Fibro', { kind:'directory' }]))
+  const occupied = new Map(Array.from({ length:100 }, (_, i) => [i ? `Stekky ${i + 1}` : 'Stekky', { kind:'directory' }]))
   const parent = fakeParent({ occupied })
-  await assert.rejects(schrijfSnelkoppelingMap(parent, smallEntries), /unused Fibro folder/)
+  await assert.rejects(schrijfSnelkoppelingMap(parent, smallEntries), /unused Stekky folder/)
   assert(!parent.calls.some(call => call.create), 'exhausting names never overwrites the last occupied folder')
 }
 {
   let overwritten = false
   const existing = new Map([['Home.url', { kind:'file', createWritable() { overwritten = true } }]])
-  const target = fakeDirectory('Fibro', { existing })
+  const target = fakeDirectory('Stekky', { existing })
   await assert.rejects(schrijfSnelkoppelingMap(fakeParent({ target }), smallEntries), { name:'InvalidModificationError' })
   assert.equal(overwritten, false, 'an unexpected existing file in a returned handle is never truncated')
   assert.deepEqual(target.calls.written, [])
 }
 for (const stage of ['writableError','writeError','closeError']) {
   const failure = fsError('NotAllowedError')
-  const target = fakeDirectory('Fibro', { [stage]:failure, abortError:fsError('AbortError') })
+  const target = fakeDirectory('Stekky', { [stage]:failure, abortError:fsError('AbortError') })
   await assert.rejects(schrijfSnelkoppelingMap(fakeParent({ target }), smallEntries), error => error === failure,
     'the original filesystem failure remains visible even if abort also fails')
   assert.deepEqual(target.calls.aborted, stage === 'writableError' ? [] : ['Home.url'])

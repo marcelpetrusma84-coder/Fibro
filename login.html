@@ -4,22 +4,22 @@
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
   <script src="huisregel.js?v=2"></script>
-<script src="foutmelder.js?v=2"></script>
-  <script src="taal.js?v=72"></script>
-  <script src="apk.js?v=2"></script>
-  <script src="registratie.js?v=1"></script>
+<script src="foutmelder.js?v=3"></script>
+  <script src="taal.js?v=74"></script>
+  <script src="apk.js?v=3"></script>
+  <script src="registratie.js?v=2"></script>
   <script>try { FibroApk.hervatUitnodiging() } catch (e) {} // in de app: een uitnodiging die wacht (apk.js)</script>
-<script>Object.assign(window.FIBRO_EN ||= {}, { 'Verder met setup': 'Continue setup', 'Fibro is vanaf 16 jaar.': 'Fibro is for ages 16 and up.', 'Fibro is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.': "Fibro is for ages 16 and up. If you're younger, you can't create an account yet." })</script>
-<script>Object.assign(window.FIBRO_EN ||= {}, { 'Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Fibro</a>': 'I agree to the <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">{app} house rules</a>' }) // v229: met een link naar de spelregels</script>
+<script>Object.assign(window.FIBRO_EN ||= {}, { 'Verder met setup': 'Continue setup', 'Stekky is vanaf 16 jaar.': 'Stekky is for ages 16 and up.', 'Stekky is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.': "Stekky is for ages 16 and up. If you're younger, you can't create an account yet." })</script>
+<script>Object.assign(window.FIBRO_EN ||= {}, { 'Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Stekky</a>': 'I agree to the <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">{app} house rules</a>' }) // v229: met een link naar de spelregels</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { // v226: bèta en de registratie-schakelaar (registratie.js)
-  '🧪 Fibro is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.': "🧪 Fibro is still in beta: things can go wrong. After signing up, turn on recovery (Face ID, fingerprint or your recovery key). Without recovery you can't read your messages on a new device.",
-  'Nieuwe accounts maak je nu alleen met een uitnodiging. Vraag iemand die al op Fibro zit om een uitnodigingslink.': 'New accounts can only be created with an invitation right now. Ask someone who is already on Fibro for an invitation link.',
+  '🧪 Stekky is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.': "🧪 Stekky is still in beta: things can go wrong. After signing up, turn on recovery (Face ID, fingerprint or your recovery key). Without recovery you can't read your messages on a new device.",
+  'Nieuwe accounts maak je nu alleen met een uitnodiging. Vraag iemand die al op Stekky zit om een uitnodigingslink.': 'New accounts can only be created with an invitation right now. Ask someone who is already on Stekky for an invitation link.',
   'Er kunnen op dit moment geen nieuwe accounts gemaakt worden. Probeer het later nog eens.': "New accounts can't be created at the moment. Please try again later.",
   'Account aanmaken lukt nu niet. Probeer het later nog eens.': "Creating an account doesn't work right now. Please try again later.",
   'Deze uitnodiging is verlopen of al gebruikt. Vraag om een nieuwe uitnodigingslink.': 'This invitation has expired or was already used. Ask for a new invitation link.'
 })</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title data-t>Fibro — Inloggen</title>
+  <title data-t>Stekky — Inloggen</title>
   <style>
     @import url('lettertypen/basis.css?v=1');
     :root { --bg:#1a0a2e; --surface:#161618; --border:#2a2a2e; --accent:#c084fc; --accent-dim:#f0abfc; --text:#f3e8ff; --text-muted:#666660; --danger:#ff5c5c; --radius:12px; }
@@ -75,7 +75,7 @@
 
 <div class="container">
   <div class="logo">
-    <h1>Fi<span>b</span>ro</h1>
+    <h1>Stek<span>k</span>y</h1>
     <p data-t>Jouw persoonlijke ruimte</p>
   </div>
 
@@ -110,7 +110,7 @@
       <div style="text-align:center;margin-top:12px;">
         <a href="#" id="vergeten-link" onclick="document.getElementById('vergeten-uitleg').style.display='block';this.style.display='none';return false" style="font-size:13px;color:var(--text-muted);" data-t>Wachtwoord vergeten?</a>
         <div id="vergeten-uitleg" style="display:none;font-size:13px;color:var(--text-muted);line-height:1.5;">
-          <span data-t>Vraag de beheerder van Fibro om een tijdelijk wachtwoord. Daarmee log je in en kies je zelf een nieuw. Je berichten blijven gewoon.</span>
+          <span data-t>Vraag de beheerder van Stekky om een tijdelijk wachtwoord. Daarmee log je in en kies je zelf een nieuw. Je berichten blijven gewoon.</span>
           <a href="over.html" style="color:var(--accent);" data-t>Contact</a>
         </div>
       </div>
@@ -139,12 +139,12 @@
            beginscherm heeft eigen opslag, dus anders moet je daar opnieuw inloggen en je sleutel terugzetten (beginscherm.js) -->
       <div id="reg-beginscherm" hidden style="margin-bottom:16px;padding:14px;border-radius:12px;border:1px solid rgba(192,132,252,0.5);background:rgba(192,132,252,0.1);">
         <div id="reg-beginscherm-titel" style="font-size:15px;font-weight:700;margin-bottom:6px;" data-t>📲 Gebruik je een iPhone?</div>
-        <div style="font-size:13.5px;line-height:1.5;margin-bottom:12px;" data-t>Zet Fibro eerst op je beginscherm en maak daar je account aan. Dan krijg je meldingen, en hoef je later niet opnieuw in te loggen.</div>
+        <div style="font-size:13.5px;line-height:1.5;margin-bottom:12px;" data-t>Zet Stekky eerst op je beginscherm en maak daar je account aan. Dan krijg je meldingen, en hoef je later niet opnieuw in te loggen.</div>
         <button type="button" class="btn btn-primary" id="reg-beginscherm-hoe" style="margin-bottom:6px;" data-t>Laat zien hoe</button>
         <button type="button" id="reg-beginscherm-toch" style="display:block;width:100%;background:none;border:none;color:var(--text);opacity:0.75;font-size:13px;text-decoration:underline;cursor:pointer;padding:8px;font-family:inherit;" data-t>Toch hier verdergaan</button>
       </div>
       <div id="reg-form">
-        <div class="beta-info" data-t>🧪 Fibro is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.</div>
+        <div class="beta-info" data-t>🧪 Stekky is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.</div>
         <div class="field">
           <label data-t>Gebruikersnaam</label>
           <!-- v266: een duidelijke knop met tekst onder de naam, in plaats van de dobbelsteen ernaast -->
@@ -159,12 +159,12 @@
         <div class="field">
           <label data-t>Geboortejaar</label>
           <input type="number" id="reg-jaar" placeholder="bijv. 2005" data-t-attr="placeholder" min="1900" max="2010" />
-          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;" data-t>Fibro is vanaf 16 jaar.</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;" data-t>Stekky is vanaf 16 jaar.</div>
         </div>
         <div class="field" style="display:flex;align-items:flex-start;gap:10px;margin-top:4px;">
           <input type="checkbox" id="reg-akkoord" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;" />
           <label for="reg-akkoord" style="text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;cursor:pointer;" data-t>
-            Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Fibro</a>
+            Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Stekky</a>
           </label>
         </div>
         <button class="btn btn-primary" onclick="registreren()" id="reg-btn" data-t>Account aanmaken</button>
@@ -202,7 +202,7 @@
 <script type="module">
   import { createClient } from './supabase-lib.js?v=1'
   import { genereerKeypair, slaPrivateKeyOp, haalPrivateKeyOp, ontsleutelPrivateKey, normaliseerHerstelSleutel, versleutelPrivateKey, maakHerstelSleutel } from './crypto.js?v=182'
-  import { passkeyStatus, lijstDozen, maakDoos, openDoos, sleutelPastBij } from './passkey-kluis.js?v=2'
+  import { passkeyStatus, lijstDozen, maakDoos, openDoos, sleutelPastBij } from './passkey-kluis.js?v=3'
 
   const supabase = createClient(
     'https://qmgatbphiplrfxrljtbe.supabase.co',
@@ -270,7 +270,7 @@
   function faceIdFoutTekst(e) {
     const c = e && e.code
     if (c === 'geannuleerd') return T('Geannuleerd. Probeer het opnieuw, of kies later.')
-    if (c === 'bestaat-al') return T('Hier bestaat al een Fibro-passkey voor dit account.')
+    if (c === 'bestaat-al') return T('Hier bestaat al een Stekky-passkey voor dit account.')
     if (c === 'geen-prf') return T('Deze browser kan Face ID-herstel niet gebruiken.')
     if (c === 'geen-doos') return T('Er is nog geen Face ID-herstel voor dit account.')
     if (c === 'past-niet') return T('De sleutel in de doos past niet bij je account.')
@@ -554,7 +554,7 @@
     const jaarNum = parseInt(jaar)
     if (jaarNum < 1900 || jaarNum > new Date().getFullYear()) { toonBericht(msg,'error',T('Geldig geboortejaar invullen.')); return }
     // v225: Fibro is vanaf 16 jaar (in Nederland mag je onder de 16 alleen met toestemming van een ouder; zie Over Fibro)
-    if (new Date().getFullYear() - jaarNum < 16) { toonBericht(msg,'error',T('Fibro is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.')); return }
+    if (new Date().getFullYear() - jaarNum < 16) { toonBericht(msg,'error',T('Stekky is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.')); return }
 
     btn.disabled = true
     btn.innerHTML = '<span class="spinner"></span>' + T('🔒 Encryptie voorbereiden...')
@@ -665,7 +665,7 @@ window.herstelMetSleutel = async function() {
         if (profielFout || !profiel?.public_key) throw new Error('profile-key-unavailable')
         publiek = profiel.public_key
       } catch {
-        toonBericht(msg, 'error', T('Fibro kon je accountsleutel niet controleren. Probeer het opnieuw als je internet hebt.'))
+        toonBericht(msg, 'error', T('Stekky kon je accountsleutel niet controleren. Probeer het opnieuw als je internet hebt.'))
         return
       }
       if (!(await sleutelPastBij(priv, publiek))) {
@@ -796,7 +796,7 @@ window.herstelMetSleutel = async function() {
 <script type="module">
 // v248: de kaart 'Gebruik je een iPhone?' bij Registreren, alleen op een iPhone in Safari (niet als app)
 // v249: ook op Android in de browser (niet in de app of de oude APK): 'Gebruik je Android?'. Dit vervangt de APK-download.
-import { iphoneZonderApp, openBeginschermUitleg, toestel } from './beginscherm.js?v=2'
+import { iphoneZonderApp, openBeginschermUitleg, toestel } from './beginscherm.js?v=3'
 const kaart = document.getElementById('reg-beginscherm')
 let weg = false
 try { weg = sessionStorage.getItem('fibro_reg_beginscherm_weg') === '1' } catch (e) {}

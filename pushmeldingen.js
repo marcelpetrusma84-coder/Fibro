@@ -7,7 +7,7 @@
 // kiesOnlineOntvangers): alleen na minstens 30 minuten weg, niet 's nachts, niet als je zelf al online bent, dezelfde
 // vriend hoogstens eens per 3 uur, hoogstens een per 20 minuten en 6 per dag. Een nieuwe vervangt de vorige.
 // De keuzes staan in de database (chat_instellingen.push_uit: wat je uitzette), want de server beslist; hier een kopie.
-import { zetMeldingenAan } from './meldingen-aan.js?v=1'
+import { zetMeldingenAan } from './meldingen-aan.js?v=2'
 
 // Dezelfde soorten als in sql/pushmeldingen.sql en PUSH_GROEP in stuur-push
 export const PUSH_SOORTEN = [
@@ -64,7 +64,7 @@ export function wisselPush(supabase, uid, soort) {
 // Een korte uitleg als aanzetten niet lukte (null = niets te zeggen)
 export function uitlegPush(reden) {
   const T = window.T || (s => s)
-  if (reden === 'geweigerd') return T('Meldingen staan uit voor Fibro op dit toestel. Zet ze eerst aan in de instellingen van je telefoon of browser.')
+  if (reden === 'geweigerd') return T('Meldingen staan uit voor Stekky op dit toestel. Zet ze eerst aan in de instellingen van je telefoon of browser.')
   if (reden === 'niet-mogelijk') return T('Dit toestel of deze browser kan geen meldingen ontvangen.')
   if (reden === 'mislukt' || reden === 'server') return T('Dat lukte niet. Controleer je internet en probeer het nog eens.')
   return null // 'uit' (vraag weggetikt) en 'iphone-zonder-app' (daar opent al de uitleg)

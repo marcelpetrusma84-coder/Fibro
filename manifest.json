@@ -1,6 +1,6 @@
 {
-  "name": "Fibro",
-  "short_name": "Fibro",
+  "name": "Stekky",
+  "short_name": "Stekky",
   "description": "Jouw persoonlijke sociale app",
   "id": "/Fibro/",
   "start_url": "./index.html",
@@ -22,7 +22,7 @@
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

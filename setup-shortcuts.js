@@ -1,48 +1,48 @@
-import { maakSnelkoppelingen, maakZip, schrijfSnelkoppelingMap } from './device-shortcuts.js?v=2'
+import { maakSnelkoppelingen, maakZip, schrijfSnelkoppelingMap } from './device-shortcuts.js?v=3'
 import { laadSnelkoppelingMap, bewaarSnelkoppelingMap } from './shortcut-folder-store.js?v=1'
 
 const EN = {
-  'Fibro-map met 2 snelkoppelingen maken':'Create a Fibro folder with 2 shortcuts',
-  'Home en Sleutelherstel, met het Fibro-icoon.':'Home and Key recovery, with the Fibro icon.',
+  'Stekky-map met 2 snelkoppelingen maken':'Create a Stekky folder with 2 shortcuts',
+  'Home en Sleutelherstel, met het Stekky-icoon.':'Home and Key recovery, with the Stekky icon.',
   'Je profiel en gastenboek':'Your profile and guestbook',
   'Sleutelherstel':'Key recovery',
   'Sleutel op dit apparaat terugzetten':'Restore your key on this device',
   'Map opslaan':'Save folder',
   'ZIP downloaden':'Download ZIP',
   'Op het beginscherm':'On your Home Screen',
-  'Kies waar je de nieuwe Fibro-map wilt opslaan…':'Choose where to save the new Fibro folder…',
-  'Fibro-map maken…':'Creating the Fibro folder…',
+  'Kies waar je de nieuwe Stekky-map wilt opslaan…':'Choose where to save the new Stekky folder…',
+  'Stekky-map maken…':'Creating the Stekky folder…',
   'Map {naam} is gemaakt. Open Home of Key recovery in die map.':'Folder {naam} was created. Open Home or Key recovery in that folder.',
   'Geen map gekozen. Je kunt opnieuw kiezen of de ZIP downloaden.':'No folder selected. Choose again or download the ZIP.',
   'De map kon niet worden afgemaakt. Je kunt de ZIP downloaden.':'The folder could not be completed. You can download the ZIP.',
   'Snelkoppelingen voorbereiden…':'Preparing shortcuts…',
-  'De ZIP is klaargezet voor download. Pak hem uit: daarin staat de Fibro-map met de twee links en het icoon.':'The ZIP is ready to download. Extract it to get the Fibro folder with both links and the icon.',
+  'De ZIP is klaargezet voor download. Pak hem uit: daarin staat de Stekky-map met de twee links en het icoon.':'The ZIP is ready to download. Extract it to get the Stekky folder with both links and the icon.',
   'Downloaden lukte niet. Controleer je verbinding en probeer het opnieuw.':'The download failed. Check your connection and try again.',
   'Op je telefoon voeg je de twee iconen zelf toe en sleep je ze samen in een map.':'On your phone, add the two icons yourself and drag them together into a folder.',
   'Open Home hierboven. Kies in Safari: Deel → Zet op beginscherm → Voeg toe.':'Open Home above. In Safari choose Share → Add to Home Screen → Add.',
   'Open Home hierboven. Kies in Chrome: menu → Snelkoppeling maken of Toevoegen aan startscherm.':'Open Home above. In Chrome choose menu → Create shortcut or Add to Home Screen.',
   'Herhaal dit voor Sleutelherstel als je browser een losse snelkoppeling aanbiedt.':'Repeat for Key recovery if your browser offers a separate shortcut.',
-  'Sleep de twee iconen op elkaar om een Fibro-map te maken.':'Drag the two icons onto each other to create a Fibro folder.',
-  'Biedt je browser alleen App installeren aan? Op ondersteunde apparaten vind je beide links in het snelmenu van het geïnstalleerde Fibro-icoon.':'If your browser only offers Install app, supported devices show both links in the installed Fibro icon’s shortcut menu.',
+  'Sleep de twee iconen op elkaar om een Stekky-map te maken.':'Drag the two icons onto each other to create a Stekky folder.',
+  'Biedt je browser alleen App installeren aan? Op ondersteunde apparaten vind je beide links in het snelmenu van het geïnstalleerde Stekky-icoon.':'If your browser only offers Install app, supported devices show both links in the installed Stekky icon’s shortcut menu.',
   'De ZIP is een map met links. Downloaden installeert geen beginschermiconen.':'The ZIP is a folder of links. Downloading it does not install Home Screen icons.',
   'Deze links bevatten geen privésleutel of inloggegevens.':'These links contain no private key or login credentials.',
-  'Lokale preview: deze snelkoppelingen horen bij dit previewadres. Maak mobiele snelkoppelingen vanuit de live Fibro-app.':'Local preview: these shortcuts use this preview address. Create mobile shortcuts from the live Fibro app.',
+  'Lokale preview: deze snelkoppelingen horen bij dit previewadres. Maak mobiele snelkoppelingen vanuit de live Stekky-app.':'Local preview: these shortcuts use this preview address. Create mobile shortcuts from the live Stekky app.',
   'Adres':'Address',
-  'Je browser laat je een map kiezen; anders kun je de Fibro-map als ZIP downloaden.':'Your browser lets you choose a folder; otherwise you can download the Fibro folder as a ZIP.'
+  'Je browser laat je een map kiezen; anders kun je de Stekky-map als ZIP downloaden.':'Your browser lets you choose a folder; otherwise you can download the Stekky folder as a ZIP.'
 }
 Object.assign(EN, {
-  'Fibro — Setup':'Fibro — Setup',
-  'Maak Fibro klaar op dit apparaat':'Set up Fibro on this device',
+  'Stekky — Setup':'Stekky — Setup',
+  'Maak Stekky klaar op dit apparaat':'Set up Stekky on this device',
   'Je account is klaar. Voeg hieronder de twee handige links toe.':'Your account is ready. Add the two useful links below.',
   'Je kunt dit overslaan en meteen verdergaan.':'You can skip this and continue straight away.',
-  'Open Fibro':'Open Fibro',
+  'Open Stekky':'Open Stekky',
   'Dit setupscherm maakt geen nieuwe sleutel aan.':'This setup screen does not create a new key.',
-  'Standaard: een Fibro-map op je bureaublad.':'Default: a Fibro folder on your desktop.',
+  'Standaard: een Stekky-map op je bureaublad.':'Default: a Stekky folder on your desktop.',
   'Eerdere maptoegang controleren…':'Checking previously allowed folder access…',
   'Map {naam} is gemaakt in {locatie}.':'Folder {naam} was created in {locatie}.',
-  'Rechtstreeks plaatsen kan hier niet. Het Fibro-pakket wordt gedownload.':'Direct placement is unavailable here. Downloading the Fibro package.',
-  'Rechtstreeks plaatsen kon niet worden afgerond. Het Fibro-pakket wordt gedownload.':'Direct placement could not be completed. Downloading the Fibro package.',
-  'Het Fibro-pakket is klaargezet voor download. Pak de Fibro-map uit op je bureaublad. Je browser bepaalt de downloadlocatie.':'The Fibro package is ready to download. Extract the Fibro folder onto your desktop. Your browser controls the download location.',
+  'Rechtstreeks plaatsen kan hier niet. Het Stekky-pakket wordt gedownload.':'Direct placement is unavailable here. Downloading the Stekky package.',
+  'Rechtstreeks plaatsen kon niet worden afgerond. Het Stekky-pakket wordt gedownload.':'Direct placement could not be completed. Downloading the Stekky package.',
+  'Het Stekky-pakket is klaargezet voor download. Pak de Stekky-map uit op je bureaublad. Je browser bepaalt de downloadlocatie.':'The Stekky package is ready to download. Extract the Stekky folder onto your desktop. Your browser controls the download location.',
   'Downloaden lukte niet. Probeer opnieuw of kies een map.':'The download failed. Try again or choose a folder.',
   'Andere mogelijkheid':'Another option',
   'Map kiezen':'Choose a folder',
@@ -74,10 +74,10 @@ export function startSetupSnelkoppelingen({ view = window, page = document, devi
   card.innerHTML = `
     <label class="fibro-shortcuts-label" for="fibro-shortcuts-check">
       <input type="checkbox" id="fibro-shortcuts-check" aria-describedby="fibro-shortcuts-hint">
-      <span><strong data-text="Fibro-map met 2 snelkoppelingen maken"></strong><small id="fibro-shortcuts-hint" data-text="Home en Sleutelherstel, met het Fibro-icoon."></small></span>
+      <span><strong data-text="Stekky-map met 2 snelkoppelingen maken"></strong><small id="fibro-shortcuts-hint" data-text="Home en Sleutelherstel, met het Stekky-icoon."></small></span>
       <img class="fibro-shortcuts-brand" alt="" width="30" height="30">
     </label>
-    <p class="fibro-shortcuts-note" data-text="Standaard: een Fibro-map op je bureaublad." data-desktop></p>
+    <p class="fibro-shortcuts-note" data-text="Standaard: een Stekky-map op je bureaublad." data-desktop></p>
     <div class="fibro-shortcuts-details" hidden>
       <div class="fibro-shortcuts-links">
         <a class="fibro-shortcuts-link" data-link="home" target="_blank" rel="noopener"><img alt="" width="30" height="30"><span>Home<small data-text="Je profiel en gastenboek"></small></span></a>
@@ -92,7 +92,7 @@ export function startSetupSnelkoppelingen({ view = window, page = document, devi
       </div>
       <details class="fibro-shortcuts-steps" data-mobile hidden><summary data-text="Op het beginscherm"></summary><ol></ol></details>
       <p class="fibro-shortcuts-note" data-text="Deze links bevatten geen privésleutel of inloggegevens."></p>
-      <p class="fibro-shortcuts-note" data-local hidden data-text="Lokale preview: deze snelkoppelingen horen bij dit previewadres. Maak mobiele snelkoppelingen vanuit de live Fibro-app."></p>
+      <p class="fibro-shortcuts-note" data-local hidden data-text="Lokale preview: deze snelkoppelingen horen bij dit previewadres. Maak mobiele snelkoppelingen vanuit de live Stekky-app."></p>
     </div>
     <p class="fibro-shortcuts-status" role="status" aria-live="polite"></p>`
   for (const element of card.querySelectorAll('[data-text]')) element.textContent = t(element.dataset.text)
@@ -113,8 +113,8 @@ export function startSetupSnelkoppelingen({ view = window, page = document, devi
   for (const key of [
     ios ? 'Open Home hierboven. Kies in Safari: Deel → Zet op beginscherm → Voeg toe.' : 'Open Home hierboven. Kies in Chrome: menu → Snelkoppeling maken of Toevoegen aan startscherm.',
     'Herhaal dit voor Sleutelherstel als je browser een losse snelkoppeling aanbiedt.',
-    'Sleep de twee iconen op elkaar om een Fibro-map te maken.',
-    'Biedt je browser alleen App installeren aan? Op ondersteunde apparaten vind je beide links in het snelmenu van het geïnstalleerde Fibro-icoon.'
+    'Sleep de twee iconen op elkaar om een Stekky-map te maken.',
+    'Biedt je browser alleen App installeren aan? Op ondersteunde apparaten vind je beide links in het snelmenu van het geïnstalleerde Stekky-icoon.'
   ]) { const item = page.createElement('li'); item.textContent = t(key); steps.querySelector('ol').append(item) }
   let pakket = null, busy = false, destroyed = false
   const listeners = []
@@ -141,10 +141,10 @@ export function startSetupSnelkoppelingen({ view = window, page = document, devi
       if (destroyed) return
       const href = view.URL.createObjectURL(new Blob([maakZip(entries)], { type:'application/zip' }))
       const link = page.createElement('a')
-      link.href = href; link.download = 'Fibro-shortcuts.zip'
+      link.href = href; link.download = 'Stekky-shortcuts.zip'
       page.body.append(link); link.click(); link.remove()
       view.setTimeout(() => view.URL.revokeObjectURL(href), 30000)
-      report(mobile ? 'Op je telefoon: pak de ZIP uit voor de links, of voeg Home en Sleutelherstel toe via je browser.' : 'Het Fibro-pakket is klaargezet voor download. Pak de Fibro-map uit op je bureaublad. Je browser bepaalt de downloadlocatie.', 'success')
+      report(mobile ? 'Op je telefoon: pak de ZIP uit voor de links, of voeg Home en Sleutelherstel toe via je browser.' : 'Het Stekky-pakket is klaargezet voor download. Pak de Stekky-map uit op je bureaublad. Je browser bepaalt de downloadlocatie.', 'success')
     } catch { report('Downloaden lukte niet. Probeer opnieuw of kies een map.', 'error') }
   }
   async function defaultAction() {
@@ -160,7 +160,7 @@ export function startSetupSnelkoppelingen({ view = window, page = document, devi
         if (!mobile && parent?.kind === 'directory' && typeof parent.queryPermission === 'function' && await parent.queryPermission({ mode:'readwrite' }) === 'granted') {
           const entries = await prepare()
           if (destroyed) return
-          report('Fibro-map maken…')
+          report('Stekky-map maken…')
           const result = await schrijfSnelkoppelingMap(parent, entries)
           report('Map {naam} is gemaakt in {locatie}.', 'success', { naam:result.name, locatie:parent.name })
           return
@@ -168,7 +168,7 @@ export function startSetupSnelkoppelingen({ view = window, page = document, devi
       } catch { savedWriteFailed = true }
       if (destroyed) return
       showFallback()
-      report(savedWriteFailed ? 'Rechtstreeks plaatsen kon niet worden afgerond. Het Fibro-pakket wordt gedownload.' : 'Rechtstreeks plaatsen kan hier niet. Het Fibro-pakket wordt gedownload.')
+      report(savedWriteFailed ? 'Rechtstreeks plaatsen kon niet worden afgerond. Het Stekky-pakket wordt gedownload.' : 'Rechtstreeks plaatsen kan hier niet. Het Stekky-pakket wordt gedownload.')
       await downloadPackage()
     } finally { if (!destroyed) setBusy(false) }
   }
@@ -182,7 +182,7 @@ export function startSetupSnelkoppelingen({ view = window, page = document, devi
       if (destroyed) return
       const entries = await prepare()
       if (destroyed) return
-      report('Fibro-map maken…')
+      report('Stekky-map maken…')
       const result = await schrijfSnelkoppelingMap(parent, entries)
       rememberedDirectory = Promise.resolve(parent)
       // Remember only a handle that was successfully used; never store keys or paths.

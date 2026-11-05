@@ -50,10 +50,10 @@ function toonTip() {
     'border:1px solid rgba(255,255,255,0.18);border-radius:14px;padding:14px 16px;' +
     'box-shadow:0 8px 30px rgba(0,0,0,0.5);font:15px/1.45 system-ui,-apple-system,sans-serif'
   d.innerHTML =
-    '<div style="font-weight:700;font-size:16px;margin-bottom:6px">' + T('\u{1F4F1} Zet Fibro op je beginscherm') + '</div>' +
-    '<div style="margin-bottom:8px">' + T('In een gewoon browsertabblad kan je iPhone de gegevens van Fibro wissen als je een week niet kijkt. Dan moet je je sleutel opnieuw herstellen.') + '</div>' +
+    '<div style="font-weight:700;font-size:16px;margin-bottom:6px">' + T('\u{1F4F1} Zet Stekky op je beginscherm') + '</div>' +
+    '<div style="margin-bottom:8px">' + T('In een gewoon browsertabblad kan je iPhone de gegevens van Stekky wissen als je een week niet kijkt. Dan moet je je sleutel opnieuw herstellen.') + '</div>' +
     '<div style="margin-bottom:8px">' + T('<b>Zo doe je het:</b> tik op de deelknop (vierkantje met pijl omhoog; bij nieuwere iPhones eerst op <b>\u2022\u2022\u2022</b>) en kies <b>Zet op beginscherm</b>.') + '</div>' +
-    '<div style="margin-bottom:12px;opacity:0.85">' + T('Open Fibro daarna via het nieuwe icoon. Dat heeft eigen opslag: log daar opnieuw in en herstel je sleutel met Face ID (of je herstelcode).') + '</div>' +
+    '<div style="margin-bottom:12px;opacity:0.85">' + T('Open Stekky daarna via het nieuwe icoon. Dat heeft eigen opslag: log daar opnieuw in en herstel je sleutel met Face ID (of je herstelcode).') + '</div>' +
     '<div style="text-align:right"><button type="button" id="opslagTipOk" style="min-height:44px;padding:0 22px;' +
     'border-radius:10px;border:0;background:#22c55e;color:#06210f;font-weight:700;font-size:15px">' + T('Begrepen') + '</button></div>'
   document.body.appendChild(d)

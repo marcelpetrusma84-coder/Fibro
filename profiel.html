@@ -568,11 +568,12 @@ import { initSync } from './sync.js?v=254'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=149'
 import { startStickermaker } from './stickermaker.js?v=243'
 import { tekenFibroVellen, stickerWidgetDef } from './stickerwidget.js?v=236'
+import { STANDAARD_SCHAKELAARS, beginSchakelaars } from './standaardwidgets.js?v=1' // v267: dezelfde standaard als Home
 import { maakStickerkeuze } from './stickerkeuze.js?v=236' // v171: een sticker als mood
 import { leesMood, tekenMoodSticker } from './moodsticker.js?v=236'
 import { maakWidgetWijzigingsBewaking } from './profile-unsaved.js?v=2'
 
-var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=['gastenboek','mood','muziek']
+var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=[...STANDAARD_SCHAKELAARS]
 const widgetBewaking = maakWidgetWijzigingsBewaking({ getWidgets: () => actieveWidgets })
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
 // v173: de oude emoji-stickers (Natuur & Planten, Sfeer & Magie, Muziek & Kunst, Dieren, 'Actieve stickers') en de
@@ -933,7 +934,7 @@ async function init(){
     toonAchtergrondKeuze(lokaal.bgKleur||profiel?.achtergrond_kleur,true) // v204: ook een gradient of wallpaper
     if(lokaal.animatie){huidigeAnimatie=lokaal.animatie;updateAnimatieUI()}
     if(lokaal.lettertype){huidigLettertype=lokaal.lettertype;document.body.style.fontFamily=lokaal.lettertype;localStorage.setItem('fibro_lettertype',lokaal.lettertype)}
-    actieveWidgets=widgetBewaking.initialize(Array.isArray(lokaal.widgets)?lokaal.widgets.filter(w=>w!=='stickerboard'):['gastenboek','mood','muziek']) // v173: Sticker board is weg
+    actieveWidgets=widgetBewaking.initialize(Array.isArray(lokaal.widgets)?lokaal.widgets.filter(w=>w!=='stickerboard'):beginSchakelaars(localStorage,userId)) // v173: Sticker board is weg
     widgetBewaking.changed()
     const bestaandeWallpaper=await laadFotoUitDB('bg_wallpaper_'+userId)
     // v138: een grote PNG-achtergrond (van een iPhone) op de achtergrond kleiner maken
@@ -945,7 +946,7 @@ async function init(){
     onFotoOntvangen: (vriendId, blob, meta) => console.log('📷 Foto ontvangen van', vriendId),
     onStatus: (vriendId, status) => console.log('P2P status:', vriendId, status)
   })
-  if(!widgetBewaking.initialized){actieveWidgets=widgetBewaking.initialize(['gastenboek','mood','muziek']);widgetBewaking.changed()}
+  if(!widgetBewaking.initialized){actieveWidgets=widgetBewaking.initialize(beginSchakelaars(localStorage,huidigeUser?.id));widgetBewaking.changed()}
   bouwFontGrid();bouwAvatarPicker();updateWidgetToggles();toonHuidigeMuziek()
   startStickermaker(document.getElementById('eigenStickers'), huidigeUser.id, stickerWidgets) // v154: Stickerlab (eigen stickers)
   tekenFibroVellen(document.getElementById('fibroStickers'), stickerWidgets) // v157: stickervel 1 enz., met knopje voor Home

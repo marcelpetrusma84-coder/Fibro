@@ -317,6 +317,7 @@ import { pasBlokstijlToe } from './blokstijl.js?v=95'
 import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=95'
 import { startHeartbeat } from './heartbeat.js?v=117'
 import { meldToestel } from './toestel.js?v=1'
+import { zetStandaardWidgets } from './standaardwidgets.js?v=1' // v267: nieuw account = meteen widgets op Home
 import * as GB from './gastenboekstijl.js?v=2'
 import { spelIcoonHtml } from './spelicoon.js?v=3' // 30 okt 2026: plaatjes uit de spellen
 import { initSync, lokaleVriendNaam } from './sync.js?v=254'
@@ -2700,6 +2701,9 @@ async function init() {
 // START
 // ════════════════════════════════
 init().then(() => {
+  // v267: een nieuw account krijgt bij de eerste start Mood, foto's, Four in a Row, een sticker en het gastenboek
+  // (standaardwidgets.js). Wie al een indeling heeft (of alles uitzette) houdt die.
+  try { if (zetStandaardWidgets(localStorage, _widgetUid())) console.log('[widgets] standaard-widgets klaargezet') } catch (e) {}
   // HOME WIDGETS
   const homeLayout = laadLayout('home')
   const homeActief = homeLayout.filter(w => w.aan)

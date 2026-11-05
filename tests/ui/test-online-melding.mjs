@@ -22,8 +22,11 @@ const index = lees('index.html')
 assert.match(index, /import \{ onlineMeldingAan, haalOnlineKeuze, wisselOnlineMelding, uitlegOnlineMelding \} from '\.\/online-melding\.js\?v=1'/,
   'gewone import (geen import() bij de tik: anders vraagt de iPhone geen toestemming)')
 assert.match(index, /b\.id = 'menuOnlineMelding'[\s\S]*?role', 'menuitemcheckbox'/, 'schakelaar in het menu')
-assert.ok(index.indexOf("menuOnlineMelding") < index.indexOf("groep(T('Accountinstellingen')"), 'onder Instellingen')
+const kop = index.indexOf("groep(T('Pushmeldingen'), 'menuKopPush')")
+assert.ok(kop > index.indexOf("groep(T('Instellingen')") && kop < index.indexOf("menuOnlineMelding"), 'eigen kopje Pushmeldingen boven de schakelaar')
+assert.ok(index.indexOf("menuOnlineMelding") < index.indexOf("groep(T('Accountinstellingen')"), 'voor Accountinstellingen')
 const en = lees('taal-en.js')
+assert.match(en, /"Pushmeldingen": "Push notifications"/, 'kopje in het Engels')
 assert.match(en, /"\\u\{1F7E2\} Melding als een vriend online komt": "\\u\{1F7E2\} Notify me when a friend comes online"/, 'Engels')
 
 // 3. online-melding.js met een nep-supabase en nep-toestemming

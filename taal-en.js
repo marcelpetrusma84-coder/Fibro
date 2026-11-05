@@ -61,6 +61,7 @@ window.FIBRO_EN = {
   "Herstelsleutel": "Recovery key",
   "bijv. ChonkyCapibara404": "e.g. ChonkyCapibara404",
   "Je naam verschijnt hier": "Your name appears here",
+  "Pushmeldingen": "Push notifications",
   "\u{1F7E2} Melding als een vriend online komt": "\u{1F7E2} Notify me when a friend comes online",
   "Meldingen staan uit voor Fibro op dit toestel. Zet ze eerst aan in de instellingen van je telefoon of browser.": "Notifications are off for Fibro on this device. Turn them on first in your phone or browser settings.",
   "Dit toestel of deze browser kan geen meldingen ontvangen.": "This device or browser can't receive notifications.",

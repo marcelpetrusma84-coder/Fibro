@@ -19,7 +19,7 @@ const K = 'fibro_widgets_profiel_' + UID
 let ls = opslag('2026-11-05T11:00:00Z')
 assert.equal(zetStandaardWidgets(ls, UID, NU), true)
 const l = JSON.parse(ls.getItem(K))
-assert.deepEqual(l.map(w => w.id), ['mood', 'fotos_2x2', 'spel_vieroprij', 'sticker_f6-05', 'gastenboek'])
+assert.deepEqual(l.map(w => w.id), ['mood', 'fotos_2x2', 'spel_vieroprij', 'sticker_f6-01', 'gastenboek'])
 assert.ok(l.every((w, i) => w.aan === true && w.volgorde === i))
 // nog een keer: verandert niets
 assert.equal(zetStandaardWidgets(ls, UID, NU), false)
@@ -62,7 +62,7 @@ assert.deepEqual(beginSchakelaars(opslag(undefined), UID), STANDAARD_SCHAKELAARS
 
 // 7. aangesloten in index.html (voor Home getekend wordt) en profiel.html
 const index = readFileSync(new URL('../../index.html', import.meta.url), 'utf8')
-assert.match(index, /import \{ zetStandaardWidgets \} from '\.\/standaardwidgets\.js\?v=1'/)
+assert.match(index, /import \{ zetStandaardWidgets \} from '\.\/standaardwidgets\.js\?v=2'/)
 const start = index.indexOf('init().then(() => {')
 assert.ok(index.indexOf('zetStandaardWidgets(localStorage', start) > start && index.indexOf('zetStandaardWidgets(localStorage', start) < index.indexOf("laadLayout('home')", start))
 assert.match(profiel, /beginSchakelaars\(localStorage,userId\)/)

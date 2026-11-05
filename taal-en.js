@@ -115,6 +115,8 @@ window.FIBRO_EN = {
   "🔒 App-slot": "🔒 App lock",
   // v270: je eigen naam bij het registreren (registratie.js, eigennaam.js)
   "bèta": "beta",
+  "Wachtwoord verbergen": "Hide password",
+  "Wachtwoord tonen": "Show password",
   "🔄 Gebruikersnaam-generator": "🔄 Username generator",
   "Je eigen naam": "Your own name",
   "bijv. Sanne de Vries": "e.g. Sam Smith",

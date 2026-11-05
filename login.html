@@ -49,6 +49,31 @@
     .card .spinner { border-color:rgba(255,255,255,0.35); border-top-color:#ffffff; }
     .card .message.error { background:#fdecec; border-color:#f5b5b5; }
     .card .message.success { background:#f3e8ff; border-color:#d9b8f7; }
+    /* v270: mooiere en duidelijkere invoervelden (gewoon lettertype, groter, duidelijke rand als je typt, oogje bij het wachtwoord) */
+    .card { font-family:'DM Sans',system-ui,-apple-system,sans-serif; }
+    .card .tab { font-family:inherit; text-transform:none; letter-spacing:0; font-size:14px; font-weight:600; min-height:40px; }
+    .card label { text-transform:none; letter-spacing:0; font-size:14px; font-weight:600; color:var(--text); margin-bottom:6px; }
+    .card .field { margin-bottom:18px; }
+    .card input[type=text], .card input[type=password], .card input[type=number] { min-height:52px; padding:12px 14px; border:1.5px solid var(--border); border-radius:12px;
+      background:#faf7fd; color:var(--text); font-family:inherit; transition:border-color .15s, box-shadow .15s, background .15s; }
+    .card input:hover { border-color:#cdb6e6; }
+    .card input:focus { border-color:var(--accent); background:#fff; box-shadow:0 0 0 4px rgba(139,63,209,0.15); }
+    .card input::placeholder { color:#b3a5c2; }
+    .card input[readonly] { background:#f3e8ff; border-style:dashed; color:var(--accent); font-weight:700; }
+    .card input.fout { border-color:var(--danger); box-shadow:0 0 0 4px rgba(212,44,44,0.12); }
+    .card input[type=number] { -moz-appearance:textfield; }
+    .card input[type=number]::-webkit-inner-spin-button, .card input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+    .card .btn { font-family:inherit; text-transform:none; letter-spacing:0; font-size:16px; font-weight:700; border-radius:12px; min-height:52px; }
+    .card .naam-knop { border-radius:12px; font-family:inherit; }
+    .card input[type=checkbox] { accent-color:var(--accent); }
+    /* de herstelsleutel: het vaste begin (FIBRO-) en het veld even hoog en in dezelfde stijl */
+    .card span:has(+ #herstelsleutel-input) { display:flex; align-items:center; min-height:52px; border:1.5px solid var(--border) !important; border-right:none !important; border-radius:12px 0 0 12px !important; background:#f3e8ff !important; font-weight:600; }
+    .card #herstelsleutel-input { border-radius:0 12px 12px 0 !important; }
+    .ww-veld { position:relative; }
+    .ww-veld input { padding-right:54px; }
+    .ww-oog { position:absolute; right:4px; top:50%; transform:translateY(-50%); width:44px; height:44px; border:none; border-radius:10px; background:transparent;
+      color:var(--text-muted); font-size:20px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .ww-oog:focus-visible { outline:2px solid var(--accent); }
     .tabs { display:flex; gap:4px; margin-bottom:28px; background:var(--bg); padding:4px; border-radius:8px; }
     .tab { flex:1; padding:8px; border:none; background:transparent; color:var(--text-muted); font-family:'DM Mono',monospace; font-size:12px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; border-radius:6px; transition:all 0.2s; }
     .tab.active { background:var(--surface); color:var(--accent); border:1px solid var(--border); }
@@ -158,7 +183,7 @@
         <!-- v270: je eigen naam (verplicht). Wordt je weergavenaam: alleen op je toestel en bij je vrienden, niet op de server -->
         <div class="field">
           <label for="reg-eigennaam" data-t>Je eigen naam</label>
-          <input type="text" id="reg-eigennaam" placeholder="bijv. Sanne de Vries" data-t-attr="placeholder" autocomplete="name" maxlength="40" />
+          <input type="text" id="reg-eigennaam" placeholder="bijv. Sanne de Vries" data-t-attr="placeholder" autocomplete="name" autocapitalize="words" enterkeyhint="next" maxlength="40" />
         </div>
         <div class="field">
           <label data-t>Gebruikersnaam</label>
@@ -173,7 +198,7 @@
         </div>
         <div class="field">
           <label data-t>Geboortejaar</label>
-          <input type="number" id="reg-jaar" placeholder="bijv. 2005" data-t-attr="placeholder" min="1900" max="2010" />
+          <input type="number" id="reg-jaar" placeholder="bijv. 2005" data-t-attr="placeholder" min="1900" max="2010" inputmode="numeric" enterkeyhint="done" />
           <div style="font-size:11px;color:var(--text-muted);margin-top:4px;" data-t>Stekky is vanaf 16 jaar.</div>
         </div>
         <div class="field" style="display:flex;align-items:flex-start;gap:10px;margin-top:4px;">
@@ -564,7 +589,7 @@
 
     const eigenNaam = FibroRegistratie.schoonEigenNaam(document.getElementById('reg-eigennaam').value) // v270
     const naamFout = FibroRegistratie.eigenNaamFout(eigenNaam)
-    if (naamFout) { toonBericht(msg,'error',T(naamFout)); document.getElementById('reg-eigennaam').focus(); return }
+    if (naamFout) { toonBericht(msg,'error',T(naamFout)); document.getElementById('reg-eigennaam').classList.add('fout'); document.getElementById('reg-eigennaam').focus(); return }
     if (!username || !wachtwoord || !jaar) { toonBericht(msg,'error',T('Vul alle velden in.')); return }
     if (!akkoord) { toonBericht(msg,'error',T('Je moet akkoord gaan met de spelregels.')); return }
     if (wachtwoord.length < 8) { toonBericht(msg,'error',T('Wachtwoord minimaal 8 tekens.')); return }
@@ -641,6 +666,22 @@
       </div>
     `
   }
+
+// v270: een oogje bij elk wachtwoordveld (tonen/verbergen), en een rode rand verdwijnt zodra je weer typt
+;(function () {
+  const t = zin => (typeof T === 'function' ? T(zin) : zin)
+  for (const veld of document.querySelectorAll('.card input[type=password]')) {
+    const doos = document.createElement('div'); doos.className = 'ww-veld'
+    veld.parentNode.insertBefore(doos, veld); doos.append(veld)
+    const oog = document.createElement('button'); oog.type = 'button'; oog.className = 'ww-oog'
+    const zet = zichtbaar => { veld.type = zichtbaar ? 'text' : 'password'; oog.textContent = zichtbaar ? '🙈' : '👁'; oog.setAttribute('aria-label', t(zichtbaar ? 'Wachtwoord verbergen' : 'Wachtwoord tonen')); oog.setAttribute('aria-pressed', String(zichtbaar)) }
+    oog.addEventListener('click', () => { zet(veld.type === 'password'); veld.focus() })
+    zet(false); doos.append(oog)
+  }
+  document.addEventListener('input', e => { if (e.target && e.target.classList) e.target.classList.remove('fout') })
+  const naam = document.getElementById('reg-eigennaam')
+  if (naam) naam.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('reg-wachtwoord')?.focus() } })
+})()
 
 window.formatHerstel = function(el) {
   let v = el.value.toUpperCase().replace(/[^A-Z0-9]/g, '')

@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=2"></script>
-<script src="taal.js?v=70"></script>
+<script src="taal.js?v=71"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -53,6 +53,7 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 /* v191: zonder gekozen vriend staat bovenaan alleen 'Chat', als titel zoals 'Vrienden' op de pagina Vrienden */
 .chat-name.als-titel { font-family:"Playfair Display",serif; font-style:italic; font-size:18px; font-weight:400; color:var(--accent); }
 .chat-status:empty { display:none; }
+#sleutelKnop[hidden] { display:none !important; } #sleutelKnop { display:flex; }
 .lock-btn { font-size:14px; padding:4px 10px; border-radius:20px; border:0.5px solid var(--border); background:none; color:var(--muted); cursor:pointer; font-family:'DM Sans',sans-serif; }
 .screenshot-banner { background:rgba(192,132,252,0.12); border-bottom:0.5px solid rgba(192,132,252,0.25); padding:7px 14px; font-size:14px; color:var(--accent2); display:none; align-items:center; gap:8px; }
 .screenshot-banner.show { display:flex; }
@@ -286,6 +287,7 @@ window.veiligeUrl = function(v){
     <div class="chat-status" id="chatStatus"></div>
   </div>
   <div id="belKnoppen" style="display:none; margin-left:auto; display:flex; gap:8px; flex-shrink:0;">
+    <button id="sleutelKnop" type="button" hidden style="background:rgba(192,132,252,0.12); border:0.5px solid rgba(192,132,252,0.45); border-radius:50%; width:36px; height:36px; font-size:16px; cursor:pointer; align-items:center; justify-content:center; padding:0;">🔐</button><!-- v266: sleutelcontrole.js -->
     <button onclick="if(geselecteerdeVriend)window.location.href='bellen.html?vriend='+geselecteerdeVriend.id+'&naam='+encodeURIComponent(geselecteerdeVriend.naam)" title="Bellen" data-t-attr="title" style="background:rgba(34,197,94,0.15); border:0.5px solid rgba(34,197,94,0.4); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;">📞</button>
     
     <button onclick="toonChatMenu()" title="Meer" data-t-attr="title" style="background:rgba(255,255,255,0.06); border:0.5px solid var(--border); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--muted);">⋯</button>
@@ -450,7 +452,8 @@ window.veiligeUrl = function(v){
   import { speelBuzz } from './buzzgeluid.js?v=1'
   import { houOpen } from './lijntjes.js?v=1'
   import { haalVriendFotos, zetAvatar, geldigeFoto } from './vriendfotos.js?v=2'
-  import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel } from './crypto.js?v=182'
+  import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel, eigenPubliekeSleutel } from './crypto.js?v=182'
+  import { werkKnopBij as werkSleutelKnopBij } from './sleutelcontrole.js?v=1' // v266: sleutel controleren (QR of 60 cijfers)
   import { maakSpelChatCrypto } from './spelchat-crypto.js?v=1'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
   import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, zetMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon, bouwFilterKnop } from './bellen.js?v=162'
@@ -1097,7 +1100,19 @@ window.veiligeUrl = function(v){
   // v182: kwam je via een uitnodigingslink, dan staat hier al de (korte) vingerafdruk uit die link (invite.html):
   // die ging buiten de server om. Klopt hij, dan wordt hij de lange van nu; klopt hij niet, dan meteen de balk.
   const vriendSleutelSleutel = id => 'fibro_vriendsleutel_' + huidigeUser.id + '_' + id
+  // v266: de knop 🔐/✅ "Sleutel controleren" (alleen als ☰ > Instellingen > Sleutels controleren aan staat)
+  let mijnPubVoor = null, mijnPub = null
+  async function werkSleutelKnop() {
+    const knop = document.getElementById('sleutelKnop')
+    if (!knop) return
+    if (!geselecteerdeVriend || !mijnPrivateKey || !huidigeUser) { knop.hidden = true; return }
+    try { if (mijnPubVoor !== mijnPrivateKey) { mijnPub = await eigenPubliekeSleutel(mijnPrivateKey); mijnPubVoor = mijnPrivateKey } } catch (e) { knop.hidden = true; return }
+    const v = geselecteerdeVriend
+    if (!v) return
+    werkSleutelKnopBij(knop, { mijnId: huidigeUser.id, mijnPub, vriendId: v.id, naam: v.naam || '', vriendPub: vriendPublicKey })
+  }
   async function controleerVriendSleutel(vriendId, pub) {
+    werkSleutelKnop() // v266
     const balk = document.getElementById('sleutelBalk')
     if (!balk || !huidigeUser) return
     if (!vriendId || !pub || pub.length <= 10) { balk.style.display = 'none'; return }
@@ -2506,6 +2521,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       vriendPublicKey = null
       werkVerzendknopBij()
       const sb = document.getElementById('sleutelBalk'); if (sb) sb.style.display = 'none' // v181
+      const sk = document.getElementById('sleutelKnop'); if (sk) sk.hidden = true // v266
       document.getElementById('chatScherm').style.display = 'none'
       document.getElementById('vriendenSelectie').style.display = 'block'
       document.getElementById('chatNaam').textContent = T('Chat') // v191: was 'Selecteer een vriend' + 'Kies hieronder met wie je wilt chatten'

@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=2"></script>
-<script src="taal.js?v=70"></script>
+<script src="taal.js?v=71"></script>
 <script src="apk.js?v=2"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2290,6 +2290,29 @@ window.openMenu = function() {
     haalPushKeuzes(supabase, window._uid).then(uit => {
       if (uit && !bezig) for (const id in knoppen) knoppen[id](!uit.includes(id))
     })
+  }
+  // v266: sleutels van vrienden controleren met een QR-code of 60 cijfers (standaard uit; sleutelcontrole.js)
+  {
+    const b = document.createElement('button')
+    b.id = 'menuSleutelcontrole'
+    b.setAttribute('role', 'menuitemcheckbox')
+    b.style.cssText = 'display:block;width:100%;min-height:44px;text-align:left;background:none;border:none;border-radius:10px;color:var(--text);font-size:15px;padding:10px 12px;cursor:pointer;font-family:inherit'
+    const toon = (aan) => {
+      b.textContent = T('\u{1F510} Sleutels controleren') + ': ' + (aan ? T('aan') : T('uit'))
+      b.setAttribute('aria-checked', aan ? 'true' : 'false')
+    }
+    let aan = false
+    try { aan = localStorage.getItem('fibro_sleutelcontrole') === '1' } catch (e) {}
+    toon(aan)
+    b.onclick = () => {
+      aan = !aan
+      try { localStorage.setItem('fibro_sleutelcontrole', aan ? '1' : '0') } catch (e) {}
+      toon(aan)
+      if (aan) alert(T('In elke chat staat nu bovenin \u{1F510}. Tik erop om de sleutel van je vriend te controleren met een QR-code of 60 cijfers. Gecontroleerd = \u2705.'))
+    }
+    // hoort bij Instellingen (onderaan dat groepje)
+    const kop = m.querySelector('#menuKopInstellingen')
+    ;(kop && kop.parentElement ? kop.parentElement : g).appendChild(b)
   }
   g = groep(T('Accountinstellingen'), 'menuKopAccount')
   item(g, T('\u{1F4E6} Mijn gegevens downloaden'), () => openAccount('gegevens'))

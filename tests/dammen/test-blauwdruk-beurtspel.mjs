@@ -9,7 +9,7 @@ assert.ok(lijst, 'BEURTSPELLEN staat in chat.html')
 const BEURTSPELLEN = JSON.parse(lijst[1].replace(/'/g, '"'))
 assert.deepEqual(BEURTSPELLEN, ['botkaaseiren', 'vieroprij', 'schaken', 'dammen'])
 assert.match(chat, /const SPELCHAT_SPELLEN = BEURTSPELLEN/, 'de chatbalk komt uit dezelfde lijst')
-assert.match(chat, /BEURTSPELLEN\.filter\(spel => spel !== 'schaken'\)\.map\(spel => \[spel, 'groot'\]\)/, 'de webcamrondjes komen uit dezelfde lijst')
+assert.match(chat, /BEURTSPELLEN\.map\(spel => \[spel, 'groot'\]\)/, 'de webcamrondjes komen uit dezelfde lijst (v265: schaken ook)')
 assert.match(chat, /window\.addEventListener\('fibro-spel-geslagen', kleurRondjeRood\)/)
 assert.match(chat, /window\.addEventListener\('fibro-dam-geslagen', kleurRondjeRood\)/, 'dammen blijft werken')
 // elk beurtspel kan echt gestart worden

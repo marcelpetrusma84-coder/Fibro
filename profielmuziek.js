@@ -20,7 +20,7 @@
 //
 // Gebruik: speelProfielMuziek({ data: 'data:audio/...', titel: 'Mijn nummer', sleutel: 'eigen' of 'vriend_<id>', vriend })
 
-import './geluidregelaar.js?v=180'
+import './geluidregelaar.js?v=181'
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 const AUTO = 'fibro_muziek_auto', AUTO_VRIENDEN = 'fibro_muziek_auto_vrienden'
 

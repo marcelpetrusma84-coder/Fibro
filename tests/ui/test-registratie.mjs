@@ -47,9 +47,9 @@ assert.equal(R.isGeweigerd(null), false)
 }
 
 // 4. De pagina's: script geladen, bètamelding, uitleg vertaald, uitnodiging mee bij het aanmelden
-const BETA = '🧪 Fibro is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.'
+const BETA = '🧪 Stekky is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.'
 for (const [naam, html] of [['login.html', login], ['invite.html', invite]]) {
-  assert.match(html, /<script src="registratie\.js\?v=1"><\/script>/, naam + ': registratie.js geladen')
+  assert.match(html, /<script src="registratie\.js\?v=2"><\/script>/, naam + ': registratie.js geladen')
   assert.ok(html.includes('data-t>' + BETA + '</div>'), naam + ': bètamelding bij het formulier')
   for (const zin of [BETA, R.TEKST.uitnodiging, R.TEKST.dicht, R.ONBEKEND, R.VERLOPEN]) {
     assert.ok(html.includes("'" + zin + "':"), naam + ': Engelse vertaling van: ' + zin.slice(0, 40))
@@ -70,7 +70,7 @@ assert.match(moderatie, /\$\{mEsc\(van\)\} → \$\{mEsc\(naar\)\}/, 'namen van g
 {
   const deel = moderatie.slice(moderatie.indexOf('// ─── Bèta'), moderatie.indexOf('// ─── Feedback van testers'))
   const zinnen = new Set([...deel.matchAll(/T\('([^']+)'/g)].map(m => m[1]))
-  for (const z of ['Iedereen kan een account maken.', 'Alleen wie een uitnodiging van een Fibro-gebruiker heeft, kan een account maken.', 'Niemand kan een account maken. Inloggen werkt gewoon.', 'Open', 'Alleen met uitnodiging', 'Dicht']) zinnen.add(z)
+  for (const z of ['Iedereen kan een account maken.', 'Alleen wie een uitnodiging van een Stekky-gebruiker heeft, kan een account maken.', 'Niemand kan een account maken. Inloggen werkt gewoon.', 'Open', 'Alleen met uitnodiging', 'Dicht']) zinnen.add(z)
   assert.ok(zinnen.size >= 15, 'teksten gevonden')
   for (const z of zinnen) assert.ok(moderatie.includes("'" + z + "':"), 'moderatie: Engelse vertaling van: ' + z)
 }
@@ -84,8 +84,8 @@ assert.match(moderatie, /\$\{mEsc\(van\)\} → \$\{mEsc\(naar\)\}/, 'namen van g
   for (const id of ['actief24', 'actief7', 'actief30', 'betaActiefPerDag', 'terugDag', 'terugWeek', 'betaLeeftijd']) assert.ok(blok.includes('id="' + id + '"'), id)
   const over = lees('over.html')
   const zin = 'Voor de bèta ziet de moderator alleen totalen'
-  assert.ok(over.includes('<li data-t>' + zin), 'Over Fibro: eerlijk over de bèta-cijfers')
-  assert.ok(over.includes("{ '" + zin), 'Over Fibro: ook in het Engels')
+  assert.ok(over.includes('<li data-t>' + zin), 'Over Stekky: eerlijk over de bèta-cijfers')
+  assert.ok(over.includes("{ '" + zin), 'Over Stekky: ook in het Engels')
   const terug = new Function('T', moderatie.match(/function terugTekst\(t\) \{[\s\S]*?\n\}/)[0] + '; return terugTekst')(
     (k, v) => k.replace(/\{(\w+)\}/g, (_, n) => v[n]))
   assert.equal(terug({ van: 4, terug: 3 }), '3 van 4 (75%)')
@@ -165,7 +165,7 @@ for (const f of ['zet_registratie_stand', 'beta_overzicht']) {
   const tel = sql.slice(sql.indexOf('function public.tel_toestel('), sql.indexOf('$$;', sql.indexOf('function public.tel_toestel(')))
   assert.match(tel, /toon_online = false\) then return/, 'wie helemaal offline staat, telt niet mee')
   assert.match(tel, /where toestel_per_dag\.aantal < \(select count\(\*\) from profiles\)/, 'nooit meer dan het aantal accounts')
-  assert.ok(lees('over.html').includes('op wat voor soort toestel Fibro gebruikt wordt'), 'Over Fibro noemt het toestel')
+  assert.ok(lees('over.html').includes('op wat voor soort toestel Stekky gebruikt wordt'), 'Over Stekky noemt het toestel')
 }
 
 console.log('test-registratie: alles goed')

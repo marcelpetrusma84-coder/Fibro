@@ -55,7 +55,7 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
   const personalList = column(T('Jouw top 10'), T('Jouw beste rondes'), 'personal')
   const friendsList = column(T('Vrienden top 10'), T('Jij en je vrienden'), 'friends')
   const globalPanel = element('section', 'nr-sb-global')
-  const globalLabel = element('h3', '', T('Hoogste score op Fibro'))
+  const globalLabel = element('h3', '', T('Hoogste score op Stekky'))
   const globalScore = element('strong', 'nr-sb-global-score', '—')
   const globalDetail = element('p', 'nr-sb-global-detail')
   globalPanel.append(globalLabel, globalScore, globalDetail)
@@ -124,7 +124,7 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
       else if (boards.global.isSelf) globalDetail.appendChild(element('span', 'nr-sb-record-name', T('Jij')))
       if (boards.global.playedAt) globalDetail.appendChild(dateNode(boards.global.playedAt))
     } else {
-      globalDetail.textContent = online ? T('Nog geen Fibro-record.') : T('Het Fibro-record verschijnt zodra je online lijst beschikbaar is.')
+      globalDetail.textContent = online ? T('Nog geen Stekky-record.') : T('Het Stekky-record verschijnt zodra je online lijst beschikbaar is.')
     }
     status.textContent = online ? T('De tien hoogste scores, met de beste score bovenaan.')
       : boards.status === 'setup' ? T('Jouw scores worden bewaard. De gedeelde scorelijsten worden nog klaargezet.')

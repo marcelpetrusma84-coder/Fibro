@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-<script src="taal.js?v=72"></script>
+<script src="taal.js?v=73"></script>
 <script>
 // v221: woorden van het tabblad Foutmeldingen (alleen gebruikt als Engels gekozen is)
 window.FIBRO_EN = Object.assign(window.FIBRO_EN || {}, {
@@ -22,7 +22,7 @@ window.FIBRO_EN = Object.assign(window.FIBRO_EN || {}, {
   // v226: Bèta (sql/registratie-schakelaar.sql)
   '🧪 Bèta': '🧪 Beta', 'Nieuwe accounts': 'New accounts', 'Open': 'Open', 'Alleen met uitnodiging': 'Invitation only', 'Dicht': 'Closed',
   'Iedereen kan een account maken.': 'Anyone can create an account.',
-  'Alleen wie een uitnodiging van een Fibro-gebruiker heeft, kan een account maken.': 'Only people with an invitation from a Fibro user can create an account.',
+  'Alleen wie een uitnodiging van een Stekky-gebruiker heeft, kan een account maken.': 'Only people with an invitation from a Stekky user can create an account.',
   'Niemand kan een account maken. Inloggen werkt gewoon.': 'Nobody can create an account. Logging in still works.',
   'Gewijzigd: {tijd}': 'Changed: {tijd}', 'Nieuwe accounts: {stand} ✓': 'New accounts: {stand} ✓', 'Omzetten mislukt.': 'Changing failed.',
   'Accounts': 'Accounts', 'Laatste 24 uur': 'Last 24 hours', 'Via uitnodiging': 'Via invitation',
@@ -43,7 +43,7 @@ window.FIBRO_EN = Object.assign(window.FIBRO_EN || {}, {
   'Jonger dan 16: accounts van vóór de leeftijdsgrens, of een verkeerd ingevuld jaar.': 'Under 16: accounts from before the age limit, or a wrongly entered year.',
   // v228: soort toestel
   'Toestellen (laatste 7 dagen)': 'Devices (last 7 days)', 'Android-app': 'Android app', 'Android (browser)': 'Android (browser)', 'iPhone/iPad': 'iPhone/iPad', 'Computer': 'Computer', 'Anders': 'Other',
-  'Per toestel een keer per dag geteld. Gebruik je Fibro op je telefoon én je computer, dan tel je bij allebei.': 'Counted once per day per device. Someone using Fibro on both a phone and a computer counts for both.',
+  'Per toestel een keer per dag geteld. Gebruik je Stekky op je telefoon én je computer, dan tel je bij allebei.': 'Counted once per day per device. Someone using Stekky on both a phone and a computer counts for both.',
   'Gemiddeld per dag: {lijst}': 'Average per day: {lijst}', 'Vandaag: {lijst}': 'Today: {lijst}',
   'Nog geen toestellen geteld. Het tellen begint zodra sql/registratie-schakelaar.sql is uitgevoerd en mensen Home openen.': 'No devices counted yet. Counting starts once sql/registratie-schakelaar.sql has been run and people open Home.',
   // v222: Feedback
@@ -56,7 +56,7 @@ window.FIBRO_EN = Object.assign(window.FIBRO_EN || {}, {
 })
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title data-t>Fibro — Moderatie</title>
+<title data-t>Stekky — Moderatie</title>
 <meta name="theme-color" content="#c084fc">
 <link href="lettertypen/basis.css?v=1" rel="stylesheet">
 <style>
@@ -312,7 +312,7 @@ select.veld option { background:#1a0a2e; }
     <div class="sectie-kop" data-t>Toestellen (laatste 7 dagen)</div>
     <div id="betaToestellen"></div>
     <div class="fout-klein" id="betaToestelInfo" style="margin-top:4px"></div>
-    <div class="fout-klein" style="margin-top:4px" data-t>Per toestel een keer per dag geteld. Gebruik je Fibro op je telefoon én je computer, dan tel je bij allebei.</div>
+    <div class="fout-klein" style="margin-top:4px" data-t>Per toestel een keer per dag geteld. Gebruik je Stekky op je telefoon én je computer, dan tel je bij allebei.</div>
 
     <div class="sectie-kop" data-t>Leeftijd</div>
     <div id="betaLeeftijd"></div>
@@ -612,7 +612,7 @@ window.kiesTab = function(tab) {
 const STAND_NAAM = { open: 'Open', uitnodiging: 'Alleen met uitnodiging', dicht: 'Dicht' }
 const STAND_UITLEG = {
   open: 'Iedereen kan een account maken.',
-  uitnodiging: 'Alleen wie een uitnodiging van een Fibro-gebruiker heeft, kan een account maken.',
+  uitnodiging: 'Alleen wie een uitnodiging van een Stekky-gebruiker heeft, kan een account maken.',
   dicht: 'Niemand kan een account maken. Inloggen werkt gewoon.'
 }
 let betaStand = null

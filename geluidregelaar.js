@@ -158,7 +158,7 @@ function mediaSessie() {
     if (actief && !isMuziek(actief)) return // een video of de beltoon: daar gaat de browser zelf over
     const el = actief
     if (el && typeof MediaMetadata !== 'undefined') {
-      ms.metadata = new MediaMetadata({ title: el.dataset.fibroTitel || 'Fibro', artist: 'Fibro',
+      ms.metadata = new MediaMetadata({ title: el.dataset.fibroTitel || 'Stekky', artist: 'Stekky',
         artwork: [{ src: new URL('icon-192.png', location.href).href, sizes: '192x192', type: 'image/png' }] })
       ms.playbackState = 'playing'
     } else if (laatsteMuziek && geldig(laatsteMuziek)) {

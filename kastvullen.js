@@ -18,7 +18,7 @@ const PAGINAS = ['chat.html', 'vrienden.html', 'index.html', 'profiel.html', 'vr
 const WACHT_UUR = 6
 const STEMPEL = 'fibro_kast_gevuld'
 const MAX_TEKST = 400000 // grotere bestanden (Phaser) niet doorzoeken
-// Verwijzingen zoals './sync.js?v=149', "lettertypen/basis.css?v=1" of '../phaser.min.js?v=1'
+// Verwijzingen zoals './sync.js?v=150', "lettertypen/basis.css?v=1" of '../phaser.min.js?v=1'
 const VERWIJZING = /["'(`]((?:\.{1,2}\/)?[\w\/.-]+\.(?:js|css)\?v=\d+)["')`]/g
 // Lettertypen: alleen de gewone Latijnse set, zoals de browser die meestal nodig heeft
 const LETTER = /url\(\s*['"]?([\w.\/-]*-latin-\d[\w-]*\.woff2)['"]?\s*\)/g

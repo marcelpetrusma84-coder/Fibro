@@ -55,11 +55,11 @@ function base64(data) {
 function icoVanPng(png) {
   const signatuur = [137, 80, 78, 71, 13, 10, 26, 10]
   if (png.length < 45 || !signatuur.every((waarde, i) => png[i] === waarde)) {
-    throw new TypeError('The Fibro icon must be a PNG image.')
+    throw new TypeError('The Stekky icon must be a PNG image.')
   }
   const bron = new DataView(png.buffer, png.byteOffset, png.byteLength)
   if (bron.getUint32(8) !== 13 || bron.getUint32(12) !== 0x49484452 || bron.getUint32(png.length - 8) !== 0x49454e44) {
-    throw new TypeError('The Fibro icon must be a complete PNG image.')
+    throw new TypeError('The Stekky icon must be a complete PNG image.')
   }
   const breedte = bron.getUint32(16), hoogte = bron.getUint32(20)
   if (!breedte || breedte !== hoogte || breedte > 256) {
@@ -88,7 +88,7 @@ function webloc(url) {
 }
 
 function windowsLink(url) {
-  return `[InternetShortcut]\r\nURL=${url}\r\nIconFile=Fibro.ico\r\nIconIndex=0\r\n`
+  return `[InternetShortcut]\r\nURL=${url}\r\nIconFile=Stekky.ico\r\nIconIndex=0\r\n`
 }
 
 /** Build a portable folder. Pass the existing icon-192.png as bytes or a Blob. */
@@ -102,21 +102,21 @@ export async function maakSnelkoppelingen({ baseUrl, iconPng } = {}) {
   const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
-<title>Fibro</title><link rel="icon" href="${afbeelding}">
+<title>Stekky</title><link rel="icon" href="${afbeelding}">
 <style>:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;background:#160b27;color:#f9f4ff;font:1rem/1.6 system-ui,sans-serif;padding:24px}main{width:min(100%,460px)}header{display:flex;align-items:center;gap:16px;margin-bottom:24px}img{width:64px;height:64px;border-radius:16px}h1{font-size:2rem;margin:0}p{color:#d8cce4}a{display:block;color:inherit;text-decoration:none;border:1px solid #70518f;border-radius:18px;padding:18px 20px;margin:12px 0;background:linear-gradient(135deg,#3b2355,#241535)}a:hover,a:focus-visible{border-color:#d4a3ff;outline:2px solid #d4a3ff;outline-offset:3px}strong,small{display:block}small{color:#d8cce4}footer{font-size:.875rem;margin-top:24px}</style></head>
-<body><main><header><img src="${afbeelding}" alt="" width="64" height="64"><h1>Fibro</h1></header>
+<body><main><header><img src="${afbeelding}" alt="" width="64" height="64"><h1>Stekky</h1></header>
 <a href="${escapeMarkup(home)}"><strong>Home</strong><small>Your profile and guestbook</small></a>
 <a href="${escapeMarkup(herstel)}"><strong>Key recovery</strong><small>Open the options to restore your device key</small></a>
 <footer><p>These are ordinary links. Sign in when asked. This folder contains no private key, recovery code or login credentials.</p><p>Keep your recovery code separately in a safe place.</p></footer></main></body></html>\n`
-  const readme = `FIBRO\n\nHome: ${home}\nKey recovery: ${herstel}\n\nWindows: open Home.url or Key recovery.url.\nMac: open Home.webloc or Key recovery.webloc.\nAny device: open Fibro.html, or use either link above in your browser.\n\nKeep all files together. Fibro.png and Fibro.ico are app icons.\nWindows may need you to choose Fibro.ico manually in the shortcut properties.\nA browser cannot automatically set your operating system's folder icon.\n\nThese are ordinary links and may ask you to sign in. They do not bypass login.\nThis folder contains no private key, recovery code, account ID or login credentials.\nKeep your recovery code separately in a safe place. Opening Key recovery does\nnot automatically replace a key; follow the instructions in Fibro.\n\nOn a phone, use your browser's Add to Home Screen or Install App option.\nThe phone's operating system controls app folders and home-screen placement.\n`
+  const readme = `FIBRO\n\nHome: ${home}\nKey recovery: ${herstel}\n\nWindows: open Home.url or Key recovery.url.\nMac: open Home.webloc or Key recovery.webloc.\nAny device: open Stekky.html, or use either link above in your browser.\n\nKeep all files together. Stekky.png and Stekky.ico are app icons.\nWindows may need you to choose Stekky.ico manually in the shortcut properties.\nA browser cannot automatically set your operating system's folder icon.\n\nThese are ordinary links and may ask you to sign in. They do not bypass login.\nThis folder contains no private key, recovery code, account ID or login credentials.\nKeep your recovery code separately in a safe place. Opening Key recovery does\nnot automatically replace a key; follow the instructions in Stekky.\n\nOn a phone, use your browser's Add to Home Screen or Install App option.\nThe phone's operating system controls app folders and home-screen placement.\n`
   return [
     { name: 'Home.url', data: tekstEncoder.encode(windowsLink(home)) },
     { name: 'Key recovery.url', data: tekstEncoder.encode(windowsLink(herstel)) },
     { name: 'Home.webloc', data: tekstEncoder.encode(webloc(home)) },
     { name: 'Key recovery.webloc', data: tekstEncoder.encode(webloc(herstel)) },
-    { name: 'Fibro.html', data: tekstEncoder.encode(html) },
-    { name: 'Fibro.ico', data: ico },
-    { name: 'Fibro.png', data: png },
+    { name: 'Stekky.html', data: tekstEncoder.encode(html) },
+    { name: 'Stekky.ico', data: ico },
+    { name: 'Stekky.png', data: png },
     { name: 'README.txt', data: tekstEncoder.encode(readme) }
   ]
 }
@@ -143,7 +143,7 @@ export async function schrijfSnelkoppelingMap(parent, entries) {
 
   let target, folderName
   for (let number = 1; number <= 100; number++) {
-    const name = number === 1 ? 'Fibro' : `Fibro ${number}`
+    const name = number === 1 ? 'Stekky' : `Stekky ${number}`
     try { await parent.getDirectoryHandle(name) }
     catch (error) {
       if (error.name === 'TypeMismatchError') continue // A file occupies this name.
@@ -153,7 +153,7 @@ export async function schrijfSnelkoppelingMap(parent, entries) {
       break
     }
   }
-  if (!target) throw new Error('No unused Fibro folder name is available.')
+  if (!target) throw new Error('No unused Stekky folder name is available.')
 
   // A directory picker has no exclusive mkdir operation. Refuse existing files
   // in the returned handle too, rather than truncating an unexpected collision.
@@ -194,7 +194,7 @@ function veiligArchiefPad(naam) {
 }
 
 /** Dependency-free ZIP (stored entries, UTF-8 names, CRC-32; no ZIP64). */
-export function maakZip(entries, root = 'Fibro') {
+export function maakZip(entries, root = 'Stekky') {
   if (!Array.isArray(entries) || entries.length > 65535 || !veiligArchiefPad(root) || root.includes('/')) {
     throw new TypeError('Use a safe folder name and at most 65535 files.')
   }

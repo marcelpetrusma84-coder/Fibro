@@ -14,17 +14,17 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-<script src="taal.js?v=72"></script>
+<script src="taal.js?v=73"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title data-t>Fibro — Chat</title>
+<title data-t>Stekky — Chat</title>
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Fibro">
+<meta name="apple-mobile-web-app-title" content="Stekky">
 <meta name="theme-color" content="#c084fc">
 <script>
   try {
@@ -293,7 +293,7 @@ window.veiligeUrl = function(v){
     <button onclick="toonChatMenu()" title="Meer" data-t-attr="title" style="background:rgba(255,255,255,0.06); border:0.5px solid var(--border); border-radius:50%; width:36px; height:36px; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--muted);">⋯</button>
   </div>
 </div>
-<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Fibro – Chat</h1>
+<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Stekky – Chat</h1>
 
 
 <div class="screenshot-banner" id="screenshotBanner" data-t>
@@ -435,7 +435,7 @@ window.veiligeUrl = function(v){
   </div>
 </div>
 
-<script src="beltoon.js?v=8"></script>
+<script src="beltoon.js?v=9"></script>
 <script type="module">
   import { koppelSpelIcoonFallback } from './spelicoon.js?v=3'
   koppelSpelIcoonFallback()
@@ -445,7 +445,7 @@ window.veiligeUrl = function(v){
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { laadWallpaper } from './wallpaper.js?v=95'
   import { supabase } from './supabase.js?v=95'
-  import { initSync, syncMetVriend } from './sync.js?v=254'
+  import { initSync, syncMetVriend } from './sync.js?v=255'
   import { isOnline as vriendIsOnline } from './paren.js?v=2'
   import { startHeartbeat } from './heartbeat.js?v=117'
   import { startMeldingen, buzzRustig } from './meldingen.js?v=188'
@@ -453,7 +453,7 @@ window.veiligeUrl = function(v){
   import { houOpen } from './lijntjes.js?v=1'
   import { haalVriendFotos, zetAvatar, geldigeFoto } from './vriendfotos.js?v=2'
   import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel, eigenPubliekeSleutel } from './crypto.js?v=182'
-  import { werkKnopBij as werkSleutelKnopBij } from './sleutelcontrole.js?v=1' // v266: sleutel controleren (QR of 60 cijfers)
+  import { werkKnopBij as werkSleutelKnopBij } from './sleutelcontrole.js?v=2' // v266: sleutel controleren (QR of 60 cijfers)
   import { maakSpelChatCrypto } from './spelchat-crypto.js?v=1'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
   import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, zetMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon, bouwFilterKnop } from './bellen.js?v=162'
@@ -469,11 +469,11 @@ window.veiligeUrl = function(v){
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { nieuweSpelSessie, isNieuwsteSpelSessie } from './spelsessie.js?v=1'
-  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=10'
-  import { mountChessLayout } from './chess-layout.js?v=10'
+  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=11'
+  import { mountChessLayout } from './chess-layout.js?v=11'
   import { maakSpelVerbinding } from './spelverbinding.js?v=2'
   import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=2'
-  import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=1'
+  import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=2'
   import { leesReactieBericht, tekenReactieKaart, tekenReactieSticker, reactieKort } from './profielreacties.js?v=2' // v258; v259: als sticker
   import { startChatStatus, werkVinkjesBij, TYPEN_DUUR_MS } from './chatstatus.js?v=1' // v261: typen en gelezen-vinkjes
   import { bewaarChatFoto, haalChatFotos, markeerBekeken } from './chatfotos.js?v=2'
@@ -489,7 +489,7 @@ window.veiligeUrl = function(v){
   // wacht het spel er even op.
   let titelModule = null
   const laadTitelscherm = () => titelModule ? Promise.resolve(titelModule)
-    : laadModule('./titelscherm.js?v=6').then(m => (titelModule = m))
+    : laadModule('./titelscherm.js?v=7').then(m => (titelModule = m))
   const laadRustig = f => ('requestIdleCallback' in window ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 2500))
   laadRustig(() => laadTitelscherm().catch(() => {}))
   pasBlokstijlToe()
@@ -2297,7 +2297,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       } catch (e) {
         bezig = false; opname = null
         console.warn('[spraak] microfoon', e)
-        kort(e && e.name === 'NotAllowedError' ? T('🎤 Fibro mag de microfoon niet gebruiken. Zet het aan in de instellingen van je telefoon.') : T('🎤 Opnemen lukt niet op dit toestel.'))
+        kort(e && e.name === 'NotAllowedError' ? T('🎤 Stekky mag de microfoon niet gebruiken. Zet het aan in de instellingen van je telefoon.') : T('🎤 Opnemen lukt niet op dit toestel.'))
         return
       }
       if (losgelaten) { // de vraag om de microfoon kwam ertussen: nog niet opnemen
@@ -2802,11 +2802,11 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ander accepteert. Spellen die nog in chat.html zitten hoeven niets.
   const SPEL_BESTAND = {
     botkaaseiren: './bke-ui.js?v=239',
-    dammen: './dammen-ui.js?v=150',
+    dammen: './dammen-ui.js?v=151',
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
-    schaken: './schaken-ui.js?v=264',
-    schakendrie: './schaken-drie-ui.js?v=34',
+    schaken: './schaken-ui.js?v=265',
+    schakendrie: './schaken-drie-ui.js?v=35',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=151',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -2814,7 +2814,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     endlessrunner: './runner-gunner-ui.js?v=149',
     pacman: './ecto-ui.js?v=178',
     pinball: './twin-snakes-ui.js?v=150',
-    shmup: './neon-raiders-ui.js?v=224'
+    shmup: './neon-raiders-ui.js?v=225'
   }
   const _alGeladen = {}
   function laadSpelAlvast(spelType) {
@@ -2967,7 +2967,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       const tekst = await chatBeveiliging.open('spelchat', msg.payload)
       if (spelKanaal !== verbinding) return
       if (tekst !== null) toonSpelChat(tekst, false)
-      else if (typeof msg.payload?.tekst === 'string') toonSpelChatStatus(T('Je vriend heeft nog een oude Fibro. Chatten in het spel lukt pas als je vriend Fibro sluit en opnieuw opent.'))
+      else if (typeof msg.payload?.tekst === 'string') toonSpelChatStatus(T('Je vriend heeft nog een oude Stekky. Chatten in het spel lukt pas als je vriend Stekky sluit en opnieuw opent.'))
     })
 
     spelKanaal.on('broadcast', { event: 'verlaten' }, () => {
@@ -2999,7 +2999,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
         const code = await chatBeveiliging.open('spelsticker', msg.payload)
         if (spelKanaal !== verbinding) return
         if (code !== null) toonSpelSticker(code, false)
-        else if (typeof msg.payload?.code === 'string') toonSpelChatStatus(T('Je vriend heeft nog een oude Fibro. Chatten in het spel lukt pas als je vriend Fibro sluit en opnieuw opent.'))
+        else if (typeof msg.payload?.code === 'string') toonSpelChatStatus(T('Je vriend heeft nog een oude Stekky. Chatten in het spel lukt pas als je vriend Stekky sluit en opnieuw opent.'))
       })
     }
     spelKanaal.subscribe()
@@ -3662,7 +3662,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await laadModule('./schaken-ui.js?v=264')
+    const m = await laadModule('./schaken-ui.js?v=265')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: fibroChessTest?.active ? schaakT('Testspeler · Zwart') : spelVriendUsername(), testMode:Boolean(fibroChessTest?.active), onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer : nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
     spelCameraLayout = mountChessLayout({ root:document.getElementById('spelOverlay'), cameraSelector:'.spel-video-vak' })
@@ -3670,7 +3670,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   async function startSchakenDrie(players) {
-    const m = await laadModule('./schaken-drie-ui.js?v=34')
+    const m = await laadModule('./schaken-drie-ui.js?v=35')
     const testMode = Boolean(fibroChessTest?.active)
     const controller = m.start({ Bordgeluid, gameChannel:testMode ? null : spelKanaal, players, userId:testMode ? 'fibro-test-you' : huidigeUser.id, localPreview:testMode, testMode, testStream:fibroChessTest?.stream || null, onTestCameraChange:stream => { if (fibroChessTest?.active) fibroChessTest.stream = stream }, onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null })
     spelSchaakDrieController = controller
@@ -3683,7 +3683,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ─── Dammen (internationaal, 10x10) ───
   // v3 nov (sneller): dammen pas laden als je het speelt, zoals de andere spellen
   async function startDammen() {
-    const [Dammen, DammenUI] = await Promise.all([laadModule('./dammen.js?v=95'), laadModule('./dammen-ui.js?v=150')])
+    const [Dammen, DammenUI] = await Promise.all([laadModule('./dammen.js?v=95'), laadModule('./dammen-ui.js?v=151')])
     DammenUI.start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
 
@@ -3840,7 +3840,7 @@ async function startBlockIt() {
   }
 
   async function startNeonRaiders() {
-    const m = await laadModule('./neon-raiders-ui.js?v=224')
+    const m = await laadModule('./neon-raiders-ui.js?v=225')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'shmup' && !spelGestopt })
   }
 
@@ -4345,8 +4345,8 @@ async function startBlockIt() {
     let stand = 'onbekend'
     try { stand = (await navigator.permissions.query({ name: 'microphone' })).state } catch (e) {}
     const tekst = stand === 'denied'
-      ? T('Fibro mag je microfoon niet gebruiken. Tik op het slotje naast het adres (of op aA in Safari), zet Microfoon op Toestaan en tik dan nog eens op 🎤.')
-      : T('Fibro kon je microfoon niet openen. Tik nog eens op 🎤 en kies Toestaan.')
+      ? T('Stekky mag je microfoon niet gebruiken. Tik op het slotje naast het adres (of op aA in Safari), zet Microfoon op Toestaan en tik dan nog eens op 🎤.')
+      : T('Stekky kon je microfoon niet openen. Tik nog eens op 🎤 en kies Toestaan.')
     const inhoud = document.getElementById('spelOverlay')
     if (!inhoud) return
     document.getElementById('spelMicTip')?.remove()

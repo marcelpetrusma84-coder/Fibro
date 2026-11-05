@@ -396,7 +396,7 @@ function wachtOpOudeVriend() {
   oudKlaarTimer = setTimeout(() => {
     if (syncPartnerId !== partner || !eigenKlaar || anderKlaar) return
     if (Date.now() - laatsteGeef < 15000) { wachtOpOudeVriend(); return }
-    console.log('[sync] Vriend met een oudere Fibro is stil - klaar')
+    console.log('[sync] Vriend met een oudere Stekky is stil - klaar')
     anderKlaar = true
     controleerRust()
     naKlaar()
@@ -1205,7 +1205,7 @@ async function verwerkP2pBericht(bericht) {
       nodig.push(...muziekNodig)
       try { localStorage.removeItem(relaySleutel) } catch (e) {}
     } else if (muziekNodig.length && isRelayConnection) {
-      console.log('[sync] Relay-verbinding - muziek overgeslagen (geen Fibro+)')
+      console.log('[sync] Relay-verbinding - muziek overgeslagen (geen Stekky+)')
       zetP2pStatus('muziek niet opgehaald (relay)')
       window._muziekGeblokkeerdDoorRelay = true
       try { localStorage.setItem(relaySleutel, String(Date.now())) } catch (e) {}

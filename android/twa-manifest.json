@@ -1,8 +1,8 @@
 {
   "packageId": "nl.fibro.app",
   "host": "marcelpetrusma84-coder.github.io",
-  "name": "Fibro",
-  "launcherName": "Fibro",
+  "name": "Stekky",
+  "launcherName": "Stekky",
   "display": "standalone",
   "themeColor": "#1A0A2E",
   "themeColorDark": "#1A0A2E",

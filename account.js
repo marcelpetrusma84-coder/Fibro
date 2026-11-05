@@ -173,7 +173,7 @@ function bestandsnaam(gebruikersnaam) {
 export function openGegevens(uid) {
   if (!uid) return
   const v = maakVel('gegevensScherm', T('\u{1F4E6} Mijn gegevens'))
-  v.kaart.appendChild(alinea(T('Je krijgt één bestand met alles wat Fibro op de server over jou bewaart: je account, profiel, vrienden, berichten, gastenboek, reacties en instellingen. Op de server zijn je berichten versleuteld; de app maakt ze hier leesbaar, op je eigen toestel.')))
+  v.kaart.appendChild(alinea(T('Je krijgt één bestand met alles wat Stekky op de server over jou bewaart: je account, profiel, vrienden, berichten, gastenboek, reacties en instellingen. Op de server zijn je berichten versleuteld; de app maakt ze hier leesbaar, op je eigen toestel.')))
   const haal = knop(T('\u{1F4E6} Gegevens ophalen'), 'hoofd')
   const bewaar = knop(T('\u{1F4BE} Bestand bewaren'), 'hoofd')
   bewaar.style.display = 'none'

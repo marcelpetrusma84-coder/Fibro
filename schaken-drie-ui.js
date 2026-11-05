@@ -7,7 +7,7 @@ import {
   THREE_PLAYER_NAMES
 } from './schaak-drie.js?v=10'
 import { THREE_PLAYER_VIEWBOX, THREE_PLAYER_BOARD_ARTWORK, threePlayerPieceArtwork } from './schaak-drie-artwork.js?v=3'
-import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=10'
+import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=11'
 import { maakSchaakWallpaper } from './schaak-wallpaper.js?v=4'
 
 const COLOR_STYLES = ['#fff', '#c4c7ce', '#ff7777']
@@ -117,7 +117,7 @@ export function start({ Bordgeluid = null, gameChannel = null, players = [], use
   captureBar.className = 'chess3-capturebar'
   const heading = document.createElement('header')
   heading.className = 'chess3-heading'
-  heading.innerHTML = `<span class="chess3-kicker">${tekst('FIBRO · DRIE SPELERS')}</span><h2>${tekst('Schaken met drie spelers')}</h2><p>${tekst('Sla een koning om die speler uit te schakelen. De laatste koning wint. Als een derde speler aansluit tijdens een partij, begint iedereen opnieuw vanuit deze beginstelling.')}</p>`
+  heading.innerHTML = `<span class="chess3-kicker">${tekst('STEKKY · DRIE SPELERS')}</span><h2>${tekst('Schaken met drie spelers')}</h2><p>${tekst('Sla een koning om die speler uit te schakelen. De laatste koning wint. Als een derde speler aansluit tijdens een partij, begint iedereen opnieuw vanuit deze beginstelling.')}</p>`
   controls.innerHTML = `<span class="chess3-turns" data-sch-label="Beurtvolgorde" aria-label="${veilig(t('Beurtvolgorde'))}"><b>${tekst('Wit')}</b><i>→</i><b>${tekst('Zwart')}</b><i>→</i><b>${tekst('Rood')}</b></span>`
   if (testMode) {
     const resetButton = document.createElement('button')
@@ -152,11 +152,11 @@ export function start({ Bordgeluid = null, gameChannel = null, players = [], use
   rulesDialog.setAttribute('aria-labelledby', 'chess3-rules-title')
   rulesDialog.innerHTML = `
     <header class="chess3-rules-header">
-      <div><span class="chess3-kicker">${tekst('FIBRO · SPELUITLEG')}</span><h2 id="chess3-rules-title">${tekst('Drie spelers. De laatste koning wint.')}</h2></div>
+      <div><span class="chess3-kicker">${tekst('STEKKY · SPELUITLEG')}</span><h2 id="chess3-rules-title">${tekst('Drie spelers. De laatste koning wint.')}</h2></div>
       <button class="chess3-rules-close" type="button" data-sch-label="Spelregels sluiten" aria-label="${veilig(t('Spelregels sluiten'))}">✕</button>
     </header>
     <div class="chess3-rules-content">
-      <p class="chess3-rules-lead">${tekst('Drie legers, 96 velden. Elke kleur begint met 16 stukken. Er is geen wereldwijd uniform reglement voor schaken met drie spelers; Fibro gebruikt de variant waarin je koningen slaat en de laatste koning wint.')}</p>
+      <p class="chess3-rules-lead">${tekst('Drie legers, 96 velden. Elke kleur begint met 16 stukken. Er is geen wereldwijd uniform reglement voor schaken met drie spelers; Stekky gebruikt de variant waarin je koningen slaat en de laatste koning wint.')}</p>
       <section class="chess3-rules-goal"><h3>${tekst('Het doel')}</h3><p><strong>${tekst('Houd je koning in leven.')}</strong> ${tekst('Sla de koning van een tegenstander om die speler uit te schakelen. De laatste speler met een koning wint.')}</p></section>
       <section><h3>${tekst('1 · Speel om de beurt')}</h3><p class="chess3-rules-order"><b>${tekst('Wit')}</b><span>→</span><b>${tekst('Zwart')}</b><span>→</span><b>${tekst('Rood')}</b><span>${tekst('→ opnieuw')}</span></p><p>${tekst('Doe één zet, daarna is de volgende kleur aan de beurt. De beurtmelding laat zien wie er mag zetten.')}</p></section>
       <section><h3>${tekst('2 · Kies een stuk en daarna een gemarkeerd veld')}</h3><p>${tekst('Kies een stuk van de kleur die aan de beurt is. Het bord toont waar dat stuk naartoe kan:')}</p><ul><li><strong>${tekst('Groene rand:')}</strong> ${tekst('een mogelijke zet.')}</li><li><strong>${tekst('Rode rand:')}</strong> ${tekst('een stuk van een tegenstander slaan.')}</li></ul><p>${tekst('Klik op een gemarkeerd doelveld om te zetten. Klik op een ander eigen stuk om je keuze te veranderen. Je kunt beide tegenstanders aanvallen.')}</p></section>

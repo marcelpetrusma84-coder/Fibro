@@ -144,7 +144,7 @@ try:
         st = nieuw_st(); ctx, pg = toestel(br, st, {'antwoord': 'denied', 'app': True}, ua=IPHONE); home(pg)
         wacht(pg, KAART, 8000); welkom = tik_welkom(pg)
         tekst = pg.evaluate("(document.getElementById('meldkaart') || {}).innerText || ''")
-        check('H9 iPhone-app, bij de eerste tik geweigerd: uitleg Instellingen > Meldingen > Fibro', welkom and 'Instellingen > Meldingen > Fibro' in tekst and not st['abonnementen'], tekst)
+        check('H9 iPhone-app, bij de eerste tik geweigerd: uitleg Instellingen > Meldingen > Stekky', welkom and 'Instellingen > Meldingen > Stekky' in tekst and not st['abonnementen'], tekst)
         ctx.close()
         # H10: Safari op de iPhone: geen meldkaart, wel de tip voor het beginscherm. Als app (beginscherm): wel de kaart.
         st = nieuw_st(); ctx, pg = toestel(br, st, {}, ua=IPHONE); home(pg)
@@ -154,7 +154,7 @@ try:
         st = nieuw_st(); ctx, pg = toestel(br, st, {'app': True}, ua=IPHONE); home(pg)
         zichtbaar = wacht(pg, KAART, 8000); welkom = tik_welkom(pg)
         m = pg.evaluate("window.__melding")
-        check('H11 iPhone als app: de eerste tik op Welkom bij Fibro vraagt meteen de meldingen (in de tik) en zet ze aan',
+        check('H11 iPhone als app: de eerste tik op Welkom bij Stekky vraagt meteen de meldingen (in de tik) en zet ze aan',
               zichtbaar and welkom and m['gevraagd'] == 1 and m['vraagInKlik'] is True and len(st['abonnementen']) == 1
               and not pg.evaluate("!!document.querySelector('.beginscherm-tip')") and wacht(pg, "() => !document.getElementById('meldkaart')", 5000), (m, st['abonnementen']))
         ctx.close()

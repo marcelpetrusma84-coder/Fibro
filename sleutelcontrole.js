@@ -149,7 +149,7 @@ export function openControle(naSluiten) {
     let video = q('.sc-scan video')
     try {
       stroom = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
-    } catch (e) { uitslag.style.color = '#fca5a5'; uitslag.textContent = T('Fibro mag de camera niet gebruiken. Vergelijk dan de 60 cijfers.'); return }
+    } catch (e) { uitslag.style.color = '#fca5a5'; uitslag.textContent = T('Stekky mag de camera niet gebruiken. Vergelijk dan de 60 cijfers.'); return }
     q('.sc-scan').hidden = false
     q('.sc-scan-tekst').textContent = T('Richt de camera op de QR-code van {naam}.', { naam })
     scanKnop.textContent = T('Stoppen met scannen')
@@ -174,7 +174,7 @@ export function openControle(naSluiten) {
           }
           if (r === 'anders') {
             vergeet(mijnId, vriendId); stopScan(); toonStand()
-            uitslag.style.color = '#fca5a5'; uitslag.textContent = T('⚠️ Klopt NIET. De sleutels zijn anders dan bij {naam}. Stuur nog niets geheims en vraag {naam} om Fibro opnieuw te openen.', { naam })
+            uitslag.style.color = '#fca5a5'; uitslag.textContent = T('⚠️ Klopt NIET. De sleutels zijn anders dan bij {naam}. Stuur nog niets geheims en vraag {naam} om Stekky opnieuw te openen.', { naam })
             return
           }
           if (r === 'ander-account') q('.sc-scan-tekst').textContent = T('Dit is de code van iemand anders, niet van {naam}.', { naam })

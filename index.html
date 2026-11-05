@@ -14,12 +14,12 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-<script src="taal.js?v=72"></script>
-<script src="apk.js?v=2"></script>
+<script src="taal.js?v=73"></script>
+<script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>/* v130: zoomen mag weer; iPhone zoomt bij invoervakken kleiner dan 16px vanzelf in */@supports (-webkit-touch-callout: none){input,textarea,select{font-size:16px !important}}</style>
-<title>Fibro</title>
+<title>Stekky</title>
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
@@ -177,7 +177,7 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
     <div style="flex:1;min-width:220px;">
       <div style="color:#c084fc;font-size:14px;margin-bottom:4px;" data-t>Je berichten zijn hier niet leesbaar</div>
       <div style="color:#b8b0c8;font-size:12px;line-height:1.5;" data-t>
-        Je sleutel staat niet op dit apparaat. Dat is normaal als je Fibro voor het eerst
+        Je sleutel staat niet op dit apparaat. Dat is normaal als je Stekky voor het eerst
         opent in deze browser of op een nieuwe telefoon. Tik op Sleutel terugzetten en ontgrendel met Face ID
         of je vingerafdruk. Staat dat nog niet aan, gebruik dan je herstelsleutel.
       </div>
@@ -189,7 +189,7 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
 <div id="content-laag">
 <div class="top-bar" role="banner">
   <div style="display:flex;align-items:center;gap:8px;">
-    <div class="top-logo">Fibro</div>
+    <div class="top-logo">Stekky</div>
     <button type="button" class="beta-label" id="betaLabel" onclick="window.openFibroTerugmelden()" aria-label="Beta: fout of idee melden" data-t-attr="aria-label" data-t>beta</button>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
@@ -198,7 +198,7 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
     <div class="top-av" id="topAvatar" onclick="window.location.href='profiel.html'" style="display:none">👤</div>
   </div>
 </div>
-<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Fibro – Home</h1>
+<main style="display:contents"><h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Stekky – Home</h1>
 
 
 <div class="profile-hero">
@@ -320,7 +320,7 @@ import { meldToestel } from './toestel.js?v=1'
 import { zetStandaardWidgets } from './standaardwidgets.js?v=2' // v267: nieuw account = meteen widgets op Home
 import * as GB from './gastenboekstijl.js?v=2'
 import { spelIcoonHtml } from './spelicoon.js?v=3' // 30 okt 2026: plaatjes uit de spellen
-import { initSync, lokaleVriendNaam } from './sync.js?v=254'
+import { initSync, lokaleVriendNaam } from './sync.js?v=255'
 import { maakProfielLikes, itemVan } from './profielreacties.js?v=2' // v258: likes op je eigen profiel
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -330,8 +330,8 @@ import { haalPrivateKeyOp } from './crypto.js?v=182'
 import { isBelregel, belregelTekst } from './belregel.js?v=152'
 import { koppelSpelIcoonFallback } from './spelicoon.js?v=3'
 koppelSpelIcoonFallback()
-import { openSpelMetTitel } from './titelscherm.js?v=6' // v252: titelscherm met muziek meteen bij je tik
-import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=1' // v266
+import { openSpelMetTitel } from './titelscherm.js?v=7' // v252: titelscherm met muziek meteen bij je tik
+import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=2' // v266
 pasBlokstijlToe()
 
 // ── Waarschuw als de private key op dit apparaat ontbreekt ──
@@ -2203,7 +2203,7 @@ const FIBRO_DATUM = '2026-10-27'
 function versieTekst() {
   let d = FIBRO_DATUM
   try { d = new Date(FIBRO_DATUM + 'T12:00:00').toLocaleDateString(T.locale || 'nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) } catch (e) {}
-  return (T.app || 'Fibro') + ' v' + FIBRO_VERSIE + ' \u00B7 ' + d
+  return (T.app || 'Stekky') + ' v' + FIBRO_VERSIE + ' \u00B7 ' + d
 }
 const BEWAAR_KEUZES = [[1, T('1 dag')], [7, T('7 dagen')], [31, T('31 dagen')], [90, T('90 dagen')], [365, T('1 jaar')]]
 function sluitMenu() {
@@ -2315,7 +2315,7 @@ window.openMenu = function() {
   }
   schakelaar('fibro_muziek_auto', T('\u{1F3B5} Mijn muziek vanzelf'), async (aan) => {
     if (aan) { try { sessionStorage.removeItem('fibro_muziek_pauze_eigen') } catch (e) {} }
-    try { const m = await import('./profielmuziek.js?v=184'); if (aan) startProfielMuziek(); else m.zetAuto(false) } catch (e) {}
+    try { const m = await import('./profielmuziek.js?v=185'); if (aan) startProfielMuziek(); else m.zetAuto(false) } catch (e) {}
   })
   schakelaar('fibro_muziek_auto_vrienden', T('\u{1F3B5} Muziek van vrienden vanzelf'))
   // v187: uit = een buzz is alleen een melding (geen buzzgeluid, niet trillen, geen schuddend scherm), zie meldingen.js
@@ -2391,10 +2391,10 @@ window.openMenu = function() {
   g = groep(T('Accountinstellingen'), 'menuKopAccount', T('Gegevens downloaden, account verwijderen'))
   item(g, T('\u{1F4E6} Mijn gegevens downloaden'), () => openAccount('gegevens'))
   item(g, T('\u{1F5D1}\uFE0F Account verwijderen'), () => openAccount('verwijderen')).style.color = '#fca5a5'
-  g = groep(T('Mijn Fibro'), 'menuKopFibro', T('Over, spelregels, app installeren, fout melden'))
-  item(g, T('\u2139\uFE0F Over Fibro'), () => { window.location.href = 'over.html' })
+  g = groep(T('Mijn Stekky'), 'menuKopFibro', T('Over, spelregels, app installeren, fout melden'))
+  item(g, T('\u2139\uFE0F Over Stekky'), () => { window.location.href = 'over.html' })
   item(g, T('\u{1F4DC} Spelregels'), () => { window.location.href = 'spelregels.html' }) // v229
-  item(g, T('\u{1F4F2} Fibro als app installeren'), openAppUitleg) // v178
+  item(g, T('\u{1F4F2} Stekky als app installeren'), openAppUitleg) // v178
   item(g, T('\u{1F4AC} Fout of idee melden'), () => window.openFibroTerugmelden()) // v222
   // v223: alleen voor moderators (is_moderator in je profiel). De pagina zelf controleert het nog eens bij de server.
   if (window._profiel && window._profiel.is_moderator === true) {
@@ -2529,7 +2529,7 @@ async function openBewaren() {
 // v178: uitleg om Fibro als app op het beginscherm te zetten. v248: met tekeningen, per toestel en iOS-versie
 // (beginscherm.js; ook gebruikt door Profiel > Meldingen aanzetten).
 function openAppUitleg() {
-  import('./beginscherm.js?v=2').then(m => m.openBeginschermUitleg()).catch(e => console.warn('[beginscherm]', e))
+  import('./beginscherm.js?v=3').then(m => m.openBeginschermUitleg()).catch(e => console.warn('[beginscherm]', e))
 }
 
 // v248: tip voor wie Fibro op de iPhone in Safari gebruikt (niet als app): dan krijg je geen meldingen.
@@ -2538,7 +2538,7 @@ async function toonBeginschermTip() {
   const plek = document.getElementById('beginschermTip')
   if (!plek) return
   let m
-  try { m = await import('./beginscherm.js?v=2') } catch (e) { return }
+  try { m = await import('./beginscherm.js?v=3') } catch (e) { return }
   if (!m.iphoneZonderApp()) return
   try { if (Date.now() - Number(localStorage.getItem('fibro_tip_beginscherm') || 0) < 7 * 86400000) return } catch (e) {}
   const kaart = document.createElement('div')
@@ -2547,7 +2547,7 @@ async function toonBeginschermTip() {
   kaart.style.cssText = 'display:flex;align-items:center;gap:10px;margin:8px 0 4px;padding:10px 12px;border-radius:14px;border:1px solid rgba(192,132,252,0.45);background:rgba(192,132,252,0.1);font-size:13.5px;line-height:1.4'
   const tekst = document.createElement('div')
   tekst.style.cssText = 'flex:1;min-width:0'
-  tekst.innerHTML = T('\u{1F514} <b>Meldingen op je iPhone?</b> Zet Fibro op je beginscherm.')
+  tekst.innerHTML = T('\u{1F514} <b>Meldingen op je iPhone?</b> Zet Stekky op je beginscherm.')
   const hoe = document.createElement('button')
   hoe.type = 'button'
   hoe.textContent = T('Hoe?')
@@ -2564,7 +2564,7 @@ async function toonBeginschermTip() {
 }
 toonBeginschermTip()
 // v258: meldingen aanzetten met een tik (meldingen-aan.js): een kaart tot ze aan staan ('Nu niet' = 3 dagen niet)
-import('./meldingen-aan.js?v=1').then(m => m.toonMeldkaart(document.getElementById('beginschermTip'), supabase, window._uid))
+import('./meldingen-aan.js?v=2').then(m => m.toonMeldkaart(document.getElementById('beginschermTip'), supabase, window._uid))
   .catch(e => console.warn('[meldingen]', e))
 
 // v142: de taal kiezen (Nederlands of Engels). Het menu-item heet in beide talen 'Taal / Language',
@@ -2622,7 +2622,7 @@ async function openAccount(wat) {
   const uid = window._uid
   if (!uid) return
   try {
-    const m = await import('./account.js?v=4')
+    const m = await import('./account.js?v=5')
     if (wat === 'verwijderen') m.openVerwijderen(uid)
     else m.openGegevens(uid)
   } catch (e) {
@@ -2864,7 +2864,7 @@ async function startProfielMuziek() {
     const data = await laadUitDB('muziek_track')
     if (!data) return
     const titel = await laadUitDB('muziek_titel')
-    const m = await import('./profielmuziek.js?v=184')
+    const m = await import('./profielmuziek.js?v=185')
     await m.speelProfielMuziek({ data, titel, sleutel: 'eigen' })
   } catch (e) { console.warn('[profielmuziek]', e) }
 }
@@ -2876,7 +2876,7 @@ startMeldingen()
 // v172: ook de plaatjes en geluiden van de stickers.
 // v203 (sneller): al kort nadat Home klaar is (was: na 6 seconden), en na elke update meteen (FIBRO_VERSIE). Dan staan
 // de scripts van Chat en Vrienden al klaar als je daarheen gaat.
-const startKast = () => setTimeout(() => { import('./kastvullen.js?v=203').then(m => m.vulKast(FIBRO_VERSIE)).catch(() => {}) }, 1500)
+const startKast = () => setTimeout(() => { import('./kastvullen.js?v=204').then(m => m.vulKast(FIBRO_VERSIE)).catch(() => {}) }, 1500)
 if (document.readyState === 'complete') startKast(); else window.addEventListener('load', startKast, { once: true })
 </script>
 
@@ -2887,9 +2887,9 @@ if ('serviceWorker' in navigator) {
 </script>
 <script src="swipe.js?v=96"></script>
 <script src="menuschuif.js?v=1"></script>
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=205"; startBelLuisteraar()</script>
-<script type="module">import { beschermOpslag } from "./opslag.js?v=2"; beschermOpslag()</script>
-<script type="module" src="geluidregelaar.js?v=180"></script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=206"; startBelLuisteraar()</script>
+<script type="module">import { beschermOpslag } from "./opslag.js?v=3"; beschermOpslag()</script>
+<script type="module" src="geluidregelaar.js?v=181"></script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=197"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=169"; startOngelezen()</script>

@@ -48,56 +48,56 @@ const corsHeaders = {
 type Tekst = { title: string; body: string };
 const TEKSTEN: Record<string, Record<string, Tekst>> = {
   bericht: {
-    nl: { title: "Fibro", body: "Je hebt een nieuw bericht 💬" },
-    en: { title: "Fibro", body: "You have a new message 💬" },
+    nl: { title: "Stekky", body: "Je hebt een nieuw bericht 💬" },
+    en: { title: "Stekky", body: "You have a new message 💬" },
   },
   buzz: {
     nl: { title: "⚡ Buzz!", body: "{naam} buzzt je!" },
     en: { title: "⚡ Buzz!", body: "{naam} is buzzing you!" },
   },
   oproep: {
-    nl: { title: "Fibro", body: "📞 {naam} belt je" },
-    en: { title: "Fibro", body: "📞 {naam} is calling you" },
+    nl: { title: "Stekky", body: "📞 {naam} belt je" },
+    en: { title: "Stekky", body: "📞 {naam} is calling you" },
   },
   "oproep-video": {
-    nl: { title: "Fibro", body: "📹 {naam} belt je (video)" },
-    en: { title: "Fibro", body: "📹 {naam} is video calling you" },
+    nl: { title: "Stekky", body: "📹 {naam} belt je (video)" },
+    en: { title: "Stekky", body: "📹 {naam} is video calling you" },
   },
   gemist: {
-    nl: { title: "Fibro", body: "📵 Gemiste oproep van {naam}" },
-    en: { title: "Fibro", body: "📵 Missed call from {naam}" },
+    nl: { title: "Stekky", body: "📵 Gemiste oproep van {naam}" },
+    en: { title: "Stekky", body: "📵 Missed call from {naam}" },
   },
   spel: {
-    nl: { title: "Fibro", body: "🎮 {naam} daagt je uit voor {spel}!" },
-    en: { title: "Fibro", body: "🎮 {naam} challenges you to {spel}!" },
+    nl: { title: "Stekky", body: "🎮 {naam} daagt je uit voor {spel}!" },
+    en: { title: "Stekky", body: "🎮 {naam} challenges you to {spel}!" },
   },
   "spel-gemist": {
-    nl: { title: "Fibro", body: "🎮 {naam} wilde {spel} met je spelen" },
-    en: { title: "Fibro", body: "🎮 {naam} wanted to play {spel} with you" },
+    nl: { title: "Stekky", body: "🎮 {naam} wilde {spel} met je spelen" },
+    en: { title: "Stekky", body: "🎮 {naam} wanted to play {spel} with you" },
   },
   "spel-verlaten": {
-    nl: { title: "Fibro", body: "🎮 {naam} heeft jullie spel {spel} verlaten" },
-    en: { title: "Fibro", body: "🎮 {naam} left your game of {spel}" },
+    nl: { title: "Stekky", body: "🎮 {naam} heeft jullie spel {spel} verlaten" },
+    en: { title: "Stekky", body: "🎮 {naam} left your game of {spel}" },
   },
   "vriend-nieuw": {
-    nl: { title: "Fibro", body: "🎉 {naam} heeft je uitnodiging aangenomen! Zeg hoi 👋" },
-    en: { title: "Fibro", body: "🎉 {naam} accepted your invite! Say hi 👋" },
+    nl: { title: "Stekky", body: "🎉 {naam} heeft je uitnodiging aangenomen! Zeg hoi 👋" },
+    en: { title: "Stekky", body: "🎉 {naam} accepted your invite! Say hi 👋" },
   },
   gastenboek: {
-    nl: { title: "Fibro", body: "📖 {naam} schreef in je gastenboek" },
-    en: { title: "Fibro", body: "📖 {naam} wrote in your guestbook" },
+    nl: { title: "Stekky", body: "📖 {naam} schreef in je gastenboek" },
+    en: { title: "Stekky", body: "📖 {naam} wrote in your guestbook" },
   },
   like: {
-    nl: { title: "Fibro", body: "{emoji} {naam} reageerde op je {wat}" },
-    en: { title: "Fibro", body: "{emoji} {naam} reacted to your {wat}" },
+    nl: { title: "Stekky", body: "{emoji} {naam} reageerde op je {wat}" },
+    en: { title: "Stekky", body: "{emoji} {naam} reacted to your {wat}" },
   },
   online: {
-    nl: { title: "Fibro", body: "🟢 {naam} is nu online" },
-    en: { title: "Fibro", body: "🟢 {naam} is online now" },
+    nl: { title: "Stekky", body: "🟢 {naam} is nu online" },
+    en: { title: "Stekky", body: "🟢 {naam} is online now" },
   },
   moderatie: {
-    nl: { title: "Fibro · Moderatie", body: "🚩 Er is een nieuwe melding. Kijk in Moderatie." },
-    en: { title: "Fibro · Moderation", body: "🚩 There is a new report. Check Moderation." },
+    nl: { title: "Stekky · Moderatie", body: "🚩 Er is een nieuwe melding. Kijk in Moderatie." },
+    en: { title: "Stekky · Moderation", body: "🚩 There is a new report. Check Moderation." },
   },
 };
 const MELDING_BINNEN_MS = 2 * 60 * 1000

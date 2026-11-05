@@ -167,7 +167,7 @@ console.log('geluidje bij geslagen: ok')
 // 17. Webcam ook bij vier op een rij, boter-kaas-en-eieren, Neo Paddle en Block It
 const chat7 = lees('chat.html')
 assert.match(chat7, /bouwSpelCamKnop\(\) \/\/ v3 nov/)
-assert.match(chat7, /if \(!CAMERA_RONDJES\[spelActief\] \|\| spelActief === 'dammen'\) return/, 'dammen houdt zijn eigen knop')
+assert.match(chat7, /if \(!CAMERA_RONDJES\[spelActief\] \|\| spelActief === 'dammen' \|\| spelActief === 'schaken'\) return/, 'dammen (en schaken, v270) houden hun eigen knop')
 assert.match(chat7, /\.spel-overlay\.klein-video-modus \.spel-video-vak \{ top:6px; width:60px; height:60px;/)
 assert.match(chat7, /document\.getElementById\('spelCamKnop'\)\?\.remove\(\)\n    if \(!wasFibroTest\) stopSpelBel\(\)/, 'knop weg bij sluiten')
 console.log('webcam bij meer spellen: ok')

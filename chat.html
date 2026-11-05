@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-<script src="taal.js?v=74"></script>
+<script src="taal.js?v=75"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -452,6 +452,7 @@ window.veiligeUrl = function(v){
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { laadWallpaper } from './wallpaper.js?v=95'
   import { supabase } from './supabase.js?v=95'
+  import './pushnamen.js?v=1' // v270: de eigen namen van je vrienden voor de pushmeldingen (window.FibroPushNamen)
   import { initSync, syncMetVriend } from './sync.js?v=255'
   import { isOnline as vriendIsOnline } from './paren.js?v=2'
   import { startHeartbeat } from './heartbeat.js?v=117'
@@ -976,6 +977,7 @@ window.veiligeUrl = function(v){
 
   function tekenVriendenLijst(data) {
     const container = document.getElementById('vriendenLijst')
+    try { window.FibroPushNamen?.bewaar(huidigeUser?.id, data) } catch (e) {} // v270: "Sanne aka gebruikersnaam" in pushmeldingen
     container.innerHTML = data.map(vriend => `
       <div class="vriend-item" data-vid="${esc(vriend.id)}" data-vnaam="${esc(vriendWeergaveNaam(vriend))}" data-vav="${esc(vriend.avatar_url || '👤')}" data-vkey="${esc(vriend.public_key || '')}">
         <div class="vriend-av">${esc(vriend.avatar_url || '👤')}</div>
@@ -2906,7 +2908,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     spelGestopt = false
     resetSpelVideo()
     const videoNaam = document.getElementById('spelVideoAnderNaam')
-    if (videoNaam) videoNaam.textContent = spelVriendUsername()
+    // v270: onder het webcamrondje de eigen naam van je vriend (als je die kent), anders de gebruikersnaam
+    if (videoNaam) { const vid = spelTegenstander?.id || geselecteerdeVriend?.id; videoNaam.textContent = (vid && heeftWeergaveNaam({ id: vid })) ? vriendWeergaveNaam({ id: vid }) : spelVriendUsername() }
     const overlay = document.getElementById('spelOverlay')
     overlay.classList.add('open')
     // v251: eerst het titelscherm (bewegend plaatje en muziek). Ondertussen wordt al op je vriend gewacht;

@@ -5,9 +5,9 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
   <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-  <script src="taal.js?v=74"></script>
+  <script src="taal.js?v=75"></script>
   <script src="apk.js?v=3"></script>
-  <script src="registratie.js?v=2"></script>
+  <script src="registratie.js?v=3"></script>
   <script>try { FibroApk.hervatUitnodiging() } catch (e) {} // in de app: een uitnodiging die wacht (apk.js)</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Verder met setup': 'Continue setup', 'Stekky is vanaf 16 jaar.': 'Stekky is for ages 16 and up.', 'Stekky is vanaf 16 jaar. Ben je jonger, dan kun je nog geen account maken.': "Stekky is for ages 16 and up. If you're younger, you can't create an account yet." })</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Ik ga akkoord met de <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">spelregels van Stekky</a>': 'I agree to the <a href="spelregels.html" target="_blank" rel="noopener" style="color:var(--accent)">{app} house rules</a>' }) // v229: met een link naar de spelregels</script>
@@ -145,6 +145,12 @@
       </div>
       <div id="reg-form">
         <div class="beta-info" data-t>🧪 Stekky is nog in de bètafase: er kan nog iets misgaan. Zet na het aanmelden herstel aan (Face ID, vingerafdruk of je herstelsleutel). Zonder herstel kun je je berichten op een nieuw toestel niet meer lezen.</div>
+        <!-- v270: je eigen naam (verplicht). Wordt je weergavenaam: alleen op je toestel en bij je vrienden, niet op de server -->
+        <div class="field">
+          <label for="reg-eigennaam" data-t>Je eigen naam</label>
+          <input type="text" id="reg-eigennaam" placeholder="bijv. Sanne de Vries" data-t-attr="placeholder" autocomplete="name" maxlength="40" />
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;" data-t>Zo weten je vrienden wie je bent. Alleen je vrienden zien deze naam; hij komt niet op de server.</div>
+        </div>
         <div class="field">
           <label data-t>Gebruikersnaam</label>
           <!-- v266: een duidelijke knop met tekst onder de naam, in plaats van de dobbelsteen ernaast -->
@@ -511,7 +517,7 @@
     // ── Push notificaties registreren ──
     try {
       if ('serviceWorker' in navigator && 'PushManager' in window) {
-        const reg = await navigator.serviceWorker.register('./service-worker.js?v=95')
+        const reg = await navigator.serviceWorker.register('./service-worker.js?v=96')
         await navigator.serviceWorker.ready
         const toestemming = await Notification.requestPermission()
         if (toestemming === 'granted') {
@@ -548,6 +554,9 @@
     const btn = document.getElementById('reg-btn')
     const msg = document.getElementById('reg-msg')
 
+    const eigenNaam = FibroRegistratie.schoonEigenNaam(document.getElementById('reg-eigennaam').value) // v270
+    const naamFout = FibroRegistratie.eigenNaamFout(eigenNaam)
+    if (naamFout) { toonBericht(msg,'error',T(naamFout)); document.getElementById('reg-eigennaam').focus(); return }
     if (!username || !wachtwoord || !jaar) { toonBericht(msg,'error',T('Vul alle velden in.')); return }
     if (!akkoord) { toonBericht(msg,'error',T('Je moet akkoord gaan met de spelregels.')); return }
     if (wachtwoord.length < 8) { toonBericht(msg,'error',T('Wachtwoord minimaal 8 tekens.')); return }
@@ -595,6 +604,7 @@
     if (data.user) {
       // Sla private key op, public key naar Supabase
       slaPrivateKeyOp(data.user.id, keypair.privateKeyB64)
+      FibroRegistratie.bewaarEigenNaam(data.user.id, eigenNaam) // v270: je eigen naam = je weergavenaam (alleen op dit toestel)
       await supabase.from('profiles').upsert({
         id: data.user.id,
         username,

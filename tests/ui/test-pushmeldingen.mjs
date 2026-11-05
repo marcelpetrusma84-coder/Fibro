@@ -33,7 +33,7 @@ assert.match(push, /if \(await staatUit\(supabase, receiver_id, String\(type\)\)
 
 // 3. Het menu op Home
 const index = lees('index.html')
-assert.match(index, /import \{ PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush \} from '\.\/pushmeldingen\.js\?v=2'/,
+assert.match(index, /import \{ PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush \} from '\.\/pushmeldingen\.js\?v=3'/,
   'gewone import (geen import() bij de tik: anders vraagt de iPhone geen toestemming)')
 const kop = index.indexOf("groep(T('Pushmeldingen'), 'menuKopPush'")
 assert.ok(kop > index.indexOf("groep(T('Instellingen')") && kop < index.indexOf("groep(T('Accountinstellingen')"), 'eigen kopje tussen Instellingen en Accountinstellingen')
@@ -43,7 +43,7 @@ assert.match(en, /"Pushmeldingen": "Push notifications"/)
 
 // 4. pushmeldingen.js met een nep-supabase en nep-toestemming
 let bron = lees('pushmeldingen.js')
-bron = bron.replace(/^import \{ zetMeldingenAan \} from '\.\/meldingen-aan\.js\?v=2'$/m, 'const zetMeldingenAan = (...a) => globalThis.__toestemming(...a)')
+bron = bron.replace(/^import \{ zetMeldingenAan \} from '\.\/meldingen-aan\.js\?v=3'$/m, 'const zetMeldingenAan = (...a) => globalThis.__toestemming(...a)')
 assert.ok(!/^import /m.test(bron), 'import vervangen')
 const opslag = new Map()
 globalThis.localStorage = { getItem: k => opslag.has(k) ? opslag.get(k) : null, setItem: (k, v) => opslag.set(k, String(v)) }

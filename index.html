@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-<script src="taal.js?v=74"></script>
+<script src="taal.js?v=75"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -332,7 +332,7 @@ import { isBelregel, belregelTekst } from './belregel.js?v=152'
 import { koppelSpelIcoonFallback } from './spelicoon.js?v=3'
 koppelSpelIcoonFallback()
 import { openSpelMetTitel } from './titelscherm.js?v=7' // v252: titelscherm met muziek meteen bij je tik
-import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=2' // v266
+import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=3' // v266
 pasBlokstijlToe()
 
 // ── Waarschuw als de private key op dit apparaat ontbreekt ──
@@ -2571,7 +2571,7 @@ async function toonBeginschermTip() {
 }
 toonBeginschermTip()
 // v258: meldingen aanzetten met een tik (meldingen-aan.js): een kaart tot ze aan staan ('Nu niet' = 3 dagen niet)
-import('./meldingen-aan.js?v=2').then(m => m.toonMeldkaart(document.getElementById('beginschermTip'), supabase, window._uid))
+import('./meldingen-aan.js?v=3').then(m => m.toonMeldkaart(document.getElementById('beginschermTip'), supabase, window._uid))
   .catch(e => console.warn('[meldingen]', e))
 
 // v142: de taal kiezen (Nederlands of Engels). Het menu-item heet in beide talen 'Taal / Language',
@@ -2730,6 +2730,10 @@ async function init() {
   // v263: de strook "✨ Nieuw bij je vrienden" (nieuwbij.js): alleen wat al op dit toestel staat, de server doet niets
   import('./nieuwbij.js?v=1').then(m => m.toonNieuwBij(document.getElementById('nieuwBij'), session.user.id))
     .catch(e => console.warn('[nieuwbij]', e))
+  // v270: nog geen eigen naam (weergavenaam)? Dan een keer vragen, zodat vrienden weten wie je bent (eigennaam.js)
+  setTimeout(() => import('./eigennaam.js?v=1').then(m => m.vraagEigenNaam(session.user.id, {
+    naOpslaan: naam => { const el = document.getElementById('heroNaam'); if (el) el.textContent = naam }
+  })).catch(e => console.warn('[eigennaam]', e)), 1500)
   werkOpslagBalkBij()
 
   // v119: het profiel van de vorige keer meteen tonen (niet wachten op de server);
@@ -2889,7 +2893,7 @@ if (document.readyState === 'complete') startKast(); else window.addEventListene
 
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./service-worker.js?v=95')
+  navigator.serviceWorker.register('./service-worker.js?v=96')
 }
 </script>
 <script src="swipe.js?v=96"></script>

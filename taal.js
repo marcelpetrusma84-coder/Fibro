@@ -6,6 +6,7 @@
 // v266b (5 november 2026): taal-en.js?v=69 (melding als een vriend online komt)
 // v266c (5 november 2026): taal-en.js?v=70 (kopje Pushmeldingen in het menu)
 // v268 (5 november 2026): taal-en.js?v=71 (menu met inklapbare kopjes)
+// v266e (5 november 2026): taal-en.js?v=72 (sleutels controleren)
 //
 // In gewone woorden: dit bestand weet welke taal je gekozen hebt en vertaalt de teksten.
 // De Nederlandse zin is zelf de sleutel: T('Opslaan') geeft in het Nederlands 'Opslaan' en in
@@ -30,7 +31,7 @@
 // Alleen pagina's met <html data-taal> krijgen lang="en" (die zijn al vertaald).
 // In het Nederlands doet dit bestand verder niets met de pagina: alles blijft precies zoals het was.
 // Een gewoon script (geen module), vroeg geladen: direct na huisregel.js.
-// De Engelse woordenlijst (taal-en.js?v=71) wordt alleen bij Engels geladen.
+// De Engelse woordenlijst (taal-en.js?v=72) wordt alleen bij Engels geladen.
 (function () {
   'use strict'
   if (window.T) return
@@ -95,7 +96,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=71', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=72', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

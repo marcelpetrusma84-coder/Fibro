@@ -22,7 +22,7 @@
   <title data-t>Stekky — Inloggen</title>
   <style>
     @import url('lettertypen/basis.css?v=1');
-    :root { --bg:#50124d; /* v270: het paars van het logo */ --surface:#161618; --border:#2a2a2e; --accent:#c084fc; --accent-dim:#f0abfc; --text:#f3e8ff; --text-muted:#666660; --danger:#ff5c5c; --radius:12px; }
+    :root { --bg:#8b3fd1; /* v270: hetzelfde paars als de knoppen (op verzoek van Marcel) */ --surface:#161618; --border:#2a2a2e; --accent:#c084fc; --accent-dim:#f0abfc; --text:#f3e8ff; --text-muted:#666660; --danger:#ff5c5c; --radius:12px; }
     * { box-sizing:border-box; margin:0; padding:0; }
     /* v249: de pagina kan weer op en neer scrollen (overflow:hidden sneed de boven- en onderkant af als het formulier hoger
        was dan het scherm, bijv. Registreren op een telefoon). margin:auto 0 op .container houdt hem in het midden als hij past. */
@@ -31,10 +31,10 @@
     .container { width:100%; max-width:420px; margin:auto 0; position:relative; z-index:1; animation:fadeUp 0.4s ease both; }
     @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
     .logo { text-align:center; margin-bottom:40px; }
-    .logo h1 { font-family:'DM Serif Display',serif; font-size:48px; letter-spacing:-1px; color:var(--text); }
-    .logo h1 span { color:var(--accent); }
-    .beta-label { display:inline-block; vertical-align:super; margin-left:6px; padding:2px 7px; border-radius:999px; background:rgba(251,191,36,0.16); border:1px solid rgba(251,191,36,0.45); color:#fbbf24; font:700 11px/1.3 system-ui,sans-serif; letter-spacing:.06em; text-transform:uppercase; }
-    .logo p { font-size:11px; color:rgba(255,255,255,0.72); letter-spacing:2px; text-transform:uppercase; margin-top:6px; }
+    .logo h1 { font-family:'DM Serif Display',serif; font-size:48px; letter-spacing:-1px; color:#ffffff; }
+    .logo h1 span { color:#ffffff; } /* v270: het hele woord Stekky wit */
+    .beta-label { display:inline-block; vertical-align:super; margin-left:6px; padding:2px 7px; border-radius:999px; background:#fbbf24; border:1px solid #fbbf24; color:#3b0a57; font:700 11px/1.3 system-ui,sans-serif; letter-spacing:.06em; text-transform:uppercase; }
+    .logo p { font-size:11px; color:rgba(255,255,255,0.85); letter-spacing:2px; text-transform:uppercase; margin-top:6px; }
     .taalkeuze { display:flex; justify-content:center; gap:6px; margin-bottom:18px; }
     .taalkeuze button { background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); border-radius:20px; padding:6px 14px; min-height:34px; font-family:inherit; font-size:12px; cursor:pointer; }
     .taalkeuze button.aan { border-color:var(--accent); color:var(--accent); background:rgba(192,132,252,0.12); }

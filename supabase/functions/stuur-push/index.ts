@@ -135,7 +135,7 @@ const IEMAND: Record<string, string> = { nl: "Iemand", en: "Someone" };
 
 // v266: de regels voor 'online', zodat zo'n melding niet irritant wordt. (Even weg en terug, korter dan 30 minuten,
 // komt hier niet eens: dat houdt de trigger al tegen.)
-export const ONLINE_REGELS = {
+const ONLINE_REGELS = {
   versMs: 2 * 60 * 1000,           // de vriend moet nu echt online zijn (laatste teken minder dan 2 minuten geleden)
   zelfOnlineMs: 5 * 60 * 1000,     // ben je zelf online (teken minder dan 5 minuten geleden), dan zie je het al in Fibro
   paarRustMs: 3 * 60 * 60 * 1000,  // dezelfde vriend hoogstens eens per 3 uur
@@ -144,7 +144,7 @@ export const ONLINE_REGELS = {
   stilVan: 23, stilTot: 8,         // 's nachts (23:00 tot 8:00, Nederlandse tijd) niets
   levensduurS: 10 * 60,            // staat de telefoon uit, dan na 10 minuten niet meer bezorgen (dan klopt het niet meer)
 };
-export function uurInNederland(nu: number): number {
+function uurInNederland(nu: number): number {
   try {
     return Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Amsterdam", hour: "numeric", hourCycle: "h23" }).format(new Date(nu)));
   } catch (_e) { return new Date(nu).getUTCHours() + 1; }
@@ -152,7 +152,7 @@ export function uurInNederland(nu: number): number {
 // Wie krijgt een melding dat 'vriend' online kwam? kandidaten: vrienden (beide kanten 'accepted') die de schakelaar
 // aan hebben, met hun profiel. log: verstuurde online-meldingen van de laatste 24 uur aan deze kandidaten.
 // Geeft [{ id, taal }] terug, of [] (bijvoorbeeld 's nachts).
-export function kiesOnlineOntvangers(
+function kiesOnlineOntvangers(
   { nu, vriend, kandidaten, log }: {
     nu: number; vriend: string;
     kandidaten: { id: string; taal?: string; online_status?: boolean; laatst_gezien?: string | null; geblokkeerd?: boolean }[];

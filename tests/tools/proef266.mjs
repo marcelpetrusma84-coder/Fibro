@@ -24,6 +24,7 @@ let js = ts.transpileModule(bron, { compilerOptions: { target: ts.ScriptTarget.E
 js = js.replace(/^import \{ createClient \} from "npm:@supabase\/supabase-js@2";$/m, 'const { createClient } = globalThis.__nep;')
        .replace(/^import webpush from "npm:web-push";$/m, 'const webpush = globalThis.__nep.webpush;')
 if (/^import /m.test(js)) throw new Error('import niet vervangen')
+js += '\nglobalThis.__uurInNederland = uurInNederland;'
 
 const B = 'bbbbbbbb-0000-4000-8000-000000000002' // Bram komt online
 const M = 'aaaaaaaa-0000-4000-8000-000000000001' // Marcel: schakelaar aan
@@ -73,7 +74,7 @@ globalThis.__nep = {
 }
 let handler
 globalThis.Deno = { env: { get: k => 'x-' + k }, serve: h => { handler = h } }
-const mod = await import('data:text/javascript;base64,' + Buffer.from(js).toString('base64'))
+await import('data:text/javascript;base64,' + Buffer.from(js).toString('base64'))
 let fout = 0
 async function online(id = B) {
   verzonden = []
@@ -123,7 +124,7 @@ check('al 6 vandaag: Marcel niet meer, Eva wel', JSON.stringify(naar()) === JSON
 NU = Date.UTC(2026, 10, 5, 0, 30, 0); begin(); r = await online()
 check("'s nachts: geen meldingen", verzonden.length === 0, r)
 check('uurInNederland: 0:30 UTC in november = 1 uur, in juli 14:00 UTC = 16 uur',
-  mod.uurInNederland(Date.UTC(2026, 10, 5, 0, 30)) === 1 && mod.uurInNederland(Date.UTC(2026, 6, 1, 14, 0)) === 16)
+  globalThis.__uurInNederland(Date.UTC(2026, 10, 5, 0, 30)) === 1 && globalThis.__uurInNederland(Date.UTC(2026, 6, 1, 14, 0)) === 16)
 
 // 7. zelf al online: dan zie je het al in Fibro
 NU = Date.UTC(2026, 10, 5, 14, 0, 0); begin()

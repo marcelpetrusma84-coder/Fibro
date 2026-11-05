@@ -41,5 +41,8 @@ console.log('PASS: captures for both players; en passant; capture with promotion
   assert.match(ui, /function meldGeslagen\(effect\) \{\n    if \(!effect \|\| !isVriendPartij\) return/)
   assert.equal((ui.match(/meldGeslagen\(slagEffect\)/g) || []).length, 2, 'eigen zet en zet van de vriend')
   assert.match(ui, /if \(!testMode\) cameraLayoutToggle\.closest\('label'\)\.hidden = true/)
+  // v270: tegen een vriend geen oude schaakindeling meer (die maakte van de rondjes brede balken); alleen in de schaaktest
+  assert.match(chat, /spelCameraLayout = fibroChessTest\?\.active \? mountChessLayout\(\{ root:document\.getElementById\('spelOverlay'\), cameraSelector:'\.spel-video-vak' \}\) : null/, 'rondjes naast elkaar, net als bij dammen')
+  assert.match(chat, /spelActief === 'dammen' \|\| spelActief === 'schaken'\) return/, 'geen tweede webcamknop bij schaken')
   console.log('PASS: schaken met webcamrondjes')
 }

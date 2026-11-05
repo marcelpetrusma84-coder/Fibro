@@ -16,7 +16,7 @@ assert.match(mod, /const WERKER = '\.\/service-worker\.js\?v=96'/, 'dezelfde ser
 assert.ok(mod.includes(lees('profiel.html').match(/applicationServerKey: '([^']+)'/)[1]), 'dezelfde serversleutel als Profiel')
 
 // 2. Home: de kaart, niet in Safari op de iPhone (daar de tip voor het beginscherm), 'Nu niet' = 3 dagen
-assert.match(index, /import\('\.\/meldingen-aan\.js\?v=3'\)\.then\(m => m\.toonMeldkaart\(document\.getElementById\('beginschermTip'\), supabase, window\._uid\)\)/)
+assert.match(index, /import\('\.\/meldingen-aan\.js\?v=4'\)\.then\(m => m\.toonMeldkaart\(document\.getElementById\('beginschermTip'\), supabase, window\._uid\)\)/)
 assert.match(mod, /if \(stand === 'aan' \|\| stand === 'niet-mogelijk' \|\| stand === 'iphone-zonder-app'\) return null/)
 assert.match(mod, /const WEG_DAGEN = 3/)
 

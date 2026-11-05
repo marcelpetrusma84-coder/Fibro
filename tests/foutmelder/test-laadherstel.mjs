@@ -7,7 +7,7 @@ import assert from 'node:assert/strict'
 const code = readFileSync(new URL('../../foutmelder.js', import.meta.url), 'utf8')
 const BASIS = 'https://marcelpetrusma84-coder.github.io/Fibro/'
 
-function omgeving ({ online = true } = {}) {
+function omgeving ({ online = true, wachtrij = null } = {}) {
   const opslag = new Map(), sessie = new Map(), luisteraars = { bubbel: {}, vang: {} }, verzonden = []
   let herladen = 0, klok = 1_000_000
   const mapOpslag = m => ({
@@ -24,7 +24,7 @@ function omgeving ({ online = true } = {}) {
     navigator: { userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) Safari/604.1', onLine: online, maxTouchPoints: 5 },
     matchMedia: () => ({ matches: false }),
     fetch: (url, opt) => { verzonden.push(JSON.parse(opt.body)); return Promise.resolve({ ok: true, status: 204 }) },
-    setTimeout: f => { f(); return 0 }, Date: NepDate, JSON, Set, Promise, String, Array, Object, Math, URL, Number
+    setTimeout: (f, ms) => { if (wachtrij && ms === 1000) wachtrij.push(f); else f(); return 0 }, Date: NepDate, JSON, Set, Promise, String, Array, Object, Math, URL, Number
   }
   vm.createContext(ctx); vm.runInContext(code, ctx)
   const vuur = (soort, e, vang) => ((vang ? luisteraars.vang : luisteraars.bubbel)[soort] || []).forEach(f => f(e))
@@ -75,6 +75,24 @@ await test('zonder internet niet herladen (dan helpt het niet)', async () => {
   const o = omgeving({ online: false })
   o.vuur('error', { target: { tagName: 'SCRIPT', src: BASIS + 'chat.js?v=1' } }, true)
   assert.equal(o.herladen, 0)
+})
+
+await test('v3: pagina net verlaten (Safari breekt het laden af): niet melden, niet herladen', async () => {
+  const w = []
+  const o = omgeving({ wachtrij: w })
+  o.vuur('error', { target: { tagName: 'SCRIPT', src: BASIS + 'beltoon.js?v=8' } }, true)
+  o.vuur('pagehide', {})          // je tikte door naar Chat
+  w.forEach(f => f())
+  assert.equal(o.verzonden.length, 0); assert.equal(o.herladen, 0)
+  const o2 = omgeving()
+  o2.vuur('beforeunload', {})
+  o2.vuur('error', { target: { tagName: 'SCRIPT', src: BASIS + 'beltoon.js?v=8' } }, true)
+  assert.equal(o2.verzonden.length, 0); assert.equal(o2.herladen, 0)
+})
+await test('v3: script met data-fibro-stil (probeert het zelf nog eens) niet melden', async () => {
+  const o = omgeving()
+  o.vuur('error', { target: { tagName: 'SCRIPT', src: BASIS + 'beltoon.js?v=8', dataset: { fibroStil: '1' } } }, true)
+  assert.equal(o.verzonden.length, 0); assert.equal(o.herladen, 0)
 })
 
 // ── De portier: haalMetHerkansing ──

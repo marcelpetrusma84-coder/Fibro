@@ -52,6 +52,7 @@ window.FIBRO_EN = {
 // ---- Inloggen, registreren en herstellen (login.html) ----
   "Stekky — Inloggen": "{app} — Log in",
   "Jouw persoonlijke ruimte": "Your personal space",
+  "Je eigen plekkie": "Your own little spot",
   "Inloggen": "Log in",
   "Registreren": "Sign up",
   "Herstel": "Recover",

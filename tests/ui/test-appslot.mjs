@@ -55,6 +55,16 @@ assert.equal(await hashPin('2468', p.zout, p.iter), p.hash, 'goede pincode klopt
 assert.notEqual(await hashPin('2469', p.zout, p.iter), p.hash, 'verkeerde pincode klopt niet')
 assert.equal(wachtNa(4), 0); assert.equal(wachtNa(5), 30000); assert.equal(wachtNa(6), 60000); assert.equal(wachtNa(50), 15 * 60000)
 
+// 3b. Altijd twee manieren (op verzoek van Marcel): pincode én Face ID/vingerafdruk. Bij Bewaren vraagt de telefoon meteen
+// (nog in de tik) om Face ID; mislukt dat, dan wordt er niets bewaard. Alleen een toestel zonder Face ID krijgt alleen de pincode.
+assert.match(bron, /var bioKlaar = cred \|\| !kan \? Promise\.resolve\(cred\) : maakBiometrie\(\)/, 'Face ID verplicht als het toestel het kan')
+assert.ok(bron.indexOf('maakBiometrie().then(function (id) { cred = id') < bron.indexOf('return nieuwePin ? maakPin(p1)'), 'Face ID eerst (in de tik), daarna de pincode')
+assert.match(bron, /throw null\n      \}\)\.then\(klaar,/, 'Face ID mislukt: niet bewaren')
+assert.ok(!/Ook Face ID of vingerafdruk gebruiken/.test(bron), 'geen losse knop meer om Face ID over te slaan')
+assert.match(bron, /T\('of met je pincode'\)/, 'op het slot: Face ID-knop en daaronder de pincode')
+// (In een testbrowser met een nep-Face ID nagelopen: bewaren = pincode + Face ID, ontgrendelen met allebei, niet herkend = dicht,
+// toestel zonder Face ID = alleen pincode met uitleg.)
+
 // 4. Bellen gaat voor, en de pagina's
 assert.match(bron, /html\.fibro-slot-dicht #oproepModal\{z-index:100001!important\}/, 'oproepvenster van de chat boven het slot')
 assert.match(bron, /#fibroSlot\{position:fixed;inset:0;z-index:99990;/, 'slot onder het oproepvenster van bel-luisteraar.js (100000)')

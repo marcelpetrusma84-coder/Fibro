@@ -1,7 +1,8 @@
 // appslot.js (v266, 5 nov 2026): Fibro op slot met Face ID, vingerafdruk of een pincode.
 //
 // In gewone woorden: zet je het aan (☰ > Instellingen > 🔒 App-slot), dan vraagt Fibro om je gezicht, vingerafdruk of
-// pincode als je een tijdje weg was. Standaard UIT. Je kiest zelf na hoe lang: meteen, 1 minuut, 15 minuten of 1 uur.
+// pincode als je een tijdje weg was. Er zijn altijd twee manieren om te ontgrendelen: je pincode én Face ID of je
+// vingerafdruk (alleen de pincode als het toestel dat niet kan). Standaard UIT. Je kiest zelf na hoe lang: meteen, 1 minuut, 15 minuten of 1 uur.
 //  - Meldingen komen gewoon binnen: die toont de telefoon zelf (en er staat nooit in wat iemand schreef).
 //  - Bellen gaat altijd direct door: het oproepvenster staat boven het slot, en het belscherm (bellen.html) heeft geen slot.
 //  - Tik je op een melding, dan opent Fibro de juiste pagina; na het ontgrendelen zie je meteen die chat.
@@ -103,6 +104,8 @@
     '#fibroSlot button{min-height:48px;border-radius:24px;border:none;padding:12px 22px;font:inherit;font-weight:700;font-size:16px;cursor:pointer}' +
     '#fibroSlot .fs-hoofd{background:linear-gradient(135deg,#c084fc,#f0abfc);color:#1a0a2e;min-width:240px}' +
     '#fibroSlot .fs-licht{background:none;color:#f3e8ff;opacity:.75;text-decoration:underline;font-weight:400;font-size:14px}' +
+    '#fibroSlot .fs-of{display:flex;align-items:center;gap:10px;width:240px;font-size:13px;opacity:.7}' +
+    '#fibroSlot .fs-of::before,#fibroSlot .fs-of::after{content:"";flex:1;height:1px;background:#f3e8ff55}' +
     '#fibroSlot input{width:200px;min-height:52px;border-radius:14px;border:1px solid #c084fc88;background:#ffffff14;color:#fff;' +
     'font-size:26px;letter-spacing:.4em;text-align:center}#fibroSlot .fs-fout{color:#fca5a5;min-height:20px;font-size:14px}' +
     '.fs-dialoog{position:fixed;inset:0;z-index:100002;display:flex;align-items:center;justify-content:center;background:#000a;padding:16px}' +
@@ -145,13 +148,13 @@
     overlay.setAttribute('role', 'dialog')
     overlay.setAttribute('aria-modal', 'true')
     overlay.innerHTML = '<div class="fs-slot" aria-hidden="true">🔒</div><h1></h1><p class="fs-uitleg"></p>' +
-      '<button type="button" class="fs-hoofd fs-bio" hidden></button>' +
+      '<button type="button" class="fs-hoofd fs-bio" hidden></button><div class="fs-of" hidden></div>' +
       '<input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" class="fs-pin">' +
       '<div class="fs-fout" role="alert"></div>' +
       '<button type="button" class="fs-hoofd fs-ok"></button>' +
       '<button type="button" class="fs-licht fs-vergeten"></button>'
     overlay.querySelector('h1').textContent = T('Fibro is op slot')
-    overlay.querySelector('.fs-uitleg').textContent = inst.cred ? T('Ontgrendel met Face ID of je vingerafdruk, of typ je pincode.') : T('Typ je pincode.')
+    overlay.querySelector('.fs-uitleg').textContent = inst.cred ? T('Ontgrendel met Face ID of je vingerafdruk, of met je pincode.') : T('Typ je pincode.')
     var bio = overlay.querySelector('.fs-bio'), pin = overlay.querySelector('.fs-pin'), fout = overlay.querySelector('.fs-fout')
     var ok = overlay.querySelector('.fs-ok'), vergeten = overlay.querySelector('.fs-vergeten')
     pin.setAttribute('aria-label', T('Pincode'))
@@ -161,6 +164,7 @@
     if (inst.cred) {
       bio.hidden = false
       bio.textContent = T('🙂 Face ID of vingerafdruk')
+      var of = overlay.querySelector('.fs-of'); of.hidden = false; of.textContent = T('of met je pincode')
       bio.onclick = function () { // in de tik zelf: anders vraagt de iPhone niets
         fout.textContent = ''
         controleerBiometrie(inst.cred).then(function (goed) { if (goed) open(); else fout.textContent = T('Niet herkend. Probeer het nog eens of typ je pincode.') },
@@ -230,12 +234,12 @@
       '<div class="fs-keuzes"></div><div class="fs-pinvak" hidden><p class="fs-p2"></p>' +
       '<input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" class="fs-pin1">' +
       '<input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" class="fs-pin2"></div>' +
-      '<button type="button" class="fs-bio" hidden></button><div class="fs-fout" role="alert"></div>' +
+      '<p class="fs-bio-uitleg" hidden></p><div class="fs-fout" role="alert"></div>' +
       '<div class="fs-rij"><button type="button" class="fs-annuleer"></button><button type="button" class="fs-bewaar" aria-pressed="true"></button></div></div>'
     var q = function (s) { return d.querySelector(s) }
     q('#fsTitel').textContent = T('🔒 App-slot')
     q('.fs-p1').textContent = T('Fibro vraagt om Face ID, je vingerafdruk of een pincode als je een tijdje weg was. Meldingen komen gewoon binnen en bellen gaat altijd direct door.')
-    q('.fs-p2').textContent = T('Kies een pincode van 4 tot 6 cijfers (twee keer). Die heb je nodig als Face ID of je vingerafdruk niet lukt.')
+    q('.fs-p2').textContent = T('Kies een pincode van 4 tot 6 cijfers (twee keer).')
     q('.fs-pin1').placeholder = T('Pincode'); q('.fs-pin2').placeholder = T('Nog een keer')
     q('.fs-pin1').setAttribute('aria-label', T('Pincode')); q('.fs-pin2').setAttribute('aria-label', T('Pincode nog een keer'))
     q('.fs-annuleer').textContent = T('Annuleren'); q('.fs-bewaar').textContent = T('Bewaren')
@@ -248,18 +252,17 @@
       q('.fs-keuzes').appendChild(b)
       return [o[0], b]
     })
-    var bio = q('.fs-bio')
-    kanBiometrie().then(function (kan) { if (kan) { bio.dataset.kan = '1'; teken() } })
-    bio.onclick = function () {
-      if (cred) { cred = null; teken(); return }
-      q('.fs-fout').textContent = ''
-      maakBiometrie().then(function (id) { cred = id; teken() }, function () { q('.fs-fout').textContent = T('Face ID of vingerafdruk instellen lukte niet. De pincode werkt wel.') })
-    }
+    // v266b (op verzoek van Marcel): altijd twee manieren om te ontgrendelen: 1. pincode en 2. Face ID of vingerafdruk.
+    // Kan dit toestel geen Face ID of vingerafdruk, dan alleen de pincode (dat staat er dan bij).
+    var bioUitleg = q('.fs-bio-uitleg'), kan = null
+    kanBiometrie().then(function (k) { kan = k; teken() })
     function teken() {
       knoppen.forEach(function (k) { k[1].setAttribute('aria-pressed', k[0] === keuze ? 'true' : 'false') })
       q('.fs-pinvak').hidden = keuze < 0 || !!inst.pin
-      bio.hidden = keuze < 0 || !bio.dataset.kan
-      bio.textContent = cred ? T('🙂 Face ID / vingerafdruk: aan (tik om uit te zetten)') : T('🙂 Ook Face ID of vingerafdruk gebruiken')
+      bioUitleg.hidden = keuze < 0 || kan === null
+      bioUitleg.textContent = cred ? T('✅ Ontgrendelen kan met je pincode en met Face ID of je vingerafdruk.')
+        : kan ? T('Na Bewaren vraagt je telefoon om Face ID of je vingerafdruk. Daarna kun je ontgrendelen met allebei: je pincode en Face ID of je vingerafdruk.')
+        : T('Dit toestel heeft geen Face ID of vingerafdruk voor Fibro. Je ontgrendelt dan alleen met je pincode.')
     }
     teken()
     function weg() { d.remove() }
@@ -276,11 +279,22 @@
         schrijf(ACTIEF, Date.now())
         weg(); if (opKlaar) opKlaar(stand())
       }
-      if (inst.pin) { klaar(inst.pin); return }
-      var p1 = q('.fs-pin1').value.trim(), p2 = q('.fs-pin2').value.trim()
-      if (!geldigePin(p1)) { fout.textContent = T('Een pincode heeft 4 tot 6 cijfers.'); return }
-      if (p1 !== p2) { fout.textContent = T('De twee pincodes zijn niet hetzelfde.'); return }
-      maakPin(p1).then(klaar, function () { fout.textContent = T('Dat lukte niet. Probeer het nog eens.') })
+      var p1 = '', nieuwePin = !inst.pin
+      if (nieuwePin) {
+        p1 = q('.fs-pin1').value.trim()
+        var p2 = q('.fs-pin2').value.trim()
+        if (!geldigePin(p1)) { fout.textContent = T('Een pincode heeft 4 tot 6 cijfers.'); return }
+        if (p1 !== p2) { fout.textContent = T('De twee pincodes zijn niet hetzelfde.'); return }
+      }
+      fout.textContent = ''
+      // Face ID / vingerafdruk meteen in deze tik vragen (anders vraagt de iPhone niets); daarna pas de pincode bewaren
+      var bioKlaar = cred || !kan ? Promise.resolve(cred) : maakBiometrie().then(function (id) { cred = id; return id })
+      bioKlaar.then(function () {
+        return nieuwePin ? maakPin(p1) : inst.pin
+      }, function () {
+        fout.textContent = T('Face ID of vingerafdruk instellen lukte niet. Tik nog eens op Bewaren om het opnieuw te proberen.')
+        throw null
+      }).then(klaar, function (e) { if (e !== null) fout.textContent = T('Dat lukte niet. Probeer het nog eens.') })
     }
     document.body.appendChild(d)
   }

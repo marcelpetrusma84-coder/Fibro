@@ -1,4 +1,4 @@
-# Het Stekky-logo (5 nov 2026; v3: vier widgetblokken): python3 tests/gen/logo_bouw.py tests/gen .  -> icon-192/512, icon-maskable-512, apple-touch-icon, icon.svg en de Android-iconen
+# Het Stekky-logo (5 nov 2026; v3: vier widgetblokken; v4: kleurverloop): python3 tests/gen/logo_bouw.py tests/gen .  -> icon-192/512, icon-maskable-512, apple-touch-icon, icon.svg en de Android-iconen
 import sys; sys.path.insert(0, sys.argv[1]); from logo_teken import *
 R=sys.argv[2]; A=R+'/android/app/src/main/res/'
 gewoon=teken(1.0, True, 0.22)       # "any": afgeronde hoeken
@@ -9,11 +9,14 @@ bewaar(gewoon, R+'/icon-192.png', 192); bewaar(gewoon, R+'/icon-512.png', 512)
 bewaar(mask, R+'/icon-maskable-512.png', 512)
 bewaar(vol, R+'/apple-touch-icon.png', 180)
 open(R+'/icon.svg','w').write('''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="113" fill="#50124d"/>
+  <defs><linearGradient id="verloop" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="512">
+    <stop offset="0" stop-color="#8b3fd1"/><stop offset="0.4" stop-color="#6a2bab"/><stop offset="1" stop-color="#1a0a2e"/>
+  </linearGradient></defs>
+  <rect width="512" height="512" rx="113" fill="url(#verloop)"/>
   <g fill="#fff">
     <rect x="75" y="75" width="171" height="171" rx="32" fill="none" stroke="#fff" stroke-width="11"/>
     <rect x="98" y="98" width="125" height="125" rx="14"/>
-    <text x="160.5" y="191" font-size="106" text-anchor="middle" font-family="Inter, 'DM Sans', Arial, sans-serif" font-weight="700" fill="#50124d">S</text>
+    <text x="160.5" y="191" font-size="106" text-anchor="middle" font-family="Inter, 'DM Sans', Arial, sans-serif" font-weight="700" fill="url(#verloop)">S</text>
     <rect x="266" y="75" width="171" height="171" rx="32"/>
     <rect x="75" y="266" width="171" height="171" rx="32"/>
     <rect x="271.5" y="271.5" width="160" height="160" rx="27" fill="none" stroke="#fff" stroke-width="11"/>

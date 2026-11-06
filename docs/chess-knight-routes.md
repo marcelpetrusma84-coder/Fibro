@@ -9,6 +9,15 @@ bestaande apparaatinstellingen. Ongeldige gegevens vallen terug op de defaults.
 De functie werkt in alle vier de soloniveaus, waaronder Ultra. Vriendenpartijen
 en drie-spelerpartijen krijgen deze hulp niet.
 
+Zodra routes zichtbaar zijn, verschijnen er naast elkaar twee live sliders.
+**Stappen** kiest de lagen 1 t/m het ingestelde maximum (1–4) en synchroniseert
+de vier instellingen. **Zichtbaarheid** regelt alle routevormen inclusief hun
+contrasterende randen van 5% (bijna onzichtbaar) tot 100% (de standaard). De
+waarde wordt opgeslagen als het gehele getal `knightRouteOpacity`. Alleen de
+routevormen vervagen: de legenda, bediening en highlight van het onderzochte
+paard blijven goed zichtbaar. Ongeldige opgeslagen waarden gebruiken 100%.
+
+
 ## Weergave en betekenis
 
 - Eigen paard: rode, blauwe, groene en paarse bolletjes, afnemend in grootte.
@@ -16,6 +25,8 @@ en drie-spelerpartijen krijgen deze hulp niet.
 - De vulling is halfdoorzichtig, zodat stukken eronder zichtbaar blijven. Als
   meerdere sprongaantallen hetzelfde veld bereiken, liggen de kleinere vormen
   boven de grotere. Er is geen beperking of uitsluiting per kwadrant.
+- Het onderzochte paard krijgt een eigen highlight en de legenda noemt zijn
+  veld. Op het beginvak staat geen bestemmingsbolletje of -vierkantje.
 - Een legenda geeft de gekozen sprongaantallen aan. Een nieuwe gewone tik,
   sluiten of een gewijzigde stelling/beurt ruimt de routes op.
 
@@ -26,7 +37,8 @@ daarom geen voorspelling van een echte partij en geen engine-advies.
 
 Iedere sprong gebruikt de bestaande legale-zettencontrole, inclusief de
 veiligheid van de eigen koning. Een koning wordt niet als capturebestemming
-gebruikt. Terugkeer en rondjes zijn mogelijk; de echte stelling wordt nooit
+gebruikt. Terugkeer en rondjes blijven in de berekening mogelijk, ook al wordt
+op het beginvak geen markering getekend. De echte stelling wordt nooit
 gewijzigd. Een uitgeschakelde tussenlaag wordt nog steeds berekend als een
 latere laag aanstaat. Hoogstens vier sprongen worden doorzocht, met deduplicatie
 van identieke stellingen per laag.
@@ -49,15 +61,17 @@ opgeruimd bij afsluiten. De labels wisselen live tussen Nederlands en Engels.
 
 Open `tests/fixtures/chess-ultra-mobile-preview.html`, kies Ultra en houd tijdens
 wit aan zet bijvoorbeeld g1 twee seconden vast. Probeer daarna b8 en verander
-de vier toggles. De preview bevat ook de bestaande bordvergroting. De veegzone
+de twee live sliders en de vier toggles. Controleer dat terugkeer naar het
+beginvak alleen de paardhighlight toont. De preview bevat ook de bestaande
+bordvergroting. De veegzone
 voor Take-back is in de echte app onzichtbaar; uitsluitend de testpreview toont
 de strook en voortgang. Toetsenbordfocus kan die bediening zichtbaar maken.
 
 Normaal mergen en statisch deployen. Geen SQL, API-sleutels of nieuwe pakketten
 nodig. Alle drie de nieuwe modules `schaak-paard*.js` moeten worden meegeleverd.
 
-De integratie is gebaseerd op Marcels main **3362283**, inclusief zijn postbus-
-en pushwijzigingen. Alle **88 Node-testbestanden** slagen in chess, security, UI,
+De oorspronkelijke invoering was gebaseerd op Marcels main **3362283**, inclusief
+zijn postbus- en pushwijzigingen. Daarbij slaagden **88 Node-testbestanden** in chess, security, UI,
 onboarding, Neon, sync, foutmelder, Block It, bellen en dammen. Nieuwe tests
 controleren exacte sprongaantallen, eigen/vijandelijk paard, captures en
 koningsveiligheid, overlappende routes, alle toggles, lange druk en annuleren,
@@ -75,6 +89,15 @@ green/purple circles; opposing routes use orange/cyan/yellow/white squares.
 Sizes decrease with jump count, overlapping horizons remain visible and no
 quadrants are omitted. This is solo-only in every level, including Ultra.
 
+While routes are visible, live sliders select contiguous depths 1 through N
+(1–4) and marker opacity from 5% to 100%. The latter persists as
+`knightRouteOpacity`, defaulting to 100 for invalid data. Opacity updates retain
+the board and destination nodes. The inspected knight has a persistent
+highlight and a coordinate label; its own square receives no destination
+marker. Legal return branches are still calculated. Legend and controls retain
+their contrast at minimal marker opacity.
+
+
 Other pieces stay still except captures along a branch. Each jump uses legal
 move generation and king-safety checks; the live position is immutable. These
 routes do not predict opposing replies. Holds support touch, mouse and keyboard,
@@ -82,6 +105,6 @@ preserve normal taps, suppress accidental release clicks, and cancel safely on
 movement/multitouch/lifecycle changes. FEN/revision guards reject stale work.
 The prior invisible-production swipe correction is retained. No database,
 credentials or dependency changes are required.
-Based on main `3362283`, including the latest mailbox/push changes; all 88 Node
-test files pass. Real browser holds confirmed both palettes/shapes and preserved
+The original implementation was based on main `3362283`, including its mailbox/
+push changes; all 88 Node test files passed at that point. Real browser holds confirmed both palettes/shapes and preserved
 pieces. Physical phone gestures remain a device smoke test.

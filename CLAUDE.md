@@ -1,5 +1,7 @@
 # Afspraken voor Claude (Stekky, voorheen Fibro)
 
+> Dezelfde afspraken staan in AGENTS.md (voor Codex). Pas je de ene aan, pas dan de andere ook aan.
+
 ## Wie beslist
 - Eigenaar: **Marcel**. Hij is geen programmeur: schrijf in eenvoudig Nederlands.
 - **Merge nooit** zonder dat **Marcel of Tijn** "Merge" zegt. Zij beslissen.
@@ -7,7 +9,7 @@
   of de stappen, zodat ze het zelf kunnen doen.
 
 ## Werkwijze
-- Branch `claude/...` vanaf `origin/main` → PR → testversie op Netlify:
+- Branch `claude/...` (Claude) of `codex/...` (Codex) vanaf `origin/main` → PR → testversie op Netlify:
   `deploy-preview-<nr>--stately-llama-4b380e.netlify.app`.
 - Wacht met mergen tot alle controles op GitHub goed zijn (Tests (Node), Browsertests, apk).
 - Tests: `node tests/alle-tests.mjs`. Versiecontrole: `node tests/tools/controleer-versies.mjs origin/main HEAD`

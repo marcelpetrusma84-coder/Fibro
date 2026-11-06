@@ -263,8 +263,10 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       .sch-vonk { position:fixed; z-index:30; width:7px; height:7px; margin:-3.5px 0 0 -3.5px; border-radius:50%; pointer-events:none; background:radial-gradient(circle,#fff 0 30%,#ffd36e 45%,#ff7a2f 80%,transparent); box-shadow:0 0 6px #ffb347; }
       .sch-schokgolf { position:fixed; z-index:30; border-radius:50%; pointer-events:none; border:3px solid #ff4d5e; box-shadow:0 0 18px #ff2d45, inset 0 0 12px #ff2d4599; }
       .sch-checkmate-text { margin:0; padding:.14em .28em .22em; color:transparent; font-family:Impact,"Arial Black",system-ui,sans-serif; font-size:clamp(52px,15vw,150px); font-weight:1000; letter-spacing:.07em; line-height:1; text-align:center; -webkit-text-stroke:1px #f4fbff; background:linear-gradient(180deg,#fff 0%,#9da8b2 15%,#f8ffff 25%,#65717c 39%,#f2f7fb 52%,#77818b 66%,#fff 79%,#88939e 100%); background-clip:text; -webkit-background-clip:text; filter:drop-shadow(0 2px 0 #fff) drop-shadow(0 4px 0 #63707c) drop-shadow(0 7px 0 #222d37) drop-shadow(0 12px 13px #000c); text-shadow:0 1px 0 #fff,0 2px 0 #aeb8c1,0 3px 0 #59636d,0 5px 0 #252d35,0 12px 22px #000c; }
+      .sch-checkmate:not([hidden]) .sch-checkmate-text { transform-origin:center; animation:sch-checkmate-zoom 650ms cubic-bezier(.16,1,.3,1) both; }
+      @keyframes sch-checkmate-zoom { from { transform:scale(.5); } to { transform:scale(1); } }
       .sch-checkmate-fade { opacity:0; transform:scale(1.08); }
-      @media (prefers-reduced-motion:reduce) { .sch-checkmate { transition:none; } }
+      @media (prefers-reduced-motion:reduce) { .sch-checkmate { transition:none; } .sch-checkmate-fade { transform:none; } .sch-checkmate:not([hidden]) .sch-checkmate-text { animation:none; transform:none; } }
       .sch-noob-dialog { position:fixed; z-index:24; inset:0; display:grid; place-items:center; padding:20px; background:#070b14b8; }
       .sch-noob-dialog[hidden] { display:none; }
       .sch-noob-card { width:min(360px,100%); padding:20px; border:1px solid #f2cf97a0; border-radius:16px; background:linear-gradient(145deg,#30243a,#17121f); color:#fff8ed; box-shadow:0 18px 48px #000c; }

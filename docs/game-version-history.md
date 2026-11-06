@@ -24,6 +24,10 @@ spelvariant en daarom een minorversie.
 Schaken 6.1.1 verfijnt de schaakmatweergave: de tekst begint op halve grootte
 en zoomt naar de bestaande volle grootte. De fade en totale duur blijven gelijk.
 
+Schaken 6.2 voegt live sliders voor paardroutes toe: 1–4 sprongen en 5–100%
+zichtbaarheid. Het onderzochte paard krijgt een highlight; het beginvak krijgt
+geen routemarkering. Dit is een toevoeging binnen dezelfde spelvariant.
+
 ## Waar de datum vandaan komt
 
 De 24 historische gegevens zijn nagegaan in de eerste-oudergeschiedenis van

@@ -37,14 +37,14 @@ for (const game of expectedGames) {
   assert.throws(() => entries.push(entries[0]), TypeError)
   assert.throws(() => { entries[0].summary = 'changed' }, TypeError)
 }
-assert.equal(records, 26, '25 verified existing records plus the checkmate patch')
+assert.equal(records, 27, '26 verified existing records plus the live knight-route release')
 assert.equal(pending, 0, 'every shipped version has a real commit and timestamp')
-assert.equal(SPEL_VERSIES.schaken, '6.1.1')
+assert.equal(SPEL_VERSIES.schaken, '6.2.0')
 assert.equal(SPEL_VERSIES.shmup, '5.0.0')
 
 // The old branch briefly carried Chess 4 again while integrating Neon. It is
 // not a release and must never replace the real main sequence or timestamps.
-assert.deepEqual(spelHistorie('schaken').map(entry => entry.version), ['6.1.1','6.1.0','6.0.0','5.0.0','4.0.0','3.0.0','2.0.0'])
+assert.deepEqual(spelHistorie('schaken').map(entry => entry.version), ['6.2.0','6.1.1','6.1.0','6.0.0','5.0.0','4.0.0','3.0.0','2.0.0'])
 const chess = new Map(spelHistorie('schaken').map(entry => [entry.version,entry]))
 assert.equal(chess.get('6.0.0').sourceCommit, '6289a3fde4d7ad93e7c97f4924dc017fbe12fc3a')
 assert.equal(chess.get('6.0.0').updatedAt, '2026-11-02T13:16:03+01:00')

@@ -3,6 +3,7 @@
 import { SPEL_VERSIES, spelHistorie, versieLabel } from './spelversie-data.js?v=6'
 import { mountSpelVersie } from './spelversie-ui.js?v=6'
 export { SPEL_VERSIES, SPEL_HISTORIE, spelHistorie, versieLabel, vergelijkVersies } from './spelversie-data.js?v=6'
+export { mountSpelVersie }
 
 const histories = new WeakMap()
 

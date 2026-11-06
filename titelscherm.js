@@ -1,3 +1,5 @@
+// v8 (6 nov 2026, v271): opent er een spel tegen de computer, dan meldt dit bestand 'fibro-spel-open'; sluit het, dan
+// 'fibro-spel-dicht'. Je profielmuziek (profielmuziek.js) gaat zo uit tijdens het spel en daarna weer verder.
 // titelscherm.js - het titelscherm van elk spel (v5, 2 nov 2026; v4: muziek speelt door in het menu van het spel;
 // v5: het spel opent in een venster op Home, zodat de muziek ook op de iPhone doorspeelt in de menu's)
 // v2: openSpelMetTitel(): op Home, het profiel van een vriend en de uitnodiging komt het titelscherm al op die pagina,
@@ -32,16 +34,19 @@ export function titelNaam(spelId) {
 // v5: het spel opent in een venster óp deze pagina (spel.html?...&titel=1&ingebed=1), niet als nieuwe pagina. Zo speelt
 // de muziek door in het menu van het spel, ook op de iPhone (een nieuwe pagina mag daar pas na een tik geluid maken).
 // De muziek stopt als het spel echt begint (spel.html stuurt dan 'spel-begint') of als je het venster sluit.
+function meldSpel(open) { try { window.dispatchEvent(new CustomEvent(open ? 'fibro-spel-open' : 'fibro-spel-dicht')) } catch (e) {} }
 export function openSpelMetTitel(spelId, adres) {
+    meldSpel(true) // v8: je profielmuziek gaat uit (het titelscherm heeft zijn eigen muziek, en daarna speel je)
     if (!heeftTitelscherm(spelId)) { location.href = adres; return }
     toonTitelscherm({ spelId, naam: titelNaam(spelId) }).then(getikt => {
         if (getikt) openSpelVenster(adres + (adres.includes('?') ? '&' : '?') + 'titel=1&ingebed=1')
+        else meldSpel(false) // toch niet gespeeld: je muziek gaat weer verder
     })
 }
 
 let venster = null, oudeOverflow = ''
 function openSpelVenster(adres) {
-    sluitSpelVenster(true)
+    sluitSpelVenster(true, true)
     venster = document.createElement('iframe')
     venster.className = 'fibro-spelvenster'
     venster.title = 'Stekky'
@@ -55,12 +60,13 @@ function openSpelVenster(adres) {
     try { history.pushState({ fibroSpel: true }, '') } catch (e) {}
     venster.addEventListener('load', () => { try { venster && venster.contentWindow.focus() } catch (e) {} })
 }
-function sluitSpelVenster(viaTerugknop) {
+function sluitSpelVenster(viaTerugknop, viaNieuwVenster) {
     if (!venster) return
     venster.remove()
     venster = null
     document.documentElement.style.overflow = oudeOverflow
     stopTitelMuziek(0.3)
+    if (!viaNieuwVenster) meldSpel(false) // v8: spel dicht: je profielmuziek gaat weer verder
     if (!viaTerugknop && history.state && history.state.fibroSpel) { try { history.back() } catch (e) {} }
 }
 if (typeof window !== 'undefined') {

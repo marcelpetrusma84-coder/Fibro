@@ -1,3 +1,5 @@
+// v2 (6 nov 2026, v271): tijdens het spelen gaat je profielmuziek uit ('fibro-spel-open', zie profielmuziek.js) en
+// daarna weer verder ('fibro-spel-dicht').
 // quiz.js (v1, Fibro v265, 4 november 2026) - de quiz-widget. Met achtergrondmuziek (titelmuziek.js) en de
 // stickers 'Gelukt!' en 'Nee!'.
 // Je maakt zelf een quiz (tot 50 meerkeuzevragen) als widget op je profiel. Vrienden spelen hem op je profiel,
@@ -313,9 +315,12 @@ export function speelQuiz(quizIn, { achtergrond = null } = {}) {
   if (!quiz) return null
   const s = scherm(achtergrond)
   s.classList.add('quiz-speler')
+  const meld = open => { try { window.dispatchEvent(new CustomEvent(open ? 'fibro-spel-open' : 'fibro-spel-dicht')) } catch (e) {} }
+  meld(true) // v2: je profielmuziek uit tijdens de quiz
   if (quiz.muziek) { try { speelTitelMuziek(quiz.muziek) } catch (e) {} }
   const sluitSpeler = s._sluit
-  s._sluit = () => { try { stopTitelMuziek(0.6) } catch (e) {} sluitSpeler() }
+  let dicht = false
+  s._sluit = () => { try { stopTitelMuziek(0.6) } catch (e) {} sluitSpeler(); if (!dicht) { dicht = true; meld(false) } }
   try { if (s.requestFullscreen && !document.fullscreenElement) s.requestFullscreen().catch(() => {}) } catch (e) {}
   const geluid = naam => { if (quiz.geluid) { try { speelGeluid(naam) } catch (e) {} } }
   let nr = 0, antwoorden = [], bezig = false

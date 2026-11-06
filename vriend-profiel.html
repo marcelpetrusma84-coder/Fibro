@@ -147,7 +147,7 @@ body.heeft-wallpaper::before { display:block; }
   import * as GB from './gastenboekstijl.js?v=2'
   import { spelIcoonHtml } from './spelicoon.js?v=3' // losse spelplaatjes; v3 vangt ontbrekende plaatjes op
   import { koppelSpelIcoonFallback } from './spelicoon.js?v=3'
-  import { openSpelMetTitel } from './titelscherm.js?v=7' // v252: titelscherm met muziek meteen bij je tik
+  import { openSpelMetTitel } from './titelscherm.js?v=8' // v252: titelscherm met muziek meteen bij je tik
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
@@ -337,7 +337,7 @@ body.heeft-wallpaper::before { display:block; }
       if (!vriendId) return // v180: ook als 'Muziek van vrienden vanzelf' uit staat: dan het knopje met \u25B6
       const data = await laadFotoUitDB('vriend_' + vriendId + '_muziek_profiel')
       if (!data) return
-      const m = await import('./profielmuziek.js?v=185')
+      const m = await import('./profielmuziek.js?v=186')
       await m.speelProfielMuziek({ data, titel: T('Muziek van {naam}', { naam }), sleutel: 'vriend_' + vriendId, vriend: true })
     } catch (e) { console.warn('[profielmuziek]', e) }
   }
@@ -581,7 +581,7 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_quiz')
     if (!ruw) return false
     let Q, quiz = null
-    try { Q = await import('./quiz.js?v=1') } catch (e) { console.warn('[quiz]', e); return false }
+    try { Q = await import('./quiz.js?v=2') } catch (e) { console.warn('[quiz]', e); return false }
     try { quiz = Q.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!quiz) return false
     await vriendAchtergrond(el, vriendId, 'quiz')

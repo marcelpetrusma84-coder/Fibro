@@ -331,7 +331,7 @@ import { haalPrivateKeyOp } from './crypto.js?v=182'
 import { isBelregel, belregelTekst } from './belregel.js?v=152'
 import { koppelSpelIcoonFallback } from './spelicoon.js?v=3'
 koppelSpelIcoonFallback()
-import { openSpelMetTitel } from './titelscherm.js?v=7' // v252: titelscherm met muziek meteen bij je tik
+import { openSpelMetTitel } from './titelscherm.js?v=8' // v252: titelscherm met muziek meteen bij je tik
 import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=5' // v266
 pasBlokstijlToe()
 
@@ -1563,7 +1563,7 @@ async function renderQuiz(c, uid) {
   let quiz = null
   try { quiz = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
   let Q
-  try { Q = await import('./quiz.js?v=1') } catch (e) { console.warn('[quiz]', e); return }
+  try { Q = await import('./quiz.js?v=2') } catch (e) { console.warn('[quiz]', e); return }
   Q.tekenQuizWidget(c, {
     quiz, eigen: true,
     achtergrond: () => laadUitDB('widgetbg_quiz_' + uid),
@@ -2316,7 +2316,7 @@ window.openMenu = function() {
   }
   schakelaar('fibro_muziek_auto', T('\u{1F3B5} Mijn muziek vanzelf'), async (aan) => {
     if (aan) { try { sessionStorage.removeItem('fibro_muziek_pauze_eigen') } catch (e) {} }
-    try { const m = await import('./profielmuziek.js?v=185'); if (aan) startProfielMuziek(); else m.zetAuto(false) } catch (e) {}
+    try { const m = await import('./profielmuziek.js?v=186'); if (aan) startProfielMuziek(); else m.zetAuto(false) } catch (e) {}
   })
   schakelaar('fibro_muziek_auto_vrienden', T('\u{1F3B5} Muziek van vrienden vanzelf'))
   // v187: uit = een buzz is alleen een melding (geen buzzgeluid, niet trillen, geen schuddend scherm), zie meldingen.js
@@ -2879,7 +2879,7 @@ async function startProfielMuziek() {
     const data = await laadUitDB('muziek_track')
     if (!data) return
     const titel = await laadUitDB('muziek_titel')
-    const m = await import('./profielmuziek.js?v=185')
+    const m = await import('./profielmuziek.js?v=186')
     await m.speelProfielMuziek({ data, titel, sleutel: 'eigen' })
   } catch (e) { console.warn('[profielmuziek]', e) }
 }

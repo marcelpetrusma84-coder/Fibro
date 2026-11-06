@@ -3,7 +3,7 @@ import { stukSVG, registreerSlag, veroverdePunten, STUKPUNTEN } from './schaak-s
 import { schaakFen } from './schaak-ultra-engine.js?v=1'
 import { schaakNotatie, maakUltraEvaluatieHistorie } from './schaak-ultra-historie.js?v=1'
 import { maakSchaakWallpaper } from './schaak-wallpaper.js?v=4'
-import { maakUltraFocus } from './schaak-ultra-focus.js?v=1'
+import { maakUltraFocus } from './schaak-ultra-focus.js?v=2'
 import { maakUltraSwipe } from './schaak-ultra-swipe.js?v=1'
 import { maakPaardRoutesUI } from './schaak-paardroutes-ui.js?v=6'
 import { maakHintHold } from './schaak-hint-hold.js?v=1'

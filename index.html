@@ -21,8 +21,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>/* v130: zoomen mag weer; iPhone zoomt bij invoervakken kleiner dan 16px vanzelf in */@supports (-webkit-touch-callout: none){input,textarea,select{font-size:16px !important}}</style>
 <title>Stekky</title>
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=4">
+<link rel="manifest" href="manifest.json?v=4">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link href="lettertypen/basis.css?v=1" rel="stylesheet">
@@ -143,7 +143,7 @@ async function laadFotoUitDB(id){try{const db=await openDB();return new Promise(
 async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').delete(id);tx.oncomplete=()=>{try{if(window.werkOpslagBalkBij)window.werkOpslagBalkBij()}catch(e){};resolve()}})}catch{return null}}
 </script>
 <link rel="stylesheet" href="android-fix.css?v=1">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="icon.svg?v=4" type="image/svg+xml">
 <link rel="stylesheet" href="stijl.css?v=3">
 <link rel="stylesheet" href="app-depth.css?v=2">
 </head>
@@ -332,7 +332,7 @@ import { isBelregel, belregelTekst } from './belregel.js?v=152'
 import { koppelSpelIcoonFallback } from './spelicoon.js?v=3'
 koppelSpelIcoonFallback()
 import { openSpelMetTitel } from './titelscherm.js?v=7' // v252: titelscherm met muziek meteen bij je tik
-import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=4' // v266
+import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=5' // v266
 pasBlokstijlToe()
 
 // ── Waarschuw als de private key op dit apparaat ontbreekt ──
@@ -2571,7 +2571,7 @@ async function toonBeginschermTip() {
 }
 toonBeginschermTip()
 // v258: meldingen aanzetten met een tik (meldingen-aan.js): een kaart tot ze aan staan ('Nu niet' = 3 dagen niet)
-import('./meldingen-aan.js?v=4').then(m => m.toonMeldkaart(document.getElementById('beginschermTip'), supabase, window._uid))
+import('./meldingen-aan.js?v=5').then(m => m.toonMeldkaart(document.getElementById('beginschermTip'), supabase, window._uid))
   .catch(e => console.warn('[meldingen]', e))
 // v270: herstel nog niet aan (na een paar dagen)? Een vriendelijk kaartje (herstel-herinnering.js). Even later dan de
 // meldingenkaart, en niet als die er staat: nooit twee kaartjes tegelijk.
@@ -2897,7 +2897,7 @@ if (document.readyState === 'complete') startKast(); else window.addEventListene
 
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./service-worker.js?v=96')
+  navigator.serviceWorker.register('./service-worker.js?v=97')
 }
 </script>
 <script src="swipe.js?v=96"></script>

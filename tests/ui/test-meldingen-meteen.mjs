@@ -12,11 +12,11 @@ assert.ok(romp.indexOf('Notification.requestPermission()') > 0, 'vraagt toestemm
 assert.ok(romp.indexOf('Notification.requestPermission()') < romp.indexOf('await '), 'eerst de vraag, dan pas wachten (iPhone)')
 assert.match(romp, /if \(iphoneZonderApp\(\)\) \{ openBeginschermUitleg\(\{ reden: 'meldingen' \}\); return 'iphone-zonder-app' \}/)
 assert.match(romp, /upsert\(\{ user_id: userId, subscription: sub\.toJSON\(\) \}, \{ onConflict: 'user_id,endpoint' \}\)/)
-assert.match(mod, /const WERKER = '\.\/service-worker\.js\?v=96'/, 'dezelfde service worker als de andere pagina\'s')
+assert.match(mod, /const WERKER = '\.\/service-worker\.js\?v=97'/, 'dezelfde service worker als de andere pagina\'s')
 assert.ok(mod.includes(lees('profiel.html').match(/applicationServerKey: '([^']+)'/)[1]), 'dezelfde serversleutel als Profiel')
 
 // 2. Home: de kaart, niet in Safari op de iPhone (daar de tip voor het beginscherm), 'Nu niet' = 3 dagen
-assert.match(index, /import\('\.\/meldingen-aan\.js\?v=4'\)\.then\(m => m\.toonMeldkaart\(document\.getElementById\('beginschermTip'\), supabase, window\._uid\)\)/)
+assert.match(index, /import\('\.\/meldingen-aan\.js\?v=5'\)\.then\(m => m\.toonMeldkaart\(document\.getElementById\('beginschermTip'\), supabase, window\._uid\)\)/)
 assert.match(mod, /if \(stand === 'aan' \|\| stand === 'niet-mogelijk' \|\| stand === 'iphone-zonder-app'\) return null/)
 assert.match(mod, /const WEG_DAGEN = 3/)
 

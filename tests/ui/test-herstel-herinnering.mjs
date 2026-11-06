@@ -29,7 +29,7 @@ assert.equal(moetHerinneren({ ...basis, aangemaakt: null }), false, 'onbekende d
 // ── Home laadt het, na het meldingenkaartje ──
 const index = lees('index.html')
 assert.match(index, /import\('\.\/herstel-herinnering\.js\?v=2'\)\.then\(m => m\.toonHerstelKaart\(document\.getElementById\('beginschermTip'\), supabase, window\._uid\)\)/)
-assert.ok(index.indexOf("herstel-herinnering.js?v=2") > index.indexOf("meldingen-aan.js?v=4').then(m => m.toonMeldkaart"), 'na de meldingenkaart')
+assert.ok(index.indexOf("herstel-herinnering.js?v=2") > index.indexOf("meldingen-aan.js?v=5').then(m => m.toonMeldkaart"), 'na de meldingenkaart')
 
 // ── korter na het registreren ──
 const KORT = 'Schrijf hem op: zonder deze code ben je je berichten kwijt op een nieuwe telefoon.'

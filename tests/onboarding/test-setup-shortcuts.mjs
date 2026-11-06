@@ -39,7 +39,7 @@ assert.deepEqual((await arrive({ search:'?logout=1' })).calls, [])
 const manifest = JSON.parse(await readFile(new URL('../../manifest.json', import.meta.url), 'utf8'))
 assert.deepEqual(manifest.shortcuts.map(shortcut => shortcut.url), ['./index.html', './login.html#herstellen'])
 for (const shortcut of manifest.shortcuts) {
-  assert(shortcut.icons.some(icon => icon.src === 'icon-192.png'), 'both app-menu destinations retain the Stekky icon')
+  assert(shortcut.icons.some(icon => /^icon-192\.png(\?v=\d+)?$/.test(icon.src)), 'both app-menu destinations retain the Stekky icon')
 }
 console.log('PASS: recovery shortcut stays open without automatic key changes; normal login and both manifest destinations remain correct.')
 

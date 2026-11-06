@@ -2014,4 +2014,12 @@ window.FIBRO_EN = {
   "Samen spelletjes spelen": "Play games together",
   "Geen reclame en je gegevens worden niet verkocht": "No ads, and your data is never sold",
   "Een voorproefje van Stekky: probeer het meteen, ook zonder account.": "A taste of Stekky: try it right away, even without an account.",
+  "Even geduld, de app wordt geladen...": "One moment, the app is loading...",
+  "De app laadt niet. Controleer je internet en probeer het opnieuw.": "The app isn't loading. Check your internet and try again.",
+  "🔊 Tik voor geluid": "🔊 Tap for sound",
+  "🎤 Je microfoon werkt niet: de ander hoort je niet.": "🎤 Your microphone isn't working: the other person can't hear you.",
+  "iPhone: Instellingen → Apps → Safari → Microfoon → Sta toe. Sluit daarna {app} helemaal af en open hem opnieuw.": "iPhone: Settings → Apps → Safari → Microphone → Allow. Then close {app} completely and open it again.",
+  "Android: tik op het slotje naast het adres → Rechten → Microfoon aan. Lukt dat niet: Instellingen → Apps → Chrome → Rechten → Microfoon → Toestaan.": "Android: tap the lock next to the address → Permissions → Microphone on. If that doesn't work: Settings → Apps → Chrome → Permissions → Microphone → Allow.",
+  "Sta de microfoon toe via het slotje naast het adres in je browser.": "Allow the microphone via the lock next to the address in your browser.",
+  "Oké": "OK",
 }

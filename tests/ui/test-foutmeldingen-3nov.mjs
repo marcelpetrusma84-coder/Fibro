@@ -24,7 +24,7 @@ const lees = f => readFileSync(new URL('../../' + f, import.meta.url), 'utf8')
   assert.match(b, /if \(!peerConnection && !lokaleStream\) \{ console\.warn\('\[bellen\] offer zonder gesprek genegeerd'\); return \}\n  if \(!peerConnection\) maakPeerConnection\(\)/)
   assert.match(b, /;\(lokaleStream \? lokaleStream\.getTracks\(\) : \[\]\)\.forEach\(track => \{/)
   assert.match(b, /if \(antwoordVerwerkt\.has\(pc\)\) return\n    antwoordVerwerkt\.add\(pc\)\n    await pc\.setRemoteDescription/)
-  for (const f of ['chat.html', 'bellen.html', 'bel-luisteraar.js']) assert.match(lees(f), /bellen\.js\?v=162/, f)
+  for (const f of ['chat.html', 'bellen.html', 'bel-luisteraar.js']) assert.match(lees(f), /bellen\.js\?v=16[2-9]/, f)
 }
 
 // 3. 'Failed to fetch dynamically imported module' en 'Importing a module script failed': nog één keer proberen

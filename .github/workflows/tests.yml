@@ -96,3 +96,6 @@ jobs:
       - name: Nummers uit je playlist verwijderen (blijft weg na opnieuw openen)
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef272.py .
+      - name: Inloggen tijdens laden, navigatiebalk iPhone, geluid bij bellen
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef273.py .

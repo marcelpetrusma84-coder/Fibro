@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-<script src="taal.js?v=78"></script>
+<script src="taal.js?v=79"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json?v=4">
@@ -51,6 +51,8 @@ body.knoppen-weg #knoppen-gesprek, body.knoppen-weg .terug-btn, body.knoppen-weg
 <body>
 <button class="terug-btn" onclick="window.location.href='chat.html'" data-t>← terug</button>
 <audio id="remoteAudio" autoplay style="display:none"></audio>
+<!-- v163: blokkeert de telefoon het geluid van de ander, dan deze knop (zoals bij bellen in een spel) -->
+<button type="button" id="geluidKnop" style="display:none;position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:22;align-items:center;gap:8px;min-height:52px;padding:12px 24px;border:none;border-radius:26px;background:#8b3fd1;color:#fff;font:inherit;font-size:17px;font-weight:700;box-shadow:0 8px 24px #0009;cursor:pointer" data-t>🔊 Tik voor geluid</button>
 <video id="remoteMedia" autoplay playsinline></video>
 <video id="lokaalMedia" autoplay playsinline muted></video>
 <div class="overlay" id="ui">
@@ -142,7 +144,7 @@ function stopBeltoon() {
 </script>
 <script type="module">
 import { supabase } from './supabase.js?v=95'
-import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo, sluitBelMelding, wachtOpBelregel, bouwFilterKnop } from './bellen.js?v=162'
+import { initBellen, belOp, accepteerOproep, weigerooproep, hangOp, toggleMic, zetVriendId, schakelVideo, isVideoActiefLokaal, wisselCamera, aantalCameras, heeftLokaleVideo, sluitBelMelding, wachtOpBelregel, bouwFilterKnop, getMediaStatus, hervatGeluid, geluidDiagnose } from './bellen.js?v=163'
 
 const params = new URLSearchParams(window.location.search)
 const vriendId = params.get('vriend')
@@ -175,6 +177,11 @@ try { bouwFilterKnop(document.getElementById('filterKnopPlek')) } catch (e) {}  
 initBellen(session.user.id, {
   onVerbonden: () => { stopBeltoon(); startTimer() },
   onGeenCamera: () => toonMelding(T('Geen camera beschikbaar: je belt met alleen geluid.')), // v150
+  onGeenMicrofoon: (e) => toonMicHulp(e), // v163: zonder microfoon hoort de ander je niet: zeggen en uitleggen hoe je het aanzet
+  onMediaStatus: (st) => { // v163: blokkeert de telefoon het geluid van de ander, dan een grote knop 'Tik voor geluid'
+    const k = document.getElementById('geluidKnop')
+    if (k) k.style.display = st.audioBlocked ? 'flex' : 'none'
+  },
   onVideoStatus: (actief) => {
     const remoteMedia = document.getElementById('remoteMedia')
     if (remoteMedia) remoteMedia.style.display = actief ? 'block' : 'none'
@@ -237,7 +244,30 @@ if (vriendId && !params.get('inkomend')) {
   }
 }
 
+// v163: na 20 s in gesprek nagaan of het geluid echt over en weer gaat. Zo niet, dan naar de foutmelder
+// (Moderatie > Fouten) met wat er mis is: verbonden, eigen microfoon, geluid van de ander, bytes over de lijn, afspelen.
+let geluidControle = null
+function controleerGeluid() {
+  clearTimeout(geluidControle)
+  geluidControle = setTimeout(async () => {
+    if (!timer) return
+    let d = null
+    try { d = await geluidDiagnose() } catch (e) { return }
+    const goed = d.connected && d.localAudio && d.remoteAudio && !d.audioBlocked && (d.verstuurd || 0) > 2000 && (d.ontvangen || 0) > 2000 && d.speler.startsWith('speelt')
+    if (goed) return
+    const ja = b => b ? 'ja' : 'nee'
+    window.__fibroFoutmelder?.meld('belofte', 'Gesprek: na 20 s nog geen goed geluid',
+      'bellen.html · ' + (videoModus ? 'video' : 'audio') + ' · verbonden=' + ja(d.connected) + ' · ice=' + d.ice + ' · route=' + d.route +
+      ' · eigen mic=' + (d.localAudio ? 'ja' : d.localAudioAvailable ? 'gedempt' : 'nee') + ' · mic onderbroken=' + ja(d.localAudioMuted) +
+      ' · geluid ander=' + ja(d.remoteAudio) + ' · spoor ander=' + d.spoorAnder + ' · verstuurd=' + d.verstuurd + ' · ontvangen=' + d.ontvangen +
+      ' · niveau=' + d.niveau + ' · speler=' + d.speler + ' · afspelen geblokkeerd=' + ja(d.audioBlocked))
+  }, 20000)
+}
+document.getElementById('geluidKnop')?.addEventListener('click', () => hervatGeluid())
+document.addEventListener('pointerdown', () => { try { if (getMediaStatus().audioBlocked) hervatGeluid() } catch (e) {} }, true)
+
 function startTimer() {
+  controleerGeluid() // v163
   // iOS fix: audio moet gestart worden na gebruikersinteractie
   const audioEl = document.getElementById('remoteAudio')
   if (audioEl) { audioEl.play().catch(e => console.log('audio play:', e)) }
@@ -344,6 +374,32 @@ window.wisselCam = async () => {
   }
 }
 // v150: korte melding bovenin (verdwijnt na 5 s)
+// v163: je microfoon lukt niet (bijvoorbeeld 'Permission denied' op Android). Blijft staan tot je hem wegtikt.
+function toonMicHulp(e) {
+  if (document.getElementById('micHulp')) return
+  const ua = navigator.userAgent || ''
+  const iphone = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)
+  const android = /Android/.test(ua) || (/Linux/.test(ua) && navigator.maxTouchPoints > 0)
+  const stappen = iphone
+    ? T('iPhone: Instellingen → Apps → Safari → Microfoon → Sta toe. Sluit daarna {app} helemaal af en open hem opnieuw.')
+    : android
+    ? T('Android: tik op het slotje naast het adres → Rechten → Microfoon aan. Lukt dat niet: Instellingen → Apps → Chrome → Rechten → Microfoon → Toestaan.')
+    : T('Sta de microfoon toe via het slotje naast het adres in je browser.')
+  const m = document.createElement('div')
+  m.id = 'micHulp'
+  m.setAttribute('role', 'alert')
+  m.style.cssText = 'position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:21;width:calc(100% - 32px);max-width:420px;' +
+    'background:rgba(20,8,36,0.94);color:#fff;padding:14px 16px 12px;border-radius:14px;border:1px solid #fca5a5;font-size:15px;line-height:1.45;box-shadow:0 10px 30px #0008'
+  const kop = document.createElement('div'); kop.style.cssText = 'font-weight:700;margin-bottom:4px'
+  kop.textContent = T('🎤 Je microfoon werkt niet: de ander hoort je niet.')
+  const uitleg = document.createElement('div'); uitleg.style.cssText = 'opacity:.9;font-size:14px'; uitleg.textContent = stappen
+  const ok = document.createElement('button'); ok.type = 'button'; ok.textContent = T('Oké')
+  ok.style.cssText = 'margin-top:10px;min-height:40px;padding:8px 18px;border:none;border-radius:20px;background:#8b3fd1;color:#fff;font:inherit;font-weight:700;cursor:pointer'
+  ok.onclick = () => m.remove()
+  m.append(kop, uitleg, ok)
+  document.body.appendChild(m)
+}
+
 function toonMelding(tekst) {
   const m = document.createElement('div')
   m.textContent = tekst

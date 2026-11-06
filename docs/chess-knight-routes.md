@@ -27,8 +27,11 @@ paard blijven goed zichtbaar. Ongeldige opgeslagen waarden gebruiken 100%.
   boven de grotere. Er is geen beperking of uitsluiting per kwadrant.
 - Het onderzochte paard krijgt een eigen highlight en de legenda noemt zijn
   veld. Op het beginvak staat geen bestemmingsbolletje of -vierkantje.
-- Een legenda geeft de gekozen sprongaantallen aan. Een nieuwe gewone tik,
-  sluiten of een gewijzigde stelling/beurt ruimt de routes op.
+- De gekleurde cijfers in de legenda zijn ook onafhankelijke schakelaars: je
+  kunt bijvoorbeeld alleen sprong 2 tonen of sprong 1 en 4 combineren. De
+  slider kiest nog steeds snel een aaneengesloten maximum; de gekleurde
+  schakelaars verfijnen daarna welke lagen zichtbaar zijn. Een nieuwe gewone
+  tik, sluiten of een gewijzigde stelling/beurt ruimt de routes op.
 
 Het gaat om **hypothetische opeenvolgende sprongen van hetzelfde paard**. De
 andere stukken blijven staan, behalve stukken die langs een route worden
@@ -94,8 +97,11 @@ While routes are visible, live sliders select contiguous depths 1 through N
 `knightRouteOpacity`, defaulting to 100 for invalid data. Opacity updates retain
 the board and destination nodes. The inspected knight has a persistent
 highlight and a coordinate label; its own square receives no destination
-marker. Legal return branches are still calculated. Legend and controls retain
-their contrast at minimal marker opacity.
+marker. The four numbered legend badges are also independent toggles, so users
+can show just depth 2 or combine depths 1 and 4. The depth slider remains a
+quick contiguous maximum; toggles can refine its visible layers. Legal return
+branches are still calculated. Legend and controls retain their contrast at
+minimal marker opacity.
 
 
 Other pieces stay still except captures along a branch. Each jump uses legal

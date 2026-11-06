@@ -66,7 +66,7 @@ globalThis.window=new EventTarget()
 window.localStorage=globalThis.localStorage
 window.T=()=>{throw Error('The chess renderer must not invoke the global app translator')}
 const {start}=await import('../../schaken-drie-ui.js')
-const {maakSchaakTaal}=await import('../../schaak-taal.js?v=11')
+const {maakSchaakTaal}=await import('../../schaak-taal.js?v=12')
 const root=doc.getElementById('spelInhoud')
 const hostile='<img src=x onerror=alert(1)>'
 let stopped=0

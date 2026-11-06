@@ -16,7 +16,7 @@ export function maakPaardRoutesUI({ Schaak, board, root = board, menu = null, le
 } = {}) {
   if (!board || typeof getState !== 'function' || !doc?.createElement) throw new TypeError('Knight routes need a board, position reader and document.')
   const id = `sch-knight-route-${++volgendeBeschrijving}`
-  const cleanups = [], markers = [], descriptions = [], sources = [], holdingNodes = []
+  const cleanups = [], markers = [], descriptions = [], sources = [], holdingNodes = [], stepButtons = []
   const inputs = [...root.querySelectorAll('[data-knight-step]')].filter(input => {
     const depth = Number(input.dataset.knightStep)
     return Number.isInteger(depth) && depth >= 1 && depth <= 4
@@ -51,12 +51,12 @@ export function maakPaardRoutesUI({ Schaak, board, root = board, menu = null, le
     try { const value = getOpacity(); return validOpacity(value) ? value : 100 } catch { return 100 }
   }
   function syncControls(enabled = steps()) {
-    const depth = Math.max(1, enabled.lastIndexOf(true) + 1)
+    const depth = enabled.lastIndexOf(true) + 1
     if (depthInput) {
-      depthInput.value = String(depth); depthInput.disabled = !activeRoute
-      depthInput.setAttribute('aria-valuetext', depth === 1 ? t('Tot één sprong') : t('Tot {n} sprongen', { n:depth }))
+      depthInput.value = String(Math.max(1,depth)); depthInput.disabled = !activeRoute
+      depthInput.setAttribute('aria-valuetext', depth === 0 ? t('Geen sprongen zichtbaar') : depth === 1 ? t('Tot één sprong') : t('Tot {n} sprongen', { n:depth }))
     }
-    if (depthOutput) depthOutput.textContent = String(depth)
+    if (depthOutput) depthOutput.textContent = depth ? String(depth) : '—'
     if (opacityInput) {
       opacityInput.value = String(routeOpacity); opacityInput.disabled = !activeRoute
       opacityInput.setAttribute('aria-valuetext', t('Zichtbaarheid: {n}%', { n:routeOpacity }))
@@ -90,7 +90,7 @@ export function maakPaardRoutesUI({ Schaak, board, root = board, menu = null, le
     return /^[wz]N$/.test(piece || '') ? { r, k, color:piece[0], fen:current.fen, revision:current.revision } : null
   }
   function canHold(candidate) {
-    return (!menu || menu.hidden) && steps().some(Boolean) && sourceMatches(candidate, context())
+    return (!menu || menu.hidden) && sourceMatches(candidate, context())
   }
   function field(r, k) { return board.querySelector(`[data-r="${r}"][data-k="${k}"]`) }
   function removeHolding() {
@@ -130,22 +130,39 @@ export function maakPaardRoutesUI({ Schaak, board, root = board, menu = null, le
     marker.setAttribute('aria-hidden', 'true')
     return marker
   }
+  function paintStepButtons(enemy) {
+    if (!legendSteps) return
+    // Keep these native buttons intact across route/opacity/language changes.
+    // Replacing the focused badge would strand keyboard and touch users.
+    if (!stepButtons.length) for (let depth = 1; depth <= 4; depth++) {
+      const button = doc.createElement('button')
+      button.type = 'button'
+      button.className = `sch-knight-marker sch-knight-step-toggle sch-knight-depth-${depth}`
+      button.setAttribute('data-knight-visible-step', String(depth))
+      button.dataset.depth = String(depth)
+      button.textContent = String(depth)
+      listen(button, 'click', () => changeVisibleStep(depth - 1))
+      stepButtons.push(button)
+    }
+    for (let index = 0; index < stepButtons.length; index++) {
+      const button = stepButtons[index]
+      button.classList.toggle('sch-knight-enemy', enemy)
+      button.setAttribute('aria-pressed', String(activeRoute.steps[index]))
+      button.setAttribute('aria-label', depthLabel(index + 1))
+      button.title = depthLabel(index + 1)
+      if (button.parentNode !== legendSteps) legendSteps.append(button)
+    }
+  }
   function paint() {
     removePaint()
     if (legend) legend.hidden = !activeRoute
-    empty(legendSteps)
     syncControls()
-    if (!activeRoute) { if (legendSource) legendSource.textContent = ''; paintHolding(); return }
+    if (!activeRoute) { empty(legendSteps); if (legendSource) legendSource.textContent = ''; paintHolding(); return }
     const enemy = activeRoute.color !== playerColor
     const label = t(enemy ? 'Routes van het paard van de computer' : 'Routes van jouw paard')
     if (legendLabel) legendLabel.textContent = label
     if (legendSource) legendSource.textContent = t('Paard op {veld}', { veld:String.fromCharCode(97 + activeRoute.k) + (8 - activeRoute.r) })
-    for (let depth = 1; depth <= 4; depth++) if (activeRoute.steps[depth - 1] && legendSteps) {
-      const icon = makeMarker(depth, enemy)
-      icon.textContent = String(depth)
-      icon.title = depthLabel(depth)
-      legendSteps.append(icon)
-    }
+    paintStepButtons(enemy)
     const source = field(activeRoute.r,activeRoute.k)
     if (source && !source.classList.contains('sch-knight-source')) {
       source.classList.add('sch-knight-source'); sources.push(source)
@@ -190,7 +207,7 @@ export function maakPaardRoutesUI({ Schaak, board, root = board, menu = null, le
     const enabled = steps(), current = context()
     routeOpacity = readOpacity()
     for (const input of inputs) input.checked = enabled[Number(input.dataset.knightStep) - 1]
-    if (activeRoute && (!enabled.some(Boolean) || !sourceMatches(activeRoute,current))) clear()
+    if (activeRoute && !sourceMatches(activeRoute,current)) clear()
     else if (activeRoute && enabled.some((on, i) => on !== activeRoute.steps[i])) recompute(current, enabled)
     hold?.refresh?.()
     paint()
@@ -222,6 +239,13 @@ export function maakPaardRoutesUI({ Schaak, board, root = board, menu = null, le
     if (disposed || !activeRoute) return false
     if (!sourceMatches(activeRoute,context())) { clear(); return false }
     return true
+  }
+  function changeVisibleStep(index) {
+    if (!liveRoute()) return
+    const enabled = steps()
+    enabled[index] = !enabled[index]
+    try { saveSteps(enabled) } catch { /* the root retains its in-memory settings */ }
+    refresh()
   }
   function changeDepth() {
     if (!liveRoute()) return

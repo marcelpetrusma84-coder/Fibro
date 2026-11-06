@@ -99,3 +99,6 @@ jobs:
       - name: Inloggen tijdens laden, navigatiebalk iPhone, geluid bij bellen
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef273.py .
+      - name: Spreekwolkje in het spel als je een berichtje krijgt
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef274.py .

@@ -14,6 +14,7 @@
 // v270c (6 november 2026): taal-en.js?v=77 (herstel korter, herinnering op Home)
 // v271 (6 november 2026): taal-en.js?v=79 (nummers uit je playlist verwijderen)
 // v273 (6 november 2026): taal-en.js?v=80 (bellen: geluid en microfoon, inloggen tijdens laden)
+// v275 (6 november 2026): taal-en.js?v=81 (spreekwolkje in het spel bij een berichtje)
 //
 // In gewone woorden: dit bestand weet welke taal je gekozen hebt en vertaalt de teksten.
 // De Nederlandse zin is zelf de sleutel: T('Opslaan') geeft in het Nederlands 'Opslaan' en in
@@ -38,7 +39,7 @@
 // Alleen pagina's met <html data-taal> krijgen lang="en" (die zijn al vertaald).
 // In het Nederlands doet dit bestand verder niets met de pagina: alles blijft precies zoals het was.
 // Een gewoon script (geen module), vroeg geladen: direct na huisregel.js.
-// De Engelse woordenlijst (taal-en.js?v=80) wordt alleen bij Engels geladen.
+// De Engelse woordenlijst (taal-en.js?v=81) wordt alleen bij Engels geladen.
 (function () {
   'use strict'
   if (window.T) return
@@ -103,7 +104,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=80', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=81', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

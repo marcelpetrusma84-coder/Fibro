@@ -50,6 +50,8 @@ function fixture({ mobile = true } = {}) {
   for (let stage = 1; stage <= 4; stage++) {
     h.down(1,100); assert.equal(h.board.captures.size,0,'a one-finger square tap keeps its original target')
     h.down(2,200); assert.equal(h.board.captures.size,2)
+    h.move(2,213); assert.equal(h.focus.stage,stage-1,'a small but meaningful 13px pinch remains below the threshold')
+    h.move(2,214); assert.equal(h.focus.stage,stage,'a natural 14px pinch advances the board focus one step')
     h.move(2,260); assert.equal(h.focus.stage,stage)
     h.move(2,440); h.move(1,0); assert.equal(h.focus.stage,stage,'one step per gesture, even after a large spread')
     const click = h.board.emit('click'); assert.equal(click.prevented,true); assert.equal(click.stopped,true)
@@ -69,7 +71,7 @@ function fixture({ mobile = true } = {}) {
 // leave the controller permanently swallowing clicks.
 {
   const h = fixture()
-  h.down(1,100); h.down(2,200); h.move(2,215); assert.equal(h.focus.stage,0)
+  h.down(1,100); h.down(2,200); h.move(2,209); assert.equal(h.focus.stage,0,'small touch jitter does not change the board')
   h.down(3,300); h.move(2,270); assert.equal(h.focus.stage,0,'third finger cancels that gesture')
   h.up(1);h.up(2);h.up(3);h.pause()
   h.down(1,100);h.down(2,200)

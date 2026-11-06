@@ -83,7 +83,9 @@ export function maakUltraFocus({ root, board, host = root, restoreButton = null,
     event.preventDefault()
     if (stepped || cancelled || touches.size !== 2 || initialDistance < 12) return
     const delta = distance() - initialDistance
-    if (Math.abs(delta) < Math.max(24, initialDistance * .16)) return
+    // A modest 14px / 10% spread already feels like an intentional pinch on
+    // a phone; the previous 24px / 16% demanded an unnecessarily large move.
+    if (Math.abs(delta) < Math.max(14, initialDistance * .1)) return
     stepped = true
     setStage(stage + Math.sign(delta))
   }

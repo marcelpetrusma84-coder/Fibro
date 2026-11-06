@@ -5,12 +5,13 @@
 import { readdirSync, statSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const REPO = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const tests = []
 function zoek(map) {
   for (const naam of readdirSync(map).sort()) {
-    const p = path.join(map, naam), rel = path.relative(REPO, p)
+    const p = path.join(map, naam), rel = path.relative(REPO, p).split(path.sep).join('/')
     if (statSync(p).isDirectory()) { if (!/^tests\/(tools|fixtures|gen)$/.test(rel)) zoek(p) }
     else if (naam.endsWith('.mjs') && rel !== 'tests/alle-tests.mjs') tests.push(rel)
   }

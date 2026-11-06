@@ -416,6 +416,7 @@ window.FIBRO_EN = {
   "batterij": "battery",
   "berichten vandaag": "messages today",
   "▶ Spelen": "▶ Play",
+  "Druk op Enter om te spelen. Houd de spelkaart 3 seconden vast voor de versiegeschiedenis.": "Press Enter to play. Hold the game card for 3 seconds to view version history.",
   "Je profiel is vol (150 MB).": "Your profile is full (150 MB).",
   "Je profiel is vol (150 MB).\n\nVerwijder eerst een foto of nummer om ruimte te maken.": "Your profile is full (150 MB).\n\nRemove a photo or song first to make room.",
   "Je profiel is bijna vol (150 MB).\n\nMaak eerst ruimte, bijvoorbeeld door een foto of muziek weg te halen.": "Your profile is almost full (150 MB).\n\nMake room first, for example by removing a photo or some music.",

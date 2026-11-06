@@ -1,8 +1,11 @@
 # Versies en historie van spellen
 
 `spelversie-data.js` is de enige bron voor het huidige nummer en de historie van
-elk spel. Home en Stijl lezen dezelfde gegevens. Cacheversies in import-URL's en
-de algemene Fibro-appversie blijven afzonderlijke technische tellers.
+elk spel. Home en Stijl lezen dezelfde gegevens. Op Home blijft de spelkaart
+compact; houd een kaart drie seconden vast om de versie, tijd, tussenpoos en
+omhoog/omlaagknoppen voor oudere en nieuwere versies te tonen. Een korte tik
+blijft het spel openen. Cacheversies in import-URL's en de algemene
+Fibro-appversie blijven afzonderlijke technische tellers.
 
 ## Nummering
 
@@ -21,10 +24,29 @@ Schaken 6.1 voegt paardroutes na 2 seconden vasthouden, sterker contrast en de
 vernieuwde versiehistorie toe. Dit zijn verbeteringen binnen dezelfde
 spelvariant en daarom een minorversie.
 
+Schaken 6.1.1 verfijnt de schaakmatweergave: de tekst begint op halve grootte
+en zoomt naar de bestaande volle grootte. De fade en totale duur blijven gelijk.
+
+Schaken 6.2 voegt live instellingen voor paardroutes toe: 1–4 sprongen,
+5–100% zichtbaarheid en onafhankelijke schakelaars per sprongkleur. Het
+onderzochte paard krijgt een highlight; het beginvak krijgt geen
+routemarkering. Ultra krijgt een driedubbele hintdruk voor een echte legale zet
+met controleerbare uitleg, pijl en demonstratie. Een gewone tik houdt de korte
+stukhint. De hint gebruikt een zwart-wit-cyaan omlijsting, ook wanneer een
+aangevallen stuk rood is gemarkeerd.
+
+Schaken 6.3 voegt de uitgebreide Ultra-hint met uitleg toe. Op Home blijft de
+versiehistorie van alle spellen verborgen tot je een spelkaart drie seconden
+vasthoudt; de spelversie en pijlen verschijnen dan zonder een normale tik te
+veranderen in een spelstart.
+
+Schaken 6.3.1 maakt de pinchbediening op mobiel gevoeliger: een bewuste beweging
+van 14 pixels of 10% van de beginafstand schakelt één weergavestap.
+
 ## Waar de datum vandaan komt
 
-De 24 historische gegevens zijn nagegaan in de eerste-oudergeschiedenis van
-`main` voor `spelversies.js`. `updatedAt` is de ISO-datum met tijdzone van de
+De bestaande historische gegevens zijn nagegaan in de eerste-oudergeschiedenis
+van `main` voor `spelversies.js`. `updatedAt` is de ISO-datum met tijdzone van de
 commit die dat versienummer op main introduceerde. `sourceCommit` bewaart de
 volledige commit-ID. Dit is een aantoonbaar tijdstip van de code-update, geen
 bewering over de exacte Netlify-deploymenttijd.
@@ -46,6 +68,17 @@ actuele klok herordend.
 The canonical model stores full semantic version strings and immutable history
 records. Minor releases cover additions; patch releases cover fixes. Existing
 historical major numbers are preserved. Do not use floating-point increments.
+
+Home game cards stay compact until held for three seconds. Then the same version
+history used in Style appears, including its timestamp, interval and newer/older
+controls; a normal tap still opens the game.
+
+Chess 6.3 adds a detailed Ultra hint with a legal suggested move and explanation.
+The hint gets a distinct black, white and cyan frame even when the piece is red
+to indicate that it is under attack.
+
+Chess 6.3.1 makes mobile pinch resizing respond to a smaller, more natural
+14-pixel or 10%-of-starting-distance gesture.
 
 Historical timestamps identify the first-parent main commit that introduced
 each recorded number, with the full commit hash retained as evidence. They are

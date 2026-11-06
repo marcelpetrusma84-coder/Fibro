@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=79"></script>
+<script src="taal.js?v=80"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -74,6 +74,13 @@
   .widget-header-spel .widget-titel { flex:1; min-width:0; overflow-wrap:anywhere; line-height:1.35; }
   .widget-header-spel > .widget-spelversie { flex:1 0 100%; width:100%; min-width:0; margin:2px 0 3px; padding:0; border:0; background:none; color:#fff; font-variant-numeric:tabular-nums; white-space:normal; }
   .widget-spelversie:empty { display:none; }
+  .widget-header-spel > .widget-spelversie[hidden] { display:none; }
+  .widget-blok[role="button"] { touch-action:manipulation; }
+  .widget-blok[role="button"]:focus-visible { outline:3px solid #c084fc; outline-offset:3px; }
+  .widget-blok.game-version-holding { position:relative; outline:2px solid #c084fc; outline-offset:2px; box-shadow:0 0 0 4px #8b3fd144,0 12px 26px #0007; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+  .widget-blok.game-version-holding::after { content:""; position:absolute; z-index:12; left:8px; right:8px; bottom:6px; height:3px; border-radius:9px; background:linear-gradient(90deg,#f1dcff,#a75af3); box-shadow:0 0 8px #c084fcaa; transform:scaleX(0); transform-origin:left center; pointer-events:none; animation:game-version-hold-progress 3s linear forwards; }
+  @keyframes game-version-hold-progress { to { transform:scaleX(1); } }
+  @media (prefers-reduced-motion:reduce) { .widget-blok.game-version-holding::after { animation:none; transform:scaleX(.55); } }
   .widget-inhoud { flex:1; min-height:0; padding:10px; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
   .widget-inhoud.foto-widget { padding:0 !important; display:flex !important; flex-direction:column !important; align-items:stretch !important; justify-content:stretch !important; overflow:visible !important; }
   .widget-blok-naakt { background:transparent !important; border:none !important; box-shadow:none !important; overflow:visible !important; }
@@ -330,6 +337,7 @@ import { bewaardeSessieZonderInternet } from './offline.js?v=146'
 import { startMeldingen } from './meldingen.js?v=188'
 import { haalPrivateKeyOp } from './crypto.js?v=182'
 import { isBelregel, belregelTekst } from './belregel.js?v=152'
+import { maakSpelVersieLangDruk } from './spelversie-langdruk.js?v=1'
 import { koppelSpelIcoonFallback } from './spelicoon.js?v=3'
 koppelSpelIcoonFallback()
 import { openSpelMetTitel } from './titelscherm.js?v=8' // v252: titelscherm met muziek meteen bij je tik
@@ -685,6 +693,7 @@ function renderProfiel(id, c) {
 }
 
 // ── Spelwidget: tikken opent het spel tegen de computer (spel.html) ──
+const gameVersionHistoryCleanup = new WeakMap()
 function renderSpelWidget(c, spel) {
   const ICONEN = { botkaaseiren: '⭕', vieroprij: '🔴', schaken: '♟️', dammen: '⚫', pong: '🏓', pacman: '👻', breakout: '🟪', flappybird: '🦇', swarm: '🪲', endlessrunner: '🏃', pinball: '🐍', shmup: '🚀' }
   // 30 okt 2026: een plaatje uit het spel zelf (spelicoon.js); de emoji alleen als er (nog) geen plaatje is
@@ -692,10 +701,66 @@ function renderSpelWidget(c, spel) {
   c.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:100%;"><span style="font-size:30px;line-height:1">' + icon + '</span><span style="font-size:13px;font-weight:600;color:#fff">' + T('▶ Spelen') + '</span></div>'
   const blok = c.closest('.widget-blok') || c
   const kop = blok.querySelector('.widget-header')
-  // v265: de versie staat niet meer op de widget (zo is hij net zo compact als de andere), alleen in Mijn stijl > Spellen
-  if (kop) kop.classList.add('widget-header-spel')
+  const oudOpruimen = gameVersionHistoryCleanup.get(blok)
+  oudOpruimen?.()
+  const versieVlak = document.createElement('span')
+  versieVlak.className = 'widget-spelversie'
+  versieVlak.setAttribute('data-spelversie', spel)
+  versieVlak.setAttribute('data-spelversie-history', '')
+  versieVlak.hidden = true
+  if (kop) { kop.classList.add('widget-header-spel'); kop.append(versieVlak) }
   blok.style.cursor = 'pointer'
-  blok.onclick = () => openSpelMetTitel(spel, 'spel.html?spel=' + encodeURIComponent(spel))
+  blok.setAttribute('role', 'button')
+  blok.tabIndex = 0
+  blok.setAttribute('aria-keyshortcuts', 'Enter Space')
+  const holdHelp = T('Druk op Enter om te spelen. Houd de spelkaart 3 seconden vast voor de versiegeschiedenis.')
+  blok.title = holdHelp
+  blok.setAttribute('aria-label', `${kop?.querySelector('.widget-titel')?.textContent?.trim() || spel}. ${holdHelp}`)
+  let history = null, historyShown = false, historyRequest = 0, disposed = false
+  const toonHistorie = async () => {
+    if (disposed || !kop) return
+    const request = ++historyRequest
+    if (historyShown) {
+      history?.destroy()
+      history = null
+      historyShown = false
+      return
+    }
+    historyShown = true
+    try {
+      const versions = await import('./spelversies.js?v=23')
+      if (disposed || request !== historyRequest || !versieVlak.isConnected) return
+      const currentVersion = versions.spelVersie(spel)
+      if (!currentVersion) { historyShown = false; return }
+      history = versions.mountSpelVersie(versieVlak, {
+        game:spel,
+        currentVersion,
+        history:versions.spelHistorie(spel),
+        language:typeof T === 'function' && T.taal === 'en' ? 'en' : 'nl',
+      })
+    } catch (error) {
+      if (request === historyRequest) historyShown = false
+      console.warn('[game-version-history] could not load version history', error)
+    }
+  }
+  const press = maakSpelVersieLangDruk({ element:blok, onLongPress:toonHistorie })
+  const openGame = () => openSpelMetTitel(spel, 'spel.html?spel=' + encodeURIComponent(spel))
+  const keyboard = event => {
+    if (event.key !== 'Enter' || event.repeat) return
+    event.preventDefault()
+    openGame()
+  }
+  blok.addEventListener('keydown', keyboard)
+  blok.onclick = openGame
+  const cleanup = () => {
+    disposed = true
+    historyRequest++
+    press.destroy()
+    blok.removeEventListener('keydown', keyboard)
+    history?.destroy()
+    versieVlak.remove()
+  }
+  gameVersionHistoryCleanup.set(blok, cleanup)
 }
 
 // ── IndexedDB voor muziek (FibroDB v2, zelfde als profiel.html) ──
@@ -2214,7 +2279,7 @@ async function renderGastenboek(c, uid) {
 // v183: het versienummer en de datum van deze versie, onderaan in het menu. Zo zie je op elk toestel welke versie
 // er echt draait (een telefoon kan een oude pagina nog even vasthouden). Elk maak-script zet het nummer een hoger:
 // tests/gen/bouw.py maakt geen script als het hier niet omhoog gaat.
-const FIBRO_VERSIE = 218
+const FIBRO_VERSIE = 219
 const FIBRO_DATUM = '2026-10-27'
 function versieTekst() {
   let d = FIBRO_DATUM

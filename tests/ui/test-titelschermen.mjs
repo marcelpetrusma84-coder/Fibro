@@ -96,7 +96,7 @@ assert.match(lees('titelscherm.js'), /from '\.\/titelmuziek\.js\?v=4'/)
 // 7. v252: op Home, het profiel van een vriend en de uitnodiging komt het titelscherm al bij je tik (muziek meteen,
 //    ook op de iPhone); daarna spel.html?...&titel=1, dat het titelscherm dan overslaat
 assert.match(spel, /const titelGezien = new URLSearchParams\(location\.search\)\.get\('titel'\) === '1'/)
-for (const [f, patroon] of [['index.html', /blok\.onclick = \(\) => openSpelMetTitel\(spel, 'spel\.html\?spel=' \+ encodeURIComponent\(spel\)\)/],
+for (const [f, patroon] of [['index.html', /blok\.onclick = openGame/],
                             ['vriend-profiel.html', /el\.onclick = \(\) => openSpelMetTitel\(spel, 'spel\.html\?spel=' \+ encodeURIComponent\(spel\)\)/],
                             ['invite.html', /knop\.onclick = \(e\) => \{ e\.preventDefault\(\); openSpelMetTitel\(id, knop\.getAttribute\('href'\)\) \}/]]) {
   const bron = lees(f)

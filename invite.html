@@ -536,7 +536,7 @@ async function toonMeldWelkom(userId, plek) {
   const vak = document.getElementById('meldWelkom')
   if (!vak) return
   let m
-  try { m = await import('./meldingen-aan.js?v=4') } catch (e) { return }
+  try { m = await import('./meldingen-aan.js?v=5') } catch (e) { return }
   const stand = await m.meldStand()
   if (stand !== 'uit' && stand !== 'geweigerd') return
   const tekst = document.getElementById('meldWelkomTekst'), knop = document.getElementById('meldWelkomKnop')

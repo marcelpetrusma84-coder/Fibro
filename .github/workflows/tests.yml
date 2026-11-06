@@ -93,3 +93,6 @@ jobs:
       - name: Profielmuziek uit tijdens een spel tegen de computer (en daarna weer verder)
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef271.py .
+      - name: Nummers uit je playlist verwijderen (blijft weg na opnieuw openen)
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef272.py .

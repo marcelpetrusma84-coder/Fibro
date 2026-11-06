@@ -581,7 +581,7 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_quiz')
     if (!ruw) return false
     let Q, quiz = null
-    try { Q = await import('./quiz.js?v=1') } catch (e) { console.warn('[quiz]', e); return false }
+    try { Q = await import('./quiz.js?v=2') } catch (e) { console.warn('[quiz]', e); return false }
     try { quiz = Q.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!quiz) return false
     await vriendAchtergrond(el, vriendId, 'quiz')

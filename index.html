@@ -1563,7 +1563,7 @@ async function renderQuiz(c, uid) {
   let quiz = null
   try { quiz = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
   let Q
-  try { Q = await import('./quiz.js?v=1') } catch (e) { console.warn('[quiz]', e); return }
+  try { Q = await import('./quiz.js?v=2') } catch (e) { console.warn('[quiz]', e); return }
   Q.tekenQuizWidget(c, {
     quiz, eigen: true,
     achtergrond: () => laadUitDB('widgetbg_quiz_' + uid),

@@ -5,6 +5,7 @@
 #  C. door het titelscherm, het spel staat open (venster): nog steeds stil, ook als de pagina even weg en terug is
 #  D. spel dicht (terugknop): de muziek gaat weer verder
 #  E. titelscherm weggetikt met Escape is ook 'spelen'; maar: zelf gepauzeerd voor het spel = na het spel nog steeds uit
+#  G. ook de quiz-widget: tijdens de quiz stil, na het sluiten weer verder
 #  F. geen paginafouten
 # python3 -I proef271.py <map>
 import sys, os, subprocess, time, socket, base64, struct, math
@@ -25,8 +26,8 @@ B = 'http://127.0.0.1:%d/' % poort
 PAGINA = '_proef271.html'
 open(os.path.join(MAP, PAGINA), 'w').write('''<!doctype html><html data-taal><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
 <body style="background:#1a0a2e;margin:0;height:100vh"><script type="module">
-const pm = await import('./profielmuziek.js?v=186'); const ts = await import('./titelscherm.js?v=8')
-window.__ts = ts; window.__pm = pm
+const pm = await import('./profielmuziek.js?v=186'); const ts = await import('./titelscherm.js?v=8'); const qz = await import('./quiz.js?v=2')
+window.__ts = ts; window.__pm = pm; window.__qz = qz
 await pm.speelProfielMuziek({ data: %r, titel: 'Mijn nummer', sleutel: 'proef271' })
 window.__klaar = 1
 </script></body></html>''' % WAV)
@@ -58,6 +59,12 @@ try:
         pg.evaluate("window.__ts.openSpelMetTitel('breakout', 'spel.html?spel=breakout')"); pg.wait_for_timeout(400)
         pg.keyboard.press('Escape'); pg.wait_for_timeout(1200); pg.evaluate("history.back()"); pg.wait_for_timeout(1000)
         check('E zelf gepauzeerd: na het spel nog steeds uit', not speelt())
+        pg.click('#profielMuziekKnop'); pg.wait_for_timeout(500)   # weer aan
+        aan = speelt()
+        pg.evaluate("window.__quiz = window.__qz.speelQuiz({ titel: 'Proef', muziek: 'botkaaseiren', vragen: [{ v: 'Twee plus twee?', a: ['3', '4'], g: 1 }] })"); pg.wait_for_timeout(500)
+        stil = not speelt()
+        pg.evaluate("window.__quiz._sluit()"); pg.wait_for_timeout(1000)
+        check('G quiz: tijdens de quiz stil, daarna weer verder', aan and stil and speelt(), (aan, stil, speelt()))
         br.close()
 finally:
     srv.terminate()

@@ -114,6 +114,10 @@ window.FIBRO_EN = {
   "na 1 uur": "after 1 hour",
   "na {n} min": "after {n} min",
   "🔒 App-slot": "🔒 App lock",
+  // v271: nummers uit je playlist verwijderen (muziekwidget op Home)
+  "\"{naam}\" uit je playlist verwijderen?": "Remove \"{naam}\" from your playlist?",
+  "Nummer verwijderen": "Remove song",
+  "Verwijderen lukte niet: {fout}": "Removing didn't work: {fout}",
   // v270: herstel korter na registreren, en de herinnering op Home (herstel-herinnering.js)
   "Krijg je ooit een nieuwe telefoon? Met Face ID krijg je je berichten terug.": "Ever get a new phone? With Face ID you get your messages back.",
   "Schrijf hem op: zonder deze code ben je je berichten kwijt op een nieuwe telefoon.": "Write it down: without this code you lose your messages on a new phone.",

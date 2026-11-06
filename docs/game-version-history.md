@@ -32,13 +32,18 @@ Schaken 6.2 voegt live instellingen voor paardroutes toe: 1–4 sprongen,
 onderzochte paard krijgt een highlight; het beginvak krijgt geen
 routemarkering. Ultra krijgt een driedubbele hintdruk voor een echte legale zet
 met controleerbare uitleg, pijl en demonstratie. Een gewone tik houdt de korte
-stukhint. Aanvalskleur en hintkleur blijven met een contrastrand apart te
-herkennen.
+stukhint. De hint gebruikt een zwart-wit-cyaan omlijsting, ook wanneer een
+aangevallen stuk rood is gemarkeerd.
+
+Schaken 6.3 voegt de uitgebreide Ultra-hint met uitleg toe. Op Home blijft de
+versiehistorie van alle spellen verborgen tot je een spelkaart drie seconden
+vasthoudt; de spelversie en pijlen verschijnen dan zonder een normale tik te
+veranderen in een spelstart.
 
 ## Waar de datum vandaan komt
 
-De 24 historische gegevens zijn nagegaan in de eerste-oudergeschiedenis van
-`main` voor `spelversies.js`. `updatedAt` is de ISO-datum met tijdzone van de
+De bestaande historische gegevens zijn nagegaan in de eerste-oudergeschiedenis
+van `main` voor `spelversies.js`. `updatedAt` is de ISO-datum met tijdzone van de
 commit die dat versienummer op main introduceerde. `sourceCommit` bewaart de
 volledige commit-ID. Dit is een aantoonbaar tijdstip van de code-update, geen
 bewering over de exacte Netlify-deploymenttijd.
@@ -64,6 +69,10 @@ historical major numbers are preserved. Do not use floating-point increments.
 Home game cards stay compact until held for three seconds. Then the same version
 history used in Style appears, including its timestamp, interval and newer/older
 controls; a normal tap still opens the game.
+
+Chess 6.3 adds a detailed Ultra hint with a legal suggested move and explanation.
+The hint gets a distinct black, white and cyan frame even when the piece is red
+to indicate that it is under attack.
 
 Historical timestamps identify the first-parent main commit that introduced
 each recorded number, with the full commit hash retained as evidence. They are

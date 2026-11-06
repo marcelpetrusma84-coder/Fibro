@@ -1,8 +1,8 @@
 // One source for compact game labels and the browsable history on Home.
 // Versions are semantic strings: a minor update such as 6.10 is never 6.1.
-import { SPEL_VERSIES, spelHistorie, versieLabel } from './spelversie-data.js?v=5'
-import { mountSpelVersie } from './spelversie-ui.js?v=5'
-export { SPEL_VERSIES, SPEL_HISTORIE, spelHistorie, versieLabel, vergelijkVersies } from './spelversie-data.js?v=5'
+import { SPEL_VERSIES, spelHistorie, versieLabel } from './spelversie-data.js?v=6'
+import { mountSpelVersie } from './spelversie-ui.js?v=6'
+export { SPEL_VERSIES, SPEL_HISTORIE, spelHistorie, versieLabel, vergelijkVersies } from './spelversie-data.js?v=6'
 
 const histories = new WeakMap()
 

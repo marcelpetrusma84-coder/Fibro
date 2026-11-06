@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Fibro · Schaakmatzoom testen</title>
+  <style>
+    *{box-sizing:border-box}
+    :root{--accent:#c084fc;--accent2:#f0abfc;--border:#ffffff35;--card:#ffffff10;--text:#f3e8ff}
+    body{margin:0;padding:18px;background:#101322;color:#edf1ff;font:14px system-ui}
+    main{position:relative;z-index:1;max-width:900px;margin:auto}
+    .guide{position:relative;z-index:1;padding:16px 18px;margin-bottom:16px;border:1px solid #92b5e554;border-radius:14px;background:#101322ed;box-shadow:0 8px 24px #0004}
+    h1{margin:0 0 10px;font-size:22px}
+    p{margin:8px 0;color:#c5cee0;line-height:1.5}
+    nav{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:12px}
+    #play-checkmate{min-height:44px;padding:10px 16px;border:1px solid #9fe8cd99;border-radius:10px;background:linear-gradient(145deg,#30564e,#1e303e);color:#eefff9;font:700 14px system-ui;cursor:pointer;box-shadow:0 3px 0 #080e18,inset 0 1px #fff2}
+    #play-checkmate:active{transform:translateY(1px)}
+    #play-checkmate:focus-visible{outline:3px solid #ffe09c;outline-offset:3px}
+    #preview-status{color:#b6f5df;font-size:12px}
+    #spelTitelBar{margin-bottom:12px;font-weight:700}
+    #spelInhoud{min-width:0}
+  </style>
+</head>
+<body>
+<main id="spelOverlay">
+  <section class="guide" aria-labelledby="preview-title">
+    <h1 id="preview-title">Schaakmat: van halve naar volle grootte</h1>
+    <p>Lokale proef met de echte schaakengine en spelweergave. Er is geen verbinding met andere spelers en je hoeft niet in te loggen.</p>
+    <p>Wit heeft koning f6 en dame g6; zwart heeft koning h8. De knop speelt <strong>Qg7#</strong>. Je kunt die zet ook zelf op het bord uitvoeren. De tekst begint op 50%, groeit in 650 ms naar de huidige volle grootte en verdwijnt na 3 seconden met de bestaande fade. Bij ‘minder beweging’ verschijnt de tekst zonder zoom.</p>
+    <nav aria-label="Schaakmatproef">
+      <button id="play-checkmate" type="button">Speel schaakmat / opnieuw tonen</button>
+      <output id="preview-status" role="status" aria-live="polite">Klaar om te testen.</output>
+    </nav>
+  </section>
+  <section aria-label="Lokaal schaaktestbord">
+    <div id="spelTitelBar"></div>
+    <div id="spelInhoud"></div>
+  </section>
+</main>
+<script type="module">
+import * as Engine from '../../schaak.js?v=95'
+import * as Bordgeluid from '../../bordgeluid.js?v=201'
+import { start } from '../../schaken-ui.js?v=267'
+
+function matInEen() {
+  const state = Engine.nieuweSpelStaat()
+  state.bord = Array.from({length:8},()=>Array(8).fill(null))
+  state.bord[2][5] = 'wK' // f6
+  state.bord[2][6] = 'wQ' // g6
+  state.bord[0][7] = 'zK' // h8
+  state.rokade = { wK:false, wQ:false, zK:false, zQ:false }
+  return state
+}
+
+const status = document.getElementById('preview-status')
+try {
+  // Validate the fixture with the production rules before mounting the UI.
+  const proof = matInEen()
+  const mateMove = Engine.legaleZetten(proof,2,6).find(move=>move.naar[0]===1&&move.naar[1]===6)
+  if (!mateMove || Engine.staatInSchaak(proof,'w') || Engine.staatInSchaak(proof,'z')) throw Error('De testpositie is niet geldig.')
+  Engine.voerZetUit(proof,mateMove)
+  if (!Engine.isSchaakmat(proof,'z')) throw Error('De testzet moet schaakmat geven.')
+
+  const channel = { isSolo:true, niveau:'makkelijk', on(){return this}, send(){} }
+  start({ Schaak:{...Engine,nieuweSpelStaat:matInEen}, Bordgeluid, spelKanaal:channel, benIkSpeler1:true, vriendNaam:'Lokale testcomputer' })
+  const overlay = document.getElementById('sch-checkmate')
+  new MutationObserver(()=>{
+    status.textContent=overlay.hidden?'Klaar — toon opnieuw of speel zelf Qg7#.':'Schaakmat zichtbaar: halve → volle grootte → fade.'
+  }).observe(overlay,{attributes:true,attributeFilter:['hidden']})
+
+  document.getElementById('play-checkmate').addEventListener('click',()=>{
+    document.getElementById('sch-opnieuw').click()
+    document.querySelector('#sch-bord [data-r="2"][data-k="6"]').click()
+    document.querySelector('#sch-bord [data-r="1"][data-k="6"]').click()
+  })
+} catch(error) {
+  status.textContent='De proef kon niet starten: '+error.message
+  document.getElementById('play-checkmate').disabled=true
+  console.error(error)
+}
+</script>
+</body>
+</html>

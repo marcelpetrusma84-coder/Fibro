@@ -14,7 +14,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-<script src="taal.js?v=78"></script>
+<script src="taal.js?v=79"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -477,8 +477,8 @@ window.veiligeUrl = function(v){
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { nieuweSpelSessie, isNieuwsteSpelSessie } from './spelsessie.js?v=1'
-  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=11'
-  import { mountChessLayout } from './chess-layout.js?v=11'
+  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=12'
+  import { mountChessLayout } from './chess-layout.js?v=12'
   import { maakSpelVerbinding } from './spelverbinding.js?v=2'
   import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=2'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=2'
@@ -2814,8 +2814,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=151',
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
-    schaken: './schaken-ui.js?v=266',
-    schakendrie: './schaken-drie-ui.js?v=35',
+    schaken: './schaken-ui.js?v=269',
+    schakendrie: './schaken-drie-ui.js?v=36',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=151',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -3672,7 +3672,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await laadModule('./schaken-ui.js?v=266')
+    const m = await laadModule('./schaken-ui.js?v=269')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: fibroChessTest?.active ? schaakT('Testspeler · Zwart') : spelVriendUsername(), testMode:Boolean(fibroChessTest?.active), onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer : nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
     // v270: tegen een vriend staan de webcams als twee rondjes naast elkaar boven het bord, net als bij dammen.
@@ -3682,7 +3682,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   async function startSchakenDrie(players) {
-    const m = await laadModule('./schaken-drie-ui.js?v=35')
+    const m = await laadModule('./schaken-drie-ui.js?v=36')
     const testMode = Boolean(fibroChessTest?.active)
     const controller = m.start({ Bordgeluid, gameChannel:testMode ? null : spelKanaal, players, userId:testMode ? 'fibro-test-you' : huidigeUser.id, localPreview:testMode, testMode, testStream:fibroChessTest?.stream || null, onTestCameraChange:stream => { if (fibroChessTest?.active) fibroChessTest.stream = stream }, onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null })
     spelSchaakDrieController = controller

@@ -90,3 +90,6 @@ jobs:
       - name: Schaken met webcamrondjes naast elkaar, zoals dammen (gouden en rode rand)
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef270.py .
+      - name: Profielmuziek uit tijdens een spel tegen de computer (en daarna weer verder)
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef271.py .

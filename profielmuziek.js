@@ -1,4 +1,7 @@
 // profielmuziek.js - je profielnummer speelt vanzelf (v179, 17 oktober 2026)
+// v186 (6 nov 2026): speel je een spel tegen de computer (titelscherm.js meldt 'fibro-spel-open'), dan gaat je
+// profielmuziek uit; sluit je het spel ('fibro-spel-dicht'), dan gaat hij verder waar hij was. Had je hem zelf al
+// gepauzeerd, dan blijft hij uit.
 //
 // Op Home speelt je eigen profielnummer (Profiel > tabblad Profiel > Profielmuziek; op dit toestel bewaard als
 // 'muziek_track' en 'muziek_titel' in de toesteldatabase), op het profiel van een vriend zijn nummer (dat komt via
@@ -38,6 +41,11 @@ export function nacht(nu) {
 
 let huidige = null
 let beurt = 0
+let spelOpen = false // v186: er staat een spel open: niets vanzelf starten
+if (typeof window !== 'undefined') {
+  window.addEventListener('fibro-spel-open', () => { spelOpen = true; if (huidige) huidige.spelBegint() })
+  window.addEventListener('fibro-spel-dicht', () => { spelOpen = false; if (huidige) huidige.spelKlaar() })
+}
 
 // ─── v184: de plek van het knopje ───
 const PLEK = 'fibro_muziek_knop_plek'
@@ -191,7 +199,7 @@ export async function speelProfielMuziek({ data, titel, sleutel, vriend = false 
 
   let wachtOpTik = false, wasSpelend = false, weg = false
   const probeer = () => {
-    if (weg || !vanzelf()) return
+    if (weg || spelOpen || !vanzelf()) return
     audio.__fibroAuto = true // vanzelf: klinkt er al iets, dan wacht het (geluidregelaar.js)
     const p = audio.play()
     if (p && p.then) p.then(() => { stopWachten() }, () => { if (!wachtOpTik) startWachten() })
@@ -215,15 +223,23 @@ export async function speelProfielMuziek({ data, titel, sleutel, vriend = false 
   audio.addEventListener('pause', toon)
   const zicht = () => {
     if (document.hidden) { wasSpelend = !audio.paused; if (wasSpelend) audio.pause() }
-    else if (wasSpelend && sessie(PAUZE) !== '1') { wasSpelend = false; audio.__fibroAuto = true; const p = audio.play(); if (p && p.catch) p.catch(() => {}) }
+    else if (wasSpelend && !spelOpen && sessie(PAUZE) !== '1') { wasSpelend = false; audio.__fibroAuto = true; const p = audio.play(); if (p && p.catch) p.catch(() => {}) }
   }
   document.addEventListener('visibilitychange', zicht)
   const bewaarPlek = () => { try { if (audio.currentTime > 0) sessie(POS, audio.currentTime.toFixed(1)) } catch (e) {} }
   window.addEventListener('pagehide', bewaarPlek)
   const plekTimer = setInterval(bewaarPlek, 2000)
 
+  let speeldeVoorSpel = false
   huidige = {
     audio, knop, vriend,
+    // v186: een spel begint: stil (zonder 'zelf gepauzeerd' te onthouden); daarna weer verder als hij speelde
+    spelBegint() { speeldeVoorSpel = !audio.paused || (wachtOpTik && sessie(PAUZE) !== '1'); stopWachten(); if (!audio.paused) audio.pause() },
+    spelKlaar() {
+      if (weg || !speeldeVoorSpel || sessie(PAUZE) === '1') return
+      speeldeVoorSpel = false; audio.__fibroAuto = true
+      const p = audio.play(); if (p && p.catch) p.catch(() => { if (!wachtOpTik) startWachten() })
+    },
     stop() {
       weg = true
       bewaarPlek()

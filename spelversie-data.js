@@ -18,6 +18,7 @@ const histories = {
     initial('1.0.0'),
   ],
   schaken:[
+    record('6.1.1', '2026-11-04T17:42:54+01:00', '9cc8906dc63092618e79a705b9aee904236bab01', 'Schaakmattekst zoomt van halve naar volle grootte', 'Checkmate text zooms from half to full size'),
     // Actual implementation commit; separate from the deployment time.
     record('6.1.0', '2026-11-03T23:10:04+01:00', '3e21c7752e8d1c557054847e693b92303af5b6f7', 'Paardroutes na 2 seconden, sterker contrast en vernieuwde versiehistorie', 'Knight routes after 2 seconds, stronger contrast and improved version history'),
     record('6.0.0', '2026-11-02T13:16:03+01:00', '6289a3fde4d7ad93e7c97f4924dc017fbe12fc3a', 'Ultra en live evaluatie', 'Ultra and live evaluation'),

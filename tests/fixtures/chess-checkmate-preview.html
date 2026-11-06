@@ -9,7 +9,7 @@
     :root{--accent:#c084fc;--accent2:#f0abfc;--border:#ffffff35;--card:#ffffff10;--text:#f3e8ff}
     body{margin:0;padding:18px;background:#101322;color:#edf1ff;font:14px system-ui}
     main{position:relative;z-index:1;max-width:900px;margin:auto}
-    .guide{padding:16px 18px;margin-bottom:16px;border:1px solid #92b5e554;border-radius:14px;background:#101322ed;box-shadow:0 8px 24px #0004}
+    .guide{position:relative;z-index:1;padding:16px 18px;margin-bottom:16px;border:1px solid #92b5e554;border-radius:14px;background:#101322ed;box-shadow:0 8px 24px #0004}
     h1{margin:0 0 10px;font-size:22px}
     p{margin:8px 0;color:#c5cee0;line-height:1.5}
     nav{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:12px}
@@ -22,7 +22,7 @@
   </style>
 </head>
 <body>
-<main>
+<main id="spelOverlay">
   <section class="guide" aria-labelledby="preview-title">
     <h1 id="preview-title">Schaakmat: van halve naar volle grootte</h1>
     <p>Lokale proef met de echte schaakengine en spelweergave. Er is geen verbinding met andere spelers en je hoeft niet in te loggen.</p>
@@ -32,7 +32,7 @@
       <output id="preview-status" role="status" aria-live="polite">Klaar om te testen.</output>
     </nav>
   </section>
-  <section id="spelOverlay" aria-label="Lokaal schaaktestbord">
+  <section aria-label="Lokaal schaaktestbord">
     <div id="spelTitelBar"></div>
     <div id="spelInhoud"></div>
   </section>

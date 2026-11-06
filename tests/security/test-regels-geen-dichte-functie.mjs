@@ -6,8 +6,9 @@
 import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const MAP = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../../sql')
+const MAP = fileURLToPath(new URL('../../sql/', import.meta.url))
 const bestanden = readdirSync(MAP).filter(f => f.endsWith('.sql')).sort()
 const zonderCommentaar = s => s.replace(/--.*$/gm, '')
 const dicht = new Set()

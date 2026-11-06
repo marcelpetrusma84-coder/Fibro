@@ -21,6 +21,9 @@ Schaken 6.1 voegt paardroutes na 2 seconden vasthouden, sterker contrast en de
 vernieuwde versiehistorie toe. Dit zijn verbeteringen binnen dezelfde
 spelvariant en daarom een minorversie.
 
+Schaken 6.1.1 verfijnt de schaakmatweergave: de tekst begint op halve grootte
+en zoomt naar de bestaande volle grootte. De fade en totale duur blijven gelijk.
+
 ## Waar de datum vandaan komt
 
 De 24 historische gegevens zijn nagegaan in de eerste-oudergeschiedenis van

@@ -338,15 +338,14 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   import { initSync } from './sync.js?v=255'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { haalVriendFotos, zetAvatar } from './vriendfotos.js?v=2'
+  import { volgOnline, isVriendOnline, bewaarServerStand } from './onlinestip.js?v=1' // v274: nauwkeuriger bolletje
   pasBlokstijlToe()
 
   function isGebruikerOnline(profiel) {
     try { if (localStorage.getItem('fibro_ik_offline') === '1') return false } catch (e) {}
     if (!navigator.onLine) return false // v127: zonder internet weten we het niet
-    if (!profiel || !profiel.online_status) return false // bugtest 3 nov: profiel kan leeg zijn (niet zichtbaar)
-    if (!profiel.laatst_gezien) return false
-    const sec = (Date.now() - new Date(profiel.laatst_gezien).getTime()) / 1000
-    return sec < 300 // heartbeat elke 2 min (heartbeat.js)
+    if (!profiel) return false // bugtest 3 nov: profiel kan leeg zijn (niet zichtbaar)
+    return isVriendOnline(profiel.id, profiel) // v274: live verbinding eerst, anders het seintje op de server (onlinestip.js)
   }
 
   // v203 (sneller): wie is er ingelogd op dit toestel? Alleen om meteen de lijst van de vorige keer te kunnen tonen,
@@ -417,6 +416,8 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     let geblokkeerd = []
     if (!error && data) {
       volgAchtergronden(userId, data)
+      bewaarServerStand(data.map(f => f && f.profiles).filter(Boolean)) // v274
+      volgOnline(userId, vriendIdsOnline, tekenOpnieuwOnline)
       geblokkeerd = await (geblokBelofte || haalGeblokkeerden())
       try { localStorage.setItem(lijstSleutel, JSON.stringify({ data, geblokkeerd })) } catch (e) {}
     } else {
@@ -497,6 +498,9 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     return d.toLocaleDateString(T.locale, { day: 'numeric', month: 'short' }) + ' ' + tijd
   }
   let laatsteTeken = null
+  // v274: het bolletje verandert (live verbinding of een nieuw seintje): de lijst opnieuw tekenen
+  const tekenOpnieuwOnline = () => { if (laatsteTeken && !document.hidden) tekenLijst(...laatsteTeken) }
+  const vriendIdsOnline = () => ((laatsteTeken && laatsteTeken[1]) || []).map(f => f && f.profiles && f.profiles.id).filter(Boolean)
   window.addEventListener('fibro-sync-bijgewerkt', () => { if (laatsteTeken) tekenLijst(...laatsteTeken) })
   setInterval(() => { if (laatsteTeken && !document.hidden) tekenLijst(...laatsteTeken) }, 60000) // "9 min geleden" bijhouden
   window.addEventListener('storage', e => { if (laatsteTeken && e.key && e.key.startsWith('fibro_syncbij_')) tekenLijst(...laatsteTeken) })

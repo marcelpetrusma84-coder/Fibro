@@ -314,5 +314,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     }
   }
 </script>
+<!-- v274: ook in een spel of gesprek tel je mee als online (het seintje elke 2 minuten, heartbeat.js) -->
+<script type="module">import { startHeartbeat } from './heartbeat.js?v=117'; if (window.top === window) startHeartbeat().catch(() => {})</script>
 </body>
 </html>

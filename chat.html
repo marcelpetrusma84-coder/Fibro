@@ -456,6 +456,7 @@ window.veiligeUrl = function(v){
   import './pushnamen.js?v=1' // v270: de eigen namen van je vrienden voor de pushmeldingen (window.FibroPushNamen)
   import { initSync, syncMetVriend } from './sync.js?v=255'
   import { isOnline as vriendIsOnline } from './paren.js?v=2'
+  import { volgOnline, isVriendOnline as stipOnline, bewaarServerStand } from './onlinestip.js?v=1' // v274: nauwkeuriger bolletje
   import { startHeartbeat } from './heartbeat.js?v=117'
   import { startMeldingen, buzzRustig } from './meldingen.js?v=188'
   import { speelBuzz } from './buzzgeluid.js?v=1'
@@ -868,10 +869,8 @@ window.veiligeUrl = function(v){
   // --- Online-status in de vriendenlijst (zelfde regel als de pagina Vrienden) ---
   function isGebruikerOnline(profiel) {
     try { if (localStorage.getItem('fibro_ik_offline') === '1') return false } catch (e) {}
-    if (!profiel || !profiel.online_status) return false
-    if (!profiel.laatst_gezien) return false
-    const sec = (Date.now() - new Date(profiel.laatst_gezien).getTime()) / 1000
-    return sec < 300 // heartbeat elke 2 min (heartbeat.js)
+    if (!profiel) return false
+    return stipOnline(profiel.id, profiel) // v274: live verbinding eerst, anders het seintje op de server (onlinestip.js)
   }
 
   // Zet stipjes aan/uit en schuift wie online is naar boven.
@@ -901,6 +900,9 @@ window.veiligeUrl = function(v){
     if (gesorteerd.some((el, i) => el !== rijen[i])) gesorteerd.forEach(el => container.appendChild(el))
   }
 
+  // v274: het bolletje verandert (live verbinding of een nieuw seintje): opnieuw zetten uit wat we weten
+  const vriendIdsOnline = () => (window._vriendenData || []).map(v => v.id)
+  const werkOnlineUitStand = () => { if (!document.hidden) werkOnlineBij((window._vriendenData || []).map(v => ({ id: v.id }))) }
   // v199: het groene stipje bij de foto bovenin het gesprek (dezelfde regel als de lijst)
   let onlineVrienden = new Set()
   function werkKopStipBij() {
@@ -924,7 +926,7 @@ window.veiligeUrl = function(v){
         .from('profiles')
         .select('id, online_status, laatst_gezien')
         .in('id', ids)
-      if (!error && data) werkOnlineBij(data)
+      if (!error && data) { bewaarServerStand(data); werkOnlineBij(data) }
     } catch (e) { console.warn('[online] ophalen mislukt', e) }
   }
   function startOnlineTimer() {
@@ -1055,8 +1057,10 @@ window.veiligeUrl = function(v){
       const vers = data.find(v => v.id === geselecteerdeVriend.id)
       if (vers && (vers.public_key || null) !== vriendPublicKey) { vriendPublicKey = vers.public_key || null; werkVerzendknopBij(); controleerVriendSleutel(geselecteerdeVriend.id, vriendPublicKey) }
     }
+    if (!profielFout) bewaarServerStand(data) // v274
     werkOnlineBij(data)
     startOnlineTimer()
+    if (huidigeUser) volgOnline(huidigeUser.id, vriendIdsOnline, werkOnlineUitStand) // v274: live bijwerken
     setTimeout(() => bewaarAlleChats(data), 5000) // v128
     setTimeout(() => ruimBerichtCacheOp(), 15000) // v133
   }

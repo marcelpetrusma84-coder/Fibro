@@ -566,6 +566,7 @@ import { eisSessie, startBewaking } from './sessie.js?v=95'
 import { startMeldingen } from './meldingen.js?v=188'
 import { laadThema, bewaarThemaCache } from './thema.js?v=235'
 import { startHeartbeat } from './heartbeat.js?v=117'
+import { volgOnline } from './onlinestip.js?v=1' // v274: vrienden zien meteen of je de app in beeld hebt
 import { initSync } from './sync.js?v=255'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=149'
 import { startStickermaker } from './stickermaker.js?v=243'
@@ -885,6 +886,7 @@ async function init(){
     .then(r=>r,()=>({data:null}))
   await laadThema()
   startHeartbeat().catch(e=>console.warn('[heartbeat]',e))
+  volgOnline(huidigeUser.id)
   const{data}=await versProfiel
   profiel=data
   if(profiel)bewaarProfielCache(huidigeUser.id,profiel)

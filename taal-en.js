@@ -2023,4 +2023,9 @@ window.FIBRO_EN = {
   "Android: tik op het slotje naast het adres → Rechten → Microfoon aan. Lukt dat niet: Instellingen → Apps → Chrome → Rechten → Microfoon → Toestaan.": "Android: tap the lock next to the address → Permissions → Microphone on. If that doesn't work: Settings → Apps → Chrome → Permissions → Microphone → Allow.",
   "Sta de microfoon toe via het slotje naast het adres in je browser.": "Allow the microphone via the lock next to the address in your browser.",
   "Oké": "OK",
+  "Je hebt een berichtje": "You have a message",
+  "Je hebt {n} berichtjes": "You have {n} messages",
+  "Naar de chat? Dan verlaat je het spel.": "Go to the chat? You will leave the game.",
+  "Verder spelen": "Keep playing",
+  "Naar de chat": "Go to chat",
 }

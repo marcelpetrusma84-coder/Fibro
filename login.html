@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl" data-taal style="background:#1a0a2e;">
+<html lang="nl" data-taal style="background-color:#1a0a2e;">
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
@@ -26,7 +26,9 @@
     * { box-sizing:border-box; margin:0; padding:0; }
     /* v249: de pagina kan weer op en neer scrollen (overflow:hidden sneed de boven- en onderkant af als het formulier hoger
        was dan het scherm, bijv. Registreren op een telefoon). margin:auto 0 op .container houdt hem in het midden als hij past. */
-    body { background:var(--bg); color:var(--text); font-family:'DM Mono',monospace; min-height:100dvh; display:flex; align-items:flex-start; justify-content:center; padding:24px; overflow-x:hidden; }
+    /* v271: kleurverloop van het nieuwe paars (boven) naar het donkere paars van de app (onder) */
+    html { min-height:100%; background:#1a0a2e linear-gradient(180deg,#8b3fd1 0%,#6a2bab 40%,#1a0a2e 100%) no-repeat; }
+    body { background:transparent; color:var(--text); font-family:'DM Mono',monospace; min-height:100dvh; display:flex; align-items:flex-start; justify-content:center; padding:24px; overflow-x:hidden; }
     body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:0; }
     .container { width:100%; max-width:420px; margin:auto 0; position:relative; z-index:1; animation:fadeUp 0.4s ease both; }
     @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }

@@ -1,4 +1,5 @@
 // beltoon.js — beltoon voor een inkomende oproep (v8)
+// v11 (6 nov 2026, v271): de achtergrond loopt van het nieuwe paars naar het donkere paars van de app
 // v10 (6 nov 2026, v270): het tikscherm in de stijl van de inlogpagina: paars van de knoppen, Stekky wit in het midden
 // v7 (11 oktober 2026, v142): het welkomstscherm ook in het Engels (taal.js; zonder taal.js Nederlands)
 // Werkt met een gewoon <audio>-element i.p.v. Web Audio: de iPhone laat dat beter toe.
@@ -96,7 +97,7 @@
     wekScherm = document.createElement('div')
     wekScherm.style.cssText =
       'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;' +
-      'justify-content:center;gap:14px;background:#8b3fd1;color:#ffffff;' +
+      'justify-content:center;gap:14px;background:linear-gradient(180deg,#8b3fd1 0%,#6a2bab 40%,#1a0a2e 100%);color:#ffffff;' +
       'font-family:inherit;text-align:center;padding:24px;opacity:0;transition:opacity .3s;cursor:pointer;'
     const hallo = document.createElement('div')
     hallo.textContent = welkom ? vt('Welkom bij') : ''

@@ -106,11 +106,11 @@
     @keyframes spin { to{transform:rotate(360deg)} }
     .e2e-badge { display:inline-flex; align-items:center; gap:5px; background:rgba(34,197,94,0.1); border:0.5px solid rgba(34,197,94,0.3); border-radius:20px; padding:3px 8px; font-size:10px; color:#22c55e; margin-top:8px; }
   </style>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="manifest.json?v=4">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="stylesheet" href="android-fix.css?v=1">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="icon.svg?v=4" type="image/svg+xml">
 <link rel="stylesheet" href="stijl.css?v=3">
 </head>
 <body>
@@ -571,7 +571,7 @@
     // ── Push notificaties registreren ──
     try {
       if ('serviceWorker' in navigator && 'PushManager' in window) {
-        const reg = await navigator.serviceWorker.register('./service-worker.js?v=96')
+        const reg = await navigator.serviceWorker.register('./service-worker.js?v=97')
         await navigator.serviceWorker.ready
         const toestemming = await Notification.requestPermission()
         if (toestemming === 'granted') {

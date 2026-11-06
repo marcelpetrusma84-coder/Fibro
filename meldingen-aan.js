@@ -14,7 +14,7 @@ import { iphoneZonderApp, openBeginschermUitleg } from './beginscherm.js?v=3'
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 const SERVERSLEUTEL = 'BBTo5083-joPZ8FjJW0_lIMuyUWP3T6b6cul22b971RK033GrXdRzFyPUbSE8aoTADuQmdRtVOq1CI2n3v-RLyA'
-const WERKER = './service-worker.js?v=96' // dezelfde als op de andere pagina's
+const WERKER = './service-worker.js?v=97' // dezelfde als op de andere pagina's
 const WEG_SLEUTEL = 'fibro_meldkaart_weg'
 const WEG_DAGEN = 3
 

@@ -184,8 +184,8 @@ self.addEventListener('push', function(event) {
     try { if (self.FibroPushNamen) body = self.FibroPushNamen.naamInMelding(body, await self.FibroPushNamen.lees()) } catch (e) {} // v270
     const options = {
       body: body,
-      icon: schud ? '/Fibro/icon-buzz.png' : '/Fibro/icon-192.png',
-      badge: '/Fibro/icon-192.png',
+      icon: schud ? '/Fibro/icon-buzz.png' : '/Fibro/icon-192.png?v=4', // v271: nieuw icoon (kleurverloop)
+      badge: '/Fibro/icon-192.png?v=4',
       vibrate: schud ? [300, 80, 300, 80, 300, 80, 500] : isOproep ? [700, 300, 700, 300, 700, 300, 700] : [200, 100, 200],
       tag: tag,
       renotify: !!tag,

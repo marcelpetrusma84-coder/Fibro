@@ -22,8 +22,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Stekky — Stijl</title>
 <meta http-equiv="cache-control" content="no-cache">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=4">
+<link rel="manifest" href="manifest.json?v=4">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -140,7 +140,7 @@ body::before{content:'';position:fixed;inset:0;background:rgba(0,0,0,0.38);z-ind
 input, textarea { font-size:16px !important; }
 </style>
 <link rel="stylesheet" href="android-fix.css?v=1">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="icon.svg?v=4" type="image/svg+xml">
 <link rel="stylesheet" href="stijl.css?v=3">
 <link rel="stylesheet" href="profile-controls.css?v=2">
 <script src="profile-controls.js?v=2"></script>
@@ -1353,7 +1353,7 @@ window.activeerPushNotificaties = async function() {
       alert(ios ? T('Meldingen werken op de iPhone vanaf iOS 16.4. Werk je iPhone bij en probeer het opnieuw.') : T('Push notificaties worden niet ondersteund op dit apparaat.'))
       return
     }
-    const reg = await navigator.serviceWorker.register('./service-worker.js?v=96')
+    const reg = await navigator.serviceWorker.register('./service-worker.js?v=97')
     await navigator.serviceWorker.ready
     const toestemming = await Notification.requestPermission()
     if (toestemming !== 'granted') {

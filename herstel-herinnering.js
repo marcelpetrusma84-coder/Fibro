@@ -47,7 +47,7 @@ function knop(tekst, hoofd) {
   k.type = 'button'
   k.textContent = tekst
   k.style.cssText = hoofd
-    ? 'flex-shrink:0;min-height:40px;padding:8px 16px;border-radius:20px;border:none;background:var(--accent,#c084fc);color:#1a0a2e;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit'
+    ? 'flex-shrink:0;min-height:40px;padding:8px 16px;border-radius:20px;border:none;background:var(--knop,#8b3fd1);color:#ffffff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit'
     : 'flex-shrink:0;width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,0.1);color:var(--text,#fff);font-size:18px;cursor:pointer'
   return k
 }

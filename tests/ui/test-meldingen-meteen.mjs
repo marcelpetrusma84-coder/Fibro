@@ -16,7 +16,7 @@ assert.match(mod, /const WERKER = '\.\/service-worker\.js\?v=96'/, 'dezelfde ser
 assert.ok(mod.includes(lees('profiel.html').match(/applicationServerKey: '([^']+)'/)[1]), 'dezelfde serversleutel als Profiel')
 
 // 2. Home: de kaart, niet in Safari op de iPhone (daar de tip voor het beginscherm), 'Nu niet' = 3 dagen
-assert.match(index, /import\('\.\/meldingen-aan\.js\?v=3'\)\.then\(m => m\.toonMeldkaart\(document\.getElementById\('beginschermTip'\), supabase, window\._uid\)\)/)
+assert.match(index, /import\('\.\/meldingen-aan\.js\?v=4'\)\.then\(m => m\.toonMeldkaart\(document\.getElementById\('beginschermTip'\), supabase, window\._uid\)\)/)
 assert.match(mod, /if \(stand === 'aan' \|\| stand === 'niet-mogelijk' \|\| stand === 'iphone-zonder-app'\) return null/)
 assert.match(mod, /const WEG_DAGEN = 3/)
 
@@ -32,7 +32,7 @@ assert.ok(!/id="meldWelkomKnop"[^>]*class="btn"/.test(invite), 'geen .btn: toonA
 assert.match(invite, /<div id="meldWelkom" hidden/, 'pas zichtbaar als het kan')
 
 // 5. Versies en Engels
-for (const [bestand, v] of [['bel-luisteraar.js', "beltoon.js?v=10"], ['chat.html', 'beltoon.js?v=10']]) assert.ok(lees(bestand).includes(v), bestand)
+for (const [bestand, v] of [['bel-luisteraar.js', "beltoon.js?v=11"], ['chat.html', 'beltoon.js?v=11']]) assert.ok(lees(bestand).includes(v), bestand)
 globalThis.window = {}
 new Function('window', lees('taal-en.js'))(globalThis.window)
 const EN = globalThis.window.FIBRO_EN

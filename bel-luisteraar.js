@@ -14,7 +14,7 @@ function laadBeltoon(herkansing = false) {
   if (window.FibroBeltoon) return
   if (!herkansing && document.querySelector('script[data-fibro-beltoon]')) return
   const s = document.createElement('script')
-  s.src = 'beltoon.js?v=10'
+  s.src = 'beltoon.js?v=11'
   s.dataset.fibroBeltoon = '1'
   if (!herkansing) {
     s.dataset.fibroStil = '1' // de eerste keer niet melden (foutmelder.js)

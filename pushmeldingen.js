@@ -7,7 +7,7 @@
 // kiesOnlineOntvangers): alleen na minstens 30 minuten weg, niet 's nachts, niet als je zelf al online bent, dezelfde
 // vriend hoogstens eens per 3 uur, hoogstens een per 20 minuten en 6 per dag. Een nieuwe vervangt de vorige.
 // De keuzes staan in de database (chat_instellingen.push_uit: wat je uitzette), want de server beslist; hier een kopie.
-import { zetMeldingenAan } from './meldingen-aan.js?v=3'
+import { zetMeldingenAan } from './meldingen-aan.js?v=4'
 
 // Dezelfde soorten als in sql/pushmeldingen.sql en PUSH_GROEP in stuur-push
 export const PUSH_SOORTEN = [

@@ -40,6 +40,9 @@ versiehistorie van alle spellen verborgen tot je een spelkaart drie seconden
 vasthoudt; de spelversie en pijlen verschijnen dan zonder een normale tik te
 veranderen in een spelstart.
 
+Schaken 6.3.1 maakt de pinchbediening op mobiel gevoeliger: een bewuste beweging
+van 14 pixels of 10% van de beginafstand schakelt één weergavestap.
+
 ## Waar de datum vandaan komt
 
 De bestaande historische gegevens zijn nagegaan in de eerste-oudergeschiedenis
@@ -73,6 +76,9 @@ controls; a normal tap still opens the game.
 Chess 6.3 adds a detailed Ultra hint with a legal suggested move and explanation.
 The hint gets a distinct black, white and cyan frame even when the piece is red
 to indicate that it is under attack.
+
+Chess 6.3.1 makes mobile pinch resizing respond to a smaller, more natural
+14-pixel or 10%-of-starting-distance gesture.
 
 Historical timestamps identify the first-parent main commit that introduced
 each recorded number, with the full commit hash retained as evidence. They are

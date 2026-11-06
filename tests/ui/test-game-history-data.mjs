@@ -37,15 +37,17 @@ for (const game of expectedGames) {
   assert.throws(() => entries.push(entries[0]), TypeError)
   assert.throws(() => { entries[0].summary = 'changed' }, TypeError)
 }
-assert.equal(records, 28, '26 verified existing records plus Chess 6.2 knight routes and Chess 6.3 Ultra hints')
+assert.equal(records, 29, '26 verified existing records plus Chess 6.2 knight routes, Chess 6.3 Ultra hints and a mobile pinch patch')
 assert.equal(pending, 0, 'every shipped version has a real commit and timestamp')
-assert.equal(SPEL_VERSIES.schaken, '6.3.0')
+assert.equal(SPEL_VERSIES.schaken, '6.3.1')
 assert.equal(SPEL_VERSIES.shmup, '5.0.0')
 
 // The old branch briefly carried Chess 4 again while integrating Neon. It is
 // not a release and must never replace the real main sequence or timestamps.
-assert.deepEqual(spelHistorie('schaken').map(entry => entry.version), ['6.3.0','6.2.0','6.1.1','6.1.0','6.0.0','5.0.0','4.0.0','3.0.0','2.0.0'])
+assert.deepEqual(spelHistorie('schaken').map(entry => entry.version), ['6.3.1','6.3.0','6.2.0','6.1.1','6.1.0','6.0.0','5.0.0','4.0.0','3.0.0','2.0.0'])
 const chess = new Map(spelHistorie('schaken').map(entry => [entry.version,entry]))
+assert.equal(chess.get('6.3.1').sourceCommit, '7d9626a9373d52e1fc317ba84887a146be96de3a')
+assert.equal(chess.get('6.3.1').updatedAt, '2026-11-06T18:15:14+01:00')
 assert.equal(chess.get('6.3.0').sourceCommit, 'a3e222e24ac0e895681644bccd7ec8c6411b54bb')
 assert.equal(chess.get('6.3.0').updatedAt, '2026-11-06T17:53:27+01:00')
 assert.equal(chess.get('6.2.0').sourceCommit, '76fc7dc4d1226068b12b9fe3a331e3817a01a043')

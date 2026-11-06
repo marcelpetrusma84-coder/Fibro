@@ -18,6 +18,7 @@ const histories = {
     initial('1.0.0'),
   ],
   schaken:[
+    record('6.3.1', '2026-11-06T18:15:14+01:00', '7d9626a9373d52e1fc317ba84887a146be96de3a', 'Mobiel Ultra-bord reageert natuurlijker op een kleinere pinchbeweging', 'Ultra board resizing responds more naturally to a smaller pinch gesture'),
     record('6.3.0', '2026-11-06T17:53:27+01:00', 'a3e222e24ac0e895681644bccd7ec8c6411b54bb', 'Ultra toont na lang indrukken een legale zet met uitleg; hint en aangevallen stuk blijven duidelijk te onderscheiden', 'Ultra reveals a legal move with an explanation after a hold; the hint stays distinct when its piece is under attack'),
     record('6.2.0', '2026-11-06T17:20:18+01:00', '76fc7dc4d1226068b12b9fe3a331e3817a01a043', 'Live stappen en zichtbaarheid van paardroutes, met een highlight op het onderzochte paard', 'Live knight-route depth and opacity with a highlighted source knight'),
     record('6.1.1', '2026-11-04T17:42:54+01:00', '9cc8906dc63092618e79a705b9aee904236bab01', 'Schaakmattekst zoomt van halve naar volle grootte', 'Checkmate text zooms from half to full size'),

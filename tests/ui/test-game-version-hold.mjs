@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { maakSpelVersieLangDruk } from '../../spelversie-langdruk.js'
-import { mountSpelVersie } from '../../spelversies.js?v=22'
+import { mountSpelVersie } from '../../spelversies.js?v=23'
 import { SPEL_VERSIES } from '../../spelversie-data.js'
 
 class EventTargetFake {
@@ -80,7 +80,7 @@ const gameIds=[...games.matchAll(/([a-z][a-z0-9]*):/g)].map(match=>match[1])
 assert.ok(gameIds.length>0)
 for(const game of gameIds)assert.ok(SPEL_VERSIES[game],`${game} has a version history`)
 assert.match(home,/maakSpelVersieLangDruk\(\{ element:blok, onLongPress:toonHistorie \}\)/)
-assert.match(home,/import\('\.\/spelversies\.js\?v=22'\)/,'the full history loads only after the hold gesture')
+assert.match(home,/import\('\.\/spelversies\.js\?v=23'\)/,'the full history loads only after the hold gesture')
 assert.equal(typeof mountSpelVersie,'function','Home can import the version-history renderer from the shared module')
 assert.match(home,/versieVlak\.hidden = true/,'version details start hidden on every game card')
 assert.match(home,/Druk op Enter om te spelen\. Houd de spelkaart 3 seconden vast voor de versiegeschiedenis/)

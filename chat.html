@@ -472,13 +472,13 @@ window.veiligeUrl = function(v){
   import { speel as speelFx, speelGeluid as speelFxGeluid, naamVan as fxNaam } from './stickerfx.js?v=235'
   import { stuurRapport } from './rapport.js?v=96'
   import * as Schaak from './schaak.js?v=95'
-  import * as Bordgeluid from './bordgeluid.js?v=201'
+  import * as Bordgeluid from './bordgeluid.js?v=203'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { nieuweSpelSessie, isNieuwsteSpelSessie } from './spelsessie.js?v=1'
-  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=11'
-  import { mountChessLayout } from './chess-layout.js?v=11'
+  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=12'
+  import { mountChessLayout } from './chess-layout.js?v=12'
   import { maakSpelVerbinding } from './spelverbinding.js?v=2'
   import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=2'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=2'
@@ -2814,8 +2814,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=151',
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
-    schaken: './schaken-ui.js?v=266',
-    schakendrie: './schaken-drie-ui.js?v=35',
+    schaken: './schaken-ui.js?v=275',
+    schakendrie: './schaken-drie-ui.js?v=43',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=151',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -3672,7 +3672,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await laadModule('./schaken-ui.js?v=266')
+    const m = await laadModule('./schaken-ui.js?v=275')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: fibroChessTest?.active ? schaakT('Testspeler · Zwart') : spelVriendUsername(), testMode:Boolean(fibroChessTest?.active), onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer : nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
     // v270: tegen een vriend staan de webcams als twee rondjes naast elkaar boven het bord, net als bij dammen.
@@ -3682,7 +3682,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   async function startSchakenDrie(players) {
-    const m = await laadModule('./schaken-drie-ui.js?v=35')
+    const m = await laadModule('./schaken-drie-ui.js?v=43')
     const testMode = Boolean(fibroChessTest?.active)
     const controller = m.start({ Bordgeluid, gameChannel:testMode ? null : spelKanaal, players, userId:testMode ? 'fibro-test-you' : huidigeUser.id, localPreview:testMode, testMode, testStream:fibroChessTest?.stream || null, onTestCameraChange:stream => { if (fibroChessTest?.active) fibroChessTest.stream = stream }, onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null })
     spelSchaakDrieController = controller

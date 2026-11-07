@@ -38,7 +38,7 @@ function fixture({ isSolo=true, niveau='ultra', saved='{}', benIkSpeler1=true }=
   Object.assign(context, {isUltra:result.isUltra, mijnKleur:result.mijnKleur, instellingen:result.instellingen,
     menu:{hidden:true,querySelector:select}, inhoud:{querySelector:select}, spelEl:root, spelKanaal:channel, opruimers:cleanups,
     staat:Schaak.nieuweSpelStaat(), Schaak, schaakFen, maakUltraEvaluatieHistorie, schaakNotatie, paardRoutesUI:null, esc:String,
-    bezig:false, promotieOpen:false, gameOver:false,
+    bezig:false, promotieOpen:false, gameOver:false, spinPerspectiveActive:false, toonSpinButton(){},
     taal:{language:'nl'}, t, bewaarInstellingen(){storage=JSON.stringify(result.instellingen)},
     Bordgeluid:{maakSchaakAnalyseGeluid(){created++; return {speel:delta=>audio.push(delta), annuleer:()=>cancelled++, destroy:()=>destroyed++}}},
     // Gesture behavior and its shared takeback callback are exercised by the

@@ -106,8 +106,13 @@ export function maakPaardRoutesUI({ Schaak, board, root = board, menu = null, le
     const enemy = activeRoute.color !== playerColor
     const label = t(enemy ? 'Routes van het paard van de computer' : 'Routes van jouw paard')
     if (legendLabel) legendLabel.textContent = label
-    for (let depth = 1; depth <= 4; depth++) if (activeRoute.steps[depth - 1] && legendSteps) {
-      const icon = makeMarker(depth, enemy)
+    for (let depth = 1; depth <= 4; depth++) if (legendSteps) {
+      const icon = doc.createElement('button')
+      icon.type = 'button'
+      icon.className = `sch-knight-marker sch-knight-step-toggle sch-knight-depth-${depth}${enemy ? ' sch-knight-enemy' : ''}`
+      icon.dataset.knightLegendStep = String(depth)
+      icon.setAttribute('aria-pressed', String(activeRoute.steps[depth - 1]))
+      icon.setAttribute('aria-label', depthLabel(depth))
       icon.textContent = String(depth)
       icon.title = depthLabel(depth)
       legendSteps.append(icon)
@@ -150,7 +155,7 @@ export function maakPaardRoutesUI({ Schaak, board, root = board, menu = null, le
     if (disposed) return
     const enabled = steps(), current = context()
     for (const input of inputs) input.checked = enabled[Number(input.dataset.knightStep) - 1]
-    if (activeRoute && (!enabled.some(Boolean) || !sourceMatches(activeRoute,current))) clear()
+    if (activeRoute && !sourceMatches(activeRoute,current)) clear()
     else if (activeRoute && enabled.some((on, i) => on !== activeRoute.steps[i])) recompute(current, enabled)
     hold?.refresh?.()
     paint()
@@ -176,6 +181,15 @@ export function maakPaardRoutesUI({ Schaak, board, root = board, menu = null, le
     }
   }
   for (const input of inputs) listen(input, 'change', changeSteps)
+  listen(legendSteps, 'click', event => {
+    const button = event.target?.closest?.('[data-knight-legend-step]')
+    const depth = Number(button?.dataset.knightLegendStep)
+    if (!activeRoute || !Number.isInteger(depth) || depth < 1 || depth > 4) return
+    const input = inputs.find(item => Number(item.dataset.knightStep) === depth)
+    if (!input) return
+    input.checked = !input.checked
+    changeSteps()
+  })
   listen(close, 'click', () => { if (!disposed) { clear(); onInspect?.(null) } })
   hold = holdFactory({
     board, getCandidate, canHold, onHold:inspect, win, doc,

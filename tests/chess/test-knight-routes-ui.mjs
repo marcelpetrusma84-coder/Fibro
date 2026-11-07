@@ -20,12 +20,12 @@ function markup({ saved = '{}', solo = true, level = 'ultra' } = {}) {
 }
 for (const level of ['makkelijk', 'normaal', 'moeilijk', 'ultra']) {
   const view = markup({ level })
-  assert.deepEqual(plain(view.instellingen.knightRouteSteps), [true,true,true,true], 'all four horizons start enabled in every solo level')
+  assert.deepEqual(plain(view.instellingen.knightRouteSteps), [true,true,true,false], 'three horizons start enabled in every solo level')
   assert.equal([...view.markup.matchAll(/data-knight-step="[1-4]"/g)].length, 4)
 }
 assert.equal(markup({ solo:false }).markup.includes('data-knight-step='), false, 'friend matches never expose the coaching controls')
 for (const saved of ['{broken', 'null', '{"knightRouteSteps":[true]}', '{"knightRouteSteps":[1,1,1,1]}']) {
-  assert.deepEqual(plain(markup({ saved }).instellingen.knightRouteSteps), [true,true,true,true], 'malformed preferences use safe complete defaults')
+  assert.deepEqual(plain(markup({ saved }).instellingen.knightRouteSteps), [true,true,true,false], 'malformed preferences use safe defaults')
 }
 const saved = markup({ saved:'{"knightRouteSteps":[false,true,false,true],"custom":"keep","ultraTakeback":true}' }).instellingen
 assert.deepEqual(plain(saved.knightRouteSteps), [false,true,false,true]); assert.equal(saved.custom, 'keep'); assert.equal(saved.ultraTakeback, true)
@@ -128,10 +128,13 @@ function fixture({ state=initialState(), steps=[true,true,true,true], solo=true,
   assert.equal(h.square(5,5).querySelectorAll('.sch-knight-marker').length,0,'own pieces remain blockers at every depth')
   h.menu.hidden=false;assert.equal(h.hold.options.canHold(candidate),false,'a settings dialog prevents a new hold')
   h.controller.refresh();assert.equal(h.controller.active,true,'opening settings does not discard the displayed plan')
+  const second=h.legendSteps.querySelector('[data-knight-legend-step="2"]')
+  second.emit('click');assert.equal(h.settings.knightRouteSteps[1],false,'legend toggles the selected horizon')
+  h.legendSteps.querySelector('[data-knight-legend-step="2"]').emit('click');assert.equal(h.settings.knightRouteSteps[1],true)
   for(let i=0;i<3;i++)h.toggle(i,false)
   assert(h.markers().length>0);assert(h.markers().every(marker=>marker.dataset.depth==='4'),'hiding early horizons does not remove fourth-jump routes')
   assert.deepEqual(h.settings.knightRouteSteps,[false,false,false,true]);assert.equal(h.settings.custom,'keep')
-  h.toggle(3,false);assert.equal(h.controller.active,false);assert.equal(h.markers().length,0);assert.equal(h.hold.options.canHold(candidate),false)
+  h.toggle(3,false);assert.equal(h.controller.active,true);assert.equal(h.markers().length,0);assert.equal(h.hold.options.canHold(candidate),false)
   h.toggle(0,true);h.menu.hidden=true;h.show();assert.equal(h.controller.active,true)
   const existingDescription=h.square(3,5).getAttribute('aria-describedby')
   assert.ok(existingDescription,'reachable squares expose their jump counts to assistive technology')

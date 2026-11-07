@@ -46,6 +46,7 @@ class Node {
   closest(selector){for(let node=this;node;node=node.parentElement)if(node.matches(selector))return node;return null}
   contains(target){for(let node=target;node;node=node.parentElement)if(node===this)return true;return false}
   addEventListener(name,fn){this.handlers.set(name,[...(this.handlers.get(name)||[]),fn])}
+  removeEventListener(name,fn){this.handlers.set(name,(this.handlers.get(name)||[]).filter(handler=>handler!==fn))}
   emit(name,event={}){for(const fn of this.handlers.get(name)||[])fn({target:this,preventDefault(){},...event})}
   focus(){this.ownerDocument.activeElement=this}
   showModal(){this.open=true} close(){this.open=false;this.emit('close')}
@@ -54,6 +55,10 @@ class Node {
 }
 const doc={createElement(tag){return new Node(tag,doc)},createElementNS(_ns,tag){return new Node(tag,doc)},createTextNode(text){const node=new Node('#text',doc);node._text=text;return node},getElementById(id){return doc.root.id===id?doc.root:doc.root.querySelector('#'+id)}}
 doc.root=new Node('body',doc)
+doc.head=doc.root
+doc.addEventListener=()=>{}
+doc.removeEventListener=()=>{}
+globalThis.MutationObserver=class { observe() {} disconnect() {} }
 for(const id of ['spelOverlay','spelTitelBar','spelInhoud']){const node=new Node('div',doc);node.setAttribute('id',id);doc.root.append(node)}
 globalThis.document=doc
 const settingsKey='fibro_chess_settings_v1'

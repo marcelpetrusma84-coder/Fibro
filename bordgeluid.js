@@ -266,6 +266,112 @@ export function capturePiece({ value, outcome, theme = 'classic' } = {}) {
     } catch { return false }
 }
 
+// A low, rounded fist-on-table thud with a sharp wood split on the breaking hit.
+function speelTafelImpact(c, start, cracked) {
+    const duur = 0.29
+    const lengte = Math.floor(c.sampleRate * duur)
+    const buffer = c.createBuffer(1, lengte, c.sampleRate)
+    const samples = buffer.getChannelData(0)
+    for (let i = 0; i < lengte; i++) {
+        const time = i / c.sampleRate
+        const envelope = Math.exp(-time * (cracked ? 17 : 14))
+        samples[i] = (Math.random() * 2 - 1) * envelope
+    }
+
+    const source = c.createBufferSource()
+    source.buffer = buffer
+    const master = c.createGain()
+    master.gain.value = 0.78
+    master.connect(c.destination)
+
+    const bodyFilter = c.createBiquadFilter()
+    bodyFilter.type = 'lowpass'; bodyFilter.frequency.value = 520; bodyFilter.Q.value = 0.72
+    const bodyGain = c.createGain()
+    bodyGain.gain.setValueAtTime(0.0001, start)
+    bodyGain.gain.exponentialRampToValueAtTime(0.72, start + 0.008)
+    bodyGain.gain.exponentialRampToValueAtTime(0.001, start + 0.235)
+    source.connect(bodyFilter); bodyFilter.connect(bodyGain); bodyGain.connect(master)
+
+    if (cracked) {
+        const splinterFilter = c.createBiquadFilter()
+        splinterFilter.type = 'bandpass'; splinterFilter.frequency.value = 1450; splinterFilter.Q.value = 0.72
+        const splinterGain = c.createGain()
+        splinterGain.gain.setValueAtTime(0.0001, start)
+        splinterGain.gain.exponentialRampToValueAtTime(0.36, start + 0.003)
+        splinterGain.gain.exponentialRampToValueAtTime(0.001, start + 0.082)
+        source.connect(splinterFilter); splinterFilter.connect(splinterGain); splinterGain.connect(master)
+    }
+
+    source.start(start)
+    source.stop(start + duur)
+
+    const sub = c.createOscillator(), subGain = c.createGain()
+    sub.type = 'sine'
+    sub.frequency.setValueAtTime(94, start)
+    sub.frequency.exponentialRampToValueAtTime(39, start + 0.16)
+    subGain.gain.setValueAtTime(0.0001, start)
+    subGain.gain.exponentialRampToValueAtTime(0.52, start + 0.008)
+    subGain.gain.exponentialRampToValueAtTime(0.001, start + 0.22)
+    sub.connect(subGain); subGain.connect(master)
+    sub.start(start); sub.stop(start + 0.23)
+
+}
+
+function speelTafelMagie(c, start) {
+    const duur = 0.68
+    const lengte = Math.floor(c.sampleRate * duur)
+    const buffer = c.createBuffer(1, lengte, c.sampleRate)
+    const samples = buffer.getChannelData(0)
+    for (let i = 0; i < lengte; i++) {
+        const progress = i / lengte
+        samples[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * progress) ** 0.72
+    }
+    const source = c.createBufferSource()
+    source.buffer = buffer
+    const sweep = c.createBiquadFilter()
+    sweep.type = 'bandpass'; sweep.Q.value = 0.58
+    sweep.frequency.setValueAtTime(360, start)
+    sweep.frequency.exponentialRampToValueAtTime(2400, start + 0.32)
+    sweep.frequency.exponentialRampToValueAtTime(820, start + duur)
+    const shimmer = c.createBiquadFilter()
+    shimmer.type = 'highpass'; shimmer.frequency.value = 920
+    const gain = c.createGain()
+    gain.gain.setValueAtTime(0.0001, start)
+    gain.gain.exponentialRampToValueAtTime(0.18, start + 0.14)
+    gain.gain.exponentialRampToValueAtTime(0.001, start + duur)
+    const master = c.createGain(); master.gain.value = 0.72
+    source.connect(sweep); sweep.connect(shimmer); shimmer.connect(gain); gain.connect(master); master.connect(c.destination)
+    source.start(start); source.stop(start + duur)
+
+    const tone = c.createOscillator(), toneGain = c.createGain()
+    tone.type = 'sine'
+    tone.frequency.setValueAtTime(196, start)
+    tone.frequency.exponentialRampToValueAtTime(392, start + 0.52)
+    toneGain.gain.setValueAtTime(0.0001, start)
+    toneGain.gain.exponentialRampToValueAtTime(0.055, start + 0.16)
+    toneGain.gain.exponentialRampToValueAtTime(0.001, start + 0.62)
+    tone.connect(toneGain); toneGain.connect(master)
+    tone.start(start); tone.stop(start + 0.64)
+}
+
+// It uses the existing sound preference and queue, so it stays silent when chess audio is off.
+export function tafelklap({ cracked = true } = {}) {
+    if (!aan()) return false
+    try {
+        const c = ctx()
+        if (!c) return false
+        const t = stukStart(c)
+        if (cracked === true) {
+            speelTafelImpact(c, t, true)
+            reserveerStuk(c, t + 0.36)
+        } else {
+            speelTafelMagie(c, t)
+            reserveerStuk(c, t + 0.74)
+        }
+        return true
+    } catch (e) { return false }
+}
+
 export function schaak(Schaak, staat, zet, mijnKleur, thema = 'classic', capture = null) {
     try {
         const naam = kiesSchaakGeluid(Schaak, staat, zet, mijnKleur)

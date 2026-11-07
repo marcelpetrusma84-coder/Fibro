@@ -8,14 +8,16 @@ const lees = f => readFileSync(new URL('../../' + f, import.meta.url), 'utf8')
   const b = lees('bellen.js')
   assert.match(b, /if \(audioEl\.srcObject !== stream\) audioEl\.srcObject = stream/)
   assert.match(b, /if \(e && e\.name === 'AbortError'\) return !audioEl\.paused\n    meldMediaFout\('geluid afspelen', e\)/)
-  for (const f of ['chat.html', 'bellen.html', 'bel-luisteraar.js']) assert.match(lees(f), /bellen\.js\?v=162/, f)
+  for (const f of ['chat.html', 'bellen.html', 'bel-luisteraar.js']) assert.match(lees(f), /bellen\.js\?v=16[2-9]/, f)
 }
 
 // 2. vriendenlijst: een vriend zonder zichtbaar profiel (profiles: null) liet de hele lijst vastlopen
 {
   const v = lees('vrienden.html')
-  const blok = v.slice(v.indexOf('function isGebruikerOnline('), v.indexOf('return sec < 300'))
-  const isOnline = new Function('navigator', 'localStorage', blok + 'return sec < 300 }\nreturn isGebruikerOnline')({ onLine: true }, { getItem: () => null })
+  // v274: de regel zelf staat nu in onlinestip.js (isVriendOnline, eigen test test-online-bolletje.mjs)
+  const eind = '(onlinestip.js)\n  }'
+  const blok = v.slice(v.indexOf('function isGebruikerOnline('), v.indexOf(eind) + eind.length)
+  const isOnline = new Function('navigator', 'localStorage', 'isVriendOnline', blok + '\nreturn isGebruikerOnline')({ onLine: true }, { getItem: () => null }, (id, p) => !!(p && p.online_status))
   assert.equal(isOnline(null), false)
   assert.equal(isOnline(undefined), false)
   assert.equal(isOnline({ online_status: true, laatst_gezien: new Date().toISOString() }), true)

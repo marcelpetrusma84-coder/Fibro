@@ -5,7 +5,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
   <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-  <script src="taal.js?v=78"></script>
+  <script src="taal.js?v=81"></script>
   <script src="apk.js?v=3"></script>
   <script src="registratie.js?v=3"></script>
   <script>try { FibroApk.hervatUitnodiging() } catch (e) {} // in de app: een uitnodiging die wacht (apk.js)</script>
@@ -244,6 +244,24 @@
   <script>try { if (FibroApk.toonDownload()) { var k = FibroApk.kaart(); if (k) document.getElementById('apkPlek').appendChild(k) } } catch (e) {} // Android in de browser: de app aanbieden</script>
 </div>
 
+<script>
+  // v271: tik je op een knop voordat de app helemaal geladen is (traag internet), dan gaf dat de fout
+  // "Can't find variable: inloggen". Nu wacht de knop even (hoogstens 15 s) tot de app klaar is en doet dan alsnog wat je vroeg.
+  ;['inloggen', 'registreren', 'herstelMetFaceId', 'herstelMetSleutel', 'nieuweNaam', 'switchTab'].forEach(function (naam) {
+    if (typeof window[naam] === 'function') return
+    var wacht = function () {
+      var args = arguments, tot = Date.now() + 15000
+      var msg = document.getElementById(naam === 'registreren' || naam === 'nieuweNaam' ? 'reg-msg' : naam === 'inloggen' ? 'login-msg' : 'herstel-msg')
+      if (msg && naam !== 'switchTab' && naam !== 'nieuweNaam') { msg.className = 'message success'; msg.textContent = (typeof T === 'function' ? T('Even geduld, de app wordt geladen...') : 'Even geduld, de app wordt geladen...') }
+      ;(function probeer() {
+        if (window[naam] !== wacht) { try { window[naam].apply(window, args) } catch (e) { console.error(e) } return }
+        if (Date.now() > tot) { if (msg) { msg.className = 'message error'; msg.textContent = (typeof T === 'function' ? T('De app laadt niet. Controleer je internet en probeer het opnieuw.') : 'De app laadt niet. Controleer je internet en probeer het opnieuw.') } return }
+        setTimeout(probeer, 150)
+      })()
+    }
+    window[naam] = wacht
+  })
+</script>
 <script type="module">
   import { createClient } from './supabase-lib.js?v=1'
   import { genereerKeypair, slaPrivateKeyOp, haalPrivateKeyOp, ontsleutelPrivateKey, normaliseerHerstelSleutel, versleutelPrivateKey, maakHerstelSleutel } from './crypto.js?v=182'

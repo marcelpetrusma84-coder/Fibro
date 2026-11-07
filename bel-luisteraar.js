@@ -5,7 +5,7 @@
 // v143: ook in het Engels (taal.js)
 import { supabase } from './supabase.js?v=95'
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m)) // taal.js (v143)
-import { initBellen, weigerooproep } from './bellen.js?v=162'
+import { initBellen, weigerooproep } from './bellen.js?v=163'
 
 // beltoon.js laden (klassiek script, zet window.FibroBeltoon)
 // v205 (5 nov 2026): lukt het laden niet (Safari breekt het af, even geen internet), dan na 1,5 s nog een keer, stil.

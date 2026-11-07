@@ -6,7 +6,7 @@
 
 import { schaakBot } from './solo-bord.js?v=4'
 import { damBot } from './dam-bot.js?v=1'   // v253: sterkere damcomputer (met expert), rekent in een worker
-import { schaakUltraBot } from './schaak-ultra.js?v=3'
+import { schaakUltraBot } from './schaak-ultra.js?v=4'
 
 export const NIVEAUS = ['makkelijk', 'normaal', 'moeilijk']
 

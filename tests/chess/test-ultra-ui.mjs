@@ -20,7 +20,7 @@ function node() {
     classList:{ toggle(name, on) { on ? classes.add(name) : classes.delete(name) }, contains:name => classes.has(name) },
     style:{ setProperty:(key, value) => properties.set(key, value), getPropertyValue:key => properties.get(key) },
     setAttribute:(key, value) => attributes.set(key, String(value)), getAttribute:key => attributes.get(key),
-    addEventListener:(event, handler) => handlers.set(event, handler), change() { handlers.get('change')?.() }, click() { handlers.get('click')?.() }
+    addEventListener:(event, handler) => handlers.set(event, handler), querySelectorAll:()=>[], change() { handlers.get('change')?.() }, click() { handlers.get('click')?.() }
   }
 }
 function fixture({ isSolo=true, niveau='ultra', saved='{}', benIkSpeler1=true }={}) {
@@ -30,14 +30,19 @@ function fixture({ isSolo=true, niveau='ultra', saved='{}', benIkSpeler1=true }=
     on(type, {event}, handler) { assert.equal(type, 'broadcast'); listeners.set(event, handler) },
     send(message) { assert.ok(listeners.has('ultra-evaluatie')); sent.push(JSON.parse(JSON.stringify(message))) }
   }
-  const context = vm.createContext({ localStorage:{getItem:()=>storage}, document:{getElementById:id=>id==='spelInhoud'?root:node()}, matchMedia:()=>({matches:true}), maakSchaakTaal:()=>({t}) })
+  const context = vm.createContext({ localStorage:{getItem:()=>storage}, document:{getElementById:id=>id==='spelInhoud'?root:node()}, matchMedia:()=>({matches:true}), maakSchaakTaal:()=>({t}),
+    minderBeweging:{matches:true},beschrijfUltraHint:()=>null,
+    maakHintWeergave:()=>({show(){return true},clear(){},destroy(){}}),
+    maakHintHold:options=>{options.element.addEventListener('click',options.onShort);return {refresh(){},destroy(){}}},
+  })
   vm.runInContext(`const SETTINGS_KEY='test'; ${settingsReader}; ${render}; globalThis.render=render`, context)
   const result = context.render({Schaak, spelKanaal:channel, benIkSpeler1})
   const nodes = new Map([...result.markup.matchAll(/id="([^"]+)"/g)].map(match=>['#'+match[1],node()]))
   const select = selector=>nodes.get(selector)??null
+  const boardEl=select('#sch-bord')
   Object.assign(context, {isUltra:result.isUltra, mijnKleur:result.mijnKleur, instellingen:result.instellingen,
     menu:{hidden:true,querySelector:select}, inhoud:{querySelector:select}, spelEl:root, spelKanaal:channel, opruimers:cleanups,
-    staat:Schaak.nieuweSpelStaat(), Schaak, schaakFen, maakUltraEvaluatieHistorie, schaakNotatie, paardRoutesUI:null, esc:String,
+    staat:Schaak.nieuweSpelStaat(), Schaak, schaakFen, maakUltraEvaluatieHistorie, schaakNotatie, paardRoutesUI:null, bordEl:boardEl, stukSVG:()=>'', esc:String,
     bezig:false, promotieOpen:false, gameOver:false, spinPerspectiveActive:false, toonSpinButton(){},
     taal:{language:'nl'}, t, bewaarInstellingen(){storage=JSON.stringify(result.instellingen)},
     Bordgeluid:{maakSchaakAnalyseGeluid(){created++; return {speel:delta=>audio.push(delta), annuleer:()=>cancelled++, destroy:()=>destroyed++}}},

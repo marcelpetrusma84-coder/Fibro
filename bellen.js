@@ -37,6 +37,7 @@ let onVerbondenCallback = null
 let onVideoStatusCallback = null
 let onEigenVideoOntvangenCallback = null
 let onGeenCameraCallback = null
+let onGeenMicrofoonCallback = null // v163: zonder microfoon gaat het gesprek stil verder; dan moet je dat wel weten
 let onMediaStatusCallback = null
 let audioGeblokkeerd = false
 let laatsteMediaStatus = ''
@@ -61,7 +62,7 @@ let geinitialiseerd = false
 let gesprekKlaar = null   // belofte: klaar zodra het gesprekskanaal echt open is
 let iceBuffer = []        // ICE-gegevens die binnenkomen voordat offer/answer verwerkt is
 let videoGewenst = false  // v150: met video gebeld/opgenomen (ook als de eigen camera niet lukte)
-const BELLEN_VERSIE = 162 // v162: geluid niet steeds opnieuw laden (bugtest 3 nov); v161: zetMic en localAudioMuted (iPhone-foutmeldingen 3 nov 2026); media state follows actual tracks; queued camera negotiation and audio recovery
+const BELLEN_VERSIE = 163 // v163 (6 nov 2026): melding als je microfoon niet lukt (onGeenMicrofoon) en geluidDiagnose (getStats) voor bellen.html; v162: geluid niet steeds opnieuw laden (bugtest 3 nov); v161: zetMic en localAudioMuted (iPhone-foutmeldingen 3 nov 2026); media state follows actual tracks; queued camera negotiation and audio recovery
 
 function actieveTracks(stream, kind, ontvangen = false) {
   return !!stream?.getTracks().some(track => track.kind === kind && track.readyState === 'live' && track.enabled && (!ontvangen || !track.muted))
@@ -322,6 +323,7 @@ async function haalGespreksStream(video, epoch = gesprekEpoch) {
   try { stream = await haalMicEnCamera(video) }
   catch (e) {
     meldMediaFout(spelGesprek ? 'microfoon (spel)' : 'microfoon (gesprek)', e)
+    if (onGeenMicrofoonCallback) { try { onGeenMicrofoonCallback(e) } catch (er) {} }
     // Camera-only players can still join. Never discard an already working preview
     // just because this device has no microphone or microphone permission was denied.
     if (!actieveTracks(lokaleStream, 'video') && !spelGesprek) throw e
@@ -352,6 +354,31 @@ async function haalGespreksStream(video, epoch = gesprekEpoch) {
   return stream
 }
 
+// v163: wat er met het geluid gebeurt, voor de controle na 20 s in bellen.html (naar de foutmelder als het niet goed is).
+// Bytes verstuurd/ontvangen laten zien of het geluid echt over de lijn gaat; het audio-element of het ook afspeelt.
+export async function geluidDiagnose() {
+  const st = getMediaStatus()
+  const uit = { ...st, verstuurd: null, ontvangen: null, niveau: null, route: '?', ice: peerConnection?.iceConnectionState || '-' }
+  try {
+    const stats = await peerConnection?.getStats()
+    let paar = null
+    stats?.forEach(r => {
+      if (r.type === 'outbound-rtp' && r.kind === 'audio') uit.verstuurd = (uit.verstuurd || 0) + (r.bytesSent || 0)
+      if (r.type === 'inbound-rtp' && r.kind === 'audio') { uit.ontvangen = (uit.ontvangen || 0) + (r.bytesReceived || 0); if (r.audioLevel != null) uit.niveau = Math.round(r.audioLevel * 100) / 100 }
+      if (r.type === 'candidate-pair' && (r.nominated || r.selected) && r.state === 'succeeded') paar = r
+    })
+    if (paar) {
+      const l = stats.get(paar.localCandidateId), r = stats.get(paar.remoteCandidateId)
+      uit.route = (l?.candidateType || '?') + '/' + (r?.candidateType || '?')
+    }
+  } catch (e) {}
+  const el = document.getElementById('remoteAudio')
+  uit.speler = el ? (el.paused ? 'pauze' : 'speelt') + (el.muted ? ',stil' : '') + ',vol=' + el.volume + ',klaar=' + el.readyState : 'geen'
+  const t = remoteStream?.getAudioTracks()[0]
+  uit.spoorAnder = t ? t.readyState + (t.muted ? ',muted' : '') + (t.enabled ? '' : ',uit') : 'geen'
+  return uit
+}
+
 // Soort ICE-adres uit een kandidaat halen: host (eigen netwerk), srflx (via de router), relay (via TURN)
 function kandidaatSoort(k) {
   const m = / typ ([a-z]+)/.exec((k && k.candidate) || '')
@@ -375,6 +402,7 @@ export function initBellen(userId, callbacks = {}) {
   onVideoStatusCallback = callbacks.onVideoStatus || null
   onEigenVideoOntvangenCallback = callbacks.onEigenVideoOntvangen || null
   onGeenCameraCallback = callbacks.onGeenCamera || null
+  onGeenMicrofoonCallback = callbacks.onGeenMicrofoon || null
   onMediaStatusCallback = callbacks.onMediaStatus || null
   laatsteMediaStatus = ''
   meldMediaStatus()

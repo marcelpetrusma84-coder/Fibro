@@ -87,9 +87,17 @@ function harness({ initial = Schaak.nieuweSpelStaat(), cloud = () => result(), e
         assert(Array.isArray(payload.from) && payload.from.length === 2)
         assert(payload.from.every(value => Number.isInteger(value) && value >= 0 && value < 8))
         assert.equal(board.bord[payload.from[0]][payload.from[1]]?.[0], 'w')
-        assert(Schaak.alleLegaleZetten(board, 'w').some(move => move.van[0] === payload.from[0] && move.van[1] === payload.from[1]), 'the hinted piece has a legal move now')
+        assert(Array.isArray(payload.to) && payload.to.length === 2)
+        assert(payload.to.every(value => Number.isInteger(value) && value >= 0 && value < 8))
+        const hintedMove = Schaak.alleLegaleZetten(board, 'w').find(move => move.van[0] === payload.from[0] && move.van[1] === payload.from[1] && move.naar[0] === payload.to[0] && move.naar[1] === payload.to[1])
+        assert(hintedMove, 'the complete hinted move is legal in this exact position')
+        const promotion = board.bord[payload.from[0]][payload.from[1]][1] === 'P' && [0,7].includes(payload.to[0])
+        if (promotion) assert(['Q','R','B','N'].includes(payload.promotieStuk))
+        else assert.equal('promotieStuk' in payload,false,'ordinary hints do not masquerade as promotions')
         assert(['lichess','stockfish'].includes(payload.source))
-        for (const target of ['to','naar','target','zet','bestmove','pv','promotieStuk']) assert.equal(target in payload, false, 'a hint exposes only its origin piece: ' + target)
+        assert(Number.isSafeInteger(payload.depth) && payload.depth >= 0)
+        for (const score of ['cp','mate']) assert(payload[score] === null || Number.isFinite(payload[score]))
+        for (const target of ['naar','target','zet','bestmove','pv']) assert.equal(target in payload, false, 'only validated move coordinates leave the engine adapter: ' + target)
       }
       onEvent?.(event, payload)
     }
@@ -152,6 +160,7 @@ try {
     assert.equal(h.engineCalls[0].options.movetime, 650)
     assert.equal(h.hints().filter(message => message.payload.ok).length, 1)
     assert.deepEqual(h.hints()[0].payload.from, [6, 4])
+    assert.deepEqual(h.hints()[0].payload.to,[4,4]);assert.equal(h.hints()[0].payload.depth,26);assert.equal(h.hints()[0].payload.cp,35)
     assert.deepEqual(h.board, before, 'asking for a hint never executes the suggested move')
     h.hint(); await tick()
     assert.equal(h.engineCalls.length, 1, 'a completed current-position best move is cached')
@@ -161,6 +170,25 @@ try {
       assert.equal(h.hints().at(-1).payload.reason, 'stale')
     }
     h.stop()
+  }
+
+  // Detailed hint metadata identifies an actual underpromotion and never
+  // passes non-finite scores/depth through to UI explanations.
+  {
+    const initial=emptyState();initial.bord[1][0]='wP'
+    const h=harness({initial,engine:()=>result('a7a8n','stockfish')})
+    h.settings(false,true);h.hint();await tick()
+    const hint=h.hints().at(-1).payload
+    assert.deepEqual(hint.to,[0,0]);assert.equal(hint.promotieStuk,'N')
+    assert.deepEqual(h.board,initial,'a detailed promotion hint never promotes a live pawn')
+    h.stop()
+  }
+  {
+    const h=harness({engine:()=>({bestmove:'g1f3',depth:Infinity,cp:Infinity,mate:NaN})})
+    h.settings(false,true);h.hint();await tick()
+    const hint=h.hints().at(-1).payload
+    assert.equal(hint.ok,true);assert.equal(hint.depth,0);assert.equal(hint.cp,null);assert.equal(hint.mate,null)
+    assert.deepEqual(hint.to,[5,5]);h.stop()
   }
 
   // Evaluation and hints share human-turn work in either settings order.
@@ -464,4 +492,4 @@ try {
   globalThis.fetch = originalFetch
 }
 
-console.log('PASS: opt-in Ultra takeback/hints, complete-state rollback, special moves and mate recovery, stale generation/cloud/timer isolation, local legal origin-only hints, shared meter work and cancellation.')
+console.log('PASS: opt-in Ultra takeback/hints, complete-state rollback, special moves and mate recovery, stale generation/cloud/timer isolation, local legal exact-move hints with validated metadata, shared meter work and cancellation.')

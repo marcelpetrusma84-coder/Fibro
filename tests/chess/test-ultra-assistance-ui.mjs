@@ -5,6 +5,7 @@ import * as Schaak from '../../schaak.js'
 import { registreerSlag } from '../../schaak-stukken.js'
 import { schaakFen, uciNaarZet } from '../../schaak-ultra-engine.js'
 import { maakUltraEvaluatieHistorie, schaakNotatie } from '../../schaak-ultra-historie.js'
+import { beschrijfUltraHint } from '../../schaak-hint-uitleg.js'
 
 const source=readFileSync(new URL('../../schaken-ui.js',import.meta.url),'utf8')
 const reader=source.match(/function readSettings\(\) \{[\s\S]*?\n\}/)[0]
@@ -40,7 +41,14 @@ function fixture({saved='{}',isSolo=true,niveau='ultra',state=Schaak.nieuweSpelS
   let storage=saved,clearedOverlays=0,cancelledAnimations=0,cancelledAudio=0,swipe=null
   const channel={isSolo,niveau,on(_type,{event},handler){listeners.set(event,handler)},send(message){sent.push(plain(message))}}
   const document={getElementById:id=>id==='spelInhoud'?root:node(),createElement:()=>node()}
-  const context=vm.createContext({document,localStorage:{getItem:()=>storage},matchMedia:()=>({matches:true}),maakSchaakTaal:()=>({t}),console,Promise})
+  const displayedHints=[]
+  let hintHoldController=null
+  const context=vm.createContext({document,localStorage:{getItem:()=>storage},matchMedia:()=>({matches:true}),maakSchaakTaal:()=>({t}),console,Promise,
+    minderBeweging:{matches:true},
+    beschrijfUltraHint:options=>beschrijfUltraHint(options),
+    maakHintWeergave:({panel})=>({show(model,options){panel.hidden=false;displayedHints.push({model,options});return true},clear(){panel.hidden=true},destroy(){panel.hidden=true}}),
+    maakHintHold:options=>{options.element.addEventListener('click',options.onShort);hintHoldController={refresh(){},destroy(){},triggerLong(){if(options.canActivate()){options.onState?.({phase:'holding'});options.onLong();options.onState?.({phase:'fired'})}}};return hintHoldController},
+  })
   vm.runInContext(`const SETTINGS_KEY='test'; ${reader}; ${render}; globalThis.render=render`,context)
   const result=context.render({Schaak,spelKanaal:channel,benIkSpeler1:true})
   const nodes=new Map([...result.markup.matchAll(/id="([^"]+)"/g)].map(match=>['#'+match[1],node()]))
@@ -56,6 +64,7 @@ function fixture({saved='{}',isSolo=true,niveau='ultra',state=Schaak.nieuweSpelS
     rijVolgorde:()=>[0,1,2,3,4,5,6,7],kolVolgorde:()=>[0,1,2,3,4,5,6,7],
     bewaarInstellingen(){storage=JSON.stringify(result.instellingen)},wisCheckmateOverlay(){clearedOverlays++},
     toonStatus(key){context.statusBericht={key};context.statusEl.textContent=t(key)},
+    ultraHintWeergave:null,
     Bordgeluid:{maakSchaakAnalyseGeluid:()=>({speel:value=>sounds.push(value),annuleer(){cancelledAudio++},destroy(){}}),kiesSchaakGeluid(){},schaak(){sounds.push('move')}},
     animeerZet:async()=>true,schaakSlagEffect:()=>null,registreerSlag,
     naBeurtControle(){context.tekenBord()},
@@ -70,10 +79,11 @@ function fixture({saved='{}',isSolo=true,niveau='ultra',state=Schaak.nieuweSpelS
       return swipe
     }
   })
+  context.displayedHints=displayedHints
   vm.runInContext(board+'\n'+controller+'\n'+menuController+'\n'+received+`\nglobalThis.refresh=tekenBord; globalThis.beforeMove=bewaarUltraMoment; globalThis.addMove=voegUltraZetToe; globalThis.clearHint=wisUltraHint; globalThis.reset=resetUltraHistorie; globalThis.showMenu=toonMenu;
     globalThis.view=()=>({ply:ultraZetten.length,generation:ultraGeneration,history:[...ultraZetten],snapshots:ultraBordMomenten.size,pending:!!ultraTakebackPending,hint:ultraHint,hintPending:!!ultraHintPending,evaluation:ultraHistorie?.getSnapshot()});`,context)
   context.refresh()
-  return {...result,context,select,sent,sounds,cleanups,refresh:context.refresh,view:()=>plain(context.view()),read:()=>JSON.parse(storage),
+  return {...result,context,select,sent,sounds,cleanups,refresh:context.refresh,view:()=>plain(context.view()),read:()=>JSON.parse(storage),displayedHints,triggerLong:()=>hintHoldController?.triggerLong(),
     get state(){return context.staat},get captures(){return plain(context.veroverd)},get counters(){return {clearedOverlays,cancelledAnimations,cancelledAudio}},get swipe(){return swipe},
     emit:(event,payload)=>listeners.get(event)?.({payload}),
     evaluate(cp){const view=context.view();listeners.get('ultra-evaluatie')?.({payload:{ply:view.ply,generation:view.generation,fen:schaakFen(context.staat),cp,mate:null,final:true}})},
@@ -108,6 +118,18 @@ ui.emit('ultra-hint-result',{ok:true,ply:0,generation:0,fen:schaakFen(ui.state),
 let marked=ui.select('#sch-bord').querySelectorAll('.sch-hint-piece')
 assert.equal(marked.length,1);assert.equal(marked[0].dataset.r,6);assert.equal(marked[0].dataset.k,4)
 assert.equal(ui.context.geselecteerd,null);assert.deepEqual(plain(ui.context.mogelijkeZetten),[],'hint gives no destination markers')
+ui.triggerLong()
+assert.equal(ui.sent.at(-1).event,'ultra-hint')
+ui.emit('ultra-hint-result',{ok:true,ply:0,generation:0,fen:schaakFen(ui.state),from:[7,6],to:[5,5],source:'stockfish',depth:18,cp:34,mate:null})
+assert.equal(ui.view().hintPending,false);assert.equal(ui.context.displayedHints.length,1)
+assert.deepEqual(ui.context.displayedHints[0].model.from,[7,6]);assert.deepEqual(ui.context.displayedHints[0].model.to,[5,5])
+assert.equal(ui.context.displayedHints[0].model.moveLabel,'g1 → f3')
+assert.deepEqual(plain(ui.context.displayedHints[0].options),{animate:true,reveal:true})
+assert.equal(ui.select('#sch-hint-explanation').hidden,false,'the detailed hint opens a clear move-and-reason panel')
+ui.triggerLong()
+ui.emit('ultra-hint-result',{ok:true,ply:0,generation:0,fen:schaakFen(ui.state),from:[7,6],to:[3,3],source:'stockfish',depth:18})
+assert.equal(ui.view().hintPending,false,'an illegal destination is rejected')
+assert.equal(ui.context.displayedHints.length,1)
 ui.toggle('#sch-ultra-hints-enabled',false);assert.equal(hint.hidden,true);assert.equal(ui.view().hint,null)
 assert.equal(ui.read().ultraHints,false);assert.equal(ui.read().custom,'keep')
 ui.toggle('#sch-ultra-hints-enabled',true);hint.click()
@@ -262,4 +284,17 @@ assert.equal(swipe.destroyed,true);assert.equal(swipe.options.canUndo(),false)
 assert.equal(swipe.options.onUndo(),false);assert.equal(undoRequests().length,2)
 swiping.emit('ultra-takeback-result',{ok:true,ply:0,generation:2,fen:swipeInitial})
 assert.equal(schaakFen(swiping.state),beforeDispose,'a disposed game cannot process an old swipe acknowledgement')
-console.log('PASS: Ultra-only strict assistance defaults, persisted opt-ins, origin-only hints, full-state takeback before/after replies, capture/castling/promotion rollback, stale generation protection, guarded swipe/button requests, reset and quiet audio.')
+
+// A hint and the red attacked-piece treatment must remain distinguishable on
+// the exact same square. The queen on d5 attacks the white pawn on d2.
+const contrast=fixture({saved:'{"ultraHints":true,"showAttackRoutes":true,"exaggerate":true}'})
+for(const move of ['c2c4','d7d5','c4d5','d8d5'])contrast.move(move)
+contrast.triggerLong()
+contrast.emit('ultra-hint-result',{ok:true,ply:4,generation:0,fen:schaakFen(contrast.state),from:[6,3],to:[4,3],source:'stockfish',depth:20})
+const threatenedHint=contrast.select('#sch-bord').querySelectorAll('.sch-hint-piece')[0]
+assert.ok(threatenedHint);assert.ok(threatenedHint.classList.contains('sch-threat-exaggerated'),'the attacked red gradient remains enabled under the hint')
+assert.match(source,/.sch-hint-piece \{[^}]*#fff[^}]*#31dfff/,'a crisp white-and-cyan edge stays above the red attacked gradient')
+assert.match(source,/\.sch-threat-exaggerated\.sch-hint-piece \{[^}]*0 0 0 5px #fff[^}]*0 0 0 10px #24e8ff/,'a black-white-cyan frame stays distinct over the red danger glow')
+assert.match(source,/\.sch-hint-piece::after \{[^}]*content:"!"/,'a high-contrast exclamation badge identifies the hint separately')
+assert.equal(contrast.displayedHints.length,1)
+console.log('PASS: Ultra-only strict assistance defaults, persisted opt-ins, short and detailed legal hints, move/reason display, stale and illegal hint rejection, attacked-red plus high-contrast hint, full-state takeback before/after replies, stale generations, guarded swipe/button requests, reset and quiet audio.')

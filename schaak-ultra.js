@@ -28,9 +28,17 @@ export function schaakUltraBot({ stuur, isDicht, motor:Schaak, engineFactory = m
     if (previous?.timer !== null && previous?.timer !== undefined) cancelTimeout(previous.timer)
     previous?.controller.abort()
   }
-  function hintResult(ok, reason, choice, source) {
+  function hintResult(ok, reason, choice, result) {
+    const promotion = ok && staat.bord[choice.zet.van[0]][choice.zet.van[1]]?.[1] === 'P' && [0,7].includes(choice.zet.naar[0])
     emit('ultra-hint-result', { ok, ply, fen:fen(), generation,
-      ...(ok ? { from:choice.zet.van.slice(), source } : { reason }) })
+      ...(ok ? {
+        from:choice.zet.van.slice(), to:choice.zet.naar.slice(),
+        ...(promotion ? { promotieStuk:choice.promotieStuk } : {}),
+        source:['lichess','stockfish'].includes(result?.source) ? result.source : 'stockfish',
+        depth:Number.isSafeInteger(result?.depth) && result.depth >= 0 ? result.depth : 0,
+        cp:Number.isFinite(result?.cp) ? result.cp : null,
+        mate:Number.isFinite(result?.mate) ? result.mate : null,
+      } : { reason }) })
   }
   function finishHint(run, result) {
     if (!pendingHint || !hintsEnabled || staat.aanZet !== 'w' ||
@@ -38,7 +46,7 @@ export function schaakUltraBot({ stuur, isDicht, motor:Schaak, engineFactory = m
         (run && !current(run))) return
     pendingHint = null
     const choice = legalResult(result)
-    if (choice) hintResult(true, null, choice, result.source || 'stockfish')
+    if (choice) hintResult(true, null, choice, result)
     else hintResult(false, 'unavailable')
   }
   function requestHint(payload) {

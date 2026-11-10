@@ -1,8 +1,9 @@
 // groepbellen.js (10 nov 2026, groepschat stap 2): voice chat met de groep, tot 8 personen.
+// v2 (stap 3): ook webcam chat (beeld: true), tot 4 personen. De camera kan uit; dan zien de anderen je rondje.
 //
 // Hoe het werkt: iedereen in het gesprek praat rechtstreeks met iedereen (WebRTC, alleen geluid), via onze eigen
 // STUN/TURN-server (ice-config.js), net als gewoon bellen. Wie er in het gesprek zit, staat op het live-kanaal van de
-// groep (presence: { bel: true, stil, hand }). Voor elk paar maakt degene met het kleinste id het aanbod (offer).
+// groep (presence: { bel: true, stil, hand, cam }). Voor elk paar maakt degene met het kleinste id het aanbod (offer).
 // De seintjes daarvoor (offer, answer, ice) gaan over hetzelfde kanaal (broadcast 'rtc'), versleuteld voor alleen de
 // ontvanger en vast aan de afzender (groepsleutel.js, soort 'media'): een ander lid kan ze niet lezen of namaken.
 //
@@ -12,6 +13,8 @@ import { versleutelGroepsBytes, openGroepsBytes } from './groepsleutel.js?v=2'
 import { ICE_SERVERS, iceReady } from './ice-config.js?v=149'
 
 export const MAX_BELLERS = 8
+export const MAX_BEELD = 4
+const BEELD = { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 24, max: 30 } }
 const GELUID = { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
 const naarB64 = b => { let s = ''; for (let i = 0; i < b.length; i += 8192) s += String.fromCharCode.apply(null, b.subarray(i, i + 8192)); return btoa(s) }
 const vanB64 = t => { const bin = atob(t); const o = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) o[i] = bin.charCodeAt(i); return o }
@@ -21,23 +24,25 @@ export function bellersUit(presenceState) {
   const uit = new Map()
   for (const [key, metas] of Object.entries(presenceState || {})) {
     const m = (metas || []).find(x => x && x.bel)
-    if (m) uit.set(key, { stil: !!m.stil, hand: !!m.hand })
+    if (m) uit.set(key, { stil: !!m.stil, hand: !!m.hand, cam: !!m.cam })
   }
   return uit
 }
 // Moet ik het aanbod maken voor dit paar? (altijd precies een van de twee)
 export const ikBegin = (ik, ander) => String(ik) < String(ander)
 
-// opties: { ik, groepId, kanaal(): supabase-kanaal, sleutel(): { mijnPriv, mijnPub, pubVan(id) }, opStaat(staat) }
-export function maakGroepGesprek({ ik, groepId, kanaal, sleutel, opStaat }) {
+// opties: { ik, groepId, kanaal(): supabase-kanaal, sleutel(): { mijnPriv, mijnPub, pubVan(id) }, opStaat(staat), beeld }
+export function maakGroepGesprek({ ik, groepId, kanaal, sleutel, opStaat, beeld = false }) {
+  const max = beeld ? MAX_BEELD : MAX_BELLERS
   const peers = new Map()      // id -> { pc, audio, stroom, wachtIce: [], uitIce: [], klaar }
-  let stroom = null, mee = false, stil = false, hand = false, luid = true, geblokkeerd = false
+  let stroom = null, mee = false, stil = false, hand = false, cam = false, luid = true, geblokkeerd = false
   let bellers = new Map()
   let ac = null, meterTimer = null
   const praat = new Map()      // id -> tot wanneer 'praat'
   const meters = new Map()     // id -> { analyser, data, track }
 
-  const staat = () => ({ mee, stil, hand, luid, geblokkeerd, bellers: new Map(bellers), praat: new Set([...praat].filter(([, t]) => t > performance.now()).map(([id]) => id)),
+  const staat = () => ({ mee, stil, hand, cam, luid, geblokkeerd, beeld, max, bellers: new Map(bellers), eigen: stroom,
+    stromen: new Map([...peers].filter(([, p]) => p.stroom).map(([id, p]) => [id, p.stroom])), praat: new Set([...praat].filter(([, t]) => t > performance.now()).map(([id]) => id)),
     verbonden: new Set([...peers].filter(([, p]) => ['connected', 'completed'].includes(p.pc.iceConnectionState)).map(([id]) => id)) })
   const meld = () => { try { opStaat && opStaat(staat()) } catch (e) {} }
 
@@ -68,12 +73,15 @@ export function maakGroepGesprek({ ik, groepId, kanaal, sleutel, opStaat }) {
     const pc = new RTCPeerConnection(ICE_SERVERS)
     const peer = { pc, audio: null, stroom: null, wachtIce: [], uitIce: [], klaar: false }
     peers.set(id, peer)
-    if (stroom) for (const t of stroom.getAudioTracks()) pc.addTrack(t, stroom)
+    if (stroom) for (const t of stroom.getTracks()) pc.addTrack(t, stroom)
+    // webcam chat zonder (werkende) camera: wel beeld van de anderen ontvangen (alleen nodig voor wie het aanbod maakt)
+    if (beeld && !(stroom && stroom.getVideoTracks().length) && ikBegin(ik, id)) { try { pc.addTransceiver('video', { direction: 'recvonly' }) } catch (e) {} }
     // ice pas na het offer/answer versturen: anders kan het eerder aankomen dan het offer en gaat het verloren
     pc.onicecandidate = e => { if (!e.candidate) return; const c = e.candidate.toJSON(); if (peer.klaar) stuurSein(id, 'ice', c).catch(() => {}); else peer.uitIce.push(c) }
     pc.ontrack = e => {
       const st = e.streams && e.streams[0] ? e.streams[0] : new MediaStream([e.track])
       peer.stroom = st
+      if (e.track.kind === 'video') { e.track.onunmute = meld; e.track.onmute = meld; meld(); return }
       if (!peer.audio) { peer.audio = document.createElement('audio'); peer.audio.autoplay = true; peer.audio.setAttribute('playsinline', ''); peer.audio.hidden = true; document.body.appendChild(peer.audio) }
       peer.audio.srcObject = st
       peer.audio.muted = !luid
@@ -94,7 +102,7 @@ export function maakGroepGesprek({ ik, groepId, kanaal, sleutel, opStaat }) {
   async function verbind(id) {
     if (!mee || peers.has(id) || !ikBegin(ik, id)) return
     const peer = maakPeer(id), { pc } = peer
-    const offer = await pc.createOffer({ offerToReceiveAudio: true })
+    const offer = await pc.createOffer()
     await pc.setLocalDescription(offer)
     await stuurSein(id, 'offer', { type: offer.type, sdp: offer.sdp })
     await klaarVoorIce(id, peer)
@@ -181,11 +189,11 @@ export function maakGroepGesprek({ ik, groepId, kanaal, sleutel, opStaat }) {
   // ── presence ──
   function track() {
     const k = kanaal()
-    if (k && k.track) k.track({ bel: mee, stil, hand }).catch?.(() => {})
+    if (k && k.track) k.track({ bel: mee, stil, hand, cam: mee && cam }).catch?.(() => {})
   }
   function presence(state) {
     bellers = bellersUit(state)
-    if (mee) bellers.set(ik, { stil, hand })
+    if (mee) bellers.set(ik, { stil, hand, cam })
     if (mee) {
       for (const id of bellers.keys()) if (id !== ik) verbind(id).catch(e => console.warn('[groepbellen] verbinden', e))
       for (const id of [...peers.keys()]) if (!bellers.has(id)) sluitPeer(id)
@@ -200,20 +208,25 @@ export function maakGroepGesprek({ ik, groepId, kanaal, sleutel, opStaat }) {
     ontvangSein: p => { ontvangSein(p).catch(e => console.warn('[groepbellen] sein', e)) },
     async doeMee() {
       if (mee) return
-      if (bellers.size >= MAX_BELLERS) throw new Error('vol')
+      if (bellers.size >= max) throw new Error('vol')
       wek()
       await iceReady.catch?.(() => {})
-      stroom = await navigator.mediaDevices.getUserMedia({ audio: GELUID, video: false })
+      let zonderCamera = false
+      // webcam chat: eerst met camera; lukt dat niet (geen camera, of hij mag niet), dan met alleen geluid
+      if (beeld) { try { stroom = await navigator.mediaDevices.getUserMedia({ audio: GELUID, video: BEELD }) } catch (e) { stroom = null; zonderCamera = true } }
+      if (!stroom) stroom = await navigator.mediaDevices.getUserMedia({ audio: GELUID, video: false })
       mee = true; stil = false; hand = false; geblokkeerd = false
-      bellers.set(ik, { stil, hand })
+      cam = stroom.getVideoTracks().length > 0
+      bellers.set(ik, { stil, hand, cam })
       meet(ik, stroom)
       track()
       for (const id of bellers.keys()) if (id !== ik) verbind(id).catch(() => {})
       meld()
+      return { zonderCamera }
     },
     verlaat() {
       if (!mee) return
-      mee = false; hand = false
+      mee = false; hand = false; cam = false
       for (const id of [...peers.keys()]) sluitPeer(id)
       if (stroom) for (const t of stroom.getTracks()) { try { t.stop() } catch (e) {} }
       stroom = null; meters.clear(); praat.clear()
@@ -221,8 +234,15 @@ export function maakGroepGesprek({ ik, groepId, kanaal, sleutel, opStaat }) {
       track()
       meld()
     },
-    zetStil(aan) { stil = !!aan; if (stroom) for (const t of stroom.getAudioTracks()) t.enabled = !stil; if (mee) bellers.set(ik, { stil, hand }); track(); meld() },
-    zetHand(aan) { hand = !!aan; if (mee) bellers.set(ik, { stil, hand }); track(); meld() },
+    zetStil(aan) { stil = !!aan; if (stroom) for (const t of stroom.getAudioTracks()) t.enabled = !stil; if (mee) bellers.set(ik, { stil, hand, cam }); track(); meld() },
+    zetHand(aan) { hand = !!aan; if (mee) bellers.set(ik, { stil, hand, cam }); track(); meld() },
+    // camera uit: het beeld gaat uit (zwart) en de anderen zien je rondje. Aan kan alleen als er een camera is.
+    zetCamera(aan) {
+      const v = stroom ? stroom.getVideoTracks() : []
+      cam = !!aan && v.length > 0
+      for (const t of v) t.enabled = cam
+      if (mee) bellers.set(ik, { stil, hand, cam }); track(); meld()
+    },
     zetLuid(aan) { luid = !!aan; for (const p of peers.values()) if (p.audio) p.audio.muted = !luid; meld() },
     speelAlles() { wek(); geblokkeerd = false; for (const p of peers.values()) if (p.audio) speel(p.audio); meld() },
   }

@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=86"></script>
+<script src="taal.js?v=87"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -121,7 +121,19 @@ button { font-family:inherit; }
 .tegel .tnaam { font-size:12px; font-weight:700; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 2px; }
 .tegel .tstil { position:absolute; top:2px; right:4px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; font-size:12px; }
 .tegel .thand { position:absolute; top:2px; left:4px; font-size:16px; }
-.bel-knoppen { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:6px; }
+.bel-knoppen { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0, 1fr); gap:6px; }
+/* webcam chat: een scherm per persoon, met een rand die goud kleurt als iemand praat (zoals de rondjes) */
+#belTegels.beeld { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+.tegel.scherm { padding:0; background:transparent; gap:0; }
+.tegel.scherm .vak { position:relative; width:100%; aspect-ratio:3/4; max-height:26vh; box-sizing:border-box; border-radius:18px; overflow:hidden; border:3px solid rgba(151,240,221,0.55); background:#120720; display:flex; align-items:center; justify-content:center; transition:border-color .15s ease, box-shadow .15s ease; }
+.tegel.scherm.praat .vak { border-color:#fcd34d; box-shadow:0 0 0 4px #fbbf2470, 0 0 26px #fbbf24c0; }
+.tegel.scherm.wacht .vak { opacity:.55; }
+.tegel.scherm video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#120720; }
+.tegel.scherm.ik video { transform:scaleX(-1); }
+.tegel.scherm .cirkel { width:64px; height:64px; }
+.tegel.scherm .tnaam { position:absolute; left:8px; bottom:8px; max-width:calc(100% - 16px); padding:2px 8px; border-radius:10px; background:rgba(0,0,0,0.55); }
+.tegel.scherm.leeg { aspect-ratio:3/4; max-height:26vh; border-radius:18px; }
+.bel-knoppen button[aria-pressed="false"]#belCam { background:rgba(252,165,165,0.22); color:#fecaca; }
 .bel-knoppen button { display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 0; border:none; border-radius:14px; background:rgba(255,255,255,0.08); color:#fff; font-size:12px; cursor:pointer; min-height:52px; }
 .bel-knoppen button[aria-pressed="true"]#belHand, .bel-knoppen button[aria-pressed="true"]#belMic { background:rgba(252,165,165,0.22); color:#fecaca; }
 .bel-knoppen button[aria-pressed="false"]#belLuid { background:rgba(252,165,165,0.22); color:#fecaca; }
@@ -174,10 +186,10 @@ button { font-family:inherit; }
       <span class="keuze-tekst"><span class="keuze-titel" data-t>Voice chat</span><span class="keuze-uitleg" data-t>Samen praten, met een chat erbij</span></span>
       <span class="chip" data-t>tot 8</span>
     </button>
-    <button type="button" class="keuze" data-soort="webcam" disabled>
+    <button type="button" class="keuze" data-soort="webcam">
       <span class="keuze-icoon" style="background:linear-gradient(135deg,#6a2bab,#8b3fd1)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg></span>
       <span class="keuze-tekst"><span class="keuze-titel" data-t>Webcam chat</span><span class="keuze-uitleg" data-t>Elkaar zien en praten, met een chat erbij</span></span>
-      <span class="chip" data-t>binnenkort</span>
+      <span class="chip" data-t>tot 4</span>
     </button>
     <div class="uitleg"><span aria-hidden="true">🔒</span><span data-t>Alles is end-to-end versleuteld, net als je gewone chats. Je kunt alleen vrienden toevoegen.</span></div>
   </div>
@@ -208,7 +220,8 @@ button { font-family:inherit; }
     <button type="button" class="terug" id="gesprekTerug" data-t>← terug</button>
     <div class="kop-tekst"><div class="kop-naam" id="groepTitel"></div><div class="kop-sub" id="groepSub"></div></div>
     <button type="button" class="rond-knop" id="belKnop" hidden aria-label="Voice chat starten" data-t-attr="aria-label" style="background:#22c55e;border-color:#22c55e;color:#0b2a14">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>
+      <svg class="bel-tel" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>
+      <svg class="bel-cam" hidden width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>
     </button>
     <button type="button" class="rond-knop" id="ledenKnop" aria-label="Leden" data-t-attr="aria-label">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/></svg>
@@ -221,6 +234,7 @@ button { font-family:inherit; }
     <div class="bel-knoppen">
       <button type="button" id="belMic" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span data-t>Microfoon</span></button>
       <button type="button" id="belLuid" aria-pressed="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><span data-t>Luidspreker</span></button>
+      <button type="button" id="belCam" aria-pressed="true" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg><span data-t>Camera</span></button>
       <button type="button" id="belHand" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13V5a1.5 1.5 0 0 1 3 0v6M11 10V4a1.5 1.5 0 0 1 3 0v6M14 10V5.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7 6 6 0 0 1-5-3l-2.5-4.5a1.5 1.5 0 0 1 2.5-1.5L8 15"/></svg><span data-t>Hand</span></button>
       <button type="button" id="belWeg" class="ophangen"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 15c5-5 13-5 18 0l-2.5 2.5-3.5-1.5v-3a12 12 0 0 0-6 0v3L5.5 17.5z"/></svg><span data-t>Ophangen</span></button>
     </div>
@@ -266,7 +280,7 @@ button { font-family:inherit; }
   import { speel as speelFx } from './stickerfx.js?v=235'
   import { isCode as isEigenCode, leesFx, zoekEigenSticker, fxCode, stickerPakket } from './eigenstickers.js?v=162'
   import { kanOpnemen, neemOp, maakSpeler, tijdTekst as spraakTijd } from './spraak.js?v=1'
-  import { maakGroepGesprek, MAX_BELLERS } from './groepbellen.js?v=1'
+  import { maakGroepGesprek, MAX_BELLERS, MAX_BEELD } from './groepbellen.js?v=2'
   import { houOpen } from './lijntjes.js?v=1'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { zoekSticker } from './stickervellen.js?v=236'
@@ -342,7 +356,7 @@ button { font-family:inherit; }
   }
   async function startNieuw(s) {
     soort = s; gekozen.clear()
-    $('nieuwTitel').textContent = s === 'voice' ? T('Nieuwe voice chat') : T('Nieuwe groepschat')
+    $('nieuwTitel').textContent = s === 'voice' ? T('Nieuwe voice chat') : s === 'webcam' ? T('Nieuwe webcam chat') : T('Nieuwe groepschat')
     toon('leden')
     $('groepNaam').value = ''
     $('maakMelding').textContent = ''
@@ -740,56 +754,90 @@ button { font-family:inherit; }
     gesprek = maakGroepGesprek({
       ik, groepId: groep.id, kanaal: () => lijn?.kanaal?.(),
       sleutel: () => ({ mijnPriv, mijnPub, pubVan: id => lidVan(id)?.public_key || null }),
-      opStaat: tekenBel,
+      opStaat: tekenBel, beeld: groep.soort === 'webcam',
     })
     { const k = lijn?.kanaal?.(); if (k && k.presenceState) gesprek.presence(k.presenceState()) } // wie er al in zit
     tekenBel(gesprek.staat())
   }
-  // ── Voice chat (groepbellen.js): tot 8 personen ──
+  // ── Voice chat en webcam chat (groepbellen.js): tot 8 personen praten, of tot 4 met beeld ──
   let gesprek = null
+  const metBeeld = () => groep && groep.soort === 'webcam'
+  const maxBel = () => metBeeld() ? MAX_BEELD : MAX_BELLERS
   const magBellen = () => groep && mijnPriv && leden.length > 1 && leden.length <= MAX_BELLERS
+  const tegelVan = new Map()   // id -> tegel (blijft staan, zodat het beeld niet steeds opnieuw begint)
+  function zetBeeld(video, stroom) {
+    if (video.srcObject !== stroom) { video.srcObject = stroom || null; if (stroom) video.play?.().catch?.(() => {}) }
+  }
   function tekenBel(st) {
     if (!groep) return
-    const mee = st.mee, n = st.bellers.size
+    const mee = st.mee, n = st.bellers.size, beeld = metBeeld()
     $('belKnop').hidden = mee || !magBellen() || n > 0
-    // balk: er wordt gepraat (of dit is een voice-groep) en ik zit er niet in
-    const toonBalk = !mee && magBellen() && (n > 0 || groep.soort === 'voice')
+    $('belKnop').querySelector('.bel-tel').hidden = beeld; $('belKnop').querySelector('.bel-cam').hidden = !beeld
+    $('belKnop').setAttribute('aria-label', beeld ? T('Webcam chat starten') : T('Voice chat starten'))
+    // balk: er wordt gepraat (of dit is een voice- of webcamgroep) en ik zit er niet in
+    const toonBalk = !mee && magBellen() && (n > 0 || groep.soort === 'voice' || beeld)
     $('belBalk').hidden = !toonBalk
     if (toonBalk) {
       const namen = [...st.bellers.keys()].map(id => naamVan(lidVan(id))).filter(Boolean)
-      $('belBalkTekst').textContent = n === 0 ? T('Nog niemand in de voice chat') : n === 1 ? T('{naam} zit in de voice chat', { naam: namen[0] }) : T('{namen} zitten in de voice chat', { namen: namen.join(', ') })
+      $('belBalkTekst').textContent = beeld
+        ? (n === 0 ? T('Nog niemand in de webcam chat') : n === 1 ? T('{naam} zit in de webcam chat', { naam: namen[0] }) : T('{namen} zitten in de webcam chat', { namen: namen.join(', ') }))
+        : (n === 0 ? T('Nog niemand in de voice chat') : n === 1 ? T('{naam} zit in de voice chat', { naam: namen[0] }) : T('{namen} zitten in de voice chat', { namen: namen.join(', ') }))
       $('belMee').textContent = n === 0 ? T('Starten') : T('Meedoen')
-      $('belMee').disabled = n >= MAX_BELLERS
+      $('belMee').disabled = n >= maxBel()
     }
     $('belPaneel').hidden = !mee
-    if (!mee) return
+    const tegels = $('belTegels')
+    if (!mee) { if (tegelVan.size || tegels.firstChild) { tegelVan.clear(); tegels.innerHTML = '' } return }
+    tegels.classList.toggle('beeld', beeld)
     $('belMic').setAttribute('aria-pressed', String(st.stil)); $('belMic').querySelector('span').textContent = st.stil ? T('Microfoon uit') : T('Microfoon')
     $('belLuid').setAttribute('aria-pressed', String(st.luid)); $('belLuid').querySelector('span').textContent = st.luid ? T('Luidspreker') : T('Geluid uit')
     $('belHand').setAttribute('aria-pressed', String(st.hand))
+    $('belCam').hidden = !beeld
+    $('belCam').setAttribute('aria-pressed', String(st.cam)); $('belCam').querySelector('span').textContent = st.cam ? T('Camera') : T('Camera uit')
+    $('belCam').disabled = !(st.eigen && st.eigen.getVideoTracks().length)
     $('belGeluid').hidden = !st.geblokkeerd
-    const tegels = $('belTegels'); tegels.innerHTML = ''
     const ids = [ik, ...[...st.bellers.keys()].filter(id => id !== ik)]
+    for (const [id, t] of tegelVan) if (!ids.includes(id)) { const v = t.querySelector('video'); if (v) v.srcObject = null; t.remove(); tegelVan.delete(id) }
+    for (const leeg of tegels.querySelectorAll('.tegel.leeg')) leeg.remove()
     for (const id of ids) {
       const b = st.bellers.get(id) || {}
       const lid = id === ik ? (lidVan(ik) || { id: ik }) : lidVan(id)
-      const t = document.createElement('div')
-      t.className = 'tegel' + (st.praat.has(id) ? ' praat' : '') + (id !== ik && !st.verbonden.has(id) ? ' wacht' : '')
-      t.innerHTML = '<div class="cirkel" style="background:' + kleurVan(id) + '">' + avatarHtml(lid) + '</div><div class="tnaam"></div>'
-        + (b.stil ? '<div class="tstil" role="img" aria-label="' + esc(T('Microfoon uit')) + '">\u{1F507}</div>' : '')
-        + (b.hand ? '<div class="thand" role="img" aria-label="' + esc(T('Steekt een hand op')) + '">\u270B</div>' : '')
-      t.querySelector('.tnaam').textContent = id === ik ? T('Jij') : naamVan(lid)
-      tegels.appendChild(t)
+      let t = tegelVan.get(id)
+      if (!t) {
+        t = document.createElement('div'); t.dataset.id = id
+        const rondje = '<div class="cirkel" style="background:' + kleurVan(id) + '">' + avatarHtml(lid) + '</div>'
+        t.innerHTML = beeld ? '<div class="vak"><video autoplay playsinline muted></video>' + rondje + '<div class="tnaam"></div></div>' : rondje + '<div class="tnaam"></div>'
+        t.insertAdjacentHTML('beforeend', '<div class="tstil" role="img" hidden>\u{1F507}</div><div class="thand" role="img" hidden>✋</div>')
+        t.querySelector('.tnaam').textContent = id === ik ? T('Jij') : naamVan(lid)
+        t.querySelector('.tstil').setAttribute('aria-label', T('Microfoon uit')); t.querySelector('.thand').setAttribute('aria-label', T('Steekt een hand op'))
+        tegelVan.set(id, t)
+      }
+      tegels.appendChild(t) // in de goede volgorde (ik eerst)
+      t.className = 'tegel' + (beeld ? ' scherm' : '') + (id === ik ? ' ik' : '') + (st.praat.has(id) ? ' praat' : '') + (id !== ik && !st.verbonden.has(id) ? ' wacht' : '')
+      t.querySelector('.tstil').hidden = !b.stil
+      t.querySelector('.thand').hidden = !b.hand
+      if (beeld) {
+        const v = t.querySelector('video'), stroom = id === ik ? st.eigen : st.stromen.get(id)
+        const vt = stroom && stroom.getVideoTracks()[0]
+        const zie = !!(b.cam && vt && vt.readyState === 'live' && !vt.muted)
+        zetBeeld(v, stroom)
+        v.hidden = !zie
+        t.querySelector('.cirkel').hidden = zie
+      }
     }
-    const plekken = Math.min(MAX_BELLERS, Math.max(leden.length, ids.length))
-    for (let i = ids.length; i < plekken; i++) { const t = document.createElement('div'); t.className = 'tegel leeg'; t.textContent = T('Vrij plekje'); tegels.appendChild(t) }
+    const plekken = Math.min(maxBel(), Math.max(leden.length, ids.length))
+    for (let i = ids.length; i < plekken; i++) { const t = document.createElement('div'); t.className = 'tegel leeg' + (beeld ? ' scherm' : ''); t.textContent = T('Vrij plekje'); tegels.appendChild(t) }
   }
   async function belMee() {
     if (!gesprek || !magBellen()) return
     $('belMee').disabled = true
-    try { await gesprek.doeMee() }
+    try {
+      const uit = await gesprek.doeMee()
+      if (uit && uit.zonderCamera) toast(T('Je camera doet het niet. Je doet mee met alleen geluid.'))
+    }
     catch (e) {
       console.warn('[groep] voice chat', e)
-      toast(e && e.message === 'vol' ? T('De voice chat is vol (8 personen).')
+      toast(e && e.message === 'vol' ? (metBeeld() ? T('De webcam chat is vol (4 personen).') : T('De voice chat is vol (8 personen).'))
         : e && e.name === 'NotAllowedError' ? T('\u{1F3A4} Stekky mag de microfoon niet gebruiken. Zet het aan in de instellingen van je telefoon.')
         : T('Meedoen lukte niet. Probeer het opnieuw.'))
     }
@@ -800,6 +848,7 @@ button { font-family:inherit; }
   $('belWeg').addEventListener('click', () => gesprek?.verlaat())
   $('belMic').addEventListener('click', () => { const s = gesprek?.staat(); if (s) gesprek.zetStil(!s.stil) })
   $('belLuid').addEventListener('click', () => { const s = gesprek?.staat(); if (s) gesprek.zetLuid(!s.luid) })
+  $('belCam').addEventListener('click', () => { const s = gesprek?.staat(); if (s) gesprek.zetCamera(!s.cam) })
   $('belHand').addEventListener('click', () => { const s = gesprek?.staat(); if (s) gesprek.zetHand(!s.hand) })
   $('belGeluid').addEventListener('click', () => gesprek?.speelAlles())
   window.addEventListener('pagehide', () => gesprek?.verlaat())

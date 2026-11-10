@@ -129,3 +129,6 @@ jobs:
       - name: "Groepschat: poll en afspraak (+ knop)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef284.py .
+      - name: "Groepschat: groepsmuziek"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef285.py .

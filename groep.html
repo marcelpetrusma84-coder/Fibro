@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=90"></script>
+<script src="taal.js?v=91"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -190,6 +190,24 @@ button { font-family:inherit; }
 .b-rij.mijn .k-keuze.mijn { border-color:#fff; }
 .b-rij.mijn .k-keuze.mijn .k-vink { background:#fff; border-color:#fff; color:#6a2bab; }
 .b-rij.mijn .k-sub, .b-rij.mijn .k-voet, .b-rij.mijn .bubbel.kaart:not(.afspraak) .k-namen { color:rgba(255,255,255,.78); }
+/* groepsmuziek */
+.m-uitleg { font-size:13px; color:var(--muted); margin-top:-4px; }
+.m-lijst { display:flex; flex-direction:column; gap:6px; }
+.m-leeg { font-size:14px; color:var(--muted); padding:14px 4px; text-align:center; }
+.m-rij { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:14px; background:rgba(255,255,255,0.05); border:1px solid transparent; }
+.m-rij.speelt { border-color:#c084fc; background:linear-gradient(155deg, rgba(192,132,252,.23), rgba(192,132,252,.12)); }
+.m-rij.uit { opacity:.5; }
+.m-speel { width:40px; height:40px; flex:none; border-radius:50%; border:none; background:#8b3fd1; color:#fff; font-size:15px; cursor:pointer; }
+.m-rij.uit .m-speel { background:rgba(255,255,255,0.12); cursor:default; }
+.m-info { flex:1; min-width:0; }
+.m-titel { font-size:15px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.m-sub { font-size:12px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.m-kies { display:flex; align-items:center; gap:10px; padding:10px; border-radius:14px; background:rgba(255,255,255,0.05); font-size:15px; }
+.m-kies input { width:22px; height:22px; accent-color:#8b3fd1; flex:none; }
+#muziekNu { display:flex; align-items:center; gap:8px; padding:6px 8px 6px 12px; border-radius:16px; background:linear-gradient(155deg, rgba(192,132,252,.23), rgba(192,132,252,.12)); border:1px solid rgba(225,204,255,.28); font-size:13px; }
+#muziekNu[hidden] { display:none; }
+#muziekNuTitel { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
+#muziekNuKnop { width:36px; height:36px; border-radius:50%; border:none; background:#8b3fd1; color:#fff; cursor:pointer; }
 /* het venster om een poll of afspraak te maken */
 #maakVak { position:fixed; inset:0; z-index:60; display:flex; align-items:flex-end; justify-content:center; background:rgba(0,0,0,0.55); }
 #maakVak[hidden] { display:none; }
@@ -310,14 +328,16 @@ button { font-family:inherit; }
     <div id="extraMenu" hidden role="menu">
       <button type="button" class="extra-tegel" id="maakPollKnop" role="menuitem"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span data-t>Poll</span></button>
       <button type="button" class="extra-tegel" id="maakAfspraakKnop" role="menuitem"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01"/></svg><span data-t>Afspraak</span></button>
+      <button type="button" class="extra-tegel" id="muziekKnop" role="menuitem"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><span data-t>Muziek</span></button>
     </div>
+    <div id="muziekNu" hidden><span class="mn-noot" aria-hidden="true">♫</span><span id="muziekNuTitel"></span><button type="button" id="muziekNuKnop" aria-label="Pauze" data-t-attr="aria-label">⏸</button></div>
     <div class="balk-knoppen">
       <button type="button" class="balk-knop" id="emojiKnop" aria-label="Emoji" data-t-attr="aria-label" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg></button>
       <button type="button" class="balk-knop" id="stickerKnop" aria-label="Stickers" data-t-attr="aria-label" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 14.5V7a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v10a4 4 0 0 0 4 4h7.5"/><path d="M21 14.5 14.5 21v-3a3.5 3.5 0 0 1 3.5-3.5z"/><path d="M8.5 12.5a4.5 4.5 0 0 0 7 0M9 8.5h.01M15 8.5h.01"/></svg></button>
       <button type="button" class="balk-knop later" aria-label="Spel" data-t-attr="aria-label"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5.5h10a4 4 0 0 1 3.95 3.4c.3 2 .8 5.5.8 7a2.6 2.6 0 0 1-4.6 1.7L15.7 16a2 2 0 0 0-1.5-.7H9.8a2 2 0 0 0-1.5.7l-1.45 1.6A2.6 2.6 0 0 1 2.25 15.9c0-1.5.5-5 .8-7A4 4 0 0 1 7 5.5z"/><path d="M8 9v4M6 11h4M15.5 11.5h.01M17.5 9.5h.01"/></svg></button>
       <button type="button" class="balk-knop" id="fotoKnop" aria-label="Foto versturen" data-t-attr="aria-label"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
       <button type="button" class="balk-knop" id="spraakKnop" aria-label="Houd ingedrukt om in te spreken" data-t-attr="aria-label" style="touch-action:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
-      <button type="button" class="balk-knop" id="extraKnop" aria-label="Meer: poll, afspraak" data-t-attr="aria-label" aria-pressed="false" aria-controls="extraMenu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg></button>
+      <button type="button" class="balk-knop" id="extraKnop" aria-label="Meer: poll, afspraak, muziek" data-t-attr="aria-label" aria-pressed="false" aria-controls="extraMenu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg></button>
     </div>
     <div id="antwoordBalk" hidden><span id="antwoordTekst"></span><button type="button" id="antwoordWeg" aria-label="Niet antwoorden" data-t-attr="aria-label">✕</button></div>
     <div id="spraakBalk" hidden role="status" aria-live="polite"><span class="punt"></span><span id="spraakTijd">0:00</span><span id="spraakHint" data-t>← schuif om te annuleren</span></div>
@@ -350,6 +370,7 @@ button { font-family:inherit; }
   import { isCode as isEigenCode, leesFx, zoekEigenSticker, fxCode, stickerPakket } from './eigenstickers.js?v=162'
   import { kanOpnemen, neemOp, maakSpeler, tijdTekst as spraakTijd } from './spraak.js?v=1'
   import { maakGroepGesprek, MAX_BELLERS, MAX_BEELD } from './groepbellen.js?v=3'
+  import { maakGroepMuziek } from './groepmuziek.js?v=1'
   import { houOpen } from './lijntjes.js?v=1'
   import { haalVriendFotos, geldigeFoto } from './vriendfotos.js?v=2'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
@@ -939,6 +960,7 @@ button { font-family:inherit; }
   }
   async function haalGemist() {
     gesprek?.track() // na een onderbreking: opnieuw laten zien dat ik in de voice chat zit
+    muziek?.vraagLijsten().catch?.(() => {})
     const { data } = await supabase.from('groep_berichten').select('id, sender_id, content, created_at')
       .eq('groep_id', groep.id).order('created_at', { ascending: false }).limit(50)
     for (const r of (data || []).reverse()) await tekenBericht(r)
@@ -968,6 +990,7 @@ button { font-family:inherit; }
         await tekenBericht(r, true, true)
       })
       .on('broadcast', { event: 'media' }, m => { ontvang(m && m.payload).catch?.(() => {}) })
+      .on('broadcast', { event: 'muziek' }, m => { muziek?.ontvang(m && m.payload).catch?.(e => console.warn('[groep] muziek', e)) })
       .on('broadcast', { event: 'typen' }, m => { const v = m && m.payload && m.payload.van; if (v && v !== ik && lidVan(v)) { typers.set(v, Date.now()); werkTypenBij() } }), haalGemist)
     markeerGelezen()
     ruimOp(groep.id)
@@ -978,6 +1001,19 @@ button { font-family:inherit; }
     })
     { const k = lijn?.kanaal?.(); if (k && k.presenceState) gesprek.presence(k.presenceState()) } // wie er al in zit
     tekenBel(gesprek.staat())
+    muziek = maakGroepMuziek({
+      ik, groepId: groep.id, kanaal: () => lijn?.kanaal?.(),
+      sleutel: () => mijnPriv ? { mijnPriv, mijnPub, leden, pubVan: id => lidVan(id)?.public_key || null } : null,
+      opVerander: () => tekenMuziek(),
+    })
+    // zodra het kanaal open is: wie heeft er muziek? (en mijn lijst laten weten)
+    ;(async () => {
+      for (let i = 0; i < 40; i++) {
+        const k = lijn?.kanaal?.()
+        if (k && k.state === 'joined') { muziek.vraagLijsten().catch(() => {}); break }
+        await new Promise(ok => setTimeout(ok, 500))
+      }
+    })()
   }
   // ── Voice chat en webcam chat (groepbellen.js): tot 8 personen praten, of tot 4 met beeld ──
   let gesprek = null
@@ -1202,11 +1238,12 @@ button { font-family:inherit; }
     const zet = () => $('extraKnop').setAttribute('aria-pressed', String(!$('extraMenu').hidden))
     new MutationObserver(zet).observe($('extraMenu'), { attributes: true, attributeFilter: ['hidden'] }); zet()
   }
-  function sluitMaak() { $('maakVak').hidden = true; $('maakVak').querySelector('.vel').innerHTML = '' }
+  function sluitMaak() { $('maakVak').hidden = true; $('maakVak').querySelector('.vel').innerHTML = ''; muziekBeeld = null }
   $('maakVak').addEventListener('click', e => { if (e.target === $('maakVak')) sluitMaak() })
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('maakVak').hidden) sluitMaak() })
   function openMaak(titel, inhoud, opDoe) {
     $('extraMenu').hidden = true
+    muziekBeeld = null
     const vel = $('maakVak').querySelector('.vel')
     vel.innerHTML = '<h2></h2>' + inhoud + '<div class="knoppen"><button type="button" class="weg"></button><button type="button" class="doe"></button></div>'
     vel.querySelector('h2').textContent = titel
@@ -1263,6 +1300,115 @@ button { font-family:inherit; }
     vel.querySelector('.a-datum').min = vandaag; vel.querySelector('.a-totdatum').min = vandaag
     vel.querySelector('.a-datum').addEventListener('change', e => { const t = vel.querySelector('.a-totdatum'); t.min = e.target.value || vandaag; if (t.value && t.value < t.min) t.value = '' })
   })
+  // ── Groepsmuziek (groepmuziek.js): ieders gedeelde nummers in een playlist ──
+  let muziek = null
+  const speler = new Audio()
+  speler.preload = 'auto'
+  let speeltId = null, spelerUrl = null, muziekBeeld = null // 'lijst' | 'kies' | null
+  function stopMuziek() {
+    try { speler.pause() } catch (e) {}
+    speeltId = null
+    if (spelerUrl) { URL.revokeObjectURL(spelerUrl); spelerUrl = null }
+    tekenMuziek()
+  }
+  async function speelMuziek(item) {
+    if (!muziek) return
+    if (speeltId === item.id) { if (speler.paused) speler.play().catch(() => {}); else speler.pause(); return tekenMuziek() }
+    stopMuziek()
+    speeltId = item.id; tekenMuziek()
+    try {
+      const blob = await muziek.blob(item)
+      if (speeltId !== item.id) return
+      spelerUrl = URL.createObjectURL(blob)
+      speler.src = spelerUrl
+      await speler.play()
+    } catch (e) {
+      if (speeltId === item.id) speeltId = null
+      toast(e && e.message === 'niet online' ? T('{naam} heeft de groep nu niet open. Probeer het later.', { naam: naamKort(item.van) })
+        : e && e.message === 'weg' ? T('Dit nummer is er niet meer.') : T('Afspelen lukte niet.'))
+    }
+    tekenMuziek()
+  }
+  speler.addEventListener('ended', () => {
+    // daarna het volgende nummer dat kan
+    const l = muziek ? muziek.lijst() : [], i = l.findIndex(n => n.id === speeltId)
+    const volgende = l.slice(i + 1).find(n => n.mijn || n.opToestel || n.online)
+    stopMuziek()
+    if (volgende) speelMuziek(volgende)
+  })
+  for (const ev of ['play', 'pause']) speler.addEventListener(ev, () => tekenMuziek())
+  window.addEventListener('pagehide', stopMuziek)
+  $('muziekNuKnop').addEventListener('click', () => { if (speler.paused) speler.play().catch(() => {}); else speler.pause() })
+  $('muziekNuTitel').addEventListener('click', () => openMuziek())
+  function tekenMuziek() {
+    const l = muziek ? muziek.lijst() : []
+    const nu = l.find(n => n.id === speeltId)
+    $('muziekNu').hidden = !nu
+    if (nu) { $('muziekNuTitel').textContent = nu.titel + (nu.artiest ? ' – ' + nu.artiest : ''); $('muziekNuKnop').textContent = speler.paused ? '▶' : '⏸' }
+    if (muziekBeeld !== 'lijst' || $('maakVak').hidden) return
+    const lijst = $('maakVak').querySelector('.m-lijst')
+    if (!lijst) return
+    lijst.innerHTML = ''
+    if (!l.length) { lijst.innerHTML = '<div class="m-leeg">' + esc(T('Nog geen muziek gedeeld. Kies hieronder je eigen nummers.')) + '</div>'; return }
+    for (const n of l) {
+      const kan = n.mijn || n.opToestel || n.online
+      const rij = document.createElement('div'); rij.className = 'm-rij' + (n.id === speeltId ? ' speelt' : '') + (kan ? '' : ' uit')
+      rij.dataset.id = n.id
+      rij.innerHTML = '<button type="button" class="m-speel"></button><div class="m-info"><div class="m-titel"></div><div class="m-sub"></div></div>'
+      const v = muziek.voortgang(n.id)
+      rij.querySelector('.m-speel').textContent = n.id === speeltId && !speler.paused ? '⏸' : '▶'
+      rij.querySelector('.m-speel').setAttribute('aria-label', T('Afspelen'))
+      rij.querySelector('.m-titel').textContent = n.titel
+      const wie = n.mijn ? T('jij') : naamKort(n.van)
+      rij.querySelector('.m-sub').textContent = [n.artiest, wie, v !== null ? T('ophalen {p}%', { p: Math.round(v * 100) }) : !kan ? T('niet online') : ''].filter(Boolean).join(' · ')
+      if (kan) rij.querySelector('.m-speel').addEventListener('click', () => speelMuziek(n))
+      lijst.appendChild(rij)
+    }
+  }
+  function openMuziek() {
+    if (!muziek) return
+    $('extraMenu').hidden = true
+    muziekBeeld = 'lijst'
+    const vel = $('maakVak').querySelector('.vel')
+    vel.innerHTML = '<h2></h2><div class="m-uitleg"></div><div class="m-lijst"></div><div class="knoppen"><button type="button" class="weg"></button><button type="button" class="doe"></button></div>'
+    vel.querySelector('h2').textContent = T('Groepsmuziek')
+    vel.querySelector('.m-uitleg').textContent = T('Iedereen kiest zelf welke nummers hij deelt. Een nummer van een ander speelt als die de groep open heeft, of als het al op je telefoon staat.')
+    vel.querySelector('.weg').textContent = T('Sluiten')
+    vel.querySelector('.doe').textContent = T('Mijn nummers kiezen')
+    vel.querySelector('.weg').addEventListener('click', sluitMaak)
+    vel.querySelector('.doe').addEventListener('click', kiesMuziek)
+    $('maakVak').hidden = false
+    tekenMuziek()
+    muziek.vraagLijsten().catch(() => {})
+  }
+  async function kiesMuziek() {
+    muziekBeeld = 'kies'
+    const vel = $('maakVak').querySelector('.vel')
+    vel.innerHTML = '<h2></h2><div class="m-uitleg"></div><div class="m-lijst"></div><div class="knoppen"><button type="button" class="weg"></button><button type="button" class="doe"></button></div>'
+    vel.querySelector('h2').textContent = T('Mijn nummers delen')
+    vel.querySelector('.m-uitleg').textContent = T('Je profielnummer en de muziek van je muziekspeler op Home. Alleen de leden van deze groep kunnen ze afspelen.')
+    vel.querySelector('.weg').textContent = T('Terug')
+    vel.querySelector('.doe').textContent = T('Opslaan')
+    vel.querySelector('.weg').addEventListener('click', openMuziek)
+    const eigen = await muziek.eigenNummers(), gedeeld = muziek.mijnGedeeld()
+    const lijst = vel.querySelector('.m-lijst')
+    if (!eigen.length) lijst.innerHTML = '<div class="m-leeg">' + esc(T('Je hebt nog geen muziek. Zet nummers in de muziekspeler op Home of kies een profielnummer.')) + '</div>'
+    eigen.forEach((n, i) => {
+      const l = document.createElement('label'); l.className = 'm-kies'
+      l.innerHTML = '<input type="checkbox"><span></span>'
+      l.querySelector('input').checked = gedeeld.some(g => g.bron === n.bron && (n.bron === 'profiel' || g.titel === n.titel))
+      l.querySelector('input').dataset.i = i
+      l.querySelector('span').textContent = (n.bron === 'profiel' ? T('Profielnummer') + ': ' : '') + n.titel + (n.artiest ? ' – ' + n.artiest : '')
+      lijst.appendChild(l)
+    })
+    vel.querySelector('.doe').addEventListener('click', async () => {
+      const keuze = [...lijst.querySelectorAll('input:checked')].map(x => eigen[Number(x.dataset.i)])
+      await muziek.deel(keuze)
+      toast(keuze.length ? T('{n} nummer(s) gedeeld in deze groep', { n: keuze.length }) : T('Je deelt geen muziek meer in deze groep'))
+      openMuziek()
+    })
+  }
+  $('muziekKnop').addEventListener('click', openMuziek)
   for (const b of document.querySelectorAll('.balk-knop.later')) b.addEventListener('click', () => toast(T('Samen spelen in een groep komt later')))
   $('fotoKnop').addEventListener('click', () => { if (!mijnPriv || !groep) return; $('fotoInvoer').click() })
   $('fotoInvoer').addEventListener('change', async e => {
@@ -1374,7 +1520,7 @@ button { font-family:inherit; }
   // ── Terug ──
   $('kiezenTerug').addEventListener('click', () => { location.href = 'chat.html' })
   $('ledenTerug').addEventListener('click', () => toon('kiezen'))
-  $('gesprekTerug').addEventListener('click', () => { gesprek?.verlaat(); lijn?.stop?.(); location.href = 'chat.html' })
+  $('gesprekTerug').addEventListener('click', () => { stopMuziek(); gesprek?.verlaat(); lijn?.stop?.(); location.href = 'chat.html' })
   for (const b of document.querySelectorAll('.keuze[data-soort]')) b.addEventListener('click', () => startNieuw(b.dataset.soort))
 
   // ── Start ──

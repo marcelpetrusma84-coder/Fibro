@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=84"></script>
+<script src="taal.js?v=85"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -94,6 +94,22 @@ button { font-family:inherit; }
 #spraakBalk .punt { width:12px; height:12px; border-radius:50%; background:#ef4444; animation:knipper 1s infinite; }
 #spraakBalk.annuleer { color:#fca5a5; }
 @keyframes knipper { 50% { opacity:.3 } }
+.b-rij { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+.citaat { border-left:3px solid var(--accent); background:rgba(255,255,255,0.10); border-radius:6px; padding:3px 8px; margin-bottom:4px; font-size:12px; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
+.citaat b { color:var(--accent); font-weight:700; }
+.reacties { display:flex; flex-wrap:wrap; gap:4px; margin-top:2px; }
+.reactie { background:#3d2a5c; border:0.5px solid #6b4f96; color:#fff; border-radius:10px; padding:2px 8px; font-size:13px; }
+.reactie.mijn { border-color:var(--accent); }
+.bubbel.weg { font-style:italic; color:var(--muted); background:transparent; border:1px dashed rgba(255,255,255,0.2); }
+.b-rij.licht .bubbel, .b-rij.licht .b-sticker, .b-rij.licht .b-foto { outline:2px solid var(--accent); outline-offset:2px; }
+#berichtMenu { position:fixed; z-index:60; background:#fff; border-radius:22px; padding:6px 8px; display:flex; flex-direction:column; gap:4px; box-shadow:0 4px 16px rgba(0,0,0,0.45); }
+#berichtMenu .rij { display:flex; gap:4px; }
+#berichtMenu button { background:none; border:0; font-size:22px; cursor:pointer; line-height:1; min-width:40px; min-height:40px; border-radius:12px; }
+#berichtMenu button.tekst { font-size:14px; color:#1a0a2e; font-weight:700; padding:0 10px; }
+#berichtMenu button.gekozen { background:#ede4fb; }
+#antwoordBalk { display:flex; align-items:center; gap:8px; padding:6px 10px; border-left:3px solid var(--accent); background:rgba(255,255,255,0.06); border-radius:8px; font-size:13px; }
+#antwoordBalk span { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#antwoordBalk button { background:none; border:0; color:var(--muted); font-size:16px; cursor:pointer; min-width:36px; min-height:36px; }
 .chatbalk { margin:0 10px calc(10px + env(safe-area-inset-bottom,0px)); padding:12px; display:flex; flex-direction:column; gap:12px; border-radius:24px; background:linear-gradient(160deg,rgba(255,255,255,0.09),rgba(255,255,255,0.04)); border:1px solid rgba(192,132,252,0.5); flex-shrink:0; }
 .balk-knoppen { display:flex; gap:8px; }
 .balk-knop { width:46px; height:46px; flex-shrink:0; border-radius:50%; border:1px solid var(--border); background:rgba(255,255,255,0.08); font-size:21px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
@@ -186,6 +202,7 @@ button { font-family:inherit; }
       <button type="button" class="balk-knop" id="fotoKnop" aria-label="Foto versturen" data-t-attr="aria-label">📷</button>
       <button type="button" class="balk-knop" id="spraakKnop" aria-label="Houd ingedrukt om in te spreken" data-t-attr="aria-label" style="touch-action:none">🎤</button>
     </div>
+    <div id="antwoordBalk" hidden><span id="antwoordTekst"></span><button type="button" id="antwoordWeg" aria-label="Niet antwoorden" data-t-attr="aria-label">✕</button></div>
     <div id="spraakBalk" hidden role="status" aria-live="polite"><span class="punt"></span><span id="spraakTijd">0:00</span><span id="spraakHint" data-t>← schuif om te annuleren</span></div>
     <input type="file" id="fotoInvoer" accept="image/*" multiple hidden>
     <div class="balk-invoer">
@@ -420,14 +437,90 @@ button { font-family:inherit; }
       toast(T('Versturen lukte niet helemaal. Probeer het opnieuw.'))
     }
   }
-  async function tekenBericht(r, onder = true, nieuw = false) {
+  // ── Antwoorden, reacties en weghalen (zoals in de gewone chat). Alles gaat versleuteld als groepsbericht:
+  //   'antw:<id>\n<tekst>'        een antwoord op een bericht (het citaat maakt elk toestel zelf)
+  //   'reactie:<id>:<emoji/tekst>' een reactie (leeg = weg); een 'stil' bericht: telt niet als ongelezen, geen melding
+  //   'weg:<id>'                   de afzender haalde zijn bericht weg (de rij is ook uit de database)
+  const tekstPerId = new Map()   // id -> { naam, tekst } voor citaten
+  const reacties = new Map()     // id -> Map(van -> inhoud)
+  const ID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+  const RE_REACTIE = new RegExp('^reactie:(' + ID + '):([\\s\\S]{0,30})$')
+  const RE_WEG = new RegExp('^weg:(' + ID + ')$')
+  const RE_ANTW = new RegExp('^antw:(' + ID + ')\\n([\\s\\S]*)$')
+  function kortVan(tekst) {
+    if (/^fxsticker:/.test(tekst)) return T('\u{1F5BC}\uFE0F Sticker')
+    const mm = MARKER.exec(tekst)
+    if (mm) return mm[2] === 'foto' ? T('\u{1F4F7} Foto') : T('\u{1F3A4} Spraakbericht ({tijd})', { tijd: spraakTijd(Number(mm[3])) })
+    return String(tekst).slice(0, 80)
+  }
+  function zetReactie(id, van, inhoud) {
+    let m = reacties.get(id)
+    if (!m) { m = new Map(); reacties.set(id, m) }
+    if (inhoud) m.set(van, inhoud); else m.delete(van)
+    tekenReacties(id)
+  }
+  function tekenReacties(id) {
+    const rij = $('berichten').querySelector('.b-rij[data-id="' + id + '"]')
+    if (!rij) return
+    rij.querySelector('.reacties')?.remove()
+    const m = reacties.get(id)
+    if (!m || !m.size) return
+    const vak = document.createElement('div'); vak.className = 'reacties'
+    const tellen = new Map()
+    for (const [van, inhoud] of m) {
+      if ([...inhoud].length <= 2 && !/[a-z0-9]/i.test(inhoud)) {
+        const t = tellen.get(inhoud) || { n: 0, mijn: false }; t.n++; if (van === ik) t.mijn = true; tellen.set(inhoud, t)
+      } else {
+        const c = document.createElement('span'); c.className = 'reactie' + (van === ik ? ' mijn' : '')
+        c.textContent = naamVan(van === ik ? { id: ik, username: T('jij') } : lidVan(van)) + ': ' + inhoud
+        vak.appendChild(c)
+      }
+    }
+    for (const [e, t] of tellen) {
+      const c = document.createElement('span'); c.className = 'reactie' + (t.mijn ? ' mijn' : '')
+      c.textContent = e + (t.n > 1 ? ' ' + t.n : ''); vak.prepend(c)
+    }
+    rij.querySelector('.b-kol').insertBefore(vak, rij.querySelector('.b-tijd'))
+  }
+  function haalWeg(id, van) {
+    const rij = $('berichten').querySelector('.b-rij[data-id="' + id + '"]')
+    if (!rij || rij.dataset.van !== van) return
+    const kol = rij.querySelector('.b-kol')
+    for (const el of kol.querySelectorAll('.bubbel, .b-sticker, .citaat, .reacties')) el.remove()
+    const b = document.createElement('div'); b.className = 'bubbel weg'; b.textContent = T('\u{1F6AB} Bericht verwijderd')
+    kol.insertBefore(b, kol.querySelector('.b-tijd'))
+    rij.dataset.weg = '1'
+    tekstPerId.delete(id)
+  }
+
+  // Berichten een voor een tekenen (een reactie of antwoord moet na zijn bericht komen)
+  let wachtrij = Promise.resolve()
+  function tekenBericht(r, onder = true, nieuw = false) {
+    const p = wachtrij.then(() => tekenEen(r, onder, nieuw)).catch(e => console.warn('[groep] tekenen', e))
+    wachtrij = p
+    return p
+  }
+  async function tekenEen(r, onder, nieuw) {
     if (!r || getoond.has(r.id)) return
     getoond.add(r.id)
     const mijn = r.sender_id === ik
     const afz = mijn ? { id: ik, public_key: mijnPub } : lidVan(r.sender_id)
+    const uit = await openGroepsbericht(r.content, { groepId: groep.id, van: r.sender_id, ik, mijnPriv, afzenderPub: afz?.public_key, serverTijd: Date.parse(r.created_at) })
+    const leesbaar = uit.status === 'ok' || uit.status === 'tijd'
+    let tekst = leesbaar ? uit.tekst : ''
+    let antwoordOp = null
+    if (leesbaar) {
+      let m = RE_REACTIE.exec(tekst)
+      if (m) { zetReactie(m[1], r.sender_id, m[2]); return }
+      m = RE_WEG.exec(tekst)
+      if (m) { haalWeg(m[1], r.sender_id); return }
+      m = RE_ANTW.exec(tekst)
+      if (m) { antwoordOp = m[1]; tekst = m[2] }
+    }
     const rij = document.createElement('div')
     rij.className = 'b-rij' + (mijn ? ' mijn' : '') + (vorigeAfzender === r.sender_id ? ' vervolg' : '')
     rij.dataset.id = r.id
+    rij.dataset.van = r.sender_id
     vorigeAfzender = r.sender_id
     const kleur = kleurVan(r.sender_id)
     rij.innerHTML = '<span class="av" style="background:' + kleur + '">' + avatarHtml(afz) + '</span>'
@@ -435,10 +528,21 @@ button { font-family:inherit; }
     if (!mijn) rij.querySelector('.b-naam').textContent = naamVan(afz)
     $('berichten').appendChild(rij)
     const bub = rij.querySelector('.bubbel')
-    const uit = await openGroepsbericht(r.content, { groepId: groep.id, van: r.sender_id, ik, mijnPriv, afzenderPub: afz?.public_key, serverTijd: Date.parse(r.created_at) })
-    if (uit.status === 'ok' || uit.status === 'tijd') {
-      const fxm = /^fxsticker:([\s\S]+)$/.exec(uit.tekst)
-      const mm = MARKER.exec(uit.tekst)
+    if (antwoordOp) {
+      const c = document.createElement('div'); c.className = 'citaat'
+      const orig = tekstPerId.get(antwoordOp)
+      if (orig) { const b = document.createElement('b'); b.textContent = orig.naam + ': '; c.append(b, document.createTextNode(orig.tekst)) }
+      else c.textContent = T('bericht niet meer beschikbaar')
+      c.addEventListener('click', () => {
+        const doel = $('berichten').querySelector('.b-rij[data-id="' + antwoordOp + '"]')
+        if (doel) { doel.scrollIntoView({ block: 'center', behavior: 'smooth' }); doel.classList.add('licht'); setTimeout(() => doel.classList.remove('licht'), 1500) }
+      })
+      bub.before(c)
+    }
+    if (leesbaar) {
+      tekstPerId.set(r.id, { naam: mijn ? T('jij') : naamVan(afz), tekst: kortVan(tekst) })
+      const fxm = /^fxsticker:([\s\S]+)$/.exec(tekst)
+      const mm = MARKER.exec(tekst)
       if (fxm) {
         const st = stickerUit(fxm[1])
         if (st) {
@@ -450,7 +554,7 @@ button { font-family:inherit; }
       } else if (mm) {
         tekenMedia(bub, mm[1], mm[2], Number(mm[3]), r.sender_id, mijn, nieuw)
       } else {
-        bub.textContent = uit.tekst
+        bub.textContent = tekst
       }
     } else {
       bub.classList.add('slot')
@@ -458,8 +562,100 @@ button { font-family:inherit; }
         : !afz ? T('🔒 Van iemand die niet meer in de groep zit')
         : uit.status === 'vervalst' ? T('⚠️ [bericht klopt niet — onderweg veranderd]') : T('🔒 [versleuteld bericht — kan niet lezen]')
     }
+    if (leesbaar) zetLangDrukken(rij)
+    tekenReacties(r.id)
     if (onder) naarOnder()
+    if (nieuw && !mijn) markeerGelezen()
   }
+
+  // ── Lang drukken (of rechts klikken) op een bericht: reageren, antwoorden, weghalen ──
+  const MENU_EMOJIS = ['\u{1F44D}', '\u2764\uFE0F', '\u{1F602}', '\u{1F62E}', '\u{1F622}', '\u{1F525}']
+  let menuBuiten = null
+  function sluitMenu() {
+    $('berichtMenu')?.remove()
+    if (menuBuiten) { document.removeEventListener('pointerdown', menuBuiten, true); menuBuiten = null }
+  }
+  function openMenu(rij, x, y) {
+    sluitMenu()
+    const id = rij.dataset.id, mijn = rij.dataset.van === ik
+    const mijnReactie = reacties.get(id)?.get(ik) || ''
+    const m = document.createElement('div'); m.id = 'berichtMenu'; m.setAttribute('role', 'menu')
+    const r1 = document.createElement('div'); r1.className = 'rij'
+    for (const e of MENU_EMOJIS) {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = e
+      if (e === mijnReactie) b.className = 'gekozen'
+      b.addEventListener('click', () => { sluitMenu(); verstuur('reactie:' + id + ':' + (e === mijnReactie ? '' : e), { stil: true }) })
+      r1.appendChild(b)
+    }
+    const r2 = document.createElement('div'); r2.className = 'rij'
+    const knop = (tekst, actie) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tekst'; b.textContent = tekst; b.addEventListener('click', () => { sluitMenu(); actie() }); r2.appendChild(b) }
+    if (rij.dataset.weg !== '1') {
+      knop(T('\u21A9 Antwoorden'), () => kiesAntwoord(id))
+      knop(T('\u{1F4AC} Reageer'), () => {
+        const t = prompt(T('Jouw reactie (max 30 tekens):'))
+        if (t && t.trim()) verstuur('reactie:' + id + ':' + t.trim().slice(0, 30), { stil: true })
+      })
+      if (mijnReactie) knop(T('Reactie weg'), () => verstuur('reactie:' + id + ':', { stil: true }))
+      if (mijn) knop(T('\u{1F5D1} Weghalen'), () => weghalen(id))
+    }
+    m.append(r1, r2)
+    document.body.appendChild(m)
+    const b = m.getBoundingClientRect()
+    m.style.left = Math.max(8, Math.min(x - b.width / 2, innerWidth - b.width - 8)) + 'px'
+    m.style.top = Math.max(8, y - b.height - 12) + 'px'
+    setTimeout(() => { if (!m.isConnected) return; menuBuiten = e => { if (!m.contains(e.target)) sluitMenu() }; document.addEventListener('pointerdown', menuBuiten, true) }, 0)
+  }
+  function zetLangDrukken(rij) {
+    let tm = null, sx = 0, sy = 0
+    rij.addEventListener('pointerdown', e => { sx = e.clientX; sy = e.clientY; clearTimeout(tm); tm = setTimeout(() => { tm = null; openMenu(rij, sx, sy); try { navigator.vibrate?.(15) } catch (er) {} }, 450) })
+    rij.addEventListener('pointermove', e => { if (tm && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) { clearTimeout(tm); tm = null } })
+    for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) rij.addEventListener(ev, () => { clearTimeout(tm); tm = null })
+    rij.addEventListener('contextmenu', e => { e.preventDefault(); openMenu(rij, e.clientX, e.clientY) })
+  }
+  let antwoordOp = null
+  function kiesAntwoord(id) {
+    const orig = tekstPerId.get(id)
+    antwoordOp = id
+    $('antwoordTekst').textContent = '\u21A9 ' + (orig ? orig.naam + ': ' + orig.tekst : T('bericht'))
+    $('antwoordBalk').hidden = false
+    $('bericht').focus()
+  }
+  function wisAntwoord() { antwoordOp = null; $('antwoordBalk').hidden = true }
+  $('antwoordWeg').addEventListener('click', wisAntwoord)
+  async function weghalen(id) {
+    if (!confirm(T('Dit bericht voor iedereen weghalen?'))) return
+    const { error } = await supabase.from('groep_berichten').delete().eq('id', id).eq('sender_id', ik)
+    if (error) { toast(T('Dat lukte niet')); return }
+    haalWeg(id, ik)
+    verstuur('weg:' + id, { stil: true })
+  }
+
+  // ── Gelezen (voor het tellertje in de chatlijst en op het tabblad Chat) ──
+  let gelezenTimer = null
+  function markeerGelezen() {
+    if (!groep || document.visibilityState !== 'visible') return
+    clearTimeout(gelezenTimer)
+    gelezenTimer = setTimeout(() => { supabase.rpc('groep_markeer_gelezen', { p_groep: groep.id }).then(() => {}, () => {}) }, 800)
+  }
+  document.addEventListener('visibilitychange', markeerGelezen)
+
+  // ── Typen: "Bram typt..." (over het live-kanaal, niet bewaard) ──
+  const typers = new Map()
+  let laatsteTypen = 0
+  function werkTypenBij() {
+    const nu = Date.now()
+    for (const [v, t] of typers) if (nu - t > 4000) typers.delete(v)
+    const namen = [...typers.keys()].map(v => naamVan(lidVan(v))).filter(Boolean)
+    if (!namen.length) { werkKopBij(); return }
+    $('groepSub').textContent = namen.length === 1 ? T('{naam} typt\u2026', { naam: namen[0] }) : T('{namen} typen\u2026', { namen: namen.join(', ') })
+  }
+  setInterval(() => { if (typers.size) werkTypenBij() }, 1000)
+  $('bericht').addEventListener('input', () => {
+    const k = lijn?.kanaal?.()
+    if (!k || Date.now() - laatsteTypen < 2500 || !$('bericht').value) return
+    laatsteTypen = Date.now()
+    k.send({ type: 'broadcast', event: 'typen', payload: { van: ik } }).catch?.(() => {})
+  })
 
   async function laadBerichten() {
     const { data, error } = await supabase.from('groep_berichten').select('id, sender_id, content, created_at')
@@ -494,34 +690,49 @@ button { font-family:inherit; }
         if (r.sender_id !== ik && !lidVan(r.sender_id)) { try { await haalLeden(true) } catch (e) {} }
         await tekenBericht(r, true, true)
       })
-      .on('broadcast', { event: 'media' }, m => { ontvang(m && m.payload).catch?.(() => {}) }), haalGemist)
+      .on('broadcast', { event: 'media' }, m => { ontvang(m && m.payload).catch?.(() => {}) })
+      .on('broadcast', { event: 'typen' }, m => { const v = m && m.payload && m.payload.van; if (v && v !== ik && lidVan(v)) { typers.set(v, Date.now()); werkTypenBij() } }), haalGemist)
+    markeerGelezen()
     ruimOp(groep.id)
   }
   function zetInvoer(aan) { $('bericht').disabled = !aan; $('verstuur').disabled = !aan }
 
-  let bezig = false
-  async function verstuur(tekst) {
-    if (!groep || !mijnPriv || bezig) return false
-    bezig = true
+  // een voor een versturen (een reactie vlak na een bericht mag niet verloren gaan)
+  let verzendRij = Promise.resolve()
+  function verstuur(tekst, opties) {
+    const p = verzendRij.then(() => verstuurNu(tekst, opties))
+    verzendRij = p.catch(() => {})
+    return p
+  }
+  async function verstuurNu(tekst, { stil = false } = {}) {
+    if (!groep || !mijnPriv) return false
     try {
       await haalLeden()
       const ontvangers = leden.map(l => l.id === ik ? { id: ik, public_key: mijnPub } : l)
       const { content, overgeslagen } = await versleutelGroepsbericht(tekst, { groepId: groep.id, van: ik, mijnPriv, leden: ontvangers })
-      const { data, error } = await supabase.from('groep_berichten').insert({ groep_id: groep.id, sender_id: ik, content }).select('id, sender_id, content, created_at').single()
+      const rij = { groep_id: groep.id, sender_id: ik, content }
+      if (stil) rij.stil = true
+      let { data, error } = await supabase.from('groep_berichten').insert(rij).select('id, sender_id, content, created_at').single()
+      if (error && stil && (error.code === 'PGRST204' || error.code === '42703')) { // de server kent 'stil' nog niet (sql/groep-extra.sql)
+        delete rij.stil
+        ;({ data, error } = await supabase.from('groep_berichten').insert(rij).select('id, sender_id, content, created_at').single())
+      }
       if (error || !data) { console.warn('[groep] versturen mislukt', error); toast(navigator.onLine ? T('Niet verstuurd. Probeer het opnieuw.') : T('Geen internet')); return false }
       await tekenBericht(data, true, true)
       if (overgeslagen.length) toast(T('{n} lid kan dit nog niet lezen (geen sleutel)', { n: overgeslagen.length }))
       return true
     } catch (e) {
       console.warn('[groep] versleutelen mislukt', e); toast(T('Niet verstuurd. Probeer het opnieuw.')); return false
-    } finally { bezig = false }
+    }
   }
   async function verstuurInvoer() {
     const inv = $('bericht'); const tekst = inv.value.trim()
     if (!tekst) return
     inv.value = ''
     $('emojiRaster').hidden = true
-    if (!(await verstuur(tekst))) inv.value = tekst
+    const op = antwoordOp
+    wisAntwoord()
+    if (!(await verstuur(op ? 'antw:' + op + '\n' + tekst : tekst))) { inv.value = tekst; if (op) kiesAntwoord(op) }
   }
   $('verstuur').addEventListener('click', verstuurInvoer)
   $('bericht').addEventListener('keydown', e => { if (e.key === 'Enter') verstuurInvoer() })

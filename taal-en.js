@@ -2106,4 +2106,12 @@ window.FIBRO_EN = {
   "komt binnen…": "arriving…",
   "niet meer op dit toestel": "no longer on this device",
   "🎤 Spraakbericht ({tijd})": "🎤 Voice message ({tijd})",
+  // groepschat: antwoorden, reacties, weghalen, typen (10 nov 2026)
+  "Dit bericht voor iedereen weghalen?": "Remove this message for everyone?",
+  "Niet antwoorden": "Do not reply",
+  "Reactie weg": "Remove reaction",
+  "{naam} typt…": "{naam} is typing…",
+  "{namen} typen…": "{namen} are typing…",
+  "↩ Antwoorden": "↩ Reply",
+  "🗑 Weghalen": "🗑 Remove",
 }

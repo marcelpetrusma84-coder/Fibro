@@ -37,6 +37,10 @@
 // irritant wordt (kiesOnlineOntvangers).
 // v266: zelf kiezen (☰ > Pushmeldingen): chat_instellingen.push_uit is wat de ontvanger uitzette (buzz, spel, vriend,
 // gastenboek, like, online). Dan geen melding (PUSH_GROEP, staatUit). Berichten en bellen gaan altijd door.
+// groepen (10 nov 2026): { groep_bericht_id } van de trigger op groep_berichten (sql/groep-extra.sql). Alle leden behalve
+// de afzender krijgen "Nieuw bericht in een groep" (zoals bij de gewone chat zonder naam of inhoud); een tik opent de
+// groep. Een 'stil' bericht (reactie, weggehaald) geeft niets. Elk bericht hoogstens een keer (push_log), en per groep
+// vervangt een nieuwe melding de vorige (tag).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push";
 
@@ -47,6 +51,10 @@ const corsHeaders = {
 
 type Tekst = { title: string; body: string };
 const TEKSTEN: Record<string, Record<string, Tekst>> = {
+  groep: {
+    nl: { title: "Stekky", body: "Nieuw bericht in een groep 👥" },
+    en: { title: "Stekky", body: "New message in a group 👥" },
+  },
   bericht: {
     nl: { title: "Stekky", body: "Je hebt een nieuw bericht 💬" },
     en: { title: "Stekky", body: "You have a new message 💬" },
@@ -343,6 +351,43 @@ Deno.serve(async (req) => {
       const uitn = soort === "spel" ? leesUitnodiging(b.content) : null;
       if (uitn && uitn.van !== b.sender_id) return antwoord({ ok: false, reden: "ongeldige uitnodiging" }, 400);
       return await stuurVriendMelding(supabase, b.sender_id, b.receiver_id, soort, uitn);
+    }
+
+    // groepen: een nieuw bericht in een groep (trigger op groep_berichten)
+    if (invoer.groep_bericht_id) {
+      const id = String(invoer.groep_bericht_id);
+      if (!UUID.test(id)) return antwoord({ ok: false, reden: "ongeldig bericht" }, 400);
+      const { data: b, error: fb } = await supabase.from("groep_berichten")
+        .select("id, groep_id, sender_id, stil, created_at").eq("id", id).maybeSingle();
+      if (fb) throw fb;
+      if (!b) return antwoord({ ok: false, reden: "geen bericht" }, 404);
+      if (b.stil) return antwoord({ ok: false, reden: "geen melding nodig" });
+      if (Date.now() - new Date(b.created_at).getTime() > BERICHT_VERS_MS) return antwoord({ ok: false, reden: "te oud" });
+      const { data: afz } = await supabase.from("profiles").select("geblokkeerd").eq("id", b.sender_id).maybeSingle();
+      if (!afz || afz.geblokkeerd) return antwoord({ ok: false, reden: "geblokkeerd" }, 403);
+      if (!(await pakSlot(supabase, b.id))) return antwoord({ ok: true, verstuurd: 0, reden: "al verstuurd" });
+      const { data: leden, error: fl } = await supabase.from("groep_leden").select("user_id").eq("groep_id", b.groep_id);
+      if (fl) throw fl;
+      const ids = (leden || []).map((l: any) => l.user_id).filter((u: string) => u !== b.sender_id);
+      if (!ids.length) return antwoord({ ok: true, verstuurd: 0 });
+      const { data: profielen } = await supabase.from("profiles").select("id, taal").in("id", ids);
+      webpush.setVapidDetails("mailto:fibro.contact@proton.me", Deno.env.get("VAPID_PUBLIC_KEY"), Deno.env.get("VAPID_PRIVATE_KEY"));
+      let verstuurd = 0;
+      for (const p of profielen || []) {
+        const taal = p.taal === "en" ? "en" : "nl";
+        const payload = JSON.stringify({ ...TEKSTEN.groep[taal], url: "/Fibro/groep.html?id=" + encodeURIComponent(b.groep_id), type: "groep", tag: "groep-" + b.groep_id });
+        const { data: subs } = await supabase.from("push_subscriptions").select("id, subscription").eq("user_id", p.id);
+        for (const rij of subs || []) {
+          try {
+            await webpush.sendNotification(rij.subscription, payload, { TTL: 24 * 60 * 60 });
+            verstuurd++;
+          } catch (e) {
+            console.error("Push fout:", e && (e as any).statusCode ? (e as any).statusCode : e);
+            if (e && ((e as any).statusCode === 404 || (e as any).statusCode === 410)) await supabase.from("push_subscriptions").delete().eq("id", rij.id);
+          }
+        }
+      }
+      return antwoord({ ok: true, verstuurd });
     }
 
     // v258: iemand gebruikte een uitnodiging (trigger op invite_tokens): de maker hoort dat hij een nieuwe vriend heeft

@@ -8,3 +8,5 @@ invite.local.txt
 local-backend.local.json
 test-account.mock.local.json
 auth-state.mock.local.json
+test-account.quick.local.json
+auth-state.quick.local.json

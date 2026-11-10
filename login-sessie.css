@@ -1,0 +1,36 @@
+.login-sessie { display:none; }
+html[data-login-sessie="laden"] #login-inhoud {
+  filter:blur(11px); opacity:.28; pointer-events:none; user-select:none;
+}
+html[data-login-sessie="laden"] .login-sessie {
+  position:fixed; inset:0; z-index:8000; display:grid; place-items:center;
+  padding:24px; background:radial-gradient(ellipse at 50% 40%,#7e43b533,#1a0a2e80 75%);
+}
+.login-sessie-kaart {
+  position:relative; isolation:isolate; width:min(100%,340px); padding:32px 28px;
+  text-align:center; overflow:hidden; border:1px solid #ead6ff55; border-radius:28px;
+  color:#fff; font-family:'DM Sans',system-ui,sans-serif;
+  background:radial-gradient(ellipse at 50% 0%,#cf9aff25,transparent 70%),linear-gradient(145deg,#44235bec,#241033f2);
+  box-shadow:inset 0 1px 0 #fff3,inset 0 -1px 0 #0005,0 24px 70px #10061b70,0 5px 14px #10061b30;
+  backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+}
+.login-sessie-slot {
+  display:block; width:78px; height:78px; margin:0 auto 20px;
+  color:#e5ccff; opacity:.5; filter:drop-shadow(0 2px 1px #12041f) drop-shadow(0 0 15px #ba78ff70);
+}
+.login-sessie-titel { font-size:19px; font-weight:650; line-height:1.35; letter-spacing:-.35px; }
+.login-sessie-uitleg { margin-top:8px; color:#e0ccec; font-size:14px; line-height:1.5; }
+.login-sessie-balk {
+  position:relative; height:5px; margin-top:24px; overflow:hidden; border-radius:99px;
+  background:#11071d99; box-shadow:inset 0 1px 3px #0006,0 1px 0 #fff1;
+}
+.login-sessie-balk::after {
+  content:''; display:block; width:42%; height:100%; border-radius:inherit;
+  background:linear-gradient(90deg,#ae72ee00,#e9caff 48%,#cba2ff);
+  box-shadow:0 0 12px #d7afff88; animation:login-sessie-licht 1.7s ease-in-out infinite;
+}
+@keyframes login-sessie-licht { from { transform:translateX(-110%); } to { transform:translateX(345%); } }
+@media (prefers-reduced-motion:reduce) {
+  .login-sessie-balk::after { animation:none; margin-inline:auto; }
+  html[data-login-sessie="laden"] #login-inhoud { animation:none; }
+}

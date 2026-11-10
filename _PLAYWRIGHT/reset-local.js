@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 const folder = path.dirname(fileURLToPath(import.meta.url))
 
-for (const bestand of ['test-account.mock.local.json', 'auth-state.mock.local.json', 'local-backend.local.json']) {
+for (const bestand of ['test-account.mock.local.json', 'auth-state.mock.local.json', 'test-account.quick.local.json', 'auth-state.quick.local.json', 'local-backend.local.json']) {
   await rm(path.join(folder, bestand), { force: true })
 }
 

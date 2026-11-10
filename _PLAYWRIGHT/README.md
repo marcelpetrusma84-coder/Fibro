@@ -2,7 +2,7 @@
 
 Deze tests openen Home, Vrienden, Chat en Stijl. Ze gebruiken een **lokaal nagebootste testserver** met een fictieve uitnodiger en testaccounts. Externe verbindingen worden geblokkeerd. Dit test de schermen en de aanmeldstroom; de echte Supabase-server, beveiligingsregels en verbindingen worden hiermee niet getest.
 
-De testbestanden staan in `_PLAYWRIGHT` naast `.vscode` en `android`. De aanmelding staat in `first-login.setup.js`, de vier paginatests in `tests/navigation.spec.js`.
+De testbestanden staan in `_PLAYWRIGHT` naast `.vscode` en `android`. De korte voorbereiding staat in `quick-login.setup.js`, de uitgebreide aanmelding in `first-login.setup.js` en de vier paginatests in `tests/navigation.spec.js`.
 
 ## Klaarzetten en starten
 
@@ -13,7 +13,7 @@ npm install
 npm run test:headed
 ```
 
-Bij de eerste run wordt automatisch een nieuwe lokale uitnodiging gemaakt en wordt de registratie zichtbaar doorlopen. De lokale gegevens, inclusief gebruikersnaam, wachtwoord en herstelcode, staan leesbaar in `test-account.mock.local.json`. De sessie staat in `auth-state.mock.local.json`. De lokale servergegevens staan in `local-backend.local.json`. Git negeert deze bestanden. Iedere pagina blijft even in beeld.
+Standaard bereidt de korte route automatisch een fictieve gebruiker en sessie in de lokale nabootsing voor. Daarna opent één browser Home en klikt achtereenvolgens op Vrienden, Chat en Stijl. De vier controles blijven apart zichtbaar in het resultaat en iedere pagina blijft even in beeld. De inlog- en registratieschermen worden daarbij niet doorlopen. De testgegevens, inclusief gebruikersnaam, wachtwoord en herstelcode, zijn leesbaar in `test-account.quick.local.json`; de sessie staat in `auth-state.quick.local.json`. Git negeert deze lokale bestanden.
 
 Een volgende run gebruikt dezelfde lokale testsessie. Met dit commando begin je opnieuw en maak je automatisch een nieuwe eenmalige lokale uitnodiging:
 
@@ -21,7 +21,29 @@ Een volgende run gebruikt dezelfde lokale testsessie. Met dit commando begin je 
 npm run test:fresh
 ```
 
-Dit verwijdert de drie genoemde lokale mockbestanden. De eerdere echte testaccountgegevens en de eerder aangeleverde uitnodiging in `invite.local.txt` blijven staan; die link werd gebruikt voor de oorspronkelijke opzet met de echte server en wordt door deze lokale tests niet gebruikt.
+Dit verwijdert de lokale gegevens van de korte en uitgebreide testaccounts, hun sessies en de nagebootste server. De eerdere echte testaccountgegevens en de eerder aangeleverde uitnodiging in `invite.local.txt` blijven staan; die link wordt door deze lokale tests niet gebruikt.
+
+## Uitgebreide aanmelding en uitnodiging automatisch testen
+
+```powershell
+npm run test:full
+```
+
+Dit gebruikt de uitgebreide voorbereiding uit `first-login.setup.js`: bij een eerste run doorloopt Chrome de lokale uitnodiging en registratie, slaat de herstelcode op en voert daarna de vier paginatests uit. Volgende runs hergebruiken de aparte uitgebreide testsessie. De lokale gegevens staan in `test-account.mock.local.json` en `auth-state.mock.local.json`.
+
+De uitnodiging en registratie zijn ook als zelfstandige automatische browsertest te draaien, zonder zelf te klikken:
+
+```powershell
+npm run test:registration
+```
+
+Met `npm run test:all` voer je voorlopig de vier navigatietests uit, met de korte voorbereiding. De uitnodigings- en registratietest is tijdelijk uitgeschakeld in `test:all` en kan afzonderlijk worden gestart met `npm run test:registration`. Deze lokale nabootsing is geen test van de echte Supabase-server.
+
+De automatische sessielader op het inlogscherm heeft eigen tests voor vervagen, doorgaan naar Home, herstel, geen opgeslagen sessie en verminderde beweging:
+
+```powershell
+npm run test:login-session
+```
 
 ## Herbruikbare lokale uitnodiging proberen
 

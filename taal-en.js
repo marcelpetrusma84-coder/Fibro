@@ -2251,4 +2251,6 @@ window.FIBRO_EN = {
   "lettertype|Sierlijk": "Elegant",
   "lettertype|Kinderhand": "Kid's handwriting",
   "lettertype|Oude typemachine": "Old typewriter",
+  "Je sessie wordt hersteld": "Restoring your session",
+  "We openen je eigen plekkie…": "Opening your own space…",
 }

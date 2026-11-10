@@ -29,6 +29,7 @@
 // groepschat (10 november 2026): taal-en.js?v=93 (wit whiteboard)
 // groepschat (10 november 2026): taal-en.js?v=94 (piano)
 // Stekky Store (10 november 2026): taal-en.js?v=95
+// Sessielader: taal-en.js?v=96 (automatisch terug naar Home).
 //
 // In gewone woorden: dit bestand weet welke taal je gekozen hebt en vertaalt de teksten.
 // De Nederlandse zin is zelf de sleutel: T('Opslaan') geeft in het Nederlands 'Opslaan' en in
@@ -118,7 +119,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=95', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=96', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

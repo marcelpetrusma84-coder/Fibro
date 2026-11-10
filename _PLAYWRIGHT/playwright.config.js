@@ -10,8 +10,9 @@ const baseURL = `http://127.0.0.1:${port}`
 export default defineConfig({
   testDir: path.join(folder, 'tests'),
   testMatch: '**/*.spec.js',
-  globalSetup: path.join(folder, 'first-login.setup.js'),
+  globalSetup: path.join(folder, 'quick-login.setup.js'),
   fullyParallel: false,
+  workers: 1, // De lokale testserver bewaart zijn gegevens in één gedeeld bestand.
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
   reporter: 'list',
@@ -20,7 +21,7 @@ export default defineConfig({
     browserName: 'chromium',
     channel: 'chrome',
     headless: true,
-    storageState: path.join(folder, 'auth-state.mock.local.json'),
+    storageState: path.join(folder, 'auth-state.quick.local.json'),
     serviceWorkers: 'block',
     trace: 'retain-on-failure'
   },

@@ -3,9 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "playwright test",
-    "test:headed": "playwright test --headed",
-    "test:fresh": "node reset-local.js && playwright test --headed",
+    "test": "playwright test tests/navigation.spec.js",
+    "test:headed": "playwright test tests/navigation.spec.js --headed",
+    "test:fresh": "node reset-local.js && playwright test tests/navigation.spec.js --headed",
+    "test:full": "playwright test tests/navigation.spec.js --config=playwright.full.config.js --headed",
+    "test:registration": "playwright test tests/registration-invite.spec.js --headed",
+    "test:all": "playwright test tests/navigation.spec.js --headed",
+    "test:login-session": "playwright test tests/login-session.spec.js --headed",
     "test:invite": "playwright test --config=playwright.manual.config.js --headed",
     "test:privacy": "playwright test tests/privacy-link.spec.js --headed"
   },

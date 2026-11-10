@@ -42,7 +42,7 @@
 // groep. Een 'stil' bericht (reactie, weggehaald) geeft niets. Elk bericht hoogstens een keer (push_log), en per groep
 // vervangt een nieuwe melding de vorige (tag).
 import { createClient } from "npm:@supabase/supabase-js@2";
-import webpush from "npm:web-push";
+import webpush from "npm:web-push@3.6.7"; // vaste versie: een nieuwere geeft geen 'default' (boot error 10 nov 2026)
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -116,7 +116,7 @@ const LEVENSDUUR: Record<string, number> = { oproep: 45, "oproep-video": 45, gem
   "vriend-nieuw": 3 * 24 * 60 * 60, gastenboek: 3 * 24 * 60 * 60, like: 24 * 60 * 60 };
 const GASTENBOEK_RUST_MS = 10 * 60 * 1000; // v258: zelfde vriend, zelfde gastenboek: hoogstens een melding per 10 minuten
 // v258: deze meldingen komen alleen van de server (met een id), nooit van een app met receiver_id + type
-const ALLEEN_SERVER = new Set(["spel", "vriend-nieuw", "gastenboek", "like", "online"]);
+const ALLEEN_SERVER = new Set(["spel", "vriend-nieuw", "gastenboek", "like", "online", "groep"]);
 // v258: likes onder een foto, nummer of video (zelfde lijst als in sql/profiel-likes.sql en profielreacties.js)
 const LIKE_EMOJI = new Set(["❤️", "😂", "🔥", "😍", "😮", "👏"]);
 const LIKE_WAT: Record<string, { nl: string; en: string }> = {

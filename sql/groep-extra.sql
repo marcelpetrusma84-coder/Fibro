@@ -78,8 +78,7 @@ end
 $$;
 revoke execute on function public.groep_bericht_push() from public, anon, authenticated;
 
-drop trigger if exists groep_bericht_push on public.groep_berichten;
-create trigger groep_bericht_push
+create or replace trigger groep_bericht_push
   after insert on public.groep_berichten
   for each row
   when (not new.stil)

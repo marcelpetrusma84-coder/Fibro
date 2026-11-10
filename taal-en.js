@@ -2195,4 +2195,18 @@ window.FIBRO_EN = {
   "ophalen {p}%": "fetching {p}%",
   "{naam} heeft de groep nu niet open. Probeer het later.": "{naam} doesn't have the group open right now. Try again later.",
   "{n} nummer(s) gedeeld in deze groep": "{n} song(s) shared in this group",
+  // whiteboard in groepen (10 november 2026, taal-en.js?v=92)
+  "Alles wissen": "Clear all",
+  "Dik": "Thick",
+  "Dikte": "Thickness",
+  "Dun": "Thin",
+  "Middel": "Medium",
+  "Het hele bord wissen, voor iedereen?": "Clear the whole board, for everyone?",
+  "In de chat": "Send to chat",
+  "Kleur {n}": "Colour {n}",
+  "Meer: poll, afspraak, muziek, whiteboard": "More: poll, event, music, whiteboard",
+  "Ongedaan maken": "Undo",
+  "Whiteboard": "Whiteboard",
+  "Dat lukte niet.": "That didn't work.",
+  "Gum": "Eraser",
 }

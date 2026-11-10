@@ -1,6 +1,6 @@
 # proef284 (10 nov 2026): groepschat - de + knop met Poll en Afspraak.
 # Nagebootste Supabase en nep-Realtime (uit proef281). Marcel, Bram en Lotte in een groep.
-#  A. de + knop opent een menu met alleen wat af is: Poll, Afspraak en Muziek
+#  A. de + knop opent een menu met alleen wat af is: Poll, Afspraak, Muziek en Whiteboard
 #  B. Marcel maakt een poll (3 keuzes, een erbij gezet): een versleuteld bericht, kaartje met 0 stemmen
 #  C. Bram stemt Sushi (een 'stil' versleuteld bericht) -> Sushi 1 met zijn naam, ook bij Marcel; Bram kiest
 #     daarna Pizza -> Sushi 0, Pizza 1 (een keuze); een poll met 'meer keuzes' laat twee keuzes tegelijk toe
@@ -215,7 +215,7 @@ try:
         check(m.is_hidden('#extraMenu'), 'A: menu eerst dicht')
         m.click('#extraKnop')
         tegels = m.eval_on_selector_all('#extraMenu .extra-tegel', 'els => els.map(e => e.textContent.trim())')
-        check(tegels == ['Poll', 'Afspraak', 'Muziek'] and m.get_attribute('#extraKnop', 'aria-pressed') == 'true', 'A: + opent Poll, Afspraak en Muziek (%s)' % tegels)
+        check(tegels == ['Poll', 'Afspraak', 'Muziek', 'Whiteboard'] and m.get_attribute('#extraKnop', 'aria-pressed') == 'true', 'A: + opent Poll, Afspraak, Muziek en Whiteboard (%s)' % tegels)
         # B
         m.click('#maakPollKnop'); m.wait_for_selector('#maakVak:not([hidden])')
         m.fill('.p-vraag', 'Waar eten we?')

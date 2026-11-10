@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=92"></script>
+<script src="taal.js?v=93"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -196,10 +196,10 @@ button { font-family:inherit; }
 .bord-kop { display:flex; align-items:center; justify-content:space-between; font-size:18px; font-weight:700; }
 #bordDicht { width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:#fff; font-size:18px; cursor:pointer; }
 .bord-vlak { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
-#bordDoek { border-radius:18px; background:#1e1230; border:1px solid rgba(192,132,252,0.45); touch-action:none; cursor:crosshair; }
+#bordDoek { border-radius:18px; background:#ffffff; border:1px solid rgba(192,132,252,0.45); touch-action:none; cursor:crosshair; }
 .bord-gereedschap { display:flex; flex-direction:column; gap:10px; }
 #bordKleuren { display:flex; justify-content:space-between; gap:6px; }
-#bordKleuren button { width:34px; height:34px; border-radius:50%; border:2px solid rgba(255,255,255,0.25); cursor:pointer; padding:0; }
+#bordKleuren button { width:34px; height:34px; border-radius:50%; border:2px solid rgba(255,255,255,0.35); cursor:pointer; padding:0; }
 #bordKleuren button[aria-checked="true"] { border-color:#fff; box-shadow:0 0 0 3px rgba(192,132,252,.6); }
 .bord-knoppen { display:flex; gap:8px; align-items:center; }
 #bordDiktes { display:flex; gap:6px; }
@@ -403,7 +403,7 @@ button { font-family:inherit; }
   import { kanOpnemen, neemOp, maakSpeler, tijdTekst as spraakTijd } from './spraak.js?v=1'
   import { maakGroepGesprek, MAX_BELLERS, MAX_BEELD } from './groepbellen.js?v=3'
   import { maakGroepMuziek } from './groepmuziek.js?v=1'
-  import { maakGroepBord, tekenLijn, KLEUREN as BORD_KLEUREN, DIKTES as BORD_DIKTES } from './groepbord.js?v=1'
+  import { maakGroepBord, tekenLijn, KLEUREN as BORD_KLEUREN, DIKTES as BORD_DIKTES, ACHTERGROND as BORD_ACHTERGROND } from './groepbord.js?v=2'
   import { houOpen } from './lijntjes.js?v=1'
   import { haalVriendFotos, geldigeFoto } from './vriendfotos.js?v=2'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
@@ -1455,7 +1455,7 @@ button { font-family:inherit; }
   const doek = $('bordDoek'), pen = doek.getContext('2d')
   BORD_KLEUREN.forEach((k, i) => {
     const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'radio'); b.style.background = k
-    b.setAttribute('aria-label', T('Kleur {n}', { n: i + 1 })); b.setAttribute('aria-checked', String(k === bordKleur))
+    b.setAttribute('aria-label', k === '#ffffff' ? T('Gum') : T('Kleur {n}', { n: i + 1 })); b.setAttribute('aria-checked', String(k === bordKleur))
     b.addEventListener('click', () => { bordKleur = k; for (const x of $('bordKleuren').children) x.setAttribute('aria-checked', String(x === b)) })
     $('bordKleuren').appendChild(b)
   })
@@ -1512,7 +1512,7 @@ button { font-family:inherit; }
   $('bordDeel').addEventListener('click', () => {
     // het bord als foto in de chat (zoals een foto: naar wie online is)
     const c = document.createElement('canvas'); c.width = 900; c.height = 1200
-    const x = c.getContext('2d'); x.fillStyle = '#1e1230'; x.fillRect(0, 0, c.width, c.height)
+    const x = c.getContext('2d'); x.fillStyle = BORD_ACHTERGROND; x.fillRect(0, 0, c.width, c.height)
     for (const l of bord.lijnen()) tekenLijn(x, l, c.width, c.height)
     c.toBlob(b => { if (b) { stuurMedia('foto', b, 0); $('bordVak').hidden = true } else toast(T('Dat lukte niet.')) }, 'image/jpeg', 0.85)
   })

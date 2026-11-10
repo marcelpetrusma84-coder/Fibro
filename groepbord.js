@@ -1,4 +1,4 @@
-// groepbord.js (10 nov 2026, groepschat): een whiteboard voor de groep, waar iedereen tegelijk op tekent.
+// groepbord.js (10 nov 2026, groepschat; v2: wit bord): een whiteboard voor de groep, waar iedereen tegelijk op tekent.
 //
 // Zoals de groepsmuziek: niets op de server. Elke lijn gaat versleuteld (groepsleutel.js, soort 'media', voor alle
 // leden) over het live-kanaal van de groep (broadcast 'bord'), en elk toestel bewaart het bord zelf (localStorage,
@@ -11,7 +11,10 @@
 //   { soort: 'staat', van, naar, i, n, d, kop }  het hele bord in stukjes, alleen voor de vrager
 import { versleutelGroepsBytes, openGroepsBytes } from './groepsleutel.js?v=2'
 
-export const KLEUREN = ['#ffffff', '#c084fc', '#f472b6', '#facc15', '#4ade80', '#38bdf8', '#f87171', '#1a0a2e']
+// v2: een wit bord. De kleuren om mee te tekenen; wit is de gum. (Oude kleuren blijven geldig voor bestaande lijnen.)
+export const KLEUREN = ['#1a0a2e', '#8b3fd1', '#ec4899', '#eab308', '#22c55e', '#0ea5e9', '#ef4444', '#ffffff']
+const OUDE_KLEUREN = ['#c084fc', '#f472b6', '#facc15', '#4ade80', '#38bdf8', '#f87171']
+export const ACHTERGROND = '#ffffff'
 export const DIKTES = [3, 7, 14]
 const STUK = 60000, MAX_LIJNEN = 3000, MAX_PUNTEN = 600
 const GELDIG_ID = /^[a-z0-9]{8,24}$/
@@ -22,7 +25,7 @@ export const nieuwId = () => Array.from(crypto.getRandomValues(new Uint8Array(12
 // een lijn van buiten controleren (en netjes maken)
 export function geldigeLijn(l, van) {
   if (!l || !GELDIG_ID.test(String(l.id)) || !Array.isArray(l.p) || !l.p.length) return null
-  const kleur = KLEUREN.includes(l.kleur) ? l.kleur : KLEUREN[0]
+  const kleur = KLEUREN.includes(l.kleur) || OUDE_KLEUREN.includes(l.kleur) ? l.kleur : KLEUREN[0]
   const dikte = DIKTES.includes(l.dikte) ? l.dikte : DIKTES[0]
   const p = []
   for (const q of l.p.slice(0, MAX_PUNTEN)) {

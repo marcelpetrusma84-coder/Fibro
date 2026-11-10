@@ -1,6 +1,6 @@
 # proef286 (10 nov 2026): groepschat - Whiteboard (groepbord.js): samen tekenen, versleuteld, zonder server.
 # Nagebootste Supabase en nep-Realtime (uit proef285). Marcel, Bram en Lotte in een groep.
-#  A. + > Whiteboard: een tekenvlak met 8 kleuren en 3 diktes; ongedaan maken kan nog niet
+#  A. + > Whiteboard: een wit tekenvlak met 8 kleuren (wit = gum) en 3 diktes; ongedaan maken kan nog niet
 #  B. Marcel tekent een lijn: versleuteld over het kanaal (geen punten of kleur leesbaar)
 #  C. Bram opent het bord later: krijgt de lijn van Marcel (die het bord open heeft); Bram tekent roze -> Marcel ziet
 #     hem meteen
@@ -224,21 +224,23 @@ try:
         check('Whiteboard' in m.inner_text('#extraMenu'), 'A: Whiteboard in het + menu')
         m.click('#bordKnop'); m.wait_for_selector('#bordVak:not([hidden])')
         w = m.evaluate("(() => { const c = document.getElementById('bordDoek'); return [c.clientWidth, c.clientHeight] })()")
+        wit = m.evaluate("getComputedStyle(document.getElementById('bordDoek')).backgroundColor")
+        check(wit == 'rgb(255, 255, 255)', 'A: het bord is wit (%s)' % wit)
         check(m.locator('#bordKleuren button').count() == 8 and m.locator('#bordDiktes button').count() == 3 and m.is_disabled('#bordTerug') and w[0] > 200 and abs(w[1] / w[0] - 4 / 3) < 0.02, 'A: tekenvlak (%s), 8 kleuren, 3 diktes, ongedaan nog uit' % w)
         # B
         trek(m, 0.2, 0.2, 0.8, 0.3)
         check(len(lijnen(m, MARCEL)) == 1 and m.is_enabled('#bordTerug'), 'B: Marcel heeft een lijn')
         uit = [x[1] for x in rt.get('bord', []) if (x[1] or {}).get('soort') == 'lijn']
         tekst = json.dumps(uit)
-        check(len(uit) == 1 and 'kleur' not in tekst and '"p"' not in tekst and '#ffffff' not in tekst and uit[0]['van'] == MARCEL, 'B: lijn versleuteld over het kanaal')
+        check(len(uit) == 1 and 'kleur' not in tekst and '"p"' not in tekst and '#1a0a2e' not in tekst and uit[0]['van'] == MARCEL, 'B: lijn versleuteld over het kanaal')
         # C
         open_(bp); bp.click('#extraKnop'); bp.click('#bordKnop'); bp.wait_for_selector('#bordVak:not([hidden])')
         check(wacht(bp, AANTAL, [gid, BRAM, 1]), 'C: Bram krijgt de lijn van Marcel (%d)' % len(lijnen(bp, BRAM)))
         bp.click('#bordKleuren button:nth-child(3)'); trek(bp, 0.3, 0.6, 0.7, 0.7)
         ok = wacht(m, AANTAL, [gid, MARCEL, 2])
         l = lijnen(m, MARCEL)
-        check(ok and any(x['van'] == BRAM and x['kleur'] == '#f472b6' for x in l), 'C: Marcel ziet de roze lijn van Bram meteen')
-        rood = m.evaluate("(() => { const c = document.getElementById('bordDoek'), x = c.getContext('2d'); const d = x.getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] > 200 && d[i + 1] < 150 && d[i + 2] > 150) n++; return n })()")
+        check(ok and any(x['van'] == BRAM and x['kleur'] == '#ec4899' for x in l), 'C: Marcel ziet de roze lijn van Bram meteen')
+        rood = m.evaluate("(() => { const c = document.getElementById('bordDoek'), x = c.getContext('2d'); const d = x.getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 200 && d[i] > 200 && d[i + 1] < 120 && d[i + 2] > 120) n++; return n })()")
         check(rood > 50, 'C: de roze lijn staat ook echt op het doek (%d pixels)' % rood)
         # D
         m.click('#bordTerug')

@@ -2208,4 +2208,5 @@ window.FIBRO_EN = {
   "Ongedaan maken": "Undo",
   "Whiteboard": "Whiteboard",
   "Dat lukte niet.": "That didn't work.",
+  "Gum": "Eraser",
 }

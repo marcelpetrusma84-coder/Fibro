@@ -2,7 +2,7 @@
 # Nagebootste Supabase en nep-Realtime met presence (uit proef282), echte WebRTC met nep-camera en nep-microfoon.
 # Marcel, Bram en Lotte in een webcam-groep.
 #  A. Marcel opent de groep: balk 'Nog niemand in de webcam chat' met Starten; tik -> een scherm met zijn eigen beeld
-#     (gespiegeld), twee vrije plekjes, compact op een rij, beeld hoogstens 320 px; de knoppen Microfoon, Luidspreker,
+#     (gespiegeld), twee vrije plekjes, compact (2 boven, 2 beneden), beeld hoogstens 320 px; de knoppen Microfoon, Luidspreker,
 #     Camera, Hand en Ophangen pas na een tik op zijn eigen scherm
 #  B. Bram doet mee -> Marcel ziet het beeld van Bram (en andersom), verbonden
 #  C. wie praat: het scherm van Bram krijgt bij Marcel de gouden rand (.praat)
@@ -254,7 +254,8 @@ try:
         check(sum('leeg' in x['cls'] for x in t) == 2, 'A: twee vrije plekjes')
         boven = m.eval_on_selector_all('#belTegels .tegel', 'els => els.map(e => Math.round(e.getBoundingClientRect().top))')
         hoog = m.evaluate("document.getElementById('belPaneel').getBoundingClientRect().height")
-        check(len(set(boven)) == 1 and hoog < 0.4 * 844, 'A: compact - alle schermen op een rij, paneel %d px hoog (%s)' % (hoog, boven))
+        links = m.eval_on_selector_all('#belTegels .tegel', 'els => els.map(e => Math.round(e.getBoundingClientRect().left))')
+        check(boven[0] == boven[1] < boven[2] and links[0] == links[2] and hoog < 0.4 * 844, 'A: compact - 2 boven, 2 beneden, paneel %d px hoog (%s %s)' % (hoog, boven, links))
         vw = m.evaluate("(() => { const v = document.querySelector('.tegel.ik video'); return [v.videoWidth, v.videoHeight] })()")
         check(max(vw) <= 320, 'A: lagere beeldkwaliteit (%s)' % vw)
         check(m.is_hidden('.bel-knoppen'), 'A: knoppen pas na een tik op je eigen scherm')

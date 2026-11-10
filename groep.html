@@ -124,17 +124,17 @@ button { font-family:inherit; }
 .tegel.ik { cursor:pointer; -webkit-tap-highlight-color:transparent; }
 .bel-knoppen { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0, 1fr); gap:6px; }
 /* webcam chat: een scherm per persoon, met een rand die goud kleurt als iemand praat (zoals de rondjes) */
-/* compact: alle schermen naast elkaar op een rij (tot 4), zodat er ruimte overblijft voor de chat */
-#belTegels.beeld { grid-template-columns:repeat(var(--n, 2), minmax(0, 1fr)); gap:6px; }
+/* compact: 2 schermen boven en 2 beneden, niet te hoog, zodat je onder de schermen nog berichten ziet */
+#belTegels.beeld { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:6px; }
 .tegel.scherm { padding:0; background:transparent; gap:0; }
-.tegel.scherm .vak { position:relative; width:100%; height:19vh; min-height:110px; max-height:190px; box-sizing:border-box; border-radius:18px; overflow:hidden; border:3px solid rgba(151,240,221,0.55); background:#120720; display:flex; align-items:center; justify-content:center; transition:border-color .15s ease, box-shadow .15s ease; }
+.tegel.scherm .vak { position:relative; width:100%; height:15vh; min-height:96px; max-height:150px; box-sizing:border-box; border-radius:18px; overflow:hidden; border:3px solid rgba(151,240,221,0.55); background:#120720; display:flex; align-items:center; justify-content:center; transition:border-color .15s ease, box-shadow .15s ease; }
 .tegel.scherm.praat .vak { border-color:#fcd34d; box-shadow:0 0 0 4px #fbbf2470, 0 0 26px #fbbf24c0; }
 .tegel.scherm.wacht .vak { opacity:.55; }
-.tegel.scherm video { position:absolute; top:0; left:0; right:0; bottom:0; display:block; width:100%; height:100%; object-fit:cover; background:#120720; }
+.tegel.scherm video { position:absolute; top:0; left:0; right:0; bottom:0; display:block; width:100%; height:100%; object-fit:cover; border-radius:15px; background:#120720; }
 .tegel.scherm.ik video { transform:scaleX(-1); }
 .tegel.scherm .cirkel { width:52px; height:52px; font-size:20px; }
 .tegel.scherm .tnaam { position:absolute; left:5px; bottom:5px; max-width:calc(100% - 10px); padding:1px 6px; font-size:11px; border-radius:10px; background:rgba(0,0,0,0.55); }
-.tegel.scherm.leeg { height:19vh; min-height:110px; max-height:190px; box-sizing:border-box; border-radius:18px; text-align:center; }
+.tegel.scherm.leeg { height:15vh; min-height:96px; max-height:150px; box-sizing:border-box; border-radius:18px; text-align:center; }
 .bel-knoppen button[aria-pressed="false"]#belCam { background:rgba(252,165,165,0.22); color:#fecaca; }
 .bel-knoppen button { display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 0; border:none; border-radius:14px; background:rgba(255,255,255,0.08); color:#fff; font-size:12px; cursor:pointer; min-height:52px; }
 .bel-knoppen button[aria-pressed="true"]#belHand, .bel-knoppen button[aria-pressed="true"]#belMic { background:rgba(252,165,165,0.22); color:#fecaca; }
@@ -865,7 +865,6 @@ button { font-family:inherit; }
       }
     }
     const plekken = Math.min(maxBel(), Math.max(leden.length, ids.length))
-    tegels.style.setProperty('--n', String(Math.max(2, plekken)))
     for (let i = ids.length; i < plekken; i++) { const t = document.createElement('div'); t.className = 'tegel leeg' + (beeld ? ' scherm' : ''); t.textContent = T('Vrij plekje'); tegels.appendChild(t) }
   }
   async function belMee() {

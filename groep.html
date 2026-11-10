@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=93"></script>
+<script src="taal.js?v=94"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -208,6 +208,38 @@ button { font-family:inherit; }
 #bordDiktes span { display:block; border-radius:50%; background:currentColor; }
 #bordTerug:disabled { opacity:.4; cursor:default; }
 #bordDeel { flex:1; height:44px; border-radius:14px; border:none; background:#8b3fd1; color:#fff; font:inherit; font-weight:700; cursor:pointer; }
+/* piano */
+#pianoVak { position:fixed; inset:0; z-index:70; display:flex; flex-direction:column; background:#12081f; padding:max(10px, env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px)); gap:10px; }
+#pianoVak[hidden] { display:none; }
+#pianoDicht { width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:#fff; font-size:18px; cursor:pointer; }
+.p-kopje { font-size:13px; color:var(--muted); }
+#pianoLijst { flex:1; min-height:0; overflow:auto; display:flex; flex-direction:column; gap:6px; }
+#pianoBewaar { display:flex; flex-direction:column; gap:8px; padding:10px; border-radius:16px; background:rgba(192,132,252,0.12); border:1px solid rgba(192,132,252,0.4); }
+#pianoBewaar[hidden] { display:none; }
+#pianoNaam { height:44px; padding:0 14px; border-radius:14px; border:1px solid rgba(255,255,255,0.12); background:rgba(10,4,20,0.55); color:#fff; font:inherit; font-size:16px; outline:none; }
+.p-rij { display:flex; gap:8px; }
+.p-rij button { flex:1; height:44px; border-radius:14px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.06); color:#fff; font:inherit; font-size:14px; cursor:pointer; }
+.p-rij .doe { background:#8b3fd1; border-color:#8b3fd1; font-weight:700; flex:1.4; }
+.p-bediening { display:flex; align-items:center; gap:8px; }
+.p-bediening > button { height:44px; min-width:44px; border-radius:14px; border:1px solid transparent; background:rgba(255,255,255,0.06); color:#fff; font:inherit; font-size:18px; cursor:pointer; }
+#pianoOctaaf { min-width:34px; text-align:center; font-size:14px; color:var(--muted); }
+#pianoOpnemen { margin-left:auto; display:flex; align-items:center; gap:8px; padding:0 14px; font-size:15px; }
+#pianoOpnemen .p-punt { width:12px; height:12px; border-radius:50%; background:#ef4444; }
+#pianoOpnemen.bezig { background:#dc2626; font-weight:700; }
+#pianoOpnemen.bezig .p-punt { background:#fff; animation:knipper 1s infinite; }
+@keyframes knipper { 50% { opacity:.2 } }
+#pianoToetsen { position:relative; height:min(34vh, 220px); flex-shrink:0; touch-action:none; user-select:none; -webkit-user-select:none; }
+.p-wit, .p-zwart { position:absolute; top:0; padding:0; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.p-wit { height:100%; border:1px solid #2a1840; border-radius:0 0 12px 12px; background:linear-gradient(#ffffff, #ece4f6); color:#6a2bab; font:inherit; font-size:11px; display:flex; align-items:flex-end; justify-content:center; padding-bottom:8px; box-sizing:border-box; }
+.p-zwart { height:60%; z-index:2; border:none; border-radius:0 0 8px 8px; background:linear-gradient(#3b2a4f, #140a22); box-shadow:0 3px 4px rgba(0,0,0,.5); }
+.p-wit.aan { background:linear-gradient(#e9d5ff, #c084fc); }
+.p-zwart.aan { background:linear-gradient(#a855f7, #6a2bab); }
+.p-deuntje { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:14px; background:rgba(255,255,255,0.05); }
+.p-deuntje.speelt { background:linear-gradient(155deg, rgba(192,132,252,.23), rgba(192,132,252,.12)); }
+.p-deuntje .m-speel { flex:none; }
+/* deuntje in de chat */
+.k-speel { margin-top:10px; width:100%; height:42px; border-radius:21px; border:none; background:#8b3fd1; color:#fff; font:inherit; font-size:15px; font-weight:700; cursor:pointer; }
+.b-rij.mijn .k-speel { background:#fff; color:#6a2bab; }
 /* groepsmuziek */
 .m-uitleg { font-size:13px; color:var(--muted); margin-top:-4px; }
 .m-lijst { display:flex; flex-direction:column; gap:6px; }
@@ -339,6 +371,22 @@ button { font-family:inherit; }
     </div>
   </div>
   <div id="berichten" aria-live="polite"></div>
+  <div id="pianoVak" hidden role="dialog" aria-modal="true" aria-labelledby="pianoTitel">
+    <div class="bord-kop"><div id="pianoTitel" data-t>Piano</div><button type="button" id="pianoDicht" aria-label="Sluiten" data-t-attr="aria-label">✕</button></div>
+    <div class="p-kopje" data-t>Deuntjes in deze groep</div>
+    <div id="pianoLijst"></div>
+    <div id="pianoBewaar" hidden>
+      <input type="text" id="pianoNaam" maxlength="40" autocomplete="off" placeholder="Naam van je deuntje" aria-label="Naam van je deuntje" data-t-attr="placeholder,aria-label">
+      <div class="p-rij"><button type="button" id="pianoWeg" data-t>Weggooien</button><button type="button" id="pianoLuister" data-t>Luisteren</button><button type="button" id="pianoPlaats" class="doe" data-t>Bewaren in de groep</button></div>
+    </div>
+    <div class="p-bediening">
+      <button type="button" id="pianoLager" aria-label="Octaaf lager" data-t-attr="aria-label">−</button>
+      <span id="pianoOctaaf"></span>
+      <button type="button" id="pianoHoger" aria-label="Octaaf hoger" data-t-attr="aria-label">+</button>
+      <button type="button" id="pianoOpnemen"><span class="p-punt"></span><span id="pianoOpnemenTekst" data-t>Opnemen</span></button>
+    </div>
+    <div id="pianoToetsen"></div>
+  </div>
   <div id="bordVak" hidden role="dialog" aria-modal="true" aria-labelledby="bordTitel">
     <div class="bord-kop"><div id="bordTitel" data-t>Whiteboard</div><button type="button" id="bordDicht" aria-label="Sluiten" data-t-attr="aria-label">✕</button></div>
     <div class="bord-vlak"><canvas id="bordDoek"></canvas></div>
@@ -361,6 +409,7 @@ button { font-family:inherit; }
       <button type="button" class="extra-tegel" id="maakAfspraakKnop" role="menuitem"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01"/></svg><span data-t>Afspraak</span></button>
       <button type="button" class="extra-tegel" id="muziekKnop" role="menuitem"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><span data-t>Muziek</span></button>
       <button type="button" class="extra-tegel" id="bordKnop" role="menuitem"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="13" rx="2"/><path d="M8 21l4-5 4 5M7.5 12.5l3-3 2 2 4-4"/></svg><span data-t>Whiteboard</span></button>
+      <button type="button" class="extra-tegel" id="pianoKnop" role="menuitem"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M7 5v9M12 5v9M17 5v9M7 14v5M12 14v5M17 14v5"/></svg><span data-t>Piano</span></button>
     </div>
     <div id="muziekNu" hidden><span class="mn-noot" aria-hidden="true">♫</span><span id="muziekNuTitel"></span><button type="button" id="muziekNuKnop" aria-label="Pauze" data-t-attr="aria-label">⏸</button></div>
     <div class="balk-knoppen">
@@ -369,7 +418,7 @@ button { font-family:inherit; }
       <button type="button" class="balk-knop later" aria-label="Spel" data-t-attr="aria-label"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5.5h10a4 4 0 0 1 3.95 3.4c.3 2 .8 5.5.8 7a2.6 2.6 0 0 1-4.6 1.7L15.7 16a2 2 0 0 0-1.5-.7H9.8a2 2 0 0 0-1.5.7l-1.45 1.6A2.6 2.6 0 0 1 2.25 15.9c0-1.5.5-5 .8-7A4 4 0 0 1 7 5.5z"/><path d="M8 9v4M6 11h4M15.5 11.5h.01M17.5 9.5h.01"/></svg></button>
       <button type="button" class="balk-knop" id="fotoKnop" aria-label="Foto versturen" data-t-attr="aria-label"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
       <button type="button" class="balk-knop" id="spraakKnop" aria-label="Houd ingedrukt om in te spreken" data-t-attr="aria-label" style="touch-action:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
-      <button type="button" class="balk-knop" id="extraKnop" aria-label="Meer: poll, afspraak, muziek, whiteboard" data-t-attr="aria-label" aria-pressed="false" aria-controls="extraMenu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg></button>
+      <button type="button" class="balk-knop" id="extraKnop" aria-label="Meer: poll, afspraak, muziek, whiteboard, piano" data-t-attr="aria-label" aria-pressed="false" aria-controls="extraMenu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg></button>
     </div>
     <div id="antwoordBalk" hidden><span id="antwoordTekst"></span><button type="button" id="antwoordWeg" aria-label="Niet antwoorden" data-t-attr="aria-label">✕</button></div>
     <div id="spraakBalk" hidden role="status" aria-live="polite"><span class="punt"></span><span id="spraakTijd">0:00</span><span id="spraakHint" data-t>← schuif om te annuleren</span></div>
@@ -403,6 +452,7 @@ button { font-family:inherit; }
   import { kanOpnemen, neemOp, maakSpeler, tijdTekst as spraakTijd } from './spraak.js?v=1'
   import { maakGroepGesprek, MAX_BELLERS, MAX_BEELD } from './groepbellen.js?v=3'
   import { maakGroepMuziek } from './groepmuziek.js?v=1'
+  import { maakPiano, speelDeuntje, leesDeuntje, lengteMs } from './groeppiano.js?v=1'
   import { maakGroepBord, tekenLijn, KLEUREN as BORD_KLEUREN, DIKTES as BORD_DIKTES, ACHTERGROND as BORD_ACHTERGROND } from './groepbord.js?v=2'
   import { houOpen } from './lijntjes.js?v=1'
   import { haalVriendFotos, geldigeFoto } from './vriendfotos.js?v=2'
@@ -647,6 +697,8 @@ button { font-family:inherit; }
   const RE_STEM = new RegExp('^stem:(' + ID + '):(\\[[0-9,]{0,20}\\])$')
   const RE_AFSPRAAK = /^afspraak:(\{[\s\S]{2,1000}\})$/
   const RE_KOMT = new RegExp('^komt:(' + ID + '):(ja|nee|misschien|)$')
+  const RE_DEUNTJE = /^deuntje:(\{[\s\S]{2,12000}\})$/   // een deuntje van de piano (groeppiano.js)
+  let deuntjes = []           // [{ id, van, data }] in volgorde; de piano toont de laatste 10
   const stemmen = new Map()   // poll-id -> Map(van -> [keuzes])
   const komen = new Map()     // afspraak-id -> Map(van -> 'ja'|'nee'|'misschien')
   const kaarten = new Map()   // id -> { soort, data, bub }
@@ -674,6 +726,8 @@ button { font-family:inherit; }
     if (poll) return '\u{1F4CA} ' + poll.vraag
     const am = RE_AFSPRAAK.exec(tekst), afs = am && leesAfspraak(am[1])
     if (afs) return '\u{1F4C5} ' + afs.titel
+    const dm = RE_DEUNTJE.exec(tekst), dt = dm && leesDeuntje(dm[1])
+    if (dt) return '\u{1F3B9} ' + (dt.naam || T('Deuntje'))
     return String(tekst).slice(0, 80)
   }
   function zetReactie(id, van, inhoud) {
@@ -708,6 +762,7 @@ button { font-family:inherit; }
   function haalWeg(id, van) {
     const rij = $('berichten').querySelector('.b-rij[data-id="' + id + '"]')
     if (!rij || rij.dataset.van !== van) return
+    if (deuntjes.some(x => x.id === id)) { deuntjes = deuntjes.filter(x => x.id !== id); tekenPianoLijst() }
     const kol = rij.querySelector('.b-kol')
     for (const el of kol.querySelectorAll('.bubbel, .b-sticker, .citaat, .reacties')) el.remove()
     const b = document.createElement('div'); b.className = 'bubbel weg'; b.textContent = T('\u{1F6AB} Bericht verwijderd')
@@ -881,6 +936,12 @@ button { font-family:inherit; }
         const am = !poll && RE_AFSPRAAK.exec(tekst), afs = am && leesAfspraak(am[1])
         if (poll) { kaarten.set(r.id, { soort: 'poll', data: poll, bub }); tekenPoll(r.id) }
         else if (afs) { kaarten.set(r.id, { soort: 'afspraak', data: afs, bub }); tekenAfspraak(r.id) }
+        else if (RE_DEUNTJE.test(tekst) && leesDeuntje(RE_DEUNTJE.exec(tekst)[1])) {
+          const dt = leesDeuntje(RE_DEUNTJE.exec(tekst)[1])
+          kaarten.set(r.id, { soort: 'deuntje', data: dt, bub }); tekenDeuntjeKaart(r.id)
+          deuntjes = deuntjes.filter(x => x.id !== r.id).concat([{ id: r.id, van: r.sender_id, data: dt }])
+          tekenPianoLijst()
+        }
         else bub.textContent = tekst
       }
     } else {
@@ -1448,6 +1509,102 @@ button { font-family:inherit; }
     })
   }
   $('muziekKnop').addEventListener('click', openMuziek)
+
+  // ── Piano (groeppiano.js): spelen, opnemen, deuntjes in de groep ──
+  let piano = null, pianoStop = null, pianoSpeelt = null, opgenomen = null, opnameTimer = null
+  const duurTekst = ms => { const sec = ms > 0 ? Math.max(1, Math.round(ms / 1000)) : 0; return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0') }
+  function stopDeuntje() { if (pianoStop) { const s = pianoStop; pianoStop = null; s() } }
+  function speel(id, data) {
+    if (pianoSpeelt === id) { stopDeuntje(); return }
+    stopDeuntje()
+    pianoSpeelt = id
+    pianoStop = speelDeuntje(data, {
+      opAanslag: (toon, aan) => piano && !$('pianoVak').hidden && piano.licht(toon, aan),
+      opKlaar: () => { if (pianoSpeelt === id) { pianoSpeelt = null; pianoStop = null } werkSpeelKnoppenBij() },
+    })
+    werkSpeelKnoppenBij()
+  }
+  function werkSpeelKnoppenBij() {
+    for (const [id, k] of kaarten) if (k.soort === 'deuntje') tekenDeuntjeKaart(id)
+    tekenPianoLijst()
+  }
+  function tekenDeuntjeKaart(id) {
+    const kaart = kaarten.get(id)
+    if (!kaart || kaart.soort !== 'deuntje' || !kaart.bub.isConnected) return
+    const { data: d, bub } = kaart
+    bub.className = 'bubbel kaart'
+    bub.innerHTML = '<div class="k-kop"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M7 5v9M12 5v9M17 5v9"/></svg><span class="k-titel"></span></div><div class="k-sub"></div><button type="button" class="k-speel"></button>'
+    bub.querySelector('.k-titel').textContent = d.naam || T('Deuntje')
+    bub.querySelector('.k-sub').textContent = T('Deuntje op de piano') + ' · ' + duurTekst(lengteMs(d))
+    const k = bub.querySelector('.k-speel')
+    k.textContent = pianoSpeelt === id ? T('■ Stoppen') : T('▶ Afspelen')
+    k.addEventListener('click', () => speel(id, d))
+  }
+  function tekenPianoLijst() {
+    if ($('pianoVak').hidden) return
+    const lijst = $('pianoLijst'); lijst.innerHTML = ''
+    const laatste = deuntjes.slice(-10).reverse()
+    if (!laatste.length) { lijst.innerHTML = '<div class="m-leeg">' + esc(T('Nog geen deuntjes. Druk op Opnemen, speel iets en bewaar het.')) + '</div>'; return }
+    for (const x of laatste) {
+      const rij = document.createElement('div'); rij.className = 'p-deuntje' + (pianoSpeelt === x.id ? ' speelt' : '')
+      rij.innerHTML = '<button type="button" class="m-speel"></button><div class="m-info"><div class="m-titel"></div><div class="m-sub"></div></div>'
+      rij.querySelector('.m-speel').textContent = pianoSpeelt === x.id ? '■' : '▶'
+      rij.querySelector('.m-speel').setAttribute('aria-label', pianoSpeelt === x.id ? T('Stoppen') : T('Afspelen'))
+      rij.querySelector('.m-titel').textContent = x.data.naam || T('Deuntje')
+      rij.querySelector('.m-sub').textContent = naamKort(x.van) + ' · ' + duurTekst(lengteMs(x.data))
+      rij.querySelector('.m-speel').addEventListener('click', () => speel(x.id, x.data))
+      lijst.appendChild(rij)
+    }
+  }
+  function openPiano() {
+    $('extraMenu').hidden = true
+    $('pianoVak').hidden = false
+    if (!piano) {
+      piano = maakPiano($('pianoToetsen'))
+      $('pianoOctaaf').textContent = piano.basisNaam()
+    }
+    piano.wek()
+    tekenPianoLijst()
+  }
+  function zetOpnameKnop() {
+    const bezig = piano && piano.neemtOp()
+    $('pianoOpnemen').classList.toggle('bezig', !!bezig)
+    $('pianoOpnemenTekst').textContent = bezig ? T('Stop ({tijd})', { tijd: duurTekst(piano.opnameDuur()) }) : T('Opnemen')
+  }
+  $('pianoKnop').addEventListener('click', openPiano)
+  $('pianoDicht').addEventListener('click', () => {
+    if (piano && piano.neemtOp()) { piano.stopOpname(); clearInterval(opnameTimer); zetOpnameKnop() }
+    $('pianoVak').hidden = true
+  })
+  $('pianoLager').addEventListener('click', () => { if (piano) $('pianoOctaaf').textContent = piano.octaaf(-1) })
+  $('pianoHoger').addEventListener('click', () => { if (piano) $('pianoOctaaf').textContent = piano.octaaf(1) })
+  $('pianoOpnemen').addEventListener('click', () => {
+    if (!piano) return
+    if (!piano.neemtOp()) {
+      stopDeuntje(); $('pianoBewaar').hidden = true; opgenomen = null
+      piano.neemOp(); zetOpnameKnop()
+      opnameTimer = setInterval(() => {
+        zetOpnameKnop()
+        if (piano.opnameDuur() >= 60000) $('pianoOpnemen').click() // hoogstens een minuut
+      }, 250)
+      return
+    }
+    clearInterval(opnameTimer)
+    const noten = piano.stopOpname(); zetOpnameKnop()
+    if (!noten.length) { toast(T('Je hebt nog niets gespeeld.')); return }
+    const begin = Math.min(...noten.map(n => n[1]))
+    opgenomen = { naam: '', n: noten.map(([t, b, d]) => [t, b - begin, d]) }
+    $('pianoNaam').value = ''
+    $('pianoBewaar').hidden = false
+  })
+  $('pianoLuister').addEventListener('click', () => { if (opgenomen) speel('opname', opgenomen) })
+  $('pianoWeg').addEventListener('click', () => { opgenomen = null; $('pianoBewaar').hidden = true; if (pianoSpeelt === 'opname') stopDeuntje() })
+  $('pianoPlaats').addEventListener('click', async () => {
+    if (!opgenomen || !mijnPriv) return
+    const d = { naam: $('pianoNaam').value.trim().slice(0, 40) || T('Mijn deuntje'), n: opgenomen.n }
+    if (await verstuur('deuntje:' + JSON.stringify(d))) { opgenomen = null; $('pianoBewaar').hidden = true; toast(T('Je deuntje staat in de groep')) }
+  })
+  window.addEventListener('pagehide', stopDeuntje)
 
   // ── Whiteboard (groepbord.js): samen tekenen ──
   let bord = null

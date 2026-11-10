@@ -135,3 +135,6 @@ jobs:
       - name: "Groepschat: whiteboard"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef286.py .
+      - name: "Groepschat: piano en deuntjes"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef287.py .

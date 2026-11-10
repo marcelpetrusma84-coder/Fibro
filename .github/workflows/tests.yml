@@ -138,3 +138,6 @@ jobs:
       - name: "Groepschat: piano en deuntjes"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef287.py .
+      - name: "Stekky Store (alleen moderators) en lettertypes uit de store"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef288.py .

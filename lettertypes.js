@@ -41,6 +41,18 @@ export const LETTERTYPES = [
   { naam: 'Permanent Marker', val: 'cursive', label: 'Stift' },
 ]
 
+// v131: lettertypes uit de Stekky Store (store.html). Die kies je bij Lettertype pas als je ze gedownload hebt.
+// id = de naam in de store (tabel store_downloads, kolom item_id). Ze staan ook in EIGEN hieronder, zodat iedereen
+// ze kan laten zien (kiest een vriend er een, dan zie jij zijn profiel ook in dat lettertype).
+export const STORE_LETTERTYPES = [
+  { id: 'lettertype-bangers', naam: 'Bangers', val: 'cursive', label: 'Stripheld' },
+  { id: 'lettertype-black-ops-one', naam: 'Black Ops One', val: 'sans-serif', label: 'Leger' },
+  { id: 'lettertype-abril-fatface', naam: 'Abril Fatface', val: 'serif', label: 'Krantenkop' },
+  { id: 'lettertype-sacramento', naam: 'Sacramento', val: 'cursive', label: 'Sierlijk' },
+  { id: 'lettertype-gloria-hallelujah', naam: 'Gloria Hallelujah', val: 'cursive', label: 'Kinderhand' },
+  { id: 'lettertype-special-elite', naam: 'Special Elite', val: 'monospace', label: 'Oude typemachine' },
+]
+
 // v118: de lettertypen staan in de eigen repo (map lettertypen/, Fontsource 5.3.0),
 // niet meer bij Google. Ook oudere keuzes (van voor deze lijst) staan erin.
 const EIGEN = new Set([
@@ -51,7 +63,9 @@ const EIGEN = new Set([
   'nunito', 'orbitron', 'oswald', 'pacifico', 'permanent-marker', 'pirata-one', 'playfair-display',
   'press-start-2p', 'press-start-2p-tekst', 'quicksand', 'raleway', 'rampart-one', 'righteous', 'rubik-bubbles',
   'rubik-spray-paint', 'rye', 'satisfy', 'sedgwick-ave', 'shadows-into-light', 'share-tech-mono',
-  'silkscreen', 'space-mono', 'titan-one'
+  'silkscreen', 'space-mono', 'titan-one',
+  // v131: Stekky Store
+  'abril-fatface', 'bangers', 'black-ops-one', 'gloria-hallelujah', 'sacramento', 'special-elite'
 ])
 export function lettertypeSlug(naam) {
   return String(naam || '').trim().toLowerCase().replace(/ /g, '-')

@@ -532,7 +532,7 @@ button { font-family:inherit; }
       const c = document.createElement('div'); c.className = 'citaat'
       const orig = tekstPerId.get(antwoordOp)
       if (orig) { const b = document.createElement('b'); b.textContent = orig.naam + ': '; c.append(b, document.createTextNode(orig.tekst)) }
-      else c.textContent = T('bericht niet meer beschikbaar')
+      else { c.textContent = T('bericht niet meer beschikbaar'); c.dataset.wacht = antwoordOp } // komt het bericht nog, dan vult hij zich
       c.addEventListener('click', () => {
         const doel = $('berichten').querySelector('.b-rij[data-id="' + antwoordOp + '"]')
         if (doel) { doel.scrollIntoView({ block: 'center', behavior: 'smooth' }); doel.classList.add('licht'); setTimeout(() => doel.classList.remove('licht'), 1500) }
@@ -541,6 +541,10 @@ button { font-family:inherit; }
     }
     if (leesbaar) {
       tekstPerId.set(r.id, { naam: mijn ? T('jij') : naamVan(afz), tekst: kortVan(tekst) })
+      for (const c of $('berichten').querySelectorAll('.citaat[data-wacht="' + r.id + '"]')) {
+        const o = tekstPerId.get(r.id), b = document.createElement('b'); b.textContent = o.naam + ': '
+        c.textContent = ''; c.append(b, document.createTextNode(o.tekst)); delete c.dataset.wacht
+      }
       const fxm = /^fxsticker:([\s\S]+)$/.exec(tekst)
       const mm = MARKER.exec(tekst)
       if (fxm) {

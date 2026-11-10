@@ -23,7 +23,10 @@ NAAM = {MARCEL: 'Marcel', BRAM: 'Bram', LOTTE: 'Lotte'}
 VRIENDEN = {MARCEL: [BRAM, LOTTE], BRAM: [MARCEL], LOTTE: [MARCEL]}
 DB = {'sleutels': {}, 'groepen': [], 'leden': [], 'berichten': [], 'rpc': []}
 def token(uid): return json.dumps({"access_token": "tok-" + uid[:4], "refresh_token": "y", "token_type": "bearer", "expires_in": 3600, "expires_at": int(time.time()) + 3600, "user": {"id": uid}})
-def nu(): return time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime())
+_t = [0]
+def nu():  # oplopend, net als in de echte database (microseconden): de volgorde van berichten ligt vast
+    _t[0] += 1
+    return time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime()) + '.%06dZ' % _t[0]
 
 def server(uid):
     def supa(route):

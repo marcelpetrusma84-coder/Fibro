@@ -2143,4 +2143,6 @@ window.FIBRO_EN = {
   "De webcam chat is vol (4 personen).": "The webcam chat is full (4 people).",
   "Je camera doet het niet. Je doet mee met alleen geluid.": "Your camera isn't working. You're joining with sound only.",
   "tot 4": "up to 4",
+  // knoppen in de voice chat (10 november 2026, taal-en.js?v=88)
+  "Knoppen tonen of verbergen": "Show or hide the buttons",
 }

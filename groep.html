@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=87"></script>
+<script src="taal.js?v=88"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -121,18 +121,20 @@ button { font-family:inherit; }
 .tegel .tnaam { font-size:12px; font-weight:700; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 2px; }
 .tegel .tstil { position:absolute; top:2px; right:4px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; font-size:12px; }
 .tegel .thand { position:absolute; top:2px; left:4px; font-size:16px; }
+.tegel.ik { cursor:pointer; -webkit-tap-highlight-color:transparent; }
 .bel-knoppen { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0, 1fr); gap:6px; }
 /* webcam chat: een scherm per persoon, met een rand die goud kleurt als iemand praat (zoals de rondjes) */
-#belTegels.beeld { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+/* compact: 2 schermen boven en 2 beneden, niet te hoog, zodat je onder de schermen nog berichten ziet */
+#belTegels.beeld { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:6px; }
 .tegel.scherm { padding:0; background:transparent; gap:0; }
-.tegel.scherm .vak { position:relative; width:100%; aspect-ratio:3/4; max-height:26vh; box-sizing:border-box; border-radius:18px; overflow:hidden; border:3px solid rgba(151,240,221,0.55); background:#120720; display:flex; align-items:center; justify-content:center; transition:border-color .15s ease, box-shadow .15s ease; }
+.tegel.scherm .vak { position:relative; width:100%; height:15vh; min-height:96px; max-height:150px; box-sizing:border-box; border-radius:18px; overflow:hidden; border:3px solid rgba(151,240,221,0.55); background:#120720; display:flex; align-items:center; justify-content:center; transition:border-color .15s ease, box-shadow .15s ease; }
 .tegel.scherm.praat .vak { border-color:#fcd34d; box-shadow:0 0 0 4px #fbbf2470, 0 0 26px #fbbf24c0; }
 .tegel.scherm.wacht .vak { opacity:.55; }
-.tegel.scherm video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#120720; }
+.tegel.scherm video { position:absolute; top:0; left:0; right:0; bottom:0; display:block; width:100%; height:100%; object-fit:cover; border-radius:15px; background:#120720; }
 .tegel.scherm.ik video { transform:scaleX(-1); }
-.tegel.scherm .cirkel { width:64px; height:64px; }
-.tegel.scherm .tnaam { position:absolute; left:8px; bottom:8px; max-width:calc(100% - 16px); padding:2px 8px; border-radius:10px; background:rgba(0,0,0,0.55); }
-.tegel.scherm.leeg { aspect-ratio:3/4; max-height:26vh; border-radius:18px; }
+.tegel.scherm .cirkel { width:52px; height:52px; font-size:20px; }
+.tegel.scherm .tnaam { position:absolute; left:5px; bottom:5px; max-width:calc(100% - 10px); padding:1px 6px; font-size:11px; border-radius:10px; background:rgba(0,0,0,0.55); }
+.tegel.scherm.leeg { height:15vh; min-height:96px; max-height:150px; box-sizing:border-box; border-radius:18px; text-align:center; }
 .bel-knoppen button[aria-pressed="false"]#belCam { background:rgba(252,165,165,0.22); color:#fecaca; }
 .bel-knoppen button { display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 0; border:none; border-radius:14px; background:rgba(255,255,255,0.08); color:#fff; font-size:12px; cursor:pointer; min-height:52px; }
 .bel-knoppen button[aria-pressed="true"]#belHand, .bel-knoppen button[aria-pressed="true"]#belMic { background:rgba(252,165,165,0.22); color:#fecaca; }
@@ -280,8 +282,9 @@ button { font-family:inherit; }
   import { speel as speelFx } from './stickerfx.js?v=235'
   import { isCode as isEigenCode, leesFx, zoekEigenSticker, fxCode, stickerPakket } from './eigenstickers.js?v=162'
   import { kanOpnemen, neemOp, maakSpeler, tijdTekst as spraakTijd } from './spraak.js?v=1'
-  import { maakGroepGesprek, MAX_BELLERS, MAX_BEELD } from './groepbellen.js?v=2'
+  import { maakGroepGesprek, MAX_BELLERS, MAX_BEELD } from './groepbellen.js?v=3'
   import { houOpen } from './lijntjes.js?v=1'
+  import { haalVriendFotos, geldigeFoto } from './vriendfotos.js?v=2'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { zoekSticker } from './stickervellen.js?v=236'
 
@@ -408,6 +411,23 @@ button { font-family:inherit; }
     $('groepSub').textContent = leden.length ? T('{n} leden', { n: leden.length }) : ''
   }
   const lidVan = id => leden.find(l => l.id === id)
+  // Profielfoto's (voor de rondjes in de voice chat): die van jezelf en van leden die je vriend zijn. Van iemand die
+  // je niet kent krijg je de foto niet (de database geeft hem alleen aan vrienden); die houdt zijn emoji of letter.
+  const fotoVan = new Map()
+  async function haalFotos() {
+    const ids = leden.map(l => l.id)
+    if (!ids.length) return
+    const klaar = () => { if (gesprek) tekenBel(gesprek.staat()) }
+    try {
+      const { data } = await supabase.from('profiles').select('id, updated_at, avatar_versie').in('id', ids)
+      const vrienden = (data || []).filter(r => r && r.id !== ik)
+      const zet = m => { for (const [id, f] of m) fotoVan.set(id, f); klaar() }
+      if (vrienden.length) zet(await haalVriendFotos(ik, vrienden, zet))
+      const { data: mij } = await supabase.from('profiles').select('avatar_data').eq('id', ik).maybeSingle()
+      const f = geldigeFoto(mij && mij.avatar_data)
+      if (f) { fotoVan.set(ik, f); klaar() }
+    } catch (e) { console.warn('[groep] foto\'s', e) }
+  }
 
   function sysBericht(tekst) {
     const d = document.createElement('div'); d.className = 'sys'; d.textContent = tekst; $('berichten').appendChild(d)
@@ -736,6 +756,7 @@ button { font-family:inherit; }
     sysBericht(T('🔒 Berichten in deze groep zijn end-to-end versleuteld'))
     if (!mijnPriv) { sysBericht(T('Je sleutel staat niet op dit toestel. Zet hem terug met je herstelcode (Stijl > Instellingen).')); zetInvoer(false) }
     try { await haalLeden(true) } catch (e) { sysBericht(T('Leden laden lukte niet')) }
+    haalFotos()
     await laadBerichten()
     lijn?.stop?.()
     lijn = houOpen('groep-' + groep.id, () => supabase
@@ -765,6 +786,13 @@ button { font-family:inherit; }
   const maxBel = () => metBeeld() ? MAX_BEELD : MAX_BELLERS
   const magBellen = () => groep && mijnPriv && leden.length > 1 && leden.length <= MAX_BELLERS
   const tegelVan = new Map()   // id -> tegel (blijft staan, zodat het beeld niet steeds opnieuw begint)
+  let knoppenOpen = false      // de knoppen (Microfoon ... Ophangen) zie je pas als je op je eigen rondje tikt
+  function zetFoto(c, f, lid) {
+    if (c._foto === f) return
+    c._foto = f
+    if (f) { c.style.backgroundImage = 'url("' + f + '")'; c.style.backgroundSize = 'cover'; c.style.backgroundPosition = 'center'; c.textContent = '' }
+    else { c.style.backgroundImage = ''; c.innerHTML = avatarHtml(lid) }
+  }
   function zetBeeld(video, stroom) {
     if (video.srcObject !== stroom) { video.srcObject = stroom || null; if (stroom) video.play?.().catch?.(() => {}) }
   }
@@ -786,6 +814,8 @@ button { font-family:inherit; }
       $('belMee').disabled = n >= maxBel()
     }
     $('belPaneel').hidden = !mee
+    if (!mee) knoppenOpen = false
+    $('belPaneel').querySelector('.bel-knoppen').hidden = !knoppenOpen
     const tegels = $('belTegels')
     if (!mee) { if (tegelVan.size || tegels.firstChild) { tegelVan.clear(); tegels.innerHTML = '' } return }
     tegels.classList.toggle('beeld', beeld)
@@ -810,8 +840,17 @@ button { font-family:inherit; }
         t.insertAdjacentHTML('beforeend', '<div class="tstil" role="img" hidden>\u{1F507}</div><div class="thand" role="img" hidden>✋</div>')
         t.querySelector('.tnaam').textContent = id === ik ? T('Jij') : naamVan(lid)
         t.querySelector('.tstil').setAttribute('aria-label', T('Microfoon uit')); t.querySelector('.thand').setAttribute('aria-label', T('Steekt een hand op'))
+        if (id === ik) {
+          t.setAttribute('role', 'button'); t.tabIndex = 0
+          t.setAttribute('aria-label', T('Knoppen tonen of verbergen'))
+          const wissel = () => { knoppenOpen = !knoppenOpen; if (gesprek) tekenBel(gesprek.staat()) }
+          t.addEventListener('click', wissel)
+          t.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wissel() } })
+        }
         tegelVan.set(id, t)
       }
+      if (id === ik) t.setAttribute('aria-expanded', String(knoppenOpen))
+      zetFoto(t.querySelector('.cirkel'), fotoVan.get(id) || null, lid)
       tegels.appendChild(t) // in de goede volgorde (ik eerst)
       t.className = 'tegel' + (beeld ? ' scherm' : '') + (id === ik ? ' ik' : '') + (st.praat.has(id) ? ' praat' : '') + (id !== ik && !st.verbonden.has(id) ? ' wacht' : '')
       t.querySelector('.tstil').hidden = !b.stil

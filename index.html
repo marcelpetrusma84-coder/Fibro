@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=82"></script>
+<script src="taal.js?v=83"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -2386,7 +2386,7 @@ window.openMenu = function() {
     g.appendChild(b)
     return b
   }
-  let g = groep(T('Instellingen'), 'menuKopInstellingen', T('Taal, berichten bewaren, muziek, buzz, vinkjes'))
+  let g = groep(T('Instellingen'), 'menuKopInstellingen', T('Taal, berichten bewaren, muziek, buzz, vinkjes, groepen'))
   item(g, T('\u{1F310} Taal / Language'), openTaal) // v142
   item(g, T('\u23F3 Berichten bewaren'), openBewaren)
   // v179/v180: muziek vanzelf afspelen, aan of uit: je eigen profielnummer op Home, en dat van vrienden op hun profiel
@@ -2423,6 +2423,11 @@ window.openMenu = function() {
   // v261: uit = je vrienden zien niet dat jij hun bericht gelezen hebt, en jij ziet het bij hen ook niet (chatstatus.js)
   schakelaar('fibro_leesbevestiging', T('\u2713\u2713 Gelezen-vinkjes'), async (aan) => {
     try { (await import('./chatstatus.js?v=1')).zetLeesbevestiging(supabase, aan) } catch (e) {}
+  })
+  // groepschat (10 nov 2026): uit = je komt alleen in een groep als je iedereen erin als vriend hebt. De server controleert
+  // het (sql/groep-onbekenden.sql: chat_instellingen.groep_onbekenden). Standaard aan.
+  schakelaar('fibro_groep_onbekenden', T('\u{1F465} Groepen met onbekenden'), async (aan) => {
+    try { const { error } = await supabase.rpc('zet_groep_onbekenden', { p_aan: !!aan }); if (error) console.warn('[groep] schakelaar bewaren mislukt', error.message) } catch (e) {}
   })
   // v266: Fibro op slot met Face ID, vingerafdruk of pincode (standaard uit; appslot.js)
   if (window.FibroSlot) {

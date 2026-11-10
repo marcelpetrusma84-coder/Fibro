@@ -15,7 +15,8 @@
 --  - Berichten: alleen leden lezen en sturen; je eigen bericht mag je weghalen. Na 31 dagen weg (zoals de chat).
 --  - Groepen maken, leden toevoegen en weghalen gaat alleen via de functies hieronder (die controleren alles).
 --
--- Uitvoeren: in één keer in de SQL Editor van Supabase. Nog een keer uitvoeren kan geen kwaad.
+-- Uitvoeren: in één keer in de SQL Editor van Supabase. Nog een keer uitvoeren kan geen kwaad, maar voer daarna
+-- ook sql/groep-onbekenden.sql opnieuw uit (die maakt maak_groep en groep_lid_toevoegen af).
 
 begin;
 
@@ -79,6 +80,7 @@ create or replace function public.groep_max(p_soort text)
 returns integer
 language sql
 immutable
+set search_path = public, pg_temp
 as $$
   select case p_soort when 'voice' then 8 when 'webcam' then 4 else 50 end;
 $$;
@@ -255,7 +257,7 @@ revoke execute on function public.groep_leden_info(uuid) from public, anon;
 revoke execute on function public.mijn_groepen() from public, anon;
 revoke execute on function public.groep_hernoem(uuid, text) from public, anon;
 revoke execute on function public.is_groepslid(uuid) from public, anon;
-revoke execute on function public.zijn_vrienden(uuid, uuid) from public, anon;
+revoke execute on function public.zijn_vrienden(uuid, uuid) from public, anon, authenticated; -- alleen binnen de functies hieronder
 grant execute on function public.maak_groep(text, text, uuid[]) to authenticated;
 grant execute on function public.groep_lid_toevoegen(uuid, uuid) to authenticated;
 grant execute on function public.groep_lid_weg(uuid, uuid) to authenticated;
@@ -263,7 +265,6 @@ grant execute on function public.groep_leden_info(uuid) to authenticated;
 grant execute on function public.mijn_groepen() to authenticated;
 grant execute on function public.groep_hernoem(uuid, text) to authenticated;
 grant execute on function public.is_groepslid(uuid) to authenticated;
-grant execute on function public.zijn_vrienden(uuid, uuid) to authenticated;
 grant execute on function public.groep_max(text) to authenticated;
 
 -- ── Realtime: nieuwe groepsberichten meteen binnen ──

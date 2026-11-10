@@ -19,6 +19,7 @@
 // groepschat (10 november 2026): taal-en.js?v=83 (groepen met onbekenden)
 // groepschat (10 november 2026): taal-en.js?v=84 (foto's, spraak en stickers in groepen)
 // groepschat (10 november 2026): taal-en.js?v=85 (antwoorden, reacties, weghalen, typen in groepen)
+// groepschat (10 november 2026): taal-en.js?v=86 (voice chat in groepen)
 //
 // In gewone woorden: dit bestand weet welke taal je gekozen hebt en vertaalt de teksten.
 // De Nederlandse zin is zelf de sleutel: T('Opslaan') geeft in het Nederlands 'Opslaan' en in
@@ -43,7 +44,7 @@
 // Alleen pagina's met <html data-taal> krijgen lang="en" (die zijn al vertaald).
 // In het Nederlands doet dit bestand verder niets met de pagina: alles blijft precies zoals het was.
 // Een gewoon script (geen module), vroeg geladen: direct na huisregel.js.
-// De Engelse woordenlijst (taal-en.js?v=85) wordt alleen bij Engels geladen.
+// De Engelse woordenlijst (taal-en.js?v=86) wordt alleen bij Engels geladen.
 (function () {
   'use strict'
   if (window.T) return
@@ -108,7 +109,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=85', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=86', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

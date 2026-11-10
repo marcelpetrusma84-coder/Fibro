@@ -1,7 +1,7 @@
 # proef277 (10 nov 2026, groepschat stap 1): een groep maken en versleuteld kletsen (groep.html, groepsleutel.js,
 # groepenlijst.js), met een nagebootste Supabase (de echte regels staan in sql/groepen.sql).
 #  A. Chat: knop '+ Groep' en je groepen bovenaan de lijst (mijn_groepen)
-#  B. Nieuwe chat: Groepschat kiezen (voice en webcam nog 'binnenkort'), naam en Bram kiezen (teller), Groep maken
+#  B. Nieuwe chat: Groepschat kiezen (voice kiesbaar, webcam nog 'binnenkort'), naam en Bram kiezen (teller), Groep maken
 #     = maak_groep met de goede gegevens, en je staat in het gesprek
 #  C. Marcel stuurt 'Hoi Bram 👋': op de server staat alleen 'g1:...' (niet leesbaar); bij Marcel staat het bericht
 #  D. Bram opent de groep: hij leest 'Hoi Bram 👋' met de naam Marcel erboven
@@ -97,7 +97,7 @@ try:
         bc, bp, bf = toestel(b, BRAM)
         # B
         m.goto(BASIS + 'groep.html'); m.wait_for_selector('#kiezen:not([hidden])')
-        check(m.is_disabled('.keuze[data-soort=voice]') and m.is_disabled('.keuze[data-soort=webcam]') and not m.is_disabled('.keuze[data-soort=chat]'), 'B: groepschat kiesbaar, voice en webcam nog binnenkort')
+        check(not m.is_disabled('.keuze[data-soort=voice]') and m.is_disabled('.keuze[data-soort=webcam]') and not m.is_disabled('.keuze[data-soort=chat]'), 'B: groepschat kiesbaar, voice ook, webcam nog binnenkort')
         m.click('.keuze[data-soort=chat]'); m.wait_for_selector('#vriendenLijst .vriend')
         check(m.locator('#vriendenLijst .vriend').count() == 2, 'B: twee vrienden om te kiezen')
         check(m.is_disabled('#maakKnop'), 'B: zonder naam en vrienden geen Groep maken')

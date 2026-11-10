@@ -120,3 +120,6 @@ jobs:
       - name: "Groepschat: antwoorden, reacties, weghalen, typen, ongelezen"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef281.py .
+      - name: "Groepschat: voice chat tot 8 personen"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef282.py .

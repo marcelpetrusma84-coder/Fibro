@@ -1,0 +1,10 @@
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+test-account.local.json
+auth-state.local.json
+invite.local.txt
+local-backend.local.json
+test-account.mock.local.json
+auth-state.mock.local.json

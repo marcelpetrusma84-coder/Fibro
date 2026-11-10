@@ -256,6 +256,8 @@ try:
         hoog = m.evaluate("document.getElementById('belPaneel').getBoundingClientRect().height")
         links = m.eval_on_selector_all('#belTegels .tegel', 'els => els.map(e => Math.round(e.getBoundingClientRect().left))')
         check(boven[0] == boven[1] < boven[2] and links[0] == links[2] and hoog < 0.4 * 844, 'A: compact - 2 boven, 2 beneden, paneel %d px hoog (%s %s)' % (hoog, boven, links))
+        dekt = m.evaluate("(() => { const v = document.querySelector('.tegel.ik video'), b = v.parentElement.getBoundingClientRect(), r = v.getBoundingClientRect(); return [r.left <= b.left + 3.5, r.top <= b.top + 3.5, r.right >= b.right - 3.5, r.bottom >= b.bottom - 3.5] })()")
+        check(all(dekt), 'A: beeld vult het hele vak (%s)' % dekt)
         vw = m.evaluate("(() => { const v = document.querySelector('.tegel.ik video'); return [v.videoWidth, v.videoHeight] })()")
         check(max(vw) <= 320, 'A: lagere beeldkwaliteit (%s)' % vw)
         check(m.is_hidden('.bel-knoppen'), 'A: knoppen pas na een tik op je eigen scherm')
@@ -283,6 +285,14 @@ try:
         check(wacht_tot(m, RONDJE + "('Bram')", 8000), 'D: Marcel ziet Brams rondje (%s)' % tegel(m, 'Bram'))
         bp.click('#belCam')
         check(wacht_tot(m, ZIE + "('Bram')", 8000), 'D: camera weer aan -> beeld terug')
+        # het beeld van de camera verandert van maat (staand <-> liggend): het vak blijft vol, de tegel even groot
+        voor = m.evaluate("document.querySelector('.tegel.ik .vak').getBoundingClientRect().height")
+        m.evaluate("(async () => { const v = document.querySelector('.tegel.ik video'); await v.srcObject.getVideoTracks()[0].applyConstraints({ width: 240, height: 320 }) })()")
+        try: m.wait_for_function("(() => { const v = document.querySelector('.tegel.ik video'); return v.videoWidth === 240 })()", timeout=5000)
+        except Exception: pass
+        m.wait_for_timeout(400)
+        na = m.evaluate("(() => { const v = document.querySelector('.tegel.ik video'), b = v.parentElement.getBoundingClientRect(), r = v.getBoundingClientRect(); return [v.videoWidth, v.videoHeight, b.height, r.left <= b.left + 3.5 && r.right >= b.right - 3.5 && r.top <= b.top + 3.5 && r.bottom >= b.bottom - 3.5] })()")
+        check(na[0] == 240 and na[2] == voor and na[3], 'D: andere camera-maat -> vak even groot en vol (%s, %s)' % (voor, na))
         check(m.evaluate("() => { const e = [...document.querySelectorAll('#belTegels .tegel')].find(e => e.textContent.includes('Bram')); return e.querySelector('video').__merk === 1 }"), 'D: hetzelfde beeld-element (niet opnieuw gemaakt)')
         # E
         open_(lp)

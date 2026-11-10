@@ -1,4 +1,6 @@
 // groepbellen.js (10 nov 2026, groepschat stap 2): voice chat met de groep, tot 8 personen.
+// v3: wie praat meet nu ~85 ms per keer (niet 10 ms), zodat korte geluiden niet gemist worden.
+// v3: lagere beeldkwaliteit (320x240, 15 beelden per seconde, hoogstens 250 kbit/s): de schermen zijn klein.
 // v2 (stap 3): ook webcam chat (beeld: true), tot 4 personen. De camera kan uit; dan zien de anderen je rondje.
 //
 // Hoe het werkt: iedereen in het gesprek praat rechtstreeks met iedereen (WebRTC, alleen geluid), via onze eigen
@@ -14,7 +16,9 @@ import { ICE_SERVERS, iceReady } from './ice-config.js?v=149'
 
 export const MAX_BELLERS = 8
 export const MAX_BEELD = 4
-const BEELD = { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 24, max: 30 } }
+// v3: de schermen zijn klein, dus een lagere kwaliteit is genoeg (minder data, minder warm toestel)
+const BEELD = { facingMode: 'user', width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { ideal: 15, max: 20 } }
+const MAX_BEELD_BPS = 250000
 const GELUID = { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
 const naarB64 = b => { let s = ''; for (let i = 0; i < b.length; i += 8192) s += String.fromCharCode.apply(null, b.subarray(i, i + 8192)); return btoa(s) }
 const vanB64 = t => { const bin = atob(t); const o = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) o[i] = bin.charCodeAt(i); return o }
@@ -91,9 +95,23 @@ export function maakGroepGesprek({ ik, groepId, kanaal, sleutel, opStaat, beeld 
     }
     pc.oniceconnectionstatechange = () => {
       meld()
+      if (['connected', 'completed'].includes(pc.iceConnectionState)) beperkBeeld(pc)
       if (pc.iceConnectionState === 'failed' && ikBegin(ik, id)) { sluitPeer(id); verbind(id) }
     }
     return peer
+  }
+  // het beeld dat ik stuur hoogstens MAX_BEELD_BPS (anders gebruikt de browser er veel meer voor)
+  function beperkBeeld(pc) {
+    for (const s of pc.getSenders()) {
+      if (!s.track || s.track.kind !== 'video') continue
+      try {
+        const p = s.getParameters()
+        if (!p.encodings || !p.encodings.length) p.encodings = [{}]
+        if (p.encodings[0].maxBitrate === MAX_BEELD_BPS) continue
+        p.encodings[0].maxBitrate = MAX_BEELD_BPS
+        s.setParameters(p).catch(() => {})
+      } catch (e) {}
+    }
   }
   async function klaarVoorIce(id, peer) {
     peer.klaar = true
@@ -165,7 +183,7 @@ export function maakGroepGesprek({ ik, groepId, kanaal, sleutel, opStaat, beeld 
     if (!ac || !track) return
     try {
       const bron = ac.createMediaStreamSource(new MediaStream([track]))
-      const analyser = ac.createAnalyser(); analyser.fftSize = 512
+      const analyser = ac.createAnalyser(); analyser.fftSize = 4096 // ~85 ms: bijna alles tussen twee metingen (elke 100 ms)
       bron.connect(analyser)
       meters.set(id, { analyser, data: new Uint8Array(analyser.fftSize), track })
     } catch (e) {}
@@ -178,9 +196,14 @@ export function maakGroepGesprek({ ik, groepId, kanaal, sleutel, opStaat, beeld 
       const uit = id === ik ? stil : !!(bellers.get(id) || {}).stil
       if (uit || m.track.readyState !== 'live' || !m.track.enabled) continue
       m.analyser.getByteTimeDomainData(m.data)
-      let som = 0
-      for (let i = 0; i < m.data.length; i++) { const x = (m.data[i] - 128) / 128; som += x * x }
-      if (Math.sqrt(som / m.data.length) > 0.035) { const was = (praat.get(id) || 0) > nu; praat.set(id, nu + 350); if (!was) anders = true }
+      // in stukjes van 512 (~10 ms) meten en de luidste nemen: ook een kort geluid tussen twee metingen telt mee
+      let hoogst = 0
+      for (let b = 0; b < m.data.length; b += 512) {
+        let som = 0
+        for (let i = b; i < b + 512; i++) { const x = (m.data[i] - 128) / 128; som += x * x }
+        hoogst = Math.max(hoogst, som / 512)
+      }
+      if (Math.sqrt(hoogst) > 0.035) { const was = (praat.get(id) || 0) > nu; praat.set(id, nu + 350); if (!was) anders = true }
     }
     for (const [id, t] of praat) if (t <= nu && t > nu - 150) anders = true
     if (anders) meld()

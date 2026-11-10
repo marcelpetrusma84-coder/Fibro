@@ -2,7 +2,8 @@
 # Nagebootste Supabase en nep-Realtime met presence (uit proef282), echte WebRTC met nep-camera en nep-microfoon.
 # Marcel, Bram en Lotte in een webcam-groep.
 #  A. Marcel opent de groep: balk 'Nog niemand in de webcam chat' met Starten; tik -> een scherm met zijn eigen beeld
-#     (gespiegeld), twee vrije plekjes, en de knoppen Microfoon, Luidspreker, Camera, Hand en Ophangen
+#     (gespiegeld), twee vrije plekjes, compact op een rij, beeld hoogstens 320 px; de knoppen Microfoon, Luidspreker,
+#     Camera, Hand en Ophangen pas na een tik op zijn eigen scherm
 #  B. Bram doet mee -> Marcel ziet het beeld van Bram (en andersom), verbonden
 #  C. wie praat: het scherm van Bram krijgt bij Marcel de gouden rand (.praat)
 #  D. Bram zet zijn camera uit -> Marcel ziet Brams rondje in plaats van beeld; weer aan -> beeld terug. Het
@@ -215,6 +216,15 @@ def toestel(b, uid, taal='nl'):
     pg.evaluate("([t, en, namen, uid]) => { localStorage.setItem('sb-qmgatbphiplrfxrljtbe-auth-token', t); localStorage.setItem('fibro_opslagtip_later', String(Date.now())); if (en) localStorage.setItem('fibro_taal', 'en'); for (const [id, n] of Object.entries(namen)) localStorage.setItem('vriend_naam_' + id + '_' + uid, n) }", [token(uid), taal == 'en', {MARCEL: 'Marcel'} if uid != MARCEL else {}, uid])
     DB['sleutels'][uid] = pg.evaluate(SLEUTEL, uid)
     return ctx, pg, fouten
+def leesbaar(rtc):
+    # zit er ergens leesbare tekst in de seintjes? (de base64 zelf kan toevallig 'sdp' bevatten, dus: uitpakken en zoeken)
+    for x in rtc:
+        p = x[1] or {}
+        if set(p.keys()) - {'van', 'naar', 't', 'd', 'k'}: return True
+        try: ruw = base64.b64decode(p.get('d') or '')
+        except Exception: return True
+        if any(w in ruw for w in (b'sdp', b'candidate', b'v=0', b'm=audio', b'm=video')): return True
+    return False
 def tegels(pg): return pg.eval_on_selector_all('#belTegels .tegel', "els => els.map(e => ({ naam: (e.querySelector('.tnaam') || e).textContent, cls: e.className, beeld: !!(e.querySelector('video') && !e.querySelector('video').hidden && e.querySelector('video').videoWidth > 0), rondje: !!(e.querySelector('.cirkel') && !e.querySelector('.cirkel').hidden) }))")
 def tegel(pg, naam): return next((t for t in tegels(pg) if t['naam'] == naam), None)
 def wacht_tot(pg, js, ms=15000):
@@ -242,6 +252,11 @@ try:
         check(ok and t[0]['naam'] == 'Jij' and 'scherm' in t[0]['cls'] and 'ik' in t[0]['cls'], 'A: eigen beeld in een scherm (%s)' % t)
         check(m.evaluate("getComputedStyle(document.querySelector('.tegel.ik video')).transform") != 'none', 'A: eigen beeld gespiegeld')
         check(sum('leeg' in x['cls'] for x in t) == 2, 'A: twee vrije plekjes')
+        boven = m.eval_on_selector_all('#belTegels .tegel', 'els => els.map(e => Math.round(e.getBoundingClientRect().top))')
+        hoog = m.evaluate("document.getElementById('belPaneel').getBoundingClientRect().height")
+        check(len(set(boven)) == 1 and hoog < 0.4 * 844, 'A: compact - alle schermen op een rij, paneel %d px hoog (%s)' % (hoog, boven))
+        vw = m.evaluate("(() => { const v = document.querySelector('.tegel.ik video'); return [v.videoWidth, v.videoHeight] })()")
+        check(max(vw) <= 320, 'A: lagere beeldkwaliteit (%s)' % vw)
         check(m.is_hidden('.bel-knoppen'), 'A: knoppen pas na een tik op je eigen scherm')
         m.click('.tegel.ik')
         knoppen = m.inner_text('.bel-knoppen')
@@ -254,7 +269,7 @@ try:
         ok1 = wacht_tot(m, ZIE + "('Bram')", 20000); ok2 = wacht_tot(bp, ZIE + "('Marcel')", 20000)
         check(ok1 and ok2, 'B: Marcel ziet Bram en Bram ziet Marcel (%s | %s)' % (tegels(m), tegels(bp)))
         rtc = json.dumps([x[1] for x in rt.get('rtc', [])])
-        check('m=video' not in rtc and 'sdp' not in rtc, 'B: seintjes versleuteld')
+        check(len(rt.get('rtc', [])) >= 3 and not leesbaar(rt.get('rtc', [])), 'B: seintjes versleuteld')
         # C
         check(wacht_tot(m, "[...document.querySelectorAll('#belTegels .tegel.praat')].some(e => e.textContent.includes('Bram'))"), 'C: Brams scherm kleurt goud als hij praat')
         rand = m.evaluate("getComputedStyle([...document.querySelectorAll('#belTegels .tegel.praat .vak')][0] || document.body).borderTopColor")

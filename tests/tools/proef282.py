@@ -214,6 +214,15 @@ def toestel(b, uid, taal='nl'):
     pg.evaluate("([t, en, namen, uid]) => { localStorage.setItem('sb-qmgatbphiplrfxrljtbe-auth-token', t); localStorage.setItem('fibro_opslagtip_later', String(Date.now())); if (en) localStorage.setItem('fibro_taal', 'en'); for (const [id, n] of Object.entries(namen)) localStorage.setItem('vriend_naam_' + id + '_' + uid, n) }", [token(uid), taal == 'en', {MARCEL: 'Marcel'} if uid != MARCEL else {}, uid])
     DB['sleutels'][uid] = pg.evaluate(SLEUTEL, uid)
     return ctx, pg, fouten
+def leesbaar(rtc):
+    # zit er ergens leesbare tekst in de seintjes? (de base64 zelf kan toevallig 'sdp' bevatten, dus: uitpakken en zoeken)
+    for x in rtc:
+        p = x[1] or {}
+        if set(p.keys()) - {'van', 'naar', 't', 'd', 'k'}: return True
+        try: ruw = base64.b64decode(p.get('d') or '')
+        except Exception: return True
+        if any(w in ruw for w in (b'sdp', b'candidate', b'v=0', b'm=audio', b'm=video')): return True
+    return False
 def tegels(pg): return pg.eval_on_selector_all('#belTegels .tegel', "els => els.map(e => ({ naam: (e.querySelector('.tnaam') || e).textContent, cls: e.className, stil: !!e.querySelector('.tstil:not([hidden])'), hand: !!e.querySelector('.thand:not([hidden])') }))")
 def bram_tegel(pg): return pg.locator('#belTegels .tegel', has_text='Bram')
 try:
@@ -263,7 +272,7 @@ try:
         rtc = rt.get('rtc', [])
         tekst = json.dumps([x[1] for x in rtc])
         soorten_ok = all(set((x[1] or {}).keys()) >= {'van', 'naar', 't', 'd', 'k'} for x in rtc)
-        check(len(rtc) >= 3 and soorten_ok and 'sdp' not in tekst and 'candidate' not in tekst and 'v=0' not in tekst, 'C: %d seintjes, versleuteld' % len(rtc))
+        check(len(rtc) >= 3 and soorten_ok and not leesbaar(rtc), 'C: %d seintjes, versleuteld' % len(rtc))
         check(all((x[1]['van'] == x[0]) and x[1]['naar'] in (MARCEL, BRAM) and x[1]['naar'] != x[0] for x in rtc), 'C: elk seintje van de afzender aan een ontvanger')
         check(rtc and rtc[0][0] == MARCEL, 'C: Marcel (kleinste id) begint')
         # D

@@ -210,6 +210,7 @@ body.heeft-wallpaper::before { display:block; }
   // ── IndexedDB voor vriend cache ──
   function openDB() {
     return new Promise((resolve, reject) => {
+      if (typeof indexedDB === 'undefined') { reject('geen IndexedDB'); return }
       const req = indexedDB.open('FibroDB', 2)
       req.onupgradeneeded = e => {
         const db = e.target.result
@@ -220,12 +221,17 @@ body.heeft-wallpaper::before { display:block; }
     })
   }
 
+  // v276: met Vergrendelingsmodus (Lockdown Mode) op een iPhone bestaat indexedDB niet in Safari. Dan liep dit vast en
+  // bleef de rest van het vriendprofiel (achtergrond, widgets) leeg. Nu: gewoon niets op het toestel bewaren.
   async function slaFotoOp(id, data) {
-    const db = await openDB()
+    let db
+    try { db = await openDB() } catch (e) { return }
     return new Promise(resolve => {
       const tx = db.transaction('fotos', 'readwrite')
       tx.objectStore('fotos').put({ id, data })
       tx.oncomplete = resolve
+      tx.onerror = resolve
+      tx.onabort = resolve
     })
   }
 

@@ -1,9 +1,11 @@
 # proef282 (10 nov 2026): voice chat in een groep (groepbellen.js), tot 8 personen.
 # Nagebootste Supabase en nep-Realtime met presence (uit proef281), echte WebRTC met nep-microfoon (de piep van Chromium).
 # Marcel, Bram en Lotte in een voice-groep.
-#  A. Marcel opent de groep: balk 'Nog niemand in de voice chat' met Starten; tik -> paneel met zijn rondje (Jij) en
-#     twee vrije plekjes, de knoppen Microfoon, Luidspreker, Hand en Ophangen
-#  B. Bram opent de groep: balk 'Marcel zit in de voice chat' met Meedoen; tik -> twee rondjes, verbonden (geen 'wacht')
+#  A. Marcel opent de groep: balk 'Nog niemand in de voice chat' met Starten; tik -> paneel met zijn rondje (Jij, met zijn
+#     profielfoto) en twee vrije plekjes. De knoppen Microfoon, Luidspreker, Hand en Ophangen zie je pas na een tik op je
+#     eigen rondje (nog een tik: weer weg)
+#  B. Bram opent de groep: balk 'Marcel zit in de voice chat' met Meedoen; tik -> twee rondjes, verbonden (geen 'wacht');
+#     Marcel ziet de profielfoto van Bram (vriend), Lotte zou alleen haar letter krijgen
 #  C. de seintjes (offer, answer, ice) gaan versleuteld over het kanaal: geen 'sdp' of 'candidate' leesbaar, alleen voor
 #     de ontvanger; het offer komt van wie het kleinste id heeft (Marcel)
 #  D. wie praat: het rondje van Bram krijgt bij Marcel de gouden rand (.praat), door de piep van de nep-microfoon
@@ -25,6 +27,13 @@ NAAM = {MARCEL: 'Marcel', BRAM: 'Bram', LOTTE: 'Lotte'}
 VRIENDEN = {MARCEL: [BRAM, LOTTE], BRAM: [MARCEL], LOTTE: [MARCEL]}
 DB = {'sleutels': {}, 'groepen': [], 'leden': [], 'berichten': [], 'rpc': []}
 def token(uid): return json.dumps({"access_token": "tok-" + uid[:4], "refresh_token": "y", "token_type": "bearer", "expires_in": 3600, "expires_at": int(time.time()) + 3600, "user": {"id": uid}})
+FOTO = {}  # profielfoto's (data:image), alleen zichtbaar voor jezelf en vrienden (zoals de database)
+def foto_png(kleur):
+    import zlib, struct
+    rauw = b''.join(b'\x00' + bytes(kleur) * 8 for _ in range(8))
+    def blok(t, d): return struct.pack('>I', len(d)) + t + d + struct.pack('>I', zlib.crc32(t + d) & 0xffffffff)
+    png = b'\x89PNG\r\n\x1a\n' + blok(b'IHDR', struct.pack('>IIBBBBB', 8, 8, 8, 2, 0, 0, 0)) + blok(b'IDAT', zlib.compress(rauw)) + blok(b'IEND', b'')
+    return 'data:image/png;base64,' + base64.b64encode(png).decode()
 _t = [0]
 def nu():  # oplopend, net als in de echte database (microseconden): de volgorde van berichten ligt vast
     _t[0] += 1
@@ -77,7 +86,11 @@ def server(uid):
             rij = sorted([b for b in DB['berichten'] if b['groep_id'] == g and lid(g)], key=lambda b: b['created_at'], reverse=True)
             return route.fulfill(status=200, json=rij)
         if '/rest/v1/profiles' in u:
-            rij = {'id': uid, 'username': NAAM[uid], 'public_key': DB['sleutels'].get(uid)}
+            inn = q.get('id', [''])[0]
+            if inn.startswith('in.('):
+                mag = [x for x in inn[4:-1].split(',') if x.strip('"') == uid or x.strip('"') in VRIENDEN.get(uid, [])]
+                return route.fulfill(status=200, json=[{'id': x.strip('"'), 'updated_at': '2026-11-10T10:00:00Z', 'avatar_versie': 'v1', 'avatar_data': FOTO.get(x.strip('"'))} for x in mag])
+            rij = {'id': uid, 'username': NAAM[uid], 'public_key': DB['sleutels'].get(uid), 'avatar_data': FOTO.get(uid)}
             return route.fulfill(status=200, json=rij if obj else [rij])
         if '/auth/v1/user' in u: return route.fulfill(status=200, json={'id': uid})
         return route.fulfill(status=200, json=[])
@@ -211,6 +224,7 @@ try:
         DB['groepen'].append({'id': gid, 'naam': 'Praatgroep', 'soort': 'voice', 'maker': MARCEL, 'created_at': nu()})
         for u, rol in ((MARCEL, 'beheerder'), (BRAM, 'lid'), (LOTTE, 'lid')): DB['leden'].append({'groep_id': gid, 'user_id': u, 'rol': rol})
         DB['sleutels'][LOTTE] = m.evaluate(SLEUTEL, LOTTE)
+        FOTO[MARCEL] = foto_png((200, 40, 40)); FOTO[BRAM] = foto_png((40, 40, 200))
         open_ = lambda pg: (pg.goto(BASIS + 'groep.html?id=' + gid), pg.wait_for_function("document.getElementById('groepSub').textContent.includes('3')"), pg.wait_for_timeout(600))
         # A
         open_(m)
@@ -219,6 +233,14 @@ try:
         m.click('#belMee'); m.wait_for_selector('#belPaneel:not([hidden])')
         t = tegels(m)
         check(len(t) == 3 and t[0]['naam'] == 'Jij' and sum('leeg' in x['cls'] for x in t) == 2, 'A: Jij en twee vrije plekjes (%s)' % t)
+        check(m.is_hidden('.bel-knoppen'), 'A: knoppen nog niet te zien')
+        try: m.wait_for_function("(document.querySelector('.tegel.ik .cirkel').style.backgroundImage || '').includes('data:image/png')", timeout=8000); ok = True
+        except Exception: ok = False
+        check(ok, 'A: eigen profielfoto in het rondje')
+        m.click('.tegel.ik')
+        check(m.is_visible('.bel-knoppen') and m.get_attribute('.tegel.ik', 'aria-expanded') == 'true', 'A: tik op je rondje -> knoppen')
+        m.click('.tegel.ik'); check(m.is_hidden('.bel-knoppen'), 'A: nog een tik -> weg')
+        m.click('.tegel.ik')
         knoppen = m.inner_text('.bel-knoppen')
         check(all(w in knoppen for w in ('Microfoon', 'Luidspreker', 'Hand', 'Ophangen')), 'A: de vier knoppen (%r)' % knoppen)
         check(m.is_hidden('#belBalk') and m.is_hidden('#belKnop'), 'A: balk en belknop weg als je erin zit')
@@ -234,6 +256,9 @@ try:
         except Exception: ok = False
         check(ok, 'B: verbonden bij allebei (%s | %s)' % (tegels(m), tegels(bp)))
         check(sum('leeg' in x['cls'] for x in tegels(m)) == 1, 'B: nog een vrij plekje (voor Lotte)')
+        try: m.wait_for_function("(() => { const e = [...document.querySelectorAll('#belTegels .tegel')].find(e => e.textContent.includes('Bram')); return e && (e.querySelector('.cirkel').style.backgroundImage || '').includes('data:image/png') })()", timeout=8000); ok = True
+        except Exception: ok = False
+        check(ok, 'B: Marcel ziet de profielfoto van Bram')
         # C
         rtc = rt.get('rtc', [])
         tekst = json.dumps([x[1] for x in rtc])
@@ -248,7 +273,7 @@ try:
         rand = m.evaluate("() => { const e = [...document.querySelectorAll('#belTegels .tegel')].find(e => e.textContent.includes('Bram')); return e ? getComputedStyle(e.querySelector('.cirkel')).boxShadow : '' }")
         if os.environ.get('SHOT'): m.screenshot(path=os.environ['SHOT'] + '/m282.png')
         # E
-        bp.click('#belMic'); bp.click('#belHand')
+        bp.click('.tegel.ik'); bp.click('#belMic'); bp.click('#belHand')
         try: m.wait_for_function("(() => { const e = [...document.querySelectorAll('#belTegels .tegel')].find(e => e.textContent.includes('Bram')); return e && e.querySelector('.tstil:not([hidden])') && e.querySelector('.thand:not([hidden])') })()", timeout=8000); ok = True
         except Exception: ok = False
         check(ok, 'E: Marcel ziet 🔇 en ✋ bij Bram (%s)' % tegels(m))

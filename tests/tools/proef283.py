@@ -26,6 +26,13 @@ NAAM = {MARCEL: 'Marcel', BRAM: 'Bram', LOTTE: 'Lotte'}
 VRIENDEN = {MARCEL: [BRAM, LOTTE], BRAM: [MARCEL], LOTTE: [MARCEL]}
 DB = {'sleutels': {}, 'groepen': [], 'leden': [], 'berichten': [], 'rpc': []}
 def token(uid): return json.dumps({"access_token": "tok-" + uid[:4], "refresh_token": "y", "token_type": "bearer", "expires_in": 3600, "expires_at": int(time.time()) + 3600, "user": {"id": uid}})
+FOTO = {}  # profielfoto's (data:image), alleen zichtbaar voor jezelf en vrienden (zoals de database)
+def foto_png(kleur):
+    import zlib, struct
+    rauw = b''.join(b'\x00' + bytes(kleur) * 8 for _ in range(8))
+    def blok(t, d): return struct.pack('>I', len(d)) + t + d + struct.pack('>I', zlib.crc32(t + d) & 0xffffffff)
+    png = b'\x89PNG\r\n\x1a\n' + blok(b'IHDR', struct.pack('>IIBBBBB', 8, 8, 8, 2, 0, 0, 0)) + blok(b'IDAT', zlib.compress(rauw)) + blok(b'IEND', b'')
+    return 'data:image/png;base64,' + base64.b64encode(png).decode()
 _t = [0]
 def nu():  # oplopend, net als in de echte database (microseconden): de volgorde van berichten ligt vast
     _t[0] += 1
@@ -78,7 +85,11 @@ def server(uid):
             rij = sorted([b for b in DB['berichten'] if b['groep_id'] == g and lid(g)], key=lambda b: b['created_at'], reverse=True)
             return route.fulfill(status=200, json=rij)
         if '/rest/v1/profiles' in u:
-            rij = {'id': uid, 'username': NAAM[uid], 'public_key': DB['sleutels'].get(uid)}
+            inn = q.get('id', [''])[0]
+            if inn.startswith('in.('):
+                mag = [x for x in inn[4:-1].split(',') if x.strip('"') == uid or x.strip('"') in VRIENDEN.get(uid, [])]
+                return route.fulfill(status=200, json=[{'id': x.strip('"'), 'updated_at': '2026-11-10T10:00:00Z', 'avatar_versie': 'v1', 'avatar_data': FOTO.get(x.strip('"'))} for x in mag])
+            rij = {'id': uid, 'username': NAAM[uid], 'public_key': DB['sleutels'].get(uid), 'avatar_data': FOTO.get(uid)}
             return route.fulfill(status=200, json=rij if obj else [rij])
         if '/auth/v1/user' in u: return route.fulfill(status=200, json={'id': uid})
         return route.fulfill(status=200, json=[])
@@ -231,6 +242,8 @@ try:
         check(ok and t[0]['naam'] == 'Jij' and 'scherm' in t[0]['cls'] and 'ik' in t[0]['cls'], 'A: eigen beeld in een scherm (%s)' % t)
         check(m.evaluate("getComputedStyle(document.querySelector('.tegel.ik video')).transform") != 'none', 'A: eigen beeld gespiegeld')
         check(sum('leeg' in x['cls'] for x in t) == 2, 'A: twee vrije plekjes')
+        check(m.is_hidden('.bel-knoppen'), 'A: knoppen pas na een tik op je eigen scherm')
+        m.click('.tegel.ik')
         knoppen = m.inner_text('.bel-knoppen')
         check(all(w in knoppen for w in ('Microfoon', 'Luidspreker', 'Camera', 'Hand', 'Ophangen')) and m.is_visible('#belCam'), 'A: vijf knoppen met Camera (%r)' % knoppen)
         # B
@@ -249,7 +262,7 @@ try:
         if os.environ.get('SHOT'): m.screenshot(path=os.environ['SHOT'] + '/m283.png')
         # D
         m.evaluate("() => { const e = [...document.querySelectorAll('#belTegels .tegel')].find(e => e.textContent.includes('Bram')); e.querySelector('video').__merk = 1 }")
-        bp.click('#belCam')
+        bp.click('.tegel.ik'); bp.click('#belCam')
         check(bp.get_attribute('#belCam', 'aria-pressed') == 'false' and 'Camera uit' in bp.inner_text('#belCam'), 'D: knop zegt Camera uit')
         check(wacht_tot(m, RONDJE + "('Bram')", 8000), 'D: Marcel ziet Brams rondje (%s)' % tegel(m, 'Bram'))
         bp.click('#belCam')

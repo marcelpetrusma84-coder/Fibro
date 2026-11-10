@@ -2132,4 +2132,15 @@ window.FIBRO_EN = {
   "Hand": "Hand",
   "Ophangen": "Hang up",
   "tot 8": "up to 8",
+  // webcam chat in groepen (10 november 2026, taal-en.js?v=87)
+  "Nieuwe webcam chat": "New webcam chat",
+  "Camera": "Camera",
+  "Camera uit": "Camera off",
+  "Webcam chat starten": "Start webcam chat",
+  "Nog niemand in de webcam chat": "Nobody in the webcam chat yet",
+  "{naam} zit in de webcam chat": "{naam} is in the webcam chat",
+  "{namen} zitten in de webcam chat": "{namen} are in the webcam chat",
+  "De webcam chat is vol (4 personen).": "The webcam chat is full (4 people).",
+  "Je camera doet het niet. Je doet mee met alleen geluid.": "Your camera isn't working. You're joining with sound only.",
+  "tot 4": "up to 4",
 }

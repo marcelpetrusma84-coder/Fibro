@@ -123,3 +123,6 @@ jobs:
       - name: "Groepschat: voice chat tot 8 personen"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef282.py .
+      - name: "Groepschat: webcam chat tot 4 personen"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef283.py .

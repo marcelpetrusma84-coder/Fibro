@@ -201,7 +201,7 @@ def toestel(b, uid, taal='nl'):
     pg.evaluate("([t, en, namen, uid]) => { localStorage.setItem('sb-qmgatbphiplrfxrljtbe-auth-token', t); localStorage.setItem('fibro_opslagtip_later', String(Date.now())); if (en) localStorage.setItem('fibro_taal', 'en'); for (const [id, n] of Object.entries(namen)) localStorage.setItem('vriend_naam_' + id + '_' + uid, n) }", [token(uid), taal == 'en', {MARCEL: 'Marcel'} if uid != MARCEL else {}, uid])
     DB['sleutels'][uid] = pg.evaluate(SLEUTEL, uid)
     return ctx, pg, fouten
-def tegels(pg): return pg.eval_on_selector_all('#belTegels .tegel', "els => els.map(e => ({ naam: (e.querySelector('.tnaam') || e).textContent, cls: e.className, stil: !!e.querySelector('.tstil'), hand: !!e.querySelector('.thand') }))")
+def tegels(pg): return pg.eval_on_selector_all('#belTegels .tegel', "els => els.map(e => ({ naam: (e.querySelector('.tnaam') || e).textContent, cls: e.className, stil: !!e.querySelector('.tstil:not([hidden])'), hand: !!e.querySelector('.thand:not([hidden])') }))")
 def bram_tegel(pg): return pg.locator('#belTegels .tegel', has_text='Bram')
 try:
     with sync_playwright() as p:
@@ -249,7 +249,7 @@ try:
         if os.environ.get('SHOT'): m.screenshot(path=os.environ['SHOT'] + '/m282.png')
         # E
         bp.click('#belMic'); bp.click('#belHand')
-        try: m.wait_for_function("(() => { const e = [...document.querySelectorAll('#belTegels .tegel')].find(e => e.textContent.includes('Bram')); return e && e.querySelector('.tstil') && e.querySelector('.thand') })()", timeout=8000); ok = True
+        try: m.wait_for_function("(() => { const e = [...document.querySelectorAll('#belTegels .tegel')].find(e => e.textContent.includes('Bram')); return e && e.querySelector('.tstil:not([hidden])') && e.querySelector('.thand:not([hidden])') })()", timeout=8000); ok = True
         except Exception: ok = False
         check(ok, 'E: Marcel ziet 🔇 en ✋ bij Bram (%s)' % tegels(m))
         check(bp.get_attribute('#belMic', 'aria-pressed') == 'true' and 'Microfoon uit' in bp.inner_text('#belMic'), 'E: knop zegt Microfoon uit')

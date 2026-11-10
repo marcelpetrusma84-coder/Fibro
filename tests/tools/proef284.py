@@ -4,7 +4,7 @@
 #  B. Marcel maakt een poll (3 keuzes, een erbij gezet): een versleuteld bericht, kaartje met 0 stemmen
 #  C. Bram stemt Sushi (een 'stil' versleuteld bericht) -> Sushi 1 met zijn naam, ook bij Marcel; Bram kiest
 #     daarna Pizza -> Sushi 0, Pizza 1 (een keuze); een poll met 'meer keuzes' laat twee keuzes tegelijk toe
-#  D. Marcel maakt een afspraak (morgen 19:30, Pathé); Bram zegt Ja -> bij Marcel 'Ja 1' met de naam;
+#  D. Marcel maakt een afspraak (morgen 19:30 - 22:00, Pathé): kaartje met Ja (groen) en Nee (rood); Bram zegt Ja -> bij Marcel 'Ja 1' met de naam;
 #     nog eens Ja = weer weg
 #  E. geen paginafouten
 # python3 -I proef284.py <map>
@@ -259,10 +259,12 @@ try:
         m.click('#maakVak .doe')
         check(not m.is_hidden('#maakVak'), 'D: zonder titel niet geplaatst')
         morgen = time.strftime('%Y-%m-%d', time.localtime(time.time() + 86400))
-        m.fill('.a-titel', 'Bioscoop'); m.fill('.a-datum', morgen); m.fill('.a-tijd', '19:30'); m.fill('.a-waar', 'Pathé')
+        m.fill('.a-titel', 'Bioscoop'); m.fill('.a-datum', morgen); m.fill('.a-tijd', '19:30'); m.fill('.a-tottijd', '22:00'); m.fill('.a-waar', 'Pathé')
         m.click('#maakVak .doe'); m.wait_for_selector('.bubbel.kaart >> text=Bioscoop')
         t = kaart(m, 'Bioscoop').inner_text()
-        check('19:30' in t and 'Pathé' in t and 'geweest' not in t, 'D: afspraakkaartje (%r)' % t)
+        knoppen = kaart(m, 'Bioscoop').locator('.k-antw button').evaluate_all('els => els.map(e => [e.dataset.antw, getComputedStyle(e).backgroundColor])')
+        check(t.startswith('Afspraak') and '19:30 - 22:00' in t and 'Pathé' in t and 'geweest' not in t, 'D: afspraakkaartje met begin en eind (%r)' % t)
+        check([k[0] for k in knoppen] == ['ja', 'nee'] and knoppen[0][1] != knoppen[1][1], 'D: twee knoppen, Ja groen en Nee rood (%s)' % knoppen)
         open_(bp); bp.wait_for_selector('.bubbel.kaart >> text=Bioscoop')
         kaart(bp, 'Bioscoop').locator('button[data-antw=ja]').click(); bp.wait_for_timeout(600)
         check(kaart(bp, 'Bioscoop').locator('button[data-antw=ja]').get_attribute('aria-pressed') == 'true' and DB['berichten'][-1].get('stil') is True, 'D: Bram zegt Ja (stil bericht)')

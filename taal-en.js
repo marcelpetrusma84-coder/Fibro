@@ -2173,4 +2173,9 @@ window.FIBRO_EN = {
   "✅ Ja": "✅ Yes",
   "❌ Nee": "❌ No",
   "❓ Misschien": "❓ Maybe",
+  "Begint op": "Starts on",
+  "Tot (mag leeg)": "Until (optional)",
+  "Het einde ligt voor het begin": "The end is before the start",
+  "Ja": "Yes",
+  "Nee": "No",
 }

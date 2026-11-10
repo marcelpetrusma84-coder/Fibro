@@ -170,16 +170,26 @@ button { font-family:inherit; }
 .k-voet { font-size:12px; color:var(--muted); margin-top:4px; }
 .k-wanneer { font-size:14px; margin:6px 0 2px; }
 .k-waar { font-size:13px; color:var(--muted); margin-bottom:8px; overflow-wrap:anywhere; }
-.k-antw { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px; margin:8px 0 4px; }
-.k-antw button { padding:8px 2px; border-radius:12px; border:1px solid rgba(225,204,255,.25); background:rgba(10,4,20,0.35); color:#fff; font:inherit; font-size:12px; cursor:pointer; }
-.k-antw button[aria-pressed="true"] { border-color:#c084fc; background:linear-gradient(155deg, rgba(192,132,252,.38), rgba(192,132,252,.18)); }
 .kaart.voorbij .k-antw { opacity:.6; }
+/* afspraak: donker kaartje met grote Ja (groen) en Nee (rood), naar Marcels ontwerp */
+.bubbel.kaart.afspraak, .b-rij.mijn .bubbel.kaart.afspraak { background:#1e1726; border:1px solid rgba(255,255,255,0.09); color:#fff; border-radius:20px; padding:12px 14px 12px; }
+.afspraak .k-label { font-size:13px; color:rgba(255,255,255,.62); }
+.afspraak .k-titel { font-size:18px; font-weight:700; margin-top:2px; overflow-wrap:anywhere; }
+.afspraak .k-wanneer { font-size:13px; color:rgba(255,255,255,.85); margin:3px 0 0; }
+.afspraak .k-waar { font-size:13px; color:rgba(255,255,255,.62); margin:2px 0 0; }
+.k-antw { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 0 2px; }
+.k-antw button { height:42px; border-radius:21px; border:2px solid transparent; font:inherit; font-size:16px; cursor:pointer; transition:filter .15s, border-color .15s; }
+.k-antw button[data-antw="ja"] { background:#86d987; color:#10240f; }
+.k-antw button[data-antw="nee"] { background:#6e3236; color:#f6dede; }
+.k-antw button[aria-pressed="true"] { border-color:#fff; font-weight:700; }
+.k-antw:has(button[aria-pressed="true"]) button[aria-pressed="false"] { filter:saturate(.45) brightness(.8); }
+.afspraak .k-wie { color:rgba(255,255,255,.62); margin-top:6px; }
 /* in je eigen (paarse) bubbel: wit in plaats van paars, anders zie je de balkjes niet */
 .b-rij.mijn .k-kop svg { color:#fff; }
 .b-rij.mijn .k-balk { background:linear-gradient(90deg, rgba(255,255,255,.32), rgba(255,255,255,.16)); }
-.b-rij.mijn .k-keuze.mijn, .b-rij.mijn .k-antw button[aria-pressed="true"] { border-color:#fff; }
+.b-rij.mijn .k-keuze.mijn { border-color:#fff; }
 .b-rij.mijn .k-keuze.mijn .k-vink { background:#fff; border-color:#fff; color:#6a2bab; }
-.b-rij.mijn .k-sub, .b-rij.mijn .k-namen, .b-rij.mijn .k-voet, .b-rij.mijn .k-waar { color:rgba(255,255,255,.78); }
+.b-rij.mijn .k-sub, .b-rij.mijn .k-voet, .b-rij.mijn .bubbel.kaart:not(.afspraak) .k-namen { color:rgba(255,255,255,.78); }
 /* het venster om een poll of afspraak te maken */
 #maakVak { position:fixed; inset:0; z-index:60; display:flex; align-items:flex-end; justify-content:center; background:rgba(0,0,0,0.55); }
 #maakVak[hidden] { display:none; }
@@ -598,7 +608,8 @@ button { font-family:inherit; }
     try {
       const a = JSON.parse(json)
       if (!a || typeof a.titel !== 'string' || !a.titel.trim() || !/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(String(a.wanneer))) return null
-      return { titel: a.titel.trim().slice(0, 80), wanneer: a.wanneer, waar: typeof a.waar === 'string' ? a.waar.trim().slice(0, 80) : '' }
+      const tot = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(String(a.tot)) && String(a.tot) >= String(a.wanneer) ? a.tot : ''
+      return { titel: a.titel.trim().slice(0, 80), wanneer: a.wanneer, tot, waar: typeof a.waar === 'string' ? a.waar.trim().slice(0, 80) : '' }
     } catch (e) { return null }
   }
   function kortVan(tekst) {
@@ -653,7 +664,6 @@ button { font-family:inherit; }
 
   // ── Poll en afspraak tekenen ──
   const ICOON_POLL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>'
-  const ICOON_AGENDA = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>'
   const naamKort = id => id === ik ? T('jij') : naamVan(lidVan(id))
   function zetStem(id, van, keuzes) {
     let m = stemmen.get(id); if (!m) { m = new Map(); stemmen.set(id, m) }
@@ -699,15 +709,16 @@ button { font-family:inherit; }
     voet.textContent = geldig.length === 1 ? T('1 stem') : T('{n} stemmen', { n: geldig.length })
     bub.appendChild(voet)
   }
+  // '2026-12-25T10:00' -> '25 dec 10:00' (zoals in Marcels ontwerp)
   function wanneerTekst(w) {
     const [d, t] = String(w).split('T'), [j, mnd, dag] = d.split('-').map(Number)
     const loc = (() => { try { return localStorage.getItem('fibro_taal') === 'en' ? 'en-GB' : 'nl-NL' } catch (e) { return 'nl-NL' } })()
-    const datum = new Date(j, mnd - 1, dag)
-    let s = datum.toLocaleDateString(loc, { weekday: 'long', day: 'numeric', month: 'long' })
-    if (t) s += ' · ' + t
-    return s
+    let s = new Date(j, mnd - 1, dag).toLocaleDateString(loc, { day: 'numeric', month: 'short' }).replace('.', '')
+    if (j !== new Date().getFullYear()) s += ' ' + j
+    return t ? s + ' ' + t : s
   }
-  function afspraakVoorbij(w) {
+  function afspraakVoorbij(a) {
+    const w = a.tot || a.wanneer
     const [d, t] = String(w).split('T'), [j, mnd, dag] = d.split('-').map(Number), [u, mi] = (t || '23:59').split(':').map(Number)
     return new Date(j, mnd - 1, dag, u, mi).getTime() < Date.now()
   }
@@ -717,19 +728,20 @@ button { font-family:inherit; }
     const { data: a, bub } = kaart
     const m = komen.get(id) || new Map()
     const mijn = m.get(ik) || ''
-    const voorbij = afspraakVoorbij(a.wanneer)
-    bub.className = 'bubbel kaart' + (voorbij ? ' voorbij' : '')
-    bub.innerHTML = '<div class="k-kop">' + ICOON_AGENDA + '<span class="k-titel"></span></div><div class="k-wanneer"></div>' + (a.waar ? '<div class="k-waar"></div>' : '') + '<div class="k-antw"></div><div class="k-namen k-wie"></div>'
+    const voorbij = afspraakVoorbij(a)
+    bub.className = 'bubbel kaart afspraak' + (voorbij ? ' voorbij' : '')
+    bub.innerHTML = '<div class="k-label"></div><div class="k-titel"></div><div class="k-wanneer"></div>' + (a.waar ? '<div class="k-waar"></div>' : '') + '<div class="k-antw"></div><div class="k-namen k-wie"></div>'
+    bub.querySelector('.k-label').textContent = T('Afspraak')
     bub.querySelector('.k-titel').textContent = a.titel
-    bub.querySelector('.k-wanneer').textContent = wanneerTekst(a.wanneer) + (voorbij ? ' · ' + T('geweest') : '')
+    bub.querySelector('.k-wanneer').textContent = wanneerTekst(a.wanneer) + (a.tot ? ' - ' + (a.tot.slice(0, 10) === a.wanneer.slice(0, 10) && a.tot.includes('T') ? a.tot.slice(11) : wanneerTekst(a.tot)) : '') + (voorbij ? ' · ' + T('geweest') : '')
     if (a.waar) bub.querySelector('.k-waar').textContent = '\u{1F4CD} ' + a.waar
-    const ANTW = [['ja', T('✅ Ja')], ['misschien', T('❓ Misschien')], ['nee', T('❌ Nee')]]
+    const ANTW = [['ja', T('Ja')], ['nee', T('Nee')]]
     const regels = []
     for (const [w, label] of ANTW) {
       const wie = [...m].filter(([, x]) => x === w).map(([van]) => van)
       const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', String(mijn === w))
       b.dataset.antw = w
-      b.textContent = label + (wie.length ? ' ' + wie.length : '')
+      b.textContent = label + (wie.length ? ' · ' + wie.length : '')
       b.addEventListener('click', () => {
         if (!mijnPriv) return
         const nieuw = mijn === w ? '' : w
@@ -1233,15 +1245,23 @@ button { font-family:inherit; }
   $('maakAfspraakKnop').addEventListener('click', () => {
     if (!mijnPriv || !groep) return
     const vel = openMaak(T('Nieuwe afspraak'), veld('a-titel', T('Wat gaan we doen?'), 'text', 80)
-      + '<div class="rij2">' + veld('a-datum', T('Datum'), 'date') + veld('a-tijd', T('Tijd (mag leeg)'), 'time') + '</div>'
+      + '<div class="rij2">' + veld('a-datum', T('Begint op'), 'date') + veld('a-tijd', T('Tijd (mag leeg)'), 'time') + '</div>'
+      + '<div class="rij2">' + veld('a-totdatum', T('Tot (mag leeg)'), 'date') + veld('a-tottijd', T('Tijd (mag leeg)'), 'time') + '</div>'
       + veld('a-waar', T('Waar? (mag leeg)'), 'text', 80), async vel => {
       const titel = vel.querySelector('.a-titel').value.trim(), datum = vel.querySelector('.a-datum').value, tijd = vel.querySelector('.a-tijd').value
       if (!titel) { toast(T('Vul in wat jullie gaan doen')); return false }
       if (!/^\d{4}-\d{2}-\d{2}$/.test(datum)) { toast(T('Kies een datum')); return false }
       const wanneer = datum + (/^\d{2}:\d{2}$/.test(tijd) ? 'T' + tijd : '')
-      return verstuur('afspraak:' + JSON.stringify({ titel, wanneer, waar: vel.querySelector('.a-waar').value.trim() }))
+      const totDatum = vel.querySelector('.a-totdatum').value, totTijd = vel.querySelector('.a-tottijd').value
+      const tot = /^\d{4}-\d{2}-\d{2}$/.test(totDatum) ? totDatum + (/^\d{2}:\d{2}$/.test(totTijd) ? 'T' + totTijd : '') : (/^\d{2}:\d{2}$/.test(totTijd) ? datum + 'T' + totTijd : '')
+      if (tot && tot < wanneer) { toast(T('Het einde ligt voor het begin')); return false }
+      const afspraak = { titel, wanneer, waar: vel.querySelector('.a-waar').value.trim() }
+      if (tot) afspraak.tot = tot
+      return verstuur('afspraak:' + JSON.stringify(afspraak))
     })
-    const nu = new Date(); vel.querySelector('.a-datum').min = nu.getFullYear() + '-' + String(nu.getMonth() + 1).padStart(2, '0') + '-' + String(nu.getDate()).padStart(2, '0')
+    const nu = new Date(), vandaag = nu.getFullYear() + '-' + String(nu.getMonth() + 1).padStart(2, '0') + '-' + String(nu.getDate()).padStart(2, '0')
+    vel.querySelector('.a-datum').min = vandaag; vel.querySelector('.a-totdatum').min = vandaag
+    vel.querySelector('.a-datum').addEventListener('change', e => { const t = vel.querySelector('.a-totdatum'); t.min = e.target.value || vandaag; if (t.value && t.value < t.min) t.value = '' })
   })
   for (const b of document.querySelectorAll('.balk-knop.later')) b.addEventListener('click', () => toast(T('Samen spelen in een groep komt later')))
   $('fotoKnop').addEventListener('click', () => { if (!mijnPriv || !groep) return; $('fotoInvoer').click() })

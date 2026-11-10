@@ -213,6 +213,8 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
       @media (prefers-reduced-motion:reduce) { .sch-knight-holding::after { animation:none; opacity:.8; } }
       .sch-vak { border:0; border-radius:0; padding:0; min-width:0; position:relative; display:grid; place-items:center; cursor:pointer; aspect-ratio:1; }
       .sch-vak:focus-visible { outline:3px solid #55dfff; outline-offset:-3px; z-index:2; }
+      .sch-legal-dot { position:absolute; z-index:2; left:50%; top:50%; width:25%; aspect-ratio:1; border:1px solid #111823; border-radius:50%; background:radial-gradient(circle at 32% 24%,#eaffef 0 5%,#94f5b3 16%,#39d979 42%,#13a856 70%,#08643a 100%); box-shadow:inset 0 1px 1px #ffffffd9,inset 0 -2px 3px #03432499,0 1px 3px #000b,0 0 0 1px #ffffffbb; transform:translate(-50%,-50%); pointer-events:none; }
+      .sch-legal-capture { position:absolute; z-index:2; inset:3px; border:2px solid #121720; border-radius:8px; background:linear-gradient(145deg,#ff8a8eb0,#f34254a0 52%,#a81336b0); box-shadow:inset 0 1px 0 #fff9,inset 0 -3px 7px #4c071e7a,0 1px 4px #000a,0 0 0 1px #ffdce0; pointer-events:none; }
       .sch-stuk { display:block; width:88%; aspect-ratio:1; line-height:1; pointer-events:none; position:relative; z-index:1; filter:drop-shadow(0 2px 1px #0006); }
       .sch-figuur { display:block; width:100%; height:100%; overflow:visible; }
       .sch-ivoor { color:#fff9e9; --sch-line:#40362e; }
@@ -1439,9 +1441,7 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         if (isMogelijkeZet && !paardRoutesUI?.active) {
           const stip = document.createElement('div')
           const heeftStuk = !!staat.bord[r][k]
-          stip.style.cssText = heeftStuk
-            ? 'position:absolute;inset:2px;border:3px solid rgba(220,38,38,0.7);border-radius:4px;pointer-events:none;'
-            : 'position:absolute;width:12px;height:12px;border-radius:50%;background:rgba(34,197,94,0.6);pointer-events:none;'
+          stip.className = heeftStuk ? 'sch-legal-capture' : 'sch-legal-dot'
           vakje.appendChild(stip)
         }
 

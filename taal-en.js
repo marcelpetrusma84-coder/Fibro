@@ -2145,4 +2145,10 @@ window.FIBRO_EN = {
   "tot 4": "up to 4",
   // knoppen in de voice chat (10 november 2026, taal-en.js?v=88)
   "Knoppen tonen of verbergen": "Show or hide the buttons",
+  // lijn-iconen bij Stijl (10 november 2026, taal-en.js?v=89)
+  "Achtergrond": "Background",
+  "Animatie": "Animation",
+  "Lettertype": "Font",
+  "Kleur": "Colour",
+  "Widgets": "Widgets",
 }

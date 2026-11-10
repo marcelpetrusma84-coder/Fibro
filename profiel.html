@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=88"></script>
+<script src="taal.js?v=89"></script>
 <script src="appslot.js?v=3"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Vuurwerk': 'Fireworks', 'Onweer': 'Thunderstorm', 'Glitter': 'Glitter' }) // v234: nieuwe animaties</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Gastenboek zonder lijntjes': 'Guestbook without lines', 'Gewoon in je eigen kleuren, zonder lijntjespapier': 'Plain, in your own colours, without lined paper' }) // v235</script>
@@ -143,7 +143,7 @@ input, textarea { font-size:16px !important; }
 <link rel="stylesheet" href="android-fix.css?v=1">
 <link rel="icon" href="icon.svg?v=4" type="image/svg+xml">
 <link rel="stylesheet" href="stijl.css?v=3">
-<link rel="stylesheet" href="profile-controls.css?v=2">
+<link rel="stylesheet" href="profile-controls.css?v=3">
 <script src="profile-controls.js?v=2"></script>
 <link rel="stylesheet" href="app-depth.css?v=2">
 </head>
@@ -161,23 +161,23 @@ input, textarea { font-size:16px !important; }
       <div class="profile-tab-group" role="presentation">
         <span class="profile-tab-group-label" aria-hidden="true" data-t>Persoonlijk</span>
         <div class="profile-tab-group-buttons" role="presentation">
-          <button type="button" role="tab" id="tab-profiel" class="main-tab active" data-panel="profiel" aria-controls="panel-profiel" aria-selected="true" tabindex="0" onclick="switchTab('profiel')" data-t>👤 Profiel</button>
+          <button type="button" role="tab" id="tab-profiel" class="main-tab active" data-panel="profiel" aria-controls="panel-profiel" aria-selected="true" tabindex="0" onclick="switchTab('profiel')"><svg class="tab-icoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="tab-woord" data-t>Profiel</span></button>
         </div>
       </div>
       <div class="profile-tab-group" role="presentation">
         <span class="profile-tab-group-label" aria-hidden="true" data-t>Uiterlijk</span>
         <div class="profile-tab-group-buttons" role="presentation">
-          <button type="button" role="tab" id="tab-achtergrond" class="main-tab" data-panel="achtergrond" aria-controls="panel-achtergrond" aria-selected="false" tabindex="-1" onclick="switchTab('achtergrond')" data-t>🖼 Achtergrond</button>
-          <button type="button" role="tab" id="tab-animatie" class="main-tab" data-panel="animatie" aria-controls="panel-animatie" aria-selected="false" tabindex="-1" onclick="switchTab('animatie')" data-t>✨ Animatie</button>
-          <button type="button" role="tab" id="tab-lettertype" class="main-tab" data-panel="lettertype" aria-controls="panel-lettertype" aria-selected="false" tabindex="-1" onclick="switchTab('lettertype')" data-t>🔤 Lettertype</button>
-          <button type="button" role="tab" id="tab-kleur" class="main-tab" data-panel="kleur" aria-controls="panel-kleur" aria-selected="false" tabindex="-1" onclick="switchTab('kleur')" data-t>💜 Kleur</button>
+          <button type="button" role="tab" id="tab-achtergrond" class="main-tab" data-panel="achtergrond" aria-controls="panel-achtergrond" aria-selected="false" tabindex="-1" onclick="switchTab('achtergrond')"><svg class="tab-icoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg><span class="tab-woord" data-t>Achtergrond</span></button>
+          <button type="button" role="tab" id="tab-animatie" class="main-tab" data-panel="animatie" aria-controls="panel-animatie" aria-selected="false" tabindex="-1" onclick="switchTab('animatie')"><svg class="tab-icoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3l1.8 4.7 4.7 1.8-4.7 1.8L11 16l-1.8-4.7L4.5 9.5l4.7-1.8z"/><path d="M18.5 14l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg><span class="tab-woord" data-t>Animatie</span></button>
+          <button type="button" role="tab" id="tab-lettertype" class="main-tab" data-panel="lettertype" aria-controls="panel-lettertype" aria-selected="false" tabindex="-1" onclick="switchTab('lettertype')"><svg class="tab-icoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V5h16v2M12 5v14M9 19h6"/></svg><span class="tab-woord" data-t>Lettertype</span></button>
+          <button type="button" role="tab" id="tab-kleur" class="main-tab" data-panel="kleur" aria-controls="panel-kleur" aria-selected="false" tabindex="-1" onclick="switchTab('kleur')"><svg class="tab-icoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg><span class="tab-woord" data-t>Kleur</span></button>
         </div>
       </div>
       <div class="profile-tab-group" role="presentation">
         <span class="profile-tab-group-label" aria-hidden="true" data-t>Inhoud</span>
         <div class="profile-tab-group-buttons" role="presentation">
-          <button type="button" role="tab" id="tab-widgets" class="main-tab" data-panel="widgets" aria-controls="panel-widgets" aria-selected="false" tabindex="-1" onclick="switchTab('widgets')" data-t>🧩 Widgets</button>
-          <button type="button" role="tab" id="tab-stickers" class="main-tab" data-panel="stickers" aria-controls="panel-stickers" aria-selected="false" tabindex="-1" onclick="switchTab('stickers')" data-t>🎨 Stickers</button>
+          <button type="button" role="tab" id="tab-widgets" class="main-tab" data-panel="widgets" aria-controls="panel-widgets" aria-selected="false" tabindex="-1" onclick="switchTab('widgets')"><svg class="tab-icoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="tab-woord" data-t>Widgets</span></button>
+          <button type="button" role="tab" id="tab-stickers" class="main-tab" data-panel="stickers" aria-controls="panel-stickers" aria-selected="false" tabindex="-1" onclick="switchTab('stickers')"><svg class="tab-icoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 0 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H17a4 4 0 0 0 4-4c0-4.4-4-8.2-9-8.2z"/><path d="M7.5 11h.01M10.5 7.5h.01M15 8h.01"/></svg><span class="tab-woord" data-t>Stickers</span></button>
         </div>
       </div>
     </div>

@@ -10,6 +10,11 @@
 .profile-tab-group-buttons { display:flex; gap:7px; }
 .profile-nav .main-tab { min-height:44px; border:1px solid rgba(230,208,255,.37); border-radius:12px; padding:10px 13px; background:linear-gradient(160deg,#524062,#2b1c3c 75%); color:#fff; font:inherit; font-size:13px; line-height:1.2; font-weight:600; white-space:nowrap; cursor:pointer; scroll-snap-align:start; box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 3px 0 #140c20,0 5px 8px rgba(0,0,0,.32); transition:transform .15s,box-shadow .15s,border-color .15s; }
 .profile-nav .main-tab.active { color:#1e0d32; border-color:#f6e8ff; background:linear-gradient(145deg,#f0d7ff,#cc9bf5 75%); box-shadow:inset 0 1px 0 #fff,0 3px 0 #6c458a,0 4px 12px rgba(208,145,255,.25); }
+/* v3 (10 nov 2026): zoals het menu onderaan - lijn-icoon boven het woord, wit; gekozen = lichtpaars vlak met paars icoon en woord */
+.profile-nav .main-tab { display:flex; flex-direction:column; align-items:center; gap:4px; min-width:76px; padding:8px 10px 7px; border-color:transparent; border-radius:16px; background:transparent; box-shadow:none; font-weight:500; transition:background-color .16s ease,border-color .16s ease,color .16s ease; }
+.profile-nav .main-tab .tab-icoon { display:block; flex:none; }
+.profile-nav .main-tab.active { color:var(--accent,#c084fc); border-color:var(--fibro-rim,rgba(225,204,255,.28)); background:linear-gradient(155deg,var(--fibro-accent-light,rgba(192,132,252,.23)),var(--fibro-accent-wash,rgba(192,132,252,.12))); box-shadow:inset 0 1px 0 #ffffff17,0 3px 8px #0003; }
+.profile-nav .main-tab:active { transform:translateY(1px); box-shadow:none; }
 .profile-nav .main-tab:active,.profile-nav-arrow:active:not(:disabled) { transform:translateY(2px); box-shadow:inset 0 1px 3px rgba(0,0,0,.4),0 1px 0 #140c20; }
 .profile-nav-arrow { align-self:center; min-width:32px; min-height:48px; padding:0; border:1px solid rgba(225,200,255,.45); border-radius:10px; background:linear-gradient(145deg,#665075,#30213e); color:#fff; font:inherit; font-size:24px; line-height:1; box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 3px 0 #140c20; cursor:pointer; transition:opacity .15s,transform .15s; }
 .profile-nav-arrow:disabled { opacity:.26; box-shadow:inset 0 1px 4px rgba(0,0,0,.45); cursor:default; }

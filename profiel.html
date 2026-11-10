@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=81"></script>
+<script src="taal.js?v=95"></script>
 <script src="appslot.js?v=3"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Vuurwerk': 'Fireworks', 'Onweer': 'Thunderstorm', 'Glitter': 'Glitter' }) // v234: nieuwe animaties</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Gastenboek zonder lijntjes': 'Guestbook without lines', 'Gewoon in je eigen kleuren, zonder lijntjespapier': 'Plain, in your own colours, without lined paper' }) // v235</script>
@@ -48,6 +48,7 @@ body{background:var(--bg);background-attachment:fixed;background-size:cover;back
 .main-tabs::-webkit-scrollbar{display:none;}
 .main-tab{font-size:14px;padding:16px 16px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;flex-shrink:0;}
 .main-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.store-tab{text-decoration:none;}.font-store{color:var(--accent);font-weight:600;}
 .panel{display:none;padding:14px;}
 .panel.active{display:block;}
 .section{margin-bottom:20px;}
@@ -143,7 +144,7 @@ input, textarea { font-size:16px !important; }
 <link rel="stylesheet" href="android-fix.css?v=1">
 <link rel="icon" href="icon.svg?v=4" type="image/svg+xml">
 <link rel="stylesheet" href="stijl.css?v=3">
-<link rel="stylesheet" href="profile-controls.css?v=2">
+<link rel="stylesheet" href="profile-controls.css?v=3">
 <script src="profile-controls.js?v=2"></script>
 <link rel="stylesheet" href="app-depth.css?v=2">
 </head>
@@ -161,23 +162,24 @@ input, textarea { font-size:16px !important; }
       <div class="profile-tab-group" role="presentation">
         <span class="profile-tab-group-label" aria-hidden="true" data-t>Persoonlijk</span>
         <div class="profile-tab-group-buttons" role="presentation">
-          <button type="button" role="tab" id="tab-profiel" class="main-tab active" data-panel="profiel" aria-controls="panel-profiel" aria-selected="true" tabindex="0" onclick="switchTab('profiel')" data-t>👤 Profiel</button>
+          <button type="button" role="tab" id="tab-profiel" class="main-tab active" data-panel="profiel" aria-controls="panel-profiel" aria-selected="true" tabindex="0" onclick="switchTab('profiel')"><svg class="tab-icoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="tab-woord" data-t>Profiel</span></button>
         </div>
       </div>
       <div class="profile-tab-group" role="presentation">
         <span class="profile-tab-group-label" aria-hidden="true" data-t>Uiterlijk</span>
         <div class="profile-tab-group-buttons" role="presentation">
-          <button type="button" role="tab" id="tab-achtergrond" class="main-tab" data-panel="achtergrond" aria-controls="panel-achtergrond" aria-selected="false" tabindex="-1" onclick="switchTab('achtergrond')" data-t>🖼 Achtergrond</button>
-          <button type="button" role="tab" id="tab-animatie" class="main-tab" data-panel="animatie" aria-controls="panel-animatie" aria-selected="false" tabindex="-1" onclick="switchTab('animatie')" data-t>✨ Animatie</button>
-          <button type="button" role="tab" id="tab-lettertype" class="main-tab" data-panel="lettertype" aria-controls="panel-lettertype" aria-selected="false" tabindex="-1" onclick="switchTab('lettertype')" data-t>🔤 Lettertype</button>
-          <button type="button" role="tab" id="tab-kleur" class="main-tab" data-panel="kleur" aria-controls="panel-kleur" aria-selected="false" tabindex="-1" onclick="switchTab('kleur')" data-t>💜 Kleur</button>
+          <button type="button" role="tab" id="tab-achtergrond" class="main-tab" data-panel="achtergrond" aria-controls="panel-achtergrond" aria-selected="false" tabindex="-1" onclick="switchTab('achtergrond')"><svg class="tab-icoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg><span class="tab-woord" data-t>Achtergrond</span></button>
+          <button type="button" role="tab" id="tab-animatie" class="main-tab" data-panel="animatie" aria-controls="panel-animatie" aria-selected="false" tabindex="-1" onclick="switchTab('animatie')"><svg class="tab-icoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3l1.8 4.7 4.7 1.8-4.7 1.8L11 16l-1.8-4.7L4.5 9.5l4.7-1.8z"/><path d="M18.5 14l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg><span class="tab-woord" data-t>Animatie</span></button>
+          <button type="button" role="tab" id="tab-lettertype" class="main-tab" data-panel="lettertype" aria-controls="panel-lettertype" aria-selected="false" tabindex="-1" onclick="switchTab('lettertype')"><svg class="tab-icoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V5h16v2M12 5v14M9 19h6"/></svg><span class="tab-woord" data-t>Lettertype</span></button>
+          <button type="button" role="tab" id="tab-kleur" class="main-tab" data-panel="kleur" aria-controls="panel-kleur" aria-selected="false" tabindex="-1" onclick="switchTab('kleur')"><svg class="tab-icoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg><span class="tab-woord" data-t>Kleur</span></button>
         </div>
       </div>
       <div class="profile-tab-group" role="presentation">
         <span class="profile-tab-group-label" aria-hidden="true" data-t>Inhoud</span>
         <div class="profile-tab-group-buttons" role="presentation">
-          <button type="button" role="tab" id="tab-widgets" class="main-tab" data-panel="widgets" aria-controls="panel-widgets" aria-selected="false" tabindex="-1" onclick="switchTab('widgets')" data-t>🧩 Widgets</button>
-          <button type="button" role="tab" id="tab-stickers" class="main-tab" data-panel="stickers" aria-controls="panel-stickers" aria-selected="false" tabindex="-1" onclick="switchTab('stickers')" data-t>🎨 Stickers</button>
+          <button type="button" role="tab" id="tab-widgets" class="main-tab" data-panel="widgets" aria-controls="panel-widgets" aria-selected="false" tabindex="-1" onclick="switchTab('widgets')"><svg class="tab-icoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="tab-woord" data-t>Widgets</span></button>
+          <button type="button" role="tab" id="tab-stickers" class="main-tab" data-panel="stickers" aria-controls="panel-stickers" aria-selected="false" tabindex="-1" onclick="switchTab('stickers')"><svg class="tab-icoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 14.5V7a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v10a4 4 0 0 0 4 4h7.5"/><path d="M21 14.5 14.5 21v-3a3.5 3.5 0 0 1 3.5-3.5z"/><path d="M8.5 12.5a4.5 4.5 0 0 0 7 0M9 8.5h.01M15 8.5h.01"/></svg><span class="tab-woord" data-t>Stickers</span></button>
+          <a href="store.html" id="tab-store" class="main-tab store-tab" style="display:none" aria-label="Stekky Store" data-t-attr="aria-label"><svg class="tab-icoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/></svg><span class="tab-woord" data-t>Store</span></a>
         </div>
       </div>
     </div>
@@ -499,10 +501,10 @@ input, textarea { font-size:16px !important; }
 </div>
 </main>
 <div class="bottom-nav" role="navigation" aria-label="Menu">
-  <div class="nav-item" onclick="window.location.href='index.html'" data-t><div class="nav-icon">🏠</div>Home</div>
-  <div class="nav-item" onclick="window.location.href='vrienden.html'" data-t><div class="nav-icon">👥</div>Vrienden</div>
-  <div class="nav-item" onclick="window.location.href='chat.html'" data-t><div class="nav-icon">💬</div>Chat</div>
-  <div class="nav-item active" data-t><div class="nav-icon">🖍️</div>Stijl</div>
+  <div class="nav-item" onclick="window.location.href='index.html'"><div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></div><div class="nav-label" data-t>Home</div></div>
+  <div class="nav-item" onclick="window.location.href='vrienden.html'"><div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/></svg></div><div class="nav-label" data-t>Vrienden</div></div>
+  <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></div><div class="nav-label" data-t>Chat</div></div>
+  <div class="nav-item active"><div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg></div><div class="nav-label" data-t>Stijl</div></div>
 </div>
 <script>
 // v129: de tekst (naam, @naam, bio, mood, online) meteen uit het geheugen van dit toestel tonen,
@@ -564,7 +566,7 @@ function _profielUid() {
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
 import { startMeldingen } from './meldingen.js?v=188'
-import { laadThema, bewaarThemaCache } from './thema.js?v=235'
+import { laadThema, bewaarThemaCache } from './thema.js?v=236'
 import { startHeartbeat } from './heartbeat.js?v=117'
 import { volgOnline } from './onlinestip.js?v=1' // v274: vrienden zien meteen of je de app in beeld hebt
 import { initSync } from './sync.js?v=255'
@@ -581,7 +583,8 @@ const widgetBewaking = maakWidgetWijzigingsBewaking({ getWidgets: () => actieveW
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
 // v173: de oude emoji-stickers (Natuur & Planten, Sfeer & Magie, Muziek & Kunst, Dieren, 'Actieve stickers') en de
 // widget 'Sticker board' zijn weg: ze werden alleen op dit toestel bewaard en nergens getoond.
-import { LETTERTYPES, laadFont } from './lettertypes.js?v=130'
+import { LETTERTYPES, STORE_LETTERTYPES, laadFont } from './lettertypes.js?v=131'
+import { bewaardeDownloads, mijnDownloads } from './store.js?v=1' // v131: Stekky Store
 import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=95'
 import { pasAnimatieToe, startOp as startAnimatieOp } from './animatie.js?v=235'
 window.blokAangepast = function(){
@@ -607,12 +610,18 @@ function vulBlokvelden(){
 }
 pasBlokstijlToe()
 setTimeout(vulBlokvelden, 300)
-const fonts = LETTERTYPES.map(f => ({ naam: f.naam, familie: "'" + f.naam + "'," + f.val, stijl: f.label }))
+const maakFont = f => ({ naam: f.naam, familie: "'" + f.naam + "'," + f.val, stijl: f.label, store: !!f.id })
+const basisFonts = LETTERTYPES.map(maakFont)
+let fonts = basisFonts
+// v131: lettertypes uit de Stekky Store staan alleen in de lijst als je ze gedownload hebt (of nu gebruikt)
+function zetStoreFonts(ids){fonts=basisFonts.concat(STORE_LETTERTYPES.map(maakFont).filter(f=>ids.has(STORE_LETTERTYPES.find(x=>x.naam===f.naam).id)||huidigLettertype===f.familie))}
 // v129: niet meer alle 38 lettertypen bij het openen laden; bouwFontGrid laadt ze als ze in beeld komen
-function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
+// v276: met Vergrendelingsmodus (Lockdown Mode) op een iPhone bestaat indexedDB niet in Safari. Dan niet vastlopen
+// (de rest van je profiel laadde niet meer), maar gewoon niets op het toestel bewaren.
+function openDB(){return new Promise((resolve,reject)=>{if(typeof indexedDB==='undefined'){reject('geen IndexedDB');return}const req=indexedDB.open('FibroDB',2);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('fotos'))db.createObjectStore('fotos',{keyPath:'id'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>reject('DB fout')})}
 async function dbAlleSleutels(){const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').getAllKeys();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>resolve([])})}
 async function metenOpslag(uid){try{const alle=await dbAlleSleutels();const mijn=alle.filter(k=>typeof k==='string'&&k.includes(uid));let totaal=0;for(const k of mijn){if(k==='video_data_'+uid){try{const m=JSON.parse(await laadFotoUitDB('video_meta_'+uid)||'null');if(m&&m.grootte>0){totaal+=m.grootte;continue}}catch(e){}}const d=await laadFotoUitDB(k);if(typeof d==='string')totaal+=d.length;else if(d&&d.size)totaal+=d.size}return totaal}catch(e){return 0}}
-async function slaFotoOp(id,data){const uid=huidigeUser&&huidigeUser.id;if(uid&&typeof id==='string'&&id.includes(uid)){const g=typeof data==='string'?data.length:(data&&data.size)||0;const nu=await metenOpslag(uid);if(nu+g>157286400){alert(T('Je profiel is vol (150 MB).\n\nVerwijder eerst een foto of nummer om ruimte te maken.'));return null}}const db=await openDB();return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=resolve})}
+async function slaFotoOp(id,data){const uid=huidigeUser&&huidigeUser.id;if(uid&&typeof id==='string'&&id.includes(uid)){const g=typeof data==='string'?data.length:(data&&data.size)||0;const nu=await metenOpslag(uid);if(nu+g>157286400){alert(T('Je profiel is vol (150 MB).\n\nVerwijder eerst een foto of nummer om ruimte te maken.'));return null}}let db;try{db=await openDB()}catch(e){return undefined}return new Promise((resolve)=>{const tx=db.transaction('fotos','readwrite');tx.objectStore('fotos').put({id,data});tx.oncomplete=resolve;tx.onerror=resolve;tx.onabort=resolve})}
 async function laadFotoUitDB(id){try{const db=await openDB();return new Promise((resolve)=>{const req=db.transaction('fotos').objectStore('fotos').get(id);req.onsuccess=e=>resolve(e.target.result?.data||null);req.onerror=()=>resolve(null)})}catch{return null}}
 // v138: foto's maken in een formaat dat dit toestel echt kan. Safari (iPhone) kan geen WebP maken en
 // Chromium geen AVIF: dan komt er stilletjes een PNG uit, 5-10x groter. Dus WebP als het kan, anders JPEG
@@ -895,6 +904,11 @@ async function init(){
   const zelfVeranderd=id=>!!(vroeg&&document.getElementById(id).value!==vroeg[id])
   // Testlinkje Fibro+ alleen voor de moderator (de database laat ook alleen de moderator is_plus wijzigen)
   if (profiel && profiel.is_moderator) { const tl = document.getElementById('testPlusLink'); if (tl) tl.style.display = '' }
+  // v131: de Stekky Store (store.html) is voorlopig alleen voor moderators: het laatste vakje in de balk
+  if (profiel && profiel.is_moderator) {
+    const st = document.getElementById('tab-store'); if (st) st.style.display = ''
+    mijnDownloads(supabase, huidigeUser.id).then(r => { if (!r.error) { zetStoreFonts(r.ids); bouwFontGrid() } }, () => {})
+  }
   if(profiel){
     // ── Laad alles uit localStorage ──
     const lokaal = JSON.parse(localStorage.getItem('fibro_profiel_' + huidigeUser.id) || '{}')
@@ -951,6 +965,7 @@ async function init(){
     onStatus: (vriendId, status) => console.log('P2P status:', vriendId, status)
   })
   if(!widgetBewaking.initialized){actieveWidgets=widgetBewaking.initialize(beginSchakelaars(localStorage,huidigeUser?.id));widgetBewaking.changed()}
+  zetStoreFonts(bewaardeDownloads(huidigeUser.id)) // v131
   bouwFontGrid();bouwAvatarPicker();updateWidgetToggles();toonHuidigeMuziek()
   startStickermaker(document.getElementById('eigenStickers'), huidigeUser.id, stickerWidgets) // v154: Stickerlab (eigen stickers)
   tekenFibroVellen(document.getElementById('fibroStickers'), stickerWidgets) // v157: stickervel 1 enz., met knopje voor Home
@@ -1101,7 +1116,7 @@ function stopAnimatiePreview(){if(stopVoorbeeld){stopVoorbeeld();stopVoorbeeld=n
 // v129: elk lettertype laat zichzelf zien (ook als er al een ander lettertype voor de hele pagina geldt),
 // en wordt pas geladen als het in beeld komt. Kiezen = meteen de hele pagina in dat lettertype.
 function pasLettertypeLiveToe(fam){document.querySelectorAll('style').forEach(st=>{if(st.id==='fibro-font-style'||/^\s*\*\s*\{\s*font-family:/.test(st.textContent))st.remove()});if(!fam){document.body.style.fontFamily='';return}try{laadFont(String(fam).split(',')[0].replace(/['"]/g,'').trim())}catch(e){}const st=document.createElement('style');st.id='fibro-font-style';st.textContent='* { font-family: '+fam+' !important; }';document.head.appendChild(st);document.body.style.fontFamily=fam}
-function bouwFontGrid(){const grid=document.getElementById('fontGrid');grid.innerHTML='';const zichtbaar=('IntersectionObserver' in window)?new IntersectionObserver(items=>{items.forEach(it=>{if(it.isIntersecting&&it.boundingClientRect.height>0){try{laadFont(it.target.dataset.font)}catch(e){};zichtbaar.unobserve(it.target)}})},{rootMargin:'300px'}):null;fonts.forEach(f=>{const div=document.createElement('div');div.className='font-item'+(huidigLettertype===f.familie?' selected':'');div.dataset.font=f.naam;div.innerHTML=`<div class="font-preview" style="font-family:${f.familie} !important;">${f.naam}</div><div class="font-zin" style="font-family:${f.familie} !important;">${T('Het leven is mooi & bijzonder')}</div><div class="font-name">${T('lettertype|'+f.stijl)}</div>`;div.onclick=()=>{document.querySelectorAll('.font-item').forEach(i=>i.classList.remove('selected'));div.classList.add('selected');huidigLettertype=f.familie;pasLettertypeLiveToe(f.familie)};grid.appendChild(div);if(zichtbaar)zichtbaar.observe(div);else{try{laadFont(f.naam)}catch(e){}}})}
+function bouwFontGrid(){const grid=document.getElementById('fontGrid');grid.innerHTML='';const zichtbaar=('IntersectionObserver' in window)?new IntersectionObserver(items=>{items.forEach(it=>{if(it.isIntersecting&&it.boundingClientRect.height>0){try{laadFont(it.target.dataset.font)}catch(e){};zichtbaar.unobserve(it.target)}})},{rootMargin:'300px'}):null;fonts.forEach(f=>{const div=document.createElement('div');div.className='font-item'+(huidigLettertype===f.familie?' selected':'');div.dataset.font=f.naam;div.innerHTML=`<div class="font-preview" style="font-family:${f.familie} !important;">${f.naam}</div><div class="font-zin" style="font-family:${f.familie} !important;">${T('Het leven is mooi & bijzonder')}</div><div class="font-name">${T('lettertype|'+f.stijl)}${f.store?' <span class="font-store">· Store</span>':''}</div>`;div.onclick=()=>{document.querySelectorAll('.font-item').forEach(i=>i.classList.remove('selected'));div.classList.add('selected');huidigLettertype=f.familie;pasLettertypeLiveToe(f.familie)};grid.appendChild(div);if(zichtbaar)zichtbaar.observe(div);else{try{laadFont(f.naam)}catch(e){}}})}
 window.updateAccent=function(k){document.getElementById('accentPicker').value=k;document.getElementById('accentHex').value=k;document.documentElement.style.setProperty('--accent',k)}
 window.updateAccentHex=function(v){if(/^#[0-9a-f]{6}$/i.test(v))updateAccent(v)}
 window.updateAccent2=function(k){document.getElementById('accent2Picker').value=k;document.getElementById('accent2Hex').value=k;document.documentElement.style.setProperty('--accent2',k)}
@@ -1463,7 +1478,7 @@ vulSpelVersies()
 <script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=209"; startBelLuisteraar()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=197"; startSpelUitnodigingLuisteraar()</script>
-<script type="module">import { startOngelezen } from "./ongelezen.js?v=169"; startOngelezen()</script>
+<script type="module">import { startOngelezen } from "./ongelezen.js?v=170"; startOngelezen()</script>
 <script>
 /* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */
 setTimeout(function(){

@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=81"></script>
+<script src="taal.js?v=95"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -255,10 +255,10 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 
 </main>
 <div class="bottom-nav" role="navigation" aria-label="Menu">
-  <div class="nav-item" onclick="window.location.href='index.html'" data-t><div class="nav-icon">🏠</div>Home</div>
-  <div class="nav-item active" data-t><div class="nav-icon">👥</div>Vrienden</div>
-  <div class="nav-item" onclick="window.location.href='chat.html'" data-t><div class="nav-icon">💬</div>Chat</div>
-  <div class="nav-item" onclick="window.location.href='profiel.html'" data-t><div class="nav-icon">🖍️</div>Stijl</div>
+  <div class="nav-item" onclick="window.location.href='index.html'"><div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></div><div class="nav-label" data-t>Home</div></div>
+  <div class="nav-item active"><div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/></svg></div><div class="nav-label" data-t>Vrienden</div></div>
+  <div class="nav-item" onclick="window.location.href='chat.html'"><div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></div><div class="nav-label" data-t>Chat</div></div>
+  <div class="nav-item" onclick="window.location.href='profiel.html'"><div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg></div><div class="nav-label" data-t>Stijl</div></div>
 </div>
 
 <!-- ======================== -->
@@ -328,7 +328,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 
 <script type="module">
 
-  import { laadThema } from './thema.js?v=235'
+  import { laadThema } from './thema.js?v=236'
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { startMeldingen } from './meldingen.js?v=188'
@@ -738,6 +738,115 @@ startMeldingen()
     document.getElementById('uitMaak').style.display = ''
   }
   for (const b of document.querySelectorAll('#uitDuur .uit-chip')) b.addEventListener('click', () => { zetKeuze(Number(b.dataset.sec)); verbergLink() })
+  // Alleen in de expliciet ingeschakelde, lokale Playwright-omgeving. De echte
+  // uitnodigingsserver wordt hiervoor nooit gebruikt.
+  if (['localhost', '127.0.0.1', '::1', '[::1]'].includes(location.hostname) &&
+      localStorage.getItem('fibro_playwright_local') === '1') {
+    const knop = document.querySelector('#uitDuur .uit-chip[data-sec="604800"]')
+    const uitKeuze = document.querySelector('#inviteModal .uit-keuze')
+    const uitvoer = document.createElement('div')
+    uitvoer.id = 'playwrightTestInviteResult'
+    uitvoer.hidden = true
+    uitvoer.style.cssText = 'margin:12px 0;padding:12px;border:2px solid #facc15;border-radius:12px;background:#261e08;color:#fff'
+    const uitleg = document.createElement('p')
+    uitleg.textContent = 'PLAYWRIGHT TEST — deze link werkt alleen in de lokale testomgeving.'
+    uitleg.style.cssText = 'margin:0 0 8px;font-size:13px;font-weight:700'
+    const link = document.createElement('input')
+    link.id = 'playwrightTestInviteLink'
+    link.readOnly = true
+    link.setAttribute('aria-label', 'Lokale Playwright-testuitnodiging')
+    link.style.cssText = 'box-sizing:border-box;width:100%;padding:8px;border-radius:8px'
+    const probeer = document.createElement('button')
+    probeer.type = 'button'
+    probeer.id = 'playwrightTestInviteOpen'
+    probeer.textContent = 'Open als nieuwe testgebruiker'
+    probeer.disabled = true
+    probeer.style.cssText = 'margin-top:8px;padding:9px 12px;border:0;border-radius:8px;background:#facc15;color:#161006;font-weight:700;cursor:pointer'
+    const melding = document.createElement('p')
+    melding.id = 'playwrightTestInviteStatus'
+    melding.setAttribute('role', 'status')
+    melding.style.cssText = 'margin:8px 0 0;font-size:13px'
+    uitvoer.append(uitleg, link, probeer, melding)
+    uitKeuze.appendChild(uitvoer)
+    probeer.addEventListener('click', async () => {
+      if (typeof window.fibroOpenLocalTestInvite !== 'function') {
+        melding.textContent = 'Open deze functie via npm run test:invite.'
+        return
+      }
+      probeer.disabled = true
+      melding.textContent = 'Nieuw testvenster wordt geopend…'
+      try {
+        await window.fibroOpenLocalTestInvite(link.value)
+        melding.textContent = 'Een nieuw anoniem testvenster is geopend. Je kunt dit opnieuw doen.'
+      } catch (e) {
+        melding.textContent = 'Het testvenster kon niet worden geopend. Controleer of de test nog actief is.'
+      } finally {
+        probeer.disabled = false
+      }
+    })
+
+    const dialoog = document.createElement('dialog')
+    dialoog.id = 'playwrightTestInviteDialog'
+    dialoog.setAttribute('aria-labelledby', 'playwrightTestInviteTitle')
+    dialoog.style.cssText = 'max-width:340px;width:calc(100% - 40px);padding:20px;border:2px solid #facc15;border-radius:16px;background:#2a1240;color:#fff'
+    dialoog.innerHTML = '<form method="dialog"><h2 id="playwrightTestInviteTitle">Playwright testuitnodiging</h2><p>Alleen voor de lokale testomgeving.</p><label for="playwrightTestPin">Testcode</label><input id="playwrightTestPin" type="password" inputmode="numeric" autocomplete="off" style="display:block;width:100%;box-sizing:border-box;margin:8px 0;padding:10px"><p id="playwrightTestPinError" role="alert"></p><button type="submit" value="cancel">Annuleren</button> <button type="button" id="playwrightTestCreate">Testlink maken</button></form>'
+    document.body.appendChild(dialoog)
+    const invoer = dialoog.querySelector('#playwrightTestPin')
+    const fout = dialoog.querySelector('#playwrightTestPinError')
+    dialoog.querySelector('#playwrightTestCreate').addEventListener('click', async () => {
+      if (invoer.value !== '1234') { fout.textContent = 'Onjuiste testcode.'; invoer.focus(); return }
+      invoer.value = ''
+      dialoog.close()
+      uitvoer.hidden = false
+      link.value = ''
+      probeer.disabled = true
+      melding.textContent = 'Testlink wordt gemaakt…'
+      try {
+        const response = await fetch('/__fibro_playwright/invite', {
+          method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ reusable: true }), signal: AbortSignal.timeout(10000)
+        })
+        if (!response.ok) throw new Error('De lokale testbrug is niet beschikbaar.')
+        const resultaat = await response.json()
+        const url = new URL(resultaat.url)
+        if (!['localhost', '127.0.0.1', '::1', '[::1]'].includes(url.hostname)) throw new Error('De testlink is geen lokaal adres.')
+        link.value = url.href
+        probeer.disabled = false
+        melding.textContent = 'Lokale testlink klaar. Open hem als nieuwe testgebruiker.'
+      } catch (e) {
+        melding.textContent = 'Testlink niet beschikbaar. Start de lokale Playwright-testomgeving.'
+      }
+    })
+
+    let timer = null
+    let geopend = false
+    const stop = () => { clearTimeout(timer); timer = null }
+    const begin = () => {
+      if (timer !== null) return
+      geopend = false
+      timer = setTimeout(() => {
+        timer = null
+        geopend = true
+        fout.textContent = ''
+        invoer.value = ''
+        if (!dialoog.open) dialoog.showModal()
+        invoer.focus()
+      }, 5000)
+    }
+    knop.style.userSelect = 'none'
+    knop.style.webkitUserSelect = 'none'
+    knop.style.webkitTouchCallout = 'none'
+    dialoog.addEventListener('close', () => { geopend = false })
+    knop.addEventListener('pointerdown', e => { if (e.isPrimary && (e.pointerType !== 'mouse' || e.button === 0)) begin() })
+    for (const naam of ['pointerup', 'pointercancel', 'pointerleave']) knop.addEventListener(naam, stop)
+    knop.addEventListener('contextmenu', e => { if (timer !== null || geopend) e.preventDefault() })
+    knop.addEventListener('keydown', e => { if (!e.repeat && (e.key === ' ' || e.key === 'Enter')) begin() })
+    knop.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') stop() })
+    knop.addEventListener('blur', stop)
+    knop.addEventListener('click', e => {
+      if (geopend) { e.preventDefault(); e.stopImmediatePropagation(); geopend = false }
+    }, true)
+  }
   {
     const kies = document.getElementById('uitSpel')
     for (const [id, icoon, naam] of MEE_SPELLEN) { const o = document.createElement('option'); o.value = id; o.textContent = icoon + ' ' + naam; kies.appendChild(o) }
@@ -953,7 +1062,7 @@ function filterVrienden() {
 <script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=209"; startBelLuisteraar()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=197"; startSpelUitnodigingLuisteraar()</script>
-<script type="module">import { startOngelezen } from "./ongelezen.js?v=169"; startOngelezen()</script>
+<script type="module">import { startOngelezen } from "./ongelezen.js?v=170"; startOngelezen()</script>
 <script src="swipe.js?v=96"></script>
 <script src="menuschuif.js?v=1"></script>
 <script type="module" src="offline.js?v=146"></script>

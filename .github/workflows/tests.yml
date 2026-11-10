@@ -102,3 +102,42 @@ jobs:
       - name: Spreekwolkje in het spel als je een berichtje krijgt
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef274.py .
+      - name: "iPhone met Vergrendelingsmodus: foto kiezen op Home, profiel en vriendprofiel laden"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef275.py .
+      - name: "Menu onderaan met lijn-iconen"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef276.py .
+      - name: "Groepschat: groep maken en versleuteld kletsen"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef277.py .
+      - name: "Groepschat: namen en groepen met onbekenden"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef278.py .
+      - name: "Groepschat: foto, spraak en eigen stickers"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef279.py .
+      - name: "Groepschat: antwoorden, reacties, weghalen, typen, ongelezen"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef281.py .
+      - name: "Groepschat: voice chat tot 8 personen"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef282.py .
+      - name: "Groepschat: webcam chat tot 4 personen"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef283.py .
+      - name: "Groepschat: poll en afspraak (+ knop)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef284.py .
+      - name: "Groepschat: groepsmuziek"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef285.py .
+      - name: "Groepschat: whiteboard"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef286.py .
+      - name: "Groepschat: piano en deuntjes"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef287.py .
+      - name: "Stekky Store (alleen moderators) en lettertypes uit de store"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef288.py .

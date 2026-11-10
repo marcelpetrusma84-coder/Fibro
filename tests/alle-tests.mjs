@@ -17,7 +17,7 @@ function zoek(map) {
   }
 }
 zoek(path.join(REPO, 'tests'))
-for (const t of ['proef46', 'proef50', 'proef229', 'proef233', 'proef235', 'proef266']) tests.push('tests/tools/' + t + '.mjs')
+for (const t of ['proef46', 'proef50', 'proef229', 'proef233', 'proef235', 'proef266', 'proef280']) tests.push('tests/tools/' + t + '.mjs')
 
 let goed = 0
 const mis = []

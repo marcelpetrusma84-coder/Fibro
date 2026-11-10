@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=81"></script>
+<script src="taal.js?v=95"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -305,23 +305,23 @@ window.addEventListener('pageshow', function (e) { if (e.persisted) window.werkO
 </main>
 <div class="bottom-nav" role="navigation" aria-label="Menu">
   <div class="nav-item active" onclick="window.location.href='index.html'">
-    <div class="nav-icon">🏠</div><div class="nav-label" data-t>Home</div>
+    <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></div><div class="nav-label" data-t>Home</div>
   </div>
   <div class="nav-item" onclick="window.location.href='vrienden.html'">
-    <div class="nav-icon">👥</div><div class="nav-label" data-t>Vrienden</div>
+    <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/></svg></div><div class="nav-label" data-t>Vrienden</div>
   </div>
   
   <div class="nav-item" onclick="window.location.href='chat.html'">
-    <div class="nav-icon">💬</div><div class="nav-label" data-t>Chat</div>
+    <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></div><div class="nav-label" data-t>Chat</div>
   </div>
   <div class="nav-item" onclick="window.location.href='profiel.html'">
-    <div class="nav-icon">🖍️</div><div class="nav-label" data-t>Stijl</div>
+    <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg></div><div class="nav-label" data-t>Stijl</div>
   </div>
 </div>
 </div>
 
 <script type="module">
-import { laadThema } from './thema.js?v=235'
+import { laadThema } from './thema.js?v=236'
 import { pasBlokstijlToe } from './blokstijl.js?v=95'
 import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=95'
 import { startHeartbeat } from './heartbeat.js?v=117'
@@ -1116,6 +1116,18 @@ function maakFotoTitel(keyPrefix, uid) {
   return bar
 }
 
+// v276 (10 nov 2026): een foto lezen om hem op een canvas te tekenen. Met Vergrendelingsmodus (Lockdown Mode) aan op
+// een iPhone bestaat FileReader niet: dan gaf kiezen van een foto 'Can't find variable: FileReader' en gebeurde er niets.
+// Een blob-adres (URL.createObjectURL) werkt daar wel, en een plaatje kan daarmee net zo goed op het canvas.
+function fotoLezer() {
+  if (typeof FileReader === 'function') return new FileReader()
+  const lezer = { onload: null, readAsDataURL(bestand) {
+    const adres = URL.createObjectURL(bestand)
+    setTimeout(() => { if (lezer.onload) lezer.onload({ target: { result: adres } }) }, 0)
+    setTimeout(() => URL.revokeObjectURL(adres), 60000) // het plaatje staat dan al lang op het canvas
+  } }
+  return lezer
+}
 function renderFotoGrid(c, stijl, aantalFotos) {
   const uid = window._uid || 'lokaal'
   const KEY = 'pfoto_' + stijl + '_'
@@ -1141,7 +1153,7 @@ function renderFotoGrid(c, stijl, aantalFotos) {
       const file = this.files[0]; if (!file) return
       if (file.size > 10*1024*1024) { alert(T('Max 10MB')); return }
       const celIdx = idx
-      const reader = new FileReader()
+      const reader = fotoLezer()
       reader.onload = ev => {
         const tmpImg = new Image()
         tmpImg.onload = async () => {
@@ -1288,7 +1300,7 @@ function renderFotoFeatured(c) {
       const file = this.files[0]; if (!file) return
       if (file.size > 10*1024*1024) { alert(T('Max 10MB')); return }
       const celIdx = i
-      const reader = new FileReader()
+      const reader = fotoLezer()
       reader.onload = ev => {
         const tmp = new Image()
         tmp.onload = async () => {
@@ -1426,7 +1438,7 @@ function renderFotoZwevend(c) {
       const file = this.files[0]; if (!file) return
       if (file.size > 10*1024*1024) { alert(T('Max 10MB')); return }
       const celIdx = i
-      const reader = new FileReader()
+      const reader = fotoLezer()
       reader.onload = ev => {
         const tmp = new Image()
         tmp.onload = async () => {
@@ -1539,7 +1551,7 @@ function renderFotoPolaroid(c) {
       const file = this.files[0]; if (!file) return
       if (file.size > 10*1024*1024) { alert(T('Max 10MB')); return }
       const celIdx = i
-      const reader = new FileReader()
+      const reader = fotoLezer()
       reader.onload = ev => {
         const tmp = new Image()
         tmp.onload = async () => {
@@ -1834,7 +1846,7 @@ async function zetWidgetAchtergrond(c, sleutel) {
     inp.onchange = () => {
       const f = inp.files[0]
       if (!f) return
-      const lezer = new FileReader()
+      const lezer = fotoLezer()
       lezer.onload = ev => {
         const img = new Image()
         img.onload = async () => {
@@ -2374,7 +2386,7 @@ window.openMenu = function() {
     g.appendChild(b)
     return b
   }
-  let g = groep(T('Instellingen'), 'menuKopInstellingen', T('Taal, berichten bewaren, muziek, buzz, vinkjes'))
+  let g = groep(T('Instellingen'), 'menuKopInstellingen', T('Taal, berichten bewaren, muziek, buzz, vinkjes, groepen'))
   item(g, T('\u{1F310} Taal / Language'), openTaal) // v142
   item(g, T('\u23F3 Berichten bewaren'), openBewaren)
   // v179/v180: muziek vanzelf afspelen, aan of uit: je eigen profielnummer op Home, en dat van vrienden op hun profiel
@@ -2411,6 +2423,11 @@ window.openMenu = function() {
   // v261: uit = je vrienden zien niet dat jij hun bericht gelezen hebt, en jij ziet het bij hen ook niet (chatstatus.js)
   schakelaar('fibro_leesbevestiging', T('\u2713\u2713 Gelezen-vinkjes'), async (aan) => {
     try { (await import('./chatstatus.js?v=1')).zetLeesbevestiging(supabase, aan) } catch (e) {}
+  })
+  // groepschat (10 nov 2026): uit = je komt alleen in een groep als je iedereen erin als vriend hebt. De server controleert
+  // het (sql/groep-onbekenden.sql: chat_instellingen.groep_onbekenden). Standaard aan.
+  schakelaar('fibro_groep_onbekenden', T('\u{1F465} Groepen met onbekenden'), async (aan) => {
+    try { const { error } = await supabase.rpc('zet_groep_onbekenden', { p_aan: !!aan }); if (error) console.warn('[groep] schakelaar bewaren mislukt', error.message) } catch (e) {}
   })
   // v266: Fibro op slot met Face ID, vingerafdruk of pincode (standaard uit; appslot.js)
   if (window.FibroSlot) {
@@ -2718,7 +2735,7 @@ async function openAccount(wat) {
   const uid = window._uid
   if (!uid) return
   try {
-    const m = await import('./account.js?v=5')
+    const m = await import('./account.js?v=6')
     if (wat === 'verwijderen') m.openVerwijderen(uid)
     else m.openGegevens(uid)
   } catch (e) {
@@ -2992,7 +3009,7 @@ if ('serviceWorker' in navigator) {
 <script type="module" src="geluidregelaar.js?v=181"></script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=197"; startSpelUitnodigingLuisteraar()</script>
-<script type="module">import { startOngelezen } from "./ongelezen.js?v=169"; startOngelezen()</script>
+<script type="module">import { startOngelezen } from "./ongelezen.js?v=170"; startOngelezen()</script>
 <script type="module">import { checkTimers } from "./timer-melding.js?v=188"; setTimeout(checkTimers,4000)</script>
 <script src="./fotoviewer.js?v=9"></script>
 <script type="module" src="blokkade.js?v=2"></script>

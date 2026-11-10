@@ -12,10 +12,13 @@
 // (navigator.setAppBadge). Het getal gaat ook in een kastje ('fibro-badge'), zodat de portier (service-worker.js)
 // er een bij kan tellen als er een pushmelding komt terwijl Fibro dicht is. Alles gelezen: het bolletje weg en de
 // meldingen van berichten ook (Android toont een stipje op het icoon zolang er een melding van Fibro staat).
+// v170 (10 nov 2026): ook groepen. groep_ongelezen() (sql/groep-extra.sql) geeft per groep het aantal nieuwe berichten;
+// die tellen mee in het totaal, en in de chat krijgt elke groep (.groep-item) een bolletje. Elke minuut opnieuw.
 import { supabase } from './supabase.js?v=95'
 import { houOpen } from './lijntjes.js?v=1'
 
 const aantallen = new Map()      // vriend-id → aantal ongelezen
+const groepAantallen = new Map() // groep-id → aantal ongelezen (v170)
 const bezig = new Map()          // vriend-id → 'loopt' | 'nogEens'
 let mijnId = null, openVriend = null, gestart = false, werkt = false
 
@@ -46,6 +49,9 @@ export async function startOngelezen() {
   })
   // In de chat: welk gesprek staat er open? (chat.html zet window.geselecteerdeVriend)
   setInterval(() => kijkOpenVriend(false), 700)
+  setInterval(() => { if (document.visibilityState === 'visible') haalGroepen() }, 60000) // v170
+  const groepen = document.getElementById('groepenLijst')
+  if (groepen && window.MutationObserver) new MutationObserver(toon).observe(groepen, { childList: true })
   const lijst = document.getElementById('vriendenLijst')
   if (lijst && window.MutationObserver) new MutationObserver(toon).observe(lijst, { childList: true })
   kijkOpenVriend(false)
@@ -73,7 +79,19 @@ function kijkOpenVriend(altijd) {
   if (id && (nieuw || altijd) && document.visibilityState === 'visible') markeer(id)
 }
 
+// v170: groepen. Bestaat de functie nog niet op de server, dan gewoon niets.
+async function haalGroepen() {
+  try {
+    const { data, error } = await supabase.rpc('groep_ongelezen')
+    if (error || !Array.isArray(data)) return
+    groepAantallen.clear()
+    for (const r of data) { const n = Number(r.aantal); if (r.groep_id && n > 0) groepAantallen.set(r.groep_id, n) }
+    toon()
+  } catch (e) {}
+}
+
 async function haalOp() {
+  haalGroepen()
   try {
     const { data, error } = await supabase.rpc('ongelezen_per_vriend')
     if (error || !Array.isArray(data)) { if (error) console.warn('[ongelezen]', error.message); return false }
@@ -134,6 +152,15 @@ function zetBol(ouder, n, stijl, vooraan) {
 function toon() {
   let totaal = 0
   for (const n of aantallen.values()) totaal += n
+  for (const n of groepAantallen.values()) totaal += n // v170
+
+  // v170: groepen in de chat
+  for (const item of document.querySelectorAll('.groep-item[data-gid]')) {
+    const n = groepAantallen.get(item.dataset.gid) || 0
+    zetBol(item, n, BOL + 'min-width:22px;height:22px;padding:0 7px;font-size:12px;flex-shrink:0;')
+    const naam = item.querySelector('.vriend-naam')
+    if (naam) naam.style.fontWeight = n ? '700' : ''
+  }
 
   // Tabblad Chat in de menubalk
   for (const item of document.querySelectorAll('.nav-item')) {

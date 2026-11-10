@@ -1,0 +1,15 @@
+{
+  "name": "stekky-page-smoke-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:fresh": "node reset-local.js && playwright test --headed",
+    "test:invite": "playwright test --config=playwright.manual.config.js --headed",
+    "test:privacy": "playwright test tests/privacy-link.spec.js --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0"
+  }
+}

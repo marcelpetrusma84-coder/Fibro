@@ -54,6 +54,14 @@ Ze vallen onder de SIL Open Font License 1.1 of de Apache License 2.0.
 - Space Mono (OFL-1.1): Copyright 2016 The Space Mono Project Authors (https://github.com/googlefonts/spacemono) SpaceMono-Italic.ttf: Copyright 2016 The Space Mono Project Authors (https://github.com/googlefonts/spacemono) SpaceMono-Bold.ttf: Copyright 2016 The Space Mono Project Authors (https://github.com/googlefonts/spacemono) SpaceMono-BoldItalic.ttf: Copyright 2016 The Space Mono Project Authors (https://github.com/googlefonts/spacemono)
 - Titan One (OFL-1.1): Copyright (c) 2011 Rodrigo Fuenzalida (hello@rfuenzalida.com), with Reserved Font Name "Titan One"
 
+Lettertypen uit de Stekky Store (10-11-2026, ook Fontsource 5.3.0, latin en latin-ext):
+- Abril Fatface (OFL-1.1): Copyright (c) 2011, TypeTogether (www.type-together.com info@type-together.com), with Reserved Font Names "Abril" and "Abril Fatface"
+- Bangers (OFL-1.1): Copyright 2010 The Bangers Project Authors (https://github.com/googlefonts/bangers)
+- Black Ops One (OFL-1.1): Copyright 2022 The PinyonScript Project Authors (https://github.com/SorkinType/Black-Ops)
+- Gloria Hallelujah (OFL-1.1): Copyright (c) 2010, Kimberly Geswein (kimberlygeswein.com kimberlygeswein@gmail.com)
+- Sacramento (OFL-1.1): Copyright (c) 2012 by Brian J. Bonislawsky DBA Astigmatic (AOETI) (astigma@astigmatic.com), with Reserved Font Name 'Sacramento'
+- Special Elite (Apache-2.0): zie licentietekst
+
 
 ======================================================================
 SIL OPEN FONT LICENSE Version 1.1

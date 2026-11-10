@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang="nl" data-taal style="background:#1a0a2e;">
+<script>
+  const f = localStorage.getItem('fibro_lettertype')
+  if (f) {
+    document.write("<style>*{font-family:" + f + " !important}</style>")
+    var fn = f.split(",")[0].replace(/[\x27\x22]/g, "").trim()
+    var fsl = fn.toLowerCase().replace(/ /g, "-")
+    if (/^[a-z0-9-]+$/.test(fsl)) document.write('<link rel="stylesheet" href="lettertypen/' + fsl + '.css?v=1">')
+  }
+</script>
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<script src="huisregel.js?v=2"></script>
+<script src="foutmelder.js?v=3"></script>
+<script src="balk-vast.js?v=1"></script>
+<script src="taal.js?v=95"></script>
+<script src="appslot.js?v=3"></script>
+<script src="verbinding.js?v=3"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-t>Stekky - Groep</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=4">
+<link rel="manifest" href="manifest.json?v=4">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stekky">
+<meta name="theme-color" content="#c084fc">
+<link href="lettertypen/basis.css?v=1" rel="stylesheet">
+<style>
+/* groep.html (10 nov 2026): groepschat stap 1. Kiezen wat voor chat, naam en vrienden kiezen, en het gesprek zelf.
+   In de stijl van het ontwerp 'Stekky groepschat' (de chatbalk zoals in de gewone chat, zonder buzz). */
+* { box-sizing:border-box; margin:0; padding:0; }
+:root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.14); --accent:#c084fc; --accent2:#f0abfc; --text:#ffffff; --muted:rgba(255,255,255,0.75); --knop:#8b3fd1; }
+html, body { height:100%; }
+body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); max-width:480px; margin:0 auto; display:flex; flex-direction:column; height:100dvh; overflow:hidden; }
+[hidden] { display:none !important; }
+button { font-family:inherit; }
+.kop { margin:10px 10px 0; padding:10px 12px; display:flex; align-items:center; gap:10px; border-radius:18px; background:rgba(255,255,255,0.07); border:1px solid var(--border); flex-shrink:0; }
+.terug { flex-shrink:0; min-height:46px; padding:0 14px 0 10px; font-size:16px; font-weight:700; color:#1e0d32; border:1px solid #f6e8ff; border-radius:14px; background:linear-gradient(145deg,#f0d7ff,#cc9bf5 75%); box-shadow:inset 0 1px 0 #fff,0 3px 0 #6c458a; cursor:pointer; }
+.terug:active { transform:translateY(2px); box-shadow:inset 0 1px 3px rgba(0,0,0,.25),0 1px 0 #6c458a; }
+.kop-tekst { flex:1; min-width:0; display:flex; flex-direction:column; }
+.kop-titel { font-family:'Playfair Display',serif; font-style:italic; font-size:20px; color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kop-naam { font-size:16px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kop-sub { font-size:13px; color:var(--muted); }
+.rond-knop { width:44px; height:44px; flex-shrink:0; border-radius:50%; border:1px solid var(--border); background:rgba(255,255,255,0.08); color:#e9d5ff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.vlak { flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:20px 16px; display:flex; flex-direction:column; gap:14px; }
+.vraag { font-family:'Playfair Display',serif; font-style:italic; font-size:18px; color:var(--accent); }
+.keuze { text-align:left; display:flex; align-items:center; gap:14px; padding:16px; border-radius:18px; background:var(--card); border:1px solid var(--border); color:#fff; cursor:pointer; width:100%; }
+.keuze:disabled { cursor:default; opacity:.6; }
+.keuze-icoon { width:54px; height:54px; flex-shrink:0; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+.keuze-tekst { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+.keuze-titel { font-size:17px; font-weight:700; }
+.keuze-uitleg { font-size:14px; color:var(--muted); line-height:1.35; }
+.chip { flex-shrink:0; padding:4px 10px; border-radius:20px; background:rgba(192,132,252,0.18); color:#e9d5ff; font-size:13px; font-weight:700; }
+.uitleg { display:flex; gap:8px; font-size:13px; color:var(--muted); line-height:1.4; }
+.veld-label { font-size:14px; font-weight:700; color:#e9d5ff; }
+.veld { width:100%; height:52px; padding:0 14px; border-radius:14px; border:1px solid rgba(192,132,252,0.45); background:rgba(255,255,255,0.08); color:#fff; font-family:inherit; font-size:16px; outline:none; }
+.veld:focus { border-color:var(--accent); }
+.rij-kop { display:flex; align-items:baseline; justify-content:space-between; }
+.teller { font-size:14px; font-weight:700; color:#e9d5ff; }
+.vriend { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:16px; background:var(--card); border:1px solid var(--border); cursor:pointer; }
+.vriend.gekozen { background:rgba(139,63,209,0.22); border-color:rgba(192,132,252,0.6); }
+.vriend input { width:24px; height:24px; accent-color:var(--knop); flex-shrink:0; }
+.av { width:42px; height:42px; flex-shrink:0; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700; color:#1a0a2e; overflow:hidden; }
+.av img { width:100%; height:100%; object-fit:cover; }
+.vriend-naam { flex:1; min-width:0; font-size:16px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hoofdknop { height:54px; border:none; border-radius:16px; background:var(--knop); color:#fff; font-size:17px; font-weight:700; cursor:pointer; width:100%; flex-shrink:0; }
+.hoofdknop:disabled { opacity:.5; cursor:default; }
+.onder { padding:12px 16px calc(18px + env(safe-area-inset-bottom,0px)); display:flex; flex-direction:column; gap:8px; flex-shrink:0; }
+.melding { font-size:13px; color:#fca5a5; text-align:center; min-height:1em; }
+.leeg { font-size:14px; color:var(--muted); text-align:center; padding:20px 0; }
+/* gesprek */
+#berichten { flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 14px 8px; display:flex; flex-direction:column; gap:10px; }
+.sys { align-self:center; padding:5px 12px; border-radius:20px; background:rgba(192,132,252,0.12); font-size:13px; color:#e9d5ff; text-align:center; max-width:90%; }
+.b-rij { display:flex; gap:8px; align-items:flex-end; max-width:82%; }
+.b-rij.mijn { align-self:flex-end; flex-direction:row-reverse; }
+.b-rij .av { width:30px; height:30px; font-size:14px; }
+.b-rij.mijn .av { display:none; }
+.b-kol { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.b-rij.mijn .b-kol { align-items:flex-end; }
+.b-naam { font-size:12px; font-weight:700; }
+.bubbel { padding:9px 13px; border-radius:18px 18px 18px 4px; background:rgba(255,255,255,0.09); border:1px solid rgba(255,255,255,0.12); font-size:15px; line-height:1.35; white-space:pre-wrap; word-break:break-word; }
+.b-rij.mijn .bubbel { border-radius:18px 18px 4px 18px; background:var(--knop); border-color:transparent; }
+.bubbel.slot { font-style:italic; color:var(--muted); }
+.b-tijd { font-size:11px; color:rgba(255,255,255,0.65); }
+.b-rij.vervolg .b-naam, .b-rij.vervolg .av { visibility:hidden; }
+.b-sticker { width:120px; height:120px; object-fit:contain; cursor:pointer; }
+.bubbel.media { padding:4px; }
+.b-foto { display:block; max-width:220px; max-height:280px; border-radius:14px; cursor:zoom-in; }
+.media-wacht { padding:5px 9px; font-size:14px; color:rgba(255,255,255,0.85); }
+#spraakBalk { display:flex; align-items:center; gap:10px; padding:4px 6px; font-size:15px; }
+#spraakBalk .punt { width:12px; height:12px; border-radius:50%; background:#ef4444; animation:knipper 1s infinite; }
+#spraakBalk.annuleer { color:#fca5a5; }
+@keyframes knipper { 50% { opacity:.3 } }
+.b-rij { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+.citaat { border-left:3px solid var(--accent); background:rgba(255,255,255,0.10); border-radius:6px; padding:3px 8px; margin-bottom:4px; font-size:12px; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
+.citaat b { color:var(--accent); font-weight:700; }
+.reacties { display:flex; flex-wrap:wrap; gap:4px; margin-top:2px; }
+.reactie { background:#3d2a5c; border:0.5px solid #6b4f96; color:#fff; border-radius:10px; padding:2px 8px; font-size:13px; }
+.reactie.mijn { border-color:var(--accent); }
+.bubbel.weg { font-style:italic; color:var(--muted); background:transparent; border:1px dashed rgba(255,255,255,0.2); }
+.b-rij.licht .bubbel, .b-rij.licht .b-sticker, .b-rij.licht .b-foto { outline:2px solid var(--accent); outline-offset:2px; }
+#berichtMenu { position:fixed; z-index:60; background:#fff; border-radius:22px; padding:6px 8px; display:flex; flex-direction:column; gap:4px; box-shadow:0 4px 16px rgba(0,0,0,0.45); }
+#berichtMenu .rij { display:flex; gap:4px; }
+#berichtMenu button { background:none; border:0; font-size:22px; cursor:pointer; line-height:1; min-width:40px; min-height:40px; border-radius:12px; }
+#berichtMenu button.tekst { font-size:14px; color:#1a0a2e; font-weight:700; padding:0 10px; }
+#berichtMenu button.gekozen { background:#ede4fb; }
+#belBalk { margin:10px 12px 0; padding:10px 12px; display:flex; align-items:center; gap:10px; border-radius:14px; background:rgba(34,197,94,0.14); border:1px solid rgba(34,197,94,0.4); font-size:14px; flex-shrink:0; }
+#belBalk span { flex:1; min-width:0; }
+#belMee { height:38px; padding:0 14px; border:none; border-radius:12px; background:#22c55e; color:#0b2a14; font-weight:700; font-size:14px; cursor:pointer; }
+#belMee:disabled { opacity:.5; }
+#belPaneel { margin:10px 10px 0; padding:10px; border-radius:20px; background:rgba(255,255,255,0.06); border:1px solid var(--border); display:flex; flex-direction:column; gap:10px; flex-shrink:0; }
+#belTegels { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:8px; }
+.tegel { position:relative; display:flex; flex-direction:column; align-items:center; gap:4px; padding:6px 2px; border-radius:14px; background:rgba(255,255,255,0.05); min-width:0; }
+.tegel.leeg { border:1px dashed rgba(255,255,255,0.16); background:transparent; justify-content:center; color:var(--muted); font-size:11px; min-height:84px; }
+.tegel .cirkel { width:56px; height:56px; box-sizing:border-box; border-radius:50%; border:3px solid rgba(151,240,221,0.55); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; color:#1a0a2e; transition:border-color .15s ease, box-shadow .15s ease; }
+.tegel.praat .cirkel { border-color:#fcd34d; box-shadow:0 0 0 4px #fbbf2470, 0 0 26px #fbbf24c0; }
+.tegel.wacht .cirkel { opacity:.55; }
+.tegel .tnaam { font-size:12px; font-weight:700; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 2px; }
+.tegel .tstil { position:absolute; top:2px; right:4px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; font-size:12px; }
+.tegel .thand { position:absolute; top:2px; left:4px; font-size:16px; }
+.tegel.ik { cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.bel-knoppen { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0, 1fr); gap:6px; }
+/* webcam chat: een scherm per persoon, met een rand die goud kleurt als iemand praat (zoals de rondjes) */
+/* compact: 2 schermen boven en 2 beneden, niet te hoog, zodat je onder de schermen nog berichten ziet */
+#belTegels.beeld { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:6px; }
+.tegel.scherm { padding:0; background:transparent; gap:0; }
+.tegel.scherm .vak { position:relative; width:100%; height:15vh; min-height:96px; max-height:150px; box-sizing:border-box; border-radius:18px; overflow:hidden; border:3px solid rgba(151,240,221,0.55); background:#120720; display:flex; align-items:center; justify-content:center; transition:border-color .15s ease, box-shadow .15s ease; }
+.tegel.scherm.praat .vak { border-color:#fcd34d; box-shadow:0 0 0 4px #fbbf2470, 0 0 26px #fbbf24c0; }
+.tegel.scherm.wacht .vak { opacity:.55; }
+/* het beeld vult het vak; de maat rekent vulBeeld() zelf uit (op de iPhone werkte object-fit niet goed en versprong het) */
+.tegel.scherm video { position:absolute; top:0; left:0; display:block; width:100%; height:100%; max-width:none; max-height:none; object-fit:cover; background:#120720; }
+.tegel.scherm.ik video { transform:scaleX(-1); }
+.tegel.scherm .cirkel { width:52px; height:52px; font-size:20px; }
+.tegel.scherm .tnaam { position:absolute; left:5px; bottom:5px; max-width:calc(100% - 10px); padding:1px 6px; font-size:11px; border-radius:10px; background:rgba(0,0,0,0.55); }
+.tegel.scherm.leeg { height:15vh; min-height:96px; max-height:150px; box-sizing:border-box; border-radius:18px; text-align:center; }
+.bel-knoppen button[aria-pressed="false"]#belCam { background:rgba(252,165,165,0.22); color:#fecaca; }
+.bel-knoppen button { display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 0; border:none; border-radius:14px; background:rgba(255,255,255,0.08); color:#fff; font-size:12px; cursor:pointer; min-height:52px; }
+.bel-knoppen button[aria-pressed="true"]#belHand, .bel-knoppen button[aria-pressed="true"]#belMic { background:rgba(252,165,165,0.22); color:#fecaca; }
+.bel-knoppen button[aria-pressed="false"]#belLuid { background:rgba(252,165,165,0.22); color:#fecaca; }
+.bel-knoppen .ophangen { background:#dc2626; font-weight:700; }
+#belGeluid { height:40px; border:none; border-radius:12px; background:#fcd34d; color:#3b2a00; font-weight:700; cursor:pointer; }
+#antwoordBalk { display:flex; align-items:center; gap:8px; padding:6px 10px; border-left:3px solid var(--accent); background:rgba(255,255,255,0.06); border-radius:8px; font-size:13px; }
+#antwoordBalk span { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#antwoordBalk button { background:none; border:0; color:var(--muted); font-size:16px; cursor:pointer; min-width:36px; min-height:36px; }
+.chatbalk { margin:0 10px calc(10px + env(safe-area-inset-bottom,0px)); padding:12px; display:flex; flex-direction:column; gap:12px; border-radius:24px; background:linear-gradient(160deg,rgba(255,255,255,0.09),rgba(255,255,255,0.04)); border:1px solid rgba(192,132,252,0.5); flex-shrink:0; }
+.balk-knoppen { display:flex; gap:6px; }
+/* + Meer: poll en afspraak (groepsfuncties) */
+#extraMenu { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:6px; }
+#extraMenu[hidden] { display:none; }
+.extra-tegel { display:flex; flex-direction:column; align-items:center; gap:5px; padding:10px 4px 8px; border-radius:16px; border:1px solid rgba(225,204,255,.18); background:rgba(255,255,255,0.05); color:#fff; font:inherit; font-size:12px; cursor:pointer; }
+.extra-tegel:active { background:linear-gradient(155deg, rgba(192,132,252,.23), rgba(192,132,252,.12)); color:#c084fc; }
+/* kaartjes in het gesprek: poll en afspraak */
+.bubbel.kaart { width:min(270px, 72vw); padding:12px; white-space:normal; }
+.k-kop { font-weight:700; font-size:15px; display:flex; gap:7px; align-items:flex-start; }
+.k-kop svg { flex:none; margin-top:1px; color:#c084fc; }
+.k-sub { font-size:12px; color:var(--muted); margin:3px 0 9px; }
+.k-keuze { position:relative; display:block; width:100%; text-align:left; margin:0 0 6px; padding:9px 10px; border-radius:12px; border:1px solid rgba(225,204,255,.25); background:rgba(10,4,20,0.35); color:#fff; font:inherit; font-size:14px; cursor:pointer; overflow:hidden; }
+.k-keuze.mijn { border-color:#c084fc; }
+.k-balk { position:absolute; left:0; top:0; bottom:0; background:linear-gradient(90deg, rgba(192,132,252,.38), rgba(192,132,252,.18)); transition:width .25s ease; }
+.k-regel { position:relative; display:flex; gap:8px; align-items:center; }
+.k-regel .k-tekst { flex:1; min-width:0; overflow-wrap:anywhere; }
+.k-regel .k-n { font-weight:700; font-variant-numeric:tabular-nums; }
+.k-vink { width:18px; height:18px; flex:none; border-radius:50%; border:2px solid rgba(255,255,255,.5); display:flex; align-items:center; justify-content:center; font-size:11px; }
+.k-keuze.mijn .k-vink { background:#c084fc; border-color:#c084fc; color:#1a0a2e; }
+.k-namen { position:relative; font-size:11px; color:var(--muted); margin-top:3px; }
+.k-namen:empty { display:none; }
+.k-voet { font-size:12px; color:var(--muted); margin-top:4px; }
+.k-wanneer { font-size:14px; margin:6px 0 2px; }
+.k-waar { font-size:13px; color:var(--muted); margin-bottom:8px; overflow-wrap:anywhere; }
+.kaart.voorbij .k-antw { opacity:.6; }
+/* afspraak: donker kaartje met grote Ja (groen) en Nee (rood), naar Marcels ontwerp */
+.bubbel.kaart.afspraak, .b-rij.mijn .bubbel.kaart.afspraak { background:#1e1726; border:1px solid rgba(255,255,255,0.09); color:#fff; border-radius:20px; padding:12px 14px 12px; }
+.afspraak .k-label { font-size:13px; color:rgba(255,255,255,.62); }
+.afspraak .k-titel { font-size:18px; font-weight:700; margin-top:2px; overflow-wrap:anywhere; }
+.afspraak .k-wanneer { font-size:13px; color:rgba(255,255,255,.85); margin:3px 0 0; }
+.afspraak .k-waar { font-size:13px; color:rgba(255,255,255,.62); margin:2px 0 0; }
+.k-antw { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 0 2px; }
+.k-antw button { height:42px; border-radius:21px; border:2px solid transparent; font:inherit; font-size:16px; cursor:pointer; transition:filter .15s, border-color .15s; }
+.k-antw button[data-antw="ja"] { background:#86d987; color:#10240f; }
+.k-antw button[data-antw="nee"] { background:#6e3236; color:#f6dede; }
+.k-antw button[aria-pressed="true"] { border-color:#fff; font-weight:700; }
+.k-antw:has(button[aria-pressed="true"]) button[aria-pressed="false"] { filter:saturate(.45) brightness(.8); }
+.afspraak .k-wie { color:rgba(255,255,255,.62); margin-top:6px; }
+/* in je eigen (paarse) bubbel: wit in plaats van paars, anders zie je de balkjes niet */
+.b-rij.mijn .k-kop svg { color:#fff; }
+.b-rij.mijn .k-balk { background:linear-gradient(90deg, rgba(255,255,255,.32), rgba(255,255,255,.16)); }
+.b-rij.mijn .k-keuze.mijn { border-color:#fff; }
+.b-rij.mijn .k-keuze.mijn .k-vink { background:#fff; border-color:#fff; color:#6a2bab; }
+.b-rij.mijn .k-sub, .b-rij.mijn .k-voet, .b-rij.mijn .bubbel.kaart:not(.afspraak) .k-namen { color:rgba(255,255,255,.78); }
+/* whiteboard */
+#bordVak { position:fixed; inset:0; z-index:70; display:flex; flex-direction:column; background:#12081f; padding:max(10px, env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px)); gap:10px; }
+#bordVak[hidden] { display:none; }
+.bord-kop { display:flex; align-items:center; justify-content:space-between; font-size:18px; font-weight:700; }
+#bordDicht { width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:#fff; font-size:18px; cursor:pointer; }
+.bord-vlak { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
+#bordDoek { border-radius:18px; background:#ffffff; border:1px solid rgba(192,132,252,0.45); touch-action:none; cursor:crosshair; }
+.bord-gereedschap { display:flex; flex-direction:column; gap:10px; }
+#bordKleuren { display:flex; justify-content:space-between; gap:6px; }
+#bordKleuren button { width:34px; height:34px; border-radius:50%; border:2px solid rgba(255,255,255,0.35); cursor:pointer; padding:0; }
+#bordKleuren button[aria-checked="true"] { border-color:#fff; box-shadow:0 0 0 3px rgba(192,132,252,.6); }
+.bord-knoppen { display:flex; gap:8px; align-items:center; }
+#bordDiktes { display:flex; gap:6px; }
+#bordDiktes button, #bordTerug, #bordWis { width:44px; height:44px; border-radius:14px; border:1px solid transparent; background:rgba(255,255,255,0.06); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
+#bordDiktes button[aria-checked="true"] { color:#c084fc; background:linear-gradient(155deg, rgba(192,132,252,.23), rgba(192,132,252,.12)); border-color:rgba(225,204,255,.28); }
+#bordDiktes span { display:block; border-radius:50%; background:currentColor; }
+#bordTerug:disabled { opacity:.4; cursor:default; }
+#bordDeel { flex:1; height:44px; border-radius:14px; border:none; background:#8b3fd1; color:#fff; font:inherit; font-weight:700; cursor:pointer; }
+/* piano */
+#pianoVak { position:fixed; inset:0; z-index:70; display:flex; flex-direction:column; background:#12081f; padding:max(10px, env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px)); gap:10px; }
+#pianoVak[hidden] { display:none; }
+#pianoDicht { width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:#fff; font-size:18px; cursor:pointer; }
+.p-kopje { font-size:13px; color:var(--muted); }
+#pianoLijst { flex:1; min-height:0; overflow:auto; display:flex; flex-direction:column; gap:6px; }
+#pianoBewaar { display:flex; flex-direction:column; gap:8px; padding:10px; border-radius:16px; background:rgba(192,132,252,0.12); border:1px solid rgba(192,132,252,0.4); }
+#pianoBewaar[hidden] { display:none; }
+#pianoNaam { height:44px; padding:0 14px; border-radius:14px; border:1px solid rgba(255,255,255,0.12); background:rgba(10,4,20,0.55); color:#fff; font:inherit; font-size:16px; outline:none; }
+.p-rij { display:flex; gap:8px; }
+.p-rij button { flex:1; height:44px; border-radius:14px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.06); color:#fff; font:inherit; font-size:14px; cursor:pointer; }
+.p-rij .doe { background:#8b3fd1; border-color:#8b3fd1; font-weight:700; flex:1.4; }
+.p-bediening { display:flex; align-items:center; gap:8px; }
+.p-bediening > button { height:44px; min-width:44px; border-radius:14px; border:1px solid transparent; background:rgba(255,255,255,0.06); color:#fff; font:inherit; font-size:18px; cursor:pointer; }
+#pianoOctaaf { min-width:34px; text-align:center; font-size:14px; color:var(--muted); }
+#pianoOpnemen { margin-left:auto; display:flex; align-items:center; gap:8px; padding:0 14px; font-size:15px; }
+#pianoOpnemen .p-punt { width:12px; height:12px; border-radius:50%; background:#ef4444; }
+#pianoOpnemen.bezig { background:#dc2626; font-weight:700; }
+#pianoOpnemen.bezig .p-punt { background:#fff; animation:knipper 1s infinite; }
+@keyframes knipper { 50% { opacity:.2 } }
+#pianoToetsen { position:relative; height:min(34vh, 220px); flex-shrink:0; touch-action:none; user-select:none; -webkit-user-select:none; }
+.p-wit, .p-zwart { position:absolute; top:0; padding:0; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.p-wit { height:100%; border:1px solid #2a1840; border-radius:0 0 12px 12px; background:linear-gradient(#ffffff, #ece4f6); color:#6a2bab; font:inherit; font-size:11px; display:flex; align-items:flex-end; justify-content:center; padding-bottom:8px; box-sizing:border-box; }
+.p-zwart { height:60%; z-index:2; border:none; border-radius:0 0 8px 8px; background:linear-gradient(#3b2a4f, #140a22); box-shadow:0 3px 4px rgba(0,0,0,.5); }
+.p-wit.aan { background:linear-gradient(#e9d5ff, #c084fc); }
+.p-zwart.aan { background:linear-gradient(#a855f7, #6a2bab); }
+.p-deuntje { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:14px; background:rgba(255,255,255,0.05); }
+.p-deuntje.speelt { background:linear-gradient(155deg, rgba(192,132,252,.23), rgba(192,132,252,.12)); }
+.p-deuntje .m-speel { flex:none; }
+/* deuntje in de chat */
+.k-speel { margin-top:10px; width:100%; height:42px; border-radius:21px; border:none; background:#8b3fd1; color:#fff; font:inherit; font-size:15px; font-weight:700; cursor:pointer; }
+.b-rij.mijn .k-speel { background:#fff; color:#6a2bab; }
+/* groepsmuziek */
+.m-uitleg { font-size:13px; color:var(--muted); margin-top:-4px; }
+.m-lijst { display:flex; flex-direction:column; gap:6px; }
+.m-leeg { font-size:14px; color:var(--muted); padding:14px 4px; text-align:center; }
+.m-rij { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:14px; background:rgba(255,255,255,0.05); border:1px solid transparent; }
+.m-rij.speelt { border-color:#c084fc; background:linear-gradient(155deg, rgba(192,132,252,.23), rgba(192,132,252,.12)); }
+.m-rij.uit { opacity:.5; }
+.m-speel { width:40px; height:40px; flex:none; border-radius:50%; border:none; background:#8b3fd1; color:#fff; font-size:15px; cursor:pointer; }
+.m-rij.uit .m-speel { background:rgba(255,255,255,0.12); cursor:default; }
+.m-info { flex:1; min-width:0; }
+.m-titel { font-size:15px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.m-sub { font-size:12px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.m-kies { display:flex; align-items:center; gap:10px; padding:10px; border-radius:14px; background:rgba(255,255,255,0.05); font-size:15px; }
+.m-kies input { width:22px; height:22px; accent-color:#8b3fd1; flex:none; }
+#muziekNu { display:flex; align-items:center; gap:8px; padding:6px 8px 6px 12px; border-radius:16px; background:linear-gradient(155deg, rgba(192,132,252,.23), rgba(192,132,252,.12)); border:1px solid rgba(225,204,255,.28); font-size:13px; }
+#muziekNu[hidden] { display:none; }
+#muziekNuTitel { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
+#muziekNuKnop { width:36px; height:36px; border-radius:50%; border:none; background:#8b3fd1; color:#fff; cursor:pointer; }
+/* het venster om een poll of afspraak te maken */
+#maakVak { position:fixed; inset:0; z-index:60; display:flex; align-items:flex-end; justify-content:center; background:rgba(0,0,0,0.55); }
+#maakVak[hidden] { display:none; }
+#maakVak .vel { width:100%; max-width:480px; max-height:88vh; overflow:auto; padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px)); border-radius:24px 24px 0 0; background:#24123c; border:1px solid rgba(192,132,252,0.5); border-bottom:0; display:flex; flex-direction:column; gap:10px; }
+#maakVak h2 { margin:0 0 4px; font-size:18px; }
+#maakVak label { font-size:13px; color:var(--muted); display:flex; flex-direction:column; gap:5px; }
+#maakVak input[type=text], #maakVak input[type=date], #maakVak input[type=time] { height:44px; padding:0 14px; border-radius:14px; border:1px solid rgba(255,255,255,0.12); background:rgba(10,4,20,0.55); color:#fff; font:inherit; font-size:16px; outline:none; color-scheme:dark; }
+#maakVak input:focus { border-color:var(--accent); }
+#maakVak .rij2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+#maakVak .vink { flex-direction:row; align-items:center; gap:10px; color:#fff; font-size:14px; }
+#maakVak .vink input { width:22px; height:22px; accent-color:#8b3fd1; }
+#maakVak .knoppen { display:flex; gap:8px; margin-top:6px; }
+#maakVak .knoppen button { flex:1; height:46px; border-radius:14px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.06); color:#fff; font:inherit; font-size:15px; cursor:pointer; }
+#maakVak .knoppen .doe { background:#8b3fd1; border-color:#8b3fd1; font-weight:700; }
+#maakVak .klein { align-self:flex-start; height:38px; padding:0 14px; border-radius:12px; border:1px dashed rgba(192,132,252,0.6); background:none; color:#c084fc; font:inherit; font-size:14px; cursor:pointer; }
+/* lijn-iconen zoals het menu onderaan: wit, en open = lichtpaars vlak met paars icoon */
+.balk-knop { width:48px; height:42px; flex-shrink:0; border-radius:14px; border:1px solid transparent; background:rgba(255,255,255,0.05); color:#fff; padding:0; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background-color .16s ease, border-color .16s ease, color .16s ease; }
+.balk-knop[aria-pressed="true"] { color:#c084fc; background:linear-gradient(155deg, rgba(192,132,252,.23), rgba(192,132,252,.12)); border-color:rgba(225,204,255,.28); }
+.balk-invoer { display:flex; gap:10px; align-items:center; }
+#bericht { flex:1; min-width:0; height:44px; padding:0 16px; border-radius:22px; border:1px solid rgba(255,255,255,0.08); background:rgba(10,4,20,0.55); color:#fff; font-family:inherit; font-size:16px; outline:none; }
+#bericht:focus { border-color:var(--accent); }
+#verstuur { width:50px; height:50px; flex-shrink:0; border-radius:50%; border:none; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#2563eb; font-size:16px; cursor:pointer; }
+#verstuur:disabled { opacity:.5; }
+#emojiRaster { display:flex; flex-wrap:wrap; gap:4px; padding:4px 2px 0; }
+#emojiRaster button { width:40px; height:40px; border:none; background:none; font-size:22px; cursor:pointer; border-radius:10px; }
+#stickerRaster { margin:0 -4px; }
+.toast { position:fixed; left:50%; bottom:200px; transform:translateX(-50%); background:rgba(20,8,36,0.95); border:1px solid rgba(192,132,252,0.5); color:#fff; padding:10px 16px; border-radius:14px; font-size:14px; z-index:50; max-width:86%; text-align:center; }
+/* ledenpaneel */
+#ledenPaneel { position:fixed; inset:0; z-index:40; background:rgba(10,4,20,0.7); display:flex; align-items:flex-end; justify-content:center; }
+.paneel { width:100%; max-width:480px; max-height:86dvh; overflow-y:auto; background:#241038; border-radius:22px 22px 0 0; border:1px solid rgba(192,132,252,0.4); padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px)); display:flex; flex-direction:column; gap:10px; }
+.lid { display:flex; align-items:center; gap:12px; padding:8px 4px; }
+.lid-rol { font-size:12px; color:var(--accent); }
+.klein-knop { min-height:40px; padding:0 12px; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,0.08); color:#fff; font-size:14px; cursor:pointer; }
+.klein-knop.rood { border-color:rgba(248,113,113,0.6); color:#fca5a5; }
+</style>
+<link rel="stylesheet" href="android-fix.css?v=1">
+<link rel="icon" href="icon.svg?v=4" type="image/svg+xml">
+<link rel="stylesheet" href="stijl.css?v=3">
+</head>
+<body data-fibro-page="groep">
+
+<!-- 1. Wat voor chat -->
+<section id="kiezen" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="kop">
+    <button type="button" class="terug" id="kiezenTerug" data-t>← terug</button>
+    <div class="kop-titel" data-t>Nieuwe chat</div>
+  </div>
+  <div class="vlak">
+    <div class="vraag" data-t>Wat voor chat wil je maken?</div>
+    <button type="button" class="keuze" data-soort="chat">
+      <span class="keuze-icoon" style="background:linear-gradient(135deg,#c084fc,#f0abfc)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a0a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></svg></span>
+      <span class="keuze-tekst"><span class="keuze-titel" data-t>Groepschat</span><span class="keuze-uitleg" data-t>Berichten, foto's en stickers met je vrienden</span></span>
+      <span class="chip" data-t>tot 50</span>
+    </button>
+    <button type="button" class="keuze" data-soort="voice">
+      <span class="keuze-icoon" style="background:linear-gradient(135deg,#8b3fd1,#c084fc)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span>
+      <span class="keuze-tekst"><span class="keuze-titel" data-t>Voice chat</span><span class="keuze-uitleg" data-t>Samen praten, met een chat erbij</span></span>
+      <span class="chip" data-t>tot 8</span>
+    </button>
+    <button type="button" class="keuze" data-soort="webcam">
+      <span class="keuze-icoon" style="background:linear-gradient(135deg,#6a2bab,#8b3fd1)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg></span>
+      <span class="keuze-tekst"><span class="keuze-titel" data-t>Webcam chat</span><span class="keuze-uitleg" data-t>Elkaar zien en praten, met een chat erbij</span></span>
+      <span class="chip" data-t>tot 4</span>
+    </button>
+    <div class="uitleg"><span aria-hidden="true">🔒</span><span data-t>Alles is end-to-end versleuteld, net als je gewone chats. Je kunt alleen vrienden toevoegen.</span></div>
+  </div>
+</section>
+
+<!-- 2. Naam en vrienden -->
+<section id="leden" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="kop">
+    <button type="button" class="terug" id="ledenTerug" data-t>← terug</button>
+    <div class="kop-tekst"><div class="kop-titel" id="nieuwTitel" data-t>Nieuwe groepschat</div><div class="kop-sub" data-t>Stap 2 van 2</div></div>
+  </div>
+  <div class="vlak">
+    <label class="veld-label" for="groepNaam" data-t>Naam van de groep</label>
+    <input class="veld" id="groepNaam" maxlength="40" autocomplete="off" placeholder="Bijvoorbeeld: Zaterdag-gamers" data-t-attr="placeholder">
+    <div class="rij-kop"><div class="vraag" data-t>Wie doet er mee?</div><div class="teller" id="teller"></div></div>
+    <div id="vriendenLijst" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+  <div class="onder">
+    <div class="melding" id="maakMelding" role="status"></div>
+    <div class="uitleg" style="justify-content:center;text-align:center" data-t>Jij bent de beheerder. Je kunt later nog vrienden toevoegen of weghalen.</div>
+    <button type="button" class="hoofdknop" id="maakKnop" disabled data-t>Groep maken</button>
+  </div>
+</section>
+
+<!-- 3. Het gesprek -->
+<section id="gesprek" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="kop">
+    <button type="button" class="terug" id="gesprekTerug" data-t>← terug</button>
+    <div class="kop-tekst"><div class="kop-naam" id="groepTitel"></div><div class="kop-sub" id="groepSub"></div></div>
+    <button type="button" class="rond-knop" id="belKnop" hidden aria-label="Voice chat starten" data-t-attr="aria-label" style="background:#22c55e;border-color:#22c55e;color:#0b2a14">
+      <svg class="bel-tel" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>
+      <svg class="bel-cam" hidden width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>
+    </button>
+    <button type="button" class="rond-knop" id="ledenKnop" aria-label="Leden" data-t-attr="aria-label">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/></svg>
+    </button>
+  </div>
+  <div id="belBalk" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#86efac" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span id="belBalkTekst"></span><button type="button" id="belMee" data-t>Meedoen</button></div>
+  <div id="belPaneel" hidden>
+    <div id="belTegels"></div>
+    <button type="button" id="belGeluid" hidden data-t>🔊 Tik voor geluid</button>
+    <div class="bel-knoppen">
+      <button type="button" id="belMic" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span data-t>Microfoon</span></button>
+      <button type="button" id="belLuid" aria-pressed="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><span data-t>Luidspreker</span></button>
+      <button type="button" id="belCam" aria-pressed="true" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg><span data-t>Camera</span></button>
+      <button type="button" id="belHand" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13V5a1.5 1.5 0 0 1 3 0v6M11 10V4a1.5 1.5 0 0 1 3 0v6M14 10V5.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7 6 6 0 0 1-5-3l-2.5-4.5a1.5 1.5 0 0 1 2.5-1.5L8 15"/></svg><span data-t>Hand</span></button>
+      <button type="button" id="belWeg" class="ophangen"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 15c5-5 13-5 18 0l-2.5 2.5-3.5-1.5v-3a12 12 0 0 0-6 0v3L5.5 17.5z"/></svg><span data-t>Ophangen</span></button>
+    </div>
+  </div>
+  <div id="berichten" aria-live="polite"></div>
+  <div id="pianoVak" hidden role="dialog" aria-modal="true" aria-labelledby="pianoTitel">
+    <div class="bord-kop"><div id="pianoTitel" data-t>Piano</div><button type="button" id="pianoDicht" aria-label="Sluiten" data-t-attr="aria-label">✕</button></div>
+    <div class="p-kopje" data-t>Deuntjes in deze groep</div>
+    <div id="pianoLijst"></div>
+    <div id="pianoBewaar" hidden>
+      <input type="text" id="pianoNaam" maxlength="40" autocomplete="off" placeholder="Naam van je deuntje" aria-label="Naam van je deuntje" data-t-attr="placeholder,aria-label">
+      <div class="p-rij"><button type="button" id="pianoWeg" data-t>Weggooien</button><button type="button" id="pianoLuister" data-t>Luisteren</button><button type="button" id="pianoPlaats" class="doe" data-t>Bewaren in de groep</button></div>
+    </div>
+    <div class="p-bediening">
+      <button type="button" id="pianoLager" aria-label="Octaaf lager" data-t-attr="aria-label">−</button>
+      <span id="pianoOctaaf"></span>
+      <button type="button" id="pianoHoger" aria-label="Octaaf hoger" data-t-attr="aria-label">+</button>
+      <button type="button" id="pianoOpnemen"><span class="p-punt"></span><span id="pianoOpnemenTekst" data-t>Opnemen</span></button>
+    </div>
+    <div id="pianoToetsen"></div>
+  </div>
+  <div id="bordVak" hidden role="dialog" aria-modal="true" aria-labelledby="bordTitel">
+    <div class="bord-kop"><div id="bordTitel" data-t>Whiteboard</div><button type="button" id="bordDicht" aria-label="Sluiten" data-t-attr="aria-label">✕</button></div>
+    <div class="bord-vlak"><canvas id="bordDoek"></canvas></div>
+    <div class="bord-gereedschap">
+      <div id="bordKleuren" role="radiogroup" aria-label="Kleur" data-t-attr="aria-label"></div>
+      <div class="bord-knoppen">
+        <div id="bordDiktes" role="radiogroup" aria-label="Dikte" data-t-attr="aria-label"></div>
+        <button type="button" id="bordTerug" aria-label="Ongedaan maken" data-t-attr="aria-label"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+        <button type="button" id="bordWis" aria-label="Alles wissen" data-t-attr="aria-label"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
+        <button type="button" id="bordDeel" class="deel"><span data-t>In de chat</span></button>
+      </div>
+    </div>
+  </div>
+  <div id="maakVak" hidden><div class="vel" role="dialog" aria-modal="true"></div></div>
+  <div class="chatbalk">
+    <div id="emojiRaster" hidden></div>
+    <div id="stickerRaster" hidden></div>
+    <div id="extraMenu" hidden role="menu">
+      <button type="button" class="extra-tegel" id="maakPollKnop" role="menuitem"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span data-t>Poll</span></button>
+      <button type="button" class="extra-tegel" id="maakAfspraakKnop" role="menuitem"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01"/></svg><span data-t>Afspraak</span></button>
+      <button type="button" class="extra-tegel" id="muziekKnop" role="menuitem"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><span data-t>Muziek</span></button>
+      <button type="button" class="extra-tegel" id="bordKnop" role="menuitem"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="13" rx="2"/><path d="M8 21l4-5 4 5M7.5 12.5l3-3 2 2 4-4"/></svg><span data-t>Whiteboard</span></button>
+      <button type="button" class="extra-tegel" id="pianoKnop" role="menuitem"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M7 5v9M12 5v9M17 5v9M7 14v5M12 14v5M17 14v5"/></svg><span data-t>Piano</span></button>
+    </div>
+    <div id="muziekNu" hidden><span class="mn-noot" aria-hidden="true">♫</span><span id="muziekNuTitel"></span><button type="button" id="muziekNuKnop" aria-label="Pauze" data-t-attr="aria-label">⏸</button></div>
+    <div class="balk-knoppen">
+      <button type="button" class="balk-knop" id="emojiKnop" aria-label="Emoji" data-t-attr="aria-label" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg></button>
+      <button type="button" class="balk-knop" id="stickerKnop" aria-label="Stickers" data-t-attr="aria-label" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 14.5V7a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v10a4 4 0 0 0 4 4h7.5"/><path d="M21 14.5 14.5 21v-3a3.5 3.5 0 0 1 3.5-3.5z"/><path d="M8.5 12.5a4.5 4.5 0 0 0 7 0M9 8.5h.01M15 8.5h.01"/></svg></button>
+      <button type="button" class="balk-knop later" aria-label="Spel" data-t-attr="aria-label"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5.5h10a4 4 0 0 1 3.95 3.4c.3 2 .8 5.5.8 7a2.6 2.6 0 0 1-4.6 1.7L15.7 16a2 2 0 0 0-1.5-.7H9.8a2 2 0 0 0-1.5.7l-1.45 1.6A2.6 2.6 0 0 1 2.25 15.9c0-1.5.5-5 .8-7A4 4 0 0 1 7 5.5z"/><path d="M8 9v4M6 11h4M15.5 11.5h.01M17.5 9.5h.01"/></svg></button>
+      <button type="button" class="balk-knop" id="fotoKnop" aria-label="Foto versturen" data-t-attr="aria-label"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+      <button type="button" class="balk-knop" id="spraakKnop" aria-label="Houd ingedrukt om in te spreken" data-t-attr="aria-label" style="touch-action:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <button type="button" class="balk-knop" id="extraKnop" aria-label="Meer: poll, afspraak, muziek, whiteboard, piano" data-t-attr="aria-label" aria-pressed="false" aria-controls="extraMenu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg></button>
+    </div>
+    <div id="antwoordBalk" hidden><span id="antwoordTekst"></span><button type="button" id="antwoordWeg" aria-label="Niet antwoorden" data-t-attr="aria-label">✕</button></div>
+    <div id="spraakBalk" hidden role="status" aria-live="polite"><span class="punt"></span><span id="spraakTijd">0:00</span><span id="spraakHint" data-t>← schuif om te annuleren</span></div>
+    <input type="file" id="fotoInvoer" accept="image/*" multiple hidden>
+    <div class="balk-invoer">
+      <input id="bericht" maxlength="2000" autocomplete="off" placeholder="Stuur een bericht..." aria-label="Bericht" data-t-attr="placeholder,aria-label">
+      <button type="button" id="verstuur" aria-label="Versturen" data-t-attr="aria-label">➤</button>
+    </div>
+  </div>
+</section>
+
+<div id="ledenPaneel" hidden>
+  <div class="paneel" role="dialog" aria-modal="true" aria-labelledby="paneelTitel">
+    <div class="rij-kop"><div class="vraag" id="paneelTitel" data-t>Leden</div><button type="button" class="klein-knop" id="paneelDicht" data-t>Sluiten</button></div>
+    <div id="ledenLijst"></div>
+    <div id="toevoegenDeel" hidden>
+      <div class="veld-label" style="margin:8px 0" data-t>Vriend toevoegen</div>
+      <div id="toevoegenLijst" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+    <button type="button" class="klein-knop rood" id="verlaatKnop" style="margin-top:8px" data-t>Groep verlaten</button>
+  </div>
+</div>
+
+<script type="module">
+  import { supabase } from './supabase.js?v=95'
+  import { haalPrivateKeyOp, eigenPubliekeSleutel } from './crypto.js?v=182'
+  import { versleutelGroepsbericht, openGroepsbericht, MAX_LEDEN } from './groepsleutel.js?v=2'
+  import { maakFoto, verstuurMedia, maakOntvanger, bewaarMedia, leesMedia, ruimOp, nieuwId, marker, MARKER, MAX_BYTES } from './groepmedia.js?v=1'
+  import { speel as speelFx } from './stickerfx.js?v=235'
+  import { isCode as isEigenCode, leesFx, zoekEigenSticker, fxCode, stickerPakket } from './eigenstickers.js?v=162'
+  import { kanOpnemen, neemOp, maakSpeler, tijdTekst as spraakTijd } from './spraak.js?v=1'
+  import { maakGroepGesprek, MAX_BELLERS, MAX_BEELD } from './groepbellen.js?v=3'
+  import { maakGroepMuziek } from './groepmuziek.js?v=1'
+  import { maakPiano, speelDeuntje, leesDeuntje, lengteMs } from './groeppiano.js?v=1'
+  import { maakGroepBord, tekenLijn, KLEUREN as BORD_KLEUREN, DIKTES as BORD_DIKTES, ACHTERGROND as BORD_ACHTERGROND } from './groepbord.js?v=2'
+  import { houOpen } from './lijntjes.js?v=1'
+  import { haalVriendFotos, geldigeFoto } from './vriendfotos.js?v=2'
+  import { bewaardeSessieZonderInternet } from './offline.js?v=146'
+  import { zoekSticker } from './stickervellen.js?v=236'
+
+  const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
+  const $ = id => document.getElementById(id)
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+  const GELDIG_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  const KLEUREN = ['#c084fc', '#f0abfc', '#a5b4fc', '#fcd34d', '#86efac', '#fda4af', '#7dd3fc', '#fdba74']
+  const kleurVan = id => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return KLEUREN[h % KLEUREN.length] }
+  const EMOJIS = ['😊','😂','❤','🔥','👍','🎉','😍','🤔','😢','😎','🌿','🌸','✨','🎵','🙌','💬','🦋','🌙','⭐','🍀','🎮','🐱','🌈','🎨']
+
+  let ik = null, mijnPriv = null, mijnPub = null
+  let groep = null, leden = [], ledenTijd = 0, lijn = null
+  const getoond = new Set()
+
+  function toast(tekst) {
+    const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = tekst
+    document.body.appendChild(t); setTimeout(() => t.remove(), 2600)
+  }
+  function toon(scherm) { for (const s of ['kiezen', 'leden', 'gesprek']) $(s).hidden = s !== scherm }
+  function avatarHtml(p) {
+    const a = String(p?.avatar_url || '')
+    if (a && [...a].length <= 4 && !/^https?:/i.test(a)) return esc(a)
+    return esc([...(p ? naamVan(p) : '?')][0].toUpperCase())
+  }
+  // Namen: een vriend zie je met zijn weergavenaam (die hij met jou deelde, zoals in de gewone chat), iemand die je niet
+  // kent met zijn gebruikersnaam. Zijn weergavenaam krijg je niet: die deelt hij alleen met zijn vrienden.
+  function naamVan(p) {
+    if (!p) return T('Oud lid')
+    if (p.id !== ik) { try { const n = String(localStorage.getItem('vriend_naam_' + p.id + '_' + ik) || '').trim(); if (n) return n } catch (e) {} }
+    return p.username || '?'
+  }
+  // De server weigert een groep als iemand erin 'Groepen met onbekenden' uit heeft staan en niet iedereen kent.
+  function foutTekst(error, kandidaten) {
+    if (error && error.hint === 'onbekenden') {
+      const wie = (kandidaten || []).find(p => p && p.id === error.details)
+      return wie ? T('{naam} wil alleen in groepen waarin iedereen een vriend is.', { naam: naamVan(wie) })
+        : T('Iemand wil alleen in groepen waarin iedereen een vriend is.')
+    }
+    return navigator.onLine ? T('Dat lukte niet') : T('Geen internet')
+  }
+  const tijdTekst = iso => { const d = new Date(iso); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') }
+
+  async function sessie() {
+    let { data: { session } } = await supabase.auth.getSession()
+    if (!session) session = bewaardeSessieZonderInternet()
+    return session
+  }
+
+  // ── Vrienden (alleen geaccepteerd) ──
+  async function haalVrienden() {
+    const { data, error } = await supabase.from('friendships')
+      .select('friend_id, profiles!friendships_friend_id_fkey(id, username, avatar_url, public_key)')
+      .eq('user_id', ik).eq('status', 'accepted')
+    if (error) throw error
+    return (data || []).map(r => r.profiles).filter(p => p && p.id).sort((a, b) => naamVan(a).localeCompare(naamVan(b)))
+  }
+
+  // ── 2. Nieuwe groep ──
+  let soort = 'chat'
+  let laatsteVrienden = []
+  const gekozen = new Set()
+  function werkTellerBij() {
+    const max = MAX_LEDEN[soort]
+    $('teller').textContent = T('{n} van {max}', { n: gekozen.size + 1, max })
+    $('maakKnop').disabled = gekozen.size < 1 || !$('groepNaam').value.trim()
+    for (const r of $('vriendenLijst').querySelectorAll('.vriend')) {
+      const vol = gekozen.size + 1 >= max && !gekozen.has(r.dataset.id)
+      r.querySelector('input').disabled = vol
+      r.classList.toggle('gekozen', gekozen.has(r.dataset.id))
+    }
+  }
+  async function startNieuw(s) {
+    soort = s; gekozen.clear()
+    $('nieuwTitel').textContent = s === 'voice' ? T('Nieuwe voice chat') : s === 'webcam' ? T('Nieuwe webcam chat') : T('Nieuwe groepschat')
+    toon('leden')
+    $('groepNaam').value = ''
+    $('maakMelding').textContent = ''
+    const lijst = $('vriendenLijst')
+    lijst.innerHTML = '<div class="leeg">' + esc(T('Even laden...')) + '</div>'
+    let vrienden = []
+    try { vrienden = await haalVrienden() } catch (e) { lijst.innerHTML = '<div class="leeg">' + esc(T('Laden lukte niet')) + '</div>'; return }
+    if (!vrienden.length) { lijst.innerHTML = '<div class="leeg">' + esc(T('Je hebt nog geen vrienden om toe te voegen.')) + '</div>'; werkTellerBij(); return }
+    lijst.innerHTML = ''
+    laatsteVrienden = vrienden
+    for (const v of vrienden) {
+      const r = document.createElement('label'); r.className = 'vriend'; r.dataset.id = v.id
+      r.innerHTML = '<span class="av" style="background:' + kleurVan(v.id) + '">' + avatarHtml(v) + '</span><span class="vriend-naam"></span><input type="checkbox">'
+      r.querySelector('.vriend-naam').textContent = naamVan(v)
+      r.querySelector('input').setAttribute('aria-label', T('{naam} toevoegen', { naam: naamVan(v) }))
+      r.querySelector('input').addEventListener('change', e => { if (e.target.checked) gekozen.add(v.id); else gekozen.delete(v.id); werkTellerBij() })
+      lijst.appendChild(r)
+    }
+    werkTellerBij()
+  }
+  $('groepNaam').addEventListener('input', werkTellerBij)
+  $('maakKnop').addEventListener('click', async () => {
+    const naam = $('groepNaam').value.trim()
+    if (!naam || !gekozen.size) return
+    $('maakKnop').disabled = true
+    $('maakMelding').textContent = ''
+    const { data, error } = await supabase.rpc('maak_groep', { p_naam: naam, p_soort: soort, p_leden: [...gekozen] })
+    if (error || !data) {
+      console.warn('[groep] maken mislukt', error)
+      $('maakMelding').textContent = error && error.hint === 'onbekenden' ? foutTekst(error, laatsteVrienden)
+        : navigator.onLine ? T('Groep maken lukte niet. Probeer het opnieuw.') : T('Geen internet')
+      werkTellerBij(); return
+    }
+    history.replaceState(null, '', 'groep.html?id=' + data)
+    await openGroep(data)
+  })
+
+  // ── 3. Gesprek ──
+  async function haalLeden(forceer) {
+    if (!forceer && leden.length && Date.now() - ledenTijd < 60000) return leden
+    const { data, error } = await supabase.rpc('groep_leden_info', { p_groep: groep.id })
+    if (error) throw error
+    leden = data || []; ledenTijd = Date.now()
+    werkKopBij()
+    return leden
+  }
+  function werkKopBij() {
+    $('groepTitel').textContent = groep?.naam || ''
+    $('groepSub').textContent = leden.length ? T('{n} leden', { n: leden.length }) : ''
+  }
+  const lidVan = id => leden.find(l => l.id === id)
+  // Profielfoto's (voor de rondjes in de voice chat): die van jezelf en van leden die je vriend zijn. Van iemand die
+  // je niet kent krijg je de foto niet (de database geeft hem alleen aan vrienden); die houdt zijn emoji of letter.
+  const fotoVan = new Map()
+  async function haalFotos() {
+    const ids = leden.map(l => l.id)
+    if (!ids.length) return
+    const klaar = () => { if (gesprek) tekenBel(gesprek.staat()) }
+    try {
+      const { data } = await supabase.from('profiles').select('id, updated_at, avatar_versie').in('id', ids)
+      const vrienden = (data || []).filter(r => r && r.id !== ik)
+      const zet = m => { for (const [id, f] of m) fotoVan.set(id, f); klaar() }
+      if (vrienden.length) zet(await haalVriendFotos(ik, vrienden, zet))
+      const { data: mij } = await supabase.from('profiles').select('avatar_data').eq('id', ik).maybeSingle()
+      const f = geldigeFoto(mij && mij.avatar_data)
+      if (f) { fotoVan.set(ik, f); klaar() }
+    } catch (e) { console.warn('[groep] foto\'s', e) }
+  }
+
+  function sysBericht(tekst) {
+    const d = document.createElement('div'); d.className = 'sys'; d.textContent = tekst; $('berichten').appendChild(d)
+  }
+  function naarOnder() { const b = $('berichten'); b.scrollTop = b.scrollHeight }
+
+  let vorigeAfzender = null
+  // Een sticker uit een bericht: een vaste (f1-01) van dit toestel, of een eigen sticker met het plaatje erin
+  // (in een groep altijd meegestuurd: niet iedereen is vriend van de maker, dus sync.js brengt hem niet).
+  function stickerUit(rest) {
+    const fx = leesFx(rest)
+    if (!isEigenCode(fx.code)) return zoekSticker(fx.code)
+    if (!fx.pakket || fx.pakket.length > 700000) return null
+    try {
+      const p = JSON.parse(fx.pakket)
+      if (!p || typeof p.d !== 'string' || !/^data:image\/(webp|png);base64,[A-Za-z0-9+/=]+$/.test(p.d)) return null
+      const woord = w => (typeof w === 'string' && /^[a-z]{1,20}$/.test(w)) ? w : 'geen'
+      return { src: p.d, b: woord(p.b), g: woord(p.g), naam: typeof p.n === 'string' ? p.n.slice(0, 30) : '' }
+    } catch (e) { return null }
+  }
+
+  // ── Foto's en spraakberichtjes (groepmedia.js): alleen naar wie online is ──
+  const ontvangen = new Map()   // id -> rec (net binnen, nog niet per se op het toestel bewaard)
+  const wachtend = new Map()    // id -> { bub, van, soort }
+  function toonMedia(bub, rec, mijn) {
+    const url = URL.createObjectURL(rec.blob)
+    bub.textContent = ''
+    bub.classList.add('media')
+    if (rec.soort === 'foto') {
+      const img = Object.assign(document.createElement('img'), { className: 'b-foto', src: url, alt: T('Foto') })
+      img.setAttribute('data-fv-groep', 'groep')
+      img.addEventListener('load', () => { if (Math.abs($('berichten').scrollHeight - $('berichten').scrollTop - $('berichten').clientHeight) < 400) naarOnder() })
+      bub.appendChild(img)
+    } else {
+      bub.appendChild(maakSpeler(url, rec.duur, { mijn }))
+    }
+  }
+  async function tekenMedia(bub, id, soort, duur, van, mijn, nieuw) {
+    const icoon = soort === 'foto' ? T('\u{1F4F7} Foto') : T('\u{1F3A4} Spraakbericht ({tijd})', { tijd: spraakTijd(duur) })
+    bub.classList.add('media')
+    bub.innerHTML = '<div class="media-wacht"></div>'
+    const tekst = bub.firstChild
+    tekst.textContent = icoon + (nieuw && !mijn ? ' \u00B7 ' + T('komt binnen\u2026') : '')
+    let rec = ontvangen.get(id)
+    if (!rec) rec = await leesMedia(groep.id, id)
+    if (rec && rec.van === van) { toonMedia(bub, rec, mijn); return }
+    if (mijn) { tekst.textContent = icoon + ' \u00B7 ' + T('niet meer op dit toestel'); return }
+    wachtend.set(id, { bub, van, mijn })
+    const nietOnline = () => { if (wachtend.get(id)?.bub === bub) tekst.textContent = icoon + ' \u00B7 ' + T('je was niet online') }
+    if (nieuw) setTimeout(nietOnline, 45000); else nietOnline()
+  }
+  const ontvang = maakOntvanger({
+    sleutelVoor: van => { const l = lidVan(van); return l && l.public_key && mijnPriv ? { groepId: groep.id, ik, mijnPriv, afzenderPub: l.public_key } : null },
+    opKlaar: (id, rec) => {
+      ontvangen.set(id, rec)
+      bewaarMedia(groep.id, id, rec)
+      const w = wachtend.get(id)
+      if (w && w.van === rec.van) { wachtend.delete(id); toonMedia(w.bub, rec, w.mijn) }
+    }
+  })
+  async function stuurMedia(soort, blob, duur) {
+    const k = lijn?.kanaal?.()
+    if (!k) { toast(T('Geen verbinding met de groep. Probeer het zo opnieuw.')); return }
+    if (!blob || blob.size > MAX_BYTES) { toast(T('Dit is te groot om te versturen.')); return }
+    const id = nieuwId()
+    const rec = { blob, soort, mime: blob.type, duur, van: ik }
+    ontvangen.set(id, rec)
+    await bewaarMedia(groep.id, id, rec)
+    if (!(await verstuur(marker(id, soort, duur)))) return
+    try {
+      await haalLeden()
+      const ontvangers = leden.map(l => l.id === ik ? { id: ik, public_key: mijnPub } : l)
+      await verstuurMedia(k, { id, soort, mime: blob.type, duur, blob }, { groepId: groep.id, van: ik, mijnPriv, leden: ontvangers })
+      toast(soort === 'foto' ? T('Foto verstuurd naar wie nu online is') : T('Spraakbericht verstuurd naar wie nu online is'))
+    } catch (e) {
+      console.warn('[groep] media versturen mislukt', e)
+      toast(T('Versturen lukte niet helemaal. Probeer het opnieuw.'))
+    }
+  }
+  // ── Antwoorden, reacties en weghalen (zoals in de gewone chat). Alles gaat versleuteld als groepsbericht:
+  //   'antw:<id>\n<tekst>'        een antwoord op een bericht (het citaat maakt elk toestel zelf)
+  //   'reactie:<id>:<emoji/tekst>' een reactie (leeg = weg); een 'stil' bericht: telt niet als ongelezen, geen melding
+  //   'weg:<id>'                   de afzender haalde zijn bericht weg (de rij is ook uit de database)
+  const tekstPerId = new Map()   // id -> { naam, tekst } voor citaten
+  const reacties = new Map()     // id -> Map(van -> inhoud)
+  const ID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+  const RE_REACTIE = new RegExp('^reactie:(' + ID + '):([\\s\\S]{0,30})$')
+  const RE_WEG = new RegExp('^weg:(' + ID + ')$')
+  const RE_ANTW = new RegExp('^antw:(' + ID + ')\\n([\\s\\S]*)$')
+  // Poll en afspraak (de + knop): ook gewone versleutelde groepsberichten.
+  //   'poll:{"vraag":..,"keuzes":[..],"meer":bool}'      een poll
+  //   'stem:<id>:[0,2]'                                    mijn stem (stil); [] = stem weg
+  //   'afspraak:{"titel":..,"wanneer":"2026-11-15T19:30","waar":..}'
+  //   'komt:<id>:ja|nee|misschien'                         mijn antwoord (stil); leeg = weg
+  const RE_POLL = /^poll:(\{[\s\S]{2,3000}\})$/
+  const RE_STEM = new RegExp('^stem:(' + ID + '):(\\[[0-9,]{0,20}\\])$')
+  const RE_AFSPRAAK = /^afspraak:(\{[\s\S]{2,1000}\})$/
+  const RE_KOMT = new RegExp('^komt:(' + ID + '):(ja|nee|misschien|)$')
+  const RE_DEUNTJE = /^deuntje:(\{[\s\S]{2,12000}\})$/   // een deuntje van de piano (groeppiano.js)
+  let deuntjes = []           // [{ id, van, data }] in volgorde; de piano toont de laatste 10
+  const stemmen = new Map()   // poll-id -> Map(van -> [keuzes])
+  const komen = new Map()     // afspraak-id -> Map(van -> 'ja'|'nee'|'misschien')
+  const kaarten = new Map()   // id -> { soort, data, bub }
+  function leesPoll(json) {
+    try {
+      const p = JSON.parse(json)
+      if (!p || typeof p.vraag !== 'string' || !p.vraag.trim() || !Array.isArray(p.keuzes)) return null
+      const keuzes = p.keuzes.filter(k => typeof k === 'string' && k.trim()).map(k => k.trim().slice(0, 60)).slice(0, 6)
+      return keuzes.length >= 2 ? { vraag: p.vraag.trim().slice(0, 140), keuzes, meer: p.meer === true } : null
+    } catch (e) { return null }
+  }
+  function leesAfspraak(json) {
+    try {
+      const a = JSON.parse(json)
+      if (!a || typeof a.titel !== 'string' || !a.titel.trim() || !/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(String(a.wanneer))) return null
+      const tot = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(String(a.tot)) && String(a.tot) >= String(a.wanneer) ? a.tot : ''
+      return { titel: a.titel.trim().slice(0, 80), wanneer: a.wanneer, tot, waar: typeof a.waar === 'string' ? a.waar.trim().slice(0, 80) : '' }
+    } catch (e) { return null }
+  }
+  function kortVan(tekst) {
+    if (/^fxsticker:/.test(tekst)) return T('\u{1F5BC}\uFE0F Sticker')
+    const mm = MARKER.exec(tekst)
+    if (mm) return mm[2] === 'foto' ? T('\u{1F4F7} Foto') : T('\u{1F3A4} Spraakbericht ({tijd})', { tijd: spraakTijd(Number(mm[3])) })
+    const pm = RE_POLL.exec(tekst), poll = pm && leesPoll(pm[1])
+    if (poll) return '\u{1F4CA} ' + poll.vraag
+    const am = RE_AFSPRAAK.exec(tekst), afs = am && leesAfspraak(am[1])
+    if (afs) return '\u{1F4C5} ' + afs.titel
+    const dm = RE_DEUNTJE.exec(tekst), dt = dm && leesDeuntje(dm[1])
+    if (dt) return '\u{1F3B9} ' + (dt.naam || T('Deuntje'))
+    return String(tekst).slice(0, 80)
+  }
+  function zetReactie(id, van, inhoud) {
+    let m = reacties.get(id)
+    if (!m) { m = new Map(); reacties.set(id, m) }
+    if (inhoud) m.set(van, inhoud); else m.delete(van)
+    tekenReacties(id)
+  }
+  function tekenReacties(id) {
+    const rij = $('berichten').querySelector('.b-rij[data-id="' + id + '"]')
+    if (!rij) return
+    rij.querySelector('.reacties')?.remove()
+    const m = reacties.get(id)
+    if (!m || !m.size) return
+    const vak = document.createElement('div'); vak.className = 'reacties'
+    const tellen = new Map()
+    for (const [van, inhoud] of m) {
+      if ([...inhoud].length <= 2 && !/[a-z0-9]/i.test(inhoud)) {
+        const t = tellen.get(inhoud) || { n: 0, mijn: false }; t.n++; if (van === ik) t.mijn = true; tellen.set(inhoud, t)
+      } else {
+        const c = document.createElement('span'); c.className = 'reactie' + (van === ik ? ' mijn' : '')
+        c.textContent = naamVan(van === ik ? { id: ik, username: T('jij') } : lidVan(van)) + ': ' + inhoud
+        vak.appendChild(c)
+      }
+    }
+    for (const [e, t] of tellen) {
+      const c = document.createElement('span'); c.className = 'reactie' + (t.mijn ? ' mijn' : '')
+      c.textContent = e + (t.n > 1 ? ' ' + t.n : ''); vak.prepend(c)
+    }
+    rij.querySelector('.b-kol').insertBefore(vak, rij.querySelector('.b-tijd'))
+  }
+  function haalWeg(id, van) {
+    const rij = $('berichten').querySelector('.b-rij[data-id="' + id + '"]')
+    if (!rij || rij.dataset.van !== van) return
+    if (deuntjes.some(x => x.id === id)) { deuntjes = deuntjes.filter(x => x.id !== id); tekenPianoLijst() }
+    const kol = rij.querySelector('.b-kol')
+    for (const el of kol.querySelectorAll('.bubbel, .b-sticker, .citaat, .reacties')) el.remove()
+    const b = document.createElement('div'); b.className = 'bubbel weg'; b.textContent = T('\u{1F6AB} Bericht verwijderd')
+    kol.insertBefore(b, kol.querySelector('.b-tijd'))
+    rij.dataset.weg = '1'
+    tekstPerId.delete(id)
+  }
+
+  // ── Poll en afspraak tekenen ──
+  const ICOON_POLL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>'
+  const naamKort = id => id === ik ? T('jij') : naamVan(lidVan(id))
+  function zetStem(id, van, keuzes) {
+    let m = stemmen.get(id); if (!m) { m = new Map(); stemmen.set(id, m) }
+    const k = Array.isArray(keuzes) ? [...new Set(keuzes.filter(x => Number.isInteger(x) && x >= 0 && x < 6))] : []
+    if (k.length) m.set(van, k); else m.delete(van)
+    tekenPoll(id)
+  }
+  function zetKomt(id, van, antw) {
+    let m = komen.get(id); if (!m) { m = new Map(); komen.set(id, m) }
+    if (antw) m.set(van, antw); else m.delete(van)
+    tekenAfspraak(id)
+  }
+  function tekenPoll(id) {
+    const kaart = kaarten.get(id)
+    if (!kaart || kaart.soort !== 'poll' || !kaart.bub.isConnected) return
+    const { data: p, bub } = kaart
+    const m = stemmen.get(id) || new Map()
+    const geldig = [...m].map(([van, k]) => [van, p.meer ? k.filter(x => x < p.keuzes.length) : k.filter(x => x < p.keuzes.length).slice(0, 1)]).filter(([, k]) => k.length)
+    const mijn = new Set((geldig.find(([van]) => van === ik) || [, []])[1])
+    bub.className = 'bubbel kaart'
+    bub.innerHTML = '<div class="k-kop">' + ICOON_POLL + '<span class="k-vraag"></span></div><div class="k-sub"></div>'
+    bub.querySelector('.k-vraag').textContent = p.vraag
+    bub.querySelector('.k-sub').textContent = p.meer ? T('Kies er een of meer') : T('Kies er een')
+    p.keuzes.forEach((keuze, i) => {
+      const wie = geldig.filter(([, k]) => k.includes(i)).map(([van]) => van)
+      const pct = geldig.length ? Math.round(wie.length / geldig.length * 100) : 0
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'k-keuze' + (mijn.has(i) ? ' mijn' : '')
+      b.setAttribute('aria-pressed', String(mijn.has(i)))
+      b.innerHTML = '<span class="k-balk" style="width:' + pct + '%"></span><span class="k-regel"><span class="k-vink">' + (mijn.has(i) ? '✓' : '') + '</span><span class="k-tekst"></span><span class="k-n">' + wie.length + '</span></span><div class="k-namen"></div>'
+      b.querySelector('.k-tekst').textContent = keuze
+      b.querySelector('.k-namen').textContent = wie.map(naamKort).join(', ')
+      b.addEventListener('click', () => {
+        if (!mijnPriv) return
+        let nieuw
+        if (p.meer) { const s = new Set(mijn); if (s.has(i)) s.delete(i); else s.add(i); nieuw = [...s].sort() }
+        else nieuw = mijn.has(i) ? [] : [i]
+        zetStem(id, ik, nieuw) // meteen laten zien; het bericht komt erachteraan
+        verstuur('stem:' + id + ':' + JSON.stringify(nieuw), { stil: true })
+      })
+      bub.appendChild(b)
+    })
+    const voet = document.createElement('div'); voet.className = 'k-voet'
+    voet.textContent = geldig.length === 1 ? T('1 stem') : T('{n} stemmen', { n: geldig.length })
+    bub.appendChild(voet)
+  }
+  // '2026-12-25T10:00' -> '25 dec 10:00' (zoals in Marcels ontwerp)
+  function wanneerTekst(w) {
+    const [d, t] = String(w).split('T'), [j, mnd, dag] = d.split('-').map(Number)
+    const loc = (() => { try { return localStorage.getItem('fibro_taal') === 'en' ? 'en-GB' : 'nl-NL' } catch (e) { return 'nl-NL' } })()
+    let s = new Date(j, mnd - 1, dag).toLocaleDateString(loc, { day: 'numeric', month: 'short' }).replace('.', '')
+    if (j !== new Date().getFullYear()) s += ' ' + j
+    return t ? s + ' ' + t : s
+  }
+  function afspraakVoorbij(a) {
+    const w = a.tot || a.wanneer
+    const [d, t] = String(w).split('T'), [j, mnd, dag] = d.split('-').map(Number), [u, mi] = (t || '23:59').split(':').map(Number)
+    return new Date(j, mnd - 1, dag, u, mi).getTime() < Date.now()
+  }
+  function tekenAfspraak(id) {
+    const kaart = kaarten.get(id)
+    if (!kaart || kaart.soort !== 'afspraak' || !kaart.bub.isConnected) return
+    const { data: a, bub } = kaart
+    const m = komen.get(id) || new Map()
+    const mijn = m.get(ik) || ''
+    const voorbij = afspraakVoorbij(a)
+    bub.className = 'bubbel kaart afspraak' + (voorbij ? ' voorbij' : '')
+    bub.innerHTML = '<div class="k-label"></div><div class="k-titel"></div><div class="k-wanneer"></div>' + (a.waar ? '<div class="k-waar"></div>' : '') + '<div class="k-antw"></div><div class="k-namen k-wie"></div>'
+    bub.querySelector('.k-label').textContent = T('Afspraak')
+    bub.querySelector('.k-titel').textContent = a.titel
+    bub.querySelector('.k-wanneer').textContent = wanneerTekst(a.wanneer) + (a.tot ? ' - ' + (a.tot.slice(0, 10) === a.wanneer.slice(0, 10) && a.tot.includes('T') ? a.tot.slice(11) : wanneerTekst(a.tot)) : '') + (voorbij ? ' · ' + T('geweest') : '')
+    if (a.waar) bub.querySelector('.k-waar').textContent = '\u{1F4CD} ' + a.waar
+    const ANTW = [['ja', T('Ja')], ['nee', T('Nee')]]
+    const regels = []
+    for (const [w, label] of ANTW) {
+      const wie = [...m].filter(([, x]) => x === w).map(([van]) => van)
+      const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', String(mijn === w))
+      b.dataset.antw = w
+      b.textContent = label + (wie.length ? ' · ' + wie.length : '')
+      b.addEventListener('click', () => {
+        if (!mijnPriv) return
+        const nieuw = mijn === w ? '' : w
+        zetKomt(id, ik, nieuw)
+        verstuur('komt:' + id + ':' + nieuw, { stil: true })
+      })
+      bub.querySelector('.k-antw').appendChild(b)
+      if (wie.length) regels.push(label + ': ' + wie.map(naamKort).join(', '))
+    }
+    bub.querySelector('.k-wie').textContent = regels.join(' · ')
+  }
+
+  // Berichten een voor een tekenen (een reactie of antwoord moet na zijn bericht komen)
+  let wachtrij = Promise.resolve()
+  function tekenBericht(r, onder = true, nieuw = false) {
+    const p = wachtrij.then(() => tekenEen(r, onder, nieuw)).catch(e => console.warn('[groep] tekenen', e))
+    wachtrij = p
+    return p
+  }
+  async function tekenEen(r, onder, nieuw) {
+    if (!r || getoond.has(r.id)) return
+    getoond.add(r.id)
+    const mijn = r.sender_id === ik
+    const afz = mijn ? { id: ik, public_key: mijnPub } : lidVan(r.sender_id)
+    const uit = await openGroepsbericht(r.content, { groepId: groep.id, van: r.sender_id, ik, mijnPriv, afzenderPub: afz?.public_key, serverTijd: Date.parse(r.created_at) })
+    const leesbaar = uit.status === 'ok' || uit.status === 'tijd'
+    let tekst = leesbaar ? uit.tekst : ''
+    let antwoordOp = null
+    if (leesbaar) {
+      let m = RE_REACTIE.exec(tekst)
+      if (m) { zetReactie(m[1], r.sender_id, m[2]); return }
+      m = RE_WEG.exec(tekst)
+      if (m) { haalWeg(m[1], r.sender_id); return }
+      m = RE_STEM.exec(tekst)
+      if (m) { let k = []; try { k = JSON.parse(m[2]) } catch (e) {} zetStem(m[1], r.sender_id, k); return }
+      m = RE_KOMT.exec(tekst)
+      if (m) { zetKomt(m[1], r.sender_id, m[2]); return }
+      m = RE_ANTW.exec(tekst)
+      if (m) { antwoordOp = m[1]; tekst = m[2] }
+    }
+    const rij = document.createElement('div')
+    rij.className = 'b-rij' + (mijn ? ' mijn' : '') + (vorigeAfzender === r.sender_id ? ' vervolg' : '')
+    rij.dataset.id = r.id
+    rij.dataset.van = r.sender_id
+    vorigeAfzender = r.sender_id
+    const kleur = kleurVan(r.sender_id)
+    rij.innerHTML = '<span class="av" style="background:' + kleur + '">' + avatarHtml(afz) + '</span>'
+      + '<div class="b-kol">' + (mijn ? '' : '<div class="b-naam" style="color:' + kleur + '"></div>') + '<div class="bubbel"></div><div class="b-tijd">' + esc(tijdTekst(r.created_at)) + '</div></div>'
+    if (!mijn) rij.querySelector('.b-naam').textContent = naamVan(afz)
+    $('berichten').appendChild(rij)
+    const bub = rij.querySelector('.bubbel')
+    if (antwoordOp) {
+      const c = document.createElement('div'); c.className = 'citaat'
+      const orig = tekstPerId.get(antwoordOp)
+      if (orig) { const b = document.createElement('b'); b.textContent = orig.naam + ': '; c.append(b, document.createTextNode(orig.tekst)) }
+      else { c.textContent = T('bericht niet meer beschikbaar'); c.dataset.wacht = antwoordOp } // komt het bericht nog, dan vult hij zich
+      c.addEventListener('click', () => {
+        const doel = $('berichten').querySelector('.b-rij[data-id="' + antwoordOp + '"]')
+        if (doel) { doel.scrollIntoView({ block: 'center', behavior: 'smooth' }); doel.classList.add('licht'); setTimeout(() => doel.classList.remove('licht'), 1500) }
+      })
+      bub.before(c)
+    }
+    if (leesbaar) {
+      tekstPerId.set(r.id, { naam: mijn ? T('jij') : naamVan(afz), tekst: kortVan(tekst) })
+      for (const c of $('berichten').querySelectorAll('.citaat[data-wacht="' + r.id + '"]')) {
+        const o = tekstPerId.get(r.id), b = document.createElement('b'); b.textContent = o.naam + ': '
+        c.textContent = ''; c.append(b, document.createTextNode(o.tekst)); delete c.dataset.wacht
+      }
+      const fxm = /^fxsticker:([\s\S]+)$/.exec(tekst)
+      const mm = MARKER.exec(tekst)
+      if (fxm) {
+        const st = stickerUit(fxm[1])
+        if (st) {
+          const img = Object.assign(document.createElement('img'), { className: 'b-sticker', src: st.src, alt: st.naam || T('Sticker') })
+          img.addEventListener('click', () => speelFx(img, st, true))
+          bub.replaceWith(img)
+          if (nieuw) speelFx(img, st, !mijn) // net binnen: bewegen; geluid bij wie hem krijgt (de verstuurder hoorde het al)
+        } else bub.textContent = T('\u{1F5BC}\uFE0F Sticker')
+      } else if (mm) {
+        tekenMedia(bub, mm[1], mm[2], Number(mm[3]), r.sender_id, mijn, nieuw)
+      } else {
+        const pm = RE_POLL.exec(tekst), poll = pm && leesPoll(pm[1])
+        const am = !poll && RE_AFSPRAAK.exec(tekst), afs = am && leesAfspraak(am[1])
+        if (poll) { kaarten.set(r.id, { soort: 'poll', data: poll, bub }); tekenPoll(r.id) }
+        else if (afs) { kaarten.set(r.id, { soort: 'afspraak', data: afs, bub }); tekenAfspraak(r.id) }
+        else if (RE_DEUNTJE.test(tekst) && leesDeuntje(RE_DEUNTJE.exec(tekst)[1])) {
+          const dt = leesDeuntje(RE_DEUNTJE.exec(tekst)[1])
+          kaarten.set(r.id, { soort: 'deuntje', data: dt, bub }); tekenDeuntjeKaart(r.id)
+          deuntjes = deuntjes.filter(x => x.id !== r.id).concat([{ id: r.id, van: r.sender_id, data: dt }])
+          tekenPianoLijst()
+        }
+        else bub.textContent = tekst
+      }
+    } else {
+      bub.classList.add('slot')
+      bub.textContent = uit.status === 'niet-voor-mij' ? T('🔒 Verstuurd voordat je lid werd')
+        : !afz ? T('🔒 Van iemand die niet meer in de groep zit')
+        : uit.status === 'vervalst' ? T('⚠️ [bericht klopt niet — onderweg veranderd]') : T('🔒 [versleuteld bericht — kan niet lezen]')
+    }
+    if (leesbaar) zetLangDrukken(rij)
+    tekenReacties(r.id)
+    if (onder) naarOnder()
+    if (nieuw && !mijn) markeerGelezen()
+  }
+
+  // ── Lang drukken (of rechts klikken) op een bericht: reageren, antwoorden, weghalen ──
+  const MENU_EMOJIS = ['\u{1F44D}', '\u2764\uFE0F', '\u{1F602}', '\u{1F62E}', '\u{1F622}', '\u{1F525}']
+  let menuBuiten = null
+  function sluitMenu() {
+    $('berichtMenu')?.remove()
+    if (menuBuiten) { document.removeEventListener('pointerdown', menuBuiten, true); menuBuiten = null }
+  }
+  function openMenu(rij, x, y) {
+    sluitMenu()
+    const id = rij.dataset.id, mijn = rij.dataset.van === ik
+    const mijnReactie = reacties.get(id)?.get(ik) || ''
+    const m = document.createElement('div'); m.id = 'berichtMenu'; m.setAttribute('role', 'menu')
+    const r1 = document.createElement('div'); r1.className = 'rij'
+    for (const e of MENU_EMOJIS) {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = e
+      if (e === mijnReactie) b.className = 'gekozen'
+      b.addEventListener('click', () => { sluitMenu(); verstuur('reactie:' + id + ':' + (e === mijnReactie ? '' : e), { stil: true }) })
+      r1.appendChild(b)
+    }
+    const r2 = document.createElement('div'); r2.className = 'rij'
+    const knop = (tekst, actie) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tekst'; b.textContent = tekst; b.addEventListener('click', () => { sluitMenu(); actie() }); r2.appendChild(b) }
+    if (rij.dataset.weg !== '1') {
+      knop(T('\u21A9 Antwoorden'), () => kiesAntwoord(id))
+      knop(T('\u{1F4AC} Reageer'), () => {
+        const t = prompt(T('Jouw reactie (max 30 tekens):'))
+        if (t && t.trim()) verstuur('reactie:' + id + ':' + t.trim().slice(0, 30), { stil: true })
+      })
+      if (mijnReactie) knop(T('Reactie weg'), () => verstuur('reactie:' + id + ':', { stil: true }))
+      if (mijn) knop(T('\u{1F5D1} Weghalen'), () => weghalen(id))
+    }
+    m.append(r1, r2)
+    document.body.appendChild(m)
+    const b = m.getBoundingClientRect()
+    m.style.left = Math.max(8, Math.min(x - b.width / 2, innerWidth - b.width - 8)) + 'px'
+    m.style.top = Math.max(8, y - b.height - 12) + 'px'
+    setTimeout(() => { if (!m.isConnected) return; menuBuiten = e => { if (!m.contains(e.target)) sluitMenu() }; document.addEventListener('pointerdown', menuBuiten, true) }, 0)
+  }
+  function zetLangDrukken(rij) {
+    let tm = null, sx = 0, sy = 0
+    rij.addEventListener('pointerdown', e => { sx = e.clientX; sy = e.clientY; clearTimeout(tm); tm = setTimeout(() => { tm = null; openMenu(rij, sx, sy); try { navigator.vibrate?.(15) } catch (er) {} }, 450) })
+    rij.addEventListener('pointermove', e => { if (tm && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) { clearTimeout(tm); tm = null } })
+    for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) rij.addEventListener(ev, () => { clearTimeout(tm); tm = null })
+    rij.addEventListener('contextmenu', e => { e.preventDefault(); openMenu(rij, e.clientX, e.clientY) })
+  }
+  let antwoordOp = null
+  function kiesAntwoord(id) {
+    const orig = tekstPerId.get(id)
+    antwoordOp = id
+    $('antwoordTekst').textContent = '\u21A9 ' + (orig ? orig.naam + ': ' + orig.tekst : T('bericht'))
+    $('antwoordBalk').hidden = false
+    $('bericht').focus()
+  }
+  function wisAntwoord() { antwoordOp = null; $('antwoordBalk').hidden = true }
+  $('antwoordWeg').addEventListener('click', wisAntwoord)
+  async function weghalen(id) {
+    if (!confirm(T('Dit bericht voor iedereen weghalen?'))) return
+    const { error } = await supabase.from('groep_berichten').delete().eq('id', id).eq('sender_id', ik)
+    if (error) { toast(T('Dat lukte niet')); return }
+    haalWeg(id, ik)
+    verstuur('weg:' + id, { stil: true })
+  }
+
+  // ── Gelezen (voor het tellertje in de chatlijst en op het tabblad Chat) ──
+  let gelezenTimer = null
+  function markeerGelezen() {
+    if (!groep || document.visibilityState !== 'visible') return
+    clearTimeout(gelezenTimer)
+    gelezenTimer = setTimeout(() => { supabase.rpc('groep_markeer_gelezen', { p_groep: groep.id }).then(() => {}, () => {}) }, 800)
+  }
+  document.addEventListener('visibilitychange', markeerGelezen)
+
+  // ── Typen: "Bram typt..." (over het live-kanaal, niet bewaard) ──
+  const typers = new Map()
+  let laatsteTypen = 0
+  function werkTypenBij() {
+    const nu = Date.now()
+    for (const [v, t] of typers) if (nu - t > 4000) typers.delete(v)
+    const namen = [...typers.keys()].map(v => naamVan(lidVan(v))).filter(Boolean)
+    if (!namen.length) { werkKopBij(); return }
+    $('groepSub').textContent = namen.length === 1 ? T('{naam} typt\u2026', { naam: namen[0] }) : T('{namen} typen\u2026', { namen: namen.join(', ') })
+  }
+  setInterval(() => { if (typers.size) werkTypenBij() }, 1000)
+  $('bericht').addEventListener('input', () => {
+    const k = lijn?.kanaal?.()
+    if (!k || Date.now() - laatsteTypen < 2500 || !$('bericht').value) return
+    laatsteTypen = Date.now()
+    k.send({ type: 'broadcast', event: 'typen', payload: { van: ik } }).catch?.(() => {})
+  })
+
+  async function laadBerichten() {
+    const { data, error } = await supabase.from('groep_berichten').select('id, sender_id, content, created_at')
+      .eq('groep_id', groep.id).order('created_at', { ascending: false }).limit(100)
+    if (error) { sysBericht(T('Berichten laden lukte niet')); return }
+    for (const r of (data || []).reverse()) await tekenBericht(r, false)
+    naarOnder()
+  }
+  async function haalGemist() {
+    gesprek?.track() // na een onderbreking: opnieuw laten zien dat ik in de voice chat zit
+    muziek?.vraagLijsten().catch?.(() => {})
+    const { data } = await supabase.from('groep_berichten').select('id, sender_id, content, created_at')
+      .eq('groep_id', groep.id).order('created_at', { ascending: false }).limit(50)
+    for (const r of (data || []).reverse()) await tekenBericht(r)
+  }
+
+  async function openGroep(id) {
+    toon('gesprek')
+    $('berichten').innerHTML = ''
+    getoond.clear(); vorigeAfzender = null
+    const { data, error } = await supabase.from('groepen').select('id, naam, soort, maker').eq('id', id).maybeSingle()
+    if (error || !data) { $('groepTitel').textContent = T('Groep'); sysBericht(T('Deze groep bestaat niet meer, of je bent geen lid.')); zetInvoer(false); return }
+    groep = data
+    werkKopBij()
+    sysBericht(T('🔒 Berichten in deze groep zijn end-to-end versleuteld'))
+    if (!mijnPriv) { sysBericht(T('Je sleutel staat niet op dit toestel. Zet hem terug met je herstelcode (Stijl > Instellingen).')); zetInvoer(false) }
+    try { await haalLeden(true) } catch (e) { sysBericht(T('Leden laden lukte niet')) }
+    haalFotos()
+    await laadBerichten()
+    lijn?.stop?.()
+    lijn = houOpen('groep-' + groep.id, () => supabase
+      .channel('groep-' + groep.id, { config: { private: true, presence: { key: ik } } })
+      .on('presence', { event: 'sync' }, () => { const k = lijn?.kanaal?.(); if (k && gesprek) gesprek.presence(k.presenceState()) })
+      .on('broadcast', { event: 'rtc' }, m => gesprek?.ontvangSein(m && m.payload))
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'groep_berichten', filter: 'groep_id=eq.' + groep.id }, async p => {
+        const r = p.new
+        if (r.sender_id !== ik && !lidVan(r.sender_id)) { try { await haalLeden(true) } catch (e) {} }
+        await tekenBericht(r, true, true)
+      })
+      .on('broadcast', { event: 'media' }, m => { ontvang(m && m.payload).catch?.(() => {}) })
+      .on('broadcast', { event: 'bord' }, m => { bord?.ontvang(m && m.payload).catch?.(e => console.warn('[groep] bord', e)) })
+      .on('broadcast', { event: 'muziek' }, m => { muziek?.ontvang(m && m.payload).catch?.(e => console.warn('[groep] muziek', e)) })
+      .on('broadcast', { event: 'typen' }, m => { const v = m && m.payload && m.payload.van; if (v && v !== ik && lidVan(v)) { typers.set(v, Date.now()); werkTypenBij() } }), haalGemist)
+    markeerGelezen()
+    ruimOp(groep.id)
+    gesprek = maakGroepGesprek({
+      ik, groepId: groep.id, kanaal: () => lijn?.kanaal?.(),
+      sleutel: () => ({ mijnPriv, mijnPub, pubVan: id => lidVan(id)?.public_key || null }),
+      opStaat: tekenBel, beeld: groep.soort === 'webcam',
+    })
+    { const k = lijn?.kanaal?.(); if (k && k.presenceState) gesprek.presence(k.presenceState()) } // wie er al in zit
+    tekenBel(gesprek.staat())
+    muziek = maakGroepMuziek({
+      ik, groepId: groep.id, kanaal: () => lijn?.kanaal?.(),
+      sleutel: () => mijnPriv ? { mijnPriv, mijnPub, leden, pubVan: id => lidVan(id)?.public_key || null } : null,
+      opVerander: () => tekenMuziek(),
+    })
+    bord = maakGroepBord({
+      ik, groepId: groep.id, kanaal: () => lijn?.kanaal?.(),
+      sleutel: () => mijnPriv ? { mijnPriv, mijnPub, leden, pubVan: id => lidVan(id)?.public_key || null } : null,
+      opVerander: () => { if (!$('bordVak').hidden) tekenBord() },
+    })
+    // zodra het kanaal open is: wie heeft er muziek? (en mijn lijst laten weten)
+    ;(async () => {
+      for (let i = 0; i < 40; i++) {
+        const k = lijn?.kanaal?.()
+        if (k && k.state === 'joined') { muziek.vraagLijsten().catch(() => {}); break }
+        await new Promise(ok => setTimeout(ok, 500))
+      }
+    })()
+  }
+  // ── Voice chat en webcam chat (groepbellen.js): tot 8 personen praten, of tot 4 met beeld ──
+  let gesprek = null
+  const metBeeld = () => groep && groep.soort === 'webcam'
+  const maxBel = () => metBeeld() ? MAX_BEELD : MAX_BELLERS
+  const magBellen = () => groep && mijnPriv && leden.length > 1 && leden.length <= MAX_BELLERS
+  const tegelVan = new Map()   // id -> tegel (blijft staan, zodat het beeld niet steeds opnieuw begint)
+  let knoppenOpen = false      // de knoppen (Microfoon ... Ophangen) zie je pas als je op je eigen rondje tikt
+  function zetFoto(c, f, lid) {
+    if (c._foto === f) return
+    c._foto = f
+    if (f) { c.style.backgroundImage = 'url("' + f + '")'; c.style.backgroundSize = 'cover'; c.style.backgroundPosition = 'center'; c.textContent = '' }
+    else { c.style.backgroundImage = ''; c.innerHTML = avatarHtml(lid) }
+  }
+  function zetBeeld(video, stroom) {
+    if (!video._vul) {
+      // het beeld altijd het hele vak laten vullen (bijsnijden), ook als de camera tussendoor een andere maat geeft
+      video._vul = () => vulBeeld(video)
+      video.addEventListener('loadedmetadata', video._vul)
+      video.addEventListener('resize', video._vul)
+      if (window.ResizeObserver) new ResizeObserver(video._vul).observe(video.parentElement)
+    }
+    if (video.srcObject !== stroom) { video.srcObject = stroom || null; if (stroom) video.play?.().catch?.(() => {}) }
+    vulBeeld(video)
+  }
+  function vulBeeld(v) {
+    const vak = v.parentElement
+    const bw = vak ? vak.clientWidth : 0, bh = vak ? vak.clientHeight : 0, vw = v.videoWidth, vh = v.videoHeight
+    if (!bw || !bh || !vw || !vh) return
+    const k = Math.max(bw / vw, bh / vh), w = Math.ceil(vw * k), h = Math.ceil(vh * k)
+    const maat = w + 'x' + h + '@' + Math.round((bw - w) / 2) + ',' + Math.round((bh - h) / 2)
+    if (v._maat === maat) return
+    v._maat = maat
+    v.style.width = w + 'px'; v.style.height = h + 'px'
+    v.style.left = Math.round((bw - w) / 2) + 'px'; v.style.top = Math.round((bh - h) / 2) + 'px'
+  }
+  function tekenBel(st) {
+    if (!groep) return
+    const mee = st.mee, n = st.bellers.size, beeld = metBeeld()
+    $('belKnop').hidden = mee || !magBellen() || n > 0
+    $('belKnop').querySelector('.bel-tel').hidden = beeld; $('belKnop').querySelector('.bel-cam').hidden = !beeld
+    $('belKnop').setAttribute('aria-label', beeld ? T('Webcam chat starten') : T('Voice chat starten'))
+    // balk: er wordt gepraat (of dit is een voice- of webcamgroep) en ik zit er niet in
+    const toonBalk = !mee && magBellen() && (n > 0 || groep.soort === 'voice' || beeld)
+    $('belBalk').hidden = !toonBalk
+    if (toonBalk) {
+      const namen = [...st.bellers.keys()].map(id => naamVan(lidVan(id))).filter(Boolean)
+      $('belBalkTekst').textContent = beeld
+        ? (n === 0 ? T('Nog niemand in de webcam chat') : n === 1 ? T('{naam} zit in de webcam chat', { naam: namen[0] }) : T('{namen} zitten in de webcam chat', { namen: namen.join(', ') }))
+        : (n === 0 ? T('Nog niemand in de voice chat') : n === 1 ? T('{naam} zit in de voice chat', { naam: namen[0] }) : T('{namen} zitten in de voice chat', { namen: namen.join(', ') }))
+      $('belMee').textContent = n === 0 ? T('Starten') : T('Meedoen')
+      $('belMee').disabled = n >= maxBel()
+    }
+    $('belPaneel').hidden = !mee
+    if (!mee) knoppenOpen = false
+    $('belPaneel').querySelector('.bel-knoppen').hidden = !knoppenOpen
+    const tegels = $('belTegels')
+    if (!mee) { if (tegelVan.size || tegels.firstChild) { tegelVan.clear(); tegels.innerHTML = '' } return }
+    tegels.classList.toggle('beeld', beeld)
+    $('belMic').setAttribute('aria-pressed', String(st.stil)); $('belMic').querySelector('span').textContent = st.stil ? T('Microfoon uit') : T('Microfoon')
+    $('belLuid').setAttribute('aria-pressed', String(st.luid)); $('belLuid').querySelector('span').textContent = st.luid ? T('Luidspreker') : T('Geluid uit')
+    $('belHand').setAttribute('aria-pressed', String(st.hand))
+    $('belCam').hidden = !beeld
+    $('belCam').setAttribute('aria-pressed', String(st.cam)); $('belCam').querySelector('span').textContent = st.cam ? T('Camera') : T('Camera uit')
+    $('belCam').disabled = !(st.eigen && st.eigen.getVideoTracks().length)
+    $('belGeluid').hidden = !st.geblokkeerd
+    const ids = [ik, ...[...st.bellers.keys()].filter(id => id !== ik)]
+    for (const [id, t] of tegelVan) if (!ids.includes(id)) { const v = t.querySelector('video'); if (v) v.srcObject = null; t.remove(); tegelVan.delete(id) }
+    for (const leeg of tegels.querySelectorAll('.tegel.leeg')) leeg.remove()
+    for (const id of ids) {
+      const b = st.bellers.get(id) || {}
+      const lid = id === ik ? (lidVan(ik) || { id: ik }) : lidVan(id)
+      let t = tegelVan.get(id)
+      if (!t) {
+        t = document.createElement('div'); t.dataset.id = id
+        const rondje = '<div class="cirkel" style="background:' + kleurVan(id) + '">' + avatarHtml(lid) + '</div>'
+        t.innerHTML = beeld ? '<div class="vak"><video autoplay playsinline muted></video>' + rondje + '<div class="tnaam"></div></div>' : rondje + '<div class="tnaam"></div>'
+        t.insertAdjacentHTML('beforeend', '<div class="tstil" role="img" hidden>\u{1F507}</div><div class="thand" role="img" hidden>✋</div>')
+        t.querySelector('.tnaam').textContent = id === ik ? T('Jij') : naamVan(lid)
+        t.querySelector('.tstil').setAttribute('aria-label', T('Microfoon uit')); t.querySelector('.thand').setAttribute('aria-label', T('Steekt een hand op'))
+        if (id === ik) {
+          t.setAttribute('role', 'button'); t.tabIndex = 0
+          t.setAttribute('aria-label', T('Knoppen tonen of verbergen'))
+          const wissel = () => { knoppenOpen = !knoppenOpen; if (gesprek) tekenBel(gesprek.staat()) }
+          t.addEventListener('click', wissel)
+          t.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wissel() } })
+        }
+        tegelVan.set(id, t)
+      }
+      if (id === ik) t.setAttribute('aria-expanded', String(knoppenOpen))
+      zetFoto(t.querySelector('.cirkel'), fotoVan.get(id) || null, lid)
+      tegels.appendChild(t) // in de goede volgorde (ik eerst)
+      t.className = 'tegel' + (beeld ? ' scherm' : '') + (id === ik ? ' ik' : '') + (st.praat.has(id) ? ' praat' : '') + (id !== ik && !st.verbonden.has(id) ? ' wacht' : '')
+      t.querySelector('.tstil').hidden = !b.stil
+      t.querySelector('.thand').hidden = !b.hand
+      if (beeld) {
+        const v = t.querySelector('video'), stroom = id === ik ? st.eigen : st.stromen.get(id)
+        const vt = stroom && stroom.getVideoTracks()[0]
+        const zie = !!(b.cam && vt && vt.readyState === 'live' && !vt.muted)
+        zetBeeld(v, stroom)
+        v.hidden = !zie
+        t.querySelector('.cirkel').hidden = zie
+      }
+    }
+    const plekken = Math.min(maxBel(), Math.max(leden.length, ids.length))
+    for (let i = ids.length; i < plekken; i++) { const t = document.createElement('div'); t.className = 'tegel leeg' + (beeld ? ' scherm' : ''); t.textContent = T('Vrij plekje'); tegels.appendChild(t) }
+  }
+  async function belMee() {
+    if (!gesprek || !magBellen()) return
+    $('belMee').disabled = true
+    try {
+      const uit = await gesprek.doeMee()
+      if (uit && uit.zonderCamera) toast(T('Je camera doet het niet. Je doet mee met alleen geluid.'))
+    }
+    catch (e) {
+      console.warn('[groep] voice chat', e)
+      toast(e && e.message === 'vol' ? (metBeeld() ? T('De webcam chat is vol (4 personen).') : T('De voice chat is vol (8 personen).'))
+        : e && e.name === 'NotAllowedError' ? T('\u{1F3A4} Stekky mag de microfoon niet gebruiken. Zet het aan in de instellingen van je telefoon.')
+        : T('Meedoen lukte niet. Probeer het opnieuw.'))
+    }
+    tekenBel(gesprek.staat())
+  }
+  $('belKnop').addEventListener('click', belMee)
+  $('belMee').addEventListener('click', belMee)
+  $('belWeg').addEventListener('click', () => gesprek?.verlaat())
+  $('belMic').addEventListener('click', () => { const s = gesprek?.staat(); if (s) gesprek.zetStil(!s.stil) })
+  $('belLuid').addEventListener('click', () => { const s = gesprek?.staat(); if (s) gesprek.zetLuid(!s.luid) })
+  $('belCam').addEventListener('click', () => { const s = gesprek?.staat(); if (s) gesprek.zetCamera(!s.cam) })
+  $('belHand').addEventListener('click', () => { const s = gesprek?.staat(); if (s) gesprek.zetHand(!s.hand) })
+  $('belGeluid').addEventListener('click', () => gesprek?.speelAlles())
+  window.addEventListener('pagehide', () => gesprek?.verlaat())
+
+  function zetInvoer(aan) { $('bericht').disabled = !aan; $('verstuur').disabled = !aan }
+
+  // een voor een versturen (een reactie vlak na een bericht mag niet verloren gaan)
+  let verzendRij = Promise.resolve()
+  function verstuur(tekst, opties) {
+    const p = verzendRij.then(() => verstuurNu(tekst, opties))
+    verzendRij = p.catch(() => {})
+    return p
+  }
+  async function verstuurNu(tekst, { stil = false } = {}) {
+    if (!groep || !mijnPriv) return false
+    try {
+      await haalLeden()
+      const ontvangers = leden.map(l => l.id === ik ? { id: ik, public_key: mijnPub } : l)
+      const { content, overgeslagen } = await versleutelGroepsbericht(tekst, { groepId: groep.id, van: ik, mijnPriv, leden: ontvangers })
+      const rij = { groep_id: groep.id, sender_id: ik, content }
+      if (stil) rij.stil = true
+      let { data, error } = await supabase.from('groep_berichten').insert(rij).select('id, sender_id, content, created_at').single()
+      if (error && stil && (error.code === 'PGRST204' || error.code === '42703')) { // de server kent 'stil' nog niet (sql/groep-extra.sql)
+        delete rij.stil
+        ;({ data, error } = await supabase.from('groep_berichten').insert(rij).select('id, sender_id, content, created_at').single())
+      }
+      if (error || !data) { console.warn('[groep] versturen mislukt', error); toast(navigator.onLine ? T('Niet verstuurd. Probeer het opnieuw.') : T('Geen internet')); return false }
+      await tekenBericht(data, true, true)
+      if (overgeslagen.length) toast(T('{n} lid kan dit nog niet lezen (geen sleutel)', { n: overgeslagen.length }))
+      return true
+    } catch (e) {
+      console.warn('[groep] versleutelen mislukt', e); toast(T('Niet verstuurd. Probeer het opnieuw.')); return false
+    }
+  }
+  async function verstuurInvoer() {
+    const inv = $('bericht'); const tekst = inv.value.trim()
+    if (!tekst) return
+    inv.value = ''
+    $('emojiRaster').hidden = true
+    const op = antwoordOp
+    wisAntwoord()
+    if (!(await verstuur(op ? 'antw:' + op + '\n' + tekst : tekst))) { inv.value = tekst; if (op) kiesAntwoord(op) }
+  }
+  $('verstuur').addEventListener('click', verstuurInvoer)
+  $('bericht').addEventListener('keydown', e => { if (e.key === 'Enter') verstuurInvoer() })
+
+  // chatbalk: emoji's en stickers; foto, spraak en spel komen later in groepen
+  $('emojiKnop').addEventListener('click', () => {
+    const r = $('emojiRaster')
+    if (!r.childElementCount) for (const e of EMOJIS) {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = e
+      b.addEventListener('click', () => { $('bericht').value += e; $('bericht').focus() })
+      r.appendChild(b)
+    }
+    r.hidden = !r.hidden; $('stickerRaster').hidden = true
+  })
+  // knoppen kleuren mee als hun keuzevak open is (zoals het menu onderaan)
+  for (const [vak, knop] of [['emojiRaster', 'emojiKnop'], ['stickerRaster', 'stickerKnop']]) {
+    const zet = () => $(knop).setAttribute('aria-pressed', String(!$(vak).hidden))
+    new MutationObserver(zet).observe($(vak), { attributes: true, attributeFilter: ['hidden'] }); zet()
+  }
+  let stickerKeuze = null
+  $('stickerKnop').addEventListener('click', async () => {
+    const r = $('stickerRaster')
+    if (!stickerKeuze) {
+      try {
+        const [{ maakStickerkeuze }, fx] = await Promise.all([import('./stickerkeuze.js?v=236'), import('./stickerfx.js?v=235')])
+        stickerKeuze = maakStickerkeuze(r, { uid: () => ik, onKies: async st => {
+          if (!st) return
+          fx.speelGeluid(st.g)
+          r.hidden = true
+          if (String(st.vel).startsWith('e')) {
+            // eigen sticker: het plaatje gaat mee in het bericht (versleuteld)
+            const code = st.vel + '-' + st.nr
+            const eigen = await zoekEigenSticker(ik, code)
+            if (!eigen) return
+            await verstuur('fxsticker:' + fxCode(code, eigen.tijd) + '#' + stickerPakket({ data: eigen.src, b: eigen.b, g: eigen.g, naam: eigen.naam, tijd: eigen.tijd }))
+            return
+          }
+          await verstuur('fxsticker:' + st.vel + '-' + st.nr)
+        } })
+      } catch (e) { toast(T('Stickers laden lukte niet')); return }
+    }
+    r.hidden = !r.hidden; $('emojiRaster').hidden = true
+    if (!r.hidden) stickerKeuze.vernieuw?.()
+  })
+  // ── + Meer: poll en afspraak maken ──
+  $('extraKnop').addEventListener('click', () => {
+    const r = $('extraMenu'); r.hidden = !r.hidden
+    if (!r.hidden) { $('emojiRaster').hidden = true; $('stickerRaster').hidden = true }
+  })
+  for (const k of ['emojiKnop', 'stickerKnop']) $(k).addEventListener('click', () => { $('extraMenu').hidden = true })
+  {
+    const zet = () => $('extraKnop').setAttribute('aria-pressed', String(!$('extraMenu').hidden))
+    new MutationObserver(zet).observe($('extraMenu'), { attributes: true, attributeFilter: ['hidden'] }); zet()
+  }
+  function sluitMaak() { $('maakVak').hidden = true; $('maakVak').querySelector('.vel').innerHTML = ''; muziekBeeld = null }
+  $('maakVak').addEventListener('click', e => { if (e.target === $('maakVak')) sluitMaak() })
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('maakVak').hidden) sluitMaak() })
+  function openMaak(titel, inhoud, opDoe) {
+    $('extraMenu').hidden = true
+    muziekBeeld = null
+    const vel = $('maakVak').querySelector('.vel')
+    vel.innerHTML = '<h2></h2>' + inhoud + '<div class="knoppen"><button type="button" class="weg"></button><button type="button" class="doe"></button></div>'
+    vel.querySelector('h2').textContent = titel
+    vel.querySelector('.weg').textContent = T('Annuleren')
+    vel.querySelector('.doe').textContent = T('Plaatsen')
+    vel.querySelector('.weg').addEventListener('click', sluitMaak)
+    vel.querySelector('.doe').addEventListener('click', async () => { if (await opDoe(vel)) sluitMaak() })
+    $('maakVak').hidden = false
+    vel.querySelector('input')?.focus()
+    return vel
+  }
+  const veld = (cls, label, type = 'text', max = 80) => '<label>' + esc(label) + '<input type="' + type + '" class="' + cls + '"' + (type === 'text' ? ' maxlength="' + max + '" autocomplete="off"' : '') + '></label>'
+  $('maakPollKnop').addEventListener('click', () => {
+    if (!mijnPriv || !groep) return
+    const vel = openMaak(T('Nieuwe poll'), veld('p-vraag', T('Vraag'), 'text', 140) + '<div class="p-keuzes"></div><button type="button" class="klein p-meer-keuzes"></button>'
+      + '<label class="vink"><input type="checkbox" class="p-meer"><span></span></label>', async vel => {
+      const vraag = vel.querySelector('.p-vraag').value.trim()
+      const keuzes = [...vel.querySelectorAll('.p-keuze')].map(i => i.value.trim()).filter(Boolean)
+      if (!vraag) { toast(T('Vul een vraag in')); return false }
+      if (keuzes.length < 2) { toast(T('Vul minstens 2 keuzes in')); return false }
+      return verstuur('poll:' + JSON.stringify({ vraag, keuzes, meer: vel.querySelector('.p-meer').checked }))
+    })
+    vel.querySelector('.vink span').textContent = T('Meer keuzes mogen')
+    const knop = vel.querySelector('.p-meer-keuzes'); knop.textContent = T('+ Keuze toevoegen')
+    const voegToe = () => {
+      const n = vel.querySelectorAll('.p-keuze').length
+      if (n >= 6) return
+      const l = document.createElement('label'); l.innerHTML = esc(T('Keuze {n}', { n: n + 1 })) + '<input type="text" class="p-keuze" maxlength="60" autocomplete="off">'
+      vel.querySelector('.p-keuzes').appendChild(l)
+      knop.hidden = n + 1 >= 6
+      return l.querySelector('input')
+    }
+    voegToe(); voegToe()
+    knop.addEventListener('click', () => voegToe()?.focus())
+  })
+  $('maakAfspraakKnop').addEventListener('click', () => {
+    if (!mijnPriv || !groep) return
+    const vel = openMaak(T('Nieuwe afspraak'), veld('a-titel', T('Wat gaan we doen?'), 'text', 80)
+      + '<div class="rij2">' + veld('a-datum', T('Begint op'), 'date') + veld('a-tijd', T('Tijd (mag leeg)'), 'time') + '</div>'
+      + '<div class="rij2">' + veld('a-totdatum', T('Tot (mag leeg)'), 'date') + veld('a-tottijd', T('Tijd (mag leeg)'), 'time') + '</div>'
+      + veld('a-waar', T('Waar? (mag leeg)'), 'text', 80), async vel => {
+      const titel = vel.querySelector('.a-titel').value.trim(), datum = vel.querySelector('.a-datum').value, tijd = vel.querySelector('.a-tijd').value
+      if (!titel) { toast(T('Vul in wat jullie gaan doen')); return false }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(datum)) { toast(T('Kies een datum')); return false }
+      const wanneer = datum + (/^\d{2}:\d{2}$/.test(tijd) ? 'T' + tijd : '')
+      const totDatum = vel.querySelector('.a-totdatum').value, totTijd = vel.querySelector('.a-tottijd').value
+      const tot = /^\d{4}-\d{2}-\d{2}$/.test(totDatum) ? totDatum + (/^\d{2}:\d{2}$/.test(totTijd) ? 'T' + totTijd : '') : (/^\d{2}:\d{2}$/.test(totTijd) ? datum + 'T' + totTijd : '')
+      if (tot && tot < wanneer) { toast(T('Het einde ligt voor het begin')); return false }
+      const afspraak = { titel, wanneer, waar: vel.querySelector('.a-waar').value.trim() }
+      if (tot) afspraak.tot = tot
+      return verstuur('afspraak:' + JSON.stringify(afspraak))
+    })
+    const nu = new Date(), vandaag = nu.getFullYear() + '-' + String(nu.getMonth() + 1).padStart(2, '0') + '-' + String(nu.getDate()).padStart(2, '0')
+    vel.querySelector('.a-datum').min = vandaag; vel.querySelector('.a-totdatum').min = vandaag
+    vel.querySelector('.a-datum').addEventListener('change', e => { const t = vel.querySelector('.a-totdatum'); t.min = e.target.value || vandaag; if (t.value && t.value < t.min) t.value = '' })
+  })
+  // ── Groepsmuziek (groepmuziek.js): ieders gedeelde nummers in een playlist ──
+  let muziek = null
+  const speler = new Audio()
+  speler.preload = 'auto'
+  let speeltId = null, spelerUrl = null, muziekBeeld = null // 'lijst' | 'kies' | null
+  function stopMuziek() {
+    try { speler.pause() } catch (e) {}
+    speeltId = null
+    if (spelerUrl) { URL.revokeObjectURL(spelerUrl); spelerUrl = null }
+    tekenMuziek()
+  }
+  async function speelMuziek(item) {
+    if (!muziek) return
+    if (speeltId === item.id) { if (speler.paused) speler.play().catch(() => {}); else speler.pause(); return tekenMuziek() }
+    stopMuziek()
+    speeltId = item.id; tekenMuziek()
+    try {
+      const blob = await muziek.blob(item)
+      if (speeltId !== item.id) return
+      spelerUrl = URL.createObjectURL(blob)
+      speler.src = spelerUrl
+      await speler.play()
+    } catch (e) {
+      if (speeltId === item.id) speeltId = null
+      toast(e && e.message === 'niet online' ? T('{naam} heeft de groep nu niet open. Probeer het later.', { naam: naamKort(item.van) })
+        : e && e.message === 'weg' ? T('Dit nummer is er niet meer.') : T('Afspelen lukte niet.'))
+    }
+    tekenMuziek()
+  }
+  speler.addEventListener('ended', () => {
+    // daarna het volgende nummer dat kan
+    const l = muziek ? muziek.lijst() : [], i = l.findIndex(n => n.id === speeltId)
+    const volgende = l.slice(i + 1).find(n => n.mijn || n.opToestel || n.online)
+    stopMuziek()
+    if (volgende) speelMuziek(volgende)
+  })
+  for (const ev of ['play', 'pause']) speler.addEventListener(ev, () => tekenMuziek())
+  window.addEventListener('pagehide', stopMuziek)
+  $('muziekNuKnop').addEventListener('click', () => { if (speler.paused) speler.play().catch(() => {}); else speler.pause() })
+  $('muziekNuTitel').addEventListener('click', () => openMuziek())
+  function tekenMuziek() {
+    const l = muziek ? muziek.lijst() : []
+    const nu = l.find(n => n.id === speeltId)
+    $('muziekNu').hidden = !nu
+    if (nu) { $('muziekNuTitel').textContent = nu.titel + (nu.artiest ? ' – ' + nu.artiest : ''); $('muziekNuKnop').textContent = speler.paused ? '▶' : '⏸' }
+    if (muziekBeeld !== 'lijst' || $('maakVak').hidden) return
+    const lijst = $('maakVak').querySelector('.m-lijst')
+    if (!lijst) return
+    lijst.innerHTML = ''
+    if (!l.length) { lijst.innerHTML = '<div class="m-leeg">' + esc(T('Nog geen muziek gedeeld. Kies hieronder je eigen nummers.')) + '</div>'; return }
+    for (const n of l) {
+      const kan = n.mijn || n.opToestel || n.online
+      const rij = document.createElement('div'); rij.className = 'm-rij' + (n.id === speeltId ? ' speelt' : '') + (kan ? '' : ' uit')
+      rij.dataset.id = n.id
+      rij.innerHTML = '<button type="button" class="m-speel"></button><div class="m-info"><div class="m-titel"></div><div class="m-sub"></div></div>'
+      const v = muziek.voortgang(n.id)
+      rij.querySelector('.m-speel').textContent = n.id === speeltId && !speler.paused ? '⏸' : '▶'
+      rij.querySelector('.m-speel').setAttribute('aria-label', T('Afspelen'))
+      rij.querySelector('.m-titel').textContent = n.titel
+      const wie = n.mijn ? T('jij') : naamKort(n.van)
+      rij.querySelector('.m-sub').textContent = [n.artiest, wie, v !== null ? T('ophalen {p}%', { p: Math.round(v * 100) }) : !kan ? T('niet online') : ''].filter(Boolean).join(' · ')
+      if (kan) rij.querySelector('.m-speel').addEventListener('click', () => speelMuziek(n))
+      lijst.appendChild(rij)
+    }
+  }
+  function openMuziek() {
+    if (!muziek) return
+    $('extraMenu').hidden = true
+    muziekBeeld = 'lijst'
+    const vel = $('maakVak').querySelector('.vel')
+    vel.innerHTML = '<h2></h2><div class="m-uitleg"></div><div class="m-lijst"></div><div class="knoppen"><button type="button" class="weg"></button><button type="button" class="doe"></button></div>'
+    vel.querySelector('h2').textContent = T('Groepsmuziek')
+    vel.querySelector('.m-uitleg').textContent = T('Iedereen kiest zelf welke nummers hij deelt. Een nummer van een ander speelt als die de groep open heeft, of als het al op je telefoon staat.')
+    vel.querySelector('.weg').textContent = T('Sluiten')
+    vel.querySelector('.doe').textContent = T('Mijn nummers kiezen')
+    vel.querySelector('.weg').addEventListener('click', sluitMaak)
+    vel.querySelector('.doe').addEventListener('click', kiesMuziek)
+    $('maakVak').hidden = false
+    tekenMuziek()
+    muziek.vraagLijsten().catch(() => {})
+  }
+  async function kiesMuziek() {
+    muziekBeeld = 'kies'
+    const vel = $('maakVak').querySelector('.vel')
+    vel.innerHTML = '<h2></h2><div class="m-uitleg"></div><div class="m-lijst"></div><div class="knoppen"><button type="button" class="weg"></button><button type="button" class="doe"></button></div>'
+    vel.querySelector('h2').textContent = T('Mijn nummers delen')
+    vel.querySelector('.m-uitleg').textContent = T('Je profielnummer en de muziek van je muziekspeler op Home. Alleen de leden van deze groep kunnen ze afspelen.')
+    vel.querySelector('.weg').textContent = T('Terug')
+    vel.querySelector('.doe').textContent = T('Opslaan')
+    vel.querySelector('.weg').addEventListener('click', openMuziek)
+    const eigen = await muziek.eigenNummers(), gedeeld = muziek.mijnGedeeld()
+    const lijst = vel.querySelector('.m-lijst')
+    if (!eigen.length) lijst.innerHTML = '<div class="m-leeg">' + esc(T('Je hebt nog geen muziek. Zet nummers in de muziekspeler op Home of kies een profielnummer.')) + '</div>'
+    eigen.forEach((n, i) => {
+      const l = document.createElement('label'); l.className = 'm-kies'
+      l.innerHTML = '<input type="checkbox"><span></span>'
+      l.querySelector('input').checked = gedeeld.some(g => g.bron === n.bron && (n.bron === 'profiel' || g.titel === n.titel))
+      l.querySelector('input').dataset.i = i
+      l.querySelector('span').textContent = (n.bron === 'profiel' ? T('Profielnummer') + ': ' : '') + n.titel + (n.artiest ? ' – ' + n.artiest : '')
+      lijst.appendChild(l)
+    })
+    vel.querySelector('.doe').addEventListener('click', async () => {
+      const keuze = [...lijst.querySelectorAll('input:checked')].map(x => eigen[Number(x.dataset.i)])
+      await muziek.deel(keuze)
+      toast(keuze.length ? T('{n} nummer(s) gedeeld in deze groep', { n: keuze.length }) : T('Je deelt geen muziek meer in deze groep'))
+      openMuziek()
+    })
+  }
+  $('muziekKnop').addEventListener('click', openMuziek)
+
+  // ── Piano (groeppiano.js): spelen, opnemen, deuntjes in de groep ──
+  let piano = null, pianoStop = null, pianoSpeelt = null, opgenomen = null, opnameTimer = null
+  const duurTekst = ms => { const sec = ms > 0 ? Math.max(1, Math.round(ms / 1000)) : 0; return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0') }
+  function stopDeuntje() { if (pianoStop) { const s = pianoStop; pianoStop = null; s() } }
+  function speel(id, data) {
+    if (pianoSpeelt === id) { stopDeuntje(); return }
+    stopDeuntje()
+    pianoSpeelt = id
+    pianoStop = speelDeuntje(data, {
+      opAanslag: (toon, aan) => piano && !$('pianoVak').hidden && piano.licht(toon, aan),
+      opKlaar: () => { if (pianoSpeelt === id) { pianoSpeelt = null; pianoStop = null } werkSpeelKnoppenBij() },
+    })
+    werkSpeelKnoppenBij()
+  }
+  function werkSpeelKnoppenBij() {
+    for (const [id, k] of kaarten) if (k.soort === 'deuntje') tekenDeuntjeKaart(id)
+    tekenPianoLijst()
+  }
+  function tekenDeuntjeKaart(id) {
+    const kaart = kaarten.get(id)
+    if (!kaart || kaart.soort !== 'deuntje' || !kaart.bub.isConnected) return
+    const { data: d, bub } = kaart
+    bub.className = 'bubbel kaart'
+    bub.innerHTML = '<div class="k-kop"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M7 5v9M12 5v9M17 5v9"/></svg><span class="k-titel"></span></div><div class="k-sub"></div><button type="button" class="k-speel"></button>'
+    bub.querySelector('.k-titel').textContent = d.naam || T('Deuntje')
+    bub.querySelector('.k-sub').textContent = T('Deuntje op de piano') + ' · ' + duurTekst(lengteMs(d))
+    const k = bub.querySelector('.k-speel')
+    k.textContent = pianoSpeelt === id ? T('■ Stoppen') : T('▶ Afspelen')
+    k.addEventListener('click', () => speel(id, d))
+  }
+  function tekenPianoLijst() {
+    if ($('pianoVak').hidden) return
+    const lijst = $('pianoLijst'); lijst.innerHTML = ''
+    const laatste = deuntjes.slice(-10).reverse()
+    if (!laatste.length) { lijst.innerHTML = '<div class="m-leeg">' + esc(T('Nog geen deuntjes. Druk op Opnemen, speel iets en bewaar het.')) + '</div>'; return }
+    for (const x of laatste) {
+      const rij = document.createElement('div'); rij.className = 'p-deuntje' + (pianoSpeelt === x.id ? ' speelt' : '')
+      rij.innerHTML = '<button type="button" class="m-speel"></button><div class="m-info"><div class="m-titel"></div><div class="m-sub"></div></div>'
+      rij.querySelector('.m-speel').textContent = pianoSpeelt === x.id ? '■' : '▶'
+      rij.querySelector('.m-speel').setAttribute('aria-label', pianoSpeelt === x.id ? T('Stoppen') : T('Afspelen'))
+      rij.querySelector('.m-titel').textContent = x.data.naam || T('Deuntje')
+      rij.querySelector('.m-sub').textContent = naamKort(x.van) + ' · ' + duurTekst(lengteMs(x.data))
+      rij.querySelector('.m-speel').addEventListener('click', () => speel(x.id, x.data))
+      lijst.appendChild(rij)
+    }
+  }
+  function openPiano() {
+    $('extraMenu').hidden = true
+    $('pianoVak').hidden = false
+    if (!piano) {
+      piano = maakPiano($('pianoToetsen'))
+      $('pianoOctaaf').textContent = piano.basisNaam()
+    }
+    piano.wek()
+    tekenPianoLijst()
+  }
+  function zetOpnameKnop() {
+    const bezig = piano && piano.neemtOp()
+    $('pianoOpnemen').classList.toggle('bezig', !!bezig)
+    $('pianoOpnemenTekst').textContent = bezig ? T('Stop ({tijd})', { tijd: duurTekst(piano.opnameDuur()) }) : T('Opnemen')
+  }
+  $('pianoKnop').addEventListener('click', openPiano)
+  $('pianoDicht').addEventListener('click', () => {
+    if (piano && piano.neemtOp()) { piano.stopOpname(); clearInterval(opnameTimer); zetOpnameKnop() }
+    $('pianoVak').hidden = true
+  })
+  $('pianoLager').addEventListener('click', () => { if (piano) $('pianoOctaaf').textContent = piano.octaaf(-1) })
+  $('pianoHoger').addEventListener('click', () => { if (piano) $('pianoOctaaf').textContent = piano.octaaf(1) })
+  $('pianoOpnemen').addEventListener('click', () => {
+    if (!piano) return
+    if (!piano.neemtOp()) {
+      stopDeuntje(); $('pianoBewaar').hidden = true; opgenomen = null
+      piano.neemOp(); zetOpnameKnop()
+      opnameTimer = setInterval(() => {
+        zetOpnameKnop()
+        if (piano.opnameDuur() >= 60000) $('pianoOpnemen').click() // hoogstens een minuut
+      }, 250)
+      return
+    }
+    clearInterval(opnameTimer)
+    const noten = piano.stopOpname(); zetOpnameKnop()
+    if (!noten.length) { toast(T('Je hebt nog niets gespeeld.')); return }
+    const begin = Math.min(...noten.map(n => n[1]))
+    opgenomen = { naam: '', n: noten.map(([t, b, d]) => [t, b - begin, d]) }
+    $('pianoNaam').value = ''
+    $('pianoBewaar').hidden = false
+  })
+  $('pianoLuister').addEventListener('click', () => { if (opgenomen) speel('opname', opgenomen) })
+  $('pianoWeg').addEventListener('click', () => { opgenomen = null; $('pianoBewaar').hidden = true; if (pianoSpeelt === 'opname') stopDeuntje() })
+  $('pianoPlaats').addEventListener('click', async () => {
+    if (!opgenomen || !mijnPriv) return
+    const d = { naam: $('pianoNaam').value.trim().slice(0, 40) || T('Mijn deuntje'), n: opgenomen.n }
+    if (await verstuur('deuntje:' + JSON.stringify(d))) { opgenomen = null; $('pianoBewaar').hidden = true; toast(T('Je deuntje staat in de groep')) }
+  })
+  window.addEventListener('pagehide', stopDeuntje)
+
+  // ── Whiteboard (groepbord.js): samen tekenen ──
+  let bord = null
+  let bordKleur = BORD_KLEUREN[0], bordDikte = BORD_DIKTES[1], bezigeLijn = null
+  const doek = $('bordDoek'), pen = doek.getContext('2d')
+  BORD_KLEUREN.forEach((k, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'radio'); b.style.background = k
+    b.setAttribute('aria-label', k === '#ffffff' ? T('Gum') : T('Kleur {n}', { n: i + 1 })); b.setAttribute('aria-checked', String(k === bordKleur))
+    b.addEventListener('click', () => { bordKleur = k; for (const x of $('bordKleuren').children) x.setAttribute('aria-checked', String(x === b)) })
+    $('bordKleuren').appendChild(b)
+  })
+  BORD_DIKTES.forEach((d, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'radio')
+    b.setAttribute('aria-label', [T('Dun'), T('Middel'), T('Dik')][i]); b.setAttribute('aria-checked', String(d === bordDikte))
+    b.innerHTML = '<span style="width:' + (d + 3) + 'px;height:' + (d + 3) + 'px"></span>'
+    b.addEventListener('click', () => { bordDikte = d; for (const x of $('bordDiktes').children) x.setAttribute('aria-checked', String(x === b)) })
+    $('bordDiktes').appendChild(b)
+  })
+  function maatBord() {
+    const vlak = doek.parentElement.getBoundingClientRect()
+    const b = Math.floor(Math.min(vlak.width, vlak.height * 3 / 4)), h = Math.floor(b * 4 / 3)
+    const r = window.devicePixelRatio || 1
+    doek.style.width = b + 'px'; doek.style.height = h + 'px'
+    doek.width = Math.round(b * r); doek.height = Math.round(h * r)
+    tekenBord()
+  }
+  function tekenBord() {
+    pen.clearRect(0, 0, doek.width, doek.height)
+    for (const l of (bord ? bord.lijnen() : [])) tekenLijn(pen, l, doek.width, doek.height)
+    if (bezigeLijn) tekenLijn(pen, bezigeLijn, doek.width, doek.height)
+    $('bordTerug').disabled = !(bord && bord.kanOngedaan())
+  }
+  const puntVan = e => { const r = doek.getBoundingClientRect(); return [Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (e.clientY - r.top) / r.height))] }
+  doek.addEventListener('pointerdown', e => {
+    if (!bord || !mijnPriv) return
+    e.preventDefault(); try { doek.setPointerCapture(e.pointerId) } catch (er) {}
+    bezigeLijn = { kleur: bordKleur, dikte: bordDikte, p: [puntVan(e)] }
+    tekenBord()
+  })
+  doek.addEventListener('pointermove', e => {
+    if (!bezigeLijn) return
+    const q = puntVan(e), v = bezigeLijn.p[bezigeLijn.p.length - 1]
+    if (Math.hypot(q[0] - v[0], q[1] - v[1]) < 0.004 || bezigeLijn.p.length >= 600) return
+    bezigeLijn.p.push(q)
+    tekenLijn(pen, { ...bezigeLijn, p: [v, q] }, doek.width, doek.height)
+  })
+  const klaarLijn = () => { if (!bezigeLijn) return; const l = bezigeLijn; bezigeLijn = null; bord.teken(l).catch(e => console.warn('[groep] bord', e)) }
+  doek.addEventListener('pointerup', klaarLijn)
+  doek.addEventListener('pointercancel', klaarLijn)
+  function openBord() {
+    if (!bord) return
+    $('extraMenu').hidden = true
+    $('bordVak').hidden = false
+    maatBord()
+    bord.vraag().catch(() => {})
+  }
+  $('bordKnop').addEventListener('click', openBord)
+  $('bordDicht').addEventListener('click', () => { $('bordVak').hidden = true; bezigeLijn = null })
+  window.addEventListener('resize', () => { if (!$('bordVak').hidden) maatBord() })
+  $('bordTerug').addEventListener('click', () => bord?.ongedaan())
+  $('bordWis').addEventListener('click', () => { if (bord && confirm(T('Het hele bord wissen, voor iedereen?'))) bord.wisAlles() })
+  $('bordDeel').addEventListener('click', () => {
+    // het bord als foto in de chat (zoals een foto: naar wie online is)
+    const c = document.createElement('canvas'); c.width = 900; c.height = 1200
+    const x = c.getContext('2d'); x.fillStyle = BORD_ACHTERGROND; x.fillRect(0, 0, c.width, c.height)
+    for (const l of bord.lijnen()) tekenLijn(x, l, c.width, c.height)
+    c.toBlob(b => { if (b) { stuurMedia('foto', b, 0); $('bordVak').hidden = true } else toast(T('Dat lukte niet.')) }, 'image/jpeg', 0.85)
+  })
+  for (const b of document.querySelectorAll('.balk-knop.later')) b.addEventListener('click', () => toast(T('Samen spelen in een groep komt later')))
+  $('fotoKnop').addEventListener('click', () => { if (!mijnPriv || !groep) return; $('fotoInvoer').click() })
+  $('fotoInvoer').addEventListener('change', async e => {
+    const files = [...(e.target.files || [])].slice(0, 10)
+    e.target.value = ''
+    for (const f of files) {
+      let blob
+      try { blob = await maakFoto(f) } catch (er) { toast(T('Deze foto kan niet worden gelezen.')); continue }
+      await stuurMedia('foto', blob, 0)
+    }
+  })
+  // 🎤 ingedrukt houden = opnemen, loslaten = versturen, naar links schuiven = annuleren (zoals in de chat)
+  {
+    const knop = $('spraakKnop'), balk = $('spraakBalk')
+    let opname = null, startX = 0, annuleer = false, bezigOp = false, losGelaten = false
+    const klaar = async (versturen) => {
+      const o = opname; opname = null
+      balk.hidden = true; balk.classList.remove('annuleer'); $('bericht').parentElement.hidden = false
+      if (!o) return
+      if (!versturen) { o.annuleer(); return }
+      const r = await o.stop()
+      if (!r || r.duur < 0.8 || !r.blob.size) { toast(T('\u{1F3A4} Houd de knop ingedrukt om in te spreken')); return }
+      await stuurMedia('spraak', r.blob, r.duur)
+    }
+    knop.addEventListener('pointerdown', async e => {
+      if (!mijnPriv || !groep || bezigOp || opname) return
+      if (!kanOpnemen()) { toast(T('\u{1F3A4} Opnemen lukt niet op dit toestel.')); return }
+      e.preventDefault()
+      try { knop.setPointerCapture(e.pointerId) } catch (er) {}
+      startX = e.clientX; annuleer = false; losGelaten = false; bezigOp = true
+      try {
+        opname = await neemOp({ opTik: s => { $('spraakTijd').textContent = spraakTijd(s) }, opVol: () => klaar(true) })
+      } catch (er) {
+        bezigOp = false
+        toast(er && er.name === 'NotAllowedError' ? T('\u{1F3A4} Stekky mag de microfoon niet gebruiken. Zet het aan in de instellingen van je telefoon.') : T('\u{1F3A4} Opnemen lukt niet op dit toestel.'))
+        return
+      }
+      bezigOp = false
+      if (losGelaten) { klaar(false); toast(T('\u{1F3A4} Houd de knop ingedrukt om in te spreken')); return }
+      $('spraakTijd').textContent = '0:00'; $('spraakHint').textContent = T('← schuif om te annuleren')
+      balk.hidden = false; $('bericht').parentElement.hidden = true
+    })
+    knop.addEventListener('pointermove', e => {
+      if (!opname) return
+      annuleer = e.clientX - startX < -70
+      balk.classList.toggle('annuleer', annuleer)
+      $('spraakHint').textContent = annuleer ? T('Loslaten = weggooien') : T('← schuif om te annuleren')
+    })
+    const los = () => { losGelaten = true; if (opname) klaar(!annuleer) }
+    knop.addEventListener('pointerup', los)
+    knop.addEventListener('pointercancel', () => { losGelaten = true; if (opname) klaar(false) })
+  }
+
+  // ── Leden ──
+  async function tekenLedenPaneel() {
+    await haalLeden(true).catch(() => {})
+    const ikBeheerder = lidVan(ik)?.rol === 'beheerder'
+    const lijst = $('ledenLijst'); lijst.innerHTML = ''
+    for (const l of leden) {
+      const r = document.createElement('div'); r.className = 'lid'
+      r.innerHTML = '<span class="av" style="background:' + kleurVan(l.id) + '">' + avatarHtml(l) + '</span><span class="vriend-naam"></span>'
+      const naam = r.querySelector('.vriend-naam')
+      naam.textContent = naamVan(l) + (l.id === ik ? ' (' + T('jij') + ')' : '')
+      if (l.rol === 'beheerder') { const s = document.createElement('span'); s.className = 'lid-rol'; s.textContent = T('beheerder'); r.appendChild(s) }
+      if (ikBeheerder && l.id !== ik) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'klein-knop rood'; b.textContent = T('Weghalen')
+        b.addEventListener('click', async () => {
+          if (!confirm(T('{naam} uit de groep halen?', { naam: naamVan(l) }))) return
+          const { error } = await supabase.rpc('groep_lid_weg', { p_groep: groep.id, p_lid: l.id })
+          if (error) toast(T('Dat lukte niet')); else tekenLedenPaneel()
+        })
+        r.appendChild(b)
+      }
+      lijst.appendChild(r)
+    }
+    $('toevoegenDeel').hidden = !ikBeheerder
+    if (ikBeheerder) {
+      const tl = $('toevoegenLijst'); tl.innerHTML = ''
+      const max = MAX_LEDEN[groep.soort] || 50
+      let vrienden = []
+      try { vrienden = (await haalVrienden()).filter(v => !lidVan(v.id)) } catch (e) {}
+      if (leden.length >= max) tl.innerHTML = '<div class="leeg">' + esc(T('De groep is vol ({max})', { max })) + '</div>'
+      else if (!vrienden.length) tl.innerHTML = '<div class="leeg">' + esc(T('Al je vrienden zitten al in de groep')) + '</div>'
+      else for (const v of vrienden) {
+        const r = document.createElement('div'); r.className = 'lid'
+        r.innerHTML = '<span class="av" style="background:' + kleurVan(v.id) + '">' + avatarHtml(v) + '</span><span class="vriend-naam"></span>'
+        r.querySelector('.vriend-naam').textContent = naamVan(v)
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'klein-knop'; b.textContent = T('Toevoegen')
+        b.addEventListener('click', async () => {
+          b.disabled = true
+          const { error } = await supabase.rpc('groep_lid_toevoegen', { p_groep: groep.id, p_lid: v.id })
+          if (error) { toast(foutTekst(error, [v, ...leden])); b.disabled = false } else tekenLedenPaneel()
+        })
+        r.appendChild(b); tl.appendChild(r)
+      }
+    }
+  }
+  $('ledenKnop').addEventListener('click', () => { $('ledenPaneel').hidden = false; tekenLedenPaneel() })
+  $('paneelDicht').addEventListener('click', () => { $('ledenPaneel').hidden = true })
+  $('ledenPaneel').addEventListener('click', e => { if (e.target.id === 'ledenPaneel') $('ledenPaneel').hidden = true })
+  $('verlaatKnop').addEventListener('click', async () => {
+    if (!confirm(T('Wil je de groep "{naam}" verlaten?', { naam: groep?.naam || '' }))) return
+    const { error } = await supabase.rpc('groep_lid_weg', { p_groep: groep.id, p_lid: ik })
+    if (error) { toast(T('Dat lukte niet')); return }
+    await ruimOp(groep.id, true) // foto's en spraak van deze groep van dit toestel weg
+    location.href = 'chat.html'
+  })
+
+  // ── Terug ──
+  $('kiezenTerug').addEventListener('click', () => { location.href = 'chat.html' })
+  $('ledenTerug').addEventListener('click', () => toon('kiezen'))
+  $('gesprekTerug').addEventListener('click', () => { stopMuziek(); gesprek?.verlaat(); lijn?.stop?.(); location.href = 'chat.html' })
+  for (const b of document.querySelectorAll('.keuze[data-soort]')) b.addEventListener('click', () => startNieuw(b.dataset.soort))
+
+  // ── Start ──
+  async function init() {
+    const s = await sessie()
+    if (!s) { location.href = 'login.html'; return }
+    ik = s.user.id
+    mijnPriv = haalPrivateKeyOp(ik)
+    if (mijnPriv) { try { mijnPub = await eigenPubliekeSleutel(mijnPriv) } catch (e) { mijnPriv = null } }
+    const id = new URLSearchParams(location.search).get('id')
+    if (id && GELDIG_ID.test(id)) await openGroep(id)
+    else toon('kiezen')
+  }
+  init()
+</script>
+<script src="fotoviewer.js?v=9"></script>
+</body>
+</html>

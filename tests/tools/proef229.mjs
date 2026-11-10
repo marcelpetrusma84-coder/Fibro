@@ -24,7 +24,7 @@ if (!ts) {
 const bron = fs.readFileSync(process.argv[2] || path.join(REPO, 'supabase/functions/stuur-push/index.ts'), 'utf8')
 let js = ts.transpileModule(bron, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText
 js = js.replace(/^import \{ createClient \} from "npm:@supabase\/supabase-js@2";$/m, 'const { createClient } = globalThis.__nep;')
-       .replace(/^import webpush from "npm:web-push";$/m, 'const webpush = globalThis.__nep.webpush;')
+       .replace(/^import webpush from "npm:web-push(@[0-9.]+)?";.*$/m, 'const webpush = globalThis.__nep.webpush;')
 if (/^import /m.test(js)) throw new Error('import niet vervangen')
 
 

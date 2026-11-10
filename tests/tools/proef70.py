@@ -122,7 +122,7 @@ with sync_playwright() as pw:
     p.wait_for_timeout(1500)
     def vakje(vel):
         try:
-            if not p.is_visible('#stickerGrid'): p.click('button.emoji-toggle:has-text("\U0001F3A8")', timeout=3000)
+            if not p.is_visible('#stickerGrid'): p.click("#stickerKnop", timeout=3000)
             p.click('#stickerGrid .sk-vak[data-vak="%s"]' % vel, timeout=3000)
         except Exception as e: return 'FOUT ' + str(e)[:80]
         p.wait_for_timeout(800)

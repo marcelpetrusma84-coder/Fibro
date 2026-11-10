@@ -2090,4 +2090,9 @@ window.FIBRO_EN = {
   "🔒 Van iemand die niet meer in de groep zit": "🔒 From someone who left the group",
   "🔒 Verstuurd voordat je lid werd": "🔒 Sent before you joined",
   "🔒 [versleuteld bericht — kan niet lezen]": "🔒 [encrypted message — cannot read]",
+  // groepschat: namen en onbekenden (10 nov 2026)
+  "Taal, berichten bewaren, muziek, buzz, vinkjes, groepen": "Language, keeping messages, music, buzz, read receipts, groups",
+  "👥 Groepen met onbekenden": "👥 Groups with strangers",
+  "{naam} wil alleen in groepen waarin iedereen een vriend is.": "{naam} only wants to be in groups where everyone is a friend.",
+  "Iemand wil alleen in groepen waarin iedereen een vriend is.": "Someone only wants to be in groups where everyone is a friend.",
 }

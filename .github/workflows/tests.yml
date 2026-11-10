@@ -111,3 +111,6 @@ jobs:
       - name: "Groepschat: groep maken en versleuteld kletsen"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef277.py .
+      - name: "Groepschat: namen en groepen met onbekenden"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef278.py .

@@ -20,4 +20,9 @@ export async function toonGroepen(supabase, el) {
     if (error || !Array.isArray(data)) return
     el.innerHTML = data.map(groepRijHtml).join('')
   } catch (e) {}
+  // de schakelaar 'Groepen met onbekenden' (menu op Home) gelijk zetten met de server (een ander toestel kan hem veranderd hebben)
+  try {
+    const { data: s } = await supabase.from('chat_instellingen').select('groep_onbekenden').maybeSingle()
+    if (s && typeof s.groep_onbekenden === 'boolean') localStorage.setItem('fibro_groep_onbekenden', s.groep_onbekenden ? '1' : '0')
+  } catch (e) {}
 }

@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=82"></script>
+<script src="taal.js?v=83"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -226,7 +226,23 @@ button { font-family:inherit; }
   function avatarHtml(p) {
     const a = String(p?.avatar_url || '')
     if (a && [...a].length <= 4 && !/^https?:/i.test(a)) return esc(a)
-    return esc((p?.username || '?').slice(0, 1).toUpperCase())
+    return esc([...(p ? naamVan(p) : '?')][0].toUpperCase())
+  }
+  // Namen: een vriend zie je met zijn weergavenaam (die hij met jou deelde, zoals in de gewone chat), iemand die je niet
+  // kent met zijn gebruikersnaam. Zijn weergavenaam krijg je niet: die deelt hij alleen met zijn vrienden.
+  function naamVan(p) {
+    if (!p) return T('Oud lid')
+    if (p.id !== ik) { try { const n = String(localStorage.getItem('vriend_naam_' + p.id + '_' + ik) || '').trim(); if (n) return n } catch (e) {} }
+    return p.username || '?'
+  }
+  // De server weigert een groep als iemand erin 'Groepen met onbekenden' uit heeft staan en niet iedereen kent.
+  function foutTekst(error, kandidaten) {
+    if (error && error.hint === 'onbekenden') {
+      const wie = (kandidaten || []).find(p => p && p.id === error.details)
+      return wie ? T('{naam} wil alleen in groepen waarin iedereen een vriend is.', { naam: naamVan(wie) })
+        : T('Iemand wil alleen in groepen waarin iedereen een vriend is.')
+    }
+    return navigator.onLine ? T('Dat lukte niet') : T('Geen internet')
   }
   const tijdTekst = iso => { const d = new Date(iso); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') }
 
@@ -242,11 +258,12 @@ button { font-family:inherit; }
       .select('friend_id, profiles!friendships_friend_id_fkey(id, username, avatar_url, public_key)')
       .eq('user_id', ik).eq('status', 'accepted')
     if (error) throw error
-    return (data || []).map(r => r.profiles).filter(p => p && p.id).sort((a, b) => String(a.username).localeCompare(String(b.username)))
+    return (data || []).map(r => r.profiles).filter(p => p && p.id).sort((a, b) => naamVan(a).localeCompare(naamVan(b)))
   }
 
   // ── 2. Nieuwe groep ──
   let soort = 'chat'
+  let laatsteVrienden = []
   const gekozen = new Set()
   function werkTellerBij() {
     const max = MAX_LEDEN[soort]
@@ -269,11 +286,12 @@ button { font-family:inherit; }
     try { vrienden = await haalVrienden() } catch (e) { lijst.innerHTML = '<div class="leeg">' + esc(T('Laden lukte niet')) + '</div>'; return }
     if (!vrienden.length) { lijst.innerHTML = '<div class="leeg">' + esc(T('Je hebt nog geen vrienden om toe te voegen.')) + '</div>'; werkTellerBij(); return }
     lijst.innerHTML = ''
+    laatsteVrienden = vrienden
     for (const v of vrienden) {
       const r = document.createElement('label'); r.className = 'vriend'; r.dataset.id = v.id
       r.innerHTML = '<span class="av" style="background:' + kleurVan(v.id) + '">' + avatarHtml(v) + '</span><span class="vriend-naam"></span><input type="checkbox">'
-      r.querySelector('.vriend-naam').textContent = v.username || '?'
-      r.querySelector('input').setAttribute('aria-label', T('{naam} toevoegen', { naam: v.username || '?' }))
+      r.querySelector('.vriend-naam').textContent = naamVan(v)
+      r.querySelector('input').setAttribute('aria-label', T('{naam} toevoegen', { naam: naamVan(v) }))
       r.querySelector('input').addEventListener('change', e => { if (e.target.checked) gekozen.add(v.id); else gekozen.delete(v.id); werkTellerBij() })
       lijst.appendChild(r)
     }
@@ -288,7 +306,8 @@ button { font-family:inherit; }
     const { data, error } = await supabase.rpc('maak_groep', { p_naam: naam, p_soort: soort, p_leden: [...gekozen] })
     if (error || !data) {
       console.warn('[groep] maken mislukt', error)
-      $('maakMelding').textContent = navigator.onLine ? T('Groep maken lukte niet. Probeer het opnieuw.') : T('Geen internet')
+      $('maakMelding').textContent = error && error.hint === 'onbekenden' ? foutTekst(error, laatsteVrienden)
+        : navigator.onLine ? T('Groep maken lukte niet. Probeer het opnieuw.') : T('Geen internet')
       werkTellerBij(); return
     }
     history.replaceState(null, '', 'groep.html?id=' + data)
@@ -328,7 +347,7 @@ button { font-family:inherit; }
     const kleur = kleurVan(r.sender_id)
     rij.innerHTML = '<span class="av" style="background:' + kleur + '">' + avatarHtml(afz) + '</span>'
       + '<div class="b-kol">' + (mijn ? '' : '<div class="b-naam" style="color:' + kleur + '"></div>') + '<div class="bubbel"></div><div class="b-tijd">' + esc(tijdTekst(r.created_at)) + '</div></div>'
-    if (!mijn) rij.querySelector('.b-naam').textContent = afz?.username || T('Oud lid')
+    if (!mijn) rij.querySelector('.b-naam').textContent = naamVan(afz)
     $('berichten').appendChild(rij)
     const bub = rij.querySelector('.bubbel')
     const uit = await openGroepsbericht(r.content, { groepId: groep.id, van: r.sender_id, ik, mijnPriv, afzenderPub: afz?.public_key, serverTijd: Date.parse(r.created_at) })
@@ -451,12 +470,12 @@ button { font-family:inherit; }
       const r = document.createElement('div'); r.className = 'lid'
       r.innerHTML = '<span class="av" style="background:' + kleurVan(l.id) + '">' + avatarHtml(l) + '</span><span class="vriend-naam"></span>'
       const naam = r.querySelector('.vriend-naam')
-      naam.textContent = (l.username || '?') + (l.id === ik ? ' (' + T('jij') + ')' : '')
+      naam.textContent = naamVan(l) + (l.id === ik ? ' (' + T('jij') + ')' : '')
       if (l.rol === 'beheerder') { const s = document.createElement('span'); s.className = 'lid-rol'; s.textContent = T('beheerder'); r.appendChild(s) }
       if (ikBeheerder && l.id !== ik) {
         const b = document.createElement('button'); b.type = 'button'; b.className = 'klein-knop rood'; b.textContent = T('Weghalen')
         b.addEventListener('click', async () => {
-          if (!confirm(T('{naam} uit de groep halen?', { naam: l.username || '?' }))) return
+          if (!confirm(T('{naam} uit de groep halen?', { naam: naamVan(l) }))) return
           const { error } = await supabase.rpc('groep_lid_weg', { p_groep: groep.id, p_lid: l.id })
           if (error) toast(T('Dat lukte niet')); else tekenLedenPaneel()
         })
@@ -475,12 +494,12 @@ button { font-family:inherit; }
       else for (const v of vrienden) {
         const r = document.createElement('div'); r.className = 'lid'
         r.innerHTML = '<span class="av" style="background:' + kleurVan(v.id) + '">' + avatarHtml(v) + '</span><span class="vriend-naam"></span>'
-        r.querySelector('.vriend-naam').textContent = v.username || '?'
+        r.querySelector('.vriend-naam').textContent = naamVan(v)
         const b = document.createElement('button'); b.type = 'button'; b.className = 'klein-knop'; b.textContent = T('Toevoegen')
         b.addEventListener('click', async () => {
           b.disabled = true
           const { error } = await supabase.rpc('groep_lid_toevoegen', { p_groep: groep.id, p_lid: v.id })
-          if (error) { toast(T('Dat lukte niet')); b.disabled = false } else tekenLedenPaneel()
+          if (error) { toast(foutTekst(error, [v, ...leden])); b.disabled = false } else tekenLedenPaneel()
         })
         r.appendChild(b); tl.appendChild(r)
       }

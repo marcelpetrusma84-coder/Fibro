@@ -32,7 +32,7 @@ with sync_playwright() as pw:
     p.goto(B + 'login.html'); p.evaluate("t => localStorage.setItem('sb-qmgatbphiplrfxrljtbe-auth-token', t)", TOKEN)
     lijst = p.evaluate("async () => (await import('./lettertypes.js?v=' + (document.querySelector('script') ? '130' : '130'))).LETTERTYPES")
     p.goto(B + 'profiel.html'); p.wait_for_timeout(1500)
-    for f in lijst: p.evaluate("n => import('./lettertypes.js?v=130').then(m => m.laadFont(n))", f['naam'])
+    for f in lijst: p.evaluate("n => import('./lettertypes.js?v=131').then(m => m.laadFont(n))", f['naam'])
     p.wait_for_timeout(1500)
     basis = p.evaluate(MEET, ["'DM Sans'", ZIN])
     te_breed = []; uitslag = {}

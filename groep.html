@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=89"></script>
+<script src="taal.js?v=90"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -146,7 +146,65 @@ button { font-family:inherit; }
 #antwoordBalk span { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 #antwoordBalk button { background:none; border:0; color:var(--muted); font-size:16px; cursor:pointer; min-width:36px; min-height:36px; }
 .chatbalk { margin:0 10px calc(10px + env(safe-area-inset-bottom,0px)); padding:12px; display:flex; flex-direction:column; gap:12px; border-radius:24px; background:linear-gradient(160deg,rgba(255,255,255,0.09),rgba(255,255,255,0.04)); border:1px solid rgba(192,132,252,0.5); flex-shrink:0; }
-.balk-knoppen { display:flex; gap:8px; }
+.balk-knoppen { display:flex; gap:6px; }
+/* + Meer: poll en afspraak (groepsfuncties) */
+#extraMenu { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:6px; }
+#extraMenu[hidden] { display:none; }
+.extra-tegel { display:flex; flex-direction:column; align-items:center; gap:5px; padding:10px 4px 8px; border-radius:16px; border:1px solid rgba(225,204,255,.18); background:rgba(255,255,255,0.05); color:#fff; font:inherit; font-size:12px; cursor:pointer; }
+.extra-tegel:active { background:linear-gradient(155deg, rgba(192,132,252,.23), rgba(192,132,252,.12)); color:#c084fc; }
+/* kaartjes in het gesprek: poll en afspraak */
+.bubbel.kaart { width:min(270px, 72vw); padding:12px; white-space:normal; }
+.k-kop { font-weight:700; font-size:15px; display:flex; gap:7px; align-items:flex-start; }
+.k-kop svg { flex:none; margin-top:1px; color:#c084fc; }
+.k-sub { font-size:12px; color:var(--muted); margin:3px 0 9px; }
+.k-keuze { position:relative; display:block; width:100%; text-align:left; margin:0 0 6px; padding:9px 10px; border-radius:12px; border:1px solid rgba(225,204,255,.25); background:rgba(10,4,20,0.35); color:#fff; font:inherit; font-size:14px; cursor:pointer; overflow:hidden; }
+.k-keuze.mijn { border-color:#c084fc; }
+.k-balk { position:absolute; left:0; top:0; bottom:0; background:linear-gradient(90deg, rgba(192,132,252,.38), rgba(192,132,252,.18)); transition:width .25s ease; }
+.k-regel { position:relative; display:flex; gap:8px; align-items:center; }
+.k-regel .k-tekst { flex:1; min-width:0; overflow-wrap:anywhere; }
+.k-regel .k-n { font-weight:700; font-variant-numeric:tabular-nums; }
+.k-vink { width:18px; height:18px; flex:none; border-radius:50%; border:2px solid rgba(255,255,255,.5); display:flex; align-items:center; justify-content:center; font-size:11px; }
+.k-keuze.mijn .k-vink { background:#c084fc; border-color:#c084fc; color:#1a0a2e; }
+.k-namen { position:relative; font-size:11px; color:var(--muted); margin-top:3px; }
+.k-namen:empty { display:none; }
+.k-voet { font-size:12px; color:var(--muted); margin-top:4px; }
+.k-wanneer { font-size:14px; margin:6px 0 2px; }
+.k-waar { font-size:13px; color:var(--muted); margin-bottom:8px; overflow-wrap:anywhere; }
+.kaart.voorbij .k-antw { opacity:.6; }
+/* afspraak: donker kaartje met grote Ja (groen) en Nee (rood), naar Marcels ontwerp */
+.bubbel.kaart.afspraak, .b-rij.mijn .bubbel.kaart.afspraak { background:#1e1726; border:1px solid rgba(255,255,255,0.09); color:#fff; border-radius:20px; padding:12px 14px 12px; }
+.afspraak .k-label { font-size:13px; color:rgba(255,255,255,.62); }
+.afspraak .k-titel { font-size:18px; font-weight:700; margin-top:2px; overflow-wrap:anywhere; }
+.afspraak .k-wanneer { font-size:13px; color:rgba(255,255,255,.85); margin:3px 0 0; }
+.afspraak .k-waar { font-size:13px; color:rgba(255,255,255,.62); margin:2px 0 0; }
+.k-antw { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 0 2px; }
+.k-antw button { height:42px; border-radius:21px; border:2px solid transparent; font:inherit; font-size:16px; cursor:pointer; transition:filter .15s, border-color .15s; }
+.k-antw button[data-antw="ja"] { background:#86d987; color:#10240f; }
+.k-antw button[data-antw="nee"] { background:#6e3236; color:#f6dede; }
+.k-antw button[aria-pressed="true"] { border-color:#fff; font-weight:700; }
+.k-antw:has(button[aria-pressed="true"]) button[aria-pressed="false"] { filter:saturate(.45) brightness(.8); }
+.afspraak .k-wie { color:rgba(255,255,255,.62); margin-top:6px; }
+/* in je eigen (paarse) bubbel: wit in plaats van paars, anders zie je de balkjes niet */
+.b-rij.mijn .k-kop svg { color:#fff; }
+.b-rij.mijn .k-balk { background:linear-gradient(90deg, rgba(255,255,255,.32), rgba(255,255,255,.16)); }
+.b-rij.mijn .k-keuze.mijn { border-color:#fff; }
+.b-rij.mijn .k-keuze.mijn .k-vink { background:#fff; border-color:#fff; color:#6a2bab; }
+.b-rij.mijn .k-sub, .b-rij.mijn .k-voet, .b-rij.mijn .bubbel.kaart:not(.afspraak) .k-namen { color:rgba(255,255,255,.78); }
+/* het venster om een poll of afspraak te maken */
+#maakVak { position:fixed; inset:0; z-index:60; display:flex; align-items:flex-end; justify-content:center; background:rgba(0,0,0,0.55); }
+#maakVak[hidden] { display:none; }
+#maakVak .vel { width:100%; max-width:480px; max-height:88vh; overflow:auto; padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px)); border-radius:24px 24px 0 0; background:#24123c; border:1px solid rgba(192,132,252,0.5); border-bottom:0; display:flex; flex-direction:column; gap:10px; }
+#maakVak h2 { margin:0 0 4px; font-size:18px; }
+#maakVak label { font-size:13px; color:var(--muted); display:flex; flex-direction:column; gap:5px; }
+#maakVak input[type=text], #maakVak input[type=date], #maakVak input[type=time] { height:44px; padding:0 14px; border-radius:14px; border:1px solid rgba(255,255,255,0.12); background:rgba(10,4,20,0.55); color:#fff; font:inherit; font-size:16px; outline:none; color-scheme:dark; }
+#maakVak input:focus { border-color:var(--accent); }
+#maakVak .rij2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+#maakVak .vink { flex-direction:row; align-items:center; gap:10px; color:#fff; font-size:14px; }
+#maakVak .vink input { width:22px; height:22px; accent-color:#8b3fd1; }
+#maakVak .knoppen { display:flex; gap:8px; margin-top:6px; }
+#maakVak .knoppen button { flex:1; height:46px; border-radius:14px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.06); color:#fff; font:inherit; font-size:15px; cursor:pointer; }
+#maakVak .knoppen .doe { background:#8b3fd1; border-color:#8b3fd1; font-weight:700; }
+#maakVak .klein { align-self:flex-start; height:38px; padding:0 14px; border-radius:12px; border:1px dashed rgba(192,132,252,0.6); background:none; color:#c084fc; font:inherit; font-size:14px; cursor:pointer; }
 /* lijn-iconen zoals het menu onderaan: wit, en open = lichtpaars vlak met paars icoon */
 .balk-knop { width:48px; height:42px; flex-shrink:0; border-radius:14px; border:1px solid transparent; background:rgba(255,255,255,0.05); color:#fff; padding:0; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background-color .16s ease, border-color .16s ease, color .16s ease; }
 .balk-knop[aria-pressed="true"] { color:#c084fc; background:linear-gradient(155deg, rgba(192,132,252,.23), rgba(192,132,252,.12)); border-color:rgba(225,204,255,.28); }
@@ -245,15 +303,21 @@ button { font-family:inherit; }
     </div>
   </div>
   <div id="berichten" aria-live="polite"></div>
+  <div id="maakVak" hidden><div class="vel" role="dialog" aria-modal="true"></div></div>
   <div class="chatbalk">
     <div id="emojiRaster" hidden></div>
     <div id="stickerRaster" hidden></div>
+    <div id="extraMenu" hidden role="menu">
+      <button type="button" class="extra-tegel" id="maakPollKnop" role="menuitem"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span data-t>Poll</span></button>
+      <button type="button" class="extra-tegel" id="maakAfspraakKnop" role="menuitem"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01"/></svg><span data-t>Afspraak</span></button>
+    </div>
     <div class="balk-knoppen">
       <button type="button" class="balk-knop" id="emojiKnop" aria-label="Emoji" data-t-attr="aria-label" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg></button>
       <button type="button" class="balk-knop" id="stickerKnop" aria-label="Stickers" data-t-attr="aria-label" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 14.5V7a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v10a4 4 0 0 0 4 4h7.5"/><path d="M21 14.5 14.5 21v-3a3.5 3.5 0 0 1 3.5-3.5z"/><path d="M8.5 12.5a4.5 4.5 0 0 0 7 0M9 8.5h.01M15 8.5h.01"/></svg></button>
       <button type="button" class="balk-knop later" aria-label="Spel" data-t-attr="aria-label"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5.5h10a4 4 0 0 1 3.95 3.4c.3 2 .8 5.5.8 7a2.6 2.6 0 0 1-4.6 1.7L15.7 16a2 2 0 0 0-1.5-.7H9.8a2 2 0 0 0-1.5.7l-1.45 1.6A2.6 2.6 0 0 1 2.25 15.9c0-1.5.5-5 .8-7A4 4 0 0 1 7 5.5z"/><path d="M8 9v4M6 11h4M15.5 11.5h.01M17.5 9.5h.01"/></svg></button>
       <button type="button" class="balk-knop" id="fotoKnop" aria-label="Foto versturen" data-t-attr="aria-label"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
       <button type="button" class="balk-knop" id="spraakKnop" aria-label="Houd ingedrukt om in te spreken" data-t-attr="aria-label" style="touch-action:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <button type="button" class="balk-knop" id="extraKnop" aria-label="Meer: poll, afspraak" data-t-attr="aria-label" aria-pressed="false" aria-controls="extraMenu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg></button>
     </div>
     <div id="antwoordBalk" hidden><span id="antwoordTekst"></span><button type="button" id="antwoordWeg" aria-label="Niet antwoorden" data-t-attr="aria-label">✕</button></div>
     <div id="spraakBalk" hidden role="status" aria-live="polite"><span class="punt"></span><span id="spraakTijd">0:00</span><span id="spraakHint" data-t>← schuif om te annuleren</span></div>
@@ -520,10 +584,42 @@ button { font-family:inherit; }
   const RE_REACTIE = new RegExp('^reactie:(' + ID + '):([\\s\\S]{0,30})$')
   const RE_WEG = new RegExp('^weg:(' + ID + ')$')
   const RE_ANTW = new RegExp('^antw:(' + ID + ')\\n([\\s\\S]*)$')
+  // Poll en afspraak (de + knop): ook gewone versleutelde groepsberichten.
+  //   'poll:{"vraag":..,"keuzes":[..],"meer":bool}'      een poll
+  //   'stem:<id>:[0,2]'                                    mijn stem (stil); [] = stem weg
+  //   'afspraak:{"titel":..,"wanneer":"2026-11-15T19:30","waar":..}'
+  //   'komt:<id>:ja|nee|misschien'                         mijn antwoord (stil); leeg = weg
+  const RE_POLL = /^poll:(\{[\s\S]{2,3000}\})$/
+  const RE_STEM = new RegExp('^stem:(' + ID + '):(\\[[0-9,]{0,20}\\])$')
+  const RE_AFSPRAAK = /^afspraak:(\{[\s\S]{2,1000}\})$/
+  const RE_KOMT = new RegExp('^komt:(' + ID + '):(ja|nee|misschien|)$')
+  const stemmen = new Map()   // poll-id -> Map(van -> [keuzes])
+  const komen = new Map()     // afspraak-id -> Map(van -> 'ja'|'nee'|'misschien')
+  const kaarten = new Map()   // id -> { soort, data, bub }
+  function leesPoll(json) {
+    try {
+      const p = JSON.parse(json)
+      if (!p || typeof p.vraag !== 'string' || !p.vraag.trim() || !Array.isArray(p.keuzes)) return null
+      const keuzes = p.keuzes.filter(k => typeof k === 'string' && k.trim()).map(k => k.trim().slice(0, 60)).slice(0, 6)
+      return keuzes.length >= 2 ? { vraag: p.vraag.trim().slice(0, 140), keuzes, meer: p.meer === true } : null
+    } catch (e) { return null }
+  }
+  function leesAfspraak(json) {
+    try {
+      const a = JSON.parse(json)
+      if (!a || typeof a.titel !== 'string' || !a.titel.trim() || !/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(String(a.wanneer))) return null
+      const tot = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(String(a.tot)) && String(a.tot) >= String(a.wanneer) ? a.tot : ''
+      return { titel: a.titel.trim().slice(0, 80), wanneer: a.wanneer, tot, waar: typeof a.waar === 'string' ? a.waar.trim().slice(0, 80) : '' }
+    } catch (e) { return null }
+  }
   function kortVan(tekst) {
     if (/^fxsticker:/.test(tekst)) return T('\u{1F5BC}\uFE0F Sticker')
     const mm = MARKER.exec(tekst)
     if (mm) return mm[2] === 'foto' ? T('\u{1F4F7} Foto') : T('\u{1F3A4} Spraakbericht ({tijd})', { tijd: spraakTijd(Number(mm[3])) })
+    const pm = RE_POLL.exec(tekst), poll = pm && leesPoll(pm[1])
+    if (poll) return '\u{1F4CA} ' + poll.vraag
+    const am = RE_AFSPRAAK.exec(tekst), afs = am && leesAfspraak(am[1])
+    if (afs) return '\u{1F4C5} ' + afs.titel
     return String(tekst).slice(0, 80)
   }
   function zetReactie(id, van, inhoud) {
@@ -566,6 +662,98 @@ button { font-family:inherit; }
     tekstPerId.delete(id)
   }
 
+  // ── Poll en afspraak tekenen ──
+  const ICOON_POLL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>'
+  const naamKort = id => id === ik ? T('jij') : naamVan(lidVan(id))
+  function zetStem(id, van, keuzes) {
+    let m = stemmen.get(id); if (!m) { m = new Map(); stemmen.set(id, m) }
+    const k = Array.isArray(keuzes) ? [...new Set(keuzes.filter(x => Number.isInteger(x) && x >= 0 && x < 6))] : []
+    if (k.length) m.set(van, k); else m.delete(van)
+    tekenPoll(id)
+  }
+  function zetKomt(id, van, antw) {
+    let m = komen.get(id); if (!m) { m = new Map(); komen.set(id, m) }
+    if (antw) m.set(van, antw); else m.delete(van)
+    tekenAfspraak(id)
+  }
+  function tekenPoll(id) {
+    const kaart = kaarten.get(id)
+    if (!kaart || kaart.soort !== 'poll' || !kaart.bub.isConnected) return
+    const { data: p, bub } = kaart
+    const m = stemmen.get(id) || new Map()
+    const geldig = [...m].map(([van, k]) => [van, p.meer ? k.filter(x => x < p.keuzes.length) : k.filter(x => x < p.keuzes.length).slice(0, 1)]).filter(([, k]) => k.length)
+    const mijn = new Set((geldig.find(([van]) => van === ik) || [, []])[1])
+    bub.className = 'bubbel kaart'
+    bub.innerHTML = '<div class="k-kop">' + ICOON_POLL + '<span class="k-vraag"></span></div><div class="k-sub"></div>'
+    bub.querySelector('.k-vraag').textContent = p.vraag
+    bub.querySelector('.k-sub').textContent = p.meer ? T('Kies er een of meer') : T('Kies er een')
+    p.keuzes.forEach((keuze, i) => {
+      const wie = geldig.filter(([, k]) => k.includes(i)).map(([van]) => van)
+      const pct = geldig.length ? Math.round(wie.length / geldig.length * 100) : 0
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'k-keuze' + (mijn.has(i) ? ' mijn' : '')
+      b.setAttribute('aria-pressed', String(mijn.has(i)))
+      b.innerHTML = '<span class="k-balk" style="width:' + pct + '%"></span><span class="k-regel"><span class="k-vink">' + (mijn.has(i) ? '✓' : '') + '</span><span class="k-tekst"></span><span class="k-n">' + wie.length + '</span></span><div class="k-namen"></div>'
+      b.querySelector('.k-tekst').textContent = keuze
+      b.querySelector('.k-namen').textContent = wie.map(naamKort).join(', ')
+      b.addEventListener('click', () => {
+        if (!mijnPriv) return
+        let nieuw
+        if (p.meer) { const s = new Set(mijn); if (s.has(i)) s.delete(i); else s.add(i); nieuw = [...s].sort() }
+        else nieuw = mijn.has(i) ? [] : [i]
+        zetStem(id, ik, nieuw) // meteen laten zien; het bericht komt erachteraan
+        verstuur('stem:' + id + ':' + JSON.stringify(nieuw), { stil: true })
+      })
+      bub.appendChild(b)
+    })
+    const voet = document.createElement('div'); voet.className = 'k-voet'
+    voet.textContent = geldig.length === 1 ? T('1 stem') : T('{n} stemmen', { n: geldig.length })
+    bub.appendChild(voet)
+  }
+  // '2026-12-25T10:00' -> '25 dec 10:00' (zoals in Marcels ontwerp)
+  function wanneerTekst(w) {
+    const [d, t] = String(w).split('T'), [j, mnd, dag] = d.split('-').map(Number)
+    const loc = (() => { try { return localStorage.getItem('fibro_taal') === 'en' ? 'en-GB' : 'nl-NL' } catch (e) { return 'nl-NL' } })()
+    let s = new Date(j, mnd - 1, dag).toLocaleDateString(loc, { day: 'numeric', month: 'short' }).replace('.', '')
+    if (j !== new Date().getFullYear()) s += ' ' + j
+    return t ? s + ' ' + t : s
+  }
+  function afspraakVoorbij(a) {
+    const w = a.tot || a.wanneer
+    const [d, t] = String(w).split('T'), [j, mnd, dag] = d.split('-').map(Number), [u, mi] = (t || '23:59').split(':').map(Number)
+    return new Date(j, mnd - 1, dag, u, mi).getTime() < Date.now()
+  }
+  function tekenAfspraak(id) {
+    const kaart = kaarten.get(id)
+    if (!kaart || kaart.soort !== 'afspraak' || !kaart.bub.isConnected) return
+    const { data: a, bub } = kaart
+    const m = komen.get(id) || new Map()
+    const mijn = m.get(ik) || ''
+    const voorbij = afspraakVoorbij(a)
+    bub.className = 'bubbel kaart afspraak' + (voorbij ? ' voorbij' : '')
+    bub.innerHTML = '<div class="k-label"></div><div class="k-titel"></div><div class="k-wanneer"></div>' + (a.waar ? '<div class="k-waar"></div>' : '') + '<div class="k-antw"></div><div class="k-namen k-wie"></div>'
+    bub.querySelector('.k-label').textContent = T('Afspraak')
+    bub.querySelector('.k-titel').textContent = a.titel
+    bub.querySelector('.k-wanneer').textContent = wanneerTekst(a.wanneer) + (a.tot ? ' - ' + (a.tot.slice(0, 10) === a.wanneer.slice(0, 10) && a.tot.includes('T') ? a.tot.slice(11) : wanneerTekst(a.tot)) : '') + (voorbij ? ' · ' + T('geweest') : '')
+    if (a.waar) bub.querySelector('.k-waar').textContent = '\u{1F4CD} ' + a.waar
+    const ANTW = [['ja', T('Ja')], ['nee', T('Nee')]]
+    const regels = []
+    for (const [w, label] of ANTW) {
+      const wie = [...m].filter(([, x]) => x === w).map(([van]) => van)
+      const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', String(mijn === w))
+      b.dataset.antw = w
+      b.textContent = label + (wie.length ? ' · ' + wie.length : '')
+      b.addEventListener('click', () => {
+        if (!mijnPriv) return
+        const nieuw = mijn === w ? '' : w
+        zetKomt(id, ik, nieuw)
+        verstuur('komt:' + id + ':' + nieuw, { stil: true })
+      })
+      bub.querySelector('.k-antw').appendChild(b)
+      if (wie.length) regels.push(label + ': ' + wie.map(naamKort).join(', '))
+    }
+    bub.querySelector('.k-wie').textContent = regels.join(' · ')
+  }
+
   // Berichten een voor een tekenen (een reactie of antwoord moet na zijn bericht komen)
   let wachtrij = Promise.resolve()
   function tekenBericht(r, onder = true, nieuw = false) {
@@ -587,6 +775,10 @@ button { font-family:inherit; }
       if (m) { zetReactie(m[1], r.sender_id, m[2]); return }
       m = RE_WEG.exec(tekst)
       if (m) { haalWeg(m[1], r.sender_id); return }
+      m = RE_STEM.exec(tekst)
+      if (m) { let k = []; try { k = JSON.parse(m[2]) } catch (e) {} zetStem(m[1], r.sender_id, k); return }
+      m = RE_KOMT.exec(tekst)
+      if (m) { zetKomt(m[1], r.sender_id, m[2]); return }
       m = RE_ANTW.exec(tekst)
       if (m) { antwoordOp = m[1]; tekst = m[2] }
     }
@@ -631,7 +823,11 @@ button { font-family:inherit; }
       } else if (mm) {
         tekenMedia(bub, mm[1], mm[2], Number(mm[3]), r.sender_id, mijn, nieuw)
       } else {
-        bub.textContent = tekst
+        const pm = RE_POLL.exec(tekst), poll = pm && leesPoll(pm[1])
+        const am = !poll && RE_AFSPRAAK.exec(tekst), afs = am && leesAfspraak(am[1])
+        if (poll) { kaarten.set(r.id, { soort: 'poll', data: poll, bub }); tekenPoll(r.id) }
+        else if (afs) { kaarten.set(r.id, { soort: 'afspraak', data: afs, bub }); tekenAfspraak(r.id) }
+        else bub.textContent = tekst
       }
     } else {
       bub.classList.add('slot')
@@ -995,6 +1191,77 @@ button { font-family:inherit; }
     }
     r.hidden = !r.hidden; $('emojiRaster').hidden = true
     if (!r.hidden) stickerKeuze.vernieuw?.()
+  })
+  // ── + Meer: poll en afspraak maken ──
+  $('extraKnop').addEventListener('click', () => {
+    const r = $('extraMenu'); r.hidden = !r.hidden
+    if (!r.hidden) { $('emojiRaster').hidden = true; $('stickerRaster').hidden = true }
+  })
+  for (const k of ['emojiKnop', 'stickerKnop']) $(k).addEventListener('click', () => { $('extraMenu').hidden = true })
+  {
+    const zet = () => $('extraKnop').setAttribute('aria-pressed', String(!$('extraMenu').hidden))
+    new MutationObserver(zet).observe($('extraMenu'), { attributes: true, attributeFilter: ['hidden'] }); zet()
+  }
+  function sluitMaak() { $('maakVak').hidden = true; $('maakVak').querySelector('.vel').innerHTML = '' }
+  $('maakVak').addEventListener('click', e => { if (e.target === $('maakVak')) sluitMaak() })
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('maakVak').hidden) sluitMaak() })
+  function openMaak(titel, inhoud, opDoe) {
+    $('extraMenu').hidden = true
+    const vel = $('maakVak').querySelector('.vel')
+    vel.innerHTML = '<h2></h2>' + inhoud + '<div class="knoppen"><button type="button" class="weg"></button><button type="button" class="doe"></button></div>'
+    vel.querySelector('h2').textContent = titel
+    vel.querySelector('.weg').textContent = T('Annuleren')
+    vel.querySelector('.doe').textContent = T('Plaatsen')
+    vel.querySelector('.weg').addEventListener('click', sluitMaak)
+    vel.querySelector('.doe').addEventListener('click', async () => { if (await opDoe(vel)) sluitMaak() })
+    $('maakVak').hidden = false
+    vel.querySelector('input')?.focus()
+    return vel
+  }
+  const veld = (cls, label, type = 'text', max = 80) => '<label>' + esc(label) + '<input type="' + type + '" class="' + cls + '"' + (type === 'text' ? ' maxlength="' + max + '" autocomplete="off"' : '') + '></label>'
+  $('maakPollKnop').addEventListener('click', () => {
+    if (!mijnPriv || !groep) return
+    const vel = openMaak(T('Nieuwe poll'), veld('p-vraag', T('Vraag'), 'text', 140) + '<div class="p-keuzes"></div><button type="button" class="klein p-meer-keuzes"></button>'
+      + '<label class="vink"><input type="checkbox" class="p-meer"><span></span></label>', async vel => {
+      const vraag = vel.querySelector('.p-vraag').value.trim()
+      const keuzes = [...vel.querySelectorAll('.p-keuze')].map(i => i.value.trim()).filter(Boolean)
+      if (!vraag) { toast(T('Vul een vraag in')); return false }
+      if (keuzes.length < 2) { toast(T('Vul minstens 2 keuzes in')); return false }
+      return verstuur('poll:' + JSON.stringify({ vraag, keuzes, meer: vel.querySelector('.p-meer').checked }))
+    })
+    vel.querySelector('.vink span').textContent = T('Meer keuzes mogen')
+    const knop = vel.querySelector('.p-meer-keuzes'); knop.textContent = T('+ Keuze toevoegen')
+    const voegToe = () => {
+      const n = vel.querySelectorAll('.p-keuze').length
+      if (n >= 6) return
+      const l = document.createElement('label'); l.innerHTML = esc(T('Keuze {n}', { n: n + 1 })) + '<input type="text" class="p-keuze" maxlength="60" autocomplete="off">'
+      vel.querySelector('.p-keuzes').appendChild(l)
+      knop.hidden = n + 1 >= 6
+      return l.querySelector('input')
+    }
+    voegToe(); voegToe()
+    knop.addEventListener('click', () => voegToe()?.focus())
+  })
+  $('maakAfspraakKnop').addEventListener('click', () => {
+    if (!mijnPriv || !groep) return
+    const vel = openMaak(T('Nieuwe afspraak'), veld('a-titel', T('Wat gaan we doen?'), 'text', 80)
+      + '<div class="rij2">' + veld('a-datum', T('Begint op'), 'date') + veld('a-tijd', T('Tijd (mag leeg)'), 'time') + '</div>'
+      + '<div class="rij2">' + veld('a-totdatum', T('Tot (mag leeg)'), 'date') + veld('a-tottijd', T('Tijd (mag leeg)'), 'time') + '</div>'
+      + veld('a-waar', T('Waar? (mag leeg)'), 'text', 80), async vel => {
+      const titel = vel.querySelector('.a-titel').value.trim(), datum = vel.querySelector('.a-datum').value, tijd = vel.querySelector('.a-tijd').value
+      if (!titel) { toast(T('Vul in wat jullie gaan doen')); return false }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(datum)) { toast(T('Kies een datum')); return false }
+      const wanneer = datum + (/^\d{2}:\d{2}$/.test(tijd) ? 'T' + tijd : '')
+      const totDatum = vel.querySelector('.a-totdatum').value, totTijd = vel.querySelector('.a-tottijd').value
+      const tot = /^\d{4}-\d{2}-\d{2}$/.test(totDatum) ? totDatum + (/^\d{2}:\d{2}$/.test(totTijd) ? 'T' + totTijd : '') : (/^\d{2}:\d{2}$/.test(totTijd) ? datum + 'T' + totTijd : '')
+      if (tot && tot < wanneer) { toast(T('Het einde ligt voor het begin')); return false }
+      const afspraak = { titel, wanneer, waar: vel.querySelector('.a-waar').value.trim() }
+      if (tot) afspraak.tot = tot
+      return verstuur('afspraak:' + JSON.stringify(afspraak))
+    })
+    const nu = new Date(), vandaag = nu.getFullYear() + '-' + String(nu.getMonth() + 1).padStart(2, '0') + '-' + String(nu.getDate()).padStart(2, '0')
+    vel.querySelector('.a-datum').min = vandaag; vel.querySelector('.a-totdatum').min = vandaag
+    vel.querySelector('.a-datum').addEventListener('change', e => { const t = vel.querySelector('.a-totdatum'); t.min = e.target.value || vandaag; if (t.value && t.value < t.min) t.value = '' })
   })
   for (const b of document.querySelectorAll('.balk-knop.later')) b.addEventListener('click', () => toast(T('Samen spelen in een groep komt later')))
   $('fotoKnop').addEventListener('click', () => { if (!mijnPriv || !groep) return; $('fotoInvoer').click() })

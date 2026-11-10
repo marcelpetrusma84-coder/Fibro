@@ -105,3 +105,6 @@ jobs:
       - name: "iPhone met Vergrendelingsmodus: foto kiezen op Home, profiel en vriendprofiel laden"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef275.py .
+      - name: "Menu onderaan met lijn-iconen"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef276.py .

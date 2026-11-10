@@ -1116,6 +1116,18 @@ function maakFotoTitel(keyPrefix, uid) {
   return bar
 }
 
+// v276 (10 nov 2026): een foto lezen om hem op een canvas te tekenen. Met Vergrendelingsmodus (Lockdown Mode) aan op
+// een iPhone bestaat FileReader niet: dan gaf kiezen van een foto 'Can't find variable: FileReader' en gebeurde er niets.
+// Een blob-adres (URL.createObjectURL) werkt daar wel, en een plaatje kan daarmee net zo goed op het canvas.
+function fotoLezer() {
+  if (typeof FileReader === 'function') return new FileReader()
+  const lezer = { onload: null, readAsDataURL(bestand) {
+    const adres = URL.createObjectURL(bestand)
+    setTimeout(() => { if (lezer.onload) lezer.onload({ target: { result: adres } }) }, 0)
+    setTimeout(() => URL.revokeObjectURL(adres), 60000) // het plaatje staat dan al lang op het canvas
+  } }
+  return lezer
+}
 function renderFotoGrid(c, stijl, aantalFotos) {
   const uid = window._uid || 'lokaal'
   const KEY = 'pfoto_' + stijl + '_'
@@ -1141,7 +1153,7 @@ function renderFotoGrid(c, stijl, aantalFotos) {
       const file = this.files[0]; if (!file) return
       if (file.size > 10*1024*1024) { alert(T('Max 10MB')); return }
       const celIdx = idx
-      const reader = new FileReader()
+      const reader = fotoLezer()
       reader.onload = ev => {
         const tmpImg = new Image()
         tmpImg.onload = async () => {
@@ -1288,7 +1300,7 @@ function renderFotoFeatured(c) {
       const file = this.files[0]; if (!file) return
       if (file.size > 10*1024*1024) { alert(T('Max 10MB')); return }
       const celIdx = i
-      const reader = new FileReader()
+      const reader = fotoLezer()
       reader.onload = ev => {
         const tmp = new Image()
         tmp.onload = async () => {
@@ -1426,7 +1438,7 @@ function renderFotoZwevend(c) {
       const file = this.files[0]; if (!file) return
       if (file.size > 10*1024*1024) { alert(T('Max 10MB')); return }
       const celIdx = i
-      const reader = new FileReader()
+      const reader = fotoLezer()
       reader.onload = ev => {
         const tmp = new Image()
         tmp.onload = async () => {
@@ -1539,7 +1551,7 @@ function renderFotoPolaroid(c) {
       const file = this.files[0]; if (!file) return
       if (file.size > 10*1024*1024) { alert(T('Max 10MB')); return }
       const celIdx = i
-      const reader = new FileReader()
+      const reader = fotoLezer()
       reader.onload = ev => {
         const tmp = new Image()
         tmp.onload = async () => {
@@ -1834,7 +1846,7 @@ async function zetWidgetAchtergrond(c, sleutel) {
     inp.onchange = () => {
       const f = inp.files[0]
       if (!f) return
-      const lezer = new FileReader()
+      const lezer = fotoLezer()
       lezer.onload = ev => {
         const img = new Image()
         img.onload = async () => {

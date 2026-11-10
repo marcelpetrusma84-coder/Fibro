@@ -102,3 +102,6 @@ jobs:
       - name: Spreekwolkje in het spel als je een berichtje krijgt
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef274.py .
+      - name: iPhone met Vergrendelingsmodus: foto kiezen op Home, profiel en vriendprofiel laden
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef275.py .

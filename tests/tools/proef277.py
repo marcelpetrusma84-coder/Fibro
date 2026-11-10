@@ -5,7 +5,7 @@
 #     = maak_groep met de goede gegevens, en je staat in het gesprek
 #  C. Marcel stuurt 'Hoi Bram 👋': op de server staat alleen 'g1:...' (niet leesbaar); bij Marcel staat het bericht
 #  D. Bram opent de groep: hij leest 'Hoi Bram 👋' met de naam Marcel erboven
-#  E. een sticker uit de stickerkeuze komt als plaatje binnen; 📷 zegt 'Komt binnenkort in groepen'
+#  E. een sticker uit de stickerkeuze komt als plaatje binnen; 🎮 zegt dat samen spelen later komt (📷 en 🎤: proef279)
 #  F. Leden: Marcel is beheerder en kan Lotte toevoegen (groep_lid_toevoegen)
 #  G. Engels; geen paginafouten
 # python3 -I proef277.py <map>
@@ -117,13 +117,13 @@ try:
         m.wait_for_selector('.b-rij.mijn .bubbel')
         check(len(DB['berichten']) == 1 and DB['berichten'][0]['content'].startswith('g1:') and 'Hoi' not in DB['berichten'][0]['content'], 'C: op de server alleen versleuteld')
         check(m.inner_text('.b-rij.mijn .bubbel') == 'Hoi Bram 👋', 'C: Marcel ziet zijn bericht')
-        # E (sticker en foto)
+        # E (sticker en spel)
         m.click('#stickerKnop'); m.wait_for_selector('#stickerRaster .sk-sticker')
         m.click('#stickerRaster .sk-sticker >> nth=0'); m.wait_for_function("document.querySelectorAll('.b-rij.mijn').length === 2")
         m.wait_for_timeout(300)
         check(m.locator('.b-rij.mijn img.b-sticker').count() == 1, 'E: sticker als plaatje bij Marcel')
-        m.click('.balk-knop.later[aria-label="Foto versturen"]')
-        check('Komt binnenkort in groepen' in m.inner_text('.toast'), 'E: foto zegt binnenkort')
+        m.click('.balk-knop.later[aria-label="Spel"]')
+        check('Samen spelen in een groep komt later' in m.inner_text('.toast'), 'E: spel zegt later')
         # D
         bp.goto(BASIS + 'groep.html?id=' + gid); bp.wait_for_selector('.b-rij .bubbel')
         bp.wait_for_function("document.querySelectorAll('.b-rij').length === 2")

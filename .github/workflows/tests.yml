@@ -114,3 +114,6 @@ jobs:
       - name: "Groepschat: namen en groepen met onbekenden"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef278.py .
+      - name: "Groepschat: foto, spraak en eigen stickers"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef279.py .

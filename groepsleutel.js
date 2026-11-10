@@ -1,4 +1,5 @@
 // groepsleutel.js (10 nov 2026, groepschat stap 1): berichten in een groep end-to-end versleutelen.
+// v2 (10 nov 2026): ook foto's en spraakberichtjes (versleutelGroepsBytes / openGroepsBytes, soort 'media').
 //
 // Hoe: elk bericht krijgt een eigen, willekeurige sleutel (AES-GCM, 256 bits). Die berichtsleutel wordt voor elk lid
 // apart ingepakt met de sleutel die de afzender en dat lid samen hebben (ECDH P-256, dezelfde sleutelparen als de
@@ -49,18 +50,18 @@ function paarSleutel(mijnPriv, anderPub, groepId) {
   return p
 }
 
-const berichtExtra = (groepId, van, t) => tekst(['fibro-groep-v1', 'bericht', groepId, van, t].join('|'))
+const inhoudExtra = (soort, groepId, van, t) => tekst(['fibro-groep-v1', soort, groepId, van, t].join('|'))
 const inpakExtra = (groepId, van, naar, t) => tekst(['fibro-groep-v1', 'sleutel', groepId, van, naar, t].join('|'))
 
-// leden: [{ id, public_key }], ik zelf hoort erbij (zo kan ik mijn eigen bericht later ook lezen).
-// Leden zonder publieke sleutel krijgen niets (ze kunnen nog niet versleutelen); die staan in 'overgeslagen'.
-export async function versleutelGroepsbericht(platteTekst, { groepId, van, mijnPriv, leden, nu }) {
+// Bytes versleutelen met een nieuwe sleutel, en die sleutel per lid inpakken. soort: 'bericht' of 'media' (een foto of
+// spraakberichtje mag nooit als tekstbericht te openen zijn, en andersom).
+async function sluit(bytes, soort, { groepId, van, mijnPriv, leden, nu }) {
   if (!groepId || !van || !mijnPriv) throw new Error('groep, afzender of sleutel ontbreekt')
   const t = Math.floor(nu || Date.now()).toString(36)
   const ruw = crypto.getRandomValues(new Uint8Array(32))
   const sleutel = await crypto.subtle.importKey('raw', ruw, 'AES-GCM', false, ['encrypt'])
   const iv = crypto.getRandomValues(new Uint8Array(12))
-  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: berichtExtra(groepId, van, t) }, sleutel, tekst(platteTekst)))
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: inhoudExtra(soort, groepId, van, t) }, sleutel, bytes))
   const d = new Uint8Array(12 + ct.length); d.set(iv); d.set(ct, 12)
   const k = {}
   const overgeslagen = []
@@ -76,8 +77,39 @@ export async function versleutelGroepsbericht(platteTekst, { groepId, van, mijnP
     } catch (e) { overgeslagen.push(lid.id) }
   }
   if (!k[van]) throw new Error('eigen sleutel past niet')
-  return { content: VOORVOEGSEL + JSON.stringify({ t, d: naarB64(d), k }), overgeslagen }
+  return { t, d, k, overgeslagen }
 }
+// Geeft { bytes, status }: status 'ok', 'niet-voor-mij', 'onleesbaar' of 'vervalst'.
+async function open(pak, soort, { groepId, van, ik, mijnPriv, afzenderPub }) {
+  if (!pak || typeof pak.t !== 'string' || !/^[0-9a-z]{1,12}$/.test(pak.t) || !(pak.d instanceof Uint8Array) || !pak.k || typeof pak.k !== 'object') return { status: 'vervalst' }
+  const mijn = pak.k[ik]
+  if (typeof mijn !== 'string') return { status: 'niet-voor-mij' }
+  if (!mijnPriv || !afzenderPub) return { status: 'onleesbaar' }
+  let ruw
+  try {
+    const ps = await paarSleutel(mijnPriv, afzenderPub, groepId)
+    const w = vanB64(mijn)
+    ruw = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: w.slice(0, 12), additionalData: inpakExtra(groepId, van, ik, pak.t) }, ps, w.slice(12))
+  } catch (e) { return { status: 'onleesbaar' } }
+  try {
+    if (pak.d.length < 28) return { status: 'vervalst' }
+    const sleutel = await crypto.subtle.importKey('raw', ruw, 'AES-GCM', false, ['decrypt'])
+    const bytes = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: pak.d.slice(0, 12), additionalData: inhoudExtra(soort, groepId, van, pak.t) }, sleutel, pak.d.slice(12)))
+    return { bytes, status: 'ok' }
+  } catch (e) { return { status: 'vervalst' } }
+}
+
+// leden: [{ id, public_key }], ik zelf hoort erbij (zo kan ik mijn eigen bericht later ook lezen).
+// Leden zonder publieke sleutel krijgen niets (ze kunnen nog niet versleutelen); die staan in 'overgeslagen'.
+export async function versleutelGroepsbericht(platteTekst, opties) {
+  const p = await sluit(tekst(platteTekst), 'bericht', opties)
+  return { content: VOORVOEGSEL + JSON.stringify({ t: p.t, d: naarB64(p.d), k: p.k }), overgeslagen: p.overgeslagen }
+}
+
+// Een foto of spraakberichtje (v2, 10 nov 2026): { t, d (Uint8Array), k, overgeslagen }. Gaat niet via de database
+// maar los naar wie online is (groepmedia.js).
+export function versleutelGroepsBytes(bytes, opties) { return sluit(bytes, 'media', opties) }
+export function openGroepsBytes(pak, opties) { return open(pak, 'media', opties) }
 
 export function isGroepsbericht(content) { return typeof content === 'string' && content.startsWith(VOORVOEGSEL) }
 
@@ -86,23 +118,12 @@ export async function openGroepsbericht(content, { groepId, van, ik, mijnPriv, a
   if (!isGroepsbericht(content)) return { tekst: '', status: 'onleesbaar' }
   let pak
   try { pak = JSON.parse(content.slice(VOORVOEGSEL.length)) } catch (e) { return { tekst: '', status: 'vervalst' } }
-  if (!pak || typeof pak.t !== 'string' || !/^[0-9a-z]{1,12}$/.test(pak.t) || typeof pak.d !== 'string' || !pak.k || typeof pak.k !== 'object') return { tekst: '', status: 'vervalst' }
-  const mijn = pak.k[ik]
-  if (typeof mijn !== 'string') return { tekst: '', status: 'niet-voor-mij' }
-  if (!mijnPriv || !afzenderPub) return { tekst: '', status: 'onleesbaar' }
-  let ruw
-  try {
-    const ps = await paarSleutel(mijnPriv, afzenderPub, groepId)
-    const w = vanB64(mijn)
-    ruw = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: w.slice(0, 12), additionalData: inpakExtra(groepId, van, ik, pak.t) }, ps, w.slice(12))
-  } catch (e) { return { tekst: '', status: 'onleesbaar' } }
-  let plat
-  try {
-    const sleutel = await crypto.subtle.importKey('raw', ruw, 'AES-GCM', false, ['decrypt'])
-    const d = vanB64(pak.d)
-    if (d.length < 28) return { tekst: '', status: 'vervalst' }
-    plat = new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: d.slice(0, 12), additionalData: berichtExtra(groepId, van, pak.t) }, sleutel, d.slice(12)))
-  } catch (e) { return { tekst: '', status: 'vervalst' } }
+  if (!pak || typeof pak.d !== 'string') return { tekst: '', status: 'vervalst' }
+  let d
+  try { d = vanB64(pak.d) } catch (e) { return { tekst: '', status: 'vervalst' } }
+  const uit = await open({ t: pak.t, d, k: pak.k }, 'bericht', { groepId, van, ik, mijnPriv, afzenderPub })
+  if (uit.status !== 'ok') return { tekst: '', status: uit.status }
+  const plat = new TextDecoder().decode(uit.bytes)
   const verstuurd = parseInt(pak.t, 36)
   const server = Number(serverTijd)
   if (server > 0 && !(Math.abs(server - verstuurd) <= TIJD_MARGE)) return { tekst: plat, status: 'tijd', verstuurd }

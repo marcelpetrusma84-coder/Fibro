@@ -1,6 +1,6 @@
 // test-groepsleutel.mjs (10 nov 2026): groepsberichten versleutelen en openen (groepsleutel.js).
 import assert from 'node:assert/strict'
-import { versleutelGroepsbericht, openGroepsbericht, isGroepsbericht, MAX_LEDEN } from '../../groepsleutel.js'
+import { versleutelGroepsbericht, openGroepsbericht, isGroepsbericht, MAX_LEDEN, versleutelGroepsBytes, openGroepsBytes } from '../../groepsleutel.js'
 
 const b64 = buf => Buffer.from(buf).toString('base64')
 async function paar() {
@@ -36,4 +36,15 @@ const veel = [{ id: 'A', public_key: a.pub }]
 for (let i = 0; i < 49; i++) veel.push({ id: 'L' + i, public_key: (i % 2 ? b : c).pub })
 const groot = await versleutelGroepsbericht('x'.repeat(200), { groepId: G, van: 'A', mijnPriv: a.priv, leden: veel })
 assert.ok(groot.content.length < 8000, 'bericht voor 50 leden < 8 kB (' + groot.content.length + ')')
+// foto's en spraak (bytes, v2)
+const foto = crypto.getRandomValues(new Uint8Array(50000))
+const pakB = await versleutelGroepsBytes(foto, { groepId: G, van: 'A', mijnPriv: a.priv, leden })
+const ob = await openGroepsBytes(pakB, { groepId: G, van: 'A', ik: 'C', mijnPriv: c.priv, afzenderPub: a.pub })
+assert.equal(ob.status, 'ok'); assert.deepEqual(ob.bytes, foto)
+assert.equal((await openGroepsBytes(pakB, { groepId: G2, van: 'A', ik: 'C', mijnPriv: c.priv, afzenderPub: a.pub })).status, 'onleesbaar', 'media: andere groep')
+const kapot = { ...pakB, d: pakB.d.slice() }; kapot.d[100] ^= 1
+assert.equal((await openGroepsBytes(kapot, { groepId: G, van: 'A', ik: 'C', mijnPriv: c.priv, afzenderPub: a.pub })).status, 'vervalst', 'media: onderweg veranderd')
+// een foto is nooit als tekstbericht te openen
+const alsTekst = 'g1:' + JSON.stringify({ t: pakB.t, d: Buffer.from(pakB.d).toString('base64'), k: pakB.k })
+assert.equal((await openGroepsbericht(alsTekst, { groepId: G, van: 'A', ik: 'C', mijnPriv: c.priv, afzenderPub: a.pub })).status, 'vervalst', 'media niet als bericht')
 console.log('ok: groepsberichten versleutelen en openen (' + groot.content.length + ' tekens voor 50 leden)')

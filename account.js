@@ -252,8 +252,8 @@ async function wisFotos(uid) {
         const cur = e.target.result
         if (!cur) return
         const k = String(cur.primaryKey)
-        // van jou, van je vrienden, of van niemand in het bijzonder; van een ander account niet
-        if (k.includes(uid) || k.startsWith('vriend_') || !UUID.test(k)) { st.delete(cur.primaryKey); n++ }
+        // van jou, van je vrienden, uit je groepen (foto's en spraak), of van niemand in het bijzonder; van een ander account niet
+        if (k.includes(uid) || k.startsWith('vriend_') || k.startsWith('groep_') || !UUID.test(k)) { st.delete(cur.primaryKey); n++ }
         cur.continue()
       }
       tx.oncomplete = klaar

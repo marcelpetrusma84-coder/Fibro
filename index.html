@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=83"></script>
+<script src="taal.js?v=84"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -2735,7 +2735,7 @@ async function openAccount(wat) {
   const uid = window._uid
   if (!uid) return
   try {
-    const m = await import('./account.js?v=5')
+    const m = await import('./account.js?v=6')
     if (wat === 'verwijderen') m.openVerwijderen(uid)
     else m.openGegevens(uid)
   } catch (e) {

@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=83"></script>
+<script src="taal.js?v=84"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -86,7 +86,14 @@ button { font-family:inherit; }
 .bubbel.slot { font-style:italic; color:var(--muted); }
 .b-tijd { font-size:11px; color:rgba(255,255,255,0.65); }
 .b-rij.vervolg .b-naam, .b-rij.vervolg .av { visibility:hidden; }
-.b-sticker { width:120px; height:120px; object-fit:contain; }
+.b-sticker { width:120px; height:120px; object-fit:contain; cursor:pointer; }
+.bubbel.media { padding:4px; }
+.b-foto { display:block; max-width:220px; max-height:280px; border-radius:14px; cursor:zoom-in; }
+.media-wacht { padding:5px 9px; font-size:14px; color:rgba(255,255,255,0.85); }
+#spraakBalk { display:flex; align-items:center; gap:10px; padding:4px 6px; font-size:15px; }
+#spraakBalk .punt { width:12px; height:12px; border-radius:50%; background:#ef4444; animation:knipper 1s infinite; }
+#spraakBalk.annuleer { color:#fca5a5; }
+@keyframes knipper { 50% { opacity:.3 } }
 .chatbalk { margin:0 10px calc(10px + env(safe-area-inset-bottom,0px)); padding:12px; display:flex; flex-direction:column; gap:12px; border-radius:24px; background:linear-gradient(160deg,rgba(255,255,255,0.09),rgba(255,255,255,0.04)); border:1px solid rgba(192,132,252,0.5); flex-shrink:0; }
 .balk-knoppen { display:flex; gap:8px; }
 .balk-knop { width:46px; height:46px; flex-shrink:0; border-radius:50%; border:1px solid var(--border); background:rgba(255,255,255,0.08); font-size:21px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
@@ -176,9 +183,11 @@ button { font-family:inherit; }
       <button type="button" class="balk-knop" id="emojiKnop" aria-label="Emoji" data-t-attr="aria-label">😊</button>
       <button type="button" class="balk-knop" id="stickerKnop" aria-label="Stickers" data-t-attr="aria-label">🎨</button>
       <button type="button" class="balk-knop later" aria-label="Spel" data-t-attr="aria-label">🎮</button>
-      <button type="button" class="balk-knop later" aria-label="Foto versturen" data-t-attr="aria-label">📷</button>
-      <button type="button" class="balk-knop later" aria-label="Spraakbericht" data-t-attr="aria-label">🎤</button>
+      <button type="button" class="balk-knop" id="fotoKnop" aria-label="Foto versturen" data-t-attr="aria-label">📷</button>
+      <button type="button" class="balk-knop" id="spraakKnop" aria-label="Houd ingedrukt om in te spreken" data-t-attr="aria-label" style="touch-action:none">🎤</button>
     </div>
+    <div id="spraakBalk" hidden role="status" aria-live="polite"><span class="punt"></span><span id="spraakTijd">0:00</span><span id="spraakHint" data-t>← schuif om te annuleren</span></div>
+    <input type="file" id="fotoInvoer" accept="image/*" multiple hidden>
     <div class="balk-invoer">
       <input id="bericht" maxlength="2000" autocomplete="off" placeholder="Stuur een bericht..." aria-label="Bericht" data-t-attr="placeholder,aria-label">
       <button type="button" id="verstuur" aria-label="Versturen" data-t-attr="aria-label">➤</button>
@@ -201,7 +210,11 @@ button { font-family:inherit; }
 <script type="module">
   import { supabase } from './supabase.js?v=95'
   import { haalPrivateKeyOp, eigenPubliekeSleutel } from './crypto.js?v=182'
-  import { versleutelGroepsbericht, openGroepsbericht, MAX_LEDEN } from './groepsleutel.js?v=1'
+  import { versleutelGroepsbericht, openGroepsbericht, MAX_LEDEN } from './groepsleutel.js?v=2'
+  import { maakFoto, verstuurMedia, maakOntvanger, bewaarMedia, leesMedia, ruimOp, nieuwId, marker, MARKER, MAX_BYTES } from './groepmedia.js?v=1'
+  import { speel as speelFx } from './stickerfx.js?v=235'
+  import { isCode as isEigenCode, leesFx, zoekEigenSticker, fxCode, stickerPakket } from './eigenstickers.js?v=162'
+  import { kanOpnemen, neemOp, maakSpeler, tijdTekst as spraakTijd } from './spraak.js?v=1'
   import { houOpen } from './lijntjes.js?v=1'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { zoekSticker } from './stickervellen.js?v=236'
@@ -335,7 +348,79 @@ button { font-family:inherit; }
   function naarOnder() { const b = $('berichten'); b.scrollTop = b.scrollHeight }
 
   let vorigeAfzender = null
-  async function tekenBericht(r, onder = true) {
+  // Een sticker uit een bericht: een vaste (f1-01) van dit toestel, of een eigen sticker met het plaatje erin
+  // (in een groep altijd meegestuurd: niet iedereen is vriend van de maker, dus sync.js brengt hem niet).
+  function stickerUit(rest) {
+    const fx = leesFx(rest)
+    if (!isEigenCode(fx.code)) return zoekSticker(fx.code)
+    if (!fx.pakket || fx.pakket.length > 700000) return null
+    try {
+      const p = JSON.parse(fx.pakket)
+      if (!p || typeof p.d !== 'string' || !/^data:image\/(webp|png);base64,[A-Za-z0-9+/=]+$/.test(p.d)) return null
+      const woord = w => (typeof w === 'string' && /^[a-z]{1,20}$/.test(w)) ? w : 'geen'
+      return { src: p.d, b: woord(p.b), g: woord(p.g), naam: typeof p.n === 'string' ? p.n.slice(0, 30) : '' }
+    } catch (e) { return null }
+  }
+
+  // ── Foto's en spraakberichtjes (groepmedia.js): alleen naar wie online is ──
+  const ontvangen = new Map()   // id -> rec (net binnen, nog niet per se op het toestel bewaard)
+  const wachtend = new Map()    // id -> { bub, van, soort }
+  function toonMedia(bub, rec, mijn) {
+    const url = URL.createObjectURL(rec.blob)
+    bub.textContent = ''
+    bub.classList.add('media')
+    if (rec.soort === 'foto') {
+      const img = Object.assign(document.createElement('img'), { className: 'b-foto', src: url, alt: T('Foto') })
+      img.setAttribute('data-fv-groep', 'groep')
+      img.addEventListener('load', () => { if (Math.abs($('berichten').scrollHeight - $('berichten').scrollTop - $('berichten').clientHeight) < 400) naarOnder() })
+      bub.appendChild(img)
+    } else {
+      bub.appendChild(maakSpeler(url, rec.duur, { mijn }))
+    }
+  }
+  async function tekenMedia(bub, id, soort, duur, van, mijn, nieuw) {
+    const icoon = soort === 'foto' ? T('\u{1F4F7} Foto') : T('\u{1F3A4} Spraakbericht ({tijd})', { tijd: spraakTijd(duur) })
+    bub.classList.add('media')
+    bub.innerHTML = '<div class="media-wacht"></div>'
+    const tekst = bub.firstChild
+    tekst.textContent = icoon + (nieuw && !mijn ? ' \u00B7 ' + T('komt binnen\u2026') : '')
+    let rec = ontvangen.get(id)
+    if (!rec) rec = await leesMedia(groep.id, id)
+    if (rec && rec.van === van) { toonMedia(bub, rec, mijn); return }
+    if (mijn) { tekst.textContent = icoon + ' \u00B7 ' + T('niet meer op dit toestel'); return }
+    wachtend.set(id, { bub, van, mijn })
+    const nietOnline = () => { if (wachtend.get(id)?.bub === bub) tekst.textContent = icoon + ' \u00B7 ' + T('je was niet online') }
+    if (nieuw) setTimeout(nietOnline, 45000); else nietOnline()
+  }
+  const ontvang = maakOntvanger({
+    sleutelVoor: van => { const l = lidVan(van); return l && l.public_key && mijnPriv ? { groepId: groep.id, ik, mijnPriv, afzenderPub: l.public_key } : null },
+    opKlaar: (id, rec) => {
+      ontvangen.set(id, rec)
+      bewaarMedia(groep.id, id, rec)
+      const w = wachtend.get(id)
+      if (w && w.van === rec.van) { wachtend.delete(id); toonMedia(w.bub, rec, w.mijn) }
+    }
+  })
+  async function stuurMedia(soort, blob, duur) {
+    const k = lijn?.kanaal?.()
+    if (!k) { toast(T('Geen verbinding met de groep. Probeer het zo opnieuw.')); return }
+    if (!blob || blob.size > MAX_BYTES) { toast(T('Dit is te groot om te versturen.')); return }
+    const id = nieuwId()
+    const rec = { blob, soort, mime: blob.type, duur, van: ik }
+    ontvangen.set(id, rec)
+    await bewaarMedia(groep.id, id, rec)
+    if (!(await verstuur(marker(id, soort, duur)))) return
+    try {
+      await haalLeden()
+      const ontvangers = leden.map(l => l.id === ik ? { id: ik, public_key: mijnPub } : l)
+      await verstuurMedia(k, { id, soort, mime: blob.type, duur, blob }, { groepId: groep.id, van: ik, mijnPriv, leden: ontvangers })
+      toast(soort === 'foto' ? T('Foto verstuurd naar wie nu online is') : T('Spraakbericht verstuurd naar wie nu online is'))
+    } catch (e) {
+      console.warn('[groep] media versturen mislukt', e)
+      toast(T('Versturen lukte niet helemaal. Probeer het opnieuw.'))
+    }
+  }
+  async function tekenBericht(r, onder = true, nieuw = false) {
     if (!r || getoond.has(r.id)) return
     getoond.add(r.id)
     const mijn = r.sender_id === ik
@@ -352,10 +437,18 @@ button { font-family:inherit; }
     const bub = rij.querySelector('.bubbel')
     const uit = await openGroepsbericht(r.content, { groepId: groep.id, van: r.sender_id, ik, mijnPriv, afzenderPub: afz?.public_key, serverTijd: Date.parse(r.created_at) })
     if (uit.status === 'ok' || uit.status === 'tijd') {
-      const fx = /^fxsticker:(f\d+-\d+)$/.exec(uit.tekst)
-      const st = fx ? zoekSticker(fx[1]) : null
-      if (st) {
-        bub.replaceWith(Object.assign(document.createElement('img'), { className: 'b-sticker', src: st.src, alt: T('Sticker') }))
+      const fxm = /^fxsticker:([\s\S]+)$/.exec(uit.tekst)
+      const mm = MARKER.exec(uit.tekst)
+      if (fxm) {
+        const st = stickerUit(fxm[1])
+        if (st) {
+          const img = Object.assign(document.createElement('img'), { className: 'b-sticker', src: st.src, alt: st.naam || T('Sticker') })
+          img.addEventListener('click', () => speelFx(img, st, true))
+          bub.replaceWith(img)
+          if (nieuw) speelFx(img, st, !mijn) // net binnen: bewegen; geluid bij wie hem krijgt (de verstuurder hoorde het al)
+        } else bub.textContent = T('\u{1F5BC}\uFE0F Sticker')
+      } else if (mm) {
+        tekenMedia(bub, mm[1], mm[2], Number(mm[3]), r.sender_id, mijn, nieuw)
       } else {
         bub.textContent = uit.tekst
       }
@@ -399,8 +492,10 @@ button { font-family:inherit; }
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'groep_berichten', filter: 'groep_id=eq.' + groep.id }, async p => {
         const r = p.new
         if (r.sender_id !== ik && !lidVan(r.sender_id)) { try { await haalLeden(true) } catch (e) {} }
-        await tekenBericht(r)
-      }), haalGemist)
+        await tekenBericht(r, true, true)
+      })
+      .on('broadcast', { event: 'media' }, m => { ontvang(m && m.payload).catch?.(() => {}) }), haalGemist)
+    ruimOp(groep.id)
   }
   function zetInvoer(aan) { $('bericht').disabled = !aan; $('verstuur').disabled = !aan }
 
@@ -414,7 +509,7 @@ button { font-family:inherit; }
       const { content, overgeslagen } = await versleutelGroepsbericht(tekst, { groepId: groep.id, van: ik, mijnPriv, leden: ontvangers })
       const { data, error } = await supabase.from('groep_berichten').insert({ groep_id: groep.id, sender_id: ik, content }).select('id, sender_id, content, created_at').single()
       if (error || !data) { console.warn('[groep] versturen mislukt', error); toast(navigator.onLine ? T('Niet verstuurd. Probeer het opnieuw.') : T('Geen internet')); return false }
-      await tekenBericht(data)
+      await tekenBericht(data, true, true)
       if (overgeslagen.length) toast(T('{n} lid kan dit nog niet lezen (geen sleutel)', { n: overgeslagen.length }))
       return true
     } catch (e) {
@@ -449,9 +544,16 @@ button { font-family:inherit; }
         const [{ maakStickerkeuze }, fx] = await Promise.all([import('./stickerkeuze.js?v=236'), import('./stickerfx.js?v=235')])
         stickerKeuze = maakStickerkeuze(r, { uid: () => ik, onKies: async st => {
           if (!st) return
-          if (String(st.vel).startsWith('e')) { toast(T('Eigen stickers kun je nog niet in een groep sturen')); return }
           fx.speelGeluid(st.g)
           r.hidden = true
+          if (String(st.vel).startsWith('e')) {
+            // eigen sticker: het plaatje gaat mee in het bericht (versleuteld)
+            const code = st.vel + '-' + st.nr
+            const eigen = await zoekEigenSticker(ik, code)
+            if (!eigen) return
+            await verstuur('fxsticker:' + fxCode(code, eigen.tijd) + '#' + stickerPakket({ data: eigen.src, b: eigen.b, g: eigen.g, naam: eigen.naam, tijd: eigen.tijd }))
+            return
+          }
           await verstuur('fxsticker:' + st.vel + '-' + st.nr)
         } })
       } catch (e) { toast(T('Stickers laden lukte niet')); return }
@@ -459,7 +561,58 @@ button { font-family:inherit; }
     r.hidden = !r.hidden; $('emojiRaster').hidden = true
     if (!r.hidden) stickerKeuze.vernieuw?.()
   })
-  for (const b of document.querySelectorAll('.balk-knop.later')) b.addEventListener('click', () => toast(T('Komt binnenkort in groepen')))
+  for (const b of document.querySelectorAll('.balk-knop.later')) b.addEventListener('click', () => toast(T('Samen spelen in een groep komt later')))
+  $('fotoKnop').addEventListener('click', () => { if (!mijnPriv || !groep) return; $('fotoInvoer').click() })
+  $('fotoInvoer').addEventListener('change', async e => {
+    const files = [...(e.target.files || [])].slice(0, 10)
+    e.target.value = ''
+    for (const f of files) {
+      let blob
+      try { blob = await maakFoto(f) } catch (er) { toast(T('Deze foto kan niet worden gelezen.')); continue }
+      await stuurMedia('foto', blob, 0)
+    }
+  })
+  // 🎤 ingedrukt houden = opnemen, loslaten = versturen, naar links schuiven = annuleren (zoals in de chat)
+  {
+    const knop = $('spraakKnop'), balk = $('spraakBalk')
+    let opname = null, startX = 0, annuleer = false, bezigOp = false, losGelaten = false
+    const klaar = async (versturen) => {
+      const o = opname; opname = null
+      balk.hidden = true; balk.classList.remove('annuleer'); $('bericht').parentElement.hidden = false
+      if (!o) return
+      if (!versturen) { o.annuleer(); return }
+      const r = await o.stop()
+      if (!r || r.duur < 0.8 || !r.blob.size) { toast(T('\u{1F3A4} Houd de knop ingedrukt om in te spreken')); return }
+      await stuurMedia('spraak', r.blob, r.duur)
+    }
+    knop.addEventListener('pointerdown', async e => {
+      if (!mijnPriv || !groep || bezigOp || opname) return
+      if (!kanOpnemen()) { toast(T('\u{1F3A4} Opnemen lukt niet op dit toestel.')); return }
+      e.preventDefault()
+      try { knop.setPointerCapture(e.pointerId) } catch (er) {}
+      startX = e.clientX; annuleer = false; losGelaten = false; bezigOp = true
+      try {
+        opname = await neemOp({ opTik: s => { $('spraakTijd').textContent = spraakTijd(s) }, opVol: () => klaar(true) })
+      } catch (er) {
+        bezigOp = false
+        toast(er && er.name === 'NotAllowedError' ? T('\u{1F3A4} Stekky mag de microfoon niet gebruiken. Zet het aan in de instellingen van je telefoon.') : T('\u{1F3A4} Opnemen lukt niet op dit toestel.'))
+        return
+      }
+      bezigOp = false
+      if (losGelaten) { klaar(false); toast(T('\u{1F3A4} Houd de knop ingedrukt om in te spreken')); return }
+      $('spraakTijd').textContent = '0:00'; $('spraakHint').textContent = T('← schuif om te annuleren')
+      balk.hidden = false; $('bericht').parentElement.hidden = true
+    })
+    knop.addEventListener('pointermove', e => {
+      if (!opname) return
+      annuleer = e.clientX - startX < -70
+      balk.classList.toggle('annuleer', annuleer)
+      $('spraakHint').textContent = annuleer ? T('Loslaten = weggooien') : T('← schuif om te annuleren')
+    })
+    const los = () => { losGelaten = true; if (opname) klaar(!annuleer) }
+    knop.addEventListener('pointerup', los)
+    knop.addEventListener('pointercancel', () => { losGelaten = true; if (opname) klaar(false) })
+  }
 
   // ── Leden ──
   async function tekenLedenPaneel() {
@@ -512,6 +665,7 @@ button { font-family:inherit; }
     if (!confirm(T('Wil je de groep "{naam}" verlaten?', { naam: groep?.naam || '' }))) return
     const { error } = await supabase.rpc('groep_lid_weg', { p_groep: groep.id, p_lid: ik })
     if (error) { toast(T('Dat lukte niet')); return }
+    await ruimOp(groep.id, true) // foto's en spraak van deze groep van dit toestel weg
     location.href = 'chat.html'
   })
 
@@ -534,5 +688,6 @@ button { font-family:inherit; }
   }
   init()
 </script>
+<script src="fotoviewer.js?v=9"></script>
 </body>
 </html>

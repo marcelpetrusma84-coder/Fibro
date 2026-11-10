@@ -2095,4 +2095,15 @@ window.FIBRO_EN = {
   "👥 Groepen met onbekenden": "👥 Groups with strangers",
   "{naam} wil alleen in groepen waarin iedereen een vriend is.": "{naam} only wants to be in groups where everyone is a friend.",
   "Iemand wil alleen in groepen waarin iedereen een vriend is.": "Someone only wants to be in groups where everyone is a friend.",
+  // groepschat: foto's, spraak en stickers (10 nov 2026)
+  "Dit is te groot om te versturen.": "This is too large to send.",
+  "Foto verstuurd naar wie nu online is": "Photo sent to everyone who is online now",
+  "Geen verbinding met de groep. Probeer het zo opnieuw.": "No connection with the group. Please try again in a moment.",
+  "Samen spelen in een groep komt later": "Playing together in a group is coming later",
+  "Spraakbericht verstuurd naar wie nu online is": "Voice message sent to everyone who is online now",
+  "Versturen lukte niet helemaal. Probeer het opnieuw.": "Sending did not fully work. Please try again.",
+  "je was niet online": "you were not online",
+  "komt binnen…": "arriving…",
+  "niet meer op dit toestel": "no longer on this device",
+  "🎤 Spraakbericht ({tijd})": "🎤 Voice message ({tijd})",
 }

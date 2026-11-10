@@ -108,3 +108,6 @@ jobs:
       - name: "Menu onderaan met lijn-iconen"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef276.py .
+      - name: "Groepschat: groep maken en versleuteld kletsen"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef277.py .

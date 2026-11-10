@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="nl" data-taal style="background:#1a0a2e;">
+<script>
+  const f = localStorage.getItem('fibro_lettertype')
+  if (f) {
+    document.write("<style>*{font-family:" + f + " !important}</style>")
+    var fn = f.split(",")[0].replace(/[\x27\x22]/g, "").trim()
+    var fsl = fn.toLowerCase().replace(/ /g, "-")
+    if (/^[a-z0-9-]+$/.test(fsl)) document.write('<link rel="stylesheet" href="lettertypen/' + fsl + '.css?v=1">')
+  }
+</script>
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<script src="huisregel.js?v=2"></script>
+<script src="foutmelder.js?v=3"></script>
+<script src="balk-vast.js?v=1"></script>
+<script src="taal.js?v=82"></script>
+<script src="appslot.js?v=3"></script>
+<script src="verbinding.js?v=3"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-t>Stekky - Groep</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=4">
+<link rel="manifest" href="manifest.json?v=4">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stekky">
+<meta name="theme-color" content="#c084fc">
+<link href="lettertypen/basis.css?v=1" rel="stylesheet">
+<style>
+/* groep.html (10 nov 2026): groepschat stap 1. Kiezen wat voor chat, naam en vrienden kiezen, en het gesprek zelf.
+   In de stijl van het ontwerp 'Stekky groepschat' (de chatbalk zoals in de gewone chat, zonder buzz). */
+* { box-sizing:border-box; margin:0; padding:0; }
+:root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.14); --accent:#c084fc; --accent2:#f0abfc; --text:#ffffff; --muted:rgba(255,255,255,0.75); --knop:#8b3fd1; }
+html, body { height:100%; }
+body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); max-width:480px; margin:0 auto; display:flex; flex-direction:column; height:100dvh; overflow:hidden; }
+[hidden] { display:none !important; }
+button { font-family:inherit; }
+.kop { margin:10px 10px 0; padding:10px 12px; display:flex; align-items:center; gap:10px; border-radius:18px; background:rgba(255,255,255,0.07); border:1px solid var(--border); flex-shrink:0; }
+.terug { flex-shrink:0; min-height:46px; padding:0 14px 0 10px; font-size:16px; font-weight:700; color:#1e0d32; border:1px solid #f6e8ff; border-radius:14px; background:linear-gradient(145deg,#f0d7ff,#cc9bf5 75%); box-shadow:inset 0 1px 0 #fff,0 3px 0 #6c458a; cursor:pointer; }
+.terug:active { transform:translateY(2px); box-shadow:inset 0 1px 3px rgba(0,0,0,.25),0 1px 0 #6c458a; }
+.kop-tekst { flex:1; min-width:0; display:flex; flex-direction:column; }
+.kop-titel { font-family:'Playfair Display',serif; font-style:italic; font-size:20px; color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kop-naam { font-size:16px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kop-sub { font-size:13px; color:var(--muted); }
+.rond-knop { width:44px; height:44px; flex-shrink:0; border-radius:50%; border:1px solid var(--border); background:rgba(255,255,255,0.08); color:#e9d5ff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.vlak { flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:20px 16px; display:flex; flex-direction:column; gap:14px; }
+.vraag { font-family:'Playfair Display',serif; font-style:italic; font-size:18px; color:var(--accent); }
+.keuze { text-align:left; display:flex; align-items:center; gap:14px; padding:16px; border-radius:18px; background:var(--card); border:1px solid var(--border); color:#fff; cursor:pointer; width:100%; }
+.keuze:disabled { cursor:default; opacity:.6; }
+.keuze-icoon { width:54px; height:54px; flex-shrink:0; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+.keuze-tekst { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+.keuze-titel { font-size:17px; font-weight:700; }
+.keuze-uitleg { font-size:14px; color:var(--muted); line-height:1.35; }
+.chip { flex-shrink:0; padding:4px 10px; border-radius:20px; background:rgba(192,132,252,0.18); color:#e9d5ff; font-size:13px; font-weight:700; }
+.uitleg { display:flex; gap:8px; font-size:13px; color:var(--muted); line-height:1.4; }
+.veld-label { font-size:14px; font-weight:700; color:#e9d5ff; }
+.veld { width:100%; height:52px; padding:0 14px; border-radius:14px; border:1px solid rgba(192,132,252,0.45); background:rgba(255,255,255,0.08); color:#fff; font-family:inherit; font-size:16px; outline:none; }
+.veld:focus { border-color:var(--accent); }
+.rij-kop { display:flex; align-items:baseline; justify-content:space-between; }
+.teller { font-size:14px; font-weight:700; color:#e9d5ff; }
+.vriend { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:16px; background:var(--card); border:1px solid var(--border); cursor:pointer; }
+.vriend.gekozen { background:rgba(139,63,209,0.22); border-color:rgba(192,132,252,0.6); }
+.vriend input { width:24px; height:24px; accent-color:var(--knop); flex-shrink:0; }
+.av { width:42px; height:42px; flex-shrink:0; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700; color:#1a0a2e; overflow:hidden; }
+.av img { width:100%; height:100%; object-fit:cover; }
+.vriend-naam { flex:1; min-width:0; font-size:16px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hoofdknop { height:54px; border:none; border-radius:16px; background:var(--knop); color:#fff; font-size:17px; font-weight:700; cursor:pointer; width:100%; flex-shrink:0; }
+.hoofdknop:disabled { opacity:.5; cursor:default; }
+.onder { padding:12px 16px calc(18px + env(safe-area-inset-bottom,0px)); display:flex; flex-direction:column; gap:8px; flex-shrink:0; }
+.melding { font-size:13px; color:#fca5a5; text-align:center; min-height:1em; }
+.leeg { font-size:14px; color:var(--muted); text-align:center; padding:20px 0; }
+/* gesprek */
+#berichten { flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 14px 8px; display:flex; flex-direction:column; gap:10px; }
+.sys { align-self:center; padding:5px 12px; border-radius:20px; background:rgba(192,132,252,0.12); font-size:13px; color:#e9d5ff; text-align:center; max-width:90%; }
+.b-rij { display:flex; gap:8px; align-items:flex-end; max-width:82%; }
+.b-rij.mijn { align-self:flex-end; flex-direction:row-reverse; }
+.b-rij .av { width:30px; height:30px; font-size:14px; }
+.b-rij.mijn .av { display:none; }
+.b-kol { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.b-rij.mijn .b-kol { align-items:flex-end; }
+.b-naam { font-size:12px; font-weight:700; }
+.bubbel { padding:9px 13px; border-radius:18px 18px 18px 4px; background:rgba(255,255,255,0.09); border:1px solid rgba(255,255,255,0.12); font-size:15px; line-height:1.35; white-space:pre-wrap; word-break:break-word; }
+.b-rij.mijn .bubbel { border-radius:18px 18px 4px 18px; background:var(--knop); border-color:transparent; }
+.bubbel.slot { font-style:italic; color:var(--muted); }
+.b-tijd { font-size:11px; color:rgba(255,255,255,0.65); }
+.b-rij.vervolg .b-naam, .b-rij.vervolg .av { visibility:hidden; }
+.b-sticker { width:120px; height:120px; object-fit:contain; }
+.chatbalk { margin:0 10px calc(10px + env(safe-area-inset-bottom,0px)); padding:12px; display:flex; flex-direction:column; gap:12px; border-radius:24px; background:linear-gradient(160deg,rgba(255,255,255,0.09),rgba(255,255,255,0.04)); border:1px solid rgba(192,132,252,0.5); flex-shrink:0; }
+.balk-knoppen { display:flex; gap:8px; }
+.balk-knop { width:46px; height:46px; flex-shrink:0; border-radius:50%; border:1px solid var(--border); background:rgba(255,255,255,0.08); font-size:21px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.balk-invoer { display:flex; gap:10px; align-items:center; }
+#bericht { flex:1; min-width:0; height:44px; padding:0 16px; border-radius:22px; border:1px solid rgba(255,255,255,0.08); background:rgba(10,4,20,0.55); color:#fff; font-family:inherit; font-size:16px; outline:none; }
+#bericht:focus { border-color:var(--accent); }
+#verstuur { width:50px; height:50px; flex-shrink:0; border-radius:50%; border:none; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#2563eb; font-size:16px; cursor:pointer; }
+#verstuur:disabled { opacity:.5; }
+#emojiRaster { display:flex; flex-wrap:wrap; gap:4px; padding:4px 2px 0; }
+#emojiRaster button { width:40px; height:40px; border:none; background:none; font-size:22px; cursor:pointer; border-radius:10px; }
+#stickerRaster { margin:0 -4px; }
+.toast { position:fixed; left:50%; bottom:200px; transform:translateX(-50%); background:rgba(20,8,36,0.95); border:1px solid rgba(192,132,252,0.5); color:#fff; padding:10px 16px; border-radius:14px; font-size:14px; z-index:50; max-width:86%; text-align:center; }
+/* ledenpaneel */
+#ledenPaneel { position:fixed; inset:0; z-index:40; background:rgba(10,4,20,0.7); display:flex; align-items:flex-end; justify-content:center; }
+.paneel { width:100%; max-width:480px; max-height:86dvh; overflow-y:auto; background:#241038; border-radius:22px 22px 0 0; border:1px solid rgba(192,132,252,0.4); padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px)); display:flex; flex-direction:column; gap:10px; }
+.lid { display:flex; align-items:center; gap:12px; padding:8px 4px; }
+.lid-rol { font-size:12px; color:var(--accent); }
+.klein-knop { min-height:40px; padding:0 12px; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,0.08); color:#fff; font-size:14px; cursor:pointer; }
+.klein-knop.rood { border-color:rgba(248,113,113,0.6); color:#fca5a5; }
+</style>
+<link rel="stylesheet" href="android-fix.css?v=1">
+<link rel="icon" href="icon.svg?v=4" type="image/svg+xml">
+<link rel="stylesheet" href="stijl.css?v=3">
+</head>
+<body data-fibro-page="groep">
+
+<!-- 1. Wat voor chat -->
+<section id="kiezen" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="kop">
+    <button type="button" class="terug" id="kiezenTerug" data-t>← terug</button>
+    <div class="kop-titel" data-t>Nieuwe chat</div>
+  </div>
+  <div class="vlak">
+    <div class="vraag" data-t>Wat voor chat wil je maken?</div>
+    <button type="button" class="keuze" data-soort="chat">
+      <span class="keuze-icoon" style="background:linear-gradient(135deg,#c084fc,#f0abfc)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a0a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></svg></span>
+      <span class="keuze-tekst"><span class="keuze-titel" data-t>Groepschat</span><span class="keuze-uitleg" data-t>Berichten, foto's en stickers met je vrienden</span></span>
+      <span class="chip" data-t>tot 50</span>
+    </button>
+    <button type="button" class="keuze" data-soort="voice" disabled>
+      <span class="keuze-icoon" style="background:linear-gradient(135deg,#8b3fd1,#c084fc)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span>
+      <span class="keuze-tekst"><span class="keuze-titel" data-t>Voice chat</span><span class="keuze-uitleg" data-t>Samen praten, met een chat erbij</span></span>
+      <span class="chip" data-t>binnenkort</span>
+    </button>
+    <button type="button" class="keuze" data-soort="webcam" disabled>
+      <span class="keuze-icoon" style="background:linear-gradient(135deg,#6a2bab,#8b3fd1)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg></span>
+      <span class="keuze-tekst"><span class="keuze-titel" data-t>Webcam chat</span><span class="keuze-uitleg" data-t>Elkaar zien en praten, met een chat erbij</span></span>
+      <span class="chip" data-t>binnenkort</span>
+    </button>
+    <div class="uitleg"><span aria-hidden="true">🔒</span><span data-t>Alles is end-to-end versleuteld, net als je gewone chats. Je kunt alleen vrienden toevoegen.</span></div>
+  </div>
+</section>
+
+<!-- 2. Naam en vrienden -->
+<section id="leden" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="kop">
+    <button type="button" class="terug" id="ledenTerug" data-t>← terug</button>
+    <div class="kop-tekst"><div class="kop-titel" data-t>Nieuwe groepschat</div><div class="kop-sub" data-t>Stap 2 van 2</div></div>
+  </div>
+  <div class="vlak">
+    <label class="veld-label" for="groepNaam" data-t>Naam van de groep</label>
+    <input class="veld" id="groepNaam" maxlength="40" autocomplete="off" placeholder="Bijvoorbeeld: Zaterdag-gamers" data-t-attr="placeholder">
+    <div class="rij-kop"><div class="vraag" data-t>Wie doet er mee?</div><div class="teller" id="teller"></div></div>
+    <div id="vriendenLijst" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+  <div class="onder">
+    <div class="melding" id="maakMelding" role="status"></div>
+    <div class="uitleg" style="justify-content:center;text-align:center" data-t>Jij bent de beheerder. Je kunt later nog vrienden toevoegen of weghalen.</div>
+    <button type="button" class="hoofdknop" id="maakKnop" disabled data-t>Groep maken</button>
+  </div>
+</section>
+
+<!-- 3. Het gesprek -->
+<section id="gesprek" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="kop">
+    <button type="button" class="terug" id="gesprekTerug" data-t>← terug</button>
+    <div class="kop-tekst"><div class="kop-naam" id="groepTitel"></div><div class="kop-sub" id="groepSub"></div></div>
+    <button type="button" class="rond-knop" id="ledenKnop" aria-label="Leden" data-t-attr="aria-label">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/></svg>
+    </button>
+  </div>
+  <div id="berichten" aria-live="polite"></div>
+  <div class="chatbalk">
+    <div id="emojiRaster" hidden></div>
+    <div id="stickerRaster" hidden></div>
+    <div class="balk-knoppen">
+      <button type="button" class="balk-knop" id="emojiKnop" aria-label="Emoji" data-t-attr="aria-label">😊</button>
+      <button type="button" class="balk-knop" id="stickerKnop" aria-label="Stickers" data-t-attr="aria-label">🎨</button>
+      <button type="button" class="balk-knop later" aria-label="Spel" data-t-attr="aria-label">🎮</button>
+      <button type="button" class="balk-knop later" aria-label="Foto versturen" data-t-attr="aria-label">📷</button>
+      <button type="button" class="balk-knop later" aria-label="Spraakbericht" data-t-attr="aria-label">🎤</button>
+    </div>
+    <div class="balk-invoer">
+      <input id="bericht" maxlength="2000" autocomplete="off" placeholder="Stuur een bericht..." aria-label="Bericht" data-t-attr="placeholder,aria-label">
+      <button type="button" id="verstuur" aria-label="Versturen" data-t-attr="aria-label">➤</button>
+    </div>
+  </div>
+</section>
+
+<div id="ledenPaneel" hidden>
+  <div class="paneel" role="dialog" aria-modal="true" aria-labelledby="paneelTitel">
+    <div class="rij-kop"><div class="vraag" id="paneelTitel" data-t>Leden</div><button type="button" class="klein-knop" id="paneelDicht" data-t>Sluiten</button></div>
+    <div id="ledenLijst"></div>
+    <div id="toevoegenDeel" hidden>
+      <div class="veld-label" style="margin:8px 0" data-t>Vriend toevoegen</div>
+      <div id="toevoegenLijst" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+    <button type="button" class="klein-knop rood" id="verlaatKnop" style="margin-top:8px" data-t>Groep verlaten</button>
+  </div>
+</div>
+
+<script type="module">
+  import { supabase } from './supabase.js?v=95'
+  import { haalPrivateKeyOp, eigenPubliekeSleutel } from './crypto.js?v=182'
+  import { versleutelGroepsbericht, openGroepsbericht, MAX_LEDEN } from './groepsleutel.js?v=1'
+  import { houOpen } from './lijntjes.js?v=1'
+  import { bewaardeSessieZonderInternet } from './offline.js?v=146'
+  import { zoekSticker } from './stickervellen.js?v=236'
+
+  const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
+  const $ = id => document.getElementById(id)
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+  const GELDIG_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  const KLEUREN = ['#c084fc', '#f0abfc', '#a5b4fc', '#fcd34d', '#86efac', '#fda4af', '#7dd3fc', '#fdba74']
+  const kleurVan = id => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return KLEUREN[h % KLEUREN.length] }
+  const EMOJIS = ['😊','😂','❤','🔥','👍','🎉','😍','🤔','😢','😎','🌿','🌸','✨','🎵','🙌','💬','🦋','🌙','⭐','🍀','🎮','🐱','🌈','🎨']
+
+  let ik = null, mijnPriv = null, mijnPub = null
+  let groep = null, leden = [], ledenTijd = 0, lijn = null
+  const getoond = new Set()
+
+  function toast(tekst) {
+    const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = tekst
+    document.body.appendChild(t); setTimeout(() => t.remove(), 2600)
+  }
+  function toon(scherm) { for (const s of ['kiezen', 'leden', 'gesprek']) $(s).hidden = s !== scherm }
+  function avatarHtml(p) {
+    const a = String(p?.avatar_url || '')
+    if (a && [...a].length <= 4 && !/^https?:/i.test(a)) return esc(a)
+    return esc((p?.username || '?').slice(0, 1).toUpperCase())
+  }
+  const tijdTekst = iso => { const d = new Date(iso); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') }
+
+  async function sessie() {
+    let { data: { session } } = await supabase.auth.getSession()
+    if (!session) session = bewaardeSessieZonderInternet()
+    return session
+  }
+
+  // ── Vrienden (alleen geaccepteerd) ──
+  async function haalVrienden() {
+    const { data, error } = await supabase.from('friendships')
+      .select('friend_id, profiles!friendships_friend_id_fkey(id, username, avatar_url, public_key)')
+      .eq('user_id', ik).eq('status', 'accepted')
+    if (error) throw error
+    return (data || []).map(r => r.profiles).filter(p => p && p.id).sort((a, b) => String(a.username).localeCompare(String(b.username)))
+  }
+
+  // ── 2. Nieuwe groep ──
+  let soort = 'chat'
+  const gekozen = new Set()
+  function werkTellerBij() {
+    const max = MAX_LEDEN[soort]
+    $('teller').textContent = T('{n} van {max}', { n: gekozen.size + 1, max })
+    $('maakKnop').disabled = gekozen.size < 1 || !$('groepNaam').value.trim()
+    for (const r of $('vriendenLijst').querySelectorAll('.vriend')) {
+      const vol = gekozen.size + 1 >= max && !gekozen.has(r.dataset.id)
+      r.querySelector('input').disabled = vol
+      r.classList.toggle('gekozen', gekozen.has(r.dataset.id))
+    }
+  }
+  async function startNieuw(s) {
+    soort = s; gekozen.clear()
+    toon('leden')
+    $('groepNaam').value = ''
+    $('maakMelding').textContent = ''
+    const lijst = $('vriendenLijst')
+    lijst.innerHTML = '<div class="leeg">' + esc(T('Even laden...')) + '</div>'
+    let vrienden = []
+    try { vrienden = await haalVrienden() } catch (e) { lijst.innerHTML = '<div class="leeg">' + esc(T('Laden lukte niet')) + '</div>'; return }
+    if (!vrienden.length) { lijst.innerHTML = '<div class="leeg">' + esc(T('Je hebt nog geen vrienden om toe te voegen.')) + '</div>'; werkTellerBij(); return }
+    lijst.innerHTML = ''
+    for (const v of vrienden) {
+      const r = document.createElement('label'); r.className = 'vriend'; r.dataset.id = v.id
+      r.innerHTML = '<span class="av" style="background:' + kleurVan(v.id) + '">' + avatarHtml(v) + '</span><span class="vriend-naam"></span><input type="checkbox">'
+      r.querySelector('.vriend-naam').textContent = v.username || '?'
+      r.querySelector('input').setAttribute('aria-label', T('{naam} toevoegen', { naam: v.username || '?' }))
+      r.querySelector('input').addEventListener('change', e => { if (e.target.checked) gekozen.add(v.id); else gekozen.delete(v.id); werkTellerBij() })
+      lijst.appendChild(r)
+    }
+    werkTellerBij()
+  }
+  $('groepNaam').addEventListener('input', werkTellerBij)
+  $('maakKnop').addEventListener('click', async () => {
+    const naam = $('groepNaam').value.trim()
+    if (!naam || !gekozen.size) return
+    $('maakKnop').disabled = true
+    $('maakMelding').textContent = ''
+    const { data, error } = await supabase.rpc('maak_groep', { p_naam: naam, p_soort: soort, p_leden: [...gekozen] })
+    if (error || !data) {
+      console.warn('[groep] maken mislukt', error)
+      $('maakMelding').textContent = navigator.onLine ? T('Groep maken lukte niet. Probeer het opnieuw.') : T('Geen internet')
+      werkTellerBij(); return
+    }
+    history.replaceState(null, '', 'groep.html?id=' + data)
+    await openGroep(data)
+  })
+
+  // ── 3. Gesprek ──
+  async function haalLeden(forceer) {
+    if (!forceer && leden.length && Date.now() - ledenTijd < 60000) return leden
+    const { data, error } = await supabase.rpc('groep_leden_info', { p_groep: groep.id })
+    if (error) throw error
+    leden = data || []; ledenTijd = Date.now()
+    werkKopBij()
+    return leden
+  }
+  function werkKopBij() {
+    $('groepTitel').textContent = groep?.naam || ''
+    $('groepSub').textContent = leden.length ? T('{n} leden', { n: leden.length }) : ''
+  }
+  const lidVan = id => leden.find(l => l.id === id)
+
+  function sysBericht(tekst) {
+    const d = document.createElement('div'); d.className = 'sys'; d.textContent = tekst; $('berichten').appendChild(d)
+  }
+  function naarOnder() { const b = $('berichten'); b.scrollTop = b.scrollHeight }
+
+  let vorigeAfzender = null
+  async function tekenBericht(r, onder = true) {
+    if (!r || getoond.has(r.id)) return
+    getoond.add(r.id)
+    const mijn = r.sender_id === ik
+    const afz = mijn ? { id: ik, public_key: mijnPub } : lidVan(r.sender_id)
+    const rij = document.createElement('div')
+    rij.className = 'b-rij' + (mijn ? ' mijn' : '') + (vorigeAfzender === r.sender_id ? ' vervolg' : '')
+    rij.dataset.id = r.id
+    vorigeAfzender = r.sender_id
+    const kleur = kleurVan(r.sender_id)
+    rij.innerHTML = '<span class="av" style="background:' + kleur + '">' + avatarHtml(afz) + '</span>'
+      + '<div class="b-kol">' + (mijn ? '' : '<div class="b-naam" style="color:' + kleur + '"></div>') + '<div class="bubbel"></div><div class="b-tijd">' + esc(tijdTekst(r.created_at)) + '</div></div>'
+    if (!mijn) rij.querySelector('.b-naam').textContent = afz?.username || T('Oud lid')
+    $('berichten').appendChild(rij)
+    const bub = rij.querySelector('.bubbel')
+    const uit = await openGroepsbericht(r.content, { groepId: groep.id, van: r.sender_id, ik, mijnPriv, afzenderPub: afz?.public_key, serverTijd: Date.parse(r.created_at) })
+    if (uit.status === 'ok' || uit.status === 'tijd') {
+      const fx = /^fxsticker:(f\d+-\d+)$/.exec(uit.tekst)
+      const st = fx ? zoekSticker(fx[1]) : null
+      if (st) {
+        bub.replaceWith(Object.assign(document.createElement('img'), { className: 'b-sticker', src: st.src, alt: T('Sticker') }))
+      } else {
+        bub.textContent = uit.tekst
+      }
+    } else {
+      bub.classList.add('slot')
+      bub.textContent = uit.status === 'niet-voor-mij' ? T('🔒 Verstuurd voordat je lid werd')
+        : !afz ? T('🔒 Van iemand die niet meer in de groep zit')
+        : uit.status === 'vervalst' ? T('⚠️ [bericht klopt niet — onderweg veranderd]') : T('🔒 [versleuteld bericht — kan niet lezen]')
+    }
+    if (onder) naarOnder()
+  }
+
+  async function laadBerichten() {
+    const { data, error } = await supabase.from('groep_berichten').select('id, sender_id, content, created_at')
+      .eq('groep_id', groep.id).order('created_at', { ascending: false }).limit(100)
+    if (error) { sysBericht(T('Berichten laden lukte niet')); return }
+    for (const r of (data || []).reverse()) await tekenBericht(r, false)
+    naarOnder()
+  }
+  async function haalGemist() {
+    const { data } = await supabase.from('groep_berichten').select('id, sender_id, content, created_at')
+      .eq('groep_id', groep.id).order('created_at', { ascending: false }).limit(50)
+    for (const r of (data || []).reverse()) await tekenBericht(r)
+  }
+
+  async function openGroep(id) {
+    toon('gesprek')
+    $('berichten').innerHTML = ''
+    getoond.clear(); vorigeAfzender = null
+    const { data, error } = await supabase.from('groepen').select('id, naam, soort, maker').eq('id', id).maybeSingle()
+    if (error || !data) { $('groepTitel').textContent = T('Groep'); sysBericht(T('Deze groep bestaat niet meer, of je bent geen lid.')); zetInvoer(false); return }
+    groep = data
+    werkKopBij()
+    sysBericht(T('🔒 Berichten in deze groep zijn end-to-end versleuteld'))
+    if (!mijnPriv) { sysBericht(T('Je sleutel staat niet op dit toestel. Zet hem terug met je herstelcode (Stijl > Instellingen).')); zetInvoer(false) }
+    try { await haalLeden(true) } catch (e) { sysBericht(T('Leden laden lukte niet')) }
+    await laadBerichten()
+    lijn?.stop?.()
+    lijn = houOpen('groep-' + groep.id, () => supabase
+      .channel('groep-' + groep.id, { config: { private: true } })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'groep_berichten', filter: 'groep_id=eq.' + groep.id }, async p => {
+        const r = p.new
+        if (r.sender_id !== ik && !lidVan(r.sender_id)) { try { await haalLeden(true) } catch (e) {} }
+        await tekenBericht(r)
+      }), haalGemist)
+  }
+  function zetInvoer(aan) { $('bericht').disabled = !aan; $('verstuur').disabled = !aan }
+
+  let bezig = false
+  async function verstuur(tekst) {
+    if (!groep || !mijnPriv || bezig) return false
+    bezig = true
+    try {
+      await haalLeden()
+      const ontvangers = leden.map(l => l.id === ik ? { id: ik, public_key: mijnPub } : l)
+      const { content, overgeslagen } = await versleutelGroepsbericht(tekst, { groepId: groep.id, van: ik, mijnPriv, leden: ontvangers })
+      const { data, error } = await supabase.from('groep_berichten').insert({ groep_id: groep.id, sender_id: ik, content }).select('id, sender_id, content, created_at').single()
+      if (error || !data) { console.warn('[groep] versturen mislukt', error); toast(navigator.onLine ? T('Niet verstuurd. Probeer het opnieuw.') : T('Geen internet')); return false }
+      await tekenBericht(data)
+      if (overgeslagen.length) toast(T('{n} lid kan dit nog niet lezen (geen sleutel)', { n: overgeslagen.length }))
+      return true
+    } catch (e) {
+      console.warn('[groep] versleutelen mislukt', e); toast(T('Niet verstuurd. Probeer het opnieuw.')); return false
+    } finally { bezig = false }
+  }
+  async function verstuurInvoer() {
+    const inv = $('bericht'); const tekst = inv.value.trim()
+    if (!tekst) return
+    inv.value = ''
+    $('emojiRaster').hidden = true
+    if (!(await verstuur(tekst))) inv.value = tekst
+  }
+  $('verstuur').addEventListener('click', verstuurInvoer)
+  $('bericht').addEventListener('keydown', e => { if (e.key === 'Enter') verstuurInvoer() })
+
+  // chatbalk: emoji's en stickers; foto, spraak en spel komen later in groepen
+  $('emojiKnop').addEventListener('click', () => {
+    const r = $('emojiRaster')
+    if (!r.childElementCount) for (const e of EMOJIS) {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = e
+      b.addEventListener('click', () => { $('bericht').value += e; $('bericht').focus() })
+      r.appendChild(b)
+    }
+    r.hidden = !r.hidden; $('stickerRaster').hidden = true
+  })
+  let stickerKeuze = null
+  $('stickerKnop').addEventListener('click', async () => {
+    const r = $('stickerRaster')
+    if (!stickerKeuze) {
+      try {
+        const [{ maakStickerkeuze }, fx] = await Promise.all([import('./stickerkeuze.js?v=236'), import('./stickerfx.js?v=235')])
+        stickerKeuze = maakStickerkeuze(r, { uid: () => ik, onKies: async st => {
+          if (!st) return
+          if (String(st.vel).startsWith('e')) { toast(T('Eigen stickers kun je nog niet in een groep sturen')); return }
+          fx.speelGeluid(st.g)
+          r.hidden = true
+          await verstuur('fxsticker:' + st.vel + '-' + st.nr)
+        } })
+      } catch (e) { toast(T('Stickers laden lukte niet')); return }
+    }
+    r.hidden = !r.hidden; $('emojiRaster').hidden = true
+    if (!r.hidden) stickerKeuze.vernieuw?.()
+  })
+  for (const b of document.querySelectorAll('.balk-knop.later')) b.addEventListener('click', () => toast(T('Komt binnenkort in groepen')))
+
+  // ── Leden ──
+  async function tekenLedenPaneel() {
+    await haalLeden(true).catch(() => {})
+    const ikBeheerder = lidVan(ik)?.rol === 'beheerder'
+    const lijst = $('ledenLijst'); lijst.innerHTML = ''
+    for (const l of leden) {
+      const r = document.createElement('div'); r.className = 'lid'
+      r.innerHTML = '<span class="av" style="background:' + kleurVan(l.id) + '">' + avatarHtml(l) + '</span><span class="vriend-naam"></span>'
+      const naam = r.querySelector('.vriend-naam')
+      naam.textContent = (l.username || '?') + (l.id === ik ? ' (' + T('jij') + ')' : '')
+      if (l.rol === 'beheerder') { const s = document.createElement('span'); s.className = 'lid-rol'; s.textContent = T('beheerder'); r.appendChild(s) }
+      if (ikBeheerder && l.id !== ik) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'klein-knop rood'; b.textContent = T('Weghalen')
+        b.addEventListener('click', async () => {
+          if (!confirm(T('{naam} uit de groep halen?', { naam: l.username || '?' }))) return
+          const { error } = await supabase.rpc('groep_lid_weg', { p_groep: groep.id, p_lid: l.id })
+          if (error) toast(T('Dat lukte niet')); else tekenLedenPaneel()
+        })
+        r.appendChild(b)
+      }
+      lijst.appendChild(r)
+    }
+    $('toevoegenDeel').hidden = !ikBeheerder
+    if (ikBeheerder) {
+      const tl = $('toevoegenLijst'); tl.innerHTML = ''
+      const max = MAX_LEDEN[groep.soort] || 50
+      let vrienden = []
+      try { vrienden = (await haalVrienden()).filter(v => !lidVan(v.id)) } catch (e) {}
+      if (leden.length >= max) tl.innerHTML = '<div class="leeg">' + esc(T('De groep is vol ({max})', { max })) + '</div>'
+      else if (!vrienden.length) tl.innerHTML = '<div class="leeg">' + esc(T('Al je vrienden zitten al in de groep')) + '</div>'
+      else for (const v of vrienden) {
+        const r = document.createElement('div'); r.className = 'lid'
+        r.innerHTML = '<span class="av" style="background:' + kleurVan(v.id) + '">' + avatarHtml(v) + '</span><span class="vriend-naam"></span>'
+        r.querySelector('.vriend-naam').textContent = v.username || '?'
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'klein-knop'; b.textContent = T('Toevoegen')
+        b.addEventListener('click', async () => {
+          b.disabled = true
+          const { error } = await supabase.rpc('groep_lid_toevoegen', { p_groep: groep.id, p_lid: v.id })
+          if (error) { toast(T('Dat lukte niet')); b.disabled = false } else tekenLedenPaneel()
+        })
+        r.appendChild(b); tl.appendChild(r)
+      }
+    }
+  }
+  $('ledenKnop').addEventListener('click', () => { $('ledenPaneel').hidden = false; tekenLedenPaneel() })
+  $('paneelDicht').addEventListener('click', () => { $('ledenPaneel').hidden = true })
+  $('ledenPaneel').addEventListener('click', e => { if (e.target.id === 'ledenPaneel') $('ledenPaneel').hidden = true })
+  $('verlaatKnop').addEventListener('click', async () => {
+    if (!confirm(T('Wil je de groep "{naam}" verlaten?', { naam: groep?.naam || '' }))) return
+    const { error } = await supabase.rpc('groep_lid_weg', { p_groep: groep.id, p_lid: ik })
+    if (error) { toast(T('Dat lukte niet')); return }
+    location.href = 'chat.html'
+  })
+
+  // ── Terug ──
+  $('kiezenTerug').addEventListener('click', () => { location.href = 'chat.html' })
+  $('ledenTerug').addEventListener('click', () => toon('kiezen'))
+  $('gesprekTerug').addEventListener('click', () => { lijn?.stop?.(); location.href = 'chat.html' })
+  for (const b of document.querySelectorAll('.keuze[data-soort]')) b.addEventListener('click', () => startNieuw(b.dataset.soort))
+
+  // ── Start ──
+  async function init() {
+    const s = await sessie()
+    if (!s) { location.href = 'login.html'; return }
+    ik = s.user.id
+    mijnPriv = haalPrivateKeyOp(ik)
+    if (mijnPriv) { try { mijnPub = await eigenPubliekeSleutel(mijnPriv) } catch (e) { mijnPriv = null } }
+    const id = new URLSearchParams(location.search).get('id')
+    if (id && GELDIG_ID.test(id)) await openGroep(id)
+    else toon('kiezen')
+  }
+  init()
+</script>
+</body>
+</html>

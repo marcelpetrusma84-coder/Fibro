@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=81"></script>
+<script src="taal.js?v=82"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -311,7 +311,11 @@ window.veiligeUrl = function(v){
 <div class="privacy-bar" id="privacyBar" data-t>⚠ Screenshot poging gedetecteerd — zonder toestemming</div>
 
 <div id="vriendenSelectie" class="vriend-selectie">
-  <h2 class="vs-kop" data-t>Met wie wil je chatten?</h2>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
+    <h2 class="vs-kop" style="margin-bottom:0" data-t>Met wie wil je chatten?</h2>
+    <a href="groep.html" id="nieuweGroep" class="groep-nieuw" style="flex-shrink:0;display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:22px;background:#8b3fd1;color:#fff;font-size:15px;font-weight:700;text-decoration:none" data-t>+ Groep</a>
+  </div>
+  <div id="groepenLijst"></div>
   <div id="vriendenLijst"><div class="laden" data-t>Vrienden laden...</div></div>
 </div>
 
@@ -461,6 +465,7 @@ window.veiligeUrl = function(v){
   import { startMeldingen, buzzRustig } from './meldingen.js?v=188'
   import { speelBuzz } from './buzzgeluid.js?v=1'
   import { houOpen } from './lijntjes.js?v=1'
+  import { toonGroepen } from './groepenlijst.js?v=1' // groepschat stap 1
   import { haalVriendFotos, zetAvatar, geldigeFoto } from './vriendfotos.js?v=2'
   import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel, eigenPubliekeSleutel } from './crypto.js?v=182'
   import { werkKnopBij as werkSleutelKnopBij } from './sleutelcontrole.js?v=2' // v266: sleutel controleren (QR of 60 cijfers)
@@ -707,6 +712,7 @@ window.veiligeUrl = function(v){
     window.huidigeUser = huidigeUser
     startHeartbeat().catch(e => console.warn('[heartbeat]', e))
     initSync(huidigeUser.id)
+    toonGroepen(supabase, document.getElementById('groepenLijst'))
     mijnPrivateKey = haalPrivateKeyOp(huidigeUser.id)
     werkVerzendknopBij()
     initReacties({ supabase, versleutel, ontsleutelBericht, mijnId: () => huidigeUser.id, geefSleutels: () => ({ mijn: mijnPrivateKey, vriend: vriendPublicKey }), herteken: () => tekenReacties(document.getElementById('messages')) })

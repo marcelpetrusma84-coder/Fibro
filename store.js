@@ -8,10 +8,12 @@
 import { STORE_PAKKETTEN } from './lettertypes.js?v=132'
 
 export const STORE_SOORTEN = [
-  { id: 'lettertype', titel: 'Lettertypes' },
+  // 11 nov 2026: volgorde van de paarse balk in store.html; achtergronden erbij
   { id: 'game', titel: 'Games' },
-  { id: 'sticker', titel: 'Stickers' },
   { id: 'widget', titel: 'Widgets' },
+  { id: 'sticker', titel: 'Stickers' },
+  { id: 'achtergrond', titel: 'Achtergronden' },
+  { id: 'lettertype', titel: 'Lettertypes' },
 ]
 
 // Alles wat in de store staat. Elk item: id (uniek, kleine letters/cijfers/streepjes), soort, titel.

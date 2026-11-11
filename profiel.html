@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=100"></script>
+<script src="taal.js?v=101"></script>
 <script src="appslot.js?v=3"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Vuurwerk': 'Fireworks', 'Onweer': 'Thunderstorm', 'Glitter': 'Glitter' }) // v234: nieuwe animaties</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Gastenboek zonder lijntjes': 'Guestbook without lines', 'Gewoon in je eigen kleuren, zonder lijntjespapier': 'Plain, in your own colours, without lined paper' }) // v235</script>
@@ -908,8 +908,9 @@ async function init(){
   const zelfVeranderd=id=>!!(vroeg&&document.getElementById(id).value!==vroeg[id])
   // Testlinkje Fibro+ alleen voor de moderator (de database laat ook alleen de moderator is_plus wijzigen)
   if (profiel && profiel.is_moderator) { const tl = document.getElementById('testPlusLink'); if (tl) tl.style.display = '' }
-  // v131: de Stekky Store (store.html) is voorlopig alleen voor moderators: het laatste vakje in de balk
-  if (profiel && profiel.is_moderator) {
+  // v131: de Stekky Store (store.html): het laatste vakje in de balk
+  // 11 nov 2026: de Store is er voor iedereen (eerst alleen moderators)
+  if (profiel) {
     const st = document.getElementById('tab-store'); if (st) st.style.display = ''
     mijnDownloads(supabase, huidigeUser.id).then(r => { if (!r.error) { zetStoreFonts(r.ids); bouwFontGrid() } }, () => {})
   }

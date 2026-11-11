@@ -1,13 +1,14 @@
-# proef288 (10 nov 2026, v131): de Stekky Store (store.html, store.js), voorlopig alleen voor moderators.
+# proef288 (10 nov 2026, v131): de Stekky Store (store.html, store.js). Sinds 11 nov 2026 voor iedereen met een account.
 #  A. Stijl (profiel.html) als moderator: het laatste vakje in de balk is Store; tik erop = store.html
-#  B. Stijl als gewone gebruiker: geen Store-vakje
+#  B. Stijl als gewone gebruiker: ook het Store-vakje (sinds 11 nov 2026)
 #  C. Store als moderator (v2, 11 nov): negen lettertype-pakketten per thema, elk met 4 lettertypes in hun eigen letter;
 #     Downloaden = één rij in store_downloads (in je account) en de knop wordt "✓ Gedownload";
 #     Games/Stickers/Widgets: "komen binnenkort"
 #  D. Terug bij Stijl > Lettertype: alle 4 lettertypes van het pakket staan erbij (met "· Store"), een ander niet;
 #     een oud los gedownload lettertype (v1, lettertype-special-elite) staat er ook nog bij
 #  E. Weghalen in de store = de rij gaat weg uit je account
-#  F. Store als gewone gebruiker: "Geen toegang", niets geladen of gedownload
+#  F. Store als gewone gebruiker: open; staat de database nog op 'alleen moderators', dan een duidelijke melding;
+#     na sql/stekky-store-iedereen.sql kan downloaden wel. Zonder account: "Geen toegang".
 #  G. Staat de tabel er nog niet (sql/stekky-store.sql niet uitgevoerd): een duidelijke melding, geen vastloper
 #  I. (11 nov 2026) Games: Pesten staat in de store; vóór downloaden niet bij Profiel > Widgets, erna wel (aan te zetten)
 #  H. geen paginafouten
@@ -22,7 +23,7 @@ def check(ok, wat):
 
 UID = 'aaaaaaaa-0000-4000-8000-000000000001'
 TOKEN = json.dumps({"access_token": "x", "refresh_token": "y", "token_type": "bearer", "expires_in": 3600, "expires_at": int(time.time()) + 3600, "user": {"id": UID}})
-STAND = {'mod': True, 'rijen': set(), 'geen_tabel': False, 'verzoeken': []}
+STAND = {'mod': True, 'rijen': set(), 'geen_tabel': False, 'verzoeken': [], 'iedereen': False}
 
 def supa(route):
     u = route.request.url; m = route.request.method
@@ -34,7 +35,7 @@ def supa(route):
         if m == 'GET': return route.fulfill(status=200, json=[{'item_id': i} for i in sorted(STAND['rijen'])])
         if m == 'POST':
             r = json.loads(route.request.post_data or '{}')
-            if not STAND['mod'] or r.get('user_id') != UID: return route.fulfill(status=403, json={'code': '42501', 'message': 'rls'})
+            if not (STAND['mod'] or STAND['iedereen']) or r.get('user_id') != UID: return route.fulfill(status=403, json={'code': '42501', 'message': 'rls'})
             STAND['rijen'].add(r['item_id']); return route.fulfill(status=201, body='')
         if m == 'DELETE':
             q = urllib.parse.parse_qs(urllib.parse.urlparse(u).query)
@@ -149,12 +150,23 @@ try:
         pg.goto(BASIS + 'profiel.html')
         wacht(pg, "() => document.querySelectorAll('#fontGrid .font-item').length >= 38")
         pg.wait_for_timeout(1500)
-        check(pg.evaluate("getComputedStyle(document.getElementById('tab-store')).display") == 'none' and pg.evaluate(LAATSTE) == 'tab-stickers',
-              'B: gewone gebruiker: geen Store-vakje (laatste: %s)' % pg.evaluate(LAATSTE))
+        check(pg.evaluate(LAATSTE) == 'tab-store', 'B: gewone gebruiker: ook het Store-vakje (laatste: %s)' % pg.evaluate(LAATSTE))
         pg.goto(BASIS + 'store.html')
-        f1 = wacht(pg, "() => getComputedStyle(document.getElementById('toegangGeweigerd')).display === 'block'")
-        check(f1 and pg.evaluate("getComputedStyle(document.getElementById('inhoud')).display") == 'none', 'F: store als gewone gebruiker: Geen toegang')
-        check(STAND['verzoeken'] == [], 'F: gewone gebruiker: niets opgevraagd of gedownload (%s)' % STAND['verzoeken'])
+        f1 = wacht(pg, "() => getComputedStyle(document.getElementById('inhoud')).display === 'block' && document.querySelectorAll('#lijst .item').length === 9")
+        check(f1, 'F: gewone gebruiker: de store is open')
+        pg.click('.soort[data-soort="game"]'); pg.click('#lijst .item[data-id="pesten"] .knop')
+        f2 = wacht(pg, "() => document.getElementById('melding').style.display === 'block'")
+        check(f2 and 'alleen open voor moderators' in pg.inner_text('#melding') and 'pesten' not in STAND['rijen'],
+              'F: database nog op alleen moderators: duidelijke melding (%r)' % pg.inner_text('#melding'))
+        STAND['iedereen'] = True   # sql/stekky-store-iedereen.sql uitgevoerd
+        pg.click('#lijst .item[data-id="pesten"] .knop')
+        f3 = wacht(pg, "() => { const k = document.querySelector('#lijst .item[data-id=\"pesten\"] .knop'); return k && k.textContent === '✓ Gedownload' }")
+        check(f3 and 'pesten' in STAND['rijen'], 'F: daarna kan een gewone gebruiker Pesten downloaden')
+        ctx.close()
+        # zonder account: geen toegang
+        ctx = b.new_context(service_workers='block', locale='nl-NL'); ctx.route('**/*supabase.co/**', supa)
+        pg = ctx.new_page(); pg.goto(BASIS + 'store.html')
+        check(wacht(pg, "() => getComputedStyle(document.getElementById('toegangGeweigerd')).display === 'block'"), 'F: zonder account: Geen toegang')
         ctx.close()
         b.close()
 finally:

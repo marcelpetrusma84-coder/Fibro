@@ -89,6 +89,7 @@ try:
         if mag:
             id = mag[0]; x, y = midden(pg, kaart(pg, id))
             veeg(pg, x, y, 30, -220)
+            if wacht(pg, "() => !!document.querySelector('.kt-keuze')", 800): pg.click('.kt-keuzerij button >> nth=0')   # een boer: kleur kiezen
             check(wacht(pg, "() => { const a = document.querySelectorAll('.kt-afleg .kt-ak'); return a.length && a[a.length-1].dataset.id === '%s' && !document.querySelector('.kt-laag .kt-vlieg') }" % id, 5000), 'C: omhoog geveegd = bovenop de aflegstapel (' + id + ')')
             check(id not in pg.evaluate(HAND), 'C: en weg uit je hand')
         else:

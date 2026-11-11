@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-<script src="taal.js?v=100"></script>
+<script src="taal.js?v=101"></script>
 <script src="appslot.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Stekky Store</title>
@@ -73,7 +73,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 <script type="module">
 import { supabase } from './supabase.js?v=95'
 import { laadFont } from './lettertypes.js?v=132'
-import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, weghalenItem, tabelOntbreekt } from './store.js?v=3'
+import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, weghalenItem, tabelOntbreekt } from './store.js?v=4'
 
 let mijnId = null
 let mijn = new Set()
@@ -154,7 +154,9 @@ async function download(it, knop) {
   knop.textContent = T('Bezig...')
   const { error } = await downloadItem(supabase, mijnId, it.id)
   if (error) {
-    toonMelding(tabelOntbreekt(error) ? T('De store staat nog niet aan in de database (sql/stekky-store.sql).') : T('Downloaden mislukt. Probeer het opnieuw.'))
+    toonMelding(tabelOntbreekt(error) ? T('De store staat nog niet aan in de database (sql/stekky-store.sql).')
+      : String(error.code) === '42501' ? T('Downloaden kan nog niet: de Store staat in de database nog alleen open voor moderators.')
+      : T('Downloaden mislukt. Probeer het opnieuw.'))
     knop.disabled = false
     knop.textContent = T('Downloaden')
     return
@@ -175,9 +177,7 @@ async function weghalen(it, knop) {
 async function init() {
   const { data: { session } } = await supabase.auth.getSession()
   const weiger = () => { document.getElementById('laden').style.display = 'none'; document.getElementById('toegangGeweigerd').style.display = 'block' }
-  if (!session) return weiger()
-  const { data: isMod, error } = await supabase.rpc('ben_ik_moderator')
-  if (error || isMod !== true) return weiger()
+  if (!session) return weiger()   // 11 nov 2026: iedereen met een account (eerst alleen moderators)
   mijnId = session.user.id
   mijn = bewaardeDownloads(mijnId)
   document.getElementById('laden').style.display = 'none'

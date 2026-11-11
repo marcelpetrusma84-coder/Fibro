@@ -56,4 +56,4 @@ Elk kaartspel krijgt **vanzelf**:
   3. Zet je die widget aan, dan staat Pesten op **Home** (tegen de computer, `spel.html?spel=pesten`) en in het **spelmenu van de chat** (met een vriend, `toonStoreSpellen()` in `chat.html`, alleen als `spel_pesten` in je widgets staat).
   4. Een uitnodiging van een vriend voor Pesten kun je altijd aannemen, ook zonder download.
   - Pesten gaat niet mee met een uitnodigingslink (`store: true` in `solo.js`).
-  - De Store is voorlopig alleen voor moderators. Wil je hem voor iedereen, pas dan de policy `store_downloads_toevoegen` aan (zie `sql/stekky-store.sql`) en laat het Store-vakje bij Stijl voor iedereen zien.
+  - De Store is sinds 11 november 2026 voor iedereen met een account (`sql/stekky-store-iedereen.sql`).

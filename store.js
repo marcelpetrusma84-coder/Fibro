@@ -1,7 +1,7 @@
 // store.js (10 nov 2026, v1): de Stekky Store. Wat je gedownload hebt, staat in je account (tabel store_downloads,
 // sql/stekky-store.sql) en ook op dit toestel (fibro_store_<id>), zodat Stijl > Lettertype het meteen weet.
-// Voorlopig alleen voor moderators: het Store-vakje bij Stijl staat alleen bij moderators, store.html vraagt het
-// nog eens aan de server (ben_ik_moderator), en de database laat alleen moderators iets downloaden.
+// Sinds 11 nov 2026 voor iedereen met een account (eerst alleen moderators): het Store-vakje bij Stijl staat bij
+// iedereen, en de database laat iedereen downloaden die niet geblokkeerd is (sql/stekky-store-iedereen.sql).
 // Soorten: lettertype (nu), game, sticker en widget (later). Lettertypes komen per thema in een pakket van 4
 // (v2, 11 nov 2026): een nieuw pakket staat in STORE_PAKKETTEN (lettertypes.js), de bestanden in lettertypen/.
 import { STORE_PAKKETTEN } from './lettertypes.js?v=132'

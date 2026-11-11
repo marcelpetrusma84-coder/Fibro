@@ -2345,4 +2345,5 @@ window.FIBRO_EN = {
   "Gepauzeerd": "Paused",
   "Het spel staat ook stil bij je vriend.": "The game is paused for your friend too.",
   "{naam} heeft het spel gepauzeerd. Wacht tot {naam} verder gaat.": "{naam} paused the game. Wait until {naam} continues.",
+  "Downloaden kan nog niet: de Store staat in de database nog alleen open voor moderators.": "You can't download yet: in the database the Store is still open to moderators only.",
 }

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 const lees = p => readFileSync(new URL('../../' + p, import.meta.url), 'utf8')
 const profiel = lees('profiel.html'), index = lees('index.html')
 const rijen = profiel.match(/<div class="widget-versie" data-spelversie="[a-z]+"><\/div>/g) || []
-assert.equal(rijen.length, 13, 'alle dertien spellen in de lijst (Pesten erbij, 11 nov 2026), compact (alleen het versienummer)')
+assert.equal(rijen.length, 15, 'alle vijftien spellen in de lijst (Pesten, Toepen en Eenentwintigen erbij, 11 nov 2026), compact (alleen het versienummer)')
 assert.doesNotMatch(profiel, /data-spelversie-history/)
 assert.match(profiel, /import \{ vulSpelVersies \} from "\.\/spelversies\.js\?v=\d+"\n[^\n]*\nkoppelSpelIcoonFallback\(\)\nvulSpelVersies\(\)/)
 assert.match(index, /versieVlak\.setAttribute\('data-spelversie', spel\)/, 'version history is attached to each game card')

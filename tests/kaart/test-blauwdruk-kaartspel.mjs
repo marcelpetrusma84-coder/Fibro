@@ -33,7 +33,7 @@ assert.match(hulp, /spelVideoEigen/, 'de beurtklok komt ook om het webcamrondje'
 const chat = lees('chat.html')
 const KAARTSPELLEN = JSON.parse(chat.match(/const KAARTSPELLEN = (\[[^\]]*\])/)[1].replace(/'/g, '"'))
 const BEURTSPELLEN = JSON.parse(chat.match(/const BEURTSPELLEN = (\[[^\]]*\])/)[1].replace(/'/g, '"'))
-assert.deepEqual(KAARTSPELLEN, ['pesten'])
+assert.deepEqual(KAARTSPELLEN, ['pesten', 'toepen', 'eenentwintigen'])
 for (const spel of KAARTSPELLEN) assert.ok(BEURTSPELLEN.includes(spel), spel + ' krijgt de chatbalk en de webcamrondjes')
 assert.match(chat, /onActivity:\(\) => \{ if \(spelKanaal === verbinding && \(spelActief === 'schaken' \|\| KAARTSPELLEN\.includes\(spelActief\)\)\) startSpelBel\(\) \}/, 'spraak vanzelf aan bij kaartspellen')
 assert.ok(!/onclick="startSpel\('pesten'\)"/.test(chat), 'geen vaste knop: Pesten komt uit de Store')
@@ -47,10 +47,21 @@ const versie = f => [...new Set([...lees(f).matchAll(/pesten-ui\.js\?v=(\d+)/g)]
 assert.equal(versie('chat.html').length, 1); assert.deepEqual(versie('chat.html'), versie('solo.js'), 'overal dezelfde versie van pesten-ui.js')
 assert.match(lees('solo.js'), /pesten: +\{ naam: 'Pesten'.*bot: pestenBot/, 'ook tegen de computer (spel.html)')
 assert.match(lees('speluitnodiging.js'), /pesten: \{ icon: '🃏', naam: 'Pesten' \}/)
+// 11 nov 2026: Toepen en Eenentwintigen op dezelfde blauwdruk, ook uit de Store
+for (const [id, naam] of [['toepen', 'Toepen'], ['eenentwintigen', 'Eenentwintigen']]) {
+  const v = [...new Set([...chat.matchAll(new RegExp(id + '-ui\\.js\\?v=(\\d+)', 'g'))].map(m => m[1]))]
+  assert.equal(v.length, 1, id + ': één versie in chat.html'); assert.ok(lees('solo.js').includes(id + "-ui.js?v=" + v[0] + "'"), id + ': dezelfde versie in solo.js')
+  assert.match(lees('solo.js'), new RegExp(id + ': +\\{ naam: \'' + naam + "'.*store: true"), id + ': tegen de computer, alleen via de Store')
+  assert.match(chat, new RegExp("id: '" + id + "', naam: '" + naam + "', widget: 'spel_" + id + "'"), id + ': in het spelmenu met de widget')
+  assert.match(lees('store.js'), new RegExp("id: '" + id + "', soort: 'game'"), id + ': in de Store')
+  assert.match(lees('profiel.html'), new RegExp('id="widgetRij-spel_' + id + '"'), id + ': widget bij Profiel')
+  assert.match(lees('speluitnodiging.js'), new RegExp(id + ': \\{ icon:'), id + ': uitnodiging')
+  assert.match(lees('supabase/functions/stuur-push/index.ts'), new RegExp('  ' + id + ': \\{ nl:'), id + ': pushmelding')
+}
 
 // 4. Elke tekst heeft een Engelse vertaling
 const en = lees('taal-en.js')
-for (const f of ['kaartspel-hulp.js', 'pesten-ui.js'])
+for (const f of ['kaartspel-hulp.js', 'pesten-ui.js', 'toepen-ui.js', 'eenentwintigen-ui.js'])
   for (const m of lees(f).matchAll(/\bT\('((?:[^'\\]|\\.)*)'/g)) assert.ok(en.includes(JSON.stringify(m[1]) + ':'), f + ': Engels voor ' + m[1])
 assert.match(lees('BLAUWDRUK-KAARTSPEL.md'), /KAARTSPELLEN/)
 console.log('blauwdruk kaartspel: ok')

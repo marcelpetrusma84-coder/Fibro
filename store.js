@@ -24,6 +24,11 @@ export const STORE_SOORTEN = [
 export const STORE_GAMES = [
   { id: 'pesten', soort: 'game', titel: 'Pesten', widget: 'spel_pesten', icoon: 'spelicoon/pesten.webp?v=2',
     uitleg: 'Het kaartspel: leg dezelfde kleur of waarde, pest met een 2 of joker, en roep op tijd "Laatste kaart!". Tegen de computer of met een vriend in de chat.' },
+  // 11 nov 2026: twee kaartspellen erbij
+  { id: 'toepen', soort: 'game', titel: 'Toepen', widget: 'spel_toepen', icoon: 'spelicoon/toepen.webp?v=2',
+    uitleg: 'Vier kaarten, vier slagen, alleen de laatste slag telt. Klop "Toep!" om de inzet te verhogen, en durf te bluffen. Wie 10 strafpunten heeft, verliest.' },
+  { id: 'eenentwintigen', soort: 'game', titel: 'Eenentwintigen', widget: 'spel_eenentwintigen', icoon: 'spelicoon/eenentwintigen.webp?v=2',
+    uitleg: 'Pak kaarten tot je zo dicht mogelijk bij 21 zit, maar niet erover. Durf jij nog een kaart? Tegen de computer of met een vriend in de chat.' },
 ]
 export const STORE_ITEMS = [...STORE_PAKKETTEN.map(p => Object.assign({ soort: 'lettertype' }, p)), ...STORE_GAMES]
 // Welke game-widgets mag je aanzetten (wat je gedownload hebt)

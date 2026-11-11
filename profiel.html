@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=103"></script>
+<script src="taal.js?v=104"></script>
 <script src="appslot.js?v=3"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Vuurwerk': 'Fireworks', 'Onweer': 'Thunderstorm', 'Glitter': 'Glitter' }) // v234: nieuwe animaties</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Gastenboek zonder lijntjes': 'Guestbook without lines', 'Gewoon in je eigen kleuren, zonder lijntjespapier': 'Plain, in your own colours, without lined paper' }) // v235</script>
@@ -494,6 +494,8 @@ input, textarea { font-size:16px !important; }
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/botkaaseiren.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Tic-Tac-Toe</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="botkaaseiren"></div><div class="toggle off" id="widget-spel_botkaaseiren" onclick="toggleWidget('spel_botkaaseiren')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/vieroprij.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Four in a Row</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="vieroprij"></div><div class="toggle off" id="widget-spel_vieroprij" onclick="toggleWidget('spel_vieroprij')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item" id="widgetRij-spel_pesten" style="display:none"><!-- 11 nov 2026: alleen als je Pesten in de Store gedownload hebt --><div class="widget-info"><div class="widget-icon"><img src="spelicoon/pesten.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Pesten</div><div class="widget-desc" data-t>Uit de Store: tegen de computer op Home, met een vriend in de chat</div></div></div><div class="widget-versie" data-spelversie="pesten"></div><button type="button" class="store-verwijder" onclick="verwijderStoreSpel('pesten')" aria-label="Pesten verwijderen" data-t-attr="aria-label" title="Pesten verwijderen">🗑</button><div class="toggle off" id="widget-spel_pesten" onclick="toggleWidget('spel_pesten')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item" id="widgetRij-spel_toepen" style="display:none"><!-- 11 nov 2026: alleen als je Toepen in de Store gedownload hebt --><div class="widget-info"><div class="widget-icon"><img src="spelicoon/toepen.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Toepen</div><div class="widget-desc" data-t>Uit de Store: tegen de computer op Home, met een vriend in de chat</div></div></div><div class="widget-versie" data-spelversie="toepen"></div><button type="button" class="store-verwijder" onclick="verwijderStoreSpel('toepen')" aria-label="Toepen verwijderen" data-t-attr="aria-label" title="Toepen verwijderen">🗑</button><div class="toggle off" id="widget-spel_toepen" onclick="toggleWidget('spel_toepen')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item" id="widgetRij-spel_eenentwintigen" style="display:none"><!-- 11 nov 2026: alleen als je Eenentwintigen in de Store gedownload hebt --><div class="widget-info"><div class="widget-icon"><img src="spelicoon/eenentwintigen.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Eenentwintigen</div><div class="widget-desc" data-t>Uit de Store: tegen de computer op Home, met een vriend in de chat</div></div></div><div class="widget-versie" data-spelversie="eenentwintigen"></div><button type="button" class="store-verwijder" onclick="verwijderStoreSpel('eenentwintigen')" aria-label="Eenentwintigen verwijderen" data-t-attr="aria-label" title="Eenentwintigen verwijderen">🗑</button><div class="toggle off" id="widget-spel_eenentwintigen" onclick="toggleWidget('spel_eenentwintigen')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/schaken.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Chess</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="schaken"></div><div class="toggle off" id="widget-spel_schaken" onclick="toggleWidget('spel_schaken')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/dammen.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Draughts</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="dammen"></div><div class="toggle off" id="widget-spel_dammen" onclick="toggleWidget('spel_dammen')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/pong.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Neo Paddle</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="pong"></div><div class="toggle off" id="widget-spel_pong" onclick="toggleWidget('spel_pong')"><div class="toggle-dot"></div></div></div>
@@ -596,7 +598,7 @@ const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','�
 // v173: de oude emoji-stickers (Natuur & Planten, Sfeer & Magie, Muziek & Kunst, Dieren, 'Actieve stickers') en de
 // widget 'Sticker board' zijn weg: ze werden alleen op dit toestel bewaard en nergens getoond.
 import { LETTERTYPES, STORE_LETTERTYPES, laadFont } from './lettertypes.js?v=132'
-import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES } from './store.js?v=6' // v131: Stekky Store
+import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES } from './store.js?v=7' // v131: Stekky Store
 import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=95'
 import { pasAnimatieToe, startOp as startAnimatieOp } from './animatie.js?v=235'
 window.blokAangepast = function(){
@@ -1289,6 +1291,8 @@ window.slaAllesOp=async function(){
     spel_botkaaseiren: { id:'spel_botkaaseiren', icon:'⭕', titel:'Tic-Tac-Toe',   w:2, h:1 },
     spel_vieroprij:    { id:'spel_vieroprij',    icon:'🔴', titel:'Four in a Row', w:2, h:1 },
     spel_pesten:       { id:'spel_pesten',       icon:'🃏', titel:'Pesten',        w:2, h:1 },   // 11 nov 2026: uit de Store
+    spel_toepen:       { id:'spel_toepen',       icon:'✊', titel:'Toepen',        w:2, h:1 },   // 11 nov 2026: uit de Store
+    spel_eenentwintigen: { id:'spel_eenentwintigen', icon:'♠️', titel:'Eenentwintigen', w:2, h:1 },   // 11 nov 2026: uit de Store
     spel_flappybird:   { id:'spel_flappybird',   icon:'🦇', titel:'Flapper',       w:2, h:1 },
     spel_schaken:      { id:'spel_schaken',      icon:'♟️', titel:'Chess',         w:2, h:1 },
     spel_dammen:       { id:'spel_dammen',       icon:'⚫', titel:'Draughts',      w:2, h:1 },
@@ -1517,13 +1521,13 @@ startMeldingen()
 
 <script type="module">
 import { vulSpelVersies } from "./spelversies.js?v=24"
-import { koppelSpelIcoonFallback } from './spelicoon.js?v=4'
+import { koppelSpelIcoonFallback } from './spelicoon.js?v=5'
 koppelSpelIcoonFallback()
 vulSpelVersies()
 </script>
 <script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=209"; startBelLuisteraar()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=198"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=199"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=171"; startOngelezen()</script>
 <script>
 /* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */

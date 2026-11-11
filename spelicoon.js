@@ -4,7 +4,7 @@
 // Gebruikt in het spelmenu van de chat, de widgetlijst in Profiel, de spelwidget op Home en op het profiel van een vriend. Een nieuw plaatje voor een bestaand spel: verhoog VERSIE (ook in de html).
 export const VERSIE = 2
 export const SPELLEN = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pong', 'pacman', 'pinball',
-  'endlessrunner', 'breakout', 'swarm', 'shmup', 'flappybird', 'pesten']   // 11 nov 2026: Pesten (uit de Store)
+  'endlessrunner', 'breakout', 'swarm', 'shmup', 'flappybird', 'pesten', 'toepen', 'eenentwintigen']   // 11 nov 2026: kaartspellen uit de Store
 
 export function spelIcoonSrc(spel) {
   return SPELLEN.includes(spel) ? 'spelicoon/' + spel + '.webp?v=' + VERSIE : null
@@ -21,7 +21,7 @@ export function spelIcoonHtml(spel, px) {
 const icoonFallbacks = Object.freeze({
   botkaaseiren:'⭕', vieroprij:'🔴', schaken:'♟️', dammen:'⚫', pong:'🏓',
   pacman:'👻', pinball:'🐍', flappybird:'🦇', breakout:'🟪', swarm:'🪲',
-  endlessrunner:'🏃', shmup:'🚀', pesten:'🃏',
+  endlessrunner:'🏃', shmup:'🚀', pesten:'🃏', toepen:'✊', eenentwintigen:'♠️',
 })
 const fallbackRoots = new WeakMap()
 const positieveMaat = value => Number.isFinite(Number(value)) && Number(value) > 0 ? Number(value) : 0

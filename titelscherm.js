@@ -13,8 +13,8 @@
 //
 // Gebruik: await toonTitelscherm({ spelId: 'breakout', naam: 'Block It', ouder: element })
 //          Geeft true als je erdoor tikte, false als het scherm van buitenaf weg moest (sluitTitelscherm).
-import { SCENES } from './titelscenes.js?v=5'
-import { speelTitelMuziek, stopTitelMuziek, muziekAan, zetMuziek } from './titelmuziek.js?v=5'
+import { SCENES } from './titelscenes.js?v=6'
+import { speelTitelMuziek, stopTitelMuziek, muziekAan, zetMuziek } from './titelmuziek.js?v=6'
 
 export { stopTitelMuziek }
 
@@ -23,7 +23,7 @@ let huidig = null
 let naMuziekTimer = null
 
 // De namen zoals in de spellen (schaken in de taal van de schaakinstellingen is aan spel.html; hier Schaken/Chess)
-const NAMEN = { botkaaseiren: 'Tic-Tac-Toe', vieroprij: 'Four in a Row', pesten: 'Pesten', dammen: 'Draughts', pong: 'Neo Paddle', pacman: 'Ghost Tag',
+const NAMEN = { botkaaseiren: 'Tic-Tac-Toe', vieroprij: 'Four in a Row', pesten: 'Pesten', toepen: 'Toepen', eenentwintigen: 'Eenentwintigen', dammen: 'Draughts', pong: 'Neo Paddle', pacman: 'Ghost Tag',
     breakout: 'Block It', swarm: 'The Swarm', pinball: 'Twin Snakes', endlessrunner: 'Runner & Gunner', flappybird: 'Flapper', shmup: 'Neon Raiders' }
 export function titelNaam(spelId) {
     if (spelId === 'schaken') return window.T && window.T.taal === 'en' ? 'Chess' : 'Schaken'

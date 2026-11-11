@@ -2388,4 +2388,8 @@ window.FIBRO_EN = {
   "{naam} is verwijderd.": "{naam} has been removed.",
   "Uit de Store": "From the Store",
   "Pesten verwijderen": "Remove Pesten",
+  // ---- Kaartstijl kiezen in de kaartspellen (kaartspel-hulp.js v3), 11 nov 2026 ----
+  "Kaarten kiezen": "Choose cards",
+  "Kies je kaarten": "Choose your cards",
+  "Perkament": "Parchment",
 }

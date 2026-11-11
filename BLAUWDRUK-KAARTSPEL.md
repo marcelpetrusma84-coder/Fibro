@@ -15,6 +15,7 @@ Elk kaartspel krijgt **vanzelf**:
 |---|---|
 | Kaarten | Vectorplaatjes (SVG): `kaartSvg('h10')`, `kaartSvg('J1')`. Kleuren `h` harten, `r` ruiten, `k` klaveren, `s` schoppen; waarden `2`..`10`, `B`, `V`, `H`, `A`; jokers `J1` en `J2`. In het Engels staan er J, Q, K op. |
 | Achterkant | `achterkantSvg('stekky')`: paars verloop `#8b3fd1` → `#6a2bab` → `#1a0a2e`. Meer achterkanten (bijvoorbeeld uit de Store) zet je in `ACHTERKANTEN`. |
+| Kaartstijl | Knop **🎴** onderin: kies de gewone **Stekky**-kaarten of **Perkament** (plaatjes in `kaarten/perkament/`, met eigen achterkant en joker). De keuze staat op dit toestel (`fibro_kaartstijl`) en geldt in elk kaartspel; de kaarten op tafel veranderen meteen. Een nieuwe stijl: een map `kaarten/<naam>/` met `h2.webp` … `sA.webp`, `joker.webp`, `achterkant.webp`, en een regel in `KAARTSTIJLEN`. Maken: zie `tests/gen/kaarten_perkament/`. Test: `tests/tools/proef294.py`. |
 | Jouw waaier | **Tik** = de kaart komt groot naar voren. Tik meer kaarten van dezelfde waarde om ze samen te spelen. **Veeg omhoog** = spelen; hoe harder, hoe verder de kaart over tafel glijdt. **Lang vasthouden en schuiven** = de kaart verplaatsen. **⇅** = sorteren op kleur, nog eens = op waarde. |
 | Oplichten | Kaarten die je mag spelen krijgen een paarse gloed, de rest wordt donkerder. Kun je niets, dan licht de stapel op. |
 | Stapel | **Tik** = de kaart springt op, draait om en vliegt in een boog naar je hand. **Veeg** = de kaart gaat met je vinger mee en tolt naar je hand. |

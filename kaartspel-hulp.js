@@ -1,6 +1,8 @@
 // kaartspel-hulp.js - BLAUWDRUK voor alle kaartspellen in Stekky (v1, 11 nov 2026). Zie BLAUWDRUK-KAARTSPEL.md.
 // v2: de tafel is een eigen laag (isolation), zodat het pauzescherm van het spelmenu (spelmenu.js) er in de chat altijd boven ligt.
 //     Tegen de computer (solo) geen reactieknop 😀.
+// v3: kaartstijl kiezen met de knop 🎴: de gewone Stekky-kaarten of de perkamentkaarten van Marcel (plaatjes in
+//     kaarten/perkament/, met een eigen achterkant en joker). De keuze staat op dit toestel (fibro_kaartstijl).
 //
 // In gewone woorden: hier zit alles wat elk kaartspel hetzelfde doet, zodat een nieuw kaartspel alleen nog zijn
 // eigen spelregels hoeft te maken (zoals pesten.js). Wat je hier krijgt:
@@ -105,8 +107,41 @@ function joker(id) {
     + hoekTekst(27, 40) + '<g transform="rotate(180 125 175)">' + hoekTekst(27, 40) + '</g>'
 }
 
+// ─────────────── Kaartstijl (v3): getekend (Stekky) of plaatjes (Perkament) ───────────────
+// Plaatjes: kaarten/<stijl>/<kaart>.webp met de kaartnamen van hierboven (h10, sB, kV, rH, hA ...), plus joker.webp
+// en achterkant.webp. Vervang je een plaatje, verhoog dan v hieronder (de service worker bewaart per ?v=).
+// De plaatjes zijn gemaakt met tests/gen/kaarten_perkament/ (zie LEESMIJ daar).
+const STIJL_SLEUTEL = 'fibro_kaartstijl'
+export const KAARTSTIJLEN = {
+  stekky: { naam: 'Stekky' },
+  perkament: { naam: 'Perkament', map: './kaarten/perkament/', v: 1 },
+}
+export function kaartStijl() {
+  try { const s = localStorage.getItem(STIJL_SLEUTEL); return KAARTSTIJLEN[s] ? s : 'stekky' } catch (e) { return 'stekky' }
+}
+function plaatjeUrl(stijl, naam) { const s = KAARTSTIJLEN[stijl]; return s.map + naam + '.webp?v=' + s.v }
+function plaatje(stijl, naam) {
+  return '<img class="kt-svg kt-img" src="' + plaatjeUrl(stijl, naam) + '" alt="" draggable="false" decoding="async">'
+}
+const vooruitGeladen = new Set()
+function laadVooruit(stijl) {
+  if (!KAARTSTIJLEN[stijl]?.map || vooruitGeladen.has(stijl) || typeof Image === 'undefined') return
+  vooruitGeladen.add(stijl)
+  const namen = ['achterkant', 'joker']
+  for (const k of KAART_KLEUREN) for (const w of KAART_WAARDEN) namen.push(k + w)
+  for (const n of namen) { const i = new Image(); i.decoding = 'async'; i.src = plaatjeUrl(stijl, n) }
+}
+export function zetKaartStijl(stijl) {
+  if (!KAARTSTIJLEN[stijl]) return
+  try { localStorage.setItem(STIJL_SLEUTEL, stijl) } catch (e) {}
+  laadVooruit(stijl)
+  try { window.dispatchEvent(new CustomEvent('fibro-kaartstijl', { detail: { stijl } })) } catch (e) {}
+}
+laadVooruit(kaartStijl())   // alvast ophalen, zodat vliegende kaarten niet even leeg zijn
+
 const svgCache = new Map()
-export function kaartSvg(id) {
+export function kaartSvg(id, stijl = kaartStijl()) {
+  if (KAARTSTIJLEN[stijl]?.map) return plaatje(stijl, /^J[12]$/.test(id) ? 'joker' : id)
   const sleutel = id + (isEngels() ? '|en' : '')
   if (svgCache.has(sleutel)) return svgCache.get(sleutel)
   const { kleur: k, waarde: w } = kaartDelen(id)
@@ -130,7 +165,8 @@ export function kaartSvg(id) {
 export const ACHTERKANTEN = {
   stekky: { van: '#8b3fd1', midden: '#6a2bab', naar: '#1a0a2e', lijn: '#c084fc' },
 }
-export function achterkantSvg(stijl = 'stekky') {
+export function achterkantSvg(stijl) {
+  if (!stijl) { const ks = kaartStijl(); if (KAARTSTIJLEN[ks].map) return plaatje(ks, 'achterkant'); stijl = 'stekky' }
   const a = ACHTERKANTEN[stijl] || ACHTERKANTEN.stekky
   const id = 'ktA' + (Object.keys(ACHTERKANTEN).indexOf(stijl) + 1 || 1)
   let lijnen = ''
@@ -215,6 +251,7 @@ const STIJL = `
 .kt-tafel{position:relative;isolation:isolate;width:100%;height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:stretch;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;overflow:hidden;background:radial-gradient(ellipse at 50% 46%,#3a1a5e 0%,#24103d 45%,#1a0a2e 80%)}
 .kt-tafel *{box-sizing:border-box}
 .kt-svg{display:block;width:100%;height:100%}
+.kt-img{object-fit:fill;pointer-events:none;-webkit-user-drag:none;user-select:none;border-radius:7%}
 .kt-kaart{position:absolute;left:0;top:0;border-radius:calc(var(--kw)*.075);box-shadow:0 2px 8px #0007;transition:transform .22s cubic-bezier(.2,.8,.3,1.2),filter .2s,box-shadow .2s;touch-action:none;will-change:transform;cursor:pointer}
 .kt-kaart.kt-mag{box-shadow:0 0 0 2px #c084fc,0 0 16px #c084fcb0,0 2px 8px #0007}
 .kt-kaart.kt-niet{filter:brightness(.62) saturate(.8)}
@@ -272,6 +309,12 @@ const STIJL = `
 .kt-keuzekaart{padding:18px;border-radius:18px;background:#24103d;border:1px solid #c084fc;text-align:center}
 .kt-keuzerij{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
 .kt-keuzerij button{width:62px;height:62px;border-radius:14px;border:2px solid #ffffff33;background:#fffdf9;font-size:36px;cursor:pointer;line-height:1}
+.kt-stijlrij{display:flex;gap:12px;justify-content:center;margin-top:12px}
+.kt-stijlkeuze{display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px;border-radius:14px;border:2px solid #ffffff22;background:#ffffff10;color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.kt-stijlkeuze[aria-pressed=true]{border-color:#c084fc;background:#8b3fd140;box-shadow:0 0 14px #8b3fd1aa}
+.kt-stijlvoorbeeld{display:flex}
+.kt-stijlvoorbeeld>div{width:52px;height:73px;border-radius:5px;box-shadow:0 2px 6px #0008}
+.kt-stijlvoorbeeld>div+div{margin-left:-14px;transform:rotate(8deg)}
 @media (prefers-reduced-motion:reduce){.kt-kaart{transition:none}.kt-klok.kt-bijna,.kt-knop.kt-schud{animation:none}}
 `
 function zetStijl() {
@@ -308,6 +351,7 @@ export function maakKaartTafel(container, opties = {}) {
     + '<div class="kt-hand"></div>'
     + '<div class="kt-onder"><div class="kt-zetel kt-zetel-ik"><span style="font-size:12px">' + esc(T('Jij')) + '</span><div class="kt-klok"></div></div>'
     + '<span class="kt-knoppen" style="display:contents"></span>'
+    + '<button type="button" class="kt-knop kt-stijlknop" aria-label="' + esc(T('Kaarten kiezen')) + '" title="' + esc(T('Kaarten kiezen')) + '">🎴</button>'
     + '<span style="position:relative"><button type="button" class="kt-knop kt-sorteer" aria-label="' + esc(T('Sorteren')) + '" title="' + esc(T('Sorteren')) + '">⇅</button></span>'
     // reacties (😀) alleen met een vriend: tegen de computer heb je er niets aan (Marcel, 11 nov 2026)
     + (o.solo ? '' : '<span style="position:relative"><button type="button" class="kt-knop kt-reactieknop" aria-label="' + esc(T('Reactie')) + '">😀</button><div class="kt-reacties"></div></span>') + '</div>'
@@ -503,6 +547,33 @@ export function maakKaartTafel(container, opties = {}) {
     stapelEl.addEventListener('pointercancel', los)
     stapelEl.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (stand.mijnBeurt) o.onPak({ manier: 'tik' }) } })
   })()
+
+  // ── Kaartstijl kiezen (🎴): de kaarten op tafel veranderen meteen mee ──
+  function kiesKaartStijl() {
+    el.querySelector('.kt-stijlkeus')?.remove()
+    const d = document.createElement('div'); d.className = 'kt-keuze kt-stijlkeus'
+    d.innerHTML = '<div class="kt-keuzekaart"><div style="font-weight:800;font-size:17px">' + esc(T('Kies je kaarten')) + '</div><div class="kt-stijlrij"></div>'
+      + '<button type="button" class="kt-knop" style="margin-top:12px">' + esc(T('Sluiten')) + '</button></div>'
+    const nu = kaartStijl()
+    for (const [id, s] of Object.entries(KAARTSTIJLEN)) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'kt-stijlkeuze'; b.dataset.stijl = id
+      b.setAttribute('aria-pressed', String(id === nu))
+      b.innerHTML = '<span class="kt-stijlvoorbeeld"><div>' + (s.map ? plaatje(id, 'achterkant') : achterkantSvg('stekky')) + '</div><div>' + kaartSvg('hH', id) + '</div></span>'
+        + '<span>' + esc(id === 'stekky' ? s.naam : T(s.naam)) + '</span>'
+      b.onclick = () => { kaartGeluid.tik(); zetKaartStijl(id); d.remove() }
+      d.querySelector('.kt-stijlrij').appendChild(b)
+    }
+    d.querySelector('.kt-keuzekaart > .kt-knop').onclick = () => d.remove()
+    d.addEventListener('click', e => { if (e.target === d) d.remove() })
+    el.appendChild(d)
+  }
+  $('.kt-stijlknop').onclick = () => { audio(); kiesKaartStijl() }
+  function nieuweStijl() {
+    for (const k of handEl.querySelectorAll('.kt-kaart')) k.innerHTML = kaartSvg(k.dataset.id)
+    anderWaaier.innerHTML = ''; stapelEl.innerHTML = ''
+    legRest()
+  }
+  window.addEventListener('fibro-kaartstijl', nieuweStijl)
 
   // ── Sorteren en reacties ──
   $('.kt-sorteer').onclick = () => {
@@ -855,6 +926,7 @@ export function maakKaartTafel(container, opties = {}) {
     if (el.isConnected) return
     clearInterval(wachter); clearInterval(klok?.timer)
     window.removeEventListener('resize', opnieuw)
+    window.removeEventListener('fibro-kaartstijl', nieuweStijl)
     for (const r of document.querySelectorAll('.spel-video-vak > .kt-klok')) r.remove()
   }, 1000)
   meet()

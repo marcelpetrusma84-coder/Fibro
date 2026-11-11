@@ -34,7 +34,8 @@ async function badgeEenErbij() {
 // MP3_VERSIE in stickerfx.js (de oude versie gaat hier dan vanzelf uit de kast). De kast blijft bij een nieuwe
 // CACHE_VERSION staan.
 const MEDIA_KAST = 'fibro-media-1'
-const IS_MEDIA = /\/(stickers\/f[1-9]\/\d{2}\.webp|geluiden\/[a-z0-9-]+\.mp3)$/
+// 11 nov 2026: ook de kaartplaatjes van de kaartspellen (kaarten/perkament/hA.webp?v=1 ...; kaartspel-hulp.js).
+const IS_MEDIA = /\/(stickers\/f[1-9]\/\d{2}\.webp|geluiden\/[a-z0-9-]+\.mp3|kaarten\/[a-z]+\/[A-Za-z0-9]+\.webp)$/
 async function ruimOudeVersiesOp(kast, url) { // hetzelfde bestand met een andere ?v= (oude MP3_VERSIE) eruit
   try {
     for (const k of await kast.keys()) {

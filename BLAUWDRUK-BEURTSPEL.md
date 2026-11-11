@@ -1,6 +1,6 @@
 # Blauwdruk: een nieuw beurtspel in Fibro
 
-*Gemaakt op 3 november 2026. Een beurtspel is een spel waarin je om de beurt zet: boter-kaas-en-eieren, vier op een rij, dammen, schaken.*
+*Gemaakt op 3 november 2026. Een beurtspel is een spel waarin je om de beurt zet: boter-kaas-en-eieren, vier op een rij, dammen, schaken. Voor kaartspellen (zoals Pesten) is er een eigen blauwdruk bovenop deze: [BLAUWDRUK-KAARTSPEL.md](BLAUWDRUK-KAARTSPEL.md).*
 
 Elk nieuw beurtspel krijgt **vanzelf** hetzelfde als dammen:
 
@@ -57,5 +57,5 @@ Dit geldt voor **alle** spellen (in de chat en tegen de computer); een spel hoef
 
 ## Let op
 
-- Het spraakgesprek begint bij deze spellen pas als iemand op 📹 drukt (bij schaken vanzelf). Er was een geluidsprobleem tussen een iPhone en een Steam Deck dat nog niet is opgelost.
+- Het spraakgesprek begint bij deze spellen pas als iemand op 📹 drukt (bij schaken en de kaartspellen vanzelf; zie BLAUWDRUK-KAARTSPEL.md). Er was een geluidsprobleem tussen een iPhone en een Steam Deck dat nog niet is opgelost.
 - Snelle actiespellen (zoals Neo Paddle en Block It) krijgen geen chatbalk en alleen kleine rondjes. Die staan niet in `BEURTSPELLEN`, maar alleen met `'klein'` in `CAMERA_RONDJES`.

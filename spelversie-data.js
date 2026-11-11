@@ -53,6 +53,11 @@ const histories = {
     record('4.0.0', '2026-10-27T21:42:57+01:00', '887d9f8955c821518648dd87f66b2448e61dd1f9', 'Muisbesturing en scorelijsten', 'Mouse controls and scoreboards'),
     initial('3.0.0'),
   ],
+  // 11 nov 2026: het eerste kaartspel, alleen via de Stekky Store
+  pesten:[
+    // nieuw spel: de eerste versie is ook het begin van zijn geschiedenis (firstRecorded), met de echte commit
+    { version:'1.0.0', updatedAt:'2026-11-11T09:41:39+01:00', summary:'Eerste kaartspel: waaier, vegen, stapel, beurtklok en spraak', summaryEn:'First card game: fanned hand, swipes, deck, turn timer and voice', firstRecorded:true, sourceCommit:'f79355903f4f2a27a866f29cd8ece3065c4e4b49' },
+  ],
 }
 
 export const SPEL_HISTORIE = Object.freeze(Object.fromEntries(Object.entries(histories).map(([game, entries]) =>

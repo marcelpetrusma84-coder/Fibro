@@ -15,7 +15,16 @@ export const STORE_SOORTEN = [
 
 // Alles wat in de store staat. Elk item: id (uniek, kleine letters/cijfers/streepjes), soort, titel.
 // Een lettertype-pakket heeft ook lettertypes (4 stuks).
-export const STORE_ITEMS = STORE_PAKKETTEN.map(p => Object.assign({ soort: 'lettertype' }, p))
+// Games (11 nov 2026): een spel uit de store staat NIET vanzelf in de app. Na downloaden verschijnt het bij
+// Profiel > Widgets > Spellen; zet je die widget aan, dan staat het op Home (tegen de computer) en in het spelmenu
+// van de chat (met een vriend). widget = de naam van die widget.
+export const STORE_GAMES = [
+  { id: 'pesten', soort: 'game', titel: 'Pesten', widget: 'spel_pesten', icoon: 'spelicoon/pesten.webp?v=2',
+    uitleg: 'Het kaartspel: leg dezelfde kleur of waarde, pest met een 2 of joker, en roep op tijd "Laatste kaart!". Tegen de computer of met een vriend in de chat.' },
+]
+export const STORE_ITEMS = [...STORE_PAKKETTEN.map(p => Object.assign({ soort: 'lettertype' }, p)), ...STORE_GAMES]
+// Welke game-widgets mag je aanzetten (wat je gedownload hebt)
+export const gameWidgets = ids => STORE_GAMES.filter(g => ids.has(g.id)).map(g => g.widget)
 
 const GELDIG = /^[a-z0-9-]{1,64}$/
 const sleutel = uid => 'fibro_store_' + uid

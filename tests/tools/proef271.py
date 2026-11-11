@@ -26,7 +26,7 @@ B = 'http://127.0.0.1:%d/' % poort
 PAGINA = '_proef271.html'
 open(os.path.join(MAP, PAGINA), 'w').write('''<!doctype html><html data-taal><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
 <body style="background:#1a0a2e;margin:0;height:100vh"><script type="module">
-const pm = await import('./profielmuziek.js?v=186'); const ts = await import('./titelscherm.js?v=8'); const qz = await import('./quiz.js?v=2')
+const pm = await import('./profielmuziek.js?v=186'); const ts = await import('./titelscherm.js?v=9'); const qz = await import('./quiz.js?v=3')
 window.__ts = ts; window.__pm = pm; window.__qz = qz
 await pm.speelProfielMuziek({ data: %r, titel: 'Mijn nummer', sleutel: 'proef271' })
 window.__klaar = 1

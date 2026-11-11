@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=98"></script>
+<script src="taal.js?v=100"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -455,7 +455,7 @@ window.veiligeUrl = function(v){
 
 <script src="beltoon.js?v=11"></script>
 <script type="module">
-  import { koppelSpelIcoonFallback } from './spelicoon.js?v=3'
+  import { koppelSpelIcoonFallback } from './spelicoon.js?v=4'
   koppelSpelIcoonFallback()
 </script>
 <script type="module">
@@ -512,7 +512,7 @@ window.veiligeUrl = function(v){
   // wacht het spel er even op.
   let titelModule = null
   const laadTitelscherm = () => titelModule ? Promise.resolve(titelModule)
-    : laadModule('./titelscherm.js?v=8').then(m => (titelModule = m))
+    : laadModule('./titelscherm.js?v=9').then(m => (titelModule = m))
   const laadRustig = f => ('requestIdleCallback' in window ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 2500))
   laadRustig(() => laadTitelscherm().catch(() => {}))
   pasBlokstijlToe()
@@ -729,7 +729,7 @@ window.veiligeUrl = function(v){
     // vriendenlijst ophalen in plaats van ervoor. .then() start het verzoek meteen.
     const profielBelofte = supabase
       .from('profiles')
-      .select('id, username, avatar_url, avatar_data')
+      .select('id, username, avatar_url, avatar_data, widgets') // 11 nov 2026: widgets = welke spellen uit de Store aan staan
       .eq('id', huidigeUser.id)
       .single()
       .then(r => r, e => ({ data: null, error: e }))
@@ -851,6 +851,7 @@ window.veiligeUrl = function(v){
 
     await laadVrienden()
     huidigProfiel = (await profielBelofte).data
+    toonStoreSpellen() // 11 nov 2026: Pesten in het spelmenu als de widget aan staat
     pasFotosToe() // v134: eigen foto bij eigen berichten
 
     // ── Automatisch spel starten via URL (van uitnodiging op andere pagina) ──
@@ -2676,6 +2677,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   const SPEL_INFO = {
     botkaaseiren:   { icon: '⭕', naam: 'Tic-Tac-Toe' },
     vieroprij:      { icon: '🔴', naam: 'Four in a Row' },
+    pesten:         { icon: '🃏', naam: 'Pesten' },
     schaken:        { icon: '♟️', naam: schaakT('Schaken') },
     schakendrie:    { icon: '♟️♟️♟️', naam: schaakT('Schaken met drie spelers') },
     dammen:         { icon: '⚫', naam: 'Draughts' },
@@ -2842,6 +2844,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=151',
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
+    pesten: './pesten-ui.js?v=1',
     schaken: './schaken-ui.js?v=275',
     schakendrie: './schaken-drie-ui.js?v=43',
     flappybird: './flappy-ui.js?v=147',
@@ -2900,7 +2903,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // Accepteer uitnodiging → open het spel
   window.speelMee = async function(spelType, sessieId, starterId, players = null) {
     if (!huidigeUser || !geselecteerdeVriend?.id) return
-    const beschikbaar = ['botkaaseiren', 'vieroprij', 'schaken', 'schakendrie', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball', 'shmup']
+    const beschikbaar = ['botkaaseiren', 'vieroprij', 'pesten', 'schaken', 'schakendrie', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball', 'shmup']
     if (!beschikbaar.includes(spelType)) {
       alert(T('🚧 {spel} komt binnenkort beschikbaar!', { spel: SPEL_INFO[spelType]?.naam || spelType }))
       return
@@ -2957,7 +2960,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
         toonSpelVerbindingStatus(status)
         if (status === 'connected' && spelWachtKlaar) { const klaar = spelWachtKlaar; spelWachtKlaar = null; klaar(true) }
       },
-      onActivity:() => { if (spelKanaal === verbinding && spelActief === 'schaken') startSpelBel() }
+      // 11 nov 2026: bij kaartspellen staat het spraakgesprek ook vanzelf aan (op verzoek van Marcel), net als bij schaken
+      onActivity:() => { if (spelKanaal === verbinding && (spelActief === 'schaken' || KAARTSPELLEN.includes(spelActief))) startSpelBel() }
     })
     spelKanaal = verbinding
 
@@ -2981,6 +2985,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     try { // v256: kon het spel niet laden, dan een duidelijke melding in plaats van een leeg scherm
     if (spelType === 'botkaaseiren') await startBotKaasEieren()
     else if (spelType === 'vieroprij') await startVierOpEenRij()
+    else if (spelType === 'pesten') await startPesten()
     else if (spelType === 'schaken') await startSchaken()
     else if (spelType === 'schakendrie') await startSchakenDrie(players)
     else if (spelType === 'dammen') await startDammen()
@@ -3099,13 +3104,37 @@ console.timeLog('[chat] berichten', 'opgehaald')
     },
   })
 
+  // ── 11 nov 2026: spellen uit de Stekky Store (Pesten) ──
+  // Zo'n spel staat alleen in het spelmenu als je het in de Store gedownload hebt EN de widget aan hebt gezet
+  // (Profiel > Widgets > Spellen). Een uitnodiging van een vriend voor zo'n spel kun je altijd aannemen.
+  function toonStoreSpellen() {
+    const STORE_SPELLEN = [{ id: 'pesten', naam: 'Pesten', widget: 'spel_pesten', na: 'vieroprij' }]
+    const widgets = Array.isArray(huidigProfiel?.widgets) ? huidigProfiel.widgets : []
+    for (const sp of STORE_SPELLEN) {
+      const id = 'spelKnop-' + sp.id
+      const oud = document.getElementById(id)
+      if (!widgets.includes(sp.widget)) { oud?.remove(); continue }
+      if (oud) continue
+      const knop = document.createElement('button')
+      knop.id = id; knop.className = 'spel-keuze-btn'; knop.type = 'button'
+      knop.innerHTML = '<span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/' + sp.id + '.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span></span>'
+      knop.lastElementChild.textContent = sp.naam
+      knop.onclick = () => window.startSpel(sp.id)
+      const na = document.querySelector('#spelMenuGrid .spel-keuze-btn[onclick="startSpel(\'' + sp.na + '\')"]')
+      if (na) na.after(knop); else document.querySelector('#spelMenuGrid > div:last-child')?.appendChild(knop)
+    }
+  }
+
   // ── BLAUWDRUK BEURTSPELLEN (zie BLAUWDRUK-BEURTSPEL.md) ──
   // Zet een nieuw beurtspel in deze lijst, dan krijgt het tegen een vriend vanzelf:
   //   - de chatbalk (stickers 🎨, emoji's 😊, tekstveld met ➤, knoppen schuiven opzij bij typen);
   //   - de webcamrondjes bovenin (120 px), met de webcamknop 📹, gouden rand bij praten
   //     en een rode rand als het spel 'fibro-spel-geslagen' meldt (beurtspel-hulp.js).
   // Schaken staat erin voor de chatbalk, maar heeft zijn eigen webcamvakken.
-  const BEURTSPELLEN = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen']
+  const BEURTSPELLEN = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pesten']
+  // BLAUWDRUK KAARTSPELLEN (zie BLAUWDRUK-KAARTSPEL.md): een kaartspel staat ook in BEURTSPELLEN (chatbalk, stickers,
+  // webcamrondjes) en krijgt daarbij vanzelf het spraakgesprek zodra het spel begint.
+  const KAARTSPELLEN = ['pesten']
   // v169: spellen met een chatbalk: de beurtspellen (daar heb je tijd om iets te sturen)
   const SPELCHAT_SPELLEN = BEURTSPELLEN
 
@@ -3577,6 +3606,12 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ─── Boter-Kaas-Eieren ───
   async function startBotKaasEieren() {
     const m = await laadModule('./bke-ui.js?v=239')
+    m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
+  }
+
+  // ─── Pesten (kaartspel, 11 nov 2026) ───
+  async function startPesten() {
+    const m = await laadModule('./pesten-ui.js?v=1')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
 

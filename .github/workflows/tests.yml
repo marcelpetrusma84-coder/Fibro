@@ -141,6 +141,15 @@ jobs:
       - name: "Stekky Store (alleen moderators) en lettertypes uit de store"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef288.py .
+      - name: "Inloggen: geen fout bij Registreren na de herstelcode"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef289.py .
+      - name: "Pesten: kaartspel-blauwdruk (waaier, vegen, stapel, uitspelen, met z'n tweeën)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef290.py .
+      - name: "Pesten alleen via de Store: spelmenu in de chat alleen met de widget"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef292.py .
       - name: "Spelmenu ☰ in elk spel (pauze, geluid, microfoon, camera, menu, verlaten) en berichten linksboven"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef291.py .

@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-<script src="taal.js?v=95"></script>
+<script src="taal.js?v=96"></script>
 <script src="appslot.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Stekky Store</title>
@@ -25,12 +25,13 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .soorten::-webkit-scrollbar { display:none; }
 .soort { flex:none; min-height:40px; padding:8px 16px; border-radius:20px; border:0.5px solid var(--border); background:var(--card); color:var(--text); font:inherit; font-size:14px; cursor:pointer; }
 .soort[aria-selected="true"] { background:var(--knop); border-color:var(--knop); color:#fff; font-weight:600; }
-.raster { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; }
+.raster { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; }
 .item { display:flex; flex-direction:column; gap:6px; background:var(--card); border:0.5px solid var(--border); border-radius:16px; padding:14px 12px 12px; min-width:0; }
 .item.heb { border-color:rgba(192,132,252,0.55); }
-.item-voorbeeld { font-size:28px; line-height:1.15; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.item-zin { font-size:14px; line-height:1.3; color:var(--text); opacity:0.85; min-height:2.6em; overflow-wrap:anywhere; }
-.item-naam { font-size:12px; color:var(--accent); font-weight:600; }
+.item-kop { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:4px; }
+.item-titel { font-family:'DM Serif Display',serif; font-size:20px; color:var(--accent); }
+.item-aantal { font-size:12px; color:var(--muted); white-space:nowrap; }
+.item-regel { font-size:22px; line-height:1.35; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .knop { margin-top:auto; min-height:40px; padding:8px 12px; border-radius:12px; border:none; background:var(--knop); color:#fff; font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
 .knop:disabled { opacity:0.55; cursor:default; }
 .knop.heb { background:transparent; border:0.5px solid var(--accent); color:var(--accent); }
@@ -70,8 +71,8 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 
 <script type="module">
 import { supabase } from './supabase.js?v=95'
-import { laadFont } from './lettertypes.js?v=131'
-import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, weghalenItem, tabelOntbreekt } from './store.js?v=1'
+import { laadFont } from './lettertypes.js?v=132'
+import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, weghalenItem, tabelOntbreekt } from './store.js?v=2'
 
 let mijnId = null
 let mijn = new Set()
@@ -118,10 +119,10 @@ function bouwLijst() {
     const kaart = document.createElement('div')
     kaart.className = 'item' + (heb ? ' heb' : '')
     kaart.dataset.id = it.id
-    const familie = `'${it.naam}',${it.val}`
-    kaart.innerHTML = `<div class="item-voorbeeld" style="font-family:${esc(familie)} !important">Stekky</div>`
-      + `<div class="item-zin" style="font-family:${esc(familie)} !important">${esc(T('Het leven is mooi & bijzonder'))}</div>`
-      + `<div class="item-naam">${esc(T('lettertype|' + it.label))}</div>`
+    // v2: een pakket van 4 lettertypes; elke regel staat in zijn eigen letter
+    kaart.innerHTML = `<div class="item-kop"><span class="item-titel">${esc(T('pakket|' + it.titel))}</span>`
+      + `<span class="item-aantal">${esc(T('{n} lettertypes', { n: it.lettertypes.length }))}</span></div>`
+      + it.lettertypes.map(f => `<div class="item-regel" style="font-family:${esc(`'${f.naam}',${f.val}`)} !important">${esc(T('lettertype|' + f.label))}</div>`).join('')
     const knop = document.createElement('button')
     knop.type = 'button'
     knop.className = 'knop' + (heb ? ' heb' : '')
@@ -138,7 +139,7 @@ function bouwLijst() {
       kaart.appendChild(weg)
     }
     raster.appendChild(kaart)
-    try { laadFont(it.naam) } catch (e) {}
+    for (const f of it.lettertypes) { try { laadFont(f.naam) } catch (e) {} }
   }
   lijst.innerHTML = ''
   lijst.appendChild(raster)
@@ -155,7 +156,7 @@ async function download(it, knop) {
     return
   }
   mijn.add(it.id)
-  toonMelding(it.soort === 'lettertype' ? T('Gedownload! Kies het bij Stijl → Lettertype.') : T('Gedownload!'), true)
+  toonMelding(it.soort === 'lettertype' ? T('Gedownload! Kies ze bij Stijl → Lettertype.') : T('Gedownload!'), true)
   bouwLijst()
 }
 

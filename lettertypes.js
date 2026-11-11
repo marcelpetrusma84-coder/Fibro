@@ -41,17 +41,71 @@ export const LETTERTYPES = [
   { naam: 'Permanent Marker', val: 'cursive', label: 'Stift' },
 ]
 
-// v131: lettertypes uit de Stekky Store (store.html). Die kies je bij Lettertype pas als je ze gedownload hebt.
-// id = de naam in de store (tabel store_downloads, kolom item_id). Ze staan ook in EIGEN hieronder, zodat iedereen
-// ze kan laten zien (kiest een vriend er een, dan zie jij zijn profiel ook in dat lettertype).
-export const STORE_LETTERTYPES = [
-  { id: 'lettertype-bangers', naam: 'Bangers', val: 'cursive', label: 'Stripheld' },
-  { id: 'lettertype-black-ops-one', naam: 'Black Ops One', val: 'sans-serif', label: 'Leger' },
-  { id: 'lettertype-abril-fatface', naam: 'Abril Fatface', val: 'serif', label: 'Krantenkop' },
-  { id: 'lettertype-sacramento', naam: 'Sacramento', val: 'cursive', label: 'Sierlijk' },
-  { id: 'lettertype-gloria-hallelujah', naam: 'Gloria Hallelujah', val: 'cursive', label: 'Kinderhand' },
-  { id: 'lettertype-special-elite', naam: 'Special Elite', val: 'monospace', label: 'Oude typemachine' },
+// v132: lettertype-pakketten uit de Stekky Store (store.html): per thema 4 lettertypes in 1 download.
+// id = de naam in de store (tabel store_downloads, kolom item_id). Pas na het downloaden kies je ze bij Lettertype.
+// oud = de losse download uit v131 (10-11-2026); wie die al had, houdt dat lettertype.
+// Alle lettertypes staan ook in EIGEN hieronder, zodat iedereen ze kan laten zien (kiest een vriend er een,
+// dan zie jij zijn profiel ook in dat lettertype). Een nieuw pakket: een blok hieronder + bestanden in lettertypen/.
+export const STORE_PAKKETTEN = [
+  { id: 'pakket-retro', titel: 'Retro', lettertypes: [
+    { naam: 'Shrikhand', val: 'cursive', label: 'Diner' },
+    { naam: 'Righteous', val: 'sans-serif', label: 'Jukebox' },
+    { naam: 'Faster One', val: 'sans-serif', label: 'Racewagen' },
+    { naam: 'Abril Fatface', val: 'serif', label: 'Krantenkop', oud: 'lettertype-abril-fatface' },
+  ] },
+  { id: 'pakket-scifi', titel: 'Sci-fi', lettertypes: [
+    { naam: 'Michroma', val: 'sans-serif', label: 'Ruimteschip' },
+    { naam: 'Zen Dots', val: 'sans-serif', label: 'Planeet' },
+    { naam: 'Oxanium', val: 'sans-serif', label: 'Cyborg' },
+    { naam: 'Syncopate', val: 'sans-serif', label: 'Sterrenstelsel' },
+  ] },
+  { id: 'pakket-cowboy', titel: 'Cowboy', lettertypes: [
+    { naam: 'Ewert', val: 'serif', label: 'Saloon' },
+    { naam: 'Sancreek', val: 'serif', label: 'Sheriff' },
+    { naam: 'Smokum', val: 'serif', label: 'Wanted' },
+    { naam: 'Diplomata', val: 'serif', label: 'Rodeo' },
+  ] },
+  { id: 'pakket-prinses', titel: 'Prinses', lettertypes: [
+    { naam: 'Princess Sofia', val: 'cursive', label: 'Tiara' },
+    { naam: 'Parisienne', val: 'cursive', label: 'Bal' },
+    { naam: 'Pinyon Script', val: 'cursive', label: 'Kroon' },
+    { naam: 'Sacramento', val: 'cursive', label: 'Sierlijk', oud: 'lettertype-sacramento' },
+  ] },
+  { id: 'pakket-urban', titel: 'Urban', lettertypes: [
+    { naam: 'Sedgwick Ave Display', val: 'cursive', label: 'Spuitbus' },
+    { naam: 'Rock Salt', val: 'cursive', label: 'Muurkrijt' },
+    { naam: 'Knewave', val: 'cursive', label: 'Skater' },
+    { naam: 'Rubik Wet Paint', val: 'sans-serif', label: 'Natte verf' },
+  ] },
+  { id: 'pakket-horror', titel: 'Horror', lettertypes: [
+    { naam: 'Butcherman', val: 'cursive', label: 'Monster' },
+    { naam: 'Eater', val: 'cursive', label: 'Zombie' },
+    { naam: 'Metal Mania', val: 'cursive', label: 'Heavy metal' },
+    { naam: 'Jolly Lodger', val: 'cursive', label: 'Spookhuis' },
+  ] },
+  { id: 'pakket-strip', titel: 'Strip', lettertypes: [
+    { naam: 'Luckiest Guy', val: 'cursive', label: 'Superheld' },
+    { naam: 'Bubblegum Sans', val: 'cursive', label: 'Kauwgom' },
+    { naam: 'Bangers', val: 'cursive', label: 'Stripheld', oud: 'lettertype-bangers' },
+    { naam: 'Gloria Hallelujah', val: 'cursive', label: 'Kinderhand', oud: 'lettertype-gloria-hallelujah' },
+  ] },
+  { id: 'pakket-agent', titel: 'Geheim agent', lettertypes: [
+    { naam: 'Stardos Stencil', val: 'sans-serif', label: 'Topgeheim' },
+    { naam: 'Allerta Stencil', val: 'sans-serif', label: 'Missie' },
+    { naam: 'Black Ops One', val: 'sans-serif', label: 'Leger', oud: 'lettertype-black-ops-one' },
+    { naam: 'Special Elite', val: 'monospace', label: 'Oude typemachine', oud: 'lettertype-special-elite' },
+  ] },
+  { id: 'pakket-ridders', titel: 'Ridders & draken', lettertypes: [
+    { naam: 'UnifrakturMaguntia', val: 'serif', label: 'Kasteel' },
+    { naam: 'Uncial Antiqua', val: 'serif', label: 'Tovenaar' },
+    { naam: 'Almendra Display', val: 'serif', label: 'Draak' },
+    { naam: 'Grenze Gotisch', val: 'serif', label: 'Harnas' },
+  ] },
 ]
+
+// Alle store-lettertypes op een rij. ids = de downloads die dit lettertype geven (het pakket, en de oude losse).
+export const STORE_LETTERTYPES = STORE_PAKKETTEN.flatMap(p => p.lettertypes.map(f =>
+  Object.assign({}, f, { pakket: p.id, ids: [p.id].concat(f.oud ? [f.oud] : []) })))
 
 // v118: de lettertypen staan in de eigen repo (map lettertypen/, Fontsource 5.3.0),
 // niet meer bij Google. Ook oudere keuzes (van voor deze lijst) staan erin.
@@ -65,7 +119,12 @@ const EIGEN = new Set([
   'rubik-spray-paint', 'rye', 'satisfy', 'sedgwick-ave', 'shadows-into-light', 'share-tech-mono',
   'silkscreen', 'space-mono', 'titan-one',
   // v131: Stekky Store
-  'abril-fatface', 'bangers', 'black-ops-one', 'gloria-hallelujah', 'sacramento', 'special-elite'
+  'abril-fatface', 'bangers', 'black-ops-one', 'gloria-hallelujah', 'sacramento', 'special-elite',
+  // v132: lettertype-pakketten
+  'shrikhand', 'faster-one', 'michroma', 'zen-dots', 'oxanium', 'syncopate', 'ewert', 'sancreek', 'smokum',
+  'diplomata', 'princess-sofia', 'parisienne', 'pinyon-script', 'sedgwick-ave-display', 'rock-salt', 'knewave',
+  'rubik-wet-paint', 'butcherman', 'eater', 'metal-mania', 'jolly-lodger', 'luckiest-guy', 'bubblegum-sans',
+  'stardos-stencil', 'allerta-stencil', 'unifrakturmaguntia', 'uncial-antiqua', 'almendra-display', 'grenze-gotisch'
 ])
 export function lettertypeSlug(naam) {
   return String(naam || '').trim().toLowerCase().replace(/ /g, '-')

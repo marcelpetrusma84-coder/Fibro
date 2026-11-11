@@ -2,9 +2,9 @@
 // sql/stekky-store.sql) en ook op dit toestel (fibro_store_<id>), zodat Stijl > Lettertype het meteen weet.
 // Voorlopig alleen voor moderators: het Store-vakje bij Stijl staat alleen bij moderators, store.html vraagt het
 // nog eens aan de server (ben_ik_moderator), en de database laat alleen moderators iets downloaden.
-// Soorten: lettertype (nu), game, sticker en widget (later). Een nieuw lettertype: een regel in STORE_LETTERTYPES
-// (lettertypes.js) en de bestanden in lettertypen/.
-import { STORE_LETTERTYPES } from './lettertypes.js?v=131'
+// Soorten: lettertype (nu), game, sticker en widget (later). Lettertypes komen per thema in een pakket van 4
+// (v2, 11 nov 2026): een nieuw pakket staat in STORE_PAKKETTEN (lettertypes.js), de bestanden in lettertypen/.
+import { STORE_PAKKETTEN } from './lettertypes.js?v=132'
 
 export const STORE_SOORTEN = [
   { id: 'lettertype', titel: 'Lettertypes' },
@@ -13,8 +13,9 @@ export const STORE_SOORTEN = [
   { id: 'widget', titel: 'Widgets' },
 ]
 
-// Alles wat in de store staat. Elk item: id (uniek, kleine letters/cijfers/streepjes), soort, naam.
-export const STORE_ITEMS = STORE_LETTERTYPES.map(f => Object.assign({ soort: 'lettertype' }, f))
+// Alles wat in de store staat. Elk item: id (uniek, kleine letters/cijfers/streepjes), soort, titel.
+// Een lettertype-pakket heeft ook lettertypes (4 stuks).
+export const STORE_ITEMS = STORE_PAKKETTEN.map(p => Object.assign({ soort: 'lettertype' }, p))
 
 const GELDIG = /^[a-z0-9-]{1,64}$/
 const sleutel = uid => 'fibro_store_' + uid

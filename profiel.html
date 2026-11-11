@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=95"></script>
+<script src="taal.js?v=96"></script>
 <script src="appslot.js?v=3"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Vuurwerk': 'Fireworks', 'Onweer': 'Thunderstorm', 'Glitter': 'Glitter' }) // v234: nieuwe animaties</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Gastenboek zonder lijntjes': 'Guestbook without lines', 'Gewoon in je eigen kleuren, zonder lijntjespapier': 'Plain, in your own colours, without lined paper' }) // v235</script>
@@ -566,7 +566,7 @@ function _profielUid() {
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
 import { startMeldingen } from './meldingen.js?v=188'
-import { laadThema, bewaarThemaCache } from './thema.js?v=236'
+import { laadThema, bewaarThemaCache } from './thema.js?v=237'
 import { startHeartbeat } from './heartbeat.js?v=117'
 import { volgOnline } from './onlinestip.js?v=1' // v274: vrienden zien meteen of je de app in beeld hebt
 import { initSync } from './sync.js?v=255'
@@ -583,8 +583,8 @@ const widgetBewaking = maakWidgetWijzigingsBewaking({ getWidgets: () => actieveW
 const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','🌊','🍂','⭐','🎵','🌺','🦊','🐱','🌈','🎮','📚','🌻','🍀','🐉','🌴','🔮','🎭','🦄','🍓','🎪','🌃','🏔']
 // v173: de oude emoji-stickers (Natuur & Planten, Sfeer & Magie, Muziek & Kunst, Dieren, 'Actieve stickers') en de
 // widget 'Sticker board' zijn weg: ze werden alleen op dit toestel bewaard en nergens getoond.
-import { LETTERTYPES, STORE_LETTERTYPES, laadFont } from './lettertypes.js?v=131'
-import { bewaardeDownloads, mijnDownloads } from './store.js?v=1' // v131: Stekky Store
+import { LETTERTYPES, STORE_LETTERTYPES, laadFont } from './lettertypes.js?v=132'
+import { bewaardeDownloads, mijnDownloads } from './store.js?v=2' // v131: Stekky Store
 import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=95'
 import { pasAnimatieToe, startOp as startAnimatieOp } from './animatie.js?v=235'
 window.blokAangepast = function(){
@@ -610,11 +610,12 @@ function vulBlokvelden(){
 }
 pasBlokstijlToe()
 setTimeout(vulBlokvelden, 300)
-const maakFont = f => ({ naam: f.naam, familie: "'" + f.naam + "'," + f.val, stijl: f.label, store: !!f.id })
+const maakFont = f => ({ naam: f.naam, familie: "'" + f.naam + "'," + f.val, stijl: f.label, store: !!f.pakket })
 const basisFonts = LETTERTYPES.map(maakFont)
 let fonts = basisFonts
 // v131: lettertypes uit de Stekky Store staan alleen in de lijst als je ze gedownload hebt (of nu gebruikt)
-function zetStoreFonts(ids){fonts=basisFonts.concat(STORE_LETTERTYPES.map(maakFont).filter(f=>ids.has(STORE_LETTERTYPES.find(x=>x.naam===f.naam).id)||huidigLettertype===f.familie))}
+// v132: een lettertype uit een pakket staat erbij als je dat pakket (of het oude losse lettertype) gedownload hebt
+function zetStoreFonts(ids){fonts=basisFonts.concat(STORE_LETTERTYPES.filter(f=>f.ids.some(i=>ids.has(i))||huidigLettertype===maakFont(f).familie).map(maakFont))}
 // v129: niet meer alle 38 lettertypen bij het openen laden; bouwFontGrid laadt ze als ze in beeld komen
 // v276: met Vergrendelingsmodus (Lockdown Mode) op een iPhone bestaat indexedDB niet in Safari. Dan niet vastlopen
 // (de rest van je profiel laadde niet meer), maar gewoon niets op het toestel bewaren.

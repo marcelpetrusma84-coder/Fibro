@@ -1,9 +1,11 @@
 # proef288 (10 nov 2026, v131): de Stekky Store (store.html, store.js), voorlopig alleen voor moderators.
 #  A. Stijl (profiel.html) als moderator: het laatste vakje in de balk is Store; tik erop = store.html
 #  B. Stijl als gewone gebruiker: geen Store-vakje
-#  C. Store als moderator: zes lettertypes, elk in zijn eigen letter; Downloaden = een rij in store_downloads
-#     (in je account) en de knop wordt "✓ Gedownload"; Games/Stickers/Widgets: "komen binnenkort"
-#  D. Terug bij Stijl > Lettertype: het gedownloade lettertype staat erbij (met "· Store"), een ander store-lettertype niet
+#  C. Store als moderator (v2, 11 nov): negen lettertype-pakketten per thema, elk met 4 lettertypes in hun eigen letter;
+#     Downloaden = één rij in store_downloads (in je account) en de knop wordt "✓ Gedownload";
+#     Games/Stickers/Widgets: "komen binnenkort"
+#  D. Terug bij Stijl > Lettertype: alle 4 lettertypes van het pakket staan erbij (met "· Store"), een ander niet;
+#     een oud los gedownload lettertype (v1, lettertype-special-elite) staat er ook nog bij
 #  E. Weghalen in de store = de rij gaat weg uit je account
 #  F. Store als gewone gebruiker: "Geen toegang", niets geladen of gedownload
 #  G. Staat de tabel er nog niet (sql/stekky-store.sql niet uitgevoerd): een duidelijke melding, geen vastloper
@@ -77,32 +79,41 @@ try:
         pg.click('#tab-store')
         check(wacht(pg, "() => location.pathname.endsWith('/store.html')"), 'A: tik op Store = de Stekky Store')
         # ── C ──
-        c1 = wacht(pg, "() => document.querySelectorAll('#lijst .item').length === 6")
-        namen = pg.evaluate("() => [...document.querySelectorAll('#lijst .item-naam')].map(e => e.textContent)")
-        check(c1 and namen == ['Stripheld', 'Leger', 'Krantenkop', 'Sierlijk', 'Kinderhand', 'Oude typemachine'], 'C: zes lettertypes in de store (%s)' % namen)
-        geladen = wacht(pg, "() => document.fonts.check(\"16px 'Bangers'\") && document.fonts.check(\"16px 'Special Elite'\")", 8000)
-        check(geladen, 'C: de lettertypes worden echt geladen (Bangers, Special Elite)')
-        knop = '#lijst .item[data-id="lettertype-bangers"] .knop'
+        c1 = wacht(pg, "() => document.querySelectorAll('#lijst .item').length === 9")
+        namen = pg.evaluate("() => [...document.querySelectorAll('#lijst .item-titel')].map(e => e.textContent)")
+        check(c1 and namen == ['Retro', 'Sci-fi', 'Cowboy', 'Prinses', 'Urban', 'Horror', 'Strip', 'Geheim agent', 'Ridders & draken'],
+              'C: negen pakketten in de store (%s)' % namen)
+        regels = pg.evaluate("() => [...document.querySelectorAll('#lijst .item')].map(k => k.querySelectorAll('.item-regel').length)")
+        check(regels == [4] * 9, 'C: elk pakket heeft 4 lettertypes (%s)' % regels)
+        strip = pg.evaluate("() => [...document.querySelectorAll('#lijst .item[data-id=\"pakket-strip\"] .item-regel')].map(e => e.textContent + '|' + e.style.fontFamily)")
+        check(strip[0].startswith('Superheld|') and 'Luckiest Guy' in strip[0], 'C: elke regel in zijn eigen letter (%s)' % strip[:2])
+        geladen = wacht(pg, "() => document.fonts.check(\"16px 'Luckiest Guy'\") && document.fonts.check(\"16px 'Princess Sofia'\") && document.fonts.check(\"16px 'Smokum'\")", 8000)
+        check(geladen, 'C: de lettertypes worden echt geladen (Luckiest Guy, Princess Sofia, Smokum)')
+        knop = '#lijst .item[data-id="pakket-strip"] .knop'
         check(pg.inner_text(knop) == 'Downloaden', 'C: knop Downloaden')
         pg.click(knop)
-        c2 = wacht(pg, "() => { const k = document.querySelector('#lijst .item[data-id=\"lettertype-bangers\"] .knop'); return k && k.textContent === '✓ Gedownload' }")
-        check(c2 and STAND['rijen'] == {'lettertype-bangers'}, 'C: Downloaden = bewaard in je account, knop "✓ Gedownload" (%s)' % STAND['rijen'])
+        c2 = wacht(pg, "() => { const k = document.querySelector('#lijst .item[data-id=\"pakket-strip\"] .knop'); return k && k.textContent === '✓ Gedownload' }")
+        check(c2 and STAND['rijen'] == {'pakket-strip'}, 'C: Downloaden = één rij in je account, knop "✓ Gedownload" (%s)' % STAND['rijen'])
         check('Stijl → Lettertype' in pg.inner_text('#melding'), 'C: melding waar je het kunt kiezen')
         pg.click('.soort[data-soort="game"]')
         check('komen binnenkort' in pg.inner_text('#lijst'), 'C: Games: komen binnenkort (%r)' % pg.inner_text('#lijst'))
         # ── D ──
+        STAND['rijen'].add('lettertype-special-elite')  # oude losse download uit v1
         pg.click('.terug')
         check(wacht(pg, "() => location.pathname.endsWith('/profiel.html')"), 'D: ← terug = Stijl')
         wacht(pg, "() => document.querySelectorAll('#fontGrid .font-item').length > 38")
         pg.wait_for_timeout(800)
         lijst = pg.evaluate(FONTS)
-        check('Bangers|Stripheld · Store' in lijst, 'D: Bangers staat bij Lettertype, met "· Store" (%s)' % lijst[-3:])
-        check(not any(x.startswith('Sacramento|') for x in lijst), 'D: een niet-gedownload store-lettertype staat er niet bij')
+        verwacht = ['Luckiest Guy|Superheld · Store', 'Bubblegum Sans|Kauwgom · Store', 'Bangers|Stripheld · Store', 'Gloria Hallelujah|Kinderhand · Store']
+        check(all(v in lijst for v in verwacht), 'D: alle 4 lettertypes van Strip staan bij Lettertype, met "· Store" (%s)' % lijst[-5:])
+        check('Special Elite|Oude typemachine · Store' in lijst, 'D: het oude losse lettertype (Special Elite) staat er nog')
+        check(not any(x.startswith(('Sacramento|', 'Smokum|', 'Stardos Stencil|')) for x in lijst), 'D: lettertypes uit niet-gedownloade pakketten staan er niet bij')
+        STAND['rijen'].discard('lettertype-special-elite')
         # ── E ──
         pg.goto(BASIS + 'store.html')
-        wacht(pg, "() => document.querySelector('#lijst .item[data-id=\"lettertype-bangers\"] .weghalen')")
-        pg.click('#lijst .item[data-id="lettertype-bangers"] .weghalen')
-        e1 = wacht(pg, "() => { const k = document.querySelector('#lijst .item[data-id=\"lettertype-bangers\"] .knop'); return k && k.textContent === 'Downloaden' }")
+        wacht(pg, "() => document.querySelector('#lijst .item[data-id=\"pakket-strip\"] .weghalen')")
+        pg.click('#lijst .item[data-id="pakket-strip"] .weghalen')
+        e1 = wacht(pg, "() => { const k = document.querySelector('#lijst .item[data-id=\"pakket-strip\"] .knop'); return k && k.textContent === 'Downloaden' }")
         check(e1 and STAND['rijen'] == set() and 'DELETE' in STAND['verzoeken'], 'E: Weghalen = uit je account (%s)' % STAND['rijen'])
         ctx.close()
         # ── G ──
@@ -110,7 +121,7 @@ try:
         ctx, pg = nieuw(b)
         pg.goto(BASIS + 'store.html')
         g1 = wacht(pg, "() => document.getElementById('melding').style.display === 'block'")
-        check(g1 and 'sql/stekky-store.sql' in pg.inner_text('#melding') and pg.evaluate("document.querySelectorAll('#lijst .item').length") == 6,
+        check(g1 and 'sql/stekky-store.sql' in pg.inner_text('#melding') and pg.evaluate("document.querySelectorAll('#lijst .item').length") == 9,
               'G: tabel ontbreekt: duidelijke melding, de store staat er wel (%r)' % pg.inner_text('#melding'))
         ctx.close()
         STAND['geen_tabel'] = False

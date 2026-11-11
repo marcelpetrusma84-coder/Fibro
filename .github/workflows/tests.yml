@@ -141,3 +141,6 @@ jobs:
       - name: "Stekky Store (alleen moderators) en lettertypes uit de store"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef288.py .
+      - name: "Pesten: kaartspel-blauwdruk (waaier, vegen, stapel, uitspelen, met z'n tweeën)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef290.py .

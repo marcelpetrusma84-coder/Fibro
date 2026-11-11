@@ -802,10 +802,57 @@ function neonTitel(ctx, b, h, t) {
     ctx.textBaseline = 'alphabetic'
 }
 
+// ── Pesten: paarse speeltafel, een waaier kaarten en kaarten die op de stapel vliegen ──
+function pesten(ctx, b, h, t, st) {
+    lucht(ctx, b, h, ['#3a1a5e', '#24103d', '#1a0a2e'])
+    // vilt
+    const g = ctx.createRadialGradient(b / 2, h * 0.62, 10, b / 2, h * 0.62, Math.max(b, h) * 0.6)
+    g.addColorStop(0, '#4b2380'); g.addColorStop(1, 'rgba(26,10,46,0)')
+    ctx.fillStyle = g; ctx.fillRect(0, 0, b, h)
+    const w = Math.min(b * 0.2, h * 0.16), kh = w * 1.4
+    const kaart = (x, y, hoek, teken, waarde, rood, dicht) => {
+        ctx.save(); ctx.translate(x, y); ctx.rotate(hoek)
+        ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 4
+        rond(ctx, -w / 2, -kh / 2, w, kh, w * 0.09)
+        if (dicht) {
+            const a = ctx.createLinearGradient(-w / 2, -kh / 2, w / 2, kh / 2)
+            a.addColorStop(0, '#8b3fd1'); a.addColorStop(0.55, '#6a2bab'); a.addColorStop(1, '#1a0a2e')
+            ctx.fillStyle = a; ctx.fill(); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0
+            ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; rond(ctx, -w / 2 + 5, -kh / 2 + 5, w - 10, kh - 10, w * 0.05); ctx.stroke()
+            ctx.fillStyle = '#c084fc'; ctx.font = (w * 0.4) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('✦', 0, 0)
+        } else {
+            ctx.fillStyle = '#fffdf9'; ctx.fill(); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0
+            ctx.fillStyle = rood ? '#d62246' : '#1a0a2e'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+            ctx.font = '800 ' + (w * 0.24) + 'px sans-serif'; ctx.fillText(waarde, -w * 0.3, -kh * 0.36)
+            ctx.font = (w * 0.2) + 'px sans-serif'; ctx.fillText(teken, -w * 0.3, -kh * 0.22)
+            ctx.font = (w * 0.62) + 'px sans-serif'; ctx.fillText(teken, 0, kh * 0.06)
+        }
+        ctx.restore()
+    }
+    // de waaier onderin: gaat langzaam open en dicht
+    const waaier = [['♠', 'A', false], ['♥', '7', true], ['♣', 'B', false], ['♦', '2', true], ['♥', 'A', true]]
+    const open = 0.75 + 0.25 * Math.sin(t * 1.3)
+    waaier.forEach(([teken, waarde, rood], i) => {
+        const d = i - 2
+        kaart(b / 2 + d * w * 0.55 * open, h * 0.84 + Math.abs(d) * 6, d * 0.2 * open, teken, waarde, rood)
+    })
+    // stapel links, aflegstapel in het midden; elke 1,4 s vliegt er een kaart
+    const sx = b / 2 - w * 0.9, sy = h * 0.6, ax = b / 2 + w * 0.7, ay = h * 0.6
+    for (let i = 3; i >= 0; i--) kaart(sx - i * 1.5, sy - i * 2, 0, '', '', false, true)
+    const stap = 1.4, n = Math.floor(t / stap), p = glad(klem((t % stap) / 0.8))
+    const lijst = [['♥', 'H', true], ['♠', '8', false], ['♦', 'V', true], ['♣', '2', false], ['♥', '10', true], ['♠', 'J', false]]
+    const k = i => lijst[((i % lijst.length) + lijst.length) % lijst.length]
+    for (let i = Math.max(0, n - 3); i < n; i++) { const [te, wa, ro] = k(i); kaart(ax, ay, ((i * 37) % 21 - 10) / 60, te, wa, ro) }
+    const [te, wa, ro] = k(n)
+    const x = sx + (ax - sx) * p, y = sy - Math.sin(p * Math.PI) * h * 0.12
+    kaart(x, y, (1 - p) * -0.6 + ((n * 37) % 21 - 10) / 60 * p, te, wa, ro, p < 0.5)
+}
+
 // Lettertype (bestand in lettertypen/), kleuren van de titel, en de tekening
 export const SCENES = {
     botkaaseiren: { font: 'Chewy', css: 'chewy', titel: '#fff1d6', rand: '#4a2509', gloed: '#ffb35a', teken: botkaaseiren },
     vieroprij: { font: 'Titan One', css: 'titan-one', titel: '#ffd23f', rand: '#1e4fd8', gloed: '#ffffff', teken: vieroprij },
+    pesten: { font: 'Titan One', css: 'titan-one', titel: '#ffffff', rand: '#6a2bab', gloed: '#c084fc', teken: pesten },
     schaken: { font: 'Cinzel Decorative', css: 'cinzel-decorative', titel: '#f3dc96', rand: '#2b1d05', gloed: '#d9a83a', teken: schaken },
     dammen: { font: 'Cinzel', css: 'cinzel', titel: '#fbf3df', rand: '#2a1608', gloed: '#c98a3e', teken: dammen },
     pong: { font: 'Monoton', css: 'monoton', titel: '#7af7ff', rand: '#12002b', gloed: '#ff3df2', teken: pong },

@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=96"></script>
+<script src="taal.js?v=97"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -336,6 +336,7 @@ window.veiligeUrl = function(v){
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
         <button class="spel-keuze-btn" onclick="startSpel('botkaaseiren')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/botkaaseiren.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span>Tic-Tac-Toe</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('vieroprij')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/vieroprij.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span>Four in a Row</span></button>
+        <button class="spel-keuze-btn" onclick="startSpel('pesten')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true"><g transform="rotate(-16 18 30)"><rect x="8" y="5" width="16" height="23" rx="2.5" fill="#8b3fd1" stroke="#c084fc" stroke-width="1.2"/><path d="M16 12l4 4.5-4 4.5-4-4.5z" fill="#1a0a2e" stroke="#c084fc" stroke-width=".8"/></g><g transform="rotate(14 18 30)"><rect x="12" y="5" width="16" height="23" rx="2.5" fill="#fffdf9" stroke="#d6c8e6" stroke-width="1"/><text x="15" y="12" font-size="6.5" font-weight="800" font-family="system-ui,sans-serif" fill="#d62246">A</text><path d="M20 23.5c-3.2-2.4-5-4.2-5-6.3 0-1.6 1.2-2.7 2.6-2.7 1.1 0 1.9.6 2.4 1.5.5-.9 1.3-1.5 2.4-1.5 1.4 0 2.6 1.1 2.6 2.7 0 2.1-1.8 3.9-5 6.3z" fill="#d62246"/></g></svg></span><span>Pesten</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('schaken')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/schaken.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span id="chessGameName">Schaken</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('dammen')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/dammen.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span>Draughts</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('pong')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/pong.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span>Neo Paddle</span></button>
@@ -506,7 +507,7 @@ window.veiligeUrl = function(v){
   // wacht het spel er even op.
   let titelModule = null
   const laadTitelscherm = () => titelModule ? Promise.resolve(titelModule)
-    : laadModule('./titelscherm.js?v=8').then(m => (titelModule = m))
+    : laadModule('./titelscherm.js?v=9').then(m => (titelModule = m))
   const laadRustig = f => ('requestIdleCallback' in window ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 2500))
   laadRustig(() => laadTitelscherm().catch(() => {}))
   pasBlokstijlToe()
@@ -2670,6 +2671,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   const SPEL_INFO = {
     botkaaseiren:   { icon: '⭕', naam: 'Tic-Tac-Toe' },
     vieroprij:      { icon: '🔴', naam: 'Four in a Row' },
+    pesten:         { icon: '🃏', naam: 'Pesten' },
     schaken:        { icon: '♟️', naam: schaakT('Schaken') },
     schakendrie:    { icon: '♟️♟️♟️', naam: schaakT('Schaken met drie spelers') },
     dammen:         { icon: '⚫', naam: 'Draughts' },
@@ -2836,6 +2838,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=151',
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
+    pesten: './pesten-ui.js?v=1',
     schaken: './schaken-ui.js?v=275',
     schakendrie: './schaken-drie-ui.js?v=43',
     flappybird: './flappy-ui.js?v=147',
@@ -2894,7 +2897,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // Accepteer uitnodiging → open het spel
   window.speelMee = async function(spelType, sessieId, starterId, players = null) {
     if (!huidigeUser || !geselecteerdeVriend?.id) return
-    const beschikbaar = ['botkaaseiren', 'vieroprij', 'schaken', 'schakendrie', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball', 'shmup']
+    const beschikbaar = ['botkaaseiren', 'vieroprij', 'pesten', 'schaken', 'schakendrie', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball', 'shmup']
     if (!beschikbaar.includes(spelType)) {
       alert(T('🚧 {spel} komt binnenkort beschikbaar!', { spel: SPEL_INFO[spelType]?.naam || spelType }))
       return
@@ -2950,7 +2953,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
         toonSpelVerbindingStatus(status)
         if (status === 'connected' && spelWachtKlaar) { const klaar = spelWachtKlaar; spelWachtKlaar = null; klaar(true) }
       },
-      onActivity:() => { if (spelKanaal === verbinding && spelActief === 'schaken') startSpelBel() }
+      // 11 nov 2026: bij kaartspellen staat het spraakgesprek ook vanzelf aan (op verzoek van Marcel), net als bij schaken
+      onActivity:() => { if (spelKanaal === verbinding && (spelActief === 'schaken' || KAARTSPELLEN.includes(spelActief))) startSpelBel() }
     })
     spelKanaal = verbinding
 
@@ -2974,6 +2978,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     try { // v256: kon het spel niet laden, dan een duidelijke melding in plaats van een leeg scherm
     if (spelType === 'botkaaseiren') await startBotKaasEieren()
     else if (spelType === 'vieroprij') await startVierOpEenRij()
+    else if (spelType === 'pesten') await startPesten()
     else if (spelType === 'schaken') await startSchaken()
     else if (spelType === 'schakendrie') await startSchakenDrie(players)
     else if (spelType === 'dammen') await startDammen()
@@ -3049,7 +3054,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
   //   - de webcamrondjes bovenin (120 px), met de webcamknop 📹, gouden rand bij praten
   //     en een rode rand als het spel 'fibro-spel-geslagen' meldt (beurtspel-hulp.js).
   // Schaken staat erin voor de chatbalk, maar heeft zijn eigen webcamvakken.
-  const BEURTSPELLEN = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen']
+  const BEURTSPELLEN = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pesten']
+  // BLAUWDRUK KAARTSPELLEN (zie BLAUWDRUK-KAARTSPEL.md): een kaartspel staat ook in BEURTSPELLEN (chatbalk, stickers,
+  // webcamrondjes) en krijgt daarbij vanzelf het spraakgesprek zodra het spel begint.
+  const KAARTSPELLEN = ['pesten']
   // v169: spellen met een chatbalk: de beurtspellen (daar heb je tijd om iets te sturen)
   const SPELCHAT_SPELLEN = BEURTSPELLEN
 
@@ -3520,6 +3528,12 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ─── Boter-Kaas-Eieren ───
   async function startBotKaasEieren() {
     const m = await laadModule('./bke-ui.js?v=239')
+    m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
+  }
+
+  // ─── Pesten (kaartspel, 11 nov 2026) ───
+  async function startPesten() {
+    const m = await laadModule('./pesten-ui.js?v=1')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
 

@@ -126,6 +126,7 @@ const LIKE_RUST_MS = 10 * 60 * 1000;
 // v257: de spellen (zelfde namen als in de chat, SPEL_INFO)
 const SPELNAMEN: Record<string, { nl: string; en: string }> = {
   botkaaseiren: { nl: "Tic-Tac-Toe", en: "Tic-Tac-Toe" }, vieroprij: { nl: "Four in a Row", en: "Four in a Row" },
+  pesten: { nl: "Pesten", en: "Pesten" }, // 11 nov 2026: het eerste kaartspel
   schaken: { nl: "Schaken", en: "Chess" }, schakendrie: { nl: "Schaken met drie spelers", en: "Three-player chess" },
   dammen: { nl: "Draughts", en: "Draughts" }, pong: { nl: "Neo Paddle", en: "Neo Paddle" }, flappybird: { nl: "Flapper", en: "Flapper" },
   swarm: { nl: "The Swarm", en: "The Swarm" }, pacman: { nl: "Ghost Tag", en: "Ghost Tag" },

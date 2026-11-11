@@ -2292,4 +2292,18 @@ window.FIBRO_EN = {
   "lettertype|Tovenaar": "Wizard",
   "lettertype|Draak": "Dragon",
   "lettertype|Harnas": "Armour",
+
+// ---- Spelmenu ☰ in elk spel (spelmenu.js), 11 nov 2026 ----
+  "Spelmenu": "Game menu",
+  "Geluid aanzetten": "Sound on",
+  "Geluid uitzetten": "Sound off",
+  "Microfoon aanzetten": "Microphone on",
+  "Microfoon uitzetten": "Microphone off",
+  "Camera aanzetten": "Camera on",
+  "Camera uitzetten": "Camera off",
+  "Menu": "Menu",
+  "Spel verlaten": "Leave game",
+  "Gepauzeerd": "Paused",
+  "Het spel staat ook stil bij je vriend.": "The game is paused for your friend too.",
+  "{naam} heeft het spel gepauzeerd. Wacht tot {naam} verder gaat.": "{naam} paused the game. Wait until {naam} continues.",
 }

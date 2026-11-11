@@ -9,6 +9,16 @@ Elk nieuw beurtspel krijgt **vanzelf** hetzelfde als dammen:
 
 Dat regelt `chat.html`. Het spel hoeft er bijna niets voor te doen.
 
+## In elk spel: het spelmenu ☰ en berichten linksboven (11 november 2026)
+
+Dit geldt voor **alle** spellen (in de chat en tegen de computer); een spel hoeft er niets voor te doen.
+
+- **Rechtsboven ☰** (`spelmenu.js`), in deze volgorde: ⏸ Pauze / ▶ Verder spelen, 🔊 Geluid aan/uit, 🎤 Microfoon, 📹 Camera, 🏠 Menu, 🚪 Spel verlaten. Microfoon en camera alleen met een vriend (camera alleen bij spellen met webcam). De losse ✕, 🎤 en 📹 bovenin zijn weg.
+- **Pauze** staat bij jullie allebei stil; wie pauzeerde, gaat verder. Tegen de computer wacht de computer ook. Het spel hoeft niets te doen: de beeldjes (`requestAnimationFrame`) en de klok (`performance.now`) worden vastgehouden. Wil een spel zelf iets doen, luister dan naar `fibro-spel-pauze`.
+- **Geluid uit** zet al het Web Audio-geluid van het spel op 0 (de stem van je vriend blijft).
+- **Menu**: tegen de computer terug naar het kiezen van het niveau; met een vriend het spel dicht en het spelmenu van de chat open.
+- **Linksboven** een wolkje als een andere vriend je een bericht stuurt (`spelbericht.js`). Berichten van je tegenspeler zie je al in het spel.
+
 ## Zo maak je een nieuw beurtspel
 
 1. **Kopieer het sjabloon.** `sjabloon-beurtspel-ui.js` is een klein, werkend spel ("Stokjes"). Kopieer het naar `<naam>-ui.js` en bouw je spel daarin. Houd deze onderdelen aan:

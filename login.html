@@ -523,6 +523,7 @@
 
   function nieuweNaam() {
     const input = document.getElementById('reg-username')
+    if (!input) return
     input.value = genereerNaam()
     input.style.transform = 'scale(1.05)'
     input.style.borderColor = 'var(--accent)'
@@ -538,7 +539,8 @@
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'))
     document.getElementById('panel-'+tab).classList.add('active')
     if (tab === 'registreren') {
-      setTimeout(() => { if (!document.getElementById('reg-username').value) nieuweNaam() }, 100)
+      // Na het aanmaken staat hier de herstelcode en is het naamveld weg: dan niets doen
+      setTimeout(() => { const veld = document.getElementById('reg-username'); if (veld && !veld.value) nieuweNaam() }, 100)
     }
   }
 

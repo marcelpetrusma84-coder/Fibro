@@ -48,7 +48,7 @@ assert.ok(SI.VERSIE >= 2)
 for (const f of ['chat.html', 'profiel.html', 'spelicoon.js']) assert.ok(!lees(f).includes('border-radius:22%'), f + ': geen ronde tegel meer')
 for (const f of ['index.html', 'vriend-profiel.html']) assert.ok(lees(f).includes("spelicoon.js?v=" + MODULE_VERSIE + "'"), f + ': spelicoon.js met de nieuwe moduleversie')
 for (const f of ['index.html', 'profiel.html', 'chat.html', 'vriend-profiel.html']) {
-  assert.match(lees(f), /import \{ koppelSpelIcoonFallback \} from '\.\/spelicoon\.js\?v=4'/, f + ': reserve-icoon uit de vernieuwde module')
+  assert.match(lees(f), /import \{ koppelSpelIcoonFallback \} from '\.\/spelicoon\.js\?v=5'/, f + ': reserve-icoon uit de vernieuwde module')
   assert.match(lees(f), /koppelSpelIcoonFallback\(\)/, f + ': vangt mislukte plaatjes op, ook als ze later worden toegevoegd')
 }
 console.log('ok: plaatjes uit de spellen (' + SI.SPELLEN.length + ')')

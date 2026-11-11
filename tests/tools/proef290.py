@@ -120,6 +120,9 @@ try:
         check(kleuren == sorted(kleuren, key=lambda k: 'hkrs'.index(k)), 'G: ⇅ sorteert op kleur (%s)' % ' '.join(h))
         pg.click('.kt-reactieknop'); pg.click('.kt-reacties button >> nth=2')
         check(wacht(pg, "() => [...document.querySelectorAll('.kt-reactie')].some(e => e.textContent === '🔥')", 2000), 'G: een reactie vliegt over tafel')
+        # (pakte je net strafkaarten, dan is de computer aan de beurt: eerst weer je eigen beurt afwachten)
+        if pg.query_selector('.kt-knop[data-naam=pas]'): pg.click('.kt-knop[data-naam=pas]')
+        wacht(pg, MIJN_BEURT, 20000); pg.wait_for_timeout(300)
         check(pg.evaluate("() => document.querySelector('.kt-zetel-ik .kt-klok').classList.contains('kt-aan')"), 'G: de beurtklok loopt rond jouw rondje')
         check(pg.evaluate("() => !!document.querySelector('#spelVideoEigen > .kt-klok.kt-aan')"), 'G: en rond je webcamrondje')
         # ── H: uitspelen ──

@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-<script src="taal.js?v=102"></script>
+<script src="taal.js?v=103"></script>
 <script src="appslot.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Stekky Store</title>
@@ -13,18 +13,18 @@
 <link rel="icon" href="icon.svg?v=4" type="image/svg+xml">
 <link href="lettertypen/basis.css?v=1" rel="stylesheet">
 <style>
-/* store.html (10 nov 2026): de Stekky Store. Voorlopig alleen voor moderators. Logica: store.js */
+/* store.html (10 nov 2026): de Stekky Store, voor iedereen met een account. Logica: store.js
+   11 nov 2026: zwarte balk en paarse balk (zoals Profiel, om een soort te kiezen) blijven bovenin staan tijdens scrollen. */
 * { box-sizing:border-box; margin:0; padding:0; }
 :root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --knop:#8b3fd1; --text:#f3e8ff; --muted:rgba(255,255,255,0.6); }
 body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); max-width:520px; margin:0 auto; min-height:100dvh; padding:16px 16px 40px; }
-.top-bar { display:flex; align-items:center; gap:10px; padding:10px 0; margin-bottom:14px; border-bottom:0.5px solid var(--border); }
-.terug { background:none; border:0.5px solid var(--border); border-radius:20px; padding:6px 12px; min-height:36px; color:var(--muted); font:inherit; font-size:13px; cursor:pointer; }
-.titel { display:flex; align-items:center; gap:8px; font-family:'DM Serif Display',serif; font-size:24px; color:var(--accent); }
+.kop-vast { position:sticky; top:0; z-index:30; margin:-16px -16px 14px; padding:max(8px, env(safe-area-inset-top, 0px)) 16px 8px; background:var(--bg); box-shadow:0 8px 12px -10px rgba(0,0,0,0.7); } /* zwarte en paarse balk blijven bovenin; niets schuift zichtbaar langs */
+.top-bar { display:flex; align-items:center; gap:10px; padding:10px 12px; margin:0; border:1px solid rgba(255,255,255,0.14); border-radius:18px; background:linear-gradient(145deg,#26262c,#08080b 70%); box-shadow:inset 0 1px 0 rgba(255,255,255,0.16), 0 6px 20px -6px rgba(0,0,0,0.8); }
+.terug { width:34px; height:34px; flex:none; display:flex; align-items:center; justify-content:center; padding:0; border-radius:10px; background:rgba(255,255,255,0.08); border:0.5px solid var(--border); color:rgba(255,255,255,0.8); cursor:pointer; }
+.titel { display:flex; align-items:center; gap:8px; font-family:'DM Serif Display',serif; font-size:26px; line-height:1; letter-spacing:-0.5px; font-weight:400; color:#fff; }
+.kop-vast .profile-nav { margin:10px 0 0; }
+.profile-nav .main-tab .tab-icoon { width:22px; height:22px; }
 .uitleg { font-size:13px; line-height:1.5; color:var(--muted); margin-bottom:14px; }
-.soorten { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:16px; scrollbar-width:none; }
-.soorten::-webkit-scrollbar { display:none; }
-.soort { flex:none; min-height:40px; padding:8px 16px; border-radius:20px; border:0.5px solid var(--border); background:var(--card); color:var(--text); font:inherit; font-size:14px; cursor:pointer; }
-.soort[aria-selected="true"] { background:var(--knop); border-color:var(--knop); color:#fff; font-weight:600; }
 .raster { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; }
 .item { display:flex; flex-direction:column; gap:6px; background:var(--card); border:0.5px solid var(--border); border-radius:16px; padding:14px 12px 12px; min-width:0; }
 .item.heb { border-color:rgba(192,132,252,0.55); }
@@ -44,15 +44,30 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .toegang-geweigerd { text-align:center; padding:60px 20px; }
 .toegang-icon { font-size:48px; margin-bottom:16px; }
 .laden { text-align:center; padding:40px; color:var(--muted); font-size:14px; }
-.knop:focus-visible, .soort:focus-visible, .terug:focus-visible, .weghalen:focus-visible { outline:3px solid #fff; outline-offset:2px; }
+.knop:focus-visible, .terug:focus-visible, .weghalen:focus-visible { outline:3px solid #fff; outline-offset:2px; }
 </style>
+<link rel="stylesheet" href="profile-controls.css?v=3">
+<script src="profile-controls.js?v=2"></script>
 <link rel="stylesheet" href="android-fix.css?v=1">
 </head>
 <body>
 
-<div class="top-bar">
-  <button type="button" class="terug" onclick="window.location.href='profiel.html'" data-t>← terug</button>
-  <h1 class="titel"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/></svg><span data-t>Stekky Store</span></h1>
+<div class="kop-vast">
+<header class="top-bar" role="banner">
+  <button type="button" class="terug" onclick="window.location.href='profiel.html'" aria-label="Terug" title="Terug" data-t-attr="aria-label,title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <h1 class="titel"><span data-t>Stekky Store</span></h1>
+</header>
+
+<nav class="profile-nav" id="storeNav" style="display:none" aria-label="Soorten" data-t-attr="aria-label">
+  <div class="profile-nav-rail">
+    <button type="button" class="profile-nav-arrow" id="profile-nav-previous" aria-label="Vorige onderdelen" data-t-attr="aria-label">‹</button>
+    <div class="main-tabs" id="soorten" role="tablist" aria-label="Soorten" data-t-attr="aria-label">
+      <div class="profile-tab-group"><span class="profile-tab-group-label" data-t>Inhoud</span><div class="profile-tab-group-buttons"><button type="button" role="tab" class="main-tab" data-soort="game" aria-selected="false"><svg class="tab-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="7" width="19" height="11" rx="5"/><path d="M7.5 10.5v4M5.5 12.5h4"/><circle cx="15.5" cy="11.5" r=".9" fill="currentColor"/><circle cx="17.8" cy="13.8" r=".9" fill="currentColor"/></svg><span data-t>Games</span></button><button type="button" role="tab" class="main-tab" data-soort="widget" aria-selected="false"><svg class="tab-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg><span data-t>Widgets</span></button><button type="button" role="tab" class="main-tab" data-soort="sticker" aria-selected="false"><svg class="tab-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 13V7a3.5 3.5 0 0 0-3.5-3.5H7A3.5 3.5 0 0 0 3.5 7v10A3.5 3.5 0 0 0 7 20.5h6z"/><path d="M13 20.5V16a3 3 0 0 1 3-3h4.5"/><circle cx="9" cy="10" r=".9" fill="currentColor"/><circle cx="15" cy="10" r=".9" fill="currentColor"/><path d="M8.5 14a4 4 0 0 0 3 1.5"/></svg><span data-t>Stickers</span></button></div></div>
+      <div class="profile-tab-group"><span class="profile-tab-group-label" data-t>Uiterlijk</span><div class="profile-tab-group-buttons"><button type="button" role="tab" class="main-tab" data-soort="achtergrond" aria-selected="false"><svg class="tab-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="9.5" r="1.8"/><path d="m3.5 17.5 5-5 4 4 2.5-2.5 5.5 5.5"/></svg><span data-t>Achtergronden</span></button><button type="button" role="tab" class="main-tab" data-soort="lettertype" aria-selected="false"><svg class="tab-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19 9 5l5 14M5.8 14h6.4"/><path d="M15.5 12.5a2.7 2.7 0 0 1 5 1.3V19m0-2.8c0 1.6-1.3 2.8-2.8 2.8s-2.4-.9-2.4-2.2 1.2-2.1 2.6-2.1h2.6"/></svg><span data-t>Lettertypes</span></button></div></div>
+    </div>
+    <button type="button" class="profile-nav-arrow" id="profile-nav-next" aria-label="Volgende onderdelen" data-t-attr="aria-label">›</button>
+  </div>
+</nav>
 </div>
 
 <div id="laden" class="laden" data-t>Laden...</div>
@@ -60,24 +75,23 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 <div id="toegangGeweigerd" style="display:none" class="toegang-geweigerd">
   <div class="toegang-icon">🔒</div>
   <div style="font-size:18px;font-weight:600;margin-bottom:8px;" data-t>Geen toegang</div>
-  <div style="font-size:14px;color:var(--muted);" data-t>De Stekky Store is nu alleen voor moderators.</div>
+  <div style="font-size:14px;color:var(--muted);" data-t>Log in om de Stekky Store te gebruiken.</div>
 </div>
 
 <div id="inhoud" style="display:none">
   <p class="uitleg" data-t>Download games, stickers, lettertypes en widgets en gebruik ze meteen in Stekky. Wat je downloadt, blijft bij je account.</p>
   <div id="melding" class="melding" style="display:none" role="status"></div>
-  <div class="soorten" id="soorten" role="tablist" aria-label="Soorten" data-t-attr="aria-label"></div>
   <div id="lijst"></div>
 </div>
 
 <script type="module">
 import { supabase } from './supabase.js?v=95'
 import { laadFont } from './lettertypes.js?v=132'
-import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, verwijderDownload, tabelOntbreekt } from './store.js?v=5'
+import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, verwijderDownload, tabelOntbreekt } from './store.js?v=6'
 
 let mijnId = null
 let mijn = new Set()
-let soort = 'lettertype'
+let soort = 'game'
 const esc = v => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 
 function toonMelding(tekst, goed) {
@@ -90,18 +104,13 @@ function toonMelding(tekst, goed) {
 }
 
 function bouwSoorten() {
-  const balk = document.getElementById('soorten')
-  balk.innerHTML = ''
-  for (const s of STORE_SOORTEN) {
-    const b = document.createElement('button')
-    b.type = 'button'
-    b.className = 'soort'
-    b.setAttribute('role', 'tab')
-    b.dataset.soort = s.id
-    b.setAttribute('aria-selected', String(s.id === soort))
-    b.textContent = T(s.titel)
-    b.onclick = () => { soort = s.id; bouwSoorten(); bouwLijst() }
-    balk.appendChild(b)
+  // 11 nov 2026: de knoppen staan vast in de paarse balk (zoals Profiel); hier alleen de gekozen soort aangeven
+  for (const b of document.querySelectorAll('#soorten .main-tab')) {
+    const aan = b.dataset.soort === soort
+    b.classList.toggle('active', aan)
+    b.setAttribute('aria-selected', String(aan))
+    b.tabIndex = aan ? 0 : -1
+    b.onclick = () => { soort = b.dataset.soort; bouwSoorten(); bouwLijst(); window.scrollTo({ top: 0 }) }   // nieuwe soort: begin bovenaan de lijst
   }
 }
 
@@ -186,6 +195,7 @@ async function init() {
   mijn = bewaardeDownloads(mijnId)
   document.getElementById('laden').style.display = 'none'
   document.getElementById('inhoud').style.display = 'block'
+  document.getElementById('storeNav').style.display = ''
   bouwSoorten()
   bouwLijst()
   const r = await mijnDownloads(supabase, mijnId)

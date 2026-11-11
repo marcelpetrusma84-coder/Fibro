@@ -51,7 +51,9 @@ jobs:
       - name: Playwright en Chrome
         run: |
           pip install playwright==1.*
-          python -m playwright install --with-deps chromium
+          # 11 nov 2026: lukt het installeren van de extra Ubuntu-pakketten niet binnen 4 minuten (storing bij
+          # Ubuntu; het bleef 20 minuten hangen), dan alleen Chrome zelf; de GitHub-computer heeft de meeste pakketten al.
+          timeout 240 python -m playwright install --with-deps chromium || python -m playwright install chromium
       - name: Bellen en webcam met twee spelers (5 spellen)
         run: python -I tests/tools/proef228.py .
       - name: Postbus (nooit tegelijk online)

@@ -2232,10 +2232,12 @@ window.FIBRO_EN = {
   // Stekky Store (10 november 2026, taal-en.js?v=95)
   "Store": "Store",
   "De Stekky Store is nu alleen voor moderators.": "The Stekky Store is only for moderators right now.",
+  "Log in om de Stekky Store te gebruiken.": "Log in to use the Stekky Store.",
   "Download games, stickers, lettertypes en widgets en gebruik ze meteen in Stekky. Wat je downloadt, blijft bij je account.": "Download games, stickers, fonts and widgets and use them right away in {app}. What you download stays with your account.",
   "Soorten": "Categories",
   "Lettertypes": "Fonts",
   "Games": "Games",
+  "Achtergronden": "Backgrounds",
   "{soort} komen binnenkort in de store.": "{soort} are coming to the store soon.",
   "Downloaden": "Download",
   "✓ Gedownload": "✓ Downloaded",

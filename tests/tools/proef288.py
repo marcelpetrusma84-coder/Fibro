@@ -13,6 +13,8 @@
 #  I. (11 nov 2026) Games: Pesten staat in de store; vóór downloaden niet bij Profiel > Widgets, erna wel (aan te zetten);
 #     🗑 bij de widget = verwijderd: uit je account, de widget uit en weg (ook van Home)
 #  J. (11 nov 2026) Stijl > Lettertype > Uit de Store: gedownloade pakketten met Verwijderen
+#  K. (11 nov 2026) De zwarte balk "Stekky Store" en de paarse balk blijven bovenin staan tijdens scrollen; de paarse balk (zoals Profiel)
+#     heeft Games, Widgets, Stickers, Achtergronden en Lettertypes; Games staat eerst aan
 #  H. geen paginafouten
 # python3 -I proef288.py <map>
 import sys, os, time, json, socket, subprocess, tempfile, re, urllib.parse
@@ -82,6 +84,25 @@ try:
         check(pg.inner_text('#tab-store').strip() == 'Store', 'A: het vakje heet Store')
         pg.click('#tab-store')
         check(wacht(pg, "() => location.pathname.endsWith('/store.html')"), 'A: tik op Store = de Stekky Store')
+        # ── K: zwarte balk + paarse balk ──
+        k1 = wacht(pg, "() => !!document.getElementById('storeNav') && getComputedStyle(document.getElementById('storeNav')).display !== 'none' && !!document.querySelector('#lijst .item[data-id=\"pesten\"]')")
+        tabs = pg.evaluate("() => [...document.querySelectorAll('#storeNav .main-tab')].map(b => b.dataset.soort + (b.classList.contains('active') ? '*' : ''))")
+        check(k1 and tabs == ['game*', 'widget', 'sticker', 'achtergrond', 'lettertype'], 'K: paarse balk met 5 soorten, Games eerst aan (%s)' % tabs)
+        kleur = pg.evaluate("() => { const b = document.querySelector('.top-bar'), t = b.querySelector('.titel'); return [b.textContent.trim(), getComputedStyle(t).color, getComputedStyle(b.parentElement).position] }")
+        check(kleur == ['Stekky Store', 'rgb(255, 255, 255)', 'sticky'], 'K: zwarte balk met witte tekst Stekky Store (%s)' % kleur)
+        pg.click('#soorten .main-tab[data-soort="achtergrond"]')
+        check(wacht(pg, "() => document.querySelector('#lijst').textContent.includes('Achtergronden komen binnenkort')"), 'K: Achtergronden: komen binnenkort')
+        pg.click('#soorten .main-tab[data-soort="lettertype"]')
+        wacht(pg, "() => document.querySelectorAll('#lijst .item').length === 9")
+        pg.evaluate("window.scrollTo(0, document.body.scrollHeight)"); pg.wait_for_timeout(300)
+        bovenin = pg.evaluate("() => { const r = document.querySelector('.top-bar').getBoundingClientRect(); const x = r.left + r.width / 2, y = r.top + r.height / 2; return [window.scrollY > 200, r.top >= 0 && r.top < 20, document.querySelector('.top-bar').contains(document.elementFromPoint(x, y))] }")
+        check(bovenin == [True, True, True], 'K: na scrollen staat de zwarte balk nog bovenin, boven de rest (%s)' % bovenin)
+        paars = pg.evaluate("() => { const n = document.getElementById('storeNav'), r = n.getBoundingClientRect(), t = n.querySelector('.main-tab.active').getBoundingClientRect(); return [r.top > 50 && r.bottom < 220, n.contains(document.elementFromPoint(t.left + t.width / 2, t.top + t.height / 2))] }")
+        check(paars == [True, True], 'K: na scrollen staat de paarse balk er ook nog, onder de zwarte balk (%s)' % paars)
+        pg.click('#soorten .main-tab[data-soort="game"]')
+        check(wacht(pg, "() => !!document.querySelector('#lijst .item[data-id=\"pesten\"]')", 4000), 'K: na scrollen kun je in de paarse balk een andere soort kiezen')
+        pg.click('#soorten .main-tab[data-soort="lettertype"]')
+        pg.evaluate("window.scrollTo(0, 0)")
         # ── C ──
         c1 = wacht(pg, "() => document.querySelectorAll('#lijst .item').length === 9")
         namen = pg.evaluate("() => [...document.querySelectorAll('#lijst .item-titel')].map(e => e.textContent)")
@@ -103,8 +124,8 @@ try:
         pg.goto(BASIS + 'profiel.html'); pg.click('#tab-widgets') if pg.query_selector('#tab-widgets') else None
         wacht(pg, "() => !!document.getElementById('widgetRij-spel_pesten')"); pg.wait_for_timeout(800)
         check(pg.evaluate("getComputedStyle(document.getElementById('widgetRij-spel_pesten')).display") == 'none', 'I: vóór downloaden: Pesten niet bij de widgets')
-        pg.goto(BASIS + 'store.html'); wacht(pg, "() => document.querySelectorAll('#lijst .item').length === 9")
-        pg.click('.soort[data-soort="game"]')
+        pg.goto(BASIS + 'store.html'); wacht(pg, "() => !!document.querySelector('#lijst .item[data-id=\"pesten\"]')")
+        pg.click('#soorten .main-tab[data-soort="game"]')
         i1 = wacht(pg, "() => !!document.querySelector('#lijst .item[data-id=\"pesten\"] img[src*=\"spelicoon/pesten.webp\"]')", 4000)
         check(i1 and 'Pesten' in pg.inner_text('#lijst') and 'Laatste kaart' in pg.inner_text('#lijst'), 'I: Games: Pesten met plaatje en uitleg (%r)' % pg.inner_text('#lijst')[:80])
         pg.click('#lijst .item[data-id="pesten"] .knop')
@@ -125,7 +146,7 @@ try:
         check(i4 and 'pesten' not in STAND['rijen'] and layout == ['mood'] and not pg.evaluate("document.getElementById('widget-spel_pesten').classList.contains('on')"),
               'I: 🗑 bij Widgets = verwijderd: uit je account, widget uit en weg van Home (%s, %s)' % (STAND['rijen'], layout))
         check(not pg.evaluate("document.body.dataset.widgetsUnsaved === 'true'"), 'I: daarna geen vraag om op te slaan')
-        pg.goto(BASIS + 'store.html'); wacht(pg, "() => document.querySelectorAll('#lijst .item').length === 9")
+        pg.goto(BASIS + 'store.html'); wacht(pg, "() => !!document.querySelector('#lijst .item')")
         # ── D ──
         STAND['rijen'].add('lettertype-special-elite')  # oude losse download uit v1
         pg.click('.terug')
@@ -148,7 +169,7 @@ try:
         STAND['rijen'].add('pakket-strip')   # voor E (verwijderen in de store)
         STAND['rijen'].discard('lettertype-special-elite')
         # ── E ──
-        pg.goto(BASIS + 'store.html')
+        pg.goto(BASIS + 'store.html'); wacht(pg, "() => !!document.querySelector('#lijst .item')"); pg.click('#soorten .main-tab[data-soort="lettertype"]'); 
         wacht(pg, "() => document.querySelector('#lijst .item[data-id=\"pakket-strip\"] .weghalen')")
         check(pg.inner_text('#lijst .item[data-id="pakket-strip"] .weghalen') == '🗑 Verwijderen', 'E: knop heet 🗑 Verwijderen')
         pg.click('#lijst .item[data-id="pakket-strip"] .weghalen')
@@ -160,6 +181,7 @@ try:
         ctx, pg = nieuw(b)
         pg.goto(BASIS + 'store.html')
         g1 = wacht(pg, "() => document.getElementById('melding').style.display === 'block'")
+        pg.click('#soorten .main-tab[data-soort="lettertype"]'); 
         check(g1 and 'sql/stekky-store.sql' in pg.inner_text('#melding') and pg.evaluate("document.querySelectorAll('#lijst .item').length") == 9,
               'G: tabel ontbreekt: duidelijke melding, de store staat er wel (%r)' % pg.inner_text('#melding'))
         ctx.close()
@@ -172,9 +194,9 @@ try:
         pg.wait_for_timeout(1500)
         check(pg.evaluate(LAATSTE) == 'tab-store', 'B: gewone gebruiker: ook het Store-vakje (laatste: %s)' % pg.evaluate(LAATSTE))
         pg.goto(BASIS + 'store.html')
-        f1 = wacht(pg, "() => getComputedStyle(document.getElementById('inhoud')).display === 'block' && document.querySelectorAll('#lijst .item').length === 9")
+        f1 = wacht(pg, "() => getComputedStyle(document.getElementById('inhoud')).display === 'block' && !!document.querySelector('#lijst .item[data-id=\"pesten\"]')")
         check(f1, 'F: gewone gebruiker: de store is open')
-        pg.click('.soort[data-soort="game"]'); pg.click('#lijst .item[data-id="pesten"] .knop')
+        pg.click('#soorten .main-tab[data-soort="game"]'); pg.click('#lijst .item[data-id="pesten"] .knop')
         f2 = wacht(pg, "() => document.getElementById('melding').style.display === 'block'")
         check(f2 and 'alleen open voor moderators' in pg.inner_text('#melding') and 'pesten' not in STAND['rijen'],
               'F: database nog op alleen moderators: duidelijke melding (%r)' % pg.inner_text('#melding'))

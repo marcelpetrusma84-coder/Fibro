@@ -59,7 +59,7 @@ function fixture({saved='{}',isSolo=true,niveau='ultra',state=Schaak.nieuweSpelS
     menu:{hidden:true,querySelector:select,querySelectorAll:()=>[]},menuBackdrop:node(),zoomBtn:node(),settingsBtn:node(),inhoud:{querySelector:select},spelEl:root,spelKanaal:channel,opruimers:cleanups,
     staat:state,Schaak,schaakFen,maakUltraEvaluatieHistorie,schaakNotatie,esc:String,t,taal:{language:'nl'},
     bordEl:boardEl,paardRoutesUI:null,veroverd:{w:[],z:[]},laatsteZet:null,routeStuk:null,geselecteerd:null,mogelijkeZetten:[],gameOver:false,
-    bezig:false,promotieOpen:false,generatie:0,pendingNoobMove:null,statusBericht:{key:'Jij bent aan zet'},statusEl:node(),promotieEl:node(),noobDialog:node(),opnieuwBtn:node(),wachtrij:Promise.resolve(),
+    bezig:false,promotieOpen:false,spinPerspectiveActive:false,toonSpinButton(){},generatie:0,pendingNoobMove:null,statusBericht:{key:'Jij bent aan zet'},statusEl:node(),promotieEl:node(),noobDialog:node(),opnieuwBtn:node(),wachtrij:Promise.resolve(),
     stukSVG:()=>'',READABLE_NAMES:{P:'pion',N:'paard',B:'loper',R:'toren',Q:'dame',K:'koning'},kleurBijStuk:()=>'',tekenVeroverd(){},
     rijVolgorde:()=>[0,1,2,3,4,5,6,7],kolVolgorde:()=>[0,1,2,3,4,5,6,7],
     bewaarInstellingen(){storage=JSON.stringify(result.instellingen)},wisCheckmateOverlay(){clearedOverlays++},
@@ -110,7 +110,7 @@ for(const mode of [{isSolo:false,niveau:'ultra'},{isSolo:true,niveau:'hard'}]) {
 const ui=fixture({saved:'{"ultraTakeback":true,"ultraHints":true,"showUltraEvaluation":true,"ultraEvaluationSound":true,"custom":"keep"}'})
 const undo=ui.select('#sch-ultra-takeback'),hint=ui.select('#sch-ultra-hint')
 assert.equal(undo.disabled,true);assert.equal(hint.hidden,false)
-assert.equal((ui.markup.match(/id="sch-bord"[\s\S]*?<\/div><button class="sch-hint-button"/)||[]).length,1,'hint button is a sibling outside the 64-square grid')
+assert.equal((ui.markup.match(/id="sch-bord"[^>]*><\/div>[\s\S]*?<button class="sch-hint-button"/)||[]).length,1,'hint button is a sibling outside the 64-square grid')
 hint.click();assert.equal(hint.disabled,true);assert.equal(hint.getAttribute('aria-busy'),'true')
 assert.equal(ui.select('#sch-ultra-assistance-status').textContent,'Een tip zoeken…')
 assert.deepEqual(ui.sent.at(-1),{type:'broadcast',event:'ultra-hint',payload:{ply:0,generation:0}})

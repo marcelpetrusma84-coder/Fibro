@@ -7,8 +7,9 @@ import {
   THREE_PLAYER_NAMES
 } from './schaak-drie.js?v=10'
 import { THREE_PLAYER_VIEWBOX, THREE_PLAYER_BOARD_ARTWORK, threePlayerPieceArtwork } from './schaak-drie-artwork.js?v=3'
-import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=12'
+import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=13'
 import { maakSchaakWallpaper } from './schaak-wallpaper.js?v=4'
+import { maakSchaakTafelklap } from './schaak-tafelklap.js?v=9'
 
 const COLOR_STYLES = ['#fff', '#c4c7ce', '#ff7777']
 const LABELS = { K:'Koning', Q:'Dame', R:'Toren', B:'Loper', N:'Paard', P:'Pion' }
@@ -113,6 +114,13 @@ export function start({ Bordgeluid = null, gameChannel = null, players = [], use
   svg.setAttribute('aria-label', t('Schaakbord voor drie spelers, 96 velden'))
   svg.setAttribute('viewBox', THREE_PLAYER_VIEWBOX)
   boardWrap.append(svg)
+  const tafelklap = maakSchaakTafelklap({
+    stage:boardWrap,
+    board:svg,
+    pieces:'.chess3-piece',
+    channel:gameChannel,
+    onImpact:({ cracked }) => Bordgeluid?.tafelklap?.({ cracked })
+  })
   const captureBar = document.createElement('div')
   captureBar.className = 'chess3-capturebar'
   const heading = document.createElement('header')
@@ -581,6 +589,7 @@ export function start({ Bordgeluid = null, gameChannel = null, players = [], use
     destroy({ preserveCamera = false } = {}) {
       if (destroyed) return
       destroyed = true
+      tafelklap.destroy()
       stopLanguage(); taal.destroy()
       stopWallpaper(); schaakWallpaper.destroy()
       if (rulesDialog.open) rulesDialog.close()

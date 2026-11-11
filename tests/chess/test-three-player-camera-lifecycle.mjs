@@ -38,7 +38,7 @@ function setup(testMode, { pendingIce = false, pendingPlayback = false } = {}) {
     document:{ getElementById:() => ({ classList:classes }) },
     root:{ replaceChildren() {}, classList:classes },
     rulesDialog:{ open:false }, settingsDialog:{ open:false },
-    stopLanguage() {}, taal:{ destroy() {} },
+    stopLanguage() {}, taal:{ destroy() {} }, tafelklap:{ destroy() {} },
     stopWallpaper() { effects.wallpaperStops++ },
     schaakWallpaper:{ destroy() { effects.wallpaperDestroy++ } },
     previousLanguage:null, previousTitleLanguage:null, titleSurface:null,

@@ -39,7 +39,8 @@ assert.match(chat, /onActivity:\(\) => \{ if \(spelKanaal === verbinding && \(sp
 assert.ok(!/onclick="startSpel\('pesten'\)"/.test(chat), 'geen vaste knop: Pesten komt uit de Store')
 assert.match(chat, /function toonStoreSpellen\(\)/, 'knop in het spelmenu alleen met de widget spel_pesten')
 assert.match(chat, /widget: 'spel_pesten'/)
-assert.match(chat, /select\('id, username, avatar_url, avatar_data, widgets'\)/)
+assert.match(chat, /gameAan\(huidigeUser\.id, sp\)/, 'v2: download + widget op dit toestel (niet de server)')
+assert.match(lees('store.js'), /export async function verwijderDownload\(/, 'alles uit de Store kan weer weg')
 assert.match(chat, /else if \(spelType === 'pesten'\) await startPesten\(\)/)
 assert.match(chat, /const beschikbaar = \[[^\]]*'pesten'/)
 const versie = f => [...new Set([...lees(f).matchAll(/pesten-ui\.js\?v=(\d+)/g)].map(m => m[1]))]

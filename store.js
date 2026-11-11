@@ -1,5 +1,6 @@
 // store.js (10 nov 2026, v1): de Stekky Store. Wat je gedownload hebt, staat in je account (tabel store_downloads,
 // sql/stekky-store.sql) en ook op dit toestel (fibro_store_<id>), zodat Stijl > Lettertype het meteen weet.
+// v5 (11 nov 2026): Verwijderen (verwijderDownload) en games alleen aan met download + widget (gameAan).
 // Sinds 11 nov 2026 voor iedereen met een account (eerst alleen moderators): het Store-vakje bij Stijl staat bij
 // iedereen, en de database laat iedereen downloaden die niet geblokkeerd is (sql/stekky-store-iedereen.sql).
 // Soorten: lettertype (nu), game, sticker en widget (later). Lettertypes komen per thema in een pakket van 4
@@ -70,4 +71,46 @@ export async function weghalenItem(supabase, uid, id) {
   if (error) return { error }
   const ids = bewaardeDownloads(uid); ids.delete(id); bewaar(uid, ids)
   return { error: null }
+}
+
+// ── Verwijderen (11 nov 2026): alles wat je gedownload hebt kun je altijd weer weghalen, in de Store en op andere
+// plekken (Profiel > Widgets voor games, Stijl > Lettertype voor lettertypes). Een game gaat dan ook van Home en uit
+// het spelmenu van de chat: de widget gaat uit. Je widgets staan op dit toestel (fibro_widgets_profiel_<id>).
+const LAYOUT = uid => 'fibro_widgets_profiel_' + uid
+export function gameWidgetAan(uid, widget) {
+  try {
+    const l = JSON.parse(localStorage.getItem(LAYOUT(uid)) || '[]')
+    return Array.isArray(l) && l.some(w => w && w.id === widget && w.aan)
+  } catch (e) { return false }
+}
+export function zetGameWidgetUit(uid, widget) {
+  try {
+    const l = JSON.parse(localStorage.getItem(LAYOUT(uid)) || '[]')
+    if (Array.isArray(l)) {
+      const over = l.filter(w => w && w.id !== widget).sort((a, b) => (Number(a.volgorde) || 0) - (Number(b.volgorde) || 0))
+        .map((w, i) => Object.assign({}, w, { volgorde: i }))
+      localStorage.setItem(LAYOUT(uid), JSON.stringify(over))
+    }
+  } catch (e) {}
+  try {
+    const sleutelP = 'fibro_profiel_' + uid
+    const p = JSON.parse(localStorage.getItem(sleutelP) || 'null')
+    if (p && Array.isArray(p.widgets)) { p.widgets = p.widgets.filter(w => w !== widget); localStorage.setItem(sleutelP, JSON.stringify(p)) }
+  } catch (e) {}
+}
+// Een game uit de store staat aan als hij gedownload is EN de widget aan staat (op dit toestel)
+export const gameAan = (uid, game) => bewaardeDownloads(uid).has(game.id) && gameWidgetAan(uid, game.widget)
+export async function verwijderDownload(supabase, uid, id) {
+  const r = await weghalenItem(supabase, uid, id)
+  if (r.error) return r
+  const game = STORE_GAMES.find(g => g.id === id)
+  if (game) zetGameWidgetUit(uid, game.widget)
+  return r
+}
+// Wat er bij een gedownload id hoort (voor de lijstjes met Verwijderen)
+export function itemVan(id) {
+  const it = STORE_ITEMS.find(i => i.id === id)
+  if (it) return it
+  const oud = STORE_PAKKETTEN.flatMap(p => p.lettertypes).find(f => f.oud === id)
+  return oud ? { id, soort: 'lettertype', titel: oud.label, los: true } : null
 }

@@ -53,7 +53,9 @@ Elk kaartspel krijgt **vanzelf**:
 - **Pesten komt alleen uit de Stekky Store** (11 november 2026). Zo werkt het:
   1. Store → Games → Pesten → Downloaden (`STORE_GAMES` in `store.js`; een rij in `store_downloads`).
   2. Daarna staat Pesten bij Profiel → Widgets → Spellen (`widgetRij-spel_pesten`, `zetStoreGames`).
-  3. Zet je die widget aan, dan staat Pesten op **Home** (tegen de computer, `spel.html?spel=pesten`) en in het **spelmenu van de chat** (met een vriend, `toonStoreSpellen()` in `chat.html`, alleen als `spel_pesten` in je widgets staat).
+  3. Zet je die widget aan, dan staat Pesten op **Home** (tegen de computer, `spel.html?spel=pesten`) en in het **spelmenu van de chat** (met een vriend, `toonStoreSpellen()` in `chat.html`).
   4. Een uitnodiging van een vriend voor Pesten kun je altijd aannemen, ook zonder download.
+  5. **Verwijderen** kan altijd: in de Store (🗑 Verwijderen) en bij Profiel → Widgets (🗑). Dan gaat de download uit je account én de widget uit, dus Pesten verdwijnt van Home en uit het spelmenu (`verwijderDownload` in `store.js`). Lettertypes uit de Store verwijder je ook bij Stijl → Lettertype → Uit de Store.
+  - De chat kijkt op **dit toestel** of Pesten aan staat (`gameAan`: download + widget), want je widgets staan op je toestel, niet op de server.
   - Pesten gaat niet mee met een uitnodigingslink (`store: true` in `solo.js`).
   - De Store is sinds 11 november 2026 voor iedereen met een account (`sql/stekky-store-iedereen.sql`).

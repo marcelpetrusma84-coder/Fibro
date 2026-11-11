@@ -2346,4 +2346,9 @@ window.FIBRO_EN = {
   "Het spel staat ook stil bij je vriend.": "The game is paused for your friend too.",
   "{naam} heeft het spel gepauzeerd. Wacht tot {naam} verder gaat.": "{naam} paused the game. Wait until {naam} continues.",
   "Downloaden kan nog niet: de Store staat in de database nog alleen open voor moderators.": "You can't download yet: in the database the Store is still open to moderators only.",
+  "{naam} verwijderen? Je kunt het altijd opnieuw downloaden in de Store.": "Remove {naam}? You can always download it again in the Store.",
+  "Verwijderen mislukt. Probeer het opnieuw.": "Removing failed. Please try again.",
+  "{naam} is verwijderd.": "{naam} has been removed.",
+  "Uit de Store": "From the Store",
+  "Pesten verwijderen": "Remove Pesten",
 }

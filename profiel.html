@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=101"></script>
+<script src="taal.js?v=102"></script>
 <script src="appslot.js?v=3"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Vuurwerk': 'Fireworks', 'Onweer': 'Thunderstorm', 'Glitter': 'Glitter' }) // v234: nieuwe animaties</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Gastenboek zonder lijntjes': 'Guestbook without lines', 'Gewoon in je eigen kleuren, zonder lijntjespapier': 'Plain, in your own colours, without lined paper' }) // v235</script>
@@ -49,6 +49,12 @@ body{background:var(--bg);background-attachment:fixed;background-size:cover;back
 .main-tab{font-size:14px;padding:16px 16px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;flex-shrink:0;}
 .main-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
 .store-tab{text-decoration:none;}.font-store{color:var(--accent);font-weight:600;}
+/* 11 nov 2026: gedownloade dingen uit de Store verwijderen (bij Widgets en bij Lettertype) */
+.store-verwijder{flex:none;margin-right:8px;min-width:36px;min-height:36px;border-radius:10px;border:1px solid rgba(248,113,113,.45);background:rgba(248,113,113,.12);color:#fca5a5;font-size:15px;cursor:pointer}
+.store-lijst{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.store-rij{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--card);border:0.5px solid var(--border)}
+.store-rij .store-naam{flex:1;font-weight:600}
+.store-rij .store-verwijder{margin:0;padding:0 12px;font-size:13px;font-weight:600}
 .panel{display:none;padding:14px;}
 .panel.active{display:block;}
 .section{margin-bottom:20px;}
@@ -375,6 +381,11 @@ input, textarea { font-size:16px !important; }
     <div class="section-label" data-t>Kies je lettertype</div>
     <div class="font-grid" id="fontGrid"></div>
   </div>
+  <!-- 11 nov 2026: lettertypes uit de Store die je gedownload hebt, met Verwijderen -->
+  <div class="section" id="storeFontsSectie" style="display:none">
+    <div class="section-label" data-t>Uit de Store</div>
+    <div class="store-lijst" id="storeFontsLijst"></div>
+  </div>
 </div>
 <div class="panel" id="panel-kleur" role="tabpanel" aria-labelledby="tab-kleur" aria-hidden="true">
   <div class="section">
@@ -482,7 +493,7 @@ input, textarea { font-size:16px !important; }
     <div class="widget-list">
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/botkaaseiren.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Tic-Tac-Toe</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="botkaaseiren"></div><div class="toggle off" id="widget-spel_botkaaseiren" onclick="toggleWidget('spel_botkaaseiren')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/vieroprij.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Four in a Row</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="vieroprij"></div><div class="toggle off" id="widget-spel_vieroprij" onclick="toggleWidget('spel_vieroprij')"><div class="toggle-dot"></div></div></div>
-      <div class="widget-item" id="widgetRij-spel_pesten" style="display:none"><!-- 11 nov 2026: alleen als je Pesten in de Store gedownload hebt --><div class="widget-info"><div class="widget-icon"><img src="spelicoon/pesten.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Pesten</div><div class="widget-desc" data-t>Uit de Store: tegen de computer op Home, met een vriend in de chat</div></div></div><div class="widget-versie" data-spelversie="pesten"></div><div class="toggle off" id="widget-spel_pesten" onclick="toggleWidget('spel_pesten')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item" id="widgetRij-spel_pesten" style="display:none"><!-- 11 nov 2026: alleen als je Pesten in de Store gedownload hebt --><div class="widget-info"><div class="widget-icon"><img src="spelicoon/pesten.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Pesten</div><div class="widget-desc" data-t>Uit de Store: tegen de computer op Home, met een vriend in de chat</div></div></div><div class="widget-versie" data-spelversie="pesten"></div><button type="button" class="store-verwijder" onclick="verwijderStoreSpel('pesten')" aria-label="Pesten verwijderen" data-t-attr="aria-label" title="Pesten verwijderen">🗑</button><div class="toggle off" id="widget-spel_pesten" onclick="toggleWidget('spel_pesten')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/schaken.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Chess</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="schaken"></div><div class="toggle off" id="widget-spel_schaken" onclick="toggleWidget('spel_schaken')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/dammen.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Draughts</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="dammen"></div><div class="toggle off" id="widget-spel_dammen" onclick="toggleWidget('spel_dammen')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/pong.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Neo Paddle</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="pong"></div><div class="toggle off" id="widget-spel_pong" onclick="toggleWidget('spel_pong')"><div class="toggle-dot"></div></div></div>
@@ -585,7 +596,7 @@ const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','�
 // v173: de oude emoji-stickers (Natuur & Planten, Sfeer & Magie, Muziek & Kunst, Dieren, 'Actieve stickers') en de
 // widget 'Sticker board' zijn weg: ze werden alleen op dit toestel bewaard en nergens getoond.
 import { LETTERTYPES, STORE_LETTERTYPES, laadFont } from './lettertypes.js?v=132'
-import { bewaardeDownloads, mijnDownloads, gameWidgets } from './store.js?v=4' // v131: Stekky Store
+import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES } from './store.js?v=5' // v131: Stekky Store
 import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=95'
 import { pasAnimatieToe, startOp as startAnimatieOp } from './animatie.js?v=235'
 window.blokAangepast = function(){
@@ -618,7 +629,36 @@ let fonts = basisFonts
 // v132: een lettertype uit een pakket staat erbij als je dat pakket (of het oude losse lettertype) gedownload hebt
 // 11 nov 2026: games uit de Store (Pesten) staan pas bij de widgets als je ze gedownload hebt
 function zetStoreGames(ids){const mag=gameWidgets(ids);for(const rij of document.querySelectorAll('[id^="widgetRij-spel_"]'))rij.style.display=mag.includes(rij.id.slice(10))?'':'none'}
-function zetStoreFonts(ids){zetStoreGames(ids);fonts=basisFonts.concat(STORE_LETTERTYPES.filter(f=>f.ids.some(i=>ids.has(i))||huidigLettertype===maakFont(f).familie).map(maakFont))}
+// 11 nov 2026: verwijderen wat je uit de Store hebt (eerst vragen). Games: ook de widget uit (Home en chat).
+window.verwijderStoreSpel=async function(id){
+  const game=STORE_GAMES.find(g=>g.id===id);if(!game||!huidigeUser)return
+  if(!confirm(T('{naam} verwijderen? Je kunt het altijd opnieuw downloaden in de Store.',{naam:game.titel})))return
+  const{error}=await verwijderDownload(supabase,huidigeUser.id,id)
+  if(error){alert(T('Verwijderen mislukt. Probeer het opnieuw.'));return}
+  const vuil=widgetBewaking.isDirty()
+  actieveWidgets=actieveWidgets.filter(w=>w!==game.widget)
+  if(vuil)widgetBewaking.changed();else widgetBewaking.markSaved(actieveWidgets)
+  updateWidgetToggles();zetStoreGames(bewaardeDownloads(huidigeUser.id))
+}
+function bouwStoreFonts(ids){
+  const sectie=document.getElementById('storeFontsSectie'),lijst=document.getElementById('storeFontsLijst');if(!sectie||!lijst)return
+  const items=[...ids].map(itemVan).filter(it=>it&&it.soort==='lettertype')
+  sectie.style.display=items.length?'':'none';lijst.innerHTML=''
+  for(const it of items){
+    const rij=document.createElement('div');rij.className='store-rij';rij.dataset.id=it.id
+    const naam=document.createElement('span');naam.className='store-naam';naam.textContent=it.los?T('lettertype|'+it.titel):T('pakket|'+it.titel)
+    const knop=document.createElement('button');knop.type='button';knop.className='store-verwijder';knop.textContent=T('🗑 Verwijderen')
+    knop.onclick=async()=>{
+      if(!confirm(T('{naam} verwijderen? Je kunt het altijd opnieuw downloaden in de Store.',{naam:naam.textContent})))return
+      knop.disabled=true
+      const{error}=await verwijderDownload(supabase,huidigeUser.id,it.id)
+      if(error){knop.disabled=false;alert(T('Verwijderen mislukt. Probeer het opnieuw.'));return}
+      zetStoreFonts(bewaardeDownloads(huidigeUser.id));bouwFontGrid()
+    }
+    rij.append(naam,knop);lijst.appendChild(rij)
+  }
+}
+function zetStoreFonts(ids){zetStoreGames(ids);bouwStoreFonts(ids);fonts=basisFonts.concat(STORE_LETTERTYPES.filter(f=>f.ids.some(i=>ids.has(i))||huidigLettertype===maakFont(f).familie).map(maakFont))}
 // v129: niet meer alle 38 lettertypen bij het openen laden; bouwFontGrid laadt ze als ze in beeld komen
 // v276: met Vergrendelingsmodus (Lockdown Mode) op een iPhone bestaat indexedDB niet in Safari. Dan niet vastlopen
 // (de rest van je profiel laadde niet meer), maar gewoon niets op het toestel bewaren.

@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=101"></script>
+<script src="taal.js?v=102"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -486,7 +486,8 @@ window.veiligeUrl = function(v){
   import { stuurRapport } from './rapport.js?v=96'
   import * as Schaak from './schaak.js?v=95'
   import { maakSpelMenu } from './spelmenu.js?v=1' // 11 nov 2026: hamburgermenu rechtsboven in elk spel (pauze, geluid, microfoon, camera, menu, verlaten)
-  import { startSpelBerichtInChat } from './spelbericht.js?v=2' // 11 nov 2026: berichten van andere vrienden linksboven in het spel
+  import { startSpelBerichtInChat } from './spelbericht.js?v=2'
+  import { gameAan, mijnDownloads } from './store.js?v=5' // 11 nov 2026: spellen uit de Store // 11 nov 2026: berichten van andere vrienden linksboven in het spel
   import * as Bordgeluid from './bordgeluid.js?v=203'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
@@ -729,7 +730,7 @@ window.veiligeUrl = function(v){
     // vriendenlijst ophalen in plaats van ervoor. .then() start het verzoek meteen.
     const profielBelofte = supabase
       .from('profiles')
-      .select('id, username, avatar_url, avatar_data, widgets') // 11 nov 2026: widgets = welke spellen uit de Store aan staan
+      .select('id, username, avatar_url, avatar_data')
       .eq('id', huidigeUser.id)
       .single()
       .then(r => r, e => ({ data: null, error: e }))
@@ -851,7 +852,8 @@ window.veiligeUrl = function(v){
 
     await laadVrienden()
     huidigProfiel = (await profielBelofte).data
-    toonStoreSpellen() // 11 nov 2026: Pesten in het spelmenu als de widget aan staat
+    toonStoreSpellen() // 11 nov 2026: Pesten in het spelmenu als hij gedownload is en de widget aan staat
+    mijnDownloads(supabase, huidigeUser.id).then(() => toonStoreSpellen(), () => {})
     pasFotosToe() // v134: eigen foto bij eigen berichten
 
     // ── Automatisch spel starten via URL (van uitnodiging op andere pagina) ──
@@ -2611,7 +2613,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
     zet()
   })
 
+  addEventListener('pageshow', () => { try { toonStoreSpellen() } catch (e) {} }) // terug in de chat: Store-spellen opnieuw bekijken
   window.toggleSpelMenu = function() {
+    try { toonStoreSpellen() } catch (e) {}
     const spelGrid = document.getElementById('spelMenuGrid')
     const emojiGrid = document.getElementById('emojiGrid')
     const stickerGrid = document.getElementById('stickerGrid')
@@ -3107,13 +3111,13 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ── 11 nov 2026: spellen uit de Stekky Store (Pesten) ──
   // Zo'n spel staat alleen in het spelmenu als je het in de Store gedownload hebt EN de widget aan hebt gezet
   // (Profiel > Widgets > Spellen). Een uitnodiging van een vriend voor zo'n spel kun je altijd aannemen.
+  // v2 (11 nov 2026): de widgets staan op dit toestel (niet op de server): gameAan() uit store.js kijkt daar.
   function toonStoreSpellen() {
     const STORE_SPELLEN = [{ id: 'pesten', naam: 'Pesten', widget: 'spel_pesten', na: 'vieroprij' }]
-    const widgets = Array.isArray(huidigProfiel?.widgets) ? huidigProfiel.widgets : []
     for (const sp of STORE_SPELLEN) {
       const id = 'spelKnop-' + sp.id
       const oud = document.getElementById(id)
-      if (!widgets.includes(sp.widget)) { oud?.remove(); continue }
+      if (!huidigeUser || !gameAan(huidigeUser.id, sp)) { oud?.remove(); continue }
       if (oud) continue
       const knop = document.createElement('button')
       knop.id = id; knop.className = 'spel-keuze-btn'; knop.type = 'button'

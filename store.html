@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-<script src="taal.js?v=101"></script>
+<script src="taal.js?v=102"></script>
 <script src="appslot.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Stekky Store</title>
@@ -73,7 +73,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 <script type="module">
 import { supabase } from './supabase.js?v=95'
 import { laadFont } from './lettertypes.js?v=132'
-import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, weghalenItem, tabelOntbreekt } from './store.js?v=4'
+import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, verwijderDownload, tabelOntbreekt } from './store.js?v=5'
 
 let mijnId = null
 let mijn = new Set()
@@ -138,7 +138,7 @@ function bouwLijst() {
       const weg = document.createElement('button')
       weg.type = 'button'
       weg.className = 'weghalen'
-      weg.textContent = T('Weghalen')
+      weg.textContent = T('🗑 Verwijderen')
       weg.onclick = () => weghalen(it, weg)
       kaart.appendChild(weg)
     }
@@ -166,10 +166,14 @@ async function download(it, knop) {
   bouwLijst()
 }
 
+// 11 nov 2026: Verwijderen (eerst vragen). Een game gaat ook van Home en uit het spelmenu van de chat.
 async function weghalen(it, knop) {
+  const naam = it.soort === 'game' ? it.titel : T('pakket|' + it.titel)
+  if (!confirm(T('{naam} verwijderen? Je kunt het altijd opnieuw downloaden in de Store.', { naam }))) return
   knop.disabled = true
-  const { error } = await weghalenItem(supabase, mijnId, it.id)
-  if (error) { toonMelding(T('Weghalen mislukt. Probeer het opnieuw.')); knop.disabled = false; return }
+  const { error } = await verwijderDownload(supabase, mijnId, it.id)
+  if (error) { toonMelding(T('Verwijderen mislukt. Probeer het opnieuw.')); knop.disabled = false; return }
+  toonMelding(T('{naam} is verwijderd.', { naam }), true)
   mijn.delete(it.id)
   bouwLijst()
 }

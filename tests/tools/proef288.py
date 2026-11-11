@@ -10,7 +10,9 @@
 #  F. Store als gewone gebruiker: open; staat de database nog op 'alleen moderators', dan een duidelijke melding;
 #     na sql/stekky-store-iedereen.sql kan downloaden wel. Zonder account: "Geen toegang".
 #  G. Staat de tabel er nog niet (sql/stekky-store.sql niet uitgevoerd): een duidelijke melding, geen vastloper
-#  I. (11 nov 2026) Games: Pesten staat in de store; vóór downloaden niet bij Profiel > Widgets, erna wel (aan te zetten)
+#  I. (11 nov 2026) Games: Pesten staat in de store; vóór downloaden niet bij Profiel > Widgets, erna wel (aan te zetten);
+#     🗑 bij de widget = verwijderd: uit je account, de widget uit en weg (ook van Home)
+#  J. (11 nov 2026) Stijl > Lettertype > Uit de Store: gedownloade pakketten met Verwijderen
 #  H. geen paginafouten
 # python3 -I proef288.py <map>
 import sys, os, time, json, socket, subprocess, tempfile, re, urllib.parse
@@ -60,7 +62,7 @@ def nieuw(b):
     ctx.route_web_socket('**/realtime/v1/websocket**', lambda w: None)
     ctx.route(re.compile(r'^https?://(?!127\.0\.0\.1)(?!.*supabase\.co).*'), lambda r: r.fulfill(status=204, body=''))
     pg = ctx.new_page()
-    pg.on('pageerror', lambda e: fouten.append(str(e)[:200])); pg.on('dialog', lambda d: d.dismiss())
+    pg.on('pageerror', lambda e: fouten.append(str(e)[:200])); pg.on('dialog', lambda d: d.accept())   # 11 nov 2026: 'verwijderen?' met OK beantwoorden
     pg.goto(BASIS + 'manifest.json')
     pg.evaluate("t => { localStorage.setItem('sb-qmgatbphiplrfxrljtbe-auth-token', t); localStorage.setItem('fibro_taal', 'nl'); localStorage.setItem('fibro_opslagtip_later', String(Date.now())) }", TOKEN)
     return ctx, pg
@@ -113,8 +115,16 @@ try:
         check(i3, 'I: na downloaden: Pesten bij Profiel > Widgets > Spellen')
         pg.evaluate("toggleWidget('spel_pesten')")
         check(pg.evaluate("document.getElementById('widget-spel_pesten').classList.contains('on')"), 'I: de widget gaat aan')
-        pg.evaluate("toggleWidget('spel_pesten')")   # weer uit: anders vraagt Profiel of je wilt opslaan
-        STAND['rijen'].discard('pesten')
+        # 🗑 bij de widget: verwijderen (de widget staat aan en staat al op Home)
+        pg.evaluate("""() => { const uid = 'aaaaaaaa-0000-4000-8000-000000000001'
+            localStorage.setItem('fibro_widgets_profiel_' + uid, JSON.stringify([{ id: 'mood', aan: true, volgorde: 0 }, { id: 'spel_pesten', aan: true, volgorde: 1 }])) }""")
+        pg.click('#tab-widgets')
+        pg.click('#widgetRij-spel_pesten .store-verwijder')
+        i4 = wacht(pg, "() => getComputedStyle(document.getElementById('widgetRij-spel_pesten')).display === 'none'", 5000)
+        layout = pg.evaluate("() => JSON.parse(localStorage.getItem('fibro_widgets_profiel_aaaaaaaa-0000-4000-8000-000000000001')).map(w => w.id)")
+        check(i4 and 'pesten' not in STAND['rijen'] and layout == ['mood'] and not pg.evaluate("document.getElementById('widget-spel_pesten').classList.contains('on')"),
+              'I: 🗑 bij Widgets = verwijderd: uit je account, widget uit en weg van Home (%s, %s)' % (STAND['rijen'], layout))
+        check(not pg.evaluate("document.body.dataset.widgetsUnsaved === 'true'"), 'I: daarna geen vraag om op te slaan')
         pg.goto(BASIS + 'store.html'); wacht(pg, "() => document.querySelectorAll('#lijst .item').length === 9")
         # ── D ──
         STAND['rijen'].add('lettertype-special-elite')  # oude losse download uit v1
@@ -127,13 +137,23 @@ try:
         check(all(v in lijst for v in verwacht), 'D: alle 4 lettertypes van Strip staan bij Lettertype, met "· Store" (%s)' % lijst[-5:])
         check('Special Elite|Oude typemachine · Store' in lijst, 'D: het oude losse lettertype (Special Elite) staat er nog')
         check(not any(x.startswith(('Sacramento|', 'Smokum|', 'Stardos Stencil|')) for x in lijst), 'D: lettertypes uit niet-gedownloade pakketten staan er niet bij')
+        # ── J: Uit de Store, met Verwijderen ──
+        pg.click('#tab-lettertype') if pg.query_selector('#tab-lettertype') else None
+        namen = pg.evaluate("() => [...document.querySelectorAll('#storeFontsLijst .store-rij .store-naam')].map(e => e.textContent)")
+        check(sorted(namen) == sorted(['Strip', 'Oude typemachine']), 'J: Uit de Store: de gedownloade pakketten (%s)' % namen)
+        pg.click('#storeFontsLijst .store-rij[data-id="pakket-strip"] .store-verwijder')
+        j1 = wacht(pg, "() => !document.querySelector('#storeFontsLijst .store-rij[data-id=\"pakket-strip\"]')", 5000)
+        check(j1 and 'pakket-strip' not in STAND['rijen'] and not any(x.startswith('Luckiest Guy|') for x in pg.evaluate(FONTS)),
+              'J: Verwijderen = uit je account en de lettertypes van Strip weg (%s)' % STAND['rijen'])
+        STAND['rijen'].add('pakket-strip')   # voor E (verwijderen in de store)
         STAND['rijen'].discard('lettertype-special-elite')
         # ── E ──
         pg.goto(BASIS + 'store.html')
         wacht(pg, "() => document.querySelector('#lijst .item[data-id=\"pakket-strip\"] .weghalen')")
+        check(pg.inner_text('#lijst .item[data-id="pakket-strip"] .weghalen') == '🗑 Verwijderen', 'E: knop heet 🗑 Verwijderen')
         pg.click('#lijst .item[data-id="pakket-strip"] .weghalen')
         e1 = wacht(pg, "() => { const k = document.querySelector('#lijst .item[data-id=\"pakket-strip\"] .knop'); return k && k.textContent === 'Downloaden' }")
-        check(e1 and STAND['rijen'] == set() and 'DELETE' in STAND['verzoeken'], 'E: Weghalen = uit je account (%s)' % STAND['rijen'])
+        check(e1 and STAND['rijen'] == set() and 'DELETE' in STAND['verzoeken'], 'E: Verwijderen (na de vraag) = uit je account (%s)' % STAND['rijen'])
         ctx.close()
         # ── G ──
         STAND['geen_tabel'] = True

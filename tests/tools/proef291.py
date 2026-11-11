@@ -5,6 +5,7 @@
 #  D. Geluid uit: Web Audio-geluid is stil (gemeten); weer aan = geluid; de keuze blijft bewaard
 #  E. Menu = terug naar het kiezen van het niveau; Spel verlaten = terug naar Home
 #  F. het berichtenwolkje staat linksboven en niet over ☰ of de naam van het spel
+#  H. Pesten (kaartspel) tegen de computer: het pauzescherm ligt boven de kaarten en het eindscherm van de tafel
 #  G. in de chat, met z'n tweeën (nep-server van proef97): ☰ in het spel, de oude ✕ 🎤 📹 bovenin weg, Microfoon en Camera
 #     in het menu; Marcel pauzeert = ook Bram staat stil (zonder Verder-knop); Marcel gaat verder = allebei verder;
 #     een bericht van een ANDERE vriend = wolkje linksboven, alleen zolang het spel open is; Spel verlaten sluit het spel
@@ -99,6 +100,16 @@ try:
         pg.wait_for_timeout(4500)
         w = rect(pg, '#spelbericht')
         check(w['l'] < 30 and w['t'] < 30 and not overlapt(w, k) and not overlapt(w, t), 'F: klein wolkje in de hoek linksboven, niet over de naam (%s / %s)' % (w, t))
+        # ── H: Pesten ──
+        pg.goto(BASIS + 'spel.html?spel=pesten&titel=1'); pg.wait_for_selector('.niveau-btn', timeout=10000)
+        pg.click('.niveau-btn[data-niveau=normaal]')
+        wacht(pg, "() => !!document.querySelector('.kt-tafel.kt-mijnbeurt')", 15000)
+        pg.evaluate("() => { const d = document.createElement('div'); d.className = 'kt-einde'; d.id = 'proefEinde'; d.style.zIndex = '999'; document.querySelector('.kt-tafel').appendChild(d) }")
+        pg.click('#spelMenuKnop'); pg.click('[data-menu=pauze]')
+        boven = pg.evaluate("() => { const e = document.elementFromPoint(innerWidth / 2, innerHeight / 2); return !!e.closest('#spelPauzeLaag') }")
+        check(boven, 'H: Pesten: het pauzescherm ligt boven de kaarten en de schermen van de tafel')
+        pg.click('#spelPauzeLaag .sp-verder')
+        check(wacht(pg, "() => !document.getElementById('spelPauzeLaag').classList.contains('open')", 3000), 'H: Pesten: verder spelen')
         # ── E: Spel verlaten ──
         pg.click('#spelMenuKnop'); pg.click('[data-menu=exit]')
         check(wacht(pg, "() => location.pathname.endsWith('/index.html')"), 'E: Spel verlaten = terug naar Home')

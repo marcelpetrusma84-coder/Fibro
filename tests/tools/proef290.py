@@ -158,7 +158,7 @@ try:
             q.goto(BASIS + 'manifest.json')
             q.evaluate("""async ([nr, maak]) => {
                 document.body.innerHTML = '<div id="spelOverlay"><div id="spelTitelBar"></div><div id="spelInhoud" style="position:fixed;inset:0"></div></div>'
-                const m = await import('./pesten-ui.js?v=1')
+                const m = await import('./pesten-ui.js?v=2')
                 const kanaal = (0, eval)('(' + maak + ')')(nr)
                 m.start({ spelKanaal: kanaal, benIkSpeler1: nr === 1, vriendNaam: nr === 1 ? 'Tijn' : 'Marcel' })
             }""", [nr, KANAAL])

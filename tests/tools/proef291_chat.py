@@ -51,6 +51,16 @@ try:
         check('G10 Spel verlaten sluit het spel (en het wolkje)', wacht(b, "() => !document.getElementById('spelOverlay').classList.contains('open') && !document.getElementById('spelbericht') && !document.getElementById('spelMenuKnop')", 5000))
         b.evaluate("document.dispatchEvent(new CustomEvent('fibro-nieuw-bericht', { detail: { van: 'cccc0001-0000-4000-8000-000000000003' } }))")
         check('G11 zonder spel geen wolkje', not b.evaluate("!!document.getElementById('spelbericht')"))
+        # G13: Pesten in de chat: het pauzescherm ligt boven alles van de kaarttafel
+        sessie = m.evaluate("Date.now().toString(36)")
+        for pg in (m, b): ev(pg, "([s, n, u]) => { window.speelMee(s, n, u) }", ['pesten', sessie, MARCEL])
+        for pg in (m, b):
+            if wacht(pg, "() => !!document.querySelector('.fibro-titelscherm')", 6000): pg.wait_for_timeout(600); pg.mouse.click(195, 420)
+        wacht(m, "() => document.querySelectorAll('.kt-hand .kt-kaart').length === 7", 20000)
+        m.evaluate("() => { const d = document.createElement('div'); d.className = 'kt-einde'; d.style.zIndex = '999'; document.querySelector('.kt-tafel').appendChild(d) }")
+        m.click('#spelMenuKnop'); m.click('[data-menu=pauze]')
+        boven = m.evaluate("() => !!document.elementFromPoint(innerWidth / 2, innerHeight / 2).closest('#spelPauzeLaag')")
+        check('G13 Pesten in de chat: het pauzescherm ligt boven de kaarttafel', boven)
         check('G12 geen paginafouten', not fouten, fouten[:3])
         br.close()
 finally:

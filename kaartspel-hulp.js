@@ -1,4 +1,5 @@
 // kaartspel-hulp.js - BLAUWDRUK voor alle kaartspellen in Stekky (v1, 11 nov 2026). Zie BLAUWDRUK-KAARTSPEL.md.
+// v2: de tafel is een eigen laag (isolation), zodat het pauzescherm van het spelmenu (spelmenu.js) er in de chat altijd boven ligt.
 //
 // In gewone woorden: hier zit alles wat elk kaartspel hetzelfde doet, zodat een nieuw kaartspel alleen nog zijn
 // eigen spelregels hoeft te maken (zoals pesten.js). Wat je hier krijgt:
@@ -210,7 +211,7 @@ export function tril(patroon = 12) { try { if (navigator.vibrate) navigator.vibr
 
 // ─────────────────────────────── Stijl ───────────────────────────────
 const STIJL = `
-.kt-tafel{position:relative;width:100%;height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:stretch;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;overflow:hidden;background:radial-gradient(ellipse at 50% 46%,#3a1a5e 0%,#24103d 45%,#1a0a2e 80%)}
+.kt-tafel{position:relative;isolation:isolate;width:100%;height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:stretch;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;overflow:hidden;background:radial-gradient(ellipse at 50% 46%,#3a1a5e 0%,#24103d 45%,#1a0a2e 80%)}
 .kt-tafel *{box-sizing:border-box}
 .kt-svg{display:block;width:100%;height:100%}
 .kt-kaart{position:absolute;left:0;top:0;border-radius:calc(var(--kw)*.075);box-shadow:0 2px 8px #0007;transition:transform .22s cubic-bezier(.2,.8,.3,1.2),filter .2s,box-shadow .2s;touch-action:none;will-change:transform;cursor:pointer}

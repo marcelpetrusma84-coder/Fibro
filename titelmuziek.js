@@ -181,6 +181,12 @@ export const DEUNTJES = {
         { klank: 'bas', vol: 0.26, stap: 2, noten: 'F3 . C3 . F3 . C3 . | Bb2 . F3 . Bb2 . F3 . | C3 . G3 . C3 . G3 . | F3 . C3 . F3 . . . | Bb2 . F3 . Bb2 . F3 . | A2 . E3 . A2 . E3 . | G2 . D3 . C3 . E3 . | F3 . C3 . F2 . . .' },
         { slag: true, vol: 0.2, stap: 2, noten: 'k . s . k k s .' }
     ] },
+    // Pesten: een ondeugend kroegpianootje (11 nov 2026)
+    pesten: { bpm: 126, stemmen: [
+        { klank: 'speelgoed', vol: 0.28, stap: 2, noten: 'C5 E5 G5 E5 A5 . G5 . | F5 A5 C6 A5 G5 . E5 . | D5 F5 A5 F5 G5 . B4 . | C5 . E5 G5 C6 . . . | A5 G5 F5 E5 D5 . F5 . | G5 F5 E5 D5 C5 . E5 . | D5 . F5 . B4 . D5 . | C5 . G4 . C5 . . .' },
+        { klank: 'bas', vol: 0.26, stap: 2, noten: 'C3 . G3 . C3 . G3 . | F3 . C4 . F3 . C4 . | G2 . D3 . G2 . D3 . | C3 . G3 . C3 . E3 . | F3 . C4 . F3 . A3 . | C3 . G3 . A2 . E3 . | G2 . D3 . G2 . B2 . | C3 . G2 . C3 . . .' },
+        { slag: true, vol: 0.18, stap: 2, noten: 'k . s . k k s .' }
+    ] },
     // Schaken: deftig, als een klavecimbel
     schaken: { bpm: 92, stemmen: [
         { klank: 'fluit', vol: 0.24, stap: 2, noten: 'A4 - - B4 C5 - - E5 | D5 - C5 - B4 - - - | G4 - - A4 B4 - - D5 | C5 - B4 - A4 - - - | E5 - - F5 E5 - D5 - | C5 - - D5 C5 - B4 - | A4 - C5 - B4 - G#4 - | A4 - - - - - . .' },

@@ -25,9 +25,9 @@ assert.equal(tijdTekst(3600), '01:00:00')
 assert.equal(tijdTekst(59), '00:59')
 assert.equal(tijdTekst(-5), '00:00')
 
-// 2. een spel meesturen: dezelfde 12 als in solo.js
-const soloIds = [...knip(solo, 'SOLO_SPELLEN', '\n}\n').matchAll(/^\s+(\w+):\s+\{ naam:/gm)].map(m => m[1])
-assert.equal(soloIds.length, 12, 'twaalf spellen om alleen te spelen')
+// 2. een spel meesturen: dezelfde 12 als in solo.js, zonder de spellen uit de Store (11 nov 2026: Pesten)
+const soloIds = [...knip(solo, 'SOLO_SPELLEN', '\n}\n').matchAll(/^\s+(\w+):\s+\{ naam:(?![^\n]*store: true)/gm)].map(m => m[1])
+assert.equal(soloIds.length, 12, 'twaalf spellen om alleen te spelen (Pesten komt uit de Store)')
 const vrIds = [...knip(vrienden, 'const MEE_SPELLEN = [', '\n  ]\n').matchAll(/\['(\w+)', /g)].map(m => m[1])
 const invIds = [...knip(invite, 'const MEE_SPELLEN = {', '\n}\n').matchAll(/(\w+): \['/g)].map(m => m[1])
 assert.deepEqual([...vrIds].sort(), [...soloIds].sort(), 'vrienden.html: dezelfde spellen als solo.js')

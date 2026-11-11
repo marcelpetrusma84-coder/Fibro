@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=96"></script>
+<script src="taal.js?v=99"></script>
 <script src="appslot.js?v=3"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Vuurwerk': 'Fireworks', 'Onweer': 'Thunderstorm', 'Glitter': 'Glitter' }) // v234: nieuwe animaties</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Gastenboek zonder lijntjes': 'Guestbook without lines', 'Gewoon in je eigen kleuren, zonder lijntjespapier': 'Plain, in your own colours, without lined paper' }) // v235</script>
@@ -482,6 +482,7 @@ input, textarea { font-size:16px !important; }
     <div class="widget-list">
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/botkaaseiren.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Tic-Tac-Toe</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="botkaaseiren"></div><div class="toggle off" id="widget-spel_botkaaseiren" onclick="toggleWidget('spel_botkaaseiren')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/vieroprij.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Four in a Row</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="vieroprij"></div><div class="toggle off" id="widget-spel_vieroprij" onclick="toggleWidget('spel_vieroprij')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item" id="widgetRij-spel_pesten" style="display:none"><!-- 11 nov 2026: alleen als je Pesten in de Store gedownload hebt --><div class="widget-info"><div class="widget-icon"><img src="spelicoon/pesten.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Pesten</div><div class="widget-desc" data-t>Uit de Store: tegen de computer op Home, met een vriend in de chat</div></div></div><div class="widget-versie" data-spelversie="pesten"></div><div class="toggle off" id="widget-spel_pesten" onclick="toggleWidget('spel_pesten')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/schaken.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Chess</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="schaken"></div><div class="toggle off" id="widget-spel_schaken" onclick="toggleWidget('spel_schaken')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/dammen.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Draughts</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="dammen"></div><div class="toggle off" id="widget-spel_dammen" onclick="toggleWidget('spel_dammen')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/pong.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Neo Paddle</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="pong"></div><div class="toggle off" id="widget-spel_pong" onclick="toggleWidget('spel_pong')"><div class="toggle-dot"></div></div></div>
@@ -584,7 +585,7 @@ const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','�
 // v173: de oude emoji-stickers (Natuur & Planten, Sfeer & Magie, Muziek & Kunst, Dieren, 'Actieve stickers') en de
 // widget 'Sticker board' zijn weg: ze werden alleen op dit toestel bewaard en nergens getoond.
 import { LETTERTYPES, STORE_LETTERTYPES, laadFont } from './lettertypes.js?v=132'
-import { bewaardeDownloads, mijnDownloads } from './store.js?v=2' // v131: Stekky Store
+import { bewaardeDownloads, mijnDownloads, gameWidgets } from './store.js?v=3' // v131: Stekky Store
 import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=95'
 import { pasAnimatieToe, startOp as startAnimatieOp } from './animatie.js?v=235'
 window.blokAangepast = function(){
@@ -615,7 +616,9 @@ const basisFonts = LETTERTYPES.map(maakFont)
 let fonts = basisFonts
 // v131: lettertypes uit de Stekky Store staan alleen in de lijst als je ze gedownload hebt (of nu gebruikt)
 // v132: een lettertype uit een pakket staat erbij als je dat pakket (of het oude losse lettertype) gedownload hebt
-function zetStoreFonts(ids){fonts=basisFonts.concat(STORE_LETTERTYPES.filter(f=>f.ids.some(i=>ids.has(i))||huidigLettertype===maakFont(f).familie).map(maakFont))}
+// 11 nov 2026: games uit de Store (Pesten) staan pas bij de widgets als je ze gedownload hebt
+function zetStoreGames(ids){const mag=gameWidgets(ids);for(const rij of document.querySelectorAll('[id^="widgetRij-spel_"]'))rij.style.display=mag.includes(rij.id.slice(10))?'':'none'}
+function zetStoreFonts(ids){zetStoreGames(ids);fonts=basisFonts.concat(STORE_LETTERTYPES.filter(f=>f.ids.some(i=>ids.has(i))||huidigLettertype===maakFont(f).familie).map(maakFont))}
 // v129: niet meer alle 38 lettertypen bij het openen laden; bouwFontGrid laadt ze als ze in beeld komen
 // v276: met Vergrendelingsmodus (Lockdown Mode) op een iPhone bestaat indexedDB niet in Safari. Dan niet vastlopen
 // (de rest van je profiel laadde niet meer), maar gewoon niets op het toestel bewaren.
@@ -1244,6 +1247,7 @@ window.slaAllesOp=async function(){
     gastenboek: { id:'gastenboek', icon:'📖', titel:'Gastenboek',    w:4, h:4 },
     spel_botkaaseiren: { id:'spel_botkaaseiren', icon:'⭕', titel:'Tic-Tac-Toe',   w:2, h:1 },
     spel_vieroprij:    { id:'spel_vieroprij',    icon:'🔴', titel:'Four in a Row', w:2, h:1 },
+    spel_pesten:       { id:'spel_pesten',       icon:'🃏', titel:'Pesten',        w:2, h:1 },   // 11 nov 2026: uit de Store
     spel_flappybird:   { id:'spel_flappybird',   icon:'🦇', titel:'Flapper',       w:2, h:1 },
     spel_schaken:      { id:'spel_schaken',      icon:'♟️', titel:'Chess',         w:2, h:1 },
     spel_dammen:       { id:'spel_dammen',       icon:'⚫', titel:'Draughts',      w:2, h:1 },
@@ -1471,14 +1475,14 @@ startMeldingen()
 <script src="menuschuif.js?v=1"></script>
 
 <script type="module">
-import { vulSpelVersies } from "./spelversies.js?v=23"
-import { koppelSpelIcoonFallback } from './spelicoon.js?v=3'
+import { vulSpelVersies } from "./spelversies.js?v=24"
+import { koppelSpelIcoonFallback } from './spelicoon.js?v=4'
 koppelSpelIcoonFallback()
 vulSpelVersies()
 </script>
 <script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=209"; startBelLuisteraar()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=197"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=198"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=170"; startOngelezen()</script>
 <script>
 /* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */

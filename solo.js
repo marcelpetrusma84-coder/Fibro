@@ -7,6 +7,7 @@
 import { schaakBot } from './solo-bord.js?v=4'
 import { damBot } from './dam-bot.js?v=1'   // v253: sterkere damcomputer (met expert), rekent in een worker
 import { schaakUltraBot } from './schaak-ultra.js?v=4'
+import { computerStap as pestenComputerStap, doeStap as pestenDoeStap, geldigeStand as pestenGeldig } from './pesten.js?v=1'
 
 export const NIVEAUS = ['makkelijk', 'normaal', 'moeilijk']
 
@@ -393,6 +394,54 @@ export function pongBot({ stuur, niveau, isDicht }) {
   }
 }
 
+// ─────────────────────────────────────────────
+// Pesten (11 nov 2026). Mens = speler 1 (schudt en deelt), computer = speler 2. De regels en de keuzes van de
+// computer staan in pesten.js; hier alleen het wachten en het terugsturen. Soms gooit de computer een emoji.
+// ─────────────────────────────────────────────
+export function pestenBot({ stuur, niveau, isDicht }) {
+  let staat = null, spelId = -1, nr = 0, timer = null
+  const reageer = emoji => { if (Math.random() < 0.6) setTimeout(() => { if (!isDicht()) stuur('kaartreactie', { emoji }) }, 700) }
+  function plan(extra = 0) {
+    clearTimeout(timer)
+    if (!staat || staat.winnaar || staat.aanZet !== 2) return
+    timer = setTimeout(() => {
+      if (isDicht() || !staat || staat.winnaar || staat.aanZet !== 2) return
+      const stap = pestenComputerStap(staat, 2, niveau)
+      const nieuw = pestenDoeStap(staat, 2, stap)
+      if (!nieuw) return
+      const voor = staat
+      staat = nieuw; nr++
+      stuur('zet', { staat, nr, spelId })
+      if (stap.soort === 'betrap') reageer('😂')
+      else if (stap.soort === 'speel' && voor.straf === 0 && nieuw.straf >= 5) reageer('😎')
+      if (nieuw.winnaar === 2) reageer('🔥')
+      // na een kaart die veel beweegt (pakken, meerdere kaarten) iets langer wachten
+      plan(stap.soort === 'pak' ? 900 : 300 * (stap.kaarten ? stap.kaarten.length : 1))
+    }, 900 + Math.floor(Math.random() * 700) + extra)
+  }
+  function neem(p, nieuwSpel) {
+    if (!p || !pestenGeldig(p.staat)) return
+    const id = p.spelId ?? spelId
+    if (nieuwSpel ? id <= spelId : (id < spelId || (id === spelId && (p.nr ?? 0) <= nr))) return
+    const nieuwDeel = id !== spelId
+    if (staat && staat.aanZet === 2 && !staat.winnaar && p.staat.straf >= 5 && staat.straf < p.staat.straf) reageer('😱')
+    if (p.staat.laatste?.soort === 'betrapt' && p.staat.laatste.wie === 2) reageer('🙈')
+    staat = p.staat; spelId = id; nr = p.nr ?? 0
+    plan(nieuwDeel ? 2600 : 0)   // na het delen eerst de animatie laten afspelen
+  }
+  return {
+    ontvang(event, payload) {
+      if (isDicht()) return
+      if (event === 'zet' || event === 'stand') neem(payload, false)
+      else if (event === 'opnieuw') neem(payload, true)
+      else if (event === 'vraag-stand' && staat) {
+        if (spelId > (payload.spelId ?? -1) || (spelId === (payload.spelId ?? -1) && nr > (payload.nr ?? 0))) stuur('stand', { staat, nr, spelId })
+      }
+    },
+    stop() { clearTimeout(timer) },
+  }
+}
+
 // Arcadespellen: daar is geen tegenstander. Het spel krijgt solo mee en speelt
 // zonder vriend; het kanaal hoeft niets terug te sturen.
 export function stilBot() {
@@ -405,6 +454,7 @@ export function stilBot() {
 export const SOLO_SPELLEN = {
   botkaaseiren: { naam: 'Tic-Tac-Toe',   icon: '⭕', bestand: './bke-ui.js?v=239',      bot: bkeBot },
   vieroprij:    { naam: 'Four in a Row', icon: '🔴', bestand: './vieroprij-ui.js?v=240', bot: vorBot },
+  pesten:       { naam: 'Pesten',        icon: '🃏', bestand: './pesten-ui.js?v=1',     bot: pestenBot, store: true },   // 11 nov 2026: het eerste kaartspel; alleen via de Store (niet meesturen met een uitnodiging)
   schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=275',  niveaus:[...NIVEAUS, 'ultra'], bot: opties => opties.niveau === 'ultra' ? schaakUltraBot(opties) : schaakBot(opties), motor: './schaak.js?v=95', motorNaam: 'Schaak' },
   dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=151',   niveaus:[...NIVEAUS, 'expert'], bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
   // 30 okt 2026: Neo Paddle v2 (blokjes en power-ups) en levels voor alleen (spel.html toont een knop 🧱 Levels).

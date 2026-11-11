@@ -9,6 +9,7 @@
 #  E. Weghalen in de store = de rij gaat weg uit je account
 #  F. Store als gewone gebruiker: "Geen toegang", niets geladen of gedownload
 #  G. Staat de tabel er nog niet (sql/stekky-store.sql niet uitgevoerd): een duidelijke melding, geen vastloper
+#  I. (11 nov 2026) Games: Pesten staat in de store; vóór downloaden niet bij Profiel > Widgets, erna wel (aan te zetten)
 #  H. geen paginafouten
 # python3 -I proef288.py <map>
 import sys, os, time, json, socket, subprocess, tempfile, re, urllib.parse
@@ -95,8 +96,25 @@ try:
         c2 = wacht(pg, "() => { const k = document.querySelector('#lijst .item[data-id=\"pakket-strip\"] .knop'); return k && k.textContent === '✓ Gedownload' }")
         check(c2 and STAND['rijen'] == {'pakket-strip'}, 'C: Downloaden = één rij in je account, knop "✓ Gedownload" (%s)' % STAND['rijen'])
         check('Stijl → Lettertype' in pg.inner_text('#melding'), 'C: melding waar je het kunt kiezen')
+        # ── I (11 nov 2026): Pesten in de store ──
+        pg.goto(BASIS + 'profiel.html'); pg.click('#tab-widgets') if pg.query_selector('#tab-widgets') else None
+        wacht(pg, "() => !!document.getElementById('widgetRij-spel_pesten')"); pg.wait_for_timeout(800)
+        check(pg.evaluate("getComputedStyle(document.getElementById('widgetRij-spel_pesten')).display") == 'none', 'I: vóór downloaden: Pesten niet bij de widgets')
+        pg.goto(BASIS + 'store.html'); wacht(pg, "() => document.querySelectorAll('#lijst .item').length === 9")
         pg.click('.soort[data-soort="game"]')
-        check('komen binnenkort' in pg.inner_text('#lijst'), 'C: Games: komen binnenkort (%r)' % pg.inner_text('#lijst'))
+        i1 = wacht(pg, "() => !!document.querySelector('#lijst .item[data-id=\"pesten\"] img[src*=\"spelicoon/pesten.webp\"]')", 4000)
+        check(i1 and 'Pesten' in pg.inner_text('#lijst') and 'Laatste kaart' in pg.inner_text('#lijst'), 'I: Games: Pesten met plaatje en uitleg (%r)' % pg.inner_text('#lijst')[:80])
+        pg.click('#lijst .item[data-id="pesten"] .knop')
+        i2 = wacht(pg, "() => { const k = document.querySelector('#lijst .item[data-id=\"pesten\"] .knop'); return k && k.textContent === '✓ Gedownload' }")
+        check(i2 and 'pesten' in STAND['rijen'] and 'Widgets' in pg.inner_text('#melding'), 'I: Downloaden = rij in je account en melding: zet hem aan bij Widgets (%s)' % STAND['rijen'])
+        pg.goto(BASIS + 'profiel.html')
+        i3 = wacht(pg, "() => { const r = document.getElementById('widgetRij-spel_pesten'); return r && getComputedStyle(r).display !== 'none' }", 8000)
+        check(i3, 'I: na downloaden: Pesten bij Profiel > Widgets > Spellen')
+        pg.evaluate("toggleWidget('spel_pesten')")
+        check(pg.evaluate("document.getElementById('widget-spel_pesten').classList.contains('on')"), 'I: de widget gaat aan')
+        pg.evaluate("toggleWidget('spel_pesten')")   # weer uit: anders vraagt Profiel of je wilt opslaan
+        STAND['rijen'].discard('pesten')
+        pg.goto(BASIS + 'store.html'); wacht(pg, "() => document.querySelectorAll('#lijst .item').length === 9")
         # ── D ──
         STAND['rijen'].add('lettertype-special-elite')  # oude losse download uit v1
         pg.click('.terug')

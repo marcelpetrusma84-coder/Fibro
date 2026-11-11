@@ -1,0 +1,4 @@
+crop/
+deck/
+*.png
+__pycache__/

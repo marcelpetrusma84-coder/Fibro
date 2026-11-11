@@ -1,0 +1,17 @@
+Perkamentkaarten voor de kaartspellen (11 november 2026, Marcel)
+
+bron/      de plaatjes van Marcel: vier overzichten (harten, ruiten, klaveren, schoppen), de joker en de achterkant.
+           Ze waren niet compleet (klaveren 10, schoppen 6/8/9 en harten 6/9 ontbraken) en een paar hoeken klopten niet.
+
+Zo maak je kaarten/perkament/*.webp opnieuw (python3 met opencv, numpy en pillow), in deze map:
+  python3 knip.py     losse kaarten uit de overzichten -> crop/
+  python3 bouw.py     het hele spel -> ../../../kaarten/perkament/ (en deck/ en overzicht.png hier, niet bewaren)
+
+Wat bouw.py doet:
+  - Boer, Vrouw, Heer, Aas, joker en achterkant komen zo uit de plaatjes (bijgesneden, ronde hoeken).
+  - De getallen 2 t/m 10 worden voor elke kleur opnieuw getekend (maak.py): de lege kaart van die kleur
+    (blanco.py haalt de tekens weg) met de tekens van de 2 (klaveren: de 4) op de gewone plekken.
+  - Harten heer, klaveren heer, schoppen heer en schoppen vrouw hadden een ruiten- of klaverenteken rechtsonder:
+    die hoek wordt de linkerbovenhoek, 180 graden gedraaid. Op schoppen vrouw staat onderin ook een gedraaid
+    schoppenteken in plaats van klaveren.
+Vervang je een plaatje in de app, verhoog dan v bij perkament in KAARTSTIJLEN (kaartspel-hulp.js).

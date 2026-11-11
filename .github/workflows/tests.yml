@@ -155,6 +155,9 @@ jobs:
       - name: "Toepen en Eenentwintigen: echt spelen tegen de computer en met z'n tweeën"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef293.py .
+      - name: "Kaartspellen: kaartstijl kiezen (Stekky of Perkament) met 🎴"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef294.py .
       - name: "Spelmenu ☰ in elk spel (pauze, geluid, microfoon, camera, menu, verlaten) en berichten linksboven"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef291.py .

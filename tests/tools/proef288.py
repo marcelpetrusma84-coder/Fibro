@@ -13,7 +13,7 @@
 #  I. (11 nov 2026) Games: Pesten staat in de store; vóór downloaden niet bij Profiel > Widgets, erna wel (aan te zetten);
 #     🗑 bij de widget = verwijderd: uit je account, de widget uit en weg (ook van Home)
 #  J. (11 nov 2026) Stijl > Lettertype > Uit de Store: gedownloade pakketten met Verwijderen
-#  K. (11 nov 2026) De zwarte balk "Stekky Store" blijft bovenin staan tijdens scrollen; de paarse balk (zoals Profiel)
+#  K. (11 nov 2026) De zwarte balk "Stekky Store" en de paarse balk blijven bovenin staan tijdens scrollen; de paarse balk (zoals Profiel)
 #     heeft Games, Widgets, Stickers, Achtergronden en Lettertypes; Games staat eerst aan
 #  H. geen paginafouten
 # python3 -I proef288.py <map>
@@ -97,6 +97,11 @@ try:
         pg.evaluate("window.scrollTo(0, document.body.scrollHeight)"); pg.wait_for_timeout(300)
         bovenin = pg.evaluate("() => { const r = document.querySelector('.top-bar').getBoundingClientRect(); const x = r.left + r.width / 2, y = r.top + r.height / 2; return [window.scrollY > 200, r.top >= 0 && r.top < 20, document.querySelector('.top-bar').contains(document.elementFromPoint(x, y))] }")
         check(bovenin == [True, True, True], 'K: na scrollen staat de zwarte balk nog bovenin, boven de rest (%s)' % bovenin)
+        paars = pg.evaluate("() => { const n = document.getElementById('storeNav'), r = n.getBoundingClientRect(), t = n.querySelector('.main-tab.active').getBoundingClientRect(); return [r.top > 50 && r.bottom < 220, n.contains(document.elementFromPoint(t.left + t.width / 2, t.top + t.height / 2))] }")
+        check(paars == [True, True], 'K: na scrollen staat de paarse balk er ook nog, onder de zwarte balk (%s)' % paars)
+        pg.click('#soorten .main-tab[data-soort="game"]')
+        check(wacht(pg, "() => !!document.querySelector('#lijst .item[data-id=\"pesten\"]')", 4000), 'K: na scrollen kun je in de paarse balk een andere soort kiezen')
+        pg.click('#soorten .main-tab[data-soort="lettertype"]')
         pg.evaluate("window.scrollTo(0, 0)")
         # ── C ──
         c1 = wacht(pg, "() => document.querySelectorAll('#lijst .item').length === 9")

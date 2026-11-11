@@ -14,15 +14,15 @@
 <link href="lettertypen/basis.css?v=1" rel="stylesheet">
 <style>
 /* store.html (10 nov 2026): de Stekky Store, voor iedereen met een account. Logica: store.js
-   11 nov 2026: zwarte balk bovenin blijft staan tijdens scrollen; paarse balk (zoals Profiel) om een soort te kiezen. */
+   11 nov 2026: zwarte balk en paarse balk (zoals Profiel, om een soort te kiezen) blijven bovenin staan tijdens scrollen. */
 * { box-sizing:border-box; margin:0; padding:0; }
 :root { --bg:#1a0a2e; --card:rgba(255,255,255,0.06); --border:rgba(255,255,255,0.12); --accent:#c084fc; --knop:#8b3fd1; --text:#f3e8ff; --muted:rgba(255,255,255,0.6); }
 body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); max-width:520px; margin:0 auto; min-height:100dvh; padding:16px 16px 40px; }
-.kop-vast { position:sticky; top:0; z-index:30; margin:-16px -16px 12px; padding:max(8px, env(safe-area-inset-top, 0px)) 16px 0; background:var(--bg); } /* blijft bovenin; niets schuift zichtbaar boven de balk langs */
+.kop-vast { position:sticky; top:0; z-index:30; margin:-16px -16px 14px; padding:max(8px, env(safe-area-inset-top, 0px)) 16px 8px; background:var(--bg); box-shadow:0 8px 12px -10px rgba(0,0,0,0.7); } /* zwarte en paarse balk blijven bovenin; niets schuift zichtbaar langs */
 .top-bar { display:flex; align-items:center; gap:10px; padding:10px 12px; margin:0; border:1px solid rgba(255,255,255,0.14); border-radius:18px; background:linear-gradient(145deg,#26262c,#08080b 70%); box-shadow:inset 0 1px 0 rgba(255,255,255,0.16), 0 6px 20px -6px rgba(0,0,0,0.8); }
 .terug { width:34px; height:34px; flex:none; display:flex; align-items:center; justify-content:center; padding:0; border-radius:10px; background:rgba(255,255,255,0.08); border:0.5px solid var(--border); color:rgba(255,255,255,0.8); cursor:pointer; }
 .titel { display:flex; align-items:center; gap:8px; font-family:'DM Serif Display',serif; font-size:26px; line-height:1; letter-spacing:-0.5px; font-weight:400; color:#fff; }
-body > .profile-nav { margin:0 0 16px; }
+.kop-vast .profile-nav { margin:10px 0 0; }
 .profile-nav .main-tab .tab-icoon { width:22px; height:22px; }
 .uitleg { font-size:13px; line-height:1.5; color:var(--muted); margin-bottom:14px; }
 .raster { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; }
@@ -57,7 +57,6 @@ body > .profile-nav { margin:0 0 16px; }
   <button type="button" class="terug" onclick="window.location.href='profiel.html'" aria-label="Terug" title="Terug" data-t-attr="aria-label,title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
   <h1 class="titel"><span data-t>Stekky Store</span></h1>
 </header>
-</div>
 
 <nav class="profile-nav" id="storeNav" style="display:none" aria-label="Soorten" data-t-attr="aria-label">
   <div class="profile-nav-rail">
@@ -69,6 +68,7 @@ body > .profile-nav { margin:0 0 16px; }
     <button type="button" class="profile-nav-arrow" id="profile-nav-next" aria-label="Volgende onderdelen" data-t-attr="aria-label">›</button>
   </div>
 </nav>
+</div>
 
 <div id="laden" class="laden" data-t>Laden...</div>
 
@@ -110,7 +110,7 @@ function bouwSoorten() {
     b.classList.toggle('active', aan)
     b.setAttribute('aria-selected', String(aan))
     b.tabIndex = aan ? 0 : -1
-    b.onclick = () => { soort = b.dataset.soort; bouwSoorten(); bouwLijst() }
+    b.onclick = () => { soort = b.dataset.soort; bouwSoorten(); bouwLijst(); window.scrollTo({ top: 0 }) }   // nieuwe soort: begin bovenaan de lijst
   }
 }
 

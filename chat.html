@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=103"></script>
+<script src="taal.js?v=104"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -455,7 +455,7 @@ window.veiligeUrl = function(v){
 
 <script src="beltoon.js?v=11"></script>
 <script type="module">
-  import { koppelSpelIcoonFallback } from './spelicoon.js?v=4'
+  import { koppelSpelIcoonFallback } from './spelicoon.js?v=5'
   koppelSpelIcoonFallback()
 </script>
 <script type="module">
@@ -487,7 +487,7 @@ window.veiligeUrl = function(v){
   import * as Schaak from './schaak.js?v=95'
   import { maakSpelMenu } from './spelmenu.js?v=1' // 11 nov 2026: hamburgermenu rechtsboven in elk spel (pauze, geluid, microfoon, camera, menu, verlaten)
   import { startSpelBerichtInChat } from './spelbericht.js?v=2'
-  import { gameAan, mijnDownloads } from './store.js?v=6' // 11 nov 2026: spellen uit de Store // 11 nov 2026: berichten van andere vrienden linksboven in het spel
+  import { gameAan, mijnDownloads } from './store.js?v=7' // 11 nov 2026: spellen uit de Store // 11 nov 2026: berichten van andere vrienden linksboven in het spel
   import * as Bordgeluid from './bordgeluid.js?v=203'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
@@ -513,7 +513,7 @@ window.veiligeUrl = function(v){
   // wacht het spel er even op.
   let titelModule = null
   const laadTitelscherm = () => titelModule ? Promise.resolve(titelModule)
-    : laadModule('./titelscherm.js?v=9').then(m => (titelModule = m))
+    : laadModule('./titelscherm.js?v=10').then(m => (titelModule = m))
   const laadRustig = f => ('requestIdleCallback' in window ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 2500))
   laadRustig(() => laadTitelscherm().catch(() => {}))
   pasBlokstijlToe()
@@ -2682,6 +2682,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     botkaaseiren:   { icon: '⭕', naam: 'Tic-Tac-Toe' },
     vieroprij:      { icon: '🔴', naam: 'Four in a Row' },
     pesten:         { icon: '🃏', naam: 'Pesten' },
+    toepen:         { icon: '✊', naam: 'Toepen' },            // 11 nov 2026: kaartspel uit de Store
+    eenentwintigen: { icon: '♠️', naam: 'Eenentwintigen' },    // 11 nov 2026: kaartspel uit de Store
     schaken:        { icon: '♟️', naam: schaakT('Schaken') },
     schakendrie:    { icon: '♟️♟️♟️', naam: schaakT('Schaken met drie spelers') },
     dammen:         { icon: '⚫', naam: 'Draughts' },
@@ -2849,6 +2851,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
     pesten: './pesten-ui.js?v=2',
+    toepen: './toepen-ui.js?v=1',
+    eenentwintigen: './eenentwintigen-ui.js?v=1',
     schaken: './schaken-ui.js?v=275',
     schakendrie: './schaken-drie-ui.js?v=43',
     flappybird: './flappy-ui.js?v=147',
@@ -2907,7 +2911,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // Accepteer uitnodiging → open het spel
   window.speelMee = async function(spelType, sessieId, starterId, players = null) {
     if (!huidigeUser || !geselecteerdeVriend?.id) return
-    const beschikbaar = ['botkaaseiren', 'vieroprij', 'pesten', 'schaken', 'schakendrie', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball', 'shmup']
+    const beschikbaar = ['botkaaseiren', 'vieroprij', 'pesten', 'toepen', 'eenentwintigen', 'schaken', 'schakendrie', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball', 'shmup']
     if (!beschikbaar.includes(spelType)) {
       alert(T('🚧 {spel} komt binnenkort beschikbaar!', { spel: SPEL_INFO[spelType]?.naam || spelType }))
       return
@@ -2990,6 +2994,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (spelType === 'botkaaseiren') await startBotKaasEieren()
     else if (spelType === 'vieroprij') await startVierOpEenRij()
     else if (spelType === 'pesten') await startPesten()
+    else if (spelType === 'toepen') await startKaartspel(spelType)
+    else if (spelType === 'eenentwintigen') await startKaartspel(spelType)
     else if (spelType === 'schaken') await startSchaken()
     else if (spelType === 'schakendrie') await startSchakenDrie(players)
     else if (spelType === 'dammen') await startDammen()
@@ -3108,12 +3114,14 @@ console.timeLog('[chat] berichten', 'opgehaald')
     },
   })
 
-  // ── 11 nov 2026: spellen uit de Stekky Store (Pesten) ──
+  // ── 11 nov 2026: spellen uit de Stekky Store (Pesten, Toepen, Eenentwintigen) ──
   // Zo'n spel staat alleen in het spelmenu als je het in de Store gedownload hebt EN de widget aan hebt gezet
   // (Profiel > Widgets > Spellen). Een uitnodiging van een vriend voor zo'n spel kun je altijd aannemen.
   // v2 (11 nov 2026): de widgets staan op dit toestel (niet op de server): gameAan() uit store.js kijkt daar.
   function toonStoreSpellen() {
-    const STORE_SPELLEN = [{ id: 'pesten', naam: 'Pesten', widget: 'spel_pesten', na: 'vieroprij' }]
+    const STORE_SPELLEN = [{ id: 'pesten', naam: 'Pesten', widget: 'spel_pesten', icoon: 'spelicoon/pesten.webp?v=2' },
+      { id: 'toepen', naam: 'Toepen', widget: 'spel_toepen', icoon: 'spelicoon/toepen.webp?v=2' },
+      { id: 'eenentwintigen', naam: 'Eenentwintigen', widget: 'spel_eenentwintigen', icoon: 'spelicoon/eenentwintigen.webp?v=2' }]
     for (const sp of STORE_SPELLEN) {
       const id = 'spelKnop-' + sp.id
       const oud = document.getElementById(id)
@@ -3121,10 +3129,12 @@ console.timeLog('[chat] berichten', 'opgehaald')
       if (oud) continue
       const knop = document.createElement('button')
       knop.id = id; knop.className = 'spel-keuze-btn'; knop.type = 'button'
-      knop.innerHTML = '<span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/' + sp.id + '.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span></span>'
+      knop.innerHTML = '<span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="' + sp.icoon + '" width="36" height="36" alt="" draggable="false"></span><span></span>'
       knop.lastElementChild.textContent = sp.naam
       knop.onclick = () => window.startSpel(sp.id)
-      const na = document.querySelector('#spelMenuGrid .spel-keuze-btn[onclick="startSpel(\'' + sp.na + '\')"]')
+      // na het vorige Store-spel dat er staat (Pesten, Toepen, Eenentwintigen), anders na Four in a Row
+      const eerder = STORE_SPELLEN.slice(0, STORE_SPELLEN.indexOf(sp)).reverse().map(x => document.getElementById('spelKnop-' + x.id)).find(Boolean)
+      const na = eerder || document.querySelector('#spelMenuGrid .spel-keuze-btn[onclick="startSpel(\'vieroprij\')"]')
       if (na) na.after(knop); else document.querySelector('#spelMenuGrid > div:last-child')?.appendChild(knop)
     }
   }
@@ -3135,10 +3145,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
   //   - de webcamrondjes bovenin (120 px), met de webcamknop 📹, gouden rand bij praten
   //     en een rode rand als het spel 'fibro-spel-geslagen' meldt (beurtspel-hulp.js).
   // Schaken staat erin voor de chatbalk, maar heeft zijn eigen webcamvakken.
-  const BEURTSPELLEN = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pesten']
+  const BEURTSPELLEN = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pesten', 'toepen', 'eenentwintigen']
   // BLAUWDRUK KAARTSPELLEN (zie BLAUWDRUK-KAARTSPEL.md): een kaartspel staat ook in BEURTSPELLEN (chatbalk, stickers,
   // webcamrondjes) en krijgt daarbij vanzelf het spraakgesprek zodra het spel begint.
-  const KAARTSPELLEN = ['pesten']
+  const KAARTSPELLEN = ['pesten', 'toepen', 'eenentwintigen']
   // v169: spellen met een chatbalk: de beurtspellen (daar heb je tijd om iets te sturen)
   const SPELCHAT_SPELLEN = BEURTSPELLEN
 
@@ -3616,6 +3626,11 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ─── Pesten (kaartspel, 11 nov 2026) ───
   async function startPesten() {
     const m = await laadModule('./pesten-ui.js?v=2')
+    m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
+  }
+  // ─── Toepen en Eenentwintigen (kaartspellen uit de Store, 11 nov 2026): hetzelfde als Pesten ───
+  async function startKaartspel(spelType) {
+    const m = await laadModule(SPEL_BESTAND[spelType])
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
 

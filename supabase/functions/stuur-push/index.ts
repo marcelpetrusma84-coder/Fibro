@@ -127,6 +127,8 @@ const LIKE_RUST_MS = 10 * 60 * 1000;
 const SPELNAMEN: Record<string, { nl: string; en: string }> = {
   botkaaseiren: { nl: "Tic-Tac-Toe", en: "Tic-Tac-Toe" }, vieroprij: { nl: "Four in a Row", en: "Four in a Row" },
   pesten: { nl: "Pesten", en: "Pesten" }, // 11 nov 2026: het eerste kaartspel
+  toepen: { nl: "Toepen", en: "Toepen" }, // 11 nov 2026: kaartspellen uit de Store
+  eenentwintigen: { nl: "Eenentwintigen", en: "Twenty-One" },
   schaken: { nl: "Schaken", en: "Chess" }, schakendrie: { nl: "Schaken met drie spelers", en: "Three-player chess" },
   dammen: { nl: "Draughts", en: "Draughts" }, pong: { nl: "Neo Paddle", en: "Neo Paddle" }, flappybird: { nl: "Flapper", en: "Flapper" },
   swarm: { nl: "The Swarm", en: "The Swarm" }, pacman: { nl: "Ghost Tag", en: "Ghost Tag" },

@@ -152,6 +152,9 @@ jobs:
       - name: "Pesten alleen via de Store: spelmenu in de chat alleen met de widget"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef292.py .
+      - name: "Toepen en Eenentwintigen: echt spelen tegen de computer en met z'n tweeën"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef293.py .
       - name: "Spelmenu ☰ in elk spel (pauze, geluid, microfoon, camera, menu, verlaten) en berichten linksboven"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef291.py .

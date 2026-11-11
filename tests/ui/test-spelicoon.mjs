@@ -10,7 +10,7 @@ const SI = await import(pad('spelicoon.js'))
 const { SPEL_VERSIES } = await import(pad('spelversies.js'))
 // De WebP-inhoud blijft v2. Alleen de JavaScript-module kreeg een nieuwe
 // cacheversie voor foutafhandeling; die twee versies lopen bewust apart.
-const MODULE_VERSIE = 4   // v4 (11 nov 2026): Pesten erbij
+const MODULE_VERSIE = 5   // v5 (11 nov 2026): Toepen en Eenentwintigen erbij
 
 // 1. Elk spel heeft een plaatje: WebP, 128 x 128, klein
 assert.deepEqual([...SI.SPELLEN].sort(), Object.keys(SPEL_VERSIES).sort(), 'een plaatje voor elk spel')
@@ -36,7 +36,7 @@ for (const [, spel, plaatje, v] of knoppen) { assert.equal(spel, plaatje, 'knop 
 // 3. De widgetlijst in Profiel: twaalf spellen, elk met zijn eigen plaatje
 const profiel = lees('profiel.html')
 const widgets = [...profiel.matchAll(/<img src="spelicoon\/(\w+)\.webp\?v=(\d+)"[^>]*><\/div><div><div class="widget-name" data-t>[^<]*<\/div><div class="widget-desc" data-t>[^<]*<\/div><\/div><\/div><div class="widget-versie" data-spelversie="(\w+)"/g)]
-assert.equal(widgets.length, 13)   // 11 nov 2026: Pesten (alleen zichtbaar na downloaden in de Store)
+assert.equal(widgets.length, 15)   // 11 nov 2026: Pesten, Toepen, Eenentwintigen (alleen zichtbaar na downloaden in de Store)
 for (const [, plaatje, v, spel] of widgets) { assert.equal(plaatje, spel, 'widget ' + spel); assert.equal(Number(v), SI.VERSIE) }
 
 // 4. Home en het profiel van een vriend gebruiken spelicoon.js
@@ -48,7 +48,7 @@ assert.ok(SI.VERSIE >= 2)
 for (const f of ['chat.html', 'profiel.html', 'spelicoon.js']) assert.ok(!lees(f).includes('border-radius:22%'), f + ': geen ronde tegel meer')
 for (const f of ['index.html', 'vriend-profiel.html']) assert.ok(lees(f).includes("spelicoon.js?v=" + MODULE_VERSIE + "'"), f + ': spelicoon.js met de nieuwe moduleversie')
 for (const f of ['index.html', 'profiel.html', 'chat.html', 'vriend-profiel.html']) {
-  assert.match(lees(f), /import \{ koppelSpelIcoonFallback \} from '\.\/spelicoon\.js\?v=4'/, f + ': reserve-icoon uit de vernieuwde module')
+  assert.match(lees(f), /import \{ koppelSpelIcoonFallback \} from '\.\/spelicoon\.js\?v=5'/, f + ': reserve-icoon uit de vernieuwde module')
   assert.match(lees(f), /koppelSpelIcoonFallback\(\)/, f + ': vangt mislukte plaatjes op, ook als ze later worden toegevoegd')
 }
 console.log('ok: plaatjes uit de spellen (' + SI.SPELLEN.length + ')')

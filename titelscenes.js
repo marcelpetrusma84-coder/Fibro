@@ -802,8 +802,18 @@ function neonTitel(ctx, b, h, t) {
     ctx.textBaseline = 'alphabetic'
 }
 
-// ── Pesten: paarse speeltafel, een waaier kaarten en kaarten die op de stapel vliegen ──
-function pesten(ctx, b, h, t, st) {
+// ── Kaartspellen: paarse speeltafel, een waaier kaarten en kaarten die op de stapel vliegen ──
+// 11 nov 2026: Toepen en Eenentwintigen gebruiken dezelfde tafel met hun eigen kaarten (waaier = onderin,
+// lijst = de kaarten die op tafel vliegen).
+const PESTEN_WAAIER = [['♠', 'A', false], ['♥', '7', true], ['♣', 'B', false], ['♦', '2', true], ['♥', 'A', true]]
+const PESTEN_LIJST = [['♥', 'H', true], ['♠', '8', false], ['♦', 'V', true], ['♣', '2', false], ['♥', '10', true], ['♠', 'J', false]]
+const kaartScene = (waaier, lijst) => (ctx, b, h, t, st) => kaartTafel(ctx, b, h, t, st, waaier, lijst)
+const pesten = kaartScene(PESTEN_WAAIER, PESTEN_LIJST)
+const toepen = kaartScene([['♠', '10', false], ['♥', '9', true], ['♣', '8', false], ['♦', '7', true]],
+    [['♥', '10', true], ['♥', 'A', true], ['♠', '9', false], ['♠', 'B', false], ['♦', '8', true], ['♣', 'H', false]])
+const eenentwintigen = kaartScene([['♠', 'A', false], ['♥', 'H', true]],
+    [['♦', '5', true], ['♣', '9', false], ['♥', '7', true], ['♠', 'V', false], ['♦', 'A', true], ['♣', '3', false]])
+function kaartTafel(ctx, b, h, t, st, waaier, lijst) {
     lucht(ctx, b, h, ['#3a1a5e', '#24103d', '#1a0a2e'])
     // vilt
     const g = ctx.createRadialGradient(b / 2, h * 0.62, 10, b / 2, h * 0.62, Math.max(b, h) * 0.6)
@@ -830,17 +840,15 @@ function pesten(ctx, b, h, t, st) {
         ctx.restore()
     }
     // de waaier onderin: gaat langzaam open en dicht
-    const waaier = [['♠', 'A', false], ['♥', '7', true], ['♣', 'B', false], ['♦', '2', true], ['♥', 'A', true]]
     const open = 0.75 + 0.25 * Math.sin(t * 1.3)
     waaier.forEach(([teken, waarde, rood], i) => {
-        const d = i - 2
+        const d = i - (waaier.length - 1) / 2
         kaart(b / 2 + d * w * 0.55 * open, h * 0.84 + Math.abs(d) * 6, d * 0.2 * open, teken, waarde, rood)
     })
     // stapel links, aflegstapel in het midden; elke 1,4 s vliegt er een kaart
     const sx = b / 2 - w * 0.9, sy = h * 0.6, ax = b / 2 + w * 0.7, ay = h * 0.6
     for (let i = 3; i >= 0; i--) kaart(sx - i * 1.5, sy - i * 2, 0, '', '', false, true)
     const stap = 1.4, n = Math.floor(t / stap), p = glad(klem((t % stap) / 0.8))
-    const lijst = [['♥', 'H', true], ['♠', '8', false], ['♦', 'V', true], ['♣', '2', false], ['♥', '10', true], ['♠', 'J', false]]
     const k = i => lijst[((i % lijst.length) + lijst.length) % lijst.length]
     for (let i = Math.max(0, n - 3); i < n; i++) { const [te, wa, ro] = k(i); kaart(ax, ay, ((i * 37) % 21 - 10) / 60, te, wa, ro) }
     const [te, wa, ro] = k(n)
@@ -853,6 +861,8 @@ export const SCENES = {
     botkaaseiren: { font: 'Chewy', css: 'chewy', titel: '#fff1d6', rand: '#4a2509', gloed: '#ffb35a', teken: botkaaseiren },
     vieroprij: { font: 'Titan One', css: 'titan-one', titel: '#ffd23f', rand: '#1e4fd8', gloed: '#ffffff', teken: vieroprij },
     pesten: { font: 'Titan One', css: 'titan-one', titel: '#ffffff', rand: '#6a2bab', gloed: '#c084fc', teken: pesten },
+    toepen: { font: 'Titan One', css: 'titan-one', titel: '#fcd34d', rand: '#6a2bab', gloed: '#c084fc', teken: toepen },
+    eenentwintigen: { font: 'Titan One', css: 'titan-one', titel: '#86efac', rand: '#1a0a2e', gloed: '#c084fc', teken: eenentwintigen },
     schaken: { font: 'Cinzel Decorative', css: 'cinzel-decorative', titel: '#f3dc96', rand: '#2b1d05', gloed: '#d9a83a', teken: schaken },
     dammen: { font: 'Cinzel', css: 'cinzel', titel: '#fbf3df', rand: '#2a1608', gloed: '#c98a3e', teken: dammen },
     pong: { font: 'Monoton', css: 'monoton', titel: '#7af7ff', rand: '#12002b', gloed: '#ff3df2', teken: pong },

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { SPEL_HISTORIE, SPEL_VERSIES, spelHistorie, vergelijkVersies, versieLabel } from '../../spelversie-data.js'
 
-const expectedGames = ['botkaaseiren','vieroprij','schaken','dammen','pong','pacman','pinball','flappybird','breakout','swarm','endlessrunner','shmup']
+const expectedGames = ['botkaaseiren','vieroprij','schaken','dammen','pong','pacman','pinball','flappybird','breakout','swarm','endlessrunner','shmup','pesten']
 assert.deepEqual(Object.keys(SPEL_HISTORIE), expectedGames)
 assert.deepEqual(Object.keys(SPEL_VERSIES), expectedGames)
 assert.ok(Object.isFrozen(SPEL_HISTORIE)); assert.ok(Object.isFrozen(SPEL_VERSIES))
@@ -37,7 +37,7 @@ for (const game of expectedGames) {
   assert.throws(() => entries.push(entries[0]), TypeError)
   assert.throws(() => { entries[0].summary = 'changed' }, TypeError)
 }
-assert.equal(records, 29, '26 verified existing records plus Chess 6.2 knight routes, Chess 6.3 Ultra hints and a mobile pinch patch')
+assert.equal(records, 30, '26 verified existing records plus Chess 6.2 knight routes, Chess 6.3 Ultra hints, a mobile pinch patch and Pesten 1.0 (11 nov 2026)')
 assert.equal(pending, 0, 'every shipped version has a real commit and timestamp')
 assert.equal(SPEL_VERSIES.schaken, '6.3.1')
 assert.equal(SPEL_VERSIES.shmup, '5.0.0')
@@ -56,10 +56,12 @@ assert.equal(chess.get('6.0.0').sourceCommit, '6289a3fde4d7ad93e7c97f4924dc017fb
 assert.equal(chess.get('6.0.0').updatedAt, '2026-11-02T13:16:03+01:00')
 assert.equal(chess.get('3.0.0').sourceCommit, '8fa72a338aca029249863eb46cc0e09f95222071')
 assert.equal(chess.get('3.0.0').updatedAt, '2026-10-22T18:28:32+02:00')
+// Games that existed when registration started share that baseline; a game added later starts at its own first commit.
+const LATER = { pesten: ['2026-11-11T09:41:39+01:00', 'f79355903f4f2a27a866f29cd8ece3065c4e4b49'] }
 for (const game of expectedGames) {
   const baseline = spelHistorie(game).at(-1)
-  assert.equal(baseline.updatedAt, '2026-10-21T21:08:23+02:00')
-  assert.equal(baseline.sourceCommit, 'fbe8d756386a42fb8c6dbaa3436f7bf2534fc033')
+  assert.equal(baseline.updatedAt, LATER[game]?.[0] || '2026-10-21T21:08:23+02:00')
+  assert.equal(baseline.sourceCommit, LATER[game]?.[1] || 'fbe8d756386a42fb8c6dbaa3436f7bf2534fc033')
 }
 
 // Compare integer segments, not decimals or string order. A future tenth

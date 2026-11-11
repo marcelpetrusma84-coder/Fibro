@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-<script src="taal.js?v=97"></script>
+<script src="taal.js?v=99"></script>
 <script src="appslot.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Stekky Store</title>
@@ -31,6 +31,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .item-kop { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:4px; }
 .item-titel { font-family:'DM Serif Display',serif; font-size:20px; color:var(--accent); }
 .item-aantal { font-size:12px; color:var(--muted); white-space:nowrap; }
+.item-game { display:flex; gap:10px; align-items:center; } .item-game img { width:56px; height:56px; flex:none; } .item-uitleg { font-size:12px; line-height:1.4; color:var(--muted); opacity:.85; }
 .item-regel { font-size:22px; line-height:1.35; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .knop { margin-top:auto; min-height:40px; padding:8px 12px; border-radius:12px; border:none; background:var(--knop); color:#fff; font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
 .knop:disabled { opacity:0.55; cursor:default; }
@@ -72,7 +73,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 <script type="module">
 import { supabase } from './supabase.js?v=95'
 import { laadFont } from './lettertypes.js?v=132'
-import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, weghalenItem, tabelOntbreekt } from './store.js?v=2'
+import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, weghalenItem, tabelOntbreekt } from './store.js?v=3'
 
 let mijnId = null
 let mijn = new Set()
@@ -119,8 +120,11 @@ function bouwLijst() {
     const kaart = document.createElement('div')
     kaart.className = 'item' + (heb ? ' heb' : '')
     kaart.dataset.id = it.id
+    // 11 nov 2026: een game (Pesten): plaatje, naam en uitleg; na downloaden zet je hem aan bij Profiel > Widgets
+    if (it.soort === 'game') kaart.innerHTML = `<div class="item-game"><img src="${esc(it.icoon)}" alt="" draggable="false"><span class="item-titel">${esc(it.titel)}</span></div>`
+      + `<div class="item-uitleg">${esc(T(it.uitleg))}</div>`
     // v2: een pakket van 4 lettertypes; elke regel staat in zijn eigen letter
-    kaart.innerHTML = `<div class="item-kop"><span class="item-titel">${esc(T('pakket|' + it.titel))}</span>`
+    else kaart.innerHTML = `<div class="item-kop"><span class="item-titel">${esc(T('pakket|' + it.titel))}</span>`
       + `<span class="item-aantal">${esc(T('{n} lettertypes', { n: it.lettertypes.length }))}</span></div>`
       + it.lettertypes.map(f => `<div class="item-regel" style="font-family:${esc(`'${f.naam}',${f.val}`)} !important">${esc(T('lettertype|' + f.label))}</div>`).join('')
     const knop = document.createElement('button')
@@ -139,7 +143,7 @@ function bouwLijst() {
       kaart.appendChild(weg)
     }
     raster.appendChild(kaart)
-    for (const f of it.lettertypes) { try { laadFont(f.naam) } catch (e) {} }
+    for (const f of it.lettertypes || []) { try { laadFont(f.naam) } catch (e) {} }
   }
   lijst.innerHTML = ''
   lijst.appendChild(raster)
@@ -156,7 +160,7 @@ async function download(it, knop) {
     return
   }
   mijn.add(it.id)
-  toonMelding(it.soort === 'lettertype' ? T('Gedownload! Kies ze bij Stijl → Lettertype.') : T('Gedownload!'), true)
+  toonMelding(it.soort === 'lettertype' ? T('Gedownload! Kies ze bij Stijl → Lettertype.') : it.soort === 'game' ? T('Gedownload! Zet hem aan bij Profiel → Widgets → Spellen.') : T('Gedownload!'), true)
   bouwLijst()
 }
 

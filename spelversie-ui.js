@@ -1,4 +1,4 @@
-import { versieLabel } from './spelversie-data.js?v=7'
+import { versieLabel } from './spelversie-data.js?v=8'
 
 const mounted = new WeakMap()
 const labels = {

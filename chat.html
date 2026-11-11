@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=97"></script>
+<script src="taal.js?v=99"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -336,7 +336,6 @@ window.veiligeUrl = function(v){
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
         <button class="spel-keuze-btn" onclick="startSpel('botkaaseiren')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/botkaaseiren.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span>Tic-Tac-Toe</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('vieroprij')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/vieroprij.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span>Four in a Row</span></button>
-        <button class="spel-keuze-btn" onclick="startSpel('pesten')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true"><g transform="rotate(-16 18 30)"><rect x="8" y="5" width="16" height="23" rx="2.5" fill="#8b3fd1" stroke="#c084fc" stroke-width="1.2"/><path d="M16 12l4 4.5-4 4.5-4-4.5z" fill="#1a0a2e" stroke="#c084fc" stroke-width=".8"/></g><g transform="rotate(14 18 30)"><rect x="12" y="5" width="16" height="23" rx="2.5" fill="#fffdf9" stroke="#d6c8e6" stroke-width="1"/><text x="15" y="12" font-size="6.5" font-weight="800" font-family="system-ui,sans-serif" fill="#d62246">A</text><path d="M20 23.5c-3.2-2.4-5-4.2-5-6.3 0-1.6 1.2-2.7 2.6-2.7 1.1 0 1.9.6 2.4 1.5.5-.9 1.3-1.5 2.4-1.5 1.4 0 2.6 1.1 2.6 2.7 0 2.1-1.8 3.9-5 6.3z" fill="#d62246"/></g></svg></span><span>Pesten</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('schaken')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/schaken.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span id="chessGameName">Schaken</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('dammen')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/dammen.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span>Draughts</span></button>
         <button class="spel-keuze-btn" onclick="startSpel('pong')"><span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/pong.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span>Neo Paddle</span></button>
@@ -452,7 +451,7 @@ window.veiligeUrl = function(v){
 
 <script src="beltoon.js?v=11"></script>
 <script type="module">
-  import { koppelSpelIcoonFallback } from './spelicoon.js?v=3'
+  import { koppelSpelIcoonFallback } from './spelicoon.js?v=4'
   koppelSpelIcoonFallback()
 </script>
 <script type="module">
@@ -724,7 +723,7 @@ window.veiligeUrl = function(v){
     // vriendenlijst ophalen in plaats van ervoor. .then() start het verzoek meteen.
     const profielBelofte = supabase
       .from('profiles')
-      .select('id, username, avatar_url, avatar_data')
+      .select('id, username, avatar_url, avatar_data, widgets') // 11 nov 2026: widgets = welke spellen uit de Store aan staan
       .eq('id', huidigeUser.id)
       .single()
       .then(r => r, e => ({ data: null, error: e }))
@@ -846,6 +845,7 @@ window.veiligeUrl = function(v){
 
     await laadVrienden()
     huidigProfiel = (await profielBelofte).data
+    toonStoreSpellen() // 11 nov 2026: Pesten in het spelmenu als de widget aan staat
     pasFotosToe() // v134: eigen foto bij eigen berichten
 
     // ── Automatisch spel starten via URL (van uitnodiging op andere pagina) ──
@@ -3046,6 +3046,27 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (SPELCHAT_SPELLEN.includes(spelType)) bouwSpelChatUI()
 
     // Start spel-audiobel automatisch
+  }
+
+  // ── 11 nov 2026: spellen uit de Stekky Store (Pesten) ──
+  // Zo'n spel staat alleen in het spelmenu als je het in de Store gedownload hebt EN de widget aan hebt gezet
+  // (Profiel > Widgets > Spellen). Een uitnodiging van een vriend voor zo'n spel kun je altijd aannemen.
+  function toonStoreSpellen() {
+    const STORE_SPELLEN = [{ id: 'pesten', naam: 'Pesten', widget: 'spel_pesten', na: 'vieroprij' }]
+    const widgets = Array.isArray(huidigProfiel?.widgets) ? huidigProfiel.widgets : []
+    for (const sp of STORE_SPELLEN) {
+      const id = 'spelKnop-' + sp.id
+      const oud = document.getElementById(id)
+      if (!widgets.includes(sp.widget)) { oud?.remove(); continue }
+      if (oud) continue
+      const knop = document.createElement('button')
+      knop.id = id; knop.className = 'spel-keuze-btn'; knop.type = 'button'
+      knop.innerHTML = '<span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="spelicoon/' + sp.id + '.webp?v=2" width="36" height="36" alt="" draggable="false"></span><span></span>'
+      knop.lastElementChild.textContent = sp.naam
+      knop.onclick = () => window.startSpel(sp.id)
+      const na = document.querySelector('#spelMenuGrid .spel-keuze-btn[onclick="startSpel(\'' + sp.na + '\')"]')
+      if (na) na.after(knop); else document.querySelector('#spelMenuGrid > div:last-child')?.appendChild(knop)
+    }
   }
 
   // ── BLAUWDRUK BEURTSPELLEN (zie BLAUWDRUK-BEURTSPEL.md) ──

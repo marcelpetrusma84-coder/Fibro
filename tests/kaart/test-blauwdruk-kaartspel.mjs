@@ -36,7 +36,10 @@ const BEURTSPELLEN = JSON.parse(chat.match(/const BEURTSPELLEN = (\[[^\]]*\])/)[
 assert.deepEqual(KAARTSPELLEN, ['pesten'])
 for (const spel of KAARTSPELLEN) assert.ok(BEURTSPELLEN.includes(spel), spel + ' krijgt de chatbalk en de webcamrondjes')
 assert.match(chat, /onActivity:\(\) => \{ if \(spelKanaal === verbinding && \(spelActief === 'schaken' \|\| KAARTSPELLEN\.includes\(spelActief\)\)\) startSpelBel\(\) \}/, 'spraak vanzelf aan bij kaartspellen')
-assert.match(chat, /startSpel\('pesten'\)/, 'knop in het spelmenu')
+assert.ok(!/onclick="startSpel\('pesten'\)"/.test(chat), 'geen vaste knop: Pesten komt uit de Store')
+assert.match(chat, /function toonStoreSpellen\(\)/, 'knop in het spelmenu alleen met de widget spel_pesten')
+assert.match(chat, /widget: 'spel_pesten'/)
+assert.match(chat, /select\('id, username, avatar_url, avatar_data, widgets'\)/)
 assert.match(chat, /else if \(spelType === 'pesten'\) await startPesten\(\)/)
 assert.match(chat, /const beschikbaar = \[[^\]]*'pesten'/)
 const versie = f => [...new Set([...lees(f).matchAll(/pesten-ui\.js\?v=(\d+)/g)].map(m => m[1]))]

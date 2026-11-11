@@ -32,7 +32,7 @@ Elk kaartspel krijgt **vanzelf**:
 
 1. **Regels in een eigen bestand** zonder scherm, zoals `pesten.js`: één stand-object, functies die een *nieuwe* stand teruggeven (of `null` als het niet mag), `geldigeStand()` om een stand van de ander te controleren, en `computerStap()` voor spelen tegen de computer. Zo kun je de regels testen met Node.
 2. **Het spel zelf**, zoals `pesten-ui.js`: `export function start({ spelKanaal, benIkSpeler1, vriendNaam })`, maak de tafel met `maakKaartTafel(...)` en praat over het spelkanaal zoals een beurtspel: `zet` (de hele stand), `vraag-stand`/`stand` (elke 3 seconden als je wacht), `opnieuw` (met de nieuwe stand). Speler 1 schudt en deelt. Animaties gaan na elkaar (een wachtrij), en tijdens een animatie kun je niets doen.
-3. **Aanmelden**: zet het spel in `BEURTSPELLEN` **en** `KAARTSPELLEN` in `chat.html`, plus de knop in het spelmenu, `SPEL_INFO`, `SPEL_BESTAND`, `beschikbaar` en een `startNaam()`-functie. In `solo.js` bij `SOLO_SPELLEN` met een computerspeler. In `speluitnodiging.js` de naam en het icoon. Zie de tabel in BLAUWDRUK-BEURTSPEL.md voor de rest (titelscherm, widget, spelicoon).
+3. **Aanmelden**: zet het spel in `BEURTSPELLEN` **en** `KAARTSPELLEN` in `chat.html`. Komt het uit de Store, zet het dan in `STORE_GAMES` (`store.js`) en `toonStoreSpellen()` (`chat.html`) in plaats van een vaste knop; anders de knop in het spelmenu, `SPEL_INFO`, `SPEL_BESTAND`, `beschikbaar` en een `startNaam()`-functie. In `solo.js` bij `SOLO_SPELLEN` met een computerspeler. In `speluitnodiging.js` de naam en het icoon. Zie de tabel in BLAUWDRUK-BEURTSPEL.md voor de rest (titelscherm, widget, spelicoon).
 4. **Teksten** met `T('...')` en de Engelse zin in `taal-en.js`. Daarna `taal-en.js` en `taal.js` een hoger `?v=`.
 5. **Tests**: regels in `tests/kaart/`, en een browsertest zoals `tests/tools/proef290.py` (speelt echt: tikken, vegen, pakken, uitspelen, en met z'n tweeën).
 
@@ -50,4 +50,10 @@ Elk kaartspel krijgt **vanzelf**:
 
 - De hele stand gaat over het spelkanaal, dus ook de kaarten van de ander. Het spel laat ze niet zien, maar iemand die het kanaal afluistert, kan ze zien. Voor een spel tussen vrienden is dat goed genoeg; voor een spel met inzet niet.
 - Het spraakgesprek gaat vanzelf aan bij kaartspellen. Het oude geluidsprobleem tussen een iPhone en een Steam Deck (zie BLAUWDRUK-BEURTSPEL.md) is nog niet opgelost.
-- Pesten staat nog niet in de Stekky Store (daar staan nu alleen lettertypes); het staat gewoon in het spelmenu van de chat en speelt ook tegen de computer (`spel.html?spel=pesten`).
+- **Pesten komt alleen uit de Stekky Store** (11 november 2026). Zo werkt het:
+  1. Store → Games → Pesten → Downloaden (`STORE_GAMES` in `store.js`; een rij in `store_downloads`).
+  2. Daarna staat Pesten bij Profiel → Widgets → Spellen (`widgetRij-spel_pesten`, `zetStoreGames`).
+  3. Zet je die widget aan, dan staat Pesten op **Home** (tegen de computer, `spel.html?spel=pesten`) en in het **spelmenu van de chat** (met een vriend, `toonStoreSpellen()` in `chat.html`, alleen als `spel_pesten` in je widgets staat).
+  4. Een uitnodiging van een vriend voor Pesten kun je altijd aannemen, ook zonder download.
+  - Pesten gaat niet mee met een uitnodigingslink (`store: true` in `solo.js`).
+  - De Store is voorlopig alleen voor moderators. Wil je hem voor iedereen, pas dan de policy `store_downloads_toevoegen` aan (zie `sql/stekky-store.sql`) en laat het Store-vakje bij Stijl voor iedereen zien.

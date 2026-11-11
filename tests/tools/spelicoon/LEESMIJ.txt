@@ -22,3 +22,6 @@ Zo maak je ze opnieuw (Python met Playwright; Fibro moet draaien op http://127.0
   python3 dom.py; python3 canvas.py; python3 harnas.py
   python3 tegel.py <repo>/spelicoon        (maakt ook vel.png om te bekijken)
 Daarna VERSIE in spelicoon.js een hoger, en ?v= in chat.html, profiel.html, index.html en vriend-profiel.html.
+
+Pesten (11 nov 2026): het plaatje is een achterkant en harten aas uit kaartspel-hulp.js (achterkantSvg, kaartSvg('hA')),
+getekend op 128 x 128 met een doorzichtige achtergrond (Chromium) en opgeslagen als WebP met PIL (kwaliteit 88).

@@ -2329,4 +2329,7 @@ window.FIBRO_EN = {
   "Keer om!": "Reverse!",
   "Welke kleur wordt het?": "Which suit will it be?",
   "Stand: jij {a} - {b} {naam}": "Score: you {a} - {b} {naam}",
+  "Het kaartspel: leg dezelfde kleur of waarde, pest met een 2 of joker, en roep op tijd \"Laatste kaart!\". Tegen de computer of met een vriend in de chat.": "The card game: match the suit or rank, hit back with a 2 or joker, and call \"Last card!\" in time. Against the computer or with a friend in the chat.",
+  "Gedownload! Zet hem aan bij Profiel → Widgets → Spellen.": "Downloaded! Turn it on in Profile → Widgets → Games.",
+  "Uit de Store: tegen de computer op Home, met een vriend in de chat": "From the Store: against the computer on Home, with a friend in the chat",
 }

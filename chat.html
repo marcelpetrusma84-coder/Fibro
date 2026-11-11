@@ -3119,9 +3119,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // (Profiel > Widgets > Spellen). Een uitnodiging van een vriend voor zo'n spel kun je altijd aannemen.
   // v2 (11 nov 2026): de widgets staan op dit toestel (niet op de server): gameAan() uit store.js kijkt daar.
   function toonStoreSpellen() {
-    const STORE_SPELLEN = [{ id: 'pesten', naam: 'Pesten', widget: 'spel_pesten', na: 'vieroprij', icoon: 'spelicoon/pesten.webp?v=2' },
-      { id: 'toepen', naam: 'Toepen', widget: 'spel_toepen', na: 'pesten', icoon: 'spelicoon/toepen.webp?v=2' },
-      { id: 'eenentwintigen', naam: 'Eenentwintigen', widget: 'spel_eenentwintigen', na: 'toepen', icoon: 'spelicoon/eenentwintigen.webp?v=2' }]
+    const STORE_SPELLEN = [{ id: 'pesten', naam: 'Pesten', widget: 'spel_pesten', icoon: 'spelicoon/pesten.webp?v=2' },
+      { id: 'toepen', naam: 'Toepen', widget: 'spel_toepen', icoon: 'spelicoon/toepen.webp?v=2' },
+      { id: 'eenentwintigen', naam: 'Eenentwintigen', widget: 'spel_eenentwintigen', icoon: 'spelicoon/eenentwintigen.webp?v=2' }]
     for (const sp of STORE_SPELLEN) {
       const id = 'spelKnop-' + sp.id
       const oud = document.getElementById(id)
@@ -3132,7 +3132,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
       knop.innerHTML = '<span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="' + sp.icoon + '" width="36" height="36" alt="" draggable="false"></span><span></span>'
       knop.lastElementChild.textContent = sp.naam
       knop.onclick = () => window.startSpel(sp.id)
-      const na = document.querySelector('#spelMenuGrid .spel-keuze-btn[onclick="startSpel(\'' + sp.na + '\')"]') || document.getElementById('spelKnop-' + sp.na) || document.querySelector('#spelMenuGrid .spel-keuze-btn[onclick="startSpel(\'vieroprij\')"]')
+      // na het vorige Store-spel dat er staat (Pesten, Toepen, Eenentwintigen), anders na Four in a Row
+      const eerder = STORE_SPELLEN.slice(0, STORE_SPELLEN.indexOf(sp)).reverse().map(x => document.getElementById('spelKnop-' + x.id)).find(Boolean)
+      const na = eerder || document.querySelector('#spelMenuGrid .spel-keuze-btn[onclick="startSpel(\'vieroprij\')"]')
       if (na) na.after(knop); else document.querySelector('#spelMenuGrid > div:last-child')?.appendChild(knop)
     }
   }

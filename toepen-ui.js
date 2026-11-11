@@ -125,6 +125,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam }) {
     const oud = staat
     staat = nieuw; nr++
     stuur('zet', { staat, nr, spelId })
+    tafel.knoppen([])                                // knoppen weg tot de animatie klaar is
     inRij(async () => { if (animatie) await animatie(); naZet(oud) })
   }
 

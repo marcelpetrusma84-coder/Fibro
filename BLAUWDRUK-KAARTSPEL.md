@@ -1,6 +1,6 @@
 # Blauwdruk: een nieuw kaartspel in Stekky
 
-*Gemaakt op 11 november 2026, samen met het eerste kaartspel: **Pesten**. Een kaartspel is ook een beurtspel, dus alles uit [BLAUWDRUK-BEURTSPEL.md](BLAUWDRUK-BEURTSPEL.md) geldt ook hier.*
+*Gemaakt op 11 november 2026, samen met het eerste kaartspel: **Pesten**. Daarna op dezelfde blauwdruk: **Toepen** en **Eenentwintigen**. Een kaartspel is ook een beurtspel, dus alles uit [BLAUWDRUK-BEURTSPEL.md](BLAUWDRUK-BEURTSPEL.md) geldt ook hier.*
 
 Elk kaartspel krijgt **vanzelf**:
 
@@ -45,6 +45,22 @@ Elk kaartspel krijgt **vanzelf**:
 - **Boer**: past altijd, jij kiest de kleur. **Joker**: past altijd, daarna mag alles.
 - Nog 2 kaarten? Tik **☝ Laatste kaart!** voordat je speelt. Vergeten? Dan mag de ander op **🫵 Betrapt!** tikken: 2 strafkaarten.
 - Wie het eerst geen kaarten meer heeft, wint. Daarna begint de ander.
+
+## Toepen
+
+32 kaarten (7 t/m aas), 4 elk. Van laag naar hoog: boer, vrouw, heer, aas, 7, 8, 9, **10**. Kleur bekennen als je kunt; de hoogste van de gevraagde kleur wint de slag. **Alleen de laatste slag telt**: wie die verliest, krijgt de inzet als strafpunten.
+
+- **✊ Toep!** op je beurt: de ander gaat mee (inzet + 1) of gaat eruit (krijgt de oude inzet). Niet twee keer achter elkaar toepen.
+- Wie **10 strafpunten** heeft, verliest. Na elke ronde begint de ander.
+- Regels: `toepen.js`, spel: `toepen-ui.js`. De zet die een ronde afmaakt, deelt meteen de volgende ronde (`laatste.ronde`).
+
+## Eenentwintigen
+
+52 kaarten, 2 elk. 2 t/m 10 tellen wat erop staat, boer/vrouw/heer 10, aas 11 of 1. Wie begint pakt kaarten (tik of veeg op de stapel) tot **✋ Ik blijf**; daarna de ander. Boven 21 = meteen af. Aan het eind draait de ander zijn kaarten om (ze vliegen open op tafel). Evenveel = gelijkspel.
+
+- Regels: `eenentwintigen.js`, spel: `eenentwintigen-ui.js`. De computerspeler voor beide staat in `solo.js` (`kaartspelBot`).
+- Beide komen alleen uit de **Stekky Store**, net als Pesten (`STORE_GAMES`, widgets `spel_toepen` en `spel_eenentwintigen`).
+- Test: `tests/tools/proef293.py` en `tests/kaart/test-toepen-regels.mjs`, `test-eenentwintigen-regels.mjs`.
 
 ## Let op
 

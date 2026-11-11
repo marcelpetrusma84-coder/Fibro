@@ -57,14 +57,18 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam }) {
     if (!staat) { tafel.status(statusTekst(null)); return }
     tafel.toon(beeld(staat))
     tafel.knoppen(P.magBlijven(staat, ik) ? [{ naam: 'blijf', tekst: T('✋ Ik blijf'), nadruk: true, opKlik: blijf }] : [])
+    tekenInfo(staat)
+    const klok = staat.klaar ? '' : spelId + ':' + staat.aanZet
+    if (klok !== klokVoor) { klokVoor = klok; tafel.beurtKlok(staat.klaar ? null : (staat.aanZet === ik ? 'ik' : 'ander'), BEURT_SECONDEN) }
+  }
+  // De pilletjes boven de stapel: jouw totaal (meteen bij het pakken bijgewerkt, niet pas na de animatie)
+  function tekenInfo(staat) {
     const pil = (t, k) => '<span style="padding:3px 10px;border-radius:999px;background:#000a;border:1px solid #c084fc;font-weight:800;font-size:15px' + (k ? ';color:' + k : '') + '">' + t + '</span>'
     const mijn = P.totaal(staat.handen[ik])
     let info = pil(T('Jij: {n}', { n: mijn }), mijn > 21 ? '#ff5c7a' : mijn === 21 ? '#86efac' : '')
     if (staat.gestopt[hij] && !staat.klaar) info += pil(T('{naam} blijft', { naam: naamHtml }))
     if (staat.klaar) info += pil(naamHtml + ': ' + P.totaal(staat.handen[hij]), P.totaal(staat.handen[hij]) > 21 ? '#ff5c7a' : '')
     tafel.info(info)
-    const klok = staat.klaar ? '' : spelId + ':' + staat.aanZet
-    if (klok !== klokVoor) { klokVoor = klok; tafel.beurtKlok(staat.klaar ? null : (staat.aanZet === ik ? 'ik' : 'ander'), BEURT_SECONDEN) }
   }
 
   // Einde: de ander draait zijn kaarten om, dan de uitslag
@@ -92,6 +96,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam }) {
     const oud = staat
     staat = nieuw; nr++
     stuur('zet', { staat, nr, spelId })
+    tafel.knoppen([])                                // knoppen weg tot de animatie klaar is
     inRij(async () => { if (animatie) await animatie(); naZet(oud) })
   }
 
@@ -104,6 +109,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam }) {
     zet(nieuw, async () => {
       tafel.toon(beeld(nieuw, { afleg: [], mijnBeurt: false }))
       await tafel.pakAnimatie(l.kaarten, { manier })
+      tekenInfo({ ...nieuw, klaar: false })
       if (l.soort === 'dood') { tafel.effect(T('{n}: te veel!', { n: l.totaal })); tafel.tril([40, 60, 40]); await wacht(900) }
       else if (l.eenentwintig) { tafel.effect('21!'); await wacht(700) }
       if (nieuw.klaar) await omdraaien(nieuw)

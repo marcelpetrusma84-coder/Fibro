@@ -26,9 +26,9 @@ try:
     with sync_playwright() as p:
         br = p.chromium.launch(args=['--no-proxy-server', '--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', '--autoplay-policy=no-user-gesture-required'])
         cm, m, cb, b = start(br, 'nl')
-        DOWNLOADS[MARCEL] = ['pesten']; DOWNLOADS[BRAM] = []
+        DOWNLOADS[MARCEL] = ['pesten', 'eenentwintigen']; DOWNLOADS[BRAM] = []
         cm.route('**/rest/v1/store_downloads**', met_downloads(MARCEL)); cb.route('**/rest/v1/store_downloads**', met_downloads(BRAM))
-        zet_toestel(m, MARCEL, ['pesten'], ['mood', 'spel_pesten'])
+        zet_toestel(m, MARCEL, ['pesten', 'eenentwintigen'], ['mood', 'spel_pesten', 'spel_eenentwintigen'])   # 11 nov 2026: ook Eenentwintigen
         zet_toestel(b, BRAM, ['pesten'], ['mood'])   # Bram heeft hem wel gedownload, maar de widget staat uit
         for pg in (m, b):
             pg.goto(BASIS + 'chat.html')
@@ -36,6 +36,8 @@ try:
         a = wacht(m, "() => !!document.getElementById('spelKnop-pesten')", 10000)
         knoppen = m.evaluate(KNOPPEN)
         check('A Marcel (widget aan): Pesten in het spelmenu, na Four in a Row', a and knoppen.index('Pesten') == knoppen.index('Four in a Row') + 1, knoppen)
+        check('A Eenentwintigen staat er ook, na Pesten (gedownload + widget), Toepen niet (niet gedownload)', 'Eenentwintigen' in knoppen and knoppen.index('Eenentwintigen') == knoppen.index('Pesten') + 1 and 'Toepen' not in knoppen
+              and m.evaluate("() => (document.querySelector('#spelKnop-eenentwintigen img') || {}).getAttribute?.('src')") == 'spelicoon/eenentwintigen.webp?v=2', knoppen)
         check('A het spelplaatje van Pesten', m.evaluate("() => (document.querySelector('#spelKnop-pesten img') || {}).getAttribute?.('src')") == 'spelicoon/pesten.webp?v=2')
         b.wait_for_timeout(1500)
         check('B Bram (gedownload, widget uit): geen Pesten', 'Pesten' not in b.evaluate(KNOPPEN) and len(b.evaluate(KNOPPEN)) == 12, b.evaluate(KNOPPEN))

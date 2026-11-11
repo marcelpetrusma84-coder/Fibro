@@ -65,15 +65,23 @@ try:
         check(all(src.startswith('./kaarten/perkament/' + (id if not id.startswith('J') else 'joker') + '.webp?v=') for id, src in hand), 'C: elke kaart het goede plaatje')
 
         # D. spelen gaat door
+        # D. spelen gaat door. Veeg vanaf een stuk van de kaart dat echt bovenop ligt (de waaier overlapt), en liefst
+        #    geen boer of joker (dan komt er eerst een kleurvraag).
+        check(wacht(pg, MIJN_BEURT), 'D: jij bent nog aan de beurt')
         mag = pg.evaluate("() => [...document.querySelectorAll('.kt-hand .kt-kaart.kt-mag')].map(k => k.dataset.id)")
+        mag.sort(key=lambda id: id[1:] == 'B' or id.startswith('J'))
         if mag:
-            box = pg.locator('.kt-hand .kt-kaart[data-id="%s"]' % mag[0]).bounding_box()
-            x, y = box['x'] + box['width'] / 2, box['y'] + box['height'] * 0.6
+            x, y = pg.eval_on_selector('.kt-hand .kt-kaart[data-id="%s"]' % mag[0], """e => { const r = e.getBoundingClientRect()
+                for (const fy of [0.5, 0.35, 0.65, 0.2, 0.8]) for (let fx = 0.08; fx < 0.95; fx += 0.08) {
+                    const x = r.left + r.width * fx, y = r.top + r.height * fy, raak = document.elementFromPoint(x, y)
+                    if (raak && (raak === e || e.contains(raak))) return [x, y] }
+                return [r.left + r.width / 2, r.top + r.height / 2] }""")
             pg.mouse.move(x, y); pg.mouse.down()
-            for i in range(1, 9): pg.mouse.move(x, y - 30 * i); time.sleep(0.012)
+            for i in range(1, 9): pg.mouse.move(x, y - 28 * i); time.sleep(0.012)
             pg.mouse.up()
-            check(wacht(pg, "() => [...document.querySelectorAll('.kt-afleg .kt-ak')].some(k => k.dataset.id === %r && k.querySelector('img.kt-img'))" % mag[0], 8000),
-                  'D: een kaart omhoog vegen: hij ligt als plaatje op de aflegstapel')
+            check(wacht(pg, "() => !document.querySelector('.kt-hand .kt-kaart[data-id=\"%s\"]') && " % mag[0] + RUST +
+                        " && [...document.querySelectorAll('.kt-afleg .kt-ak')].every(k => k.querySelector('img.kt-img'))", 10000),
+                  'D: een kaart omhoog vegen: hij is gespeeld en de aflegstapel is perkament')
         else:
             pg.click('.kt-stapel'); check(wacht(pg, "() => document.querySelectorAll('.kt-hand .kt-kaart').length > 7", 8000), 'D: (niets te spelen) een kaart pakken werkt')
         time.sleep(0.5)

@@ -6,7 +6,7 @@
 #  D. veeg een kaart die NIET past omhoog = hij blijft in je hand
 #  E. de computer speelt terug, daarna ben jij weer aan de beurt
 #  F. tik op de stapel = 1 kaart erbij; veeg vanaf de stapel = ook 1 kaart erbij (een andere animatie)
-#  G. sorteren (⇅), een reactie (😀 > emoji vliegt over tafel), de beurtklok rond je rondje en rond het webcamrondje
+#  G. sorteren (⇅), GEEN reactieknop 😀 tegen de computer, de beurtklok rond je rondje en rond het webcamrondje
 #  H. een heel spel uitspelen tot er een winnaar is, en Opnieuw spelen deelt opnieuw
 #  I. met z'n tweeën (twee schermen, een nagemaakt spelkanaal): speler 1 deelt, speler 2 ziet dezelfde open kaart;
 #     een zet van de een komt bij de ander aan; daar komt de kaart uit de waaier van de ander
@@ -118,8 +118,10 @@ try:
         h = pg.evaluate(HAND)
         kleuren = [k[0] for k in h if not k.startswith('J')]
         check(kleuren == sorted(kleuren, key=lambda k: 'hkrs'.index(k)), 'G: ⇅ sorteert op kleur (%s)' % ' '.join(h))
-        pg.click('.kt-reactieknop'); pg.click('.kt-reacties button >> nth=2')
-        check(wacht(pg, "() => [...document.querySelectorAll('.kt-reactie')].some(e => e.textContent === '🔥')", 2000), 'G: een reactie vliegt over tafel')
+        check(not pg.query_selector('.kt-reactieknop'), 'G: tegen de computer geen reactieknop 😀')
+        # (pakte je net strafkaarten, dan is de computer aan de beurt: eerst weer je eigen beurt afwachten)
+        if pg.query_selector('.kt-knop[data-naam=pas]'): pg.click('.kt-knop[data-naam=pas]')
+        wacht(pg, MIJN_BEURT, 20000); pg.wait_for_timeout(300)
         check(pg.evaluate("() => document.querySelector('.kt-zetel-ik .kt-klok').classList.contains('kt-aan')"), 'G: de beurtklok loopt rond jouw rondje')
         check(pg.evaluate("() => !!document.querySelector('#spelVideoEigen > .kt-klok.kt-aan')"), 'G: en rond je webcamrondje')
         # ── H: uitspelen ──
@@ -158,7 +160,7 @@ try:
             q.goto(BASIS + 'manifest.json')
             q.evaluate("""async ([nr, maak]) => {
                 document.body.innerHTML = '<div id="spelOverlay"><div id="spelTitelBar"></div><div id="spelInhoud" style="position:fixed;inset:0"></div></div>'
-                const m = await import('./pesten-ui.js?v=1')
+                const m = await import('./pesten-ui.js?v=2')
                 const kanaal = (0, eval)('(' + maak + ')')(nr)
                 m.start({ spelKanaal: kanaal, benIkSpeler1: nr === 1, vriendNaam: nr === 1 ? 'Tijn' : 'Marcel' })
             }""", [nr, KANAAL])
@@ -179,6 +181,10 @@ try:
         else:
             een.click('.kt-stapel')
             check(wacht(twee, "() => parseInt(document.querySelector('.kt-anderaantal').textContent) === 8", 8000), 'I: speler 1 pakt, speler 2 ziet 8 kaarten bij de ander')
+        # reacties: alleen met z'n tweeën; de emoji vliegt bij allebei over tafel
+        een.click('.kt-reactieknop'); een.click('.kt-reacties button >> nth=2')
+        check(wacht(een, "() => [...document.querySelectorAll('.kt-reactie')].some(e => e.textContent === '🔥')", 2000)
+              and wacht(twee, "() => [...document.querySelectorAll('.kt-reactie')].some(e => e.textContent === '🔥')", 4000), 'I: met z\'n tweeën: een reactie vliegt bij allebei over tafel')
         een.close(); twee.close()
         check(not fouten, 'geen paginafouten (%s)' % fouten[:3])
         b.close()

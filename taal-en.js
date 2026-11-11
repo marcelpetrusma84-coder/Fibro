@@ -2332,4 +2332,17 @@ window.FIBRO_EN = {
   "Het kaartspel: leg dezelfde kleur of waarde, pest met een 2 of joker, en roep op tijd \"Laatste kaart!\". Tegen de computer of met een vriend in de chat.": "The card game: match the suit or rank, hit back with a 2 or joker, and call \"Last card!\" in time. Against the computer or with a friend in the chat.",
   "Gedownload! Zet hem aan bij Profiel → Widgets → Spellen.": "Downloaded! Turn it on in Profile → Widgets → Games.",
   "Uit de Store: tegen de computer op Home, met een vriend in de chat": "From the Store: against the computer on Home, with a friend in the chat",
+// ---- Spelmenu ☰ in elk spel (spelmenu.js), 11 nov 2026 ----
+  "Spelmenu": "Game menu",
+  "Geluid aanzetten": "Sound on",
+  "Geluid uitzetten": "Sound off",
+  "Microfoon aanzetten": "Microphone on",
+  "Microfoon uitzetten": "Microphone off",
+  "Camera aanzetten": "Camera on",
+  "Camera uitzetten": "Camera off",
+  "Menu": "Menu",
+  "Spel verlaten": "Leave game",
+  "Gepauzeerd": "Paused",
+  "Het spel staat ook stil bij je vriend.": "The game is paused for your friend too.",
+  "{naam} heeft het spel gepauzeerd. Wacht tot {naam} verder gaat.": "{naam} paused the game. Wait until {naam} continues.",
 }

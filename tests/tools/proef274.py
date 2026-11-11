@@ -1,6 +1,7 @@
 # proef274 (6 nov 2026, v275): een spreekwolkje bovenin het spel als je een berichtje krijgt (spelbericht.js).
 #  A. spel.html laadt het en geeft zonder account geen fouten
-#  B. eerste berichtje: groot wolkje "💬 Je hebt een berichtje" onder de ✕, dat na 4 s klein wordt naast de ✕ (niet erover)
+#  B. eerste berichtje: groot wolkje "💬 Je hebt een berichtje" linksboven, dat na 4 s klein wordt in de hoek linksboven
+#     (v2, 11 nov 2026: rechtsboven staat nu het spelmenu ☰; het wolkje mag daar en over de naam van het spel niet overheen)
 #  C. meer berichtjes: het kleine wolkje telt (💬 3), er komt geen tweede groot wolkje
 #  D. tik op het wolkje: vraag "Naar de chat?"; Verder spelen = weg, je blijft in het spel
 #  E. Naar de chat: naar de chat met die vriend (een afzender), of naar de chatlijst (meer afzenders)
@@ -31,14 +32,14 @@ try:
             pg.route('**/*supabase.co/**', lambda r: r.abort())
             pg.goto(BASIS + 'spel.html?spel=botkaaseiren&titel=1'); pg.wait_for_timeout(2000)
             if taal == 'nl-NL':
-                check(pg.evaluate("[...document.scripts].some(s => s.textContent.includes(\"from './spelbericht.js?v=1'\"))"), 'A: spel.html laadt spelbericht.js')
+                check(pg.evaluate("[...document.scripts].some(s => s.textContent.includes(\"from './spelbericht.js?v=2'\"))"), 'A: spel.html laadt spelbericht.js')
                 check(not paginafouten, 'A: geen paginafouten zonder account (%s)' % paginafouten)
                 ik = 'aaaa'
-                f = pg.evaluate("""async () => { const m = await import('./spelbericht.js?v=1'); const ik = 'aaaa'
+                f = pg.evaluate("""async () => { const m = await import('./spelbericht.js?v=2'); const ik = 'aaaa'
                   const b = (c, s) => m.telt({ receiver_id: ik, sender_id: s || 'bbbb', content: c }, ik)
                   return [b('hoi'), b('buzz:'), b('oproep:video:x'), b('oproep:gemist:x'), b('hoi', ik), m.telt({ receiver_id: 'cccc', sender_id: 'bbbb', content: 'x' }, ik), m.telt(null, ik)] }""")
                 check(f == [True, True, False, True, False, False, False], 'F: welke tellen (%s)' % f)
-            pg.evaluate("import('./spelbericht.js?v=1').then(m => { window.naar = 'nog niet'; window.w = m.maakWolkje(id => { window.naar = id }) })")
+            pg.evaluate("import('./spelbericht.js?v=2').then(m => { window.naar = 'nog niet'; window.w = m.maakWolkje(id => { window.naar = id }) })")
             pg.wait_for_function('window.w')
             pg.evaluate("window.w.erbij('bram')"); pg.wait_for_timeout(400)
             tekst = pg.inner_text('#spelbericht')
@@ -46,12 +47,12 @@ try:
                 check('You have a message' in tekst, 'G: Engels (%r)' % tekst)
                 ctx.close(); continue
             check('Je hebt een berichtje' in tekst and '💬' in tekst, 'B: groot wolkje (%r)' % tekst)
-            check(not overlapt(rect(pg, '#spelbericht'), rect(pg, '#sluitKnop')), 'B: niet over de ✕')
+            check(not overlapt(rect(pg, '#spelbericht'), rect(pg, '#spelMenuKnop')) and rect(pg, '#spelbericht')['l'] < 30, 'B: linksboven, niet over ☰')
             pg.wait_for_timeout(4500)
             check(pg.evaluate("document.getElementById('spelbericht').classList.contains('klein')"), 'B: na 4 s klein')
             pg.wait_for_timeout(400)
-            k, x, t = rect(pg, '#spelbericht'), rect(pg, '#sluitKnop'), rect(pg, '#spelTitelBar')
-            check(not overlapt(k, x) and abs(k['t'] - x['t']) < 6 and k['r'] <= x['l'], 'B: klein, naast de ✕ (%s / %s)' % (k, x))
+            k, x, t = rect(pg, '#spelbericht'), rect(pg, '#spelMenuKnop'), rect(pg, '#spelTitelBar')
+            check(not overlapt(k, x) and k['l'] < 30 and k['t'] < 30, 'B: klein, in de hoek linksboven (%s / %s)' % (k, x))
             check(not overlapt(k, t), 'B: niet over de naam van het spel')
             check(pg.inner_text('#spelbericht').replace('\n', '').replace(' ', '') == '💬1', 'B: klein wolkje met 1 (%r)' % pg.inner_text('#spelbericht'))
             pg.evaluate("window.w.erbij('bram'); window.w.erbij('bram')"); pg.wait_for_timeout(200)

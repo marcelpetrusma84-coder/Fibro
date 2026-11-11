@@ -1,4 +1,6 @@
 // kaartspel-hulp.js - BLAUWDRUK voor alle kaartspellen in Stekky (v1, 11 nov 2026). Zie BLAUWDRUK-KAARTSPEL.md.
+// v2: de tafel is een eigen laag (isolation), zodat het pauzescherm van het spelmenu (spelmenu.js) er in de chat altijd boven ligt.
+//     Tegen de computer (solo) geen reactieknop 😀.
 //
 // In gewone woorden: hier zit alles wat elk kaartspel hetzelfde doet, zodat een nieuw kaartspel alleen nog zijn
 // eigen spelregels hoeft te maken (zoals pesten.js). Wat je hier krijgt:
@@ -210,7 +212,7 @@ export function tril(patroon = 12) { try { if (navigator.vibrate) navigator.vibr
 
 // ─────────────────────────────── Stijl ───────────────────────────────
 const STIJL = `
-.kt-tafel{position:relative;width:100%;height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:stretch;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;overflow:hidden;background:radial-gradient(ellipse at 50% 46%,#3a1a5e 0%,#24103d 45%,#1a0a2e 80%)}
+.kt-tafel{position:relative;isolation:isolate;width:100%;height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:stretch;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;overflow:hidden;background:radial-gradient(ellipse at 50% 46%,#3a1a5e 0%,#24103d 45%,#1a0a2e 80%)}
 .kt-tafel *{box-sizing:border-box}
 .kt-svg{display:block;width:100%;height:100%}
 .kt-kaart{position:absolute;left:0;top:0;border-radius:calc(var(--kw)*.075);box-shadow:0 2px 8px #0007;transition:transform .22s cubic-bezier(.2,.8,.3,1.2),filter .2s,box-shadow .2s;touch-action:none;will-change:transform;cursor:pointer}
@@ -307,7 +309,8 @@ export function maakKaartTafel(container, opties = {}) {
     + '<div class="kt-onder"><div class="kt-zetel kt-zetel-ik"><span style="font-size:12px">' + esc(T('Jij')) + '</span><div class="kt-klok"></div></div>'
     + '<span class="kt-knoppen" style="display:contents"></span>'
     + '<span style="position:relative"><button type="button" class="kt-knop kt-sorteer" aria-label="' + esc(T('Sorteren')) + '" title="' + esc(T('Sorteren')) + '">⇅</button></span>'
-    + '<span style="position:relative"><button type="button" class="kt-knop kt-reactieknop" aria-label="' + esc(T('Reactie')) + '">😀</button><div class="kt-reacties"></div></span></div>'
+    // reacties (😀) alleen met een vriend: tegen de computer heb je er niets aan (Marcel, 11 nov 2026)
+    + (o.solo ? '' : '<span style="position:relative"><button type="button" class="kt-knop kt-reactieknop" aria-label="' + esc(T('Reactie')) + '">😀</button><div class="kt-reacties"></div></span>') + '</div>'
   container.appendChild(el)
   const laag = document.createElement('div'); laag.className = 'kt-laag'; el.appendChild(laag)
   const $ = s => el.querySelector(s)
@@ -508,12 +511,12 @@ export function maakKaartTafel(container, opties = {}) {
     toonStatusTip(sorteer === 'kleur' ? T('Gesorteerd op kleur') : T('Gesorteerd op waarde'))
   }
   const reactieRij = $('.kt-reacties')
-  for (const r of REACTIES) {
+  if (reactieRij) for (const r of REACTIES) {
     const b = document.createElement('button'); b.type = 'button'; b.textContent = r
     b.onclick = () => { reactieRij.classList.remove('kt-open'); o.onReactie(r); reactie(r, 'ik') }
     reactieRij.appendChild(b)
   }
-  $('.kt-reactieknop').onclick = () => reactieRij.classList.toggle('kt-open')
+  if (reactieRij) $('.kt-reactieknop').onclick = () => reactieRij.classList.toggle('kt-open')
 
   let tipTimer = null, statusTekst = ''
   function toonStatusTip(t) { clearTimeout(tipTimer); statusEl.textContent = t; tipTimer = setTimeout(() => { statusEl.textContent = statusTekst }, 1400) }

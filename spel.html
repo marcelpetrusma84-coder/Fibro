@@ -5,11 +5,11 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://lichess.org/api/cloud-eval https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-<script src="taal.js?v=99"></script>
+<script src="taal.js?v=100"></script>
 <script src="appslot.js?v=3"></script>
 <script src="controller.js?v=2"></script>
 <!-- v275: een spreekwolkje bovenin het spel als je een berichtje krijgt -->
-<script type="module">import { startSpelBericht } from './spelbericht.js?v=1'; startSpelBericht().catch(() => {})</script>
+<script type="module">import { startSpelBericht } from './spelbericht.js?v=2'; startSpelBericht().catch(() => {})</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title data-t>Stekky — Spel</title>
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=4">
@@ -28,7 +28,8 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 .spel-scherm:has(.sch-spel) { justify-content:flex-start; overflow-y:auto; overscroll-behavior:contain; padding-block:48px 16px; }
 .spel-scherm #spelInhoud:has(.sch-spel) { flex:0 0 auto; height:auto; margin-block:auto; }
 .spel-sluit-btn { position:absolute; top:16px; right:16px; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.12); border:none; color:white; font-size:20px; cursor:pointer; z-index:10; display:flex; align-items:center; justify-content:center; }
-.spel-titel-bar { position:absolute; top:16px; left:16px; font-size:14px; color:white; font-weight:600; opacity:0.8; }
+.spel-titel-bar { position:absolute; top:20px; left:50%; transform:translateX(-50%); max-width:calc(100% - 150px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; font-size:14px; color:white; font-weight:600; opacity:0.8; } /* 11 nov 2026: in het midden; linksboven het berichtenwolkje, rechtsboven het spelmenu */
+#sluitKnop { display:none !important; } /* 11 nov 2026: Terug zit nu in het spelmenu ☰ (Spel verlaten) */
 #spelInhoud { width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
 .niveau-kaart { display:flex; flex-direction:column; align-items:center; gap:14px; padding:24px; text-align:center; }
 .niveau-icon { font-size:56px; }
@@ -63,8 +64,9 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 </div>
 
 <script type="module">
+  import { maakSpelMenu, isGepauzeerd } from './spelmenu.js?v=1' // 11 nov 2026: als eerste, voor de pauze- en geluidskranen
   import * as Bordgeluid from './bordgeluid.js?v=203'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=273'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=274'
   import { supabase } from './supabase.js?v=95'
   import { startSpelUitnodigingLuisteraar } from './speluitnodiging.js?v=198'
   import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=13'
@@ -91,6 +93,18 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     stopTitelMuziek(0.2)
     terug()
   }
+  // 11 nov 2026: het spelmenu ☰ rechtsboven (spelmenu.js): pauze, geluid, menu (terug naar het niveau kiezen), verlaten
+  let gestart = false
+  maakSpelMenu({
+    solo: true,
+    kanPauze: () => gestart,
+    onMenu: () => {
+      if (kanaal) kanaal.sluit()
+      const q = new URLSearchParams(location.search); q.set('titel', '1')
+      location.replace('spel.html?' + q.toString())
+    },
+    onExit: () => document.getElementById('sluitKnop').click(),
+  })
 
   const spelId = new URLSearchParams(location.search).get('spel') || ''
   const spel = Object.prototype.hasOwnProperty.call(SOLO_SPELLEN, spelId) ? SOLO_SPELLEN[spelId] : null
@@ -306,6 +320,13 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
       const motor = spel.motor ? await import(spel.motor) : null
       const extra = spel.motorNaam ? { [spel.motorNaam]: motor } : {}
       kanaal = spel.zonderKanaal ? null : maakSoloKanaal(spel.bot, niveau, motor)
+      // 11 nov 2026: tijdens de pauze wacht de computer: zijn zetten komen pas na Verder spelen
+      if (kanaal) {
+        const echtOn = kanaal.on.bind(kanaal), wachtrij = []
+        kanaal.on = (soort, filter, fn) => echtOn(soort, filter, bericht => { if (isGepauzeerd()) wachtrij.push(() => fn(bericht)); else fn(bericht) })
+        window.addEventListener('fibro-spel-pauze', e => { if (!e.detail.aan) for (const doe of wachtrij.splice(0)) { try { doe() } catch (x) { console.error(x) } } })
+      }
+      gestart = true
       // Jij bent altijd speler 1 en begint de eerste ronde.
       m.start({ ...extra, Bordgeluid, spelKanaal: kanaal, benIkSpeler1: true, vriendNaam: spelT('Computer'), isActief: () => true, solo: spel.arcade ? solo : undefined })
       if (kanaal) kanaal.subscribe()

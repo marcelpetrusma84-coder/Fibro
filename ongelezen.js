@@ -40,6 +40,8 @@ export async function startOngelezen() {
       if (!telt(m.content)) return // v152: gesprek of geweigerd: geen rood bolletje
       aantallen.set(m.sender_id, (aantallen.get(m.sender_id) || 0) + 1)
       toon()
+      // v171 (11 nov 2026): seintje voor het berichtenwolkje in een spel (spelbericht.js)
+      try { document.dispatchEvent(new CustomEvent('fibro-nieuw-bericht', { detail: { van: m.sender_id } })) } catch (e) {}
     }), haalOp)
   // Terug naar de app: opnieuw tellen (misschien heb je elders gelezen).
   document.addEventListener('visibilitychange', () => {

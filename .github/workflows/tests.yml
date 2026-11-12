@@ -51,7 +51,9 @@ jobs:
       - name: Playwright en Chrome
         run: |
           pip install playwright==1.*
-          python -m playwright install --with-deps chromium
+          # 11 nov 2026: lukt het installeren van de extra Ubuntu-pakketten niet binnen 4 minuten (storing bij
+          # Ubuntu; het bleef 20 minuten hangen), dan alleen Chrome zelf; de GitHub-computer heeft de meeste pakketten al.
+          timeout 240 python -m playwright install --with-deps chromium || python -m playwright install chromium
       - name: Bellen en webcam met twee spelers (5 spellen)
         run: python -I tests/tools/proef228.py .
       - name: Postbus (nooit tegelijk online)
@@ -141,3 +143,21 @@ jobs:
       - name: "Stekky Store (alleen moderators) en lettertypes uit de store"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef288.py .
+      - name: "Inloggen: geen fout bij Registreren na de herstelcode"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef289.py .
+      - name: "Pesten: kaartspel-blauwdruk (waaier, vegen, stapel, uitspelen, met z'n tweeën)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef290.py .
+      - name: "Pesten alleen via de Store: spelmenu in de chat alleen met de widget"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef292.py .
+      - name: "Toepen en Eenentwintigen: echt spelen tegen de computer en met z'n tweeën"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef293.py .
+      - name: "Kaartspellen: kaartstijl kiezen (Stekky of Perkament) met 🎴"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef294.py .
+      - name: "Spelmenu ☰ in elk spel (pauze, geluid, microfoon, camera, menu, verlaten) en berichten linksboven"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef291.py .

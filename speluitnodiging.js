@@ -11,6 +11,9 @@ import { isNieuwsteSpelSessie } from './spelsessie.js?v=1'
 const SPEL_INFO = {
   botkaaseiren: { icon: '⭕', naam: 'Tic-Tac-Toe' },
   vieroprij: { icon: '🔴', naam: 'Four in a Row' },
+  pesten: { icon: '🃏', naam: 'Pesten' },
+  toepen: { icon: '✊', naam: 'Toepen' },
+  eenentwintigen: { icon: '♠️', naam: 'Eenentwintigen' },
   schaken: { icon: '♟️', naam: 'Chess' },
   schakendrie: { icon: '♟️♟️♟️', naam: 'Three-player chess' },
   dammen: { icon: '⚫', naam: 'Draughts' },

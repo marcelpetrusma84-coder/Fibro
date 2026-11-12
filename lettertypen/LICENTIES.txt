@@ -62,6 +62,37 @@ Lettertypen uit de Stekky Store (10-11-2026, ook Fontsource 5.3.0, latin en lati
 - Sacramento (OFL-1.1): Copyright (c) 2012 by Brian J. Bonislawsky DBA Astigmatic (AOETI) (astigma@astigmatic.com), with Reserved Font Name 'Sacramento'
 - Special Elite (Apache-2.0): zie licentietekst
 
+Lettertype-pakketten uit de Stekky Store (11-11-2026, ook Fontsource 5.3.0):
+- Allerta Stencil (OFL-1.1): Copyright (c) 2009, Matt McInerney <matt@pixelspread.com> with Reserved Font Name Allerta.
+- Almendra Display (OFL-1.1): Copyright (c) 2011-2012, Ana Sanfelippo (anasanfe@gmail.com), with Reserved Font Name 'Almendra'
+- Bubblegum Sans (OFL-1.1): Copyright (c) 2011 Angel Koziupa (sudtipos@sudtipos.com), Copyright (c) 2011 Alejandro Paul (sudtipos@sudtipos.com), with Reserved Font Name "Bubblegum Sans"
+- Butcherman (OFL-1.1): Copyright (c) 2011, Typomondo, with Reserved Font Name  "Butcherman".
+- Diplomata (OFL-1.1): Copyright 2011 The Diplomata Project Authors (https://github.com/etunni/diplomata), with Reserved Font Name "Diplomata"
+- Eater (OFL-1.1): Copyright (c) 2011, Vernon Adams DBA Typomondo (vern@newtypography.co.uk), with Reserved Font Name "Eater"
+- Ewert (OFL-1.1): Copyright (c) 2011, Johan Kallas (johankallas@gmail.com), Copyright (c) 2011 Mihkel Virkus (mihkelvirkus@gmail.com) with Reserved Font Name Ewert.
+- Faster One (OFL-1.1): Copyright 2012 The Faster Project Authors (https://github.com/etunni/faster), with Reserved Font Name 'Faster'
+- Grenze Gotisch (OFL-1.1): Copyright 2020 The Grenze Gotisch Project Authors (https://github.com/Omnibus-Type/Grenze-Gotisch)
+- Jolly Lodger (OFL-1.1): Copyright (c) 2012 by Font Diner, Inc (diner@fontdiner.com) with Reseved Font Name "Jolly Lodger"
+- Knewave (OFL-1.1): Copyright (c) 2011 by Tyler Finck. All rights reserved.
+- Luckiest Guy (Apache-2.0): zie licentietekst
+- Metal Mania (OFL-1.1): Copyright (c) 2012 by Open Window (dathanboardman@gmail.com) with Reseved Font Name "Metal Mania"
+- Michroma (OFL-1.1): Copyright 2011 The Michroma Project Authors (https://github.com/googlefonts/Michroma-font)
+- Oxanium (OFL-1.1): Copyright 2019 The Oxanium Project Authors (https://github.com/sevmeyer/oxanium)
+- Parisienne (OFL-1.1): Copyright (c) 2012 by Brian J. Bonislawsky DBA Astigmatic (AOETI) (astigma@astigmatic.com), with Reserved Font Name "Parisienne"
+- Pinyon Script (OFL-1.1): Copyright 2022 The PinyonScript Project Authors (https://github.com/SorkinType/Pinyon)
+- Princess Sofia (OFL-1.1): Copyright (c) 2012 by Font Diner, Inc DBA Tart Workshop (diner@fontdiner.com) with Reseved Font Name "Princess Sofia"
+- Rock Salt (Apache-2.0): zie licentietekst
+- Rubik Wet Paint (OFL-1.1): Copyright 2020 The Rubik Filtered Project Authors (https://github.com/NaN-xyz/Rubik-Filtered)
+- Sancreek (OFL-1.1): Copyright (c) 2011 by vernon adams (vern@newtypography.co.uk), with Reserved Font Names "Sancreek"
+- Sedgwick Ave Display (OFL-1.1): Copyright 2017 The Sedgwick Ave Project Authors (https://github.com/googlefonts/sedgwickave)
+- Shrikhand (OFL-1.1): Copyright (c) 2015 Jonny Pinhorn (jonpinhorn.typedesign@gmail.com)
+- Smokum (Apache-2.0): zie licentietekst
+- Stardos Stencil (OFL-1.1): Copyright (c) 2011, Vernon Adams (vern@newtypography.co.uk) with Reserved Font Names 'Stardos'. All rights reserved. StardosStencil-Bold.ttf: Copyright (c) 2011, Vernon Adams (vern@newtypography.co.uk) with Reserved Font Names 'Stardos'. All rights reserved.
+- Syncopate (Apache-2.0): zie licentietekst
+- Uncial Antiqua (OFL-1.1): Copyright (c) 2011 by Brian J. Bonislawsky DBA Astigmatic (AOETI) (astigma@astigmatic.com), with Reserved Font Name "Uncial Antiqua"
+- UnifrakturMaguntia (OFL-1.1): Copyright (c) 2010 j. 'mach' wust (j.mach.wust@gmail.com) with Reserved Font Name UnifrakturMaguntia. Copyright (c) 2009 Peter Wiegel (wiegel@peter-wiegel.de). This Font Software is licensed under the SIL Open Font License, Version 1.1.
+- Zen Dots (OFL-1.1): Copyright 2021 The Dots Project Authors (https://github.com/googlefonts/zen-dots)
+
 
 ======================================================================
 SIL OPEN FONT LICENSE Version 1.1

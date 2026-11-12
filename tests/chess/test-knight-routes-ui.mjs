@@ -20,7 +20,7 @@ function markup({ saved = '{}', solo = true, level = 'ultra' } = {}) {
 }
 for (const level of ['makkelijk', 'normaal', 'moeilijk', 'ultra']) {
   const view = markup({ level })
-  assert.deepEqual(plain(view.instellingen.knightRouteSteps), [true,true,true,true], 'all four horizons start enabled in every solo level')
+  assert.deepEqual(plain(view.instellingen.knightRouteSteps), [true,true,true,false], 'three horizons start enabled in every solo level')
   assert.equal([...view.markup.matchAll(/data-knight-step="[1-4]"/g)].length, 4)
   assert.equal(view.instellingen.knightRouteOpacity,100,'route visibility starts with the established contrast')
   assert.match(view.markup,/data-knight-depth(?:\s|[=>])/,'solo routes expose a live depth range')
@@ -28,7 +28,7 @@ for (const level of ['makkelijk', 'normaal', 'moeilijk', 'ultra']) {
 }
 for(const marker of ['data-knight-step=','data-knight-depth','data-knight-opacity']) assert.equal(markup({solo:false}).markup.includes(marker),false,'friend matches never expose '+marker)
 for (const saved of ['{broken', 'null', '{"knightRouteSteps":[true]}', '{"knightRouteSteps":[1,1,1,1]}']) {
-  assert.deepEqual(plain(markup({ saved }).instellingen.knightRouteSteps), [true,true,true,true], 'malformed preferences use safe complete defaults')
+  assert.deepEqual(plain(markup({ saved }).instellingen.knightRouteSteps), [true,true,true,false], 'malformed preferences use safe defaults')
 }
 for(const value of [null,'35',0,101,35.5,false]) {
   assert.equal(markup({saved:JSON.stringify({knightRouteOpacity:value})}).instellingen.knightRouteOpacity,100,'malformed opacity uses the readable default')

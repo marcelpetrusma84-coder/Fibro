@@ -141,8 +141,8 @@ try:
         cm, m, cb, b = open_spel(br, 'dammen')
         wacht(b, "() => !!document.querySelector('.dm-video')", 20000); b.wait_for_timeout(1500)
         zicht = b.evaluate(STAND)
-        if not zicht['micZichtbaar']: b.evaluate("document.getElementById('spelMuteBtn').style.display = 'flex'")  # knop is er misschien nog niet; dan direct de knop gebruiken
-        try: b.click('#spelMuteBtn', timeout=4000, force=True)
+        # 11 nov 2026: 🎤 zit nu in het spelmenu ☰ (spelmenu.js)
+        try: b.click('#spelMenuKnop', timeout=4000); b.click('#spelMenuLijst [data-menu=mic]', timeout=4000)
         except Exception as e: print('klik mislukt', e)
         ok = wacht(b, "() => (window.__pcs || []).some(pc => pc.connectionState === 'connected')", 15000)
         check('B1 speler 2 tikt op 🎤: verbonden', ok, (zicht, b.evaluate(STAND)))
@@ -153,10 +153,10 @@ try:
         wacht(b, "() => { const k = document.getElementById('spelMuteBtn'); return k && k.textContent === '🎤' }", 8000)
         s1 = b.evaluate(STAND)
         check('C0 schaken: automatisch verbonden, microfoon aan (🎤)', ok and s1['mic'] == '🎤', s1)
-        b.click('#spelMuteBtn'); b.wait_for_timeout(600)
+        b.click('#spelMenuKnop'); b.click('#spelMenuLijst [data-menu=mic]'); b.wait_for_timeout(600)
         s2 = b.evaluate(STAND); uit = b.evaluate("(() => { const t = []; for (const pc of window.__pcs) for (const s of pc.getSenders()) if (s.track && s.track.kind === 'audio') t.push(s.track.enabled); return t })()")
         check('C1 tik op 🎤 = microfoon uit (🔇)', s2['mic'] == '🔇' and uit and not any(uit), (s2, uit))
-        b.click('#spelMuteBtn'); b.wait_for_timeout(600)
+        b.click('#spelMenuKnop'); b.click('#spelMenuLijst [data-menu=mic]'); b.wait_for_timeout(600)
         s3 = b.evaluate(STAND); aan = b.evaluate("(() => { const t = []; for (const pc of window.__pcs) for (const s of pc.getSenders()) if (s.track && s.track.kind === 'audio') t.push(s.track.enabled); return t })()")
         check('C2 nog eens = weer aan (🎤)', s3['mic'] == '🎤' and aan and all(aan), (s3, aan))
         cm.close(); cb.close()
@@ -167,7 +167,7 @@ try:
             for _ in range(8):
                 if not b.evaluate("!!document.querySelector('.bi-uitleg')"): break
                 b.evaluate("(() => { const u = document.querySelector('.bi-uitleg'); const k = [...u.querySelectorAll('button')].find(x => /✕|×|Sluit|Close/.test(x.textContent + (x.getAttribute('aria-label')||''))); (k || u.querySelector('button')).click() })()"); b.wait_for_timeout(400)
-            try: b.click('#spelCamKnop', timeout=4000)
+            try: b.click('#spelMenuKnop', timeout=4000); b.click('#spelMenuLijst [data-menu=cam]', timeout=4000)   # 11 nov 2026: 📹 zit in het spelmenu
             except Exception as e: print('klik', str(e)[:80])
             ok = wacht(b, "() => (window.__pcs || []).some(pc => pc.connectionState === 'connected')", 15000)
             for pg in (m, b):  # beide kanten (op een trage computer komt het geluid bij de een later binnen)

@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=95"></script>
+<script src="taal.js?v=105"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -184,6 +184,10 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 @media (prefers-reduced-motion: reduce) { .spel-wacht-draai { animation-duration:2.4s; } }
 .spel-sluit-btn { position:absolute; top:16px; right:16px; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.12); border:none; color:white; font-size:20px; cursor:pointer; z-index:10; display:flex; align-items:center; justify-content:center; }
 .spel-titel-bar { position:absolute; top:16px; left:16px; font-size:14px; color:white; font-weight:600; opacity:0.8; }
+/* 11 nov 2026: in elk spel rechtsboven het spelmenu ☰ (spelmenu.js) met pauze, geluid, microfoon, camera, menu en verlaten;
+   de losse ✕, 🎤 en 📹 bovenin zitten daarin. De naam van het spel staat in het midden (linksboven komt het berichtenwolkje). */
+.spel-overlay.met-spelmenu .spel-sluit-btn, .spel-overlay.met-spelmenu #spelMuteBtn, .spel-overlay.met-spelmenu #spelCamKnop { display:none !important; }
+.spel-overlay.met-spelmenu .spel-titel-bar { left:50%; transform:translateX(-50%); top:20px; max-width:calc(100% - 150px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; }
 .spel-video-vak { display:none; position:relative; flex:1 1 0; min-height:0; width:min(100% - 24px,460px); margin:8px 12px; overflow:hidden; border:1px solid rgba(151,240,221,.55); border-radius:15px; background:linear-gradient(145deg,#111827,#0a1220); box-shadow:inset 0 0 24px #0009,0 7px 18px #0006; cursor:default; transition:border-color .25s ease,box-shadow .25s ease,transform .22s ease; }
 .spel-video-vak video { width:100%; height:100%; min-height:0; object-fit:cover; background:#080b11; transform:scaleX(-1); }
 .spel-video-vak.remote video { transform:none; }
@@ -451,11 +455,11 @@ window.veiligeUrl = function(v){
 
 <script src="beltoon.js?v=11"></script>
 <script type="module">
-  import { koppelSpelIcoonFallback } from './spelicoon.js?v=3'
+  import { koppelSpelIcoonFallback } from './spelicoon.js?v=5'
   koppelSpelIcoonFallback()
 </script>
 <script type="module">
-  import { laadThema } from './thema.js?v=236'
+  import { laadThema } from './thema.js?v=237'
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { laadWallpaper } from './wallpaper.js?v=95'
   import { supabase } from './supabase.js?v=95'
@@ -481,13 +485,16 @@ window.veiligeUrl = function(v){
   import { speel as speelFx, speelGeluid as speelFxGeluid, naamVan as fxNaam } from './stickerfx.js?v=235'
   import { stuurRapport } from './rapport.js?v=96'
   import * as Schaak from './schaak.js?v=95'
-  import * as Bordgeluid from './bordgeluid.js?v=201'
+  import { maakSpelMenu } from './spelmenu.js?v=1' // 11 nov 2026: hamburgermenu rechtsboven in elk spel (pauze, geluid, microfoon, camera, menu, verlaten)
+  import { startSpelBerichtInChat } from './spelbericht.js?v=2'
+  import { gameAan, mijnDownloads } from './store.js?v=7' // 11 nov 2026: spellen uit de Store // 11 nov 2026: berichten van andere vrienden linksboven in het spel
+  import * as Bordgeluid from './bordgeluid.js?v=203'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { nieuweSpelSessie, isNieuwsteSpelSessie } from './spelsessie.js?v=1'
-  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=12'
-  import { mountChessLayout } from './chess-layout.js?v=12'
+  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=13'
+  import { mountChessLayout } from './chess-layout.js?v=13'
   import { maakSpelVerbinding } from './spelverbinding.js?v=2'
   import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=2'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=2'
@@ -506,7 +513,7 @@ window.veiligeUrl = function(v){
   // wacht het spel er even op.
   let titelModule = null
   const laadTitelscherm = () => titelModule ? Promise.resolve(titelModule)
-    : laadModule('./titelscherm.js?v=8').then(m => (titelModule = m))
+    : laadModule('./titelscherm.js?v=10').then(m => (titelModule = m))
   const laadRustig = f => ('requestIdleCallback' in window ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 2500))
   laadRustig(() => laadTitelscherm().catch(() => {}))
   pasBlokstijlToe()
@@ -845,6 +852,8 @@ window.veiligeUrl = function(v){
 
     await laadVrienden()
     huidigProfiel = (await profielBelofte).data
+    toonStoreSpellen() // 11 nov 2026: Pesten in het spelmenu als hij gedownload is en de widget aan staat
+    mijnDownloads(supabase, huidigeUser.id).then(() => toonStoreSpellen(), () => {})
     pasFotosToe() // v134: eigen foto bij eigen berichten
 
     // ── Automatisch spel starten via URL (van uitnodiging op andere pagina) ──
@@ -2604,7 +2613,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
     zet()
   })
 
+  addEventListener('pageshow', () => { try { toonStoreSpellen() } catch (e) {} }) // terug in de chat: Store-spellen opnieuw bekijken
   window.toggleSpelMenu = function() {
+    try { toonStoreSpellen() } catch (e) {}
     const spelGrid = document.getElementById('spelMenuGrid')
     const emojiGrid = document.getElementById('emojiGrid')
     const stickerGrid = document.getElementById('stickerGrid')
@@ -2670,6 +2681,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
   const SPEL_INFO = {
     botkaaseiren:   { icon: '⭕', naam: 'Tic-Tac-Toe' },
     vieroprij:      { icon: '🔴', naam: 'Four in a Row' },
+    pesten:         { icon: '🃏', naam: 'Pesten' },
+    toepen:         { icon: '✊', naam: 'Toepen' },            // 11 nov 2026: kaartspel uit de Store
+    eenentwintigen: { icon: '♠️', naam: 'Eenentwintigen' },    // 11 nov 2026: kaartspel uit de Store
     schaken:        { icon: '♟️', naam: schaakT('Schaken') },
     schakendrie:    { icon: '♟️♟️♟️', naam: schaakT('Schaken met drie spelers') },
     dammen:         { icon: '⚫', naam: 'Draughts' },
@@ -2836,8 +2850,11 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=151',
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
-    schaken: './schaken-ui.js?v=270',
-    schakendrie: './schaken-drie-ui.js?v=36',
+    pesten: './pesten-ui.js?v=3',
+    toepen: './toepen-ui.js?v=2',
+    eenentwintigen: './eenentwintigen-ui.js?v=2',
+    schaken: './schaken-ui.js?v=275',
+    schakendrie: './schaken-drie-ui.js?v=43',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=151',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -2894,7 +2911,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // Accepteer uitnodiging → open het spel
   window.speelMee = async function(spelType, sessieId, starterId, players = null) {
     if (!huidigeUser || !geselecteerdeVriend?.id) return
-    const beschikbaar = ['botkaaseiren', 'vieroprij', 'schaken', 'schakendrie', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball', 'shmup']
+    const beschikbaar = ['botkaaseiren', 'vieroprij', 'pesten', 'toepen', 'eenentwintigen', 'schaken', 'schakendrie', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball', 'shmup']
     if (!beschikbaar.includes(spelType)) {
       alert(T('🚧 {spel} komt binnenkort beschikbaar!', { spel: SPEL_INFO[spelType]?.naam || spelType }))
       return
@@ -2934,6 +2951,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (videoNaam) { const vid = spelTegenstander?.id || geselecteerdeVriend?.id; videoNaam.textContent = (vid && heeftWeergaveNaam({ id: vid })) ? vriendWeergaveNaam({ id: vid }) : spelVriendUsername() }
     const overlay = document.getElementById('spelOverlay')
     overlay.classList.add('open')
+    maakChatSpelMenu() // 11 nov 2026
     // v251: eerst het titelscherm (bewegend plaatje en muziek). Ondertussen wordt al op je vriend gewacht;
     // het spel begint pas als je het titelscherm hebt weggetikt én je vriend er is. Niet bij schaken met drie: daar
     // kom je vanuit een schaakspel dat al open was.
@@ -2950,7 +2968,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
         toonSpelVerbindingStatus(status)
         if (status === 'connected' && spelWachtKlaar) { const klaar = spelWachtKlaar; spelWachtKlaar = null; klaar(true) }
       },
-      onActivity:() => { if (spelKanaal === verbinding && spelActief === 'schaken') startSpelBel() }
+      // 11 nov 2026: bij kaartspellen staat het spraakgesprek ook vanzelf aan (op verzoek van Marcel), net als bij schaken
+      onActivity:() => { if (spelKanaal === verbinding && (spelActief === 'schaken' || KAARTSPELLEN.includes(spelActief))) startSpelBel() }
     })
     spelKanaal = verbinding
 
@@ -2974,6 +2993,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
     try { // v256: kon het spel niet laden, dan een duidelijke melding in plaats van een leeg scherm
     if (spelType === 'botkaaseiren') await startBotKaasEieren()
     else if (spelType === 'vieroprij') await startVierOpEenRij()
+    else if (spelType === 'pesten') await startPesten()
+    else if (spelType === 'toepen') await startKaartspel(spelType)
+    else if (spelType === 'eenentwintigen') await startKaartspel(spelType)
     else if (spelType === 'schaken') await startSchaken()
     else if (spelType === 'schakendrie') await startSchakenDrie(players)
     else if (spelType === 'dammen') await startDammen()
@@ -3005,9 +3027,15 @@ console.timeLog('[chat] berichten', 'opgehaald')
     spelKanaal.on('broadcast', { event: 'verlaten' }, () => {
       if (spelKanaal !== verbinding) return
       toonSpelVerbindingStatus('left')
+      spelMenu?.pauzeVanAnder(false) // 11 nov 2026: een pauze van de ander houdt op als die weggaat
       spelGestopt = true // v243: snelle spellen (Block It, Pong, ...) stoppen hun lus via isActief
       toonSpelMelding(spelT('{naam} heeft het spel verlaten.', { naam: esc(spelVriendUsername()) }))
       verbinding.stop()
+    })
+    // 11 nov 2026: pauze voor allebei (spelmenu.js). Wie pauzeerde, gaat ook weer verder.
+    spelKanaal.on('broadcast', { event: 'spelpauze' }, (msg) => {
+      if (spelKanaal !== verbinding) return
+      spelMenu?.pauzeVanAnder(Boolean(msg.payload?.aan), spelVriendUsername())
     })
     // v3 nov (foutmelding iPhone, dammen): alleen speler 1 belt. Tikt speler 2 op 📹 of 🎤, dan vraagt die hierom.
     spelKanaal.on('broadcast', { event: 'bel-verzoek' }, () => {
@@ -3043,13 +3071,84 @@ console.timeLog('[chat] berichten', 'opgehaald')
     // Start spel-audiobel automatisch
   }
 
+  // ── 11 nov 2026: het spelmenu ☰ rechtsboven en het berichtenwolkje linksboven, in elk spel ──
+  let spelMenu = null
+  function maakChatSpelMenu() {
+    spelMenu?.weg()
+    const overlay = document.getElementById('spelOverlay')
+    overlay.classList.add('met-spelmenu')
+    spelMenu = maakSpelMenu({
+      ouder: overlay,
+      kanPauze: () => Boolean(spelKanaal && spelVriendKwam && !spelGestopt),
+      kanMic: () => Boolean(spelActief && !fibroChessTest?.active),
+      micAan: () => Boolean(getMediaStatus().localAudio),
+      kanCam: () => isVideoSpel() && !fibroChessTest?.active,
+      camAan: () => Boolean(spelEigenVideo),
+      onMic: () => window.toggleSpelMic(),
+      onCam: async () => {
+        let antwoord = null
+        try { antwoord = await window.FibroChessVideo() } catch (e) {}
+        if (!antwoord || !antwoord.ok) toonSpelCamTip(antwoord && antwoord.reason === 'connecting'
+          ? T('De verbinding met je vriend wordt nog opgebouwd. Probeer het zo nog eens.')
+          : T('Je camera kon niet worden gestart. Controleer de cameratoestemming en probeer het opnieuw.'))
+        spelMenu?.werkBij()
+      },
+      onMenu: () => {
+        window.sluitSpel()
+        const grid = document.getElementById('spelMenuGrid')
+        if (grid && grid.style.display === 'none') window.toggleSpelMenu()
+      },
+      onExit: () => window.sluitSpel(),
+      onPauze: aan => { try { spelKanaal?.send({ type: 'broadcast', event: 'spelpauze', payload: { aan } }) } catch (e) {} },
+    })
+  }
+  window.addEventListener('fibro-chess-video-state', () => spelMenu?.werkBij())
+  // Berichten van andere vrienden tijdens een spel: wolkje linksboven. Tik = vraag; Naar de chat = spel dicht, die chat open.
+  const spelBerichtWolk = startSpelBerichtInChat({
+    actief: () => Boolean(spelActief),
+    naarChat: vriendId => {
+      window.sluitSpel()
+      const rij = vriendId && [...document.querySelectorAll('#vriendenLijst .vriend-item[data-vid]')].find(el => el.dataset.vid === vriendId)
+      if (rij) rij.click()
+      else if (vriendId) setTimeout(() => { location.href = 'chat.html?vriend=' + encodeURIComponent(vriendId) }, 300)
+    },
+  })
+
+  // ── 11 nov 2026: spellen uit de Stekky Store (Pesten, Toepen, Eenentwintigen) ──
+  // Zo'n spel staat alleen in het spelmenu als je het in de Store gedownload hebt EN de widget aan hebt gezet
+  // (Profiel > Widgets > Spellen). Een uitnodiging van een vriend voor zo'n spel kun je altijd aannemen.
+  // v2 (11 nov 2026): de widgets staan op dit toestel (niet op de server): gameAan() uit store.js kijkt daar.
+  function toonStoreSpellen() {
+    const STORE_SPELLEN = [{ id: 'pesten', naam: 'Pesten', widget: 'spel_pesten', icoon: 'spelicoon/pesten.webp?v=2' },
+      { id: 'toepen', naam: 'Toepen', widget: 'spel_toepen', icoon: 'spelicoon/toepen.webp?v=2' },
+      { id: 'eenentwintigen', naam: 'Eenentwintigen', widget: 'spel_eenentwintigen', icoon: 'spelicoon/eenentwintigen.webp?v=2' }]
+    for (const sp of STORE_SPELLEN) {
+      const id = 'spelKnop-' + sp.id
+      const oud = document.getElementById(id)
+      if (!huidigeUser || !gameAan(huidigeUser.id, sp)) { oud?.remove(); continue }
+      if (oud) continue
+      const knop = document.createElement('button')
+      knop.id = id; knop.className = 'spel-keuze-btn'; knop.type = 'button'
+      knop.innerHTML = '<span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="' + sp.icoon + '" width="36" height="36" alt="" draggable="false"></span><span></span>'
+      knop.lastElementChild.textContent = sp.naam
+      knop.onclick = () => window.startSpel(sp.id)
+      // na het vorige Store-spel dat er staat (Pesten, Toepen, Eenentwintigen), anders na Four in a Row
+      const eerder = STORE_SPELLEN.slice(0, STORE_SPELLEN.indexOf(sp)).reverse().map(x => document.getElementById('spelKnop-' + x.id)).find(Boolean)
+      const na = eerder || document.querySelector('#spelMenuGrid .spel-keuze-btn[onclick="startSpel(\'vieroprij\')"]')
+      if (na) na.after(knop); else document.querySelector('#spelMenuGrid > div:last-child')?.appendChild(knop)
+    }
+  }
+
   // ── BLAUWDRUK BEURTSPELLEN (zie BLAUWDRUK-BEURTSPEL.md) ──
   // Zet een nieuw beurtspel in deze lijst, dan krijgt het tegen een vriend vanzelf:
   //   - de chatbalk (stickers 🎨, emoji's 😊, tekstveld met ➤, knoppen schuiven opzij bij typen);
   //   - de webcamrondjes bovenin (120 px), met de webcamknop 📹, gouden rand bij praten
   //     en een rode rand als het spel 'fibro-spel-geslagen' meldt (beurtspel-hulp.js).
   // Schaken staat erin voor de chatbalk, maar heeft zijn eigen webcamvakken.
-  const BEURTSPELLEN = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen']
+  const BEURTSPELLEN = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pesten', 'toepen', 'eenentwintigen']
+  // BLAUWDRUK KAARTSPELLEN (zie BLAUWDRUK-KAARTSPEL.md): een kaartspel staat ook in BEURTSPELLEN (chatbalk, stickers,
+  // webcamrondjes) en krijgt daarbij vanzelf het spraakgesprek zodra het spel begint.
+  const KAARTSPELLEN = ['pesten', 'toepen', 'eenentwintigen']
   // v169: spellen met een chatbalk: de beurtspellen (daar heb je tijd om iets te sturen)
   const SPELCHAT_SPELLEN = BEURTSPELLEN
 
@@ -3490,7 +3589,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
       document.getElementById('spelVideoAnderNaam').textContent = schaakT('Vriend')
     }
     titelModule?.sluitTitelscherm() // v251
-    document.getElementById('spelOverlay').classList.remove('open')
+    spelMenu?.weg(); spelMenu = null; spelBerichtWolk?.weg() // 11 nov 2026
+    document.getElementById('spelOverlay').classList.remove('open', 'met-spelmenu')
     document.getElementById('spelInhoud').innerHTML = ''
     var scw = document.getElementById('spelChatWrap'); if (scw) scw.remove()
     var ssg = document.getElementById('spelStickerGroot'); if (ssg) ssg.remove() // v170
@@ -3520,6 +3620,17 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ─── Boter-Kaas-Eieren ───
   async function startBotKaasEieren() {
     const m = await laadModule('./bke-ui.js?v=239')
+    m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
+  }
+
+  // ─── Pesten (kaartspel, 11 nov 2026) ───
+  async function startPesten() {
+    const m = await laadModule('./pesten-ui.js?v=3')
+    m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
+  }
+  // ─── Toepen en Eenentwintigen (kaartspellen uit de Store, 11 nov 2026): hetzelfde als Pesten ───
+  async function startKaartspel(spelType) {
+    const m = await laadModule(SPEL_BESTAND[spelType])
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
 
@@ -3694,7 +3805,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await laadModule('./schaken-ui.js?v=270')
+    const m = await laadModule('./schaken-ui.js?v=275')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: fibroChessTest?.active ? schaakT('Testspeler · Zwart') : spelVriendUsername(), testMode:Boolean(fibroChessTest?.active), onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer : nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
     // v270: tegen een vriend staan de webcams als twee rondjes naast elkaar boven het bord, net als bij dammen.
@@ -3704,7 +3815,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   async function startSchakenDrie(players) {
-    const m = await laadModule('./schaken-drie-ui.js?v=36')
+    const m = await laadModule('./schaken-drie-ui.js?v=43')
     const testMode = Boolean(fibroChessTest?.active)
     const controller = m.start({ Bordgeluid, gameChannel:testMode ? null : spelKanaal, players, userId:testMode ? 'fibro-test-you' : huidigeUser.id, localPreview:testMode, testMode, testStream:fibroChessTest?.stream || null, onTestCameraChange:stream => { if (fibroChessTest?.active) fibroChessTest.stream = stream }, onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null })
     spelSchaakDrieController = controller
@@ -4573,7 +4684,7 @@ async function verstuurMelding(reden) {
 <script src="fotoviewer.js?v=9"></script>
 <script src="swipe.js?v=96"></script>
 <script src="menuschuif.js?v=1"></script>
-<script type="module">if (new URLSearchParams(location.search).get('test') !== 'FIBRO TEST') { const { startOngelezen } = await import('./ongelezen.js?v=170').catch(() => new Promise(r => setTimeout(r, 1500)).then(() => import('./ongelezen.js?v=170&opnieuw=1'))); startOngelezen() }</script>
+<script type="module">if (new URLSearchParams(location.search).get('test') !== 'FIBRO TEST') { const { startOngelezen } = await import('./ongelezen.js?v=171').catch(() => new Promise(r => setTimeout(r, 1500)).then(() => import('./ongelezen.js?v=171&opnieuw=1'))); startOngelezen() }</script>
 <script type="module">if (new URLSearchParams(location.search).get('test') !== 'FIBRO TEST') await import('./blokkade.js?v=2').catch(() => new Promise(r => setTimeout(r, 1500)).then(() => import('./blokkade.js?v=2&opnieuw=1')))</script>
 </body>
 </html>

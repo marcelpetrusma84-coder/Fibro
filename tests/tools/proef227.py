@@ -18,7 +18,7 @@ HARNAS = r"""<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta na
 <style>body{margin:0;background:#1a0a2e;color:#fff}</style></head><body>
 <script type="module">
 const q = new URLSearchParams(location.search)
-const ts = await import('./titelscherm.js?v=6'), tm = await import('./titelmuziek.js?v=4')
+const ts = await import('./titelscherm.js?v=6'), tm = await import('./titelmuziek.js?v=6')
 window.__ts = ts
 window.__tm = tm
 window.__uitkomst = null
@@ -90,13 +90,13 @@ try:
             pg.goto(B + 'spel.html?spel=breakout'); pg.wait_for_selector('.fibro-titelscherm'); pg.wait_for_timeout(500)
             pg.mouse.click(195, 500); pg.wait_for_selector('#startKnop'); pg.click('#startKnop')
             pg.wait_for_selector('#bi-keuze button', timeout=8000); pg.wait_for_timeout(500)
-            sp = "import('./titelmuziek.js?v=4').then(m => m.speeltNu())"
+            sp = "import('./titelmuziek.js?v=6').then(m => m.speeltNu())"
             inMenu = pg.evaluate(sp)
             pg.click('#bi-keuze button >> nth=0'); pg.wait_for_timeout(500)
             naStart = pg.evaluate(sp)
             check('T6 muziek in het menu van Block It, stopt bij Gewoon', inMenu == 'breakout' and naStart is None, (inMenu, naStart))
             pg.goto(B + 'spel.html?spel=swarm&titel=1'); pg.wait_for_timeout(1500)
-            check('T7 na het titelscherm op Home: muziek in het menu op spel.html', pg.evaluate("import('./titelmuziek.js?v=4').then(m => m.speeltNu())") == 'swarm' and pg.evaluate("!document.querySelector('.fibro-titelscherm')"))
+            check('T7 na het titelscherm op Home: muziek in het menu op spel.html', pg.evaluate("import('./titelmuziek.js?v=6').then(m => m.speeltNu())") == 'swarm' and pg.evaluate("!document.querySelector('.fibro-titelscherm')"))
             pg.close()
         except Exception as e:
             check('proef afgebroken', False, str(e).split(chr(10))[0])

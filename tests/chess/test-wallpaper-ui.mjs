@@ -42,7 +42,7 @@ function fixture(mode,{overlay=true}={}) {
   const prefix=mode==='two'?'sch':'chess3',nodes=new Map(),events=[],cleanup=[]
   for(const key of ['enabled','motion','status'])nodes.set('#'+prefix+'-wallpaper-'+key,node())
   const select=id=>nodes.get(id)
-  const root={},overlayRoot={}
+  const root={classList:{remove(){}}},overlayRoot={classList:{remove(){}}}
   let state=sharedEnabled?'permission':'off',callback,disposed=false,unsubscribed=false,language='nl'
   const factory=options=>{
     assert.equal(options.root,overlay?overlayRoot:root,'the background attaches to the overlay, with a content fallback')
@@ -52,7 +52,7 @@ function fixture(mode,{overlay=true}={}) {
       activateMotion(){events.push('activate');state='motion';callback?.();return Promise.resolve()},
       subscribe(fn){callback=fn;return ()=>{unsubscribed=true;callback=null}},destroy(){disposed=true;events.push('destroy')}}
   }
-  const context=vm.createContext({document:{getElementById:()=>overlay?overlayRoot:null},inhoud:root,root,
+  const context=vm.createContext({document:{getElementById:()=>overlay?overlayRoot:null},inhoud:root,root,wallpaperRoot:overlay?overlayRoot:root,
     menu:{querySelector:select},settingsDialog:{querySelector:select},maakSchaakWallpaper:factory,opruimers:cleanup,
     t:key=>language==='nl'?key:'EN:'+key})
   vm.runInContext((mode==='two'?twoController:threeController)+'\nglobalThis.refresh=toonSchaakWallpaper; globalThis.dispose=()=>{stopWallpaper();schaakWallpaper.destroy()}',context)

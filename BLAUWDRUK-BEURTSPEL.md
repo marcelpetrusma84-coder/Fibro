@@ -1,6 +1,6 @@
 # Blauwdruk: een nieuw beurtspel in Fibro
 
-*Gemaakt op 3 november 2026. Een beurtspel is een spel waarin je om de beurt zet: boter-kaas-en-eieren, vier op een rij, dammen, schaken.*
+*Gemaakt op 3 november 2026. Een beurtspel is een spel waarin je om de beurt zet: boter-kaas-en-eieren, vier op een rij, dammen, schaken. Voor kaartspellen (zoals Pesten) is er een eigen blauwdruk bovenop deze: [BLAUWDRUK-KAARTSPEL.md](BLAUWDRUK-KAARTSPEL.md).*
 
 Elk nieuw beurtspel krijgt **vanzelf** hetzelfde als dammen:
 
@@ -8,6 +8,16 @@ Elk nieuw beurtspel krijgt **vanzelf** hetzelfde als dammen:
 - **De webcamrondjes bovenin**: twee rondjes van 120 px (vriend links, jij rechts), de webcamknop 📹, een groene rand als je vriend je ziet, een gouden rand als iemand praat, en een rode rand (met geluidje) als iemand geslagen wordt.
 
 Dat regelt `chat.html`. Het spel hoeft er bijna niets voor te doen.
+
+## In elk spel: het spelmenu ☰ en berichten linksboven (11 november 2026)
+
+Dit geldt voor **alle** spellen (in de chat en tegen de computer); een spel hoeft er niets voor te doen.
+
+- **Rechtsboven ☰** (`spelmenu.js`), in deze volgorde: ⏸ Pauze / ▶ Verder spelen, 🔊 Geluid aan/uit, 🎤 Microfoon, 📹 Camera, 🏠 Menu, 🚪 Spel verlaten. Microfoon en camera alleen met een vriend (camera alleen bij spellen met webcam). De losse ✕, 🎤 en 📹 bovenin zijn weg.
+- **Pauze** staat bij jullie allebei stil; wie pauzeerde, gaat verder. Tegen de computer wacht de computer ook. Het spel hoeft niets te doen: de beeldjes (`requestAnimationFrame`) en de klok (`performance.now`) worden vastgehouden. Wil een spel zelf iets doen, luister dan naar `fibro-spel-pauze`.
+- **Geluid uit** zet al het Web Audio-geluid van het spel op 0 (de stem van je vriend blijft).
+- **Menu**: tegen de computer terug naar het kiezen van het niveau; met een vriend het spel dicht en het spelmenu van de chat open.
+- **Linksboven** een wolkje als een andere vriend je een bericht stuurt (`spelbericht.js`). Berichten van je tegenspeler zie je al in het spel.
 
 ## Zo maak je een nieuw beurtspel
 
@@ -47,5 +57,5 @@ Dat regelt `chat.html`. Het spel hoeft er bijna niets voor te doen.
 
 ## Let op
 
-- Het spraakgesprek begint bij deze spellen pas als iemand op 📹 drukt (bij schaken vanzelf). Er was een geluidsprobleem tussen een iPhone en een Steam Deck dat nog niet is opgelost.
+- Het spraakgesprek begint bij deze spellen pas als iemand op 📹 drukt (bij schaken en de kaartspellen vanzelf; zie BLAUWDRUK-KAARTSPEL.md). Er was een geluidsprobleem tussen een iPhone en een Steam Deck dat nog niet is opgelost.
 - Snelle actiespellen (zoals Neo Paddle en Block It) krijgen geen chatbalk en alleen kleine rondjes. Die staan niet in `BEURTSPELLEN`, maar alleen met `'klein'` in `CAMERA_RONDJES`.

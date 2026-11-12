@@ -1,4 +1,7 @@
 // spelbericht.js (v1, 6 nov 2026, v275): een spreekwolkje bovenin het spel als je een berichtje krijgt (Marcel).
+// v2 (11 nov 2026): linksboven (rechtsboven staat nu het spelmenu ☰, spelmenu.js), en ook in de chat-spellen: daar
+// tellen alleen berichten van ANDERE vrienden (die van je tegenspeler zie je al in het spel). In de chat komt het seintje
+// 'fibro-nieuw-bericht' van ongelezen.js, zodat er geen tweede lijntje naar de server nodig is.
 //
 // Het eerste berichtje tijdens het spelen: een wolkje "💬 Je hebt een berichtje" (net onder de ✕) dat na een paar
 // seconden klein wordt. Daarna blijft er een klein wolkje naast de ✕ staan met het aantal (💬 3), zonder steeds opnieuw te storen.
@@ -26,17 +29,17 @@ function stijl() {
   const s = document.createElement('style')
   s.id = 'spelbericht-stijl'
   s.textContent = `
-#spelbericht { position:fixed; top:62px; right:16px; z-index:28; display:flex;
-  align-items:center; gap:6px; min-height:36px; padding:7px 14px; border:none; border-radius:18px 4px 18px 18px;
+#spelbericht { position:fixed; top:58px; left:12px; z-index:262; display:flex;
+  align-items:center; gap:6px; min-height:36px; padding:7px 14px; border:none; border-radius:4px 18px 18px 18px;
   background:#8b3fd1; color:#fff; font:600 15px/1.2 system-ui,-apple-system,sans-serif; box-shadow:0 6px 18px rgba(0,0,0,0.45);
-  cursor:pointer; -webkit-tap-highlight-color:transparent; transition:top .3s, right .3s, padding .25s, font-size .25s; animation:spelbericht-in .3s ease-out; }
-#spelbericht.klein { top:17px; right:62px; padding:6px 11px; font-size:14px; } /* naast de ✕ van het spel (spel.html) */
+  cursor:pointer; -webkit-tap-highlight-color:transparent; transition:top .3s, left .3s, padding .25s, font-size .25s; animation:spelbericht-in .3s ease-out; }
+#spelbericht.klein { top:12px; left:12px; padding:6px 11px; font-size:14px; } /* linksboven in de hoek */
 #spelbericht.wip { animation:spelbericht-wip .35s ease-out; }
 #spelbericht .sb-tekst { white-space:nowrap; }
 #spelbericht.klein .sb-tekst { display:none; }
 #spelbericht .sb-getal { display:none; min-width:12px; text-align:center; }
 #spelbericht.klein .sb-getal { display:inline; }
-#spelbericht-vraag { position:fixed; top:62px; right:16px; z-index:29; width:min(260px, calc(100vw - 24px));
+#spelbericht-vraag { position:fixed; top:58px; left:12px; z-index:263; width:min(260px, calc(100vw - 24px));
   padding:14px; border-radius:14px; background:rgba(26,10,46,0.97); color:#fff; border:1px solid rgba(192,132,252,0.5);
   font:15px/1.4 system-ui,-apple-system,sans-serif; box-shadow:0 10px 30px rgba(0,0,0,0.55); }
 #spelbericht-vraag .sb-rij { display:flex; gap:8px; margin-top:12px; }
@@ -91,7 +94,9 @@ export function maakWolkje(naarChat) {
     knop.setAttribute('aria-label', aantal === 1 ? t('Je hebt een berichtje') : t('Je hebt {n} berichtjes', { n: aantal }))
     return aantal
   }
-  return { erbij, get aantal() { return aantal }, stop() { clearTimeout(kleinTimer) } }
+  // weg: het wolkje (en de vraag) weghalen en opnieuw beginnen met tellen (als het spel dicht gaat)
+  function weg() { clearTimeout(kleinTimer); knop?.remove(); knop = null; document.getElementById('spelbericht-vraag')?.remove(); aantal = 0; van.clear() }
+  return { erbij, weg, get aantal() { return aantal }, stop() { clearTimeout(kleinTimer) } }
 }
 
 // In spel.html: luisteren naar nieuwe berichtjes zolang het spel open is.
@@ -114,5 +119,17 @@ export async function startSpelBericht() {
       const m = p && p.new
       if (telt(m, ik)) wolk.erbij(m.sender_id)
     }))
+  return wolk
+}
+
+// v2: in de chat (chat.html). actief() = er is nu een spel open; naarChat(vriendId) = het spel sluiten en naar die chat.
+// Berichten van je tegenspeler komen hier niet: ongelezen.js telt het open gesprek (je tegenspeler) als gelezen.
+export function startSpelBerichtInChat({ actief, naarChat }) {
+  const wolk = maakWolkje(naarChat)
+  window.__fibroSpelBericht = wolk
+  document.addEventListener('fibro-nieuw-bericht', e => {
+    const van = e && e.detail && e.detail.van
+    if (typeof van === 'string' && actief()) wolk.erbij(van)
+  })
   return wolk
 }

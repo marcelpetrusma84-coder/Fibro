@@ -1,12 +1,20 @@
-# proef288 (10 nov 2026, v131): de Stekky Store (store.html, store.js), voorlopig alleen voor moderators.
+# proef288 (10 nov 2026, v131): de Stekky Store (store.html, store.js). Sinds 11 nov 2026 voor iedereen met een account.
 #  A. Stijl (profiel.html) als moderator: het laatste vakje in de balk is Store; tik erop = store.html
-#  B. Stijl als gewone gebruiker: geen Store-vakje
-#  C. Store als moderator: zes lettertypes, elk in zijn eigen letter; Downloaden = een rij in store_downloads
-#     (in je account) en de knop wordt "✓ Gedownload"; Games/Stickers/Widgets: "komen binnenkort"
-#  D. Terug bij Stijl > Lettertype: het gedownloade lettertype staat erbij (met "· Store"), een ander store-lettertype niet
+#  B. Stijl als gewone gebruiker: ook het Store-vakje (sinds 11 nov 2026)
+#  C. Store als moderator (v2, 11 nov): negen lettertype-pakketten per thema, elk met 4 lettertypes in hun eigen letter;
+#     Downloaden = één rij in store_downloads (in je account) en de knop wordt "✓ Gedownload";
+#     Games/Stickers/Widgets: "komen binnenkort"
+#  D. Terug bij Stijl > Lettertype: alle 4 lettertypes van het pakket staan erbij (met "· Store"), een ander niet;
+#     een oud los gedownload lettertype (v1, lettertype-special-elite) staat er ook nog bij
 #  E. Weghalen in de store = de rij gaat weg uit je account
-#  F. Store als gewone gebruiker: "Geen toegang", niets geladen of gedownload
+#  F. Store als gewone gebruiker: open; staat de database nog op 'alleen moderators', dan een duidelijke melding;
+#     na sql/stekky-store-iedereen.sql kan downloaden wel. Zonder account: "Geen toegang".
 #  G. Staat de tabel er nog niet (sql/stekky-store.sql niet uitgevoerd): een duidelijke melding, geen vastloper
+#  I. (11 nov 2026) Games: Pesten staat in de store; vóór downloaden niet bij Profiel > Widgets, erna wel (aan te zetten);
+#     🗑 bij de widget = verwijderd: uit je account, de widget uit en weg (ook van Home)
+#  J. (11 nov 2026) Stijl > Lettertype > Uit de Store: gedownloade pakketten met Verwijderen
+#  K. (11 nov 2026) De zwarte balk "Stekky Store" en de paarse balk blijven bovenin staan tijdens scrollen; de paarse balk (zoals Profiel)
+#     heeft Games, Widgets, Stickers, Achtergronden en Lettertypes; Games staat eerst aan
 #  H. geen paginafouten
 # python3 -I proef288.py <map>
 import sys, os, time, json, socket, subprocess, tempfile, re, urllib.parse
@@ -19,7 +27,7 @@ def check(ok, wat):
 
 UID = 'aaaaaaaa-0000-4000-8000-000000000001'
 TOKEN = json.dumps({"access_token": "x", "refresh_token": "y", "token_type": "bearer", "expires_in": 3600, "expires_at": int(time.time()) + 3600, "user": {"id": UID}})
-STAND = {'mod': True, 'rijen': set(), 'geen_tabel': False, 'verzoeken': []}
+STAND = {'mod': True, 'rijen': set(), 'geen_tabel': False, 'verzoeken': [], 'iedereen': False}
 
 def supa(route):
     u = route.request.url; m = route.request.method
@@ -31,7 +39,7 @@ def supa(route):
         if m == 'GET': return route.fulfill(status=200, json=[{'item_id': i} for i in sorted(STAND['rijen'])])
         if m == 'POST':
             r = json.loads(route.request.post_data or '{}')
-            if not STAND['mod'] or r.get('user_id') != UID: return route.fulfill(status=403, json={'code': '42501', 'message': 'rls'})
+            if not (STAND['mod'] or STAND['iedereen']) or r.get('user_id') != UID: return route.fulfill(status=403, json={'code': '42501', 'message': 'rls'})
             STAND['rijen'].add(r['item_id']); return route.fulfill(status=201, body='')
         if m == 'DELETE':
             q = urllib.parse.parse_qs(urllib.parse.urlparse(u).query)
@@ -56,7 +64,7 @@ def nieuw(b):
     ctx.route_web_socket('**/realtime/v1/websocket**', lambda w: None)
     ctx.route(re.compile(r'^https?://(?!127\.0\.0\.1)(?!.*supabase\.co).*'), lambda r: r.fulfill(status=204, body=''))
     pg = ctx.new_page()
-    pg.on('pageerror', lambda e: fouten.append(str(e)[:200])); pg.on('dialog', lambda d: d.dismiss())
+    pg.on('pageerror', lambda e: fouten.append(str(e)[:200])); pg.on('dialog', lambda d: d.accept())   # 11 nov 2026: 'verwijderen?' met OK beantwoorden
     pg.goto(BASIS + 'manifest.json')
     pg.evaluate("t => { localStorage.setItem('sb-qmgatbphiplrfxrljtbe-auth-token', t); localStorage.setItem('fibro_taal', 'nl'); localStorage.setItem('fibro_opslagtip_later', String(Date.now())) }", TOKEN)
     return ctx, pg
@@ -76,41 +84,105 @@ try:
         check(pg.inner_text('#tab-store').strip() == 'Store', 'A: het vakje heet Store')
         pg.click('#tab-store')
         check(wacht(pg, "() => location.pathname.endsWith('/store.html')"), 'A: tik op Store = de Stekky Store')
+        # ── K: zwarte balk + paarse balk ──
+        k1 = wacht(pg, "() => !!document.getElementById('storeNav') && getComputedStyle(document.getElementById('storeNav')).display !== 'none' && !!document.querySelector('#lijst .item[data-id=\"pesten\"]')")
+        tabs = pg.evaluate("() => [...document.querySelectorAll('#storeNav .main-tab')].map(b => b.dataset.soort + (b.classList.contains('active') ? '*' : ''))")
+        check(k1 and tabs == ['game*', 'widget', 'sticker', 'achtergrond', 'lettertype'], 'K: paarse balk met 5 soorten, Games eerst aan (%s)' % tabs)
+        kleur = pg.evaluate("() => { const b = document.querySelector('.top-bar'), t = b.querySelector('.titel'); return [b.textContent.trim(), getComputedStyle(t).color, getComputedStyle(b.parentElement).position] }")
+        check(kleur == ['Stekky Store', 'rgb(255, 255, 255)', 'sticky'], 'K: zwarte balk met witte tekst Stekky Store (%s)' % kleur)
+        pg.click('#soorten .main-tab[data-soort="achtergrond"]')
+        check(wacht(pg, "() => document.querySelector('#lijst').textContent.includes('Achtergronden komen binnenkort')"), 'K: Achtergronden: komen binnenkort')
+        pg.click('#soorten .main-tab[data-soort="lettertype"]')
+        wacht(pg, "() => document.querySelectorAll('#lijst .item').length === 9")
+        pg.evaluate("window.scrollTo(0, document.body.scrollHeight)"); pg.wait_for_timeout(300)
+        bovenin = pg.evaluate("() => { const r = document.querySelector('.top-bar').getBoundingClientRect(); const x = r.left + r.width / 2, y = r.top + r.height / 2; return [window.scrollY > 200, r.top >= 0 && r.top < 20, document.querySelector('.top-bar').contains(document.elementFromPoint(x, y))] }")
+        check(bovenin == [True, True, True], 'K: na scrollen staat de zwarte balk nog bovenin, boven de rest (%s)' % bovenin)
+        paars = pg.evaluate("() => { const n = document.getElementById('storeNav'), r = n.getBoundingClientRect(), t = n.querySelector('.main-tab.active').getBoundingClientRect(); return [r.top > 50 && r.bottom < 220, n.contains(document.elementFromPoint(t.left + t.width / 2, t.top + t.height / 2))] }")
+        check(paars == [True, True], 'K: na scrollen staat de paarse balk er ook nog, onder de zwarte balk (%s)' % paars)
+        pg.click('#soorten .main-tab[data-soort="game"]')
+        check(wacht(pg, "() => !!document.querySelector('#lijst .item[data-id=\"pesten\"]')", 4000), 'K: na scrollen kun je in de paarse balk een andere soort kiezen')
+        pg.click('#soorten .main-tab[data-soort="lettertype"]')
+        pg.evaluate("window.scrollTo(0, 0)")
         # ── C ──
-        c1 = wacht(pg, "() => document.querySelectorAll('#lijst .item').length === 6")
-        namen = pg.evaluate("() => [...document.querySelectorAll('#lijst .item-naam')].map(e => e.textContent)")
-        check(c1 and namen == ['Stripheld', 'Leger', 'Krantenkop', 'Sierlijk', 'Kinderhand', 'Oude typemachine'], 'C: zes lettertypes in de store (%s)' % namen)
-        geladen = wacht(pg, "() => document.fonts.check(\"16px 'Bangers'\") && document.fonts.check(\"16px 'Special Elite'\")", 8000)
-        check(geladen, 'C: de lettertypes worden echt geladen (Bangers, Special Elite)')
-        knop = '#lijst .item[data-id="lettertype-bangers"] .knop'
+        c1 = wacht(pg, "() => document.querySelectorAll('#lijst .item').length === 9")
+        namen = pg.evaluate("() => [...document.querySelectorAll('#lijst .item-titel')].map(e => e.textContent)")
+        check(c1 and namen == ['Retro', 'Sci-fi', 'Cowboy', 'Prinses', 'Urban', 'Horror', 'Strip', 'Geheim agent', 'Ridders & draken'],
+              'C: negen pakketten in de store (%s)' % namen)
+        regels = pg.evaluate("() => [...document.querySelectorAll('#lijst .item')].map(k => k.querySelectorAll('.item-regel').length)")
+        check(regels == [4] * 9, 'C: elk pakket heeft 4 lettertypes (%s)' % regels)
+        strip = pg.evaluate("() => [...document.querySelectorAll('#lijst .item[data-id=\"pakket-strip\"] .item-regel')].map(e => e.textContent + '|' + e.style.fontFamily)")
+        check(strip[0].startswith('Superheld|') and 'Luckiest Guy' in strip[0], 'C: elke regel in zijn eigen letter (%s)' % strip[:2])
+        geladen = wacht(pg, "() => document.fonts.check(\"16px 'Luckiest Guy'\") && document.fonts.check(\"16px 'Princess Sofia'\") && document.fonts.check(\"16px 'Smokum'\")", 8000)
+        check(geladen, 'C: de lettertypes worden echt geladen (Luckiest Guy, Princess Sofia, Smokum)')
+        knop = '#lijst .item[data-id="pakket-strip"] .knop'
         check(pg.inner_text(knop) == 'Downloaden', 'C: knop Downloaden')
         pg.click(knop)
-        c2 = wacht(pg, "() => { const k = document.querySelector('#lijst .item[data-id=\"lettertype-bangers\"] .knop'); return k && k.textContent === '✓ Gedownload' }")
-        check(c2 and STAND['rijen'] == {'lettertype-bangers'}, 'C: Downloaden = bewaard in je account, knop "✓ Gedownload" (%s)' % STAND['rijen'])
+        c2 = wacht(pg, "() => { const k = document.querySelector('#lijst .item[data-id=\"pakket-strip\"] .knop'); return k && k.textContent === '✓ Gedownload' }")
+        check(c2 and STAND['rijen'] == {'pakket-strip'}, 'C: Downloaden = één rij in je account, knop "✓ Gedownload" (%s)' % STAND['rijen'])
         check('Stijl → Lettertype' in pg.inner_text('#melding'), 'C: melding waar je het kunt kiezen')
-        pg.click('.soort[data-soort="game"]')
-        check('komen binnenkort' in pg.inner_text('#lijst'), 'C: Games: komen binnenkort (%r)' % pg.inner_text('#lijst'))
+        # ── I (11 nov 2026): Pesten in de store ──
+        pg.goto(BASIS + 'profiel.html'); pg.click('#tab-widgets') if pg.query_selector('#tab-widgets') else None
+        wacht(pg, "() => !!document.getElementById('widgetRij-spel_pesten')"); pg.wait_for_timeout(800)
+        check(pg.evaluate("getComputedStyle(document.getElementById('widgetRij-spel_pesten')).display") == 'none', 'I: vóór downloaden: Pesten niet bij de widgets')
+        pg.goto(BASIS + 'store.html'); wacht(pg, "() => !!document.querySelector('#lijst .item[data-id=\"pesten\"]')")
+        pg.click('#soorten .main-tab[data-soort="game"]')
+        i1 = wacht(pg, "() => !!document.querySelector('#lijst .item[data-id=\"pesten\"] img[src*=\"spelicoon/pesten.webp\"]')", 4000)
+        check(i1 and 'Pesten' in pg.inner_text('#lijst') and 'Laatste kaart' in pg.inner_text('#lijst'), 'I: Games: Pesten met plaatje en uitleg (%r)' % pg.inner_text('#lijst')[:80])
+        pg.click('#lijst .item[data-id="pesten"] .knop')
+        i2 = wacht(pg, "() => { const k = document.querySelector('#lijst .item[data-id=\"pesten\"] .knop'); return k && k.textContent === '✓ Gedownload' }")
+        check(i2 and 'pesten' in STAND['rijen'] and 'Widgets' in pg.inner_text('#melding'), 'I: Downloaden = rij in je account en melding: zet hem aan bij Widgets (%s)' % STAND['rijen'])
+        pg.goto(BASIS + 'profiel.html')
+        i3 = wacht(pg, "() => { const r = document.getElementById('widgetRij-spel_pesten'); return r && getComputedStyle(r).display !== 'none' }", 8000)
+        check(i3, 'I: na downloaden: Pesten bij Profiel > Widgets > Spellen')
+        pg.evaluate("toggleWidget('spel_pesten')")
+        check(pg.evaluate("document.getElementById('widget-spel_pesten').classList.contains('on')"), 'I: de widget gaat aan')
+        # 🗑 bij de widget: verwijderen (de widget staat aan en staat al op Home)
+        pg.evaluate("""() => { const uid = 'aaaaaaaa-0000-4000-8000-000000000001'
+            localStorage.setItem('fibro_widgets_profiel_' + uid, JSON.stringify([{ id: 'mood', aan: true, volgorde: 0 }, { id: 'spel_pesten', aan: true, volgorde: 1 }])) }""")
+        pg.click('#tab-widgets')
+        pg.click('#widgetRij-spel_pesten .store-verwijder')
+        i4 = wacht(pg, "() => getComputedStyle(document.getElementById('widgetRij-spel_pesten')).display === 'none'", 5000)
+        layout = pg.evaluate("() => JSON.parse(localStorage.getItem('fibro_widgets_profiel_aaaaaaaa-0000-4000-8000-000000000001')).map(w => w.id)")
+        check(i4 and 'pesten' not in STAND['rijen'] and layout == ['mood'] and not pg.evaluate("document.getElementById('widget-spel_pesten').classList.contains('on')"),
+              'I: 🗑 bij Widgets = verwijderd: uit je account, widget uit en weg van Home (%s, %s)' % (STAND['rijen'], layout))
+        check(not pg.evaluate("document.body.dataset.widgetsUnsaved === 'true'"), 'I: daarna geen vraag om op te slaan')
+        pg.goto(BASIS + 'store.html'); wacht(pg, "() => !!document.querySelector('#lijst .item')")
         # ── D ──
+        STAND['rijen'].add('lettertype-special-elite')  # oude losse download uit v1
         pg.click('.terug')
         check(wacht(pg, "() => location.pathname.endsWith('/profiel.html')"), 'D: ← terug = Stijl')
         wacht(pg, "() => document.querySelectorAll('#fontGrid .font-item').length > 38")
         pg.wait_for_timeout(800)
         lijst = pg.evaluate(FONTS)
-        check('Bangers|Stripheld · Store' in lijst, 'D: Bangers staat bij Lettertype, met "· Store" (%s)' % lijst[-3:])
-        check(not any(x.startswith('Sacramento|') for x in lijst), 'D: een niet-gedownload store-lettertype staat er niet bij')
+        verwacht = ['Luckiest Guy|Superheld · Store', 'Bubblegum Sans|Kauwgom · Store', 'Bangers|Stripheld · Store', 'Gloria Hallelujah|Kinderhand · Store']
+        check(all(v in lijst for v in verwacht), 'D: alle 4 lettertypes van Strip staan bij Lettertype, met "· Store" (%s)' % lijst[-5:])
+        check('Special Elite|Oude typemachine · Store' in lijst, 'D: het oude losse lettertype (Special Elite) staat er nog')
+        check(not any(x.startswith(('Sacramento|', 'Smokum|', 'Stardos Stencil|')) for x in lijst), 'D: lettertypes uit niet-gedownloade pakketten staan er niet bij')
+        # ── J: Uit de Store, met Verwijderen ──
+        pg.click('#tab-lettertype') if pg.query_selector('#tab-lettertype') else None
+        namen = pg.evaluate("() => [...document.querySelectorAll('#storeFontsLijst .store-rij .store-naam')].map(e => e.textContent)")
+        check(sorted(namen) == sorted(['Strip', 'Oude typemachine']), 'J: Uit de Store: de gedownloade pakketten (%s)' % namen)
+        pg.click('#storeFontsLijst .store-rij[data-id="pakket-strip"] .store-verwijder')
+        j1 = wacht(pg, "() => !document.querySelector('#storeFontsLijst .store-rij[data-id=\"pakket-strip\"]')", 5000)
+        check(j1 and 'pakket-strip' not in STAND['rijen'] and not any(x.startswith('Luckiest Guy|') for x in pg.evaluate(FONTS)),
+              'J: Verwijderen = uit je account en de lettertypes van Strip weg (%s)' % STAND['rijen'])
+        STAND['rijen'].add('pakket-strip')   # voor E (verwijderen in de store)
+        STAND['rijen'].discard('lettertype-special-elite')
         # ── E ──
-        pg.goto(BASIS + 'store.html')
-        wacht(pg, "() => document.querySelector('#lijst .item[data-id=\"lettertype-bangers\"] .weghalen')")
-        pg.click('#lijst .item[data-id="lettertype-bangers"] .weghalen')
-        e1 = wacht(pg, "() => { const k = document.querySelector('#lijst .item[data-id=\"lettertype-bangers\"] .knop'); return k && k.textContent === 'Downloaden' }")
-        check(e1 and STAND['rijen'] == set() and 'DELETE' in STAND['verzoeken'], 'E: Weghalen = uit je account (%s)' % STAND['rijen'])
+        pg.goto(BASIS + 'store.html'); wacht(pg, "() => !!document.querySelector('#lijst .item')"); pg.click('#soorten .main-tab[data-soort="lettertype"]'); 
+        wacht(pg, "() => document.querySelector('#lijst .item[data-id=\"pakket-strip\"] .weghalen')")
+        check(pg.inner_text('#lijst .item[data-id="pakket-strip"] .weghalen') == '🗑 Verwijderen', 'E: knop heet 🗑 Verwijderen')
+        pg.click('#lijst .item[data-id="pakket-strip"] .weghalen')
+        e1 = wacht(pg, "() => { const k = document.querySelector('#lijst .item[data-id=\"pakket-strip\"] .knop'); return k && k.textContent === 'Downloaden' }")
+        check(e1 and STAND['rijen'] == set() and 'DELETE' in STAND['verzoeken'], 'E: Verwijderen (na de vraag) = uit je account (%s)' % STAND['rijen'])
         ctx.close()
         # ── G ──
         STAND['geen_tabel'] = True
         ctx, pg = nieuw(b)
         pg.goto(BASIS + 'store.html')
         g1 = wacht(pg, "() => document.getElementById('melding').style.display === 'block'")
-        check(g1 and 'sql/stekky-store.sql' in pg.inner_text('#melding') and pg.evaluate("document.querySelectorAll('#lijst .item').length") == 6,
+        pg.click('#soorten .main-tab[data-soort="lettertype"]'); 
+        check(g1 and 'sql/stekky-store.sql' in pg.inner_text('#melding') and pg.evaluate("document.querySelectorAll('#lijst .item').length") == 9,
               'G: tabel ontbreekt: duidelijke melding, de store staat er wel (%r)' % pg.inner_text('#melding'))
         ctx.close()
         STAND['geen_tabel'] = False
@@ -120,12 +192,23 @@ try:
         pg.goto(BASIS + 'profiel.html')
         wacht(pg, "() => document.querySelectorAll('#fontGrid .font-item').length >= 38")
         pg.wait_for_timeout(1500)
-        check(pg.evaluate("getComputedStyle(document.getElementById('tab-store')).display") == 'none' and pg.evaluate(LAATSTE) == 'tab-stickers',
-              'B: gewone gebruiker: geen Store-vakje (laatste: %s)' % pg.evaluate(LAATSTE))
+        check(pg.evaluate(LAATSTE) == 'tab-store', 'B: gewone gebruiker: ook het Store-vakje (laatste: %s)' % pg.evaluate(LAATSTE))
         pg.goto(BASIS + 'store.html')
-        f1 = wacht(pg, "() => getComputedStyle(document.getElementById('toegangGeweigerd')).display === 'block'")
-        check(f1 and pg.evaluate("getComputedStyle(document.getElementById('inhoud')).display") == 'none', 'F: store als gewone gebruiker: Geen toegang')
-        check(STAND['verzoeken'] == [], 'F: gewone gebruiker: niets opgevraagd of gedownload (%s)' % STAND['verzoeken'])
+        f1 = wacht(pg, "() => getComputedStyle(document.getElementById('inhoud')).display === 'block' && !!document.querySelector('#lijst .item[data-id=\"pesten\"]')")
+        check(f1, 'F: gewone gebruiker: de store is open')
+        pg.click('#soorten .main-tab[data-soort="game"]'); pg.click('#lijst .item[data-id="pesten"] .knop')
+        f2 = wacht(pg, "() => document.getElementById('melding').style.display === 'block'")
+        check(f2 and 'alleen open voor moderators' in pg.inner_text('#melding') and 'pesten' not in STAND['rijen'],
+              'F: database nog op alleen moderators: duidelijke melding (%r)' % pg.inner_text('#melding'))
+        STAND['iedereen'] = True   # sql/stekky-store-iedereen.sql uitgevoerd
+        pg.click('#lijst .item[data-id="pesten"] .knop')
+        f3 = wacht(pg, "() => { const k = document.querySelector('#lijst .item[data-id=\"pesten\"] .knop'); return k && k.textContent === '✓ Gedownload' }")
+        check(f3 and 'pesten' in STAND['rijen'], 'F: daarna kan een gewone gebruiker Pesten downloaden')
+        ctx.close()
+        # zonder account: geen toegang
+        ctx = b.new_context(service_workers='block', locale='nl-NL'); ctx.route('**/*supabase.co/**', supa)
+        pg = ctx.new_page(); pg.goto(BASIS + 'store.html')
+        check(wacht(pg, "() => getComputedStyle(document.getElementById('toegangGeweigerd')).display === 'block'"), 'F: zonder account: Geen toegang')
         ctx.close()
         b.close()
 finally:

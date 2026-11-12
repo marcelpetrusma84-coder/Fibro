@@ -181,6 +181,24 @@ export const DEUNTJES = {
         { klank: 'bas', vol: 0.26, stap: 2, noten: 'F3 . C3 . F3 . C3 . | Bb2 . F3 . Bb2 . F3 . | C3 . G3 . C3 . G3 . | F3 . C3 . F3 . . . | Bb2 . F3 . Bb2 . F3 . | A2 . E3 . A2 . E3 . | G2 . D3 . C3 . E3 . | F3 . C3 . F2 . . .' },
         { slag: true, vol: 0.2, stap: 2, noten: 'k . s . k k s .' }
     ] },
+    // Pesten: een ondeugend kroegpianootje (11 nov 2026)
+    pesten: { bpm: 126, stemmen: [
+        { klank: 'speelgoed', vol: 0.28, stap: 2, noten: 'C5 E5 G5 E5 A5 . G5 . | F5 A5 C6 A5 G5 . E5 . | D5 F5 A5 F5 G5 . B4 . | C5 . E5 G5 C6 . . . | A5 G5 F5 E5 D5 . F5 . | G5 F5 E5 D5 C5 . E5 . | D5 . F5 . B4 . D5 . | C5 . G4 . C5 . . .' },
+        { klank: 'bas', vol: 0.26, stap: 2, noten: 'C3 . G3 . C3 . G3 . | F3 . C4 . F3 . C4 . | G2 . D3 . G2 . D3 . | C3 . G3 . C3 . E3 . | F3 . C4 . F3 . A3 . | C3 . G3 . A2 . E3 . | G2 . D3 . G2 . B2 . | C3 . G2 . C3 . . .' },
+        { slag: true, vol: 0.18, stap: 2, noten: 'k . s . k k s .' }
+    ] },
+    // Toepen: een stoer kroeglied in mineur, met een klop op de tafel (11 nov 2026)
+    toepen: { bpm: 112, stemmen: [
+        { klank: 'speelgoed', vol: 0.28, stap: 2, noten: 'A4 . C5 E5 A5 . G5 . | F5 . E5 D5 E5 . . . | D5 . F5 A5 G5 . F5 . | E5 . C5 . E5 . . . | A4 . C5 E5 A5 . B5 . | C6 . B5 A5 G5 . E5 . | F5 E5 D5 C5 B4 . E5 . | A4 . E4 . A4 . . .' },
+        { klank: 'bas', vol: 0.26, stap: 2, noten: 'A2 . E3 . A2 . E3 . | D3 . A3 . D3 . A3 . | G2 . D3 . G2 . D3 . | C3 . G3 . E3 . C3 . | A2 . E3 . A2 . E3 . | F2 . C3 . F2 . C3 . | D3 . A3 . E3 . B2 . | A2 . E3 . A2 . . .' },
+        { slag: true, vol: 0.2, stap: 2, noten: 'k . . k s . . .' }
+    ] },
+    // Eenentwintigen: een spannend casino-swingetje (11 nov 2026)
+    eenentwintigen: { bpm: 132, stemmen: [
+        { klank: 'speelgoed', vol: 0.27, stap: 2, noten: 'G5 . E5 G5 A5 . G5 . | E5 . C5 . D5 . . . | G5 . E5 G5 A5 . C6 . | B5 . A5 . G5 . . . | A5 . F5 A5 B5 . A5 . | G5 . E5 . F5 . D5 . | E5 . G5 . D5 . F5 . | C5 . G4 . C5 . . .' },
+        { klank: 'bas', vol: 0.25, stap: 2, noten: 'C3 . G3 . C3 . G3 . | A2 . E3 . G2 . D3 . | C3 . G3 . C3 . G3 . | E3 . B3 . G2 . D3 . | F2 . C3 . F2 . C3 . | C3 . G3 . D3 . A3 . | G2 . D3 . G2 . B2 . | C3 . G2 . C3 . . .' },
+        { slag: true, vol: 0.16, stap: 2, noten: 'k s k s k s k s' }
+    ] },
     // Schaken: deftig, als een klavecimbel
     schaken: { bpm: 92, stemmen: [
         { klank: 'fluit', vol: 0.24, stap: 2, noten: 'A4 - - B4 C5 - - E5 | D5 - C5 - B4 - - - | G4 - - A4 B4 - - D5 | C5 - B4 - A4 - - - | E5 - - F5 E5 - D5 - | C5 - - D5 C5 - B4 - | A4 - C5 - B4 - G#4 - | A4 - - - - - . .' },

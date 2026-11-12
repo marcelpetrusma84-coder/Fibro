@@ -135,12 +135,14 @@ try:
         # ════════ Eenentwintigen ════════
         pg = open_spel(ctx, 'eenentwintigen')
         wacht(pg, "() => " + RUST + " && document.querySelectorAll('.kt-hand .kt-kaart').length === 2")
-        if totaal(pg.evaluate(HAND)) == 21: print('     (meteen 21: dan blijf je vanzelf; F deels overgeslagen)')
+        # Meteen 21: dan blijf je vanzelf en speelt de computer direct; zijn kaarten liggen dan al open op tafel en de
+        # uitslag staat er, dus F (beurt, stapel, aantal bij de computer, totaal) kan dan niet (G controleert de uitslag).
+        if totaal(pg.evaluate(HAND)) == 21: print('     (meteen 21: dan blijf je vanzelf; F overgeslagen)')
         else:
             check(wacht(pg, MIJN_BEURT), 'F: na het delen ben jij aan de beurt')
             check(pg.evaluate("() => document.querySelector('.kt-stapel').classList.contains('kt-wijs')"), 'F: de stapel licht op')
-        check(len(pg.evaluate(HAND)) == 2 and pg.evaluate(ANDER) >= 2, 'F: 2 kaarten bij jou en bij de computer')
-        check(('Jij: %d' % totaal(pg.evaluate(HAND))) in pg.evaluate(INFO), 'F: je totaal staat erbij (%s, %s)' % (pg.evaluate(HAND), pg.evaluate(INFO)))
+            check(len(pg.evaluate(HAND)) == 2 and pg.evaluate(ANDER) >= 2, 'F: 2 kaarten bij jou en bij de computer')
+            check(('Jij: %d' % totaal(pg.evaluate(HAND))) in pg.evaluate(INFO), 'F: je totaal staat erbij (%s, %s)' % (pg.evaluate(HAND), pg.evaluate(INFO)))
         if totaal(pg.evaluate(HAND)) < 21:
             pg.click('.kt-stapel')
             check(wacht(pg, "() => document.querySelectorAll('.kt-hand .kt-kaart').length === 3 && " + RUST, 6000), 'F: tik op de stapel = een kaart erbij')

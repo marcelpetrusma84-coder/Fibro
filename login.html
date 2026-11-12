@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+  <link rel="stylesheet" href="login-sessie.css?v=1">
+  <script src="login-sessie.js?v=1"></script>
   <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-  <script src="taal.js?v=105"></script>
+  <script src="taal.js?v=106"></script>
   <script src="apk.js?v=3"></script>
   <script src="registratie.js?v=3"></script>
   <script>try { FibroApk.hervatUitnodiging() } catch (e) {} // in de app: een uitnodiging die wacht (apk.js)</script>
@@ -115,7 +117,20 @@
 </head>
 <body>
 
-<div class="container">
+<div class="login-sessie" role="status" aria-live="polite" aria-atomic="true">
+  <div class="login-sessie-kaart">
+    <svg class="login-sessie-slot" viewBox="0 0 80 80" fill="none" aria-hidden="true" focusable="false">
+      <path d="M25 35V25a15 15 0 0 1 30 0v10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+      <rect x="16" y="33" width="48" height="36" rx="11" fill="currentColor" fill-opacity=".12" stroke="currentColor" stroke-width="2"/>
+      <circle cx="40" cy="48" r="3" fill="currentColor"/><path d="M40 51v7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+    <p class="login-sessie-titel" data-t>Je sessie wordt hersteld</p>
+    <p class="login-sessie-uitleg" data-t>We openen je eigen plekkie…</p>
+    <div class="login-sessie-balk" aria-hidden="true"></div>
+  </div>
+</div>
+<div class="container" id="login-inhoud">
+  <script>if (document.documentElement.hasAttribute('data-login-sessie')) { var inhoud = document.getElementById('login-inhoud'); inhoud.inert = true; inhoud.setAttribute('aria-hidden', 'true') }</script>
   <div class="logo">
     <h1>Stek<span>k</span>y<sup class="beta-label" data-t>bèta</sup></h1> <!-- v270: bèta hier, in plaats van het blok tekst bij registreren -->
     <p data-t>Je eigen plekkie</p>
@@ -342,6 +357,7 @@
 
   // Venster over de pagina. actie() mag een fout gooien: dan blijft het venster open met de melding.
   function faceIdVenster({ titel, tekst, ja, nee, actie }) {
+    globalThis.FibroLoginSessie?.toonFormulier()
     return new Promise(resolve => {
       const achter = document.createElement('div')
       achter.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(10,4,20,0.82);display:flex;align-items:center;justify-content:center;padding:20px;'
@@ -818,6 +834,7 @@ window.herstelMetSleutel = async function() {
   // Klaar = het seintje tijdelijk_wachtwoord gaat uit, samen met het nieuwe wachtwoord.
   async function eerstNieuwWachtwoord(user) {
     if (!user || !user.user_metadata || user.user_metadata.tijdelijk_wachtwoord !== true) return
+    globalThis.FibroLoginSessie?.toonFormulier()
     const vorige = document.querySelector('.panel.active')
     const tabs = document.querySelector('.tabs')
     if (tabs) tabs.style.display = 'none'
@@ -849,16 +866,24 @@ window.herstelMetSleutel = async function() {
     el.textContent = tekst
   }
 
-  supabase.auth.getSession().then(({ data: { session } }) => {
+  supabase.auth.getSession().then(({ data: { session }, error }) => {
     const params = new URLSearchParams(window.location.search)
     // An explicit recovery shortcut must stay on the recovery screen, even on
     // a device that already has a session/key. It never triggers key changes.
-    if (window.location.hash === '#herstellen') return
-    if (session && !params.get('logout')) {
-      eerstNieuwWachtwoord(session.user).then(() => naInloggenFaceId(session.user.id, '')).finally(() => { // v265
-        window.location.href = naInloggenAdres()
-      })
+    if (error || !session || params.has('logout') || ['#herstellen', '#registreren'].includes(window.location.hash)) {
+      globalThis.FibroLoginSessie?.toonFormulier()
+      return
     }
+    if (globalThis.FibroLoginSessie?.isVerlopen()) return
+    globalThis.FibroLoginSessie?.toonLaden()
+    return eerstNieuwWachtwoord(session.user).then(() => naInloggenFaceId(session.user.id, '')).then(() => {
+      if (globalThis.FibroLoginSessie?.isVerlopen()) return
+      globalThis.FibroLoginSessie?.toonLaden()
+      window.location.href = naInloggenAdres()
+    })
+  }).catch(e => {
+    globalThis.FibroLoginSessie?.toonFormulier()
+    console.warn('[login-sessie]', e)
   })
 
   async function laadWallpaper() {

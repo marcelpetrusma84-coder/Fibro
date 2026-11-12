@@ -2392,4 +2392,6 @@ window.FIBRO_EN = {
   "Kaarten kiezen": "Choose cards",
   "Kies je kaarten": "Choose your cards",
   "Perkament": "Parchment",
+  "Je sessie wordt hersteld": "Restoring your session",
+  "We openen je eigen plekkie…": "Opening your own space…",
 }

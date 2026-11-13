@@ -158,6 +158,9 @@ jobs:
       - name: "Kaartspellen: kaartstijl kiezen (Stekky of Perkament) met 🎴"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef294.py .
+      - name: "Stickervel Sinterklaas uit de Store (downloaden, stickerkeuze, verwijderen)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef295.py .
       - name: "Spelmenu ☰ in elk spel (pauze, geluid, microfoon, camera, menu, verlaten) en berichten linksboven"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef291.py .

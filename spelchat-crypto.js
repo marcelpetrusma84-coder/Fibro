@@ -23,7 +23,7 @@ export function maakSpelChatCrypto({ mijnId, vriendId, mijnPrivateKey, vriendPub
     if (!TYPES.has(type) || typeof data !== 'string') return false
     return type === 'spelchat'
       ? data.trim().length > 0 && data.length <= 2000
-      : /^(f[1-6]|e[12])-\d{2}$/.test(data)
+      : /^(f[1-7]|e[12])-\d{2}$/.test(data)
   }
 
   return {

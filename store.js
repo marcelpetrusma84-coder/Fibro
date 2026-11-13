@@ -1,11 +1,13 @@
 // store.js (10 nov 2026, v1): de Stekky Store. Wat je gedownload hebt, staat in je account (tabel store_downloads,
 // sql/stekky-store.sql) en ook op dit toestel (fibro_store_<id>), zodat Stijl > Lettertype het meteen weet.
 // v5 (11 nov 2026): Verwijderen (verwijderDownload) en games alleen aan met download + widget (gameAan).
+// v8 (13 nov 2026): stickervellen (STORE_STICKERS), het eerste is Sinterklaas.
 // Sinds 11 nov 2026 voor iedereen met een account (eerst alleen moderators): het Store-vakje bij Stijl staat bij
 // iedereen, en de database laat iedereen downloaden die niet geblokkeerd is (sql/stekky-store-iedereen.sql).
 // Soorten: lettertype (nu), game, sticker en widget (later). Lettertypes komen per thema in een pakket van 4
 // (v2, 11 nov 2026): een nieuw pakket staat in STORE_PAKKETTEN (lettertypes.js), de bestanden in lettertypen/.
 import { STORE_PAKKETTEN } from './lettertypes.js?v=132'
+import { STORE_VELLEN } from './stickervellen.js?v=237'
 
 export const STORE_SOORTEN = [
   // 11 nov 2026: volgorde van de paarse balk in store.html; achtergronden erbij
@@ -30,7 +32,11 @@ export const STORE_GAMES = [
   { id: 'eenentwintigen', soort: 'game', titel: 'Eenentwintigen', widget: 'spel_eenentwintigen', icoon: 'spelicoon/eenentwintigen.webp?v=2',
     uitleg: 'Pak kaarten tot je zo dicht mogelijk bij 21 zit, maar niet erover. Durf jij nog een kaart? Tegen de computer of met een vriend in de chat.' },
 ]
-export const STORE_ITEMS = [...STORE_PAKKETTEN.map(p => Object.assign({ soort: 'lettertype' }, p)), ...STORE_GAMES]
+// Stickers (13 nov 2026): een vel van 12 bewegende stickers met geluid (STORE_VELLEN in stickervellen.js). Na downloaden
+// staat het in de stickerkeuze van de chat bij 'Winkel'. Verwijderen: dan is het daar weg (wat je al stuurde, blijft).
+export const STORE_STICKERS = STORE_VELLEN.map(v => ({ id: v.store, soort: 'sticker', titel: v.titel, vel: v.id,
+  uitleg: 'Twaalf stickers die bewegen en geluid maken: de Sint, Piet, de pakjesboot, Ozosnel, chocoladeletters en meer.' }))
+export const STORE_ITEMS = [...STORE_PAKKETTEN.map(p => Object.assign({ soort: 'lettertype' }, p)), ...STORE_GAMES, ...STORE_STICKERS]
 // Welke game-widgets mag je aanzetten (wat je gedownload hebt)
 export const gameWidgets = ids => STORE_GAMES.filter(g => ids.has(g.id)).map(g => g.widget)
 

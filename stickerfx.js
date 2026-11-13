@@ -10,6 +10,7 @@
 // v164: nog twaalf, voor stickervel 2 (tests/tools/geluiden3.py). v165: en twaalf voor vel 3 (geluiden4.py).
 // v166: en twaalf voor vel 4 (geluiden5.py). v209-v214: 35 meme-, montage- en emotiegeluiden (geluiden6.py, 64 kbps),
 // voor eigen stickers in het Stickerlab (en later voor een vel). 30 okt 2026: 'censuur' voor vel 6 (geluiden7.py).
+// 13 nov 2026: twaalf voor vel 7, Sinterklaas uit de Store (geluiden8.py).
 // Lukt de mp3 niet, dan klinkt hun 'terug'-geluid (het geluid dat die sticker voorheen had).
 // Namen staan hier in twee talen ([Nederlands, Engels]); de taal volgt window.T.taal (taal.js).
 // Op de iPhone mag een pagina pas geluid maken na een tik: daarom zet de eerste tik op de pagina
@@ -328,6 +329,19 @@ export const GELUIDEN = {
   dankbaar:  { naam: ['Dankbaar', 'Grateful'], mp3: true, terug: 'ting' },  // emotie
   // 30 okt 2026: alleen als mp3 (tests/tools/geluiden7.py), voor stickervel 6 (Vloeken)
   censuur:   { naam: ['Piep! (gecensureerd)', 'Bleep! (censored)'], mp3: true, terug: 'zoemer' },
+  // 13 nov 2026: alleen als mp3 (tests/tools/geluiden8.py), voor stickervel 7 (Sinterklaas, uit de Stekky Store)
+  sintklok:    { naam: ['Kerkklokken', 'Church bells'], mp3: true, terug: 'ting' },
+  pietsprong:  { naam: ['Pietensprong', 'Jolly jump'], mp3: true, terug: 'sprong' },
+  haardvuur:   { naam: ['Haardvuur', 'Fireplace'], mp3: true, terug: 'vuur' },
+  chocokrak:   { naam: ['Krak! Mmm', 'Crack! Mmm'], mp3: true, terug: 'klets' },
+  stoomfluit:  { naam: ['Scheepstoeter', 'Ship horn'], mp3: true, terug: 'fluit' },
+  pakpapier:   { naam: ['Uitpakken', 'Unwrapping'], mp3: true, terug: 'pling' },
+  zakbonk:     { naam: ['Volle zak', 'Full sack'], mp3: true, terug: 'boem' },
+  hoefslag:    { naam: ['Paard op het dak', 'Horse on the roof'], mp3: true, terug: 'popcorn' },
+  pepernoten:  { naam: ['Strooien', 'Scattering'], mp3: true, terug: 'popcorn' },
+  dakwind:     { naam: ['Wind op het dak', 'Wind on the roof'], mp3: true, terug: 'zucht' },
+  klopklop:    { naam: ['Wie klopt daar?', "Who's knocking?"], mp3: true, terug: 'klets' },
+  mijterglans: { naam: ['Glinstering', 'Sparkle'], mp3: true, terug: 'pling' },
 }
 
 /* ---------- afspelen ---------- */

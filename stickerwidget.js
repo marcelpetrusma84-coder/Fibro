@@ -6,13 +6,13 @@
 // In de widget-indeling heet een sticker 'sticker_<code>': sticker_f1-05 (vel van Fibro) of sticker_e1-03
 // (eigen sticker). Een eigen sticker van een vriend komt via de sync (sync.js); is hij er nog niet, dan
 // staat er een zandlopertje dat vanzelf bijwerkt (vriend-profiel.html ververst de widgets).
-import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=236'
+import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=237'
 import { zoekEigenSticker, zoekVriendSticker } from './eigenstickers.js?v=162'
-import { BEWEGINGEN, speel } from './stickerfx.js?v=235'
+import { BEWEGINGEN, speel } from './stickerfx.js?v=236'
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 
-const ID = /^sticker_((?:f[1-6]|e[12])-(?:0[1-9]|1[0-2]))$/
+const ID = /^sticker_((?:f[1-7]|e[12])-(?:0[1-9]|1[0-2]))$/
 export const widgetId = code => 'sticker_' + code
 export const codeVan = id => { const m = ID.exec(String(id || '')); return m ? m[1] : null }
 // De widget in de indeling (profiel.html, Opslaan): een klein vakje zonder kop

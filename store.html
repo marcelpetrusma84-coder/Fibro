@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
-<script src="taal.js?v=106"></script>
+<script src="taal.js?v=107"></script>
 <script src="appslot.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Stekky Store</title>
@@ -32,6 +32,9 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .item-titel { font-family:'DM Serif Display',serif; font-size:20px; color:var(--accent); }
 .item-aantal { font-size:12px; color:var(--muted); white-space:nowrap; }
 .item-game { display:flex; gap:10px; align-items:center; } .item-game img { width:56px; height:56px; flex:none; } .item-uitleg { font-size:12px; line-height:1.4; color:var(--muted); opacity:.85; }
+.item-stickers { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:4px; margin:8px 0 2px; }
+.item-sticker { border:0; background:transparent; padding:2px; border-radius:10px; cursor:pointer; aspect-ratio:1; -webkit-tap-highlight-color:transparent; }
+.item-sticker:active { background:rgba(192,132,252,0.16); } .item-sticker img { width:100%; height:100%; object-fit:contain; pointer-events:none; }
 .item-regel { font-size:22px; line-height:1.35; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .knop { margin-top:auto; min-height:40px; padding:8px 12px; border-radius:12px; border:none; background:var(--knop); color:#fff; font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
 .knop:disabled { opacity:0.55; cursor:default; }
@@ -87,7 +90,9 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 <script type="module">
 import { supabase } from './supabase.js?v=95'
 import { laadFont } from './lettertypes.js?v=132'
-import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, verwijderDownload, tabelOntbreekt } from './store.js?v=7'
+import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, verwijderDownload, tabelOntbreekt } from './store.js?v=8'
+import { zoekSticker, STORE_VELLEN } from './stickervellen.js?v=237'
+import { speel } from './stickerfx.js?v=236'
 
 let mijnId = null
 let mijn = new Set()
@@ -132,6 +137,20 @@ function bouwLijst() {
     // 11 nov 2026: een game (Pesten): plaatje, naam en uitleg; na downloaden zet je hem aan bij Profiel > Widgets
     if (it.soort === 'game') kaart.innerHTML = `<div class="item-game"><img src="${esc(it.icoon)}" alt="" draggable="false"><span class="item-titel">${esc(it.titel)}</span></div>`
       + `<div class="item-uitleg">${esc(T(it.uitleg))}</div>`
+    // 13 nov 2026: een stickervel: naam, uitleg en alle 12 stickers; tik = bewegen en geluid (zo hoor je ze vooraf)
+    else if (it.soort === 'sticker') {
+      const vel = STORE_VELLEN.find(v => v.id === it.vel)
+      kaart.innerHTML = `<div class="item-kop"><span class="item-titel">${esc(it.titel)}</span><span class="item-aantal">${esc(T('{n} stickers', { n: vel.stickers.length }))}</span></div>`
+        + `<div class="item-uitleg">${esc(T(it.uitleg))}</div><div class="item-stickers"></div>`
+      for (const s of vel.stickers) {
+        const st = zoekSticker(vel.id + '-' + s.nr)
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'item-sticker'
+        b.setAttribute('aria-label', T('Sticker {naam} bekijken', { naam: (window.T && window.T.taal === 'en') ? st.naam[1] : st.naam[0] }))
+        const img = document.createElement('img'); img.src = st.src; img.alt = ''; img.loading = 'lazy'; img.draggable = false
+        b.appendChild(img); b.onclick = () => speel(img, st)
+        kaart.querySelector('.item-stickers').appendChild(b)
+      }
+    }
     // v2: een pakket van 4 lettertypes; elke regel staat in zijn eigen letter
     else kaart.innerHTML = `<div class="item-kop"><span class="item-titel">${esc(T('pakket|' + it.titel))}</span>`
       + `<span class="item-aantal">${esc(T('{n} lettertypes', { n: it.lettertypes.length }))}</span></div>`
@@ -171,13 +190,14 @@ async function download(it, knop) {
     return
   }
   mijn.add(it.id)
-  toonMelding(it.soort === 'lettertype' ? T('Gedownload! Kies ze bij Stijl → Lettertype.') : it.soort === 'game' ? T('Gedownload! Zet hem aan bij Profiel → Widgets → Spellen.') : T('Gedownload!'), true)
+  toonMelding(it.soort === 'lettertype' ? T('Gedownload! Kies ze bij Stijl → Lettertype.') : it.soort === 'game' ? T('Gedownload! Zet hem aan bij Profiel → Widgets → Spellen.')
+    : it.soort === 'sticker' ? T('Gedownload! Je vindt ze in de chat bij Stickers → Winkel.') : T('Gedownload!'), true)
   bouwLijst()
 }
 
 // 11 nov 2026: Verwijderen (eerst vragen). Een game gaat ook van Home en uit het spelmenu van de chat.
 async function weghalen(it, knop) {
-  const naam = it.soort === 'game' ? it.titel : T('pakket|' + it.titel)
+  const naam = (it.soort === 'game' || it.soort === 'sticker') ? it.titel : T('pakket|' + it.titel)
   if (!confirm(T('{naam} verwijderen? Je kunt het altijd opnieuw downloaden in de Store.', { naam }))) return
   knop.disabled = true
   const { error } = await verwijderDownload(supabase, mijnId, it.id)

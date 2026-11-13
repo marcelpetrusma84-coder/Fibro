@@ -41,6 +41,7 @@
 // kaartstijl Perkament (11 november 2026): taal-en.js?v=105
 // Sessielader (12 november 2026, #156): taal-en.js?v=106 (automatisch terug naar Home).
 // stickervel Sinterklaas (13 november 2026): taal-en.js?v=107
+// lettertypes Sinterklaas (13 november 2026): taal-en.js?v=108
 //
 // In gewone woorden: dit bestand weet welke taal je gekozen hebt en vertaalt de teksten.
 // De Nederlandse zin is zelf de sleutel: T('Opslaan') geeft in het Nederlands 'Opslaan' en in
@@ -65,7 +66,7 @@
 // Alleen pagina's met <html data-taal> krijgen lang="en" (die zijn al vertaald).
 // In het Nederlands doet dit bestand verder niets met de pagina: alles blijft precies zoals het was.
 // Een gewoon script (geen module), vroeg geladen: direct na huisregel.js.
-// De Engelse woordenlijst (taal-en.js?v=107) wordt alleen bij Engels geladen.
+// De Engelse woordenlijst (taal-en.js?v=108) wordt alleen bij Engels geladen.
 (function () {
   'use strict'
   if (window.T) return
@@ -130,7 +131,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=107', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=108', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

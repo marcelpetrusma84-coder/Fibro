@@ -101,6 +101,13 @@ export const STORE_PAKKETTEN = [
     { naam: 'Almendra Display', val: 'serif', label: 'Draak' },
     { naam: 'Grenze Gotisch', val: 'serif', label: 'Harnas' },
   ] },
+  // 13 nov 2026: Sinterklaas (op verzoek van Marcel, naast het stickervel Sinterklaas). Fontsource 5.2.5, OFL-1.1.
+  { id: 'pakket-sinterklaas', titel: 'Sinterklaas', lettertypes: [
+    { naam: 'Eagle Lake', val: 'serif', label: 'Het Grote Boek' },
+    { naam: 'Berkshire Swash', val: 'cursive', label: 'Sintgedicht' },
+    { naam: 'Emilys Candy', val: 'cursive', label: 'Strooigoed' },
+    { naam: 'Henny Penny', val: 'cursive', label: 'Pepernoot' },
+  ] },
 ]
 
 // Alle store-lettertypes op een rij. ids = de downloads die dit lettertype geven (het pakket, en de oude losse).
@@ -124,7 +131,9 @@ const EIGEN = new Set([
   'shrikhand', 'faster-one', 'michroma', 'zen-dots', 'oxanium', 'syncopate', 'ewert', 'sancreek', 'smokum',
   'diplomata', 'princess-sofia', 'parisienne', 'pinyon-script', 'sedgwick-ave-display', 'rock-salt', 'knewave',
   'rubik-wet-paint', 'butcherman', 'eater', 'metal-mania', 'jolly-lodger', 'luckiest-guy', 'bubblegum-sans',
-  'stardos-stencil', 'allerta-stencil', 'unifrakturmaguntia', 'uncial-antiqua', 'almendra-display', 'grenze-gotisch'
+  'stardos-stencil', 'allerta-stencil', 'unifrakturmaguntia', 'uncial-antiqua', 'almendra-display', 'grenze-gotisch',
+  // 13 nov 2026: pakket Sinterklaas
+  'eagle-lake', 'berkshire-swash', 'emilys-candy', 'henny-penny'
 ])
 export function lettertypeSlug(naam) {
   return String(naam || '').trim().toLowerCase().replace(/ /g, '-')

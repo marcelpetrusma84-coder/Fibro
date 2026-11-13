@@ -37,7 +37,7 @@ for (const game of expectedGames) {
   assert.throws(() => entries.push(entries[0]), TypeError)
   assert.throws(() => { entries[0].summary = 'changed' }, TypeError)
 }
-assert.equal(records, 33, '26 verified existing records plus Chess 6.2 knight routes, Chess 6.3 Ultra hints, a mobile pinch patch, Pesten 1.0, Toepen 1.0 and Eenentwintigen 1.0 (11 nov 2026), Koningsjacht 1.0 (13 nov 2026)')
+assert.equal(records, 34, '26 verified existing records plus Chess 6.2 knight routes, Chess 6.3 Ultra hints, a mobile pinch patch, Pesten 1.0, Toepen 1.0 and Eenentwintigen 1.0 (11 nov 2026), Koningsjacht 1.0 and 1.1 (13 nov 2026)')
 assert.equal(pending, 0, 'every shipped version has a real commit and timestamp')
 assert.equal(SPEL_VERSIES.schaken, '6.3.1')
 assert.equal(SPEL_VERSIES.shmup, '5.0.0')

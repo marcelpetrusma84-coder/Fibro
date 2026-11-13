@@ -87,4 +87,5 @@ Elk kaartspel krijgt **vanzelf**:
 - Regels: `koningsjacht.js`, spel: `koningsjacht-ui.js`. Geen spelkanaal (`zonderKanaal` in `solo.js`), niet in de chat. Het spel wordt op het toestel bewaard (`fibro_koningsjacht_stand`), de beste medaille per niveau ook (`fibro_koningsjacht_best`).
 - De tafel gebruikt drie opties van `kaartspel-hulp.js` v5: `stijl: 'perkament'` (vaste kaarten, geen knop 🎴), `ondergrond: 'hout'` (`kaarten/hout.webp`, gemaakt met `tests/gen/maak_hout.py`) en `stapelTekst`. Bovenin staat geen tegenstander maar de vijand (zijn kaart, leven, aanval, schild).
 - Uit de **Stekky Store** (`STORE_GAMES`, widget `spel_koningsjacht`). Spelicoon: `tests/gen/maak_spelicoon_koningsjacht.py`.
+- **Geluid en licht** (v2): `koningsjacht-geluid.js` maakt alle geluiden met Web Audio (zwaard, inslag, gong, brul, oorlogshoorn, fanfares) en epische muziek (knop 🎵, `fibro_koningsjacht_muziek`). Bij een aanval gloeien je kaarten in hun kleur, vliegen ze naar de vijand en komt er een zwaardhaal van licht met vonken.
 - Test: `tests/kaart/test-koningsjacht-regels.mjs` en `tests/tools/proef299.py`.

@@ -6,8 +6,13 @@
 // Kies kaarten en veeg ze omhoog (of tik op Aanvallen). Slaat de vijand terug, kies dan kaarten om af te werpen.
 // Alleen tegen het kasteel: er is geen spelkanaal (solo.js: zonderKanaal). Het spel wordt op dit toestel bewaard,
 // zodat je later verder kunt (fibro_koningsjacht_stand), net als je beste medaille per niveau (fibro_koningsjacht_best).
+// v2 (13 nov 2026, Marcel): stoere geluiden en epische muziek (koningsjacht-geluid.js, knop 🎵), en aanvallen met licht:
+// je kaarten vliegen gloeiend naar de vijand, een zwaardhaal van licht, vonken, een lichtflits en de tafel trilt. Elke
+// soort heeft zijn eigen licht: ♣ twee halen (dubbel), ♠ een blauw schild, ♥ rode hartjes naar de taveerne, ♦ paarse
+// fonkels. De vijand slaat terug met drie rode klauwhalen. Verslagen: gouden licht en brokstukken.
 import * as K from './koningsjacht.js?v=1'
 import { maakKaartTafel, kaartSvg, achterkantSvg, KLEUR_TEKEN, zetStijl } from './kaartspel-hulp.js?v=5'
+import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek } from './koningsjacht-geluid.js?v=1'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
 const wacht = ms => new Promise(k => setTimeout(k, ms))
@@ -69,6 +74,18 @@ const CSS = `
 .kj-raakgetal{position:fixed;z-index:50;font-weight:900;font-size:34px;color:#fecaca;text-shadow:0 0 10px #ef4444,0 2px 0 #450a0a;pointer-events:none;white-space:nowrap}
 .kj-flits{position:absolute;inset:0;z-index:40;pointer-events:none;background:radial-gradient(ellipse at 50% 20%,#ef444466,#0000 70%)}
 .kj .kt-kaart.kt-mag{box-shadow:0 2px 8px #0007}
+.kj .kt-kaart.kt-gekozen{box-shadow:0 0 0 3px #fde68a,0 0 26px #f5b301,0 8px 20px #000a}
+.kj .kt-vlieg .kt-v{box-shadow:0 0 18px #f5b301b0,0 6px 18px #000a}
+.kj-fx{position:absolute;inset:0;pointer-events:none;z-index:45;overflow:hidden}
+.kj-fx>*{position:absolute;pointer-events:none}
+.kj-licht{border-radius:50%;mix-blend-mode:screen}
+.kj-vonk{width:7px;height:7px;border-radius:50%;mix-blend-mode:screen}
+.kj-haal{overflow:visible}
+.kj-gloeit{filter:brightness(1.35) drop-shadow(0 0 10px var(--kj-gloed,#f5b301)) drop-shadow(0 0 22px var(--kj-gloed,#f5b301))}
+.kj-koepel{border-radius:50% 50% 12px 12px/80% 80% 12px 12px;border:3px solid #93c5fd;background:radial-gradient(ellipse at 50% 100%,#60a5fa55,#3b82f611 60%,#0000 75%);box-shadow:0 0 30px #60a5fa,inset 0 0 30px #93c5fd88}
+.kj-zwevend{font-size:22px;text-shadow:0 0 10px currentColor}
+.kj-muziek{display:flex;align-items:center;gap:8px}
+.kj-muziek[aria-pressed=true]{background:#8b3fd1;border-color:#c084fc;box-shadow:0 0 14px #8b3fd1aa}
 .kj-pil{padding:3px 10px;border-radius:999px;background:#000a;border:1px solid #f5d08a88;font-weight:800;font-size:13px}
 `
 function zetCss() {
@@ -129,16 +146,28 @@ export function start() {
       + '<div class="kj-uitleg">' + esc(T('Versla de twaalf vijanden uit het kasteel. Elke soort kaart heeft een eigen kracht.')) + '</div>'
       + (verder ? '<button type="button" class="kj-knop kj-verder">▶ ' + esc(T('Verder spelen')) + ' (' + esc(T(NIVEAU_NAAM[verder.niveau])) + ', ' + verder.verslagen + '/12)</button>' : '')
       + '<div class="kj-niveaus">' + niveau('schildknaap', '🛡️') + niveau('ridder', '⚔️') + niveau('koning', '👑') + '</div>'
-      + '<button type="button" class="kj-knop kj-zacht kj-regelknop">📜 ' + esc(T('Hoe speel je?')) + '</button>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><button type="button" class="kj-knop kj-zacht kj-regelknop">📜 ' + esc(T('Hoe speel je?')) + '</button>'
+      + '<button type="button" class="kj-knop kj-zacht kj-muziek" aria-pressed="' + muziekStaatAan() + '">🎵 ' + esc(muziekStaatAan() ? T('Muziek aan') : T('Muziek uit')) + '</button></div>'
       + '<div class="kj-bron">' + esc(T('Gebaseerd op het kaartspel Regicide van Badgers From Mars.')) + '</div></div>'
     for (const b of inhoud.querySelectorAll('.kj-niveau')) b.onclick = () => speel(K.nieuwSpel({ niveau: b.dataset.niveau }), true)
     inhoud.querySelector('.kj-regelknop').onclick = toonRegels
     const v = inhoud.querySelector('.kj-verder'); if (v) v.onclick = () => speel(verder, false)
+    const mk = inhoud.querySelector('.kj-muziek')
+    mk.onclick = () => {
+      const aan = !muziekStaatAan(); zetMuziek(aan)
+      mk.setAttribute('aria-pressed', String(aan)); mk.textContent = '🎵 ' + (aan ? T('Muziek aan') : T('Muziek uit'))
+    }
+    if (muziekStaatAan()) startMuziek()   // werkt pas na een tik (de browser), anders bij de keuze van een niveau
   }
+  // De muziek stopt als je het spel verlaat, en zwijgt zolang de app op de achtergrond staat
+  const bewaker = setInterval(() => { if (!inhoud.isConnected) { clearInterval(bewaker); stopMuziek() } }, 1000)
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stopMuziek(); else if (muziekStaatAan() && inhoud.isConnected) startMuziek() })
+  function wisselMuziek() { zetMuziek(!muziekStaatAan()); tekenKnoppen() }
 
   // ── De tafel ──
   function speel(s, nieuw) {
     staat = s; selectie = []
+    if (muziekStaatAan()) startMuziek()
     bewaar()
     tafel = maakKaartTafel(inhoud, {
       solo: true, naamAnder: '', stijl: STIJL, ondergrond: 'hout', stapelTekst: n => T('Taveerne: {n}', { n }),
@@ -201,6 +230,7 @@ export function start() {
       lijst.push({ naam: 'afweer', tekst: '🛡️ ' + T('Afweren') + ' ' + K.som(selectie) + '/' + K.teAfweren(staat), nadruk: K.magAfweren(staat, selectie), opKlik: () => weerAf(selectie) })
     }
     if (staat.narren > 0) lijst.push({ naam: 'nar', tekst: '🃏 ' + T('Nar') + ' ×' + staat.narren, schud: staat.fase === 'verdedig' && K.som(staat.hand) < K.teAfweren(staat), opKlik: nar })
+    lijst.push({ naam: 'muziek', tekst: '🎵', nadruk: muziekStaatAan(), opKlik: wisselMuziek })
     lijst.push({ naam: 'regels', tekst: '📜', opKlik: toonRegels })
     tafel.knoppen(lijst)
   }
@@ -228,50 +258,185 @@ export function start() {
   }
   const vijandKaart = () => tafel.element.querySelector('.kj-kaart')
 
-  // ── Animaties van de vijand ──
+  // ── Licht en animaties ──
+  const rustig = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches } catch (e) { return false } }
+  const LICHT = { h: '#ff4d6d', r: '#c084fc', k: '#4ade80', s: '#60a5fa' }
+  function fxLaag() {
+    let f = tafel.element.querySelector('.kj-fx')
+    if (!f) { f = document.createElement('div'); f.className = 'kj-fx'; tafel.element.appendChild(f) }
+    return f
+  }
+  // midden van een element, ten opzichte van de tafel
+  function plek(el) {
+    const t = tafel.element.getBoundingClientRect(), r = el.getBoundingClientRect()
+    return { x: r.left - t.left + r.width / 2, y: r.top - t.top + r.height / 2, b: r.width, h: r.height }
+  }
+  const anim = (el, frames, opts) => { try { return el.animate(frames, opts).finished.catch(() => {}) } catch (e) { return Promise.resolve() } }
+  // een ronde lichtflits (kleur) op een plek
+  function lichtflits(x, y, kleur, maat = 160, duur = 520) {
+    const d = document.createElement('div'); d.className = 'kj-licht'
+    d.style.cssText = 'left:' + (x - maat / 2) + 'px;top:' + (y - maat / 2) + 'px;width:' + maat + 'px;height:' + maat + 'px;background:radial-gradient(circle,#fff 0%,' + kleur + ' 30%,' + kleur + '00 70%)'
+    fxLaag().appendChild(d)
+    return anim(d, [{ transform: 'scale(.2)', opacity: 0 }, { transform: 'scale(1)', opacity: 1, offset: 0.25 }, { transform: 'scale(1.6)', opacity: 0 }], { duration: duur, easing: 'ease-out' }).then(() => d.remove())
+  }
+  // vonken die alle kanten op vliegen
+  function vonken(x, y, kleuren, n = 16, ver = 90) {
+    if (rustig()) n = Math.min(n, 5)
+    const f = fxLaag(), klaar = []
+    for (let i = 0; i < n; i++) {
+      const v = document.createElement('div'); v.className = 'kj-vonk'
+      const k = kleuren[i % kleuren.length]
+      v.style.cssText = 'left:' + (x - 3) + 'px;top:' + (y - 3) + 'px;background:' + k + ';box-shadow:0 0 8px ' + k + ',0 0 16px ' + k
+      f.appendChild(v)
+      const hoek = Math.random() * Math.PI * 2, af = ver * (0.5 + Math.random() * 0.7)
+      klaar.push(anim(v, [{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: 'translate(' + Math.cos(hoek) * af + 'px,' + (Math.sin(hoek) * af + 20) + 'px) scale(.2)', opacity: 0 }],
+        { duration: 500 + Math.random() * 350, easing: 'cubic-bezier(.1,.7,.3,1)' }).then(() => v.remove()))
+    }
+    return Promise.all(klaar)
+  }
+  // een zwaardhaal van licht over de vijand (schuin), of een kruis (dubbel)
+  function zwaardhaal(p, kleur, richting = 1, vertraging = 0) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('class', 'kj-haal')
+    const w = p.b * 1.9, h = p.h * 1.5
+    svg.setAttribute('width', w); svg.setAttribute('height', h); svg.setAttribute('viewBox', '0 0 100 100'); svg.setAttribute('preserveAspectRatio', 'none')
+    svg.style.cssText = 'left:' + (p.x - w / 2) + 'px;top:' + (p.y - h / 2) + 'px;filter:drop-shadow(0 0 6px ' + kleur + ') drop-shadow(0 0 14px ' + kleur + ')'
+    const pad = richting > 0 ? 'M8 12 Q50 46 92 88' : 'M92 12 Q50 46 8 88'
+    svg.innerHTML = '<path d="' + pad + '" fill="none" stroke="' + kleur + '" stroke-width="7" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>'
+      + '<path d="' + pad + '" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>'
+    fxLaag().appendChild(svg)
+    const lijnen = [...svg.querySelectorAll('path')]
+    return Promise.all(lijnen.map(l => anim(l, [{ strokeDashoffset: 100 }, { strokeDashoffset: 0, offset: 0.35 }, { strokeDashoffset: 0 }], { duration: 520, delay: vertraging, easing: 'ease-out', fill: 'forwards' })))
+      .then(() => anim(svg, [{ opacity: 1 }, { opacity: 0 }], { duration: 260 })).then(() => svg.remove())
+  }
+  function tril(sterk = 6) {
+    if (rustig()) return
+    anim(tafel.element, [{ transform: 'none' }, { transform: 'translate(' + sterk + 'px,-' + sterk / 2 + 'px)' }, { transform: 'translate(-' + sterk + 'px,' + sterk / 2 + 'px)' },
+      { transform: 'translate(' + sterk / 2 + 'px,0)' }, { transform: 'none' }], { duration: 320 })
+  }
+  // iets wat zweeft van a naar b (hartjes, fonkels)
+  function zweef(tekst, kleur, van, naar, vertraging = 0) {
+    const d = document.createElement('div'); d.className = 'kj-zwevend'; d.textContent = tekst; d.style.color = kleur
+    d.style.left = (van.x - 11) + 'px'; d.style.top = (van.y - 14) + 'px'; d.style.opacity = '0'
+    fxLaag().appendChild(d)
+    const dx = naar.x - van.x + (Math.random() - 0.5) * 30, dy = naar.y - van.y
+    return anim(d, [{ transform: 'translate(0,0) scale(.5)', opacity: 0 }, { transform: 'translate(' + dx * 0.3 + 'px,' + (dy * 0.3 - 30) + 'px) scale(1.2)', opacity: 1, offset: 0.3 },
+      { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.6)', opacity: 0 }], { duration: 900, delay: vertraging, easing: 'ease-in-out', fill: 'both' }).then(() => d.remove())
+  }
+
+  // Jouw kaarten vallen aan: ze lichten op in hun kleur, schieten naar de vijand en terug; bij de inslag licht en vonken
+  async function kaartenVallenAan(ids, l) {
+    const kaart = vijandKaart(); if (!kaart) return
+    const doel = plek(kaart)
+    const aflegKaarten = [...tafel.element.querySelectorAll('.kt-afleg .kt-ak')].slice(-ids.length)
+    const kleuren = [...new Set(ids.map(id => LICHT[id[0]]))]
+    const hoofdKleur = l.immuun ? '#9ca3af' : kleuren[0]
+    const dubbel = l.werkt.includes('k')
+    let inslag
+    const geraakt = new Promise(k => { inslag = k })
+    aflegKaarten.forEach((el, i) => {
+      el.style.setProperty('--kj-gloed', LICHT[ids[i][0]] || '#f5b301'); el.classList.add('kj-gloeit')
+      const van = plek(el), dx = doel.x - van.x, dy = doel.y - van.y + doel.h * 0.15
+      const basis = el.style.transform || ''
+      anim(el, [{ transform: basis, offset: 0 }, { transform: basis + ' translate(0,14px) scale(1.05)', offset: 0.18 },
+        { transform: 'translate(' + dx + 'px,' + dy + 'px) rotate(' + (i % 2 ? 18 : -18) + 'deg) scale(.8)', offset: 0.5 },
+        { transform: basis, offset: 1 }], { duration: rustig() ? 420 : 760, delay: i * 70, easing: 'cubic-bezier(.5,0,.3,1)' })
+        .then(() => el.classList.remove('kj-gloeit'))
+    })
+    setTimeout(inslag, (rustig() ? 210 : 380) + (aflegKaarten.length - 1) * 70)
+    await geraakt
+    if (l.immuun) geluid('immuun'); else if (dubbel) geluid('dubbel'); else geluid('zwaard', l.schade >= 15 ? 2 : 1)
+    tafel.tril(dubbel ? [30, 40, 50] : [25, 30, 25]); tril(dubbel ? 9 : 6)
+    const halen = [zwaardhaal(doel, hoofdKleur, 1)]
+    if (dubbel) halen.push(zwaardhaal(doel, LICHT.k, -1, 260))
+    lichtflits(doel.x, doel.y, hoofdKleur, doel.b * 2.4)
+    vonken(doel.x, doel.y, l.immuun ? ['#d1d5db', '#9ca3af'] : [...kleuren, '#fde68a', '#fff'], 18, 100)
+    if (dubbel) setTimeout(() => { lichtflits(doel.x, doel.y, LICHT.k, doel.b * 3); vonken(doel.x, doel.y, [LICHT.k, '#fff'], 14, 120); tril(10) }, 300)
+    await Promise.all([raak(l.schade, dubbel), ...halen])
+  }
+  async function schildLicht(n) {
+    geluid('schild')
+    const hand = tafel.element.querySelector('.kt-hand'); if (!hand) return
+    const p = plek(hand)
+    const d = document.createElement('div'); d.className = 'kj-koepel'
+    d.style.cssText = 'left:' + (p.x - p.b * 0.46) + 'px;top:' + (p.y - p.h * 0.62) + 'px;width:' + (p.b * 0.92) + 'px;height:' + (p.h * 1.05) + 'px'
+    fxLaag().appendChild(d)
+    tafel.effect('♠ ' + T('Schild {n}', { n }), { gloed: false, geluid: false })
+    await anim(d, [{ transform: 'scaleY(.1)', opacity: 0 }, { transform: 'scaleY(1.05)', opacity: 1, offset: 0.35 }, { transform: 'scaleY(1)', opacity: 0.9, offset: 0.7 }, { transform: 'scaleY(1)', opacity: 0 }],
+      { duration: rustig() ? 500 : 1100, easing: 'ease-out' })
+    d.remove()
+  }
+  async function genezenLicht(n) {
+    geluid('genezen')
+    tafel.effect('♥ ' + T('{n} kaarten terug', { n }), { gloed: false, geluid: false })
+    const van = plek(tafel.element.querySelector('.kt-afleg')), naar = plek(tafel.element.querySelector('.kt-stapel'))
+    const tochten = []
+    for (let i = 0; i < Math.min(8, n + 2); i++) tochten.push(zweef('♥', LICHT.h, van, naar, i * 90))
+    await Promise.all(tochten)
+    lichtflits(naar.x, naar.y, LICHT.h, 120)
+  }
+  function pakLicht() {
+    geluid('pakken')
+    const p = plek(tafel.element.querySelector('.kt-stapel'))
+    lichtflits(p.x, p.y, LICHT.r, 140, 700); vonken(p.x, p.y, [LICHT.r, '#fff'], 12, 70)
+  }
+
+  // ── De vijand ──
   async function nieuweVijand(s) {
     tekenVijand(s)
     const k = vijandKaart()
     if (!k || !K.vijand(s)) return
-    tafel.geluid.speciaal?.()
-    try { await k.animate([{ transform: 'translateY(-90px) rotate(-14deg) scale(.6)', opacity: 0 }, { transform: 'translateY(6px) rotate(3deg) scale(1.08)', opacity: 1, offset: 0.7 }, { transform: 'none', opacity: 1 }], { duration: 560, easing: 'cubic-bezier(.2,.8,.3,1)' }).finished } catch (e) {}
+    geluid('hoorn')
+    const p = plek(k)
+    lichtflits(p.x, p.y, '#ef4444', p.b * 2.6, 900)
+    await anim(k, [{ transform: 'translateY(-90px) rotate(-14deg) scale(.6)', opacity: 0, filter: 'brightness(3)' }, { transform: 'translateY(6px) rotate(3deg) scale(1.1)', opacity: 1, filter: 'brightness(1.6) drop-shadow(0 0 16px #ef4444)', offset: 0.7 },
+      { transform: 'none', opacity: 1, filter: 'none' }], { duration: rustig() ? 300 : 700, easing: 'cubic-bezier(.2,.8,.3,1)' })
   }
   async function raak(schade, dubbel) {
     const k = vijandKaart()
     if (!k) return
     k.classList.remove('kj-geraakt'); void k.offsetWidth; k.classList.add('kj-geraakt')
-    tafel.tril([20, 30, 20]); tafel.geluid.leg?.(1.5)
     const r = k.getBoundingClientRect()
     const g = document.createElement('div'); g.className = 'kj-raakgetal'; g.textContent = '−' + schade + (dubbel ? ' ♣×2' : '')
     g.style.left = (r.left + r.width / 2) + 'px'; g.style.top = (r.top + r.height * 0.3) + 'px'
     document.body.appendChild(g)
-    try { await g.animate([{ transform: 'translate(-50%,0) scale(.4)', opacity: 0 }, { transform: 'translate(-50%,-30px) scale(1.2)', opacity: 1, offset: 0.3 }, { transform: 'translate(-50%,-60px) scale(1)', opacity: 0 }], { duration: 900, easing: 'ease-out' }).finished } catch (e) {}
+    try { await g.animate([{ transform: 'translate(-50%,0) scale(.4)', opacity: 0 }, { transform: 'translate(-50%,-30px) scale(1.3)', opacity: 1, offset: 0.3 }, { transform: 'translate(-50%,-60px) scale(1)', opacity: 0 }], { duration: 900, easing: 'ease-out' }).finished } catch (e) {}
     g.remove()
   }
+  // de vijand springt naar voren en haalt drie keer uit: rode klauwen over de tafel
   async function slaTerug(s) {
     const k = vijandKaart(), v = K.vijandInfo(s)
     if (!k || !v) return
+    geluid('vijandSlaat', v.slag >= 15 ? 1.4 : 1)
     const f = document.createElement('div'); f.className = 'kj-flits'; tafel.element.appendChild(f)
-    tafel.tril([40, 40, 60]); tafel.geluid.nee?.()
-    try {
-      await Promise.all([
-        k.animate([{ transform: 'none' }, { transform: 'translateY(26px) scale(1.14) rotate(-4deg)', offset: 0.35 }, { transform: 'none' }], { duration: 520, easing: 'ease-in-out' }).finished,
-        f.animate([{ opacity: 0 }, { opacity: 1, offset: 0.35 }, { opacity: 0 }], { duration: 620 }).finished,
-      ])
-    } catch (e) {}
+    const t = tafel.element.getBoundingClientRect()
+    const midden = { x: t.width / 2, y: t.height * 0.62, b: t.width * 0.55, h: t.height * 0.35 }
+    const sprong = anim(k, [{ transform: 'none', filter: 'none' }, { transform: 'translateY(34px) scale(1.18) rotate(-5deg)', filter: 'brightness(1.5) drop-shadow(0 0 18px #ef4444)', offset: 0.4 }, { transform: 'none', filter: 'none' }], { duration: 640, easing: 'ease-in-out' })
+    await wacht(rustig() ? 150 : 420)
+    tafel.tril([40, 40, 60]); tril(11)
+    const klauwen = [-0.18, 0, 0.18].map((d, i) => zwaardhaal({ x: midden.x + d * t.width, y: midden.y, b: midden.b * 0.5, h: midden.h }, '#ef4444', -1, i * 70))
+    vonken(midden.x, midden.y, ['#ef4444', '#f97316', '#fff'], 16, 120)
+    await Promise.all([sprong, anim(f, [{ opacity: 0 }, { opacity: 1, offset: 0.3 }, { opacity: 0 }], { duration: 700 }), ...klauwen])
     f.remove()
     tafel.effect(T('{naam} slaat terug: {n}!', { naam: vijandNaam(v.id), n: v.slag }), { gloed: false, geluid: false })
     await wacht(500)
   }
   async function verslagen(l, oud) {
     const k = vijandKaart()
-    tafel.effect(l.precies ? T('Precies raak!') : T('Verslagen!'))
+    geluid('verslagen', l.precies)
+    tafel.effect(l.precies ? T('Precies raak!') : T('Verslagen!'), { geluid: false })
     if (k) {
+      const p = plek(k)
+      lichtflits(p.x, p.y, '#fde68a', p.b * 3.2, 900)
+      vonken(p.x, p.y, ['#fde68a', '#f5b301', '#fff', '#a16207'], 26, 150)
       const r = k.getBoundingClientRect()
       const doel = l.precies ? tafel.element.querySelector('.kt-stapel').getBoundingClientRect() : { left: r.left + 40, top: window.innerHeight + 40, width: r.width, height: r.height }
       const dx = doel.left + doel.width / 2 - (r.left + r.width / 2), dy = doel.top + doel.height / 2 - (r.top + r.height / 2)
-      try { await k.animate([{ transform: 'none', opacity: 1 }, { transform: 'translate(' + dx + 'px,' + dy + 'px) rotate(' + (l.precies ? 0 : 160) + 'deg) scale(' + (l.precies ? 0.85 : 0.6) + ')', opacity: l.precies ? 1 : 0 }], { duration: 650, easing: 'cubic-bezier(.5,0,.7,1)' }).finished } catch (e) {}
+      if (l.precies) { k.style.setProperty('--kj-gloed', '#fde68a'); k.classList.add('kj-gloeit') }
+      await anim(k, [{ transform: 'none', opacity: 1 }, { transform: 'translateY(-10px) scale(1.1)', opacity: 1, offset: 0.2 },
+        { transform: 'translate(' + dx + 'px,' + dy + 'px) rotate(' + (l.precies ? 0 : 160) + 'deg) scale(' + (l.precies ? 0.85 : 0.6) + ')', opacity: l.precies ? 1 : 0 }], { duration: rustig() ? 400 : 800, easing: 'cubic-bezier(.5,0,.7,1)' })
+      k.classList.remove('kj-gloeit')
       k.innerHTML = ''; k.dataset.id = ''
+      if (l.precies) { const st = plek(tafel.element.querySelector('.kt-stapel')); lichtflits(st.x, st.y, '#fde68a', 150) }
     }
     if (l.precies) { tafel.toon(beeld(oud, { hand: tafelHand, afleg: [], stapelAantal: oud.taveerne.length + 1, mijnBeurt: false, status: T('{naam} ligt nu bovenop de taveerne', { naam: vijandNaam(l.vijand) }) })); await wacht(700) }
   }
@@ -289,12 +454,13 @@ export function start() {
       tafelHand = handNa
       tafel.toon(beeld(oud, { hand: handNa, afleg: [...oud.tafel, ...ids], mijnBeurt: false, status: '' }))
       await tafel.speelAnimatie(ids, { snelheid: opts.snelheid || 1, richting: opts.richting || { x: 0, y: -1 }, vanRects })
-      if (l.immuun) { tafel.effect(T('{naam} is immuun voor {k}', { naam: vijandNaam(l.vijand), k: KLEUR_TEKEN[l.immuun] }), { gloed: false }); await wacht(650) }
-      if (l.genezen) { tafel.effect('♥ ' + T('{n} kaarten terug', { n: l.genezen })); tafel.toon(beeld(oud, { hand: handNa, afleg: [...oud.tafel, ...ids], stapelAantal: oud.taveerne.length + l.genezen, mijnBeurt: false, status: '' })); await wacht(650) }
+      if (l.genezen) { tafel.toon(beeld(oud, { hand: handNa, afleg: [...oud.tafel, ...ids], stapelAantal: oud.taveerne.length + l.genezen, mijnBeurt: false, status: '' })); await genezenLicht(l.genezen) }
       const tussen = { kasteel: oud.kasteel, schade: Math.min(K.vijandInfo(oud).leven, oud.schade + l.schade), schild: oud.schild + l.schild }
-      await Promise.all([raak(l.schade, l.werkt.includes('k')), wacht(150).then(() => tekenVijand(tussen))])
-      if (l.schild) { tafel.effect('♠ ' + T('Schild {n}', { n: tussen.schild }), { gloed: false }); await wacht(600) }
+      await Promise.all([kaartenVallenAan(ids, l), wacht(rustig() ? 260 : 480).then(() => tekenVijand(tussen))])
+      if (l.immuun) { tafel.effect(T('{naam} is immuun voor {k}', { naam: vijandNaam(l.vijand), k: KLEUR_TEKEN[l.immuun] }), { gloed: false, geluid: false }); await wacht(650) }
+      if (l.schild) await schildLicht(tussen.schild)
       if (l.gepakt.length) {
+        pakLicht()
         tafelHand = [...handNa, ...l.gepakt]
         tafel.toon(beeld(oud, { hand: tafelHand, afleg: [...oud.tafel, ...ids], stapelAantal: oud.taveerne.length + l.genezen - l.gepakt.length, mijnBeurt: false, status: '' }))
         await tafel.pakAnimatie(l.gepakt)
@@ -306,7 +472,7 @@ export function start() {
       } else if (nieuw.fase === 'verdedig') {
         tafel.toon(beeld(nieuw, { mijnBeurt: false }))
         await slaTerug(nieuw)
-      } else if (l.geenSlag) { tafel.effect(T('Je schild houdt hem tegen!'), { gloed: false }); await wacht(500) }
+      } else if (l.geenSlag) { geluid('afweren'); tafel.effect(T('Je schild houdt hem tegen!'), { gloed: false, geluid: false }); await wacht(500) }
       naZet()
     })
   }
@@ -317,9 +483,9 @@ export function start() {
     inRij(async () => {
       tafel.wisSelectie(); tafel.knoppen([])
       tafel.toon(beeld(nieuw, { mijnBeurt: false, status: '' }))
-      tafel.effect(T('Gepast'), { gloed: false, geluid: false }); await wacht(500)
+      geluid('passen'); tafel.effect(T('Gepast'), { gloed: false, geluid: false }); await wacht(500)
       if (nieuw.fase === 'verdedig') await slaTerug(nieuw)
-      else if (nieuw.laatste.geenSlag) { tafel.effect(T('Je schild houdt hem tegen!'), { gloed: false }); await wacht(500) }
+      else if (nieuw.laatste.geenSlag) { geluid('afweren'); tafel.effect(T('Je schild houdt hem tegen!'), { gloed: false, geluid: false }); await wacht(500) }
       naZet()
     })
   }
@@ -332,8 +498,11 @@ export function start() {
       tafel.wisSelectie(); tafel.knoppen([])
       tafel.toon(beeld(oud, { hand: nieuw.hand, afleg: [...oud.tafel, ...ids], mijnBeurt: false, status: '' }))
       await tafel.speelAnimatie(ids, { snelheid: opts.snelheid || 0.6, richting: opts.richting || { x: 0, y: -1 }, vanRects })
+      geluid('afweren')
+      const p = plek(tafel.element.querySelector('.kt-afleg'))
+      lichtflits(p.x, p.y, LICHT.s, 170); vonken(p.x, p.y, [LICHT.s, '#fff'], 12, 80)
       await wacht(250)
-      tafel.effect('🛡️ ' + T('Afgeweerd!'), { gloed: false })
+      tafel.effect('🛡️ ' + T('Afgeweerd!'), { gloed: false, geluid: false })
       naZet()
     })
   }
@@ -345,7 +514,10 @@ export function start() {
       staat = nieuw; selectie = []; bewaar()
       inRij(async () => {
         tafel.wisSelectie(); tafel.knoppen([])
-        tafel.effect('🃏 ' + T('Nar!'))
+        geluid('nar')
+        tafel.effect('🃏 ' + T('Nar!'), { geluid: false })
+        const hp = plek(tafel.element.querySelector('.kt-hand'))
+        vonken(hp.x, hp.y, ['#f43f5e', '#facc15', '#22c55e', '#3b82f6', '#a855f7', '#fff'], 30, 160)
         tafel.toon(beeld(nieuw, { hand: [], mijnBeurt: false, status: '' }))
         await wacht(500)
         tafel.toon(beeld(nieuw, { mijnBeurt: false, status: '' }))
@@ -366,6 +538,7 @@ export function start() {
     const med = K.medaille(staat)
     if (med) { const b = lees(BESTE, {}) || {}; const volg = ['goud', 'zilver', 'brons']; if (!b[staat.niveau] || volg.indexOf(med) < volg.indexOf(b[staat.niveau])) { b[staat.niveau] = med; schrijf(BESTE, b) } }
     const v = staat.kasteel[0]
+    geluid(staat.gewonnen ? 'win' : 'verlies')
     tafel.einde({
       gewonnen: staat.gewonnen,
       titel: staat.gewonnen ? '👑 ' + T('Het kasteel is van jou!') : '💀 ' + T('Verslagen door de {naam}', { naam: v ? vijandNaam(v).toLowerCase() : '' }),

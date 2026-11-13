@@ -39,10 +39,12 @@ def wacht(pg, js, ms=15000):
 def waarde(id):
     w = id[1:]
     return 1 if w == 'A' else 10 if w == 'B' else 15 if w == 'V' else 20 if w == 'H' else int(w)
+# Een gekozen kaart springt omhoog en wordt groter: dan is van de kaart ernaast soms alleen het onderste stukje
+# nog te zien. Daarom ook laag op de kaart zoeken (0.8, 0.9); anders kwam de tik op de gekozen kaart (CI, 13 nov).
 def kies(pg, ids):
     for id in ids:
         x, y = pg.eval_on_selector('.kt-hand .kt-kaart[data-id="%s"]' % id, """e => { const r = e.getBoundingClientRect()
-            for (const fy of [0.5, 0.35, 0.65, 0.2]) for (let fx = 0.08; fx < 0.95; fx += 0.08) { const x = r.left + r.width * fx, y = r.top + r.height * fy, raak = document.elementFromPoint(x, y); if (raak && e.contains(raak)) return [x, y] }
+            for (const fy of [0.5, 0.35, 0.65, 0.2, 0.8, 0.9]) for (let fx = 0.08; fx < 0.95; fx += 0.08) { const x = r.left + r.width * fx, y = r.top + r.height * fy, raak = document.elementFromPoint(x, y); if (raak && e.contains(raak)) return [x, y] }
             return [r.left + r.width / 2, r.top + r.height / 2] }""")
         pg.mouse.click(x, y); time.sleep(0.15)
 def speler(ctx, nr, kanaalnaam, bestand):
@@ -66,6 +68,18 @@ def beurt(pg):
     kies(pg, [beste]); pg.click('.kt-knop[data-naam=aanval]')
     wacht(pg, "() => " + RUST + " && !!document.querySelector('.kt-knop[data-naam=afweer], .kt-einde') || (document.querySelector('.kt-status').textContent.includes('aan de beurt'))", 15000)
     return beste
+GEKOZEN = "() => [...document.querySelectorAll('.kt-hand .kt-kaart.kt-gekozen')].map(k => k.dataset.id).sort()"
+# Kaarten één voor één kiezen, en kijken of het lukte. Op een drukke CI-machine kwam een tweede tik soms op de kaart
+# die net omhoog sprong (dan ging die weer uit) en bleef afweren hangen op 0/10.
+def kies_zeker(pg, ids):
+    for _ in range(3):
+        if sorted(pg.evaluate(GEKOZEN)) == sorted(ids): return True
+        for id in pg.evaluate(GEKOZEN):   # wat er niet bij hoort eerst uit
+            if id not in ids: kies(pg, [id]); wacht(pg, "() => !document.querySelector('.kt-hand .kt-kaart[data-id=\"%s\"].kt-gekozen')" % id, 2000)
+        for id in ids:
+            if id in pg.evaluate(GEKOZEN): continue
+            kies(pg, [id]); wacht(pg, "() => !!document.querySelector('.kt-hand .kt-kaart[data-id=\"%s\"].kt-gekozen')" % id, 2000)
+    return sorted(pg.evaluate(GEKOZEN)) == sorted(ids)
 def afweren(pg):
     if not pg.query_selector('.kt-knop[data-naam=afweer]'): return
     nodig = int(re.search(r'/(\d+)', pg.text_content('.kt-knop[data-naam=afweer]')).group(1))
@@ -73,7 +87,7 @@ def afweren(pg):
     for id in hand:
         if sum(waarde(k) for k in kies_) >= nodig: break
         kies_.append(id)
-    if sum(waarde(k) for k in kies_) >= nodig: kies(pg, kies_); pg.click('.kt-knop[data-naam=afweer]')
+    if sum(waarde(k) for k in kies_) >= nodig: kies_zeker(pg, kies_); pg.click('.kt-knop[data-naam=afweer]')
     else: pg.click('.kt-knop[data-naam=nar]')
 
 try:

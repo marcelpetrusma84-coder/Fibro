@@ -5,8 +5,10 @@
 // elkaar in 3 rijen (v216; was op een breed scherm 6 naast elkaar in 2 rijen). Een leeg vakje zegt wat er later komt.
 // Gebruik: const k = maakStickerkeuze(element, { onKies: sticker => ..., uid: () => id }); k.vernieuw() leest
 // je eigen stickers opnieuw (bij het openen). sticker = { vel, nr, naam, b, g, src }.
-// 13 nov 2026: de vier vakjes 'Winkel' tonen de stickervellen die je in de Stekky Store gedownload hebt (STORE_VELLEN).
-import { FIBRO_VELLEN, zoekSticker, mijnStoreVellen } from './stickervellen.js?v=237'
+// 13 nov 2026: de vier vakjes 'Winkel' tonen de stickervellen die je in de Stekky Store gedownload hebt (STORE_VELLEN)
+// en bij Stijl > Stickers aangezet hebt (actieveStoreVellen).
+import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=237'
+import { actieveStoreVellen } from './stickervakken.js?v=1'
 import { leesEigen } from './eigenstickers.js?v=162'
 import { speelBeweging } from './stickerfx.js?v=236'
 
@@ -118,7 +120,7 @@ export function maakStickerkeuze(el, { onKies, uid } = {}) {
   let winkel = []
   function zetWinkelVakjes() {
     const id = typeof uid === 'function' ? uid() : uid
-    winkel = id ? mijnStoreVellen(id) : []
+    winkel = id ? actieveStoreVellen(id) : []
     for (const v of alle) {
       if (v.soort !== 'winkel') continue
       const vel = winkel[v.n - 1] || null
@@ -171,7 +173,7 @@ export function maakStickerkeuze(el, { onKies, uid } = {}) {
     const p = document.createElement('div'); p.className = 'sk-leeg'
     if (v.soort === 'fibro') p.textContent = T('Vel {n} is nog leeg. Hier komen binnenkort stickers die bewegen en geluid maken.', { n: v.n })
     else if (v.soort === 'eigen') p.textContent = T('Je eigen stickers maak je in Stijl, bij Stickers.')
-    else p.textContent = T('Hier komen de stickervellen die je downloadt in de Stekky Store.')
+    else p.textContent = T('Hier komen de stickervellen uit de Stekky Store. Na downloaden zet je ze aan bij Stijl, bij Stickers.')
     inhoud.appendChild(p)
   }
 

@@ -54,7 +54,7 @@ opslag.set('fibro_store_u1', 'kapot'); assert.deepEqual(mijnStoreVellen('u1'), [
 assert.match(lees('store.js'), /STORE_STICKERS = STORE_VELLEN\.map/)
 assert.match(lees('store.js'), /\.\.\.STORE_GAMES, \.\.\.STORE_STICKERS\]/)
 assert.match(lees('store.html'), /it\.soort === 'sticker'/)
-assert.match(lees('stickerkeuze.js'), /mijnStoreVellen\(id\)/)
+assert.match(lees('stickerkeuze.js'), /actieveStoreVellen\(id\)/, 'de chat toont alleen de vellen die je bij Stijl aanzette')
 
 // 5. Overal mag de code f7 (berichten, spelchat, moods, widgets)
 for (const [f, re] of [['chat.html', /SPELSTICKER_CODE = \/\^\(f\[1-7\]\|e\[12\]\)/], ['spelchat-crypto.js', /\(f\[1-7\]\|e\[12\]\)/],
@@ -63,6 +63,6 @@ for (const [f, re] of [['chat.html', /SPELSTICKER_CODE = \/\^\(f\[1-7\]\|e\[12\]
 
 // 6. De Engelse teksten
 const en = lees('taal-en.js')
-for (const z of ['Hier komen de stickervellen die je downloadt in de Stekky Store.', 'Gedownload! Je vindt ze in de chat bij Stickers → Winkel.', 'Sticker {naam} bekijken'])
+for (const z of ['Hier komen de stickervellen uit de Stekky Store. Na downloaden zet je ze aan bij Stijl, bij Stickers.', 'Gedownload! Zet ze aan bij Stijl → Stickers, dan staan ze in de chat.', 'Sticker {naam} bekijken'])
   assert.ok(en.includes(JSON.stringify(z) + ':'), 'Engels voor ' + z)
 console.log('stickervel 7 (Sinterklaas, Store): ok')

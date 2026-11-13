@@ -161,6 +161,9 @@ jobs:
       - name: "Stickervel Sinterklaas uit de Store (downloaden, stickerkeuze, verwijderen)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef295.py .
+      - name: "Home: de bovenste balk blijft staan tijdens scrollen"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef296.py .
       - name: "Spelmenu ☰ in elk spel (pauze, geluid, microfoon, camera, menu, verlaten) en berichten linksboven"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef291.py .

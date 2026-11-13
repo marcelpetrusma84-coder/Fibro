@@ -40,7 +40,11 @@
   input, textarea { font-size:16px !important; }
 
   /* TOP BAR */
-  .top-bar { display:flex; align-items:center; justify-content:space-between; padding:14px 16px 10px; }
+  /* 13 nov 2026: de balk met Stekky, beta, uitloggen en het menu blijft bovenin staan tijdens het scrollen
+     (zoals in de chat, bij Vrienden en bij Stijl). app-depth.css maakt er een zwevend balkje van met een
+     doorzichtige achtergrond; de kleur hieronder is voor als dat bestand (nog) niet geladen is. */
+  html body[data-fibro-page="home"] .top-bar { top:calc(max(8px, env(safe-area-inset-top, 0px)) + var(--kop-top, 0px)); }  /* onder de sleutelwaarschuwing, als die er staat */
+  .top-bar { display:flex; align-items:center; justify-content:space-between; padding:14px 16px 10px; position:sticky; top:var(--kop-top, 0px); z-index:12; background:rgba(26,10,46,0.82); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
   .top-logo { font-family:'DM Serif Display',serif; font-size:26px; line-height:1; letter-spacing:-0.5px; color:#ffffff; } /* v271: wit, zoals op de inlogpagina */
 /* v222: tijdens de beta: tik op het labeltje om een fout of idee te melden (terugmelden.js) */
 .beta-label { font:700 11px/1 'DM Sans',sans-serif; letter-spacing:.08em; text-transform:uppercase; color:#1e0d32; background:linear-gradient(145deg,#f0d7ff,#cc9bf5); border:1px solid #f6e8ff; border-radius:999px; padding:5px 9px; min-height:26px; cursor:pointer; box-shadow:0 2px 0 #6c458a; }
@@ -353,7 +357,12 @@ pasBlokstijlToe()
     const { data: prof } = await supabase.from('profiles').select('public_key').eq('id', user.id).single()
     if (!prof?.public_key) return
     const balk = document.getElementById('sleutel-balk')
-    if (balk) balk.style.display = 'block'
+    if (balk) {
+      balk.style.display = 'block'
+      // de balk blijft ook bovenin staan: de Stekky-balk eronder, zodat je het menu blijft zien (13 nov 2026)
+      const zetHoogte = () => document.documentElement.style.setProperty('--kop-top', balk.offsetHeight + 'px')
+      zetHoogte(); window.addEventListener('resize', zetHoogte)
+    }
   } catch (e) {
     console.error('Sleutelcontrole mislukt:', e)
   }

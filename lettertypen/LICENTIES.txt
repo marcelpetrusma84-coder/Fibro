@@ -93,6 +93,12 @@ Lettertype-pakketten uit de Stekky Store (11-11-2026, ook Fontsource 5.3.0):
 - UnifrakturMaguntia (OFL-1.1): Copyright (c) 2010 j. 'mach' wust (j.mach.wust@gmail.com) with Reserved Font Name UnifrakturMaguntia. Copyright (c) 2009 Peter Wiegel (wiegel@peter-wiegel.de). This Font Software is licensed under the SIL Open Font License, Version 1.1.
 - Zen Dots (OFL-1.1): Copyright 2021 The Dots Project Authors (https://github.com/googlefonts/zen-dots)
 
+Lettertype-pakket Sinterklaas uit de Stekky Store (13-11-2026, Fontsource 5.2.5):
+- Berkshire Swash (OFL-1.1): Copyright (c) 2012 by Brian J. Bonislawsky DBA Astigmatic (AOETI) (astigma@astigmatic.com), with Reserved Font Name "Berkshire Swash"
+- Eagle Lake (OFL-1.1): Copyright (c) 2012 by Brian J. Bonislawsky DBA Astigmatic (AOETI) (astigma@astigmatic.com), with Reserved Font Name "Eagle Lake"
+- Emilys Candy (OFL-1.1): Copyright (c) 2012 by Font Diner, Inc DBA Neapolitan (diner@fontdiner.com) with Reserved Font Name "Emilys Candy"
+- Henny Penny (OFL-1.1): Copyright (c) 2012, Brownfox (gayaneh.b@gmail.com), with Reserved Font Name "Henny Penny"
+
 
 ======================================================================
 SIL OPEN FONT LICENSE Version 1.1

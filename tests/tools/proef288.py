@@ -1,7 +1,7 @@
 # proef288 (10 nov 2026, v131): de Stekky Store (store.html, store.js). Sinds 11 nov 2026 voor iedereen met een account.
 #  A. Stijl (profiel.html) als moderator: het laatste vakje in de balk is Store; tik erop = store.html
 #  B. Stijl als gewone gebruiker: ook het Store-vakje (sinds 11 nov 2026)
-#  C. Store als moderator (v2, 11 nov): negen lettertype-pakketten per thema, elk met 4 lettertypes in hun eigen letter;
+#  C. Store als moderator (v2, 11 nov): tien lettertype-pakketten (13 nov: Sinterklaas erbij) per thema, elk met 4 lettertypes in hun eigen letter;
 #     Downloaden = één rij in store_downloads (in je account) en de knop wordt "✓ Gedownload";
 #     Games/Stickers/Widgets: "komen binnenkort"
 #  D. Terug bij Stijl > Lettertype: alle 4 lettertypes van het pakket staan erbij (met "· Store"), een ander niet;
@@ -104,12 +104,12 @@ try:
         pg.click('#soorten .main-tab[data-soort="lettertype"]')
         pg.evaluate("window.scrollTo(0, 0)")
         # ── C ──
-        c1 = wacht(pg, "() => document.querySelectorAll('#lijst .item').length === 9")
+        c1 = wacht(pg, "() => document.querySelectorAll('#lijst .item').length === 10")
         namen = pg.evaluate("() => [...document.querySelectorAll('#lijst .item-titel')].map(e => e.textContent)")
-        check(c1 and namen == ['Retro', 'Sci-fi', 'Cowboy', 'Prinses', 'Urban', 'Horror', 'Strip', 'Geheim agent', 'Ridders & draken'],
-              'C: negen pakketten in de store (%s)' % namen)
+        check(c1 and namen == ['Retro', 'Sci-fi', 'Cowboy', 'Prinses', 'Urban', 'Horror', 'Strip', 'Geheim agent', 'Ridders & draken', 'Sinterklaas'],
+              'C: tien pakketten in de store (%s)' % namen)   # 13 nov 2026: Sinterklaas erbij
         regels = pg.evaluate("() => [...document.querySelectorAll('#lijst .item')].map(k => k.querySelectorAll('.item-regel').length)")
-        check(regels == [4] * 9, 'C: elk pakket heeft 4 lettertypes (%s)' % regels)
+        check(regels == [4] * 10, 'C: elk pakket heeft 4 lettertypes (%s)' % regels)
         strip = pg.evaluate("() => [...document.querySelectorAll('#lijst .item[data-id=\"pakket-strip\"] .item-regel')].map(e => e.textContent + '|' + e.style.fontFamily)")
         check(strip[0].startswith('Superheld|') and 'Luckiest Guy' in strip[0], 'C: elke regel in zijn eigen letter (%s)' % strip[:2])
         geladen = wacht(pg, "() => document.fonts.check(\"16px 'Luckiest Guy'\") && document.fonts.check(\"16px 'Princess Sofia'\") && document.fonts.check(\"16px 'Smokum'\")", 8000)
@@ -182,7 +182,7 @@ try:
         pg.goto(BASIS + 'store.html')
         g1 = wacht(pg, "() => document.getElementById('melding').style.display === 'block'")
         pg.click('#soorten .main-tab[data-soort="lettertype"]'); 
-        check(g1 and 'sql/stekky-store.sql' in pg.inner_text('#melding') and pg.evaluate("document.querySelectorAll('#lijst .item').length") == 9,
+        check(g1 and 'sql/stekky-store.sql' in pg.inner_text('#melding') and pg.evaluate("document.querySelectorAll('#lijst .item').length") == 10,
               'G: tabel ontbreekt: duidelijke melding, de store staat er wel (%r)' % pg.inner_text('#melding'))
         ctx.close()
         STAND['geen_tabel'] = False

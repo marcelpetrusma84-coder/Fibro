@@ -37,7 +37,7 @@ STATUS = "() => document.querySelector('.kt-status').textContent"
 
 # Een stand maken (met koningsjacht.js in de pagina zelf) en bewaren, zodat "Verder spelen" hem opent
 ZET = """async o => {
-  const K = await import('./koningsjacht.js?v=1')
+  const K = await import('./koningsjacht.js?v=2')
   const s = K.nieuwSpel({ niveau: o.niveau || 'schildknaap' })
   const alle = [...s.kasteel, ...s.taveerne, ...s.hand]
   const hoofd = id => ['B', 'V', 'H'].includes(id.slice(1))

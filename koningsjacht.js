@@ -28,6 +28,13 @@
 //     niveau: Schildknaap 4, Ridder 2, Koning 0. Je mag een nar inzetten bij aanvallen en bij afweren.
 //   - Gewonnen als alle 12 verslagen zijn. Een gouden medaille zonder narren, zilver met 1, brons met meer.
 //
+// v2 (13 nov 2026, Marcel): met z'n tweeën (in de chat).
+//   - Samen (samen: true): één kasteel, elk een eigen hand van 7 kaarten (handen[1], handen[2]), om de beurt
+//     (aanZet). Wie aanvalt, weert ook af; daarna is de ander. Na een verslagen vijand blijf je aan de beurt.
+//     ♦ ruiten delen de kaarten om en om uit, te beginnen bij wie aanvalt. Narren zijn van jullie samen
+//     (Schildknaap 2, Ridder 1, Koning 0); een nar geeft wie hem inzet een nieuwe hand.
+//   - Wedstrijd en duel: ieder speelt een eigen spel (gewoon solo), met hetzelfde geschudde kasteel (zaadRng).
+//     In het duel kan de ander een vloek sturen: jouw vijand krijgt er leven bij (vervloek, s.extra).
 // De stand is één gewoon object (zie nieuwSpel). Alle functies geven een NIEUWE stand terug of null als het niet mag.
 
 export const KLEUREN = ['h', 'r', 'k', 's']
@@ -35,7 +42,8 @@ export const GETALLEN = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10']
 export const HOOFDEN = ['B', 'V', 'H']
 export const MAX_HAND = 8
 export const VIJAND = { B: { leven: 20, aanval: 10 }, V: { leven: 30, aanval: 15 }, H: { leven: 40, aanval: 20 } }
-export const NIVEAUS = { schildknaap: { narren: 4 }, ridder: { narren: 2 }, koning: { narren: 0 } }
+export const NIVEAUS = { schildknaap: { narren: 4, samen: 2 }, ridder: { narren: 2, samen: 1 }, koning: { narren: 0, samen: 0 } }
+export const MAX_HAND_SAMEN = 7
 export const AANTAL_VIJANDEN = 12
 
 export const kaartInfo = id => ({ kleur: String(id)[0], waarde: String(id).slice(1) })
@@ -55,24 +63,43 @@ export function schud(lijst, rng = Math.random) {
   return a
 }
 const kopie = s => JSON.parse(JSON.stringify(s))
+// Een dobbelsteen met een vast zaadje: allebei hetzelfde geschudde kasteel (wedstrijd en duel)
+export function zaadRng(zaad) { let x = (Math.abs(Math.floor(zaad)) % 2147483646) + 1; return () => { x = (x * 48271) % 2147483647; return (x - 1) / 2147483646 } }
 
-export function nieuwSpel({ niveau = 'ridder', rng = Math.random } = {}) {
+// De hand van wie aan de beurt is (alleen: s.hand; samen: s.handen[s.aanZet])
+export const hand = (s, wie) => s.handen ? (s.handen[wie || s.aanZet] || []) : s.hand
+function zetHand(s, h) { if (s.handen) s.handen[s.aanZet] = h; else s.hand = h }
+export const maxHand = s => s.handen ? MAX_HAND_SAMEN : MAX_HAND
+export const ander = wie => wie === 1 ? 2 : 1
+
+export function nieuwSpel({ niveau = 'ridder', rng = Math.random, samen = false, begint = 1 } = {}) {
   if (!NIVEAUS[niveau]) niveau = 'ridder'
   const groep = w => schud(KLEUREN.map(k => k + w), rng)
   const kasteel = [...groep('B'), ...groep('V'), ...groep('H')]
   const taveerne = schud(KLEUREN.flatMap(k => GETALLEN.map(w => k + w)), rng)
-  const s = { niveau, kasteel, taveerne, afleg: [], hand: [], tafel: [], schade: 0, schild: 0,
-    narren: NIVEAUS[niveau].narren, narrenGebruikt: 0, fase: 'aanval', vorigePas: false, verslagen: 0,
+  const s = { niveau, kasteel, taveerne, afleg: [], tafel: [], schade: 0, schild: 0, extra: 0,
+    narren: NIVEAUS[niveau][samen ? 'samen' : 'narren'], narrenGebruikt: 0, fase: 'aanval', vorigePas: false, verslagen: 0,
     klaar: false, gewonnen: false, beurt: 0, laatste: { soort: 'begin', kaarten: [] } }
-  trek(s, MAX_HAND)
+  if (samen) { s.handen = { 1: [], 2: [] }; s.aanZet = begint === 2 ? 2 : 1; s.begint = s.aanZet; trek(s, MAX_HAND_SAMEN * 2) }
+  else { s.hand = []; trek(s, MAX_HAND) }
   return s
 }
 
-// Pak tot n kaarten van de taveerne (zo veel als er zijn en zo lang je hand niet vol is)
+// Pak tot n kaarten van de taveerne (zo veel als er zijn en zo lang de hand niet vol is). Samen: om en om, te
+// beginnen bij wie aan de beurt is. Geeft de kaarten van wie aan de beurt is; s.__per krijgt ze per speler.
 function trek(s, n) {
-  const gepakt = []
-  while (n-- > 0 && s.taveerne.length && s.hand.length < MAX_HAND) { const id = s.taveerne.shift(); s.hand.push(id); gepakt.push(id) }
-  return gepakt
+  const max = maxHand(s), per = { 1: [], 2: [] }
+  if (!s.handen) {
+    while (n-- > 0 && s.taveerne.length && s.hand.length < max) { const id = s.taveerne.shift(); s.hand.push(id); per[1].push(id) }
+    return per[1]
+  }
+  let wie = s.aanZet
+  while (n > 0 && s.taveerne.length && (s.handen[1].length < max || s.handen[2].length < max)) {
+    if (s.handen[wie].length < max) { const id = s.taveerne.shift(); s.handen[wie].push(id); per[wie].push(id); n-- }
+    wie = ander(wie)
+  }
+  s.__per = per
+  return per[s.aanZet]
 }
 
 export const vijand = s => s.kasteel[0] || null
@@ -80,7 +107,8 @@ export function vijandInfo(s) {
   const id = vijand(s)
   if (!id) return null
   const { kleur, waarde: w } = kaartInfo(id)
-  return { id, kleur, soort: w, leven: VIJAND[w].leven, aanval: VIJAND[w].aanval, over: Math.max(0, VIJAND[w].leven - s.schade),
+  const leven = VIJAND[w].leven + (s.extra || 0)
+  return { id, kleur, soort: w, leven, aanval: VIJAND[w].aanval, extra: s.extra || 0, over: Math.max(0, leven - s.schade),
     slag: Math.max(0, VIJAND[w].aanval - s.schild) }
 }
 // Hoeveel je nu moet afweren
@@ -107,7 +135,7 @@ export function aanvalUitkomst(s, ids) {
   return { kracht, schade, soorten, werkt, immuun: soorten.includes(v.kleur) ? v.kleur : null, verslagen: s.schade + schade >= v.leven }
 }
 
-const inHand = (s, ids) => ids.every(id => s.hand.includes(id))
+const inHand = (s, ids) => ids.every(id => hand(s).includes(id))
 
 export function magAanvallen(s, ids) {
   return Boolean(s && !s.klaar && s.fase === 'aanval' && geldigeAanval(ids) && inHand(s, ids))
@@ -122,14 +150,17 @@ export function magAfweren(s, ids) {
 // Kun je nog verder? Zo niet, dan is het verloren.
 function controleer(s) {
   if (s.klaar) return s
-  if (s.fase === 'verdedig' && som(s.hand) < teAfweren(s) && s.narren === 0) { s.klaar = true; s.gewonnen = false; s.laatste.verloren = 'afweren' }
-  else if (s.fase === 'aanval' && !s.hand.length && s.vorigePas && s.narren === 0) { s.klaar = true; s.gewonnen = false; s.laatste.verloren = 'leeg' }
+  if (s.fase === 'verdedig' && som(hand(s)) < teAfweren(s) && s.narren === 0) { s.klaar = true; s.gewonnen = false; s.laatste.verloren = 'afweren' }
+  else if (s.fase === 'aanval' && !hand(s).length && s.vorigePas && s.narren === 0) { s.klaar = true; s.gewonnen = false; s.laatste.verloren = 'leeg' }
+  delete s.__per
   return s
 }
 
 // Na het aanvallen of passen: slaat de vijand terug?
+// Samen: na je beurt (afgeweerd, of geen slag) is de ander
+function volgende(s) { if (s.handen) { s.laatste.wie = s.laatste.wie || s.aanZet; s.aanZet = ander(s.aanZet) } }
 function naarAfweren(s) {
-  if (teAfweren(s) <= 0) { s.fase = 'aanval'; s.laatste.geenSlag = true; return controleer(s) }
+  if (teAfweren(s) <= 0) { s.fase = 'aanval'; s.laatste.geenSlag = true; volgende(s); return controleer(s) }
   s.fase = 'verdedig'
   return controleer(s)
 }
@@ -139,11 +170,11 @@ export function valAan(s0, ids) {
   const s = kopie(s0)
   const u = aanvalUitkomst(s, ids)
   const v = vijandInfo(s)
-  s.hand = s.hand.filter(id => !ids.includes(id))
+  zetHand(s, hand(s).filter(id => !ids.includes(id)))
   s.tafel.push(...ids)
   s.beurt++; s.vorigePas = false
   const l = { soort: 'aanval', kaarten: ids.slice(), vijand: v.id, kracht: u.kracht, schade: u.schade, werkt: u.werkt, immuun: u.immuun,
-    genezen: 0, gepakt: [], schild: 0 }
+    genezen: 0, gepakt: [], schild: 0, wie: s.aanZet || 1 }
   // ♥ eerst: kaarten van de aflegstapel onder de taveerne
   if (u.werkt.includes('h')) {
     const terug = schud(s.afleg).slice(0, u.kracht)
@@ -152,7 +183,7 @@ export function valAan(s0, ids) {
     l.genezen = terug.length
   }
   // ♦ dan: kaarten pakken
-  if (u.werkt.includes('r')) l.gepakt = trek(s, u.kracht)
+  if (u.werkt.includes('r')) { l.gepakt = trek(s, u.kracht); if (s.__per) l.gepaktPer = s.__per }
   // ♠ schild
   if (u.werkt.includes('s')) { s.schild += u.kracht; l.schild = u.kracht }
   s.schade += u.schade
@@ -161,7 +192,7 @@ export function valAan(s0, ids) {
     s.afleg.push(...s.tafel); s.tafel = []
     s.kasteel.shift()
     if (l.precies) s.taveerne.unshift(v.id); else s.afleg.push(v.id)
-    s.verslagen++; s.schade = 0; s.schild = 0
+    s.verslagen++; s.schade = 0; s.schild = 0; s.extra = 0
     s.laatste = l
     if (!s.kasteel.length) { s.klaar = true; s.gewonnen = true; s.fase = 'klaar'; return s }
     s.fase = 'aanval'
@@ -176,17 +207,18 @@ export function pas(s0) {
   if (!magPassen(s0)) return null
   const s = kopie(s0)
   s.beurt++; s.vorigePas = true
-  s.laatste = { soort: 'pas', kaarten: [] }
+  s.laatste = { soort: 'pas', kaarten: [], wie: s.aanZet || 1 }
   return naarAfweren(s)
 }
 
 export function weerAf(s0, ids) {
   if (!magAfweren(s0, ids)) return null
   const s = kopie(s0)
-  s.hand = s.hand.filter(id => !ids.includes(id))
+  zetHand(s, hand(s).filter(id => !ids.includes(id)))
   s.afleg.push(...ids)
   s.fase = 'aanval'
-  s.laatste = { soort: 'afweer', kaarten: ids.slice(), slag: teAfweren(s0) }
+  s.laatste = { soort: 'afweer', kaarten: ids.slice(), slag: teAfweren(s0), wie: s.aanZet || 1 }
+  volgende(s)
   return controleer(s)
 }
 
@@ -194,12 +226,50 @@ export function weerAf(s0, ids) {
 export function nar(s0) {
   if (!magNar(s0)) return null
   const s = kopie(s0)
-  const weg = s.hand.slice()
-  s.afleg.push(...weg); s.hand = []
+  const weg = hand(s).slice()
+  s.afleg.push(...weg); zetHand(s, [])
   s.narren--; s.narrenGebruikt++
-  const gepakt = trek(s, MAX_HAND)
-  s.laatste = { soort: 'nar', kaarten: [], weg, gepakt }
+  // een nar vult alleen de hand van wie hem inzet
+  const gepakt = []
+  while (s.taveerne.length && hand(s).length < maxHand(s)) { const id = s.taveerne.shift(); hand(s).push(id); gepakt.push(id) }
+  s.laatste = { soort: 'nar', kaarten: [], weg, gepakt, wie: s.aanZet || 1 }
   return controleer(s)
+}
+
+// ── Belegering (v3, 13 nov 2026, Marcel): ieder een eigen kasteel, om de beurt aanvallen en verdedigen ──
+// Elke speler heeft een eigen 'front' (een gewone stand zoals alleen): de vijanden daarin zijn de wachters van het
+// kasteel van de ANDER. Op jouw beurt val je de voorste wachter van de ander aan; die slaat terug en jij weert af.
+// Daarna is de ander. Een verslagen wachter (of een schild dat alles tegenhoudt) beëindigt je beurt ook.
+// Precies raak = je neemt de wachter gevangen (hij komt in jouw taveerne). Wie als eerste alle 12 wachters van de
+// ander verslaat, wint; wie niet meer kan afweren, verliest. Narren: Schildknaap 2, Ridder 1, Koning 0 (elk).
+export function nieuwBeleg({ niveau = 'ridder', begint = 1, rng = Math.random } = {}) {
+  if (!NIVEAUS[niveau]) niveau = 'ridder'
+  const front = () => Object.assign(nieuwSpel({ niveau, rng }), { narren: NIVEAUS[niveau].samen })
+  return { modus: 'beleg', niveau, aanZet: begint === 2 ? 2 : 1, spelers: { 1: front(), 2: front() }, klaar: false, winnaar: 0, beurt: 0, laatste: { wie: 0, soort: 'begin' } }
+}
+// Na een zet van 'wie' (nieuw = zijn nieuwe front): wie wint er, of is de ander aan de beurt?
+export function belegStap(b0, wie, nieuw) {
+  if (!b0 || b0.klaar || b0.aanZet !== wie || !nieuw) return null
+  const b = kopie(b0)
+  b.spelers[wie] = nieuw; b.beurt++
+  const l = nieuw.laatste || {}
+  b.laatste = { wie, soort: l.soort, kaarten: l.kaarten || [], schade: l.schade || 0, verslagen: Boolean(l.verslagen), precies: Boolean(l.precies), vijand: l.vijand || null }
+  if (nieuw.klaar) { b.klaar = true; b.winnaar = nieuw.gewonnen ? wie : ander(wie); return b }
+  const klaarMetBeurt = nieuw.fase === 'aanval' && (l.soort === 'afweer' || l.verslagen || l.geenSlag)
+  if (klaarMetBeurt) b.aanZet = ander(wie)
+  return b
+}
+export function geldigBeleg(b) {
+  return Boolean(b && b.modus === 'beleg' && NIVEAUS[b.niveau] && [1, 2].includes(b.aanZet) && b.spelers && geldigeStand(b.spelers[1]) && geldigeStand(b.spelers[2]))
+}
+
+// Duel: de ander stuurt een vloek; je vijand krijgt er n leven bij (tot hij verslagen is)
+export function vervloek(s0, n = 10) {
+  if (!s0 || s0.klaar || !vijand(s0)) return null
+  const s = kopie(s0)
+  s.extra = (s.extra || 0) + n
+  s.laatste = { soort: 'vloek', kaarten: [], n }
+  return s
 }
 
 // Medaille na het winnen: goud zonder narren, zilver met 1, brons met meer
@@ -211,7 +281,9 @@ export function medaille(s) {
 // Klopt deze stand? (voor een stand uit de opslag)
 export function geldigeStand(s) {
   if (!s || typeof s !== 'object' || !NIVEAUS[s.niveau]) return false
-  for (const k of ['kasteel', 'taveerne', 'afleg', 'hand', 'tafel']) if (!Array.isArray(s[k]) || !s[k].every(isKaart)) return false
-  const alle = [...s.kasteel, ...s.taveerne, ...s.afleg, ...s.hand, ...s.tafel]
+  const handen = s.handen ? (s.handen && [s.handen[1], s.handen[2]]) : [s.hand]
+  if (s.handen && ![1, 2].includes(s.aanZet)) return false
+  for (const l of [s.kasteel, s.taveerne, s.afleg, s.tafel, ...handen]) if (!Array.isArray(l) || !l.every(isKaart)) return false
+  const alle = [s.kasteel, s.taveerne, s.afleg, s.tafel, ...handen].flat()
   return alle.length === 52 && new Set(alle).size === 52 && ['aanval', 'verdedig', 'klaar'].includes(s.fase)
 }

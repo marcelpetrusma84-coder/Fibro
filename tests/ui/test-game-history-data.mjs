@@ -58,7 +58,8 @@ assert.equal(chess.get('3.0.0').sourceCommit, '8fa72a338aca029249863eb46cc0e09f9
 assert.equal(chess.get('3.0.0').updatedAt, '2026-10-22T18:28:32+02:00')
 // Games that existed when registration started share that baseline; a game added later starts at its own first commit.
 const LATER = { pesten: ['2026-11-11T09:41:39+01:00', 'f79355903f4f2a27a866f29cd8ece3065c4e4b49'],
-  toepen: ['2026-11-11T16:53:30+01:00', '48c3818ba9826733552905fd17e06ea49c1c5cc5'], eenentwintigen: ['2026-11-11T16:53:30+01:00', '48c3818ba9826733552905fd17e06ea49c1c5cc5'] }
+  toepen: ['2026-11-11T16:53:30+01:00', '48c3818ba9826733552905fd17e06ea49c1c5cc5'], eenentwintigen: ['2026-11-11T16:53:30+01:00', '48c3818ba9826733552905fd17e06ea49c1c5cc5'],
+  koningsjacht: ['2026-11-13T14:24:09+01:00', 'd824c459c4eff04d661cded51c1c0715cf89f0c5'] }
 for (const game of expectedGames) {
   const baseline = spelHistorie(game).at(-1)
   assert.equal(baseline.updatedAt, LATER[game]?.[0] || '2026-10-21T21:08:23+02:00')

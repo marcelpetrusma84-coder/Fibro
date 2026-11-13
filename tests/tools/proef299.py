@@ -10,7 +10,7 @@
 #  H. het spel wordt bewaard: na herladen "Verder spelen"
 #  I. verliezen (kan niet afweren) en winnen (medaille op het beginscherm)
 #  J. in het Engels: King Hunt; geen paginafouten
-#  K. v2 (13 nov 2026): epische muziek aan/uit (🎵, bewaard), en bij een aanval licht: gloeiende kaarten, een zwaardhaal,
+#  K. v2 (13 nov 2026): na een tik staat het geluid open (iPhone); epische muziek aan/uit (🎵, bewaard), en bij een aanval licht: gloeiende kaarten, een zwaardhaal,
 #     vonken; ♣ = twee halen; de vijand slaat terug met drie klauwhalen; geluiden via koningsjacht-geluid.js
 # python3 -I proef299.py <map>
 import sys, os, time, socket, subprocess, tempfile, re
@@ -104,10 +104,11 @@ try:
         check(pg.is_visible('.kj-regelkaart') and '♣ klaveren: dubbele schade' in pg.text_content('.kj-regelkaart'), 'A: de spelregels openen')
         pg.click('.kj-regelkaart .kj-knop')
         check(not pg.query_selector('.kj-regels'), 'A: en gaan weer dicht')
+        check(pg.evaluate("() => import('./koningsjacht-geluid.js?v=2').then(m => m.geluidStaat())") == 'running', 'K: na een tik staat het geluid open (nodig op de iPhone)')
         check(pg.get_attribute('.kj-muziek', 'aria-pressed') == 'false', 'K: de muziek staat eerst uit')
         pg.click('.kj-muziek')
         check(pg.get_attribute('.kj-muziek', 'aria-pressed') == 'true' and pg.evaluate("() => localStorage.getItem('fibro_koningsjacht_muziek')") == 'aan'
-              and pg.evaluate("() => import('./koningsjacht-geluid.js?v=1').then(m => m.speeltMuziek())"), 'K: 🎵 = epische muziek aan (en onthouden)')
+              and pg.evaluate("() => import('./koningsjacht-geluid.js?v=2').then(m => m.speeltMuziek())"), 'K: 🎵 = epische muziek aan (en onthouden)')
 
         # ════════ B. een nieuw spel ════════
         pg.click('.kj-niveau[data-niveau=schildknaap]')
@@ -139,7 +140,7 @@ try:
         check(not pg.query_selector('.kj-fx > *'), 'K: na afloop is al het licht weer weg')
         check(pg.evaluate(KNOP, 'muziek') and 'kt-nadruk' in pg.get_attribute('.kt-knop[data-naam=muziek]', 'class'), 'K: knop 🎵 op tafel, licht op want de muziek staat aan')
         knop(pg, 'muziek')
-        check(pg.evaluate("() => localStorage.getItem('fibro_koningsjacht_muziek')") == 'uit' and not pg.evaluate("() => import('./koningsjacht-geluid.js?v=1').then(m => m.speeltMuziek())"), 'K: 🎵 op tafel = muziek uit')
+        check(pg.evaluate("() => localStorage.getItem('fibro_koningsjacht_muziek')") == 'uit' and not pg.evaluate("() => import('./koningsjacht-geluid.js?v=2').then(m => m.speeltMuziek())"), 'K: 🎵 op tafel = muziek uit')
         kies(pg, 'k9')
         knop(pg, 'afweer'); time.sleep(0.3)
         check(pg.evaluate(KNOP, 'afweer') and 'k9' in pg.evaluate(HAND), 'C: 9 is te weinig, de kaart blijft in je hand')

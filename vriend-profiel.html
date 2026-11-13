@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=106"></script>
+<script src="taal.js?v=107"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -159,7 +159,7 @@ body.heeft-wallpaper::before { display:block; }
   import { startMeldingen } from './meldingen.js?v=188'
   import { startHeartbeat } from './heartbeat.js?v=117' // v274: ook hier tel je mee als online
   import { volgOnline, isVriendOnline, bewaarServerStand } from './onlinestip.js?v=1' // v274: nauwkeuriger bolletje
-  import { leesMood, isMoodSticker, tekenMoodSticker } from './moodsticker.js?v=236' // v171: een sticker als mood
+  import { leesMood, isMoodSticker, tekenMoodSticker } from './moodsticker.js?v=237' // v171: een sticker als mood
   koppelSpelIcoonFallback()
   pasBlokstijlToe()
 
@@ -537,7 +537,7 @@ body.heeft-wallpaper::before { display:block; }
       if (/^sticker_/.test(w.id || '')) {
         el.innerHTML = '<div class="widget-inhoud"></div>'
         grid.appendChild(el)
-        try { await (await import('./stickerwidget.js?v=236')).tekenStickerWidget(el.querySelector('.widget-inhoud'), w.id, { vriendId }) }
+        try { await (await import('./stickerwidget.js?v=237')).tekenStickerWidget(el.querySelector('.widget-inhoud'), w.id, { vriendId }) }
         catch (e) { console.warn('[stickerwidget]', e); el.remove() }
         continue
       }
@@ -594,7 +594,7 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_quiz')
     if (!ruw) return false
     let Q, quiz = null
-    try { Q = await import('./quiz.js?v=4') } catch (e) { console.warn('[quiz]', e); return false }
+    try { Q = await import('./quiz.js?v=5') } catch (e) { console.warn('[quiz]', e); return false }
     try { quiz = Q.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!quiz) return false
     await vriendAchtergrond(el, vriendId, 'quiz')

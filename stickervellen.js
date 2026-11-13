@@ -1,7 +1,8 @@
 // stickervellen.js - de stickervellen van Fibro (v153, 15 oktober 2026; v156: vel 1; v161: eigen geluiden voor vel 1;
 // v164: vel 2, voor beurtspellen, met eigen geluiden; v165: vel 3, handgebaren;
 // v166: vel 4, moderne handgebaren; v206-v208: vel 5, chattaal (lol, brb, GOAT ...), met geluiden die er al waren;
-// v215: acht stickers van vel 5 met een van de meme-geluiden van v214; 30 okt 2026: vel 6, emoji-gezichtjes)
+// v215: acht stickers van vel 5 met een van de meme-geluiden van v214; 30 okt 2026: vel 6, emoji-gezichtjes;
+// 13 nov 2026: vel 7, Sinterklaas, het eerste vel uit de Stekky Store: STORE_VELLEN)
 // Zes vaste vakjes (f1 t/m f6), elk voor een vel van 12 stickers. De volgorde in FIBRO_VELLEN bepaalt het nummer
 // op het scherm (30 okt 2026: volgorde f6, f1, f2, f5, f3, f4). Een vel dat nog leeg is, toont
 // "binnenkort". Een sticker staat in stickers/<vel>/<nr>.webp en heeft een naam ([Nederlands, Engels]),
@@ -108,13 +109,43 @@ export const FIBRO_VELLEN = [
   ] },
 ]
 
+// 13 nov 2026: stickervellen uit de Stekky Store (store.js, soort 'sticker'). Ze staan pas in je stickerkeuze (bij
+// 'Winkel') als je ze gedownload hebt; een sticker die een vriend stuurt, zie en hoor je altijd (zoekSticker kent ze).
+// store = het id in de Store (store_downloads.item_id). Id's gaan door na f6 (f7, f8 ...); een nieuw id ook in de patronen f[1-7] zetten (zoek op 'f\[1-7\]').
+// Vel 7, Sinterklaas: uit een plaatje van Marcel met roetveegpieten (tests/tools/knip7.py), geluiden met code gemaakt
+// (tests/tools/geluiden8.py).
+export const STORE_VELLEN = [
+  { id: 'f7', store: 'stickers-sinterklaas', titel: 'Sinterklaas', stickers: [
+    { nr: '01', naam: ['Sinterklaas', 'Sinterklaas'], b: 'wiebel', g: 'sintklok' },
+    { nr: '02', naam: ['Piet!', 'Piet!'], b: 'hup', g: 'pietsprong' },
+    { nr: '03', naam: ['Schoentje zetten', 'Shoe by the fire'], b: 'flakker', g: 'haardvuur' },
+    { nr: '04', naam: ['Chocoladeletter', 'Chocolate letter'], b: 'schud', g: 'chocokrak' },
+    { nr: '05', naam: ['Pakjesboot 12', 'Gift steamboat'], b: 'zweef', g: 'stoomfluit' },
+    { nr: '06', naam: ['Cadeautjes!', 'Presents!'], b: 'groei', g: 'pakpapier' },
+    { nr: '07', naam: ['Zak van de Sint', "Sint's sack"], b: 'stuiter', g: 'zakbonk' },
+    { nr: '08', naam: ['Ozosnel!', 'Ozosnel!'], b: 'duw', g: 'hoefslag' },
+    { nr: '09', naam: ['Strooigoed', 'Sweets'], b: 'ontplof', g: 'pepernoten' },
+    { nr: '10', naam: ['Piet op het dak', 'Piet on the roof'], b: 'kantel', g: 'dakwind' },
+    { nr: '11', naam: ['Sint & Piet', 'Sint & Piet'], b: 'knik', g: 'klopklop' },
+    { nr: '12', naam: ['Mijter & staf', 'Mitre & staff'], b: 'oplichten', g: 'mijterglans' },
+  ] },
+]
+
 export const PER_VEL = 12
+
+// Welke Store-vellen heb je gedownload (op dit toestel; store.js bewaart ze in fibro_store_<uid>)
+export function mijnStoreVellen(uid) {
+  let ids = []
+  try { ids = JSON.parse(localStorage.getItem('fibro_store_' + uid) || '[]') } catch (e) {}
+  if (!Array.isArray(ids)) ids = []
+  return STORE_VELLEN.filter(v => ids.includes(v.store))
+}
 
 // Zoek een sticker op met de code uit een bericht ('f1-01'). Geeft null als hij niet (meer) bestaat.
 export function zoekSticker(code) {
-  const m = /^(f[1-6])-(\d{2})$/.exec(String(code || ''))
+  const m = /^(f[1-7])-(\d{2})$/.exec(String(code || ''))
   if (!m) return null
-  const vel = FIBRO_VELLEN.find(v => v.id === m[1])
+  const vel = FIBRO_VELLEN.find(v => v.id === m[1]) || STORE_VELLEN.find(v => v.id === m[1])
   const s = vel && vel.stickers.find(x => x.nr === m[2])
   return s ? { vel: vel.id, nr: s.nr, naam: s.naam, b: s.b, g: s.g, src: stickerSrc(vel.id, s.nr) } : null
 }

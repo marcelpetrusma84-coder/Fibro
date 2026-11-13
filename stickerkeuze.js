@@ -5,9 +5,10 @@
 // elkaar in 3 rijen (v216; was op een breed scherm 6 naast elkaar in 2 rijen). Een leeg vakje zegt wat er later komt.
 // Gebruik: const k = maakStickerkeuze(element, { onKies: sticker => ..., uid: () => id }); k.vernieuw() leest
 // je eigen stickers opnieuw (bij het openen). sticker = { vel, nr, naam, b, g, src }.
-import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=236'
+// 13 nov 2026: de vier vakjes 'Winkel' tonen de stickervellen die je in de Stekky Store gedownload hebt (STORE_VELLEN).
+import { FIBRO_VELLEN, zoekSticker, mijnStoreVellen } from './stickervellen.js?v=237'
 import { leesEigen } from './eigenstickers.js?v=162'
-import { speelBeweging } from './stickerfx.js?v=235'
+import { speelBeweging } from './stickerfx.js?v=236'
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 const naamVan = n => Array.isArray(n) ? ((window.T && window.T.taal === 'en') ? n[1] : n[0]) : ''
@@ -92,7 +93,6 @@ export function maakStickerkeuze(el, { onKies, uid } = {}) {
       b.setAttribute('aria-label', T('Eigen vel {n}', { n: v.n }))
     } else {
       b.setAttribute('aria-label', T('Winkelvak {n}', { n: v.n }))
-      b.textContent = '\u{1F6CD}️'; b.classList.add('stippel', 'leeg')
     }
     b.addEventListener('click', () => kies(v.id))
     knoppen[v.id] = b
@@ -114,12 +114,35 @@ export function maakStickerkeuze(el, { onKies, uid } = {}) {
   }
   zetEigenVakjes()
 
+  // Winkelvakjes: het n-de gedownloade Store-vel, of een leeg vakje met een tasje
+  let winkel = []
+  function zetWinkelVakjes() {
+    const id = typeof uid === 'function' ? uid() : uid
+    winkel = id ? mijnStoreVellen(id) : []
+    for (const v of alle) {
+      if (v.soort !== 'winkel') continue
+      const vel = winkel[v.n - 1] || null
+      v.vel = vel
+      const b = knoppen[v.id]; b.textContent = ''
+      if (vel) {
+        const img = document.createElement('img'); img.alt = ''; img.loading = 'lazy'
+        img.src = zoekSticker(vel.id + '-' + vel.stickers[0].nr).src
+        b.appendChild(img); b.classList.remove('stippel', 'leeg')
+        b.setAttribute('aria-label', T('Winkelvak {n}', { n: v.n }) + ': ' + vel.titel)
+      } else {
+        b.textContent = '\u{1F6CD}️'; b.classList.add('stippel', 'leeg')
+        b.setAttribute('aria-label', T('Winkelvak {n}', { n: v.n }))
+      }
+    }
+  }
+  zetWinkelVakjes()
+
   function toonInhoud(v) {
     inhoud.textContent = ''
-    if (v.soort === 'fibro' && v.vel.stickers.length) {
+    if ((v.soort === 'fibro' || v.soort === 'winkel') && v.vel && v.vel.stickers.length) {
       const raster = document.createElement('div'); raster.className = 'sk-raster'
       v.vel.stickers.forEach(s => {
-        const st = zoekSticker(v.id + '-' + s.nr)
+        const st = zoekSticker(v.vel.id + '-' + s.nr)
         if (!st) return
         const b = document.createElement('button'); b.type = 'button'; b.className = 'sk-sticker'
         b.setAttribute('aria-label', T('Stuur sticker {naam}', { naam: naamVan(st.naam) }))
@@ -148,7 +171,7 @@ export function maakStickerkeuze(el, { onKies, uid } = {}) {
     const p = document.createElement('div'); p.className = 'sk-leeg'
     if (v.soort === 'fibro') p.textContent = T('Vel {n} is nog leeg. Hier komen binnenkort stickers die bewegen en geluid maken.', { n: v.n })
     else if (v.soort === 'eigen') p.textContent = T('Je eigen stickers maak je in Stijl, bij Stickers.')
-    else p.textContent = T('Hier komen stickervellen uit de winkel. De winkel komt later.')
+    else p.textContent = T('Hier komen de stickervellen die je downloadt in de Stekky Store.')
     inhoud.appendChild(p)
   }
 
@@ -181,10 +204,11 @@ export function maakStickerkeuze(el, { onKies, uid } = {}) {
   async function vernieuw() {
     const id = typeof uid === 'function' ? uid() : uid
     if (!id) return
+    zetWinkelVakjes()
     try { eigen = await leesEigen(id) } catch (e) { eigen = {} }
     zetEigenVakjes()
     const v = alle.find(x => x.id === gekozen)
-    if (v && v.soort === 'eigen') toonInhoud(v)
+    if (v && (v.soort === 'eigen' || v.soort === 'winkel')) toonInhoud(v)
   }
   vernieuw()
   return { vernieuw }

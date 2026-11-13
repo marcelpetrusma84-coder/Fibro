@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=106"></script>
+<script src="taal.js?v=107"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -651,9 +651,9 @@ function renderProfiel(id, c) {
     const emoji = window._profiel?.offline_emoji || '😊'
     const tekst = window._profiel?.offline_bericht || ''
     // v171: een sticker als mood (moodsticker.js): tik = beweging en geluid
-    const sticker = /^fxsticker:((?:f[1-6]|e[12])-(?:0[1-9]|1[0-2]))$/.exec(emoji)
+    const sticker = /^fxsticker:((?:f[1-7]|e[12])-(?:0[1-9]|1[0-2]))$/.exec(emoji)
     c.innerHTML = `<div style="display:flex;align-items:center;gap:10px"><span class="mood-plek" style="font-size:28px;line-height:1">${sticker ? '' : escH(emoji)}</span><span style="font-size:14px">${escH(tekst)}</span></div>`
-    if (sticker) import('./moodsticker.js?v=236').then(m => m.tekenMoodSticker(c.querySelector('.mood-plek'), sticker[1], { uid: window._uid })).catch(e => console.warn('[moodsticker]', e))
+    if (sticker) import('./moodsticker.js?v=237').then(m => m.tekenMoodSticker(c.querySelector('.mood-plek'), sticker[1], { uid: window._uid })).catch(e => console.warn('[moodsticker]', e))
 
   } else if (id === 'muziek') {
     renderMuziekPlayer(c)
@@ -702,7 +702,7 @@ function renderProfiel(id, c) {
     renderSpelWidget(c, id.slice(5))
   } else if (id.startsWith('sticker_')) {
     // v157: sticker als widget (Profiel > Stickers): tik = beweging en geluid. Pas laden als hij er staat.
-    import('./stickerwidget.js?v=236').then(m => m.tekenStickerWidget(c, id, { uid: window._uid })).catch(e => console.warn('[stickerwidget]', e))
+    import('./stickerwidget.js?v=237').then(m => m.tekenStickerWidget(c, id, { uid: window._uid })).catch(e => console.warn('[stickerwidget]', e))
   }
 }
 
@@ -1669,7 +1669,7 @@ async function renderQuiz(c, uid) {
   let quiz = null
   try { quiz = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
   let Q
-  try { Q = await import('./quiz.js?v=4') } catch (e) { console.warn('[quiz]', e); return }
+  try { Q = await import('./quiz.js?v=5') } catch (e) { console.warn('[quiz]', e); return }
   Q.tekenQuizWidget(c, {
     quiz, eigen: true,
     achtergrond: () => laadUitDB('widgetbg_quiz_' + uid),

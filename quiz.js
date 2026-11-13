@@ -14,8 +14,8 @@
 //   tekenQuizWidget(el, { quiz, eigen, achtergrond, bewerk })   de kaart in de widget
 //   openMaker(quiz, opslaan)                                     het maak-scherm (beeldvullend)
 //   speelQuiz(quiz, { achtergrond })                             spelen (beeldvullend)
-import { zoekSticker } from './stickervellen.js?v=236'
-import { speel, speelGeluid } from './stickerfx.js?v=235'
+import { zoekSticker } from './stickervellen.js?v=237'
+import { speel, speelGeluid } from './stickerfx.js?v=236'
 import { DEUNTJES, speelTitelMuziek, stopTitelMuziek } from './titelmuziek.js?v=6'
 
 Object.assign(window.FIBRO_EN ||= {}, {

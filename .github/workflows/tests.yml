@@ -158,6 +158,9 @@ jobs:
       - name: "Kaartspellen: kaartstijl kiezen (Stekky of Perkament) met 🎴"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef294.py .
+      - name: "Stickervel Sinterklaas uit de Store (downloaden, stickerkeuze, verwijderen)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef295.py .
       - name: "Home: de bovenste balk blijft staan tijdens scrollen"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef296.py .

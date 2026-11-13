@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=108"></script>
+<script src="taal.js?v=109"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -118,7 +118,7 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .e-opt:hover { background:rgba(192,132,252,0.2); }
 .input-wrap { position:fixed; bottom:calc(60px + env(safe-area-inset-bottom,0px)); width:100%; max-width:480px; z-index:9; background:rgba(0,0,0,0.2); border-top:0.5px solid var(--border); backdrop-filter:blur(12px); }
 .emoji-toggle-row { display:flex; gap:6px; padding:6px 14px 0; }
-.input-area { padding:6px 14px 10px; display:flex; gap:8px; align-items:center; }
+.input-area { padding:6px 14px 10px; display:flex; gap:8px; align-items:flex-end; } /* 13 nov: bij meer regels blijft de knop onderaan */
 .emoji-grid { width:100%; background:rgba(0,0,0,0.85); border-top:0.5px solid var(--border); display:none; }
 #stickerGrid { width:100%; background:rgba(0,0,0,0.85); border-top:0.5px solid var(--border); }
 .fx-wrap { padding:4px; }
@@ -127,6 +127,11 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .fx-wacht { border:1.5px dashed rgba(192,132,252,0.5); border-radius:18px; box-sizing:border-box; padding:34px; opacity:0.8; cursor:default; }
 .fx-wachttekst { font-size:12px; color:var(--text); opacity:0.8; margin-top:4px; max-width:120px; }
 .msg-input { flex:1; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-family:inherit; font-size:16px !important; outline:none; }
+/* 13 nov 2026: het invoerveld is een tekstvak: een enter = een nieuwe regel; het groeit mee tot 5 regels */
+textarea.msg-input { display:block; resize:none; line-height:1.35; min-height:38px; max-height:126px; overflow-y:auto; }
+/* 13 nov 2026: boven de berichten van elke dag staat de datum (Vandaag, Gisteren, woensdag 12 november) */
+.dag-scheiding { display:flex; justify-content:center; margin:10px 0 6px; pointer-events:none; }
+.dag-scheiding span { font-size:12px; font-weight:600; color:var(--text); background:rgba(0,0,0,0.38); border:0.5px solid var(--border); border-radius:999px; padding:3px 11px; }
 .msg-input::placeholder { color:var(--muted); }
 .msg-input:focus { border-color:var(--accent); }
 /* lijn-iconen zoals het menu onderaan: wit, en open = lichtpaars vlak met paars icoon */
@@ -364,7 +369,7 @@ window.veiligeUrl = function(v){
     <input type="file" id="fotoFileInput" accept="image/*" multiple style="display:none" onchange="fotoGekozen(this)">
     <div id="spraakBalk" class="spraak-opname" hidden role="status" aria-live="polite"><span class="spraak-punt"></span><span id="spraakTijd">0:00</span><span class="spraak-hint" id="spraakHint" data-t>← schuif om te annuleren</span></div>
     <div class="input-area">
-      <input class="msg-input" id="msgInput" maxlength="2000" placeholder="Stuur een bericht..." data-t-attr="placeholder" onkeydown="if(event.key==='Enter')sendMsg()">
+      <textarea class="msg-input" id="msgInput" rows="1" maxlength="2000" placeholder="Stuur een bericht..." data-t-attr="placeholder" aria-label="Stuur een bericht..."></textarea>
       <button class="send-btn" id="sendBtn" onclick="sendMsg()">➤</button>
     </div>
   </div>
@@ -1341,6 +1346,73 @@ console.timeLog('[chat] berichten', 'opgehaald')
     row.classList.toggle('gegroepeerd', !!zelfde)
   }
 
+  // ─── 13 nov 2026: datum boven de berichten van elke dag ───
+  // Elk bericht (ook een belregel) heeft zijn tijd in data-ts. Voor het eerste bericht van een dag komt een
+  // .dag-scheiding met 'Vandaag', 'Gisteren' of de dag en datum. Bij elke verandering in #messages opnieuw (de
+  // berichten komen niet altijd achteraan binnen, bijvoorbeeld bewaarde foto's).
+  function dagLabel(ms) {
+    const d = new Date(ms), nu = new Date()
+    const begin = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime()
+    const verschil = Math.round((begin(nu) - begin(d)) / 86400000)
+    if (verschil === 0) return T('Vandaag')
+    if (verschil === 1) return T('Gisteren')
+    const opties = { weekday: 'long', day: 'numeric', month: 'long' }
+    if (d.getFullYear() !== nu.getFullYear()) opties.year = 'numeric'
+    return d.toLocaleDateString(T.locale, opties)
+  }
+  let dagWachter = null
+  function zetDagScheidingen() {
+    const c = document.getElementById('messages')
+    if (!c) return
+    if (dagWachter) dagWachter.disconnect()
+    try {
+      for (const oud of [...c.querySelectorAll(':scope > .dag-scheiding')]) oud.remove()
+      let vorigeDag = null
+      for (const el of [...c.children]) {
+        if (!el.dataset || !el.dataset.ts) continue
+        const ms = berichtTijd({ created_at: el.dataset.ts })
+        if (!ms) continue
+        const d = new Date(ms), dag = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate()
+        if (dag === vorigeDag) continue
+        vorigeDag = dag
+        const sch = document.createElement('div'); sch.className = 'dag-scheiding'; sch.dataset.dag = dag
+        sch.setAttribute('role', 'separator')
+        const lbl = document.createElement('span'); lbl.textContent = dagLabel(ms); sch.appendChild(lbl)
+        c.insertBefore(sch, el)
+      }
+      for (const el of c.querySelectorAll(':scope > .msg-row')) herGroepeer(el)
+    } finally {
+      if (dagWachter) dagWachter.observe(c, { childList: true })
+    }
+  }
+  {
+    const c = document.getElementById('messages')
+    if (c && window.MutationObserver) { dagWachter = new MutationObserver(zetDagScheidingen); dagWachter.observe(c, { childList: true }) }
+  }
+
+  // ─── 13 nov 2026: het berichtvak ───
+  // Op een telefoon of tablet (aanraakscherm) is enter een nieuwe regel en verstuur je met de knop ➤. Met een
+  // toetsenbord (pc, Steam Deck) verstuurt enter, en geeft shift + enter een nieuwe regel. Het vak groeit mee.
+  function pasBerichtvakAan() {
+    const inp = document.getElementById('msgInput')
+    if (!inp) return
+    inp.style.height = 'auto'
+    inp.style.height = Math.min(inp.scrollHeight + 2, 126) + 'px'
+  }
+  window.pasBerichtvakAan = pasBerichtvakAan
+  {
+    const inp = document.getElementById('msgInput')
+    const aanraak = () => { try { return matchMedia('(hover: none) and (pointer: coarse)').matches } catch (e) { return false } }
+    if (inp) {
+      inp.addEventListener('input', pasBerichtvakAan)
+      inp.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' || e.isComposing || e.keyCode === 229) return
+        if (e.shiftKey || aanraak()) return   // nieuwe regel
+        e.preventDefault(); window.sendMsg()
+      })
+    }
+  }
+
   function toonAlsVerwijderd(id) {
     if (!window._tekstPerId) window._tekstPerId = {}
     window._tekstPerId[id] = VERWIJDERD_TEKST
@@ -1855,6 +1927,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     if (!tekst) return
     speelPlop('uit')
     input.value = ''
+    pasBerichtvakAan()
     const vriendId = geselecteerdeVriend.id
     chatStatus?.verstuurd(vriendId) // v261
     const antwoordOp = geefAntwoordOp()

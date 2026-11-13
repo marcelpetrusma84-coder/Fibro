@@ -2406,4 +2406,7 @@ window.FIBRO_EN = {
   "lettertype|Sintgedicht": "Sinterklaas poem",
   "lettertype|Strooigoed": "Sweets",
   "lettertype|Pepernoot": "Ginger nut",
+  // ---- Chat: datum boven de berichten van elke dag, 13 nov 2026 ----
+  "Vandaag": "Today",
+  "Gisteren": "Yesterday",
 }

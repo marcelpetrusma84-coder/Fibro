@@ -10,6 +10,8 @@
 #  H. het spel wordt bewaard: na herladen "Verder spelen"
 #  I. verliezen (kan niet afweren) en winnen (medaille op het beginscherm)
 #  J. in het Engels: King Hunt; geen paginafouten
+#  K. v2 (13 nov 2026): epische muziek aan/uit (🎵, bewaard), en bij een aanval licht: gloeiende kaarten, een zwaardhaal,
+#     vonken; ♣ = twee halen; de vijand slaat terug met drie klauwhalen; geluiden via koningsjacht-geluid.js
 # python3 -I proef299.py <map>
 import sys, os, time, socket, subprocess, tempfile, re
 from playwright.sync_api import sync_playwright
@@ -102,6 +104,10 @@ try:
         check(pg.is_visible('.kj-regelkaart') and '♣ klaveren: dubbele schade' in pg.text_content('.kj-regelkaart'), 'A: de spelregels openen')
         pg.click('.kj-regelkaart .kj-knop')
         check(not pg.query_selector('.kj-regels'), 'A: en gaan weer dicht')
+        check(pg.get_attribute('.kj-muziek', 'aria-pressed') == 'false', 'K: de muziek staat eerst uit')
+        pg.click('.kj-muziek')
+        check(pg.get_attribute('.kj-muziek', 'aria-pressed') == 'true' and pg.evaluate("() => localStorage.getItem('fibro_koningsjacht_muziek')") == 'aan'
+              and pg.evaluate("() => import('./koningsjacht-geluid.js?v=1').then(m => m.speeltMuziek())"), 'K: 🎵 = epische muziek aan (en onthouden)')
 
         # ════════ B. een nieuw spel ════════
         pg.click('.kj-niveau[data-niveau=schildknaap]')
@@ -119,11 +125,21 @@ try:
         # ════════ C t/m F: een vaste stand ════════
         ok = verder(pg, { 'kasteel': ['hB', 'kB'], 'hand': ['k6', 'k9', 'hA', 's7', 'h3', 'h2', 'r5', 'sA'] })
         check(ok and pg.evaluate("() => document.querySelector('.kj-kaart').dataset.id") == 'hB', 'C: verder spelen tegen de boer van harten')
+        pg.evaluate("""() => { window.__fx = { haal: 0, vonk: 0, licht: 0, gloeit: 0 }; new MutationObserver(ms => { for (const m of ms) for (const n of m.addedNodes) if (n.classList) {
+            if (n.classList.contains('kj-haal')) window.__fx.haal++; if (n.classList.contains('kj-vonk')) window.__fx.vonk++; if (n.classList.contains('kj-licht')) window.__fx.licht++ }
+            for (const m of ms) if (m.type === 'attributes' && m.target.classList.contains('kj-gloeit')) window.__fx.gloeit++ }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] }) }""")
         kies(pg, 'k6')
         check('12 schade' in pg.evaluate(STATUS), 'C: de uitleg zegt 12 schade (%s)' % pg.evaluate(STATUS))
         knop(pg, 'aanval')
         check(wacht(pg, KLAAR) and pg.evaluate(LEVEN) == '❤ 8 / 20', 'C: ♣ klaveren doet dubbele schade (%s)' % pg.evaluate(LEVEN))
         check(pg.evaluate(KNOP, 'afweer') and 'Weer 10 af' in pg.evaluate(STATUS), 'C: de boer slaat terug met 10')
+        fx = pg.evaluate('window.__fx')
+        check(fx['gloeit'] >= 1 and fx['vonk'] >= 5 and fx['licht'] >= 2, 'K: aanval met licht: gloeiende kaart, vonken en lichtflitsen (%s)' % fx)
+        check(fx['haal'] >= 5, 'K: ♣ twee zwaardhalen plus drie klauwhalen van de vijand (%s)' % fx)
+        check(not pg.query_selector('.kj-fx > *'), 'K: na afloop is al het licht weer weg')
+        check(pg.evaluate(KNOP, 'muziek') and 'kt-nadruk' in pg.get_attribute('.kt-knop[data-naam=muziek]', 'class'), 'K: knop 🎵 op tafel, licht op want de muziek staat aan')
+        knop(pg, 'muziek')
+        check(pg.evaluate("() => localStorage.getItem('fibro_koningsjacht_muziek')") == 'uit' and not pg.evaluate("() => import('./koningsjacht-geluid.js?v=1').then(m => m.speeltMuziek())"), 'K: 🎵 op tafel = muziek uit')
         kies(pg, 'k9')
         knop(pg, 'afweer'); time.sleep(0.3)
         check(pg.evaluate(KNOP, 'afweer') and 'k9' in pg.evaluate(HAND), 'C: 9 is te weinig, de kaart blijft in je hand')

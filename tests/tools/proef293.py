@@ -195,7 +195,10 @@ try:
             klaar = "() => " + RUST + " && document.querySelectorAll('.kt-hand .kt-kaart').length === %d" % n
             check(wacht(een, klaar) and wacht(twee, klaar), 'I %s: allebei %d kaarten na het delen door speler 1' % (spel, n))
             check(not set(een.evaluate(HAND)) & set(twee.evaluate(HAND)), 'I %s: niemand heeft dezelfde kaart' % spel)
-            check(wacht(een, MIJN_BEURT) and not twee.evaluate("() => !!document.querySelector('.kt-tafel.kt-mijnbeurt')"), 'I %s: speler 1 begint, speler 2 wacht' % spel)
+            # Eenentwintigen: met meteen 21 blijft speler 1 vanzelf en is speler 2 meteen aan de beurt (zoals bij F)
+            meteen21 = spel == 'eenentwintigen' and totaal(een.evaluate(HAND)) == 21
+            if meteen21: print('     (I: speler 1 had meteen 21: blijft vanzelf, pakken overgeslagen)')
+            else: check(wacht(een, MIJN_BEURT) and not twee.evaluate("() => !!document.querySelector('.kt-tafel.kt-mijnbeurt')"), 'I %s: speler 1 begint, speler 2 wacht (%s)' % (spel, een.evaluate(HAND)))
             if spel == 'toepen':
                 id = speelbaar(een)[0]; x, y = midden(een, kaart(id)); veeg(een, x, y, 0, -220)
                 check(wacht(twee, "() => [...document.querySelectorAll('.kt-afleg .kt-ak')].some(k => k.dataset.id === '%s') && %s" % (id, RUST), 8000), 'I toepen: de kaart van speler 1 ligt ook bij speler 2 op tafel (%s)' % id)
@@ -204,9 +207,10 @@ try:
                 check(wacht(een, "() => !!document.querySelector('.kt-knop[data-naam=mee]')", 6000), 'I toepen: speler 2 toept, speler 1 krijgt Mee / Eruit')
                 een.click('.kt-knop[data-naam=mee]')
                 check(wacht(twee, "() => /Inzet 2/.test(document.querySelector('.kt-info').textContent)", 6000), 'I toepen: meegaan = inzet 2 bij allebei')
-            else:
+            elif not meteen21:
                 een.click('.kt-stapel')
                 check(wacht(twee, "() => parseInt(document.querySelector('.kt-anderaantal').textContent) === 3", 8000), 'I eenentwintigen: speler 1 pakt, speler 2 ziet 3 kaarten bij de ander')
+            if spel == 'eenentwintigen':
                 if een.query_selector('.kt-knop[data-naam=blijf]'): een.click('.kt-knop[data-naam=blijf]')
                 check(wacht(twee, MIJN_BEURT, 8000) or wacht(twee, "() => !!document.querySelector('.kt-einde')", 2000), 'I eenentwintigen: daarna is speler 2 (of speler 1 was al af)')
             een.close(); twee.close()

@@ -61,7 +61,18 @@ for (const [id, naam] of [['toepen', 'Toepen'], ['eenentwintigen', 'Eenentwintig
 
 // 4. Elke tekst heeft een Engelse vertaling
 const en = lees('taal-en.js')
-for (const f of ['kaartspel-hulp.js', 'pesten-ui.js', 'toepen-ui.js', 'eenentwintigen-ui.js'])
+// 13 nov 2026: Koningsjacht, alleen te spelen (geen spelkanaal), met de perkamentkaarten op een houten tafel
+assert.match(lees('solo.js'), /koningsjacht: \{ naam: 'Koningsjacht'.*bestand: '\.\/koningsjacht-ui\.js\?v=\d+', zonderKanaal: true, store: true \}/)
+assert.match(lees('store.js'), /id: 'koningsjacht', soort: 'game'.*widget: 'spel_koningsjacht'/)
+assert.match(lees('profiel.html'), /id="widgetRij-spel_koningsjacht"/)
+assert.ok(!chat.includes('koningsjacht'), 'Koningsjacht staat (nog) niet in de chat: alleen tegen het kasteel')
+const kj = lees('koningsjacht-ui.js')
+assert.match(kj, /stijl: STIJL, ondergrond: 'hout'/, 'vaste perkamentkaarten en een houten tafelblad')
+assert.match(kj, /Regicide van Badgers From Mars/, 'vermelding van het oorspronkelijke spel')
+assert.match(hulp, /\.kt-tafel\.kt-hout\{[^}]*url\(kaarten\/hout\.webp\?v=\d+\)/, 'houten tafelblad')
+assert.match(hulp, /\(vast \? '' : '<button type="button" class="kt-knop kt-stijlknop"/, 'vaste stijl: geen knop 🎴')
+for (const f of ['pesten-ui.js', 'toepen-ui.js', 'eenentwintigen-ui.js', 'koningsjacht-ui.js']) assert.match(lees(f), /kaartspel-hulp\.js\?v=5'/, f + ': kaartspel-hulp v5')
+for (const f of ['kaartspel-hulp.js', 'pesten-ui.js', 'toepen-ui.js', 'eenentwintigen-ui.js', 'koningsjacht-ui.js'])
   for (const m of lees(f).matchAll(/\bT\('((?:[^'\\]|\\.)*)'/g)) assert.ok(en.includes(JSON.stringify(m[1]) + ':'), f + ': Engels voor ' + m[1])
 assert.match(lees('BLAUWDRUK-KAARTSPEL.md'), /KAARTSPELLEN/)
 console.log('blauwdruk kaartspel: ok')

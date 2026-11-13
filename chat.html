@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=109"></script>
+<script src="taal.js?v=110"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -460,7 +460,7 @@ window.veiligeUrl = function(v){
 
 <script src="beltoon.js?v=11"></script>
 <script type="module">
-  import { koppelSpelIcoonFallback } from './spelicoon.js?v=5'
+  import { koppelSpelIcoonFallback } from './spelicoon.js?v=6'
   koppelSpelIcoonFallback()
 </script>
 <script type="module">
@@ -492,7 +492,7 @@ window.veiligeUrl = function(v){
   import * as Schaak from './schaak.js?v=95'
   import { maakSpelMenu } from './spelmenu.js?v=1' // 11 nov 2026: hamburgermenu rechtsboven in elk spel (pauze, geluid, microfoon, camera, menu, verlaten)
   import { startSpelBerichtInChat } from './spelbericht.js?v=2'
-  import { gameAan, mijnDownloads } from './store.js?v=9' // 11 nov 2026: spellen uit de Store // 11 nov 2026: berichten van andere vrienden linksboven in het spel
+  import { gameAan, mijnDownloads } from './store.js?v=10' // 11 nov 2026: spellen uit de Store // 11 nov 2026: berichten van andere vrienden linksboven in het spel
   import * as Bordgeluid from './bordgeluid.js?v=203'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
@@ -518,7 +518,7 @@ window.veiligeUrl = function(v){
   // wacht het spel er even op.
   let titelModule = null
   const laadTitelscherm = () => titelModule ? Promise.resolve(titelModule)
-    : laadModule('./titelscherm.js?v=10').then(m => (titelModule = m))
+    : laadModule('./titelscherm.js?v=11').then(m => (titelModule = m))
   const laadRustig = f => ('requestIdleCallback' in window ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 2500))
   laadRustig(() => laadTitelscherm().catch(() => {}))
   pasBlokstijlToe()
@@ -2923,9 +2923,9 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=151',
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
-    pesten: './pesten-ui.js?v=4',
-    toepen: './toepen-ui.js?v=3',
-    eenentwintigen: './eenentwintigen-ui.js?v=3',
+    pesten: './pesten-ui.js?v=5',
+    toepen: './toepen-ui.js?v=4',
+    eenentwintigen: './eenentwintigen-ui.js?v=4',
     schaken: './schaken-ui.js?v=275',
     schakendrie: './schaken-drie-ui.js?v=43',
     flappybird: './flappy-ui.js?v=147',
@@ -3698,7 +3698,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Pesten (kaartspel, 11 nov 2026) ───
   async function startPesten() {
-    const m = await laadModule('./pesten-ui.js?v=4')
+    const m = await laadModule('./pesten-ui.js?v=5')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
   // ─── Toepen en Eenentwintigen (kaartspellen uit de Store, 11 nov 2026): hetzelfde als Pesten ───

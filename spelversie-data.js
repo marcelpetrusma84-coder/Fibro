@@ -65,6 +65,9 @@ const histories = {
   eenentwintigen:[
     { version:'1.0.0', updatedAt:'2026-11-11T16:53:30+01:00', summary:'Eenentwintigen: pak kaarten tot zo dicht mogelijk bij 21', summaryEn:'Twenty-One: draw cards to get as close to 21 as you can', firstRecorded:true, sourceCommit:'48c3818ba9826733552905fd17e06ea49c1c5cc5' },
   ],
+  koningsjacht:[
+    { version:'1.0.0', updatedAt:'2026-11-13T18:00:00+01:00', summary:'Koningsjacht: versla de twaalf vijanden uit het kasteel', summaryEn:'King Hunt: defeat the twelve enemies of the castle', firstRecorded:true, sourceCommit:'' },
+  ],
 }
 
 export const SPEL_HISTORIE = Object.freeze(Object.fromEntries(Object.entries(histories).map(([game, entries]) =>

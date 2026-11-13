@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=109"></script>
+<script src="taal.js?v=110"></script>
 <script src="appslot.js?v=3"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Vuurwerk': 'Fireworks', 'Onweer': 'Thunderstorm', 'Glitter': 'Glitter' }) // v234: nieuwe animaties</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Gastenboek zonder lijntjes': 'Guestbook without lines', 'Gewoon in je eigen kleuren, zonder lijntjespapier': 'Plain, in your own colours, without lined paper' }) // v235</script>
@@ -496,6 +496,7 @@ input, textarea { font-size:16px !important; }
       <div class="widget-item" id="widgetRij-spel_pesten" style="display:none"><!-- 11 nov 2026: alleen als je Pesten in de Store gedownload hebt --><div class="widget-info"><div class="widget-icon"><img src="spelicoon/pesten.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Pesten</div><div class="widget-desc" data-t>Uit de Store: tegen de computer op Home, met een vriend in de chat</div></div></div><div class="widget-versie" data-spelversie="pesten"></div><button type="button" class="store-verwijder" onclick="verwijderStoreSpel('pesten')" aria-label="Pesten verwijderen" data-t-attr="aria-label" title="Pesten verwijderen">🗑</button><div class="toggle off" id="widget-spel_pesten" onclick="toggleWidget('spel_pesten')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item" id="widgetRij-spel_toepen" style="display:none"><!-- 11 nov 2026: alleen als je Toepen in de Store gedownload hebt --><div class="widget-info"><div class="widget-icon"><img src="spelicoon/toepen.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Toepen</div><div class="widget-desc" data-t>Uit de Store: tegen de computer op Home, met een vriend in de chat</div></div></div><div class="widget-versie" data-spelversie="toepen"></div><button type="button" class="store-verwijder" onclick="verwijderStoreSpel('toepen')" aria-label="Toepen verwijderen" data-t-attr="aria-label" title="Toepen verwijderen">🗑</button><div class="toggle off" id="widget-spel_toepen" onclick="toggleWidget('spel_toepen')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item" id="widgetRij-spel_eenentwintigen" style="display:none"><!-- 11 nov 2026: alleen als je Eenentwintigen in de Store gedownload hebt --><div class="widget-info"><div class="widget-icon"><img src="spelicoon/eenentwintigen.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Eenentwintigen</div><div class="widget-desc" data-t>Uit de Store: tegen de computer op Home, met een vriend in de chat</div></div></div><div class="widget-versie" data-spelversie="eenentwintigen"></div><button type="button" class="store-verwijder" onclick="verwijderStoreSpel('eenentwintigen')" aria-label="Eenentwintigen verwijderen" data-t-attr="aria-label" title="Eenentwintigen verwijderen">🗑</button><div class="toggle off" id="widget-spel_eenentwintigen" onclick="toggleWidget('spel_eenentwintigen')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item" id="widgetRij-spel_koningsjacht" style="display:none"><!-- 13 nov 2026: alleen als je Koningsjacht in de Store gedownload hebt --><div class="widget-info"><div class="widget-icon"><img src="spelicoon/koningsjacht.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Koningsjacht</div><div class="widget-desc" data-t>Uit de Store: alleen te spelen, op Home</div></div></div><div class="widget-versie" data-spelversie="koningsjacht"></div><button type="button" class="store-verwijder" onclick="verwijderStoreSpel('koningsjacht')" aria-label="Koningsjacht verwijderen" data-t-attr="aria-label" title="Koningsjacht verwijderen">🗑</button><div class="toggle off" id="widget-spel_koningsjacht" onclick="toggleWidget('spel_koningsjacht')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/schaken.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Chess</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="schaken"></div><div class="toggle off" id="widget-spel_schaken" onclick="toggleWidget('spel_schaken')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/dammen.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Draughts</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="dammen"></div><div class="toggle off" id="widget-spel_dammen" onclick="toggleWidget('spel_dammen')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon"><img src="spelicoon/pong.webp?v=2" width="26" height="26" alt="" draggable="false" style="display:block"></div><div><div class="widget-name" data-t>Neo Paddle</div><div class="widget-desc" data-t>Speel tegen de computer</div></div></div><div class="widget-versie" data-spelversie="pong"></div><div class="toggle off" id="widget-spel_pong" onclick="toggleWidget('spel_pong')"><div class="toggle-dot"></div></div></div>
@@ -598,7 +599,7 @@ const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','�
 // v173: de oude emoji-stickers (Natuur & Planten, Sfeer & Magie, Muziek & Kunst, Dieren, 'Actieve stickers') en de
 // widget 'Sticker board' zijn weg: ze werden alleen op dit toestel bewaard en nergens getoond.
 import { LETTERTYPES, STORE_LETTERTYPES, laadFont } from './lettertypes.js?v=133'
-import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES } from './store.js?v=9' // v131: Stekky Store
+import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES } from './store.js?v=10' // v131: Stekky Store
 import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=95'
 import { pasAnimatieToe, startOp as startAnimatieOp } from './animatie.js?v=235'
 window.blokAangepast = function(){
@@ -1293,6 +1294,7 @@ window.slaAllesOp=async function(){
     spel_pesten:       { id:'spel_pesten',       icon:'🃏', titel:'Pesten',        w:2, h:1 },   // 11 nov 2026: uit de Store
     spel_toepen:       { id:'spel_toepen',       icon:'✊', titel:'Toepen',        w:2, h:1 },   // 11 nov 2026: uit de Store
     spel_eenentwintigen: { id:'spel_eenentwintigen', icon:'♠️', titel:'Eenentwintigen', w:2, h:1 },   // 11 nov 2026: uit de Store
+    spel_koningsjacht: { id:'spel_koningsjacht', icon:'👑', titel:'Koningsjacht', w:2, h:1 },   // 13 nov 2026: uit de Store
     spel_flappybird:   { id:'spel_flappybird',   icon:'🦇', titel:'Flapper',       w:2, h:1 },
     spel_schaken:      { id:'spel_schaken',      icon:'♟️', titel:'Chess',         w:2, h:1 },
     spel_dammen:       { id:'spel_dammen',       icon:'⚫', titel:'Draughts',      w:2, h:1 },
@@ -1520,8 +1522,8 @@ startMeldingen()
 <script src="menuschuif.js?v=1"></script>
 
 <script type="module">
-import { vulSpelVersies } from "./spelversies.js?v=25"
-import { koppelSpelIcoonFallback } from './spelicoon.js?v=5'
+import { vulSpelVersies } from "./spelversies.js?v=26"
+import { koppelSpelIcoonFallback } from './spelicoon.js?v=6'
 koppelSpelIcoonFallback()
 vulSpelVersies()
 </script>

@@ -199,6 +199,12 @@ export const DEUNTJES = {
         { klank: 'bas', vol: 0.25, stap: 2, noten: 'C3 . G3 . C3 . G3 . | A2 . E3 . G2 . D3 . | C3 . G3 . C3 . G3 . | E3 . B3 . G2 . D3 . | F2 . C3 . F2 . C3 . | C3 . G3 . D3 . A3 . | G2 . D3 . G2 . B2 . | C3 . G2 . C3 . . .' },
         { slag: true, vol: 0.16, stap: 2, noten: 'k s k s k s k s' }
     ] },
+    // Koningsjacht: een middeleeuwse mars op weg naar het kasteel (13 nov 2026)
+    koningsjacht: { bpm: 104, stemmen: [
+        { klank: 'fluit', vol: 0.24, stap: 2, noten: 'D5 . D5 E5 F5 . A5 . | G5 . F5 E5 D5 . . . | C5 . C5 D5 E5 . G5 . | F5 . E5 D5 C#5 . . . | D5 . F5 A5 D6 . C6 . | A#5 . A5 G5 A5 . . . | G5 F5 E5 D5 C#5 . E5 . | D5 . A4 . D5 . . .' },
+        { klank: 'klavecimbel', vol: 0.12, stap: 2, noten: 'D3 A3 D4 A3 D3 A3 D4 A3 | A#2 F3 A#3 F3 A2 E3 A3 E3 | C3 G3 C4 G3 C3 G3 C4 G3 | A2 E3 A3 E3 A2 E3 C#4 E3 | D3 A3 D4 A3 F3 C4 F4 C4 | G2 D3 G3 D3 A2 E3 A3 E3 | A#2 F3 A#3 F3 A2 E3 A3 E3 | D3 A3 D4 A3 D3 . . .' },
+        { slag: true, vol: 0.18, stap: 2, noten: 'k . . k k . s .' }
+    ] },
     // Schaken: deftig, als een klavecimbel
     schaken: { bpm: 92, stemmen: [
         { klank: 'fluit', vol: 0.24, stap: 2, noten: 'A4 - - B4 C5 - - E5 | D5 - C5 - B4 - - - | G4 - - A4 B4 - - D5 | C5 - B4 - A4 - - - | E5 - - F5 E5 - D5 - | C5 - - D5 C5 - B4 - | A4 - C5 - B4 - G#4 - | A4 - - - - - . .' },

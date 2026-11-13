@@ -170,6 +170,9 @@ jobs:
       - name: "Groepschat: datum boven de berichten van elke dag, enter = nieuwe regel"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef298.py .
+      - name: "Koningsjacht: alleen tegen het kasteel, perkamentkaarten op een houten tafel"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef299.py .
       - name: "Spelmenu ☰ in elk spel (pauze, geluid, microfoon, camera, menu, verlaten) en berichten linksboven"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef291.py .

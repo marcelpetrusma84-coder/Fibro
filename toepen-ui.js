@@ -6,7 +6,7 @@
 // Op tafel liggen de kaarten van de slag die bezig is. Speler 1 schudt en deelt het eerste spel; daarna deelt de zet
 // die een ronde afmaakt meteen de volgende ronde (zie toepen.js).
 import * as P from './toepen.js?v=1'
-import { maakKaartTafel, KLEUR_TEKEN, REACTIES } from './kaartspel-hulp.js?v=4'
+import { maakKaartTafel, KLEUR_TEKEN, REACTIES } from './kaartspel-hulp.js?v=5'
 import { meldGeslagen } from './beurtspel-hulp.js?v=1'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)

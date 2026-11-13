@@ -76,3 +76,15 @@ Elk kaartspel krijgt **vanzelf**:
   - De chat kijkt op **dit toestel** of Pesten aan staat (`gameAan`: download + widget), want je widgets staan op je toestel, niet op de server.
   - Pesten gaat niet mee met een uitnodigingslink (`store: true` in `solo.js`).
   - De Store is sinds 11 november 2026 voor iedereen met een account (`sql/stekky-store-iedereen.sql`).
+
+## Koningsjacht (alleen te spelen)
+
+*13 november 2026.* Gebaseerd op het idee van het kaartspel **Regicide** van Badgers From Mars; de naam, de teksten en de uitwerking zijn van Stekky (in het spel staat een vermelding). Je speelt alleen tegen het kasteel: 12 vijanden (eerst de boeren, dan de vrouwen, dan de heren).
+
+- Aanvallen met een kaart, een aas + een kaart, of 2 tot 4 dezelfde waarden (samen tot 10). Krachten: ♥ kaarten terug onder de taveerne, ♦ kaarten pakken, ♣ dubbele schade, ♠ schild. Een vijand is immuun voor zijn eigen soort.
+- Daarna slaat de vijand terug: kaarten afgooien die samen minstens zijn aanval (min schild) waard zijn. Precies op nul = de vijand komt bovenop de taveerne.
+- Niveaus: Schildknaap (4 narren), Ridder (2), Koning (0). Een nar = je hele hand weg, 8 nieuwe kaarten. Medaille: goud zonder nar, zilver met 1, brons met meer.
+- Regels: `koningsjacht.js`, spel: `koningsjacht-ui.js`. Geen spelkanaal (`zonderKanaal` in `solo.js`), niet in de chat. Het spel wordt op het toestel bewaard (`fibro_koningsjacht_stand`), de beste medaille per niveau ook (`fibro_koningsjacht_best`).
+- De tafel gebruikt drie opties van `kaartspel-hulp.js` v5: `stijl: 'perkament'` (vaste kaarten, geen knop 🎴), `ondergrond: 'hout'` (`kaarten/hout.webp`, gemaakt met `tests/gen/maak_hout.py`) en `stapelTekst`. Bovenin staat geen tegenstander maar de vijand (zijn kaart, leven, aanval, schild).
+- Uit de **Stekky Store** (`STORE_GAMES`, widget `spel_koningsjacht`). Spelicoon: `tests/gen/maak_spelicoon_koningsjacht.py`.
+- Test: `tests/kaart/test-koningsjacht-regels.mjs` en `tests/tools/proef299.py`.

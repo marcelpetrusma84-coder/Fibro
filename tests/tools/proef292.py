@@ -51,7 +51,7 @@ try:
         # D: Marcel verwijdert Pesten (zoals in de Store of bij Widgets): download weg en widget uit
         for pg in (m, b): pg.evaluate("window.sluitSpel && window.sluitSpel(true)")
         DOWNLOADS[MARCEL] = []
-        m.evaluate("""async uid => { const s = await import('./store.js?v=7'); localStorage.setItem('fibro_store_' + uid, '[]'); s.zetGameWidgetUit(uid, 'spel_pesten') }""", MARCEL)
+        m.evaluate("""async uid => { const s = await import('./store.js?v=10'); localStorage.setItem('fibro_store_' + uid, '[]'); s.zetGameWidgetUit(uid, 'spel_pesten') }""", MARCEL)
         m.evaluate("window.toggleSpelMenu()")
         check('D na verwijderen: geen Pesten meer in het spelmenu', wacht(m, "() => !document.getElementById('spelKnop-pesten')", 4000), m.evaluate(KNOPPEN))
         check('geen paginafouten', not fouten, fouten[:3])

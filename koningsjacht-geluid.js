@@ -27,6 +27,19 @@ function ctx() {
   } catch (e) { return null }
   return ac
 }
+// 13 nov 2026 (Marcel: 'het geluid werkt niet'): op een iPhone mag het geluid alleen aangaan tijdens een tik. De
+// geluiden komen pas na een animatie (dus niet tijdens de tik), en dan bleef alles stil. Daarom: bij elke tik het
+// geluid openzetten, en de eerste keer een stil geluidje spelen (oudere iPhones openen het geluid pas echt daarmee).
+// Let op: staat de iPhone op stil (het schuifje aan de zijkant), dan blijft Web Audio stil; dat is bij elk spel zo.
+let stilGespeeld = false
+function ontgrendel() {
+  const a = ctx()
+  if (!a || stilGespeeld) return
+  try { const b = a.createBufferSource(); b.buffer = a.createBuffer(1, 1, 22050); b.connect(a.destination); b.start(0); stilGespeeld = true } catch (e) {}
+}
+if (typeof document !== 'undefined') for (const soort of ['pointerdown', 'touchend', 'click', 'keydown']) document.addEventListener(soort, ontgrendel, { capture: true, passive: true })
+export const geluidStaat = () => (ac ? ac.state : 'geen')   // voor de tests: 'running' = het geluid staat open
+
 // Een nagalm (zaal) zonder bestand: ruis die langzaam uitsterft
 function galmBuffer(sec) {
   const len = Math.floor(ac.sampleRate * sec), b = ac.createBuffer(2, len, ac.sampleRate)

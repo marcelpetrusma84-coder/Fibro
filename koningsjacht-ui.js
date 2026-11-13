@@ -12,7 +12,7 @@
 // fonkels. De vijand slaat terug met drie rode klauwhalen. Verslagen: gouden licht en brokstukken.
 import * as K from './koningsjacht.js?v=1'
 import { maakKaartTafel, kaartSvg, achterkantSvg, KLEUR_TEKEN, zetStijl } from './kaartspel-hulp.js?v=5'
-import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek } from './koningsjacht-geluid.js?v=1'
+import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek } from './koningsjacht-geluid.js?v=2'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
 const wacht = ms => new Promise(k => setTimeout(k, ms))

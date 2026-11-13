@@ -96,6 +96,7 @@ try:
 
         # ════════ A. beginscherm ════════
         pg = nieuwe_pagina(ctx)
+        pg.evaluate("localStorage.setItem('fibro_koningsjacht_instellingen', JSON.stringify({ bierRonde: 999 }))")
         open_spel(pg)
         check(pg.evaluate("() => [...document.querySelectorAll('.kj-niveau')].map(b => b.dataset.niveau).join()") == 'schildknaap,ridder,koning', 'A: drie niveaus')
         check('Regicide' in pg.text_content('.kj-bron') and 'Badgers From Mars' in pg.text_content('.kj-bron'), 'A: vermelding van Regicide (Badgers From Mars)')
@@ -113,6 +114,8 @@ try:
         check(pg.get_attribute('.kj-scene-bier-ik', 'aria-valuenow') == '23' and '23%' not in pg.text_content('.kj-scene-bier-ik'), 'M: schuif verandert de pul zonder zichtbaar percentage')
         pg.click('.kj-bier-vol')
         check(pg.input_value('#kj-bier-inhoud') == '100' and pg.get_attribute('.kj-scene-bier-ik', 'aria-valuenow') == '100', 'M: nieuwe pul is weer vol')
+        check(pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#2', 'M: oude voorkeurenteller 999 wordt genegeerd: eerste bijvulling is pul #2')
+        check(pg.evaluate("() => !Object.hasOwn(JSON.parse(localStorage.getItem('fibro_koningsjacht_instellingen')), 'bierRonde')"), 'M: pulnummer staat niet meer in de algemene voorkeuren')
         pg.check('[data-scene=middeleeuws]'); pg.uncheck('[data-instelling=flikkeren]')
         pg.click('.kj-instellingen-sluit')
         pg.eval_on_selector('.kj-scene-bier-ik', """e => { const r = e.querySelector('img').getBoundingClientRect();
@@ -120,9 +123,8 @@ try:
           e.dispatchEvent(new PointerEvent('pointerdown', p)); window.dispatchEvent(new PointerEvent('pointerup', p)); }""")
         check(pg.get_attribute('.kj-scene-bier-ik', 'aria-valuenow') == '25', 'M: tik op eigen pul verandert de inhoud')
         pg.eval_on_selector('.kj-scene-bier-ik', "e => e.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }))")
-        ronde_voor = pg.evaluate("() => JSON.parse(localStorage.getItem('fibro_koningsjacht_instellingen')).bierRonde")
         pg.dblclick('.kj-scene-bier-ik')
-        check(pg.get_attribute('.kj-scene-bier-ik', 'aria-valuenow') == '100' and pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#' + str(ronde_voor + 2), 'M: dubbelklik schenkt een nieuwe volle pul met oplopend nummer')
+        check(pg.get_attribute('.kj-scene-bier-ik', 'aria-valuenow') == '100' and pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#3', 'M: dubbelklik schenkt een nieuwe volle pul met oplopend nummer')
         check(wacht(pg, "() => document.querySelector('.kj-scene-bier-ik .kj-scene-bier-nummer').hidden", 4000), 'M: pulnummer verdwijnt na twee seconden')
         pg.reload(); pg.wait_for_selector('.kj-start-instellingen')
         pg.click('.kj-start-instellingen')
@@ -166,6 +168,30 @@ try:
         check('11' in pg.text_content('.kj-kasteel span'), 'B: nog 11 in het kasteel')
         check(pg.evaluate("() => getComputedStyle(document.querySelector('.kj-kaart .kt-pk-hoek')).position") == 'absolute', 'B: de vijand heeft ook het scherpe hoekje')
         check(pg.evaluate("() => !!JSON.parse(localStorage.getItem('fibro_koningsjacht_stand'))"), 'B: het spel staat bewaard')
+        # De menuteller erft niet mee naar een nieuwe partij; hervatten houdt de partij-teller wel.
+        pg.click('.kt-knop[data-naam=instellingen]'); pg.check('[data-instelling=bierpul]'); pg.click('.kj-instellingen-sluit')
+        pg.dblclick('.kj-scene-bier-ik')
+        check(pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#2', 'O: een nieuwe solopartij begint weer bij de eerste pul')
+        pg.dblclick('.kj-scene-bier-ik')
+        check(pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#3', 'O: de tweede bijvulling is pul #3')
+        pg.reload(); pg.wait_for_selector('.kj-verder'); pg.click('.kj-verder')
+        check(wacht(pg, KLAAR), 'O: dezelfde solopartij kan worden hervat')
+        pg.dblclick('.kj-scene-bier-ik')
+        check(pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#4', 'O: hervatten behoudt de vorige partij-teller')
+        for _ in range(6): pg.dblclick('.kj-scene-bier-ik')
+        check(pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#10' and pg.locator('.kj-kaars[data-slijtage="9"]').count() == 2, 'P: bij pul #10 zijn beide kaarsen bijna op')
+        check(pg.evaluate("""() => [...document.querySelectorAll('.kj-slijtage-druppels svg')].every(e => {
+          const r = e.getBoundingClientRect(), k = e.closest('.kj-kaars').getBoundingClientRect()
+          return getComputedStyle(e).display !== 'none' && r.width >= k.width * .95 && r.height >= k.height * .95
+        })"""), 'P: het druipende kaarsvet is zichtbaar en heeft de maat van de kandelaar')
+        pg.dblclick('.kj-scene-bier-ik')
+        check(pg.locator('.kj-kaars[data-slijtage="9"]').count() == 2, 'P: na pul #10 blijven beide kaarsen branden op dezelfde korte stand')
+        pg.click('.kt-knop[data-naam=instellingen]'); pg.check('[data-scene=modern]')
+        check(pg.get_attribute('.kj-links .kj-kandelaar', 'src').endswith('candle-modern-left-empty.png') and pg.get_attribute('.kj-rechts .kj-kandelaar', 'src').endswith('candle-modern-right-empty.png'), 'P: ook de moderne houders tonen de verbruikte kaarsen')
+        pg.uncheck('[data-instelling=bierpul]')
+        check(pg.locator('.kj-kaars[data-slijtage="0"]').count() == 2 and pg.get_attribute('.kj-links .kj-kandelaar', 'src').endswith('candle-modern-left.png') and pg.get_attribute('.kj-rechts .kj-kandelaar', 'src').endswith('candle-modern-right.png'), 'P: zonder bierpul zijn beide oorspronkelijke kaarsen terug')
+        check(pg.evaluate("() => [...document.querySelectorAll('.kj-slijtage-druppels,.kj-slijtage-plas,.kj-slijtage-licht')].every(e => e.hidden)"), 'P: zonder bierpul zijn wasdruppels, wasplassen en extra reflecties weg')
+        pg.check('[data-scene=standaard]'); pg.click('.kj-instellingen-sluit')
 
         # ════════ C t/m F: een vaste stand ════════
         ok = verder(pg, { 'kasteel': ['hB', 'kB'], 'hand': ['k6', 'k9', 'hA', 's7', 'h3', 'h2', 'r5', 'sA'] })

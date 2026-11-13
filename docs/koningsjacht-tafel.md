@@ -9,6 +9,8 @@ Het tandwiel op het beginscherm en op de speeltafel opent de instellingen. Deze 
 - De moderne scene heeft een doorzichtige glazen pul met een daadwerkelijk veranderende bierlaag achter het glas en schuim bij een volle pul. Glas en vloeistof draaien samen als de oorstand wisselt.
 - De middeleeuwse scene kiest een eigen 6/8-arrangement met luit, fluit, tamboer en tamboerijn. Dit is lokaal gesynthetiseerde muziek. De bestaande muziekknop bepaalt of muziek klinkt; een scenewissel zet uitgeschakelde muziek niet alsnog aan.
 - **Nieuwe volle pul** en rechtstreeks dubbelklikken (pc) of dubbeltikken (mobiel) vullen naar 100%, wisselen de oorstand en animeren de vervanging. Je begint bij pul #1. Elke nieuwe pul verhoogt de teller; het nieuwe nummer verschijnt twee seconden, ook bij de medespeler. De verse glazen pul heeft een dikkere schuimkraag van ongeveer twee vingers. Dit werkt in alle drie tafelstijlen.
+- De pultelling hoort bij de partij. Elke nieuwe partij begint bij #1, met verse kaarsen. Hervatten bewaart de eigen telling; een multiplayerpartij gebruikt het spel-id en de spelerrol. De teller staat niet in de algemene instellingen en oude bierberichten van een vorige partij worden genegeerd.
+- Alleen met de bierpul ingeschakeld branden de kaarsen per bijvulling verder op. Bij pul #10 blijven ze bijna opgebrand en brandend; verdere bijvullingen verkorten ze niet. De houders behouden hun vorm, wasdruppels en plassen worden zichtbaar en Modern projecteert een lichtpatroon op tafel. Bierpul uit herstelt de oorspronkelijke kaarsen.
 
 De beelden zijn speciaal gegenereerde lokale spelassets. De achtergrond is een foto met parallax en de kandelaars/pullen zijn transparante sprites; dit is geen volledig 3D-model met vrij draaibare camera. De moderne kaarten worden als zelfstandige SVGs getekend. Deze stijl overschrijft geen globale kaartvoorkeur bij andere spellen; de gedeelde kaarthelper houdt de bestaande stijlen beschikbaar.
 
@@ -29,6 +31,6 @@ De fixture is duidelijk als test gemarkeerd en gebruikt alleen een lokale Broadc
 
 ## Controles
 
-`node tests/kaart/test-koningsjacht-scene.mjs` test beweging, reduced motion, toestemming, touchbediening, toetsenbord, schuim en opruimen. `node tests/kaart/test-koningsjacht-bier.mjs` test late join, verloren/oude/ongeldige berichten, opnieuw vullen en opruimen. `node tests/kaart/test-koningsjacht-muziekthema.mjs` test de instrumenten, de muziekvoorkeur, pauzeren en het opruimen bij themawissels. Alle drie worden door `node tests/alle-tests.mjs` meegenomen.
+`node tests/kaart/test-koningsjacht-scene.mjs` test beweging, reduced motion, toestemming, touchbediening, toetsenbord, schuim en opruimen. `node tests/kaart/test-koningsjacht-bier.mjs` test late join, verloren/oude/ongeldige berichten, partijtelling, opnieuw vullen en opruimen. `node tests/kaart/test-koningsjacht-kaarsen.mjs` test slijtage, begrenzing op pul #10, stijlwissels en herstel zonder bierpul. `node tests/kaart/test-koningsjacht-muziekthema.mjs` test de instrumenten, de muziekvoorkeur, pauzeren en het opruimen bij themawissels. Deze worden door `node tests/alle-tests.mjs` meegenomen.
 
 De bestaande CI-browsertests `tests/tools/proef299.py` en `proef301.py` zijn uitgebreid voor de instellingen, bewaren, Engelse teksten en de gedeelde bierstand. Hiervoor is geen productie-databasewijziging nodig.

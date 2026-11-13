@@ -1,5 +1,18 @@
 import assert from 'node:assert/strict'
-import { verbindBierpul } from '../../koningsjacht-bier.js'
+import { verbindBierpul, herstelBierPartij } from '../../koningsjacht-bier.js'
+
+// Een pulnummer hoort bij de partij; nooit bij algemene toestelvoorkeuren.
+const volleEerste = partij => ({ partij, ronde: 0, inhoud: 100, oorRechts: true })
+const bewaard = { partij: 'solo-bestaand', ronde: 3, inhoud: 28, oorRechts: false }
+assert.deepEqual(herstelBierPartij(bewaard, 'solo-bestaand'), bewaard, 'hervatten bewaart het pulnummer en de inhoud')
+assert.deepEqual(herstelBierPartij({ ...bewaard, ronde: 999 }, 'solo-bestaand', true), volleEerste('solo-bestaand'), 'een nieuwe partij begint met de eerste volle pul')
+assert.deepEqual(herstelBierPartij(bewaard, 'solo-anders'), volleEerste('solo-anders'), 'een andere partij erft geen oude pul')
+assert.deepEqual(herstelBierPartij({ bierRonde: 999 }, 'solo-nieuw'), volleEerste('solo-nieuw'), 'een oude algemene voorkeurenteller wordt niet gebruikt')
+assert.deepEqual(herstelBierPartij(null, 1001), volleEerste(1001))
+for (const onjuist of [
+  { ...bewaard, ronde: -1 }, { ...bewaard, ronde: '3' }, { ...bewaard, ronde: Number.MAX_SAFE_INTEGER + 1 },
+  { ...bewaard, inhoud: 101 }, { ...bewaard, inhoud: NaN }, { ...bewaard, oorRechts: 'false' }
+]) assert.deepEqual(herstelBierPartij(onjuist, 'solo-bestaand'), volleEerste('solo-bestaand'), 'onjuiste partijopslag wordt genegeerd')
 
 const listeners = new Map(), heartbeat = new Set(), berichten = []
 const timers = { setInterval(fn) { heartbeat.add(fn); return fn }, clearInterval(fn) { heartbeat.delete(fn) } }
@@ -41,4 +54,31 @@ assert.equal(heartbeat.size, 1, 'verlaten spel stopt het herstelinterval')
 a.stop(); b.stop()
 assert.equal(heartbeat.size, 0)
 assert.equal(verbindBierpul(null, {}).update(), undefined, 'solo heeft geen netwerk nodig')
+
+// Dezelfde verbinding mag een nieuwe partij openen, ook wanneer de pulstand
+// toevallig hetzelfde is. Een oud partijbericht mag het versienummer niet vergiftigen.
+let partij1 = 11, partij2 = 11, nieuweStand, ontvangen = 0
+const eigenStand = { zichtbaar: true, inhoud: 100, oorRechts: true, ronde: 0 }
+const anderStand = { zichtbaar: false, inhoud: 100, oorRechts: true, ronde: 0 }
+const c = verbindBierpul(kanaal(1), { speler: 1, partij: () => partij1, lees: () => eigenStand, toon() {}, timers, klok: () => 5000 })
+const d = verbindBierpul(kanaal(2), { speler: 2, partij: () => partij2, lees: () => anderStand, toon: s => { nieuweStand = s; ontvangen++ }, timers, klok: () => 5000 })
+const laatsteEigen = () => berichten.filter(m => m.event === 'kj-bier-stand' && m.payload.speler === 1).at(-1).payload
+const eerste = laatsteEigen()
+assert.equal(eerste.partij, 11)
+const eerstOntvangen = ontvangen
+partij1 = partij2 = 22; c.update()
+const tweede = laatsteEigen()
+assert.equal(tweede.partij, 22)
+assert.ok(tweede.versie > eerste.versie, 'een andere partij verhoogt de versie, ook bij dezelfde klok en pulstand')
+assert.equal(ontvangen, eerstOntvangen + 1)
+assert.deepEqual(nieuweStand, eigenStand)
+listeners.get(2).get('kj-bier-stand')({ payload: { ...eerste, ronde: 999, versie: 999999 } })
+assert.equal(nieuweStand.ronde, 0, 'een oud bericht uit de vorige partij wordt genegeerd')
+eigenStand.ronde = 3; eigenStand.inhoud = 20; c.update()
+assert.equal(nieuweStand.ronde, 3, 'een geldig nieuw bericht blijft na een ongeldig hoog versienummer aankomen')
+partij1 = partij2 = 33; eigenStand.ronde = 0; eigenStand.inhoud = 100; c.update()
+assert.equal(nieuweStand.ronde, 0, 'een volgende partij kan weer ronde 0 publiceren')
+assert.equal(nieuweStand.inhoud, 100)
+c.stop(); d.stop()
+assert.equal(heartbeat.size, 0)
 console.log('Koningsjacht bierpul: eigen status, late join, volgorde, validatie, herstel en opruimen goed')

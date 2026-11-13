@@ -1,6 +1,7 @@
 # knip7.py <bron.jpg> <uitmap> [controle.png] : stickervel 7 (Sinterklaas, voor de Stekky Store) uit het plaatje van
 # Marcel (13 nov 2026, 1024 x 559, 15 stickers met een witte rand op beige perkament; met roetveegpieten).
-# Marcel koos er 12 (weg: 'Cadeautjes!' met tekst, 'Piet in schoorsteen!' met tekst en 'De roe!').
+# Marcel koos er 12 (weg: 'Cadeautjes!' met tekst, 'Piet in schoorsteen!' met tekst en 'De roe!'), en alleen bij Sint & Piet,
+# Ozosnel en Pakjesboot 12 blijft de tekst staan (TEKST_WEG).
 # <uitmap>/01.webp .. 12.webp = stickers/f7/. controle.png: alle 12 op een ruitjespatroon en op een donkere chat.
 # Werkwijze zoals knip6.py: de witte rand van elke sticker zoeken, alles daarbinnen is de sticker; 380 px in een vak
 # van 384 x 384, ~60% gevuld, strakke zachte rand, WebP 80. De bron is groot genoeg (stickers ~170 px): geen ESRGAN nodig,
@@ -30,6 +31,17 @@ ALLE = ['sinterklaas', 'piet', 'schoentje', 'chocoladeletter', 'cadeautjes-tekst
         'pakjesboot', 'cadeautjes', 'zak', 'ozosnel', 'piet-schoorsteen-tekst',
         'strooigoed', 'piet-dak', 'sint-en-piet', 'roe', 'mijter-staf']
 WEG = {'cadeautjes-tekst', 'piet-schoorsteen-tekst', 'roe'}
+# 13 nov 2026: Marcel wil alleen de tekst bij Sint & Piet, Ozosnel en Pakjesboot 12 houden. Bij deze stickers gaat de
+# tekstband eraf: alles onder een boog door 3 punten (x, y op het bronplaatje, net boven de witte tekstband) verdwijnt,
+# en er komt een nieuwe witte rand (RAND px) om wat overblijft.
+TEKST_WEG = {
+    'piet':            [(290, 212), (340, 212), (400, 212)],
+    'schoentje':       [(440, 158), (520, 168), (600, 156)],
+    'chocoladeletter': [(645, 158), (715, 166), (785, 147)],
+    'zak':             [(448, 333), (520, 338), (600, 327)],
+    'mijter-staf':     [(838, 506), (900, 509), (970, 497)],
+}
+RAND = 5
 assert len(groot) == 15, 'verwacht 15 stickers, gevonden: %d %s' % (len(groot), [(s[0].start, s[1].start) for _, s in groot])
 
 vel = Image.new('RGBA', (6 * 200, 2 * 200), (0, 0, 0, 0)) if CONTROLE else None
@@ -46,6 +58,21 @@ for (k, (sy, sx)), naam in zip(groot, ALLE):
         voor = nd.binary_fill_holes(dicht)
         if voor.sum() > 0.45 * voor.size: break
     if stap: print('   %s: witte rand had een gaatje, dichtgemaakt in %d stap(pen)' % (nr, stap))
+    if naam in TEKST_WEG:
+        (ax, ay), (bx, by), (cx, cy) = TEKST_WEG[naam]
+        a, b_, c = np.polyfit([ax, bx, cx], [ay, by, cy], 2)
+        xs_ = np.arange(x0, x1); grens = a * xs_ ** 2 + b_ * xs_ + c - y0           # de boog, per kolom (in het vak)
+        onder = np.arange(y1 - y0)[:, None] > grens[None, :]
+        blijft = voor & ~onder
+        kern = blijft & ((vak.min(2) < 222) | (vak.max(2) - vak.min(2) > 30))      # wat geen witte rand is
+        kern = nd.binary_opening(kern, iterations=1)                                # losse randpixeltjes weg
+        lab2, n2 = nd.label(kern); maten = nd.sum(kern, lab2, range(1, n2 + 1))
+        kern = np.isin(lab2, [i + 1 for i, m_ in enumerate(maten) if m_ >= 25])     # kruimels van de tekst niet meenemen
+        yy, xx = np.ogrid[-RAND:RAND + 1, -RAND:RAND + 1]
+        nieuw = nd.binary_fill_holes(nd.binary_dilation(kern, structure=(xx * xx + yy * yy) <= RAND * RAND)) & voor
+        vak[nieuw & ~blijft] = 255                                                  # nieuwe rand onderaan: wit
+        voor = nieuw
+        print('   %s: tekst weg' % nr)
     vak[~voor] = 255
     groot_rgb = Image.fromarray(vak.astype(np.uint8))
     f = 3   # eerst ruim vergroten (Lanczos), dan een gladde rand maken, daarna terug naar 380 px

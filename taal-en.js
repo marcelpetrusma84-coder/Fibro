@@ -2481,4 +2481,11 @@ window.FIBRO_EN = {
   "Een nar gooit je hele hand weg en geeft je 8 nieuwe kaarten. Schildknaap: 4 narren, Ridder: 2, Koning: geen. Winnen zonder nar = goud, met 1 nar = zilver, meer = brons.": "A jester discards your whole hand and gives you 8 new cards. Squire: 4 jesters, Knight: 2, King: none. Win without a jester = gold, with 1 = silver, more = bronze.",
   "Passen mag, maar niet twee beurten achter elkaar.": "You may pass, but not two turns in a row.",
   "Taveerne: {n}": "Tavern: {n}",
+  // ---- Stickervellen uit de Store aanzetten bij Stijl > Stickers (stickervakken.js), 13 nov 2026 ----
+  "{naam} in de chat": "{naam} in the chat",
+  "Alle {n} vakjes in de chat zijn vol. Zet eerst een ander stickervel uit.": "All {n} slots in the chat are full. Turn off another sticker sheet first.",
+  "In de chat: Winkelvak {n}": "In the chat: Shop slot {n}",
+  "Staat uit: zet het aan, dan staat het in de chat bij Stickers → Winkel": "Off: turn it on to put it in the chat under Stickers → Shop",
+  "Gedownload! Zet ze aan bij Stijl → Stickers, dan staan ze in de chat.": "Downloaded! Turn them on in Style → Stickers to use them in the chat.",
+  "Hier komen de stickervellen uit de Stekky Store. Na downloaden zet je ze aan bij Stijl, bij Stickers.": "Sticker sheets from the {app} Store appear here. After downloading, turn them on in Style, under Stickers.",
 }

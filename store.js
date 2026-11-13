@@ -8,6 +8,7 @@
 // (v2, 11 nov 2026): een nieuw pakket staat in STORE_PAKKETTEN (lettertypes.js), de bestanden in lettertypen/.
 import { STORE_PAKKETTEN } from './lettertypes.js?v=133'
 import { STORE_VELLEN } from './stickervellen.js?v=237'
+import { legStoreVakkenVast, zetStoreVelActief } from './stickervakken.js?v=1'   // 13 nov 2026: stickers aanzetten bij Stijl
 
 export const STORE_SOORTEN = [
   // 11 nov 2026: volgorde van de paarse balk in store.html; achtergronden erbij
@@ -36,7 +37,8 @@ export const STORE_GAMES = [
     uitleg: 'Versla in je eentje de twaalf boeren, vrouwen en heren uit het kasteel. Elke soort kaart heeft een eigen kracht. Gebaseerd op Regicide.' },
 ]
 // Stickers (13 nov 2026): een vel van 12 bewegende stickers met geluid (STORE_VELLEN in stickervellen.js). Na downloaden
-// staat het in de stickerkeuze van de chat bij 'Winkel'. Verwijderen: dan is het daar weg (wat je al stuurde, blijft).
+// staat het bij Stijl > Stickers; zet je het daar aan, dan staat het in de stickerkeuze van de chat bij 'Winkel'.
+// Verwijderen (in de Store of bij Stijl): dan is het daar weg (wat je al stuurde, blijft).
 export const STORE_STICKERS = STORE_VELLEN.map(v => ({ id: v.store, soort: 'sticker', titel: v.titel, vel: v.id,
   uitleg: 'Twaalf stickers die bewegen en geluid maken: de Sint, Piet, de pakjesboot, Ozosnel, chocoladeletters en meer.' }))
 export const STORE_ITEMS = [...STORE_PAKKETTEN.map(p => Object.assign({ soort: 'lettertype' }, p)), ...STORE_GAMES, ...STORE_STICKERS]
@@ -75,6 +77,8 @@ export async function mijnDownloads(supabase, uid) {
 
 export async function downloadItem(supabase, uid, id) {
   if (!GELDIG.test(String(id))) return { error: { message: 'ongeldig item' } }
+  // 13 nov 2026: een nieuw stickervel staat eerst uit; je zet het aan bij Stijl > Stickers (stickervakken.js)
+  if (STORE_STICKERS.some(s => s.id === id) && !bewaardeDownloads(uid).has(id)) legStoreVakkenVast(uid)
   const { error } = await supabase.from('store_downloads').insert({ user_id: uid, item_id: id })
   if (error && String(error.code) !== '23505') return { error } // 23505 = had je al: ook goed
   const ids = bewaardeDownloads(uid); ids.add(id); bewaar(uid, ids)
@@ -121,6 +125,7 @@ export async function verwijderDownload(supabase, uid, id) {
   if (r.error) return r
   const game = STORE_GAMES.find(g => g.id === id)
   if (game) zetGameWidgetUit(uid, game.widget)
+  if (STORE_STICKERS.some(s => s.id === id)) zetStoreVelActief(uid, id, false)   // 13 nov 2026: ook uit het vakje in de chat
   return r
 }
 // Wat er bij een gedownload id hoort (voor de lijstjes met Verwijderen)

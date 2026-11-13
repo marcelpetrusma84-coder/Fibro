@@ -4,6 +4,8 @@
 #  B. Downloaden = een rij 'stickers-sinterklaas' in store_downloads en de melding waar je ze vindt
 #  C. Stickerkeuze (chat): zonder download is Winkelvak 1 leeg (met uitleg); met download staat Sinterklaas erin,
 #     met 12 stickers; tik = de sticker gaat mee als f7-xx
+#  C2 (13 nov 2026, Marcel): na downloaden staat het vel eerst UIT; bij Stijl > Stickers zet je het aan (dan staat
+#     het in Winkelvak 1), uit (dan is het weg) of verwijder je het
 #  D. Verwijderen in de Store: weg uit je account en uit de stickerkeuze; een ontvangen f7-sticker blijft te zien
 #  E. geen paginafouten
 # python3 -I proef295.py <map>
@@ -43,7 +45,7 @@ def wacht(pg, js, ms=15000):
     except Exception: return False
 # De stickerkeuze los op een lege pagina (zoals in de chat): kiezen = window.gekozen
 KEUZE = """async uid => { document.body.innerHTML = '<div id="k" style="width:390px"></div>'
-  const m = await import('./stickerkeuze.js?v=237'); window.gekozen = []
+  const m = await import('./stickerkeuze.js?v=238'); window.gekozen = []
   window.keuze = m.maakStickerkeuze(document.getElementById('k'), { uid: () => uid, onKies: st => window.gekozen.push(st.vel + '-' + st.nr) }) }"""
 try:
     with sync_playwright() as p:
@@ -78,7 +80,20 @@ try:
         pg.click(kaart + ' .knop')
         check(wacht(pg, "() => document.querySelector('.item[data-id=\"stickers-sinterklaas\"] .knop').textContent.includes('Gedownload')"), 'B: gedownload')
         check(RIJEN == {'stickers-sinterklaas'}, 'B: een rij in store_downloads (%s)' % RIJEN)
-        check('Stickers → Winkel' in pg.inner_text('#melding'), 'B: de melding zegt waar je ze vindt')
+        check('Stijl → Stickers' in pg.inner_text('#melding'), 'B: de melding zegt waar je ze aanzet (%s)' % pg.inner_text('#melding'))
+
+        # ── C2: eerst uit; aanzetten bij Stijl > Stickers ──
+        pg.goto(BASIS + 'manifest.json'); pg.evaluate(KEUZE, UID)
+        check(pg.locator('.sk-vak[data-vak=w1] img').count() == 0, 'C2: na downloaden staat het nog niet in de chat')
+        def stijl():
+            pg.goto(BASIS + 'profiel.html'); pg.wait_for_selector('#tab-stickers', timeout=15000)
+            pg.click('#tab-stickers')
+            return wacht(pg, "() => { const s = document.getElementById('storeStickersSectie'); return s && s.style.display !== 'none' && s.querySelector('.store-vel[data-id=\"stickers-sinterklaas\"]') }")
+        check(stijl(), 'C2: Sinterklaas staat bij Stijl > Stickers, Uit de Store')
+        vel = '.store-vel[data-id="stickers-sinterklaas"]'
+        check(pg.locator(vel + ' .store-vel-plaatjes img').count() == 5 and pg.get_attribute(vel + ' .toggle', 'aria-checked') == 'false', 'C2: met voorbeeldjes, en de schakelaar staat uit')
+        pg.click(vel + ' .toggle')
+        check(pg.get_attribute(vel + ' .toggle', 'aria-checked') == 'true' and 'Winkelvak 1' in pg.inner_text(vel), 'C2: aangezet: in de chat, Winkelvak 1')
 
         # ── C (met download) ──
         pg.goto(BASIS + 'manifest.json'); pg.evaluate(KEUZE, UID)
@@ -91,6 +106,13 @@ try:
         st = pg.evaluate("async () => { const v = await import('./stickervellen.js?v=237'); const s = v.zoekSticker('f7-08'); return [s.naam[0], s.g] }")
         check(st == ['Ozosnel!', 'hoefslag'], 'C: f7-08 is Ozosnel met hoefgetrappel (%s)' % st)
 
+        # ── C2: uitzetten bij Stijl = weg uit de chat; weer aan voor D ──
+        check(stijl(), 'C2: terug naar Stijl > Stickers')
+        pg.click(vel + ' .toggle')
+        pg.goto(BASIS + 'manifest.json'); pg.evaluate(KEUZE, UID)
+        check(pg.locator('.sk-vak[data-vak=w1] img').count() == 0, 'C2: uitgezet: weg uit de chat')
+        stijl(); pg.click(vel + ' .toggle')
+
         # ── D ──
         pg.goto(BASIS + 'store.html'); pg.wait_for_selector('#inhoud', state='visible', timeout=15000)
         pg.click('#soorten .main-tab[data-soort=sticker]')
@@ -101,6 +123,13 @@ try:
         check(pg.locator('.sk-vak[data-vak=w1] img').count() == 0, 'D: en weg uit de stickerkeuze')
         ok = pg.evaluate("async () => { const v = await import('./stickervellen.js?v=237'); return v.zoekSticker('f7-01')?.src }")
         check(ok == 'stickers/f7/01.webp', 'D: een ontvangen f7-sticker blijft te zien (%s)' % ok)
+        # ── C2: opnieuw downloaden (staat dan uit) en verwijderen bij Stijl > Stickers ──
+        pg.goto(BASIS + 'store.html'); pg.wait_for_selector('#inhoud', state='visible', timeout=15000)
+        pg.click('#soorten .main-tab[data-soort=sticker]'); pg.click(kaart + ' .knop')
+        wacht(pg, "() => document.querySelector('.item[data-id=\"stickers-sinterklaas\"] .knop').textContent.includes('Gedownload')")
+        check(stijl() and pg.get_attribute(vel + ' .toggle', 'aria-checked') == 'false', 'C2: opnieuw gedownload: staat weer uit')
+        pg.click(vel + ' .store-verwijder')
+        check(wacht(pg, "() => document.getElementById('storeStickersSectie').style.display === 'none'") and not RIJEN, 'C2: verwijderd bij Stijl > Stickers: weg uit de lijst en uit je account')
         check(not fouten, 'E: geen paginafouten ' + ' | '.join(fouten))
         b.close()
 finally:

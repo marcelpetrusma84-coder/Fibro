@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=110"></script>
+<script src="taal.js?v=111"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1363,7 +1363,7 @@ button { font-family:inherit; }
     const r = $('stickerRaster')
     if (!stickerKeuze) {
       try {
-        const [{ maakStickerkeuze }, fx] = await Promise.all([import('./stickerkeuze.js?v=237'), import('./stickerfx.js?v=236')])
+        const [{ maakStickerkeuze }, fx] = await Promise.all([import('./stickerkeuze.js?v=238'), import('./stickerfx.js?v=236')])
         stickerKeuze = maakStickerkeuze(r, { uid: () => ik, onKies: async st => {
           if (!st) return
           fx.speelGeluid(st.g)

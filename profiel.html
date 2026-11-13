@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=111"></script>
+<script src="taal.js?v=112"></script>
 <script src="appslot.js?v=3"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Vuurwerk': 'Fireworks', 'Onweer': 'Thunderstorm', 'Glitter': 'Glitter' }) // v234: nieuwe animaties</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Gastenboek zonder lijntjes': 'Guestbook without lines', 'Gewoon in je eigen kleuren, zonder lijntjespapier': 'Plain, in your own colours, without lined paper' }) // v235</script>
@@ -54,13 +54,11 @@ body{background:var(--bg);background-attachment:fixed;background-size:cover;back
 .store-lijst{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .store-rij{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--card);border:0.5px solid var(--border)}
 .store-rij .store-naam{flex:1;font-weight:600}
-.store-vel{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:12px;background:var(--card);border:0.5px solid var(--border)}
-.store-vel-kop{display:flex;align-items:center;gap:10px}
-.store-vel-kop .store-naam{flex:1;font-weight:700}
-.store-vel-plaatjes{display:flex;gap:6px}
-.store-vel-plaatjes img{width:48px;height:48px;object-fit:contain}
-.store-vel-onder{display:flex;align-items:center;gap:10px}
-.store-vel-uitleg{flex:1;font-size:12px;color:var(--muted)}
+.store-vel-label{display:flex;align-items:center;gap:8px}
+.store-vel-label small{font-size:10px;letter-spacing:1px;padding:2px 8px;border-radius:999px;background:rgba(192,132,252,.18);color:var(--accent)}
+.store-vel-onder{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--card);border:0.5px solid var(--border)}
+.store-vel-chat{display:flex;align-items:center;gap:8px;font-weight:600}
+.store-vel-uitleg{flex:1;min-width:140px;font-size:12px;color:var(--muted)}
 .store-vel .store-verwijder{margin:0;padding:0 12px;font-size:13px;font-weight:600}
 .store-rij .store-verwijder{margin:0;padding:0 12px;font-size:13px;font-weight:600}
 .panel{display:none;padding:14px;}
@@ -519,12 +517,10 @@ input, textarea { font-size:16px !important; }
   </div>
 </div>
 <div class="panel" id="panel-stickers" role="tabpanel" aria-labelledby="tab-stickers" aria-hidden="true">
-  <!-- 13 nov 2026 (Marcel): stickervellen uit de Store: aanzetten = in een Winkelvakje van de chat, of verwijderen -->
-  <div class="section" id="storeStickersSectie" style="display:none">
-    <div class="section-label" data-t>Uit de Store</div>
-    <div class="store-lijst" id="storeStickersLijst"></div>
-  </div>
   <div class="section"><div class="section-label" data-t>Je eigen chatstickers</div><div id="eigenStickers"></div></div>
+  <!-- 13 nov 2026 (Marcel): stickervellen uit de Store, onder het Stickerlab en net zo als de vellen van Stekky: tik =
+       beweging en geluid, 🏠 = op Home; per vel ook aan in de chat (Winkelvakje) en verwijderen -->
+  <div id="storeStickersSectie" style="display:none"></div>
   <div id="fibroStickers"></div>
 </div>
 </main>
@@ -600,7 +596,8 @@ import { volgOnline } from './onlinestip.js?v=1' // v274: vrienden zien meteen o
 import { initSync } from './sync.js?v=255'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=149'
 import { startStickermaker } from './stickermaker.js?v=244'
-import { tekenFibroVellen, stickerWidgetDef } from './stickerwidget.js?v=237'
+import { tekenFibroVellen, stickerWidgetDef, maakSchakelaar, widgetId, stickerNaam, zetStijl as zetStickerStijl } from './stickerwidget.js?v=237'
+import { speel as speelSticker } from './stickerfx.js?v=236'
 import { STANDAARD_SCHAKELAARS, beginSchakelaars } from './standaardwidgets.js?v=2' // v267: dezelfde standaard als Home
 import { maakStickerkeuze } from './stickerkeuze.js?v=238' // v171: een sticker als mood
 import { zoekSticker } from './stickervellen.js?v=237'
@@ -614,7 +611,7 @@ const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','�
 // v173: de oude emoji-stickers (Natuur & Planten, Sfeer & Magie, Muziek & Kunst, Dieren, 'Actieve stickers') en de
 // widget 'Sticker board' zijn weg: ze werden alleen op dit toestel bewaard en nergens getoond.
 import { LETTERTYPES, STORE_LETTERTYPES, laadFont } from './lettertypes.js?v=133'
-import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES } from './store.js?v=11' // v131: Stekky Store
+import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES } from './store.js?v=12' // v131: Stekky Store
 import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=95'
 import { pasAnimatieToe, startOp as startAnimatieOp } from './animatie.js?v=235'
 window.blokAangepast = function(){
@@ -679,39 +676,53 @@ function bouwStoreFonts(ids){
  // 13 nov 2026 (Marcel): gedownloade stickervellen bij Stijl > Stickers: aanzetten (= in een Winkelvakje van de
 // stickerkeuze in de chat, 4 vakjes) of verwijderen
 function bouwStoreStickers(ids){
-  const sectie=document.getElementById('storeStickersSectie'),lijst=document.getElementById('storeStickersLijst');if(!sectie||!lijst||!huidigeUser)return
+  const sectie=document.getElementById('storeStickersSectie');if(!sectie||!huidigeUser)return
   const uid=huidigeUser.id
   const items=[...ids].map(itemVan).filter(it=>it&&it.soort==='sticker')
-  sectie.style.display=items.length?'':'none';lijst.innerHTML=''
+  sectie.style.display=items.length?'':'none';sectie.innerHTML='';zetStickerStijl()
   const actief=actieveStoreVellen(uid).map(v=>v.store)
+  const widgets={aan:n=>stickerWidgets.aan(n),zet:(n,aan)=>stickerWidgets.zet(n,aan)}
+  const maak=(tag,klas,tekst)=>{const e=document.createElement(tag);if(klas)e.className=klas;if(tekst!=null)e.textContent=tekst;return e}
   for(const it of items){
     const aan=actief.includes(it.id),vak=actief.indexOf(it.id)+1
-    const d=document.createElement('div');d.className='store-vel';d.dataset.id=it.id
-    const kop=document.createElement('div');kop.className='store-vel-kop'
-    const naam=document.createElement('span');naam.className='store-naam';naam.textContent=it.titel
-    const t=document.createElement('div');t.className='toggle '+(aan?'on':'off');t.setAttribute('role','switch');t.setAttribute('aria-checked',String(aan));t.tabIndex=0
+    const d=maak('div','section sw-sectie store-vel');d.dataset.id=it.id;d.dataset.vel=it.vel
+    const label=maak('div','section-label store-vel-label');label.append(maak('span','',it.titel),maak('small','',T('Uit de Store')))
+    const uitlegBoven=maak('p','sw-uitleg',T('Tik op een sticker: hij beweegt en maakt geluid. Zet het knopje \u{1F3E0} aan en druk op Opslaan, dan staat hij op Home.'))
+    // dezelfde rij als bij de vellen van Stekky: tik = beweging en geluid, 🏠 = op Home
+    const raster=maak('div','sw-raster')
+    for(let i=1;i<=12;i++){
+      const code=it.vel+'-'+String(i).padStart(2,'0'),st=zoekSticker(code);if(!st)continue
+      const naam=stickerNaam(st)
+      const img=document.createElement('img');img.src=st.src;img.alt='';img.width=384;img.height=384;img.loading='lazy';img.draggable=false
+      const knop=maak('button','sw-plek');knop.type='button';knop.dataset.code=code;knop.setAttribute('aria-label',T('Speel sticker {naam}',{naam}));knop.append(img)
+      knop.addEventListener('click',()=>speelSticker(img,st))
+      const cel=maak('div','sw-cel');cel.append(knop,maakSchakelaar(widgetId(code),T('{naam} op Home',{naam}),widgets));raster.append(cel)
+    }
+    // in de chat (een Winkelvakje) en verwijderen
+    const onder=maak('div','store-vel-onder')
+    const chat=maak('label','store-vel-chat');chat.append(maak('span','','\u{1F4AC} '+T('In de chat zetten')))
+    const t=maak('div','toggle '+(aan?'on':'off'));t.setAttribute('role','switch');t.setAttribute('aria-checked',String(aan));t.tabIndex=0
     t.setAttribute('aria-label',T('{naam} in de chat',{naam:it.titel}));t.innerHTML='<div class="toggle-dot"></div>'
     const wissel=()=>{
       if(!zetStoreVelActief(uid,it.id,!aan)){alert(T('Alle {n} vakjes in de chat zijn vol. Zet eerst een ander stickervel uit.',{n:WINKEL_VAKJES}));return}
       bouwStoreStickers(bewaardeDownloads(uid))
     }
     t.onclick=wissel;t.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();wissel()}}
-    kop.append(naam,t)
-    const plaatjes=document.createElement('div');plaatjes.className='store-vel-plaatjes'
-    for(const nr of ['01','02','03','04','05']){const st=zoekSticker(it.vel+'-'+nr);if(!st)continue;const img=document.createElement('img');img.src=st.src;img.alt='';img.loading='lazy';plaatjes.appendChild(img)}
-    const onder=document.createElement('div');onder.className='store-vel-onder'
-    const uitleg=document.createElement('span');uitleg.className='store-vel-uitleg'
-    uitleg.textContent=aan?T('In de chat: Winkelvak {n}',{n:vak}):T('Staat uit: zet het aan, dan staat het in de chat bij Stickers → Winkel')
-    const knop=document.createElement('button');knop.type='button';knop.className='store-verwijder';knop.textContent=T('🗑 Verwijderen')
+    chat.append(t)
+    const uitleg=maak('span','store-vel-uitleg',aan?T('In de chat: Winkelvak {n}',{n:vak}):T('Staat uit: zet het aan, dan staat het in de chat bij Stickers → Winkel'))
+    const knop=maak('button','store-verwijder',T('🗑 Verwijderen'));knop.type='button'
     knop.onclick=async()=>{
       if(!confirm(T('{naam} verwijderen? Je kunt het altijd opnieuw downloaden in de Store.',{naam:it.titel})))return
       knop.disabled=true
       const{error}=await verwijderDownload(supabase,uid,it.id)
       if(error){knop.disabled=false;alert(T('Verwijderen mislukt. Probeer het opnieuw.'));return}
+      // de stickers van dit vel gaan ook van Home (net als een game uit de Store)
+      const weg=new Set(Array.from({length:12},(_,i)=>widgetId(it.vel+'-'+String(i+1).padStart(2,'0'))))
+      if(actieveWidgets.some(w=>weg.has(w))){const vuil=widgetBewaking.isDirty();actieveWidgets=actieveWidgets.filter(w=>!weg.has(w));if(vuil)widgetBewaking.changed();else widgetBewaking.markSaved(actieveWidgets)}
       zetStoreFonts(bewaardeDownloads(uid))
     }
-    onder.append(uitleg,knop)
-    d.append(kop,plaatjes,onder);lijst.appendChild(d)
+    onder.append(chat,uitleg,knop)
+    d.append(label,uitlegBoven,raster,onder);sectie.appendChild(d)
   }
 }
 function zetStoreFonts(ids){zetStoreGames(ids);bouwStoreFonts(ids);bouwStoreStickers(ids);fonts=basisFonts.concat(STORE_LETTERTYPES.filter(f=>f.ids.some(i=>ids.has(i))||huidigLettertype===maakFont(f).familie).map(maakFont))}

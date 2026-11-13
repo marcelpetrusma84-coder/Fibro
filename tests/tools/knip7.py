@@ -65,6 +65,30 @@ for (k, (sy, sx)), naam in zip(groot, ALLE):
         onder = np.arange(y1 - y0)[:, None] > grens[None, :]
         blijft = voor & ~onder
         kern = blijft & ((vak.min(2) < 222) | (vak.max(2) - vak.min(2) > 30))      # wat geen witte rand is
+        if naam == 'chocoladeletter':
+            # De onderkant van de S zat achter de tekst. Een S is hetzelfde als je hem een halve slag draait: zoek het
+            # draaipunt waarbij de gedraaide S het best op de zichtbare S past, en vul de verborgen onderkant daarmee.
+            S = nd.binary_opening(kern, iterations=2)
+            lab3, _ = nd.label(S); S = lab3 == (1 + np.argmax(np.bincount(lab3.ravel())[1:]))
+            ys3, xs3 = np.nonzero(S); h3, w3 = S.shape; best = None
+            for cy2 in range(int(ys3.mean()) * 2 - 10, int(ys3.mean()) * 2 + 60):        # 2 x draaipunt (halve pixels)
+                for cx2 in range(int(xs3.mean()) * 2 - 20, int(xs3.mean()) * 2 + 21):
+                    ry, rx = cy2 - ys3, cx2 - xs3
+                    ok = (ry >= 0) & (ry < h3) & (rx >= 0) & (rx < w3)
+                    if ok.sum() < 0.8 * len(ys3): continue
+                    zicht = ~onder[ry[ok], rx[ok]]
+                    score = (S[ry[ok], rx[ok]] & zicht).sum() / max(1, zicht.sum())
+                    if best is None or score > best[0]: best = (score, cy2, cx2)
+            _, cy2, cx2 = best
+            yy3, xx3 = np.nonzero(onder & (np.arange(h3)[:, None] < h3))
+            ry, rx = cy2 - yy3, cx2 - xx3
+            ok = (ry >= 0) & (ry < h3) & (rx >= 0) & (rx < w3)
+            yy3, xx3, ry, rx = yy3[ok], xx3[ok], ry[ok], rx[ok]
+            vul = S[ry, rx]
+            vak[yy3[vul], xx3[vul]] = vak[ry[vul], rx[vul]]
+            kern[yy3[vul], xx3[vul]] = True; voor[yy3[vul], xx3[vul]] = True
+            blijft = blijft | kern
+            print('   %s: onderkant van de S aangevuld (draaipunt %.1f, %.1f; past %.0f%%)' % (nr, cx2 / 2, cy2 / 2, best[0] * 100))
         kern = nd.binary_opening(kern, iterations=1)                                # losse randpixeltjes weg
         lab2, n2 = nd.label(kern); maten = nd.sum(kern, lab2, range(1, n2 + 1))
         kern = np.isin(lab2, [i + 1 for i, m_ in enumerate(maten) if m_ >= 25])     # kruimels van de tekst niet meenemen

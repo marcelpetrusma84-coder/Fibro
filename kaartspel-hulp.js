@@ -1,6 +1,7 @@
 // kaartspel-hulp.js - BLAUWDRUK voor alle kaartspellen in Stekky (v1, 11 nov 2026). Zie BLAUWDRUK-KAARTSPEL.md.
 // v2: de tafel is een eigen laag (isolation), zodat het pauzescherm van het spelmenu (spelmenu.js) er in de chat altijd boven ligt.
 //     Tegen de computer (solo) geen reactieknop 😀.
+// v4: scherpe hoekjes over de perkamentkaarten (beter te zien welke kaart het is), zie plaatjeMetHoek.
 // v3: kaartstijl kiezen met de knop 🎴: de gewone Stekky-kaarten of de perkamentkaarten van Marcel (plaatjes in
 //     kaarten/perkament/, met een eigen achterkant en joker). De keuze staat op dit toestel (fibro_kaartstijl).
 //
@@ -140,8 +141,25 @@ export function zetKaartStijl(stijl) {
 laadVooruit(kaartStijl())   // alvast ophalen, zodat vliegende kaarten niet even leeg zijn
 
 const svgCache = new Map()
+// v4 (13 nov 2026): op de plaatjes (Perkament) waren de hoekjes klein en wazig, dus in je waaier zag je slecht welke
+// kaart het was. Nu staat er over beide hoeken een scherp, getekend hoekje: de waarde (B/V/H in het Nederlands, net
+// als in de spellen) en het teken, in de kleur van die soort op de perkamentkaarten.
+const PERK_KLEUR = { h: '#a3212b', r: '#6d2a84', k: '#2e5b2a', s: '#1d2d55' }
+function perkHoek(k, w) {
+  const kleur = PERK_KLEUR[k] || ZWART, tekst = toonWaarde(w)
+  return '<rect x="7" y="9" width="46" height="98" rx="11" fill="#f5e8cb" stroke="#d9c49a" stroke-width="1.5"/>'
+    + '<text x="30" y="52" font-size="' + (tekst.length > 1 ? 34 : 42) + '" font-family="Georgia,\'Times New Roman\',serif" font-weight="700" text-anchor="middle" fill="' + kleur + '"'
+    + (tekst.length > 1 ? ' letter-spacing="-3"' : '') + '>' + tekst + '</text>'
+    + tekenKleur(k, 30, 80, 30, false, kleur)
+}
+function plaatjeMetHoek(stijl, id) {
+  const { kleur: k, waarde: w } = kaartDelen(id)
+  return '<span class="kt-svg kt-pk">' + plaatje(stijl, id)
+    + '<svg class="kt-pk-hoek" viewBox="0 0 250 350" aria-hidden="true">' + perkHoek(k, w)
+    + '<g transform="rotate(180 125 175)">' + perkHoek(k, w) + '</g></svg></span>'
+}
 export function kaartSvg(id, stijl = kaartStijl()) {
-  if (KAARTSTIJLEN[stijl]?.map) return plaatje(stijl, /^J[12]$/.test(id) ? 'joker' : id)
+  if (KAARTSTIJLEN[stijl]?.map) return /^J[12]$/.test(id) ? plaatje(stijl, 'joker') : plaatjeMetHoek(stijl, id)
   const sleutel = id + (isEngels() ? '|en' : '')
   if (svgCache.has(sleutel)) return svgCache.get(sleutel)
   const { kleur: k, waarde: w } = kaartDelen(id)
@@ -252,6 +270,7 @@ const STIJL = `
 .kt-tafel *{box-sizing:border-box}
 .kt-svg{display:block;width:100%;height:100%}
 .kt-img{object-fit:fill;pointer-events:none;-webkit-user-drag:none;user-select:none;border-radius:7%}
+.kt-pk{position:relative;pointer-events:none}.kt-pk>.kt-img{display:block;width:100%;height:100%}.kt-pk-hoek{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .kt-kaart{position:absolute;left:0;top:0;border-radius:calc(var(--kw)*.075);box-shadow:0 2px 8px #0007;transition:transform .22s cubic-bezier(.2,.8,.3,1.2),filter .2s,box-shadow .2s;touch-action:none;will-change:transform;cursor:pointer}
 .kt-kaart.kt-mag{box-shadow:0 0 0 2px #c084fc,0 0 16px #c084fcb0,0 2px 8px #0007}
 .kt-kaart.kt-niet{filter:brightness(.62) saturate(.8)}

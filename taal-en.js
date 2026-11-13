@@ -2486,6 +2486,7 @@ window.FIBRO_EN = {
   "Alle {n} vakjes in de chat zijn vol. Zet eerst een ander stickervel uit.": "All {n} slots in the chat are full. Turn off another sticker sheet first.",
   "In de chat: Winkelvak {n}": "In the chat: Shop slot {n}",
   "Staat uit: zet het aan, dan staat het in de chat bij Stickers → Winkel": "Off: turn it on to put it in the chat under Stickers → Shop",
+  "In de chat zetten": "Use in the chat",
   "Gedownload! Zet ze aan bij Stijl → Stickers, dan staan ze in de chat.": "Downloaded! Turn them on in Style → Stickers to use them in the chat.",
   "Hier komen de stickervellen uit de Stekky Store. Na downloaden zet je ze aan bij Stijl, bij Stickers.": "Sticker sheets from the {app} Store appear here. After downloading, turn them on in Style, under Stickers.",
 }

@@ -91,7 +91,15 @@ try:
             return wacht(pg, "() => { const s = document.getElementById('storeStickersSectie'); return s && s.style.display !== 'none' && s.querySelector('.store-vel[data-id=\"stickers-sinterklaas\"]') }")
         check(stijl(), 'C2: Sinterklaas staat bij Stijl > Stickers, Uit de Store')
         vel = '.store-vel[data-id="stickers-sinterklaas"]'
-        check(pg.locator(vel + ' .store-vel-plaatjes img').count() == 5 and pg.get_attribute(vel + ' .toggle', 'aria-checked') == 'false', 'C2: met voorbeeldjes, en de schakelaar staat uit')
+        check(pg.locator(vel + ' .sw-raster .sw-plek img').count() == 12 and pg.locator(vel + ' .sw-schakel[data-widget]').count() == 12
+              and pg.get_attribute(vel + ' .toggle', 'aria-checked') == 'false', 'C2: alle 12 stickers, elk met een knopje 🏠, en de chat-schakelaar staat uit')
+        volgorde = pg.evaluate("() => { const p = document.getElementById('panel-stickers'); const a = p.querySelector('#eigenStickers'), b = p.querySelector('#storeStickersSectie'), c = p.querySelector('#fibroStickers'); return !!(a.compareDocumentPosition(b) & 4) && !!(b.compareDocumentPosition(c) & 4) }")
+        check(volgorde, 'C2: de gedownloade stickers staan onder het Stickerlab (en boven de vellen van Stekky)')
+        pg.click(vel + ' .sw-plek[data-code="f7-05"]')
+        check(wacht(pg, "() => document.querySelector('.sw-plek[data-code=\"f7-05\"] img').getAnimations().length > 0", 3000) and (time.sleep(0.5) or 'stoomfluit' in geluiden),
+              'C2: tik op de pakjesboot = hij beweegt en zijn geluid speelt (stoomfluit)')
+        pg.click(vel + ' .sw-schakel[data-widget="sticker_f7-01"]'); pg.click('.save-top-btn'); time.sleep(1)
+        check(pg.evaluate("u => JSON.parse(localStorage.getItem('fibro_widgets_profiel_' + u) || '[]').some(w => w.id === 'sticker_f7-01' && w.aan)", UID), 'C2: 🏠 aan + Opslaan = de Sint staat op Home')
         pg.click(vel + ' .toggle')
         check(pg.get_attribute(vel + ' .toggle', 'aria-checked') == 'true' and 'Winkelvak 1' in pg.inner_text(vel), 'C2: aangezet: in de chat, Winkelvak 1')
 
@@ -128,8 +136,12 @@ try:
         pg.click('#soorten .main-tab[data-soort=sticker]'); pg.click(kaart + ' .knop')
         wacht(pg, "() => document.querySelector('.item[data-id=\"stickers-sinterklaas\"] .knop').textContent.includes('Gedownload')")
         check(stijl() and pg.get_attribute(vel + ' .toggle', 'aria-checked') == 'false', 'C2: opnieuw gedownload: staat weer uit')
+        pg.click(vel + ' .sw-schakel[data-widget="sticker_f7-01"]'); pg.click('.save-top-btn'); time.sleep(1)
+        check(pg.evaluate("u => JSON.parse(localStorage.getItem('fibro_widgets_profiel_' + u) || '[]').some(w => w.id === 'sticker_f7-01' && w.aan)", UID), 'C2: de Sint weer op Home')
+        stijl()
         pg.click(vel + ' .store-verwijder')
         check(wacht(pg, "() => document.getElementById('storeStickersSectie').style.display === 'none'") and not RIJEN, 'C2: verwijderd bij Stijl > Stickers: weg uit de lijst en uit je account')
+        check(not pg.evaluate("u => JSON.parse(localStorage.getItem('fibro_widgets_profiel_' + u) || '[]').some(w => w.id === 'sticker_f7-01')", UID), 'C2: en de Sint is ook weg van Home')
         check(not fouten, 'E: geen paginafouten ' + ' | '.join(fouten))
         b.close()
 finally:

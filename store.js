@@ -125,7 +125,11 @@ export async function verwijderDownload(supabase, uid, id) {
   if (r.error) return r
   const game = STORE_GAMES.find(g => g.id === id)
   if (game) zetGameWidgetUit(uid, game.widget)
-  if (STORE_STICKERS.some(s => s.id === id)) zetStoreVelActief(uid, id, false)   // 13 nov 2026: ook uit het vakje in de chat
+  const vel = STORE_STICKERS.find(s => s.id === id)
+  if (vel) {
+    zetStoreVelActief(uid, id, false)   // 13 nov 2026: ook uit het vakje in de chat
+    for (let i = 1; i <= 12; i++) zetGameWidgetUit(uid, 'sticker_' + vel.vel + '-' + String(i).padStart(2, '0'))   // en van Home
+  }
   return r
 }
 // Wat er bij een gedownload id hoort (voor de lijstjes met Verwijderen)

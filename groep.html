@@ -276,8 +276,12 @@ button { font-family:inherit; }
 /* lijn-iconen zoals het menu onderaan: wit, en open = lichtpaars vlak met paars icoon */
 .balk-knop { width:48px; height:42px; flex-shrink:0; border-radius:14px; border:1px solid transparent; background:rgba(255,255,255,0.05); color:#fff; padding:0; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background-color .16s ease, border-color .16s ease, color .16s ease; }
 .balk-knop[aria-pressed="true"] { color:#c084fc; background:linear-gradient(155deg, rgba(192,132,252,.23), rgba(192,132,252,.12)); border-color:rgba(225,204,255,.28); }
-.balk-invoer { display:flex; gap:10px; align-items:center; }
-#bericht { flex:1; min-width:0; height:44px; padding:0 16px; border-radius:22px; border:1px solid rgba(255,255,255,0.08); background:rgba(10,4,20,0.55); color:#fff; font-family:inherit; font-size:16px; outline:none; }
+.balk-invoer { display:flex; gap:10px; align-items:flex-end; }
+/* 13 nov 2026: een tekstvak: enter = een nieuwe regel (op een telefoon); het groeit mee tot 5 regels */
+#bericht { flex:1; min-width:0; height:44px; min-height:44px; max-height:128px; padding:11px 16px; line-height:1.35; resize:none; overflow-y:auto; display:block; border-radius:22px; border:1px solid rgba(255,255,255,0.08); background:rgba(10,4,20,0.55); color:#fff; font-family:inherit; font-size:16px; outline:none; box-sizing:border-box; }
+/* 13 nov 2026: boven de berichten van elke dag de datum (Vandaag, Gisteren, woensdag 12 november) */
+.dag-scheiding { display:flex; justify-content:center; margin:4px 0 0; pointer-events:none; }
+.dag-scheiding span { font-size:12px; font-weight:600; color:#fff; background:rgba(0,0,0,0.38); border:1px solid rgba(255,255,255,0.12); border-radius:999px; padding:3px 11px; }
 #bericht:focus { border-color:var(--accent); }
 #verstuur { width:50px; height:50px; flex-shrink:0; border-radius:50%; border:none; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#2563eb; font-size:16px; cursor:pointer; }
 #verstuur:disabled { opacity:.5; }
@@ -424,7 +428,7 @@ button { font-family:inherit; }
     <div id="spraakBalk" hidden role="status" aria-live="polite"><span class="punt"></span><span id="spraakTijd">0:00</span><span id="spraakHint" data-t>← schuif om te annuleren</span></div>
     <input type="file" id="fotoInvoer" accept="image/*" multiple hidden>
     <div class="balk-invoer">
-      <input id="bericht" maxlength="2000" autocomplete="off" placeholder="Stuur een bericht..." aria-label="Bericht" data-t-attr="placeholder,aria-label">
+      <textarea id="bericht" rows="1" maxlength="2000" autocomplete="off" placeholder="Stuur een bericht..." aria-label="Bericht" data-t-attr="placeholder,aria-label"></textarea>
       <button type="button" id="verstuur" aria-label="Versturen" data-t-attr="aria-label">➤</button>
     </div>
   </div>
@@ -895,6 +899,7 @@ button { font-family:inherit; }
     rij.className = 'b-rij' + (mijn ? ' mijn' : '') + (vorigeAfzender === r.sender_id ? ' vervolg' : '')
     rij.dataset.id = r.id
     rij.dataset.van = r.sender_id
+    if (r.created_at) rij.dataset.ts = r.created_at   // 13 nov 2026: voor de datum boven elke dag
     vorigeAfzender = r.sender_id
     const kleur = kleurVan(r.sender_id)
     rij.innerHTML = '<span class="av" style="background:' + kleur + '">' + avatarHtml(afz) + '</span>'
@@ -1280,13 +1285,63 @@ button { font-family:inherit; }
     const inv = $('bericht'); const tekst = inv.value.trim()
     if (!tekst) return
     inv.value = ''
+    pasBerichtvakAan()
     $('emojiRaster').hidden = true
     const op = antwoordOp
     wisAntwoord()
-    if (!(await verstuur(op ? 'antw:' + op + '\n' + tekst : tekst))) { inv.value = tekst; if (op) kiesAntwoord(op) }
+    if (!(await verstuur(op ? 'antw:' + op + '\n' + tekst : tekst))) { inv.value = tekst; pasBerichtvakAan(); if (op) kiesAntwoord(op) }
   }
   $('verstuur').addEventListener('click', verstuurInvoer)
-  $('bericht').addEventListener('keydown', e => { if (e.key === 'Enter') verstuurInvoer() })
+  // 13 nov 2026: op een telefoon (aanraakscherm) is enter een nieuwe regel en verstuur je met ➤; met een
+  // toetsenbord (pc, Steam Deck) verstuurt enter en geeft shift + enter een nieuwe regel. Het vak groeit mee.
+  function pasBerichtvakAan() {
+    const inv = $('bericht'); inv.style.height = 'auto'
+    inv.style.height = Math.min(Math.max(inv.scrollHeight + 2, 44), 128) + 'px'
+  }
+  $('bericht').addEventListener('input', pasBerichtvakAan)
+  $('bericht').addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || e.isComposing || e.keyCode === 229) return
+    let aanraak = false; try { aanraak = matchMedia('(hover: none) and (pointer: coarse)').matches } catch (x) {}
+    if (e.shiftKey || aanraak) return
+    e.preventDefault(); verstuurInvoer()
+  })
+
+  // 13 nov 2026: de datum boven de berichten van elke dag (zoals in de chat met een vriend). Bij elke verandering in
+  // #berichten opnieuw; het eerste bericht van een dag toont weer naam en fotootje (geen 'vervolg').
+  function dagLabel(ms) {
+    const d = new Date(ms), nu = new Date()
+    const begin = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime()
+    const verschil = Math.round((begin(nu) - begin(d)) / 86400000)
+    if (verschil === 0) return T('Vandaag')
+    if (verschil === 1) return T('Gisteren')
+    const loc = (() => { try { return localStorage.getItem('fibro_taal') === 'en' ? 'en-GB' : 'nl-NL' } catch (e) { return 'nl-NL' } })()
+    const opties = { weekday: 'long', day: 'numeric', month: 'long' }
+    if (d.getFullYear() !== nu.getFullYear()) opties.year = 'numeric'
+    return d.toLocaleDateString(loc, opties)
+  }
+  let dagWachter = null
+  function zetDagScheidingen() {
+    const c = $('berichten')
+    if (dagWachter) dagWachter.disconnect()
+    try {
+      for (const oud of [...c.querySelectorAll(':scope > .dag-scheiding')]) oud.remove()
+      let vorigeDag = null
+      for (const el of [...c.children]) {
+        const ms = el.dataset && el.dataset.ts ? Date.parse(el.dataset.ts) : NaN
+        if (!ms) continue
+        const d = new Date(ms), dag = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate()
+        if (dag === vorigeDag) continue
+        vorigeDag = dag
+        const sch = document.createElement('div'); sch.className = 'dag-scheiding'; sch.setAttribute('role', 'separator')
+        const lbl = document.createElement('span'); lbl.textContent = dagLabel(ms); sch.appendChild(lbl)
+        c.insertBefore(sch, el)
+        el.classList.remove('vervolg')
+      }
+    } finally {
+      if (dagWachter) dagWachter.observe(c, { childList: true })
+    }
+  }
+  if (window.MutationObserver) { dagWachter = new MutationObserver(zetDagScheidingen); dagWachter.observe($('berichten'), { childList: true }) }
 
   // chatbalk: emoji's en stickers; foto, spraak en spel komen later in groepen
   $('emojiKnop').addEventListener('click', () => {

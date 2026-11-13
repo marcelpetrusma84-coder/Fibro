@@ -112,4 +112,21 @@ for (const hash of ['#herstellen', '#registreren']) {
   assert.equal(o.formulier.inert, false)
 }
 
+// 13 nov 2026 (Marcel kon niet uitloggen): na Uitloggen (login.html?logout=1) haalt de lader een overgebleven
+// inlogpas weg, zodat je niet vanzelf weer binnenkomt. Zonder ?logout blijft hij staan.
+for (const [search, blijft] of [['?logout=1', false], ['', true]]) {
+  const opslag = new Map([['sb-qmgatbphiplrfxrljtbe-auth-token', sessie], ['fibro_taal', 'nl']])
+  const ls = { get length() { return opslag.size }, key: i => [...opslag.keys()][i] ?? null, getItem: k => opslag.get(k) ?? null, removeItem: k => opslag.delete(k) }
+  const root = element()
+  vm.runInNewContext(bron, { document: { documentElement: root, getElementById: () => element(), addEventListener() {} }, window: { addEventListener() {} },
+    location: { hash: '', search }, localStorage: ls, URLSearchParams, setTimeout: () => 0, clearTimeout() {} })
+  assert.equal(opslag.has('sb-qmgatbphiplrfxrljtbe-auth-token'), blijft, search ? 'na uitloggen is de inlogpas weg' : 'gewoon openen: de inlogpas blijft')
+  assert.equal(opslag.get('fibro_taal'), 'nl', 'andere instellingen blijven')
+}
+const home = readFileSync(new URL('../../index.html', import.meta.url), 'utf8')
+const uit = home.slice(home.indexOf('window.uitloggen = async function'), home.indexOf('// v119: profiel van de vorige keer'))
+assert.match(uit, /Promise\.race\(\[supabase\.auth\.signOut\(\{ scope: 'local' \}\), new Promise\(r => setTimeout\(r, 4000\)\)\]\)/, 'uitloggen wacht niet eindeloos')
+assert.match(uit, /k\.startsWith\('sb-'\) && k\.endsWith\('-auth-token'\)\) localStorage\.removeItem\(k\)/, 'uitloggen haalt de inlogpas altijd zelf weg')
+assert.match(uit, /window\.location\.href = 'login\.html\?logout=1'/, 'en gaat naar het aanmeldscherm zonder sessielader')
+
 console.log('ok: sessielader, expliciete routes, formulierbereikbaarheid en twaalfseconden-nooduitgang')

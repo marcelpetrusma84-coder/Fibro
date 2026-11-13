@@ -173,6 +173,9 @@ jobs:
       - name: "Koningsjacht: alleen tegen het kasteel, perkamentkaarten op een houten tafel"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef299.py .
+      - name: "Uitloggen lukt altijd, ook als de server niet (goed) antwoordt"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef300.py .
       - name: "Spelmenu ☰ in elk spel (pauze, geluid, microfoon, camera, menu, verlaten) en berichten linksboven"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef291.py .

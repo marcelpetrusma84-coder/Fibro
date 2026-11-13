@@ -66,6 +66,7 @@ const histories = {
     { version:'1.0.0', updatedAt:'2026-11-11T16:53:30+01:00', summary:'Eenentwintigen: pak kaarten tot zo dicht mogelijk bij 21', summaryEn:'Twenty-One: draw cards to get as close to 21 as you can', firstRecorded:true, sourceCommit:'48c3818ba9826733552905fd17e06ea49c1c5cc5' },
   ],
   koningsjacht:[
+    record('1.1.0', '2026-11-13T15:33:32+01:00', 'af79e48a92008b2352ceb51f05ded243c66e2062', 'Koningsjacht: stoere geluiden, aanvallen met licht en epische muziek', 'King Hunt: epic sounds, attacks with light effects and epic music'),
     { version:'1.0.0', updatedAt:'2026-11-13T14:24:09+01:00', summary:'Koningsjacht: versla de twaalf vijanden uit het kasteel', summaryEn:'King Hunt: defeat the twelve enemies of the castle', firstRecorded:true, sourceCommit:'d824c459c4eff04d661cded51c1c0715cf89f0c5' },
   ],
 }

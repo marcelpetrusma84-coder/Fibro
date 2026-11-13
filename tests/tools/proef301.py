@@ -7,6 +7,7 @@
 #  E. wedstrijd: allebei hetzelfde kasteel en dezelfde hand; je ziet de stand van de ander ('🏁 Marcel: 0/12');
 #     wint de ander (bericht 'voortgang'), dan zie je 'Marcel wint!'
 #  F. duel: een vloek van de ander = de vijand krijgt 10 leven erbij (20 -> 30)
+#  H. belegering: ieder een eigen kasteel, om de beurt aanvallen en afweren; je ziet je eigen kasteel
 #  G. geen paginafouten
 # python3 -I proef301.py <map>
 import sys, os, time, socket, subprocess, tempfile, re, json
@@ -87,7 +88,7 @@ try:
         # ════════ A-D: samen ════════
         twee = speler(ctx, 2, 'kj-samen', bestand); een = speler(ctx, 1, 'kj-samen', bestand)
         check(wacht(twee, "() => (document.querySelector('.kj-wacht') || {}).textContent?.includes('Marcel kiest')", 8000), 'A: speler 2 wacht: "Marcel kiest hoe jullie spelen..." (zijn vriend heet hier Marcel)')
-        check(een.locator('.kj-modi .kj-niveau').count() == 3, 'A: speler 1 kiest uit samen, wedstrijd en duel')
+        check(een.locator('.kj-modi .kj-niveau').count() == 4, 'A: speler 1 kiest uit samen, wedstrijd, duel en belegering')
         een.click('.kj-modi .kj-niveau[data-modus=samen]'); een.click('.kj-niveaukeus .kj-niveau[data-niveau=schildknaap]')
         check(wacht(een, MIJN) and wacht(twee, "() => document.querySelectorAll('.kt-hand .kt-kaart').length === 7 && " + RUST), 'B: samen: het spel begint bij allebei')
         h1, h2 = een.evaluate(HAND), twee.evaluate(HAND)
@@ -137,6 +138,24 @@ try:
         check(wacht(twee, "() => document.querySelector('.kj-balk span').textContent.includes('30 / 30') && " + RUST, 8000), 'F: een vloek van de ander: de boer heeft nu 30 leven (%s)' % twee.evaluate(LEVEN))
         twee.evaluate("id => window.__kanaal.postMessage({ van: 1, event: 'vloek', payload: { naar: 2, spelId: id, id: 'proef' } })", spel); time.sleep(1)
         check('30 / 30' in twee.evaluate(LEVEN), 'F: dezelfde vloek telt maar één keer')
+        een.close(); twee.close()
+        # ════════ H: belegering ════════
+        twee = speler(ctx, 2, 'kj-beleg', bestand); een = speler(ctx, 1, 'kj-beleg', bestand)
+        wacht(twee, "() => !!document.querySelector('.kj-wacht')", 8000)
+        check(een.locator('.kj-modi .kj-niveau[data-modus=beleg]').count() == 1, 'H: belegering staat erbij')
+        een.click('.kj-modi .kj-niveau[data-modus=beleg]'); een.click('.kj-niveaukeus .kj-niveau[data-niveau=schildknaap]')
+        check(wacht(een, MIJN) and wacht(twee, "() => document.querySelectorAll('.kt-hand .kt-kaart').length === 8 && " + RUST), 'H: belegering begint: allebei 8 kaarten, speler 1 is aan de beurt')
+        check(not twee.evaluate("() => !!document.querySelector('.kt-tafel.kt-mijnbeurt')") and wacht(twee, "() => document.querySelector('.kt-status').textContent.includes('valt jouw kasteel aan')", 6000),
+              'H: speler 2 wacht: "Marcel valt jouw kasteel aan..."')
+        check(wacht(twee, "() => document.querySelector('.kt-info').textContent.includes('Jouw kasteel: 12')", 6000), 'H: speler 2 ziet zijn eigen kasteel (12 wachters)')
+        beurt(een)
+        check(wacht(twee, "() => /Jouw kasteel: (12 · ❤ (?!20)|11)/.test(document.querySelector('.kt-info').textContent)", 10000), 'H: speler 1 valt aan: de voorste wachter van speler 2 is geraakt (%s)' % twee.text_content('.kt-info'))
+        for _ in range(8):
+            if wacht(twee, MIJN, 1500): break
+            if een.query_selector('.kt-knop[data-naam=afweer]'): afweren(een)
+            wacht(een, "() => " + RUST, 8000); time.sleep(0.8)
+        check(wacht(twee, MIJN, 15000), 'H: na zijn klap (afgeweerd of wachter verslagen) is speler 2 aan de beurt')
+        check(wacht(een, "() => document.querySelector('.kt-status').textContent.includes('valt jouw kasteel aan')", 6000), 'H: speler 1 wacht nu')
         een.close(); twee.close()
         check(not fouten, 'G: geen paginafouten %s' % fouten[:3])
         b.close()

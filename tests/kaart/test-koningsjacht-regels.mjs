@@ -155,4 +155,21 @@ assert.equal(K.medaille({ gewonnen: false }), null)
   const t = stand({ vijand: 'hB', hand: ['s10', 'k9'], schade: 20 }); t.extra = 10
   const n = K.valAan(t, ['s10']); assert.ok(n.laatste.verslagen && n.laatste.precies, 'met een vloek moet je er 30 doen'); assert.equal(n.extra, 0)
 }
+// 13. Belegering: ieder een eigen front, om de beurt; verdedigen hoort bij je beurt
+{
+  const b = K.nieuwBeleg({ niveau: 'schildknaap', rng: rngVan(9) })
+  assert.ok(K.geldigBeleg(b)); assert.equal(b.aanZet, 1); assert.equal(b.spelers[1].narren, 2); assert.equal(b.spelers[1].hand.length, 8)
+  assert.equal(K.belegStap(b, 2, b.spelers[2]), null, 'speler 2 is niet aan de beurt')
+  // speler 1: aanval in een vaste stand (boer van harten, 6 schade): slag 10, dus eerst afweren
+  const f = stand({ vijand: 'hB', hand: ['s6', 'h9', 'k4'] })
+  let n = K.belegStap(b, 1, K.valAan(f, ['s6'])); assert.equal(n.aanZet, 1, 'na de aanval nog afweren'); assert.equal(n.spelers[1].fase, 'verdedig')
+  n = K.belegStap(n, 1, K.weerAf(n.spelers[1], ['h9'])); assert.equal(n.aanZet, 2, 'na het afweren is de ander')
+  assert.equal(n.laatste.soort, 'afweer'); assert.equal(n.laatste.wie, 1)
+  // een verslagen wachter beëindigt de beurt ook
+  const g = stand({ vijand: 'hB', hand: ['s10', 'k9'], schade: 10 })
+  const v = K.belegStap(K.nieuwBeleg({ rng: rngVan(4) }), 1, K.valAan(g, ['s10'])); assert.equal(v.aanZet, 2); assert.ok(v.laatste.verslagen && v.laatste.precies)
+  // kan niet afweren = verloren, de ander wint
+  const h = stand({ vijand: 'sH', hand: ['h9', 'h3'] })
+  const w = K.belegStap(K.nieuwBeleg({ rng: rngVan(5) }), 1, K.valAan(h, ['h3'])); assert.ok(w.klaar); assert.equal(w.winnaar, 2)
+}
 console.log('koningsjacht regels: ok (' + gewonnen + ' van 40 gewonnen door de simpele speler)')

@@ -2522,4 +2522,13 @@ window.FIBRO_EN = {
   "Wedstrijd: ieder een eigen kasteel, precies hetzelfde geschud. Wie het verst komt, wint.": "Race: each your own castle, shuffled exactly the same. Whoever gets furthest wins.",
   "Duel: als de wedstrijd, maar precies raak stuurt een vloek: de vijand van de ander krijgt 10 leven erbij.": "Duel: like the race, but an exact hit sends a curse: the other player's enemy gets 10 extra health.",
   "Versla de twaalf boeren, vrouwen en heren uit het kasteel. Alleen, of in de chat met een vriend: samen, als wedstrijd of als duel. Elke soort kaart heeft een eigen kracht. Gebaseerd op Regicide.": "Defeat the castle's twelve jacks, queens and kings. On your own, or in the chat with a friend: together, as a race or as a duel. Every suit has its own power. Based on Regicide.",
+  "Belegering": "Siege",
+  "Ieder een eigen kasteel. Om de beurt val je de wachters van de ander aan en weer je hun klap af. Wie het eerst het kasteel van de ander verovert, wint.": "Each has their own castle. Take turns attacking the other's guards and blocking their blows. Whoever conquers the other's castle first wins.",
+  "{naam} valt jouw kasteel aan...": "{naam} is attacking your castle...",
+  "Jouw kasteel": "Your castle",
+  "{naam} neemt jouw {wachter} gevangen!": "{naam} captures your {wachter}!",
+  "{naam} verslaat jouw {wachter}!": "{naam} defeats your {wachter}!",
+  "{naam} valt jouw {wachter} aan: −{n}": "{naam} attacks your {wachter}: −{n}",
+  "{naam}: {n}": "{naam}: {n}",
+  "Belegering: ieder een eigen kasteel. Om de beurt val je de voorste wachter van de ander aan en weer je zijn klap af. Precies raak = je neemt hem gevangen. Wie het eerst alle 12 wachters van de ander verslaat, wint.": "Siege: each has their own castle. Take turns attacking the other's front guard and blocking its blow. Exact hit = you capture it. Whoever defeats all 12 of the other's guards first wins.",
 }

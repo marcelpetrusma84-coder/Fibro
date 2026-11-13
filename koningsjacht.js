@@ -236,6 +236,33 @@ export function nar(s0) {
   return controleer(s)
 }
 
+// ── Belegering (v3, 13 nov 2026, Marcel): ieder een eigen kasteel, om de beurt aanvallen en verdedigen ──
+// Elke speler heeft een eigen 'front' (een gewone stand zoals alleen): de vijanden daarin zijn de wachters van het
+// kasteel van de ANDER. Op jouw beurt val je de voorste wachter van de ander aan; die slaat terug en jij weert af.
+// Daarna is de ander. Een verslagen wachter (of een schild dat alles tegenhoudt) beëindigt je beurt ook.
+// Precies raak = je neemt de wachter gevangen (hij komt in jouw taveerne). Wie als eerste alle 12 wachters van de
+// ander verslaat, wint; wie niet meer kan afweren, verliest. Narren: Schildknaap 2, Ridder 1, Koning 0 (elk).
+export function nieuwBeleg({ niveau = 'ridder', begint = 1, rng = Math.random } = {}) {
+  if (!NIVEAUS[niveau]) niveau = 'ridder'
+  const front = () => Object.assign(nieuwSpel({ niveau, rng }), { narren: NIVEAUS[niveau].samen })
+  return { modus: 'beleg', niveau, aanZet: begint === 2 ? 2 : 1, spelers: { 1: front(), 2: front() }, klaar: false, winnaar: 0, beurt: 0, laatste: { wie: 0, soort: 'begin' } }
+}
+// Na een zet van 'wie' (nieuw = zijn nieuwe front): wie wint er, of is de ander aan de beurt?
+export function belegStap(b0, wie, nieuw) {
+  if (!b0 || b0.klaar || b0.aanZet !== wie || !nieuw) return null
+  const b = kopie(b0)
+  b.spelers[wie] = nieuw; b.beurt++
+  const l = nieuw.laatste || {}
+  b.laatste = { wie, soort: l.soort, kaarten: l.kaarten || [], schade: l.schade || 0, verslagen: Boolean(l.verslagen), precies: Boolean(l.precies), vijand: l.vijand || null }
+  if (nieuw.klaar) { b.klaar = true; b.winnaar = nieuw.gewonnen ? wie : ander(wie); return b }
+  const klaarMetBeurt = nieuw.fase === 'aanval' && (l.soort === 'afweer' || l.verslagen || l.geenSlag)
+  if (klaarMetBeurt) b.aanZet = ander(wie)
+  return b
+}
+export function geldigBeleg(b) {
+  return Boolean(b && b.modus === 'beleg' && NIVEAUS[b.niveau] && [1, 2].includes(b.aanZet) && b.spelers && geldigeStand(b.spelers[1]) && geldigeStand(b.spelers[2]))
+}
+
 // Duel: de ander stuurt een vloek; je vijand krijgt er n leven bij (tot hij verslagen is)
 export function vervloek(s0, n = 10) {
   if (!s0 || s0.klaar || !vijand(s0)) return null

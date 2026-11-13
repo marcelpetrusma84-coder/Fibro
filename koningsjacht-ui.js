@@ -15,6 +15,8 @@
 //   wedstrijd ieder een eigen spel met hetzelfde kasteel (zaadje); je ziet elkaars stand ('voortgang'). Wie het
 //             verst komt (of het eerst alle 12 verslaat), wint
 //   duel      als wedstrijd, maar precies raak = een vloek naar de ander ('vloek'): zijn vijand krijgt 10 leven erbij
+//   beleg     (v6) ieder een eigen kasteel, om de beurt: je valt de voorste wachter van de ander aan en weert zijn
+//             klap af (koningsjacht.js nieuwBeleg/belegStap). De hele stand gaat over het kanaal, net als bij samen
 // Speler 1 kiest de manier en het niveau ('opnieuw'); speler 2 wacht. Wie later binnenkomt, vraagt de stand op.
 // v4 (13 nov 2026, Marcel): kaarslicht. Twee kaarsen op tafel met flakkerende vlammen; de randen van de tafel zijn
 // donker en het warme licht flakkert mee. Aan/uit met 🕯️ (bewaard: fibro_koningsjacht_kaars, standaard aan).
@@ -107,6 +109,7 @@ const CSS = `
 .kj-rechts .kj-vlam{animation-duration:1.3s;animation-delay:-.6s}
 @keyframes kjVlam{0%{transform:scale(1,1) skewX(0)}20%{transform:scale(.94,1.08) skewX(3deg)}45%{transform:scale(1.04,.95) skewX(-2deg)}70%{transform:scale(.97,1.1) skewX(2deg)}100%{transform:scale(1.02,.97) skewX(-3deg)}}
 .kj.kj-geenkaars .kj-kaarslicht,.kj.kj-geenkaars .kj-kaars{display:none}
+.kt-tafel.kj .kt-info{flex-wrap:wrap;justify-content:center;width:96%;white-space:normal;row-gap:4px}
 .kt-tafel.kj .kt-onder,.kt-tafel.kj .kt-status,.kt-tafel.kj .kt-info,.kt-tafel.kj .kj-stats{position:relative;z-index:32}.kt-tafel.kj .kt-info{position:absolute}
 @media (prefers-reduced-motion:reduce){.kj-vlam{animation:none}}
 .kj-pil{padding:3px 10px;border-radius:999px;background:#000a;border:1px solid #f5d08a88;font-weight:800;font-size:13px}
@@ -141,7 +144,8 @@ function regelsHtml() {
     + p('In de chat kun je met een vriend spelen. Wie het spel begint, kiest hoe:')
     + '<ul>' + li('Samen: één kasteel, om de beurt. Elk 7 kaarten in je hand; ♦ deelt om en om uit. Wie aanvalt, weert ook af.')
     + li('Wedstrijd: ieder een eigen kasteel, precies hetzelfde geschud. Wie het verst komt, wint.')
-    + li('Duel: als de wedstrijd, maar precies raak stuurt een vloek: de vijand van de ander krijgt 10 leven erbij.') + '</ul>'
+    + li('Duel: als de wedstrijd, maar precies raak stuurt een vloek: de vijand van de ander krijgt 10 leven erbij.')
+    + li('Belegering: ieder een eigen kasteel. Om de beurt val je de voorste wachter van de ander aan en weer je zijn klap af. Precies raak = je neemt hem gevangen. Wie het eerst alle 12 wachters van de ander verslaat, wint.') + '</ul>'
     + '<p style="font-size:12px;opacity:.75;margin-top:10px">' + esc(T('Gebaseerd op het kaartspel Regicide van Badgers From Mars.')) + '</p>'
 }
 function toonRegels() {
@@ -162,11 +166,11 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
   const kanaal = spelKanaal, samenSpel = Boolean(kanaal)
   const ik = benIkSpeler1 ? 1 : 2, hij = ik === 1 ? 2 : 1
   const naam = vriendNaam || T('vriend')
-  let modus = 'solo', spelId = -1, nr = 0, opzet = null, tegen = null, afgelopen = false
+  let modus = 'solo', spelId = -1, nr = 0, opzet = null, tegen = null, afgelopen = false, beleg = null
   const vloeken = new Set()
   const stuur = (event, payload) => { try { kanaal && kanaal.send({ type: 'broadcast', event, payload }) } catch (e) {} }
   const mijnHand = s => modus === 'samen' ? K.hand(s, ik) : s.hand
-  const aanMij = s => modus !== 'samen' || s.aanZet === ik
+  const aanMij = s => modus === 'beleg' ? Boolean(beleg && !beleg.klaar && beleg.aanZet === ik) : (modus !== 'samen' || s.aanZet === ik)
   const inRij = fn => { rij = rij.then(async () => { bezig++; try { await fn() } finally { bezig-- } }).catch(e => console.error('[koningsjacht]', e)); return rij }
 
   // ── Het beginscherm: kies een niveau (of ga verder) ──
@@ -200,7 +204,8 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
   // Met z'n tweeën: speler 1 kiest hoe jullie spelen en het niveau
   const MODI = [['samen', '🤝', 'Samen tegen het kasteel', 'Eén team, om de beurt. Samen winnen of samen verliezen.'],
     ['wedstrijd', '🏁', 'Wedstrijd', 'Ieder een eigen kasteel, precies hetzelfde geschud. Wie het verst komt, wint.'],
-    ['duel', '⚔️', 'Duel', 'Als de wedstrijd, maar precies raak stuurt een vloek: de vijand van de ander krijgt 10 leven erbij.']]
+    ['duel', '⚔️', 'Duel', 'Als de wedstrijd, maar precies raak stuurt een vloek: de vijand van de ander krijgt 10 leven erbij.'],
+    ['beleg', '🏰', 'Belegering', 'Ieder een eigen kasteel. Om de beurt val je de wachters van de ander aan en weer je hun klap af. Wie het eerst het kasteel van de ander verovert, wint.']]
   function kiesSamenScherm() {
     tafel = null; staat = null; afgelopen = false
     let gekozen = 'samen'
@@ -233,7 +238,12 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
   // Speler 1 begint een spel (ook bij Opnieuw spelen)
   function begin(m, niveau) {
     const id = Math.max(Date.now(), spelId + 1)
-    if (m === 'samen') {
+    if (m === 'beleg') {
+      const b = K.nieuwBeleg({ niveau, begint: 1 })
+      opzet = { modus: m, niveau, spelId: id }
+      stuur('opnieuw', { modus: m, niveau, spelId: id, nr: 0, beleg: b })
+      openSpel({ modus: m, niveau, spelId: id, beleg: b, nr: 0 })
+    } else if (m === 'samen') {
       const st = K.nieuwSpel({ niveau, samen: true, begint: 1 })
       opzet = { modus: m, niveau, spelId: id }
       stuur('opnieuw', { modus: m, niveau, spelId: id, nr: 0, staat: st })
@@ -249,12 +259,13 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
   function openSpel(o) {
     modus = o.modus; spelId = o.spelId; nr = o.nr || 0; tegen = null; afgelopen = false; vloeken.clear()
     opzet = { modus: o.modus, niveau: o.niveau, spelId: o.spelId, zaad: o.zaad }
-    const st = modus === 'samen' ? o.staat : K.nieuwSpel({ niveau: o.niveau, rng: K.zaadRng(o.zaad) })
+    beleg = modus === 'beleg' ? o.beleg : null
+    const st = modus === 'beleg' ? beleg.spelers[ik] : modus === 'samen' ? o.staat : K.nieuwSpel({ niveau: o.niveau, rng: K.zaadRng(o.zaad) })
     speel(st, true)
-    if (modus !== 'samen') stuurVoortgang()
+    if (modus === 'wedstrijd' || modus === 'duel') stuurVoortgang()
   }
   function stuurVoortgang() {
-    if (!samenSpel || modus === 'samen' || !staat) return
+    if (!samenSpel || (modus !== 'wedstrijd' && modus !== 'duel') || !staat) return
     const v = K.vijandInfo(staat)
     stuur('voortgang', { wie: ik, spelId, verslagen: staat.verslagen, over: v ? v.over : 0, leven: v ? v.leven : 0, klaar: staat.klaar, gewonnen: staat.gewonnen, narren: staat.narrenGebruikt })
   }
@@ -262,12 +273,21 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     const nieuwer = (id, n) => id > spelId || (id === spelId && n > nr)
     kanaal.on('broadcast', { event: 'opnieuw' }, msg => {
       const p = msg.payload || {}
-      if (!(p.spelId > spelId) || !['samen', 'wedstrijd', 'duel'].includes(p.modus) || !K.NIVEAUS[p.niveau]) return
+      if (!(p.spelId > spelId) || !['samen', 'wedstrijd', 'duel', 'beleg'].includes(p.modus) || !K.NIVEAUS[p.niveau]) return
       if (p.modus === 'samen' && !K.geldigeStand(p.staat)) return
+      if (p.modus === 'beleg' && !K.geldigBeleg(p.beleg)) return
       tafel?.sluitEinde?.(); openSpel(p)
     })
     const zet = msg => {
       const p = msg.payload || {}
+      if (p.beleg) {   // belegering: de hele stand van allebei
+        if (!K.geldigBeleg(p.beleg)) return
+        if (p.spelId > spelId) { openSpel({ modus: 'beleg', niveau: p.beleg.niveau, spelId: p.spelId, beleg: p.beleg, nr: p.nr }); return }
+        if (modus !== 'beleg' || !nieuwer(p.spelId, p.nr)) return
+        const oudB = beleg; nr = p.nr; beleg = p.beleg; staat = beleg.spelers[ik]
+        inRij(() => verwerkBeleg(oudB, beleg))
+        return
+      }
       if (p.modus && p.modus !== 'samen') { if (p.spelId > spelId && K.NIVEAUS[p.niveau]) openSpel(p); return }
       if (!p.staat || !K.geldigeStand(p.staat) || !p.staat.handen) return
       if (p.spelId > spelId) { openSpel({ modus: 'samen', niveau: p.staat.niveau, spelId: p.spelId, staat: p.staat, nr: p.nr }); return }
@@ -280,12 +300,14 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     kanaal.on('broadcast', { event: 'vraag-stand' }, msg => {
       const p = msg.payload || {}
       if (spelId < 0) return
-      if (modus === 'samen') { if (staat && (spelId > (p.spelId ?? -1) || (spelId === (p.spelId ?? -1) && nr > (p.nr ?? 0)))) stuur('stand', { staat, nr, spelId }) }
+      const nieuwerBijMij = spelId > (p.spelId ?? -1) || (spelId === (p.spelId ?? -1) && nr > (p.nr ?? 0))
+      if (modus === 'beleg') { if (beleg && nieuwerBijMij) stuur('stand', { beleg, nr, spelId }) }
+      else if (modus === 'samen') { if (staat && nieuwerBijMij) stuur('stand', { staat, nr, spelId }) }
       else { if (spelId > (p.spelId ?? -1) && opzet) stuur('stand', opzet); stuurVoortgang() }
     })
     kanaal.on('broadcast', { event: 'voortgang' }, msg => {
       const p = msg.payload || {}
-      if (p.wie !== hij || p.spelId !== spelId || modus === 'samen') return
+      if (p.wie !== hij || p.spelId !== spelId || (modus !== 'wedstrijd' && modus !== 'duel')) return
       const oud = tegen; tegen = p
       if (tafel && staat) { tekenInfo(staat); if (oud && p.verslagen > oud.verslagen && !afgelopen) tafel.status(T('{naam} versloeg al {n} vijanden', { naam, n: p.verslagen })) }
       controleerUitslag()
@@ -299,8 +321,8 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     kanaal.on('broadcast', { event: 'kaartreactie' }, msg => { const e = msg.payload && msg.payload.emoji; if (tafel && REACTIES.includes(e)) tafel.reactie(e, 'ander') })
     const klok = setInterval(() => {
       if (!inhoud.isConnected) { clearInterval(klok); return }
-      if (spelId < 0 || (modus === 'samen' && staat && !staat.klaar && staat.aanZet !== ik)) stuur('vraag-stand', { spelId, nr })
-      else if (modus !== 'samen' && staat) { stuurVoortgang(); if (!tegen) stuur('vraag-stand', { spelId, nr }) }
+      if (spelId < 0 || (modus === 'samen' && staat && !staat.klaar && staat.aanZet !== ik) || (modus === 'beleg' && beleg && !beleg.klaar && beleg.aanZet !== ik)) stuur('vraag-stand', { spelId, nr })
+      else if ((modus === 'wedstrijd' || modus === 'duel') && staat) { stuurVoortgang(); if (!tegen) stuur('vraag-stand', { spelId, nr }) }
     }, 3000)
     if (!benIkSpeler1) stuur('vraag-stand', { spelId, nr })
   }
@@ -382,6 +404,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
   function statusTekst(s = staat) {
     if (!s || s.klaar) return ''
     if (afgelopen) return ''
+    if (modus === 'beleg' && beleg && !aanMij(s)) return T('{naam} valt jouw kasteel aan...', { naam })
     if (!aanMij(s)) return s.fase === 'verdedig' ? T('{naam} moet afweren...', { naam }) : T('{naam} is aan de beurt...', { naam })
     if (s.fase === 'verdedig') {
       const n = K.teAfweren(s), gekozen = K.som(selectie)
@@ -421,7 +444,10 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
   function tekenInfo(s) {
     const pil = t => '<span class="kj-pil">' + t + '</span>'
     let extra = ''
-    if (modus === 'samen') extra = pil((s.aanZet === hij ? '▶ ' : '') + '🤝 ' + esc(naam) + ': ' + K.hand(s, hij).length)
+    if (modus === 'beleg' && beleg) {
+      const f = beleg.spelers[hij], v = K.vijandInfo(f)
+      extra = pil((beleg.aanZet === hij ? '▶ ' : '') + '⚔️ ' + esc(naam)) + pil('🏰 ' + esc(T('Jouw kasteel')) + ': ' + (12 - f.verslagen) + (v ? ' · ❤ ' + v.over : ''))
+    } else if (modus === 'samen') extra = pil((s.aanZet === hij ? '▶ ' : '') + '🤝 ' + esc(naam) + ': ' + K.hand(s, hij).length)
     else if (samenSpel) extra = pil((modus === 'duel' ? '⚔️ ' : '🏁 ') + esc(naam) + ': ' + (tegen ? tegen.verslagen : 0) + '/12' + (tegen && tegen.klaar && !tegen.gewonnen ? ' 💀' : ''))
     tafel.info(pil('👑 ' + s.verslagen + '/12') + pil('🃏 ' + s.narren) + (samenSpel ? '' : pil('🗑️ ' + s.afleg.length)) + extra)
   }
@@ -430,7 +456,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     const p = tafel?.element.querySelector('.kj-vijand')
     if (!p) return
     const v = K.vijandInfo(s)
-    p.querySelector('.kj-kasteel > span').textContent = T('Kasteel: {n}', { n: Math.max(0, s.kasteel.length - 1) })
+    p.querySelector('.kj-kasteel > span').textContent = modus === 'beleg' ? T('{naam}: {n}', { naam, n: Math.max(0, s.kasteel.length - 1) }) : T('Kasteel: {n}', { n: Math.max(0, s.kasteel.length - 1) })
     p.querySelector('.kj-kasteel').style.visibility = s.kasteel.length > 1 ? '' : 'hidden'
     const kaartEl = p.querySelector('.kj-kaart')
     if (!v) { kaartEl.innerHTML = ''; for (const c of ['.kj-naam', '.kj-regel', '.kj-immuun', '.kj-balk span']) p.querySelector(c).textContent = ''; p.querySelector('.kj-vul').style.width = '0%'; return }
@@ -664,7 +690,8 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
   // Na jouw zet: met z'n tweeën de stand (samen) of je voortgang (wedstrijd, duel) naar de ander
   function deel(nieuw) {
     if (!samenSpel) return
-    if (modus === 'samen') { nr++; stuur('zet', { staat: nieuw, nr, spelId }) }
+    if (modus === 'beleg') { const b = K.belegStap(beleg, ik, nieuw); if (b) { beleg = b; nr++; stuur('zet', { beleg, nr, spelId }) } }
+    else if (modus === 'samen') { nr++; stuur('zet', { staat: nieuw, nr, spelId }) }
     else if (modus === 'duel' && nieuw.laatste.soort === 'aanval' && nieuw.laatste.precies) stuur('vloek', { naar: hij, spelId, id: spelId + ':' + nieuw.beurt })
   }
 
@@ -770,6 +797,38 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     teken()
   }
 
+  // ── Belegering: wat de ander deed (hij viel jouw kasteel aan) ──
+  async function verwerkBeleg(oudB, b) {
+    if (!tafel) return
+    const l = b.laatste || {}
+    if (l.wie === hij) {
+      const wachter = l.vijand ? vijandNaam(l.vijand).toLowerCase() : ''
+      if (l.soort === 'aanval') {
+        if (l.verslagen) { geluid('verslagen', l.precies); tafel.effect('🏰 ' + (l.precies ? T('{naam} neemt jouw {wachter} gevangen!', { naam, wachter }) : T('{naam} verslaat jouw {wachter}!', { naam, wachter })), { gloed: false, geluid: false }) }
+        else { geluid('zwaard', l.schade >= 15 ? 2 : 1); tafel.tril([25, 30, 25]); tafel.effect('⚔️ ' + T('{naam} valt jouw {wachter} aan: −{n}', { naam, wachter, n: l.schade }), { gloed: false, geluid: false }) }
+        await wacht(rustig() ? 400 : 1100)
+      } else if (l.soort === 'afweer') { geluid('afweren'); tafel.effect('🛡️ ' + T('{naam} weert af!', { naam }), { gloed: false, geluid: false }); await wacht(600) }
+      else if (l.soort === 'pas') { geluid('passen'); tafel.effect(T('{naam} past', { naam }), { gloed: false, geluid: false }); await wacht(500) }
+      else if (l.soort === 'nar') { geluid('nar'); tafel.effect('🃏 ' + T('{naam}: nar!', { naam }), { geluid: false }); await wacht(600) }
+    }
+    teken()
+    if (b.klaar) return belegEinde()
+    if (b.aanZet === ik && (!oudB || oudB.aanZet !== ik)) { tafel.geluid.beurt?.(); tafel.tril(15); tafel.effect(T('Jouw beurt!'), { gloed: false, geluid: false }) }
+  }
+  function belegEinde() {
+    if (afgelopen || !beleg) return
+    afgelopen = true
+    const winst = beleg.winnaar === ik
+    tafel.knoppen([]); tafel.toon(beeld(staat, { mijnBeurt: false, status: '' }))
+    geluid(winst ? 'win' : 'verlies')
+    tafel.einde({
+      gewonnen: winst,
+      titel: winst ? '👑 ' + T('Jij wint!') : '🏰 ' + T('{naam} wint!', { naam }),
+      sub: T('Jij {a} · {naam} {b}', { a: beleg.spelers[ik].verslagen + '/12', b: beleg.spelers[hij].verslagen + '/12', naam }),
+      opnieuw: () => startScherm(),
+    })
+  }
+
   // ── Wedstrijd en duel: wie wint? ──
   function controleerUitslag() {
     if (modus === 'solo' || modus === 'samen' || afgelopen || !staat || !tafel) return
@@ -800,7 +859,8 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
   function naZet(oud) {
     teken()
     if (modus === 'samen' && !staat.klaar && staat.aanZet === ik && oud && oud.aanZet !== ik) { tafel.geluid.beurt?.(); tafel.tril(15) }
-    if (samenSpel && modus !== 'samen') { stuurVoortgang(); controleerUitslag(); return }
+    if (modus === 'wedstrijd' || modus === 'duel') { stuurVoortgang(); controleerUitslag(); return }
+    if (modus === 'beleg') { if (beleg && beleg.klaar) belegEinde(); return }
     if (!staat.klaar) return
     if (samenSpel) {   // samen: allebei hetzelfde einde
       geluid(staat.gewonnen ? 'win' : 'verlies')

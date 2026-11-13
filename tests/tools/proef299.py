@@ -10,6 +10,7 @@
 #  H. het spel wordt bewaard: na herladen "Verder spelen"
 #  I. verliezen (kan niet afweren) en winnen (medaille op het beginscherm)
 #  J. in het Engels: King Hunt; geen paginafouten
+#  L. v4 (13 nov 2026): kaarslicht (twee kaarsen, flakkerend licht), aan/uit met 🕯️
 #  K. v2 (13 nov 2026): na een tik staat het geluid open (iPhone); epische muziek aan/uit (🎵, bewaard), en bij een aanval licht: gloeiende kaarten, een zwaardhaal,
 #     vonken; ♣ = twee halen; de vijand slaat terug met drie klauwhalen; geluiden via koningsjacht-geluid.js
 # python3 -I proef299.py <map>
@@ -115,6 +116,12 @@ try:
         check(wacht(pg, KLAAR), 'B: na het delen ben jij aan de beurt')
         check(pg.evaluate("() => { const t = document.querySelector('.kt-tafel'); return t.classList.contains('kt-hout') && t.classList.contains('kj') && getComputedStyle(t).backgroundImage.includes('hout.webp') }"), 'B: houten tafelblad')
         check(not pg.query_selector('.kt-stijlknop'), 'B: geen knop 🎴 (de kaarten zijn altijd perkament)')
+        check(pg.locator('.kj-kaarslicht').count() == 1 and pg.locator('.kt-midden .kj-kaars .kj-vlam').count() == 2 and pg.is_visible('.kj-kaars.kj-links'),
+              'L: kaarslicht: twee kaarsen met een vlam en een donkere rand (standaard aan)')
+        knop(pg, 'kaars')
+        check(not pg.is_visible('.kj-kaarslicht') and pg.evaluate("() => localStorage.getItem('fibro_koningsjacht_kaars')") == 'uit', 'L: 🕯️ = kaarslicht uit (en onthouden)')
+        knop(pg, 'kaars')
+        check(pg.is_visible('.kj-kaarslicht') and 'kt-nadruk' in pg.get_attribute('.kt-knop[data-naam=kaars]', 'class'), 'L: 🕯️ nog eens = weer aan')
         check(pg.evaluate("() => [...document.querySelectorAll('.kt-hand .kt-kaart')].every(k => k.querySelector('.kt-pk img[src*=\"kaarten/perkament/\"]'))"), 'B: alle kaarten in je hand zijn perkament')
         check(len(pg.evaluate(HAND)) == 8, 'B: 8 kaarten in je hand')
         vijand = pg.evaluate("() => document.querySelector('.kj-kaart').dataset.id")

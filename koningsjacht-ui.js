@@ -10,6 +10,8 @@
 // je kaarten vliegen gloeiend naar de vijand, een zwaardhaal van licht, vonken, een lichtflits en de tafel trilt. Elke
 // soort heeft zijn eigen licht: ♣ twee halen (dubbel), ♠ een blauw schild, ♥ rode hartjes naar de taveerne, ♦ paarse
 // fonkels. De vijand slaat terug met drie rode klauwhalen. Verslagen: gouden licht en brokstukken.
+// v4 (13 nov 2026, Marcel): kaarslicht. Twee kaarsen op tafel met flakkerende vlammen; de randen van de tafel zijn
+// donker en het warme licht flakkert mee. Aan/uit met 🕯️ (bewaard: fibro_koningsjacht_kaars, standaard aan).
 import * as K from './koningsjacht.js?v=1'
 import { maakKaartTafel, kaartSvg, achterkantSvg, KLEUR_TEKEN, zetStijl } from './kaartspel-hulp.js?v=5'
 import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek } from './koningsjacht-geluid.js?v=2'
@@ -86,6 +88,20 @@ const CSS = `
 .kj-zwevend{font-size:22px;text-shadow:0 0 10px currentColor}
 .kj-muziek{display:flex;align-items:center;gap:8px}
 .kj-muziek[aria-pressed=true]{background:#8b3fd1;border-color:#c084fc;box-shadow:0 0 14px #8b3fd1aa}
+.kj-kaarslicht{position:absolute;inset:0;pointer-events:none;z-index:30;transition:opacity .5s}
+.kj-kaarslicht .kj-donker{position:absolute;inset:0;background:radial-gradient(ellipse 85% 70% at 50% 52%,#0000 25%,#0a0400a6 70%,#050200e0 100%)}
+.kj-kaarslicht .kj-warm{position:absolute;inset:0;mix-blend-mode:soft-light;opacity:var(--kj-licht,.9);background:radial-gradient(circle at 12% 46%,#ffb347 0,#ff8c1a55 18%,#0000 42%),radial-gradient(circle at 88% 46%,#ffb347 0,#ff8c1a55 18%,#0000 42%)}
+.kj-kaarslicht .kj-gloed{position:absolute;inset:0;mix-blend-mode:screen;opacity:calc(var(--kj-licht,.9) * .55);background:radial-gradient(circle at 12% 46%,#ffcf7a66 0,#ff9a2e22 14%,#0000 30%),radial-gradient(circle at 88% 46%,#ffcf7a66 0,#ff9a2e22 14%,#0000 30%)}
+.kj-kaars{position:absolute;bottom:18%;width:30px;height:96px;pointer-events:none;z-index:31}
+.kj-kaars.kj-links{left:calc(12% - 15px)}.kj-kaars.kj-rechts{left:calc(88% - 15px)}
+.kj-kaars svg{position:absolute;left:0;bottom:0;width:30px;height:70px}
+.kj-vlam{position:absolute;left:50%;bottom:62px;width:14px;height:26px;margin-left:-7px;transform-origin:50% 100%;border-radius:50% 50% 45% 45%/65% 65% 35% 35%;
+  background:radial-gradient(ellipse at 50% 72%,#fff 0,#fff6c2 22%,#ffc94a 48%,#ff7a18 75%,#ff7a1800 100%);box-shadow:0 0 18px 6px #ffb34788,0 0 44px 16px #ff8c1a44;animation:kjVlam 1.6s ease-in-out infinite alternate}
+.kj-rechts .kj-vlam{animation-duration:1.3s;animation-delay:-.6s}
+@keyframes kjVlam{0%{transform:scale(1,1) skewX(0)}20%{transform:scale(.94,1.08) skewX(3deg)}45%{transform:scale(1.04,.95) skewX(-2deg)}70%{transform:scale(.97,1.1) skewX(2deg)}100%{transform:scale(1.02,.97) skewX(-3deg)}}
+.kj.kj-geenkaars .kj-kaarslicht,.kj.kj-geenkaars .kj-kaars{display:none}
+.kt-tafel.kj .kt-onder,.kt-tafel.kj .kt-status,.kt-tafel.kj .kt-info,.kt-tafel.kj .kj-stats{position:relative;z-index:32}.kt-tafel.kj .kt-info{position:absolute}
+@media (prefers-reduced-motion:reduce){.kj-vlam{animation:none}}
 .kj-pil{padding:3px 10px;border-radius:999px;background:#000a;border:1px solid #f5d08a88;font-weight:800;font-size:13px}
 `
 function zetCss() {
@@ -162,6 +178,38 @@ export function start() {
   // De muziek stopt als je het spel verlaat, en zwijgt zolang de app op de achtergrond staat
   const bewaker = setInterval(() => { if (!inhoud.isConnected) { clearInterval(bewaker); stopMuziek() } }, 1000)
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopMuziek(); else if (muziekStaatAan() && inhoud.isConnected) startMuziek() })
+  // ── Kaarslicht ──
+  const KAARS = 'fibro_koningsjacht_kaars'
+  const kaarsAan = () => { try { return localStorage.getItem(KAARS) !== 'uit' } catch (e) { return true } }
+  function wisselKaars() {
+    try { localStorage.setItem(KAARS, kaarsAan() ? 'uit' : 'aan') } catch (e) {}
+    tafel?.element.classList.toggle('kj-geenkaars', !kaarsAan()); tekenKnoppen()
+  }
+  const kaarsSvg = '<svg viewBox="0 0 30 70" aria-hidden="true"><defs><linearGradient id="kjWas" x1="0" x2="1"><stop offset="0" stop-color="#d8c7a0"/><stop offset=".45" stop-color="#fff6dc"/><stop offset="1" stop-color="#b9a37a"/></linearGradient></defs>'
+    + '<ellipse cx="15" cy="66" rx="14" ry="4" fill="#3a2410" opacity=".7"/><rect x="5" y="58" width="20" height="9" rx="3" fill="#8a6a2a"/><rect x="8" y="12" width="14" height="49" rx="3" fill="url(#kjWas)"/>'
+    + '<path d="M8 15 q3 6 0 12 M21 14 q-2 8 1 15" stroke="#fff6dc" stroke-width="2.5" fill="none" stroke-linecap="round"/><rect x="14.3" y="5" width="1.4" height="8" fill="#2a1a0a"/></svg>'
+  function zetKaarslicht() {
+    const el = tafel.element
+    el.classList.toggle('kj-geenkaars', !kaarsAan())
+    const licht = document.createElement('div'); licht.className = 'kj-kaarslicht'
+    licht.innerHTML = '<div class="kj-warm"></div><div class="kj-gloed"></div><div class="kj-donker"></div>'
+    el.appendChild(licht)
+    const midden = el.querySelector('.kt-midden')
+    for (const kant of ['kj-links', 'kj-rechts']) {
+      const k = document.createElement('div'); k.className = 'kj-kaars ' + kant
+      k.innerHTML = kaarsSvg + '<div class="kj-vlam"></div>'
+      midden.appendChild(k)
+    }
+    // het licht flakkert: steeds een beetje anders, zacht overvloeiend
+    if (rustig()) return
+    let nu = 0.9
+    const klok = setInterval(() => {
+      if (!el.isConnected) { clearInterval(klok); return }
+      const doel = 0.72 + Math.random() * 0.28 - (Math.random() < 0.06 ? 0.2 : 0)
+      nu += (doel - nu) * 0.45
+      licht.style.setProperty('--kj-licht', nu.toFixed(3))
+    }, 90)
+  }
   function wisselMuziek() { zetMuziek(!muziekStaatAan()); tekenKnoppen() }
 
   // ── De tafel ──
@@ -178,6 +226,7 @@ export function start() {
       onSelectie: ids => { selectie = ids; if (!bezig) { tekenKnoppen(); tafel.status(statusTekst()) } },
     })
     tafel.element.classList.add('kj')
+    zetKaarslicht()
     const ander = tafel.element.querySelector('.kt-ander')
     const paneel = document.createElement('div'); paneel.className = 'kj-vijand'
     paneel.innerHTML = '<div class="kj-kasteel" aria-hidden="true"><div>' + achterkantSvg(STIJL) + '</div><div>' + achterkantSvg(STIJL) + '</div><div>'
@@ -231,6 +280,7 @@ export function start() {
     }
     if (staat.narren > 0) lijst.push({ naam: 'nar', tekst: '🃏 ' + T('Nar') + ' ×' + staat.narren, schud: staat.fase === 'verdedig' && K.som(staat.hand) < K.teAfweren(staat), opKlik: nar })
     lijst.push({ naam: 'muziek', tekst: '🎵', nadruk: muziekStaatAan(), opKlik: wisselMuziek })
+    lijst.push({ naam: 'kaars', tekst: '🕯️', nadruk: kaarsAan(), opKlik: wisselKaars })
     lijst.push({ naam: 'regels', tekst: '📜', opKlik: toonRegels })
     tafel.knoppen(lijst)
   }

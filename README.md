@@ -104,16 +104,19 @@ You can help with:
 - Privacy-first storage ideas
 - Documentation
 
-See `docs/CONTRIBUTING.md` for details.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for details. Security issues: see [`SECURITY.md`](SECURITY.md).
 
 ---
 
 ## License
 
-MIT License
+GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later), see [`LICENSE`](LICENSE)
+and the explanation in [`LICENTIE.md`](LICENTIE.md). The name "Stekky", the app icon and the logo are not covered
+by this license. Versions published before 13 November 2026 were under the MIT License.
 
-Exception: the three-player chess artwork, adapted board geometry, and reference
-fixture use CC BY-SA 3.0. See [artwork attribution](assets/chess-three/README.md).
+Third-party parts keep their own licenses: fonts in `lettertypen/` (OFL-1.1 / Apache-2.0), `vendor/jsqr`
+(Apache-2.0), `vendor/stockfish` (GPL-3.0), and the three-player chess artwork, adapted board geometry, and reference
+fixture (CC BY-SA 3.0, see [artwork attribution](assets/chess-three/README.md)).
 
 For three-player chess setup, FIBRO TEST, and validation commands, see the
 [integration handoff](docs/three-player-integration.md).

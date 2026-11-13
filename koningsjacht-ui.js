@@ -22,8 +22,8 @@
 // donker en het warme licht flakkert mee. Aan/uit met 🕯️ (bewaard: fibro_koningsjacht_kaars, standaard aan).
 import * as K from './koningsjacht.js?v=2'
 import { maakKaartTafel, kaartSvg, achterkantSvg, KLEUR_TEKEN, zetStijl, REACTIES } from './kaartspel-hulp.js?v=5'
-import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek } from './koningsjacht-geluid.js?v=2'
-import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=2'
+import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek, zetMuziekThema } from './koningsjacht-geluid.js?v=3'
+import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=3'
 import { verbindBierpul } from './koningsjacht-bier.js?v=1'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
@@ -192,7 +192,19 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
   }
   let scene = null, flikkerTimer = null, anderBier = null, bierTimer = null
 
-  const sceneOpties = () => ({ ...instellingen, anderBier, eigenNaam: T('Jij') })
+  const sceneOpties = () => ({ ...instellingen, anderBier, eigenNaam: T('Jij'), bierLabel: T('Inhoud van je bierpul'), onBierInhoud: wijzigBierInhoud })
+  zetMuziekThema(instellingen.middeleeuws ? 'middeleeuws' : 'standaard')
+
+  function wijzigBierInhoud(niveau, afgerond = false) {
+    if (!Number.isFinite(niveau)) return
+    instellingen.bierInhoud = Math.round(Math.max(0, Math.min(100, niveau)))
+    scene?.update(sceneOpties())
+    const slider = document.getElementById('kj-bier-inhoud')
+    if (slider) slider.value = String(instellingen.bierInhoud)
+    schrijf(INSTELLINGEN, instellingen)
+    if (afgerond) { clearTimeout(bierTimer); bierTimer = null; stuurBier() }
+    else if (samenSpel && !bierTimer) bierTimer = setTimeout(() => { bierTimer = null; stuurBier() }, 200)
+  }
 
   function stopScene() {
     clearInterval(flikkerTimer); flikkerTimer = null
@@ -204,6 +216,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     actief?.classList.toggle('kj-sfeer', instellingen.middeleeuws)
     actief?.classList.toggle('kj-geenflikkering', !instellingen.flikkeren)
     scene?.update(sceneOpties())
+    zetMuziekThema(instellingen.middeleeuws ? 'middeleeuws' : 'standaard')
     verversKaarslicht()
     schrijf(INSTELLINGEN, instellingen)
   }
@@ -228,7 +241,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Achtergrond bewegen')) + '</b><small>' + esc(T('Beweeg je telefoon voor een subtiel diepte-effect.')) + '</small></span><input type="checkbox" data-instelling="beweging"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Kaarsen laten flikkeren')) + '</b><small>' + esc(T('Laat de vlam en het kaarslicht zacht bewegen.')) + '</small></span><input type="checkbox" data-instelling="flikkeren"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Bierpul tonen')) + '</b><small>' + esc(T('Zet een bierpul op de tafel.')) + '</small></span><input type="checkbox" data-instelling="bierpul"></label>'
-      + '<div class="kj-bier-inhoud"><label for="kj-bier-inhoud">' + esc(T('Inhoud van je bierpul')) + '</label><input id="kj-bier-inhoud" type="range" min="0" max="100" step="1"><output for="kj-bier-inhoud"></output><button type="button" class="kj-bier-vol">' + esc(T('Nieuwe volle pul')) + '</button></div>'
+      + '<div class="kj-bier-inhoud"><label for="kj-bier-inhoud">' + esc(T('Inhoud van je bierpul')) + '</label><input id="kj-bier-inhoud" type="range" min="0" max="100" step="1"><button type="button" class="kj-bier-vol">' + esc(T('Nieuwe volle pul')) + '</button></div>'
       + '<p class="kj-instellingen-info" role="status" aria-live="polite"></p></section>'
     document.body.appendChild(scherm)
     const kaart = scherm.querySelector('.kj-instellingen-kaart')
@@ -263,20 +276,17 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
       })
     }
     const bierSlider = scherm.querySelector('#kj-bier-inhoud')
-    const bierWaarde = scherm.querySelector('.kj-bier-inhoud output')
     const nieuwePul = scherm.querySelector('.kj-bier-vol')
     const toonBierWaarde = () => {
-      bierSlider.value = String(instellingen.bierInhoud); bierWaarde.textContent = instellingen.bierInhoud + '%'
+      bierSlider.value = String(instellingen.bierInhoud)
       bierSlider.disabled = nieuwePul.disabled = !instellingen.bierpul
     }
     toonBierWaarde()
     scherm.querySelector('[data-instelling="bierpul"]').addEventListener('change', toonBierWaarde)
     bierSlider.addEventListener('input', () => {
-      instellingen.bierInhoud = Number(bierSlider.value)
-      toonBierWaarde(); pasInstellingenToe()
-      if (samenSpel && !bierTimer) bierTimer = setTimeout(() => { bierTimer = null; stuurBier() }, 200)
+      wijzigBierInhoud(Number(bierSlider.value))
     })
-    bierSlider.addEventListener('change', () => { clearTimeout(bierTimer); bierTimer = null; stuurBier() })
+    bierSlider.addEventListener('change', () => wijzigBierInhoud(Number(bierSlider.value), true))
     nieuwePul.addEventListener('click', () => {
       instellingen.bierInhoud = 100
       instellingen.bierOorRechts = !instellingen.bierOorRechts

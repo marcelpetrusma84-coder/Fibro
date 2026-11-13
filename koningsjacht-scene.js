@@ -4,7 +4,7 @@ const eigenaren = new WeakMap()
 // Ook een nog openstaande permissievraag blijft zo geldig bij wisselen van scherm.
 const sensorrechten = new WeakMap()
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n))
-const bedienbaar = 'button, input, select, textarea, label, a, summary, dialog, video, canvas, [contenteditable], [role="button"], [role="dialog"], .kt-kaart, .kt-stapel, .kt-afleg, .kt-onder, .kt-info, .kj-vijand'
+const bedienbaar = 'button, input, select, textarea, label, a, summary, dialog, video, canvas, [contenteditable], [role="button"], [role="dialog"], [role="slider"], .kt-kaart, .kt-stapel, .kt-afleg, .kt-onder, .kt-info, .kj-vijand'
 
 export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
   if (!tafelElement?.ownerDocument) throw new Error('De kaarttafel ontbreekt.')
@@ -21,7 +21,7 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
   }
   let opties = { beweging: false, middeleeuws: false, flikkeren: true, bierpul: false, bierInhoud: 100, bierOorRechts: true, eigenNaam: '', anderBier: null, ...instellingen }
   let klaar = false, baseline = null, frame = null, x = 0, y = 0, doelX = 0, doelY = 0
-  let laatsteBron = ''
+  let laatsteBron = '', bierPointer = null
   const cleanup = []
   const laag = doc.createElement('div')
   laag.className = 'kj-scene-laag'
@@ -54,12 +54,10 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
     const naam = doc.createElement('span')
     naam.className = 'kj-scene-bier-naam'
     naam.style.cssText = 'overflow:hidden;text-overflow:ellipsis;'
-    const waarde = doc.createElement('span')
-    waarde.className = 'kj-scene-bier-waarde'
-    badge.append(naam, waarde)
+    badge.appendChild(naam)
     houder.append(afbeelding, meter, badge)
     bierLayer.appendChild(houder)
-    return { houder, afbeelding, niveau, naam, waarde, ronde: null }
+    return { houder, afbeelding, niveau, naam, ronde: null }
   }
   const eigenPul = maakPul(false)
   const anderePul = maakPul(true)
@@ -136,19 +134,21 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
     const middeleeuws = new URL('./assets/koningsjacht/medieval-scene.png', import.meta.url).href
     const reserve = new URL('./kaarten/hout.webp', import.meta.url).href
     decorLayer.style.backgroundImage = `url("${opties.middeleeuws ? middeleeuws : hout}"), url("${reserve}")`
-    const bestand = opties.middeleeuws ? 'beer-medieval.png' : 'beer-modern.png'
-    const bierUrl = new URL('./assets/koningsjacht/' + bestand, import.meta.url).href
     const andere = opties.anderBier && typeof opties.anderBier === 'object' && !Array.isArray(opties.anderBier) ? opties.anderBier : {}
     function toonPul(pul, zichtbaar, inhoud, oorRechts, naam, ronde) {
       pul.houder.hidden = !zichtbaar
       if (!zichtbaar) { pul.afbeelding.removeAttribute('src'); pul.ronde = null; return }
-      if (pul.afbeelding.src !== bierUrl) pul.afbeelding.src = bierUrl
       const niveau = typeof inhoud === 'number' && Number.isFinite(inhoud) ? Math.round(clamp(inhoud, 0, 100)) : 100
+      const bestand = opties.middeleeuws
+        ? (niveau >= 95 ? 'beer-medieval.png' : 'beer-medieval-empty.png')
+        : (niveau >= 95 ? 'beer-modern-full.png' : 'beer-modern.png')
+      const bierUrl = new URL('./assets/koningsjacht/' + bestand, import.meta.url).href
+      if (pul.afbeelding.src !== bierUrl) pul.afbeelding.src = bierUrl
       pul.afbeelding.style.transform = oorRechts === false ? 'scaleX(-1)' : 'none'
-      pul.niveau.style.transition = motion.matches ? 'none' : 'height .25s ease'
+      pul.niveau.style.transition = motion.matches || (pul === eigenPul && bierPointer !== null) ? 'none' : 'height .12s ease'
       pul.niveau.style.height = `${niveau}%`
-      pul.waarde.textContent = `${niveau}%`
       pul.naam.textContent = typeof naam === 'string' ? naam.trim().slice(0, 32) : ''
+      pul.houder.setAttribute('aria-valuenow', String(niveau))
       if (Number.isSafeInteger(ronde) && ronde >= 0) {
         if (pul.ronde !== null && ronde !== pul.ronde && !motion.matches) {
           pul.houder.animate?.([{ transform: 'translateY(-14px) scale(.88)', opacity: .35 }, { transform: 'translateY(0) scale(1)', opacity: 1 }], { duration: 450, easing: 'cubic-bezier(.2,.8,.2,1)' })
@@ -158,6 +158,19 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
     }
     toonPul(eigenPul, opties.bierpul === true, opties.bierInhoud, opties.bierOorRechts, opties.eigenNaam, opties.bierRonde)
     toonPul(anderePul, andere.zichtbaar === true, andere.inhoud, andere.oorRechts, andere.naam, andere.ronde)
+    const kanBedienen = typeof opties.onBierInhoud === 'function'
+    eigenPul.houder.style.pointerEvents = kanBedienen ? 'auto' : 'none'
+    eigenPul.houder.style.touchAction = 'none'
+    eigenPul.houder.style.userSelect = 'none'
+    eigenPul.houder.style.webkitUserSelect = 'none'
+    eigenPul.houder.style.webkitTouchCallout = 'none'
+    eigenPul.houder.style.cursor = kanBedienen ? 'ns-resize' : 'default'
+    eigenPul.houder.tabIndex = kanBedienen ? 0 : -1
+    eigenPul.houder.setAttribute('role', kanBedienen ? 'slider' : 'group')
+    eigenPul.houder.setAttribute('aria-label', opties.bierLabel || opties.eigenNaam || '')
+    eigenPul.houder.setAttribute('aria-orientation', 'vertical')
+    eigenPul.houder.setAttribute('aria-valuemin', '0')
+    eigenPul.houder.setAttribute('aria-valuemax', '100')
     laag.dataset.flikkeren = opties.flikkeren === false || motion.matches ? 'uit' : 'aan'
     if (!opties.beweging || motion.matches || wasBeweging !== opties.beweging) neutraal()
   }
@@ -179,6 +192,7 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
   function stop() {
     if (klaar) return
     klaar = true; stopFrame()
+    if (bierPointer !== null) { try { eigenPul.houder.releasePointerCapture?.(bierPointer) } catch {} bierPointer = null }
     while (cleanup.length) cleanup.pop()()
     laag.remove()
     bierLayer.remove()
@@ -191,6 +205,51 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
   }
   const api = { update, verplaatsingsToestemming, stop, laag, decorLayer, bierLayer, get bewegingsStatus() { return bewegingsStatus() } }
   eigenaren.set(tafelElement, api)
+  function verzetBier(event, afgerond) {
+    const rect = eigenPul.afbeelding.getBoundingClientRect()
+    if (!rect.height || !Number.isFinite(event.clientY)) return
+    const niveau = Math.round(clamp(1 - (event.clientY - rect.top) / rect.height, 0, 1) * 100)
+    update({ bierInhoud: niveau })
+    opties.onBierInhoud?.(niveau, afgerond)
+  }
+  luister(eigenPul.houder, 'pointerdown', event => {
+    if (klaar || bierPointer !== null || !opties.bierpul || typeof opties.onBierInhoud !== 'function' || event.isPrimary === false || (event.button != null && event.button !== 0)) return
+    event.preventDefault(); event.stopPropagation()
+    stopFrame(); doelX = x; doelY = y
+    bierPointer = event.pointerId
+    eigenPul.houder.focus?.({ preventScroll: true })
+    try { eigenPul.houder.setPointerCapture?.(bierPointer) } catch {}
+    verzetBier(event, false)
+  })
+  luister(win, 'pointermove', event => {
+    if (bierPointer === null || event.pointerId !== bierPointer) return
+    event.preventDefault(); verzetBier(event, false)
+  }, { passive: false })
+  luister(win, 'pointerup', event => {
+    if (bierPointer === null || event.pointerId !== bierPointer) return
+    event.preventDefault(); verzetBier(event, true)
+    try { eigenPul.houder.releasePointerCapture?.(bierPointer) } catch {}
+    bierPointer = null
+  })
+  const annuleer = () => {
+    if (bierPointer === null) return
+    try { eigenPul.houder.releasePointerCapture?.(bierPointer) } catch {}
+    bierPointer = null
+    opties.onBierInhoud?.(opties.bierInhoud, true)
+  }
+  luister(win, 'pointercancel', event => { if (event.pointerId === bierPointer) annuleer() })
+  luister(eigenPul.houder, 'lostpointercapture', annuleer)
+  luister(win, 'blur', annuleer)
+  luister(eigenPul.houder, 'contextmenu', event => event.preventDefault())
+  luister(eigenPul.houder, 'keydown', event => {
+    if (!opties.bierpul || typeof opties.onBierInhoud !== 'function') return
+    const stap = event.shiftKey ? 10 : 5
+    const delta = { ArrowUp: stap, ArrowRight: stap, ArrowDown: -stap, ArrowLeft: -stap }
+    if (!(event.key in delta) && event.key !== 'Home' && event.key !== 'End') return
+    event.preventDefault(); event.stopPropagation()
+    const niveau = event.key === 'Home' ? 0 : event.key === 'End' ? 100 : clamp(opties.bierInhoud + delta[event.key], 0, 100)
+    update({ bierInhoud: niveau }); opties.onBierInhoud(niveau, true)
+  })
   luister(win, 'deviceorientation', toestel, { passive: true })
   luister(tafelElement, 'pointermove', muis, { passive: true })
   luister(tafelElement, 'pointerleave', () => { if (laatsteBron === 'muis') { stopFrame(); doelX = x; doelY = y } }, { passive: true })

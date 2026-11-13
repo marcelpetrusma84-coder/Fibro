@@ -73,12 +73,47 @@ function omgeving({ reduced = false, sensor = false, toestemming } = {}) {
   assert.equal(ander.hidden, false)
   assert.equal(ander.children[1].children[0].style.height, '72%')
   assert.equal(ander.children[2].children[0].textContent, 'Vriend')
+  assert.match(eigen.children[0].src, /beer-medieval-empty\.png/)
+  assert.equal(eigen.children[2].children.length, 1, 'geen zichtbaar percentage naast de naam')
+  scene.update({ bierInhoud: 95, middeleeuws: false })
+  assert.match(eigen.children[0].src, /beer-modern-full\.png/, 'volle moderne pul toont schuim')
+  scene.update({ bierInhoud: 94 })
+  assert.match(eigen.children[0].src, /beer-modern\.png/, 'niet-volle moderne pul gebruikt de gewone afbeelding')
   scene.update({ bierpul: false })
   assert.equal(scene.bierLayer.children[0].hidden, true)
   scene.stop()
   assert.equal(o.root.children.length, 0)
   assert.equal(o.root.classList.contains('kj-scene-actief'), false)
   assert.equal(o.root.count(), 0); assert.equal(o.win.count(), 0); assert.equal(o.doc.count(), 0)
+}
+
+// Directe bediening blijft bruikbaar met aanraking, muis en toetsenbord.
+{
+  const o = omgeving(), meldingen = []
+  const scene = maakKoningsjachtScene(o.root, { bierpul: true, onBierInhoud: (niveau, klaar) => meldingen.push([niveau, klaar]), bierLabel: 'Eigen bierpul' })
+  const pul = scene.bierLayer.children[0]
+  const event = extra => ({ preventDefault() {}, stopPropagation() {}, isPrimary: true, button: 0, pointerId: 7, ...extra })
+  assert.equal(pul.role, 'slider'); assert.equal(pul['aria-label'], 'Eigen bierpul')
+  pul.emit('pointerdown', event({ pointerType: 'touch', clientY: 75 }))
+  assert.deepEqual(meldingen.at(-1), [25, false])
+  o.win.emit('pointermove', event({ pointerType: 'touch', clientY: 40 }))
+  assert.deepEqual(meldingen.at(-1), [60, false])
+  o.win.emit('pointermove', event({ pointerId: 8, clientY: 5 }))
+  assert.deepEqual(meldingen.at(-1), [60, false], 'andere vinger verandert de pul niet')
+  o.win.emit('pointerup', event({ clientY: -5 }))
+  assert.deepEqual(meldingen.at(-1), [100, true], 'afgeronde sleep wordt begrensd op 100')
+  assert.equal(pul['aria-valuenow'], '100')
+  pul.emit('keydown', event({ key: 'ArrowDown', shiftKey: true }))
+  assert.deepEqual(meldingen.at(-1), [90, true])
+  pul.emit('keydown', event({ key: 'Home' }))
+  assert.deepEqual(meldingen.at(-1), [0, true])
+  pul.emit('keydown', event({ key: 'End' }))
+  assert.deepEqual(meldingen.at(-1), [100, true])
+  pul.emit('pointerdown', event({ pointerType: 'mouse', clientY: 80 }))
+  o.win.emit('pointercancel', event())
+  assert.deepEqual(meldingen.at(-1), [20, true], 'afgebroken sleep publiceert de laatste stand')
+  scene.stop()
+  assert.equal(pul.count(), 0); assert.equal(o.win.count(), 0)
 }
 
 // Muisbeweging beïnvloedt alleen de achtergrond en stopt bij de speelbediening.

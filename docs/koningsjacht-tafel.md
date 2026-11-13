@@ -5,7 +5,8 @@ Het tandwiel op het beginscherm en op de speeltafel opent de instellingen. Deze 
 - Normale houttafel of middeleeuwse studeerkamer, met dezelfde bestaande perkamentkaarten.
 - Subtiele achtergrondbeweging met muis of telefoonsensor; standaard uit. iOS vraagt toestemming na de tik. De kaartbediening blijft stil. Verminderde beweging van het toestel wordt gerespecteerd.
 - Realistische kandelaars met apart bewegende vlammen. Flikkeren staat standaard aan; de bestaande kaarsknop blijft al het kaarslicht uitzetten.
-- Optionele bierpul (standaard uit): keramiek op de normale tafel, hout bij de middeleeuwse scene. De inhoudsschuif loopt van 0 tot 100%. Omdat de pullen ondoorzichtig zijn, staat er een aparte niveaumeter met percentage naast.
+- Optionele bierpul (standaard uit): keramiek op de normale tafel, hout bij de middeleeuwse scene. Sleep of tik rechtstreeks op je eigen pul om de inhoud aan te geven. Muis, vinger en toetsenbord werken; de pul vangt alleen zijn eigen sleepbeweging op. De geel-oranje niveaumeter blijft zichtbaar, zonder percentage op tafel of in de instellingen. Bij minimaal 95% verschijnt schuim boven de rand; bij lage niveaus is het schuim weg, ook bij de houten pul.
+- De middeleeuwse scene kiest een eigen 6/8-arrangement met luit, fluit, tamboer en tamboerijn. Dit is lokaal gesynthetiseerde muziek. De bestaande muziekknop bepaalt of muziek klinkt; een scenewissel zet uitgeschakelde muziek niet alsnog aan.
 - **Nieuwe volle pul** vult naar 100%, wisselt de oorstand en animeert de vervanging. Beide spelers zien hun eigen pul en de pul van de ander.
 
 De beelden zijn speciaal gegenereerde lokale spelassets. De achtergrond is een foto met parallax en de kandelaars/pullen zijn transparante sprites; dit is geen volledig 3D-model met vrij draaibare camera.
@@ -27,6 +28,6 @@ De fixture is duidelijk als test gemarkeerd en gebruikt alleen een lokale Broadc
 
 ## Controles
 
-`node tests/kaart/test-koningsjacht-scene.mjs` test beweging, reduced motion, toestemming, vulmeters en opruimen. `node tests/kaart/test-koningsjacht-bier.mjs` test late join, verloren/oude/ongeldige berichten, opnieuw vullen en opruimen. Beide worden door `node tests/alle-tests.mjs` meegenomen.
+`node tests/kaart/test-koningsjacht-scene.mjs` test beweging, reduced motion, toestemming, touchbediening, toetsenbord, schuim en opruimen. `node tests/kaart/test-koningsjacht-bier.mjs` test late join, verloren/oude/ongeldige berichten, opnieuw vullen en opruimen. `node tests/kaart/test-koningsjacht-muziekthema.mjs` test de instrumenten, de muziekvoorkeur, pauzeren en het opruimen bij themawissels. Alle drie worden door `node tests/alle-tests.mjs` meegenomen.
 
 De bestaande CI-browsertests `tests/tools/proef299.py` en `proef301.py` zijn uitgebreid voor de instellingen, bewaren, Engelse teksten en de gedeelde bierstand. Hiervoor is geen productie-databasewijziging nodig.

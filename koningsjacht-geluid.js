@@ -4,6 +4,7 @@
 // iemand anders). Zwaardslagen, inslagen, een schild dat klinkt als metaal, genezen, een vijand die brult en
 // terugslaat, een oorlogshoorn bij een nieuwe vijand, fanfares bij verslagen en winnen.
 // De muziek: een epische mars in d-klein (pauken/taiko's, strijkers, een koor en hoorns) die steeds doorloopt.
+// De middeleeuwse scene kiest een herbergdans met luit, fluit en tamboer; de muziekknop blijft leidend.
 // Aan of uit met de knop 🎵 (bewaard op dit toestel: fibro_koningsjacht_muziek). Het spelmenu (☰ > Geluid uit)
 // zet ook dit geluid uit (spelmenu.js doet dat voor elk Web Audio-geluid); bij Pauze staat de muziek stil.
 
@@ -210,6 +211,26 @@ const AKKOORDEN = [[50, 53, 57], [46, 50, 53], [41, 45, 48], [48, 52, 55], [50, 
 const MELODIE = [[[62, 2], [65, 1], [69, 1]], [[70, 3], [69, 1]], [[65, 2], [69, 1], [72, 1]], [[71, 2], [67, 2]],
   [[74, 2], [72, 1], [69, 1]], [[70, 2], [67, 1], [70, 1]], [[74, 1.5], [72, 0.5], [70, 1], [69, 1]], [[69, 4]]]
 let muziekAan = false, volgendeMaat = 0, maatTijd = 0, planner = null, muziekGain = null, muziekNat = null, gepauzeerd = false
+let muziekThema = 'standaard', muziekBronnen = null
+
+// Keep each arrangement's scheduled sources together, including notes that have
+// not started yet. Switching scenes cannot leave an old arrangement playing.
+function muziekBron(bron, t, einde) {
+  const groep = muziekBronnen
+  groep?.add(bron)
+  bron.onended = () => { groep?.delete(bron); try { bron.disconnect() } catch (e) {} }
+  bron.start(t); bron.stop(einde)
+}
+
+export function zetMuziekThema(thema) {
+  const volgend = thema === 'middeleeuws' ? 'middeleeuws' : 'standaard'
+  if (volgend === muziekThema) return muziekThema
+  muziekThema = volgend
+  // Changing a scene only changes the arrangement. The user's music toggle and
+  // a stop caused by hiding/leaving the game remain in control of playback.
+  if (muziekAan) { stopMuziek(); startMuziek() }
+  return muziekThema
+}
 
 function strijkers(t, noten, duur, luid) {
   for (const n of noten) for (const d of [-7, 6]) {
@@ -217,23 +238,23 @@ function strijkers(t, noten, duur, luid) {
     const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1400
     const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(luid, t + duur * 0.3); g.gain.setValueAtTime(luid, t + duur * 0.8); g.gain.linearRampToValueAtTime(0.0001, t + duur)
     o.connect(f); f.connect(g); g.connect(muziekGain); const n2 = ac.createGain(); n2.gain.value = 0.5; g.connect(n2); n2.connect(muziekNat)
-    o.start(t); o.stop(t + duur + 0.05)
+    muziekBron(o, t, t + duur + 0.05)
   }
 }
 function bas(t, n, duur) {
   const o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.value = noot(n - 12)
   const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 320
   const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.05); g.gain.setValueAtTime(0.14, t + duur * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + duur)
-  o.connect(f); f.connect(g); g.connect(muziekGain); o.start(t); o.stop(t + duur + 0.05)
+  o.connect(f); f.connect(g); g.connect(muziekGain); muziekBron(o, t, t + duur + 0.05)
 }
 function pauk(t, luid = 0.5, hoog = false) {
   const o = ac.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(hoog ? 150 : 95, t); o.frequency.exponentialRampToValueAtTime(hoog ? 70 : 42, t + 0.35)
   const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(luid, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7)
-  o.connect(g); g.connect(muziekGain); const n = ac.createGain(); n.gain.value = 0.35; g.connect(n); n.connect(muziekNat); o.start(t); o.stop(t + 0.75)
+  o.connect(g); g.connect(muziekGain); const n = ac.createGain(); n.gain.value = 0.35; g.connect(n); n.connect(muziekNat); muziekBron(o, t, t + 0.75)
   const b = ac.createBufferSource(); b.buffer = ruisBuffer(0.2)
   const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 900
   const g2 = ac.createGain(); g2.gain.setValueAtTime(luid * 0.4, t); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.15)
-  b.connect(f); f.connect(g2); g2.connect(muziekGain); b.start(t); b.stop(t + 0.2)
+  b.connect(f); f.connect(g2); g2.connect(muziekGain); muziekBron(b, t, t + 0.2)
 }
 function koor(t, noten, duur) {
   for (const n of noten) {
@@ -244,7 +265,7 @@ function koor(t, noten, duur) {
     const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.11, t + duur * 0.35); g.gain.linearRampToValueAtTime(0.0001, t + duur)
     o.connect(f1); o.connect(f2); f1.connect(g); f2.connect(g)
     const n2 = ac.createGain(); n2.gain.value = 0.9; g.connect(n2); n2.connect(muziekNat); g.connect(muziekGain)
-    o.start(t); vib.start(t); o.stop(t + duur + 0.05); vib.stop(t + duur + 0.05)
+    muziekBron(o, t, t + duur + 0.05); muziekBron(vib, t, t + duur + 0.05)
   }
 }
 function hoornNoot(t, n, duur) {
@@ -253,7 +274,7 @@ function hoornNoot(t, n, duur) {
     const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(500, t); f.frequency.linearRampToValueAtTime(1700, t + Math.min(0.3, duur * 0.5)); f.frequency.linearRampToValueAtTime(900, t + duur)
     const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.06, t + 0.06); g.gain.setValueAtTime(0.055, t + duur * 0.85); g.gain.exponentialRampToValueAtTime(0.0001, t + duur)
     o.connect(f); f.connect(g); g.connect(muziekGain); const n2 = ac.createGain(); n2.gain.value = 0.6; g.connect(n2); n2.connect(muziekNat)
-    o.start(t); o.stop(t + duur + 0.05)
+    muziekBron(o, t, t + duur + 0.05)
   }
 }
 function planMaat(maat, t) {
@@ -270,9 +291,81 @@ function planMaat(maat, t) {
     for (const [n, d] of MELODIE[i - 8]) { hoornNoot(t + tel * TEL, n, d * TEL * 0.95); tel += d }
   }
 }
+
+// A small acoustic tavern ensemble: open fifths, a Dorian recorder melody and
+// a lilting 6/8 pulse. These are synthesized instruments, not downloaded loops.
+const HERBERG_TEL = 60 / 180
+const HERBERG_AKKOORDEN = [[50, 57, 62], [48, 55, 60], [43, 50, 55], [50, 57, 62], [53, 60, 65], [48, 55, 60], [43, 50, 55], [50, 57, 62]]
+const HERBERG_MELODIE = [
+  [[74, 1], [77, .5], [76, .5], [74, 1], [72, 1], [69, 1], [72, 1]],
+  [[72, 1.5], [74, .5], [76, 1], [79, 1], [76, 1], [72, 1]],
+  [[71, 1], [74, 1], [79, 1], [77, 1], [74, 1], [71, 1]],
+  [[74, 3], [69, 1], [72, 1], [74, 1]],
+  [[77, 1], [81, 1], [79, 1], [77, 1.5], [76, .5], [74, 1]],
+  [[76, 1], [79, 1], [84, 1], [79, 1], [76, 1], [72, 1]],
+  [[74, 1], [71, 1], [67, 1], [69, 1], [71, 1], [72, 1]],
+  [[74, 4], [0, 2]]
+]
+const snaarBuffers = new Map()
+function snaarBuffer(n) {
+  if (snaarBuffers.has(n)) return snaarBuffers.get(n)
+  const lengte = Math.round(ac.sampleRate * 1.8), periode = Math.max(2, Math.round(ac.sampleRate / noot(n)))
+  const buffer = ac.createBuffer(1, lengte, ac.sampleRate), data = buffer.getChannelData(0), snaar = new Float32Array(periode)
+  for (let i = 0; i < periode; i++) snaar[i] = Math.random() * 2 - 1
+  // Karplus–Strong: a short noise excitation decays through the string's delay.
+  for (let i = 0; i < lengte; i++) {
+    const pos = i % periode
+    data[i] = snaar[pos]
+    snaar[pos] = (snaar[pos] + snaar[(pos + 1) % periode]) * .496
+  }
+  snaarBuffers.set(n, buffer)
+  return buffer
+}
+function luit(t, n, luid = .15) {
+  const b = ac.createBufferSource(); b.buffer = snaarBuffer(n)
+  const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(3400, t); f.frequency.exponentialRampToValueAtTime(850, t + .9)
+  const g = ac.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(luid, t + .003); g.gain.exponentialRampToValueAtTime(.0001, t + 1.5)
+  b.connect(f); f.connect(g); g.connect(muziekGain)
+  const n2 = ac.createGain(); n2.gain.value = .2; g.connect(n2); n2.connect(muziekNat)
+  muziekBron(b, t, t + 1.65)
+}
+function fluit(t, n, duur) {
+  if (!n) return
+  const g = ac.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.09, t + Math.min(.055, duur / 4)); g.gain.setValueAtTime(.075, t + duur * .72); g.gain.exponentialRampToValueAtTime(.0001, t + duur)
+  g.connect(muziekGain); const nat = ac.createGain(); nat.gain.value = .3; g.connect(nat); nat.connect(muziekNat)
+  for (const [harmonisch, sterkte] of [[1, 1], [2, .14], [3, .025]]) {
+    const o = ac.createOscillator(); o.type = 'sine'; o.frequency.value = noot(n) * harmonisch
+    const deel = ac.createGain(); deel.gain.value = sterkte; o.connect(deel); deel.connect(g)
+    muziekBron(o, t, t + duur + .025)
+  }
+}
+function tamboer(t, accent = false) {
+  // Skin of the frame drum followed by a light, high tambourine jingle.
+  const o = ac.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(accent ? 160 : 190, t); o.frequency.exponentialRampToValueAtTime(82, t + .13)
+  const g = ac.createGain(); g.gain.setValueAtTime(accent ? .2 : .09, t); g.gain.exponentialRampToValueAtTime(.0001, t + .22)
+  o.connect(g); g.connect(muziekGain); muziekBron(o, t, t + .25)
+  const b = ac.createBufferSource(); b.buffer = ruisBuffer(.15)
+  const f = ac.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 6500
+  const r = ac.createGain(); r.gain.setValueAtTime(accent ? .07 : .035, t); r.gain.exponentialRampToValueAtTime(.0001, t + .12)
+  b.connect(f); f.connect(r); r.connect(muziekGain); muziekBron(b, t, t + .15)
+}
+function planHerbergMaat(maat, t) {
+  const i = maat % 8, a = HERBERG_AKKOORDEN[i]
+  for (const [tel, snaar] of [0, 2, 1, 2, 0, 1].entries()) luit(t + tel * HERBERG_TEL, a[snaar], tel % 3 === 0 ? .18 : .12)
+  luit(t, a[0] - 12, .15)
+  tamboer(t, true); tamboer(t + HERBERG_TEL * 3)
+  if (i % 2) tamboer(t + HERBERG_TEL * 5, false)
+  let tel = 0
+  for (const [n, duur] of HERBERG_MELODIE[i]) { fluit(t + tel * HERBERG_TEL, n, duur * HERBERG_TEL * .9); tel += duur }
+}
 function kijkVooruit() {
   if (!muziekAan || !ac) return
-  while (maatTijd < ac.currentTime + 1.2) { planMaat(volgendeMaat, maatTijd); maatTijd += TEL * 4; volgendeMaat++ }
+  const herberg = muziekThema === 'middeleeuws'
+  while (maatTijd < ac.currentTime + 1.2) {
+    if (herberg) planHerbergMaat(volgendeMaat, maatTijd); else planMaat(volgendeMaat, maatTijd)
+    maatTijd += herberg ? HERBERG_TEL * 6 : TEL * 4
+    volgendeMaat++
+  }
 }
 export function muziekStaatAan() { try { return localStorage.getItem(MUZIEK_SLEUTEL) === 'aan' } catch (e) { return false } }
 export function zetMuziek(aan) {
@@ -282,6 +375,7 @@ export function zetMuziek(aan) {
 export function startMuziek() {
   if (muziekAan || !ctx()) return
   muziekAan = true
+  muziekBronnen = new Set()
   muziekGain = ac.createGain(); muziekGain.gain.setValueAtTime(0.0001, ac.currentTime); muziekGain.gain.exponentialRampToValueAtTime(0.7, ac.currentTime + 1.5)
   muziekGain.connect(hoofd)
   muziekNat = ac.createGain(); muziekNat.gain.value = 1; muziekNat.connect(galm)   // de galm van de muziek, met de muziek mee uit
@@ -291,6 +385,9 @@ export function startMuziek() {
 export function stopMuziek() {
   if (!muziekAan) return
   muziekAan = false; clearInterval(planner); planner = null
+  const bronnen = muziekBronnen
+  muziekBronnen = null
+  for (const bron of bronnen || []) { try { bron.stop(ac.currentTime + .65) } catch (e) {} }
   for (const g of [muziekGain, muziekNat]) {
     try { g.gain.cancelScheduledValues(ac.currentTime); g.gain.setValueAtTime(Math.max(0.0001, g.gain.value), ac.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.6) } catch (e) {}
     setTimeout(() => { try { g.disconnect() } catch (e) {} }, 800)

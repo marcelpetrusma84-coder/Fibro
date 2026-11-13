@@ -19,9 +19,11 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
     sensorrecht = { waarde: kanSensor && typeof orEvent.requestPermission === 'function' ? 'onbekend' : 'toegestaan', aanvraag: null }
     sensorrechten.set(win, sensorrecht)
   }
-  let opties = { beweging: false, middeleeuws: false, flikkeren: true, bierpul: false, bierInhoud: 100, bierOorRechts: true, eigenNaam: '', anderBier: null, ...instellingen }
+  // `middeleeuws` blijft werken voor eerdere aanroepers; nieuwe instellingen
+  // kiezen de tafel met `scene`.
+  let opties = { beweging: false, scene: null, middeleeuws: false, flikkeren: true, bierpul: false, bierInhoud: 100, bierOorRechts: true, eigenNaam: '', anderBier: null, ...instellingen }
   let klaar = false, baseline = null, frame = null, x = 0, y = 0, doelX = 0, doelY = 0
-  let laatsteBron = '', bierPointer = null
+  let laatsteBron = '', bierPointer = null, aanraking = null, vorigeTik = null, negeerMuisTot = 0
   const cleanup = []
   const laag = doc.createElement('div')
   laag.className = 'kj-scene-laag'
@@ -38,10 +40,28 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
     houder.className = 'kj-scene-bier ' + (ander ? 'kj-scene-bier-ander' : 'kj-scene-bier-ik')
     houder.hidden = true
     houder.style.cssText = `position:absolute;${ander ? 'left' : 'right'}:8%;bottom:12%;width:12%;min-width:56px;max-width:130px;pointer-events:none;text-align:center;color:white;font:700 12px/1.2 system-ui,sans-serif;filter:drop-shadow(3px 6px 5px #0008);`
+    // Het glas en de inhoud delen één visuele laag zodat spiegelen van het oor
+    // ook de vloeistof meeneemt. De bestaande afbeelding blijft het sleepvlak.
+    const glasbeeld = doc.createElement('div')
+    glasbeeld.className = 'kj-scene-bier-beeld'
+    glasbeeld.style.cssText = 'position:relative;pointer-events:none;'
+    const glasMasker = doc.createElement('div')
+    glasMasker.className = 'kj-scene-glas-masker'
+    glasMasker.hidden = true
+    // Geijkt op de binnenzijde van de foto: het dikke glas en het oor blijven vrij.
+    glasMasker.style.cssText = 'position:absolute;left:27%;width:38%;top:17%;bottom:21%;z-index:1;overflow:hidden;pointer-events:none;border-radius:9% 9% 35% 35% / 3% 3% 5% 5%;'
+    const glasVulling = doc.createElement('div')
+    glasVulling.className = 'kj-scene-glas-vulling'
+    glasVulling.style.cssText = 'position:absolute;left:0;right:0;bottom:0;border-radius:50% 50% 0 0 / 4% 4% 0 0;background:linear-gradient(90deg,#9a440cd9,#e69722e0 32%,#f4be50d4 58%,#a5510fd9);box-shadow:inset 0 2px 5px #ffe4a080;'
+    const schuim = doc.createElement('div')
+    schuim.className = 'kj-scene-glas-schuim'
+    schuim.style.cssText = 'position:absolute;top:0;left:0;right:0;height:19%;min-height:2px;background:linear-gradient(#fff8dcdd,#f8e8b9a6);border-radius:50% 50% 20% 20%;'
+    glasVulling.appendChild(schuim)
+    glasMasker.appendChild(glasVulling)
     const afbeelding = doc.createElement('img')
     afbeelding.className = 'kj-scene-bierpul'
     afbeelding.alt = ''
-    afbeelding.style.cssText = 'display:block;width:100%;height:auto;pointer-events:none;'
+    afbeelding.style.cssText = 'position:relative;z-index:2;display:block;width:100%;height:auto;pointer-events:none;'
     const meter = doc.createElement('div')
     meter.className = 'kj-scene-bier-meter'
     meter.style.cssText = `position:absolute;top:12%;bottom:28px;${ander ? 'right' : 'left'}:0;width:10px;min-height:25px;border:1px solid #fff9;border-radius:8px;background:#1b100ee8;box-shadow:0 1px 4px #000c,inset 0 0 2px #000;overflow:hidden;`
@@ -55,9 +75,15 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
     naam.className = 'kj-scene-bier-naam'
     naam.style.cssText = 'overflow:hidden;text-overflow:ellipsis;'
     badge.appendChild(naam)
-    houder.append(afbeelding, meter, badge)
+    const nummer = doc.createElement('span')
+    nummer.className = 'kj-scene-bier-nummer'
+    nummer.hidden = true
+    nummer.setAttribute('aria-live', 'polite')
+    nummer.style.cssText = 'position:absolute;right:0;top:2%;z-index:4;padding:3px 7px;border:1px solid #fff1ae;border-radius:9px;background:linear-gradient(#624719,#241506);color:#fff7cf;font:800 13px/1.2 system-ui,sans-serif;text-shadow:0 1px 2px #000;box-shadow:0 2px 6px #0009;pointer-events:none;'
+    glasbeeld.append(glasMasker, afbeelding)
+    houder.append(glasbeeld, meter, badge, nummer)
     bierLayer.appendChild(houder)
-    return { houder, afbeelding, niveau, naam, ronde: null }
+    return { houder, glasbeeld, glasMasker, glasVulling, schuim, afbeelding, niveau, naam, nummer, nummerTimer: null, ronde: null }
   }
   const eigenPul = maakPul(false)
   const anderePul = maakPul(true)
@@ -130,28 +156,45 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
     if (klaar) return
     const wasBeweging = opties.beweging
     opties = { ...opties, ...nieuw }
-    const hout = new URL('./assets/koningsjacht/wood-table.png', import.meta.url).href
-    const middeleeuws = new URL('./assets/koningsjacht/medieval-scene.png', import.meta.url).href
+    const gekozenScene = ['standaard', 'modern', 'middeleeuws'].includes(opties.scene)
+      ? opties.scene : (opties.middeleeuws ? 'middeleeuws' : 'standaard')
+    const achtergrond = { standaard: 'wood-table.png', modern: 'modern-epoxy-table.png', middeleeuws: 'medieval-scene.png' }[gekozenScene]
+    const hout = new URL('./assets/koningsjacht/' + achtergrond, import.meta.url).href
     const reserve = new URL('./kaarten/hout.webp', import.meta.url).href
-    decorLayer.style.backgroundImage = `url("${opties.middeleeuws ? middeleeuws : hout}"), url("${reserve}")`
+    decorLayer.style.backgroundImage = `url("${hout}"), url("${reserve}")`
     const andere = opties.anderBier && typeof opties.anderBier === 'object' && !Array.isArray(opties.anderBier) ? opties.anderBier : {}
     function toonPul(pul, zichtbaar, inhoud, oorRechts, naam, ronde) {
       pul.houder.hidden = !zichtbaar
-      if (!zichtbaar) { pul.afbeelding.removeAttribute('src'); pul.ronde = null; return }
+      if (!zichtbaar) {
+        pul.afbeelding.removeAttribute('src'); pul.ronde = null
+        clearTimeout(pul.nummerTimer); pul.nummerTimer = null; pul.nummer.hidden = true
+        if (pul === eigenPul) vorigeTik = null
+        return
+      }
       const niveau = typeof inhoud === 'number' && Number.isFinite(inhoud) ? Math.round(clamp(inhoud, 0, 100)) : 100
-      const bestand = opties.middeleeuws
+      const bestand = gekozenScene === 'modern' ? 'beer-glass-empty.png' : gekozenScene === 'middeleeuws'
         ? (niveau >= 95 ? 'beer-medieval.png' : 'beer-medieval-empty.png')
         : (niveau >= 95 ? 'beer-modern-full.png' : 'beer-modern.png')
       const bierUrl = new URL('./assets/koningsjacht/' + bestand, import.meta.url).href
       if (pul.afbeelding.src !== bierUrl) pul.afbeelding.src = bierUrl
-      pul.afbeelding.style.transform = oorRechts === false ? 'scaleX(-1)' : 'none'
+      pul.glasbeeld.style.transform = oorRechts === false ? 'scaleX(-1)' : 'none'
+      pul.glasMasker.hidden = gekozenScene !== 'modern'
+      pul.glasVulling.style.height = `${niveau}%`
+      pul.glasVulling.style.transition = motion.matches || (pul === eigenPul && bierPointer !== null) ? 'none' : 'height .12s ease'
+      pul.schuim.hidden = niveau < 95
       pul.niveau.style.transition = motion.matches || (pul === eigenPul && bierPointer !== null) ? 'none' : 'height .12s ease'
       pul.niveau.style.height = `${niveau}%`
       pul.naam.textContent = typeof naam === 'string' ? naam.trim().slice(0, 32) : ''
       pul.houder.setAttribute('aria-valuenow', String(niveau))
       if (Number.isSafeInteger(ronde) && ronde >= 0) {
-        if (pul.ronde !== null && ronde !== pul.ronde && !motion.matches) {
-          pul.houder.animate?.([{ transform: 'translateY(-14px) scale(.88)', opacity: .35 }, { transform: 'translateY(0) scale(1)', opacity: 1 }], { duration: 450, easing: 'cubic-bezier(.2,.8,.2,1)' })
+        if (pul.ronde !== null && ronde !== pul.ronde) {
+          if (!motion.matches) pul.houder.animate?.([{ transform: 'translateY(-14px) scale(.88)', opacity: .35 }, { transform: 'translateY(0) scale(1)', opacity: 1 }], { duration: 450, easing: 'cubic-bezier(.2,.8,.2,1)' })
+          if (ronde > 0) {
+            clearTimeout(pul.nummerTimer)
+            pul.nummer.textContent = `#${ronde + 1}`
+            pul.nummer.hidden = false
+            pul.nummerTimer = setTimeout(() => { pul.nummer.hidden = true; pul.nummerTimer = null }, 2000)
+          }
         }
         pul.ronde = ronde
       }
@@ -192,6 +235,7 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
   function stop() {
     if (klaar) return
     klaar = true; stopFrame()
+    clearTimeout(eigenPul.nummerTimer); clearTimeout(anderePul.nummerTimer)
     if (bierPointer !== null) { try { eigenPul.houder.releasePointerCapture?.(bierPointer) } catch {} bierPointer = null }
     while (cleanup.length) cleanup.pop()()
     laag.remove()
@@ -217,30 +261,51 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
     event.preventDefault(); event.stopPropagation()
     stopFrame(); doelX = x; doelY = y
     bierPointer = event.pointerId
+    aanraking = event.pointerType === 'touch' && Number.isFinite(event.clientX) && Number.isFinite(event.clientY)
+      ? { x: event.clientX, y: event.clientY, tijd: Date.now(), verplaatst: false } : null
     eigenPul.houder.focus?.({ preventScroll: true })
     try { eigenPul.houder.setPointerCapture?.(bierPointer) } catch {}
     verzetBier(event, false)
   })
   luister(win, 'pointermove', event => {
     if (bierPointer === null || event.pointerId !== bierPointer) return
+    if (aanraking && Number.isFinite(event.clientX) && Number.isFinite(event.clientY) && Math.hypot(event.clientX - aanraking.x, event.clientY - aanraking.y) > 20) aanraking.verplaatst = true
     event.preventDefault(); verzetBier(event, false)
   }, { passive: false })
   luister(win, 'pointerup', event => {
     if (bierPointer === null || event.pointerId !== bierPointer) return
     event.preventDefault(); verzetBier(event, true)
-    try { eigenPul.houder.releasePointerCapture?.(bierPointer) } catch {}
+    const pointer = bierPointer
     bierPointer = null
+    try { eigenPul.houder.releasePointerCapture?.(pointer) } catch {}
+    if (aanraking) {
+      const nu = Date.now()
+      const tik = !aanraking.verplaatst && nu - aanraking.tijd <= 450 && Number.isFinite(event.clientX) && Number.isFinite(event.clientY) && Math.hypot(event.clientX - aanraking.x, event.clientY - aanraking.y) <= 20
+      if (tik && vorigeTik && nu - vorigeTik.tijd <= 450 && Math.hypot(aanraking.x - vorigeTik.x, aanraking.y - vorigeTik.y) <= 30) {
+        vorigeTik = null
+        // Sommige mobiele browsers produceren na een dubbeltik nog een dblclick.
+        negeerMuisTot = nu + 900
+        if (opties.bierpul && typeof opties.onBierNieuw === 'function') opties.onBierNieuw()
+      } else vorigeTik = tik ? { x: aanraking.x, y: aanraking.y, tijd: nu } : null
+      aanraking = null
+    }
   })
   const annuleer = () => {
     if (bierPointer === null) return
-    try { eigenPul.houder.releasePointerCapture?.(bierPointer) } catch {}
-    bierPointer = null
+    const pointer = bierPointer
+    bierPointer = null; aanraking = null; vorigeTik = null
+    try { eigenPul.houder.releasePointerCapture?.(pointer) } catch {}
     opties.onBierInhoud?.(opties.bierInhoud, true)
   }
   luister(win, 'pointercancel', event => { if (event.pointerId === bierPointer) annuleer() })
   luister(eigenPul.houder, 'lostpointercapture', annuleer)
   luister(win, 'blur', annuleer)
   luister(eigenPul.houder, 'contextmenu', event => event.preventDefault())
+  luister(eigenPul.houder, 'dblclick', event => {
+    event.preventDefault(); event.stopPropagation()
+    if (klaar || !opties.bierpul || Date.now() < negeerMuisTot || typeof opties.onBierNieuw !== 'function') return
+    opties.onBierNieuw()
+  })
   luister(eigenPul.houder, 'keydown', event => {
     if (!opties.bierpul || typeof opties.onBierInhoud !== 'function') return
     const stap = event.shiftKey ? 10 : 5

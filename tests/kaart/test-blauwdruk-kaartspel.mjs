@@ -71,7 +71,7 @@ assert.match(kj, /stijl: STIJL, onReactie: [^\n]*ondergrond: 'hout'/, 'vaste per
 assert.match(kj, /Regicide van Badgers From Mars/, 'vermelding van het oorspronkelijke spel')
 assert.match(hulp, /\.kt-tafel\.kt-hout\{[^}]*url\(kaarten\/hout\.webp\?v=\d+\)/, 'houten tafelblad')
 assert.match(hulp, /\(vast \? '' : '<button type="button" class="kt-knop kt-stijlknop"/, 'vaste stijl: geen knop 🎴')
-for (const f of ['pesten-ui.js', 'toepen-ui.js', 'eenentwintigen-ui.js', 'koningsjacht-ui.js']) assert.match(lees(f), /kaartspel-hulp\.js\?v=5'/, f + ': kaartspel-hulp v5')
+for (const f of ['pesten-ui.js', 'toepen-ui.js', 'eenentwintigen-ui.js', 'koningsjacht-ui.js']) assert.match(lees(f), /kaartspel-hulp\.js\?v=6'/, f + ': dezelfde gedeelde kaartspel-hulp v6')
 for (const f of ['kaartspel-hulp.js', 'pesten-ui.js', 'toepen-ui.js', 'eenentwintigen-ui.js', 'koningsjacht-ui.js'])
   for (const m of lees(f).matchAll(/\bT\('((?:[^'\\]|\\.)*)'/g)) assert.ok(en.includes(JSON.stringify(m[1]) + ':'), f + ': Engels voor ' + m[1])
 assert.match(lees('BLAUWDRUK-KAARTSPEL.md'), /KAARTSPELLEN/)

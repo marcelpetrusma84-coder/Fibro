@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=114"></script>
+<script src="taal.js?v=115"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -2924,10 +2924,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=151',
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
-    pesten: './pesten-ui.js?v=5',
-    toepen: './toepen-ui.js?v=4',
-    eenentwintigen: './eenentwintigen-ui.js?v=4',
-    koningsjacht: './koningsjacht-ui.js?v=7',
+    pesten: './pesten-ui.js?v=6',
+    toepen: './toepen-ui.js?v=5',
+    eenentwintigen: './eenentwintigen-ui.js?v=5',
+    koningsjacht: './koningsjacht-ui.js?v=9',
     schaken: './schaken-ui.js?v=275',
     schakendrie: './schaken-drie-ui.js?v=43',
     flappybird: './flappy-ui.js?v=147',
@@ -3702,7 +3702,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Pesten (kaartspel, 11 nov 2026) ───
   async function startPesten() {
-    const m = await laadModule('./pesten-ui.js?v=5')
+    const m = await laadModule('./pesten-ui.js?v=6')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
   // ─── Toepen en Eenentwintigen (kaartspellen uit de Store, 11 nov 2026): hetzelfde als Pesten ───

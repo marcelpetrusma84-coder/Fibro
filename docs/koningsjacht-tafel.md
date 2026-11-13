@@ -2,14 +2,15 @@
 
 Het tandwiel op het beginscherm en op de speeltafel opent de instellingen. Deze worden op het toestel bewaard in `fibro_koningsjacht_instellingen`.
 
-- Normale houttafel of middeleeuwse studeerkamer, met dezelfde bestaande perkamentkaarten.
+- Drie aparte keuzeknoppen voor de tafelsfeer: **Standaard**, **Modern** en **Middeleeuws**. Standaard houdt de houttafel en perkamentkaarten. Middeleeuws gebruikt de studeerkamer en eigen kandelaars. Modern krijgt een blauwe/gouden epoxytafel, links een opengewerkte gouden kandelaar, rechts een champagneglazen kandelaar met kaars, en een zwart-gouden kaartenset. Wisselen tijdens een partij bewaart de hand, selectie en spelstand.
 - Subtiele achtergrondbeweging met muis of telefoonsensor; standaard uit. iOS vraagt toestemming na de tik. De kaartbediening blijft stil. Verminderde beweging van het toestel wordt gerespecteerd.
 - Realistische kandelaars met apart bewegende vlammen. Flikkeren staat standaard aan; de bestaande kaarsknop blijft al het kaarslicht uitzetten.
 - Optionele bierpul (standaard uit): keramiek op de normale tafel, hout bij de middeleeuwse scene. Sleep of tik rechtstreeks op je eigen pul om de inhoud aan te geven. Muis, vinger en toetsenbord werken; de pul vangt alleen zijn eigen sleepbeweging op. De geel-oranje niveaumeter blijft zichtbaar, zonder percentage op tafel of in de instellingen. Bij minimaal 95% verschijnt schuim boven de rand; bij lage niveaus is het schuim weg, ook bij de houten pul.
+- De moderne scene heeft een doorzichtige glazen pul met een daadwerkelijk veranderende bierlaag achter het glas en schuim bij een volle pul. Glas en vloeistof draaien samen als de oorstand wisselt.
 - De middeleeuwse scene kiest een eigen 6/8-arrangement met luit, fluit, tamboer en tamboerijn. Dit is lokaal gesynthetiseerde muziek. De bestaande muziekknop bepaalt of muziek klinkt; een scenewissel zet uitgeschakelde muziek niet alsnog aan.
-- **Nieuwe volle pul** vult naar 100%, wisselt de oorstand en animeert de vervanging. Beide spelers zien hun eigen pul en de pul van de ander.
+- **Nieuwe volle pul** en rechtstreeks dubbelklikken (pc) of dubbeltikken (mobiel) vullen naar 100%, wisselen de oorstand en animeren de vervanging. Je begint bij pul #1. Elke nieuwe pul verhoogt de teller; het nieuwe nummer verschijnt twee seconden, ook bij de medespeler. De verse glazen pul heeft een dikkere schuimkraag van ongeveer twee vingers. Dit werkt in alle drie tafelstijlen.
 
-De beelden zijn speciaal gegenereerde lokale spelassets. De achtergrond is een foto met parallax en de kandelaars/pullen zijn transparante sprites; dit is geen volledig 3D-model met vrij draaibare camera.
+De beelden zijn speciaal gegenereerde lokale spelassets. De achtergrond is een foto met parallax en de kandelaars/pullen zijn transparante sprites; dit is geen volledig 3D-model met vrij draaibare camera. De moderne kaarten worden als zelfstandige SVGs getekend. Deze stijl overschrijft geen globale kaartvoorkeur bij andere spellen; de gedeelde kaarthelper houdt de bestaande stijlen beschikbaar.
 
 ## Multiplayer en webcam
 

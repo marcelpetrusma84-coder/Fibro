@@ -21,15 +21,14 @@
 // v4 (13 nov 2026, Marcel): kaarslicht. Twee kaarsen op tafel met flakkerende vlammen; de randen van de tafel zijn
 // donker en het warme licht flakkert mee. Aan/uit met 🕯️ (bewaard: fibro_koningsjacht_kaars, standaard aan).
 import * as K from './koningsjacht.js?v=2'
-import { maakKaartTafel, kaartSvg, achterkantSvg, KLEUR_TEKEN, zetStijl, REACTIES } from './kaartspel-hulp.js?v=5'
+import { maakKaartTafel, kaartSvg, achterkantSvg, KLEUR_TEKEN, zetStijl, REACTIES } from './kaartspel-hulp.js?v=6'
 import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek, zetMuziekThema } from './koningsjacht-geluid.js?v=3'
-import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=3'
+import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=5'
 import { verbindBierpul } from './koningsjacht-bier.js?v=1'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
 const wacht = ms => new Promise(k => setTimeout(k, ms))
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
-const STIJL = 'perkament'
 const BEWAAR = 'fibro_koningsjacht_stand', BESTE = 'fibro_koningsjacht_best'
 const SOORT = { B: 'Boer', V: 'Vrouw', H: 'Heer' }
 const KLEURNAAM = { h: 'harten', r: 'ruiten', k: 'klaveren', s: 'schoppen' }
@@ -130,6 +129,9 @@ const CSS = `
 .kj-bier-inhoud{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 0 14px}.kj-bier-inhoud label{flex:1 1 100%;font-weight:700}.kj-bier-inhoud input{flex:1;min-width:120px;accent-color:#d69a43}.kj-bier-inhoud output{min-width:3.5em;text-align:right;font-variant-numeric:tabular-nums}.kj-bier-vol{min-height:40px;padding:8px 12px;border:1px solid #e6c68c88;border-radius:10px;background:#593717;color:#fff5dd;font:inherit;cursor:pointer}
 .kj-start-instellingen{position:absolute;right:12px;top:12px;z-index:35;min-width:44px;min-height:44px;border:1px solid #e6c68c88;border-radius:12px;background:#25150cdd;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 3px 12px #0009}
 .kj-start{position:relative;isolation:isolate;justify-content:safe center}
+.kj-instellingen,.kj-instellingen *{box-sizing:border-box}.kj-scene-keuze{border:0;padding:0;margin:0 0 12px;min-width:0}.kj-scene-keuze legend{font-weight:700;margin-bottom:10px}.kj-scene-opties{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.kj-scene-opties label{display:flex;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:7px 4px;border:1px solid #e6c68c55;border-radius:10px;background:#100d0d66;font-size:12px;cursor:pointer}.kj-scene-opties label:has(input:checked){background:linear-gradient(145deg,#8f652b,#4c3217);border-color:#ffe8a6;box-shadow:inset 0 1px #fff5,0 3px 8px #0006}.kj-scene-opties input{accent-color:#e5bb65;margin:0}
+.kj-modern .kt-knop{background:linear-gradient(155deg,#142334,#090f19);border-color:#d6b66c;color:#fff4d3;box-shadow:inset 0 1px #fff2,0 3px 8px #0008}.kj-modern .kj-kaart{box-shadow:0 8px 22px #000b,0 0 0 1px #e2be6777}.kj-modern .kj-titel,.kj-modern .kj-naam{color:#f5d990}.kj-instellingen.kj-modern .kj-instellingen-kaart{background:linear-gradient(145deg,#172536,#09111c);border-color:#dfc37b99}
+.kj-modern .kj-kaars.kj-links{width:clamp(62px,15vw,100px);aspect-ratio:2/3}.kj-modern .kj-kaars.kj-rechts{width:clamp(80px,18vw,118px);aspect-ratio:2/3}.kj-modern .kj-links .kj-vlam{left:49.7%;bottom:81%;height:11%;width:10%;margin-left:-5%}.kj-modern .kj-rechts .kj-vlam{left:49.8%;bottom:96%;height:12%;width:9%;margin-left:-4.5%}
 `
 function zetCss() {
   if (document.getElementById('kj-stijl')) return
@@ -182,6 +184,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
   const INSTELLINGEN = 'fibro_koningsjacht_instellingen'
   const bewaardeInstellingen = lees(INSTELLINGEN, {}) || {}
   const instellingen = {
+    scene: ['standaard', 'modern', 'middeleeuws'].includes(bewaardeInstellingen.scene) ? bewaardeInstellingen.scene : (bewaardeInstellingen.middeleeuws === true ? 'middeleeuws' : 'standaard'),
     beweging: bewaardeInstellingen.beweging === true,
     middeleeuws: bewaardeInstellingen.middeleeuws === true,
     flikkeren: bewaardeInstellingen.flikkeren !== false,
@@ -190,9 +193,11 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     bierOorRechts: bewaardeInstellingen.bierOorRechts !== false,
     bierRonde: Number.isSafeInteger(bewaardeInstellingen.bierRonde) && bewaardeInstellingen.bierRonde >= 0 ? bewaardeInstellingen.bierRonde : 0
   }
+  instellingen.middeleeuws = instellingen.scene === 'middeleeuws'
+  let STIJL = instellingen.scene === 'modern' ? 'modern' : 'perkament'
   let scene = null, flikkerTimer = null, anderBier = null, bierTimer = null
 
-  const sceneOpties = () => ({ ...instellingen, anderBier, eigenNaam: T('Jij'), bierLabel: T('Inhoud van je bierpul'), onBierInhoud: wijzigBierInhoud })
+  const sceneOpties = () => ({ ...instellingen, anderBier, eigenNaam: T('Jij'), bierLabel: T('Inhoud van je bierpul'), onBierInhoud: wijzigBierInhoud, onBierNieuw: nieuweBierpul })
   zetMuziekThema(instellingen.middeleeuws ? 'middeleeuws' : 'standaard')
 
   function wijzigBierInhoud(niveau, afgerond = false) {
@@ -205,6 +210,15 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     if (afgerond) { clearTimeout(bierTimer); bierTimer = null; stuurBier() }
     else if (samenSpel && !bierTimer) bierTimer = setTimeout(() => { bierTimer = null; stuurBier() }, 200)
   }
+  function nieuweBierpul() {
+    instellingen.bierInhoud = 100
+    instellingen.bierOorRechts = !instellingen.bierOorRechts
+    instellingen.bierRonde++
+    const slider = document.getElementById('kj-bier-inhoud')
+    if (slider) slider.value = '100'
+    pasInstellingenToe()
+    clearTimeout(bierTimer); bierTimer = null; stuurBier()
+  }
 
   function stopScene() {
     clearInterval(flikkerTimer); flikkerTimer = null
@@ -213,10 +227,24 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
 
   function pasInstellingenToe() {
     const actief = tafel?.element?.isConnected ? tafel.element : inhoud.querySelector('.kj-start')
+    instellingen.middeleeuws = instellingen.scene === 'middeleeuws'
     actief?.classList.toggle('kj-sfeer', instellingen.middeleeuws)
+    actief?.classList.toggle('kj-modern', instellingen.scene === 'modern')
+    document.querySelector('.kj-instellingen')?.classList.toggle('kj-modern', instellingen.scene === 'modern')
     actief?.classList.toggle('kj-geenflikkering', !instellingen.flikkeren)
     scene?.update(sceneOpties())
     zetMuziekThema(instellingen.middeleeuws ? 'middeleeuws' : 'standaard')
+    const nieuweStijl = instellingen.scene === 'modern' ? 'modern' : 'perkament'
+    if (nieuweStijl !== STIJL) {
+      STIJL = nieuweStijl
+      for (const [i, kaart] of [...inhoud.querySelectorAll('.kj-kaarten>div')].entries()) kaart.innerHTML = kaartSvg(['kB', 'hH', 'sV'][i], STIJL)
+      if (tafel?.element?.isConnected) {
+        tafel.zetKaartStijl(STIJL)
+        for (const kaart of tafel.element.querySelectorAll('.kj-kasteel>div')) kaart.innerHTML = achterkantSvg(STIJL)
+        if (staat) tekenVijand(staat)
+      }
+    }
+    verversKandelaars()
     verversKaarslicht()
     schrijf(INSTELLINGEN, instellingen)
   }
@@ -225,6 +253,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     stopScene()
     if (!element) return
     element.classList.toggle('kj-sfeer', instellingen.middeleeuws)
+    element.classList.toggle('kj-modern', instellingen.scene === 'modern')
     element.classList.toggle('kj-geenflikkering', !instellingen.flikkeren)
     scene = maakKoningsjachtScene(element, sceneOpties())
   }
@@ -233,11 +262,13 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     if (document.querySelector('.kj-instellingen')) return
     const vorigeFocus = document.activeElement
     const scherm = document.createElement('div')
-    scherm.className = 'kj-instellingen'
+    scherm.className = 'kj-instellingen' + (instellingen.scene === 'modern' ? ' kj-modern' : '')
     scherm.innerHTML = '<section class="kj-instellingen-kaart" role="dialog" aria-modal="true" aria-labelledby="kj-instellingen-titel">'
       + '<div class="kj-instellingen-kop"><h2 id="kj-instellingen-titel">' + esc(T('Instellingen')) + '</h2>'
       + '<button type="button" class="kj-instellingen-sluit" aria-label="' + esc(T('Sluiten')) + '">×</button></div>'
-      + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Middeleeuwse tafel')) + '</b><small>' + esc(T('Een houten achtergrond met kaarsen in kandelaren.')) + '</small></span><input type="checkbox" data-instelling="middeleeuws"></label>'
+      + '<fieldset class="kj-scene-keuze"><legend>' + esc(T('Tafelsfeer')) + '</legend><div class="kj-scene-opties">'
+      + [['standaard', T('Standaard')], ['modern', T('Modern')], ['middeleeuws', T('Middeleeuws')]].map(([id, label]) => '<label><input type="radio" name="kj-scene" data-scene="' + id + '" value="' + id + '"' + (instellingen.scene === id ? ' checked' : '') + '><span>' + esc(label) + '</span></label>').join('')
+      + '</div></fieldset>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Achtergrond bewegen')) + '</b><small>' + esc(T('Beweeg je telefoon voor een subtiel diepte-effect.')) + '</small></span><input type="checkbox" data-instelling="beweging"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Kaarsen laten flikkeren')) + '</b><small>' + esc(T('Laat de vlam en het kaarslicht zacht bewegen.')) + '</small></span><input type="checkbox" data-instelling="flikkeren"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Bierpul tonen')) + '</b><small>' + esc(T('Zet een bierpul op de tafel.')) + '</small></span><input type="checkbox" data-instelling="bierpul"></label>'
@@ -258,6 +289,11 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     document.addEventListener('keydown', toetsen)
     scherm.querySelector('.kj-instellingen-sluit').onclick = sluit
     scherm.addEventListener('click', e => { if (e.target === scherm) sluit() })
+    for (const input of scherm.querySelectorAll('[data-scene]')) input.addEventListener('change', () => {
+      if (!input.checked) return
+      instellingen.scene = input.value
+      pasInstellingenToe()
+    })
     for (const input of scherm.querySelectorAll('[data-instelling]')) {
       const key = input.dataset.instelling
       input.checked = instellingen[key]
@@ -287,12 +323,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
       wijzigBierInhoud(Number(bierSlider.value))
     })
     bierSlider.addEventListener('change', () => wijzigBierInhoud(Number(bierSlider.value), true))
-    nieuwePul.addEventListener('click', () => {
-      instellingen.bierInhoud = 100
-      instellingen.bierOorRechts = !instellingen.bierOorRechts
-      instellingen.bierRonde++
-      toonBierWaarde(); pasInstellingenToe(); stuurBier()
-    })
+    nieuwePul.addEventListener('click', nieuweBierpul)
     scherm.querySelector('.kj-instellingen-sluit').focus()
   }
 
@@ -505,7 +536,18 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
       k.innerHTML = kaarsSvg + '<img class="kj-kandelaar" src="./assets/koningsjacht/chamberstick.png" alt="" draggable="false"><div class="kj-vlam"></div>'
       midden.appendChild(k)
     }
+    verversKandelaars()
     verversKaarslicht()
+  }
+  function verversKandelaars() {
+    const el = tafel?.element
+    if (!el?.isConnected) return
+    for (const kaars of el.querySelectorAll('.kj-kaars')) {
+      const bestand = instellingen.scene === 'modern' ? (kaars.classList.contains('kj-links') ? 'candle-modern-left.png' : 'candle-modern-right.png') : 'chamberstick.png'
+      const afbeelding = kaars.querySelector('.kj-kandelaar')
+      const url = new URL('./assets/koningsjacht/' + bestand, import.meta.url).href
+      if (afbeelding.src !== url) afbeelding.src = url
+    }
   }
   function verversKaarslicht() {
     clearInterval(flikkerTimer); flikkerTimer = null
@@ -626,7 +668,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     p.querySelector('.kj-kasteel').style.visibility = s.kasteel.length > 1 ? '' : 'hidden'
     const kaartEl = p.querySelector('.kj-kaart')
     if (!v) { kaartEl.innerHTML = ''; for (const c of ['.kj-naam', '.kj-regel', '.kj-immuun', '.kj-balk span']) p.querySelector(c).textContent = ''; p.querySelector('.kj-vul').style.width = '0%'; return }
-    if (kaart && kaartEl.dataset.id !== v.id) { kaartEl.innerHTML = kaartSvg(v.id, STIJL); kaartEl.dataset.id = v.id }
+    if (kaart && (kaartEl.dataset.id !== v.id || kaartEl.dataset.stijl !== STIJL)) { kaartEl.innerHTML = kaartSvg(v.id, STIJL); kaartEl.dataset.id = v.id; kaartEl.dataset.stijl = STIJL }
     p.querySelector('.kj-naam').textContent = vijandNaam(v.id)
     p.querySelector('.kj-vul').style.width = (100 * v.over / v.leven) + '%'
     p.querySelector('.kj-balk span').textContent = '❤ ' + v.over + ' / ' + v.leven

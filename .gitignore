@@ -4,3 +4,4 @@
 *.bak-*
 *.voor-*
 node_modules/
+android/.gradle/

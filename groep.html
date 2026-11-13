@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=106"></script>
+<script src="taal.js?v=107"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -447,7 +447,7 @@ button { font-family:inherit; }
   import { haalPrivateKeyOp, eigenPubliekeSleutel } from './crypto.js?v=182'
   import { versleutelGroepsbericht, openGroepsbericht, MAX_LEDEN } from './groepsleutel.js?v=2'
   import { maakFoto, verstuurMedia, maakOntvanger, bewaarMedia, leesMedia, ruimOp, nieuwId, marker, MARKER, MAX_BYTES } from './groepmedia.js?v=1'
-  import { speel as speelFx } from './stickerfx.js?v=235'
+  import { speel as speelFx } from './stickerfx.js?v=236'
   import { isCode as isEigenCode, leesFx, zoekEigenSticker, fxCode, stickerPakket } from './eigenstickers.js?v=162'
   import { kanOpnemen, neemOp, maakSpeler, tijdTekst as spraakTijd } from './spraak.js?v=1'
   import { maakGroepGesprek, MAX_BELLERS, MAX_BEELD } from './groepbellen.js?v=3'
@@ -457,7 +457,7 @@ button { font-family:inherit; }
   import { houOpen } from './lijntjes.js?v=1'
   import { haalVriendFotos, geldigeFoto } from './vriendfotos.js?v=2'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
-  import { zoekSticker } from './stickervellen.js?v=236'
+  import { zoekSticker } from './stickervellen.js?v=237'
 
   const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
   const $ = id => document.getElementById(id)
@@ -1308,7 +1308,7 @@ button { font-family:inherit; }
     const r = $('stickerRaster')
     if (!stickerKeuze) {
       try {
-        const [{ maakStickerkeuze }, fx] = await Promise.all([import('./stickerkeuze.js?v=236'), import('./stickerfx.js?v=235')])
+        const [{ maakStickerkeuze }, fx] = await Promise.all([import('./stickerkeuze.js?v=237'), import('./stickerfx.js?v=236')])
         stickerKeuze = maakStickerkeuze(r, { uid: () => ik, onKies: async st => {
           if (!st) return
           fx.speelGeluid(st.g)

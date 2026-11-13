@@ -2394,4 +2394,10 @@ window.FIBRO_EN = {
   "Perkament": "Parchment",
   "Je sessie wordt hersteld": "Restoring your session",
   "We openen je eigen plekkie…": "Opening your own space…",
+  // ---- Stickervel Sinterklaas uit de Stekky Store (store.html, stickerkeuze.js), 13 nov 2026 ----
+  "Hier komen de stickervellen die je downloadt in de Stekky Store.": "Sticker sheets you download in the {app} Store appear here.",
+  "{n} stickers": "{n} stickers",
+  "Sticker {naam} bekijken": "Preview sticker {naam}",
+  "Gedownload! Je vindt ze in de chat bij Stickers → Winkel.": "Downloaded! You'll find them in the chat under Stickers → Shop.",
+  "Twaalf stickers die bewegen en geluid maken: de Sint, Piet, de pakjesboot, Ozosnel, chocoladeletters en meer.": "Twelve stickers that move and make sounds: Sinterklaas, Piet, the steamboat, his horse Ozosnel, chocolate letters and more.",
 }

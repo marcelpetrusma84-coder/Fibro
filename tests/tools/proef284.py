@@ -232,6 +232,10 @@ try:
         open_(bp); bp.wait_for_selector('.bubbel.kaart >> text=Waar eten we?')
         kaart(bp, 'Waar eten we?').locator('.k-keuze', has_text='Sushi').click()
         bp.wait_for_function("document.querySelector('.bubbel.kaart .k-voet').textContent.includes('1')")
+        # Het kaartje telt al mee voordat het stille bericht bij de (nep)server is: wacht tot het er is (in CI soms later).
+        for _ in range(50):
+            if DB['berichten'][-1].get('sender_id') == BRAM: break
+            bp.wait_for_timeout(100)
         st = DB['berichten'][-1]
         check(st.get('stil') is True and st['content'].startswith('g1:') and st['sender_id'] == BRAM, 'C: stem = stil versleuteld bericht')
         k = keuzes(bp, 'Waar eten we?')

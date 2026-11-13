@@ -2400,6 +2400,12 @@ window.FIBRO_EN = {
   "Sticker {naam} bekijken": "Preview sticker {naam}",
   "Gedownload! Je vindt ze in de chat bij Stickers → Winkel.": "Downloaded! You'll find them in the chat under Stickers → Shop.",
   "Twaalf stickers die bewegen en geluid maken: de Sint, Piet, de pakjesboot, Ozosnel, chocoladeletters en meer.": "Twelve stickers that move and make sounds: Sinterklaas, Piet, the steamboat, his horse Ozosnel, chocolate letters and more.",
+  // ---- Lettertype-pakket Sinterklaas in de Stekky Store, 13 nov 2026 ----
+  "pakket|Sinterklaas": "Sinterklaas",
+  "lettertype|Het Grote Boek": "The Big Book",
+  "lettertype|Sintgedicht": "Sinterklaas poem",
+  "lettertype|Strooigoed": "Sweets",
+  "lettertype|Pepernoot": "Ginger nut",
   // ---- Chat: datum boven de berichten van elke dag, 13 nov 2026 ----
   "Vandaag": "Today",
   "Gisteren": "Yesterday",

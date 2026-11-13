@@ -33,7 +33,7 @@ assert.match(hulp, /spelVideoEigen/, 'de beurtklok komt ook om het webcamrondje'
 const chat = lees('chat.html')
 const KAARTSPELLEN = JSON.parse(chat.match(/const KAARTSPELLEN = (\[[^\]]*\])/)[1].replace(/'/g, '"'))
 const BEURTSPELLEN = JSON.parse(chat.match(/const BEURTSPELLEN = (\[[^\]]*\])/)[1].replace(/'/g, '"'))
-assert.deepEqual(KAARTSPELLEN, ['pesten', 'toepen', 'eenentwintigen'])
+assert.deepEqual(KAARTSPELLEN, ['pesten', 'toepen', 'eenentwintigen', 'koningsjacht'])
 for (const spel of KAARTSPELLEN) assert.ok(BEURTSPELLEN.includes(spel), spel + ' krijgt de chatbalk en de webcamrondjes')
 assert.match(chat, /onActivity:\(\) => \{ if \(spelKanaal === verbinding && \(spelActief === 'schaken' \|\| KAARTSPELLEN\.includes\(spelActief\)\)\) startSpelBel\(\) \}/, 'spraak vanzelf aan bij kaartspellen')
 assert.ok(!/onclick="startSpel\('pesten'\)"/.test(chat), 'geen vaste knop: Pesten komt uit de Store')
@@ -48,7 +48,7 @@ assert.equal(versie('chat.html').length, 1); assert.deepEqual(versie('chat.html'
 assert.match(lees('solo.js'), /pesten: +\{ naam: 'Pesten'.*bot: pestenBot/, 'ook tegen de computer (spel.html)')
 assert.match(lees('speluitnodiging.js'), /pesten: \{ icon: '🃏', naam: 'Pesten' \}/)
 // 11 nov 2026: Toepen en Eenentwintigen op dezelfde blauwdruk, ook uit de Store
-for (const [id, naam] of [['toepen', 'Toepen'], ['eenentwintigen', 'Eenentwintigen']]) {
+for (const [id, naam] of [['toepen', 'Toepen'], ['eenentwintigen', 'Eenentwintigen'], ['koningsjacht', 'Koningsjacht']]) {
   const v = [...new Set([...chat.matchAll(new RegExp(id + '-ui\\.js\\?v=(\\d+)', 'g'))].map(m => m[1]))]
   assert.equal(v.length, 1, id + ': één versie in chat.html'); assert.ok(lees('solo.js').includes(id + "-ui.js?v=" + v[0] + "'"), id + ': dezelfde versie in solo.js')
   assert.match(lees('solo.js'), new RegExp(id + ': +\\{ naam: \'' + naam + "'.*store: true"), id + ': tegen de computer, alleen via de Store')
@@ -65,9 +65,9 @@ const en = lees('taal-en.js')
 assert.match(lees('solo.js'), /koningsjacht: \{ naam: 'Koningsjacht'.*bestand: '\.\/koningsjacht-ui\.js\?v=\d+', zonderKanaal: true, store: true \}/)
 assert.match(lees('store.js'), /id: 'koningsjacht', soort: 'game'.*widget: 'spel_koningsjacht'/)
 assert.match(lees('profiel.html'), /id="widgetRij-spel_koningsjacht"/)
-assert.ok(!chat.includes('koningsjacht'), 'Koningsjacht staat (nog) niet in de chat: alleen tegen het kasteel')
+assert.match(chat, /else if \(spelType === 'koningsjacht'\) await startKaartspel\(spelType\)/, 'Koningsjacht ook met een vriend in de chat (13 nov 2026)')
 const kj = lees('koningsjacht-ui.js')
-assert.match(kj, /stijl: STIJL, ondergrond: 'hout'/, 'vaste perkamentkaarten en een houten tafelblad')
+assert.match(kj, /stijl: STIJL, onReactie: [^\n]*ondergrond: 'hout'/, 'vaste perkamentkaarten en een houten tafelblad')
 assert.match(kj, /Regicide van Badgers From Mars/, 'vermelding van het oorspronkelijke spel')
 assert.match(hulp, /\.kt-tafel\.kt-hout\{[^}]*url\(kaarten\/hout\.webp\?v=\d+\)/, 'houten tafelblad')
 assert.match(hulp, /\(vast \? '' : '<button type="button" class="kt-knop kt-stijlknop"/, 'vaste stijl: geen knop 🎴')

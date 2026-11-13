@@ -34,7 +34,7 @@ export const STORE_GAMES = [
     uitleg: 'Pak kaarten tot je zo dicht mogelijk bij 21 zit, maar niet erover. Durf jij nog een kaart? Tegen de computer of met een vriend in de chat.' },
   // 13 nov 2026: Koningsjacht, alleen te spelen (op Home), met de perkamentkaarten op een houten tafel
   { id: 'koningsjacht', soort: 'game', titel: 'Koningsjacht', widget: 'spel_koningsjacht', icoon: 'spelicoon/koningsjacht.webp?v=2',
-    uitleg: 'Versla in je eentje de twaalf boeren, vrouwen en heren uit het kasteel. Elke soort kaart heeft een eigen kracht. Gebaseerd op Regicide.' },
+    uitleg: 'Versla de twaalf boeren, vrouwen en heren uit het kasteel. Alleen, of in de chat met een vriend: samen, als wedstrijd of als duel. Elke soort kaart heeft een eigen kracht. Gebaseerd op Regicide.' },
 ]
 // Stickers (13 nov 2026): een vel van 12 bewegende stickers met geluid (STORE_VELLEN in stickervellen.js). Na downloaden
 // staat het bij Stijl > Stickers; zet je het daar aan, dan staat het in de stickerkeuze van de chat bij 'Winkel'.

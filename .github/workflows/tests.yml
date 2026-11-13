@@ -176,6 +176,9 @@ jobs:
       - name: "Uitloggen lukt altijd, ook als de server niet (goed) antwoordt"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef300.py .
+      - name: "Koningsjacht met z'n tweeen: samen, wedstrijd en duel"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef301.py .
       - name: "Spelmenu ☰ in elk spel (pauze, geluid, microfoon, camera, menu, verlaten) en berichten linksboven"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef291.py .

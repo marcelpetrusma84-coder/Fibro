@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=112"></script>
+<script src="taal.js?v=113"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -492,7 +492,7 @@ window.veiligeUrl = function(v){
   import * as Schaak from './schaak.js?v=95'
   import { maakSpelMenu } from './spelmenu.js?v=1' // 11 nov 2026: hamburgermenu rechtsboven in elk spel (pauze, geluid, microfoon, camera, menu, verlaten)
   import { startSpelBerichtInChat } from './spelbericht.js?v=2'
-  import { gameAan, mijnDownloads } from './store.js?v=12' // 11 nov 2026: spellen uit de Store // 11 nov 2026: berichten van andere vrienden linksboven in het spel
+  import { gameAan, mijnDownloads } from './store.js?v=13' // 11 nov 2026: spellen uit de Store // 11 nov 2026: berichten van andere vrienden linksboven in het spel
   import * as Bordgeluid from './bordgeluid.js?v=203'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
@@ -2757,6 +2757,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     pesten:         { icon: '🃏', naam: 'Pesten' },
     toepen:         { icon: '✊', naam: 'Toepen' },            // 11 nov 2026: kaartspel uit de Store
     eenentwintigen: { icon: '♠️', naam: 'Eenentwintigen' },    // 11 nov 2026: kaartspel uit de Store
+    koningsjacht:   { icon: '👑', naam: 'Koningsjacht' },     // 13 nov 2026: samen, wedstrijd of duel tegen het kasteel
     schaken:        { icon: '♟️', naam: schaakT('Schaken') },
     schakendrie:    { icon: '♟️♟️♟️', naam: schaakT('Schaken met drie spelers') },
     dammen:         { icon: '⚫', naam: 'Draughts' },
@@ -2926,6 +2927,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     pesten: './pesten-ui.js?v=5',
     toepen: './toepen-ui.js?v=4',
     eenentwintigen: './eenentwintigen-ui.js?v=4',
+    koningsjacht: './koningsjacht-ui.js?v=5',
     schaken: './schaken-ui.js?v=275',
     schakendrie: './schaken-drie-ui.js?v=43',
     flappybird: './flappy-ui.js?v=147',
@@ -2984,7 +2986,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // Accepteer uitnodiging → open het spel
   window.speelMee = async function(spelType, sessieId, starterId, players = null) {
     if (!huidigeUser || !geselecteerdeVriend?.id) return
-    const beschikbaar = ['botkaaseiren', 'vieroprij', 'pesten', 'toepen', 'eenentwintigen', 'schaken', 'schakendrie', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball', 'shmup']
+    const beschikbaar = ['botkaaseiren', 'vieroprij', 'pesten', 'toepen', 'eenentwintigen', 'koningsjacht', 'schaken', 'schakendrie', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball', 'shmup']
     if (!beschikbaar.includes(spelType)) {
       alert(T('🚧 {spel} komt binnenkort beschikbaar!', { spel: SPEL_INFO[spelType]?.naam || spelType }))
       return
@@ -3069,6 +3071,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     else if (spelType === 'pesten') await startPesten()
     else if (spelType === 'toepen') await startKaartspel(spelType)
     else if (spelType === 'eenentwintigen') await startKaartspel(spelType)
+    else if (spelType === 'koningsjacht') await startKaartspel(spelType)   // 13 nov 2026
     else if (spelType === 'schaken') await startSchaken()
     else if (spelType === 'schakendrie') await startSchakenDrie(players)
     else if (spelType === 'dammen') await startDammen()
@@ -3194,7 +3197,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
   function toonStoreSpellen() {
     const STORE_SPELLEN = [{ id: 'pesten', naam: 'Pesten', widget: 'spel_pesten', icoon: 'spelicoon/pesten.webp?v=2' },
       { id: 'toepen', naam: 'Toepen', widget: 'spel_toepen', icoon: 'spelicoon/toepen.webp?v=2' },
-      { id: 'eenentwintigen', naam: 'Eenentwintigen', widget: 'spel_eenentwintigen', icoon: 'spelicoon/eenentwintigen.webp?v=2' }]
+      { id: 'eenentwintigen', naam: 'Eenentwintigen', widget: 'spel_eenentwintigen', icoon: 'spelicoon/eenentwintigen.webp?v=2' },
+      { id: 'koningsjacht', naam: 'Koningsjacht', widget: 'spel_koningsjacht', icoon: 'spelicoon/koningsjacht.webp?v=2' }]
     for (const sp of STORE_SPELLEN) {
       const id = 'spelKnop-' + sp.id
       const oud = document.getElementById(id)
@@ -3218,10 +3222,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
   //   - de webcamrondjes bovenin (120 px), met de webcamknop 📹, gouden rand bij praten
   //     en een rode rand als het spel 'fibro-spel-geslagen' meldt (beurtspel-hulp.js).
   // Schaken staat erin voor de chatbalk, maar heeft zijn eigen webcamvakken.
-  const BEURTSPELLEN = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pesten', 'toepen', 'eenentwintigen']
+  const BEURTSPELLEN = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pesten', 'toepen', 'eenentwintigen', 'koningsjacht']
   // BLAUWDRUK KAARTSPELLEN (zie BLAUWDRUK-KAARTSPEL.md): een kaartspel staat ook in BEURTSPELLEN (chatbalk, stickers,
   // webcamrondjes) en krijgt daarbij vanzelf het spraakgesprek zodra het spel begint.
-  const KAARTSPELLEN = ['pesten', 'toepen', 'eenentwintigen']
+  const KAARTSPELLEN = ['pesten', 'toepen', 'eenentwintigen', 'koningsjacht']
   // v169: spellen met een chatbalk: de beurtspellen (daar heb je tijd om iets te sturen)
   const SPELCHAT_SPELLEN = BEURTSPELLEN
 

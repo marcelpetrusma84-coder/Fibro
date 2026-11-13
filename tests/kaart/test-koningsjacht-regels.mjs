@@ -23,7 +23,7 @@ assert.deepEqual(s.kasteel.map(id => id.slice(1)), ['B', 'B', 'B', 'B', 'V', 'V'
 assert.equal(s.hand.length, 8); assert.equal(s.taveerne.length, 32); assert.equal(s.narren, 4)
 assert.ok(K.geldigeStand(s))
 assert.equal(K.nieuwSpel({ niveau: 'ridder' }).narren, 2); assert.equal(K.nieuwSpel({ niveau: 'koning' }).narren, 0)
-assert.deepEqual(K.vijandInfo(stand({ vijand: 'hV' })), { id: 'hV', kleur: 'h', soort: 'V', leven: 30, aanval: 15, over: 30, slag: 15 })
+assert.deepEqual(K.vijandInfo(stand({ vijand: 'hV' })), { id: 'hV', kleur: 'h', soort: 'V', leven: 30, aanval: 15, extra: 0, over: 30, slag: 15 })
 
 // 2. Waarden en samen spelen
 assert.equal(K.waarde('hA'), 1); assert.equal(K.waarde('k7'), 7); assert.equal(K.waarde('sB'), 10); assert.equal(K.waarde('rV'), 15); assert.equal(K.waarde('hH'), 20)
@@ -121,4 +121,38 @@ let gewonnen = 0
 for (let z = 1; z <= 40; z++) { const e = speel(['schildknaap', 'ridder', 'koning'][z % 3], z); if (e.gewonnen) { gewonnen++; assert.equal(e.verslagen, 12); assert.ok(K.medaille(e)) } }
 assert.equal(K.medaille({ gewonnen: true, narrenGebruikt: 0 }), 'goud'); assert.equal(K.medaille({ gewonnen: true, narrenGebruikt: 3 }), 'brons'); assert.equal(K.medaille({ gewonnen: true, narrenGebruikt: 1 }), 'zilver')
 assert.equal(K.medaille({ gewonnen: false }), null)
+// 11. Samen (v2): twee handen van 7, om de beurt, ♦ om en om, narren samen
+{
+  const t0 = K.nieuwSpel({ niveau: 'schildknaap', samen: true, rng: rngVan(3) })
+  assert.equal(t0.handen[1].length, 7); assert.equal(t0.handen[2].length, 7); assert.equal(t0.taveerne.length, 26); assert.equal(t0.aanZet, 1)
+  assert.equal(t0.narren, 2); assert.equal(K.nieuwSpel({ niveau: 'ridder', samen: true }).narren, 1); assert.equal(K.nieuwSpel({ niveau: 'koning', samen: true }).narren, 0)
+  assert.ok(K.geldigeStand(t0)); assert.equal(t0.hand, undefined)
+  // een vaste stand: speler 1 heeft r5 en kleine kaarten, speler 2 iets anders
+  const t = JSON.parse(JSON.stringify(t0))
+  const alle = [...t.kasteel, ...t.taveerne, ...t.handen[1], ...t.handen[2]]
+  t.kasteel = ['sB', ...t.kasteel.filter(id => id !== 'sB')]
+  t.handen = { 1: ['r5', 'h2', 'h3', 'h4', 'h6'], 2: ['k9', 'k8', 'k7'] }
+  t.taveerne = alle.filter(id => !t.kasteel.includes(id) && !t.handen[1].includes(id) && !t.handen[2].includes(id))
+  assert.ok(K.geldigeStand(t))
+  assert.ok(!K.magAanvallen(t, ['k9']), 'speler 1 kan niet met de kaarten van speler 2')
+  let n = K.valAan(t, ['r5'])
+  assert.equal(n.handen[1].length, 7, '♦: speler 1 vult aan tot 7'); assert.equal(n.handen[2].length, 5, 'en speler 2 krijgt er om en om ook (2)')
+  assert.equal(n.laatste.gepaktPer[1].length + n.laatste.gepaktPer[2].length, 5)
+  assert.equal(n.fase, 'verdedig'); assert.equal(n.aanZet, 1, 'wie aanvalt, weert af')
+  const weg = [...n.handen[1]].sort((a, b) => K.waarde(b) - K.waarde(a)); const kies = []
+  for (const id of weg) { if (K.som(kies) >= 10) break; kies.push(id) }
+  n = K.weerAf(n, kies); assert.equal(n.aanZet, 2, 'daarna is de ander'); assert.equal(n.fase, 'aanval')
+  assert.equal(n.laatste.wie, 1)
+  n = K.pas(n); assert.equal(n.fase, 'verdedig'); assert.equal(n.aanZet, 2)
+  n = K.nar(n); assert.equal(n.handen[2].length, 7); assert.equal(n.narren, 1)
+  assert.ok(K.geldigeStand(n))
+}
+// 12. Wedstrijd en duel: hetzelfde zaadje = hetzelfde kasteel; een vloek geeft de vijand leven erbij
+{
+  const a = K.nieuwSpel({ niveau: 'ridder', rng: K.zaadRng(12345) }), b = K.nieuwSpel({ niveau: 'ridder', rng: K.zaadRng(12345) })
+  assert.deepEqual(a.kasteel, b.kasteel); assert.deepEqual(a.hand, b.hand)
+  const v = K.vervloek(a, 10); assert.equal(K.vijandInfo(v).leven, 30); assert.equal(K.vijandInfo(v).over, 30); assert.equal(v.laatste.soort, 'vloek')
+  const t = stand({ vijand: 'hB', hand: ['s10', 'k9'], schade: 20 }); t.extra = 10
+  const n = K.valAan(t, ['s10']); assert.ok(n.laatste.verslagen && n.laatste.precies, 'met een vloek moet je er 30 doen'); assert.equal(n.extra, 0)
+}
 console.log('koningsjacht regels: ok (' + gewonnen + ' van 40 gewonnen door de simpele speler)')

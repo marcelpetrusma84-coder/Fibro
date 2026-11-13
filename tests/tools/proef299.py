@@ -107,6 +107,7 @@ try:
         pg.click('.kj-regelkaart .kj-knop')
         check(not pg.query_selector('.kj-regels'), 'A: en gaan weer dicht')
         # Instellingen op mobiel: pul, inhoud, nieuwe pul, twee scenes en bewaren.
+        check(pg.evaluate("() => { const e = document.querySelector('.kj-start-instellingen'), r = e.getBoundingClientRect(); return e.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)) }"), 'M: instellingen hebben een eigen klikgebied naast het algemene spelmenu')
         pg.click('.kj-start-instellingen')
         check(pg.is_checked('[data-instelling=flikkeren]') and pg.is_disabled('#kj-bier-inhoud'), 'M: flikkeren standaard aan, bierbediening eerst uit')
         pg.check('[data-instelling=bierpul]')

@@ -164,6 +164,9 @@ jobs:
       - name: "Home: de bovenste balk blijft staan tijdens scrollen"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef296.py .
+      - name: "Chat: datum boven de berichten van elke dag, enter = nieuwe regel"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef297.py .
       - name: "Spelmenu ☰ in elk spel (pauze, geluid, microfoon, camera, menu, verlaten) en berichten linksboven"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef291.py .

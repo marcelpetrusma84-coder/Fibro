@@ -11,7 +11,7 @@ const chat = lees('chat.html'), spel = lees('spel.html'), en = lees('taal-en.js'
 
 // 1. Alle 12 spellen (en schaken met drie) hebben een plaatje en een deuntje
 const ids = Object.keys(SOLO_SPELLEN)
-assert.equal(ids.length, 15)   // 11 nov 2026: Pesten, Toepen en Eenentwintigen erbij
+assert.equal(ids.length, 16)   // 11 nov 2026: Pesten, Toepen en Eenentwintigen erbij; 13 nov: Koningsjacht
 for (const id of [...ids, 'schakendrie']) {
   assert.equal(typeof SCENES[id]?.teken, 'function', 'plaatje voor ' + id)
   assert.ok(DEUNTJES[id], 'deuntje voor ' + id)
@@ -55,7 +55,7 @@ assert.ok(!/\.filter\s*=/.test(bron), 'geen ctx.filter (kent Safari niet)')
 
 // 4. Chat: titelscherm bij het openen, het spel wacht op de tik, sluiten ruimt het op
 // 3 nov 2026 (sneller): de chat laadt het titelscherm als de pagina rustig is (niet meer in het eerste laden)
-assert.match(chat, /laadModule\('\.\/titelscherm\.js\?v=10'\)\.then\(m => \(titelModule = m\)\)/)
+assert.match(chat, /laadModule\('\.\/titelscherm\.js\?v=11'\)\.then\(m => \(titelModule = m\)\)/)
 assert.match(chat, /laadRustig\(\(\) => laadTitelscherm\(\)\.catch\(\(\) => \{\}\)\)/)
 const mee = chat.slice(chat.indexOf('window.speelMee = async function'), chat.indexOf("if (spelType === 'botkaaseiren') await startBotKaasEieren()"))
 assert.ok(mee.indexOf('toonTitelscherm(') < mee.indexOf('const wachtOpVriend'), 'titelscherm voor het wachten')
@@ -64,7 +64,7 @@ const sluit = chat.slice(chat.indexOf('window.sluitSpel = function(stil)'), chat
 assert.match(sluit, /titelModule\?\.sluitTitelscherm\(\)/)
 
 // 5. Alleen spelen: eerst het titelscherm, dan het menu; de muziek stopt als het spel begint
-assert.match(spel, /import \{ toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek \} from '\.\/titelscherm\.js\?v=10'/)
+assert.match(spel, /import \{ toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek \} from '\.\/titelscherm\.js\?v=11'/)
 assert.match(spel, /\(titelGezien \? Promise\.resolve\(true\) : toonTitelscherm\(\{ spelId, naam: spelNaam\(\) \}\)\)\.then\(\(\) => \{\n      if \(spel\.zonderKanaal\) start\('normaal'\)\n      else if \(spel\.arcade\) startScherm\(\)\n      else kiesNiveau\(\)/)
 assert.match(spel, /async function start\(niveau\) \{\n    spelStart\(spelId\)/)
 
@@ -90,8 +90,8 @@ assert.match(lees('titelmuziek.js'), /if \(ingebed\) \{ try \{ window\.parent\.p
 
 // 6. Engels en versienummers
 for (const k of ['Tik om te beginnen', 'Muziek uit', 'Muziek aan']) assert.ok(en.includes(JSON.stringify(k) + ':'), 'Engels: ' + k)
-assert.match(lees('titelscherm.js'), /from '\.\/titelscenes\.js\?v=6'/)
-assert.match(lees('titelscherm.js'), /from '\.\/titelmuziek\.js\?v=6'/)
+assert.match(lees('titelscherm.js'), /from '\.\/titelscenes\.js\?v=7'/)
+assert.match(lees('titelscherm.js'), /from '\.\/titelmuziek\.js\?v=7'/)
 
 // 7. v252: op Home, het profiel van een vriend en de uitnodiging komt het titelscherm al bij je tik (muziek meteen,
 //    ook op de iPhone); daarna spel.html?...&titel=1, dat het titelscherm dan overslaat
@@ -100,13 +100,13 @@ for (const [f, patroon] of [['index.html', /blok\.onclick = openGame/],
                             ['vriend-profiel.html', /el\.onclick = \(\) => openSpelMetTitel\(spel, 'spel\.html\?spel=' \+ encodeURIComponent\(spel\)\)/],
                             ['invite.html', /knop\.onclick = \(e\) => \{ e\.preventDefault\(\); openSpelMetTitel\(id, knop\.getAttribute\('href'\)\) \}/]]) {
   const bron = lees(f)
-  assert.match(bron, /import \{ openSpelMetTitel \} from '\.\/titelscherm\.js\?v=10'/, f + ': laadt het titelscherm meteen (dan telt je tik voor het geluid)')
+  assert.match(bron, /import \{ openSpelMetTitel \} from '\.\/titelscherm\.js\?v=11'/, f + ': laadt het titelscherm meteen (dan telt je tik voor het geluid)')
   assert.match(bron, patroon, f)
 }
 const muziek = lees('titelmuziek.js')
 assert.match(muziek, /\['pointerdown', 'touchend', 'click', 'keydown'\]/, 'geluid aan bij elke soort tik')
 assert.match(muziek, /a\.createBuffer\(1, 1, 22050\)/, 'stil geluidje voor oudere iPhones')
-for (const f of ['chat.html', 'spel.html', 'index.html', 'vriend-profiel.html', 'invite.html']) assert.ok(/titelscherm\.js\?v=10'/.test(lees(f)), f + ': titelscherm v4')
+for (const f of ['chat.html', 'spel.html', 'index.html', 'vriend-profiel.html', 'invite.html']) assert.ok(/titelscherm\.js\?v=11'/.test(lees(f)), f + ': titelscherm v4')
 
 // 8. v252: drie spellen in hun eigen stijl; titelstijl.js is gemaakt uit de spellen zelf
 const stijl = lees('titelstijl.js')

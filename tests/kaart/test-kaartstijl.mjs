@@ -22,7 +22,13 @@ const alle = ['J1', 'J2']; for (const k of K.KAART_KLEUREN) for (const w of K.KA
 const bestanden = new Set()
 for (const id of alle) {
   const html = K.kaartSvg(id)
-  assert.match(html, /^<img class="kt-svg kt-img" /, id + ' is een plaatje')
+  assert.match(html, /<img class="kt-svg kt-img" /, id + ' is een plaatje')
+  // v4: over de hoeken een scherp hoekje met de waarde (B/V/H in het Nederlands) en het teken (niet bij de joker)
+  if (!id.startsWith('J')) {
+    assert.match(html, /^<span class="kt-svg kt-pk">/, id + ': plaatje met een scherp hoekje')
+    const w = id.slice(1), toon = { B: 'B', V: 'V', H: 'H' }[w] || w
+    assert.equal((html.match(new RegExp('>' + toon + '</text>', 'g')) || []).length, 2, id + ': waarde ' + toon + ' in beide hoeken')
+  } else assert.match(html, /^<img /, 'de joker heeft geen hoekje')
   assert.ok(existsSync(new URL('../../' + src(html), import.meta.url)), id + ': ' + src(html) + ' bestaat')
   bestanden.add(src(html))
 }

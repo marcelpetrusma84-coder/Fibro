@@ -218,8 +218,8 @@ try:
         # ── J: de Store ──
         q = ctx.new_page()
         q.goto(BASIS + 'manifest.json')
-        uit = q.evaluate("async () => { const s = await import('./store.js?v=7'); return s.STORE_GAMES.map(g => g.id + '|' + g.widget) }")
-        check(uit == ['pesten|spel_pesten', 'toepen|spel_toepen', 'eenentwintigen|spel_eenentwintigen'], 'J: de Store heeft Pesten, Toepen en Eenentwintigen (%s)' % uit)
+        uit = q.evaluate("async () => { const s = await import('./store.js?v=10'); return s.STORE_GAMES.map(g => g.id + '|' + g.widget) }")
+        check(uit == ['pesten|spel_pesten', 'toepen|spel_toepen', 'eenentwintigen|spel_eenentwintigen', 'koningsjacht|spel_koningsjacht'], 'J: de Store heeft Pesten, Toepen, Eenentwintigen en Koningsjacht (%s)' % uit)
         check(not fouten, 'J: geen paginafouten (%s)' % fouten[:3])
         b.close()
 finally:

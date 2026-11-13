@@ -4,7 +4,7 @@
 // voor een kaart, tik op "Ik blijf" als je genoeg hebt. Aan het eind draait de ander zijn kaarten om (ze vliegen
 // open op tafel). Over het spelkanaal precies zoals Pesten: 'zet', 'vraag-stand'/'stand', 'opnieuw', 'kaartreactie'.
 import * as P from './eenentwintigen.js?v=1'
-import { maakKaartTafel, REACTIES } from './kaartspel-hulp.js?v=3'
+import { maakKaartTafel, REACTIES } from './kaartspel-hulp.js?v=5'
 import { meldGeslagen } from './beurtspel-hulp.js?v=1'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)

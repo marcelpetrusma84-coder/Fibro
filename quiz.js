@@ -16,7 +16,7 @@
 //   speelQuiz(quiz, { achtergrond })                             spelen (beeldvullend)
 import { zoekSticker } from './stickervellen.js?v=237'
 import { speel, speelGeluid } from './stickerfx.js?v=236'
-import { DEUNTJES, speelTitelMuziek, stopTitelMuziek } from './titelmuziek.js?v=6'
+import { DEUNTJES, speelTitelMuziek, stopTitelMuziek } from './titelmuziek.js?v=7'
 
 Object.assign(window.FIBRO_EN ||= {}, {
   'Quiz': 'Quiz', 'Nog geen quiz': 'No quiz yet', '✏️ Maak een quiz': '✏️ Make a quiz', '✏️ Bewerken': '✏️ Edit',

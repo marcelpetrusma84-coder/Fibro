@@ -25,3 +25,6 @@ Daarna VERSIE in spelicoon.js een hoger, en ?v= in chat.html, profiel.html, inde
 
 Pesten (11 nov 2026): het plaatje is een achterkant en harten aas uit kaartspel-hulp.js (achterkantSvg, kaartSvg('hA')),
 getekend op 128 x 128 met een doorzichtige achtergrond (Chromium) en opgeslagen als WebP met PIL (kwaliteit 88).
+
+Koningsjacht (13 nov 2026): de perkament-achterkant en de heer van harten uit kaarten/perkament/, schuin over elkaar.
+Maken: python3 tests/gen/maak_spelicoon_koningsjacht.py

@@ -31,6 +31,9 @@ export const STORE_GAMES = [
     uitleg: 'Vier kaarten, vier slagen, alleen de laatste slag telt. Klop "Toep!" om de inzet te verhogen, en durf te bluffen. Wie 10 strafpunten heeft, verliest.' },
   { id: 'eenentwintigen', soort: 'game', titel: 'Eenentwintigen', widget: 'spel_eenentwintigen', icoon: 'spelicoon/eenentwintigen.webp?v=2',
     uitleg: 'Pak kaarten tot je zo dicht mogelijk bij 21 zit, maar niet erover. Durf jij nog een kaart? Tegen de computer of met een vriend in de chat.' },
+  // 13 nov 2026: Koningsjacht, alleen te spelen (op Home), met de perkamentkaarten op een houten tafel
+  { id: 'koningsjacht', soort: 'game', titel: 'Koningsjacht', widget: 'spel_koningsjacht', icoon: 'spelicoon/koningsjacht.webp?v=2',
+    uitleg: 'Versla in je eentje de twaalf boeren, vrouwen en heren uit het kasteel. Elke soort kaart heeft een eigen kracht. Gebaseerd op Regicide.' },
 ]
 // Stickers (13 nov 2026): een vel van 12 bewegende stickers met geluid (STORE_VELLEN in stickervellen.js). Na downloaden
 // staat het in de stickerkeuze van de chat bij 'Winkel'. Verwijderen: dan is het daar weg (wat je al stuurde, blijft).

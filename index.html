@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=3"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=109"></script>
+<script src="taal.js?v=110"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -332,7 +332,7 @@ import { startHeartbeat } from './heartbeat.js?v=117'
 import { meldToestel } from './toestel.js?v=1'
 import { zetStandaardWidgets } from './standaardwidgets.js?v=2' // v267: nieuw account = meteen widgets op Home
 import * as GB from './gastenboekstijl.js?v=2'
-import { spelIcoonHtml } from './spelicoon.js?v=5' // 30 okt 2026: plaatjes uit de spellen
+import { spelIcoonHtml } from './spelicoon.js?v=6' // 30 okt 2026: plaatjes uit de spellen
 import { initSync, lokaleVriendNaam } from './sync.js?v=255'
 import { maakProfielLikes, itemVan } from './profielreacties.js?v=2' // v258: likes op je eigen profiel
 import { supabase } from './supabase.js?v=95'
@@ -342,9 +342,9 @@ import { startMeldingen } from './meldingen.js?v=188'
 import { haalPrivateKeyOp } from './crypto.js?v=182'
 import { isBelregel, belregelTekst } from './belregel.js?v=152'
 import { maakSpelVersieLangDruk } from './spelversie-langdruk.js?v=1'
-import { koppelSpelIcoonFallback } from './spelicoon.js?v=5'
+import { koppelSpelIcoonFallback } from './spelicoon.js?v=6'
 koppelSpelIcoonFallback()
-import { openSpelMetTitel } from './titelscherm.js?v=10' // v252: titelscherm met muziek meteen bij je tik
+import { openSpelMetTitel } from './titelscherm.js?v=11' // v252: titelscherm met muziek meteen bij je tik
 import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=5' // v266
 pasBlokstijlToe()
 
@@ -709,7 +709,7 @@ function renderProfiel(id, c) {
 // ── Spelwidget: tikken opent het spel tegen de computer (spel.html) ──
 const gameVersionHistoryCleanup = new WeakMap()
 function renderSpelWidget(c, spel) {
-  const ICONEN = { botkaaseiren: '⭕', vieroprij: '🔴', pesten: '🃏', toepen: '✊', eenentwintigen: '♠️', schaken: '♟️', dammen: '⚫', pong: '🏓', pacman: '👻', breakout: '🟪', flappybird: '🦇', swarm: '🪲', endlessrunner: '🏃', pinball: '🐍', shmup: '🚀' }
+  const ICONEN = { botkaaseiren: '⭕', vieroprij: '🔴', pesten: '🃏', toepen: '✊', eenentwintigen: '♠️', koningsjacht: '👑', schaken: '♟️', dammen: '⚫', pong: '🏓', pacman: '👻', breakout: '🟪', flappybird: '🦇', swarm: '🪲', endlessrunner: '🏃', pinball: '🐍', shmup: '🚀' }
   // 30 okt 2026: een plaatje uit het spel zelf (spelicoon.js); de emoji alleen als er (nog) geen plaatje is
   const icon = spelIcoonHtml(spel, 40) || ICONEN[spel] || '🎮'
   c.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:100%;"><span style="font-size:30px;line-height:1">' + icon + '</span><span style="font-size:13px;font-weight:600;color:#fff">' + T('▶ Spelen') + '</span></div>'
@@ -742,7 +742,7 @@ function renderSpelWidget(c, spel) {
     }
     historyShown = true
     try {
-      const versions = await import('./spelversies.js?v=25')
+      const versions = await import('./spelversies.js?v=26')
       if (disposed || request !== historyRequest || !versieVlak.isConnected) return
       const currentVersion = versions.spelVersie(spel)
       if (!currentVersion) { historyShown = false; return }
@@ -1669,7 +1669,7 @@ async function renderQuiz(c, uid) {
   let quiz = null
   try { quiz = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
   let Q
-  try { Q = await import('./quiz.js?v=5') } catch (e) { console.warn('[quiz]', e); return }
+  try { Q = await import('./quiz.js?v=6') } catch (e) { console.warn('[quiz]', e); return }
   Q.tekenQuizWidget(c, {
     quiz, eigen: true,
     achtergrond: () => laadUitDB('widgetbg_quiz_' + uid),

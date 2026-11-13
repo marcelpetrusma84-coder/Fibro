@@ -807,18 +807,44 @@ function neonTitel(ctx, b, h, t) {
 // lijst = de kaarten die op tafel vliegen).
 const PESTEN_WAAIER = [['♠', 'A', false], ['♥', '7', true], ['♣', 'B', false], ['♦', '2', true], ['♥', 'A', true]]
 const PESTEN_LIJST = [['♥', 'H', true], ['♠', '8', false], ['♦', 'V', true], ['♣', '2', false], ['♥', '10', true], ['♠', 'J', false]]
-const kaartScene = (waaier, lijst) => (ctx, b, h, t, st) => kaartTafel(ctx, b, h, t, st, waaier, lijst)
+const kaartScene = (waaier, lijst, hout = false) => (ctx, b, h, t, st) => kaartTafel(ctx, b, h, t, st, waaier, lijst, hout)
 const pesten = kaartScene(PESTEN_WAAIER, PESTEN_LIJST)
 const toepen = kaartScene([['♠', '10', false], ['♥', '9', true], ['♣', '8', false], ['♦', '7', true]],
     [['♥', '10', true], ['♥', 'A', true], ['♠', '9', false], ['♠', 'B', false], ['♦', '8', true], ['♣', 'H', false]])
 const eenentwintigen = kaartScene([['♠', 'A', false], ['♥', 'H', true]],
     [['♦', '5', true], ['♣', '9', false], ['♥', '7', true], ['♠', 'V', false], ['♦', 'A', true], ['♣', '3', false]])
-function kaartTafel(ctx, b, h, t, st, waaier, lijst) {
+// 13 nov 2026: Koningsjacht op een houten tafel met perkamentkaarten; de vijanden uit het kasteel vliegen over tafel
+const koningsjacht = kaartScene([['♥', 'A', true], ['♣', '5', false], ['♦', '9', true], ['♠', '7', false], ['♥', '3', true]],
+    [['♠', 'B', false], ['♥', 'B', true], ['♦', 'V', true], ['♣', 'V', false], ['♥', 'H', true], ['♠', 'H', false]], true)
+function houtenBlad(ctx, b, h) {
+    const plank = Math.max(60, b / 4)
+    for (let x = 0, i = 0; x < b; x += plank, i++) {
+        const g = ctx.createLinearGradient(x, 0, x + plank, 0)
+        const tint = [0, 10, -8, 6][i % 4]
+        g.addColorStop(0, 'rgb(' + (110 + tint) + ',' + (68 + tint) + ',34)'); g.addColorStop(0.5, 'rgb(' + (134 + tint) + ',' + (86 + tint) + ',44)'); g.addColorStop(1, 'rgb(' + (100 + tint) + ',' + (60 + tint) + ',30)')
+        ctx.fillStyle = g; ctx.fillRect(x, 0, plank, h)
+        ctx.strokeStyle = 'rgba(60,32,12,0.35)'; ctx.lineWidth = 1.2
+        for (let n = 0; n < 7; n++) {
+            const nx = x + plank * (0.12 + n * 0.13)
+            ctx.beginPath(); ctx.moveTo(nx, 0)
+            for (let y = 0; y <= h; y += 40) ctx.lineTo(nx + Math.sin(y / 90 + n * 1.7 + i) * 6, y)
+            ctx.stroke()
+        }
+        ctx.fillStyle = 'rgba(30,14,4,0.8)'; ctx.fillRect(x, 0, 2, h)
+    }
+    const v = ctx.createRadialGradient(b / 2, h * 0.55, Math.min(b, h) * 0.2, b / 2, h * 0.55, Math.max(b, h) * 0.75)
+    v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.65)')
+    ctx.fillStyle = v; ctx.fillRect(0, 0, b, h)
+}
+function kaartTafel(ctx, b, h, t, st, waaier, lijst, hout = false) {
+    if (hout) houtenBlad(ctx, b, h)
+    else {
     lucht(ctx, b, h, ['#3a1a5e', '#24103d', '#1a0a2e'])
     // vilt
     const g = ctx.createRadialGradient(b / 2, h * 0.62, 10, b / 2, h * 0.62, Math.max(b, h) * 0.6)
     g.addColorStop(0, '#4b2380'); g.addColorStop(1, 'rgba(26,10,46,0)')
     ctx.fillStyle = g; ctx.fillRect(0, 0, b, h)
+    }
     const w = Math.min(b * 0.2, h * 0.16), kh = w * 1.4
     const kaart = (x, y, hoek, teken, waarde, rood, dicht) => {
         ctx.save(); ctx.translate(x, y); ctx.rotate(hoek)
@@ -826,13 +852,15 @@ function kaartTafel(ctx, b, h, t, st, waaier, lijst) {
         rond(ctx, -w / 2, -kh / 2, w, kh, w * 0.09)
         if (dicht) {
             const a = ctx.createLinearGradient(-w / 2, -kh / 2, w / 2, kh / 2)
-            a.addColorStop(0, '#8b3fd1'); a.addColorStop(0.55, '#6a2bab'); a.addColorStop(1, '#1a0a2e')
+            if (hout) { a.addColorStop(0, '#7a1f1f'); a.addColorStop(0.55, '#5a1414'); a.addColorStop(1, '#2a0808') }
+            else { a.addColorStop(0, '#8b3fd1'); a.addColorStop(0.55, '#6a2bab'); a.addColorStop(1, '#1a0a2e') }
             ctx.fillStyle = a; ctx.fill(); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0
-            ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; rond(ctx, -w / 2 + 5, -kh / 2 + 5, w - 10, kh - 10, w * 0.05); ctx.stroke()
-            ctx.fillStyle = '#c084fc'; ctx.font = (w * 0.4) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('✦', 0, 0)
+            ctx.strokeStyle = hout ? '#e8c46a' : '#c084fc'; ctx.lineWidth = 2; rond(ctx, -w / 2 + 5, -kh / 2 + 5, w - 10, kh - 10, w * 0.05); ctx.stroke()
+            ctx.fillStyle = hout ? '#e8c46a' : '#c084fc'; ctx.font = (w * 0.4) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(hout ? '♛' : '✦', 0, 0)
         } else {
-            ctx.fillStyle = '#fffdf9'; ctx.fill(); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0
-            ctx.fillStyle = rood ? '#d62246' : '#1a0a2e'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+            ctx.fillStyle = hout ? '#f1e2bf' : '#fffdf9'; ctx.fill(); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0
+            if (hout) { ctx.strokeStyle = '#a07a45'; ctx.lineWidth = 1.5; rond(ctx, -w / 2 + 3, -kh / 2 + 3, w - 6, kh - 6, w * 0.06); ctx.stroke() }
+            ctx.fillStyle = hout ? (rood ? '#a3212b' : '#1d2d55') : rood ? '#d62246' : '#1a0a2e'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
             ctx.font = '800 ' + (w * 0.24) + 'px sans-serif'; ctx.fillText(waarde, -w * 0.3, -kh * 0.36)
             ctx.font = (w * 0.2) + 'px sans-serif'; ctx.fillText(teken, -w * 0.3, -kh * 0.22)
             ctx.font = (w * 0.62) + 'px sans-serif'; ctx.fillText(teken, 0, kh * 0.06)
@@ -863,6 +891,7 @@ export const SCENES = {
     pesten: { font: 'Titan One', css: 'titan-one', titel: '#ffffff', rand: '#6a2bab', gloed: '#c084fc', teken: pesten },
     toepen: { font: 'Titan One', css: 'titan-one', titel: '#fcd34d', rand: '#6a2bab', gloed: '#c084fc', teken: toepen },
     eenentwintigen: { font: 'Titan One', css: 'titan-one', titel: '#86efac', rand: '#1a0a2e', gloed: '#c084fc', teken: eenentwintigen },
+    koningsjacht: { font: 'Cinzel Decorative', css: 'cinzel-decorative', titel: '#fde68a', rand: '#3a1d08', gloed: '#f5b301', teken: koningsjacht },
     schaken: { font: 'Cinzel Decorative', css: 'cinzel-decorative', titel: '#f3dc96', rand: '#2b1d05', gloed: '#d9a83a', teken: schaken },
     dammen: { font: 'Cinzel', css: 'cinzel', titel: '#fbf3df', rand: '#2a1608', gloed: '#c98a3e', teken: dammen },
     pong: { font: 'Monoton', css: 'monoton', titel: '#7af7ff', rand: '#12002b', gloed: '#ff3df2', teken: pong },

@@ -105,7 +105,7 @@ try:
         check(een.locator('.kj-modi .kj-niveau').count() == 4, 'A: speler 1 kiest uit samen, wedstrijd, duel en belegering')
         # Elke speler heeft zijn eigen pul; de ander ziet updates en nieuwe volle pullen.
         een.click('.kj-start-instellingen'); een.check('[data-instelling=bierpul]')
-        een.locator('#kj-bier-inhoud').fill('42')
+        een.eval_on_selector('#kj-bier-inhoud', "e => { e.value = '42'; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })) }")
         check(wacht(twee, "() => document.querySelector('.kj-scene-bier-ander')?.textContent.includes('42%')", 8000), 'I: speler 2 ziet 42% van speler 1')
         een.click('.kj-instellingen-sluit')
         twee.close(); twee = speler(ctx, 2, 'kj-samen', bestand)

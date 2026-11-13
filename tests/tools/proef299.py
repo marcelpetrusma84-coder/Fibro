@@ -109,7 +109,7 @@ try:
         pg.click('.kj-start-instellingen')
         check(pg.is_checked('[data-instelling=flikkeren]') and pg.is_disabled('#kj-bier-inhoud'), 'M: flikkeren standaard aan, bierbediening eerst uit')
         pg.check('[data-instelling=bierpul]')
-        pg.locator('#kj-bier-inhoud').fill('23')
+        pg.eval_on_selector('#kj-bier-inhoud', "e => { e.value = '23'; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })) }")
         check('23%' in pg.text_content('.kj-scene-bier-ik'), 'M: schuif toont 23% op tafel')
         pg.click('.kj-bier-vol')
         check(pg.input_value('#kj-bier-inhoud') == '100' and '100%' in pg.text_content('.kj-scene-bier-ik'), 'M: nieuwe pul is weer vol')

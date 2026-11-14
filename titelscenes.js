@@ -1,6 +1,7 @@
 // titelscenes.js - de bewegende plaatjes van de titelschermen (v4, 2 nov 2026)
 // v8 (14 nov 2026, Marcel): Koningsjacht krijgt zijn eigen intro: de perkamentrol met de koning, de koningin en de
-//     boer van harten (assets/koningsjacht/intro.webp) als achtergrond over het hele scherm, de titel op het schild.
+//     boer van harten (assets/koningsjacht/intro.webp) als achtergrond over het hele scherm, de titel op het schild, in
+//     het middeleeuwse Uncial Antiqua (in plaats van Cinzel Decorative).
 // v4: The Swarm weer met de kevers rond de lamp (allemaal groen, zonder gras), met de titel uit het spel.
 // v3: Ghost Tag met de spookjes en stippen uit het spel; Twin Snakes allebei vooruit; Neo Paddle: de bal kaatst echt.
 // v2: The Swarm, Runner & Gunner en Neon Raiders in de stijl van het spel zelf (titelstijl.js, met hun eigen titel);
@@ -930,7 +931,7 @@ export const SCENES = {
     pesten: { font: 'Titan One', css: 'titan-one', titel: '#ffffff', rand: '#6a2bab', gloed: '#c084fc', teken: pesten },
     toepen: { font: 'Titan One', css: 'titan-one', titel: '#fcd34d', rand: '#6a2bab', gloed: '#c084fc', teken: toepen },
     eenentwintigen: { font: 'Titan One', css: 'titan-one', titel: '#86efac', rand: '#1a0a2e', gloed: '#c084fc', teken: eenentwintigen },
-    koningsjacht: { font: 'Cinzel Decorative', css: 'cinzel-decorative', titel: '#fde68a', rand: '#3a1d08', gloed: '#f5b301', teken: koningsjacht },
+    koningsjacht: { font: 'Uncial Antiqua', css: 'uncial-antiqua', titel: '#fde68a', rand: '#3a1d08', gloed: '#f5b301', teken: koningsjacht },
     schaken: { font: 'Cinzel Decorative', css: 'cinzel-decorative', titel: '#f3dc96', rand: '#2b1d05', gloed: '#d9a83a', teken: schaken },
     dammen: { font: 'Cinzel', css: 'cinzel', titel: '#fbf3df', rand: '#2a1608', gloed: '#c98a3e', teken: dammen },
     pong: { font: 'Monoton', css: 'monoton', titel: '#7af7ff', rand: '#12002b', gloed: '#ff3df2', teken: pong },

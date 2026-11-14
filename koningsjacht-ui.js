@@ -21,7 +21,7 @@
 // v4 (13 nov 2026, Marcel): kaarslicht. Twee kaarsen op tafel met flakkerende vlammen; de randen van de tafel zijn
 // donker en het warme licht flakkert mee. Aan/uit met 🕯️ (bewaard: fibro_koningsjacht_kaars, standaard aan).
 import * as K from './koningsjacht.js?v=2'
-import { maakKaartTafel, kaartSvg, achterkantSvg, KLEUR_TEKEN, zetStijl, REACTIES } from './kaartspel-hulp.js?v=6'
+import { maakKaartTafel, kaartSvg, achterkantSvg, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=7'
 import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek, zetMuziekThema } from './koningsjacht-geluid.js?v=4'
 import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=5'
 import { zetKaarsSlijtage } from './koningsjacht-kaarsen.js?v=1'
@@ -296,6 +296,8 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Achtergrond bewegen')) + '</b><small>' + esc(T('Beweeg je telefoon voor een subtiel diepte-effect.')) + '</small></span><input type="checkbox" data-instelling="beweging"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Kaarsen laten flikkeren')) + '</b><small>' + esc(T('Laat de vlam en het kaarslicht zacht bewegen.')) + '</small></span><input type="checkbox" data-instelling="flikkeren"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Bierpul tonen')) + '</b><small>' + esc(T('Zet een bierpul op de tafel.')) + '</small></span><input type="checkbox" data-instelling="bierpul"></label>'
+      // kaarttafel (kaartspel-hulp v7): hulp, grote kaarten, trillen; voor alle kaartspellen op dit toestel
+      + KAART_INSTELLINGEN.map(i => '<label class="kj-instellingen-optie"><span><b>' + esc(T(i.titel)) + '</b><small>' + esc(T(i.uitleg)) + '</small></span><input type="checkbox" data-kaartinstelling="' + i.sleutel + '"></label>').join('')
       + '<div class="kj-bier-inhoud"><label for="kj-bier-inhoud">' + esc(T('Inhoud van je bierpul')) + '</label><input id="kj-bier-inhoud" type="range" min="0" max="100" step="1"><button type="button" class="kj-bier-vol">' + esc(T('Nieuwe volle pul')) + '</button></div>'
       + '<p class="kj-instellingen-info" role="status" aria-live="polite"></p></section>'
     document.body.appendChild(scherm)
@@ -334,6 +336,11 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
               : status === 'verminderde-beweging' ? T('Beweging staat uit vanwege je apparaatinstelling.') : ''
         }).catch(() => { if (melding.isConnected) melding.textContent = T('Beweging is niet beschikbaar op dit apparaat.') })
       })
+    }
+    const kaartInst = kaartInstellingen()
+    for (const input of scherm.querySelectorAll('[data-kaartinstelling]')) {
+      input.checked = kaartInst[input.dataset.kaartinstelling]
+      input.addEventListener('change', () => zetKaartInstelling(input.dataset.kaartinstelling, input.checked))
     }
     const bierSlider = scherm.querySelector('#kj-bier-inhoud')
     const nieuwePul = scherm.querySelector('.kj-bier-vol')
@@ -601,7 +608,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     if (muziekStaatAan()) startMuziek()
     bewaar()
     tafel = maakKaartTafel(inhoud, {
-      solo: !samenSpel, naamAnder: samenSpel ? naam : '', stijl: STIJL, onReactie: emoji => stuur('kaartreactie', { emoji }), ondergrond: 'hout', stapelTekst: n => T('Taveerne: {n}', { n }),
+      solo: !samenSpel, naamAnder: samenSpel ? naam : '', stijl: STIJL, instellingKnop: false,   // de kaarttafel-instellingen staan in ⚙ hieronder onReactie: emoji => stuur('kaartreactie', { emoji }), ondergrond: 'hout', stapelTekst: n => T('Taveerne: {n}', { n }),
       groep: () => 'alles',                              // je mag elke kaart erbij kiezen; magSpelen beslist
       magSpelen: ids => !afgelopen && aanMij(staat) && (staat.fase === 'aanval' ? K.magAanvallen(staat, ids) : K.magAfweren(staat, ids)),
       onSpeel: (ids, opts) => staat.fase === 'aanval' ? valAan(ids, opts) : weerAf(ids, opts),

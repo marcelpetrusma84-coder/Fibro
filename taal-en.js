@@ -2547,4 +2547,14 @@ window.FIBRO_EN = {
   "Beweging niet toegestaan op dit apparaat.": "Motion access was not allowed on this device.",
   "Beweging is niet beschikbaar op dit apparaat.": "Motion is not available on this device.",
   "Beweging staat uit vanwege je apparaatinstelling.": "Motion is off because of your device settings.",
+  // kaartspel-hulp v7 (14 nov 2026)
+  "Aflegstapel": "Discard pile",
+  "Bovenop de aflegstapel": "On top of the discard pile",
+  "Laatste zet van {naam}": "Last move by {naam}",
+  "Hulp: kaarten oplichten": "Help: highlight cards",
+  "Kaarten die je mag spelen lichten op, de rest wordt donkerder.": "Cards you can play light up, the rest gets darker.",
+  "Grote kaarten": "Large cards",
+  "Je kaarten zijn groter: makkelijker te lezen en te tikken.": "Your cards are bigger: easier to read and tap.",
+  "Trillen": "Vibration",
+  "Je telefoon trilt een beetje bij kaarten en effecten.": "Your phone vibrates a little with cards and effects.",
 }

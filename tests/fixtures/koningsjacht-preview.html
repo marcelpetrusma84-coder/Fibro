@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <base href="../../">
+  <title>Koningsjacht — lokaal testvoorbeeld</title>
+  <style>html,body,#spelInhoud{width:100%;height:100%;margin:0}body{background:#241309}.testlabel{position:fixed;left:8px;bottom:4px;z-index:80;padding:3px 7px;border-radius:6px;background:#191009dc;color:#ffe8b7;font:11px system-ui;pointer-events:none}</style>
+</head>
+<body>
+  <div id="spelTitelBar" hidden></div>
+  <main id="spelInhoud"></main>
+  <span class="testlabel">LOKAAL TESTVOORBEELD</span>
+  <script type="module">
+    import { start } from './koningsjacht-ui.js?v=11'
+    const params = new URLSearchParams(location.search)
+    // Alleen deze fixture simuleert spelers. Geen account, uitnodiging, camera of productieserver.
+    const speler = Number(params.get('speler'))
+    if (speler === 1 || speler === 2) {
+      const bc = new BroadcastChannel('koningsjacht-preview-' + (params.get('kanaal') || 'lokaal'))
+      const handlers = new Map()
+      bc.onmessage = ({ data }) => {
+        if (data.speler !== speler) for (const fn of handlers.get(data.event) || []) fn({ payload: data.payload })
+      }
+      const kanaal = {
+        on(_, { event }, fn) { const lijst = handlers.get(event) || []; lijst.push(fn); handlers.set(event, lijst); return this },
+        send({ event, payload }) { bc.postMessage({ speler, event, payload }); return Promise.resolve('ok') }
+      }
+      document.querySelector('.testlabel').textContent += ' · SPELER ' + speler
+      addEventListener('pagehide', () => bc.close(), { once: true })
+      start({ spelKanaal: kanaal, benIkSpeler1: speler === 1, vriendNaam: speler === 1 ? 'Testspeler 2' : 'Testspeler 1' })
+    } else start()
+  </script>
+</body>
+</html>

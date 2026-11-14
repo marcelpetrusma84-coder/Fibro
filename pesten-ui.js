@@ -9,7 +9,7 @@
 //   'kaartreactie' een emoji die over tafel vliegt
 // Speler 1 schudt en deelt het eerste spel. De chatbalk, stickers, webcam en het spraakgesprek komen van chat.html.
 import * as P from './pesten.js?v=1'
-import { maakKaartTafel, KLEUR_TEKEN, REACTIES } from './kaartspel-hulp.js?v=5'
+import { maakKaartTafel, KLEUR_TEKEN, REACTIES } from './kaartspel-hulp.js?v=6'
 import { meldGeslagen } from './beurtspel-hulp.js?v=1'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)

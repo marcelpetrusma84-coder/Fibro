@@ -3,6 +3,7 @@
 //     Tegen de computer (solo) geen reactieknop 😀.
 // v5: opties stijl (vaste kaartstijl, dan geen knop 🎴), ondergrond: 'hout' (een houten tafelblad) en onSelectie;
 //     voor Koningsjacht (koningsjacht-ui.js).
+// v6: zwart-gouden moderne kaarten en een lokale stijlwissel op een vaste kaarttafel.
 // v4: scherpe hoekjes over de perkamentkaarten (beter te zien welke kaart het is), zie plaatjeMetHoek.
 // v3: kaartstijl kiezen met de knop 🎴: de gewone Stekky-kaarten of de perkamentkaarten van Marcel (plaatjes in
 //     kaarten/perkament/, met een eigen achterkant en joker). De keuze staat op dit toestel (fibro_kaartstijl).
@@ -118,6 +119,7 @@ const STIJL_SLEUTEL = 'fibro_kaartstijl'
 export const KAARTSTIJLEN = {
   stekky: { naam: 'Stekky' },
   perkament: { naam: 'Perkament', map: './kaarten/perkament/', v: 1 },
+  modern: { naam: 'Modern', verborgen: true }, // de complete Modern-scene in Koningsjacht kiest deze stijl
 }
 export function kaartStijl() {
   try { const s = localStorage.getItem(STIJL_SLEUTEL); return KAARTSTIJLEN[s] ? s : 'stekky' } catch (e) { return 'stekky' }
@@ -143,6 +145,77 @@ export function zetKaartStijl(stijl) {
 laadVooruit(kaartStijl())   // alvast ophalen, zodat vliegende kaarten niet even leeg zijn
 
 const svgCache = new Map()
+const modernCache = new Map()
+const MODERN_GOUD = '#d9ba75', MODERN_LICHT = '#fff0c6', MODERN_ROOD = '#ff7890'
+// Originele lijnillustraties: twee gespiegelde helften, zoals op klassieke hofkaarten,
+// met een eigentijds zwart glazen vlak en geometrische goudlijnen.
+function modernKader(achter = false) {
+  return '<rect x="2" y="2" width="246" height="346" rx="12" fill="#10151c" stroke="' + MODERN_GOUD + '" stroke-width="3"/>'
+    + '<path d="M12 12h226v118L12 278z" fill="#d1e7f2" opacity=".065"/>'
+    + '<path d="M12 16L232 338h-86L12 146z" fill="#ffffff" opacity=".035"/>'
+    + '<rect x="10" y="10" width="230" height="330" rx="7" fill="none" stroke="' + MODERN_GOUD + '" stroke-width=".8" opacity=".65"/>'
+    + (achter ? '' : '<path d="M59 17h132M59 333h132" stroke="' + MODERN_GOUD + '" stroke-width="1" opacity=".65"/>')
+}
+function modernHof(k, w, kleur) {
+  const kroon = w === 'H'
+    ? '<path d="M93 90V66l16 13 16-25 16 25 16-13v24z" fill="#50432a"/><path d="M93 83h64M101 70l6 14m18-26v26m24-14-6 14"/><circle cx="125" cy="54" r="3" fill="' + MODERN_LICHT + '"/>'
+    : w === 'V'
+      ? '<path d="M93 90q4-35 32-35t32 35M100 81l9-13 16 16 16-16 9 13M125 55v25"/><path d="M94 91q-20 15-13 45m75-45q20 15 13 45"/>'
+      : '<path d="M91 88q9-29 43-22l24 19z" fill="#3a3121"/><path d="M89 89h70M138 66q10-21 29-21-1 21-26 27m0-7 18-12"/>'
+  const attribuut = w === 'H'
+    ? '<path d="M78 157V97l-4-13-4 13v60m-8-30h24M67 154h15"/><path d="M74 101v22" stroke="' + MODERN_LICHT + '"/>'
+    : w === 'V'
+      ? '<path d="M176 160v-42m0 9-10-11m10 19 10-10"/><path d="M176 104c-16-15-22 7-8 12-1 14 18 14 18 0 15-6 8-26-10-12z" fill="#6b3f44"/>'
+      : '<path d="M76 160V113m0 15q-18-21-11-34 18 9 11 34zm0 10q18-20 20-32-18 1-20 32z" fill="#303d39"/>'
+  const mozaiek = Array.from({ length: 6 }, (_, n) => {
+    const y = 135 + n * 6
+    return '<path d="M96 ' + y + 'l14 7 15-7 15 7 14-7"/>'
+  }).join('')
+  const helft = '<g stroke="' + MODERN_GOUD + '" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" fill="none">'
+    + kroon
+    + '<path d="M106 93v19q1 15 19 18 18-3 19-18V93z" fill="#746349"/>'
+    + '<path d="M109 102h9m14 0h9m-16 3-4 12h7m-8 7h12" stroke="#171a20" stroke-width="1.9"/>'
+    + '<path d="M112 125v12l-24 10-17 28h108l-17-28-24-10v-12M112 136l13 18 13-18M88 147l17 28m57-28-17 28" fill="#222a32"/>'
+    + mozaiek + attribuut
+    + '<path d="M119 155l6 8 6-8-6-7z" fill="' + kleur + '"/>'
+    + '</g>'
+  return '<rect x="54" y="45" width="142" height="260" rx="4" fill="#141b23" stroke="' + MODERN_GOUD + '" stroke-width="1.2"/>'
+    + '<path d="M59 49h132v252H59zM65 55h120v240H65z" fill="none" stroke="' + MODERN_GOUD + '" stroke-width=".6" opacity=".45"/>'
+    + helft + '<g transform="rotate(180 125 175)">' + helft + '</g>'
+    + '<path d="M59 175h132" stroke="' + MODERN_GOUD + '" stroke-width="1"/>'
+    + tekenKleur(k, 125, 175, 27, false, kleur)
+}
+function modernKaart(id) {
+  const sleutel = id + (isEngels() ? '|en' : '|nl')
+  if (modernCache.has(sleutel)) return modernCache.get(sleutel)
+  const { kleur: k, waarde: w } = kaartDelen(id)
+  const kleur = k === 'h' || k === 'r' || id === 'J2' ? MODERN_ROOD : MODERN_LICHT
+  let binnen = ''
+  if (w === 'J') {
+    const letters = '<text x="30" y="48" font-size="19" ' + LETTER + ' fill="' + kleur + '">' + ['J', 'O', 'K', 'E', 'R'].map((l, i) => '<tspan x="30" dy="' + (i ? 20 : 0) + '">' + l + '</tspan>').join('') + '</text>'
+    binnen = letters + '<g transform="rotate(180 125 175)">' + letters + '</g>'
+      + '<g stroke="' + MODERN_GOUD + '" stroke-width="2" fill="none"><path d="M71 181q-5-54 10-72 24 10 44 46 20-36 44-46 15 18 10 72l-25-14-29 18-29-18z" fill="#26323c"/><circle cx="81" cy="109" r="6"/><circle cx="169" cy="109" r="6"/><path d="M125 220l13 23 26 5-18 18 3 27-24-12-24 12 3-27-18-18 26-5z" fill="' + kleur + '"/><path d="M81 117l15 40m73-40-15 40M125 155v22"/></g>'
+  } else {
+    binnen = hoek(k, w, kleur) + '<g transform="rotate(180 125 175)">' + hoek(k, w, kleur) + '</g>'
+    if (w === 'A') binnen += '<path d="M125 71l66 104-66 104-66-104zM125 89l54 86-54 86-54-86z" fill="none" stroke="' + MODERN_GOUD + '" stroke-width="1.4"/>' + tekenKleur(k, 125, 175, 93, false, kleur)
+    else if (PITTEN[w]) binnen += PITTEN[w].map(([x, y]) => tekenKleur(k, x, y, 39, y > 175, kleur)).join('')
+    else binnen += modernHof(k, w, kleur)
+  }
+  const svg = '<svg class="kt-svg kt-modern" viewBox="0 0 250 350" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' + modernKader() + binnen + '</svg>'
+  modernCache.set(sleutel, svg)
+  return svg
+}
+function modernAchterkant() {
+  let stralen = ''
+  for (let n = 0; n < 12; n++) {
+    const d = 9 + n * 6
+    stralen += '<path d="M125 ' + (22 + n * 3) + 'l' + d + ' ' + (153 - n * 3) + '-' + d + ' ' + (153 - n * 3) + '-' + d + '-' + (153 - n * 3) + 'z"/>'
+  }
+  return '<svg class="kt-svg kt-modern" viewBox="0 0 250 350" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' + modernKader(true)
+    + '<g fill="none" stroke="' + MODERN_GOUD + '" stroke-width=".8" opacity=".55">' + stralen + '</g>'
+    + '<path d="M125 123l35 52-35 52-35-52z" fill="#111820" stroke="' + MODERN_LICHT + '" stroke-width="2"/>'
+    + '<path d="M125 146l19 29-19 29-19-29z" fill="' + MODERN_GOUD + '"/><circle cx="125" cy="175" r="7" fill="#131921"/></svg>'
+}
 // v4 (13 nov 2026): op de plaatjes (Perkament) waren de hoekjes klein en wazig, dus in je waaier zag je slecht welke
 // kaart het was. Nu staat er over beide hoeken een scherp, getekend hoekje: de waarde (B/V/H in het Nederlands, net
 // als in de spellen) en het teken, in de kleur van die soort op de perkamentkaarten.
@@ -161,6 +234,7 @@ function plaatjeMetHoek(stijl, id) {
     + '<g transform="rotate(180 125 175)">' + perkHoek(k, w) + '</g></svg></span>'
 }
 export function kaartSvg(id, stijl = kaartStijl()) {
+  if (stijl === 'modern') return modernKaart(id)
   if (KAARTSTIJLEN[stijl]?.map) return /^J[12]$/.test(id) ? plaatje(stijl, 'joker') : plaatjeMetHoek(stijl, id)
   const sleutel = id + (isEngels() ? '|en' : '')
   if (svgCache.has(sleutel)) return svgCache.get(sleutel)
@@ -186,6 +260,7 @@ export const ACHTERKANTEN = {
   stekky: { van: '#8b3fd1', midden: '#6a2bab', naar: '#1a0a2e', lijn: '#c084fc' },
 }
 export function achterkantSvg(stijl) {
+  if (stijl === 'modern' || (!stijl && kaartStijl() === 'modern')) return modernAchterkant()
   if (KAARTSTIJLEN[stijl]?.map) return plaatje(stijl, 'achterkant')   // v5: de achterkant van een plaatjesstijl
   if (!stijl) { const ks = kaartStijl(); if (KAARTSTIJLEN[ks].map) return plaatje(ks, 'achterkant'); stijl = 'stekky' }
   const a = ACHTERKANTEN[stijl] || ACHTERKANTEN.stekky
@@ -371,9 +446,9 @@ export function maakKaartTafel(container, opties = {}) {
   zetStijl()
   const o = { groep: id => kaartDelen(id).waarde, magSpelen: () => false, onSpeel() {}, onPak() {}, onReactie() {}, onSelectie() {}, ...opties }
   // v5: een spel met een vaste kaartstijl (o.stijl) tekent altijd die kaarten en achterkant, zonder knop 🎴
-  const vast = KAARTSTIJLEN[o.stijl] ? o.stijl : null
+  let vast = KAARTSTIJLEN[o.stijl] ? o.stijl : null
   const kaart = id => kaartSvg(id, vast || kaartStijl())
-  const rug = () => vast && KAARTSTIJLEN[vast].map ? achterkantSvg(vast) : achterkantSvg(o.achterkant)
+  const rug = () => vast ? achterkantSvg(vast) : achterkantSvg(o.achterkant)
   if (vast) laadVooruit(vast)
   container.innerHTML = ''
   const el = document.createElement('div')
@@ -591,6 +666,7 @@ export function maakKaartTafel(container, opties = {}) {
       + '<button type="button" class="kt-knop" style="margin-top:12px">' + esc(T('Sluiten')) + '</button></div>'
     const nu = kaartStijl()
     for (const [id, s] of Object.entries(KAARTSTIJLEN)) {
+      if (s.verborgen) continue
       const b = document.createElement('button'); b.type = 'button'; b.className = 'kt-stijlkeuze'; b.dataset.stijl = id
       b.setAttribute('aria-pressed', String(id === nu))
       b.innerHTML = '<span class="kt-stijlvoorbeeld"><div>' + (s.map ? plaatje(id, 'achterkant') : achterkantSvg('stekky')) + '</div><div>' + kaartSvg('hH', id) + '</div></span>'
@@ -607,6 +683,12 @@ export function maakKaartTafel(container, opties = {}) {
     for (const k of handEl.querySelectorAll('.kt-kaart')) k.innerHTML = kaart(k.dataset.id)
     anderWaaier.innerHTML = ''; stapelEl.innerHTML = ''
     legRest()
+  }
+  // Een spel mag zijn vaste kaartstijl lokaal wijzigen zonder voorkeuren van andere
+  // spellen of de spelstand aan te passen. Selectie en kaartvolgorde blijven intact.
+  function zetTafelKaartStijl(stijl) {
+    if (!vast || !KAARTSTIJLEN[stijl] || stijl === vast) return
+    vast = stijl; laadVooruit(stijl); nieuweStijl()
   }
   window.addEventListener('fibro-kaartstijl', nieuweStijl)
 
@@ -969,7 +1051,7 @@ export function maakKaartTafel(container, opties = {}) {
   return {
     element: el, toon: toonStand, kaartRechthoek, selectie: () => selectie.slice(), wisSelectie() { selectie = []; legHand(); o.onSelectie([]) },
     speelAnimatie, anderSpeeltAnimatie, pakAnimatie, anderPaktAnimatie, deelAnimatie, schudAnimatie,
-    beurtKlok, effect, reactie, knoppen, anderKnop, info, kiesUit, einde, sluitEinde,
+    beurtKlok, effect, reactie, knoppen, anderKnop, info, kiesUit, einde, sluitEinde, zetKaartStijl: zetTafelKaartStijl,
     status(t) { statusTekst = t; statusEl.textContent = t }, webcamRuimte, geluid: kaartGeluid, tril,
   }
 }

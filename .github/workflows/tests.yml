@@ -179,6 +179,9 @@ jobs:
       - name: "Koningsjacht met z'n tweeen: samen, wedstrijd en duel"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef301.py .
+      - name: Kaarttafel v7 - over de waaier kijken, tik op aflegstapel, dubbeltik, instellingen (proef302)
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef302.py .
       - name: "Spelmenu ☰ in elk spel (pauze, geluid, microfoon, camera, menu, verlaten) en berichten linksboven"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef291.py .

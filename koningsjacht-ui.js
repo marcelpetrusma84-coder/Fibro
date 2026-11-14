@@ -608,12 +608,13 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     if (muziekStaatAan()) startMuziek()
     bewaar()
     tafel = maakKaartTafel(inhoud, {
-      solo: !samenSpel, naamAnder: samenSpel ? naam : '', stijl: STIJL, instellingKnop: false,   // de kaarttafel-instellingen staan in ⚙ hieronder onReactie: emoji => stuur('kaartreactie', { emoji }), ondergrond: 'hout', stapelTekst: n => T('Taveerne: {n}', { n }),
+      solo: !samenSpel, naamAnder: samenSpel ? naam : '', stijl: STIJL, onReactie: emoji => stuur('kaartreactie', { emoji }), ondergrond: 'hout', stapelTekst: n => T('Taveerne: {n}', { n }),
       groep: () => 'alles',                              // je mag elke kaart erbij kiezen; magSpelen beslist
       magSpelen: ids => !afgelopen && aanMij(staat) && (staat.fase === 'aanval' ? K.magAanvallen(staat, ids) : K.magAfweren(staat, ids)),
       onSpeel: (ids, opts) => staat.fase === 'aanval' ? valAan(ids, opts) : weerAf(ids, opts),
       onPak: () => tafel.status(T('De taveerne: met ♦ ruiten pak je hier kaarten')),
       onSelectie: ids => { selectie = ids; if (!bezig) { tekenKnoppen(); tafel.status(statusTekst()) } },
+      instellingKnop: false,   // de kaarttafel-instellingen (hulp, grote kaarten, trillen) staan in het eigen ⚙-scherm
     })
     tafel.element.classList.add('kj')
     plaatsScene(tafel.element)

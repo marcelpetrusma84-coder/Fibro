@@ -1,4 +1,4 @@
-// v12 (14 nov 2026): titelscenes v8 (Koningsjacht: Marcels perkamentrol als intro).
+// v12 (14 nov 2026): titelscenes v8 (Koningsjacht: Marcels perkamentrol als intro); een scene kiest de hoogte van de titel (st.titelY).
 // v8 (6 nov 2026, v271): opent er een spel tegen de computer, dan meldt dit bestand 'fibro-spel-open'; sluit het, dan
 // 'fibro-spel-dicht'. Je profielmuziek (profielmuziek.js) gaat zo uit tijdens het spel en daarna weer verder.
 // titelscherm.js - het titelscherm van elk spel (v5, 2 nov 2026; v4: muziek speelt door in het menu van het spel;
@@ -181,7 +181,7 @@ export function toonTitelscherm({ spelId, naam, ouder }) {
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
         const binnen = glad(Math.min(1, t / 0.9))
-        const midY = h * 0.22 + Math.sin(t * 1.6) * 4 - (1 - binnen) * 40
+        const midY = (st.titelY ?? h * 0.22) + Math.sin(t * 1.6) * 4 - (1 - binnen) * 40   // v12: een scene mag de plek kiezen (st.titelY)
         ctx.globalAlpha = binnen
         regels.forEach((r, i) => {
             const y = midY + (i - (regels.length - 1) / 2) * maatF * 1.15

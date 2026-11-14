@@ -162,6 +162,10 @@ try:
         pg.check('[data-scene=middeleeuws]')
         check(pg.get_attribute('.kj-links .kj-kandelaar', 'src').endswith('chamberstick.png') and pg.locator('.kt-hand .kt-modern').count() == 0, 'N: middeleeuws herstelt eigen kandelaars en perkament')
         pg.check('[data-scene=standaard]'); pg.click('.kj-instellingen-sluit')
+        # De gekozen kaart weer loslaten (zoals een speler zou doen). Een gekozen kaart springt omhoog; lag hij rechts in
+        # de hand, dan lag hij over je bierpul en mislukte het dubbelklikken op de pul hieronder (CI, 14 nov 2026).
+        kies(pg, hand_voor[0])
+        wacht(pg, "() => !document.querySelector('.kt-hand .kt-gekozen')", 3000)
         check(pg.evaluate("() => [...document.querySelectorAll('.kt-hand .kt-kaart')].every(k => k.querySelector('.kt-pk img[src*=\"kaarten/perkament/\"]'))"), 'B: alle kaarten in je hand zijn perkament')
         check(len(pg.evaluate(HAND)) == 8, 'B: 8 kaarten in je hand')
         vijand = pg.evaluate("() => document.querySelector('.kj-kaart').dataset.id")

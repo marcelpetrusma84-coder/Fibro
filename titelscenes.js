@@ -830,24 +830,11 @@ function koningsjacht(ctx, b, h, t, st) {
     if (!im.complete || !im.naturalWidth) return
     if (!im.geladenOp) im.geladenOp = performance.now()
     const zicht = Math.min(1, (performance.now() - im.geladenOp) / 900)   // zacht opkomen zodra het plaatje er is
-    const zoom = 1 + Math.min(t, 30) * 0.0015
-    let schaal, x, y
-    if (b < h) {
-        // Telefoon (staand, Marcel 14 nov): van de bovenkant van het schild met het kasteel tot en met 'Veritas per
-        // cordium' past precies in de bovenste 90% van het scherm; daaronder 'Tik om te beginnen'. Midden: de koning.
-        const boven = 0.03, onder = 0.985
-        schaal = Math.max(b / im.naturalWidth, (h * 0.9) / ((onder - boven) * im.naturalHeight)) * zoom
-        const w0 = im.naturalWidth * schaal
-        x = Math.min(0, Math.max(b - w0, b / 2 - w0 * INTRO_SCHILD.x))
-        y = h * 0.9 * (1 - zoom) / 2 - boven * im.naturalHeight * schaal
-    } else {
-        // Groot scherm: de rol vult het hele scherm, het schild in het midden
-        schaal = Math.max(b / im.naturalWidth, h / im.naturalHeight) * 1.02 * zoom
-        const w0 = im.naturalWidth * schaal, h0 = im.naturalHeight * schaal
-        x = Math.min(0, Math.max(b - w0, b / 2 - w0 * INTRO_SCHILD.x))
-        y = Math.min(0, Math.max(h - h0, h / 2 - h0 * INTRO_SCHILD.y))
-    }
+    const schaal = Math.max(b / im.naturalWidth, h / im.naturalHeight) * (1.02 + Math.min(t, 30) * 0.0015)
     const w = im.naturalWidth * schaal, hh = im.naturalHeight * schaal
+    // het schild in het midden van het scherm, zonder dat er een rand van het scherm leeg blijft
+    const x = Math.min(0, Math.max(b - w, b / 2 - w * INTRO_SCHILD.x))
+    const y = Math.min(0, Math.max(h - hh, h / 2 - hh * INTRO_SCHILD.y))
     const sx = x + w * INTRO_SCHILD.x, sy = y + hh * INTRO_SCHILD.y
     if (st) st.titelY = sy
     ctx.save()

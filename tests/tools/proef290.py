@@ -74,6 +74,7 @@ try:
         check(wacht(pg, "() => document.querySelector('%s').classList.contains('kt-gekozen')" % kaart(pg, eerste), 2000), 'B: tik = de kaart komt groot naar voren')
         groot = pg.eval_on_selector(kaart(pg, eerste), "e => e.getBoundingClientRect().width")
         check(groot > 90, 'B: en is groter (%d px breed)' % groot)
+        pg.wait_for_timeout(500)   # kaartspel-hulp v7: twee tikken vlak na elkaar = dubbeltik = spelen; dit is een losse tweede tik
         pg.click(kaart(pg, eerste))
         check(wacht(pg, "() => !document.querySelector('%s').classList.contains('kt-gekozen')" % kaart(pg, eerste), 2000), 'B: nog eens tikken = terug in de waaier')
         # ── D (eerst: een kaart die niet past) ──

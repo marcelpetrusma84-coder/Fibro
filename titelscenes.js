@@ -822,6 +822,7 @@ function koningsjacht(ctx, b, h, t) {
     const g = ctx.createRadialGradient(b / 2, h * 0.55, 0, b / 2, h * 0.55, Math.max(b, h) * 0.75)
     g.addColorStop(0, '#1d2a52'); g.addColorStop(0.55, '#0b1230'); g.addColorStop(1, '#05081a')
     ctx.fillStyle = g; ctx.fillRect(0, 0, b, h)
+    if (typeof Image === 'undefined') return   // (Node-test: geen plaatjes)
     if (!introPlaatje) { introPlaatje = new Image(); introPlaatje.src = new URL('./assets/koningsjacht/intro.webp?v=1', import.meta.url).href; introPlaatje.onload = () => { introPlaatje.geladenOp = performance.now() } }
     const im = introPlaatje
     if (!im.complete || !im.naturalWidth) return

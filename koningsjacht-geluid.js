@@ -4,6 +4,7 @@
 // iemand anders). Zwaardslagen, inslagen, een schild dat klinkt als metaal, genezen, een vijand die brult en
 // terugslaat, een oorlogshoorn bij een nieuwe vijand, fanfares bij verslagen en winnen.
 // De muziek: een epische mars in d-klein (pauken/taiko's, strijkers, een koor en hoorns) die steeds doorloopt.
+// v4: ook geluid als de iPhone op stil staat (navigator.audioSession, zie zetSessie) en na 'interrupted' weer aan.
 // De middeleeuwse scene kiest een herbergdans met luit, fluit en tamboer; de muziekknop blijft leidend.
 // Aan of uit met de knop 🎵 (bewaard op dit toestel: fibro_koningsjacht_muziek). Het spelmenu (☰ > Geluid uit)
 // zet ook dit geluid uit (spelmenu.js doet dat voor elk Web Audio-geluid); bij Pauze staat de muziek stil.
@@ -24,7 +25,8 @@ function ctx() {
       const terug = ac.createGain(); terug.gain.value = 0.32
       galm.connect(terug); terug.connect(hoofd)
     }
-    if (ac && ac.state === 'suspended' && !gepauzeerd) ac.resume().catch(() => {})
+    // v4: een iPhone zet het geluid ook op 'interrupted' (na een telefoontje, de app even weg, een melding). Dan ook weer aanzetten.
+    if (ac && ac.state !== 'running' && ac.state !== 'closed' && !gepauzeerd) ac.resume().catch(() => {})
   } catch (e) { return null }
   return ac
 }
@@ -32,8 +34,21 @@ function ctx() {
 // geluiden komen pas na een animatie (dus niet tijdens de tik), en dan bleef alles stil. Daarom: bij elke tik het
 // geluid openzetten, en de eerste keer een stil geluidje spelen (oudere iPhones openen het geluid pas echt daarmee).
 // Let op: staat de iPhone op stil (het schuifje aan de zijkant), dan blijft Web Audio stil; dat is bij elk spel zo.
+// v4 (14 nov 2026, Marcel: 'het geluid werkt niet op de iPhone'): staat de iPhone op stil (het schuifje aan de zijkant),
+// dan bleef Web Audio stil. Vanaf iOS 17 kan een pagina zeggen dat haar geluid 'afspelen' is (zoals muziek of een video):
+// dan klinkt het wel. Alleen zolang Koningsjacht open is (de tafel .kj staat in beeld), daarna weer gewoon ('auto').
+// ☰ > Geluid uit en de knop 🎵 blijven gewoon werken.
+function zetSessie() {
+  try {
+    const s = typeof navigator !== 'undefined' && navigator.audioSession
+    if (!s) return
+    const wil = typeof document !== 'undefined' && document.querySelector('.kj') ? 'playback' : 'auto'
+    if (s.type !== wil) s.type = wil
+  } catch (e) {}
+}
 let stilGespeeld = false
 function ontgrendel() {
+  zetSessie()
   const a = ctx()
   if (!a || stilGespeeld) return
   try { const b = a.createBufferSource(); b.buffer = a.createBuffer(1, 1, 22050); b.connect(a.destination); b.start(0); stilGespeeld = true } catch (e) {}
@@ -198,6 +213,7 @@ function fanfare(t, noten, stap = 0.18) {
 }
 
 export function speel(naam, ...args) {
+  zetSessie()
   if (!ctx() || !G[naam]) return
   try { G[naam](...args) } catch (e) {}
 }
@@ -373,6 +389,7 @@ export function zetMuziek(aan) {
   if (aan) startMuziek(); else stopMuziek()
 }
 export function startMuziek() {
+  zetSessie()
   if (muziekAan || !ctx()) return
   muziekAan = true
   muziekBronnen = new Set()

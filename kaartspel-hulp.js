@@ -4,6 +4,10 @@
 // v5: opties stijl (vaste kaartstijl, dan geen knop 🎴), ondergrond: 'hout' (een houten tafelblad) en onSelectie;
 //     voor Koningsjacht (koningsjacht-ui.js).
 // v6: zwart-gouden moderne kaarten en een lokale stijlwissel op een vaste kaarttafel.
+// v7 (14 nov 2026, Marcel): met je vinger over de waaier schuiven = de kaart onder je vinger komt groot omhoog (loslaten
+//     = die kaart kiezen); een gekozen kaart op tafel leggen door op de aflegstapel te tikken; dubbeltik = meteen spelen;
+//     tik op de aflegstapel zonder gekozen kaart = de laatste zet van de ander groot; knop ⚙️ met Hulp (kaarten
+//     oplichten, standaard aan), Grote kaarten en Trillen (bewaard op dit toestel: fibro_kaarttafel).
 // v4: scherpe hoekjes over de perkamentkaarten (beter te zien welke kaart het is), zie plaatjeMetHoek.
 // v3: kaartstijl kiezen met de knop 🎴: de gewone Stekky-kaarten of de perkamentkaarten van Marcel (plaatjes in
 //     kaarten/perkament/, met een eigen achterkant en joker). De keuze staat op dit toestel (fibro_kaartstijl).
@@ -340,7 +344,32 @@ export const kaartGeluid = {
   verlies: () => [392, 330, 262].forEach((f, i) => toon(f, 0.35, { type: 'triangle', luid: 0.07, wacht: i * 0.16 })),
   roep: () => { toon(988, 0.12, { type: 'square', luid: 0.05 }); toon(1319, 0.2, { type: 'square', luid: 0.05, wacht: 0.1 }) },
 }
-export function tril(patroon = 12) { try { if (navigator.vibrate) navigator.vibrate(patroon) } catch (e) {} }
+export function tril(patroon = 12) { if (!kaartInstellingen().trillen) return; try { if (navigator.vibrate) navigator.vibrate(patroon) } catch (e) {} }
+
+// ─────────────── Instellingen van de tafel (v7): per toestel, voor alle kaartspellen ───────────────
+// hulp: kaarten die je mag spelen lichten op (en de stapel als je niets kunt). groot: grotere kaarten in je waaier.
+// trillen: de telefoon trilt bij kaarten en effecten. Een spel met een eigen instellingenscherm (Koningsjacht) zet
+// instellingKnop: false en toont KAART_INSTELLINGEN zelf, met kaartInstellingen() en zetKaartInstelling().
+const INSTELLING_SLEUTEL = 'fibro_kaarttafel'
+const STANDAARD_INSTELLINGEN = { hulp: true, groot: false, trillen: true }
+export const KAART_INSTELLINGEN = [
+  { sleutel: 'hulp', titel: 'Hulp: kaarten oplichten', uitleg: 'Kaarten die je mag spelen lichten op, de rest wordt donkerder.' },
+  { sleutel: 'groot', titel: 'Grote kaarten', uitleg: 'Je kaarten zijn groter: makkelijker te lezen en te tikken.' },
+  { sleutel: 'trillen', titel: 'Trillen', uitleg: 'Je telefoon trilt een beetje bij kaarten en effecten.' },
+]
+export function kaartInstellingen() {
+  let bewaard = {}
+  try { bewaard = JSON.parse(localStorage.getItem(INSTELLING_SLEUTEL) || '{}') || {} } catch (e) {}
+  const uit = { ...STANDAARD_INSTELLINGEN }
+  for (const k of Object.keys(uit)) if (typeof bewaard[k] === 'boolean') uit[k] = bewaard[k]
+  return uit
+}
+export function zetKaartInstelling(sleutel, aan) {
+  if (!(sleutel in STANDAARD_INSTELLINGEN)) return
+  const nu = { ...kaartInstellingen(), [sleutel]: Boolean(aan) }
+  try { localStorage.setItem(INSTELLING_SLEUTEL, JSON.stringify(nu)) } catch (e) {}
+  try { window.dispatchEvent(new CustomEvent('fibro-kaarttafel', { detail: nu })) } catch (e) {}
+}
 
 // ─────────────────────────────── Stijl ───────────────────────────────
 const STIJL = `
@@ -357,6 +386,15 @@ const STIJL = `
 .kt-kaart.kt-gekozen{box-shadow:0 0 0 3px #fff,0 0 22px #c084fc,0 8px 20px #000a;filter:none}
 .kt-kaart.kt-sleep{transition:none;z-index:300!important}
 .kt-kaart.kt-weg{visibility:hidden}
+.kt-kaart.kt-loep{z-index:400!important;box-shadow:0 0 0 2px #fff,0 0 20px #c084fcb0,0 10px 24px #000b;filter:none}
+.kt-afleg{cursor:pointer;touch-action:manipulation}
+.kt-afleg.kt-doel{border-radius:calc(var(--pw)*.075);box-shadow:0 0 0 2px #c084fc,0 0 18px #c084fcb0}
+.kt-instelrij{display:flex;flex-direction:column;gap:2px;margin-top:10px;text-align:left;max-width:300px}
+.kt-instelling{display:flex;align-items:center;gap:12px;padding:10px 2px;border-top:1px solid #ffffff1c;cursor:pointer}
+.kt-instelling span{flex:1}.kt-instelling small{display:block;opacity:.75;font-size:12px;margin-top:2px;font-weight:400}
+.kt-instelling input{width:22px;height:22px;accent-color:#8b3fd1;flex:none}
+.kt-laatste{display:flex;justify-content:center;gap:8px;margin-top:12px}
+.kt-laatste>div{width:min(30vw,110px);aspect-ratio:5/7;border-radius:7%;box-shadow:0 4px 14px #000a}
 .kt-ander{flex:none;display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 12px 2px;min-height:76px}
 .kt-zetel{position:relative;width:46px;height:46px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:19px;background:linear-gradient(135deg,#8b3fd1,#6a2bab);border:2px solid #ffffff40}
 .kt-klok{position:absolute;inset:-7px;border-radius:50%;pointer-events:none;opacity:0;transition:opacity .25s;background:conic-gradient(var(--kt-klokkleur,#c084fc) calc(var(--kt-rest,1)*360deg),#ffffff14 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px))}
@@ -440,6 +478,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 //   stijl           v5: vaste kaartstijl ('perkament'): altijd die kaarten, geen knop 🎴
 //   stapelTekst(n)  v5: eigen tekst onder de stapel (Koningsjacht: 'Taveerne: 32')
 //   ondergrond      v5: 'hout' = een houten tafelblad (kaarten/hout.webp) in plaats van paars
+//   instellingKnop  v7: false = geen knop ⚙️ (het spel toont KAART_INSTELLINGEN in zijn eigen instellingen)
 export const REACTIES = ['😂', '😱', '🔥', '😎', '🙈', '👏']
 
 export function maakKaartTafel(container, opties = {}) {
@@ -460,6 +499,7 @@ export function maakKaartTafel(container, opties = {}) {
     + '<div class="kt-hand"></div>'
     + '<div class="kt-onder"><div class="kt-zetel kt-zetel-ik"><span style="font-size:12px">' + esc(T('Jij')) + '</span><div class="kt-klok"></div></div>'
     + '<span class="kt-knoppen" style="display:contents"></span>'
+    + (o.instellingKnop === false ? '' : '<button type="button" class="kt-knop kt-instelknop" aria-label="' + esc(T('Instellingen')) + '" title="' + esc(T('Instellingen')) + '">⚙️</button>')
     + (vast ? '' : '<button type="button" class="kt-knop kt-stijlknop" aria-label="' + esc(T('Kaarten kiezen')) + '" title="' + esc(T('Kaarten kiezen')) + '">🎴</button>')
     + '<span style="position:relative"><button type="button" class="kt-knop kt-sorteer" aria-label="' + esc(T('Sorteren')) + '" title="' + esc(T('Sorteren')) + '">⇅</button></span>'
     // reacties (😀) alleen met een vriend: tegen de computer heb je er niets aan (Marcel, 11 nov 2026)
@@ -478,11 +518,16 @@ export function maakKaartTafel(container, opties = {}) {
   let verborgen = new Set()                 // kaarten die nog onderweg zijn (animatie)
   let anderVerborgen = 0, aflegVerborgen = 0
   let gesleept = null                       // de kaart die je van de stapel veegt
+  let loep = null                           // v7: de kaart onder je vinger (schuiven over de waaier)
+  let laatsteTik = null                     // v7: voor de dubbeltik
+  let laatsteZet = null                     // v7: wat de ander het laatst speelde
+  let inst = kaartInstellingen()
 
   // ── Maten: kaarten zo groot als past ──
   function meet() {
     const b = el.clientWidth || 360, h = el.clientHeight || 640
-    const kw = Math.round(Math.max(54, Math.min(96, b * 0.21, h * 0.125)))
+    const f = inst.groot ? 1.25 : 1             // v7: grote kaarten
+    const kw = Math.round(Math.max(54 * f, Math.min(96 * f, b * 0.21 * f, h * 0.125 * f)))
     maat = { kw, kh: Math.round(kw * 1.4), pw: Math.round(kw * 0.92) }
     el.style.setProperty('--kw', kw + 'px'); el.style.setProperty('--pw', maat.pw + 'px')
     handEl.style.height = Math.round(maat.kh * 1.42) + 'px'
@@ -518,20 +563,25 @@ export function maakKaartTafel(container, opties = {}) {
       }
       k.style.width = maat.kw + 'px'; k.style.height = maat.kh + 'px'
       const gekozen = selectie.includes(id)
+      const onder = loep === id                    // v7: de kaart onder je vinger
+      const groot = gekozen || onder
       const b = handEl.clientWidth || 360
-      const tx = gekozen ? Math.max(maat.kw * 0.14, Math.min(b - maat.kw * 1.14, p[i].x)) : p[i].x   // een grote kaart blijft binnen beeld
-      const ty = p[i].y - (gekozen ? maat.kh * 0.36 : 0)
+      const tx = groot ? Math.max(maat.kw * 0.14, Math.min(b - maat.kw * 1.14, p[i].x)) : p[i].x   // een grote kaart blijft binnen beeld
+      const ty = p[i].y - (onder ? maat.kh * 0.46 : gekozen ? maat.kh * 0.36 : 0)
       k.dataset.basis = JSON.stringify(p[i])
-      if (!k.classList.contains('kt-sleep')) k.style.transform = 'translate(' + tx + 'px,' + ty + 'px) rotate(' + (gekozen ? 0 : p[i].r) + 'deg) scale(' + (gekozen ? 1.25 : 1) + ')'
-      k.style.zIndex = gekozen ? 200 + i : 10 + i
+      if (!k.classList.contains('kt-sleep')) k.style.transform = 'translate(' + tx + 'px,' + ty + 'px) rotate(' + (groot ? 0 : p[i].r) + 'deg) scale(' + (onder ? 1.4 : gekozen ? 1.25 : 1) + ')'
+      k.style.zIndex = onder ? 400 : gekozen ? 200 + i : 10 + i
       k.dataset.plek = i
       k.classList.toggle('kt-gekozen', gekozen)
-      k.classList.toggle('kt-mag', stand.mijnBeurt && stand.speelbaar.has(id) && !gekozen)
-      k.classList.toggle('kt-niet', stand.mijnBeurt && !stand.speelbaar.has(id) && !gekozen)
+      k.classList.toggle('kt-loep', onder)
+      // v7: zonder hulp (⚙️) licht niets op en wordt niets donkerder
+      k.classList.toggle('kt-mag', inst.hulp && stand.mijnBeurt && stand.speelbaar.has(id) && !gekozen)
+      k.classList.toggle('kt-niet', inst.hulp && stand.mijnBeurt && !stand.speelbaar.has(id) && !gekozen && !onder)
       k.classList.toggle('kt-weg', verborgen.has(id))
       k.setAttribute('aria-pressed', String(gekozen))
     })
     for (const k of [...handEl.querySelectorAll('.kt-kaart')]) if (!ids.includes(k.dataset.id)) k.remove()
+    aflegEl.classList.toggle('kt-doel', Boolean(inst.hulp && stand.mijnBeurt && selectie.length && o.magSpelen(selectie.slice())))
   }
 
   function kies(id) {
@@ -541,6 +591,33 @@ export function maakKaartTafel(container, opties = {}) {
     else selectie = [id]
     legHand()
     o.onSelectie(selectie.slice())
+  }
+
+  // v7: spelen zonder vegen (dubbeltik, tik op de aflegstapel): de kaarten vliegen van je hand naar de aflegstapel
+  function speelGroep(groep, k) {
+    if (stand.mijnBeurt && groep.length && o.magSpelen(groep)) {
+      const r = (kaartEl(groep[0]) || handEl).getBoundingClientRect(), d = aflegEl.getBoundingClientRect()
+      const dx = d.left + d.width / 2 - (r.left + r.width / 2), dy = d.top + d.height / 2 - (r.top + r.height / 2), n = Math.hypot(dx, dy) || 1
+      o.onSpeel(groep, { snelheid: 1, richting: { x: dx / n, y: dy / n }, element: k || kaartEl(groep[0]) })
+      return true
+    }
+    weiger(k || aflegEl)
+    return false
+  }
+  // v7: welke kaart in je hand ligt onder je vinger? (de bovenste)
+  function kaartOnder(x, y) {
+    let lijst = []
+    try { lijst = document.elementsFromPoint(x, y) } catch (e) {}
+    for (const e of lijst) { const k = e.closest && e.closest('.kt-kaart'); if (k && handEl.contains(k)) return k.dataset.id }
+    // tussen of naast de kaarten: de dichtstbijzijnde kaart op die hoogte
+    const h = handEl.getBoundingClientRect()
+    if (y < h.top - maat.kh * 0.6 || y > h.bottom + 10) return null
+    let beste = null, afstand = Infinity
+    for (const k of handEl.querySelectorAll('.kt-kaart')) {
+      const r = k.getBoundingClientRect(), a = Math.abs(r.left + r.width / 2 - x)
+      if (a < afstand) { afstand = a; beste = k.dataset.id }
+    }
+    return beste
   }
 
   // Tik, veeg omhoog of lang vasthouden en schuiven
@@ -561,7 +638,12 @@ export function maakKaartTafel(container, opties = {}) {
       if (!modus && Math.hypot(dx, dy) > 9) {
         clearTimeout(lang)
         if (dy < -8 && Math.abs(dy) > Math.abs(dx) * 0.9) { modus = 'omhoog'; k.classList.add('kt-sleep') }
-        else modus = 'niets'
+        else modus = 'kijk'   // v7: opzij schuiven = over de waaier kijken
+      }
+      if (modus === 'kijk') {
+        const onder = kaartOnder(e.clientX, e.clientY)
+        if (onder !== loep) { loep = onder; legHand(); if (onder) kaartGeluid.tik() }
+        return
       }
       const p = JSON.parse(k.dataset.basis || '{}')
       if (modus === 'omhoog') {
@@ -583,8 +665,25 @@ export function maakKaartTafel(container, opties = {}) {
       const dx = e.clientX - start.x, dy = e.clientY - start.y, duur = performance.now() - start.t
       const m = modus; start = null; modus = null
       k.classList.remove('kt-sleep')
+      if (m === 'kijk') {   // v7: loslaten na het schuiven = die kaart kiezen
+        const gekozen = e.type === 'pointercancel' ? null : (loep || kaartOnder(e.clientX, e.clientY))
+        loep = null
+        if (gekozen && !selectie.includes(gekozen)) kies(gekozen); else legHand()
+        return
+      }
       if (e.type === 'pointercancel') { legHand(); return }
-      if (!m && duur < 600) { kies(id()); return }
+      if (!m && duur < 600) {
+        // v7: dubbeltik op dezelfde kaart = meteen spelen (de eerste tik koos hem al)
+        const nu = performance.now()
+        if (laatsteTik && laatsteTik.id === id() && nu - laatsteTik.t < 380) {
+          laatsteTik = null
+          if (!selectie.includes(id())) kies(id())
+          speelGroep(selectie.includes(id()) ? selectie.slice() : [id()], k)
+          return
+        }
+        laatsteTik = { id: id(), t: nu }
+        kies(id()); return
+      }
       if (m === 'omhoog') {
         const a = punten[0], b = punten[punten.length - 1]
         const vy = (b.y - a.y) / Math.max(1, b.t - a.t), vx = (b.x - a.x) / Math.max(1, b.t - a.t)
@@ -657,6 +756,52 @@ export function maakKaartTafel(container, opties = {}) {
     stapelEl.addEventListener('pointercancel', los)
     stapelEl.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (stand.mijnBeurt) o.onPak({ manier: 'tik' }) } })
   })()
+
+  // ── v7: tik op de aflegstapel. Met een gekozen kaart: leg hem daar neer. Zonder: de laatste zet van de ander groot ──
+  aflegEl.setAttribute('role', 'button'); aflegEl.tabIndex = 0
+  const tikAfleg = () => {
+    audio()
+    if (selectie.length) { speelGroep(selectie.slice(), kaartEl(selectie[0])); return }
+    toonLaatsteZet()
+  }
+  aflegEl.addEventListener('click', tikAfleg)
+  aflegEl.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tikAfleg() } })
+  function toonLaatsteZet() {
+    const zicht = stand.afleg.slice(0, Math.max(0, stand.afleg.length - aflegVerborgen))
+    const ids = laatsteZet && laatsteZet.length ? laatsteZet : zicht.slice(-1)
+    if (!ids.length) return
+    kaartGeluid.tik()
+    el.querySelector('.kt-laatstekeus')?.remove()
+    const d = document.createElement('div'); d.className = 'kt-keuze kt-laatstekeus'
+    const titel = laatsteZet && laatsteZet.length ? T('Laatste zet van {naam}', { naam: o.naamAnder || T('vriend') }) : T('Bovenop de aflegstapel')
+    d.innerHTML = '<div class="kt-keuzekaart"><div style="font-weight:800;font-size:17px">' + esc(titel) + '</div><div class="kt-laatste"></div>'
+      + '<button type="button" class="kt-knop" style="margin-top:12px">' + esc(T('Sluiten')) + '</button></div>'
+    for (const id of ids.slice(-4)) { const c = document.createElement('div'); c.dataset.id = id; c.innerHTML = kaart(id); c.setAttribute('aria-label', kaartNaam(id)); d.querySelector('.kt-laatste').appendChild(c) }
+    d.querySelector('.kt-keuzekaart > .kt-knop').onclick = () => d.remove()
+    d.addEventListener('click', e => { if (e.target === d) d.remove() })
+    el.appendChild(d)
+  }
+
+  // ── v7: instellingen (⚙️): hulp, grote kaarten, trillen ──
+  function toonInstellingen() {
+    el.querySelector('.kt-instelkeus')?.remove()
+    const d = document.createElement('div'); d.className = 'kt-keuze kt-instelkeus'
+    d.innerHTML = '<div class="kt-keuzekaart"><div style="font-weight:800;font-size:17px">' + esc(T('Instellingen')) + '</div><div class="kt-instelrij"></div>'
+      + '<button type="button" class="kt-knop" style="margin-top:12px">' + esc(T('Sluiten')) + '</button></div>'
+    for (const i of KAART_INSTELLINGEN) {
+      const l = document.createElement('label'); l.className = 'kt-instelling'
+      l.innerHTML = '<span><b>' + esc(T(i.titel)) + '</b><small>' + esc(T(i.uitleg)) + '</small></span><input type="checkbox" data-kaartinstelling="' + i.sleutel + '">'
+      const inp = l.querySelector('input'); inp.checked = inst[i.sleutel]
+      inp.addEventListener('change', () => { kaartGeluid.tik(); zetKaartInstelling(i.sleutel, inp.checked) })
+      d.querySelector('.kt-instelrij').appendChild(l)
+    }
+    d.querySelector('.kt-keuzekaart > .kt-knop').onclick = () => d.remove()
+    d.addEventListener('click', e => { if (e.target === d) d.remove() })
+    el.appendChild(d)
+  }
+  if (o.instellingKnop !== false) $('.kt-instelknop').onclick = () => { audio(); toonInstellingen() }
+  const nieuweInstellingen = () => { inst = kaartInstellingen(); meet(); legRest(); legHand() }
+  window.addEventListener('fibro-kaarttafel', nieuweInstellingen)
 
   // ── Kaartstijl kiezen (🎴): de kaarten op tafel veranderen meteen mee ──
   function kiesKaartStijl() {
@@ -735,7 +880,7 @@ export function maakKaartTafel(container, opties = {}) {
     }
     stapelEl.querySelector('.kt-teller').textContent = o.stapelTekst ? o.stapelTekst(stand.stapelAantal) : T('{n} op de stapel', { n: stand.stapelAantal })
     stapelEl.classList.toggle('kt-leeg', !stand.stapelAantal)
-    stapelEl.classList.toggle('kt-wijs', stand.mijnBeurt && !stand.speelbaar.size && stand.stapelAantal > 0)
+    stapelEl.classList.toggle('kt-wijs', inst.hulp && stand.mijnBeurt && !stand.speelbaar.size && stand.stapelAantal > 0)
     stapelEl.setAttribute('aria-label', T('Stapel: tik om een kaart te pakken'))
     const zicht = stand.afleg.slice(0, Math.max(0, stand.afleg.length - aflegVerborgen)).slice(-4)
     aflegEl.innerHTML = ''
@@ -745,7 +890,7 @@ export function maakKaartTafel(container, opties = {}) {
       aflegEl.appendChild(d)
     })
     const top = zicht[zicht.length - 1]
-    aflegEl.setAttribute('aria-label', top ? T('Bovenste kaart: {kaart}', { kaart: kaartNaam(top) }) : '')
+    aflegEl.setAttribute('aria-label', top ? T('Bovenste kaart: {kaart}', { kaart: kaartNaam(top) }) : T('Aflegstapel'))
   }
 
   // ── Wat de tafel laat zien. stand = { hand, anderAantal, stapelAantal, afleg, mijnBeurt, speelbaar (ids), status } ──
@@ -825,6 +970,7 @@ export function maakKaartTafel(container, opties = {}) {
 
   // De ander speelt kaarten: van zijn waaier, omdraaien, op de aflegstapel
   async function anderSpeeltAnimatie(ids) {
+    laatsteZet = ids.slice()   // v7: tik op de aflegstapel = deze kaarten groot
     aflegVerborgen = ids.length; legRest()
     const van = anderRect(), doel = aflegRect()
     const start = { left: van.left + van.width / 2 - doel.width * 0.4, top: van.top, width: doel.width * 0.8, height: doel.height * 0.8 }
@@ -1044,6 +1190,7 @@ export function maakKaartTafel(container, opties = {}) {
     clearInterval(wachter); clearInterval(klok?.timer)
     window.removeEventListener('resize', opnieuw)
     window.removeEventListener('fibro-kaartstijl', nieuweStijl)
+    window.removeEventListener('fibro-kaarttafel', nieuweInstellingen)
     for (const r of document.querySelectorAll('.spel-video-vak > .kt-klok')) r.remove()
   }, 1000)
   meet()
@@ -1052,6 +1199,7 @@ export function maakKaartTafel(container, opties = {}) {
     element: el, toon: toonStand, kaartRechthoek, selectie: () => selectie.slice(), wisSelectie() { selectie = []; legHand(); o.onSelectie([]) },
     speelAnimatie, anderSpeeltAnimatie, pakAnimatie, anderPaktAnimatie, deelAnimatie, schudAnimatie,
     beurtKlok, effect, reactie, knoppen, anderKnop, info, kiesUit, einde, sluitEinde, zetKaartStijl: zetTafelKaartStijl,
+    laatsteZet(ids) { laatsteZet = Array.isArray(ids) ? ids.slice() : null }, instellingen: () => ({ ...inst }), openInstellingen: () => toonInstellingen(),
     status(t) { statusTekst = t; statusEl.textContent = t }, webcamRuimte, geluid: kaartGeluid, tril,
   }
 }

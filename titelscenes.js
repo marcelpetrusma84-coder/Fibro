@@ -1,4 +1,7 @@
 // titelscenes.js - de bewegende plaatjes van de titelschermen (v4, 2 nov 2026)
+// v8 (14 nov 2026, Marcel): Koningsjacht krijgt zijn eigen intro: de perkamentrol met de koning, de koningin en de
+//     boer van harten (assets/koningsjacht/intro.webp) als achtergrond over het hele scherm, de titel op het schild, in
+//     het middeleeuwse Uncial Antiqua (in plaats van Cinzel Decorative).
 // v4: The Swarm weer met de kevers rond de lamp (allemaal groen, zonder gras), met de titel uit het spel.
 // v3: Ghost Tag met de spookjes en stippen uit het spel; Twin Snakes allebei vooruit; Neo Paddle: de bal kaatst echt.
 // v2: The Swarm, Runner & Gunner en Neon Raiders in de stijl van het spel zelf (titelstijl.js, met hun eigen titel);
@@ -813,9 +816,46 @@ const toepen = kaartScene([['♠', '10', false], ['♥', '9', true], ['♣', '8'
     [['♥', '10', true], ['♥', 'A', true], ['♠', '9', false], ['♠', 'B', false], ['♦', '8', true], ['♣', 'H', false]])
 const eenentwintigen = kaartScene([['♠', 'A', false], ['♥', 'H', true]],
     [['♦', '5', true], ['♣', '9', false], ['♥', '7', true], ['♠', 'V', false], ['♦', 'A', true], ['♣', '3', false]])
-// 13 nov 2026: Koningsjacht op een houten tafel met perkamentkaarten; de vijanden uit het kasteel vliegen over tafel
-const koningsjacht = kaartScene([['♥', 'A', true], ['♣', '5', false], ['♦', '9', true], ['♠', '7', false], ['♥', '3', true]],
-    [['♠', 'B', false], ['♥', 'B', true], ['♦', 'V', true], ['♣', 'V', false], ['♥', 'H', true], ['♠', 'H', false]], true)
+// 14 nov 2026 (v8): Koningsjacht = Marcels perkamentrol als achtergrond over het hele scherm (zoals 'cover'). Op een
+// telefoon zie je het middenstuk (de koning, de koningin en de boer), op een groot scherm de hele rol. De titel staat
+// midden op het lege schild (st.titelY, titelscherm.js), met een donkere gloed erachter zodat hij goed te lezen is.
+// Het plaatje komt zacht op, zoomt heel langzaam in en krijgt een ademende warme gloed (kaarslicht).
+const INTRO_SCHILD = { x: 0.487, y: 0.618 }   // het midden van het lege schild in het plaatje (0..1)
+let introPlaatje = null
+function koningsjacht(ctx, b, h, t, st) {
+    ctx.fillStyle = '#0b1230'; ctx.fillRect(0, 0, b, h)
+    if (typeof Image === 'undefined') return   // (Node-test: geen plaatjes)
+    if (!introPlaatje) { introPlaatje = new Image(); introPlaatje.src = new URL('./assets/koningsjacht/intro.webp?v=1', import.meta.url).href; introPlaatje.onload = () => { introPlaatje.geladenOp = performance.now() } }
+    const im = introPlaatje
+    if (!im.complete || !im.naturalWidth) return
+    if (!im.geladenOp) im.geladenOp = performance.now()
+    const zicht = Math.min(1, (performance.now() - im.geladenOp) / 900)   // zacht opkomen zodra het plaatje er is
+    const schaal = Math.max(b / im.naturalWidth, h / im.naturalHeight) * (1.02 + Math.min(t, 30) * 0.0015)
+    const w = im.naturalWidth * schaal, hh = im.naturalHeight * schaal
+    // het schild in het midden van het scherm, zonder dat er een rand van het scherm leeg blijft
+    const x = Math.min(0, Math.max(b - w, b / 2 - w * INTRO_SCHILD.x))
+    const y = Math.min(0, Math.max(h - hh, h / 2 - hh * INTRO_SCHILD.y))
+    const sx = x + w * INTRO_SCHILD.x, sy = y + hh * INTRO_SCHILD.y
+    if (st) st.titelY = sy
+    ctx.save()
+    ctx.globalAlpha = zicht
+    ctx.drawImage(im, x, y, w, hh)
+    // een warme gloed die langzaam ademt, alsof er kaarslicht op valt
+    const gl = ctx.createRadialGradient(sx, sy, 0, sx, sy, Math.max(b, h) * 0.6)
+    gl.addColorStop(0, 'rgba(255,190,110,' + (0.08 + 0.05 * Math.sin(t * 1.3)) + ')'); gl.addColorStop(1, 'rgba(255,190,110,0)')
+    ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = gl; ctx.fillRect(0, 0, b, h)
+    ctx.globalCompositeOperation = 'source-over'
+    // donker achter de titel (op het lichte perkament is goud anders slecht te lezen) en een rand rondom
+    const tb = Math.min(b * 0.62, 520), th = Math.min(h * 0.13, 110)
+    ctx.save(); ctx.translate(sx, sy); ctx.scale(tb, th)
+    const dk = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
+    dk.addColorStop(0, 'rgba(20,8,4,0.62)'); dk.addColorStop(0.6, 'rgba(20,8,4,0.38)'); dk.addColorStop(1, 'rgba(20,8,4,0)')
+    ctx.fillStyle = dk; ctx.beginPath(); ctx.arc(0, 0, 1, 0, Math.PI * 2); ctx.fill(); ctx.restore()
+    const rand = ctx.createRadialGradient(b / 2, h / 2, Math.min(b, h) * 0.35, b / 2, h / 2, Math.max(b, h) * 0.75)
+    rand.addColorStop(0, 'rgba(5,8,26,0)'); rand.addColorStop(1, 'rgba(5,8,26,0.55)')
+    ctx.fillStyle = rand; ctx.fillRect(0, 0, b, h)
+    ctx.restore()
+}
 function houtenBlad(ctx, b, h) {
     const plank = Math.max(60, b / 4)
     for (let x = 0, i = 0; x < b; x += plank, i++) {
@@ -891,7 +931,7 @@ export const SCENES = {
     pesten: { font: 'Titan One', css: 'titan-one', titel: '#ffffff', rand: '#6a2bab', gloed: '#c084fc', teken: pesten },
     toepen: { font: 'Titan One', css: 'titan-one', titel: '#fcd34d', rand: '#6a2bab', gloed: '#c084fc', teken: toepen },
     eenentwintigen: { font: 'Titan One', css: 'titan-one', titel: '#86efac', rand: '#1a0a2e', gloed: '#c084fc', teken: eenentwintigen },
-    koningsjacht: { font: 'Cinzel Decorative', css: 'cinzel-decorative', titel: '#fde68a', rand: '#3a1d08', gloed: '#f5b301', teken: koningsjacht },
+    koningsjacht: { font: 'Uncial Antiqua', css: 'uncial-antiqua', titel: '#fde68a', rand: '#3a1d08', gloed: '#f5b301', teken: koningsjacht },
     schaken: { font: 'Cinzel Decorative', css: 'cinzel-decorative', titel: '#f3dc96', rand: '#2b1d05', gloed: '#d9a83a', teken: schaken },
     dammen: { font: 'Cinzel', css: 'cinzel', titel: '#fbf3df', rand: '#2a1608', gloed: '#c98a3e', teken: dammen },
     pong: { font: 'Monoton', css: 'monoton', titel: '#7af7ff', rand: '#12002b', gloed: '#ff3df2', teken: pong },

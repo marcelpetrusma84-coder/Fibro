@@ -133,11 +133,11 @@ try:
         check(pg.evaluate("() => getComputedStyle(document.querySelector('.kj-scene-decor')).backgroundImage.includes('medieval-scene.png')"), 'M: echte middeleeuwse achtergrond')
         pg.uncheck('[data-instelling=bierpul]'); pg.check('[data-scene=standaard]'); pg.check('[data-instelling=flikkeren]')
         pg.click('.kj-instellingen-sluit')
-        check(pg.evaluate("() => import('./koningsjacht-geluid.js?v=3').then(m => m.geluidStaat())") == 'running', 'K: na een tik staat het geluid open (nodig op de iPhone)')
+        check(pg.evaluate("() => import('./koningsjacht-geluid.js?v=4').then(m => m.geluidStaat())") == 'running', 'K: na een tik staat het geluid open (nodig op de iPhone)')
         check(pg.get_attribute('.kj-muziek', 'aria-pressed') == 'false', 'K: de muziek staat eerst uit')
         pg.click('.kj-muziek')
         check(pg.get_attribute('.kj-muziek', 'aria-pressed') == 'true' and pg.evaluate("() => localStorage.getItem('fibro_koningsjacht_muziek')") == 'aan'
-              and pg.evaluate("() => import('./koningsjacht-geluid.js?v=3').then(m => m.speeltMuziek())"), 'K: 🎵 = epische muziek aan (en onthouden)')
+              and pg.evaluate("() => import('./koningsjacht-geluid.js?v=4').then(m => m.speeltMuziek())"), 'K: 🎵 = epische muziek aan (en onthouden)')
 
         # ════════ B. een nieuw spel ════════
         pg.click('.kj-niveau[data-niveau=schildknaap]')
@@ -162,6 +162,10 @@ try:
         pg.check('[data-scene=middeleeuws]')
         check(pg.get_attribute('.kj-links .kj-kandelaar', 'src').endswith('chamberstick.png') and pg.locator('.kt-hand .kt-modern').count() == 0, 'N: middeleeuws herstelt eigen kandelaars en perkament')
         pg.check('[data-scene=standaard]'); pg.click('.kj-instellingen-sluit')
+        # De gekozen kaart weer loslaten (zoals een speler zou doen). Een gekozen kaart springt omhoog; lag hij rechts in
+        # de hand, dan lag hij over je bierpul en mislukte het dubbelklikken op de pul hieronder (CI, 14 nov 2026).
+        kies(pg, hand_voor[0])
+        wacht(pg, "() => !document.querySelector('.kt-hand .kt-gekozen')", 3000)
         check(pg.evaluate("() => [...document.querySelectorAll('.kt-hand .kt-kaart')].every(k => k.querySelector('.kt-pk img[src*=\"kaarten/perkament/\"]'))"), 'B: alle kaarten in je hand zijn perkament')
         check(len(pg.evaluate(HAND)) == 8, 'B: 8 kaarten in je hand')
         vijand = pg.evaluate("() => document.querySelector('.kj-kaart').dataset.id")
@@ -211,7 +215,7 @@ try:
         check(not pg.query_selector('.kj-fx > *'), 'K: na afloop is al het licht weer weg')
         check(pg.evaluate(KNOP, 'muziek') and 'kt-nadruk' in pg.get_attribute('.kt-knop[data-naam=muziek]', 'class'), 'K: knop 🎵 op tafel, licht op want de muziek staat aan')
         knop(pg, 'muziek')
-        check(pg.evaluate("() => localStorage.getItem('fibro_koningsjacht_muziek')") == 'uit' and not pg.evaluate("() => import('./koningsjacht-geluid.js?v=3').then(m => m.speeltMuziek())"), 'K: 🎵 op tafel = muziek uit')
+        check(pg.evaluate("() => localStorage.getItem('fibro_koningsjacht_muziek')") == 'uit' and not pg.evaluate("() => import('./koningsjacht-geluid.js?v=4').then(m => m.speeltMuziek())"), 'K: 🎵 op tafel = muziek uit')
         kies(pg, 'k9')
         knop(pg, 'afweer'); time.sleep(0.3)
         check(pg.evaluate(KNOP, 'afweer') and 'k9' in pg.evaluate(HAND), 'C: 9 is te weinig, de kaart blijft in je hand')

@@ -1,3 +1,4 @@
+// v12 (14 nov 2026): titelscenes v8 (Koningsjacht: Marcels perkamentrol als intro).
 // v8 (6 nov 2026, v271): opent er een spel tegen de computer, dan meldt dit bestand 'fibro-spel-open'; sluit het, dan
 // 'fibro-spel-dicht'. Je profielmuziek (profielmuziek.js) gaat zo uit tijdens het spel en daarna weer verder.
 // titelscherm.js - het titelscherm van elk spel (v5, 2 nov 2026; v4: muziek speelt door in het menu van het spel;
@@ -13,7 +14,7 @@
 //
 // Gebruik: await toonTitelscherm({ spelId: 'breakout', naam: 'Block It', ouder: element })
 //          Geeft true als je erdoor tikte, false als het scherm van buitenaf weg moest (sluitTitelscherm).
-import { SCENES } from './titelscenes.js?v=7'
+import { SCENES } from './titelscenes.js?v=8'
 import { speelTitelMuziek, stopTitelMuziek, muziekAan, zetMuziek } from './titelmuziek.js?v=7'
 
 export { stopTitelMuziek }

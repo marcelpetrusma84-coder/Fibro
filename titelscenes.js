@@ -1,4 +1,6 @@
 // titelscenes.js - de bewegende plaatjes van de titelschermen (v4, 2 nov 2026)
+// v8 (14 nov 2026, Marcel): Koningsjacht krijgt zijn eigen intro: de perkamentrol met de koning, de koningin en de
+//     boer van harten (assets/koningsjacht/intro.webp), die zacht oplicht en heel langzaam inzoomt. De titel staat erboven.
 // v4: The Swarm weer met de kevers rond de lamp (allemaal groen, zonder gras), met de titel uit het spel.
 // v3: Ghost Tag met de spookjes en stippen uit het spel; Twin Snakes allebei vooruit; Neo Paddle: de bal kaatst echt.
 // v2: The Swarm, Runner & Gunner en Neon Raiders in de stijl van het spel zelf (titelstijl.js, met hun eigen titel);
@@ -813,9 +815,33 @@ const toepen = kaartScene([['♠', '10', false], ['♥', '9', true], ['♣', '8'
     [['♥', '10', true], ['♥', 'A', true], ['♠', '9', false], ['♠', 'B', false], ['♦', '8', true], ['♣', 'H', false]])
 const eenentwintigen = kaartScene([['♠', 'A', false], ['♥', 'H', true]],
     [['♦', '5', true], ['♣', '9', false], ['♥', '7', true], ['♠', 'V', false], ['♦', 'A', true], ['♣', '3', false]])
-// 13 nov 2026: Koningsjacht op een houten tafel met perkamentkaarten; de vijanden uit het kasteel vliegen over tafel
-const koningsjacht = kaartScene([['♥', 'A', true], ['♣', '5', false], ['♦', '9', true], ['♠', '7', false], ['♥', '3', true]],
-    [['♠', 'B', false], ['♥', 'B', true], ['♦', 'V', true], ['♣', 'V', false], ['♥', 'H', true], ['♠', 'H', false]], true)
+// 14 nov 2026 (v8): Koningsjacht = Marcels perkamentrol op een donkerblauwe achtergrond. Het plaatje past altijd helemaal
+// in beeld (onder de titel, boven 'Tik om te beginnen'), komt zacht op en zoomt heel langzaam in.
+let introPlaatje = null
+function koningsjacht(ctx, b, h, t) {
+    const g = ctx.createRadialGradient(b / 2, h * 0.55, 0, b / 2, h * 0.55, Math.max(b, h) * 0.75)
+    g.addColorStop(0, '#1d2a52'); g.addColorStop(0.55, '#0b1230'); g.addColorStop(1, '#05081a')
+    ctx.fillStyle = g; ctx.fillRect(0, 0, b, h)
+    if (!introPlaatje) { introPlaatje = new Image(); introPlaatje.src = new URL('./assets/koningsjacht/intro.webp?v=1', import.meta.url).href; introPlaatje.onload = () => { introPlaatje.geladenOp = performance.now() } }
+    const im = introPlaatje
+    if (!im.complete || !im.naturalWidth) return
+    if (!im.geladenOp) im.geladenOp = performance.now()
+    const zicht = Math.min(1, (performance.now() - im.geladenOp) / 900)   // zacht opkomen zodra het plaatje er is
+    const ruimteB = b * 0.98, ruimteH = h * 0.58
+    const schaal = Math.min(ruimteB / im.naturalWidth, ruimteH / im.naturalHeight) * (1 + Math.min(t, 30) * 0.0012)
+    const w = im.naturalWidth * schaal, hh = im.naturalHeight * schaal
+    const x = (b - w) / 2, y = h * 0.57 - hh / 2
+    ctx.save()
+    ctx.globalAlpha = zicht
+    ctx.shadowColor = 'rgba(0,0,0,0.75)'; ctx.shadowBlur = 36; ctx.shadowOffsetY = 12
+    ctx.drawImage(im, x, y, w, hh)
+    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0
+    // een warme gloed die langzaam ademt, alsof er kaarslicht op valt
+    const gl = ctx.createRadialGradient(b / 2, y + hh * 0.5, 0, b / 2, y + hh * 0.5, w * 0.55)
+    gl.addColorStop(0, 'rgba(255,190,110,' + (0.10 + 0.05 * Math.sin(t * 1.3)) + ')'); gl.addColorStop(1, 'rgba(255,190,110,0)')
+    ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = gl; ctx.fillRect(0, 0, b, h)
+    ctx.restore()
+}
 function houtenBlad(ctx, b, h) {
     const plank = Math.max(60, b / 4)
     for (let x = 0, i = 0; x < b; x += plank, i++) {

@@ -3011,8 +3011,11 @@ if (document.readyState === 'complete') startKast(); else window.addEventListene
 </script>
 
 <script>
+// 14 nov 2026: register() kan mislukken als Safari service-worker.js even niet kan ophalen (slecht netwerk, app net
+// naar de achtergrond). Dan kwam 'TypeError: Script service-worker.js load failed' als mislukte belofte in de
+// foutmeldingen. Dat is geen fout in de app: de volgende keer dat je Home opent probeert hij het gewoon opnieuw.
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./service-worker.js?v=97')
+  navigator.serviceWorker.register('./service-worker.js?v=97').catch(() => {})
 }
 </script>
 <script src="swipe.js?v=96"></script>

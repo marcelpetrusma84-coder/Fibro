@@ -2557,4 +2557,12 @@ window.FIBRO_EN = {
   "Je kaarten zijn groter: makkelijker te lezen en te tikken.": "Your cards are bigger: easier to read and tap.",
   "Trillen": "Vibration",
   "Je telefoon trilt een beetje bij kaarten en effecten.": "Your phone vibrates a little with cards and effects.",
+  "UX": "UX",
+  "Icoonthema": "Icon theme",
+  "Nostalgia": "Nostalgia",
+  "Kies de iconen voor je menu's en chatknoppen.": "Choose the icons for your menus and chat controls.",
+  "Strakke lijniconen.": "Clean outline icons.",
+  "Kleurrijk en vertrouwd.": "Colourful and familiar.",
+  "Je keuze wordt direct toegepast en op dit apparaat bewaard.": "Your choice is applied immediately and saved on this device.",
+  "{naam} is zojuist online gekomen": "{naam} just came online",
 }

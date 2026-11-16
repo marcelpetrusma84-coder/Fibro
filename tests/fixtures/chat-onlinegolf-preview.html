@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TEST · Online lichtgolf</title>
+  <link rel="stylesheet" href="../../chat-onlinegolf.css?v=1">
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 30% 0,#172f64,#080b1b 70%);color:#f7faff;font:15px/1.5 system-ui,sans-serif}
+    .testbalk{position:relative;z-index:10;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:12px;background:repeating-linear-gradient(135deg,#f6d34a 0 14px,#e7be20 14px 28px);color:#151518;font-size:12px}
+    .testbalk strong{letter-spacing:.06em}.testbalk button{border:1px solid #f7faff77;border-radius:10px;background:#17253c;color:#fff;font:600 13px system-ui;padding:10px 14px;cursor:pointer}
+    main{width:min(100%,480px);margin:auto;min-height:calc(100dvh - 64px);display:flex;flex-direction:column}
+    header{position:relative;z-index:2;display:flex;gap:12px;align-items:center;padding:20px;background:#0d192dbd;border-bottom:1px solid #fff2}
+    .avatar{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:#4365a6;font-size:25px;box-shadow:0 3px 12px #0005}
+    header small{display:block;color:#9caccb}.messages{display:flex;flex-direction:column;gap:18px;padding:42px 18px 90px;flex:1;min-height:58dvh}
+    .dag{text-align:center;color:#8496b4;font-size:12px}.bericht{align-self:flex-start;max-width:84%;padding:13px 17px;border:1px solid #b2d3ff33;border-radius:18px 18px 18px 4px;background:#25466b99;box-shadow:0 5px 18px #0003}
+    .bericht.ik{align-self:flex-end;border-radius:18px 18px 4px 18px;background:#674caf99}.bericht small{display:block;text-align:right;color:#b1c3dc;font-size:10px;margin-top:6px}
+    footer{position:relative;z-index:2;padding:18px;background:#0d192ddd;color:#9eaec7;font-size:12px;text-align:center;border-top:1px solid #fff2}
+  </style>
+</head>
+<body>
+  <div class="testbalk"><strong>TEST · GESIMULEERDE CHAT</strong><button id="herhaal" type="button">Vriend komt online</button><span id="effectfase">Voorbeeld staat klaar</span></div>
+  <main>
+    <header><span class="avatar">🌊</span><div><strong>Demo-vriend</strong><small id="staat">Offline</small></div></header>
+    <section id="chatScherm">
+      <div class="messages" id="messages">
+        <div class="dag">Vandaag · dit zijn voorbeeldberichten</div>
+        <div class="bericht">Hoi! Zullen we straks een spel spelen?<small>19:41</small></div>
+        <div class="bericht ik">Ja, goed plan. Ik ben er alvast!<small>19:42 ✓✓</small></div>
+        <div class="bericht">Ik pak even mijn telefoon erbij.<small>19:42</small></div>
+        <div class="bericht ik">Tot zo 👋<small>19:43 ✓</small></div>
+      </div>
+    </section>
+    <footer>Alleen een lokale demonstratie. Er wordt niets verstuurd.</footer>
+  </main>
+  <script type="module">
+    import { maakChatOnlineGolf, maakOnlineOvergang } from '../../chat-onlinegolf.js?v=2'
+    const golf=maakChatOnlineGolf({ouder:document.getElementById('chatScherm'),berichten:document.getElementById('messages'),tekst:naam=>naam+' is zojuist online gekomen'})
+    const overgang=maakOnlineOvergang({bijBinnenkomst:()=>{document.getElementById('staat').textContent='Online';golf.speel('Demo-vriend')},bijWeg:()=>golf.stop()})
+    let middenTimer, eindeTimer
+    document.getElementById('herhaal').addEventListener('click',()=>{
+      clearTimeout(middenTimer); clearTimeout(eindeTimer)
+      const fase=document.getElementById('effectfase');fase.textContent='Golf speelt'
+      overgang.kies('demo',false);overgang.werkBij('demo',true)
+      middenTimer=setTimeout(()=>{fase.textContent='Golf halverwege'},1100)
+      eindeTimer=setTimeout(()=>{fase.textContent='Gereed'},2600)
+    })
+  </script>
+</body>
+</html>

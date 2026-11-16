@@ -1,0 +1,66 @@
+# Koningsjacht: iedere kaartwaarde blijft werkelijk zichtbaar, plus middeleeuwse materialen.
+# python -I tests/tools/proef304.py <map>
+import ast, os, re, socket, subprocess, sys, tempfile, time
+from playwright.sync_api import sync_playwright
+
+MAP = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
+fouten = []
+def check(ok, tekst):
+    print(('OK   ' if ok else 'FOUT ') + tekst)
+    if not ok: fouten.append(tekst)
+
+HOEKEN = """() => [...document.querySelectorAll('.kt-hand .kt-kaart')].every(k => {
+  const r = k.getBoundingClientRect();
+  if (r.left < 0 || r.right > innerWidth + .5 || r.bottom > innerHeight) return false;
+  for (const x of [14,30,48]) for (const y of [20,52,82,100]) {
+    if (document.elementFromPoint(r.left+r.width*x/250,r.top+r.height*y/350)?.closest('.kt-kaart') !== k) return false;
+  }
+  return true;
+})"""
+sock = socket.socket(); sock.bind(('127.0.0.1',0)); poort = sock.getsockname()[1]; sock.close()
+www = tempfile.mkdtemp(prefix='proef304_'); os.symlink(MAP,os.path.join(www,'Fibro'))
+server = subprocess.Popen([sys.executable,'-m','http.server',str(poort),'--bind','127.0.0.1','--directory',www],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+time.sleep(.8)
+basis = 'http://127.0.0.1:%d/Fibro/' % poort
+try:
+    with sync_playwright() as p:
+        browser = p.chromium.launch(args=['--no-proxy-server'])
+        for breedte, hoogte in [(320,568),(390,844),(1280,720)]:
+            ctx = browser.new_context(viewport={'width':breedte,'height':hoogte},service_workers='block',reduced_motion='reduce')
+            ctx.route(re.compile(r'^https?://(?!127\.0\.0\.1).*'),lambda r:r.fulfill(status=204,body=''))
+            pg = ctx.new_page(); paginafouten = []
+            pg.on('pageerror',lambda e:paginafouten.append(str(e)))
+            pg.goto(basis+'tests/fixtures/koningsjacht-hand-preview.html')
+            pg.click('#voorbeeld')
+            for stijl in ['standaard','middeleeuws','modern']:
+                pg.select_option('#scene',stijl)
+                pg.wait_for_function(HOEKEN)
+                check(pg.locator('.kt-gekozen').count()==2 and pg.evaluate(HOEKEN),f'{breedte}px {stijl}: alle acht waarden/soorten vrij, ook schoppen 5')
+                pg.click('.kt-instelknop')
+                check(pg.evaluate("() => { const b=document.querySelector('.kt-instelkeus .kt-keuzekaart > .kt-knop'),r=b.getBoundingClientRect(); return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('button')===b }"),'Instellingen liggen boven de vergrote kaarten')
+                pg.check('[data-kaartinstelling=groot]'); pg.click('.kt-instelkeus .kt-keuzekaart > .kt-knop')
+                pg.wait_for_function(HOEKEN)
+                check(pg.evaluate(HOEKEN),f'{breedte}px {stijl}: ook met Grote kaarten alle hoeken zichtbaar')
+                pg.click('.kt-instelknop'); pg.uncheck('[data-kaartinstelling=groot]'); pg.click('.kt-instelkeus .kt-keuzekaart > .kt-knop')
+                if stijl=='middeleeuws':
+                    check(pg.evaluate("() => { const s=getComputedStyle(document.querySelector('.kt-afleg')); return s.borderStyle==='solid' && s.backgroundImage.includes('gradient') && !s.boxShadow.includes('192, 132, 252') }"),'Middeleeuws: houten/ijzeren aflegbak zonder paarse neonrand')
+            pg.click('#wissen')
+            check(pg.locator('.kt-gekozen').count()==0,'wissen herstelt de gewone waaier')
+            check(not paginafouten,'geen paginafouten: '+str(paginafouten[:2]))
+            ctx.close()
+
+        ctx = browser.new_context(viewport={'width':390,'height':844},service_workers='block',reduced_motion='reduce')
+        ctx.route(re.compile(r'^https?://(?!127\.0\.0\.1).*'),lambda r:r.fulfill(status=204,body=''))
+        pg=ctx.new_page(); pg.goto(basis+'tests/fixtures/koningsjacht-preview.html')
+        pg.click('.kj-start-instellingen'); pg.check('[data-scene=middeleeuws]'); pg.click('.kj-instellingen-sluit')
+        pg.click('.kj-niveau[data-niveau=schildknaap]'); pg.wait_for_selector('.kt-tafel.kt-mijnbeurt')
+        check(pg.locator('.kj-steen-symbool').count()==3 and pg.evaluate("() => [...document.querySelectorAll('.kj-pil')].every(e => getComputedStyle(e).backgroundImage.includes('stone-grain.svg'))"),'de drie echte Koningsjacht-tellers zijn stenen plaatjes')
+        pg.click('.kt-knop[data-naam=instellingen]'); pg.check('[data-scene=modern]'); pg.click('.kj-instellingen-sluit')
+        check(pg.evaluate("() => [...document.querySelectorAll('.kj-steen-symbool')].every(e => getComputedStyle(e).display==='none') && [...document.querySelectorAll('.kj-pil')].every(e => !getComputedStyle(e).backgroundImage.includes('stone-grain.svg'))"),'Modern herstelt de eigen tellers zonder steenmateriaal')
+        ctx.close(); browser.close()
+except Exception as e:
+    check(False,'proef afgebroken: '+str(e).split('\n')[0])
+finally:
+    server.terminate()
+print('\n%d fout(en)' % len(fouten))
+sys.exit(1 if fouten else 0)

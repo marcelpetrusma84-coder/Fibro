@@ -21,9 +21,9 @@
 // v4 (13 nov 2026, Marcel): kaarslicht. Twee kaarsen op tafel met flakkerende vlammen; de randen van de tafel zijn
 // donker en het warme licht flakkert mee. Aan/uit met 🕯️ (bewaard: fibro_koningsjacht_kaars, standaard aan).
 import * as K from './koningsjacht.js?v=2'
-import { maakKaartTafel, kaartSvg, achterkantSvg, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=7'
+import { maakKaartTafel, kaartSvg, achterkantSvg, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=8'
 import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek, zetMuziekThema } from './koningsjacht-geluid.js?v=4'
-import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=5'
+import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=6'
 import { zetKaarsSlijtage } from './koningsjacht-kaarsen.js?v=1'
 import { verbindBierpul, herstelBierPartij } from './koningsjacht-bier.js?v=2'
 
@@ -121,6 +121,7 @@ const CSS = `
 .kt-tafel.kj .kt-onder,.kt-tafel.kj .kt-status,.kt-tafel.kj .kt-info,.kt-tafel.kj .kj-stats{position:relative;z-index:32}.kt-tafel.kj .kt-info{position:absolute}
 @media (prefers-reduced-motion:reduce){.kj-vlam{animation:none}}
 .kj-pil{padding:3px 10px;border-radius:999px;background:#000a;border:1px solid #f5d08a88;font-weight:800;font-size:13px}
+.kj-steen-symbool{display:none}
 .kj-instellingen{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:18px;background:#100a0cd9;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .kj-instellingen-kaart{width:min(100%,400px);max-height:min(86dvh,650px);overflow:auto;padding:22px;border:1px solid #e2bb7677;border-radius:20px;background:linear-gradient(145deg,#382519,#1f1512);color:#fff8e8;box-shadow:inset 0 1px #fff3,0 18px 60px #000b;text-align:left;font:15px/1.45 system-ui,sans-serif}
 .kj-instellingen-kop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.kj-instellingen-kop h2{margin:0;font:700 22px Georgia,serif;color:#f7dda6}
@@ -615,6 +616,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
       onPak: () => tafel.status(T('De taveerne: met ♦ ruiten pak je hier kaarten')),
       onSelectie: ids => { selectie = ids; if (!bezig) { tekenKnoppen(); tafel.status(statusTekst()) } },
       instellingKnop: false,   // de kaarttafel-instellingen (hulp, grote kaarten, trillen) staan in het eigen ⚙-scherm
+      leesbareSelectie: true, // ruimte voor iedere kaartwaarde en soort, ook achter vergrote kaarten
     })
     tafel.element.classList.add('kj')
     plaatsScene(tafel.element)
@@ -691,13 +693,14 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
   }
   function tekenInfo(s) {
     const pil = t => '<span class="kj-pil">' + t + '</span>'
+    const steen = (emoji, waarde, pad) => pil('<span class="kj-teller-emoji">' + emoji + '</span><svg class="kj-steen-symbool" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + pad + '</svg> ' + waarde)
     let extra = ''
     if (modus === 'beleg' && beleg) {
       const f = beleg.spelers[hij], v = K.vijandInfo(f)
       extra = pil((beleg.aanZet === hij ? '▶ ' : '') + '⚔️ ' + esc(naam)) + pil('🏰 ' + esc(T('Jouw kasteel')) + ': ' + (12 - f.verslagen) + (v ? ' · ❤ ' + v.over : ''))
     } else if (modus === 'samen') extra = pil((s.aanZet === hij ? '▶ ' : '') + '🤝 ' + esc(naam) + ': ' + K.hand(s, hij).length)
     else if (samenSpel) extra = pil((modus === 'duel' ? '⚔️ ' : '🏁 ') + esc(naam) + ': ' + (tegen ? tegen.verslagen : 0) + '/12' + (tegen && tegen.klaar && !tegen.gewonnen ? ' 💀' : ''))
-    tafel.info(pil('👑 ' + s.verslagen + '/12') + pil('🃏 ' + s.narren) + (samenSpel ? '' : pil('🗑️ ' + s.afleg.length)) + extra)
+    tafel.info(steen('👑',s.verslagen + '/12','<path d="M3 7l4 4 5-7 5 7 4-4-2 11H5zM6 21h12"/>') + steen('🃏',s.narren,'<path d="M4 18h16M6 18V8l4 4 2-8 2 8 4-4v10M5 5h.01M12 2h.01M19 5h.01"/>') + (samenSpel ? '' : steen('🗑️',s.afleg.length,'<rect x="4" y="8" width="11" height="13" rx="1"/><path d="M9 8V3h11v13h-5M7 12h5M7 16h5"/>')) + extra)
   }
   // Het paneel bovenin: kasteel, de vijand, zijn leven, aanval, schild en waar hij niet tegen kan
   function tekenVijand(s, { kaart = true } = {}) {

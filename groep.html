@@ -450,6 +450,8 @@ button { font-family:inherit; }
 
 <script type="module">
   import { supabase } from './supabase.js?v=95'
+  import { smileysNaarEmoji, koppelSmileys } from './smileys.js?v=1' // 17 nov 2026: :) wordt 🙂
+  koppelSmileys(document.getElementById('bericht'))
   import { haalPrivateKeyOp, eigenPubliekeSleutel } from './crypto.js?v=182'
   import { versleutelGroepsbericht, openGroepsbericht, MAX_LEDEN } from './groepsleutel.js?v=2'
   import { maakFoto, verstuurMedia, maakOntvanger, bewaarMedia, leesMedia, ruimOp, nieuwId, marker, MARKER, MAX_BYTES } from './groepmedia.js?v=1'
@@ -1284,7 +1286,7 @@ button { font-family:inherit; }
     }
   }
   async function verstuurInvoer() {
-    const inv = $('bericht'); const tekst = inv.value.trim()
+    const inv = $('bericht'); const tekst = smileysNaarEmoji(inv.value.trim()) // 17 nov 2026: ook een smiley aan het eind
     if (!tekst) return
     inv.value = ''
     pasBerichtvakAan()

@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
-<script src="foutmelder.js?v=3"></script>
+<script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
 <script src="taal.js?v=118"></script>
 <script src="appslot.js?v=3"></script>
@@ -486,7 +486,7 @@ window.veiligeUrl = function(v){
   import { werkKnopBij as werkSleutelKnopBij } from './sleutelcontrole.js?v=2' // v266: sleutel controleren (QR of 60 cijfers)
   import { maakSpelChatCrypto } from './spelchat-crypto.js?v=2'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
-  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, zetMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon, bouwFilterKnop } from './bellen.js?v=163'
+  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, zetMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon, bouwFilterKnop } from './bellen.js?v=164'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
   import { maakStickerkeuze } from './stickerkeuze.js?v=238'
   import { isCode as isEigenCode, zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel, fxCode, leesFx, stickerPakket, bewaarVriendSticker, zoekWeg } from './eigenstickers.js?v=162'
@@ -4588,6 +4588,10 @@ async function startBlockIt() {
       if (!spelBelActief || spelKanaal !== partij) return
       const st = getMediaStatus()
       if (st.connected && st.localAudio && st.remoteAudio && !st.audioBlocked) return
+      // 17 nov 2026: heeft dit toestel geen microfoon (er is er geen, of hij is niet toegestaan), dan is de oorzaak al
+      // bekend: de speler kreeg een tip en de microfoonfout zelf ging al naar de foutmelder (bellen.js meldMediaFout).
+      // Zo kwam 'Spelgesprek: na 20 s nog geen goed geluid' er dubbel bij (foutmeldingen 7 nov, Android en Windows).
+      if (!st.localAudioAvailable) return
       const ja = b => b ? 'ja' : 'nee'
       window.__fibroFoutmelder?.meld('belofte', 'Spelgesprek: na 20 s nog geen goed geluid',
         'chat.html startSpelBel · verbonden=' + ja(st.connected) + ' · eigen mic=' + (st.localAudio ? 'ja' : st.localAudioAvailable ? 'gedempt' : 'nee') +

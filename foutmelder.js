@@ -199,6 +199,11 @@
     const tag = el.tagName.toUpperCase()
     const adres = tag === 'SCRIPT' ? el.src : (tag === 'LINK' && /stylesheet/i.test(el.rel || '') ? el.href : '')
     if (!adres) return // een plaatje of geluid: niet erg genoeg
+    // v4 (17 nov 2026): een lettertype (map lettertypen/) dat niet binnenkomt, ook niet. De tekst staat dan gewoon in
+    // het gewone lettertype. Op Stijl laadt het lettertypenraster er tientallen tegelijk: hapert het netwerk even, dan
+    // kwamen ze allemaal als 'Laden mislukt: pacifico.css', 'lobster.css', ... in de foutmeldingen, en herlaadde de
+    // hele pagina terwijl je een lettertype aan het kiezen was.
+    if (tag === 'LINK' && /\/lettertypen\/[^\/]+\.css(?:[?#]|$)/i.test(adres)) return
     if (new URL(adres, location.href).origin !== location.origin) return // alleen onze eigen bestanden
     if (weg || verborgen()) return
     setTimeout(function () {

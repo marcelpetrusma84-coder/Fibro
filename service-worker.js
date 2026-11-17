@@ -176,13 +176,28 @@ self.addEventListener('push', function(event) {
   const isBuzz = data.type === 'buzz'
   // v151: oproep ('belt je') blijft staan tot je erop tikt; 'gemist' vervangt hem (zelfde tag van de server)
   const isOproep = data.type === 'oproep' || data.type === 'oproep-video'
-  const tag = typeof data.tag === 'string' && data.tag ? data.tag : (isBuzz ? 'buzz' : undefined)
+  // 17 nov 2026: gewone chatberichten (zonder eigen tag van de server) komen samen in één melding met het aantal:
+  // "Je hebt 3 nieuwe berichtjes 💬", zoals andere apps in het meldingenscherm laten zien hoeveel er wacht.
+  const isBericht = (!data.type || data.type === 'bericht') && !(typeof data.tag === 'string' && data.tag)
+  const tag = isBericht ? 'berichten' : typeof data.tag === 'string' && data.tag ? data.tag : (isBuzz ? 'buzz' : undefined)
   // v168: een bericht, buzz of gemiste oproep telt mee in het bolletje op het icoon ('belt je' niet)
   const telt = !data.type || data.type === 'bericht' || data.type === 'buzz' || data.type === 'gemist'
   event.waitUntil((async () => {
     const schud = isBuzz && !(await buzzRustig())
     let body = data.body || 'Je hebt een nieuw bericht'
     try { if (self.FibroPushNamen) body = self.FibroPushNamen.naamInMelding(body, await self.FibroPushNamen.lees()) } catch (e) {} // v270
+    let aantal = 1
+    if (isBericht) {
+      // Hoeveel staan er al in de melding die nog op het scherm staat? Weggeveegd of gelezen (ongelezen.js haalt de
+      // meldingen weg als alles gelezen is): dan begint het weer bij 1.
+      try {
+        const oud = await self.registration.getNotifications({ tag: 'berichten' })
+        for (const m of oud || []) aantal = Math.max(aantal, ((m.data && m.data.aantal) || 1) + 1)
+      } catch (e) {}
+      // De server stuurt de tekst in de taal van de ontvanger; daaraan zien we of het Engels moet.
+      const engels = /^You have/i.test(String(data.body || ''))
+      if (aantal > 1) body = engels ? 'You have ' + aantal + ' new messages 💬' : 'Je hebt ' + aantal + ' nieuwe berichtjes 💬'
+    }
     const options = {
       body: body,
       icon: schud ? '/Fibro/icon-buzz.png' : '/Fibro/icon-192.png?v=4', // v271: nieuw icoon (kleurverloop)
@@ -191,7 +206,7 @@ self.addEventListener('push', function(event) {
       tag: tag,
       renotify: !!tag,
       requireInteraction: isOproep,
-      data: { url: data.url || '/chat.html' }
+      data: isBericht ? { url: data.url || '/chat.html', aantal: aantal } : { url: data.url || '/chat.html' }
     }
     await Promise.all([self.registration.showNotification(title, options), telt ? badgeEenErbij() : null])
   })())

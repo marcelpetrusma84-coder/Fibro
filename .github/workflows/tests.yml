@@ -170,6 +170,9 @@ jobs:
       - name: "Kaartspellen: kaartstijl kiezen (Stekky of Perkament) met 🎴"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef294.py .
+      - name: "Kaartspellen: de Vrolijke kaarten (standaard, plaatjes laden, Engels)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef312.py .
       - name: "Kaartspellen: groen casino of houten tafel, en moderne kaarten (proef308)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef308.py .

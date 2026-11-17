@@ -12,6 +12,8 @@
 // v9 (17 nov 2026, Marcel): de moderne kaarten voor alle kaartspellen (in 🎴), en een ondergrond kiezen: groen casino
 //     (standaard) of een houten tafel (bewaard op dit toestel: fibro_kaartondergrond). Een spel met een eigen
 //     ondergrond (Koningsjacht: opties.ondergrond) houdt die.
+// v11 (17 nov 2026, Marcel): Vrolijke kaarten in vier kleuren: harten rood, ruiten geel, klaveren groen, schoppen
+//     blauw; de kleren van boer, vrouw en heer in de kleur van hun soort (tests/gen/kaarten_vrolijk/kleuren.py).
 // v10 (17 nov 2026, Marcel): de Vrolijke kaarten (nu de standaard): figuurtjes met gezichtjes op aas, 2 en 3, boer/vrouw/
 //     heer met portret, joker en achterkant uit Marcels plaatjes (tests/gen/kaarten_vrolijk/); de kaart zelf, de hoekjes,
 //     de tekens van 4 t/m 10 en de gezichtjes van klaveren- en hartenaas tekent vrolijkKaart scherp. Zie VROLIJK.
@@ -263,10 +265,11 @@ function modernAchterkant() {
 //   joker, achterkant
 // Vervang je een plaatje, verhoog dan v (de service worker bewaart per ?v=).
 const VROLIJK = {
-  map: './kaarten/vrolijk/', v: 1,
+  map: './kaarten/vrolijk/', v: 3,
   plaatjes: ['A', '2', '3', 'B', 'V', 'H'],
-  kleur: { h: '#e8474f', r: '#d0494b', k: '#2f8a52', s: '#47423f' },
-  rand: { h: '#8e2a2e', r: '#7d2a2b', k: '#1d4d31', s: '#1f1c1c' },
+  // v11 (17 nov 2026, Marcel): harten rood, ruiten geel, klaveren groen, schoppen blauw (ook de kleren van de hofkaarten)
+  kleur: { h: '#e8474f', r: '#f3b41b', k: '#2f8a52', s: '#2f62c2' },
+  rand: { h: '#8e2a2e', r: '#8a5a00', k: '#1d4d31', s: '#16306a' },
   tekst: '#4a3530', lijn: '#5b4038', creme: '#f8f1e2',
   portret: [474, 561],
   // waar in het portret (in pixels: midden x, midden y, maat) het goede teken getekend wordt

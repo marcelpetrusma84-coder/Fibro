@@ -19,6 +19,10 @@ Wat er gebeurt:
   - Boer, vrouw, heer (hof.py): twee sets in de plaatjes, gekleurd (klaveren, ook voor harten) en grijs
     (schoppen, ook voor ruiten). Het hoekje en tekens van de verkeerde kleur worden weggepoetst; waar een teken weg
     is, tekent de app het goede teken (vakken.json -> VROLIJK.tekens). De heer is met de hand gemeten (HOF).
+  - Kleuren (kleuren.py, Marcel 17 nov 2026): harten rood, ruiten geel, klaveren groen, schoppen blauw. De
+    figuurtjes van ruiten en schoppen krijgen die kleur, en de kleren van boer, vrouw en heer de kleur van hun
+    soort. Hoofden (haar, gezicht, baard), de grijze kronen en het zwaard blijven zoals ze zijn (BESCHERM).
+    De getekende tekens in de app hebben dezelfde kleuren (VROLIJK.kleur en VROLIJK.rand).
   - Joker (alleen het figuurtje) en achterkant.
 Verandert vakken.json, zet dan "tekens" over in VROLIJK in kaartspel-hulp.js. Vervang je een plaatje in de app,
 verhoog dan v in VROLIJK.

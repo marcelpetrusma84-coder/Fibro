@@ -8,6 +8,7 @@ from uitknip import recht, norm_hoek
 from vrijstaand import los
 from gezicht import oud_gezicht_weg
 from hof import portret, WEG, teken_masker, PW, PH
+from kleuren import herkleur   # 17 nov 2026: harten rood, ruiten geel, klaveren groen, schoppen blauw
 APP = '../../../kaarten/vrolijk'; os.makedirs(APP, exist_ok=True)
 VOORBEELD = 'voorbeeld'; os.makedirs(VOORBEELD, exist_ok=True)   # png's om te bekijken (niet bewaren)
 FW, FH = 474, 678          # figuurtjes: zelfde verhouding als het binnenvlak van de kaart (232 x 332)
@@ -36,6 +37,7 @@ for kl, naam in BRON.items():
         c = recht(img, cx, cy, w, h, a, s=3)
         r = los(c, zonder_boventeken=wa in '23')
         if kl + wa == 'hA': r = oud_gezicht_weg(r)          # het nieuwe gezicht tekent de app
+        if kl in 'rs': r[..., :3] = herkleur(r[..., :3], kl, figuur=True, alpha=r[..., 3])
         bewaar(kl + wa, cv2.resize(r, (FW, FH), interpolation=cv2.INTER_AREA))
 # 2. boer, vrouw, heer: hoekje en verkeerde tekens weg; waar een teken weg is tekent de app het goede teken
 SET = {'k': 'kleur', 'h': 'kleur', 's': 'grijs', 'r': 'grijs'}
@@ -68,6 +70,7 @@ for kl, set_ in SET.items():
             gat |= m
         gat = cv2.dilate(gat, np.ones((9, 9), np.uint8))
         img = cv2.inpaint(img, gat, 9, cv2.INPAINT_TELEA)
+        img = herkleur(img, kl, wa + '_' + set_)            # de kleren in de kleur van de soort
         bewaar(kl + wa, img, 82)
         if lijst: vakken[kl + wa] = lijst
 # 3. joker (alleen het figuurtje) en achterkant

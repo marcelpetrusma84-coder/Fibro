@@ -43,7 +43,7 @@ VRO_PLAATJES = """async () => {
   ids.push('joker', 'achterkant')
   const uit = []
   for (const id of ids) {
-    const r = await fetch('./kaarten/vrolijk/' + id + '.webp?v=1'); const b = await r.blob()
+    const r = await fetch('./kaarten/vrolijk/' + id + '.webp?v=3'); const b = await r.blob()
     const ok = await new Promise(res => { const i = new Image(); i.onload = () => res(i.naturalWidth > 300); i.onerror = () => res(false); i.src = URL.createObjectURL(b) })
     uit.push([id, r.status, ok])
   }
@@ -81,7 +81,7 @@ try:
         pg.click('.kt-stijlknop'); pg.click('.kt-stijlkeuze[data-stijl=vrolijk]')
         check(pg.evaluate(alle_vrolijk, '.kt-hand .kt-kaart'), 'C: terug naar Vrolijk')
         # D
-        nl = pg.evaluate("async () => { const m = await import('./kaartspel-hulp.js?v=10'); return ['hB','hV','hH'].map(id => m.kaartSvg(id, 'vrolijk')).join('') }")
+        nl = pg.evaluate("async () => { const m = await import('./kaartspel-hulp.js?v=11'); return ['hB','hV','hH'].map(id => m.kaartSvg(id, 'vrolijk')).join('') }")
         check('>JACK<' in nl and '>QUEEN<' in nl and '>KING<' in nl and '>BOER<' not in nl, 'D: in het Nederlands ook JACK, QUEEN, KING')
         q = ctx.new_page(); q.on('pageerror', lambda e: fouten.append('en: ' + str(e)[:300]))
         q.goto(BASIS + 'manifest.json')
@@ -89,7 +89,7 @@ try:
         q.goto(BASIS + 'spel.html?spel=pesten&titel=1')
         q.wait_for_selector('.niveau-btn[data-niveau=makkelijk]', timeout=10000); q.click('.niveau-btn[data-niveau=makkelijk]')
         check(wacht(q, "() => document.querySelectorAll('.kt-hand .kt-kaart').length >= 7"), 'D: Engels: kaarten gedeeld')
-        tekst = q.evaluate("() => window.__kaartTekst = (async () => { const m = await import('./kaartspel-hulp.js?v=10'); return ['hB','hV','hH'].map(id => m.kaartSvg(id, 'vrolijk')).join('') })()")
+        tekst = q.evaluate("() => window.__kaartTekst = (async () => { const m = await import('./kaartspel-hulp.js?v=11'); return ['hB','hV','hH'].map(id => m.kaartSvg(id, 'vrolijk')).join('') })()")
         check('>JACK<' in tekst and '>QUEEN<' in tekst and '>KING<' in tekst and '>BOER<' not in tekst, 'D: in het Engels JACK, QUEEN, KING')
         check(not fouten, 'D: geen paginafouten ' + ' | '.join(fouten))
         b.close()

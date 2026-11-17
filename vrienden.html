@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=122"></script>
+<script src="taal.js?v=123"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -33,6 +33,15 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 .top-title { font-family:"Playfair Display",serif; font-style:italic; font-size:18px; color:var(--accent); flex:1; }
 .invite-btn { font-size:15px; padding:10px 20px; min-height:44px; border-radius:22px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; cursor:pointer; font-weight:700; } /* v250: groter, makkelijker te raken */
 .search-bar { padding:10px 14px; border-bottom:0.5px solid var(--border); }
+/* 18 nov 2026: vriendverzoeken uit een groepschat */
+#verzoekenLijst { padding:10px 14px 0; }
+#verzoekenLijst[hidden] { display:none; }
+.vz-kop { font-size:13px; font-weight:700; color:var(--accent); margin:2px 0 8px; }
+.vz-rij { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:10px 12px; margin-bottom:8px; border-radius:14px; background:rgba(139,63,209,0.18); border:1px solid rgba(192,132,252,0.4); }
+.vz-tekst { flex:1; min-width:150px; font-size:14px; line-height:1.35; }
+.vz-tekst small { display:block; color:var(--muted); font-size:12px; }
+.vz-knop { min-height:40px; padding:0 14px; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,0.08); color:#fff; font-size:14px; cursor:pointer; font-family:inherit; }
+.vz-knop.ja { background:#8b3fd1; border-color:#8b3fd1; }
 .search-input { width:100%; background:var(--card); border:0.5px solid var(--border); border-radius:20px; padding:8px 14px; color:var(--text); font-size:12px; outline:none; }
 .section-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; padding:12px 16px 6px; }
 .friend-row { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:0.5px solid var(--border); cursor:pointer; }
@@ -249,6 +258,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
 <div class="search-bar">
 </div>
 
+<div id="verzoekenLijst" hidden aria-live="polite"></div>
 <div id="vriendenLijst">
   <div style="padding:20px; text-align:center; color:var(--muted); font-size:12px;" data-t>Vrienden laden...</div>
 </div>
@@ -386,8 +396,39 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
     if (!session) session = zonderNet || bewaardeSessieZonderInternet()
     if (!session) { window.location.href = 'login.html'; return }
     startHeartbeat().catch(e => console.warn('[heartbeat]', e))
-    if (!zonderNet) await laadVrienden(session.user.id)
+    if (!zonderNet) { laadVerzoeken(session.user.id); await laadVrienden(session.user.id) }
     initSync(session.user.id)
+  }
+
+  // 18 nov 2026 (Marcel): vriendverzoeken van iemand uit een groepschat (sql/vriendverzoek-groep.sql), met Ja / Nee
+  async function laadVerzoeken(userId) {
+    const vak = document.getElementById('verzoekenLijst')
+    let lijst = []
+    try {
+      const { data, error } = await supabase.rpc('mijn_vriendverzoeken')
+      if (!error && Array.isArray(data)) lijst = data.filter(v => v && v.richting === 'in')
+    } catch (e) {}
+    vak.innerHTML = ''; vak.hidden = !lijst.length
+    if (!lijst.length) return
+    const kop = document.createElement('div'); kop.className = 'vz-kop'; kop.textContent = T('Vriendverzoeken'); vak.appendChild(kop)
+    for (const v of lijst) {
+      const r = document.createElement('div'); r.className = 'vz-rij'
+      const t = document.createElement('div'); t.className = 'vz-tekst'
+      t.textContent = T('\u{1F44B} {naam} wil vrienden worden', { naam: v.username || T('Iemand') })
+      if (v.groep_naam) { const k = document.createElement('small'); k.textContent = T('uit de groep {groep}', { groep: v.groep_naam }); t.appendChild(k) }
+      const ja = document.createElement('button'); ja.type = 'button'; ja.className = 'vz-knop ja'; ja.textContent = T('Ja')
+      const nee = document.createElement('button'); nee.type = 'button'; nee.className = 'vz-knop'; nee.textContent = T('Nee')
+      const kies = async jaNee => {
+        ja.disabled = nee.disabled = true
+        let gelukt = false
+        try { const { data, error } = await supabase.rpc('beantwoord_vriendverzoek', { p_id: v.id, p_ja: jaNee }); gelukt = !error && data === true } catch (e) {}
+        if (!gelukt) { ja.disabled = nee.disabled = false; alert(T('Dat lukte niet')); return }
+        r.remove(); if (!vak.querySelector('.vz-rij')) vak.hidden = true
+        if (jaNee) await laadVrienden(userId)
+      }
+      ja.onclick = () => kies(true); nee.onclick = () => kies(false)
+      r.append(t, ja, nee); vak.appendChild(r)
+    }
   }
 
   async function laadVrienden(userId) {

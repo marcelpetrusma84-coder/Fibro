@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=122"></script>
+<script src="taal.js?v=123"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -2421,6 +2421,7 @@ window.openMenu = function() {
       if (opKlik) opKlik(aan)
     }
     g.appendChild(b)
+    return zet
   }
   schakelaar('fibro_muziek_auto', T('\u{1F3B5} Mijn muziek vanzelf'), async (aan) => {
     if (aan) { try { sessionStorage.removeItem('fibro_muziek_pauze_eigen') } catch (e) {} }
@@ -2437,9 +2438,19 @@ window.openMenu = function() {
   })
   // groepschat (10 nov 2026): uit = je komt alleen in een groep als je iedereen erin als vriend hebt. De server controleert
   // het (sql/groep-onbekenden.sql: chat_instellingen.groep_onbekenden). Standaard aan.
-  schakelaar('fibro_groep_onbekenden', T('\u{1F465} Groepen met onbekenden'), async (aan) => {
+  const zetOnbekenden = schakelaar('fibro_groep_onbekenden', T('\u{1F465} Groepen met onbekenden'), async (aan) => {
     try { const { error } = await supabase.rpc('zet_groep_onbekenden', { p_aan: !!aan }); if (error) console.warn('[groep] schakelaar bewaren mislukt', error.message) } catch (e) {}
   })
+  // 18 nov 2026: de keuze staat op de server; op een ander toestel (of na opnieuw installeren) die laten zien
+  ;(async () => {
+    try {
+      const uid = window._uid; if (!uid) return
+      const { data, error } = await supabase.from('chat_instellingen').select('groep_onbekenden').eq('gebruiker_id', uid).maybeSingle()
+      if (error || !data || typeof data.groep_onbekenden !== 'boolean') return
+      try { localStorage.setItem('fibro_groep_onbekenden', data.groep_onbekenden ? '1' : '0') } catch (e) {}
+      zetOnbekenden()
+    } catch (e) {}
+  })()
   // v266: Fibro op slot met Face ID, vingerafdruk of pincode (standaard uit; appslot.js)
   if (window.FibroSlot) {
     const b = item(g, '', () => window.FibroSlot.openInstellingen())

@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=122"></script>
+<script src="taal.js?v=123"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -302,6 +302,13 @@ button { font-family:inherit; }
 .lid-rol { font-size:12px; color:var(--accent); }
 .klein-knop { min-height:40px; padding:0 12px; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,0.08); color:#fff; font-size:14px; cursor:pointer; }
 .klein-knop.rood { border-color:rgba(248,113,113,0.6); color:#fca5a5; }
+/* 18 nov 2026: vriend worden met iemand uit de groep */
+.klein-knop.vriend { border-color:rgba(192,132,252,0.7); color:#e9d5ff; }
+.klein-knop:disabled { opacity:.6; cursor:default; }
+#verzoekBalk { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:6px 10px 0; padding:8px 12px; border-radius:14px; background:rgba(139,63,209,0.25); border:1px solid rgba(192,132,252,0.45); font-size:14px; }
+#verzoekBalk[hidden] { display:none; }
+#verzoekBalk .vb-tekst { flex:1; min-width:140px; }
+#verzoekBalk .klein-knop { min-height:36px; }
 </style>
 <link rel="stylesheet" href="android-fix.css?v=1">
 <link rel="icon" href="icon.svg?v=4" type="image/svg+xml">
@@ -370,6 +377,7 @@ button { font-family:inherit; }
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/></svg>
     </button>
   </div>
+  <div id="verzoekBalk" hidden role="status"></div>
   <div id="belBalk" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#86efac" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span id="belBalkTekst"></span><button type="button" id="belMee" data-t>Meedoen</button></div>
   <div id="belPaneel" hidden>
     <div id="belTegels"></div>
@@ -494,6 +502,65 @@ button { font-family:inherit; }
       if (!error && Array.isArray(data)) geblokt = new Set(data.map(r => r && r.id).filter(Boolean))
     } catch (e) {}
     gesprek?.zetGedempt(geblokt)
+  }
+  // 18 nov 2026 (Marcel): vriend worden met iemand uit de groep (sql/vriendverzoek-groep.sql). Bij Leden staat
+  // "Vriend worden" naast wie nog niet je vriend is; die krijgt een verzoek (hier bovenin en bij Vrienden) met Ja / Nee.
+  let vriendIds = new Set(), verzoeken = [], verzoekenAan = false
+  async function haalVriendStand() {
+    try { vriendIds = new Set((await haalVrienden()).map(v => v.id)) } catch (e) {}
+    try {
+      const { data, error } = await supabase.rpc('mijn_vriendverzoeken')
+      verzoekenAan = !error
+      verzoeken = !error && Array.isArray(data) ? data : []
+    } catch (e) { verzoekenAan = false; verzoeken = [] }
+    tekenVerzoekBalk()
+  }
+  const verzoekIn = id => verzoeken.find(v => v.richting === 'in' && v.wie === id)
+  const verzoekUit = id => verzoeken.find(v => v.richting === 'uit' && v.wie === id)
+  async function beantwoordVerzoek(v, ja) {
+    const { data, error } = await supabase.rpc('beantwoord_vriendverzoek', { p_id: v.id, p_ja: !!ja })
+    if (error || !data) toast(T('Dat lukte niet'))
+    else toast(ja ? T('Jullie zijn nu vrienden \u{1F389}') : T('Verzoek weggehaald'))
+    await haalVriendStand()
+    if (!$('ledenPaneel').hidden) tekenLedenPaneel()
+  }
+  function tekenVerzoekBalk() {
+    const balk = $('verzoekBalk'); if (!balk || !groep) return
+    const v = verzoeken.find(x => x.richting === 'in' && lidVan(x.wie) && !isGeblokt(x.wie) && !vriendIds.has(x.wie))
+    balk.hidden = !v; balk.innerHTML = ''
+    if (!v) return
+    const t = document.createElement('span'); t.className = 'vb-tekst'
+    t.textContent = T('\u{1F44B} {naam} wil vrienden worden', { naam: naamVan(lidVan(v.wie) || { id: v.wie, username: v.username }) })
+    const ja = document.createElement('button'); ja.type = 'button'; ja.className = 'klein-knop vriend'; ja.textContent = T('Ja')
+    const nee = document.createElement('button'); nee.type = 'button'; nee.className = 'klein-knop'; nee.textContent = T('Nee')
+    ja.onclick = () => { ja.disabled = nee.disabled = true; beantwoordVerzoek(v, true) }
+    nee.onclick = () => { ja.disabled = nee.disabled = true; beantwoordVerzoek(v, false) }
+    balk.append(t, ja, nee)
+  }
+  function vriendKnoppen(l, r) {
+    if (!verzoekenAan || l.id === ik || vriendIds.has(l.id) || isGeblokt(l.id)) return
+    const vin = verzoekIn(l.id)
+    if (vin) {
+      for (const [tekst, ja] of [[T('Ja, vrienden'), true], [T('Nee'), false]]) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'klein-knop' + (ja ? ' vriend' : ''); b.textContent = tekst
+        b.onclick = () => { b.disabled = true; beantwoordVerzoek(vin, ja) }
+        r.appendChild(b)
+      }
+      return
+    }
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'klein-knop vriend'
+    if (verzoekUit(l.id)) { b.textContent = T('Verzoek verstuurd'); b.disabled = true; r.appendChild(b); return }
+    b.textContent = T('\u2795 Vriend worden')
+    b.onclick = async () => {
+      b.disabled = true
+      const { data, error } = await supabase.rpc('vraag_vriend', { p_naar: l.id, p_groep: groep.id })
+      if (error) { toast(/te veel/.test(error.message || '') ? T('Je hebt vandaag al veel verzoeken gestuurd. Probeer het morgen.') : T('Dat lukte niet')); b.disabled = false; return }
+      if (data === 'vrienden' || data === 'al vrienden') toast(T('Jullie zijn nu vrienden \u{1F389}'))
+      else if (data === 'verstuurd') toast(T('Verzoek verstuurd naar {naam}', { naam: naamVan(l) }))
+      else toast(T('Dat lukte niet'))
+      await haalVriendStand(); tekenLedenPaneel()
+    }
+    r.appendChild(b)
   }
   const getoond = new Set()
 
@@ -1073,6 +1140,9 @@ button { font-family:inherit; }
     $('groepSub').textContent = namen.length === 1 ? T('{naam} typt\u2026', { naam: namen[0] }) : T('{namen} typen\u2026', { namen: namen.join(', ') })
   }
   setInterval(() => { if (typers.size) werkTypenBij() }, 1000)
+  // 18 nov 2026: nieuwe vriendverzoeken binnen een minuut zien (en als je terugkomt in de app)
+  setInterval(() => { if (groep && !document.hidden) haalVriendStand() }, 60000)
+  document.addEventListener('visibilitychange', () => { if (groep && !document.hidden) haalVriendStand() })
   $('bericht').addEventListener('input', () => {
     const k = lijn?.kanaal?.()
     if (!k || Date.now() - laatsteTypen < 2500 || !$('bericht').value) return
@@ -1131,6 +1201,7 @@ button { font-family:inherit; }
     if (!mijnPriv) { sysBericht(T('Je sleutel staat niet op dit toestel. Zet hem terug met je herstelcode (Stijl > Instellingen).')); zetInvoer(false) }
     try { await haalLeden(true) } catch (e) { sysBericht(T('Leden laden lukte niet')) }
     await haalGeblokt()
+    haalVriendStand()
     haalFotos()
     await laadBerichten()
     lijn?.stop?.()
@@ -1869,6 +1940,7 @@ button { font-family:inherit; }
       naam.textContent = naamVan(l) + (l.id === ik ? ' (' + T('jij') + ')' : '')
       if (l.rol === 'beheerder') { const s = document.createElement('span'); s.className = 'lid-rol'; s.textContent = T('beheerder'); r.appendChild(s) }
       if (isGeblokt(l.id)) { const s = document.createElement('span'); s.className = 'lid-blok'; s.textContent = T('geblokkeerd'); s.title = T('Alleen jij ziet dit. Je ziet zijn berichten ingeklapt en hoort hem niet.'); r.appendChild(s) }
+      vriendKnoppen(l, r)
       if (ikBeheerder && l.id !== ik) {
         const b = document.createElement('button'); b.type = 'button'; b.className = 'klein-knop rood'; b.textContent = T('Weghalen')
         b.addEventListener('click', async () => {
@@ -1902,7 +1974,7 @@ button { font-family:inherit; }
       }
     }
   }
-  $('ledenKnop').addEventListener('click', async () => { $('ledenPaneel').hidden = false; await haalGeblokt(); tekenLedenPaneel() })
+  $('ledenKnop').addEventListener('click', async () => { $('ledenPaneel').hidden = false; await haalGeblokt(); await haalVriendStand(); tekenLedenPaneel() })
   $('paneelDicht').addEventListener('click', () => { $('ledenPaneel').hidden = true })
   $('ledenPaneel').addEventListener('click', e => { if (e.target.id === 'ledenPaneel') $('ledenPaneel').hidden = true })
   $('verlaatKnop').addEventListener('click', async () => {

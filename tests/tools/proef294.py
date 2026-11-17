@@ -51,7 +51,7 @@ try:
               'A: zonder keuze gewone getekende kaarten')
 
         pg.click('.kt-stijlknop')
-        check(pg.locator('.kt-stijlkeus').count() == 1 and pg.locator('.kt-stijlkeuze').count() == 2, 'B: 🎴 opent de keuze met twee stijlen')
+        check(pg.locator('.kt-stijlkeus').count() == 1 and pg.locator('.kt-stijlkeuze[data-stijl]').count() == 3, 'B: 🎴 opent de keuze met drie stijlen (17 nov 2026: ook Modern)')
         check(pg.locator('.kt-stijlkeuze[data-stijl=stekky][aria-pressed=true]').count() == 1, 'B: Stekky staat aan')
         check('Perkament' in pg.inner_text('.kt-stijlkeus'), 'B: Perkament staat erbij')
         pg.click('.kt-stijlkeuze[data-stijl=perkament]')

@@ -2568,4 +2568,7 @@ window.FIBRO_EN = {
   "Gedownload! {naam} staat nu op je beginscherm.": "Downloaded! {naam} is now on your home screen.",
   "Gedownload! Er is geen ruimte meer op je beginscherm. Haal iets weg, of zet hem aan bij Profiel → Widgets → Spellen.": "Downloaded! There is no more room on your home screen. Remove something, or turn it on under Profile → Widgets → Games.",
   "🔗 Delen met uitnodigingslink": "🔗 Share with invite link",
+  "Tafel": "Table",
+  "Groen casino": "Green casino",
+  "Houten tafel": "Wooden table",
 }

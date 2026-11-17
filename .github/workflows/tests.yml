@@ -164,6 +164,9 @@ jobs:
       - name: "Kaartspellen: kaartstijl kiezen (Stekky of Perkament) met 🎴"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef294.py .
+      - name: "Kaartspellen: groen casino of houten tafel, en moderne kaarten (proef308)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef308.py .
       - name: "Stickervel Sinterklaas uit de Store (downloaden, stickerkeuze, verwijderen)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef295.py .

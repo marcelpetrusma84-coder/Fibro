@@ -25,7 +25,7 @@ assert.doesNotMatch(K.achterkantSvg('modern'), /#8b3fd1/)
 // De stijlkeuze voor Koningsjacht verandert geen globale voorkeuren of de bestaande stijlen.
 assert.equal(K.kaartStijl(), 'stekky')
 assert.equal(opslag.has('fibro_kaartstijl'), false)
-assert.equal(K.KAARTSTIJLEN.modern.verborgen, true)
+assert.ok(!K.KAARTSTIJLEN.modern.verborgen, '17 nov 2026: de moderne kaarten staan voor alle kaartspellen in de keuze 🎴')
 assert.match(K.kaartSvg('sH', 'perkament'), /kaarten\/perkament\/sH.webp/)
 assert.match(K.kaartSvg('sH', 'stekky'), /^<svg class="kt-svg"/)
 assert.match(K.achterkantSvg('stekky'), /#8b3fd1/)

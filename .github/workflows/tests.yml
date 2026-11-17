@@ -146,6 +146,9 @@ jobs:
       - name: "Groepschat: iemand die je persoonlijk blokkeerde (ingeklapt, niet horen of zien)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef311.py .
+      - name: "Groepschat: vriend worden met iemand uit de groep"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef313.py .
       - name: "Groepschat: poll en afspraak (+ knop)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef284.py .

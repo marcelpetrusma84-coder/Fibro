@@ -1,0 +1,29 @@
+/* De lichtgolf ligt boven de achtergrond, maar onder de bestaande berichten. */
+#chatScherm { position:relative; isolation:isolate; }
+#messages { position:relative; z-index:1; }
+.chat-onlinegolf { position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden; }
+.chat-onlinegolf canvas { display:block; width:100%; height:100%; }
+.chat-onlinegolf.zonder-webgl::before {
+  content:""; position:absolute; inset:-55% -20%; opacity:0;
+  background:repeating-radial-gradient(ellipse at 15% 30%,#020822 0 12px,#031848 28px,#075bd7 34px,#17c8ff 36px,#063080 43px,#020822 66px);
+  mask-image:linear-gradient(transparent 28%,#000 40% 55%,transparent 68%);
+  -webkit-mask-image:linear-gradient(transparent 28%,#000 40% 55%,transparent 68%);
+  transform:translateY(-55%) skewY(-7deg); animation:chatOnlineSatijn 2.5s linear both;
+}
+@keyframes chatOnlineSatijn { 0%{opacity:0;transform:translateY(-55%) skewY(-7deg)} 14%{opacity:.9} 78%{opacity:.9} 100%{opacity:0;transform:translateY(55%) skewY(5deg)} }
+.chat-onlinegolf-lezen { animation:chatOnlineHelder 2.5s ease-out both; }
+@keyframes chatOnlineHelder { 0%,100%{filter:none} 28%{filter:blur(.35px)} 78%{filter:blur(.2px)} }
+.chat-onlinegolf-melding {
+  position:absolute; z-index:5; top:14px; left:50%; transform:translate(-50%,5px);
+  width:max-content; max-width:calc(100% - 32px); box-sizing:border-box; padding:11px 16px;
+  border:1px solid #8beaffb3; border-radius:16px; background:linear-gradient(145deg,#123e62f5,#0b192ff5);
+  color:#f4fdff; font:600 14px/1.4 system-ui,sans-serif; text-align:center;
+  box-shadow:inset 0 1px #d4faff55,0 7px 28px #020a2280,0 0 22px #18baff33;
+  opacity:0; transition:opacity .2s,transform .2s; pointer-events:none;
+}
+.chat-onlinegolf-melding.is-zichtbaar { opacity:1; transform:translate(-50%,0); }
+.chat-onlinegolf-melding.is-zichtbaar::before { content:""; display:inline-block; width:7px; height:7px; margin-right:8px; border-radius:50%; background:#69ffb4; box-shadow:0 0 10px #36fba4; }
+@media (prefers-reduced-motion:reduce) {
+  .chat-onlinegolf-lezen,.chat-onlinegolf.zonder-webgl::before { animation:none; }
+  .chat-onlinegolf-melding { transition:none; }
+}

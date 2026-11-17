@@ -110,6 +110,9 @@ jobs:
       - name: "Menu onderaan met lijn-iconen"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef276.py .
+      - name: "Chat: neon-golf als de gekozen vriend online komt"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef303.py .
       - name: "Groepschat: groep maken en versleuteld kletsen"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef277.py .
@@ -182,6 +185,9 @@ jobs:
       - name: Kaarttafel v7 - over de waaier kijken, tik op aflegstapel, dubbeltik, instellingen (proef302)
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef302.py .
+      - name: "Koningsjacht: leesbare kaartwaaier en middeleeuwse materialen"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef304.py .
       - name: "Spelmenu ☰ in elk spel (pauze, geluid, microfoon, camera, menu, verlaten) en berichten linksboven"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef291.py .

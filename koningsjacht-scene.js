@@ -5,6 +5,73 @@ const eigenaren = new WeakMap()
 const sensorrechten = new WeakMap()
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n))
 const bedienbaar = 'button, input, select, textarea, label, a, summary, dialog, video, canvas, [contenteditable], [role="button"], [role="dialog"], [role="slider"], .kt-kaart, .kt-stapel, .kt-afleg, .kt-onder, .kt-info, .kj-vijand'
+const steenkorrel = new URL('./assets/koningsjacht/stone-grain.svg', import.meta.url).href
+
+// Middeleeuws: een houten legbak met smeedijzeren beslag; het licht komt van
+// kaarsen en de haard. De bestaande kj-sfeer-klasse schakelt alles weer uit.
+const MIDDELEEUWSE_KAARTSTIJL = `
+.kt-tafel.kj.kj-sfeer .kt-afleg{
+  border:4px solid #574334;border-radius:8px;
+  background:repeating-linear-gradient(7deg,#130b072e 0 1px,#0000 1px 6px),linear-gradient(112deg,#392218,#65412a 31%,#4b2e1d 64%,#2d1b13);
+  box-shadow:inset 0 0 0 1px #150e0a,inset 0 2px 3px #f2d09a30,inset 0 -4px 10px #100905b3,0 3px 0 #1b120d,0 6px 9px #0009;
+}
+.kt-tafel.kj.kj-sfeer .kt-afleg::before{
+  content:"";position:absolute;inset:-5px;z-index:2;border:1px solid #211a14;border-radius:9px;pointer-events:none;
+  background:radial-gradient(circle at 7% 6%,#c4aa78 0 1px,#49392b 1.6px 3px,#100d09 3.5px,#0000 4px),radial-gradient(circle at 93% 6%,#c4aa78 0 1px,#49392b 1.6px 3px,#100d09 3.5px,#0000 4px),radial-gradient(circle at 7% 94%,#ad8c5c 0 1px,#49392b 1.6px 3px,#100d09 3.5px,#0000 4px),radial-gradient(circle at 93% 94%,#ad8c5c 0 1px,#49392b 1.6px 3px,#100d09 3.5px,#0000 4px);
+  box-shadow:inset 0 1px #bba17a70,inset 1px 0 #93775440,inset -1px -2px #100d0ac9;
+}
+.kt-tafel.kj.kj-sfeer .kt-afleg:not(:has(.kt-ak))::after{
+  content:"";position:absolute;inset:9px;border:1px solid #a57a4847;border-radius:3px;pointer-events:none;
+  background:radial-gradient(ellipse at 30% 15%,#efba6a1f,#0000 75%);box-shadow:inset 0 0 10px #1a0e0870;
+}
+.kt-tafel.kj.kj-sfeer .kt-afleg.kt-doel{
+  border-color:#8d673e;
+  box-shadow:inset 0 0 0 1px #e5c08a80,inset -4px -3px 13px #f2bd631f,0 3px 0 #1b120d,-3px -4px 12px #edaa403d,0 7px 11px #000a;
+}
+.kt-tafel.kj.kj-sfeer .kt-kaart.kt-mag{
+  box-shadow:-1px -2px 2px #e9c28d80,2px 4px 7px #1a0b05a6;
+}
+.kt-tafel.kj.kj-sfeer .kt-kaart.kt-gekozen,
+.kt-tafel.kj.kj-sfeer .kt-kaart.kt-loep{
+  box-shadow:0 0 0 2px #775335,-1px -2px 0 3px #d9b477,-3px -5px 11px #ffc76a66,3px 8px 16px #1a0904b3;
+}
+.kt-tafel.kj.kj-sfeer .kt-stapel.kt-wijs .kt-st:last-child{
+  box-shadow:0 0 0 2px #8d623c,-3px -5px 12px #f9bd6266,3px 6px 10px #140a05b3;
+}
+.kt-tafel.kj.kj-sfeer .kt-afleg .kt-ak.kt-gloed{animation:kjHaardGloed 1.1s ease-out}
+@keyframes kjHaardGloed{0%,100%{box-shadow:0 3px 7px #1c0e08a6}30%{box-shadow:-3px -4px 9px #ffe0a578,2px 5px 13px #a6572466}}
+.kt-tafel.kj.kj-sfeer .kt-vlieg .kt-v{box-shadow:-3px -4px 9px #f6c9824d,3px 8px 14px #190a05b3}
+.kt-tafel.kj.kj-sfeer .kt-knop,.kj-sfeer .kj-knop{
+  border-color:#9a7c54;color:#fff1d4;
+  background:repeating-linear-gradient(8deg,#130b071f 0 1px,#0000 1px 5px),linear-gradient(150deg,#5a4330,#30271f 65%,#201b16);
+  box-shadow:inset 0 1px #e4c39766,inset 0 -2px #0c080666,0 3px 0 #100b08,0 5px 8px #0007;
+}
+.kt-tafel.kj.kj-sfeer .kt-knop.kt-nadruk{
+  border-color:#dfbb7b;background:linear-gradient(145deg,#987044,#624327 65%,#3c2b1c);
+  box-shadow:inset 0 1px #fce6af99,inset 0 -2px #2a160d80,-2px -3px 9px #efb25a38,0 4px 8px #0008;
+}
+.kt-tafel.kj.kj-sfeer .kt-keuzekaart,.kt-tafel.kj.kj-sfeer .kt-eindekaart{
+  background:repeating-linear-gradient(5deg,#190c0826 0 1px,#0000 1px 7px),linear-gradient(145deg,#63452c,#302116);
+  border-color:#a17c4b;box-shadow:inset 0 1px #dec59670,inset 0 0 0 3px #261b1370,0 10px 35px #000c;
+}
+.kt-tafel.kj.kj-sfeer .kt-instelling input{accent-color:#c49651}
+.kt-tafel.kj.kj-sfeer .kj-pil{
+  display:inline-flex;align-items:center;gap:6px;min-height:31px;padding:4px 10px;
+  border:2px solid #5b5144;border-top-color:#d5cbb7;border-left-color:#b8ac95;border-radius:5px 8px 4px 6px;
+  color:#30281f;font-family:Georgia,'Times New Roman',serif!important;font-size:14px;font-weight:900;
+  background-image:url("${steenkorrel}"),radial-gradient(ellipse at 30% 10%,#e6dfcc66,transparent 70%),linear-gradient(155deg,#c6bba3,#a89b83 58%,#8c806c);
+  background-size:100px 72px,100% 100%,100% 100%;
+  text-shadow:0 1px 0 #f0e8d3,0 -1px 0 #65574388;
+  box-shadow:inset 0 1px 1px #f8eed288,inset 0 -2px 3px #473b2d80,0 3px 0 #342a20,0 5px 7px #0008;
+}
+.kt-tafel.kj.kj-sfeer .kj-pil:nth-child(2){border-radius:7px 4px 7px 5px;background-position:29px 11px,0 0,0 0}
+.kt-tafel.kj.kj-sfeer .kj-pil:nth-child(3){border-radius:4px 7px 5px 8px;background-position:61px 32px,0 0,0 0}
+.kt-tafel.kj.kj-sfeer .kj-teller-emoji{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;white-space:nowrap}
+.kt-tafel.kj.kj-sfeer .kj-steen-symbool{display:inline-block;width:17px;height:17px;flex:none;filter:drop-shadow(0 1px 0 #eee4cd)}
+.kt-tafel.kj.kj-sfeer .kj-balk{border-radius:3px;border:2px solid #74634d;background:#302a23;box-shadow:inset 0 2px 3px #0008,0 1px #c6b79766}
+.kt-tafel.kj.kj-sfeer .kj-vul{background:linear-gradient(90deg,#70321c,#b25a29 55%,#dfaa55);box-shadow:inset 0 1px #e9c58a77,inset 0 -2px #4e251a88}
+@media(prefers-reduced-motion:reduce){.kt-tafel.kj.kj-sfeer .kt-afleg .kt-ak.kt-gloed{animation:none}}
+`
 
 export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
   if (!tafelElement?.ownerDocument) throw new Error('De kaarttafel ontbreekt.')
@@ -28,6 +95,9 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
   const laag = doc.createElement('div')
   laag.className = 'kj-scene-laag'
   laag.style.cssText = 'position:absolute;inset:0;overflow:hidden;pointer-events:none;user-select:none;z-index:-1;perspective:1200px;background:#28150d;'
+  const materiaalStijl = doc.createElement('style')
+  materiaalStijl.textContent = MIDDELEEUWSE_KAARTSTIJL
+  laag.appendChild(materiaalStijl)
   const decorLayer = doc.createElement('div')
   decorLayer.className = 'kj-scene-decor'
   decorLayer.style.cssText = 'position:absolute;inset:-5%;pointer-events:none;background-position:center;background-size:cover;background-repeat:no-repeat;transform-origin:50% 62%;backface-visibility:hidden;will-change:transform;'

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <base href="../../">
+  <title>TEST · Koningsjacht kaarten leesbaar</title>
+  <style>
+    *{box-sizing:border-box}html,body{height:100%;margin:0}body{display:flex;flex-direction:column;background:#21140e;color:#fff;font:13px system-ui}
+    header{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;padding:9px;flex:none;background:repeating-linear-gradient(135deg,#f4cf4c 0 14px,#e6b92d 14px 28px);color:#21170b}
+    header strong{font-size:11px;letter-spacing:.06em}header button,header select{border:1px solid #f2e1b6;border-radius:8px;padding:8px 11px;background:#302319;color:#fff;font:inherit;min-height:36px}
+    #tafel{flex:1;min-height:0}.kt-status{font-size:12px!important}.kt-tafel .kt-zetel-ik{display:none}.kt-tafel .kt-ander{min-height:100px}
+  </style>
+</head>
+<body>
+  <header><strong>TEST · GEEN ECHTE PARTIJ</strong><select id="scene" aria-label="Tafelstijl"><option value="standaard">Standaard</option><option value="middeleeuws">Middeleeuws</option><option value="modern">Modern</option></select><button id="voorbeeld" type="button">Kies ♥9 en ♥8</button><button id="wissen" type="button">Selectie wissen</button></header>
+  <main id="tafel"></main>
+  <script type="module">
+    import { maakKaartTafel } from './kaartspel-hulp.js?v=8'
+    import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=6'
+    const hand=['k8','k2','s2','sA','h9','s5','h8','s9']
+    const tafel=maakKaartTafel(document.getElementById('tafel'),{
+      solo:true,stijl:'perkament',ondergrond:'hout',leesbareSelectie:true,naamAnder:'Voorbeeldtafel',groep:()=> 'alles',
+      magSpelen:ids=>ids.length>0,onSelectie:ids=>tafel.status(ids.length?'Gekozen: '+ids.join(', ')+' · ook de andere kaartwaarden blijven leesbaar':'Kies een kaart; de waaier maakt automatisch ruimte.'),onSpeel:()=>{}
+    })
+    tafel.element.classList.add('kj')
+    tafel.toon({hand,mijnBeurt:true,speelbaar:hand,anderAantal:0,stapelAantal:32,afleg:[],status:'Kies een kaart; de waaier maakt automatisch ruimte.'})
+    tafel.knoppen([{naam:'aanval',tekst:'Aanvallen',klik:()=>{}},{naam:'pas',tekst:'Passen',klik:()=>{}}])
+    const scene=maakKoningsjachtScene(tafel.element,{scene:'standaard',beweging:false,flikkeren:true})
+    function sfeer(){
+      const naam=document.getElementById('scene').value
+      tafel.element.classList.toggle('kj-sfeer',naam==='middeleeuws')
+      tafel.element.classList.toggle('kj-modern',naam==='modern')
+      tafel.zetKaartStijl(naam==='modern'?'modern':'perkament')
+      scene.update({scene:naam})
+    }
+    document.getElementById('scene').addEventListener('change',sfeer)
+    document.getElementById('wissen').addEventListener('click',()=>tafel.wisSelectie())
+    document.getElementById('voorbeeld').addEventListener('click',()=>{
+      tafel.wisSelectie()
+      for(const id of ['h9','h8'])tafel.element.querySelector('.kt-kaart[data-id="'+id+'"]').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))
+    })
+    addEventListener('pagehide',()=>scene.stop(),{once:true})
+  </script>
+</body>
+</html>

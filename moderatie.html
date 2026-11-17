@@ -18,7 +18,7 @@ window.FIBRO_EN = Object.assign(window.FIBRO_EN || {}, {
   'soorten': 'kinds', 'meldingen': 'reports', 'laatste 24 uur': 'last 24 hours',
   '{n}× · laatst {tijd}': '{n}× · last {tijd}', 'eerst {tijd}': 'first {tijd}',
   'Vastgelopen': 'Crashed', 'Mislukt': 'Failed', 'Stapel en bron': 'Stack and source',
-  '✓ Opgelost, wissen': '✓ Fixed, delete', 'Alles wissen': 'Delete all', 'Zeker? Tik nog een keer': 'Sure? Tap again',
+  '✓ Opgelost, wissen': '✓ Fixed, delete', 'Varianten ({n})': 'Variants ({n})', 'Alles wissen': 'Delete all', 'Zeker? Tik nog een keer': 'Sure? Tap again',
   'Gewist ✓': 'Deleted ✓', 'Wissen mislukt.': 'Deleting failed.', '↻ Vernieuwen': '↻ Refresh', 'Laden…': 'Loading…', 'Bijgewerkt om {tijd}': 'Updated at {tijd}', 'Bijgewerkt om {tijd} · {n} meldingen': 'Updated at {tijd} · {n} reports',
   // v226: Bèta (sql/registratie-schakelaar.sql)
   '🧪 Bèta': '🧪 Beta', 'Nieuwe accounts': 'New accounts', 'Open': 'Open', 'Alleen met uitnodiging': 'Invitation only', 'Dicht': 'Closed',
@@ -349,6 +349,7 @@ select.veld option { background:#1a0a2e; }
 
 <script type="module">
 import { supabase } from './supabase.js?v=95'
+import { groepeerFouten } from './foutgroepen.js?v=1' // 17 nov 2026: dezelfde fout op één kaart
 
 let alleRapporten = []
 let huidigFilter = 'alle'
@@ -821,7 +822,7 @@ window.wisFeedback = async function(id) {
 }
 
 // ─── Foutmeldingen (v221, foutmelder.js + sql/foutmeldingen.sql) ───
-// Dezelfde fout (pagina, soort, foutregel en bron) staat als een kaart, met hoe vaak en wanneer het laatst.
+// Dezelfde fout staat als een kaart, met hoe vaak, op welke pagina's en wanneer het laatst (foutgroepen.js).
 let foutGroepen = []
 let wisAllesKlaar = 0
 
@@ -837,17 +838,8 @@ async function laadFouten() {
     document.getElementById('foutenSamen').textContent = ''
     return
   }
-  const groepen = new Map()
-  for (const r of data || []) {
-    const sleutel = [r.pagina, r.soort, r.bericht, r.bron || ''].join('\u0001')
-    let g = groepen.get(sleutel)
-    if (!g) { g = { pagina: r.pagina, soort: r.soort, bericht: r.bericht, bron: r.bron, stapel: r.stapel, laatst: r.created_at, eerst: r.created_at, ids: [], toestellen: new Map() }; groepen.set(sleutel, g) }
-    g.ids.push(r.id)
-    if (r.created_at < g.eerst) g.eerst = r.created_at
-    if (r.toestel) g.toestellen.set(r.toestel, (g.toestellen.get(r.toestel) || 0) + 1)
-    if (!g.stapel && r.stapel) g.stapel = r.stapel
-  }
-  foutGroepen = [...groepen.values()].sort((a, b) => (a.laatst < b.laatst ? 1 : -1))
+  // 17 nov 2026: dezelfde fout (soort, foutregel, bestand) op één kaart, ook van andere pagina's of regels (foutgroepen.js)
+  foutGroepen = groepeerFouten(data || [])
   toonFouten(data || [])
 }
 window.laadFouten = laadFouten
@@ -895,7 +887,7 @@ function toonFouten(rijen) {
       <div class="rapport-kaart fout-kaart">
         <div class="fout-kop">
           <span class="fout-chip ${soort}">${mEsc(T(soort === 'belofte' ? 'Mislukt' : 'Vastgelopen'))}</span>
-          <span class="fout-chip">${mEsc(g.pagina)}</span>
+          ${[...g.paginas.keys()].slice(0, 3).map(p => `<span class="fout-chip">${mEsc(p)}</span>`).join('')}${g.paginas.size > 3 ? `<span class="fout-chip">+${g.paginas.size - 3}</span>` : ''}
           <span class="fout-tal">${mEsc(T('{n}× · laatst {tijd}', { n: g.ids.length, tijd: datum(g.laatst) }))}</span>
         </div>
         <div class="fout-bericht">${mEsc(g.bericht)}</div>
@@ -903,6 +895,7 @@ function toonFouten(rijen) {
         ${toestellen ? `<div class="fout-klein">${toestellen}</div>` : ''}
         ${g.ids.length > 1 ? `<div class="fout-klein">${mEsc(T('eerst {tijd}', { tijd: datum(g.eerst) }))}</div>` : ''}
         ${g.stapel ? `<details><summary>${mEsc(T('Stapel en bron'))}</summary><pre>${mEsc(g.stapel)}</pre></details>` : ''}
+        ${g.varianten.length > 1 ? `<details><summary>${mEsc(T('Varianten ({n})', { n: g.varianten.length > 3 ? '3+' : g.varianten.length }))}</summary><pre>${mEsc(g.varianten.slice(0, 3).join('\n'))}</pre></details>` : ''}
         <button class="knop grijs" onclick="wisFoutGroep(${i})">${mEsc(T('✓ Opgelost, wissen'))}</button>
       </div>`
   }).join('')

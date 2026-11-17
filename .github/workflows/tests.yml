@@ -188,6 +188,9 @@ jobs:
       - name: "Koningsjacht: leesbare kaartwaaier en middeleeuwse materialen"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef304.py .
+      - name: "Moderatie: dezelfde fout op één kaart (foutgroepen.js)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef305.py .
       - name: "Spelmenu ☰ in elk spel (pauze, geluid, microfoon, camera, menu, verlaten) en berichten linksboven"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef291.py .

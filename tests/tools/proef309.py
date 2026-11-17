@@ -5,6 +5,7 @@
 #  C. het oogje is een SVG-lijntekening, geen emoji, en wisselt tussen tonen en verbergen
 #  D. hetzelfde op de uitnodigingspagina
 #  E. geen paginafouten
+#  F. het gele bèta-label (donkere letters) heeft ook geen schaduw
 # python3 -I proef309.py <map> [schermafdruk-map]
 import sys, os, time, socket, subprocess, tempfile, re
 from playwright.sync_api import sync_playwright
@@ -48,6 +49,8 @@ try:
         proef(pg, 'login', '.card', ['label', 'a', '.e2e-badge', 'p', 'span'])
         sch = pg.evaluate(SCHADUW, '.logo p')
         check(len(sch) > 0 and all(x != 'none' for x in sch), 'B: tekst buiten het vak houdt zijn schaduw %s' % sch)
+        sch = pg.evaluate(SCHADUW, '.beta-label')
+        check(len(sch) > 0 and all(x == 'none' for x in sch), 'F: geen schaduw op het gele bèta-label %s' % sch)
         if FOTO: pg.screenshot(path=os.path.join(FOTO, 'login.png'))
         pg2 = ctx.new_page(); pg2.on('pageerror', lambda e: fouten.append('invite: ' + str(e)[:300])); pg2.on('dialog', lambda d: d.dismiss())
         pg2.goto(BASIS + 'invite.html?code=PROEF'); pg2.wait_for_selector('.kaart .ww-oog', state='attached', timeout=10000)

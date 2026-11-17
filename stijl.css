@@ -23,8 +23,9 @@ input, textarea, select { text-shadow:none !important; }
 
 /* v4: lichte vlakken (zoals het witte inlogvak op login en uitnodiging) hebben donkere letters: daar nooit een schaduw.
    Zonder dit kreeg de tekst in dat witte vlak een zwarte waas als je een achtergrondfoto hebt (tekst zag er vaag uit).
-   Gebruik: zet class="licht-vlak" op elk wit of licht vlak. */
-.licht-vlak:not(#_fibro), .licht-vlak:not(#_fibro) * { text-shadow:none !important; }
+   Gebruik: zet class="licht-vlak" op elk wit of licht vlak.
+   Ook de kleine gekleurde labels met donkere letters: het gele bèta-label en 'Aanbevolen' bij de Android-app. */
+:is(.licht-vlak, .beta-label, .fapk-badge):not(#_fibro), :is(.licht-vlak, .beta-label, .fapk-badge):not(#_fibro) * { text-shadow:none !important; }
 
 /* 3. Witte tekst spierwit (was op veel plekken een heel licht paars wit, #f3e8ff) */
 :root { --text:#ffffff !important; }

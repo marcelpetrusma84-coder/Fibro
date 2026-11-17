@@ -372,7 +372,14 @@ Deno.serve(async (req) => {
       if (!(await pakSlot(supabase, b.id))) return antwoord({ ok: true, verstuurd: 0, reden: "al verstuurd" });
       const { data: leden, error: fl } = await supabase.from("groep_leden").select("user_id").eq("groep_id", b.groep_id);
       if (fl) throw fl;
-      const ids = (leden || []).map((l: any) => l.user_id).filter((u: string) => u !== b.sender_id);
+      let ids = (leden || []).map((l: any) => l.user_id).filter((u: string) => u !== b.sender_id);
+      // 17 nov 2026: wie de afzender persoonlijk blokkeerde, krijgt van zijn groepsberichten geen melding
+      if (ids.length) {
+        const { data: blokkers } = await supabase.from("mijn_blokkades").select("blokkeerder_id")
+          .eq("geblokkeerde_id", b.sender_id).in("blokkeerder_id", ids);
+        const weg = new Set((blokkers || []).map((r: any) => r.blokkeerder_id));
+        ids = ids.filter((u: string) => !weg.has(u));
+      }
       if (!ids.length) return antwoord({ ok: true, verstuurd: 0 });
       const { data: profielen } = await supabase.from("profiles").select("id, taal").in("id", ids);
       webpush.setVapidDetails("mailto:fibro.contact@proton.me", Deno.env.get("VAPID_PUBLIC_KEY"), Deno.env.get("VAPID_PRIVATE_KEY"));

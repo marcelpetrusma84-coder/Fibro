@@ -4,6 +4,7 @@
 // v4 (17 nov 2026): de camera vraagt weer een gewone maat (640x480, zoals de iPhone die zelf heeft). Om 320x240
 //   te maken moest de iPhone het beeld zelf verkleinen en dan versprong het eigen beeld (en kwamen er zwarte randen).
 //   Het verkleinen voor de anderen doet nu de verbinding (scaleResolutionDownBy 2): ze krijgen nog steeds 320x240.
+// v5 (17 nov 2026): zetGedempt(ids): wie je persoonlijk blokkeerde hoor je niet (alleen bij jou; hij merkt niets).
 // v2 (stap 3): ook webcam chat (beeld: true), tot 4 personen. De camera kan uit; dan zien de anderen je rondje.
 //
 // Hoe het werkt: iedereen in het gesprek praat rechtstreeks met iedereen (WebRTC, alleen geluid), via onze eigen
@@ -47,6 +48,8 @@ export function maakGroepGesprek({ ik, groepId, kanaal, sleutel, opStaat, beeld 
   const peers = new Map()      // id -> { pc, audio, stroom, wachtIce: [], uitIce: [], klaar }
   let stroom = null, mee = false, stil = false, hand = false, cam = false, luid = true, geblokkeerd = false
   let bellers = new Map()
+  let gedempt = new Set()      // v5: ids die ik niet wil horen (persoonlijk geblokkeerd)
+  const zetGeluid = (id, p) => { if (p.audio) p.audio.muted = !luid || gedempt.has(id) }
   let ac = null, meterTimer = null
   const praat = new Map()      // id -> tot wanneer 'praat'
   const meters = new Map()     // id -> { analyser, data, track }
@@ -94,7 +97,7 @@ export function maakGroepGesprek({ ik, groepId, kanaal, sleutel, opStaat, beeld 
       if (e.track.kind === 'video') { e.track.onunmute = meld; e.track.onmute = meld; meld(); return }
       if (!peer.audio) { peer.audio = document.createElement('audio'); peer.audio.autoplay = true; peer.audio.setAttribute('playsinline', ''); peer.audio.hidden = true; document.body.appendChild(peer.audio) }
       peer.audio.srcObject = st
-      peer.audio.muted = !luid
+      zetGeluid(id, peer)
       speel(peer.audio)
       meet(id, st)
       meld()
@@ -273,7 +276,8 @@ export function maakGroepGesprek({ ik, groepId, kanaal, sleutel, opStaat, beeld 
       for (const t of v) t.enabled = cam
       if (mee) bellers.set(ik, { stil, hand, cam }); track(); meld()
     },
-    zetLuid(aan) { luid = !!aan; for (const p of peers.values()) if (p.audio) p.audio.muted = !luid; meld() },
+    zetLuid(aan) { luid = !!aan; for (const [id, p] of peers) zetGeluid(id, p); meld() },
+    zetGedempt(ids) { gedempt = new Set(ids || []); for (const [id, p] of peers) zetGeluid(id, p) },
     speelAlles() { wek(); geblokkeerd = false; for (const p of peers.values()) if (p.audio) speel(p.audio); meld() },
   }
 }

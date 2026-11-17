@@ -51,6 +51,7 @@ def server(uid):
             naam = u.split('/rpc/')[1].split('?')[0]; DB['rpc'].append((uid, naam, body))
             if naam == 'groep_ongelezen': return route.fulfill(status=200, json=[{'groep_id': g['id'], 'aantal': 3} for g in DB['groepen'] if lid(g['id'])])
             if naam in ('groep_markeer_gelezen', 'ongelezen_per_vriend'): return route.fulfill(status=200, json=[] if naam == 'ongelezen_per_vriend' else None)
+            if naam == 'mijn_geblokkeerden': return route.fulfill(status=200, json=[{'id': x, 'username': 'x', 'sinds': nu()} for x in DB.get('blok', {}).get(uid, [])])
             if naam == 'mijn_groepen':
                 rij = [{'id': g['id'], 'naam': g['naam'], 'soort': g['soort'], 'leden': sum(1 for l in DB['leden'] if l['groep_id'] == g['id']), 'laatste': g['created_at']} for g in DB['groepen'] if lid(g['id'])]
                 return route.fulfill(status=200, json=rij)
@@ -304,7 +305,8 @@ try:
         na = m.evaluate("(() => { const v = document.querySelector('.tegel.ik video'), b = v.parentElement.getBoundingClientRect(), r = v.getBoundingClientRect(); return [v.videoWidth, v.videoHeight, b.height, r.left <= b.left + 3.5 && r.right >= b.right - 3.5 && r.top <= b.top + 3.5 && r.bottom >= b.bottom - 3.5] })()")
         check(na[0] == 240 and na[2] == voor and na[3], 'D: andere camera-maat -> vak even groot en vol (%s, %s)' % (voor, na))
         check(m.evaluate("() => { const e = [...document.querySelectorAll('#belTegels .tegel')].find(e => e.textContent.includes('Bram')); return e.querySelector('video').__merk === 1 }"), 'D: hetzelfde beeld-element (niet opnieuw gemaakt)')
-        # E
+        # E (17 nov 2026: Lotte blokkeerde Bram persoonlijk: zij hoort en ziet hem niet, de rest wel)
+        DB['blok'] = {LOTTE: [BRAM]}
         open_(lp)
         lp.wait_for_function("document.getElementById('belBalkTekst').textContent.includes('Marcel')", timeout=8000)
         lp.click('#belMee'); lp.wait_for_selector('#belPaneel:not([hidden])')
@@ -313,6 +315,12 @@ try:
         ok = wacht_tot(m, RONDJE + "('Lotte')", 15000) and wacht_tot(m, "[...document.querySelectorAll('#belTegels .tegel')].some(e => e.textContent.includes('Lotte') && !e.classList.contains('wacht'))", 20000)
         check(ok, 'E: Marcel ziet Lottes rondje, verbonden (%s)' % tegels(m))
         check(wacht_tot(lp, ZIE + "('Marcel')", 20000), 'E: Lotte ziet wel het beeld van Marcel')
+        check(wacht_tot(lp, "document.querySelectorAll('audio').length === 2", 15000), 'E: Lotte is met beiden verbonden (geluid)')
+        lp.wait_for_timeout(1500)
+        stil = lp.evaluate("[...document.querySelectorAll('audio')].map(a => a.muted)")
+        check(sorted(stil) == [False, True], 'E: Lotte hoort Bram niet (geblokkeerd), Marcel wel (%s)' % stil)
+        check(lp.evaluate(RONDJE + "('Bram')") and not lp.evaluate("[...document.querySelectorAll('#belTegels .tegel.praat')].some(e => e.textContent.includes('Bram'))"), 'E: bij Lotte: Brams rondje, nooit de gouden rand (%s)' % tegel(lp, 'Bram'))
+        check(m.evaluate(ZIE + "('Bram')"), 'E: Marcel ziet Bram nog gewoon')
         check(sum('leeg' in x['cls'] for x in tegels(m)) == 0 and len(tegels(m)) == 3, 'E: drie schermen, geen vrij plekje meer')
         # F
         bp.click('#belWeg')

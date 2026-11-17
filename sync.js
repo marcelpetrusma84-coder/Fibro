@@ -16,6 +16,7 @@ import { startParen, opOnline, opNieuwePagina, onlineVrienden, vrienden as paren
 import * as SB from './syncbeurt.js?v=1'
 import * as Postbus from './postbus.js?v=1' // v251: kleine profielupdates ook als je niet tegelijk online bent
 import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel } from './crypto.js?v=182'
+import { eigenHandtekening, bewaarVriendHandtekening } from './profielbundel.js?v=1' // 17 nov 2026: profiel via vrienden, stap 3
 
 let huidigeUserId = null
 let onlineGebruikers = new Set()
@@ -851,8 +852,68 @@ async function eigenVideoHash(metaHash) {
 // vingerafdruk van gemaakt kan worden (publiceerProfielVersie).
 async function stuurManifest() {
   const manifest = await maakManifest()
-  dataChannel.send(JSON.stringify({ type: 'manifest', data: manifest }))
+  // 17 nov 2026 (profiel via vrienden, stap 3): een ondertekend lijstje van de onderdelen gaat mee (profielbundel.js).
+  // Lukt dat niet, dan gewoon zonder: het synchroniseren zelf verandert niet.
+  let handtekening = null
+  try { handtekening = await eigenHandtekening({ eigenId: huidigeUserId, privateKey: haalPrivateKeyOp(huidigeUserId), onderdelen: await eigenOnderdelen(), ls: localStorage }) }
+  catch (e) { console.warn('[sync] handtekening maken mislukt', e) }
+  if (!dataChannel || dataChannel.readyState !== 'open') return
+  dataChannel.send(JSON.stringify(handtekening ? { type: 'manifest', data: manifest, handtekening } : { type: 'manifest', data: manifest }))
   zetP2pStatus('manifest gestuurd')
+}
+
+// 17 nov 2026: de eigen profielonderdelen precies zoals een vriend ze bewaart (vriend_<ik>_<naam>), voor de
+// handtekening. Dezelfde bronnen als maakManifest en de stuur...-functies hieronder. Geen video.
+async function eigenOnderdelen() {
+  const uit = {}
+  const zet = (naam, data) => { if (typeof data === 'string' && data) uit[naam] = { data, snel: hashString(data) } }
+  zet('layout', localStorage.getItem('fibro_widgets_profiel_' + huidigeUserId) || '[]')
+  const suffix = '_' + huidigeUserId
+  for (const key of await dbListKeys('pfoto_')) {
+    if (!key.endsWith(suffix) || key.includes('_fit_')) continue
+    const d = (await dbGet(key))?.data
+    if (typeof d === 'string' && d.startsWith('data:image')) zet('foto_' + key.slice(0, -suffix.length), d)
+  }
+  try {
+    const t1 = localStorage.getItem('muziek_track') || (await dbGet('muziek_track'))?.data
+    if (typeof t1 === 'string' && t1.startsWith('data:audio')) zet('muziek_profiel', t1)
+    const idx = (await dbGet('muziek_index_' + huidigeUserId))?.data
+    if (idx) {
+      zet('muziek_index', idx)
+      let lijst = []
+      try { lijst = JSON.parse(idx) || [] } catch (e) {}
+      for (let i = 0; i < lijst.length; i++) zet('muziek_nr' + i, (await dbGet('muziek_nr_' + huidigeUserId + '_' + i))?.data)
+    }
+  } catch (e) {}
+  for (const sl of KLEIN_WIDGETS) {
+    const w = localStorage.getItem(sl + '_' + huidigeUserId)
+    if (w && w.length < kleinMax(sl)) zet(sl, w)
+  }
+  for (const sl of WBG_WIDGETS) {
+    const d = (await dbGet('widgetbg_' + sl + '_' + huidigeUserId))?.data
+    if (typeof d === 'string' && d.startsWith('data:image')) zet('wbg_' + sl, d)
+  }
+  try {
+    const pre = 'eigensticker_' + huidigeUserId + '_'
+    for (const key of await dbListKeys(pre)) {
+      const code = key.slice(pre.length), rec = await dbGet(key)
+      if (STICKER_CODE.test(code) && rec && typeof rec.data === 'string' && STICKER_DATA.test(rec.data)) zet('sticker_' + code, stickerPakket(rec))
+    }
+  } catch (e) {}
+  const vm = (await dbGet('video_meta_' + huidigeUserId))?.data
+  if (typeof vm === 'string') zet('video_meta', vm)
+  return uit
+}
+
+// 17 nov 2026: de publieke sleutel van een vriend (voor het controleren van zijn handtekening), eens per sessie
+const vriendSleutels = new Map()
+async function haalVriendSleutel(id) {
+  if (vriendSleutels.has(id)) return vriendSleutels.get(id)
+  const { data, error } = await supabase.from('profiles').select('public_key').eq('id', id).maybeSingle()
+  if (error) return null
+  const k = data && typeof data.public_key === 'string' ? data.public_key : null
+  vriendSleutels.set(id, k)
+  return k
 }
 
         async function maakManifest() {
@@ -1104,6 +1165,14 @@ async function verwerkP2pBericht(bericht) {
   }
   if (bericht.type === 'manifest') {
     let videoNodig = false
+    // 17 nov 2026 (stap 3): het ondertekende lijstje van de vriend controleren en bewaren, op de achtergrond
+    if (bericht.handtekening && syncPartnerId) {
+      const vriend = syncPartnerId
+      bewaarVriendHandtekening({ eigenId: huidigeUserId, ls: localStorage, haalSleutel: haalVriendSleutel,
+        crypto: { sleutelVingerafdruk, isZelfdeSleutel }, db: { get: dbGet, put: dbPut } }, vriend, bericht.handtekening)
+        .then(r => { if (r !== 'bewaard' && r !== 'oud') console.warn('[sync] handtekening van vriend niet bewaard:', r) })
+        .catch(e => console.warn('[sync] handtekening controleren mislukt', e))
+    }
     try { localStorage.removeItem('fibro_serversticker_' + huidigeUserId + '_' + syncPartnerId) } catch (e) {} // v162: weer rechtstreeks verbonden
     Postbus.wis(postbusDeps(), syncPartnerId, huidigeUserId).catch(() => {}) // v251: rechtstreeks is nieuwer dan de postbus
     // Naam van de vriend lokaal bewaren; laatste verbinding is leidend.

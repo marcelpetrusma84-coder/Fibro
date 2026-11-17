@@ -2,7 +2,7 @@
 #  A. Pesten zonder keuze: de Vrolijke kaarten in je hand, op de aflegstapel en als achterkant op de stapel
 #  B. alle plaatjes laden echt (aas/2/3, boer/vrouw/heer, joker, achterkant): geen 404, op tijd geladen
 #  C. 🎴 toont Vrolijk (aan) naast Stekky, Perkament en Modern; wisselen naar Stekky en terug werkt meteen
-#  D. in het Engels: JACK/QUEEN/KING; geen paginafouten
+#  D. JACK/QUEEN/KING op de hofkaarten, in het Engels en (Marcel) ook in het Nederlands; geen paginafouten
 # python3 -I proef312.py <map> [schermafdruk.png]
 import sys, os, time, socket, subprocess, tempfile, re
 from playwright.sync_api import sync_playwright
@@ -81,6 +81,8 @@ try:
         pg.click('.kt-stijlknop'); pg.click('.kt-stijlkeuze[data-stijl=vrolijk]')
         check(pg.evaluate(alle_vrolijk, '.kt-hand .kt-kaart'), 'C: terug naar Vrolijk')
         # D
+        nl = pg.evaluate("async () => { const m = await import('./kaartspel-hulp.js?v=10'); return ['hB','hV','hH'].map(id => m.kaartSvg(id, 'vrolijk')).join('') }")
+        check('>JACK<' in nl and '>QUEEN<' in nl and '>KING<' in nl and '>BOER<' not in nl, 'D: in het Nederlands ook JACK, QUEEN, KING')
         q = ctx.new_page(); q.on('pageerror', lambda e: fouten.append('en: ' + str(e)[:300]))
         q.goto(BASIS + 'manifest.json')
         q.evaluate("() => { localStorage.setItem('fibro_taal', 'en'); localStorage.setItem('fibro_solo_niveau_pesten', 'makkelijk') }")

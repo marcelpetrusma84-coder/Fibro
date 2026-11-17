@@ -21,7 +21,7 @@ for (const id of alle) {
   else assert.equal(p.length, 1, id + ': een plaatje')
   for (const f of p) { assert.ok(bestaat(f), id + ': ' + f + ' bestaat'); gebruikt.add(f) }
   if (!id.startsWith('J')) {
-    const toon = { H: 'K' }[w] || w   // in het Nederlands op deze kaarten K (van KONING), zoals Marcels ontwerp
+    const toon = { B: 'J', V: 'Q', H: 'K' }[w] || w   // op deze kaarten altijd Engels (Marcel)
     assert.ok(svg.includes('>' + toon + '</text>'), id + ': waarde ' + toon + ' in de hoek')
   }
   verschillend.add(svg)
@@ -33,8 +33,9 @@ for (const id of ['hA', 'kA']) assert.match(K.kaartSvg(id), /fill="#4a1717"/, id
 for (const id of ['rA', 'sA']) assert.doesNotMatch(K.kaartSvg(id), /fill="#4a1717"/, id + ': gezicht zit al in het plaatje')
 // de verkeerde tekens in de tekening zijn vervangen door het goede teken (kleur van de soort)
 assert.match(K.kaartSvg('hB'), /fill="#e8474f"/); assert.match(K.kaartSvg('rV'), /fill="#d0494b"/); assert.match(K.kaartSvg('kH'), /fill="#2f8a52"/)
-// namen onder de hofkaarten, en de achterkant
-assert.match(K.kaartSvg('sB'), />BOER<\/text>/); assert.match(K.kaartSvg('sV'), />VROUW<\/text>/); assert.match(K.kaartSvg('sH'), />KONING<\/text>/)
+// namen onder de hofkaarten: altijd Engels (Marcel), ook als de app in het Nederlands staat; en de achterkant
+assert.match(K.kaartSvg('sB'), />JACK<\/text>/); assert.match(K.kaartSvg('sV'), />QUEEN<\/text>/); assert.match(K.kaartSvg('sH'), />KING<\/text>/)
+assert.doesNotMatch(K.kaartSvg('sB') + K.kaartSvg('sV') + K.kaartSvg('sH'), />(BOER|VROUW|KONING|B|V|H)<\/text>/)
 assert.deepEqual(plaatjesIn(K.achterkantSvg()), ['kaarten/vrolijk/achterkant.webp'])
 assert.ok(bestaat('kaarten/vrolijk/achterkant.webp'))
 // niet te zwaar voor telefoons

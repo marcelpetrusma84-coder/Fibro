@@ -285,7 +285,7 @@ function vrTeken(k, cx, cy, maat, omgekeerd) {
     + '<ellipse cx="' + (k === 'k' ? 44 : 34) + '" cy="' + (k === 'k' ? 20 : k === 'r' ? 36 : 28) + '" rx="10" ry="6" transform="rotate(-35 ' + (k === 'k' ? 44 : 34) + ' 28)" fill="#fff" opacity=".35"/></g>'
 }
 function vrHoek(k, w, groot = false) {
-  const t = isEngels() ? toonWaarde(w) : (w === 'H' ? 'K' : w), maat = groot ? 34 : 30   // op deze kaarten: K van KONING
+  const t = ({ B: 'J', V: 'Q', H: 'K' })[w] || w, maat = groot ? 34 : 30   // op deze kaarten altijd Engels (Marcel): J, Q, K
   return '<text x="' + (groot ? 31 : 27) + '" y="' + (groot ? 48 : 43) + '" font-size="' + (t.length > 1 ? maat - 5 : maat) + '" font-weight="600" ' + VR_LETTER
     + ' fill="' + VROLIJK.tekst + '"' + (t.length > 1 ? ' letter-spacing="-2"' : '') + '>' + t + '</text>'
     + vrTeken(k, groot ? 31 : 27, groot ? 72 : 61, groot ? 25 : 19, false)
@@ -318,7 +318,7 @@ function vrGezicht(cx, cy, b) {
     + '<ellipse cx="' + f(cx) + '" cy="' + f(y1 - .07 * b) + '" rx="' + f(.13 * b) + '" ry="' + f(.055 * b) + '" fill="#e2656a"/>'
     + '<path d="' + tand + '" fill="#fff"/><path d="' + streep + '" stroke="#cfc3bd" stroke-width="' + f(.015 * b) + '"/>'
 }
-const VR_NAAM = { B: ['BOER', 'JACK'], V: ['VROUW', 'QUEEN'], H: ['KONING', 'KING'] }
+const VR_NAAM = { B: 'JACK', V: 'QUEEN', H: 'KING' }   // 17 nov 2026 (Marcel): de Engelse namen, ook in het Nederlands
 function vrolijkKaart(id) {
   const sleutel = id + (isEngels() ? '|en' : '')
   if (vrCache.has(sleutel)) return vrCache.get(sleutel)
@@ -335,8 +335,8 @@ function vrolijkKaart(id) {
     let tekens = ''
     for (const [px, py, m] of VROLIJK.tekens[k + w] || []) tekens += vrTeken(k, x + px * sx, y + py * sy, m * sx, false)
     svg = vrKaart(vrVak(k + w, x, y, bw, bh, 12) + tekens + vrHoek(k, w, true)
-      + '<text x="125" y="' + (y + bh + 40) + '" font-size="' + (isEngels() ? 32 : 30) + '" font-weight="600" letter-spacing="1" ' + VR_LETTER + ' fill="' + VROLIJK.tekst + '">'
-      + VR_NAAM[w][isEngels() ? 1 : 0] + '</text>', false)
+      + '<text x="125" y="' + (y + bh + 40) + '" font-size="32" font-weight="600" letter-spacing="1" ' + VR_LETTER + ' fill="' + VROLIJK.tekst + '">'
+      + VR_NAAM[w] + '</text>', false)
   } else {
     let midden
     if (PITTEN[w] && !VROLIJK.plaatjes.includes(w)) midden = PITTEN[w].map(([px, py]) => vrTeken(k, px, py, 46, py > 175)).join('')

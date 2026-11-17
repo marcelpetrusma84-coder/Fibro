@@ -9,7 +9,8 @@ Zo maak je kaarten/vrolijk/*.webp opnieuw (python3 met opencv en numpy), in deze
 
 Wat er gebeurt:
   - De kaart zelf (witte rand, bruin lijntje, creme vlak), de hoekjes, de tekens van 4 t/m 10 en de namen onder
-    de hofkaarten tekent de app zelf, scherp en in de taal van de speler (vrolijkKaart in kaartspel-hulp.js).
+    de hofkaarten tekent de app zelf, scherp (vrolijkKaart in kaartspel-hulp.js). Op de hofkaarten altijd Engels
+    (JACK, QUEEN, KING en J, Q, K in de hoek), ook als de app in het Nederlands staat (Marcel, 17 nov 2026).
   - Aas, 2 en 3: het figuurtje wordt uitgeknipt, recht gezet en losgemaakt van de achtergrond (vrijstaand.py).
     Het losse teken bovenaan de 2 en 3 gaat weg (anders zie je 3 tekens op een 2). Klaveren 3 houdt hem: dat is
     een figuurtje met een gezicht.

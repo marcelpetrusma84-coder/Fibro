@@ -43,7 +43,7 @@ VRO_PLAATJES = """async () => {
   ids.push('joker', 'achterkant')
   const uit = []
   for (const id of ids) {
-    const r = await fetch('./kaarten/vrolijk/' + id + '.webp?v=2'); const b = await r.blob()
+    const r = await fetch('./kaarten/vrolijk/' + id + '.webp?v=3'); const b = await r.blob()
     const ok = await new Promise(res => { const i = new Image(); i.onload = () => res(i.naturalWidth > 300); i.onerror = () => res(false); i.src = URL.createObjectURL(b) })
     uit.push([id, r.status, ok])
   }

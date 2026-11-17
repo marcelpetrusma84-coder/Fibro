@@ -265,7 +265,7 @@ function modernAchterkant() {
 //   joker, achterkant
 // Vervang je een plaatje, verhoog dan v (de service worker bewaart per ?v=).
 const VROLIJK = {
-  map: './kaarten/vrolijk/', v: 2,
+  map: './kaarten/vrolijk/', v: 3,
   plaatjes: ['A', '2', '3', 'B', 'V', 'H'],
   // v11 (17 nov 2026, Marcel): harten rood, ruiten geel, klaveren groen, schoppen blauw (ook de kleren van de hofkaarten)
   kleur: { h: '#e8474f', r: '#f3b41b', k: '#2f8a52', s: '#2f62c2' },

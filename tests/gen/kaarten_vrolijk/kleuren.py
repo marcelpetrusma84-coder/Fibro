@@ -2,8 +2,9 @@
 # van boer, vrouw en heer. Gezichten, haar, baarden, kronen en zwaarden blijven zoals ze zijn (BESCHERM, in delen
 # van het portret: x0, y0, x1, y1).
 import cv2, numpy as np
+VERLOOP_GEEL = [(0x0c, 0x26, 0x4a), (0x0a, 0x5a, 0x9c), (0x12, 0x9a, 0xdc), (0x2a, 0xc4, 0xf6), (0xa8, 0xec, 0xff)]   # BGR
 DOEL = {'h': 0, 'r': 23, 'k': 72, 's': 108}           # tint (OpenCV, 0-180)
-ROOD = lambda H, S, V: ((H <= 5) | (H >= 163)) & (S > 105) & (V < 225)     # niet huid en bruin haar (tint 6-16)
+ROOD = lambda H, S, V: ((H <= 5) | (H >= 160)) & (S > 60) & (V < 225)     # ook donkerrood; niet huid en bruin haar (tint 6-16)
 GROEN = lambda H, S, V: (H >= 27) & (H <= 115) & (S > 18) & (V < 225)     # olijfgroen en blauwgroen (niet het goud, tint < 27)
 GRIJS = lambda H, S, V: ((S < 16) | ((H >= 95) & (H < 165))) & (V > 30) & (V < 205)     # niet de creme achtergrond
 MANTEL = lambda H, S, V: ((H >= 150) | (H <= 5)) & (S > 30) & (V < 145)   # alleen donker (huid en wangen zijn lichter)     # de donkerrode mantel van de grijze heer
@@ -11,7 +12,8 @@ BRON = {'h': [GROEN], 'k': [ROOD], 'r': [GRIJS, MANTEL], 's': [GRIJS, MANTEL]}
 BESCHERM = {   # hoofd (haar, gezicht, baard), en bij de grijze set de kroon en de scepter; gemeten op het rooster
     'B_kleur': [(.26, .17, .82, .51)],
     'V_kleur': [(.25, .17, .72, .53)],
-    'H_kleur': [(.28, .19, .93, .63), (.08, .25, .28, .95)],
+    'H_kleur': [(.28, .19, .93, .63)],
+    'H_kleur_h': [(.08, .25, .28, .95)],   # alleen bij harten: het zwaard is blauwgrijs (zou rood worden)
     'B_grijs': [(.25, .17, .80, .51)],
     'V_grijs': [(.23, .17, .77, .58), (.33, .02, .70, .20)],
     'H_grijs': [(.22, .17, .95, .66), (.30, .01, .95, .23), (.12, .18, .26, 1.0)],
@@ -34,7 +36,7 @@ def herkleur(img, kl, soort_set=None, figuur=False, alpha=None):
         w = np.maximum(w, ((H >= 27) & (H <= 135) & (V < 225)) * np.clip((S - 5) / 14, 0, 1))
     if not figuur:
         bes = np.zeros(H.shape, np.uint8)
-        for x0, y0, x1, y1 in BESCHERM.get(soort_set, []):   # zachte ovalen (geen rechte randen)
+        for x0, y0, x1, y1 in BESCHERM.get(soort_set, []) + BESCHERM.get(str(soort_set) + '_' + kl, []):   # zachte ovalen (geen rechte randen)
             cv2.ellipse(bes, (int((x0 + x1) / 2 * Ww), int((y0 + y1) / 2 * Hh)), (int((x1 - x0) / 2 * Ww * 1.1), int((y1 - y0) / 2 * Hh * 1.1)), 0, 0, 360, 1, -1)
         w = w * (1 - cv2.GaussianBlur(bes.astype(float), (0, 0), 6))
         if soort_set and soort_set.endswith('grijs'):   # lichtgrijs (zwaard, baard, bont, kroon) blijft
@@ -46,8 +48,12 @@ def herkleur(img, kl, soort_set=None, figuur=False, alpha=None):
         licht = np.clip((V - 95) / 50, 0, 1)
         nH = np.where(licht > .5, DOEL['r'], 16).astype(float)
         nS = np.maximum(S, 185); nV = np.minimum(255, (V * .45 + 140) * licht + V * .8 * (1 - licht))
-    elif kl == 'r':
-        nS = np.where(grijs, 200, np.maximum(S, 190)); nV = np.minimum(255, V * .45 + 140)
+    elif kl == 'r':   # een kleurverloop (donker = diep goudbruin, licht = helder geel): plooien en schaduw blijven
+        t = np.clip((V - 25) / 160, 0, 1) ** .75
+        pal = np.array(VERLOOP_GEEL, float)                     # BGR, van donker naar licht
+        idx = t * (len(pal) - 1); i0 = np.floor(idx).astype(int).clip(0, len(pal) - 2); f = (idx - i0)[..., None]
+        rgb = pal[i0] * (1 - f) + pal[i0 + 1] * f
+        return (img.astype(float) * (1 - w[..., None]) + rgb * w[..., None]).clip(0, 255).astype(np.uint8)
     elif kl == 's':
         nS = np.where(grijs, 150, np.maximum(S, 150)); nV = np.minimum(255, V * .9 + 20)
     elif kl == 'h':

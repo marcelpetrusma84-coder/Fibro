@@ -2,7 +2,7 @@
 # Nagebootste Supabase en nep-Realtime met presence (uit proef282), echte WebRTC met nep-camera en nep-microfoon.
 # Marcel, Bram en Lotte in een webcam-groep.
 #  A. Marcel opent de groep: balk 'Nog niemand in de webcam chat' met Starten; tik -> een scherm met zijn eigen beeld
-#     (gespiegeld), twee vrije plekjes, compact (2 boven, 2 beneden), beeld hoogstens 320 px; de knoppen Microfoon, Luidspreker,
+#     (gespiegeld), twee vrije plekjes, compact (2 boven, 2 beneden), eigen camera op gewone maat, wat de anderen krijgen hoogstens 320 px, schermen blijven staan; de knoppen Microfoon, Luidspreker,
 #     Camera, Hand en Ophangen pas na een tik op zijn eigen scherm
 #  B. Bram doet mee -> Marcel ziet het beeld van Bram (en andersom), verbonden
 #  C. wie praat: het scherm van Bram krijgt bij Marcel de gouden rand (.praat)
@@ -259,7 +259,7 @@ try:
         dekt = m.evaluate("(() => { const v = document.querySelector('.tegel.ik video'), b = v.parentElement.getBoundingClientRect(), r = v.getBoundingClientRect(); return [r.left <= b.left + 3.5, r.top <= b.top + 3.5, r.right >= b.right - 3.5, r.bottom >= b.bottom - 3.5] })()")
         check(all(dekt), 'A: beeld vult het hele vak (%s)' % dekt)
         vw = m.evaluate("(() => { const v = document.querySelector('.tegel.ik video'); return [v.videoWidth, v.videoHeight] })()")
-        check(max(vw) <= 320, 'A: lagere beeldkwaliteit (%s)' % vw)
+        check(max(vw) > 320, 'A: eigen camera op een gewone maat, niet door het toestel verkleind (%s)' % vw)
         check(m.is_hidden('.bel-knoppen'), 'A: knoppen pas na een tik op je eigen scherm')
         m.click('.tegel.ik')
         knoppen = m.inner_text('.bel-knoppen')
@@ -273,10 +273,18 @@ try:
         check(ok1 and ok2, 'B: Marcel ziet Bram en Bram ziet Marcel (%s | %s)' % (tegels(m), tegels(bp)))
         rtc = json.dumps([x[1] for x in rt.get('rtc', [])])
         check(len(rt.get('rtc', [])) >= 3 and not leesbaar(rt.get('rtc', [])), 'B: seintjes versleuteld')
+        # wat de anderen krijgen is wel klein (de verbinding verkleint het)
+        check(wacht_tot(m, "(() => { const e = [...document.querySelectorAll('#belTegels .tegel')].find(e => e.textContent.includes('Bram')); const v = e && e.querySelector('video'); return !!(v && v.videoWidth > 0 && Math.max(v.videoWidth, v.videoHeight) <= 320) })()", 15000),
+              'B: lagere beeldkwaliteit voor de anderen (%s)' % m.evaluate("(() => { const e = [...document.querySelectorAll('#belTegels .tegel')].find(e => e.textContent.includes('Bram')); const v = e.querySelector('video'); return [v.videoWidth, v.videoHeight] })()"))
+        # de schermen blijven staan (niet steeds opnieuw in de pagina gezet): dat liet het beeld op de iPhone verspringen
+        m.evaluate("() => { window.__verzet = 0; new MutationObserver(l => { for (const r of l) for (const n of [...r.addedNodes, ...r.removedNodes]) if (n.querySelector && n.querySelector('video')) window.__verzet++ }).observe(document.getElementById('belTegels'), { childList: true }) }")
         # C
         check(wacht_tot(m, "[...document.querySelectorAll('#belTegels .tegel.praat')].some(e => e.textContent.includes('Bram'))"), 'C: Brams scherm kleurt goud als hij praat')
+        m.wait_for_timeout(400)  # de rand kleurt in 0,15 s goud (overgang); nu de schermen blijven staan, zie je die echt
         rand = m.evaluate("getComputedStyle([...document.querySelectorAll('#belTegels .tegel.praat .vak')][0] || document.body).borderTopColor")
         check(rand == 'rgb(252, 211, 77)', 'C: gouden rand (%s)' % rand)
+        m.wait_for_timeout(1500)
+        check(m.evaluate("window.__verzet") == 0, 'C: schermen blijven op hun plek terwijl er gepraat wordt (%s keer verzet)' % m.evaluate("window.__verzet"))
         if os.environ.get('SHOT'): m.screenshot(path=os.environ['SHOT'] + '/m283.png')
         # D
         m.evaluate("() => { const e = [...document.querySelectorAll('#belTegels .tegel')].find(e => e.textContent.includes('Bram')); e.querySelector('video').__merk = 1 }")

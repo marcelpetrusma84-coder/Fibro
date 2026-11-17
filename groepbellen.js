@@ -1,6 +1,9 @@
 // groepbellen.js (10 nov 2026, groepschat stap 2): voice chat met de groep, tot 8 personen.
 // v3: wie praat meet nu ~85 ms per keer (niet 10 ms), zodat korte geluiden niet gemist worden.
 // v3: lagere beeldkwaliteit (320x240, 15 beelden per seconde, hoogstens 250 kbit/s): de schermen zijn klein.
+// v4 (17 nov 2026): de camera vraagt weer een gewone maat (640x480, zoals de iPhone die zelf heeft). Om 320x240
+//   te maken moest de iPhone het beeld zelf verkleinen en dan versprong het eigen beeld (en kwamen er zwarte randen).
+//   Het verkleinen voor de anderen doet nu de verbinding (scaleResolutionDownBy 2): ze krijgen nog steeds 320x240.
 // v2 (stap 3): ook webcam chat (beeld: true), tot 4 personen. De camera kan uit; dan zien de anderen je rondje.
 //
 // Hoe het werkt: iedereen in het gesprek praat rechtstreeks met iedereen (WebRTC, alleen geluid), via onze eigen
@@ -17,8 +20,11 @@ import { ICE_SERVERS, iceReady } from './ice-config.js?v=149'
 export const MAX_BELLERS = 8
 export const MAX_BEELD = 4
 // v3: de schermen zijn klein, dus een lagere kwaliteit is genoeg (minder data, minder warm toestel)
-const BEELD = { facingMode: 'user', width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { ideal: 15, max: 20 } }
+// v4: de camera zelf op een gewone maat; wat we sturen wordt half zo groot (BEELD_KLEINER) en hoogstens 15 per seconde
+const BEELD = { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 15, max: 20 } }
 const MAX_BEELD_BPS = 250000
+const BEELD_KLEINER = 2
+const BEELD_FPS = 15
 const GELUID = { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
 const naarB64 = b => { let s = ''; for (let i = 0; i < b.length; i += 8192) s += String.fromCharCode.apply(null, b.subarray(i, i + 8192)); return btoa(s) }
 const vanB64 = t => { const bin = atob(t); const o = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) o[i] = bin.charCodeAt(i); return o }
@@ -107,8 +113,9 @@ export function maakGroepGesprek({ ik, groepId, kanaal, sleutel, opStaat, beeld 
       try {
         const p = s.getParameters()
         if (!p.encodings || !p.encodings.length) p.encodings = [{}]
-        if (p.encodings[0].maxBitrate === MAX_BEELD_BPS) continue
-        p.encodings[0].maxBitrate = MAX_BEELD_BPS
+        const e = p.encodings[0]
+        if (e.maxBitrate === MAX_BEELD_BPS && e.scaleResolutionDownBy === BEELD_KLEINER) continue
+        e.maxBitrate = MAX_BEELD_BPS; e.scaleResolutionDownBy = BEELD_KLEINER; e.maxFramerate = BEELD_FPS
         s.setParameters(p).catch(() => {})
       } catch (e) {}
     }

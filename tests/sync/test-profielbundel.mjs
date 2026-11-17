@@ -56,8 +56,8 @@ await test('onthouden vingerafdruk (zoals de chat): andere sleutel = niet bewaar
 })
 await test('sync.js stuurt het lijstje mee en controleert dat van de vriend', async () => {
   const s = readFileSync(new URL('../../sync.js', import.meta.url), 'utf8')
-  assert.match(s, /import \{ eigenHandtekening, bewaarVriendHandtekening \} from '\.\/profielbundel\.js\?v=1'/)
-  assert.match(s, /\{ type: 'manifest', data: manifest, handtekening \}/)
+  assert.match(s, /import \{ eigenHandtekening, bewaarVriendHandtekening \} from '\.\/profielbundel\.js\?v=\d+'/)
+  assert.match(s, /const bericht = \{ type: 'manifest', data: manifest \}\n  if \(handtekening\) bericht\.handtekening = handtekening/)
   assert.match(s, /bewaarVriendHandtekening\(\{ eigenId: huidigeUserId/)
   assert.doesNotMatch(s.slice(s.indexOf('async function eigenOnderdelen'), s.indexOf('const vriendSleutels')), /video_data/, 'geen video')
 })

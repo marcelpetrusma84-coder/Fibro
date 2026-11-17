@@ -1,0 +1,211 @@
+# proef307 (17 nov 2026): profiel via vrienden, stap 4. Anna, Bram, Sanne en Dirk zijn allemaal vrienden van elkaar.
+#  1. Anna en Bram synchroniseren rechtstreeks: Bram heeft Anna's profiel en haar ondertekende lijstje (stap 3).
+#     Anna gaat weg (offline).
+#  A. Sanne komt online terwijl Anna weg is. Ze synchroniseert met Bram en krijgt via Bram Anna's foto (die gaat nooit
+#     via de postbus; indeling en quote kunnen ook via de postbus van Anna komen) en bewaart Anna's lijstje. Alles past
+#     bij Anna's handtekening.
+#  B. Bram doet (als test) alsof hij kwaadwillig is: hij verandert onderweg de foto van Anna. Dirk komt online en
+#     synchroniseert met Bram: de vervalste foto wordt geweigerd en Dirk bewaart het lijstje niet.
+#  C. De server werd gevraagd of de ontvanger een vriend van Anna is (deelt_vriend)
+#  D. geen paginafouten
+# Oude map (zonder stap 4) als controle: A mislukt.
+# python3 -I proef307.py <map>
+import sys, os, time, json, socket, subprocess, re
+from playwright.sync_api import sync_playwright
+import threading
+ANNA = 'aaaaaaaa-0000-4000-8000-000000000001'; BRAM = 'bbbb0001-0000-4000-8000-000000000002'
+SANNE = 'cccc0001-0000-4000-8000-000000000003'; DIRK = 'dddd0001-0000-4000-8000-000000000004'
+NAAM = {ANNA: 'Anna', BRAM: 'Bram', SANNE: 'Sanne', DIRK: 'Dirk'}
+ALLEN = [ANNA, BRAM, SANNE, DIRK]
+def token(uid): return json.dumps({"access_token": "tok-" + uid[:4], "refresh_token": "y", "token_type": "bearer", "expires_in": 3600, "expires_at": int(time.time()) + 3600, "user": {"id": uid}})
+RT = {'sockets': [], 'uit': [], 'lock': threading.Lock()}
+DEELT = []
+def rest(uid, sleutels):
+    vrienden = [x for x in ALLEN if x != uid]
+    def profiel(x): return {"id": x, "username": NAAM[x], "display_name": None, "avatar_url": "\U0001F438", "online_status": True,
+                            "laatst_gezien": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), "public_key": sleutels.get(x), "avatar_data": None}
+    def supa(route):
+        u = route.request.url; m = route.request.method
+        if '/rest/v1/rpc/deelt_vriend' in u:
+            b = json.loads(route.request.post_data or '{}'); DEELT.append((uid, b.get('eigenaar'), b.get('ander')))
+            return route.fulfill(status=200, json=b.get('eigenaar') in ALLEN and b.get('ander') in ALLEN and len({uid, b.get('eigenaar'), b.get('ander')}) == 3)
+        if '/rest/v1/messages' in u: return route.fulfill(status=200, json=[] if m == 'GET' else {})
+        if '/rest/v1/friendships' in u:
+            return route.fulfill(status=200, json=[{"user_id": uid, "friend_id": x, "status": "accepted", "profiles": profiel(x)} for x in vrienden])
+        if '/rest/v1/profiles' in u and m == 'GET':
+            een = 'vnd.pgrst.object' in (route.request.headers.get('accept') or '')
+            gevraagd = [x for x in ALLEN if x in u]
+            rijen = [profiel(x) for x in (gevraagd or [uid])]
+            return route.fulfill(status=200, json=rijen[0] if een else rijen)
+        if '/functions/v1/' in u: return route.fulfill(status=200, json={})
+        if '/auth/v1/user' in u: return route.fulfill(status=200, json={"id": uid, "aud": "authenticated"})
+        return route.fulfill(status=200, json=[])
+    return supa
+def stuur_door(van, topic, event, payload):
+    with RT['lock']:
+        RT['uit'].append((topic, event, payload))
+        for s in list(RT['sockets']):
+            if s['w'] is van or topic not in s['topics']: continue
+            try: s['w'].send(json.dumps([s['topics'][topic], None, topic, 'broadcast', {'type': 'broadcast', 'event': event, 'payload': payload}]))
+            except Exception: pass
+def ws(w):
+    s = {'w': w, 'topics': {}}
+    with RT['lock']: RT['sockets'].append(s)
+    def bericht(m):
+        if isinstance(m, (bytes, bytearray)):
+            b = bytes(m)
+            try:
+                if b[0] != 3: return
+                lj, lr, lt, le, lm, cod = b[1], b[2], b[3], b[4], b[5], b[6]; i = 7 + lj + lr
+                topic = b[i:i + lt].decode(); i += lt; ev_ = b[i:i + le].decode(); i += le + lm
+                stuur_door(w, topic, ev_, json.loads(b[i:].decode() or '{}') if cod == 1 else None)
+            except Exception: pass
+            return
+        try: jr, ref, topic, event, payload = json.loads(m)
+        except Exception: return
+        if event == 'phx_join':
+            s['topics'][topic] = jr
+            s.setdefault('sleutel', {})[topic] = (((payload or {}).get('config') or {}).get('presence') or {}).get('key') or ''
+            pg_ = [dict(f, id=k + 1) for k, f in enumerate(((payload or {}).get('config') or {}).get('postgres_changes') or [])]
+            w.send(json.dumps([jr, ref, topic, 'phx_reply', {'status': 'ok', 'response': {'postgres_changes': pg_}}])); return
+        if event == 'phx_leave': s['topics'].pop(topic, None)
+        if event == 'broadcast': stuur_door(w, topic, (payload or {}).get('event'), (payload or {}).get('payload'))
+        # proef306: aanwezigheid (presence), zodat sync.js ziet dat de ander online is
+        if event == 'presence' and (payload or {}).get('event') == 'track':
+            key = s.get('sleutel', {}).get(topic) or 'x'
+            meta = dict((payload or {}).get('payload') or {}, phx_ref='r%d' % len(RT['uit']))
+            with RT['lock']:
+                RT.setdefault('aanwezig', {}).setdefault(topic, {})[key] = meta
+                for t in list(RT['sockets']):
+                    if topic in t['topics']:
+                        try: t['w'].send(json.dumps([t['topics'][topic], None, topic, 'presence_diff', {'joins': {key: {'metas': [meta]}}, 'leaves': {}}]))
+                        except Exception: pass
+                staat = {k: {'metas': [v]} for k, v in RT['aanwezig'][topic].items()}
+            try: w.send(json.dumps([jr, None, topic, 'presence_state', staat]))
+            except Exception: pass
+        if ref: w.send(json.dumps([jr, ref, topic, 'phx_reply', {'status': 'ok', 'response': {}}]))
+    w.on_message(bericht)
+    w.on_close(lambda *a: RT['sockets'].remove(s) if s in RT['sockets'] else None)
+def http_broadcast(route):
+    try:
+        for m in (json.loads(route.request.post_data or '{}').get('messages') or []):
+            t = m.get('topic') or ''
+            stuur_door(None, t if t.startswith('realtime:') else 'realtime:' + t, m.get('event'), m.get('payload'))
+    except Exception: pass
+    return route.fulfill(status=202, body='')
+
+MAP = os.path.abspath(sys.argv[1])
+s0 = socket.socket(); s0.bind(('127.0.0.1', 0)); poort = s0.getsockname()[1]; s0.close()
+srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(poort), '--bind', '127.0.0.1', '--directory', MAP], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); time.sleep(0.8)
+B = 'http://127.0.0.1:%d/' % poort
+uitslag = []; fouten = []
+def check(n, ok, info=''): uitslag.append(bool(ok)); print(('OK   ' if ok else 'MIS  ') + n + ('  | ' + str(info)[:260] if info != '' else ''), flush=True)
+def wacht(pg, js, ms):
+    try: pg.wait_for_function(js, timeout=ms); return True
+    except Exception: return False
+STAND = """() => { const pcs = window.__pcs || []; const pc = pcs[pcs.length - 1]
+  const a = document.getElementById('remoteAudio'); const at = a && a.srcObject ? a.srcObject.getAudioTracks().filter(t => t.readyState === 'live' && !t.muted) : []
+  const k = document.getElementById('spelMuteBtn')
+  return { verbonden: pc ? pc.connectionState : 'geen', geluidAnder: at.length, mic: k ? k.textContent : null, micZichtbaar: k ? getComputedStyle(k).display !== 'none' : false } }"""
+VOLG_PC = "(() => { const O = window.RTCPeerConnection; window.__pcs = []; window.RTCPeerConnection = function (...a) { const pc = new O(...a); window.__pcs.push(pc); return pc }; window.RTCPeerConnection.prototype = O.prototype })()"
+# na 20 s geeft de foutmelder een melding: opvangen
+FOUTMELDER = "(() => { window.__meldingen = []; Object.defineProperty(window, '__fibroFoutmelder', { configurable: true, get() { return { meld: (...a) => window.__meldingen.push(a.join(' | ')) } }, set() {} }) })()"
+
+POST = []   # de tabel profiel_post op de nep-server
+def postbus_of(gewoon):
+    from urllib.parse import urlparse, parse_qsl
+    def route(r):
+        u = r.request.url
+        if '/rest/v1/profiel_post' not in u: return gewoon(r)
+        q = dict(parse_qsl(urlparse(u).query))
+        f = {k: v[3:] for k, v in q.items() if k in ('afzender', 'ontvanger') and v.startswith('eq.')}
+        past = lambda rij: all(rij[k] == v for k, v in f.items())
+        m = r.request.method
+        if m == 'POST':
+            b = json.loads(r.request.post_data or '[]'); b = b if isinstance(b, list) else [b]
+            for rij in b:
+                for oud in [x for x in POST if x['afzender'] == rij['afzender'] and x['ontvanger'] == rij['ontvanger']]: POST.remove(oud)
+                POST.append(dict(rij, bijgewerkt=time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime())))
+            return r.fulfill(status=201, body='')
+        if m == 'DELETE':
+            for rij in [x for x in POST if past(x)]: POST.remove(rij)
+            return r.fulfill(status=204, body='')
+        return r.fulfill(status=200, json=[dict(x) for x in POST if past(x)])
+    return route
+def toestel(br, uid, sl):
+    ctx = br.new_context(service_workers='block', viewport={'width': 390, 'height': 844})
+    ctx.route('**/*supabase.co/**', postbus_of(rest(uid, sl))); ctx.route_web_socket('**/realtime/v1/websocket**', ws); ctx.route('**/realtime/v1/api/broadcast**', http_broadcast)
+    ctx.route(re.compile(r'^https?://(?!127\.0\.0\.1)(?!.*supabase\.co).*'), lambda r: r.fulfill(status=204, body=''))
+    ctx.add_init_script(FOUTMELDER)
+    pg = ctx.new_page(); naam = NAAM[uid]
+    pg.on('pageerror', lambda e: fouten.append(naam + ': ' + str(e)[:200])); pg.on('dialog', lambda d: d.dismiss())
+    if os.environ.get('LOG'): pg.on('console', lambda c: print(naam, c.text[:170]) if '[sync]' in c.text else None)
+    pg.goto(B + 'manifest.json'); pg.evaluate("t => { localStorage.setItem('sb-qmgatbphiplrfxrljtbe-auth-token', t); localStorage.setItem('fibro_taal', 'nl') }", token(uid))
+    sl[uid] = pg.evaluate("async uid => { const c = await import('./crypto.js?v=95'); const ik = await c.genereerKeypair(); c.slaPrivateKeyOp(uid, ik.privateKeyB64); return ik.publicKeyB64 }", uid)
+    return ctx, pg
+
+ANNA_LS = {
+  'fibro_widgets_profiel_' + ANNA: json.dumps([{'id': 'quote', 'aan': True, 'volgorde': 1, 'w': 4, 'h': 1}, {'id': 'fotos_2x2', 'aan': True, 'volgorde': 2, 'w': 2, 'h': 2}]),
+  'quote_' + ANNA: json.dumps({'tekst': 'Groeten van Anna via Bram', 'grootte': 16}),
+}
+FOTO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+DB = """const db = await new Promise((ok, f) => { const r = indexedDB.open('FibroDB', 2)
+  r.onupgradeneeded = e => { const d = e.target.result; if (!d.objectStoreNames.contains('fotos')) d.createObjectStore('fotos', { keyPath: 'id' }) }
+  r.onsuccess = e => ok(e.target.result); r.onerror = f })
+  const get = id => new Promise(k => { const q = db.transaction('fotos').objectStore('fotos').get(id); q.onsuccess = () => k(q.result || null); q.onerror = () => k(null) })
+  const put = rec => new Promise(k => { const tx = db.transaction('fotos', 'readwrite'); tx.objectStore('fotos').put(rec); tx.oncomplete = k })"""
+ZET_FOTO = "async ([uid, foto]) => { " + DB + "\n  await put({ id: 'pfoto_2x2_0_' + uid, data: foto }) }"
+HEEFT = "async ([anna, naam]) => { " + DB + "\n  return !!(await get('vriend_' + anna + '_' + naam)) }"
+LEES = "async ([anna, sleutel]) => { " + DB + """
+  const h = await import('./profielhandtekening.js?v=2'); const pre = 'vriend_' + anna + '_'
+  const rec = await get(pre + 'handtekening'); const q = await get(pre + 'quote')
+  const uit = { layout: !!(await get(pre + 'layout')), quote: q ? q.data : null, foto: !!(await get(pre + 'foto_pfoto_2x2_0')), lijst: !!rec, via: !!(rec && rec.viaVriend) }
+  if (rec) { const l = JSON.parse(rec.data); uit.klopt = await h.controleerProfiel(l, { eigenaar: anna, publicKeyB64: sleutel })
+    uit.onderdelen = {}; for (const n of ['layout', 'quote', 'foto_pfoto_2x2_0']) { const r = await get(pre + n); uit.onderdelen[n] = !!r && await h.controleerOnderdeel(l, n, r.data) } }
+  return uit }"""
+# Bram als kwaadwillige tussenpersoon: elk dg-chunk van de foto onderweg veranderen (na zijn eigen controle)
+VERVALS = """() => { const zend = RTCDataChannel.prototype.send
+  RTCDataChannel.prototype.send = function (x) {
+    try { const b = JSON.parse(x); if (b.type === 'dg-chunk' && b.naam === 'foto_pfoto_2x2_0' && typeof b.data === 'string') { b.data = b.data.replace('iVBOR', 'iVBOQ'); x = JSON.stringify(b) } } catch (e) {}
+    return zend.call(this, x) } }"""
+def wacht_op(pg, js, arg, s):
+    t0 = time.time()
+    while time.time() - t0 < s:
+        if pg.evaluate(js, arg): return True
+        pg.wait_for_timeout(1000)
+    return False
+try:
+    with sync_playwright() as p:
+        br = p.chromium.launch(args=['--no-proxy-server'])
+        sl = {}
+        ca, a = toestel(br, ANNA, sl); cb, b = toestel(br, BRAM, sl); cs, s = toestel(br, SANNE, sl); cd, d = toestel(br, DIRK, sl)
+        a.evaluate("ls => { for (const [k, v] of Object.entries(ls)) localStorage.setItem(k, v) }", ANNA_LS)
+        a.evaluate(ZET_FOTO, [ANNA, FOTO])
+        # 1. Anna en Bram rechtstreeks
+        a.goto(B + 'vrienden.html'); b.goto(B + 'vrienden.html')
+        ok1 = wacht_op(b, HEEFT, [ANNA, 'handtekening'], 45) and wacht_op(b, HEEFT, [ANNA, 'foto_pfoto_2x2_0'], 20)
+        b.wait_for_timeout(2000)
+        check('1 Bram heeft Anna\'s profiel en lijstje (rechtstreeks)', ok1)
+        ca.close()   # Anna offline
+        # A. Sanne via Bram
+        s.goto(B + 'vrienden.html')
+        wacht_op(s, HEEFT, [ANNA, 'handtekening'], 60)
+        s.wait_for_timeout(1500)
+        u = s.evaluate(LEES, [ANNA, sl[ANNA]])
+        check('A Sanne kreeg Anna\'s foto via Bram (en ook indeling en quote)', u['layout'] and u['foto'] and 'Groeten van Anna via Bram' in (u['quote'] or ''), u)
+        check('A Sanne bewaarde Anna\'s lijstje; handtekening en onderdelen kloppen', u['lijst'] and u['via'] and u.get('klopt') is True and all((u.get('onderdelen') or {'x': False}).values()), u)
+        cs.close()
+        # B. Bram vervalst Anna's foto onderweg; Dirk via Bram
+        b.evaluate(VERVALS)
+        d.goto(B + 'vrienden.html')
+        d.wait_for_timeout(30000)   # tijd voor de sync met Bram (de foto komt niet, dus er is niets om op te wachten)
+        v = d.evaluate(LEES, [ANNA, sl[ANNA]])
+        check('B de vervalste foto is geweigerd (niet bewaard)', not v['foto'], v)
+        check('B Dirk bewaarde het lijstje niet (niet alles klopte)', not v['lijst'], v)
+        check('C de server werd gevraagd of Sanne en Dirk vrienden van Anna zijn', (BRAM, ANNA, SANNE) in DEELT and (BRAM, ANNA, DIRK) in DEELT, DEELT[:6])
+        cb.close(); cd.close(); br.close()
+finally:
+    srv.terminate()
+check('D geen paginafouten', not fouten, fouten[:4])
+print('UITSLAG: %d van %d goed' % (sum(uitslag), len(uitslag)))
+sys.exit(0 if uitslag and all(uitslag) else 1)

@@ -62,6 +62,9 @@ jobs:
       - name: "Profiel via vrienden, stap 3: ondertekend lijstje bij het rechtstreeks synchroniseren"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef306.py .
+      - name: "Profiel via vrienden, stap 4: profiel via een gezamenlijke vriend (en vervalsing geweigerd)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef307.py .
       - name: Pushmeldingen voor spellen (twee spelers)
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef234.py .

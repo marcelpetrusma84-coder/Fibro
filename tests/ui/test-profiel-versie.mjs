@@ -48,7 +48,7 @@ assert.match(pub, /supabase\.from\('profiles'\)\.update\(\{ profiel_versie: v \}
 assert.match(pub, /error\.code === '42703'/, 'zonder de kolom (SQL nog niet uitgevoerd) stopt het netjes')
 assert.equal((sync.match(/\n\s+startProfielVersie\(\)\n/g) || []).length, 2, 'start in beide gevallen waarin dit tabblad de sync krijgt')
 // 17 nov 2026: het ondertekende lijstje (profiel via vrienden) gaat ernaast mee; het overzicht zelf blijft maakManifest()
-assert.match(sync, /async function stuurManifest\(\) \{\n  const manifest = await maakManifest\(\)\n[\s\S]{0,600}?dataChannel\.send\(JSON\.stringify\(handtekening \? \{ type: 'manifest', data: manifest, handtekening \} : \{ type: 'manifest', data: manifest \}\)\)/, 'het overzicht dat verstuurd wordt is hetzelfde')
+assert.match(sync, /async function stuurManifest\(\) \{\n  const manifest = await maakManifest\(\)\n[\s\S]{0,1400}?const bericht = \{ type: 'manifest', data: manifest \}[\s\S]{0,200}?dataChannel\.send\(JSON\.stringify\(bericht\)\)/, 'het overzicht dat verstuurd wordt is hetzelfde')
 const ontvang = knip(sync, "if (bericht.type === 'manifest')", "if (bericht.type === 'geef')")
 assert.match(sync, /const v = belangrijkeVingerafdruk\(manifest\)/) // v249b: in nieuweSyncStand (zie test-profiel-geen-vals-nieuw.mjs)
 assert.match(ontvang, /nieuweSyncStand\(vorig, bericht\.data\)/)

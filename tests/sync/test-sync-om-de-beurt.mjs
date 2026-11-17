@@ -26,7 +26,7 @@ assert.match(antwoord, /SB\.beslisVraag\(/)
 
 // 2. Klaar = alles binnen aan beide kanten; dan door naar de volgende
 assert.match(deel("if (bericht.type === 'klaar') {", 'return\n'), /naKlaar\(\)/)
-assert.match(sync, /verwachtItems\(nodig\) \/\/ v247/)
+assert.match(sync, /verwachtItems\(\[\.\.\.nodig, \.\.\.wachtOpDg\]\) \/\/ v247/) // 17 nov 2026: ook de profielen via een gezamenlijke vriend (stap 4)
 for (const naam of ["itemBinnen('layout')", "itemBinnen('muziek:' + muziekItemId)", "itemBinnen('klein:' + sl)", "itemBinnen('videometa')"]) assert.ok(sync.includes(naam), naam)
 assert.match(sync, /itemBinnen\(itemId\.startsWith\('pfoto_'\) \? 'foto:' \+ itemId : itemId\.startsWith\('sticker_'\) \? 'sticker:' \+ itemId\.slice\(8\)/)
 const volgende = deel('function probeerVolgende() {', '\n}\n')

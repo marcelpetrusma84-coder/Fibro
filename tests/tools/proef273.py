@@ -65,7 +65,8 @@ try:
         check("k.style.display = st.audioBlocked ? 'flex' : 'none'" in html, 'C: knop verschijnt als het geluid geblokkeerd is')
         check('onGeenMicrofoon: (e) => toonMicHulp(e)' in html, 'C: microfoonhulp als de microfoon niet lukt')
         check("'Gesprek: na 20 s nog geen goed geluid'" in html and 'controleerGeluid() // v163' in html, 'C: controle na 20 s')
-        check("bellen.js?v=163'" in html, 'C: nieuwe bellen.js')
+        mv = re.search(r"bellen\.js\?v=(\d+)'", html)
+        check(mv is not None and int(mv.group(1)) >= 163, 'C: nieuwe bellen.js (v163 of later)')
         b.close()
 finally:
     srv.terminate()

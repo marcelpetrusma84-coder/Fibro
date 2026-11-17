@@ -292,6 +292,9 @@ export function meldMediaFout(waar, e) {
   try {
     const f = window.__fibroFoutmelder
     if (!f || !f.meld) return
+    // 17 nov 2026: NotFoundError = dit toestel heeft geen microfoon (of camera), bijvoorbeeld een pc zonder headset.
+    // Dat is geen fout in Stekky en de speler krijgt al een tip in beeld; niet meer in Moderatie > Fouten.
+    if (e && e.name === 'NotFoundError') return
     const tekst = ((e && e.name) || 'Fout') + ': ' + ((e && e.message) || String(e || ''))
     const extra = (window.isSecureContext === false ? ' · GEEN https' : '') + (navigator.mediaDevices ? '' : ' · geen mediaDevices')
     const stuur = st => f.meld('belofte', tekst, 'bellen.js ' + waar + ' · toestemming microfoon: ' + st + extra, e && e.stack)

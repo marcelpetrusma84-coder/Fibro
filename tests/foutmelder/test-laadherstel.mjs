@@ -116,6 +116,20 @@ async function portier (antwoorden) {
   try { uit = await haal({}) } catch (x) { uit = 'fout' }
   return { pogingen, uit }
 }
+await test('v4: lettertype (lettertypen/) laadt niet: niet melden en niet herladen; ander stijlblad wel', async () => {
+  const o = omgeving()
+  for (const naam of ['pacifico', 'lobster', 'basis']) {
+    o.vuur('error', { target: { tagName: 'LINK', rel: 'stylesheet', href: BASIS + 'lettertypen/' + naam + '.css?v=1' } }, true)
+  }
+  o.vuur('error', { target: { tagName: 'LINK', rel: 'stylesheet', href: 'https://marcelpetrusma84-coder.github.io/Fibro/lettertypen/lobster.css' } }, true)
+  await new Promise(r => setImmediate(r))
+  assert.equal(o.verzonden.length, 0, 'lettertypen niet melden')
+  assert.equal(o.herladen, 0, 'lettertypen niet herladen')
+  o.vuur('error', { target: { tagName: 'LINK', rel: 'stylesheet', href: BASIS + 'stijl.css?v=3' } }, true)
+  await new Promise(r => setImmediate(r))
+  assert.equal(o.herladen, 1, 'een gewoon stijlblad wel')
+  assert.equal(o.verzonden[0].p_bericht, 'Laden mislukt: stijl.css')
+})
 await test('portier: goed in een keer, of een 403 gewoon door', async () => {
   let r = await portier([200]); assert.deepEqual(r.pogingen, ['no-cache']); assert.equal(r.uit.status, 200)
   r = await portier([403]); assert.equal(r.pogingen.length, 1)

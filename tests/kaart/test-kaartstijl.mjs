@@ -9,8 +9,8 @@ globalThis.window = { dispatchEvent: e => gezien.push(e) }
 globalThis.CustomEvent = class { constructor(type, o) { this.type = type; this.detail = o?.detail } }
 const K = await import('../../kaartspel-hulp.js')
 
-// 1. Zonder keuze: de gewone getekende kaarten
-assert.equal(K.kaartStijl(), 'stekky')
+// 1. Zonder keuze: sinds 17 nov 2026 de Vrolijke kaarten
+assert.equal(K.kaartStijl(), 'vrolijk')
 assert.match(K.kaartSvg('hA'), /^<svg /); assert.match(K.achterkantSvg(), /^<svg /)
 
 // 2. Perkament kiezen: plaatjes, en een seintje zodat de tafel meteen ververst
@@ -41,7 +41,7 @@ assert.match(K.achterkantSvg('stekky'), /^<svg /)
 
 // 3. Onbekende stijl: niets veranderen
 K.zetKaartStijl('bestaat-niet'); assert.equal(K.kaartStijl(), 'perkament')
-opslag.set('fibro_kaartstijl', 'kapot'); assert.equal(K.kaartStijl(), 'stekky', 'rare waarde = gewone kaarten')
+opslag.set('fibro_kaartstijl', 'kapot'); assert.equal(K.kaartStijl(), 'vrolijk', 'rare waarde = de standaard')
 
 // 4. De knop 🎴 op tafel, en de service worker bewaart de plaatjes
 const hulp = lees('kaartspel-hulp.js')

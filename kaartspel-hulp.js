@@ -12,6 +12,11 @@
 // v9 (17 nov 2026, Marcel): de moderne kaarten voor alle kaartspellen (in 🎴), en een ondergrond kiezen: groen casino
 //     (standaard) of een houten tafel (bewaard op dit toestel: fibro_kaartondergrond). Een spel met een eigen
 //     ondergrond (Koningsjacht: opties.ondergrond) houdt die.
+// v11 (17 nov 2026, Marcel): Vrolijke kaarten in vier kleuren: harten rood, ruiten geel, klaveren groen, schoppen
+//     blauw; de kleren van boer, vrouw en heer in de kleur van hun soort (tests/gen/kaarten_vrolijk/kleuren.py).
+// v10 (17 nov 2026, Marcel): de Vrolijke kaarten (nu de standaard): figuurtjes met gezichtjes op aas, 2 en 3, boer/vrouw/
+//     heer met portret, joker en achterkant uit Marcels plaatjes (tests/gen/kaarten_vrolijk/); de kaart zelf, de hoekjes,
+//     de tekens van 4 t/m 10 en de gezichtjes van klaveren- en hartenaas tekent vrolijkKaart scherp. Zie VROLIJK.
 // v4: scherpe hoekjes over de perkamentkaarten (beter te zien welke kaart het is), zie plaatjeMetHoek.
 // v3: kaartstijl kiezen met de knop 🎴: de gewone Stekky-kaarten of de perkamentkaarten van Marcel (plaatjes in
 //     kaarten/perkament/, met een eigen achterkant en joker). De keuze staat op dit toestel (fibro_kaartstijl).
@@ -63,15 +68,17 @@ export function kaartNaam(id) {
 }
 
 // Kleurtekens getekend in een vak van 100 x 100
-function tekenKleur(k, cx, cy, maat, omgekeerd, kleur) {
-  const f = kleur || kleurVan(k)
-  const t = 'translate(' + (cx - maat / 2) + ' ' + (cy - maat / 2) + ') scale(' + (maat / 100) + ')' + (omgekeerd ? ' rotate(180 50 50)' : '')
+function kleurVorm(k) {
   let vorm
   if (k === 'h') vorm = '<path d="M50 90C22 68 5 51 5 31C5 15 17 5 30 5c10 0 17 6 20 14C53 11 60 5 70 5c13 0 25 10 25 26 0 20-17 37-45 59z"/>'
   else if (k === 'r') vorm = '<path d="M50 2Q68 28 90 50Q68 72 50 98Q32 72 10 50Q32 28 50 2z"/>'
   else if (k === 's') vorm = '<path d="M50 3C36 24 6 39 6 60c0 14 11 24 24 24 8 0 14-4 17-9-1 10-5 17-13 21h32c-8-4-12-11-13-21 3 5 9 9 17 9 13 0 24-10 24-24C94 39 64 24 50 3z"/>'
   else vorm = '<circle cx="50" cy="27" r="20"/><circle cx="27" cy="57" r="20"/><circle cx="73" cy="57" r="20"/><circle cx="50" cy="50" r="12"/><path d="M47 58c-1 18-5 29-13 38h32c-8-9-12-20-13-38z"/>'
-  return '<g transform="' + t + '" fill="' + f + '">' + vorm + '</g>'
+  return vorm
+}
+const kleurPlek = (cx, cy, maat, omgekeerd) => 'translate(' + (cx - maat / 2) + ' ' + (cy - maat / 2) + ') scale(' + (maat / 100) + ')' + (omgekeerd ? ' rotate(180 50 50)' : '')
+function tekenKleur(k, cx, cy, maat, omgekeerd, kleur) {
+  return '<g transform="' + kleurPlek(cx, cy, maat, omgekeerd) + '" fill="' + (kleur || kleurVan(k)) + '">' + kleurVorm(k) + '</g>'
 }
 
 // Waar de tekens staan op de cijferkaarten (x, y; y > 175 = ondersteboven)
@@ -129,7 +136,9 @@ export const KAARTSTIJLEN = {
   stekky: { naam: 'Stekky' },
   perkament: { naam: 'Perkament', map: './kaarten/perkament/', v: 1 },
   modern: { naam: 'Modern' }, // v9: voor alle kaartspellen (eerst alleen de Modern-scene in Koningsjacht)
+  vrolijk: { naam: 'Vrolijk' }, // v10: de standaard (zie VROLIJK)
 }
+const STANDAARD_STIJL = 'vrolijk'
 // v9: de ondergrond van de tafel (behalve als een spel zelf een ondergrond kiest)
 const ONDERGROND_SLEUTEL = 'fibro_kaartondergrond'
 export const ONDERGRONDEN = { casino: { naam: 'Groen casino' }, hout: { naam: 'Houten tafel' } }
@@ -143,7 +152,7 @@ export function zetKaartOndergrond(id) {
 }
 const ondergrondKlasse = id => id === 'hout' ? ' kt-hout' : id === 'casino' ? ' kt-casino' : ''
 export function kaartStijl() {
-  try { const s = localStorage.getItem(STIJL_SLEUTEL); return KAARTSTIJLEN[s] ? s : 'stekky' } catch (e) { return 'stekky' }
+  try { const s = localStorage.getItem(STIJL_SLEUTEL); return KAARTSTIJLEN[s] ? s : STANDAARD_STIJL } catch (e) { return STANDAARD_STIJL }
 }
 function plaatjeUrl(stijl, naam) { const s = KAARTSTIJLEN[stijl]; return s.map + naam + '.webp?v=' + s.v }
 function plaatje(stijl, naam) {
@@ -151,7 +160,15 @@ function plaatje(stijl, naam) {
 }
 const vooruitGeladen = new Set()
 function laadVooruit(stijl) {
-  if (!KAARTSTIJLEN[stijl]?.map || vooruitGeladen.has(stijl) || typeof Image === 'undefined') return
+  if (vooruitGeladen.has(stijl) || typeof Image === 'undefined') return
+  if (stijl === 'vrolijk') {   // v10: alleen de plaatjes die er zijn (4 t/m 10 worden getekend)
+    vooruitGeladen.add(stijl)
+    const namen = ['achterkant', 'joker']
+    for (const k of KAART_KLEUREN) for (const w of VROLIJK.plaatjes) namen.push(k + w)
+    for (const n of namen) { const i = new Image(); i.decoding = 'async'; i.src = vrUrl(n) }
+    return
+  }
+  if (!KAARTSTIJLEN[stijl]?.map) return
   vooruitGeladen.add(stijl)
   const namen = ['achterkant', 'joker']
   for (const k of KAART_KLEUREN) for (const w of KAART_WAARDEN) namen.push(k + w)
@@ -163,7 +180,7 @@ export function zetKaartStijl(stijl) {
   laadVooruit(stijl)
   try { window.dispatchEvent(new CustomEvent('fibro-kaartstijl', { detail: { stijl } })) } catch (e) {}
 }
-laadVooruit(kaartStijl())   // alvast ophalen, zodat vliegende kaarten niet even leeg zijn
+queueMicrotask(() => laadVooruit(kaartStijl()))   // alvast ophalen, zodat vliegende kaarten niet even leeg zijn
 
 const svgCache = new Map()
 const modernCache = new Map()
@@ -237,6 +254,110 @@ function modernAchterkant() {
     + '<path d="M125 123l35 52-35 52-35-52z" fill="#111820" stroke="' + MODERN_LICHT + '" stroke-width="2"/>'
     + '<path d="M125 146l19 29-19 29-19-29z" fill="' + MODERN_GOUD + '"/><circle cx="125" cy="175" r="7" fill="#131921"/></svg>'
 }
+
+// ─────────────── v10: de Vrolijke kaarten ───────────────
+// Getekend: de kaart (witte rand, bruin lijntje, creme vlak), de hoekjes (waarde + teken, in de taal van de speler),
+// de tekens van 4 t/m 10 (met een donker randje en een glimlichtje) en de gezichtjes van de klaveren- en hartenaas.
+// Plaatjes (kaarten/vrolijk/, gemaakt met tests/gen/kaarten_vrolijk/bouw.py):
+//   <kleur>A, 2, 3   de figuurtjes (doorzichtig, even groot als het creme vlak)
+//   <kleur>B, V, H   het portret (boven het naambordje). In de tekening stonden soms tekens van een andere kleur (de
+//                    hartenboer had een klaveren scepter): die zijn weggepoetst; tekens zegt waar het goede teken komt
+//   joker, achterkant
+// Vervang je een plaatje, verhoog dan v (de service worker bewaart per ?v=).
+const VROLIJK = {
+  map: './kaarten/vrolijk/', v: 3,
+  plaatjes: ['A', '2', '3', 'B', 'V', 'H'],
+  // v11 (17 nov 2026, Marcel): harten rood, ruiten geel, klaveren groen, schoppen blauw (ook de kleren van de hofkaarten)
+  kleur: { h: '#e8474f', r: '#f3b41b', k: '#2f8a52', s: '#2f62c2' },
+  rand: { h: '#8e2a2e', r: '#8a5a00', k: '#1d4d31', s: '#16306a' },
+  tekst: '#4a3530', lijn: '#5b4038', creme: '#f8f1e2',
+  portret: [474, 561],
+  // waar in het portret (in pixels: midden x, midden y, maat) het goede teken getekend wordt
+  tekens: {"kH":[[418,338,72]],"hB":[[434,138,85]],"hV":[[443,288,66],[448,536,53]],"rB":[[434,163,86],[251,76,54]],"rV":[[440,262,72],[267,82,59]],"rH":[[85,176,79],[407,334,88]]},
+  // de nieuwe gezichtjes: midden x, midden y en breedte, op de kaart (250 x 350)
+  gezicht: { hA: [127, 164, 80], kA: [128, 166, 66] },
+}
+const vrUrl = naam => VROLIJK.map + naam + '.webp?v=' + VROLIJK.v
+const vrCache = new Map()
+const VR_LETTER = 'font-family="\'DM Sans\',system-ui,-apple-system,Segoe UI,Roboto,sans-serif" text-anchor="middle"'
+function vrTeken(k, cx, cy, maat, omgekeerd) {
+  const vorm = kleurVorm(k)
+  return '<g transform="' + kleurPlek(cx, cy, maat, omgekeerd) + '">'
+    + '<g fill="' + VROLIJK.rand[k] + '" stroke="' + VROLIJK.rand[k] + '" stroke-width="7" stroke-linejoin="round">' + vorm + '</g>'
+    + '<g fill="' + VROLIJK.kleur[k] + '">' + vorm + '</g>'
+    + '<ellipse cx="' + (k === 'k' ? 44 : 34) + '" cy="' + (k === 'k' ? 20 : k === 'r' ? 36 : 28) + '" rx="10" ry="6" transform="rotate(-35 ' + (k === 'k' ? 44 : 34) + ' 28)" fill="#fff" opacity=".35"/></g>'
+}
+function vrHoek(k, w, groot = false) {
+  const t = ({ B: 'J', V: 'Q', H: 'K' })[w] || w, maat = groot ? 34 : 30   // op deze kaarten altijd Engels (Marcel): J, Q, K
+  return '<text x="' + (groot ? 31 : 27) + '" y="' + (groot ? 48 : 43) + '" font-size="' + (t.length > 1 ? maat - 5 : maat) + '" font-weight="600" ' + VR_LETTER
+    + ' fill="' + VROLIJK.tekst + '"' + (t.length > 1 ? ' letter-spacing="-2"' : '') + '>' + t + '</text>'
+    + vrTeken(k, groot ? 31 : 27, groot ? 72 : 61, groot ? 25 : 19, false)
+}
+const vrKaart = (binnen, vlak = true) => '<svg class="kt-svg kt-vrolijk" viewBox="0 0 250 350" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+  + '<rect x="1.5" y="1.5" width="247" height="347" rx="18" fill="#fffefa" stroke="#e2dccf" stroke-width="1.5"/>'
+  + (vlak ? '<rect x="9" y="9" width="232" height="332" rx="12" fill="' + VROLIJK.creme + '" stroke="' + VROLIJK.lijn + '" stroke-width="2"/>' : '')
+  + binnen + '</svg>'
+// een plaatje in een vak met ronde hoeken (zonder clipPath: een witte lijst met een gat erin)
+function vrVak(naam, x, y, w, h, r, lijn = true) {
+  const gat = 'M' + (x + r) + ' ' + y + 'h' + (w - 2 * r) + 'a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + r + 'v' + (h - 2 * r) + 'a' + r + ' ' + r + ' 0 0 1 -' + r + ' ' + r
+    + 'h-' + (w - 2 * r) + 'a' + r + ' ' + r + ' 0 0 1 -' + r + ' -' + r + 'v-' + (h - 2 * r) + 'a' + r + ' ' + r + ' 0 0 1 ' + r + ' -' + r + 'z'
+  return '<image href="' + vrUrl(naam) + '" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" preserveAspectRatio="none"/>'
+    + '<path d="M' + (x - 2) + ' ' + (y - 2) + 'h' + (w + 4) + 'v' + (h + 4) + 'h-' + (w + 4) + 'z' + gat + '" fill="#fffefa" fill-rule="evenodd"/>'
+    + (lijn ? '<path d="' + gat + '" fill="none" stroke="' + VROLIJK.lijn + '" stroke-width="2"/>' : '')
+}
+// een lachend gezichtje (zoals de ruitenaas): dichte oogjes, grote mond met tandjes, blosjes
+function vrGezicht(cx, cy, b) {
+  const f = n => (Math.round(n * 10) / 10)
+  const oog = x => '<path d="M' + f(x - .1 * b) + ' ' + f(cy - .09 * b) + 'Q' + f(x) + ' ' + f(cy - .22 * b) + ' ' + f(x + .1 * b) + ' ' + f(cy - .09 * b) + '" fill="none" stroke="#36211d" stroke-width="' + f(.055 * b) + '" stroke-linecap="round"/>'
+  const y0 = cy + .02 * b, y1 = cy + .34 * b, hw = .32 * b
+  const mond = 'M' + f(cx - hw) + ' ' + f(y0) + 'Q' + f(cx) + ' ' + f(y0 + .06 * b) + ' ' + f(cx + hw) + ' ' + f(y0) + 'Q' + f(cx + .3 * b) + ' ' + f(y1) + ' ' + f(cx) + ' ' + f(y1) + 'Q' + f(cx - .3 * b) + ' ' + f(y1) + ' ' + f(cx - hw) + ' ' + f(y0) + 'z'
+  const tand = 'M' + f(cx - .3 * b) + ' ' + f(y0 + .015 * b) + 'Q' + f(cx) + ' ' + f(y0 + .075 * b) + ' ' + f(cx + .3 * b) + ' ' + f(y0 + .015 * b) + 'L' + f(cx + .27 * b) + ' ' + f(y0 + .14 * b) + 'Q' + f(cx) + ' ' + f(y0 + .19 * b) + ' ' + f(cx - .27 * b) + ' ' + f(y0 + .14 * b) + 'z'
+  let streep = ''
+  for (const d of [-.16, -.055, .055, .16]) streep += 'M' + f(cx + d * b) + ' ' + f(y0 + .03 * b) + 'v' + f(.14 * b)
+  return '<ellipse cx="' + f(cx - .47 * b) + '" cy="' + f(cy + .1 * b) + '" rx="' + f(.1 * b) + '" ry="' + f(.06 * b) + '" fill="#ff6f7a" opacity=".38"/>'
+    + '<ellipse cx="' + f(cx + .47 * b) + '" cy="' + f(cy + .1 * b) + '" rx="' + f(.1 * b) + '" ry="' + f(.06 * b) + '" fill="#ff6f7a" opacity=".38"/>'
+    + oog(cx - .28 * b) + oog(cx + .28 * b)
+    + '<path d="' + mond + '" fill="#4a1717" stroke="#36211d" stroke-width="' + f(.035 * b) + '" stroke-linejoin="round"/>'
+    + '<ellipse cx="' + f(cx) + '" cy="' + f(y1 - .07 * b) + '" rx="' + f(.13 * b) + '" ry="' + f(.055 * b) + '" fill="#e2656a"/>'
+    + '<path d="' + tand + '" fill="#fff"/><path d="' + streep + '" stroke="#cfc3bd" stroke-width="' + f(.015 * b) + '"/>'
+}
+const VR_NAAM = { B: 'JACK', V: 'QUEEN', H: 'KING' }   // 17 nov 2026 (Marcel): de Engelse namen, ook in het Nederlands
+function vrolijkKaart(id) {
+  const sleutel = id + (isEngels() ? '|en' : '')
+  if (vrCache.has(sleutel)) return vrCache.get(sleutel)
+  const { kleur: k, waarde: w } = kaartDelen(id)
+  let svg
+  if (w === 'J') {
+    const hoekTekst = (x, y) => '<text x="' + x + '" y="' + y + '" font-size="17" font-weight="600" ' + VR_LETTER + ' fill="#c0392b">'
+      + ['J', 'O', 'K', 'E', 'R'].map((l, i) => '<tspan x="' + x + '" dy="' + (i ? 18 : 0) + '">' + l + '</tspan>').join('') + '</text>'
+    svg = vrKaart('<image href="' + vrUrl('joker') + '" x="30" y="12" width="190" height="272" preserveAspectRatio="xMidYMid meet"/>'
+      + '<text x="125" y="318" font-size="34" font-weight="600" letter-spacing="1" ' + VR_LETTER + ' fill="' + VROLIJK.tekst + '">JOKER</text>'
+      + hoekTekst(26, 36) + '<g transform="rotate(180 125 175)">' + hoekTekst(26, 36) + '</g>')
+  } else if (VR_NAAM[w]) {
+    const [pw, ph] = VROLIJK.portret, x = 10, y = 10, bw = 230, bh = Math.round(230 * ph / pw), sx = bw / pw, sy = bh / ph
+    let tekens = ''
+    for (const [px, py, m] of VROLIJK.tekens[k + w] || []) tekens += vrTeken(k, x + px * sx, y + py * sy, m * sx, false)
+    svg = vrKaart(vrVak(k + w, x, y, bw, bh, 12) + tekens + vrHoek(k, w, true)
+      + '<text x="125" y="' + (y + bh + 40) + '" font-size="32" font-weight="600" letter-spacing="1" ' + VR_LETTER + ' fill="' + VROLIJK.tekst + '">'
+      + VR_NAAM[w] + '</text>', false)
+  } else {
+    let midden
+    if (PITTEN[w] && !VROLIJK.plaatjes.includes(w)) midden = PITTEN[w].map(([px, py]) => vrTeken(k, px, py, 46, py > 175)).join('')
+    else {
+      midden = '<image href="' + vrUrl(k + w) + '" x="9" y="9" width="232" height="332" preserveAspectRatio="none"/>'
+      const g = VROLIJK.gezicht[k + w]
+      if (g) midden += vrGezicht(g[0], g[1], g[2])
+    }
+    svg = vrKaart(midden + vrHoek(k, w) + '<g transform="rotate(180 125 175)">' + vrHoek(k, w) + '</g>')
+  }
+  vrCache.set(sleutel, svg)
+  return svg
+}
+function vrolijkAchterkant() {
+  return '<svg class="kt-svg kt-vrolijk" viewBox="0 0 250 350" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+    + '<rect x="1.5" y="1.5" width="247" height="347" rx="18" fill="#fffefa" stroke="#e2dccf" stroke-width="1.5"/>'
+    + vrVak('achterkant', 10, 10, 230, 330, 11, false) + '</svg>'
+}
 // v4 (13 nov 2026): op de plaatjes (Perkament) waren de hoekjes klein en wazig, dus in je waaier zag je slecht welke
 // kaart het was. Nu staat er over beide hoeken een scherp, getekend hoekje: de waarde (B/V/H in het Nederlands, net
 // als in de spellen) en het teken, in de kleur van die soort op de perkamentkaarten.
@@ -256,6 +377,7 @@ function plaatjeMetHoek(stijl, id) {
 }
 export function kaartSvg(id, stijl = kaartStijl()) {
   if (stijl === 'modern') return modernKaart(id)
+  if (stijl === 'vrolijk') return vrolijkKaart(id)
   if (KAARTSTIJLEN[stijl]?.map) return /^J[12]$/.test(id) ? plaatje(stijl, 'joker') : plaatjeMetHoek(stijl, id)
   const sleutel = id + (isEngels() ? '|en' : '')
   if (svgCache.has(sleutel)) return svgCache.get(sleutel)
@@ -281,6 +403,8 @@ export const ACHTERKANTEN = {
   stekky: { van: '#8b3fd1', midden: '#6a2bab', naar: '#1a0a2e', lijn: '#c084fc' },
 }
 export function achterkantSvg(stijl) {
+  if (!stijl && kaartStijl() === 'vrolijk') stijl = 'vrolijk'
+  if (stijl === 'vrolijk') return vrolijkAchterkant()
   if (stijl === 'modern' || (!stijl && kaartStijl() === 'modern')) return modernAchterkant()
   if (KAARTSTIJLEN[stijl]?.map) return plaatje(stijl, 'achterkant')   // v5: de achterkant van een plaatjesstijl
   if (!stijl) { const ks = kaartStijl(); if (KAARTSTIJLEN[ks].map) return plaatje(ks, 'achterkant'); stijl = 'stekky' }
@@ -852,7 +976,7 @@ export function maakKaartTafel(container, opties = {}) {
       if (s.verborgen) continue
       const b = document.createElement('button'); b.type = 'button'; b.className = 'kt-stijlkeuze'; b.dataset.stijl = id
       b.setAttribute('aria-pressed', String(id === nu))
-      b.innerHTML = '<span class="kt-stijlvoorbeeld"><div>' + (s.map ? plaatje(id, 'achterkant') : achterkantSvg(id === 'modern' ? 'modern' : 'stekky')) + '</div><div>' + kaartSvg('hH', id) + '</div></span>'
+      b.innerHTML = '<span class="kt-stijlvoorbeeld"><div>' + achterkantSvg(id) + '</div><div>' + kaartSvg('hH', id) + '</div></span>'
         + '<span>' + esc(id === 'stekky' ? s.naam : T(s.naam)) + '</span>'
       b.onclick = () => { kaartGeluid.tik(); zetKaartStijl(id); d.remove() }
       d.querySelector('.kt-stijlrij').appendChild(b)

@@ -2571,6 +2571,7 @@ window.FIBRO_EN = {
   "Tafel": "Table",
   "Groen casino": "Green casino",
   "Houten tafel": "Wooden table",
+  "Vrolijk": "Cheerful",
   "🚫 Bericht van iemand die je hebt geblokkeerd · tik om te tonen": "🚫 Message from someone you blocked · tap to show",
   "Bericht van iemand die je hebt geblokkeerd": "Message from someone you blocked",
   "Alleen jij ziet dit. Je ziet zijn berichten ingeklapt en hoort hem niet.": "Only you see this. Their messages are collapsed and you can't hear them.",

@@ -1,7 +1,7 @@
 # proef308 (17 nov 2026, Marcel): de kaartspellen (Pesten, Toepen, Eenentwintigen) liggen op een groen casinolaken of
 # een houten tafel, en hebben ook de moderne kaarten. Koningsjacht houdt zijn eigen houten tafel.
 #  A. standaard: groen casinolaken
-#  B. 🎴: drie kaartstijlen (Stekky, Perkament, Modern) en twee tafels (Groen casino, Houten tafel)
+#  B. 🎴: vier kaartstijlen (Stekky, Perkament, Modern, Vrolijk) en twee tafels (Groen casino, Houten tafel)
 #  C. Modern: meteen moderne kaarten in je hand, op de stapel en bij de ander
 #  D. Houten tafel: de tafel verandert meteen; na opnieuw laden en in Toepen en Eenentwintigen ook (en modern)
 #  E. Koningsjacht: altijd zijn houten tafel, geen keuze 🎴
@@ -57,7 +57,7 @@ try:
         pg.click('.kt-stijlknop')
         stijlen = pg.evaluate("() => [...document.querySelectorAll('.kt-stijlkeuze[data-stijl]')].map(b => b.dataset.stijl)")
         tafels = pg.evaluate("() => [...document.querySelectorAll('.kt-ondergrondkeuze')].map(b => b.dataset.ondergrond + (b.getAttribute('aria-pressed') === 'true' ? '*' : ''))")
-        check(stijlen == ['stekky', 'perkament', 'modern'], 'B: drie kaartstijlen %s' % stijlen)
+        check(stijlen == ['stekky', 'perkament', 'modern', 'vrolijk'], 'B: vier kaartstijlen %s' % stijlen)
         check(tafels == ['casino*', 'hout'], 'B: twee tafels, casino gekozen %s' % tafels)
         check('Groen casino' in pg.inner_text('.kt-stijlkeus') and 'Houten tafel' in pg.inner_text('.kt-stijlkeus'), 'B: met namen')
         if FOTO_MAP: pg.screenshot(path=os.path.join(FOTO_MAP, 'keuze.png'))

@@ -1,4 +1,5 @@
-// v121 (17 nov 2026): taal-en.js?v=121 (geblokkeerde personen in een groep)
+// v122 (17 nov 2026): taal-en.js?v=122 (geblokkeerde personen in een groep)
+// v121b (17 nov 2026): taal-en.js?v=121 (Vrolijke kaarten)
 // taal.js - Fibro in het Nederlands of in het Engels (v7, 13 oktober 2026, v148)
 // v265 (4 november 2026): taal-en.js?v=72 (wachtwoord resetten)
 // v265b (4 november 2026): taal-en.js?v=72 (quiz)
@@ -137,7 +138,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=121', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=122', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

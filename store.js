@@ -9,6 +9,7 @@
 import { STORE_PAKKETTEN } from './lettertypes.js?v=133'
 import { STORE_VELLEN } from './stickervellen.js?v=237'
 import { legStoreVakkenVast, zetStoreVelActief } from './stickervakken.js?v=1'   // 13 nov 2026: stickers aanzetten bij Stijl
+import { zetStandaardWidgets } from './standaardwidgets.js?v=2'   // 17 nov 2026: games meteen op Home
 
 export const STORE_SOORTEN = [
   // 11 nov 2026: volgorde van de paarse balk in store.html; achtergronden erbij
@@ -25,15 +26,15 @@ export const STORE_SOORTEN = [
 // Profiel > Widgets > Spellen; zet je die widget aan, dan staat het op Home (tegen de computer) en in het spelmenu
 // van de chat (met een vriend). widget = de naam van die widget.
 export const STORE_GAMES = [
-  { id: 'pesten', soort: 'game', titel: 'Pesten', widget: 'spel_pesten', icoon: 'spelicoon/pesten.webp?v=2',
+  { id: 'pesten', soort: 'game', titel: 'Pesten', widget: 'spel_pesten', homeIcoon: '🃏', icoon: 'spelicoon/pesten.webp?v=2',
     uitleg: 'Het kaartspel: leg dezelfde kleur of waarde, pest met een 2 of joker, en roep op tijd "Laatste kaart!". Tegen de computer of met een vriend in de chat.' },
   // 11 nov 2026: twee kaartspellen erbij
-  { id: 'toepen', soort: 'game', titel: 'Toepen', widget: 'spel_toepen', icoon: 'spelicoon/toepen.webp?v=2',
+  { id: 'toepen', soort: 'game', titel: 'Toepen', widget: 'spel_toepen', homeIcoon: '✊', icoon: 'spelicoon/toepen.webp?v=2',
     uitleg: 'Vier kaarten, vier slagen, alleen de laatste slag telt. Klop "Toep!" om de inzet te verhogen, en durf te bluffen. Wie 10 strafpunten heeft, verliest.' },
-  { id: 'eenentwintigen', soort: 'game', titel: 'Eenentwintigen', widget: 'spel_eenentwintigen', icoon: 'spelicoon/eenentwintigen.webp?v=2',
+  { id: 'eenentwintigen', soort: 'game', titel: 'Eenentwintigen', widget: 'spel_eenentwintigen', homeIcoon: '♠️', icoon: 'spelicoon/eenentwintigen.webp?v=2',
     uitleg: 'Pak kaarten tot je zo dicht mogelijk bij 21 zit, maar niet erover. Durf jij nog een kaart? Tegen de computer of met een vriend in de chat.' },
   // 13 nov 2026: Koningsjacht, alleen te spelen (op Home), met de perkamentkaarten op een houten tafel
-  { id: 'koningsjacht', soort: 'game', titel: 'Koningsjacht', widget: 'spel_koningsjacht', icoon: 'spelicoon/koningsjacht.webp?v=2',
+  { id: 'koningsjacht', soort: 'game', titel: 'Koningsjacht', widget: 'spel_koningsjacht', homeIcoon: '👑', icoon: 'spelicoon/koningsjacht.webp?v=2',
     uitleg: 'Versla de twaalf boeren, vrouwen en heren uit het kasteel. Alleen, of in de chat met een vriend: samen, als wedstrijd of als duel. Elke soort kaart heeft een eigen kracht. Gebaseerd op Regicide.' },
 ]
 // Stickers (13 nov 2026): een vel van 12 bewegende stickers met geluid (STORE_VELLEN in stickervellen.js). Na downloaden
@@ -117,6 +118,37 @@ export function zetGameWidgetUit(uid, widget) {
     const p = JSON.parse(localStorage.getItem(sleutelP) || 'null')
     if (p && Array.isArray(p.widgets)) { p.widgets = p.widgets.filter(w => w !== widget); localStorage.setItem(sleutelP, JSON.stringify(p)) }
   } catch (e) {}
+}
+// 17 nov 2026: na downloaden komt een game meteen op Home (in "Jouw profiel"), tenzij daar geen ruimte meer is. Home
+// is 4 vakjes breed; we tellen de vakjes die de widgets nu gebruiken (breed × hoog). Een game is 2 × 1.
+// HOME_MAX_VAKJES = 12 rijen van 4. Past hij niet meer, dan zet je hem zelf aan bij Profiel > Widgets > Spellen.
+// Geeft 'aan' (staat nu op Home), 'al' (stond er al) of 'vol' (geen ruimte meer).
+export const HOME_MAX_VAKJES = 48
+export function vakjesInGebruik(layout) {
+  return (Array.isArray(layout) ? layout : []).filter(w => w && w.aan)
+    .reduce((n, w) => n + Math.max(1, Math.min(4, Number(w.w) || 2)) * Math.max(1, Number(w.h) || 1), 0)
+}
+export function zetGameWidgetAan(uid, game, ls = localStorage) {
+  const def = { id: game.widget, icon: game.homeIcoon || '🎮', titel: game.titel, w: 2, h: 1 }
+  try {
+    const sleutelL = LAYOUT(uid)
+    // Nog nooit een indeling bewaard (nieuw account): eerst de standaard-widgets, zodat die niet wegvallen
+    if (ls.getItem(sleutelL) === null) zetStandaardWidgets(ls, uid)
+    let l = JSON.parse(ls.getItem(sleutelL) || '[]')
+    if (!Array.isArray(l)) l = []
+    if (l.some(w => w && w.id === def.id && w.aan)) return 'al'
+    l = l.filter(w => w && w.id !== def.id)
+    if (vakjesInGebruik(l) + def.w * def.h > HOME_MAX_VAKJES) return 'vol'
+    const volgorde = l.reduce((m, w) => Math.max(m, Number(w.volgorde) || 0), -1) + 1
+    l.push(Object.assign({}, def, { volgorde, aan: true }))
+    ls.setItem(sleutelL, JSON.stringify(l))
+    // Stijl (profiel.html) leest de schakelaars uit fibro_profiel_<id>.widgets als die er is: daar ook bij zetten,
+    // anders zou de volgende keer Opslaan hem weer van Home halen.
+    const sleutelP = 'fibro_profiel_' + uid
+    const p = JSON.parse(ls.getItem(sleutelP) || 'null')
+    if (p && Array.isArray(p.widgets) && !p.widgets.includes(def.id)) { p.widgets.push(def.id); ls.setItem(sleutelP, JSON.stringify(p)) }
+    return 'aan'
+  } catch (e) { return 'vol' }
 }
 // Een game uit de store staat aan als hij gedownload is EN de widget aan staat (op dit toestel)
 export const gameAan = (uid, game) => bewaardeDownloads(uid).has(game.id) && gameWidgetAan(uid, game.widget)

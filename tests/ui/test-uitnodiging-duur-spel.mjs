@@ -31,7 +31,10 @@ assert.equal(soloIds.length, 12, 'twaalf spellen om alleen te spelen (Pesten kom
 const vrIds = [...knip(vrienden, 'const MEE_SPELLEN = [', '\n  ]\n').matchAll(/\['(\w+)', /g)].map(m => m[1])
 const invIds = [...knip(invite, 'const MEE_SPELLEN = {', '\n}\n').matchAll(/(\w+): \['/g)].map(m => m[1])
 assert.deepEqual([...vrIds].sort(), [...soloIds].sort(), 'vrienden.html: dezelfde spellen als solo.js')
-assert.deepEqual([...invIds].sort(), [...soloIds].sort(), 'invite.html: dezelfde spellen als solo.js')
+// 17 nov 2026 (Marcel): een game uit de Store die je gedownload hebt mag nu ook mee (vrienden.html voegt hem dan toe);
+// invite.html kent dus alle spellen om alleen te spelen, ook die uit de Store.
+const alleSoloIds = [...knip(solo, 'SOLO_SPELLEN', '\n}\n').matchAll(/^\s+(\w+):\s+\{ naam:/gm)].map(m => m[1])
+assert.deepEqual([...invIds].sort(), [...alleSoloIds].sort(), 'invite.html: alle spellen uit solo.js, ook die uit de Store')
 for (const id of soloIds) {
   const naam = new RegExp('\\b' + id + ":\\s+\\{ naam: '([^']+)'").exec(solo)[1]
   assert.ok(vrienden.includes("'" + naam + "'") && invite.includes("'" + naam + "'"), 'zelfde naam voor ' + id)

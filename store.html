@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
-<script src="taal.js?v=118"></script>
+<script src="taal.js?v=119"></script>
 <script src="appslot.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Stekky Store</title>
@@ -39,6 +39,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .knop { margin-top:auto; min-height:40px; padding:8px 12px; border-radius:12px; border:none; background:var(--knop); color:#fff; font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
 .knop:disabled { opacity:0.55; cursor:default; }
 .knop.heb { background:transparent; border:0.5px solid var(--accent); color:var(--accent); }
+.deel-knop { display:flex; align-items:center; justify-content:center; min-height:40px; padding:8px 12px; border-radius:12px; background:var(--knop); color:#fff; font-size:14px; font-weight:600; text-decoration:none; text-align:center; }
 .weghalen { align-self:center; min-height:32px; background:none; border:none; color:var(--muted); font:inherit; font-size:12px; text-decoration:underline; cursor:pointer; }
 .binnenkort { text-align:center; padding:48px 20px; color:var(--muted); font-size:14px; line-height:1.5; background:var(--card); border:0.5px dashed var(--border); border-radius:16px; }
 .binnenkort-icoon { color:var(--accent); margin-bottom:10px; }
@@ -90,7 +91,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 <script type="module">
 import { supabase } from './supabase.js?v=95'
 import { laadFont } from './lettertypes.js?v=133'
-import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, verwijderDownload, tabelOntbreekt } from './store.js?v=13'
+import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, verwijderDownload, tabelOntbreekt, zetGameWidgetAan } from './store.js?v=14'
 import { zoekSticker, STORE_VELLEN } from './stickervellen.js?v=237'
 import { speel } from './stickerfx.js?v=236'
 
@@ -162,6 +163,15 @@ function bouwLijst() {
     knop.disabled = heb
     knop.onclick = () => download(it, knop)
     kaart.appendChild(knop)
+    // 17 nov 2026: een gedownloade game delen met een uitnodigingslink: je vriend kan hem meteen alleen spelen
+    // (tegen de computer), ook zonder account. vrienden.html opent het uitnodigingsvenster met dit spel gekozen.
+    if (heb && it.soort === 'game') {
+      const deel = document.createElement('a')
+      deel.className = 'deel-knop'
+      deel.href = 'vrienden.html?uitnodigen=' + encodeURIComponent(it.id)
+      deel.textContent = T('🔗 Delen met uitnodigingslink')
+      kaart.appendChild(deel)
+    }
     if (heb) {
       const weg = document.createElement('button')
       weg.type = 'button'
@@ -190,7 +200,11 @@ async function download(it, knop) {
     return
   }
   mijn.add(it.id)
-  toonMelding(it.soort === 'lettertype' ? T('Gedownload! Kies ze bij Stijl → Lettertype.') : it.soort === 'game' ? T('Gedownload! Zet hem aan bij Profiel → Widgets → Spellen.')
+  // 17 nov 2026: een game komt meteen op Home, tenzij daar geen ruimte meer is (store.js zetGameWidgetAan)
+  const opHome = it.soort === 'game' ? zetGameWidgetAan(mijnId, it) : ''
+  toonMelding(it.soort === 'lettertype' ? T('Gedownload! Kies ze bij Stijl → Lettertype.')
+    : it.soort === 'game' ? (opHome === 'vol' ? T('Gedownload! Er is geen ruimte meer op je beginscherm. Haal iets weg, of zet hem aan bij Profiel → Widgets → Spellen.')
+      : T('Gedownload! {naam} staat nu op je beginscherm.', { naam: it.titel }))
     : it.soort === 'sticker' ? T('Gedownload! Zet ze aan bij Stijl → Stickers, dan staan ze in de chat.') : T('Gedownload!'), true)
   bouwLijst()
 }

@@ -2571,4 +2571,5 @@ window.FIBRO_EN = {
   "Tafel": "Table",
   "Groen casino": "Green casino",
   "Houten tafel": "Wooden table",
+  "Vrolijk": "Cheerful",
 }

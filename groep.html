@@ -458,7 +458,7 @@ button { font-family:inherit; }
   import { speel as speelFx } from './stickerfx.js?v=236'
   import { isCode as isEigenCode, leesFx, zoekEigenSticker, fxCode, stickerPakket } from './eigenstickers.js?v=162'
   import { kanOpnemen, neemOp, maakSpeler, tijdTekst as spraakTijd } from './spraak.js?v=1'
-  import { maakGroepGesprek, MAX_BELLERS, MAX_BEELD } from './groepbellen.js?v=3'
+  import { maakGroepGesprek, MAX_BELLERS, MAX_BEELD } from './groepbellen.js?v=4'
   import { maakGroepMuziek } from './groepmuziek.js?v=1'
   import { maakPiano, speelDeuntje, leesDeuntje, lengteMs } from './groeppiano.js?v=1'
   import { maakGroepBord, tekenLijn, KLEUREN as BORD_KLEUREN, DIKTES as BORD_DIKTES, ACHTERGROND as BORD_ACHTERGROND } from './groepbord.js?v=2'
@@ -1192,7 +1192,7 @@ button { font-family:inherit; }
     const ids = [ik, ...[...st.bellers.keys()].filter(id => id !== ik)]
     for (const [id, t] of tegelVan) if (!ids.includes(id)) { const v = t.querySelector('video'); if (v) v.srcObject = null; t.remove(); tegelVan.delete(id) }
     for (const leeg of tegels.querySelectorAll('.tegel.leeg')) leeg.remove()
-    for (const id of ids) {
+    for (const [i, id] of ids.entries()) {
       const b = st.bellers.get(id) || {}
       const lid = id === ik ? (lidVan(ik) || { id: ik }) : lidVan(id)
       let t = tegelVan.get(id)
@@ -1214,14 +1214,23 @@ button { font-family:inherit; }
       }
       if (id === ik) t.setAttribute('aria-expanded', String(knoppenOpen))
       zetFoto(t.querySelector('.cirkel'), fotoVan.get(id) || null, lid)
-      tegels.appendChild(t) // in de goede volgorde (ik eerst)
+      // in de goede volgorde (ik eerst). 17 nov 2026: alleen verplaatsen als hij niet al op zijn plek staat; een
+      // beeld dat steeds opnieuw in de pagina werd gezet (bij elk 'wie praat'), knipperde en versprong op de iPhone
+      if (tegels.children[i] !== t) tegels.insertBefore(t, tegels.children[i] || null)
       t.className = 'tegel' + (beeld ? ' scherm' : '') + (id === ik ? ' ik' : '') + (st.praat.has(id) ? ' praat' : '') + (id !== ik && !st.verbonden.has(id) ? ' wacht' : '')
       t.querySelector('.tstil').hidden = !b.stil
       t.querySelector('.thand').hidden = !b.hand
       if (beeld) {
         const v = t.querySelector('video'), stroom = id === ik ? st.eigen : st.stromen.get(id)
         const vt = stroom && stroom.getVideoTracks()[0]
-        const zie = !!(b.cam && vt && vt.readyState === 'live' && !vt.muted)
+        let zie = !!(b.cam && vt && vt.readyState === 'live' && !vt.muted)
+        // 17 nov 2026: een beeld dat heel even stokt (de verbinding hapert) niet meteen wisselen voor het rondje;
+        // pas als het langer dan anderhalve seconde stil blijft (camera uit gaat wel meteen)
+        if (zie) { t._stokt = 0; t._zag = vt }
+        else if (b.cam && vt && vt.readyState === 'live' && t._zag === vt && !v.hidden) {
+          if (!t._stokt) { t._stokt = Date.now(); setTimeout(() => { if (gesprek) tekenBel(gesprek.staat()) }, 1600) }
+          if (Date.now() - t._stokt < 1500) zie = true
+        } else t._stokt = 0
         zetBeeld(v, stroom)
         v.hidden = !zie
         t.querySelector('.cirkel').hidden = zie

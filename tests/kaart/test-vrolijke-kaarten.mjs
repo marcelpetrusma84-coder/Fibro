@@ -32,7 +32,10 @@ assert.equal(gebruikt.size, 4 * 6 + 1, 'per kleur A, 2, 3, B, V, H en een joker'
 for (const id of ['hA', 'kA']) assert.match(K.kaartSvg(id), /fill="#4a1717"/, id + ': lachende mond')
 for (const id of ['rA', 'sA']) assert.doesNotMatch(K.kaartSvg(id), /fill="#4a1717"/, id + ': gezicht zit al in het plaatje')
 // de verkeerde tekens in de tekening zijn vervangen door het goede teken (kleur van de soort)
-assert.match(K.kaartSvg('hB'), /fill="#e8474f"/); assert.match(K.kaartSvg('rV'), /fill="#d0494b"/); assert.match(K.kaartSvg('kH'), /fill="#2f8a52"/)
+assert.match(K.kaartSvg('hB'), /fill="#e8474f"/); assert.match(K.kaartSvg('rV'), /fill="#f3b41b"/); assert.match(K.kaartSvg('kH'), /fill="#2f8a52"/)
+// v11: vier kleuren (Marcel): harten rood, ruiten geel, klaveren groen, schoppen blauw
+assert.match(K.kaartSvg('h7'), /fill="#e8474f"/); assert.match(K.kaartSvg('r7'), /fill="#f3b41b"/)
+assert.match(K.kaartSvg('k7'), /fill="#2f8a52"/); assert.match(K.kaartSvg('s7'), /fill="#2f62c2"/)
 // namen onder de hofkaarten: altijd Engels (Marcel), ook als de app in het Nederlands staat; en de achterkant
 assert.match(K.kaartSvg('sB'), />JACK<\/text>/); assert.match(K.kaartSvg('sV'), />QUEEN<\/text>/); assert.match(K.kaartSvg('sH'), />KING<\/text>/)
 assert.doesNotMatch(K.kaartSvg('sB') + K.kaartSvg('sV') + K.kaartSvg('sH'), />(BOER|VROUW|KONING|B|V|H)<\/text>/)

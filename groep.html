@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=120"></script>
+<script src="taal.js?v=121"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -101,6 +101,12 @@ button { font-family:inherit; }
 .reactie { background:#3d2a5c; border:0.5px solid #6b4f96; color:#fff; border-radius:10px; padding:2px 8px; font-size:13px; }
 .reactie.mijn { border-color:var(--accent); }
 .bubbel.weg { font-style:italic; color:var(--muted); background:transparent; border:1px dashed rgba(255,255,255,0.2); }
+/* 17 nov 2026: een bericht van iemand die je persoonlijk blokkeerde: ingeklapt, tik = toch tonen */
+.b-rij.geblokt .b-kol > :not(.blok-dek):not(.b-tijd), .b-rij.geblokt .av { display:none; }
+.b-rij.geblokt { padding-left:0; }
+.blok-dek { font-style:italic; color:var(--muted); background:transparent; border:1px dashed rgba(255,255,255,0.2); cursor:pointer; }
+.b-rij:not(.geblokt) .blok-dek { display:none; }
+.lid-blok { font-size:12px; color:#fca5a5; margin-left:6px; }
 .b-rij.licht .bubbel, .b-rij.licht .b-sticker, .b-rij.licht .b-foto { outline:2px solid var(--accent); outline-offset:2px; }
 #berichtMenu { position:fixed; z-index:60; background:#fff; border-radius:22px; padding:6px 8px; display:flex; flex-direction:column; gap:4px; box-shadow:0 4px 16px rgba(0,0,0,0.45); }
 #berichtMenu .rij { display:flex; gap:4px; }
@@ -458,7 +464,7 @@ button { font-family:inherit; }
   import { speel as speelFx } from './stickerfx.js?v=236'
   import { isCode as isEigenCode, leesFx, zoekEigenSticker, fxCode, stickerPakket } from './eigenstickers.js?v=162'
   import { kanOpnemen, neemOp, maakSpeler, tijdTekst as spraakTijd } from './spraak.js?v=1'
-  import { maakGroepGesprek, MAX_BELLERS, MAX_BEELD } from './groepbellen.js?v=4'
+  import { maakGroepGesprek, MAX_BELLERS, MAX_BEELD } from './groepbellen.js?v=5'
   import { maakGroepMuziek } from './groepmuziek.js?v=1'
   import { maakPiano, speelDeuntje, leesDeuntje, lengteMs } from './groeppiano.js?v=1'
   import { maakGroepBord, tekenLijn, KLEUREN as BORD_KLEUREN, DIKTES as BORD_DIKTES, ACHTERGROND as BORD_ACHTERGROND } from './groepbord.js?v=2'
@@ -477,6 +483,18 @@ button { font-family:inherit; }
 
   let ik = null, mijnPriv = null, mijnPub = null
   let groep = null, leden = [], ledenTijd = 0, lijn = null
+  // 17 nov 2026: wie ik persoonlijk blokkeerde (mijn_geblokkeerden). In een groep blijft hij gewoon lid en merkt hij
+  // niets, maar bij mij zijn zijn berichten ingeklapt, tellen zijn reacties en stemmen niet, hoor en zie ik hem niet
+  // in de voice/webcam chat en staat er 'geblokkeerd' bij Leden.
+  let geblokt = new Set()
+  const isGeblokt = id => !!id && id !== ik && geblokt.has(id)
+  async function haalGeblokt() {
+    try {
+      const { data, error } = await supabase.rpc('mijn_geblokkeerden')
+      if (!error && Array.isArray(data)) geblokt = new Set(data.map(r => r && r.id).filter(Boolean))
+    } catch (e) {}
+    gesprek?.zetGedempt(geblokt)
+  }
   const getoond = new Set()
 
   function toast(tekst) {
@@ -888,14 +906,15 @@ button { font-family:inherit; }
     let tekst = leesbaar ? uit.tekst : ''
     let antwoordOp = null
     if (leesbaar) {
-      let m = RE_REACTIE.exec(tekst)
-      if (m) { zetReactie(m[1], r.sender_id, m[2]); return }
-      m = RE_WEG.exec(tekst)
+      let m = RE_WEG.exec(tekst)
       if (m) { haalWeg(m[1], r.sender_id); return }
+      const blok = isGeblokt(r.sender_id) // zijn reacties, stemmen en antwoorden op afspraken tellen bij mij niet
+      m = RE_REACTIE.exec(tekst)
+      if (m) { if (!blok) zetReactie(m[1], r.sender_id, m[2]); return }
       m = RE_STEM.exec(tekst)
-      if (m) { let k = []; try { k = JSON.parse(m[2]) } catch (e) {} zetStem(m[1], r.sender_id, k); return }
+      if (m) { let k = []; try { k = JSON.parse(m[2]) } catch (e) {} if (!blok) zetStem(m[1], r.sender_id, k); return }
       m = RE_KOMT.exec(tekst)
-      if (m) { zetKomt(m[1], r.sender_id, m[2]); return }
+      if (m) { if (!blok) zetKomt(m[1], r.sender_id, m[2]); return }
       m = RE_ANTW.exec(tekst)
       if (m) { antwoordOp = m[1]; tekst = m[2] }
     }
@@ -923,7 +942,7 @@ button { font-family:inherit; }
       bub.before(c)
     }
     if (leesbaar) {
-      tekstPerId.set(r.id, { naam: mijn ? T('jij') : naamVan(afz), tekst: kortVan(tekst) })
+      tekstPerId.set(r.id, { naam: mijn ? T('jij') : naamVan(afz), tekst: isGeblokt(r.sender_id) ? T('Bericht van iemand die je hebt geblokkeerd') : kortVan(tekst) })
       for (const c of $('berichten').querySelectorAll('.citaat[data-wacht="' + r.id + '"]')) {
         const o = tekstPerId.get(r.id), b = document.createElement('b'); b.textContent = o.naam + ': '
         c.textContent = ''; c.append(b, document.createTextNode(o.tekst)); delete c.dataset.wacht
@@ -936,7 +955,7 @@ button { font-family:inherit; }
           const img = Object.assign(document.createElement('img'), { className: 'b-sticker', src: st.src, alt: st.naam || T('Sticker') })
           img.addEventListener('click', () => speelFx(img, st, true))
           bub.replaceWith(img)
-          if (nieuw) speelFx(img, st, !mijn) // net binnen: bewegen; geluid bij wie hem krijgt (de verstuurder hoorde het al)
+          if (nieuw && !isGeblokt(r.sender_id)) speelFx(img, st, !mijn) // net binnen: bewegen; geluid bij wie hem krijgt (de verstuurder hoorde het al)
         } else bub.textContent = T('\u{1F5BC}\uFE0F Sticker')
       } else if (mm) {
         tekenMedia(bub, mm[1], mm[2], Number(mm[3]), r.sender_id, mijn, nieuw)
@@ -948,7 +967,7 @@ button { font-family:inherit; }
         else if (RE_DEUNTJE.test(tekst) && leesDeuntje(RE_DEUNTJE.exec(tekst)[1])) {
           const dt = leesDeuntje(RE_DEUNTJE.exec(tekst)[1])
           kaarten.set(r.id, { soort: 'deuntje', data: dt, bub }); tekenDeuntjeKaart(r.id)
-          deuntjes = deuntjes.filter(x => x.id !== r.id).concat([{ id: r.id, van: r.sender_id, data: dt }])
+          if (!isGeblokt(r.sender_id)) deuntjes = deuntjes.filter(x => x.id !== r.id).concat([{ id: r.id, van: r.sender_id, data: dt }])
           tekenPianoLijst()
         }
         else bub.textContent = tekst
@@ -960,6 +979,13 @@ button { font-family:inherit; }
         : uit.status === 'vervalst' ? T('⚠️ [bericht klopt niet — onderweg veranderd]') : T('🔒 [versleuteld bericht — kan niet lezen]')
     }
     if (leesbaar) zetLangDrukken(rij)
+    if (isGeblokt(r.sender_id)) {
+      rij.classList.add('geblokt')
+      const dek = document.createElement('button'); dek.type = 'button'; dek.className = 'bubbel blok-dek'
+      dek.textContent = T('\u{1F6AB} Bericht van iemand die je hebt geblokkeerd \u00B7 tik om te tonen')
+      dek.addEventListener('click', e => { e.stopPropagation(); rij.classList.remove('geblokt') })
+      rij.querySelector('.b-kol').prepend(dek)
+    }
     tekenReacties(r.id)
     if (onder) naarOnder()
     if (nieuw && !mijn) markeerGelezen()
@@ -1104,6 +1130,7 @@ button { font-family:inherit; }
     sysBericht(T('🔒 Berichten in deze groep zijn end-to-end versleuteld'))
     if (!mijnPriv) { sysBericht(T('Je sleutel staat niet op dit toestel. Zet hem terug met je herstelcode (Stijl > Instellingen).')); zetInvoer(false) }
     try { await haalLeden(true) } catch (e) { sysBericht(T('Leden laden lukte niet')) }
+    await haalGeblokt()
     haalFotos()
     await laadBerichten()
     lijn?.stop?.()
@@ -1126,7 +1153,7 @@ button { font-family:inherit; }
       .on('broadcast', { event: 'media' }, m => { ontvang(m && m.payload).catch?.(() => {}) })
       .on('broadcast', { event: 'bord' }, m => { bord?.ontvang(m && m.payload).catch?.(e => console.warn('[groep] bord', e)) })
       .on('broadcast', { event: 'muziek' }, m => { muziek?.ontvang(m && m.payload).catch?.(e => console.warn('[groep] muziek', e)) })
-      .on('broadcast', { event: 'typen' }, m => { const v = m && m.payload && m.payload.van; if (v && v !== ik && lidVan(v)) { typers.set(v, Date.now()); werkTypenBij() } }), haalGemist)
+      .on('broadcast', { event: 'typen' }, m => { const v = m && m.payload && m.payload.van; if (v && v !== ik && lidVan(v) && !isGeblokt(v)) { typers.set(v, Date.now()); werkTypenBij() } }), haalGemist)
     markeerGelezen()
     ruimOp(groep.id)
     gesprek = maakGroepGesprek({
@@ -1134,6 +1161,7 @@ button { font-family:inherit; }
       sleutel: () => ({ mijnPriv, mijnPub, pubVan: id => lidVan(id)?.public_key || null }),
       opStaat: tekenBel, beeld: groep.soort === 'webcam',
     })
+    gesprek.zetGedempt(geblokt) // wie ik blokkeerde hoor ik niet
     { const k = lijn?.kanaal?.(); if (k && k.presenceState) gesprek.presence(k.presenceState()) } // wie er al in zit
     tekenBel(gesprek.staat())
     muziek = maakGroepMuziek({
@@ -1249,13 +1277,13 @@ button { font-family:inherit; }
       // in de goede volgorde (ik eerst). 17 nov 2026: alleen verplaatsen als hij niet al op zijn plek staat; een
       // beeld dat steeds opnieuw in de pagina werd gezet (bij elk 'wie praat'), knipperde en versprong op de iPhone
       if (tegels.children[i] !== t) tegels.insertBefore(t, tegels.children[i] || null)
-      t.className = 'tegel' + (beeld ? ' scherm' : '') + (id === ik ? ' ik' : '') + (st.praat.has(id) ? ' praat' : '') + (id !== ik && !st.verbonden.has(id) ? ' wacht' : '')
+      t.className = 'tegel' + (beeld ? ' scherm' : '') + (id === ik ? ' ik' : '') + (st.praat.has(id) && !isGeblokt(id) ? ' praat' : '') + (id !== ik && !st.verbonden.has(id) ? ' wacht' : '')
       t.querySelector('.tstil').hidden = !b.stil
       t.querySelector('.thand').hidden = !b.hand
       if (beeld) {
         const v = t.querySelector('video'), stroom = id === ik ? st.eigen : st.stromen.get(id)
         const vt = stroom && stroom.getVideoTracks()[0]
-        let zie = !!(b.cam && vt && vt.readyState === 'live' && !vt.muted)
+        let zie = !!(b.cam && vt && vt.readyState === 'live' && !vt.muted) && !isGeblokt(id) // geblokkeerd: zijn rondje
         // 17 nov 2026: een beeld dat heel even stokt (de verbinding hapert) niet meteen wisselen voor het rondje;
         // pas als het langer dan anderhalve seconde stil blijft (camera uit gaat wel meteen)
         if (zie) { t._stokt = 0; t._zag = vt }
@@ -1263,6 +1291,7 @@ button { font-family:inherit; }
           if (!t._stokt) { t._stokt = Date.now(); setTimeout(() => { if (gesprek) tekenBel(gesprek.staat()) }, 1600) }
           if (Date.now() - t._stokt < 1500) zie = true
         } else t._stokt = 0
+        if (isGeblokt(id)) { zie = false; t._stokt = 0 }
         zetBeeld(v, stroom)
         v.hidden = !zie
         t.querySelector('.cirkel').hidden = zie
@@ -1839,6 +1868,7 @@ button { font-family:inherit; }
       const naam = r.querySelector('.vriend-naam')
       naam.textContent = naamVan(l) + (l.id === ik ? ' (' + T('jij') + ')' : '')
       if (l.rol === 'beheerder') { const s = document.createElement('span'); s.className = 'lid-rol'; s.textContent = T('beheerder'); r.appendChild(s) }
+      if (isGeblokt(l.id)) { const s = document.createElement('span'); s.className = 'lid-blok'; s.textContent = T('geblokkeerd'); s.title = T('Alleen jij ziet dit. Je ziet zijn berichten ingeklapt en hoort hem niet.'); r.appendChild(s) }
       if (ikBeheerder && l.id !== ik) {
         const b = document.createElement('button'); b.type = 'button'; b.className = 'klein-knop rood'; b.textContent = T('Weghalen')
         b.addEventListener('click', async () => {
@@ -1872,7 +1902,7 @@ button { font-family:inherit; }
       }
     }
   }
-  $('ledenKnop').addEventListener('click', () => { $('ledenPaneel').hidden = false; tekenLedenPaneel() })
+  $('ledenKnop').addEventListener('click', async () => { $('ledenPaneel').hidden = false; await haalGeblokt(); tekenLedenPaneel() })
   $('paneelDicht').addEventListener('click', () => { $('ledenPaneel').hidden = true })
   $('ledenPaneel').addEventListener('click', e => { if (e.target.id === 'ledenPaneel') $('ledenPaneel').hidden = true })
   $('verlaatKnop').addEventListener('click', async () => {

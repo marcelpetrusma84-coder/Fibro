@@ -1,3 +1,4 @@
+// v121 (17 nov 2026): taal-en.js?v=121 (geblokkeerde personen in een groep)
 // taal.js - Fibro in het Nederlands of in het Engels (v7, 13 oktober 2026, v148)
 // v265 (4 november 2026): taal-en.js?v=72 (wachtwoord resetten)
 // v265b (4 november 2026): taal-en.js?v=72 (quiz)
@@ -71,7 +72,7 @@
 // Alleen pagina's met <html data-taal> krijgen lang="en" (die zijn al vertaald).
 // In het Nederlands doet dit bestand verder niets met de pagina: alles blijft precies zoals het was.
 // Een gewoon script (geen module), vroeg geladen: direct na huisregel.js.
-// De Engelse woordenlijst (taal-en.js?v=120) wordt alleen bij Engels geladen.
+// De Engelse woordenlijst (taal-en.js?v=121) wordt alleen bij Engels geladen.
 (function () {
   'use strict'
   if (window.T) return
@@ -136,7 +137,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=120', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=121', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

@@ -9,6 +9,9 @@
 //     tik op de aflegstapel zonder gekozen kaart = de laatste zet van de ander groot; knop ⚙️ met Hulp (kaarten
 //     oplichten, standaard aan), Grote kaarten en Trillen (bewaard op dit toestel: fibro_kaarttafel).
 // v8: optionele selectie-bewuste plaatsing voor Koningsjacht houdt waarde en soort vrij.
+// v9 (17 nov 2026, Marcel): de moderne kaarten voor alle kaartspellen (in 🎴), en een ondergrond kiezen: groen casino
+//     (standaard) of een houten tafel (bewaard op dit toestel: fibro_kaartondergrond). Een spel met een eigen
+//     ondergrond (Koningsjacht: opties.ondergrond) houdt die.
 // v4: scherpe hoekjes over de perkamentkaarten (beter te zien welke kaart het is), zie plaatjeMetHoek.
 // v3: kaartstijl kiezen met de knop 🎴: de gewone Stekky-kaarten of de perkamentkaarten van Marcel (plaatjes in
 //     kaarten/perkament/, met een eigen achterkant en joker). De keuze staat op dit toestel (fibro_kaartstijl).
@@ -125,8 +128,20 @@ const STIJL_SLEUTEL = 'fibro_kaartstijl'
 export const KAARTSTIJLEN = {
   stekky: { naam: 'Stekky' },
   perkament: { naam: 'Perkament', map: './kaarten/perkament/', v: 1 },
-  modern: { naam: 'Modern', verborgen: true }, // de complete Modern-scene in Koningsjacht kiest deze stijl
+  modern: { naam: 'Modern' }, // v9: voor alle kaartspellen (eerst alleen de Modern-scene in Koningsjacht)
 }
+// v9: de ondergrond van de tafel (behalve als een spel zelf een ondergrond kiest)
+const ONDERGROND_SLEUTEL = 'fibro_kaartondergrond'
+export const ONDERGRONDEN = { casino: { naam: 'Groen casino' }, hout: { naam: 'Houten tafel' } }
+export function kaartOndergrond() {
+  try { const s = localStorage.getItem(ONDERGROND_SLEUTEL); return ONDERGRONDEN[s] ? s : 'casino' } catch (e) { return 'casino' }
+}
+export function zetKaartOndergrond(id) {
+  if (!ONDERGRONDEN[id]) return
+  try { localStorage.setItem(ONDERGROND_SLEUTEL, id) } catch (e) {}
+  try { window.dispatchEvent(new CustomEvent('fibro-kaartondergrond', { detail: { ondergrond: id } })) } catch (e) {}
+}
+const ondergrondKlasse = id => id === 'hout' ? ' kt-hout' : id === 'casino' ? ' kt-casino' : ''
 export function kaartStijl() {
   try { const s = localStorage.getItem(STIJL_SLEUTEL); return KAARTSTIJLEN[s] ? s : 'stekky' } catch (e) { return 'stekky' }
 }
@@ -378,7 +393,11 @@ const STIJL = `
 .kt-tafel{position:relative;isolation:isolate;width:100%;height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:stretch;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;overflow:hidden;background:radial-gradient(ellipse at 50% 46%,#3a1a5e 0%,#24103d 45%,#1a0a2e 80%)}
 .kt-tafel *{box-sizing:border-box}
 .kt-tafel.kt-hout{background:radial-gradient(ellipse at 50% 46%,#0000 35%,#0000004d 72%,#000000b3 100%),url(kaarten/hout.webp?v=1) center/cover #4a2c16}
-.kt-hout .kt-status{text-shadow:0 1px 3px #000,0 0 8px #000}
+.kt-hout .kt-status,.kt-casino .kt-status{text-shadow:0 1px 3px #000,0 0 8px #000}
+/* v9: groen casinolaken: vilt met een zacht licht in het midden en een donkere rand */
+.kt-tafel.kt-casino{background:radial-gradient(ellipse at 50% 46%,#ffffff14 0%,#0000 40%,#00000059 78%,#000000b3 100%),repeating-linear-gradient(45deg,#ffffff05 0 2px,#0000 2px 5px),repeating-linear-gradient(-45deg,#00000008 0 2px,#0000 2px 6px),radial-gradient(ellipse at 50% 46%,#22894c 0%,#17693a 55%,#0d4426 100%) #17693a}
+.kt-tafelrij{display:flex;gap:12px;justify-content:center;margin-top:8px}
+.kt-tafelvoorbeeld{display:block;width:78px;height:52px;border-radius:8px;box-shadow:inset 0 0 0 2px #ffffff22,0 2px 6px #0008}
 .kt-svg{display:block;width:100%;height:100%}
 .kt-img{object-fit:fill;pointer-events:none;-webkit-user-drag:none;user-select:none;border-radius:7%}
 .kt-pk{position:relative;pointer-events:none}.kt-pk>.kt-img{display:block;width:100%;height:100%}.kt-pk-hoek{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
@@ -494,7 +513,8 @@ export function maakKaartTafel(container, opties = {}) {
   if (vast) laadVooruit(vast)
   container.innerHTML = ''
   const el = document.createElement('div')
-  el.className = 'kt-tafel' + (o.ondergrond === 'hout' ? ' kt-hout' : '')
+  // v9: de eigen ondergrond van het spel (Koningsjacht), anders wat je zelf koos (groen casino of hout)
+  el.className = 'kt-tafel' + ondergrondKlasse(o.ondergrond || kaartOndergrond())
   el.innerHTML = '<div class="kt-ander"><div class="kt-zetel kt-zetel-ander"><span></span><div class="kt-klok"></div></div>'
     + '<div class="kt-anderinfo"><div class="kt-andernaam"></div><div class="kt-anderaantal"></div></div><div class="kt-anderwaaier"></div><div class="kt-anderknop"></div></div>'
     + '<div class="kt-midden"><div class="kt-info"></div><div class="kt-stapel" role="button" tabindex="0"></div><div class="kt-afleg"></div></div>'
@@ -825,16 +845,26 @@ export function maakKaartTafel(container, opties = {}) {
     el.querySelector('.kt-stijlkeus')?.remove()
     const d = document.createElement('div'); d.className = 'kt-keuze kt-stijlkeus'
     d.innerHTML = '<div class="kt-keuzekaart"><div style="font-weight:800;font-size:17px">' + esc(T('Kies je kaarten')) + '</div><div class="kt-stijlrij"></div>'
+      + (o.ondergrond ? '' : '<div style="font-weight:800;font-size:15px;margin-top:14px">' + esc(T('Tafel')) + '</div><div class="kt-tafelrij"></div>')
       + '<button type="button" class="kt-knop" style="margin-top:12px">' + esc(T('Sluiten')) + '</button></div>'
     const nu = kaartStijl()
     for (const [id, s] of Object.entries(KAARTSTIJLEN)) {
       if (s.verborgen) continue
       const b = document.createElement('button'); b.type = 'button'; b.className = 'kt-stijlkeuze'; b.dataset.stijl = id
       b.setAttribute('aria-pressed', String(id === nu))
-      b.innerHTML = '<span class="kt-stijlvoorbeeld"><div>' + (s.map ? plaatje(id, 'achterkant') : achterkantSvg('stekky')) + '</div><div>' + kaartSvg('hH', id) + '</div></span>'
+      b.innerHTML = '<span class="kt-stijlvoorbeeld"><div>' + (s.map ? plaatje(id, 'achterkant') : achterkantSvg(id === 'modern' ? 'modern' : 'stekky')) + '</div><div>' + kaartSvg('hH', id) + '</div></span>'
         + '<span>' + esc(id === 'stekky' ? s.naam : T(s.naam)) + '</span>'
       b.onclick = () => { kaartGeluid.tik(); zetKaartStijl(id); d.remove() }
       d.querySelector('.kt-stijlrij').appendChild(b)
+    }
+    // v9: de ondergrond (alleen bij spellen zonder eigen ondergrond)
+    const tafelNu = kaartOndergrond()
+    if (!o.ondergrond) for (const [id, g] of Object.entries(ONDERGRONDEN)) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'kt-stijlkeuze kt-ondergrondkeuze'; b.dataset.ondergrond = id
+      b.setAttribute('aria-pressed', String(id === tafelNu))
+      b.innerHTML = '<span class="kt-tafelvoorbeeld kt-tafel' + ondergrondKlasse(id) + '"></span><span>' + esc(T(g.naam)) + '</span>'
+      b.onclick = () => { kaartGeluid.tik(); zetKaartOndergrond(id); d.remove() }
+      d.querySelector('.kt-tafelrij').appendChild(b)
     }
     d.querySelector('.kt-keuzekaart > .kt-knop').onclick = () => d.remove()
     d.addEventListener('click', e => { if (e.target === d) d.remove() })
@@ -853,6 +883,13 @@ export function maakKaartTafel(container, opties = {}) {
     vast = stijl; laadVooruit(stijl); nieuweStijl()
   }
   window.addEventListener('fibro-kaartstijl', nieuweStijl)
+  // v9: een andere ondergrond gekozen (ook in een ander kaartspel): de tafel verandert meteen mee
+  const nieuweOndergrond = () => {
+    if (o.ondergrond) return
+    el.classList.remove('kt-hout', 'kt-casino')
+    const k = ondergrondKlasse(kaartOndergrond()).trim(); if (k) el.classList.add(k)
+  }
+  window.addEventListener('fibro-kaartondergrond', nieuweOndergrond)
 
   // ── Sorteren en reacties ──
   $('.kt-sorteer').onclick = () => {
@@ -1207,6 +1244,7 @@ export function maakKaartTafel(container, opties = {}) {
     clearInterval(wachter); clearInterval(klok?.timer)
     window.removeEventListener('resize', opnieuw)
     window.removeEventListener('fibro-kaartstijl', nieuweStijl)
+    window.removeEventListener('fibro-kaartondergrond', nieuweOndergrond)
     window.removeEventListener('fibro-kaarttafel', nieuweInstellingen)
     for (const r of document.querySelectorAll('.spel-video-vak > .kt-klok')) r.remove()
   }, 1000)

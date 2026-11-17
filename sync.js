@@ -16,7 +16,8 @@ import { startParen, opOnline, opNieuwePagina, onlineVrienden, vrienden as paren
 import * as SB from './syncbeurt.js?v=1'
 import * as Postbus from './postbus.js?v=1' // v251: kleine profielupdates ook als je niet tegelijk online bent
 import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel } from './crypto.js?v=182'
-import { eigenHandtekening, bewaarVriendHandtekening } from './profielbundel.js?v=1' // 17 nov 2026: profiel via vrienden, stap 3
+import { eigenHandtekening, bewaarVriendHandtekening } from './profielbundel.js?v=2' // 17 nov 2026: profiel via vrienden, stap 3
+import * as Doorgeven from './doorgeven.js?v=1' // 17 nov 2026: stap 4, een profiel via een gezamenlijke vriend
 
 let huidigeUserId = null
 let onlineGebruikers = new Set()
@@ -615,8 +616,10 @@ function maakPeerConnection() {
   }
 }
 
+let p2pRij = Promise.resolve() // stap 4: volgorde van manifest en dg-berichten
 function koppelDataChannel(kanaal) {
   dataChannel = kanaal
+  p2pRij = Promise.resolve()
   dataChannel.onopen = async () => {
     console.log('[sync] DataChannel OPEN')
     clearTimeout(syncTimeout) // v247 (wachtende kant)
@@ -639,11 +642,17 @@ function koppelDataChannel(kanaal) {
     try { bericht = JSON.parse(event.data) }
     catch(e) { console.warn('[sync] P2P bericht geweigerd: ongeldige JSON'); return }
     if (!bericht || typeof bericht !== 'object' || typeof bericht.type !== 'string') return
-    if (!['manifest', 'geef', 'chunk', 'item', 'klaar'].includes(bericht.type)) {
+    if (!['manifest', 'geef', 'chunk', 'item', 'klaar', 'dg-lijst', 'dg-geef', 'dg-chunk'].includes(bericht.type)) { // dg-: stap 4 (doorgeven.js)
       console.warn('[sync] P2P bericht geweigerd: onbekend type', bericht.type)
       return
     }
     console.log('[sync] P2P bericht:', bericht.type)
+    // Stap 4: het manifest en de dg-berichten één voor één, zodat een aangeboden profiel pas verwerkt wordt als het
+    // manifest (met wat er aangeboden wordt) klaar is. De rest (gewone chunks) gaat zoals altijd meteen.
+    if (bericht.type === 'manifest' || bericht.type.startsWith('dg-')) {
+      p2pRij = p2pRij.then(() => verwerkP2pBericht(bericht)).catch(e => console.log('[sync] Verwerken afgebroken (verbinding weg):', e && e.message))
+      return
+    }
     verwerkP2pBericht(bericht).catch(e => console.log('[sync] Verwerken afgebroken (verbinding weg):', e && e.message))
   }
   dataChannel.onclose = () => {
@@ -857,9 +866,112 @@ async function stuurManifest() {
   let handtekening = null
   try { handtekening = await eigenHandtekening({ eigenId: huidigeUserId, privateKey: haalPrivateKeyOp(huidigeUserId), onderdelen: await eigenOnderdelen(), ls: localStorage }) }
   catch (e) { console.warn('[sync] handtekening maken mislukt', e) }
-  if (!dataChannel || dataChannel.readyState !== 'open') return
-  dataChannel.send(JSON.stringify(handtekening ? { type: 'manifest', data: manifest, handtekening } : { type: 'manifest', data: manifest }))
+  // Stap 4: profielen van gezamenlijke vrienden die ik deze vriend mag aanbieden (de server bevestigt per vriend)
+  const partner = syncPartnerId
+  let aanbod = []
+  try { aanbod = await Doorgeven.aanbodVoor(doorgeefDepsTussen(), partner) } catch (e) { console.warn('[sync] aanbod maken mislukt', e) }
+  if (!dataChannel || dataChannel.readyState !== 'open' || syncPartnerId !== partner) return
+  mijnAanbod = new Map(aanbod.map(a => [a.eigenaar, a.lijst]))
+  const bericht = { type: 'manifest', data: manifest }
+  if (handtekening) bericht.handtekening = handtekening
+  if (aanbod.length) bericht.doorgeven = aanbod.map(a => a.eigenaar)
+  dataChannel.send(JSON.stringify(bericht))
+  for (const a of aanbod) dataChannel.send(JSON.stringify({ type: 'dg-lijst', eigenaar: a.eigenaar, lijst: a.lijst }))
   zetP2pStatus('manifest gestuurd')
+}
+
+// ── Stap 4 (17 nov 2026): een profiel via een gezamenlijke vriend (doorgeven.js) ──
+let mijnAanbod = new Map()   // wat ik deze vriend aanbood: eigenaar -> ondertekend lijstje
+let dgVerwacht = new Set()   // wat deze vriend mij aanbiedt (uit zijn manifest)
+let dgBezig = new Map()      // eigenaar -> { lijst, wacht: Set(namen), mislukt }
+const dgBuffers = {}
+function doorgeefDepsTussen() {
+  return { eigenId: huidigeUserId, vrienden, nu: Date.now(), db: { get: dbGet, sleutels: dbListKeys },
+    deeltVriend: async (eigenaar, ander) => { const { data, error } = await supabase.rpc('deelt_vriend', { eigenaar, ander }); if (error) throw error; return data === true } }
+}
+function doorgeefDepsOntvanger() {
+  return { eigenId: huidigeUserId, vrienden, ls: localStorage, haalSleutel: haalVriendSleutel, crypto: { sleutelVingerafdruk, isZelfdeSleutel },
+    db: { get: dbGet, put: dbPut }, snel: hashString, relay: isRelayConnection,
+    laatstRechtstreeks: id => { try { const b = JSON.parse(localStorage.getItem('fibro_syncbij_' + huidigeUserId + '_' + id) || 'null'); return Number(b && typeof b === 'object' ? b.t : b) || 0 } catch (e) { return 0 } } }
+}
+async function dgKlaarMet(eigenaar) {
+  const b = dgBezig.get(eigenaar)
+  if (!b || b.wacht.size) return
+  dgBezig.delete(eigenaar)
+  if (!b.mislukt) {
+    await Doorgeven.bewaarLijst(doorgeefDepsOntvanger(), eigenaar, b.lijst)
+    console.log('[sync] Profiel van een gezamenlijke vriend bijgewerkt via', syncPartnerId)
+    try { window.dispatchEvent(new CustomEvent('fibro-sync-bijgewerkt', { detail: { vriendId: eigenaar, tijd: Date.now(), nieuw: true, viaVriend: true } })) } catch (e) {}
+  }
+}
+async function verwerkDoorgeven(bericht) {
+  if (bericht.type === 'dg-lijst') {
+    const id = bericht.eigenaar
+    if (typeof id !== 'string' || !dgVerwacht.has(id)) return
+    dgVerwacht.delete(id)
+    let r = { ok: false }
+    try { r = await Doorgeven.beoordeelLijst(doorgeefDepsOntvanger(), syncPartnerId, id, bericht.lijst) } catch (e) {}
+    if (r.ok && r.nodig.length && dataChannel && dataChannel.readyState === 'open') {
+      dgBezig.set(id, { lijst: bericht.lijst, wacht: new Set(r.nodig), mislukt: false })
+      if (wachtItems) for (const n of r.nodig) wachtItems.add('dg:' + id + ':' + n)
+      dataChannel.send(JSON.stringify({ type: 'dg-geef', eigenaar: id, items: r.nodig }))
+      console.log('[sync] Via deze vriend: ' + r.nodig.length + ' onderdeel/onderdelen van een gezamenlijke vriend')
+    } else if (r.ok) {
+      await Doorgeven.bewaarLijst(doorgeefDepsOntvanger(), id, bericht.lijst) // ik had alles al
+    }
+    itemBinnen('dg:' + id)
+    return
+  }
+  if (bericht.type === 'dg-geef') {
+    laatsteGeef = Date.now()
+    const id = bericht.eigenaar, lijst = mijnAanbod.get(id)
+    if (!lijst || !Array.isArray(bericht.items) || bericht.items.length > 500) return
+    for (const naam of bericht.items) {
+      if (!dataChannel || dataChannel.readyState !== 'open') return
+      if (typeof naam !== 'string' || !Doorgeven.isDoorgeefNaam(naam)) continue
+      if (isRelayConnection && Doorgeven.muziekNaam(naam)) { dataChannel.send(JSON.stringify({ type: 'dg-chunk', eigenaar: id, naam, mis: true })); continue }
+      let inhoud = null
+      try { inhoud = await Doorgeven.inhoudVoor(doorgeefDepsTussen(), syncPartnerId, id, naam, lijst) } catch (e) {}
+      const totaal = inhoud ? Math.ceil(inhoud.length / CHUNK_TEKST) : 0
+      if (!inhoud || totaal > MAX_CHUNKS_PER_ITEM) { dataChannel.send(JSON.stringify({ type: 'dg-chunk', eigenaar: id, naam, mis: true })); continue }
+      for (let i = 0; i < totaal; i++) {
+        while (dataChannel && dataChannel.bufferedAmount > 512 * 1024) await new Promise(r => setTimeout(r, 20))
+        if (!dataChannel || dataChannel.readyState !== 'open') return
+        dataChannel.send(JSON.stringify({ type: 'dg-chunk', eigenaar: id, naam, volgnr: i, totaal, data: inhoud.slice(i * CHUNK_TEKST, (i + 1) * CHUNK_TEKST) }))
+      }
+    }
+    return
+  }
+  if (bericht.type === 'dg-chunk') {
+    const id = bericht.eigenaar, naam = bericht.naam, b = dgBezig.get(id)
+    if (!b || typeof naam !== 'string' || !b.wacht.has(naam)) return
+    const klaarMet = async (gelukt) => {
+      delete dgBuffers[id + '|' + naam]
+      if (!gelukt) b.mislukt = true
+      b.wacht.delete(naam)
+      itemBinnen('dg:' + id + ':' + naam)
+      await dgKlaarMet(id)
+    }
+    if (bericht.mis === true) { await klaarMet(false); return }
+    const { volgnr, totaal, data } = bericht
+    if (!Number.isInteger(totaal) || totaal < 1 || totaal > MAX_CHUNKS_PER_ITEM || !Number.isInteger(volgnr) || volgnr < 0 || volgnr >= totaal
+      || typeof data !== 'string' || data.length > CHUNK_TEKST * 2) return
+    const k = id + '|' + naam
+    let buf = dgBuffers[k]
+    if (!buf) {
+      if (Object.keys(dgBuffers).length >= MAX_CHUNK_BUFFERS) return
+      buf = dgBuffers[k] = { delen: new Array(totaal), ontvangen: 0, totaal }
+    }
+    if (buf.totaal !== totaal || buf.delen[volgnr] !== undefined) return
+    buf.delen[volgnr] = data
+    buf.ontvangen++
+    if (buf.ontvangen % 20 === 0) zetItemKlok(15000) // grote onderdelen: blijven wachten zolang er iets binnenkomt
+    if (buf.ontvangen < buf.totaal) return
+    let ok = false
+    try { ok = await Doorgeven.bewaarOnderdeel(doorgeefDepsOntvanger(), id, naam, buf.delen.join(''), b.lijst) } catch (e) {}
+    if (!ok) console.warn('[sync] Onderdeel via een vriend klopt niet met de handtekening, weggegooid:', naam)
+    await klaarMet(ok)
+  }
 }
 
 // 17 nov 2026: de eigen profielonderdelen precies zoals een vriend ze bewaart (vriend_<ik>_<naam>), voor de
@@ -1156,6 +1268,7 @@ async function postbusRonde() {
 
 async function verwerkP2pBericht(bericht) {
   if (relayCheck) await relayCheck // eerst weten of het via relay gaat (v106)
+  if (bericht.type.startsWith('dg-')) { await verwerkDoorgeven(bericht); return } // stap 4 (17 nov 2026)
   if (bericht.type === 'klaar') {
     anderKlaar = true
     if (syncPartnerId) Postbus.rechtstreeksKlaar(postbusDeps(), syncPartnerId).catch(() => {}) // v251
@@ -1166,6 +1279,8 @@ async function verwerkP2pBericht(bericht) {
   if (bericht.type === 'manifest') {
     let videoNodig = false
     // 17 nov 2026 (stap 3): het ondertekende lijstje van de vriend controleren en bewaren, op de achtergrond
+    dgVerwacht = new Set(Array.isArray(bericht.doorgeven) ? bericht.doorgeven.filter(id => typeof id === 'string'
+      && vrienden.has(id) && id !== syncPartnerId && id !== huidigeUserId).slice(0, Doorgeven.MAX_AANBOD) : [])
     if (bericht.handtekening && syncPartnerId) {
       const vriend = syncPartnerId
       bewaarVriendHandtekening({ eigenId: huidigeUserId, ls: localStorage, haalSleutel: haalVriendSleutel,
@@ -1348,10 +1463,14 @@ async function verwerkP2pBericht(bericht) {
       localStorage.setItem(sl, JSON.stringify({ t: nu, v, oud, nieuw, k, w, nt }))
       window.dispatchEvent(new CustomEvent('fibro-sync-bijgewerkt', { detail: { vriendId: syncPartnerId, tijd: nu, nieuw } }))
     } catch (e) {}
-    if (nodig.length) {
-      dataChannel.send(JSON.stringify({ type: 'geef', items: nodig }))
-      zetP2pStatus('vraag ' + nodig.length + ' item(s)')
-      verwachtItems(nodig) // v247: klaar zodra alles binnen is
+    // Stap 4: ook wachten op de aangeboden profielen van gezamenlijke vrienden (dg-lijst komt direct na het manifest)
+    const wachtOpDg = [...dgVerwacht].map(id => 'dg:' + id)
+    if (nodig.length || wachtOpDg.length) {
+      if (nodig.length) {
+        dataChannel.send(JSON.stringify({ type: 'geef', items: nodig }))
+        zetP2pStatus('vraag ' + nodig.length + ' item(s)')
+      }
+      verwachtItems([...nodig, ...wachtOpDg]) // v247: klaar zodra alles binnen is
     } else {
       zetP2pStatus('alles up-to-date')
       eigenKlaar = true
@@ -1973,6 +2092,8 @@ function stopSync() {
   clearTimeout(itemKlok)
   itemKlok = null
   clearTimeout(oudKlaarTimer)
+  mijnAanbod = new Map(); dgVerwacht = new Set(); dgBezig = new Map() // stap 4
+  for (const k of Object.keys(dgBuffers)) delete dgBuffers[k]
   laatsteGeef = 0
   zetP2pStatus('')
 }

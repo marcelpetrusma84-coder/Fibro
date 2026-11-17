@@ -53,16 +53,12 @@ export async function eigenHandtekening({ eigenId, privateKey, onderdelen, ls, n
 }
 function alsObject(x) { return x && typeof x === 'object' && !Array.isArray(x) ? x : {} }
 
-// Het lijstje van een vriend controleren en bewaren.
-// deps: { eigenId, ls, haalSleutel(vriendId) -> publieke sleutel (SPKI b64) of null,
-//         crypto: { sleutelVingerafdruk, isZelfdeSleutel }, db: { get, put }, nu }
-// Geeft 'bewaard', 'oud', 'sleutel' (geen of andere sleutel), 'vals' (handtekening klopt niet) of 'leeg'.
-export async function bewaarVriendHandtekening(deps, vriendId, lijst) {
+// Klopt het lijstje van deze vriend? (formaat, eigenaar, sleutel met de onthouden vingerafdruk, handtekening)
+// deps: { eigenId, ls, haalSleutel(vriendId) -> publieke sleutel (SPKI b64) of null, crypto: { sleutelVingerafdruk,
+//         isZelfdeSleutel }, nu }. Geeft 'ok', 'sleutel' (geen of andere sleutel), 'vals' of 'leeg'.
+export async function controleerVriendLijst(deps, vriendId, lijst) {
   if (!lijst || typeof lijst !== 'object' || !vriendId) return 'leeg'
   if (String(lijst.eigenaar || '').toLowerCase() !== String(vriendId).toLowerCase()) return 'vals'
-  let vorig = null
-  try { const r = await deps.db.get(VRIEND_SLEUTEL(vriendId)); vorig = r && r.data ? JSON.parse(r.data) : null } catch (e) {}
-  if (vorig && !isNieuwer(lijst, vorig)) return 'oud'
   let sleutel = null
   try { sleutel = await deps.haalSleutel(vriendId) } catch (e) {}
   if (typeof sleutel !== 'string' || sleutel.length <= 10) return 'sleutel'
@@ -73,7 +69,19 @@ export async function bewaarVriendHandtekening(deps, vriendId, lijst) {
     try { ok = deps.crypto.isZelfdeSleutel(onthouden, await deps.crypto.sleutelVingerafdruk(sleutel)) } catch (e) {}
     if (!ok) return 'sleutel'
   }
-  if (!(await controleerProfiel(lijst, { eigenaar: vriendId, publicKeyB64: sleutel, nu: deps.nu || Date.now() }))) return 'vals'
+  return (await controleerProfiel(lijst, { eigenaar: vriendId, publicKeyB64: sleutel, nu: deps.nu || Date.now() })) ? 'ok' : 'vals'
+}
+
+// Het lijstje van een vriend controleren en bewaren (rechtstreeks van die vriend, stap 3). deps zoals hierboven, plus
+// db: { get, put }. Geeft 'bewaard', 'oud', 'sleutel', 'vals' of 'leeg'.
+export async function bewaarVriendHandtekening(deps, vriendId, lijst) {
+  if (!lijst || typeof lijst !== 'object' || !vriendId) return 'leeg'
+  if (String(lijst.eigenaar || '').toLowerCase() !== String(vriendId).toLowerCase()) return 'vals'
+  let vorig = null
+  try { const r = await deps.db.get(VRIEND_SLEUTEL(vriendId)); vorig = r && r.data ? JSON.parse(r.data) : null } catch (e) {}
+  if (vorig && !isNieuwer(lijst, vorig)) return 'oud'
+  const r = await controleerVriendLijst(deps, vriendId, lijst)
+  if (r !== 'ok') return r
   await deps.db.put({ id: VRIEND_SLEUTEL(vriendId), data: JSON.stringify(lijst), ontvangen: Date.now() })
   return 'bewaard'
 }

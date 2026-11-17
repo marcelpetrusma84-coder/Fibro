@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
-<script src="taal.js?v=118"></script>
+<script src="taal.js?v=119"></script>
 <script src="apk.js?v=3"></script>
 <script src="registratie.js?v=3"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Wie jou uitnodigde, heeft deze week al 5 nieuwe mensen op Stekky gebracht. Dat is het maximum. Probeer het over een paar dagen opnieuw.': 'The person who invited you has already brought 5 new people to Stekky this week. That is the maximum. Please try again in a few days.' }) // v255</script>
@@ -300,11 +300,14 @@ function bepaalNiveau(jaar) {
   return 'adults'
 }
 
-// v250: een meegestuurd spel (invite.html?token=...&spel=...). Alleen een van deze 12 (dezelfde als in solo.js).
+// v250: een meegestuurd spel (invite.html?token=...&spel=...). Alleen een van deze (dezelfde namen als in solo.js).
 const MEE_SPELLEN = {
   botkaaseiren: ['⭕', 'Tic-Tac-Toe'], vieroprij: ['🔴', 'Four in a Row'], schaken: ['♟️', 'Chess'], dammen: ['⚫', 'Draughts'],
   pong: ['🏓', 'Neo Paddle'], pacman: ['👻', 'Ghost Tag'], breakout: ['🟪', 'Block It'], swarm: ['🪲', 'The Swarm'],
   pinball: ['🐍', 'Twin Snakes'], endlessrunner: ['🏃', 'Runner & Gunner'], flappybird: ['🦇', 'Flapper'], shmup: ['🚀', 'Neon Raiders'],
+  // 17 nov 2026: games uit de Stekky Store die de uitnodiger gedownload heeft (vrienden.html). Hier alleen het gedeelte
+  // tegen de computer (spel.html), ook zonder account; met een vriend spelen kan pas in de chat.
+  pesten: ['🃏', 'Pesten'], toepen: ['✊', 'Toepen'], eenentwintigen: ['♠️', 'Eenentwintigen'], koningsjacht: ['👑', 'Koningsjacht'],
 }
 function toonSpelUitdaging(naam) {
   const id = urlParams.get('spel') || ''

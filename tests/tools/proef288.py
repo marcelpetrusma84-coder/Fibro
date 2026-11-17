@@ -130,12 +130,15 @@ try:
         check(i1 and 'Pesten' in pg.inner_text('#lijst') and 'Laatste kaart' in pg.inner_text('#lijst'), 'I: Games: Pesten met plaatje en uitleg (%r)' % pg.inner_text('#lijst')[:80])
         pg.click('#lijst .item[data-id="pesten"] .knop')
         i2 = wacht(pg, "() => { const k = document.querySelector('#lijst .item[data-id=\"pesten\"] .knop'); return k && k.textContent === '✓ Gedownload' }")
-        check(i2 and 'pesten' in STAND['rijen'] and 'Widgets' in pg.inner_text('#melding'), 'I: Downloaden = rij in je account en melding: zet hem aan bij Widgets (%s)' % STAND['rijen'])
+        # 17 nov 2026: na downloaden staat de game meteen op Home (store.js zetGameWidgetAan), met een knop om hem te delen
+        opHome = pg.evaluate("() => JSON.parse(localStorage.getItem('fibro_widgets_profiel_aaaaaaaa-0000-4000-8000-000000000001') || '[]').filter(w => w.aan).map(w => w.id)")
+        check(i2 and 'pesten' in STAND['rijen'] and 'beginscherm' in pg.inner_text('#melding') and 'spel_pesten' in opHome,
+              'I: Downloaden = rij in je account, meteen op Home en melding (%s, %s)' % (STAND['rijen'], opHome))
+        check(pg.get_attribute('#lijst .item[data-id="pesten"] .deel-knop', 'href') == 'vrienden.html?uitnodigen=pesten', 'I: knop Delen met uitnodigingslink')
         pg.goto(BASIS + 'profiel.html')
         i3 = wacht(pg, "() => { const r = document.getElementById('widgetRij-spel_pesten'); return r && getComputedStyle(r).display !== 'none' }", 8000)
         check(i3, 'I: na downloaden: Pesten bij Profiel > Widgets > Spellen')
-        pg.evaluate("toggleWidget('spel_pesten')")
-        check(pg.evaluate("document.getElementById('widget-spel_pesten').classList.contains('on')"), 'I: de widget gaat aan')
+        check(wacht(pg, "() => document.getElementById('widget-spel_pesten').classList.contains('on')", 4000), 'I: de widget staat al aan (zonder zelf aanzetten)')
         # 🗑 bij de widget: verwijderen (de widget staat aan en staat al op Home)
         pg.evaluate("""() => { const uid = 'aaaaaaaa-0000-4000-8000-000000000001'
             localStorage.setItem('fibro_widgets_profiel_' + uid, JSON.stringify([{ id: 'mood', aan: true, volgorde: 0 }, { id: 'spel_pesten', aan: true, volgorde: 1 }])) }""")

@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=118"></script>
+<script src="taal.js?v=119"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -700,6 +700,7 @@ startMeldingen()
 <script type="module">
   import { supabase } from './supabase.js?v=95'
   import { haalPrivateKeyOp, eigenPubliekeSleutel, sleutelVingerafdruk } from './crypto.js?v=182'
+  import { STORE_GAMES, bewaardeDownloads } from './store.js?v=14' // 17 nov 2026: gedownloade games meesturen
 
   // v250: zelf kiezen hoe lang de link geldig is (1 uur, 1 dag, 3 dagen of 7 dagen; standaard 3 dagen)
   const DUREN = [3600, 86400, 259200, 604800]
@@ -854,6 +855,27 @@ startMeldingen()
     for (const [id, icoon, naam] of MEE_SPELLEN) { const o = document.createElement('option'); o.value = id; o.textContent = icoon + ' ' + naam; kies.appendChild(o) }
     kies.addEventListener('change', verbergLink)
   }
+  // 17 nov 2026: games die je in de Store gedownload hebt kun je ook meesturen. Je vriend speelt dan alleen het
+  // gedeelte tegen de computer (spel.html), ook zonder account. Uit de Store (knop Delen) kom je hier met
+  // ?uitnodigen=<id>: dan gaat het uitnodigingsvenster meteen open met dat spel gekozen.
+  ;(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      const mijn = bewaardeDownloads(session.user.id)
+      const kies = document.getElementById('uitSpel')
+      for (const g of STORE_GAMES) {
+        if (!mijn.has(g.id) || MEE_SPELLEN.some(s => s[0] === g.id)) continue
+        MEE_SPELLEN.push([g.id, g.homeIcoon || '🎮', g.titel])
+        const o = document.createElement('option'); o.value = g.id; o.textContent = (g.homeIcoon || '🎮') + ' ' + g.titel; kies.appendChild(o)
+      }
+      const gevraagd = new URLSearchParams(location.search).get('uitnodigen')
+      if (gevraagd && MEE_SPELLEN.some(s => s[0] === gevraagd)) {
+        openInviteModal()
+        kies.value = gevraagd
+      }
+    } catch (e) {}
+  })()
   window.maakUitnodiging = async function() {
     document.getElementById('uitMaak').style.display = 'none'
     await genereerInvite()

@@ -63,7 +63,12 @@ export async function ondertekenProfiel({ eigenaar, privateKeyB64, onderdelen, v
     if (!ONDERDEEL.test(k)) throw new Error('ongeldige onderdeelnaam: ' + k)
     items[k] = await inhoudHash(inhoud)
   }
-  const m = { v: 1, eigenaar: String(eigenaar).toLowerCase(), versie: Math.floor(versie), items }
+  return ondertekenLijst({ eigenaar, privateKeyB64, items, versie })
+}
+
+// Hetzelfde, maar met de SHA-256 per onderdeel al uitgerekend (profielbundel.js onthoudt ze voor grote onderdelen)
+export async function ondertekenLijst({ eigenaar, privateKeyB64, items, versie = Date.now() }) {
+  const m = { v: 1, eigenaar: String(eigenaar).toLowerCase(), versie: Math.floor(versie), items: { ...(items || {}) } }
   if (!isGoedLijstje(m)) throw new Error('ongeldig profiel-lijstje')
   const sleutel = await subtle().importKey('pkcs8', b64NaarBytes(privateKeyB64), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign'])
   const sig = await subtle().sign({ name: 'ECDSA', hash: 'SHA-256' }, sleutel, new TextEncoder().encode(vasteTekst(m)))

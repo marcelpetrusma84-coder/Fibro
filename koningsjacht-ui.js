@@ -21,7 +21,7 @@
 // v4 (13 nov 2026, Marcel): kaarslicht. Twee kaarsen op tafel met flakkerende vlammen; de randen van de tafel zijn
 // donker en het warme licht flakkert mee. Aan/uit met 🕯️ (bewaard: fibro_koningsjacht_kaars, standaard aan).
 import * as K from './koningsjacht.js?v=2'
-import { maakKaartTafel, kaartSvg, achterkantSvg, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=9'
+import { maakKaartTafel, kaartSvg, achterkantSvg, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=10'
 import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek, zetMuziekThema } from './koningsjacht-geluid.js?v=4'
 import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=6'
 import { zetKaarsSlijtage } from './koningsjacht-kaarsen.js?v=1'
@@ -88,6 +88,14 @@ const CSS = `
 .kj-flits{position:absolute;inset:0;z-index:40;pointer-events:none;background:radial-gradient(ellipse at 50% 20%,#ef444466,#0000 70%)}
 .kj .kt-kaart.kt-mag{box-shadow:0 2px 8px #0007}
 .kj .kt-kaart.kt-gekozen{box-shadow:0 0 0 3px #fde68a,0 0 26px #f5b301,0 8px 20px #000a}
+.kt-tafel.kj .kt-midden > :is(.kt-stapel,.kt-afleg){translate:0 calc(var(--kj-hand-verschil, 0px) / 2)}
+.kt-tafel.kj .kt-midden > .kj-kaars{translate:0 calc(var(--kj-hand-verschil, 0px) * .9)}
+/* Langwerpige projecties volgen de draaiing van iedere kaart en liggen achter de kaart zelf. */
+.kt-tafel.kj.kj-tafelschaduw .kt-kaart::before{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(0,0,0,.68);transform:translate(-20%,25%) skewX(-15deg) scaleY(.85);transform-origin:bottom center;filter:blur(3px);z-index:-1;pointer-events:none}
+.kt-tafel.kj.kj-tafelschaduw :is(.kt-stapel,.kt-afleg,.kj-kasteel){filter:drop-shadow(-13px 18px 4px rgba(0,0,0,.65))}
+/* De bediening ligt boven de kaartschaduwen, met zacht tafellicht voor extra contrast. */
+.kt-tafel.kj.kj-tafelschaduw .kt-onder{z-index:450}
+.kt-tafel.kj.kj-tafelschaduw .kt-onder::before{content:"";position:absolute;inset:-5px 0;z-index:-1;pointer-events:none;border-radius:24px;background:radial-gradient(ellipse at center,rgba(190,137,65,.42),rgba(100,61,27,.18) 60%,transparent 78%)}
 .kj .kt-vlieg .kt-v{box-shadow:0 0 18px #f5b301b0,0 6px 18px #000a}
 .kj-fx{position:absolute;inset:0;pointer-events:none;z-index:45;overflow:hidden}
 .kj-fx>*{position:absolute;pointer-events:none}
@@ -191,6 +199,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     beweging: bewaardeInstellingen.beweging === true,
     middeleeuws: bewaardeInstellingen.middeleeuws === true,
     flikkeren: bewaardeInstellingen.flikkeren !== false,
+    tafelschaduw: bewaardeInstellingen.tafelschaduw !== false,
     bierpul: bewaardeInstellingen.bierpul === true,
     bierInhoud: Number.isInteger(bewaardeInstellingen.bierInhoud) && bewaardeInstellingen.bierInhoud >= 0 && bewaardeInstellingen.bierInhoud <= 100 ? bewaardeInstellingen.bierInhoud : 100,
     bierOorRechts: bewaardeInstellingen.bierOorRechts !== false,
@@ -257,6 +266,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     actief?.classList.toggle('kj-modern', instellingen.scene === 'modern')
     document.querySelector('.kj-instellingen')?.classList.toggle('kj-modern', instellingen.scene === 'modern')
     actief?.classList.toggle('kj-geenflikkering', !instellingen.flikkeren)
+    actief?.classList.toggle('kj-tafelschaduw', instellingen.tafelschaduw)
     scene?.update(sceneOpties())
     zetMuziekThema(instellingen.middeleeuws ? 'middeleeuws' : 'standaard')
     const nieuweStijl = instellingen.scene === 'modern' ? 'modern' : 'perkament'
@@ -280,6 +290,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     element.classList.toggle('kj-sfeer', instellingen.middeleeuws)
     element.classList.toggle('kj-modern', instellingen.scene === 'modern')
     element.classList.toggle('kj-geenflikkering', !instellingen.flikkeren)
+    element.classList.toggle('kj-tafelschaduw', instellingen.tafelschaduw)
     scene = maakKoningsjachtScene(element, sceneOpties())
   }
 
@@ -296,6 +307,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
       + '</div></fieldset>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Achtergrond bewegen')) + '</b><small>' + esc(T('Beweeg je telefoon voor een subtiel diepte-effect.')) + '</small></span><input type="checkbox" data-instelling="beweging"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Kaarsen laten flikkeren')) + '</b><small>' + esc(T('Laat de vlam en het kaarslicht zacht bewegen.')) + '</small></span><input type="checkbox" data-instelling="flikkeren"></label>'
+      + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Schaduwen op tafel')) + '</b><small>' + esc(T('Laat de kaarten en stapels een schaduw op de tafel werpen.')) + '</small></span><input type="checkbox" data-instelling="tafelschaduw"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Bierpul tonen')) + '</b><small>' + esc(T('Zet een bierpul op de tafel.')) + '</small></span><input type="checkbox" data-instelling="bierpul"></label>'
       // kaarttafel (kaartspel-hulp v7): hulp, grote kaarten, trillen; voor alle kaartspellen op dit toestel
       + KAART_INSTELLINGEN.map(i => '<label class="kj-instellingen-optie"><span><b>' + esc(T(i.titel)) + '</b><small>' + esc(T(i.uitleg)) + '</small></span><input type="checkbox" data-kaartinstelling="' + i.sleutel + '"></label>').join('')

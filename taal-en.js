@@ -2571,4 +2571,6 @@ window.FIBRO_EN = {
   "Tafel": "Table",
   "Groen casino": "Green casino",
   "Houten tafel": "Wooden table",
+  "Schaduwen op tafel": "Shadows on the table",
+  "Laat de kaarten en stapels een schaduw op de tafel werpen.": "Cast shadows from the cards and decks onto the table.",
 }

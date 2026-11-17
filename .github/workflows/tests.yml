@@ -140,6 +140,9 @@ jobs:
       - name: "Groepschat: webcam chat tot 4 personen"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef283.py .
+      - name: "Groepschat: berichten na veel reacties, nieuw lid kan meteen lezen"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef310.py .
       - name: "Groepschat: poll en afspraak (+ knop)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef284.py .

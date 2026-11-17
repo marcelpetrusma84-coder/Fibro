@@ -1054,19 +1054,43 @@ button { font-family:inherit; }
     k.send({ type: 'broadcast', event: 'typen', payload: { van: ik } }).catch?.(() => {})
   })
 
+  // 17 nov 2026: de laatste 100 gewone berichten, en daarna de 'stille' (reacties, stemmen, weghalen) van diezelfde tijd.
+  // Eerder telden de stille mee in de 100: met veel reacties of stemmen zag je na het openen bijna geen berichten meer.
+  const KOLOMMEN = 'id, sender_id, content, created_at'
+  let laatsteTijd = ''   // de nieuwste created_at die ik heb (om na een onderbreking alles daarna op te halen)
+  const onthoudTijd = rijen => { for (const r of rijen || []) if (r && r.created_at && r.created_at > laatsteTijd) laatsteTijd = r.created_at }
   async function laadBerichten() {
-    const { data, error } = await supabase.from('groep_berichten').select('id, sender_id, content, created_at')
-      .eq('groep_id', groep.id).order('created_at', { ascending: false }).limit(100)
+    let { data, error } = await supabase.from('groep_berichten').select(KOLOMMEN)
+      .eq('groep_id', groep.id).eq('stil', false).order('created_at', { ascending: false }).limit(100)
+    let rijen
+    if (error && (error.code === 'PGRST204' || error.code === '42703' || error.code === 'PGRST100')) {
+      // de server kent 'stil' nog niet (sql/groep-extra.sql): zoals vroeger
+      ;({ data, error } = await supabase.from('groep_berichten').select(KOLOMMEN)
+        .eq('groep_id', groep.id).order('created_at', { ascending: false }).limit(100))
+      rijen = (data || []).reverse()
+    } else if (!error) {
+      rijen = (data || []).reverse()
+      const vanaf = rijen.length === 100 ? rijen[0].created_at : null
+      let q = supabase.from('groep_berichten').select(KOLOMMEN).eq('groep_id', groep.id).eq('stil', true)
+      if (vanaf) q = q.gte('created_at', vanaf)
+      const { data: stil } = await q.order('created_at', { ascending: false }).limit(1000)
+      rijen = rijen.concat(stil || []).sort((a, b) => (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0))
+    }
     if (error) { sysBericht(T('Berichten laden lukte niet')); return }
-    for (const r of (data || []).reverse()) await tekenBericht(r, false)
+    onthoudTijd(rijen)
+    for (const r of rijen) await tekenBericht(r, false)
     naarOnder()
   }
+  // na een onderbreking (en net na het openen): alles wat er sinds het laatste bericht bij kwam, niet alleen de laatste 50
   async function haalGemist() {
     gesprek?.track() // na een onderbreking: opnieuw laten zien dat ik in de voice chat zit
     muziek?.vraagLijsten().catch?.(() => {})
-    const { data } = await supabase.from('groep_berichten').select('id, sender_id, content, created_at')
-      .eq('groep_id', groep.id).order('created_at', { ascending: false }).limit(50)
-    for (const r of (data || []).reverse()) await tekenBericht(r)
+    let q = supabase.from('groep_berichten').select(KOLOMMEN).eq('groep_id', groep.id)
+    if (laatsteTijd) q = q.gte('created_at', laatsteTijd)
+    const { data } = await q.order('created_at', { ascending: !!laatsteTijd }).limit(laatsteTijd ? 500 : 50)
+    const rijen = laatsteTijd ? (data || []) : (data || []).reverse()
+    onthoudTijd(rijen)
+    for (const r of rijen) await tekenBericht(r)
   }
 
   async function openGroep(id) {
@@ -1085,11 +1109,18 @@ button { font-family:inherit; }
     lijn?.stop?.()
     lijn = houOpen('groep-' + groep.id, () => supabase
       .channel('groep-' + groep.id, { config: { private: true, presence: { key: ik } } })
-      .on('presence', { event: 'sync' }, () => { const k = lijn?.kanaal?.(); if (k && gesprek) gesprek.presence(k.presenceState()) })
+      .on('presence', { event: 'sync' }, () => {
+        const k = lijn?.kanaal?.(); if (!k) return
+        const st = k.presenceState()
+        // 17 nov 2026: iemand online die ik nog niet als lid ken (net toegevoegd): de ledenlijst meteen vernieuwen
+        if (Object.keys(st || {}).some(id => id !== ik && GELDIG_ID.test(id) && !lidVan(id))) haalLeden(true).catch(() => {})
+        if (gesprek) gesprek.presence(st)
+      })
       .on('broadcast', { event: 'rtc' }, m => gesprek?.ontvangSein(m && m.payload))
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'groep_berichten', filter: 'groep_id=eq.' + groep.id }, async p => {
         const r = p.new
         if (r.sender_id !== ik && !lidVan(r.sender_id)) { try { await haalLeden(true) } catch (e) {} }
+        onthoudTijd([r])
         await tekenBericht(r, true, true)
       })
       .on('broadcast', { event: 'media' }, m => { ontvang(m && m.payload).catch?.(() => {}) })
@@ -1119,7 +1150,8 @@ button { font-family:inherit; }
     ;(async () => {
       for (let i = 0; i < 40; i++) {
         const k = lijn?.kanaal?.()
-        if (k && k.state === 'joined') { muziek.vraagLijsten().catch(() => {}); break }
+        // 17 nov 2026: ook wat er binnenkwam tussen het laden en het openen van het kanaal (dat ging verloren)
+        if (k && k.state === 'joined') { haalGemist().catch(() => {}); break }
         await new Promise(ok => setTimeout(ok, 500))
       }
     })()
@@ -1276,7 +1308,9 @@ button { font-family:inherit; }
   async function verstuurNu(tekst, { stil = false } = {}) {
     if (!groep || !mijnPriv) return false
     try {
-      await haalLeden()
+      // 17 nov 2026: altijd de ledenlijst van nu (eerder tot een minuut oud): een net toegevoegd lid kon die berichten
+      // niet lezen ('Verstuurd voordat je lid werd'), en wie net weggehaald was kreeg ze nog wel. Lukt het niet: de oude.
+      try { await haalLeden(true) } catch (e) { await haalLeden() }
       const ontvangers = leden.map(l => l.id === ik ? { id: ik, public_key: mijnPub } : l)
       const { content, overgeslagen } = await versleutelGroepsbericht(tekst, { groepId: groep.id, van: ik, mijnPriv, leden: ontvangers })
       const rij = { groep_id: groep.id, sender_id: ik, content }

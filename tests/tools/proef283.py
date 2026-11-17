@@ -280,7 +280,9 @@ try:
         m.evaluate("() => { window.__verzet = 0; new MutationObserver(l => { for (const r of l) for (const n of [...r.addedNodes, ...r.removedNodes]) if (n.querySelector && n.querySelector('video')) window.__verzet++ }).observe(document.getElementById('belTegels'), { childList: true }) }")
         # C
         check(wacht_tot(m, "[...document.querySelectorAll('#belTegels .tegel.praat')].some(e => e.textContent.includes('Bram'))"), 'C: Brams scherm kleurt goud als hij praat')
-        m.wait_for_timeout(400)  # de rand kleurt in 0,15 s goud (overgang); nu de schermen blijven staan, zie je die echt
+        # de rand kleurt in 0,15 s goud en weer terug (wie praat wisselt steeds): de overgang even uit om de kleur te meten
+        rand = m.evaluate("(() => { for (const v of document.querySelectorAll('#belTegels .vak')) v.style.transition = 'none'; return 1 })()")
+        wacht_tot(m, "!!document.querySelector('#belTegels .tegel.praat .vak')")
         rand = m.evaluate("getComputedStyle([...document.querySelectorAll('#belTegels .tegel.praat .vak')][0] || document.body).borderTopColor")
         check(rand == 'rgb(252, 211, 77)', 'C: gouden rand (%s)' % rand)
         m.wait_for_timeout(1500)

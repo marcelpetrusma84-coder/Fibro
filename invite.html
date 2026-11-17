@@ -99,16 +99,17 @@ hr { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
 .ww-veld { position:relative; }
 .ww-veld .input { padding-right:54px; }
 .ww-oog { position:absolute; right:4px; top:50%; transform:translateY(-50%); width:44px; height:44px; border:none; border-radius:10px; background:transparent; color:var(--muted); font-size:20px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+/* v272: strak lijn-oogje */ .ww-oog { transition:color .15s, background .15s; } .ww-oog:hover, .ww-oog[aria-pressed="true"] { color:#8b3fd1; } .ww-oog:hover { background:#f3e8ff; } .ww-oog svg { display:block; pointer-events:none; }
 </style>
 <link rel="stylesheet" href="android-fix.css?v=1">
 <link rel="icon" href="icon.svg?v=4" type="image/svg+xml">
-<link rel="stylesheet" href="stijl.css?v=3">
+<link rel="stylesheet" href="stijl.css?v=4">
 </head>
 <body>
 
 <!-- v270: zoals de inlogpagina: Stekky wit in het midden, bèta ernaast, Je eigen plekkie eronder; daaronder een wit vlak -->
 <div class="logo-kop"><h1>Stekky<sup class="beta-label" data-t>bèta</sup></h1><p data-t>Je eigen plekkie</p></div>
-<div class="kaart">
+<div class="kaart licht-vlak">
   <div class="taalkeuze" role="group" aria-label="Taal / Language">
     <button type="button" data-kies-taal="nl" onclick="T.kies('nl')">Nederlands</button>
     <button type="button" data-kies-taal="en" onclick="T.kies('en')">English</button>
@@ -417,12 +418,15 @@ window.naarLogin = function() {
 
 // v270: een oogje bij het wachtwoord (tonen/verbergen), en een rode rand verdwijnt zodra je weer typt (zoals op de inlogpagina)
 ;(function () {
+  // v272: een strak lijn-oogje (SVG) in plaats van de emoji's 👁 en 🙈
+  const OOG_OPEN = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>'
+  const OOG_DICHT = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-2.2 3.1"/><path d="M6.6 6.6C3.7 8.4 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="m3 3 18 18"/></svg>'
   const t = zin => (typeof T === 'function' ? T(zin) : zin)
   for (const veld of document.querySelectorAll('.kaart input[type=password]')) {
     const doos = document.createElement('div'); doos.className = 'ww-veld'
     veld.parentNode.insertBefore(doos, veld); doos.append(veld)
     const oog = document.createElement('button'); oog.type = 'button'; oog.className = 'ww-oog'
-    const zet = zichtbaar => { veld.type = zichtbaar ? 'text' : 'password'; oog.textContent = zichtbaar ? '🙈' : '👁'; oog.setAttribute('aria-label', t(zichtbaar ? 'Wachtwoord verbergen' : 'Wachtwoord tonen')); oog.setAttribute('aria-pressed', String(zichtbaar)) }
+    const zet = zichtbaar => { veld.type = zichtbaar ? 'text' : 'password'; oog.innerHTML = zichtbaar ? OOG_DICHT : OOG_OPEN; oog.setAttribute('aria-label', t(zichtbaar ? 'Wachtwoord verbergen' : 'Wachtwoord tonen')); oog.setAttribute('aria-pressed', String(zichtbaar)) }
     oog.addEventListener('click', () => { zet(veld.type === 'password'); veld.focus() })
     zet(false); doos.append(oog)
   }

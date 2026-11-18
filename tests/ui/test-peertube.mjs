@@ -30,6 +30,9 @@ assert.match(P.leesLink('https://framatube.org/w/p/' + kort).fout, /Afspeellijst
 assert.ok(P.leesLink('https://framatube.org/w/' + kort + '/extra').fout)
 assert.ok(P.leesLink('https://framatube.org/w/abc"onload=x').fout)
 assert.ok(P.leesLink('https://framatube.org/a/iemand/video-channels').fout)
+// v2: gaming (spectra.video), makers (makertube.net) en het archief van Beeld & Geluid
+for (const s of ['spectra.video', 'makertube.net', 'peertube.beeldengeluid.nl'])
+  assert.deepEqual(P.leesLink('https://' + s + '/w/' + kort), { server: s, id: kort }, s)
 console.log('PASS: leesLink kent de goede links en weigert de rest')
 
 // ── Wat van een vriend komt ──
@@ -80,7 +83,7 @@ assert.match(lees('profiel.html'), /id="widget-peertube" onclick="toggleWidget\(
 assert.match(lees('profiel.html'), /peertube:\s+\{ id:'peertube'/)
 assert.match(lees('vriend-profiel.html'), /if \(w\.id === 'peertube'\) \{/)
 assert.match(lees('vriend-profiel.html'), /cfg = P\.normaliseer\(JSON\.parse\(ruw\)\)/, 'wat een vriend stuurt gaat door normaliseer')
-for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/peertube\.js\?v=1'\)/)
+for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/peertube\.js\?v=2'\)/)
 const en = lees('taal-en.js')
 for (const t of ['PeerTube', 'Uit de Store: video van PeerTube, laadt pas na een tik', 'Nog geen video', '▶ Afspelen', 'Toegestane servers: {lijst}'])
   assert.ok(en.includes(JSON.stringify(t) + ':'), 'Engels voor: ' + t)

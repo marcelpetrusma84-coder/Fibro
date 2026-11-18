@@ -28,7 +28,7 @@ PAGINA = '''<!doctype html><html><head><meta charset="utf-8">''' + csp + '''
 <style>body{background:#1a0a2e;color:#fff;font-family:sans-serif;margin:0}.w{width:360px;min-height:240px;flex-direction:column;margin:12px;border-radius:14px;background:rgba(255,255,255,.08);padding:10px;box-sizing:border-box;display:flex}</style>
 </head><body><div class="w" id="w"></div><div class="w" id="v"></div>
 <script type="module">
-import * as P from './peertube.js?v=1'
+import * as P from './peertube.js?v=2'
 window.P = P
 window.csp = []
 document.addEventListener('securitypolicyviolation', e => window.csp.push(e.blockedURI))

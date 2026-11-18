@@ -1,4 +1,6 @@
 // peertube.js (v1, 18 nov 2026) - de PeerTube-widget: een video van PeerTube op je profiel.
+// v2 (18 nov 2026): drie servers erbij: spectra.video (veel gaming), makertube.net (makers, retro-techniek en -gaming)
+// en peertube.beeldengeluid.nl (het open archief van Beeld & Geluid).
 //
 // In gewone woorden: je plakt een link naar een PeerTube-video. Op je profiel (en bij je vrienden) staat dan een
 // rustig kaartje met "▶ Afspelen". Pas als iemand daarop tikt, maakt zijn toestel verbinding met de PeerTube-server.
@@ -35,7 +37,8 @@ Object.assign(window.FIBRO_EN ||= {}, {
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 
 // De goedgekeurde PeerTube-servers. Zet je er een bij, zet hem dan ook in frame-src van index.html en vriend-profiel.html.
-export const SERVERS = ['framatube.org', 'tilvids.com', 'video.blender.org', 'tube.tchncs.de', 'diode.zone']
+export const SERVERS = ['framatube.org', 'tilvids.com', 'video.blender.org', 'tube.tchncs.de', 'diode.zone',
+  'spectra.video', 'makertube.net', 'peertube.beeldengeluid.nl'] // v2
 
 const MAX_TITEL = 80
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

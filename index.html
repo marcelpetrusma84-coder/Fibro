@@ -11,7 +11,7 @@
 </script>
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self' https://framatube.org https://tilvids.com https://video.blender.org https://tube.tchncs.de https://diode.zone; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self' https://framatube.org https://tilvids.com https://video.blender.org https://tube.tchncs.de https://diode.zone https://spectra.video https://makertube.net https://peertube.beeldengeluid.nl; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
@@ -1701,7 +1701,7 @@ async function renderPeertube(c, uid) {
   let cfg = null
   try { cfg = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
   let P
-  try { P = await import('./peertube.js?v=1') } catch (e) { console.warn('[peertube]', e); return }
+  try { P = await import('./peertube.js?v=2') } catch (e) { console.warn('[peertube]', e); return }
   P.tekenPeertubeWidget(c, {
     cfg, eigen: true,
     bewaar: nieuw => {

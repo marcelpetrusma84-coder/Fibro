@@ -45,6 +45,15 @@ assert.equal(P.normaliseer('framatube.org'), null)
 assert.equal(P.normaliseer({ server: 'framatube.org', id: kort, titel: 'x'.repeat(500) }).titel.length, 80)
 console.log('PASS: normaliseer laat alleen goedgekeurde servers en nette codes door')
 
+// ── v3: titel en miniatuur ophalen ──
+const gevraagd = []
+const nep = async url => { gevraagd.push(url); return url.includes('/api/') ? { ok: true, json: async () => ({ name: '  Mijn   video ', previewPath: '/lazy-static/previews/p.jpg', thumbnailPath: '/lazy-static/thumbnails/t.jpg' }) } : { ok: false } }
+const info = await P.haalInfo({ server: 'framatube.org', id: kort }, { fetch: nep })
+assert.equal(info.titel, 'Mijn video')
+assert.deepEqual(gevraagd, ['https://framatube.org/api/v1/videos/' + kort, 'https://framatube.org/lazy-static/previews/p.jpg'], 'de API en het grote voorbeeldplaatje, op dezelfde server')
+assert.deepEqual(await P.haalInfo({ server: 'kwaad.nl', id: kort }, { fetch: nep }), {})
+console.log('PASS: titel en miniatuur komen van de eigen server van de video')
+
 // ── De speler ──
 const url = new URL(P.speelUrl({ server: 'framatube.org', id: kort }))
 assert.equal(url.origin + url.pathname, 'https://framatube.org/videos/embed/' + kort)
@@ -66,7 +75,11 @@ for (const pagina of ['index.html', 'vriend-profiel.html']) {
   const frame = csp.match(/frame-src ([^;]*);/)[1].split(' ')
   // 18 nov 2026: na de PeerTube-servers komen de bronnen van de muziek-widget (test-muziekwidget.mjs controleert de hele rij)
   assert.deepEqual(frame.slice(0, P.SERVERS.length + 1), ["'self'", ...P.SERVERS.map(s => 'https://' + s)], pagina + ': frame-src begint met de lijst uit peertube.js')
-  assert.doesNotMatch(csp, /connect-src[^;]*(framatube|tilvids)/, pagina + ': Stekky zelf praat niet met PeerTube')
+  // v3 (18 nov 2026): op Home mag Stekky de server één keer om titel en miniatuur vragen (bij het opslaan);
+  // op het profiel van een vriend nooit: daar komt alles via sync
+  const connect = csp.match(/connect-src ([^;]*);/)[1].split(' ')
+  if (pagina === 'index.html') assert.ok(P.SERVERS.every(s => connect.includes('https://' + s)), 'index.html: connect-src heeft de PeerTube-servers')
+  else assert.doesNotMatch(csp.match(/connect-src [^;]*;/)[0], /framatube|tilvids|spectra/, pagina + ': praat niet met PeerTube')
 }
 for (const pagina of ['chat.html', 'login.html', 'over.html', 'spelregels.html']) {
   assert.match(lees(pagina), /frame-src 'self';/, pagina + ': geen PeerTube nodig, dus dicht')
@@ -84,7 +97,7 @@ assert.match(lees('profiel.html'), /id="widget-peertube" onclick="toggleWidget\(
 assert.match(lees('profiel.html'), /peertube:\s+\{ id:'peertube'/)
 assert.match(lees('vriend-profiel.html'), /if \(w\.id === 'peertube'\) \{/)
 assert.match(lees('vriend-profiel.html'), /cfg = P\.normaliseer\(JSON\.parse\(ruw\)\)/, 'wat een vriend stuurt gaat door normaliseer')
-for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/peertube\.js\?v=2'\)/)
+for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/peertube\.js\?v=3'\)/)
 const en = lees('taal-en.js')
 for (const t of ['PeerTube', 'Uit de Store: video van PeerTube, laadt pas na een tik', 'Nog geen video', '▶ Afspelen', 'Toegestane servers: {lijst}'])
   assert.ok(en.includes(JSON.stringify(t) + ':'), 'Engels voor: ' + t)

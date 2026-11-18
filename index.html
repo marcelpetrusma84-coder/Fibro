@@ -11,11 +11,11 @@
 </script>
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self' https://framatube.org https://tilvids.com https://video.blender.org https://tube.tchncs.de https://diode.zone https://spectra.video https://makertube.net https://peertube.beeldengeluid.nl https://bandcamp.com https://open.audio; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob: https://framatube.org https://tilvids.com https://video.blender.org https://tube.tchncs.de https://diode.zone https://spectra.video https://makertube.net https://peertube.beeldengeluid.nl https://open.audio; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self' https://framatube.org https://tilvids.com https://video.blender.org https://tube.tchncs.de https://diode.zone https://spectra.video https://makertube.net https://peertube.beeldengeluid.nl https://bandcamp.com https://open.audio; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=128"></script>
+<script src="taal.js?v=129"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -343,7 +343,7 @@ import { meldToestel } from './toestel.js?v=1'
 import { zetStandaardWidgets } from './standaardwidgets.js?v=2' // v267: nieuw account = meteen widgets op Home
 import * as GB from './gastenboekstijl.js?v=2'
 import { spelIcoonHtml } from './spelicoon.js?v=6' // 30 okt 2026: plaatjes uit de spellen
-import { initSync, lokaleVriendNaam } from './sync.js?v=259'
+import { initSync, lokaleVriendNaam } from './sync.js?v=260'
 import { maakProfielLikes, itemVan } from './profielreacties.js?v=2' // v258: likes op je eigen profiel
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -1703,15 +1703,35 @@ async function renderPeertube(c, uid) {
   const key = 'peertube_' + uid
   let cfg = null
   try { cfg = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
+  zetWidgetAchtergrond(c, 'widgetbg_peertube_' + uid) // de miniatuur (of een eigen foto via 🖼)
   let P
-  try { P = await import('./peertube.js?v=2') } catch (e) { console.warn('[peertube]', e); return }
+  try { P = await import('./peertube.js?v=3') } catch (e) { console.warn('[peertube]', e); return }
   P.tekenPeertubeWidget(c, {
     cfg, eigen: true,
-    bewaar: nieuw => {
-      try { if (nieuw) localStorage.setItem(key, JSON.stringify(nieuw)); else localStorage.removeItem(key) } catch (e) {}
-      renderPeertube(c, uid)
-    },
+    bewaar: async nieuw => { await bewaarMetInfo(c, uid, 'peertube', P, cfg, nieuw); renderPeertube(c, uid) },
   })
+}
+
+// 18 nov 2026: opslaan met titel en plaatje (haalInfo in peertube.js en muziekwidget.js). Alleen hier, op het toestel
+// van de eigenaar, wordt de server één keer gevraagd (huisregel: connect-src). Het plaatje wordt de achtergrond van het
+// kaartje (widgetbg_<widget>_<uid>, net als met de 🖼-knop) en gaat zo via sync naar vrienden. Een andere video of
+// ander album: nieuw plaatje (of geen); dezelfde (alleen de titel veranderd): de achtergrond blijft.
+async function bewaarMetInfo(c, uid, sl, module, oud, nieuw) {
+  const key = sl + '_' + uid, bg = 'widgetbg_' + sl + '_' + uid
+  const wisAchtergrond = async () => { await wisFotoUitDB(bg); try { localStorage.removeItem('widgetbgpos_' + bg) } catch (e) {} }
+  if (!nieuw) { try { localStorage.removeItem(key) } catch (e) {} await wisAchtergrond(); return }
+  const zelfde = !!oud && oud.bron === nieuw.bron && oud.server === nieuw.server && oud.soort === nieuw.soort && String(oud.id) === String(nieuw.id)
+  let info = {}
+  if (!zelfde || !nieuw.titel) { try { info = (await module.haalInfo(nieuw)) || {} } catch (e) { info = {} } }
+  if (!nieuw.titel && info.titel) nieuw.titel = info.titel
+  try { localStorage.setItem(key, JSON.stringify(nieuw)) } catch (e) {}
+  if (zelfde) return
+  if (!info.plaatje) { await wisAchtergrond(); return }
+  if ((await slaFotoOp(bg, info.plaatje.data)) === null) return // profiel vol: zonder plaatje
+  try {
+    const { vulStand } = await import('./voorbeeldplaatje.js?v=1')
+    localStorage.setItem('widgetbgpos_' + bg, JSON.stringify(vulStand(c.clientWidth, c.clientHeight, info.plaatje.breedte, info.plaatje.hoogte)))
+  } catch (e) {}
 }
 
 // ════════════════════════════════
@@ -1721,14 +1741,12 @@ async function renderMuziekwidget(c, uid) {
   const key = 'muziekwidget_' + uid
   let cfg = null
   try { cfg = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
+  zetWidgetAchtergrond(c, 'widgetbg_muziekwidget_' + uid) // de albumhoes (of een eigen foto via 🖼)
   let M
-  try { M = await import('./muziekwidget.js?v=1') } catch (e) { console.warn('[muziekwidget]', e); return }
+  try { M = await import('./muziekwidget.js?v=2') } catch (e) { console.warn('[muziekwidget]', e); return }
   M.tekenMuziekWidget(c, {
     cfg, eigen: true,
-    bewaar: nieuw => {
-      try { if (nieuw) localStorage.setItem(key, JSON.stringify(nieuw)); else localStorage.removeItem(key) } catch (e) {}
-      renderMuziekwidget(c, uid)
-    },
+    bewaar: async nieuw => { await bewaarMetInfo(c, uid, 'muziekwidget', M, cfg, nieuw); renderMuziekwidget(c, uid) },
   })
 }
 

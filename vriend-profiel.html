@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=128"></script>
+<script src="taal.js?v=129"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -154,7 +154,7 @@ body.heeft-wallpaper::before { display:block; }
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
-  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=259'
+  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=260'
   import { versleutel, haalPrivateKeyOp } from './crypto.js?v=182'
   import { maakProfielLikes, itemVan, openReageerScherm, maakReactieBericht, maakKleinPlaatje } from './profielreacties.js?v=2' // v258
   import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -686,19 +686,21 @@ body.heeft-wallpaper::before { display:block; }
 
   // 18 nov 2026: PeerTube-video van een vriend (peertube.js). De link komt via P2P (sync.js 'klein:peertube');
   // normaliseer() laat alleen goedgekeurde servers door. De video laadt pas na een tik op afspelen.
+  // v3: de miniatuur komt als achtergrond via sync ('wbg:peertube'); deze pagina vraagt de server nooit iets.
   let peertubeWidget = null
   window.addEventListener('fibro-sync-item', async e => {
     const d = e.detail || {}
-    if (d.vriendId !== vriendId || !peertubeWidget || d.item !== 'klein:peertube') return
+    if (d.vriendId !== vriendId || !peertubeWidget || !/^(klein|wbg):peertube$/.test(d.item || '')) return
     try { await renderVriendPeertube(peertubeWidget.el, vriendId, peertubeWidget.w) } catch (x) { console.warn('[peertube]', x) } // het lege vakje staat er al
   })
   async function renderVriendPeertube(el, vriendId, w) {
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_peertube')
     if (!ruw) return false
     let P, cfg = null
-    try { P = await import('./peertube.js?v=2') } catch (e) { console.warn('[peertube]', e); return false }
+    try { P = await import('./peertube.js?v=3') } catch (e) { console.warn('[peertube]', e); return false }
     try { cfg = P.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
+    await vriendAchtergrond(el, vriendId, 'peertube') // de miniatuur, via sync (wbg:peertube)
     el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F3AC}</span><span class="widget-titel">' + vEsc(T('PeerTube')) + '</span></div><div class="widget-inhoud"></div>'
     P.tekenPeertubeWidget(el.querySelector('.widget-inhoud'), { cfg })
     return true
@@ -709,16 +711,17 @@ body.heeft-wallpaper::before { display:block; }
   let muziekWidgetEl = null
   window.addEventListener('fibro-sync-item', async e => {
     const d = e.detail || {}
-    if (d.vriendId !== vriendId || !muziekWidgetEl || d.item !== 'klein:muziekwidget') return
+    if (d.vriendId !== vriendId || !muziekWidgetEl || !/^(klein|wbg):muziekwidget$/.test(d.item || '')) return
     try { await renderVriendMuziekwidget(muziekWidgetEl, vriendId) } catch (x) { console.warn('[muziekwidget]', x) } // het lege vakje staat er al
   })
   async function renderVriendMuziekwidget(el, vriendId) {
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_muziekwidget')
     if (!ruw) return false
     let M, cfg = null
-    try { M = await import('./muziekwidget.js?v=1') } catch (e) { console.warn('[muziekwidget]', e); return false }
+    try { M = await import('./muziekwidget.js?v=2') } catch (e) { console.warn('[muziekwidget]', e); return false }
     try { cfg = M.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
+    await vriendAchtergrond(el, vriendId, 'muziekwidget') // de albumhoes, via sync (wbg:muziekwidget)
     el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F3A7}</span><span class="widget-titel">' + vEsc(T('Bandcamp & Funkwhale')) + '</span></div><div class="widget-inhoud"></div>'
     M.tekenMuziekWidget(el.querySelector('.widget-inhoud'), { cfg })
     return true

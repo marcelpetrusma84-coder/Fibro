@@ -1,3 +1,4 @@
+// v129 (18 nov 2026): taal-en.js?v=129 (titel en plaatje ophalen)
 // v128 (18 nov 2026): taal-en.js?v=128 (muziek-widget: Bandcamp en Funkwhale)
 // v127 (18 nov 2026): taal-en.js?v=127 (PeerTube-widget)
 // v126 (18 nov 2026): taal-en.js?v=126 (Koningsjacht: schaduwen op tafel, PR #207 van Tijn)
@@ -144,7 +145,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=128', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=129', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

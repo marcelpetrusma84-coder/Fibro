@@ -1,6 +1,8 @@
 // peertube.js (v1, 18 nov 2026) - de PeerTube-widget: een video van PeerTube op je profiel.
 // v2 (18 nov 2026): drie servers erbij: spectra.video (veel gaming), makertube.net (makers, retro-techniek en -gaming)
 // en peertube.beeldengeluid.nl (het open archief van Beeld & Geluid).
+// v3 (18 nov 2026): titel en miniatuur ophalen bij het opslaan (haalInfo, voorbeeldplaatje.js). Alleen op het toestel
+// van de eigenaar; de miniatuur wordt de achtergrond van het kaartje en gaat via sync naar vrienden.
 //
 // In gewone woorden: je plakt een link naar een PeerTube-video. Op je profiel (en bij je vrienden) staat dan een
 // rustig kaartje met "▶ Afspelen". Pas als iemand daarop tikt, maakt zijn toestel verbinding met de PeerTube-server.
@@ -21,7 +23,10 @@
 //   speelUrl(cfg)                            -> de embed-link met alle privacy-instellingen
 //   tekenPeertubeWidget(el, { cfg, eigen, bewaar })
 
+import { haalJson, plaatjeOpServer, maakPlaatje } from './voorbeeldplaatje.js?v=1'
+
 Object.assign(window.FIBRO_EN ||= {}, {
+  'Ophalen…': 'Fetching…',
   'PeerTube-video': 'PeerTube video', 'van {server}': 'from {server}', '▶ Afspelen': '▶ Play',
   'Pas als je op afspelen tikt, maakt je toestel verbinding met {server}.': 'Only when you tap play does your device connect to {server}.',
   'Plak een link naar een PeerTube-video': 'Paste a link to a PeerTube video', 'Titel (mag leeg)': 'Title (optional)',
@@ -87,6 +92,22 @@ export function speelUrl(cfg) {
   return 'https://' + c.server + '/videos/embed/' + encodeURIComponent(c.id) + '?p2p=0&peertubeLink=0&warningTitle=0&autoplay=1'
 }
 
+// v3: titel en miniatuur van de video, via de API van de server (die staat dat toe voor andere sites, CORS op /api
+// en /lazy-static). Alleen bij het opslaan, op het toestel van de eigenaar. Geeft { titel, plaatje } (plaatje =
+// { data, breedte, hoogte }); wat niet lukt, ontbreekt.
+export async function haalInfo(cfg, opties = {}) {
+  const c = normaliseer(cfg)
+  if (!c) return {}
+  const d = await haalJson('https://' + c.server + '/api/v1/videos/' + encodeURIComponent(c.id), opties)
+  if (!d || typeof d !== 'object') return {}
+  const uit = {}
+  const titel = tekst(d.name, MAX_TITEL)
+  if (titel) uit.titel = titel
+  const adres = plaatjeOpServer(d.previewPath, c.server) || plaatjeOpServer(d.thumbnailPath, c.server)
+  if (adres) { const p = await maakPlaatje(adres, opties); if (p) uit.plaatje = p }
+  return uit
+}
+
 // ── kleine hulpjes ──
 function el(tag, stijl, inhoud) {
   const e = document.createElement(tag)
@@ -139,10 +160,13 @@ export function tekenPeertubeWidget(c, { cfg = null, eigen = false, bewaar = nul
     const rij = el('div', 'display:flex;gap:6px;flex-wrap:wrap;justify-content:center')
     const ok = el('button', HOOFDKNOP, T('Opslaan ✓'))
     ok.className = 'pt-opslaan'
-    ok.onclick = stop(() => {
+    ok.onclick = stop(async () => {
       const r = leesLink(link.value)
       if (r.fout) { melding.textContent = r.fout; return }
-      bewaar({ server: r.server, id: r.id, titel: tekst(titel.value, MAX_TITEL) })
+      // v3: bewaar mag even duren (titel en miniatuur ophalen): zolang staat er "Ophalen…"
+      ok.disabled = true; ok.textContent = T('Ophalen…')
+      try { await bewaar({ server: r.server, id: r.id, titel: tekst(titel.value, MAX_TITEL) }) }
+      finally { if (ok.isConnected) { ok.disabled = false; ok.textContent = T('Opslaan ✓') } }
     })
     rij.appendChild(ok)
     if (v) {

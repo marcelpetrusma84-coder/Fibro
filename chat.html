@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=126"></script>
+<script src="taal.js?v=127"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -288,6 +288,7 @@ button,.send-btn,.back-btn,.lock-btn,.modal-btn { min-height:44px; min-width:44p
 <link rel="stylesheet" href="icoonthema.css?v=2">
 <script src="icoonthema.js?v=2"></script>
 <link rel="stylesheet" href="chat-onlinegolf.css?v=1">
+<link rel="stylesheet" href="chat-depth.css?v=1">
 </head>
 <body data-fibro-page="chat">
 <script>
@@ -481,6 +482,7 @@ window.veiligeUrl = function(v){
   import { isOnline as vriendIsOnline, opOnline } from './paren.js?v=2'
   import { volgOnline, isVriendOnline as stipOnline, bewaarServerStand } from './onlinestip.js?v=2' // v274: nauwkeuriger bolletje
   import { maakChatOnlineGolf, maakOnlineOvergang } from './chat-onlinegolf.js?v=2'
+  import { koppelChatDepth } from './chat-depth.js?v=2'
   import { smileysNaarEmoji, koppelSmileys } from './smileys.js?v=1' // 17 nov 2026: :) wordt 🙂
   koppelSmileys(document.getElementById('msgInput'))
   import { startHeartbeat } from './heartbeat.js?v=118'
@@ -944,6 +946,7 @@ window.veiligeUrl = function(v){
   // Een gecachte vriendenlijst bevat geen online-status. Pas een echte serverstand
   // of aanwezigheidsevent kan de beginstand bevestigen; openen alleen speelt niets af.
   const bekendeOnlineStatus = new Set()
+  koppelChatDepth(document.getElementById('messages'))
   let onlineGolfChatKlaar = null
   const onlineGolf = maakChatOnlineGolf({
     ouder: document.getElementById('chatScherm'), berichten: document.getElementById('messages'),

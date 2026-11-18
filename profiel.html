@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=126"></script>
+<script src="taal.js?v=127"></script>
 <script src="appslot.js?v=3"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Vuurwerk': 'Fireworks', 'Onweer': 'Thunderstorm', 'Glitter': 'Glitter' }) // v234: nieuwe animaties</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Gastenboek zonder lijntjes': 'Guestbook without lines', 'Gewoon in je eigen kleuren, zonder lijntjespapier': 'Plain, in your own colours, without lined paper' }) // v235</script>
@@ -161,6 +161,19 @@ input, textarea { font-size:16px !important; }
 <link rel="stylesheet" href="app-depth.css?v=2">
 <link rel="stylesheet" href="icoonthema.css?v=2">
 <script src="icoonthema.js?v=2"></script>
+<style>
+  .chat-depth-keuze {
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    min-height:56px; margin-top:16px; padding:12px 14px; border:1px solid var(--border);
+    border-radius:14px; background:var(--card); cursor:pointer;
+  }
+  .chat-depth-tekst { display:grid; gap:4px; }
+  .chat-depth-tekst strong { font-size:15px; }
+  .chat-depth-tekst small { color:var(--muted); font-size:12px; line-height:1.4; }
+  .chat-depth-keuze input { flex:none; width:20px; height:20px; margin:0; accent-color:var(--knop,#8b3fd1); }
+  .chat-depth-keuze:focus-within { outline:2px solid var(--accent,#c084fc); outline-offset:3px; }
+  .chat-depth-melding { margin:8px 0 0; color:var(--muted); font-size:12px; }
+</style>
 </head>
 <body data-fibro-page="style">
 <div class="top-bar" role="banner">
@@ -478,6 +491,21 @@ input, textarea { font-size:16px !important; }
       </div>
       <p class="icoonthema-bewaren" data-t>Je keuze wordt direct toegepast en op dit apparaat bewaard.</p>
     </fieldset>
+    <label class="chat-depth-keuze">
+      <span class="chat-depth-tekst">
+        <strong id="chatDepthTitel" data-t>Depth</strong>
+        <small id="chatDepthUitleg" data-t>Blauwe 3D-blokken en slagschaduwen achter je chatberichten.</small>
+      </span>
+      <input type="checkbox" id="chatDepth" aria-labelledby="chatDepthTitel" aria-describedby="chatDepthUitleg">
+    </label>
+    <label class="chat-depth-keuze">
+      <span class="chat-depth-tekst">
+        <strong id="chatDepthBewegingTitel" data-t>Beweging van de 3D-achtergrond</strong>
+        <small id="chatDepthBewegingUitleg" data-t>Laat de blokken meebewegen met je muis of telefoon. Staat standaard uit.</small>
+      </span>
+      <input type="checkbox" id="chatDepthBeweging" aria-labelledby="chatDepthBewegingTitel" aria-describedby="chatDepthBewegingUitleg">
+    </label>
+    <p class="chat-depth-melding" id="chatDepthMelding" role="status" hidden></p>
   </div>
 </div>
 <div class="panel" id="panel-widgets" role="tabpanel" aria-labelledby="tab-widgets" aria-hidden="true">
@@ -556,6 +584,45 @@ input, textarea { font-size:16px !important; }
   <div class="nav-item active"><div class="nav-icon" data-icoon="stijl"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg></div><div class="nav-label" data-t>Stijl</div></div>
 </div>
 <script>
+// Bewaar de weergavevoorkeuren voor dit toestel.
+{
+  const voorkeuren = [
+    [document.getElementById('chatDepth'), 'fibro_chat_depth'],
+    [document.getElementById('chatDepthBeweging'), 'fibro_chat_depth_beweging'],
+  ];
+  const melding = document.getElementById('chatDepthMelding');
+
+  function leesDepthVoorkeuren() {
+    for (const [invoer, sleutel] of voorkeuren) {
+      try { invoer.checked = localStorage.getItem(sleutel) === '1'; }
+      catch { invoer.checked = false; }
+    }
+  }
+
+  for (const [invoer, sleutel] of voorkeuren) {
+    invoer.addEventListener('change', async () => {
+      try {
+        localStorage.setItem(sleutel, invoer.checked ? '1' : '0');
+        melding.hidden = true;
+      } catch {
+        leesDepthVoorkeuren();
+        melding.textContent = T('Opslaan is niet gelukt. Controleer of opslag in je browser is toegestaan.');
+        melding.hidden = false;
+        return;
+      }
+      const sensor = window.DeviceOrientationEvent;
+      if (sleutel === 'fibro_chat_depth_beweging' && invoer.checked &&
+          !matchMedia('(prefers-reduced-motion: reduce)').matches &&
+          typeof sensor?.requestPermission === 'function') {
+        try { await sensor.requestPermission(); } catch {}
+      }
+    });
+  }
+  leesDepthVoorkeuren();
+  window.addEventListener('pageshow', leesDepthVoorkeuren);
+  window.addEventListener('storage', leesDepthVoorkeuren);
+}
+
 // v129: de tekst (naam, @naam, bio, mood, online) meteen uit het geheugen van dit toestel tonen,
 // nog voordat de rest van de pagina geladen is. Het verse profiel van de server werkt het daarna bij,
 // behalve wat je intussen zelf al veranderd hebt.

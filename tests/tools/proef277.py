@@ -1,6 +1,6 @@
 # proef277 (10 nov 2026, groepschat stap 1): een groep maken en versleuteld kletsen (groep.html, groepsleutel.js,
 # groepenlijst.js), met een nagebootste Supabase (de echte regels staan in sql/groepen.sql).
-#  A. Chat: knop '+ Groep' en je groepen bovenaan de lijst (mijn_groepen)
+#  A. Chat: knop '+ Groep' en je groepen bovenaan de lijst (mijn_groepen), paars, met 2/50 leden
 #  B. Nieuwe chat: Groepschat kiezen (voice en webcam kiesbaar), naam en Bram kiezen (teller), Groep maken
 #     = maak_groep met de goede gegevens, en je staat in het gesprek
 #  C. Marcel stuurt 'Hoi Bram 👋': op de server staat alleen 'g1:...' (niet leesbaar); bij Marcel staat het bericht
@@ -134,6 +134,9 @@ try:
         # A
         m.goto(BASIS + 'chat.html'); m.wait_for_selector('#groepenLijst .groep-item')
         check(m.inner_text('#groepenLijst .groep-item .vriend-naam') == 'Zaterdag-gamers' and m.get_attribute('#groepenLijst .groep-item', 'href') == 'groep.html?id=' + gid, 'A: groep bovenaan de chatlijst')
+        check(m.inner_text('#groepenLijst .groep-item .groep-teller') == 'Groepschat · 2/50 leden', 'A: leden en maximum (%r)' % m.inner_text('#groepenLijst .groep-item .groep-teller'))
+        achter = m.evaluate("getComputedStyle(document.querySelector('#groepenLijst .groep-item')).backgroundImage")
+        check('gradient' in achter and '124, 58, 237' in achter, 'A: groep heeft een paarse balk (%s)' % achter[:80])
         if os.environ.get('SHOT'): m.screenshot(path=os.environ['SHOT'] + '/chat.png')
         check(m.get_attribute('#nieuweGroep', 'href') == 'groep.html', 'A: knop + Groep')
         # F

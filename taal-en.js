@@ -2049,6 +2049,7 @@ window.FIBRO_EN = {
   "Groep verlaten": "Leave group",
   "Groepschat": "Group chat",
   "Groepschat · {n} leden": "Group chat · {n} members",
+  "Groepschat · {n}/{max} leden": "Group chat · {n}/{max} members",
   "Je hebt nog geen vrienden om toe te voegen.": "You have no friends to add yet.",
   "Je sleutel staat niet op dit toestel. Zet hem terug met je herstelcode (Stijl > Instellingen).": "Your key is not on this device. Restore it with your recovery code (Style > Settings).",
   "Jij bent de beheerder. Je kunt later nog vrienden toevoegen of weghalen.": "You are the admin. You can add or remove friends later.",

@@ -2592,7 +2592,10 @@ window.FIBRO_EN = {
   "Laat de kaarten en stapels een schaduw op de tafel werpen.": "Cast shadows from the cards and decks onto the table.",
   // 18 nov 2026: PeerTube-widget (peertube.js, profiel.html, vriend-profiel.html)
   "PeerTube": "PeerTube",
-  "Video van PeerTube, laadt pas na een tik": "Video from PeerTube, only loads after a tap",
+  "Uit de Store: video van PeerTube, laadt pas na een tik": "From the Store: video from PeerTube, only loads after a tap",
+  "PeerTube verwijderen": "Remove PeerTube",
+  "Zet een video van PeerTube op je profiel. Je vrienden zien eerst een kaartje; pas als iemand op afspelen tikt, maakt zijn toestel verbinding met PeerTube. Geen reclame, geen aanbevelingen.": "Put a PeerTube video on your profile. Your friends first see a card; only when someone taps play does their device connect to PeerTube. No ads, no recommendations.",
+  "Gedownload! Er is geen ruimte meer op je beginscherm. Haal iets weg, of zet hem aan bij Profiel → Widgets.": "Downloaded! There is no room left on your home screen. Remove something, or turn it on at Profile → Widgets.",
   "PeerTube-video": "PeerTube video",
   "van {server}": "from {server}",
   "Pas als je op afspelen tikt, maakt je toestel verbinding met {server}.": "Only when you tap play does your device connect to {server}.",

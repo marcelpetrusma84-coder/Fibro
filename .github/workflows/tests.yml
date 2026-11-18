@@ -221,3 +221,6 @@ jobs:
       - name: "PeerTube-widget: laadt pas na een tik, alleen goedgekeurde servers (proef314)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef314.py .
+      - name: "PeerTube-widget in de Store: downloaden, op Home, verwijderen (proef315)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef315.py .

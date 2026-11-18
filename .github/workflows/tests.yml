@@ -224,3 +224,6 @@ jobs:
       - name: "PeerTube-widget in de Store: downloaden, op Home, verwijderen (proef315)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef315.py .
+      - name: "Muziek-widget (Bandcamp en Funkwhale): Store, Home, laadt pas na een tik (proef316)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef316.py .

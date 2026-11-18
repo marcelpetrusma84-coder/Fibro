@@ -2586,4 +2586,5 @@ window.FIBRO_EN = {
   "Verzoek verstuurd naar {naam}": "Request sent to {naam}",
   "Vriendverzoeken": "Friend requests",
   "uit de groep {groep}": "from the group {groep}",
+  "\u{1F389} Nieuwe vriend of vriendverzoek": "\u{1F389} New friend or friend request",
 }

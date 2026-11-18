@@ -33,7 +33,7 @@ assert.match(push, /if \(await staatUit\(supabase, receiver_id, String\(type\)\)
 
 // 3. Het menu op Home
 const index = lees('index.html')
-assert.match(index, /import \{ PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush \} from '\.\/pushmeldingen\.js\?v=5'/,
+assert.match(index, /import \{ PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush \} from '\.\/pushmeldingen\.js\?v=\d+'/,
   'gewone import (geen import() bij de tik: anders vraagt de iPhone geen toestemming)')
 const kop = index.indexOf("groep(T('Pushmeldingen'), 'menuKopPush'")
 assert.ok(kop > index.indexOf("groep(T('Instellingen')") && kop < index.indexOf("groep(T('Accountinstellingen')"), 'eigen kopje tussen Instellingen en Accountinstellingen')

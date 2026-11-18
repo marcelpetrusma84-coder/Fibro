@@ -41,6 +41,10 @@
 // de afzender krijgen "Nieuw bericht in een groep" (zoals bij de gewone chat zonder naam of inhoud); een tik opent de
 // groep. Een 'stil' bericht (reactie, weggehaald) geeft niets. Elk bericht hoogstens een keer (push_log), en per groep
 // vervangt een nieuwe melding de vorige (tag).
+// vriendverzoek (18 nov 2026): { vriendverzoek_id } van de trigger op vriendverzoeken (sql/vriendverzoek-push.sql).
+// "👋 Lotte wil vrienden worden" naar wie gevraagd wordt; een tik opent Vrienden (daar staat Ja / Nee). Alleen als het
+// verzoek nog open en vers is, geen van beiden geblokkeerd is en er geen blokkade tussen hen is; hoogstens een keer per
+// verzoek (push_log). Valt onder 'Vrienden' in ☰ > Pushmeldingen.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7"; // vaste versie: een nieuwere geeft geen 'default' (boot error 10 nov 2026)
 
@@ -91,6 +95,10 @@ const TEKSTEN: Record<string, Record<string, Tekst>> = {
     nl: { title: "Stekky", body: "🎉 {naam} heeft je uitnodiging aangenomen! Zeg hoi 👋" },
     en: { title: "Stekky", body: "🎉 {naam} accepted your invite! Say hi 👋" },
   },
+  vriendverzoek: {
+    nl: { title: "Stekky", body: "👋 {naam} wil vrienden worden" },
+    en: { title: "Stekky", body: "👋 {naam} wants to be friends" },
+  },
   gastenboek: {
     nl: { title: "Stekky", body: "📖 {naam} schreef in je gastenboek" },
     en: { title: "Stekky", body: "📖 {naam} wrote in your guestbook" },
@@ -116,7 +124,7 @@ const LEVENSDUUR: Record<string, number> = { oproep: 45, "oproep-video": 45, gem
   "vriend-nieuw": 3 * 24 * 60 * 60, gastenboek: 3 * 24 * 60 * 60, like: 24 * 60 * 60 };
 const GASTENBOEK_RUST_MS = 10 * 60 * 1000; // v258: zelfde vriend, zelfde gastenboek: hoogstens een melding per 10 minuten
 // v258: deze meldingen komen alleen van de server (met een id), nooit van een app met receiver_id + type
-const ALLEEN_SERVER = new Set(["spel", "vriend-nieuw", "gastenboek", "like", "online", "groep"]);
+const ALLEEN_SERVER = new Set(["spel", "vriend-nieuw", "gastenboek", "like", "online", "groep", "vriendverzoek"]);
 // v258: likes onder een foto, nummer of video (zelfde lijst als in sql/profiel-likes.sql en profielreacties.js)
 const LIKE_EMOJI = new Set(["❤️", "😂", "🔥", "😍", "😮", "👏"]);
 const LIKE_WAT: Record<string, { nl: string; en: string }> = {
@@ -149,7 +157,7 @@ const IEMAND: Record<string, string> = { nl: "Iemand", en: "Someone" };
 
 // v266: welke meldingen kun je uitzetten (soort -> groep in chat_instellingen.push_uit). Niet: bericht en bellen.
 const PUSH_GROEP: Record<string, string> = {
-  buzz: "buzz", spel: "spel", "spel-gemist": "spel", "spel-verlaten": "spel", "vriend-nieuw": "vriend",
+  buzz: "buzz", spel: "spel", "spel-gemist": "spel", "spel-verlaten": "spel", "vriend-nieuw": "vriend", vriendverzoek: "vriend",
   gastenboek: "gastenboek", like: "like", online: "online",
 };
 // Heeft de ontvanger deze soort uitgezet? Lukt het opzoeken niet (kolom bestaat nog niet), dan gewoon sturen.
@@ -396,6 +404,47 @@ Deno.serve(async (req) => {
             console.error("Push fout:", e && (e as any).statusCode ? (e as any).statusCode : e);
             if (e && ((e as any).statusCode === 404 || (e as any).statusCode === 410)) await supabase.from("push_subscriptions").delete().eq("id", rij.id);
           }
+        }
+      }
+      return antwoord({ ok: true, verstuurd });
+    }
+
+    // vriendverzoek (18 nov 2026): iemand uit een groep wil vrienden worden (trigger op vriendverzoeken)
+    if (invoer.vriendverzoek_id) {
+      const id = String(invoer.vriendverzoek_id);
+      if (!UUID.test(id)) return antwoord({ ok: false, reden: "ongeldig verzoek" }, 400);
+      const { data: v, error: fv } = await supabase.from("vriendverzoeken")
+        .select("id, van, naar, status, created_at").eq("id", id).maybeSingle();
+      if (fv) throw fv;
+      if (!v || v.status !== "open") return antwoord({ ok: false, reden: "geen open verzoek" }, 404);
+      if (Date.now() - new Date(v.created_at).getTime() > BERICHT_VERS_MS) return antwoord({ ok: false, reden: "te oud" });
+      const { data: blok } = await supabase.from("mijn_blokkades").select("blokkeerder_id")
+        .or("and(blokkeerder_id.eq." + v.van + ",geblokkeerde_id.eq." + v.naar + "),and(blokkeerder_id.eq." + v.naar + ",geblokkeerde_id.eq." + v.van + ")").limit(1);
+      if (blok && blok.length) return antwoord({ ok: true, verstuurd: 0, reden: "blokkade" });
+      if (await staatUit(supabase, v.naar, "vriendverzoek")) return antwoord({ ok: true, verstuurd: 0, reden: "uitgezet" });
+      let { data: profielen, error: fp } = await supabase.from("profiles").select("id, username, taal, geblokkeerd").in("id", [v.van, v.naar]);
+      if (fp && fp.code === "42703") ({ data: profielen, error: fp } = await supabase.from("profiles").select("id, username, geblokkeerd").in("id", [v.van, v.naar]));
+      if (fp) throw fp;
+      const vrager = (profielen || []).find((p: any) => p.id === v.van);
+      const ontvanger = (profielen || []).find((p: any) => p.id === v.naar);
+      if (!vrager || !ontvanger || vrager.geblokkeerd || ontvanger.geblokkeerd) return antwoord({ ok: false, reden: "geblokkeerd" }, 403);
+      if (!(await pakSlot(supabase, v.id))) return antwoord({ ok: true, verstuurd: 0, reden: "al verstuurd" });
+      const taal = ontvanger.taal === "en" ? "en" : "nl";
+      const naam = String(vrager.username || IEMAND[taal]).slice(0, 40);
+      const payload = JSON.stringify({
+        title: TEKSTEN.vriendverzoek[taal].title, body: TEKSTEN.vriendverzoek[taal].body.replace("{naam}", naam),
+        url: "/Fibro/vrienden.html", type: "vriendverzoek", tag: "vriendverzoek-" + v.van,
+      });
+      webpush.setVapidDetails("mailto:fibro.contact@proton.me", Deno.env.get("VAPID_PUBLIC_KEY"), Deno.env.get("VAPID_PRIVATE_KEY"));
+      const { data: subs } = await supabase.from("push_subscriptions").select("id, subscription").eq("user_id", v.naar);
+      let verstuurd = 0;
+      for (const rij of subs || []) {
+        try {
+          await webpush.sendNotification(rij.subscription, payload, { TTL: 3 * 24 * 60 * 60 });
+          verstuurd++;
+        } catch (e) {
+          console.error("Push fout:", e && (e as any).statusCode ? (e as any).statusCode : e);
+          if (e && ((e as any).statusCode === 404 || (e as any).statusCode === 410)) await supabase.from("push_subscriptions").delete().eq("id", rij.id);
         }
       }
       return antwoord({ ok: true, verstuurd });

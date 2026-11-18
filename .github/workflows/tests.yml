@@ -218,3 +218,6 @@ jobs:
       - name: "Spelmenu ☰ in elk spel (pauze, geluid, microfoon, camera, menu, verlaten) en berichten linksboven"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef291.py .
+      - name: "PeerTube-widget: laadt pas na een tik, alleen goedgekeurde servers (proef314)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef314.py .

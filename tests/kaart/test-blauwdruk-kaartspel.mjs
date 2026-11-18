@@ -9,13 +9,13 @@ const P = await import('../../pesten.js')
 // 1. Elke kaart is een eigen vectorplaatje (SVG), ook de achterkant
 const plaatjes = new Set()
 for (const id of P.maakDeck()) {
-  const svg = K.kaartSvg(id)
+  const svg = K.kaartSvg(id, 'stekky')   // 17 nov 2026: de Vrolijke kaarten zijn nu de standaard; dit test de getekende
   assert.match(svg, /^<svg class="kt-svg" viewBox="0 0 250 350"[^>]*>.*<\/svg>$/s, id + ' is een svg')
   assert.ok(!/undefined|NaN/.test(svg), id + ': netjes getekend')
   plaatjes.add(svg)
 }
 assert.equal(plaatjes.size, 54, '54 verschillende kaarten')
-assert.match(K.achterkantSvg(), /linearGradient.*#8b3fd1.*#6a2bab.*#1a0a2e/s, 'achterkant in de Stekky-kleuren')
+assert.match(K.achterkantSvg('stekky'), /linearGradient.*#8b3fd1.*#6a2bab.*#1a0a2e/s, 'achterkant in de Stekky-kleuren')
 assert.equal(K.kaartNaam('hA'), 'harten aas')
 assert.deepEqual(['sA', 'h3', 'J1', 'k10', 'h10'].sort(K.SORTEER.kleur), ['h3', 'h10', 'k10', 'sA', 'J1'])
 assert.deepEqual(['sA', 'h3', 'J1', 'k10', 'h10'].sort(K.SORTEER.waarde), ['h3', 'h10', 'k10', 'sA', 'J1'])
@@ -71,7 +71,7 @@ assert.match(kj, /stijl: STIJL, onReactie: [^\n]*ondergrond: 'hout'/, 'vaste per
 assert.match(kj, /Regicide van Badgers From Mars/, 'vermelding van het oorspronkelijke spel')
 assert.match(hulp, /\.kt-tafel\.kt-hout\{[^}]*url\(kaarten\/hout\.webp\?v=\d+\)/, 'houten tafelblad')
 assert.match(hulp, /\(vast \? '' : '<button type="button" class="kt-knop kt-stijlknop"/, 'vaste stijl: geen knop 🎴')
-for (const f of ['pesten-ui.js', 'toepen-ui.js', 'eenentwintigen-ui.js', 'koningsjacht-ui.js']) assert.match(lees(f), /kaartspel-hulp\.js\?v=10'/, f + ': dezelfde gedeelde kaartspel-hulp v10')
+for (const f of ['pesten-ui.js', 'toepen-ui.js', 'eenentwintigen-ui.js', 'koningsjacht-ui.js']) assert.match(lees(f), /kaartspel-hulp\.js\?v=11'/, f + ': dezelfde gedeelde kaartspel-hulp v11')
 for (const f of ['kaartspel-hulp.js', 'pesten-ui.js', 'toepen-ui.js', 'eenentwintigen-ui.js', 'koningsjacht-ui.js'])
   for (const m of lees(f).matchAll(/\bT\('((?:[^'\\]|\\.)*)'/g)) assert.ok(en.includes(JSON.stringify(m[1]) + ':'), f + ': Engels voor ' + m[1])
 assert.match(lees('BLAUWDRUK-KAARTSPEL.md'), /KAARTSPELLEN/)

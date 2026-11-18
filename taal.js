@@ -1,3 +1,9 @@
+// v126 (18 nov 2026): taal-en.js?v=126 (Koningsjacht: schaduwen op tafel, PR #207 van Tijn)
+// v125 (18 nov 2026): taal-en.js?v=125 (groepen in de chatlijst: paars en 3/8 leden)
+// v124 (18 nov 2026): taal-en.js?v=124 (pushmelding bij een vriendverzoek)
+// v123 (18 nov 2026): taal-en.js?v=123 (vriend worden vanuit een groep)
+// v122 (17 nov 2026): taal-en.js?v=122 (geblokkeerde personen in een groep)
+// v121b (17 nov 2026): taal-en.js?v=121 (Vrolijke kaarten)
 // taal.js - Fibro in het Nederlands of in het Engels (v7, 13 oktober 2026, v148)
 // v265 (4 november 2026): taal-en.js?v=72 (wachtwoord resetten)
 // v265b (4 november 2026): taal-en.js?v=72 (quiz)
@@ -136,7 +142,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=121', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=126', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

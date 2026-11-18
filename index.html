@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=121"></script>
+<script src="taal.js?v=126"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -37,6 +37,14 @@
   html { background:var(--bg); }
   #fibro-animatie-canvas { background:var(--bg); }
   #content-laag { position:relative; z-index:1; }
+  /* Laat Home door een wazige glasplaat zien; de bovenbalk en het menu blijven scherp. */
+  body.home-menu-open #content-laag { z-index:auto; }
+  html.home-menu-open, body.home-menu-open { overflow:hidden; overscroll-behavior:none; }
+  body.home-menu-open .top-bar { z-index:9999 !important; box-shadow:-18px 24px 12px rgba(0,0,0,.48), -34px 42px 32px rgba(0,0,0,.38), 0 2px 12px rgba(0,0,0,.35) !important; }
+  .home-menu-glas { position:fixed; inset:0; z-index:9998; touch-action:none; background:rgba(12,7,23,.42); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); animation:home-menu-verschijn .2s ease-out; }
+  #fibroMenu { overscroll-behavior:contain; -webkit-overflow-scrolling:touch; box-shadow:-18px 24px 12px rgba(0,0,0,.48), -34px 42px 32px rgba(0,0,0,.38), 0 2px 12px rgba(0,0,0,.35) !important; }
+  @keyframes home-menu-verschijn { from { opacity:0; } to { opacity:1; } }
+  @media (prefers-reduced-motion:reduce) { .home-menu-glas { animation:none; } }
   input, textarea { font-size:16px !important; }
 
   /* TOP BAR */
@@ -347,7 +355,7 @@ import { maakSpelVersieLangDruk } from './spelversie-langdruk.js?v=1'
 import { koppelSpelIcoonFallback } from './spelicoon.js?v=6'
 koppelSpelIcoonFallback()
 import { openSpelMetTitel } from './titelscherm.js?v=12' // v252: titelscherm met muziek meteen bij je tik
-import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=5' // v266
+import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=6' // v266
 pasBlokstijlToe()
 
 // ── Waarschuw als de private key op dit apparaat ontbreekt ──
@@ -2318,6 +2326,9 @@ const BEWAAR_KEUZES = [[1, T('1 dag')], [7, T('7 dagen')], [31, T('31 dagen')], 
 function sluitMenu() {
   const m = document.getElementById('fibroMenu')
   if (m) m.remove()
+  document.getElementById('homeMenuGlas')?.remove()
+  document.body.classList.remove('home-menu-open')
+  document.documentElement.classList.remove('home-menu-open')
   const k = document.getElementById('menuBtn')
   if (k) k.setAttribute('aria-expanded', 'false')
 }
@@ -2382,7 +2393,7 @@ window.openMenu = function() {
       zet(open)
       menuOpen = menuOpen.filter(x => x !== id).concat(open ? [id] : [])
       try { localStorage.setItem('fibro_menu_open', JSON.stringify(menuOpen)) } catch (er) {}
-      if (open) setTimeout(() => { try { g.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) } catch (er) {} }, 0)
+      if (open) setTimeout(() => { try { m.scrollBy({ top: Math.max(0, g.getBoundingClientRect().bottom - m.getBoundingClientRect().bottom + 8), behavior: 'smooth' }) } catch (er) {} }, 0)
     }
     g.append(k, lijst)
     m.appendChild(g)
@@ -2421,6 +2432,7 @@ window.openMenu = function() {
       if (opKlik) opKlik(aan)
     }
     g.appendChild(b)
+    return zet
   }
   schakelaar('fibro_muziek_auto', T('\u{1F3B5} Mijn muziek vanzelf'), async (aan) => {
     if (aan) { try { sessionStorage.removeItem('fibro_muziek_pauze_eigen') } catch (e) {} }
@@ -2437,9 +2449,19 @@ window.openMenu = function() {
   })
   // groepschat (10 nov 2026): uit = je komt alleen in een groep als je iedereen erin als vriend hebt. De server controleert
   // het (sql/groep-onbekenden.sql: chat_instellingen.groep_onbekenden). Standaard aan.
-  schakelaar('fibro_groep_onbekenden', T('\u{1F465} Groepen met onbekenden'), async (aan) => {
+  const zetOnbekenden = schakelaar('fibro_groep_onbekenden', T('\u{1F465} Groepen met onbekenden'), async (aan) => {
     try { const { error } = await supabase.rpc('zet_groep_onbekenden', { p_aan: !!aan }); if (error) console.warn('[groep] schakelaar bewaren mislukt', error.message) } catch (e) {}
   })
+  // 18 nov 2026: de keuze staat op de server; op een ander toestel (of na opnieuw installeren) die laten zien
+  ;(async () => {
+    try {
+      const uid = window._uid; if (!uid) return
+      const { data, error } = await supabase.from('chat_instellingen').select('groep_onbekenden').eq('gebruiker_id', uid).maybeSingle()
+      if (error || !data || typeof data.groep_onbekenden !== 'boolean') return
+      try { localStorage.setItem('fibro_groep_onbekenden', data.groep_onbekenden ? '1' : '0') } catch (e) {}
+      zetOnbekenden()
+    } catch (e) {}
+  })()
   // v266: Fibro op slot met Face ID, vingerafdruk of pincode (standaard uit; appslot.js)
   if (window.FibroSlot) {
     const b = item(g, '', () => window.FibroSlot.openInstellingen())
@@ -2527,7 +2549,13 @@ window.openMenu = function() {
   versie.textContent = versieTekst()
   versie.style.cssText = 'border-top:0.5px solid var(--border);margin-top:4px;padding:10px 12px 6px;font-size:12px;color:var(--text);opacity:0.65;text-align:center;user-select:text;-webkit-user-select:text'
   m.appendChild(versie)
-  document.body.appendChild(m)
+  const glas = document.createElement('div')
+  glas.id = 'homeMenuGlas'
+  glas.className = 'home-menu-glas'
+  glas.setAttribute('aria-hidden', 'true')
+  document.body.classList.add('home-menu-open')
+  document.documentElement.classList.add('home-menu-open')
+  document.body.append(glas, m)
   knop.setAttribute('aria-expanded', 'true')
   m.querySelector('button').focus()
   setTimeout(() => {

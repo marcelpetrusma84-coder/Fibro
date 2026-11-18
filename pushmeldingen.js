@@ -14,7 +14,7 @@ export const PUSH_SOORTEN = [
   { id: 'online', tekst: '\u{1F7E2} Vriend komt online' },
   { id: 'buzz', tekst: '⚡ Buzz' },
   { id: 'spel', tekst: '\u{1F3AE} Uitdagingen voor een spel' },
-  { id: 'vriend', tekst: '\u{1F389} Nieuwe vriend' },
+  { id: 'vriend', tekst: '\u{1F389} Nieuwe vriend of vriendverzoek' },   // 18 nov 2026: ook vriendverzoeken uit een groep
   { id: 'gastenboek', tekst: '\u{1F4D6} Gastenboek' },
   { id: 'like', tekst: '❤️ Likes op je profiel' },
 ]

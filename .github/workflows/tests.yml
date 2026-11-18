@@ -140,6 +140,15 @@ jobs:
       - name: "Groepschat: webcam chat tot 4 personen"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef283.py .
+      - name: "Groepschat: berichten na veel reacties, nieuw lid kan meteen lezen"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef310.py .
+      - name: "Groepschat: iemand die je persoonlijk blokkeerde (ingeklapt, niet horen of zien)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef311.py .
+      - name: "Groepschat: vriend worden met iemand uit de groep"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef313.py .
       - name: "Groepschat: poll en afspraak (+ knop)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef284.py .
@@ -170,6 +179,9 @@ jobs:
       - name: "Kaartspellen: kaartstijl kiezen (Stekky of Perkament) met 🎴"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef294.py .
+      - name: "Kaartspellen: de Vrolijke kaarten (standaard, plaatjes laden, Engels)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef312.py .
       - name: "Kaartspellen: groen casino of houten tafel, en moderne kaarten (proef308)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef308.py .

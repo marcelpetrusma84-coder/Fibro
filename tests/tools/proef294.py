@@ -48,11 +48,13 @@ try:
         pg = open_spel(ctx, 'pesten')
         check(wacht(pg, MIJN_BEURT), 'Pesten: gedeeld en jij bent aan de beurt')
         check(soort(pg, '.kt-hand .kt-kaart') == {'svg'} and soort(pg, '.kt-stapel .kt-st') == {'svg'} and soort(pg, '.kt-afleg .kt-ak') == {'svg'},
-              'A: zonder keuze gewone getekende kaarten')
+              'A: zonder keuze getekende kaarten (svg)')
+        check(pg.evaluate("() => { const k = [...document.querySelectorAll('.kt-hand .kt-kaart')]; return k.length > 0 && k.every(e => e.querySelector('svg.kt-vrolijk')) }"),
+              'A: 17 nov 2026: zonder keuze de Vrolijke kaarten')
 
         pg.click('.kt-stijlknop')
-        check(pg.locator('.kt-stijlkeus').count() == 1 and pg.locator('.kt-stijlkeuze[data-stijl]').count() == 3, 'B: 🎴 opent de keuze met drie stijlen (17 nov 2026: ook Modern)')
-        check(pg.locator('.kt-stijlkeuze[data-stijl=stekky][aria-pressed=true]').count() == 1, 'B: Stekky staat aan')
+        check(pg.locator('.kt-stijlkeus').count() == 1 and pg.locator('.kt-stijlkeuze[data-stijl]').count() == 4, 'B: 🎴 opent de keuze met vier stijlen (17 nov 2026: ook Modern en Vrolijk)')
+        check(pg.locator('.kt-stijlkeuze[data-stijl=vrolijk][aria-pressed=true]').count() == 1, 'B: Vrolijk staat aan')
         check('Perkament' in pg.inner_text('.kt-stijlkeus'), 'B: Perkament staat erbij')
         pg.click('.kt-stijlkeuze[data-stijl=perkament]')
         check(pg.locator('.kt-stijlkeus').count() == 0, 'C: de keuze gaat dicht')

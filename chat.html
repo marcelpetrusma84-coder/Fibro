@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=120"></script>
+<script src="taal.js?v=126"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -66,6 +66,11 @@ body { background:var(--bg); background-attachment:fixed; background-size:cover;
 .vriend-selectie h3, .vriend-selectie .vs-kop { font-family:'Playfair Display',serif; font-style:italic; font-size:16px; color:var(--accent); margin-bottom:14px; }
 .vriend-item { display:flex; align-items:center; gap:12px; padding:12px; border:0.5px solid var(--border); border-radius:var(--blok-hoek,12px); margin-bottom:8px; cursor:pointer; background:var(--blok-kleur,var(--card)); transform:var(--blok-kantel,none); box-shadow:var(--blok-schaduw,none); transition:border-color 0.2s; } /* v130: blokstijl zoals de rest van de app */
 .vriend-item:hover { border-color:var(--accent); }
+/* 18 nov 2026: een groepschat valt op met een paarse balk */
+body .vriend-item.groep-item, body[data-fibro-page] .vriend-item.groep-item { background:linear-gradient(135deg, rgba(124,58,237,0.55), rgba(168,85,247,0.35)); border:1px solid rgba(196,148,255,0.75); outline-color:rgba(196,148,255,0.6); box-shadow:0 0 14px rgba(168,85,247,0.35); } /* ook boven app-depth.css */
+body[data-fibro-page] .vriend-item.groep-item:hover { border-color:#e2c8ff; outline-color:#e2c8ff; }
+.groep-item .vriend-av { background:linear-gradient(135deg,#a855f7,#7c3aed); }
+.groep-item .groep-teller { font-size:13px; color:#ead9ff; font-weight:600; }
 .vriend-item .vriend-av { position:relative; }
 .vriend-av .online-dot { position:absolute; bottom:-1px; right:-1px; width:11px; height:11px; border-radius:50%; background:#4ade80; border:2px solid var(--bg-kleur, var(--bg)); display:none; }
 .vriend-item.is-online .online-dot { display:block; }
@@ -482,7 +487,7 @@ window.veiligeUrl = function(v){
   import { startMeldingen, buzzRustig } from './meldingen.js?v=188'
   import { speelBuzz } from './buzzgeluid.js?v=1'
   import { houOpen } from './lijntjes.js?v=1'
-  import { toonGroepen } from './groepenlijst.js?v=2' // groepschat stap 1
+  import { toonGroepen } from './groepenlijst.js?v=3' // groepschat stap 1
   import { haalVriendFotos, zetAvatar, geldigeFoto } from './vriendfotos.js?v=2'
   import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel, eigenPubliekeSleutel } from './crypto.js?v=182'
   import { werkKnopBij as werkSleutelKnopBij } from './sleutelcontrole.js?v=2' // v266: sleutel controleren (QR of 60 cijfers)
@@ -2986,10 +2991,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=151',
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
-    pesten: './pesten-ui.js?v=9',
-    toepen: './toepen-ui.js?v=8',
-    eenentwintigen: './eenentwintigen-ui.js?v=8',
-    koningsjacht: './koningsjacht-ui.js?v=15',
+    pesten: './pesten-ui.js?v=11',
+    toepen: './toepen-ui.js?v=10',
+    eenentwintigen: './eenentwintigen-ui.js?v=10',
+    koningsjacht: './koningsjacht-ui.js?v=18',
     schaken: './schaken-ui.js?v=275',
     schakendrie: './schaken-drie-ui.js?v=43',
     flappybird: './flappy-ui.js?v=147',
@@ -3765,7 +3770,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Pesten (kaartspel, 11 nov 2026) ───
   async function startPesten() {
-    const m = await laadModule('./pesten-ui.js?v=9')
+    const m = await laadModule('./pesten-ui.js?v=11')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
   // ─── Toepen en Eenentwintigen (kaartspellen uit de Store, 11 nov 2026): hetzelfde als Pesten ───

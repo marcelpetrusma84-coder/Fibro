@@ -1,0 +1,28 @@
+Vrolijke kaarten voor de kaartspellen (17 november 2026, Marcel)
+
+bron/      de plaatjes van Marcel: per kleur een waaier van kaarten (klaveren2 is een tweede versie van klaveren),
+           en ruiten-joker met de joker en de achterkant. Er zaten foutjes in (twee keer klaveren 9, twee keer
+           ruiten 10, ruiten 7 met een J, op de harten- en ruitenhofkaarten tekens van een andere kleur).
+
+Zo maak je kaarten/vrolijk/*.webp opnieuw (python3 met opencv en numpy), in deze map:
+  python3 bouw.py      -> ../../../kaarten/vrolijk/ en vakken.json (en voorbeeld/ om te bekijken, niet bewaren)
+
+Wat er gebeurt:
+  - De kaart zelf (witte rand, bruin lijntje, creme vlak), de hoekjes, de tekens van 4 t/m 10 en de namen onder
+    de hofkaarten tekent de app zelf, scherp (vrolijkKaart in kaartspel-hulp.js). Op de hofkaarten altijd Engels
+    (JACK, QUEEN, KING en J, Q, K in de hoek), ook als de app in het Nederlands staat (Marcel, 17 nov 2026).
+  - Aas, 2 en 3: het figuurtje wordt uitgeknipt, recht gezet en losgemaakt van de achtergrond (vrijstaand.py).
+    Het losse teken bovenaan de 2 en 3 gaat weg (anders zie je 3 tekens op een 2). Klaveren 3 houdt hem: dat is
+    een figuurtje met een gezicht.
+  - Klaveren- en hartenaas krijgen een groot lachend gezicht zoals de ruitenaas (vraag van Marcel): het oude
+    gezichtje van de hartenaas gaat weg (gezicht.py), het nieuwe tekent de app (vrGezicht).
+  - Boer, vrouw, heer (hof.py): twee sets in de plaatjes, gekleurd (klaveren, ook voor harten) en grijs
+    (schoppen, ook voor ruiten). Het hoekje en tekens van de verkeerde kleur worden weggepoetst; waar een teken weg
+    is, tekent de app het goede teken (vakken.json -> VROLIJK.tekens). De heer is met de hand gemeten (HOF).
+  - Kleuren (kleuren.py, Marcel 17 nov 2026): harten rood, ruiten geel, klaveren groen, schoppen blauw. De
+    figuurtjes van ruiten en schoppen krijgen die kleur, en de kleren van boer, vrouw en heer de kleur van hun
+    soort. Hoofden (haar, gezicht, baard), de grijze kronen en het zwaard blijven zoals ze zijn (BESCHERM).
+    De getekende tekens in de app hebben dezelfde kleuren (VROLIJK.kleur en VROLIJK.rand).
+  - Joker (alleen het figuurtje) en achterkant.
+Verandert vakken.json, zet dan "tekens" over in VROLIJK in kaartspel-hulp.js. Vervang je een plaatje in de app,
+verhoog dan v in VROLIJK.

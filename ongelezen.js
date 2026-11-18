@@ -16,6 +16,7 @@
 // die tellen mee in het totaal, en in de chat krijgt elke groep (.groep-item) een bolletje. Elke minuut opnieuw.
 import { supabase } from './supabase.js?v=95'
 import { houOpen } from './lijntjes.js?v=1'
+import { CHAT_MELDING_TAG, synchroniseerChatMelding } from './chat-melding.js?v=1'
 
 const aantallen = new Map()      // vriend-id → aantal ongelezen
 const groepAantallen = new Map() // groep-id → aantal ongelezen (v170)
@@ -93,6 +94,7 @@ async function haalGroepen() {
 }
 
 async function haalOp() {
+  synchroniseerChatMelding(supabase, mijnId)
   haalGroepen()
   try {
     const { data, error } = await supabase.rpc('ongelezen_per_vriend')
@@ -127,6 +129,7 @@ function markeer(vriendId) {
   supabase.rpc('markeer_gelezen', { p_vriend: vriendId })
     .then(({ error }) => {
       if (error) { console.warn('[ongelezen]', error.message); return }
+      synchroniseerChatMelding(supabase, mijnId)
       // v261: gelukt: chatstatus.js geeft de vriend een duwtje, zodat zijn vinkjes blauw worden
       try { document.dispatchEvent(new CustomEvent('fibro-gelezen', { detail: { vriend: vriendId } })) } catch (e) {}
     }, e => console.warn('[ongelezen]', e))
@@ -209,7 +212,7 @@ function zetAppBadge(totaal) {
     try {
       if (navigator.serviceWorker) navigator.serviceWorker.getRegistration()
         .then(r => r ? r.getNotifications() : [])
-        .then(lijst => { for (const m of lijst || []) if (!m.requireInteraction) m.close() })
+        .then(lijst => { for (const m of lijst || []) if (!m.requireInteraction && m.tag !== CHAT_MELDING_TAG) m.close() })
         .catch(() => {})
     } catch (e) {}
   }

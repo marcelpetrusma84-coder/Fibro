@@ -1,6 +1,6 @@
 // node tests/meldingen/test-berichten-aantal.mjs (17 nov 2026) - gewone chatberichten komen samen in één pushmelding met
 // het aantal ("Je hebt 3 nieuwe berichtjes 💬"), zoals andere apps in het meldingenscherm van de telefoon laten zien.
-// Buzz, bellen, spellen, groepen en andere meldingen blijven zoals ze waren.
+// Privé en groep delen een teller. Buzz en bellen hebben hun eigen melding.
 import { readFileSync } from 'node:fs'
 import vm from 'node:vm'
 import assert from 'node:assert/strict'
@@ -12,6 +12,7 @@ function portier () {
   const scherm = [] // meldingen die nu op het scherm staan
   const kast = new Map()
   const registration = {
+    scope: 'https://stekky.example/Fibro/',
     showNotification: async (titel, opties) => {
       getoond.push({ titel, ...opties })
       if (opties.tag) { const i = scherm.findIndex(m => m.tag === opties.tag); if (i >= 0) scherm.splice(i, 1) }
@@ -41,33 +42,33 @@ const test = async (naam, f) => { await f(); ok++; console.log('OK  ', naam) }
 await test('drie berichten: één melding, die telt 1, 2, 3', async () => {
   const p = portier()
   let m = await p.push(BERICHT)
-  assert.equal(m.body, 'Je hebt een nieuw bericht 💬')
-  assert.equal(m.tag, 'berichten'); assert.equal(m.renotify, true); assert.equal(m.data.aantal, 1)
+  assert.equal(m.body, '1 nieuw chatbericht')
+  assert.equal(m.tag, 'stekky-chat-ongelezen'); assert.equal(m.renotify, true); assert.equal(m.data.aantal, undefined)
   m = await p.push(BERICHT)
-  assert.equal(m.body, 'Je hebt 2 nieuwe berichtjes 💬')
+  assert.equal(m.body, '2 nieuwe chatberichten')
   m = await p.push(BERICHT)
-  assert.equal(m.body, 'Je hebt 3 nieuwe berichtjes 💬'); assert.equal(m.data.aantal, 3)
+  assert.equal(m.body, '3 nieuwe chatberichten'); assert.equal(m.data.aantal, undefined)
   assert.equal(p.scherm.length, 1, 'maar één melding op het scherm')
 })
-await test('melding weggeveegd of alles gelezen: weer bij 1 beginnen', async () => {
+await test('wegvegen laat ongelezen berichten staan in de teller', async () => {
   const p = portier()
   await p.push(BERICHT); await p.push(BERICHT)
   p.scherm[0].close()
   const m = await p.push(BERICHT)
-  assert.equal(m.body, 'Je hebt een nieuw bericht 💬'); assert.equal(m.data.aantal, 1)
+  assert.equal(m.body, '3 nieuwe chatberichten')
 })
-await test('Engels: You have 2 new messages', async () => {
+await test('Engels: 2 new chat messages', async () => {
   const p = portier()
   const en = { ...BERICHT, body: 'You have a new message 💬' }
   await p.push(en)
-  assert.equal((await p.push(en)).body, 'You have 2 new messages 💬')
+  assert.equal((await p.push(en)).body, '2 new chat messages')
 })
 await test('ook een oud bericht zonder type telt mee', async () => {
   const p = portier()
   await p.push({ title: 'Stekky', body: 'Je hebt een nieuw bericht 💬' })
-  assert.equal((await p.push({ title: 'Stekky', body: 'Je hebt een nieuw bericht 💬' })).body, 'Je hebt 2 nieuwe berichtjes 💬')
+  assert.equal((await p.push({ title: 'Stekky', body: 'Je hebt een nieuw bericht 💬' })).body, '2 nieuwe chatberichten')
 })
-await test('buzz, oproep, groep en like blijven apart en tellen niet mee', async () => {
+await test('groep telt mee in de chatmelding, buzz en oproep blijven apart', async () => {
   const p = portier()
   await p.push(BERICHT)
   const buzz = await p.push({ title: 'Stekky', body: 'Bram buzzt je!', type: 'buzz' })
@@ -75,10 +76,10 @@ await test('buzz, oproep, groep en like blijven apart en tellen niet mee', async
   const bel = await p.push({ title: 'Stekky', body: 'Bram belt je', type: 'oproep', tag: 'oproep-x' })
   assert.equal(bel.tag, 'oproep-x'); assert.equal(bel.requireInteraction, true)
   const groep = await p.push({ title: 'Stekky', body: 'Nieuw bericht in een groep 👥', type: 'groep', tag: 'groep-1' })
-  assert.equal(groep.tag, 'groep-1'); assert.equal(groep.body, 'Nieuw bericht in een groep 👥')
+  assert.equal(groep.tag, 'stekky-chat-ongelezen'); assert.equal(groep.body, '2 nieuwe chatberichten')
   const m = await p.push(BERICHT)
-  assert.equal(m.body, 'Je hebt 2 nieuwe berichtjes 💬', 'alleen de berichten tellen')
-  assert.equal(p.scherm.length, 4)
+  assert.equal(m.body, '3 nieuwe chatberichten', 'privé en groep tellen samen')
+  assert.equal(p.scherm.length, 3)
 })
 
 console.log(`\n${ok} van ${ok} goed`)

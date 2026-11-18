@@ -14,6 +14,117 @@ const MAX_LEEFTIJD = 7 * 24 * 3600 * 1000 // een oudere kopie: gewoon wachten op
 // open is en bewaart het in dit kastje; komt er een pushmelding (bericht, buzz, gemiste oproep) terwijl Fibro dicht
 // is, dan telt de portier er een bij. Het kastje blijft staan bij een nieuwe CACHE_VERSION.
 const BADGE_KAST = 'fibro-badge', BADGE_SLEUTEL = 'fibro-badge-teller'
+// Een eigen teller voor de meldingenlade. Een buzz of oproep kan nog steeds het app-icoon bijwerken.
+const CHAT_TAG = 'stekky-chat-ongelezen', CHAT_STAND = 'fibro-chat-melding-stand'
+const CHAT_SYNC = 'fibro-chat-melding-teller', CHAT_CLEAR = 'fibro-chat-melding-wis'
+const CHAT_UUID = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i
+let chatStand = null, chatRij = Promise.resolve()
+
+function planChatMelding(taak) {
+  const werk = chatRij.then(taak)
+  chatRij = werk.catch(() => {}) // Een mislukte melding blokkeert de volgende niet.
+  return werk
+}
+
+function geldigeChatStand(stand) {
+  return stand && Number.isSafeInteger(stand.aantal) && stand.aantal >= 0 &&
+    Number.isSafeInteger(stand.gemeten) && stand.gemeten > 0
+}
+
+async function leesChatStand() {
+  if (chatStand) return chatStand
+  try {
+    const kast = await caches.open(BADGE_KAST)
+    const bewaard = await kast.match(CHAT_STAND)
+    if (bewaard) {
+      const stand = await bewaard.json()
+      if (Number.isSafeInteger(stand?.aantal) && stand.aantal >= 0 &&
+          Number.isSafeInteger(stand.gemeten) && stand.gemeten >= 0 && Array.isArray(stand.ids)) chatStand = stand
+    }
+  } catch (e) {}
+  return chatStand ||= { ontvanger: '', aantal: 0, gemeten: 0, exact: false, ids: [], taal: 'nl' }
+}
+
+async function bewaarChatStand(stand) {
+  chatStand = stand
+  try { await (await caches.open(BADGE_KAST)).put(CHAT_STAND, new Response(JSON.stringify(stand))) } catch (e) {}
+}
+
+function chatMeldingTekst({ aantal, exact, taal }) {
+  const n = new Intl.NumberFormat(taal === 'en' ? 'en' : 'nl').format(aantal)
+  if (taal === 'en') return n + (exact ? ' unread chat ' : ' new chat ') + (aantal === 1 ? 'message' : 'messages')
+  return n + (exact ? ' ongelezen ' : (aantal === 1 ? ' nieuw ' : ' nieuwe ')) + (aantal === 1 ? 'chatbericht' : 'chatberichten')
+}
+
+function toonChatMelding(stand, nieuw) {
+  const url = bestand => new URL(bestand, self.registration.scope).href
+  return self.registration.showNotification('Stekky', {
+    body: chatMeldingTekst(stand),
+    tag: CHAT_TAG,
+    icon: url('icon-192.png?v=4'),
+    badge: url('icon-192.png?v=4'),
+    renotify: nieuw,
+    ...(nieuw ? { vibrate: [200, 100, 200] } : { silent: true }),
+    data: { url: url('chat.html') },
+  })
+}
+
+async function wisChatMelding(ontvanger) {
+  const oud = await leesChatStand()
+  if (oud.ontvanger && oud.ontvanger !== ontvanger) return
+  await bewaarChatStand({ ...oud, ontvanger, aantal: 0, ids: [], afgemeld: true })
+  for (const melding of await self.registration.getNotifications({ tag: CHAT_TAG })) melding.close()
+}
+
+async function werkChatMeldingBij(data) {
+  const oud = await leesChatStand()
+  const zelfdeAccount = oud.ontvanger === data.ontvanger || !oud.ontvanger
+  if (zelfdeAccount && data.gemeten < oud.gemeten) return
+  const stand = {
+    ontvanger: data.ontvanger, aantal: data.aantal, gemeten: data.gemeten,
+    exact: true, ids: zelfdeAccount ? oud.ids : [], taal: data.taal === 'en' ? 'en' : 'nl',
+  }
+  await bewaarChatStand(stand)
+  const meldingen = await self.registration.getNotifications({ tag: CHAT_TAG })
+  if (!stand.aantal || !zelfdeAccount) {
+    for (const melding of meldingen) melding.close()
+    return
+  }
+  // Een weggeveegde melding blijft weg. Pas een volgend bericht maakt weer een kaartje.
+  if (meldingen.some(melding => melding.body !== chatMeldingTekst(stand))) await toonChatMelding(stand, false)
+}
+
+async function nieuwChatBericht(data) {
+  const oud = await leesChatStand()
+  if (oud.afgemeld) return
+  const ontvanger = CHAT_UUID.test(data.ontvanger || '') ? data.ontvanger : oud.ontvanger
+  if (ontvanger && oud.ontvanger && ontvanger !== oud.ontvanger) return
+  const id = CHAT_UUID.test(data.berichtId || '') ? data.berichtId : ''
+  if (id && oud.ids.includes(id)) return
+  const metStand = geldigeChatStand(data.chatTeller)
+  if (metStand && data.chatTeller.gemeten < oud.gemeten) return
+  const stand = {
+    ontvanger,
+    aantal: metStand ? data.chatTeller.aantal : oud.aantal + 1,
+    gemeten: metStand ? data.chatTeller.gemeten : oud.gemeten,
+    exact: !!metStand,
+    ids: id ? [...oud.ids.slice(-63), id] : oud.ids,
+    taal: data.taal === 'en' || (!data.taal && /^you have|^new message/i.test(data.body || '')) ? 'en'
+      : data.taal === 'nl' ? 'nl' : oud.taal,
+  }
+  await bewaarChatStand(stand)
+  if (stand.aantal) await toonChatMelding(stand, true)
+  else for (const melding of await self.registration.getNotifications({ tag: CHAT_TAG })) melding.close()
+}
+
+self.addEventListener('message', function(event) {
+  const data = event.data
+  if (!CHAT_UUID.test(data?.ontvanger || '')) return
+  // Alleen de webapp brengt haar eigen, ingelogde stand over naar de worker.
+  if (!event.source?.url || !event.source.url.startsWith(self.registration.scope)) return
+  if (data.type === CHAT_CLEAR) event.waitUntil(planChatMelding(() => wisChatMelding(data.ontvanger)))
+  if (data.type === CHAT_SYNC && geldigeChatStand(data)) event.waitUntil(planChatMelding(() => werkChatMeldingBij(data)))
+})
 // v270: in een pushmelding de eigen naam van je vriend erbij ("Sanne aka ChonkyCapibara404 belt je"), zie pushnamen.js.
 // Lukt het laden niet, dan gewoon de tekst van de server.
 try { importScripts('./pushnamen.js?v=1') } catch (e) {}
@@ -172,32 +283,24 @@ async function buzzRustig() {
 }
 self.addEventListener('push', function(event) {
   const data = event.data ? event.data.json() : {}
+  if (!data.type || data.type === 'bericht' || data.type === 'groep') {
+    event.waitUntil(Promise.all([
+      planChatMelding(() => nieuwChatBericht(data)),
+      !data.type || data.type === 'bericht' ? badgeEenErbij() : null,
+    ]))
+    return
+  }
   const title = data.title || 'Stekky'
   const isBuzz = data.type === 'buzz'
   // v151: oproep ('belt je') blijft staan tot je erop tikt; 'gemist' vervangt hem (zelfde tag van de server)
   const isOproep = data.type === 'oproep' || data.type === 'oproep-video'
-  // 17 nov 2026: gewone chatberichten (zonder eigen tag van de server) komen samen in één melding met het aantal:
-  // "Je hebt 3 nieuwe berichtjes 💬", zoals andere apps in het meldingenscherm laten zien hoeveel er wacht.
-  const isBericht = (!data.type || data.type === 'bericht') && !(typeof data.tag === 'string' && data.tag)
-  const tag = isBericht ? 'berichten' : typeof data.tag === 'string' && data.tag ? data.tag : (isBuzz ? 'buzz' : undefined)
+  const tag = typeof data.tag === 'string' && data.tag ? data.tag : (isBuzz ? 'buzz' : undefined)
   // v168: een bericht, buzz of gemiste oproep telt mee in het bolletje op het icoon ('belt je' niet)
-  const telt = !data.type || data.type === 'bericht' || data.type === 'buzz' || data.type === 'gemist'
+  const telt = !data.type || data.type === 'buzz' || data.type === 'gemist'
   event.waitUntil((async () => {
     const schud = isBuzz && !(await buzzRustig())
     let body = data.body || 'Je hebt een nieuw bericht'
     try { if (self.FibroPushNamen) body = self.FibroPushNamen.naamInMelding(body, await self.FibroPushNamen.lees()) } catch (e) {} // v270
-    let aantal = 1
-    if (isBericht) {
-      // Hoeveel staan er al in de melding die nog op het scherm staat? Weggeveegd of gelezen (ongelezen.js haalt de
-      // meldingen weg als alles gelezen is): dan begint het weer bij 1.
-      try {
-        const oud = await self.registration.getNotifications({ tag: 'berichten' })
-        for (const m of oud || []) aantal = Math.max(aantal, ((m.data && m.data.aantal) || 1) + 1)
-      } catch (e) {}
-      // De server stuurt de tekst in de taal van de ontvanger; daaraan zien we of het Engels moet.
-      const engels = /^You have/i.test(String(data.body || ''))
-      if (aantal > 1) body = engels ? 'You have ' + aantal + ' new messages 💬' : 'Je hebt ' + aantal + ' nieuwe berichtjes 💬'
-    }
     const options = {
       body: body,
       icon: schud ? '/Fibro/icon-buzz.png' : '/Fibro/icon-192.png?v=4', // v271: nieuw icoon (kleurverloop)
@@ -206,7 +309,7 @@ self.addEventListener('push', function(event) {
       tag: tag,
       renotify: !!tag,
       requireInteraction: isOproep,
-      data: isBericht ? { url: data.url || '/chat.html', aantal: aantal } : { url: data.url || '/chat.html' }
+      data: { url: data.url || '/chat.html' }
     }
     await Promise.all([self.registration.showNotification(title, options), telt ? badgeEenErbij() : null])
   })())

@@ -355,7 +355,7 @@ import { maakSpelVersieLangDruk } from './spelversie-langdruk.js?v=1'
 import { koppelSpelIcoonFallback } from './spelicoon.js?v=6'
 koppelSpelIcoonFallback()
 import { openSpelMetTitel } from './titelscherm.js?v=12' // v252: titelscherm met muziek meteen bij je tik
-import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=6' // v266
+import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=7' // v266
 pasBlokstijlToe()
 
 // ── Waarschuw als de private key op dit apparaat ontbreekt ──
@@ -2712,7 +2712,7 @@ async function toonBeginschermTip() {
 }
 toonBeginschermTip()
 // v258: meldingen aanzetten met een tik (meldingen-aan.js): een kaart tot ze aan staan ('Nu niet' = 3 dagen niet)
-import('./meldingen-aan.js?v=5').then(m => m.toonMeldkaart(document.getElementById('beginschermTip'), supabase, window._uid))
+import('./meldingen-aan.js?v=6').then(m => m.toonMeldkaart(document.getElementById('beginschermTip'), supabase, window._uid))
   .catch(e => console.warn('[meldingen]', e))
 // v270: herstel nog niet aan (na een paar dagen)? Een vriendelijk kaartje (herstel-herinnering.js). Even later dan de
 // meldingenkaart, en niet als die er staat: nooit twee kaartjes tegelijk.
@@ -2803,6 +2803,7 @@ window.uitloggen = async function() {
   // 13 nov 2026 (Marcel kon niet uitloggen): de inlogpas van dit toestel altijd zelf weghalen. Bleef hij staan, dan zag
   // login.html een sessie ('Je sessie wordt hersteld') en stuurde je meteen terug naar Home.
   try { Object.keys(localStorage).forEach(k => { if (k.startsWith('sb-') && k.endsWith('-auth-token')) localStorage.removeItem(k) }) } catch(e) {}
+  await import('./chat-melding.js?v=1').then(m => m.wisChatMelding(window._uid)).catch(() => {})
   window.location.href = 'login.html?logout=1'
 }
 
@@ -3045,7 +3046,7 @@ if (document.readyState === 'complete') startKast(); else window.addEventListene
 // naar de achtergrond). Dan kwam 'TypeError: Script service-worker.js load failed' als mislukte belofte in de
 // foutmeldingen. Dat is geen fout in de app: de volgende keer dat je Home opent probeert hij het gewoon opnieuw.
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./service-worker.js?v=97').catch(() => {})
+  navigator.serviceWorker.register('./service-worker.js?v=98').catch(() => {})
 }
 </script>
 <script src="swipe.js?v=96"></script>
@@ -3055,7 +3056,7 @@ if ('serviceWorker' in navigator) {
 <script type="module" src="geluidregelaar.js?v=181"></script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=200"; startSpelUitnodigingLuisteraar()</script>
-<script type="module">import { startOngelezen } from "./ongelezen.js?v=171"; startOngelezen()</script>
+<script type="module">import { startOngelezen } from "./ongelezen.js?v=172"; startOngelezen()</script>
 <script type="module">import { checkTimers } from "./timer-melding.js?v=188"; setTimeout(checkTimers,4000)</script>
 <script src="./fotoviewer.js?v=9"></script>
 <script type="module" src="blokkade.js?v=2"></script>

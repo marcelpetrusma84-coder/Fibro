@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=129"></script>
+<script src="taal.js?v=130"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -347,7 +347,7 @@ body { background:var(--bg); font-family:"DM Sans",sans-serif; color:var(--text)
   import { startHeartbeat } from './heartbeat.js?v=118'
   import { wisVriendData } from './opruimen.js?v=95'
   import { blokkeerPersoon, kiesVriendActie, kiesGeblokkeerdActie, deblokkeerPersoon, verwijderGeblokkeerde, haalGeblokkeerden } from './persoonblok.js?v=3'
-  import { initSync } from './sync.js?v=260'
+  import { initSync } from './sync.js?v=261'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { haalVriendFotos, zetAvatar } from './vriendfotos.js?v=2'
   import { volgOnline, isVriendOnline, bewaarServerStand } from './onlinestip.js?v=2' // v274: nauwkeuriger bolletje
@@ -741,7 +741,7 @@ startMeldingen()
 <script type="module">
   import { supabase } from './supabase.js?v=95'
   import { haalPrivateKeyOp, eigenPubliekeSleutel, sleutelVingerafdruk } from './crypto.js?v=182'
-  import { STORE_GAMES, bewaardeDownloads } from './store.js?v=16' // 17 nov 2026: gedownloade games meesturen
+  import { STORE_GAMES, bewaardeDownloads } from './store.js?v=17' // 17 nov 2026: gedownloade games meesturen
 
   // v250: zelf kiezen hoe lang de link geldig is (1 uur, 1 dag, 3 dagen of 7 dagen; standaard 3 dagen)
   const DUREN = [3600, 86400, 259200, 604800]

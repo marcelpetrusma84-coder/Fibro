@@ -102,7 +102,7 @@ for (const pagina of ['index.html', 'vriend-profiel.html']) {
   assert.doesNotMatch(rest, /bandcamp|open\.audio/, pagina + ': alleen in frame-src (en op Home in connect-src)')
   const connect = csp.match(/connect-src [^;]*;/)[0]
   assert.doesNotMatch(connect, /bandcamp/, pagina + ': Bandcamp wordt nooit gevraagd')
-  if (pagina === 'index.html') assert.match(connect, / https:\/\/open\.audio;/, 'index.html: titel en hoes van Funkwhale ophalen')
+  if (pagina === 'index.html') assert.match(connect, / https:\/\/open\.audio[ ;]/, 'index.html: titel en hoes van Funkwhale ophalen')
   else assert.doesNotMatch(connect, /open\.audio/, pagina + ': vrienden vragen Funkwhale niets')
 }
 for (const pagina of ['chat.html', 'login.html', 'over.html']) assert.match(lees(pagina), /frame-src 'self';/)

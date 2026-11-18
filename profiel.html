@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=129"></script>
+<script src="taal.js?v=130"></script>
 <script src="appslot.js?v=3"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Vuurwerk': 'Fireworks', 'Onweer': 'Thunderstorm', 'Glitter': 'Glitter' }) // v234: nieuwe animaties</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Gastenboek zonder lijntjes': 'Guestbook without lines', 'Gewoon in je eigen kleuren, zonder lijntjespapier': 'Plain, in your own colours, without lined paper' }) // v235</script>
@@ -509,6 +509,7 @@ input, textarea { font-size:16px !important; }
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">🧠</div><div><div class="widget-name" data-t>Quiz</div><div class="widget-desc" data-t>Vrienden spelen jouw quiz</div></div></div><div class="toggle off" id="widget-quiz" onclick="toggleWidget('quiz')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item" id="widgetRij-peertube" style="display:none"><!-- 18 nov 2026: alleen als je PeerTube in de Store gedownload hebt --><div class="widget-info"><div class="widget-icon">🎬</div><div><div class="widget-name" data-t>PeerTube</div><div class="widget-desc" data-t>Uit de Store: video van PeerTube, laadt pas na een tik</div></div></div><button type="button" class="store-verwijder" onclick="verwijderStoreSpel('peertube')" aria-label="PeerTube verwijderen" data-t-attr="aria-label" title="PeerTube verwijderen">🗑</button><div class="toggle off" id="widget-peertube" onclick="toggleWidget('peertube')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item" id="widgetRij-muziekwidget" style="display:none"><!-- 18 nov 2026: alleen als je hem in de Store gedownload hebt --><div class="widget-info"><div class="widget-icon">🎧</div><div><div class="widget-name" data-t>Bandcamp &amp; Funkwhale</div><div class="widget-desc" data-t>Uit de Store: muziek van Bandcamp of Funkwhale, laadt pas na een tik</div></div></div><button type="button" class="store-verwijder" onclick="verwijderStoreSpel('muziekwidget')" aria-label="Bandcamp &amp; Funkwhale verwijderen" data-t-attr="aria-label" title="Bandcamp &amp; Funkwhale verwijderen">🗑</button><div class="toggle off" id="widget-muziekwidget" onclick="toggleWidget('muziekwidget')"><div class="toggle-dot"></div></div></div>
+      <div class="widget-item" id="widgetRij-radio" style="display:none"><!-- 18 nov 2026: alleen als je hem in de Store gedownload hebt --><div class="widget-info"><div class="widget-icon">📻</div><div><div class="widget-name" data-t>Radio</div><div class="widget-desc" data-t>Uit de Store: internetradio, speelt pas na een tik</div></div></div><button type="button" class="store-verwijder" onclick="verwijderStoreSpel('radio')" aria-label="Radio verwijderen" data-t-attr="aria-label" title="Radio verwijderen">🗑</button><div class="toggle off" id="widget-radio" onclick="toggleWidget('radio')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">⏱</div><div><div class="widget-name" data-t>Opteltimer</div><div class="widget-desc" data-t>Tellen sinds een datum</div></div></div><div class="toggle off" id="widget-opteltimer" onclick="toggleWidget('opteltimer')"><div class="toggle-dot"></div></div></div>
       <div class="widget-item"><div class="widget-info"><div class="widget-icon">✍</div><div><div class="widget-name" data-t>Quote</div><div class="widget-desc" data-t>Favoriete citaat tonen</div></div></div><div class="toggle off" id="widget-quote" onclick="toggleWidget('quote')"><div class="toggle-dot"></div></div></div>
     </div>
@@ -620,7 +621,7 @@ import { startMeldingen } from './meldingen.js?v=188'
 import { laadThema, bewaarThemaCache } from './thema.js?v=238'
 import { startHeartbeat } from './heartbeat.js?v=118'
 import { volgOnline } from './onlinestip.js?v=2' // v274: vrienden zien meteen of je de app in beeld hebt
-import { initSync } from './sync.js?v=260'
+import { initSync } from './sync.js?v=261'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=149'
 import { startStickermaker } from './stickermaker.js?v=244'
 import { tekenFibroVellen, stickerWidgetDef, maakSchakelaar, widgetId, stickerNaam, zetStijl as zetStickerStijl } from './stickerwidget.js?v=237'
@@ -638,7 +639,7 @@ const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','�
 // v173: de oude emoji-stickers (Natuur & Planten, Sfeer & Magie, Muziek & Kunst, Dieren, 'Actieve stickers') en de
 // widget 'Sticker board' zijn weg: ze werden alleen op dit toestel bewaard en nergens getoond.
 import { LETTERTYPES, STORE_LETTERTYPES, laadFont } from './lettertypes.js?v=133'
-import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES, storeWidgetItem } from './store.js?v=16' // v131: Stekky Store
+import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES, storeWidgetItem } from './store.js?v=17' // v131: Stekky Store
 import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=95'
 import { pasAnimatieToe, startOp as startAnimatieOp } from './animatie.js?v=235'
 window.blokAangepast = function(){
@@ -1380,6 +1381,7 @@ window.slaAllesOp=async function(){
     quiz:       { id:'quiz',       icon:'🧠', titel:'Quiz',          w:4, h:2 }, // v265: quiz.js
     peertube:   { id:'peertube',   icon:'🎬', titel:'PeerTube',      w:4, h:3 }, // 18 nov 2026: peertube.js
     muziekwidget: { id:'muziekwidget', icon:'🎧', titel:'Bandcamp & Funkwhale', w:4, h:3 }, // 18 nov 2026: muziekwidget.js
+    radio:      { id:'radio',      icon:'📻', titel:'Radio',         w:4, h:3 }, // 18 nov 2026: radio.js
     countdown:  { id:'afteltimer', icon:'⏳', titel:'Afteltimer',    w:4, h:2 },
     opteltimer: { id:'opteltimer', icon:'⏱', titel:'Opteltimer',    w:4, h:2 },
     gastenboek: { id:'gastenboek', icon:'📖', titel:'Gastenboek',    w:4, h:4 },

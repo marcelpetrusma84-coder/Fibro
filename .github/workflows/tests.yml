@@ -230,3 +230,6 @@ jobs:
       - name: "Titel en plaatje vanzelf bij PeerTube en Funkwhale (proef317)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef317.py .
+      - name: "Radio-widget: zoeken, vastzetten, pas spelen na een tik (proef318)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef318.py .

@@ -44,7 +44,7 @@ await test('nog nooit een indeling (oud account): alleen de game; Stijl zonder s
 })
 await test('Store-pagina: zet de game op Home en heeft een deelknop', async () => {
   const s = lees('store.html')
-  assert.match(s, /const opHome = it\.soort === 'game' \? zetGameWidgetAan\(mijnId, it\) : ''/)
+  assert.match(s, /const opHome = \(it\.soort === 'game' \|\| it\.soort === 'widget'\) \? zetGameWidgetAan\(mijnId, it\) : ''/)
   assert.match(s, /'vrienden\.html\?uitnodigen=' \+ encodeURIComponent\(it\.id\)/)
   assert.match(s, /if \(heb && it\.soort === 'game'\)/)
 })
@@ -62,6 +62,35 @@ await test('nieuwe zinnen staan in het Engels', async () => {
   const en = lees('taal-en.js')
   for (const z of ['Gedownload! {naam} staat nu op je beginscherm.', '🔗 Delen met uitnodigingslink',
     'Gedownload! Er is geen ruimte meer op je beginscherm. Haal iets weg, of zet hem aan bij Profiel → Widgets → Spellen.']) assert.ok(en.includes(JSON.stringify(z) + ':'), z)
+})
+
+// 18 nov 2026: een widget uit de Store (PeerTube) gaat net zo, maar met zijn eigen maat (4 × 3)
+await test('widget uit de Store: op Home met zijn eigen maat, Verwijderen haalt hem weg', async () => {
+  const { STORE_WIDGETS, STORE_ITEMS, gameWidgets, storeWidgetItem, zetGameWidgetUit } = await import('../../store.js')
+  const pt = STORE_WIDGETS.find(w => w.id === 'peertube')
+  assert.ok(pt && pt.soort === 'widget' && STORE_ITEMS.includes(pt))
+  ls.setItem(L, JSON.stringify([{ id: 'mood', w: 4, h: 1, volgorde: 0, aan: true }]))
+  assert.equal(zetGameWidgetAan(UID, pt), 'aan')
+  assert.deepEqual(JSON.parse(ls.getItem(L))[1], { id: 'peertube', icon: '\u{1F3AC}', titel: 'PeerTube', w: 4, h: 3, volgorde: 1, aan: true })
+  assert.deepEqual(gameWidgets(new Set(['peertube', 'pesten'])), ['spel_pesten', 'peertube'])
+  assert.deepEqual(gameWidgets(new Set()), [])
+  assert.equal(storeWidgetItem('peertube'), pt)
+  zetGameWidgetUit(UID, 'peertube')
+  assert.equal(gameWidgetAan(UID, 'peertube'), false)
+  // 4 × 3 = 12 vakjes: past niet als er nog maar 8 vrij zijn
+  ls.setItem(L, JSON.stringify(Array.from({ length: 10 }, (_, i) => ({ id: 'w' + i, w: 4, h: 1, volgorde: i, aan: true }))))
+  assert.equal(zetGameWidgetAan(UID, pt), 'vol')
+  const st = lees('store.html')
+  assert.match(st, /it\.soort === 'widget'\) kaart\.innerHTML/)
+  assert.match(st, /\(it\.soort === 'game' \|\| it\.soort === 'widget'\) \? zetGameWidgetAan\(mijnId, it\)/)
+  const pr = lees('profiel.html')
+  assert.match(pr, /id="widgetRij-peertube" style="display:none"/, 'pas zichtbaar na downloaden')
+  assert.match(pr, /querySelectorAll\('\[id\^="widgetRij-"\]'\)/)
+  assert.match(pr, /const game=storeWidgetItem\(id\)/)
+  assert.match(lees('store.js'), /const game = storeWidgetItem\(id\)[^\n]*\n  if \(game\) zetGameWidgetUit\(uid, game\.widget\)/)
+  const en = lees('taal-en.js')
+  for (const z of [pt.uitleg, 'Uit de Store: video van PeerTube, laadt pas na een tik', 'PeerTube verwijderen',
+    'Gedownload! Er is geen ruimte meer op je beginscherm. Haal iets weg, of zet hem aan bij Profiel → Widgets.']) assert.ok(en.includes(JSON.stringify(z) + ':'), z)
 })
 
 console.log(`\n${ok} van ${ok} goed`)

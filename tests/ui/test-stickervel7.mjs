@@ -52,7 +52,7 @@ opslag.set('fibro_store_u1', 'kapot'); assert.deepEqual(mijnStoreVellen('u1'), [
 
 // 4. In de Store, en de stickerkeuze toont het bij Winkel
 assert.match(lees('store.js'), /STORE_STICKERS = STORE_VELLEN\.map/)
-assert.match(lees('store.js'), /\.\.\.STORE_GAMES, \.\.\.STORE_STICKERS\]/)
+assert.match(lees('store.js'), /\.\.\.STORE_GAMES, (\.\.\.STORE_WIDGETS, )?\.\.\.STORE_STICKERS\]/)
 assert.match(lees('store.html'), /it\.soort === 'sticker'/)
 assert.match(lees('stickerkeuze.js'), /actieveStoreVellen\(id\)/, 'de chat toont alleen de vellen die je bij Stijl aanzette')
 

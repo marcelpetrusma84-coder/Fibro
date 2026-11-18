@@ -311,6 +311,20 @@ function soortVanBericht(inhoud: unknown): string | null {
   return null; // speluitnodiging, belregel, ... : daar hoort geen berichtmelding bij
 }
 
+async function chatMeldingData(supabase: any, ontvanger: string, taal: "nl" | "en", berichtId?: string) {
+  if (!berichtId || !UUID.test(berichtId)) return { ontvanger, taal };
+  // De oude melding blijft werken als de teller nog niet op de server staat.
+  let chatTeller: { aantal: number; gemeten: number } | undefined;
+  try {
+    const { data, error } = await supabase.rpc("chat_melding_teller_voor", { p_gebruiker: ontvanger });
+    if (!error && Number.isSafeInteger(data?.aantal) && data.aantal >= 0 && data.aantal <= 2147483647 &&
+      Number.isSafeInteger(data.gemeten) && data.gemeten > 0) {
+      chatTeller = { aantal: data.aantal, gemeten: data.gemeten };
+    }
+  } catch (_) { /* de melding heeft geen teller nodig om te kunnen worden afgeleverd */ }
+  return { ontvanger, taal, berichtId, chatTeller };
+}
+
 // v256: het slot. true = deze functie mag de melding voor dit bericht sturen (en niemand anders meer).
 async function pakSlot(supabase: any, messageId: string): Promise<boolean> {
   let error;
@@ -362,7 +376,7 @@ Deno.serve(async (req) => {
       if (!(await pakSlot(supabase, b.id))) return antwoord({ ok: true, verstuurd: 0, reden: "al verstuurd" });
       const uitn = soort === "spel" ? leesUitnodiging(b.content) : null;
       if (uitn && uitn.van !== b.sender_id) return antwoord({ ok: false, reden: "ongeldige uitnodiging" }, 400);
-      return await stuurVriendMelding(supabase, b.sender_id, b.receiver_id, soort, uitn);
+      return await stuurVriendMelding(supabase, b.sender_id, b.receiver_id, soort, uitn, null, b.id);
     }
 
     // groepen: een nieuw bericht in een groep (trigger op groep_berichten)
@@ -388,25 +402,32 @@ Deno.serve(async (req) => {
         const weg = new Set((blokkers || []).map((r: any) => r.blokkeerder_id));
         ids = ids.filter((u: string) => !weg.has(u));
       }
-      if (!ids.length) return antwoord({ ok: true, verstuurd: 0 });
+      if (!ids.length) return antwoord({ ok: true });
       const { data: profielen } = await supabase.from("profiles").select("id, taal").in("id", ids);
       webpush.setVapidDetails("mailto:fibro.contact@proton.me", Deno.env.get("VAPID_PUBLIC_KEY"), Deno.env.get("VAPID_PRIVATE_KEY"));
-      let verstuurd = 0;
       for (const p of profielen || []) {
         const taal = p.taal === "en" ? "en" : "nl";
-        const payload = JSON.stringify({ ...TEKSTEN.groep[taal], url: "/Fibro/groep.html?id=" + encodeURIComponent(b.groep_id), type: "groep", tag: "groep-" + b.groep_id });
         const { data: subs } = await supabase.from("push_subscriptions").select("id, subscription").eq("user_id", p.id);
-        for (const rij of subs || []) {
+        if (!subs?.length) continue;
+        const chat = await chatMeldingData(supabase, p.id, taal, b.id);
+        if (chat.chatTeller?.aantal === 0) continue;
+        const payload = JSON.stringify({
+          ...TEKSTEN.groep[taal],
+          ...chat,
+          url: "/Fibro/groep.html?id=" + encodeURIComponent(b.groep_id),
+          type: "groep",
+          tag: "groep-" + b.groep_id,
+        });
+        for (const rij of subs) {
           try {
             await webpush.sendNotification(rij.subscription, payload, { TTL: 24 * 60 * 60 });
-            verstuurd++;
           } catch (e) {
             console.error("Push fout:", e && (e as any).statusCode ? (e as any).statusCode : e);
             if (e && ((e as any).statusCode === 404 || (e as any).statusCode === 410)) await supabase.from("push_subscriptions").delete().eq("id", rij.id);
           }
         }
       }
-      return antwoord({ ok: true, verstuurd });
+      return antwoord({ ok: true });
     }
 
     // vriendverzoek (18 nov 2026): iemand uit een groep wil vrienden worden (trigger op vriendverzoeken)
@@ -542,6 +563,7 @@ Deno.serve(async (req) => {
     // v256: oude versies van de app vragen zelf om een berichtmelding. Hetzelfde slot als de trigger: het nieuwste
     // bericht van de laatste 2 minuten van deze afzender aan deze ontvanger. Had dat al een melding, dan niets.
     const oudeSoort = Object.hasOwn(TEKSTEN, String(type)) ? String(type) : "bericht";
+    let berichtId: string | undefined;
     if (oudeSoort === "bericht" || oudeSoort === "buzz") {
       let alVerstuurd = false;
       try { // het slot is een extraatje: lukt het opzoeken niet, dan gewoon sturen zoals vroeger
@@ -551,11 +573,14 @@ Deno.serve(async (req) => {
           .order("created_at", { ascending: false }).limit(5);
         if (fl) throw fl;
         const bericht = (laatste || []).find((m: { content: string }) => soortVanBericht(m.content) === oudeSoort);
-        if (bericht) alVerstuurd = !(await pakSlot(supabase, bericht.id));
+        if (bericht) {
+          berichtId = bericht.id;
+          alVerstuurd = !(await pakSlot(supabase, bericht.id));
+        }
       } catch (e) { console.error("slot (oude app):", e); }
       if (alVerstuurd) return antwoord({ ok: true, verstuurd: 0, reden: "al verstuurd" });
     }
-    return await stuurVriendMelding(supabase, afzender, receiver_id, type);
+    return await stuurVriendMelding(supabase, afzender, receiver_id, type, null, null, berichtId);
   } catch (e) {
     return antwoord({ error: String(e) }, 500);
   }
@@ -564,7 +589,8 @@ Deno.serve(async (req) => {
 // Een melding van afzender aan een vriend (bericht, buzz, oproep, gemist). Alleen naar een vriend, niet als de
 // afzender geblokkeerd is; tekst in de taal van de ontvanger.
 async function stuurVriendMelding(supabase: any, afzender: string, receiver_id: string, type: unknown,
-  uitn: { spel: string; van: string; sessie: string } | null = null, like: { emoji: string; soort: string } | null = null) {
+  uitn: { spel: string; van: string; sessie: string } | null = null, like: { emoji: string; soort: string } | null = null,
+  berichtId?: string) {
   {
     if (afzender === receiver_id) return antwoord({ ok: false, reden: "niet naar jezelf" }, 400);
     // 2. Alleen naar een vriend.
@@ -601,6 +627,9 @@ async function stuurVriendMelding(supabase: any, afzender: string, receiver_id: 
     if (!ik || !ontvanger) return antwoord({ ok: false, reden: "onbekend account" }, 404);
     if (ik.geblokkeerd) return antwoord({ ok: false, reden: "geblokkeerd" }, 403);
 
+    // Bij bevestigde chatberichten zegt het HTTP-antwoord niets over de ongelezen berichten van de ontvanger.
+    const soort = Object.hasOwn(TEKSTEN, String(type)) ? String(type) : "bericht";
+    const chatBericht = soort === "bericht" && berichtId && UUID.test(berichtId);
     // 4. De telefoons van de ontvanger.
     const { data: subs, error } = await supabase
       .from("push_subscriptions")
@@ -608,11 +637,10 @@ async function stuurVriendMelding(supabase: any, afzender: string, receiver_id: 
       .eq("user_id", receiver_id);
     if (error) throw error;
     if (!subs || subs.length === 0) {
-      return antwoord({ ok: false, reden: "geen abonnementen" });
+      return chatBericht ? antwoord({ ok: true }) : antwoord({ ok: false, reden: "geen abonnementen" });
     }
 
     // 5. De tekst, in de taal van de ontvanger.
-    const soort = Object.hasOwn(TEKSTEN, String(type)) ? String(type) : "bericht";
     const taal = ontvanger.taal === "en" ? "en" : "nl";
     const tekst = TEKSTEN[soort][taal];
     const naam = String(ik.username || IEMAND[taal]).slice(0, 40);
@@ -620,6 +648,8 @@ async function stuurVriendMelding(supabase: any, afzender: string, receiver_id: 
     const spelNaam = uitn && SPELNAMEN[uitn.spel] ? SPELNAMEN[uitn.spel][taal] : "";
     const isSpel = soort === "spel" || soort === "spel-gemist" || soort === "spel-verlaten";
     if (isSpel && !spelNaam) return antwoord({ ok: false, reden: "onbekend spel" }, 400);
+    const chat = soort === "bericht" ? await chatMeldingData(supabase, receiver_id, taal, berichtId) : null;
+    if (chat?.chatTeller?.aantal === 0) return antwoord({ ok: true });
     const melding: Record<string, string> = {
       title: tekst.title,
       body: tekst.body.replace("{naam}", naam).replace("{spel}", spelNaam)
@@ -640,7 +670,7 @@ async function stuurVriendMelding(supabase: any, afzender: string, receiver_id: 
     if (soort === "vriend-nieuw") melding.tag = "vriend-" + afzender; // v258
     if (soort === "gastenboek") melding.tag = "gastenboek-" + afzender;
     if (soort === "like") melding.tag = "like-" + afzender;
-    const payload = JSON.stringify(melding);
+    const payload = JSON.stringify({ ...melding, ...chat });
     const opties = LEVENSDUUR[soort] ? { TTL: LEVENSDUUR[soort], urgency: bellen || soort === "spel" ? "high" : "normal" } : undefined;
 
     webpush.setVapidDetails(
@@ -661,6 +691,6 @@ async function stuurVriendMelding(supabase: any, afzender: string, receiver_id: 
         }
       }
     }
-    return antwoord({ ok: true, verstuurd });
+    return chatBericht ? antwoord({ ok: true }) : antwoord({ ok: true, verstuurd });
   }
 }

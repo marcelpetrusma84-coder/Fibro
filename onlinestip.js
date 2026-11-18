@@ -1,4 +1,4 @@
-// onlinestip.js (v1, 6 nov 2026, v274): het groene bolletje bij een vriend, nauwkeuriger (op verzoek van Marcel).
+// onlinestip.js (v2, 18 nov 2026: niet meer even grijs bij een paginawissel; v1 6 nov 2026, v274): het groene bolletje bij een vriend, nauwkeuriger (op verzoek van Marcel).
 //
 // Vroeger keek het bolletje alleen naar de server: elke telefoon zegt daar om de 2 minuten "ik ben er nog"
 // (heartbeat.js), en groen = dat laatste seintje is minder dan 5 minuten oud. Dat liep achter (Vrienden en een
@@ -12,6 +12,9 @@
 //  3. Anders de server: groen als zijn laatste seintje minder dan 5 minuten oud is. Zo tel je ook mee in een spel
 //     of gesprek (daar loopt alleen het seintje). Zagen we hem hier uit de live verbinding gaan en kwam er daarna
 //     geen nieuw seintje, dan is hij echt weg (bijvoorbeeld telefoon uit): GRIJS.
+//  v2: wie live in beeld was en de live verbinding verlaat, blijft nog WEG_GENADE_MS groen. Bij een paginawissel
+//     (Vrienden -> Chat) verlaat je de verbinding even en kom je een paar seconden later terug; zonder deze marge
+//     sprong je bij je vrienden dan steeds even op offline. Is hij er daarna nog niet, dan beslist de server.
 // Kosten: hoogstens een kleine vraag (ongeveer 2 KB) per 2 minuten, alleen voor vrienden die niet live zijn, en een
 // enkele vraag als iemand de live verbinding verlaat.
 
@@ -22,13 +25,16 @@ export const VERS_MS = 5 * 60 * 1000   // seintje van de server telt 5 minuten (
 export const POLL_MS = 2 * 60 * 1000   // de server hoogstens elke 2 minuten opnieuw vragen
 export const MARGE_MS = 20 * 1000      // klokken van telefoons lopen nooit precies gelijk
 export const NA_WEG_MS = 6000          // even wachten na het verlaten: misschien opent hij net een spel
+export const WEG_GENADE_MS = 12000     // v2: zo lang na het verlaten nog groen (paginawissel)
 
 // De regel zelf (los te testen).
 //  live: in de live verbinding met de app in beeld; verborgen: in de live verbinding, app weggezet; stil: helemaal offline
 //  server: { online_status, laatst } (laatst in ms); wegOp: wanneer hij hier de live verbinding verliet (of null)
-export function beslisOnline({ nu, live, verborgen, stil, server, wegOp }) {
+//  wasLive: hij had de app in beeld toen hij de live verbinding verliet
+export function beslisOnline({ nu, live, verborgen, stil, server, wegOp, wasLive }) {
   if (stil || verborgen) return false
   if (live) return true
+  if (wegOp && wasLive && nu - wegOp < WEG_GENADE_MS) return true // v2: waarschijnlijk een andere pagina
   if (!server || !server.online_status || !server.laatst) return false
   if (nu - server.laatst >= VERS_MS) return false
   if (wegOp && server.laatst < wegOp - MARGE_MS) return false
@@ -37,6 +43,8 @@ export function beslisOnline({ nu, live, verborgen, stil, server, wegOp }) {
 
 const stand = new Map()        // vriendId -> { online_status, laatst, haal }
 const wegOp = new Map()        // vriendId -> tijd waarop hij hier de live verbinding verliet
+const wasLive = new Set()      // v2: vrienden die bij het verlaten de app in beeld hadden
+const nuLive = new Set()       // v2: vrienden die nu live met de app in beeld zijn (laatst bekend)
 const luisteraars = new Set()
 let geefIds = () => []
 let gestart = false
@@ -64,6 +72,7 @@ export function isVriendOnline(id, profiel) {
   }
   const k = inKamer(id)
   const actief = k && heeftKenmerk(id, 'actief')
+  if (k) { if (actief) nuLive.add(id); else nuLive.delete(id) }
   return beslisOnline({
     nu: Date.now(),
     live: actief,
@@ -71,6 +80,7 @@ export function isVriendOnline(id, profiel) {
     stil: k && heeftKenmerk(id, 'stil'),
     server,
     wegOp: k ? null : (wegOp.get(id) || null),
+    wasLive: !k && wasLive.has(id),
   })
 }
 
@@ -114,13 +124,18 @@ export function volgOnline(uid, ids, opWijziging) {
   })
   opOnline((w) => {
     if (!w || !w.id || w.online || w.gelijk) {
-      if (w && w.id && w.online) wegOp.delete(w.id)
+      if (w && w.id && w.online) { wegOp.delete(w.id); wasLive.delete(w.id) }
+      if (w && w.id && inKamer(w.id)) { if (heeftKenmerk(w.id, 'actief')) nuLive.add(w.id); else nuLive.delete(w.id) }
       roep()
       return
     }
-    // Hij verliet de live verbinding: naar een spel of gesprek (daar alleen het seintje), of echt weg.
+    // Hij verliet de live verbinding: naar een andere pagina, een spel of gesprek (daar alleen het seintje), of echt weg.
     wegOp.set(w.id, Date.now())
+    if (nuLive.has(w.id)) wasLive.add(w.id); else wasLive.delete(w.id)
+    nuLive.delete(w.id)
     setTimeout(() => { if (!inKamer(w.id)) haal(false, [w.id]).then(roep); else roep() }, NA_WEG_MS)
+    // v2: na de marge nog eens kijken (en de server vragen) als hij nog niet terug is
+    setTimeout(() => { if (!inKamer(w.id)) haal(false, [w.id]).then(roep); else roep() }, WEG_GENADE_MS + 200)
   })
   setInterval(() => { haal(false).then(roep) }, POLL_MS)
   setTimeout(() => { haal(false).then(roep) }, 1500)

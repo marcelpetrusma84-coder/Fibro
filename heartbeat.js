@@ -1,6 +1,7 @@
 import { supabase } from './supabase.js?v=95'
 
 const PING_MS = 120000
+const NA_START_MS = 4000
 let heartbeatInterval = null
 let heartbeatUserId = null
 
@@ -23,6 +24,9 @@ export async function startHeartbeat() {
 
   // Direct eerste ping
   await ping()
+  // 18 nov 2026: en na een paar seconden nog een. Bij een paginawissel zet de vorige pagina je bij het weggaan
+  // (pagehide) op offline; komt dat verzoek later aan dan de eerste ping hier, dan stond je tot 2 minuten offline.
+  setTimeout(() => { if (!document.hidden) ping() }, NA_START_MS)
 
   // Stop eventueel lopende interval
   if (heartbeatInterval) clearInterval(heartbeatInterval)

@@ -1,8 +1,8 @@
-// radio.js (v1, 18 nov 2026) - de radio-widget: internetradio op je profiel, in een vintage radio.
+// radio.js (v2, 19 nov 2026: pijltjes ‹ › om te zappen; Klaar vast bovenaan) - de radio-widget: internetradio op je profiel, in een vintage radio.
 //
 // In gewone woorden: je zet tot 6 zenders op je radio (zoeken in Radio Browser, een open database met tienduizenden
 // zenders, of zelf een stream-link plakken). Op je profiel (en bij je vrienden) staat een ouderwetse radio met een
-// gloeiend schermpje, een zenderschaal, voorkeuzeknoppen 1 tot 6 en een draaiknop. Pas als iemand op ▶ tikt, maakt
+// gloeiend schermpje, een zenderschaal, voorkeuzeknoppen 1 tot 6, pijltjes ‹ › om te zappen en een draaiknop. Pas als iemand op ▶ tikt, maakt
 // zijn toestel verbinding met de zender. Er is geen embed: de stream speelt in een gewone <audio>.
 //  - alleen https-streams (http werkt niet in een https-app), geen HLS, alleen MP3 en AAC (die spelen overal).
 //  - zoeken gebeurt alleen op het toestel van de eigenaar (Radio Browser, servers in ZOEK_SERVERS; ook in de huisregel
@@ -141,7 +141,10 @@ const CSS = `
 .rd-radio.rd-speelt .rd-luidspreker{animation:rd-bonk .9s ease-in-out infinite}
 @keyframes rd-bonk{50%{box-shadow:inset 0 2px 7px rgba(0,0,0,.65),0 0 0 2px rgba(255,207,138,.18)}}
 .rd-paneel{flex:1;display:flex;flex-direction:column;gap:7px;min-width:0}
-.rd-scherm{background:#120720;border-radius:8px;padding:7px 9px;box-shadow:inset 0 0 14px rgba(255,170,60,.22);min-height:40px}
+.rd-zap{display:flex;gap:5px;align-items:stretch}
+.rd-scherm{flex:1;min-width:0;background:#120720;border-radius:8px;padding:7px 9px;box-shadow:inset 0 0 14px rgba(255,170,60,.22);min-height:40px}
+.rd-pijl{width:30px;flex:none;border-radius:8px;border:none;padding:0;background:#e8dcc8;color:#2a1240;font-weight:800;font-size:22px;line-height:1;box-shadow:0 3px 0 #8a7a62;cursor:pointer;font-family:inherit}
+.rd-pijl:active{transform:translateY(2px);box-shadow:0 1px 0 #8a7a62;background:#ffcf8a}
 .rd-naam{color:#ffcf8a;font-weight:700;font-size:14px;line-height:1.25;text-shadow:0 0 7px rgba(255,170,60,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rd-sub{color:#e9b878;font-size:11px;opacity:.85;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rd-schaal{position:relative;height:22px;border-radius:6px;background:repeating-linear-gradient(90deg,rgba(255,207,138,.55) 0 1px,transparent 1px 9px) center/92% 45% no-repeat,#120720}
@@ -165,7 +168,9 @@ const CSS = `
 .rd-item .rd-in{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rd-item .rd-klein{font-size:10.5px;opacity:.65}
 .rd-melding{font-size:12px;color:#ffcf8a;min-height:0}
-.rd-bewerk{overflow-y:auto;gap:7px}
+.rd-radio.rd-bewerk{overflow-y:auto;gap:7px;max-height:min(460px,72vh)} /* niet eindeloos groeien: de lijst scrolt binnen de radio */
+.rd-balk{position:sticky;top:-10px;z-index:3;margin:-10px -10px 0;padding:10px 10px 7px;background:#5b2a86;border-radius:14px 14px 0 0;box-shadow:0 5px 8px -6px rgba(0,0,0,.6);flex-wrap:nowrap}
+.rd-balk .rd-naam{flex:1;min-width:0}
 `
 function zetCss() {
   if (document.getElementById('rd-css')) return
@@ -218,9 +223,19 @@ export function tekenRadioWidget(c, { cfg = null, eigen = false, bewaar = null, 
     const boven = el('div', 'rd-boven'), paneel = el('div', 'rd-paneel')
     const scherm = el('div', 'rd-scherm'), naam = el('div', 'rd-naam'), sub = el('div', 'rd-sub')
     scherm.append(naam, sub)
+    // zappen: ‹ vorige en › volgende zender, naast het schermpje (pas bij 2 of meer zenders)
+    const zap = el('div', 'rd-zap')
+    const pijl = (cls, teken, label, stap) => {
+      const b = el('button', 'rd-pijl ' + cls, teken)
+      b.type = 'button'; b.title = label; b.setAttribute('aria-label', label)
+      b.onclick = stop(() => zappen(stap))
+      return b
+    }
+    if (v.zenders.length > 1) zap.append(pijl('rd-vorige', '‹', T('Vorige zender'), -1), scherm, pijl('rd-volgende', '›', T('Volgende zender'), 1))
+    else zap.append(scherm)
     const schaal = el('div', 'rd-schaal'), naald = el('div', 'rd-naald')
     schaal.appendChild(naald)
-    paneel.append(scherm, schaal)
+    paneel.append(zap, schaal)
     boven.append(el('div', 'rd-luidspreker'), paneel)
     const onder = el('div', 'rd-onder'), presets = el('div', 'rd-presets')
     v.zenders.forEach((x, i) => {
@@ -235,7 +250,13 @@ export function tekenRadioWidget(c, { cfg = null, eigen = false, bewaar = null, 
     const draai = el('button', 'rd-draai')
     draai.type = 'button'; draai.title = T('Andere zender'); draai.setAttribute('aria-label', T('Andere zender'))
     let hoek = 0
-    draai.onclick = stop(() => { hoek += 60; draai.style.transform = 'rotate(' + hoek + 'deg)'; kies((nr + 1) % v.zenders.length) })
+    draai.onclick = stop(() => zappen(1))
+    // één stap verder of terug (rond: na de laatste komt weer de eerste); de draaiknop draait mee
+    function zappen(stap) {
+      const n = v.zenders.length
+      hoek += 60 * stap; draai.style.transform = 'rotate(' + hoek + 'deg)'
+      kies((nr + stap + n) % n)
+    }
     onder.append(presets, knop, draai)
     const uitleg = el('div', 'rd-uitleg')
     radio.append(boven, onder, uitleg)
@@ -353,15 +374,16 @@ export function tekenRadioWidget(c, { cfg = null, eigen = false, bewaar = null, 
     })
     for (const x of [link, naamVeld]) { x.onclick = e => e.stopPropagation(); x.onkeydown = e => e.stopPropagation() }
     eigenRij.append(link, naamVeld, erbij)
-    const knoppen = el('div', 'rd-rij')
+    // Klaar en Annuleren vast bovenaan (naast "Jouw zenders"), dan hoef je niet langs alle zoekresultaten te scrollen
+    const knoppen = el('div', 'rd-rij rd-balk')
     const klaar = el('button', 'rd-knopje rd-hoofd rd-klaar', T('Klaar ✓'))
     klaar.type = 'button'
     klaar.onclick = stop(() => { radio.classList.remove('rd-bewerk'); bewaar(lijst.length ? { zenders: lijst } : null) })
     const terug = el('button', 'rd-knopje', T('Annuleren'))
     terug.type = 'button'
     terug.onclick = stop(() => { radio.classList.remove('rd-bewerk'); if (v) toon(); else leeg() })
-    knoppen.append(klaar, terug)
-    radio.append(kop, mijn, zoekRij, snel, melding, uitkomst, eigenRij, knoppen,
+    knoppen.append(kop, klaar, terug)
+    radio.append(knoppen, mijn, zoekRij, snel, melding, uitkomst, eigenRij,
       el('div', 'rd-uitleg', T('Zenders uit Radio Browser, een open database zonder tracking.')))
     tekenMijn()
   }

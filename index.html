@@ -11,11 +11,11 @@
 </script>
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self' https://framatube.org https://tilvids.com https://video.blender.org https://tube.tchncs.de https://diode.zone; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=127"></script>
+<script src="taal.js?v=128"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -343,7 +343,7 @@ import { meldToestel } from './toestel.js?v=1'
 import { zetStandaardWidgets } from './standaardwidgets.js?v=2' // v267: nieuw account = meteen widgets op Home
 import * as GB from './gastenboekstijl.js?v=2'
 import { spelIcoonHtml } from './spelicoon.js?v=6' // 30 okt 2026: plaatjes uit de spellen
-import { initSync, lokaleVriendNaam } from './sync.js?v=257'
+import { initSync, lokaleVriendNaam } from './sync.js?v=258'
 import { maakProfielLikes, itemVan } from './profielreacties.js?v=2' // v258: likes op je eigen profiel
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -440,6 +440,7 @@ const PROFIEL_DEFS = [
   // Overige
   { id:'poll',           icon:'🗳️', titel:'Poll',                 w:4, h:3 },
   { id:'quiz',           icon:'🧠', titel:'Quiz',                 w:4, h:2 }, // v265: quiz.js
+  { id:'peertube',       icon:'🎬', titel:'PeerTube',             w:4, h:3 }, // 18 nov 2026: peertube.js
   { id:'afteltimer',     icon:'⏳', titel:'Afteltimer',           w:4, h:2 },
   { id:'opteltimer',     icon:'⏱', titel:'Opteltimer',           w:4, h:2 },
   { id:'gastenboek',     icon:'📖', titel:'Gastenboek',           w:4, h:4 },
@@ -702,6 +703,8 @@ function renderProfiel(id, c) {
     renderPoll(c, window._uid)
   } else if (id === 'quiz') {
     renderQuiz(c, window._uid)
+  } else if (id === 'peertube') {
+    renderPeertube(c, window._uid)
   } else if (id === 'afteltimer') {
     renderAftel(c, window._uid)
   } else if (id === 'opteltimer') {
@@ -1687,6 +1690,24 @@ async function renderQuiz(c, uid) {
       try { localStorage.setItem(key, JSON.stringify(nieuw)) } catch (e) {}
       renderQuiz(c, uid)
     }),
+  })
+}
+
+// ════════════════════════════════
+// PEERTUBE (18 nov 2026, peertube.js): een PeerTube-video op je profiel; laadt pas na een tik op afspelen
+// ════════════════════════════════
+async function renderPeertube(c, uid) {
+  const key = 'peertube_' + uid
+  let cfg = null
+  try { cfg = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
+  let P
+  try { P = await import('./peertube.js?v=1') } catch (e) { console.warn('[peertube]', e); return }
+  P.tekenPeertubeWidget(c, {
+    cfg, eigen: true,
+    bewaar: nieuw => {
+      try { if (nieuw) localStorage.setItem(key, JSON.stringify(nieuw)); else localStorage.removeItem(key) } catch (e) {}
+      renderPeertube(c, uid)
+    },
   })
 }
 

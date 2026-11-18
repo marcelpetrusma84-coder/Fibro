@@ -11,11 +11,11 @@
 </script>
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self' https://framatube.org https://tilvids.com https://video.blender.org https://tube.tchncs.de https://diode.zone; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=127"></script>
+<script src="taal.js?v=128"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -154,7 +154,7 @@ body.heeft-wallpaper::before { display:block; }
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
-  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=257'
+  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=258'
   import { versleutel, haalPrivateKeyOp } from './crypto.js?v=182'
   import { maakProfielLikes, itemVan, openReageerScherm, maakReactieBericht, maakKleinPlaatje } from './profielreacties.js?v=2' // v258
   import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -511,6 +511,11 @@ body.heeft-wallpaper::before { display:block; }
         if (gelukt) { grid.appendChild(el); quizWidgetEl = el; continue }
         quizWidgetEl = el // v265b: komt de quiz (of zijn achtergrond) binnen terwijl je kijkt, dan meteen tonen
       }
+      if (w.id === 'peertube') { // 18 nov 2026: peertube.js
+        const gelukt = await renderVriendPeertube(el, vriendId, w)
+        if (gelukt) { grid.appendChild(el); peertubeWidget = { el, w }; continue }
+        peertubeWidget = { el, w } // komt de video binnen terwijl je kijkt, dan meteen tonen
+      }
       if (w.id === 'afteltimer') {
         const gelukt = await renderVriendTimer(el, vriendId, 'aftel')
         if (gelukt) { grid.appendChild(el); continue }
@@ -550,7 +555,7 @@ body.heeft-wallpaper::before { display:block; }
       const muziekTekst = muziekRelay
         ? T('De muziek komt binnen zodra jullie telefoons elkaar rechtstreeks kunnen bereiken (bijvoorbeeld allebei op wifi).')
         : T('De muziek komt binnen zodra jullie allebei online zijn.')
-      const leegTekst = { quiz: T('Nog geen quiz'), poll: T('Nog geen poll'), afteltimer: T('Nog geen datum'), opteltimer: T('Nog geen datum'), quote: T('Nog geen quote'), muziek: muziekTekst }[w.id]
+      const leegTekst = { quiz: T('Nog geen quiz'), poll: T('Nog geen poll'), afteltimer: T('Nog geen datum'), opteltimer: T('Nog geen datum'), quote: T('Nog geen quote'), peertube: T('Nog geen video'), muziek: muziekTekst }[w.id]
       el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">' + vEsc(w.icon || '🧩') + '</span><span class="widget-titel">' + vEsc(w.titel ? T(w.titel) : w.id) + '</span></div><div class="widget-inhoud">' + (leegTekst ? '<div style="font-size:13px;color:var(--muted)">' + leegTekst + '</div>' : '<div class="wi-icon">' + vEsc(w.icon || '🧩') + '</div>') + '</div>'
       grid.appendChild(el)
     }
@@ -671,6 +676,26 @@ body.heeft-wallpaper::before { display:block; }
     }
 
     await teken()
+    return true
+  }
+
+  // 18 nov 2026: PeerTube-video van een vriend (peertube.js). De link komt via P2P (sync.js 'klein:peertube');
+  // normaliseer() laat alleen goedgekeurde servers door. De video laadt pas na een tik op afspelen.
+  let peertubeWidget = null
+  window.addEventListener('fibro-sync-item', async e => {
+    const d = e.detail || {}
+    if (d.vriendId !== vriendId || !peertubeWidget || d.item !== 'klein:peertube') return
+    try { await renderVriendPeertube(peertubeWidget.el, vriendId, peertubeWidget.w) } catch (x) { console.warn('[peertube]', x) } // het lege vakje staat er al
+  })
+  async function renderVriendPeertube(el, vriendId, w) {
+    const ruw = await laadFotoUitDB('vriend_' + vriendId + '_peertube')
+    if (!ruw) return false
+    let P, cfg = null
+    try { P = await import('./peertube.js?v=1') } catch (e) { console.warn('[peertube]', e); return false }
+    try { cfg = P.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
+    if (!cfg) return false
+    el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F3AC}</span><span class="widget-titel">' + vEsc(T('PeerTube')) + '</span></div><div class="widget-inhoud"></div>'
+    P.tekenPeertubeWidget(el.querySelector('.widget-inhoud'), { cfg })
     return true
   }
 

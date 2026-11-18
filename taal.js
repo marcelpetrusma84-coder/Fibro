@@ -1,4 +1,5 @@
-// v127: Depth en optionele beweging in de chat.
+// v128: Depth en optionele beweging in de chat.
+// v127 (18 nov 2026): taal-en.js?v=127 (PeerTube-widget)
 // v126 (18 nov 2026): taal-en.js?v=126 (Koningsjacht: schaduwen op tafel, PR #207 van Tijn)
 // v125 (18 nov 2026): taal-en.js?v=125 (groepen in de chatlijst: paars en 3/8 leden)
 // v124 (18 nov 2026): taal-en.js?v=124 (pushmelding bij een vriendverzoek)
@@ -143,7 +144,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=127', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=128', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

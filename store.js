@@ -2,6 +2,8 @@
 // sql/stekky-store.sql) en ook op dit toestel (fibro_store_<id>), zodat Stijl > Lettertype het meteen weet.
 // v5 (11 nov 2026): Verwijderen (verwijderDownload) en games alleen aan met download + widget (gameAan).
 // v8 (13 nov 2026): stickervellen (STORE_STICKERS), het eerste is Sinterklaas.
+// v15 (18 nov 2026): widgets (STORE_WIDGETS), de eerste is PeerTube (peertube.js). Werkt net als een game: na
+// downloaden staat hij op Home en bij Profiel > Widgets; Verwijderen haalt hem overal weg.
 // Sinds 11 nov 2026 voor iedereen met een account (eerst alleen moderators): het Store-vakje bij Stijl staat bij
 // iedereen, en de database laat iedereen downloaden die niet geblokkeerd is (sql/stekky-store-iedereen.sql).
 // Soorten: lettertype (nu), game, sticker en widget (later). Lettertypes komen per thema in een pakket van 4
@@ -42,9 +44,17 @@ export const STORE_GAMES = [
 // Verwijderen (in de Store of bij Stijl): dan is het daar weg (wat je al stuurde, blijft).
 export const STORE_STICKERS = STORE_VELLEN.map(v => ({ id: v.store, soort: 'sticker', titel: v.titel, vel: v.id,
   uitleg: 'Twaalf stickers die bewegen en geluid maken: de Sint, Piet, de pakjesboot, Ozosnel, chocoladeletters en meer.' }))
-export const STORE_ITEMS = [...STORE_PAKKETTEN.map(p => Object.assign({ soort: 'lettertype' }, p)), ...STORE_GAMES, ...STORE_STICKERS]
-// Welke game-widgets mag je aanzetten (wat je gedownload hebt)
-export const gameWidgets = ids => STORE_GAMES.filter(g => ids.has(g.id)).map(g => g.widget)
+// Widgets (18 nov 2026): na downloaden meteen op Home (zetGameWidgetAan, met hun eigen maat w × h) en bij
+// Profiel > Widgets (widgetRij-<widget>). widget = de naam van de widget, homeIcoon = het icoon in de kop.
+export const STORE_WIDGETS = [
+  { id: 'peertube', soort: 'widget', titel: 'PeerTube', widget: 'peertube', homeIcoon: '\u{1F3AC}', w: 4, h: 3,
+    uitleg: 'Zet een video van PeerTube op je profiel. Je vrienden zien eerst een kaartje; pas als iemand op afspelen tikt, maakt zijn toestel verbinding met PeerTube. Geen reclame, geen aanbevelingen.' },
+]
+export const STORE_ITEMS = [...STORE_PAKKETTEN.map(p => Object.assign({ soort: 'lettertype' }, p)), ...STORE_GAMES, ...STORE_WIDGETS, ...STORE_STICKERS]
+// Welke widgets uit de Store mag je aanzetten (wat je gedownload hebt): games en (sinds v15) widgets
+export const gameWidgets = ids => [...STORE_GAMES, ...STORE_WIDGETS].filter(g => ids.has(g.id)).map(g => g.widget)
+// Een game of widget uit de Store bij zijn id
+export const storeWidgetItem = id => STORE_GAMES.find(g => g.id === id) || STORE_WIDGETS.find(g => g.id === id) || null
 
 const GELDIG = /^[a-z0-9-]{1,64}$/
 const sleutel = uid => 'fibro_store_' + uid
@@ -129,7 +139,7 @@ export function vakjesInGebruik(layout) {
     .reduce((n, w) => n + Math.max(1, Math.min(4, Number(w.w) || 2)) * Math.max(1, Number(w.h) || 1), 0)
 }
 export function zetGameWidgetAan(uid, game, ls = localStorage) {
-  const def = { id: game.widget, icon: game.homeIcoon || '🎮', titel: game.titel, w: 2, h: 1 }
+  const def = { id: game.widget, icon: game.homeIcoon || '🎮', titel: game.titel, w: game.w || 2, h: game.h || 1 } // v15: een widget heeft zijn eigen maat
   try {
     const sleutelL = LAYOUT(uid)
     // Nog nooit een indeling bewaard (nieuw account): eerst de standaard-widgets, zodat die niet wegvallen
@@ -155,7 +165,7 @@ export const gameAan = (uid, game) => bewaardeDownloads(uid).has(game.id) && gam
 export async function verwijderDownload(supabase, uid, id) {
   const r = await weghalenItem(supabase, uid, id)
   if (r.error) return r
-  const game = STORE_GAMES.find(g => g.id === id)
+  const game = storeWidgetItem(id) // v15: ook een widget gaat van Home
   if (game) zetGameWidgetUit(uid, game.widget)
   const vel = STORE_STICKERS.find(s => s.id === id)
   if (vel) {

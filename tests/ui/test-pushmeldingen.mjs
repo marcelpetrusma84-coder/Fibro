@@ -43,7 +43,7 @@ assert.match(en, /"Pushmeldingen": "Push notifications"/)
 
 // 4. pushmeldingen.js met een nep-supabase en nep-toestemming
 let bron = lees('pushmeldingen.js')
-bron = bron.replace(/^import \{ zetMeldingenAan \} from '\.\/meldingen-aan\.js\?v=5'$/m, 'const zetMeldingenAan = (...a) => globalThis.__toestemming(...a)')
+bron = bron.replace(/^import \{ zetMeldingenAan \} from '\.\/meldingen-aan\.js\?v=6'$/m, 'const zetMeldingenAan = (...a) => globalThis.__toestemming(...a)')
 assert.ok(!/^import /m.test(bron), 'import vervangen')
 const opslag = new Map()
 globalThis.localStorage = { getItem: k => opslag.has(k) ? opslag.get(k) : null, setItem: (k, v) => opslag.set(k, String(v)) }

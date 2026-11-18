@@ -101,7 +101,8 @@ await proef('gemiste oproep (Engels)', { receiver_id: B, type: 'gemist' }, 'pas-
 await proef('naam met & en ? veilig in het adres', { receiver_id: A, type: 'oproep' }, 'pas-d', u => p(u).body === '📞 Jan & Piet? belt je'
   && p(u).url === '/Fibro/bellen.html?vriend=' + D + '&naam=Jan%20%26%20Piet%3F&inkomend=1')
 await proef('bericht: zoals vroeger (geen opties, geen tag)', { receiver_id: B }, 'pas-a', u => o(u) === undefined && !('tag' in p(u))
-  && JSON.stringify(p(u)) === JSON.stringify({ title: 'Stekky', body: 'You have a new message 💬', url: '/Fibro/chat.html', type: 'bericht' }))
+  // 18 nov 2026 (PR #216, Tijn): een chatbericht krijgt ook de ontvanger en zijn taal mee (gezamenlijke teller in service-worker.js)
+  && JSON.stringify(p(u)) === JSON.stringify({ title: 'Stekky', body: 'You have a new message 💬', url: '/Fibro/chat.html', type: 'bericht', ontvanger: B, taal: 'en' }))
 await proef('buzz: zoals vroeger', { receiver_id: B, type: 'buzz' }, 'pas-a', u => o(u) === undefined && !('tag' in p(u)) && p(u).type === 'buzz')
 await proef('vreemd type (__proto__) = bericht', { receiver_id: B, type: '__proto__' }, 'pas-a', u => u.status === 200 && p(u).type === 'bericht')
 await proef('vreemd type (constructor) = bericht', { receiver_id: B, type: 'constructor' }, 'pas-a', u => u.status === 200 && p(u).type === 'bericht')

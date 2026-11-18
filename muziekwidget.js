@@ -1,4 +1,7 @@
 // muziekwidget.js (v1, 18 nov 2026) - de muziek-widget: een album of nummer van Bandcamp of Funkwhale op je profiel.
+// v2 (18 nov 2026): titel vanzelf. Bandcamp: uit de insluitcode ("Album van Artiest"). Funkwhale: titel, artiest en
+// albumhoes via de API (haalInfo, voorbeeldplaatje.js), alleen bij het opslaan op het toestel van de eigenaar; de hoes
+// wordt de achtergrond van het kaartje en gaat via sync naar vrienden.
 //
 // In gewone woorden: je plakt de insluitcode van Bandcamp, of een link naar een nummer of album op Funkwhale. Op je
 // profiel (en bij je vrienden) staat dan een rustig kaartje met "▶ Luisteren". Pas als iemand daarop tikt, maakt zijn
@@ -22,7 +25,10 @@
 //   speelUrl(cfg)       -> { src, hoogte } of null
 //   tekenMuziekWidget(el, { cfg, eigen, bewaar })
 
+import { haalJson, plaatjeOpServer, maakPlaatje } from './voorbeeldplaatje.js?v=1'
+
 Object.assign(window.FIBRO_EN ||= {}, {
+  'Ophalen…': 'Fetching…',
   'Nog geen muziek': 'No music yet', '➕ Muziek kiezen': '➕ Choose music', '▶ Luisteren': '▶ Listen',
   'Bandcamp-album': 'Bandcamp album', 'Bandcamp-nummer': 'Bandcamp track',
   'Funkwhale-album': 'Funkwhale album', 'Funkwhale-nummer': 'Funkwhale track', 'van {bron}': 'from {bron}',
@@ -50,6 +56,15 @@ const FW_ID = /^(\d{1,10}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-
 const SOORT = new Set(['album', 'track'])
 const tekst = (s, max) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, max)
 const entities = s => String(s).replace(/&amp;/g, '&').replace(/&#0?38;/g, '&').replace(/&quot;/g, '"')
+// v2: tekst uit html (de link in Bandcamps insluitcode): tekens terug, geen tags
+const htmlTekst = s => {
+  // in de browser: de html-lezer (voert niets uit, geeft alleen de tekst); anders de eenvoudige tekens hieronder
+  if (typeof DOMParser === 'function') { try { return tekst(new DOMParser().parseFromString(String(s), 'text/html').documentElement.textContent, MAX_TITEL) } catch (e) {} }
+  return htmlTekstEenvoudig(s)
+}
+const htmlTekstEenvoudig = s => tekst(String(s).replace(/<[^>]*>/g, '').replace(/&#(\d{1,6});/g, (m, n) => { const c = Number(n); return c > 31 && c < 0x110000 ? String.fromCodePoint(c) : '' })
+  .replace(/&#x([0-9a-f]{1,6});/gi, (m, n) => { const c = parseInt(n, 16); return c > 31 && c < 0x110000 ? String.fromCodePoint(c) : '' })
+  .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'), MAX_TITEL)
 
 // Wat is er geplakt? Een Bandcamp-insluitcode (of de link daaruit), of een Funkwhale-link of -insluitcode.
 export function leesInvoer(invoer) {
@@ -62,8 +77,12 @@ export function leesInvoer(invoer) {
   if (bcDeel !== null) {
     const album = /(?:^|[\s/[])album\s*=\s*(\d{1,12})/i.exec(bcDeel)
     const track = /(?:^|[\s/[])track\s*=\s*(\d{1,12})/i.exec(bcDeel)
-    if (album) return { bron: 'bandcamp', soort: 'album', id: album[1], ...(track ? { nummer: track[1] } : {}) }
-    if (track) return { bron: 'bandcamp', soort: 'track', id: track[1] }
+    // v2: Bandcamp zet "Album van Artiest" als link in de code (<a href=...>Titel by Artiest</a>)
+    const a = /<a\b[^>]*>([\s\S]{1,300}?)<\/a>/i.exec(String(invoer))
+    const titel = a ? htmlTekst(a[1]) : ''
+    const extra = titel ? { titel } : {}
+    if (album) return { bron: 'bandcamp', soort: 'album', id: album[1], ...(track ? { nummer: track[1] } : {}), ...extra }
+    if (track) return { bron: 'bandcamp', soort: 'track', id: track[1], ...extra }
     return { fout: T('Dit is geen link naar een nummer of album.') }
   }
 
@@ -124,6 +143,24 @@ export function speelUrl(cfg) {
     src: 'https://' + c.server + '/front/embed.html?&type=' + c.soort + '&id=' + encodeURIComponent(c.id),
     hoogte: c.soort === 'album' ? 330 : 150,
   }
+}
+
+// v2: titel, artiest en hoes van Funkwhale, via de API (alleen bij het opslaan, op het toestel van de eigenaar).
+// Bandcamp: niets ophalen (de titel komt al uit de insluitcode). Geeft { titel, plaatje }; wat niet lukt, ontbreekt.
+export async function haalInfo(cfg, opties = {}) {
+  const c = normaliseer(cfg)
+  if (!c || c.bron !== 'funkwhale') return {}
+  const d = await haalJson('https://' + c.server + '/api/v1/' + (c.soort === 'album' ? 'albums' : 'tracks') + '/' + encodeURIComponent(c.id) + '/', opties)
+  if (!d || typeof d !== 'object') return {}
+  const naam = tekst(d.title, MAX_TITEL)
+  const credits = Array.isArray(d.artist_credit) ? d.artist_credit.map(x => (x && (x.credit || (x.artist && x.artist.name)) || '') + (x && x.joinphrase || '')).join('') : ''
+  const artiest = tekst((d.artist && d.artist.name) || credits, 60)
+  const uit = {}
+  if (naam) uit.titel = tekst(artiest ? naam + ' – ' + artiest : naam, MAX_TITEL)
+  const hoes = (d.cover && d.cover.urls) || (d.album && d.album.cover && d.album.cover.urls) || null
+  const adres = hoes && (plaatjeOpServer(hoes.large_square_crop, c.server) || plaatjeOpServer(hoes.medium_square_crop, c.server) || plaatjeOpServer(hoes.original, c.server))
+  if (adres) { const p = await maakPlaatje(adres, opties); if (p) uit.plaatje = p }
+  return uit
 }
 
 const bronNaam = c => c.bron === 'bandcamp' ? 'Bandcamp' : c.server
@@ -187,10 +224,13 @@ export function tekenMuziekWidget(c, { cfg = null, eigen = false, bewaar = null 
     const rij = el('div', 'display:flex;gap:6px;flex-wrap:wrap;justify-content:center')
     const ok = el('button', HOOFDKNOP, T('Opslaan ✓'))
     ok.className = 'mw-opslaan'
-    ok.onclick = stop(() => {
+    ok.onclick = stop(async () => {
       const r = leesInvoer(veld.value)
       if (r.fout) { melding.textContent = r.fout; return }
-      bewaar({ ...r, titel: tekst(titel.value, MAX_TITEL) })
+      // v2: zelf getypte titel gaat voor; anders die uit de Bandcamp-code (of later die van Funkwhale)
+      ok.disabled = true; ok.textContent = T('Ophalen…')
+      try { await bewaar({ ...r, titel: tekst(titel.value, MAX_TITEL) || r.titel || '' }) }
+      finally { if (ok.isConnected) { ok.disabled = false; ok.textContent = T('Opslaan ✓') } }
     })
     rij.appendChild(ok)
     if (v) {

@@ -119,6 +119,6 @@ const sync = lees('sync.js')
 assert.match(sync, /const \{ v, oud, nieuw, k, w, erbij \} = nieuweSyncStand\(vorig, bericht\.data\)\n[\s\S]{0,200}localStorage\.setItem\(sl, JSON\.stringify\(\{ t: nu, v, oud, nieuw, k, w, nt \}\)\)/) // v263: ook w en nt
 assert.match(sync, /const v = belangrijkeVingerafdruk\(await maakManifest\(\)\)/, 'op de server: ook alleen het belangrijke deel')
 for (const f of ['index.html', 'chat.html', 'vrienden.html', 'profiel.html', 'vriend-profiel.html'])
-  assert.match(lees(f), /sync\.js\?v=25[0-9]/, f)
+  assert.match(lees(f), /sync\.js\?v=(2[5-9][0-9]|[3-9][0-9]{2})/, f)
 
 console.log('ok: "Profiel geüpdatet" alleen bij nieuwe foto\'s, video, muziek of een andere achtergrond')

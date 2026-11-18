@@ -43,8 +43,8 @@ assert.deepEqual(u, { goed: 1, totaal: 2, fouten: [{ v: 'b', jij: 'x', goed: 'y'
 const sync = lees('sync.js')
 assert.match(sync, /const KLEIN_WIDGETS = \['quote', 'aftel', 'optel', 'poll', 'quiz'[,\]]/) // 18 nov 2026: daarna mag peertube komen
 assert.match(sync, /\['poll','poll_'\],\['quiz','quiz_'\]/)
-assert.match(sync, /const WBG_WIDGETS = \['poll', 'quote', 'aftel', 'optel', 'quiz'\]/)
-assert.match(sync, /widgetbg_\(poll\|quote\|aftel\|optel\|quiz\)/)
+assert.match(sync, /const WBG_WIDGETS = \['poll', 'quote', 'aftel', 'optel', 'quiz'[,\]]/) // 18 nov 2026: daarna mogen er meer komen
+assert.match(sync, /widgetbg_\(poll\|quote\|aftel\|optel\|quiz[|)]/)
 assert.doesNotMatch(sync, /\['quote','aftel','optel','poll'\]/, 'nergens nog de oude lijst zonder quiz')
 
 // de pagina's

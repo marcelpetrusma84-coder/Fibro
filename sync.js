@@ -1,4 +1,5 @@
 // v254 (4 november 2026): event 'fibro-sync-item' bij elk binnengekomen onderdeel van een vriend (itemBinnen)
+// v260 (18 nov 2026): de miniatuur (PeerTube) en albumhoes (muziek) gaan mee als achtergrond (widgetbg_peertube/_muziekwidget)
 // v259 (18 nov 2026): ook de muziek-widget (muziekwidget_<uid>, muziekwidget.js)
 // v258 (18 nov 2026): ook de PeerTube-widget (peertube_<uid>) gaat mee naar vrienden (peertube.js)
 // v253 (4 november 2026): ook de quiz-widget (quiz_<uid>, widgetbg_quiz) gaat mee naar vrienden (quiz.js)
@@ -19,7 +20,7 @@ import * as SB from './syncbeurt.js?v=1'
 import * as Postbus from './postbus.js?v=1' // v251: kleine profielupdates ook als je niet tegelijk online bent
 import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel } from './crypto.js?v=182'
 import { eigenHandtekening, bewaarVriendHandtekening } from './profielbundel.js?v=2' // 17 nov 2026: profiel via vrienden, stap 3
-import * as Doorgeven from './doorgeven.js?v=3' // 17 nov 2026: stap 4, een profiel via een gezamenlijke vriend
+import * as Doorgeven from './doorgeven.js?v=4' // 17 nov 2026: stap 4, een profiel via een gezamenlijke vriend
 
 let huidigeUserId = null
 let onlineGebruikers = new Set()
@@ -841,7 +842,7 @@ async function verzamelEigenMuziek() {
 // v265: de kleine tekstwidgets die meegaan; een quiz (tot 50 vragen) mag groter zijn dan een quote of poll
 const KLEIN_WIDGETS = ['quote', 'aftel', 'optel', 'poll', 'quiz', 'peertube', 'muziekwidget'] // 18 nov 2026: peertube.js, muziekwidget.js
 const kleinMax = sl => sl === 'quiz' ? 40000 : 20000
-const WBG_WIDGETS = ['poll', 'quote', 'aftel', 'optel', 'quiz'] // v265: quiz
+const WBG_WIDGETS = ['poll', 'quote', 'aftel', 'optel', 'quiz', 'peertube', 'muziekwidget'] // v265: quiz; v260: miniatuur/hoes van PeerTube en muziek
         const wbgPosWacht = {}
 
 // v112: controlegetal van de eigen video onthouden bij dat van de video-info, zodat de
@@ -1571,7 +1572,7 @@ function isGeldigeChunk(b) {
   // Zonder deze check kon een peer bijv. totaal=1e9 sturen → new Array(1e9) → crash
   if (typeof b.itemId !== 'string' || b.itemId.length > 200) return false
   const isSticker = /^sticker_e[12]-(0[1-9]|1[0-2])$/.test(b.itemId) // v155
-  if (!isSticker && !b.itemId.startsWith('pfoto_') && !b.itemId.startsWith('muziek_') && b.itemId !== 'video' && !/^widgetbg_(poll|quote|aftel|optel|quiz)$/.test(b.itemId)) return false
+  if (!isSticker && !b.itemId.startsWith('pfoto_') && !b.itemId.startsWith('muziek_') && b.itemId !== 'video' && !/^widgetbg_(poll|quote|aftel|optel|quiz|peertube|muziekwidget)$/.test(b.itemId)) return false
   if (isSticker && (!Number.isInteger(b.totaal) || b.totaal > MAX_STICKER_CHUNKS)) return false
   if (typeof b.hash !== 'string' || b.hash.length > 16) return false
   if (!Number.isInteger(b.totaal) || b.totaal < 1 || b.totaal > MAX_CHUNKS_PER_ITEM) return false

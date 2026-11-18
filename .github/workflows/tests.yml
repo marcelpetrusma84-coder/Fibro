@@ -227,3 +227,6 @@ jobs:
       - name: "Muziek-widget (Bandcamp en Funkwhale): Store, Home, laadt pas na een tik (proef316)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef316.py .
+      - name: "Titel en plaatje vanzelf bij PeerTube en Funkwhale (proef317)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef317.py .

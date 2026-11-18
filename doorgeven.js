@@ -16,7 +16,7 @@ import { controleerOnderdeel, inhoudHash, isNieuwer } from './profielhandtekenin
 import { controleerVriendLijst, VRIEND_SLEUTEL } from './profielbundel.js?v=2'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-const KLEIN = ['quote', 'aftel', 'optel', 'poll', 'quiz', 'peertube', 'muziekwidget'] // v2: peertube.js; v3 (18 nov 2026): muziekwidget.js
+const KLEIN = ['quote', 'aftel', 'optel', 'poll', 'quiz', 'peertube', 'muziekwidget'] // v2: peertube.js; v3 (18 nov 2026): muziekwidget.js; v4: hun achtergrond (wbg_) ook
 export const MAX_AANBOD = 30          // hoogstens zoveel profielen per verbinding
 const DEELT_GELDIG_MS = 10 * 60 * 1000
 
@@ -24,7 +24,7 @@ const DEELT_GELDIG_MS = 10 * 60 * 1000
 export function isDoorgeefNaam(naam) {
   return typeof naam === 'string' && (naam === 'layout' || naam === 'video_meta' || KLEIN.includes(naam)
     || /^foto_pfoto_[A-Za-z0-9_]{1,60}$/.test(naam) || /^muziek_(profiel|index|nr\d{1,4})$/.test(naam)
-    || /^wbg_(poll|quote|aftel|optel|quiz)$/.test(naam) || /^sticker_e[12]-(0[1-9]|1[0-2])$/.test(naam))
+    || /^wbg_(poll|quote|aftel|optel|quiz|peertube|muziekwidget)$/.test(naam) || /^sticker_e[12]-(0[1-9]|1[0-2])$/.test(naam))
 }
 export function isGoedeInhoud(naam, d) {
   if (typeof d !== 'string' || !d) return false

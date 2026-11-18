@@ -338,7 +338,7 @@ window.addEventListener('pageshow', function (e) { if (e.persisted) window.werkO
 import { laadThema } from './thema.js?v=238'
 import { pasBlokstijlToe } from './blokstijl.js?v=95'
 import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=95'
-import { startHeartbeat } from './heartbeat.js?v=117'
+import { startHeartbeat } from './heartbeat.js?v=118'
 import { meldToestel } from './toestel.js?v=1'
 import { zetStandaardWidgets } from './standaardwidgets.js?v=2' // v267: nieuw account = meteen widgets op Home
 import * as GB from './gastenboekstijl.js?v=2'
@@ -615,7 +615,7 @@ function renderHome(id, c) {
       const ids=fs.map(f=>f.user_id===window._uid?f.friend_id:f.user_id)
       if(!ids.length){const e=document.getElementById('wonl');if(e)e.textContent='0';return}
       // v274: dezelfde regel als het bolletje (onlinestip.js): live verbinding eerst, anders het seintje; en live bijgewerkt
-      Promise.all([import('./onlinestip.js?v=1'),supabase.from('profiles').select('id,online_status,laatst_gezien').in('id',ids)]).then(([m,{data:p}])=>{
+      Promise.all([import('./onlinestip.js?v=2'),supabase.from('profiles').select('id,online_status,laatst_gezien').in('id',ids)]).then(([m,{data:p}])=>{
         m.bewaarServerStand(p||[])
         const tel=()=>{const e=document.getElementById('wonl');if(e)e.textContent=ids.filter(id=>m.isVriendOnline(id)).length}
         tel();m.volgOnline(window._uid,()=>ids,tel)

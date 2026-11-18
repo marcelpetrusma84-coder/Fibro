@@ -63,6 +63,11 @@ assert.equal(R({ nu, server: { online_status: true, laatst: nu - 5 * 60000 } }),
 assert.equal(R({ nu, server: { online_status: false, laatst: nu } }), false, 'server zegt offline')
 assert.equal(R({ nu, server: vers, wegOp: nu - 1000 }), false, 'uit de live verbinding en daarna geen seintje: weg (telefoon uit)')
 assert.equal(R({ nu, server: { online_status: true, laatst: nu - 2000 }, wegOp: nu - 8000 }), true, 'na het verlaten nog een seintje: in een spel')
+// v2 (18 nov 2026): een paginawissel laat je niet even op offline springen
+assert.equal(R({ nu, server: vers, wegOp: nu - 1000, wasLive: true }), true, 'net weg, had de app in beeld: nog groen (andere pagina)')
+assert.equal(R({ nu, server: { online_status: false, laatst: nu - 500 }, wegOp: nu - 1000, wasLive: true }), true, 'ook als de oude pagina net offline schreef')
+assert.equal(R({ nu, server: vers, wegOp: nu - O.WEG_GENADE_MS, wasLive: true }), false, 'na de marge beslist de server weer')
+assert.equal(R({ nu, server: vers, wegOp: nu - 1000, wasLive: false }), false, 'had de app niet in beeld: geen marge')
 
 // ── met de nep verbinding ──
 let getekend = 0
@@ -105,17 +110,21 @@ assert.equal(O.isVriendOnline(BRAM), true, 'lang in een spel: groen (elke 2 minu
 P.kamer.set(KIM, { actief: true }); P.roep({ id: KIM, online: true })
 S.server.set(KIM, { online_status: true, laatst_gezien: iso(nu - 30000) })
 await wacht(40000)
+O.isVriendOnline(KIM)                        // de pagina tekent haar (live, in beeld)
 P.kamer.delete(KIM); P.roep({ id: KIM, online: false })
 await wacht(7000)
-assert.equal(O.isVriendOnline(KIM), false, 'telefoon uit: grijs, niet nog 5 minuten groen')
+assert.equal(O.isVriendOnline(KIM), true, 'v2: eerst nog even groen (het kan een paginawissel zijn)')
+await wacht(6000)
+assert.equal(O.isVriendOnline(KIM), false, 'telefoon uit: na 12 seconden grijs, niet nog 5 minuten groen')
 
 // Kim gaat even naar een andere pagina (meteen weer live): niet eens de server vragen
 P.kamer.set(KIM, { actief: true }); P.roep({ id: KIM, online: true })
 const n2 = S.vragen.length
 P.kamer.delete(KIM); P.roep({ id: KIM, online: false })
 await wacht(1500)
+assert.equal(O.isVriendOnline(KIM), true, 'v2: tijdens de paginawissel blijft ze groen')
 P.kamer.set(KIM, { actief: true }); P.roep({ id: KIM, online: true })
-await wacht(7000)
+await wacht(14000)
 assert.equal(S.vragen.length, n2, 'andere pagina in Stekky: geen extra vraag')
 assert.equal(O.isVriendOnline(KIM), true)
 
@@ -136,11 +145,13 @@ assert.deepEqual(P.eigen, { actief: true })
 
 // ── de pagina's ──
 for (const f of ['vrienden.html', 'chat.html', 'vriend-profiel.html', 'profiel.html'])
-  assert.match(lees(f), /from '\.\/onlinestip\.js\?v=1'/, f + ' gebruikt onlinestip.js')
-assert.match(lees('index.html'), /import\('\.\/onlinestip\.js\?v=1'\)/, 'Home: het getal vrienden online')
+  assert.match(lees(f), /from '\.\/onlinestip\.js\?v=2'/, f + ' gebruikt onlinestip.js')
+assert.match(lees('index.html'), /import\('\.\/onlinestip\.js\?v=2'\)/, 'Home: het getal vrienden online')
 for (const f of ['vrienden.html', 'chat.html', 'vriend-profiel.html'])
   assert.match(lees(f), /return (isVriendOnline|stipOnline)\(profiel\.id/, f + ': dezelfde regel')
 assert.match(lees('chat.html'), /isVriendOnline as stipOnline/, 'Chat: andere naam, want p2pfoto.js heeft ook een isVriendOnline')
-for (const f of ['spel.html', 'bellen.html', 'vriend-profiel.html'])
+const hb = lees('heartbeat.js')
+assert.match(hb, /setTimeout\(\(\) => \{ if \(!document\.hidden\) ping\(\) \}, NA_START_MS\)/, 'v2: na het starten nog een ping (late offline van de vorige pagina)')
+for (const f of ['spel.html', 'bellen.html', 'vriend-profiel.html', 'groep.html', 'store.html'])
   assert.match(lees(f), /startHeartbeat\(\)/, f + ': het seintje loopt ook hier')
 console.log('online-bolletje: alles goed')

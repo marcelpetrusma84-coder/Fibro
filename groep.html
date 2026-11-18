@@ -2005,5 +2005,6 @@ button { font-family:inherit; }
   init()
 </script>
 <script src="fotoviewer.js?v=9"></script>
+<script type="module">import { startHeartbeat } from './heartbeat.js?v=118'; if (window.top === window) startHeartbeat().catch(() => {}) // 18 nov 2026: ook hier tel je mee als online</script>
 </body>
 </html>

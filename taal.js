@@ -1,3 +1,4 @@
+// v125 (18 nov 2026): taal-en.js?v=125 (groepen in de chatlijst: paars en 3/8 leden)
 // v124 (18 nov 2026): taal-en.js?v=124 (pushmelding bij een vriendverzoek)
 // v123 (18 nov 2026): taal-en.js?v=123 (vriend worden vanuit een groep)
 // v122 (17 nov 2026): taal-en.js?v=122 (geblokkeerde personen in een groep)
@@ -140,7 +141,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=124', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=125', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

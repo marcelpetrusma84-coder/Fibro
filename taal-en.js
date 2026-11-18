@@ -2588,4 +2588,6 @@ window.FIBRO_EN = {
   "Vriendverzoeken": "Friend requests",
   "uit de groep {groep}": "from the group {groep}",
   "\u{1F389} Nieuwe vriend of vriendverzoek": "\u{1F389} New friend or friend request",
+  "Schaduwen op tafel": "Shadows on the table",
+  "Laat de kaarten en stapels een schaduw op de tafel werpen.": "Cast shadows from the cards and decks onto the table.",
 }

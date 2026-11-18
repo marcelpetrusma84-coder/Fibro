@@ -700,7 +700,10 @@ export function maakKaartTafel(container, opties = {}) {
     const ids = volgorde
     const leesbaar = o.leesbareSelectie ? berekenLeesbareWaaier({ breedte:handEl.clientWidth || 360, kw:maat.kw, kh:maat.kh, aantal:ids.length, selectie:selectie.map(id => ids.indexOf(id)), loep:ids.indexOf(loep) }) : null
     const p = leesbaar?.kaarten || plekken(ids.length)
-    handEl.style.height = (leesbaar?.hoogte || Math.round(maat.kh * 1.42)) + 'px'
+    const gewoneHoogte = Math.round(maat.kh * 1.42)
+    const handHoogte = leesbaar?.hoogte || gewoneHoogte
+    handEl.style.height = handHoogte + 'px'
+    if (o.leesbareSelectie) el.style.setProperty('--kj-hand-verschil', (handHoogte - gewoneHoogte) + 'px')
     ids.forEach((id, i) => {
       let k = kaartEl(id)
       if (!k) {

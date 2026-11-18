@@ -1,4 +1,5 @@
 // v254 (4 november 2026): event 'fibro-sync-item' bij elk binnengekomen onderdeel van een vriend (itemBinnen)
+// v259 (18 nov 2026): ook de muziek-widget (muziekwidget_<uid>, muziekwidget.js)
 // v258 (18 nov 2026): ook de PeerTube-widget (peertube_<uid>) gaat mee naar vrienden (peertube.js)
 // v253 (4 november 2026): ook de quiz-widget (quiz_<uid>, widgetbg_quiz) gaat mee naar vrienden (quiz.js)
 // sync.js — P2P widget-sync via WebRTC DataChannel (v146: vraag over muziek via relay ook in het Engels)
@@ -18,7 +19,7 @@ import * as SB from './syncbeurt.js?v=1'
 import * as Postbus from './postbus.js?v=1' // v251: kleine profielupdates ook als je niet tegelijk online bent
 import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel } from './crypto.js?v=182'
 import { eigenHandtekening, bewaarVriendHandtekening } from './profielbundel.js?v=2' // 17 nov 2026: profiel via vrienden, stap 3
-import * as Doorgeven from './doorgeven.js?v=2' // 17 nov 2026: stap 4, een profiel via een gezamenlijke vriend
+import * as Doorgeven from './doorgeven.js?v=3' // 17 nov 2026: stap 4, een profiel via een gezamenlijke vriend
 
 let huidigeUserId = null
 let onlineGebruikers = new Set()
@@ -838,7 +839,7 @@ async function verzamelEigenMuziek() {
 }
 
 // v265: de kleine tekstwidgets die meegaan; een quiz (tot 50 vragen) mag groter zijn dan een quote of poll
-const KLEIN_WIDGETS = ['quote', 'aftel', 'optel', 'poll', 'quiz', 'peertube'] // 18 nov 2026: peertube.js
+const KLEIN_WIDGETS = ['quote', 'aftel', 'optel', 'poll', 'quiz', 'peertube', 'muziekwidget'] // 18 nov 2026: peertube.js, muziekwidget.js
 const kleinMax = sl => sl === 'quiz' ? 40000 : 20000
 const WBG_WIDGETS = ['poll', 'quote', 'aftel', 'optel', 'quiz'] // v265: quiz
         const wbgPosWacht = {}
@@ -1047,7 +1048,7 @@ async function haalVriendSleutel(id) {
   try { if (videoMetaHash) videoHash = await eigenVideoHash(videoMetaHash) } catch(e) {}
   // Kleine tekstwidgets: quote, afteltimer, opteltimer
   const klein = {}
-  for (const [sl, key] of [['quote','quote_'],['aftel','aftel_'],['optel','optel_'],['poll','poll_'],['quiz','quiz_'],['peertube','peertube_']]) {
+  for (const [sl, key] of [['quote','quote_'],['aftel','aftel_'],['optel','optel_'],['poll','poll_'],['quiz','quiz_'],['peertube','peertube_'],['muziekwidget','muziekwidget_']]) {
     try {
       const w = localStorage.getItem(key + huidigeUserId)
       if (w) klein[sl] = hashString(w)

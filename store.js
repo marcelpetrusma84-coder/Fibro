@@ -4,6 +4,7 @@
 // v8 (13 nov 2026): stickervellen (STORE_STICKERS), het eerste is Sinterklaas.
 // v15 (18 nov 2026): widgets (STORE_WIDGETS), de eerste is PeerTube (peertube.js). Werkt net als een game: na
 // downloaden staat hij op Home en bij Profiel > Widgets; Verwijderen haalt hem overal weg.
+// v16 (18 nov 2026): de muziek-widget (muziekwidget.js): een album of nummer van Bandcamp of Funkwhale.
 // Sinds 11 nov 2026 voor iedereen met een account (eerst alleen moderators): het Store-vakje bij Stijl staat bij
 // iedereen, en de database laat iedereen downloaden die niet geblokkeerd is (sql/stekky-store-iedereen.sql).
 // Soorten: lettertype (nu), game, sticker en widget (later). Lettertypes komen per thema in een pakket van 4
@@ -49,6 +50,8 @@ export const STORE_STICKERS = STORE_VELLEN.map(v => ({ id: v.store, soort: 'stic
 export const STORE_WIDGETS = [
   { id: 'peertube', soort: 'widget', titel: 'PeerTube', widget: 'peertube', homeIcoon: '\u{1F3AC}', w: 4, h: 3,
     uitleg: 'Zet een video van PeerTube op je profiel. Je vrienden zien eerst een kaartje; pas als iemand op afspelen tikt, maakt zijn toestel verbinding met PeerTube. Geen reclame, geen aanbevelingen.' },
+  { id: 'muziekwidget', soort: 'widget', titel: 'Bandcamp & Funkwhale', widget: 'muziekwidget', homeIcoon: '\u{1F3A7}', w: 4, h: 3,
+    uitleg: 'Zet een album of nummer van Bandcamp of Funkwhale op je profiel. Je vrienden zien eerst een kaartje; pas als iemand op luisteren tikt, maakt zijn toestel verbinding met Bandcamp of Funkwhale. Geen reclame, en bij Bandcamp telt het luisteren mee voor de artiest.' },
 ]
 export const STORE_ITEMS = [...STORE_PAKKETTEN.map(p => Object.assign({ soort: 'lettertype' }, p)), ...STORE_GAMES, ...STORE_WIDGETS, ...STORE_STICKERS]
 // Welke widgets uit de Store mag je aanzetten (wat je gedownload hebt): games en (sinds v15) widgets

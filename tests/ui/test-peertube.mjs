@@ -64,7 +64,8 @@ console.log('PASS: de speler laadt zonder p2p, zonder PeerTube-link, in een afge
 for (const pagina of ['index.html', 'vriend-profiel.html']) {
   const csp = lees(pagina).match(/<meta http-equiv="Content-Security-Policy" content="([^"]*)">/)[1]
   const frame = csp.match(/frame-src ([^;]*);/)[1].split(' ')
-  assert.deepEqual(frame, ["'self'", ...P.SERVERS.map(s => 'https://' + s)], pagina + ': frame-src = de lijst uit peertube.js')
+  // 18 nov 2026: na de PeerTube-servers komen de bronnen van de muziek-widget (test-muziekwidget.mjs controleert de hele rij)
+  assert.deepEqual(frame.slice(0, P.SERVERS.length + 1), ["'self'", ...P.SERVERS.map(s => 'https://' + s)], pagina + ': frame-src begint met de lijst uit peertube.js')
   assert.doesNotMatch(csp, /connect-src[^;]*(framatube|tilvids)/, pagina + ': Stekky zelf praat niet met PeerTube')
 }
 for (const pagina of ['chat.html', 'login.html', 'over.html', 'spelregels.html']) {
@@ -74,9 +75,9 @@ console.log('PASS: de huisregel laat precies de goedgekeurde servers toe, alleen
 
 // ── Overal aangesloten ──
 const sync = lees('sync.js')
-assert.match(sync, /const KLEIN_WIDGETS = \['quote', 'aftel', 'optel', 'poll', 'quiz', 'peertube'\]/)
-assert.match(sync, /\['quiz','quiz_'\],\['peertube','peertube_'\]\]/)
-assert.match(lees('doorgeven.js'), /const KLEIN = \['quote', 'aftel', 'optel', 'poll', 'quiz', 'peertube'\]/)
+assert.match(sync, /const KLEIN_WIDGETS = \['quote', 'aftel', 'optel', 'poll', 'quiz', 'peertube'[,\]]/)
+assert.match(sync, /\['quiz','quiz_'\],\['peertube','peertube_'\][,\]]/)
+assert.match(lees('doorgeven.js'), /const KLEIN = \['quote', 'aftel', 'optel', 'poll', 'quiz', 'peertube'[,\]]/)
 assert.match(lees('index.html'), /\{ id:'peertube',\s+icon:'🎬', titel:'PeerTube',\s+w:4, h:3 \}/)
 assert.match(lees('index.html'), /\} else if \(id === 'peertube'\) \{\n    renderPeertube\(c, window\._uid\)/)
 assert.match(lees('profiel.html'), /id="widget-peertube" onclick="toggleWidget\('peertube'\)"/)

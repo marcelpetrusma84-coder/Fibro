@@ -92,7 +92,7 @@ console.log('PASS: samenvoegen')
 const gevraagd = []
 const nep = antw => async (url, o) => { gevraagd.push([url, o]); return { ok: antw.ok !== false, json: async () => antw } }
 let r = await R.maakOphaler(async () => 'PAS', { fetch: nep({ ok: true, titel: 'NOS', berichten: [] }) })('https://feeds.nos.nl/nosnieuwsalgemeen')
-assert.deepEqual(r, { titel: 'NOS', berichten: [] })
+assert.deepEqual(r, { titel: 'NOS', berichten: [], afbeelding: '', link: '' })
 const [url, o] = gevraagd[0]
 assert.equal(url, R.FUNCTIE_URL); assert.equal(o.method, 'POST'); assert.equal(o.credentials, 'omit'); assert.equal(o.referrerPolicy, 'no-referrer')
 assert.equal(o.headers.Authorization, 'Bearer PAS')
@@ -147,7 +147,7 @@ assert.match(lees('profiel.html'), /rss:\s+\{ id:'rss'/)
 assert.match(lees('vriend-profiel.html'), /if \(w\.id === 'rss'\) \{/)
 assert.ok(lees('vriend-profiel.html').includes("R.tekenRssWidget(el.querySelector('.widget-inhoud'), { cfg, sprite, spriteId })"))
 assert.doesNotMatch(lees('vriend-profiel.html'), /maakOphaler|rss-ophalen/, 'bij een vriend: niets ophalen')
-for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/rsswidget\.js\?v=2'\)/)
+for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/rsswidget\.js\?v=3'\)/)
 const en = lees('taal-en.js')
 for (const t of ['RSS-feed', 'Nog geen feed', item.uitleg, 'Uit de Store: de nieuwste koppen van je favoriete sites', 'Ophalen lukt nu niet. Probeer het later nog eens.', 'Bijgewerkt: {wanneer}'])
   assert.ok(en.includes(JSON.stringify(t) + ':'), 'Engels voor: ' + t)
@@ -237,7 +237,7 @@ console.log('PASS: v2: plaatjes alleen via de server van Stekky')
 
 // ── v2: aangesloten ──
 assert.match(sync, /const WBG_WIDGETS = \[[^\]]*'rss'[^\]]*\]/, 'fotootjes gaan mee als achtergrond')
-assert.match(lees('doorgeven.js'), /wbg_\([^)]*\|rss\)/)
+assert.match(lees("doorgeven.js"), /wbg_\([^)]*\|rss[|)]/)
 const ih = lees('index.html')
 assert.match(ih, /const key = 'rss_' \+ uid, bg = 'widgetbg_rss_' \+ uid, fotosKey = 'rssfotos_' \+ uid/)
 assert.doesNotMatch(ih, /zetWidgetAchtergrond\(c, 'widgetbg_rss_'/, 'geen 🖼-knop op de RSS-widget')

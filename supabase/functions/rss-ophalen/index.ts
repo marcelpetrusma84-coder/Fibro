@@ -19,6 +19,10 @@
 // van de eigenaar verkleint het), hoogstens 300 KB, alleen echte plaatjes (jpg, png, webp, gif, avif; op de eerste
 // bytes gecontroleerd), dezelfde regels als bij feeds, en hoogstens 40 plaatjes per minuut per gebruiker. De telefoon
 // vraagt alleen plaatjes van nieuwe berichten, hoogstens 6 per keer (rsswidget.js). Er wordt niets bewaard.
+//
+// v3 (19 nov 2026): ook voor de Mastodon-widget (mastodon.js): die leest de openbare RSS-feed van een account
+// (https://server/@naam.rss). Geen inloggen bij Mastodon. Gevoelige berichten en berichten met een
+// inhoudswaarschuwing krijgen geen plaatje-adres (feed.js), dus die plaatjes haalt de server nooit op.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { leesFeed, netteFeedUrl, privéIp, soortPlaatje, tekenset } from "./feed.js";
 
@@ -179,7 +183,7 @@ Deno.serve(async (req) => {
 
     // 3. Ophalen en lezen
     const r = await haalFeed(url);
-    if ("feed" in r && r.feed) return antwoord({ ok: true, titel: r.feed.titel, berichten: r.feed.berichten });
+    if ("feed" in r && r.feed) return antwoord({ ok: true, titel: r.feed.titel, berichten: r.feed.berichten, afbeelding: r.feed.afbeelding, link: r.feed.link });
     return antwoord({ ok: false, reden: r.fout }, r.status || 502);
   } catch (e) {
     const tijd = e && (e as Error).name === "TimeoutError";

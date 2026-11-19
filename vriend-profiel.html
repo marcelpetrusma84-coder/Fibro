@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=137"></script>
+<script src="taal.js?v=138"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -346,7 +346,7 @@ body.heeft-wallpaper::before { display:block; }
       if (!vriendId) return // v180: ook als 'Muziek van vrienden vanzelf' uit staat: dan het knopje met \u25B6
       const data = await laadFotoUitDB('vriend_' + vriendId + '_muziek_profiel')
       if (!data) return
-      const m = await import('./profielmuziek.js?v=186')
+      const m = await import('./profielmuziek.js?v=187')
       await m.speelProfielMuziek({ data, titel: T('Muziek van {naam}', { naam }), sleutel: 'vriend_' + vriendId, vriend: true })
     } catch (e) { console.warn('[profielmuziek]', e) }
   }
@@ -754,7 +754,7 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_radio')
     if (!ruw) return false
     let R, cfg = null
-    try { R = await import('./radio.js?v=4') } catch (e) { console.warn('[radio]', e); return false }
+    try { R = await import('./radio.js?v=5') } catch (e) { console.warn('[radio]', e); return false }
     try { cfg = R.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
     el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F4FB}</span><span class="widget-titel">' + vEsc(T('Radio')) + '</span></div><div class="widget-inhoud"></div>'
@@ -1024,6 +1024,11 @@ async function renderVriendMuziek(el) {
       // v180: voor geluidregelaar.js, en de knop volgt de speler
       audio.dataset.fibroGeluid = 'muziek'
       audio.dataset.fibroTitel = t.naam || ''
+      // v182: voor het vergrendelscherm (vergrendelscherm.js): artiest, albumhoes en ⏮ ⏭
+      audio.dataset.fibroArtiest = t.artiest || ''
+      if (/^data:image\/(png|jpe?g|gif|webp);base64,/i.test(String(t.cover || '').trim())) audio.dataset.fibroHoes = String(t.cover).trim()
+      audio.__fibroVorige = tracks.length > 1 ? () => el.querySelector('#vm-prev')?.click() : null
+      audio.__fibroVolgende = tracks.length > 1 ? () => el.querySelector('#vm-next')?.click() : null
       { const a = audio
         a.onplay = () => { if (a !== audio) return; const b = el.querySelector('#vm-play'); if (b) b.textContent = '\u23F8' }
         a.onpause = () => { if (a !== audio) return; const b = el.querySelector('#vm-play'); if (b) b.textContent = '\u25B6' } }
@@ -1592,6 +1597,6 @@ startMeldingen()
 <div style="height:44px;"></div>
 <script src="./fotoviewer.js?v=9"></script>
 <script type="module" src="offline.js?v=146"></script>
-<script type="module" src="geluidregelaar.js?v=181"></script>
+<script type="module" src="geluidregelaar.js?v=182"></script>
 </body>
 </html>

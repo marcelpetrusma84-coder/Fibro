@@ -1,4 +1,4 @@
-// radio.js (v4, 19 nov 2026: vier skins erbij (radioskins.js v2); v3: skins van Marcel, zie radioskins.js; v2: pijltjes ‹ › om te zappen; Klaar vast bovenaan) - de radio-widget: internetradio op je profiel, in een vintage radio.
+// radio.js (v5, 19 nov 2026: het spelertje op het vergrendelscherm (vergrendelscherm.js); v4: vier skins erbij (radioskins.js v2); v3: skins van Marcel, zie radioskins.js; v2: pijltjes ‹ › om te zappen; Klaar vast bovenaan) - de radio-widget: internetradio op je profiel, in een vintage radio.
 //
 // In gewone woorden: je zet tot 6 zenders op je radio (zoeken in Radio Browser, een open database met tienduizenden
 // zenders, of zelf een stream-link plakken). Op je profiel (en bij je vrienden) staat een ouderwetse radio met een
@@ -24,6 +24,7 @@
 //   tekenRadioWidget(el, { cfg, eigen, bewaar })
 
 import { SKINS, SKIN_NAMEN, skinPlaatje } from './radioskins.js?v=2'
+import { nuSpeelt, nuWeg } from './vergrendelscherm.js?v=1'
 
 Object.assign(window.FIBRO_EN ||= {}, {
   '🎨 Skin': '🎨 Skin', 'Kies een skin voor je radio': 'Choose a skin for your radio', 'Standaard': 'Standard', 'Gekozen': 'Selected',
@@ -233,15 +234,37 @@ export function tekenRadioWidget(c, { cfg = null, eigen = false, bewaar = null, 
   zetCss()
   const v = normaliseer(cfg)
   c.querySelectorAll('.rd-radio').forEach(x => { const a = x.querySelector('audio'); if (a) { try { a.pause() } catch (e) {} } x.remove() })
+  nuWeg('radio') // v5: een oude radio hoort niet meer op het vergrendelscherm
   const radio = el('div', 'rd-radio')
   c.appendChild(radio)
   let nr = 0, audio = null, aan = false
+  let zapper = null, laatsteWerkBij = null // v5: voor het vergrendelscherm (⏮ ⏭ = vorige/volgende zender)
+
+  // v5 (19 nov 2026): het spelertje op het vergrendelscherm (vergrendelscherm.js): naam van de zender, "Live radio",
+  // ⏮ ⏭ om te zappen, ⏸ zet de radio uit en ▶ weer aan. Zonder tijdbalk en spoelen: het is live.
+  function vergrendelscherm(speelt) {
+    const zender = v && v.zenders[nr]
+    if (!zender) return nuWeg('radio')
+    const n = v.zenders.length
+    nuSpeelt('radio', {
+      el: speelt ? audio : null, speelt, live: true,
+      titel: zender.naam, artiest: T('Live radio') + (host(zender.url) ? ' · ' + host(zender.url) : ''),
+      album: n > 1 ? T('Zender {n} van {totaal}', { n: nr + 1, totaal: n }) : '',
+      vorige: n > 1 ? () => zapper && zapper(-1) : null,
+      volgende: n > 1 ? () => zapper && zapper(1) : null,
+      pauze: () => { uitzetten(); if (laatsteWerkBij) laatsteWerkBij() },
+      verder: () => { if (!aan && v.zenders[nr]) speelStream(v.zenders[nr].url, laatsteWerkBij || (() => {})) },
+      stop: () => { uitzetten(); if (laatsteWerkBij) laatsteWerkBij() },
+    })
+  }
 
   function uitzetten() {
+    const wasAan = aan
     if (audio) { try { audio.pause(); audio.removeAttribute('src'); audio.load() } catch (e) {} audio.remove(); audio = null }
     if (aan) meld(false)
     aan = false
     radio.classList.remove('rd-speelt')
+    if (wasAan) vergrendelscherm(false) // gepauzeerd in beeld laten: ▶ op het vergrendelscherm zet hem weer aan
   }
 
   // Pas hier wordt er iets van buiten geladen (één plek, voor de gewone radio en voor de skins)
@@ -254,7 +277,8 @@ export function tekenRadioWidget(c, { cfg = null, eigen = false, bewaar = null, 
     audio.src = url
     radio.appendChild(audio) // in de pagina: haalt Home de widget weg, dan stopt de radio vanzelf
     const ditAudio = audio
-    audio.onplaying = () => { if (audio === ditAudio) { radio.classList.add('rd-speelt'); werkBij() } }
+    laatsteWerkBij = werkBij
+    audio.onplaying = () => { if (audio === ditAudio) { radio.classList.add('rd-speelt'); werkBij(); vergrendelscherm(true) } }
     audio.onerror = () => { if (audio !== ditAudio) return; uitzetten(); werkBij(T('Deze zender speelt nu niet.')) }
     if (!aan) meld(true)
     aan = true
@@ -320,6 +344,7 @@ export function tekenRadioWidget(c, { cfg = null, eigen = false, bewaar = null, 
       hoek += 60 * stap; draai.style.transform = 'rotate(' + hoek + 'deg)'
       kies((nr + stap + n) % n)
     }
+    zapper = zappen
     onder.append(presets, knop, draai)
     const uitleg = el('div', 'rd-uitleg')
     radio.append(boven, onder, uitleg)
@@ -389,6 +414,7 @@ export function tekenRadioWidget(c, { cfg = null, eigen = false, bewaar = null, 
       hoek += 60 * stap; draai.style.transform = 'rotate(' + hoek + 'deg)'
       kies((nr + stap + n) % n)
     }
+    zapper = zappen
     vlak.append(speaker, scherm, schaal, vorige, volgende, ...presets, knop, draai)
     const uitleg = el('div', 'rd-uitleg')
     radio.append(vlak, uitleg)

@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=137"></script>
+<script src="taal.js?v=138"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -990,6 +990,12 @@ function renderMuziekPlayer(c) {
       // of later laat verder spelen
       audio.dataset.fibroGeluid = 'muziek'
       audio.dataset.fibroTitel = track.naam || ''
+      // v182: voor het vergrendelscherm (vergrendelscherm.js): artiest, albumhoes en ⏮ ⏭
+      audio.dataset.fibroArtiest = track.artiest || ''
+      audio.dataset.fibroAlbum = T('Mijn muziek')
+      if (/^data:image\//.test(String(track.cover || ''))) audio.dataset.fibroHoes = track.cover
+      audio.__fibroVorige = tracks.length > 1 ? () => document.getElementById('muz-prev')?.click() : null
+      audio.__fibroVolgende = tracks.length > 1 ? () => document.getElementById('muz-next')?.click() : null
       { const a = audio
         a.onplay = () => { if (a !== audio) return; const b = document.getElementById('muz-play'); if (b) b.textContent = '\u23F8' }
         a.onpause = () => { if (a !== audio) return; const b = document.getElementById('muz-play'); if (b) b.textContent = '\u25B6' } }
@@ -1768,7 +1774,7 @@ async function renderRadio(c, uid) {
   let cfg = null
   try { cfg = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
   let R
-  try { R = await import('./radio.js?v=4') } catch (e) { console.warn('[radio]', e); return }
+  try { R = await import('./radio.js?v=5') } catch (e) { console.warn('[radio]', e); return }
   R.tekenRadioWidget(c, {
     cfg, eigen: true,
     bewaar: nieuw => {
@@ -2589,7 +2595,7 @@ window.openMenu = function() {
   }
   schakelaar('fibro_muziek_auto', T('\u{1F3B5} Mijn muziek vanzelf'), async (aan) => {
     if (aan) { try { sessionStorage.removeItem('fibro_muziek_pauze_eigen') } catch (e) {} }
-    try { const m = await import('./profielmuziek.js?v=186'); if (aan) startProfielMuziek(); else m.zetAuto(false) } catch (e) {}
+    try { const m = await import('./profielmuziek.js?v=187'); if (aan) startProfielMuziek(); else m.zetAuto(false) } catch (e) {}
   })
   schakelaar('fibro_muziek_auto_vrienden', T('\u{1F3B5} Muziek van vrienden vanzelf'))
   // v187: uit = een buzz is alleen een melding (geen buzzgeluid, niet trillen, geen schuddend scherm), zie meldingen.js
@@ -3178,7 +3184,7 @@ async function startProfielMuziek() {
     const data = await laadUitDB('muziek_track')
     if (!data) return
     const titel = await laadUitDB('muziek_titel')
-    const m = await import('./profielmuziek.js?v=186')
+    const m = await import('./profielmuziek.js?v=187')
     await m.speelProfielMuziek({ data, titel, sleutel: 'eigen' })
   } catch (e) { console.warn('[profielmuziek]', e) }
 }
@@ -3204,9 +3210,9 @@ if ('serviceWorker' in navigator) {
 </script>
 <script src="swipe.js?v=96"></script>
 <script src="menuschuif.js?v=1"></script>
-<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=211"; startBelLuisteraar()</script>
+<script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=212"; startBelLuisteraar()</script>
 <script type="module">import { beschermOpslag } from "./opslag.js?v=3"; beschermOpslag()</script>
-<script type="module" src="geluidregelaar.js?v=181"></script>
+<script type="module" src="geluidregelaar.js?v=182"></script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=200"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=172"; startOngelezen()</script>

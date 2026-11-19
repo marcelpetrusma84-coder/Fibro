@@ -173,6 +173,7 @@ function setup(userId = 'a') {
     RTCIceCandidate: class { constructor(value) { Object.assign(this, value) } },
     supabase, ICE_SERVERS: {}, iceReady: Promise.resolve(),
     houOpen(name, factory) { return factory().subscribe() },
+    nuSpeelt() {}, nuWeg() {}, // vergrendelscherm.js (19 nov 2026)
     maakBelregel() { return 'test call' }, alert() {},
     // camerafilters.js (v157/v2) staat in deze test altijd op 'geen': dan geeft het filter de rauwe track terug
     maakCameraFilter() { let bron = null; return { zetBron(t) { bron = t || null }, uitTrack() { return bron }, kies() {}, huidig: () => 'geen', zetNamen() {}, namen: () => [] } },

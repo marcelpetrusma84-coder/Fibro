@@ -9,6 +9,7 @@
 // roept het opKlaar() (de chat zet er dan '👂 Beluisterd' neer).
 //
 // Versturen gaat net als foto's rechtstreeks van telefoon naar telefoon (p2pfoto.js), niet via de server.
+import { nuSpeelt, nuWeg } from './vergrendelscherm.js?v=1'
 const T = (s, v) => (window.T ? window.T(s, v) : String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 export const MAX_SEC = 120
 export const MAX_BYTES = 5 * 1024 * 1024
@@ -69,7 +70,7 @@ export async function neemOp({ opTik, opVol } = {}) {
 
 // ── Afspelen ──
 let speeltNu = null
-export function maakSpeler(url, duur, { eenmalig = false, opKlaar = null, mijn = false } = {}) {
+export function maakSpeler(url, duur, { eenmalig = false, opKlaar = null, mijn = false, van = '', hoes = '' } = {}) {
   const vak = document.createElement('div')
   vak.className = 'spraak-speler'
   vak.style.cssText = 'display:flex;align-items:center;gap:10px;min-width:190px;max-width:240px;padding:2px 0'
@@ -107,6 +108,11 @@ export function maakSpeler(url, duur, { eenmalig = false, opKlaar = null, mijn =
     tijd.textContent = (eenmalig ? '\u{1F442} ' : '\u{1F3A4} ') + (audio.paused && audio.currentTime === 0 ? tijdTekst(d) : tijdTekst(audio.currentTime) + ' / ' + tijdTekst(d))
   }
   audio.addEventListener('timeupdate', teken)
+  // v2 (19 nov 2026): op het vergrendelscherm "Spraakbericht van Bram" met tijdbalk en spoelen (vergrendelscherm.js).
+  // Een eenmalig bericht: niet spoelen (live), zoals in de app.
+  const titel = mijn ? T('Mijn spraakbericht') : van ? T('Spraakbericht van {naam}', { naam: van }) : T('Spraakbericht')
+  audio.addEventListener('play', () => nuSpeelt('spraak', { el: audio, titel, artiest: 'Stekky', hoes, live: eenmalig }))
+  audio.addEventListener('ended', () => nuWeg('spraak', audio))
   audio.addEventListener('play', () => { knop.textContent = '⏸︎'; knop.setAttribute('aria-label', T('Pauze')) })
   audio.addEventListener('pause', () => { knop.textContent = '▶︎'; knop.setAttribute('aria-label', T('Afspelen')) })
   let afgespeeld = false

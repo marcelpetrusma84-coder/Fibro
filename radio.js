@@ -1,4 +1,4 @@
-// radio.js (v3, 19 nov 2026: skins van Marcel, zie radioskins.js; v2: pijltjes ‹ › om te zappen; Klaar vast bovenaan) - de radio-widget: internetradio op je profiel, in een vintage radio.
+// radio.js (v4, 19 nov 2026: vier skins erbij (radioskins.js v2); v3: skins van Marcel, zie radioskins.js; v2: pijltjes ‹ › om te zappen; Klaar vast bovenaan) - de radio-widget: internetradio op je profiel, in een vintage radio.
 //
 // In gewone woorden: je zet tot 6 zenders op je radio (zoeken in Radio Browser, een open database met tienduizenden
 // zenders, of zelf een stream-link plakken). Op je profiel (en bij je vrienden) staat een ouderwetse radio met een
@@ -23,12 +23,13 @@
 //   zoekZenders({ naam, land, tag })     -> [zenders] (owner, Radio Browser)
 //   tekenRadioWidget(el, { cfg, eigen, bewaar })
 
-import { SKINS, SKIN_NAMEN, skinPlaatje } from './radioskins.js?v=1'
+import { SKINS, SKIN_NAMEN, skinPlaatje } from './radioskins.js?v=2'
 
 Object.assign(window.FIBRO_EN ||= {}, {
   '🎨 Skin': '🎨 Skin', 'Kies een skin voor je radio': 'Choose a skin for your radio', 'Standaard': 'Standard', 'Gekozen': 'Selected',
   'Retro hout': 'Retro wood', 'Cyberpunk / Neon': 'Cyberpunk / Neon', 'Futuristisch / Sci-Fi': 'Futuristic / Sci-Fi', 'Natuur / Botanisch': 'Nature / Botanical',
   'Graffiti / Street Art': 'Graffiti / Street Art', 'Pixel Art (8-bit)': 'Pixel Art (8-bit)', 'Steampunk / Messing': 'Steampunk / Brass',
+  'Draak & Fantasy': 'Dragon & Fantasy', 'Snoep & Candy': 'Sweets & Candy', 'Onderwater / Aquarium': 'Underwater / Aquarium', 'Space & Sci-Fi': 'Space & Sci-Fi',
   'Radio': 'Radio', 'Nog geen zender': 'No station yet', '📻 Zenders kiezen': '📻 Choose stations', '✏️ Zenders': '✏️ Stations',
   'Zender {n} van {totaal}': 'Station {n} of {totaal}', 'Aan': 'On', 'Uit': 'Off', 'Andere zender': 'Next station',
   'Pas als je op ▶ tikt, maakt je toestel verbinding met {host}.': 'Only when you tap ▶ does your device connect to {host}.',
@@ -372,6 +373,7 @@ export function tekenRadioWidget(c, { cfg = null, eigen = false, bewaar = null, 
       const b = knopje('rd-preset', r, v.zenders[i] ? v.zenders[i].naam : '', () => kies(i))
       b.textContent = ''
       b.disabled = !v.zenders[i]
+      if (sk.rond) b.style.borderRadius = '50%'
       return b
     })
     const knop = knopje('rd-aan', sk.play, T('Aan'), () => { if (aan) { uitzetten(); werkBij() } else speel() })

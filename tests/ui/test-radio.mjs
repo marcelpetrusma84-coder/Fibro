@@ -94,7 +94,7 @@ assert.match(lees('profiel.html'), /id="widgetRij-radio" style="display:none"/)
 assert.match(lees('profiel.html'), /radio:\s+\{ id:'radio'/)
 assert.match(lees('vriend-profiel.html'), /if \(w\.id === 'radio'\) \{/)
 assert.match(lees('vriend-profiel.html'), /cfg = R\.normaliseer\(JSON\.parse\(ruw\)\)/)
-for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/radio\.js\?v=3'\)/)
+for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/radio\.js\?v=4'\)/)
 const en = lees('taal-en.js')
 for (const t of ['Radio', 'Nog geen zender', item.uitleg, 'Uit de Store: internetradio, speelt pas na een tik', 'Nederland', 'Klassiek'])
   assert.ok(en.includes(JSON.stringify(t) + ':'), 'Engels voor: ' + t)
@@ -104,7 +104,7 @@ console.log('PASS: de radio staat in de Store, op Home, bij vrienden, in Profiel
 {
   const { SKINS, SKIN_NAMEN } = await import(new URL('../../radioskins.js', import.meta.url))
   const { statSync, readFileSync: lb } = await import('node:fs')
-  assert.deepEqual(SKIN_NAMEN, ['hout', 'neon', 'scifi', 'natuur', 'graffiti', 'pixel', 'steampunk'])
+  assert.deepEqual(SKIN_NAMEN, ['hout', 'neon', 'scifi', 'natuur', 'graffiti', 'pixel', 'steampunk', 'draak', 'candy', 'onderwater', 'space'])
   const goed = r => Array.isArray(r) && r.length === 4 && r.every(n => typeof n === 'number' && n >= 0) && r[0] + r[2] <= 100.01 && r[1] + r[3] <= 100.01 && r[2] > 2 && r[3] > 5
   for (const [naam, sk] of Object.entries(SKINS)) {
     for (const k of ['scherm', 'vorige', 'volgende', 'schaal', 'speaker', 'play', 'knop']) assert.ok(goed(sk[k]), naam + '.' + k)
@@ -125,8 +125,8 @@ console.log('PASS: de radio staat in de Store, op Home, bij vrienden, in Profiel
   assert.equal(R.normaliseer({ zenders: z, skin: '../x' }).skin, undefined, 'alleen bekende skins (komt ook van vrienden)')
   assert.equal(R.normaliseer({ zenders: z, skin: 'constructor' }).skin, undefined)
   const rj3 = lees('radio.js')
-  assert.match(rj3, /import \{ SKINS, SKIN_NAMEN, skinPlaatje \} from '\.\/radioskins\.js\?v=1'/)
+  assert.match(rj3, /import \{ SKINS, SKIN_NAMEN, skinPlaatje \} from '\.\/radioskins\.js\?v=2'/)
   assert.doesNotMatch(rj3, /el\('img'\)|createElement\('img'\)/, 'geen <img>: de fotoviewer zou ze openen')
   assert.match(lees('radioskins.js'), /new URL\('\.\/radioskins\/' \+ naam \+ '\.webp\?v=1', import\.meta\.url\)/, 'plaatjes uit de app zelf')
-  console.log('PASS: skins: 7 plaatjes uit de app, knoppen op hun plek, alleen bekende namen')
+  console.log('PASS: skins: 11 plaatjes uit de app, knoppen op hun plek, alleen bekende namen')
 }

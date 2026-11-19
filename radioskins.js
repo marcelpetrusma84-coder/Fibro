@@ -1,7 +1,8 @@
-// radioskins.js (v1, 19 nov 2026) - de skins van de radio (radio.js), ontworpen door Marcel.
+// radioskins.js (v2, 19 nov 2026: vier skins erbij: draak, candy, onderwater, space; v1: de eerste zeven) - de skins van de radio (radio.js), ontworpen door Marcel.
 // De plaatjes staan in radioskins/<naam>.webp (gemaakt met tests/gen/radioskins_bouw.py: het schermpje is leeg en het
 // vaste naaldje is weg). radio.js legt er het schermpje met de echte zender, een meelopend naaldje en werkende knoppen
-// overheen. Alle plekken zijn [links, boven, breedte, hoogte] in procenten van het plaatje.
+// overheen. Alle plekken zijn [links, boven, breedte, hoogte] in procenten van het plaatje. rond: de knoppen 1-4 zijn
+// rondjes (edelstenen, parels), dan is de gloed van de gekozen knop ook rond.
 // Een skin is alleen een naam in de opslag (radio_<uid>.skin); de plaatjes zitten in de app, dus bij vrienden wordt
 // er niets extra's verstuurd of opgehaald.
 export const SKINS = {
@@ -26,6 +27,19 @@ export const SKINS = {
   steampunk: { naam: 'Steampunk / Messing', tekst: '#2b1d12', sub: '#5a3a1c', accent: '#d9622b', b: 608, h: 246,
     scherm: [48.68, 13.01, 34.87, 26.02], vorige: [35.69, 7.32, 8.72, 31.3], volgende: [88.49, 7.32, 8.55, 31.3], schaal: [35.69, 46.75, 61.51, 13.41], speaker: [2.14, 6.1, 30.26, 54.88],
     p: [[2.47, 71.14, 7.73, 20.33], [11.84, 71.14, 7.89, 20.33], [21.38, 71.14, 7.73, 20.33], [30.76, 71.14, 7.89, 20.33]], play: [70.39, 65.85, 11.84, 29.27], knop: [84.54, 64.23, 13.16, 32.52] },
+  // v2: tweede ronde van Marcel
+  draak: { naam: 'Draak & Fantasy', rond: true, tekst: '#f3d9a4', sub: '#e7c08a', accent: '#ff7a2f', b: 411, h: 147,
+    scherm: [47.45, 12.24, 37.96, 29.25], vorige: [36.01, 8.16, 7.79, 37.41], volgende: [88.32, 8.16, 7.79, 37.41], schaal: [35.52, 48.98, 61.31, 17.01], speaker: [3.16, 9.52, 29.93, 58.5],
+    p: [[3.41, 70.75, 7.79, 21.77], [12.41, 70.75, 7.79, 21.77], [21.65, 70.75, 7.79, 21.77], [30.66, 70.75, 7.79, 21.77]], play: [70.8, 66.67, 10.71, 29.93], knop: [85.64, 65.31, 11.19, 31.29] },
+  candy: { naam: 'Snoep & Candy', tekst: '#5a2340', sub: '#8a4a6a', accent: '#ff4f9a', b: 425, h: 177,
+    scherm: [47.76, 14.12, 35.53, 24.86], vorige: [36.47, 10.73, 8.24, 31.64], volgende: [86.59, 10.73, 8.24, 31.64], schaal: [36.47, 49.15, 58.35, 12.43], speaker: [4.71, 11.3, 28.71, 46.33],
+    p: [[6.35, 70.06, 5.41, 19.77], [14.82, 70.06, 5.65, 19.77], [23.76, 70.06, 5.41, 19.77], [32.47, 70.06, 5.41, 19.77]], play: [70.59, 68.93, 8.47, 20.34], knop: [83.53, 64.41, 11.76, 28.25] },
+  onderwater: { naam: 'Onderwater / Aquarium', rond: true, tekst: '#bff6ff', sub: '#7fd6e6', accent: '#5ff0ff', b: 414, h: 172,
+    scherm: [47.83, 12.21, 36.96, 26.74], vorige: [36.23, 8.72, 8.45, 33.72], volgende: [88.16, 8.72, 8.45, 33.72], schaal: [35.75, 48.26, 60.87, 13.37], speaker: [3.14, 7.56, 29.95, 56.4],
+    p: [[2.66, 72.67, 8.21, 19.77], [12.32, 72.67, 8.21, 19.77], [21.74, 72.67, 8.21, 19.77], [31.4, 72.67, 8.21, 19.77]], play: [70.05, 68.6, 11.59, 27.91], knop: [84.54, 67.44, 12.08, 29.07] },
+  space: { naam: 'Space & Sci-Fi', tekst: '#9ff4ff', sub: '#d79bff', accent: '#3ff0ff', b: 414, h: 169,
+    scherm: [48.07, 14.2, 36.71, 25.44], vorige: [36.23, 11.24, 7.97, 31.36], volgende: [88.41, 11.24, 7.97, 31.36], schaal: [35.75, 47.34, 60.87, 14.2], speaker: [2.9, 10.06, 30.19, 53.25],
+    p: [[2.9, 72.19, 7.97, 19.53], [12.08, 72.19, 7.97, 19.53], [21.74, 72.19, 7.97, 19.53], [31.4, 72.19, 7.73, 19.53]], play: [69.81, 66.27, 12.08, 29.59], knop: [84.78, 65.09, 12.56, 30.77] },
 }
 export const SKIN_NAMEN = Object.keys(SKINS)
-export const skinPlaatje = naam => new URL('./radioskins/' + naam + '.webp?v=1', import.meta.url).href
+export const skinPlaatje = naam => new URL('./radioskins/' + naam + '.webp?v=1', import.meta.url) // de nieuwe plaatjes zijn nieuwe bestanden: v=1 blijft goed.href

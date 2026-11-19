@@ -51,6 +51,10 @@ let mediaEpoch = 0
 let gesprekEpoch = 0
 let kanaalGeneratie = 0
 let remoteVideoUit = false
+// 19 nov 2026: staat de microfoon van de ander aan? null = weet ik niet (de ander heeft een oudere versie).
+// Elke kant stuurt 'mic-status' als zijn eigen microfoon aan of uit gaat (zodra de verbinding er is).
+let remoteMic = null
+let verstuurdeMic = null
 let onderhandelingTimer = null
 let onderhandelingPogingen = 0
 const gevolgdeTracks = new WeakSet()
@@ -62,7 +66,7 @@ let geinitialiseerd = false
 let gesprekKlaar = null   // belofte: klaar zodra het gesprekskanaal echt open is
 let iceBuffer = []        // ICE-gegevens die binnenkomen voordat offer/answer verwerkt is
 let videoGewenst = false  // v150: met video gebeld/opgenomen (ook als de eigen camera niet lukte)
-const BELLEN_VERSIE = 163 // v163 (6 nov 2026): melding als je microfoon niet lukt (onGeenMicrofoon) en geluidDiagnose (getStats) voor bellen.html; v162: geluid niet steeds opnieuw laden (bugtest 3 nov); v161: zetMic en localAudioMuted (iPhone-foutmeldingen 3 nov 2026); media state follows actual tracks; queued camera negotiation and audio recovery
+const BELLEN_VERSIE = 164 // v164 (19 nov 2026): 'mic-status' (staat de microfoon van de ander aan) en NotAllowedError niet melden als het de keuze van de speler was; v163 (6 nov 2026): melding als je microfoon niet lukt (onGeenMicrofoon) en geluidDiagnose (getStats) voor bellen.html; v162: geluid niet steeds opnieuw laden (bugtest 3 nov); v161: zetMic en localAudioMuted (iPhone-foutmeldingen 3 nov 2026); media state follows actual tracks; queued camera negotiation and audio recovery
 
 function actieveTracks(stream, kind, ontvangen = false) {
   return !!stream?.getTracks().some(track => track.kind === kind && track.readyState === 'live' && track.enabled && (!ontvangen || !track.muted))
@@ -77,6 +81,7 @@ export function getMediaStatus() {
     // v161: de iPhone kan de microfoon zelf onderbreken (bijvoorbeeld als de camera erbij komt); dat staat los van dempen
     localAudioMuted: !!lokaleStream?.getAudioTracks().some(track => track.readyState === 'live' && track.muted),
     remoteAudio: actieveTracks(remoteStream, 'audio', true),
+    remoteMic: remoteMic === null ? 'onbekend' : remoteMic ? 'aan' : 'uit',
     audioBlocked: audioGeblokkeerd,
     connected: peerConnection?.connectionState === 'connected'
   }
@@ -86,6 +91,10 @@ function meldMediaStatus() {
   if (!remoteStream?.getAudioTracks().some(track => track.readyState === 'live')) audioGeblokkeerd = false
   const status = getMediaStatus()
   videoActiefLokaal = status.localVideo
+  if (status.connected && status.localAudio !== verstuurdeMic) {
+    verstuurdeMic = status.localAudio
+    stuurSignaal('mic-status', { aan: status.localAudio }).catch(() => {})
+  }
   const key = JSON.stringify(status)
   if (key === laatsteMediaStatus) return
   laatsteMediaStatus = key
@@ -297,7 +306,14 @@ export function meldMediaFout(waar, e) {
     if (e && e.name === 'NotFoundError') return
     const tekst = ((e && e.name) || 'Fout') + ': ' + ((e && e.message) || String(e || ''))
     const extra = (window.isSecureContext === false ? ' · GEEN https' : '') + (navigator.mediaDevices ? '' : ' · geen mediaDevices')
-    const stuur = st => f.meld('belofte', tekst, 'bellen.js ' + waar + ' · toestemming microfoon: ' + st + extra, e && e.stack)
+    const stuur = st => {
+      // 19 nov 2026: NotAllowedError terwijl de microfoon niet is toegestaan (stand 'prompt', 'denied' of onbekend) =
+      // de speler tikte 'Niet toestaan' of sloot de vraag (foutmeldingen 18 nov, Android). Dat is een keuze van de
+      // speler, geen fout in Stekky; hij krijgt al een tip in beeld. Alleen als de browser zegt dat het WEL mag
+      // ('granted') en het toch niet lukt, is het vreemd en gaat het nog naar Moderatie > Fouten.
+      if (e && e.name === 'NotAllowedError' && st !== 'granted') return
+      f.meld('belofte', tekst, 'bellen.js ' + waar + ' · toestemming microfoon: ' + st + extra, e && e.stack)
+    }
     if (navigator.permissions && navigator.permissions.query) {
       navigator.permissions.query({ name: 'microphone' }).then(r => stuur(r.state), () => stuur('onbekend'))
     } else stuur('onbekend')
@@ -556,6 +572,10 @@ async function verwerkSignaal(type, data, v) {
     meldMediaStatus()
     if (onVideoStatusCallback) onVideoStatusCallback(data.actief)
   }
+  if (type === 'mic-status') {
+    remoteMic = !!(data && data.aan)
+    meldMediaStatus()
+  }
   if (type === 'video-ontvangen') {
     if (onEigenVideoOntvangenCallback) onEigenVideoOntvangenCallback(Boolean(data.actief))
   }
@@ -670,6 +690,8 @@ function maakPeerConnection() {
   if (!audioSender) audioSender = pc.addTransceiver('audio', { direction:'recvonly' }).sender
   remoteStream = new MediaStream()
   remoteVideoUit = false
+  remoteMic = null
+  verstuurdeMic = null
   volgStream(remoteStream)
   const ontvangenStream = remoteStream
   pc.ontrack = (event) => {
@@ -890,6 +912,8 @@ function beeindigGesprek(doorOns, behoudCamera = false) {
   iceBuffer = []
   remoteStream = null
   remoteVideoUit = false
+  remoteMic = null
+  verstuurdeMic = null
   // Media-elementen leegmaken zodat de browser streams echt vrijgeeft
   const remoteEl = document.getElementById('remoteMedia')
   if (remoteEl) { remoteEl.srcObject = null; remoteEl.style.display = 'none' }

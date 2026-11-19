@@ -493,7 +493,7 @@ window.veiligeUrl = function(v){
   import { werkKnopBij as werkSleutelKnopBij } from './sleutelcontrole.js?v=2' // v266: sleutel controleren (QR of 60 cijfers)
   import { maakSpelChatCrypto } from './spelchat-crypto.js?v=2'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
-  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, zetMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon, bouwFilterKnop } from './bellen.js?v=164'
+  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, zetMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon, bouwFilterKnop } from './bellen.js?v=165'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
   import { maakStickerkeuze } from './stickerkeuze.js?v=238'
   import { isCode as isEigenCode, zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel, fxCode, leesFx, stickerPakket, bewaarVriendSticker, zoekWeg } from './eigenstickers.js?v=162'
@@ -4599,11 +4599,14 @@ async function startBlockIt() {
       // bekend: de speler kreeg een tip en de microfoonfout zelf ging al naar de foutmelder (bellen.js meldMediaFout).
       // Zo kwam 'Spelgesprek: na 20 s nog geen goed geluid' er dubbel bij (foutmeldingen 7 nov, Android en Windows).
       if (!st.localAudioAvailable) return
+      // 19 nov 2026: en heeft de ander geen microfoon aan (niet toegestaan, geen microfoon, of gedempt), dan komt er
+      // ook geen geluid; dat is geen fout (foutmeldingen 18 nov: de ander op Android had 'Niet toestaan' gekozen).
+      if (st.remoteMic === 'uit') return
       const ja = b => b ? 'ja' : 'nee'
       window.__fibroFoutmelder?.meld('belofte', 'Spelgesprek: na 20 s nog geen goed geluid',
         'chat.html startSpelBel · verbonden=' + ja(st.connected) + ' · eigen mic=' + (st.localAudio ? 'ja' : st.localAudioAvailable ? 'gedempt' : 'nee') +
         ' · mic onderbroken=' + ja(st.localAudioMuted) +
-        ' · mic beschikbaar=' + ja(st.localAudioAvailable) + ' · geluid ander=' + ja(st.remoteAudio) +
+        ' · mic beschikbaar=' + ja(st.localAudioAvailable) + ' · geluid ander=' + ja(st.remoteAudio) + ' · mic ander=' + st.remoteMic +
         ' · afspelen geblokkeerd=' + ja(st.audioBlocked) + ' · speler1=' + ja(benIkSpeler1) + ' · ' + spelActief)
     }, 20000)
     document.getElementById('spelMuteBtn').style.display = 'flex'

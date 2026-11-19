@@ -29,8 +29,18 @@ function draai (fout, staat = 'prompt') {
 await test('geen microfoon in het toestel (NotFoundError): niet melden', async () => {
   assert.equal(draai({ name: 'NotFoundError', message: 'Requested device not found' }).length, 0)
 })
-await test('andere microfoonfouten wel melden (bijvoorbeeld NotAllowedError, NotReadableError)', async () => {
-  for (const name of ['NotAllowedError', 'NotReadableError', 'OverconstrainedError']) {
+await test('19 nov: NotAllowedError door de keuze van de speler (prompt, denied, onbekend): niet melden', async () => {
+  for (const staat of ['prompt', 'denied', 'onbekend']) {
+    assert.equal(draai({ name: 'NotAllowedError', message: 'Permission denied' }, staat).length, 0, staat)
+  }
+})
+await test('19 nov: NotAllowedError terwijl de microfoon WEL is toegestaan: wel melden', async () => {
+  const g = draai({ name: 'NotAllowedError', message: 'Permission denied' }, 'granted')
+  assert.equal(g.length, 1)
+  assert.match(g[0][2], /toestemming microfoon: granted/)
+})
+await test('andere microfoonfouten wel melden (bijvoorbeeld NotReadableError)', async () => {
+  for (const name of ['NotReadableError', 'OverconstrainedError']) {
     const g = draai({ name, message: 'x' })
     assert.equal(g.length, 1, name)
     assert.match(g[0][1], new RegExp('^' + name + ': x$'))
@@ -44,6 +54,15 @@ await test('spelgesprek na 20 s: zonder eigen microfoon geen extra melding, met 
   const stop = blok.indexOf('if (!st.localAudioAvailable) return')
   assert.ok(stop > 0, 'stopt als de eigen microfoon er niet is')
   assert.ok(stop > blok.indexOf('if (st.connected && st.localAudio && st.remoteAudio'), 'na de controle op goed geluid')
+  assert.ok(blok.indexOf("if (st.remoteMic === 'uit') return") > stop, '19 nov: stopt als de microfoon van de ander uit staat')
+  assert.match(chat.slice(eindBlok, eindBlok + 800), /mic ander=' \+ st\.remoteMic/, 'stand van de ander staat in de melding')
+})
+await test('19 nov: bellen.js stuurt en ontvangt mic-status', async () => {
+  assert.match(bellen, /stuurSignaal\('mic-status', \{ aan: status\.localAudio \}\)/)
+  assert.match(bellen, /type === 'mic-status'[\s\S]{0,80}remoteMic = !!\(data && data\.aan\)/)
+  assert.match(bellen, /remoteMic: remoteMic === null \? 'onbekend'/)
+  // bij een nieuw en een beeindigd gesprek weer 'onbekend'
+  assert.ok((bellen.match(/remoteMic = null\n  verstuurdeMic = null/g) || []).length >= 2)
 })
 
 console.log(`\n${ok} van ${ok} goed`)

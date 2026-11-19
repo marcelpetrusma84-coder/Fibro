@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=134"></script>
+<script src="taal.js?v=135"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -343,7 +343,7 @@ import { meldToestel } from './toestel.js?v=1'
 import { zetStandaardWidgets } from './standaardwidgets.js?v=2' // v267: nieuw account = meteen widgets op Home
 import * as GB from './gastenboekstijl.js?v=2'
 import { spelIcoonHtml } from './spelicoon.js?v=6' // 30 okt 2026: plaatjes uit de spellen
-import { initSync, lokaleVriendNaam } from './sync.js?v=263'
+import { initSync, lokaleVriendNaam } from './sync.js?v=264'
 import { maakProfielLikes, itemVan } from './profielreacties.js?v=2' // v258: likes op je eigen profiel
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -444,6 +444,7 @@ const PROFIEL_DEFS = [
   { id:'muziekwidget',   icon:'🎧', titel:'Bandcamp & Funkwhale', w:4, h:3 }, // 18 nov 2026: muziekwidget.js
   { id:'radio',          icon:'📻', titel:'Radio',                w:4, h:3 }, // 18 nov 2026: radio.js
   { id:'rss',            icon:'📰', titel:'RSS-feed',             w:4, h:3 }, // 19 nov 2026: rsswidget.js
+  { id:'mastodon',       icon:'🐘', titel:'Mastodon',             w:4, h:3 }, // 19 nov 2026: mastodon.js
   { id:'afteltimer',     icon:'⏳', titel:'Afteltimer',           w:4, h:2 },
   { id:'opteltimer',     icon:'⏱', titel:'Opteltimer',           w:4, h:2 },
   { id:'gastenboek',     icon:'📖', titel:'Gastenboek',           w:4, h:4 },
@@ -714,6 +715,8 @@ function renderProfiel(id, c) {
     renderRadio(c, window._uid)
   } else if (id === 'rss') {
     renderRss(c, window._uid)
+  } else if (id === 'mastodon') {
+    renderMastodon(c, window._uid)
   } else if (id === 'afteltimer') {
     renderAftel(c, window._uid)
   } else if (id === 'opteltimer') {
@@ -1787,7 +1790,7 @@ async function renderRss(c, uid) {
   try { cfg = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
   try { spriteId = (JSON.parse(localStorage.getItem('widgetbgpos_' + bg) || 'null') || {}).rss || '' } catch (e) {}
   let R
-  try { R = await import('./rsswidget.js?v=2') } catch (e) { console.warn('[rss]', e); return }
+  try { R = await import('./rsswidget.js?v=3') } catch (e) { console.warn('[rss]', e); return }
   const sprite = spriteId ? await laadUitDB(bg) : null
   R.tekenRssWidget(c, {
     cfg, eigen: true, sprite, spriteId,
@@ -1804,6 +1807,38 @@ async function renderRss(c, uid) {
       try { if (nieuw) localStorage.setItem(key, JSON.stringify(nieuw)); else localStorage.removeItem(key) } catch (e) {}
       if (!nieuw) { await wisFotoUitDB(bg); await wisFotoUitDB(fotosKey); try { localStorage.removeItem('widgetbgpos_' + bg) } catch (e) {} }
       renderRss(c, uid)
+    },
+  })
+}
+
+// ════════════════════════════════
+// MASTODON (19 nov 2026, mastodon.js): je openbare Mastodon-berichten. Alleen meelezen (geen inloggen). Net als de
+// RSS-widget: alleen hier opgehaald via rss-ophalen; de fotootjes (mastodonfotos_<uid>) samen één fotoplaatje
+// (widgetbg_mastodon_<uid>, pos = { mastodon: fotoId }) dat via sync naar vrienden gaat. Geen 🖼-knop.
+// ════════════════════════════════
+async function renderMastodon(c, uid) {
+  const key = 'mastodon_' + uid, bg = 'widgetbg_mastodon_' + uid, fotosKey = 'mastodonfotos_' + uid
+  let cfg = null, spriteId = ''
+  try { cfg = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
+  try { spriteId = (JSON.parse(localStorage.getItem('widgetbgpos_' + bg) || 'null') || {}).mastodon || '' } catch (e) {}
+  let M
+  try { M = await import('./mastodon.js?v=1') } catch (e) { console.warn('[mastodon]', e); return }
+  const sprite = spriteId ? await laadUitDB(bg) : null
+  M.tekenMastodonWidget(c, {
+    cfg, eigen: true, sprite, spriteId,
+    ophalen: M.maakOphaler(async () => { const { data } = await supabase.auth.getSession(); return data && data.session ? data.session.access_token : null }),
+    fotos: {
+      lees: async () => { try { return JSON.parse((await laadUitDB(fotosKey)) || '{}') || {} } catch (e) { return {} } },
+      bewaar: async cache => { if (cache && Object.keys(cache).length) await slaFotoOp(fotosKey, JSON.stringify(cache)); else await wisFotoUitDB(fotosKey) },
+      sprite: async (data, id) => {
+        if (data && (await slaFotoOp(bg, data)) !== null) { try { localStorage.setItem('widgetbgpos_' + bg, JSON.stringify({ mastodon: id })) } catch (e) {} }
+        else { await wisFotoUitDB(bg); try { localStorage.removeItem('widgetbgpos_' + bg) } catch (e) {} }
+      },
+    },
+    bewaar: async nieuw => {
+      try { if (nieuw) localStorage.setItem(key, JSON.stringify(nieuw)); else localStorage.removeItem(key) } catch (e) {}
+      if (!nieuw) { await wisFotoUitDB(bg); await wisFotoUitDB(fotosKey); try { localStorage.removeItem('widgetbgpos_' + bg) } catch (e) {} }
+      renderMastodon(c, uid)
     },
   })
 }

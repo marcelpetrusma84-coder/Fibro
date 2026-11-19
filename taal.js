@@ -1,3 +1,4 @@
+// v135 (19 nov 2026): taal-en.js?v=135 (Mastodon-widget)
 // v134 (19 nov 2026): taal-en.js?v=134 (radio-pijltjes na de RSS-widget)
 // v133 (19 nov 2026): taal-en.js?v=133 (RSS-widget met plaatjes)
 // v132 (19 nov 2026): taal-en.js?v=132 (RSS-widget)
@@ -150,7 +151,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=134', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=135', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

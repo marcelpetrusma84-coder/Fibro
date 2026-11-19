@@ -2696,4 +2696,21 @@ window.FIBRO_EN = {
   // 19 nov 2026: radio, pijltjes om te zappen (radio.js)
   "Vorige zender": "Previous station",
   "Volgende zender": "Next station",
+  // 19 nov 2026: Mastodon-widget (mastodon.js, store.js, profiel.html, vriend-profiel.html)
+  "Mastodon": "Mastodon",
+  "Nog geen account": "No account yet",
+  "🐘 Account kiezen": "🐘 Choose an account",
+  "Je Mastodon-naam, bijvoorbeeld @naam@mastodon.social": "Your Mastodon name, for example @name@mastodon.social",
+  "Dit is geen Mastodon-naam. Schrijf hem als @naam@server.": "This is not a Mastodon name. Write it as @name@server.",
+  "Dit account is niet gevonden, of laat zijn berichten niet zien.": "This account was not found, or does not show its posts.",
+  "Volg mij op Mastodon": "Follow me on Mastodon",
+  "Toon bericht": "Show post",
+  "Verberg bericht": "Hide post",
+  "Openen ↗": "Open ↗",
+  "✏️ Account": "✏️ Account",
+  "Nog geen openbare berichten.": "No public posts yet.",
+  "Alleen openbare berichten. Stekky logt niet in bij Mastodon; de server van Stekky leest mee, niet jouw toestel. Gevoelige plaatjes worden overgeslagen.": "Only public posts. {app} does not log in to Mastodon; the {app} server reads along, not your device. Sensitive pictures are skipped.",
+  "Je openbare Mastodon-berichten op je profiel, met een knop \"Volg mij op Mastodon\". Stekky logt niet in bij Mastodon: alleen openbare berichten, de server van Stekky leest mee (niet je toestel) en daarna stuurt je toestel ze naar je vrienden. Gevoelige plaatjes worden overgeslagen en berichten met een waarschuwing blijven dicht tot je erop tikt.": "Your public Mastodon posts on your profile, with a \"Follow me on Mastodon\" button. {app} does not log in to Mastodon: only public posts, the {app} server reads along (not your device) and then your device sends them to your friends. Sensitive pictures are skipped and posts with a warning stay closed until you tap them.",
+  "Uit de Store: je openbare Mastodon-berichten": "From the Store: your public Mastodon posts",
+  "Mastodon verwijderen": "Remove Mastodon",
 }

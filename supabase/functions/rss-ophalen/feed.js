@@ -8,10 +8,17 @@
 //    Alle HTML gaat eruit; er gaat dus nooit HTML van de nieuwssite naar de app.
 //  - v2 (19 nov 2026): per bericht ook een korte samenvatting (platte tekst) en de adressen van het kleinste en het
 //    grootste plaatje dat de feed noemt (alleen https). De app vraagt die plaatjes later apart op (index.ts, plaatje).
+//  - v3 (19 nov 2026, Mastodon-widget): berichten zonder kop (zoals bij Mastodon) krijgen de tekst als kop en de hele
+//    tekst als inhoud (hoogstens 500 tekens). Een inhoudswaarschuwing (CW) komt apart mee (cw). Gevoelig
+//    (media:rating adult, of een CW): GEEN plaatje-adres mee, de app vraagt het dan ook nooit op. Een plaatje met een
+//    type moet echt een plaatje zijn (geen video). De feed geeft ook zijn eigen plaatje (afbeelding, bv. de
+//    profielfoto bij Mastodon) en link mee.
 
 export const MAX_BERICHTEN = 20
 const MAX_TITEL = 160
 const MAX_SAMENVATTING = 200
+const MAX_INHOUD = 500
+const MAX_CW = 120
 const MAX_LINK = 500
 
 // Namen van een eigen netwerk of van het toestel zelf
@@ -76,8 +83,10 @@ function ontcijfer(s) {
 // Platte tekst uit een stukje XML: CDATA open, tags eruit, tekens ontcijferd (twee keer: veel feeds coderen dubbel)
 export function tekstUit(s, max = MAX_TITEL) {
   let t = String(s == null ? '' : s).replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
-  t = ontcijfer(t.replace(/<[^>]*>/g, ' '))
-  t = ontcijfer(t.replace(/<[^>]*>/g, ' ')) // stond er &lt;b&gt; in, dan is dat nu ook weg
+  // v3: tags binnen een zin (link, vet, ...) zonder spatie weg, andere tags (alinea, regel) worden een spatie
+  const weg = x => x.replace(/<\/?(a|span|strong|em|b|i|u|code|small|s|del|ins|mark|abbr|sup|sub)\b[^>]*>/gi, '').replace(/<[^>]*>/g, ' ')
+  t = ontcijfer(weg(t))
+  t = ontcijfer(weg(t)) // stond er &lt;b&gt; in, dan is dat nu ook weg
   // eslint-disable-next-line no-control-regex
   t = t.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g, '')
   t = t.replace(/\s+/g, ' ').trim()
@@ -123,7 +132,7 @@ function plaatjesUit(stuk, basis) {
   for (const m of stuk.matchAll(/<media:thumbnail\b[^>]*>/gi)) voeg(attr(m[0], 'url'), attr(m[0], 'width'), 1)
   for (const m of stuk.matchAll(/<media:content\b[^>]*>/gi)) {
     const t = attr(m[0], 'type').toLowerCase(), medium = attr(m[0], 'medium').toLowerCase()
-    if (medium === 'image' || t.startsWith('image/') || (!t && !medium && /\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(attr(m[0], 'url'))))
+    if (t ? t.startsWith('image/') : (medium === 'image' || (!medium && /\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(attr(m[0], 'url')))))
       voeg(attr(m[0], 'url'), attr(m[0], 'width'), 2)
   }
   for (const m of stuk.matchAll(/<enclosure\b[^>]*>/gi)) if (attr(m[0], 'type').toLowerCase().startsWith('image/')) voeg(attr(m[0], 'url'), 0, 2)
@@ -140,6 +149,30 @@ function plaatjesUit(stuk, basis) {
   const klein = metBreedte.length ? metBreedte[0] : kandidaten.slice().sort((a, b) => a.voorkeur - b.voorkeur)[0]
   const groot = metBreedte.length ? metBreedte[metBreedte.length - 1] : kandidaten.slice().sort((a, b) => (b.voorkeur === 2) - (a.voorkeur === 2))[0]
   return { klein: klein.url, groot: groot.url }
+}
+// v3: de HTML van de tekst (CDATA open en ontcijferd), en een inhoudswaarschuwing zoals Mastodon die zet:
+// <p><strong>Inhoudswaarschuwing:</strong> tekst</p><hr /> bovenaan. Geeft { cw, html } (html zonder de CW).
+function tekstHtml(stuk) {
+  for (const n of ['description', 'content:encoded', 'summary', 'content']) {
+    const ruw = binnen(stuk, n)
+    if (!ruw) continue
+    let html = ruw.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+    if (!/<[a-z]/i.test(html)) html = ontcijfer(html)
+    const m = /^\s*<p>\s*<strong>[^<]{0,60}<\/strong>([\s\S]{0,1000}?)<\/p>\s*<hr\s*\/?>/i.exec(html)
+    if (m) return { cw: tekstUit(m[1], MAX_CW) || '…', html: html.slice(m[0].length) }
+    return { cw: '', html }
+  }
+  return { cw: '', html: '' }
+}
+// v3: gevoelig? (een plaatje met media:rating adult)
+function gevoeligUit(stuk) {
+  return /<media:rating\b[^>]*>\s*adult\s*<\/media:rating>/i.test(stuk)
+}
+// v3: tekst met witregels tussen alinea's (</p><p> en <br> worden een nieuwe regel)
+function inhoudUit(html) {
+  const metRegels = html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>\s*<p[^>]*>/gi, '\n\n')
+  const t = metRegels.split('\n').map(r => tekstUit(r, MAX_INHOUD)).join('\n').replace(/\n{3,}/g, '\n\n').trim()
+  return t.length > MAX_INHOUD ? t.slice(0, MAX_INHOUD - 1).trimEnd() + '…' : t
 }
 function samenvattingUit(stuk, titel) {
   for (const n of ['description', 'summary', 'content:encoded', 'content', 'media:description']) {
@@ -175,7 +208,10 @@ export function leesFeed(xml, feedUrl = '') {
   const re = new RegExp('<' + tag + '\\b[^>]*>([\\s\\S]*?)</' + tag + '\\s*>', 'gi')
   for (const m of s.matchAll(re)) {
     const stuk = m[1]
-    const t = tekstUit(binnen(stuk, 'title'))
+    let t = tekstUit(binnen(stuk, 'title'))
+    const { cw, html } = tekstHtml(stuk)
+    const zonderKop = !t
+    if (zonderKop) t = tekstUit(html) || (cw ? cw : '')
     let ruweLink = atom ? atomLink(stuk) : tekstUit(binnen(stuk, 'link'), MAX_LINK)
     if (!ruweLink && !atom) {
       const g = /<guid\b([^>]*)>([\s\S]*?)<\/guid\s*>/i.exec(stuk)
@@ -183,11 +219,19 @@ export function leesFeed(xml, feedUrl = '') {
     }
     const link = netteLink(ruweLink, netteLink(basis, feedUrl) || feedUrl || undefined)
     if (!t || !link) continue
-    const p = plaatjesUit(stuk, link)
-    berichten.push({ titel: t, link, datum: datumUit(stuk), tekst: samenvattingUit(stuk, t), plaatje: p.klein, plaatjeGroot: p.groot })
+    const gevoelig = !!cw || gevoeligUit(stuk)
+    const p = gevoelig ? { klein: '', groot: '' } : plaatjesUit(stuk, link)
+    const b = { titel: t, link, datum: datumUit(stuk), tekst: zonderKop ? '' : samenvattingUit(stuk, t), plaatje: p.klein, plaatjeGroot: p.groot }
+    if (zonderKop) b.inhoud = inhoudUit(html)
+    if (cw) { b.cw = cw; b.titel = cw } // nooit de tekst achter een waarschuwing als kop
+    if (gevoelig) b.gevoelig = true
+    berichten.push(b)
     if (berichten.length >= MAX_BERICHTEN) break
   }
-  return { titel, berichten }
+  // v3: het plaatje en de link van de feed zelf (bij Mastodon: de profielfoto en het profiel)
+  const beeld = /<image\b[^>]*>([\s\S]*?)<\/image\s*>/i.exec(kop)
+  const afbeelding = beeld ? nettePlaatjeUrl(tekstUit(binnen(beeld[1], 'url'), MAX_LINK), feedUrl) || '' : ''
+  return { titel, berichten, afbeelding, link: netteLink(basis, feedUrl) }
 }
 
 // Welke tekenset staat er bovenaan de XML (encoding="...")? Anders utf-8.

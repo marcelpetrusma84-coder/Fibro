@@ -239,3 +239,6 @@ jobs:
       - name: "RSS-widget v2: plaatjes (hoogstens 6, alleen nieuwe), samenvatting, schakelaar (proef320)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef320.py .
+      - name: "Mastodon-widget: alleen meelezen, CW eerst, geen gevoelige plaatjes (proef321)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef321.py .

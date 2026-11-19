@@ -59,7 +59,7 @@ const vraag = async (url, pas = 'GOED', methode = 'POST') => {
 
 let [st, d] = await vraag('https://t.nl/rss')
 assert.equal(st, 200)
-assert.deepEqual(d, { ok: true, titel: 'Test', berichten: [{ titel: 'Kop & zo', link: 'https://t.nl/1', datum: 0, tekst: '', plaatje: 'https://spion.nl/p.gif', plaatjeGroot: 'https://spion.nl/p.gif' }] },
+assert.deepEqual(d, { ok: true, titel: 'Test', berichten: [{ titel: 'Kop & zo', link: 'https://t.nl/1', datum: 0, tekst: '', plaatje: 'https://spion.nl/p.gif', plaatjeGroot: 'https://spion.nl/p.gif' }], afbeelding: '', link: 'https://t.nl/rss' },
   'alleen tekst: geen html; het plaatje alleen als adres (de server haalt het niet vanzelf op)')
 assert.ok(!gehaald.includes('https://spion.nl/p.gif'))
 ;[st, d] = await vraag('https://t.nl/oud'); assert.equal(st, 200, 'een gewone doorverwijzing mag'); assert.equal(d.titel, 'Test')

@@ -7,6 +7,7 @@
 // v16 (18 nov 2026): de muziek-widget (muziekwidget.js): een album of nummer van Bandcamp of Funkwhale.
 // v17 (18 nov 2026): de radio (radio.js): internetradio in een vintage radio.
 // v18 (19 nov 2026): de RSS-widget (rsswidget.js): de nieuwste koppen van tot 3 feeds.
+// v19 (19 nov 2026): de Mastodon-widget (mastodon.js): je openbare berichten, alleen meelezen.
 // Sinds 11 nov 2026 voor iedereen met een account (eerst alleen moderators): het Store-vakje bij Stijl staat bij
 // iedereen, en de database laat iedereen downloaden die niet geblokkeerd is (sql/stekky-store-iedereen.sql).
 // Soorten: lettertype (nu), game, sticker en widget (later). Lettertypes komen per thema in een pakket van 4
@@ -58,6 +59,8 @@ export const STORE_WIDGETS = [
     uitleg: 'Een ouderwetse radio op je profiel, met tot 6 zenders van over de hele wereld: zoek op naam, land of muzieksoort, of plak je eigen stream-link. Pas als iemand op afspelen tikt, maakt zijn toestel verbinding met de zender.' },
   { id: 'rss', soort: 'widget', titel: 'RSS-feed', widget: 'rss', homeIcoon: '\u{1F4F0}', w: 4, h: 3,
     uitleg: 'De nieuwste koppen van je favoriete sites op je profiel, van tot 3 RSS-feeds (bijvoorbeeld NOS of NU.nl). De server van Stekky haalt de koppen op, niet je toestel; daarna stuurt je toestel ze naar je vrienden. Pas als iemand op een kop tikt, opent het artikel op de site zelf.' },
+  { id: 'mastodon', soort: 'widget', titel: 'Mastodon', widget: 'mastodon', homeIcoon: '\u{1F418}', w: 4, h: 3,
+    uitleg: 'Je openbare Mastodon-berichten op je profiel, met een knop "Volg mij op Mastodon". Stekky logt niet in bij Mastodon: alleen openbare berichten, de server van Stekky leest mee (niet je toestel) en daarna stuurt je toestel ze naar je vrienden. Gevoelige plaatjes worden overgeslagen en berichten met een waarschuwing blijven dicht tot je erop tikt.' },
 ]
 export const STORE_ITEMS = [...STORE_PAKKETTEN.map(p => Object.assign({ soort: 'lettertype' }, p)), ...STORE_GAMES, ...STORE_WIDGETS, ...STORE_STICKERS]
 // Welke widgets uit de Store mag je aanzetten (wat je gedownload hebt): games en (sinds v15) widgets

@@ -1,4 +1,4 @@
-// rsswidget.js (v2, 19 nov 2026) - de RSS-widget: de nieuwste berichten van je favoriete sites op je profiel.
+// rsswidget.js (v3, 19 nov 2026) - de RSS-widget: de nieuwste berichten van je favoriete sites op je profiel.
 //
 // In gewone woorden: je zet tot 3 RSS-feeds op de widget (een link plakken, of een voorbeeld kiezen). JOUW toestel
 // vraagt de server van Stekky (edge function rss-ophalen) om de berichten; die haalt de feed op en geeft alleen tekst
@@ -8,6 +8,7 @@
 //  - Home ververst vanzelf als de berichten ouder zijn dan een uur (en met de knop ↻).
 //  - wat van een vriend komt gaat door normaliseer(): alleen tekst, links alleen http(s) zonder inlog.
 //
+// v3 (19 nov 2026): maakOphaler geeft ook het plaatje en de link van de feed door (voor de Mastodon-widget).
 // v2 (19 nov 2026): plaatjes en een samenvatting, en een mooier uiterlijk (het nieuwste bericht groot met plaatje).
 //  - De server haalt een plaatje alleen op voor NIEUWE berichten, hoogstens 6 per keer, hoogstens 300 KB, en rekent er
 //    niet mee: JOUW telefoon maakt er kleine fotootjes van (maakFotos) en onthoudt ze (rssfotos_<uid>).
@@ -265,7 +266,7 @@ export function maakOphaler(geefPas, { fetch: f = globalThis.fetch, ms = 12000 }
       if (!r) return { fout: T('Ophalen lukt nu niet. Probeer het later nog eens.') }
       let d = null
       try { d = await r.json() } catch (e) {}
-      if (r.ok && d && d.ok && Array.isArray(d.berichten)) return { titel: tekst(d.titel, 40), berichten: d.berichten }
+      if (r.ok && d && d.ok && Array.isArray(d.berichten)) return { titel: tekst(d.titel, 40), berichten: d.berichten, afbeelding: typeof d.afbeelding === 'string' ? d.afbeelding : '', link: typeof d.link === 'string' ? d.link : '' }
       if (d && d.reden === 'geen feed') return { fout: T('Dit is geen RSS-feed.') }
       if (d && (d.reden === 'niet bereikbaar' || d.reden === 'te langzaam' || d.reden === 'te groot' || d.reden === 'adres')) return { fout: T('Deze feed is nu niet te bereiken.') }
       return { fout: T('Ophalen lukt nu niet. Probeer het later nog eens.') }

@@ -63,7 +63,7 @@ console.log('PASS: Radio Browser: alleen goede streams, alleen hun servers, zond
 // ── de speler ──
 const rj = lees('radio.js')
 assert.equal((rj.match(/createElement\('audio'\)/g) || []).length, 1, 'één plek die de stream laadt')
-assert.match(rj, /\/\/ Pas hier wordt er iets van buiten geladen\n    function speel\(\)/)
+assert.match(rj, /\/\/ Pas hier wordt er iets van buiten geladen[^\n]*\n  function speelStream\(url, werkBij\)/)
 assert.match(rj, /audio\.preload = 'none'/)
 assert.match(rj, /radio\.appendChild\(audio\)/, 'in de pagina: weg = stil')
 assert.match(rj, /'fibro-spel-open' : 'fibro-spel-dicht'/, 'profielmuziek stil tijdens de radio')
@@ -94,8 +94,39 @@ assert.match(lees('profiel.html'), /id="widgetRij-radio" style="display:none"/)
 assert.match(lees('profiel.html'), /radio:\s+\{ id:'radio'/)
 assert.match(lees('vriend-profiel.html'), /if \(w\.id === 'radio'\) \{/)
 assert.match(lees('vriend-profiel.html'), /cfg = R\.normaliseer\(JSON\.parse\(ruw\)\)/)
-for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/radio\.js\?v=2'\)/)
+for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/radio\.js\?v=3'\)/)
 const en = lees('taal-en.js')
 for (const t of ['Radio', 'Nog geen zender', item.uitleg, 'Uit de Store: internetradio, speelt pas na een tik', 'Nederland', 'Klassiek'])
   assert.ok(en.includes(JSON.stringify(t) + ':'), 'Engels voor: ' + t)
 console.log('PASS: de radio staat in de Store, op Home, bij vrienden, in Profiel en gaat mee via sync')
+
+// ── v3 (19 nov 2026): skins (radioskins.js, radioskins/*.webp) ──
+{
+  const { SKINS, SKIN_NAMEN } = await import(new URL('../../radioskins.js', import.meta.url))
+  const { statSync, readFileSync: lb } = await import('node:fs')
+  assert.deepEqual(SKIN_NAMEN, ['hout', 'neon', 'scifi', 'natuur', 'graffiti', 'pixel', 'steampunk'])
+  const goed = r => Array.isArray(r) && r.length === 4 && r.every(n => typeof n === 'number' && n >= 0) && r[0] + r[2] <= 100.01 && r[1] + r[3] <= 100.01 && r[2] > 2 && r[3] > 5
+  for (const [naam, sk] of Object.entries(SKINS)) {
+    for (const k of ['scherm', 'vorige', 'volgende', 'schaal', 'speaker', 'play', 'knop']) assert.ok(goed(sk[k]), naam + '.' + k)
+    assert.equal(sk.p.length, 4, naam + ': knoppen 1-4'); sk.p.forEach((r, i) => assert.ok(goed(r), naam + '.p' + (i + 1)))
+    assert.ok(sk.p.every((r, i) => i === 0 || r[0] > sk.p[i - 1][0]), naam + ': 1-4 van links naar rechts')
+    for (const c of ['tekst', 'sub', 'accent']) assert.match(sk[c], /^#[0-9a-f]{6}$/i, naam + '.' + c)
+    const f = new URL('../../radioskins/' + naam + '.webp', import.meta.url)
+    const b = lb(f)
+    assert.equal(b.slice(0, 4).toString(), 'RIFF'); assert.equal(b.slice(8, 12).toString(), 'WEBP', naam + ': echt webp')
+    assert.ok(statSync(f).size < 80000, naam + ': klein genoeg')
+    // de maat in het VP8-kopje moet kloppen met b x h (anders zitten de knoppen verkeerd)
+    const i = b.indexOf('VP8 '); assert.ok(i > 0, naam + ': VP8')
+    const w = b.readUInt16LE(i + 14) & 0x3fff, h = b.readUInt16LE(i + 16) & 0x3fff
+    assert.deepEqual([w, h], [sk.b, sk.h], naam + ': maat')
+  }
+  const z = [{ naam: 'Een', url: 'https://een.nl/s' }]
+  assert.equal(R.normaliseer({ zenders: z, skin: 'neon' }).skin, 'neon')
+  assert.equal(R.normaliseer({ zenders: z, skin: '../x' }).skin, undefined, 'alleen bekende skins (komt ook van vrienden)')
+  assert.equal(R.normaliseer({ zenders: z, skin: 'constructor' }).skin, undefined)
+  const rj3 = lees('radio.js')
+  assert.match(rj3, /import \{ SKINS, SKIN_NAMEN, skinPlaatje \} from '\.\/radioskins\.js\?v=1'/)
+  assert.doesNotMatch(rj3, /el\('img'\)|createElement\('img'\)/, 'geen <img>: de fotoviewer zou ze openen')
+  assert.match(lees('radioskins.js'), /new URL\('\.\/radioskins\/' \+ naam \+ '\.webp\?v=1', import\.meta\.url\)/, 'plaatjes uit de app zelf')
+  console.log('PASS: skins: 7 plaatjes uit de app, knoppen op hun plek, alleen bekende namen')
+}

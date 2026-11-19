@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=135"></script>
+<script src="taal.js?v=136"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -1768,7 +1768,7 @@ async function renderRadio(c, uid) {
   let cfg = null
   try { cfg = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
   let R
-  try { R = await import('./radio.js?v=2') } catch (e) { console.warn('[radio]', e); return }
+  try { R = await import('./radio.js?v=3') } catch (e) { console.warn('[radio]', e); return }
   R.tekenRadioWidget(c, {
     cfg, eigen: true,
     bewaar: nieuw => {

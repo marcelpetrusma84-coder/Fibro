@@ -242,3 +242,6 @@ jobs:
       - name: "Mastodon-widget: alleen meelezen, CW eerst, geen gevoelige plaatjes (proef321)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef321.py .
+      - name: "Radio-skins van Marcel: plaatje, echte zender op het schermpje, werkende knoppen, skin kiezen (proef322)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef322.py .

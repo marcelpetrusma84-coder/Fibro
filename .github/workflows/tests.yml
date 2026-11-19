@@ -233,3 +233,6 @@ jobs:
       - name: "Radio-widget: zoeken, vastzetten, pas spelen na een tik (proef318)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef318.py .
+      - name: "RSS-widget: feed kiezen, koppen via rss-ophalen, artikel zonder referrer (proef319)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef319.py .

@@ -9,3 +9,9 @@ entrypoint = "./functions/stuur-push/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/stuur-push/*.html" ]
+
+# 19 nov 2026: de RSS-widget (rsswidget.js). De functie controleert zelf of je ingelogd bent (auth.getUser).
+[functions.rss-ophalen]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/rss-ophalen/index.ts"

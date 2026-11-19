@@ -16,7 +16,7 @@ import { controleerOnderdeel, inhoudHash, isNieuwer } from './profielhandtekenin
 import { controleerVriendLijst, VRIEND_SLEUTEL } from './profielbundel.js?v=2'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-const KLEIN = ['quote', 'aftel', 'optel', 'poll', 'quiz', 'peertube', 'muziekwidget', 'radio'] // v2: peertube.js; v3 (18 nov 2026): muziekwidget.js; v4: hun achtergrond (wbg_) ook; v5: de radio
+const KLEIN = ['quote', 'aftel', 'optel', 'poll', 'quiz', 'peertube', 'muziekwidget', 'radio', 'rss'] // v2: peertube.js; v3 (18 nov 2026): muziekwidget.js; v4: hun achtergrond (wbg_) ook; v5: de radio; v6 (19 nov 2026): de RSS-widget
 export const MAX_AANBOD = 30          // hoogstens zoveel profielen per verbinding
 const DEELT_GELDIG_MS = 10 * 60 * 1000
 

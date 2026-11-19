@@ -2593,6 +2593,7 @@ window.FIBRO_EN = {
   "Schaduwen op tafel": "Shadows on the table",
   "Laat de kaarten en stapels een schaduw op de tafel werpen.": "Cast shadows from the cards and decks onto the table.",
   "Wachter verslagen!": "Guard defeated!",
+  "De achterkant van een middeleeuws schild, met draagbanden naar jou en de voorkant naar de tegenstander": "The back of a medieval shield, with the straps facing you and the front facing the opponent",
   "Precies raak. De {kaart} gaat boven op de Taveerne.": "Exact hit. The {kaart} goes on top of the Tavern deck.",
   "De {kaart} is verslagen en gaat naar de aflegstapel.": "The {kaart} is defeated and goes to the discard pile.",
   "Afgeweerd met {kaarten}": "Defended with {kaarten}",

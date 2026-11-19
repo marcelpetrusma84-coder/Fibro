@@ -1,3 +1,4 @@
+// v132 (19 nov 2026): taal-en.js?v=132 (RSS-widget)
 // v130 (18 nov 2026): taal-en.js?v=130 (radio)
 // v129 (18 nov 2026): taal-en.js?v=129 (titel en plaatje ophalen)
 // v128 (18 nov 2026): taal-en.js?v=128 (muziek-widget: Bandcamp en Funkwhale)
@@ -146,7 +147,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=130', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=132', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

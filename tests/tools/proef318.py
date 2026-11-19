@@ -5,7 +5,9 @@
 #  C. twee zenders vastzetten en een eigen https-link toevoegen (een http-link wordt geweigerd); Klaar = de radio
 #  D. vóór ▶: geen verbinding met een zender; het scherm toont zender 1, de uitleg noemt de host
 #  E. ▶: pas nu de stream; hij speelt; de profielmuziek krijgt 'fibro-spel-open'
-#  F. draaiknop: zender 2 speelt; ■: stil, de stream is weg, 'fibro-spel-dicht'; geen paginafouten of huisregel-meldingen
+#  F. draaiknop: zender 2 speelt; ■: stil, de stream is weg, 'fibro-spel-dicht'
+#  G. (19 nov) pijltjes ‹ ›: zappen rond (na de laatste weer de eerste), zonder ▶ geen verbinding, met ▶ speelt de nieuwe zender;
+#     Klaar ✓ staat vast bovenaan in het zenders-scherm, ook als je naar beneden scrolt; geen paginafouten of huisregel-meldingen
 # python3 -I proef318.py <map>
 import sys, os, time, json, socket, subprocess, tempfile, re, urllib.parse, struct, math
 from playwright.sync_api import sync_playwright
@@ -73,7 +75,9 @@ try:
         zoekvragen = []
         def rb(r):
             zoekvragen.append(r.request.url); buiten.append(r.request.url)
-            r.fulfill(status=200, headers={'Access-Control-Allow-Origin': '*'}, content_type='application/json', body=json.dumps(STATIONS))
+            veel = 'name=veel' in r.request.url  # G: een zoekvraag met veel uitkomsten (zoals echt: tot 40)
+            lijst = [{'name': 'Vul %d' % i, 'url_resolved': 'https://vul%d.nepradio.nl/s' % i, 'codec': 'MP3', 'bitrate': 128, 'hls': 0, 'lastcheckok': 1, 'countrycode': 'NL'} for i in range(25)] if veel else STATIONS
+            r.fulfill(status=200, headers={'Access-Control-Allow-Origin': '*'}, content_type='application/json', body=json.dumps(lijst))
         ctx.route(re.compile(r'^https://(de1|de2|nl1|at1)\.api\.radio-browser\.info/.*'), rb)
         def stream(r):
             buiten.append(r.request.url); r.fulfill(status=200, content_type='audio/wav', body=GELUID)
@@ -115,6 +119,15 @@ try:
         pg.click(B + ' .rd-erbij')
         check('Jouw zenders (3/6)' in pg.inner_text(B), 'C: drie zenders op de radio')
         pg.locator(B).screenshot(path='/tmp/radio-bewerk.png')
+        boven = pg.evaluate("() => { const r = document.querySelector('%s .rd-radio'), k = r.querySelector('.rd-klaar'), u = r.querySelector('.rd-uitkomst'); return k.getBoundingClientRect().top < u.getBoundingClientRect().top }" % B)
+        check(boven, 'G: Klaar ✓ staat boven de zoekresultaten')
+        pg.fill(B + ' .rd-zoekveld', 'veel'); pg.click(B + ' .rd-zoek')
+        check(wacht(pg, "() => document.querySelectorAll('%s .rd-uitkomst .rd-item').length === 25" % B, 8000), 'G: 25 zoekresultaten')
+        hoog = pg.evaluate("() => document.querySelector('%s').getBoundingClientRect().height" % B)
+        check(hoog < 560, 'G: de widget groeit niet eindeloos mee met de resultaten (%d px)' % hoog)
+        vast = pg.evaluate("() => { const r = document.querySelector('%s .rd-radio'); r.scrollTop = r.scrollHeight; const a = r.getBoundingClientRect(), k = r.querySelector('.rd-klaar').getBoundingClientRect(); return [Math.round(k.top - a.top), Math.round(a.bottom - k.bottom), r.scrollTop > 0] }" % B)
+        check(vast[2] and 0 <= vast[0] <= 30, 'G: na scrollen staat Klaar ✓ nog bovenaan in beeld (%s)' % vast)
+        pg.locator(B).screenshot(path='/tmp/radio-bewerk-gescrold.png')
         pg.click(B + ' .rd-klaar')
         cfg = json.loads(pg.evaluate("uid => localStorage.getItem('radio_' + uid)", UID) or 'null')
         check(cfg and [z['naam'] for z in cfg['zenders']] == ['Nep Radio Een', 'Nep Twee', 'Mijn zender'], 'C: bewaard (%s)' % cfg)
@@ -142,8 +155,31 @@ try:
         pg.click(B + ' .rd-aan')
         check(pg.locator(B + ' audio').count() == 0 and pg.inner_text(B + ' .rd-aan') == '▶', 'F: ■ = stil, de stream is weg')
         check(pg.evaluate('window.__ev') == ['open', 'dicht'], 'F: profielmuziek mag weer (fibro-spel-dicht) (%s)' % pg.evaluate('window.__ev'))
-        check(not pg.evaluate('window.__csp'), 'F: de huisregel hield niets tegen (%s)' % pg.evaluate('window.__csp'))
-        check(not fouten, 'F: geen paginafouten %s' % fouten[:3])
+
+        # ── G ──
+        naam = lambda: pg.inner_text(B + ' .rd-naam')
+        check(pg.get_attribute(B + ' .rd-vorige', 'aria-label') == 'Vorige zender' and pg.get_attribute(B + ' .rd-volgende', 'aria-label') == 'Volgende zender', 'G: pijltjes ‹ › naast het schermpje')
+        streams = lambda: len([u for u in buiten if 'nepradio' in u])
+        voor = streams()
+        pg.click(B + ' .rd-volgende')
+        check(naam() == 'Mijn zender' and 'Zender 3 van 3' in pg.inner_text(B + ' .rd-sub'), 'G: › = zender 3 (%s)' % naam())
+        pg.click(B + ' .rd-volgende')
+        check(naam() == 'Nep Radio Een', 'G: › na de laatste = weer de eerste (%s)' % naam())
+        pg.click(B + ' .rd-vorige')
+        check(naam() == 'Mijn zender', 'G: ‹ vóór de eerste = de laatste (%s)' % naam())
+        check(pg.get_attribute(B + ' .rd-preset:nth-child(3)', 'aria-pressed') == 'true', 'G: voorkeuzeknop 3 zit ingedrukt')
+        time.sleep(0.3)
+        check(streams() == voor and pg.locator(B + ' audio').count() == 0, 'G: zappen zonder ▶ maakt geen verbinding')
+        pg.click(B + ' .rd-aan')
+        check(wacht(pg, "() => { const a = document.querySelector('%s audio'); return !!a && a.src.includes('mijn.nepradio.nl') && !a.paused }" % B, 8000), 'G: ▶ speelt zender 3')
+        pg.click(B + ' .rd-vorige')
+        check(wacht(pg, "() => { const a = document.querySelector('%s audio'); return !!a && a.src.includes('twee.nepradio.nl') && !a.paused && a.currentTime > 0 }" % B, 8000) and naam() == 'Nep Twee', 'G: ‹ tijdens het spelen: zender 2 speelt meteen')
+        check(pg.locator(B + ' audio').count() == 1, 'G: maar één stream tegelijk')
+        pg.locator(B).screenshot(path='/tmp/radio-zappen.png')
+        pg.click(B + ' .rd-aan')
+        check(pg.locator(B + ' audio').count() == 0 and pg.evaluate('window.__ev') == ['open', 'dicht', 'open', 'dicht'], 'G: ■ = stil (%s)' % pg.evaluate('window.__ev'))
+        check(not pg.evaluate('window.__csp'), 'G: de huisregel hield niets tegen (%s)' % pg.evaluate('window.__csp'))
+        check(not fouten, 'G: geen paginafouten %s' % fouten[:3])
         b.close()
 finally:
     srv.terminate()

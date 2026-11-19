@@ -1,5 +1,7 @@
+// v134 (19 nov 2026): taal-en.js?v=134 (radio-pijltjes na de RSS-widget)
 // v133 (19 nov 2026): taal-en.js?v=133 (RSS-widget met plaatjes)
 // v132 (19 nov 2026): taal-en.js?v=132 (RSS-widget)
+// v131 (19 nov 2026): taal-en.js?v=131 (radio: pijltjes om te zappen)
 // v130 (18 nov 2026): taal-en.js?v=130 (radio)
 // v129 (18 nov 2026): taal-en.js?v=129 (titel en plaatje ophalen)
 // v128 (18 nov 2026): taal-en.js?v=128 (muziek-widget: Bandcamp en Funkwhale)
@@ -148,7 +150,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=133', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=134', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

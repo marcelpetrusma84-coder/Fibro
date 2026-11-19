@@ -2693,4 +2693,7 @@ window.FIBRO_EN = {
   // 19 nov 2026: RSS-widget v2 (plaatjes)
   "Plaatjes tonen": "Show pictures",
   "Plaatjes ophalen…": "Fetching pictures…",
+  // 19 nov 2026: radio, pijltjes om te zappen (radio.js)
+  "Vorige zender": "Previous station",
+  "Volgende zender": "Next station",
 }

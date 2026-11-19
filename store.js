@@ -8,6 +8,7 @@
 // v17 (18 nov 2026): de radio (radio.js): internetradio in een vintage radio.
 // v18 (19 nov 2026): de RSS-widget (rsswidget.js): de nieuwste koppen van tot 3 feeds.
 // v19 (19 nov 2026): de Mastodon-widget (mastodon.js): je openbare berichten, alleen meelezen.
+// v20 (19 nov 2026): de weer-widget (weer.js): het weer van een plaats die je kiest, via Open-Meteo.
 // Sinds 11 nov 2026 voor iedereen met een account (eerst alleen moderators): het Store-vakje bij Stijl staat bij
 // iedereen, en de database laat iedereen downloaden die niet geblokkeerd is (sql/stekky-store-iedereen.sql).
 // Soorten: lettertype (nu), game, sticker en widget (later). Lettertypes komen per thema in een pakket van 4
@@ -61,6 +62,8 @@ export const STORE_WIDGETS = [
     uitleg: 'De nieuwste koppen van je favoriete sites op je profiel, van tot 3 RSS-feeds (bijvoorbeeld NOS of NU.nl). De server van Stekky haalt de koppen op, niet je toestel; daarna stuurt je toestel ze naar je vrienden. Pas als iemand op een kop tikt, opent het artikel op de site zelf.' },
   { id: 'mastodon', soort: 'widget', titel: 'Mastodon', widget: 'mastodon', homeIcoon: '\u{1F418}', w: 4, h: 3,
     uitleg: 'Je openbare Mastodon-berichten op je profiel, met een knop "Volg mij op Mastodon". Stekky logt niet in bij Mastodon: alleen openbare berichten, de server van Stekky leest mee (niet je toestel) en daarna stuurt je toestel ze naar je vrienden. Gevoelige plaatjes worden overgeslagen en berichten met een waarschuwing blijven dicht tot je erop tikt.' },
+  { id: 'weer', soort: 'widget', titel: 'Weer', widget: 'weer', homeIcoon: '\u{1F324}\u{FE0F}', w: 4, h: 3,
+    uitleg: 'Het weer van nu en de komende 5 dagen op je profiel, voor een plaats die je zelf kiest. Je toestel vraagt het weer aan Open-Meteo (gratis, zonder reclame), hoogstens één keer per half uur en maar een paar KB. Stekky gebruikt nooit de locatie van je telefoon. Je vrienden krijgen het weer van jou en maken zelf geen verbinding.' },
 ]
 export const STORE_ITEMS = [...STORE_PAKKETTEN.map(p => Object.assign({ soort: 'lettertype' }, p)), ...STORE_GAMES, ...STORE_WIDGETS, ...STORE_STICKERS]
 // Welke widgets uit de Store mag je aanzetten (wat je gedownload hebt): games en (sinds v15) widgets

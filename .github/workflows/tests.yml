@@ -248,3 +248,6 @@ jobs:
       - name: "Radio-skins van Marcel: plaatje, echte zender op het schermpje, werkende knoppen, skin kiezen (proef322)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef322.py .
+      - name: "Weer-widget: plaats kiezen, weer van Open-Meteo, hoogstens elk half uur, vrienden vragen niets (proef324)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef324.py .

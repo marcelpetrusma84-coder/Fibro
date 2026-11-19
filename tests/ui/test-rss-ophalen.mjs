@@ -36,6 +36,11 @@ const routes = {
   'https://t.nl/html': () => new Response('<html>hoi</html>'),
   'https://intern.nl/rss': () => new Response(RSS),
 }
+const JPG = Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+routes['https://img.t.nl/a.jpg'] = () => new Response(JPG, { headers: { 'content-type': 'image/jpeg' } })
+routes['https://img.t.nl/svg'] = () => new Response('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>', { headers: { 'content-type': 'image/jpeg' } })
+routes['https://img.t.nl/groot.jpg'] = () => new Response(new Uint8Array(400 * 1024).fill(0xff), { headers: { 'content-type': 'image/jpeg' } })
+routes['https://img.t.nl/naar-intern'] = () => new Response(null, { status: 302, headers: { location: 'https://10.0.0.1/a.jpg' } })
 const gehaald = []
 globalThis.fetch = async (u, o) => {
   gehaald.push(u)
@@ -54,7 +59,9 @@ const vraag = async (url, pas = 'GOED', methode = 'POST') => {
 
 let [st, d] = await vraag('https://t.nl/rss')
 assert.equal(st, 200)
-assert.deepEqual(d, { ok: true, titel: 'Test', berichten: [{ titel: 'Kop & zo', link: 'https://t.nl/1', datum: 0 }] }, 'alleen tekst: geen html, geen plaatjes')
+assert.deepEqual(d, { ok: true, titel: 'Test', berichten: [{ titel: 'Kop & zo', link: 'https://t.nl/1', datum: 0, tekst: '', plaatje: 'https://spion.nl/p.gif', plaatjeGroot: 'https://spion.nl/p.gif' }] },
+  'alleen tekst: geen html; het plaatje alleen als adres (de server haalt het niet vanzelf op)')
+assert.ok(!gehaald.includes('https://spion.nl/p.gif'))
 ;[st, d] = await vraag('https://t.nl/oud'); assert.equal(st, 200, 'een gewone doorverwijzing mag'); assert.equal(d.titel, 'Test')
 ;[st] = await vraag('https://t.nl/naar-intern'); assert.equal(st, 400, 'niet doorverwijzen naar een eigen netwerk')
 ;[st] = await vraag('https://t.nl/naar-http'); assert.equal(st, 400, 'niet doorverwijzen naar http')
@@ -68,6 +75,20 @@ assert.ok(!gehaald.includes('https://intern.nl/rss') && !gehaald.some(u => u.inc
 ;[st] = await vraag('https://t.nl/rss', 'KWAAD'); assert.equal(st, 401, 'alleen ingelogd')
 ;[st] = await vraag('https://t.nl/rss', 'GEBLOKKEERD'); assert.equal(st, 403, 'niet als je geblokkeerd bent')
 ;[st] = await vraag('', 'GOED', 'GET'); assert.equal(st, 405)
+// ── v2: plaatjes ──
+const plaatje = async (url, pas = 'GOED') => handler(new Request('https://f.supabase.co/functions/v1/rss-ophalen', { method: 'POST', headers: { Authorization: 'Bearer ' + pas }, body: JSON.stringify({ plaatje: url }) }))
+let rp = await plaatje('https://img.t.nl/a.jpg')
+assert.equal(rp.status, 200); assert.equal(rp.headers.get('content-type'), 'image/jpeg'); assert.equal(rp.headers.get('x-content-type-options'), 'nosniff')
+assert.deepEqual(new Uint8Array(await rp.arrayBuffer()), JPG, 'het plaatje ongewijzigd doorgegeven (de server rekent niet)')
+rp = await plaatje('https://img.t.nl/svg'); assert.equal(rp.status, 422, 'geen echt plaatje (svg met code) = nee, wat de server ook zegt')
+rp = await plaatje('https://img.t.nl/groot.jpg'); assert.equal(rp.status, 413, 'hoogstens 300 KB')
+rp = await plaatje('https://img.t.nl/naar-intern'); assert.equal(rp.status, 400, 'ook bij plaatjes geen eigen netwerk')
+rp = await plaatje('http://img.t.nl/a.jpg'); assert.equal(rp.status, 400)
+rp = await plaatje('https://img.t.nl/a.jpg', 'KWAAD'); assert.equal(rp.status, 401)
+let laatsteP = 0
+for (let i = 0; i < 40; i++) laatsteP = (await plaatje('https://img.t.nl/a.jpg')).status
+assert.equal(laatsteP, 429, 'hoogstens 40 plaatjes per minuut')
+console.log('PASS: rss-ophalen v2: plaatjes alleen doorgeven, echt plaatje, 300 KB, geen eigen netwerk, 40 per minuut')
 let laatste = 0
 for (let i = 0; i < 31; i++) [laatste] = await vraag('https://t.nl/rss')
 assert.equal(laatste, 429, 'hoogstens 30 per minuut')

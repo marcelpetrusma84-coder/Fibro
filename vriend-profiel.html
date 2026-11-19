@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=132"></script>
+<script src="taal.js?v=133"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -154,7 +154,7 @@ body.heeft-wallpaper::before { display:block; }
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
-  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=262'
+  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=263'
   import { versleutel, haalPrivateKeyOp } from './crypto.js?v=182'
   import { maakProfielLikes, itemVan, openReageerScherm, maakReactieBericht, maakKleinPlaatje } from './profielreacties.js?v=2' // v258
   import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -762,18 +762,25 @@ body.heeft-wallpaper::before { display:block; }
   let rssWidgetEl = null
   window.addEventListener('fibro-sync-item', async e => {
     const d = e.detail || {}
-    if (d.vriendId !== vriendId || !rssWidgetEl || d.item !== 'klein:rss') return
+    if (d.vriendId !== vriendId || !rssWidgetEl || (d.item !== 'klein:rss' && d.item !== 'wbg:rss')) return
     try { await renderVriendRss(rssWidgetEl, vriendId) } catch (x) { console.warn('[rss]', x) }
   })
   async function renderVriendRss(el, vriendId) {
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_rss')
     if (!ruw) return false
     let R, cfg = null
-    try { R = await import('./rsswidget.js?v=1') } catch (e) { console.warn('[rss]', e); return false }
+    try { R = await import('./rsswidget.js?v=2') } catch (e) { console.warn('[rss]', e); return false }
     try { cfg = R.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
+    // v2: de fotootjes (één plaatje, via P2P van je vriend); alleen als ze bij deze berichten horen (fotoId = pos.rss)
+    let sprite = null, spriteId = ''
+    const rec = await haalRecordVP('vriend_' + vriendId + '_wbg_rss')
+    if (rec && typeof rec.data === 'string') {
+      try { spriteId = (JSON.parse(rec.pos || 'null') || {}).rss || '' } catch (e) {}
+      sprite = rec.data
+    }
     el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F4F0}</span><span class="widget-titel">' + vEsc(T('RSS-feed')) + '</span></div><div class="widget-inhoud"></div>'
-    R.tekenRssWidget(el.querySelector('.widget-inhoud'), { cfg })
+    R.tekenRssWidget(el.querySelector('.widget-inhoud'), { cfg, sprite, spriteId })
     return true
   }
 

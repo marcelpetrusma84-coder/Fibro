@@ -2724,4 +2724,9 @@ window.FIBRO_EN = {
   "Graffiti / Street Art": "Graffiti / Street Art",
   "Pixel Art (8-bit)": "Pixel Art (8-bit)",
   "Steampunk / Messing": "Steampunk / Brass",
+  // 19 nov 2026: vier radio-skins erbij (radio.js v4, radioskins.js v2)
+  "Draak & Fantasy": "Dragon & Fantasy",
+  "Snoep & Candy": "Sweets & Candy",
+  "Onderwater / Aquarium": "Underwater / Aquarium",
+  "Space & Sci-Fi": "Space & Sci-Fi",
 }

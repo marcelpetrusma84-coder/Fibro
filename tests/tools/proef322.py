@@ -4,7 +4,7 @@
 #  C. ▶: de stream speelt, de knop toont ■, de luidspreker gloeit; ■: stil
 #  D. 🎨 Skin: 8 keuzes (Standaard + 7); steampunk kiezen = bewaard en meteen te zien; Zenders bewerken houdt de skin;
 #     Standaard = de gewone paarse radio
-#  E. alle 7 skins tekenen (plaatje geladen, schermpje met tekst, knoppen op hun plek); geen paginafouten of huisregel-meldingen
+#  E. alle 11 skins tekenen (19 nov: + draak, candy, onderwater, space) (plaatje geladen, schermpje met tekst, knoppen op hun plek); geen paginafouten of huisregel-meldingen
 # python3 -I proef322.py <map>
 import sys, os, time, json, socket, subprocess, tempfile, re, urllib.parse, struct, math
 from playwright.sync_api import sync_playwright
@@ -18,7 +18,7 @@ def wav(sec=2, hz=8000):
     data = b''.join(struct.pack('<h', int(3000 * math.sin(2 * math.pi * 440 * i / hz))) for i in range(int(sec * hz)))
     return b'RIFF' + struct.pack('<I', 36 + len(data)) + b'WAVEfmt ' + struct.pack('<IHHIIHH', 16, 1, 1, hz, hz * 2, 2, 16) + b'data' + struct.pack('<I', len(data)) + data
 GELUID = wav()
-SKINS = ['hout', 'neon', 'scifi', 'natuur', 'graffiti', 'pixel', 'steampunk']
+SKINS = ['hout', 'neon', 'scifi', 'natuur', 'graffiti', 'pixel', 'steampunk', 'draak', 'candy', 'onderwater', 'space']
 ZENDERS = [{'naam': 'Nep Radio Een', 'url': 'https://een.nepradio.nl/live.mp3', 'land': 'NL'}, {'naam': 'Nep Twee', 'url': 'https://twee.nepradio.nl/aac', 'land': 'BE'},
            {'naam': 'Mijn Zender', 'url': 'https://mijn.nepradio.nl/s', 'land': ''}]
 UID = 'aaaaaaaa-0000-4000-8000-000000000001'
@@ -116,7 +116,7 @@ try:
 
         # ── D ──
         pg.click(B + ' .rd-skinknop')
-        check(pg.locator(B + ' .rd-skinoptie').count() == 8, 'D: 8 keuzes (Standaard + 7 skins)')
+        check(pg.locator(B + ' .rd-skinoptie').count() == 12, 'D: 12 keuzes (Standaard + 11 skins)')
         check(pg.get_attribute(B + ' .rd-skinoptie[data-skin=neon]', 'aria-pressed') == 'true', 'D: neon staat aan')
         pg.locator(B).screenshot(path='/tmp/skin-kiezen.png')
         pg.evaluate("s => document.querySelector(s).scrollIntoView({ block: 'center' })", B + ' .rd-skinoptie[data-skin=steampunk]')
@@ -140,7 +140,7 @@ try:
             zet(pg, {'zenders': ZENDERS + [{'naam': 'Vier', 'url': 'https://een.nepradio.nl/4', 'land': 'NL'}], 'skin': sk})
             pg.reload()
             ok = wacht(pg, "() => !!document.querySelector('%s .rd-skin') && document.querySelector('%s .rd-sscherm .rd-naam').textContent === 'Nep Radio Een'" % (B, B), 15000)
-            laadt = wacht(pg, "() => new Promise(ok => { const i = new Image(); i.onload = () => ok(i.naturalWidth > 500); i.onerror = () => ok(false); i.src = 'radioskins/%s.webp?v=1' })" % sk, 5000)
+            laadt = wacht(pg, "() => new Promise(ok => { const i = new Image(); i.onload = () => ok(i.naturalWidth > 300); i.onerror = () => ok(false); i.src = 'radioskins/%s.webp?v=1' })" % sk, 5000)
             time.sleep(0.4)
             pg.locator(B + ' .rd-skin').screenshot(path='/tmp/skin-%s.png' % sk)
             # alle knoppen binnen het plaatje

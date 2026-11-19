@@ -10,6 +10,7 @@ import { ICE_SERVERS, iceReady } from './ice-config.js?v=149'
 import { houOpen } from './lijntjes.js?v=1'
 import { maakBelregel } from './belregel.js?v=152'
 import { maakCameraFilter, bouwFilterKiezer, FILTERS as CAMERA_FILTERS } from './camerafilters.js?v=4'
+import { nuSpeelt, nuWeg } from './vergrendelscherm.js?v=1'
 
 let lokaleStream = null
 const antwoordVerwerkt = new WeakSet()   // v160: per verbinding het eerste antwoord
@@ -66,7 +67,7 @@ let geinitialiseerd = false
 let gesprekKlaar = null   // belofte: klaar zodra het gesprekskanaal echt open is
 let iceBuffer = []        // ICE-gegevens die binnenkomen voordat offer/answer verwerkt is
 let videoGewenst = false  // v150: met video gebeld/opgenomen (ook als de eigen camera niet lukte)
-const BELLEN_VERSIE = 164 // v164 (19 nov 2026): 'mic-status' (staat de microfoon van de ander aan) en NotAllowedError niet melden als het de keuze van de speler was; v163 (6 nov 2026): melding als je microfoon niet lukt (onGeenMicrofoon) en geluidDiagnose (getStats) voor bellen.html; v162: geluid niet steeds opnieuw laden (bugtest 3 nov); v161: zetMic en localAudioMuted (iPhone-foutmeldingen 3 nov 2026); media state follows actual tracks; queued camera negotiation and audio recovery
+const BELLEN_VERSIE = 165 // v165 (19 nov 2026): het gesprek op het vergrendelscherm (vergrendelscherm.js, zetGesprekInfo); v164 (19 nov 2026): 'mic-status' (staat de microfoon van de ander aan) en NotAllowedError niet melden als het de keuze van de speler was; v163 (6 nov 2026): melding als je microfoon niet lukt (onGeenMicrofoon) en geluidDiagnose (getStats) voor bellen.html; v162: geluid niet steeds opnieuw laden (bugtest 3 nov); v161: zetMic en localAudioMuted (iPhone-foutmeldingen 3 nov 2026); media state follows actual tracks; queued camera negotiation and audio recovery
 
 function actieveTracks(stream, kind, ontvangen = false) {
   return !!stream?.getTracks().some(track => track.kind === kind && track.readyState === 'live' && track.enabled && (!ontvangen || !track.muted))
@@ -87,10 +88,54 @@ export function getMediaStatus() {
   }
 }
 
+// v165 (19 nov 2026): het gesprek op het vergrendelscherm (vergrendelscherm.js): "Gesprek met Bram" met zijn
+// profielfoto. ⏸ = je microfoon dempen, ▶ = weer aan (de knop in de app volgt mee). Op Android/Chrome ook ophangen.
+// De pagina mag naam, foto en album (bijv. het spel) zelf geven met zetGesprekInfo({ id, naam, hoes, album }); anders
+// haalt dit de gebruikersnaam.
+const gesprekInfos = new Map() // id van de vriend -> { naam, hoes, album }
+const gesprekNamen = new Map()
+export function zetGesprekInfo(info) {
+  if (!info || !info.id) return
+  gesprekInfos.set(String(info.id), Object.assign({}, gesprekInfos.get(String(info.id)), info))
+  vergrendelGesprek(getMediaStatus())
+}
+function haalGesprekNaam(id) {
+  if (!id || gesprekNamen.has(id)) return
+  gesprekNamen.set(id, null)
+  Promise.resolve(supabase.from('profiles').select('username, avatar_url').eq('id', id).maybeSingle())
+    .then(({ data }) => { if (data) { gesprekNamen.set(id, data); vergrendelGesprek(getMediaStatus()) } })
+    .catch(() => {})
+}
+function vergrendelGesprek(st) {
+  try {
+    if (!peerConnection || !vriendId) { nuWeg('gesprek'); return }
+    if (!st.connected) return // pas als het gesprek echt loopt
+    const gesprekInfo = gesprekInfos.get(String(vriendId)) || {}
+    const T = (z, v) => (window.T ? window.T(z, v) : String(z).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
+    const opgehaald = gesprekNamen.get(vriendId)
+    if (!gesprekInfo.naam && opgehaald === undefined) haalGesprekNaam(vriendId)
+    const naam = gesprekInfo.naam || (opgehaald && opgehaald.username) || T('je vriend')
+    const titel = spelGesprek ? T('Spelgesprek met {naam}', { naam }) : (videoGewenst || st.localVideo || st.remoteVideo) ? T('Videogesprek met {naam}', { naam }) : T('Gesprek met {naam}', { naam })
+    const micAan = st.localAudioAvailable && st.localAudio
+    nuSpeelt('gesprek', {
+      titel, live: true,
+      artiest: !st.localAudioAvailable ? 'Stekky' : micAan ? T('🎤 Microfoon aan · ⏸ = dempen') : T('🔇 Microfoon uit · ▶ = weer aan'),
+      album: gesprekInfo.album || 'Stekky',
+      hoes: gesprekInfo.hoes || (opgehaald && opgehaald.avatar_url) || '',
+      speelt: st.localAudioAvailable ? micAan : true,
+      pauze: () => { zetMic(false) },
+      verder: () => { if (getMediaStatus().localAudioAvailable) zetMic(true); else activeerMicrofoon().catch(() => {}) },
+      microfoon: () => { const nu = getMediaStatus(); if (nu.localAudioAvailable) zetMic(!nu.localAudio); else activeerMicrofoon().catch(() => {}) },
+      ophangen: () => { hangOp().catch(() => {}) },
+    })
+  } catch (e) {}
+}
+
 function meldMediaStatus() {
   if (!remoteStream?.getAudioTracks().some(track => track.readyState === 'live')) audioGeblokkeerd = false
   const status = getMediaStatus()
   videoActiefLokaal = status.localVideo
+  vergrendelGesprek(status)
   if (status.connected && status.localAudio !== verstuurdeMic) {
     verstuurdeMic = status.localAudio
     stuurSignaal('mic-status', { aan: status.localAudio }).catch(() => {})
@@ -914,6 +959,7 @@ function beeindigGesprek(doorOns, behoudCamera = false) {
   remoteVideoUit = false
   remoteMic = null
   verstuurdeMic = null
+  nuWeg('gesprek')
   // Media-elementen leegmaken zodat de browser streams echt vrijgeeft
   const remoteEl = document.getElementById('remoteMedia')
   if (remoteEl) { remoteEl.srcObject = null; remoteEl.style.display = 'none' }

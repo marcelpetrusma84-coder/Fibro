@@ -8,7 +8,7 @@
 //   speelt pauzeert zo lang en gaat daarna verder.
 // - Je profielmuziek die vanzelf start (data-profielmuziek, __fibroAuto) wacht netjes als er al iets anders klinkt.
 // - Zacht faden (niet op de iPhone/iPad: daar laat Safari het volume van een speler niet regelen).
-// - Vergrendelscherm en koptelefoonknop (Media Session): titel van de muziek, pauze en verder.
+// - Vergrendelscherm en koptelefoonknop: meldt wat er klinkt bij vergrendelscherm.js (v182).
 // - Gesprekken (een speler met een MediaStream, srcObject) raakt de regelaar nooit aan.
 // Herkennen: play() van elk media-element komt langs (ook spelers die niet in de pagina hangen), plus de gebeurtenissen
 // 'play' en 'volumechange' van spelers in de pagina (een video die je met zijn eigen knoppen start of harder zet).
@@ -16,13 +16,15 @@
 // Stickerspelers (data-stickerfx) melden zich zelf als kort. Soort van een speler: data-fibro-geluid="muziek"
 // (de muziekspelers), <video> = video, data-profielmuziek = achtergrond.
 
+import { nuSpeelt } from './vergrendelscherm.js?v=1'
+const T = (z) => (typeof window.T === 'function' ? window.T(z) : z)
+
 const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
 const FADE_UIT = 250, FADE_IN = 600, FADE_KORT = 120, HERVAT_NA = 350
 
 let actief = null        // wat nu klinkt (lang geluid)
 const stapel = []        // onderbroken spelers, de laatste bovenaan
 let kortTot = 0, kortTimer = null, hervatTimer = null
-let laatsteMuziek = null // voor het vergrendelscherm: de laatste muziek (profielmuziek of muziekspeler)
 const gevolgd = new WeakSet()
 
 function soortVan(el) {
@@ -94,7 +96,6 @@ function neemOver(el) {
   uitStapel(el)
   if (actief && !actief.paused) { systeemPauze(actief, FADE_UIT); opStapel(actief) }
   actief = el
-  if (isMuziek(el)) laatsteMuziek = el
   if (el.__fibroAuto && soortVan(el) === 'achtergrond' && !IOS) { try { el.volume = 0 } catch (e) {} fade(el, basis(el), FADE_IN) } // zacht beginnen
   mediaSessie()
 }
@@ -130,7 +131,6 @@ function hervat() {
     const el = stapel.pop()
     if (!geldig(el)) continue
     actief = el
-    if (isMuziek(el)) laatsteMuziek = el
     el.__fibroHervat = true
     try { if (!IOS) el.volume = 0 } catch (e) {}
     let p
@@ -150,37 +150,19 @@ function kort(ms) {
   kortTimer = setTimeout(() => planHervat(), Math.max(0, kortTot - Date.now()))
 }
 
-// Vergrendelscherm en koptelefoon
+// Vergrendelscherm en koptelefoon. v182 (19 nov 2026): het spelertje zelf regelt vergrendelscherm.js (titel, artiest,
+// hoes, tijdbalk, spoelen, vorige/volgende). Hier alleen aanmelden wat er klinkt; de muziekspelers geven hun gegevens
+// mee in data-fibro-titel, -artiest, -album, -hoes en (als er een lijst is) el.__fibroVorige / el.__fibroVolgende.
 function mediaSessie() {
-  const ms = navigator.mediaSession
-  if (!ms) return
-  try {
-    if (actief && !isMuziek(actief)) return // een video of de beltoon: daar gaat de browser zelf over
-    const el = actief
-    if (el && typeof MediaMetadata !== 'undefined') {
-      ms.metadata = new MediaMetadata({ title: el.dataset.fibroTitel || 'Stekky', artist: 'Stekky',
-        artwork: [{ src: new URL('icon-192.png', location.href).href, sizes: '192x192', type: 'image/png' }] })
-      ms.playbackState = 'playing'
-    } else if (laatsteMuziek && geldig(laatsteMuziek)) {
-      ms.playbackState = 'paused'
-    } else {
-      ms.playbackState = 'none'
-    }
-  } catch (e) {}
-}
-function koppelSessie() {
-  const ms = navigator.mediaSession
-  if (!ms || !ms.setActionHandler) return
-  const zet = (actie, f) => { try { ms.setActionHandler(actie, f) } catch (e) {} }
-  zet('play', () => {
-    const el = laatsteMuziek
-    if (!el || !geldig(el) || !el.paused) return
-    el.__fibroAuto = false
-    try { const p = el.play(); if (p && p.catch) p.catch(() => {}) } catch (e) {}
-  })
-  const pauze = () => { if (actief && !actief.paused) { try { actief.pause() } catch (e) {} } }
-  zet('pause', pauze)
-  zet('stop', pauze)
+  const el = actief
+  if (!el || el.srcObject) return
+  const s = soortVan(el)
+  if (s === 'sticker' || s === 'onbekend') return
+  const d = el.dataset || {}
+  const titel = d.fibroTitel || (s === 'video' ? T('Video') : '')
+  nuSpeelt('geluid:' + s, { el, titel, artiest: d.fibroArtiest || 'Stekky', album: d.fibroAlbum || '', hoes: d.fibroHoes || '',
+    vorige: typeof el.__fibroVorige === 'function' ? el.__fibroVorige : null,
+    volgende: typeof el.__fibroVolgende === 'function' ? el.__fibroVolgende : null })
 }
 
 // Aansluiten (één keer per pagina)
@@ -202,7 +184,6 @@ function start() {
     const d = (e && e.detail) || {}
     if (d.soort === 'kort') kort(Math.max(200, Math.min(10000, Number(d.ms) || 1500)))
   })
-  koppelSessie()
   document.addEventListener('visibilitychange', () => { if (!document.hidden) planHervat() })
   // voor de proeven: wat de regelaar nu weet
   window.fibroGeluid = { stand: () => ({ actief: actief ? soortVan(actief) : null, stapel: stapel.map(soortVan), kort: kortBezig() }) }

@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=137"></script>
+<script src="taal.js?v=138"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -493,7 +493,7 @@ window.veiligeUrl = function(v){
   import { werkKnopBij as werkSleutelKnopBij } from './sleutelcontrole.js?v=2' // v266: sleutel controleren (QR of 60 cijfers)
   import { maakSpelChatCrypto } from './spelchat-crypto.js?v=2'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
-  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, zetMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon, bouwFilterKnop } from './bellen.js?v=165'
+  import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, zetMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon, bouwFilterKnop, zetGesprekInfo } from './bellen.js?v=166'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
   import { maakStickerkeuze } from './stickerkeuze.js?v=238'
   import { isCode as isEigenCode, zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel, fxCode, leesFx, stickerPakket, bewaarVriendSticker, zoekWeg } from './eigenstickers.js?v=162'
@@ -517,7 +517,7 @@ window.veiligeUrl = function(v){
   import { leesReactieBericht, tekenReactieKaart, tekenReactieSticker, reactieKort } from './profielreacties.js?v=2' // v258; v259: als sticker
   import { startChatStatus, werkVinkjesBij, TYPEN_DUUR_MS } from './chatstatus.js?v=1' // v261: typen en gelezen-vinkjes
   import { bewaarChatFoto, haalChatFotos, markeerBekeken } from './chatfotos.js?v=2'
-  import { kanOpnemen, neemOp, maakSpeler, tijdTekst, MAX_BYTES as SPRAAK_MAX, GELDIG_TYPE as SPRAAK_TYPE } from './spraak.js?v=1' // v264: spraakberichtjes // v262: foto's blijven op dit toestel bewaard
+  import { kanOpnemen, neemOp, maakSpeler, tijdTekst, MAX_BYTES as SPRAAK_MAX, GELDIG_TYPE as SPRAAK_TYPE } from './spraak.js?v=2' // v264: spraakberichtjes // v262: foto's blijven op dit toestel bewaard
   // v256 (foutmelding 3 nov 2026): lukt het laden van een spelbestand niet (even geen internet, of net een nieuwe
   // versie op GitHub), dan na 1,2 seconde nog één keer, met een ander adres (sommige browsers onthouden een mislukte poging)
   const laadModule = url => import(url).catch(async () => {
@@ -2419,11 +2419,11 @@ console.timeLog('[chat] berichten', 'opgehaald')
     }
     if (!url || (extra.eenmalig && extra.bekeken && !isMijn)) beluisterd()
     else if (extra.eenmalig && !isMijn) {
-      plek.appendChild(maakSpeler(url, extra.duur, { eenmalig: true, opKlaar: () => {
+      plek.appendChild(maakSpeler(url, extra.duur, { eenmalig: true, van: geselecteerdeVriend?.naam || '', hoes: avatar, opKlaar: () => {
         if (extra.id) markeerBekeken(extra.id)
         setTimeout(() => { try { URL.revokeObjectURL(url) } catch (e) {} ; beluisterd() }, 400)
       } }))
-    } else plek.appendChild(maakSpeler(url, extra.duur, { mijn: isMijn }))
+    } else plek.appendChild(maakSpeler(url, extra.duur, { mijn: isMijn, van: geselecteerdeVriend?.naam || '', hoes: avatar }))
     if (bewaard) {
       const na = [...container.children].find(el => el.dataset && el.dataset.ts && Date.parse(el.dataset.ts) > wanneer)
       container.insertBefore(row, na || null)
@@ -4588,6 +4588,12 @@ async function startBlockIt() {
     const tegenstanderId = spelTegenstander.id
     const partij = spelKanaal
     spelBelActief = true
+    // 19 nov 2026: op het vergrendelscherm "Spelgesprek met Bram", met het spel erbij (vergrendelscherm.js)
+    try {
+      const vriend = geselecteerdeVriend && geselecteerdeVriend.id === tegenstanderId ? geselecteerdeVriend : null
+      zetGesprekInfo({ id: tegenstanderId, naam: (vriend && vriend.naam) || spelTegenstander.username || '', hoes: (vriend && vriend.avatar) || '',
+        album: (SPEL_INFO[spelActief] && SPEL_INFO[spelActief].naam) || 'Stekky' })
+    } catch (e) {}
     // v224: spraak tijdens spellen werkte nog nooit (geen prompt, geen geluid). Staat er na 20 seconden geen goed
     // geluid, dan gaat de stand naar de foutmelder (Moderatie > Fouten): verbonden, eigen microfoon, geluid van de ander.
     clearTimeout(spelGeluidControle)

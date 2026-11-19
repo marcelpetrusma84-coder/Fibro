@@ -68,6 +68,9 @@ jobs:
       - name: "Inloggen: scherpe tekst in het witte vak en een strak oogje bij het wachtwoord"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef309.py .
+      - name: Spelertje op het vergrendelscherm (spraakbericht en radio)
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef323.py .
       - name: Pushmeldingen voor spellen (twee spelers)
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef234.py .

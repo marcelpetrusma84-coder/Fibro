@@ -2729,4 +2729,16 @@ window.FIBRO_EN = {
   "Snoep & Candy": "Sweets & Candy",
   "Onderwater / Aquarium": "Underwater / Aquarium",
   "Space & Sci-Fi": "Space & Sci-Fi",
+  // 19 nov 2026: vergrendelscherm.js (het spelertje op het vergrendelscherm)
+  "Mijn muziek": "My music",
+  "Live radio": "Live radio",
+  "Spraakbericht van {naam}": "Voice message from {naam}",
+  "Spraakbericht": "Voice message",
+  "Mijn spraakbericht": "My voice message",
+  "Gesprek met {naam}": "Call with {naam}",
+  "Videogesprek met {naam}": "Video call with {naam}",
+  "Gesprek": "Call",
+  "🎤 Microfoon aan · ⏸ = dempen": "🎤 Microphone on · ⏸ = mute",
+  "🔇 Microfoon uit · ▶ = weer aan": "🔇 Microphone off · ▶ = unmute",
+  "Spelgesprek met {naam}": "Game call with {naam}",
 }

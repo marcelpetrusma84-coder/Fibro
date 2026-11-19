@@ -1,4 +1,4 @@
-// radio.js (v2, 19 nov 2026: pijltjes ‹ › om te zappen; Klaar vast bovenaan) - de radio-widget: internetradio op je profiel, in een vintage radio.
+// radio.js (v3, 19 nov 2026: skins van Marcel, zie radioskins.js; v2: pijltjes ‹ › om te zappen; Klaar vast bovenaan) - de radio-widget: internetradio op je profiel, in een vintage radio.
 //
 // In gewone woorden: je zet tot 6 zenders op je radio (zoeken in Radio Browser, een open database met tienduizenden
 // zenders, of zelf een stream-link plakken). Op je profiel (en bij je vrienden) staat een ouderwetse radio met een
@@ -10,8 +10,12 @@
 //  - wat van een vriend komt gaat door normaliseer(): https, geen inlog, geen adressen in je eigen netwerk.
 //  - speelt de radio, dan is je profielmuziek stil ('fibro-spel-open' / 'fibro-spel-dicht', zie profielmuziek.js).
 //
-// Opslag: localStorage 'radio_<uid>' = JSON { zenders: [{ naam, url, land }] } (hoogstens 6). Vrienden krijgen hem via
-// sync.js ('klein:radio').
+// Opslag: localStorage 'radio_<uid>' = JSON { zenders: [{ naam, url, land }], skin } (hoogstens 6 zenders; skin is
+// een naam uit radioskins.js, of niets voor de gewone paarse radio). Vrienden krijgen hem via sync.js ('klein:radio').
+//
+// v3 (19 nov 2026): skins. Het plaatje van de skin (uit de app zelf, radioskins/) is de achtergrond; daaroverheen het
+// schermpje met de echte zender, een naaldje dat meeloopt, en onzichtbare knoppen precies op de getekende knoppen
+// (‹ ›, 1-4, ▶ en de draaiknop, die meedraait). Zender 5 en 6 bereik je met ‹ › of de draaiknop.
 //
 // Gebruik:
 //   normaliseer(cfg)                     -> { zenders } of null
@@ -19,7 +23,12 @@
 //   zoekZenders({ naam, land, tag })     -> [zenders] (owner, Radio Browser)
 //   tekenRadioWidget(el, { cfg, eigen, bewaar })
 
+import { SKINS, SKIN_NAMEN, skinPlaatje } from './radioskins.js?v=1'
+
 Object.assign(window.FIBRO_EN ||= {}, {
+  '🎨 Skin': '🎨 Skin', 'Kies een skin voor je radio': 'Choose a skin for your radio', 'Standaard': 'Standard', 'Gekozen': 'Selected',
+  'Retro hout': 'Retro wood', 'Cyberpunk / Neon': 'Cyberpunk / Neon', 'Futuristisch / Sci-Fi': 'Futuristic / Sci-Fi', 'Natuur / Botanisch': 'Nature / Botanical',
+  'Graffiti / Street Art': 'Graffiti / Street Art', 'Pixel Art (8-bit)': 'Pixel Art (8-bit)', 'Steampunk / Messing': 'Steampunk / Brass',
   'Radio': 'Radio', 'Nog geen zender': 'No station yet', '📻 Zenders kiezen': '📻 Choose stations', '✏️ Zenders': '✏️ Stations',
   'Zender {n} van {totaal}': 'Station {n} of {totaal}', 'Aan': 'On', 'Uit': 'Off', 'Andere zender': 'Next station',
   'Pas als je op ▶ tikt, maakt je toestel verbinding met {host}.': 'Only when you tap ▶ does your device connect to {host}.',
@@ -82,7 +91,8 @@ export function normaliseer(cfg) {
     zenders.push({ naam, url, land: nettLand(z.land) })
     if (zenders.length === MAX_ZENDERS) break
   }
-  return zenders.length ? { zenders } : null
+  if (!zenders.length) return null
+  return SKIN_NAMEN.includes(cfg.skin) ? { zenders, skin: cfg.skin } : { zenders }
 }
 
 // Zelf een stream-link toevoegen
@@ -171,6 +181,37 @@ const CSS = `
 .rd-radio.rd-bewerk{overflow-y:auto;gap:7px;max-height:min(460px,72vh)} /* niet eindeloos groeien: de lijst scrolt binnen de radio */
 .rd-balk{position:sticky;top:-10px;z-index:3;margin:-10px -10px 0;padding:10px 10px 7px;background:#5b2a86;border-radius:14px 14px 0 0;box-shadow:0 5px 8px -6px rgba(0,0,0,.6);flex-wrap:nowrap}
 .rd-balk .rd-naam{flex:1;min-width:0}
+/* v3: skins (radioskins.js): het plaatje met daarover het schermpje, het naaldje en onzichtbare knoppen */
+.rd-radio.rd-metskin{background:none;box-shadow:none;padding:0;gap:6px}
+.rd-skin{position:relative;width:100%;flex:none;background-size:100% 100%;background-repeat:no-repeat;border-radius:12px;container-type:inline-size;filter:drop-shadow(0 4px 10px rgba(0,0,0,.45))}
+.rd-skin>*{position:absolute;box-sizing:border-box}
+.rd-sk{border:none;background:transparent;padding:0;margin:0;cursor:pointer;border-radius:10px;-webkit-tap-highlight-color:transparent}
+.rd-sk:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.rd-sk:active{background:rgba(255,255,255,.18)}
+.rd-sk:disabled{cursor:default;background:rgba(0,0,0,.42)}
+.rd-sscherm{display:flex;flex-direction:column;justify-content:center;padding:0 5cqw;overflow:hidden;container-type:size;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;pointer-events:none}
+.rd-sscherm .rd-naam,.rd-sscherm .rd-sub{color:inherit;text-shadow:none}
+.rd-sscherm .rd-naam{font-size:min(36cqh,11.5cqw);font-weight:800;line-height:1.2} /* past ook in een laag schermpje (graffiti) */
+.rd-sscherm .rd-sub{font-size:min(26cqh,8.6cqw);margin-top:3cqh;opacity:.95}
+.rd-sk.rd-preset{min-width:0;height:auto;box-shadow:none;border-radius:9px}
+.rd-sk.rd-preset[aria-pressed="true"]{transform:none;background:transparent;box-shadow:0 0 0 2px var(--rd-accent),0 0 12px var(--rd-accent)}
+.rd-sk.rd-aan,.rd-sk.rd-draai{border-radius:50%;width:auto;height:auto;box-shadow:none}
+.rd-sk.rd-aan[aria-pressed="true"]{background:rgba(0,0,0,.5);color:#fff;font-size:5cqw;box-shadow:0 0 14px var(--rd-accent)}
+.rd-sk.rd-aan:not([aria-pressed="true"]){font-size:0}
+.rd-sk.rd-draai{background-repeat:no-repeat;transition:transform .35s}
+.rd-sk.rd-draai::after{display:none}
+.rd-snaald{position:absolute;top:12%;bottom:12%;width:.7cqw;min-width:2px;margin-left:-.35cqw;border-radius:2px;background:var(--rd-accent);box-shadow:0 0 6px var(--rd-accent);transition:left .45s cubic-bezier(.3,1.4,.5,1)}
+.rd-sschaal{pointer-events:none}
+.rd-sspeaker{pointer-events:none;border-radius:10px}
+.rd-radio.rd-speelt .rd-sspeaker{animation:rd-gloei 1.1s ease-in-out infinite}
+@keyframes rd-gloei{50%{box-shadow:0 0 0 2px var(--rd-accent),0 0 16px var(--rd-accent)}}
+.rd-skinkeus{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rd-skinoptie{display:flex;flex-direction:column;gap:5px;border:none;border-radius:12px;padding:6px;background:rgba(0,0,0,.25);color:#fff;cursor:pointer;font-family:inherit;text-align:left}
+.rd-skinoptie[aria-pressed="true"]{box-shadow:0 0 0 2px #c084fc}
+.rd-skinoptie .rd-voorbeeld{width:100%;border-radius:9px;background-size:100% 100%;background-repeat:no-repeat}
+.rd-skinoptie .rd-standaard{aspect-ratio:608/260;border-radius:9px;background:linear-gradient(160deg,#5b2a86,#2a1240 72%)}
+.rd-skinoptie span{font-size:11.5px;font-weight:700;display:flex;flex-direction:column;gap:1px;line-height:1.25}
+.rd-skinoptie em{font-style:normal;font-weight:600;color:#c084fc;font-size:10.5px}
 `
 function zetCss() {
   if (document.getElementById('rd-css')) return
@@ -202,8 +243,27 @@ export function tekenRadioWidget(c, { cfg = null, eigen = false, bewaar = null, 
     radio.classList.remove('rd-speelt')
   }
 
+  // Pas hier wordt er iets van buiten geladen (één plek, voor de gewone radio en voor de skins)
+  function speelStream(url, werkBij) {
+    if (audio) { try { audio.pause(); audio.removeAttribute('src'); audio.load() } catch (e) {} audio.remove(); audio = null }
+    audio = document.createElement('audio')
+    audio.className = 'rd-audio'
+    audio.preload = 'none'
+    audio.style.display = 'none'
+    audio.src = url
+    radio.appendChild(audio) // in de pagina: haalt Home de widget weg, dan stopt de radio vanzelf
+    const ditAudio = audio
+    audio.onplaying = () => { if (audio === ditAudio) { radio.classList.add('rd-speelt'); werkBij() } }
+    audio.onerror = () => { if (audio !== ditAudio) return; uitzetten(); werkBij(T('Deze zender speelt nu niet.')) }
+    if (!aan) meld(true)
+    aan = true
+    werkBij(T('Verbinden…'))
+    try { const p = audio.play(); if (p && p.catch) p.catch(() => { if (audio === ditAudio) { uitzetten(); werkBij(T('Deze zender speelt nu niet.')) } }) } catch (e) {}
+  }
+
   function leeg() {
     uitzetten()
+    radio.classList.remove('rd-metskin')
     radio.textContent = ''
     radio.style.alignItems = 'center'; radio.style.justifyContent = 'center'; radio.style.textAlign = 'center'
     const icoon = el('div', null, '📻')
@@ -219,6 +279,8 @@ export function tekenRadioWidget(c, { cfg = null, eigen = false, bewaar = null, 
   function toon() {
     radio.textContent = ''
     radio.removeAttribute('style')
+    if (v.skin && SKINS[v.skin]) return toonSkin(SKINS[v.skin])
+    radio.classList.remove('rd-metskin')
     const z = () => v.zenders[nr]
     const boven = el('div', 'rd-boven'), paneel = el('div', 'rd-paneel')
     const scherm = el('div', 'rd-scherm'), naam = el('div', 'rd-naam'), sub = el('div', 'rd-sub')
@@ -260,12 +322,7 @@ export function tekenRadioWidget(c, { cfg = null, eigen = false, bewaar = null, 
     onder.append(presets, knop, draai)
     const uitleg = el('div', 'rd-uitleg')
     radio.append(boven, onder, uitleg)
-    if (eigen && bewaar) {
-      const w = el('button', 'rd-knopje rd-wijzig', T('✏️ Zenders'))
-      w.type = 'button'; w.onclick = stop(() => { uitzetten(); bewerk(v.zenders.slice()) })
-      w.style.alignSelf = 'flex-start'
-      radio.appendChild(w)
-    }
+    if (eigen && bewaar) radio.appendChild(eigenKnoppen())
 
     function werkBij(status) {
       naam.textContent = z().naam
@@ -281,30 +338,123 @@ export function tekenRadioWidget(c, { cfg = null, eigen = false, bewaar = null, 
       if (aan) speel()
       else werkBij()
     }
-    // Pas hier wordt er iets van buiten geladen
-    function speel() {
-      if (audio) { try { audio.pause(); audio.removeAttribute('src'); audio.load() } catch (e) {} audio.remove(); audio = null }
-      audio = document.createElement('audio')
-      audio.className = 'rd-audio'
-      audio.preload = 'none'
-      audio.style.display = 'none'
-      audio.src = z().url
-      radio.appendChild(audio) // in de pagina: haalt Home de widget weg, dan stopt de radio vanzelf
-      const ditAudio = audio
-      audio.onplaying = () => { if (audio === ditAudio) { radio.classList.add('rd-speelt'); werkBij() } }
-      audio.onerror = () => { if (audio !== ditAudio) return; uitzetten(); werkBij(T('Deze zender speelt nu niet.')) }
-      if (!aan) meld(true)
-      aan = true
-      werkBij(T('Verbinden…'))
-      try { const p = audio.play(); if (p && p.catch) p.catch(() => { if (audio === ditAudio) { uitzetten(); werkBij(T('Deze zender speelt nu niet.')) } }) } catch (e) {}
-    }
+    const speel = () => speelStream(z().url, werkBij)
     werkBij()
+  }
+
+  // ── v3: de radio met een skin (het plaatje + schermpje, naaldje en knoppen erover) ──
+  function toonSkin(sk) {
+    radio.classList.add('rd-metskin')
+    radio.style.setProperty('--rd-accent', sk.accent)
+    const z = () => v.zenders[nr]
+    const vlak = el('div', 'rd-skin')
+    vlak.style.backgroundImage = 'url("' + skinPlaatje(v.skin) + '")'
+    vlak.style.aspectRatio = sk.b + ' / ' + sk.h
+    const plek = (e, r) => { e.style.left = r[0] + '%'; e.style.top = r[1] + '%'; e.style.width = r[2] + '%'; e.style.height = r[3] + '%'; return e }
+    const knopje = (cls, r, label, doe) => {
+      const b = plek(el('button', 'rd-sk ' + cls), r)
+      b.type = 'button'; b.title = label; b.setAttribute('aria-label', label)
+      b.onclick = stop(doe)
+      return b
+    }
+    const speaker = plek(el('div', 'rd-sspeaker'), sk.speaker)
+    const scherm = plek(el('div', 'rd-sscherm'), sk.scherm)
+    scherm.style.color = sk.tekst
+    const naam = el('div', 'rd-naam'), sub = el('div', 'rd-sub')
+    sub.style.color = sk.sub
+    scherm.append(naam, sub)
+    const schaal = plek(el('div', 'rd-sschaal'), sk.schaal), naald = el('div', 'rd-snaald')
+    schaal.appendChild(naald)
+    const vorige = knopje('rd-vorige', sk.vorige, T('Vorige zender'), () => zappen(-1))
+    const volgende = knopje('rd-volgende', sk.volgende, T('Volgende zender'), () => zappen(1))
+    vorige.disabled = volgende.disabled = v.zenders.length < 2
+    const presets = sk.p.map((r, i) => {
+      const b = knopje('rd-preset', r, v.zenders[i] ? v.zenders[i].naam : '', () => kies(i))
+      b.textContent = ''
+      b.disabled = !v.zenders[i]
+      return b
+    })
+    const knop = knopje('rd-aan', sk.play, T('Aan'), () => { if (aan) { uitzetten(); werkBij() } else speel() })
+    const draai = knopje('rd-draai', sk.knop, T('Andere zender'), () => zappen(1))
+    // de draaiknop is een stukje van het plaatje zelf, zodat hij echt kan draaien
+    draai.style.backgroundImage = 'url("' + skinPlaatje(v.skin) + '")'
+    draai.style.backgroundSize = (10000 / sk.knop[2]) + '% ' + (10000 / sk.knop[3]) + '%'
+    draai.style.backgroundPosition = (sk.knop[0] / (100 - sk.knop[2]) * 100) + '% ' + (sk.knop[1] / (100 - sk.knop[3]) * 100) + '%'
+    let hoek = 0
+    function zappen(stap) {
+      const n = v.zenders.length
+      if (n < 2) return
+      hoek += 60 * stap; draai.style.transform = 'rotate(' + hoek + 'deg)'
+      kies((nr + stap + n) % n)
+    }
+    vlak.append(speaker, scherm, schaal, vorige, volgende, ...presets, knop, draai)
+    const uitleg = el('div', 'rd-uitleg')
+    radio.append(vlak, uitleg)
+    if (eigen && bewaar) radio.appendChild(eigenKnoppen())
+    function werkBij(status) {
+      naam.textContent = z().naam
+      sub.textContent = status || (vlag(z().land) + ' ' + T('Zender {n} van {totaal}', { n: nr + 1, totaal: v.zenders.length }))
+      naald.style.left = (v.zenders.length === 1 ? 50 : 6 + nr * (88 / (v.zenders.length - 1))) + '%'
+      presets.forEach((b, i) => b.setAttribute('aria-pressed', String(i === nr)))
+      knop.textContent = aan ? '■' : '▶'
+      knop.setAttribute('aria-pressed', String(aan)); knop.setAttribute('aria-label', aan ? T('Uit') : T('Aan'))
+      uitleg.textContent = aan ? T('Je luistert via {host}.', { host: host(z().url) }) : T('Pas als je op ▶ tikt, maakt je toestel verbinding met {host}.', { host: host(z().url) })
+    }
+    function kies(i) { nr = i; if (aan) speel(); else werkBij() }
+    const speel = () => speelStream(z().url, werkBij)
+    werkBij()
+  }
+
+  // de knoppen van de eigenaar onder de radio: zenders en skin
+  function eigenKnoppen() {
+    const rij = el('div', 'rd-rij')
+    const w = el('button', 'rd-knopje rd-wijzig', T('✏️ Zenders'))
+    w.type = 'button'; w.onclick = stop(() => { uitzetten(); bewerk(v.zenders.slice()) })
+    const s = el('button', 'rd-knopje rd-skinknop', T('🎨 Skin'))
+    s.type = 'button'; s.onclick = stop(() => { uitzetten(); kiesSkin() })
+    rij.append(w, s)
+    return rij
+  }
+
+  // ── v3: een skin kiezen (alleen de eigenaar); de keuze gaat mee naar vrienden (alleen de naam) ──
+  function kiesSkin() {
+    radio.textContent = ''
+    radio.removeAttribute('style')
+    radio.classList.remove('rd-metskin')
+    radio.classList.add('rd-bewerk')
+    const balk = el('div', 'rd-rij rd-balk')
+    const terug = el('button', 'rd-knopje rd-terug', T('Annuleren'))
+    terug.type = 'button'
+    terug.onclick = stop(() => { radio.classList.remove('rd-bewerk'); toon() })
+    balk.append(el('div', 'rd-naam', T('Kies een skin voor je radio')), terug)
+    const lijst = el('div', 'rd-skinkeus')
+    for (const naam of ['', ...SKIN_NAMEN]) {
+      const b = el('button', 'rd-skinoptie')
+      b.type = 'button'; b.dataset.skin = naam || 'standaard'
+      const gekozen = (v.skin || '') === naam
+      b.setAttribute('aria-pressed', String(gekozen))
+      // geen <img>: de fotoviewer van de app (fotoviewer.js) zou een tik op een plaatje in een widget openen als foto
+      if (naam) { const voorbeeld = el('div', 'rd-voorbeeld'); voorbeeld.style.backgroundImage = 'url("' + skinPlaatje(naam) + '")'; voorbeeld.style.aspectRatio = SKINS[naam].b + ' / ' + SKINS[naam].h; b.appendChild(voorbeeld) }
+      else b.appendChild(el('div', 'rd-standaard'))
+      const onder = el('span')
+      onder.append(el('b', null, naam ? T(SKINS[naam].naam) : T('Standaard')), el('em', null, gekozen ? '✓ ' + T('Gekozen') : ''))
+      b.appendChild(onder)
+      b.onclick = stop(() => {
+        radio.classList.remove('rd-bewerk')
+        const nieuw = { zenders: v.zenders }
+        if (naam) nieuw.skin = naam
+        bewaar(nieuw)
+      })
+      lijst.appendChild(b)
+    }
+    radio.append(balk, lijst)
   }
 
   // ── zenders kiezen (alleen de eigenaar) ──
   function bewerk(lijst) {
     radio.textContent = ''
     radio.removeAttribute('style')
+    radio.classList.remove('rd-metskin')
     radio.classList.add('rd-bewerk')
     const kop = el('div', 'rd-naam'), mijn = el('div', 'rd-lijst')
     function tekenMijn() {
@@ -378,7 +528,7 @@ export function tekenRadioWidget(c, { cfg = null, eigen = false, bewaar = null, 
     const knoppen = el('div', 'rd-rij rd-balk')
     const klaar = el('button', 'rd-knopje rd-hoofd rd-klaar', T('Klaar ✓'))
     klaar.type = 'button'
-    klaar.onclick = stop(() => { radio.classList.remove('rd-bewerk'); bewaar(lijst.length ? { zenders: lijst } : null) })
+    klaar.onclick = stop(() => { radio.classList.remove('rd-bewerk'); bewaar(lijst.length ? (v && v.skin ? { zenders: lijst, skin: v.skin } : { zenders: lijst }) : null) })
     const terug = el('button', 'rd-knopje', T('Annuleren'))
     terug.type = 'button'
     terug.onclick = stop(() => { radio.classList.remove('rd-bewerk'); if (v) toon(); else leeg() })

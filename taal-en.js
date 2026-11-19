@@ -2713,4 +2713,15 @@ window.FIBRO_EN = {
   "Je openbare Mastodon-berichten op je profiel, met een knop \"Volg mij op Mastodon\". Stekky logt niet in bij Mastodon: alleen openbare berichten, de server van Stekky leest mee (niet je toestel) en daarna stuurt je toestel ze naar je vrienden. Gevoelige plaatjes worden overgeslagen en berichten met een waarschuwing blijven dicht tot je erop tikt.": "Your public Mastodon posts on your profile, with a \"Follow me on Mastodon\" button. {app} does not log in to Mastodon: only public posts, the {app} server reads along (not your device) and then your device sends them to your friends. Sensitive pictures are skipped and posts with a warning stay closed until you tap them.",
   "Uit de Store: je openbare Mastodon-berichten": "From the Store: your public Mastodon posts",
   "Mastodon verwijderen": "Remove Mastodon",
+  // 19 nov 2026: skins voor de radio (radio.js v3, radioskins.js)
+  "🎨 Skin": "🎨 Skin",
+  "Kies een skin voor je radio": "Choose a skin for your radio",
+  "Gekozen": "Selected",
+  "Retro hout": "Retro wood",
+  "Cyberpunk / Neon": "Cyberpunk / Neon",
+  "Futuristisch / Sci-Fi": "Futuristic / Sci-Fi",
+  "Natuur / Botanisch": "Nature / Botanical",
+  "Graffiti / Street Art": "Graffiti / Street Art",
+  "Pixel Art (8-bit)": "Pixel Art (8-bit)",
+  "Steampunk / Messing": "Steampunk / Brass",
 }

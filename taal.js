@@ -154,7 +154,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=138', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=139', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

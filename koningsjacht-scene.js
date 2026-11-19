@@ -11,22 +11,43 @@ const steenkorrel = new URL('./assets/koningsjacht/stone-grain.svg', import.meta
 // kaarsen en de haard. De bestaande kj-sfeer-klasse schakelt alles weer uit.
 const MIDDELEEUWSE_KAARTSTIJL = `
 .kt-tafel.kj.kj-sfeer .kt-afleg{
-  border:4px solid #574334;border-radius:8px;
-  background:repeating-linear-gradient(7deg,#130b072e 0 1px,#0000 1px 6px),linear-gradient(112deg,#392218,#65412a 31%,#4b2e1d 64%,#2d1b13);
-  box-shadow:inset 0 0 0 1px #150e0a,inset 0 2px 3px #f2d09a30,inset 0 -4px 10px #100905b3,0 3px 0 #1b120d,0 6px 9px #0009;
+  isolation:isolate;
+  border-radius:8px;
+  --kj-legbak-rand:#574334;
+  --kj-legbak-schaduw:0 6px 9px #0009;
 }
 .kt-tafel.kj.kj-sfeer .kt-afleg::before{
-  content:"";position:absolute;inset:-5px;z-index:2;border:1px solid #211a14;border-radius:9px;pointer-events:none;
-  background:radial-gradient(circle at 7% 6%,#c4aa78 0 1px,#49392b 1.6px 3px,#100d09 3.5px,#0000 4px),radial-gradient(circle at 93% 6%,#c4aa78 0 1px,#49392b 1.6px 3px,#100d09 3.5px,#0000 4px),radial-gradient(circle at 7% 94%,#ad8c5c 0 1px,#49392b 1.6px 3px,#100d09 3.5px,#0000 4px),radial-gradient(circle at 93% 94%,#ad8c5c 0 1px,#49392b 1.6px 3px,#100d09 3.5px,#0000 4px);
-  box-shadow:inset 0 1px #bba17a70,inset 1px 0 #93775440,inset -1px -2px #100d0ac9;
+  content:"";
+  position:absolute;
+  inset:2px;
+  z-index:0;
+  border-radius:inherit;
+  pointer-events:none;
+  background:#472c1e;
+  box-shadow:0 3px 0 #1b120d,var(--kj-legbak-schaduw);
 }
-.kt-tafel.kj.kj-sfeer .kt-afleg:not(:has(.kt-ak))::after{
-  content:"";position:absolute;inset:9px;border:1px solid #a57a4847;border-radius:3px;pointer-events:none;
-  background:radial-gradient(ellipse at 30% 15%,#efba6a1f,#0000 75%);box-shadow:inset 0 0 10px #1a0e0870;
+/* Het beslag is alleen zichtbaar zolang er geen kaart op de legbak ligt. */
+.kt-tafel.kj.kj-sfeer .kt-afleg:not(:has(> .kt-ak))::before{
+  inset:-3px;
+  border:2px solid var(--kj-legbak-rand);
+  background:
+    radial-gradient(circle at 5px 5px,#c4aa78 0 1px,#49392b 2px,#0000 3px),
+    radial-gradient(circle at calc(100% - 5px) 5px,#c4aa78 0 1px,#49392b 2px,#0000 3px),
+    radial-gradient(circle at 5px calc(100% - 5px),#ad8c5c 0 1px,#49392b 2px,#0000 3px),
+    radial-gradient(circle at calc(100% - 5px) calc(100% - 5px),#ad8c5c 0 1px,#49392b 2px,#0000 3px),
+    repeating-linear-gradient(7deg,#130b072e 0 1px,#0000 1px 6px),
+    linear-gradient(112deg,#392218,#65412a 31%,#4b2e1d 64%,#2d1b13);
+  box-shadow:inset 0 0 0 1px #150e0a,inset 0 2px 3px #f2d09a30,inset 0 -4px 10px #100905b3,0 3px 0 #1b120d,var(--kj-legbak-schaduw);
+}
+.kt-tafel.kj.kj-sfeer .kt-afleg > .kt-ak{
+  z-index:1;
+  overflow:hidden;
+  background:#e8d6af;
 }
 .kt-tafel.kj.kj-sfeer .kt-afleg.kt-doel{
-  border-color:#8d673e;
-  box-shadow:inset 0 0 0 1px #e5c08a80,inset -4px -3px 13px #f2bd631f,0 3px 0 #1b120d,-3px -4px 12px #edaa403d,0 7px 11px #000a;
+  --kj-legbak-rand:#8d673e;
+  --kj-legbak-schaduw:-3px -4px 12px #edaa4066,0 7px 11px #000a;
+  box-shadow:none;
 }
 .kt-tafel.kj.kj-sfeer .kt-kaart.kt-mag{
   box-shadow:-1px -2px 2px #e9c28d80,2px 4px 7px #1a0b05a6;

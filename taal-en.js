@@ -2690,4 +2690,7 @@ window.FIBRO_EN = {
   "Uit de Store: de nieuwste koppen van je favoriete sites": "From the Store: the latest headlines from your favourite sites",
   "RSS-feed verwijderen": "Remove RSS feed",
   "De nieuwste koppen van je favoriete sites op je profiel, van tot 3 RSS-feeds (bijvoorbeeld NOS of NU.nl). De server van Stekky haalt de koppen op, niet je toestel; daarna stuurt je toestel ze naar je vrienden. Pas als iemand op een kop tikt, opent het artikel op de site zelf.": "The latest headlines from your favourite sites on your profile, from up to 3 RSS feeds (for example NOS or NU.nl). The {app} server fetches the headlines, not your device; then your device sends them to your friends. Only when someone taps a headline does the article open on the site itself.",
+  // 19 nov 2026: RSS-widget v2 (plaatjes)
+  "Plaatjes tonen": "Show pictures",
+  "Plaatjes ophalen…": "Fetching pictures…",
 }

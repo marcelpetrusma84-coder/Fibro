@@ -36,6 +36,7 @@ const rss = `<?xml version="1.0" encoding="UTF-8"?><!-- reclame --><rss version=
 const a = F.leesFeed(rss, 'https://feeds.nos.nl/nosnieuwsalgemeen')
 assert.equal(a.titel, 'NOS Nieuws')
 assert.deepEqual(a.berichten.map(b => b.titel), ['Kabinet & Kamer eens', 'Café ‘De Zon’ & meer', 'Via guid'], 'html weg, tekens ontcijferd, kwaad/leeg weg')
+assert.equal(a.berichten[0].tekst, 'tekst', 'samenvatting als platte tekst')
 assert.deepEqual(a.berichten.map(b => b.link), ['https://nos.nl/artikel/1', 'https://nos.nl/artikel/2', 'https://nos.nl/artikel/3'], 'relatieve link via de site')
 assert.equal(a.berichten[0].datum, Date.parse('2026-11-18T19:00:00Z'))
 assert.equal(a.berichten[1].datum, Date.parse('2026-11-18T10:00:00Z'))
@@ -144,10 +145,103 @@ assert.match(lees('index.html'), /\} else if \(id === 'rss'\) \{\n    renderRss\
 assert.match(lees('profiel.html'), /id="widgetRij-rss" style="display:none"/)
 assert.match(lees('profiel.html'), /rss:\s+\{ id:'rss'/)
 assert.match(lees('vriend-profiel.html'), /if \(w\.id === 'rss'\) \{/)
-assert.ok(lees('vriend-profiel.html').includes("R.tekenRssWidget(el.querySelector('.widget-inhoud'), { cfg })"))
+assert.ok(lees('vriend-profiel.html').includes("R.tekenRssWidget(el.querySelector('.widget-inhoud'), { cfg, sprite, spriteId })"))
 assert.doesNotMatch(lees('vriend-profiel.html'), /maakOphaler|rss-ophalen/, 'bij een vriend: niets ophalen')
-for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/rsswidget\.js\?v=1'\)/)
+for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/rsswidget\.js\?v=2'\)/)
 const en = lees('taal-en.js')
 for (const t of ['RSS-feed', 'Nog geen feed', item.uitleg, 'Uit de Store: de nieuwste koppen van je favoriete sites', 'Ophalen lukt nu niet. Probeer het later nog eens.', 'Bijgewerkt: {wanneer}'])
   assert.ok(en.includes(JSON.stringify(t) + ':'), 'Engels voor: ' + t)
 console.log('PASS: de RSS-widget staat in de Store, op Home, bij vrienden, in Profiel en gaat mee via sync')
+
+// ── v2: samenvatting en plaatjes uit de feed ──
+const met = `<rss xmlns:media="http://search.yahoo.com/mrss/"><channel><title>P</title>
+<item><title>Een</title><link>https://p.nl/1</link><description>&lt;p&gt;&lt;img src="https://img.p.nl/in-tekst.jpg" width="600"&gt;Eerste zin.&lt;/p&gt;</description></item>
+<item><title>Twee</title><link>https://p.nl/2</link><media:content url="https://img.p.nl/groot.jpg" medium="image" width="1200"/><media:thumbnail url="https://img.p.nl/klein.jpg" width="120"/><description>Twee: meer uitleg over twee</description></item>
+<item><title>Drie</title><link>https://p.nl/3</link><enclosure url="http://img.p.nl/http.jpg" type="image/jpeg"/></item>
+<item><title>Vier</title><link>https://p.nl/4</link><enclosure url="https://192.168.1.1/x.jpg" type="image/jpeg"/><enclosure url="https://img.p.nl/a.mp3" type="audio/mpeg"/></item>
+<item><title>Vijf</title><link>https://p.nl/5</link><media:thumbnail url="/rel.jpg"/></item>
+</channel></rss>`
+const pb = F.leesFeed(met, 'https://p.nl/rss').berichten
+assert.deepEqual(pb.map(b => [b.plaatje, b.plaatjeGroot]), [
+  ['https://img.p.nl/in-tekst.jpg', 'https://img.p.nl/in-tekst.jpg'],
+  ['https://img.p.nl/klein.jpg', 'https://img.p.nl/groot.jpg'],
+  ['https://img.p.nl/http.jpg', 'https://img.p.nl/http.jpg'],
+  ['', ''],
+  ['https://p.nl/rel.jpg', 'https://p.nl/rel.jpg'],
+], 'kleinste en grootste; http wordt https; geen eigen netwerk, geen geluid; relatief via het artikel')
+assert.equal(pb[0].tekst, 'Eerste zin.')
+assert.equal(pb[1].tekst, 'meer uitleg over twee', 'de kop niet dubbel in de samenvatting')
+assert.equal(F.leesFeed('<rss><channel><item><title>X</title><link>https://x.nl/</link><description>' + 'woord '.repeat(100) + '</description></item></channel></rss>', 'https://x.nl/').berichten[0].tekst.length, 200)
+const bt = n => Uint8Array.from(n)
+assert.equal(F.soortPlaatje(bt([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0, 0, 0, 0, 0])), 'image/jpeg')
+assert.equal(F.soortPlaatje(bt([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0])), 'image/png')
+assert.equal(F.soortPlaatje(bt([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50])), 'image/webp')
+assert.equal(F.soortPlaatje(new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>')), '', 'geen svg (daar kan code in)')
+assert.equal(F.soortPlaatje(new TextEncoder().encode('<html>hoi</html>')), '')
+console.log('PASS: v2: samenvatting en het kleinste/grootste plaatje uit de feed; alleen echte plaatjes (op de bytes)')
+
+// ── v2: het fotoplaatje (sprite) ──
+assert.deepEqual(R.vak(0), { x: 0, y: 0, w: 480, h: 240 })
+assert.deepEqual(R.vak(1), { x: 0, y: 240, w: 80, h: 80 })
+assert.deepEqual(R.vak(11), { x: 320, y: 320, w: 80, h: 80 })
+assert.equal(R.vak(12), null); assert.equal(R.vak(-1), null); assert.equal(R.vak(1.5), null)
+for (let i = 0; i < 12; i++) { const v = R.vak(i); assert.ok(v.x + v.w <= R.SPRITE_B && v.y + v.h <= R.SPRITE_H, 'past: ' + i) }
+assert.deepEqual(R.vakStijl(0), { size: '100% 166.67%', pos: '0% 0%' })
+assert.deepEqual(R.vakStijl(1), { size: '600% 500%', pos: '0% 75%' })
+assert.deepEqual(R.vakStijl(11), { size: '600% 500%', pos: '80% 100%' })
+assert.ok(R.netteSprite('data:image/jpeg;base64,/9j/4AAQ=='))
+for (const k of ['data:image/svg+xml;base64,PHN2Zz4=', 'data:image/jpeg;base64,abc")', 'https://x.nl/a.jpg', 'data:text/html;base64,PGI+', 'data:image/jpeg;base64,' + 'A'.repeat(600000), null])
+  assert.equal(R.netteSprite(k), false, String(k).slice(0, 30))
+assert.match(R.fotoHash('abc'), /^[a-z0-9]{1,14}$/); assert.notEqual(R.fotoHash('abc'), R.fotoHash('abd')); assert.equal(R.fotoHash('x'), R.fotoHash('x'))
+const n2 = R.normaliseer({ feeds: [{ url: 'https://a.nl/r' }], fotoId: 'abc123', plaatjes: false, berichten: [
+  { titel: 'A', link: 'https://a.nl/1', feed: 0, vak: 0, tekst: ' Korte  tekst ' }, { titel: 'B', link: 'https://a.nl/2', feed: 0, vak: 0 },
+  { titel: 'C', link: 'https://a.nl/3', feed: 0, vak: 12 }, { titel: 'D', link: 'https://a.nl/4', feed: 0, vak: '3' }, { titel: 'E', link: 'https://a.nl/5', feed: 0, vak: 4 }] })
+assert.deepEqual(n2.berichten.map(x => x.vak), [0, undefined, undefined, undefined, 4], 'vak: alleen echte, niet dubbel')
+assert.equal(n2.berichten[0].tekst, 'Korte tekst'); assert.equal(n2.fotoId, 'abc123'); assert.equal(n2.plaatjes, false)
+assert.equal(R.normaliseer({ feeds: [{ url: 'https://a.nl/r' }], fotoId: 'x"y' }).fotoId, undefined)
+console.log('PASS: v2: het fotoplaatje: vakken, CSS, alleen echte data-plaatjes, vingerafdruk')
+
+// ── v2: welke plaatjes vragen, en hoeveel ──
+const bers = Array.from({ length: 12 }, (_, i) => ({ titel: 'B' + i, link: 'https://n.nl/' + i, feed: 0 }))
+const bron = Object.fromEntries(bers.map((x, i) => [x.link, { plaatje: 'https://img.n.nl/k' + i + '.jpg', plaatjeGroot: 'https://img.n.nl/g' + i + '.jpg' }]))
+let k = R.kiesPlaatjes(bers, bron, {})
+assert.equal(k.length, 6, 'hoogstens 6 per keer')
+assert.deepEqual(k[0], { link: 'https://n.nl/0', url: 'https://img.n.nl/g0.jpg', groot: true }, 'het eerste bericht: het grote')
+assert.equal(k[1].url, 'https://img.n.nl/k1.jpg', 'de rest: het kleinste')
+const cache0 = { 'https://n.nl/0': { k: 'data:image/jpeg;base64,AA', g: 'data:image/jpeg;base64,BB' }, 'https://n.nl/1': { k: 'data:image/jpeg;base64,CC' }, 'https://n.nl/2': { mis: 1 } }
+k = R.kiesPlaatjes(bers, bron, cache0)
+assert.deepEqual(k.map(x => x.link), [3, 4, 5, 6, 7, 8].map(i => 'https://n.nl/' + i), 'alleen nieuwe; wat mislukte niet opnieuw')
+assert.deepEqual(R.kiesPlaatjes([bers[1], bers[0]], bron, cache0).map(x => [x.link, x.groot]), [['https://n.nl/1', true]], 'nu bovenaan zonder groot: dan alsnog het grote')
+assert.deepEqual(R.kiesPlaatjes(bers, {}, {}), [], 'geen plaatje in de feed: niets vragen')
+const gevraagdP = []
+const fc = await R.maakFotos({ berichten: bers.slice(0, 4), bronnen: bron, cache: { 'https://oud.nl/x': { k: 'data:image/jpeg;base64,ZZ' }, 'https://n.nl/0': cache0['https://n.nl/0'] },
+  haal: async u => { gevraagdP.push(u); return u.includes('k2') ? null : { u } },
+  verklein: async (blob, w, h) => 'data:image/jpeg;base64,' + w + 'x' + h + blob.u.slice(-6, -4) })
+assert.deepEqual(gevraagdP, ['https://img.n.nl/k1.jpg', 'https://img.n.nl/k2.jpg', 'https://img.n.nl/k3.jpg'], 'bericht 0 had er al een')
+assert.deepEqual(Object.keys(fc).sort(), ['https://n.nl/0', 'https://n.nl/1', 'https://n.nl/2', 'https://n.nl/3'], 'oude berichten uit het geheugen')
+assert.equal(fc['https://n.nl/2'].mis, 1); assert.equal(fc['https://n.nl/1'].k, 'data:image/jpeg;base64,80x80k1'); assert.equal(fc['https://n.nl/1'].g, undefined)
+const dl = R.spriteDelen(bers.slice(0, 4), fc)
+assert.deepEqual(dl.map(x => [x.i, x.data.slice(-2)]), [[0, 'BB'], [1, 'k1'], [3, 'k3']], 'vak 0 het grote; mislukt = geen vak')
+console.log('PASS: v2: alleen plaatjes van nieuwe berichten, hoogstens 6, het grote alleen bovenaan; verkleinen op de telefoon')
+
+// ── v2: een plaatje via de server ──
+const gp = []
+const ophP = R.maakOphaler(async () => 'PAS', { fetch: async (u, o) => { gp.push(JSON.parse(o.body)); return { ok: true, headers: { get: () => 'image/jpeg' }, blob: async () => 'BLOB' } } })
+assert.equal(await ophP.plaatje('https://img.n.nl/a.jpg'), 'BLOB')
+assert.deepEqual(gp[0], { plaatje: 'https://img.n.nl/a.jpg' })
+assert.equal(await ophP.plaatje('https://10.0.0.1/a.jpg'), null); assert.equal(gp.length, 1, 'eigen netwerk: niets gevraagd')
+const ophH = R.maakOphaler(async () => 'PAS', { fetch: async () => ({ ok: true, headers: { get: () => 'text/html' }, blob: async () => 'X' }) })
+assert.equal(await ophH.plaatje('https://img.n.nl/a.jpg'), null, 'geen plaatje terug = niets')
+assert.equal(R.VERS_MS, 60 * 60 * 1000, 'een uur')
+console.log('PASS: v2: plaatjes alleen via de server van Stekky')
+
+// ── v2: aangesloten ──
+assert.match(sync, /const WBG_WIDGETS = \[[^\]]*'rss'[^\]]*\]/, 'fotootjes gaan mee als achtergrond')
+assert.match(lees('doorgeven.js'), /wbg_\([^)]*\|rss\)/)
+const ih = lees('index.html')
+assert.match(ih, /const key = 'rss_' \+ uid, bg = 'widgetbg_rss_' \+ uid, fotosKey = 'rssfotos_' \+ uid/)
+assert.doesNotMatch(ih, /zetWidgetAchtergrond\(c, 'widgetbg_rss_'/, 'geen 🖼-knop op de RSS-widget')
+assert.match(lees('vriend-profiel.html'), /d\.item !== 'klein:rss' && d\.item !== 'wbg:rss'/)
+assert.match(lees('vriend-profiel.html'), /haalRecordVP\('vriend_' \+ vriendId \+ '_wbg_rss'\)/)
+for (const t of ['Plaatjes tonen', 'Plaatjes ophalen…']) assert.ok(en.includes(JSON.stringify(t) + ':'), 'Engels voor: ' + t)
+console.log('PASS: v2: fotootjes via sync naar vrienden, geen 🖼-knop')

@@ -124,10 +124,10 @@ try:
             # ── D ──
             voor = len(FUNCTIE)
             pg.click(B + ' .rs-klaar')
-            check(wacht(pg, "() => document.querySelectorAll('%s .rs-bericht').length === 3" % B, 8000), 'D: drie koppen op de widget')
-            koppen = pg.eval_on_selector_all(B + ' .rs-bericht .rs-kop', 'els => els.map(e => e.textContent)')
+            check(wacht(pg, "() => document.querySelectorAll('%s .rs-lijst > a').length === 3" % B, 8000), 'D: drie koppen op de widget')
+            koppen = pg.eval_on_selector_all(B + ' .rs-lijst > a .rs-kop', 'els => els.map(e => e.textContent)')
             check(koppen == ['Vers bericht van Nepnieuws', 'NOS: middelste bericht', 'Oud bericht van Nepnieuws'], 'D: nieuwste eerst (%s)' % koppen)
-            sub = pg.inner_text(B + ' .rs-bericht .rs-sub')
+            sub = pg.inner_text(B + ' .rs-lijst > a .rs-sub')
             check(sub.startswith('Nepnieuws') and '10 min geleden' in sub, 'D: naam van de feed en hoe oud (%s)' % sub)
             check(len(FUNCTIE) - voor == 2, 'D: elke feed één keer gevraagd')
             cfg = json.loads(pg.evaluate("uid => localStorage.getItem('rss_' + uid)", UID) or 'null')
@@ -135,7 +135,7 @@ try:
             pg.locator(B).screenshot(path='/tmp/rss.png')
 
             # ── E ──
-            a = pg.locator(B + ' .rs-bericht').first
+            a = pg.locator(B + ' .rs-lijst > a').first
             check(a.get_attribute('target') == '_blank' and a.get_attribute('rel') == 'noopener noreferrer', 'E: nieuw tabblad, noopener noreferrer')
             with ctx.expect_page() as nieuw:
                 a.click()
@@ -147,12 +147,12 @@ try:
             # ── F ──
             voor = len(FUNCTIE)
             pg.click(B + ' .rs-ververs')
-            check(wacht(pg, "() => true") and wacht(pg, "() => document.querySelectorAll('%s .rs-bericht').length === 3" % B, 5000) and len(FUNCTIE) - voor == 2, 'F: ↻ haalt opnieuw op')
+            check(wacht(pg, "() => true") and wacht(pg, "() => document.querySelectorAll('%s .rs-lijst > a').length === 3" % B, 5000) and len(FUNCTIE) - voor == 2, 'F: ↻ haalt opnieuw op')
             time.sleep(0.5)
             voor = len(FUNCTIE)
             pg.reload()
             pg.evaluate("window.__csp = []; document.addEventListener('securitypolicyviolation', e => __csp.push(e.blockedURI + ' ' + e.violatedDirective))")
-            check(wacht(pg, "() => document.querySelectorAll('%s .rs-bericht').length === 3" % B, 15000), 'F: na herladen staan de koppen er')
+            check(wacht(pg, "() => document.querySelectorAll('%s .rs-lijst > a').length === 3" % B, 15000), 'F: na herladen staan de koppen er')
             time.sleep(1)
             check(len(FUNCTIE) == voor, 'F: vers: niet opnieuw gevraagd')
             check(not pg.evaluate('window.__csp'), 'F: de huisregel hield niets tegen (%s)' % pg.evaluate('window.__csp'))

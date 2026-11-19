@@ -6,9 +6,12 @@
 //  - privéIp: is een IP-adres (na het opzoeken van de naam) iets van een eigen netwerk? Dan halen we niets op.
 //  - leesFeed: haalt uit RSS (2.0 en 1.0) of Atom alleen de naam van de feed en per bericht de kop, de link en de datum.
 //    Alle HTML gaat eruit; er gaat dus nooit HTML van de nieuwssite naar de app.
+//  - v2 (19 nov 2026): per bericht ook een korte samenvatting (platte tekst) en de adressen van het kleinste en het
+//    grootste plaatje dat de feed noemt (alleen https). De app vraagt die plaatjes later apart op (index.ts, plaatje).
 
 export const MAX_BERICHTEN = 20
 const MAX_TITEL = 160
+const MAX_SAMENVATTING = 200
 const MAX_LINK = 500
 
 // Namen van een eigen netwerk of van het toestel zelf
@@ -100,6 +103,52 @@ function datumUit(stuk) {
   }
   return 0
 }
+// Een plaatje-adres: zoals een feed-adres (alleen https, niets in een eigen netwerk), relatief ten opzichte van de feed
+export function nettePlaatjeUrl(url, basis) {
+  if (typeof url !== 'string' || !url.trim() || url.length > MAX_LINK) return null
+  let u
+  try { u = new URL(url.trim(), basis || undefined) } catch (e) { return null }
+  if (u.protocol === 'http:') u.protocol = 'https:' // de meeste beeldservers kunnen ook https; anders lukt het gewoon niet
+  return netteFeedUrl(u.href)
+}
+
+// Alle plaatjes die een bericht noemt: media:thumbnail, media:content, enclosure, itunes:image en <img> in de tekst.
+// Geeft { klein, groot }: het kleinste en het grootste (op breedte; zonder breedte telt de soort).
+function plaatjesUit(stuk, basis) {
+  const kandidaten = []
+  const voeg = (url, breedte, voorkeur) => {
+    const u = nettePlaatjeUrl(url, basis)
+    if (u && !kandidaten.some(k => k.url === u)) kandidaten.push({ url: u, breedte: Number(breedte) || 0, voorkeur })
+  }
+  for (const m of stuk.matchAll(/<media:thumbnail\b[^>]*>/gi)) voeg(attr(m[0], 'url'), attr(m[0], 'width'), 1)
+  for (const m of stuk.matchAll(/<media:content\b[^>]*>/gi)) {
+    const t = attr(m[0], 'type').toLowerCase(), medium = attr(m[0], 'medium').toLowerCase()
+    if (medium === 'image' || t.startsWith('image/') || (!t && !medium && /\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(attr(m[0], 'url'))))
+      voeg(attr(m[0], 'url'), attr(m[0], 'width'), 2)
+  }
+  for (const m of stuk.matchAll(/<enclosure\b[^>]*>/gi)) if (attr(m[0], 'type').toLowerCase().startsWith('image/')) voeg(attr(m[0], 'url'), 0, 2)
+  for (const m of stuk.matchAll(/<itunes:image\b[^>]*>/gi)) voeg(attr(m[0], 'href'), 0, 2)
+  if (!kandidaten.length) { // een <img> in de tekst (vaak zelf als &lt;img ...&gt; gecodeerd)
+    for (const n of ['content:encoded', 'description', 'summary', 'content']) {
+      const html = ontcijfer(binnen(stuk, n).replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1'))
+      const img = /<img\b[^>]*>/i.exec(html)
+      if (img) { voeg(attr(img[0], 'src'), attr(img[0], 'width'), 3); break }
+    }
+  }
+  if (!kandidaten.length) return { klein: '', groot: '' }
+  const metBreedte = kandidaten.filter(k => k.breedte > 0).sort((a, b) => a.breedte - b.breedte)
+  const klein = metBreedte.length ? metBreedte[0] : kandidaten.slice().sort((a, b) => a.voorkeur - b.voorkeur)[0]
+  const groot = metBreedte.length ? metBreedte[metBreedte.length - 1] : kandidaten.slice().sort((a, b) => (b.voorkeur === 2) - (a.voorkeur === 2))[0]
+  return { klein: klein.url, groot: groot.url }
+}
+function samenvattingUit(stuk, titel) {
+  for (const n of ['description', 'summary', 'content:encoded', 'content', 'media:description']) {
+    let t = tekstUit(binnen(stuk, n), MAX_SAMENVATTING)
+    if (t && titel && t.startsWith(titel)) t = t.slice(titel.length).replace(/^[\s:.\-–—|]+/, '')
+    if (t && t !== titel) return t
+  }
+  return ''
+}
 function atomLink(stuk) {
   let reserve = ''
   for (const m of stuk.matchAll(/<link\b[^>]*>/gi)) {
@@ -111,7 +160,7 @@ function atomLink(stuk) {
   return reserve
 }
 
-// Uit de tekst van een feed: { titel, berichten: [{ titel, link, datum }] } of null als het geen feed is
+// Uit de tekst van een feed: { titel, berichten: [{ titel, link, datum, tekst, plaatje, plaatjeGroot }] } of null als het geen feed is
 export function leesFeed(xml, feedUrl = '') {
   if (typeof xml !== 'string') return null
   const s = xml.replace(/<!--[\s\S]*?-->/g, '').replace(/<!DOCTYPE[\s\S]*?>/gi, '')
@@ -134,7 +183,8 @@ export function leesFeed(xml, feedUrl = '') {
     }
     const link = netteLink(ruweLink, netteLink(basis, feedUrl) || feedUrl || undefined)
     if (!t || !link) continue
-    berichten.push({ titel: t, link, datum: datumUit(stuk) })
+    const p = plaatjesUit(stuk, link)
+    berichten.push({ titel: t, link, datum: datumUit(stuk), tekst: samenvattingUit(stuk, t), plaatje: p.klein, plaatjeGroot: p.groot })
     if (berichten.length >= MAX_BERICHTEN) break
   }
   return { titel, berichten }
@@ -145,4 +195,15 @@ export function tekenset(begin) {
   const m = /^\s*<\?xml[^>]*encoding\s*=\s*["']([\w.-]{1,30})["']/i.exec(begin || '')
   const e = m ? m[1].toLowerCase() : 'utf-8'
   return ['utf-8', 'utf8', 'iso-8859-1', 'iso-8859-15', 'windows-1252', 'latin1', 'us-ascii'].includes(e) ? e : 'utf-8'
+}
+
+// v2: is dit echt een plaatje? Kijkt naar de eerste bytes (niet naar wat de server zegt). Geeft het soort of ''.
+export function soortPlaatje(b) {
+  if (!b || b.length < 12) return ''
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'image/jpeg'
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return 'image/png'
+  if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x38) return 'image/gif'
+  if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) return 'image/webp'
+  if (b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70 && b[8] === 0x61 && b[9] === 0x76 && b[10] === 0x69) return 'image/avif'
+  return ''
 }

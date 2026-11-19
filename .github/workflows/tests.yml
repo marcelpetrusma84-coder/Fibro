@@ -236,3 +236,6 @@ jobs:
       - name: "RSS-widget: feed kiezen, koppen via rss-ophalen, artikel zonder referrer (proef319)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef319.py .
+      - name: "RSS-widget v2: plaatjes (hoogstens 6, alleen nieuwe), samenvatting, schakelaar (proef320)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef320.py .

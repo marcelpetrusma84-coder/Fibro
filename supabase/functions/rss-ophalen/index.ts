@@ -14,12 +14,19 @@
 //    opzoeken van de naam en niet na een doorverwijzing; hoogstens 3 doorverwijzingen)
 //  - hoogstens 2 MB en 8 seconden; geen cookies; er gaat nooit HTML terug, alleen tekst (feed.js)
 //  - de link van de feed staat in de vraag (POST), niet in het adres: zo staat hij niet in de logboeken
+//
+// v2 (19 nov 2026): ook één plaatje doorgeven ({ plaatje: url }). Licht voor de server: hij rekent niet (de telefoon
+// van de eigenaar verkleint het), hoogstens 300 KB, alleen echte plaatjes (jpg, png, webp, gif, avif; op de eerste
+// bytes gecontroleerd), dezelfde regels als bij feeds, en hoogstens 40 plaatjes per minuut per gebruiker. De telefoon
+// vraagt alleen plaatjes van nieuwe berichten, hoogstens 6 per keer (rsswidget.js). Er wordt niets bewaard.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { leesFeed, netteFeedUrl, privéIp, tekenset } from "./feed.js";
+import { leesFeed, netteFeedUrl, privéIp, soortPlaatje, tekenset } from "./feed.js";
 
 const MAX_BYTES = 2 * 1024 * 1024;
 const TIJD_MS = 8000;
 const PER_MINUUT = 30;
+const MAX_PLAATJE = 300 * 1024;
+const PLAATJES_PER_MINUUT = 40;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,13 +42,13 @@ function antwoord(data: unknown, status = 200) {
 
 // Hoeveel vragen per gebruiker in de laatste minuut (alleen in het geheugen van deze server)
 const vragen = new Map<string, number[]>();
-function teVeel(uid: string) {
+function teVeel(sleutel: string, max = PER_MINUUT) {
   const nu = Date.now();
-  const lijst = (vragen.get(uid) || []).filter((t) => nu - t < 60000);
+  const lijst = (vragen.get(sleutel) || []).filter((t) => nu - t < 60000);
   lijst.push(nu);
-  vragen.set(uid, lijst);
+  vragen.set(sleutel, lijst);
   if (vragen.size > 5000) vragen.clear();
-  return lijst.length > PER_MINUUT;
+  return lijst.length > max;
 }
 
 // Wijst de naam naar een adres in een eigen netwerk? (Kan de server namen niet opzoeken, dan houdt https ons veilig:
@@ -62,9 +69,9 @@ async function naamVeilig(host: string) {
   return gevonden > 0;
 }
 
-async function leesMax(r: Response) {
+async function leesMax(r: Response, max = MAX_BYTES) {
   const lengte = Number(r.headers.get("content-length") || 0);
-  if (lengte > MAX_BYTES) return null;
+  if (lengte > max) return null;
   if (!r.body) return new Uint8Array();
   const lezer = r.body.getReader();
   const stukken: Uint8Array[] = [];
@@ -73,7 +80,7 @@ async function leesMax(r: Response) {
     const { done, value } = await lezer.read();
     if (done) break;
     totaal += value.length;
-    if (totaal > MAX_BYTES) { try { await lezer.cancel(); } catch (_e) { /* */ } return null; }
+    if (totaal > max) { try { await lezer.cancel(); } catch (_e) { /* */ } return null; }
     stukken.push(value);
   }
   const alles = new Uint8Array(totaal);
@@ -82,7 +89,8 @@ async function leesMax(r: Response) {
   return alles;
 }
 
-async function haalFeed(begin: string) {
+// Veilig ophalen: elke stap (ook na een doorverwijzing) opnieuw gecontroleerd; hoogstens 3 doorverwijzingen
+async function haalVeilig(begin: string, accept: string, max: number) {
   const signaal = AbortSignal.timeout(TIJD_MS);
   let url = begin;
   for (let stap = 0; stap <= 3; stap++) {
@@ -93,10 +101,7 @@ async function haalFeed(begin: string) {
       redirect: "manual",
       signal: signaal,
       credentials: "omit",
-      headers: {
-        "Accept": "application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.9, */*;q=0.5",
-        "User-Agent": "StekkyRSS/1.0 (feedlezer van de Stekky-app)",
-      },
+      headers: { "Accept": accept, "User-Agent": "StekkyRSS/1.0 (feedlezer van de Stekky-app)" },
     });
     if (r.status >= 300 && r.status < 400) {
       const naar = r.headers.get("location");
@@ -106,8 +111,18 @@ async function haalFeed(begin: string) {
       continue;
     }
     if (!r.ok) { try { await r.body?.cancel(); } catch (_e) { /* */ } return { fout: "niet bereikbaar", status: 502 }; }
-    const bytes = await leesMax(r);
+    const bytes = await leesMax(r, max);
     if (!bytes) return { fout: "te groot", status: 413 };
+    return { bytes, url: nette };
+  }
+  return { fout: "te veel doorverwijzingen", status: 502 };
+}
+
+async function haalFeed(begin: string) {
+  const r = await haalVeilig(begin, "application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.9, */*;q=0.5", MAX_BYTES);
+  if (!("bytes" in r) || !r.bytes) return r;
+  {
+    const bytes = r.bytes, nette = r.url;
     const begin200 = new TextDecoder("latin1").decode(bytes.slice(0, 200));
     let tekst = "";
     try { tekst = new TextDecoder(tekenset(begin200)).decode(bytes); } catch (_e) { tekst = new TextDecoder().decode(bytes); }
@@ -115,7 +130,14 @@ async function haalFeed(begin: string) {
     if (!feed || (!feed.titel && !feed.berichten.length)) return { fout: "geen feed", status: 422 };
     return { feed };
   }
-  return { fout: "te veel doorverwijzingen", status: 502 };
+}
+
+async function haalPlaatje(begin: string) {
+  const r = await haalVeilig(begin, "image/avif, image/webp, image/jpeg, image/png, image/gif;q=0.9", MAX_PLAATJE);
+  if (!("bytes" in r) || !r.bytes) return r;
+  const soort = soortPlaatje(r.bytes);
+  if (!soort) return { fout: "geen plaatje", status: 422 };
+  return { bytes: r.bytes, soort };
 }
 
 Deno.serve(async (req) => {
@@ -134,11 +156,24 @@ Deno.serve(async (req) => {
     if (!uid) return antwoord({ ok: false, reden: "niet ingelogd" }, 401);
     const { data: profiel } = await supabase.from("profiles").select("geblokkeerd").eq("id", uid).maybeSingle();
     if (profiel && profiel.geblokkeerd) return antwoord({ ok: false, reden: "geblokkeerd" }, 403);
-    if (teVeel(uid)) return antwoord({ ok: false, reden: "even wachten" }, 429);
+    let body: { url?: unknown; plaatje?: unknown } = {};
+    try { body = await req.json(); } catch (_e) { /* */ }
+
+    // v2: één plaatje doorgeven (niet bewaren, niet verkleinen)
+    if (typeof body.plaatje === "string") {
+      if (teVeel("p:" + uid, PLAATJES_PER_MINUUT)) return antwoord({ ok: false, reden: "even wachten" }, 429);
+      const adres = netteFeedUrl(body.plaatje);
+      if (!adres) return antwoord({ ok: false, reden: "adres" }, 400);
+      const p = await haalPlaatje(adres);
+      if (!("soort" in p) || !p.bytes) return antwoord({ ok: false, reden: p.fout }, p.status || 502);
+      return new Response(p.bytes, {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": p.soort, "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
+      });
+    }
 
     // 2. Welke feed?
-    let body: { url?: unknown } = {};
-    try { body = await req.json(); } catch (_e) { /* */ }
+    if (teVeel(uid)) return antwoord({ ok: false, reden: "even wachten" }, 429);
     const url = typeof body.url === "string" ? netteFeedUrl(body.url) : null;
     if (!url) return antwoord({ ok: false, reden: "adres" }, 400);
 

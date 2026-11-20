@@ -21,14 +21,13 @@
 // v4 (13 nov 2026, Marcel): kaarslicht. Twee kaarsen op tafel met flakkerende vlammen; de randen van de tafel zijn
 // donker en het warme licht flakkert mee. Aan/uit met 🕯️ (bewaard: fibro_koningsjacht_kaars, standaard aan).
 import * as K from './koningsjacht.js?v=2'
-import { maakKaartTafel, kaartSvg, achterkantSvg, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=11'
+import { maakKaartTafel, kaartSvg, achterkantSvg, kaartNaam, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=16'
 import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek, zetMuziekThema } from './koningsjacht-geluid.js?v=4'
-import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=11'
+import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=12'
 import { zetKaarsSlijtage } from './koningsjacht-kaarsen.js?v=1'
 import { verbindBierpul, herstelBierPartij } from './koningsjacht-bier.js?v=2'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
-const wacht = ms => new Promise(k => setTimeout(k, ms))
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 const BEWAAR = 'fibro_koningsjacht_stand', BESTE = 'fibro_koningsjacht_best'
 const SOORT = { B: 'Boer', V: 'Vrouw', H: 'Heer' }
@@ -101,10 +100,10 @@ const CSS = `
 .kj-flits{position:absolute;inset:0;z-index:40;pointer-events:none;background:radial-gradient(ellipse at 50% 20%,#ef444466,#0000 70%)}
 .kj .kt-kaart.kt-mag{box-shadow:0 2px 8px #0007}
 .kj .kt-kaart.kt-gekozen{box-shadow:0 0 0 3px #fde68a,0 0 26px #f5b301,0 8px 20px #000a}
-.kt-tafel.kj .kt-midden > :is(.kt-stapel,.kt-afleg){translate:0 calc(var(--kj-hand-verschil, 0px) / 2)}
+.kt-tafel.kj .kt-midden > :is(.kt-stapel-groep,.kt-afleg){translate:0 calc(var(--kj-hand-verschil, 0px) / 2)}
 .kt-tafel.kj .kt-midden > .kj-kaars{translate:0 calc(var(--kj-hand-verschil, 0px) * .9)}
 /* Langwerpige projecties volgen de draaiing van iedere kaart en liggen achter de kaart zelf. */
-.kt-tafel.kj.kj-tafelschaduw .kt-kaart::before{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(0,0,0,.68);transform:translate(-20%,25%) skewX(-15deg) scaleY(.85);transform-origin:bottom center;filter:blur(3px);z-index:-1;pointer-events:none}
+.kt-tafel.kj.kj-tafelschaduw .kt-kaart::before{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(0,0,0,.68);transform:translate(-20%,25%) skewX(-15deg) scaleY(.85);transform-origin:bottom center;filter:blur(3px);z-index:0;pointer-events:none}
 .kt-tafel.kj.kj-tafelschaduw :is(.kt-stapel,.kt-afleg,.kj-kasteel){filter:drop-shadow(-13px 18px 4px rgba(0,0,0,.65))}
 /* De bediening ligt boven de kaartschaduwen, met zacht tafellicht voor extra contrast. */
 .kt-tafel.kj.kj-tafelschaduw .kt-onder{z-index:450}
@@ -117,6 +116,9 @@ const CSS = `
 .kj-haal{overflow:visible}
 .kj-gloeit{filter:brightness(1.35) drop-shadow(0 0 10px var(--kj-gloed,#f5b301)) drop-shadow(0 0 22px var(--kj-gloed,#f5b301))}
 .kj-koepel{border-radius:50% 50% 12px 12px/80% 80% 12px 12px;border:3px solid #93c5fd;background:radial-gradient(ellipse at 50% 100%,#60a5fa55,#3b82f611 60%,#0000 75%);box-shadow:0 0 30px #60a5fa,inset 0 0 30px #93c5fd88}
+.kj-medieval-shield{position:absolute;z-index:430;pointer-events:none;filter:drop-shadow(0 14px 11px #000d);transform-style:preserve-3d;transform-origin:50% 88%}
+.kj-medieval-shield svg{display:block;width:100%;height:100%;overflow:visible}
+.kt-tafel.kj .kt-effect{box-sizing:border-box;width:max-content;max-width:calc(100vw - 28px);padding:7px 12px;white-space:normal;text-align:center;text-wrap:balance;line-height:1.15;font-size:clamp(22px,8vw,48px)}
 .kj-zwevend{font-size:22px;text-shadow:0 0 10px currentColor}
 .kj-muziek{display:flex;align-items:center;gap:8px}
 .kj-muziek[aria-pressed=true]{background:#8b3fd1;border-color:#c084fc;box-shadow:0 0 14px #8b3fd1aa}
@@ -139,6 +141,7 @@ const CSS = `
 .kj .kj-vlam{left:48%;bottom:95.5%;width:15%;height:24%;margin-left:-7.5%}
 .kj.kj-geenkaars .kj-kaarslicht,.kj.kj-geenkaars .kj-kaars{display:none}
 .kt-tafel.kj .kt-info{flex-wrap:wrap;justify-content:center;width:96%;white-space:normal;row-gap:4px}
+.kt-tafel.kj .kt-status{max-width:100%;white-space:normal;text-wrap:balance;line-height:1.25}
 .kt-tafel.kj .kt-onder,.kt-tafel.kj .kt-status,.kt-tafel.kj .kt-info,.kt-tafel.kj .kj-stats{position:relative;z-index:32}.kt-tafel.kj .kt-info{position:absolute}
 @media (prefers-reduced-motion:reduce){.kj-vlam{animation:none}}
 .kj-pil{padding:3px 10px;border-radius:999px;background:#000a;border:1px solid #f5d08a88;font-weight:800;font-size:13px}
@@ -210,6 +213,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
   const instellingen = {
     scene: ['standaard', 'modern', 'middeleeuws'].includes(bewaardeInstellingen.scene) ? bewaardeInstellingen.scene : (bewaardeInstellingen.middeleeuws === true ? 'middeleeuws' : 'standaard'),
     beweging: bewaardeInstellingen.beweging === true,
+    slowMoves: bewaardeInstellingen.slowMoves === true,
     middeleeuws: bewaardeInstellingen.middeleeuws === true,
     flikkeren: bewaardeInstellingen.flikkeren !== false,
     tafelschaduw: bewaardeInstellingen.tafelschaduw !== false,
@@ -219,6 +223,8 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     bierRonde: 0
   }
   instellingen.middeleeuws = instellingen.scene === 'middeleeuws'
+  const koningsjachtBewegingsfactor = () => instellingen.slowMoves && !rustig() ? 1.25 : 1
+  const wacht = ms => new Promise(k => setTimeout(k, ms * koningsjachtBewegingsfactor()))
   let STIJL = instellingen.scene === 'modern' ? 'modern' : 'perkament'
   let scene = null, flikkerTimer = null, anderBier = null, bierTimer = null
 
@@ -319,6 +325,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
       + [['standaard', T('Standaard')], ['modern', T('Modern')], ['middeleeuws', T('Middeleeuws')]].map(([id, label]) => '<label><input type="radio" name="kj-scene" data-scene="' + id + '" value="' + id + '"' + (instellingen.scene === id ? ' checked' : '') + '><span>' + esc(label) + '</span></label>').join('')
       + '</div></fieldset>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Achtergrond bewegen')) + '</b><small>' + esc(T('Beweeg je telefoon voor een subtiel diepte-effect.')) + '</small></span><input type="checkbox" data-instelling="beweging"></label>'
+      + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Slow moves')) + '</b><small>' + esc(T('Laat kaartbewegingen en effecten rustiger verlopen, zodat je beter ziet wat er gebeurt.')) + '</small></span><input type="checkbox" data-instelling="slowMoves"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Kaarsen laten flikkeren')) + '</b><small>' + esc(T('Laat de vlam en het kaarslicht zacht bewegen.')) + '</small></span><input type="checkbox" data-instelling="flikkeren"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Schaduwen op tafel')) + '</b><small>' + esc(T('Laat de kaarten en stapels een schaduw op de tafel werpen.')) + '</small></span><input type="checkbox" data-instelling="tafelschaduw"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Bierpul tonen')) + '</b><small>' + esc(T('Zet een bierpul op de tafel.')) + '</small></span><input type="checkbox" data-instelling="bierpul"></label>'
@@ -641,6 +648,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
       onPak: () => tafel.status(T('De taveerne: met ♦ ruiten pak je hier kaarten')),
       onSelectie: ids => { selectie = ids; if (!bezig) { tekenKnoppen(); tafel.status(statusTekst()) } },
       instellingKnop: false,   // de kaarttafel-instellingen (hulp, grote kaarten, trillen) staan in het eigen ⚙-scherm
+      animatieFactor: koningsjachtBewegingsfactor,
       leesbareSelectie: true, // ruimte voor iedere kaartwaarde en soort, ook achter vergrote kaarten
     })
     tafel.element.classList.add('kj')
@@ -778,7 +786,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     const t = tafel.element.getBoundingClientRect(), r = el.getBoundingClientRect()
     return { x: r.left - t.left + r.width / 2, y: r.top - t.top + r.height / 2, b: r.width, h: r.height }
   }
-  const anim = (el, frames, opts) => { try { return el.animate(frames, opts).finished.catch(() => {}) } catch (e) { return Promise.resolve() } }
+  const anim = (el, frames, opts = {}) => { try { const factor = koningsjachtBewegingsfactor(); return el.animate(frames, { ...opts, duration: (opts.duration || 0) * factor, delay: (opts.delay || 0) * factor }).finished.catch(() => {}) } catch (e) { return Promise.resolve() } }
   // een ronde lichtflits (kleur) op een plek
   function lichtflits(x, y, kleur, maat = 160, duur = 520) {
     const d = document.createElement('div'); d.className = 'kj-licht'
@@ -849,7 +857,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
         { transform: basis, offset: 1 }], { duration: rustig() ? 420 : 760, delay: i * 70, easing: 'cubic-bezier(.5,0,.3,1)' })
         .then(() => el.classList.remove('kj-gloeit'))
     })
-    setTimeout(inslag, (rustig() ? 210 : 380) + (aflegKaarten.length - 1) * 70)
+    setTimeout(inslag, ((rustig() ? 210 : 380) + (aflegKaarten.length - 1) * 70) * koningsjachtBewegingsfactor())
     await geraakt
     if (l.immuun) geluid('immuun'); else if (dubbel) geluid('dubbel'); else geluid('zwaard', l.schade >= 15 ? 2 : 1)
     tafel.tril(dubbel ? [30, 40, 50] : [25, 30, 25]); tril(dubbel ? 9 : 6)
@@ -857,19 +865,51 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     if (dubbel) halen.push(zwaardhaal(doel, LICHT.k, -1, 260))
     lichtflits(doel.x, doel.y, hoofdKleur, doel.b * 2.4)
     vonken(doel.x, doel.y, l.immuun ? ['#d1d5db', '#9ca3af'] : [...kleuren, '#fde68a', '#fff'], 18, 100)
-    if (dubbel) setTimeout(() => { lichtflits(doel.x, doel.y, LICHT.k, doel.b * 3); vonken(doel.x, doel.y, [LICHT.k, '#fff'], 14, 120); tril(10) }, 300)
+    if (dubbel) setTimeout(() => { lichtflits(doel.x, doel.y, LICHT.k, doel.b * 3); vonken(doel.x, doel.y, [LICHT.k, '#fff'], 14, 120); tril(10) }, 300 * koningsjachtBewegingsfactor())
     await Promise.all([raak(l.schade, dubbel), ...halen])
   }
   async function schildLicht(n) {
     geluid('schild')
     const hand = tafel.element.querySelector('.kt-hand'); if (!hand) return
     const p = plek(hand)
-    const d = document.createElement('div'); d.className = 'kj-koepel'
-    d.style.cssText = 'left:' + (p.x - p.b * 0.46) + 'px;top:' + (p.y - p.h * 0.62) + 'px;width:' + (p.b * 0.92) + 'px;height:' + (p.h * 1.05) + 'px'
-    fxLaag().appendChild(d)
+    const middeleeuws = instellingen.scene === 'middeleeuws'
+    const d = document.createElement('div')
+    if (middeleeuws) {
+      const breedte = Math.min(190, Math.max(150, p.b * 0.44)), hoogte = breedte * 1.3
+      d.className = 'kj-medieval-shield'
+      // Het schild staat op de voorrand van de hand: de kaartspeler ziet de achterkant en de draagbanden.
+      d.style.cssText = 'left:' + (p.x - breedte / 2) + 'px;top:' + (p.y + p.h * 0.5 - hoogte * 0.78) + 'px;width:' + breedte + 'px;height:' + hoogte + 'px'
+      d.innerHTML = '<svg viewBox="0 0 200 260" role="img" aria-label="' + esc(T('De achterkant van een middeleeuws schild, met draagbanden naar jou en de voorkant naar de tegenstander')) + '" xmlns="http://www.w3.org/2000/svg">'
+        + '<defs><linearGradient id="kjSchildRand" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b8a783"/><stop offset=".18" stop-color="#514638"/><stop offset=".42" stop-color="#a79570"/><stop offset=".68" stop-color="#393229"/><stop offset=".88" stop-color="#958365"/><stop offset="1" stop-color="#30291f"/></linearGradient>'
+        + '<linearGradient id="kjSchildHout" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#291a11"/><stop offset=".2" stop-color="#503722"/><stop offset=".48" stop-color="#322116"/><stop offset=".72" stop-color="#62442b"/><stop offset="1" stop-color="#26180f"/></linearGradient>'
+        + '<linearGradient id="kjSchildLeer" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#765239"/><stop offset=".48" stop-color="#3f281b"/><stop offset="1" stop-color="#25180f"/></linearGradient>'
+        + '<linearGradient id="kjSchildHandvat" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#a27b50"/><stop offset=".38" stop-color="#4b3020"/><stop offset=".72" stop-color="#291a12"/><stop offset="1" stop-color="#866342"/></linearGradient>'
+        + '<filter id="kjSchildTextuur"><feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="2" seed="8"/><feColorMatrix values=".35 0 0 0 .18 .35 0 0 0 .13 .35 0 0 0 .08 0 0 0 .16 0"/><feBlend in="SourceGraphic" mode="multiply"/></filter></defs>'
+        + '<path d="M15 14Q100 31 185 14L177 137Q169 207 100 250Q31 207 23 137Z" fill="url(#kjSchildRand)" stroke="#17130f" stroke-width="5"/>'
+        + '<path d="M25 25Q100 40 175 25L168 135Q161 194 100 232Q39 194 32 135Z" fill="url(#kjSchildHout)" stroke="#33291d" stroke-width="2.5"/>'
+        + '<path d="M25 25Q100 40 175 25L168 135Q161 194 100 232Q39 194 32 135Z" fill="#87613e" opacity=".13" filter="url(#kjSchildTextuur)"/>'
+        + '<path d="M56 34Q61 126 69 199M100 39V222M144 34Q139 126 131 199" fill="none" stroke="#160f0a" stroke-width="3" opacity=".68"/>'
+        + '<path d="M60 35Q65 122 72 196M104 39V220M148 34Q143 122 128 196" fill="none" stroke="#b18a5d" stroke-width="1.2" opacity=".34"/>'
+        + '<g fill="url(#kjSchildLeer)" stroke="#241810" stroke-width="2.5"><path d="M45 65Q100 78 155 65L151 83Q100 97 49 83Z"/><path d="M39 164Q100 188 161 164L157 182Q100 207 43 182Z"/></g>'
+        + '<path d="M48 71Q100 84 152 71M43 170Q100 192 157 170" fill="none" stroke="#c4a174" stroke-width="1.5" opacity=".65"/>'
+        + '<path d="M53 74L76 79M147 74L124 79M46 173L72 181M154 173L128 181" fill="none" stroke="#d2b48c" stroke-width="1.6" stroke-dasharray="2 5" opacity=".8"/>'
+        + '<g fill="url(#kjSchildRand)" stroke="#241a12" stroke-width="2"><path d="M72 101Q100 91 128 101L124 157Q100 169 76 157Z"/><path d="M62 96L78 91L83 108L67 113Z"/><path d="M138 96L122 91L117 108L133 113Z"/></g>'
+        + '<path d="M81 111Q100 118 119 111L116 145Q100 151 84 145Z" fill="url(#kjSchildHandvat)" stroke="#24170f" stroke-width="2.5"/>'
+        + '<path d="M84 117Q100 123 116 117M84 139Q100 145 116 139" fill="none" stroke="#c09a6b" stroke-width="1.4" opacity=".65"/>'
+        + '<path d="M86 123Q100 128 114 123M86 130Q100 135 114 130" fill="none" stroke="#1b120c" stroke-width="1.2" opacity=".8"/>'
+        + '<g fill="#b9aa89" stroke="#2c2419" stroke-width="2"><circle cx="28" cy="39" r="3.8"/><circle cx="172" cy="39" r="3.8"/><circle cx="34" cy="103" r="3.8"/><circle cx="166" cy="103" r="3.8"/><circle cx="43" cy="164" r="3.8"/><circle cx="157" cy="164" r="3.8"/><circle cx="68" cy="211" r="3.8"/><circle cx="132" cy="211" r="3.8"/></g>'
+        + '<path d="M77 53Q100 61 123 53" fill="none" stroke="#d3c4a4" stroke-width="1.6" opacity=".7"/></svg>'
+    } else {
+      d.className = 'kj-koepel'
+      d.style.cssText = 'left:' + (p.x - p.b * 0.46) + 'px;top:' + (p.y - p.h * 0.62) + 'px;width:' + (p.b * 0.92) + 'px;height:' + (p.h * 1.05) + 'px'
+    }
+    if (middeleeuws) tafel.element.appendChild(d)
+    else fxLaag().appendChild(d)
     tafel.effect('♠ ' + T('Schild {n}', { n }), { gloed: false, geluid: false })
-    await anim(d, [{ transform: 'scaleY(.1)', opacity: 0 }, { transform: 'scaleY(1.05)', opacity: 1, offset: 0.35 }, { transform: 'scaleY(1)', opacity: 0.9, offset: 0.7 }, { transform: 'scaleY(1)', opacity: 0 }],
-      { duration: rustig() ? 500 : 1100, easing: 'ease-out' })
+    const frames = middeleeuws
+      ? [{ transform: 'perspective(650px) translateY(42px) rotateX(-76deg) scale(.5)', opacity: 0 }, { transform: 'perspective(650px) translateY(-5px) rotateX(-8deg) scale(1.06)', opacity: 1, offset: 0.48 }, { transform: 'perspective(650px) translateY(0) rotateX(-3deg) scale(1)', opacity: .98, offset: .8 }, { transform: 'perspective(650px) translateY(18px) rotateX(-6deg) scale(.96)', opacity: 0 }]
+      : [{ transform: 'scaleY(.1)', opacity: 0 }, { transform: 'scaleY(1.05)', opacity: 1, offset: 0.48 }, { transform: 'scaleY(1)', opacity: 0.9, offset: 0.8 }, { transform: 'scaleY(1)', opacity: 0 }]
+    await anim(d, frames, { duration: rustig() ? 900 : 2100, easing: 'ease-out' })
     d.remove()
   }
   async function genezenLicht(n) {
@@ -906,7 +946,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     const g = document.createElement('div'); g.className = 'kj-raakgetal'; g.textContent = '−' + schade + (dubbel ? ' ♣×2' : '')
     g.style.left = (r.left + r.width / 2) + 'px'; g.style.top = (r.top + r.height * 0.3) + 'px'
     document.body.appendChild(g)
-    try { await g.animate([{ transform: 'translate(-50%,0) scale(.4)', opacity: 0 }, { transform: 'translate(-50%,-30px) scale(1.3)', opacity: 1, offset: 0.3 }, { transform: 'translate(-50%,-60px) scale(1)', opacity: 0 }], { duration: 900, easing: 'ease-out' }).finished } catch (e) {}
+    await anim(g, [{ transform: 'translate(-50%,0) scale(.4)', opacity: 0 }, { transform: 'translate(-50%,-30px) scale(1.3)', opacity: 1, offset: 0.3 }, { transform: 'translate(-50%,-60px) scale(1)', opacity: 0 }], { duration: 900, easing: 'ease-out' })
     g.remove()
   }
   // de vijand springt naar voren en haalt drie keer uit: rode klauwen over de tafel
@@ -927,37 +967,57 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     tafel.effect(T('{naam} slaat terug: {n}!', { naam: vijandNaam(v.id), n: v.slag }), { gloed: false, geluid: false })
     await wacht(500)
   }
-  async function verslagen(l, oud) {
+  async function verslagen(l, nieuw) {
     const k = vijandKaart()
+    const kaart = vijandNaam(l.vijand)
     geluid('verslagen', l.precies)
-    tafel.effect(l.precies ? T('Precies raak!') : T('Verslagen!'), { geluid: false })
+    const uitleg = l.precies ? T('Precies raak. De {kaart} gaat boven op de Taveerne.', { kaart })
+      : T('De {kaart} is verslagen en gaat naar de aflegstapel.', { kaart })
+    tafel.status(uitleg)
+    tafel.effect(l.precies ? T('Precies raak!') : T('Wachter verslagen!'), { geluid: false })
     if (k) {
       const p = plek(k)
       lichtflits(p.x, p.y, '#fde68a', p.b * 3.2, 900)
       vonken(p.x, p.y, ['#fde68a', '#f5b301', '#fff', '#a16207'], 26, 150)
       const r = k.getBoundingClientRect()
-      const doel = l.precies ? tafel.element.querySelector('.kt-stapel').getBoundingClientRect() : { left: r.left + 40, top: window.innerHeight + 40, width: r.width, height: r.height }
+      const doel = tafel.element.querySelector(l.precies ? '.kt-stapel' : '.kt-afleg').getBoundingClientRect()
       const dx = doel.left + doel.width / 2 - (r.left + r.width / 2), dy = doel.top + doel.height / 2 - (r.top + r.height / 2)
       if (l.precies) { k.style.setProperty('--kj-gloed', '#fde68a'); k.classList.add('kj-gloeit') }
       await anim(k, [{ transform: 'none', opacity: 1 }, { transform: 'translateY(-10px) scale(1.1)', opacity: 1, offset: 0.2 },
-        { transform: 'translate(' + dx + 'px,' + dy + 'px) rotate(' + (l.precies ? 0 : 160) + 'deg) scale(' + (l.precies ? 0.85 : 0.6) + ')', opacity: l.precies ? 1 : 0 }], { duration: rustig() ? 400 : 800, easing: 'cubic-bezier(.5,0,.7,1)' })
+        { transform: 'translate(' + dx + 'px,' + dy + 'px) rotate(' + (l.precies ? 0 : 8) + 'deg) scale(' + doel.width / r.width + ')', opacity: 1 }], { duration: rustig() ? 400 : 1150, easing: 'ease-in-out' })
       k.classList.remove('kj-gloeit')
       k.innerHTML = ''; k.dataset.id = ''
       if (l.precies) { const st = plek(tafel.element.querySelector('.kt-stapel')); lichtflits(st.x, st.y, '#fde68a', 150) }
     }
-    if (l.precies) { tafel.toon(beeld(oud, { hand: tafelHand, afleg: [], stapelAantal: oud.taveerne.length + 1, mijnBeurt: false, status: T('{naam} ligt nu bovenop de taveerne', { naam: vijandNaam(l.vijand) }) })); await wacht(700) }
+    tafel.toon(beeld(nieuw, { afleg: l.precies ? [] : [l.vijand], mijnBeurt: false, status: uitleg }))
+    await wacht(750)
   }
-  let tafelHand = []
 
   // ── Een aanval laten zien (van jou, of in 'samen' van de ander: dan komen de kaarten van boven) ──
   const vanBoven = n => { const t = tafel.element.getBoundingClientRect(); return Array.from({ length: n }, (_, i) => ({ left: t.left + t.width / 2 - 30 + i * 12, top: t.top - 90, width: 60, height: 84 })) }
+  function toonGespeeldeKaarten(ids, eigen, vanRects, opts, snelheid) {
+    const vertrek = vanRects || vanBoven(ids.length)
+    if (!eigen) return tafel.anderSpeeltAnimatie(ids, { leesbaar: true, vanRects: vertrek })
+    return tafel.speelAnimatie(ids, { leesbaar: true, snelheid: opts.snelheid || snelheid, richting: opts.richting || { x: 0, y: -1 }, vanRects: vertrek })
+  }
+  function zetUitleg(ids, l) {
+    const kaarten = ids.map(kaartNaam).join(' + ')
+    const redenen = []
+    if (l.schade) redenen.push(T('{n} schade', { n: l.schade }))
+    if (l.genezen) redenen.push(T('brengt {n} kaarten van de aflegstapel terug naar de Taveerne', { n: l.genezen }))
+    const gepakt = l.gepaktPer ? Object.values(l.gepaktPer).reduce((som, kaarten) => som + kaarten.length, 0) : (l.gepakt || []).length
+    if (gepakt) redenen.push(T('pakt {n} kaarten uit de Taveerne', { n: gepakt }))
+    if (l.schild) redenen.push(T('geeft {n} schild', { n: l.schild }))
+    if (l.immuun) redenen.push(T('werkt niet tegen {kleur}', { kleur: KLEUR_TEKEN[l.immuun] }))
+    return T('Gespeeld: {kaarten} — {reden}', { kaarten, reden: redenen.join(' · ') || T('gebruikt deze kaart') })
+  }
   async function toonAanval(oud, nieuw, ids, { eigen = true, vanRects = null, opts = {} } = {}) {
     const l = nieuw.laatste
     const handNa = eigen ? mijnHand(oud).filter(id => !ids.includes(id)) : mijnHand(oud)
-    tafelHand = handNa
-    tafel.toon(beeld(oud, { hand: handNa, afleg: [...oud.tafel, ...ids], mijnBeurt: false, status: eigen ? '' : T('{naam} valt aan!', { naam }) }))
-    await tafel.speelAnimatie(ids, { snelheid: opts.snelheid || 1, richting: opts.richting || { x: 0, y: eigen ? -1 : 1 }, vanRects: vanRects || vanBoven(ids.length) })
-    if (l.genezen) { tafel.toon(beeld(oud, { hand: handNa, afleg: [...oud.tafel, ...ids], stapelAantal: oud.taveerne.length + l.genezen, mijnBeurt: false, status: '' })); await genezenLicht(l.genezen) }
+    const uitleg = zetUitleg(ids, l)
+    tafel.toon(beeld(oud, { hand: handNa, afleg: [...oud.tafel, ...ids], mijnBeurt: false, status: uitleg }))
+    await toonGespeeldeKaarten(ids, eigen, vanRects, opts, 1)
+    if (l.genezen) { tafel.toon(beeld(oud, { hand: handNa, afleg: [...oud.tafel, ...ids], stapelAantal: oud.taveerne.length + l.genezen, mijnBeurt: false, status: uitleg })); await genezenLicht(l.genezen) }
     const tussen = { kasteel: oud.kasteel, schade: Math.min(K.vijandInfo(oud).leven, oud.schade + l.schade), schild: oud.schild + l.schild, extra: oud.extra }
     await Promise.all([kaartenVallenAan(ids, l), wacht(rustig() ? 260 : 480).then(() => tekenVijand(tussen))])
     if (l.immuun) { tafel.effect(T('{naam} is immuun voor {k}', { naam: vijandNaam(l.vijand), k: KLEUR_TEKEN[l.immuun] }), { gloed: false, geluid: false }); await wacht(650) }
@@ -966,14 +1026,13 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     if (l.gepakt.length || mijnGepakt.length) {
       pakLicht()
       if (mijnGepakt.length) {
-        tafelHand = [...handNa, ...mijnGepakt]
         const alle = l.gepaktPer ? l.gepaktPer[1].length + l.gepaktPer[2].length : l.gepakt.length
-        tafel.toon(beeld(oud, { hand: tafelHand, afleg: [...oud.tafel, ...ids], stapelAantal: oud.taveerne.length + l.genezen - alle, mijnBeurt: false, status: '' }))
+        tafel.toon(beeld(oud, { hand: [...handNa, ...mijnGepakt], afleg: [...oud.tafel, ...ids], stapelAantal: oud.taveerne.length + l.genezen - alle, mijnBeurt: false, status: uitleg }))
         await tafel.pakAnimatie(mijnGepakt)
       }
     }
     if (l.verslagen) {
-      await verslagen(l, oud)
+      await verslagen(l, nieuw)
       tafel.toon(beeld(nieuw, { mijnBeurt: false }))
       if (!nieuw.klaar) await nieuweVijand(nieuw)
     } else if (nieuw.fase === 'verdedig') {
@@ -1016,8 +1075,9 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     })
   }
   async function toonAfweer(oud, nieuw, ids, { eigen = true, vanRects = null, opts = {} } = {}) {
-    tafel.toon(beeld(oud, { hand: eigen ? mijnHand(oud).filter(id => !ids.includes(id)) : mijnHand(oud), afleg: [...oud.tafel, ...ids], mijnBeurt: false, status: eigen ? '' : T('{naam} weert af', { naam }) }))
-    await tafel.speelAnimatie(ids, { snelheid: opts.snelheid || 0.6, richting: opts.richting || { x: 0, y: eigen ? -1 : 1 }, vanRects: vanRects || vanBoven(ids.length) })
+    const uitleg = T('Afgeweerd met {kaarten}', { kaarten: ids.map(kaartNaam).join(' + ') })
+    tafel.toon(beeld(oud, { hand: eigen ? mijnHand(oud).filter(id => !ids.includes(id)) : mijnHand(oud), afleg: [...oud.tafel, ...ids], mijnBeurt: false, status: uitleg }))
+    await toonGespeeldeKaarten(ids, eigen, vanRects, opts, 0.6)
     geluid('afweren')
     const p = plek(tafel.element.querySelector('.kt-afleg'))
     lichtflits(p.x, p.y, LICHT.s, 170); vonken(p.x, p.y, [LICHT.s, '#fff'], 12, 80)

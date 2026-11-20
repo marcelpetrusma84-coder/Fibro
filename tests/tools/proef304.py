@@ -43,7 +43,7 @@ try:
                 check(pg.evaluate(HOEKEN),f'{breedte}px {stijl}: ook met Grote kaarten alle hoeken zichtbaar')
                 pg.click('.kt-instelknop'); pg.uncheck('[data-kaartinstelling=groot]'); pg.click('.kt-instelkeus .kt-keuzekaart > .kt-knop')
                 if stijl=='middeleeuws':
-                    check(pg.evaluate("() => { const s=getComputedStyle(document.querySelector('.kt-afleg')); return s.borderStyle==='solid' && s.backgroundImage.includes('gradient') && !s.boxShadow.includes('192, 132, 252') }"),'Middeleeuws: houten/ijzeren aflegbak zonder paarse neonrand')
+                    check(pg.evaluate("() => { const e=document.querySelector('.kt-afleg'), s=getComputedStyle(e,'::before'); return s.borderStyle==='solid' && s.backgroundImage.includes('gradient') && ![s,getComputedStyle(e)].some(s => s.boxShadow.includes('192, 132, 252')) }"),'Middeleeuws: houten/ijzeren aflegbak zonder paarse neonrand')
             pg.click('#wissen')
             check(pg.locator('.kt-gekozen').count()==0,'wissen herstelt de gewone waaier')
             check(not paginafouten,'geen paginafouten: '+str(paginafouten[:2]))
@@ -65,6 +65,15 @@ try:
                 check(hud['aantal']=='3' and hud['hp']=='13' and hud['max']=='20' and hud['levenBreedte']=='65%',f'{breedte}px {stijl}: 3/12 verslagen, 13/20 leven en juiste groene vulling')
                 check(hud['schild']=='6' and hud['aanval']=='10' and hud['schildBreedte']=='60%',f'{breedte}px {stijl}: blauw toont 6 van 10 schade beschermd')
                 check(hud['binnen'] and hud['tekst'] and hud['segmenten'],f'{breedte}px {stijl}: segmenten en beide cijfers volledig zichtbaar')
+            pg.goto(basis+'tests/fixtures/koningsjacht-hand-preview.html?voorbeeld=afleg')
+            check(pg.evaluate("""() => {
+              const e=document.querySelector('.kt-afleg'), k=e.querySelector('.kt-ak');
+              const bak=getComputedStyle(e,'::before'), kaart=getComputedStyle(k), r=k.getBoundingClientRect();
+              return bak.content !== 'none' && Number(kaart.zIndex)>Number(bak.zIndex)
+                && kaart.backgroundColor !== 'rgba(0, 0, 0, 0)' && kaart.opacity==='1'
+                && bak.backgroundImage==='none' && bak.borderStyle==='none'
+                && document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('.kt-ak')===k;
+            }"""),f'{breedte}px: kaart ondoorzichtig boven de legbak, zonder beslag door de kaart')
             ctx.close()
 
         ctx = browser.new_context(viewport={'width':390,'height':844},service_workers='block',reduced_motion='reduce')

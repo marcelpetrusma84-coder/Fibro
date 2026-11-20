@@ -936,7 +936,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     tafel.effect(T('{naam} slaat terug: {n}!', { naam: vijandNaam(v.id), n: v.slag }), { gloed: false, geluid: false })
     await wacht(500)
   }
-  async function verslagen(l, oud, nieuw) {
+  async function verslagen(l, nieuw) {
     const k = vijandKaart()
     const kaart = vijandNaam(l.vijand)
     geluid('verslagen', l.precies)

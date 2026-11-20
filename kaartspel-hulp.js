@@ -677,6 +677,12 @@ export function maakKaartTafel(container, opties = {}) {
   let laatsteZet = null                     // v7: wat de ander het laatst speelde
   let inst = kaartInstellingen()
 
+  // Een tik op een andere bediening onderbreekt de reeks: terugkeren naar de
+  // gekozen kaart mag nooit onbedoeld als dubbeltik worden uitgespeeld.
+  el.addEventListener('pointerdown', e => {
+    if (!handEl.contains(e.target)) laatsteTik = null
+  }, true)
+
   // ── Maten: kaarten zo groot als past ──
   function meet() {
     const b = el.clientWidth || 360, h = el.clientHeight || 640

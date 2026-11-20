@@ -47,6 +47,24 @@ try:
             pg.click('#wissen')
             check(pg.locator('.kt-gekozen').count()==0,'wissen herstelt de gewone waaier')
             check(not paginafouten,'geen paginafouten: '+str(paginafouten[:2]))
+            pg.goto(basis+'tests/fixtures/koningsjacht-preview.html?voorbeeld=levensbalk')
+            pg.wait_for_selector('.kt-tafel.kt-mijnbeurt')
+            for stijl in ['standaard','middeleeuws','modern']:
+                pg.click('.kt-knop[data-naam=instellingen]'); pg.check('[data-scene='+stijl+']'); pg.click('.kj-instellingen-sluit')
+                hud = pg.evaluate("""() => {
+                  const e=document.querySelector('.kj-hud'), h=e.querySelector('.kj-balk'), s=e.querySelector('.kj-schildbalk');
+                  const r=e.getBoundingClientRect();
+                  return { aantal:e.querySelector('.kj-wachters b').textContent,
+                    hp:h.getAttribute('aria-valuenow'), max:h.getAttribute('aria-valuemax'),
+                    schild:s.getAttribute('aria-valuenow'), aanval:s.getAttribute('aria-valuemax'),
+                    levenBreedte:e.querySelector('.kj-vul').style.width, schildBreedte:e.querySelector('.kj-schildvul').style.width,
+                    binnen:r.left>=0 && r.right<=innerWidth && r.width>100,
+                    tekst:[h.querySelector('span'),s.querySelector('span')].every(t=>t.scrollWidth<=t.clientWidth),
+                    segmenten:getComputedStyle(h,'::after').backgroundImage.includes('repeating-linear-gradient') };
+                }""")
+                check(hud['aantal']=='3' and hud['hp']=='13' and hud['max']=='20' and hud['levenBreedte']=='65%',f'{breedte}px {stijl}: 3/12 verslagen, 13/20 leven en juiste groene vulling')
+                check(hud['schild']=='6' and hud['aanval']=='10' and hud['schildBreedte']=='60%',f'{breedte}px {stijl}: blauw toont 6 van 10 schade beschermd')
+                check(hud['binnen'] and hud['tekst'] and hud['segmenten'],f'{breedte}px {stijl}: segmenten en beide cijfers volledig zichtbaar')
             ctx.close()
 
         ctx = browser.new_context(viewport={'width':390,'height':844},service_workers='block',reduced_motion='reduce')

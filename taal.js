@@ -1,3 +1,4 @@
+// v141 (20 nov 2026): Koningsjacht levensbalk en schildsterkte.
 // v139 (19 nov 2026): taal-en.js?v=139 (weer-widget)
 // v138 (19 nov 2026): taal-en.js?v=138 (het spelertje op het vergrendelscherm)
 // v137 (19 nov 2026): taal-en.js?v=137 (vier radio-skins erbij)
@@ -155,7 +156,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=139', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=141', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

@@ -23,7 +23,7 @@
 import * as K from './koningsjacht.js?v=2'
 import { maakKaartTafel, kaartSvg, achterkantSvg, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=11'
 import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek, zetMuziekThema } from './koningsjacht-geluid.js?v=4'
-import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=6'
+import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=11'
 import { zetKaarsSlijtage } from './koningsjacht-kaarsen.js?v=1'
 import { verbindBierpul, herstelBierPartij } from './koningsjacht-bier.js?v=2'
 
@@ -69,7 +69,7 @@ const CSS = `
 .kt-tafel.kj .kt-ander>:not(.kj-vijand){display:none!important}
 .kt-tafel.kj .kt-zetel-ik{display:none}
 .kt-tafel.kj .kt-status{order:1;margin-top:10px}.kt-tafel.kj .kt-ander{order:0}.kt-tafel.kj .kt-midden{order:2}.kt-tafel.kj .kt-hand{order:3}.kt-tafel.kj .kt-onder{order:4}
-.kj-vijand{display:flex;align-items:center;gap:12px}
+.kj-vijand{display:flex;align-items:center;gap:clamp(6px,2vw,12px);width:min(100%,460px);min-width:0}
 .kj-kasteel{position:relative;width:46px;height:64px;flex:none}
 .kj-kasteel>div{position:absolute;inset:0;border-radius:4px;box-shadow:0 1px 4px #0009}
 .kj-kasteel>div:nth-child(2){transform:translate(-2px,-3px)}.kj-kasteel>div:nth-child(3){transform:translate(-4px,-6px)}
@@ -77,12 +77,25 @@ const CSS = `
 .kj-kaart{position:relative;width:86px;height:120px;flex:none;border-radius:7%;box-shadow:0 6px 18px #000b}
 .kj-kaart.kj-geraakt{animation:kjRaak .45s}
 @keyframes kjRaak{0%,100%{transform:none;filter:none}20%{transform:translateX(-7px) rotate(-3deg);filter:brightness(1.6) sepia(1) hue-rotate(-50deg) saturate(4)}45%{transform:translateX(6px) rotate(2deg)}70%{transform:translateX(-3px)}}
-.kj-stats{display:flex;flex-direction:column;gap:5px;min-width:126px;text-shadow:0 1px 3px #000}
+.kj-stats{display:flex;flex:1;flex-direction:column;gap:6px;min-width:0;text-shadow:0 1px 3px #000}
 .kj-naam{font-weight:800;font-size:15px;font-family:Georgia,'Times New Roman',serif}
-.kj-balk{position:relative;height:17px;border-radius:9px;background:#000a;border:1px solid #ffffff55;overflow:hidden}
-.kj-vul{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#991b1b,#ef4444);transition:width .55s cubic-bezier(.3,.7,.3,1)}
-.kj-balk span{position:absolute;inset:0;text-align:center;font-size:11px;font-weight:800;line-height:16px}
-.kj-regel{font-size:13px;font-weight:700;display:flex;gap:10px}
+.kj-hud{display:flex;align-items:stretch;width:100%;min-width:0;padding:3px;border:1px solid #9b8964;border-radius:4px;background:linear-gradient(135deg,#b3a17b,#4c4c42 24%,#242b29 57%,#8b7958);box-shadow:inset 0 1px #ece2b77a,0 3px 0 #111914,0 5px 10px #000b}
+.kj-wachters{flex:0 0 34px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:-3px 3px -3px -3px;border:2px solid #847659;border-radius:3px;background:radial-gradient(ellipse at top,#193538,#071518 75%);box-shadow:inset 0 0 6px #000,1px 0 0 #080b08;color:#fff5d9}
+.kj-wachters b{font:800 20px/1 Georgia,serif;text-shadow:0 2px 2px #000}
+.kj-wachters small{font:700 9px/1.2 system-ui;color:#c9b993;margin-top:3px}
+.kj-hud-balken{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.kj-hud .kj-balk{position:relative;height:23px;border-radius:1px;background:#071b0b;border:1px solid #0a0e08;overflow:hidden;box-shadow:inset 0 1px 4px #000}
+.kj-hud .kj-vul,.kj-schade-spoor{position:absolute;left:0;top:0;bottom:0;width:0;transition:width .55s cubic-bezier(.3,.7,.3,1)}
+.kj-hud .kj-vul{background:linear-gradient(180deg,#9bd65b 0%,#63af32 20%,#338519 52%,#246312 54%,#4d981f 100%);box-shadow:inset 0 1px #d5f699aa,inset 0 -1px #102e08}
+.kj-schade-spoor{background:#c8b67d;transition:width 1.1s ease .25s}
+.kj-hud .kj-balk::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(var(--kj-segment,25%) - 1px),#071a10cc calc(var(--kj-segment,25%) - 1px),#071a10cc var(--kj-segment,25%));mask-image:linear-gradient(#000 0 38%,transparent 75%)}
+.kj-hud .kj-balk span{position:absolute;z-index:1;inset:0;display:grid;place-items:center;color:#fffef1;font:800 11px/1 system-ui;white-space:nowrap;text-shadow:0 1px 2px #000,1px 0 2px #000,-1px 0 2px #000}
+.kj-schildbalk{position:relative;height:12px;border:1px solid #071116;background:#06121b;overflow:hidden;box-shadow:inset 0 1px 3px #000}
+.kj-schildvul{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(#91def4,#2ba2ca 40%,#127798 55%,#1f90b0);box-shadow:inset 0 1px #c9f5ff99;transition:width .55s ease}
+.kj-schildbalk span{position:absolute;inset:0;text-align:center;color:#f1fcff;font:800 9px/10px system-ui;text-shadow:0 1px 2px #000,1px 0 2px #000,-1px 0 2px #000}
+.kj-regel{font-size:13px;font-weight:700;display:flex;gap:4px 10px;flex-wrap:wrap}
+@media(max-width:360px){.kj-vijand .kj-kaart{width:68px;height:95px}.kj-vijand .kj-kasteel{width:36px;height:50px}.kj-wachters{flex-basis:28px}.kj-naam{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.kj-hud .kj-vul,.kj-schade-spoor,.kj-schildvul{transition:none}}
 .kj-immuun{font-size:12px;opacity:.9}
 .kj-raakgetal{position:fixed;z-index:50;font-weight:900;font-size:34px;color:#fecaca;text-shadow:0 0 10px #ef4444,0 2px 0 #450a0a;pointer-events:none;white-space:nowrap}
 .kj-flits{position:absolute;inset:0;z-index:40;pointer-events:none;background:radial-gradient(ellipse at 50% 20%,#ef444466,#0000 70%)}
@@ -638,7 +651,9 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     const paneel = document.createElement('div'); paneel.className = 'kj-vijand'
     paneel.innerHTML = '<div class="kj-kasteel" aria-hidden="true"><div>' + achterkantSvg(STIJL) + '</div><div>' + achterkantSvg(STIJL) + '</div><div>'
       + achterkantSvg(STIJL) + '</div><span></span></div><div class="kj-kaart"></div><div class="kj-stats"><div class="kj-naam"></div>'
-      + '<div class="kj-balk"><div class="kj-vul"></div><span></span></div><div class="kj-regel"></div><div class="kj-immuun"></div></div>'
+      + '<div class="kj-hud"><div class="kj-wachters" role="img"><b>0</b><small>/12</small></div><div class="kj-hud-balken">'
+      + '<div class="kj-balk" role="progressbar"><div class="kj-schade-spoor"></div><div class="kj-vul"></div><span></span></div>'
+      + '<div class="kj-schildbalk" role="progressbar"><div class="kj-schildvul"></div><span></span></div></div></div><div class="kj-regel"></div><div class="kj-immuun"></div></div>'
     ander.appendChild(paneel)
     if (nieuw) inRij(async () => {
       tafel.toon(beeld(staat, { mijnBeurt: false, status: T('De kaarten worden geschud...') }))
@@ -722,6 +737,22 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '' 
     p.querySelector('.kj-kasteel > span').textContent = modus === 'beleg' ? T('{naam}: {n}', { naam, n: Math.max(0, s.kasteel.length - 1) }) : T('Kasteel: {n}', { n: Math.max(0, s.kasteel.length - 1) })
     p.querySelector('.kj-kasteel').style.visibility = s.kasteel.length > 1 ? '' : 'hidden'
     const kaartEl = p.querySelector('.kj-kaart')
+    const verslagenAantal = Math.max(0, Math.min(12, s.verslagen ?? staat?.verslagen ?? 0))
+    p.querySelector('.kj-wachters b').textContent = verslagenAantal
+    p.querySelector('.kj-wachters').setAttribute('aria-label', T('{n} van de 12 wachters verslagen', { n: verslagenAantal }))
+    const levensbalk = p.querySelector('.kj-balk'), schildbalk = p.querySelector('.kj-schildbalk')
+    const schild = Math.max(0, s.schild || 0), aanval = v?.aanval || 0, bescherming = Math.min(schild, aanval)
+    for (const [balk, waarde, max, tekst] of [
+      [levensbalk, v?.over || 0, v?.leven || 1, T('Leven van de wachter')],
+      [schildbalk, bescherming, aanval || 1, T('Jouw schild: {n} van {aanval} schade afgevangen', { n: bescherming, aanval })]
+    ]) {
+      balk.setAttribute('aria-valuemin', '0'); balk.setAttribute('aria-valuemax', max)
+      balk.setAttribute('aria-valuenow', waarde); balk.setAttribute('aria-label', tekst); balk.title = tekst
+    }
+    p.querySelector('.kj-schildvul').style.width = (aanval ? 100 * bescherming / aanval : 0) + '%'
+    p.querySelector('.kj-schildbalk span').textContent = '🛡 ' + schild
+    p.querySelector('.kj-schade-spoor').style.width = (v ? 100 * v.over / v.leven : 0) + '%'
+    levensbalk.style.setProperty('--kj-segment', (v ? 100 * 5 / v.leven : 25) + '%')
     if (!v) { kaartEl.innerHTML = ''; for (const c of ['.kj-naam', '.kj-regel', '.kj-immuun', '.kj-balk span']) p.querySelector(c).textContent = ''; p.querySelector('.kj-vul').style.width = '0%'; return }
     if (kaart && (kaartEl.dataset.id !== v.id || kaartEl.dataset.stijl !== STIJL)) { kaartEl.innerHTML = kaartSvg(v.id, STIJL); kaartEl.dataset.id = v.id; kaartEl.dataset.stijl = STIJL }
     p.querySelector('.kj-naam').textContent = vijandNaam(v.id)

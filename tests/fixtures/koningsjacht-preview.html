@@ -12,8 +12,18 @@
   <main id="spelInhoud"></main>
   <span class="testlabel">LOKAAL TESTVOORBEELD</span>
   <script type="module">
-    import { start } from './koningsjacht-ui.js?v=16'
+    import { start } from './koningsjacht-ui.js?v=35'
     const params = new URLSearchParams(location.search)
+    // Direct speelbaar voorbeeld van de balk; uitsluitend op deze testpagina.
+    if (params.get('voorbeeld') === 'levensbalk') {
+      const K = await import('./koningsjacht.js?v=2')
+      const s = K.nieuwSpel({ niveau: 'schildknaap' })
+      s.kasteel = ['hB', ...s.kasteel.filter(id => id !== 'hB')]
+      s.afleg.push(...s.kasteel.splice(-3)); s.verslagen = 3
+      s.schade = 7; s.schild = 6
+      if (!K.geldigeStand(s)) throw new Error('Ongeldige teststand')
+      localStorage.setItem('fibro_koningsjacht_stand', JSON.stringify(s))
+    }
     // Alleen deze fixture simuleert spelers. Geen account, uitnodiging, camera of productieserver.
     const speler = Number(params.get('speler'))
     if (speler === 1 || speler === 2) {
@@ -29,7 +39,10 @@
       document.querySelector('.testlabel').textContent += ' · SPELER ' + speler
       addEventListener('pagehide', () => bc.close(), { once: true })
       start({ spelKanaal: kanaal, benIkSpeler1: speler === 1, vriendNaam: speler === 1 ? 'Testspeler 2' : 'Testspeler 1' })
-    } else start()
+    } else {
+      start()
+      if (params.get('voorbeeld') === 'levensbalk') document.querySelector('.kj-verder').click()
+    }
   </script>
 </body>
 </html>

@@ -18,6 +18,9 @@
 // v200: alleen het open slotje bij een vriend, met uitleg (slotuitleg.js).
 // 30 okt 2026: Neo Paddle v2 en de levels van Neo Paddle.
 window.FIBRO_EN = {
+  "{n} van de 12 wachters verslagen": "{n} of the 12 guards defeated",
+  "Leven van de wachter": "Guard health",
+  "Jouw schild: {n} van {aanval} schade afgevangen": "Your shield: blocks {n} of {aanval} damage",
 
 // ---- Overal ----
   "Iemand": "Someone",

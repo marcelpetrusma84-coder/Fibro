@@ -89,8 +89,8 @@ const MIDDELEEUWSE_KAARTSTIJL = `
 .kt-tafel.kj.kj-sfeer .kj-pil:nth-child(3){border-radius:4px 7px 5px 8px;background-position:61px 32px,0 0,0 0}
 .kt-tafel.kj.kj-sfeer .kj-teller-emoji{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;white-space:nowrap}
 .kt-tafel.kj.kj-sfeer .kj-steen-symbool{display:inline-block;width:17px;height:17px;flex:none;filter:drop-shadow(0 1px 0 #eee4cd)}
-.kt-tafel.kj.kj-sfeer .kj-balk{border-radius:3px;border:2px solid #74634d;background:#302a23;box-shadow:inset 0 2px 3px #0008,0 1px #c6b79766}
-.kt-tafel.kj.kj-sfeer .kj-vul{background:linear-gradient(90deg,#70321c,#b25a29 55%,#dfaa55);box-shadow:inset 0 1px #e9c58a77,inset 0 -2px #4e251a88}
+.kt-tafel.kj.kj-sfeer .kj-hud{border-color:#a18b61;background:linear-gradient(135deg,#b5a076,#594b37 28%,#302a21 60%,#998059)}
+.kt-tafel.kj.kj-sfeer .kj-wachters{border-color:#8a7452;background:radial-gradient(ellipse at top,#34362a,#151c14 75%)}
 @media(prefers-reduced-motion:reduce){.kt-tafel.kj.kj-sfeer .kt-afleg .kt-ak.kt-gloed{animation:none}}
 `
 

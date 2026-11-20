@@ -11,11 +11,11 @@
 </script>
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob: https://framatube.org https://tilvids.com https://video.blender.org https://tube.tchncs.de https://diode.zone https://spectra.video https://makertube.net https://peertube.beeldengeluid.nl https://open.audio https://de1.api.radio-browser.info https://de2.api.radio-browser.info https://nl1.api.radio-browser.info https://at1.api.radio-browser.info; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self' https://framatube.org https://tilvids.com https://video.blender.org https://tube.tchncs.de https://diode.zone https://spectra.video https://makertube.net https://peertube.beeldengeluid.nl https://bandcamp.com https://open.audio; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob: https://framatube.org https://tilvids.com https://video.blender.org https://tube.tchncs.de https://diode.zone https://spectra.video https://makertube.net https://peertube.beeldengeluid.nl https://open.audio https://de1.api.radio-browser.info https://de2.api.radio-browser.info https://nl1.api.radio-browser.info https://at1.api.radio-browser.info https://api.open-meteo.com https://geocoding-api.open-meteo.com; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self' https://framatube.org https://tilvids.com https://video.blender.org https://tube.tchncs.de https://diode.zone https://spectra.video https://makertube.net https://peertube.beeldengeluid.nl https://bandcamp.com https://open.audio; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=139"></script>
+<script src="taal.js?v=140"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -343,7 +343,7 @@ import { meldToestel } from './toestel.js?v=1'
 import { zetStandaardWidgets } from './standaardwidgets.js?v=2' // v267: nieuw account = meteen widgets op Home
 import * as GB from './gastenboekstijl.js?v=2'
 import { spelIcoonHtml } from './spelicoon.js?v=6' // 30 okt 2026: plaatjes uit de spellen
-import { initSync, lokaleVriendNaam } from './sync.js?v=264'
+import { initSync, lokaleVriendNaam } from './sync.js?v=266'
 import { maakProfielLikes, itemVan } from './profielreacties.js?v=2' // v258: likes op je eigen profiel
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -445,6 +445,7 @@ const PROFIEL_DEFS = [
   { id:'radio',          icon:'📻', titel:'Radio',                w:4, h:3 }, // 18 nov 2026: radio.js
   { id:'rss',            icon:'📰', titel:'RSS-feed',             w:4, h:3 }, // 19 nov 2026: rsswidget.js
   { id:'mastodon',       icon:'🐘', titel:'Mastodon',             w:4, h:3 }, // 19 nov 2026: mastodon.js
+  { id:'weer',           icon:'🌤️', titel:'Weer',                 w:4, h:3 }, // 19 nov 2026: weer.js
   { id:'afteltimer',     icon:'⏳', titel:'Afteltimer',           w:4, h:2 },
   { id:'opteltimer',     icon:'⏱', titel:'Opteltimer',           w:4, h:2 },
   { id:'gastenboek',     icon:'📖', titel:'Gastenboek',           w:4, h:4 },
@@ -717,6 +718,8 @@ function renderProfiel(id, c) {
     renderRss(c, window._uid)
   } else if (id === 'mastodon') {
     renderMastodon(c, window._uid)
+  } else if (id === 'weer') {
+    renderWeer(c, window._uid)
   } else if (id === 'afteltimer') {
     renderAftel(c, window._uid)
   } else if (id === 'opteltimer') {
@@ -1845,6 +1848,26 @@ async function renderMastodon(c, uid) {
       try { if (nieuw) localStorage.setItem(key, JSON.stringify(nieuw)); else localStorage.removeItem(key) } catch (e) {}
       if (!nieuw) { await wisFotoUitDB(bg); await wisFotoUitDB(fotosKey); try { localStorage.removeItem('widgetbgpos_' + bg) } catch (e) {} }
       renderMastodon(c, uid)
+    },
+  })
+}
+
+// ════════════════════════════════
+// WEER (19 nov 2026, weer.js): het weer van nu en de komende 5 dagen voor een plaats die je kiest. Alleen hier (op
+// het toestel van de eigenaar) wordt het opgehaald, bij Open-Meteo (huisregel: connect-src); hoogstens één keer per
+// half uur, een paar KB. Vrienden krijgen het via sync.js ('klein:weer') en praten met niemand.
+// ════════════════════════════════
+async function renderWeer(c, uid) {
+  const key = 'weer_' + uid
+  let cfg = null
+  try { cfg = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
+  let W
+  try { W = await import('./weer.js?v=1') } catch (e) { console.warn('[weer]', e); return }
+  W.tekenWeerWidget(c, {
+    cfg, eigen: true,
+    bewaar: nieuw => {
+      try { if (nieuw) localStorage.setItem(key, JSON.stringify(nieuw)); else localStorage.removeItem(key) } catch (e) {}
+      renderWeer(c, uid)
     },
   })
 }

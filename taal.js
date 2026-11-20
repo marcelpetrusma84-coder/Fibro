@@ -1,3 +1,5 @@
+// v140 (20 nov 2026): weer-widget en Koningsjacht-zetuitleg samen.
+// v139 (19 nov 2026): taal-en.js?v=139 (weer-widget)
 // v138 (19 nov 2026): taal-en.js?v=138 (het spelertje op het vergrendelscherm)
 // v137 (19 nov 2026): taal-en.js?v=137 (vier radio-skins erbij)
 // v136 (19 nov 2026): taal-en.js?v=136 (skins voor de radio)
@@ -154,7 +156,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=139', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=140', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

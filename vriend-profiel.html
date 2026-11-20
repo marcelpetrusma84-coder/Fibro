@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=139"></script>
+<script src="taal.js?v=140"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -154,7 +154,7 @@ body.heeft-wallpaper::before { display:block; }
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
-  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=264'
+  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=266'
   import { versleutel, haalPrivateKeyOp } from './crypto.js?v=182'
   import { maakProfielLikes, itemVan, openReageerScherm, maakReactieBericht, maakKleinPlaatje } from './profielreacties.js?v=2' // v258
   import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -536,6 +536,11 @@ body.heeft-wallpaper::before { display:block; }
         if (gelukt) { grid.appendChild(el); mastodonWidgetEl = el; continue }
         mastodonWidgetEl = el // komen de berichten binnen terwijl je kijkt, dan meteen tonen
       }
+      if (w.id === 'weer') { // 19 nov 2026: weer.js
+        const gelukt = await renderVriendWeer(el, vriendId)
+        if (gelukt) { grid.appendChild(el); weerWidgetEl = el; continue }
+        weerWidgetEl = el // komt het weer binnen terwijl je kijkt, dan meteen tonen
+      }
       if (w.id === 'afteltimer') {
         const gelukt = await renderVriendTimer(el, vriendId, 'aftel')
         if (gelukt) { grid.appendChild(el); continue }
@@ -575,7 +580,7 @@ body.heeft-wallpaper::before { display:block; }
       const muziekTekst = muziekRelay
         ? T('De muziek komt binnen zodra jullie telefoons elkaar rechtstreeks kunnen bereiken (bijvoorbeeld allebei op wifi).')
         : T('De muziek komt binnen zodra jullie allebei online zijn.')
-      const leegTekst = { quiz: T('Nog geen quiz'), poll: T('Nog geen poll'), afteltimer: T('Nog geen datum'), opteltimer: T('Nog geen datum'), quote: T('Nog geen quote'), peertube: T('Nog geen video'), muziekwidget: T('Nog geen muziek'), radio: T('Nog geen zender'), rss: T('Nog geen feed'), mastodon: T('Nog geen account'), muziek: muziekTekst }[w.id]
+      const leegTekst = { quiz: T('Nog geen quiz'), poll: T('Nog geen poll'), afteltimer: T('Nog geen datum'), opteltimer: T('Nog geen datum'), quote: T('Nog geen quote'), peertube: T('Nog geen video'), muziekwidget: T('Nog geen muziek'), radio: T('Nog geen zender'), rss: T('Nog geen feed'), mastodon: T('Nog geen account'), weer: T('Nog geen plaats'), muziek: muziekTekst }[w.id]
       el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">' + vEsc(w.icon || '🧩') + '</span><span class="widget-titel">' + vEsc(w.titel ? T(w.titel) : w.id) + '</span></div><div class="widget-inhoud">' + (leegTekst ? '<div style="font-size:13px;color:var(--muted)">' + leegTekst + '</div>' : '<div class="wi-icon">' + vEsc(w.icon || '🧩') + '</div>') + '</div>'
       grid.appendChild(el)
     }
@@ -812,6 +817,26 @@ body.heeft-wallpaper::before { display:block; }
     }
     el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F418}</span><span class="widget-titel">' + vEsc(T('Mastodon')) + '</span></div><div class="widget-inhoud"></div>'
     M.tekenMastodonWidget(el.querySelector('.widget-inhoud'), { cfg, sprite, spriteId })
+    return true
+  }
+
+  // 19 nov 2026: de weer-widget van een vriend (weer.js). Het weer komt via P2P (sync.js 'klein:weer'); hier wordt
+  // niets opgehaald (geen verbinding met Open-Meteo). normaliseer() laat alleen getallen en korte tekst door.
+  let weerWidgetEl = null
+  window.addEventListener('fibro-sync-item', async e => {
+    const d = e.detail || {}
+    if (d.vriendId !== vriendId || !weerWidgetEl || d.item !== 'klein:weer') return
+    try { await renderVriendWeer(weerWidgetEl, vriendId) } catch (x) { console.warn('[weer]', x) }
+  })
+  async function renderVriendWeer(el, vriendId) {
+    const ruw = await laadFotoUitDB('vriend_' + vriendId + '_weer')
+    if (!ruw) return false
+    let W, cfg = null
+    try { W = await import('./weer.js?v=1') } catch (e) { console.warn('[weer]', e); return false }
+    try { cfg = W.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
+    if (!cfg) return false
+    el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F324}\u{FE0F}</span><span class="widget-titel">' + vEsc(T('Weer')) + '</span></div><div class="widget-inhoud"></div>'
+    W.tekenWeerWidget(el.querySelector('.widget-inhoud'), { cfg })
     return true
   }
 

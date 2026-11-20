@@ -95,6 +95,21 @@ try:
         pg.click('.kt-instelkeus .kt-keuzekaart > .kt-knop')
         check(pg.locator('.kt-instelkeus').count() == 0, 'A: Sluiten')
 
+        # De instellingen tussen twee snelle tikken verbreken een dubbeltik.
+        # In één browsertaak, dus ook op CI werkelijk binnen het dubbeltikvenster.
+        onderbroken = pg.evaluate("""() => {
+          const k=document.querySelector('.kt-hand .kt-kaart.kt-mag');
+          if (!k) return false;
+          const tik = e => { for (const type of ['pointerdown','pointerup'])
+            e.dispatchEvent(new PointerEvent(type,{bubbles:true,pointerId:42,button:0,clientX:100,clientY:100})); };
+          tik(k);
+          const knop=document.querySelector('.kt-instelknop'); tik(knop); knop.click();
+          document.querySelector('.kt-instelkeus .kt-keuzekaart > .kt-knop').click();
+          tik(k);
+          return k.isConnected && !k.classList.contains('kt-gekozen') && !document.querySelector('.kt-vlieg');
+        }""")
+        check(onderbroken, 'A: instellingen tussen twee snelle kaarttikken speelt geen kaart uit')
+
         # D. met je vinger over de waaier: van de linkerkaart naar rechts
         wis(pg)
         hand = pg.evaluate("() => [...document.querySelectorAll('.kt-hand .kt-kaart')].sort((a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left).map(k => k.dataset.id)")

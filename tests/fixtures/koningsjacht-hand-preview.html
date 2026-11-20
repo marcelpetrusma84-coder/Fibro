@@ -16,15 +16,16 @@
   <header><strong>TEST · GEEN ECHTE PARTIJ</strong><select id="scene" aria-label="Tafelstijl"><option value="standaard">Standaard</option><option value="middeleeuws">Middeleeuws</option><option value="modern">Modern</option></select><button id="voorbeeld" type="button">Kies ♥9 en ♥8</button><button id="wissen" type="button">Selectie wissen</button></header>
   <main id="tafel"></main>
   <script type="module">
-    import { maakKaartTafel } from './kaartspel-hulp.js?v=10'
-    import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=6'
+    import { maakKaartTafel } from './kaartspel-hulp.js?v=16'
+    import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=9'
     const hand=['k8','k2','s2','sA','h9','s5','h8','s9']
+    const aflegVoorbeeld = new URLSearchParams(location.search).get('voorbeeld') === 'afleg'
     const tafel=maakKaartTafel(document.getElementById('tafel'),{
       solo:true,stijl:'perkament',ondergrond:'hout',leesbareSelectie:true,naamAnder:'Voorbeeldtafel',groep:()=> 'alles',
       magSpelen:ids=>ids.length>0,onSelectie:ids=>tafel.status(ids.length?'Gekozen: '+ids.join(', ')+' · ook de andere kaartwaarden blijven leesbaar':'Kies een kaart; de waaier maakt automatisch ruimte.'),onSpeel:()=>{}
     })
     tafel.element.classList.add('kj')
-    tafel.toon({hand,mijnBeurt:true,speelbaar:hand,anderAantal:0,stapelAantal:32,afleg:[],status:'Kies een kaart; de waaier maakt automatisch ruimte.'})
+    tafel.toon({hand,mijnBeurt:true,speelbaar:hand,anderAantal:0,stapelAantal:32,afleg:aflegVoorbeeld?['k4']:[],status:'Kies een kaart; de waaier maakt automatisch ruimte.'})
     tafel.knoppen([{naam:'aanval',tekst:'Aanvallen',klik:()=>{}},{naam:'pas',tekst:'Passen',klik:()=>{}}])
     const scene=maakKoningsjachtScene(tafel.element,{scene:'standaard',beweging:false,flikkeren:true})
     function sfeer(){
@@ -33,6 +34,10 @@
       tafel.element.classList.toggle('kj-modern',naam==='modern')
       tafel.zetKaartStijl(naam==='modern'?'modern':'perkament')
       scene.update({scene:naam})
+    }
+    if (aflegVoorbeeld) {
+      document.getElementById('scene').value = 'middeleeuws'
+      sfeer()
     }
     document.getElementById('scene').addEventListener('change',sfeer)
     document.getElementById('wissen').addEventListener('click',()=>tafel.wisSelectie())

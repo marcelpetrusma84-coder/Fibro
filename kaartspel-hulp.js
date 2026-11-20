@@ -555,12 +555,16 @@ const STIJL = `
 .kt-ander{position:relative}
 .kt-anderknop{position:absolute;left:50%;top:100%;transform:translateX(-50%);z-index:20;margin-top:4px}
 .kt-midden{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;gap:clamp(18px,7vw,46px);position:relative}
+.kt-stapel-groep{display:flex;flex:0 1 auto;min-width:0;flex-direction:column;align-items:center;gap:5px}
+.kt-stapel-groep .kt-stapel{flex:none}
 .kt-stapel,.kt-afleg{position:relative;width:var(--pw);height:calc(var(--pw)*1.4)}
 .kt-stapel{cursor:pointer;touch-action:none}
 .kt-stapel .kt-st{position:absolute;inset:0;border-radius:calc(var(--pw)*.075);box-shadow:0 1px 3px #0009}
 .kt-stapel.kt-leeg{opacity:.35}
 .kt-stapel.kt-wijs .kt-st:last-child{box-shadow:0 0 0 2px #c084fc,0 0 18px #c084fcb0}
 .kt-teller{position:absolute;left:50%;bottom:-22px;transform:translateX(-50%);font-size:12px;opacity:.75;white-space:nowrap}
+.kt-stapel-groep .kt-teller{position:relative;left:auto;bottom:auto;transform:none;z-index:2;width:max-content;max-width:min(100%,calc(100vw - 24px));padding:3px 8px;border:1px solid #f5d08a88;border-radius:999px;background:#160d09eF;color:#fff8e8;text-align:center;font-size:clamp(11px,3.2vw,13px);font-weight:800;line-height:1.25;white-space:normal;overflow-wrap:anywhere;text-shadow:0 1px 2px #000;box-shadow:0 2px 7px #0008}
+.kt-teller-melding{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 .kt-afleg .kt-ak{position:absolute;inset:0;border-radius:calc(var(--pw)*.075);box-shadow:0 2px 6px #0008;transition:filter .3s}
 .kt-afleg .kt-ak.kt-gloed{animation:ktGloed 1.1s ease-out}
 @keyframes ktGloed{0%{box-shadow:0 0 0 0 #fff0}25%{box-shadow:0 0 0 5px #fff,0 0 40px 10px #c084fc}100%{box-shadow:0 2px 6px #0008}}
@@ -641,7 +645,9 @@ export function maakKaartTafel(container, opties = {}) {
   el.className = 'kt-tafel' + ondergrondKlasse(o.ondergrond || kaartOndergrond())
   el.innerHTML = '<div class="kt-ander"><div class="kt-zetel kt-zetel-ander"><span></span><div class="kt-klok"></div></div>'
     + '<div class="kt-anderinfo"><div class="kt-andernaam"></div><div class="kt-anderaantal"></div></div><div class="kt-anderwaaier"></div><div class="kt-anderknop"></div></div>'
-    + '<div class="kt-midden"><div class="kt-info"></div><div class="kt-stapel" role="button" tabindex="0"></div><div class="kt-afleg"></div></div>'
+    + '<div class="kt-midden"><div class="kt-info"></div>'
+    + (o.stapelTekst ? '<div class="kt-stapel-groep"><div class="kt-stapel" role="button" tabindex="0"></div><div class="kt-teller" aria-hidden="true"></div><span class="kt-teller-melding" role="status"></span></div>' : '<div class="kt-stapel" role="button" tabindex="0"></div>')
+    + '<div class="kt-afleg"></div></div>'
     + '<div class="kt-status" role="status" aria-live="polite"></div>'
     + '<div class="kt-hand"></div>'
     + '<div class="kt-onder"><div class="kt-zetel kt-zetel-ik"><span style="font-size:12px">' + esc(T('Jij')) + '</span><div class="kt-klok"></div></div>'
@@ -661,6 +667,7 @@ export function maakKaartTafel(container, opties = {}) {
 
   let stand = { hand: [], anderAantal: 0, stapelAantal: 0, afleg: [], mijnBeurt: false, speelbaar: new Set() }
   let volgorde = [], selectie = [], sorteer = 'eigen'
+  let tellerWaarde = null, tellerDoel = null, tellerFrame = 0
   let maat = { kw: 70, kh: 98, pw: 64 }
   let verborgen = new Set()                 // kaarten die nog onderweg zijn (animatie)
   let anderVerborgen = 0, aflegVerborgen = 0
@@ -669,6 +676,12 @@ export function maakKaartTafel(container, opties = {}) {
   let laatsteTik = null                     // v7: voor de dubbeltik
   let laatsteZet = null                     // v7: wat de ander het laatst speelde
   let inst = kaartInstellingen()
+
+  // Een tik op een andere bediening onderbreekt de reeks: terugkeren naar de
+  // gekozen kaart mag nooit onbedoeld als dubbeltik worden uitgespeeld.
+  el.addEventListener('pointerdown', e => {
+    if (!handEl.contains(e.target)) laatsteTik = null
+  }, true)
 
   // ── Maten: kaarten zo groot als past ──
   function meet() {
@@ -1050,16 +1063,43 @@ export function maakKaartTafel(container, opties = {}) {
       }
     }
     const st = Math.min(5, Math.ceil(stand.stapelAantal / 8))
-    if (stapelEl.querySelectorAll('.kt-st').length !== Math.max(1, st) || !stapelEl.querySelector('.kt-teller')) {
+    if (stapelEl.querySelectorAll('.kt-st').length !== Math.max(1, st) || (!o.stapelTekst && !stapelEl.querySelector('.kt-teller'))) {
       stapelEl.innerHTML = ''
       for (let i = 0; i < Math.max(1, st); i++) {
         const d = document.createElement('div'); d.className = 'kt-st'; d.innerHTML = rug()
         d.style.transform = 'translate(' + (-i * 1.5) + 'px,' + (-i * 2) + 'px)'
         stapelEl.appendChild(d)
       }
-      const t = document.createElement('div'); t.className = 'kt-teller'; stapelEl.appendChild(t)
+      if (!o.stapelTekst) { const t = document.createElement('div'); t.className = 'kt-teller'; stapelEl.appendChild(t) }
     }
-    stapelEl.querySelector('.kt-teller').textContent = o.stapelTekst ? o.stapelTekst(stand.stapelAantal) : T('{n} op de stapel', { n: stand.stapelAantal })
+    const teller = o.stapelTekst ? stapelEl.parentElement.querySelector('.kt-teller') : stapelEl.querySelector('.kt-teller')
+    if (teller) {
+      const doel = Number(stand.stapelAantal)
+      const label = n => o.stapelTekst ? o.stapelTekst(n) : T('{n} op de stapel', { n })
+      const melding = o.stapelTekst ? stapelEl.parentElement.querySelector('.kt-teller-melding') : null
+      if (melding && melding.textContent !== label(doel)) melding.textContent = label(doel)
+      if (o.stapelTekst && !rustig() && Number.isFinite(doel) && tellerDoel !== null && doel > tellerWaarde && doel >= tellerDoel) {
+        if (doel !== tellerDoel) {
+          if (tellerFrame) cancelAnimationFrame(tellerFrame)
+          const startWaarde = tellerWaarde, startTijd = performance.now()
+          const duur = Math.min(620, Math.max(260, (doel - startWaarde) * 42))
+          tellerDoel = doel
+          const tel = nu => {
+            if (!teller.isConnected) { tellerFrame = 0; return }
+            const voortgang = Math.min(1, (nu - startTijd) / duur)
+            tellerWaarde = Math.floor(startWaarde + (doel - startWaarde) * voortgang)
+            teller.textContent = label(tellerWaarde)
+            if (voortgang < 1) tellerFrame = requestAnimationFrame(tel)
+            else tellerFrame = 0
+          }
+          tellerFrame = requestAnimationFrame(tel)
+        }
+      } else {
+        if (tellerFrame) cancelAnimationFrame(tellerFrame)
+        tellerFrame = 0; tellerWaarde = Number.isFinite(doel) ? doel : null; tellerDoel = Number.isFinite(doel) ? doel : null
+        teller.textContent = label(stand.stapelAantal)
+      }
+    }
     stapelEl.classList.toggle('kt-leeg', !stand.stapelAantal)
     stapelEl.classList.toggle('kt-wijs', inst.hulp && stand.mijnBeurt && !stand.speelbaar.size && stand.stapelAantal > 0)
     stapelEl.setAttribute('aria-label', T('Stapel: tik om een kaart te pakken'))
@@ -1100,7 +1140,8 @@ export function maakKaartTafel(container, opties = {}) {
   const midden = r => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 })
   // Van rechthoek a naar rechthoek b. omdraaien: de achterkant draait naar de voorkant (of andersom).
   function vlieg({ voor, achter, van, naar, duur = 420, draai = 0, eindDraai = 0, boog = 0, omdraaien = false, tollen = 0, overschiet = null, element = null }) {
-    if (rustig()) duur = Math.min(duur, 160)
+    const factor = typeof o.animatieFactor === 'function' ? Math.max(1, Number(o.animatieFactor()) || 1) : 1
+    duur = rustig() ? Math.min(duur, 160) : duur * factor
     const v = element || vliegEl(omdraaien ? achter : voor, omdraaien ? voor : achter, van)
     if (element && !v.querySelector('.kt-achter') && voor) { v.innerHTML = '<div class="kt-v kt-achter">' + voor + '</div>' + v.innerHTML }
     v.style.width = van.width + 'px'; v.style.height = van.height + 'px'
@@ -1132,7 +1173,7 @@ export function maakKaartTafel(container, opties = {}) {
   }
 
   // Jij speelt kaarten: ze vliegen naar de aflegstapel. Hoe harder geveegd, hoe verder ze doorglijden.
-  async function speelAnimatie(ids, { snelheid = 1, richting = { x: 0, y: -1 }, vanRects } = {}) {
+  async function speelAnimatie(ids, { snelheid = 1, richting = { x: 0, y: -1 }, vanRects, leesbaar = false } = {}) {
     aflegVerborgen = ids.length; legRest()
     const doel = aflegRect()
     const n = Math.hypot(richting.x, richting.y) || 1
@@ -1140,7 +1181,8 @@ export function maakKaartTafel(container, opties = {}) {
     const tochten = ids.map((id, i) => wacht(i * 90).then(() => {
       const van = vanRects?.[i] || doel
       kaartGeluid.veeg()
-      return vlieg({ voor: kaart(id), van, naar: doel, duur: Math.max(260, 520 - snelheid * 90), draai: 0,
+      const duur = leesbaar ? Math.max(520, 700 - snelheid * 60) : Math.max(260, 520 - snelheid * 90)
+      return vlieg({ voor: kaart(id), van, naar: doel, duur, draai: 0,
         eindDraai: draaiVan(id, stand.afleg.length - ids.length + i), tollen: (richting.x / n) * snelheid * 40,
         overschiet: { x: (richting.x / n) * ver, y: (richting.y / n) * ver * 0.6, r: (richting.x >= 0 ? 1 : -1) * snelheid * 12 } })
         .then(() => { aflegVerborgen--; legRest(); kaartGeluid.leg(snelheid); tril(8) })
@@ -1150,16 +1192,17 @@ export function maakKaartTafel(container, opties = {}) {
   }
 
   // De ander speelt kaarten: van zijn waaier, omdraaien, op de aflegstapel
-  async function anderSpeeltAnimatie(ids) {
+  async function anderSpeeltAnimatie(ids, { leesbaar = false, vanRects } = {}) {
     laatsteZet = ids.slice()   // v7: tik op de aflegstapel = deze kaarten groot
     aflegVerborgen = ids.length; legRest()
     const van = anderRect(), doel = aflegRect()
     const start = { left: van.left + van.width / 2 - doel.width * 0.4, top: van.top, width: doel.width * 0.8, height: doel.height * 0.8 }
     for (let i = 0; i < ids.length; i++) {
       kaartGeluid.veeg()
-      await vlieg({ voor: kaart(ids[i]), achter: rug(), van: start, naar: doel, duur: 480, omdraaien: true, boog: 30,
+      await vlieg({ voor: kaart(ids[i]), achter: rug(), van: vanRects?.[i] || start, naar: doel, duur: leesbaar ? 680 : 480, omdraaien: true, boog: 30,
         eindDraai: draaiVan(ids[i], stand.afleg.length - ids.length + i) })
       aflegVerborgen--; legRest(); kaartGeluid.leg(0.5)
+      if (leesbaar) await wacht(320)
     }
     aflegVerborgen = 0; legRest()
   }
@@ -1210,7 +1253,8 @@ export function maakKaartTafel(container, opties = {}) {
       const frames = []
       for (let i = 0; i < 3; i++) frames.push({ transform: 'translate(' + r.left + 'px,' + r.top + 'px)' }, { transform: 'translate(' + (r.left + kant * r.width * 0.65) + 'px,' + (r.top - 10) + 'px) rotate(' + kant * 14 + 'deg)' })
       frames.push({ transform: 'translate(' + r.left + 'px,' + r.top + 'px)' })
-      return new Promise(k => { const a = v.animate(frames, { duration: 900, easing: 'ease-in-out' }); a.onfinish = () => { v.remove(); k() }; a.oncancel = () => { v.remove(); k() } })
+      const factor = typeof o.animatieFactor === 'function' ? Math.max(1, Number(o.animatieFactor()) || 1) : 1
+      return new Promise(k => { const a = v.animate(frames, { duration: 900 * factor, easing: 'ease-in-out' }); a.onfinish = () => { v.remove(); k() }; a.oncancel = () => { v.remove(); k() } })
     })
     await Promise.all(helften)
   }

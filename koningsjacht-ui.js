@@ -127,6 +127,7 @@ const CSS = `
 .kj-vonk{width:7px;height:7px;border-radius:50%;mix-blend-mode:screen}
 .kj-haal{overflow:visible}
 .kj-gloeit{filter:brightness(1.35) drop-shadow(0 0 10px var(--kj-gloed,#f5b301)) drop-shadow(0 0 22px var(--kj-gloed,#f5b301))}
+.kj-flits{position:absolute;inset:0;z-index:40;pointer-events:none;background:radial-gradient(ellipse at 50% 20%,#ef444466,#0000 70%)}
 .kj-koepel{border-radius:50% 50% 12px 12px/80% 80% 12px 12px;border:3px solid #93c5fd;background:radial-gradient(ellipse at 50% 100%,#60a5fa55,#3b82f611 60%,#0000 75%);box-shadow:0 0 30px #60a5fa,inset 0 0 30px #93c5fd88}
 .kj-medieval-shield{position:absolute;z-index:430;pointer-events:none;filter:drop-shadow(0 14px 11px #000d);transform-style:preserve-3d;transform-origin:50% 88%}
 .kj-medieval-shield svg{display:block;width:100%;height:100%;overflow:visible}
@@ -228,10 +229,13 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   const scorePartij = maakScorePartij({ service: scores, storage: {
     getItem: k => localStorage.getItem(k), setItem: (k, v) => localStorage.setItem(k, v)
   } })
-  let scorebord = null
+  let scorebord = null, scoreOpslag = null
   function toonScores() {
     if (!inhoud.isConnected) return
-    scorebord ||= maakKoningsjachtScorebord({ service: scores, T: window.T || T, isActief: () => inhoud.isConnected })
+    if (!inhoud.querySelector('.nr-scoreboard')) {
+      scorebord?.destroy()
+      scorebord = maakKoningsjachtScorebord({ host: inhoud, service: scores, T: window.T || T, isActief: () => inhoud.isConnected })
+    }
     scorebord.open()
   }
   function scoreKnop(parent, className = 'kj-knop kj-zacht') {
@@ -240,9 +244,15 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     b.textContent = '🏆 ' + T('Scores'); b.onclick = toonScores
     parent?.appendChild(b)
   }
+  function bewaarScore() {
+    if (!scoreOpslag) {
+      scoreOpslag = scorePartij.finish(staat, modus)
+      scoreOpslag.catch(() => {}) // The end screen reports any save failure.
+    }
+    return scoreOpslag
+  }
   function toonEinde(options) {
-    // Snapshot before an asynchronous account lookup or a new game can change state.
-    const opgeslagen = scorePartij.finish(staat, modus)
+    const opgeslagen = bewaarScore()
     tafel.einde(options)
     const kaart = tafel.element.querySelector('.kt-eindekaart')
     kaart?.prepend(maakEindscene(staat.verslagen, { T }).element)
@@ -689,7 +699,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   // ── De tafel ──
   function speel(s, nieuw) {
     stopScene()
-    staat = s; selectie = []
+    staat = s; selectie = []; scoreOpslag = null
     scorePartij.begin(samenSpel ? 'vriend:' + spelId + ':' + ik : 'solo', !samenSpel && nieuw)
     beginBierPartij(nieuw)
     if (muziekStaatAan()) startMuziek()
@@ -730,6 +740,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
 
   function bewaar() {
     if (samenSpel) return
+    if (staat?.klaar) bewaarScore()
     schrijf(BEWAAR, staat && !staat.klaar ? staat : null)
     if (!staat || staat.klaar) schrijf(BIER_PARTIJ, null)
   }
@@ -1051,7 +1062,11 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
         await anim(svg, [{ opacity: 1 }, { opacity: 0 }], { duration: 250 }); svg.remove()
       } else {
         tafel.tril([40, 40, 60]); tril(11)
-        await Promise.all([sprong, ...[-.18, 0, .18].map((d, i) => zwaardhaal({ x: midden.x + d * t.width, y: midden.y, b: midden.b * .5, h: midden.h }, '#ef4444', -1, i * 70))])
+        const flits = document.createElement('div')
+        flits.className = 'kj-flits'; tafel.element.appendChild(flits)
+        vonken(midden.x, midden.y, ['#ef4444', '#f97316', '#fff'], 16, 120)
+        const flitsAnimatie = anim(flits, [{ opacity: 0 }, { opacity: 1, offset: .3 }, { opacity: 0 }], { duration: 700 }).then(() => flits.remove())
+        await Promise.all([sprong, flitsAnimatie, ...[-.18, 0, .18].map((d, i) => zwaardhaal({ x: midden.x + d * t.width, y: midden.y, b: midden.b * .5, h: midden.h }, '#ef4444', -1, i * 70))])
         tafel.effect(T('{naam} slaat terug: {n}!', { naam: vijandNaam(v.id), n: v.slag }), { geluid: false, gloed: false })
         await wacht(500)
       }

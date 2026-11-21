@@ -226,6 +226,7 @@ try:
         check(wacht(pg, KLAAR) and pg.evaluate(KNOP, 'aanval') and 'k9' not in pg.evaluate(HAND) and '🗑️ 2' in pg.evaluate(INFO), 'C: afgeweerd, 2 kaarten op de aflegstapel')
 
         veeg(pg, 's7')
+        check(wacht(pg, "() => document.querySelector('[data-afweer=geraakt]') && document.querySelectorAll('.kj-schildklauwen path').length===3"), 'D: schild blijft omhoog bij alle drie de klauwhalen')
         check(wacht(pg, KLAAR) and pg.evaluate(LEVEN) == '❤ 1 / 20', 'D: veeg ♠7 omhoog: 7 schade')
         check(pg.evaluate("() => document.querySelector('.kj-regel').textContent").startswith('⚔️ 3') and '🛡️ 7' in pg.text_content('.kj-regel'), 'D: schild 7, de boer slaat nog maar met 3')
         kies(pg, 'h3'); knop(pg, 'afweer')
@@ -276,6 +277,7 @@ try:
         verder(pg, { 'kasteel': ['sH'], 'restNaar': 'afleg', 'hand': ['k2', 'h9'], 'schade': 37, 'narren': 0, 'niveau': 'koning', 'verslagen': 11 })
         kies(pg, 'k2'); knop(pg, 'aanval')
         check(wacht(pg, "() => !!document.querySelector('.kt-einde')") and 'kasteel is van jou' in pg.text_content('.kt-eindetitel'), 'I: de laatste heer verslagen: gewonnen')
+        check(pg.locator('.kj-eindscene-schilden .verdiend').count()==12, 'I: de eindscène telt twaalf gouden schilden')
         check('goud' in pg.text_content('.kt-eindesub'), 'I: zonder nar = gouden medaille (%s)' % pg.text_content('.kt-eindesub'))
         pg.click('.kt-opnieuw'); pg.wait_for_selector('.kj-start')
         check('🥇' in pg.text_content('.kj-niveau[data-niveau=koning]'), 'I: de medaille staat bij Koning op het beginscherm')

@@ -18,6 +18,7 @@ export function scoreDatum(value, locale = 'nl-NL') {
 }
 
 export function maakNeonScorebord({ host = document.body, service, T = globalThis.T || fallbackT,
+  title = 'Neon Raiders scores', brand = 'NEON RAIDERS', formatScore, formatDetail,
   isActief = () => true, onOpen = () => {}, onClose = () => {} } = {}) {
   if (!service || typeof service.loadBoards !== 'function') throw new TypeError('Score service ontbreekt')
   const doc = host.ownerDocument || document
@@ -34,10 +35,10 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
     return node
   }
   const dialog = element('dialog', 'nr-scoreboard')
-  dialog.setAttribute('aria-label', T('Neon Raiders scores'))
+  dialog.setAttribute('aria-label', T(title))
   const header = element('header', 'nr-sb-header')
   const heading = element('div')
-  heading.append(element('p', 'nr-sb-eyebrow', 'NEON RAIDERS'), element('h2', '', T('Scores')))
+  heading.append(element('p', 'nr-sb-eyebrow', brand), element('h2', '', T('Scores')))
   const closeButton = element('button', 'nr-sb-close', '×')
   closeButton.type = 'button'; closeButton.setAttribute('aria-label', T('Sluiten'))
   header.append(heading, closeButton)
@@ -68,7 +69,7 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
 
   let destroyed = false, generation = 0, isOpen = false, returnFocus = null, lastBoards = null
   const locale = () => T.locale || (T.taal === 'en' ? 'en-GB' : 'nl-NL')
-  const number = value => new Intl.NumberFormat(locale()).format(Math.max(0, Math.floor(Number(value) || 0)))
+  const number = value => formatScore ? formatScore(value) : new Intl.NumberFormat(locale()).format(Math.max(0, Math.floor(Number(value) || 0)))
   function dateNode(value) {
     const date = scoreDatum(value, locale())
     if (!date) return element('span', 'nr-sb-date', T('Datum onbekend'))
@@ -78,6 +79,7 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
     return node
   }
   function levelNode(run) {
+    if (formatDetail) return element('span', 'nr-sb-level', formatDetail(run, T))
     const valid = Number.isInteger(run.level) && run.level >= 1 && run.level <= 7
     const completed = valid && run.level === 7 && run.won === true
     const label = valid ? T(completed ? 'Level {n} · Uitgespeeld' : 'Level {n}', { n: run.level })

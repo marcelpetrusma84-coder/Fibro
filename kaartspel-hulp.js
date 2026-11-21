@@ -1,3 +1,4 @@
+import { stapelProfiel, maakStapelFeedback } from './kaart-stapel-feedback.js?v=1'
 // kaartspel-hulp.js - BLAUWDRUK voor alle kaartspellen in Stekky (v1, 11 nov 2026). Zie BLAUWDRUK-KAARTSPEL.md.
 // v2: de tafel is een eigen laag (isolation), zodat het pauzescherm van het spelmenu (spelmenu.js) er in de chat altijd boven ligt.
 //     Tegen de computer (solo) geen reactieknop 😀.
@@ -555,7 +556,7 @@ const STIJL = `
 .kt-ander{position:relative}
 .kt-anderknop{position:absolute;left:50%;top:100%;transform:translateX(-50%);z-index:20;margin-top:4px}
 .kt-midden{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;gap:clamp(18px,7vw,46px);position:relative}
-.kt-stapel-groep{display:flex;flex:0 1 auto;min-width:0;flex-direction:column;align-items:center;gap:5px}
+.kt-stapel-groep{position:relative;display:flex;flex:0 1 auto;min-width:0;flex-direction:column;align-items:center;gap:5px}
 .kt-stapel-groep .kt-stapel{flex:none}
 .kt-stapel,.kt-afleg{position:relative;width:var(--pw);height:calc(var(--pw)*1.4)}
 .kt-stapel{cursor:pointer;touch-action:none}
@@ -564,6 +565,9 @@ const STIJL = `
 .kt-stapel.kt-wijs .kt-st:last-child{box-shadow:0 0 0 2px #c084fc,0 0 18px #c084fcb0}
 .kt-teller{position:absolute;left:50%;bottom:-22px;transform:translateX(-50%);font-size:12px;opacity:.75;white-space:nowrap}
 .kt-stapel-groep .kt-teller{position:relative;left:auto;bottom:auto;transform:none;z-index:2;width:max-content;max-width:min(100%,calc(100vw - 24px));padding:3px 8px;border:1px solid #f5d08a88;border-radius:999px;background:#160d09eF;color:#fff8e8;text-align:center;font-size:clamp(11px,3.2vw,13px);font-weight:800;line-height:1.25;white-space:normal;overflow-wrap:anywhere;text-shadow:0 1px 2px #000;box-shadow:0 2px 7px #0008}
+.kt-stapel-delta{position:absolute;right:-7px;bottom:25px;z-index:4;min-width:28px;padding:3px 6px;border:1px solid #ffedbd;border-radius:7px;background:#25482b;color:#e2ffd7;box-shadow:0 3px 8px #0009;font:bold 16px/1.1 system-ui;pointer-events:none}
+.kt-stapel-delta[data-richting=af]{background:#672b1d;color:#ffe0ca}
+.kt-stapel-delta[hidden]{display:none}
 .kt-teller-melding{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 .kt-afleg .kt-ak{position:absolute;inset:0;border-radius:calc(var(--pw)*.075);box-shadow:0 2px 6px #0008;transition:filter .3s}
 .kt-afleg .kt-ak.kt-gloed{animation:ktGloed 1.1s ease-out}
@@ -665,6 +669,7 @@ export function maakKaartTafel(container, opties = {}) {
   $('.kt-zetel-ander span').textContent = String(o.naamAnder || '?').trim().slice(0, 1).toUpperCase()
   $('.kt-andernaam').textContent = o.naamAnder || T('vriend')
 
+  let stapelFeedback = null
   let stand = { hand: [], anderAantal: 0, stapelAantal: 0, afleg: [], mijnBeurt: false, speelbaar: new Set() }
   let volgorde = [], selectie = [], sorteer = 'eigen'
   let tellerWaarde = null, tellerDoel = null, tellerFrame = 0
@@ -1062,7 +1067,8 @@ export function maakKaartTafel(container, opties = {}) {
         anderWaaier.appendChild(m)
       }
     }
-    const st = Math.min(5, Math.ceil(stand.stapelAantal / 8))
+    const profiel = o.dynamischeStapel ? stapelProfiel(stand.stapelAantal) : null
+    const st = profiel ? profiel.lagen : Math.min(5, Math.ceil(stand.stapelAantal / 8))
     if (stapelEl.querySelectorAll('.kt-st').length !== Math.max(1, st) || (!o.stapelTekst && !stapelEl.querySelector('.kt-teller'))) {
       stapelEl.innerHTML = ''
       for (let i = 0; i < Math.max(1, st); i++) {
@@ -1072,13 +1078,22 @@ export function maakKaartTafel(container, opties = {}) {
       }
       if (!o.stapelTekst) { const t = document.createElement('div'); t.className = 'kt-teller'; stapelEl.appendChild(t) }
     }
+    if (profiel) {
+      stapelEl.dataset.aantal = String(stand.stapelAantal)
+      stapelEl.querySelectorAll('.kt-st').forEach((d, i) => {
+        d.style.transform = `translate(${-i * .65}px,${-i * profiel.hoogte / Math.max(1, st - 1)}px)`
+      })
+    }
     const teller = o.stapelTekst ? stapelEl.parentElement.querySelector('.kt-teller') : stapelEl.querySelector('.kt-teller')
     if (teller) {
       const doel = Number(stand.stapelAantal)
       const label = n => o.stapelTekst ? o.stapelTekst(n) : T('{n} op de stapel', { n })
       const melding = o.stapelTekst ? stapelEl.parentElement.querySelector('.kt-teller-melding') : null
       if (melding && melding.textContent !== label(doel)) melding.textContent = label(doel)
-      if (o.stapelTekst && !rustig() && Number.isFinite(doel) && tellerDoel !== null && doel > tellerWaarde && doel >= tellerDoel) {
+      if (o.dynamischeStapel) {
+        stapelFeedback ||= maakStapelFeedback({ teller, melding, label, rustig, factor: o.animatieFactor })
+        stapelFeedback.update(doel)
+      } else if (o.stapelTekst && !rustig() && Number.isFinite(doel) && tellerDoel !== null && doel > tellerWaarde && doel >= tellerDoel) {
         if (doel !== tellerDoel) {
           if (tellerFrame) cancelAnimationFrame(tellerFrame)
           const startWaarde = tellerWaarde, startTijd = performance.now()
@@ -1412,7 +1427,7 @@ export function maakKaartTafel(container, opties = {}) {
   window.addEventListener('fibro-chess-video-state', () => setTimeout(opnieuw, 40))
   const wachter = setInterval(() => {
     if (el.isConnected) return
-    clearInterval(wachter); clearInterval(klok?.timer)
+    clearInterval(wachter); clearInterval(klok?.timer); stapelFeedback?.destroy()
     window.removeEventListener('resize', opnieuw)
     window.removeEventListener('fibro-kaartstijl', nieuweStijl)
     window.removeEventListener('fibro-kaartondergrond', nieuweOndergrond)

@@ -19,7 +19,7 @@
     <small>Desktop: your top 10 on the left, friends on the right. Phone: the same two lists stacked for readable dates and times.</small>
   </main>
   <script type="module">
-    import { maakNeonScorebord } from '../../neon-raiders-scoreboard.js?v=3'
+    import { maakNeonScorebord } from '../../neon-raiders-scoreboard.js?v=5'
     const state = document.getElementById('preview-state')
     const dates = Array.from({length:10}, (_,index) => new Date(Date.UTC(2026,9,27-index,18,index*4)).toISOString())
     const personal = dates.map((playedAt,index) => ({id:'personal-'+index,score:487650-index*29730,playedAt,level:7-index%7,won:index===0,name:'TEST Pilot',isSelf:true}))

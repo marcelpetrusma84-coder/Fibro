@@ -12,7 +12,10 @@
   <main id="spelInhoud"></main>
   <span class="testlabel">LOKAAL TESTVOORBEELD</span>
   <script type="module">
-    import { start } from './koningsjacht-ui.js?v=36'
+    import { start } from './koningsjacht-ui.js?v=37'
+    const { maakKoningsjachtScoreService } = await import('./koningsjacht-scores.js?v=1')
+    const memory = new Map()
+    const scoreService = maakKoningsjachtScoreService({ storage: { getItem: k => memory.get(k), setItem: (k,v) => memory.set(k,v) } })
     const params = new URLSearchParams(location.search)
     // Direct speelbaar voorbeeld van de balk; uitsluitend op deze testpagina.
     if (params.get('voorbeeld') === 'levensbalk') {
@@ -38,9 +41,9 @@
       }
       document.querySelector('.testlabel').textContent += ' · SPELER ' + speler
       addEventListener('pagehide', () => bc.close(), { once: true })
-      start({ spelKanaal: kanaal, benIkSpeler1: speler === 1, vriendNaam: speler === 1 ? 'Testspeler 2' : 'Testspeler 1' })
+      start({ scoreService, spelKanaal: kanaal, benIkSpeler1: speler === 1, vriendNaam: speler === 1 ? 'Testspeler 2' : 'Testspeler 1' })
     } else {
-      start()
+      start({ scoreService })
       if (params.get('voorbeeld') === 'levensbalk') document.querySelector('.kj-verder').click()
     }
   </script>

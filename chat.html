@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=142"></script>
+<script src="taal.js?v=143"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -2991,10 +2991,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=151',
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
-    pesten: './pesten-ui.js?v=13',
-    toepen: './toepen-ui.js?v=12',
-    eenentwintigen: './eenentwintigen-ui.js?v=12',
-    koningsjacht: './koningsjacht-ui.js?v=36',
+    pesten: './pesten-ui.js?v=14',
+    toepen: './toepen-ui.js?v=13',
+    eenentwintigen: './eenentwintigen-ui.js?v=13',
+    koningsjacht: './koningsjacht-ui.js?v=37',
     schaken: './schaken-ui.js?v=275',
     schakendrie: './schaken-drie-ui.js?v=43',
     flappybird: './flappy-ui.js?v=147',
@@ -3004,7 +3004,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     endlessrunner: './runner-gunner-ui.js?v=149',
     pacman: './ecto-ui.js?v=178',
     pinball: './twin-snakes-ui.js?v=150',
-    shmup: './neon-raiders-ui.js?v=225'
+    shmup: './neon-raiders-ui.js?v=226'
   }
   const _alGeladen = {}
   function laadSpelAlvast(spelType) {
@@ -3770,7 +3770,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Pesten (kaartspel, 11 nov 2026) ───
   async function startPesten() {
-    const m = await laadModule('./pesten-ui.js?v=13')
+    const m = await laadModule('./pesten-ui.js?v=14')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
   // ─── Toepen en Eenentwintigen (kaartspellen uit de Store, 11 nov 2026): hetzelfde als Pesten ───
@@ -4130,7 +4130,7 @@ async function startBlockIt() {
   }
 
   async function startNeonRaiders() {
-    const m = await laadModule('./neon-raiders-ui.js?v=225')
+    const m = await laadModule('./neon-raiders-ui.js?v=226')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'shmup' && !spelGestopt })
   }
 

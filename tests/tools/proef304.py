@@ -74,6 +74,18 @@ try:
                 && bak.backgroundImage==='none' && bak.borderStyle==='none'
                 && document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('.kt-ak')===k;
             }"""),f'{breedte}px: kaart ondoorzichtig boven de legbak, zonder beslag door de kaart')
+            pg.goto(basis+'tests/fixtures/koningsjacht-eindscene-preview.html')
+            for n in [0,1,8,12]:
+                pg.locator('#wachters').press('Home')
+                for _ in range(n): pg.locator('#wachters').press('ArrowRight')
+                check(pg.locator('.kj-eindscene-schilden .verdiend').count()==n,f'{breedte}px: eindscene telt {n} wapenschilden')
+            pg.wait_for_function("() => [...document.querySelectorAll('.kj-eindscene img')].every(i=>i.complete && i.naturalWidth>0)")
+            check(True,f'{breedte}px: alle eindbeelden laden')
+            pg.goto(basis+'tests/fixtures/koningsjacht-preview.html')
+            pg.click('.kj-scores')
+            pg.wait_for_selector('dialog[open]')
+            check('KONINGSJACHT' in pg.text_content('dialog') and 'Jouw top 10' in pg.text_content('dialog'),f'{breedte}px: scores openen vanuit Koningsjacht')
+            pg.click('.nr-sb-close')
             ctx.close()
 
         ctx = browser.new_context(viewport={'width':390,'height':844},service_workers='block',reduced_motion='reduce')

@@ -226,7 +226,15 @@ try:
         check(wacht(pg, KLAAR) and pg.evaluate(KNOP, 'aanval') and 'k9' not in pg.evaluate(HAND) and '🗑️ 2' in pg.evaluate(INFO), 'C: afgeweerd, 2 kaarten op de aflegstapel')
 
         veeg(pg, 's7')
-        check(wacht(pg, "() => document.querySelector('[data-afweer=geraakt]') && document.querySelectorAll('.kj-schildklauwen path').length===3"), 'D: schild blijft omhoog bij alle drie de klauwhalen')
+        check(wacht(pg, "() => document.querySelector('[data-afweer=geraakt]') && document.querySelectorAll('.kj-haal[data-schildinslag=ja]').length===3"), 'D: schild blijft omhoog bij alle drie de oorspronkelijke neonhalen')
+        check(pg.evaluate("""() => { const schild = document.querySelector('[data-afweer=geraakt]');
+          const rand = schild.getBoundingClientRect().top;
+          return [...document.querySelectorAll('.kj-haal[data-schildinslag=ja]')].every(e => {
+            const r = e.getBoundingClientRect();
+            return e.querySelectorAll('path').length === 2 && e.style.filter.includes('drop-shadow') &&
+              r.top < rand && Math.abs(r.top + r.height * .88 - (rand + 8)) < 3;
+          });
+        }"""), 'D: drie gloeiende halen botsen op de bovenrand, zonder achter het schild door te lopen')
         check(wacht(pg, KLAAR) and pg.evaluate(LEVEN) == '❤ 1 / 20', 'D: veeg ♠7 omhoog: 7 schade')
         check(pg.evaluate("() => document.querySelector('.kj-regel').textContent").startswith('⚔️ 3') and '🛡️ 7' in pg.text_content('.kj-regel'), 'D: schild 7, de boer slaat nog maar met 3')
         kies(pg, 'h3'); knop(pg, 'afweer')

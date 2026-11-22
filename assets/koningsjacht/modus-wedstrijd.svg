@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+ <defs>
+  <linearGradient id="sky" y2="1"><stop stop-color="#263552"/><stop offset=".55" stop-color="#b87146"/><stop offset="1" stop-color="#e9bc75"/></linearGradient>
+  <linearGradient id="stone" x2="0" y2="1"><stop stop-color="#ead0a0"/><stop offset="1" stop-color="#71503d"/></linearGradient>
+  <linearGradient id="road" x2="0" y2="1"><stop stop-color="#d5a663"/><stop offset="1" stop-color="#694630"/></linearGradient>
+  <pattern id="grain" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M0 6h26M8 19h18" stroke="#fff" stroke-opacity=".06"/></pattern>
+ </defs>
+ <rect width="960" height="540" fill="url(#sky)"/><circle cx="480" cy="170" r="112" fill="#ffe4a0" opacity=".66"/>
+ <path d="M0 340 180 278l122 45 148-91 140 85 155-73 215 78v218H0Z" fill="#584638"/><path d="M0 398q220-57 480 0t480-10v152H0Z" fill="#6e4a35"/>
+ <!-- Twee afzonderlijke kastelen, elk met een eigen route -->
+ <g stroke="#49342c" stroke-width="8" fill="url(#stone)">
+  <path d="M80 336V231h45v-56h56v56h44v105zM69 236v-77l34-31 35 31v77M172 236v-77l34-31 35 31v77"/>
+  <path d="M736 336V231h45v-56h56v56h44v105zM725 236v-77l34-31 35 31v77M828 236v-77l34-31 35 31v77"/>
+ </g>
+ <path d="M100 158V101m108 57v-57m545 57v-57m108 57v-57" stroke="#3b2730" stroke-width="7"/>
+ <path d="M103 102q38 0 51 22l-50 23zM210 102q-38 0-51 22l50 23zM754 102q38 0 51 22l-50 23zM861 102q-38 0-51 22l50 23z" fill="#bf5143" stroke="#f1d08d" stroke-width="4"/>
+ <path d="M142 345 406 421h148l264-76 82 195H62Z" fill="url(#road)" stroke="#dfbb7e" stroke-width="7"/>
+ <path d="M480 415v100" stroke="#f7dda0" stroke-width="7" stroke-dasharray="18 14"/>
+ <!-- Twee ridders racen elk naar hun eigen poort -->
+ <g transform="translate(272 334)"><path d="M-68 72q-14-45 24-66 41-21 86 6l27 51-27 24h-94z" fill="#3a4c63" stroke="#e5c58c" stroke-width="7"/><path d="M-27 5q3-38 35-39 31 4 34 35l-19 18-45 1z" fill="#cdb281" stroke="#483328" stroke-width="7"/><path d="m-16 5 39-2" stroke="#202c3a" stroke-width="12"/><path d="M-29 86h92" stroke="#2a1c19" stroke-width="15"/><path d="m58 2 34-23" stroke="#e8d6ad" stroke-width="7"/></g>
+ <g transform="translate(688 334) scale(-1 1)"><path d="M-68 72q-14-45 24-66 41-21 86 6l27 51-27 24h-94z" fill="#873c3d" stroke="#e5c58c" stroke-width="7"/><path d="M-27 5q3-38 35-39 31 4 34 35l-19 18-45 1z" fill="#cdb281" stroke="#483328" stroke-width="7"/><path d="m-16 5 39-2" stroke="#352128" stroke-width="12"/><path d="M-29 86h92" stroke="#2a1c19" stroke-width="15"/><path d="m58 2 34-23" stroke="#e8d6ad" stroke-width="7"/></g>
+ <!-- De twee banen lopen naar aparte doelen; geen aanval op elkaar -->
+ <path d="M391 384h177" stroke="#e8d09c" stroke-width="3" stroke-dasharray="9 11" opacity=".8"/>
+ <rect width="960" height="540" fill="url(#grain)"/><rect x="10" y="10" width="940" height="520" rx="28" fill="none" stroke="#e7c27e" stroke-opacity=".9" stroke-width="8"/><rect x="23" y="23" width="914" height="494" rx="21" fill="none" stroke="#3d261c" stroke-opacity=".8" stroke-width="3"/>
+</svg>

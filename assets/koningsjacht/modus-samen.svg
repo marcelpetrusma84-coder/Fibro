@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+ <defs>
+  <linearGradient id="sky" y2="1"><stop stop-color="#342442"/><stop offset=".58" stop-color="#b66a3b"/><stop offset="1" stop-color="#f1be70"/></linearGradient>
+  <linearGradient id="stone" x2="0" y2="1"><stop stop-color="#e4c896"/><stop offset="1" stop-color="#79503a"/></linearGradient>
+  <linearGradient id="cape" x2="1" y2="1"><stop stop-color="#315783"/><stop offset="1" stop-color="#142543"/></linearGradient>
+  <radialGradient id="sun"><stop stop-color="#fff1b0"/><stop offset="1" stop-color="#ef9e4b" stop-opacity="0"/></radialGradient>
+  <filter id="shadow" x="-.2" y="-.2" width="1.4" height="1.5"><feGaussianBlur stdDeviation="8"/></filter>
+  <pattern id="grain" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M0 8h28M4 18h18" stroke="#fff" stroke-opacity=".07"/></pattern>
+ </defs>
+ <rect width="960" height="540" fill="url(#sky)"/><circle cx="480" cy="250" r="230" fill="url(#sun)"/>
+ <path d="M0 365 130 295l110 53 116-92 127 100 127-116 107 82 112-94 131 78v234H0Z" fill="#5c493e" opacity=".75"/>
+ <path d="M0 408q170-52 340 2t310 0 310-20v150H0Z" fill="#59402e"/><path d="M0 438q210-55 425-2t535-38v142H0Z" fill="#78513a"/>
+ <!-- Eén gezamenlijk kasteel -->
+ <ellipse cx="484" cy="430" rx="226" ry="30" fill="#170f15" opacity=".5" filter="url(#shadow)"/>
+ <path d="M310 416V272h64v-62h69v72h85v-72h69v62h65v144Z" fill="url(#stone)" stroke="#4e3329" stroke-width="10"/>
+ <path d="M294 278v-99l48-44 48 44v99M578 278v-99l48-44 48 44v99M432 285V159l48-52 48 52v126" fill="url(#stone)" stroke="#52362b" stroke-width="9"/>
+ <path d="M463 416v-93q17-44 34 0v93" fill="#291c20" stroke="#583b2c" stroke-width="6"/>
+ <g fill="#34232a"><path d="M324 196h19v28h-19zM607 196h19v28h-19zM471 170h18v30h-18z"/></g>
+ <g stroke="#392731" stroke-width="7"><path d="M338 135V87M626 135V78M480 108V40"/></g>
+ <path d="M341 88q43 1 51 25l-49 20z" fill="#c34e3f" stroke="#f2c778" stroke-width="4"/><path d="M628 79q-43 2-51 25l50 22z" fill="#395983" stroke="#f2c778" stroke-width="4"/><path d="M482 42q50 0 62 29l-61 26z" fill="#d29b45" stroke="#f7d68e" stroke-width="4"/>
+ <!-- Twee bondgenoten op één pad -->
+ <path d="M0 540 382 425h196l382 115Z" fill="#b68553" stroke="#e5c38d" stroke-width="7"/><path d="M130 540 426 430M830 540 535 430" stroke="#563c31" stroke-width="8" opacity=".7"/>
+ <g transform="translate(350 336)"><path d="M-35 91q-47-48-26-95l38-17 42 25 8 87Z" fill="url(#cape)" stroke="#cfaa70" stroke-width="7"/><path d="M-18 0q0-34 30-35t34 28l-7 18-48 3z" fill="#c9aa75" stroke="#59432e" stroke-width="6"/><path d="M-4-11h33v18H-4z" fill="#263d54"/><path d="M-31 47 18 57M35 42l30 30" stroke="#d9c18c" stroke-width="8" stroke-linecap="round"/><path d="M-59 100h91" stroke="#1b1720" stroke-width="14"/></g>
+ <g transform="translate(574 336)"><path d="M-35 91q-47-48-26-95l38-17 42 25 8 87Z" fill="#7a3740" stroke="#cfaa70" stroke-width="7"/><path d="M-18 0q0-34 30-35t34 28l-7 18-48 3z" fill="#c9aa75" stroke="#59432e" stroke-width="6"/><path d="M-4-11h33v18H-4z" fill="#52353a"/><path d="M-31 47 18 57M35 42l30 30" stroke="#d9c18c" stroke-width="8" stroke-linecap="round"/><path d="M-59 100h91" stroke="#1b1720" stroke-width="14"/></g>
+ <path d="M454 351h52" stroke="#f4d794" stroke-width="6" stroke-linecap="round"/><circle cx="480" cy="351" r="8" fill="#fff0af"/>
+ <rect width="960" height="540" fill="url(#grain)"/>
+ <rect x="10" y="10" width="940" height="520" rx="28" fill="none" stroke="#e7c27e" stroke-opacity=".85" stroke-width="8"/><rect x="23" y="23" width="914" height="494" rx="21" fill="none" stroke="#3d261c" stroke-opacity=".8" stroke-width="3"/>
+</svg>

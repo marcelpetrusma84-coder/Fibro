@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+ <defs>
+  <linearGradient id="sky" y2="1"><stop stop-color="#302238"/><stop offset=".45" stop-color="#9a503b"/><stop offset="1" stop-color="#edb16a"/></linearGradient>
+  <linearGradient id="stone" x2="0" y2="1"><stop stop-color="#dac59d"/><stop offset="1" stop-color="#70513d"/></linearGradient>
+  <linearGradient id="shield" x2="1" y2="1"><stop stop-color="#d2aa59"/><stop offset=".48" stop-color="#735138"/><stop offset="1" stop-color="#342c33"/></linearGradient>
+  <filter id="shadow" x="-.3" y="-.3" width="1.6" height="1.7"><feGaussianBlur stdDeviation="9"/></filter>
+  <pattern id="grain" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M0 7h30M7 19h23" stroke="#fff" stroke-opacity=".06"/></pattern>
+ </defs>
+ <rect width="960" height="540" fill="url(#sky)"/><path d="M0 352 115 302l113 37 122-74 121 78 130-79 123 75 119-61 117 52v210H0Z" fill="#534039"/><path d="M0 425q240-62 480 0t480-20v135H0Z" fill="#694832"/>
+ <!-- Twee kastelen kijken elkaar aan -->
+ <g fill="url(#stone)" stroke="#49342a" stroke-width="9"><path d="M35 351V241h49v-65h57v65h47v110zM24 247v-83l37-38 37 38v83M123 247v-83l37-38 37 38v83"/><path d="M723 351V241h49v-65h57v65h47v110zM712 247v-83l37-38 37 38v83M811 247v-83l37-38 37 38v83"/></g>
+ <path d="M57 126V80m105 46V80m590 46V80m105 46V80" stroke="#36262a" stroke-width="7"/><path d="M59 81q38 0 51 21l-50 24zM164 81q-38 0-51 21l50 24zM754 81q38 0 51 21l-50 24zM859 81q-38 0-51 21l50 24z" fill="#4a6381" stroke="#f1d08a" stroke-width="4"/>
+ <ellipse cx="480" cy="469" rx="330" ry="27" fill="#211617" opacity=".5" filter="url(#shadow)"/>
+ <!-- Middelveld: belegeringsmuur en aanvallers die echt terugvechten -->
+ <path d="M390 400v-69l36 20v-28l42 27v-42l43 27v-28l42 25v68" fill="#a6865c" stroke="#50382d" stroke-width="8"/>
+ <path d="M413 403h125" stroke="#e7c792" stroke-width="7" stroke-dasharray="12 10"/>
+ <g transform="translate(300 335)"><path d="M-36 97q-33-48-12-90l42-21 42 30-1 81Z" fill="#314c65" stroke="#d9bc85" stroke-width="7"/><path d="M-14-5q2-35 34-34 27 3 30 32L32 10-8 9Z" fill="#cdb387" stroke="#43342c" stroke-width="7"/><path d="M-7-8h40" stroke="#1c2b39" stroke-width="12"/><path d="M-51 101h91" stroke="#251b18" stroke-width="15"/><path d="M39 38 90 64" stroke="#d7c08f" stroke-width="8"/></g>
+ <g transform="translate(660 335) scale(-1 1)"><path d="M-36 97q-33-48-12-90l42-21 42 30-1 81Z" fill="#843f3d" stroke="#d9bc85" stroke-width="7"/><path d="M-14-5q2-35 34-34 27 3 30 32L32 10-8 9Z" fill="#cdb387" stroke="#43342c" stroke-width="7"/><path d="M-7-8h40" stroke="#43232b" stroke-width="12"/><path d="M-51 101h91" stroke="#251b18" stroke-width="15"/><path d="M39 38 90 64" stroke="#d7c08f" stroke-width="8"/></g>
+ <!-- Slagen/aanvallen tussen beide kastelen, met een schild dat ze afweert -->
+ <path d="M355 290 420 320m185-30-65 30" stroke="#f2d38f" stroke-width="8" stroke-linecap="round"/>
+ <path d="M480 278q34 9 54 35l-8 56q-17 28-46 42-29-14-46-42l-8-56q20-26 54-35Z" fill="url(#shield)" stroke="#edd49a" stroke-width="8"/>
+ <path d="M480 290v103m-35-68 70 38m-69-1 68-37" stroke="#e2c282" stroke-width="6" opacity=".9"/>
+ <path d="m410 310 20 14m120-14-20 14" stroke="#fff0c2" stroke-width="5" stroke-linecap="round"/>
+ <rect width="960" height="540" fill="url(#grain)"/><rect x="10" y="10" width="940" height="520" rx="28" fill="none" stroke="#e7c27e" stroke-opacity=".9" stroke-width="8"/><rect x="23" y="23" width="914" height="494" rx="21" fill="none" stroke="#3d261c" stroke-opacity=".8" stroke-width="3"/>
+</svg>

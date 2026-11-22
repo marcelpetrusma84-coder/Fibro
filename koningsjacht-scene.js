@@ -6,6 +6,12 @@ const sensorrechten = new WeakMap()
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n))
 const bedienbaar = 'button, input, select, textarea, label, a, summary, dialog, video, canvas, [contenteditable], [role="button"], [role="dialog"], [role="slider"], .kt-kaart, .kt-stapel, .kt-afleg, .kt-onder, .kt-info, .kj-vijand'
 const steenkorrel = new URL('./assets/koningsjacht/stone-grain.svg', import.meta.url).href
+const MULTIPLAYER_ACHTERGRONDEN = {
+  samen: 'medieval-multiplayer-samen.jpg',
+  wedstrijd: 'medieval-multiplayer-wedstrijd.jpg',
+  duel: 'medieval-multiplayer-duel.jpg',
+  beleg: 'medieval-multiplayer-beleg.jpg'
+}
 
 // Middeleeuws: een houten legbak met smeedijzeren beslag; het licht komt van
 // kaarsen en de haard. De bestaande kj-sfeer-klasse schakelt alles weer uit.
@@ -249,10 +255,13 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
     opties = { ...opties, ...nieuw }
     const gekozenScene = ['standaard', 'modern', 'middeleeuws'].includes(opties.scene)
       ? opties.scene : (opties.middeleeuws ? 'middeleeuws' : 'standaard')
-    const achtergrond = { standaard: 'wood-table.png', modern: 'modern-epoxy-table.png', middeleeuws: 'medieval-scene.png' }[gekozenScene]
+    const achtergrond = opties.multiplayer === true
+      ? (MULTIPLAYER_ACHTERGRONDEN[opties.multiplayerMode] || 'medieval-scene.png')
+      : { standaard: 'wood-table.png', modern: 'modern-epoxy-table.png', middeleeuws: 'medieval-scene.png' }[gekozenScene]
     const hout = new URL('./assets/koningsjacht/' + achtergrond, import.meta.url).href
     const reserve = new URL('./kaarten/hout.webp', import.meta.url).href
     decorLayer.style.backgroundImage = `url("${hout}"), url("${reserve}")`
+    decorLayer.dataset.speltype = opties.multiplayer === true ? opties.multiplayerMode || 'samen' : ''
     const andere = opties.anderBier && typeof opties.anderBier === 'object' && !Array.isArray(opties.anderBier) ? opties.anderBier : {}
     function toonPul(pul, zichtbaar, inhoud, oorRechts, naam, ronde) {
       pul.houder.hidden = !zichtbaar

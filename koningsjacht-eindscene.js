@@ -1,7 +1,12 @@
 const STANDEN = [0, 4, 6, 8, 12]
 const BEELDEN = {
-  0: 'stand-0-v3.jpg', 4: 'stand-4-v3.jpg', 6: 'stand-6-v2.jpg',
-  8: 'stand-8.webp', 12: 'stand-12.webp',
+  0: { 0: 'stand-0-v3.jpg', 4: 'stand-4-v3.jpg', 6: 'stand-6-v2.jpg', 8: 'stand-8.webp', 12: 'stand-12.webp' },
+  2: { 0: 'narren-2/stand-0.jpg', 4: 'narren-2/stand-4.jpg', 6: 'narren-2/stand-6.jpg', 8: 'narren-2/stand-8.jpg', 12: 'narren-2/stand-12.jpg' },
+  4: { 0: 'narren-4/stand-0.jpg', 4: 'narren-4/stand-4.jpg', 6: 'narren-4/stand-6.jpg', 8: 'narren-4/stand-8.jpg', 12: 'narren-4/stand-12.jpg' },
+}
+export function eindsceneNarren(value) {
+  const n = Math.max(0, Math.floor(Number(value) || 0))
+  return n === 0 ? 0 : n <= 2 ? 2 : 4
 }
 export function eindsceneStand(value) {
   const n = Math.max(0, Math.min(12, Math.floor(Number(value) || 0)))
@@ -10,7 +15,7 @@ export function eindsceneStand(value) {
   return { n, over: 12 - n, laag, hoog, mix: hoog === laag ? 0 : (n - laag) / (hoog - laag) }
 }
 
-export function maakEindscene(value, { doc = document, T = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => v?.[k] ?? '') } = {}) {
+export function maakEindscene(value, { narren = 0, doc = document, T = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => v?.[k] ?? '') } = {}) {
   if (!doc.getElementById('kj-eindscene-css')) {
     const link = doc.createElement('link')
     link.id = 'kj-eindscene-css'; link.rel = 'stylesheet'
@@ -18,10 +23,11 @@ export function maakEindscene(value, { doc = document, T = (s, v) => s.replace(/
     doc.head.appendChild(link)
   }
   const figure = doc.createElement('figure'); figure.className = 'kj-eindscene'
+  figure.dataset.narren = String(eindsceneNarren(narren))
   const beelden = doc.createElement('div'); beelden.className = 'kj-eindscene-beeld'
   const imgs = STANDEN.map(n => {
     const img = doc.createElement('img'); img.alt = ''; img.decoding = 'async'
-    img.src = new URL(`./kaarten/koningsjacht-einde/${BEELDEN[n]}`, import.meta.url).href
+    img.src = new URL(`./kaarten/koningsjacht-einde/${BEELDEN[eindsceneNarren(narren)][n]}`, import.meta.url).href
     img.width = 1536; img.height = 1024; img.style.opacity = '0'
     beelden.appendChild(img); return img
   })

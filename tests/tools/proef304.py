@@ -89,6 +89,19 @@ try:
               .slice(0, 3).map(img => new URL(img.src).pathname.split('/').pop()).join(',')
               === 'stand-0-v3.jpg,stand-4-v3.jpg,stand-6-v2.jpg'"""),
               f'{breedte}px: vroege eindbeelden zonder zwaard geladen')
+            for narren in [2,4]:
+                pg.select_option('#narren',str(narren))
+                pg.wait_for_function("() => [...document.querySelectorAll('.kj-eindscene img')].every(i=>i.complete && i.naturalWidth>0)")
+                check(pg.locator('.kj-eindscene').get_attribute('data-narren')==str(narren),f'{breedte}px: reeks met {narren} narren gekozen')
+                check(pg.evaluate("""n => [...document.querySelectorAll('.kj-eindscene-beeld img')]
+                  .every(img => new URL(img.src).pathname.includes(`/narren-${n}/`))""",narren),
+                  f'{breedte}px: alle vijf beelden uit reeks met {narren} narren geladen')
+                pg.locator('#wachters').press('Home')
+                for _ in range(6): pg.locator('#wachters').press('ArrowRight')
+                check(pg.locator('.kj-eindscene-schilden .verdiend').count()==6,f'{breedte}px: zes wachters met {narren} narren')
+                check(pg.evaluate("""() => [...document.querySelectorAll('.kj-eindscene-beeld img')]
+                  .slice(3).every(img => img.style.opacity === '0')"""),
+                  f'{breedte}px: zwaardloze vroege reeks met {narren} narren')
             pg.goto(basis+'tests/fixtures/koningsjacht-preview.html')
             pg.click('.kj-scores')
             pg.wait_for_selector('dialog[open]')

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { maakKoningsjachtScoreService } from '../../koningsjacht-scores.js'
 import { maakScorePartij } from '../../koningsjacht-score-partij.js'
-import { eindsceneStand } from '../../koningsjacht-eindscene.js'
+import { eindsceneStand, eindsceneNarren } from '../../koningsjacht-eindscene.js'
 import { stapelProfiel, maakStapelFeedback } from '../../kaart-stapel-feedback.js'
 const ME='10000000-0000-4000-8000-000000000001', OTHER='20000000-0000-4000-8000-000000000002'
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`
@@ -44,6 +44,7 @@ for(let n=1;n<=6;n++){const s=eindsceneStand(n);assert.ok(s.laag<=6);assert.ok(s
 assert.deepEqual(eindsceneStand(5),{n:5,over:7,laag:4,hoog:6,mix:.5})
 assert.deepEqual(eindsceneStand(7),{n:7,over:5,laag:6,hoog:8,mix:.5})
 assert.equal(eindsceneStand(99).n,12);assert.equal(eindsceneStand(-1).n,0)
+assert.deepEqual([0,1,2,3,4].map(eindsceneNarren),[0,2,2,4,4])
 assert.ok(stapelProfiel(32).hoogte>stapelProfiel(8).hoogte)
 let time=0,cb
 const delta={setAttribute(){},dataset:{},remove(){}}

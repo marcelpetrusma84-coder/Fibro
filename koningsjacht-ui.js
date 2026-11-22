@@ -24,7 +24,7 @@ import { maakEindscene } from './koningsjacht-eindscene.js?v=8'
 import * as K from './koningsjacht.js?v=2'
 import { maakKaartTafel, kaartSvg, achterkantSvg, kaartNaam, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=17'
 import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek, zetMuziekThema } from './koningsjacht-geluid.js?v=4'
-import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=13'
+import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=14'
 import { zetKaarsSlijtage } from './koningsjacht-kaarsen.js?v=1'
 import { verbindBierpul, herstelBierPartij } from './koningsjacht-bier.js?v=2'
 import { maakKoningsjachtScoreService } from './koningsjacht-scores.js?v=1'
@@ -174,6 +174,8 @@ const CSS = `
 .kj-instellingen,.kj-instellingen *{box-sizing:border-box}.kj-scene-keuze{border:0;padding:0;margin:0 0 12px;min-width:0}.kj-scene-keuze legend{font-weight:700;margin-bottom:10px}.kj-scene-opties{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.kj-scene-opties label{display:flex;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:7px 4px;border:1px solid #e6c68c55;border-radius:10px;background:#100d0d66;font-size:12px;cursor:pointer}.kj-scene-opties label:has(input:checked){background:linear-gradient(145deg,#8f652b,#4c3217);border-color:#ffe8a6;box-shadow:inset 0 1px #fff5,0 3px 8px #0006}.kj-scene-opties input{accent-color:#e5bb65;margin:0}
 .kj-modern .kt-knop{background:linear-gradient(155deg,#142334,#090f19);border-color:#d6b66c;color:#fff4d3;box-shadow:inset 0 1px #fff2,0 3px 8px #0008}.kj-modern .kj-kaart{box-shadow:0 8px 22px #000b,0 0 0 1px #e2be6777}.kj-modern .kj-titel,.kj-modern .kj-naam{color:#f5d990}.kj-instellingen.kj-modern .kj-instellingen-kaart{background:linear-gradient(145deg,#172536,#09111c);border-color:#dfc37b99}
 .kj-modern .kj-kaars.kj-links{width:clamp(62px,15vw,100px);aspect-ratio:2/3}.kj-modern .kj-kaars.kj-rechts{width:clamp(80px,18vw,118px);aspect-ratio:2/3}.kj-modern .kj-links .kj-vlam{left:49.7%;bottom:81%;height:11%;width:10%;margin-left:-5%}.kj-modern .kj-rechts .kj-vlam{left:49.8%;bottom:96%;height:12%;width:9%;margin-left:-4.5%}
+.kj-modern-interior-keuze[hidden]{display:none}.kj-interior-opties label{min-height:54px;text-align:center;line-height:1.2}.kj-modern-interior-keuze legend{color:#b9e9ff}
+.kj-spaceship-interior .kj-kaarslicht,.kj-spaceship-interior .kj-kaars{display:none!important}
 .kj-mode-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%;max-width:450px}
 .kj-mode-card{min-width:0;padding:0;overflow:hidden;border:2px solid #b68b50;border-radius:14px;background:linear-gradient(145deg,#382519,#1a1110);color:#fff0d1;font:inherit;text-align:left;cursor:pointer;box-shadow:0 5px 12px #0009;transition:transform .18s,border-color .18s,box-shadow .18s}
 .kj-mode-card img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
@@ -294,6 +296,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   const bewaardeInstellingen = lees(INSTELLINGEN, {}) || {}
   const instellingen = {
     scene: ['standaard', 'modern', 'middeleeuws'].includes(bewaardeInstellingen.scene) ? bewaardeInstellingen.scene : (bewaardeInstellingen.middeleeuws === true ? 'middeleeuws' : 'standaard'),
+    modernInterior: ['none', 'old', 'futuristic'].includes(bewaardeInstellingen.modernInterior) ? bewaardeInstellingen.modernInterior : 'none',
     beweging: bewaardeInstellingen.beweging === true,
     slowMoves: bewaardeInstellingen.slowMoves === true,
     middeleeuws: bewaardeInstellingen.middeleeuws === true,
@@ -367,6 +370,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     instellingen.middeleeuws = sfeer === 'middeleeuws'
     actief?.classList.toggle('kj-sfeer', instellingen.middeleeuws)
     actief?.classList.toggle('kj-modern', sfeer === 'modern')
+    actief?.classList.toggle('kj-spaceship-interior', sfeer === 'modern' && instellingen.modernInterior !== 'none')
     document.querySelector('.kj-instellingen')?.classList.toggle('kj-modern', sfeer === 'modern')
     actief?.classList.toggle('kj-geenflikkering', !instellingen.flikkeren)
     actief?.classList.toggle('kj-tafelschaduw', instellingen.tafelschaduw)
@@ -392,6 +396,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     if (!element) return
     element.classList.toggle('kj-sfeer', sceneNaam() === 'middeleeuws')
     element.classList.toggle('kj-modern', sceneNaam() === 'modern')
+    element.classList.toggle('kj-spaceship-interior', sceneNaam() === 'modern' && instellingen.modernInterior !== 'none')
     element.classList.toggle('kj-geenflikkering', !instellingen.flikkeren)
     element.classList.toggle('kj-tafelschaduw', instellingen.tafelschaduw)
     scene = maakKoningsjachtScene(element, sceneOpties())
@@ -407,6 +412,9 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
       + '<button type="button" class="kj-instellingen-sluit" aria-label="' + esc(T('Sluiten')) + '">×</button></div>'
       + (multiplayer ? '' : '<fieldset class="kj-scene-keuze"><legend>' + esc(T('Tafelsfeer')) + '</legend><div class="kj-scene-opties">'
         + [['standaard', T('Standaard')], ['modern', T('Modern')], ['middeleeuws', T('Middeleeuws')]].map(([id, label]) => '<label><input type="radio" name="kj-scene" data-scene="' + id + '" value="' + id + '"' + (instellingen.scene === id ? ' checked' : '') + '><span>' + esc(label) + '</span></label>').join('')
+        + '</div></fieldset>'
+        + '<fieldset class="kj-scene-keuze kj-modern-interior-keuze"' + (instellingen.scene === 'modern' ? '' : ' hidden') + '><legend>' + esc(T('Moderne ruimteschiptafel')) + '</legend><div class="kj-scene-opties kj-interior-opties">'
+        + [['none', T('Epoxytafel')], ['old', T('Inside · oud schip')], ['futuristic', T('Inside · futuristisch')]].map(([id, label]) => '<label><input type="radio" name="kj-modern-interior" data-interior="' + id + '" value="' + id + '"' + (instellingen.modernInterior === id ? ' checked' : '') + '><span>' + esc(label) + '</span></label>').join('')
         + '</div></fieldset>')
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Achtergrond bewegen')) + '</b><small>' + esc(T('Beweeg je telefoon voor een subtiel diepte-effect.')) + '</small></span><input type="checkbox" data-instelling="beweging"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Slow moves')) + '</b><small>' + esc(T('Laat kaartbewegingen en effecten rustiger verlopen, zodat je beter ziet wat er gebeurt.')) + '</small></span><input type="checkbox" data-instelling="slowMoves"></label>'
@@ -435,6 +443,14 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     for (const input of scherm.querySelectorAll('[data-scene]')) input.addEventListener('change', () => {
       if (!input.checked) return
       instellingen.scene = input.value
+      const interiorChoice = scherm.querySelector('.kj-modern-interior-keuze')
+      if (interiorChoice) interiorChoice.hidden = input.value !== 'modern'
+      scherm.classList.toggle('kj-modern', input.value === 'modern')
+      pasInstellingenToe()
+    })
+    for (const input of scherm.querySelectorAll('[data-interior]')) input.addEventListener('change', () => {
+      if (!input.checked) return
+      instellingen.modernInterior = input.value
       pasInstellingenToe()
     })
     for (const input of scherm.querySelectorAll('[data-instelling]')) {

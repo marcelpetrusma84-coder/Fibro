@@ -81,6 +81,12 @@ function omgeving({ reduced = false, sensor = false, toestemming } = {}) {
   assert.match(eigen.children[0].children[1].src, /beer-modern\.png/, 'niet-volle standaardpul gebruikt de gewone afbeelding')
   scene.update({ scene: 'modern', bierInhoud: 42 })
   assert.match(scene.decorLayer.style.backgroundImage, /modern-epoxy-table\.png/)
+  scene.update({ modernInterior: 'old' })
+  assert.match(scene.decorLayer.style.backgroundImage, /spaceship-interior\.png/, 'oud ruimteschip gebruikt het cockpitinterieur')
+  scene.update({ modernInterior: 'futuristic' })
+  assert.match(scene.decorLayer.style.backgroundImage, /spaceship-interior-futuristic\.png/, 'futuristisch ruimteschip gebruikt de futuristische cockpit')
+  scene.update({ modernInterior: 'none' })
+  assert.match(scene.decorLayer.style.backgroundImage, /modern-epoxy-table\.png/, 'epoxytafel blijft als terugvaloptie beschikbaar')
   const glas = eigen.children[0], masker = glas.children[0], vulling = masker.children[0], schuim = vulling.children[0]
   assert.match(glas.children[1].src, /beer-glass-empty\.png/)
   assert.equal(masker.hidden, false)

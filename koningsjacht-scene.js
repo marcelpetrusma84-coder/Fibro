@@ -257,7 +257,9 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
       ? opties.scene : (opties.middeleeuws ? 'middeleeuws' : 'standaard')
     const achtergrond = opties.multiplayer === true
       ? (MULTIPLAYER_ACHTERGRONDEN[opties.multiplayerMode] || 'medieval-scene.png')
-      : { standaard: 'wood-table.png', modern: 'modern-epoxy-table.png', middeleeuws: 'medieval-scene.png' }[gekozenScene]
+      : gekozenScene === 'modern' && opties.modernInterior === 'old' ? 'spaceship-interior.png'
+        : gekozenScene === 'modern' && opties.modernInterior === 'futuristic' ? 'spaceship-interior-futuristic.png'
+          : { standaard: 'wood-table.png', modern: 'modern-epoxy-table.png', middeleeuws: 'medieval-scene.png' }[gekozenScene]
     const hout = new URL('./assets/koningsjacht/' + achtergrond, import.meta.url).href
     const reserve = new URL('./kaarten/hout.webp', import.meta.url).href
     decorLayer.style.backgroundImage = `url("${hout}"), url("${reserve}")`

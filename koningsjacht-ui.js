@@ -1,4 +1,4 @@
-import { maakEindscene } from './koningsjacht-eindscene.js?v=1'
+import { maakEindscene } from './koningsjacht-eindscene.js?v=3'
 // koningsjacht-ui.js - Koningsjacht, een kaartspel voor alleen (v1, 13 nov 2026). Op de BLAUWDRUK voor kaartspellen.
 // Gebaseerd op het idee van Regicide (Badgers From Mars); de naam, de teksten en de uitwerking zijn van Stekky.
 //
@@ -103,12 +103,15 @@ const CSS = `
 @media(max-width:360px){.kj-vijand .kj-kaart{width:68px;height:95px}.kj-vijand .kj-kasteel{width:36px;height:50px}.kj-wachters{flex-basis:28px}.kj-naam{font-size:13px}}
 @media(prefers-reduced-motion:reduce){.kj-hud .kj-vul,.kj-schade-spoor,.kj-schildvul{transition:none}}
 .kj-immuun{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:12px;line-height:1.35}
-.kj-immuun-icoon{display:inline-grid;place-items:center;flex:none;width:36px;height:36px;border-radius:11px;border:1px solid #a99471;background:linear-gradient(145deg,#655947,#211e1b 55%,#40382e);box-shadow:inset 0 1px 1px #fff8,inset 0 -2px 2px #000b,0 3px 0 #100e0b,0 5px 8px #0009}
-.kj-immuun-icoon span{font:bold 30px/1 Georgia,serif;color:var(--kj-suit);background:linear-gradient(155deg,#fff6df 8%,var(--kj-suit) 38%,var(--kj-suit-dark) 85%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;-webkit-text-stroke:.5px #1c111a;filter:drop-shadow(0 1px 0 #fff5) drop-shadow(0 2px 1px #000)}
-.kj-immuun-icoon[data-kleur=h]{--kj-suit:#ff6375;--kj-suit-dark:#a71936}
-.kj-immuun-icoon[data-kleur=r]{--kj-suit:#d5afff;--kj-suit-dark:#69429b}
-.kj-immuun-icoon[data-kleur=k]{--kj-suit:#97d9a0;--kj-suit-dark:#287247}
-.kj-immuun-icoon[data-kleur=s]{--kj-suit:#a9d7fa;--kj-suit-dark:#335a93}
+.kj-immuun-icoon{display:inline-grid;place-items:center;flex:none;width:38px;height:38px;border-radius:10px;border:2px solid #f6ead4;background:linear-gradient(145deg,#fffaf0,#e5ddd1 64%,#c6bdb1);box-shadow:inset 0 1px #fff,inset 0 -2px 2px #74634d55,0 2px 0 #514535,0 4px 8px #0009}
+.kj-immuun-icoon span{font:bold 31px/1 Georgia,serif;color:var(--kj-suit);-webkit-text-fill-color:var(--kj-suit);-webkit-text-stroke:.35px var(--kj-suit-dark);filter:drop-shadow(0 1px 0 #fff) drop-shadow(0 2px 1px #655a4b77)}
+.kj-immuun-icoon[data-kleur=h]{--kj-suit:#a3212b;--kj-suit-dark:#68141e}
+.kj-immuun-icoon[data-kleur=r]{--kj-suit:#6d2a84;--kj-suit-dark:#411850}
+.kj-immuun-icoon[data-kleur=k]{--kj-suit:#2e5b2a;--kj-suit-dark:#173b16}
+.kj-immuun-icoon[data-kleur=s]{--kj-suit:#1d2d55;--kj-suit-dark:#101c36}
+.kj-modern .kj-immuun-icoon{border-color:#e5d6ae;background:linear-gradient(145deg,#fff8e9,#e3e6e7 70%,#b7c2c7)}
+.kj-modern .kj-immuun-icoon[data-kleur=h],.kj-modern .kj-immuun-icoon[data-kleur=r]{--kj-suit:#b92644;--kj-suit-dark:#681628}
+.kj-modern .kj-immuun-icoon[data-kleur=k],.kj-modern .kj-immuun-icoon[data-kleur=s]{--kj-suit:#55441e;--kj-suit-dark:#312710}
 .kj-raakgetal{position:fixed;z-index:50;font-weight:900;font-size:34px;color:#fecaca;text-shadow:0 0 10px #ef4444,0 2px 0 #450a0a;pointer-events:none;white-space:nowrap}
 .kj .kt-kaart.kt-mag{box-shadow:0 2px 8px #0007}
 .kj .kt-kaart.kt-gekozen{box-shadow:0 0 0 3px #fde68a,0 0 26px #f5b301,0 8px 20px #000a}
@@ -125,10 +128,10 @@ const CSS = `
 .kj-fx>*{position:absolute;pointer-events:none}
 .kj-licht{border-radius:50%;mix-blend-mode:screen}
 .kj-vonk{width:7px;height:7px;border-radius:50%;mix-blend-mode:screen}
-.kj-haal{overflow:visible}
+.kj-haal{overflow:visible;z-index:1}
 .kj-gloeit{filter:brightness(1.35) drop-shadow(0 0 10px var(--kj-gloed,#f5b301)) drop-shadow(0 0 22px var(--kj-gloed,#f5b301))}
 .kj-flits{position:absolute;inset:0;z-index:40;pointer-events:none;background:radial-gradient(ellipse at 50% 20%,#ef444466,#0000 70%)}
-.kj-koepel{border-radius:50% 50% 12px 12px/80% 80% 12px 12px;border:3px solid #93c5fd;background:radial-gradient(ellipse at 50% 100%,#60a5fa55,#3b82f611 60%,#0000 75%);box-shadow:0 0 30px #60a5fa,inset 0 0 30px #93c5fd88}
+.kj-koepel{z-index:2;border-radius:50% 50% 12px 12px/80% 80% 12px 12px;border:3px solid #93c5fd;background:radial-gradient(ellipse at 50% 100%,#60a5fa55,#3b82f611 60%,#0000 75%);box-shadow:0 0 30px #60a5fa,inset 0 0 30px #93c5fd88}
 .kj-medieval-shield{position:absolute;z-index:430;pointer-events:none;filter:drop-shadow(0 14px 11px #000d);transform-style:preserve-3d;transform-origin:50% 88%}
 .kj-medieval-shield svg{display:block;width:100%;height:100%;overflow:visible}
 .kt-tafel.kj .kt-effect{box-sizing:border-box;width:max-content;max-width:calc(100vw - 28px);padding:7px 12px;white-space:normal;text-align:center;text-wrap:balance;line-height:1.15;font-size:clamp(22px,8vw,48px)}
@@ -879,18 +882,19 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     return Promise.all(klaar)
   }
   // een zwaardhaal van licht over de vijand (schuin), of een kruis (dubbel)
-  function zwaardhaal(p, kleur, richting = 1, vertraging = 0) {
+  function zwaardhaal(p, kleur, richting = 1, vertraging = 0, bijInslag = null) {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('class', 'kj-haal')
     const w = p.b * 1.9, h = p.h * 1.5
     svg.setAttribute('width', w); svg.setAttribute('height', h); svg.setAttribute('viewBox', '0 0 100 100'); svg.setAttribute('preserveAspectRatio', 'none')
     svg.style.cssText = 'left:' + (p.x - w / 2) + 'px;top:' + (p.y - h / 2) + 'px;filter:drop-shadow(0 0 6px ' + kleur + ') drop-shadow(0 0 14px ' + kleur + ')'
+    if (bijInslag) svg.dataset.schildinslag = 'ja'
     const pad = richting > 0 ? 'M8 12 Q50 46 92 88' : 'M92 12 Q50 46 8 88'
     svg.innerHTML = '<path d="' + pad + '" fill="none" stroke="' + kleur + '" stroke-width="7" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>'
       + '<path d="' + pad + '" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>'
     fxLaag().appendChild(svg)
     const lijnen = [...svg.querySelectorAll('path')]
     return Promise.all(lijnen.map(l => anim(l, [{ strokeDashoffset: 100 }, { strokeDashoffset: 0, offset: 0.35 }, { strokeDashoffset: 0 }], { duration: 520, delay: vertraging, easing: 'ease-out', fill: 'forwards' })))
-      .then(() => anim(svg, [{ opacity: 1 }, { opacity: 0 }], { duration: 260 })).then(() => svg.remove())
+      .then(() => { bijInslag?.(); return anim(svg, [{ opacity: 1 }, { opacity: 0 }], { duration: 260 }) }).then(() => svg.remove())
   }
   function tril(sterk = 6) {
     if (rustig()) return
@@ -1035,31 +1039,31 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     const t = tafel.element.getBoundingClientRect()
     const midden = { x: t.width / 2, y: t.height * .62, b: t.width * .55, h: t.height * .35 }
     geluid('vijandSlaat', v.slag >= 15 ? 1.4 : 1)
-    const sprong = anim(k, [{ transform: 'none' }, { transform: 'translateY(34px) scale(1.18)', offset: .4 }, { transform: 'none' }], { duration: 750 })
-    await wacht(rustig() ? 100 : 420)
+    const sprong = anim(k, [{ transform: 'none', filter: 'none' }, { transform: 'translateY(34px) scale(1.18) rotate(-5deg)', filter: 'brightness(1.5) drop-shadow(0 0 18px #ef4444)', offset: .4 }, { transform: 'none', filter: 'none' }], { duration: 640, easing: 'ease-in-out' })
+    await wacht(rustig() ? 150 : 420)
     try {
       if (schild) {
         const hit = plek(schild), van = plek(k)
         schild.dataset.afweer = 'geraakt'
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-        svg.classList.add('kj-schildklauwen')
-        svg.setAttribute('viewBox', `0 0 ${t.width} ${t.height}`)
-        svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:440;overflow:visible'
-        // All three strokes stop on the upper shield face, never behind the shield.
-        for (const dx of [-.22, 0, .22]) {
-          const path = document.createElementNS(svg.namespaceURI, 'path')
-          path.setAttribute('d', `M ${van.x + dx * van.b} ${van.y + van.h * .35} Q ${hit.x + dx * hit.b + 20} ${hit.y - hit.h * .6} ${hit.x + dx * hit.b} ${hit.y - hit.h * .25}`)
-          path.setAttribute('fill', 'none'); path.setAttribute('stroke', '#ff493b'); path.setAttribute('stroke-width', '6'); path.setAttribute('stroke-linecap', 'round')
-          path.setAttribute('pathLength', '100'); path.style.strokeDasharray = '100'; svg.appendChild(path)
-        }
-        tafel.element.appendChild(svg)
-        await Promise.all([...svg.children].map((path, i) => anim(path, [{ strokeDashoffset: 100 }, { strokeDashoffset: 0 }], { duration: rustig() ? 100 : 520, delay: i * 110, fill: 'forwards' })))
+        tafel.tril([40, 40, 60]); tril(11)
+        const flits = document.createElement('div'); flits.className = 'kj-flits'; tafel.element.appendChild(flits)
+        // De bestaande neonhalen eindigen op de bovenzijde van de voorkant. Het schild ligt
+        // vóór de lichtlaag en bedekt de laatste pixels; onder het schild verschijnt niets.
+        const randY = hit.y - hit.h / 2, eindY = randY + 8
+        const beginY = Math.min(van.y + van.h * .35, eindY - 80)
+        const hoogte = (eindY - beginY) / .76, breedte = Math.min(125, Math.max(68, hit.b * .6))
+        const halen = [-.24, 0, .24].map((d, i) => {
+          const x = hit.x + d * hit.b
+          return zwaardhaal({ x: x + .42 * breedte, y: beginY + .38 * hoogte, b: breedte / 1.9, h: hoogte / 1.5 }, '#ef4444', -1, i * 70, () => {
+            lichtflits(x, randY - 2, '#ef4444', 44, 260)
+            vonken(x, randY - 2, ['#fff', '#ff6b42', '#ffce81'], 8, 35)
+          })
+        })
+        await Promise.all([sprong, anim(flits, [{ opacity: 0 }, { opacity: 1, offset: .3 }, { opacity: 0 }], { duration: 700 }).then(() => flits.remove()), ...halen])
         geluid('afweren'); tafel.tril([25, 30, 25])
-        vonken(hit.x, hit.y - hit.h * .25, ['#ffe3a6', '#c68b42', '#fff'], 15, 55)
         await anim(schild, [{ transform: 'translateY(0)' }, { transform: 'translateY(7px) rotate(3deg)', offset: .3 }, { transform: 'none' }], { duration: 400 })
         tafel.effect(v.slag === 0 ? T('Je schild houdt hem tegen!') : T('Schild vangt {n} op · nog {schade} afweren', { n: Math.min(s.schild, v.aanval), schade: v.slag }), { geluid: false, gloed: false })
         await wacht(rustig() ? 300 : 850)
-        await anim(svg, [{ opacity: 1 }, { opacity: 0 }], { duration: 250 }); svg.remove()
       } else {
         tafel.tril([40, 40, 60]); tril(11)
         const flits = document.createElement('div')

@@ -75,12 +75,20 @@ try:
                 && document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('.kt-ak')===k;
             }"""),f'{breedte}px: kaart ondoorzichtig boven de legbak, zonder beslag door de kaart')
             pg.goto(basis+'tests/fixtures/koningsjacht-eindscene-preview.html')
-            for n in [0,1,8,12]:
+            for n in [0,1,4,5,6,7,8,12]:
                 pg.locator('#wachters').press('Home')
                 for _ in range(n): pg.locator('#wachters').press('ArrowRight')
                 check(pg.locator('.kj-eindscene-schilden .verdiend').count()==n,f'{breedte}px: eindscene telt {n} wapenschilden')
+                if 1 <= n <= 6:
+                    check(pg.evaluate("""() => [...document.querySelectorAll('.kj-eindscene-beeld img')]
+                      .filter(img => /stand-(8|12)\\.webp/.test(img.src)).every(img => img.style.opacity === '0')"""),
+                      f'{breedte}px: tot en met zes wachters blijft de hand op het been')
             pg.wait_for_function("() => [...document.querySelectorAll('.kj-eindscene img')].every(i=>i.complete && i.naturalWidth>0)")
             check(True,f'{breedte}px: alle eindbeelden laden')
+            check(pg.evaluate("""() => [...document.querySelectorAll('.kj-eindscene-beeld img')]
+              .slice(0, 3).map(img => new URL(img.src).pathname.split('/').pop()).join(',')
+              === 'stand-0-v3.jpg,stand-4-v3.jpg,stand-6-v2.jpg'"""),
+              f'{breedte}px: vroege eindbeelden zonder zwaard geladen')
             pg.goto(basis+'tests/fixtures/koningsjacht-preview.html')
             pg.click('.kj-scores')
             pg.wait_for_selector('dialog[open]')

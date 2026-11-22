@@ -1,8 +1,13 @@
-const STANDEN = [0, 4, 8, 12]
+const STANDEN = [0, 4, 6, 8, 12]
+const BEELDEN = {
+  0: 'stand-0-v3.jpg', 4: 'stand-4-v3.jpg', 6: 'stand-6-v2.jpg',
+  8: 'stand-8.webp', 12: 'stand-12.webp',
+}
 export function eindsceneStand(value) {
   const n = Math.max(0, Math.min(12, Math.floor(Number(value) || 0)))
-  const laag = Math.min(8, Math.floor(n / 4) * 4)
-  return { n, over: 12 - n, laag, hoog: laag + 4, mix: (n - laag) / 4 }
+  const laag = STANDEN.filter(stand => stand <= n).at(-1)
+  const hoog = STANDEN.find(stand => stand > n) ?? laag
+  return { n, over: 12 - n, laag, hoog, mix: hoog === laag ? 0 : (n - laag) / (hoog - laag) }
 }
 
 export function maakEindscene(value, { doc = document, T = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => v?.[k] ?? '') } = {}) {
@@ -16,7 +21,7 @@ export function maakEindscene(value, { doc = document, T = (s, v) => s.replace(/
   const beelden = doc.createElement('div'); beelden.className = 'kj-eindscene-beeld'
   const imgs = STANDEN.map(n => {
     const img = doc.createElement('img'); img.alt = ''; img.decoding = 'async'
-    img.src = new URL(`./kaarten/koningsjacht-einde/stand-${n}.webp`, import.meta.url).href
+    img.src = new URL(`./kaarten/koningsjacht-einde/${BEELDEN[n]}`, import.meta.url).href
     img.width = 1536; img.height = 1024; img.style.opacity = '0'
     beelden.appendChild(img); return img
   })
@@ -33,7 +38,7 @@ export function maakEindscene(value, { doc = document, T = (s, v) => s.replace(/
   function update(v) {
     const s = eindsceneStand(v)
     figure.dataset.wachters = String(s.n)
-    // Two registered drawings blend in place; every single guard changes the condition.
+    // Tot en met zes wachters tonen uitsluitend beelden met rustende hand en zonder zwaard.
     imgs.forEach((img, i) => { img.style.opacity = STANDEN[i] === s.laag ? '1' : STANDEN[i] === s.hoog ? String(s.mix) : '0' })
     tekens.forEach((el, i) => el.classList.toggle('verdiend', i < s.n))
     teller.textContent = `${s.n} / 12`

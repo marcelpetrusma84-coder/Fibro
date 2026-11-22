@@ -10,7 +10,7 @@ Voer `sql/koningsjacht-scores.sql` uit in de Supabase SQL Editor. Deze PR voert 
 
 ## Eindbeelden
 
-Vier oorspronkelijke, met imagegen gemaakte illustraties van exact hetzelfde tafereel vormen de tussenstanden 0, 4, 8 en 12. De renderer mengt tussen naburige standen; dertien posities zijn bereikbaar. Het vaandel toont exact één gouden wapenschild per verslagen wachter. De paardverzorging, mantel, kasteelschade en vlaggen verbeteren naar de gekozen feestelijke aankomst bij 12/12. Vier WebP-bestanden samen circa 2 MB. Geen externe afbeeldingen of AI-aanroepen tijdens het spelen.
+Vijf actieve illustraties van hetzelfde tafereel vormen de tussenstanden 0, 4, 6, 8 en 12. In de drie vroege beelden heeft de koning zijn zwaard verloren, houdt hij zijn hand op zijn been, zijn mond dicht en zijn blik recht vooruit. Daardoor blijft die houding zonder zwaard zichtbaar van 0 tot en met 6 verslagen wachters. Vanaf 7 begint de overgang naar de opgestoken arm van de feestelijke aankomst. De renderer mengt tussen naburige standen; dertien posities zijn bereikbaar. Het vaandel toont exact één gouden wapenschild per verslagen wachter. De paardverzorging, mantel, kasteelschade en vlaggen verbeteren naar 12/12. De drie aangepaste JPG-bestanden zijn samen circa 1,5 MB; de twee latere WebP-bestanden circa 1 MB. Geen externe afbeeldingen of AI-aanroepen tijdens het spelen.
 
 Bekijk `tests/fixtures/koningsjacht-eindscene-preview.html` met de slider 0–12. Dit voorbeeld schrijft geen scores en maakt geen netwerkverbinding met Supabase.
 
@@ -23,6 +23,6 @@ De vier immuniteitssymbolen zijn groter met reliëf en contrastrand. Alleen Koni
 - `node tests/kaart/test-koningsjacht-scores.mjs`
 - `node tests/ui/test-neon-scoreboard.mjs` (gedeelde UI blijft compatibel)
 - `node tests/alle-tests.mjs`
-- Browser: eindscène op 0, 1, 8 en 12; Scores openen en sluiten; nieuwe partij vs. verder spelen; drie stijlen, 320px breedte; schild 0 / gedeeltelijk / volledig; Taveerne laten toenemen en afnemen.
+- Browser: eindscène op 0, 1, 4, 5, 6, 7, 8 en 12; Scores openen en sluiten; nieuwe partij vs. verder spelen; drie stijlen, 320px breedte; schild 0 / gedeeltelijk / volledig; Taveerne laten toenemen en afnemen.
 
 Controleer de volledige GitHub-testresultaten vóór mergen. Niet-afgeronde browsercontroles zijn geen geslaagde controles.

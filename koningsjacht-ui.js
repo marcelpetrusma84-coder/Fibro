@@ -1119,7 +1119,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     if (l.genezen) redenen.push(T('brengt {n} kaarten van de aflegstapel terug naar de Taveerne', { n: l.genezen }))
     const gepakt = l.gepaktPer ? Object.values(l.gepaktPer).reduce((som, kaarten) => som + kaarten.length, 0) : (l.gepakt || []).length
     if (gepakt) redenen.push(T('pakt {n} kaarten uit de Taveerne', { n: gepakt }))
-    if (l.schild) redenen.push(T('geeft {n} schild', { n: l.schild }))
+    if (l.schild && !l.verslagen) redenen.push(T('geeft {n} schild', { n: l.schild }))
     if (l.immuun) redenen.push(T('werkt niet tegen {kleur}', { kleur: KLEUR_TEKEN[l.immuun] }))
     return T('Gespeeld: {kaarten} — {reden}', { kaarten, reden: redenen.join(' · ') || T('gebruikt deze kaart') })
   }
@@ -1130,10 +1130,10 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     tafel.toon(beeld(oud, { hand: handNa, afleg: [...oud.tafel, ...ids], mijnBeurt: false, status: uitleg }))
     await toonGespeeldeKaarten(ids, eigen, vanRects, opts, 1)
     if (l.genezen) { tafel.toon(beeld(oud, { hand: handNa, afleg: [...oud.tafel, ...ids], stapelAantal: oud.taveerne.length + l.genezen, mijnBeurt: false, status: uitleg })); await genezenLicht(l.genezen) }
-    const tussen = { kasteel: oud.kasteel, schade: Math.min(K.vijandInfo(oud).leven, oud.schade + l.schade), schild: oud.schild + l.schild, extra: oud.extra }
+    const tussen = { kasteel: oud.kasteel, schade: Math.min(K.vijandInfo(oud).leven, oud.schade + l.schade), schild: l.verslagen ? 0 : oud.schild + l.schild, extra: oud.extra }
     await Promise.all([kaartenVallenAan(ids, l), wacht(rustig() ? 260 : 480).then(() => tekenVijand(tussen))])
     if (l.immuun) { tafel.effect(T('{naam} is immuun voor {k}', { naam: vijandNaam(l.vijand), k: KLEUR_TEKEN[l.immuun] }), { gloed: false, geluid: false }); await wacht(650) }
-    if (l.schild) await schildLicht(tussen.schild, !l.verslagen && (nieuw.fase === 'verdedig' || l.geenSlag))
+    if (l.schild && !l.verslagen) await schildLicht(tussen.schild, nieuw.fase === 'verdedig' || l.geenSlag)
     const mijnGepakt = l.gepaktPer ? (l.gepaktPer[ik] || []) : (eigen ? l.gepakt : [])
     if (l.gepakt.length || mijnGepakt.length) {
       pakLicht()

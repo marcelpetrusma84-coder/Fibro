@@ -1,6 +1,6 @@
 const STANDEN = [0, 4, 6, 8, 12]
 const BEELDEN = {
-  0: 'stand-0-v2.jpg', 4: 'stand-4-v2.jpg', 6: 'stand-6.jpg',
+  0: 'stand-0-v3.jpg', 4: 'stand-4-v3.jpg', 6: 'stand-6-v2.jpg',
   8: 'stand-8.webp', 12: 'stand-12.webp',
 }
 export function eindsceneStand(value) {
@@ -38,7 +38,7 @@ export function maakEindscene(value, { doc = document, T = (s, v) => s.replace(/
   function update(v) {
     const s = eindsceneStand(v)
     figure.dataset.wachters = String(s.n)
-    // Tot en met zes wachters komen uitsluitend beelden met rustende hand in de overgang.
+    // Tot en met zes wachters tonen uitsluitend beelden met rustende hand en zonder zwaard.
     imgs.forEach((img, i) => { img.style.opacity = STANDEN[i] === s.laag ? '1' : STANDEN[i] === s.hoog ? String(s.mix) : '0' })
     tekens.forEach((el, i) => el.classList.toggle('verdiend', i < s.n))
     teller.textContent = `${s.n} / 12`

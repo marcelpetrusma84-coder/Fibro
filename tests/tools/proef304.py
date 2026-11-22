@@ -85,6 +85,10 @@ try:
                       f'{breedte}px: tot en met zes wachters blijft de hand op het been')
             pg.wait_for_function("() => [...document.querySelectorAll('.kj-eindscene img')].every(i=>i.complete && i.naturalWidth>0)")
             check(True,f'{breedte}px: alle eindbeelden laden')
+            check(pg.evaluate("""() => [...document.querySelectorAll('.kj-eindscene-beeld img')]
+              .slice(0, 3).map(img => new URL(img.src).pathname.split('/').pop()).join(',')
+              === 'stand-0-v3.jpg,stand-4-v3.jpg,stand-6-v2.jpg'"""),
+              f'{breedte}px: vroege eindbeelden zonder zwaard geladen')
             pg.goto(basis+'tests/fixtures/koningsjacht-preview.html')
             pg.click('.kj-scores')
             pg.wait_for_selector('dialog[open]')

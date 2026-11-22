@@ -1,4 +1,4 @@
-import { maakEindscene } from './koningsjacht-eindscene.js?v=1'
+import { maakEindscene } from './koningsjacht-eindscene.js?v=2'
 // koningsjacht-ui.js - Koningsjacht, een kaartspel voor alleen (v1, 13 nov 2026). Op de BLAUWDRUK voor kaartspellen.
 // Gebaseerd op het idee van Regicide (Badgers From Mars); de naam, de teksten en de uitwerking zijn van Stekky.
 //

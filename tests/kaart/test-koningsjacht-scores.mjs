@@ -40,6 +40,9 @@ assert.equal(finishes[0].id,finishes[1].id,'continuing a game preserves the immu
 rounds.begin('solo',true);await rounds.finish({verslagen:12,niveau:'koning'},'solo')
 assert.notEqual(finishes[2].id,finishes[0].id)
 for(let n=0;n<=12;n++){const s=eindsceneStand(n);assert.equal(s.n,n);assert.equal(s.over,12-n);assert.ok(s.mix>=0&&s.mix<=1)}
+for(let n=1;n<=6;n++){const s=eindsceneStand(n);assert.ok(s.laag<=6);assert.ok(s.hoog<=6||s.mix===0,'eerste zes wachters tonen geen opgeheven arm')}
+assert.deepEqual(eindsceneStand(5),{n:5,over:7,laag:4,hoog:6,mix:.5})
+assert.deepEqual(eindsceneStand(7),{n:7,over:5,laag:6,hoog:8,mix:.5})
 assert.equal(eindsceneStand(99).n,12);assert.equal(eindsceneStand(-1).n,0)
 assert.ok(stapelProfiel(32).hoogte>stapelProfiel(8).hoogte)
 let time=0,cb

@@ -10,16 +10,15 @@ export function eindsceneNarren(value) {
 }
 export function eindsceneStand(value) {
   const n = Math.max(0, Math.min(12, Math.floor(Number(value) || 0)))
-  const laag = STANDEN.filter(stand => stand <= n).at(-1)
-  const hoog = STANDEN.find(stand => stand > n) ?? laag
-  return { n, over: 12 - n, laag, hoog, mix: hoog === laag ? 0 : (n - laag) / (hoog - laag) }
+  const beeld = STANDEN.filter(stand => stand <= n).at(-1)
+  return { n, over: 12 - n, beeld }
 }
 
 export function maakEindscene(value, { narren = 0, doc = document, T = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => v?.[k] ?? '') } = {}) {
   if (!doc.getElementById('kj-eindscene-css')) {
     const link = doc.createElement('link')
     link.id = 'kj-eindscene-css'; link.rel = 'stylesheet'
-    link.href = new URL('./koningsjacht-eindscene.css?v=1', import.meta.url).href
+    link.href = new URL('./koningsjacht-eindscene.css?v=2', import.meta.url).href
     doc.head.appendChild(link)
   }
   const figure = doc.createElement('figure'); figure.className = 'kj-eindscene'
@@ -28,7 +27,7 @@ export function maakEindscene(value, { narren = 0, doc = document, T = (s, v) =>
   const imgs = STANDEN.map(n => {
     const img = doc.createElement('img'); img.alt = ''; img.decoding = 'async'
     img.src = new URL(`./kaarten/koningsjacht-einde/${BEELDEN[eindsceneNarren(narren)][n]}`, import.meta.url).href
-    img.width = 1536; img.height = 1024; img.style.opacity = '0'
+    img.width = 1536; img.height = 1024; img.style.display = 'none'
     beelden.appendChild(img); return img
   })
   const vaandel = doc.createElement('div'); vaandel.className = 'kj-eindscene-vaandel'
@@ -44,8 +43,8 @@ export function maakEindscene(value, { narren = 0, doc = document, T = (s, v) =>
   function update(v) {
     const s = eindsceneStand(v)
     figure.dataset.wachters = String(s.n)
-    // Tot en met zes wachters tonen uitsluitend beelden met rustende hand en zonder zwaard.
-    imgs.forEach((img, i) => { img.style.opacity = STANDEN[i] === s.laag ? '1' : STANDEN[i] === s.hoog ? String(s.mix) : '0' })
+    // Verschillende houdingen mogen niet over elkaar vervagen: de teller toont wel elke exacte score.
+    imgs.forEach((img, i) => { img.style.display = STANDEN[i] === s.beeld ? 'block' : 'none' })
     tekens.forEach((el, i) => el.classList.toggle('verdiend', i < s.n))
     teller.textContent = `${s.n} / 12`
     caption.textContent = s.n === 12 ? T('Alle twaalf wachters verslagen — het kasteel is veroverd!')

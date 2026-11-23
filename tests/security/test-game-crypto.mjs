@@ -104,7 +104,7 @@ try {
   for (const [type, data] of [
     ['unknown-event', 'hello'], ['spelchat', ''], ['spelchat', '  '],
     ['spelchat', 'a'.repeat(2001)], ['spelchat', 1],
-    ['spelsticker', 'javascript:alert(1)'], ['spelsticker', 'f9-01']
+    ['spelsticker', 'javascript:alert(1)'], ['spelsticker', 'g9-01'], ['spelsticker', 'f9-1']
   ]) await assert.rejects(() => a.verpak(type, data), /invalid-game-message/)
 
   // Even authenticated peers cannot bypass the inner session/event/data validation.

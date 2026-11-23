@@ -480,7 +480,7 @@ button { font-family:inherit; }
   import { houOpen } from './lijntjes.js?v=1'
   import { haalVriendFotos, geldigeFoto } from './vriendfotos.js?v=2'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
-  import { zoekSticker } from './stickervellen.js?v=237'
+  import { zoekSticker } from './stickervellen.js?v=238'
 
   const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
   const $ = id => document.getElementById(id)
@@ -1518,7 +1518,7 @@ button { font-family:inherit; }
     const r = $('stickerRaster')
     if (!stickerKeuze) {
       try {
-        const [{ maakStickerkeuze }, fx] = await Promise.all([import('./stickerkeuze.js?v=238'), import('./stickerfx.js?v=236')])
+        const [{ maakStickerkeuze }, fx] = await Promise.all([import('./stickerkeuze.js?v=239'), import('./stickerfx.js?v=236')])
         stickerKeuze = maakStickerkeuze(r, { uid: () => ik, onKies: async st => {
           if (!st) return
           fx.speelGeluid(st.g)

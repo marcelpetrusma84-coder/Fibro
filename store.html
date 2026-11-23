@@ -91,8 +91,8 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 <script type="module">
 import { supabase } from './supabase.js?v=95'
 import { laadFont } from './lettertypes.js?v=133'
-import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, verwijderDownload, tabelOntbreekt, zetGameWidgetAan } from './store.js?v=21'
-import { zoekSticker, STORE_VELLEN } from './stickervellen.js?v=237'
+import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, verwijderDownload, tabelOntbreekt, zetGameWidgetAan } from './store.js?v=22'
+import { zoekSticker, STORE_VELLEN } from './stickervellen.js?v=238'
 import { speel } from './stickerfx.js?v=236'
 
 let mijnId = null
@@ -145,7 +145,7 @@ function bouwLijst() {
     else if (it.soort === 'sticker') {
       const vel = STORE_VELLEN.find(v => v.id === it.vel)
       kaart.innerHTML = `<div class="item-kop"><span class="item-titel">${esc(it.titel)}</span><span class="item-aantal">${esc(T('{n} stickers', { n: vel.stickers.length }))}</span></div>`
-        + `<div class="item-uitleg">${esc(T(it.uitleg))}</div><div class="item-stickers"></div>`
+        + `<div class="item-uitleg">${esc(it.uitlegEn && window.T && window.T.taal === 'en' ? it.uitlegEn : T(it.uitleg))}</div><div class="item-stickers"></div>`
       for (const s of vel.stickers) {
         const st = zoekSticker(vel.id + '-' + s.nr)
         const b = document.createElement('button'); b.type = 'button'; b.className = 'item-sticker'

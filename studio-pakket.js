@@ -4,12 +4,16 @@
 //
 // Een pakketbestand (naam.stekkypakket.json) is gewoon tekst:
 //   { formaat: 'stekky-stickerpakket', versie: 1, id: 'stickers-<naam>', titel, uitleg: [nl, en],
-//     stickers: [ { naam: [nl, en], b: beweging, g: geluid, webp: <het plaatje als base64> } x 12 ] }
+//     stickers: [ { naam: [nl, en], b: beweging, g: geluid, webp: <het plaatje als base64>,
+//                   mp3: <eigen geluid als base64, mag ontbreken>, bron: <waar dat geluid vandaan komt> } x 12 ] }
+// Heeft een sticker een eigen geluid (mp3), dan klinkt dat; het geluid uit de bibliotheek (g) is dan de terugval.
 // Het wordt daarna (door tests/tools/studio-installeer.mjs) een vel in stickers/<fN>/ en een regel in studio-pakketten.js.
 
 export const FORMAAT = 'stekky-stickerpakket'
 export const AANTAL = 12                      // een pakket heeft precies 12 stickers, zoals alle vellen in de app
 export const MAX_PLAATJE = 150 * 1024         // een plaatje van meer dan 150 kB is te zwaar voor de chat
+export const MAX_MP3 = 40 * 1024              // een eigen geluid (hoogstens 3 seconden, 64 kbps = ongeveer 24 kB)
+export const MAX_BRON = 120
 export const ID_PATROON = /^stickers-[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 // Beweging en geluid die de Studio zelf voorstelt (de volgorde is de volgorde van de stickers). Allemaal bestaande
@@ -43,13 +47,24 @@ export const isWebp = b64 => {
   try { const u = alsBytes(b64); return u.length > 12 && String.fromCharCode(u[0], u[1], u[2], u[3]) === 'RIFF' && String.fromCharCode(u[8], u[9], u[10], u[11]) === 'WEBP' } catch (e) { return false }
 }
 export const groottePlaatje = b64 => { try { return alsBytes(b64).length } catch (e) { return 0 } }
+// Een mp3 begint met een ID3-label of met een blok (11 bits 1, zoals lame ze maakt: FF FB)
+export const isMp3 = b64 => {
+  try {
+    const u = alsBytes(b64)
+    if (u.length < 200) return false
+    return (u[0] === 0x49 && u[1] === 0x44 && u[2] === 0x33) || (u[0] === 0xFF && (u[1] & 0xE0) === 0xE0)
+  } catch (e) { return false }
+}
 
 // Maak het pakketobject uit wat op de pagina staat. stickers: [{ naam: [nl, en], b, g, webp }]
 export function maakPakket({ titel, uitleg, stickers }) {
   return {
     formaat: FORMAAT, versie: 1, id: storeId(titel), titel: String(titel || '').trim(),
     uitleg: [String(uitleg?.[0] || '').trim(), String(uitleg?.[1] || '').trim()],
-    stickers: stickers.map(s => ({ naam: [String(s.naam?.[0] || '').trim(), String(s.naam?.[1] || s.naam?.[0] || '').trim()], b: s.b, g: s.g, webp: s.webp })),
+    stickers: stickers.map(s => ({
+      naam: [String(s.naam?.[0] || '').trim(), String(s.naam?.[1] || s.naam?.[0] || '').trim()], b: s.b, g: s.g, webp: s.webp,
+      ...(s.mp3 ? { mp3: s.mp3, bron: String(s.bron || '').trim() } : {}),
+    })),
   }
 }
 
@@ -72,6 +87,12 @@ export function valideerPakket(p, fx) {
     if (!fx.geluiden.has(s.g)) fout.push(nr + ': het geluid "' + s.g + '" bestaat niet.')
     if (typeof s.webp !== 'string' || !isWebp(s.webp)) fout.push(nr + ' heeft geen geldig WebP-plaatje.')
     else if (groottePlaatje(s.webp) > MAX_PLAATJE) fout.push(nr + ' is te zwaar (meer dan ' + Math.round(MAX_PLAATJE / 1024) + ' kB).')
+    if (s.mp3 !== undefined) {
+      if (typeof s.mp3 !== 'string' || !isMp3(s.mp3)) fout.push(nr + ' heeft geen geldig mp3-geluid.')
+      else if (groottePlaatje(s.mp3) > MAX_MP3) fout.push(nr + ': het eigen geluid is te zwaar (meer dan ' + Math.round(MAX_MP3 / 1024) + ' kB).')
+      if (typeof s.bron !== 'string' || s.bron.trim().length < 2) fout.push(nr + ' heeft een eigen geluid, maar de bron ontbreekt. Vul in waar het geluid vandaan komt (bijvoorbeeld "Kenney.nl, CC0" of "zelf opgenomen").')
+      else if (s.bron.length > MAX_BRON) fout.push(nr + ': de bron is te lang (hoogstens ' + MAX_BRON + ' tekens).')
+    } else if (s.bron !== undefined) fout.push(nr + ' heeft een bron, maar geen eigen geluid.')
   })
   return fout
 }

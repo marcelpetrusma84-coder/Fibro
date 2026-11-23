@@ -20,7 +20,6 @@ const verhoogd = []
 
 for (let ronde = 0; ronde < 12; ronde++) {
   const veranderd = git('diff', '--name-status', basis).split('\n').filter(Boolean).map(r => r.split('\t')).filter(([s, f]) => s === 'M' && !SLA_OVER.test(f) && !NOOIT.has(f))
-  const toegevoegd = git('diff', '-U0', basis).split('\n').filter(r => r.startsWith('+') && !r.startsWith('+++')).join('\n')
   let gedaan = 0
   for (const [, f] of veranderd) {
     const naam = path.posix.basename(f)
@@ -32,9 +31,16 @@ for (let ronde = 0; ronde < 12; ronde++) {
       regels.forEach((r, i) => { if (!isOpmerking(r) && new RegExp(patroon.source).test(r)) plekken.push([g, i]) })
     }
     if (!plekken.length) continue                                    // wordt nergens met ?v= geladen
-    if (new RegExp('(?<![\\w.-])' + esc(naam) + '\\?v=').test(toegevoegd)) continue   // al verhoogd
     let hoogste = 0
     for (const [g, i] of plekken) for (const m of lees(g).split('\n')[i].matchAll(patroon)) hoogste = Math.max(hoogste, Number(m[1]))
+    // al verhoogd = het hoogste nummer is nu hoger dan in de basis (niet: "er staat een veranderde regel met dit nummer in",
+    // want wie een import-regel aanpast om iets anders, laat het oude nummer gewoon staan)
+    let hoogsteBasis = 0
+    try {
+      for (const r of git('grep', '-h', '-E', esc(naam) + '\\?v=[0-9]+', basis, '--', '*.html', '*.js', '*.css', '*.mjs').split('\n'))
+        if (!isOpmerking(r)) for (const m of r.matchAll(patroon)) hoogsteBasis = Math.max(hoogsteBasis, Number(m[1]))
+    } catch (e) { /* geen treffers in de basis */ }
+    if (hoogste > hoogsteBasis) continue
     const nieuw = hoogste + 1
     const perBestand = new Map()
     for (const [g, i] of plekken) perBestand.set(g, [...(perBestand.get(g) || []), i])

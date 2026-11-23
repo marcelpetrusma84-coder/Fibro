@@ -6,9 +6,11 @@
 #  D. met minder dan 12 kan het pakket nog niet gemaakt worden
 #  E. het pakketbestand: id uit de naam, 12 echte WebP-plaatjes van 384 x 384 onder 150 kB, doorzichtige hoeken, aangepaste naam
 #  F. Moderatie heeft een link naar de Studio; geen paginafouten
+#  H. een eigen geluid per sticker: een wav wordt opgeruimd (stilte eraf, even hard) en een kleine mp3; zonder bron geen pakket;
+#     een bestand dat geen geluid is geeft een nette melding; de beschrijving voor een geluidsmaker wordt gekopieerd
 #  G. de prompt voor Gemini: staat er bovenaan, past zich aan wat je invult, en de knop kopieert hem naar het klembord
 # python3 -I proef325.py <map>
-import sys, os, time, json, socket, subprocess, tempfile, base64, io, re
+import sys, os, time, json, socket, subprocess, tempfile, base64, io, re, math, struct, wave
 from playwright.sync_api import sync_playwright
 MAP = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 fout = []
@@ -53,6 +55,22 @@ LEES = """async b64 => {
   return { w: bm.width, h: bm.height, hoek: alfa(2, 2), midden: alfa(192, 192), riff: String.fromCharCode(...bytes.slice(0, 4)) + String.fromCharCode(...bytes.slice(8, 12)), lengte: bytes.length }
 }"""
 
+# Een nagemaakt geluid: 0,3 s stilte, 0,5 s toon (zacht), 0,4 s stilte; mono, 22050 Hz (de Studio moet het omzetten naar 44100)
+WAV = os.path.join(tmp, 'toon.wav')
+with wave.open(WAV, 'wb') as w:
+    w.setnchannels(1); w.setsampwidth(2); w.setframerate(22050)
+    sr = 22050
+    w.writeframes(b''.join(struct.pack('<h', int(0.1 * 32767 * math.sin(2 * math.pi * 440 * i / sr)) if 0.3 * sr <= i < 0.8 * sr else 0) for i in range(int(1.2 * sr))))
+TEKST = os.path.join(tmp, 'geen-geluid.wav'); open(TEKST, 'w').write('dit is geen geluid')
+LEES_MP3 = """async b64 => {
+  const bytes = Uint8Array.from(atob(b64), ch => ch.charCodeAt(0))
+  const cx = new AudioContext(); const ab = await cx.decodeAudioData(bytes.buffer.slice(0)); cx.close()
+  const x = ab.getChannelData(0); let som = 0, piek = 0
+  for (let i = 0; i < x.length; i++) { som += x[i] * x[i]; piek = Math.max(piek, Math.abs(x[i])) }
+  return { duur: ab.duration, kanalen: ab.numberOfChannels, sr: ab.sampleRate, bytes: bytes.length, kop: bytes[0],
+           rmsDb: 20 * Math.log10(Math.sqrt(som / x.length)), piekDb: 20 * Math.log10(piek) }
+}"""
+
 sock = socket.socket(); sock.bind(('127.0.0.1', 0)); poort = sock.getsockname()[1]; sock.close()
 www = tempfile.mkdtemp(prefix='proef325w_'); os.symlink(MAP, os.path.join(www, 'Fibro'))
 server = subprocess.Popen([sys.executable, '-m', 'http.server', str(poort), '--bind', '127.0.0.1', '--directory', www], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -63,6 +81,7 @@ try:
         browser = p.chromium.launch(args=['--no-proxy-server'])
         ctx = browser.new_context(viewport={'width': 1280, 'height': 900}, service_workers='block', accept_downloads=True)
         ctx.route(re.compile(r'^https?://(?!127\.0\.0\.1).*'), supa)
+        ctx.grant_permissions(['clipboard-read', 'clipboard-write'], origin='http://127.0.0.1:%d' % poort)
         ctx.add_init_script("try{localStorage.setItem('sb-qmgatbphiplrfxrljtbe-auth-token'," + json.dumps(TOKEN) + ")}catch(e){}")
         pg = ctx.new_page(); paginafouten = []
         pg.on('pageerror', lambda e: paginafouten.append(str(e)))
@@ -106,7 +125,25 @@ try:
 
         # E. het pakketbestand
         pg.fill('#gekozenLijst .kaartje:first-child input[type=text]', 'Rode bol')
+        # H. een eigen geluid voor sticker 1
+        kaart1 = '#gekozenLijst .kaartje:nth-child(1)'; kaart2 = '#gekozenLijst .kaartje:nth-child(2)'
+        pg.set_input_files(kaart2 + ' input[type=file]', TEKST)
+        pg.wait_for_function("() => document.querySelector('#gekozenLijst .kaartje:nth-child(2) .geluidstatus.fout')", timeout=15000)
+        check('niet als geluid gelezen' in pg.inner_text(kaart2 + ' .geluidstatus'), 'H. een bestand dat geen geluid is: een nette melding (%s)' % pg.inner_text(kaart2 + ' .geluidstatus')[:50])
+        pg.set_input_files(kaart1 + ' input[type=file]', WAV)
+        pg.wait_for_function("() => /^✓ Eigen geluid/.test(document.querySelector('#gekozenLijst .kaartje:nth-child(1) .geluidstatus')?.textContent || '')", timeout=30000)
+        status = pg.inner_text(kaart1 + ' .geluidstatus')
+        check('0,5 seconden' in status, 'H. de stilte is eraf: 0,5 seconden over van de 1,2 (%s)' % status)
         pg.fill('#titel', 'Zomer Dieren!')
+        pg.click('#maakPakket')
+        pg.wait_for_function("() => document.getElementById('pakketMelding').textContent.includes('bron ontbreekt')", timeout=30000)
+        check(True, 'H. zonder bron komt er geen pakket (de melding noemt de bron)')
+        pg.fill(kaart1 + ' input[placeholder^="bijvoorbeeld Kenney"]', 'zelf gemaakt (testtoon)')
+        pg.click(kaart1 + ' .speel:not(.stil)')   # ▶ met een eigen geluid geeft geen fout
+        pg.click(kaart1 + ' .speel.stil:has-text("Engels")')
+        pg.wait_for_function("() => document.querySelector('#gekozenLijst .kaartje:nth-child(1) .nr:last-child')?.textContent.includes('Gekopieerd')", timeout=8000)
+        klem = pg.evaluate("() => navigator.clipboard.readText()")
+        check('"Sticker 1"' in klem and 'bounce' in klem and 'no music' in klem, 'H. de beschrijving voor een geluidsmaker staat op het klembord (%s)' % klem[:60])
         with pg.expect_download(timeout=30000) as dl:
             pg.click('#maakPakket')
         bestand = dl.value
@@ -121,11 +158,16 @@ try:
             r = pg.evaluate(LEES, s['webp']); groot = max(groot, r['lengte'])
             if r['riff'] != 'RIFFWEBP' or (r['w'], r['h']) != (384, 384) or r['hoek'] != 0 or r['midden'] < 200: mooi = False; print('   ', r)
         check(mooi, 'E. alle 12 zijn WebP van 384 x 384, doorzichtige hoeken en een gevulde sticker in het midden')
+        st0 = pak['stickers'][0]
+        check('mp3' in st0 and st0.get('bron') == 'zelf gemaakt (testtoon)' and all('mp3' not in x and 'bron' not in x for x in pak['stickers'][1:]), 'H. alleen sticker 1 heeft een eigen geluid, met de bron erbij')
+        m = pg.evaluate(LEES_MP3, st0['mp3'])
+        check(m['kop'] == 0xFF and m['bytes'] < 40 * 1024, 'H. een echte mp3 onder 40 kB (%d bytes)' % m['bytes'])
+        check(0.4 < m['duur'] < 0.75 and m['kanalen'] == 1, 'H. ongeveer een halve seconde, mono (%.2f s)' % m['duur'])
+        check(-24 < m['rmsDb'] < -18 and m['piekDb'] < 0, 'H. even hard als de andere geluiden: rond -21 dB (%.1f dB, piek %.1f dB)' % (m['rmsDb'], m['piekDb']))
         check(groot <= 150 * 1024, 'E. het zwaarste plaatje is %d kB (grens 150 kB)' % (groot // 1024))
         check('is gemaakt' in pg.inner_text('#pakketMelding'), 'E. de melding zegt dat het bestand klaar is')
 
         # G. de prompt voor Gemini
-        ctx.grant_permissions(['clipboard-read', 'clipboard-write'], origin=basis.rstrip('/').rsplit('/', 1)[0])
         pg.goto(basis + 'studio.html')
         pg.wait_for_function("() => !document.getElementById('inhoud').classList.contains('verborgen')", timeout=15000)
         check(pg.evaluate("() => document.getElementById('promptBlok').compareDocumentPosition(document.getElementById('stap2')) & Node.DOCUMENT_POSITION_FOLLOWING") > 0, 'G. de prompt staat boven de stappen')

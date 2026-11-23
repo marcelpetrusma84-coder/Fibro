@@ -161,7 +161,7 @@ body.heeft-wallpaper::before { display:block; }
   import { startMeldingen } from './meldingen.js?v=188'
   import { startHeartbeat } from './heartbeat.js?v=118' // v274: ook hier tel je mee als online
   import { volgOnline, isVriendOnline, bewaarServerStand } from './onlinestip.js?v=2' // v274: nauwkeuriger bolletje
-  import { leesMood, isMoodSticker, tekenMoodSticker } from './moodsticker.js?v=238' // v171: een sticker als mood
+  import { leesMood, isMoodSticker, tekenMoodSticker } from './moodsticker.js?v=239' // v171: een sticker als mood
   koppelSpelIcoonFallback()
   pasBlokstijlToe()
 
@@ -569,7 +569,7 @@ body.heeft-wallpaper::before { display:block; }
       if (/^sticker_/.test(w.id || '')) {
         el.innerHTML = '<div class="widget-inhoud"></div>'
         grid.appendChild(el)
-        try { await (await import('./stickerwidget.js?v=238')).tekenStickerWidget(el.querySelector('.widget-inhoud'), w.id, { vriendId }) }
+        try { await (await import('./stickerwidget.js?v=239')).tekenStickerWidget(el.querySelector('.widget-inhoud'), w.id, { vriendId }) }
         catch (e) { console.warn('[stickerwidget]', e); el.remove() }
         continue
       }
@@ -626,7 +626,7 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_quiz')
     if (!ruw) return false
     let Q, quiz = null
-    try { Q = await import('./quiz.js?v=7') } catch (e) { console.warn('[quiz]', e); return false }
+    try { Q = await import('./quiz.js?v=8') } catch (e) { console.warn('[quiz]', e); return false }
     try { quiz = Q.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!quiz) return false
     await vriendAchtergrond(el, vriendId, 'quiz')

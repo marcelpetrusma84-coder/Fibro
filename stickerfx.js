@@ -16,6 +16,9 @@
 // Op de iPhone mag een pagina pas geluid maken na een tik: daarom zet de eerste tik op de pagina
 // het geluid alvast klaar (zie onderaan).
 
+// 23 nov 2026: stickers uit Stekky Studio kunnen een eigen geluid hebben (geluiden/<vel>-<nr>.mp3, zie studio-pakketten.js)
+import { STUDIO_VELLEN } from './studio-pakketten.js?v=2'
+
 const naamVan = item => (item && item.naam) ? (window.T && window.T.taal === 'en' ? item.naam[1] : item.naam[0]) : ''
 export { naamVan }
 
@@ -370,7 +373,7 @@ function stilVorige(behalve) {
 }
 // Het geluid met code (Web Audio): de terugval als de mp3 niet lukt
 function speelCode(geluid) {
-  let g = GELUIDEN[geluid]
+  let g = geluidVan(geluid)
   if (g && g.mp3) g = GELUIDEN[g.terug] // v161: alleen als mp3: dan het terug-geluid
   if (!g || !g.f || geluid === 'geen') return
   if (!audio()) return
@@ -381,6 +384,15 @@ function speelCode(geluid) {
     g.f(stuk, ctx.currentTime + 0.02)
   } catch (e) { console.warn('[stickerfx]', e) }
 }
+
+/* ---------- eigen geluiden uit Stekky Studio ---------- */
+// Een sticker uit de Studio met een eigen geluid heeft in studio-pakketten.js g = '<vel>-<nr>' (bijv. 'f8-03') en terug = het
+// bibliotheekgeluid. Hier worden dat geluiden die alleen als mp3 bestaan (zoals de 'mp3: true'-geluiden hierboven), maar
+// ze staan niet in GELUIDEN: zo blijven de lijst in het Stickerlab en haalAlleMp3 gewoon. Alle plekken die een sticker
+// afspelen geven alleen de naam (g) door, dus die hoeven niet te veranderen.
+const STUDIO_GELUIDEN = {}
+for (const v of STUDIO_VELLEN) for (const st of v.stickers) if (st.terug) STUDIO_GELUIDEN[st.g] = { naam: st.naam, mp3: true, terug: st.terug }
+const geluidVan = naam => GELUIDEN[naam] || STUDIO_GELUIDEN[naam]
 
 /* ---------- geluiden als mp3 (v160) ---------- */
 // De 30 mp3's samen zijn ongeveer 0,55 MB (v161) en komen van dezelfde plek als de app (GitHub), niet van de server. Ze
@@ -406,7 +418,7 @@ function stil() {
 }
 const mp3 = {} // naam -> { url: blob-adres of null, klaar: belofte }
 function haalMp3(naam) {
-  if (!GELUIDEN[naam] || naam === 'geen') return null
+  if (!geluidVan(naam) || naam === 'geen') return null
   if (!mp3[naam]) {
     const m = mp3[naam] = { url: null }
     m.klaar = fetch('geluiden/' + naam + '.mp3?v=' + MP3_VERSIE)
@@ -416,7 +428,20 @@ function haalMp3(naam) {
   }
   return mp3[naam]
 }
-function haalAlleMp3() { try { Object.keys(GELUIDEN).forEach(haalMp3) } catch (e) {} }
+// De eigen geluiden uit de Studio alleen van de pakketten die op dit toestel gedownload zijn (fibro_store_<uid>, zie
+// stickervellen.js); de rest komt pas binnen als zo'n sticker voor het eerst klinkt.
+function haalStudioMp3() {
+  try {
+    const gedownload = new Set()
+    for (let i = 0; i < localStorage.length; i++) {
+      const sleutel = localStorage.key(i)
+      if (!/^fibro_store_/.test(sleutel)) continue
+      try { for (const id of JSON.parse(localStorage.getItem(sleutel))) gedownload.add(id) } catch (e) {}
+    }
+    for (const v of STUDIO_VELLEN) if (gedownload.has(v.store)) for (const st of v.stickers) if (st.terug) haalMp3(st.g)
+  } catch (e) {}
+}
+function haalAlleMp3() { try { Object.keys(GELUIDEN).forEach(haalMp3) } catch (e) {} haalStudioMp3() }
 const spelers = []
 let beurt = 0
 function nieuweSpeler() {
@@ -446,7 +471,7 @@ function speelMp3(geluid, url) {
   if (p && typeof p.then === 'function') p.then(() => { a._vrij = true }, e => { if (!e || e.name !== 'AbortError') speelCode(geluid) })
 }
 export function speelGeluid(geluid) {
-  const g = GELUIDEN[geluid]
+  const g = geluidVan(geluid)
   if (!g || geluid === 'geen') return
   const m = haalMp3(geluid)
   if (m && m.url) return speelMp3(geluid, m.url)

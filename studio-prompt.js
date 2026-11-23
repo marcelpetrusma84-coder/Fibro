@@ -57,3 +57,17 @@ export function roosterOpmerking(opties = {}) {
   if (kolommen * rijen < MIN_STICKERS) return 'Een pakket heeft er ' + MIN_STICKERS + ' nodig, en dit rooster geeft er maar ' + (kolommen * rijen) + '. Kies meer kolommen of rijen.'
   return 'Zet bij stap 1 in de Studio "vaste indeling" aan met ' + kolommen + ' kolommen en ' + rijen + ' rijen.'
 }
+
+// ── De beschrijving van het geluid van één sticker (voor een AI-geluidsmaker) ──
+// naam: de naam van de sticker; beweging: hoe hij beweegt, in woorden (bijv. 'bounce'); taal: 'en' of 'nl'.
+// Het geluid moet kort, enkelvoudig en zonder muziek of stem zijn, want de Studio knipt de stilte eraf en maakt het even hard,
+// maar kan van een liedje of een zin niets maken.
+const schoon = t => String(t ?? '').replace(/["“”]/g, "'").replace(/\s+/g, ' ').trim().slice(0, 60)
+export function maakGeluidPrompt({ naam, beweging, taal = 'en' } = {}) {
+  const n = schoon(naam) || (taal === 'nl' ? 'een sticker' : 'a sticker')
+  const b = schoon(beweging).toLowerCase()
+  if (taal === 'nl') return 'Een kort geluidseffect voor een chatsticker: "' + n + '". ' + (b ? 'De sticker beweegt zo: ' + b + '. ' : '') +
+    'Ongeveer 1 seconde, één enkel geluid, zonder muziek, zonder stem en zonder stilte aan het begin. Vrolijk en duidelijk.'
+  return 'A short sound effect for a chat sticker: "' + n + '". ' + (b ? 'The sticker moves like this: ' + b + '. ' : '') +
+    'About 1 second, one single sound, no music, no voice and no silence at the start. Cheerful and clear.'
+}

@@ -3,10 +3,11 @@
 // Het knippen zit in studio-knippen.js, het pakketbestand in studio-pakket.js (beide zonder scherm, met tests).
 // Alleen voor moderators (zoals moderatie.html): ben_ik_moderator.
 import { supabase } from './supabase.js?v=95'
-import { BEWEGINGEN, GELUIDEN, speel } from './stickerfx.js?v=236'
+import { BEWEGINGEN, GELUIDEN, speel, speelBeweging } from './stickerfx.js?v=237'
 import { vindStickers, knipRooster, maakUitsnede } from './studio-knippen.js?v=1'
-import { AANTAL, MAX_PLAATJE, voorstelFx, maakPakket, valideerPakket, maakSlug } from './studio-pakket.js?v=1'
-import { maakPrompt, roosterOpmerking } from './studio-prompt.js?v=1'
+import { AANTAL, MAX_PLAATJE, MAX_MP3, MAX_BRON, voorstelFx, maakPakket, valideerPakket, maakSlug } from './studio-pakket.js?v=2'
+import { maakPrompt, roosterOpmerking, maakGeluidPrompt } from './studio-prompt.js?v=2'
+import { SAMPLERATE, MAX_SEC, verwerk, codeerMp3 } from './studio-geluid.js?v=1'
 
 const $ = id => document.getElementById(id)
 const MAX_KANT = 2000        // grotere platen worden eerst kleiner gemaakt (sneller knippen)
@@ -96,13 +97,18 @@ function koppelPrompt() {
   $('kopieerPrompt').addEventListener('click', kopieerPrompt)
   verversPrompt()
 }
+// Tekst op het klembord zetten. Lukt dat niet (oudere browser, of een venster zonder rechten): een tijdelijk tekstvak
+// selecteren en het oude kopieerkommando proberen. Geeft true als het gelukt is.
+async function kopieerTekst(tekst) {
+  try { await navigator.clipboard.writeText(tekst); return true } catch (e) {}
+  const veld = el('textarea', { 'aria-hidden': 'true', readonly: '' })
+  veld.value = tekst; veld.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0'
+  document.body.append(veld)
+  try { veld.focus(); veld.select(); return document.execCommand('copy') } catch (e) { return false } finally { veld.remove() }
+}
 async function kopieerPrompt() {
-  const m = $('kopieerMelding'), veld = $('promptTekst')
-  let gelukt = false
-  try { await navigator.clipboard.writeText(veld.value); gelukt = true } catch (e) {
-    // geen toegang tot het klembord (oudere browser, of een venster zonder rechten): selecteren en het oude kopieerkommando
-    try { veld.focus(); veld.select(); gelukt = document.execCommand('copy') } catch (e2) { gelukt = false }
-  }
+  const m = $('kopieerMelding')
+  const gelukt = await kopieerTekst($('promptTekst').value)
   melding(m, gelukt ? '✓ Gekopieerd. Plak het nu in Gemini.' : 'Kopiëren lukte niet. Selecteer de tekst zelf en kopieer met Ctrl+C.', gelukt ? 'goed' : 'let-op')
   m.style.margin = '0'
   if (gelukt) setTimeout(() => { if (m.textContent.startsWith('✓')) m.textContent = '' }, 4000)
@@ -265,9 +271,10 @@ function bouwKaartjes() {
       ]),
       el('div', { klas: 'twee' }, [
         keuzeveld('Beweging', BEWEGINGEN, inst.b, k => { inst.b = k }),
-        keuzeveld('Geluid', GELUIDEN, inst.g, k => { inst.g = k }),
+        keuzeveld('Geluid uit de bibliotheek', GELUIDEN, inst.g, k => { inst.g = k }),
       ]),
-      el('button', { type: 'button', klas: 'speel', tekst: '▶ Kijk en luister', onclick: () => speel(plaatje, { b: inst.b, g: inst.g }) }),
+      geluidBlok(inst),
+      el('button', { type: 'button', klas: 'speel', tekst: '▶ Kijk en luister', onclick: () => speelProef(plaatje, inst) }),
     ])
     lijst.append(el('div', { klas: 'kaartje' }, [el('div', { klas: 'plaatje' }, [plaatje]), velden]))
   })
@@ -282,6 +289,92 @@ function keuzeveld(label, bron, waarde, bijWijziging) {
   sel.value = waarde
   sel.addEventListener('change', () => bijWijziging(sel.value))
   return el('label', { klas: 'veld' }, [label, sel])
+}
+
+// ── Een eigen geluid per sticker (mp3) ──
+// De Studio ruimt het geluid op (stilte eraf, even hard, kort, mono) en maakt er een kleine mp3 van (studio-geluid.js).
+// Het geluid uit de bibliotheek blijft staan als terugval: dat klinkt als de mp3 op iemands toestel niet laadt.
+class Uitleg extends Error {}
+const MAX_BESTAND = 10 * 1024 * 1024, MAX_INVOER_SEC = 30
+function laadLame() {
+  if (window.lamejs) return Promise.resolve()
+  if (!window._lameLaden) window._lameLaden = new Promise((klaar, mis) => {
+    const sc = document.createElement('script')
+    sc.src = 'lame.min.js?v=95'
+    sc.onload = () => klaar()
+    sc.onerror = () => { window._lameLaden = null; sc.remove(); mis(new Uitleg('De mp3-maker kon niet laden. Probeer het nog een keer.')) }
+    document.head.appendChild(sc)
+  })
+  return window._lameLaden
+}
+async function maakEigenGeluid(bestand) {
+  if (bestand.size > MAX_BESTAND) throw new Uitleg('Dit bestand is te groot (hoogstens 10 MB). Kies een kort geluid.')
+  const buf = await bestand.arrayBuffer()
+  const Ctx = window.AudioContext || window.webkitAudioContext
+  let ab
+  const cx = new Ctx()
+  try { ab = await cx.decodeAudioData(buf) } catch (e) { throw new Uitleg('Dit bestand kon niet als geluid gelezen worden. Probeer een mp3 of wav.') } finally { try { cx.close() } catch (e) {} }
+  if (ab.duration > MAX_INVOER_SEC) throw new Uitleg('Dit geluid is te lang (' + Math.round(ab.duration) + ' seconden). Knip er eerst een stukje uit van hoogstens ' + MAX_INVOER_SEC + ' seconden.')
+  // naar mono op 44,1 kHz: de browser mengt en past de snelheid aan
+  const uit = new OfflineAudioContext(1, Math.max(1, Math.ceil(ab.duration * SAMPLERATE)), SAMPLERATE)
+  const bron = uit.createBufferSource(); bron.buffer = ab; bron.connect(uit.destination); bron.start()
+  const mono = (await uit.startRendering()).getChannelData(0)
+  const res = verwerk(mono, SAMPLERATE)
+  if (res.fout) throw new Uitleg(res.fout)
+  await laadLame()
+  const mp3 = codeerMp3(res.samples, window.lamejs)
+  if (mp3.length > MAX_MP3) throw new Uitleg('Dit geluid wordt te zwaar (' + Math.round(mp3.length / 1024) + ' kB). Kies een korter geluid.')
+  return { mp3: await naarBase64(new Blob([mp3], { type: 'audio/mpeg' })), duur: res.duur, bytes: mp3.length, ingekort: res.ingekort }
+}
+
+// Het blok onder de keuzelijsten van één sticker: bestand kiezen, wat er van gemaakt is, bron, beschrijving kopiëren.
+function geluidBlok(inst) {
+  const blok = el('div', { klas: 'geluidblok' })
+  const vul = (extra = null) => {
+    blok.textContent = ''
+    const status = el('div', { klas: 'geluidstatus' })
+    if (extra) { status.className = 'geluidstatus ' + extra.soort; status.textContent = extra.tekst }
+    else if (inst.mp3) status.textContent = '✓ Eigen geluid: ' + inst.mp3Info.duur.toLocaleString('nl-NL', { maximumFractionDigits: 1 }) + ' seconden, ' +
+      Math.max(1, Math.round(inst.mp3Info.bytes / 1024)) + ' kB' + (inst.mp3Info.ingekort ? ' (ingekort tot ' + MAX_SEC + ' seconden)' : '')
+    const kies = el('input', { type: 'file', accept: 'audio/*,.mp3,.wav,.m4a,.ogg' })
+    kies.addEventListener('change', async () => {
+      const f = kies.files[0]; if (!f) return
+      vul({ soort: 'bezig', tekst: 'Bezig met opruimen…' })
+      try {
+        const g = await maakEigenGeluid(f)
+        inst.mp3 = g.mp3; inst.mp3Info = g
+        vul()
+      } catch (e) { vul({ soort: 'fout', tekst: e instanceof Uitleg ? e.message : 'Dit geluid kon niet verwerkt worden. Probeer een ander bestand.' }) }
+    })
+    blok.append(el('label', { klas: 'veld' }, [inst.mp3 ? 'Ander eigen geluid kiezen (mp3, wav, m4a of ogg)' : 'Eigen geluid (mp3, wav, m4a of ogg; mag leeg)', kies]), status)
+    if (inst.mp3) {
+      const bron = el('input', { type: 'text', maxlength: String(MAX_BRON), value: inst.bron || '', placeholder: 'bijvoorbeeld Kenney.nl, CC0, of zelf opgenomen' })
+      bron.addEventListener('input', () => { inst.bron = bron.value })
+      blok.append(el('label', { klas: 'veld' }, ['Bron van dit geluid (verplicht)', bron]),
+        el('button', { type: 'button', klas: 'speel stil', tekst: '✕ Eigen geluid weghalen', onclick: () => { delete inst.mp3; delete inst.mp3Info; delete inst.bron; vul() } }))
+    }
+    // de beschrijving voor een AI-geluidsmaker: met de naam en de beweging van deze sticker
+    const kopieerRij = el('div', { klas: 'rij', style: 'gap:6px;margin-top:2px' })
+    const terugmelding = el('span', { klas: 'nr' })
+    for (const [taal, label] of [['en', '📋 Beschrijving (Engels)'], ['nl', '📋 Beschrijving (Nederlands)']]) {
+      kopieerRij.append(el('button', { type: 'button', klas: 'speel stil', tekst: label, onclick: async () => {
+        const b = inst.b === 'geen' ? '' : (BEWEGINGEN[inst.b]?.naam[taal === 'en' ? 1 : 0] || '')
+        const ok = await kopieerTekst(maakGeluidPrompt({ naam: inst.naam[taal === 'en' ? 1 : 0] || inst.naam[0], beweging: b, taal }))
+        terugmelding.textContent = ok ? '✓ Gekopieerd' : 'Kopiëren lukte niet'
+      } }))
+    }
+    kopieerRij.append(terugmelding)
+    blok.append(kopieerRij)
+  }
+  vul()
+  return blok
+}
+// ▶ bij een sticker: de beweging, en het eigen geluid als dat er is (anders het geluid uit de bibliotheek)
+function speelProef(plaatje, inst) {
+  if (!inst.mp3) return speel(plaatje, { b: inst.b, g: inst.g })
+  speelBeweging(plaatje, inst.b)
+  const a = new Audio('data:audio/mpeg;base64,' + inst.mp3)
+  a.play().catch(() => {})
 }
 
 // ── Stap 4: het pakketbestand ──
@@ -316,7 +409,7 @@ async function maakBestand() {
     for (const i of volgorde) {
       const inst = instelling.get(i)
       const blob = await alsWebp(eindCanvas(gevonden[i]))
-      stickers.push({ naam: inst.naam, b: inst.b, g: inst.g, webp: await naarBase64(blob) })
+      stickers.push({ naam: inst.naam, b: inst.b, g: inst.g, webp: await naarBase64(blob), ...(inst.mp3 ? { mp3: inst.mp3, bron: inst.bron || '' } : {}) })
     }
     const pakket = maakPakket({ titel: $('titel').value, uitleg: [$('uitlegNl').value, $('uitlegEn').value], stickers })
     const fouten = valideerPakket(pakket, { bewegingen: new Set(Object.keys(BEWEGINGEN)), geluiden: new Set(Object.keys(GELUIDEN)) })

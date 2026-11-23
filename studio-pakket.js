@@ -5,7 +5,8 @@
 // Een pakketbestand (naam.stekkypakket.json) is gewoon tekst:
 //   { formaat: 'stekky-stickerpakket', versie: 1, id: 'stickers-<naam>', titel, uitleg: [nl, en],
 //     stickers: [ { naam: [nl, en], b: beweging, g: geluid, webp: <het plaatje als base64>,
-//                   mp3: <eigen geluid als base64, mag ontbreken>, bron: <waar dat geluid vandaan komt> } x 12 ] }
+//                   mp3: <eigen geluid als base64, mag ontbreken>, bron: <waar dat geluid vandaan komt>,
+//                   licentie: <zelf | cc0 | cc-by | betaald> } x 12 ] }
 // Heeft een sticker een eigen geluid (mp3), dan klinkt dat; het geluid uit de bibliotheek (g) is dan de terugval.
 // Het wordt daarna (door tests/tools/studio-installeer.mjs) een vel in stickers/<fN>/ en een regel in studio-pakketten.js.
 
@@ -14,6 +15,15 @@ export const AANTAL = 12                      // een pakket heeft precies 12 sti
 export const MAX_PLAATJE = 150 * 1024         // een plaatje van meer dan 150 kB is te zwaar voor de chat
 export const MAX_MP3 = 40 * 1024              // een eigen geluid (hoogstens 3 seconden, 64 kbps = ongeveer 24 kB)
 export const MAX_BRON = 120
+// De licenties waaruit je kiest bij een eigen geluid. Bewust zonder "niet-commercieel" (NC) en "geen bewerkingen" (ND): met
+// NC mag het niet in een betaald product, met ND mag de Studio het niet inkorten en even hard maken. 'vermelding': komt de bron
+// in de Store te staan? (Bij CC BY moet het; bij CC0 mag het als dank.)
+export const LICENTIES = {
+  zelf: { naam: 'Zelf gemaakt of opgenomen', vermelding: false, uitleg: 'Je hoeft niets te vermelden. Zet bij Bron bijvoorbeeld "zelf opgenomen".' },
+  cc0: { naam: 'CC0 (vrij te gebruiken)', vermelding: true, uitleg: 'Vrij te gebruiken, ook commercieel. Zet bij Bron waar je het vond; dat komt als dank in de Store.' },
+  'cc-by': { naam: 'CC BY (de maker moet genoemd worden)', vermelding: true, uitleg: 'Commercieel mag, mits de maker genoemd wordt. Zet bij Bron de naam van de maker en de site; dat komt in de Store te staan.' },
+  betaald: { naam: 'Gekocht of via een betaald abonnement', vermelding: false, uitleg: 'Alleen als de voorwaarden commercieel gebruik toestaan, ook als losse geluidsbestanden in een app. Bewaar de voorwaarden.' },
+}
 export const ID_PATROON = /^stickers-[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 // Beweging en geluid die de Studio zelf voorstelt (de volgorde is de volgorde van de stickers). Allemaal bestaande
@@ -63,7 +73,7 @@ export function maakPakket({ titel, uitleg, stickers }) {
     uitleg: [String(uitleg?.[0] || '').trim(), String(uitleg?.[1] || '').trim()],
     stickers: stickers.map(s => ({
       naam: [String(s.naam?.[0] || '').trim(), String(s.naam?.[1] || s.naam?.[0] || '').trim()], b: s.b, g: s.g, webp: s.webp,
-      ...(s.mp3 ? { mp3: s.mp3, bron: String(s.bron || '').trim() } : {}),
+      ...(s.mp3 ? { mp3: s.mp3, bron: String(s.bron || '').trim(), licentie: s.licentie } : {}),
     })),
   }
 }
@@ -92,7 +102,9 @@ export function valideerPakket(p, fx) {
       else if (groottePlaatje(s.mp3) > MAX_MP3) fout.push(nr + ': het eigen geluid is te zwaar (meer dan ' + Math.round(MAX_MP3 / 1024) + ' kB).')
       if (typeof s.bron !== 'string' || s.bron.trim().length < 2) fout.push(nr + ' heeft een eigen geluid, maar de bron ontbreekt. Vul in waar het geluid vandaan komt (bijvoorbeeld "Kenney.nl, CC0" of "zelf opgenomen").')
       else if (s.bron.length > MAX_BRON) fout.push(nr + ': de bron is te lang (hoogstens ' + MAX_BRON + ' tekens).')
-    } else if (s.bron !== undefined) fout.push(nr + ' heeft een bron, maar geen eigen geluid.')
+      if (s.licentie === undefined || s.licentie === '') fout.push(nr + ' heeft een eigen geluid, maar de licentie ontbreekt. Kies er een uit de lijst.')
+      else if (!Object.hasOwn(LICENTIES, s.licentie)) fout.push(nr + ': onbekende licentie "' + String(s.licentie).slice(0, 20) + '".')
+    } else if (s.bron !== undefined || s.licentie !== undefined) fout.push(nr + ' heeft een bron of licentie, maar geen eigen geluid.')
   })
   return fout
 }

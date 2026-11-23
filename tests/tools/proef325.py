@@ -139,6 +139,13 @@ try:
         pg.wait_for_function("() => document.getElementById('pakketMelding').textContent.includes('bron ontbreekt')", timeout=30000)
         check(True, 'H. zonder bron komt er geen pakket (de melding noemt de bron)')
         pg.fill(kaart1 + ' input[placeholder^="bijvoorbeeld Kenney"]', 'zelf gemaakt (testtoon)')
+        pg.click('#maakPakket')
+        pg.wait_for_function("() => document.getElementById('pakketMelding').textContent.includes('licentie ontbreekt')", timeout=30000)
+        check(True, 'H. zonder licentie komt er ook geen pakket')
+        opties = pg.evaluate("() => [...document.querySelector('#gekozenLijst .kaartje:nth-child(1) select:has(option[value=\"cc-by\"])').options].map(o => o.value)")
+        check(opties == ['', 'zelf', 'cc0', 'cc-by', 'betaald'], 'H. de licenties om uit te kiezen: leeg, zelf, cc0, cc-by, betaald; geen NC of ND (%s)' % opties)
+        pg.select_option(kaart1 + ' select:has(option[value="cc-by"])', 'cc-by')
+        check('maker' in pg.inner_text(kaart1 + ' .nr:nth-of-type(2)') or 'genoemd' in pg.inner_text(kaart1), 'H. bij CC BY staat dat de maker genoemd moet worden')
         pg.click(kaart1 + ' .speel:not(.stil)')   # ▶ met een eigen geluid geeft geen fout
         pg.click(kaart1 + ' .speel.stil:has-text("Engels")')
         pg.wait_for_function("() => document.querySelector('#gekozenLijst .kaartje:nth-child(1) .nr:last-child')?.textContent.includes('Gekopieerd')", timeout=8000)
@@ -159,7 +166,7 @@ try:
             if r['riff'] != 'RIFFWEBP' or (r['w'], r['h']) != (384, 384) or r['hoek'] != 0 or r['midden'] < 200: mooi = False; print('   ', r)
         check(mooi, 'E. alle 12 zijn WebP van 384 x 384, doorzichtige hoeken en een gevulde sticker in het midden')
         st0 = pak['stickers'][0]
-        check('mp3' in st0 and st0.get('bron') == 'zelf gemaakt (testtoon)' and all('mp3' not in x and 'bron' not in x for x in pak['stickers'][1:]), 'H. alleen sticker 1 heeft een eigen geluid, met de bron erbij')
+        check('mp3' in st0 and st0.get('bron') == 'zelf gemaakt (testtoon)' and st0.get('licentie') == 'cc-by' and all('mp3' not in x and 'bron' not in x for x in pak['stickers'][1:]), 'H. alleen sticker 1 heeft een eigen geluid, met bron en licentie erbij')
         m = pg.evaluate(LEES_MP3, st0['mp3'])
         check(m['kop'] == 0xFF and m['bytes'] < 40 * 1024, 'H. een echte mp3 onder 40 kB (%d bytes)' % m['bytes'])
         check(0.4 < m['duur'] < 0.75 and m['kanalen'] == 1, 'H. ongeveer een halve seconde, mono (%.2f s)' % m['duur'])

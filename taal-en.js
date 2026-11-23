@@ -2802,4 +2802,5 @@ window.FIBRO_EN = {
   "{n} wachters verslagen · nog {over} te gaan": "{n} guards defeated · {over} to go",
   "1 wachter verslagen · nog 11 te gaan": "1 guard defeated · 11 to go",
   "Schild vangt {n} op · nog {schade} afweren": "Shield absorbs {n} · {schade} left to defend",
+  "Geluiden van: {bronnen}": "Sounds by: {bronnen}",
 }

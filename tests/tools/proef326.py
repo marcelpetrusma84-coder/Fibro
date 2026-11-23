@@ -1,6 +1,6 @@
 # proef326 (23 nov 2026, Marcel): een Studio-pakket met eigen geluiden in de echte app (stickerfx.js + stickervellen.js).
 # Het pakketbestand gaat door het installatie-script (in een kopie van de app), en dan:
-#  A. de mp3's staan in geluiden/f8-03.mp3 en f8-05.mp3, de plaatjes in stickers/f8/, studio-pakketten.js noemt ze
+#  A. de mp3's staan in geluiden/f8-03.mp3, f8-05.mp3 en f8-07.mp3, de plaatjes in stickers/f8/, studio-pakketten.js noemt ze
 #  B. zoekSticker('f8-03') geeft g = 'f8-03'; een sticker zonder eigen geluid houdt zijn bibliotheekgeluid; GELUIDEN (de lijst in het Stickerlab) blijft zoals hij was
 #  C. een pakket dat niet gedownload is: er wordt geen enkel eigen geluid vooraf opgehaald; speelt zo'n sticker, dan komt zijn mp3 (en alleen die) binnen en wordt afgespeeld
 #  D. een pakket dat wel gedownload is (fibro_store_<uid>): de eigen geluiden worden vooraf opgehaald
@@ -23,8 +23,9 @@ MP3_A = bytes([0xFF, 0xFB, 0x90, 0x00]) + b'A' * 500
 MP3_B = bytes([0xFF, 0xFB, 0x90, 0x00]) + b'B' * 777
 pakket = {'formaat': 'stekky-stickerpakket', 'versie': 1, 'id': 'stickers-proef', 'titel': 'Proef', 'uitleg': ['Een proef.', 'A test.'],
           'stickers': [{'naam': ['Sticker %d' % (i + 1), 'Sticker %d' % (i + 1)], 'b': BEW[i], 'g': GEL[i], 'webp': WEBP} for i in range(12)]}
-pakket['stickers'][2].update(mp3=base64.b64encode(MP3_A).decode(), bron='proef, CC0')
-pakket['stickers'][4].update(mp3=base64.b64encode(MP3_B).decode(), bron='zelf opgenomen')
+pakket['stickers'][2].update(mp3=base64.b64encode(MP3_A).decode(), bron='Piet Jansen via freesound.org', licentie='cc-by')
+pakket['stickers'][4].update(mp3=base64.b64encode(MP3_B).decode(), bron='zelf opgenomen', licentie='zelf')
+pakket['stickers'][6].update(mp3=base64.b64encode(MP3_B).decode(), bron='Kenney.nl', licentie='cc0')
 
 # Een kopie van de app waar alleen studio-pakketten.js, stickers/ en geluiden/ echt van zijn (de rest verwijst naar de echte map)
 tmp = tempfile.mkdtemp(prefix='proef326_'); hoofd = os.path.join(tmp, 'app'); os.mkdir(hoofd)
@@ -42,10 +43,10 @@ check(r.returncode == 0 and 'vel f8' in r.stdout, 'installeren lukt (%s)' % (r.s
 # A
 g = lambda n: os.path.join(hoofd, 'geluiden', n)
 check(os.path.isfile(g('f8-03.mp3')) and open(g('f8-03.mp3'), 'rb').read() == MP3_A and open(g('f8-05.mp3'), 'rb').read() == MP3_B, 'A. de mp3\'s staan in geluiden/f8-03.mp3 en f8-05.mp3, onveranderd')
-check(not os.path.exists(g('f8-04.mp3')) and len([n for n in os.listdir(os.path.join(hoofd, 'stickers', 'f8')) if n.endswith('.webp')]) == 12, 'A. alleen sticker 3 en 5 hebben een mp3; er zijn 12 plaatjes')
+check(not os.path.exists(g('f8-04.mp3')) and len([n for n in os.listdir(os.path.join(hoofd, 'stickers', 'f8')) if n.endswith('.webp')]) == 12, 'A. sticker 4 heeft geen mp3; er zijn 12 plaatjes')
 data = open(os.path.join(hoofd, 'studio-pakketten.js'), encoding='utf8').read()
 check('"f8-03"' in data and '"terug": ' not in data and 'terug: "sprong"' not in data or True, 'A. studio-pakketten.js is bijgewerkt')
-check('g: "f8-03", terug: "pling", bron: "proef, CC0"' in data and 'g: "f8-05", terug: "popcorn", bron: "zelf opgenomen"' in data and 'g: "ting"' in data, 'A. studio-pakketten.js: g, terug en bron staan erin (%s)' % re.findall(r'\{ nr: \'03\'[^}]*\}', data)[:1])
+check('g: "f8-03", terug: "pling", bron: "Piet Jansen via freesound.org", licentie: "cc-by"' in data and 'g: "f8-05", terug: "popcorn", bron: "zelf opgenomen", licentie: "zelf"' in data and 'g: "ting"' in data, 'A. studio-pakketten.js: g, terug en bron staan erin (%s)' % re.findall(r'\{ nr: \'03\'[^}]*\}', data)[:1])
 
 sock = socket.socket(); sock.bind(('127.0.0.1', 0)); poort = sock.getsockname()[1]; sock.close()
 www = os.path.join(tmp, 'www'); os.mkdir(www); os.symlink(hoofd, os.path.join(www, 'Fibro'))
@@ -103,10 +104,10 @@ try:
         pg.wait_for_function("() => !document.getElementById('inhoud').classList.contains('verborgen')", timeout=15000)
         pg.evaluate("async () => { window.fx = await import('./stickerfx.js?v=' + Date.now()) }")
         for _ in range(30):
-            if len(set(u.split('?')[0] for u in eigen(pg))) >= 2: break
+            if len(set(u.split('?')[0] for u in eigen(pg))) >= 3: break
             pg.wait_for_timeout(200)
         namen = sorted(set(u.split('?')[0].split('/')[-1] for u in eigen(pg)))
-        check(namen == ['f8-03.mp3', 'f8-05.mp3'], 'D. gedownload: de twee eigen geluiden worden vooraf opgehaald (%s)' % namen)
+        check(namen == ['f8-03.mp3', 'f8-05.mp3', 'f8-07.mp3'], 'D. gedownload: de drie eigen geluiden worden vooraf opgehaald (%s)' % namen)
         check(not pg.fouten, 'D. geen paginafouten ' + str(pg.fouten[:2]))
         ctx.close()
 
@@ -118,6 +119,22 @@ try:
         pg.evaluate("async () => { window.fx = await import('./stickerfx.js?v=' + Date.now()) }")
         pg.evaluate("() => fx.speelGeluid('f8-05')"); pg.wait_for_timeout(1500)
         check(any('/geluiden/f8-05.mp3' in u for u in pg.verzoeken) and not pg.fouten, 'E. een mp3 die niet laadt (404): geen paginafout (%s)' % pg.fouten[:1])
+        ctx.close()
+
+        # F: de Store
+        ctx, pg = nieuwe_pagina(False)
+        pg.goto(basis + 'store.html')
+        pg.wait_for_selector('.profile-tab-group-buttons button[data-soort="sticker"]', timeout=15000)
+        pg.click('.profile-tab-group-buttons button[data-soort="sticker"]')
+        pg.wait_for_selector('.item[data-id="stickers-proef"]', timeout=15000)
+        tekst = pg.inner_text('.item[data-id="stickers-proef"] .item-vermelding')
+        check(tekst == 'Geluiden van: Piet Jansen via freesound.org; Kenney.nl', 'F. de Store noemt de bron bij CC BY en CC0, niet bij "zelf opgenomen" (%s)' % tekst)
+        pg.evaluate("() => { localStorage.setItem('fibro_taal', 'en') }")
+        pg.reload(); pg.click('.profile-tab-group-buttons button[data-soort="sticker"]')
+        pg.wait_for_selector('.item[data-id="stickers-proef"] .item-vermelding', timeout=15000)
+        tekst = pg.inner_text('.item[data-id="stickers-proef"] .item-vermelding')
+        check(tekst.startswith('Sounds by: Piet Jansen'), 'F. in het Engels: "Sounds by: ..." (%s)' % tekst)
+        check(not pg.fouten, 'F. geen paginafouten ' + str(pg.fouten[:2]))
         ctx.close()
         browser.close()
 finally:

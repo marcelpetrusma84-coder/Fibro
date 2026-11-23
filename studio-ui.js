@@ -5,7 +5,7 @@
 import { supabase } from './supabase.js?v=95'
 import { BEWEGINGEN, GELUIDEN, speel, speelBeweging } from './stickerfx.js?v=237'
 import { vindStickers, knipRooster, maakUitsnede } from './studio-knippen.js?v=1'
-import { AANTAL, MAX_PLAATJE, MAX_MP3, MAX_BRON, voorstelFx, maakPakket, valideerPakket, maakSlug } from './studio-pakket.js?v=2'
+import { AANTAL, MAX_PLAATJE, MAX_MP3, MAX_BRON, LICENTIES, voorstelFx, maakPakket, valideerPakket, maakSlug } from './studio-pakket.js?v=2'
 import { maakPrompt, roosterOpmerking, maakGeluidPrompt } from './studio-prompt.js?v=2'
 import { SAMPLERATE, MAX_SEC, verwerk, codeerMp3 } from './studio-geluid.js?v=1'
 
@@ -348,10 +348,16 @@ function geluidBlok(inst) {
     })
     blok.append(el('label', { klas: 'veld' }, [inst.mp3 ? 'Ander eigen geluid kiezen (mp3, wav, m4a of ogg)' : 'Eigen geluid (mp3, wav, m4a of ogg; mag leeg)', kies]), status)
     if (inst.mp3) {
-      const bron = el('input', { type: 'text', maxlength: String(MAX_BRON), value: inst.bron || '', placeholder: 'bijvoorbeeld Kenney.nl, CC0, of zelf opgenomen' })
+      // de licentie: verplicht. Geen "niet-commercieel" (NC) en geen "geen bewerkingen" (ND): die kun je hier niet gebruiken.
+      const uitleg = el('div', { klas: 'nr', tekst: inst.licentie ? LICENTIES[inst.licentie].uitleg : 'Geluiden met "niet-commercieel" (NC) of "geen bewerkingen" (ND) kun je niet gebruiken.' })
+      const kiesLicentie = el('select', {}, [el('option', { value: '', tekst: 'Kies de licentie…' }), ...Object.entries(LICENTIES).map(([k, v]) => el('option', { value: k, tekst: v.naam }))])
+      kiesLicentie.value = inst.licentie || ''
+      kiesLicentie.addEventListener('change', () => { inst.licentie = kiesLicentie.value; uitleg.textContent = inst.licentie ? LICENTIES[inst.licentie].uitleg : 'Kies de licentie van dit geluid.' })
+      const bron = el('input', { type: 'text', maxlength: String(MAX_BRON), value: inst.bron || '', placeholder: 'bijvoorbeeld Kenney.nl, of zelf opgenomen' })
       bron.addEventListener('input', () => { inst.bron = bron.value })
-      blok.append(el('label', { klas: 'veld' }, ['Bron van dit geluid (verplicht)', bron]),
-        el('button', { type: 'button', klas: 'speel stil', tekst: '✕ Eigen geluid weghalen', onclick: () => { delete inst.mp3; delete inst.mp3Info; delete inst.bron; vul() } }))
+      blok.append(el('label', { klas: 'veld' }, ['Licentie van dit geluid (verplicht)', kiesLicentie]), uitleg,
+        el('label', { klas: 'veld' }, ['Bron van dit geluid (verplicht)', bron]),
+        el('button', { type: 'button', klas: 'speel stil', tekst: '✕ Eigen geluid weghalen', onclick: () => { delete inst.mp3; delete inst.mp3Info; delete inst.bron; delete inst.licentie; vul() } }))
     }
     // de beschrijving voor een AI-geluidsmaker: met de naam en de beweging van deze sticker
     const kopieerRij = el('div', { klas: 'rij', style: 'gap:6px;margin-top:2px' })
@@ -409,7 +415,7 @@ async function maakBestand() {
     for (const i of volgorde) {
       const inst = instelling.get(i)
       const blob = await alsWebp(eindCanvas(gevonden[i]))
-      stickers.push({ naam: inst.naam, b: inst.b, g: inst.g, webp: await naarBase64(blob), ...(inst.mp3 ? { mp3: inst.mp3, bron: inst.bron || '' } : {}) })
+      stickers.push({ naam: inst.naam, b: inst.b, g: inst.g, webp: await naarBase64(blob), ...(inst.mp3 ? { mp3: inst.mp3, bron: inst.bron || '', licentie: inst.licentie || '' } : {}) })
     }
     const pakket = maakPakket({ titel: $('titel').value, uitleg: [$('uitlegNl').value, $('uitlegEn').value], stickers })
     const fouten = valideerPakket(pakket, { bewegingen: new Set(Object.keys(BEWEGINGEN)), geluiden: new Set(Object.keys(GELUIDEN)) })

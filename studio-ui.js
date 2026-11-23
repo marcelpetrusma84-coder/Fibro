@@ -6,6 +6,7 @@ import { supabase } from './supabase.js?v=95'
 import { BEWEGINGEN, GELUIDEN, speel } from './stickerfx.js?v=236'
 import { vindStickers, knipRooster, maakUitsnede } from './studio-knippen.js?v=1'
 import { AANTAL, MAX_PLAATJE, voorstelFx, maakPakket, valideerPakket, maakSlug } from './studio-pakket.js?v=1'
+import { maakPrompt, roosterOpmerking } from './studio-prompt.js?v=1'
 
 const $ = id => document.getElementById(id)
 const MAX_KANT = 2000        // grotere platen worden eerst kleiner gemaakt (sneller knippen)
@@ -76,6 +77,35 @@ function koppel() {
   $('kiesEerste').addEventListener('click', () => { gekozen.clear(); for (let i = 0; i < Math.min(AANTAL, gevonden.length); i++) gekozen.add(i); verversKeuze() })
   $('kiesGeen').addEventListener('click', () => { gekozen.clear(); verversKeuze() })
   $('maakPakket').addEventListener('click', maakBestand)
+  koppelPrompt()
+}
+
+// ── De prompt voor Gemini (bovenaan): invullen en kopiëren ──
+function promptOpties() {
+  return { thema: $('promptThema').value, stijl: $('promptStijl').value, achtergrond: $('promptAchtergrond').value,
+    kolommen: $('promptKolommen').value, rijen: $('promptRijen').value }
+}
+function verversPrompt() {
+  const o = promptOpties()
+  $('promptTekst').value = maakPrompt(o)
+  const tekst = roosterOpmerking(o)
+  melding($('promptOpmerking'), tekst, /nodig/.test(tekst) ? 'let-op' : '')
+}
+function koppelPrompt() {
+  for (const id of ['promptThema', 'promptStijl', 'promptAchtergrond', 'promptKolommen', 'promptRijen']) $(id).addEventListener('input', verversPrompt)
+  $('kopieerPrompt').addEventListener('click', kopieerPrompt)
+  verversPrompt()
+}
+async function kopieerPrompt() {
+  const m = $('kopieerMelding'), veld = $('promptTekst')
+  let gelukt = false
+  try { await navigator.clipboard.writeText(veld.value); gelukt = true } catch (e) {
+    // geen toegang tot het klembord (oudere browser, of een venster zonder rechten): selecteren en het oude kopieerkommando
+    try { veld.focus(); veld.select(); gelukt = document.execCommand('copy') } catch (e2) { gelukt = false }
+  }
+  melding(m, gelukt ? '✓ Gekopieerd. Plak het nu in Gemini.' : 'Kopiëren lukte niet. Selecteer de tekst zelf en kopieer met Ctrl+C.', gelukt ? 'goed' : 'let-op')
+  m.style.margin = '0'
+  if (gelukt) setTimeout(() => { if (m.textContent.startsWith('✓')) m.textContent = '' }, 4000)
 }
 
 async function laadPlaat(bestand) {

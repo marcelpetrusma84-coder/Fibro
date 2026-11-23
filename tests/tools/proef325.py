@@ -6,6 +6,7 @@
 #  D. met minder dan 12 kan het pakket nog niet gemaakt worden
 #  E. het pakketbestand: id uit de naam, 12 echte WebP-plaatjes van 384 x 384 onder 150 kB, doorzichtige hoeken, aangepaste naam
 #  F. Moderatie heeft een link naar de Studio; geen paginafouten
+#  G. de prompt voor Gemini: staat er bovenaan, past zich aan wat je invult, en de knop kopieert hem naar het klembord
 # python3 -I proef325.py <map>
 import sys, os, time, json, socket, subprocess, tempfile, base64, io, re
 from playwright.sync_api import sync_playwright
@@ -122,6 +123,32 @@ try:
         check(mooi, 'E. alle 12 zijn WebP van 384 x 384, doorzichtige hoeken en een gevulde sticker in het midden')
         check(groot <= 150 * 1024, 'E. het zwaarste plaatje is %d kB (grens 150 kB)' % (groot // 1024))
         check('is gemaakt' in pg.inner_text('#pakketMelding'), 'E. de melding zegt dat het bestand klaar is')
+
+        # G. de prompt voor Gemini
+        ctx.grant_permissions(['clipboard-read', 'clipboard-write'], origin=basis.rstrip('/').rsplit('/', 1)[0])
+        pg.goto(basis + 'studio.html')
+        pg.wait_for_function("() => !document.getElementById('inhoud').classList.contains('verborgen')", timeout=15000)
+        check(pg.evaluate("() => document.getElementById('promptBlok').compareDocumentPosition(document.getElementById('stap2')) & Node.DOCUMENT_POSITION_FOLLOWING") > 0, 'G. de prompt staat boven de stappen')
+        pg.click('#promptBlok summary')
+        std = pg.input_value('#promptTekst')
+        check('15 losse stickers' in std and '5 kolommen en 3 rijen' in std and 'effen, egale kleur' in std, 'G. standaardprompt: 15 stickers, 5 x 3, effen achtergrond')
+        check('vaste indeling' in pg.inner_text('#promptOpmerking') and '5 kolommen en 3 rijen' in pg.inner_text('#promptOpmerking'), 'G. de opmerking zegt wat je in de Studio instelt')
+        pg.fill('#promptThema', 'winterdieren'); pg.fill('#promptStijl', 'zachte waterverf'); pg.fill('#promptAchtergrond', 'lichtgrijs')
+        pg.fill('#promptKolommen', '4'); pg.fill('#promptRijen', '4')
+        eigen = pg.input_value('#promptTekst')
+        check('Thema: winterdieren' in eigen and '- zachte waterverf' in eigen and 'kleur: lichtgrijs.' in eigen and '16 losse stickers' in eigen and '4 kolommen en 4 rijen' in eigen, 'G. de tekst past zich aan wat je invult')
+        pg.fill('#promptKolommen', '3'); pg.fill('#promptRijen', '3')
+        check('nodig' in pg.inner_text('#promptOpmerking') and 'maar 9' in pg.inner_text('#promptOpmerking'), 'G. een rooster met minder dan 12 krijgt een waarschuwing (%s)' % pg.inner_text('#promptOpmerking')[:60])
+        pg.fill('#promptKolommen', '4'); pg.fill('#promptRijen', '4')
+        pg.click('#kopieerPrompt')
+        pg.wait_for_function("() => document.getElementById('kopieerMelding').textContent.startsWith('✓')", timeout=8000)
+        klem = pg.evaluate("() => navigator.clipboard.readText()")
+        check(klem == pg.input_value('#promptTekst') and 'Thema: winterdieren' in klem, 'G. de knop zet de hele prompt op het klembord (%d tekens)' % len(klem))
+        # zonder toegang tot het klembord: de knop probeert het oude kopieerkommando en meldt eerlijk wat er gebeurde
+        pg.evaluate("() => { Object.defineProperty(navigator, 'clipboard', { value: { writeText: () => Promise.reject(new Error('geen recht')) }, configurable: true }); document.execCommand = () => false }")
+        pg.click('#kopieerPrompt')
+        pg.wait_for_function("() => document.getElementById('kopieerMelding').textContent.startsWith('Kopiëren lukte niet')", timeout=8000)
+        check(True, 'G. zonder klembord: een nette melding in plaats van een fout')
 
         # F. Moderatie heeft een link, geen paginafouten
         pg.goto(basis + 'moderatie.html')

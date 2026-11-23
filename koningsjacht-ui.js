@@ -1,4 +1,4 @@
-import { maakEindscene } from './koningsjacht-eindscene.js?v=3'
+import { maakEindscene } from './koningsjacht-eindscene.js?v=8'
 // koningsjacht-ui.js - Koningsjacht, een kaartspel voor alleen (v1, 13 nov 2026). Op de BLAUWDRUK voor kaartspellen.
 // Gebaseerd op het idee van Regicide (Badgers From Mars); de naam, de teksten en de uitwerking zijn van Stekky.
 //
@@ -24,7 +24,7 @@ import { maakEindscene } from './koningsjacht-eindscene.js?v=3'
 import * as K from './koningsjacht.js?v=2'
 import { maakKaartTafel, kaartSvg, achterkantSvg, kaartNaam, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=17'
 import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek, zetMuziekThema } from './koningsjacht-geluid.js?v=4'
-import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=12'
+import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=14'
 import { zetKaarsSlijtage } from './koningsjacht-kaarsen.js?v=1'
 import { verbindBierpul, herstelBierPartij } from './koningsjacht-bier.js?v=2'
 import { maakKoningsjachtScoreService } from './koningsjacht-scores.js?v=1'
@@ -174,6 +174,24 @@ const CSS = `
 .kj-instellingen,.kj-instellingen *{box-sizing:border-box}.kj-scene-keuze{border:0;padding:0;margin:0 0 12px;min-width:0}.kj-scene-keuze legend{font-weight:700;margin-bottom:10px}.kj-scene-opties{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.kj-scene-opties label{display:flex;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:7px 4px;border:1px solid #e6c68c55;border-radius:10px;background:#100d0d66;font-size:12px;cursor:pointer}.kj-scene-opties label:has(input:checked){background:linear-gradient(145deg,#8f652b,#4c3217);border-color:#ffe8a6;box-shadow:inset 0 1px #fff5,0 3px 8px #0006}.kj-scene-opties input{accent-color:#e5bb65;margin:0}
 .kj-modern .kt-knop{background:linear-gradient(155deg,#142334,#090f19);border-color:#d6b66c;color:#fff4d3;box-shadow:inset 0 1px #fff2,0 3px 8px #0008}.kj-modern .kj-kaart{box-shadow:0 8px 22px #000b,0 0 0 1px #e2be6777}.kj-modern .kj-titel,.kj-modern .kj-naam{color:#f5d990}.kj-instellingen.kj-modern .kj-instellingen-kaart{background:linear-gradient(145deg,#172536,#09111c);border-color:#dfc37b99}
 .kj-modern .kj-kaars.kj-links{width:clamp(62px,15vw,100px);aspect-ratio:2/3}.kj-modern .kj-kaars.kj-rechts{width:clamp(80px,18vw,118px);aspect-ratio:2/3}.kj-modern .kj-links .kj-vlam{left:49.7%;bottom:81%;height:11%;width:10%;margin-left:-5%}.kj-modern .kj-rechts .kj-vlam{left:49.8%;bottom:96%;height:12%;width:9%;margin-left:-4.5%}
+.kj-modern-interior-keuze[hidden]{display:none}.kj-interior-opties label{min-height:54px;text-align:center;line-height:1.2}.kj-modern-interior-keuze legend{color:#b9e9ff}
+.kj-spaceship-interior .kj-kaarslicht,.kj-spaceship-interior .kj-kaars{display:none!important}
+.kj-mode-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%;max-width:450px}
+.kj-mode-card{min-width:0;padding:0;overflow:hidden;border:2px solid #b68b50;border-radius:14px;background:linear-gradient(145deg,#382519,#1a1110);color:#fff0d1;font:inherit;text-align:left;cursor:pointer;box-shadow:0 5px 12px #0009;transition:transform .18s,border-color .18s,box-shadow .18s}
+.kj-mode-card img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
+.kj-mode-label{display:flex;align-items:center;gap:8px;min-height:42px;padding:7px 10px;border-top:1px solid #eac98066;background:linear-gradient(180deg,#3b291f,#241812)}
+.kj-mode-label .kj-ico{font-size:19px}.kj-mode-label b{font:750 13px/1.15 Georgia,serif;letter-spacing:.02em}
+.kj-mode-card[aria-pressed=true]{transform:translateY(-2px);border-color:#ffe39b;box-shadow:0 0 0 2px #f2cc7a77,0 0 20px #f1b95b77,0 8px 18px #000b}
+.kj-mode-card:focus-visible,.kj-mode-popup button:focus-visible{outline:3px solid #fff0b6;outline-offset:3px}
+.kj-mode-popup{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:#080503df;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.kj-mode-popup-kaart{position:relative;width:min(100%,560px);max-height:calc(100dvh - 32px);overflow:auto;border:1px solid #e4c27d;border-radius:20px;background:linear-gradient(150deg,#543722,#211612 72%);color:#fff2d4;box-shadow:inset 0 1px #fff4,0 22px 72px #000d;text-align:center}
+.kj-mode-popup-beeld{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-bottom:2px solid #d6b36d}
+.kj-mode-popup-kop{padding:20px 54px 4px;font:800 clamp(22px,5vw,32px)/1.15 Georgia,serif;color:#ffe1a0;text-shadow:0 2px 3px #000}
+.kj-mode-popup-bericht{margin:8px 20px 18px;color:#f4dfba;font:600 14px/1.4 system-ui,sans-serif}
+.kj-mode-popup-start{min-height:48px;margin:0 20px 20px;padding:10px 20px;border:1px solid #ffe6a8;border-radius:12px;background:linear-gradient(145deg,#e9c374,#9d682e);color:#26170b;font:800 16px/1.2 system-ui,sans-serif;cursor:pointer;box-shadow:inset 0 1px #fff9,0 4px 12px #0009}
+.kj-mode-popup-sluit{position:absolute;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));z-index:1;display:grid;place-items:center;width:46px;height:46px;border:1px solid #fff9;border-radius:50%;background:#160f0ddf;color:#fff4dd;font:300 31px/1 system-ui,sans-serif;cursor:pointer;box-shadow:0 3px 12px #000a}
+@media(max-width:380px){.kj-mode-choices{gap:7px}.kj-mode-label{gap:5px;padding:7px 6px}.kj-mode-label b{font-size:11px}.kj-mode-label .kj-ico{font-size:17px}}
+@media(prefers-reduced-motion:reduce){.kj-mode-card{transition:none}}
 `
 function zetCss() {
   if (document.getElementById('kj-stijl')) return
@@ -219,10 +237,11 @@ function toonRegels() {
 
 export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '', scoreService = null } = {}) {
   zetCss(); zetStijl()
+  const multiplayer = Boolean(spelKanaal)
   const inhoud = document.getElementById('spelInhoud')
   const titel = document.getElementById('spelTitelBar')
   if (titel) titel.textContent = '👑 ' + T('Koningsjacht')
-  let staat = null, tafel = null, selectie = [], bezig = 0, rij = Promise.resolve()
+  let staat = null, tafel = null, selectie = [], bezig = 0, rij = Promise.resolve(), sceneMode = 'samen'
   // Lazily share the app's authenticated client; preview fixtures inject a local service.
   const api = () => import('./supabase.js?v=95').then(m => m.supabase)
   const scores = scoreService || maakKoningsjachtScoreService({ supabase: {
@@ -258,7 +277,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     const opgeslagen = bewaarScore()
     tafel.einde(options)
     const kaart = tafel.element.querySelector('.kt-eindekaart')
-    kaart?.prepend(maakEindscene(staat.verslagen, { T }).element)
+    kaart?.prepend(maakEindscene(staat.verslagen, { T, scene: sceneNaam(), narren: (staat.narren || 0) + (staat.narrenGebruikt || 0) }).element)
     scoreKnop(kaart, 'kt-knop')
     const status = document.createElement('p')
     status.className = 'kj-score-status'; status.setAttribute('role', 'status')
@@ -277,6 +296,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   const bewaardeInstellingen = lees(INSTELLINGEN, {}) || {}
   const instellingen = {
     scene: ['standaard', 'modern', 'middeleeuws'].includes(bewaardeInstellingen.scene) ? bewaardeInstellingen.scene : (bewaardeInstellingen.middeleeuws === true ? 'middeleeuws' : 'standaard'),
+    modernInterior: ['none', 'old', 'futuristic'].includes(bewaardeInstellingen.modernInterior) ? bewaardeInstellingen.modernInterior : 'none',
     beweging: bewaardeInstellingen.beweging === true,
     slowMoves: bewaardeInstellingen.slowMoves === true,
     middeleeuws: bewaardeInstellingen.middeleeuws === true,
@@ -287,14 +307,15 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     bierOorRechts: bewaardeInstellingen.bierOorRechts !== false,
     bierRonde: 0
   }
-  instellingen.middeleeuws = instellingen.scene === 'middeleeuws'
+  const sceneNaam = () => multiplayer ? 'middeleeuws' : instellingen.scene
+  instellingen.middeleeuws = sceneNaam() === 'middeleeuws'
   const koningsjachtBewegingsfactor = () => instellingen.slowMoves && !rustig() ? 1.25 : 1
   const wacht = ms => new Promise(k => setTimeout(k, ms * koningsjachtBewegingsfactor()))
-  let STIJL = instellingen.scene === 'modern' ? 'modern' : 'perkament'
+  let STIJL = sceneNaam() === 'modern' ? 'modern' : 'perkament'
   let scene = null, flikkerTimer = null, anderBier = null, bierTimer = null
 
-  const sceneOpties = () => ({ ...instellingen, anderBier, eigenNaam: T('Jij'), bierLabel: T('Inhoud van je bierpul'), onBierInhoud: wijzigBierInhoud, onBierNieuw: nieuweBierpul })
-  zetMuziekThema(instellingen.middeleeuws ? 'middeleeuws' : 'standaard')
+  const sceneOpties = () => ({ ...instellingen, scene: sceneNaam(), multiplayer, multiplayerMode: sceneMode, anderBier, eigenNaam: T('Jij'), bierLabel: T('Inhoud van je bierpul'), onBierInhoud: wijzigBierInhoud, onBierNieuw: nieuweBierpul })
+  zetMuziekThema(sceneNaam() === 'middeleeuws' ? 'middeleeuws' : 'standaard')
 
   function bewaarInstellingen() {
     const { bierRonde, ...voorkeuren } = instellingen
@@ -345,15 +366,17 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
 
   function pasInstellingenToe() {
     const actief = tafel?.element?.isConnected ? tafel.element : inhoud.querySelector('.kj-start')
-    instellingen.middeleeuws = instellingen.scene === 'middeleeuws'
+    const sfeer = sceneNaam()
+    instellingen.middeleeuws = sfeer === 'middeleeuws'
     actief?.classList.toggle('kj-sfeer', instellingen.middeleeuws)
-    actief?.classList.toggle('kj-modern', instellingen.scene === 'modern')
-    document.querySelector('.kj-instellingen')?.classList.toggle('kj-modern', instellingen.scene === 'modern')
+    actief?.classList.toggle('kj-modern', sfeer === 'modern')
+    actief?.classList.toggle('kj-spaceship-interior', sfeer === 'modern' && instellingen.modernInterior !== 'none')
+    document.querySelector('.kj-instellingen')?.classList.toggle('kj-modern', sfeer === 'modern')
     actief?.classList.toggle('kj-geenflikkering', !instellingen.flikkeren)
     actief?.classList.toggle('kj-tafelschaduw', instellingen.tafelschaduw)
     scene?.update(sceneOpties())
-    zetMuziekThema(instellingen.middeleeuws ? 'middeleeuws' : 'standaard')
-    const nieuweStijl = instellingen.scene === 'modern' ? 'modern' : 'perkament'
+    zetMuziekThema(sfeer === 'middeleeuws' ? 'middeleeuws' : 'standaard')
+    const nieuweStijl = sfeer === 'modern' ? 'modern' : 'perkament'
     if (nieuweStijl !== STIJL) {
       STIJL = nieuweStijl
       for (const [i, kaart] of [...inhoud.querySelectorAll('.kj-kaarten>div')].entries()) kaart.innerHTML = kaartSvg(['kB', 'hH', 'sV'][i], STIJL)
@@ -371,8 +394,9 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   function plaatsScene(element) {
     stopScene()
     if (!element) return
-    element.classList.toggle('kj-sfeer', instellingen.middeleeuws)
-    element.classList.toggle('kj-modern', instellingen.scene === 'modern')
+    element.classList.toggle('kj-sfeer', sceneNaam() === 'middeleeuws')
+    element.classList.toggle('kj-modern', sceneNaam() === 'modern')
+    element.classList.toggle('kj-spaceship-interior', sceneNaam() === 'modern' && instellingen.modernInterior !== 'none')
     element.classList.toggle('kj-geenflikkering', !instellingen.flikkeren)
     element.classList.toggle('kj-tafelschaduw', instellingen.tafelschaduw)
     scene = maakKoningsjachtScene(element, sceneOpties())
@@ -382,13 +406,16 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     if (document.querySelector('.kj-instellingen')) return
     const vorigeFocus = document.activeElement
     const scherm = document.createElement('div')
-    scherm.className = 'kj-instellingen' + (instellingen.scene === 'modern' ? ' kj-modern' : '')
+    scherm.className = 'kj-instellingen' + (sceneNaam() === 'modern' ? ' kj-modern' : '')
     scherm.innerHTML = '<section class="kj-instellingen-kaart" role="dialog" aria-modal="true" aria-labelledby="kj-instellingen-titel">'
       + '<div class="kj-instellingen-kop"><h2 id="kj-instellingen-titel">' + esc(T('Instellingen')) + '</h2>'
       + '<button type="button" class="kj-instellingen-sluit" aria-label="' + esc(T('Sluiten')) + '">×</button></div>'
-      + '<fieldset class="kj-scene-keuze"><legend>' + esc(T('Tafelsfeer')) + '</legend><div class="kj-scene-opties">'
-      + [['standaard', T('Standaard')], ['modern', T('Modern')], ['middeleeuws', T('Middeleeuws')]].map(([id, label]) => '<label><input type="radio" name="kj-scene" data-scene="' + id + '" value="' + id + '"' + (instellingen.scene === id ? ' checked' : '') + '><span>' + esc(label) + '</span></label>').join('')
-      + '</div></fieldset>'
+      + (multiplayer ? '' : '<fieldset class="kj-scene-keuze"><legend>' + esc(T('Tafelsfeer')) + '</legend><div class="kj-scene-opties">'
+        + [['standaard', T('Standaard')], ['modern', T('Modern')], ['middeleeuws', T('Middeleeuws')]].map(([id, label]) => '<label><input type="radio" name="kj-scene" data-scene="' + id + '" value="' + id + '"' + (instellingen.scene === id ? ' checked' : '') + '><span>' + esc(label) + '</span></label>').join('')
+        + '</div></fieldset>'
+        + '<fieldset class="kj-scene-keuze kj-modern-interior-keuze"' + (instellingen.scene === 'modern' ? '' : ' hidden') + '><legend>' + esc(T('Moderne ruimteschiptafel')) + '</legend><div class="kj-scene-opties kj-interior-opties">'
+        + [['none', T('Epoxytafel')], ['old', T('Inside · oud schip')], ['futuristic', T('Inside · futuristisch')]].map(([id, label]) => '<label><input type="radio" name="kj-modern-interior" data-interior="' + id + '" value="' + id + '"' + (instellingen.modernInterior === id ? ' checked' : '') + '><span>' + esc(label) + '</span></label>').join('')
+        + '</div></fieldset>')
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Achtergrond bewegen')) + '</b><small>' + esc(T('Beweeg je telefoon voor een subtiel diepte-effect.')) + '</small></span><input type="checkbox" data-instelling="beweging"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Slow moves')) + '</b><small>' + esc(T('Laat kaartbewegingen en effecten rustiger verlopen, zodat je beter ziet wat er gebeurt.')) + '</small></span><input type="checkbox" data-instelling="slowMoves"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Kaarsen laten flikkeren')) + '</b><small>' + esc(T('Laat de vlam en het kaarslicht zacht bewegen.')) + '</small></span><input type="checkbox" data-instelling="flikkeren"></label>'
@@ -416,6 +443,14 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     for (const input of scherm.querySelectorAll('[data-scene]')) input.addEventListener('change', () => {
       if (!input.checked) return
       instellingen.scene = input.value
+      const interiorChoice = scherm.querySelector('.kj-modern-interior-keuze')
+      if (interiorChoice) interiorChoice.hidden = input.value !== 'modern'
+      scherm.classList.toggle('kj-modern', input.value === 'modern')
+      pasInstellingenToe()
+    })
+    for (const input of scherm.querySelectorAll('[data-interior]')) input.addEventListener('change', () => {
+      if (!input.checked) return
+      instellingen.modernInterior = input.value
       pasInstellingenToe()
     })
     for (const input of scherm.querySelectorAll('[data-instelling]')) {
@@ -468,10 +503,11 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     el.appendChild(knop)
   }
   // ── Met z'n tweeën (v5) ──
-  const kanaal = spelKanaal, samenSpel = Boolean(kanaal)
+  const kanaal = spelKanaal, samenSpel = multiplayer
   const ik = benIkSpeler1 ? 1 : 2, hij = ik === 1 ? 2 : 1
   const naam = vriendNaam || T('vriend')
   let modus = 'solo', spelId = -1, nr = 0, opzet = null, tegen = null, afgelopen = false, beleg = null
+  let modePopup = null, pendingStart = null
   const vloeken = new Set()
   const stuur = (event, payload) => { try { kanaal && kanaal.send({ type: 'broadcast', event, payload }) } catch (e) {} }
   const bierVerbinding = verbindBierpul(kanaal, {
@@ -514,18 +550,62 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     if (muziekStaatAan()) startMuziek()   // werkt pas na een tik (de browser), anders bij de keuze van een niveau
   }
   // Met z'n tweeën: speler 1 kiest hoe jullie spelen en het niveau
-  const MODI = [['samen', '🤝', 'Samen tegen het kasteel', 'Eén team, om de beurt. Samen winnen of samen verliezen.'],
+  const MODI = [['samen', '🤝', 'Samen', 'Eén team, om de beurt. Samen winnen of samen verliezen.'],
     ['wedstrijd', '🏁', 'Wedstrijd', 'Ieder een eigen kasteel, precies hetzelfde geschud. Wie het verst komt, wint.'],
     ['duel', '⚔️', 'Duel', 'Als de wedstrijd, maar precies raak stuurt een vloek: de vijand van de ander krijgt 10 leven erbij.'],
     ['beleg', '🏰', 'Belegering', 'Ieder een eigen kasteel. Om de beurt val je de wachters van de ander aan en weer je hun klap af. Wie het eerst het kasteel van de ander verovert, wint.']]
+  const modusInfo = id => MODI.find(m => m[0] === id)
+  const modusBeeld = id => new URL('./assets/koningsjacht/modus-' + (id === 'beleg' ? 'belegering' : id) + '.svg', import.meta.url).href
+  function toonSpeltype(o) {
+    if (!o || !(o.spelId > spelId) || !modusInfo(o.modus)) return
+    if (pendingStart && o.spelId < pendingStart.spelId) return
+    if (pendingStart?.spelId === o.spelId) {
+      if ((o.nr || 0) <= (pendingStart.nr || 0)) return
+      // Een partij kan al beginnen terwijl de ander de melding nog open heeft.
+      // Bewaar dan de nieuwste stand zonder de popup opnieuw te laten knipperen.
+      pendingStart = o
+      return
+    }
+    modePopup?.remove()
+    pendingStart = o
+    const info = modusInfo(o.modus)
+    const popup = document.createElement('div'); popup.className = 'kj-mode-popup'
+    popup.setAttribute('role', 'dialog'); popup.setAttribute('aria-modal', 'true')
+    popup.setAttribute('aria-label', T('Speltype gekozen'))
+    const kaart = document.createElement('div'); kaart.className = 'kj-mode-popup-kaart'
+    const sluiten = document.createElement('button'); sluiten.type = 'button'; sluiten.className = 'kj-mode-popup-sluit'
+    sluiten.textContent = '×'; sluiten.setAttribute('aria-label', T('Sluit en start dit spel'))
+    const beeld = document.createElement('img'); beeld.className = 'kj-mode-popup-beeld'; beeld.src = modusBeeld(info[0]); beeld.alt = ''
+    const kop = document.createElement('h2'); kop.className = 'kj-mode-popup-kop'; kop.textContent = T(info[2])
+    const bericht = document.createElement('p'); bericht.className = 'kj-mode-popup-bericht'
+    bericht.textContent = benIkSpeler1
+      ? T('Jij koos voor: {modus}', { modus: T(info[2]) })
+      : T('{naam} koos voor: {modus}', { naam, modus: T(info[2]) })
+    const starten = document.createElement('button'); starten.type = 'button'; starten.className = 'kj-mode-popup-start'; starten.textContent = T('Start dit spel')
+    kaart.append(sluiten, beeld, kop, bericht, starten); popup.append(kaart)
+    function gaVerder() {
+      if (modePopup !== popup || !pendingStart) return
+      const start = pendingStart
+      modePopup = null; pendingStart = null; popup.remove()
+      tafel?.sluitEinde?.()
+      openSpel(start)
+    }
+    sluiten.addEventListener('click', gaVerder)
+    starten.addEventListener('click', gaVerder)
+    popup.addEventListener('click', e => { if (e.target === popup) gaVerder() })
+    popup.addEventListener('keydown', e => { if (e.key === 'Escape') gaVerder() })
+    inhoud.appendChild(popup)
+    modePopup = popup
+    sluiten.focus()
+  }
   function kiesSamenScherm() {
     tafel = null; staat = null; afgelopen = false
     let gekozen = 'samen'
-    const knop = ([id, ico, t, u]) => '<button type="button" class="kj-niveau" data-modus="' + id + '"><span class="kj-ico">' + ico + '</span><span><b>' + esc(T(t)) + '</b><small>' + esc(T(u)) + '</small></span></button>'
+    const knop = ([id, ico, t, u]) => '<button type="button" class="kj-mode-card" data-modus="' + id + '" aria-label="' + esc(T(t) + '. ' + T(u)) + '"><img src="' + esc(modusBeeld(id)) + '" alt=""><span class="kj-mode-label"><span class="kj-ico" aria-hidden="true">' + ico + '</span><b>' + esc(T(t)) + '</b></span></button>'
     inhoud.innerHTML = '<div class="kj-start">'
       + '<div class="kj-titel">' + esc(T('Koningsjacht')) + '</div>'
       + '<div class="kj-uitleg">' + esc(T('Hoe spelen jullie?')) + '</div>'
-      + '<div class="kj-niveaus kj-modi">' + MODI.map(knop).join('') + '</div>'
+      + '<div class="kj-mode-choices kj-modi">' + MODI.map(knop).join('') + '</div>'
       + '<div class="kj-uitleg">' + esc(T('Kies het niveau')) + '</div>'
       + '<div class="kj-niveaus kj-niveaukeus"><button type="button" class="kj-niveau" data-niveau="schildknaap"><span class="kj-ico">🛡️</span><span><b>' + esc(T('Schildknaap')) + '</b></span></button>'
       + '<button type="button" class="kj-niveau" data-niveau="ridder"><span class="kj-ico">⚔️</span><span><b>' + esc(T('Ridder')) + '</b></span></button>'
@@ -533,8 +613,8 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
       + '<button type="button" class="kj-knop kj-zacht kj-regelknop">📜 ' + esc(T('Hoe speel je?')) + '</button>'
       + '<div class="kj-bron">' + esc(T('Gebaseerd op het kaartspel Regicide van Badgers From Mars.')) + '</div></div>'
     startInstellingen()
-    const zet = () => { for (const b of inhoud.querySelectorAll('.kj-modi .kj-niveau')) b.setAttribute('aria-pressed', String(b.dataset.modus === gekozen)) }
-    for (const b of inhoud.querySelectorAll('.kj-modi .kj-niveau')) b.onclick = () => { gekozen = b.dataset.modus; zet() }
+    const zet = () => { for (const b of inhoud.querySelectorAll('.kj-modi .kj-mode-card')) b.setAttribute('aria-pressed', String(b.dataset.modus === gekozen)) }
+    for (const b of inhoud.querySelectorAll('.kj-modi .kj-mode-card')) b.onclick = () => { gekozen = b.dataset.modus; zet() }
     zet()
     for (const b of inhoud.querySelectorAll('.kj-niveaukeus .kj-niveau')) b.onclick = () => begin(gekozen, b.dataset.niveau)
     inhoud.querySelector('.kj-regelknop').onclick = toonRegels
@@ -551,27 +631,30 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   }
   // Speler 1 begint een spel (ook bij Opnieuw spelen)
   function begin(m, niveau) {
-    const id = Math.max(Date.now(), spelId + 1)
+    const id = Math.max(Date.now(), spelId + 1, (pendingStart?.spelId ?? -1) + 1)
     if (m === 'beleg') {
       const b = K.nieuwBeleg({ niveau, begint: 1 })
       opzet = { modus: m, niveau, spelId: id }
-      stuur('opnieuw', { modus: m, niveau, spelId: id, nr: 0, beleg: b })
-      openSpel({ modus: m, niveau, spelId: id, beleg: b, nr: 0 })
+      const start = { modus: m, niveau, spelId: id, nr: 0, beleg: b }
+      stuur('opnieuw', start)
+      toonSpeltype(start)
     } else if (m === 'samen') {
       const st = K.nieuwSpel({ niveau, samen: true, begint: 1 })
       opzet = { modus: m, niveau, spelId: id }
-      stuur('opnieuw', { modus: m, niveau, spelId: id, nr: 0, staat: st })
-      openSpel({ modus: m, niveau, spelId: id, staat: st, nr: 0 })
+      const start = { modus: m, niveau, spelId: id, staat: st, nr: 0 }
+      stuur('opnieuw', start)
+      toonSpeltype(start)
     } else {
       const zaad = Math.floor(Math.random() * 2e9) + 1
       opzet = { modus: m, niveau, spelId: id, zaad }
       stuur('opnieuw', opzet)
-      openSpel(opzet)
+      toonSpeltype(opzet)
     }
   }
   // Een spel openen (bij jezelf of na een bericht van de ander)
   function openSpel(o) {
     if (o.spelId !== spelId) anderBier = null
+    sceneMode = ['samen', 'wedstrijd', 'duel', 'beleg'].includes(o.modus) ? o.modus : 'samen'
     modus = o.modus; spelId = o.spelId; nr = o.nr || 0; tegen = null; afgelopen = false; vloeken.clear()
     opzet = { modus: o.modus, niveau: o.niveau, spelId: o.spelId, zaad: o.zaad }
     beleg = modus === 'beleg' ? o.beleg : null
@@ -591,21 +674,21 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
       if (!(p.spelId > spelId) || !['samen', 'wedstrijd', 'duel', 'beleg'].includes(p.modus) || !K.NIVEAUS[p.niveau]) return
       if (p.modus === 'samen' && !K.geldigeStand(p.staat)) return
       if (p.modus === 'beleg' && !K.geldigBeleg(p.beleg)) return
-      tafel?.sluitEinde?.(); openSpel(p)
+      toonSpeltype(p)
     })
     const zet = msg => {
       const p = msg.payload || {}
       if (p.beleg) {   // belegering: de hele stand van allebei
         if (!K.geldigBeleg(p.beleg)) return
-        if (p.spelId > spelId) { openSpel({ modus: 'beleg', niveau: p.beleg.niveau, spelId: p.spelId, beleg: p.beleg, nr: p.nr }); return }
+        if (p.spelId > spelId) { toonSpeltype({ modus: 'beleg', niveau: p.beleg.niveau, spelId: p.spelId, beleg: p.beleg, nr: p.nr }); return }
         if (modus !== 'beleg' || !nieuwer(p.spelId, p.nr)) return
         const oudB = beleg; nr = p.nr; beleg = p.beleg; staat = beleg.spelers[ik]
         inRij(() => verwerkBeleg(oudB, beleg))
         return
       }
-      if (p.modus && p.modus !== 'samen') { if (p.spelId > spelId && K.NIVEAUS[p.niveau]) openSpel(p); return }
+      if (p.modus && p.modus !== 'samen') { if (p.spelId > spelId && K.NIVEAUS[p.niveau]) toonSpeltype(p); return }
       if (!p.staat || !K.geldigeStand(p.staat) || !p.staat.handen) return
-      if (p.spelId > spelId) { openSpel({ modus: 'samen', niveau: p.staat.niveau, spelId: p.spelId, staat: p.staat, nr: p.nr }); return }
+      if (p.spelId > spelId) { toonSpeltype({ modus: 'samen', niveau: p.staat.niveau, spelId: p.spelId, staat: p.staat, nr: p.nr }); return }
       if (modus !== 'samen' || !nieuwer(p.spelId, p.nr)) return
       const oud = staat; nr = p.nr; staat = p.staat
       inRij(() => verwerkAnder(oud, p.staat))
@@ -674,12 +757,12 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     const el = tafel?.element
     if (!el?.isConnected) return
     for (const kaars of el.querySelectorAll('.kj-kaars')) {
-      const bestand = instellingen.scene === 'modern' ? (kaars.classList.contains('kj-links') ? 'candle-modern-left.png' : 'candle-modern-right.png') : 'chamberstick.png'
+      const bestand = sceneNaam() === 'modern' ? (kaars.classList.contains('kj-links') ? 'candle-modern-left.png' : 'candle-modern-right.png') : 'chamberstick.png'
       const afbeelding = kaars.querySelector('.kj-kandelaar')
       const url = new URL('./assets/koningsjacht/' + bestand, import.meta.url).href
       if (afbeelding.src !== url) afbeelding.src = url
     }
-    zetKaarsSlijtage(el, { scene: instellingen.scene, bierpul: instellingen.bierpul, ronde: instellingen.bierRonde })
+    zetKaarsSlijtage(el, { scene: sceneNaam(), bierpul: instellingen.bierpul, ronde: instellingen.bierRonde })
   }
   function verversKaarslicht() {
     clearInterval(flikkerTimer); flikkerTimer = null
@@ -947,7 +1030,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     geluid('schild')
     const hand = tafel.element.querySelector('.kt-hand'); if (!hand) return
     const p = plek(hand)
-    const middeleeuws = instellingen.scene === 'middeleeuws'
+    const middeleeuws = sceneNaam() === 'middeleeuws'
     const d = document.createElement('div')
     if (middeleeuws) {
       const breedte = Math.min(190, Math.max(150, p.b * 0.44)), hoogte = breedte * 1.3
@@ -1119,7 +1202,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     if (l.genezen) redenen.push(T('brengt {n} kaarten van de aflegstapel terug naar de Taveerne', { n: l.genezen }))
     const gepakt = l.gepaktPer ? Object.values(l.gepaktPer).reduce((som, kaarten) => som + kaarten.length, 0) : (l.gepakt || []).length
     if (gepakt) redenen.push(T('pakt {n} kaarten uit de Taveerne', { n: gepakt }))
-    if (l.schild) redenen.push(T('geeft {n} schild', { n: l.schild }))
+    if (l.schild && !l.verslagen) redenen.push(T('geeft {n} schild', { n: l.schild }))
     if (l.immuun) redenen.push(T('werkt niet tegen {kleur}', { kleur: KLEUR_TEKEN[l.immuun] }))
     return T('Gespeeld: {kaarten} — {reden}', { kaarten, reden: redenen.join(' · ') || T('gebruikt deze kaart') })
   }
@@ -1130,10 +1213,10 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     tafel.toon(beeld(oud, { hand: handNa, afleg: [...oud.tafel, ...ids], mijnBeurt: false, status: uitleg }))
     await toonGespeeldeKaarten(ids, eigen, vanRects, opts, 1)
     if (l.genezen) { tafel.toon(beeld(oud, { hand: handNa, afleg: [...oud.tafel, ...ids], stapelAantal: oud.taveerne.length + l.genezen, mijnBeurt: false, status: uitleg })); await genezenLicht(l.genezen) }
-    const tussen = { kasteel: oud.kasteel, schade: Math.min(K.vijandInfo(oud).leven, oud.schade + l.schade), schild: oud.schild + l.schild, extra: oud.extra }
+    const tussen = { kasteel: oud.kasteel, schade: Math.min(K.vijandInfo(oud).leven, oud.schade + l.schade), schild: l.verslagen ? 0 : oud.schild + l.schild, extra: oud.extra }
     await Promise.all([kaartenVallenAan(ids, l), wacht(rustig() ? 260 : 480).then(() => tekenVijand(tussen))])
     if (l.immuun) { tafel.effect(T('{naam} is immuun voor {k}', { naam: vijandNaam(l.vijand), k: KLEUR_TEKEN[l.immuun] }), { gloed: false, geluid: false }); await wacht(650) }
-    if (l.schild) await schildLicht(tussen.schild, !l.verslagen && (nieuw.fase === 'verdedig' || l.geenSlag))
+    if (l.schild && !l.verslagen) await schildLicht(tussen.schild, nieuw.fase === 'verdedig' || l.geenSlag)
     const mijnGepakt = l.gepaktPer ? (l.gepaktPer[ik] || []) : (eigen ? l.gepakt : [])
     if (l.gepakt.length || mijnGepakt.length) {
       pakLicht()

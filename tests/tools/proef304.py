@@ -81,14 +81,39 @@ try:
                 check(pg.locator('.kj-eindscene-schilden .verdiend').count()==n,f'{breedte}px: eindscene telt {n} wapenschilden')
                 if 1 <= n <= 6:
                     check(pg.evaluate("""() => [...document.querySelectorAll('.kj-eindscene-beeld img')]
-                      .filter(img => /stand-(8|12)\\.webp/.test(img.src)).every(img => img.style.opacity === '0')"""),
+                      .filter(img => /stand-(8|12)-anatomie-v2\\.jpg/.test(img.src)).every(img => img.style.display === 'none')"""),
                       f'{breedte}px: tot en met zes wachters blijft de hand op het been')
             pg.wait_for_function("() => [...document.querySelectorAll('.kj-eindscene img')].every(i=>i.complete && i.naturalWidth>0)")
             check(True,f'{breedte}px: alle eindbeelden laden')
             check(pg.evaluate("""() => [...document.querySelectorAll('.kj-eindscene-beeld img')]
               .slice(0, 3).map(img => new URL(img.src).pathname.split('/').pop()).join(',')
-              === 'stand-0-v3.jpg,stand-4-v3.jpg,stand-6-v2.jpg'"""),
+              === 'stand-0-anatomie-v2.jpg,stand-4-anatomie-v2.jpg,stand-6-anatomie-v2.jpg'"""),
               f'{breedte}px: vroege eindbeelden zonder zwaard geladen')
+            for narren in [2,4]:
+                pg.locator(f'[data-narren="{narren}"]').click()
+                pg.wait_for_function("() => [...document.querySelectorAll('.kj-eindscene img')].every(i=>i.complete && i.naturalWidth>0)")
+                check(pg.locator('.kj-eindscene').get_attribute('data-narren')==str(narren),f'{breedte}px: reeks met {narren} narren gekozen')
+                check(pg.evaluate("""n => [...document.querySelectorAll('.kj-eindscene-beeld img')]
+                  .every(img => new URL(img.src).pathname.includes(`/narren-${n}/`))""",narren),
+                  f'{breedte}px: alle vijf beelden uit reeks met {narren} narren geladen')
+                pg.locator('#wachters').press('Home')
+                for _ in range(6): pg.locator('#wachters').press('ArrowRight')
+                check(pg.locator('.kj-eindscene-schilden .verdiend').count()==6,f'{breedte}px: zes wachters met {narren} narren')
+                check(pg.evaluate("""() => [...document.querySelectorAll('.kj-eindscene-beeld img')]
+                  .slice(3).every(img => img.style.display === 'none')"""),
+                  f'{breedte}px: zwaardloze vroege reeks met {narren} narren')
+            pg.locator('[data-scene="modern"]').click()
+            pg.wait_for_function("() => [...document.querySelectorAll('.kj-eindscene img')].every(i=>i.complete && i.naturalWidth>0)")
+            check(pg.locator('.kj-eindscene').get_attribute('data-scene')=='modern',f'{breedte}px: moderne eindscènes geselecteerd')
+            check(pg.evaluate("() => [...document.querySelectorAll('.kj-eindscene img')].every(i=>new URL(i.src).pathname.includes('/modern/'))"),f'{breedte}px: alle moderne eindbeelden uit de onderwaterreeks geladen')
+            check(pg.locator('.kj-eindscene[data-scene="modern"] .kj-eindscene-schilden span').count()==12,f'{breedte}px: onderwatervoortgang toont twaalf lampindicatoren')
+            for narren in [0,2,4]:
+                pg.locator(f'[data-narren="{narren}"]').click()
+                pg.wait_for_function("() => [...document.querySelectorAll('.kj-eindscene img')].every(i=>i.complete && i.naturalWidth>0)")
+                check(pg.evaluate("n => [...document.querySelectorAll('.kj-eindscene img')].every(i=>new URL(i.src).pathname.includes(`/modern/narren-${n}/`))",narren),f'{breedte}px: moderne reeks voor {narren} narren compleet')
+                pg.eval_on_selector('#wachters',"e=>{e.value='12';e.dispatchEvent(new Event('input',{bubbles:true}))}")
+                check('onderwaterstation' in pg.locator('.kj-eindscene figcaption').inner_text(),f'{breedte}px: volledige winst noemt het geredde onderwaterstation')
+                pg.eval_on_selector('#wachters',"e=>{e.value='0';e.dispatchEvent(new Event('input',{bubbles:true}))}")
             pg.goto(basis+'tests/fixtures/koningsjacht-preview.html')
             pg.click('.kj-scores')
             pg.wait_for_selector('dialog[open]')

@@ -76,6 +76,12 @@ assert.ok(n.afleg.includes('s10'))
 t = stand({ vijand: 'hB', hand: ['k9', 's3'], schade: 10 })
 n = K.valAan(t, ['k9']); assert.ok(n.laatste.verslagen && !n.laatste.precies); assert.ok(n.afleg.includes('hB')); assert.ok(n.afleg.includes('k9'))
 assert.ok(K.geldigeStand(n))
+// Ook een schoppenkaart die de laatste 4 levens met 5 schade wegslaat, leidt niet tot een tegenaanval.
+t = stand({ vijand: 'hB', hand: ['s5', 'k9'], schade: 16 })
+n = K.valAan(t, ['s5'])
+assert.ok(n.laatste.verslagen && !n.laatste.precies)
+assert.equal(n.schild, 0)
+assert.equal(n.fase, 'aanval')
 // een hoofd in je hand telt 10/15/20
 t = stand({ vijand: 'sV', hand: ['hB', 'k2'] })
 n = K.valAan(t, ['hB']); assert.equal(n.schade, 10)

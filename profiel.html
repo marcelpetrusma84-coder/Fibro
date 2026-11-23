@@ -626,14 +626,14 @@ import { startHeartbeat } from './heartbeat.js?v=118'
 import { volgOnline } from './onlinestip.js?v=2' // v274: vrienden zien meteen of je de app in beeld hebt
 import { initSync } from './sync.js?v=266'
 import { initP2pFoto, stuurFotoP2P, isVriendOnline } from './p2pfoto.js?v=149'
-import { startStickermaker } from './stickermaker.js?v=246'
-import { tekenFibroVellen, stickerWidgetDef, maakSchakelaar, widgetId, stickerNaam, zetStijl as zetStickerStijl } from './stickerwidget.js?v=239'
-import { speel as speelSticker } from './stickerfx.js?v=237'
+import { startStickermaker } from './stickermaker.js?v=247'
+import { tekenFibroVellen, stickerWidgetDef, maakSchakelaar, widgetId, stickerNaam, zetStijl as zetStickerStijl } from './stickerwidget.js?v=240'
+import { speel as speelSticker } from './stickerfx.js?v=238'
 import { STANDAARD_SCHAKELAARS, beginSchakelaars } from './standaardwidgets.js?v=2' // v267: dezelfde standaard als Home
-import { maakStickerkeuze } from './stickerkeuze.js?v=240' // v171: een sticker als mood
-import { zoekSticker } from './stickervellen.js?v=239'
-import { actieveStoreVellen, zetStoreVelActief, WINKEL_VAKJES } from './stickervakken.js?v=3' // 13 nov 2026: stickers uit de Store aanzetten
-import { leesMood, tekenMoodSticker } from './moodsticker.js?v=239'
+import { maakStickerkeuze } from './stickerkeuze.js?v=241' // v171: een sticker als mood
+import { zoekSticker } from './stickervellen.js?v=240'
+import { actieveStoreVellen, zetStoreVelActief, WINKEL_VAKJES } from './stickervakken.js?v=4' // 13 nov 2026: stickers uit de Store aanzetten
+import { leesMood, tekenMoodSticker } from './moodsticker.js?v=240'
 import { maakWidgetWijzigingsBewaking } from './profile-unsaved.js?v=2'
 
 var huidigeUser=null,profiel=null,huidigeAnimatie='geen',huidigLettertype=null,animFrame=null,actieveWidgets=[...STANDAARD_SCHAKELAARS]
@@ -642,7 +642,7 @@ const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','�
 // v173: de oude emoji-stickers (Natuur & Planten, Sfeer & Magie, Muziek & Kunst, Dieren, 'Actieve stickers') en de
 // widget 'Sticker board' zijn weg: ze werden alleen op dit toestel bewaard en nergens getoond.
 import { LETTERTYPES, STORE_LETTERTYPES, laadFont } from './lettertypes.js?v=133'
-import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES, storeWidgetItem } from './store.js?v=23' // v131: Stekky Store
+import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES, storeWidgetItem } from './store.js?v=24' // v131: Stekky Store
 import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=95'
 import { pasAnimatieToe, startOp as startAnimatieOp } from './animatie.js?v=235'
 window.blokAangepast = function(){

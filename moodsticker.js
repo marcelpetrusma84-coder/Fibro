@@ -5,9 +5,9 @@
 // bewegen en geluid maken. Op de kleine plekken (onder je naam, de vriendenlijst) staat alleen de tekst.
 // De sticker is een <span> met een achtergrondplaatje, geen <img>: zo opent fotoviewer.js hem niet als foto.
 // Een eigen sticker van een vriend komt via de sync (sync.js); tot dan een zandlopertje dat vanzelf bijwerkt.
-import { zoekSticker } from './stickervellen.js?v=239'
+import { zoekSticker } from './stickervellen.js?v=240'
 import { zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel } from './eigenstickers.js?v=162'
-import { speel } from './stickerfx.js?v=237'
+import { speel } from './stickerfx.js?v=238'
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 export const MOOD_STICKER = /^fxsticker:((?:f\d+|e[12])-(?:0[1-9]|1[0-2]))(?:\s+|$)/

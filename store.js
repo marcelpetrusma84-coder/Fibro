@@ -38,7 +38,7 @@ export const STORE_GAMES = [
   // 11 nov 2026: twee kaartspellen erbij
   { id: 'toepen', soort: 'game', titel: 'Toepen', widget: 'spel_toepen', homeIcoon: '✊', icoon: 'spelicoon/toepen.webp?v=2',
     uitleg: 'Vier kaarten, vier slagen, alleen de laatste slag telt. Klop "Toep!" om de inzet te verhogen, en durf te bluffen. Wie 10 strafpunten heeft, verliest.' },
-  { id: 'eenentwintigen', soort: 'game', titel: 'Eenentwintigen', widget: 'spel_eenentwintigen', homeIcoon: '♠️', icoon: 'spelicoon/eenentwintigen.webp?v=2',
+  { id: 'eenentwintigen', soort: 'game', titel: 'Black Jack', widget: 'spel_eenentwintigen', homeIcoon: '♠️', icoon: 'spelicoon/eenentwintigen.webp?v=2',
     uitleg: 'Pak kaarten tot je zo dicht mogelijk bij 21 zit, maar niet erover. Durf jij nog een kaart? Tegen de computer of met een vriend in de chat.' },
   // 13 nov 2026: Koningsjacht, alleen te spelen (op Home), met de perkamentkaarten op een houten tafel
   { id: 'koningsjacht', soort: 'game', titel: 'Koningsjacht', widget: 'spel_koningsjacht', homeIcoon: '👑', icoon: 'spelicoon/koningsjacht.webp?v=2',

@@ -48,7 +48,7 @@ assert.equal(versie('chat.html').length, 1); assert.deepEqual(versie('chat.html'
 assert.match(lees('solo.js'), /pesten: +\{ naam: 'Pesten'.*bot: pestenBot/, 'ook tegen de computer (spel.html)')
 assert.match(lees('speluitnodiging.js'), /pesten: \{ icon: '🃏', naam: 'Pesten' \}/)
 // 11 nov 2026: Toepen en Eenentwintigen op dezelfde blauwdruk, ook uit de Store
-for (const [id, naam] of [['toepen', 'Toepen'], ['eenentwintigen', 'Eenentwintigen'], ['koningsjacht', 'Koningsjacht']]) {
+for (const [id, naam] of [['toepen', 'Toepen'], ['eenentwintigen', 'Black Jack'], ['koningsjacht', 'Koningsjacht']]) {
   const v = [...new Set([...chat.matchAll(new RegExp(id + '-ui\\.js\\?v=(\\d+)', 'g'))].map(m => m[1]))]
   assert.equal(v.length, 1, id + ': één versie in chat.html'); assert.ok(lees('solo.js').includes(id + "-ui.js?v=" + v[0] + "'"), id + ': dezelfde versie in solo.js')
   assert.match(lees('solo.js'), new RegExp(id + ': +\\{ naam: \'' + naam + "'.*store: true"), id + ': tegen de computer, alleen via de Store')

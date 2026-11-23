@@ -770,7 +770,7 @@ function renderSpelWidget(c, spel) {
     }
     historyShown = true
     try {
-      const versions = await import('./spelversies.js?v=27')
+      const versions = await import('./spelversies.js?v=28')
       if (disposed || request !== historyRequest || !versieVlak.isConnected) return
       const currentVersion = versions.spelVersie(spel)
       if (!currentVersion) { historyShown = false; return }

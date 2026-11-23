@@ -1,5 +1,5 @@
 # proef301 (13 nov 2026): Koningsjacht met z'n tweeën (in de chat, met een nagemaakt spelkanaal).
-#  A. speler 2 wacht tot speler 1 kiest; speler 1 kiest 'samen' (Schildknaap)
+#  A. speler 2 wacht, krijgt na de keuze de juiste spelafbeelding en opent het spel via de melding
 #  B. samen: allebei 7 kaarten, niemand dezelfde; speler 1 is aan de beurt, speler 2 wacht ('Marcel is aan de beurt')
 #  (zoals proef293: speler 1 heet hier Marcel en zijn vriend Tijn)
 #  C. speler 1 valt aan: speler 2 ziet dezelfde schade bij de vijand; daarna (afweren of nar) is speler 2 aan de beurt
@@ -10,7 +10,7 @@
 #  H. belegering: ieder een eigen kasteel, om de beurt aanvallen en afweren; je ziet je eigen kasteel
 #  G. geen paginafouten
 # python3 -I proef301.py <map>
-import sys, os, time, socket, subprocess, tempfile, re, json
+import functools, http.server, json, os, re, sys, threading, time
 from playwright.sync_api import sync_playwright
 MAP = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
 fout = []
@@ -18,10 +18,17 @@ def check(ok, wat):
     print(('OK   ' if ok else 'FOUT ') + wat)
     if not ok: fout.append(wat)
 
-www = tempfile.mkdtemp(prefix='proef301_'); os.symlink(MAP, os.path.join(www, 'Fibro'))
-s = socket.socket(); s.bind(('127.0.0.1', 0)); poort = s.getsockname()[1]; s.close()
-srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(poort), '--bind', '127.0.0.1', '--directory', www], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); time.sleep(0.8)
-BASIS = 'http://127.0.0.1:%d/Fibro/' % poort
+class FibroHandler(http.server.SimpleHTTPRequestHandler):
+    def translate_path(self, path):
+        return super().translate_path(path.removeprefix('/Fibro'))
+
+    def log_message(self, *args):
+        pass
+
+handler = functools.partial(FibroHandler, directory=MAP)
+srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), handler)
+threading.Thread(target=srv.serve_forever, daemon=True).start()
+BASIS = 'http://127.0.0.1:%d/Fibro/' % srv.server_port
 fouten = []
 RUST = "!document.querySelector('.kt-laag .kt-vlieg')"
 MIJN = "() => !!document.querySelector('.kt-tafel.kt-mijnbeurt') && " + RUST
@@ -61,6 +68,34 @@ def speler(ctx, nr, kanaalnaam, bestand):
         m.start({ spelKanaal: (0, eval)('(' + maak + ')')(nr, kn), benIkSpeler1: nr === 1, vriendNaam: nr === 1 ? 'Tijn' : 'Marcel' })
     }""", [nr, KANAAL, kanaalnaam, bestand])
     return q
+
+def start_modus(een, twee, modus, niveau, titel):
+    knop = een.locator('.kj-modi button[data-modus="%s"]' % modus)
+    knop.click(timeout=8000)
+    check(knop.get_attribute('aria-pressed') == 'true' and een.locator('.kj-modi button[aria-pressed="true"]').count() == 1,
+          '%s: tik selecteert alleen dit speltype' % titel)
+    een.locator('.kj-niveaukeus button[data-niveau="%s"]' % niveau).click(timeout=8000)
+
+    # De melding hoort bij het spel. Bij het sluiten van de chat-overlay verdwijnt hij dan mee.
+    melding_een = een.locator('#spelInhoud').get_by_role('dialog', name='Speltype gekozen')
+    melding_twee = twee.locator('#spelInhoud').get_by_role('dialog', name='Speltype gekozen')
+    melding_een.wait_for(timeout=8000)
+    melding_twee.wait_for(timeout=8000)
+    check(melding_twee.get_by_role('heading', name=titel, exact=True).is_visible()
+          and melding_twee.get_by_text('Marcel koos voor: ' + titel, exact=True).is_visible(),
+          '%s: speler 2 ziet wat Marcel koos' % titel)
+    afbeeldingsnaam = 'belegering' if modus == 'beleg' else modus
+    check(wacht(twee, """() => {
+        const beeld = document.querySelector('.kj-mode-popup img')
+        return beeld?.naturalWidth > 0 && beeld.src.endsWith(%s)
+    }""" % json.dumps('/modus-' + afbeeldingsnaam + '.svg'), 8000), '%s: de bijbehorende afbeelding laadt' % titel)
+    check(twee.locator('.kt-tafel').count() == 0, '%s: de tafel wacht op het sluiten van de melding' % titel)
+
+    melding_een.get_by_role('button', name='Start dit spel', exact=True).click(timeout=8000)
+    melding_twee.get_by_role('button', name='Sluit en start dit spel', exact=True).click(timeout=8000)
+    melding_een.wait_for(state='hidden', timeout=8000)
+    melding_twee.wait_for(state='hidden', timeout=8000)
+
 # Een beurt: aanvallen met de sterkste losse kaart, dan afweren (of een nar)
 def beurt(pg):
     hand = pg.evaluate(HAND)
@@ -102,7 +137,7 @@ try:
         # ════════ A-D: samen ════════
         twee = speler(ctx, 2, 'kj-samen', bestand); een = speler(ctx, 1, 'kj-samen', bestand)
         check(wacht(twee, "() => (document.querySelector('.kj-wacht') || {}).textContent?.includes('Marcel kiest')", 8000), 'A: speler 2 wacht: "Marcel kiest hoe jullie spelen..." (zijn vriend heet hier Marcel)')
-        check(een.locator('.kj-modi .kj-niveau').count() == 4, 'A: speler 1 kiest uit samen, wedstrijd, duel en belegering')
+        check(een.locator('.kj-modi button[data-modus]').count() == 4, 'A: speler 1 kiest uit samen, wedstrijd, duel en belegering')
         # Elke speler heeft zijn eigen pul; de ander ziet updates en nieuwe volle pullen.
         een.click('.kj-start-instellingen'); een.check('[data-instelling=bierpul]')
         een.eval_on_selector('#kj-bier-inhoud', "e => { e.value = '42'; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })) }")
@@ -112,7 +147,7 @@ try:
         check(wacht(twee, "() => document.querySelector('.kj-scene-bier-ander')?.getAttribute('aria-valuenow') === '42'", 8000), 'I: later aansluiten haalt de bierstand op')
         een.click('.kj-start-instellingen'); een.click('.kj-bier-vol'); een.click('.kj-instellingen-sluit')
         check(wacht(twee, "() => document.querySelector('.kj-scene-bier-ander')?.getAttribute('aria-valuenow') === '100'", 8000), 'I: een nieuwe volle pul verschijnt bij de ander')
-        een.click('.kj-modi .kj-niveau[data-modus=samen]'); een.click('.kj-niveaukeus .kj-niveau[data-niveau=schildknaap]')
+        start_modus(een, twee, 'samen', 'schildknaap', 'Samen')
         check(wacht(een, MIJN) and wacht(twee, "() => document.querySelectorAll('.kt-hand .kt-kaart').length === 7 && " + RUST), 'B: samen: het spel begint bij allebei')
         h1, h2 = een.evaluate(HAND), twee.evaluate(HAND)
         check(len(h1) == 7 and len(h2) == 7 and not set(h1) & set(h2), 'B: elk 7 kaarten, niemand dezelfde')
@@ -138,7 +173,7 @@ try:
         # ════════ E: wedstrijd ════════
         twee = speler(ctx, 2, 'kj-race', bestand); een = speler(ctx, 1, 'kj-race', bestand)
         wacht(twee, "() => !!document.querySelector('.kj-wacht')", 8000)
-        een.click('.kj-modi .kj-niveau[data-modus=wedstrijd]'); een.click('.kj-niveaukeus .kj-niveau[data-niveau=ridder]')
+        start_modus(een, twee, 'wedstrijd', 'ridder', 'Wedstrijd')
         check(wacht(een, MIJN) and wacht(twee, MIJN), 'E: wedstrijd: allebei meteen aan de beurt')
         check(een.evaluate(HAND) == twee.evaluate(HAND) and een.evaluate("() => document.querySelector('.kj-kaart').dataset.id") == twee.evaluate("() => document.querySelector('.kj-kaart').dataset.id"),
               'E: hetzelfde kasteel en dezelfde hand (%s)' % een.evaluate(HAND))
@@ -153,7 +188,7 @@ try:
         # ════════ F: duel ════════
         twee = speler(ctx, 2, 'kj-duel', bestand); een = speler(ctx, 1, 'kj-duel', bestand)
         wacht(twee, "() => !!document.querySelector('.kj-wacht')", 8000)
-        een.click('.kj-modi .kj-niveau[data-modus=duel]'); een.click('.kj-niveaukeus .kj-niveau[data-niveau=ridder]')
+        start_modus(een, twee, 'duel', 'ridder', 'Duel')
         check(wacht(twee, MIJN) and '20 / 20' in twee.evaluate(LEVEN), 'F: duel begint (%s)' % twee.evaluate(LEVEN))
         check('⚔️ Marcel' in twee.text_content('.kt-info'), 'F: duel: "⚔️ Marcel: 0/12"')
         spel = twee.evaluate("() => { const b = [...window.__berichten].reverse().find(m => m.event === 'voortgang' && m.van === 1); return b && b.payload.spelId }")
@@ -165,8 +200,8 @@ try:
         # ════════ H: belegering ════════
         twee = speler(ctx, 2, 'kj-beleg', bestand); een = speler(ctx, 1, 'kj-beleg', bestand)
         wacht(twee, "() => !!document.querySelector('.kj-wacht')", 8000)
-        check(een.locator('.kj-modi .kj-niveau[data-modus=beleg]').count() == 1, 'H: belegering staat erbij')
-        een.click('.kj-modi .kj-niveau[data-modus=beleg]'); een.click('.kj-niveaukeus .kj-niveau[data-niveau=schildknaap]')
+        check(een.locator('.kj-modi button[data-modus=beleg]').count() == 1, 'H: belegering staat erbij')
+        start_modus(een, twee, 'beleg', 'schildknaap', 'Belegering')
         check(wacht(een, MIJN) and wacht(twee, "() => document.querySelectorAll('.kt-hand .kt-kaart').length === 8 && " + RUST), 'H: belegering begint: allebei 8 kaarten, speler 1 is aan de beurt')
         check(not twee.evaluate("() => !!document.querySelector('.kt-tafel.kt-mijnbeurt')") and wacht(twee, "() => document.querySelector('.kt-status').textContent.includes('valt jouw kasteel aan')", 6000),
               'H: speler 2 wacht: "Marcel valt jouw kasteel aan..."')
@@ -185,6 +220,7 @@ try:
 except Exception as e:
     check(False, 'proef afgebroken: ' + str(e).split('\n')[0])
 finally:
-    srv.terminate()
+    srv.shutdown()
+    srv.server_close()
 print('\n%d fout(en)' % len(fout))
 sys.exit(1 if fout else 0)

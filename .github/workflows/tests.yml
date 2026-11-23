@@ -257,3 +257,6 @@ jobs:
       - name: "Stekky Studio: eigen geluid per sticker in de echte app (proef326)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef326.py .
+      - name: "Chatlijst: online bovenaan, daaronder het laatste bericht (proef327)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef327.py .

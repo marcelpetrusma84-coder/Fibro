@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=143"></script>
+<script src="taal.js?v=144"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -354,7 +354,7 @@ import { isBelregel, belregelTekst } from './belregel.js?v=152'
 import { maakSpelVersieLangDruk } from './spelversie-langdruk.js?v=1'
 import { koppelSpelIcoonFallback } from './spelicoon.js?v=6'
 koppelSpelIcoonFallback()
-import { openSpelMetTitel } from './titelscherm.js?v=12' // v252: titelscherm met muziek meteen bij je tik
+import { openSpelMetTitel } from './titelscherm.js?v=13' // v252: titelscherm met muziek meteen bij je tik
 import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=7' // v266
 pasBlokstijlToe()
 
@@ -770,7 +770,7 @@ function renderSpelWidget(c, spel) {
     }
     historyShown = true
     try {
-      const versions = await import('./spelversies.js?v=27')
+      const versions = await import('./spelversies.js?v=28')
       if (disposed || request !== historyRequest || !versieVlak.isConnected) return
       const currentVersion = versions.spelVersie(spel)
       if (!currentVersion) { historyShown = false; return }
@@ -3237,7 +3237,7 @@ if ('serviceWorker' in navigator) {
 <script type="module">import { beschermOpslag } from "./opslag.js?v=3"; beschermOpslag()</script>
 <script type="module" src="geluidregelaar.js?v=182"></script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=200"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=201"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=172"; startOngelezen()</script>
 <script type="module">import { checkTimers } from "./timer-melding.js?v=188"; setTimeout(checkTimers,4000)</script>
 <script src="./fotoviewer.js?v=9"></script>

@@ -57,7 +57,7 @@ Elk kaartspel krijgt **vanzelf**:
 - Wie **10 strafpunten** heeft, verliest. Na elke ronde begint de ander.
 - Regels: `toepen.js`, spel: `toepen-ui.js`. De zet die een ronde afmaakt, deelt meteen de volgende ronde (`laatste.ronde`).
 
-## Eenentwintigen
+## Black Jack (voorheen Eenentwintigen; in de code blijft de naam `eenentwintigen`)
 
 52 kaarten, 2 elk. 2 t/m 10 tellen wat erop staat, boer/vrouw/heer 10, aas 11 of 1. Wie begint pakt kaarten (tik of veeg op de stapel) tot **✋ Ik blijf**; daarna de ander. Boven 21 = meteen af. Aan het eind draait de ander zijn kaarten om (ze vliegen open op tafel). Evenveel = gelijkspel.
 

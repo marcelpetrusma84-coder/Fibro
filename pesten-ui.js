@@ -8,7 +8,7 @@
 //   'opnieuw'      een nieuw spel, met de nieuwe stand erbij (wie op Opnieuw tikt, schudt en deelt)
 //   'kaartreactie' een emoji die over tafel vliegt
 // Speler 1 schudt en deelt het eerste spel. De chatbalk, stickers, webcam en het spraakgesprek komen van chat.html.
-import * as P from './pesten.js?v=1'
+import * as P from './pesten.js?v=2'
 import { maakKaartTafel, KLEUR_TEKEN, REACTIES } from './kaartspel-hulp.js?v=17'
 import { meldGeslagen } from './beurtspel-hulp.js?v=1'
 
@@ -84,7 +84,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam }) {
     else if (w === 'B') tafel.effect(T('Kleur') + ' ' + KLEUR_TEKEN[s.kleur])
     else if (w === '7') tafel.effect(T('Blijft plakken!'))
     else if (w === '8') tafel.effect(T('Wacht!'))
-    else if (w === 'A') tafel.effect(T('Keer om!'))
+    else if (w === 'A' && P.aasRegelVan(s) !== 'eenmaal') tafel.effect(T('Keer om!'))
   }
 
   function controleerEinde() {
@@ -211,7 +211,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam }) {
   function nieuwSpelStarten() {
     const begint = staat ? (staat.begint === 1 ? 2 : 1) : 1
     const id = Math.max(Date.now(), spelId + 1)
-    const nieuw = P.nieuwSpel({ begint })
+    const nieuw = P.nieuwSpel({ begint, aas: solo ? 'eenmaal' : 'nog-een-keer' })   // tegen de computer: een aas is maar één keer
     const oud = null
     spelId = id; nr = 0; staat = nieuw
     stuur('opnieuw', { staat, nr, spelId })

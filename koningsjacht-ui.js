@@ -558,6 +558,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   const modusBeeld = id => new URL('./assets/koningsjacht/modus-' + (id === 'beleg' ? 'belegering' : id) + '.svg', import.meta.url).href
   function toonSpeltype(o) {
     if (!o || !(o.spelId > spelId) || !modusInfo(o.modus)) return
+    if (pendingStart && o.spelId < pendingStart.spelId) return
     if (pendingStart?.spelId === o.spelId) {
       if ((o.nr || 0) <= (pendingStart.nr || 0)) return
       // Een partij kan al beginnen terwijl de ander de melding nog open heeft.
@@ -593,7 +594,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     starten.addEventListener('click', gaVerder)
     popup.addEventListener('click', e => { if (e.target === popup) gaVerder() })
     popup.addEventListener('keydown', e => { if (e.key === 'Escape') gaVerder() })
-    document.body.appendChild(popup)
+    inhoud.appendChild(popup)
     modePopup = popup
     sluiten.focus()
   }
@@ -630,7 +631,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   }
   // Speler 1 begint een spel (ook bij Opnieuw spelen)
   function begin(m, niveau) {
-    const id = Math.max(Date.now(), spelId + 1)
+    const id = Math.max(Date.now(), spelId + 1, (pendingStart?.spelId ?? -1) + 1)
     if (m === 'beleg') {
       const b = K.nieuwBeleg({ niveau, begint: 1 })
       opzet = { modus: m, niveau, spelId: id }
@@ -673,7 +674,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
       if (!(p.spelId > spelId) || !['samen', 'wedstrijd', 'duel', 'beleg'].includes(p.modus) || !K.NIVEAUS[p.niveau]) return
       if (p.modus === 'samen' && !K.geldigeStand(p.staat)) return
       if (p.modus === 'beleg' && !K.geldigBeleg(p.beleg)) return
-      tafel?.sluitEinde?.(); toonSpeltype(p)
+      toonSpeltype(p)
     })
     const zet = msg => {
       const p = msg.payload || {}

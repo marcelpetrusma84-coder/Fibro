@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
-<script src="taal.js?v=145"></script>
+<script src="taal.js?v=146"></script>
 <script src="appslot.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Stekky Store</title>
@@ -31,7 +31,7 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 .item-kop { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:4px; }
 .item-titel { font-family:'DM Serif Display',serif; font-size:20px; color:var(--accent); }
 .item-aantal { font-size:12px; color:var(--muted); white-space:nowrap; }
-.item-game { display:flex; gap:10px; align-items:center; } .item-game img { width:56px; height:56px; flex:none; } .item-emoji { width:56px; height:56px; flex:none; display:flex; align-items:center; justify-content:center; font-size:40px; line-height:1; border-radius:14px; background:rgba(255,255,255,0.08); } /* 18 nov 2026: widgets */ .item-uitleg { font-size:12px; line-height:1.4; color:var(--muted); opacity:.85; }
+.item-game { display:flex; gap:10px; align-items:center; } .item-game img { width:56px; height:56px; flex:none; } .item-emoji { width:56px; height:56px; flex:none; display:flex; align-items:center; justify-content:center; font-size:40px; line-height:1; border-radius:14px; background:rgba(255,255,255,0.08); } /* 18 nov 2026: widgets */ .item-uitleg { font-size:12px; line-height:1.4; color:var(--muted); opacity:.85; } .item-vermelding { font-size:11px; line-height:1.4; color:var(--muted); opacity:.75; margin-top:4px; }
 .item-stickers { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:4px; margin:8px 0 2px; }
 .item-sticker { border:0; background:transparent; padding:2px; border-radius:10px; cursor:pointer; aspect-ratio:1; -webkit-tap-highlight-color:transparent; }
 .item-sticker:active { background:rgba(192,132,252,0.16); } .item-sticker img { width:100%; height:100%; object-fit:contain; pointer-events:none; }
@@ -91,9 +91,9 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 <script type="module">
 import { supabase } from './supabase.js?v=95'
 import { laadFont } from './lettertypes.js?v=133'
-import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, verwijderDownload, tabelOntbreekt, zetGameWidgetAan } from './store.js?v=20'
-import { zoekSticker, STORE_VELLEN } from './stickervellen.js?v=237'
-import { speel } from './stickerfx.js?v=236'
+import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, verwijderDownload, tabelOntbreekt, zetGameWidgetAan } from './store.js?v=24'
+import { zoekSticker, STORE_VELLEN } from './stickervellen.js?v=240'
+import { speel } from './stickerfx.js?v=238'
 
 let mijnId = null
 let mijn = new Set()
@@ -145,7 +145,9 @@ function bouwLijst() {
     else if (it.soort === 'sticker') {
       const vel = STORE_VELLEN.find(v => v.id === it.vel)
       kaart.innerHTML = `<div class="item-kop"><span class="item-titel">${esc(it.titel)}</span><span class="item-aantal">${esc(T('{n} stickers', { n: vel.stickers.length }))}</span></div>`
-        + `<div class="item-uitleg">${esc(T(it.uitleg))}</div><div class="item-stickers"></div>`
+        + `<div class="item-uitleg">${esc(it.uitlegEn && window.T && window.T.taal === 'en' ? it.uitlegEn : T(it.uitleg))}</div>`
+        + (it.vermelding ? `<div class="item-vermelding">${esc(T('Geluiden van: {bronnen}', { bronnen: it.vermelding }))}</div>` : '')
+        + `<div class="item-stickers"></div>`
       for (const s of vel.stickers) {
         const st = zoekSticker(vel.id + '-' + s.nr)
         const b = document.createElement('button'); b.type = 'button'; b.className = 'item-sticker'

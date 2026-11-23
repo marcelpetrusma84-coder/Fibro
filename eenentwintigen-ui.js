@@ -15,7 +15,7 @@ const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 export function start({ spelKanaal, benIkSpeler1, vriendNaam }) {
   const inhoud = document.getElementById('spelInhoud')
   const titel = document.getElementById('spelTitelBar')
-  if (titel) titel.textContent = '♠️ Eenentwintigen'
+  if (titel) titel.textContent = '♠️ Black Jack'
   const ik = benIkSpeler1 ? 1 : 2, hij = ik === 1 ? 2 : 1
   const solo = Boolean(spelKanaal && spelKanaal.isSolo)
   const naam = solo ? T('Computer') : (vriendNaam || T('vriend'))

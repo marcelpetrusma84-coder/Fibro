@@ -7,10 +7,10 @@
 // je eigen stickers opnieuw (bij het openen). sticker = { vel, nr, naam, b, g, src }.
 // 13 nov 2026: de vier vakjes 'Winkel' tonen de stickervellen die je in de Stekky Store gedownload hebt (STORE_VELLEN)
 // en bij Stijl > Stickers aangezet hebt (actieveStoreVellen).
-import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=237'
-import { actieveStoreVellen } from './stickervakken.js?v=1'
+import { FIBRO_VELLEN, zoekSticker } from './stickervellen.js?v=240'
+import { actieveStoreVellen } from './stickervakken.js?v=4'
 import { leesEigen } from './eigenstickers.js?v=162'
-import { speelBeweging } from './stickerfx.js?v=236'
+import { speelBeweging } from './stickerfx.js?v=238'
 
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 const naamVan = n => Array.isArray(n) ? ((window.T && window.T.taal === 'en') ? n[1] : n[0]) : ''

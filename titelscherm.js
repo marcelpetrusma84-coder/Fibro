@@ -24,7 +24,7 @@ let huidig = null
 let naMuziekTimer = null
 
 // De namen zoals in de spellen (schaken in de taal van de schaakinstellingen is aan spel.html; hier Schaken/Chess)
-const NAMEN = { botkaaseiren: 'Tic-Tac-Toe', vieroprij: 'Four in a Row', pesten: 'Pesten', toepen: 'Toepen', eenentwintigen: 'Eenentwintigen', koningsjacht: 'Koningsjacht', dammen: 'Draughts', pong: 'Neo Paddle', pacman: 'Ghost Tag',
+const NAMEN = { botkaaseiren: 'Tic-Tac-Toe', vieroprij: 'Four in a Row', pesten: 'Pesten', toepen: 'Toepen', eenentwintigen: 'Black Jack', koningsjacht: 'Koningsjacht', dammen: 'Draughts', pong: 'Neo Paddle', pacman: 'Ghost Tag',
     breakout: 'Block It', swarm: 'The Swarm', pinball: 'Twin Snakes', endlessrunner: 'Runner & Gunner', flappybird: 'Flapper', shmup: 'Neon Raiders' }
 export function titelNaam(spelId) {
     if (spelId === 'schaken') return window.T && window.T.taal === 'en' ? 'Chess' : 'Schaken'

@@ -2370,7 +2370,7 @@ window.FIBRO_EN = {
   "{n}: te veel!": "{n}: bust!",
   "{naam}: te veel!": "{naam}: bust!",
   "Toepen verwijderen": "Remove Toepen",
-  "Eenentwintigen verwijderen": "Remove Twenty-One",
+  "Black Jack verwijderen": "Remove Black Jack",
   "Vier kaarten, vier slagen, alleen de laatste slag telt. Klop \"Toep!\" om de inzet te verhogen, en durf te bluffen. Wie 10 strafpunten heeft, verliest.": "Four cards, four tricks, only the last trick counts. Knock \"Toep!\" to raise the stake, and dare to bluff. Whoever reaches 10 penalty points loses.",
   "Pak kaarten tot je zo dicht mogelijk bij 21 zit, maar niet erover. Durf jij nog een kaart? Tegen de computer of met een vriend in de chat.": "Draw cards to get as close to 21 as you can, without going over. Dare to take one more? Against the computer or with a friend in the chat.",
 // ---- Spelmenu ☰ in elk spel (spelmenu.js), 11 nov 2026 ----
@@ -2813,4 +2813,5 @@ window.FIBRO_EN = {
   "{n} wachters verslagen · nog {over} te gaan": "{n} guards defeated · {over} to go",
   "1 wachter verslagen · nog 11 te gaan": "1 guard defeated · 11 to go",
   "Schild vangt {n} op · nog {schade} afweren": "Shield absorbs {n} · {schade} left to defend",
+  "Geluiden van: {bronnen}": "Sounds by: {bronnen}",
 }

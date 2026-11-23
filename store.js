@@ -14,8 +14,8 @@
 // Soorten: lettertype (nu), game, sticker en widget (later). Lettertypes komen per thema in een pakket van 4
 // (v2, 11 nov 2026): een nieuw pakket staat in STORE_PAKKETTEN (lettertypes.js), de bestanden in lettertypen/.
 import { STORE_PAKKETTEN } from './lettertypes.js?v=133'
-import { STORE_VELLEN } from './stickervellen.js?v=239'
-import { legStoreVakkenVast, zetStoreVelActief } from './stickervakken.js?v=3'   // 13 nov 2026: stickers aanzetten bij Stijl
+import { STORE_VELLEN } from './stickervellen.js?v=240'
+import { legStoreVakkenVast, zetStoreVelActief } from './stickervakken.js?v=4'   // 13 nov 2026: stickers aanzetten bij Stijl
 import { zetStandaardWidgets } from './standaardwidgets.js?v=2'   // 17 nov 2026: games meteen op Home
 
 export const STORE_SOORTEN = [
@@ -48,9 +48,17 @@ export const STORE_GAMES = [
 // staat het bij Stijl > Stickers; zet je het daar aan, dan staat het in de stickerkeuze van de chat bij 'Winkel'.
 // Verwijderen (in de Store of bij Stijl): dan is het daar weg (wat je al stuurde, blijft).
 // 23 nov 2026: een vel uit Stekky Studio heeft zijn eigen uitleg [nl, en] (v.uitleg); Sinterklaas houdt zijn vaste tekst.
+// Een eigen geluid met licentie CC0 of CC BY: de bron komt onder het pakket te staan (bij CC BY moet het, bij CC0 als dank).
+// Dezelfde twee als in studio-pakket.js (LICENTIES, 'vermelding'); een test houdt ze gelijk.
+export const LICENTIES_MET_VERMELDING = ['cc0', 'cc-by']
+export function geluidVermelding(vel) {
+  const bronnen = []
+  for (const s of vel.stickers || []) if (s.bron && LICENTIES_MET_VERMELDING.includes(s.licentie) && !bronnen.includes(s.bron)) bronnen.push(s.bron)
+  return bronnen.join('; ')
+}
 export const STORE_STICKERS = STORE_VELLEN.map(v => ({ id: v.store, soort: 'sticker', titel: v.titel, vel: v.id,
   uitleg: v.uitleg ? v.uitleg[0] : 'Twaalf stickers die bewegen en geluid maken: de Sint, Piet, de pakjesboot, Ozosnel, chocoladeletters en meer.',
-  uitlegEn: v.uitleg ? v.uitleg[1] : undefined }))
+  uitlegEn: v.uitleg ? v.uitleg[1] : undefined, vermelding: geluidVermelding(v) }))
 // Widgets (18 nov 2026): na downloaden meteen op Home (zetGameWidgetAan, met hun eigen maat w × h) en bij
 // Profiel > Widgets (widgetRij-<widget>). widget = de naam van de widget, homeIcoon = het icoon in de kop.
 export const STORE_WIDGETS = [

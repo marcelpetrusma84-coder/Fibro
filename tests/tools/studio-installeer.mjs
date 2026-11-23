@@ -49,7 +49,7 @@ const stickers = pakket.stickers.map((s, i) => {
   const st = { nr, naam: s.naam.map(t => t.trim()), b: s.b, g: s.g }
   if (s.mp3) {
     writeFileSync(path.join(geluidenMap, velId + '-' + nr + '.mp3'), Buffer.from(s.mp3, 'base64'))
-    st.g = velId + '-' + nr; st.terug = s.g; st.bron = s.bron.trim()
+    st.g = velId + '-' + nr; st.terug = s.g; st.bron = s.bron.trim(); st.licentie = s.licentie
   }
   return st
 })
@@ -59,7 +59,7 @@ const vel = { id: velId, store: pakket.id, titel: pakket.titel.trim(), uitleg: p
 const bron = readFileSync(dataPad, 'utf8')
 const kop = bron.slice(0, bron.indexOf('export const STUDIO_VELLEN'))
 const regel = s => '    { nr: ' + JSON.stringify(s.nr).replace(/"/g, "'") + ', naam: ' + JSON.stringify(s.naam) + ', b: ' + JSON.stringify(s.b) + ', g: ' + JSON.stringify(s.g) +
-  (s.terug ? ', terug: ' + JSON.stringify(s.terug) + ', bron: ' + JSON.stringify(s.bron) : '') + ' },'
+  (s.terug ? ', terug: ' + JSON.stringify(s.terug) + ', bron: ' + JSON.stringify(s.bron) + ', licentie: ' + JSON.stringify(s.licentie) : '') + ' },'
 const tekst = v => '  { id: ' + JSON.stringify(v.id) + ', store: ' + JSON.stringify(v.store) + ', titel: ' + JSON.stringify(v.titel) + ',\n    uitleg: ' + JSON.stringify(v.uitleg) + ',\n    stickers: [\n' + v.stickers.map(s => '  ' + regel(s)).join('\n') + '\n    ] },'
 writeFileSync(dataPad, kop + 'export const STUDIO_VELLEN = [\n' + [...nu, vel].map(tekst).join('\n') + '\n]\n')
 console.log('Pakket "' + vel.titel + '" staat nu als vel ' + velId + ' in de app (' + stickers.length + ' stickers).')

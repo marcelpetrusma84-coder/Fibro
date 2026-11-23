@@ -6,8 +6,8 @@
 // v157: onder elke sticker een knopje (stickerwidget.js): aan + Opslaan = de sticker staat op Home.
 // Gebruik: startStickermaker(element, uid, widgets)   (widgets = { aan(id), zet(id, aan) } uit profiel.html)
 import { EIGEN_VELLEN, PER_VEL, maakCode, leesEigen, bewaarEigen, wisEigen, laadAfbeelding, bekijkRand, achtergrondWeg, knipMetLijn, maakSticker } from './eigenstickers.js?v=162'
-import { BEWEGINGEN, GELUIDEN, naamVan, speel } from './stickerfx.js?v=237'
-import { maakSchakelaar, widgetId, zetStijl as zetWidgetStijl } from './stickerwidget.js?v=239'
+import { BEWEGINGEN, GELUIDEN, naamVan, speel } from './stickerfx.js?v=238'
+import { maakSchakelaar, widgetId, zetStijl as zetWidgetStijl } from './stickerwidget.js?v=240'
 import { KWAST_MIN, KWAST_MAX, KWAST_STANDAARD, kwastStraal, voegPuntToe, tekenStreek, pasStrekenToe } from './stickerkwast.js?v=1'
 import { kanHet as kanOnderwerp, laadKnipper, opVoortgang } from './onderwerp.js?v=2' // v265: voortgang
 

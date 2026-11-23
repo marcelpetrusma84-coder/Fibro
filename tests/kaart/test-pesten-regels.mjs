@@ -119,3 +119,66 @@ for (const niveau of ['makkelijk', 'normaal', 'moeilijk']) {
   }
 }
 console.log('pesten regels: ok')
+
+// ── De aas (23 nov 2026) ──
+// Tegen de computer ('eenmaal'): maar één keer, daarna is de ander aan de beurt
+s = { ...stand(['hA', 'k5', 's5'], ['r4'], 'h9'), aasRegel: 'eenmaal' }
+n = P.speel(s, 1, ['hA'])
+assert.equal(n.aanZet, 2, 'tegen de computer geeft de aas geen extra beurt')
+assert.ok(P.geldigeStand(n))
+assert.equal(P.nieuwSpel({ aas: 'eenmaal', rng: zaad(5) }).aasRegel, 'eenmaal')
+assert.equal(P.nieuwSpel({ rng: zaad(5) }).aasRegel, 'nog-een-keer', 'met z\'n tweeën online blijft het zoals het was')
+
+// Met 3 of 4 spelers: de aas draait de richting om
+for (const aantal of [3, 4]) {
+  const g = P.nieuwSpel({ spelers: aantal, rng: zaad(7) })
+  assert.equal(g.aasRegel, 'omkeer'); assert.equal(g.richting, 1)
+  for (let sp = 1; sp <= aantal; sp++) assert.equal(g.handen[sp].length, 7)
+  assert.ok(P.geldigeStand(g), aantal + ' spelers: geldige stand')
+}
+function stand3(handen, top, aanZet = 2) {
+  const g = P.nieuwSpel({ spelers: 3, rng: zaad(8) })
+  const gebruikt = new Set([...handen[1], ...handen[2], ...handen[3], top])
+  return { ...g, handen, aflegstapel: [top], stapel: P.maakDeck().filter(id => !gebruikt.has(id)), aanZet }
+}
+const d = stand3({ 1: ['h3', 's6'], 2: ['hA', 'h6', 'k5'], 3: ['r4', 'r5'] }, 'h9')
+assert.ok(P.geldigeStand(d))
+// zonder aas gaat het oplopend: 2 -> 3
+const z = P.speel(d, 2, ['h6'])
+assert.equal(z.aanZet, 3, 'gewoon verder: 2 -> 3')
+assert.equal(z.richting, 1)
+// met aas: omkeren, dus 2 -> 1
+const om = P.speel(d, 2, ['hA'])
+assert.equal(om.richting, -1); assert.equal(om.aanZet, 1, 'aas: de andere kant op (2 -> 1)')
+assert.ok(P.geldigeStand(om))
+// en daarna loopt het de andere kant op: 1 -> 3 (en niet 1 -> 2)
+assert.equal(P.speel(om, 1, ['h3']).aanZet, 3, 'na de omkeer gaat 1 naar 3')
+// pakken en passen volgen dezelfde richting
+assert.equal(P.pas(P.pak(om, 1), 1).aanZet, 3, 'passen volgt de nieuwe richting')
+// twee azen samen draaien niet om
+const dubbel = P.speel(stand3({ 1: ['h3', 's6'], 2: ['hA', 'rA', 'k5'], 3: ['r4', 'r5'] }, 'h9'), 2, ['hA', 'rA'])
+assert.equal(dubbel.richting, 1, 'twee azen heffen elkaar op'); assert.equal(dubbel.aanZet, 3)
+// betrappen met meer spelers: iedere andere speler mag
+let b = stand3({ 1: ['h3', 'h4'], 2: ['k4', 'k5'], 3: ['r4', 'r5'] }, 'h9', 1)
+b = P.speel(b, 1, ['h3'])
+assert.equal(b.betrapbaar, 1)
+assert.ok(P.magBetrappen({ ...b, aanZet: 3 }, 3), 'ook speler 3 mag speler 1 betrappen')
+assert.ok(!P.magBetrappen({ ...b, aanZet: 1 }, 1), 'jezelf betrappen kan niet')
+
+// De computer speelt hele spellen met 3 en 4 spelers en tegen de computer (aas eenmaal) zonder vast te lopen
+for (const [spelers, aas] of [[2, 'eenmaal'], [3, 'omkeer'], [4, 'omkeer']]) {
+  for (let spel = 0; spel < 30; spel++) {
+    const rng = zaad(500 + spel)
+    let st = P.nieuwSpel({ rng, spelers, aas, begint: 1 + (spel % spelers) })
+    let stappen = 0
+    while (!st.winnaar && stappen < 4000) {
+      const sp = st.aanZet
+      const nieuw = P.doeStap(st, sp, P.computerStap(st, sp, 'normaal', rng), rng)
+      assert.ok(nieuw, spelers + ' spelers: geldige stap')
+      assert.ok(P.geldigeStand(nieuw), spelers + ' spelers: altijd 54 kaarten')
+      st = nieuw; stappen++
+    }
+    assert.ok(st.winnaar, spelers + ' spelers: er is een winnaar')
+  }
+}
+console.log('pesten aas en meer spelers: ok')

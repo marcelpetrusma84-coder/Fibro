@@ -56,6 +56,11 @@ input[type=range] { accent-color:var(--knop); }
 .speel { background:var(--knop); color:#fff; border:0; border-radius:8px; padding:5px 10px; font:inherit; font-size:12px; cursor:pointer; align-self:flex-start; }
 #toegangGeweigerd { text-align:center; padding:60px 20px; }
 .verborgen { display:none !important; }
+.geluidblok { display:flex; flex-direction:column; gap:6px; border-top:0.5px dashed var(--border); padding-top:8px; margin-top:2px; }
+.geluidblok input[type=file] { font-size:12px; max-width:100%; }
+.geluidstatus { font-size:12px; color:var(--goed); }
+.geluidstatus.bezig { color:var(--muted); } .geluidstatus.fout { color:var(--fout); }
+.speel.stil { background:transparent; border:0.5px solid var(--border); color:var(--text); }
 details.promptblok { background:var(--card); border:0.5px solid var(--border); border-radius:16px; padding:12px 16px; margin-bottom:16px; }
 details.promptblok summary { font-size:15px; font-weight:600; cursor:pointer; }
 details.promptblok .rij > label.veld { flex:1 1 200px; }
@@ -130,7 +135,7 @@ textarea#promptTekst { width:100%; min-height:300px; margin-top:12px; line-heigh
 
   <section class="stap verborgen" id="stap3">
     <h2><span class="nummer">3</span> Naam, beweging en geluid</h2>
-    <p class="uitleg">De Studio heeft per sticker een beweging en een geluid voorgesteld. Druk op ▶ om te kijken en te luisteren, en pas aan wat je anders wilt.</p>
+    <p class="uitleg">De Studio heeft per sticker een beweging en een geluid voorgesteld. Druk op ▶ om te kijken en te luisteren, en pas aan wat je anders wilt. Wil je een eigen geluid? Kopieer de beschrijving voor een geluidsmaker, kies het bestand dat je krijgt, en vul in waar het vandaan komt. De Studio knipt de stilte eraf, maakt het even hard als de andere geluiden en maakt er een kleine mp3 van. Het geluid uit de bibliotheek klinkt alleen als het eigen geluid niet laadt.</p>
     <div class="gekozen-lijst" id="gekozenLijst"></div>
   </section>
 
@@ -147,7 +152,7 @@ textarea#promptTekst { width:100%; min-height:300px; margin-top:12px; line-heigh
 </main>
 
 <script type="module">
-import './studio-ui.js?v=2'
+import './studio-ui.js?v=3'
 </script>
 </body>
 </html>

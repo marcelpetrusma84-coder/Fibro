@@ -36,18 +36,30 @@ const nummers = [...readFileSync(path.join(HOOFD, 'stickervellen.js'), 'utf8').m
 const velId = 'f' + (Math.max(...nummers) + 1)
 const map = path.join(HOOFD, 'stickers', velId)
 if (existsSync(map)) { console.error('De map stickers/' + velId + ' bestaat al.'); process.exit(1) }
+// Een eigen geluid (mp3) komt in geluiden/<vel>-<nr>.mp3 (de map die de app en de portier al kennen); de sticker krijgt dan dat
+// als geluid (g), met het gekozen bibliotheekgeluid als terugval (terug) en de bron erbij. stickerfx.js leest dat uit studio-pakketten.js.
+const geluidenMap = path.join(HOOFD, 'geluiden')
+const bezet = pakket.stickers.map((s, i) => s.mp3 && path.join(geluidenMap, velId + '-' + String(i + 1).padStart(2, '0') + '.mp3')).filter(p => p && existsSync(p))
+if (bezet.length) { console.error('Er staat al een geluid op deze plek: ' + bezet.map(p => path.relative(HOOFD, p)).join(', ')); process.exit(1) }
+if (pakket.stickers.some(s => s.mp3)) mkdirSync(geluidenMap, { recursive: true })
 mkdirSync(map, { recursive: true })
 const stickers = pakket.stickers.map((s, i) => {
   const nr = String(i + 1).padStart(2, '0')
   writeFileSync(path.join(map, nr + '.webp'), Buffer.from(s.webp, 'base64'))
-  return { nr, naam: s.naam.map(t => t.trim()), b: s.b, g: s.g }
+  const st = { nr, naam: s.naam.map(t => t.trim()), b: s.b, g: s.g }
+  if (s.mp3) {
+    writeFileSync(path.join(geluidenMap, velId + '-' + nr + '.mp3'), Buffer.from(s.mp3, 'base64'))
+    st.g = velId + '-' + nr; st.terug = s.g; st.bron = s.bron.trim()
+  }
+  return st
 })
 const vel = { id: velId, store: pakket.id, titel: pakket.titel.trim(), uitleg: pakket.uitleg.map(t => t.trim()), stickers }
 
 // studio-pakketten.js opnieuw schrijven (de kop blijft, de lijst wordt bijgewerkt)
 const bron = readFileSync(dataPad, 'utf8')
 const kop = bron.slice(0, bron.indexOf('export const STUDIO_VELLEN'))
-const regel = s => '    { nr: ' + JSON.stringify(s.nr).replace(/"/g, "'") + ', naam: ' + JSON.stringify(s.naam) + ', b: ' + JSON.stringify(s.b) + ', g: ' + JSON.stringify(s.g) + ' },'
+const regel = s => '    { nr: ' + JSON.stringify(s.nr).replace(/"/g, "'") + ', naam: ' + JSON.stringify(s.naam) + ', b: ' + JSON.stringify(s.b) + ', g: ' + JSON.stringify(s.g) +
+  (s.terug ? ', terug: ' + JSON.stringify(s.terug) + ', bron: ' + JSON.stringify(s.bron) : '') + ' },'
 const tekst = v => '  { id: ' + JSON.stringify(v.id) + ', store: ' + JSON.stringify(v.store) + ', titel: ' + JSON.stringify(v.titel) + ',\n    uitleg: ' + JSON.stringify(v.uitleg) + ',\n    stickers: [\n' + v.stickers.map(s => '  ' + regel(s)).join('\n') + '\n    ] },'
 writeFileSync(dataPad, kop + 'export const STUDIO_VELLEN = [\n' + [...nu, vel].map(tekst).join('\n') + '\n]\n')
 console.log('Pakket "' + vel.titel + '" staat nu als vel ' + velId + ' in de app (' + stickers.length + ' stickers).')

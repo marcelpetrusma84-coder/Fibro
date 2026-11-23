@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { maakPrompt, roosterOpmerking, STANDAARD, MIN_STICKERS } from '../../studio-prompt.js'
+import { maakPrompt, roosterOpmerking, maakGeluidPrompt, STANDAARD, MIN_STICKERS } from '../../studio-prompt.js'
 
 const REPO = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..')
 
@@ -35,6 +35,16 @@ assert.ok(roosterOpmerking().includes('5 kolommen en 3 rijen') && !roosterOpmerk
 assert.ok(roosterOpmerking({ kolommen: 3, rijen: 3 }).includes('maar 9') && roosterOpmerking({ kolommen: 3, rijen: 3 }).includes('nodig'))
 assert.equal(MIN_STICKERS, 12)
 assert.ok(!roosterOpmerking({ kolommen: 4, rijen: 3 }).includes('nodig'), '4 x 3 = precies 12 mag')
+
+// ── De beschrijving van het geluid van één sticker ──
+const en = maakGeluidPrompt({ naam: 'Happy frog', beweging: 'Bounce' })
+assert.ok(en.includes('"Happy frog"') && en.includes('moves like this: bounce.') && en.includes('no music, no voice'), en)
+const nl = maakGeluidPrompt({ naam: 'Blije kikker', beweging: 'Stuiteren', taal: 'nl' })
+assert.ok(nl.includes('"Blije kikker"') && nl.includes('De sticker beweegt zo: stuiteren.') && nl.includes('zonder muziek, zonder stem'), nl)
+assert.ok(!maakGeluidPrompt({ naam: 'x', beweging: '' }).includes('moves like'), 'zonder beweging geen zin over beweging')
+assert.ok(maakGeluidPrompt({ naam: '  Ha "ha"\n ha ' }).includes('"Ha \'ha\' ha"'), 'aanhalingstekens en regeleinden in de naam')
+assert.ok(maakGeluidPrompt().includes('a sticker') && maakGeluidPrompt({ taal: 'nl' }).includes('een sticker'), 'zonder naam een nette tekst')
+assert.ok(maakGeluidPrompt({ naam: 'x'.repeat(200) }).length < 400, 'een lange naam wordt ingekort')
 
 // Het onderdeel staat in studio.html, binnen het deel dat alleen moderators zien
 const html = readFileSync(path.join(REPO, 'studio.html'), 'utf8')

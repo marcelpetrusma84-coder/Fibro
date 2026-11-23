@@ -7,7 +7,7 @@
 import { schaakBot } from './solo-bord.js?v=4'
 import { damBot } from './dam-bot.js?v=1'   // v253: sterkere damcomputer (met expert), rekent in een worker
 import { schaakUltraBot } from './schaak-ultra.js?v=4'
-import { computerStap as pestenComputerStap, doeStap as pestenDoeStap, geldigeStand as pestenGeldig } from './pesten.js?v=1'
+import { computerStap as pestenComputerStap, doeStap as pestenDoeStap, geldigeStand as pestenGeldig } from './pesten.js?v=2'
 import * as Toepen from './toepen.js?v=1'                   // 11 nov 2026: tweede en derde kaartspel
 import * as Eenentwintigen from './eenentwintigen.js?v=1'
 
@@ -524,7 +524,7 @@ export function stilBot() {
 export const SOLO_SPELLEN = {
   botkaaseiren: { naam: 'Tic-Tac-Toe',   icon: '⭕', bestand: './bke-ui.js?v=239',      bot: bkeBot },
   vieroprij:    { naam: 'Four in a Row', icon: '🔴', bestand: './vieroprij-ui.js?v=240', bot: vorBot },
-  pesten:       { naam: 'Pesten',        icon: '🃏', bestand: './pesten-ui.js?v=14',     bot: pestenBot, store: true },   // 11 nov 2026: het eerste kaartspel; alleen via de Store (niet meesturen met een uitnodiging)
+  pesten:       { naam: 'Pesten',        icon: '🃏', bestand: './pesten-ui.js?v=15',     bot: pestenBot, store: true },   // 11 nov 2026: het eerste kaartspel; alleen via de Store (niet meesturen met een uitnodiging)
   toepen:       { naam: 'Toepen',        icon: '✊', bestand: './toepen-ui.js?v=13',     bot: toepenBot, store: true },          // 11 nov 2026: kaartspel uit de Store
   eenentwintigen: { naam: 'Black Jack', icon: '♠️', bestand: './eenentwintigen-ui.js?v=14', bot: eenentwintigenBot, store: true },   // 11 nov 2026: kaartspel uit de Store
   // 13 nov 2026: Koningsjacht, alleen tegen het kasteel (geen computerspeler en geen spelkanaal), uit de Store; met een vriend in de chat

@@ -1,21 +1,15 @@
-// De lokale hologram-preview moet Modern kiezen en de scene-assets moeten aanwezig zijn.
+// De lokale hologram-preview moet het ruimteschip kiezen zonder externe scene-assets.
 import assert from 'node:assert/strict'
-import { existsSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 
 const fixture = readFileSync(new URL('../fixtures/koningsjacht-preview.html', import.meta.url), 'utf8')
 const helper = readFileSync(new URL('../../kaartspel-hulp.js', import.meta.url), 'utf8')
 
-assert.match(fixture, /modern-hologram/)
-assert.match(fixture, /scene:\s*'modern'/)
-assert.match(helper, /\.kt-tafel\.kj\.kj-modern \.kt-hand \.kt-kaart/)
-assert.match(helper, /\.kt-tafel\.kj\.kj-modern \.kt-stapel-groep/)
+assert.match(fixture, /ruimteschip-futuristisch/)
+assert.match(fixture, /scene:\s*'ruimteschip-futuristisch'/)
+assert.match(helper, /\.kt-tafel\.kj\.kj-holografisch \.kt-hand \.kt-kaart/)
+assert.match(helper, /\.kt-tafel\.kj\.kj-holografisch \.kt-stapel-groep/)
 
-for (const asset of [
-  'modern-epoxy-table.png',
-  'candle-modern-left.png',
-  'candle-modern-right.png',
-]) {
-  assert.ok(existsSync(new URL('../../assets/koningsjacht/' + asset, import.meta.url)), `preview asset bestaat: ${asset}`)
-}
+assert.match(readFileSync(new URL('../../koningsjacht-scene.js', import.meta.url), 'utf8'), /data:image\/svg\+xml/)
 
-console.log('OK moderne hologram-preview en tafelafbeeldingen zijn aanwezig')
+console.log('OK ruimteschip-hologram-preview bestaat zonder externe scène-afbeeldingen')

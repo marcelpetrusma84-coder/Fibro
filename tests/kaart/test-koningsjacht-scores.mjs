@@ -7,26 +7,30 @@ const ME='10000000-0000-4000-8000-000000000001', OTHER='20000000-0000-4000-8000-
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`
 const data=new Map(), storage={getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)}
 let uid=ME,online=false,next=0
-const saved=[], remote={personal:[],friends:[],global:null}
+const saved=[], boardLevels=[], remote={personal:[],friends:[],global:null}
 const api={auth:{getSession:async()=>({data:{session:{user:{id:uid}}}})},rpc:async(name,args)=>{
   if(name==='koningsjacht_save_score'){saved.push(args);return {error:null}}
-  assert.equal(name,'koningsjacht_boards');return {data:remote}
+  assert.equal(name,'koningsjacht_boards');boardLevels.push(args.p_level);return {data:remote}
 }}
 const service=maakKoningsjachtScoreService({supabase:api,storage,isOnline:()=>online,uuid:()=>id(++next),now:()=>1700000000000+next})
 for(let i=0;i<15;i++) await service.saveRun({score:i%13,level:2,mode:'solo'})
-let b=await service.loadBoards()
+await service.saveRun({score:4,level:1,mode:'solo'})
+await service.saveRun({score:9,level:3,mode:'solo'})
+let b=await service.loadBoards(2)
 assert.equal(b.personal.length,10);assert.equal(b.personal[0].score,12);assert.equal(b.personal[0].won,true)
 for(const score of [-1,13,1.5,NaN]) await assert.rejects(service.saveRun({score,level:2,mode:'solo'}))
-online=true;await service.loadBoards();assert.equal(saved.length,15)
-await service.loadBoards();assert.equal(saved.length,15)
+online=true;await service.loadBoards(2);assert.equal(saved.length,17)
+await service.loadBoards(2);assert.equal(saved.length,17)
+assert.equal(boardLevels.at(-1),2,'database query is scoped to the selected score category')
 await service.saveRun({id:id(90),score:8,level:3,mode:'beleg'})
 await service.saveRun({id:id(90),score:12,level:3,mode:'beleg'})
-b=await service.loadBoards();assert.equal(b.personal.find(r=>r.id===id(90)).score,8)
+b=await service.loadBoards(3);assert.equal(b.personal.find(r=>r.id===id(90)).score,8)
+assert.equal((await service.loadBoards(1)).personal[0].score,4,'local high scores stay available in their own category')
 assert.equal(saved.at(-1).p_mode,'beleg')
 remote.global={score:12,level:3,mode:'samen',user_id:OTHER,username:'Private',played_at:'2026-01-01T00:00:00Z'}
-b=await service.loadBoards();assert.equal(b.global.name,undefined);assert.equal(b.global.playedAt,undefined)
+b=await service.loadBoards(3);assert.equal(b.global.name,undefined);assert.equal(b.global.playedAt,undefined)
 assert.equal(b.global.mode,'samen')
-uid=OTHER;assert.equal((await service.loadBoards()).personal.length,0)
+uid=OTHER;assert.equal((await service.loadBoards(3)).personal.length,0)
 assert.equal((await service.saveRun({score:5,level:1,mode:'solo',ownerId:ME})).reason,'account-changed')
 uid=ME
 let ids=100, finishes=[]

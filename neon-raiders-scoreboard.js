@@ -19,13 +19,13 @@ export function scoreDatum(value, locale = 'nl-NL') {
 
 export function maakNeonScorebord({ host = document.body, service, T = globalThis.T || fallbackT,
   title = 'Neon Raiders scores', brand = 'NEON RAIDERS', formatScore, formatDetail,
-  isActief = () => true, onOpen = () => {}, onClose = () => {} } = {}) {
+  filterOptions = [], isActief = () => true, onOpen = () => {}, onClose = () => {} } = {}) {
   if (!service || typeof service.loadBoards !== 'function') throw new TypeError('Score service ontbreekt')
   const doc = host.ownerDocument || document
   if (!doc.getElementById('nr-scoreboard-css')) {
     const link = doc.createElement('link')
     link.id = 'nr-scoreboard-css'; link.rel = 'stylesheet'
-    link.href = new URL('./neon-raiders-scoreboard.css?v=3', import.meta.url).href
+    link.href = new URL('./neon-raiders-scoreboard.css?v=4', import.meta.url).href
     doc.head.appendChild(link)
   }
   const element = (tag, className, text) => {
@@ -42,6 +42,31 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
   const closeButton = element('button', 'nr-sb-close', '×')
   closeButton.type = 'button'; closeButton.setAttribute('aria-label', T('Sluiten'))
   header.append(heading, closeButton)
+  const filters = Array.isArray(filterOptions) ? filterOptions.filter(item => item && item.label != null) : []
+  let filterIndex = 0
+  let filterBar = null, filterLabel = null
+  if (filters.length > 1) {
+    filterBar = element('div', 'nr-sb-filter')
+    filterBar.setAttribute('role', 'group')
+    filterBar.setAttribute('aria-label', T('Scorecategorie'))
+    const previous = element('button', 'nr-sb-filter-arrow', '‹')
+    previous.type = 'button'; previous.setAttribute('aria-label', T('Vorige scorecategorie'))
+    filterLabel = element('strong', 'nr-sb-filter-label')
+    const next = element('button', 'nr-sb-filter-arrow', '›')
+    next.type = 'button'; next.setAttribute('aria-label', T('Volgende scorecategorie'))
+    filterBar.append(previous, filterLabel, next)
+    const moveFilter = delta => {
+      filterIndex = (filterIndex + delta + filters.length) % filters.length
+      filterLabel.textContent = T(filters[filterIndex].label)
+      filterBar.dataset.filter = String(filterIndex)
+      refresh()
+    }
+    previous.addEventListener('click', () => moveFilter(-1))
+    next.addEventListener('click', () => moveFilter(1))
+    filterLabel.textContent = T(filters[filterIndex].label)
+    filterBar.dataset.filter = String(filterIndex)
+    filterBar._moveFilter = moveFilter
+  }
   const status = element('p', 'nr-sb-status', T('Scores laden…'))
   status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite')
   const columns = element('div', 'nr-sb-columns')
@@ -64,7 +89,7 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
   footer.appendChild(element('p', '', T('Dag en tijd zijn in jouw lokale tijdzone.')))
   const refreshButton = element('button', 'nr-sb-refresh', T('Vernieuwen'))
   refreshButton.type = 'button'; footer.appendChild(refreshButton)
-  dialog.append(header, status, columns, globalPanel, footer)
+  dialog.append(header, ...(filterBar ? [filterBar] : []), status, columns, globalPanel, footer)
   host.appendChild(dialog)
 
   let destroyed = false, generation = 0, isOpen = false, returnFocus = null, lastBoards = null
@@ -142,7 +167,7 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
     dialog.setAttribute('aria-busy', 'true')
     if (!lastBoards) status.textContent = T('Scores laden…')
     try {
-      const boards = await service.loadBoards()
+      const boards = await service.loadBoards(filters.length > 1 ? filters[filterIndex].value : undefined)
       if (destroyed || request !== generation || !isActief()) return
       draw(boards || { personal: [], friends: [], global: null, status: 'offline' })
     } catch {
@@ -177,6 +202,19 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
   }
   const cancel = event => { event.preventDefault(); close() }
   const dismiss = event => { if (event.target === dialog) close() }
+  let swipeStart = null
+  dialog.addEventListener('pointerdown', event => {
+    if (filters.length < 2 || event.pointerType !== 'touch' || event.target.closest?.('button,input,a')) return
+    swipeStart = { x: event.clientX, y: event.clientY }
+  }, { passive: true })
+  dialog.addEventListener('pointerup', event => {
+    if (!swipeStart) return
+    const dx = event.clientX - swipeStart.x, dy = event.clientY - swipeStart.y
+    swipeStart = null
+    if (Math.abs(dx) < 48 || Math.abs(dy) > 74) return
+    filterBar?._moveFilter(dx < 0 ? 1 : -1)
+  }, { passive: true })
+  dialog.addEventListener('pointercancel', () => { swipeStart = null }, { passive: true })
   closeButton.addEventListener('click', close)
   refreshButton.addEventListener('click', refresh)
   dialog.addEventListener('cancel', cancel)

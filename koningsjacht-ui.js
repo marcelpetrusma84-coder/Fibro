@@ -22,13 +22,13 @@ import { maakEindscene } from './koningsjacht-eindscene.js?v=3'
 // v4 (13 nov 2026, Marcel): kaarslicht. Twee kaarsen op tafel met flakkerende vlammen; de randen van de tafel zijn
 // donker en het warme licht flakkert mee. Aan/uit met 🕯️ (bewaard: fibro_koningsjacht_kaars, standaard aan).
 import * as K from './koningsjacht.js?v=2'
-import { maakKaartTafel, kaartSvg, achterkantSvg, kaartNaam, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=23'
+import { maakKaartTafel, kaartSvg, achterkantSvg, kaartNaam, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=24'
 import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek, zetMuziekThema } from './koningsjacht-geluid.js?v=4'
-import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=12'
+import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=13'
 import { zetKaarsSlijtage } from './koningsjacht-kaarsen.js?v=1'
 import { verbindBierpul, herstelBierPartij } from './koningsjacht-bier.js?v=2'
-import { maakKoningsjachtScoreService } from './koningsjacht-scores.js?v=1'
-import { maakKoningsjachtScorebord } from './koningsjacht-scoreboard.js?v=2'
+import { maakKoningsjachtScoreService } from './koningsjacht-scores.js?v=2'
+import { maakKoningsjachtScorebord } from './koningsjacht-scoreboard.js?v=3'
 import { maakScorePartij } from './koningsjacht-score-partij.js?v=1'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
@@ -38,6 +38,8 @@ const SOORT = { B: 'Boer', V: 'Vrouw', H: 'Heer' }
 const KLEURNAAM = { h: 'harten', r: 'ruiten', k: 'klaveren', s: 'schoppen' }
 const MEDAILLE = { goud: '🥇', zilver: '🥈', brons: '🥉' }
 const NIVEAU_NAAM = { schildknaap: 'Schildknaap', ridder: 'Ridder', koning: 'Koning' }
+const RUIMTE_SCENES = ['ruimteschip-oud', 'ruimteschip-futuristisch']
+const isRuimteScene = scene => RUIMTE_SCENES.includes(scene)
 const lees = (k, std) => { try { const w = localStorage.getItem(k); return w === null ? std : JSON.parse(w) } catch (e) { return std } }
 const schrijf = (k, w) => { try { if (w === null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(w)) } catch (e) {} }
 export const vijandNaam = id => T('{soort} van {kleur}', { soort: T(SOORT[id.slice(1)]), kleur: T(KLEURNAAM[id[0]]) })
@@ -174,6 +176,14 @@ const CSS = `
 .kj-instellingen,.kj-instellingen *{box-sizing:border-box}.kj-scene-keuze{border:0;padding:0;margin:0 0 12px;min-width:0}.kj-scene-keuze legend{font-weight:700;margin-bottom:10px}.kj-scene-opties{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.kj-scene-opties label{display:flex;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:7px 4px;border:1px solid #e6c68c55;border-radius:10px;background:#100d0d66;font-size:12px;cursor:pointer}.kj-scene-opties label:has(input:checked){background:linear-gradient(145deg,#8f652b,#4c3217);border-color:#ffe8a6;box-shadow:inset 0 1px #fff5,0 3px 8px #0006}.kj-scene-opties input{accent-color:#e5bb65;margin:0}
 .kj-modern .kt-knop{background:linear-gradient(155deg,#142334,#090f19);border-color:#d6b66c;color:#fff4d3;box-shadow:inset 0 1px #fff2,0 3px 8px #0008}.kj-modern .kj-kaart{box-shadow:0 8px 22px #000b,0 0 0 1px #e2be6777}.kj-modern .kj-titel,.kj-modern .kj-naam{color:#f5d990}.kj-instellingen.kj-modern .kj-instellingen-kaart{background:linear-gradient(145deg,#172536,#09111c);border-color:#dfc37b99}
 .kj-modern .kj-kaars.kj-links{width:clamp(62px,15vw,100px);aspect-ratio:2/3}.kj-modern .kj-kaars.kj-rechts{width:clamp(80px,18vw,118px);aspect-ratio:2/3}.kj-modern .kj-links .kj-vlam{left:49.7%;bottom:81%;height:11%;width:10%;margin-left:-5%}.kj-modern .kj-rechts .kj-vlam{left:49.8%;bottom:96%;height:12%;width:9%;margin-left:-4.5%}
+.kj-ruimteschip .kj-kaars,.kj-ruimteschip .kj-kaarslicht{display:none!important}
+.kj-ruimteschip .kj-titel,.kj-ruimteschip .kj-naam{color:#b8f7ff;text-shadow:0 0 12px #17cfff88}
+.kj-ruimteschip .kj-knop{border-color:#53cfea;background:linear-gradient(155deg,#12344a,#091421);color:#e1fbff;box-shadow:inset 0 1px #c7fbff66,0 3px 12px #0009}
+.kj-instellingen.kj-ruimteschip .kj-instellingen-kaart{border-color:#40dffc99;background:linear-gradient(145deg,#102a3e,#07121e);box-shadow:inset 0 1px #fff3,0 18px 60px #000c,0 0 28px #14cfff28}
+.kj-instellingen.kj-ruimteschip .kj-instellingen-kop h2{color:#b8f7ff}
+.kj-instellingen.kj-ruimteschip .kj-kaars-instelling{display:none}
+.kj-scene-opties{grid-template-columns:repeat(auto-fit,minmax(112px,1fr))}.kj-scene-opties label{padding:7px 6px;text-align:center}
+.kj-instellingen.kj-ruimteschip .kj-scene-opties label:has(input:checked){background:linear-gradient(145deg,#16627a,#102438);border-color:#a7f7ff;box-shadow:inset 0 1px #fff8,0 0 13px #18d9ff66}
 `
 function zetCss() {
   if (document.getElementById('kj-stijl')) return
@@ -276,7 +286,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   const BIER_PARTIJ = 'fibro_koningsjacht_bierpartij', BIER_VRIEND = 'fibro_koningsjacht_bierpartij_vriend'
   const bewaardeInstellingen = lees(INSTELLINGEN, {}) || {}
   const instellingen = {
-    scene: ['standaard', 'modern', 'middeleeuws'].includes(bewaardeInstellingen.scene) ? bewaardeInstellingen.scene : (bewaardeInstellingen.middeleeuws === true ? 'middeleeuws' : 'standaard'),
+    scene: ['standaard', 'modern', 'middeleeuws', ...RUIMTE_SCENES].includes(bewaardeInstellingen.scene) ? bewaardeInstellingen.scene : (bewaardeInstellingen.middeleeuws === true ? 'middeleeuws' : 'standaard'),
     beweging: bewaardeInstellingen.beweging === true,
     slowMoves: bewaardeInstellingen.slowMoves === true,
     middeleeuws: bewaardeInstellingen.middeleeuws === true,
@@ -290,7 +300,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   instellingen.middeleeuws = instellingen.scene === 'middeleeuws'
   const koningsjachtBewegingsfactor = () => instellingen.slowMoves && !rustig() ? 1.25 : 1
   const wacht = ms => new Promise(k => setTimeout(k, ms * koningsjachtBewegingsfactor()))
-  let STIJL = instellingen.scene === 'modern' ? 'modern' : 'perkament'
+  let STIJL = instellingen.scene === 'modern' || isRuimteScene(instellingen.scene) ? 'modern' : 'perkament'
   let scene = null, flikkerTimer = null, anderBier = null, bierTimer = null
 
   const sceneOpties = () => ({ ...instellingen, anderBier, eigenNaam: T('Jij'), bierLabel: T('Inhoud van je bierpul'), onBierInhoud: wijzigBierInhoud, onBierNieuw: nieuweBierpul })
@@ -348,12 +358,16 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     instellingen.middeleeuws = instellingen.scene === 'middeleeuws'
     actief?.classList.toggle('kj-sfeer', instellingen.middeleeuws)
     actief?.classList.toggle('kj-modern', instellingen.scene === 'modern')
-    document.querySelector('.kj-instellingen')?.classList.toggle('kj-modern', instellingen.scene === 'modern')
+    actief?.classList.toggle('kj-ruimteschip', isRuimteScene(instellingen.scene))
+    actief?.classList.toggle('kj-holografisch', isRuimteScene(instellingen.scene))
+    const instellingenScherm = document.querySelector('.kj-instellingen')
+    instellingenScherm?.classList.toggle('kj-modern', instellingen.scene === 'modern')
+    instellingenScherm?.classList.toggle('kj-ruimteschip', isRuimteScene(instellingen.scene))
     actief?.classList.toggle('kj-geenflikkering', !instellingen.flikkeren)
     actief?.classList.toggle('kj-tafelschaduw', instellingen.tafelschaduw)
     scene?.update(sceneOpties())
     zetMuziekThema(instellingen.middeleeuws ? 'middeleeuws' : 'standaard')
-    const nieuweStijl = instellingen.scene === 'modern' ? 'modern' : 'perkament'
+    const nieuweStijl = instellingen.scene === 'modern' || isRuimteScene(instellingen.scene) ? 'modern' : 'perkament'
     if (nieuweStijl !== STIJL) {
       STIJL = nieuweStijl
       for (const [i, kaart] of [...inhoud.querySelectorAll('.kj-kaarten>div')].entries()) kaart.innerHTML = kaartSvg(['kB', 'hH', 'sV'][i], STIJL)
@@ -363,6 +377,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
         if (staat) tekenVijand(staat)
       }
     }
+    tafel?.element.classList.toggle('kj-geenkaars', !kaarsAan())
     verversKandelaars()
     verversKaarslicht()
     bewaarInstellingen()
@@ -373,6 +388,8 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     if (!element) return
     element.classList.toggle('kj-sfeer', instellingen.middeleeuws)
     element.classList.toggle('kj-modern', instellingen.scene === 'modern')
+    element.classList.toggle('kj-ruimteschip', isRuimteScene(instellingen.scene))
+    element.classList.toggle('kj-holografisch', isRuimteScene(instellingen.scene))
     element.classList.toggle('kj-geenflikkering', !instellingen.flikkeren)
     element.classList.toggle('kj-tafelschaduw', instellingen.tafelschaduw)
     scene = maakKoningsjachtScene(element, sceneOpties())
@@ -382,16 +399,16 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     if (document.querySelector('.kj-instellingen')) return
     const vorigeFocus = document.activeElement
     const scherm = document.createElement('div')
-    scherm.className = 'kj-instellingen' + (instellingen.scene === 'modern' ? ' kj-modern' : '')
+    scherm.className = 'kj-instellingen' + (instellingen.scene === 'modern' ? ' kj-modern' : '') + (isRuimteScene(instellingen.scene) ? ' kj-ruimteschip' : '')
     scherm.innerHTML = '<section class="kj-instellingen-kaart" role="dialog" aria-modal="true" aria-labelledby="kj-instellingen-titel">'
       + '<div class="kj-instellingen-kop"><h2 id="kj-instellingen-titel">' + esc(T('Instellingen')) + '</h2>'
       + '<button type="button" class="kj-instellingen-sluit" aria-label="' + esc(T('Sluiten')) + '">×</button></div>'
       + '<fieldset class="kj-scene-keuze"><legend>' + esc(T('Tafelsfeer')) + '</legend><div class="kj-scene-opties">'
-      + [['standaard', T('Standaard')], ['modern', T('Modern')], ['middeleeuws', T('Middeleeuws')]].map(([id, label]) => '<label><input type="radio" name="kj-scene" data-scene="' + id + '" value="' + id + '"' + (instellingen.scene === id ? ' checked' : '') + '><span>' + esc(label) + '</span></label>').join('')
+      + [['standaard', T('Standaard')], ['modern', T('Modern · epoxy')], ['middeleeuws', T('Middeleeuws')], ['ruimteschip-oud', T('Oud ruimteschip')], ['ruimteschip-futuristisch', T('Futuristisch ruimteschip')]].map(([id, label]) => '<label><input type="radio" name="kj-scene" data-scene="' + id + '" value="' + id + '"' + (instellingen.scene === id ? ' checked' : '') + '><span>' + esc(label) + '</span></label>').join('')
       + '</div></fieldset>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Achtergrond bewegen')) + '</b><small>' + esc(T('Beweeg je telefoon voor een subtiel diepte-effect.')) + '</small></span><input type="checkbox" data-instelling="beweging"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Slow moves')) + '</b><small>' + esc(T('Laat kaartbewegingen en effecten rustiger verlopen, zodat je beter ziet wat er gebeurt.')) + '</small></span><input type="checkbox" data-instelling="slowMoves"></label>'
-      + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Kaarsen laten flikkeren')) + '</b><small>' + esc(T('Laat de vlam en het kaarslicht zacht bewegen.')) + '</small></span><input type="checkbox" data-instelling="flikkeren"></label>'
+      + '<label class="kj-instellingen-optie kj-kaars-instelling" data-instelling-optie="kaars"><span><b>' + esc(T('Kaarsen laten flikkeren')) + '</b><small>' + esc(T('Laat de vlam en het kaarslicht zacht bewegen.')) + '</small></span><input type="checkbox" data-instelling="flikkeren"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Schaduwen op tafel')) + '</b><small>' + esc(T('Laat de kaarten en stapels een schaduw op de tafel werpen.')) + '</small></span><input type="checkbox" data-instelling="tafelschaduw"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Bierpul tonen')) + '</b><small>' + esc(T('Zet een bierpul op de tafel.')) + '</small></span><input type="checkbox" data-instelling="bierpul"></label>'
       // kaarttafel (kaartspel-hulp v7): hulp, grote kaarten, trillen; voor alle kaartspellen op dit toestel
@@ -647,7 +664,10 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopMuziek(); else if (muziekStaatAan() && inhoud.isConnected) startMuziek() })
   // ── Kaarslicht ──
   const KAARS = 'fibro_koningsjacht_kaars'
-  const kaarsAan = () => { try { return localStorage.getItem(KAARS) !== 'uit' } catch (e) { return true } }
+  const kaarsAan = () => {
+    if (isRuimteScene(instellingen.scene)) return false
+    try { return localStorage.getItem(KAARS) !== 'uit' } catch (e) { return true }
+  }
   function wisselKaars() {
     try { localStorage.setItem(KAARS, kaarsAan() ? 'uit' : 'aan') } catch (e) {}
     tafel?.element.classList.toggle('kj-geenkaars', !kaarsAan()); verversKaarslicht(); tekenKnoppen()
@@ -673,13 +693,15 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   function verversKandelaars() {
     const el = tafel?.element
     if (!el?.isConnected) return
+    el.classList.toggle('kj-geenkaars', !kaarsAan())
     for (const kaars of el.querySelectorAll('.kj-kaars')) {
+      if (isRuimteScene(instellingen.scene)) continue
       const bestand = instellingen.scene === 'modern' ? (kaars.classList.contains('kj-links') ? 'candle-modern-left.png' : 'candle-modern-right.png') : 'chamberstick.png'
       const afbeelding = kaars.querySelector('.kj-kandelaar')
       const url = new URL('./assets/koningsjacht/' + bestand, import.meta.url).href
       if (afbeelding.src !== url) afbeelding.src = url
     }
-    zetKaarsSlijtage(el, { scene: instellingen.scene, bierpul: instellingen.bierpul, ronde: instellingen.bierRonde })
+    if (!isRuimteScene(instellingen.scene)) zetKaarsSlijtage(el, { scene: instellingen.scene, bierpul: instellingen.bierpul, ronde: instellingen.bierRonde })
   }
   function verversKaarslicht() {
     clearInterval(flikkerTimer); flikkerTimer = null

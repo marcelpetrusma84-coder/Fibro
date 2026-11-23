@@ -56,6 +56,11 @@ input[type=range] { accent-color:var(--knop); }
 .speel { background:var(--knop); color:#fff; border:0; border-radius:8px; padding:5px 10px; font:inherit; font-size:12px; cursor:pointer; align-self:flex-start; }
 #toegangGeweigerd { text-align:center; padding:60px 20px; }
 .verborgen { display:none !important; }
+details.promptblok { background:var(--card); border:0.5px solid var(--border); border-radius:16px; padding:12px 16px; margin-bottom:16px; }
+details.promptblok summary { font-size:15px; font-weight:600; cursor:pointer; }
+details.promptblok .rij > label.veld { flex:1 1 200px; }
+details.promptblok .rij > label.veld.smal { flex:0 0 80px; }
+textarea#promptTekst { width:100%; min-height:300px; margin-top:12px; line-height:1.5; font-size:13px; resize:vertical; }
 @media (max-width:600px) { body { padding:12px; } .gekozen-lijst { grid-template-columns:1fr; } }
 </style>
 <link rel="stylesheet" href="stijl.css?v=4">
@@ -74,6 +79,24 @@ input[type=range] { accent-color:var(--knop); }
 <div id="laden" style="color:var(--muted);font-size:14px">Laden…</div>
 
 <main id="inhoud" class="verborgen">
+  <details class="promptblok" id="promptBlok">
+    <summary>🪄 Prompt voor Gemini: een plaat in één stijl</summary>
+    <p class="uitleg" style="margin-top:8px">Plak deze tekst in Gemini (of een andere beeldmaker). Je krijgt dan één plaat met stickers in dezelfde stijl, op een effen achtergrond, zodat de Studio ze netjes kan losknippen. Vul hieronder in wat je wilt; de tekst past zich aan.</p>
+    <div class="rij">
+      <label class="veld">Thema<input type="text" id="promptThema" maxlength="120" placeholder="bijvoorbeeld schattige zomerdieren"></label>
+      <label class="veld">Stijl<input type="text" id="promptStijl" maxlength="200" placeholder="bijvoorbeeld vrolijke cartoonstijl, dikke zwarte omlijning"></label>
+      <label class="veld">Kleur van de achtergrond<input type="text" id="promptAchtergrond" maxlength="40" placeholder="bijvoorbeeld licht beige"></label>
+      <label class="veld smal">Kolommen<input type="text" id="promptKolommen" value="5" size="2" inputmode="numeric"></label>
+      <label class="veld smal">Rijen<input type="text" id="promptRijen" value="3" size="2" inputmode="numeric"></label>
+    </div>
+    <div class="melding" id="promptOpmerking" aria-live="polite"></div>
+    <textarea id="promptTekst" readonly aria-label="De prompt voor Gemini"></textarea>
+    <div class="rij" style="margin-top:10px">
+      <button type="button" class="knop" id="kopieerPrompt">📋 Kopieer de prompt</button>
+      <span class="melding" id="kopieerMelding" aria-live="polite" style="margin:0"></span>
+    </div>
+  </details>
+
   <section class="stap">
     <h2><span class="nummer">1</span> Kies je plaat</h2>
     <p class="uitleg">Eén plaatje met alle stickers erop, op een effen achtergrond (bijvoorbeeld wit of beige). De Studio knipt ze los. Sleep het plaatje hierheen, of tik om er een te kiezen.</p>
@@ -124,7 +147,7 @@ input[type=range] { accent-color:var(--knop); }
 </main>
 
 <script type="module">
-import './studio-ui.js?v=1'
+import './studio-ui.js?v=2'
 </script>
 </body>
 </html>

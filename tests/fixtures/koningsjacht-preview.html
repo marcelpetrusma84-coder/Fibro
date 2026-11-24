@@ -12,7 +12,7 @@
   <main id="spelInhoud"></main>
   <span class="testlabel">LOKAAL TESTVOORBEELD</span>
   <script type="module">
-    import { start } from './koningsjacht-ui.js?v=55'
+    import { start } from './koningsjacht-ui.js?v=56'
     const { maakKoningsjachtScoreService } = await import('./koningsjacht-scores.js?v=1')
     const memory = new Map()
     const scoreService = maakKoningsjachtScoreService({ storage: { getItem: k => memory.get(k), setItem: (k,v) => memory.set(k,v) } })

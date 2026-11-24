@@ -1723,11 +1723,24 @@ async function renderPeertube(c, uid) {
   try { cfg = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
   zetWidgetAchtergrond(c, 'widgetbg_peertube_' + uid) // de miniatuur (of een eigen foto via 🖼)
   let P
-  try { P = await import('./peertube.js?v=3') } catch (e) { console.warn('[peertube]', e); return }
+  try { P = await import('./peertube.js?v=4') } catch (e) { console.warn('[peertube]', e); return }
   P.tekenPeertubeWidget(c, {
     cfg, eigen: true,
     bewaar: async nieuw => { await bewaarMetInfo(c, uid, 'peertube', P, cfg, nieuw); renderPeertube(c, uid) },
   })
+  // 25 nov 2026 (v4): een lijst uit categorieën ververst vanzelf als hij ouder is dan een uur (alleen hier, bij de eigenaar)
+  const lijst = P.normaliseer(cfg)
+  if (P.isCategorie(lijst) && Date.now() - (lijst.bijgewerkt || 0) > 3600000 && !renderPeertube._bezig) {
+    renderPeertube._bezig = true
+    try {
+      const r = await P.haalCategorie(lijst)
+      if (!r.fout && c.isConnected) {
+        await bewaarMetInfo(c, uid, 'peertube', P, cfg, { ...lijst, videos: r.videos, id: r.videos[0] ? r.videos[0].id : undefined, bijgewerkt: Date.now() })
+        renderPeertube._bezig = false
+        renderPeertube(c, uid)
+      }
+    } catch (e) { console.warn('[peertube] verversen', e) } finally { renderPeertube._bezig = false }
+  }
 }
 
 // 18 nov 2026: opslaan met titel en plaatje (haalInfo in peertube.js en muziekwidget.js). Alleen hier, op het toestel

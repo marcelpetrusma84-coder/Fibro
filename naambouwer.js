@@ -1,7 +1,8 @@
-// naambouwer.js (v2, 24 nov 2026; v2: begin, midden en einde naast elkaar): de gebruikersnaam-generator bij registreren (login.html en invite.html).
+// naambouwer.js (v3, 24 nov 2026; v2: begin, midden en einde naast elkaar; v3: alle woorden Engels): de gebruikersnaam-generator bij registreren (login.html en invite.html).
 //
-// Een gebruikersnaam bestaat uit drie stukjes: een begin (Turbo, Gekke, Sleepy...), een dier of grappig woord
-// (Kikker, Stroopwafel, Badeend...) en een einde (42, Pro, Koning...). Voorheen stonden er drie korte lijstjes
+// Een gebruikersnaam bestaat uit drie stukjes: een begin (Turbo, Crazy, Sleepy...), een dier of grappig woord
+// (Frog, Pancake, RubberDuck...) en een einde (42, Pro, King...). Sinds v3 zijn alle woorden Engels (op verzoek
+// van Marcel); bestaande gebruikersnamen veranderen niet. Voorheen stonden er drie korte lijstjes
 // los in login.html en invite.html. Op verzoek van Marcel zijn er nu veel meer woorden, op één plek, en kun je je
 // naam ook zelf samenstellen: drie keuzelijstjes met elk een 🔄-knop.
 //
@@ -12,7 +13,6 @@
 // e-mailadres <naam>@fibro.internal bij Supabase. De einden mogen ook cijfers hebben.
 
 export const BEGIN = [
-  // Engels
   'Turbo', 'Pixel', 'Neon', 'Fluffy', 'Sneaky', 'Chonky', 'Sparkly', 'Grumpy', 'Bouncy', 'Squishy', 'Dizzy',
   'Glitchy', 'Funky', 'Wiggly', 'Zappy', 'Bubbly', 'Fuzzy', 'Goofy', 'Jazzy', 'Mighty', 'Nifty', 'Peppy', 'Quirky',
   'Sassy', 'Ultra', 'Wacky', 'Zesty', 'Blobby', 'Clumsy', 'Derpy', 'Floppy', 'Hangry', 'Jumpy', 'Kooky', 'Lazy',
@@ -22,87 +22,91 @@ export const BEGIN = [
   'Fizzy', 'Soapy', 'Disco', 'Party', 'Ninja', 'Pirate', 'Robo', 'Royal', 'Golden', 'Silver', 'Rusty', 'Shiny',
   'Glowy', 'Sparky', 'Twinkle', 'Stinky', 'Tiny', 'Mini', 'Giga', 'Super', 'Captain', 'Professor', 'Sir', 'Lady',
   'Baron', 'Mister', 'Missy', 'Lucky', 'Spooky', 'Wonky', 'Noisy', 'Sticky', 'Slimy', 'Bonkers', 'Chill', 'Epic',
-  'Legendary', 'Turbo', 'Mystic', 'Shadow', 'Laser', 'Rainbow', 'Banana', 'Waddle', 'Snuggle', 'Tickle', 'Giggly',
+  'Legendary', 'Mystic', 'Shadow', 'Laser', 'Rainbow', 'Banana', 'Waddle', 'Snuggle', 'Tickle', 'Giggly',
   'Humble', 'Brave', 'Clever', 'Swift', 'Wild', 'Fancy', 'Dapper', 'Grand', 'Polar', 'Tropical', 'Jungle', 'Arctic',
-  'Lunar', 'Solar', 'Stellar', 'Quantum', 'Turbo', 'Nitro', 'Pocket', 'Jumbo', 'Mellow', 'Rowdy', 'Zany',
-  // Nederlands
-  'Gekke', 'Vrolijke', 'Stoere', 'Slimme', 'Snelle', 'Luie', 'Malle', 'Rare', 'Blije', 'Dappere', 'Brutale',
-  'Lieve', 'Kleine', 'Grote', 'Dolle', 'Wilde', 'Toffe', 'Coole', 'Hippe', 'Knappe', 'Ondeugende', 'Slaperige',
-  'Hongerige', 'Kriebelige', 'Wiebelige', 'Zoete', 'Pittige', 'Knapperige', 'Glibberige', 'Pluizige', 'Mollige',
-  'Giechelende', 'Dansende', 'Zingende', 'Vliegende', 'Springende', 'Rollende', 'Snurkende', 'Stuiterende',
-  'Knotsgekke', 'Superslimme', 'Megagrote', 'Piepkleine', 'Bliksemsnelle', 'Reuzenblije', 'Kriskras', 'Hoepla',
-  'Knetter', 'Stuiter', 'Kwebbel', 'Babbel', 'Knuffel', 'Snoezige', 'Zonnige', 'Sterke', 'Wijze', 'Rappe'
+  'Lunar', 'Solar', 'Stellar', 'Quantum', 'Nitro', 'Pocket', 'Jumbo', 'Mellow', 'Rowdy', 'Zany',
+  'Crazy', 'Cheerful', 'Tough', 'Smart', 'Fast', 'Merry', 'Weird', 'Glad', 'Daring', 'Bold', 'Sweet', 'Little',
+  'Big', 'Cool', 'Hip', 'Naughty', 'Hungry', 'Itchy', 'Slippery', 'Chubby', 'Dancing', 'Singing', 'Flying',
+  'Jumping', 'Rolling', 'Snoring', 'Bouncing', 'Smarty', 'Massive', 'Teeny', 'Blazing', 'Joyful', 'Zigzag',
+  'Crackle', 'Chatty', 'Cuddly', 'Cutie', 'Strong', 'Wise', 'Rapid', 'Turbo', 'Frozen', 'Fiery', 'Electric',
+  'Velvet', 'Cranky', 'Spunky', 'Snazzy', 'Groovy', 'Dreamy', 'Breezy', 'Misty', 'Dusty', 'Muddy', 'Sandy'
 ].filter((w, i, a) => a.indexOf(w) === i)
 
 // Het middelste stukje, in groepjes (de groepjes zie je in het keuzelijstje bij "Zelf samenstellen").
-export const MIDDEN = {
+// Een woord staat maar in één groepje (komt het twee keer voor, dan telt het eerste).
+const MIDDEN_RUW = {
   'Dieren': [
-    'Kikker', 'Panda', 'Hamster', 'Wasbeer', 'Capibara', 'Axolotl', 'Koala', 'Pinguin', 'Flamingo', 'Alpaca',
-    'Eekhoorn', 'Narwal', 'Quokka', 'Wombat', 'Platypus', 'Blobfish', 'Aap', 'Beer', 'Bever', 'Bij', 'Buffel',
-    'Cavia', 'Chinchilla', 'Dolfijn', 'Das', 'Dodo', 'Duif', 'Eend', 'Egel', 'Eland', 'Ezel', 'Fazant', 'Fret',
-    'Gans', 'Gekko', 'Gibbon', 'Giraf', 'Gnoe', 'Goudvis', 'Gorilla', 'Haai', 'Haan', 'Haas', 'Hagedis', 'Hert',
-    'Hond', 'Hommel', 'Hyena', 'IJsbeer', 'Inktvis', 'Jaguar', 'Kameel', 'Kanarie', 'Kangoeroe', 'Kat', 'Kever',
-    'Kip', 'Koe', 'Kolibrie', 'Konijn', 'Krab', 'Kreeft', 'Krokodil', 'Kwal', 'Lama', 'Leeuw', 'Libel', 'Luiaard',
-    'Lynx', 'Maki', 'Marmot', 'Mol', 'Mier', 'Mus', 'Muis', 'Neushoorn', 'Nijlpaard', 'Octopus', 'Oehoe',
-    'Olifant', 'Orka', 'Otter', 'Paard', 'Pad', 'Papegaai', 'Pauw', 'Pelikaan', 'Poema', 'Pony', 'Poedel', 'Rups',
-    'Ree', 'Rog', 'Salamander', 'Schaap', 'Schildpad', 'Slak', 'Slang', 'Spreeuw', 'Stekelvarken', 'Stokstaartje',
-    'Struisvogel', 'Tapir', 'Tijger', 'Toekan', 'Uil', 'Varken', 'Vleermuis', 'Vlinder', 'Vos', 'Walrus', 'Wezel',
-    'Wolf', 'Worm', 'Zebra', 'Zeehond', 'Zeekoe', 'Zeepaardje', 'Zwaan', 'Rendier', 'Lemming', 'Okapi',
-    'Pangolin', 'Fennek', 'Honingdas', 'Koekoek', 'Merel', 'Specht', 'Ekster', 'Kraai', 'Raaf', 'Mops', 'Tekkel',
-    'Corgi', 'Husky', 'Puppy', 'Kitten', 'Kuiken', 'Lammetje', 'Veulen', 'Kwartel', 'Ooievaar', 'Reiger', 'Meeuw',
-    'Mammoet', 'Dino', 'Trex', 'Lieveheersbeestje', 'Sprinkhaan', 'Krekel', 'Vuurvlieg', 'Zeester',
-    'Garnaal', 'Mossel', 'Clownvis', 'Piranha', 'Meerval', 'Snoek', 'Baviaan', 'Chimpansee', 'Orangoetan',
-    'Gordeldier', 'Miereneter', 'Buidelrat', 'Wallaby', 'Emoe', 'Kiwi', 'Papegaaiduiker'
+    'Frog', 'Panda', 'Hamster', 'Raccoon', 'Capybara', 'Axolotl', 'Koala', 'Penguin', 'Flamingo', 'Alpaca',
+    'Squirrel', 'Narwhal', 'Quokka', 'Wombat', 'Platypus', 'Blobfish', 'Monkey', 'Bear', 'Beaver', 'Bee', 'Buffalo',
+    'GuineaPig', 'Chinchilla', 'Dolphin', 'Badger', 'Dodo', 'Pigeon', 'Duck', 'Hedgehog', 'Moose', 'Donkey',
+    'Pheasant', 'Ferret', 'Goose', 'Gecko', 'Gibbon', 'Giraffe', 'Gnu', 'Goldfish', 'Gorilla', 'Shark', 'Rooster',
+    'Hare', 'Lizard', 'Deer', 'Dog', 'Bumblebee', 'Hyena', 'PolarBear', 'Squid', 'Jaguar', 'Camel', 'Canary',
+    'Kangaroo', 'Cat', 'Beetle', 'Chicken', 'Cow', 'Hummingbird', 'Bunny', 'Crab', 'Lobster', 'Crocodile',
+    'Jellyfish', 'Llama', 'Lion', 'Dragonfly', 'Sloth', 'Lynx', 'Lemur', 'Marmot', 'Mole', 'Ant', 'Sparrow',
+    'Mouse', 'Rhino', 'Hippo', 'Octopus', 'Owl', 'Elephant', 'Orca', 'Otter', 'Horse', 'Toad', 'Parrot', 'Peacock',
+    'Pelican', 'Puma', 'Pony', 'Poodle', 'Caterpillar', 'Stingray', 'Salamander', 'Sheep', 'Turtle', 'Snail',
+    'Snake', 'Starling', 'Porcupine', 'Meerkat', 'Ostrich', 'Tapir', 'Tiger', 'Toucan', 'Pig', 'Bat', 'Butterfly',
+    'Fox', 'Walrus', 'Weasel', 'Wolf', 'Worm', 'Zebra', 'Seal', 'Manatee', 'Seahorse', 'Swan', 'Reindeer',
+    'Lemming', 'Okapi', 'Pangolin', 'Fennec', 'HoneyBadger', 'Cuckoo', 'Blackbird', 'Woodpecker', 'Magpie', 'Crow',
+    'Raven', 'Pug', 'Dachshund', 'Corgi', 'Husky', 'Puppy', 'Kitten', 'Chick', 'Lamb', 'Foal', 'Quail', 'Stork',
+    'Heron', 'Seagull', 'Mammoth', 'Dino', 'Trex', 'Ladybug', 'Grasshopper', 'Cricket', 'Firefly', 'Starfish',
+    'Shrimp', 'Mussel', 'Clownfish', 'Piranha', 'Catfish', 'Pike', 'Baboon', 'Chimp', 'Orangutan', 'Armadillo',
+    'Anteater', 'Possum', 'Wallaby', 'Emu', 'Kiwi', 'Puffin', 'Goat', 'Yak', 'Bison', 'Mongoose', 'Koi', 'Tadpole',
+    'Iguana', 'Chameleon', 'Turkey', 'Vulture', 'Eagle', 'Falcon', 'Hawk', 'Moth', 'Wasp'
   ],
   'Fantasie': [
-    'Draak', 'Eenhoorn', 'Yeti', 'Kraken', 'Feniks', 'Griffioen', 'Trol', 'Kabouter', 'Elfje', 'Robot', 'Alien',
-    'Spook', 'Monster', 'Tovenaar', 'Ridder', 'Piraat', 'Ninja', 'Viking', 'Astronaut', 'Superheld', 'Zeemeermin',
-    'Reus', 'Heks', 'Fee', 'Wizard', 'Goblin', 'Sfinx', 'Pegasus', 'Bigfoot', 'Nessie', 'Cyborg', 'Droid', 'Golem',
-    'Gremlin', 'Ufo', 'Marsmannetje'
+    'Dragon', 'Unicorn', 'Yeti', 'Kraken', 'Phoenix', 'Griffin', 'Troll', 'Gnome', 'Pixie', 'Robot', 'Alien',
+    'Ghost', 'Monster', 'Wizard', 'Knight', 'Pirate', 'Ninja', 'Viking', 'Astronaut', 'Superhero', 'Mermaid',
+    'Giant', 'Witch', 'Fairy', 'Goblin', 'Sphinx', 'Pegasus', 'Bigfoot', 'Nessie', 'Cyborg', 'Droid', 'Golem',
+    'Gremlin', 'Ufo', 'Martian', 'Elf', 'Ogre', 'Vampire', 'Zombie', 'Mummy', 'Sorcerer', 'Jester'
   ],
   'Eten': [
-    'Noodle', 'Pickle', 'Waffle', 'Muffin', 'Burrito', 'Spaghetti', 'Nugget', 'Avocado', 'Stroopwafel',
-    'Poffertje', 'Kroket', 'Bitterbal', 'Frikandel', 'Pannenkoek', 'Oliebol', 'Tosti', 'Friet', 'Kaas',
-    'Hagelslag', 'Drop', 'Pindakaas', 'Appelflap', 'Banaan', 'Mango', 'Ananas', 'Aardbei', 'Bosbes', 'Kokosnoot',
-    'Peer', 'Citroen', 'Meloen', 'Broccoli', 'Wortel', 'Spruitje', 'Aardappel', 'Taco', 'Nacho', 'Pizza', 'Donut',
-    'Cupcake', 'Brownie', 'Koekje', 'Croissant', 'Bagel', 'Pretzel', 'Sushi', 'Dumpling', 'Popcorn',
-    'Marshmallow', 'Toffee', 'Lolly', 'Snoepje', 'Pudding', 'Jelly', 'Smoothie', 'Milkshake', 'Boterham',
-    'Worstje', 'Gehaktbal', 'Tompouce', 'Speculaas', 'Pepernoot', 'Kruidnoot', 'Spekje', 'Zuurtje', 'Gummibeer',
-    'Knakworst', 'Kipnugget', 'Loempia', 'Pasta', 'Ravioli', 'Lasagne', 'Hotdog', 'Hamburger', 'Pancake', 'Cookie',
-    'Biscuit', 'Cracker', 'Chips', 'Augurk', 'Olijf', 'Radijs', 'Courgette', 'Aubergine', 'Paprika', 'Pompoen',
-    'Komkommer', 'Tomaat', 'Ui', 'Knoflook', 'Champignon', 'Ijsje', 'Waterijsje', 'Taart', 'Slagroom', 'Vla'
+    'Noodle', 'Pickle', 'Waffle', 'Muffin', 'Burrito', 'Spaghetti', 'Nugget', 'Avocado', 'Pancake', 'Crumpet',
+    'Croquette', 'Meatball', 'Sausage', 'Toastie', 'Fries', 'Cheese', 'Sprinkles', 'Licorice', 'PeanutButter',
+    'ApplePie', 'Banana', 'Mango', 'Pineapple', 'Strawberry', 'Blueberry', 'Coconut', 'Pear', 'Lemon', 'Melon',
+    'Broccoli', 'Carrot', 'Sprout', 'Potato', 'Taco', 'Nacho', 'Pizza', 'Donut', 'Cupcake', 'Brownie', 'Cookie',
+    'Croissant', 'Bagel', 'Pretzel', 'Sushi', 'Dumpling', 'Popcorn', 'Marshmallow', 'Toffee', 'Lollipop', 'Candy',
+    'Pudding', 'Jelly', 'Smoothie', 'Milkshake', 'Sandwich', 'Hotdog', 'Hamburger', 'Gingerbread', 'Gumdrop',
+    'GummyBear', 'Pasta', 'Ravioli', 'Lasagna', 'Biscuit', 'Cracker', 'Chips', 'Olive', 'Radish', 'Zucchini',
+    'Eggplant', 'Pepper', 'Pumpkin', 'Cucumber', 'Tomato', 'Onion', 'Garlic', 'Mushroom', 'IceCream', 'Popsicle',
+    'Cake', 'Custard', 'Cherry', 'Peach', 'Plum', 'Grape', 'Bacon', 'Omelette', 'Cereal', 'Wasabi', 'Ketchup',
+    'Mustard', 'Mayo', 'Butter', 'Bun', 'Cinnamon', 'Fudge', 'Truffle', 'Macaron', 'Churro', 'Quesadilla'
   ],
   'Dingen en geluiden': [
-    'Toaster', 'Pillow', 'Cactus', 'Sok', 'Pantoffel', 'Theepot', 'Paraplu', 'Badeend', 'Stofzuiger',
-    'Wasknijper', 'Gieter', 'Boemerang', 'Trampoline', 'Ballon', 'Knikker', 'Jojo', 'Tol', 'Kazoo', 'Ukelele',
-    'Tuba', 'Trommel', 'Toeter', 'Fluitje', 'Scooter', 'Skateboard', 'Rakker', 'Bengel', 'Boefje', 'Snuiter',
-    'Kwak', 'Plons', 'Boing', 'Wiebel', 'Bonk', 'Knal', 'Zoef', 'Pief', 'Poef', 'Paf', 'Floep', 'Plop', 'Hatsjoe',
-    'Kriebel', 'Giechel', 'Snurk', 'Gniffel', 'Tjilp', 'Wobble', 'Bloop', 'Zoink', 'Kaboom', 'Sokpop', 'Kussen',
-    'Pyjama', 'Slof', 'Klomp', 'Molen', 'Fiets', 'Tractor', 'Raket', 'Komeet', 'Planeet', 'Meteoor', 'Wolkje',
-    'Regenboog', 'Bliksem', 'Sneeuwpop', 'Gamepad', 'Joystick', 'Diskette', 'Walkman', 'Cassette', 'Radio',
-    'Lampion', 'Ratel', 'Vuurtoren', 'Kompas', 'Schatkist', 'Pinata', 'Confetti', 'Glitter', 'Spatel', 'Garde',
-    'Pollepel', 'Vergiet', 'Teddybeer', 'Knuffel', 'Rubberbal', 'Frisbee', 'Vlieger', 'Zandkasteel', 'Emmer',
-    'Schepje', 'Kruimel', 'Bubbel', 'Klodder', 'Spetter', 'Druppel', 'Wervelwind', 'Tornado', 'Popje', 'Hoed',
-    'Bolhoed', 'Strik', 'Snor', 'Baard', 'Bril', 'Neus', 'Teen', 'Oorworm', 'Brul', 'Gil', 'Boer', 'Hik'
+    'Toaster', 'Pillow', 'Cactus', 'Sock', 'Slipper', 'Teapot', 'Umbrella', 'RubberDuck', 'Vacuum', 'Clothespin',
+    'Boomerang', 'Trampoline', 'Balloon', 'Marble', 'Yoyo', 'Spinner', 'Kazoo', 'Ukulele', 'Tuba', 'Drum', 'Horn',
+    'Whistle', 'Scooter', 'Skateboard', 'Rascal', 'Scamp', 'Imp', 'Quack', 'Splash', 'Boing', 'Wobble', 'Bonk',
+    'Bang', 'Zoom', 'Whoosh', 'Poof', 'Pow', 'Zap', 'Plop', 'Achoo', 'Giggle', 'Snore', 'Chuckle', 'Tweet', 'Bloop',
+    'Zoink', 'Kaboom', 'SockPuppet', 'Cushion', 'Pajamas', 'Clog', 'Windmill', 'Bike', 'Tractor', 'Comet', 'Planet',
+    'Meteor', 'Cloud', 'Snowman', 'Gamepad', 'Joystick', 'Walkman', 'Cassette', 'Radio', 'Lantern', 'Rattle',
+    'Lighthouse', 'Compass', 'Treasure', 'Pinata', 'Confetti', 'Glitter', 'Spatula', 'Whisk', 'Ladle', 'Colander',
+    'Teddy', 'Plushie', 'Frisbee', 'Kite', 'Sandcastle', 'Bucket', 'Shovel', 'Crumb', 'Bubble', 'Blob', 'Splat',
+    'Droplet', 'Whirlwind', 'Tornado', 'Hat', 'Bowtie', 'Mustache', 'Beard', 'Glasses', 'Nose', 'Toe', 'Roar',
+    'Burp', 'Hiccup', 'Sneeze', 'Slurp', 'Honk', 'Beep', 'Bleep', 'Squeak', 'Noodlehead', 'Doodle', 'Gizmo',
+    'Gadget', 'Widget', 'Sprocket', 'Thingamajig', 'Doohickey', 'Wiggle', 'Jiggle', 'Bingo', 'Jackpot'
   ]
 }
-export const MIDDEN_ALLES = [...new Set(Object.values(MIDDEN).flat())]
+const gezien = new Set()
+export const MIDDEN = Object.fromEntries(Object.entries(MIDDEN_RUW).map(([groep, woorden]) =>
+  [groep, woorden.filter(w => !gezien.has(w) && gezien.add(w))]))
+export const MIDDEN_ALLES = [...gezien]
 
 export const EINDE = [
   '42', '88', '99', '404', '1337', 'XL', 'Pro', 'Max', 'Zero', 'Alpha', 'Prime', '9000', 'Plus', 'Elite', 'Ace',
   'Boss', 'Legend', '007', '777', '1', '7', '11', '13', '21', '23', '33', '64', '100', '101', '123', '200', '321',
   '360', '500', '999', '1000', '2000', '3000', '5000', 'Jr', 'Sr', 'II', 'III', 'XXL', 'Mini', 'Turbo', 'Deluxe',
   'Supreme', 'Royale', 'Express', 'GT', 'HD', '3D', 'X', 'Z', 'Ultra', 'Junior', 'Senior', 'Neo', 'Nova', 'Omega',
-  'Gamma', 'Delta', 'Koning', 'Baas', 'Held', 'Kampioen', 'Ster', 'Prins', 'Graaf', 'Ridder', 'Meester', 'Expert',
-  'Fan', 'Club', 'Crew', 'Squad', 'Gang', 'Bende', 'Party', 'Power', 'Kracht', 'Snel', 'Blitz', 'Flits', 'Go',
-  'Yeah', 'Wow', 'Woef', 'Boem', 'Hoi', 'Joepie', 'Hup', 'Tadaa', 'Ole', 'Hoera', 'Wiii', 'Brrr', 'Zzz'
+  'Gamma', 'Delta', 'King', 'Queen', 'Hero', 'Champ', 'Star', 'Prince', 'Duke', 'Knight', 'Master', 'Expert',
+  'Fan', 'Club', 'Crew', 'Squad', 'Gang', 'Party', 'Power', 'Force', 'Speed', 'Blitz', 'Flash', 'Go', 'Yeah',
+  'Wow', 'Woof', 'Boom', 'Hey', 'Yay', 'Yippee', 'Tadaa', 'Ole', 'Hooray', 'Wheee', 'Brrr', 'Zzz', 'Rocks',
+  'Zone', 'Land', 'World', 'Time', 'Mode', 'Life'
 ].filter((w, i, a) => a.indexOf(w) === i)
 
 const kies = (lijst, rnd) => lijst[Math.min(lijst.length - 1, Math.floor(rnd() * lijst.length))]
 
 // Drie willekeurige stukjes. rnd is te vervangen in de tests.
 // Een willekeurige naam is hoogstens MAX_WILLEKEURIG tekens (anders opnieuw), zodat hij overal goed past.
-// Zelf samenstellen mag langer (tot ongeveer 38 tekens: BliksemsnelleLieveheersbeestjeKampioen).
+// Zelf samenstellen mag langer (zie test-naambouwer.mjs voor de langste).
 export const MAX_WILLEKEURIG = 24
 export function willekeurigeDelen(rnd = Math.random) {
   let d

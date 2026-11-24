@@ -64,19 +64,19 @@ try:
                     check(breed[0] <= breed[1], naam + ' C: paneel past op een telefoon, niets steekt uit (%s)' % breed)
                     groepen = pg.eval_on_selector_all('#naambouwer select[data-deel=midden] optgroup', 'gs => gs.map(g => g.label)')
                     check(groepen == ['Dieren', 'Fantasie', 'Eten', 'Dingen en geluiden'], naam + ' C: groepjes bij dier of woord (%s)' % groepen)
-                    pg.select_option('#naambouwer select[data-deel=begin]', 'Gekke')
-                    pg.select_option('#naambouwer select[data-deel=midden]', 'Stroopwafel')
-                    pg.select_option('#naambouwer select[data-deel=einde]', 'Koning')
-                    check(waarde() == 'GekkeStroopwafelKoning', naam + ' C: zelf samengesteld: %s' % waarde())
+                    pg.select_option('#naambouwer select[data-deel=begin]', 'Silly')
+                    pg.select_option('#naambouwer select[data-deel=midden]', 'Waffle')
+                    pg.select_option('#naambouwer select[data-deel=einde]', 'King')
+                    check(waarde() == 'SillyWaffleKing', naam + ' C: zelf samengesteld: %s' % waarde())
                     check(pg.evaluate("id => document.getElementById(id).readOnly", veld), naam + ' C: naamveld blijft op slot')
                     # ── D ──
                     for _ in range(8):
                         pg.click('#naambouwer button.naambouwer-schud[data-deel=midden]')
-                        if waarde() != 'GekkeStroopwafelKoning': break
+                        if waarde() != 'SillyWaffleKing': break
                     w = waarde()
-                    check(w.startswith('Gekke') and w.endswith('Koning') and w != 'GekkeStroopwafelKoning', naam + ' D: 🔄 verandert alleen het middelste stukje (%s)' % w)
+                    check(w.startswith('Silly') and w.endswith('King') and w != 'SillyWaffleKing', naam + ' D: 🔄 verandert alleen het middelste stukje (%s)' % w)
                     pg.select_option('#naambouwer select[data-deel=einde]', '')
-                    check(not re.search(r'Koning$', waarde()) and waarde().startswith('Gekke'), naam + ' D: zonder einde: %s' % waarde())
+                    check(not re.search(r'King$', waarde()) and waarde().startswith('Silly'), naam + ' D: zonder einde: %s' % waarde())
                     pg.click('#naambouwer .naambouwer-klaar')
                     check(not pg.is_visible('#naambouwer'), naam + ' D: Klaar sluit het paneel')
                     # ── E ──
@@ -90,7 +90,7 @@ try:
                     pg.click('#' + zelf)
                     groepen = pg.eval_on_selector_all('#naambouwer select[data-deel=midden] optgroup', 'gs => gs.map(g => g.label)')
                     check(groepen == ['Animals', 'Fantasy', 'Food', 'Things and sounds'], naam + ' F: groepjes in het Engels (%s)' % groepen)
-                    check(pg.locator('#naambouwer select[data-deel=midden] option[value=Kikker]').count() == 1, naam + ' F: de woorden zelf blijven zoals ze zijn')
+                    check(pg.locator('#naambouwer select[data-deel=midden] option[value=Frog]').count() == 1, naam + ' F: de woorden zelf blijven zoals ze zijn')
                 check(not fouten, naam + ': geen paginafouten (%s)' % fouten)
                 ctx.close()
         b.close()

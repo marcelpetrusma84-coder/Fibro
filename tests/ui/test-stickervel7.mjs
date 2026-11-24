@@ -42,7 +42,7 @@ for (const s of vel.stickers) {
   const st = zoekSticker('f7-' + s.nr)
   assert.equal(st?.src, bestand, 'een ontvangen f7-' + s.nr + ' is altijd te zien, ook zonder download')
 }
-assert.equal(zoekSticker('f7-13'), null); assert.equal(zoekSticker('f8-01'), null)
+assert.equal(zoekSticker('f7-13'), null); assert.equal(zoekSticker('f99-01'), null)
 
 // 3. Pas na downloaden in je stickerkeuze (op dit toestel: fibro_store_<uid>)
 assert.deepEqual(mijnStoreVellen('u1'), [])

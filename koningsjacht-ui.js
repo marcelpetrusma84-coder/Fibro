@@ -21,7 +21,7 @@ import { maakEindscene } from './koningsjacht-eindscene.js?v=8'
 // Speler 1 kiest de manier en het niveau ('opnieuw'); speler 2 wacht. Wie later binnenkomt, vraagt de stand op.
 // v4 (13 nov 2026, Marcel): kaarslicht. Twee kaarsen op tafel met flakkerende vlammen; de randen van de tafel zijn
 // donker en het warme licht flakkert mee. Aan/uit met 🕯️ (bewaard: fibro_koningsjacht_kaars, standaard aan).
-// v56 (24 nov 2026): dashboardbundels vallen vanuit de cockpitsleuven laag op tafel en blijven achter hologramkaarten.
+// v57 (24 nov 2026): bundels komen uit de buitenste cockpitgleuven en vallen laag op tafel, achter hologramkaarten.
 import * as K from './koningsjacht.js?v=2'
 import { maakKaartTafel, kaartSvg, achterkantSvg, kaartNaam, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=26'
 import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek, zetMuziekThema } from './koningsjacht-geluid.js?v=4'
@@ -157,15 +157,15 @@ const CSS = `
 .kj-spaceship-lamplicht{display:none;position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none;isolation:isolate;mix-blend-mode:screen}
 .kj-ruimteschip .kj-spaceship-lamplicht{display:block}
 .kj.kj-geenkaars .kj-spaceship-lamplicht{display:none}
-.kj-spaceship-lamplicht::before{content:"";position:absolute;inset:70% 10% 8%;background:radial-gradient(ellipse 25% 70% at 25% 48%,#ff72d62b,transparent 76%),radial-gradient(ellipse 25% 70% at 75% 48%,#a77aff30,transparent 76%);filter:blur(12px);opacity:.95}
-.kj-spaceship-lamplicht::after{content:"";position:absolute;inset:48% 14% 12%;pointer-events:none;background:radial-gradient(ellipse 13% 48% at 26% 58%,#ff78e512,transparent 72%),radial-gradient(ellipse 11% 44% at 38% 42%,#c78aff15,transparent 72%),radial-gradient(ellipse 11% 45% at 62% 47%,#80dfff14,transparent 72%),radial-gradient(ellipse 13% 48% at 74% 60%,#ff8bce12,transparent 72%);filter:blur(8px);mix-blend-mode:screen;animation:kjShipHazeDrift 7s ease-in-out infinite alternate}
-.kj-ship-beam{position:absolute;top:48%;height:35%;width:13%;clip-path:polygon(48% 0,52% 0,100% 100%,0 100%);filter:blur(4px);opacity:.45;transform-origin:50% 0;mix-blend-mode:screen;background:linear-gradient(180deg,#ffd2fdbb 0%,#ff73d967 20%,#c56bff42 54%,#68d9ff22 82%,transparent 100%);animation:kjShipBeamBreath 5.2s ease-in-out infinite alternate}
+.kj-spaceship-lamplicht::before{content:"";position:absolute;inset:70% 4% 8%;background:radial-gradient(ellipse 17% 70% at 13% 48%,#ff72d62b,transparent 76%),radial-gradient(ellipse 17% 70% at 87% 48%,#a77aff30,transparent 76%);filter:blur(12px);opacity:.95}
+.kj-spaceship-lamplicht::after{content:"";position:absolute;inset:48% 4% 12%;pointer-events:none;background:radial-gradient(ellipse 9% 48% at 11% 58%,#ff78e512,transparent 72%),radial-gradient(ellipse 8% 44% at 18% 42%,#c78aff15,transparent 72%),radial-gradient(ellipse 8% 45% at 82% 47%,#80dfff14,transparent 72%),radial-gradient(ellipse 9% 48% at 89% 60%,#ff8bce12,transparent 72%);filter:blur(8px);mix-blend-mode:screen;animation:kjShipHazeDrift 7s ease-in-out infinite alternate}
+.kj-ship-beam{position:absolute;top:40%;height:36%;width:12%;clip-path:polygon(48% 0,52% 0,100% 100%,0 100%);filter:blur(4px);opacity:.45;transform-origin:50% 0;mix-blend-mode:screen;background:linear-gradient(180deg,#ffd2fdbb 0%,#ff73d967 20%,#c56bff42 54%,#68d9ff22 82%,transparent 100%);animation:kjShipBeamBreath 5.2s ease-in-out infinite alternate}
 .kj-ship-beam::before{content:"";position:absolute;inset:0;clip-path:inherit;background:radial-gradient(ellipse at 40% 38%,#ff8ee526,transparent 50%),radial-gradient(ellipse at 66% 61%,#81dfff20,transparent 48%),radial-gradient(ellipse at 48% 78%,#d29aff25,transparent 48%);filter:blur(5px);animation:kjShipHazeDrift 6s ease-in-out infinite alternate}
 .kj-ship-beam::after{content:"";position:absolute;left:47%;top:2%;bottom:8%;width:6%;border-radius:50%;background:linear-gradient(180deg,#fff1ff9c,#ff9bea55 35%,#b8a3ff44 68%,#9be8ff16);filter:blur(2px);opacity:.6}
-.kj-ship-beam:nth-child(1){left:30%;transform:rotate(-8deg);background:linear-gradient(180deg,#ffe0fdbb 0%,#ff73c967 24%,#d977ff42 56%,#9c83ff22 82%,transparent 100%)}
-.kj-ship-beam:nth-child(2){left:40%;width:12%;transform:rotate(-3deg);animation-delay:-1.4s;background:linear-gradient(180deg,#fff0ffb8 0%,#e77cff67 24%,#aa7cff40 58%,#7fdfff20 84%,transparent 100%)}
-.kj-ship-beam:nth-child(3){left:60%;width:12%;transform:rotate(3deg);animation-delay:-2.6s;background:linear-gradient(180deg,#fff0ffb8 0%,#d881ff68 22%,#a48bff42 56%,#7bdfff20 84%,transparent 100%)}
-.kj-ship-beam:nth-child(4){left:70%;transform:rotate(8deg);animation-delay:-3.7s;background:linear-gradient(180deg,#ffe0fdbb 0%,#ff79d167 24%,#c56bff42 56%,#85dfff22 82%,transparent 100%)}
+.kj-ship-beam:nth-child(1){left:1.5%;transform:rotate(12deg);background:linear-gradient(180deg,#ffe0fdbb 0%,#ff73c967 24%,#d977ff42 56%,#9c83ff22 82%,transparent 100%)}
+.kj-ship-beam:nth-child(2){left:6%;transform:rotate(7deg);animation-delay:-1.4s;background:linear-gradient(180deg,#fff0ffb8 0%,#e77cff67 24%,#aa7cff40 58%,#7fdfff20 84%,transparent 100%)}
+.kj-ship-beam:nth-child(3){left:81.5%;transform:rotate(-7deg);animation-delay:-2.6s;background:linear-gradient(180deg,#fff0ffb8 0%,#d881ff68 22%,#a48bff42 56%,#7bdfff20 84%,transparent 100%)}
+.kj-ship-beam:nth-child(4){left:86%;transform:rotate(-12deg);animation-delay:-3.7s;background:linear-gradient(180deg,#ffe0fdbb 0%,#ff79d167 24%,#c56bff42 56%,#85dfff22 82%,transparent 100%)}
 .kt-tafel.kj-ruimteschip.kj-holografisch :is(.kt-hand .kt-kaart,.kj-vijand .kj-kaart){z-index:4;background-color:#061722f0;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 @keyframes kjShipBeamBreath{from{opacity:.33;filter:blur(5px) brightness(.92)}to{opacity:.5;filter:blur(3px) brightness(1.13)}}
 @keyframes kjShipHazeDrift{from{transform:translate3d(-.6%,0,0);opacity:.7}to{transform:translate3d(.6%,-1%,0);opacity:1}}

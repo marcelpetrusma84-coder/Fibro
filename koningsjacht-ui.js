@@ -21,6 +21,7 @@ import { maakEindscene } from './koningsjacht-eindscene.js?v=8'
 // Speler 1 kiest de manier en het niveau ('opnieuw'); speler 2 wacht. Wie later binnenkomt, vraagt de stand op.
 // v4 (13 nov 2026, Marcel): kaarslicht. Twee kaarsen op tafel met flakkerende vlammen; de randen van de tafel zijn
 // donker en het warme licht flakkert mee. Aan/uit met 🕯️ (bewaard: fibro_koningsjacht_kaars, standaard aan).
+// v55 (24 nov 2026): de kaarsenknop schakelt in het futuristische ruimteschip vier zachte dashboardlichtbundels.
 import * as K from './koningsjacht.js?v=2'
 import { maakKaartTafel, kaartSvg, achterkantSvg, kaartNaam, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=26'
 import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek, zetMuziekThema } from './koningsjacht-geluid.js?v=4'
@@ -153,6 +154,18 @@ const CSS = `
 .kj-kaarslicht .kj-donker{position:absolute;inset:0;background:radial-gradient(ellipse 85% 70% at 50% 52%,#0000 25%,#0a0400a6 70%,#050200e0 100%)}
 .kj-kaarslicht .kj-warm{position:absolute;inset:0;mix-blend-mode:soft-light;opacity:var(--kj-licht,.9);background:radial-gradient(circle at 12% 46%,#ffb347 0,#ff8c1a55 18%,#0000 42%),radial-gradient(circle at 88% 46%,#ffb347 0,#ff8c1a55 18%,#0000 42%)}
 .kj-kaarslicht .kj-gloed{position:absolute;inset:0;mix-blend-mode:screen;opacity:calc(var(--kj-licht,.9) * .55);background:radial-gradient(circle at 12% 46%,#ffcf7a66 0,#ff9a2e22 14%,#0000 30%),radial-gradient(circle at 88% 46%,#ffcf7a66 0,#ff9a2e22 14%,#0000 30%)}
+.kj-spaceship-lamplicht{display:none;position:absolute;inset:0;z-index:30;overflow:hidden;pointer-events:none;isolation:isolate;mix-blend-mode:screen}
+.kj-ruimteschip .kj-spaceship-lamplicht{display:block}
+.kj.kj-geenkaars .kj-spaceship-lamplicht{display:none}
+.kj-spaceship-lamplicht::before{content:"";position:absolute;inset:43% 0 0;background:radial-gradient(ellipse 42% 80% at 18% 18%,#f27aff29,transparent 78%),radial-gradient(ellipse 42% 80% at 82% 18%,#ba69ff30,transparent 78%);filter:blur(18px);opacity:.85}
+.kj-ship-beam{position:absolute;top:47%;height:54%;width:38%;clip-path:polygon(44% 0,56% 0,100% 100%,0 100%);filter:blur(13px);opacity:.3;transform-origin:50% 0;background:radial-gradient(ellipse at 50% 4%,#ffd1ffb0 0, #f184ff6b 18%,#bd70ff32 48%,#ef8fff0b 78%,transparent 100%);animation:kjShipBeamBreath 4.8s ease-in-out infinite alternate}
+.kj-ship-beam:nth-child(1){left:7%;transform:rotate(-22deg);background:radial-gradient(ellipse at 50% 4%,#ffc4ffad 0,#ec72ff70 20%,#b35aff30 52%,#f182ff0a 80%,transparent 100%)}
+.kj-ship-beam:nth-child(2){left:24%;width:34%;transform:rotate(-8deg);animation-delay:-1.4s}
+.kj-ship-beam:nth-child(3){right:24%;width:34%;transform:rotate(8deg);animation-delay:-2.6s;background:radial-gradient(ellipse at 50% 4%,#ffe0ffad 0,#d77aff70 20%,#a75eff30 52%,#de82ff0a 80%,transparent 100%)}
+.kj-ship-beam:nth-child(4){right:7%;transform:rotate(22deg);animation-delay:-3.7s;background:radial-gradient(ellipse at 50% 4%,#ffc4ffad 0,#ec72ff70 20%,#b35aff30 52%,#f182ff0a 80%,transparent 100%)}
+@keyframes kjShipBeamBreath{from{opacity:.22;filter:blur(16px)}to{opacity:.36;filter:blur(11px)}}
+.kj-geenflikkering .kj-ship-beam{animation:none;opacity:.29}
+@media(prefers-reduced-motion:reduce){.kj-ship-beam{animation:none;opacity:.29}}
 .kj-kaars{position:absolute;bottom:18%;width:30px;height:96px;pointer-events:none;z-index:31}
 .kj-kaars.kj-links{left:calc(12% - 15px)}.kj-kaars.kj-rechts{left:calc(88% - 15px)}
 .kj-kaars > svg{position:absolute;left:0;bottom:0;width:30px;height:70px}
@@ -799,7 +812,6 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   // ── Kaarslicht ──
   const KAARS = 'fibro_koningsjacht_kaars'
   const kaarsAan = () => {
-    if (ruimteschipActief()) return false
     try { return localStorage.getItem(KAARS) !== 'uit' } catch (e) { return true }
   }
   function wisselKaars() {
@@ -815,6 +827,15 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     const licht = document.createElement('div'); licht.className = 'kj-kaarslicht'
     licht.innerHTML = '<div class="kj-warm"></div><div class="kj-gloed"></div><div class="kj-donker"></div>'
     el.appendChild(licht)
+    const ruimteschipLicht = document.createElement('div')
+    ruimteschipLicht.className = 'kj-spaceship-lamplicht'
+    ruimteschipLicht.setAttribute('aria-hidden', 'true')
+    for (let i = 0; i < 4; i++) {
+      const bundel = document.createElement('span')
+      bundel.className = 'kj-ship-beam'
+      ruimteschipLicht.appendChild(bundel)
+    }
+    el.appendChild(ruimteschipLicht)
     const midden = el.querySelector('.kt-midden')
     for (const kant of ['kj-links', 'kj-rechts']) {
       const k = document.createElement('div'); k.className = 'kj-kaars ' + kant

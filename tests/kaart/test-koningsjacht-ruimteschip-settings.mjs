@@ -1,4 +1,4 @@
-// Ruimteschipscènes hebben geen kaarsen en zijn de enige scène met hologramkaarten.
+// Ruimteschipscènes verbergen kaarsen, maar de kaarsenknop schakelt dashboardlicht.
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
@@ -14,6 +14,12 @@ assert.match(ui, /classList\.toggle\('kj-ruimteschip', ruimteschipActief\(\)\)/)
 assert.match(ui, /classList\.toggle\('kj-holografisch', ruimteschipActief\(\)\)/)
 assert.match(ui, /kj-instellingen\.kj-spaceship-interior \.kj-kaars-instelling\{display:none\}/)
 assert.match(ui, /kj-ruimteschip \.kj-kaars,\.kj-ruimteschip \.kj-kaarslicht\{display:none!important\}/)
+assert.match(ui, /\.kj-ruimteschip \.kj-spaceship-lamplicht\{display:block\}/)
+assert.match(ui, /\.kj\.kj-geenkaars \.kj-spaceship-lamplicht\{display:none\}/)
+assert.match(ui, /localStorage\.getItem\(KAARS\) !== 'uit'/, 'de dashboardlichtknop staat standaard aan en kan worden uitgezet')
+assert.doesNotMatch(ui, /if \(ruimteschipActief\(\)\) return false/, 'de knop wordt in de ruimteschipstijl niet hard uitgezet')
+assert.match(ui, /bundel\.className = 'kj-ship-beam'/)
+assert.match(ui, /for \(let i = 0; i < 4; i\+\+\)/, 'de dashboardlichten krijgen vier zachte lichtbundels')
 assert.match(ui, /modernInterior: \['none', 'old', 'futuristic'\]/)
 assert.match(fixture, /scene:\s*'modern', modernInterior:\s*'futuristic'/)
 assert.match(cards, /\.kt-tafel\.kj\.kj-holografisch/)

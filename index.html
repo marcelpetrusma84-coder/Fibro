@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=147"></script>
+<script src="taal.js?v=148"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -2722,8 +2722,9 @@ window.openMenu = function() {
   item(g, T('\u{1F4AC} Fout of idee melden'), () => window.openFibroTerugmelden()) // v222
   // v223: alleen voor moderators (is_moderator in je profiel). De pagina zelf controleert het nog eens bij de server.
   if (window._profiel && window._profiel.is_moderator === true) {
-    g = groep(T('Moderator'), 'menuKopModerator', T('Moderatie'))
+    g = groep(T('Moderator'), 'menuKopModerator', T('Moderatie, Stekky Studio'))
     item(g, T('\u{1F6E1}\uFE0F Moderatie'), () => { window.location.href = 'moderatie.html' })
+    item(g, T('\u{1F3A8} Stekky Studio'), () => { window.location.href = 'studio.html' }) // stickervellen maken (alleen moderators)
   }
   // v183: onderaan het versienummer (gewone tekst, geen knop)
   const versie = document.createElement('div')

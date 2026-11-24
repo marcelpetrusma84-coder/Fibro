@@ -1066,6 +1066,8 @@ window.FIBRO_EN = {
 // ---- Moderatie (moderatie.html) ----
   "Stekky — Moderatie": "{app} — Moderation",
   "🛡️ Moderatie": "🛡️ Moderation",
+  "🎨 Stekky Studio": "🎨 {app} Studio",
+  "Moderatie, Stekky Studio": "Moderation, {app} Studio",
   "Geen toegang": "No access",
   "Alleen moderators kunnen deze pagina zien.": "Only moderators can see this page.",
   "🚩 Rapporten": "🚩 Reports",

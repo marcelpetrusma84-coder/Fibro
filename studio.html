@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#1a0a2e">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
-<script src="taal.js?v=147"></script>
+<script src="taal.js?v=148"></script>
 <script src="appslot.js?v=3"></script>
 <title>Stekky Studio</title>
 <link href="lettertypen/basis.css?v=1" rel="stylesheet">
@@ -47,11 +47,15 @@ input[type=range] { accent-color:var(--knop); }
 .vak.gekozen .vink { background:var(--knop); }
 .vak .waarsch { position:absolute; top:4px; right:6px; font-size:16px; }
 .gekozen-lijst { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:12px; margin-top:12px; }
-.kaartje { background:rgba(0,0,0,0.25); border:0.5px solid var(--border); border-radius:12px; padding:10px; display:grid; grid-template-columns:84px 1fr; gap:10px; align-items:start; }
+.kaartje { background:rgba(0,0,0,0.25); border:0.5px solid var(--border); border-radius:12px; padding:10px; display:grid; grid-template-columns:84px minmax(0,1fr); gap:10px; align-items:start; min-width:0; }
 .kaartje .plaatje { width:84px; height:84px; border-radius:10px; background:repeating-conic-gradient(#2a1745 0 25%, #1f0f38 0 50%) 0 0 / 14px 14px; display:flex; align-items:center; justify-content:center; position:relative; }
 .kaartje .plaatje img { width:100%; height:100%; object-fit:contain; }
-.kaartje .velden { display:flex; flex-direction:column; gap:6px; }
-.kaartje .twee { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.kaartje .velden { display:flex; flex-direction:column; gap:6px; min-width:0; }
+.kaartje .twee { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:6px; align-items:end; }
+/* 24 nov 2026: velden en knoppen blijven binnen hun kaartje (ze waren breder, zodat de kaartjes op de pc over elkaar lagen) */
+.kaartje label.veld { min-width:0; }
+.kaartje input[type=text], .kaartje select { width:100%; }
+.kaartje .speel { max-width:100%; white-space:normal; text-align:left; }
 .kaartje .nr { font-size:11px; color:var(--muted); }
 .speel { background:var(--knop); color:#fff; border:0; border-radius:8px; padding:5px 10px; font:inherit; font-size:12px; cursor:pointer; align-self:flex-start; }
 #toegangGeweigerd { text-align:center; padding:60px 20px; }

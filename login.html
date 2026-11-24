@@ -7,7 +7,7 @@
   <script src="login-sessie.js?v=2"></script>
   <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
-  <script src="taal.js?v=146"></script>
+  <script src="taal.js?v=147"></script>
   <script src="apk.js?v=3"></script>
   <script src="registratie.js?v=3"></script>
   <script>try { FibroApk.hervatUitnodiging() } catch (e) {} // in de app: een uitnodiging die wacht (apk.js)</script>
@@ -213,6 +213,7 @@
           <!-- v266: een duidelijke knop met tekst onder de naam, in plaats van de dobbelsteen ernaast -->
           <input type="text" id="reg-username" placeholder="Je naam verschijnt hier" data-t-attr="placeholder" autocomplete="off" readonly style="cursor:default;" />
           <button type="button" id="reg-andere-naam" class="naam-knop" onclick="nieuweNaam()" data-t>🔄 Gebruikersnaam-generator</button>
+          <button type="button" id="reg-naam-zelf" class="naam-knop naam-zelf" data-t>✏️ Zelf samenstellen</button>
           <div style="font-size:11px;color:var(--text-muted);margin-top:4px;" data-t>⚠ Onthoud deze naam — je hebt hem nodig om in te loggen</div>
         </div>
         <div class="field">
@@ -283,6 +284,7 @@
   import { createClient } from './supabase-lib.js?v=1'
   import { genereerKeypair, slaPrivateKeyOp, haalPrivateKeyOp, ontsleutelPrivateKey, normaliseerHerstelSleutel, versleutelPrivateKey, maakHerstelSleutel } from './crypto.js?v=182'
   import { passkeyStatus, lijstDozen, maakDoos, openDoos, sleutelPastBij } from './passkey-kluis.js?v=3'
+  import { maakNaamBouwer } from './naambouwer.js?v=1'
 
   const supabase = createClient(
     'https://qmgatbphiplrfxrljtbe.supabase.co',
@@ -528,25 +530,9 @@
     }
   }
 
-  const BIJVOEGLIJK = ['Turbo','Pixel','Neon','Fluffy','Sneaky','Chonky','Sparkly','Grumpy','Bouncy','Squishy','Dizzy','Glitchy','Funky','Wiggly','Zappy','Bubbly','Fuzzy','Goofy','Jazzy','Mighty','Nifty','Peppy','Quirky','Sassy','Ultra','Wacky','Zesty','Blobby','Clumsy','Derpy','Floppy','Jumpy','Kooky','Lazy','Moody','Nerdy','Silly','Zippy','Psycho','Mega','Hyper','Retro','Cyber','Magic','Spicy','Crispy']
-  const DIEREN = ['Kikker','Panda','Hamster','Wasbeer','Capibara','Axolotl','Koala','Pinguin','Flamingo','Alpaca','Eekhoorn','Narwal','Quokka','Wombat','Platypus','Blobfish','Noodle','Pickle','Waffle','Muffin','Burrito','Spaghetti','Toaster','Pillow','Nugget','Avocado','Cactus']
-  const ACHTER = ['42','88','99','404','1337','XL','Pro','Max','Zero','Alpha','Prime','9000','Plus','Elite','Ace','Boss','Legend','007','777']
-
-  function genereerNaam() {
-    const b = BIJVOEGLIJK[Math.floor(Math.random()*BIJVOEGLIJK.length)]
-    const d = DIEREN[Math.floor(Math.random()*DIEREN.length)]
-    const a = ACHTER[Math.floor(Math.random()*ACHTER.length)]
-    return b+d+a
-  }
-
-  function nieuweNaam() {
-    const input = document.getElementById('reg-username')
-    if (!input) return
-    input.value = genereerNaam()
-    input.style.transform = 'scale(1.05)'
-    input.style.borderColor = 'var(--accent)'
-    setTimeout(() => { input.style.transform='scale(1)'; input.style.borderColor='' }, 200)
-  }
+  // v271: de woordenlijsten staan nu in naambouwer.js (veel meer woorden), met "Zelf samenstellen"
+  const naamBouwer = maakNaamBouwer({ invoer: document.getElementById('reg-username'), knopZelf: document.getElementById('reg-naam-zelf') })
+  function nieuweNaam() { naamBouwer.nieuw() }
   window.nieuweNaam = nieuweNaam
 
   window.switchTab = function(tab) {

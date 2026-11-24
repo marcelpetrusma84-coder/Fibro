@@ -260,3 +260,6 @@ jobs:
       - name: "Chatlijst: online bovenaan, daaronder het laatste bericht (proef327)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef327.py .
+      - name: "Registreren: veel meer gebruikersnamen en zelf samenstellen (proef328)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef328.py .

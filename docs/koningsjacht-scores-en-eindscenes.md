@@ -6,7 +6,7 @@ Een ronde heeft lokaal een UUID en de account-eigenaar van het begin. Verder spe
 
 ## Database — apart uitvoeren na goedkeuring
 
-Voer `sql/koningsjacht-scores.sql` uit in de Supabase SQL Editor. Deze PR voert geen productiemigratie uit. Zonder de migratie werken de eigen scores lokaal; de interface meldt dat gedeelde lijsten nog worden klaargezet. De eigen tabel en RPC's wijzigen Neon Raiders niet. De client kan geen andere eigenaar kiezen. Alleen wederzijds geaccepteerde, niet-geblokkeerde vrienden krijgen namen te zien; het algemene record van een onbekende bevat geen naam, ID of tijdstip.
+Voer `sql/koningsjacht-scores.sql` uit in de Supabase SQL Editor vóór de appwijziging wordt uitgerold. Dit kan veilig vóór de merge: de migratie houdt de oude parameterloze `koningsjacht_boards()`-RPC beschikbaar voor bestaande clients en voegt daarnaast `koningsjacht_boards(p_level)` toe voor scorecategorieën. De migratie voert geen productiewijziging vanzelf uit. Zonder de migratie werken eigen scores lokaal; de interface meldt dat gedeelde lijsten nog worden klaargezet. De eigen tabel en RPC's wijzigen Neon Raiders niet. De client kan geen andere eigenaar kiezen. Alleen wederzijds geaccepteerde, niet-geblokkeerde vrienden krijgen namen te zien; het algemene record van een onbekende bevat geen naam, ID of tijdstip.
 
 ## Eindbeelden
 

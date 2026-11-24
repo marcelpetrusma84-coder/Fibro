@@ -1,3 +1,4 @@
+// v146 (24 nov 2026): taal-en.js?v=146 (Koningsjacht-scorecategorieën vertalen).
 // v145 (23 nov 2026): taal-en.js?v=145 (bronvermelding van eigen stickergeluiden in de Store).
 // v144 (23 nov 2026): taal-en.js?v=144 (Eenentwintigen heet nu Black Jack).
 // Koningsjacht: scorehistorie en eindscènes.

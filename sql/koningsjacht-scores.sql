@@ -1,5 +1,6 @@
 -- Koningsjacht: scores per ronde, eigen/vrienden-top 10 en een anoniem wereldrecord.
--- Eenmaal uitvoeren in Supabase SQL Editor vóór de nieuwe scorelijsten worden gebruikt.
+-- Eenmaal uitvoeren in Supabase SQL Editor vóór nieuwe clients met scorecategorieën live gaan.
+-- Dit kan vóór de app-merge: de oude parameterloze RPC blijft bestaan voor reeds geopende apps.
 -- Herhaalbaar. Geen profielnamen/weergavenamen worden hier gekopieerd of gepubliceerd.
 begin;
 

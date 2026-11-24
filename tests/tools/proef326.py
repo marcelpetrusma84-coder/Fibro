@@ -32,10 +32,15 @@ tmp = tempfile.mkdtemp(prefix='proef326_'); hoofd = os.path.join(tmp, 'app'); os
 for naam in os.listdir(MAP):
     if naam in ('.git', 'node_modules', 'stickers', 'geluiden', 'studio-pakketten.js'): continue
     os.symlink(os.path.join(MAP, naam), os.path.join(hoofd, naam))
-shutil.copy(os.path.join(MAP, 'studio-pakketten.js'), hoofd)
+# een lege lijst Studio-vellen, ook als er al echte pakketten in de app staan: dan wordt het proefpakket f8
+bron = open(os.path.join(MAP, 'studio-pakketten.js'), encoding='utf8').read()
+open(os.path.join(hoofd, 'studio-pakketten.js'), 'w', encoding='utf8').write(re.sub(r'export const STUDIO_VELLEN = [\s\S]*$', 'export const STUDIO_VELLEN = []\n', bron))
+STUDIO = re.compile(r'^f([89]|\d\d+)(-|$)')   # echte Studio-vellen (f8 en hoger) en hun geluiden niet meenemen
 for sub in ('stickers', 'geluiden'):
     os.mkdir(os.path.join(hoofd, sub))
-    for naam in os.listdir(os.path.join(MAP, sub)): os.symlink(os.path.join(MAP, sub, naam), os.path.join(hoofd, sub, naam))
+    for naam in os.listdir(os.path.join(MAP, sub)):
+        if STUDIO.match(naam): continue
+        os.symlink(os.path.join(MAP, sub, naam), os.path.join(hoofd, sub, naam))
 bestand = os.path.join(tmp, 'proef.stekkypakket.json'); json.dump(pakket, open(bestand, 'w'))
 r = subprocess.run(['node', os.path.join(MAP, 'tests/tools/studio-installeer.mjs'), bestand, '--map', hoofd, '--zonder-versies'], capture_output=True, text=True)
 check(r.returncode == 0 and 'vel f8' in r.stdout, 'installeren lukt (%s)' % (r.stdout.strip() or r.stderr.strip())[:80])

@@ -79,6 +79,8 @@ assert.ok(P.valideerPakket(null, fx)[0].includes('geen pakketbestand')); assert.
 const tmp = mkdtempSync(path.join(tmpdir(), 'studio-'))
 writeFileSync(path.join(tmp, 'package.json'), '{"type":"module"}')
 for (const f of ['stickerfx.js', 'stickervellen.js', 'store.js', 'studio-pakket.js', 'studio-pakketten.js']) copyFileSync(path.join(REPO, f), path.join(tmp, f))
+// begin met een lege lijst Studio-vellen (zoals op 23 nov 2026), ook als er al echte pakketten in de app staan: dan is het eerste vel f8
+writeFileSync(path.join(tmp, 'studio-pakketten.js'), readFileSync(path.join(REPO, 'studio-pakketten.js'), 'utf8').replace(/export const STUDIO_VELLEN = [\s\S]*$/, 'export const STUDIO_VELLEN = []\n'))
 mkdirSync(path.join(tmp, 'tests/tools'), { recursive: true }); mkdirSync(path.join(tmp, 'tests/tools'), { recursive: true })
 for (const f of ['studio-installeer.mjs', 'verhoog-versies.mjs']) copyFileSync(path.join(REPO, 'tests/tools', f), path.join(tmp, 'tests/tools', f))
 const installeer = (pakket, naam) => {

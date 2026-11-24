@@ -1,4 +1,4 @@
-// taal-en.js - de Engelse woordenlijst van Fibro (v12, 16 oktober 2026, v157)
+// taal-en.js - de Engelse woordenlijst van Fibro (v12, 16 oktober 2026, v159)
 // Wordt alleen geladen als de taal Engels is (zie taal.js). Links staat de Nederlandse tekst precies zoals
 // in de code of de html (de sleutel), rechts de Engelse. {n}, {naam} enz. zijn invulplekken; {app} is de
 // naam van de app (staat op een plek: APP in taal.js). Ontbreekt een zin, dan blijft hij Nederlands.
@@ -2553,6 +2553,8 @@ window.FIBRO_EN = {
   "Belegering: ieder een eigen kasteel. Om de beurt val je de voorste wachter van de ander aan en weer je zijn klap af. Precies raak = je neemt hem gevangen. Wie het eerst alle 12 wachters van de ander verslaat, wint.": "Siege: each has their own castle. Take turns attacking the other's front guard and blocking its blow. Exact hit = you capture it. Whoever defeats all 12 of the other's guards first wins.",
   "Middeleeuwse tafel": "Medieval table",
   "Tafelsfeer": "Table theme",
+  "Varianten binnen Modern": "Modern table variants",
+  "Deze drie tafelvarianten horen bij de hoofdsfeer Modern.": "These three table options are part of the main Modern theme.",
   "Moderne ruimteschiptafel": "Modern spaceship table",
   "Epoxytafel": "Epoxy table",
   "Inside · oud schip": "Inside · old spaceship",
@@ -2564,6 +2566,10 @@ window.FIBRO_EN = {
   "Middeleeuws": "Medieval",
   "Een houten achtergrond met kaarsen in kandelaren.": "A wooden background with candles in candleholders.",
   "Achtergrond bewegen": "Move background",
+  "Beuken en trillen": "Impact shake and vibration",
+  "Laat het speelveld bij harde inslagen schudden en je telefoon meetrillen.": "Shake the table and vibrate your phone on hard impacts.",
+  "Ruimteschip · commandodek": "Spaceship · command deck",
+  "Opnieuw beginnen": "Restart game",
   "Beweeg je telefoon voor een subtiel diepte-effect.": "Move your phone for a subtle depth effect.",
   "Slow moves": "Slow moves",
   "Laat kaartbewegingen en effecten rustiger verlopen, zodat je beter ziet wat er gebeurt.": "Slow card moves and effects so you can clearly follow what is happening.",

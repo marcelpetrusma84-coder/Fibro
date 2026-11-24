@@ -117,7 +117,7 @@ try:
         check(pg.input_value('#kj-bier-inhoud') == '100' and pg.get_attribute('.kj-scene-bier-ik', 'aria-valuenow') == '100', 'M: nieuwe pul is weer vol')
         check(pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#2', 'M: oude voorkeurenteller 999 wordt genegeerd: eerste bijvulling is pul #2')
         check(pg.evaluate("() => !Object.hasOwn(JSON.parse(localStorage.getItem('fibro_koningsjacht_instellingen')), 'bierRonde')"), 'M: pulnummer staat niet meer in de algemene voorkeuren')
-        pg.check('[data-scene=middeleeuws]'); pg.uncheck('[data-instelling=flikkeren]')
+        pg.check('.kj-instellingen input[data-scene=middeleeuws]'); pg.uncheck('[data-instelling=flikkeren]')
         pg.click('.kj-instellingen-sluit')
         pg.eval_on_selector('.kj-scene-bier-ik', """e => { const r = e.querySelector('img').getBoundingClientRect();
           const p = { bubbles: true, pointerId: 42, pointerType: 'touch', isPrimary: true, button: 0, clientY: r.top + r.height * .75 };
@@ -129,9 +129,9 @@ try:
         check(wacht(pg, "() => document.querySelector('.kj-scene-bier-ik .kj-scene-bier-nummer').hidden", 4000), 'M: pulnummer verdwijnt na twee seconden')
         pg.reload(); pg.wait_for_selector('.kj-start-instellingen')
         pg.click('.kj-start-instellingen')
-        check(pg.is_checked('[data-scene=middeleeuws]') and not pg.is_checked('[data-instelling=flikkeren]') and pg.input_value('#kj-bier-inhoud') == '100', 'M: scene, flikkeren en vulling zijn bewaard')
+        check(pg.is_checked('.kj-instellingen input[data-scene=middeleeuws]') and not pg.is_checked('[data-instelling=flikkeren]') and pg.input_value('#kj-bier-inhoud') == '100', 'M: scene, flikkeren en vulling zijn bewaard')
         check(pg.evaluate("() => getComputedStyle(document.querySelector('.kj-scene-decor')).backgroundImage.includes('medieval-scene.png')"), 'M: echte middeleeuwse achtergrond')
-        pg.uncheck('[data-instelling=bierpul]'); pg.check('[data-scene=standaard]'); pg.check('[data-instelling=flikkeren]')
+        pg.uncheck('[data-instelling=bierpul]'); pg.check('.kj-instellingen input[data-scene=standaard]'); pg.check('[data-instelling=flikkeren]')
         pg.click('.kj-instellingen-sluit')
         check(pg.evaluate("() => import('./koningsjacht-geluid.js?v=4').then(m => m.geluidStaat())") == 'running', 'K: na een tik staat het geluid open (nodig op de iPhone)')
         check(pg.get_attribute('.kj-muziek', 'aria-pressed') == 'false', 'K: de muziek staat eerst uit')
@@ -154,14 +154,14 @@ try:
         hand_voor = pg.evaluate(HAND)
         kies(pg, hand_voor[0])
         gekozen_voor = pg.evaluate("() => [...document.querySelectorAll('.kt-hand .kt-gekozen')].map(e => e.dataset.id)")
-        pg.click('.kt-knop[data-naam=instellingen]'); pg.check('[data-scene=modern]')
+        pg.click('.kt-knop[data-naam=instellingen]'); pg.check('.kj-instellingen input[data-scene=modern]')
         check(pg.evaluate("() => getComputedStyle(document.querySelector('.kj-scene-decor')).backgroundImage.includes('modern-epoxy-table.png')"), 'N: moderne epoxytafel')
         check(pg.get_attribute('.kj-links .kj-kandelaar', 'src').endswith('candle-modern-left.png') and pg.get_attribute('.kj-rechts .kj-kandelaar', 'src').endswith('candle-modern-right.png'), 'N: verschillende moderne kandelaars links en rechts')
         check(pg.locator('.kt-hand .kt-modern').count() == 8 and pg.evaluate(HAND) == hand_voor, 'N: moderne kaarten zonder nieuwe partij of andere hand')
         check(pg.evaluate("() => [...document.querySelectorAll('.kt-hand .kt-gekozen')].map(e => e.dataset.id)") == gekozen_voor, 'N: selectie blijft bewaard')
-        pg.check('[data-scene=middeleeuws]')
+        pg.check('.kj-instellingen input[data-scene=middeleeuws]')
         check(pg.get_attribute('.kj-links .kj-kandelaar', 'src').endswith('chamberstick.png') and pg.locator('.kt-hand .kt-modern').count() == 0, 'N: middeleeuws herstelt eigen kandelaars en perkament')
-        pg.check('[data-scene=standaard]'); pg.click('.kj-instellingen-sluit')
+        pg.check('.kj-instellingen input[data-scene=standaard]'); pg.click('.kj-instellingen-sluit')
         # De gekozen kaart weer loslaten (zoals een speler zou doen). Een gekozen kaart springt omhoog; lag hij rechts in
         # de hand, dan lag hij over je bierpul en mislukte het dubbelklikken op de pul hieronder (CI, 14 nov 2026).
         kies(pg, hand_voor[0])
@@ -192,12 +192,12 @@ try:
         })"""), 'P: het druipende kaarsvet is zichtbaar en heeft de maat van de kandelaar')
         pg.dblclick('.kj-scene-bier-ik')
         check(pg.locator('.kj-kaars[data-slijtage="9"]').count() == 2, 'P: na pul #10 blijven beide kaarsen branden op dezelfde korte stand')
-        pg.click('.kt-knop[data-naam=instellingen]'); pg.check('[data-scene=modern]')
+        pg.click('.kt-knop[data-naam=instellingen]'); pg.check('.kj-instellingen input[data-scene=modern]')
         check(pg.get_attribute('.kj-links .kj-kandelaar', 'src').endswith('candle-modern-left-empty.png') and pg.get_attribute('.kj-rechts .kj-kandelaar', 'src').endswith('candle-modern-right-empty.png'), 'P: ook de moderne houders tonen de verbruikte kaarsen')
         pg.uncheck('[data-instelling=bierpul]')
         check(pg.locator('.kj-kaars[data-slijtage="0"]').count() == 2 and pg.get_attribute('.kj-links .kj-kandelaar', 'src').endswith('candle-modern-left.png') and pg.get_attribute('.kj-rechts .kj-kandelaar', 'src').endswith('candle-modern-right.png'), 'P: zonder bierpul zijn beide oorspronkelijke kaarsen terug')
         check(pg.evaluate("() => [...document.querySelectorAll('.kj-slijtage-druppels,.kj-slijtage-plas,.kj-slijtage-licht')].every(e => e.hidden)"), 'P: zonder bierpul zijn wasdruppels, wasplassen en extra reflecties weg')
-        pg.check('[data-scene=standaard]'); pg.click('.kj-instellingen-sluit')
+        pg.check('.kj-instellingen input[data-scene=standaard]'); pg.click('.kj-instellingen-sluit')
 
         # ════════ C t/m F: een vaste stand ════════
         ok = verder(pg, { 'kasteel': ['hB', 'kB'], 'hand': ['k6', 'k9', 'hA', 's7', 'h3', 'h2', 'r5', 'sA'] })

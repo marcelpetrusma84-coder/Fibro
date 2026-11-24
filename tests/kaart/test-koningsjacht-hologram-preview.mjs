@@ -10,7 +10,7 @@ assert.match(fixture, /scene:\s*'modern',\s*modernInterior:\s*'futuristic'/)
 assert.match(helper, /\.kt-tafel\.kj\.kj-holografisch \.kt-hand \.kt-kaart/)
 assert.match(helper, /\.kt-tafel\.kj\.kj-holografisch \.kt-stapel-groep/)
 
-for (const beeld of ['spaceship-interior.png', 'spaceship-interior-futuristic.png']) {
+for (const beeld of ['spaceship-interior.png', 'spaceship-interior-futuristic.png', 'spaceship-interior-futuristic-panorama.png']) {
   const png = readFileSync(new URL('../../assets/koningsjacht/' + beeld, import.meta.url))
   assert.equal(png.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', beeld + ' is een aanwezig PNG-bestand')
 }

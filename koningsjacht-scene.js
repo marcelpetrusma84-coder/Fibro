@@ -11,7 +11,7 @@ const ACHTERGRONDEN = {
   modern: 'modern-epoxy-table.png',
   middeleeuws: 'medieval-scene.png',
   oudRuimteschip: 'spaceship-interior.png',
-  futuristischRuimteschip: 'spaceship-interior-futuristic.png'
+  futuristischRuimteschip: 'spaceship-interior-futuristic-panorama.png?v=1'
 }
 const MULTIPLAYER_ACHTERGRONDEN = {
   samen: 'medieval-multiplayer-samen.jpg',
@@ -107,6 +107,14 @@ const MIDDELEEUWSE_KAARTSTIJL = `
 @media(prefers-reduced-motion:reduce){.kt-tafel.kj.kj-sfeer .kt-afleg .kt-ak.kt-gloed{animation:none}}
 `
 
+const PANORAMA_STIJL = `
+.kt-tafel.kj-panorama{touch-action:pan-y}
+.kj-scene-decor[data-panorama="aan"]::before{content:"";position:absolute;left:50%;top:20%;width:min(54%,560px);height:39%;transform:translateX(-50%);clip-path:polygon(45% 100%,55% 100%,82% 0,18% 0);background:linear-gradient(180deg,#54eaff00 0%,#38ddff18 42%,#28dfff55 87%,#c7fcffbb 100%);filter:blur(5px);mix-blend-mode:screen;opacity:.56;animation:kjPanProjectie 2.8s ease-in-out infinite alternate;pointer-events:none}
+.kj-scene-decor[data-panorama="aan"]::after{content:"";position:absolute;left:50%;top:57%;width:19%;height:8%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(ellipse,#e2ffffdd 0 5%,#49eaffaa 18%,#22ccff30 52%,transparent 72%);filter:blur(3px);mix-blend-mode:screen;pointer-events:none}
+@keyframes kjPanProjectie{from{opacity:.4}to{opacity:.72}}
+@media(prefers-reduced-motion:reduce){.kj-scene-decor[data-panorama="aan"]::before{animation:none;opacity:.48}}
+`
+
 export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
   if (!tafelElement?.ownerDocument) throw new Error('De kaarttafel ontbreekt.')
   eigenaren.get(tafelElement)?.stop()
@@ -124,13 +132,14 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
   // kiezen de tafel met `scene`.
   let opties = { beweging: false, scene: null, middeleeuws: false, flikkeren: true, bierpul: false, bierInhoud: 100, bierOorRechts: true, eigenNaam: '', anderBier: null, ...instellingen }
   let klaar = false, baseline = null, frame = null, x = 0, y = 0, doelX = 0, doelY = 0
+  let panoramaActief = false, panoramaPlek = .5, panoramaGebaar = null
   let laatsteBron = '', bierPointer = null, aanraking = null, vorigeTik = null, negeerMuisTot = 0
   const cleanup = []
   const laag = doc.createElement('div')
   laag.className = 'kj-scene-laag'
   laag.style.cssText = 'position:absolute;inset:0;overflow:hidden;pointer-events:none;user-select:none;z-index:-1;perspective:1200px;background:#28150d;'
   const materiaalStijl = doc.createElement('style')
-  materiaalStijl.textContent = MIDDELEEUWSE_KAARTSTIJL
+  materiaalStijl.textContent = MIDDELEEUWSE_KAARTSTIJL + PANORAMA_STIJL
   laag.appendChild(materiaalStijl)
   const decorLayer = doc.createElement('div')
   decorLayer.className = 'kj-scene-decor'
@@ -203,6 +212,49 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
     target.addEventListener(type, fn, options)
     cleanup.push(() => target.removeEventListener(type, fn, options))
   }
+  function werkPanoramaBij() {
+    if (!panoramaActief) return
+    const breedte = Math.max(1, tafelElement.clientWidth), hoogte = Math.max(1, tafelElement.clientHeight)
+    // Een panorama bestrijkt alle richtingen; houd genoeg uitsnede over om
+    // tijdens het slepen echt een nieuw deel van de cockpit te kunnen bekijken.
+    const beeldBreedte = Math.max(breedte * 2.6, hoogte * 2)
+    const overschot = Math.max(0, beeldBreedte - breedte * 1.1)
+    decorLayer.style.backgroundSize = `${beeldBreedte.toFixed(1)}px auto, cover`
+    decorLayer.style.backgroundPosition = `${(-overschot * panoramaPlek).toFixed(1)}px center, center`
+  }
+  function routeerPanoramaStart(event) {
+    if (klaar || !panoramaActief || !zichtbaar() || event.isPrimary === false || (event.button != null && event.button !== 0)) return
+    if (event.pointerType !== 'touch' && event.pointerType !== 'mouse') return
+    const breedte = win.innerWidth || doc.documentElement.clientWidth
+    const marge = Math.min(54, breedte * .14), veiligeRand = 12
+    const kant = event.clientX >= breedte - marge && event.clientX <= breedte - veiligeRand ? 'rechts'
+      : event.clientX >= veiligeRand && event.clientX <= marge ? 'links' : ''
+    if (!kant) return
+    const pad = event.composedPath?.() || []
+    if (!pad.length) for (let node = event.target; node; node = node.parentElement) pad.push(node)
+    if (pad.some(element => element !== tafelElement && element?.matches?.(bedienbaar))) return
+    panoramaGebaar = { id:event.pointerId, kant, x:event.clientX, y:event.clientY, begin:panoramaPlek, actief:false }
+  }
+  function routeerPanoramaBeweging(event) {
+    const gebaar = panoramaGebaar
+    if (!gebaar || event.pointerId !== gebaar.id) return
+    const dx = event.clientX - gebaar.x, dy = event.clientY - gebaar.y
+    const juisteRichting = gebaar.kant === 'rechts' ? dx < 0 : dx > 0
+    if (!gebaar.actief) {
+      if (Math.hypot(dx, dy) < 14) return
+      if (!juisteRichting || Math.abs(dx) < Math.abs(dy) * .85) { panoramaGebaar = null; return }
+      gebaar.actief = true
+    }
+    event.preventDefault(); event.stopPropagation()
+    const breedte = Math.max(1, tafelElement.clientWidth)
+    panoramaPlek = clamp(gebaar.begin - dx / breedte * .52, 0, 1)
+    werkPanoramaBij()
+  }
+  function routeerPanoramaEinde(event) {
+    if (!panoramaGebaar || event.pointerId !== panoramaGebaar.id) return
+    if (panoramaGebaar.actief) { event.preventDefault(); event.stopPropagation() }
+    panoramaGebaar = null
+  }
   function zichtbaar() { return tafelElement.isConnected && !doc.hidden && doc.visibilityState !== 'hidden' }
   function bewegingsStatus() {
     if (klaar || !opties.beweging) return 'uit'
@@ -245,7 +297,7 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
     verplaats((gamma * Math.cos(hoek) + beta * Math.sin(hoek)) / 28, (beta * Math.cos(hoek) - gamma * Math.sin(hoek)) / 32, 'sensor')
   }
   function muis(event) {
-    if (!opties.beweging || motion.matches || !zichtbaar() || event.pointerType !== 'mouse') return
+    if (!opties.beweging || motion.matches || !zichtbaar() || event.pointerType !== 'mouse' || panoramaGebaar?.actief) return
     const pad = event.composedPath?.() || []
     if (!pad.length) for (let node = event.target; node; node = node.parentElement) pad.push(node)
     if (event.buttons || pad.some(element => element !== tafelElement && element?.matches?.(bedienbaar))) {
@@ -271,9 +323,17 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
       : gekozenScene === 'modern' && futuristischRuimteschip ? ACHTERGRONDEN.futuristischRuimteschip : null
     const achtergrond = new URL('./assets/koningsjacht/' + (multiplayerBestand || interieurBestand || sceneBestand || ACHTERGRONDEN.standaard), import.meta.url).href
     const reserve = new URL('./kaarten/hout.webp', import.meta.url).href
+    const wasPanorama = panoramaActief
+    panoramaActief = opties.multiplayer !== true && gekozenScene === 'modern' && futuristischRuimteschip
+    if (panoramaActief && !wasPanorama) panoramaPlek = .5
+    panoramaGebaar = null
+    tafelElement.classList.toggle('kj-panorama', panoramaActief)
+    decorLayer.dataset.panorama = panoramaActief ? 'aan' : 'uit'
     decorLayer.dataset.scene = gekozenScene
     decorLayer.dataset.speltype = opties.multiplayer === true ? opties.multiplayerMode || 'samen' : ''
     decorLayer.style.backgroundImage = `url("${achtergrond}"), url("${reserve}")`
+    if (panoramaActief) werkPanoramaBij()
+    else { decorLayer.style.backgroundSize = 'cover'; decorLayer.style.backgroundPosition = 'center' }
     const andere = opties.anderBier && typeof opties.anderBier === 'object' && !Array.isArray(opties.anderBier) ? opties.anderBier : {}
     function toonPul(pul, zichtbaar, inhoud, oorRechts, naam, ronde) {
       pul.houder.hidden = !zichtbaar
@@ -329,6 +389,11 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
     laag.dataset.flikkeren = opties.flikkeren === false || motion.matches ? 'uit' : 'aan'
     if (!opties.beweging || motion.matches || wasBeweging !== opties.beweging) neutraal()
   }
+  luister(win, 'pointerdown', routeerPanoramaStart, { capture:true, passive:false })
+  luister(win, 'pointermove', routeerPanoramaBeweging, { capture:true, passive:false })
+  luister(win, 'pointerup', routeerPanoramaEinde, { capture:true, passive:false })
+  luister(win, 'pointercancel', routeerPanoramaEinde, { capture:true, passive:false })
+  luister(win, 'resize', werkPanoramaBij, { passive:true })
   function verplaatsingsToestemming() {
     if (klaar || !opties.beweging) return Promise.resolve('uit')
     if (motion.matches) return Promise.resolve('verminderde-beweging')

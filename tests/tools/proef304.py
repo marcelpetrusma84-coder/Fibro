@@ -50,7 +50,7 @@ try:
             pg.goto(basis+'tests/fixtures/koningsjacht-preview.html?voorbeeld=levensbalk')
             pg.wait_for_selector('.kt-tafel.kt-mijnbeurt')
             for stijl in ['standaard','middeleeuws','modern']:
-                pg.click('.kt-knop[data-naam=instellingen]'); pg.check('[data-scene='+stijl+']'); pg.click('.kj-instellingen-sluit')
+                pg.click('.kt-knop[data-naam=instellingen]'); pg.check('.kj-instellingen input[data-scene='+stijl+']'); pg.click('.kj-instellingen-sluit')
                 hud = pg.evaluate("""() => {
                   const e=document.querySelector('.kj-hud'), h=e.querySelector('.kj-balk'), s=e.querySelector('.kj-schildbalk');
                   const r=e.getBoundingClientRect();
@@ -124,10 +124,10 @@ try:
         ctx = browser.new_context(viewport={'width':390,'height':844},service_workers='block',reduced_motion='reduce')
         ctx.route(re.compile(r'^https?://(?!127\.0\.0\.1).*'),lambda r:r.fulfill(status=204,body=''))
         pg=ctx.new_page(); pg.goto(basis+'tests/fixtures/koningsjacht-preview.html')
-        pg.click('.kj-start-instellingen'); pg.check('[data-scene=middeleeuws]'); pg.click('.kj-instellingen-sluit')
+        pg.click('.kj-start-instellingen'); pg.check('.kj-instellingen input[data-scene=middeleeuws]'); pg.click('.kj-instellingen-sluit')
         pg.click('.kj-niveau[data-niveau=schildknaap]'); pg.wait_for_selector('.kt-tafel.kt-mijnbeurt')
         check(pg.locator('.kj-steen-symbool').count()==3 and pg.evaluate("() => [...document.querySelectorAll('.kj-pil')].every(e => getComputedStyle(e).backgroundImage.includes('stone-grain.svg'))"),'de drie echte Koningsjacht-tellers zijn stenen plaatjes')
-        pg.click('.kt-knop[data-naam=instellingen]'); pg.check('[data-scene=modern]'); pg.click('.kj-instellingen-sluit')
+        pg.click('.kt-knop[data-naam=instellingen]'); pg.check('.kj-instellingen input[data-scene=modern]'); pg.click('.kj-instellingen-sluit')
         check(pg.evaluate("() => [...document.querySelectorAll('.kj-steen-symbool')].every(e => getComputedStyle(e).display==='none') && [...document.querySelectorAll('.kj-pil')].every(e => !getComputedStyle(e).backgroundImage.includes('stone-grain.svg'))"),'Modern herstelt de eigen tellers zonder steenmateriaal')
         ctx.close(); browser.close()
 except Exception as e:

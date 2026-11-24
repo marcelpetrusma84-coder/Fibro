@@ -615,8 +615,9 @@ const STIJL = `
 .kt-eindesub{font-size:14px;opacity:.85}
 .kt-keuze{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0009;z-index:501}
 .kt-keuzekaart{padding:18px;border-radius:18px;background:#24103d;border:1px solid #c084fc;text-align:center}
-.kt-keuzerij{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.kt-keuzerij{display:grid;grid-template-columns:repeat(auto-fit,minmax(62px,62px));justify-content:center;gap:10px;margin:12px auto 0}
 .kt-keuzerij button{width:62px;height:62px;border-radius:14px;border:2px solid #ffffff33;background:#fffdf9;font-size:36px;cursor:pointer;line-height:1}
+.kt-keuzerij button:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .kt-stijlrij{display:flex;gap:12px;justify-content:center;margin-top:12px}
 .kt-stijlkeuze{display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px;border-radius:14px;border:2px solid #ffffff22;background:#ffffff10;color:#fff;font:inherit;font-weight:700;cursor:pointer}
 .kt-stijlkeuze[aria-pressed=true]{border-color:#c084fc;background:#8b3fd140;box-shadow:0 0 14px #8b3fd1aa}
@@ -656,6 +657,10 @@ export const REACTIES = ['😂', '😱', '🔥', '😎', '🙈', '👏']
 export function maakKaartTafel(container, opties = {}) {
   zetStijl()
   const o = { groep: id => kaartDelen(id).waarde, magSpelen: () => false, onSpeel() {}, onPak() {}, onReactie() {}, onSelectie() {}, ...opties }
+  const haptiek = patroon => {
+    const aan = typeof o.trillen === 'function' ? o.trillen() : o.trillen !== false
+    if (aan) tril(patroon)
+  }
   // v5: een spel met een vaste kaartstijl (o.stijl) tekent altijd die kaarten en achterkant, zonder knop 🎴
   let vast = KAARTSTIJLEN[o.stijl] ? o.stijl : null
   const kaart = id => kaartSvg(id, vast || kaartStijl())
@@ -826,7 +831,7 @@ export function maakKaartTafel(container, opties = {}) {
         })
       }
       try { k.setPointerCapture(e.pointerId) } catch (x) {}
-      lang = setTimeout(() => { if (!modus) { modus = 'schuif'; k.classList.add('kt-sleep'); tril(10); kaartGeluid.tik() } }, 420)
+      lang = setTimeout(() => { if (!modus) { modus = 'schuif'; k.classList.add('kt-sleep'); haptiek(10); kaartGeluid.tik() } }, 420)
     })
     k.addEventListener('pointermove', e => {
       if (!start) return
@@ -912,7 +917,7 @@ export function maakKaartTafel(container, opties = {}) {
     })
   }
   function weiger(k) {
-    kaartGeluid.nee(); tril([20, 40, 20])
+    kaartGeluid.nee(); haptiek([20, 40, 20])
     try { k.animate([{ translate: '0 0' }, { translate: '-8px 0' }, { translate: '8px 0' }, { translate: '0 0' }], { duration: 260 }) } catch (e) {}
   }
 
@@ -1218,7 +1223,7 @@ export function maakKaartTafel(container, opties = {}) {
       return vlieg({ voor: kaart(id), van, naar: doel, duur, draai: 0,
         eindDraai: draaiVan(id, stand.afleg.length - ids.length + i), tollen: (richting.x / n) * snelheid * 40,
         overschiet: { x: (richting.x / n) * ver, y: (richting.y / n) * ver * 0.6, r: (richting.x >= 0 ? 1 : -1) * snelheid * 12 } })
-        .then(() => { aflegVerborgen--; legRest(); kaartGeluid.leg(snelheid); tril(8) })
+        .then(() => { aflegVerborgen--; legRest(); kaartGeluid.leg(snelheid); haptiek(8) })
     }))
     await Promise.all(tochten)
     aflegVerborgen = 0; legRest()
@@ -1258,7 +1263,7 @@ export function maakKaartTafel(container, opties = {}) {
         kaartGeluid.pak()
         await vlieg({ voor: kaart(id), achter: rug(), van, naar, duur: ids.length > 2 ? 360 : 560, omdraaien: true, boog: ids.length > 2 ? 40 : 90, eindDraai: 0 })
       }
-      verborgen.delete(id); legHand(); tril(6)
+      verborgen.delete(id); legHand(); haptiek(6)
     }
     verborgen.clear(); legHand()
   }
@@ -1353,7 +1358,7 @@ export function maakKaartTafel(container, opties = {}) {
   // ── Effecten ──
   function effect(tekst, { gloed = true, geluid = true } = {}) {
     if (geluid) kaartGeluid.speciaal()
-    tril([15, 30, 15])
+    haptiek([15, 30, 15])
     const top = aflegEl.lastElementChild
     if (gloed && top) { top.classList.remove('kt-gloed'); void top.offsetWidth; top.classList.add('kt-gloed') }
     const e = document.createElement('div'); e.className = 'kt-effect'; e.textContent = tekst
@@ -1407,8 +1412,10 @@ export function maakKaartTafel(container, opties = {}) {
   // Een vraag met knoppen midden op tafel (bijvoorbeeld: welke kleur na een boer?)
   function kiesUit(titel, keuzes) {
     return new Promise(klaar => {
-      const d = document.createElement('div'); d.className = 'kt-keuze'
-      d.innerHTML = '<div class="kt-keuzekaart"><div style="font-weight:800;font-size:17px">' + esc(titel) + '</div><div class="kt-keuzerij"></div></div>'
+      const commando = el.classList.contains('kj-spaceship-interior')
+      const d = document.createElement('div'); d.className = 'kt-keuze' + (commando ? ' kt-keuze-commando' : '')
+      d.innerHTML = '<div class="kt-keuzekaart">' + (commando ? '<div class="kt-command-tag">' + esc(T('Ruimteschip · commandodek')) + '</div>' : '')
+        + '<div class="kt-keuze-vraag" style="font-weight:800;font-size:17px">' + esc(titel) + '</div><div class="kt-keuzerij"></div></div>'
       for (const k of keuzes) {
         const b = document.createElement('button'); b.type = 'button'; b.innerHTML = k.html; b.setAttribute('aria-label', k.label || '')
         if (k.kleur) b.style.color = k.kleur
@@ -1422,7 +1429,7 @@ export function maakKaartTafel(container, opties = {}) {
   function einde({ titel, sub, gewonnen, opnieuw }) {
     el.querySelector('.kt-einde')?.remove()
     beurtKlok(null)
-    if (gewonnen) { kaartGeluid.win(); tril([30, 50, 30, 50, 60]) } else kaartGeluid.verlies()
+    if (gewonnen) { kaartGeluid.win(); haptiek([30, 50, 30, 50, 60]) } else kaartGeluid.verlies()
     const d = document.createElement('div'); d.className = 'kt-einde'
     d.innerHTML = '<div class="kt-eindekaart"><div class="kt-eindetitel"></div><div class="kt-eindesub"></div><button type="button" class="kt-knop kt-nadruk kt-opnieuw"></button></div>'
     d.querySelector('.kt-eindetitel').textContent = titel
@@ -1459,6 +1466,6 @@ export function maakKaartTafel(container, opties = {}) {
     speelAnimatie, anderSpeeltAnimatie, pakAnimatie, anderPaktAnimatie, deelAnimatie, schudAnimatie,
     beurtKlok, effect, reactie, knoppen, anderKnop, info, kiesUit, einde, sluitEinde, zetKaartStijl: zetTafelKaartStijl,
     laatsteZet(ids) { laatsteZet = Array.isArray(ids) ? ids.slice() : null }, instellingen: () => ({ ...inst }), openInstellingen: () => toonInstellingen(),
-    status(t) { statusTekst = t; statusEl.textContent = t }, webcamRuimte, geluid: kaartGeluid, tril,
+    status(t) { statusTekst = t; statusEl.textContent = t }, webcamRuimte, geluid: kaartGeluid, tril: haptiek,
   }
 }

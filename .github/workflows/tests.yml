@@ -263,3 +263,6 @@ jobs:
       - name: "Registreren: veel meer gebruikersnamen en zelf samenstellen (proef328)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef328.py .
+      - name: "Stekky Studio in het menu voor moderators, stickerkaartjes netjes op de pc (proef329)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef329.py .

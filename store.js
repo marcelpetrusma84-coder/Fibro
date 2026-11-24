@@ -14,8 +14,8 @@
 // Soorten: lettertype (nu), game, sticker en widget (later). Lettertypes komen per thema in een pakket van 4
 // (v2, 11 nov 2026): een nieuw pakket staat in STORE_PAKKETTEN (lettertypes.js), de bestanden in lettertypen/.
 import { STORE_PAKKETTEN } from './lettertypes.js?v=133'
-import { STORE_VELLEN } from './stickervellen.js?v=240'
-import { legStoreVakkenVast, zetStoreVelActief } from './stickervakken.js?v=4'   // 13 nov 2026: stickers aanzetten bij Stijl
+import { STORE_VELLEN } from './stickervellen.js?v=241'
+import { legStoreVakkenVast, zetStoreVelActief } from './stickervakken.js?v=5'   // 13 nov 2026: stickers aanzetten bij Stijl
 import { zetStandaardWidgets } from './standaardwidgets.js?v=2'   // 17 nov 2026: games meteen op Home
 
 export const STORE_SOORTEN = [

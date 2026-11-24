@@ -263,3 +263,6 @@ jobs:
       - name: "Registreren: veel meer gebruikersnamen en zelf samenstellen (proef328)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef328.py .
+      - name: "Stickerpakket Santa (eerste uit Stekky Studio) staat in de Store (proef330)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef330.py .

@@ -7,7 +7,7 @@
 import { schaakBot } from './solo-bord.js?v=4'
 import { damBot } from './dam-bot.js?v=1'   // v253: sterkere damcomputer (met expert), rekent in een worker
 import { schaakUltraBot } from './schaak-ultra.js?v=4'
-import { computerStap as pestenComputerStap, doeStap as pestenDoeStap, geldigeStand as pestenGeldig } from './pesten.js?v=1'
+import { computerStap as pestenComputerStap, doeStap as pestenDoeStap, geldigeStand as pestenGeldig } from './pesten.js?v=2'
 import * as Toepen from './toepen.js?v=1'                   // 11 nov 2026: tweede en derde kaartspel
 import * as Eenentwintigen from './eenentwintigen.js?v=1'
 
@@ -524,11 +524,11 @@ export function stilBot() {
 export const SOLO_SPELLEN = {
   botkaaseiren: { naam: 'Tic-Tac-Toe',   icon: '⭕', bestand: './bke-ui.js?v=239',      bot: bkeBot },
   vieroprij:    { naam: 'Four in a Row', icon: '🔴', bestand: './vieroprij-ui.js?v=240', bot: vorBot },
-  pesten:       { naam: 'Pesten',        icon: '🃏', bestand: './pesten-ui.js?v=14',     bot: pestenBot, store: true },   // 11 nov 2026: het eerste kaartspel; alleen via de Store (niet meesturen met een uitnodiging)
-  toepen:       { naam: 'Toepen',        icon: '✊', bestand: './toepen-ui.js?v=13',     bot: toepenBot, store: true },          // 11 nov 2026: kaartspel uit de Store
-  eenentwintigen: { naam: 'Eenentwintigen', icon: '♠️', bestand: './eenentwintigen-ui.js?v=13', bot: eenentwintigenBot, store: true },   // 11 nov 2026: kaartspel uit de Store
+  pesten:       { naam: 'Pesten',        icon: '🃏', bestand: './pesten-ui.js?v=16',     bot: pestenBot, store: true },   // 11 nov 2026: het eerste kaartspel; alleen via de Store (niet meesturen met een uitnodiging)
+  toepen:       { naam: 'Toepen',        icon: '✊', bestand: './toepen-ui.js?v=14',     bot: toepenBot, store: true },          // 11 nov 2026: kaartspel uit de Store
+  eenentwintigen: { naam: 'Black Jack', icon: '♠️', bestand: './eenentwintigen-ui.js?v=15', bot: eenentwintigenBot, store: true },   // 11 nov 2026: kaartspel uit de Store
   // 13 nov 2026: Koningsjacht, alleen tegen het kasteel (geen computerspeler en geen spelkanaal), uit de Store; met een vriend in de chat
-  koningsjacht: { naam: 'Koningsjacht', icon: '👑', bestand: './koningsjacht-ui.js?v=49', zonderKanaal: true, store: true },
+  koningsjacht: { naam: 'Koningsjacht', icon: '👑', bestand: './koningsjacht-ui.js?v=50', zonderKanaal: true, store: true },
   schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=275',  niveaus:[...NIVEAUS, 'ultra'], bot: opties => opties.niveau === 'ultra' ? schaakUltraBot(opties) : schaakBot(opties), motor: './schaak.js?v=95', motorNaam: 'Schaak' },
   dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=151',   niveaus:[...NIVEAUS, 'expert'], bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
   // 30 okt 2026: Neo Paddle v2 (blokjes en power-ups) en levels voor alleen (spel.html toont een knop 🧱 Levels).
@@ -551,5 +551,5 @@ export const SOLO_SPELLEN = {
   // Let op: versie 194 van dit bestand was al gebruikt (de schaak-PR van valentijnpeters, 21 okt 2026); daarom laadt
   // spel.html in v193 versie 193 en in v194 versie 195. v195 (schaken weer in twee talen): versie 196. Een volgende
   // aanpassing aan solo.js neemt 197 of hoger.
-  shmup:        { naam: 'Neon Raiders',  icon: '🚀', bestand: './neon-raiders-ui.js?v=226', zonderKanaal: true, arcade: true },
+  shmup:        { naam: 'Neon Raiders',  icon: '🚀', bestand: './neon-raiders-ui.js?v=227', zonderKanaal: true, arcade: true },
 }

@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=143"></script>
+<script src="taal.js?v=145"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -491,19 +491,19 @@ window.veiligeUrl = function(v){
   import { haalVriendFotos, zetAvatar, geldigeFoto } from './vriendfotos.js?v=2'
   import { versleutel, ontsleutelBericht, haalPrivateKeyOp, sleutelVingerafdruk, isZelfdeSleutel, eigenPubliekeSleutel } from './crypto.js?v=182'
   import { werkKnopBij as werkSleutelKnopBij } from './sleutelcontrole.js?v=2' // v266: sleutel controleren (QR of 60 cijfers)
-  import { maakSpelChatCrypto } from './spelchat-crypto.js?v=2'
+  import { maakSpelChatCrypto } from './spelchat-crypto.js?v=3'
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
   import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, zetMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon, bouwFilterKnop, zetGesprekInfo } from './bellen.js?v=166'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
-  import { maakStickerkeuze } from './stickerkeuze.js?v=238'
+  import { maakStickerkeuze } from './stickerkeuze.js?v=241'
   import { isCode as isEigenCode, zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel, fxCode, leesFx, stickerPakket, bewaarVriendSticker, zoekWeg } from './eigenstickers.js?v=162'
-  import { zoekSticker } from './stickervellen.js?v=237'
-  import { speel as speelFx, speelGeluid as speelFxGeluid, naamVan as fxNaam } from './stickerfx.js?v=236'
+  import { zoekSticker } from './stickervellen.js?v=240'
+  import { speel as speelFx, speelGeluid as speelFxGeluid, naamVan as fxNaam } from './stickerfx.js?v=238'
   import { stuurRapport } from './rapport.js?v=96'
   import * as Schaak from './schaak.js?v=95'
   import { maakSpelMenu } from './spelmenu.js?v=1' // 11 nov 2026: hamburgermenu rechtsboven in elk spel (pauze, geluid, microfoon, camera, menu, verlaten)
   import { startSpelBerichtInChat } from './spelbericht.js?v=2'
-  import { gameAan, mijnDownloads } from './store.js?v=20' // 11 nov 2026: spellen uit de Store // 11 nov 2026: berichten van andere vrienden linksboven in het spel
+  import { gameAan, mijnDownloads } from './store.js?v=24' // 11 nov 2026: spellen uit de Store // 11 nov 2026: berichten van andere vrienden linksboven in het spel
   import * as Bordgeluid from './bordgeluid.js?v=203'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
@@ -529,7 +529,7 @@ window.veiligeUrl = function(v){
   // wacht het spel er even op.
   let titelModule = null
   const laadTitelscherm = () => titelModule ? Promise.resolve(titelModule)
-    : laadModule('./titelscherm.js?v=12').then(m => (titelModule = m))
+    : laadModule('./titelscherm.js?v=13').then(m => (titelModule = m))
   const laadRustig = f => ('requestIdleCallback' in window ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 2500))
   laadRustig(() => laadTitelscherm().catch(() => {}))
   pasBlokstijlToe()
@@ -2823,7 +2823,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     vieroprij:      { icon: '🔴', naam: 'Four in a Row' },
     pesten:         { icon: '🃏', naam: 'Pesten' },
     toepen:         { icon: '✊', naam: 'Toepen' },            // 11 nov 2026: kaartspel uit de Store
-    eenentwintigen: { icon: '♠️', naam: 'Eenentwintigen' },    // 11 nov 2026: kaartspel uit de Store
+    eenentwintigen: { icon: '♠️', naam: 'Black Jack' },    // 11 nov 2026: kaartspel uit de Store
     koningsjacht:   { icon: '👑', naam: 'Koningsjacht' },     // 13 nov 2026: samen, wedstrijd of duel tegen het kasteel
     schaken:        { icon: '♟️', naam: schaakT('Schaken') },
     schakendrie:    { icon: '♟️♟️♟️', naam: schaakT('Schaken met drie spelers') },
@@ -2991,10 +2991,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=151',
     pong: './pong-ui.js?v=242',
     vieroprij: './vieroprij-ui.js?v=240',
-    pesten: './pesten-ui.js?v=14',
-    toepen: './toepen-ui.js?v=13',
-    eenentwintigen: './eenentwintigen-ui.js?v=13',
-    koningsjacht: './koningsjacht-ui.js?v=49',
+    pesten: './pesten-ui.js?v=16',
+    toepen: './toepen-ui.js?v=14',
+    eenentwintigen: './eenentwintigen-ui.js?v=15',
+    koningsjacht: './koningsjacht-ui.js?v=50',
     schaken: './schaken-ui.js?v=275',
     schakendrie: './schaken-drie-ui.js?v=43',
     flappybird: './flappy-ui.js?v=147',
@@ -3004,7 +3004,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     endlessrunner: './runner-gunner-ui.js?v=149',
     pacman: './ecto-ui.js?v=178',
     pinball: './twin-snakes-ui.js?v=150',
-    shmup: './neon-raiders-ui.js?v=226'
+    shmup: './neon-raiders-ui.js?v=227'
   }
   const _alGeladen = {}
   function laadSpelAlvast(spelType) {
@@ -3258,14 +3258,14 @@ console.timeLog('[chat] berichten', 'opgehaald')
     },
   })
 
-  // ── 11 nov 2026: spellen uit de Stekky Store (Pesten, Toepen, Eenentwintigen) ──
+  // ── 11 nov 2026: spellen uit de Stekky Store (Pesten, Toepen, Black Jack) ──
   // Zo'n spel staat alleen in het spelmenu als je het in de Store gedownload hebt EN de widget aan hebt gezet
   // (Profiel > Widgets > Spellen). Een uitnodiging van een vriend voor zo'n spel kun je altijd aannemen.
   // v2 (11 nov 2026): de widgets staan op dit toestel (niet op de server): gameAan() uit store.js kijkt daar.
   function toonStoreSpellen() {
     const STORE_SPELLEN = [{ id: 'pesten', naam: 'Pesten', widget: 'spel_pesten', icoon: 'spelicoon/pesten.webp?v=2' },
       { id: 'toepen', naam: 'Toepen', widget: 'spel_toepen', icoon: 'spelicoon/toepen.webp?v=2' },
-      { id: 'eenentwintigen', naam: 'Eenentwintigen', widget: 'spel_eenentwintigen', icoon: 'spelicoon/eenentwintigen.webp?v=2' },
+      { id: 'eenentwintigen', naam: 'Black Jack', widget: 'spel_eenentwintigen', icoon: 'spelicoon/eenentwintigen.webp?v=2' },
       { id: 'koningsjacht', naam: 'Koningsjacht', widget: 'spel_koningsjacht', icoon: 'spelicoon/koningsjacht.webp?v=2' }]
     for (const sp of STORE_SPELLEN) {
       const id = 'spelKnop-' + sp.id
@@ -3277,7 +3277,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       knop.innerHTML = '<span style="height:36px;display:flex;align-items:center;justify-content:center;"><img src="' + sp.icoon + '" width="36" height="36" alt="" draggable="false"></span><span></span>'
       knop.lastElementChild.textContent = sp.naam
       knop.onclick = () => window.startSpel(sp.id)
-      // na het vorige Store-spel dat er staat (Pesten, Toepen, Eenentwintigen), anders na Four in a Row
+      // na het vorige Store-spel dat er staat (Pesten, Toepen, Black Jack), anders na Four in a Row
       const eerder = STORE_SPELLEN.slice(0, STORE_SPELLEN.indexOf(sp)).reverse().map(x => document.getElementById('spelKnop-' + x.id)).find(Boolean)
       const na = eerder || document.querySelector('#spelMenuGrid .spel-keuze-btn[onclick="startSpel(\'vieroprij\')"]')
       if (na) na.after(knop); else document.querySelector('#spelMenuGrid > div:last-child')?.appendChild(knop)
@@ -3349,7 +3349,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // beeld, met beweging en geluid, bij jullie allebei, en verdwijnt na 2,5 s. Over het spelkanaal gaat alleen de code
   // Sticker codes use the same encrypted, session-bound envelope as game chat.
   let spelStickerMag = true, spelStickerVriendMag = true, spelStickerKeuze = null
-  const SPELSTICKER_CODE = /^(f[1-7]|e[12])-\d{2}$/
+  const SPELSTICKER_CODE = /^(f\d+|e[12])-\d{2}$/
   function spelStickerVrij() {
     spelStickerMag = true; spelStickerVriendMag = true
     const k = document.getElementById('spelStickerKnop')
@@ -3770,10 +3770,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Pesten (kaartspel, 11 nov 2026) ───
   async function startPesten() {
-    const m = await laadModule('./pesten-ui.js?v=14')
+    const m = await laadModule('./pesten-ui.js?v=16')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
-  // ─── Toepen en Eenentwintigen (kaartspellen uit de Store, 11 nov 2026): hetzelfde als Pesten ───
+  // ─── Toepen en Black Jack (kaartspellen uit de Store, 11 nov 2026): hetzelfde als Pesten ───
   async function startKaartspel(spelType) {
     const m = await laadModule(SPEL_BESTAND[spelType])
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
@@ -4130,7 +4130,7 @@ async function startBlockIt() {
   }
 
   async function startNeonRaiders() {
-    const m = await laadModule('./neon-raiders-ui.js?v=226')
+    const m = await laadModule('./neon-raiders-ui.js?v=227')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'shmup' && !spelGestopt })
   }
 

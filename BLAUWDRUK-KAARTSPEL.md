@@ -44,7 +44,7 @@ Elk kaartspel krijgt **vanzelf**:
 7 kaarten elk. Leg dezelfde kleur of waarde op; meer kaarten van dezelfde waarde mag in één keer. Kun je niet, pak een kaart (past hij, dan mag je hem leggen, anders **Pas**).
 
 - **2** = de ander pakt er 2, **joker** = 5. Terugpesten met een 2 of joker stapelt op.
-- **7** (blijft plakken), **8** (wacht), **aas** (keer om): jij bent nog een keer.
+- **7** (blijft plakken), **8** (wacht): jij bent nog een keer. **Aas**: tegen de computer maar één keer (daarna is de ander aan de beurt); met z'n tweeën online nog een keer; met 3 of 4 spelers draait de richting om (regels klaar in `pesten.js`: `aasRegel`, `richting`, `spelers`; het scherm en het verbinden met meer spelers volgen nog).
 - **Boer**: past altijd, jij kiest de kleur. **Joker**: past altijd, daarna mag alles.
 - Nog 2 kaarten? Tik **☝ Laatste kaart!** voordat je speelt. Vergeten? Dan mag de ander op **🫵 Betrapt!** tikken: 2 strafkaarten.
 - Wie het eerst geen kaarten meer heeft, wint. Daarna begint de ander.
@@ -57,7 +57,7 @@ Elk kaartspel krijgt **vanzelf**:
 - Wie **10 strafpunten** heeft, verliest. Na elke ronde begint de ander.
 - Regels: `toepen.js`, spel: `toepen-ui.js`. De zet die een ronde afmaakt, deelt meteen de volgende ronde (`laatste.ronde`).
 
-## Eenentwintigen
+## Black Jack (voorheen Eenentwintigen; in de code blijft de naam `eenentwintigen`)
 
 52 kaarten, 2 elk. 2 t/m 10 tellen wat erop staat, boer/vrouw/heer 10, aas 11 of 1. Wie begint pakt kaarten (tik of veeg op de stapel) tot **✋ Ik blijf**; daarna de ander. Boven 21 = meteen af. Aan het eind draait de ander zijn kaarten om (ze vliegen open op tafel). Evenveel = gelijkspel.
 

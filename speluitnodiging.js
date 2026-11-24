@@ -13,7 +13,7 @@ const SPEL_INFO = {
   vieroprij: { icon: '🔴', naam: 'Four in a Row' },
   pesten: { icon: '🃏', naam: 'Pesten' },
   toepen: { icon: '✊', naam: 'Toepen' },
-  eenentwintigen: { icon: '♠️', naam: 'Eenentwintigen' },
+  eenentwintigen: { icon: '♠️', naam: 'Black Jack' },
   koningsjacht: { icon: '👑', naam: 'Koningsjacht' },
   schaken: { icon: '♟️', naam: 'Chess' },
   schakendrie: { icon: '♟️♟️♟️', naam: 'Three-player chess' },

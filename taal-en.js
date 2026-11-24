@@ -2370,7 +2370,7 @@ window.FIBRO_EN = {
   "{n}: te veel!": "{n}: bust!",
   "{naam}: te veel!": "{naam}: bust!",
   "Toepen verwijderen": "Remove Toepen",
-  "Eenentwintigen verwijderen": "Remove Twenty-One",
+  "Black Jack verwijderen": "Remove Black Jack",
   "Vier kaarten, vier slagen, alleen de laatste slag telt. Klop \"Toep!\" om de inzet te verhogen, en durf te bluffen. Wie 10 strafpunten heeft, verliest.": "Four cards, four tricks, only the last trick counts. Knock \"Toep!\" to raise the stake, and dare to bluff. Whoever reaches 10 penalty points loses.",
   "Pak kaarten tot je zo dicht mogelijk bij 21 zit, maar niet erover. Durf jij nog een kaart? Tegen de computer of met een vriend in de chat.": "Draw cards to get as close to 21 as you can, without going over. Dare to take one more? Against the computer or with a friend in the chat.",
 // ---- Spelmenu ☰ in elk spel (spelmenu.js), 11 nov 2026 ----
@@ -2793,6 +2793,9 @@ window.FIBRO_EN = {
   "Weer verwijderen": "Remove Weather",
   "Het weer van nu en de komende 5 dagen op je profiel, voor een plaats die je zelf kiest. Je toestel vraagt het weer aan Open-Meteo (gratis, zonder reclame), hoogstens één keer per half uur en maar een paar KB. Stekky gebruikt nooit de locatie van je telefoon. Je vrienden krijgen het weer van jou en maken zelf geen verbinding.": "The weather now and for the next 5 days on your profile, for a place you choose yourself. Your device asks Open-Meteo for the weather (free, no ads), at most once every half hour and only a few KB. {app} never uses your phone's location. Your friends get the weather from you and make no connection themselves.",
   "Koningsjacht scores": "King Hunt scores",
+  "Scorecategorie": "Score category",
+  "Vorige scorecategorie": "Previous score category",
+  "Volgende scorecategorie": "Next score category",
   "Niveau onbekend": "Unknown difficulty",
   "Kasteel veroverd": "Castle conquered",
   "Score bewaren…": "Saving score…",
@@ -2805,4 +2808,5 @@ window.FIBRO_EN = {
   "{n} wachters verslagen · nog {over} te gaan": "{n} guards defeated · {over} to go",
   "1 wachter verslagen · nog 11 te gaan": "1 guard defeated · 11 to go",
   "Schild vangt {n} op · nog {schade} afweren": "Shield absorbs {n} · {schade} left to defend",
+  "Geluiden van: {bronnen}": "Sounds by: {bronnen}",
 }

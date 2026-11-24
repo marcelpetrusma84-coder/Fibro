@@ -57,9 +57,9 @@ assert.match(lees('store.html'), /it\.soort === 'sticker'/)
 assert.match(lees('stickerkeuze.js'), /actieveStoreVellen\(id\)/, 'de chat toont alleen de vellen die je bij Stijl aanzette')
 
 // 5. Overal mag de code f7 (berichten, spelchat, moods, widgets)
-for (const [f, re] of [['chat.html', /SPELSTICKER_CODE = \/\^\(f\[1-7\]\|e\[12\]\)/], ['spelchat-crypto.js', /\(f\[1-7\]\|e\[12\]\)/],
-  ['moodsticker.js', /f\[1-7\]\|e\[12\]/], ['stickerwidget.js', /f\[1-7\]\|e\[12\]/], ['index.html', /f\[1-7\]\|e\[12\]/], ['profiel.html', /f\[1-7\]\|e\[12\]/]])
-  assert.match(lees(f), re, f + ' kent f7')
+for (const [f, re] of [['chat.html', /SPELSTICKER_CODE = \/\^\(f\\d\+\|e\[12\]\)/], ['spelchat-crypto.js', /\(f\\d\+\|e\[12\]\)/],
+  ['moodsticker.js', /f\\d\+\|e\[12\]/], ['stickerwidget.js', /f\\d\+\|e\[12\]/], ['index.html', /f\\d\+\|e\[12\]/], ['profiel.html', /f\\d\+\|e\[12\]/]])
+  assert.match(lees(f), re, f + ' kent f7 (en elk nieuw fN)')
 
 // 6. De Engelse teksten
 const en = lees('taal-en.js')

@@ -11,6 +11,8 @@
 //   { id: 'f1', stickers: [ { nr: '01', naam: ['Grote ogen', 'Big eyes'], b: 'groei', g: 'boing' }, ... ] }
 // In een bericht gaat alleen '<vel>-<nr>' mee (bijv. fxsticker:f1-01); het plaatje staat op elk toestel.
 
+import { STUDIO_VELLEN } from './studio-pakketten.js?v=3'   // 23 nov 2026: vellen die met Stekky Studio zijn gemaakt
+
 export const FIBRO_VELLEN = [
   // 30 okt 2026: emoji-gezichtjes (id f6), op verzoek van Marcel VOORAAN: dit is 'Vel 1' in de stickerkeuze en
   // 'Stickervel 1' in Profiel; de andere vellen schuiven een plek op (het nummer op het scherm is de plek in deze lijst).
@@ -111,7 +113,7 @@ export const FIBRO_VELLEN = [
 
 // 13 nov 2026: stickervellen uit de Stekky Store (store.js, soort 'sticker'). Ze staan pas in je stickerkeuze (bij
 // 'Winkel') als je ze gedownload hebt; een sticker die een vriend stuurt, zie en hoor je altijd (zoekSticker kent ze).
-// store = het id in de Store (store_downloads.item_id). Id's gaan door na f6 (f7, f8 ...); een nieuw id ook in de patronen f[1-7] zetten (zoek op 'f\[1-7\]').
+// store = het id in de Store (store_downloads.item_id). Id's gaan door na f6 (f7, f8 ...). Sinds 23 nov 2026 staan de patronen voor elk id f<getal>; nieuwe vellen komen uit Stekky Studio (studio-pakketten.js).
 // Vel 7, Sinterklaas: uit een plaatje van Marcel met roetveegpieten (tests/tools/knip7.py), geluiden met code gemaakt
 // (tests/tools/geluiden8.py).
 export const STORE_VELLEN = [
@@ -129,6 +131,7 @@ export const STORE_VELLEN = [
     { nr: '11', naam: ['Sint & Piet', 'Sint & Piet'], b: 'knik', g: 'klopklop' },
     { nr: '12', naam: ['Mijter & staf', 'Mitre & staff'], b: 'oplichten', g: 'mijterglans' },
   ] },
+  ...STUDIO_VELLEN,   // 23 nov 2026: f8, f9 ... uit Stekky Studio (elk met titel, uitleg [nl, en] en 12 stickers)
 ]
 
 export const PER_VEL = 12
@@ -143,7 +146,7 @@ export function mijnStoreVellen(uid) {
 
 // Zoek een sticker op met de code uit een bericht ('f1-01'). Geeft null als hij niet (meer) bestaat.
 export function zoekSticker(code) {
-  const m = /^(f[1-7])-(\d{2})$/.exec(String(code || ''))
+  const m = /^(f\d+)-(\d{2})$/.exec(String(code || ''))
   if (!m) return null
   const vel = FIBRO_VELLEN.find(v => v.id === m[1]) || STORE_VELLEN.find(v => v.id === m[1])
   const s = vel && vel.stickers.find(x => x.nr === m[2])

@@ -1,3 +1,5 @@
+// v145 (23 nov 2026): taal-en.js?v=145 (bronvermelding van eigen stickergeluiden in de Store).
+// v144 (23 nov 2026): taal-en.js?v=144 (Eenentwintigen heet nu Black Jack).
 // Koningsjacht: scorehistorie en eindscènes.
 // v142 (20 nov 2026): Koningsjacht levensbalk en schildsterkte, samen met de zetuitleg van #230.
 // v141 (20 nov 2026): Koningsjacht levensbalk en schildsterkte.
@@ -159,7 +161,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=143', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=146', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

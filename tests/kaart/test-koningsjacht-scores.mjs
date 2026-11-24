@@ -1,9 +1,14 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { maakKoningsjachtScoreService } from '../../koningsjacht-scores.js'
 import { maakScorePartij } from '../../koningsjacht-score-partij.js'
 import { eindsceneStand } from '../../koningsjacht-eindscene.js'
 import { stapelProfiel, maakStapelFeedback } from '../../kaart-stapel-feedback.js'
 const ME='10000000-0000-4000-8000-000000000001', OTHER='20000000-0000-4000-8000-000000000002'
+const scoreSql=readFileSync(new URL('../../sql/koningsjacht-scores.sql',import.meta.url),'utf8')
+assert.match(scoreSql,/create or replace function public\.koningsjacht_boards\(p_level integer\)/)
+assert.match(scoreSql,/create or replace function public\.koningsjacht_boards\(\)/,'oude appversies behouden hun scorebord-RPC')
+assert.doesNotMatch(scoreSql,/drop function if exists public\.koningsjacht_boards\(\)/,'de oude scorebord-RPC wordt niet verwijderd')
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`
 const data=new Map(), storage={getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)}
 let uid=ME,online=false,next=0

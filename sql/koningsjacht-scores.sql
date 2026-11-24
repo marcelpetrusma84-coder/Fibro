@@ -79,9 +79,8 @@ grant execute on function public.koningsjacht_save_score(uuid, bigint, timestamp
   to authenticated;
 
 -- Geen vrij kiesbare spelerparameter: de uitslag is altijd voor auth.uid().
--- De scoretabellen worden per startniveau opgevraagd (niveau 1/2/3 = 4/2/0 narren).
+-- Nieuwe clients vragen per startniveau op (niveau 1/2/3 = 4/2/0 narren).
 -- Wereldrecord: onbekende speler levert UITSLUITEND {score, level, won, mode}; geen id, naam of tijd.
-drop function if exists public.koningsjacht_boards();
 create or replace function public.koningsjacht_boards(p_level integer)
 returns jsonb language plpgsql stable security definer
 set search_path = pg_catalog, pg_temp
@@ -138,4 +137,60 @@ end;
 $$;
 revoke all on function public.koningsjacht_boards(integer) from public, anon, authenticated;
 grant execute on function public.koningsjacht_boards(integer) to authenticated;
+
+-- Backward compatibility: oudere appversies roepen nog zonder argument aan.
+-- Laat deze overload bestaan (en herstel hem als de eerdere migratie hem al had verwijderd).
+create or replace function public.koningsjacht_boards()
+returns jsonb language plpgsql stable security definer
+set search_path = pg_catalog, pg_temp
+as $$
+declare
+  me uuid := auth.uid();
+  personal jsonb;
+  friends jsonb;
+  world jsonb := null;
+  known jsonb := '[]'::jsonb;
+  record public.koningsjacht_scores%rowtype;
+  record_username text;
+begin
+  if me is null then raise exception 'Authentication required' using errcode = '42501'; end if;
+
+  select coalesce(jsonb_agg(to_jsonb(r) order by r.score desc, r.played_at, r.run_id), '[]'::jsonb)
+    into personal from (
+      select s.user_id, s.run_id, s.score, s.played_at, s.level, s.won, s.mode, p.username
+      from public.koningsjacht_scores s join public.profiles p on p.id = s.user_id
+      where s.user_id = me
+      order by s.score desc, s.played_at, s.run_id limit 10
+    ) r;
+
+  select coalesce(jsonb_agg(to_jsonb(r) order by r.score desc, r.played_at, r.user_id, r.run_id), '[]'::jsonb)
+    into friends from (
+      select s.user_id, s.run_id, s.score, s.played_at, s.level, s.won, s.mode, p.username
+      from public.koningsjacht_scores s join public.profiles p on p.id = s.user_id
+      where (s.user_id = me or public.koningsjacht_friend(me, s.user_id))
+        and not coalesce(p.geblokkeerd, false)
+        and not exists (select 1 from public.blokkades b where b.gebruiker_id = s.user_id
+                        and b.opgeheven_op is null and b.van <= now() and (b.tot is null or b.tot > now()))
+      order by s.score desc, s.played_at, s.user_id, s.run_id limit 10
+    ) r;
+
+  select s.* into record from public.koningsjacht_scores s join public.profiles p on p.id = s.user_id
+    where not coalesce(p.geblokkeerd, false)
+      and not exists (select 1 from public.blokkades b where b.gebruiker_id = s.user_id
+                      and b.opgeheven_op is null and b.van <= now() and (b.tot is null or b.tot > now()))
+    order by s.score desc, s.played_at, s.user_id, s.run_id limit 1;
+  if found then
+    world := jsonb_build_object('score', record.score, 'level', record.level, 'won', record.won, 'mode', record.mode);
+    if record.user_id = me or public.koningsjacht_friend(me, record.user_id) then
+      select p.username into record_username from public.profiles p where p.id = record.user_id;
+      world := world || jsonb_build_object('user_id', record.user_id, 'username', record_username,
+                                          'played_at', record.played_at);
+      known := jsonb_build_array(jsonb_build_object('user_id', record.user_id));
+    end if;
+  end if;
+  return jsonb_build_object('personal', personal, 'friends', friends, 'global', world, 'known_players', known);
+end;
+$$;
+revoke all on function public.koningsjacht_boards() from public, anon, authenticated;
+grant execute on function public.koningsjacht_boards() to authenticated;
 commit;

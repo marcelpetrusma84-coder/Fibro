@@ -251,3 +251,9 @@ jobs:
       - name: "Weer-widget: plaats kiezen, weer van Open-Meteo, hoogstens elk half uur, vrienden vragen niets (proef324)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef324.py .
+      - name: "Stekky Studio: plaat knippen, 12 stickers kiezen, pakketbestand maken, alleen moderators (proef325)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef325.py .
+      - name: "Stekky Studio: eigen geluid per sticker in de echte app (proef326)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef326.py .

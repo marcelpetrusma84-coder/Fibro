@@ -36,7 +36,7 @@ try:
         a = wacht(m, "() => !!document.getElementById('spelKnop-pesten')", 10000)
         knoppen = m.evaluate(KNOPPEN)
         check('A Marcel (widget aan): Pesten in het spelmenu, na Four in a Row', a and knoppen.index('Pesten') == knoppen.index('Four in a Row') + 1, knoppen)
-        check('A Eenentwintigen staat er ook, na Pesten (gedownload + widget), Toepen niet (niet gedownload)', 'Eenentwintigen' in knoppen and knoppen.index('Eenentwintigen') == knoppen.index('Pesten') + 1 and 'Toepen' not in knoppen
+        check('A Eenentwintigen staat er ook, na Pesten (gedownload + widget), Toepen niet (niet gedownload)', 'Black Jack' in knoppen and knoppen.index('Black Jack') == knoppen.index('Pesten') + 1 and 'Toepen' not in knoppen
               and m.evaluate("() => (document.querySelector('#spelKnop-eenentwintigen img') || {}).getAttribute?.('src')") == 'spelicoon/eenentwintigen.webp?v=2', knoppen)
         check('A het spelplaatje van Pesten', m.evaluate("() => (document.querySelector('#spelKnop-pesten img') || {}).getAttribute?.('src')") == 'spelicoon/pesten.webp?v=2')
         b.wait_for_timeout(1500)
@@ -51,7 +51,7 @@ try:
         # D: Marcel verwijdert Pesten (zoals in de Store of bij Widgets): download weg en widget uit
         for pg in (m, b): pg.evaluate("window.sluitSpel && window.sluitSpel(true)")
         DOWNLOADS[MARCEL] = []
-        m.evaluate("""async uid => { const s = await import('./store.js?v=13'); localStorage.setItem('fibro_store_' + uid, '[]'); s.zetGameWidgetUit(uid, 'spel_pesten') }""", MARCEL)
+        m.evaluate("""async uid => { const s = await import('./store.js?v=21'); localStorage.setItem('fibro_store_' + uid, '[]'); s.zetGameWidgetUit(uid, 'spel_pesten') }""", MARCEL)
         m.evaluate("window.toggleSpelMenu()")
         check('D na verwijderen: geen Pesten meer in het spelmenu', wacht(m, "() => !document.getElementById('spelKnop-pesten')", 4000), m.evaluate(KNOPPEN))
         check('geen paginafouten', not fouten, fouten[:3])

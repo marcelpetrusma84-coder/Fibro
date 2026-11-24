@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+ <defs>
+  <linearGradient id="sky" y2="1"><stop stop-color="#171d39"/><stop offset=".56" stop-color="#523548"/><stop offset="1" stop-color="#b47753"/></linearGradient>
+  <linearGradient id="stone" x2="0" y2="1"><stop stop-color="#cdb88e"/><stop offset="1" stop-color="#53453e"/></linearGradient>
+  <linearGradient id="curse" x2="1"><stop stop-color="#fedc8a"/><stop offset=".34" stop-color="#e66a74"/><stop offset=".72" stop-color="#a63bc0"/><stop offset="1" stop-color="#8fd6ff"/></linearGradient>
+  <filter id="glow" x="-.5" y="-.8" width="2" height="2.6"><feGaussianBlur stdDeviation="15" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <pattern id="grain" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M0 9h24M4 20h17" stroke="#fff" stroke-opacity=".06"/></pattern>
+ </defs>
+ <rect width="960" height="540" fill="url(#sky)"/><circle cx="479" cy="225" r="132" fill="#d24a82" opacity=".1"/>
+ <path d="M0 371 130 302l142 47 114-75 113 79 125-72 139 49 125-61v271H0Z" fill="#292531"/><path d="M0 427q230-68 475 0t485-18v131H0Z" fill="#49352e"/>
+ <!-- Twee eigen kastelen -->
+ <g fill="url(#stone)" stroke="#332832" stroke-width="9"><path d="M74 356V242h46v-57h58v57h45v114zM63 246v-79l35-34 35 34v79M161 246v-79l35-34 35 34v79"/><path d="M732 356V242h46v-57h58v57h45v114zM721 246v-79l35-34 35 34v79M819 246v-79l35-34 35 34v79"/></g>
+ <path d="M96 165v-49m103 49v-49m642 49v-49m103 49v-49" stroke="#d7c397" stroke-width="6"/><path d="M99 116q39 0 52 19l-51 24zM202 116q-39 0-52 19l51 24zM845 116q39 0 52 19l-51 24zM948 116q-39 0-52 19l51 24z" fill="#783e57" stroke="#e3c987" stroke-width="3"/>
+ <!-- Twee spelers staan elk voor hun eigen kasteel -->
+ <g transform="translate(310 339)"><path d="M-42 94q-38-37-23-84l36-19 42 26 10 77z" fill="#263859" stroke="#dfc38d" stroke-width="7"/><path d="M-19-4q0-37 32-36 30 2 32 33L30 9-15 8Z" fill="#ceb78d" stroke="#43342d" stroke-width="6"/><path d="M-13-8h42" stroke="#192339" stroke-width="12"/><path d="M-52 99h91" stroke="#251c1c" stroke-width="14"/></g>
+ <g transform="translate(650 339)"><path d="M-42 94q-38-37-23-84l36-19 42 26 10 77z" fill="#843941" stroke="#dfc38d" stroke-width="7"/><path d="M-19-4q0-37 32-36 30 2 32 33L30 9-15 8Z" fill="#ceb78d" stroke="#43342d" stroke-width="6"/><path d="M-13-8h42" stroke="#421e2b" stroke-width="12"/><path d="M-52 99h91" stroke="#251c1c" stroke-width="14"/></g>
+ <!-- Een vloek vliegt precies van de ene vijand naar de andere -->
+ <path d="M359 300Q480 205 602 300" fill="none" stroke="url(#curse)" stroke-width="13" stroke-linecap="round" filter="url(#glow)"/>
+ <path d="M583 277 620 300l-38 24" fill="none" stroke="#e7cc8e" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+ <path d="M468 241q12-22 24 0 12-22 24 0 0 27-24 43-24-16-24-43Z" fill="#c44c89" stroke="#ffdfa0" stroke-width="5" filter="url(#glow)"/>
+ <circle cx="480" cy="296" r="7" fill="#fff0c4"/><circle cx="508" cy="284" r="5" fill="#ffbbd3"/><circle cx="454" cy="279" r="5" fill="#c8ebff"/>
+ <rect width="960" height="540" fill="url(#grain)"/><rect x="10" y="10" width="940" height="520" rx="28" fill="none" stroke="#d8a6a1" stroke-opacity=".9" stroke-width="8"/><rect x="23" y="23" width="914" height="494" rx="21" fill="none" stroke="#23192b" stroke-opacity=".9" stroke-width="3"/>
+</svg>

@@ -6,7 +6,7 @@ const fixture = readFileSync(new URL('../fixtures/koningsjacht-preview.html', im
 const helper = readFileSync(new URL('../../kaartspel-hulp.js', import.meta.url), 'utf8')
 
 assert.match(fixture, /ruimteschip-futuristisch/)
-assert.match(fixture, /scene:\s*'ruimteschip-futuristisch'/)
+assert.match(fixture, /scene:\s*'modern',\s*modernInterior:\s*'futuristic'/)
 assert.match(helper, /\.kt-tafel\.kj\.kj-holografisch \.kt-hand \.kt-kaart/)
 assert.match(helper, /\.kt-tafel\.kj\.kj-holografisch \.kt-stapel-groep/)
 

@@ -12,7 +12,7 @@
   <main id="spelInhoud"></main>
   <span class="testlabel">LOKAAL TESTVOORBEELD</span>
   <script type="module">
-    import { start } from './koningsjacht-ui.js?v=49'
+    import { start } from './koningsjacht-ui.js?v=50'
     const { maakKoningsjachtScoreService } = await import('./koningsjacht-scores.js?v=1')
     const memory = new Map()
     const scoreService = maakKoningsjachtScoreService({ storage: { getItem: k => memory.get(k), setItem: (k,v) => memory.set(k,v) } })
@@ -20,7 +20,7 @@
     // De hologram-preview start direct in het futuristische schip. Dit wijzigt alleen de lokale fixture.
     if (params.get('voorbeeld') === 'ruimteschip-futuristisch') {
       const bewaard = JSON.parse(localStorage.getItem('fibro_koningsjacht_instellingen') || '{}')
-      localStorage.setItem('fibro_koningsjacht_instellingen', JSON.stringify({ ...bewaard, scene: 'ruimteschip-futuristisch' }))
+      localStorage.setItem('fibro_koningsjacht_instellingen', JSON.stringify({ ...bewaard, scene: 'modern', modernInterior: 'futuristic' }))
       document.querySelector('.testlabel').textContent = 'LOKAAL TESTVOORBEELD · FUTURISTISCH RUIMTESCHIP'
     }
     // Direct speelbaar voorbeeld van de balk; uitsluitend op deze testpagina.

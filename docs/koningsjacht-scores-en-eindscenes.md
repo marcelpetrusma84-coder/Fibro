@@ -14,6 +14,8 @@ Vijf actieve illustraties van hetzelfde tafereel vormen de tussenstanden 0, 4, 6
 
 Bekijk `tests/fixtures/koningsjacht-eindscene-preview.html` met de slider 0–12. Dit voorbeeld schrijft geen scores en maakt geen netwerkverbinding met Supabase.
 
+Er zijn drie complete reeksen van elk vijf beelden. De bestaande reeks met het grote kasteel hoort bij een partij die met 0 narren begon. Bij 2 narren staat hetzelfde kasteel kleiner op de heuvel; bij 4 narren nog kleiner. De gekozen reeks komt van het aantal narren bij de start van de partij (`narren + narrenGebruikt`), zodat het gebruik van een nar de scène niet plotseling laat verspringen. De gezamenlijke stand met 1 nar gebruikt de reeks van 2 narren. Elke reeks behoudt de voortgang van 0 naar 12 wachters; in de eerste drie beelden blijft de koning zwaardloos en ingetogen. De preview laat alle drie de reeksen kiezen.
+
 ## Spelfeedback
 
 De vier immuniteitssymbolen zijn groter met reliëf en contrastrand. Alleen Koningsjacht schakelt de variabele stapelhoogte en de vloeiend oplopende én aflopende Taveerne-teller in; +/− maakt de richting duidelijk. Bij een vijandelijke aanval blijft het schild staan totdat de drie klauwhalen zijn opgevangen. Bij gedeeltelijke bescherming vermeldt de melding de resterende schade. Zonder schild gebruikt de aanval de bestaande klauwhalen.

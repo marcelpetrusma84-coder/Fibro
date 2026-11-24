@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <base href="../../">
+  <title>TEST · Koningsjacht in het ruimteschip</title>
+  <style>
+    *{box-sizing:border-box}html,body{height:100%;margin:0}body{display:flex;flex-direction:column;background:#09131d;color:#fff;font:14px system-ui}
+    header{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;padding:10px;background:linear-gradient(115deg,#132333,#07101a);border-bottom:1px solid #45bce977;box-shadow:0 5px 22px #0009;z-index:3}
+    header strong{font-size:12px;letter-spacing:.06em;color:#bdeeff}header label{display:flex;align-items:center;gap:7px}header select{border:1px solid #63c9e8aa;border-radius:8px;padding:8px 10px;background:#101c29;color:#fff;font:inherit;min-height:38px}
+    #tafel{flex:1;min-height:0}.kt-tafel .kt-status{font-size:12px!important}.kt-tafel .kt-zetel-ik{display:none}.kt-tafel .kt-ander{min-height:100px}
+    @media(max-width:600px){header{justify-content:stretch}header label{flex:1 1 100%;justify-content:space-between}header select{min-width:0;max-width:65%}}
+  </style>
+</head>
+<body>
+  <header>
+    <strong>TEST · GEEN ECHTE PARTIJ</strong>
+    <label for="scene">Tafelsfeer <select id="scene"><option value="modern" selected>Modern</option><option value="standaard">Standaard</option><option value="middeleeuws">Middeleeuws</option></select></label>
+    <label for="interior">Moderne tafel <select id="interior"><option value="none">Epoxytafel</option><option value="old">Inside · oud ruimteschip</option><option value="futuristic" selected>Inside · futuristisch</option></select></label>
+  </header>
+  <main id="tafel"></main>
+  <script type="module">
+    import { maakKaartTafel } from './kaartspel-hulp.js?v=17'
+    import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=14'
+    const hand=['k8','k2','s2','sA','h9','s5','h8','s9']
+    const tafel=maakKaartTafel(document.getElementById('tafel'),{
+      solo:true,stijl:'modern',ondergrond:'hout',leesbareSelectie:true,naamAnder:'Voorbeeldtafel',groep:()=> 'alles',
+      magSpelen:ids=>ids.length>0,onSelectie:ids=>tafel.status(ids.length?'Gekozen: '+ids.join(', ')+' · test de achtergronden via de keuzelijsten hierboven.':'Klik of tik op een kaart om hem te kiezen.'),onSpeel:()=>{}
+    })
+    tafel.element.classList.add('kj','kj-modern')
+    tafel.toon({hand,mijnBeurt:true,speelbaar:hand,anderAantal:0,stapelAantal:32,afleg:[],status:'Test de ruimteschipachtergronden; kaartbediening blijft actief.'})
+    tafel.knoppen([{naam:'aanval',tekst:'Aanvallen',klik:()=>tafel.status('Dit is een preview; er wordt geen echte zet gedaan.')},{naam:'pas',tekst:'Passen',klik:()=>tafel.status('Dit is een preview; er wordt geen echte zet gedaan.')}])
+    const scene=maakKoningsjachtScene(tafel.element,{scene:'modern',modernInterior:'futuristic',beweging:true,flikkeren:true})
+    function sfeer(){
+      const naam=document.getElementById('scene').value
+      const interieur=document.getElementById('interior').value
+      tafel.element.classList.toggle('kj-sfeer',naam==='middeleeuws')
+      tafel.element.classList.toggle('kj-modern',naam==='modern')
+      tafel.element.classList.toggle('kj-spaceship-interior',naam==='modern'&&interieur!=='none')
+      tafel.zetKaartStijl(naam==='modern'?'modern':'perkament')
+      scene.update({scene:naam,modernInterior:interieur,beweging:true})
+    }
+    document.getElementById('scene').addEventListener('change',sfeer)
+    document.getElementById('interior').addEventListener('change',sfeer)
+    addEventListener('pagehide',()=>scene.stop(),{once:true})
+  </script>
+</body>
+</html>

@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=145"></script>
+<script src="taal.js?v=147"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -481,6 +481,7 @@ window.veiligeUrl = function(v){
   import { isOnline as vriendIsOnline, opOnline } from './paren.js?v=2'
   import { volgOnline, isVriendOnline as stipOnline, bewaarServerStand } from './onlinestip.js?v=2' // v274: nauwkeuriger bolletje
   import { maakChatOnlineGolf, maakOnlineOvergang } from './chat-onlinegolf.js?v=2'
+  import { startLaatste, noteerLaatste, noteerUitBerichten, sorteerVrienden } from './chatvolgorde.js?v=1' // v275: online eerst, dan het laatste bericht
   import { smileysNaarEmoji, koppelSmileys } from './smileys.js?v=1' // 17 nov 2026: :) wordt 🙂
   koppelSmileys(document.getElementById('msgInput'))
   import { startHeartbeat } from './heartbeat.js?v=118'
@@ -928,13 +929,39 @@ window.veiligeUrl = function(v){
       }
       el.classList.toggle('is-online', online.has(el.dataset.vid))
     })
-    // Basisvolgorde = zoals de lijst geladen werd; online eerst
-    const basis = (window._vriendenData || []).map(v => String(v.id))
-    const plek = el => { const i = basis.indexOf(el.dataset.vid); return i < 0 ? 9999 : i }
-    const gesorteerd = [...rijen].sort((a, b) =>
-      (b.classList.contains('is-online') ? 1 : 0) - (a.classList.contains('is-online') ? 1 : 0) || plek(a) - plek(b))
-    if (gesorteerd.some((el, i) => el !== rijen[i])) gesorteerd.forEach(el => container.appendChild(el))
+    herschikLijst()
   }
+
+  // v275 (23 nov 2026, Marcel): online bovenaan; daaronder (en binnen online) wie het laatst een bericht wisselde
+  // (chatvolgorde.js). Rijen worden alleen verplaatst, zodat klikken en ongelezen-bolletjes blijven werken.
+  function herschikLijst() {
+    const container = document.getElementById('vriendenLijst')
+    if (!container) return
+    const rijen = [...container.querySelectorAll('.vriend-item[data-vid]')]
+    if (rijen.length < 2) return
+    const online = new Set(rijen.filter(el => el.classList.contains('is-online')).map(el => el.dataset.vid))
+    const volgorde = sorteerVrienden(rijen.map(el => el.dataset.vid), { online, basis: (window._vriendenData || []).map(v => String(v.id)) })
+    if (volgorde.every((id, i) => id === rijen[i].dataset.vid)) return
+    const perId = new Map(rijen.map(el => [el.dataset.vid, el]))
+    volgorde.forEach(id => container.appendChild(perId.get(id)))
+  }
+  // Een bericht met deze vriend (verstuurd of ontvangen): hij gaat naar boven in zijn groep.
+  const bijBericht = (vriendId, tijd) => { if (noteerLaatste(vriendId, tijd)) herschikLijst() }
+  // Per vriend de tijd van het laatste bericht van de server (alleen afzender, ontvanger en tijd; de berichten zelf blijven dicht).
+  async function laadLaatsteBerichten() {
+    if (!huidigeUser || navigator.onLine === false) return
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('sender_id, receiver_id, created_at')
+        .or(`sender_id.eq.${huidigeUser.id},receiver_id.eq.${huidigeUser.id}`)
+        .order('created_at', { ascending: false })
+        .limit(500)
+      if (!error && Array.isArray(data) && noteerUitBerichten(data, huidigeUser.id)) herschikLijst()
+    } catch (e) { console.warn('[chat] laatste berichten ophalen mislukt', e) }
+  }
+  // Een nieuw bericht van een vriend terwijl je de lijst ziet (ongelezen.js geeft het seintje door)
+  document.addEventListener('fibro-nieuw-bericht', e => bijBericht(e.detail && e.detail.van))
 
   // v274: het bolletje verandert (live verbinding of een nieuw seintje): opnieuw zetten uit wat we weten
   const vriendIdsOnline = () => (window._vriendenData || []).map(v => v.id)
@@ -1089,9 +1116,11 @@ window.veiligeUrl = function(v){
       })
     })
     pasFotosToe() // v134
+    herschikLijst() // v275: het laatste bericht eerst (online volgt zodra de stand bekend is)
   }
 
   async function laadVrienden() {
+    startLaatste(huidigeUser.id) // v275: de tijden van de vorige keer, zodat ook de bewaarde lijst al goed staat
     const bewaard = leesVriendenCache()
     if (bewaard && !window._vriendenData) { window._vriendenData = bewaard; tekenVriendenLijst(bewaard); laadVriendFotos(bewaard.map(v => ({ id: v.id }))) }
 
@@ -1140,6 +1169,7 @@ window.veiligeUrl = function(v){
     }
     if (!profielFout) bewaarServerStand(data) // v274
     werkOnlineBij(data)
+    laadLaatsteBerichten() // v275: op de achtergrond; de lijst springt daarna op volgorde
     startOnlineTimer()
     if (huidigeUser) volgOnline(huidigeUser.id, vriendIdsOnline, werkOnlineUitStand) // v274: live bijwerken
     setTimeout(() => bewaarAlleChats(data), 5000) // v128
@@ -1963,6 +1993,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
       slaBerichtCacheOp(data.id, pak > 0 ? tekst.slice(0, pak) : tekst)
       if (pak > 0) { const fx = leesFx(tekst.slice(10, pak)); serverStickerVerstuurd(vriendId, fx.code, fx.versie) }
       if (pling) stuurPling(data.id)
+      bijBericht(vriendId) // v275: deze vriend naar boven in de lijst
       return true
     } catch (e) { console.error('Versturen mislukt:', e); return false }
   }
@@ -2612,6 +2643,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
           (msg.sender_id === geselecteerdeVriend?.id && msg.receiver_id === huidigeUser.id)
         )
         if (!isRelevant) return
+        bijBericht(msg.sender_id === huidigeUser.id ? msg.receiver_id : msg.sender_id, msg.created_at) // v275
         if (alGetoond(msg.id)) return
         if (msg.id != null) inBehandeling.add(String(msg.id))
 
@@ -3004,7 +3036,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     endlessrunner: './runner-gunner-ui.js?v=149',
     pacman: './ecto-ui.js?v=178',
     pinball: './twin-snakes-ui.js?v=150',
-    shmup: './neon-raiders-ui.js?v=227'
+    shmup: './neon-raiders-ui.js?v=228'
   }
   const _alGeladen = {}
   function laadSpelAlvast(spelType) {
@@ -4130,7 +4162,7 @@ async function startBlockIt() {
   }
 
   async function startNeonRaiders() {
-    const m = await laadModule('./neon-raiders-ui.js?v=227')
+    const m = await laadModule('./neon-raiders-ui.js?v=228')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'shmup' && !spelGestopt })
   }
 

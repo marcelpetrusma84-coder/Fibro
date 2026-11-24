@@ -10,8 +10,14 @@ const ACHTERGRONDEN = {
   standaard: 'wood-table.png',
   modern: 'modern-epoxy-table.png',
   middeleeuws: 'medieval-scene.png',
-  'ruimteschip-oud': 'spaceship-interior.png',
-  'ruimteschip-futuristisch': 'spaceship-interior-futuristic.png'
+  oudRuimteschip: 'spaceship-interior.png',
+  futuristischRuimteschip: 'spaceship-interior-futuristic.png'
+}
+const MULTIPLAYER_ACHTERGRONDEN = {
+  samen: 'medieval-multiplayer-samen.jpg',
+  wedstrijd: 'medieval-multiplayer-wedstrijd.jpg',
+  duel: 'medieval-multiplayer-duel.jpg',
+  beleg: 'medieval-multiplayer-beleg.jpg'
 }
 
 // Middeleeuws: een houten legbak met smeedijzeren beslag; het licht komt van
@@ -254,11 +260,19 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
     if (klaar) return
     const wasBeweging = opties.beweging
     opties = { ...opties, ...nieuw }
-    const gekozenScene = Object.hasOwn(ACHTERGRONDEN, opties.scene)
-      ? opties.scene : (opties.middeleeuws ? 'middeleeuws' : 'standaard')
-    const achtergrond = new URL('./assets/koningsjacht/' + ACHTERGRONDEN[gekozenScene], import.meta.url).href
+    const oudRuimteschip = opties.modernInterior === 'old' || opties.scene === 'ruimteschip-oud'
+    const futuristischRuimteschip = opties.modernInterior === 'futuristic' || opties.scene === 'ruimteschip-futuristisch'
+    const gekozenScene = ['standaard', 'modern', 'middeleeuws'].includes(opties.scene)
+      ? opties.scene : (oudRuimteschip || futuristischRuimteschip ? 'modern' : (opties.middeleeuws ? 'middeleeuws' : 'standaard'))
+    const sceneBestand = ACHTERGRONDEN[gekozenScene]
+    const multiplayerBestand = opties.multiplayer === true
+      ? MULTIPLAYER_ACHTERGRONDEN[opties.multiplayerMode] : null
+    const interieurBestand = gekozenScene === 'modern' && oudRuimteschip ? ACHTERGRONDEN.oudRuimteschip
+      : gekozenScene === 'modern' && futuristischRuimteschip ? ACHTERGRONDEN.futuristischRuimteschip : null
+    const achtergrond = new URL('./assets/koningsjacht/' + (multiplayerBestand || interieurBestand || sceneBestand || ACHTERGRONDEN.standaard), import.meta.url).href
     const reserve = new URL('./kaarten/hout.webp', import.meta.url).href
     decorLayer.dataset.scene = gekozenScene
+    decorLayer.dataset.speltype = opties.multiplayer === true ? opties.multiplayerMode || 'samen' : ''
     decorLayer.style.backgroundImage = `url("${achtergrond}"), url("${reserve}")`
     const andere = opties.anderBier && typeof opties.anderBier === 'object' && !Array.isArray(opties.anderBier) ? opties.anderBier : {}
     function toonPul(pul, zichtbaar, inhoud, oorRechts, naam, ronde) {

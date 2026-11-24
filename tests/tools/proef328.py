@@ -2,7 +2,7 @@
 #  Voor login.html en invite.html:
 #  A. de pagina vult zelf een gebruikersnaam in, zonder paginafouten (invite.html: na een geldige uitnodiging)
 #  B. de generatorknop geeft steeds andere namen, uit de nieuwe lijsten
-#  C. "Zelf samenstellen" opent drie keuzelijstjes; een keuze verandert de naam; het veld blijft op slot
+#  C. "Zelf samenstellen" opent drie keuzelijstjes naast elkaar; een keuze verandert de naam; het veld blijft op slot
 #  D. 🔄 bij een stukje verandert alleen dat stukje; "Geen" einde mag; Klaar sluit het paneel
 #  E. na de generatorknop staan de keuzelijstjes op de nieuwe naam
 #  F. in het Engels staan de knop en de groepjes in het Engels (de woorden zelf niet)
@@ -57,6 +57,11 @@ try:
                     check(pg.is_visible('#naambouwer'), naam + ' C: paneel Zelf samenstellen open')
                     check(pg.get_attribute('#' + zelf, 'aria-expanded') == 'true', naam + ' C: knop zegt dat het paneel open is')
                     check(pg.locator('#naambouwer select').count() == 3, naam + ' C: drie keuzelijstjes')
+                    vakken = pg.eval_on_selector_all('#naambouwer select', 'ss => ss.map(s => { const r = s.getBoundingClientRect(); return [Math.round(r.top), Math.round(r.left), Math.round(r.right)] })')
+                    check(len(set(v[0] for v in vakken)) == 1 and vakken[0][2] <= vakken[1][1] and vakken[1][2] <= vakken[2][1],
+                          naam + ' C: begin, midden en einde staan naast elkaar (%s)' % vakken)
+                    breed = pg.evaluate("() => [document.documentElement.scrollWidth, innerWidth]")
+                    check(breed[0] <= breed[1], naam + ' C: paneel past op een telefoon, niets steekt uit (%s)' % breed)
                     groepen = pg.eval_on_selector_all('#naambouwer select[data-deel=midden] optgroup', 'gs => gs.map(g => g.label)')
                     check(groepen == ['Dieren', 'Fantasie', 'Eten', 'Dingen en geluiden'], naam + ' C: groepjes bij dier of woord (%s)' % groepen)
                     pg.select_option('#naambouwer select[data-deel=begin]', 'Gekke')

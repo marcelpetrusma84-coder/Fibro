@@ -1,4 +1,4 @@
-// naambouwer.js (v1, 24 nov 2026): de gebruikersnaam-generator bij registreren (login.html en invite.html).
+// naambouwer.js (v2, 24 nov 2026; v2: begin, midden en einde naast elkaar): de gebruikersnaam-generator bij registreren (login.html en invite.html).
 //
 // Een gebruikersnaam bestaat uit drie stukjes: een begin (Turbo, Gekke, Sleepy...), een dier of grappig woord
 // (Kikker, Stroopwafel, Badeend...) en een einde (42, Pro, Koning...). Voorheen stonden er drie korte lijstjes
@@ -130,11 +130,13 @@ function zetStijl() {
     .naambouwer { margin-top:10px; padding:12px; border:1px solid var(--border, rgba(192,132,252,.35)); border-radius:12px; background:rgba(192,132,252,.07); }
     .naambouwer[hidden] { display:none; }
     .naambouwer-uitleg { margin:0 0 10px; font-size:13px; line-height:1.4; opacity:.85; }
-    .naambouwer-rij { display:flex; align-items:flex-end; gap:8px; margin-bottom:10px; }
-    .naambouwer-rij label { flex:1; display:flex; flex-direction:column; gap:4px; font-size:12px; font-weight:600; min-width:0; }
-    .naambouwer-rij select { width:100%; min-height:44px; border-radius:10px; border:1.5px solid var(--border, #e2d4ef); background:#faf7fd; color:var(--text, #2a1240); font:inherit; font-size:16px; font-weight:600; padding:8px 10px; }
+    .naambouwer-rijen { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px; margin-bottom:10px; }
+    .naambouwer-rij { display:flex; flex-direction:column; gap:6px; min-width:0; }
+    .naambouwer-rij label { display:flex; flex-direction:column; gap:4px; font-size:12px; font-weight:600; min-width:0; }
+    .naambouwer-rij label span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .naambouwer-rij select { width:100%; min-width:0; min-height:44px; border-radius:10px; border:1.5px solid var(--border, #e2d4ef); background:#faf7fd; color:var(--text, #2a1240); font:inherit; font-size:16px; font-weight:600; padding:8px 3px; text-overflow:ellipsis; -webkit-appearance:none; appearance:none; text-align:center; text-align-last:center; cursor:pointer; }
     .naambouwer-rij select:focus { outline:none; box-shadow:0 0 0 4px rgba(139,63,209,.15); }
-    .naambouwer-schud { flex:0 0 44px; width:44px; height:44px; border-radius:10px; border:1px solid var(--accent, #c084fc); background:transparent; color:var(--accent, #c084fc); font-size:18px; cursor:pointer; }
+    .naambouwer-schud { width:100%; height:40px; border-radius:10px; border:1px solid var(--accent, #c084fc); background:transparent; color:var(--accent, #c084fc); font-size:18px; cursor:pointer; }
     .naambouwer-schud:active { background:var(--accent, #c084fc); color:#1a0a2e; }
     .naambouwer-klaar { display:block; width:100%; min-height:44px; border:none; border-radius:22px; background:#8b3fd1; color:#fff; font:inherit; font-weight:700; font-size:15px; cursor:pointer; }
     .naam-zelf { margin-top:6px; }`
@@ -188,6 +190,10 @@ export function maakNaamBouwer({ invoer, knopZelf, rnd = Math.random } = {}) {
       ['midden', 'Dier of woord', (s) => vulGroepen(s), () => kies(MIDDEN_ALLES, rnd)],
       ['einde', 'Einde', (s) => vulKeuze(s, EINDE, true), () => kies(EINDE, rnd)]
     ]
+    // v2: begin, midden en einde naast elkaar (op verzoek van Marcel), elk met de 🔄 eronder
+    const naastElkaar = document.createElement('div')
+    naastElkaar.className = 'naambouwer-rijen'
+    paneel.append(naastElkaar)
     for (const [sleutel, tekst, vul, schud] of rijen) {
       const rij = document.createElement('div')
       rij.className = 'naambouwer-rij'
@@ -207,7 +213,7 @@ export function maakNaamBouwer({ invoer, knopZelf, rnd = Math.random } = {}) {
       knop.setAttribute('aria-label', t('Willekeurig') + ': ' + t(tekst))
       knop.addEventListener('click', () => { delen = { ...delen, [sleutel]: schud() }; toon(true) })
       rij.append(label, knop)
-      paneel.append(rij)
+      naastElkaar.append(rij)
       keuzes[sleutel] = select
     }
     const klaar = document.createElement('button')

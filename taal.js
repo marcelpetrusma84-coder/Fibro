@@ -1,3 +1,4 @@
+// v148 (24 nov 2026): cacheversie na samenvoegen met de nieuwste main.
 // v147 (24 nov 2026): taal-en.js?v=147 (Koningsjacht-scorecategorieën, ruimteschip en Studio).
 // v146 (24 nov 2026): taal-en.js?v=146 (Koningsjacht-scorecategorieën vertalen).
 // v145 (23 nov 2026): taal-en.js?v=145 (bronvermelding van eigen stickergeluiden in de Store).

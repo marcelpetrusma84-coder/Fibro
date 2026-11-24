@@ -1,7 +1,7 @@
 # proef328 (24 nov 2026): veel meer gebruikersnamen en "Zelf samenstellen" (naambouwer.js) bij registreren.
 #  Voor login.html en invite.html:
 #  A. de pagina vult zelf een gebruikersnaam in, zonder paginafouten (invite.html: na een geldige uitnodiging)
-#  B. de generatorknop geeft steeds andere namen, uit de nieuwe lijsten
+#  B. de generatorknop geeft steeds andere namen, uit de nieuwe lijsten, zonder hoofdletters
 #  C. "Zelf samenstellen" opent drie keuzelijstjes naast elkaar; een keuze verandert de naam; het veld blijft op slot
 #  D. 🔄 bij een stukje verandert alleen dat stukje; "Geen" einde mag; Klaar sluit het paneel
 #  E. na de generatorknop staan de keuzelijstjes op de nieuwe naam
@@ -52,6 +52,7 @@ try:
                     for _ in range(12):
                         pg.evaluate("() => window.nieuweNaam()"); gezien.add(waarde())
                     check(len(gezien) >= 10, naam + ' B: generator geeft steeds andere namen (%d van 12)' % len(gezien))
+                    check(all(n == n.lower() for n in gezien), naam + ' B: zonder hoofdletters (%s)' % sorted(gezien)[:3])
                     # ── C ──
                     pg.click('#' + zelf)
                     check(pg.is_visible('#naambouwer'), naam + ' C: paneel Zelf samenstellen open')
@@ -64,19 +65,19 @@ try:
                     check(breed[0] <= breed[1], naam + ' C: paneel past op een telefoon, niets steekt uit (%s)' % breed)
                     groepen = pg.eval_on_selector_all('#naambouwer select[data-deel=midden] optgroup', 'gs => gs.map(g => g.label)')
                     check(groepen == ['Dieren', 'Fantasie', 'Eten', 'Dingen en geluiden'], naam + ' C: groepjes bij dier of woord (%s)' % groepen)
-                    pg.select_option('#naambouwer select[data-deel=begin]', 'Silly')
-                    pg.select_option('#naambouwer select[data-deel=midden]', 'Waffle')
-                    pg.select_option('#naambouwer select[data-deel=einde]', 'King')
-                    check(waarde() == 'SillyWaffleKing', naam + ' C: zelf samengesteld: %s' % waarde())
+                    pg.select_option('#naambouwer select[data-deel=begin]', 'silly')
+                    pg.select_option('#naambouwer select[data-deel=midden]', 'waffle')
+                    pg.select_option('#naambouwer select[data-deel=einde]', 'king')
+                    check(waarde() == 'sillywaffleking', naam + ' C: zelf samengesteld: %s' % waarde())
                     check(pg.evaluate("id => document.getElementById(id).readOnly", veld), naam + ' C: naamveld blijft op slot')
                     # ── D ──
                     for _ in range(8):
                         pg.click('#naambouwer button.naambouwer-schud[data-deel=midden]')
-                        if waarde() != 'SillyWaffleKing': break
+                        if waarde() != 'sillywaffleking': break
                     w = waarde()
-                    check(w.startswith('Silly') and w.endswith('King') and w != 'SillyWaffleKing', naam + ' D: 🔄 verandert alleen het middelste stukje (%s)' % w)
+                    check(w.startswith('silly') and w.endswith('king') and w != 'sillywaffleking', naam + ' D: 🔄 verandert alleen het middelste stukje (%s)' % w)
                     pg.select_option('#naambouwer select[data-deel=einde]', '')
-                    check(not re.search(r'King$', waarde()) and waarde().startswith('Silly'), naam + ' D: zonder einde: %s' % waarde())
+                    check(not re.search(r'king$', waarde()) and waarde().startswith('silly'), naam + ' D: zonder einde: %s' % waarde())
                     pg.click('#naambouwer .naambouwer-klaar')
                     check(not pg.is_visible('#naambouwer'), naam + ' D: Klaar sluit het paneel')
                     # ── E ──
@@ -90,7 +91,7 @@ try:
                     pg.click('#' + zelf)
                     groepen = pg.eval_on_selector_all('#naambouwer select[data-deel=midden] optgroup', 'gs => gs.map(g => g.label)')
                     check(groepen == ['Animals', 'Fantasy', 'Food', 'Things and sounds'], naam + ' F: groepjes in het Engels (%s)' % groepen)
-                    check(pg.locator('#naambouwer select[data-deel=midden] option[value=Frog]').count() == 1, naam + ' F: de woorden zelf blijven zoals ze zijn')
+                    check(pg.locator('#naambouwer select[data-deel=midden] option[value=frog]').count() == 1, naam + ' F: de woorden zelf blijven zoals ze zijn')
                 check(not fouten, naam + ': geen paginafouten (%s)' % fouten)
                 ctx.close()
         b.close()

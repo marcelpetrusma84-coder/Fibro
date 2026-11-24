@@ -7,8 +7,8 @@ import { BEGIN, MIDDEN, MIDDEN_ALLES, EINDE, genereerNaam, willekeurigeDelen, pl
 
 const lees = f => readFileSync(new URL('../../' + f, import.meta.url), 'utf8')
 
-for (const w of [...BEGIN, ...MIDDEN_ALLES]) assert.match(w, /^[A-Za-z]+$/, 'alleen letters: ' + w)
-for (const w of EINDE) assert.match(w, /^[A-Za-z0-9]+$/, 'einde: letters of cijfers: ' + w)
+for (const w of [...BEGIN, ...MIDDEN_ALLES]) assert.match(w, /^[a-z]+$/, 'alleen kleine letters (v4: zonder hoofdletters): ' + w)
+for (const w of EINDE) assert.match(w, /^[a-z0-9]+$/, 'einde: kleine letters of cijfers: ' + w)
 for (const [naam, lijst] of [['BEGIN', BEGIN], ['EINDE', EINDE], ['MIDDEN', Object.values(MIDDEN).flat()]]) {
   assert.equal(new Set(lijst).size, lijst.length, naam + ': geen dubbele woorden')
 }
@@ -16,11 +16,11 @@ assert.ok(BEGIN.length >= 150, 'veel meer begin-woorden (' + BEGIN.length + ')')
 assert.ok(MIDDEN.Dieren.length >= 150, 'veel meer dieren (' + MIDDEN.Dieren.length + ')')
 assert.ok(MIDDEN_ALLES.length >= 350, 'veel meer dieren en grappige woorden (' + MIDDEN_ALLES.length + ')')
 assert.ok(EINDE.length >= 80, 'meer einden (' + EINDE.length + ')')
-for (const w of ['Frog', 'Capybara', 'Blobfish', 'Toaster', 'Burrito', 'Raccoon', 'Penguin']) assert.ok(MIDDEN_ALLES.includes(w), 'Engels woord: ' + w)
+for (const w of ['frog', 'capybara', 'blobfish', 'toaster', 'burrito', 'raccoon', 'penguin']) assert.ok(MIDDEN_ALLES.includes(w), 'Engels woord: ' + w)
 // v3: alle woorden Engels (op verzoek van Marcel): de Nederlandse woorden zijn weg
-for (const nl of ['Kikker', 'Wasbeer', 'Pinguin', 'Eekhoorn', 'Stroopwafel', 'Badeend', 'Luiaard']) assert.ok(!MIDDEN_ALLES.includes(nl), 'geen Nederlands meer: ' + nl)
-for (const nl of ['Gekke', 'Vrolijke', 'Knotsgekke', 'Stuiter']) assert.ok(!BEGIN.includes(nl), 'geen Nederlands begin meer: ' + nl)
-for (const nl of ['Koning', 'Kampioen', 'Joepie', 'Woef']) assert.ok(!EINDE.includes(nl), 'geen Nederlands einde meer: ' + nl)
+for (const nl of ['kikker', 'wasbeer', 'pinguin', 'eekhoorn', 'stroopwafel', 'badeend', 'luiaard']) assert.ok(!MIDDEN_ALLES.includes(nl), 'geen Nederlands meer: ' + nl)
+for (const nl of ['gekke', 'vrolijke', 'knotsgekke', 'stuiter']) assert.ok(!BEGIN.includes(nl), 'geen Nederlands begin meer: ' + nl)
+for (const nl of ['koning', 'kampioen', 'joepie', 'woef']) assert.ok(!EINDE.includes(nl), 'geen Nederlands einde meer: ' + nl)
 const langste = Math.max(...[BEGIN, MIDDEN_ALLES, EINDE].map(l => Math.max(...l.map(w => w.length)))) * 3
 assert.ok(langste <= 64, 'een samengestelde naam past altijd in een e-mailadres')
 assert.deepEqual(Object.keys(MIDDEN), ['Dieren', 'Fantasie', 'Eten', 'Dingen en geluiden'], 'groepjes in het keuzelijstje')
@@ -33,8 +33,8 @@ for (let i = 0; i < 3000; i++) {
 const namen = new Set(Array.from({ length: 2000 }, () => genereerNaam()))
 assert.ok(namen.size > 1950, 'veel verschillende namen (' + namen.size + ' van 2000)')
 assert.equal(genereerNaam(() => 0), BEGIN[0] + MIDDEN_ALLES[0] + EINDE[0], 'rnd is te vervangen')
-assert.ok(isGeldigeDelen({ begin: 'Crazy', midden: 'Pancake', einde: '' }), 'zonder einde mag ook')
-assert.ok(!isGeldigeDelen({ begin: 'Crazy', midden: 'Sanne', einde: '' }), 'een eigen woord mag niet')
+assert.ok(isGeldigeDelen({ begin: 'crazy', midden: 'pancake', einde: '' }), 'zonder einde mag ook')
+assert.ok(!isGeldigeDelen({ begin: 'crazy', midden: 'sanne', einde: '' }), 'een eigen woord mag niet')
 
 for (const [pagina, veld, zelf] of [['login.html', 'reg-username', 'reg-naam-zelf'], ['invite.html', 'gebruikersnaam', 'naam-zelf']]) {
   const s = lees(pagina)

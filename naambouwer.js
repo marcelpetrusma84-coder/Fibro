@@ -1,4 +1,5 @@
-// naambouwer.js (v3, 24 nov 2026; v2: begin, midden en einde naast elkaar; v3: alle woorden Engels): de gebruikersnaam-generator bij registreren (login.html en invite.html).
+// naambouwer.js (v4, 24 nov 2026; v2: begin, midden en einde naast elkaar; v3: alle woorden Engels;
+// v4: zonder hoofdletters, dus crazyfrogking in plaats van CrazyFrogKing): de gebruikersnaam-generator bij registreren (login.html en invite.html).
 //
 // Een gebruikersnaam bestaat uit drie stukjes: een begin (Turbo, Crazy, Sleepy...), een dier of grappig woord
 // (Frog, Pancake, RubberDuck...) en een einde (42, Pro, King...). Sinds v3 zijn alle woorden Engels (op verzoek
@@ -9,7 +10,8 @@
 // Het naamveld blijft op slot (readonly). Je kiest alleen uit deze lijstjes, zodat niemand per ongeluk zijn echte
 // naam of iets onaardigs als gebruikersnaam neemt. Je echte naam vul je in bij "Je eigen naam" (eigennaam.js).
 //
-// Alle woorden: alleen letters a-z en A-Z (geen spaties, geen ë/ï): de gebruikersnaam wordt ook het (nep-)
+// Alle woorden: alleen kleine letters a-z (v4: zonder hoofdletters, op verzoek van Marcel; in de lijsten hieronder
+// staan ze nog met hoofdletters, zodat ze makkelijk te lezen zijn). Geen spaties, geen ë/ï: de gebruikersnaam wordt ook het (nep-)
 // e-mailadres <naam>@fibro.internal bij Supabase. De einden mogen ook cijfers hebben.
 
 export const BEGIN = [
@@ -30,7 +32,7 @@ export const BEGIN = [
   'Jumping', 'Rolling', 'Snoring', 'Bouncing', 'Smarty', 'Massive', 'Teeny', 'Blazing', 'Joyful', 'Zigzag',
   'Crackle', 'Chatty', 'Cuddly', 'Cutie', 'Strong', 'Wise', 'Rapid', 'Turbo', 'Frozen', 'Fiery', 'Electric',
   'Velvet', 'Cranky', 'Spunky', 'Snazzy', 'Groovy', 'Dreamy', 'Breezy', 'Misty', 'Dusty', 'Muddy', 'Sandy'
-].filter((w, i, a) => a.indexOf(w) === i)
+].map(w => w.toLowerCase()).filter((w, i, a) => a.indexOf(w) === i)
 
 // Het middelste stukje, in groepjes (de groepjes zie je in het keuzelijstje bij "Zelf samenstellen").
 // Een woord staat maar in één groepje (komt het twee keer voor, dan telt het eerste).
@@ -88,7 +90,7 @@ const MIDDEN_RUW = {
 }
 const gezien = new Set()
 export const MIDDEN = Object.fromEntries(Object.entries(MIDDEN_RUW).map(([groep, woorden]) =>
-  [groep, woorden.filter(w => !gezien.has(w) && gezien.add(w))]))
+  [groep, woorden.map(w => w.toLowerCase()).filter(w => !gezien.has(w) && gezien.add(w))]))
 export const MIDDEN_ALLES = [...gezien]
 
 export const EINDE = [
@@ -100,7 +102,7 @@ export const EINDE = [
   'Fan', 'Club', 'Crew', 'Squad', 'Gang', 'Party', 'Power', 'Force', 'Speed', 'Blitz', 'Flash', 'Go', 'Yeah',
   'Wow', 'Woof', 'Boom', 'Hey', 'Yay', 'Yippee', 'Tadaa', 'Ole', 'Hooray', 'Wheee', 'Brrr', 'Zzz', 'Rocks',
   'Zone', 'Land', 'World', 'Time', 'Mode', 'Life'
-].filter((w, i, a) => a.indexOf(w) === i)
+].map(w => w.toLowerCase()).filter((w, i, a) => a.indexOf(w) === i)
 
 const kies = (lijst, rnd) => lijst[Math.min(lijst.length - 1, Math.floor(rnd() * lijst.length))]
 

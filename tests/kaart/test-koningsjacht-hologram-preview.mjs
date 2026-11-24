@@ -1,4 +1,4 @@
-// De lokale hologram-preview moet het ruimteschip kiezen zonder externe scene-assets.
+// De hologram-preview gebruikt de originele ruimteschipbeelden uit de repo.
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
@@ -10,6 +10,9 @@ assert.match(fixture, /scene:\s*'ruimteschip-futuristisch'/)
 assert.match(helper, /\.kt-tafel\.kj\.kj-holografisch \.kt-hand \.kt-kaart/)
 assert.match(helper, /\.kt-tafel\.kj\.kj-holografisch \.kt-stapel-groep/)
 
-assert.match(readFileSync(new URL('../../koningsjacht-scene.js', import.meta.url), 'utf8'), /data:image\/svg\+xml/)
+for (const beeld of ['spaceship-interior.png', 'spaceship-interior-futuristic.png']) {
+  const png = readFileSync(new URL('../../assets/koningsjacht/' + beeld, import.meta.url))
+  assert.equal(png.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', beeld + ' is een aanwezig PNG-bestand')
+}
 
-console.log('OK ruimteschip-hologram-preview bestaat zonder externe scène-afbeeldingen')
+console.log('OK hologram-preview heeft beide ruimteschipbeelden')

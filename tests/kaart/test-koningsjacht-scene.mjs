@@ -97,11 +97,11 @@ function omgeving({ reduced = false, sensor = false, toestemming } = {}) {
   assert.match(scene.decorLayer.style.backgroundImage, /wood-table\.png/)
   scene.update({ scene: 'ruimteschip-oud' })
   assert.equal(scene.decorLayer.dataset.scene, 'ruimteschip-oud')
-  assert.match(scene.decorLayer.style.backgroundImage, /data:image\/svg\+xml/, 'old spaceship backdrop is generated inline and cannot 404')
+  assert.match(scene.decorLayer.style.backgroundImage, /spaceship-interior\.png/)
   const oudeRuimte = scene.decorLayer.style.backgroundImage
   scene.update({ scene: 'ruimteschip-futuristisch' })
   assert.equal(scene.decorLayer.dataset.scene, 'ruimteschip-futuristisch')
-  assert.match(scene.decorLayer.style.backgroundImage, /data:image\/svg\+xml/, 'futuristic ship backdrop is generated inline and cannot 404')
+  assert.match(scene.decorLayer.style.backgroundImage, /spaceship-interior-futuristic\.png/)
   assert.notEqual(scene.decorLayer.style.backgroundImage, oudeRuimte, 'each ship setting has its own visible interior')
   scene.update({ bierpul: false })
   assert.equal(scene.bierLayer.children[0].hidden, true)

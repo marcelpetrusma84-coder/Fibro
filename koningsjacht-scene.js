@@ -6,32 +6,12 @@ const sensorrechten = new WeakMap()
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n))
 const bedienbaar = 'button, input, select, textarea, label, a, summary, dialog, video, canvas, [contenteditable], [role="button"], [role="dialog"], [role="slider"], .kt-kaart, .kt-stapel, .kt-afleg, .kt-onder, .kt-info, .kj-vijand'
 const steenkorrel = new URL('./assets/koningsjacht/stone-grain.svg', import.meta.url).href
-const RUIMTE_SCENES = ['ruimteschip-oud', 'ruimteschip-futuristisch']
-const ruimteAchtergronden = new Map()
-function ruimteAchtergrond(scene) {
-  if (ruimteAchtergronden.has(scene)) return ruimteAchtergronden.get(scene)
-  const futuristisch = scene === 'ruimteschip-futuristisch'
-  const accent = futuristisch ? '#25e6ff' : '#e3a75e'
-  const secundair = futuristisch ? '#8b5dff' : '#c95d31'
-  const raam = futuristisch
-    ? '<path d="M410 520Q800 325 1190 520V744H410Z" fill="#071d34" stroke="#50eaff" stroke-width="10"/><path d="M425 520Q800 360 1175 520V728H425Z" fill="url(#planet)"/><path d="M435 665Q800 575 1165 665V730H435Z" fill="#1c7393" opacity=".55"/><circle cx="1000" cy="500" r="74" fill="#6dcfff" opacity=".72"/><path d="M1000 426a74 74 0 0 1 52 126 74 74 0 0 0-95-104" fill="#dffaff" opacity=".6"/><g stroke="#80f5ff" stroke-width="7"><path d="M800 385v350M425 620h750"/></g><g fill="#fff"><circle cx="540" cy="480" r="3"/><circle cx="690" cy="430" r="3"/><circle cx="1100" cy="470" r="3"/><circle cx="610" cy="550" r="2"/></g>'
-    : '<path d="M410 520Q800 325 1190 520V744H410Z" fill="#111821" stroke="#bc8c54" stroke-width="12"/><path d="M427 524Q800 370 1173 524V728H427Z" fill="url(#planet)"/><path d="M435 664Q800 580 1165 664V730H435Z" fill="#614731" opacity=".72"/><circle cx="1000" cy="492" r="58" fill="#c87943" opacity=".9"/><path d="M800 390v342M428 620h744" stroke="#8d6846" stroke-width="8"/><g fill="#ffc97e"><circle cx="550" cy="485" r="4"/><circle cx="680" cy="446" r="4"/><circle cx="1100" cy="480" r="4"/><circle cx="600" cy="550" r="3"/></g>'
-  const bedieningspaneel = futuristisch
-    ? '<g><path d="M0 785Q800 675 1600 785V1000H0Z" fill="url(#console)" stroke="#1de3ff" stroke-width="5"/><path d="M0 835Q800 740 1600 835" fill="none" stroke="#79f4ff" stroke-width="3" opacity=".7"/><g fill="#061724" stroke="#37e7ff" stroke-width="4"><rect x="75" y="855" width="260" height="90" rx="18"/><rect x="405" y="830" width="250" height="110" rx="16"/><rect x="945" y="830" width="250" height="110" rx="16"/><rect x="1265" y="855" width="260" height="90" rx="18"/></g><g fill="none" stroke="#44efff" stroke-width="5"><path d="M105 900h190m-190 22h120m222-48 80 0 44 40 44-40h80m311 0h170m-170 22h130m162 0h190"/></g><g fill="#fff"><circle cx="115" cy="870" r="5"/><circle cx="135" cy="870" r="5"/><circle cx="1420" cy="875" r="5"/></g></g>'
-    : '<g><path d="M0 785Q800 675 1600 785V1000H0Z" fill="url(#console)" stroke="#a57748" stroke-width="6"/><path d="M0 835Q800 740 1600 835" fill="none" stroke="#e1ae70" stroke-width="4"/><g fill="#17191b" stroke="#bc8d5a" stroke-width="5"><rect x="75" y="855" width="260" height="90" rx="12"/><rect x="405" y="830" width="250" height="110" rx="10"/><rect x="945" y="830" width="250" height="110" rx="10"/><rect x="1265" y="855" width="260" height="90" rx="12"/></g><g fill="none" stroke="#d79b5c" stroke-width="5"><path d="M105 900h190m-190 22h120m222-48 80 0 44 40 44-40h80m311 0h170m-170 22h130m162 0h190"/></g><g fill="#db6c40" stroke="#ffcc83" stroke-width="3"><circle cx="155" cy="875" r="9"/><circle cx="191" cy="875" r="9"/><circle cx="1378" cy="876" r="9"/></g></g>'
-  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000"><defs>'
-    + '<linearGradient id="wall" x2="0" y2="1"><stop stop-color="' + (futuristisch ? '#122b46' : '#4a3328') + '"/><stop offset="1" stop-color="' + (futuristisch ? '#050d19' : '#15191d') + '"/></linearGradient>'
-    + '<linearGradient id="metal" x2="1" y2="1"><stop stop-color="' + (futuristisch ? '#233d57' : '#6a5540') + '"/><stop offset=".5" stop-color="' + (futuristisch ? '#101d2d' : '#302a25') + '"/><stop offset="1" stop-color="' + (futuristisch ? '#304968' : '#705339') + '"/></linearGradient>'
-    + '<linearGradient id="console" x2="0" y2="1"><stop stop-color="' + (futuristisch ? '#102e43' : '#44372c') + '"/><stop offset="1" stop-color="' + (futuristisch ? '#050b14' : '#171413') + '"/></linearGradient>'
-    + '<radialGradient id="planet" cx="50%" cy="30%"><stop stop-color="' + (futuristisch ? '#5ba6ca' : '#d29a62') + '"/><stop offset="1" stop-color="' + (futuristisch ? '#10233d' : '#422b25') + '"/></radialGradient>'
-    + '</defs><rect width="1600" height="1000" fill="url(#wall)"/><path d="M0 0h1600v150L1250 250H350L0 150Z" fill="url(#metal)" stroke="' + accent + '" stroke-width="8"/>'
-    + '<path d="M0 150 350 250v490L0 850Zm1600 0-350 100v490l350 110Z" fill="url(#metal)" stroke="' + secundair + '" stroke-width="8"/>'
-    + '<path d="M345 250h910v500H345Z" fill="#0a111c" stroke="' + accent + '" stroke-width="12"/>' + raam
-    + bedieningspaneel + '<g fill="' + accent + '"><circle cx="55" cy="270" r="8"/><circle cx="1545" cy="270" r="8"/><circle cx="55" cy="710" r="8"/><circle cx="1545" cy="710" r="8"/></g>'
-    + '<path d="M24 302h250M1326 302h250M24 735h250M1326 735h250" stroke="' + accent + '" stroke-width="3" opacity=".55"/></svg>'
-  const beeld = 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")'
-  ruimteAchtergronden.set(scene, beeld)
-  return beeld
+const ACHTERGRONDEN = {
+  standaard: 'wood-table.png',
+  modern: 'modern-epoxy-table.png',
+  middeleeuws: 'medieval-scene.png',
+  'ruimteschip-oud': 'spaceship-interior.png',
+  'ruimteschip-futuristisch': 'spaceship-interior-futuristic.png'
 }
 
 // Middeleeuws: een houten legbak met smeedijzeren beslag; het licht komt van
@@ -274,17 +254,12 @@ export function maakKoningsjachtScene(tafelElement, instellingen = {}) {
     if (klaar) return
     const wasBeweging = opties.beweging
     opties = { ...opties, ...nieuw }
-    const gekozenScene = ['standaard', 'modern', 'middeleeuws', ...RUIMTE_SCENES].includes(opties.scene)
+    const gekozenScene = Object.hasOwn(ACHTERGRONDEN, opties.scene)
       ? opties.scene : (opties.middeleeuws ? 'middeleeuws' : 'standaard')
-    const achtergrond = { standaard: 'wood-table.png', modern: 'modern-epoxy-table.png', middeleeuws: 'medieval-scene.png' }[gekozenScene]
-    const hout = achtergrond
-      ? new URL('./assets/koningsjacht/' + achtergrond, import.meta.url).href
-      : null
+    const achtergrond = new URL('./assets/koningsjacht/' + ACHTERGRONDEN[gekozenScene], import.meta.url).href
     const reserve = new URL('./kaarten/hout.webp', import.meta.url).href
     decorLayer.dataset.scene = gekozenScene
-    decorLayer.style.backgroundImage = hout
-      ? `url("${hout}"), url("${reserve}")`
-      : ruimteAchtergrond(gekozenScene)
+    decorLayer.style.backgroundImage = `url("${achtergrond}"), url("${reserve}")`
     const andere = opties.anderBier && typeof opties.anderBier === 'object' && !Array.isArray(opties.anderBier) ? opties.anderBier : {}
     function toonPul(pul, zichtbaar, inhoud, oorRechts, naam, ronde) {
       pul.houder.hidden = !zichtbaar

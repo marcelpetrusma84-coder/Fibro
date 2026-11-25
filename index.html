@@ -342,7 +342,7 @@ import { startHeartbeat } from './heartbeat.js?v=118'
 import { meldToestel } from './toestel.js?v=1'
 import { zetStandaardWidgets } from './standaardwidgets.js?v=2' // v267: nieuw account = meteen widgets op Home
 import * as GB from './gastenboekstijl.js?v=2'
-import { spelIcoonHtml } from './spelicoon.js?v=6' // 30 okt 2026: plaatjes uit de spellen
+import { spelIcoonHtml } from './spelicoon.js?v=7' // 30 okt 2026: plaatjes uit de spellen
 import { initSync, lokaleVriendNaam } from './sync.js?v=269'
 import { maakProfielLikes, itemVan } from './profielreacties.js?v=2' // v258: likes op je eigen profiel
 import { supabase } from './supabase.js?v=95'
@@ -352,9 +352,9 @@ import { startMeldingen } from './meldingen.js?v=188'
 import { haalPrivateKeyOp } from './crypto.js?v=182'
 import { isBelregel, belregelTekst } from './belregel.js?v=152'
 import { maakSpelVersieLangDruk } from './spelversie-langdruk.js?v=1'
-import { koppelSpelIcoonFallback } from './spelicoon.js?v=6'
+import { koppelSpelIcoonFallback } from './spelicoon.js?v=7'
 koppelSpelIcoonFallback()
-import { openSpelMetTitel } from './titelscherm.js?v=13' // v252: titelscherm met muziek meteen bij je tik
+import { openSpelMetTitel } from './titelscherm.js?v=14' // v252: titelscherm met muziek meteen bij je tik
 import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=7' // v266
 pasBlokstijlToe()
 
@@ -3310,7 +3310,7 @@ if ('serviceWorker' in navigator) {
 <script type="module">import { beschermOpslag } from "./opslag.js?v=3"; beschermOpslag()</script>
 <script type="module" src="geluidregelaar.js?v=182"></script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=201"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=202"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=172"; startOngelezen()</script>
 <script type="module">import { checkTimers } from "./timer-melding.js?v=188"; setTimeout(checkTimers,4000)</script>
 <script src="./fotoviewer.js?v=9"></script>

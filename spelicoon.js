@@ -3,11 +3,15 @@
 // spelicoon/<spel>.webp (128 x 128) en komen uit de spellen zelf: zie tests/tools/spelicoon/LEESMIJ.txt.
 // Gebruikt in het spelmenu van de chat, de widgetlijst in Profiel, de spelwidget op Home en op het profiel van een vriend. Een nieuw plaatje voor een bestaand spel: verhoog VERSIE (ook in de html).
 export const VERSIE = 2
+import { STUDIO_SPELLEN, studioSpel, spelIcoon as studioIcoon } from './studio-spellen.js?v=1' // 25 nov 2026: spellen uit Stekky Studio
 export const SPELLEN = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pong', 'pacman', 'pinball',
   'endlessrunner', 'breakout', 'swarm', 'shmup', 'flappybird', 'pesten', 'toepen', 'eenentwintigen',   // 11 nov 2026: kaartspellen uit de Store
-  'koningsjacht']   // 13 nov 2026
+  'koningsjacht',   // 13 nov 2026
+  ...STUDIO_SPELLEN.map(s => s.id)]   // 25 nov 2026: het icoon maakt de Studio (spelicoon/<id>.webp)
 
 export function spelIcoonSrc(spel) {
+  const st = studioSpel(spel)
+  if (st) return studioIcoon(st)
   return SPELLEN.includes(spel) ? 'spelicoon/' + spel + '.webp?v=' + VERSIE : null
 }
 // Een <img> van px bij px, of '' als het spel geen plaatje heeft (dan blijft de emoji staan)
@@ -23,6 +27,7 @@ const icoonFallbacks = Object.freeze({
   botkaaseiren:'⭕', vieroprij:'🔴', schaken:'♟️', dammen:'⚫', pong:'🏓',
   pacman:'👻', pinball:'🐍', flappybird:'🦇', breakout:'🟪', swarm:'🪲',
   endlessrunner:'🏃', shmup:'🚀', pesten:'🃏', toepen:'✊', eenentwintigen:'♠️', koningsjacht:'👑',
+  ...Object.fromEntries(STUDIO_SPELLEN.map(s => [s.id, s.icoon])),
 })
 const fallbackRoots = new WeakMap()
 const positieveMaat = value => Number.isFinite(Number(value)) && Number(value) > 0 ? Number(value) : 0

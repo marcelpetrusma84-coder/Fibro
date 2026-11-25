@@ -19,6 +19,18 @@ Dit geldt voor **alle** spellen (in de chat en tegen de computer); een spel hoef
 - **Menu**: tegen de computer terug naar het kiezen van het niveau; met een vriend het spel dicht en het spelmenu van de chat open.
 - **Linksboven** een wolkje als een andere vriend je een bericht stuurt (`spelbericht.js`). Berichten van je tegenspeler zie je al in het spel.
 
+## De snelle weg: via Stekky Studio (25 november 2026)
+
+In **Stekky Studio > 🎲 Spel maken** beschrijf je een nieuw spel: beurtspel of kaartspel, naam (ook in het Engels), icoon (een emoji of een eigen plaatje), uitleg voor de Store, doel, spelregels, en bij een kaartspel welk kaartspel, hoeveel kaarten per speler en de speciale kaarten. Je vinkt aan wat erin zit (met een vriend, chatbalk met stickers, webcamrondjes, spraak vanzelf of met 📹, titelscherm en muziek in de stijl van een ander spel) en welke extra's Claude moet bouwen (❓-knop, opnieuw spelen, beurtklok, trillen, scorebord, ...). Tegen de computer, de Store en het spelmenu ☰ zitten er altijd in. De Studio maakt er een spelbestand van (`<id>.stekkyspel.json`, `spelmaker.js`).
+
+Dan: `node tests/tools/studio-spel-installeer.mjs <id>.stekkyspel.json`. Dat
+
+- zet het spel in `studio-spellen.js`. Daarmee staat het vanzelf in de Store, het spelmenu van de chat (`SPEL_INFO`, `SPEL_BESTAND`, `beschikbaar`, `toonStoreSpellen`), `BEURTSPELLEN` (webcam), de chatbalk, `KAARTSPELLEN` (spraak vanzelf), `SOLO_SPELLEN` (tegen de computer, de computerspeler `<id>.js` wordt pas geladen als je speelt), Profiel > Widgets, uitnodigingen, het spelicoon en het titelscherm. Je hoeft de tabel hieronder dus niet langs;
+- zet het spelicoon neer (`spelicoon/<id>.webp`) en een werkend beginspel uit het sjabloon (`<id>-ui.js` en `<id>.js`);
+- schrijft de bouwopdracht `spellen/<id>.md` met alles wat in de Studio is ingevuld.
+
+Daarna bouwt Claude de echte regels in `<id>-ui.js` en `<id>.js` (zie de stappen hieronder) en verhoogt `v` van het spel in `studio-spellen.js`.
+
 ## Zo maak je een nieuw beurtspel
 
 1. **Kopieer het sjabloon.** `sjabloon-beurtspel-ui.js` is een klein, werkend spel ("Stokjes"). Kopieer het naar `<naam>-ui.js` en bouw je spel daarin. Houd deze onderdelen aan:

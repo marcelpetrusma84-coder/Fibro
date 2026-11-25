@@ -641,8 +641,9 @@ const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','�
 // v173: de oude emoji-stickers (Natuur & Planten, Sfeer & Magie, Muziek & Kunst, Dieren, 'Actieve stickers') en de
 // widget 'Sticker board' zijn weg: ze werden alleen op dit toestel bewaard en nergens getoond.
 import { LETTERTYPES, STORE_LETTERTYPES, laadFont } from './lettertypes.js?v=133'
-import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES, storeWidgetItem } from './store.js?v=28' // v131: Stekky Store
+import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES, storeWidgetItem } from './store.js?v=29' // v131: Stekky Store
 import { mixWidgetDef } from './layouts.js?v=4' // 25 nov 2026: widget-layouts uit Stekky Studio
+import { studioWidgetDef } from './studio-spellen.js?v=1' // 25 nov 2026: spellen uit Stekky Studio
 import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=95'
 import { pasAnimatieToe, startOp as startAnimatieOp } from './animatie.js?v=235'
 window.blokAangepast = function(){
@@ -693,6 +694,26 @@ function bouwLayoutRijen(ids){
     const tg=document.createElement('div');tg.className='toggle '+(actieveWidgets.includes(it.widget)?'on':'off');tg.id='widget-'+it.widget
     tg.onclick=()=>window.toggleWidget(it.widget);tg.appendChild(Object.assign(document.createElement('div'),{className:'toggle-dot'}))
     rij.append(info,weg,tg);na.after(rij)
+  }
+  // 25 nov 2026: een spel uit Stekky Studio (studio-spellen.js) krijgt een rij bij Spellen, net als Pesten
+  let naSpel=document.getElementById('widgetRij-spel_koningsjacht')
+  for(const it of [...ids].map(storeWidgetItem).filter(it=>it&&it.studio)){
+    if(!naSpel)break
+    if(document.getElementById('widgetRij-'+it.widget)){naSpel=document.getElementById('widgetRij-'+it.widget);continue}
+    const rij=document.createElement('div');rij.className='widget-item';rij.id='widgetRij-'+it.widget;rij.style.display='none'
+    const info=document.createElement('div');info.className='widget-info'
+    const ic=document.createElement('div');ic.className='widget-icon'
+    ic.appendChild(Object.assign(document.createElement('img'),{src:it.icoon,width:26,height:26,alt:'',draggable:false}))
+    ic.firstChild.style.display='block'
+    const tk=document.createElement('div');const nm=document.createElement('div');nm.className='widget-name';nm.textContent=T(it.titel)
+    const ds=document.createElement('div');ds.className='widget-desc';ds.textContent=T('Uit de Store: tegen de computer op Home, met een vriend in de chat')
+    tk.append(nm,ds);info.append(ic,tk)
+    const weg=document.createElement('button');weg.type='button';weg.className='store-verwijder';weg.textContent='🗑'
+    weg.setAttribute('aria-label',T('{naam} verwijderen',{naam:T(it.titel)}));weg.title=weg.getAttribute('aria-label')
+    weg.onclick=()=>window.verwijderStoreSpel(it.id)
+    const tg=document.createElement('div');tg.className='toggle '+(actieveWidgets.includes(it.widget)?'on':'off');tg.id='widget-'+it.widget
+    tg.onclick=()=>window.toggleWidget(it.widget);tg.appendChild(Object.assign(document.createElement('div'),{className:'toggle-dot'}))
+    rij.append(info,weg,tg);naSpel.after(rij);naSpel=rij
   }
 }
 // 11 nov 2026: verwijderen wat je uit de Store hebt (eerst vragen). Games: ook de widget uit (Home en chat).
@@ -1437,7 +1458,7 @@ window.slaAllesOp=async function(){
   wOud.filter(w => w && typeof w.id === 'string').sort((a, b) => (Number(a.volgorde) || 0) - (Number(b.volgorde) || 0))
     .forEach(w => { if (!wPlek.has(w.id)) wPlek.set(w.id, wPlek.size) })
   // v235: 'gastenboek_effen' is geen eigen widget maar een keuze bij het gastenboek (gaat mee naar vrienden)
-  const wDefs = actieveWidgets.map(n => WMAP[n] || stickerWidgetDef(n) || mixWidgetDef(n)).filter(Boolean) // 25 nov 2026: ook layouts (mix_)
+  const wDefs = actieveWidgets.map(n => WMAP[n] || stickerWidgetDef(n) || mixWidgetDef(n) || studioWidgetDef(n)).filter(Boolean) // 25 nov 2026: ook layouts (mix_) en Studio-spellen
     .map(d => d.id === 'gastenboek' && actieveWidgets.includes('gastenboek_effen') ? { ...d, papier: false } : d)
   const wRang = (d, i) => wPlek.has(d.id) ? wPlek.get(d.id) : wPlek.size + i
   const wLayout = wDefs.map((d, i) => ({ d, r: wRang(d, i) })).sort((a, b) => a.r - b.r).map(({ d }, i) => ({ ...d, volgorde: i, aan: true }))
@@ -1643,13 +1664,13 @@ startMeldingen()
 
 <script type="module">
 import { vulSpelVersies } from "./spelversies.js?v=28"
-import { koppelSpelIcoonFallback } from './spelicoon.js?v=6'
+import { koppelSpelIcoonFallback } from './spelicoon.js?v=7'
 koppelSpelIcoonFallback()
 vulSpelVersies()
 </script>
 <script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=212"; startBelLuisteraar()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=201"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=202"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=172"; startOngelezen()</script>
 <script>
 /* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */

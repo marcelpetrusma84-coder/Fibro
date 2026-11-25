@@ -154,7 +154,7 @@ body.heeft-wallpaper::before { display:block; }
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
-  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=267'
+  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=268'
   import { versleutel, haalPrivateKeyOp } from './crypto.js?v=182'
   import { maakProfielLikes, itemVan, openReageerScherm, maakReactieBericht, maakKleinPlaatje } from './profielreacties.js?v=2' // v258
   import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -721,7 +721,7 @@ body.heeft-wallpaper::before { display:block; }
   // Liken en reageren (fediverse) staan hier niet: alleen de video, net als bij de losse PeerTube-widget.
   async function renderVriendMix(el, vriendId, w) {
     let L
-    try { L = await import('./layouts.js?v=2') } catch (e) { console.warn('[layout]', e); return false }
+    try { L = await import('./layouts.js?v=3') } catch (e) { console.warn('[layout]', e); return false }
     const layout = L.layoutVan(w.id)
     if (!layout) return false
     el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F9E9}</span><span class="widget-titel">' + vEsc(layout.titel) + '</span></div><div class="widget-inhoud"></div>'
@@ -735,7 +735,7 @@ body.heeft-wallpaper::before { display:block; }
       const cfg = mix[L.vakSleutel(layout, soort)]
       if (!cfg) return false
       if (soort === 'rss') { const R = await import('./rsswidget.js?v=4'); if (!R.normaliseer(cfg)) return false; R.tekenRssWidget(vak, { cfg }); return true }
-      if (soort === 'peertube') { const P = await import('./peertube.js?v=5'); if (!P.normaliseer(cfg)) return false; P.tekenPeertubeWidget(vak, { cfg }); return true }
+      if (soort === 'peertube') { const P = await import('./peertube.js?v=6'); if (!P.normaliseer(cfg)) return false; P.tekenPeertubeWidget(vak, { cfg, weergave: L.weergaveVan(layout.vakken.find(v => v.soort === soort)) }); return true }
       return false
     }
     L.tekenMix(el.querySelector('.widget-inhoud'), layout, async (soort, vak) => {
@@ -752,7 +752,7 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_peertube')
     if (!ruw) return false
     let P, cfg = null
-    try { P = await import('./peertube.js?v=5') } catch (e) { console.warn('[peertube]', e); return false }
+    try { P = await import('./peertube.js?v=6') } catch (e) { console.warn('[peertube]', e); return false }
     try { cfg = P.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
     await vriendAchtergrond(el, vriendId, 'peertube') // de miniatuur, via sync (wbg:peertube)

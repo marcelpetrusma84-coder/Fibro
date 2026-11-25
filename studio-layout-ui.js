@@ -2,8 +2,8 @@
 // Je kiest een sjabloon (hoe de vakken liggen), wat er in elk vak komt (video, muziek, radio of berichten), een naam en
 // een uitleg. De Studio laat zien hoe het eruitziet en maakt er een layoutbestand van (naam.stekkylayout.json).
 // Dat bestand zet Claude of Tijn in de app met tests/tools/studio-layout-installeer.mjs; daarna staat hij in de Store.
-import { SJABLONEN, VAK_SOORTEN, MAX_TITEL, MAX_UITLEG, MAX_KIES_FEEDS, MAX_FEEDNAAM, MANIEREN, maakLayout, valideerLayout } from './layouts.js?v=2'
-import { SERVERS as PEERTUBE_SERVERS, CATEGORIEEN } from './peertube.js?v=5'
+import { SJABLONEN, VAK_SOORTEN, MAX_TITEL, MAX_UITLEG, MAX_KIES_FEEDS, MAX_FEEDNAAM, MANIEREN, WEERGAVEN, WEERGAVE_NAAM, maakLayout, valideerLayout } from './layouts.js?v=3'
+import { SERVERS as PEERTUBE_SERVERS, CATEGORIEEN } from './peertube.js?v=6'
 
 const $ = id => document.getElementById(id)
 function el(tag, opties = {}, kinderen = []) {
@@ -21,7 +21,7 @@ function el(tag, opties = {}, kinderen = []) {
 export const slug = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'layout'
 
 // 25 nov 2026: per vak ook de inhoud (kant-en-klaar): manier 'zelf' (de gebruiker vult in), 'vast' of 'kiezen'
-const nieuweInhoud = () => ({ manier: 'zelf', feeds: [{ url: '', naam: '' }], server: 'spectra.video', cats: [7], reageren: true })
+const nieuweInhoud = () => ({ manier: 'zelf', feeds: [{ url: '', naam: '' }], server: 'spectra.video', cats: [7], reageren: true, weergave: '' })
 const stand = { sjabloon: SJABLONEN[0].id, soorten: [...SJABLONEN[0].voorstel], inhoud: SJABLONEN[0].vakken.map(nieuweInhoud) }
 const MANIER_NAAM = { zelf: 'De gebruiker vult het zelf in', vast: 'Kant-en-klaar: vast', kiezen: 'Kant-en-klaar: gebruiker kiest uit mijn lijst' }
 
@@ -30,7 +30,7 @@ function voorbeeld(layout) {
     layout.vakken.map((v, i) => el('div', { klas: 'lo-vak', 'data-soort': v.soort,
       stijl: 'grid-column:' + (v.x + 1) + ' / span ' + v.w + ';grid-row:' + (v.y + 1) + ' / span ' + v.h + ';background:rgba(192,132,252,0.16);border:1px solid rgba(192,132,252,0.55);border-radius:10px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:13px;padding:4px',
       tekst: (i + 1) + '. ' + (VAK_SOORTEN[v.soort] ? VAK_SOORTEN[v.soort].icoon + ' ' + VAK_SOORTEN[v.soort].naam[0] : '?') +
-        (v.inhoud ? (v.inhoud.manier === 'kiezen' ? ' · ☑️ kiezen' : ' · 🔒 vast') : '') })))
+        (v.inhoud ? (v.inhoud.manier === 'kiezen' ? ' · ☑️ kiezen' : ' · 🔒 vast') : '') + (v.weergave ? ' · ' + WEERGAVE_NAAM[v.weergave].split(' (')[0].toLowerCase() : '') })))
 }
 
 function huidig() {
@@ -41,7 +41,8 @@ function huidig() {
     if (soort === 'peertube') return { manier: 'vast', server: x.server, cats: CATEGORIEEN.map(c => c[0]).filter(n => x.cats.includes(n)), reageren: !!x.reageren }
     return undefined
   })
-  return maakLayout({ titel: $('loTitel').value, uitleg: [$('loUitlegNl').value, $('loUitlegEn').value], sjabloon: stand.sjabloon, soorten: stand.soorten, inhoud })
+  const weergaven = stand.soorten.map((soort, i) => (inhoud[i] && stand.inhoud[i].weergave) || undefined) // alleen bij kant-en-klare vakken
+  return maakLayout({ titel: $('loTitel').value, uitleg: [$('loUitlegNl').value, $('loUitlegEn').value], sjabloon: stand.sjabloon, soorten: stand.soorten, inhoud, weergaven })
 }
 
 function teken() {
@@ -80,6 +81,13 @@ function tekenInhoud(blok, i) {
   manier.addEventListener('change', () => { x.manier = manier.value; teken() })
   blok.appendChild(el('label', { klas: 'veld' }, ['Inhoud', manier]))
   if (x.manier === 'zelf') return
+  // v3: de weergave (bij kant-en-klare vakken)
+  if (WEERGAVEN[soort]) {
+    const wg = el('select', { klas: 'lo-weergave', 'data-vak': String(i) }, WEERGAVEN[soort].map(w => el('option', { value: w, tekst: WEERGAVE_NAAM[w] })))
+    wg.value = x.weergave || WEERGAVEN[soort][0]
+    wg.addEventListener('change', () => { x.weergave = wg.value; tekenVoorbeeld() })
+    blok.appendChild(el('label', { klas: 'veld' }, ['Weergave', wg]))
+  }
   if (soort === 'rss') {
     const max = x.manier === 'kiezen' ? MAX_KIES_FEEDS : 3
     blok.appendChild(el('div', { klas: 'nr', tekst: x.manier === 'kiezen' ? 'Zet 2 tot ' + max + ' feeds klaar. De gebruiker vinkt er hoogstens 3 aan.' : 'Hoogstens ' + max + ' feeds. De gebruiker kan ze niet veranderen.' }))

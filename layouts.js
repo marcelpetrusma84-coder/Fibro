@@ -28,11 +28,15 @@
 
 import { STUDIO_LAYOUTS } from './studio-layouts.js?v=1'
 import { netteFeedUrl, MAX_FEEDS } from './rsswidget.js?v=4'
-import { SERVERS as PEERTUBE_SERVERS, CATEGORIEEN, MAX_CATS } from './peertube.js?v=5'
+import { SERVERS as PEERTUBE_SERVERS, CATEGORIEEN, MAX_CATS } from './peertube.js?v=6'
 
 export const FORMAAT = 'stekky-layout'
 export const BREED = 4 // Home is 4 vakjes breed
-export const MIN_VAKKEN = 2, MAX_VAKKEN = 4, MIN_H = 2, MAX_H = 8
+export const MIN_VAKKEN = 1, MAX_VAKKEN = 4, MIN_H = 2, MAX_H = 8 // v3: ook één vak (bijvoorbeeld alleen een nieuws-widget)
+// v3 (25 nov 2026): de weergave per vak. Eerst de standaard. Video: lijst of carrousel (vegen, middelste groot, miniaturen);
+// nieuws (RSS): met fotootjes of alleen koppen.
+export const WEERGAVEN = { peertube: ['lijst', 'carrousel'], rss: ['fotos', 'koppen'] }
+export const WEERGAVE_NAAM = { lijst: 'Lijst', carrousel: 'Carrousel (vegen, middelste groot)', fotos: 'Lijst met fotootjes', koppen: 'Alleen koppen' }
 export const MAX_TITEL = 40, MAX_UITLEG = 200
 export const MAX_KIES_FEEDS = 8, MAX_FEEDNAAM = 30
 // Welke soorten een kant-en-klare inhoud kunnen hebben, en op welke manier
@@ -50,6 +54,7 @@ export const VAK_SOORTEN = {
 
 // De sjablonen waaruit de Studio kiest (rooster 4 breed, h hoog)
 export const SJABLONEN = [
+  { id: 'een', naam: 'Eén groot vak', h: 4, vakken: [{ x: 0, y: 0, w: 4, h: 4 }], voorstel: ['rss'] },
   { id: 'groot-boven', naam: 'Groot boven, breed eronder', h: 5, vakken: [{ x: 0, y: 0, w: 4, h: 3 }, { x: 0, y: 3, w: 4, h: 2 }], voorstel: ['peertube', 'rss'] },
   { id: 'naast-elkaar', naam: 'Twee naast elkaar', h: 3, vakken: [{ x: 0, y: 0, w: 2, h: 3 }, { x: 2, y: 0, w: 2, h: 3 }], voorstel: ['muziekwidget', 'mastodon'] },
   { id: 'drie', naam: 'Groot boven, twee eronder', h: 6, vakken: [{ x: 0, y: 0, w: 4, h: 3 }, { x: 0, y: 3, w: 2, h: 3 }, { x: 2, y: 3, w: 2, h: 3 }], voorstel: ['peertube', 'muziekwidget', 'rss'] },
@@ -80,6 +85,7 @@ export function valideerLayout(p) {
     if (!geheel(vak.x, 0, BREED - 1) || !geheel(vak.y, 0, MAX_H - 1) || !geheel(vak.w, 1, BREED) || !geheel(vak.h, 1, MAX_H) ||
       vak.x + vak.w > BREED || (geheel(p.h, MIN_H, MAX_H) && vak.y + vak.h > p.h)) { f.push(nr + ' valt buiten de layout.'); return }
     if (vak.inhoud !== undefined) for (const t of controleerInhoud(vak.soort, vak.inhoud)) f.push(nr + ': ' + t)
+    if (vak.weergave !== undefined && !(WEERGAVEN[vak.soort] || []).includes(vak.weergave)) f.push(nr + ': onbekende weergave "' + vak.weergave + '".')
     for (let x = vak.x; x < vak.x + vak.w; x++) for (let y = vak.y; y < vak.y + vak.h; y++) {
       const k = x + ',' + y
       if (bezet.has(k)) { f.push(nr + ' ligt over een ander vak.'); return }
@@ -118,7 +124,8 @@ export function controleerInhoud(soort, i) {
 }
 export const kantEnKlaar = vak => !!(vak && vak.inhoud && MANIEREN[vak.soort])
 
-export function maakLayout({ titel, uitleg, sjabloon, soorten, inhoud }) {
+export const weergaveVan = vak => (vak && vak.weergave) || (WEERGAVEN[vak && vak.soort] || [])[0] || ''
+export function maakLayout({ titel, uitleg, sjabloon, soorten, inhoud, weergaven }) {
   const s = SJABLONEN.find(x => x.id === sjabloon) || SJABLONEN[0]
   return {
     formaat: FORMAAT, versie: 1, titel: tekst(titel, MAX_TITEL),
@@ -127,13 +134,15 @@ export function maakLayout({ titel, uitleg, sjabloon, soorten, inhoud }) {
       const vak = { soort: (soorten || [])[i] || s.voorstel[i], ...v }
       const inh = (inhoud || [])[i]
       if (inh && MANIEREN[vak.soort]) vak.inhoud = inh
+      const wg = (weergaven || [])[i]
+      if (wg && (WEERGAVEN[vak.soort] || [])[0] !== wg && (WEERGAVEN[vak.soort] || []).includes(wg)) vak.weergave = wg // de standaard schrijven we niet op
       return vak
     }),
   }
 }
 
 // ── De eigen inhoud van kant-en-klare vakken (localStorage 'mix_<uid>', gaat via sync naar vrienden) ──
-export const MIX_MAX = 40000
+export const MIX_MAX = 120000 // v3: ruimte voor de miniaturen van een carrousel (hoogstens 40 kB per vak)
 export const mixSleutel = uid => 'mix_' + uid
 export const vakSleutel = (layout, soort) => layout.id + ':' + soort
 export function leesMix(uid, ls = globalThis.localStorage) {
@@ -147,6 +156,7 @@ export function zetMixVak(uid, sleutel, cfg, ls = globalThis.localStorage) {
   for (const k of Object.keys(m)) {
     if (tekstM.length < MIX_MAX) break
     if (k !== sleutel && m[k] && Array.isArray(m[k].berichten)) { m[k] = { ...m[k], berichten: [], bijgewerkt: 0 }; tekstM = JSON.stringify(m) }
+    if (k !== sleutel && m[k] && m[k].sprite) { const { sprite, spriteN, ...rest } = m[k]; m[k] = { ...rest, bijgewerkt: 0 }; tekstM = JSON.stringify(m) }
   }
   try { ls.setItem(mixSleutel(uid), tekstM) } catch (e) {}
   return m
@@ -158,8 +168,11 @@ export function vakCfg(layout, vak, bewaard) {
     const mag = i.feeds.map(f => f.url)
     const goed = bewaard && Array.isArray(bewaard.feeds) && bewaard.feeds.length && bewaard.feeds.every(f => f && mag.includes(f.url)) &&
       (i.manier === 'kiezen' || JSON.stringify(bewaard.feeds.map(f => f.url)) === JSON.stringify(mag))
-    if (goed) return { ...bewaard, feeds: bewaard.feeds.map(f => i.feeds.find(x => x.url === f.url)) }
-    return { feeds: (i.manier === 'kiezen' ? i.feeds.slice(0, MAX_FEEDS) : i.feeds).map(f => ({ url: f.url, naam: f.naam })), berichten: [], bijgewerkt: 0 }
+    const koppen = weergaveVan(vak) === 'koppen'
+    if (goed && (bewaard.plaatjes === false) === koppen) return { ...bewaard, feeds: bewaard.feeds.map(f => i.feeds.find(x => x.url === f.url)) }
+    const nieuw = { feeds: (goed ? bewaard.feeds.map(f => i.feeds.find(x => x.url === f.url)) : (i.manier === 'kiezen' ? i.feeds.slice(0, MAX_FEEDS) : i.feeds)).map(f => ({ url: f.url, naam: f.naam })), berichten: [], bijgewerkt: 0 }
+    if (koppen) nieuw.plaatjes = false
+    return nieuw
   }
   if (vak.soort === 'peertube') {
     const goed = bewaard && bewaard.server === i.server && JSON.stringify(bewaard.cats) === JSON.stringify(i.cats)
@@ -227,12 +240,12 @@ export function mixWidgetDef(widgetId, lijst = STUDIO_LAYOUTS) {
   return l ? { id: widgetId, icon: '🧩', titel: l.titel, w: BREED, h: l.h } : null
 }
 
-// De vakken tekenen: een rooster met per vak een kopje (icoon en naam) en een inhoud die tekenVak vult.
+// De vakken tekenen (v3: vaste hoogte, ongeveer 95 px per rij; een lange lijst scrolt binnen zijn vak): een rooster met per vak een kopje (icoon en naam) en een inhoud die tekenVak vult.
 export function tekenMix(el, layout, tekenVak, { taal = 'nl' } = {}) {
   el.textContent = ''
   const rooster = document.createElement('div')
   rooster.className = 'mix-rooster'
-  rooster.style.cssText = 'display:grid;grid-template-columns:repeat(' + BREED + ',minmax(0,1fr));grid-template-rows:repeat(' + layout.h + ',minmax(0,1fr));gap:8px;width:100%;height:100%;min-height:' + (layout.h * 70) + 'px'
+  rooster.style.cssText = 'display:grid;grid-template-columns:repeat(' + BREED + ',minmax(0,1fr));grid-template-rows:repeat(' + layout.h + ',minmax(0,1fr));gap:8px;width:100%;height:' + (layout.h * 95) + 'px;flex:none'
   for (const vak of layout.vakken) {
     const s = VAK_SOORTEN[vak.soort]
     if (!s) continue

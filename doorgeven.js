@@ -30,7 +30,7 @@ export function isGoedeInhoud(naam, d) {
   if (typeof d !== 'string' || !d) return false
   if (naam === 'layout') return d.length <= 60000
   if (naam === 'video_meta') return d.length <= 400000
-  if (KLEIN.includes(naam)) return d.length <= ((naam === 'quiz' || naam === 'mix') ? 40000 : 20000)
+  if (KLEIN.includes(naam)) return d.length <= (naam === 'mix' ? 120000 : naam === 'quiz' ? 40000 : 20000)
   if (naam.startsWith('foto_') || naam.startsWith('wbg_')) return d.startsWith('data:image')
   if (naam === 'muziek_index') return d.length <= 200000
   if (naam.startsWith('muziek_')) return d.startsWith('data:audio')

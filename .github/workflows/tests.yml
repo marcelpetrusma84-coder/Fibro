@@ -293,3 +293,6 @@ jobs:
       - name: "Eenendertigen: met 2 of 3 spelers (gastheer en gasten), levens, volgende ronde, en tegen 1 of 3 computers (proef339)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef339.py .
+      - name: "Kaartspellen met de groep: uitnodigen, wachtkamer, computer erbij, spelen, verlaten (proef340)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef340.py .

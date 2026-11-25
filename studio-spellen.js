@@ -6,10 +6,11 @@
 // zit (chatbalk, webcam, spraak) staat bij 'met' en 'spraak'. Het spel zelf staat in <id>-ui.js (het scherm) en
 // <id>.js (de computerspeler, export bot).
 //   { id, soort: 'beurt'|'kaart', naam: [nl, en], icoon, uitleg: [nl, en], v, met: { vriend, computer, chatbalk, webcam },
-//     spraak: 'knop'|'vanzelf'|'uit', titel: '' | id van een spel waarvan het titelscherm en de muziek gebruikt worden }
+//     spraak: 'knop'|'vanzelf'|'uit', titel: '' | id van een spel waarvan het titelscherm en de muziek gebruikt worden,
+//     max: hoeveel spelers hoogstens (25 nov 2026; meer dan 2 = ook met de groep, groepkaartspel.js) }
 
 export const STUDIO_SPELLEN = [
-  {"id":"eenendertigen","soort":"kaart","naam":["Eenendertigen","Thirty-One"],"icoon":"🎲","uitleg":["Ruil kaarten met de tafel en kom zo dicht mogelijk bij 31 in één kleur. Klop als je denkt dat je genoeg hebt!","Swap cards with the table and get as close to 31 as you can in one suit. Knock when you think you have enough!"],"v":2,"met":{"vriend":true,"computer":true,"chatbalk":true,"webcam":true},"spraak":"vanzelf","titel":"pesten"},
+  {"id":"eenendertigen","soort":"kaart","naam":["Eenendertigen","Thirty-One"],"icoon":"🎲","uitleg":["Ruil kaarten met de tafel en kom zo dicht mogelijk bij 31 in één kleur. Klop als je denkt dat je genoeg hebt!","Swap cards with the table and get as close to 31 as you can in one suit. Knock when you think you have enough!"],"v":3,"max":6,"met":{"vriend":true,"computer":true,"chatbalk":true,"webcam":true},"spraak":"vanzelf","titel":"pesten"},
 ]
 
 // Engels: de naam en de uitleg (de Nederlandse tekst is de sleutel, zoals in taal-en.js)

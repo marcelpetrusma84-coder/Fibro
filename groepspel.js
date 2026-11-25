@@ -16,7 +16,7 @@
 //   spelers = [{ zetel: 1, naam, id?, computer? }, ...]
 //   onStand(oud, nieuw, { wie, auto }) wordt aangeroepen bij elke nieuwe stand (ook je eigen zet)
 
-export function maakGroepSpel({ kanaal, zetel, spelers, regels, niveau = 'normaal', beurtMs = 30000, speling = 6000, rondePauze = 3500, denkMs = () => 900 + Math.floor(Math.random() * 700), onStand = () => {} }) {
+export function maakGroepSpel({ kanaal, zetel, spelers, regels, niveau = 'normaal', beurtMs = 30000, speling = 6000, rondePauze = 3500, denkMs = () => 900 + Math.floor(Math.random() * 700), onStand = () => {}, onGastheerWeg = () => {} }) {
   const gastheer = zetel === 1
   let staat = null, spelId = -1, nr = 0, gestopt = false
   let botTimer = null, wachtTimer = null, rondeTimer = null
@@ -90,6 +90,7 @@ export function maakGroepSpel({ kanaal, zetel, spelers, regels, niveau = 'normaa
   kanaal.on('broadcast', { event: 'weg' }, msg => {
     const z = Number(msg.payload && msg.payload.zetel)
     if (gastheer && z && z !== zetel) { weg.add(z); plan() }
+    else if (!gastheer && z === 1 && !gestopt) { try { onGastheerWeg() } catch (e) {} }   // v2: de gastheer is weg: het spel stopt
   })
 
   const timer = setInterval(() => {
@@ -121,7 +122,7 @@ export function maakGroepSpel({ kanaal, zetel, spelers, regels, niveau = 'normaa
     stop() {
       if (gestopt) return
       gestopt = true; clearInterval(timer); clearTimeout(botTimer); clearTimeout(wachtTimer); clearTimeout(rondeTimer)
-      if (!gastheer) stuur('weg', { zetel })
+      stuur('weg', { zetel })   // een gast: de computer neemt over; de gastheer: het spel stopt bij de anderen
     },
   }
 }

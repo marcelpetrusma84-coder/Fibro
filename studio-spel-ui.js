@@ -4,7 +4,7 @@
 // spelbestand van (naam.stekkyspel.json). Dat zet Claude of Tijn in de app met tests/tools/studio-spel-installeer.mjs:
 // dan staat het spel meteen overal (Store, chat, Home), en bouwt Claude de echte regels uit de bouwopdracht.
 import { SOORTEN, ONDERDELEN, SPRAAK, EXTRAS, TITELS, DECKS, KAARTEN, MAX_NAAM, MAX_UITLEG, MAX_REGELS, MAX_SPECIAAL, maakSpel, valideerSpel, maakId } from './spelmaker.js?v=1'
-import { STUDIO_SPELLEN } from './studio-spellen.js?v=1'
+import { STUDIO_SPELLEN } from './studio-spellen.js?v=2'
 
 const $ = id => document.getElementById(id)
 function el(tag, opties = {}, kinderen = []) {

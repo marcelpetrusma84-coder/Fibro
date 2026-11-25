@@ -287,3 +287,6 @@ jobs:
       - name: "Stekky Studio: spel maken, installeren, in de Store, op Home en tegen de computer spelen (proef337)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef337.py .
+      - name: "Stekky Studio: speelkaarten maken uit platen, installeren, in de kaarttafel (proef338)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef338.py .

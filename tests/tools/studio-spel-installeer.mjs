@@ -66,7 +66,7 @@ const bron = readFileSync(dataPad, 'utf8')
 const lijst = /export const STUDIO_SPELLEN = \[[\s\S]*?\]\n/
 if (!lijst.test(bron)) stop('studio-spellen.js is veranderd: de lijst staat er niet meer zoals verwacht.')
 const alles = [...STUDIO_SPELLEN, nieuw]
-writeFileSync(dataPad, bron.replace(lijst, 'export const STUDIO_SPELLEN = [\n' + alles.map(s => '  ' + JSON.stringify(s) + ',').join('\n') + '\n]\n'))
+writeFileSync(dataPad, bron.replace(lijst, () => 'export const STUDIO_SPELLEN = [\n' + alles.map(s => '  ' + JSON.stringify(s) + ',').join('\n') + '\n]\n'))
 
 // 5. De bouwopdracht
 mkdirSync(path.join(HOOFD, 'spellen'), { recursive: true })

@@ -44,6 +44,7 @@ import { stapelProfiel, maakStapelFeedback } from './kaart-stapel-feedback.js?v=
 
 import { webcamRuimte } from './beurtspel-hulp.js?v=1'
 import { berekenLeesbareWaaier } from './kaartwaaier.js?v=1'
+import { STUDIO_KAARTSETS } from './studio-kaarten.js?v=1' // 25 nov 2026: eigen speelkaarten uit Stekky Studio (kaartmaker.js)
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
 const isEngels = () => Boolean(window.T && window.T.taal === 'en')
@@ -139,6 +140,9 @@ export const KAARTSTIJLEN = {
   modern: { naam: 'Modern' }, // v9: voor alle kaartspellen (eerst alleen de Modern-scene in Koningsjacht)
   vrolijk: { naam: 'Vrolijk' }, // v10: de standaard (zie VROLIJK)
 }
+// 25 nov 2026: de speelkaarten uit Stekky Studio. studio = 'plaatjes' (alleen azen, hofkaarten, achterkant en joker; 2 t/m 10
+// worden getekend in de kleuren van de set) of 'alles' (54 plaatjes, zoals Perkament)
+for (const s of STUDIO_KAARTSETS) KAARTSTIJLEN[s.id] = { naam: s.naam[0], map: './kaarten/' + s.id + '/', v: s.v, studio: s.soort, kleur: s.kleur }
 const STANDAARD_STIJL = 'vrolijk'
 // v9: de ondergrond van de tafel (behalve als een spel zelf een ondergrond kiest)
 const ONDERGROND_SLEUTEL = 'fibro_kaartondergrond'
@@ -172,7 +176,7 @@ function laadVooruit(stijl) {
   if (!KAARTSTIJLEN[stijl]?.map) return
   vooruitGeladen.add(stijl)
   const namen = ['achterkant', 'joker']
-  for (const k of KAART_KLEUREN) for (const w of KAART_WAARDEN) namen.push(k + w)
+  for (const k of KAART_KLEUREN) for (const w of KAART_WAARDEN) if (KAARTSTIJLEN[stijl].studio !== 'plaatjes' || STUDIO_PLAATJES.includes(w)) namen.push(k + w)
   for (const n of namen) { const i = new Image(); i.decoding = 'async'; i.src = plaatjeUrl(stijl, n) }
 }
 export function zetKaartStijl(stijl) {
@@ -363,8 +367,8 @@ function vrolijkAchterkant() {
 // kaart het was. Nu staat er over beide hoeken een scherp, getekend hoekje: de waarde (B/V/H in het Nederlands, net
 // als in de spellen) en het teken, in de kleur van die soort op de perkamentkaarten.
 const PERK_KLEUR = { h: '#a3212b', r: '#6d2a84', k: '#2e5b2a', s: '#1d2d55' }
-function perkHoek(k, w) {
-  const kleur = PERK_KLEUR[k] || ZWART, tekst = toonWaarde(w)
+function perkHoek(k, w, kleuren = PERK_KLEUR) {
+  const kleur = kleuren[k] || ZWART, tekst = toonWaarde(w)
   return '<rect x="7" y="9" width="46" height="98" rx="11" fill="#f5e8cb" stroke="#d9c49a" stroke-width="1.5"/>'
     + '<text x="30" y="52" font-size="' + (tekst.length > 1 ? 34 : 42) + '" font-family="Georgia,\'Times New Roman\',serif" font-weight="700" text-anchor="middle" fill="' + kleur + '"'
     + (tekst.length > 1 ? ' letter-spacing="-3"' : '') + '>' + tekst + '</text>'
@@ -372,13 +376,30 @@ function perkHoek(k, w) {
 }
 function plaatjeMetHoek(stijl, id) {
   const { kleur: k, waarde: w } = kaartDelen(id)
+  const kleuren = KAARTSTIJLEN[stijl].kleur || PERK_KLEUR   // 25 nov 2026: een set uit de Studio heeft eigen kleuren
   return '<span class="kt-svg kt-pk">' + plaatje(stijl, id)
-    + '<svg class="kt-pk-hoek" viewBox="0 0 250 350" aria-hidden="true">' + perkHoek(k, w)
-    + '<g transform="rotate(180 125 175)">' + perkHoek(k, w) + '</g></svg></span>'
+    + '<svg class="kt-pk-hoek" viewBox="0 0 250 350" aria-hidden="true">' + perkHoek(k, w, kleuren)
+    + '<g transform="rotate(180 125 175)">' + perkHoek(k, w, kleuren) + '</g></svg></span>'
+}
+// 25 nov 2026: een set uit Stekky Studio met alleen plaatjes: 2 t/m 10 getekend, de tekens in de kleuren van de set
+const STUDIO_PLAATJES = ['A', 'B', 'V', 'H']
+const studioCache = new Map()
+function studioCijferKaart(stijl, id) {
+  const sleutel = stijl + '|' + id + (isEngels() ? '|en' : '')
+  if (studioCache.has(sleutel)) return studioCache.get(sleutel)
+  const { kleur: k, waarde: w } = kaartDelen(id)
+  const kleur = KAARTSTIJLEN[stijl].kleur[k] || ZWART
+  const svg = '<svg class="kt-svg kt-studio" viewBox="0 0 250 350" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+    + '<rect x="2" y="2" width="246" height="346" rx="18" fill="#fffdf9" stroke="#d9d2c6" stroke-width="3"/>'
+    + (PITTEN[w] || []).map(([x, y]) => tekenKleur(k, x, y, 46, y > 175, kleur)).join('')
+    + hoek(k, w, kleur) + '<g transform="rotate(180 125 175)">' + hoek(k, w, kleur) + '</g></svg>'
+  studioCache.set(sleutel, svg)
+  return svg
 }
 export function kaartSvg(id, stijl = kaartStijl()) {
   if (stijl === 'modern') return modernKaart(id)
   if (stijl === 'vrolijk') return vrolijkKaart(id)
+  if (KAARTSTIJLEN[stijl]?.studio === 'plaatjes' && !/^J[12]$/.test(id) && !STUDIO_PLAATJES.includes(kaartDelen(id).waarde)) return studioCijferKaart(stijl, id)
   if (KAARTSTIJLEN[stijl]?.map) return /^J[12]$/.test(id) ? plaatje(stijl, 'joker') : plaatjeMetHoek(stijl, id)
   const sleutel = id + (isEngels() ? '|en' : '')
   if (svgCache.has(sleutel)) return svgCache.get(sleutel)

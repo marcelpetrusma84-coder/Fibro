@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=149"></script>
+<script src="taal.js?v=150"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -343,7 +343,7 @@ import { meldToestel } from './toestel.js?v=1'
 import { zetStandaardWidgets } from './standaardwidgets.js?v=2' // v267: nieuw account = meteen widgets op Home
 import * as GB from './gastenboekstijl.js?v=2'
 import { spelIcoonHtml } from './spelicoon.js?v=6' // 30 okt 2026: plaatjes uit de spellen
-import { initSync, lokaleVriendNaam } from './sync.js?v=266'
+import { initSync, lokaleVriendNaam } from './sync.js?v=267'
 import { maakProfielLikes, itemVan } from './profielreacties.js?v=2' // v258: likes op je eigen profiel
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -1752,11 +1752,61 @@ async function renderPeertube(c, uid) {
 // ════════════════════════════════
 async function renderMix(c, id, uid) {
   let L
-  try { L = await import('./layouts.js?v=1') } catch (e) { console.warn('[layout]', e); return }
+  try { L = await import('./layouts.js?v=2') } catch (e) { console.warn('[layout]', e); return }
   const layout = L.layoutVan(id)
   if (!layout) { c.innerHTML = '<div class="wi-icon">🧩</div>'; return }
   const teken = { peertube: renderPeertube, muziekwidget: renderMuziekwidget, radio: renderRadio, rss: renderRss, mastodon: renderMastodon }
-  L.tekenMix(c, layout, (soort, vak) => { if (teken[soort]) teken[soort](vak, uid) }, { taal: (window.T && window.T.taal) || 'nl' })
+  L.tekenMix(c, layout, (soort, vak) => {
+    const def = layout.vakken.find(v => v.soort === soort)
+    if (L.kantEnKlaar(def)) renderMixVak(vak, uid, L, layout, def) // kant-en-klaar: eigen inhoud (mix_<uid>)
+    else if (teken[soort]) teken[soort](vak, uid)                    // anders: de gewone widget
+  }, { taal: (window.T && window.T.taal) || 'nl' })
+}
+
+// 25 nov 2026: een kant-en-klaar vak (inhoud van de maker in Stekky Studio). De inhoud staat in mix_<uid> (gaat via sync
+// naar vrienden). RSS: vast (geen knop) of kiezen uit de feeds van de maker. PeerTube: vaste server en categorieën,
+// en liken en reageren alleen als de maker dat aanzette.
+async function renderMixVak(el, uid, L, layout, def) {
+  el.textContent = '' // ook het keuzescherm (tekenFeedKeuze) weg
+  const sleutel = L.vakSleutel(layout, def.soort)
+  const cfg = L.vakCfg(layout, def, L.leesMix(uid)[sleutel])
+  const bewaar = nieuw => { L.zetMixVak(uid, sleutel, nieuw); renderMixVak(el, uid, L, layout, def) }
+  if (def.soort === 'rss') {
+    let R
+    try { R = await import('./rsswidget.js?v=4') } catch (e) { console.warn('[layout]', e); return }
+    const bg = 'widgetbg_mix_' + layout.id + '_rss_' + uid, fotosKey = 'mixfotos_' + layout.id + '_rss_' + uid
+    let spriteId = ''
+    try { spriteId = (JSON.parse(localStorage.getItem('widgetbgpos_' + bg) || 'null') || {}).rss || '' } catch (e) {}
+    const sprite = spriteId ? await laadUitDB(bg) : null
+    R.tekenRssWidget(el, {
+      cfg, eigen: true, sprite, spriteId, bewaar,
+      ophalen: R.maakOphaler(async () => { const { data } = await supabase.auth.getSession(); return data && data.session ? data.session.access_token : null }),
+      fotos: {
+        lees: async () => { try { return JSON.parse((await laadUitDB(fotosKey)) || '{}') || {} } catch (e) { return {} } },
+        bewaar: async cache => { if (cache && Object.keys(cache).length) await slaFotoOp(fotosKey, JSON.stringify(cache)); else await wisFotoUitDB(fotosKey) },
+        sprite: async (data, id) => {
+          if (data && (await slaFotoOp(bg, data)) !== null) { try { localStorage.setItem('widgetbgpos_' + bg, JSON.stringify({ rss: id })) } catch (e) {} }
+          else { await wisFotoUitDB(bg); try { localStorage.removeItem('widgetbgpos_' + bg) } catch (e) {} }
+        },
+      },
+      // vast: geen knop; kiezen: vinkjes bij de feeds van de maker (andere feeds = de oude berichten weg, meteen nieuwe)
+      wijzig: def.inhoud.manier === 'kiezen'
+        ? () => L.tekenFeedKeuze(el, def.inhoud, cfg.feeds.map(f => f.url), feeds => bewaar({ feeds, berichten: [], bijgewerkt: 0 }), () => renderMixVak(el, uid, L, layout, def))
+        : false,
+    })
+  } else if (def.soort === 'peertube') {
+    let P
+    try { P = await import('./peertube.js?v=5') } catch (e) { console.warn('[layout]', e); return }
+    P.tekenPeertubeWidget(el, { cfg, acties: def.inhoud.reageren ? fediverseActies(uid) : null })
+    // de lijst ververst vanzelf als hij ouder is dan een uur (alleen hier, bij de eigenaar)
+    if (Date.now() - (cfg.bijgewerkt || 0) > 3600000 && !el._mixBezig) {
+      el._mixBezig = true
+      try {
+        const r = await P.haalCategorie(cfg)
+        if (!r.fout && el.isConnected) bewaar({ ...cfg, videos: r.videos, id: r.videos[0] ? r.videos[0].id : undefined, bijgewerkt: Date.now() })
+      } catch (e) { console.warn('[layout] verversen', e) } finally { el._mixBezig = false }
+    }
+  }
 }
 
 // 25 nov 2026: Liken en Reageren onder een PeerTube-video, met je eigen fediverse-account. fediverse.js laadt pas als
@@ -1839,7 +1889,7 @@ async function renderRss(c, uid) {
   try { cfg = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
   try { spriteId = (JSON.parse(localStorage.getItem('widgetbgpos_' + bg) || 'null') || {}).rss || '' } catch (e) {}
   let R
-  try { R = await import('./rsswidget.js?v=3') } catch (e) { console.warn('[rss]', e); return }
+  try { R = await import('./rsswidget.js?v=4') } catch (e) { console.warn('[rss]', e); return }
   const sprite = spriteId ? await laadUitDB(bg) : null
   R.tekenRssWidget(c, {
     cfg, eigen: true, sprite, spriteId,
@@ -1871,7 +1921,7 @@ async function renderMastodon(c, uid) {
   try { cfg = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
   try { spriteId = (JSON.parse(localStorage.getItem('widgetbgpos_' + bg) || 'null') || {}).mastodon || '' } catch (e) {}
   let M
-  try { M = await import('./mastodon.js?v=1') } catch (e) { console.warn('[mastodon]', e); return }
+  try { M = await import('./mastodon.js?v=2') } catch (e) { console.warn('[mastodon]', e); return }
   const sprite = spriteId ? await laadUitDB(bg) : null
   M.tekenMastodonWidget(c, {
     cfg, eigen: true, sprite, spriteId,

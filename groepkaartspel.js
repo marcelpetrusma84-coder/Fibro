@@ -15,7 +15,7 @@
 //   gk.kies()                 het keuzescherm (knop 🎲)
 //   gk.ontvang(payload)       alles wat met event 'gs' over het groepskanaal binnenkomt
 //   bel = { kan(), aan(), wissel() }   de voice chat van de groep (voor de microfoon in het spelmenu)
-import { STUDIO_SPELLEN, studioSpel, spelBestand, spelIcoon } from './studio-spellen.js?v=4'
+import { STUDIO_SPELLEN, studioSpel, spelBestand, spelIcoon } from './studio-spellen.js?v=5'
 import { maakSpelMenu } from './spelmenu.js?v=1'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)

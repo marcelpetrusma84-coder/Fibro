@@ -43,6 +43,17 @@ Dan: `node tests/tools/studio-spel-installeer.mjs <id>.stekkyspel.json`. Dat
 
 Daarna bouwt Claude de echte regels in `<id>-ui.js` en `<id>.js` (zie de stappen hieronder) en verhoogt `v` van het spel in `studio-spellen.js`.
 
+## Eigen speelkaarten: Stekky Studio > 🃏 Speelkaarten maken (25 november 2026)
+
+Een eigen set kaarten maak je uit een paar grote platen (bijvoorbeeld met Gemini). Je kiest:
+
+- **Alleen de plaatjes (18)**: de azen, boeren, vrouwen en heren, de achterkant en de joker, op 2 platen van 3 × 3. De kaarten 2 tot en met 10 tekent de app zelf (`studioCijferKaart` in `kaartspel-hulp.js`), met de tekens in de kleuren die je kiest.
+- **Alle 54 kaarten**: 4 platen van 4 × 4 (één per kleur) en 1 plaat met de achterkant en de joker, zoals Perkament.
+
+Per plaat staat er een prompt voor Gemini klaar (`maakKaartPrompt` in `kaartmaker.js`). Je laadt de platen in (ook alle tegelijk); de Studio knipt ze in kaarten van 375 × 525, zet elk plaatje op de goede kaart en laat zien wat er nog ontbreekt. Klopt een kaart niet, dan kies je bij die kaart een ander plaatje. Dan maakt de Studio een kaartpakket (`<id>.stekkykaarten.json`).
+
+`node tests/tools/studio-kaarten-installeer.mjs <id>.stekkykaarten.json` zet de plaatjes in `kaarten/<id>/` en de set in `studio-kaarten.js`. Daarmee staat hij vanzelf bij "Kies je kaarten" in elk kaartspel (`KAARTSTIJLEN`).
+
 ## Zo maak je een nieuw kaartspel
 
 1. **Regels in een eigen bestand** zonder scherm, zoals `pesten.js`: één stand-object, functies die een *nieuwe* stand teruggeven (of `null` als het niet mag), `geldigeStand()` om een stand van de ander te controleren, en `computerStap()` voor spelen tegen de computer. Zo kun je de regels testen met Node.

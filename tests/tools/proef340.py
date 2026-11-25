@@ -112,8 +112,10 @@ try:
         # ── F ──
         bram.click('#spelMenuKnop'); bram.click('#spelMenuLijst [data-menu=exit]')
         check(wacht(bram, "() => !document.querySelector('.gk-overlay')", 3000), 'F Bram verlaat het spel')
-        # Bram is aan de beurt geweest of komt nog: de computer speelt voor hem; het spel gaat door tot Marcel weer kan
-        check(wacht(marcel, MIJN, 20000), 'F de computer speelde voor Bram; Marcel is weer aan de beurt')
+        # Bram is aan de beurt geweest of komt nog: de computer speelt voor hem; het spel gaat door tot Marcel weer kan.
+        # (Zo'n 1 op 9 keer haalt een computer 31 en is de ronde klaar; dan begint Tijn de volgende ronde. Tijn doet in
+        #  deze proef niets, dus de computer zet pas na zijn beurttijd (30 + 6 s) voor hem: daarom tot 60 s wachten.)
+        check(wacht(marcel, MIJN, 60000), 'F de computer speelde voor Bram; Marcel is weer aan de beurt')
         marcel.click('#spelMenuKnop'); marcel.click('#spelMenuLijst [data-menu=exit]')
         check(wacht(tijn, "() => (document.querySelector('.kt-einde') || {}).innerText?.includes('Het spel is gestopt')", 8000), 'F Marcel stopt: Tijn ziet "Het spel is gestopt."')
 

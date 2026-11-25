@@ -66,7 +66,7 @@ try:
         pg.goto(BASIS + 'studio.html')
         pg.wait_for_function("() => !document.getElementById('inhoud').classList.contains('verborgen')", timeout=15000)
         pg.click('#layoutBlok summary')
-        check(pg.locator('#loSjablonen .lo-sjabloon').count() == 4, 'A vier sjablonen om uit te kiezen')
+        check(pg.locator('#loSjablonen .lo-sjabloon').count() == 5, 'A vijf sjablonen om uit te kiezen (ook Eén groot vak)')
         pg.click('#loSjablonen .lo-sjabloon[data-sjabloon="drie"]')
         check(pg.locator('#loVakken select.lo-soort').count() == 3 and pg.locator('#loVoorbeeld .lo-vak').count() == 3, 'A "Groot boven, twee eronder": drie vakken en een voorbeeld')
         pg.select_option('#loVakken select[data-vak="1"]', 'rss')

@@ -343,7 +343,7 @@ import { meldToestel } from './toestel.js?v=1'
 import { zetStandaardWidgets } from './standaardwidgets.js?v=2' // v267: nieuw account = meteen widgets op Home
 import * as GB from './gastenboekstijl.js?v=2'
 import { spelIcoonHtml } from './spelicoon.js?v=6' // 30 okt 2026: plaatjes uit de spellen
-import { initSync, lokaleVriendNaam } from './sync.js?v=267'
+import { initSync, lokaleVriendNaam } from './sync.js?v=268'
 import { maakProfielLikes, itemVan } from './profielreacties.js?v=2' // v258: likes op je eigen profiel
 import { supabase } from './supabase.js?v=95'
 import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -1725,7 +1725,7 @@ async function renderPeertube(c, uid) {
   try { cfg = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
   zetWidgetAchtergrond(c, 'widgetbg_peertube_' + uid) // de miniatuur (of een eigen foto via 🖼)
   let P
-  try { P = await import('./peertube.js?v=5') } catch (e) { console.warn('[peertube]', e); return }
+  try { P = await import('./peertube.js?v=6') } catch (e) { console.warn('[peertube]', e); return }
   P.tekenPeertubeWidget(c, {
     cfg, eigen: true,
     bewaar: async nieuw => { await bewaarMetInfo(c, uid, 'peertube', P, cfg, nieuw); renderPeertube(c, uid) },
@@ -1752,7 +1752,7 @@ async function renderPeertube(c, uid) {
 // ════════════════════════════════
 async function renderMix(c, id, uid) {
   let L
-  try { L = await import('./layouts.js?v=2') } catch (e) { console.warn('[layout]', e); return }
+  try { L = await import('./layouts.js?v=3') } catch (e) { console.warn('[layout]', e); return }
   const layout = L.layoutVan(id)
   if (!layout) { c.innerHTML = '<div class="wi-icon">🧩</div>'; return }
   const teken = { peertube: renderPeertube, muziekwidget: renderMuziekwidget, radio: renderRadio, rss: renderRss, mastodon: renderMastodon }
@@ -1796,14 +1796,17 @@ async function renderMixVak(el, uid, L, layout, def) {
     })
   } else if (def.soort === 'peertube') {
     let P
-    try { P = await import('./peertube.js?v=5') } catch (e) { console.warn('[layout]', e); return }
-    P.tekenPeertubeWidget(el, { cfg, acties: def.inhoud.reageren ? fediverseActies(uid) : null })
-    // de lijst ververst vanzelf als hij ouder is dan een uur (alleen hier, bij de eigenaar)
+    try { P = await import('./peertube.js?v=6') } catch (e) { console.warn('[layout]', e); return }
+    const weergave = L.weergaveVan(def)
+    P.tekenPeertubeWidget(el, { cfg, weergave, acties: def.inhoud.reageren ? fediverseActies(uid) : null })
+    // de lijst ververst vanzelf als hij ouder is dan een uur (alleen hier, bij de eigenaar); bij een carrousel ook de
+    // miniaturen (één klein plaatje dat via sync naar vrienden gaat)
     if (Date.now() - (cfg.bijgewerkt || 0) > 3600000 && !el._mixBezig) {
       el._mixBezig = true
       try {
         const r = await P.haalCategorie(cfg)
-        if (!r.fout && el.isConnected) bewaar({ ...cfg, videos: r.videos, id: r.videos[0] ? r.videos[0].id : undefined, bijgewerkt: Date.now() })
+        const plaatje = (!r.fout && weergave === 'carrousel') ? await P.maakSprite(r.plaatjes) : {}
+        if (!r.fout && el.isConnected) bewaar({ ...cfg, sprite: undefined, spriteN: undefined, ...plaatje, videos: r.videos, id: r.videos[0] ? r.videos[0].id : undefined, bijgewerkt: Date.now() })
       } catch (e) { console.warn('[layout] verversen', e) } finally { el._mixBezig = false }
     }
   }

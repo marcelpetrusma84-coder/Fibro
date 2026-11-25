@@ -97,7 +97,7 @@ assert.match(lees('profiel.html'), /id="widget-peertube" onclick="toggleWidget\(
 assert.match(lees('profiel.html'), /peertube:\s+\{ id:'peertube'/)
 assert.match(lees('vriend-profiel.html'), /if \(w\.id === 'peertube'\) \{/)
 assert.match(lees('vriend-profiel.html'), /cfg = P\.normaliseer\(JSON\.parse\(ruw\)\)/, 'wat een vriend stuurt gaat door normaliseer')
-for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/peertube\.js\?v=5'\)/)
+for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/peertube\.js\?v=6'\)/)
 const en = lees('taal-en.js')
 for (const t of ['PeerTube', 'Uit de Store: video van PeerTube, laadt pas na een tik', 'Nog geen video', '▶ Afspelen', 'Toegestane servers: {lijst}'])
   assert.ok(en.includes(JSON.stringify(t) + ':'), 'Engels voor: ' + t)

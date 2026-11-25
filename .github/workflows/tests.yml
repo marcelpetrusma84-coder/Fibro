@@ -281,3 +281,6 @@ jobs:
       - name: "Stekky Studio: kant-en-klare widgets (vaste PeerTube, RSS kiezen uit de lijst) (proef334)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef334.py .
+      - name: "Stekky Studio: weergaven, video-carrousel met miniaturen en nieuws eronder (proef335)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef335.py .

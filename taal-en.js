@@ -2631,6 +2631,8 @@ window.FIBRO_EN = {
   // 18 nov 2026: PeerTube-widget (peertube.js, profiel.html, vriend-profiel.html)
   "PeerTube": "PeerTube",
   "Uit de Store: video van PeerTube, laadt pas na een tik": "From the Store: video from PeerTube, only loads after a tap",
+  "Uit de Store: een layout met een paar widgets samen": "From the Store: a layout with a few widgets together",
+  "{naam} verwijderen": "Remove {naam}",
   "PeerTube verwijderen": "Remove PeerTube",
   "Zet een video van PeerTube op je profiel. Je vrienden zien eerst een kaartje; pas als iemand op afspelen tikt, maakt zijn toestel verbinding met PeerTube. Geen reclame, geen aanbevelingen.": "Put a PeerTube video on your profile. Your friends first see a card; only when someone taps play does their device connect to PeerTube. No ads, no recommendations.",
   "Gedownload! Er is geen ruimte meer op je beginscherm. Haal iets weg, of zet hem aan bij Profiel → Widgets.": "Downloaded! There is no room left on your home screen. Remove something, or turn it on at Profile → Widgets.",

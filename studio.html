@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#1a0a2e">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
-<script src="taal.js?v=148"></script>
+<script src="taal.js?v=149"></script>
 <script src="appslot.js?v=3"></script>
 <title>Stekky Studio</title>
 <link href="lettertypen/basis.css?v=1" rel="stylesheet">
@@ -153,10 +153,27 @@ textarea#promptTekst { width:100%; min-height:300px; margin-top:12px; line-heigh
     <div class="rij" style="margin-top:14px"><button type="button" class="knop" id="maakPakket">📦 Pakketbestand maken</button></div>
     <div class="melding" id="pakketMelding" aria-live="polite"></div>
   </section>
+
+  <!-- 25 nov 2026: widget-layouts (studio-layout-ui.js, layouts.js) -->
+  <details class="promptblok" id="layoutBlok">
+    <summary>🧩 Widget-layout maken</summary>
+    <p class="uitleg" style="margin-top:8px">Een layout is één widget met een paar bestaande widgets samen, bijvoorbeeld een grote PeerTube-video met je RSS-nieuws eronder. Kies hoe de vakken liggen en wat er in elk vak komt. Gebruikers vullen de vakken zelf in (hun eigen video, muziek of feeds); de indeling zelf kunnen ze niet aanpassen. Elke soort kan één keer in een layout.</p>
+    <div class="vakken" id="loSjablonen" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"></div>
+    <div class="rij" id="loVakken" style="margin-top:12px"></div>
+    <div class="rij" style="margin-top:12px;align-items:flex-start">
+      <label class="veld" style="flex:1 1 220px">Naam van de layout<input type="text" id="loTitel" placeholder="bijvoorbeeld Video en nieuws"></label>
+      <label class="veld" style="flex:2 1 300px">Uitleg in de Store (Nederlands)<input type="text" id="loUitlegNl" value="Een grote video met je nieuws eronder, in één widget."></label>
+      <label class="veld" style="flex:2 1 300px">Uitleg in de Store (Engels)<input type="text" id="loUitlegEn" value="A big video with your news below it, in one widget."></label>
+    </div>
+    <div id="loVoorbeeld"></div>
+    <div class="rij" style="margin-top:14px"><button type="button" class="knop" id="loMaak">🧩 Layoutbestand maken</button></div>
+    <div class="melding" id="loMelding" aria-live="polite"></div>
+  </details>
 </main>
 
 <script type="module">
 import './studio-ui.js?v=5'
+import './studio-layout-ui.js?v=1'
 </script>
 </body>
 </html>

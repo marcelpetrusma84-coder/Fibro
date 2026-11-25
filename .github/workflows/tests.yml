@@ -284,3 +284,6 @@ jobs:
       - name: "Niet-commercieel weg: geen weer-widget, geen Bandcamp, geen Regicide in de Store-tekst (proef336)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef336.py .
+      - name: "Stekky Studio: spel maken, installeren, in de Store, op Home en tegen de computer spelen (proef337)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef337.py .

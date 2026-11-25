@@ -10,6 +10,7 @@ import { schaakUltraBot } from './schaak-ultra.js?v=4'
 import { computerStap as pestenComputerStap, doeStap as pestenDoeStap, geldigeStand as pestenGeldig } from './pesten.js?v=2'
 import * as Toepen from './toepen.js?v=1'                   // 11 nov 2026: tweede en derde kaartspel
 import * as Eenentwintigen from './eenentwintigen.js?v=1'
+import { STUDIO_SPELLEN, spelBestand as studioBestand, luieBot } from './studio-spellen.js?v=1' // 25 nov 2026: spellen uit Stekky Studio
 
 export const NIVEAUS = ['makkelijk', 'normaal', 'moeilijk']
 
@@ -553,3 +554,7 @@ export const SOLO_SPELLEN = {
   // aanpassing aan solo.js neemt 197 of hoger.
   shmup:        { naam: 'Neon Raiders',  icon: '🚀', bestand: './neon-raiders-ui.js?v=226', zonderKanaal: true, arcade: true },
 }
+// 25 nov 2026: spellen uit Stekky Studio (studio-spellen.js) met 'tegen de computer'. De computerspeler staat in <id>.js
+// (export bot) en wordt pas opgehaald als je speelt. Alleen via de Store, net als de kaartspellen.
+for (const s of STUDIO_SPELLEN) if (s.met.computer)
+  SOLO_SPELLEN[s.id] = { naam: s.naam[0], icon: s.icoon, bestand: studioBestand(s), bot: luieBot(s), store: true, studio: true }

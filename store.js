@@ -18,7 +18,8 @@ import { STORE_PAKKETTEN } from './lettertypes.js?v=133'
 import { STORE_VELLEN } from './stickervellen.js?v=242'
 import { legStoreVakkenVast, zetStoreVelActief } from './stickervakken.js?v=6'   // 13 nov 2026: stickers aanzetten bij Stijl
 import { zetStandaardWidgets } from './standaardwidgets.js?v=2'   // 17 nov 2026: games meteen op Home
-import { STUDIO_LAYOUTS } from './studio-layouts.js?v=1' // 25 nov 2026: widget-layouts uit Stekky Studio (layouts.js)
+import { STUDIO_LAYOUTS } from './studio-layouts.js?v=1'
+import { STUDIO_SPELLEN, spelIcoon as studioIcoon } from './studio-spellen.js?v=1' // 25 nov 2026: spellen uit Stekky Studio (spelmaker.js) // 25 nov 2026: widget-layouts uit Stekky Studio (layouts.js)
 
 export const STORE_SOORTEN = [
   // 11 nov 2026: volgorde van de paarse balk in store.html; achtergronden erbij
@@ -45,6 +46,9 @@ export const STORE_GAMES = [
   // 13 nov 2026: Koningsjacht, alleen te spelen (op Home), met de perkamentkaarten op een houten tafel
   { id: 'koningsjacht', soort: 'game', titel: 'Koningsjacht', widget: 'spel_koningsjacht', homeIcoon: '👑', icoon: 'spelicoon/koningsjacht.webp?v=2',
     uitleg: 'Versla de twaalf boeren, vrouwen en heren uit het kasteel. Alleen, of in de chat met een vriend: samen, als wedstrijd of als duel. Elke soort kaart heeft een eigen kracht.' },
+  // 25 nov 2026: spellen uit Stekky Studio
+  ...STUDIO_SPELLEN.map(s => ({ id: s.id, soort: 'game', titel: s.naam[0], widget: 'spel_' + s.id, homeIcoon: s.icoon, icoon: studioIcoon(s),
+    uitleg: s.uitleg[0], uitlegEn: s.uitleg[1], studio: true })),
 ]
 // Stickers (13 nov 2026): een vel van 12 bewegende stickers met geluid (STORE_VELLEN in stickervellen.js). Na downloaden
 // staat het bij Stijl > Stickers; zet je het daar aan, dan staat het in de stickerkeuze van de chat bij 'Winkel'.

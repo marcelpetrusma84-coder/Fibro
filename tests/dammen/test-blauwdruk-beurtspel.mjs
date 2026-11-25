@@ -8,7 +8,7 @@ const lijst = chat.match(/const BEURTSPELLEN = (\[[^\]]*\])/)
 assert.ok(lijst, 'BEURTSPELLEN staat in chat.html')
 const BEURTSPELLEN = JSON.parse(lijst[1].replace(/'/g, '"'))
 assert.deepEqual(BEURTSPELLEN, ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pesten', 'toepen', 'eenentwintigen', 'koningsjacht'])   // 11 nov 2026: de kaartspellen
-assert.match(chat, /const SPELCHAT_SPELLEN = BEURTSPELLEN/, 'de chatbalk komt uit dezelfde lijst')
+assert.match(chat, /const SPELCHAT_SPELLEN = \[\.\.\.BEURTSPELLEN, \.\.\.STUDIO_SPELLEN\.filter\(s => s\.met\.vriend && s\.met\.chatbalk\)/, 'de chatbalk komt uit dezelfde lijst (25 nov 2026: plus Studio-spellen met chatbalk)')
 assert.match(chat, /BEURTSPELLEN\.map\(spel => \[spel, 'groot'\]\)/, 'de webcamrondjes komen uit dezelfde lijst (v265: schaken ook)')
 assert.match(chat, /window\.addEventListener\('fibro-spel-geslagen', kleurRondjeRood\)/)
 assert.match(chat, /window\.addEventListener\('fibro-dam-geslagen', kleurRondjeRood\)/, 'dammen blijft werken')

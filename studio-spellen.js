@@ -1,0 +1,46 @@
+// studio-spellen.js (v1, 25 nov 2026) - de spellen uit Stekky Studio (spelmaker.js). Dit bestand schrijft
+// tests/tools/studio-spel-installeer.mjs; met de hand aanpassen hoeft niet.
+//
+// In gewone woorden: elk spel hier staat vanzelf overal waar een spel moet staan: de Store, het spelmenu in de chat,
+// tegen de computer (spel.html), Home, Profiel > Widgets, uitnodigingen, het spelicoon en het titelscherm. Wat erin
+// zit (chatbalk, webcam, spraak) staat bij 'met' en 'spraak'. Het spel zelf staat in <id>-ui.js (het scherm) en
+// <id>.js (de computerspeler, export bot).
+//   { id, soort: 'beurt'|'kaart', naam: [nl, en], icoon, uitleg: [nl, en], v, met: { vriend, computer, chatbalk, webcam },
+//     spraak: 'knop'|'vanzelf'|'uit', titel: '' | id van een spel waarvan het titelscherm en de muziek gebruikt worden }
+
+export const STUDIO_SPELLEN = []
+
+// Engels: de naam en de uitleg (de Nederlandse tekst is de sleutel, zoals in taal-en.js)
+if (typeof window !== 'undefined') {
+  const en = window.FIBRO_EN ||= {}
+  for (const s of STUDIO_SPELLEN) { en[s.naam[0]] ??= s.naam[1]; en[s.uitleg[0]] ??= s.uitleg[1] }
+}
+
+export const studioSpel = id => STUDIO_SPELLEN.find(s => s.id === id) || null
+export const spelBestand = s => './' + s.id + '-ui.js?v=' + s.v
+export const regelBestand = s => './' + s.id + '.js?v=' + s.v
+export const spelIcoon = s => 'spelicoon/' + s.id + '.webp?v=' + s.v
+
+// De computerspeler pas ophalen als je tegen de computer speelt. maakSoloKanaal (solo.js) wil meteen een bot; tot het
+// bestand er is, wachten de berichten even.
+export function luieBot(s) {
+  return opties => {
+    let echt = null, wacht = [], gestopt = false
+    import(regelBestand(s)).then(m => {
+      if (gestopt) return
+      echt = m.bot(opties)
+      for (const [e, p] of wacht) echt.ontvang(e, p)
+      wacht = null
+    }).catch(e => console.warn('[studio-spel]', s.id, e))
+    return {
+      ontvang(e, p) { if (echt) echt.ontvang(e, p); else if (wacht) wacht.push([e, p]) },
+      stop() { gestopt = true; if (echt && echt.stop) echt.stop() },
+    }
+  }
+}
+
+// Profiel > Widgets: de widget van een Studio-spel (spel_<id>), net als Pesten (2 x 1)
+export function studioWidgetDef(n) {
+  const s = typeof n === 'string' && n.startsWith('spel_') ? studioSpel(n.slice(5)) : null
+  return s ? { id: 'spel_' + s.id, icon: s.icoon, titel: s.naam[0], w: 2, h: 1 } : null
+}

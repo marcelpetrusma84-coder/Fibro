@@ -218,8 +218,11 @@ try:
         # ── J: de Store ──
         q = ctx.new_page()
         q.goto(BASIS + 'manifest.json')
-        uit = q.evaluate("async () => { const s = await import('./store.js?v=13'); return s.STORE_GAMES.map(g => g.id + '|' + g.widget) }")
+        # 25 nov 2026: daarna komen de spellen uit Stekky Studio (studio: true), zoals Eenendertigen
+        uit = q.evaluate("async () => { const s = await import('./store.js?v=13'); return s.STORE_GAMES.filter(g => !g.studio).map(g => g.id + '|' + g.widget) }")
         check(uit == ['pesten|spel_pesten', 'toepen|spel_toepen', 'eenentwintigen|spel_eenentwintigen', 'koningsjacht|spel_koningsjacht'], 'J: de Store heeft Pesten, Toepen, Eenentwintigen en Koningsjacht (%s)' % uit)
+        studio = q.evaluate("async () => { const s = await import('./store.js?v=13'); return s.STORE_GAMES.filter(g => g.studio).map(g => g.id + '|' + g.widget) }")
+        check(all(re.match(r'^[a-z0-9]+\|spel_[a-z0-9]+$', x) for x in studio), 'J: en de spellen uit Stekky Studio (%s)' % studio)
         check(not fouten, 'J: geen paginafouten (%s)' % fouten[:3])
         b.close()
 finally:

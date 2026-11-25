@@ -269,3 +269,6 @@ jobs:
       - name: "Stickerpakket Santa (eerste uit Stekky Studio) staat in de Store (proef330)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef330.py .
+      - name: "PeerTube-widget: categorieen aanvinken, bijvoorbeeld alleen Gaming (proef331)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef331.py .

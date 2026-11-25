@@ -717,7 +717,7 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_peertube')
     if (!ruw) return false
     let P, cfg = null
-    try { P = await import('./peertube.js?v=3') } catch (e) { console.warn('[peertube]', e); return false }
+    try { P = await import('./peertube.js?v=4') } catch (e) { console.warn('[peertube]', e); return false }
     try { cfg = P.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
     await vriendAchtergrond(el, vriendId, 'peertube') // de miniatuur, via sync (wbg:peertube)

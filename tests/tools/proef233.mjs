@@ -97,7 +97,7 @@ verzonden = []; await vraag({ message_id: bericht(2, B, A, 'spelinvite:schaken:'
 check('uitnodiging schaken: Nederlands', verzonden[0] && verzonden[0][1].body === '🎮 Bram daagt je uit voor Schaken!', verzonden)
 // 3. onzin in een uitnodiging: geen melding
 verzonden = []
-const rr = [await vraag({ message_id: bericht(3, A, B, 'spelinvite:bestaatniet:' + A + ':s1') }),
+const rr = [await vraag({ message_id: bericht(3, A, B, 'spelinvite:Bestaat-Niet:' + A + ':s1') }),
             await vraag({ message_id: bericht(4, A, B, 'spelinvite:dammen:' + B + ':s1') }),
             await vraag({ message_id: bericht(5, A, B, 'spelinvite:dammen:' + A + ':<script>') })]
 check('onbekend spel, verkeerde afzender of rare sessie: geen melding', verzonden.length === 0, rr.map(x => x.data.reden))
@@ -122,6 +122,28 @@ check('verlaten zonder (recent) spel: geweigerd', r8.every(x => x.status === 403
 // 9. zonder inlogpas, onbekend spel, of 'spel' zonder bericht
 verzonden = []; const r9 = [await vraag({ receiver_id: B, type: 'spel-verlaten', spel: 'dammen' }), await vraag({ receiver_id: B, type: 'spel-gemist', spel: 'x' }, 'pas-a'), await vraag({ receiver_id: B, type: 'spel' }, 'pas-a')]
 check('zonder pas 401, onbekend spel 400, spel zonder bericht 400', r9[0].status === 401 && r9[1].status === 400 && r9[2].status === 400 && !verzonden.length, r9.map(x => x.status))
+// 9b (25 nov 2026). spellen uit Stekky Studio: Eenendertigen met zijn naam; een nieuw studiospel heet "a game"
+verzonden = []; await vraag({ message_id: bericht(8, A, B, 'spelinvite:eenendertigen:' + A + ':s2') }); await vraag({ message_id: bericht(9, A, B, 'spelinvite:mijnnieuwspel:' + A + ':s3') })
+check('studiospellen: met naam, of "a game"', verzonden.length === 2 && verzonden[0][1].body === '🎮 Marcel challenges you to Thirty-One!' && verzonden[1][1].body === '🎮 Marcel challenges you to a game!', verzonden.map(v => v[1].body))
+// 9c (25 nov 2026). groepspel: Marcel opent een kaartspel in de groep; Bram (lid, Engels) krijgt een melding, Cor (geen lid) niet
+const GR = '99999999-0000-4000-8000-000000000009', D = 'dddddddd-0000-4000-8000-000000000005'
+DB.groep_leden = [{ groep_id: GR, user_id: A }, { groep_id: GR, user_id: B }, { groep_id: GR, user_id: D }]
+DB.profiles.push({ id: D, username: 'Dirk', taal: 'nl', geblokkeerd: false }); DB.tokens['pas-c'] = C
+DB.push_subscriptions.push({ id: 's4', user_id: D, subscription: { endpoint: 'd1' } }, { id: 's5', user_id: C, subscription: { endpoint: 'c1' } })
+DB.mijn_blokkades = [{ blokkeerder_id: D, geblokkeerde_id: A }]   // Dirk blokkeerde Marcel persoonlijk
+verzonden = []; r = await vraag({ groep_spel: { groep_id: GR, spel: 'eenendertigen', sessie: 'abc123' } }, 'pas-a')
+const pg = verzonden[0] && verzonden[0][1]
+check('groepspel: Bram krijgt een melding (niet Dirk die Marcel blokkeerde, niet Marcel zelf)', r.status === 200 && verzonden.length === 1 && verzonden[0][0] === 'b1'
+  && pg.body === '🎲 Marcel wants to play Thirty-One in the group' && pg.url === '/Fibro/groep.html?id=' + GR && pg.type === 'groepspel' && pg.tag === 'groepspel-' + GR, [r, verzonden])
+verzonden = []; r = await vraag({ groep_spel: { groep_id: GR, spel: 'eenendertigen', sessie: 'abc124' } }, 'pas-a')
+check('groepspel: binnen 2 minuten niet nog eens', verzonden.length === 0 && r.data.reden === 'net al gemeld', r)
+verzonden = []; const rg = [await vraag({ groep_spel: { groep_id: GR, spel: 'eenendertigen' } }, 'pas-c'), await vraag({ groep_spel: { groep_id: GR, spel: 'eenendertigen' } }),
+  await vraag({ groep_spel: { groep_id: 'x', spel: 'eenendertigen' } }, 'pas-b'), await vraag({ groep_spel: { groep_id: GR, spel: '<b>' } }, 'pas-b')]
+check('groepspel: geen lid 403, zonder pas 401, rare groep of spel 400', rg.map(x => x.status).join() === '403,401,400,400' && !verzonden.length, rg.map(x => x.status))
+DB.chat_instellingen = [{ gebruiker_id: A, push_uit: ['spel'] }]
+verzonden = []; r = await vraag({ groep_spel: { groep_id: GR, spel: 'eenendertigen' } }, 'pas-b')
+check('groepspel: wie Spellen uitzette (Marcel), krijgt niets; Dirk wel (hij blokkeerde alleen Marcel)', r.status === 200 && verzonden.length === 1 && verzonden[0][0] === 'd1' && verzonden[0][1].body === '🎲 Bram wil Eenendertigen spelen in de groep', [r, verzonden])
+DB.chat_instellingen = []
 // 10. berichten en bellen zoals vroeger
 verzonden = []; await vraag({ message_id: bericht(7, A, B, 'e2e:v2:q') }); await vraag({ receiver_id: B, type: 'oproep' }, 'pas-a')
 check('bericht en oproep ongewijzigd', verzonden.length === 2 && verzonden[0][1].type === 'bericht' && verzonden[1][1].type === 'oproep' && !('tag' in verzonden[0][1]))

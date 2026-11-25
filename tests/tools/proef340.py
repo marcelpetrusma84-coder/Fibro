@@ -7,6 +7,7 @@
 #  E. 🏠 Menu = terug naar de chat (het spel blijft), "Terug naar het spel" brengt je terug
 #  F. Bram verlaat het spel: de computer neemt zijn zetel over; daarna stopt Marcel: Tijn ziet "Het spel is gestopt."
 #  G. iemand die geen lid is, kan niets sturen; geen paginafouten
+#  H. (25 nov 2026) een nieuw spel geeft een pushmelding (meldPush); wie de groep later opent (via die melding) ziet de uitnodiging toch
 # python3 -I proef340.py <map>
 import functools, http.server, json, os, sys, threading, time
 from playwright.sync_api import sync_playwright
@@ -21,7 +22,7 @@ class H(http.server.SimpleHTTPRequestHandler):
 srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(H, directory=MAP))
 threading.Thread(target=srv.serve_forever, daemon=True).start()
 BASIS = 'http://127.0.0.1:%d/Fibro/' % srv.server_port
-IDS = {'Marcel': 'aaaaaaaa-0000-4000-8000-000000000001', 'Tijn': 'aaaaaaaa-0000-4000-8000-000000000002', 'Bram': 'aaaaaaaa-0000-4000-8000-000000000003'}
+IDS = {'Marcel': 'aaaaaaaa-0000-4000-8000-000000000001', 'Tijn': 'aaaaaaaa-0000-4000-8000-000000000002', 'Bram': 'aaaaaaaa-0000-4000-8000-000000000003', 'Lotte': 'aaaaaaaa-0000-4000-8000-000000000004'}
 fouten = []
 RUST = "!document.querySelector('.kt-laag .kt-vlieg')"
 MIJN = "() => !!document.querySelector('.kt-knoppen button[data-naam=alles]') && " + RUST
@@ -52,8 +53,9 @@ def lid(ctx, naam):
         const leden = Object.entries(ids).map(([username, id]) => ({ id, username }))
         // het groepskanaal: wat met event 'gs' gestuurd wordt, komt bij de anderen binnen
         const kanaal = { send(b) { bc.postMessage(b); return Promise.resolve('ok') } }
-        window.__toasts = []
+        window.__toasts = []; window.__push = []
         const gk = maakGroepKaartspel({ ik: ids[ik], groepId: 'g1', kanaal: () => kanaal, leden: () => leden, naamVan: l => l.username, toast: t => window.__toasts.push(t),
+          meldPush: (spel, sessie) => window.__push.push([spel, sessie]),
           bel: { kan: () => true, aan: () => false, wissel: () => { window.__bel = (window.__bel || 0) + 1 } } })
         bc.onmessage = e => { if (e.data && e.data.event === 'gs') gk.ontvang(e.data.payload) }
         window.__gk = gk; window.__bc = bc
@@ -123,6 +125,17 @@ try:
         tijn.evaluate("""() => { window.__bc.postMessage({ type: 'broadcast', event: 'gs', payload: { e: 'open', sessie: 'abcdef12', spel: 'eenendertigen', van: 'ffffffff-0000-4000-8000-000000000009' } }) }""")
         time.sleep(0.5)
         check(marcel.locator('.gk-balk').count() == 0, 'G iemand die geen lid is, kan geen spel openen')
+
+        # ── H ──
+        check(marcel.evaluate("window.__push.length") == 1 and marcel.evaluate("window.__push[0][0]") == 'eenendertigen', 'H Eenendertigen openen = een pushmelding naar de groep (%s)' % marcel.evaluate("window.__push"))
+        check(tijn.evaluate("window.__push.length") == 0, 'H meedoen geeft geen pushmelding')
+        marcel.evaluate("window.__gk.kies()"); marcel.click('.gk-spel[data-spel=eenendertigen]')
+        lotte = lid(ctx, 'Lotte')   # Lotte tikt op de melding: de groep gaat nu pas open
+        check(lotte.locator('.gk-balk').count() == 0, 'H Lotte was er niet bij het openen')
+        lotte.evaluate("window.__gk.hallo()")
+        check(wacht(lotte, "() => (document.querySelector('.gk-balk') || {}).innerText?.includes('Marcel wil Eenendertigen spelen')", 5000), 'H na hallo: Lotte ziet de uitnodiging toch')
+        lotte.click('.gk-balk .gk-mee')
+        check(wacht(marcel, "() => [...document.querySelectorAll('.gk-spelers li')].some(l => l.innerText.includes('Lotte'))", 5000), 'H Lotte zit in de wachtkamer van Marcel')
         check(not fouten, 'G geen paginafouten (%s)' % fouten[:3])
         browser.close()
 except Exception as e:

@@ -476,7 +476,7 @@ button { font-family:inherit; }
   import { maakGroepGesprek, MAX_BELLERS, MAX_BEELD } from './groepbellen.js?v=5'
   import { maakGroepMuziek } from './groepmuziek.js?v=1'
   import { maakPiano, speelDeuntje, leesDeuntje, lengteMs } from './groeppiano.js?v=1'
-  import { maakGroepKaartspel } from './groepkaartspel.js?v=2' // 25 nov 2026: kaartspellen met de groep (multiplayer stap 2)
+  import { maakGroepKaartspel } from './groepkaartspel.js?v=3' // 25 nov 2026: kaartspellen met de groep (multiplayer stap 2)
   import { maakGroepBord, tekenLijn, KLEUREN as BORD_KLEUREN, DIKTES as BORD_DIKTES, ACHTERGROND as BORD_ACHTERGROND } from './groepbord.js?v=2'
   import { houOpen } from './lijntjes.js?v=1'
   import { haalVriendFotos, geldigeFoto } from './vriendfotos.js?v=2'
@@ -1255,6 +1255,7 @@ button { font-family:inherit; }
       ik, groepId: groep.id, kanaal: () => lijn?.kanaal?.(), leden: () => leden.filter(l => !isGeblokt(l.id)), naamVan, toast,
       bel: { kan: () => Boolean(gesprek && magBellen()), aan: () => { const s = gesprek?.staat(); return Boolean(s && s.mee && !s.stil) },
         wissel: () => { const s = gesprek?.staat(); if (!s) return; if (!s.mee) belMee(); else gesprek.zetStil(!s.stil) } },
+      meldPush: (spel, sessie) => meldGroepSpel(groep.id, spel, sessie), // 25 nov 2026: pushmelding naar de groep
     })
     bord = maakGroepBord({
       ik, groepId: groep.id, kanaal: () => lijn?.kanaal?.(),
@@ -1266,7 +1267,7 @@ button { font-family:inherit; }
       for (let i = 0; i < 40; i++) {
         const k = lijn?.kanaal?.()
         // 17 nov 2026: ook wat er binnenkwam tussen het laden en het openen van het kanaal (dat ging verloren)
-        if (k && k.state === 'joined') { haalGemist().catch(() => {}); break }
+        if (k && k.state === 'joined') { haalGemist().catch(() => {}); try { kaartspel?.hallo() } catch (e) {} break }
         await new Promise(ok => setTimeout(ok, 500))
       }
     })()
@@ -1274,6 +1275,17 @@ button { font-family:inherit; }
   // ── Voice chat en webcam chat (groepbellen.js): tot 8 personen praten, of tot 4 met beeld ──
   let gesprek = null
   let kaartspel = null // 25 nov 2026: groepkaartspel.js
+  // 25 nov 2026: wie een spel opent, stuurt de andere leden een pushmelding ("Marcel wil Eenendertigen spelen").
+  // stuur-push (type groepspel) kijkt zelf of je lid bent en houdt het rustig (hoogstens eens per 2 minuten).
+  async function meldGroepSpel(groepId, spel, sessie) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      await fetch('https://qmgatbphiplrfxrljtbe.supabase.co/functions/v1/stuur-push', { method: 'POST', keepalive: true,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ groep_spel: { groep_id: groepId, spel, sessie } }) })
+    } catch (e) { console.warn('[groep] spelmelding', e) }
+  }
   const metBeeld = () => groep && groep.soort === 'webcam'
   const maxBel = () => metBeeld() ? MAX_BEELD : MAX_BELLERS
   const magBellen = () => groep && mijnPriv && leden.length > 1 && leden.length <= MAX_BELLERS

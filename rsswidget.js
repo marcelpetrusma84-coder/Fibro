@@ -1,6 +1,6 @@
-// rsswidget.js (v3, 19 nov 2026) - de RSS-widget: de nieuwste berichten van je favoriete sites op je profiel.
+// rsswidget.js (v4, 25 nov 2026) - de RSS-widget: de nieuwste berichten van je favoriete sites op je profiel.
 //
-// In gewone woorden: je zet tot 3 RSS-feeds op de widget (een link plakken, of een voorbeeld kiezen). JOUW toestel
+// In gewone woorden: je zet tot 3 RSS-feeds op de widget (een link plakken). JOUW toestel
 // vraagt de server van Stekky (edge function rss-ophalen) om de berichten; die haalt de feed op en geeft alleen tekst
 // terug (kop, link, datum, korte samenvatting). De nieuwssite ziet dus de server, niet jou. De berichten worden op dit
 // toestel bewaard en gaan via de gewone synchronisatie naar je vrienden (sync.js, 'klein:rss'): vrienden praten met
@@ -8,6 +8,7 @@
 //  - Home ververst vanzelf als de berichten ouder zijn dan een uur (en met de knop ↻).
 //  - wat van een vriend komt gaat door normaliseer(): alleen tekst, links alleen http(s) zonder inlog.
 //
+// v4 (25 nov 2026): geen voorbeelden meer (NOS en NU.nl: niet voor commercieel gebruik).
 // v3 (19 nov 2026): maakOphaler geeft ook het plaatje en de link van de feed door (voor de Mastodon-widget).
 // v2 (19 nov 2026): plaatjes en een samenvatting, en een mooier uiterlijk (het nieuwste bericht groot met plaatje).
 //  - De server haalt een plaatje alleen op voor NIEUWE berichten, hoogstens 6 per keer, hoogstens 300 KB, en rekent er
@@ -49,12 +50,9 @@ export const VERS_MS = 60 * 60 * 1000 // ouder dan een uur: Home haalt nieuwe be
 export const MAX_PLAATJES = 6 // hoogstens zoveel plaatjes per keer aan de server vragen
 export const FUNCTIE_URL = 'https://qmgatbphiplrfxrljtbe.supabase.co/functions/v1/rss-ophalen'
 const ANON_KEY = 'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
-// Voorbeelden om snel te kiezen
-export const VOORBEELDEN = () => [
-  { naam: 'NOS Nieuws', url: 'https://feeds.nos.nl/nosnieuwsalgemeen' },
-  { naam: 'NOS Sport', url: 'https://feeds.nos.nl/nossportalgemeen' },
-  { naam: 'NU.nl', url: 'https://www.nu.nl/rss/Algemeen' },
-]
+// Voorbeelden om snel te kiezen. v4 (25 nov 2026): leeg. NOS en NU.nl staan commercieel gebruik van hun feeds niet toe
+// zonder toestemming; de gebruiker plakt zelf een link. Komen er vrij te gebruiken feeds bij, dan hier.
+export const VOORBEELDEN = () => []
 // eslint-disable-next-line no-control-regex
 const tekst = (s, max) => String(s == null ? '' : s).replace(/[\u0000-\u001f\u007f​-‏‪-‮⁦-⁩]/g, '').replace(/\s+/g, ' ').trim().slice(0, max)
 
@@ -567,6 +565,7 @@ export function tekenRssWidget(c, { cfg = null, eigen = false, bewaar = null, op
     const voorbeelden = el('div', 'rs-rij')
     voorbeelden.appendChild(el('span', 'rs-uitleg', T('Voorbeelden:')))
     voorbeelden.firstChild.style.flex = 'none'
+    if (!VOORBEELDEN().length) voorbeelden.style.display = 'none' // v4: geen voorbeelden, geen rij
     for (const x of VOORBEELDEN()) {
       const b = el('button', 'rs-knopje rs-voorbeeld', x.naam)
       b.type = 'button'; b.onclick = stop(() => voegToe(x.url, x.naam))

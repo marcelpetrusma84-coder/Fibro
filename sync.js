@@ -1,6 +1,7 @@
 // v267 (25 nov 2026): ook de inhoud van kant-en-klare widgets uit Stekky Studio ('klein:mix', layouts.js)
 // v254 (4 november 2026): event 'fibro-sync-item' bij elk binnengekomen onderdeel van een vriend (itemBinnen)
 // v266 (19 nov 2026): ook de weer-widget (weer_<uid>, weer.js)
+// 25 nov 2026: de weer-widget is weg, het weer gaat niet meer mee
 // v264 (19 nov 2026): ook de Mastodon-widget (mastodon_<uid> en zijn fotootjes widgetbg_mastodon_<uid>, mastodon.js)
 // v263 (19 nov 2026): de fotootjes van de RSS-widget (widgetbg_rss_<uid>, één plaatje) gaan mee als achtergrond
 // v262 (19 nov 2026): ook de RSS-widget (rss_<uid>, rsswidget.js)
@@ -846,7 +847,7 @@ async function verzamelEigenMuziek() {
 }
 
 // v265: de kleine tekstwidgets die meegaan; een quiz (tot 50 vragen) mag groter zijn dan een quote of poll
-const KLEIN_WIDGETS = ['quote', 'aftel', 'optel', 'poll', 'quiz', 'peertube', 'muziekwidget', 'radio', 'rss', 'mastodon', 'weer', 'mix'] // 18 nov 2026: peertube.js, muziekwidget.js, radio.js; 19 nov: rsswidget.js, mastodon.js, weer.js
+const KLEIN_WIDGETS = ['quote', 'aftel', 'optel', 'poll', 'quiz', 'peertube', 'muziekwidget', 'radio', 'rss', 'mastodon', 'mix'] // 18 nov 2026: peertube.js, muziekwidget.js, radio.js; 19 nov: rsswidget.js, mastodon.js, weer.js
 const kleinMax = sl => sl === 'mix' ? 120000 : sl === 'quiz' ? 40000 : 20000 // 25 nov 2026: mix = kant-en-klare widgets (layouts.js)
 const WBG_WIDGETS = ['poll', 'quote', 'aftel', 'optel', 'quiz', 'peertube', 'muziekwidget', 'rss', 'mastodon'] // v265: quiz; v260: miniatuur/hoes van PeerTube en muziek; v263: de fotootjes van de RSS-widget; v264: en van Mastodon
         const wbgPosWacht = {}
@@ -1055,7 +1056,7 @@ async function haalVriendSleutel(id) {
   try { if (videoMetaHash) videoHash = await eigenVideoHash(videoMetaHash) } catch(e) {}
   // Kleine tekstwidgets: quote, afteltimer, opteltimer
   const klein = {}
-  for (const [sl, key] of [['quote','quote_'],['aftel','aftel_'],['optel','optel_'],['poll','poll_'],['quiz','quiz_'],['peertube','peertube_'],['muziekwidget','muziekwidget_'],['radio','radio_'],['rss','rss_'],['mastodon','mastodon_'],['weer','weer_'],['mix','mix_']]) {
+  for (const [sl, key] of [['quote','quote_'],['aftel','aftel_'],['optel','optel_'],['poll','poll_'],['quiz','quiz_'],['peertube','peertube_'],['muziekwidget','muziekwidget_'],['radio','radio_'],['rss','rss_'],['mastodon','mastodon_'],['mix','mix_']]) {
     try {
       const w = localStorage.getItem(key + huidigeUserId)
       if (w) klein[sl] = hashString(w)

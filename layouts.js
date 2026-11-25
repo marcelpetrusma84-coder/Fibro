@@ -5,7 +5,7 @@
 // wordt een pakketbestand (naam.stekkylayout.json); tests/tools/studio-layout-installeer.mjs zet het in de app
 // (studio-layouts.js). Daarna staat de layout in de Store bij Widgets. Wie hem downloadt, krijgt op Home één widget
 // 'mix_<id>' met die vakken.
-//  - Een vak laat een BESTAANDE widget zien (PeerTube, Bandcamp & Funkwhale, Radio, RSS, Mastodon), met dezelfde inhoud
+//  - Een vak laat een BESTAANDE widget zien (PeerTube, Funkwhale, Radio, RSS, Mastodon), met dezelfde inhoud
 //    als die widget los: je vult hem één keer in. Daarom kan elke soort maar één keer in een layout.
 //  - Er komt geen nieuwe opslag of synchronisatie bij: vrienden krijgen de inhoud al via die widgets (sync.js), en de
 //    layout zelf staat in de app (iedereen heeft dezelfde studio-layouts.js).
@@ -46,7 +46,7 @@ const CAT_NRS = new Set(CATEGORIEEN.map(c => c[0]))
 // Wat er in een vak kan: een bestaande widget uit de Store (zelfde naam als die widget)
 export const VAK_SOORTEN = {
   peertube: { icoon: '🎬', naam: ['Video (PeerTube)', 'Video (PeerTube)'] },
-  muziekwidget: { icoon: '🎧', naam: ['Muziek (Bandcamp & Funkwhale)', 'Music (Bandcamp & Funkwhale)'] },
+  muziekwidget: { icoon: '🎧', naam: ['Muziek (Funkwhale)', 'Music (Funkwhale)'] },
   radio: { icoon: '📻', naam: ['Radio', 'Radio'] },
   rss: { icoon: '📰', naam: ['Berichten (RSS)', 'Posts (RSS)'] },
   mastodon: { icoon: '🐘', naam: ['Berichten (Mastodon)', 'Posts (Mastodon)'] },

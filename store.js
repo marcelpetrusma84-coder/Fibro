@@ -4,11 +4,12 @@
 // v8 (13 nov 2026): stickervellen (STORE_STICKERS), het eerste is Sinterklaas.
 // v15 (18 nov 2026): widgets (STORE_WIDGETS), de eerste is PeerTube (peertube.js). Werkt net als een game: na
 // downloaden staat hij op Home en bij Profiel > Widgets; Verwijderen haalt hem overal weg.
-// v16 (18 nov 2026): de muziek-widget (muziekwidget.js): een album of nummer van Bandcamp of Funkwhale.
+// v16 (18 nov 2026): de muziek-widget (muziekwidget.js): een album of nummer van Funkwhale (25 nov 2026: Bandcamp is eruit).
 // v17 (18 nov 2026): de radio (radio.js): internetradio in een vintage radio.
 // v18 (19 nov 2026): de RSS-widget (rsswidget.js): de nieuwste koppen van tot 3 feeds.
 // v19 (19 nov 2026): de Mastodon-widget (mastodon.js): je openbare berichten, alleen meelezen.
 // v20 (19 nov 2026): de weer-widget (weer.js): het weer van een plaats die je kiest, via Open-Meteo.
+// 25 nov 2026: de weer-widget is weer weg (Open-Meteo is gratis alleen voor niet-commercieel gebruik).
 // Sinds 11 nov 2026 voor iedereen met een account (eerst alleen moderators): het Store-vakje bij Stijl staat bij
 // iedereen, en de database laat iedereen downloaden die niet geblokkeerd is (sql/stekky-store-iedereen.sql).
 // Soorten: lettertype (nu), game, sticker en widget (later). Lettertypes komen per thema in een pakket van 4
@@ -65,16 +66,14 @@ export const STORE_STICKERS = STORE_VELLEN.map(v => ({ id: v.store, soort: 'stic
 export const STORE_WIDGETS = [
   { id: 'peertube', soort: 'widget', titel: 'PeerTube', widget: 'peertube', homeIcoon: '\u{1F3AC}', w: 4, h: 3,
     uitleg: 'Zet een video van PeerTube op je profiel. Je vrienden zien eerst een kaartje; pas als iemand op afspelen tikt, maakt zijn toestel verbinding met PeerTube. Geen reclame, geen aanbevelingen.' },
-  { id: 'muziekwidget', soort: 'widget', titel: 'Bandcamp & Funkwhale', widget: 'muziekwidget', homeIcoon: '\u{1F3A7}', w: 4, h: 3,
-    uitleg: 'Zet een album of nummer van Bandcamp of Funkwhale op je profiel. Je vrienden zien eerst een kaartje; pas als iemand op luisteren tikt, maakt zijn toestel verbinding met Bandcamp of Funkwhale. Geen reclame, en bij Bandcamp telt het luisteren mee voor de artiest.' },
+  { id: 'muziekwidget', soort: 'widget', titel: 'Funkwhale', widget: 'muziekwidget', homeIcoon: '\u{1F3A7}', w: 4, h: 3,
+    uitleg: 'Zet een album of nummer van Funkwhale op je profiel: vrij gelicentieerde muziek. Je vrienden zien eerst een kaartje; pas als iemand op luisteren tikt, maakt zijn toestel verbinding met Funkwhale. Geen reclame.' },
   { id: 'radio', soort: 'widget', titel: 'Radio', widget: 'radio', homeIcoon: '\u{1F4FB}', w: 4, h: 3,
     uitleg: 'Een ouderwetse radio op je profiel, met tot 6 zenders van over de hele wereld: zoek op naam, land of muzieksoort, of plak je eigen stream-link. Pas als iemand op afspelen tikt, maakt zijn toestel verbinding met de zender.' },
   { id: 'rss', soort: 'widget', titel: 'RSS-feed', widget: 'rss', homeIcoon: '\u{1F4F0}', w: 4, h: 3,
-    uitleg: 'De nieuwste koppen van je favoriete sites op je profiel, van tot 3 RSS-feeds (bijvoorbeeld NOS of NU.nl). De server van Stekky haalt de koppen op, niet je toestel; daarna stuurt je toestel ze naar je vrienden. Pas als iemand op een kop tikt, opent het artikel op de site zelf.' },
+    uitleg: 'De nieuwste koppen van je favoriete sites op je profiel, van tot 3 RSS-feeds. De server van Stekky haalt de koppen op, niet je toestel; daarna stuurt je toestel ze naar je vrienden. Pas als iemand op een kop tikt, opent het artikel op de site zelf.' },
   { id: 'mastodon', soort: 'widget', titel: 'Mastodon', widget: 'mastodon', homeIcoon: '\u{1F418}', w: 4, h: 3,
     uitleg: 'Je openbare Mastodon-berichten op je profiel, met een knop "Volg mij op Mastodon". Stekky logt niet in bij Mastodon: alleen openbare berichten, de server van Stekky leest mee (niet je toestel) en daarna stuurt je toestel ze naar je vrienden. Gevoelige plaatjes worden overgeslagen en berichten met een waarschuwing blijven dicht tot je erop tikt.' },
-  { id: 'weer', soort: 'widget', titel: 'Weer', widget: 'weer', homeIcoon: '\u{1F324}\u{FE0F}', w: 4, h: 3,
-    uitleg: 'Het weer van nu en de komende 5 dagen op je profiel, voor een plaats die je zelf kiest. Je toestel vraagt het weer aan Open-Meteo (gratis, zonder reclame), hoogstens één keer per half uur en maar een paar KB. Stekky gebruikt nooit de locatie van je telefoon. Je vrienden krijgen het weer van jou en maken zelf geen verbinding.' },
   // 25 nov 2026: widget-layouts uit Stekky Studio: één widget met een paar bestaande widgets samen (layouts.js)
   ...STUDIO_LAYOUTS.map(l => ({ id: l.store, soort: 'widget', titel: l.titel, widget: 'mix_' + l.id, homeIcoon: '\u{1F9E9}', w: 4, h: l.h,
     uitleg: l.uitleg[0], uitlegEn: l.uitleg[1], layout: true })),

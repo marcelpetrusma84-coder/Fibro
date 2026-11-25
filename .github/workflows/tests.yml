@@ -290,6 +290,6 @@ jobs:
       - name: "Stekky Studio: speelkaarten maken uit platen, installeren, in de kaarttafel (proef338)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef338.py .
-      - name: "Eenendertigen: met z'n tweeën ruilen en kloppen, levens, volgende ronde, en tegen de computer (proef339)"
+      - name: "Eenendertigen: met 2 of 3 spelers (gastheer en gasten), levens, volgende ronde, en tegen 1 of 3 computers (proef339)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef339.py .

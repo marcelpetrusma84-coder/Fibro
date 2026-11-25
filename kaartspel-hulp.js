@@ -576,6 +576,15 @@ const STIJL = `
 .kt-anderwaaier .kt-mini{position:absolute;left:50%;top:4px;width:34px;height:48px;margin-left:-17px;transform-origin:50% 160%;border-radius:4px;box-shadow:0 1px 4px #0008}
 .kt-ander{position:relative}
 .kt-anderknop{position:absolute;left:50%;top:100%;transform:translateX(-50%);z-index:20;margin-top:4px}
+/* 25 nov 2026: meer spelers (2 tot 6): de tegenstanders als kleine rondjes bovenaan (tegenstanders()) */
+.kt-ander.kt-multi>:not(.kt-tegen):not(.kt-anderknop){display:none}
+.kt-tegen{display:flex;gap:clamp(2px,1.5vw,12px);justify-content:center;flex-wrap:nowrap;width:100%;max-width:640px;overflow:visible}
+.kt-tz{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;flex:1 1 0;max-width:112px;opacity:1;transition:transform .25s,opacity .25s}
+.kt-tz .kt-zetel{width:44px;height:44px;font-size:17px}
+.kt-tz.kt-beurt{transform:scale(1.12)}.kt-tz.kt-beurt .kt-zetel{box-shadow:0 0 0 3px #fcd34d,0 0 16px #fcd34dcc}
+.kt-tz.kt-uit{opacity:.38;filter:grayscale(1)}
+.kt-tz-naam{font-weight:700;font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kt-tz-info{font-size:11px;opacity:.85;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .kt-midden{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;gap:clamp(18px,7vw,46px);position:relative}
 .kt-stapel-groep{position:relative;display:flex;flex:0 1 auto;min-width:0;flex-direction:column;align-items:center;gap:5px}
 .kt-stapel-groep .kt-stapel{flex:none}
@@ -1200,7 +1209,7 @@ export function maakKaartTafel(container, opties = {}) {
 
   const aflegRect = () => aflegEl.getBoundingClientRect()
   const stapelRect = () => { const st = stapelEl.querySelectorAll('.kt-st'); return (st[st.length - 1] || stapelEl).getBoundingClientRect() }
-  const anderRect = () => anderWaaier.getBoundingClientRect()
+  const anderRect = () => (tegenZetel && zetelEl(tegenZetel) ? zetelEl(tegenZetel).querySelector('.kt-zetel') : anderWaaier).getBoundingClientRect()   // 25 nov 2026: of van een zetel
   function kaartRechthoek(id) {
     const k = kaartEl(id)
     if (!k) return null
@@ -1329,6 +1338,7 @@ export function maakKaartTafel(container, opties = {}) {
   let klok = null
   const klokken = () => {
     const lijst = { ik: [$('.kt-zetel-ik .kt-klok')], ander: [$('.kt-zetel-ander .kt-klok')] }
+    for (const z of el.querySelectorAll('.kt-tz')) lijst['zetel:' + z.dataset.zetel] = [z.querySelector('.kt-klok')]   // 25 nov 2026: meer spelers
     for (const [wie, vakId] of [['ik', 'spelVideoEigen'], ['ander', 'spelVideoAnder']]) {
       const vak = document.getElementById(vakId)
       if (!vak || !el.isConnected) continue
@@ -1341,9 +1351,9 @@ export function maakKaartTafel(container, opties = {}) {
   function beurtKlok(wie, seconden = 30) {
     clearInterval(klok?.timer)
     const lijst = klokken()
-    for (const r of [...lijst.ik, ...lijst.ander]) r.classList.remove('kt-aan', 'kt-bijna')
+    for (const r of Object.values(lijst).flat()) r && r.classList.remove('kt-aan', 'kt-bijna')
     if (!wie) { klok = null; return }
-    const ringen = lijst[wie], begin = performance.now()
+    const ringen = (lijst[wie] || []).filter(Boolean), begin = performance.now()
     const stap = () => {
       const rest = Math.max(0, 1 - (performance.now() - begin) / (seconden * 1000))
       for (const r of ringen) { r.style.setProperty('--kt-rest', rest.toFixed(3)); r.classList.add('kt-aan'); r.classList.toggle('kt-bijna', rest < 0.2) }
@@ -1371,7 +1381,7 @@ export function maakKaartTafel(container, opties = {}) {
   function reactie(emoji, van = 'ander') {
     if (!REACTIES.includes(emoji)) return
     kaartGeluid.pop()
-    const bron = (van === 'ik' ? $('.kt-zetel-ik') : $('.kt-zetel-ander')).getBoundingClientRect()
+    const bron = (van === 'ik' ? $('.kt-zetel-ik') : String(van).startsWith('zetel:') && zetelEl(String(van).slice(6)) ? zetelEl(String(van).slice(6)).querySelector('.kt-zetel') : $('.kt-zetel-ander')).getBoundingClientRect()
     const doel = aflegRect()
     const e = document.createElement('div'); e.className = 'kt-reactie'; e.textContent = emoji
     e.style.left = '0px'; e.style.top = '0px'
@@ -1388,6 +1398,36 @@ export function maakKaartTafel(container, opties = {}) {
   }
 
   // Knoppen van het spel zelf: [{ tekst, opKlik, nadruk, schud, uit }]
+  // ── 25 nov 2026: meer spelers. lijst = [{ zetel, naam, icoon?, aantal, info, beurt, uit }] (zonder jezelf), of null = één ander ──
+  let tegenZetel = null
+  function tegenstanders(lijst) {
+    const ander = $('.kt-ander')
+    if (!lijst) { ander.classList.remove('kt-multi'); ander.querySelector('.kt-tegen')?.remove(); tegenZetel = null; return }
+    ander.classList.add('kt-multi')
+    let rij = ander.querySelector('.kt-tegen')
+    if (!rij) { rij = document.createElement('div'); rij.className = 'kt-tegen'; ander.prepend(rij) }
+    const sleutel = lijst.map(t => t.zetel).join(',')
+    if (rij.dataset.zetels !== sleutel) {
+      rij.dataset.zetels = sleutel; rij.innerHTML = ''
+      for (const t of lijst) {
+        const z = document.createElement('div'); z.className = 'kt-tz'; z.dataset.zetel = String(t.zetel)
+        z.innerHTML = '<div class="kt-zetel"><span></span><div class="kt-klok"></div></div><div class="kt-tz-naam"></div><div class="kt-tz-info"></div>'
+        rij.appendChild(z)
+      }
+    }
+    for (const t of lijst) {
+      const z = rij.querySelector('.kt-tz[data-zetel="' + t.zetel + '"]'); if (!z) continue
+      z.querySelector('.kt-zetel span').textContent = t.icoon || String(t.naam || '?').trim().slice(0, 1).toUpperCase()   // icoon: bijvoorbeeld 🤖 voor de computer
+      z.querySelector('.kt-tz-naam').textContent = t.naam || '?'
+      z.querySelector('.kt-tz-info').textContent = t.info != null ? t.info : (t.aantal === 1 ? T('1 kaart') : T('{n} kaarten', { n: t.aantal || 0 }))
+      z.classList.toggle('kt-beurt', Boolean(t.beurt)); z.classList.toggle('kt-uit', Boolean(t.uit))
+      z.setAttribute('aria-label', (t.naam || '') + (t.beurt ? ', ' + T('aan de beurt') : ''))
+    }
+  }
+  // de animaties van 'de ander' komen van deze zetel (bij meer spelers)
+  const zetelEl = z => $('.kt-tz[data-zetel="' + z + '"]')
+  function vanZetel(z) { tegenZetel = z }
+
   function knoppen(lijst) {
     knoppenEl.innerHTML = ''
     for (const k of lijst || []) {
@@ -1460,7 +1500,7 @@ export function maakKaartTafel(container, opties = {}) {
   return {
     element: el, toon: toonStand, kaartRechthoek, selectie: () => selectie.slice(), wisSelectie() { selectie = []; legHand(); o.onSelectie([]) },
     speelAnimatie, anderSpeeltAnimatie, pakAnimatie, anderPaktAnimatie, deelAnimatie, schudAnimatie,
-    beurtKlok, effect, reactie, knoppen, anderKnop, info, kiesUit, einde, sluitEinde, zetKaartStijl: zetTafelKaartStijl,
+    beurtKlok, effect, reactie, knoppen, anderKnop, info, kiesUit, einde, sluitEinde, zetKaartStijl: zetTafelKaartStijl, tegenstanders, vanZetel,
     laatsteZet(ids) { laatsteZet = Array.isArray(ids) ? ids.slice() : null }, instellingen: () => ({ ...inst }), openInstellingen: () => toonInstellingen(),
     status(t) { statusTekst = t; statusEl.textContent = t }, webcamRuimte, geluid: kaartGeluid, tril,
   }

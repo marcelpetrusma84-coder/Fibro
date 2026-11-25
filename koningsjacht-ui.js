@@ -21,7 +21,7 @@ import { maakEindscene } from './koningsjacht-eindscene.js?v=8'
 // Speler 1 kiest de manier en het niveau ('opnieuw'); speler 2 wacht. Wie later binnenkomt, vraagt de stand op.
 // v4 (13 nov 2026, Marcel): kaarslicht. Twee kaarsen op tafel met flakkerende vlammen; de randen van de tafel zijn
 // donker en het warme licht flakkert mee. Aan/uit met 🕯️ (bewaard: fibro_koningsjacht_kaars, standaard aan).
-// v57 (24 nov 2026): bundels komen uit de buitenste cockpitgleuven en vallen laag op tafel, achter hologramkaarten.
+// v58 (25 nov 2026): ook kaarten in de aflegzone worden als hologram geprojecteerd.
 import * as K from './koningsjacht.js?v=2'
 import { maakKaartTafel, kaartSvg, achterkantSvg, kaartNaam, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=26'
 import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek, zetMuziekThema } from './koningsjacht-geluid.js?v=4'
@@ -166,7 +166,10 @@ const CSS = `
 .kj-ship-beam:nth-child(2){left:6%;transform:rotate(7deg);animation-delay:-1.4s;background:linear-gradient(180deg,#fff0ffb8 0%,#e77cff67 24%,#aa7cff40 58%,#7fdfff20 84%,transparent 100%)}
 .kj-ship-beam:nth-child(3){left:81.5%;transform:rotate(-7deg);animation-delay:-2.6s;background:linear-gradient(180deg,#fff0ffb8 0%,#d881ff68 22%,#a48bff42 56%,#7bdfff20 84%,transparent 100%)}
 .kj-ship-beam:nth-child(4){left:86%;transform:rotate(-12deg);animation-delay:-3.7s;background:linear-gradient(180deg,#ffe0fdbb 0%,#ff79d167 24%,#c56bff42 56%,#85dfff22 82%,transparent 100%)}
-.kt-tafel.kj-ruimteschip.kj-holografisch :is(.kt-hand .kt-kaart,.kj-vijand .kj-kaart){z-index:4;background-color:#061722f0;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.kt-tafel.kj-ruimteschip.kj-holografisch :is(.kt-hand .kt-kaart,.kj-vijand .kj-kaart,.kt-afleg .kt-ak){z-index:4;background-color:#061722f0;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.kt-tafel.kj-ruimteschip.kj-holografisch .kt-afleg .kt-ak{overflow:hidden;border:1px solid #6beaffbb;box-shadow:0 0 5px #48dfff99,0 0 15px #28bce966,inset 0 0 14px #29c8e52b}
+.kt-tafel.kj-ruimteschip.kj-holografisch .kt-afleg .kt-ak>.kt-svg{opacity:.94;filter:brightness(1.12) drop-shadow(0 0 3px #6beaff66)}
+.kt-tafel.kj-ruimteschip.kj-holografisch .kt-afleg .kt-ak::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(180deg,#8ef4ff0d 0,#8ef4ff0d 1px,transparent 1px,transparent 4px);mix-blend-mode:screen;opacity:.8}
 @keyframes kjShipBeamBreath{from{opacity:.33;filter:blur(5px) brightness(.92)}to{opacity:.5;filter:blur(3px) brightness(1.13)}}
 @keyframes kjShipHazeDrift{from{transform:translate3d(-.6%,0,0);opacity:.7}to{transform:translate3d(.6%,-1%,0);opacity:1}}
 .kj-geenflikkering .kj-ship-beam,.kj-geenflikkering .kj-spaceship-lamplicht::after,.kj-geenflikkering .kj-ship-beam::before{animation:none}

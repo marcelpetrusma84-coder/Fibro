@@ -17,7 +17,7 @@
 // het geluid alvast klaar (zie onderaan).
 
 // 23 nov 2026: stickers uit Stekky Studio kunnen een eigen geluid hebben (geluiden/<vel>-<nr>.mp3, zie studio-pakketten.js)
-import { STUDIO_VELLEN } from './studio-pakketten.js?v=4'
+import { STUDIO_VELLEN } from './studio-pakketten.js?v=5'
 
 const naamVan = item => (item && item.naam) ? (window.T && window.T.taal === 'en' ? item.naam[1] : item.naam[0]) : ''
 export { naamVan }

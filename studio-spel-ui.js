@@ -3,7 +3,8 @@
 // aan wat erin moet zitten: chatbalk met stickers, webcam, spraak, titelscherm en handige extra's. De Studio maakt er een
 // spelbestand van (naam.stekkyspel.json). Dat zet Claude of Tijn in de app met tests/tools/studio-spel-installeer.mjs:
 // dan staat het spel meteen overal (Store, chat, Home), en bouwt Claude de echte regels uit de bouwopdracht.
-import { SOORTEN, ONDERDELEN, SPRAAK, EXTRAS, TITELS, DECKS, KAARTEN, MAX_NAAM, MAX_UITLEG, MAX_REGELS, MAX_SPECIAAL, maakSpel, valideerSpel, maakId } from './spelmaker.js?v=1'
+// v2 (25 nov 2026): kaartspellen: "Hoeveel spelers?" (2 tot 6). Meer dan 2 = ook in de groepschat en tegen meer computers.
+import { SOORTEN, ONDERDELEN, SPRAAK, EXTRAS, TITELS, DECKS, KAARTEN, MAX_NAAM, MAX_UITLEG, MAX_REGELS, MAX_SPECIAAL, MIN_SPELERS, MAX_SPELERS, maakSpel, valideerSpel, maakId } from './spelmaker.js?v=2'
 import { STUDIO_SPELLEN } from './studio-spellen.js?v=5'
 
 const $ = id => document.getElementById(id)
@@ -72,7 +73,10 @@ function bouw() {
     w.append(el('div', { klas: 'rij', stijl: 'margin-top:8px' }, [
       veld('Welk kaartspel', el('select', { id: 'spDeck' }, Object.entries(DECKS).map(([id, n]) => el('option', { value: id, selected: (stand.deck || '52') === id, tekst: n })))),
       veld('Kaarten per speler', el('input', { type: 'number', id: 'spPerSpeler', min: 1, max: 26, value: stand.perSpeler || 7 })),
-    ]))
+      veld('Hoeveel spelers?', el('select', { id: 'spSpelers' }, Array.from({ length: MAX_SPELERS - MIN_SPELERS + 1 }, (_, i) => i + MIN_SPELERS)
+        .map(n => el('option', { value: n, selected: Number(stand.spelers || 2) === n, tekst: n === 2 ? '2 spelers' : '2 tot ' + n + ' spelers' })))),
+    ]), el('div', { id: 'spSpelersUitleg', stijl: 'font-size:12px;color:var(--muted);margin-top:4px',
+      tekst: 'Met meer dan 2 spelers kun je het spel ook met de groep spelen in de groepschat (🎲, iedereen krijgt een pushmelding), en tegen meerdere computers. Lege plekken speelt de computer.' }))
     const lijst = el('div', { id: 'spSpeciaal' })
     stand.speciaal.forEach((x, i) => lijst.append(el('div', { klas: 'rij sp-speciaal', stijl: 'margin-top:6px' }, [
       el('select', { klas: 'sp-kaart', stijl: 'flex:0 0 110px' }, KAARTEN.map(k => el('option', { value: k, selected: x.kaart === k, tekst: k }))),
@@ -108,7 +112,7 @@ function bouw() {
 function lees() {
   const v = id => $(id) ? $(id).value : undefined
   Object.assign(stand, { naam: v('spNaam'), naamEn: v('spNaamEn'), icoon: v('spIcoon'), uitleg: v('spUitleg'), uitlegEn: v('spUitlegEn'),
-    doel: v('spDoel'), regels: v('spRegels'), bord: v('spBord') ?? stand.bord, deck: v('spDeck') ?? stand.deck, perSpeler: v('spPerSpeler') ?? stand.perSpeler,
+    doel: v('spDoel'), regels: v('spRegels'), bord: v('spBord') ?? stand.bord, deck: v('spDeck') ?? stand.deck, perSpeler: v('spPerSpeler') ?? stand.perSpeler, spelers: v('spSpelers') ?? stand.spelers,
     spraak: v('spSpraak'), titel: v('spTitel') })
   stand.met = Object.fromEntries([...document.querySelectorAll('#spMet input')].map(i => [i.dataset.id, i.checked]))
   stand.extras = Object.fromEntries([...document.querySelectorAll('#spExtras input')].map(i => [i.dataset.id, i.checked]))

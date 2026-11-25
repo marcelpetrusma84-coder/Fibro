@@ -722,13 +722,8 @@ body.heeft-wallpaper::before { display:block; }
     if (!cfg) return false
     await vriendAchtergrond(el, vriendId, 'peertube') // de miniatuur, via sync (wbg:peertube)
     el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F3AC}</span><span class="widget-titel">' + vEsc(T('PeerTube')) + '</span></div><div class="widget-inhoud"></div>'
-    // 25 nov 2026: ook bij een vriend kun je liken en reageren met je EIGEN fediverse-account (fediverse.js)
-    P.tekenPeertubeWidget(el.querySelector('.widget-inhoud'), { cfg, acties: (vak, video) => {
-      import('./fediverse.js?v=1').then(F => {
-        const geefPas = async () => { const { data } = await supabase.auth.getSession(); return data && data.session ? data.session.access_token : null }
-        F.tekenActies(vak, F.maakFedi({ uid: huidigeUser.id, geefPas }), video)
-      }).catch(e => console.warn('[fediverse]', e))
-    } })
+    // 25 nov 2026: bij een vriend GEEN liken of reageren en geen reacties: dat staat alleen op je eigen Home (zie fediverse-module op Home)
+    P.tekenPeertubeWidget(el.querySelector('.widget-inhoud'), { cfg })
     return true
   }
 

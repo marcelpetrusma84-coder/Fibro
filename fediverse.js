@@ -9,7 +9,10 @@
 //  - De sleutel mag alleen zoeken, liken en reageren. Uitloggen trekt hem ook bij je server in.
 //
 // Gebruik:
-//   maakFedi({ uid, geefPas })     -> { account(), startInloggen(server), zoek(video), like(id, aan), reageer(id, tekst), uitloggen() }
+//   maakFedi({ uid, geefPas })     -> { account(), startInloggen(server), zoek(video), like(id, aan), reageer(id, tekst, video),
+//                                       mijnReacties(video), antwoorden(id), uitloggen() }
+//  - Alleen op je eigen Home: je eigen reacties (op dit toestel onthouden, 'fibro_fediverse_reacties_<uid>') met de
+//    antwoorden die mensen erop gaven. Op het profiel van een vriend staan geen knoppen, likes of reacties.
 //   verwerkTerug(zoekdeel, { geefPas })  -> { ok, terugNaar } of { fout }   (op fediverse-terug.html)
 //   terugAdres()                   -> het adres waar de fediverse-server na het inloggen naar terugstuurt
 
@@ -31,6 +34,9 @@ Object.assign(window.FIBRO_EN ||= {}, {
   'Inloggen lukte niet. Probeer het nog eens.': 'Logging in did not work. Please try again.',
   'Je bent ingelogd. Je gaat zo terug naar Stekky…': 'You are logged in. Going back to {app}…',
   'Bezig met inloggen…': 'Logging in…',
+  'Jouw reacties': 'Your replies', 'Jij': 'You', 'Nog geen antwoorden.': 'No answers yet.',
+  'Antwoorden ophalen…': 'Fetching answers…', '{n} antwoorden': '{n} answers', '1 antwoord': '1 answer',
+  'Alleen jij ziet dit, niet je bezoekers.': 'Only you can see this, not your visitors.',
 })
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 
@@ -38,6 +44,7 @@ export const FUNCTIE_URL = 'https://qmgatbphiplrfxrljtbe.supabase.co/functions/v
 const ANON_KEY = 'sb_publishable_pyFn83YMR7K2O8K1s7g4YQ_mSJZwGSf'
 export const SCOPES = 'read:search read:accounts read:statuses write:favourites write:statuses'
 export const MAX_TEKST = 500
+const MAX_REACTIES = 30 // zoveel eigen reacties onthoudt dit toestel
 const WACHT = 'fibro_fediverse_wacht'
 const APPS = 'fibro_fediverse_apps'
 const sleutel = uid => 'fibro_fediverse_' + uid
@@ -101,6 +108,7 @@ async function vraag(geefPas, body, f = globalThis.fetch) {
 
 export function maakFedi({ uid, geefPas, fetch: f = globalThis.fetch, loc = globalThis.location, ga = url => { loc.href = url } } = {}) {
   const k = sleutel(uid)
+  const kReacties = 'fibro_fediverse_reacties_' + uid
   const account = () => { const a = lees(k); return a && a.token && a.server ? a : null }
   const metSleutel = async (body) => {
     const a = account()
@@ -134,10 +142,20 @@ export function maakFedi({ uid, geefPas, fetch: f = globalThis.fetch, loc = glob
     },
     zoek: video => metSleutel({ actie: 'zoek', video }),
     like: (id, aan) => metSleutel({ actie: 'like', id, aan: aan !== false }),
-    reageer: (id, tekst) => metSleutel({ actie: 'reageer', id, tekst }),
+    async reageer(id, tekst, video) {
+      const d = await metSleutel({ actie: 'reageer', id, tekst })
+      if (!d.fout && d.id && video) { // je eigen reactie onthouden (alleen op dit toestel), voor de antwoorden erop
+        const lijst = [{ id: d.id, video, tekst: String(tekst).slice(0, MAX_TEKST), tijd: Date.now() }, ...(lees(kReacties) || [])].slice(0, MAX_REACTIES)
+        zet(kReacties, lijst)
+      }
+      return d
+    },
+    mijnReacties: video => (Array.isArray(lees(kReacties)) ? lees(kReacties) : []).filter(r => r && r.video === video && typeof r.id === 'string'),
+    antwoorden: id => metSleutel({ actie: 'antwoorden', id }),
     async uitloggen() {
       const a = account()
       zet(k, null)
+      zet(kReacties, null)
       if (a) await vraag(geefPas, { actie: 'uit', server: a.server, token: a.token, client_id: a.client_id, client_secret: a.client_secret }, f)
     },
   }
@@ -184,11 +202,13 @@ export function tekenActies(el0, fedi, video) {
   reageer.className = 'fv-reageer'
   rij.append(like, reageer)
   const onder = el('div', 'display:flex;flex-direction:column;gap:6px')
+  const mijn = el('div', 'display:flex;flex-direction:column;gap:4px')
+  mijn.className = 'fv-mijn'
   const melden = el('div', 'font-size:12px;color:#fca5a5;text-align:center')
   melden.className = 'fv-melding'
   const wie = el('div', 'font-size:11px;color:rgba(255,255,255,0.6);text-align:center')
   wie.className = 'fv-wie'
-  vak.append(rij, onder, melden, wie)
+  vak.append(rij, onder, melden, mijn, wie)
 
   function toonWie() {
     const a = fedi.account()
@@ -197,7 +217,7 @@ export function tekenActies(el0, fedi, video) {
     wie.append(T('Ingelogd als {acct}', { acct: a.acct || a.server }) + ' · ')
     const uit = el('button', 'background:none;border:none;color:var(--accent,#c084fc);font-size:11px;cursor:pointer;padding:0;font-family:inherit;text-decoration:underline', T('Uitloggen'))
     uit.className = 'fv-uit'
-    uit.onclick = stil(async () => { await fedi.uitloggen(); status = null; tekenLike(); onder.textContent = ''; toonWie() })
+    uit.onclick = stil(async () => { await fedi.uitloggen(); status = null; tekenLike(); onder.textContent = ''; toonWie(); toonMijn() })
     wie.appendChild(uit)
   }
   function tekenLike() {
@@ -219,6 +239,38 @@ export function tekenActies(el0, fedi, video) {
     status = d
     tekenLike()
     return status
+  }
+  // je eigen reacties op deze video, met de antwoorden erop (alleen hier, op je eigen Home)
+  async function toonMijn() {
+    mijn.textContent = ''
+    const lijst = fedi.account() ? fedi.mijnReacties(video).slice(0, 3) : []
+    if (!lijst.length) return
+    mijn.appendChild(el('div', 'font-size:12px;font-weight:700;text-align:left;margin-top:4px', T('Jouw reacties')))
+    for (const r of lijst) {
+      const blok = el('div', 'background:rgba(0,0,0,0.3);border-radius:8px;padding:6px 8px;text-align:left;font-size:12px;line-height:1.35')
+      blok.className = 'fv-reactie'; blok.dataset.id = r.id
+      const ik = el('div', 'white-space:pre-wrap;word-break:break-word')
+      ik.appendChild(el('b', '', T('Jij') + ': '))
+      ik.append(r.tekst || '')
+      const ant = el('div', 'margin:4px 0 0 10px;display:flex;flex-direction:column;gap:3px;color:rgba(255,255,255,0.85)', T('Antwoorden ophalen…'))
+      ant.className = 'fv-antwoorden'
+      blok.append(ik, ant)
+      mijn.appendChild(blok)
+      fedi.antwoorden(r.id).then(d => {
+        ant.textContent = ''
+        if (d.fout) { ant.textContent = melding(d.fout); return }
+        const a = Array.isArray(d.antwoorden) ? d.antwoorden : []
+        if (!a.length) { ant.appendChild(el('span', 'color:rgba(255,255,255,0.55)', T('Nog geen antwoorden.'))); return }
+        for (const x of a) {
+          const regel = el('div', 'white-space:pre-wrap;word-break:break-word')
+          regel.className = 'fv-antwoord'
+          regel.appendChild(el('b', '', (x.naam || x.acct || '?') + ': '))
+          regel.append(x.tekst || '')
+          ant.appendChild(regel)
+        }
+      })
+    }
+    mijn.appendChild(el('div', 'font-size:10px;color:rgba(255,255,255,0.5);text-align:left', T('Alleen jij ziet dit, niet je bezoekers.')))
   }
   function inlogVak() {
     onder.textContent = ''
@@ -273,10 +325,11 @@ export function tekenActies(el0, fedi, video) {
       try {
         const s = await zoek()
         if (!s) return
-        const d = await fedi.reageer(s.id, t)
+        const d = await fedi.reageer(s.id, t, video)
         if (d.fout) return fout(d)
         onder.textContent = ''
         onder.appendChild(el('div', 'font-size:12px;color:#86efac;text-align:center', T('✓ Geplaatst')))
+        toonMijn()
       } finally { if (plaats.isConnected) plaats.disabled = false }
     })
     const weg = el('button', GRIJSKNOP, T('Annuleren'))
@@ -288,4 +341,5 @@ export function tekenActies(el0, fedi, video) {
   tekenLike()
   toonWie()
   if (fedi.account()) zoek() // ingelogd: meteen laten zien of je hem al geliket hebt
+  toonMijn()
 }

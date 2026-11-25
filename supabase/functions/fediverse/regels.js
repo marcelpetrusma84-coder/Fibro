@@ -83,6 +83,21 @@ export function metVermelding(tekst, acct) {
   return tekst.toLowerCase().includes(naam.toLowerCase()) ? tekst : naam + ' ' + tekst
 }
 
+export const MAX_ANTWOORDEN = 20
+// HTML van een bericht naar platte tekst: regels blijven, tags en code verdwijnen, hoogstens 500 tekens.
+const ENT = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', '#39': "'" }
+export function platteTekst(html) {
+  if (typeof html !== 'string') return ''
+  let t = html.slice(0, 20000).replace(/<(script|style)\b[\s\S]*?(<\/\1\s*>|$)/gi, '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>\s*<p[^>]*>/gi, '\n\n').replace(/<[^>]*>/g, '')
+  t = t.replace(/&(#x[0-9a-f]{1,6}|#\d{1,7}|[a-z0-9#]{2,8});/gi, (m, k) => {
+    if (ENT[k.toLowerCase()] !== undefined) return ENT[k.toLowerCase()]
+    const n = k[0] === '#' ? (k[1] === 'x' || k[1] === 'X' ? parseInt(k.slice(2), 16) : parseInt(k.slice(1), 10)) : NaN
+    return Number.isFinite(n) && n > 31 && n < 0x110000 ? String.fromCodePoint(n) : m
+  })
+  t = t.replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim()
+  return [...t].slice(0, MAX_TEKST).join('')
+}
+
 // Alleen deze velden gaan terug naar de app
 const tal = n => Number.isInteger(n) && n >= 0 ? n : 0
 const kort = (s, max) => typeof s === 'string' ? s.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, max) : ''
@@ -96,6 +111,14 @@ export function klein(soort, d) {
     if (!goedStatusId(d.id)) return null
     const acct = d.account && goedAcct(d.account.acct) ? d.account.acct : ''
     return { id: d.id, favoriet: d.favourited === true, likes: tal(d.favourites_count), reacties: tal(d.replies_count), acct }
+  }
+  if (soort === 'context') { // de antwoorden onder een reactie (alleen platte tekst, nooit HTML)
+    const lijst = Array.isArray(d.descendants) ? d.descendants : []
+    return { antwoorden: lijst.filter(x => x && goedStatusId(x.id)).slice(0, MAX_ANTWOORDEN).map(x => ({
+      id: x.id, acct: x.account && goedAcct(x.account.acct) ? x.account.acct : '',
+      naam: kort(x.account && (x.account.display_name || x.account.username) || '', 60),
+      tekst: platteTekst(x.content), datum: kort(x.created_at || '', 30),
+    })) }
   }
   if (soort === 'zoek') {
     const s = d && Array.isArray(d.statuses) ? d.statuses[0] : null

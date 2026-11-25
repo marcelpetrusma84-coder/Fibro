@@ -17,6 +17,7 @@
 //   zoek     { server, token, video }                                -> { id, favoriet, likes, reacties, acct } of { geen: true }
 //   like     { server, token, id, aan }                              -> { id, favoriet, likes, reacties, acct }
 //   reageer  { server, token, id, tekst }                            -> { id }
+//   antwoorden { server, token, id }                                 -> { antwoorden: [{ id, acct, naam, tekst, datum }] } (platte tekst)
 //   uit      { server, token, client_id, client_secret }             -> { ok }  (de sleutel intrekken)
 //
 // Veiligheid:
@@ -120,7 +121,7 @@ async function voerUit(b: Body) {
   const server = netteServer(b.server);
   if (!server) return { fout: "server", status: 400 };
   const actie = b.actie;
-  const nodigToken = ["ik", "zoek", "like", "reageer", "uit"].includes(actie);
+  const nodigToken = ["ik", "zoek", "like", "reageer", "antwoorden", "uit"].includes(actie);
   if (nodigToken && !goedeSleutel(b.token)) return { fout: "uitgelogd", status: 401 };
 
   if (actie === "app") {
@@ -166,6 +167,12 @@ async function voerUit(b: Body) {
     if ("fout" in r) return r;
     const nieuw = klein("status", r.data);
     return nieuw ? { data: { id: nieuw.id } } : { fout: "niet bereikbaar", status: 502 };
+  }
+  if (actie === "antwoorden") {
+    // de antwoorden op één van je eigen reacties (alleen voor je eigen Home; bezoekers zien niets)
+    if (!goedStatusId(b.id)) return { fout: "gegevens", status: 400 };
+    const r = await vraagServer(server, "/api/v1/statuses/" + b.id + "/context", { token: b.token });
+    return "fout" in r ? r : { data: klein("context", r.data) };
   }
   if (actie === "uit") {
     if (!goedeSleutel(b.client_id) || !goedeSleutel(b.client_secret)) return { data: { ok: true } };

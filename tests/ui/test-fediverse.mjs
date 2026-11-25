@@ -69,6 +69,8 @@ globalThis.fetch = async (u, o = {}) => {
   if (auth !== 'Bearer ' + TOKEN) return json({ error: 'The access token is invalid' }, 401)
   if (u.startsWith('https://mastodon.social/api/v2/search?')) return json({ accounts: [{ id: 'a' }], statuses: [{ id: '777', favourited: false, favourites_count: 3, replies_count: 1, account: { acct: 'gamekanaal@spectra.video' }, content: '<script>x</script>' }], hashtags: [] })
   if (u === 'https://mastodon.social/api/v1/statuses/777/favourite') return json({ id: '777', favourited: true, favourites_count: 4, replies_count: 1, account: { acct: 'gamekanaal@spectra.video' } })
+  if (u === 'https://mastodon.social/api/v1/statuses/888/context') return json({ ancestors: [{ id: '777' }], descendants: [{ id: '901', account: { acct: 'piet@x.nl', display_name: 'Piet', note: 'geheim' }, created_at: '2026-11-25T00:00:00Z',
+    content: '<p><span class="h-card"><a href="https://x.nl/@marcel" onclick="kwaad()">@marcel</a></span> Dank je! &amp; &#128512;<br>regel 2</p><script>alert(1)</script>', media_attachments: [{ url: 'https://spion.nl/a.jpg' }] }] })
   if (u === 'https://mastodon.social/api/v1/statuses/777') return json({ id: '777', account: { acct: 'gamekanaal@spectra.video' } })
   if (u === 'https://mastodon.social/api/v1/statuses') return json({ id: '888', content: 'x', account: { acct: 'marcel' } })
   if (u === 'https://mastodon.social/api/v1/accounts/verify_credentials') return json({ acct: 'marcel', display_name: 'Marcel', source: { note: 'geheim' } })
@@ -111,6 +113,10 @@ if (handler) {
   const post = JSON.parse(gevraagd.at(-1).o.body)
   assert.deepEqual(post, { status: '@gamekanaal@spectra.video Supergoed!', in_reply_to_id: '777', visibility: 'public' }, 'de maker van de video wordt genoemd, zodat hij de reactie krijgt')
   ;[st] = await vraag({ actie: 'reageer', server: 'mastodon.social', token: TOKEN, id: '777', tekst: 'x'.repeat(501) }); assert.equal(st, 400, 'hoogstens 500 tekens')
+  ;[st, d] = await vraag({ actie: 'antwoorden', server: 'mastodon.social', token: TOKEN, id: '888' })
+  assert.equal(st, 200)
+  assert.deepEqual(d, { ok: true, antwoorden: [{ id: '901', acct: 'piet@x.nl', naam: 'Piet', tekst: '@marcel Dank je! & 😀\nregel 2', datum: '2026-11-25T00:00:00Z' }] }, 'antwoorden als platte tekst, zonder HTML of code')
+  ;[st] = await vraag({ actie: 'antwoorden', server: 'mastodon.social', token: TOKEN, id: '../x' }); assert.equal(st, 400)
   ;[st, d] = await vraag({ actie: 'zoek', server: 'mastodon.social', token: 'verlopenTOKEN1', video: 'https://spectra.video/w/' + kort }); assert.equal(st, 401); assert.equal(d.reden, 'uitgelogd')
   ;[st] = await vraag({ actie: 'zoek', server: 'mastodon.social', video: 'https://spectra.video/w/' + kort }); assert.equal(st, 401, 'zonder sleutel')
   ;[st] = await vraag({ actie: 'iets', server: 'mastodon.social' }); assert.equal(st, 400)
@@ -140,6 +146,7 @@ const nepFetch = async (u, o) => {
   if (b.actie === 'ik') return ok({ acct: 'marcel', naam: 'Marcel' })
   if (b.actie === 'zoek' && b.token === 'oud12345678') return { ok: false, json: async () => ({ ok: false, reden: 'uitgelogd' }) }
   if (b.actie === 'zoek') return ok({ id: '777', favoriet: false, likes: 3 })
+  if (b.actie === 'reageer') return ok({ id: '888' })
   return ok({})
 }
 let naar = null
@@ -174,6 +181,11 @@ assert.equal(acc.token, TOKEN); assert.equal(acc.acct, '@marcel@mastodon.social'
 assert.ok(opslag.has('fibro_fediverse_u1') && !opslag.has('fibro_fediverse_wacht'))
 assert.equal(F.maakFedi({ uid: 'u2', geefPas: async () => 'PAS', fetch: nepFetch }).account(), null, 'de sleutel hoort bij dit Stekky-account')
 assert.deepEqual(await fedi.zoek('https://spectra.video/videos/watch/' + kort), { ok: true, id: '777', favoriet: false, likes: 3 })
+// je eigen reactie wordt onthouden (alleen op dit toestel), voor de antwoorden erop
+const VID = 'https://spectra.video/videos/watch/' + kort
+assert.deepEqual(await fedi.reageer('777', 'Mooi!', VID), { ok: true, id: '888' })
+assert.deepEqual(fedi.mijnReacties(VID).map(r => [r.id, r.tekst]), [['888', 'Mooi!']])
+assert.deepEqual(fedi.mijnReacties('https://spectra.video/videos/watch/ander'), [])
 // de server kent de sleutel niet meer: account weg, opnieuw inloggen
 opslag.set('fibro_fediverse_u1', JSON.stringify({ ...acc, token: 'oud12345678' }))
 assert.equal((await fedi.zoek('https://spectra.video/videos/watch/' + kort)).fout, 'uitgelogd')
@@ -181,6 +193,7 @@ assert.equal(fedi.account(), null)
 opslag.set('fibro_fediverse_u1', JSON.stringify(acc))
 await fedi.uitloggen()
 assert.equal(fedi.account(), null); assert.equal(naarFunctie.at(-1).actie, 'uit', 'uitloggen trekt de sleutel ook bij de server in')
+assert.equal(opslag.get('fibro_fediverse_reacties_u1'), undefined, 'uitloggen haalt ook je onthouden reacties weg')
 // terugNaar alleen binnen de eigen app
 opslag.set('fibro_fediverse_wacht', JSON.stringify({ ...w2, terugNaar: 'https://kwaad.nl/' }))
 r = await F.verwerkTerug('?code=codeCODE1234&state=' + w2.state, { geefPas: async () => 'PAS', fetch: nepFetch })
@@ -194,6 +207,7 @@ for (const pagina of ['index.html', 'vriend-profiel.html', 'fediverse-terug.html
   assert.doesNotMatch(connect, /mastodon|https:(\s|$)|\*/, pagina + ': de app praat niet zelf met fediverse-servers')
 }
 assert.match(lees('supabase/config.toml'), /\[functions\.fediverse\]\nenabled = true\nverify_jwt = false\nentrypoint = "\.\/functions\/fediverse\/index\.ts"/)
-for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/fediverse\.js\?v=1'\)\.then\(F => \{/, f + ': laadt fediverse.js pas bij de speler')
+assert.match(lees('index.html'), /import\('\.\/fediverse\.js\?v=1'\)\.then\(F => \{/, 'Home laadt fediverse.js pas bij de speler')
+assert.doesNotMatch(lees('vriend-profiel.html'), /import\('\.\/fediverse|\bacties:/, 'bij een vriend: geen liken, reageren of reacties')
 assert.doesNotMatch(lees('sync.js'), /fibro_fediverse/, 'de sleutel gaat niet mee naar vrienden')
 console.log('PASS: de huisregel blijft streng; de sleutel gaat niet via sync')

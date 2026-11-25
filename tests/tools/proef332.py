@@ -5,7 +5,8 @@
 #  B. inloggen: de app gaat naar de inlogpagina van mastodon.social (PKCE, alleen zoeken/liken/reageren); terug via
 #     fediverse-terug.html; de sleutel staat alleen op dit toestel, onder dit Stekky-account; de code niet in de geschiedenis
 #  C. weer bij de video: "Ingelogd als @marcel@mastodon.social"; Liken = de video opzoeken en liken ("Geliket · 4")
-#  D. Reageren: hoogstens 500 tekens, "✓ Geplaatst"; de reactie gaat met de sleutel via Stekky
+#  D. Reageren: hoogstens 500 tekens, "✓ Geplaatst"; daarna "Jouw reacties" met de antwoorden erop (als gewone tekst),
+#     alleen op je eigen Home; een bezoeker ziet geen knoppen, likes of reacties
 #  E. de app praat zelf nooit met mastodon.social (alleen de inlogpagina, in het venster zelf); Uitloggen
 #  F. geen paginafouten, en de huisregel houdt de app tegen als hij toch rechtstreeks met mastodon.social wil praten
 # python3 -I proef332.py <map>
@@ -72,6 +73,7 @@ def edge(route):
     elif a == 'zoek': d = {'ok': True, 'id': '777', 'favoriet': False, 'likes': 3, 'reacties': 1, 'acct': 'gamekanaal@spectra.video'}
     elif a == 'like': d = {'ok': True, 'id': '777', 'favoriet': b.get('aan') is not False, 'likes': 4 if b.get('aan') is not False else 3, 'reacties': 1, 'acct': ''}
     elif a == 'reageer': d = {'ok': True, 'id': '888'}
+    elif a == 'antwoorden': d = {'ok': True, 'antwoorden': [{'id': '901', 'acct': 'piet@spectra.video', 'naam': 'Piet', 'tekst': 'Dank je! <b>niet vet</b>', 'datum': ''}] if b.get('id') == '888' else []}
     elif a == 'uit': d = {'ok': True}
     route.fulfill(status=200 if d['ok'] else 400, headers={'Access-Control-Allow-Origin': '*'}, content_type='application/json', body=json.dumps(d))
 def masto(route):
@@ -143,6 +145,16 @@ with sync_playwright() as pw:
     check(wacht(p, "document.querySelector('#w').textContent.includes('✓ Geplaatst')"), 'D "✓ Geplaatst"')
     re_ = [f for f in functie if f.get('actie') == 'reageer']
     check(re_ and re_[-1].get('id') == '777' and re_[-1].get('tekst') == 'Wat een goede run!', 'D de reactie gaat naar de juiste video')
+    check(wacht(p, "!!document.querySelector('#w .fv-antwoord')"), 'D onder "Jouw reacties": je reactie met het antwoord erop')
+    t = p.inner_text('#w .fv-mijn') if p.locator('#w .fv-mijn').count() else ''
+    check('Wat een goede run!' in t and 'Piet: Dank je! <b>niet vet</b>' in t and p.locator('#w .fv-antwoord b').count() == 1, 'D het antwoord als gewone tekst (geen HTML)')
+    check('Alleen jij ziet dit' in t, 'D "Alleen jij ziet dit, niet je bezoekers"')
+    # opnieuw openen: de reactie is onthouden en de antwoorden worden opnieuw opgehaald
+    p.click('#w .pt-stop'); p.click('#w .pt-speel')
+    check(wacht(p, "!!document.querySelector('#w .fv-antwoord')"), 'D na opnieuw openen staan je reactie en het antwoord er weer')
+    # een bezoeker (de widget zonder acties, zoals op vriend-profiel.html): geen knoppen, geen reacties
+    p.evaluate("import('./peertube.js?v=5').then(P => { const v = document.createElement('div'); v.id = 'v'; v.className = 'w'; document.body.appendChild(v); P.tekenPeertubeWidget(v, { cfg: %s }); v.querySelector('.pt-speel').click() })" % json.dumps(CFG))
+    check(wacht(p, "!!document.querySelector('#v iframe')") and p.locator('#v .fv-like, #v .fv-reageer, #v .fv-mijn').count() == 0, 'D een bezoeker: wel de video, geen likes of reacties')
 
     # E
     check(all('/oauth/authorize' in u for u in mastodon), 'E de app praat zelf nooit met mastodon.social (%s)' % [u for u in mastodon if '/oauth/authorize' not in u])

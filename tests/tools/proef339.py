@@ -130,8 +130,10 @@ try:
         check(wacht(pg, MIJN, 15000), 'F jij bent aan de beurt')
         h, t = ruil(pg)
         check(wacht(pg, "() => (%s)().includes('%s')" % (HAND, t), 5000), 'F geruild')
-        check(wacht(pg, "() => /computer|Computer/.test(document.querySelector('.kt-status').innerText) || !!document.querySelector('.kt-knoppen button[data-naam=alles]')", 5000), 'F de computer is aan de beurt')
-        check(wacht(pg, MIJN + " && !document.querySelector('.kt-knoppen button[data-naam=klop]').disabled", 12000), 'F de computer zette terug; nu mag jij kloppen')
+        # Soms heeft iemand meteen 31: dan is de ronde klaar en begint de computer ronde 2 (kloppen mag dan nog niet)
+        RONDE2 = "document.querySelector('.eed-midden').innerText.includes('Ronde 2')"
+        check(wacht(pg, "() => /computer|Computer/.test(document.querySelector('.kt-status').innerText) || !!document.querySelector('.kt-knoppen button[data-naam=alles]') || " + RONDE2, 8000), 'F de computer is aan de beurt')
+        check(wacht(pg, MIJN + " && (!document.querySelector('.kt-knoppen button[data-naam=klop]').disabled || " + RONDE2 + ")", 20000), 'F de computer zette terug; nu mag jij kloppen (of ronde 2 na een 31)')
         ctx.close()
 
         # ── G. met z'n drieën ──

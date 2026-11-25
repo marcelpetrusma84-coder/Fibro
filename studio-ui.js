@@ -3,7 +3,7 @@
 // Het knippen zit in studio-knippen.js, het pakketbestand in studio-pakket.js (beide zonder scherm, met tests).
 // Alleen voor moderators (zoals moderatie.html): ben_ik_moderator.
 import { supabase } from './supabase.js?v=95'
-import { BEWEGINGEN, GELUIDEN, speel, speelBeweging } from './stickerfx.js?v=241'
+import { BEWEGINGEN, GELUIDEN, speel, speelBeweging } from './stickerfx.js?v=242'
 import { vindStickers, knipRooster, maakUitsnede } from './studio-knippen.js?v=1'
 import { AANTAL, MAX_PLAATJE, MAX_MP3, MAX_BRON, LICENTIES, voorstelFx, maakPakket, valideerPakket, maakSlug } from './studio-pakket.js?v=3'
 import { maakPrompt, roosterOpmerking, maakGeluidPrompt } from './studio-prompt.js?v=2'

@@ -721,7 +721,7 @@ body.heeft-wallpaper::before { display:block; }
   // Liken en reageren (fediverse) staan hier niet: alleen de video, net als bij de losse PeerTube-widget.
   async function renderVriendMix(el, vriendId, w) {
     let L
-    try { L = await import('./layouts.js?v=3') } catch (e) { console.warn('[layout]', e); return false }
+    try { L = await import('./layouts.js?v=4') } catch (e) { console.warn('[layout]', e); return false }
     const layout = L.layoutVan(w.id)
     if (!layout) return false
     el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F9E9}</span><span class="widget-titel">' + vEsc(layout.titel) + '</span></div><div class="widget-inhoud"></div>'

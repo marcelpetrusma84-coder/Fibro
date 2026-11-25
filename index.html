@@ -1752,7 +1752,7 @@ async function renderPeertube(c, uid) {
 // ════════════════════════════════
 async function renderMix(c, id, uid) {
   let L
-  try { L = await import('./layouts.js?v=3') } catch (e) { console.warn('[layout]', e); return }
+  try { L = await import('./layouts.js?v=4') } catch (e) { console.warn('[layout]', e); return }
   const layout = L.layoutVan(id)
   if (!layout) { c.innerHTML = '<div class="wi-icon">🧩</div>'; return }
   const teken = { peertube: renderPeertube, muziekwidget: renderMuziekwidget, radio: renderRadio, rss: renderRss, mastodon: renderMastodon }

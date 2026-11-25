@@ -17,7 +17,7 @@ import { STORE_PAKKETTEN } from './lettertypes.js?v=133'
 import { STORE_VELLEN } from './stickervellen.js?v=241'
 import { legStoreVakkenVast, zetStoreVelActief } from './stickervakken.js?v=5'   // 13 nov 2026: stickers aanzetten bij Stijl
 import { zetStandaardWidgets } from './standaardwidgets.js?v=2'   // 17 nov 2026: games meteen op Home
-import { STUDIO_LAYOUTS } from './studio-layouts.js?v=1' // 25 nov 2026: widget-layouts uit Stekky Studio (layouts.js)
+import { STUDIO_LAYOUTS } from './studio-layouts.js?v=2' // 25 nov 2026: widget-layouts uit Stekky Studio (layouts.js)
 
 export const STORE_SOORTEN = [
   // 11 nov 2026: volgorde van de paarse balk in store.html; achtergronden erbij

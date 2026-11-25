@@ -10,7 +10,7 @@ import { schaakUltraBot } from './schaak-ultra.js?v=4'
 import { computerStap as pestenComputerStap, doeStap as pestenDoeStap, geldigeStand as pestenGeldig } from './pesten.js?v=2'
 import * as Toepen from './toepen.js?v=1'                   // 11 nov 2026: tweede en derde kaartspel
 import * as Eenentwintigen from './eenentwintigen.js?v=1'
-import { STUDIO_SPELLEN, spelBestand as studioBestand, luieBot } from './studio-spellen.js?v=1' // 25 nov 2026: spellen uit Stekky Studio
+import { STUDIO_SPELLEN, spelBestand as studioBestand, luieBot } from './studio-spellen.js?v=2' // 25 nov 2026: spellen uit Stekky Studio
 
 export const NIVEAUS = ['makkelijk', 'normaal', 'moeilijk']
 

@@ -105,10 +105,10 @@ try {
   assert.match(readFileSync(path.join(tmp, 'kleurenjacht.js'), 'utf8'), /export function bot\(/)
   assert.ok(!readFileSync(path.join(tmp, 'spellen/kleurenjacht.stekkyspel.json'), 'utf8').includes('base64'), 'zonder plaatje bewaard')
   const D = await import(pathToFileURL(path.join(tmp, 'studio-spellen.js')).href + '?x=1')
-  assert.deepEqual(D.STUDIO_SPELLEN, [{ id: 'kleurenjacht', soort: 'kaart', naam: ['Kleurenjacht', 'Colour Hunt'], icoon: '🌈', uitleg: spel.uitleg, v: 1,
-    met: { vriend: true, computer: true, chatbalk: true, webcam: false }, spraak: 'vanzelf', titel: 'pesten' }])
+  assert.deepEqual(D.STUDIO_SPELLEN.at(-1), { id: 'kleurenjacht', soort: 'kaart', naam: ['Kleurenjacht', 'Colour Hunt'], icoon: '🌈', uitleg: spel.uitleg, v: 1,
+    met: { vriend: true, computer: true, chatbalk: true, webcam: false }, spraak: 'vanzelf', titel: 'pesten' }, 'achteraan erbij gezet')
   assert.equal(window.FIBRO_EN['Kleurenjacht'], 'Colour Hunt', 'de Engelse naam')
-  assert.equal(D.spelBestand(D.STUDIO_SPELLEN[0]), './kleurenjacht-ui.js?v=1')
+  assert.equal(D.spelBestand(D.STUDIO_SPELLEN.at(-1)), './kleurenjacht-ui.js?v=1')
   assert.deepEqual(D.studioWidgetDef('spel_kleurenjacht'), { id: 'spel_kleurenjacht', icon: '🌈', titel: 'Kleurenjacht', w: 2, h: 1 })
   assert.equal(D.studioWidgetDef('spel_pesten'), null)
   r = draai(json); assert.notEqual(r.status, 0, 'twee keer hetzelfde spel kan niet'); assert.match(r.stderr, /al een spel/)

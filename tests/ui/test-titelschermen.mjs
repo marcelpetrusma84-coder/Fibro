@@ -7,10 +7,14 @@ import { DEUNTJES, stappen, frequentie } from '../../titelmuziek.js'
 import { SOLO_SPELLEN } from '../../solo.js'
 
 const lees = f => readFileSync(new URL('../../' + f, import.meta.url), 'utf8')
+// 25 nov 2026: elk nieuw spel uit Stekky Studio verhoogt titelscherm.js (via studio-spellen.js); daarom hier geen vast
+// nummer, wel overal hetzelfde
+const TITEL_V = new Set(['chat.html', 'spel.html', 'index.html', 'vriend-profiel.html', 'invite.html'].map(f => (lees(f).match(/titelscherm\.js\?v=(\d+)/) || [])[1]))
+assert.equal(TITEL_V.size, 1, 'overal dezelfde versie van titelscherm.js (' + [...TITEL_V] + ')')
 const chat = lees('chat.html'), spel = lees('spel.html'), en = lees('taal-en.js')
 
 // 1. Alle 12 spellen (en schaken met drie) hebben een plaatje en een deuntje
-const ids = Object.keys(SOLO_SPELLEN)
+const ids = Object.keys(SOLO_SPELLEN).filter(id => !SOLO_SPELLEN[id].studio)   // 25 nov 2026: Studio-spellen lenen een titelscherm (test-spelmaker)
 assert.equal(ids.length, 16)   // 11 nov 2026: Pesten, Toepen en Eenentwintigen erbij; 13 nov: Koningsjacht
 for (const id of [...ids, 'schakendrie']) {
   assert.equal(typeof SCENES[id]?.teken, 'function', 'plaatje voor ' + id)
@@ -55,7 +59,7 @@ assert.ok(!/\.filter\s*=/.test(bron), 'geen ctx.filter (kent Safari niet)')
 
 // 4. Chat: titelscherm bij het openen, het spel wacht op de tik, sluiten ruimt het op
 // 3 nov 2026 (sneller): de chat laadt het titelscherm als de pagina rustig is (niet meer in het eerste laden)
-assert.match(chat, /laadModule\('\.\/titelscherm\.js\?v=14'\)\.then\(m => \(titelModule = m\)\)/)
+assert.match(chat, /laadModule\('\.\/titelscherm\.js\?v=\d+'\)\.then\(m => \(titelModule = m\)\)/)
 assert.match(chat, /laadRustig\(\(\) => laadTitelscherm\(\)\.catch\(\(\) => \{\}\)\)/)
 const mee = chat.slice(chat.indexOf('window.speelMee = async function'), chat.indexOf("if (spelType === 'botkaaseiren') await startBotKaasEieren()"))
 assert.ok(mee.indexOf('toonTitelscherm(') < mee.indexOf('const wachtOpVriend'), 'titelscherm voor het wachten')
@@ -64,7 +68,7 @@ const sluit = chat.slice(chat.indexOf('window.sluitSpel = function(stil)'), chat
 assert.match(sluit, /titelModule\?\.sluitTitelscherm\(\)/)
 
 // 5. Alleen spelen: eerst het titelscherm, dan het menu; de muziek stopt als het spel begint
-assert.match(spel, /import \{ toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek \} from '\.\/titelscherm\.js\?v=14'/)
+assert.match(spel, /import \{ toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek \} from '\.\/titelscherm\.js\?v=\d+'/)
 assert.match(spel, /\(titelGezien \? Promise\.resolve\(true\) : toonTitelscherm\(\{ spelId, naam: spelNaam\(\) \}\)\)\.then\(\(\) => \{\n      if \(spel\.zonderKanaal\) start\('normaal'\)\n      else if \(spel\.arcade\) startScherm\(\)\n      else kiesNiveau\(\)/)
 assert.match(spel, /async function start\(niveau\) \{\n    spelStart\(spelId\)/)
 
@@ -100,13 +104,13 @@ for (const [f, patroon] of [['index.html', /blok\.onclick = openGame/],
                             ['vriend-profiel.html', /el\.onclick = \(\) => openSpelMetTitel\(spel, 'spel\.html\?spel=' \+ encodeURIComponent\(spel\)\)/],
                             ['invite.html', /knop\.onclick = \(e\) => \{ e\.preventDefault\(\); openSpelMetTitel\(id, knop\.getAttribute\('href'\)\) \}/]]) {
   const bron = lees(f)
-  assert.match(bron, /import \{ openSpelMetTitel \} from '\.\/titelscherm\.js\?v=14'/, f + ': laadt het titelscherm meteen (dan telt je tik voor het geluid)')
+  assert.match(bron, /import \{ openSpelMetTitel \} from '\.\/titelscherm\.js\?v=\d+'/, f + ': laadt het titelscherm meteen (dan telt je tik voor het geluid)')
   assert.match(bron, patroon, f)
 }
 const muziek = lees('titelmuziek.js')
 assert.match(muziek, /\['pointerdown', 'touchend', 'click', 'keydown'\]/, 'geluid aan bij elke soort tik')
 assert.match(muziek, /a\.createBuffer\(1, 1, 22050\)/, 'stil geluidje voor oudere iPhones')
-for (const f of ['chat.html', 'spel.html', 'index.html', 'vriend-profiel.html', 'invite.html']) assert.ok(/titelscherm\.js\?v=14'/.test(lees(f)), f + ': titelscherm v4')
+for (const f of ['chat.html', 'spel.html', 'index.html', 'vriend-profiel.html', 'invite.html']) assert.ok(/titelscherm\.js\?v=\d+'/.test(lees(f)), f + ': titelscherm v4')
 
 // 8. v252: drie spellen in hun eigen stijl; titelstijl.js is gemaakt uit de spellen zelf
 const stijl = lees('titelstijl.js')

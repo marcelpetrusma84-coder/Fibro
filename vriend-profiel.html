@@ -717,12 +717,18 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_peertube')
     if (!ruw) return false
     let P, cfg = null
-    try { P = await import('./peertube.js?v=4') } catch (e) { console.warn('[peertube]', e); return false }
+    try { P = await import('./peertube.js?v=5') } catch (e) { console.warn('[peertube]', e); return false }
     try { cfg = P.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
     await vriendAchtergrond(el, vriendId, 'peertube') // de miniatuur, via sync (wbg:peertube)
     el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F3AC}</span><span class="widget-titel">' + vEsc(T('PeerTube')) + '</span></div><div class="widget-inhoud"></div>'
-    P.tekenPeertubeWidget(el.querySelector('.widget-inhoud'), { cfg })
+    // 25 nov 2026: ook bij een vriend kun je liken en reageren met je EIGEN fediverse-account (fediverse.js)
+    P.tekenPeertubeWidget(el.querySelector('.widget-inhoud'), { cfg, acties: (vak, video) => {
+      import('./fediverse.js?v=1').then(F => {
+        const geefPas = async () => { const { data } = await supabase.auth.getSession(); return data && data.session ? data.session.access_token : null }
+        F.tekenActies(vak, F.maakFedi({ uid: huidigeUser.id, geefPas }), video)
+      }).catch(e => console.warn('[fediverse]', e))
+    } })
     return true
   }
 

@@ -1723,10 +1723,11 @@ async function renderPeertube(c, uid) {
   try { cfg = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
   zetWidgetAchtergrond(c, 'widgetbg_peertube_' + uid) // de miniatuur (of een eigen foto via 🖼)
   let P
-  try { P = await import('./peertube.js?v=4') } catch (e) { console.warn('[peertube]', e); return }
+  try { P = await import('./peertube.js?v=5') } catch (e) { console.warn('[peertube]', e); return }
   P.tekenPeertubeWidget(c, {
     cfg, eigen: true,
     bewaar: async nieuw => { await bewaarMetInfo(c, uid, 'peertube', P, cfg, nieuw); renderPeertube(c, uid) },
+    acties: fediverseActies(uid), // 25 nov 2026: liken en reageren met je eigen fediverse-account (fediverse.js)
   })
   // 25 nov 2026 (v4): een lijst uit categorieën ververst vanzelf als hij ouder is dan een uur (alleen hier, bij de eigenaar)
   const lijst = P.normaliseer(cfg)
@@ -1740,6 +1741,17 @@ async function renderPeertube(c, uid) {
         renderPeertube(c, uid)
       }
     } catch (e) { console.warn('[peertube] verversen', e) } finally { renderPeertube._bezig = false }
+  }
+}
+
+// 25 nov 2026: Liken en Reageren onder een PeerTube-video, met je eigen fediverse-account. fediverse.js laadt pas als
+// de speler opengaat; alles gaat via de edge function fediverse (huisregel: alleen Stekky in connect-src).
+function fediverseActies(uid) {
+  return (el, video) => {
+    import('./fediverse.js?v=1').then(F => {
+      const geefPas = async () => { const { data } = await supabase.auth.getSession(); return data && data.session ? data.session.access_token : null }
+      F.tekenActies(el, F.maakFedi({ uid, geefPas }), video)
+    }).catch(e => console.warn('[fediverse]', e))
   }
 }
 

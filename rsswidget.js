@@ -356,8 +356,10 @@ function zetVak(e, sprite, i) {
 
 // ── De widget ──
 // fotos (alleen eigenaar): { lees: async () => cache, bewaar: async cache, sprite: async (data|null, id) }
+// v4 (25 nov 2026): wijzig = null (gewoon: "✏️ Feeds" met vrij kiezen), false (geen knop: een vast vak in een kant-en-klare
+// widget) of een functie (eigen keuze, bijvoorbeeld kiezen uit de feeds van de maker; layouts.js).
 export function tekenRssWidget(c, { cfg = null, eigen = false, bewaar = null, ophalen = null, sprite = null, spriteId = '', fotos = null,
-  verklein = verkleinInBrowser, teken = tekenSprite, nu = () => Date.now() } = {}) {
+  verklein = verkleinInBrowser, teken = tekenSprite, nu = () => Date.now(), wijzig: eigenWijzig = null } = {}) {
   zetCss()
   const v = normaliseer(cfg)
   c.querySelectorAll('.rs-widget').forEach(x => x.remove())
@@ -478,9 +480,11 @@ export function tekenRssWidget(c, { cfg = null, eigen = false, bewaar = null, op
         ververs.onclick = stop(() => vernieuw(melding, ververs))
         voet.appendChild(ververs)
       }
-      const wijzig = el('button', 'rs-knopje rs-wijzig', T('✏️ Feeds'))
-      wijzig.type = 'button'; wijzig.onclick = stop(() => bewerk(v.feeds.slice(), v.plaatjes !== false))
-      voet.appendChild(wijzig)
+      if (eigenWijzig !== false) {
+        const wijzig = el('button', 'rs-knopje rs-wijzig', T('✏️ Feeds'))
+        wijzig.type = 'button'; wijzig.onclick = stop(() => typeof eigenWijzig === 'function' ? eigenWijzig() : bewerk(v.feeds.slice(), v.plaatjes !== false))
+        voet.appendChild(wijzig)
+      }
     }
     w.append(lijst, melding, voet)
     // Home: zijn de berichten ouder dan een uur, dan vanzelf nieuwe (niet steeds opnieuw als het net mislukte)

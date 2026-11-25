@@ -46,7 +46,7 @@ console.log('PASS: sjablonen zijn geldig; valideerLayout houdt foute layouts teg
 // ── 2. het installatie-script, in een tijdelijke kopie ──
 const tmp = mkdtempSync(path.join(tmpdir(), 'layouts-'))
 writeFileSync(path.join(tmp, 'package.json'), '{"type":"module"}')
-for (const f of ['layouts.js', 'studio-layouts.js', 'store.js']) copyFileSync(path.join(REPO, f), path.join(tmp, f))
+for (const f of ['layouts.js', 'studio-layouts.js', 'store.js', 'rsswidget.js', 'peertube.js', 'voorbeeldplaatje.js']) copyFileSync(path.join(REPO, f), path.join(tmp, f)) // layouts.js gebruikt rsswidget.js en peertube.js
 writeFileSync(path.join(tmp, 'studio-layouts.js'), lees('studio-layouts.js').replace(/export const STUDIO_LAYOUTS = [\s\S]*$/, 'export const STUDIO_LAYOUTS = []\n'))
 mkdirSync(path.join(tmp, 'tests/tools'), { recursive: true })
 copyFileSync(path.join(REPO, 'tests/tools/studio-layout-installeer.mjs'), path.join(tmp, 'tests/tools/studio-layout-installeer.mjs'))
@@ -83,6 +83,61 @@ assert.match(lees('index.html'), /\} else if \(id\.startsWith\('mix_'\)\) \{\n  
 assert.match(lees('index.html'), /const teken = \{ peertube: renderPeertube, muziekwidget: renderMuziekwidget, radio: renderRadio, rss: renderRss, mastodon: renderMastodon \}/)
 assert.match(lees('vriend-profiel.html'), /if \(String\(w\.id \|\| ''\)\.startsWith\('mix_'\)\) \{/)
 assert.match(lees('profiel.html'), /WMAP\[n\] \|\| stickerWidgetDef\(n\) \|\| mixWidgetDef\(n\)/)
-assert.match(lees('studio.html'), /import '\.\/studio-layout-ui\.js\?v=1'/)
+assert.match(lees('studio.html'), /import '\.\/studio-layout-ui\.js\?v=\d+'/)
 assert.match(lees('store.html'), /it\.layout \? layoutVoorbeeld\(it\.widget\)/)
 console.log('PASS: layouts staan in de Store, op Home, bij vrienden, in Profiel en in de Studio')
+
+// ── 4. kant-en-klare vakken (25 nov 2026) ──
+const NU = [{ url: 'https://www.nu.nl/rss/Algemeen', naam: 'Algemeen' }, { url: 'https://www.nu.nl/rss/Sport', naam: 'Sport' },
+  { url: 'https://www.nu.nl/rss/Tech', naam: 'Tech' }, { url: 'https://www.nu.nl/rss/Economie', naam: 'Economie' }]
+const kek = L.maakLayout({ titel: 'Gaming', uitleg: ['a', 'b'], sjabloon: 'groot-boven', inhoud: [
+  { manier: 'vast', server: 'spectra.video', cats: [7], reageren: true }, { manier: 'kiezen', feeds: NU }] })
+assert.deepEqual(L.valideerLayout(kek), [])
+assert.ok(L.kantEnKlaar(kek.vakken[0]) && L.kantEnKlaar(kek.vakken[1]))
+assert.ok(!L.kantEnKlaar(goed.vakken[0]), 'een vak zonder inhoud vult de gebruiker zelf in')
+const metInhoud = (i, inh) => { const l = JSON.parse(JSON.stringify(kek)); l.vakken[i].inhoud = inh; return L.valideerLayout(l).join() }
+assert.match(metInhoud(1, { manier: 'kiezen', feeds: NU.slice(0, 1) }), /2 tot 8 feeds/)
+assert.match(metInhoud(1, { manier: 'vast', feeds: NU }), /1 tot 3 feeds/)
+assert.match(metInhoud(1, { manier: 'vast', feeds: [{ url: 'http://nu.nl/rss', naam: 'x' }] }), /geen goede https-link/)
+assert.match(metInhoud(1, { manier: 'vast', feeds: [{ url: 'https://192.168.1.1/rss', naam: 'x' }] }), /geen goede https-link/)
+assert.match(metInhoud(1, { manier: 'vast', feeds: [NU[0], NU[0]] }), /twee keer/)
+assert.match(metInhoud(1, { manier: 'vast', feeds: [{ url: NU[0].url, naam: '' }] }), /geen naam/)
+assert.match(metInhoud(1, { manier: 'vrij', feeds: NU }), /onbekende manier/)
+assert.match(metInhoud(0, { manier: 'vast', server: 'kwaad.nl', cats: [7], reageren: true }), /niet in de lijst/)
+assert.match(metInhoud(0, { manier: 'vast', server: 'spectra.video', cats: [], reageren: true }), /categorieën/)
+assert.match(metInhoud(0, { manier: 'vast', server: 'spectra.video', cats: [99], reageren: true }), /categorieën/)
+assert.match(metInhoud(0, { manier: 'vast', server: 'spectra.video', cats: [7] }), /liken en reageren/)
+assert.match(metInhoud(0, { manier: 'kiezen', server: 'spectra.video', cats: [7], reageren: true }), /onbekende manier/, 'PeerTube alleen vast')
+{ const l = L.maakLayout({ titel: 'x', uitleg: ['a', 'b'], sjabloon: 'naast-elkaar', soorten: ['mastodon', 'radio'] }); l.vakken[0].inhoud = { manier: 'vast' }
+  assert.match(L.valideerLayout(l).join(), /kan geen vaste inhoud/, 'Mastodon, radio en muziek vult de gebruiker zelf in') }
+// beginstand en wat er bewaard is
+const lk = { id: 'l7', ...kek }
+assert.deepEqual(L.vakCfg(lk, kek.vakken[1], null).feeds.map(f => f.naam), ['Algemeen', 'Sport', 'Tech'], 'kiezen: eerst de eerste 3')
+assert.deepEqual(L.vakCfg(lk, kek.vakken[1], { feeds: [NU[3]], berichten: [{ titel: 'x' }], bijgewerkt: 5 }).feeds, [NU[3]], 'je eigen keuze blijft')
+assert.equal(L.vakCfg(lk, kek.vakken[1], { feeds: [{ url: 'https://kwaad.nl/rss', naam: 'K' }] }).feeds.length, 3, 'een feed die niet in de lijst staat: terug naar het begin')
+const vastRss = { soort: 'rss', inhoud: { manier: 'vast', feeds: NU.slice(0, 2) } }
+assert.deepEqual(L.vakCfg(lk, vastRss, { feeds: [NU[0]] }).feeds.map(f => f.naam), ['Algemeen', 'Sport'], 'vast: altijd de feeds van de maker')
+assert.deepEqual(L.vakCfg(lk, kek.vakken[0], null), { server: 'spectra.video', soort: 'categorie', cats: [7], videos: [], titel: '', bijgewerkt: 0 })
+const P = await import(pathToFileURL(path.join(REPO, 'peertube.js')).href)
+assert.ok(P.isCategorie(P.normaliseer({ ...L.vakCfg(lk, kek.vakken[0], null), videos: [{ id: 'kkGMgK9ZtnKfYAgnEtQxbv' }] })), 'de PeerTube-widget begrijpt de beginstand')
+// eigen opslag (mix_<uid>), gaat via sync naar vrienden
+const opslag = new Map(), ls = { getItem: k => opslag.has(k) ? opslag.get(k) : null, setItem: (k, v) => opslag.set(k, String(v)) }
+L.zetMixVak('u1', 'l7:rss', { feeds: [NU[1]], berichten: [], bijgewerkt: 1 }, ls)
+L.zetMixVak('u1', 'l7:peertube', { server: 'spectra.video' }, ls)
+assert.deepEqual(Object.keys(L.leesMix('u1', ls)), ['l7:rss', 'l7:peertube']); assert.ok(opslag.has('mix_u1'))
+L.zetMixVak('u1', 'l9:rss', { feeds: [NU[0]], berichten: [{ titel: 'x'.repeat(30000) }] }, ls)
+L.zetMixVak('u1', 'l7:rss', { feeds: [NU[1]], berichten: [{ titel: 'y'.repeat(15000) }] }, ls)
+assert.ok(opslag.get('mix_u1').length < L.MIX_MAX, 'te groot voor sync: eerst de berichten van een andere layout weg')
+assert.equal(L.leesMix('u1', ls)['l7:rss'].berichten.length, 1)
+for (const [f, re] of [['sync.js', /const KLEIN_WIDGETS = \[[^\]]*'mix'\]/], ['sync.js', /\['mix','mix_'\]\]/], ['sync.js', /sl === 'mix'\) \? 40000/], ['doorgeven.js', /const KLEIN = \[[^\]]*'mix'\]/]])
+  assert.match(lees(f), re, f + ': de inhoud van kant-en-klare widgets gaat mee naar vrienden')
+// het installatie-script neemt de inhoud mee
+r = installeer(kek, 'kek.json'); assert.equal(r.status, 0, r.stderr)
+const data2 = await import(pathToFileURL(path.join(tmp, 'studio-layouts.js')).href + '?x=2')
+assert.deepEqual(data2.STUDIO_LAYOUTS.at(-1).vakken.map(v => v.inhoud), kek.vakken.map(v => v.inhoud))
+assert.deepEqual(L.valideerLayout({ formaat: L.FORMAAT, versie: 1, ...data2.STUDIO_LAYOUTS.at(-1) }), [])
+console.log('PASS: kant-en-klare vakken: vast of kiezen (RSS), vast met of zonder reageren (PeerTube), eigen opslag die meegaat naar vrienden')
+assert.match(lees('vriend-profiel.html'), /laadFotoUitDB\('vriend_' \+ vriendId \+ '_mix'\)/, 'bij vrienden: kant-en-klare inhoud uit de sync')
+assert.match(lees('vriend-profiel.html'), /R\.tekenRssWidget\(vak, \{ cfg \}\)/, 'bij vrienden: alleen bekijken (geen knoppen)')
+assert.match(lees('vriend-profiel.html'), /P\.tekenPeertubeWidget\(vak, \{ cfg \}\)/, 'bij vrienden: geen liken of reageren')
+console.log('PASS: vrienden zien kant-en-klare vakken alleen')

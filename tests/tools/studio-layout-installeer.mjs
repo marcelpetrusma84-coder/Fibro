@@ -32,12 +32,12 @@ if (nu.some(l => l.store === store)) { console.error('Deze layout staat al in de
 if (new RegExp("id: '" + store + "'").test(readFileSync(path.join(HOOFD, 'store.js'), 'utf8'))) { console.error('Dit id bestaat al: ' + store); process.exit(1) }
 const id = 'l' + (Math.max(0, ...nu.map(l => Number(String(l.id).slice(1)) || 0)) + 1)
 const nieuw = { id, store, titel: layout.titel.trim(), uitleg: layout.uitleg.map(t => t.trim()), h: layout.h,
-  vakken: layout.vakken.map(v => ({ soort: v.soort, x: v.x, y: v.y, w: v.w, h: v.h })) }
+  vakken: layout.vakken.map(v => Object.assign({ soort: v.soort, x: v.x, y: v.y, w: v.w, h: v.h }, v.inhoud ? { inhoud: v.inhoud } : {})) } // 25 nov 2026: ook kant-en-klare inhoud
 
 const bron = readFileSync(dataPad, 'utf8')
 const kop = bron.slice(0, bron.indexOf('export const STUDIO_LAYOUTS'))
 const tekst = l => '  { id: ' + JSON.stringify(l.id) + ', store: ' + JSON.stringify(l.store) + ', titel: ' + JSON.stringify(l.titel) + ',\n    uitleg: ' + JSON.stringify(l.uitleg) +
-  ',\n    h: ' + l.h + ', vakken: [\n' + l.vakken.map(v => '      { soort: ' + JSON.stringify(v.soort) + ', x: ' + v.x + ', y: ' + v.y + ', w: ' + v.w + ', h: ' + v.h + ' },').join('\n') + '\n    ] },'
+  ',\n    h: ' + l.h + ', vakken: [\n' + l.vakken.map(v => '      { soort: ' + JSON.stringify(v.soort) + ', x: ' + v.x + ', y: ' + v.y + ', w: ' + v.w + ', h: ' + v.h + (v.inhoud ? ',\n        inhoud: ' + JSON.stringify(v.inhoud) : '') + ' },').join('\n') + '\n    ] },'
 writeFileSync(dataPad, kop + 'export const STUDIO_LAYOUTS = [\n' + [...nu, nieuw].map(tekst).join('\n') + '\n]\n')
 console.log('Layout "' + nieuw.titel + '" staat nu als ' + id + ' in de app (Store-id ' + store + ', widget mix_' + id + ').')
 

@@ -278,3 +278,6 @@ jobs:
       - name: "Stekky Studio: widget-layouts maken, in de Store en op Home (proef333)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef333.py .
+      - name: "Stekky Studio: kant-en-klare widgets (vaste PeerTube, RSS kiezen uit de lijst) (proef334)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef334.py .

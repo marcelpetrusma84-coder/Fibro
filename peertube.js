@@ -3,6 +3,7 @@
 // en peertube.beeldengeluid.nl (het open archief van Beeld & Geluid).
 // v3 (18 nov 2026): titel en miniatuur ophalen bij het opslaan (haalInfo, voorbeeldplaatje.js). Alleen op het toestel
 // van de eigenaar; de miniatuur wordt de achtergrond van het kaartje en gaat via sync naar vrienden.
+// v5 (25 nov 2026): onder de speler Liken en Reageren met je eigen fediverse-account (optie acties, fediverse.js).
 // v4 (25 nov 2026): categorieën. In plaats van één video kies je een server en vink je categorieën aan (bijvoorbeeld
 // Gaming). JOUW toestel vraagt die server om de nieuwste video's in die categorieën (alleen video's van de server zelf,
 // geen 18+), en bewaart de titels in de widget. Die lijst gaat via sync naar vrienden: vrienden praten met niemand tot
@@ -195,7 +196,8 @@ const stop = f => e => { e.stopPropagation(); f() }
 // ── De widget ──
 // cfg: wat er bewaard is (of van de vriend kwam). eigen: je eigen widget (dan kun je kiezen/wijzigen).
 // bewaar(cfgOfNull): slaat op (null = weghalen) en tekent opnieuw.
-export function tekenPeertubeWidget(c, { cfg = null, eigen = false, bewaar = null } = {}) {
+// v5: acties(el, videoUrl) zet onder de speler de knoppen Liken en Reageren (fediverse.js); zonder acties: geen knoppen.
+export function tekenPeertubeWidget(c, { cfg = null, eigen = false, bewaar = null, acties = null } = {}) {
   const v = normaliseer(cfg)
   c.querySelectorAll('.ptkaart').forEach(x => x.remove())
   const kaart = el('div', 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%;height:100%;min-height:120px;text-align:center;position:relative;z-index:2')
@@ -387,6 +389,7 @@ export function tekenPeertubeWidget(c, { cfg = null, eigen = false, bewaar = nul
     if (!src) return
     const titelSpeler = (video && video.titel) || v.titel
     kaart.textContent = ''
+    kaart.style.overflowY = 'auto'
     kaart.style.justifyContent = 'flex-start'
     const kader = el('div', 'position:relative;flex-shrink:0;width:100%;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#000')
     const f = document.createElement('iframe')
@@ -403,9 +406,16 @@ export function tekenPeertubeWidget(c, { cfg = null, eigen = false, bewaar = nul
     const dicht = el('button', GRIJSKNOP + ';padding:6px 12px;font-size:12px', video ? T('← Terug naar de lijst') : T('✕ Stoppen'))
     dicht.className = 'pt-stop'
     dicht.onclick = stop(() => { kaart.style.justifyContent = 'center'; teken() }) // iframe weg = verbinding weg
+    // v5: liken en reageren met je eigen fediverse-account (alleen als de pagina dat aanbiedt)
+    if (typeof acties === 'function') {
+      const balk = el('div', 'width:100%')
+      balk.className = 'pt-acties'
+      kaart.appendChild(balk)
+      try { acties(balk, 'https://' + v.server + '/videos/watch/' + ((video && video.id) || v.id)) } catch (e) { balk.remove() }
+    }
     kaart.appendChild(dicht)
   }
 
-  function teken() { if (!v) leeg(); else if (isCategorie(v)) toonLijst(); else toon() }
+  function teken() { kaart.style.overflowY = ''; if (!v) leeg(); else if (isCategorie(v)) toonLijst(); else toon() }
   teken()
 }

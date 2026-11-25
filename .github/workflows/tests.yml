@@ -272,3 +272,6 @@ jobs:
       - name: "PeerTube-widget: categorieen aanvinken, bijvoorbeeld alleen Gaming (proef331)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef331.py .
+      - name: "PeerTube: liken en reageren met je eigen fediverse-account (proef332)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef332.py .

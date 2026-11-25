@@ -717,11 +717,12 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_peertube')
     if (!ruw) return false
     let P, cfg = null
-    try { P = await import('./peertube.js?v=4') } catch (e) { console.warn('[peertube]', e); return false }
+    try { P = await import('./peertube.js?v=5') } catch (e) { console.warn('[peertube]', e); return false }
     try { cfg = P.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
     await vriendAchtergrond(el, vriendId, 'peertube') // de miniatuur, via sync (wbg:peertube)
     el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F3AC}</span><span class="widget-titel">' + vEsc(T('PeerTube')) + '</span></div><div class="widget-inhoud"></div>'
+    // 25 nov 2026: bij een vriend GEEN liken of reageren en geen reacties: dat staat alleen op je eigen Home (zie fediverse-module op Home)
     P.tekenPeertubeWidget(el.querySelector('.widget-inhoud'), { cfg })
     return true
   }

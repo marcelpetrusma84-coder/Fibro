@@ -197,12 +197,41 @@ const b = P.bot({ stuur() { throw new Error('mag niet') }, niveau: 'normaal', is
 b.ontvang('stand', { staat: P.nieuwSpel(), nr: 1, spelId: 1 }); b.stop()
 console.log('PASS: de bot voor solo.js is stil')
 
+// ── Passen (v3) ──
+{
+  let q = stand(['h7', 's8', 'k9'], ['r7', 'r8', 'r9'], ['hA', 'hH', 'sA'])
+  assert.equal(P.pas(q, 2), null, 'passen alleen als je aan de beurt bent')
+  const tafel0 = q.tafel.slice()
+  q = P.pas(q, 1)
+  assert.equal(q.aanZet, 2); assert.equal(q.passen, 1); assert.equal(q.beurten, 1); assert.deepEqual(q.tafel, tafel0, 'één keer passen: tafel blijft')
+  assert.ok(P.geldigeStand(q))
+  const q2 = P.ruil(q, 2, 'r7', 'hA'); assert.equal(q2.passen, 0, 'ruilen: de passen tellen opnieuw')
+  q = P.doeStap(q, 2, { soort: 'pas' })
+  assert.equal(q.passen, 0); assert.ok(q.laatste.nieuweTafel, 'iedereen paste: nieuwe tafel')
+  assert.ok(q.tafel.every(k => !tafel0.includes(k)), '3 nieuwe tafelkaarten'); assert.deepEqual(q.stapel.slice(0, 3), tafel0, 'de oude onder de stapel')
+  assert.ok(P.geldigeStand(q), 'nog steeds 32 kaarten'); assert.equal(q.aanZet, 1)
+  // na kloppen telt passen als je laatste beurt
+  q = P.klop(q, 1); q = P.pas(q, 2); assert.equal(q.fase, 'uitslag', 'passen na kloppen: de ronde is klaar')
+  // met 4 spelers: pas na 4 keer passen een nieuwe tafel
+  let m = P.nieuwSpel({ spelers: 4, rng: (() => { let x = 7; return () => (x = (x * 9301 + 49297) % 233280) / 233280 })() })
+  if (m.fase === 'spel') {
+    const t0 = m.tafel.slice()
+    for (let i = 0; i < 3; i++) m = P.pas(m, m.aanZet)
+    assert.deepEqual(m.tafel, t0); m = P.pas(m, m.aanZet); assert.ok(m.laatste.nieuweTafel); assert.ok(P.geldigeStand(m))
+  }
+  // de computer past als niets beter wordt
+  const c = stand(['hA', 'hH', 'h9'], ['r7', 'r8', 'r9'], ['s7', 'k8', 'r10'])
+  assert.deepEqual(P.computerStap(c, 1, 'normaal'), { soort: 'pas' })
+  assert.equal(P.geldigeStand({ ...c, passen: 9 }), false)
+}
+console.log('PASS: passen; iedereen past = 3 nieuwe tafelkaarten')
+
 // ── Het spel ──
 const ui = lees('eenendertigen-ui.js')
 assert.match(ui, /import \* as P from '\.\/eenendertigen\.js\?v=\d+'/)
 assert.match(ui, /import \{ maakGroepSpel \} from '\.\/groepspel\.js\?v=\d+'/)
 assert.match(ui, /maakKaartTafel\(inhoud/)
-for (const t of ["naam: 'alles'", "naam: 'klop'", "naam: 'uitleg'", 'deelAnimatie', 'anderSpeeltAnimatie', 'beurtKlok', 'tafel.tril', 'meldGeslagen', 'tafel.tegenstanders', "'kaartreactie'", 'Tegen hoeveel computers wil je spelen?'])
+for (const t of ["naam: 'alles'", "naam: 'klop'", "naam: 'pas'", "soort: 'pas'", 'Iedereen paste: 3 nieuwe kaarten op tafel', "naam: 'uitleg'", 'deelAnimatie', 'anderSpeeltAnimatie', 'beurtKlok', 'tafel.tril', 'meldGeslagen', 'tafel.tegenstanders', "'kaartreactie'", 'Tegen hoeveel computers wil je spelen?'])
   assert.ok(ui.includes(t), 'het spel heeft: ' + t)
 const sp = await import('../../studio-spellen.js')
 assert.deepEqual(sp.studioSpel('eenendertigen')?.met, { vriend: true, computer: true, chatbalk: true, webcam: true })

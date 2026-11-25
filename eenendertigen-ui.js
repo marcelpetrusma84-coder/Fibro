@@ -7,8 +7,8 @@
 // Midden op tafel liggen 3 open kaarten. Kies een kaart uit je hand (tik) en tik op een kaart op tafel om te ruilen;
 // of veeg je kaart omhoog en kies dan met welke tafelkaart. Knoppen: "Alle 3 ruilen", "Kloppen" en ❓ (de regels).
 // Boven de tafel: je punten en de levens. Na een ronde zie je de kaarten van de ander; speler 1 deelt dan vanzelf de
-// volgende ronde. Over het spelkanaal: zie groepspel.js ('actie', 'stand', 'opnieuw', 'vraag-stand', 'weg'), plus 'kaartreactie'.
-import * as P from './eenendertigen.js?v=2'
+// volgende ronde. v3: knop "⏭️ Passen" (past iedereen een rondgang, dan 3 nieuwe tafelkaarten). Over het spelkanaal: zie groepspel.js ('actie', 'stand', 'opnieuw', 'vraag-stand', 'weg'), plus 'kaartreactie'.
+import * as P from './eenendertigen.js?v=3'
 import { maakKaartTafel, kaartSvg, kaartNaam, REACTIES } from './kaartspel-hulp.js?v=19'
 import { meldGeslagen } from './beurtspel-hulp.js?v=1'
 import { maakGroepSpel } from './groepspel.js?v=2'
@@ -19,6 +19,8 @@ Object.assign(window.FIBRO_EN ||= {}, {
   'Kies een kaart uit je hand en tik op een kaart op tafel. Of klop als je genoeg hebt.': 'Choose a card from your hand and tap a card on the table. Or knock if you have enough.',
   '{naam} klopte: je mag nog één keer ruilen.': '{naam} knocked: you may swap one more time.',
   'Je klopte. Nu mag {naam} nog één keer.': 'You knocked. Now {naam} gets one more turn.',
+  '⏭️ Passen': '⏭️ Pass', '{naam} past': '{naam} passes', 'Je past': 'You pass', 'Iedereen paste: 3 nieuwe kaarten op tafel': 'Everyone passed: 3 new cards on the table',
+  'Wil je niets ruilen, dan mag je passen. Past iedereen een hele rondgang, dan gaan de 3 tafelkaarten weg en komen er 3 nieuwe van de stapel.': "Don't want to swap? Then you may pass. If everyone passes for a whole round, the 3 table cards are replaced by 3 new ones from the deck.",
   '🔄 Alle 3 ruilen': '🔄 Swap all 3', '✊ Kloppen': '✊ Knock', 'Met welke kaart van tafel ruilen?': 'Swap with which card on the table?',
   'Kies eerst een kaart uit je hand.': 'Choose a card from your hand first.', 'Jij: {n}': 'You: {n}', 'Klop!': 'Knock!', '{naam} klopt!': '{naam} knocks!',
   '{naam} ruilt': '{naam} swaps', '{naam} ruilt alles': '{naam} swaps all', '31!': '31!',
@@ -50,6 +52,7 @@ const wacht = ms => new Promise(k => setTimeout(k, ms))
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 const REGELS = ['Elke speler krijgt 3 kaarten. Er liggen ook 3 kaarten open op tafel. Wie begint, wisselt per ronde.',
   'Om de beurt doe je één ding: één kaart ruilen met de tafel, alle drie je kaarten ruilen met de tafel, of kloppen. Kloppen mag pas als iedereen één keer aan de beurt is geweest.',
+  'Wil je niets ruilen, dan mag je passen. Past iedereen een hele rondgang, dan gaan de 3 tafelkaarten weg en komen er 3 nieuwe van de stapel.',
   'Je punten tel je alleen op bij kaarten van dezelfde kleur: aas is 11, heer, vrouw en boer zijn 10, de andere kaarten hun eigen waarde. Je beste kleur telt. Het hoogste is 31.',
   'Drie kaarten met dezelfde waarde (bijvoorbeeld drie vrouwen) zijn 30½ waard.',
   'Klop je, dan mogen de anderen nog één keer ruilen. Daarna laat iedereen zijn kaarten zien.',
@@ -159,6 +162,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, spelers: groep, mi
     const mag = P.magRuilen(staat, ik)   // (de knoppen gaan weg tijdens een animatie: zie doe)
     tafel.knoppen([
       ...(mag ? [{ naam: 'alles', tekst: T('🔄 Alle 3 ruilen'), opKlik: allesRuilen }] : []),
+      ...(mag ? [{ naam: 'pas', tekst: T('⏭️ Passen'), opKlik: passen }] : []),
       ...(mag && !staat.geklopt ? [{ naam: 'klop', tekst: T('✊ Kloppen'), nadruk: true, uit: !P.magKloppen(staat, ik), opKlik: kloppen }] : []),
       { naam: 'uitleg', tekst: '❓', opKlik: toonRegels },
     ])
@@ -201,6 +205,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, spelers: groep, mi
   }
   const allesRuilen = () => doe({ soort: 'alles' })
   const kloppen = () => doe({ soort: 'klop' })
+  const passen = () => doe({ soort: 'pas' })
 
   // ── Een nieuwe stand (van jezelf, de gastheer of de computer) ──
   async function verwerk(oud, nieuw) {
@@ -215,6 +220,14 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, spelers: groep, mi
       tafel.effect(T('{naam} klopt!', { naam: naamVan(l.wie) })); tafel.tril(30); await wacht(600)
     } else if (l.soort === 'klop') {
       tafel.effect(T('Klop!')); tafel.tril(30); await wacht(500)
+    } else if (l.soort === 'pas') {
+      tekenInfo(nieuw)
+      tafel.effect(l.wie === ik ? T('Je past') : T('{naam} past', { naam: naamVan(l.wie) }), { gloed: false, geluid: false }); await wacht(450)
+      if (l.nieuweTafel) {
+        tafel.effect(T('Iedereen paste: 3 nieuwe kaarten op tafel'), { gloed: false })
+        for (const b of middenEl.querySelectorAll('.eed-tk')) b.animate([{ transform: 'rotateY(90deg)' }, { transform: 'none' }], { duration: 450 })
+        await wacht(700)
+      }
     } else if (l.wie === ik && (l.soort === 'ruil' || l.soort === 'alles')) {
       if (l.soort === 'alles') { tafel.effect('🔄', { gloed: false }); await wacht(400) }
     } else if (l.soort === 'ruil' || l.soort === 'alles') {

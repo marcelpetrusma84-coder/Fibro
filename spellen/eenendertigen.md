@@ -15,6 +15,7 @@
 
 Elke speler krijgt 3 kaarten. Er liggen ook 3 kaarten open op tafel. Wie begint, wisselt per ronde.
 Om de beurt doe je één ding: één kaart ruilen met de tafel, alle drie je kaarten ruilen met de tafel, of kloppen. Kloppen mag pas als iedereen één keer aan de beurt is geweest.
+Wil je niets ruilen, dan mag je passen. Past iedereen een hele rondgang, dan gaan de 3 tafelkaarten weg en komen er 3 nieuwe van de stapel.
 Je punten tel je alleen op bij kaarten van dezelfde kleur: aas is 11, heer, vrouw en boer zijn 10, de andere kaarten hun eigen waarde. Je beste kleur telt. Het hoogste is 31.
 Drie kaarten met dezelfde waarde (bijvoorbeeld drie vrouwen) zijn 30½ waard.
 Klop je, dan mag de ander nog één keer ruilen. Daarna laten jullie je kaarten zien.

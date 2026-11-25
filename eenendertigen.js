@@ -17,6 +17,8 @@
 //   nog één beurt tot de klopper weer aan de beurt zou zijn. Heeft iemand 31, dan verliezen ALLE anderen een leven.
 //   Wie geen levens meer heeft, ligt eruit (krijgt geen kaarten meer); de rest speelt door tot er één over is.
 //   Allemaal tegelijk af = gelijkspel (winnaar 0).
+// v3 (25 nov 2026, Marcel): passen. Je mag je beurt overslaan (dat telt wel als beurt). Past iedereen die meedoet een
+//   hele rondgang achter elkaar, dan gaan de 3 tafelkaarten onder de stapel en komen er 3 nieuwe open te liggen.
 //
 // De stand is één gewoon object (zie nieuwSpel). Alle functies geven een NIEUWE stand terug of null als het niet mag.
 // fase: 'spel' (er wordt gespeeld), 'uitslag' (ronde klaar, de volgende moet nog gedeeld), 'klaar' (iemand is af).
@@ -68,7 +70,7 @@ function deel(s, begint, rng) {
   s.tafel = [stapel.pop(), stapel.pop(), stapel.pop()]
   s.stapel = stapel
   s.aanZet = begint; s.begint = begint
-  s.beurten = 0; s.geklopt = 0; s.fase = 'spel'; s.uitslag = null
+  s.beurten = 0; s.passen = 0; s.geklopt = 0; s.fase = 'spel'; s.uitslag = null
   s.laatste = { soort: 'deel', wie: 0, kaarten: [] }
   // Iemand heeft meteen 31: meteen laten zien
   if (mee.some(sp => punten(s.handen[sp]) === DOEL)) rondeKlaar(s, '31')
@@ -118,7 +120,7 @@ export function ruil(oud, sp, handKaart, tafelKaart) {
   const h = oud.handen[sp].indexOf(handKaart), t = oud.tafel.indexOf(tafelKaart)
   if (h < 0 || t < 0) return null
   const s = kopie(oud)
-  s.handen[sp][h] = tafelKaart; s.tafel[t] = handKaart
+  s.handen[sp][h] = tafelKaart; s.tafel[t] = handKaart; s.passen = 0
   s.laatste = { soort: 'ruil', wie: sp, kaarten: [handKaart], gepakt: [tafelKaart] }
   naBeurt(s, sp)
   return s
@@ -127,7 +129,7 @@ export function ruilAlles(oud, sp) {
   if (!aanDeBeurt(oud, sp)) return null
   const s = kopie(oud)
   const weg = s.handen[sp]
-  s.handen[sp] = s.tafel; s.tafel = weg
+  s.handen[sp] = s.tafel; s.tafel = weg; s.passen = 0
   s.laatste = { soort: 'alles', wie: sp, kaarten: weg.slice(), gepakt: s.handen[sp].slice() }
   naBeurt(s, sp)
   return s
@@ -137,9 +139,27 @@ export const magKloppen = (s, sp) => Boolean(aanDeBeurt(s, sp) && !s.geklopt && 
 export function klop(oud, sp) {
   if (!magKloppen(oud, sp)) return null
   const s = kopie(oud)
-  s.geklopt = sp; s.beurten++
+  s.geklopt = sp; s.beurten++; s.passen = 0
   s.laatste = { soort: 'klop', wie: sp, kaarten: [] }
   s.aanZet = volgende(s, sp)
+  return s
+}
+// Passen: niets doen, de volgende is aan de beurt. Past iedereen een rondgang, dan 3 nieuwe tafelkaarten van de stapel
+// (de oude gaan onder de stapel, zodat er altijd genoeg zijn).
+export const magPassen = aanDeBeurt
+export function pas(oud, sp) {
+  if (!magPassen(oud, sp)) return null
+  const s = kopie(oud)
+  s.passen = (s.passen || 0) + 1
+  s.laatste = { soort: 'pas', wie: sp, kaarten: [] }
+  if (s.passen >= inSpel(s).length) {
+    const weg = s.tafel
+    s.stapel = [...weg, ...s.stapel]
+    s.tafel = [s.stapel.pop(), s.stapel.pop(), s.stapel.pop()]
+    s.passen = 0
+    s.laatste.nieuweTafel = true; s.laatste.kaarten = weg.slice()
+  }
+  naBeurt(s, sp)
   return s
 }
 
@@ -156,6 +176,7 @@ export function geldigeStand(s) {
     if (!zet.every(sp => Array.isArray(s.handen[sp]) && (s.handen[sp].length === 3 || (s.handen[sp].length === 0 && (s.levens[sp] === 0 || s.fase !== 'spel'))))) return false
     const alle = [...s.stapel, ...s.tafel, ...zet.flatMap(sp => s.handen[sp])]
     if (alle.length !== 32 || new Set(alle).size !== 32 || !alle.every(isKaart)) return false
+    if (s.passen !== undefined && (!Number.isInteger(s.passen) || s.passen < 0 || s.passen > n)) return false
     if (!Number.isInteger(s.beurten) || s.beurten < 0 || !Number.isInteger(s.ronde) || s.ronde < 1) return false
     return true
   } catch (e) { return false }
@@ -164,7 +185,7 @@ export function geldigeStand(s) {
 // ── De computerspeler ──
 // Wat levert elke ruil op? De beste ruil, of alles ruilen, of kloppen als hij genoeg heeft.
 // makkelijk: kijkt maar naar één kaart en klopt al bij 25; normaal: klopt vanaf 27; moeilijk: klopt slimmer (eerder als
-// de ander net geklopt heeft kan het niet meer; vanaf 28, of 26 na een paar beurten). Duurt de ronde lang, dan klopt hij
+// de ander net geklopt heeft kan het niet meer; vanaf 28, of 26 na een paar beurten). Wordt niets beter, dan past hij. Duurt de ronde lang, dan klopt hij
 // steeds eerder (na 30 beurten altijd).
 export function computerStap(s, sp, niveau = 'normaal', rng = Math.random) {
   if (!aanDeBeurt(s, sp)) return null
@@ -177,6 +198,8 @@ export function computerStap(s, sp, niveau = 'normaal', rng = Math.random) {
   // hoe langer de ronde duurt, hoe eerder hij klopt (anders kan een ronde eindeloos doorgaan)
   const grens = (niveau === 'makkelijk' ? 25 : niveau === 'moeilijk' ? (s.beurten >= 6 ? 26 : 28) : 27) - Math.floor(s.beurten / 8)
   if (magKloppen(s, sp) && (s.beurten >= 30 || (nu >= grens && keuze.p <= nu + (niveau === 'moeilijk' ? 1 : 0)))) return { soort: 'klop' }
+  // niets dat beter wordt: passen (zo komen er misschien nieuwe tafelkaarten)
+  if (keuze.p <= nu && niveau !== 'makkelijk') return { soort: 'pas' }
   return keuze.soort === 'alles' ? { soort: 'alles' } : { soort: 'ruil', hand: keuze.hand, tafel: keuze.tafel }
 }
 export function doeStap(s, sp, stap) {
@@ -184,6 +207,7 @@ export function doeStap(s, sp, stap) {
   if (stap.soort === 'ruil') return ruil(s, sp, stap.hand, stap.tafel)
   if (stap.soort === 'alles') return ruilAlles(s, sp)
   if (stap.soort === 'klop') return klop(s, sp)
+  if (stap.soort === 'pas') return pas(s, sp)
   return null
 }
 

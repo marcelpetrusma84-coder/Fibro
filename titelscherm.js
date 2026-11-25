@@ -15,7 +15,11 @@
 // Gebruik: await toonTitelscherm({ spelId: 'breakout', naam: 'Block It', ouder: element })
 //          Geeft true als je erdoor tikte, false als het scherm van buitenaf weg moest (sluitTitelscherm).
 import { SCENES } from './titelscenes.js?v=8'
-import { speelTitelMuziek, stopTitelMuziek, muziekAan, zetMuziek } from './titelmuziek.js?v=7'
+import { speelTitelMuziek as speelMuziek, stopTitelMuziek, muziekAan, zetMuziek } from './titelmuziek.js?v=7'
+import { studioSpel } from './studio-spellen.js?v=5' // 25 nov 2026: spellen uit Stekky Studio: titelscherm en muziek van een ander spel
+// Een spel uit Stekky Studio leent het titelscherm en de muziek van het spel dat in de Studio gekozen is (titel)
+const leen = id => { const s = studioSpel(id); return s ? s.titel : id }
+const speelTitelMuziek = id => speelMuziek(leen(id))
 
 export { stopTitelMuziek }
 
@@ -28,7 +32,7 @@ const NAMEN = { botkaaseiren: 'Tic-Tac-Toe', vieroprij: 'Four in a Row', pesten:
     breakout: 'Block It', swarm: 'The Swarm', pinball: 'Twin Snakes', endlessrunner: 'Runner & Gunner', flappybird: 'Flapper', shmup: 'Neon Raiders' }
 export function titelNaam(spelId) {
     if (spelId === 'schaken') return window.T && window.T.taal === 'en' ? 'Chess' : 'Schaken'
-    return NAMEN[spelId] || spelId
+    return NAMEN[spelId] || (studioSpel(spelId) ? vertaal(studioSpel(spelId).naam[0]) : spelId)
 }
 
 // Tik op een spel (Home, profiel van een vriend, uitnodiging): eerst het titelscherm hier, dan het spel.
@@ -100,7 +104,7 @@ export function menuMuziek(spelId) {
 }
 
 export function heeftTitelscherm(spelId) {
-    return Object.prototype.hasOwnProperty.call(SCENES, spelId)
+    return Object.prototype.hasOwnProperty.call(SCENES, leen(spelId))
 }
 
 function laadLettertype(scene) {
@@ -122,7 +126,7 @@ export function sluitTitelscherm() {
 }
 
 export function toonTitelscherm({ spelId, naam, ouder }) {
-    const scene = SCENES[spelId]
+    const scene = SCENES[leen(spelId)]
     if (!scene) return Promise.resolve(true)
     if (huidig) huidig(false)
     clearTimeout(naMuziekTimer)

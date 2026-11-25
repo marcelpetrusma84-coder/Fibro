@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=150"></script>
+<script src="taal.js?v=152"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -435,7 +435,7 @@ button { font-family:inherit; }
     <div class="balk-knoppen">
       <button type="button" class="balk-knop" id="emojiKnop" data-icoon="emoji" aria-label="Emoji" data-t-attr="aria-label" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg></button>
       <button type="button" class="balk-knop" id="stickerKnop" data-icoon="stickers" aria-label="Stickers" data-t-attr="aria-label" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 14.5V7a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v10a4 4 0 0 0 4 4h7.5"/><path d="M21 14.5 14.5 21v-3a3.5 3.5 0 0 1 3.5-3.5z"/><path d="M8.5 12.5a4.5 4.5 0 0 0 7 0M9 8.5h.01M15 8.5h.01"/></svg></button>
-      <button type="button" class="balk-knop later" data-icoon="spel" aria-label="Spel" data-t-attr="aria-label"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5.5h10a4 4 0 0 1 3.95 3.4c.3 2 .8 5.5.8 7a2.6 2.6 0 0 1-4.6 1.7L15.7 16a2 2 0 0 0-1.5-.7H9.8a2 2 0 0 0-1.5.7l-1.45 1.6A2.6 2.6 0 0 1 2.25 15.9c0-1.5.5-5 .8-7A4 4 0 0 1 7 5.5z"/><path d="M8 9v4M6 11h4M15.5 11.5h.01M17.5 9.5h.01"/></svg></button>
+      <button type="button" class="balk-knop" id="spelKnop" data-icoon="spel" aria-label="Spel" data-t-attr="aria-label"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5.5h10a4 4 0 0 1 3.95 3.4c.3 2 .8 5.5.8 7a2.6 2.6 0 0 1-4.6 1.7L15.7 16a2 2 0 0 0-1.5-.7H9.8a2 2 0 0 0-1.5.7l-1.45 1.6A2.6 2.6 0 0 1 2.25 15.9c0-1.5.5-5 .8-7A4 4 0 0 1 7 5.5z"/><path d="M8 9v4M6 11h4M15.5 11.5h.01M17.5 9.5h.01"/></svg></button>
       <button type="button" class="balk-knop" id="fotoKnop" data-icoon="foto" aria-label="Foto versturen" data-t-attr="aria-label"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
       <button type="button" class="balk-knop" id="spraakKnop" data-icoon="microfoon" aria-label="Houd ingedrukt om in te spreken" data-t-attr="aria-label" style="touch-action:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
       <button type="button" class="balk-knop" id="extraKnop" aria-label="Meer: poll, afspraak, muziek, whiteboard, piano" data-t-attr="aria-label" aria-pressed="false" aria-controls="extraMenu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg></button>
@@ -476,6 +476,7 @@ button { font-family:inherit; }
   import { maakGroepGesprek, MAX_BELLERS, MAX_BEELD } from './groepbellen.js?v=5'
   import { maakGroepMuziek } from './groepmuziek.js?v=1'
   import { maakPiano, speelDeuntje, leesDeuntje, lengteMs } from './groeppiano.js?v=1'
+  import { maakGroepKaartspel } from './groepkaartspel.js?v=3' // 25 nov 2026: kaartspellen met de groep (multiplayer stap 2)
   import { maakGroepBord, tekenLijn, KLEUREN as BORD_KLEUREN, DIKTES as BORD_DIKTES, ACHTERGROND as BORD_ACHTERGROND } from './groepbord.js?v=2'
   import { houOpen } from './lijntjes.js?v=1'
   import { haalVriendFotos, geldigeFoto } from './vriendfotos.js?v=2'
@@ -1232,6 +1233,7 @@ button { font-family:inherit; }
       .on('broadcast', { event: 'media' }, m => { ontvang(m && m.payload).catch?.(() => {}) })
       .on('broadcast', { event: 'bord' }, m => { bord?.ontvang(m && m.payload).catch?.(e => console.warn('[groep] bord', e)) })
       .on('broadcast', { event: 'muziek' }, m => { muziek?.ontvang(m && m.payload).catch?.(e => console.warn('[groep] muziek', e)) })
+      .on('broadcast', { event: 'gs' }, m => { try { kaartspel?.ontvang(m && m.payload) } catch (e) { console.warn('[groep] spel', e) } }) // 25 nov 2026: groepkaartspel.js
       .on('broadcast', { event: 'typen' }, m => { const v = m && m.payload && m.payload.van; if (v && v !== ik && lidVan(v) && !isGeblokt(v)) { typers.set(v, Date.now()); werkTypenBij() } }), haalGemist)
     markeerGelezen()
     ruimOp(groep.id)
@@ -1248,6 +1250,13 @@ button { font-family:inherit; }
       sleutel: () => mijnPriv ? { mijnPriv, mijnPub, leden, pubVan: id => lidVan(id)?.public_key || null } : null,
       opVerander: () => tekenMuziek(),
     })
+    // 25 nov 2026: kaartspellen met de groep (groepkaartspel.js): uitnodiging, wachtkamer en het spel over dit kanaal
+    kaartspel = maakGroepKaartspel({
+      ik, groepId: groep.id, kanaal: () => lijn?.kanaal?.(), leden: () => leden.filter(l => !isGeblokt(l.id)), naamVan, toast,
+      bel: { kan: () => Boolean(gesprek && magBellen()), aan: () => { const s = gesprek?.staat(); return Boolean(s && s.mee && !s.stil) },
+        wissel: () => { const s = gesprek?.staat(); if (!s) return; if (!s.mee) belMee(); else gesprek.zetStil(!s.stil) } },
+      meldPush: (spel, sessie) => meldGroepSpel(groep.id, spel, sessie), // 25 nov 2026: pushmelding naar de groep
+    })
     bord = maakGroepBord({
       ik, groepId: groep.id, kanaal: () => lijn?.kanaal?.(),
       sleutel: () => mijnPriv ? { mijnPriv, mijnPub, leden, pubVan: id => lidVan(id)?.public_key || null } : null,
@@ -1258,13 +1267,25 @@ button { font-family:inherit; }
       for (let i = 0; i < 40; i++) {
         const k = lijn?.kanaal?.()
         // 17 nov 2026: ook wat er binnenkwam tussen het laden en het openen van het kanaal (dat ging verloren)
-        if (k && k.state === 'joined') { haalGemist().catch(() => {}); break }
+        if (k && k.state === 'joined') { haalGemist().catch(() => {}); try { kaartspel?.hallo() } catch (e) {} break }
         await new Promise(ok => setTimeout(ok, 500))
       }
     })()
   }
   // ── Voice chat en webcam chat (groepbellen.js): tot 8 personen praten, of tot 4 met beeld ──
   let gesprek = null
+  let kaartspel = null // 25 nov 2026: groepkaartspel.js
+  // 25 nov 2026: wie een spel opent, stuurt de andere leden een pushmelding ("Marcel wil Eenendertigen spelen").
+  // stuur-push (type groepspel) kijkt zelf of je lid bent en houdt het rustig (hoogstens eens per 2 minuten).
+  async function meldGroepSpel(groepId, spel, sessie) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      await fetch('https://qmgatbphiplrfxrljtbe.supabase.co/functions/v1/stuur-push', { method: 'POST', keepalive: true,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ groep_spel: { groep_id: groepId, spel, sessie } }) })
+    } catch (e) { console.warn('[groep] spelmelding', e) }
+  }
   const metBeeld = () => groep && groep.soort === 'webcam'
   const maxBel = () => metBeeld() ? MAX_BEELD : MAX_BELLERS
   const magBellen = () => groep && mijnPriv && leden.length > 1 && leden.length <= MAX_BELLERS
@@ -1884,6 +1905,7 @@ button { font-family:inherit; }
     c.toBlob(b => { if (b) { stuurMedia('foto', b, 0); $('bordVak').hidden = true } else toast(T('Dat lukte niet.')) }, 'image/jpeg', 0.85)
   })
   for (const b of document.querySelectorAll('.balk-knop.later')) b.addEventListener('click', () => toast(T('Samen spelen in een groep komt later')))
+  $('spelKnop').addEventListener('click', () => { if (!groep || !kaartspel) return; kaartspel.kies() }) // 25 nov 2026: kaartspellen met de groep
   $('fotoKnop').addEventListener('click', () => { if (!mijnPriv || !groep) return; $('fotoInvoer').click() })
   $('fotoInvoer').addEventListener('change', async e => {
     const files = [...(e.target.files || [])].slice(0, 10)

@@ -122,8 +122,9 @@ try:
         m.click('#stickerRaster .sk-sticker >> nth=0'); m.wait_for_function("document.querySelectorAll('.b-rij.mijn').length === 2")
         m.wait_for_timeout(300)
         check(m.locator('.b-rij.mijn img.b-sticker').count() == 1, 'E: sticker als plaatje bij Marcel')
-        m.click('.balk-knop.later[aria-label="Spel"]')
-        check('Samen spelen in een groep komt later' in m.inner_text('.toast'), 'E: spel zegt later')
+        m.click('#spelKnop')   # 25 nov 2026: kaartspellen met de groep (groepkaartspel.js, proef340)
+        check(m.wait_for_selector('.gk-spel[data-spel=eenendertigen]', timeout=5000) is not None, 'E: spel = kies een kaartspel voor de groep')
+        m.click('.gk-annuleer')
         # D
         bp.goto(BASIS + 'groep.html?id=' + gid); bp.wait_for_selector('.b-rij .bubbel')
         bp.wait_for_function("document.querySelectorAll('.b-rij').length === 2")

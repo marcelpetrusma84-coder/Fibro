@@ -31,6 +31,29 @@ Elk kaartspel krijgt **vanzelf**:
 | Einde | `einde({ titel, sub, gewonnen, opnieuw })`: winnen = vallende kaarten en een vrolijk deuntje. |
 | Gevoel | Geluidjes met Web Audio (geen bestanden), trillen waar het toestel dat kan (`navigator.vibrate`; op een iPhone niet). |
 
+## De snelle weg: via Stekky Studio (25 november 2026)
+
+In **Stekky Studio > 🎲 Spel maken** beschrijf je een nieuw spel: beurtspel of kaartspel, naam (ook in het Engels), icoon (een emoji of een eigen plaatje), uitleg voor de Store, doel, spelregels, en bij een kaartspel welk kaartspel, hoeveel kaarten per speler en de speciale kaarten. Je vinkt aan wat erin zit (met een vriend, chatbalk met stickers, webcamrondjes, spraak vanzelf of met 📹, titelscherm en muziek in de stijl van een ander spel) en welke extra's Claude moet bouwen (❓-knop, opnieuw spelen, beurtklok, trillen, scorebord, ...). Tegen de computer, de Store en het spelmenu ☰ zitten er altijd in. De Studio maakt er een spelbestand van (`<id>.stekkyspel.json`, `spelmaker.js`).
+
+Dan: `node tests/tools/studio-spel-installeer.mjs <id>.stekkyspel.json`. Dat
+
+- zet het spel in `studio-spellen.js`. Daarmee staat het vanzelf in de Store, het spelmenu van de chat (`SPEL_INFO`, `SPEL_BESTAND`, `beschikbaar`, `toonStoreSpellen`), `BEURTSPELLEN` (webcam), de chatbalk, `KAARTSPELLEN` (spraak vanzelf), `SOLO_SPELLEN` (tegen de computer, de computerspeler `<id>.js` wordt pas geladen als je speelt), Profiel > Widgets, uitnodigingen, het spelicoon en het titelscherm. Je hoeft de tabel hieronder dus niet langs;
+- zet het spelicoon neer (`spelicoon/<id>.webp`) en een werkend beginspel uit het sjabloon (`<id>-ui.js` en `<id>.js`);
+- schrijft de bouwopdracht `spellen/<id>.md` met alles wat in de Studio is ingevuld.
+
+Daarna bouwt Claude de echte regels in `<id>-ui.js` en `<id>.js` (zie de stappen hieronder) en verhoogt `v` van het spel in `studio-spellen.js`.
+
+## Eigen speelkaarten: Stekky Studio > 🃏 Speelkaarten maken (25 november 2026)
+
+Een eigen set kaarten maak je uit een paar grote platen (bijvoorbeeld met Gemini). Je kiest:
+
+- **Alleen de plaatjes (18)**: de azen, boeren, vrouwen en heren, de achterkant en de joker, op 2 platen van 3 × 3. De kaarten 2 tot en met 10 tekent de app zelf (`studioCijferKaart` in `kaartspel-hulp.js`), met de tekens in de kleuren die je kiest.
+- **Alle 54 kaarten**: 4 platen van 4 × 4 (één per kleur) en 1 plaat met de achterkant en de joker, zoals Perkament.
+
+Per plaat staat er een prompt voor Gemini klaar (`maakKaartPrompt` in `kaartmaker.js`). Je laadt de platen in (ook alle tegelijk); de Studio knipt ze in kaarten van 375 × 525, zet elk plaatje op de goede kaart en laat zien wat er nog ontbreekt. Klopt een kaart niet, dan kies je bij die kaart een ander plaatje. Dan maakt de Studio een kaartpakket (`<id>.stekkykaarten.json`).
+
+`node tests/tools/studio-kaarten-installeer.mjs <id>.stekkykaarten.json` zet de plaatjes in `kaarten/<id>/` en de set in `studio-kaarten.js`. Daarmee staat hij vanzelf bij "Kies je kaarten" in elk kaartspel (`KAARTSTIJLEN`).
+
 ## Zo maak je een nieuw kaartspel
 
 1. **Regels in een eigen bestand** zonder scherm, zoals `pesten.js`: één stand-object, functies die een *nieuwe* stand teruggeven (of `null` als het niet mag), `geldigeStand()` om een stand van de ander te controleren, en `computerStap()` voor spelen tegen de computer. Zo kun je de regels testen met Node.
@@ -78,6 +101,19 @@ Elk kaartspel krijgt **vanzelf**:
   - De chat kijkt op **dit toestel** of Pesten aan staat (`gameAan`: download + widget), want je widgets staan op je toestel, niet op de server.
   - Pesten gaat niet mee met een uitnodigingslink (`store: true` in `solo.js`).
   - De Store is sinds 11 november 2026 voor iedereen met een account (`sql/stekky-store-iedereen.sql`).
+
+## Eenendertigen (het eerste spel uit Stekky Studio, 25 november 2026)
+
+Gemaakt via **🎲 Spel maken** (spellen/eenendertigen.md). Regels in `eenendertigen.js` (met `bot` voor tegen de computer, via `studio-spellen.js`), het scherm in `eenendertigen-ui.js`. Piket (32 kaarten), 3 kaarten per speler en 3 open op tafel. Kies een kaart uit je hand en tik op een tafelkaart om te ruilen (of veeg je kaart omhoog en kies een tafelkaart); knoppen "Alle 3 ruilen", "Kloppen" (pas na één rondgang) en ❓. De tafelkaarten en de pilletjes (ronde, punten, levens) staan in een eigen vak midden op tafel (`.eed-midden`), want het info-vak van de tafel laat geen tikken door. Na een ronde deelt speler 1 vanzelf de volgende. Tests: `tests/kaart/test-eenendertigen.mjs` (ook 500 potjes computer tegen computer) en `proef339`.
+
+## Met meer spelers en met de groep (25 november 2026)
+
+- **`groepspel.js`** (stap 1): 2 tot 6 spelers over één spelkanaal. Wie het spel start is de gastheer en heeft de stand; de anderen sturen hun zet (`actie`), de gastheer stuurt de nieuwe stand (`stand`). De computer speelt lege zetels, wie weggaat (`weg`) en wie zijn beurt laat verlopen. Gaat de gastheer weg, dan stopt het spel bij de anderen (`onGastheerWeg`).
+- **De tafel**: `tafel.tegenstanders(lijst)` zet de anderen als rondjes bovenaan (naam, icoon, info, wie aan de beurt is, wie eruit ligt); beurtklok en reacties per zetel (`'zetel:3'`).
+- **In de groepschat** (stap 2, `groepkaartspel.js`): 🎲 → een spel kiezen (`groepSpellen()`: kaartspellen met `max` > 2 in `studio-spellen.js`) → de groep krijgt bovenin een uitnodiging → wachtkamer (hoogstens 6, de opener kan 🤖 computers erbij zetten) → Start. Alles loopt over het kanaal van de groep (`groep-<id>`, event `gs` met het nummer van het spel), dus er hoeft niets aan de database. In het spel: het spelmenu ☰ met de microfoon (= de voice chat van de groep), 🏠 = terug naar de chat (het spel blijft open), 🚪 = verlaten.
+- Een spel kan dit als het `start({ spelKanaal, spelers, mijnZetel })` begrijpt (zie `eenendertigen-ui.js`).
+- **Pushmelding** (stap 2b): wie een spel opent, stuurt de andere leden "🎲 Marcel wil Eenendertigen spelen in de groep" (`stuur-push`, type `groepspel`); wie de groep later opent, zegt `hallo` en ziet de uitnodiging toch.
+- **In Stekky Studio** (stap 4): bij een kaartspel kies je **Hoeveel spelers?** (2 tot 6, `kaarten.spelers` in het spelbestand). De bouwopdracht krijgt dan een stuk "Met meer spelers": bouw het zoals Eenendertigen en zet `"max": n` in `studio-spellen.js` zodra het werkt (het beginspel uit het sjabloon kan alleen met z'n tweeën, dus de installer zet `max` nog niet).
 
 ## Koningsjacht (alleen te spelen)
 

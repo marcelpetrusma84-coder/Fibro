@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#1a0a2e">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
-<script src="taal.js?v=150"></script>
+<script src="taal.js?v=152"></script>
 <script src="appslot.js?v=3"></script>
 <title>Stekky Studio</title>
 <link href="lettertypen/basis.css?v=1" rel="stylesheet">
@@ -169,11 +169,25 @@ textarea#promptTekst { width:100%; min-height:300px; margin-top:12px; line-heigh
     <div class="rij" style="margin-top:14px"><button type="button" class="knop" id="loMaak">🧩 Layoutbestand maken</button></div>
     <div class="melding" id="loMelding" aria-live="polite"></div>
   </details>
+
+  <!-- 25 nov 2026: een nieuw spel beschrijven (studio-spel-ui.js, spelmaker.js) -->
+  <details class="promptblok" id="spelBlok">
+    <summary>🎲 Spel maken (beurtspel of kaartspel)</summary>
+    <p class="uitleg" style="margin-top:8px">Beschrijf een nieuw spel: de naam, het icoon, de spelregels en wat erin moet zitten. De Studio maakt er een spelbestand van. Geef dat aan Claude: dan staat het spel meteen overal in de app (Store, spelmenu, Home) met een werkend beginspel, en bouwt Claude daarna de echte regels.</p>
+  </details>
+
+  <!-- 25 nov 2026: eigen speelkaarten uit een paar platen (studio-kaarten-ui.js, kaartmaker.js) -->
+  <details class="promptblok" id="kaartBlok">
+    <summary>🃏 Speelkaarten maken</summary>
+    <p class="uitleg" style="margin-top:8px">Maak je eigen kaarten uit een paar grote platen (bijvoorbeeld met Gemini). Kies of je alleen de plaatjes maakt (de app tekent 2 tot en met 10) of alle 54 kaarten. Per plaat staat er een prompt klaar. Laad de platen in: de Studio knipt ze en zet elk plaatje op de goede kaart. Daarna maak je een kaartpakket. Geef dat aan Claude: dan staan je kaarten bij "Kies je kaarten" in elk kaartspel.</p>
+  </details>
 </main>
 
 <script type="module">
 import './studio-ui.js?v=6'
-import './studio-layout-ui.js?v=4'
+import './studio-layout-ui.js?v=5'
+import './studio-spel-ui.js?v=6'
+import './studio-kaarten-ui.js?v=1'
 </script>
 </body>
 </html>

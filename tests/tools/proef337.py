@@ -1,6 +1,6 @@
 # proef337 (25 nov 2026, Marcel): een spel maken in Stekky Studio, van het formulier tot spelen (spelmaker.js).
 # In een kopie van de app (alleen studio-spellen.js en de map spelicoon zijn echt een kopie; de rest verwijst naar de echte map).
-#  A. Studio (moderator): "Spel maken": de blauwdruk staat erbij; kaartspel kiezen; zonder naam geen bestand; een speciale
+#  A. Studio (moderator): (v2) "Hoeveel spelers?" 2 tot 6, met uitleg over de groepschat; "Spel maken": de blauwdruk staat erbij; kaartspel kiezen; zonder naam geen bestand; een speciale
 #     kaart erbij; wat er altijd in zit is aangevinkt en vast; met alles ingevuld: een spelbestand dat klopt (met icoon)
 #  B. het installatiescript zet het spel in de app (studio-spellen.js, beginspel, icoon, bouwopdracht)
 #  C. Store > Games: het spel staat erin met zijn eigen icoon; downloaden = op Home
@@ -87,6 +87,12 @@ try:
         pg.fill('#spDoel', 'Wie het eerst geen kaarten meer heeft, wint.')
         pg.fill('#spRegels', 'Iedereen krijgt 7 kaarten. Leg een kaart van dezelfde kleur of waarde op de stapel. Kun je niet, pak er een.')
         pg.select_option('#spDeck', '54')
+        opties = pg.eval_on_selector_all('#spSpelers option', 'os => os.map(o => o.textContent)')
+        check(opties == ['2 spelers', '2 tot 3 spelers', '2 tot 4 spelers', '2 tot 5 spelers', '2 tot 6 spelers'] and pg.input_value('#spSpelers') == '2', 'A hoeveel spelers: 2 tot 6, standaard 2 (%s)' % opties)
+        check('groepschat' in pg.inner_text('#spSpelersUitleg'), 'A met uitleg: meer spelers = ook in de groepschat')
+        pg.select_option('#spSpelers', '4')
+        pg.click('#spSpeciaalErbij'); pg.click('#spSpeciaal .sp-speciaal button')   # het formulier opnieuw tekenen: de keuze blijft
+        check(pg.input_value('#spSpelers') == '4', 'A de keuze blijft staan')
         pg.click('#spSpeciaalErbij')
         pg.select_option('#spSpeciaal .sp-kaart', '2'); pg.fill('#spSpeciaal .sp-wat', 'De ander pakt 2 kaarten.')
         pg.uncheck('#spMet input[data-id=webcam]')
@@ -98,7 +104,7 @@ try:
         bestand = os.path.join(tmp, d.suggested_filename); d.save_as(bestand)
         spel = json.load(open(bestand, encoding='utf8'))
         check(spel.get('formaat') == 'stekky-spel' and spel.get('soort') == 'kaart' and spel.get('naam') == ['Kleurenjacht', 'Colour Hunt'] and spel.get('icoon') == '🌈', 'A het bestand klopt')
-        check(spel.get('kaarten') == {'deck': '54', 'perSpeler': 7, 'speciaal': [{'kaart': '2', 'wat': 'De ander pakt 2 kaarten.'}]}, 'A de kaarten: %s' % spel.get('kaarten'))
+        check(spel.get('kaarten') == {'deck': '54', 'perSpeler': 7, 'spelers': 4, 'speciaal': [{'kaart': '2', 'wat': 'De ander pakt 2 kaarten.'}]}, 'A de kaarten: %s' % spel.get('kaarten'))
         check(spel.get('met', {}).get('webcam') is False and spel.get('met', {}).get('chatbalk') is True and 'beurtklok' in spel.get('extras', []), 'A wat erin zit en de extra\'s')
         check(str(spel.get('plaatje', '')).startswith('data:image/webp;base64,'), 'A het icoon is een webp-plaatje')
         check('is gemaakt' in pg.inner_text('#spMelding'), 'A melding: het bestand is gemaakt')
@@ -108,6 +114,9 @@ try:
         r = subprocess.run(['node', os.path.join(MAP, 'tests/tools/studio-spel-installeer.mjs'), bestand, '--map', app, '--zonder-versies'], capture_output=True, text=True)
         check(r.returncode == 0 and 'kleurenjacht' in r.stdout, 'B geïnstalleerd: %s' % (r.stdout.strip() or r.stderr.strip())[:120])
         check(all(os.path.exists(os.path.join(app, f)) for f in ('kleurenjacht-ui.js', 'kleurenjacht.js', 'spelicoon/kleurenjacht.webp', 'spellen/kleurenjacht.md')), 'B beginspel, icoon en bouwopdracht staan er')
+        md = open(os.path.join(app, 'spellen/kleurenjacht.md'), encoding='utf8').read()
+        check('## Met meer spelers (2 tot 4)' in md and '"max": 4' in md, 'B de bouwopdracht zegt hoe het met 4 spelers moet')
+        check('"max"' not in open(os.path.join(app, 'studio-spellen.js'), encoding='utf8').read().split('kleurenjacht')[1].split('\n')[0], 'B het beginspel staat nog niet in de groepschat (max komt met de echte regels)')
 
         # ── C. Store ──
         STAND['moderator'] = False

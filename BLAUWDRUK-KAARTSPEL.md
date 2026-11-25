@@ -112,6 +112,8 @@ Gemaakt via **🎲 Spel maken** (spellen/eenendertigen.md). Regels in `eenendert
 - **De tafel**: `tafel.tegenstanders(lijst)` zet de anderen als rondjes bovenaan (naam, icoon, info, wie aan de beurt is, wie eruit ligt); beurtklok en reacties per zetel (`'zetel:3'`).
 - **In de groepschat** (stap 2, `groepkaartspel.js`): 🎲 → een spel kiezen (`groepSpellen()`: kaartspellen met `max` > 2 in `studio-spellen.js`) → de groep krijgt bovenin een uitnodiging → wachtkamer (hoogstens 6, de opener kan 🤖 computers erbij zetten) → Start. Alles loopt over het kanaal van de groep (`groep-<id>`, event `gs` met het nummer van het spel), dus er hoeft niets aan de database. In het spel: het spelmenu ☰ met de microfoon (= de voice chat van de groep), 🏠 = terug naar de chat (het spel blijft open), 🚪 = verlaten.
 - Een spel kan dit als het `start({ spelKanaal, spelers, mijnZetel })` begrijpt (zie `eenendertigen-ui.js`).
+- **Pushmelding** (stap 2b): wie een spel opent, stuurt de andere leden "🎲 Marcel wil Eenendertigen spelen in de groep" (`stuur-push`, type `groepspel`); wie de groep later opent, zegt `hallo` en ziet de uitnodiging toch.
+- **In Stekky Studio** (stap 4): bij een kaartspel kies je **Hoeveel spelers?** (2 tot 6, `kaarten.spelers` in het spelbestand). De bouwopdracht krijgt dan een stuk "Met meer spelers": bouw het zoals Eenendertigen en zet `"max": n` in `studio-spellen.js` zodra het werkt (het beginspel uit het sjabloon kan alleen met z'n tweeën, dus de installer zet `max` nog niet).
 
 ## Koningsjacht (alleen te spelen)
 

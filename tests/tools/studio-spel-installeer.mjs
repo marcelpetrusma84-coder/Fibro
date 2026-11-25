@@ -9,6 +9,8 @@
 //      Home, Profiel > Widgets, uitnodigingen en (als gekozen) met een titelscherm.
 //   5. Schrijft de bouwopdracht: spellen/<id>.md (alles wat in de Studio is ingevuld) en spellen/<id>.stekkyspel.json.
 //   6. Verhoogt de ?v=-nummers die daardoor omhoog moeten (tests/tools/verhoog-versies.mjs).
+// Meer spelers (kaarten.spelers > 2): de bouwopdracht zegt hoe; `max` in studio-spellen.js komt pas als de echte regels
+// met meer spelers werken (het beginspel kan maar met z'n tweeën), anders zou de groepschat een spel tonen dat dat nog niet kan.
 // Er wordt niets gepubliceerd: het gaat in een pull request. Daarna bouwt Claude de echte regels (spellen/<id>.md), en
 // Marcel of Tijn zegt "Merge".
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'

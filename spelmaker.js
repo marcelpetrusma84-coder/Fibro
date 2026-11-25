@@ -8,8 +8,12 @@
 // De blauwdrukken: BLAUWDRUK-BEURTSPEL.md en BLAUWDRUK-KAARTSPEL.md.
 //
 // Hier staan de keuzes en de controle (valideerSpel), zodat de Studio en het installatiescript precies hetzelfde doen.
+// v2 (25 nov 2026, Marcel): kaartspellen voor meer spelers. Bij een kaartspel kies je "Hoeveel spelers?" (2 tot 6,
+// kaarten.spelers). Meer dan 2: het spel kan ook in de groepschat (groepkaartspel.js) en tegen meer computers; de
+// bouwopdracht zegt hoe (groepspel.js, zoals Eenendertigen). Meer dan 2 kan alleen met 'Met een vriend spelen' aan.
 
 export const FORMAAT = 'stekky-spel'
+export const MIN_SPELERS = 2, MAX_SPELERS = 6
 export const MAX_NAAM = 30, MAX_UITLEG = 300, MAX_REGELS = 4000, MAX_REGEL = 200, MAX_SPECIAAL = 16, MAX_ICOON = 60000
 
 export const SOORTEN = {
@@ -83,6 +87,7 @@ export function maakSpel(v) {
   if (kaart) spel.kaarten = {
     deck: DECKS[v.deck] ? v.deck : '52',
     perSpeler: Math.max(1, Math.min(26, Math.round(Number(v.perSpeler) || 7))),
+    spelers: Math.max(MIN_SPELERS, Math.min(MAX_SPELERS, Math.round(Number(v.spelers) || MIN_SPELERS))),
     speciaal: (v.speciaal || []).filter(s => s && tekst(s.wat, MAX_REGEL)).slice(0, MAX_SPECIAAL)
       .map(s => ({ kaart: KAARTEN.includes(s.kaart) ? s.kaart : 'aas', wat: tekst(s.wat, MAX_REGEL) })),
   }
@@ -120,6 +125,12 @@ export function valideerSpel(s, { bestaand = [] } = {}) {
     if (!DECKS[k.deck]) f.push('Kies welk kaartspel.')
     if (!Number.isInteger(k.perSpeler) || k.perSpeler < 1 || k.perSpeler > 26) f.push('Hoeveel kaarten krijgt elke speler (1 tot 26)?')
     else if (k.perSpeler * 2 > Number(k.deck)) f.push('Zoveel kaarten zitten er niet in het spel.')
+    const n = k.spelers === undefined ? MIN_SPELERS : k.spelers   // (oude spelbestanden: 2)
+    if (!Number.isInteger(n) || n < MIN_SPELERS || n > MAX_SPELERS) f.push('Hoeveel spelers (2 tot 6)?')
+    else {
+      if (n > 2 && Number.isInteger(k.perSpeler) && k.perSpeler * n > Number(k.deck)) f.push('Met ' + n + ' spelers en ' + k.perSpeler + ' kaarten per speler zijn er niet genoeg kaarten.')
+      if (n > 2 && !met.vriend) f.push('Met meer dan 2 spelers moet "Met een vriend spelen" aan staan (dan kan het ook in de groepschat).')
+    }
     if (!Array.isArray(k.speciaal) || k.speciaal.length > MAX_SPECIAAL || k.speciaal.some(x => !x || !KAARTEN.includes(x.kaart) || !isTekst(x.wat) || !x.wat.trim()))
       f.push('Een speciale kaart klopt niet.')
     else {
@@ -145,9 +156,17 @@ export function bouwopdracht(s) {
   if (s.doel) r.push('- Doel: ' + s.doel)
   r.push('', '## Spelregels', '', s.regels, '')
   if (s.soort === 'kaart') {
-    r.push('## Kaarten', '', '- Kaartspel: ' + DECKS[s.kaarten.deck], '- Kaarten per speler: ' + s.kaarten.perSpeler)
+    const n = s.kaarten.spelers || MIN_SPELERS
+    r.push('## Kaarten', '', '- Kaartspel: ' + DECKS[s.kaarten.deck], '- Kaarten per speler: ' + s.kaarten.perSpeler, '- Spelers: ' + (n > 2 ? '2 tot ' + n : '2'))
     if (s.kaarten.speciaal.length) { r.push('- Speciale kaarten:'); for (const x of s.kaarten.speciaal) r.push('  - **' + x.kaart + '**: ' + x.wat) }
     r.push('- Gebruik de kaarttafel (`kaartspel-hulp.js`): kaartstijlen, ondergrond, animaties, beurtklok en trillen.', '')
+    if (n > 2) r.push('## Met meer spelers (2 tot ' + n + ')', '',
+      '- Bouw het zoals Eenendertigen (`eenendertigen.js` en `eenendertigen-ui.js`, zie BLAUWDRUK-KAARTSPEL.md, "Met meer spelers en met de groep").',
+      '- De regels werken voor `n` spelers (zetels 1 tot n), om de beurt in de rondte; wie eruit ligt, wordt overgeslagen.',
+      '- Het spel loopt via `groepspel.js`: `start({ spelKanaal, spelers, mijnZetel })`. Zetel 1 (wie start) heeft de stand; de computer speelt lege plekken en wie weggaat.',
+      '- De anderen als rondjes rond de tafel: `tafel.tegenstanders(...)`, met 🤖 voor de computer.',
+      '- Tegen de computer: eerst kiezen tegen hoeveel computers (1 tot ' + (n - 1) + ').',
+      '- Zet `"max": ' + n + '` bij dit spel in studio-spellen.js zodra het met meer spelers werkt: dan staat het in de groepschat onder 🎲 (met pushmelding).', '')
   } else if (s.bord) r.push('## Bord', '', s.bord, '')
   r.push('## Wat erin zit', '')
   for (const o of ONDERDELEN) r.push('- ' + o.naam + ': ' + ja(s.met[o.id]))
@@ -156,7 +175,8 @@ export function bouwopdracht(s) {
   if (!s.extras.length) r.push('- (geen)')
   for (const x of EXTRAS) if (s.extras.includes(x.id)) r.push('- ' + x.naam)
   r.push('', '## Klaar is', '', '- de regels werken met een vriend en tegen de computer (wat hierboven aan staat);',
-    '- alle teksten met `T(...)`, en Engels in `taal-en.js`;', '- een test in `tests/` en een browsertest in `tests/tools/`;',
+    '- alle teksten met `T(...)`, en Engels in `taal-en.js`;', '- een test in `tests/` en een browsertest in `tests/tools/`' +
+      (s.soort === 'kaart' && (s.kaarten.spelers || 2) > 2 ? ' (ook met 3 spelers in de groepschat, zoals proef340)' : '') + ';',
     '- de `?v=` van ' + s.id + '-ui.js en ' + s.id + '.js omhoog (en `v` in studio-spellen.js).', '')
   return r.join('\n')
 }

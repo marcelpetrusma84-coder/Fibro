@@ -38,6 +38,7 @@
   "kaarten": {
     "deck": "32",
     "perSpeler": 3,
+    "spelers": 6,
     "speciaal": []
   }
 }

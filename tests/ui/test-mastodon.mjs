@@ -110,7 +110,7 @@ console.log('PASS: plaatjes: alleen nieuwe, nooit gevoelig, hoogstens 5, de klei
 const mj = lees('mastodon.js')
 assert.doesNotMatch(mj, /oauth|access_token|\/api\/v1\/|authorize|client_secret/i, 'geen inloggen bij Mastodon')
 assert.doesNotMatch(mj, /\bfetch\(|XMLHttpRequest|new WebSocket|createElement\('(img|iframe|audio|video|script)'\)|innerHTML/, 'zelf niets ophalen, geen HTML van buiten')
-assert.match(mj, /from '\.\/rsswidget\.js\?v=4'/, 'dezelfde weg als de RSS-widget (rss-ophalen)')
+assert.match(mj, /from '\.\/rsswidget\.js\?v=5'/, 'dezelfde weg als de RSS-widget (rss-ophalen)')
 assert.match(mj, /a\.rel = 'noopener noreferrer'/)
 console.log('PASS: geen inloggen, geen eigen verbindingen, links zonder referrer')
 
@@ -136,7 +136,7 @@ const vp = lees('vriend-profiel.html')
 assert.match(vp, /if \(w\.id === 'mastodon'\) \{/)
 assert.match(vp, /d\.item !== 'klein:mastodon' && d\.item !== 'wbg:mastodon'/)
 assert.ok(vp.includes("M.tekenMastodonWidget(el.querySelector('.widget-inhoud'), { cfg, sprite, spriteId })"), 'bij een vriend: niets ophalen')
-for (const fl of ['index.html', 'vriend-profiel.html']) assert.match(lees(fl), /import\('\.\/mastodon\.js\?v=2'\)/)
+for (const fl of ['index.html', 'vriend-profiel.html']) assert.match(lees(fl), /import\('\.\/mastodon\.js\?v=3'\)/)
 const csp = fl => lees(fl).match(/<meta http-equiv="Content-Security-Policy" content="([^"]*)">/)[1]
 for (const fl of ['index.html', 'vriend-profiel.html']) assert.doesNotMatch(csp(fl), /mastodon|joinmastodon/, fl + ': huisregel ongewijzigd')
 const en = lees('taal-en.js')

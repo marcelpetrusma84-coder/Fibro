@@ -1,22 +1,20 @@
-// muziekwidget.js (v1, 18 nov 2026) - de muziek-widget: een album of nummer van Bandcamp of Funkwhale op je profiel.
-// v2 (18 nov 2026): titel vanzelf. Bandcamp: uit de insluitcode ("Album van Artiest"). Funkwhale: titel, artiest en
-// albumhoes via de API (haalInfo, voorbeeldplaatje.js), alleen bij het opslaan op het toestel van de eigenaar; de hoes
-// wordt de achtergrond van het kaartje en gaat via sync naar vrienden.
+// muziekwidget.js (v1, 18 nov 2026) - de muziek-widget: een album of nummer van Funkwhale op je profiel.
+// v3 (25 nov 2026): Bandcamp is eruit. Volgens de voorwaarden van Bandcamp mag hun muziek alleen voor persoonlijk,
+// niet-commercieel gebruik. Een Bandcamp-code geeft nu een melding; een oude Bandcamp-widget (ook van een vriend) is leeg.
+// v2 (18 nov 2026): titel vanzelf. Funkwhale: titel, artiest en albumhoes via de API (haalInfo, voorbeeldplaatje.js),
+// alleen bij het opslaan op het toestel van de eigenaar; de hoes wordt de achtergrond van het kaartje en gaat via sync
+// naar vrienden.
 //
-// In gewone woorden: je plakt de insluitcode van Bandcamp, of een link naar een nummer of album op Funkwhale. Op je
-// profiel (en bij je vrienden) staat dan een rustig kaartje met "▶ Luisteren". Pas als iemand daarop tikt, maakt zijn
-// toestel verbinding met Bandcamp of de Funkwhale-server. Net als de PeerTube-widget (peertube.js):
-//  - alleen goedgekeurde bronnen (BANDCAMP en FUNKWHALE hieronder). Ze staan ook in de huisregel (frame-src van
+// In gewone woorden: je plakt een link naar een nummer of album op Funkwhale. Op je profiel (en bij je vrienden) staat
+// dan een rustig kaartje met "▶ Luisteren". Pas als iemand daarop tikt, maakt zijn toestel verbinding met de
+// Funkwhale-server. Net als de PeerTube-widget (peertube.js):
+//  - alleen goedgekeurde servers (FUNKWHALE hieronder). Ze staan ook in de huisregel (frame-src van
 //    index.html en vriend-profiel.html); een test controleert dat dat gelijk blijft.
-//  - de speler zit in een afgesloten kader (sandbox zonder allow-popups): links in de speler (bijv. "kopen") doen niets,
+//  - de speler zit in een afgesloten kader (sandbox zonder allow-popups): links in de speler doen niets,
 //    zoals andere externe links in Stekky. Er gaat geen "van welke pagina kom je" mee (referrerpolicy no-referrer).
-//  - Bandcamp: luisterbeurten via de officiële speler tellen mee voor de artiest.
-// Bandcamp zet zijn nummer (album=1234567890) niet in de gewone link, alleen in de insluitcode. Daarom plak je die code
-// (Bandcamp: Share / Embed > Embed this album). Een gewone Bandcamp-link geeft een melding met uitleg.
 //
 // Opslag: localStorage 'muziekwidget_<uid>' = JSON. Vrienden krijgen hem via sync.js ('klein:muziekwidget'), net als
 // de quote. Wat binnenkomt van een vriend gaat altijd eerst door normaliseer().
-//   Bandcamp:  { bron: 'bandcamp', soort: 'album'|'track', id: '123', nummer: '456'?, titel }
 //   Funkwhale: { bron: 'funkwhale', server: 'open.audio', soort: 'album'|'track', id: '123', titel }
 //
 // Gebruik:
@@ -30,71 +28,43 @@ import { haalJson, plaatjeOpServer, maakPlaatje } from './voorbeeldplaatje.js?v=
 Object.assign(window.FIBRO_EN ||= {}, {
   'Ophalen…': 'Fetching…',
   'Nog geen muziek': 'No music yet', '➕ Muziek kiezen': '➕ Choose music', '▶ Luisteren': '▶ Listen',
-  'Bandcamp-album': 'Bandcamp album', 'Bandcamp-nummer': 'Bandcamp track',
   'Funkwhale-album': 'Funkwhale album', 'Funkwhale-nummer': 'Funkwhale track', 'van {bron}': 'from {bron}',
   'Pas als je op luisteren tikt, maakt je toestel verbinding met {bron}.': 'Only when you tap listen does your device connect to {bron}.',
-  'Plak de insluitcode van Bandcamp of een Funkwhale-link': 'Paste the Bandcamp embed code or a Funkwhale link',
+  'Plak een link van Funkwhale': 'Paste a Funkwhale link',
   'Titel (mag leeg)': 'Title (optional)', 'Opslaan ✓': 'Save ✓', 'Annuleren': 'Cancel', '✏️ Wijzigen': '✏️ Change',
   '🗑 Weghalen': '🗑 Remove', '✕ Stoppen': '✕ Stop',
-  'Bandcamp: tik bij het album op Share / Embed, kies Embed this album en kopieer de code.': 'Bandcamp: on the album, tap Share / Embed, choose Embed this album and copy the code.',
   'Funkwhale ({servers}): plak de link van een nummer of album.': 'Funkwhale ({servers}): paste the link of a track or album.',
   'Plak eerst een link of code.': 'Paste a link or code first.',
-  'Dit is een gewone Bandcamp-link. Kopieer bij Bandcamp de insluitcode: Share / Embed, dan Embed this album.': 'This is a regular Bandcamp link. Copy the embed code on Bandcamp: Share / Embed, then Embed this album.',
+  'Bandcamp kan niet in Stekky. Plak een link van Funkwhale.': 'Bandcamp is not supported in {app}. Paste a Funkwhale link.',
   'Deze Funkwhale-server staat (nog) niet in de lijst: {server}': 'This Funkwhale server is not on the list (yet): {server}',
   'Dit is geen link naar een nummer of album.': 'This is not a link to a track or album.',
-  'Alleen Bandcamp en Funkwhale kunnen.': 'Only Bandcamp and Funkwhale are supported.',
+  'Alleen Funkwhale kan.': 'Only Funkwhale is supported.',
 })
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 
 // De goedgekeurde bronnen. Zet je er een bij, zet hem dan ook in frame-src van index.html en vriend-profiel.html.
-export const BANDCAMP = 'bandcamp.com'
 export const FUNKWHALE = ['open.audio'] // de server van The Funkwhale Collective zelf (vrij gelicentieerde muziek)
 
 const MAX_TITEL = 80
-const NUM = /^\d{1,12}$/
 const FW_ID = /^(\d{1,10}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i
 const SOORT = new Set(['album', 'track'])
 const tekst = (s, max) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, max)
 const entities = s => String(s).replace(/&amp;/g, '&').replace(/&#0?38;/g, '&').replace(/&quot;/g, '"')
-// v2: tekst uit html (de link in Bandcamps insluitcode): tekens terug, geen tags
-const htmlTekst = s => {
-  // in de browser: de html-lezer (voert niets uit, geeft alleen de tekst); anders de eenvoudige tekens hieronder
-  if (typeof DOMParser === 'function') { try { return tekst(new DOMParser().parseFromString(String(s), 'text/html').documentElement.textContent, MAX_TITEL) } catch (e) {} }
-  return htmlTekstEenvoudig(s)
-}
-const htmlTekstEenvoudig = s => tekst(String(s).replace(/<[^>]*>/g, '').replace(/&#(\d{1,6});/g, (m, n) => { const c = Number(n); return c > 31 && c < 0x110000 ? String.fromCodePoint(c) : '' })
-  .replace(/&#x([0-9a-f]{1,6});/gi, (m, n) => { const c = parseInt(n, 16); return c > 31 && c < 0x110000 ? String.fromCodePoint(c) : '' })
-  .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'), MAX_TITEL)
-
-// Wat is er geplakt? Een Bandcamp-insluitcode (of de link daaruit), of een Funkwhale-link of -insluitcode.
+// Wat is er geplakt? Een Funkwhale-link of -insluitcode.
 export function leesInvoer(invoer) {
   const t = entities(String(invoer == null ? '' : invoer).trim()).slice(0, 4000)
   if (!t) return { fout: T('Plak eerst een link of code.') }
 
-  // Bandcamp: .../EmbeddedPlayer/album=123/.../track=456/... of de korte vorm [bandcamp album=123 track=456]
-  const bc = /bandcamp\.com\/EmbeddedPlayer(?:\.html)?\/([^"'\s<>]*)/i.exec(t)
-  const bcDeel = bc ? bc[1] : (/^\[?\s*bandcamp\b/i.test(t) || /^(album|track)\s*=\s*\d/i.test(t) ? t : null)
-  if (bcDeel !== null) {
-    const album = /(?:^|[\s/[])album\s*=\s*(\d{1,12})/i.exec(bcDeel)
-    const track = /(?:^|[\s/[])track\s*=\s*(\d{1,12})/i.exec(bcDeel)
-    // v2: Bandcamp zet "Album van Artiest" als link in de code (<a href=...>Titel by Artiest</a>)
-    const a = /<a\b[^>]*>([\s\S]{1,300}?)<\/a>/i.exec(String(invoer))
-    const titel = a ? htmlTekst(a[1]) : ''
-    const extra = titel ? { titel } : {}
-    if (album) return { bron: 'bandcamp', soort: 'album', id: album[1], ...(track ? { nummer: track[1] } : {}), ...extra }
-    if (track) return { bron: 'bandcamp', soort: 'track', id: track[1], ...extra }
-    return { fout: T('Dit is geen link naar een nummer of album.') }
-  }
+  // v3: Bandcamp kan niet meer (alleen voor persoonlijk, niet-commercieel gebruik)
+  if (/bandcamp/i.test(t)) return { fout: T('Bandcamp kan niet in Stekky. Plak een link van Funkwhale.') }
 
   // Een iframe-code: neem de src eruit
   const src = /\bsrc\s*=\s*["']([^"']+)["']/i.exec(t)
   const ruw = src ? src[1] : t
   let u
-  try { u = new URL(/^https?:\/\//i.test(ruw) ? ruw : 'https://' + ruw) } catch (e) { return { fout: T('Alleen Bandcamp en Funkwhale kunnen.') } }
-  if ((u.protocol !== 'https:' && u.protocol !== 'http:') || u.username || u.password || u.port) return { fout: T('Alleen Bandcamp en Funkwhale kunnen.') }
+  try { u = new URL(/^https?:\/\//i.test(ruw) ? ruw : 'https://' + ruw) } catch (e) { return { fout: T('Alleen Funkwhale kan.') } }
+  if ((u.protocol !== 'https:' && u.protocol !== 'http:') || u.username || u.password || u.port) return { fout: T('Alleen Funkwhale kan.') }
   const host = u.hostname.toLowerCase().replace(/\.$/, '')
-
-  if (host === BANDCAMP || host.endsWith('.bandcamp.com')) return { fout: T('Dit is een gewone Bandcamp-link. Kopieer bij Bandcamp de insluitcode: Share / Embed, dan Embed this album.') }
 
   // Funkwhale: /library/tracks/123, /library/albums/123, of /front/embed.html?type=album&id=123 (ook /embed.html)
   const delen = u.pathname.split('/').filter(Boolean)
@@ -104,7 +74,7 @@ export function leesInvoer(invoer) {
   } else if (delen[0] === 'library' && (delen[1] === 'tracks' || delen[1] === 'albums') && delen.length === 3) {
     soort = delen[1] === 'tracks' ? 'track' : 'album'; id = delen[2]
   } else {
-    return { fout: FUNKWHALE.includes(host) ? T('Dit is geen link naar een nummer of album.') : T('Alleen Bandcamp en Funkwhale kunnen.') }
+    return { fout: FUNKWHALE.includes(host) ? T('Dit is geen link naar een nummer of album.') : T('Alleen Funkwhale kan.') }
   }
   if (!FUNKWHALE.includes(host)) return { fout: T('Deze Funkwhale-server staat (nog) niet in de lijst: {server}', { server: host }) }
   if (!SOORT.has(soort) || !FW_ID.test(id || '')) return { fout: T('Dit is geen link naar een nummer of album.') }
@@ -115,11 +85,7 @@ export function leesInvoer(invoer) {
 export function normaliseer(cfg) {
   if (!cfg || typeof cfg !== 'object' || !SOORT.has(cfg.soort)) return null
   const titel = tekst(cfg.titel, MAX_TITEL)
-  if (cfg.bron === 'bandcamp') {
-    if (!NUM.test(String(cfg.id || ''))) return null
-    const nummer = cfg.soort === 'album' && NUM.test(String(cfg.nummer || '')) ? String(cfg.nummer) : null
-    return { bron: 'bandcamp', soort: cfg.soort, id: String(cfg.id), ...(nummer ? { nummer } : {}), titel }
-  }
+  // v3: een oude Bandcamp-widget is niet meer goed (null)
   if (cfg.bron === 'funkwhale') {
     const server = typeof cfg.server === 'string' ? cfg.server.toLowerCase() : ''
     if (!FUNKWHALE.includes(server) || !FW_ID.test(String(cfg.id || ''))) return null
@@ -128,17 +94,10 @@ export function normaliseer(cfg) {
   return null
 }
 
-// De speler: link en hoogte (in px). Bandcamp in de kleuren van Stekky, compact (klein plaatje, zonder lijst).
+// De speler: link en hoogte (in px).
 export function speelUrl(cfg) {
   const c = normaliseer(cfg)
   if (!c) return null
-  if (c.bron === 'bandcamp') {
-    return {
-      src: 'https://bandcamp.com/EmbeddedPlayer/' + c.soort + '=' + c.id + (c.nummer ? '/track=' + c.nummer : '') +
-        '/size=large/bgcol=1a0a2e/linkcol=c084fc/tracklist=false/artwork=small/transparent=true/',
-      hoogte: 120,
-    }
-  }
   return {
     src: 'https://' + c.server + '/front/embed.html?&type=' + c.soort + '&id=' + encodeURIComponent(c.id),
     hoogte: c.soort === 'album' ? 330 : 150,
@@ -146,7 +105,7 @@ export function speelUrl(cfg) {
 }
 
 // v2: titel, artiest en hoes van Funkwhale, via de API (alleen bij het opslaan, op het toestel van de eigenaar).
-// Bandcamp: niets ophalen (de titel komt al uit de insluitcode). Geeft { titel, plaatje }; wat niet lukt, ontbreekt.
+// Geeft { titel, plaatje }; wat niet lukt, ontbreekt.
 export async function haalInfo(cfg, opties = {}) {
   const c = normaliseer(cfg)
   if (!c || c.bron !== 'funkwhale') return {}
@@ -163,9 +122,8 @@ export async function haalInfo(cfg, opties = {}) {
   return uit
 }
 
-const bronNaam = c => c.bron === 'bandcamp' ? 'Bandcamp' : c.server
-const standaardTitel = c => c.bron === 'bandcamp' ? (c.soort === 'album' ? T('Bandcamp-album') : T('Bandcamp-nummer'))
-  : (c.soort === 'album' ? T('Funkwhale-album') : T('Funkwhale-nummer'))
+const bronNaam = c => c.server
+const standaardTitel = c => c.soort === 'album' ? T('Funkwhale-album') : T('Funkwhale-nummer')
 
 // ── kleine hulpjes ──
 function el(tag, stijl, inhoud) {
@@ -208,10 +166,8 @@ export function tekenMuziekWidget(c, { cfg = null, eigen = false, bewaar = null 
     kaart.style.overflowY = 'auto' // past het niet in het vak, dan kun je scrollen (de uitleg valt niet weg)
     const veld = el('textarea', VELD + ';resize:none;min-height:44px;flex-shrink:0')
     veld.className = 'mw-invoer'; veld.rows = 2; veld.autocomplete = 'off'; veld.spellcheck = false
-    veld.placeholder = T('Plak de insluitcode van Bandcamp of een Funkwhale-link')
-    if (v) veld.value = v.bron === 'bandcamp'
-      ? 'https://bandcamp.com/EmbeddedPlayer/' + v.soort + '=' + v.id + (v.nummer ? '/track=' + v.nummer : '') + '/'
-      : 'https://' + v.server + '/library/' + (v.soort === 'album' ? 'albums' : 'tracks') + '/' + v.id
+    veld.placeholder = T('Plak een link van Funkwhale')
+    if (v) veld.value = 'https://' + v.server + '/library/' + (v.soort === 'album' ? 'albums' : 'tracks') + '/' + v.id
     const titel = el('input', VELD)
     titel.className = 'mw-titel'; titel.maxLength = MAX_TITEL
     titel.placeholder = T('Titel (mag leeg)')
@@ -219,15 +175,14 @@ export function tekenMuziekWidget(c, { cfg = null, eigen = false, bewaar = null 
     const melding = el('div', 'font-size:12px;color:#fca5a5;line-height:1.35')
     melding.className = 'mw-melding'
     const uitleg = el('div', 'font-size:11px;color:rgba(255,255,255,0.6);line-height:1.4;text-align:left')
-    uitleg.append(el('div', null, T('Bandcamp: tik bij het album op Share / Embed, kies Embed this album en kopieer de code.')),
-      el('div', null, T('Funkwhale ({servers}): plak de link van een nummer of album.', { servers: FUNKWHALE.join(', ') })))
+    uitleg.append(el('div', null, T('Funkwhale ({servers}): plak de link van een nummer of album.', { servers: FUNKWHALE.join(', ') })))
     const rij = el('div', 'display:flex;gap:6px;flex-wrap:wrap;justify-content:center')
     const ok = el('button', HOOFDKNOP, T('Opslaan ✓'))
     ok.className = 'mw-opslaan'
     ok.onclick = stop(async () => {
       const r = leesInvoer(veld.value)
       if (r.fout) { melding.textContent = r.fout; return }
-      // v2: zelf getypte titel gaat voor; anders die uit de Bandcamp-code (of later die van Funkwhale)
+      // v2: zelf getypte titel gaat voor; anders die van Funkwhale
       ok.disabled = true; ok.textContent = T('Ophalen…')
       try { await bewaar({ ...r, titel: tekst(titel.value, MAX_TITEL) || r.titel || '' }) }
       finally { if (ok.isConnected) { ok.disabled = false; ok.textContent = T('Opslaan ✓') } }

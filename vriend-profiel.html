@@ -11,11 +11,11 @@
 </script>
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self' https://framatube.org https://tilvids.com https://video.blender.org https://tube.tchncs.de https://diode.zone https://spectra.video https://makertube.net https://peertube.beeldengeluid.nl https://bandcamp.com https://open.audio; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self' https://framatube.org https://tilvids.com https://video.blender.org https://tube.tchncs.de https://diode.zone https://spectra.video https://makertube.net https://peertube.beeldengeluid.nl https://open.audio; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=150"></script>
+<script src="taal.js?v=151"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -154,7 +154,7 @@ body.heeft-wallpaper::before { display:block; }
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
-  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=268'
+  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=269'
   import { versleutel, haalPrivateKeyOp } from './crypto.js?v=182'
   import { maakProfielLikes, itemVan, openReageerScherm, maakReactieBericht, maakKleinPlaatje } from './profielreacties.js?v=2' // v258
   import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -540,11 +540,7 @@ body.heeft-wallpaper::before { display:block; }
         if (gelukt) { grid.appendChild(el); mastodonWidgetEl = el; continue }
         mastodonWidgetEl = el // komen de berichten binnen terwijl je kijkt, dan meteen tonen
       }
-      if (w.id === 'weer') { // 19 nov 2026: weer.js
-        const gelukt = await renderVriendWeer(el, vriendId)
-        if (gelukt) { grid.appendChild(el); weerWidgetEl = el; continue }
-        weerWidgetEl = el // komt het weer binnen terwijl je kijkt, dan meteen tonen
-      }
+      if (w.id === 'weer') continue // 25 nov 2026: de weer-widget is weg (Open-Meteo: gratis alleen niet-commercieel)
       if (w.id === 'afteltimer') {
         const gelukt = await renderVriendTimer(el, vriendId, 'aftel')
         if (gelukt) { grid.appendChild(el); continue }
@@ -721,7 +717,7 @@ body.heeft-wallpaper::before { display:block; }
   // Liken en reageren (fediverse) staan hier niet: alleen de video, net als bij de losse PeerTube-widget.
   async function renderVriendMix(el, vriendId, w) {
     let L
-    try { L = await import('./layouts.js?v=3') } catch (e) { console.warn('[layout]', e); return false }
+    try { L = await import('./layouts.js?v=4') } catch (e) { console.warn('[layout]', e); return false }
     const layout = L.layoutVan(w.id)
     if (!layout) return false
     el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F9E9}</span><span class="widget-titel">' + vEsc(layout.titel) + '</span></div><div class="widget-inhoud"></div>'
@@ -734,7 +730,7 @@ body.heeft-wallpaper::before { display:block; }
     const tekenVast = async (soort, vak) => {
       const cfg = mix[L.vakSleutel(layout, soort)]
       if (!cfg) return false
-      if (soort === 'rss') { const R = await import('./rsswidget.js?v=4'); if (!R.normaliseer(cfg)) return false; R.tekenRssWidget(vak, { cfg }); return true }
+      if (soort === 'rss') { const R = await import('./rsswidget.js?v=5'); if (!R.normaliseer(cfg)) return false; R.tekenRssWidget(vak, { cfg }); return true }
       if (soort === 'peertube') { const P = await import('./peertube.js?v=6'); if (!P.normaliseer(cfg)) return false; P.tekenPeertubeWidget(vak, { cfg, weergave: L.weergaveVan(layout.vakken.find(v => v.soort === soort)) }); return true }
       return false
     }
@@ -762,7 +758,7 @@ body.heeft-wallpaper::before { display:block; }
     return true
   }
 
-  // 18 nov 2026: muziek van een vriend (muziekwidget.js, Bandcamp of Funkwhale). Komt via P2P (sync.js
+  // 18 nov 2026: muziek van een vriend (muziekwidget.js, Funkwhale; 25 nov 2026: Bandcamp is eruit). Komt via P2P (sync.js
   // 'klein:muziekwidget'); normaliseer() laat alleen goedgekeurde bronnen door. Laadt pas na een tik op luisteren.
   let muziekWidgetEl = null
   window.addEventListener('fibro-sync-item', async e => {
@@ -774,11 +770,11 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_muziekwidget')
     if (!ruw) return false
     let M, cfg = null
-    try { M = await import('./muziekwidget.js?v=2') } catch (e) { console.warn('[muziekwidget]', e); return false }
+    try { M = await import('./muziekwidget.js?v=3') } catch (e) { console.warn('[muziekwidget]', e); return false }
     try { cfg = M.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
     await vriendAchtergrond(el, vriendId, 'muziekwidget') // de albumhoes, via sync (wbg:muziekwidget)
-    el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F3A7}</span><span class="widget-titel">' + vEsc(T('Bandcamp & Funkwhale')) + '</span></div><div class="widget-inhoud"></div>'
+    el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F3A7}</span><span class="widget-titel">' + vEsc(T('Funkwhale')) + '</span></div><div class="widget-inhoud"></div>'
     M.tekenMuziekWidget(el.querySelector('.widget-inhoud'), { cfg })
     return true
   }
@@ -815,7 +811,7 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_rss')
     if (!ruw) return false
     let R, cfg = null
-    try { R = await import('./rsswidget.js?v=4') } catch (e) { console.warn('[rss]', e); return false }
+    try { R = await import('./rsswidget.js?v=5') } catch (e) { console.warn('[rss]', e); return false }
     try { cfg = R.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
     // v2: de fotootjes (één plaatje, via P2P van je vriend); alleen als ze bij deze berichten horen (fotoId = pos.rss)
@@ -842,7 +838,7 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_mastodon')
     if (!ruw) return false
     let M, cfg = null
-    try { M = await import('./mastodon.js?v=2') } catch (e) { console.warn('[mastodon]', e); return false }
+    try { M = await import('./mastodon.js?v=3') } catch (e) { console.warn('[mastodon]', e); return false }
     try { cfg = M.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
     let sprite = null, spriteId = ''
@@ -853,26 +849,6 @@ body.heeft-wallpaper::before { display:block; }
     }
     el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F418}</span><span class="widget-titel">' + vEsc(T('Mastodon')) + '</span></div><div class="widget-inhoud"></div>'
     M.tekenMastodonWidget(el.querySelector('.widget-inhoud'), { cfg, sprite, spriteId })
-    return true
-  }
-
-  // 19 nov 2026: de weer-widget van een vriend (weer.js). Het weer komt via P2P (sync.js 'klein:weer'); hier wordt
-  // niets opgehaald (geen verbinding met Open-Meteo). normaliseer() laat alleen getallen en korte tekst door.
-  let weerWidgetEl = null
-  window.addEventListener('fibro-sync-item', async e => {
-    const d = e.detail || {}
-    if (d.vriendId !== vriendId || !weerWidgetEl || d.item !== 'klein:weer') return
-    try { await renderVriendWeer(weerWidgetEl, vriendId) } catch (x) { console.warn('[weer]', x) }
-  })
-  async function renderVriendWeer(el, vriendId) {
-    const ruw = await laadFotoUitDB('vriend_' + vriendId + '_weer')
-    if (!ruw) return false
-    let W, cfg = null
-    try { W = await import('./weer.js?v=1') } catch (e) { console.warn('[weer]', e); return false }
-    try { cfg = W.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
-    if (!cfg) return false
-    el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F324}\u{FE0F}</span><span class="widget-titel">' + vEsc(T('Weer')) + '</span></div><div class="widget-inhoud"></div>'
-    W.tekenWeerWidget(el.querySelector('.widget-inhoud'), { cfg })
     return true
   }
 

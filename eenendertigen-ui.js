@@ -11,7 +11,7 @@
 import * as P from './eenendertigen.js?v=2'
 import { maakKaartTafel, kaartSvg, kaartNaam, REACTIES } from './kaartspel-hulp.js?v=19'
 import { meldGeslagen } from './beurtspel-hulp.js?v=1'
-import { maakGroepSpel } from './groepspel.js?v=1'
+import { maakGroepSpel } from './groepspel.js?v=2'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
 Object.assign(window.FIBRO_EN ||= {}, {
@@ -34,7 +34,7 @@ Object.assign(window.FIBRO_EN ||= {}, {
   'Klop je, dan mogen de anderen nog één keer ruilen. Daarna laat iedereen zijn kaarten zien.': 'If you knock, the others may swap one more time. Then everyone shows their cards.',
   'Wie de minste punten heeft, verliest een leven. Hebben meer spelers evenveel, dan verliezen ze allemaal een leven. Ook wie klopte verliest maar één leven.': 'Whoever has the fewest points loses a life. If several players have the same, they all lose a life. Whoever knocked also loses only one life.',
   'Iedereen begint met 3 levens. Wie geen levens meer heeft, ligt eruit. Wie als laatste over is, wint.': 'Everyone starts with 3 lives. Whoever has no lives left is out. The last one left wins.',
-  'Jij {a}': 'You {a}', 'aan de beurt': 'to play',
+  'Jij {a}': 'You {a}', 'aan de beurt': 'to play', 'Het spel is gestopt.': 'The game has stopped.', '{naam} heeft het spel verlaten.': '{naam} has left the game.',
   'Elke speler krijgt 3 kaarten. Er liggen ook 3 kaarten open op tafel. Wie begint, wisselt per ronde.': 'Each player gets 3 cards. There are also 3 face-up cards on the table. Who starts alternates every round.',
   'Om de beurt doe je één ding: één kaart ruilen met de tafel, alle drie je kaarten ruilen met de tafel, of kloppen. Kloppen mag pas als iedereen één keer aan de beurt is geweest.': 'Taking turns, you do one thing: swap one card with the table, swap all three of your cards with the table, or knock. You may only knock once everyone has had a turn.',
   'Je punten tel je alleen op bij kaarten van dezelfde kleur: aas is 11, heer, vrouw en boer zijn 10, de andere kaarten hun eigen waarde. Je beste kleur telt. Het hoogste is 31.': 'Only cards of the same suit add up: an ace is 11, king, queen and jack are 10, the other cards their own value. Your best suit counts. The highest is 31.',
@@ -279,7 +279,9 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, spelers: groep, mi
     spel = maakGroepSpel({ kanaal: spelKanaal, zetel: ik, spelers, niveau, beurtMs: BEURT_SECONDEN * 1000, rondePauze: VOLGENDE_MS,
       regels: { aanZet: s => (s && s.fase === 'spel' ? s.aanZet : 0), doeStap: P.doeStap, computerStap: P.computerStap, geldigeStand: P.geldigeStand,
         volgendeRonde: s => (s && s.fase === 'uitslag' ? P.volgendeRonde(s) : null) },
-      onStand: (oud, nieuw) => { staat = nieuw; inRij(async () => { await verwerk(oud, nieuw); naStand(oud) }) } })
+      onStand: (oud, nieuw) => { staat = nieuw; inRij(async () => { await verwerk(oud, nieuw); naStand(oud) }) },
+      // de gastheer ging weg: het spel stopt (er is niemand meer die de stand heeft)
+      onGastheerWeg: () => { tafel.beurtKlok(null); tafel.knoppen([]); tafel.einde({ gewonnen: false, titel: T('Het spel is gestopt.'), sub: T('{naam} heeft het spel verlaten.', { naam: naamVan(1) }) }) } })
     // weg: het spel is dicht (de overlay sloot)
     const weg = setInterval(() => { if (!tafel.element.isConnected) { clearInterval(weg); spel.stop() } }, 1000)
     teken()

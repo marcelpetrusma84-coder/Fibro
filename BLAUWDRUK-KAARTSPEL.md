@@ -106,6 +106,13 @@ Per plaat staat er een prompt voor Gemini klaar (`maakKaartPrompt` in `kaartmake
 
 Gemaakt via **🎲 Spel maken** (spellen/eenendertigen.md). Regels in `eenendertigen.js` (met `bot` voor tegen de computer, via `studio-spellen.js`), het scherm in `eenendertigen-ui.js`. Piket (32 kaarten), 3 kaarten per speler en 3 open op tafel. Kies een kaart uit je hand en tik op een tafelkaart om te ruilen (of veeg je kaart omhoog en kies een tafelkaart); knoppen "Alle 3 ruilen", "Kloppen" (pas na één rondgang) en ❓. De tafelkaarten en de pilletjes (ronde, punten, levens) staan in een eigen vak midden op tafel (`.eed-midden`), want het info-vak van de tafel laat geen tikken door. Na een ronde deelt speler 1 vanzelf de volgende. Tests: `tests/kaart/test-eenendertigen.mjs` (ook 500 potjes computer tegen computer) en `proef339`.
 
+## Met meer spelers en met de groep (25 november 2026)
+
+- **`groepspel.js`** (stap 1): 2 tot 6 spelers over één spelkanaal. Wie het spel start is de gastheer en heeft de stand; de anderen sturen hun zet (`actie`), de gastheer stuurt de nieuwe stand (`stand`). De computer speelt lege zetels, wie weggaat (`weg`) en wie zijn beurt laat verlopen. Gaat de gastheer weg, dan stopt het spel bij de anderen (`onGastheerWeg`).
+- **De tafel**: `tafel.tegenstanders(lijst)` zet de anderen als rondjes bovenaan (naam, icoon, info, wie aan de beurt is, wie eruit ligt); beurtklok en reacties per zetel (`'zetel:3'`).
+- **In de groepschat** (stap 2, `groepkaartspel.js`): 🎲 → een spel kiezen (`groepSpellen()`: kaartspellen met `max` > 2 in `studio-spellen.js`) → de groep krijgt bovenin een uitnodiging → wachtkamer (hoogstens 6, de opener kan 🤖 computers erbij zetten) → Start. Alles loopt over het kanaal van de groep (`groep-<id>`, event `gs` met het nummer van het spel), dus er hoeft niets aan de database. In het spel: het spelmenu ☰ met de microfoon (= de voice chat van de groep), 🏠 = terug naar de chat (het spel blijft open), 🚪 = verlaten.
+- Een spel kan dit als het `start({ spelKanaal, spelers, mijnZetel })` begrijpt (zie `eenendertigen-ui.js`).
+
 ## Koningsjacht (alleen te spelen)
 
 *13 november 2026.* Gebaseerd op het idee van het kaartspel **Regicide** van Badgers From Mars; de naam, de teksten en de uitwerking zijn van Stekky (in het spel staat een vermelding). Je speelt alleen tegen het kasteel: 12 vijanden (eerst de boeren, dan de vrouwen, dan de heren).

@@ -1,3 +1,4 @@
+// v149 (25 nov 2026): taal-en.js?v=149 (widget-layouts uit Stekky Studio).
 // v148 (24 nov 2026): taal-en.js?v=148 (Stekky Studio in het menu voor moderators).
 // v146: Engelse teksten voor Koningsjacht en Stekky Studio.
 // v144 (23 nov 2026): taal-en.js?v=144 (Eenentwintigen heet nu Black Jack).
@@ -164,7 +165,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=148', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=149', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

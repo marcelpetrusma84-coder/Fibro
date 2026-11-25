@@ -17,6 +17,7 @@ import { STORE_PAKKETTEN } from './lettertypes.js?v=133'
 import { STORE_VELLEN } from './stickervellen.js?v=241'
 import { legStoreVakkenVast, zetStoreVelActief } from './stickervakken.js?v=5'   // 13 nov 2026: stickers aanzetten bij Stijl
 import { zetStandaardWidgets } from './standaardwidgets.js?v=2'   // 17 nov 2026: games meteen op Home
+import { STUDIO_LAYOUTS } from './studio-layouts.js?v=1' // 25 nov 2026: widget-layouts uit Stekky Studio (layouts.js)
 
 export const STORE_SOORTEN = [
   // 11 nov 2026: volgorde van de paarse balk in store.html; achtergronden erbij
@@ -74,6 +75,9 @@ export const STORE_WIDGETS = [
     uitleg: 'Je openbare Mastodon-berichten op je profiel, met een knop "Volg mij op Mastodon". Stekky logt niet in bij Mastodon: alleen openbare berichten, de server van Stekky leest mee (niet je toestel) en daarna stuurt je toestel ze naar je vrienden. Gevoelige plaatjes worden overgeslagen en berichten met een waarschuwing blijven dicht tot je erop tikt.' },
   { id: 'weer', soort: 'widget', titel: 'Weer', widget: 'weer', homeIcoon: '\u{1F324}\u{FE0F}', w: 4, h: 3,
     uitleg: 'Het weer van nu en de komende 5 dagen op je profiel, voor een plaats die je zelf kiest. Je toestel vraagt het weer aan Open-Meteo (gratis, zonder reclame), hoogstens één keer per half uur en maar een paar KB. Stekky gebruikt nooit de locatie van je telefoon. Je vrienden krijgen het weer van jou en maken zelf geen verbinding.' },
+  // 25 nov 2026: widget-layouts uit Stekky Studio: één widget met een paar bestaande widgets samen (layouts.js)
+  ...STUDIO_LAYOUTS.map(l => ({ id: l.store, soort: 'widget', titel: l.titel, widget: 'mix_' + l.id, homeIcoon: '\u{1F9E9}', w: 4, h: l.h,
+    uitleg: l.uitleg[0], uitlegEn: l.uitleg[1], layout: true })),
 ]
 export const STORE_ITEMS = [...STORE_PAKKETTEN.map(p => Object.assign({ soort: 'lettertype' }, p)), ...STORE_GAMES, ...STORE_WIDGETS, ...STORE_STICKERS]
 // Welke widgets uit de Store mag je aanzetten (wat je gedownload hebt): games en (sinds v15) widgets

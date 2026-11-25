@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
-<script src="taal.js?v=148"></script>
+<script src="taal.js?v=149"></script>
 <script src="appslot.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Stekky Store</title>
@@ -91,7 +91,8 @@ body { background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text)
 <script type="module">
 import { supabase } from './supabase.js?v=95'
 import { laadFont } from './lettertypes.js?v=133'
-import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, verwijderDownload, tabelOntbreekt, zetGameWidgetAan } from './store.js?v=25'
+import { layoutVan, VAK_SOORTEN } from './layouts.js?v=1' // 25 nov 2026: widget-layouts uit Stekky Studio
+import { STORE_SOORTEN, STORE_ITEMS, bewaardeDownloads, mijnDownloads, downloadItem, verwijderDownload, tabelOntbreekt, zetGameWidgetAan } from './store.js?v=26'
 import { zoekSticker, STORE_VELLEN } from './stickervellen.js?v=241'
 import { speel } from './stickerfx.js?v=239'
 
@@ -122,6 +123,15 @@ function bouwSoorten() {
 
 function bouwLijst() {
   const lijst = document.getElementById('lijst')
+  // 25 nov 2026: een klein plaatje van een layout: welke vakken, waar, met hun icoon en naam
+  function layoutVoorbeeld(widgetId) {
+    const l = layoutVan(widgetId)
+    if (!l) return ''
+    const en = window.T && window.T.taal === 'en'
+    return `<div class="item-layout" style="display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(${l.h},14px);gap:3px;margin-top:8px">`
+      + l.vakken.map(v => `<div style="grid-column:${v.x + 1} / span ${v.w};grid-row:${v.y + 1} / span ${v.h};background:rgba(192,132,252,0.18);border:0.5px solid rgba(192,132,252,0.5);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;text-align:center;padding:2px;overflow:hidden">${esc(VAK_SOORTEN[v.soort].icoon + ' ' + VAK_SOORTEN[v.soort].naam[en ? 1 : 0])}</div>`).join('')
+      + `</div>`
+  }
   const items = STORE_ITEMS.filter(i => i.soort === soort)
   if (!items.length) {
     const titel = (STORE_SOORTEN.find(s => s.id === soort) || {}).titel || ''
@@ -139,8 +149,9 @@ function bouwLijst() {
     if (it.soort === 'game') kaart.innerHTML = `<div class="item-game"><img src="${esc(it.icoon)}" alt="" draggable="false"><span class="item-titel">${esc(it.titel)}</span></div>`
       + `<div class="item-uitleg">${esc(T(it.uitleg))}</div>`
     // 18 nov 2026: een widget (PeerTube): icoon, naam en uitleg; na downloaden staat hij op Home
-    else if (it.soort === 'widget') kaart.innerHTML = `<div class="item-game"><span class="item-emoji" aria-hidden="true">${esc(it.homeIcoon || '')}</span><span class="item-titel">${esc(T(it.titel))}</span></div>`
-      + `<div class="item-uitleg">${esc(T(it.uitleg))}</div>`
+    else if (it.soort === 'widget') kaart.innerHTML = `<div class="item-game"><span class="item-emoji" aria-hidden="true">${esc(it.homeIcoon || '')}</span><span class="item-titel">${esc(it.layout ? it.titel : T(it.titel))}</span></div>`
+      + `<div class="item-uitleg">${esc(it.uitlegEn && window.T && window.T.taal === 'en' ? it.uitlegEn : T(it.uitleg))}</div>`
+      + (it.layout ? layoutVoorbeeld(it.widget) : '') // 25 nov 2026: een layout uit Stekky Studio: de vakken als plaatje
     // 13 nov 2026: een stickervel: naam, uitleg en alle 12 stickers; tik = bewegen en geluid (zo hoor je ze vooraf)
     else if (it.soort === 'sticker') {
       const vel = STORE_VELLEN.find(v => v.id === it.vel)

@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=148"></script>
+<script src="taal.js?v=149"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -511,6 +511,10 @@ body.heeft-wallpaper::before { display:block; }
         if (gelukt) { grid.appendChild(el); quizWidgetEl = el; continue }
         quizWidgetEl = el // v265b: komt de quiz (of zijn achtergrond) binnen terwijl je kijkt, dan meteen tonen
       }
+      if (String(w.id || '').startsWith('mix_')) { // 25 nov 2026: een widget-layout uit Stekky Studio (layouts.js)
+        const gelukt = await renderVriendMix(el, vriendId, w)
+        if (gelukt) { grid.appendChild(el); continue }
+      }
       if (w.id === 'peertube') { // 18 nov 2026: peertube.js
         const gelukt = await renderVriendPeertube(el, vriendId, w)
         if (gelukt) { grid.appendChild(el); peertubeWidget = { el, w }; continue }
@@ -713,6 +717,26 @@ body.heeft-wallpaper::before { display:block; }
     if (d.vriendId !== vriendId || !peertubeWidget || !/^(klein|wbg):peertube$/.test(d.item || '')) return
     try { await renderVriendPeertube(peertubeWidget.el, vriendId, peertubeWidget.w) } catch (x) { console.warn('[peertube]', x) } // het lege vakje staat er al
   })
+  // 25 nov 2026: een widget-layout van een vriend: elk vak is een gewone widget van die vriend (zelfde inhoud via sync).
+  // Liken en reageren (fediverse) staan hier niet: alleen de video, net als bij de losse PeerTube-widget.
+  async function renderVriendMix(el, vriendId, w) {
+    let L
+    try { L = await import('./layouts.js?v=1') } catch (e) { console.warn('[layout]', e); return false }
+    const layout = L.layoutVan(w.id)
+    if (!layout) return false
+    el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F9E9}</span><span class="widget-titel">' + vEsc(layout.titel) + '</span></div><div class="widget-inhoud"></div>'
+    const teken = { peertube: v => renderVriendPeertube(v, vriendId, w), muziekwidget: v => renderVriendMuziekwidget(v, vriendId),
+      radio: v => renderVriendRadio(v, vriendId), rss: v => renderVriendRss(v, vriendId), mastodon: v => renderVriendMastodon(v, vriendId) }
+    const leeg = { peertube: T('Nog geen video'), muziekwidget: T('Nog geen muziek'), radio: T('Nog geen zender'), rss: T('Nog geen feed'), mastodon: T('Nog geen account') }
+    L.tekenMix(el.querySelector('.widget-inhoud'), layout, async (soort, vak) => {
+      let ok = false
+      try { ok = await teken[soort](vak) } catch (e) { console.warn('[layout]', soort, e) }
+      if (!ok) vak.innerHTML = '<div style="font-size:13px;color:var(--muted)">' + vEsc(leeg[soort] || '') + '</div>'
+      const dubbel = vak.querySelector(':scope > .widget-header') // het vak heeft zijn eigen kopje al
+      if (dubbel) dubbel.remove()
+    }, { taal: (window.T && window.T.taal) || 'nl' })
+    return true
+  }
   async function renderVriendPeertube(el, vriendId, w) {
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_peertube')
     if (!ruw) return false

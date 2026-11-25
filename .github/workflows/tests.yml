@@ -275,3 +275,6 @@ jobs:
       - name: "PeerTube: liken en reageren met je eigen fediverse-account (proef332)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef332.py .
+      - name: "Stekky Studio: widget-layouts maken, in de Store en op Home (proef333)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef333.py .

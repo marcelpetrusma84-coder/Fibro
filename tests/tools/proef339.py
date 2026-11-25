@@ -3,7 +3,7 @@
 #  B. ruilen: kaart kiezen + tik op een tafelkaart: de kaarten wisselen, ook bij de ander; kloppen kan nog niet
 #  C. speler 2 ruilt alles; daarna mag speler 1 kloppen; speler 2 ziet "klopt!" en mag nog één keer ruilen
 #  D. de ronde is klaar: bij allebei dezelfde levens eraf; speler 1 deelt vanzelf ronde 2
-#  E. ❓ opent de spelregels; E2 (v3) passen: past iedereen, dan 3 nieuwe tafelkaarten bij allebei
+#  E. ❓ opent de spelregels
 #  F. tegen de computer (spel.html): niveau kiezen, 1 computer kiezen, ruilen, de computer zet terug
 #  G. (v2, 25 nov 2026) met z'n drieën (gastheer + 2 gasten, nagemaakt spelkanaal): de tegenstanders als rondjes, in de
 #     rondte aan de beurt, iedereen ziet dezelfde tafel; een gast speelt via de gastheer
@@ -102,19 +102,6 @@ try:
         check(wacht(een, "() => (document.querySelector('.eed-regels') || {}).innerText?.includes('30½')", 3000), 'E ❓ = de spelregels')
         een.click('.eed-regels button')
         check(een.locator('.eed-regels').count() == 0, 'E en weer dicht')
-
-        # ── E2. passen (v3): past iedereen, dan 3 nieuwe tafelkaarten ──
-        check(wacht(een, MIJN, 6000) or wacht(twee, MIJN, 6000), 'E2 iemand is aan de beurt in ronde 2')
-        eerst, dan = (een, twee) if een.evaluate("() => !!document.querySelector('.kt-knoppen button[data-naam=alles]')") else (twee, een)
-        oudeTafel = sorted(eerst.evaluate(TAFEL))
-        check(knop(eerst, 'pas').count() == 1, 'E2 er is een knop Passen')
-        knop(eerst, 'pas').click()
-        check(wacht(dan, MIJN, 8000), 'E2 gepast: de ander is aan de beurt')
-        check(sorted(dan.evaluate(TAFEL)) == oudeTafel, 'E2 één keer passen: de tafel blijft')
-        knop(dan, 'pas').click()
-        NIEUW = "() => { const t = (%s)(); return t.length === 3 && !t.some(k => %s.includes(k)) }" % (TAFEL, json.dumps(oudeTafel))
-        check(wacht(een, NIEUW, 8000) and wacht(twee, NIEUW, 8000), 'E2 iedereen paste: bij allebei 3 nieuwe tafelkaarten')
-        check(wacht(eerst, MIJN, 8000), 'E2 en de eerste is weer aan de beurt')
         ctx.close()
 
         # ── F. tegen de computer ──

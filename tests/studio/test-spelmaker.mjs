@@ -13,13 +13,14 @@ const lees = f => readFileSync(path.join(REPO, f), 'utf8')
 globalThis.window = {}
 const S = await import(pathToFileURL(path.join(REPO, 'spelmaker.js')).href)
 const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+const WEBP = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACwAQCdASoCAAIAAUAmJaACdLoABGaAAP7tTd/9Wh/6tD/1aH7n39XYnwoLAAAA' // zoals de Studio het maakt (png maakt het script webp, maar daar is Pillow voor nodig)
 
 // ── maakSpel en valideerSpel ──
 const invul = { soort: 'kaart', naam: 'Kleurenjacht', naamEn: 'Colour Hunt', icoon: '🌈', uitleg: 'Leg kaarten van dezelfde kleur.', uitlegEn: 'Play cards of the same colour.',
   doel: 'Wie het eerst geen kaarten meer heeft, wint.', regels: 'Iedereen krijgt 7 kaarten. Leg een kaart van dezelfde kleur of waarde op de stapel. Kun je niet, pak er een.',
   met: { vriend: true, chatbalk: true, webcam: false, computer: false }, spraak: 'vanzelf', titel: 'pesten', deck: '54', perSpeler: '7',
   speciaal: [{ kaart: '2', wat: 'De ander pakt 2 kaarten.' }, { kaart: 'joker', wat: 'De ander pakt 5 kaarten.' }, { kaart: '8', wat: '' }],
-  extras: { uitleg: true, beurtklok: true, onzin: true }, plaatje: PNG }
+  extras: { uitleg: true, beurtklok: true, onzin: true }, plaatje: WEBP }
 const spel = S.maakSpel(invul)
 assert.equal(spel.id, 'kleurenjacht')
 assert.deepEqual(spel.naam, ['Kleurenjacht', 'Colour Hunt'])
@@ -28,6 +29,7 @@ assert.equal(spel.spraak, 'vanzelf')
 assert.deepEqual(spel.extras, ['uitleg', 'beurtklok'], 'alleen bekende extra\'s')
 assert.deepEqual(spel.kaarten, { deck: '54', perSpeler: 7, speciaal: [{ kaart: '2', wat: 'De ander pakt 2 kaarten.' }, { kaart: 'joker', wat: 'De ander pakt 5 kaarten.' }] }, 'een lege speciale kaart valt weg')
 assert.deepEqual(S.valideerSpel(spel), [])
+assert.deepEqual(S.valideerSpel({ ...spel, plaatje: PNG }), [], 'png mag ook')
 assert.equal(S.maakSpel({ ...invul, met: { vriend: false, chatbalk: true, webcam: true } }).spraak, 'uit', 'zonder vriend: geen spraak')
 assert.deepEqual(S.maakSpel({ ...invul, met: { vriend: false, chatbalk: true, webcam: true } }).met.chatbalk, false, 'zonder vriend: geen chatbalk')
 assert.equal(S.maakSpel({ ...invul, spraak: 'knop' }).spraak, 'uit', 'spraak met 📹 kan niet zonder webcam')

@@ -227,7 +227,7 @@ jobs:
       - name: "PeerTube-widget in de Store: downloaden, op Home, verwijderen (proef315)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef315.py .
-      - name: "Muziek-widget (Bandcamp en Funkwhale): Store, Home, laadt pas na een tik (proef316)"
+      - name: "Muziek-widget (Funkwhale, zonder Bandcamp): Store, Home, laadt pas na een tik (proef316)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef316.py .
       - name: "Titel en plaatje vanzelf bij PeerTube en Funkwhale (proef317)"
@@ -281,3 +281,6 @@ jobs:
       - name: "Stekky Studio: weergaven, video-carrousel met miniaturen en nieuws eronder (proef335)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef335.py .
+      - name: "Niet-commercieel weg: geen weer-widget, geen Bandcamp, geen Regicide in de Store-tekst (proef336)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef336.py .

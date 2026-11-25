@@ -4,7 +4,7 @@
 #  A. PeerTube: link plakken zonder titel -> Opslaan: titel van de server, miniatuur als achtergrond (vult het vak)
 #  B. alleen de API en het voorbeeldplaatje van die ene server; de huisregel houdt niets tegen
 #  C. Funkwhale: albumlink -> "Plaat – Artiest" en de albumhoes als achtergrond
-#  D. Bandcamp: de titel uit de insluitcode; Bandcamp wordt niets gevraagd; de oude hoes gaat weg (ander album)
+#  D. Bandcamp kan niet meer (25 nov 2026): een melding; Bandcamp wordt niets gevraagd; de Funkwhale-hoes blijft
 #  E. zelf een titel typen bij dezelfde video: die blijft, niets opnieuw opgehaald, de miniatuur blijft
 #  F. de 🖼-knop staat erbij; geen paginafouten
 # python3 -I proef317.py <map>
@@ -96,7 +96,7 @@ try:
           localStorage.setItem('fibro_store_' + uid, JSON.stringify(['muziekwidget', 'peertube']))
           localStorage.setItem('fibro_widgets_profiel_' + uid, JSON.stringify([
             { id: 'peertube', icon: '🎬', titel: 'PeerTube', w: 4, h: 3, volgorde: 0, aan: true },
-            { id: 'muziekwidget', icon: '🎧', titel: 'Bandcamp & Funkwhale', w: 4, h: 3, volgorde: 1, aan: true }])) }""", UID)
+            { id: 'muziekwidget', icon: '🎧', titel: 'Funkwhale', w: 4, h: 3, volgorde: 1, aan: true }])) }""", UID)
         RIJEN.update({'peertube', 'muziekwidget'})
         pg.goto(BASIS + 'index.html')
         pg.evaluate("window.__csp = []; document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.blockedURI + ' ' + e.violatedDirective))")
@@ -131,11 +131,12 @@ try:
         n = len(buiten)
         pg.click(BM + ' .mw-wijzig')
         pg.fill(BM + ' .mw-invoer', '<iframe src="https://bandcamp.com/EmbeddedPlayer/album=3656183138/size=large/" seamless><a href="https://x.bandcamp.com/album/y">Zomer &amp; Zee by De Band</a></iframe>')
-        pg.fill(BM + ' .mw-titel', '')
         pg.click(BM + ' .mw-opslaan')
-        check(wacht(pg, "() => (document.querySelector('%s .mw-speel') && document.querySelector('%s').innerText.includes('Zomer & Zee by De Band'))" % (BM, BM), 8000), 'D: Bandcamp: titel uit de insluitcode')
+        check('Bandcamp kan niet' in pg.inner_text(BM + ' .mw-melding'), 'D: Bandcamp kan niet (25 nov 2026): een melding')
+        time.sleep(0.4)
         check(not any('bandcamp' in u for u in buiten[n:]), 'D: Bandcamp is niets gevraagd (%s)' % buiten[n:])
-        check(wacht(pg, "() => !(document.querySelector('%s .widget-inhoud') || {style:{}}).style.backgroundImage" % BM, 4000), 'D: de oude albumhoes is weg (ander album)')
+        pg.locator(BM + ' button', has_text='Annuleren').click()
+        check(wacht(pg, "() => (document.querySelector('%s .widget-inhoud') || {style:{}}).style.backgroundImage.includes('data:image/jpeg')" % BM, 4000), 'D: de Funkwhale-hoes blijft staan')
 
         # ── E ──
         n = len(buiten)

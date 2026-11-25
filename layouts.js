@@ -27,7 +27,7 @@
 //   tekenMix(el, layout, tekenVak)   -> tekent de vakken; tekenVak(soort, inhoudEl) vult er één
 
 import { STUDIO_LAYOUTS } from './studio-layouts.js?v=1'
-import { netteFeedUrl, MAX_FEEDS } from './rsswidget.js?v=4'
+import { netteFeedUrl, MAX_FEEDS } from './rsswidget.js?v=5'
 import { SERVERS as PEERTUBE_SERVERS, CATEGORIEEN, MAX_CATS } from './peertube.js?v=6'
 
 export const FORMAAT = 'stekky-layout'

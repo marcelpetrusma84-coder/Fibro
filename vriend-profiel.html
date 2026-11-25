@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=150"></script>
+<script src="taal.js?v=151"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -154,7 +154,7 @@ body.heeft-wallpaper::before { display:block; }
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
-  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=268'
+  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=269'
   import { versleutel, haalPrivateKeyOp } from './crypto.js?v=182'
   import { maakProfielLikes, itemVan, openReageerScherm, maakReactieBericht, maakKleinPlaatje } from './profielreacties.js?v=2' // v258
   import { eisSessie, startBewaking } from './sessie.js?v=95'
@@ -717,7 +717,7 @@ body.heeft-wallpaper::before { display:block; }
   // Liken en reageren (fediverse) staan hier niet: alleen de video, net als bij de losse PeerTube-widget.
   async function renderVriendMix(el, vriendId, w) {
     let L
-    try { L = await import('./layouts.js?v=3') } catch (e) { console.warn('[layout]', e); return false }
+    try { L = await import('./layouts.js?v=4') } catch (e) { console.warn('[layout]', e); return false }
     const layout = L.layoutVan(w.id)
     if (!layout) return false
     el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F9E9}</span><span class="widget-titel">' + vEsc(layout.titel) + '</span></div><div class="widget-inhoud"></div>'
@@ -730,7 +730,7 @@ body.heeft-wallpaper::before { display:block; }
     const tekenVast = async (soort, vak) => {
       const cfg = mix[L.vakSleutel(layout, soort)]
       if (!cfg) return false
-      if (soort === 'rss') { const R = await import('./rsswidget.js?v=4'); if (!R.normaliseer(cfg)) return false; R.tekenRssWidget(vak, { cfg }); return true }
+      if (soort === 'rss') { const R = await import('./rsswidget.js?v=5'); if (!R.normaliseer(cfg)) return false; R.tekenRssWidget(vak, { cfg }); return true }
       if (soort === 'peertube') { const P = await import('./peertube.js?v=6'); if (!P.normaliseer(cfg)) return false; P.tekenPeertubeWidget(vak, { cfg, weergave: L.weergaveVan(layout.vakken.find(v => v.soort === soort)) }); return true }
       return false
     }
@@ -770,7 +770,7 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_muziekwidget')
     if (!ruw) return false
     let M, cfg = null
-    try { M = await import('./muziekwidget.js?v=2') } catch (e) { console.warn('[muziekwidget]', e); return false }
+    try { M = await import('./muziekwidget.js?v=3') } catch (e) { console.warn('[muziekwidget]', e); return false }
     try { cfg = M.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
     await vriendAchtergrond(el, vriendId, 'muziekwidget') // de albumhoes, via sync (wbg:muziekwidget)
@@ -811,7 +811,7 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_rss')
     if (!ruw) return false
     let R, cfg = null
-    try { R = await import('./rsswidget.js?v=4') } catch (e) { console.warn('[rss]', e); return false }
+    try { R = await import('./rsswidget.js?v=5') } catch (e) { console.warn('[rss]', e); return false }
     try { cfg = R.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
     // v2: de fotootjes (één plaatje, via P2P van je vriend); alleen als ze bij deze berichten horen (fotoId = pos.rss)
@@ -838,7 +838,7 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_mastodon')
     if (!ruw) return false
     let M, cfg = null
-    try { M = await import('./mastodon.js?v=2') } catch (e) { console.warn('[mastodon]', e); return false }
+    try { M = await import('./mastodon.js?v=3') } catch (e) { console.warn('[mastodon]', e); return false }
     try { cfg = M.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
     let sprite = null, spriteId = ''

@@ -2,7 +2,7 @@
 // Je kiest een sjabloon (hoe de vakken liggen), wat er in elk vak komt (video, muziek, radio of berichten), een naam en
 // een uitleg. De Studio laat zien hoe het eruitziet en maakt er een layoutbestand van (naam.stekkylayout.json).
 // Dat bestand zet Claude of Tijn in de app met tests/tools/studio-layout-installeer.mjs; daarna staat hij in de Store.
-import { SJABLONEN, VAK_SOORTEN, MAX_TITEL, MAX_UITLEG, MAX_KIES_FEEDS, MAX_FEEDNAAM, MANIEREN, WEERGAVEN, WEERGAVE_NAAM, maakLayout, valideerLayout } from './layouts.js?v=3'
+import { SJABLONEN, VAK_SOORTEN, MAX_TITEL, MAX_UITLEG, MAX_KIES_FEEDS, MAX_FEEDNAAM, MANIEREN, WEERGAVEN, WEERGAVE_NAAM, maakLayout, valideerLayout } from './layouts.js?v=4'
 import { SERVERS as PEERTUBE_SERVERS, CATEGORIEEN } from './peertube.js?v=6'
 
 const $ = id => document.getElementById(id)

@@ -2655,6 +2655,7 @@ window.FIBRO_EN = {
   "Afspeellijsten kunnen nog niet, kies één video.": "Playlists are not supported yet, choose a single video.",
   // 18 nov 2026: muziek-widget (muziekwidget.js, store.js, profiel.html, vriend-profiel.html); 25 nov 2026: zonder Bandcamp
   "Funkwhale": "Funkwhale",
+  "aan de beurt": "to play", // 25 nov 2026: kaarttafel met meer spelers (kaartspel-hulp.js)
   "Uit de Store: muziek van Funkwhale, laadt pas na een tik": "From the Store: music from Funkwhale, only loads after a tap",
   "Funkwhale verwijderen": "Remove Funkwhale",
   "Zet een album of nummer van Funkwhale op je profiel: vrij gelicentieerde muziek. Je vrienden zien eerst een kaartje; pas als iemand op luisteren tikt, maakt zijn toestel verbinding met Funkwhale. Geen reclame.": "Put an album or track from Funkwhale on your profile: freely licensed music. Your friends first see a card; only when someone taps listen does their device connect to Funkwhale. No ads.",

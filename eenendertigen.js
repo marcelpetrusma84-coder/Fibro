@@ -13,13 +13,17 @@
 //   - Wie de minste punten heeft, verliest een leven; evenveel = allebei een leven. Wie klopte verliest ook maar één.
 //   - Iedereen begint met 3 levens. Wie geen levens meer heeft, heeft verloren (allebei tegelijk = gelijkspel).
 //   - Na een ronde deelt speler 1 de volgende (volgendeRonde); wie begint wisselt per ronde.
+// v2 (25 nov 2026, Marcel): 2 tot 6 spelers (n). Om de beurt in de rondte (1, 2, ..., n). Na kloppen krijgt iedereen
+//   nog één beurt tot de klopper weer aan de beurt zou zijn. Heeft iemand 31, dan verliezen ALLE anderen een leven.
+//   Wie geen levens meer heeft, ligt eruit (krijgt geen kaarten meer); de rest speelt door tot er één over is.
+//   Allemaal tegelijk af = gelijkspel (winnaar 0).
 //
 // De stand is één gewoon object (zie nieuwSpel). Alle functies geven een NIEUWE stand terug of null als het niet mag.
 // fase: 'spel' (er wordt gespeeld), 'uitslag' (ronde klaar, de volgende moet nog gedeeld), 'klaar' (iemand is af).
 
 export const KLEUREN = ['h', 'r', 'k', 's']
 export const WAARDEN = ['7', '8', '9', '10', 'B', 'V', 'H', 'A']
-export const DOEL = 31, LEVENS = 3
+export const DOEL = 31, LEVENS = 3, MIN_SPELERS = 2, MAX_SPELERS = 6
 export const DRIE_GELIJK = 30.5
 
 export const kaartInfo = id => ({ kleur: id[0], waarde: id.slice(1) })
@@ -35,6 +39,14 @@ export function schud(lijst, rng = Math.random) {
   return a
 }
 const ander = sp => sp === 1 ? 2 : 1
+export const zetels = s => Array.from({ length: s.n || 2 }, (_, i) => i + 1)
+export const inSpel = s => zetels(s).filter(sp => s.levens[sp] > 0)          // wie nog levens heeft
+// De volgende speler in de rondte die nog meedoet
+export function volgende(s, sp) {
+  const n = s.n || 2
+  for (let i = 1; i <= n; i++) { const v = ((sp - 1 + i) % n) + 1; if (s.levens[v] > 0) return v }
+  return sp
+}
 const kopie = s => JSON.parse(JSON.stringify(s))
 export const waarde = id => { const w = kaartInfo(id).waarde; return w === 'A' ? 11 : ['B', 'V', 'H'].includes(w) ? 10 : Number(w) }
 
@@ -49,49 +61,54 @@ export const toonPunten = p => p === DRIE_GELIJK ? '30½' : String(p)
 
 function deel(s, begint, rng) {
   const stapel = schud(maakDeck(), rng)
-  s.handen = { 1: [], 2: [] }
-  for (let i = 0; i < 3; i++) for (const sp of [begint, ander(begint)]) s.handen[sp].push(stapel.pop())
+  s.handen = Object.fromEntries(zetels(s).map(sp => [sp, []]))
+  const mee = []
+  for (let sp = begint, i = 0; i < s.n && !mee.includes(sp); i++, sp = volgende(s, sp)) mee.push(sp)
+  for (let i = 0; i < 3; i++) for (const sp of mee) s.handen[sp].push(stapel.pop())
   s.tafel = [stapel.pop(), stapel.pop(), stapel.pop()]
   s.stapel = stapel
   s.aanZet = begint; s.begint = begint
   s.beurten = 0; s.geklopt = 0; s.fase = 'spel'; s.uitslag = null
   s.laatste = { soort: 'deel', wie: 0, kaarten: [] }
   // Iemand heeft meteen 31: meteen laten zien
-  if (punten(s.handen[1]) === DOEL || punten(s.handen[2]) === DOEL) rondeKlaar(s, '31')
+  if (mee.some(sp => punten(s.handen[sp]) === DOEL)) rondeKlaar(s, '31')
 }
 
-export function nieuwSpel({ begint = 1, rng = Math.random } = {}) {
-  const s = { levens: { 1: LEVENS, 2: LEVENS }, ronde: 1, winnaar: 0, klaar: false }
-  deel(s, begint, rng)
+export function nieuwSpel({ begint = 1, spelers = 2, rng = Math.random } = {}) {
+  const n = Math.max(MIN_SPELERS, Math.min(MAX_SPELERS, Math.round(Number(spelers)) || 2))
+  const s = { n, levens: Object.fromEntries(Array.from({ length: n }, (_, i) => [i + 1, LEVENS])), ronde: 1, winnaar: 0, klaar: false }
+  deel(s, Math.min(Math.max(1, begint), n), rng)
   return s
 }
 export function volgendeRonde(oud, rng = Math.random) {
   if (!oud || oud.fase !== 'uitslag') return null
   const s = kopie(oud)
+  s.n ||= 2
   s.ronde++
-  deel(s, ander(oud.begint), rng)
+  deel(s, volgende(s, oud.begint), rng)
   return s
 }
 
 // De ronde is klaar: tellen, levens eraf, misschien is iemand af
 function rondeKlaar(s, reden) {
-  const p = { 1: punten(s.handen[1]), 2: punten(s.handen[2]) }
+  const mee = inSpel(s)
+  const p = Object.fromEntries(mee.map(sp => [sp, punten(s.handen[sp])]))
   let verliezers
-  if (reden === '31') verliezers = [1, 2].filter(sp => p[sp] !== DOEL)       // wie 31 heeft, wint; de ander verliest
-  else verliezers = p[1] === p[2] ? [1, 2] : [p[1] < p[2] ? 1 : 2]
-  if (!verliezers.length) verliezers = []                                      // allebei 31: niemand verliest
+  if (reden === '31') verliezers = mee.filter(sp => p[sp] !== DOEL)              // wie 31 heeft, wint; alle anderen verliezen
+  else { const laagst = Math.min(...mee.map(sp => p[sp])); verliezers = mee.filter(sp => p[sp] === laagst) }   // evenveel: allemaal
   for (const sp of verliezers) s.levens[sp] = Math.max(0, s.levens[sp] - 1)
-  s.uitslag = { punten: p, verliezers, reden, geklopt: s.geklopt }
-  const af = [1, 2].filter(sp => s.levens[sp] === 0)
-  if (af.length) { s.fase = 'klaar'; s.klaar = true; s.winnaar = af.length === 2 ? 0 : ander(af[0]) }
+  s.uitslag = { punten: p, verliezers, reden, geklopt: s.geklopt, eruit: verliezers.filter(sp => s.levens[sp] === 0) }
+  const over = inSpel(s)
+  if (over.length <= 1) { s.fase = 'klaar'; s.klaar = true; s.winnaar = over.length === 1 ? over[0] : 0 }
   else s.fase = 'uitslag'
 }
-// Na een ruil: 31 = meteen klaar; was er geklopt, dan was dit de laatste beurt; anders is de ander
+// Na een ruil: 31 = meteen klaar; was er geklopt en is de klopper weer aan de beurt, dan is de ronde klaar
 function naBeurt(s, sp) {
   s.beurten++
   if (punten(s.handen[sp]) === DOEL) { rondeKlaar(s, '31'); return }
-  if (s.geklopt && s.geklopt !== sp) { rondeKlaar(s, 'klop'); return }
-  s.aanZet = ander(sp)
+  const v = volgende(s, sp)
+  if (s.geklopt && v === s.geklopt) { rondeKlaar(s, 'klop'); return }
+  s.aanZet = v
 }
 
 const aanDeBeurt = (s, sp) => Boolean(s && s.fase === 'spel' && s.aanZet === sp)
@@ -116,25 +133,29 @@ export function ruilAlles(oud, sp) {
   return s
 }
 // Kloppen: pas als iedereen één keer aan de beurt is geweest, en maar één keer per ronde
-export const magKloppen = (s, sp) => Boolean(aanDeBeurt(s, sp) && !s.geklopt && s.beurten >= 2)
+export const magKloppen = (s, sp) => Boolean(aanDeBeurt(s, sp) && !s.geklopt && s.beurten >= inSpel(s).length)
 export function klop(oud, sp) {
   if (!magKloppen(oud, sp)) return null
   const s = kopie(oud)
   s.geklopt = sp; s.beurten++
   s.laatste = { soort: 'klop', wie: sp, kaarten: [] }
-  s.aanZet = ander(sp)
+  s.aanZet = volgende(s, sp)
   return s
 }
 
 // Klopt een stand die van de ander komt? (32 kaarten, elk precies één keer)
 export function geldigeStand(s) {
   try {
-    if (!s || typeof s !== 'object' || ![1, 2].includes(s.aanZet) || ![1, 2].includes(s.begint) || ![0, 1, 2].includes(s.winnaar)) return false
-    if (!['spel', 'uitslag', 'klaar'].includes(s.fase) || typeof s.klaar !== 'boolean' || ![0, 1, 2].includes(s.geklopt)) return false
-    if (s.handen[1].length !== 3 || s.handen[2].length !== 3 || s.tafel.length !== 3) return false
-    const alle = [...s.stapel, ...s.tafel, ...s.handen[1], ...s.handen[2]]
+    if (!s || typeof s !== 'object') return false
+    const n = s.n === undefined ? 2 : s.n
+    if (!Number.isInteger(n) || n < MIN_SPELERS || n > MAX_SPELERS) return false
+    const zet = Array.from({ length: n }, (_, i) => i + 1)
+    if (!zet.includes(s.aanZet) || !zet.includes(s.begint) || ![0, ...zet].includes(s.winnaar) || ![0, ...zet].includes(s.geklopt)) return false
+    if (!['spel', 'uitslag', 'klaar'].includes(s.fase) || typeof s.klaar !== 'boolean' || s.tafel.length !== 3) return false
+    if (!zet.every(sp => Number.isInteger(s.levens[sp]) && s.levens[sp] >= 0 && s.levens[sp] <= LEVENS)) return false
+    if (!zet.every(sp => Array.isArray(s.handen[sp]) && (s.handen[sp].length === 3 || (s.handen[sp].length === 0 && (s.levens[sp] === 0 || s.fase !== 'spel'))))) return false
+    const alle = [...s.stapel, ...s.tafel, ...zet.flatMap(sp => s.handen[sp])]
     if (alle.length !== 32 || new Set(alle).size !== 32 || !alle.every(isKaart)) return false
-    if (![1, 2].every(sp => Number.isInteger(s.levens[sp]) && s.levens[sp] >= 0 && s.levens[sp] <= LEVENS)) return false
     if (!Number.isInteger(s.beurten) || s.beurten < 0 || !Number.isInteger(s.ronde) || s.ronde < 1) return false
     return true
   } catch (e) { return false }
@@ -166,37 +187,6 @@ export function doeStap(s, sp, stap) {
   return null
 }
 
-// De computer als tegenstander (speler 2) over het nagemaakte kanaal van solo.js. Hij hoort 'zet', 'stand' en
-// 'opnieuw' en stuurt zijn zet terug, net als een vriend. Delen doet speler 1 (het spel), niet de computer.
-export function bot({ stuur, niveau, isDicht }) {
-  let staat = null, spelId = -1, nr = 0, timer = null
-  function plan(extra = 0) {
-    clearTimeout(timer)
-    if (!staat || staat.fase !== 'spel' || staat.aanZet !== 2) return
-    timer = setTimeout(() => {
-      if (isDicht() || !staat || staat.fase !== 'spel' || staat.aanZet !== 2) return
-      const nieuw = doeStap(staat, 2, computerStap(staat, 2, niveau))
-      if (!nieuw) return
-      staat = nieuw; nr++
-      stuur('zet', { staat, nr, spelId })
-      if (nieuw.laatste.soort === 'klop' || nieuw.fase !== 'spel') { if (Math.random() < 0.5) setTimeout(() => { if (!isDicht()) stuur('kaartreactie', { emoji: nieuw.laatste.soort === 'klop' ? '😎' : '🔥' }) }, 700) }
-    }, 1000 + Math.floor(Math.random() * 800) + extra)
-  }
-  function neem(p, nieuwSpel) {
-    if (!p || !geldigeStand(p.staat)) return
-    const id = p.spelId ?? spelId
-    if (nieuwSpel ? id <= spelId : (id < spelId || (id === spelId && (p.nr ?? 0) <= nr))) return
-    const nieuweRonde = id !== spelId || (staat && staat.ronde !== p.staat.ronde)
-    staat = p.staat; spelId = id; nr = p.nr ?? 0
-    plan(nieuweRonde ? 2200 : 0)
-  }
-  return {
-    ontvang(event, payload) {
-      if (isDicht()) return
-      if (event === 'zet' || event === 'stand') neem(payload, false)
-      else if (event === 'opnieuw') neem(payload, true)
-      else if (event === 'vraag-stand' && staat && (spelId > (payload.spelId ?? -1) || (spelId === (payload.spelId ?? -1) && nr > (payload.nr ?? 0)))) stuur('stand', { staat, nr, spelId })
-    },
-    stop() { clearTimeout(timer) },
-  }
-}
+// Tegen de computer (spel.html): v2 speelt de computer binnen het spel zelf (groepspel.js, op de gastheer), voor alle
+// zetels die geen mens zijn. solo.js wil wel een bot voor het nagemaakte kanaal: deze doet niets.
+export function bot() { return { ontvang() {}, stop() {} } }

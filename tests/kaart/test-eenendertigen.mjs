@@ -95,26 +95,118 @@ for (let pot = 0; pot < 500; pot++) {
 assert.ok(uitslagen[2] > uitslagen[1], 'moeilijk wint vaker (' + JSON.stringify(uitslagen) + ')')
 console.log('PASS: twee computers spelen 500 potjes zonder vast te lopen ' + JSON.stringify(uitslagen))
 
-// ── De computerspeler over het kanaal (bot) ──
-const gestuurd = []
-const bot = P.bot({ stuur: (e, p) => gestuurd.push([e, p]), niveau: 'normaal', isDicht: () => false })
-let st = P.ruil(stand(['h7', 's8', 'k9'], ['r7', 'r8', 'r9'], ['hA', 'hH', 'sA']), 1, 's8', 'hA')
-bot.ontvang('zet', { staat: st, nr: 1, spelId: 4 })
-await new Promise(k => setTimeout(k, 4500))   // eerste zet na het delen: even wachten (de kaarten worden gedeeld)
-assert.equal(gestuurd[0]?.[0], 'zet', 'de computer zet'); assert.equal(gestuurd[0][1].nr, 2); assert.equal(gestuurd[0][1].staat.aanZet, 1)
-assert.ok(P.geldigeStand(gestuurd[0][1].staat))
-bot.ontvang('vraag-stand', { spelId: 4, nr: 1 }); assert.equal(gestuurd.at(-1)[0], 'stand')
-bot.stop()
-console.log('PASS: de computerspeler speelt mee over het kanaal')
+// ── v2: meer spelers (2 tot 6) ──
+const stand4 = (handen, tafel, extra = {}) => {
+  const alle = Object.values(handen).flat().concat(tafel)
+  return { n: 4, stapel: P.maakDeck().filter(id => !alle.includes(id)), handen, tafel, aanZet: 1, begint: 1, beurten: 0, geklopt: 0, fase: 'spel', uitslag: null,
+    levens: { 1: 3, 2: 3, 3: 3, 4: 3 }, ronde: 1, winnaar: 0, klaar: false, laatste: { soort: 'deel', wie: 0, kaarten: [] }, ...extra }
+}
+let m = stand4({ 1: ['h7', 'h8', 's9'], 2: ['r7', 'r8', 'k9'], 3: ['k7', 'k8', 'sV'], 4: ['hA', 'hH', 's7'] }, ['h10', 's8', 'r10'])
+assert.ok(P.geldigeStand(m))
+m = P.ruil(m, 1, 's9', 's8'); assert.equal(m.aanZet, 2)
+m = P.ruil(m, 2, 'k9', 's9'); assert.equal(m.aanZet, 3)
+assert.equal(P.klop(m, 3), null, 'kloppen pas als iedereen (4) één keer was')
+m = P.ruil(m, 3, 'sV', 'k9'); assert.equal(m.aanZet, 4)
+assert.equal(P.magKloppen(m, 4), false, 'zetel 4 zit nog in de eerste rondgang')
+m = P.ruil(m, 4, 's7', 'sV'); assert.equal(m.aanZet, 1)
+assert.ok(P.magKloppen(m, 1)); m = P.klop(m, 1); assert.equal(m.aanZet, 2)
+m = P.ruil(m, 2, 'r7', 'h10'); m = P.ruil(m, 3, 'k7', 'r7')
+assert.equal(m.fase, 'spel'); assert.equal(m.aanZet, 4, 'na kloppen krijgt iedereen nog één beurt')
+m = P.ruil(m, 4, 'hA', 'k7')
+assert.equal(m.fase, 'uitslag', 'terug bij de klopper: klaar')
+const laagst = Math.min(...Object.values(m.uitslag.punten))
+assert.deepEqual(m.uitslag.verliezers, Object.keys(m.uitslag.punten).map(Number).filter(z => m.uitslag.punten[z] === laagst))
+// 31 bij 4 spelers: alle anderen verliezen een leven
+m = stand4({ 1: ['hA', 'hH', 's7'], 2: ['r7', 'r8', 'k9'], 3: ['k7', 'k8', 'sV'], 4: ['h7', 'h8', 's9'] }, ['h10', 's8', 'r10'])
+m = P.ruil(m, 1, 's7', 'h10')
+assert.equal(m.uitslag.reden, '31'); assert.deepEqual(m.uitslag.verliezers, [2, 3, 4], 'bij 31 verliezen alle anderen')
+// eruit: wie 0 levens heeft, krijgt geen kaarten meer en wordt overgeslagen
+m = stand4({ 1: ['hA', 'hH', 's7'], 2: ['r7', 'r8', 'k9'], 3: ['k7', 'k8', 'sV'], 4: ['h7', 'h8', 's9'] }, ['h10', 's8', 'r10'], { levens: { 1: 3, 2: 1, 3: 2, 4: 2 } })
+m = P.ruil(m, 1, 's7', 'h10')
+assert.deepEqual(m.uitslag.eruit, [2]); assert.equal(m.levens[2], 0)
+const r2 = P.volgendeRonde(m)
+assert.equal(r2.handen[2].length, 0, 'wie eruit ligt krijgt geen kaarten'); assert.ok([1, 3, 4].every(z => r2.handen[z].length === 3)); assert.ok(P.geldigeStand(r2))
+assert.equal(P.volgende(r2, 1), 3, 'zetel 2 wordt overgeslagen')
+// de laatste die over is, wint
+m = stand4({ 1: ['hA', 'hH', 's7'], 2: [], 3: [], 4: ['h7', 'h8', 's9'] }, ['h10', 's8', 'r10'], { levens: { 1: 2, 2: 0, 3: 0, 4: 1 } })
+m = P.ruil(m, 1, 's7', 'h10')
+assert.equal(m.fase, 'klaar'); assert.equal(m.winnaar, 1)
+for (const n of [1, 7, 'x']) assert.equal(P.nieuwSpel({ spelers: n }).n, n === 7 ? 6 : 2, 'tussen 2 en 6 spelers')
+console.log('PASS: meer spelers: in de rondte, kloppen, 31 = alle anderen een leven, eruit liggen, de laatste wint')
+
+for (const n of [3, 4, 5, 6]) {
+  let st = P.nieuwSpel({ spelers: n, rng }), stappen = 0
+  while (st.fase !== 'klaar') {
+    assert.ok(P.geldigeStand(st), 'altijd een geldige stand (' + n + ')')
+    if (st.fase === 'uitslag') { st = P.volgendeRonde(st, rng); continue }
+    st = P.doeStap(st, st.aanZet, P.computerStap(st, st.aanZet, 'normaal', rng))
+    assert.ok(st && ++stappen < 20000)
+  }
+  assert.ok([0, ...P.zetels(st)].includes(st.winnaar))
+}
+console.log('PASS: computers spelen met 3, 4, 5 en 6 spelers tot het einde')
+
+// ── groepspel.js: een gastheer, twee gasten en een computer op één nagemaakt kanaal ──
+const { maakGroepSpel } = await import('../../groepspel.js')
+const luisteraars = []
+const kanaal = id => ({ on(_, f, fn) { luisteraars.push({ id, ev: f.event, fn }); return this },
+  send(b) { for (const l of luisteraars) if (l.id !== id && l.ev === b.event) setTimeout(() => l.fn({ payload: JSON.parse(JSON.stringify(b.payload)) }), 1); return Promise.resolve('ok') } })
+const spelers = [{ zetel: 1, naam: 'Marcel' }, { zetel: 2, naam: 'Tijn' }, { zetel: 3, naam: 'Bram' }, { zetel: 4, naam: 'Computer', computer: true }]
+const regels = { aanZet: s => (s && s.fase === 'spel' ? s.aanZet : 0), doeStap: P.doeStap, computerStap: P.computerStap, geldigeStand: P.geldigeStand,
+  volgendeRonde: s => (s && s.fase === 'uitslag' ? P.volgendeRonde(s) : null) }
+const standen = { 1: [], 2: [], 3: [] }
+const spellen = [1, 2, 3].map(z => maakGroepSpel({ kanaal: kanaal(z), zetel: z, spelers, regels, beurtMs: 400, speling: 100, rondePauze: 30, denkMs: () => 3,
+  onStand: (oud, nieuw) => standen[z].push(nieuw) }))
+assert.equal(spellen[0].gastheer, true); assert.equal(spellen[1].gastheer, false)
+assert.equal(spellen[1].doe({ soort: 'alles' }), false, 'zonder stand kan een gast niets')
+spellen[0].start(P.nieuwSpel({ spelers: 4, rng }))
+await new Promise(k => setTimeout(k, 50))
+assert.deepEqual(standen[2].at(-1), spellen[0].staat(), 'de gasten krijgen de stand van de gastheer')
+assert.equal(spellen[1].doe({ soort: 'alles' }), spellen[0].staat().aanZet === 2, 'een gast mag alleen als hij aan de beurt is')
+// iedereen speelt: de mensen doen een computerzet zodra ze aan de beurt zijn; de computer speelt zelf (op de gastheer)
+let rondes = 0
+const speel = setInterval(() => {
+  for (const g of spellen) { const st = g.staat(); if (st && st.fase === 'spel' && st.aanZet === g.zetel) g.doe(P.computerStap(st, g.zetel, 'normaal', rng)) }
+}, 5)
+for (let t = 0; t < 600 && spellen[0].staat().fase !== 'klaar'; t++) await new Promise(k => setTimeout(k, 20))
+clearInterval(speel)
+const eind = spellen[0].staat()
+assert.equal(eind.fase, 'klaar', 'het spel met 4 (3 mensen + computer) speelt tot het einde')
+await new Promise(k => setTimeout(k, 50))
+assert.deepEqual(spellen[1].staat(), eind); assert.deepEqual(spellen[2].staat(), eind)
+assert.ok(standen[1].some(s => s.laatste.wie === 4), 'de computer (zetel 4) heeft gespeeld')
+for (const g of spellen) g.stop()
+console.log('PASS: groepspel: de gastheer heeft de stand, de gasten sturen hun zet, de computer speelt mee, iedereen ziet hetzelfde einde')
+
+// een gast laat zijn beurt verlopen: de computer zet voor hem; een gast gaat weg: de computer neemt over
+const luis2 = []
+const kan2 = id => ({ on(_, f, fn) { luis2.push({ id, ev: f.event, fn }); return this },
+  send(b) { for (const l of luis2) if (l.id !== id && l.ev === b.event) setTimeout(() => l.fn({ payload: JSON.parse(JSON.stringify(b.payload)) }), 1); return Promise.resolve('ok') } })
+const g1 = maakGroepSpel({ kanaal: kan2(1), zetel: 1, spelers: spelers.slice(0, 2), regels, beurtMs: 100, speling: 50, rondePauze: 10, onStand() {} })
+const g2 = maakGroepSpel({ kanaal: kan2(2), zetel: 2, spelers: spelers.slice(0, 2), regels, beurtMs: 100, speling: 50, rondePauze: 10, onStand() {} })
+g1.start(P.nieuwSpel({ spelers: 2, begint: 2, rng }))
+await new Promise(k => setTimeout(k, 400))
+assert.ok(g1.staat().beurten >= 1, 'de computer zette voor de gast die niets deed')
+g2.stop(); await new Promise(k => setTimeout(k, 20))
+assert.equal(g1.computer(2), true, 'wie weggaat, wordt de computer')
+g1.stop()
+console.log('PASS: groepspel: een verlopen beurt of iemand die weggaat speelt de computer')
+
+// ── tegen de computer (solo.js): de bot doet niets, het spel zelf speelt de computers ──
+const b = P.bot({ stuur() { throw new Error('mag niet') }, niveau: 'normaal', isDicht: () => false })
+b.ontvang('stand', { staat: P.nieuwSpel(), nr: 1, spelId: 1 }); b.stop()
+console.log('PASS: de bot voor solo.js is stil')
 
 // ── Het spel ──
 const ui = lees('eenendertigen-ui.js')
 assert.match(ui, /import \* as P from '\.\/eenendertigen\.js\?v=\d+'/)
+assert.match(ui, /import \{ maakGroepSpel \} from '\.\/groepspel\.js\?v=\d+'/)
 assert.match(ui, /maakKaartTafel\(inhoud/)
-for (const t of ["naam: 'alles'", "naam: 'klop'", "naam: 'uitleg'", 'deelAnimatie', 'anderSpeeltAnimatie', 'beurtKlok', 'tafel.tril', 'meldGeslagen', "stuur('vraag-stand'", "'kaartreactie'"])
+for (const t of ["naam: 'alles'", "naam: 'klop'", "naam: 'uitleg'", 'deelAnimatie', 'anderSpeeltAnimatie', 'beurtKlok', 'tafel.tril', 'meldGeslagen', 'tafel.tegenstanders', "'kaartreactie'", 'Tegen hoeveel computers wil je spelen?'])
   assert.ok(ui.includes(t), 'het spel heeft: ' + t)
-assert.match(ui, /if \(ik === 1\) volgendeTimer = setTimeout/, 'speler 1 deelt de volgende ronde')
 const sp = await import('../../studio-spellen.js')
 assert.deepEqual(sp.studioSpel('eenendertigen')?.met, { vriend: true, computer: true, chatbalk: true, webcam: true })
 assert.equal(sp.studioSpel('eenendertigen').spraak, 'vanzelf')
-console.log('PASS: het spel gebruikt de kaarttafel en staat in studio-spellen.js')
+const hulp = lees('kaartspel-hulp.js')
+for (const t of ['function tegenstanders(lijst)', 'function vanZetel(z)', "lijst['zetel:' + z.dataset.zetel]", '.kt-tz.kt-beurt']) assert.ok(hulp.includes(t), 'kaarttafel: ' + t)
+console.log('PASS: het spel gebruikt groepspel en de kaarttafel met meer spelers')

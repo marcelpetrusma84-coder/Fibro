@@ -5,7 +5,7 @@
 #  B. Lotte had de groep niet open: zij ziet '📷 Foto · je was niet online'
 #  C. 🎤 ingedrukt houden = spraakbericht; Bram krijgt een speler
 #  D. een eigen sticker (Profiel > Stickerlab) gaat met plaatje mee: Bram (geen vriend van de maker nodig) ziet hem
-#  E. 🎮 zegt dat samen spelen later komt; geen paginafouten
+#  E. 🎮 opent de keuze voor een kaartspel met de groep (25 nov 2026); geen paginafouten
 # python3 -I proef279.py <map>
 import sys, os, time, json, socket, subprocess, tempfile, urllib.parse, uuid
 from playwright.sync_api import sync_playwright
@@ -250,8 +250,9 @@ try:
         srcs = bp.eval_on_selector_all('.b-rij img.b-sticker', 'els => els.map(e => e.src.slice(0, 22))')
         check('data:image/png;base64,' in srcs, 'D: Bram ziet de eigen sticker van Marcel (%s)' % srcs)
         # E
-        m.click('.balk-knop.later')
-        check('later' in m.inner_text('.toast'), 'E: 🎮 zegt dat samen spelen later komt')
+        m.click('#spelKnop')
+        check(m.wait_for_selector('.gk-spel[data-spel=eenendertigen]', timeout=5000) is not None, 'E: 🎮 = kies een kaartspel voor de groep')
+        m.click('.gk-annuleer')
         check(not mf and not bf and not lf, 'E: geen paginafouten (%s %s %s)' % (mf[:2], bf[:2], lf[:2]))
         b.close()
 finally:

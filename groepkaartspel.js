@@ -15,6 +15,10 @@
 //   gk.kies()                 het keuzescherm (knop 🎲)
 //   gk.ontvang(payload)       alles wat met event 'gs' over het groepskanaal binnenkomt
 //   bel = { kan(), aan(), wissel() }   de voice chat van de groep (voor de microfoon in het spelmenu)
+//   gk.hallo()                als het kanaal open is: wie een wachtkamer open heeft, stuurt zijn uitnodiging nog eens
+//   meldPush(spel, sessie)    (v3, 25 nov 2026) een pushmelding naar de andere leden: "Marcel wil Eenendertigen spelen"
+//                             (stuur-push, type groepspel). Tikken opent de groep; dan zegt de pagina 'hallo' en komt
+//                             de uitnodiging bovenin (ook als je er eerst niet was).
 import { STUDIO_SPELLEN, studioSpel, spelBestand, spelIcoon } from './studio-spellen.js?v=5'
 import { maakSpelMenu } from './spelmenu.js?v=1'
 
@@ -55,7 +59,7 @@ const STIJL = `
 .gk-terug{position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:240}
 `
 
-export function maakGroepKaartspel({ ik, groepId, kanaal, leden, naamVan, toast = () => {}, bel = null }) {
+export function maakGroepKaartspel({ ik, groepId, kanaal, leden, naamVan, toast = () => {}, bel = null, meldPush = null }) {
   if (!document.getElementById('gk-stijl')) { const s = document.createElement('style'); s.id = 'gk-stijl'; s.textContent = STIJL; document.head.appendChild(s) }
   const lid = id => (leden() || []).find(l => l.id === id)
   const naam = id => id === ik ? T('Jij') : (lid(id) ? naamVan(lid(id)) : '?')
@@ -90,6 +94,7 @@ export function maakGroepKaartspel({ ik, groepId, kanaal, leden, naamVan, toast 
     if (!studioSpel(spel)) return
     lobby = { sessie: nieuweSessie(), spel, host: ik, spelers: [ik], computers: 0 }
     stuur('open', { sessie: lobby.sessie, spel })
+    try { meldPush?.(spel, lobby.sessie) } catch (e) { console.warn('[groepkaartspel] push', e) }
     toonLobby()
   }
 
@@ -187,6 +192,8 @@ export function maakGroepKaartspel({ ik, groepId, kanaal, leden, naamVan, toast 
   // ── Wat er over het groepskanaal binnenkomt (event 'gs') ──
   function ontvang(p) {
     if (!p || typeof p !== 'object' || !GELDIG.test(String(p.van)) || p.van === ik || !lid(p.van)) return
+    // iemand opent net de groep (bijvoorbeeld via de pushmelding): mijn open wachtkamer nog eens laten zien
+    if (p.e === 'hallo') { if (lobby && lobby.host === ik) { stuur('open', { sessie: lobby.sessie, spel: lobby.spel }); stuurLobby() } return }
     const sessie = typeof p.sessie === 'string' && /^[0-9a-z]{6,24}$/.test(p.sessie) ? p.sessie : null
     if (!sessie) return
     if (p.e === 'g') {          // spelverkeer
@@ -223,5 +230,6 @@ export function maakGroepKaartspel({ ik, groepId, kanaal, leden, naamVan, toast 
   }
   const schoonRooster = r => r.slice(0, MAX).map(x => x && x.computer ? { computer: true } : { id: String(x && x.id) }).filter(x => x.computer || GELDIG.test(x.id))
 
-  return { kies, ontvang, bezig: () => Boolean(lopend), _staat: () => ({ lobby, lopend: Boolean(lopend), uitnodigingen: [...uitnodigingen.keys()] }) }
+  const hallo = () => stuur('hallo', {})
+  return { kies, ontvang, hallo, bezig: () => Boolean(lopend), _staat: () => ({ lobby, lopend: Boolean(lopend), uitnodigingen: [...uitnodigingen.keys()] }) }
 }

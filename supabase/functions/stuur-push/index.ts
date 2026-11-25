@@ -45,6 +45,12 @@
 // "👋 Lotte wil vrienden worden" naar wie gevraagd wordt; een tik opent Vrienden (daar staat Ja / Nee). Alleen als het
 // verzoek nog open en vers is, geen van beiden geblokkeerd is en er geen blokkade tussen hen is; hoogstens een keer per
 // verzoek (push_log). Valt onder 'Vrienden' in ☰ > Pushmeldingen.
+// groepspel (25 nov 2026): { groep_spel: { groep_id, spel, sessie } } met inlogpas. Iemand opent in de groepschat een
+// kaartspel: de andere leden krijgen "🎲 Marcel wil Eenendertigen spelen in de groep". Alleen als de afzender lid is
+// van die groep en niet geblokkeerd; niet naar wie hem persoonlijk blokkeerde of 'Spellen' uitzette. Dezelfde persoon in
+// dezelfde groep hoogstens eens per 2 minuten (push_log). Een tik opent de groep (de uitnodiging komt dan bovenin).
+// Leeft 10 minuten. Ook: spellen uit Stekky Studio die de server nog niet kent, heten "een spel" (zo komt een
+// uitnodiging voor een nieuw spel uit de chat toch binnen).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7"; // vaste versie: een nieuwere geeft geen 'default' (boot error 10 nov 2026)
 
@@ -82,6 +88,10 @@ const TEKSTEN: Record<string, Record<string, Tekst>> = {
   spel: {
     nl: { title: "Stekky", body: "🎮 {naam} daagt je uit voor {spel}!" },
     en: { title: "Stekky", body: "🎮 {naam} challenges you to {spel}!" },
+  },
+  groepspel: {
+    nl: { title: "Stekky", body: "🎲 {naam} wil {spel} spelen in de groep" },
+    en: { title: "Stekky", body: "🎲 {naam} wants to play {spel} in the group" },
   },
   "spel-gemist": {
     nl: { title: "Stekky", body: "🎮 {naam} wilde {spel} met je spelen" },
@@ -143,21 +153,28 @@ const SPELNAMEN: Record<string, { nl: string; en: string }> = {
   swarm: { nl: "The Swarm", en: "The Swarm" }, pacman: { nl: "Ghost Tag", en: "Ghost Tag" },
   endlessrunner: { nl: "Runner & Gunner", en: "Runner & Gunner" }, pinball: { nl: "Twin Snakes", en: "Twin Snakes" },
   breakout: { nl: "Block It", en: "Block It" }, shmup: { nl: "Neon Raiders", en: "Neon Raiders" },
+  eenendertigen: { nl: "Eenendertigen", en: "Thirty-One" }, // 25 nov 2026: uit Stekky Studio
 };
+// 25 nov 2026: een spel uit Stekky Studio dat hier nog niet staat (alleen letters en cijfers): "een spel"
+const STUDIO_ID = /^[a-z][a-z0-9]{1,39}$/;
+const ONBEKEND_SPEL = { nl: "een spel", en: "a game" };
+const spelBekend = (spel: unknown) => typeof spel === "string" && (Object.hasOwn(SPELNAMEN, spel) || STUDIO_ID.test(spel));
+const spelNaam = (spel: string, taal: "nl" | "en") => (Object.hasOwn(SPELNAMEN, spel) ? SPELNAMEN[spel] : ONBEKEND_SPEL)[taal];
+const GROEPSPEL_RUST_MS = 2 * 60 * 1000;
 const SESSIE = /^[A-Za-z0-9_-]{1,64}$/;
 const SPEL_RECENT_MS = 3 * 60 * 60 * 1000, GEMIST_RECENT_MS = 30 * 60 * 1000;
 // 'spelinvite:<spel>:<van>:<sessie>' -> { spel, van, sessie } of null
 function leesUitnodiging(inhoud: unknown) {
   if (typeof inhoud !== "string" || !inhoud.startsWith("spelinvite:")) return null;
   const [, spel, van, sessie] = inhoud.split(":");
-  if (!Object.hasOwn(SPELNAMEN, spel) || !UUID.test(van || "") || !SESSIE.test(sessie || "")) return null;
+  if (!spelBekend(spel) || !UUID.test(van || "") || !SESSIE.test(sessie || "")) return null;
   return { spel, van, sessie };
 }
 const IEMAND: Record<string, string> = { nl: "Iemand", en: "Someone" };
 
 // v266: welke meldingen kun je uitzetten (soort -> groep in chat_instellingen.push_uit). Niet: bericht en bellen.
 const PUSH_GROEP: Record<string, string> = {
-  buzz: "buzz", spel: "spel", "spel-gemist": "spel", "spel-verlaten": "spel", "vriend-nieuw": "vriend", vriendverzoek: "vriend",
+  buzz: "buzz", spel: "spel", groepspel: "spel", "spel-gemist": "spel", "spel-verlaten": "spel", "vriend-nieuw": "vriend", vriendverzoek: "vriend",
   gastenboek: "gastenboek", like: "like", online: "online",
 };
 // Heeft de ontvanger deze soort uitgezet? Lukt het opzoeken niet (kolom bestaat nog niet), dan gewoon sturen.
@@ -531,6 +548,9 @@ Deno.serve(async (req) => {
       return await meldOnline(supabase, id);
     }
 
+    // 25 nov 2026: iemand opent een kaartspel in de groepschat (met inlogpas)
+    if (invoer.groep_spel) return await meldGroepSpel(supabase, req, invoer.groep_spel);
+
     if (!receiver_id && type !== "moderatie") throw new Error("receiver_id ontbreekt");
 
     // 1. Wie stuurt er? Alleen met een geldige inlogpas.
@@ -547,7 +567,7 @@ Deno.serve(async (req) => {
     // v257: gemiste uitnodiging en verlaten spel: alleen als er echt een uitnodiging tussen jullie was
     if (type === "spel-gemist" || type === "spel-verlaten") {
       const spel = String(invoer.spel || "");
-      if (!Object.hasOwn(SPELNAMEN, spel)) return antwoord({ ok: false, reden: "onbekend spel" }, 400);
+      if (!spelBekend(spel)) return antwoord({ ok: false, reden: "onbekend spel" }, 400);
       const gemist = type === "spel-gemist";
       const sinds = new Date(Date.now() - (gemist ? GEMIST_RECENT_MS : SPEL_RECENT_MS)).toISOString();
       let q = supabase.from("messages").select("id").like("content", "spelinvite:" + spel + ":%").gte("created_at", sinds);
@@ -585,6 +605,64 @@ Deno.serve(async (req) => {
     return antwoord({ error: String(e) }, 500);
   }
 });
+
+// 25 nov 2026: een vast id (uuid-vorm) voor het slot in push_log: deze persoon, deze groep, dit blok van 2 minuten
+async function slotId(tekst: string): Promise<string> {
+  const h = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(tekst)))].map((b) => b.toString(16).padStart(2, "0")).join("");
+  return h.slice(0, 8) + "-" + h.slice(8, 12) + "-4" + h.slice(13, 16) + "-8" + h.slice(17, 20) + "-" + h.slice(20, 32);
+}
+
+// 25 nov 2026: "🎲 Marcel wil Eenendertigen spelen in de groep" naar de andere leden van de groep
+async function meldGroepSpel(supabase: any, req: Request, v: any) {
+  const groepId = String(v && v.groep_id || ""), spel = String(v && v.spel || "");
+  if (!UUID.test(groepId)) return antwoord({ ok: false, reden: "ongeldige groep" }, 400);
+  if (!spelBekend(spel)) return antwoord({ ok: false, reden: "onbekend spel" }, 400);
+  const pas = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  let afzender: string | null = null;
+  if (pas) { const { data } = await supabase.auth.getUser(pas); afzender = data && data.user ? data.user.id : null; }
+  if (!afzender) return antwoord({ ok: false, reden: "niet ingelogd" }, 401);
+  const { data: afz } = await supabase.from("profiles").select("username, geblokkeerd").eq("id", afzender).maybeSingle();
+  if (!afz || afz.geblokkeerd) return antwoord({ ok: false, reden: "geblokkeerd" }, 403);
+  const { data: leden, error: fl } = await supabase.from("groep_leden").select("user_id").eq("groep_id", groepId);
+  if (fl) throw fl;
+  const alle = (leden || []).map((l: any) => l.user_id);
+  if (!alle.includes(afzender)) return antwoord({ ok: false, reden: "geen lid" }, 403);
+  let ids = alle.filter((u: string) => u !== afzender);
+  if (ids.length) {
+    const { data: blokkers } = await supabase.from("mijn_blokkades").select("blokkeerder_id")
+      .eq("geblokkeerde_id", afzender).in("blokkeerder_id", ids);
+    const weg = new Set((blokkers || []).map((r: any) => r.blokkeerder_id));
+    ids = ids.filter((u: string) => !weg.has(u));
+  }
+  if (!ids.length) return antwoord({ ok: true, verstuurd: 0 });
+  if (!(await pakSlot(supabase, await slotId("groepspel:" + groepId + ":" + afzender + ":" + Math.floor(Date.now() / GROEPSPEL_RUST_MS))))) {
+    return antwoord({ ok: true, verstuurd: 0, reden: "net al gemeld" });
+  }
+  const { data: profielen } = await supabase.from("profiles").select("id, taal, geblokkeerd").in("id", ids);
+  webpush.setVapidDetails("mailto:fibro.contact@proton.me", Deno.env.get("VAPID_PUBLIC_KEY"), Deno.env.get("VAPID_PRIVATE_KEY"));
+  let verstuurd = 0;
+  for (const p of profielen || []) {
+    if (p.geblokkeerd || await staatUit(supabase, p.id, "groepspel")) continue;
+    const taal = p.taal === "en" ? "en" : "nl";
+    const naam = String(afz.username || IEMAND[taal]).slice(0, 40);
+    const payload = JSON.stringify({
+      title: TEKSTEN.groepspel[taal].title,
+      body: TEKSTEN.groepspel[taal].body.replace("{naam}", naam).replace("{spel}", spelNaam(spel, taal)),
+      url: "/Fibro/groep.html?id=" + encodeURIComponent(groepId), type: "groepspel", tag: "groepspel-" + groepId,
+    });
+    const { data: subs } = await supabase.from("push_subscriptions").select("id, subscription").eq("user_id", p.id);
+    for (const rij of subs || []) {
+      try {
+        await webpush.sendNotification(rij.subscription, payload, { TTL: 10 * 60 });
+        verstuurd++;
+      } catch (e) {
+        console.error("Push fout:", e && (e as any).statusCode ? (e as any).statusCode : e);
+        if (e && ((e as any).statusCode === 404 || (e as any).statusCode === 410)) await supabase.from("push_subscriptions").delete().eq("id", rij.id);
+      }
+    }
+  }
+  return antwoord({ ok: true, verstuurd });
+}
 
 // Een melding van afzender aan een vriend (bericht, buzz, oproep, gemist). Alleen naar een vriend, niet als de
 // afzender geblokkeerd is; tekst in de taal van de ontvanger.
@@ -645,14 +723,14 @@ async function stuurVriendMelding(supabase: any, afzender: string, receiver_id: 
     const tekst = TEKSTEN[soort][taal];
     const naam = String(ik.username || IEMAND[taal]).slice(0, 40);
     const bellen = soort === "oproep" || soort === "oproep-video";
-    const spelNaam = uitn && SPELNAMEN[uitn.spel] ? SPELNAMEN[uitn.spel][taal] : "";
+    const naamVanSpel = uitn && spelBekend(uitn.spel) ? spelNaam(uitn.spel, taal) : "";
     const isSpel = soort === "spel" || soort === "spel-gemist" || soort === "spel-verlaten";
-    if (isSpel && !spelNaam) return antwoord({ ok: false, reden: "onbekend spel" }, 400);
+    if (isSpel && !naamVanSpel) return antwoord({ ok: false, reden: "onbekend spel" }, 400);
     const chat = soort === "bericht" ? await chatMeldingData(supabase, receiver_id, taal, berichtId) : null;
     if (chat?.chatTeller?.aantal === 0) return antwoord({ ok: true });
     const melding: Record<string, string> = {
       title: tekst.title,
-      body: tekst.body.replace("{naam}", naam).replace("{spel}", spelNaam)
+      body: tekst.body.replace("{naam}", naam).replace("{spel}", naamVanSpel)
         .replace("{emoji}", like ? like.emoji : "").replace("{wat}", like && LIKE_WAT[like.soort] ? LIKE_WAT[like.soort][taal] : ""),
       url: bellen
         ? "/Fibro/bellen.html?vriend=" + encodeURIComponent(afzender) + "&naam=" + encodeURIComponent(naam) +

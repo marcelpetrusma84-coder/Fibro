@@ -17,7 +17,7 @@
 //
 // Opslag: localStorage 'mastodon_<uid>' = JSON { account: { naam, server }, profiel: { naam, vak }, berichten:
 // [{ tekst, cw, link, datum, vak }], bijgewerkt, fotoId, plaatjes } (hoogstens 8 berichten).
-import { maakOphaler, netteLink, netteFeedUrl, netteSprite, fotoHash, verkleinInBrowser, wanneer } from './rsswidget.js?v=3'
+import { maakOphaler, netteLink, netteFeedUrl, netteSprite, fotoHash, verkleinInBrowser, wanneer } from './rsswidget.js?v=5'
 export { maakOphaler }
 
 Object.assign(window.FIBRO_EN ||= {}, {

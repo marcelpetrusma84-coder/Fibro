@@ -16,7 +16,7 @@ import { controleerOnderdeel, inhoudHash, isNieuwer } from './profielhandtekenin
 import { controleerVriendLijst, VRIEND_SLEUTEL } from './profielbundel.js?v=2'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-const KLEIN = ['quote', 'aftel', 'optel', 'poll', 'quiz', 'peertube', 'muziekwidget', 'radio', 'rss', 'mastodon', 'weer'] // v2: peertube.js; v3 (18 nov 2026): muziekwidget.js; v4: hun achtergrond (wbg_) ook; v5: de radio; v6 (19 nov 2026): de RSS-widget; v7: zijn fotootjes (wbg_rss); v8: de Mastodon-widget en zijn fotootjes; v9: de weer-widget
+const KLEIN = ['quote', 'aftel', 'optel', 'poll', 'quiz', 'peertube', 'muziekwidget', 'radio', 'rss', 'mastodon', 'weer', 'mix'] // v10 (25 nov 2026): kant-en-klare widgets (layouts.js) // v2: peertube.js; v3 (18 nov 2026): muziekwidget.js; v4: hun achtergrond (wbg_) ook; v5: de radio; v6 (19 nov 2026): de RSS-widget; v7: zijn fotootjes (wbg_rss); v8: de Mastodon-widget en zijn fotootjes; v9: de weer-widget
 export const MAX_AANBOD = 30          // hoogstens zoveel profielen per verbinding
 const DEELT_GELDIG_MS = 10 * 60 * 1000
 
@@ -30,7 +30,7 @@ export function isGoedeInhoud(naam, d) {
   if (typeof d !== 'string' || !d) return false
   if (naam === 'layout') return d.length <= 60000
   if (naam === 'video_meta') return d.length <= 400000
-  if (KLEIN.includes(naam)) return d.length <= (naam === 'quiz' ? 40000 : 20000)
+  if (KLEIN.includes(naam)) return d.length <= (naam === 'mix' ? 120000 : naam === 'quiz' ? 40000 : 20000)
   if (naam.startsWith('foto_') || naam.startsWith('wbg_')) return d.startsWith('data:image')
   if (naam === 'muziek_index') return d.length <= 200000
   if (naam.startsWith('muziek_')) return d.startsWith('data:audio')

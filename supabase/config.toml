@@ -15,3 +15,10 @@ entrypoint = "./functions/stuur-push/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/rss-ophalen/index.ts"
+
+# 25 nov 2026: liken en reageren met je eigen fediverse-account (fediverse.js, peertube.js). De functie controleert zelf
+# of je ingelogd bent (auth.getUser).
+[functions.fediverse]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/fediverse/index.ts"

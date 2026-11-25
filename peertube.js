@@ -3,6 +3,14 @@
 // en peertube.beeldengeluid.nl (het open archief van Beeld & Geluid).
 // v3 (18 nov 2026): titel en miniatuur ophalen bij het opslaan (haalInfo, voorbeeldplaatje.js). Alleen op het toestel
 // van de eigenaar; de miniatuur wordt de achtergrond van het kaartje en gaat via sync naar vrienden.
+// v6 (25 nov 2026): weergave 'carrousel' (layouts.js): de video's naast elkaar om doorheen te vegen, de middelste groot,
+// met miniaturen. De miniaturen haalt alleen het toestel van de eigenaar op (maakSprite) en worden één klein plaatje in de
+// widget (cfg.sprite, hoogstens 40 kB), dat via sync naar vrienden gaat: vrienden maken dus nog steeds geen verbinding.
+// v5 (25 nov 2026): onder de speler Liken en Reageren met je eigen fediverse-account (optie acties, fediverse.js).
+// v4 (25 nov 2026): categorieën. In plaats van één video kies je een server en vink je categorieën aan (bijvoorbeeld
+// Gaming). JOUW toestel vraagt die server om de nieuwste video's in die categorieën (alleen video's van de server zelf,
+// geen 18+), en bewaart de titels in de widget. Die lijst gaat via sync naar vrienden: vrienden praten met niemand tot
+// ze op een video tikken, net als bij één video. Op Home ververst de lijst vanzelf als hij ouder is dan een uur.
 //
 // In gewone woorden: je plakt een link naar een PeerTube-video. Op je profiel (en bij je vrienden) staat dan een
 // rustig kaartje met "▶ Afspelen". Pas als iemand daarop tikt, maakt zijn toestel verbinding met de PeerTube-server.
@@ -14,13 +22,16 @@
 //    andere externe links in Stekky. Ook de link onder in de speler staat uit (peertubeLink=0).
 //  - er gaat geen "van welke pagina kom je"-informatie mee (referrerpolicy no-referrer).
 //
-// Opslag: localStorage 'peertube_<uid>' = JSON { server, id, titel }. Vrienden krijgen hem via sync.js
+// Opslag: localStorage 'peertube_<uid>' = JSON { server, id, titel }, of (v4) { server, soort: 'categorie', cats: [7],
+// videos: [{ id, titel, duur, kanaal }], id (= de eerste video, voor de miniatuur en voor oudere versies), titel, bijgewerkt }. Vrienden krijgen hem via sync.js
 // ('klein:peertube'), net als de quote. Wat binnenkomt van een vriend gaat altijd eerst door normaliseer().
 //
 // Gebruik:
 //   leesLink(tekst)                          -> { server, id } of { fout }
 //   normaliseer(cfg)                         -> { server, id, titel } of null
 //   speelUrl(cfg)                            -> de embed-link met alle privacy-instellingen
+//   categorieUrl(server, cats)               -> het API-adres voor de nieuwste video's in die categorieën (v4)
+//   haalCategorie(cfg, { fetch })            -> { videos } of { fout } (v4)
 //   tekenPeertubeWidget(el, { cfg, eigen, bewaar })
 
 import { haalJson, plaatjeOpServer, maakPlaatje } from './voorbeeldplaatje.js?v=1'
@@ -38,6 +49,19 @@ Object.assign(window.FIBRO_EN ||= {}, {
   'Deze server staat (nog) niet in de lijst: {server}': 'This server is not on the list (yet): {server}',
   'Dit is geen link naar één video.': 'This is not a link to a single video.',
   'Afspeellijsten kunnen nog niet, kies één video.': 'Playlists are not supported yet, choose a single video.',
+  // v4: categorieën
+  '🎮 Categorie kiezen': '🎮 Choose a category', 'Eén video': 'One video', 'Categorieën': 'Categories',
+  'Server': 'Server', 'Vink een of meer categorieën aan': 'Tick one or more categories',
+  'Vink eerst een categorie aan.': 'Tick a category first.',
+  'Hoogstens {n} categorieën.': 'At most {n} categories.',
+  'De server gaf geen antwoord. Probeer het later nog eens.': 'The server did not answer. Please try again later.',
+  'Nog geen video\'s in deze categorie op {server}.': 'No videos in this category on {server} yet.',
+  'Nieuwste video\'s van {server}': 'Latest videos from {server}',
+  '← Terug naar de lijst': '← Back to the list',
+  'Muziek': 'Music', 'Films': 'Films', 'Voertuigen': 'Vehicles', 'Kunst': 'Art', 'Sport': 'Sports', 'Reizen': 'Travel',
+  'Gaming': 'Gaming', 'Mensen': 'People', 'Humor': 'Comedy', 'Vermaak': 'Entertainment', 'Nieuws en politiek': 'News & politics',
+  'Hoe doe je dat': 'How to', 'Onderwijs': 'Education', 'Actie en protest': 'Activism', 'Wetenschap en techniek': 'Science & technology',
+  'Dieren': 'Animals', 'Kinderen': 'Kids', 'Eten': 'Food',
 })
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 
@@ -46,6 +70,16 @@ export const SERVERS = ['framatube.org', 'tilvids.com', 'video.blender.org', 'tu
   'spectra.video', 'makertube.net', 'peertube.beeldengeluid.nl'] // v2
 
 const MAX_TITEL = 80
+// v4: de vaste categorieën van PeerTube (nummer, plaatje, naam). Elke PeerTube-server gebruikt deze nummers.
+export const CATEGORIEEN = [[7, '🎮', 'Gaming'], [1, '🎵', 'Muziek'], [10, '🎉', 'Vermaak'], [9, '😂', 'Humor'], [2, '🎞️', 'Films'],
+  [4, '🎨', 'Kunst'], [15, '🔬', 'Wetenschap en techniek'], [13, '📚', 'Onderwijs'], [12, '🛠️', 'Hoe doe je dat'], [11, '📰', 'Nieuws en politiek'],
+  [5, '⚽', 'Sport'], [6, '✈️', 'Reizen'], [3, '🚗', 'Voertuigen'], [8, '🙂', 'Mensen'], [14, '✊', 'Actie en protest'], [16, '🐾', 'Dieren'],
+  [17, '🧸', 'Kinderen'], [18, '🍳', 'Eten']]
+const CAT_NRS = new Set(CATEGORIEEN.map(c => c[0]))
+export const MAX_CATS = 6
+export const MAX_VIDEOS = 8
+export const MAX_SPRITE = 40000, SPRITE_B = 128, SPRITE_H = 72
+const MAX_KANAAL = 40
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const KORT = /^[1-9A-HJ-NP-Za-km-z]{16,24}$/ // de korte code uit /w/... (base58)
 const goedId = id => typeof id === 'string' && (UUID.test(id) || KORT.test(id))
@@ -81,9 +115,87 @@ export function leesLink(invoer) {
 export function normaliseer(cfg) {
   if (!cfg || typeof cfg !== 'object') return null
   const server = typeof cfg.server === 'string' ? cfg.server.toLowerCase() : ''
+  if (cfg.soort === 'categorie') return normaliseerCategorie(cfg, server)
   if (!goedeServer(server) || !goedId(cfg.id)) return null
   return { server, id: cfg.id, titel: tekst(cfg.titel, MAX_TITEL) }
 }
+// v4: een lijst met video's uit categorieën. Alleen bekende categorienummers, alleen nette video-codes.
+function normaliseerCategorie(cfg, server) {
+  if (!goedeServer(server) || !Array.isArray(cfg.cats)) return null
+  const cats = [...new Set(cfg.cats.filter(n => Number.isInteger(n) && CAT_NRS.has(n)))].slice(0, MAX_CATS)
+  if (!cats.length) return null
+  const videos = (Array.isArray(cfg.videos) ? cfg.videos : []).filter(v => v && typeof v === 'object' && goedId(v.id)).slice(0, MAX_VIDEOS)
+    .map(v => ({ id: v.id, titel: tekst(v.titel, MAX_TITEL), duur: Number.isInteger(v.duur) && v.duur >= 0 && v.duur < 360000 ? v.duur : 0, kanaal: tekst(v.kanaal, MAX_KANAAL) }))
+  const uit = { server, soort: 'categorie', cats, videos, titel: tekst(cfg.titel, MAX_TITEL), bijgewerkt: Number.isFinite(cfg.bijgewerkt) ? cfg.bijgewerkt : 0 }
+  if (videos.length) uit.id = videos[0].id // de miniatuur van de nieuwste video; oudere versies tonen die als één video
+  // v6: de miniaturen als één plaatje (onder elkaar, in de volgorde van de video's)
+  if (typeof cfg.sprite === 'string' && cfg.sprite.length <= MAX_SPRITE && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(cfg.sprite) &&
+    Number.isInteger(cfg.spriteN) && cfg.spriteN === videos.length && videos.length) { uit.sprite = cfg.sprite; uit.spriteN = cfg.spriteN }
+  return uit
+}
+export const isCategorie = cfg => !!cfg && cfg.soort === 'categorie'
+export function categorieNaam(cats) {
+  return (cats || []).map(n => CATEGORIEEN.find(c => c[0] === n)).filter(Boolean).map(c => c[1] + ' ' + T(c[2])).join(' · ')
+}
+
+// v4: het API-adres voor de nieuwste video's in deze categorieën. Alleen video's van de server zelf (isLocal: geen
+// video's van servers die niet in onze lijst staan) en geen 18+ (nsfw=false).
+export function categorieUrl(server, cats) {
+  const s = String(server || '').toLowerCase()
+  if (!goedeServer(s)) return null
+  const nrs = (cats || []).filter(n => CAT_NRS.has(n)).slice(0, MAX_CATS)
+  if (!nrs.length) return null
+  const q = new URLSearchParams()
+  for (const n of nrs) q.append('categoryOneOf', String(n))
+  q.set('sort', '-publishedAt'); q.set('count', String(MAX_VIDEOS)); q.set('nsfw', 'false'); q.set('isLocal', 'true')
+  return 'https://' + s + '/api/v1/videos?' + q.toString()
+}
+export async function haalCategorie(cfg, opties = {}) {
+  const url = cfg && categorieUrl(cfg.server, cfg.cats)
+  if (!url) return { fout: T('Vink eerst een categorie aan.') }
+  const d = await haalJson(url, opties)
+  if (!d || typeof d !== 'object' || !Array.isArray(d.data)) return { fout: T('De server gaf geen antwoord. Probeer het later nog eens.') }
+  const ruw = d.data.filter(v => v && typeof v === 'object' && !v.isLive).map(v => ({
+    id: goedId(v.shortUUID) ? v.shortUUID : v.uuid, titel: v.name, duur: Math.round(Number(v.duration) || 0),
+    kanaal: (v.channel && (v.channel.displayName || v.channel.name)) || '',
+    plaatje: plaatjeOpServer(v.thumbnailPath, String(cfg.server).toLowerCase()) || plaatjeOpServer(v.previewPath, String(cfg.server).toLowerCase()),
+  }))
+  const c = normaliseer({ server: cfg.server, soort: 'categorie', cats: cfg.cats, videos: ruw })
+  const videos = c ? c.videos : []
+  // v6: per video het adres van de miniatuur (op dezelfde server), voor maakSprite
+  return { videos, plaatjes: videos.map(v => (ruw.find(r => r.id === v.id) || {}).plaatje || null) }
+}
+
+// v6: de miniaturen tot één plaatje (onder elkaar, elk 128 x 72). Alleen op het toestel van de eigenaar (Home).
+// Een miniatuur die niet lukt wordt een donker vak. Geeft { sprite, spriteN } of {} (te groot of niets gelukt).
+export async function maakSprite(plaatjes, { fetch: f = globalThis.fetch } = {}) {
+  if (!Array.isArray(plaatjes) || !plaatjes.length || typeof document === 'undefined') return {}
+  const cv = document.createElement('canvas')
+  cv.width = SPRITE_B; cv.height = SPRITE_H * plaatjes.length
+  const x = cv.getContext('2d')
+  x.fillStyle = '#1a0a2e'; x.fillRect(0, 0, cv.width, cv.height)
+  let gelukt = 0
+  for (let i = 0; i < plaatjes.length; i++) {
+    if (!plaatjes[i]) continue
+    try {
+      const p = await maakPlaatje(plaatjes[i], { fetch: f, max: 256 })
+      if (!p) continue
+      const img = await new Promise((ok, mis) => { const im = new Image(); im.onload = () => ok(im); im.onerror = mis; im.src = p.data })
+      const schaal = Math.max(SPRITE_B / img.width, SPRITE_H / img.height) // vullen en bijsnijden
+      const w = img.width * schaal, h = img.height * schaal
+      x.save(); x.beginPath(); x.rect(0, i * SPRITE_H, SPRITE_B, SPRITE_H); x.clip()
+      x.drawImage(img, (SPRITE_B - w) / 2, i * SPRITE_H + (SPRITE_H - h) / 2, w, h); x.restore()
+      gelukt++
+    } catch (e) { /* een donker vak */ }
+  }
+  if (!gelukt) return {}
+  for (const kw of [0.7, 0.55, 0.4]) {
+    const data = cv.toDataURL('image/jpeg', kw)
+    if (data.length <= MAX_SPRITE) return { sprite: data, spriteN: plaatjes.length }
+  }
+  return {}
+}
+const duurTekst = s => { if (!s) return ''; const u = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = String(s % 60).padStart(2, '0'); return u ? u + ':' + String(m).padStart(2, '0') + ':' + x : m + ':' + x }
 
 // De link voor de speler: zonder delen tussen kijkers, zonder link naar PeerTube, meteen spelen (er is net getikt)
 export function speelUrl(cfg) {
@@ -97,12 +209,12 @@ export function speelUrl(cfg) {
 // { data, breedte, hoogte }); wat niet lukt, ontbreekt.
 export async function haalInfo(cfg, opties = {}) {
   const c = normaliseer(cfg)
-  if (!c) return {}
+  if (!c || !c.id) return {}
   const d = await haalJson('https://' + c.server + '/api/v1/videos/' + encodeURIComponent(c.id), opties)
   if (!d || typeof d !== 'object') return {}
   const uit = {}
   const titel = tekst(d.name, MAX_TITEL)
-  if (titel) uit.titel = titel
+  if (titel && !isCategorie(c)) uit.titel = titel // v4: een lijst houdt zijn eigen naam
   const adres = plaatjeOpServer(d.previewPath, c.server) || plaatjeOpServer(d.thumbnailPath, c.server)
   if (adres) { const p = await maakPlaatje(adres, opties); if (p) uit.plaatje = p }
   return uit
@@ -124,7 +236,8 @@ const stop = f => e => { e.stopPropagation(); f() }
 // ── De widget ──
 // cfg: wat er bewaard is (of van de vriend kwam). eigen: je eigen widget (dan kun je kiezen/wijzigen).
 // bewaar(cfgOfNull): slaat op (null = weghalen) en tekent opnieuw.
-export function tekenPeertubeWidget(c, { cfg = null, eigen = false, bewaar = null } = {}) {
+// v5: acties(el, videoUrl) zet onder de speler de knoppen Liken en Reageren (fediverse.js); zonder acties: geen knoppen.
+export function tekenPeertubeWidget(c, { cfg = null, eigen = false, bewaar = null, acties = null, weergave = 'lijst' } = {}) {
   const v = normaliseer(cfg)
   c.querySelectorAll('.ptkaart').forEach(x => x.remove())
   const kaart = el('div', 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%;height:100%;min-height:120px;text-align:center;position:relative;z-index:2')
@@ -136,24 +249,98 @@ export function tekenPeertubeWidget(c, { cfg = null, eigen = false, bewaar = nul
     kaart.appendChild(el('div', 'font-size:30px', '🎬'))
     kaart.appendChild(el('div', 'font-size:13px;color:rgba(255,255,255,0.75)', T('Nog geen video')))
     if (eigen && bewaar) {
+      const rij = el('div', 'display:flex;gap:6px;flex-wrap:wrap;justify-content:center')
       const k = el('button', HOOFDKNOP, T('➕ Video kiezen'))
       k.className = 'pt-kies'
       k.onclick = stop(invoer)
-      kaart.appendChild(k)
+      const kc = el('button', HOOFDKNOP, T('🎮 Categorie kiezen')) // v4
+      kc.className = 'pt-kies-cat'
+      kc.onclick = stop(invoerCategorie)
+      rij.append(k, kc)
+      kaart.appendChild(rij)
     }
+  }
+
+  // v4: bovenaan het invulscherm: kiezen tussen één video en categorieën
+  function soortKeuze(actief) {
+    const rij = el('div', 'display:flex;gap:4px;justify-content:center')
+    for (const [soort, naam, open] of [['video', T('Eén video'), invoer], ['categorie', T('Categorieën'), invoerCategorie]]) {
+      const b = el('button', (soort === actief ? HOOFDKNOP : GRIJSKNOP) + ';padding:5px 12px;font-size:12px', naam)
+      b.className = 'pt-soort'; b.dataset.soort = soort
+      b.setAttribute('aria-pressed', soort === actief ? 'true' : 'false')
+      b.onclick = stop(open)
+      rij.appendChild(b)
+    }
+    return rij
+  }
+  function terugEnWeg(rij) {
+    if (!v) return
+    const terug = el('button', GRIJSKNOP, T('Annuleren'))
+    terug.onclick = stop(() => { kaart.style.alignItems = 'center'; teken() })
+    const weg = el('button', GRIJSKNOP, T('🗑 Weghalen'))
+    weg.className = 'pt-weg'
+    weg.onclick = stop(() => bewaar(null))
+    rij.appendChild(terug); rij.appendChild(weg)
+  }
+
+  // v4: een server kiezen en categorieën aanvinken
+  function invoerCategorie() {
+    kaart.textContent = ''
+    kaart.style.alignItems = 'stretch'
+    kaart.style.justifyContent = 'flex-start'
+    const oud = isCategorie(v) ? v : null
+    const server = el('select', VELD)
+    server.className = 'pt-server'; server.setAttribute('aria-label', T('Server'))
+    for (const s of SERVERS) { const o = el('option', '', s); o.value = s; server.appendChild(o) }
+    server.value = oud ? oud.server : 'spectra.video'
+    server.onclick = e => e.stopPropagation()
+    const vak = el('div', 'display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:4px;max-height:150px;overflow-y:auto;text-align:left')
+    vak.className = 'pt-cats'
+    const gekozen = new Set(oud ? oud.cats : [7])
+    for (const [nr, icoon, naam] of CATEGORIEEN) {
+      const l = el('label', 'display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 4px;border-radius:6px;background:rgba(255,255,255,0.05)')
+      const vink = document.createElement('input')
+      vink.type = 'checkbox'; vink.value = String(nr); vink.checked = gekozen.has(nr)
+      vink.style.accentColor = '#8b3fd1'
+      vink.onchange = () => { if (vink.checked) gekozen.add(nr); else gekozen.delete(nr); melding.textContent = '' }
+      l.onclick = e => e.stopPropagation()
+      l.append(vink, document.createTextNode(icoon + ' ' + T(naam)))
+      vak.appendChild(l)
+    }
+    const melding = el('div', 'font-size:12px;color:#fca5a5;min-height:0')
+    melding.className = 'pt-melding'
+    const rij = el('div', 'display:flex;gap:6px;flex-wrap:wrap;justify-content:center')
+    const ok = el('button', HOOFDKNOP, T('Opslaan ✓'))
+    ok.className = 'pt-opslaan'
+    ok.onclick = stop(async () => {
+      const cats = CATEGORIEEN.map(c => c[0]).filter(n => gekozen.has(n))
+      if (!cats.length) { melding.textContent = T('Vink eerst een categorie aan.'); return }
+      if (cats.length > MAX_CATS) { melding.textContent = T('Hoogstens {n} categorieën.', { n: MAX_CATS }); return }
+      ok.disabled = true; ok.textContent = T('Ophalen…')
+      try {
+        const r = await haalCategorie({ server: server.value, cats })
+        if (r.fout) { melding.textContent = r.fout; return }
+        await bewaar({ server: server.value, soort: 'categorie', cats, videos: r.videos, id: r.videos[0] ? r.videos[0].id : undefined, titel: '', bijgewerkt: Date.now() })
+      } finally { if (ok.isConnected) { ok.disabled = false; ok.textContent = T('Opslaan ✓') } }
+    })
+    rij.appendChild(ok)
+    terugEnWeg(rij)
+    kaart.append(soortKeuze('categorie'), server, el('div', 'font-size:12px;color:rgba(255,255,255,0.75)', T('Vink een of meer categorieën aan')), vak, melding, rij)
   }
 
   function invoer() {
     kaart.textContent = ''
     kaart.style.alignItems = 'stretch'
+    kaart.style.justifyContent = 'center'
+    if (eigen && bewaar) kaart.appendChild(soortKeuze('video')) // v4
     const link = el('input', VELD)
     link.className = 'pt-link'; link.type = 'url'; link.inputMode = 'url'; link.autocomplete = 'off'
     link.placeholder = T('Plak een link naar een PeerTube-video')
-    if (v) link.value = 'https://' + v.server + '/w/' + v.id
+    if (v && !isCategorie(v)) link.value = 'https://' + v.server + '/w/' + v.id
     const titel = el('input', VELD)
     titel.className = 'pt-titel'; titel.maxLength = MAX_TITEL
     titel.placeholder = T('Titel (mag leeg)')
-    if (v) titel.value = v.titel
+    if (v && !isCategorie(v)) titel.value = v.titel
     const melding = el('div', 'font-size:12px;color:#fca5a5;min-height:0')
     melding.className = 'pt-melding'
     const uitleg = el('div', 'font-size:11px;color:rgba(255,255,255,0.6);line-height:1.35', T('Toegestane servers: {lijst}', { lijst: SERVERS.join(', ') }))
@@ -169,14 +356,7 @@ export function tekenPeertubeWidget(c, { cfg = null, eigen = false, bewaar = nul
       finally { if (ok.isConnected) { ok.disabled = false; ok.textContent = T('Opslaan ✓') } }
     })
     rij.appendChild(ok)
-    if (v) {
-      const terug = el('button', GRIJSKNOP, T('Annuleren'))
-      terug.onclick = stop(() => { kaart.style.alignItems = 'center'; toon() })
-      const weg = el('button', GRIJSKNOP, T('🗑 Weghalen'))
-      weg.className = 'pt-weg'
-      weg.onclick = stop(() => bewaar(null))
-      rij.appendChild(terug); rij.appendChild(weg)
-    }
+    terugEnWeg(rij)
     for (const x of [link, titel]) {
       x.onclick = e => e.stopPropagation()
       x.onkeydown = e => { e.stopPropagation(); if (e.key === 'Enter') ok.click() }
@@ -206,16 +386,55 @@ export function tekenPeertubeWidget(c, { cfg = null, eigen = false, bewaar = nul
       T('Pas als je op afspelen tikt, maakt je toestel verbinding met {server}.', { server: v.server })))
   }
 
-  // Pas hier wordt er iets van buiten geladen
-  function speler() {
-    const src = speelUrl(v)
-    if (!src) return
+  // v4: de lijst met video's uit de gekozen categorieën. Nog niets van buiten: pas bij een tik op een video.
+  function toonLijst() {
     kaart.textContent = ''
+    kaart.style.alignItems = 'stretch'
+    kaart.style.justifyContent = 'flex-start'
+    const kop = el('div', 'font-size:13px;font-weight:700;text-align:left;line-height:1.3;text-shadow:0 1px 4px rgba(0,0,0,0.7)', v.titel || categorieNaam(v.cats))
+    kop.className = 'pt-lijstkop'
+    kaart.appendChild(kop)
+    kaart.appendChild(el('div', 'font-size:11px;color:rgba(255,255,255,0.65);text-align:left;margin-top:-4px', T('Nieuwste video\'s van {server}', { server: v.server })))
+    const lijst = el('div', 'display:flex;flex-direction:column;gap:4px;overflow-y:auto;min-height:0;flex:1')
+    lijst.className = 'pt-lijst'
+    if (!v.videos.length) lijst.appendChild(el('div', 'font-size:12px;color:rgba(255,255,255,0.7);padding:8px 0', T('Nog geen video\'s in deze categorie op {server}.', { server: v.server })))
+    for (const video of v.videos) {
+      const b = el('button', 'display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:rgba(0,0,0,0.45);border:0.5px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 8px;color:#fff;cursor:pointer;font-family:inherit')
+      b.className = 'pt-video'; b.dataset.id = video.id
+      b.appendChild(el('span', 'font-size:14px;color:var(--accent,#c084fc);flex:none', '▶'))
+      const tk = el('span', 'flex:1;min-width:0')
+      tk.appendChild(el('span', 'display:block;font-size:12px;font-weight:600;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', video.titel || T('PeerTube-video')))
+      const sub = [video.kanaal, duurTekst(video.duur)].filter(Boolean).join(' · ')
+      if (sub) tk.appendChild(el('span', 'display:block;font-size:11px;color:rgba(255,255,255,0.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap', sub))
+      b.appendChild(tk)
+      b.onclick = stop(() => speler(video))
+      lijst.appendChild(b)
+    }
+    kaart.appendChild(lijst)
+    const voet = el('div', 'display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center')
+    voet.appendChild(el('div', 'font-size:10px;color:rgba(255,255,255,0.5);line-height:1.3;flex:1;min-width:150px;text-align:left',
+      T('Pas als je op afspelen tikt, maakt je toestel verbinding met {server}.', { server: v.server })))
+    if (eigen && bewaar) {
+      const w = el('button', GRIJSKNOP + ';padding:6px 10px;font-size:12px', T('✏️ Wijzigen'))
+      w.className = 'pt-wijzig'
+      w.onclick = stop(invoerCategorie)
+      voet.appendChild(w)
+    }
+    kaart.appendChild(voet)
+  }
+
+  // Pas hier wordt er iets van buiten geladen
+  function speler(video) {
+    const src = speelUrl(video ? { server: v.server, id: video.id } : v)
+    if (!src) return
+    const titelSpeler = (video && video.titel) || v.titel
+    kaart.textContent = ''
+    kaart.style.overflowY = 'auto'
     kaart.style.justifyContent = 'flex-start'
     const kader = el('div', 'position:relative;flex-shrink:0;width:100%;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#000')
     const f = document.createElement('iframe')
     f.className = 'pt-speler'
-    f.title = v.titel || T('PeerTube-video')
+    f.title = titelSpeler || T('PeerTube-video')
     f.setAttribute('sandbox', 'allow-scripts allow-same-origin')
     f.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture')
     f.setAttribute('allowfullscreen', '')
@@ -224,12 +443,72 @@ export function tekenPeertubeWidget(c, { cfg = null, eigen = false, bewaar = nul
     f.src = src
     kader.appendChild(f)
     kaart.appendChild(kader)
-    const dicht = el('button', GRIJSKNOP + ';padding:6px 12px;font-size:12px', T('✕ Stoppen'))
+    const dicht = el('button', GRIJSKNOP + ';padding:6px 12px;font-size:12px', video ? T('← Terug naar de lijst') : T('✕ Stoppen'))
     dicht.className = 'pt-stop'
-    dicht.onclick = stop(() => { kaart.style.justifyContent = 'center'; toon() }) // iframe weg = verbinding weg
+    dicht.onclick = stop(() => { kaart.style.justifyContent = 'center'; teken() }) // iframe weg = verbinding weg
+    // v5: liken en reageren met je eigen fediverse-account (alleen als de pagina dat aanbiedt)
+    if (typeof acties === 'function') {
+      const balk = el('div', 'width:100%')
+      balk.className = 'pt-acties'
+      kaart.appendChild(balk)
+      try { acties(balk, 'https://' + v.server + '/videos/watch/' + ((video && video.id) || v.id)) } catch (e) { balk.remove() }
+    }
     kaart.appendChild(dicht)
   }
 
-  if (v) toon()
-  else leeg()
+  // v6: de video's naast elkaar om doorheen te vegen; de middelste is groot (scroll-snap), tik = afspelen
+  function toonCarrousel() {
+    kaart.textContent = ''
+    kaart.style.alignItems = 'stretch'
+    kaart.style.justifyContent = 'flex-start'
+    const kop = el('div', 'font-size:13px;font-weight:700;text-align:left;line-height:1.3;text-shadow:0 1px 4px rgba(0,0,0,0.7)', v.titel || categorieNaam(v.cats))
+    kop.className = 'pt-lijstkop'
+    kaart.appendChild(kop)
+    if (!v.videos.length) { kaart.appendChild(el('div', 'font-size:12px;color:rgba(255,255,255,0.7);padding:8px 0', T('Nog geen video\'s in deze categorie op {server}.', { server: v.server }))); return }
+    const rij = el('div', 'display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 15%;flex:1;min-height:0;align-items:center;scrollbar-width:none;-webkit-overflow-scrolling:touch')
+    rij.className = 'pt-carrousel'
+    rij.setAttribute('role', 'list')
+    const kaartjes = v.videos.map((video, i) => {
+      const b = el('button', 'flex:0 0 100%;scroll-snap-align:center;display:flex;flex-direction:column;gap:4px;background:none;border:none;padding:0;color:#fff;cursor:pointer;font-family:inherit;text-align:left;transition:transform .2s,opacity .2s;transform:scale(.86);opacity:.6')
+      b.className = 'pt-video pt-dia'; b.dataset.id = video.id; b.setAttribute('role', 'listitem')
+      b.setAttribute('aria-label', T('▶ Afspelen') + ': ' + (video.titel || T('PeerTube-video')))
+      const beeld = el('div', 'position:relative;width:100%;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#8b3fd1,#1a0a2e);box-shadow:0 4px 14px rgba(0,0,0,0.45)')
+      beeld.className = 'pt-dia-beeld'
+      if (v.sprite) { beeld.style.backgroundImage = 'url(' + v.sprite + ')'; beeld.style.backgroundSize = '100% ' + (v.spriteN * 100) + '%'; beeld.style.backgroundPosition = '0 ' + (v.spriteN > 1 ? (i * 100 / (v.spriteN - 1)) : 0) + '%' }
+      beeld.appendChild(el('span', 'position:absolute;inset:auto auto 6px 6px;background:rgba(0,0,0,0.6);border-radius:12px;padding:2px 8px;font-size:12px', '▶' + (video.duur ? ' ' + duurTekst(video.duur) : '')))
+      b.appendChild(beeld)
+      b.appendChild(el('span', 'display:block;font-size:12px;font-weight:600;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', video.titel || T('PeerTube-video')))
+      if (video.kanaal) b.appendChild(el('span', 'display:block;font-size:11px;color:rgba(255,255,255,0.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap', video.kanaal))
+      b.onclick = stop(() => speler(video))
+      rij.appendChild(b)
+      return b
+    })
+    // de middelste (het dichtst bij het midden) groot en helder
+    const midden = () => {
+      const r = rij.getBoundingClientRect(), m = r.left + r.width / 2
+      let best = null, afstand = Infinity
+      for (const k of kaartjes) { const q = k.getBoundingClientRect(), a = Math.abs(q.left + q.width / 2 - m); if (a < afstand) { afstand = a; best = k } }
+      for (const k of kaartjes) { const aan = k === best; k.style.transform = aan ? 'scale(1)' : 'scale(.86)'; k.style.opacity = aan ? '1' : '.6'; k.classList.toggle('pt-midden', aan) }
+    }
+    rij.addEventListener('scroll', () => { if (!rij._wacht) { rij._wacht = true; requestAnimationFrame(() => { rij._wacht = false; midden() }) } }, { passive: true })
+    // zo groot als het vak toelaat: hoogstens 80% van de breedte, en de hoogte (beeld 16:9 plus titel) moet passen;
+    // de randen zo dat de eerste en de laatste ook in het midden kunnen staan
+    const maat = () => {
+      const b = rij.clientWidth, h = rij.clientHeight
+      if (!b) return
+      const breed = Math.max(120, Math.min(b * 0.8, h > 80 ? (h - 46) * 16 / 9 : b * 0.7))
+      for (const k of kaartjes) k.style.flex = '0 0 ' + Math.round(breed) + 'px'
+      const rand = Math.max(0, Math.round((b - breed) / 2))
+      rij.style.paddingLeft = rij.style.paddingRight = rand + 'px'
+      midden()
+    }
+    if (typeof ResizeObserver === 'function') new ResizeObserver(maat).observe(rij)
+    kaart.appendChild(rij)
+    requestAnimationFrame(maat)
+    kaart.appendChild(el('div', 'font-size:10px;color:rgba(255,255,255,0.5);line-height:1.3;text-align:left',
+      T('Pas als je op afspelen tikt, maakt je toestel verbinding met {server}.', { server: v.server })))
+  }
+
+  function teken() { kaart.style.overflowY = ''; if (!v) leeg(); else if (isCategorie(v)) (weergave === 'carrousel' ? toonCarrousel() : toonLijst()); else toon() }
+  teken()
 }

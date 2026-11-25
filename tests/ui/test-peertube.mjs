@@ -66,7 +66,7 @@ const zandbak = [...pt.matchAll(/setAttribute\('sandbox', '([^']*)'\)/g)].map(m 
 assert.deepEqual(zandbak, ['allow-scripts allow-same-origin'], 'de speler kan geen nieuwe vensters openen of de app wegsturen (geen allow-popups / allow-top-navigation)')
 assert.match(pt, /setAttribute\('referrerpolicy', 'no-referrer'\)/)
 assert.equal((pt.match(/createElement\('iframe'\)/g) || []).length, 1, 'er is precies één plek die de speler maakt')
-assert.match(pt, /\/\/ Pas hier wordt er iets van buiten geladen\n  function speler\(\)/, 'de speler alleen in speler(), na een tik')
+assert.match(pt, /\/\/ Pas hier wordt er iets van buiten geladen\n  function speler\(video\)/, 'de speler alleen in speler(), na een tik')
 console.log('PASS: de speler laadt zonder p2p, zonder PeerTube-link, in een afgesloten kader')
 
 // ── Huisregel: precies de goedgekeurde servers ──
@@ -97,8 +97,47 @@ assert.match(lees('profiel.html'), /id="widget-peertube" onclick="toggleWidget\(
 assert.match(lees('profiel.html'), /peertube:\s+\{ id:'peertube'/)
 assert.match(lees('vriend-profiel.html'), /if \(w\.id === 'peertube'\) \{/)
 assert.match(lees('vriend-profiel.html'), /cfg = P\.normaliseer\(JSON\.parse\(ruw\)\)/, 'wat een vriend stuurt gaat door normaliseer')
-for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/peertube\.js\?v=3'\)/)
+for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/peertube\.js\?v=6'\)/)
 const en = lees('taal-en.js')
 for (const t of ['PeerTube', 'Uit de Store: video van PeerTube, laadt pas na een tik', 'Nog geen video', '▶ Afspelen', 'Toegestane servers: {lijst}'])
   assert.ok(en.includes(JSON.stringify(t) + ':'), 'Engels voor: ' + t)
 console.log('PASS: de PeerTube-widget staat op Home, bij vrienden, in Profiel en gaat mee via sync')
+
+// ── v4 (25 nov 2026): categorieën ──
+const cu = new URL(P.categorieUrl('spectra.video', [7, 1]))
+assert.equal(cu.origin + cu.pathname, 'https://spectra.video/api/v1/videos')
+assert.deepEqual(cu.searchParams.getAll('categoryOneOf'), ['7', '1'])
+assert.equal(cu.searchParams.get('isLocal'), 'true', 'alleen video\'s van de server zelf')
+assert.equal(cu.searchParams.get('nsfw'), 'false', 'geen 18+')
+assert.equal(cu.searchParams.get('sort'), '-publishedAt')
+assert.equal(P.categorieUrl('kwaad.nl', [7]), null)
+assert.equal(P.categorieUrl('spectra.video', []), null)
+assert.equal(P.categorieUrl('spectra.video', [99]), null, 'onbekende categorie')
+const cat = P.normaliseer({ server: 'Spectra.Video', soort: 'categorie', cats: [7, 99, 7, 1.5, '1'], titel: ' Mijn  games ', bijgewerkt: 5,
+  videos: [{ id: kort, titel: '  Een   game ', duur: 65, kanaal: ' Kanaal ' }, { id: '../x', titel: 'kwaad' }, { id: uuid, titel: 'twee', duur: -3, kanaal: 'x'.repeat(99) }] })
+assert.deepEqual(cat, { server: 'spectra.video', soort: 'categorie', cats: [7], titel: 'Mijn games', bijgewerkt: 5, id: kort,
+  videos: [{ id: kort, titel: 'Een game', duur: 65, kanaal: 'Kanaal' }, { id: uuid, titel: 'twee', duur: 0, kanaal: 'x'.repeat(40) }] })
+assert.equal(P.normaliseer({ server: 'spectra.video', soort: 'categorie', cats: [99] }), null, 'zonder geldige categorie: niets')
+assert.equal(P.normaliseer({ server: 'kwaad.nl', soort: 'categorie', cats: [7] }), null)
+assert.equal(P.normaliseer({ server: 'spectra.video', soort: 'categorie', cats: [7], videos: Array.from({ length: 20 }, () => ({ id: kort })) }).videos.length, P.MAX_VIDEOS)
+const leeg = P.normaliseer({ server: 'spectra.video', soort: 'categorie', cats: [7], videos: [] })
+assert.ok(leeg && !('id' in leeg) && leeg.videos.length === 0, 'een lege lijst mag (nog geen video\'s)')
+assert.match(P.categorieNaam([7, 1]), /Gaming.*Muziek/)
+// ophalen: alleen dit API-adres, live-uitzendingen eruit, shortUUID of uuid
+const gevraagd2 = []
+const nep2 = async url => { gevraagd2.push(url); return { ok: true, json: async () => ({ total: 3, data: [
+  { shortUUID: kort, uuid, name: 'Nieuw', duration: 125, channel: { displayName: 'Gamekanaal' } },
+  { shortUUID: 'nee', uuid, name: 'Oud', duration: 30, channel: { name: 'kanaal2' } },
+  { shortUUID: kort, uuid, name: 'Live', isLive: true, channel: {} }] }) } }
+const opgehaald = await P.haalCategorie({ server: 'spectra.video', cats: [7] }, { fetch: nep2 })
+assert.deepEqual(gevraagd2, [P.categorieUrl('spectra.video', [7])])
+assert.deepEqual(opgehaald.videos, [{ id: kort, titel: 'Nieuw', duur: 125, kanaal: 'Gamekanaal' }, { id: uuid, titel: 'Oud', duur: 30, kanaal: 'kanaal2' }])
+assert.ok((await P.haalCategorie({ server: 'spectra.video', cats: [7] }, { fetch: async () => ({ ok: false }) })).fout)
+assert.ok((await P.haalCategorie({ server: 'kwaad.nl', cats: [7] }, { fetch: nep2 })).fout)
+// de miniatuur bij een lijst: van de nieuwste video, maar de lijst houdt zijn eigen naam
+const info2 = await P.haalInfo(cat, { fetch: nep })
+assert.equal(info2.titel, undefined, 'een lijst krijgt niet de titel van één video')
+assert.equal(P.speelUrl({ server: 'spectra.video', id: uuid }).startsWith('https://spectra.video/videos/embed/' + uuid + '?p2p=0&peertubeLink=0'), true)
+for (const t of ['🎮 Categorie kiezen', 'Gaming', 'Muziek', 'Wetenschap en techniek', '← Terug naar de lijst', "Nieuwste video's van {server}"])
+  assert.ok(pt.includes(JSON.stringify(t).slice(1, -1).replace(/'/g, "\\'") + "': ") || pt.includes("'" + t.replace(/'/g, "\\'") + "': "), 'Engels voor: ' + t)
+console.log('PASS: categorieën: alleen bekende nummers, alleen eigen video\'s van een goedgekeurde server, geen 18+')

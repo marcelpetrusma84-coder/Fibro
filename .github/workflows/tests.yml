@@ -227,7 +227,7 @@ jobs:
       - name: "PeerTube-widget in de Store: downloaden, op Home, verwijderen (proef315)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef315.py .
-      - name: "Muziek-widget (Bandcamp en Funkwhale): Store, Home, laadt pas na een tik (proef316)"
+      - name: "Muziek-widget (Funkwhale, zonder Bandcamp): Store, Home, laadt pas na een tik (proef316)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef316.py .
       - name: "Titel en plaatje vanzelf bij PeerTube en Funkwhale (proef317)"
@@ -248,9 +248,6 @@ jobs:
       - name: "Radio-skins van Marcel: plaatje, echte zender op het schermpje, werkende knoppen, skin kiezen (proef322)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef322.py .
-      - name: "Weer-widget: plaats kiezen, weer van Open-Meteo, hoogstens elk half uur, vrienden vragen niets (proef324)"
-        if: ${{ !cancelled() }}
-        run: python -I tests/tools/proef324.py .
       - name: "Stekky Studio: plaat knippen, 12 stickers kiezen, pakketbestand maken, alleen moderators (proef325)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef325.py .
@@ -263,3 +260,39 @@ jobs:
       - name: "Registreren: veel meer gebruikersnamen en zelf samenstellen (proef328)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef328.py .
+      - name: "Stekky Studio in het menu voor moderators, stickerkaartjes netjes op de pc (proef329)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef329.py .
+      - name: "Stickerpakket Santa (eerste uit Stekky Studio) staat in de Store (proef330)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef330.py .
+      - name: "PeerTube-widget: categorieen aanvinken, bijvoorbeeld alleen Gaming (proef331)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef331.py .
+      - name: "PeerTube: liken en reageren met je eigen fediverse-account (proef332)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef332.py .
+      - name: "Stekky Studio: widget-layouts maken, in de Store en op Home (proef333)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef333.py .
+      - name: "Stekky Studio: kant-en-klare widgets (vaste PeerTube, RSS kiezen uit de lijst) (proef334)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef334.py .
+      - name: "Stekky Studio: weergaven, video-carrousel met miniaturen en nieuws eronder (proef335)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef335.py .
+      - name: "Niet-commercieel weg: geen weer-widget, geen Bandcamp, geen Regicide in de Store-tekst (proef336)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef336.py .
+      - name: "Stekky Studio: spel maken, installeren, in de Store, op Home en tegen de computer spelen (proef337)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef337.py .
+      - name: "Stekky Studio: speelkaarten maken uit platen, installeren, in de kaarttafel (proef338)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef338.py .
+      - name: "Eenendertigen: met 2 of 3 spelers (gastheer en gasten), levens, volgende ronde, en tegen 1 of 3 computers (proef339)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef339.py .
+      - name: "Kaartspellen met de groep: uitnodigen, wachtkamer, computer erbij, spelen, verlaten (proef340)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef340.py .

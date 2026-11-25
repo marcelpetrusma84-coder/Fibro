@@ -11,11 +11,11 @@
 </script>
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self' https://framatube.org https://tilvids.com https://video.blender.org https://tube.tchncs.de https://diode.zone https://spectra.video https://makertube.net https://peertube.beeldengeluid.nl https://bandcamp.com https://open.audio; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self' https://framatube.org https://tilvids.com https://video.blender.org https://tube.tchncs.de https://diode.zone https://spectra.video https://makertube.net https://peertube.beeldengeluid.nl https://open.audio; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=151"></script>
+<script src="taal.js?v=153"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -148,20 +148,20 @@ body.heeft-wallpaper::before { display:block; }
 <script type="module">
   import { laadThema } from './thema.js?v=238'
   import * as GB from './gastenboekstijl.js?v=2'
-  import { spelIcoonHtml } from './spelicoon.js?v=6' // losse spelplaatjes; v3 vangt ontbrekende plaatjes op
-  import { koppelSpelIcoonFallback } from './spelicoon.js?v=6'
-  import { openSpelMetTitel } from './titelscherm.js?v=13' // v252: titelscherm met muziek meteen bij je tik
+  import { spelIcoonHtml } from './spelicoon.js?v=12' // losse spelplaatjes; v3 vangt ontbrekende plaatjes op
+  import { koppelSpelIcoonFallback } from './spelicoon.js?v=12'
+  import { openSpelMetTitel } from './titelscherm.js?v=19' // v252: titelscherm met muziek meteen bij je tik
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { supabase } from './supabase.js?v=95'
   import { haalVriendFotos } from './vriendfotos.js?v=2'
-  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=266'
+  import { initSync, vraagVriendVideo, lokaleVriendNaam, syncMetVriend } from './sync.js?v=269'
   import { versleutel, haalPrivateKeyOp } from './crypto.js?v=182'
   import { maakProfielLikes, itemVan, openReageerScherm, maakReactieBericht, maakKleinPlaatje } from './profielreacties.js?v=2' // v258
   import { eisSessie, startBewaking } from './sessie.js?v=95'
   import { startMeldingen } from './meldingen.js?v=188'
   import { startHeartbeat } from './heartbeat.js?v=118' // v274: ook hier tel je mee als online
   import { volgOnline, isVriendOnline, bewaarServerStand } from './onlinestip.js?v=2' // v274: nauwkeuriger bolletje
-  import { leesMood, isMoodSticker, tekenMoodSticker } from './moodsticker.js?v=240' // v171: een sticker als mood
+  import { leesMood, isMoodSticker, tekenMoodSticker } from './moodsticker.js?v=242' // v171: een sticker als mood
   koppelSpelIcoonFallback()
   pasBlokstijlToe()
 
@@ -511,6 +511,10 @@ body.heeft-wallpaper::before { display:block; }
         if (gelukt) { grid.appendChild(el); quizWidgetEl = el; continue }
         quizWidgetEl = el // v265b: komt de quiz (of zijn achtergrond) binnen terwijl je kijkt, dan meteen tonen
       }
+      if (String(w.id || '').startsWith('mix_')) { // 25 nov 2026: een widget-layout uit Stekky Studio (layouts.js)
+        const gelukt = await renderVriendMix(el, vriendId, w)
+        if (gelukt) { grid.appendChild(el); continue }
+      }
       if (w.id === 'peertube') { // 18 nov 2026: peertube.js
         const gelukt = await renderVriendPeertube(el, vriendId, w)
         if (gelukt) { grid.appendChild(el); peertubeWidget = { el, w }; continue }
@@ -536,11 +540,7 @@ body.heeft-wallpaper::before { display:block; }
         if (gelukt) { grid.appendChild(el); mastodonWidgetEl = el; continue }
         mastodonWidgetEl = el // komen de berichten binnen terwijl je kijkt, dan meteen tonen
       }
-      if (w.id === 'weer') { // 19 nov 2026: weer.js
-        const gelukt = await renderVriendWeer(el, vriendId)
-        if (gelukt) { grid.appendChild(el); weerWidgetEl = el; continue }
-        weerWidgetEl = el // komt het weer binnen terwijl je kijkt, dan meteen tonen
-      }
+      if (w.id === 'weer') continue // 25 nov 2026: de weer-widget is weg (Open-Meteo: gratis alleen niet-commercieel)
       if (w.id === 'afteltimer') {
         const gelukt = await renderVriendTimer(el, vriendId, 'aftel')
         if (gelukt) { grid.appendChild(el); continue }
@@ -569,7 +569,7 @@ body.heeft-wallpaper::before { display:block; }
       if (/^sticker_/.test(w.id || '')) {
         el.innerHTML = '<div class="widget-inhoud"></div>'
         grid.appendChild(el)
-        try { await (await import('./stickerwidget.js?v=240')).tekenStickerWidget(el.querySelector('.widget-inhoud'), w.id, { vriendId }) }
+        try { await (await import('./stickerwidget.js?v=242')).tekenStickerWidget(el.querySelector('.widget-inhoud'), w.id, { vriendId }) }
         catch (e) { console.warn('[stickerwidget]', e); el.remove() }
         continue
       }
@@ -626,7 +626,7 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_quiz')
     if (!ruw) return false
     let Q, quiz = null
-    try { Q = await import('./quiz.js?v=9') } catch (e) { console.warn('[quiz]', e); return false }
+    try { Q = await import('./quiz.js?v=11') } catch (e) { console.warn('[quiz]', e); return false }
     try { quiz = Q.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!quiz) return false
     await vriendAchtergrond(el, vriendId, 'quiz')
@@ -713,20 +713,52 @@ body.heeft-wallpaper::before { display:block; }
     if (d.vriendId !== vriendId || !peertubeWidget || !/^(klein|wbg):peertube$/.test(d.item || '')) return
     try { await renderVriendPeertube(peertubeWidget.el, vriendId, peertubeWidget.w) } catch (x) { console.warn('[peertube]', x) } // het lege vakje staat er al
   })
+  // 25 nov 2026: een widget-layout van een vriend: elk vak is een gewone widget van die vriend (zelfde inhoud via sync).
+  // Liken en reageren (fediverse) staan hier niet: alleen de video, net als bij de losse PeerTube-widget.
+  async function renderVriendMix(el, vriendId, w) {
+    let L
+    try { L = await import('./layouts.js?v=5') } catch (e) { console.warn('[layout]', e); return false }
+    const layout = L.layoutVan(w.id)
+    if (!layout) return false
+    el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F9E9}</span><span class="widget-titel">' + vEsc(layout.titel) + '</span></div><div class="widget-inhoud"></div>'
+    const teken = { peertube: v => renderVriendPeertube(v, vriendId, w), muziekwidget: v => renderVriendMuziekwidget(v, vriendId),
+      radio: v => renderVriendRadio(v, vriendId), rss: v => renderVriendRss(v, vriendId), mastodon: v => renderVriendMastodon(v, vriendId) }
+    const leeg = { peertube: T('Nog geen video'), muziekwidget: T('Nog geen muziek'), radio: T('Nog geen zender'), rss: T('Nog geen feed'), mastodon: T('Nog geen account') }
+    // 25 nov 2026: kant-en-klare vakken: hun inhoud komt via sync ('klein:mix', vriend_<id>_mix), alleen bekijken
+    let mix = {}
+    try { mix = JSON.parse((await laadFotoUitDB('vriend_' + vriendId + '_mix')) || '{}') || {} } catch (e) { mix = {} }
+    const tekenVast = async (soort, vak) => {
+      const cfg = mix[L.vakSleutel(layout, soort)]
+      if (!cfg) return false
+      if (soort === 'rss') { const R = await import('./rsswidget.js?v=5'); if (!R.normaliseer(cfg)) return false; R.tekenRssWidget(vak, { cfg }); return true }
+      if (soort === 'peertube') { const P = await import('./peertube.js?v=6'); if (!P.normaliseer(cfg)) return false; P.tekenPeertubeWidget(vak, { cfg, weergave: L.weergaveVan(layout.vakken.find(v => v.soort === soort)) }); return true }
+      return false
+    }
+    L.tekenMix(el.querySelector('.widget-inhoud'), layout, async (soort, vak) => {
+      let ok = false
+      const def = layout.vakken.find(v => v.soort === soort)
+      try { ok = L.kantEnKlaar(def) ? await tekenVast(soort, vak) : await teken[soort](vak) } catch (e) { console.warn('[layout]', soort, e) }
+      if (!ok) vak.innerHTML = '<div style="font-size:13px;color:var(--muted)">' + vEsc(leeg[soort] || '') + '</div>'
+      const dubbel = vak.querySelector(':scope > .widget-header') // het vak heeft zijn eigen kopje al
+      if (dubbel) dubbel.remove()
+    }, { taal: (window.T && window.T.taal) || 'nl' })
+    return true
+  }
   async function renderVriendPeertube(el, vriendId, w) {
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_peertube')
     if (!ruw) return false
     let P, cfg = null
-    try { P = await import('./peertube.js?v=3') } catch (e) { console.warn('[peertube]', e); return false }
+    try { P = await import('./peertube.js?v=6') } catch (e) { console.warn('[peertube]', e); return false }
     try { cfg = P.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
     await vriendAchtergrond(el, vriendId, 'peertube') // de miniatuur, via sync (wbg:peertube)
     el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F3AC}</span><span class="widget-titel">' + vEsc(T('PeerTube')) + '</span></div><div class="widget-inhoud"></div>'
+    // 25 nov 2026: bij een vriend GEEN liken of reageren en geen reacties: dat staat alleen op je eigen Home (zie fediverse-module op Home)
     P.tekenPeertubeWidget(el.querySelector('.widget-inhoud'), { cfg })
     return true
   }
 
-  // 18 nov 2026: muziek van een vriend (muziekwidget.js, Bandcamp of Funkwhale). Komt via P2P (sync.js
+  // 18 nov 2026: muziek van een vriend (muziekwidget.js, Funkwhale; 25 nov 2026: Bandcamp is eruit). Komt via P2P (sync.js
   // 'klein:muziekwidget'); normaliseer() laat alleen goedgekeurde bronnen door. Laadt pas na een tik op luisteren.
   let muziekWidgetEl = null
   window.addEventListener('fibro-sync-item', async e => {
@@ -738,11 +770,11 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_muziekwidget')
     if (!ruw) return false
     let M, cfg = null
-    try { M = await import('./muziekwidget.js?v=2') } catch (e) { console.warn('[muziekwidget]', e); return false }
+    try { M = await import('./muziekwidget.js?v=3') } catch (e) { console.warn('[muziekwidget]', e); return false }
     try { cfg = M.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
     await vriendAchtergrond(el, vriendId, 'muziekwidget') // de albumhoes, via sync (wbg:muziekwidget)
-    el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F3A7}</span><span class="widget-titel">' + vEsc(T('Bandcamp & Funkwhale')) + '</span></div><div class="widget-inhoud"></div>'
+    el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F3A7}</span><span class="widget-titel">' + vEsc(T('Funkwhale')) + '</span></div><div class="widget-inhoud"></div>'
     M.tekenMuziekWidget(el.querySelector('.widget-inhoud'), { cfg })
     return true
   }
@@ -779,7 +811,7 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_rss')
     if (!ruw) return false
     let R, cfg = null
-    try { R = await import('./rsswidget.js?v=3') } catch (e) { console.warn('[rss]', e); return false }
+    try { R = await import('./rsswidget.js?v=5') } catch (e) { console.warn('[rss]', e); return false }
     try { cfg = R.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
     // v2: de fotootjes (één plaatje, via P2P van je vriend); alleen als ze bij deze berichten horen (fotoId = pos.rss)
@@ -806,7 +838,7 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_mastodon')
     if (!ruw) return false
     let M, cfg = null
-    try { M = await import('./mastodon.js?v=1') } catch (e) { console.warn('[mastodon]', e); return false }
+    try { M = await import('./mastodon.js?v=3') } catch (e) { console.warn('[mastodon]', e); return false }
     try { cfg = M.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
     let sprite = null, spriteId = ''
@@ -817,26 +849,6 @@ body.heeft-wallpaper::before { display:block; }
     }
     el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F418}</span><span class="widget-titel">' + vEsc(T('Mastodon')) + '</span></div><div class="widget-inhoud"></div>'
     M.tekenMastodonWidget(el.querySelector('.widget-inhoud'), { cfg, sprite, spriteId })
-    return true
-  }
-
-  // 19 nov 2026: de weer-widget van een vriend (weer.js). Het weer komt via P2P (sync.js 'klein:weer'); hier wordt
-  // niets opgehaald (geen verbinding met Open-Meteo). normaliseer() laat alleen getallen en korte tekst door.
-  let weerWidgetEl = null
-  window.addEventListener('fibro-sync-item', async e => {
-    const d = e.detail || {}
-    if (d.vriendId !== vriendId || !weerWidgetEl || d.item !== 'klein:weer') return
-    try { await renderVriendWeer(weerWidgetEl, vriendId) } catch (x) { console.warn('[weer]', x) }
-  })
-  async function renderVriendWeer(el, vriendId) {
-    const ruw = await laadFotoUitDB('vriend_' + vriendId + '_weer')
-    if (!ruw) return false
-    let W, cfg = null
-    try { W = await import('./weer.js?v=1') } catch (e) { console.warn('[weer]', e); return false }
-    try { cfg = W.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
-    if (!cfg) return false
-    el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F324}\u{FE0F}</span><span class="widget-titel">' + vEsc(T('Weer')) + '</span></div><div class="widget-inhoud"></div>'
-    W.tekenWeerWidget(el.querySelector('.widget-inhoud'), { cfg })
     return true
   }
 

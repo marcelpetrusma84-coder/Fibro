@@ -2,7 +2,7 @@
 # Nagemaakt: de edge function rss-ophalen (geeft koppen als tekst) en de nieuwssite. (Harnas uit proef318.)
 #  A. Store > Widgets: RSS-feed staat erin; Downloaden = op Home als 4 x 3, met "Nog geen feed"
 #  B. Feed kiezen: een http-link wordt geweigerd; een link die geen feed is ook (de server zegt "geen feed")
-#  C. een eigen feed toevoegen (naam komt van de server) en het voorbeeld NOS; de vraag gaat met de inlogpas naar
+#  C. een eigen feed toevoegen (naam komt van de server) en een tweede feed (er zijn geen voorbeelden meer); de vraag gaat met de inlogpas naar
 #     rss-ophalen, de link staat in de vraag; de app praat zelf niet met de nieuwssite
 #  D. Klaar: de koppen staan er meteen (nieuwste eerst, met naam van de feed), bewaard in rss_<uid>
 #  E. een tik op een kop opent het artikel in een nieuw tabblad, zonder referrer
@@ -23,8 +23,8 @@ FEEDS = {
   'https://mijn.nepnieuws.nl/rss': {'ok': True, 'titel': 'Nepnieuws', 'berichten': [
     {'titel': 'Oud bericht van Nepnieuws', 'link': 'https://mijn.nepnieuws.nl/artikel/oud', 'datum': NU - 5 * 3600000},
     {'titel': 'Vers bericht van Nepnieuws', 'link': 'https://mijn.nepnieuws.nl/artikel/vers', 'datum': NU - 10 * 60000}]},
-  'https://feeds.nos.nl/nosnieuwsalgemeen': {'ok': True, 'titel': 'NOS Nieuws', 'berichten': [
-    {'titel': 'NOS: middelste bericht', 'link': 'https://nos.nl/artikel/1', 'datum': NU - 2 * 3600000}]},
+  'https://tweede.voorbeeldsite.nl/feed': {'ok': True, 'titel': 'Voorbeeldsite', 'berichten': [
+    {'titel': 'Voorbeeldsite: middelste bericht', 'link': 'https://tweede.voorbeeldsite.nl/artikel/1', 'datum': NU - 2 * 3600000}]},
 }
 FUNCTIE = []
 UID = 'aaaaaaaa-0000-4000-8000-000000000001'
@@ -115,9 +115,11 @@ try:
             pg.click(B + ' .rs-erbij')
             check(wacht(pg, "() => document.querySelector('%s').innerText.includes('Jouw feeds (1/3)')" % B, 5000), 'C: eigen feed toegevoegd')
             check('Nepnieuws' in pg.inner_text(B + ' .rs-item'), 'C: de naam komt van de server')
-            pg.locator(B + ' .rs-voorbeeld', has_text='NOS Nieuws').click()
-            check(wacht(pg, "() => document.querySelector('%s').innerText.includes('Jouw feeds (2/3)')" % B, 5000), 'C: voorbeeld NOS toegevoegd')
-            check(all(f['auth'] == 'Bearer x' for f in FUNCTIE) and FUNCTIE[-1]['body'] == {'url': 'https://feeds.nos.nl/nosnieuwsalgemeen'}, 'C: met de inlogpas naar rss-ophalen, de link in de vraag (%s)' % FUNCTIE[-1:])
+            check(pg.locator(B + ' .rs-voorbeeld').count() == 0 and 'NOS' not in pg.inner_text(B), 'C: geen voorbeelden (geen NOS of NU.nl)')
+            pg.fill(B + ' .rs-link', 'https://tweede.voorbeeldsite.nl/feed')
+            pg.click(B + ' .rs-erbij')
+            check(wacht(pg, "() => document.querySelector('%s').innerText.includes('Jouw feeds (2/3)')" % B, 5000), 'C: tweede feed toegevoegd')
+            check(all(f['auth'] == 'Bearer x' for f in FUNCTIE) and FUNCTIE[-1]['body'] == {'url': 'https://tweede.voorbeeldsite.nl/feed'}, 'C: met de inlogpas naar rss-ophalen, de link in de vraag (%s)' % FUNCTIE[-1:])
             check(not buiten, 'C: de app praat zelf niet met de nieuwssite (%s)' % buiten[:3])
             pg.locator(B).screenshot(path='/tmp/rss-bewerk.png')
 
@@ -126,12 +128,12 @@ try:
             pg.click(B + ' .rs-klaar')
             check(wacht(pg, "() => document.querySelectorAll('%s .rs-lijst > a').length === 3" % B, 8000), 'D: drie koppen op de widget')
             koppen = pg.eval_on_selector_all(B + ' .rs-lijst > a .rs-kop', 'els => els.map(e => e.textContent)')
-            check(koppen == ['Vers bericht van Nepnieuws', 'NOS: middelste bericht', 'Oud bericht van Nepnieuws'], 'D: nieuwste eerst (%s)' % koppen)
+            check(koppen == ['Vers bericht van Nepnieuws', 'Voorbeeldsite: middelste bericht', 'Oud bericht van Nepnieuws'], 'D: nieuwste eerst (%s)' % koppen)
             sub = pg.inner_text(B + ' .rs-lijst > a .rs-sub')
             check(sub.startswith('Nepnieuws') and '10 min geleden' in sub, 'D: naam van de feed en hoe oud (%s)' % sub)
             check(len(FUNCTIE) - voor == 2, 'D: elke feed één keer gevraagd')
             cfg = json.loads(pg.evaluate("uid => localStorage.getItem('rss_' + uid)", UID) or 'null')
-            check(cfg and [f['url'] for f in cfg['feeds']] == ['https://mijn.nepnieuws.nl/rss', 'https://feeds.nos.nl/nosnieuwsalgemeen'] and len(cfg['berichten']) == 3 and cfg['bijgewerkt'] > 0, 'D: bewaard in rss_<uid>')
+            check(cfg and [f['url'] for f in cfg['feeds']] == ['https://mijn.nepnieuws.nl/rss', 'https://tweede.voorbeeldsite.nl/feed'] and len(cfg['berichten']) == 3 and cfg['bijgewerkt'] > 0, 'D: bewaard in rss_<uid>')
             pg.locator(B).screenshot(path='/tmp/rss.png')
 
             # ── E ──

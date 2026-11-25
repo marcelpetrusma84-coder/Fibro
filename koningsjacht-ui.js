@@ -23,7 +23,7 @@ import { maakEindscene } from './koningsjacht-eindscene.js?v=8'
 // donker en het warme licht flakkert mee. Aan/uit met 🕯️ (bewaard: fibro_koningsjacht_kaars, standaard aan).
 // v58 (25 nov 2026): ook kaarten in de aflegzone worden als hologram geprojecteerd.
 import * as K from './koningsjacht.js?v=2'
-import { maakKaartTafel, kaartSvg, achterkantSvg, kaartNaam, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=26'
+import { maakKaartTafel, kaartSvg, achterkantSvg, kaartNaam, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=20'
 import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek, zetMuziekThema } from './koningsjacht-geluid.js?v=4'
 import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=16'
 import { zetKaarsSlijtage } from './koningsjacht-kaarsen.js?v=1'

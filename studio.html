@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#1a0a2e">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
-<script src="taal.js?v=151"></script>
+<script src="taal.js?v=153"></script>
 <script src="appslot.js?v=3"></script>
 <title>Stekky Studio</title>
 <link href="lettertypen/basis.css?v=1" rel="stylesheet">
@@ -47,11 +47,15 @@ input[type=range] { accent-color:var(--knop); }
 .vak.gekozen .vink { background:var(--knop); }
 .vak .waarsch { position:absolute; top:4px; right:6px; font-size:16px; }
 .gekozen-lijst { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:12px; margin-top:12px; }
-.kaartje { background:rgba(0,0,0,0.25); border:0.5px solid var(--border); border-radius:12px; padding:10px; display:grid; grid-template-columns:84px 1fr; gap:10px; align-items:start; }
+.kaartje { background:rgba(0,0,0,0.25); border:0.5px solid var(--border); border-radius:12px; padding:10px; display:grid; grid-template-columns:84px minmax(0,1fr); gap:10px; align-items:start; min-width:0; }
 .kaartje .plaatje { width:84px; height:84px; border-radius:10px; background:repeating-conic-gradient(#2a1745 0 25%, #1f0f38 0 50%) 0 0 / 14px 14px; display:flex; align-items:center; justify-content:center; position:relative; }
 .kaartje .plaatje img { width:100%; height:100%; object-fit:contain; }
-.kaartje .velden { display:flex; flex-direction:column; gap:6px; }
-.kaartje .twee { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.kaartje .velden { display:flex; flex-direction:column; gap:6px; min-width:0; }
+.kaartje .twee { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:6px; align-items:end; }
+/* 24 nov 2026: velden en knoppen blijven binnen hun kaartje (ze waren breder, zodat de kaartjes op de pc over elkaar lagen) */
+.kaartje label.veld { min-width:0; }
+.kaartje input[type=text], .kaartje select { width:100%; }
+.kaartje .speel { max-width:100%; white-space:normal; text-align:left; }
 .kaartje .nr { font-size:11px; color:var(--muted); }
 .speel { background:var(--knop); color:#fff; border:0; border-radius:8px; padding:5px 10px; font:inherit; font-size:12px; cursor:pointer; align-self:flex-start; }
 #toegangGeweigerd { text-align:center; padding:60px 20px; }
@@ -149,10 +153,41 @@ textarea#promptTekst { width:100%; min-height:300px; margin-top:12px; line-heigh
     <div class="rij" style="margin-top:14px"><button type="button" class="knop" id="maakPakket">📦 Pakketbestand maken</button></div>
     <div class="melding" id="pakketMelding" aria-live="polite"></div>
   </section>
+
+  <!-- 25 nov 2026: widget-layouts (studio-layout-ui.js, layouts.js) -->
+  <details class="promptblok" id="layoutBlok">
+    <summary>🧩 Widget-layout maken</summary>
+    <p class="uitleg" style="margin-top:8px">Een layout is één widget met een paar bestaande widgets samen, bijvoorbeeld een grote PeerTube-video met je RSS-nieuws eronder. Kies hoe de vakken liggen en wat er in elk vak komt. Per vak kies je: laat de gebruiker het zelf invullen, of maak het kant-en-klaar. Kant-en-klaar kan bij RSS (vast, of de gebruiker kiest uit jouw feeds, bijvoorbeeld NU.nl Sport en Tech) en bij PeerTube (vaste server en categorieën, bijvoorbeeld Gaming, met of zonder liken en reageren). Bij een kant-en-klaar vak kies je ook de weergave: video als lijst of als carrousel (vegen, de middelste groot, met miniaturen), nieuws met fotootjes of alleen koppen. Met "Eén groot vak" maak je een widget met maar één ding, bijvoorbeeld alleen nieuws. De indeling zelf kunnen gebruikers niet aanpassen. Elke soort kan één keer in een layout.</p>
+    <div class="vakken" id="loSjablonen" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"></div>
+    <div class="rij" id="loVakken" style="margin-top:12px"></div>
+    <div class="rij" style="margin-top:12px;align-items:flex-start">
+      <label class="veld" style="flex:1 1 220px">Naam van de layout<input type="text" id="loTitel" placeholder="bijvoorbeeld Video en nieuws"></label>
+      <label class="veld" style="flex:2 1 300px">Uitleg in de Store (Nederlands)<input type="text" id="loUitlegNl" value="Een grote video met je nieuws eronder, in één widget."></label>
+      <label class="veld" style="flex:2 1 300px">Uitleg in de Store (Engels)<input type="text" id="loUitlegEn" value="A big video with your news below it, in one widget."></label>
+    </div>
+    <div id="loVoorbeeld"></div>
+    <div class="rij" style="margin-top:14px"><button type="button" class="knop" id="loMaak">🧩 Layoutbestand maken</button></div>
+    <div class="melding" id="loMelding" aria-live="polite"></div>
+  </details>
+
+  <!-- 25 nov 2026: een nieuw spel beschrijven (studio-spel-ui.js, spelmaker.js) -->
+  <details class="promptblok" id="spelBlok">
+    <summary>🎲 Spel maken (beurtspel of kaartspel)</summary>
+    <p class="uitleg" style="margin-top:8px">Beschrijf een nieuw spel: de naam, het icoon, de spelregels en wat erin moet zitten. De Studio maakt er een spelbestand van. Geef dat aan Claude: dan staat het spel meteen overal in de app (Store, spelmenu, Home) met een werkend beginspel, en bouwt Claude daarna de echte regels.</p>
+  </details>
+
+  <!-- 25 nov 2026: eigen speelkaarten uit een paar platen (studio-kaarten-ui.js, kaartmaker.js) -->
+  <details class="promptblok" id="kaartBlok">
+    <summary>🃏 Speelkaarten maken</summary>
+    <p class="uitleg" style="margin-top:8px">Maak je eigen kaarten uit een paar grote platen (bijvoorbeeld met Gemini). Kies of je alleen de plaatjes maakt (de app tekent 2 tot en met 10) of alle 54 kaarten. Per plaat staat er een prompt klaar. Laad de platen in: de Studio knipt ze en zet elk plaatje op de goede kaart. Daarna maak je een kaartpakket. Geef dat aan Claude: dan staan je kaarten bij "Kies je kaarten" in elk kaartspel.</p>
+  </details>
 </main>
 
 <script type="module">
-import './studio-ui.js?v=4'
+import './studio-ui.js?v=6'
+import './studio-layout-ui.js?v=5'
+import './studio-spel-ui.js?v=7'
+import './studio-kaarten-ui.js?v=1'
 </script>
 </body>
 </html>

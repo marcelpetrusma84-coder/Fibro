@@ -10,10 +10,11 @@ const SI = await import(pad('spelicoon.js'))
 const { SPEL_VERSIES } = await import(pad('spelversies.js'))
 // De WebP-inhoud blijft v2. Alleen de JavaScript-module kreeg een nieuwe
 // cacheversie voor foutafhandeling; die twee versies lopen bewust apart.
-const MODULE_VERSIE = 6   // v5 (11 nov 2026): Toepen en Eenentwintigen erbij; v6 (13 nov 2026): Koningsjacht
+const MODULE_VERSIE = Number((readFileSync(pad('index.html'), 'utf8').match(/spelicoon\.js\?v=(\d+)'/) || [])[1])   // 25 nov 2026: elk Studio-spel verhoogt hem; daarom geen vast nummer, wel overal hetzelfde (en minstens 7). Eerder: v7 (25 nov 2026): spellen uit Stekky Studio; v5 (11 nov 2026): Toepen en Eenentwintigen erbij; v6 (13 nov 2026): Koningsjacht
 
 // 1. Elk spel heeft een plaatje: WebP, 128 x 128, klein
-assert.deepEqual([...SI.SPELLEN].sort(), Object.keys(SPEL_VERSIES).sort(), 'een plaatje voor elk spel')
+const { STUDIO_SPELLEN } = await import(pad('studio-spellen.js'))   // 25 nov 2026: Studio-spellen hebben een plaatje maar (nog) geen versiegeschiedenis
+assert.deepEqual([...SI.SPELLEN].filter(id => !STUDIO_SPELLEN.some(s => s.id === id)).sort(), Object.keys(SPEL_VERSIES).sort(), 'een plaatje voor elk spel')
 for (const spel of SI.SPELLEN) {
   const f = 'spelicoon/' + spel + '.webp'
   assert.ok(existsSync(pad(f)), f)
@@ -45,10 +46,11 @@ assert.match(lees('index.html'), /const icon = spelIcoonHtml\(spel, 40\) \|\| IC
 assert.match(lees('vriend-profiel.html'), /spelIcoonHtml\(spel, 40\) \|\| vEsc\(w\.icon/)
 
 assert.ok(SI.VERSIE >= 2)
+assert.ok(MODULE_VERSIE >= 7, 'spelicoon.js minstens v7')
 for (const f of ['chat.html', 'profiel.html', 'spelicoon.js']) assert.ok(!lees(f).includes('border-radius:22%'), f + ': geen ronde tegel meer')
 for (const f of ['index.html', 'vriend-profiel.html']) assert.ok(lees(f).includes("spelicoon.js?v=" + MODULE_VERSIE + "'"), f + ': spelicoon.js met de nieuwe moduleversie')
 for (const f of ['index.html', 'profiel.html', 'chat.html', 'vriend-profiel.html']) {
-  assert.match(lees(f), /import \{ koppelSpelIcoonFallback \} from '\.\/spelicoon\.js\?v=6'/, f + ': reserve-icoon uit de vernieuwde module')
+  assert.ok(lees(f).includes("import { koppelSpelIcoonFallback } from './spelicoon.js?v=" + MODULE_VERSIE + "'"), f + ': reserve-icoon uit de vernieuwde module')
   assert.match(lees(f), /koppelSpelIcoonFallback\(\)/, f + ': vangt mislukte plaatjes op, ook als ze later worden toegevoegd')
 }
 console.log('ok: plaatjes uit de spellen (' + SI.SPELLEN.length + ')')

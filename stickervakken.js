@@ -3,7 +3,7 @@
 // de stickerkeuze in de chat (4 vakjes, op volgorde van aanzetten). Daar kun je het ook verwijderen.
 // Bewaard op dit toestel in fibro_stickervakken_<uid> (een lijst met Store-id's). Bestaat die sleutel nog niet (vellen
 // van voor deze versie), dan staan alle gedownloade vellen aan, zoals eerst.
-import { mijnStoreVellen } from './stickervellen.js?v=242'
+import { mijnStoreVellen } from './stickervellen.js?v=243'
 
 export const WINKEL_VAKJES = 4
 const vakSleutel = uid => 'fibro_stickervakken_' + uid

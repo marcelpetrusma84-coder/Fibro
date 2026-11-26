@@ -2717,7 +2717,8 @@ window.FIBRO_EN = {
   "Niets gevonden.": "Nothing found.",
   "Zoeken lukt nu niet. Probeer het later nog eens.": "Searching does not work right now. Please try again later.",
   "📌 Vastzetten": "📌 Pin",
-  "Je radio is vol (6 zenders).": "Your radio is full (6 stations).",
+  "Je radio is vol (4 zenders).": "Your radio is full (4 stations).",
+  "Lege plek": "Empty slot",
   "Staat er al op.": "Already on it.",
   "Eigen stream-link (https)": "Your own stream link (https)",
   "Naam van de zender": "Station name",
@@ -2733,7 +2734,7 @@ window.FIBRO_EN = {
   "Zenders uit Radio Browser, een open database zonder tracking.": "Stations from Radio Browser, an open database without tracking.",
   "Uit de Store: internetradio, speelt pas na een tik": "From the Store: internet radio, only plays after a tap",
   "Radio verwijderen": "Remove Radio",
-  "Een ouderwetse radio op je profiel, met tot 6 zenders van over de hele wereld: zoek op naam, land of muzieksoort, of plak je eigen stream-link. Pas als iemand op afspelen tikt, maakt zijn toestel verbinding met de zender.": "An old-fashioned radio on your profile, with up to 6 stations from all over the world: search by name, country or genre, or paste your own stream link. Only when someone taps play does their device connect to the station.",
+  "Een ouderwetse radio op je profiel, met tot 4 zenders van over de hele wereld: zoek op naam, land of muzieksoort, of plak je eigen stream-link. Pas als iemand op afspelen tikt, maakt zijn toestel verbinding met de zender.": "An old-fashioned radio on your profile, with up to 6 stations from all over the world: search by name, country or genre, or paste your own stream link. Only when someone taps play does their device connect to the station.",
   "Je luistert via {host}.": "You are listening via {host}.",
   // 19 nov 2026: RSS-widget (rsswidget.js, store.js, profiel.html, vriend-profiel.html)
   "RSS-feed": "RSS feed",

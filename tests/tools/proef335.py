@@ -138,7 +138,7 @@ try:
 
         # D. Home: de carrousel
         pg.goto(BASIS + 'index.html')
-        B = '.widget-blok[data-id="mix_l1"]'
+        B = '.widget-blok[data-id="mix_l2"]'
         PTV = B + ' .mix-vak[data-soort=peertube]'
         check(wacht(pg, "() => document.querySelectorAll('%s .pt-carrousel .pt-dia').length === 4" % PTV, 15000), 'D een carrousel met de 4 video\'s')
         check(wacht(pg, "() => (document.querySelector('%s .pt-dia-beeld') || {style:{}}).style.backgroundImage.includes('data:image/jpeg')" % PTV, 15000), 'D met miniaturen (één plaatje)')
@@ -161,8 +161,8 @@ try:
         check(wacht(pg, "() => document.querySelectorAll('%s .rs-kop').length >= 3" % RV, 15000), 'E het nieuws staat eronder')
         check(pg.locator(RV + ' .rs-foto').count() == 0, 'E alleen koppen: geen fotootjes')
         mix = json.loads(pg.evaluate("localStorage.getItem('mix_%s')" % UID) or '{}')
-        check(mix.get('l1:rss', {}).get('plaatjes') is False, 'E de server haalt ook geen plaatjes op (plaatjes: false)')
-        check(str(mix.get('l1:peertube', {}).get('sprite', '')).startswith('data:image/jpeg') and mix['l1:peertube'].get('spriteN') == 4, 'E de miniaturen staan in mix_<uid> (gaan mee naar vrienden)')
+        check(mix.get('l2:rss', {}).get('plaatjes') is False, 'E de server haalt ook geen plaatjes op (plaatjes: false)')
+        check(str(mix.get('l2:peertube', {}).get('sprite', '')).startswith('data:image/jpeg') and mix['l2:peertube'].get('spriteN') == 4, 'E de miniaturen staan in mix_<uid> (gaan mee naar vrienden)')
         pg.screenshot(path=os.environ.get('SCHERM', os.path.join(tmp, 'home.png')))
         ctx.close()
         check(not fouten, 'geen paginafouten (%s)' % fouten[:3])

@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=153"></script>
+<script src="taal.js?v=154"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -465,6 +465,19 @@ window.veiligeUrl = function(v){
     <video id="lokaalMedia" autoplay playsinline muted></video><div class="spel-video-wachten" id="spelVideoEigenWachten">Je camera staat uit</div><span class="video-etiket">Jij</span>
   </div>
 </div>
+<script>
+// 26 nov 2026 (Marcel): kom je met een spel binnen (chat.html?spelVriend=...&spelType=..., bijvoorbeeld vanaf Home), dan
+// meteen het spelscherm in plaats van eerst even de chat. speelMee haalt 'Spel laden...' weg zodra het spel opent.
+(() => { try {
+  const q = new URLSearchParams(location.search)
+  if (!q.get('spelVriend') || !q.get('spelType') || !q.get('sessieId')) return
+  const o = document.getElementById('spelOverlay'), l = document.createElement('div')
+  l.id = 'spelLaden'; l.setAttribute('role', 'status'); l.style.cssText = 'color:#fff;font-size:15px;font-weight:600'
+  l.textContent = window.T ? T('Spel laden...') : 'Spel laden...'
+  document.getElementById('spelInhoud').appendChild(l); o.classList.add('open')
+  setTimeout(() => { if (l.isConnected) { l.remove(); o.classList.remove('open') } }, 15000) // vangnet: nooit blijven hangen
+} catch (e) {} })()
+</script>
 
 <script src="beltoon.js?v=11"></script>
 <script type="module">
@@ -892,10 +905,13 @@ window.veiligeUrl = function(v){
     if (spelVriend && spelType && sessieId) {
       // Open chat met die vriend en start het spel
       const vriend = (window._vriendenData || []).find(v => v.id === spelVriend)
+      // 26 nov 2026: titel=1 = het titelscherm stond al op Home (spel.html); niet nog een keer
+      const zonderTitel = urlParams.get('titel') === '1'
+      const ruimLadenOp = () => { const l = document.getElementById('spelLaden'); if (l) { l.remove(); if (!spelActief) document.getElementById('spelOverlay').classList.remove('open') } }
       if (vriend) {
         await openChat(vriend.id, vriendWeergaveNaam(vriend), vriend.avatar_url || '👤', vriend.public_key || '')
-        setTimeout(() => speelMee(spelType, sessieId, starterId || spelVriend, invitedPlayers), 800)
-      }
+        setTimeout(() => Promise.resolve(speelMee(spelType, sessieId, starterId || spelVriend, invitedPlayers, { zonderTitel })).finally(ruimLadenOp), 800)
+      } else ruimLadenOp()
       // Verwijder URL params zodat herlaad niet opnieuw triggert
       window.history.replaceState({}, '', 'chat.html')
     }
@@ -3087,7 +3103,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   // Accepteer uitnodiging → open het spel
-  window.speelMee = async function(spelType, sessieId, starterId, players = null) {
+  window.speelMee = async function(spelType, sessieId, starterId, players = null, opties = {}) {
     if (!huidigeUser || !geselecteerdeVriend?.id) return
     const beschikbaar = ['botkaaseiren', 'vieroprij', 'pesten', 'toepen', 'eenentwintigen', 'koningsjacht', 'schaken', 'schakendrie', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball', 'shmup', ...STUDIO_SPELLEN.filter(s => s.met.vriend).map(s => s.id)]
     if (!beschikbaar.includes(spelType)) {
@@ -3096,6 +3112,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     }
 
     sluitSpelUitnodiging()
+    document.getElementById('spelLaden')?.remove() // 26 nov 2026: 'Spel laden...' (kwam je met een spel binnen)
 
     if (!sessieId) sessieId = Date.now().toString(36)
     if (!isNieuwsteSpelSessie(huidigeUser?.id, geselecteerdeVriend?.id, sessieId)) return
@@ -3134,7 +3151,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     // v251: eerst het titelscherm (bewegend plaatje en muziek). Ondertussen wordt al op je vriend gewacht;
     // het spel begint pas als je het titelscherm hebt weggetikt én je vriend er is. Niet bij schaken met drie: daar
     // kom je vanuit een schaakspel dat al open was.
-    const titel = titelModule || await laadTitelscherm().catch(() => null)
+    // 26 nov 2026: opties.zonderTitel = je zag het titelscherm al op Home (spel.html); dan niet nog een keer
+    const titel = opties?.zonderTitel ? null : (titelModule || await laadTitelscherm().catch(() => null))
     const titelKlaar = titel && titel.heeftTitelscherm(spelType) && spelType !== 'schakendrie' ? titel.toonTitelscherm({ spelId: spelType, naam: SPEL_INFO[spelType]?.naam || spelType }) : Promise.resolve(true)
 
     benIkSpeler1 = spelType === 'schakendrie' ? players[0] === huidigeUser.id : (starterId ? (starterId === huidigeUser.id) : (huidigeUser.id < spelTegenstander.id))

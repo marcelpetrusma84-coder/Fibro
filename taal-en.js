@@ -1936,6 +1936,8 @@ window.FIBRO_EN = {
   "👋 Zeg hoi": "👋 Say hi",
   "Hoi! 👋": "Hi! 👋",
   "✅ Gekopieerd! Plak het in WhatsApp of een bericht.": "✅ Copied! Paste it into WhatsApp or a message.",
+  // 26 nov 2026: uitnodigen.js (➕ op Home, 📤 Delen in een spel)
+  "Let op: de uitnodiging kon niet bewaard worden, dus de link werkt niet. Probeer het opnieuw.": "Note: the invitation could not be saved, so the link won't work. Please try again.",
   "Kopieer deze tekst:": "Copy this text:",
   // v258: meldingen meteen aanzetten (meldingen-aan.js, Home en het welkomstscherm)
   "Aanzetten": "Turn on",

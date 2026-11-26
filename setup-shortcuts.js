@@ -1,5 +1,5 @@
 import { maakSnelkoppelingen, maakZip, schrijfSnelkoppelingMap } from './device-shortcuts.js?v=3'
-import { laadSnelkoppelingMap, bewaarSnelkoppelingMap } from './shortcut-folder-store.js?v=1'
+import { laadSnelkoppelingMap, bewaarSnelkoppelingMap } from './shortcut-folder-store.js?v=2'
 
 const EN = {
   'Stekky-map met 2 snelkoppelingen maken':'Create a Stekky folder with 2 shortcuts',

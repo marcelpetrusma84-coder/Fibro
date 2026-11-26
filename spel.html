@@ -67,14 +67,14 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 <script type="module">
   import { maakSpelMenu, isGepauzeerd } from './spelmenu.js?v=1' // 11 nov 2026: als eerste, voor de pauze- en geluidskranen
   import * as Bordgeluid from './bordgeluid.js?v=203'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=315'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=316'
   import { supabase } from './supabase.js?v=95'
-  import { startSpelUitnodigingLuisteraar } from './speluitnodiging.js?v=206'
+  import { startSpelUitnodigingLuisteraar } from './speluitnodiging.js?v=207'
   import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=14'
   import { nieuweSpelSessie } from './spelsessie.js?v=1'
   import { markeerKlaar } from './startkaart.js?v=1'
-  import { kanMetVriend, kanMetGroep, groepAdres } from './samenspelen.js?v=1' // 26 nov 2026: vanaf Home ook met een vriend of een groep
-  import { toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek } from './titelscherm.js?v=19' // v251: titelscherm met muziek
+  import { kanMetVriend, kanMetGroep, groepAdres } from './samenspelen.js?v=2' // 26 nov 2026: vanaf Home ook met een vriend of een groep
+  import { toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek } from './titelscherm.js?v=20' // v251: titelscherm met muziek
 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   const inhoud = document.getElementById('spelInhoud')

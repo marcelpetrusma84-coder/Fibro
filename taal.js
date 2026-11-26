@@ -1,3 +1,4 @@
+// v161 (26 nov 2026): taal-en.js?v=161 (de widget Scorebord op Home).
 // v160 (26 nov 2026): taal-en.js?v=160 (een scorebord bij elk spel: 🏆 Scores, keer gewonnen per niveau).
 // v159 (26 nov 2026): taal-en.js?v=159 (wachtkamer met een uitweg: tegen de computer of naar de chat, als je vriend er niet is).
 // v158 (26 nov 2026): taal-en.js?v=158 (uitnodigen: ➕ op Home en 📤 Delen in een spel; melding als de link niet bewaard kon worden).
@@ -171,7 +172,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=160', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=161', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

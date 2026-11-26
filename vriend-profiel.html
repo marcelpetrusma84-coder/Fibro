@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=160"></script>
+<script src="taal.js?v=161"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -440,6 +440,7 @@ body.heeft-wallpaper::before { display:block; }
     grid.innerHTML = ''
     const fotoAantal = { '3x3': 9, '2x2': 4, 'groot': 1, 'banner': 4, '1x3': 3, 'featured': 5, 'zwevend': 3, 'polaroid': 6 }
     for (const w of actief) {
+      if (w.id === 'scorebord') continue // 26 nov 2026: persoonlijk (jouw scores naast die van je vrienden), alleen op je eigen Home
       const el = document.createElement('div')
       el.className = 'widget-blok'
       el.style.gridColumn = 'span ' + Math.min(w.w || 2, 4)

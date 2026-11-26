@@ -1,3 +1,4 @@
+// v158 (26 nov 2026): taal-en.js?v=158 (uitnodigen: ➕ op Home en 📤 Delen in een spel; melding als de link niet bewaard kon worden).
 // v154 (26 nov 2026): taal-en.js?v=154 (Spel laden... als je vanaf Home met een spel de chat binnenkomt).
 // v153 (26 nov 2026): taal-en.js?v=153 (samen spelen vanaf Home: tegen een vriend of met een groep; Mollen meppen in de wachtkamer).
 // v150 (25 nov 2026): taal-en.js?v=150 (kant-en-klare widgets: feeds kiezen).
@@ -168,7 +169,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=157', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=158', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

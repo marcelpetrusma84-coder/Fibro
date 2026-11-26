@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=157"></script>
+<script src="taal.js?v=158"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -216,6 +216,8 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
     <button type="button" class="beta-label" id="betaLabel" onclick="window.openFibroTerugmelden()" aria-label="Beta: fout of idee melden" data-t-attr="aria-label" data-t>beta</button>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
+    <!-- 26 nov 2026 (Marcel): ➕ = iemand uitnodigen via het deelmenu (uitnodigen.js; link voor één persoon, 1 dag geldig) -->
+    <button id="uitnodigBtn" type="button" title="Vriend uitnodigen" aria-label="Vriend uitnodigen" data-t-attr="title,aria-label" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.08);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.7);padding:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
     <button id="uitlogBtn" onclick="window.uitloggen()" title="Uitloggen" data-t-attr="title" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.08);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.7);padding:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
     <button id="menuBtn" onclick="window.openMenu()" title="Menu" aria-label="Menu" aria-haspopup="true" aria-expanded="false" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.08);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.7);padding:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     <div class="top-av" id="topAvatar" onclick="window.location.href='profiel.html'" style="display:none">👤</div>
@@ -3327,6 +3329,7 @@ if ('serviceWorker' in navigator) {
 <script type="module" src="geluidregelaar.js?v=182"></script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=207"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { deelUitnodiging, bereidVoor } from "./uitnodigen.js?v=1"; bereidVoor(); document.getElementById("uitnodigBtn").onclick = () => deelUitnodiging()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=172"; startOngelezen()</script>
 <script type="module">import { checkTimers } from "./timer-melding.js?v=188"; setTimeout(checkTimers,4000)</script>
 <script src="./fotoviewer.js?v=9"></script>

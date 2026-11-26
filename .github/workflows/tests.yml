@@ -185,6 +185,9 @@ jobs:
       - name: "Kaartspellen: Kies je kaarten past op een smalle telefoon en de rij kun je opzij vegen (proef346)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef346.py .
+      - name: "Uitnodigen: ➕ op Home en 📤 Delen in een spel, via het deelmenu (proef347)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef347.py .
       - name: "Kaartspellen: de Vrolijke kaarten (standaard, plaatjes laden, Engels)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef312.py .

@@ -22,6 +22,9 @@ function stand(h1, h2, tafel, extra = {}) {
   return { stapel: rest, handen: { 1: h1, 2: h2 }, tafel, aanZet: 1, begint: 1, beurten: 0, geklopt: 0, fase: 'spel', uitslag: null,
     levens: { 1: 3, 2: 3 }, ronde: 1, winnaar: 0, klaar: false, laatste: { soort: 'deel', wie: 0, kaarten: [] }, ...extra }
 }
+// Vast schudden: met Math.random kreeg iemand in de nieuwe ronde soms (±1 op 100) meteen 31,
+// en dan klopten de levens niet meer. Met een vaste reeks is de test elke keer hetzelfde.
+const vast = (zaad = 1) => { let x = zaad; return () => (x = (x * 16807) % 2147483647) / 2147483647 }
 let s = stand(['h7', 's8', 'k9'], ['r7', 'r8', 'r9'], ['hA', 'hH', 'sA'])
 assert.ok(P.geldigeStand(s))
 assert.equal(P.klop(s, 1), null, 'kloppen mag niet in de eerste beurt')
@@ -63,7 +66,8 @@ console.log('PASS: gelijk = allebei een leven, 31 = meteen klaar, 0 levens = af'
 // Volgende ronde: de levens blijven, wie begint wisselt
 s = stand(['h7', 'h8', 's9'], ['rA', 'rH', 'k9'], ['k7', 's7', 'r10'], { beurten: 2 })
 s = P.klop(s, 1); s = P.ruil(s, 2, 'k9', 'r10')
-const n = P.volgendeRonde(s)
+const n = P.volgendeRonde(s, vast())
+assert.equal(n.fase, 'spel', 'de nieuwe ronde begint gewoon')
 assert.equal(n.ronde, 2); assert.equal(n.begint, 2); assert.deepEqual(n.levens, { 1: 2, 2: 3 }); assert.ok(P.geldigeStand(n))
 assert.equal(P.volgendeRonde(n), n.fase === 'uitslag' ? P.volgendeRonde(n) : null)
 // geldigeStand houdt rommel tegen
@@ -124,7 +128,7 @@ assert.equal(m.uitslag.reden, '31'); assert.deepEqual(m.uitslag.verliezers, [2, 
 m = stand4({ 1: ['hA', 'hH', 's7'], 2: ['r7', 'r8', 'k9'], 3: ['k7', 'k8', 'sV'], 4: ['h7', 'h8', 's9'] }, ['h10', 's8', 'r10'], { levens: { 1: 3, 2: 1, 3: 2, 4: 2 } })
 m = P.ruil(m, 1, 's7', 'h10')
 assert.deepEqual(m.uitslag.eruit, [2]); assert.equal(m.levens[2], 0)
-const r2 = P.volgendeRonde(m)
+const r2 = P.volgendeRonde(m, vast())
 assert.equal(r2.handen[2].length, 0, 'wie eruit ligt krijgt geen kaarten'); assert.ok([1, 3, 4].every(z => r2.handen[z].length === 3)); assert.ok(P.geldigeStand(r2))
 assert.equal(P.volgende(r2, 1), 3, 'zetel 2 wordt overgeslagen')
 // de laatste die over is, wint

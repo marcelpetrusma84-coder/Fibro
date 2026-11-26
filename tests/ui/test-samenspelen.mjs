@@ -37,7 +37,16 @@ assert.match(spel, /id="groepKnop"[^`]*👥 Met een groep/, 'knop met een groep'
 assert.match(spel, /supabase\.rpc\('mijn_groepen'\)/, 'de groepen ophalen')
 assert.match(spel, /content:'spelinvite:' \+ spelId \+ ':'/, 'de uitnodiging voor het gekozen spel (niet altijd schaken)')
 assert.equal((spel.match(/samenKnoppen\(\)\}/g) || []).length, 2, 'bij het niveau kiezen en bij het startscherm van arcadespellen')
+assert.match(spel, /starterId:user\.id, titel:'1' \}\)/, 'de chat weet dat het titelscherm er al was')
 console.log('PASS: spel.html heeft de knoppen tegen een vriend en met een groep')
+
+// 26 nov 2026: vanaf Home niet eerst de chat en niet nog een keer het titelscherm
+assert.match(chat, /if \(!q\.get\('spelVriend'\) \|\| !q\.get\('spelType'\) \|\| !q\.get\('sessieId'\)\) return[\s\S]{0,400}o\.classList\.add\('open'\)/, 'meteen het spelscherm')
+assert.match(chat, /const zonderTitel = urlParams\.get\('titel'\) === '1'/)
+assert.match(chat, /speelMee\(spelType, sessieId, starterId \|\| spelVriend, invitedPlayers, \{ zonderTitel \}\)/)
+assert.match(chat, /const titel = opties\?\.zonderTitel \? null : /, 'geen tweede titelscherm')
+assert.ok(lees('taal-en.js').includes('"Spel laden...":'))
+console.log('PASS: vanaf Home meteen het spel, zonder tweede titelscherm')
 
 // 4. Op Home (ingebed) mag het spelvenster ook naar de groepschat
 assert.match(lees('titelscherm.js'), /d\.adres\.startsWith\('groep\.html\?'\)/)

@@ -1822,6 +1822,8 @@ window.FIBRO_EN = {
   "Tik op de mollen!": "Tap the moles!",
   "Nieuw record: {n}!": "New high score: {n}!",
   "{n} mollen! Record: {r}": "{n} moles! High score: {r}",
+  // 26 nov 2026: met een spel de chat binnenkomen (vanaf Home): eerst even dit, dan het spel
+  "Spel laden...": "Loading game...",
   "Uitnodigen ›": "Invite ›",
   "Uitnodiging voor schaken versturen…": "Sending chess invitation…",
   "De uitnodiging kon niet verstuurd worden. Probeer het opnieuw.": "The invitation could not be sent. Please try again.",

@@ -302,3 +302,6 @@ jobs:
       - name: "Mollen meppen in de wachtkamer: 4x4, punten, record, stopt vanzelf (proef342)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef342.py .
+      - name: "Vanaf Home met een vriend: meteen het spel, geen tweede titelscherm (proef343)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef343.py .

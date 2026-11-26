@@ -47,7 +47,7 @@ try:
         check(knop and knop['r'] > 340 and knop['t'] < 30, 'A: ☰ rechtsboven (%s)' % knop)
         check(not pg.is_visible('#sluitKnop'), 'A: de oude ✕ is weg')
         pg.click('#spelMenuKnop')
-        check(pg.evaluate(ITEMS) == ['pauze', 'geluid', 'menu', 'exit'], 'A: volgorde: Pauze, Geluid, Menu, Spel verlaten (%s)' % pg.evaluate(ITEMS))
+        check(pg.evaluate(ITEMS) == ['pauze', 'geluid', 'scores', 'menu', 'exit'], 'A: volgorde: Pauze, Geluid, 🏆 Scores (26 nov 2026), Menu, Spel verlaten (%s)' % pg.evaluate(ITEMS))
         check(pg.is_disabled('[data-menu=pauze]'), 'A: pauze kan pas als het spel loopt')
         pg.keyboard.press('Escape')
         check(not pg.is_visible('#spelMenuLijst'), 'A: Escape sluit het menu')

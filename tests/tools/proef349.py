@@ -117,7 +117,10 @@ try:
             try: pg.mouse.click(195, 400)
             except Exception: pass
             pg.wait_for_timeout(200)
-        wacht(pg, "() => false", 9000)
+        # wachten tot het potje voorbij is (de vleermuis valt); op een trage computer (GitHub) duurt dat langer
+        for _ in range(60):
+            if [x for x in OPGESLAGEN[voor:] if x.get('p_spel') == 'flappybird']: break
+            pg.wait_for_timeout(500)
         fl = [x for x in OPGESLAGEN[voor:] if x.get('p_spel') == 'flappybird']
         check(len(fl) >= 1 and fl[0].get('p_soort') == 'punten' and fl[0].get('p_niveau') == '' and isinstance(fl[0].get('p_score'), int),
               'D: een potje Flapper gaat met de punten naar Supabase (%s)' % fl[:1])

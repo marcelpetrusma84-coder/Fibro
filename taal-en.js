@@ -1940,6 +1940,15 @@ window.FIBRO_EN = {
   "👋 Zeg hoi": "👋 Say hi",
   "Hoi! 👋": "Hi! 👋",
   "✅ Gekopieerd! Plak het in WhatsApp of een bericht.": "✅ Copied! Paste it into WhatsApp or a message.",
+  // 26 nov 2026: een scorebord bij elk spel (spel.html, spelscores.js)
+  "🏆 Scores": "🏆 Scores",
+  "{n}× gewonnen": "{n}× won",
+  "van {n} potjes": "out of {n} games",
+  "van 1 potje": "out of 1 game",
+  "Jouw overwinningen": "Your wins",
+  "Per niveau, tegen de computer": "Per level, against the computer",
+  "Wie won het vaakst?": "Who won the most?",
+  "Hoe vaak jij en je vrienden wonnen, de meeste bovenaan.": "How often you and your friends won, most wins first.",
   // 26 nov 2026: uitnodigen.js (➕ op Home, 📤 Delen in een spel)
   "Let op: de uitnodiging kon niet bewaard worden, dus de link werkt niet. Probeer het opnieuw.": "Note: the invitation could not be saved, so the link won't work. Please try again.",
   "Kopieer deze tekst:": "Copy this text:",

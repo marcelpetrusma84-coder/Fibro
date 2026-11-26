@@ -42,7 +42,7 @@ jobs:
   browser:
     name: Browsertests (bellen in spellen, postbus)
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 35   # 26 nov 2026: was 25; met de scoreborden-proeven duurt het rond 23 minuten (1x afgebroken op 25)
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -197,6 +197,9 @@ jobs:
       - name: "Scorebord-widget op Home en Scoreborden in Stekky Studio (proef350)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef350.py .
+      - name: "Scorebord ook bij Ghost Tag, Twin Snakes en Runner & Gunner, en 🏆 in het spelmenu (proef351)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef351.py .
       - name: "Kaartspellen: de Vrolijke kaarten (standaard, plaatjes laden, Engels)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef312.py .

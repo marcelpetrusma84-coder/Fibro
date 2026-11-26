@@ -1,3 +1,4 @@
+// v162 (26 nov 2026): taal-en.js?v=162 (Twin Snakes-spelvormen op het scorebord: Classic, Zonder muren).
 // v161 (26 nov 2026): taal-en.js?v=161 (de widget Scorebord op Home).
 // v160 (26 nov 2026): taal-en.js?v=160 (een scorebord bij elk spel: 🏆 Scores, keer gewonnen per niveau).
 // v159 (26 nov 2026): taal-en.js?v=159 (wachtkamer met een uitweg: tegen de computer of naar de chat, als je vriend er niet is).
@@ -172,7 +173,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=161', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=162', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

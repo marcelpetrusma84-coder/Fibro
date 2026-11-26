@@ -1941,6 +1941,9 @@ window.FIBRO_EN = {
   "Hoi! 👋": "Hi! 👋",
   "✅ Gekopieerd! Plak het in WhatsApp of een bericht.": "✅ Copied! Paste it into WhatsApp or a message.",
   // 26 nov 2026: een scorebord bij elk spel (spel.html, spelscores.js)
+  // 26 nov 2026: de spelvormen van Twin Snakes op het scorebord
+  "Classic": "Classic",
+  "Zonder muren": "No walls",
   // 26 nov 2026: de widget Scorebord op Home (scorebordwidget.js)
   "Scorebord": "Scoreboard",
   "Nog geen scores. Speel een spel en vergelijk je met je vrienden!": "No scores yet. Play a game and compare yourself with your friends!",

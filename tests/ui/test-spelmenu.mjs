@@ -6,7 +6,7 @@ const menu = lees('spelmenu.js'), chat = lees('chat.html'), spel = lees('spel.ht
 
 // de volgorde in het menu
 const volgorde = [...menu.matchAll(/const (\w+)Item = item\('(\w+)'/g)].map(m => m[2])
-assert.deepEqual(volgorde, ['pauze', 'geluid', 'mic', 'cam', 'menu', 'exit'])
+assert.deepEqual(volgorde, ['pauze', 'geluid', 'mic', 'cam', 'scores', 'menu', 'exit']) // 26 nov 2026: scores (🏆, alleen als het spel een scorebord heeft)
 // de kranen voor pauze en geluid, en het seintje voor spellen die zelf iets willen doen
 assert.match(menu, /window\.requestAnimationFrame = function/)
 assert.match(menu, /performance\.now = spelNu/)
@@ -14,7 +14,7 @@ assert.match(menu, /proto\.connect = function/)
 assert.match(menu, /new CustomEvent\('fibro-spel-pauze'/)
 // spelmenu.js als eerste geladen, zodat de kranen er zijn voor de spellen geluid maken of tekenen
 for (const [naam, bron, voor] of [['chat.html', chat, "import * as Bordgeluid from './bordgeluid.js"], ['spel.html', spel, "import * as Bordgeluid from './bordgeluid.js"]]) {
-  const i = bron.indexOf("from './spelmenu.js?v=1'")
+  const i = bron.search(/from '\.\/spelmenu\.js\?v=\d+'/)   // 26 nov 2026: welk nummer maakt niet uit
   assert.ok(i > 0 && i < bron.indexOf(voor), naam + ': spelmenu.js voor de rest')
 }
 // chat: de oude knoppen bovenin weg, pauze voor allebei, wolkje alleen voor andere vrienden

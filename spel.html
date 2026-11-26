@@ -72,6 +72,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
   import { startSpelUitnodigingLuisteraar } from './speluitnodiging.js?v=206'
   import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=14'
   import { nieuweSpelSessie } from './spelsessie.js?v=1'
+  import { markeerKlaar } from './startkaart.js?v=1'
   import { kanMetVriend, kanMetGroep, groepAdres } from './samenspelen.js?v=1' // 26 nov 2026: vanaf Home ook met een vriend of een groep
   import { toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek } from './titelscherm.js?v=19' // v251: titelscherm met muziek
 
@@ -314,6 +315,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     // v3 nov: pushmelding 'daagt je uit' (stuur-push leest het spel uit het bericht)
     if (uitnodiging?.id) fetch('https://qmgatbphiplrfxrljtbe.supabase.co/functions/v1/stuur-push', { method:'POST', keepalive:true,
       headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ message_id: uitnodiging.id }) }).catch(() => {})
+    try { markeerKlaar(localStorage, user.id) } catch (e) {} // 26 nov 2026: de kaart 'Speel met een vriend' op Home is niet meer nodig
     // titel=1: het titelscherm stond hier al; de chat laat het dan niet nog een keer zien (26 nov 2026)
     const q = new URLSearchParams({ spelVriend:vriend.id, spelType:spelId, sessieId, starterId:user.id, titel:'1' })
     gaNaar('chat.html?' + q.toString())

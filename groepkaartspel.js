@@ -231,5 +231,6 @@ export function maakGroepKaartspel({ ik, groepId, kanaal, leden, naamVan, toast 
   const schoonRooster = r => r.slice(0, MAX).map(x => x && x.computer ? { computer: true } : { id: String(x && x.id) }).filter(x => x.computer || GELDIG.test(x.id))
 
   const hallo = () => stuur('hallo', {})
-  return { kies, ontvang, hallo, bezig: () => Boolean(lopend), _staat: () => ({ lobby, lopend: Boolean(lopend), uitnodigingen: [...uitnodigingen.keys()] }) }
+  // 26 nov 2026: open(spel) = meteen de wachtkamer voor dat spel (groep.html?spel=..., vanaf Home via samenspelen.js)
+  return { kies, open: spel => { if (!lopend && !lobby && groepSpellen().some(s => s.id === spel)) open(spel) }, ontvang, hallo, bezig: () => Boolean(lopend), _staat: () => ({ lobby, lopend: Boolean(lopend), uitnodigingen: [...uitnodigingen.keys()] }) }
 }

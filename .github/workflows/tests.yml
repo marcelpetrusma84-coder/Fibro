@@ -296,3 +296,6 @@ jobs:
       - name: "Kaartspellen met de groep: uitnodigen, wachtkamer, computer erbij, spelen, verlaten (proef340)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef340.py .
+      - name: "Samen spelen vanaf Home: tegen een vriend of met een groep (proef341)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef341.py .

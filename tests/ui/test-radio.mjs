@@ -25,13 +25,14 @@ const cfg = R.normaliseer({ zenders: [
   { naam: 'Kwaad', url: 'https://192.168.1.1/' }, { naam: '', url: 'https://a.nl/s' }, { naam: 'Dubbel', url: 'https://icecast.omroep.nl/radio2-bb-mp3' },
   ...Array.from({ length: 10 }, (_, i) => ({ naam: 'Z' + i, url: 'https://z' + i + '.nl/s', land: 'xyz' })),
 ] })
-assert.equal(cfg.zenders.length, R.MAX_ZENDERS, 'hoogstens 6')
+assert.equal(R.MAX_ZENDERS, 4, 'vier zenders, net als de vier knoppen op elke skin')
+assert.equal(cfg.zenders.length, R.MAX_ZENDERS, 'hoogstens 4')
 assert.deepEqual(cfg.zenders[0], { naam: 'NPO Radio 2', url: 'https://icecast.omroep.nl/radio2-bb-mp3', land: 'NL' })
 assert.equal(cfg.zenders[1].land, '', 'rare landcode weg')
 assert.equal(R.normaliseer({ zenders: [{ naam: 'X', url: 'http://x.nl' }] }), null)
 assert.equal(R.normaliseer(null), null)
 assert.equal(R.normaliseer({ zenders: 'x' }), null)
-console.log('PASS: normaliseer: hoogstens 6 nette zenders, de rest valt weg')
+console.log('PASS: normaliseer: hoogstens 4 nette zenders, de rest valt weg')
 
 // ── Radio Browser ──
 const r = R.filterResultaten([
@@ -94,7 +95,7 @@ assert.match(lees('profiel.html'), /id="widgetRij-radio" style="display:none"/)
 assert.match(lees('profiel.html'), /radio:\s+\{ id:'radio'/)
 assert.match(lees('vriend-profiel.html'), /if \(w\.id === 'radio'\) \{/)
 assert.match(lees('vriend-profiel.html'), /cfg = R\.normaliseer\(JSON\.parse\(ruw\)\)/)
-for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/radio\.js\?v=5'\)/)
+for (const f of ['index.html', 'vriend-profiel.html']) assert.match(lees(f), /import\('\.\/radio\.js\?v=6'\)/)
 const en = lees('taal-en.js')
 for (const t of ['Radio', 'Nog geen zender', item.uitleg, 'Uit de Store: internetradio, speelt pas na een tik', 'Nederland', 'Klassiek'])
   assert.ok(en.includes(JSON.stringify(t) + ':'), 'Engels voor: ' + t)

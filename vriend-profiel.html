@@ -791,7 +791,7 @@ body.heeft-wallpaper::before { display:block; }
     const ruw = await laadFotoUitDB('vriend_' + vriendId + '_radio')
     if (!ruw) return false
     let R, cfg = null
-    try { R = await import('./radio.js?v=5') } catch (e) { console.warn('[radio]', e); return false }
+    try { R = await import('./radio.js?v=6') } catch (e) { console.warn('[radio]', e); return false }
     try { cfg = R.normaliseer(JSON.parse(ruw)) } catch (e) { return false }
     if (!cfg) return false
     el.innerHTML = '<div class="widget-header"><span class="widget-icon-sm">\u{1F4FB}</span><span class="widget-titel">' + vEsc(T('Radio')) + '</span></div><div class="widget-inhoud"></div>'

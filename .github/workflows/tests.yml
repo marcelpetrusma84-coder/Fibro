@@ -308,3 +308,6 @@ jobs:
       - name: "Home: de kaart Speel met een vriend (proef344)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef344.py .
+      - name: "Radio: altijd vier knoppen (proef345)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef345.py .

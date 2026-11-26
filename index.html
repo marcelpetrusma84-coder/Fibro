@@ -1871,7 +1871,7 @@ async function renderRadio(c, uid) {
   let cfg = null
   try { cfg = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
   let R
-  try { R = await import('./radio.js?v=5') } catch (e) { console.warn('[radio]', e); return }
+  try { R = await import('./radio.js?v=6') } catch (e) { console.warn('[radio]', e); return }
   R.tekenRadioWidget(c, {
     cfg, eigen: true,
     bewaar: nieuw => {

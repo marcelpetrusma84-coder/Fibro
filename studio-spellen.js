@@ -10,7 +10,7 @@
 //     max: hoeveel spelers hoogstens (25 nov 2026; meer dan 2 = ook met de groep, groepkaartspel.js) }
 
 export const STUDIO_SPELLEN = [
-  {"id":"eenendertigen","soort":"kaart","naam":["Eenendertigen","Thirty-One"],"icoon":"🎲","uitleg":["Ruil kaarten met de tafel en kom zo dicht mogelijk bij 31 in één kleur. Klop als je denkt dat je genoeg hebt!","Swap cards with the table and get as close to 31 as you can in one suit. Knock when you think you have enough!"],"v":4,"max":6,"met":{"vriend":true,"computer":true,"chatbalk":true,"webcam":true},"spraak":"vanzelf","titel":"pesten"},
+  {"id":"eenendertigen","soort":"kaart","naam":["Eenendertigen","Thirty-One"],"icoon":"🎲","uitleg":["Ruil kaarten met de tafel en kom zo dicht mogelijk bij 31 in één kleur. Klop als je denkt dat je genoeg hebt!","Swap cards with the table and get as close to 31 as you can in one suit. Knock when you think you have enough!"],"v":5,"max":6,"met":{"vriend":true,"computer":true,"chatbalk":true,"webcam":true},"spraak":"vanzelf","titel":"pesten"},
 ]
 
 // Engels: de naam en de uitleg (de Nederlandse tekst is de sleutel, zoals in taal-en.js)

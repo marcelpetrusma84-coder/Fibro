@@ -149,6 +149,8 @@ export function maakSpelMenu(opties = {}) {
   const geluidItem = item('geluid', () => zetSpelgeluid(!geluidAan))
   const micItem = item('mic', () => { o.onMic?.(); setTimeout(werkBij, 400) })
   const camItem = item('cam', () => { o.onCam?.(); setTimeout(werkBij, 600) })
+  // 26 nov 2026 (Marcel): 🏆 Scores, het scorebord van dit spel (spel.html). Het spel pauzeert eerst.
+  const scoreItem = item('scores', () => { sluit(); if (!gepauzeerd && o.kanPauze?.()) pauze(true, true); o.onScores?.() })
   streep()
   const menuItem = item('menu', () => { sluit(); pauze(false, true); o.onMenu?.() })
   const exitItem = item('exit', () => { sluit(); pauze(false, true); o.onExit?.() })
@@ -171,6 +173,8 @@ export function maakSpelMenu(opties = {}) {
     const mic = o.micAan(); zet(micItem, mic ? '🎤' : '🔇', mic ? T('Microfoon uitzetten') : T('Microfoon aanzetten')); micItem.dataset.aan = String(mic)
     camItem.hidden = o.solo || !o.kanCam()
     const cam = o.camAan(); zet(camItem, '📹', cam ? T('Camera uitzetten') : T('Camera aanzetten')); camItem.dataset.aan = String(cam)
+    scoreItem.hidden = !(o.onScores && o.heeftScores?.())
+    zet(scoreItem, '🏆', T('Scores'))
     zet(menuItem, '🏠', T('Menu'))
     zet(exitItem, '🚪', T('Spel verlaten'))
   }

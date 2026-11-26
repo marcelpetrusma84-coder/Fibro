@@ -5,17 +5,20 @@
 //            (Tic-Tac-Toe, Four in a Row, Schaken, Dammen, Neo Paddle, de kaartspellen uit de Store en uit Stekky Studio)
 //
 // Koningsjacht en Neon Raiders hebben al een eigen scorebord (koningsjacht-scores.js, neon-raiders-scores.js).
-// Ghost Tag, Twin Snakes en Runner & Gunner volgen later (die tellen hun punten nog op hun eigen manier).
+// Ghost Tag en Runner & Gunner (punten) en Twin Snakes (keer gewonnen) sinds 26 nov 2026 (avond).
 import { STUDIO_SPELLEN } from './studio-spellen.js?v=6'
 import { SCOREBORDEN, STIJLEN } from './scoreborden.js?v=1' // 26 nov 2026: per spel aan/uit en stijl uit Stekky Studio
 
-const PUNTEN = ['breakout', 'swarm', 'flappybird']
-const WINST = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pong', 'pesten', 'toepen', 'eenentwintigen']
+// 26 nov 2026 (avond, Marcel: "sluit maar aan"): ook Ghost Tag en Runner & Gunner (punten) en Twin Snakes (rondes
+// gewonnen per spelvorm: levels, classic, zonder muren). Die melden zich via window.fibroSoloScore / fibroSoloUitslag.
+const PUNTEN = ['breakout', 'swarm', 'flappybird', 'pacman', 'endlessrunner']
+const WINST = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pong', 'pesten', 'toepen', 'eenentwintigen', 'pinball']
 // Naam en icoon (dezelfde als in solo.js), voor de widget op Home en voor Stekky Studio
 const INFO = {
   breakout: ['Block It', '🟪'], swarm: ['The Swarm', '🪲'], flappybird: ['Flapper', '🦇'],
   botkaaseiren: ['Tic-Tac-Toe', '⭕'], vieroprij: ['Four in a Row', '🔴'], schaken: ['Schaken', '♟️'], dammen: ['Draughts', '⚫'],
   pong: ['Neo Paddle', '🏓'], pesten: ['Pesten', '🃏'], toepen: ['Toepen', '✊'], eenentwintigen: ['Black Jack', '♠️'],
+  pacman: ['Ghost Tag', '👻'], endlessrunner: ['Runner & Gunner', '🏃'], pinball: ['Twin Snakes', '🐍'],
 }
 
 // Alle spellen die een scorebord kunnen hebben (ook als het in Studio uit staat), met naam, icoon en soort

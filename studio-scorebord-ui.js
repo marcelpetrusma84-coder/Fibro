@@ -2,7 +2,7 @@
 // Per spel: scorebord aan of uit, een stijl (neon, goud, paars, roze, groen) en eventueel een eigen titel.
 // "👁 Voorbeeld" laat het echte scorebord zien met voorbeeldscores. De Studio maakt er een bestand van
 // (scoreborden.stekky.json); dat zet Claude of Tijn in de app met tests/tools/studio-scorebord-installeer.mjs.
-import { alleScoreSpellen, scorebordInstelling, valideerScoreborden } from './scorespellen.js?v=2'
+import { alleScoreSpellen, scorebordInstelling, valideerScoreborden } from './scorespellen.js?v=3'
 import { STIJLEN } from './scoreborden.js?v=1'
 import { maakNeonScorebord } from './neon-raiders-scoreboard.js?v=7'
 

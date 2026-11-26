@@ -724,6 +724,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     if (staat === 'einde') return
     staat = 'einde'; eindTijd = 0; uitslag = u; eindeOp = null
     if (leider && (u === 0 || u === 1)) winst[u]++
+    if (!kanaalOk && u !== -2) try { window.fibroSoloUitslag?.(u === ik ? 'winst' : u === -1 ? 'gelijk' : 'verlies', { niveau: spelmodus }) } catch (e) {} // 26 nov 2026: scorebord (alleen tegen de computer, spel.html)
     if (u === ik) geluid.winst()
     else if (u === ander) geluid.uit()
     else if (u === -1) geluid.gelijk()

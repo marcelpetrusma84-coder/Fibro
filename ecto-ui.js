@@ -842,6 +842,7 @@ export async function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) 
     staat = 'einde'; eindTijd = 0; jager = null
     geluid.jachtStop()
     if (gewoon) geluid.winst()
+    if (gewoon && !kanaalOk) try { window.fibroSoloScore?.(spelers[ik].score) } catch (e) {} // 26 nov 2026: scorebord (alleen tegen de computer, spel.html)
     if (leider && kanaalOk) [0, 250, 500].forEach(ms => setTimeout(stuurKlaar, ms))
   }
 

@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://lichess.org/api/cloud-eval https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
-<script src="taal.js?v=162"></script>
+<script src="taal.js?v=163"></script>
 <script src="appslot.js?v=3"></script>
 <script src="controller.js?v=2"></script>
 <!-- v275: een spreekwolkje bovenin het spel als je een berichtje krijgt -->
@@ -70,9 +70,9 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 </div>
 
 <script type="module">
-  import { maakSpelMenu, isGepauzeerd } from './spelmenu.js?v=1' // 11 nov 2026: als eerste, voor de pauze- en geluidskranen
+  import { maakSpelMenu, isGepauzeerd } from './spelmenu.js?v=2' // 11 nov 2026: als eerste, voor de pauze- en geluidskranen
   import * as Bordgeluid from './bordgeluid.js?v=203'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=321'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=322'
   import { supabase } from './supabase.js?v=95'
   import { startSpelUitnodigingLuisteraar } from './speluitnodiging.js?v=207'
   import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=15'
@@ -81,7 +81,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
   import { kanMetVriend, kanMetGroep, groepAdres } from './samenspelen.js?v=2' // 26 nov 2026: vanaf Home ook met een vriend of een groep
   import { toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek } from './titelscherm.js?v=20' // v251: titelscherm met muziek
   import { deelUitnodiging, bereidVoor, kanSpelMeesturen } from './uitnodigen.js?v=1' // 26 nov 2026: 📤 Delen (Marcel)
-  import { scoreSoort, scorebordInstelling } from './scorespellen.js?v=2' // 26 nov 2026: een scorebord bij elk spel (Marcel)
+  import { scoreSoort, scorebordInstelling } from './scorespellen.js?v=3' // 26 nov 2026: een scorebord bij elk spel (Marcel)
   import { maakSpelScoreService } from './spelscores.js?v=1'
   import { maakNeonScorebord } from './neon-raiders-scoreboard.js?v=7'
 
@@ -116,6 +116,9 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
       location.replace('spel.html?' + q.toString())
     },
     onExit: () => document.getElementById('sluitKnop').click(),
+    // 26 nov 2026: 🏆 Scores in het menu, ook bij spellen met een eigen startscherm (Ghost Tag, Twin Snakes, Runner & Gunner)
+    onScores: () => openScorebord(),
+    heeftScores: () => { try { return !!scoreDienst } catch (e) { return false } }, // het menu vraagt dit al voordat scoreDienst bestaat
   })
 
   const spelId = new URLSearchParams(location.search).get('spel') || ''
@@ -153,12 +156,20 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
   const scoreSoortHier = scoreSoort(spelId)
   let scoreDienst = null, scorebord = null, inLevels = false, huidigNiveau = ''
   try { if (scoreSoortHier) scoreDienst = maakSpelScoreService({ supabase, spel: spelId, soort: scoreSoortHier }) } catch (e) { scoreDienst = null }
-  window.fibroSoloUitslag = uitslag => {
+  // opties.niveau: een spel met eigen spelvormen kiest die zelf (Twin Snakes: levels, classic, muurloos)
+  window.fibroSoloUitslag = (uitslag, opties = {}) => {
     if (!scoreDienst || scoreSoortHier !== 'winst' || !gestart || !['winst', 'verlies', 'gelijk'].includes(uitslag)) return
-    scoreDienst.bewaar({ gewonnen: uitslag === 'winst', niveau: huidigNiveau }).catch(() => {})
+    const niveau = /^[a-z0-9_-]{1,20}$/.test(String(opties?.niveau || '')) ? String(opties.niveau) : huidigNiveau
+    scoreDienst.bewaar({ gewonnen: uitslag === 'winst', niveau }).catch(() => {})
   }
-  const NIVEAU_NAAM = { makkelijk: 'Makkelijk', normaal: 'Normaal', moeilijk: 'Moeilijk', expert: 'Expert', ultra: 'Ultra' }
-  const NIVEAU_VOLGORDE = ['makkelijk', 'normaal', 'moeilijk', 'expert', 'ultra']
+  // 26 nov 2026 (avond): spellen met punten zonder solo-object (Ghost Tag, Runner & Gunner) melden hun eindscore zo
+  window.fibroSoloScore = n => {
+    if (!scoreDienst || scoreSoortHier !== 'punten' || !gestart || inLevels) return
+    scoreDienst.bewaar({ score: Math.max(0, Math.floor(Number(n)) || 0) }).catch(() => {})
+  }
+  const NIVEAU_NAAM = { makkelijk: 'Makkelijk', normaal: 'Normaal', moeilijk: 'Moeilijk', expert: 'Expert', ultra: 'Ultra',
+    levels: 'Levels', classic: 'Classic', muurloos: 'Zonder muren' } // de laatste drie: de spelvormen van Twin Snakes
+  const NIVEAU_VOLGORDE = ['makkelijk', 'normaal', 'moeilijk', 'expert', 'ultra', 'levels', 'classic', 'muurloos']
   function openScorebord() {
     if (!scoreDienst) return
     if (!scorebord) {

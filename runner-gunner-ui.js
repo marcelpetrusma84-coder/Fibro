@@ -1391,6 +1391,7 @@ var Spel=new Phaser.Class({
     this.scene.pause();
     GELUID.muziek(false);GELUID.speel('einde');
     stuurEinde(this);
+    if (!kanaalOk) try { window.fibroSoloScore?.(this.score) } catch (e) {} // 26 nov 2026: scorebord (alleen tegen de computer, spel.html)
     laag.querySelector("h1").textContent="GAME OVER";
     scoreVak.textContent=String(this.score).padStart(7,"0");
     this.eindTekst=vertaal('SCORE {score} — {m} meter, {n} munten.',{score:String(this.score).padStart(7,"0"),m:m,n:this.muntTal});

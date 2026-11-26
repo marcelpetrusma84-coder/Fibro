@@ -2443,6 +2443,12 @@ window.FIBRO_EN = {
   "lettertype|Sintgedicht": "Sinterklaas poem",
   "lettertype|Strooigoed": "Sweets",
   "lettertype|Pepernoot": "Ginger nut",
+  // ---- Lettertype-pakket Kerst in de Stekky Store, 26 nov 2026 ----
+  "pakket|Kerst": "Christmas",
+  "lettertype|Kerstkaart": "Christmas card",
+  "lettertype|Sneeuwvlok": "Snowflake",
+  "lettertype|Kerstverhaal": "Christmas story",
+  "lettertype|Kerstkoek": "Christmas cookie",
   // ---- Chat: datum boven de berichten van elke dag, 13 nov 2026 ----
   "Vandaag": "Today",
   "Gisteren": "Yesterday",

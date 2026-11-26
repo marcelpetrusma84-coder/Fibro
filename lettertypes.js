@@ -108,6 +108,13 @@ export const STORE_PAKKETTEN = [
     { naam: 'Emilys Candy', val: 'cursive', label: 'Strooigoed' },
     { naam: 'Henny Penny', val: 'cursive', label: 'Pepernoot' },
   ] },
+  // 26 nov 2026: Kerst (op verzoek van Marcel). Fontsource 5.3.0, OFL-1.1. (Mountains of Christmas staat al bij de gewone lettertypes.)
+  { id: 'pakket-kerst', titel: 'Kerst', lettertypes: [
+    { naam: 'Festive', val: 'cursive', label: 'Kerstkaart' },
+    { naam: 'Snowburst One', val: 'cursive', label: 'Sneeuwvlok' },
+    { naam: 'Mystery Quest', val: 'cursive', label: 'Kerstverhaal' },
+    { naam: 'Kavoon', val: 'cursive', label: 'Kerstkoek' },
+  ] },
 ]
 
 // Alle store-lettertypes op een rij. ids = de downloads die dit lettertype geven (het pakket, en de oude losse).
@@ -133,7 +140,9 @@ const EIGEN = new Set([
   'rubik-wet-paint', 'butcherman', 'eater', 'metal-mania', 'jolly-lodger', 'luckiest-guy', 'bubblegum-sans',
   'stardos-stencil', 'allerta-stencil', 'unifrakturmaguntia', 'uncial-antiqua', 'almendra-display', 'grenze-gotisch',
   // 13 nov 2026: pakket Sinterklaas
-  'eagle-lake', 'berkshire-swash', 'emilys-candy', 'henny-penny'
+  'eagle-lake', 'berkshire-swash', 'emilys-candy', 'henny-penny',
+  // 26 nov 2026: pakket Kerst
+  'festive', 'snowburst-one', 'mystery-quest', 'kavoon'
 ])
 export function lettertypeSlug(naam) {
   return String(naam || '').trim().toLowerCase().replace(/ /g, '-')

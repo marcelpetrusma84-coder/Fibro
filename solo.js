@@ -527,7 +527,7 @@ export const SOLO_SPELLEN = {
   vieroprij:    { naam: 'Four in a Row', icon: '🔴', bestand: './vieroprij-ui.js?v=241', bot: vorBot },
   pesten:       { naam: 'Pesten',        icon: '🃏', bestand: './pesten-ui.js?v=20',     bot: pestenBot, store: true },   // 11 nov 2026: het eerste kaartspel; alleen via de Store (niet meesturen met een uitnodiging)
   toepen:       { naam: 'Toepen',        icon: '✊', bestand: './toepen-ui.js?v=18',     bot: toepenBot, store: true },          // 11 nov 2026: kaartspel uit de Store
-  eenentwintigen: { naam: 'Black Jack', icon: '♠️', bestand: './eenentwintigen-ui.js?v=19', bot: eenentwintigenBot, store: true },   // 11 nov 2026: kaartspel uit de Store
+  eenentwintigen: { naam: 'Black Jack', icon: '♠️', bestand: './eenentwintigen-ui.js?v=20', bot: eenentwintigenBot, store: true },   // 11 nov 2026: kaartspel uit de Store
   // 13 nov 2026: Koningsjacht, alleen tegen het kasteel (geen computerspeler en geen spelkanaal), uit de Store; met een vriend in de chat
   koningsjacht: { naam: 'Koningsjacht', icon: '👑', bestand: './koningsjacht-ui.js?v=55', zonderKanaal: true, store: true },
   schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=278',  niveaus:[...NIVEAUS, 'ultra'], bot: opties => opties.niveau === 'ultra' ? schaakUltraBot(opties) : schaakBot(opties), motor: './schaak.js?v=95', motorNaam: 'Schaak' },

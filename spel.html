@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://lichess.org/api/cloud-eval https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
-<script src="taal.js?v=163"></script>
+<script src="taal.js?v=164"></script>
 <script src="appslot.js?v=3"></script>
 <script src="controller.js?v=2"></script>
 <!-- v275: een spreekwolkje bovenin het spel als je een berichtje krijgt -->
@@ -72,7 +72,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 <script type="module">
   import { maakSpelMenu, isGepauzeerd } from './spelmenu.js?v=2' // 11 nov 2026: als eerste, voor de pauze- en geluidskranen
   import * as Bordgeluid from './bordgeluid.js?v=203'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=322'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=323'
   import { supabase } from './supabase.js?v=95'
   import { startSpelUitnodigingLuisteraar } from './speluitnodiging.js?v=207'
   import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=15'
@@ -83,6 +83,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
   import { deelUitnodiging, bereidVoor, kanSpelMeesturen } from './uitnodigen.js?v=1' // 26 nov 2026: 📤 Delen (Marcel)
   import { scoreSoort, scorebordInstelling } from './scorespellen.js?v=3' // 26 nov 2026: een scorebord bij elk spel (Marcel)
   import { maakSpelScoreService } from './spelscores.js?v=1'
+  import { maakCasino, CASINO_SPELLEN } from './casino.js?v=1' // 27 nov 2026: tokens inzetten tegen de computer (Marcel)
   import { maakNeonScorebord } from './neon-raiders-scoreboard.js?v=7'
 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -162,6 +163,8 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     const niveau = /^[a-z0-9_-]{1,20}$/.test(String(opties?.niveau || '')) ? String(opties.niveau) : huidigNiveau
     scoreDienst.bewaar({ gewonnen: uitslag === 'winst', niveau }).catch(() => {})
   }
+  // 27 nov 2026 (Marcel): casinospellen (Black Jack) laten je tokens inzetten tegen de computer (casino.js)
+  try { window.fibroCasino = CASINO_SPELLEN.includes(spelId) ? maakCasino({ supabase, spel: spelId }) : null } catch (e) { window.fibroCasino = null }
   // 26 nov 2026 (avond): spellen met punten zonder solo-object (Ghost Tag, Runner & Gunner) melden hun eindscore zo
   window.fibroSoloScore = n => {
     if (!scoreDienst || scoreSoortHier !== 'punten' || !gestart || inLevels) return

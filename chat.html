@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=161"></script>
+<script src="taal.js?v=162"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -3055,10 +3055,10 @@ console.timeLog('[chat] berichten', 'opgehaald')
     dammen: './dammen-ui.js?v=152',
     pong: './pong-ui.js?v=243',
     vieroprij: './vieroprij-ui.js?v=241',
-    pesten: './pesten-ui.js?v=19',
-    toepen: './toepen-ui.js?v=17',
-    eenentwintigen: './eenentwintigen-ui.js?v=18',
-    koningsjacht: './koningsjacht-ui.js?v=53',
+    pesten: './pesten-ui.js?v=20',
+    toepen: './toepen-ui.js?v=18',
+    eenentwintigen: './eenentwintigen-ui.js?v=19',
+    koningsjacht: './koningsjacht-ui.js?v=55',
     schaken: './schaken-ui.js?v=278',
     schakendrie: './schaken-drie-ui.js?v=45',
     flappybird: './flappy-ui.js?v=147',
@@ -3068,7 +3068,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     endlessrunner: './runner-gunner-ui.js?v=149',
     pacman: './ecto-ui.js?v=178',
     pinball: './twin-snakes-ui.js?v=150',
-    shmup: './neon-raiders-ui.js?v=227'
+    shmup: './neon-raiders-ui.js?v=228'
   }
   for (const s of STUDIO_SPELLEN) SPEL_BESTAND[s.id] = studioBestand(s) // 25 nov 2026: spellen uit Stekky Studio
   const _alGeladen = {}
@@ -3870,7 +3870,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Pesten (kaartspel, 11 nov 2026) ───
   async function startPesten() {
-    const m = await laadModule('./pesten-ui.js?v=19')
+    const m = await laadModule('./pesten-ui.js?v=20')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
   // ─── Toepen en Black Jack (kaartspellen uit de Store, 11 nov 2026): hetzelfde als Pesten ───
@@ -4230,7 +4230,7 @@ async function startBlockIt() {
   }
 
   async function startNeonRaiders() {
-    const m = await laadModule('./neon-raiders-ui.js?v=227')
+    const m = await laadModule('./neon-raiders-ui.js?v=228')
     await m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'shmup' && !spelGestopt })
   }
 

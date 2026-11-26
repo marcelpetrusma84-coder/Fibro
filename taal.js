@@ -1,3 +1,4 @@
+// v162 (26 nov 2026): taal-en.js?v=162 (Koningsjacht van Tijn: scorecategorieën en ruimteschip, samengevoegd met main).
 // v161 (26 nov 2026): taal-en.js?v=161 (de widget Scorebord op Home).
 // v160 (26 nov 2026): taal-en.js?v=160 (een scorebord bij elk spel: 🏆 Scores, keer gewonnen per niveau).
 // v159 (26 nov 2026): taal-en.js?v=159 (wachtkamer met een uitweg: tegen de computer of naar de chat, als je vriend er niet is).
@@ -34,7 +35,7 @@
 // v123 (18 nov 2026): taal-en.js?v=123 (vriend worden vanuit een groep)
 // v122 (17 nov 2026): taal-en.js?v=122 (geblokkeerde personen in een groep)
 // v121b (17 nov 2026): taal-en.js?v=121 (Vrolijke kaarten)
-// taal.js - Fibro in het Nederlands of in het Engels (v7, 13 oktober 2026, v148)
+// taal.js - Fibro in het Nederlands of in het Engels (v7, 13 oktober 2026, v149)
 // v265 (4 november 2026): taal-en.js?v=72 (wachtwoord resetten)
 // v265b (4 november 2026): taal-en.js?v=72 (quiz)
 // v265c (5 november 2026): taal-en.js?v=67 (uitnodiging)
@@ -172,7 +173,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=161', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=162', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

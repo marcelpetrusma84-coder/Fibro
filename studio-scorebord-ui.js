@@ -4,7 +4,7 @@
 // (scoreborden.stekky.json); dat zet Claude of Tijn in de app met tests/tools/studio-scorebord-installeer.mjs.
 import { alleScoreSpellen, scorebordInstelling, valideerScoreborden } from './scorespellen.js?v=2'
 import { STIJLEN } from './scoreborden.js?v=1'
-import { maakNeonScorebord } from './neon-raiders-scoreboard.js?v=6'
+import { maakNeonScorebord } from './neon-raiders-scoreboard.js?v=7'
 
 const $ = id => document.getElementById(id)
 const STIJL_NAAM = { neon: 'Neon (standaard)', goud: 'Goud', paars: 'Paars', roze: 'Roze', groen: 'Groen' }

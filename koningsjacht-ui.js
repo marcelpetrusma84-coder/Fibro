@@ -21,14 +21,15 @@ import { maakEindscene } from './koningsjacht-eindscene.js?v=8'
 // Speler 1 kiest de manier en het niveau ('opnieuw'); speler 2 wacht. Wie later binnenkomt, vraagt de stand op.
 // v4 (13 nov 2026, Marcel): kaarslicht. Twee kaarsen op tafel met flakkerende vlammen; de randen van de tafel zijn
 // donker en het warme licht flakkert mee. Aan/uit met 🕯️ (bewaard: fibro_koningsjacht_kaars, standaard aan).
+// v58 (25 nov 2026): ook kaarten in de aflegzone worden als hologram geprojecteerd.
 import * as K from './koningsjacht.js?v=2'
-import { maakKaartTafel, kaartSvg, achterkantSvg, kaartNaam, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=21'
+import { maakKaartTafel, kaartSvg, achterkantSvg, kaartNaam, KLEUR_TEKEN, zetStijl, REACTIES, KAART_INSTELLINGEN, kaartInstellingen, zetKaartInstelling } from './kaartspel-hulp.js?v=22'
 import { speel as geluid, muziekStaatAan, zetMuziek, startMuziek, stopMuziek, zetMuziekThema } from './koningsjacht-geluid.js?v=4'
-import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=14'
+import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=16'
 import { zetKaarsSlijtage } from './koningsjacht-kaarsen.js?v=1'
 import { verbindBierpul, herstelBierPartij } from './koningsjacht-bier.js?v=2'
-import { maakKoningsjachtScoreService } from './koningsjacht-scores.js?v=1'
-import { maakKoningsjachtScorebord } from './koningsjacht-scoreboard.js?v=3'
+import { maakKoningsjachtScoreService } from './koningsjacht-scores.js?v=2'
+import { maakKoningsjachtScorebord } from './koningsjacht-scoreboard.js?v=4'
 import { maakScorePartij } from './koningsjacht-score-partij.js?v=1'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
@@ -38,6 +39,8 @@ const SOORT = { B: 'Boer', V: 'Vrouw', H: 'Heer' }
 const KLEURNAAM = { h: 'harten', r: 'ruiten', k: 'klaveren', s: 'schoppen' }
 const MEDAILLE = { goud: '🥇', zilver: '🥈', brons: '🥉' }
 const NIVEAU_NAAM = { schildknaap: 'Schildknaap', ridder: 'Ridder', koning: 'Koning' }
+const RUIMTE_SCENES = ['ruimteschip-oud', 'ruimteschip-futuristisch']
+const isRuimteScene = scene => RUIMTE_SCENES.includes(scene)
 const lees = (k, std) => { try { const w = localStorage.getItem(k); return w === null ? std : JSON.parse(w) } catch (e) { return std } }
 const schrijf = (k, w) => { try { if (w === null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(w)) } catch (e) {} }
 export const vijandNaam = id => T('{soort} van {kleur}', { soort: T(SOORT[id.slice(1)]), kleur: T(KLEURNAAM[id[0]]) })
@@ -131,7 +134,16 @@ const CSS = `
 .kj-haal{overflow:visible;z-index:1}
 .kj-gloeit{filter:brightness(1.35) drop-shadow(0 0 10px var(--kj-gloed,#f5b301)) drop-shadow(0 0 22px var(--kj-gloed,#f5b301))}
 .kj-flits{position:absolute;inset:0;z-index:40;pointer-events:none;background:radial-gradient(ellipse at 50% 20%,#ef444466,#0000 70%)}
+.kj-herstart-golf{position:absolute;inset:0;z-index:80;pointer-events:none;background:linear-gradient(0deg,#55eaffee 0%,#38bdf855 38%,#38bdf800 85%);transform:translateY(105%);animation:kjHerstartGolf .72s cubic-bezier(.18,.72,.24,1) forwards}
+@keyframes kjHerstartGolf{0%{transform:translateY(105%);opacity:0}18%{opacity:1}100%{transform:translateY(-105%);opacity:.9}}
+@media(prefers-reduced-motion:reduce){.kj-herstart-golf{animation-duration:.18s}}
 .kj-koepel{z-index:2;border-radius:50% 50% 12px 12px/80% 80% 12px 12px;border:3px solid #93c5fd;background:radial-gradient(ellipse at 50% 100%,#60a5fa55,#3b82f611 60%,#0000 75%);box-shadow:0 0 30px #60a5fa,inset 0 0 30px #93c5fd88}
+.kj-koepel-spaceship{isolation:isolate;border-color:#a5fff2;background:radial-gradient(ellipse at 50% 96%,#5dffe544,#27cbbd23 38%,#4ef3eb0d 68%,transparent 78%);box-shadow:0 0 9px #c7fff2,0 0 30px #16e8d9,0 0 72px #0b9eafa6,inset 0 -6px 26px #9effefaa,inset 0 0 62px #16dacc70}
+.kj-koepel-spaceship::before{content:"";position:absolute;inset:8% 5% 1%;border:1px solid #c7fff2bb;border-radius:50% 50% 12px 12px/80% 80% 12px 12px;background:repeating-conic-gradient(from -4deg at 50% 100%,#c9fff225 0deg .45deg,transparent .8deg 12deg);mask-image:linear-gradient(180deg,#000 0%,#000b 48%,transparent 100%);box-shadow:inset 0 0 18px #6fffe766;animation:kjShieldField 2.6s ease-in-out infinite alternate}
+.kj-koepel-spaceship::after{content:"";position:absolute;left:12%;right:12%;bottom:4%;height:34%;border:2px solid #c5fff2d9;border-radius:50%;box-shadow:0 0 8px #e2fff7,0 0 24px #38f5e9, inset 0 0 14px #96fff1aa;transform:scale(.72,.42);opacity:0;animation:kjShieldRipple 1.45s cubic-bezier(.12,.55,.3,1) infinite}
+@keyframes kjShieldField{from{opacity:.68;filter:brightness(.9)}to{opacity:1;filter:brightness(1.35)}}
+@keyframes kjShieldRipple{0%{transform:scale(.68,.35);opacity:.95}75%,100%{transform:scale(1.16,1.22);opacity:0}}
+@media(prefers-reduced-motion:reduce){.kj-koepel-spaceship::before,.kj-koepel-spaceship::after{animation:none}.kj-koepel-spaceship::after{opacity:.55;transform:scale(1,.8)}}
 .kj-medieval-shield{position:absolute;z-index:430;pointer-events:none;filter:drop-shadow(0 14px 11px #000d);transform-style:preserve-3d;transform-origin:50% 88%}
 .kj-medieval-shield svg{display:block;width:100%;height:100%;overflow:visible}
 .kt-tafel.kj .kt-effect{box-sizing:border-box;width:max-content;max-width:calc(100vw - 28px);padding:7px 12px;white-space:normal;text-align:center;text-wrap:balance;line-height:1.15;font-size:clamp(22px,8vw,48px)}
@@ -142,6 +154,26 @@ const CSS = `
 .kj-kaarslicht .kj-donker{position:absolute;inset:0;background:radial-gradient(ellipse 85% 70% at 50% 52%,#0000 25%,#0a0400a6 70%,#050200e0 100%)}
 .kj-kaarslicht .kj-warm{position:absolute;inset:0;mix-blend-mode:soft-light;opacity:var(--kj-licht,.9);background:radial-gradient(circle at 12% 46%,#ffb347 0,#ff8c1a55 18%,#0000 42%),radial-gradient(circle at 88% 46%,#ffb347 0,#ff8c1a55 18%,#0000 42%)}
 .kj-kaarslicht .kj-gloed{position:absolute;inset:0;mix-blend-mode:screen;opacity:calc(var(--kj-licht,.9) * .55);background:radial-gradient(circle at 12% 46%,#ffcf7a66 0,#ff9a2e22 14%,#0000 30%),radial-gradient(circle at 88% 46%,#ffcf7a66 0,#ff9a2e22 14%,#0000 30%)}
+.kj-spaceship-lamplicht{display:none;position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none;isolation:isolate;mix-blend-mode:screen}
+.kj-ruimteschip .kj-spaceship-lamplicht{display:block}
+.kj.kj-geenkaars .kj-spaceship-lamplicht{display:none}
+.kj-spaceship-lamplicht::before{content:"";position:absolute;inset:70% 4% 8%;background:radial-gradient(ellipse 17% 70% at 13% 48%,#ff72d62b,transparent 76%),radial-gradient(ellipse 17% 70% at 87% 48%,#a77aff30,transparent 76%);filter:blur(12px);opacity:.95}
+.kj-spaceship-lamplicht::after{content:"";position:absolute;inset:48% 4% 12%;pointer-events:none;background:radial-gradient(ellipse 9% 48% at 11% 58%,#ff78e512,transparent 72%),radial-gradient(ellipse 8% 44% at 18% 42%,#c78aff15,transparent 72%),radial-gradient(ellipse 8% 45% at 82% 47%,#80dfff14,transparent 72%),radial-gradient(ellipse 9% 48% at 89% 60%,#ff8bce12,transparent 72%);filter:blur(8px);mix-blend-mode:screen;animation:kjShipHazeDrift 7s ease-in-out infinite alternate}
+.kj-ship-beam{position:absolute;top:40%;height:36%;width:12%;clip-path:polygon(48% 0,52% 0,100% 100%,0 100%);filter:blur(4px);opacity:.45;transform-origin:50% 0;mix-blend-mode:screen;background:linear-gradient(180deg,#ffd2fdbb 0%,#ff73d967 20%,#c56bff42 54%,#68d9ff22 82%,transparent 100%);animation:kjShipBeamBreath 5.2s ease-in-out infinite alternate}
+.kj-ship-beam::before{content:"";position:absolute;inset:0;clip-path:inherit;background:radial-gradient(ellipse at 40% 38%,#ff8ee526,transparent 50%),radial-gradient(ellipse at 66% 61%,#81dfff20,transparent 48%),radial-gradient(ellipse at 48% 78%,#d29aff25,transparent 48%);filter:blur(5px);animation:kjShipHazeDrift 6s ease-in-out infinite alternate}
+.kj-ship-beam::after{content:"";position:absolute;left:47%;top:2%;bottom:8%;width:6%;border-radius:50%;background:linear-gradient(180deg,#fff1ff9c,#ff9bea55 35%,#b8a3ff44 68%,#9be8ff16);filter:blur(2px);opacity:.6}
+.kj-ship-beam:nth-child(1){left:1.5%;transform:rotate(12deg);background:linear-gradient(180deg,#ffe0fdbb 0%,#ff73c967 24%,#d977ff42 56%,#9c83ff22 82%,transparent 100%)}
+.kj-ship-beam:nth-child(2){left:6%;transform:rotate(7deg);animation-delay:-1.4s;background:linear-gradient(180deg,#fff0ffb8 0%,#e77cff67 24%,#aa7cff40 58%,#7fdfff20 84%,transparent 100%)}
+.kj-ship-beam:nth-child(3){left:81.5%;transform:rotate(-7deg);animation-delay:-2.6s;background:linear-gradient(180deg,#fff0ffb8 0%,#d881ff68 22%,#a48bff42 56%,#7bdfff20 84%,transparent 100%)}
+.kj-ship-beam:nth-child(4){left:86%;transform:rotate(-12deg);animation-delay:-3.7s;background:linear-gradient(180deg,#ffe0fdbb 0%,#ff79d167 24%,#c56bff42 56%,#85dfff22 82%,transparent 100%)}
+.kt-tafel.kj-ruimteschip.kj-holografisch :is(.kt-hand .kt-kaart,.kj-vijand .kj-kaart,.kt-afleg .kt-ak){z-index:4;background-color:#061722f0;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.kt-tafel.kj-ruimteschip.kj-holografisch .kt-afleg .kt-ak{overflow:hidden;border:1px solid #6beaffbb;box-shadow:0 0 5px #48dfff99,0 0 15px #28bce966,inset 0 0 14px #29c8e52b}
+.kt-tafel.kj-ruimteschip.kj-holografisch .kt-afleg .kt-ak>.kt-svg{opacity:.94;filter:brightness(1.12) drop-shadow(0 0 3px #6beaff66)}
+.kt-tafel.kj-ruimteschip.kj-holografisch .kt-afleg .kt-ak::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(180deg,#8ef4ff0d 0,#8ef4ff0d 1px,transparent 1px,transparent 4px);mix-blend-mode:screen;opacity:.8}
+@keyframes kjShipBeamBreath{from{opacity:.33;filter:blur(5px) brightness(.92)}to{opacity:.5;filter:blur(3px) brightness(1.13)}}
+@keyframes kjShipHazeDrift{from{transform:translate3d(-.6%,0,0);opacity:.7}to{transform:translate3d(.6%,-1%,0);opacity:1}}
+.kj-geenflikkering .kj-ship-beam,.kj-geenflikkering .kj-spaceship-lamplicht::after,.kj-geenflikkering .kj-ship-beam::before{animation:none}
+@media(prefers-reduced-motion:reduce){.kj-ship-beam,.kj-spaceship-lamplicht::after,.kj-ship-beam::before{animation:none}}
 .kj-kaars{position:absolute;bottom:18%;width:30px;height:96px;pointer-events:none;z-index:31}
 .kj-kaars.kj-links{left:calc(12% - 15px)}.kj-kaars.kj-rechts{left:calc(88% - 15px)}
 .kj-kaars > svg{position:absolute;left:0;bottom:0;width:30px;height:70px}
@@ -166,6 +198,7 @@ const CSS = `
 .kj-instellingen-kaart{width:min(100%,400px);max-height:min(86dvh,650px);overflow:auto;padding:22px;border:1px solid #e2bb7677;border-radius:20px;background:linear-gradient(145deg,#382519,#1f1512);color:#fff8e8;box-shadow:inset 0 1px #fff3,0 18px 60px #000b;text-align:left;font:15px/1.45 system-ui,sans-serif}
 .kj-instellingen-kop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.kj-instellingen-kop h2{margin:0;font:700 22px Georgia,serif;color:#f7dda6}
 .kj-instellingen-sluit{min-width:44px;min-height:44px;border-radius:12px;border:1px solid #fff4;background:#ffffff14;color:inherit;font:24px/1 sans-serif;cursor:pointer}
+.kj-herstart-knop{display:block;width:100%;min-height:44px;margin-top:16px;padding:10px 14px;border-radius:12px;border:1px solid #e6c68c88;background:#ffffff14;color:inherit;font:600 16px/1.2 system-ui,sans-serif;cursor:pointer}.kj-herstart-knop:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .kj-instellingen-optie{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #ffffff20;cursor:pointer}.kj-instellingen-optie span{flex:1}.kj-instellingen-optie small{display:block;color:#d6c4aa;font-size:12px;margin-top:3px}.kj-instellingen-optie input{width:23px;height:23px;accent-color:#d69a43;flex:none}
 .kj-instellingen-info{font-size:12px;color:#dccaaa;margin-top:10px;min-height:1.4em}
 .kj-bier-inhoud{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 0 14px}.kj-bier-inhoud label{flex:1 1 100%;font-weight:700}.kj-bier-inhoud input{flex:1;min-width:120px;accent-color:#d69a43}.kj-bier-inhoud output{min-width:3.5em;text-align:right;font-variant-numeric:tabular-nums}.kj-bier-vol{min-height:40px;padding:8px 12px;border:1px solid #e6c68c88;border-radius:10px;background:#593717;color:#fff5dd;font:inherit;cursor:pointer}
@@ -174,8 +207,40 @@ const CSS = `
 .kj-instellingen,.kj-instellingen *{box-sizing:border-box}.kj-scene-keuze{border:0;padding:0;margin:0 0 12px;min-width:0}.kj-scene-keuze legend{font-weight:700;margin-bottom:10px}.kj-scene-opties{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.kj-scene-opties label{display:flex;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:7px 4px;border:1px solid #e6c68c55;border-radius:10px;background:#100d0d66;font-size:12px;cursor:pointer}.kj-scene-opties label:has(input:checked){background:linear-gradient(145deg,#8f652b,#4c3217);border-color:#ffe8a6;box-shadow:inset 0 1px #fff5,0 3px 8px #0006}.kj-scene-opties input{accent-color:#e5bb65;margin:0}
 .kj-modern .kt-knop{background:linear-gradient(155deg,#142334,#090f19);border-color:#d6b66c;color:#fff4d3;box-shadow:inset 0 1px #fff2,0 3px 8px #0008}.kj-modern .kj-kaart{box-shadow:0 8px 22px #000b,0 0 0 1px #e2be6777}.kj-modern .kj-titel,.kj-modern .kj-naam{color:#f5d990}.kj-instellingen.kj-modern .kj-instellingen-kaart{background:linear-gradient(145deg,#172536,#09111c);border-color:#dfc37b99}
 .kj-modern .kj-kaars.kj-links{width:clamp(62px,15vw,100px);aspect-ratio:2/3}.kj-modern .kj-kaars.kj-rechts{width:clamp(80px,18vw,118px);aspect-ratio:2/3}.kj-modern .kj-links .kj-vlam{left:49.7%;bottom:81%;height:11%;width:10%;margin-left:-5%}.kj-modern .kj-rechts .kj-vlam{left:49.8%;bottom:96%;height:12%;width:9%;margin-left:-4.5%}
-.kj-modern-interior-keuze[hidden]{display:none}.kj-interior-opties label{min-height:54px;text-align:center;line-height:1.2}.kj-modern-interior-keuze legend{color:#b9e9ff}
+.kj-ruimteschip .kj-kaars,.kj-ruimteschip .kj-kaarslicht{display:none!important}
+.kj-ruimteschip .kj-titel,.kj-ruimteschip .kj-naam{color:#b8f7ff;text-shadow:0 0 12px #17cfff88}
+.kj-ruimteschip .kj-knop{border-color:#53cfea;background:linear-gradient(155deg,#12344a,#091421);color:#e1fbff;box-shadow:inset 0 1px #c7fbff66,0 3px 12px #0009}
+.kj-instellingen.kj-ruimteschip .kj-instellingen-kaart{border-color:#40dffc99;background:linear-gradient(145deg,#102a3e,#07121e);box-shadow:inset 0 1px #fff3,0 18px 60px #000c,0 0 28px #14cfff28}
+.kj-instellingen.kj-ruimteschip .kj-instellingen-kop h2{color:#b8f7ff}
+.kj-instellingen.kj-ruimteschip .kj-kaars-instelling{display:none}
+.kj-scene-opties{grid-template-columns:repeat(auto-fit,minmax(112px,1fr))}.kj-scene-opties label{padding:7px 6px;text-align:center}
+.kj-instellingen.kj-ruimteschip .kj-scene-opties label:has(input:checked){background:linear-gradient(145deg,#16627a,#102438);border-color:#a7f7ff;box-shadow:inset 0 1px #fff8,0 0 13px #18d9ff66}
 .kj-spaceship-interior .kj-kaarslicht,.kj-spaceship-interior .kj-kaars{display:none!important}
+.kj-spaceship-interior .kj-titel,.kj-spaceship-interior .kj-naam{color:#b8f7ff;text-shadow:0 0 12px #17cfff88}
+.kj-spaceship-interior .kj-knop{border-color:#53cfea;background:linear-gradient(155deg,#12344a,#091421);color:#e1fbff;box-shadow:inset 0 1px #c7fbff66,0 3px 12px #0009}
+.kj-instellingen.kj-spaceship-interior .kj-instellingen-kaart{border-color:#40dffc99;background:linear-gradient(145deg,#102a3e,#07121e);box-shadow:inset 0 1px #fff3,0 18px 60px #000c,0 0 28px #14cfff28}
+.kj-instellingen.kj-spaceship-interior .kj-instellingen-kop h2{color:#b8f7ff}
+.kt-tafel.kj-spaceship-interior .kt-keuze{background:radial-gradient(ellipse at 50% 48%,#051e2de6,#02070cef 76%);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+.kt-tafel.kj-spaceship-interior .kt-keuzekaart{position:relative;isolation:isolate;width:min(92%,560px);padding:clamp(20px,5vw,34px);overflow:hidden;border:1px solid #70edff;border-radius:18px;background:linear-gradient(155deg,#123b50f5 0%,#091d2cf7 48%,#07121ff7 100%);color:#e8fcff;text-align:center;box-shadow:inset 0 1px #d8fbff77,inset 0 0 30px #33dfff20,0 0 0 4px #102f3caa,0 0 26px #19c8ff88,0 24px 70px #000e;animation:kjCommandOpen .38s cubic-bezier(.18,.8,.25,1) both}
+.kt-tafel.kj-spaceship-interior .kt-keuzekaart::before{content:"";position:absolute;z-index:0;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,#8ef5ff08 0 1px,transparent 1px 5px),linear-gradient(110deg,transparent 10%,#52eaff18 46%,transparent 70%);mask-image:linear-gradient(90deg,#000,transparent 92%)}
+.kt-tafel.kj-spaceship-interior .kt-keuzekaart>*{position:relative;z-index:1}
+.kt-tafel.kj-spaceship-interior .kt-command-tag{margin-bottom:12px;color:#8cecffb8;font:700 9px/1.3 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.16em;text-transform:uppercase}
+.kt-tafel.kj-spaceship-interior .kt-keuzekaart::after{content:"CAPTAIN’S COMMAND  ·  AUTHORIZATION REQUIRED";display:block;margin-top:18px;padding-top:11px;border-top:1px solid #58dff355;color:#8cecffb8;font:700 9px/1.3 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.16em}
+.kt-tafel.kj-spaceship-interior .kt-keuze-vraag{max-width:48ch;margin:auto!important;color:#f1fdff;font:750 clamp(17px,4vw,23px)/1.35 system-ui,sans-serif!important;text-wrap:balance;text-shadow:0 0 16px #40dfff55}
+.kt-tafel.kj-spaceship-interior .kt-keuzerij{gap:18px;margin-top:22px}
+.kt-tafel.kj-spaceship-interior .kt-keuzerij button{width:72px;height:62px;border:1px solid #73eaff;border-radius:12px;background:linear-gradient(155deg,#153d50,#0a1c2b);color:#bdf8ff;font-size:32px;box-shadow:inset 0 1px #dcfcff66,0 0 13px #13bfe755,0 5px 0 #04101b,0 8px 15px #000a;transition:transform .15s,filter .15s,box-shadow .15s}
+.kt-tafel.kj-spaceship-interior .kt-keuzerij button:hover{transform:translateY(-2px);filter:brightness(1.2);box-shadow:inset 0 1px #dcfcff88,0 0 19px #13bfe799,0 5px 0 #04101b,0 10px 18px #000a}
+.kt-tafel.kj-spaceship-interior .kt-keuzerij button:active{transform:translateY(2px);box-shadow:inset 0 1px #dcfcff55,0 0 12px #13bfe755,0 2px 0 #04101b}
+@keyframes kjCommandOpen{from{opacity:0;transform:translateY(10px) scale(.97);filter:brightness(1.8)}to{opacity:1;transform:none;filter:none}}
+@media(max-width:380px){.kt-tafel.kj-spaceship-interior .kt-keuzekaart{width:94%;padding:19px 14px}.kt-tafel.kj-spaceship-interior .kt-keuzerij{gap:14px}}
+@media(prefers-reduced-motion:reduce){.kt-tafel.kj-spaceship-interior .kt-keuzekaart{animation:none}}
+.kj-instellingen.kj-spaceship-interior .kj-kaars-instelling{display:none}
+.kj-main-scene-keuze>.kj-hoofdscenes{grid-template-columns:repeat(3,minmax(0,1fr))}
+.kj-modern-interior-keuze{margin:10px 0 12px 18px;padding:10px 12px 8px;border-left:2px solid #e6c68c88;border-radius:0 12px 12px 0;background:linear-gradient(100deg,#ffffff0c,#0000)}
+.kj-modern-interior-keuze[hidden]{display:none}.kj-interior-opties label{min-height:54px;text-align:center;line-height:1.2}.kj-modern-interior-keuze legend{color:#b9e9ff}.kj-modern-interior-note{margin:0 0 9px;color:#d7c6a7;font-size:11px;line-height:1.3}
+.kj-instellingen.kj-ruimteschip .kj-modern-interior-keuze{border-color:#41d3eb66;border-left-color:#4bd9ed;background:linear-gradient(145deg,#0e31429c,#081b29bb)}
+.kj-instellingen.kj-ruimteschip .kj-modern-interior-keuze legend{color:#b9e9ff}.kj-instellingen.kj-ruimteschip .kj-modern-interior-note{color:#a8dce8}
+@media(max-width:380px){.kj-main-scene-keuze>.kj-hoofdscenes{gap:5px}.kj-main-scene-keuze>.kj-hoofdscenes label{font-size:11px;min-height:64px}.kj-modern-interior-keuze{margin-left:8px;padding-right:7px;padding-left:10px}.kj-interior-opties label{font-size:10px;padding-inline:3px}}
 .kj-mode-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%;max-width:450px}
 .kj-mode-card{min-width:0;padding:0;overflow:hidden;border:2px solid #b68b50;border-radius:14px;background:linear-gradient(145deg,#382519,#1a1110);color:#fff0d1;font:inherit;text-align:left;cursor:pointer;box-shadow:0 5px 12px #0009;transition:transform .18s,border-color .18s,box-shadow .18s}
 .kj-mode-card img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
@@ -295,10 +360,12 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   const BIER_PARTIJ = 'fibro_koningsjacht_bierpartij', BIER_VRIEND = 'fibro_koningsjacht_bierpartij_vriend'
   const bewaardeInstellingen = lees(INSTELLINGEN, {}) || {}
   const instellingen = {
-    scene: ['standaard', 'modern', 'middeleeuws'].includes(bewaardeInstellingen.scene) ? bewaardeInstellingen.scene : (bewaardeInstellingen.middeleeuws === true ? 'middeleeuws' : 'standaard'),
-    modernInterior: ['none', 'old', 'futuristic'].includes(bewaardeInstellingen.modernInterior) ? bewaardeInstellingen.modernInterior : 'none',
+    scene: ['standaard', 'modern', 'middeleeuws'].includes(bewaardeInstellingen.scene) ? bewaardeInstellingen.scene : (isRuimteScene(bewaardeInstellingen.scene) ? 'modern' : (bewaardeInstellingen.middeleeuws === true ? 'middeleeuws' : 'standaard')),
+    modernInterior: ['none', 'old', 'futuristic'].includes(bewaardeInstellingen.modernInterior) ? bewaardeInstellingen.modernInterior
+      : bewaardeInstellingen.scene === 'ruimteschip-oud' ? 'old' : bewaardeInstellingen.scene === 'ruimteschip-futuristisch' ? 'futuristic' : 'none',
     beweging: bewaardeInstellingen.beweging === true,
     slowMoves: bewaardeInstellingen.slowMoves === true,
+    impact: bewaardeInstellingen.impact === true,
     middeleeuws: bewaardeInstellingen.middeleeuws === true,
     flikkeren: bewaardeInstellingen.flikkeren !== false,
     tafelschaduw: bewaardeInstellingen.tafelschaduw !== false,
@@ -308,6 +375,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     bierRonde: 0
   }
   const sceneNaam = () => multiplayer ? 'middeleeuws' : instellingen.scene
+  const ruimteschipActief = () => !multiplayer && instellingen.scene === 'modern' && instellingen.modernInterior !== 'none'
   instellingen.middeleeuws = sceneNaam() === 'middeleeuws'
   const koningsjachtBewegingsfactor = () => instellingen.slowMoves && !rustig() ? 1.25 : 1
   const wacht = ms => new Promise(k => setTimeout(k, ms * koningsjachtBewegingsfactor()))
@@ -370,8 +438,13 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     instellingen.middeleeuws = sfeer === 'middeleeuws'
     actief?.classList.toggle('kj-sfeer', instellingen.middeleeuws)
     actief?.classList.toggle('kj-modern', sfeer === 'modern')
-    actief?.classList.toggle('kj-spaceship-interior', sfeer === 'modern' && instellingen.modernInterior !== 'none')
-    document.querySelector('.kj-instellingen')?.classList.toggle('kj-modern', sfeer === 'modern')
+    actief?.classList.toggle('kj-ruimteschip', ruimteschipActief())
+    actief?.classList.toggle('kj-holografisch', ruimteschipActief())
+    actief?.classList.toggle('kj-spaceship-interior', ruimteschipActief())
+    const instellingenScherm = document.querySelector('.kj-instellingen')
+    instellingenScherm?.classList.toggle('kj-modern', sfeer === 'modern')
+    instellingenScherm?.classList.toggle('kj-ruimteschip', ruimteschipActief())
+    instellingenScherm?.classList.toggle('kj-spaceship-interior', ruimteschipActief())
     actief?.classList.toggle('kj-geenflikkering', !instellingen.flikkeren)
     actief?.classList.toggle('kj-tafelschaduw', instellingen.tafelschaduw)
     scene?.update(sceneOpties())
@@ -386,6 +459,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
         if (staat) tekenVijand(staat)
       }
     }
+    tafel?.element.classList.toggle('kj-geenkaars', !kaarsAan())
     verversKandelaars()
     verversKaarslicht()
     bewaarInstellingen()
@@ -394,9 +468,11 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   function plaatsScene(element) {
     stopScene()
     if (!element) return
-    element.classList.toggle('kj-sfeer', sceneNaam() === 'middeleeuws')
+    element.classList.toggle('kj-sfeer', instellingen.middeleeuws)
     element.classList.toggle('kj-modern', sceneNaam() === 'modern')
-    element.classList.toggle('kj-spaceship-interior', sceneNaam() === 'modern' && instellingen.modernInterior !== 'none')
+    element.classList.toggle('kj-ruimteschip', ruimteschipActief())
+    element.classList.toggle('kj-holografisch', ruimteschipActief())
+    element.classList.toggle('kj-spaceship-interior', ruimteschipActief())
     element.classList.toggle('kj-geenflikkering', !instellingen.flikkeren)
     element.classList.toggle('kj-tafelschaduw', instellingen.tafelschaduw)
     scene = maakKoningsjachtScene(element, sceneOpties())
@@ -405,25 +481,27 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   function toonInstellingen() {
     if (document.querySelector('.kj-instellingen')) return
     const vorigeFocus = document.activeElement
+    const kanHerstarten = !samenSpel && !afgelopen && !!(tafel?.element?.isConnected && staat && !staat.klaar)
     const scherm = document.createElement('div')
-    scherm.className = 'kj-instellingen' + (sceneNaam() === 'modern' ? ' kj-modern' : '')
+    scherm.className = 'kj-instellingen' + (sceneNaam() === 'modern' ? ' kj-modern' : '') + (ruimteschipActief() ? ' kj-ruimteschip kj-spaceship-interior' : '')
     scherm.innerHTML = '<section class="kj-instellingen-kaart" role="dialog" aria-modal="true" aria-labelledby="kj-instellingen-titel">'
       + '<div class="kj-instellingen-kop"><h2 id="kj-instellingen-titel">' + esc(T('Instellingen')) + '</h2>'
       + '<button type="button" class="kj-instellingen-sluit" aria-label="' + esc(T('Sluiten')) + '">×</button></div>'
-      + (multiplayer ? '' : '<fieldset class="kj-scene-keuze"><legend>' + esc(T('Tafelsfeer')) + '</legend><div class="kj-scene-opties">'
-        + [['standaard', T('Standaard')], ['modern', T('Modern')], ['middeleeuws', T('Middeleeuws')]].map(([id, label]) => '<label><input type="radio" name="kj-scene" data-scene="' + id + '" value="' + id + '"' + (instellingen.scene === id ? ' checked' : '') + '><span>' + esc(label) + '</span></label>').join('')
-        + '</div></fieldset>'
-        + '<fieldset class="kj-scene-keuze kj-modern-interior-keuze"' + (instellingen.scene === 'modern' ? '' : ' hidden') + '><legend>' + esc(T('Moderne ruimteschiptafel')) + '</legend><div class="kj-scene-opties kj-interior-opties">'
+      + (multiplayer ? '' : '<fieldset class="kj-scene-keuze kj-main-scene-keuze"><legend>' + esc(T('Tafelsfeer')) + '</legend><div class="kj-scene-opties kj-hoofdscenes">'
+        + [['standaard', '🪵', T('Standaard')], ['modern', '✦', T('Modern')], ['middeleeuws', '🕯️', T('Middeleeuws')]].map(([id, icoon, label]) => '<label><input type="radio" name="kj-scene" data-scene="' + id + '" value="' + id + '"' + (instellingen.scene === id ? ' checked' : '') + '><span aria-hidden="true">' + icoon + '</span><span>' + esc(label) + '</span></label>').join('')
+        + '</div><fieldset class="kj-modern-interior-keuze"' + (instellingen.scene === 'modern' ? '' : ' hidden') + '><legend>' + esc(T('Varianten binnen Modern')) + '</legend><p class="kj-modern-interior-note">' + esc(T('Deze drie tafelvarianten horen bij de hoofdsfeer Modern.')) + '</p><div class="kj-scene-opties kj-interior-opties">'
         + [['none', T('Epoxytafel')], ['old', T('Inside · oud schip')], ['futuristic', T('Inside · futuristisch')]].map(([id, label]) => '<label><input type="radio" name="kj-modern-interior" data-interior="' + id + '" value="' + id + '"' + (instellingen.modernInterior === id ? ' checked' : '') + '><span>' + esc(label) + '</span></label>').join('')
-        + '</div></fieldset>')
+        + '</div></fieldset></fieldset>')
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Achtergrond bewegen')) + '</b><small>' + esc(T('Beweeg je telefoon voor een subtiel diepte-effect.')) + '</small></span><input type="checkbox" data-instelling="beweging"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Slow moves')) + '</b><small>' + esc(T('Laat kaartbewegingen en effecten rustiger verlopen, zodat je beter ziet wat er gebeurt.')) + '</small></span><input type="checkbox" data-instelling="slowMoves"></label>'
-      + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Kaarsen laten flikkeren')) + '</b><small>' + esc(T('Laat de vlam en het kaarslicht zacht bewegen.')) + '</small></span><input type="checkbox" data-instelling="flikkeren"></label>'
+      + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Beuken en trillen')) + '</b><small>' + esc(T('Laat het speelveld bij harde inslagen schudden en je telefoon meetrillen.')) + '</small></span><input type="checkbox" data-instelling="impact"></label>'
+      + '<label class="kj-instellingen-optie kj-kaars-instelling" data-instelling-optie="kaars"><span><b>' + esc(T('Kaarsen laten flikkeren')) + '</b><small>' + esc(T('Laat de vlam en het kaarslicht zacht bewegen.')) + '</small></span><input type="checkbox" data-instelling="flikkeren"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Schaduwen op tafel')) + '</b><small>' + esc(T('Laat de kaarten en stapels een schaduw op de tafel werpen.')) + '</small></span><input type="checkbox" data-instelling="tafelschaduw"></label>'
       + '<label class="kj-instellingen-optie"><span><b>' + esc(T('Bierpul tonen')) + '</b><small>' + esc(T('Zet een bierpul op de tafel.')) + '</small></span><input type="checkbox" data-instelling="bierpul"></label>'
       // kaarttafel (kaartspel-hulp v7): hulp, grote kaarten, trillen; voor alle kaartspellen op dit toestel
       + KAART_INSTELLINGEN.map(i => '<label class="kj-instellingen-optie"><span><b>' + esc(T(i.titel)) + '</b><small>' + esc(T(i.uitleg)) + '</small></span><input type="checkbox" data-kaartinstelling="' + i.sleutel + '"></label>').join('')
       + '<div class="kj-bier-inhoud"><label for="kj-bier-inhoud">' + esc(T('Inhoud van je bierpul')) + '</label><input id="kj-bier-inhoud" type="range" min="0" max="100" step="1"><button type="button" class="kj-bier-vol">' + esc(T('Nieuwe volle pul')) + '</button></div>'
+      + (kanHerstarten ? '<button type="button" class="kj-herstart-knop">↻ ' + esc(T('Opnieuw beginnen')) + '</button>' : '')
       + '<p class="kj-instellingen-info" role="status" aria-live="polite"></p></section>'
     document.body.appendChild(scherm)
     const kaart = scherm.querySelector('.kj-instellingen-kaart')
@@ -439,13 +517,15 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     }
     document.addEventListener('keydown', toetsen)
     scherm.querySelector('.kj-instellingen-sluit').onclick = sluit
+    const herstartKnop = scherm.querySelector('.kj-herstart-knop')
+    if (herstartKnop) herstartKnop.onclick = () => { sluit(); herstartNaarKeuze() }
     scherm.addEventListener('click', e => { if (e.target === scherm) sluit() })
     for (const input of scherm.querySelectorAll('[data-scene]')) input.addEventListener('change', () => {
       if (!input.checked) return
       instellingen.scene = input.value
       const interiorChoice = scherm.querySelector('.kj-modern-interior-keuze')
-      if (interiorChoice) interiorChoice.hidden = input.value !== 'modern'
       scherm.classList.toggle('kj-modern', input.value === 'modern')
+      if (interiorChoice) interiorChoice.hidden = multiplayer || input.value !== 'modern'
       pasInstellingenToe()
     })
     for (const input of scherm.querySelectorAll('[data-interior]')) input.addEventListener('change', () => {
@@ -548,6 +628,20 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
       mk.setAttribute('aria-pressed', String(aan)); mk.textContent = '🎵 ' + (aan ? T('Muziek aan') : T('Muziek uit'))
     }
     if (muziekStaatAan()) startMuziek()   // werkt pas na een tik (de browser), anders bij de keuze van een niveau
+  }
+  function herstartNaarKeuze() {
+    if (samenSpel || !tafel?.element?.isConnected) return
+    const laag = document.createElement('div')
+    laag.className = 'kj-herstart-golf'
+    laag.setAttribute('aria-hidden', 'true')
+    tafel.element.appendChild(laag)
+    setTimeout(() => {
+      laag.remove()
+      stopScene()
+      schrijf(BEWAAR, null)
+      schrijf(BIER_PARTIJ, null)
+      startScherm()
+    }, 720)
   }
   // Met z'n tweeën: speler 1 kiest hoe jullie spelen en het niveau
   const MODI = [['samen', '🤝', 'Samen', 'Eén team, om de beurt. Samen winnen of samen verliezen.'],
@@ -730,7 +824,9 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopMuziek(); else if (muziekStaatAan() && inhoud.isConnected) startMuziek() })
   // ── Kaarslicht ──
   const KAARS = 'fibro_koningsjacht_kaars'
-  const kaarsAan = () => { try { return localStorage.getItem(KAARS) !== 'uit' } catch (e) { return true } }
+  const kaarsAan = () => {
+    try { return localStorage.getItem(KAARS) !== 'uit' } catch (e) { return true }
+  }
   function wisselKaars() {
     try { localStorage.setItem(KAARS, kaarsAan() ? 'uit' : 'aan') } catch (e) {}
     tafel?.element.classList.toggle('kj-geenkaars', !kaarsAan()); verversKaarslicht(); tekenKnoppen()
@@ -744,6 +840,15 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     const licht = document.createElement('div'); licht.className = 'kj-kaarslicht'
     licht.innerHTML = '<div class="kj-warm"></div><div class="kj-gloed"></div><div class="kj-donker"></div>'
     el.appendChild(licht)
+    const ruimteschipLicht = document.createElement('div')
+    ruimteschipLicht.className = 'kj-spaceship-lamplicht'
+    ruimteschipLicht.setAttribute('aria-hidden', 'true')
+    for (let i = 0; i < 4; i++) {
+      const bundel = document.createElement('span')
+      bundel.className = 'kj-ship-beam'
+      ruimteschipLicht.appendChild(bundel)
+    }
+    el.appendChild(ruimteschipLicht)
     const midden = el.querySelector('.kt-midden')
     for (const kant of ['kj-links', 'kj-rechts']) {
       const k = document.createElement('div'); k.className = 'kj-kaars ' + kant
@@ -756,13 +861,14 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   function verversKandelaars() {
     const el = tafel?.element
     if (!el?.isConnected) return
+    el.classList.toggle('kj-geenkaars', !kaarsAan())
     for (const kaars of el.querySelectorAll('.kj-kaars')) {
       const bestand = sceneNaam() === 'modern' ? (kaars.classList.contains('kj-links') ? 'candle-modern-left.png' : 'candle-modern-right.png') : 'chamberstick.png'
       const afbeelding = kaars.querySelector('.kj-kandelaar')
       const url = new URL('./assets/koningsjacht/' + bestand, import.meta.url).href
       if (afbeelding.src !== url) afbeelding.src = url
     }
-    zetKaarsSlijtage(el, { scene: sceneNaam(), bierpul: instellingen.bierpul, ronde: instellingen.bierRonde })
+    if (!ruimteschipActief()) zetKaarsSlijtage(el, { scene: sceneNaam(), bierpul: instellingen.bierpul, ronde: instellingen.bierRonde })
   }
   function verversKaarslicht() {
     clearInterval(flikkerTimer); flikkerTimer = null
@@ -797,7 +903,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
       onSpeel: (ids, opts) => staat.fase === 'aanval' ? valAan(ids, opts) : weerAf(ids, opts),
       onPak: () => tafel.status(T('De taveerne: met ♦ ruiten pak je hier kaarten')),
       onSelectie: ids => { selectie = ids; if (!bezig) { tekenKnoppen(); tafel.status(statusTekst()) } },
-      instellingKnop: false,   // de kaarttafel-instellingen (hulp, grote kaarten, trillen) staan in het eigen ⚙-scherm
+      instellingKnop: false, trillen: () => instellingen.impact,   // één eigen schakelaar bestuurt schermschok én telefoontrilling
       animatieFactor: koningsjachtBewegingsfactor,
       dynamischeStapel: true,
       leesbareSelectie: true, // ruimte voor iedere kaartwaarde en soort, ook achter vergrote kaarten
@@ -862,6 +968,8 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   function tekenKnoppen() {
     if (!tafel || !staat || staat.klaar || afgelopen) { tafel?.knoppen([]); return }
     const lijst = []
+    // 26 nov 2026: ↻ Opnieuw beginnen staat onder ⚙️ Instellingen. Vooraan in deze balk maakte hij de balk op smalle
+    // telefoons (360-375 px) drie rijen hoog, en dan lag de balk over je bierpul (proef299 R).
     if (!aanMij(staat)) { /* de ander is aan de beurt: alleen muziek, kaarslicht en spelregels */ }
     else if (staat.fase === 'aanval') {
       lijst.push({ naam: 'aanval', tekst: '⚔️ ' + T('Aanvallen'), nadruk: K.magAanvallen(staat, selectie), opKlik: () => valAan(selectie) })
@@ -980,10 +1088,11 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
       .then(() => { bijInslag?.(); return anim(svg, [{ opacity: 1 }, { opacity: 0 }], { duration: 260 }) }).then(() => svg.remove())
   }
   function tril(sterk = 6) {
-    if (rustig()) return
+    if (!instellingen.impact || rustig()) return
     anim(tafel.element, [{ transform: 'none' }, { transform: 'translate(' + sterk + 'px,-' + sterk / 2 + 'px)' }, { transform: 'translate(-' + sterk + 'px,' + sterk / 2 + 'px)' },
       { transform: 'translate(' + sterk / 2 + 'px,0)' }, { transform: 'none' }], { duration: 320 })
   }
+  function impact(patroon) { if (instellingen.impact) tafel?.tril(patroon) }
   // iets wat zweeft van a naar b (hartjes, fonkels)
   function zweef(tekst, kleur, van, naar, vertraging = 0) {
     const d = document.createElement('div'); d.className = 'kj-zwevend'; d.textContent = tekst; d.style.color = kleur
@@ -1016,12 +1125,12 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     setTimeout(inslag, ((rustig() ? 210 : 380) + (aflegKaarten.length - 1) * 70) * koningsjachtBewegingsfactor())
     await geraakt
     if (l.immuun) geluid('immuun'); else if (dubbel) geluid('dubbel'); else geluid('zwaard', l.schade >= 15 ? 2 : 1)
-    tafel.tril(dubbel ? [30, 40, 50] : [25, 30, 25]); tril(dubbel ? 9 : 6)
+    impact(dubbel ? [30, 40, 50] : [25, 30, 25]); tril(dubbel ? 9 : 6)
     const halen = [zwaardhaal(doel, hoofdKleur, 1)]
     if (dubbel) halen.push(zwaardhaal(doel, LICHT.k, -1, 260))
     lichtflits(doel.x, doel.y, hoofdKleur, doel.b * 2.4)
     vonken(doel.x, doel.y, l.immuun ? ['#d1d5db', '#9ca3af'] : [...kleuren, '#fde68a', '#fff'], 18, 100)
-    if (dubbel) setTimeout(() => { lichtflits(doel.x, doel.y, LICHT.k, doel.b * 3); vonken(doel.x, doel.y, [LICHT.k, '#fff'], 14, 120); tril(10) }, 300 * koningsjachtBewegingsfactor())
+    if (dubbel) setTimeout(() => { lichtflits(doel.x, doel.y, LICHT.k, doel.b * 3); vonken(doel.x, doel.y, [LICHT.k, '#fff'], 14, 120); impact(10); tril(10) }, 300 * koningsjachtBewegingsfactor())
     await Promise.all([raak(l.schade, dubbel), ...halen])
   }
   let actiefSchild = null
@@ -1058,7 +1167,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
         + '<g fill="#b9aa89" stroke="#2c2419" stroke-width="2"><circle cx="28" cy="39" r="3.8"/><circle cx="172" cy="39" r="3.8"/><circle cx="34" cy="103" r="3.8"/><circle cx="166" cy="103" r="3.8"/><circle cx="43" cy="164" r="3.8"/><circle cx="157" cy="164" r="3.8"/><circle cx="68" cy="211" r="3.8"/><circle cx="132" cy="211" r="3.8"/></g>'
         + '<path d="M77 53Q100 61 123 53" fill="none" stroke="#d3c4a4" stroke-width="1.6" opacity=".7"/></svg>'
     } else {
-      d.className = 'kj-koepel'
+      d.className = 'kj-koepel' + (ruimteschipActief() ? ' kj-koepel-spaceship' : '')
       d.style.cssText = 'left:' + (p.x - p.b * 0.46) + 'px;top:' + (p.y - p.h * 0.62) + 'px;width:' + (p.b * 0.92) + 'px;height:' + (p.h * 1.05) + 'px'
     }
     if (middeleeuws) tafel.element.appendChild(d)
@@ -1128,7 +1237,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
       if (schild) {
         const hit = plek(schild), van = plek(k)
         schild.dataset.afweer = 'geraakt'
-        tafel.tril([40, 40, 60]); tril(11)
+        impact([40, 40, 60]); tril(11)
         const flits = document.createElement('div'); flits.className = 'kj-flits'; tafel.element.appendChild(flits)
         // De bestaande neonhalen eindigen op de bovenzijde van de voorkant. Het schild ligt
         // vóór de lichtlaag en bedekt de laatste pixels; onder het schild verschijnt niets.
@@ -1143,12 +1252,12 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
           })
         })
         await Promise.all([sprong, anim(flits, [{ opacity: 0 }, { opacity: 1, offset: .3 }, { opacity: 0 }], { duration: 700 }).then(() => flits.remove()), ...halen])
-        geluid('afweren'); tafel.tril([25, 30, 25])
+        geluid('afweren'); impact([25, 30, 25])
         await anim(schild, [{ transform: 'translateY(0)' }, { transform: 'translateY(7px) rotate(3deg)', offset: .3 }, { transform: 'none' }], { duration: 400 })
         tafel.effect(v.slag === 0 ? T('Je schild houdt hem tegen!') : T('Schild vangt {n} op · nog {schade} afweren', { n: Math.min(s.schild, v.aanval), schade: v.slag }), { geluid: false, gloed: false })
         await wacht(rustig() ? 300 : 850)
       } else {
-        tafel.tril([40, 40, 60]); tril(11)
+        impact([40, 40, 60]); tril(11)
         const flits = document.createElement('div')
         flits.className = 'kj-flits'; tafel.element.appendChild(flits)
         vonken(midden.x, midden.y, ['#ef4444', '#f97316', '#fff'], 16, 120)
@@ -1352,7 +1461,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
       const wachter = l.vijand ? vijandNaam(l.vijand).toLowerCase() : ''
       if (l.soort === 'aanval') {
         if (l.verslagen) { geluid('verslagen', l.precies); tafel.effect('🏰 ' + (l.precies ? T('{naam} neemt jouw {wachter} gevangen!', { naam, wachter }) : T('{naam} verslaat jouw {wachter}!', { naam, wachter })), { gloed: false, geluid: false }) }
-        else { geluid('zwaard', l.schade >= 15 ? 2 : 1); tafel.tril([25, 30, 25]); tafel.effect('⚔️ ' + T('{naam} valt jouw {wachter} aan: −{n}', { naam, wachter, n: l.schade }), { gloed: false, geluid: false }) }
+        else { geluid('zwaard', l.schade >= 15 ? 2 : 1); impact([25, 30, 25]); tafel.effect('⚔️ ' + T('{naam} valt jouw {wachter} aan: −{n}', { naam, wachter, n: l.schade }), { gloed: false, geluid: false }) }
         await wacht(rustig() ? 400 : 1100)
       } else if (l.soort === 'afweer') { geluid('afweren'); tafel.effect('🛡️ ' + T('{naam} weert af!', { naam }), { gloed: false, geluid: false }); await wacht(600) }
       else if (l.soort === 'pas') { geluid('passen'); tafel.effect(T('{naam} past', { naam }), { gloed: false, geluid: false }); await wacht(500) }
@@ -1360,7 +1469,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     }
     teken()
     if (b.klaar) return belegEinde()
-    if (b.aanZet === ik && (!oudB || oudB.aanZet !== ik)) { tafel.geluid.beurt?.(); tafel.tril(15); tafel.effect(T('Jouw beurt!'), { gloed: false, geluid: false }) }
+    if (b.aanZet === ik && (!oudB || oudB.aanZet !== ik)) { tafel.geluid.beurt?.(); impact(15); tafel.effect(T('Jouw beurt!'), { gloed: false, geluid: false }) }
   }
   function belegEinde() {
     if (afgelopen || !beleg) return
@@ -1405,7 +1514,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
 
   function naZet(oud) {
     teken()
-    if (modus === 'samen' && !staat.klaar && staat.aanZet === ik && oud && oud.aanZet !== ik) { tafel.geluid.beurt?.(); tafel.tril(15) }
+    if (modus === 'samen' && !staat.klaar && staat.aanZet === ik && oud && oud.aanZet !== ik) { tafel.geluid.beurt?.(); impact(15) }
     if (modus === 'wedstrijd' || modus === 'duel') { stuurVoortgang(); controleerUitslag(); return }
     if (modus === 'beleg') { if (beleg && beleg.klaar) belegEinde(); return }
     if (!staat.klaar) return

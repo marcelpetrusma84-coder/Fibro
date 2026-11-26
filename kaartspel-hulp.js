@@ -554,6 +554,24 @@ const STIJL = `
 .kt-kaart.kt-sleep{transition:none;z-index:300!important}
 .kt-kaart.kt-weg{visibility:hidden}
 .kt-kaart.kt-loep{z-index:400!important;box-shadow:0 0 0 2px #fff,0 0 20px #c084fcb0,0 10px 24px #000b;filter:none}
+/* Alleen in het ruimteschip worden de kaarten en stapel als hologram geprojecteerd. */
+.kt-tafel.kj.kj-holografisch .kt-hand .kt-kaart,.kt-tafel.kj.kj-holografisch .kj-vijand .kj-kaart{isolation:isolate;overflow:visible;border:1px solid #8ceeff;border-radius:8px;background:#76eaff18;box-shadow:0 0 0 1px #31cfff55,0 0 12px #36d9ff9c,0 0 28px #12b8ff55,0 8px 22px #000b}
+.kt-tafel.kj.kj-holografisch .kt-hand .kt-kaart>.kt-svg,.kt-tafel.kj.kj-holografisch .kj-vijand .kj-kaart>.kt-svg{opacity:.94;filter:brightness(1.12) drop-shadow(0 0 3px #6beaff66)}
+.kt-tafel.kj.kj-holografisch .kt-hand .kt-kaart::after,.kt-tafel.kj.kj-holografisch .kj-vijand .kj-kaart::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;border:1px solid #b8f7ff;border-radius:inherit;background:linear-gradient(112deg,transparent 9%,#9ff5ff0c 24%,#8bf0ff32 47%,#c2fbff12 54%,transparent 72%),repeating-linear-gradient(180deg,#b9f8ff12 0 1px,transparent 1px 5px),linear-gradient(145deg,#6feaff21,#087cbd12 48%,#8ffaff28);box-shadow:inset 0 0 12px #69eaff66,0 0 8px #53eaff77;mix-blend-mode:screen;opacity:.8}
+@keyframes ktHologramScan{0%,100%{background-position:0 0,0 0,0 0}50%{background-position:100% 0,0 12px,0 0}}
+.kt-tafel.kj.kj-holografisch .kt-hand .kt-kaart::after,.kt-tafel.kj.kj-holografisch .kj-vijand .kj-kaart::after{animation:ktHologramScan 5.5s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.kt-tafel.kj.kj-holografisch .kt-hand .kt-kaart::after,.kt-tafel.kj.kj-holografisch .kj-vijand .kj-kaart::after{animation:none}}
+/* De trekstapel zweeft boven een kleine projector; de lichtkegel blijft plaatselijk en transparant. */
+.kt-tafel.kj.kj-holografisch .kt-stapel-groep{isolation:isolate;transform:translateY(-7px);animation:ktHoloFloat 3.4s ease-in-out infinite}
+.kt-tafel.kj.kj-holografisch .kt-stapel-groep::before{content:"";position:absolute;z-index:0;left:-45%;right:-45%;bottom:27px;height:32px;pointer-events:none;border:1px solid #71eaffcc;border-radius:50%;transform:perspective(72px) rotateX(58deg);background:radial-gradient(ellipse at center,#c4ffffbd 0,#37caff91 24%,#087bbd50 54%,transparent 74%);box-shadow:0 0 12px #42dfffdd,0 0 28px #20baff99;mix-blend-mode:screen;animation:ktProjectorPulse 2.8s ease-in-out infinite alternate}
+.kt-tafel.kj.kj-holografisch .kt-stapel-groep::after{content:"";position:absolute;z-index:2;left:-38%;right:-38%;top:-52px;bottom:31px;pointer-events:none;clip-path:polygon(47% 100%,53% 100%,64% 0,36% 0);background:linear-gradient(90deg,transparent 46%,#baffff58 49%,#85eeff20 50%,#9cf8ff52 51%,transparent 54%),linear-gradient(90deg,transparent,#57ddff12 16%,#8ffaff32 49%,#45ccff18 82%,transparent),repeating-linear-gradient(180deg,#c4fbff2b 0 1px,transparent 1px 10px),linear-gradient(0deg,transparent,#6feaff12 76%,#98f8ff20);filter:drop-shadow(0 0 9px #31d5ff);mix-blend-mode:screen;opacity:.72;animation:ktProjectionFlicker 4.2s steps(1,end) infinite}
+.kt-tafel.kj.kj-holografisch .kt-stapel{z-index:1;transform:translateY(-5px);filter:drop-shadow(0 0 5px #56dfff9c) drop-shadow(0 0 14px #19bdff55)}
+.kt-tafel.kj.kj-holografisch .kt-stapel .kt-st{border:1px solid #8ceeff;box-shadow:inset 0 0 8px #52ddff44,0 0 6px #3bd9ff88}
+.kt-tafel.kj.kj-holografisch .kt-stapel-groep .kt-teller{z-index:2;border-color:#83eaffaa;background:#061a28a8;color:#d8fbff;text-shadow:0 0 8px #4edfff,0 1px 2px #00121e;box-shadow:inset 0 0 10px #3bbce833,0 0 12px #20bbff66;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+@keyframes ktProjectorPulse{from{opacity:.48;filter:brightness(.85)}to{opacity:.9;filter:brightness(1.25)}}
+@keyframes ktHoloFloat{0%,100%{transform:translateY(-7px)}50%{transform:translateY(-11px)}}
+@keyframes ktProjectionFlicker{0%,91%,94%,100%{opacity:.44}92%{opacity:.18}93%{opacity:.55}95%{opacity:.3}}
+@media(prefers-reduced-motion:reduce){.kt-tafel.kj.kj-holografisch .kt-stapel-groep,.kt-tafel.kj.kj-holografisch .kt-stapel-groep::before,.kt-tafel.kj.kj-holografisch .kt-stapel-groep::after{animation:none}}
 .kt-afleg{cursor:pointer;touch-action:manipulation}
 .kt-afleg.kt-doel{border-radius:calc(var(--pw)*.075);box-shadow:0 0 0 2px #c084fc,0 0 18px #c084fcb0}
 .kt-instelrij{display:flex;flex-direction:column;gap:2px;margin-top:10px;text-align:left;max-width:300px}
@@ -627,11 +645,13 @@ const STIJL = `
 .kt-eindesub{font-size:14px;opacity:.85}
 .kt-keuze{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0009;z-index:501}
 .kt-keuzekaart{padding:18px;border-radius:18px;background:#24103d;border:1px solid #c084fc;text-align:center;max-width:calc(100% - 16px);max-height:calc(100% - 16px);overflow-y:auto;overscroll-behavior:contain}
-.kt-keuzerij{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.kt-keuzerij{display:grid;grid-template-columns:repeat(auto-fit,minmax(62px,62px));justify-content:center;gap:10px;margin:12px auto 0}
 .kt-keuzerij button{width:62px;height:62px;border-radius:14px;border:2px solid #ffffff33;background:#fffdf9;font-size:36px;cursor:pointer;line-height:1}
+.kt-keuzerij button:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .kt-stijlrij{display:flex;gap:12px;margin-top:12px}
 /* v20 (26 nov 2026): passen niet alle kaarten of tafels op het scherm, dan veeg je de rij opzij. Passen ze wel, dan staan ze
-   in het midden (de automatische marge links en rechts). */
+   in het midden (de automatische marge links en rechts). Daarom geen justify-content:center: daarmee kun je bij een
+   scrollende rij het linkerdeel niet meer bereiken. */
 .kt-stijlrij,.kt-tafelrij{position:relative;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;scroll-padding:0 10px;padding:6px 10px 10px;scrollbar-width:thin;scrollbar-color:#c084fc66 transparent}
 .kt-stijlrij>*,.kt-tafelrij>*{flex:0 0 auto;scroll-snap-align:center}
 .kt-stijlrij>:first-child,.kt-tafelrij>:first-child{margin-left:auto}
@@ -674,6 +694,10 @@ export const REACTIES = ['😂', '😱', '🔥', '😎', '🙈', '👏']
 export function maakKaartTafel(container, opties = {}) {
   zetStijl()
   const o = { groep: id => kaartDelen(id).waarde, magSpelen: () => false, onSpeel() {}, onPak() {}, onReactie() {}, onSelectie() {}, ...opties }
+  const haptiek = patroon => {
+    const aan = typeof o.trillen === 'function' ? o.trillen() : o.trillen !== false
+    if (aan) tril(patroon)
+  }
   // v5: een spel met een vaste kaartstijl (o.stijl) tekent altijd die kaarten en achterkant, zonder knop 🎴
   let vast = KAARTSTIJLEN[o.stijl] ? o.stijl : null
   const kaart = id => kaartSvg(id, vast || kaartStijl())
@@ -844,7 +868,7 @@ export function maakKaartTafel(container, opties = {}) {
         })
       }
       try { k.setPointerCapture(e.pointerId) } catch (x) {}
-      lang = setTimeout(() => { if (!modus) { modus = 'schuif'; k.classList.add('kt-sleep'); tril(10); kaartGeluid.tik() } }, 420)
+      lang = setTimeout(() => { if (!modus) { modus = 'schuif'; k.classList.add('kt-sleep'); haptiek(10); kaartGeluid.tik() } }, 420)
     })
     k.addEventListener('pointermove', e => {
       if (!start) return
@@ -930,7 +954,7 @@ export function maakKaartTafel(container, opties = {}) {
     })
   }
   function weiger(k) {
-    kaartGeluid.nee(); tril([20, 40, 20])
+    kaartGeluid.nee(); haptiek([20, 40, 20])
     try { k.animate([{ translate: '0 0' }, { translate: '-8px 0' }, { translate: '8px 0' }, { translate: '0 0' }], { duration: 260 }) } catch (e) {}
   }
 
@@ -1241,7 +1265,7 @@ export function maakKaartTafel(container, opties = {}) {
       return vlieg({ voor: kaart(id), van, naar: doel, duur, draai: 0,
         eindDraai: draaiVan(id, stand.afleg.length - ids.length + i), tollen: (richting.x / n) * snelheid * 40,
         overschiet: { x: (richting.x / n) * ver, y: (richting.y / n) * ver * 0.6, r: (richting.x >= 0 ? 1 : -1) * snelheid * 12 } })
-        .then(() => { aflegVerborgen--; legRest(); kaartGeluid.leg(snelheid); tril(8) })
+        .then(() => { aflegVerborgen--; legRest(); kaartGeluid.leg(snelheid); haptiek(8) })
     }))
     await Promise.all(tochten)
     aflegVerborgen = 0; legRest()
@@ -1281,7 +1305,7 @@ export function maakKaartTafel(container, opties = {}) {
         kaartGeluid.pak()
         await vlieg({ voor: kaart(id), achter: rug(), van, naar, duur: ids.length > 2 ? 360 : 560, omdraaien: true, boog: ids.length > 2 ? 40 : 90, eindDraai: 0 })
       }
-      verborgen.delete(id); legHand(); tril(6)
+      verborgen.delete(id); legHand(); haptiek(6)
     }
     verborgen.clear(); legHand()
   }
@@ -1377,7 +1401,7 @@ export function maakKaartTafel(container, opties = {}) {
   // ── Effecten ──
   function effect(tekst, { gloed = true, geluid = true } = {}) {
     if (geluid) kaartGeluid.speciaal()
-    tril([15, 30, 15])
+    haptiek([15, 30, 15])
     const top = aflegEl.lastElementChild
     if (gloed && top) { top.classList.remove('kt-gloed'); void top.offsetWidth; top.classList.add('kt-gloed') }
     const e = document.createElement('div'); e.className = 'kt-effect'; e.textContent = tekst
@@ -1461,8 +1485,10 @@ export function maakKaartTafel(container, opties = {}) {
   // Een vraag met knoppen midden op tafel (bijvoorbeeld: welke kleur na een boer?)
   function kiesUit(titel, keuzes) {
     return new Promise(klaar => {
-      const d = document.createElement('div'); d.className = 'kt-keuze'
-      d.innerHTML = '<div class="kt-keuzekaart"><div style="font-weight:800;font-size:17px">' + esc(titel) + '</div><div class="kt-keuzerij"></div></div>'
+      const commando = el.classList.contains('kj-spaceship-interior')
+      const d = document.createElement('div'); d.className = 'kt-keuze' + (commando ? ' kt-keuze-commando' : '')
+      d.innerHTML = '<div class="kt-keuzekaart">' + (commando ? '<div class="kt-command-tag">' + esc(T('Ruimteschip · commandodek')) + '</div>' : '')
+        + '<div class="kt-keuze-vraag" style="font-weight:800;font-size:17px">' + esc(titel) + '</div><div class="kt-keuzerij"></div></div>'
       for (const k of keuzes) {
         const b = document.createElement('button'); b.type = 'button'; b.innerHTML = k.html; b.setAttribute('aria-label', k.label || '')
         if (k.kleur) b.style.color = k.kleur
@@ -1479,7 +1505,7 @@ export function maakKaartTafel(container, opties = {}) {
     if (!el.querySelector('.kt-einde')) { try { window.fibroSoloUitslag?.(gewonnen ? 'winst' : 'verlies') } catch (e) {} }
     el.querySelector('.kt-einde')?.remove()
     beurtKlok(null)
-    if (gewonnen) { kaartGeluid.win(); tril([30, 50, 30, 50, 60]) } else kaartGeluid.verlies()
+    if (gewonnen) { kaartGeluid.win(); haptiek([30, 50, 30, 50, 60]) } else kaartGeluid.verlies()
     const d = document.createElement('div'); d.className = 'kt-einde'
     d.innerHTML = '<div class="kt-eindekaart"><div class="kt-eindetitel"></div><div class="kt-eindesub"></div><button type="button" class="kt-knop kt-nadruk kt-opnieuw"></button></div>'
     d.querySelector('.kt-eindetitel').textContent = titel
@@ -1516,6 +1542,6 @@ export function maakKaartTafel(container, opties = {}) {
     speelAnimatie, anderSpeeltAnimatie, pakAnimatie, anderPaktAnimatie, deelAnimatie, schudAnimatie,
     beurtKlok, effect, reactie, knoppen, anderKnop, info, kiesUit, einde, sluitEinde, zetKaartStijl: zetTafelKaartStijl, tegenstanders, vanZetel,
     laatsteZet(ids) { laatsteZet = Array.isArray(ids) ? ids.slice() : null }, instellingen: () => ({ ...inst }), openInstellingen: () => toonInstellingen(),
-    status(t) { statusTekst = t; statusEl.textContent = t }, webcamRuimte, geluid: kaartGeluid, tril,
+    status(t) { statusTekst = t; statusEl.textContent = t }, webcamRuimte, geluid: kaartGeluid, tril: haptiek,
   }
 }

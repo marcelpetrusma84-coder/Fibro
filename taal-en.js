@@ -1824,6 +1824,11 @@ window.FIBRO_EN = {
   "{n} mollen! Record: {r}": "{n} moles! High score: {r}",
   // 26 nov 2026: met een spel de chat binnenkomen (vanaf Home): eerst even dit, dan het spel
   "Spel laden...": "Loading game...",
+  // 26 nov 2026: de kaart op Home voor wie nog niet samen speelde (startkaart.js)
+  "Speel met een vriend": "Play with a friend",
+  "Kies een spel en nodig een vriend uit.": "Pick a game and invite a friend.",
+  "Nodig eerst een vriend uit, dan kun je samen spelen.": "Invite a friend first, then you can play together.",
+  "+ Vriend uitnodigen": "+ Invite a friend",
   "Uitnodigen ›": "Invite ›",
   "Uitnodiging voor schaken versturen…": "Sending chess invitation…",
   "De uitnodiging kon niet verstuurd worden. Probeer het opnieuw.": "The invitation could not be sent. Please try again.",

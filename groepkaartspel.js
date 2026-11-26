@@ -21,6 +21,7 @@
 //                             de uitnodiging bovenin (ook als je er eerst niet was).
 import { STUDIO_SPELLEN, studioSpel, spelBestand, spelIcoon } from './studio-spellen.js?v=5'
 import { maakSpelMenu } from './spelmenu.js?v=1'
+import { molKnop } from './mollenmeppen.js?v=1' // 26 nov 2026: Mollen meppen terwijl je in de wachtkamer wacht
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
 Object.assign(window.FIBRO_EN ||= {}, {
@@ -66,6 +67,7 @@ export function maakGroepKaartspel({ ik, groepId, kanaal, leden, naamVan, toast 
   const stuur = (e, p) => { const k = kanaal(); if (!k) return false; try { k.send({ type: 'broadcast', event: 'gs', payload: { ...p, e, van: ik } }) } catch (x) { return false } return true }
 
   let lobby = null          // { sessie, spel, host, spelers: [id...], computers }
+  let mol = null            // 26 nov 2026: Mollen meppen in de wachtkamer (mollenmeppen.js)
   let lopend = null         // { sessie, overlay, luisteraars, menu }
   const uitnodigingen = new Map()   // sessie -> { spel, host }
   let balkEl = null, laagEl = null, terugEl = null
@@ -131,6 +133,11 @@ export function maakGroepKaartspel({ ik, groepId, kanaal, leden, naamVan, toast 
         ? '<button type="button" class="gk-knop gk-annuleer">' + esc(T('Annuleren')) + '</button><button type="button" class="gk-knop gk-computer-erbij"' + (n >= max ? ' disabled' : '') + '>' + esc(T('🤖 Computer erbij')) + '</button>'
           + '<button type="button" class="gk-knop gk-hoofd gk-start"' + (n < 2 ? ' disabled title="' + esc(T('Minstens 2 spelers')) + '"' : '') + '>' + esc(T('▶ Start')) + '</button>'
         : '<button type="button" class="gk-knop gk-annuleer">' + esc(T('Ik doe niet mee')) + '</button>') + '</div>')
+    // 26 nov 2026: Mollen meppen terwijl je wacht. De wachtkamer wordt bij elke wijziging opnieuw getekend; een lopend
+    // spelletje verhuist mee. Gaat de wachtkamer dicht (het spel begint), dan stopt het vanzelf (mollenmeppen.js).
+    const kaart = l.querySelector('.gk-kaart')
+    if (mol && !mol.gestopt) kaart.appendChild(mol.el)
+    else { mol = null; const houder = document.createElement('div'); houder.className = 'gk-mollen'; kaart.appendChild(houder); houder.addEventListener('mollen', e => { mol = e.detail }); molKnop(houder) }
     l.querySelector('.gk-annuleer').onclick = () => { stuur(ikHost ? 'dicht' : 'weg', { sessie: lobby.sessie }); lobby = null; sluitLaag() }
     if (ikHost) {
       l.querySelector('.gk-computer-erbij').onclick = () => { if (lobby.spelers.length + lobby.computers < max) { lobby.computers++; stuurLobby(); toonLobby() } }
@@ -231,5 +238,6 @@ export function maakGroepKaartspel({ ik, groepId, kanaal, leden, naamVan, toast 
   const schoonRooster = r => r.slice(0, MAX).map(x => x && x.computer ? { computer: true } : { id: String(x && x.id) }).filter(x => x.computer || GELDIG.test(x.id))
 
   const hallo = () => stuur('hallo', {})
-  return { kies, ontvang, hallo, bezig: () => Boolean(lopend), _staat: () => ({ lobby, lopend: Boolean(lopend), uitnodigingen: [...uitnodigingen.keys()] }) }
+  // 26 nov 2026: open(spel) = meteen de wachtkamer voor dat spel (groep.html?spel=..., vanaf Home via samenspelen.js)
+  return { kies, open: spel => { if (!lopend && !lobby && groepSpellen().some(s => s.id === spel)) open(spel) }, ontvang, hallo, bezig: () => Boolean(lopend), _staat: () => ({ lobby, lopend: Boolean(lopend), uitnodigingen: [...uitnodigingen.keys()] }) }
 }

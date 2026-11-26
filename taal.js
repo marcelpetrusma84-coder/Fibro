@@ -1,3 +1,4 @@
+// v153 (26 nov 2026): taal-en.js?v=153 (samen spelen vanaf Home: tegen een vriend of met een groep; Mollen meppen in de wachtkamer).
 // v150 (25 nov 2026): taal-en.js?v=150 (kant-en-klare widgets: feeds kiezen).
 // v149 (25 nov 2026): taal-en.js?v=149 (widget-layouts uit Stekky Studio).
 // v148 (24 nov 2026): taal-en.js?v=148 (Stekky Studio in het menu voor moderators).
@@ -166,7 +167,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=152', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=153', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

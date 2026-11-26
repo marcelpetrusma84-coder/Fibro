@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=152"></script>
+<script src="taal.js?v=153"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -505,14 +505,15 @@ window.veiligeUrl = function(v){
   import { maakSpelMenu } from './spelmenu.js?v=1' // 11 nov 2026: hamburgermenu rechtsboven in elk spel (pauze, geluid, microfoon, camera, menu, verlaten)
   import { startSpelBerichtInChat } from './spelbericht.js?v=2'
   import { STUDIO_SPELLEN, studioSpel, spelBestand as studioBestand, spelIcoon as studioIcoon } from './studio-spellen.js?v=5' // 25 nov 2026: spellen uit Stekky Studio
+  import { molKnop } from './mollenmeppen.js?v=1' // 26 nov 2026: Mollen meppen op het wachtscherm, tot je vriend er is
   import { gameAan, mijnDownloads } from './store.js?v=36' // 11 nov 2026: spellen uit de Store // 11 nov 2026: berichten van andere vrienden linksboven in het spel
   import * as Bordgeluid from './bordgeluid.js?v=203'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { nieuweSpelSessie, isNieuwsteSpelSessie } from './spelsessie.js?v=1'
-  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=13'
-  import { mountChessLayout } from './chess-layout.js?v=13'
+  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=14'
+  import { mountChessLayout } from './chess-layout.js?v=14'
   import { maakSpelVerbinding } from './spelverbinding.js?v=2'
   import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=2'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=2'
@@ -531,7 +532,7 @@ window.veiligeUrl = function(v){
   // wacht het spel er even op.
   let titelModule = null
   const laadTitelscherm = () => titelModule ? Promise.resolve(titelModule)
-    : laadModule('./titelscherm.js?v=18').then(m => (titelModule = m))
+    : laadModule('./titelscherm.js?v=19').then(m => (titelModule = m))
   const laadRustig = f => ('requestIdleCallback' in window ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 2500))
   laadRustig(() => laadTitelscherm().catch(() => {}))
   pasBlokstijlToe()
@@ -3029,8 +3030,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     toepen: './toepen-ui.js?v=15',
     eenentwintigen: './eenentwintigen-ui.js?v=16',
     koningsjacht: './koningsjacht-ui.js?v=50',
-    schaken: './schaken-ui.js?v=275',
-    schakendrie: './schaken-drie-ui.js?v=43',
+    schaken: './schaken-ui.js?v=276',
+    schakendrie: './schaken-drie-ui.js?v=44',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=151',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -3635,6 +3636,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     knop.style.cssText = 'background:#ffffff1f;border:1px solid #ffffff44;border-radius:10px;padding:9px 22px;color:#fff;font-weight:600;cursor:pointer;'
     knop.onclick = () => window.sluitSpel()
     scherm.append(draai, tekst, extra, knop)
+    molKnop(scherm); scherm.append(knop) // 26 nov 2026: Mollen meppen terwijl je wacht (stopt vanzelf als het wachtscherm weggaat); Annuleren onderaan
     inhoud.appendChild(scherm)
     // v242: na twee minuten zeggen dat de vriend er nog niet is. Het wachten gaat door: komt hij alsnog, dan begint het spel.
     clearTimeout(spelWachtTimer)
@@ -3990,7 +3992,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await laadModule('./schaken-ui.js?v=275')
+    const m = await laadModule('./schaken-ui.js?v=276')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: fibroChessTest?.active ? schaakT('Testspeler · Zwart') : spelVriendUsername(), testMode:Boolean(fibroChessTest?.active), onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer : nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
     // v270: tegen een vriend staan de webcams als twee rondjes naast elkaar boven het bord, net als bij dammen.
@@ -4000,7 +4002,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   async function startSchakenDrie(players) {
-    const m = await laadModule('./schaken-drie-ui.js?v=43')
+    const m = await laadModule('./schaken-drie-ui.js?v=44')
     const testMode = Boolean(fibroChessTest?.active)
     const controller = m.start({ Bordgeluid, gameChannel:testMode ? null : spelKanaal, players, userId:testMode ? 'fibro-test-you' : huidigeUser.id, localPreview:testMode, testMode, testStream:fibroChessTest?.stream || null, onTestCameraChange:stream => { if (fibroChessTest?.active) fibroChessTest.stream = stream }, onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null })
     spelSchaakDrieController = controller

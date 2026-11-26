@@ -83,7 +83,7 @@ if (typeof window !== 'undefined') {
         const d = e.data || {}
         if (d.fibro === 'sluit-spel') sluitSpelVenster(false)
         else if (d.fibro === 'spel-begint') stopTitelMuziek(0.8)
-        else if (d.fibro === 'ga-naar' && typeof d.adres === 'string' && d.adres.startsWith('chat.html?')) location.href = d.adres
+        else if (d.fibro === 'ga-naar' && typeof d.adres === 'string' && (d.adres.startsWith('chat.html?') || d.adres.startsWith('groep.html?'))) location.href = d.adres // 26 nov 2026: ook naar de groepschat (samen spelen)
     })
 }
 

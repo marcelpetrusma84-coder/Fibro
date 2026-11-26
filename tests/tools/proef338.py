@@ -99,11 +99,14 @@ try:
         goed = all(k and abs(k[1][0] - KLEUR(VOLGORDE.index(k[0]))[0]) < 12 and abs(k[1][1] - KLEUR(VOLGORDE.index(k[0]))[1]) < 12 for k in kleuren)
         check(goed, 'B elke kaart heeft het plaatje uit het goede vakje')
         check(all(k[2] == 375 and k[3] == 525 for k in kleuren if k), 'B elk plaatje is 375 x 525')
+        # 26 nov 2026: de platen worden tegelijk ingelezen; welke het eerst klaar is, bepaalt de nummers van de plaatjes.
+        # Daarom onthouden we het oude plaatje van harten boer en zetten we precies dat terug (niet een vast nummer).
         hA = pg.input_value('#ktOverzicht select[data-kaart=hA]')
+        hB_oud = pg.input_value('#ktOverzicht select[data-kaart=hB]')
         pg.select_option('#ktOverzicht select[data-kaart=hB]', hA)
         pg.click('#ktMaak')
         check('bij twee kaarten' in pg.inner_text('#ktMelding'), 'B een plaatje bij twee kaarten: melding')
-        pg.select_option('#ktOverzicht select[data-kaart=hB]', str(VOLGORDE.index('hB')))
+        pg.select_option('#ktOverzicht select[data-kaart=hB]', hB_oud)
 
         # ── C ──
         with pg.expect_download() as dl:

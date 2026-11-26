@@ -4,6 +4,9 @@
 #  C. Perkament: meteen plaatjes in je hand, de achterkant op de stapel en de waaier van de ander; de plaatjes laden echt
 #  D. spelen gaat gewoon door: een kaart omhoog vegen (Pesten) en de kaart ligt als plaatje op de aflegstapel
 #  E. de keuze blijft na opnieuw laden, ook in Toepen en Eenentwintigen; terug naar Stekky = weer svg; geen paginafouten
+#  (26 nov 2026) D faalde soms op GitHub: met echt toeval had je soms geen gewone kaart om te spelen, en op een trage
+#  computer begon de veeg soms pas na 0,42 s (dan denkt de app dat je kaarten wilt verschuiven). Nu deelt de testbrowser
+#  Pesten met een vaste volgorde (zaad 12: je mag 's9' of 's3' spelen) en probeert de veeg het tot 3 keer.
 # python3 -I proef294.py <map> [schermafdruk.png]
 import sys, os, time, socket, subprocess, tempfile, re
 from playwright.sync_api import sync_playwright
@@ -24,6 +27,14 @@ MIJN_BEURT = "() => !document.querySelector('.kt-einde') && !!document.querySele
 SOORT = """sel => [...document.querySelectorAll(sel)].map(e => e.querySelector('img.kt-img') ? 'img' : e.querySelector('svg') ? 'svg' : '?')"""
 GELADEN = """() => [...document.querySelectorAll('.kt-tafel img.kt-img')].every(i => i.complete && i.naturalWidth > 100)"""
 
+VAST = []
+def vast_schudden(route):
+    r = route.fetch(); js = r.text()
+    s = 'export function nieuwSpel({ begint = 1, rng = Math.random,'
+    if s in js: js = js.replace(s, s.replace('rng = Math.random', 'rng = __vastSchudden()')); VAST.append('pesten')
+    js = 'const __vastSchudden = () => { let z = 12; return () => (z = (z * 16807) % 2147483647) / 2147483647 }\n' + js
+    route.fulfill(response=r, body=js)
+
 def wacht(pg, js, ms=15000):
     try: pg.wait_for_function(js, timeout=ms); return True
     except Exception: return False
@@ -43,6 +54,7 @@ try:
         b = p.chromium.launch(args=['--no-proxy-server'])
         ctx = b.new_context(service_workers='block', locale='nl-NL', viewport={'width': 390, 'height': 844}, has_touch=True, reduced_motion='reduce')
         ctx.route('**/*supabase.co/**', lambda r: r.fulfill(status=200, json=[]))
+        ctx.route('**/pesten.js*', vast_schudden)
         ctx.route(re.compile(r'^https?://(?!127\.0\.0\.1).*'), lambda r: r.fulfill(status=204, body=''))
 
         pg = open_spel(ctx, 'pesten')
@@ -72,7 +84,13 @@ try:
         check(wacht(pg, MIJN_BEURT), 'D: jij bent nog aan de beurt')
         mag = pg.evaluate("() => [...document.querySelectorAll('.kt-hand .kt-kaart.kt-mag')].map(k => k.dataset.id)")
         mag.sort(key=lambda id: id[1:] == 'B' or id.startswith('J'))
-        if mag:
+        check(VAST == ['pesten'] and len(mag) > 0, 'D (proef) vast geschud: er is een gewone kaart om te spelen (%s)' % mag)
+        GESPEELD = lambda id: ("() => !document.querySelector('.kt-hand .kt-kaart[data-id=\"%s\"]') && " % id + RUST +
+                               " && [...document.querySelectorAll('.kt-afleg .kt-ak')].every(k => k.querySelector('img.kt-img'))")
+        gelukt = False
+        for poging in range(3):
+            if not mag or gelukt: break
+            wacht(pg, MIJN_BEURT, 5000)
             x, y = pg.eval_on_selector('.kt-hand .kt-kaart[data-id="%s"]' % mag[0], """e => { const r = e.getBoundingClientRect()
                 for (const fy of [0.5, 0.35, 0.65, 0.2, 0.8]) for (let fx = 0.08; fx < 0.95; fx += 0.08) {
                     const x = r.left + r.width * fx, y = r.top + r.height * fy, raak = document.elementFromPoint(x, y)
@@ -81,11 +99,10 @@ try:
             pg.mouse.move(x, y); pg.mouse.down()
             for i in range(1, 9): pg.mouse.move(x, y - 28 * i); time.sleep(0.012)
             pg.mouse.up()
-            check(wacht(pg, "() => !document.querySelector('.kt-hand .kt-kaart[data-id=\"%s\"]') && " % mag[0] + RUST +
-                        " && [...document.querySelectorAll('.kt-afleg .kt-ak')].every(k => k.querySelector('img.kt-img'))", 10000),
+            gelukt = wacht(pg, GESPEELD(mag[0]), 6000 if poging < 2 else 10000)
+            if not gelukt: print('     (veeg %d lukte niet, nog een keer)' % (poging + 1))
+        check(gelukt,
                   'D: een kaart omhoog vegen: hij is gespeeld en de aflegstapel is perkament')
-        else:
-            pg.click('.kt-stapel'); check(wacht(pg, "() => document.querySelectorAll('.kt-hand .kt-kaart').length > 7", 8000), 'D: (niets te spelen) een kaart pakken werkt')
         time.sleep(0.5)
         if FOTO:
             pg.screenshot(path=FOTO)

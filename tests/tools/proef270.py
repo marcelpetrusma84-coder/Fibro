@@ -147,8 +147,16 @@ try:
         check('C maar een webcamknop', isinstance(sm, dict) and sm['knoppen'] == 1, sm)
         if os.environ.get('PROEF_FOTO'): m.screenshot(path=os.environ['PROEF_FOTO'])
         for pg in (m, b): pg.mouse.click(380, 830)   # een tik: geluid mag beginnen (zoals op een telefoon)
-        goud = wacht(m, "() => document.querySelector('#spelOverlay.dam-video-modus .spel-video-vak.praat') !== null", 10000)
-        check('D praten: gouden rand om een rondje', goud)
+        # 26 nov 2026: D faalde 1 op de 6 keer op GitHub. Nu zet de proef het geluid nog eens zelf aan (de vlag
+        # --autoplay-policy laat dat toe), kijkt hij elke 50 ms (niet alleen bij een nieuw beeld, dat stokt op een drukke
+        # computer), en wacht hij 20 s op het piepje van de nep-microfoon. Lukt het niet, dan staat erbij wat hij zag.
+        for pg in (m, b): ev(pg, "() => window.fibroSpreekMeter && window.fibroSpreekMeter.wek()")
+        GOUD = "() => document.querySelector('#spelOverlay.dam-video-modus .spel-video-vak.praat') !== null"
+        try: m.wait_for_function(GOUD, timeout=20000, polling=50); goud = True
+        except Exception: goud = False
+        check('D praten: gouden rand om een rondje', goud, '' if goud else ev(m, """() => ({ sporen: ['lokaalMedia', 'remoteAudio'].map(id =>
+            (document.getElementById(id)?.srcObject?.getAudioTracks?.() || []).map(t => t.readyState + '/' + t.enabled)),
+            zichtbaar: document.visibilityState, modus: document.getElementById('spelOverlay')?.className })"""))
         def zet(pg, a, b_): klik(pg, '#sch-bord [data-r="%d"][data-k="%d"]' % a); klik(pg, '#sch-bord [data-r="%d"][data-k="%d"]' % b_); pg.wait_for_timeout(1200)
         zet(m, (6, 4), (4, 4)); b.wait_for_timeout(1500); zet(b, (1, 3), (3, 3)); m.wait_for_timeout(1500)   # e4 d5 (wachten tot de zet bij de ander is)
         for pg in (m, b): pg.evaluate("""() => { window.__rood = []; new MutationObserver(() => { for (const id of ['spelVideoEigen', 'spelVideoAnder']) if (document.getElementById(id).classList.contains('geslagen') && !window.__rood.includes(id)) window.__rood.push(id) }).observe(document.getElementById('spelOverlay'), { subtree: true, attributes: true, attributeFilter: ['class'] }) }""")

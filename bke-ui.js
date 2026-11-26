@@ -161,6 +161,7 @@ export function start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
     if (uitslag) {
       const winnaar = uitslag.winnaar
       gameOver = true
+      try { window.fibroSoloUitslag?.(winnaar === 'gelijk' ? 'gelijk' : winnaar === mijnSymbool ? 'winst' : 'verlies') } catch (e) {} // 26 nov 2026: scorebord (alleen tegen de computer, spel.html)
       winLijn = uitslag.lijn
       if (winnaar === 'gelijk') { scoreGelijk++; statusEl.textContent = T('🤝 Gelijkspel!'); Bordgeluid.geluid('remise') }
       else if (winnaar === mijnSymbool) { scoreIk++; statusEl.textContent = T('🎉 Jij wint!'); Bordgeluid.geluid('win') }

@@ -14,11 +14,11 @@
 // iedereen, en de database laat iedereen downloaden die niet geblokkeerd is (sql/stekky-store-iedereen.sql).
 // Soorten: lettertype (nu), game, sticker en widget (later). Lettertypes komen per thema in een pakket van 4
 // (v2, 11 nov 2026): een nieuw pakket staat in STORE_PAKKETTEN (lettertypes.js), de bestanden in lettertypen/.
-import { STORE_PAKKETTEN } from './lettertypes.js?v=133'
-import { STORE_VELLEN } from './stickervellen.js?v=242'
-import { legStoreVakkenVast, zetStoreVelActief } from './stickervakken.js?v=6'   // 13 nov 2026: stickers aanzetten bij Stijl
+import { STORE_PAKKETTEN } from './lettertypes.js?v=134'
+import { STORE_VELLEN } from './stickervellen.js?v=244'
+import { legStoreVakkenVast, zetStoreVelActief } from './stickervakken.js?v=8'   // 13 nov 2026: stickers aanzetten bij Stijl
 import { zetStandaardWidgets } from './standaardwidgets.js?v=2'   // 17 nov 2026: games meteen op Home
-import { STUDIO_LAYOUTS } from './studio-layouts.js?v=2'
+import { STUDIO_LAYOUTS } from './studio-layouts.js?v=3'
 import { STUDIO_SPELLEN, spelIcoon as studioIcoon } from './studio-spellen.js?v=6' // 25 nov 2026: spellen uit Stekky Studio (spelmaker.js) // 25 nov 2026: widget-layouts uit Stekky Studio (layouts.js)
 
 export const STORE_SOORTEN = [
@@ -73,11 +73,15 @@ export const STORE_WIDGETS = [
   { id: 'muziekwidget', soort: 'widget', titel: 'Funkwhale', widget: 'muziekwidget', homeIcoon: '\u{1F3A7}', w: 4, h: 3,
     uitleg: 'Zet een album of nummer van Funkwhale op je profiel: vrij gelicentieerde muziek. Je vrienden zien eerst een kaartje; pas als iemand op luisteren tikt, maakt zijn toestel verbinding met Funkwhale. Geen reclame.' },
   { id: 'radio', soort: 'widget', titel: 'Radio', widget: 'radio', homeIcoon: '\u{1F4FB}', w: 4, h: 3,
-    uitleg: 'Een ouderwetse radio op je profiel, met tot 6 zenders van over de hele wereld: zoek op naam, land of muzieksoort, of plak je eigen stream-link. Pas als iemand op afspelen tikt, maakt zijn toestel verbinding met de zender.' },
+    uitleg: 'Een ouderwetse radio op je profiel, met tot 4 zenders van over de hele wereld: zoek op naam, land of muzieksoort, of plak je eigen stream-link. Pas als iemand op afspelen tikt, maakt zijn toestel verbinding met de zender.' },
   { id: 'rss', soort: 'widget', titel: 'RSS-feed', widget: 'rss', homeIcoon: '\u{1F4F0}', w: 4, h: 3,
     uitleg: 'De nieuwste koppen van je favoriete sites op je profiel, van tot 3 RSS-feeds. De server van Stekky haalt de koppen op, niet je toestel; daarna stuurt je toestel ze naar je vrienden. Pas als iemand op een kop tikt, opent het artikel op de site zelf.' },
   { id: 'mastodon', soort: 'widget', titel: 'Mastodon', widget: 'mastodon', homeIcoon: '\u{1F418}', w: 4, h: 3,
     uitleg: 'Je openbare Mastodon-berichten op je profiel, met een knop "Volg mij op Mastodon". Stekky logt niet in bij Mastodon: alleen openbare berichten, de server van Stekky leest mee (niet je toestel) en daarna stuurt je toestel ze naar je vrienden. Gevoelige plaatjes worden overgeslagen en berichten met een waarschuwing blijven dicht tot je erop tikt.' },
+  // 26 nov 2026 (Marcel): al je spellen op een rij, jouw beste score naast die van je beste vriend (scorebordwidget.js)
+  { id: 'scorebord', soort: 'widget', titel: 'Scorebord', widget: 'scorebord', homeIcoon: '\u{1F3C6}', w: 4, h: 3,
+    uitleg: 'Al je spellen op een rij: jouw beste score naast die van je beste vriend. Wie staat er voor? Tik op een spel om meteen te spelen. Alleen je echte vrienden doen mee, en alleen jij ziet deze widget.',
+    uitlegEn: 'All your games in a row: your best score next to your best friend\'s. Who is ahead? Tap a game to play right away. Only your real friends take part, and only you see this widget.' },
   // 25 nov 2026: widget-layouts uit Stekky Studio: één widget met een paar bestaande widgets samen (layouts.js)
   ...STUDIO_LAYOUTS.map(l => ({ id: l.store, soort: 'widget', titel: l.titel, widget: 'mix_' + l.id, homeIcoon: '\u{1F9E9}', w: 4, h: l.h,
     uitleg: l.uitleg[0], uitlegEn: l.uitleg[1], layout: true })),

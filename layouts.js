@@ -26,7 +26,7 @@
 //   mixWidgetDef(widgetId)       -> { id, icon, titel, w, h } voor Home en Profiel, of null
 //   tekenMix(el, layout, tekenVak)   -> tekent de vakken; tekenVak(soort, inhoudEl) vult er één
 
-import { STUDIO_LAYOUTS } from './studio-layouts.js?v=2'
+import { STUDIO_LAYOUTS } from './studio-layouts.js?v=3'
 import { netteFeedUrl, MAX_FEEDS } from './rsswidget.js?v=5'
 import { SERVERS as PEERTUBE_SERVERS, CATEGORIEEN, MAX_CATS } from './peertube.js?v=6'
 

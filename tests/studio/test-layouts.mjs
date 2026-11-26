@@ -48,7 +48,7 @@ console.log('PASS: sjablonen zijn geldig; valideerLayout houdt foute layouts teg
 const tmp = mkdtempSync(path.join(tmpdir(), 'layouts-'))
 writeFileSync(path.join(tmp, 'package.json'), '{"type":"module"}')
 for (const f of ['layouts.js', 'studio-layouts.js', 'store.js', 'rsswidget.js', 'peertube.js', 'voorbeeldplaatje.js']) copyFileSync(path.join(REPO, f), path.join(tmp, f)) // layouts.js gebruikt rsswidget.js en peertube.js
-writeFileSync(path.join(tmp, 'studio-layouts.js'), lees('studio-layouts.js').replace(/export const STUDIO_LAYOUTS = [\s\S]*$/, 'export const STUDIO_LAYOUTS = []\n'))
+writeFileSync(path.join(tmp, 'studio-layouts.js'), lees('studio-layouts.js').replace(/export const VERVALLEN_LAYOUTS = .*\n/, 'export const VERVALLEN_LAYOUTS = []\n').replace(/export const STUDIO_LAYOUTS = [\s\S]*$/, 'export const STUDIO_LAYOUTS = []\n'))
 mkdirSync(path.join(tmp, 'tests/tools'), { recursive: true })
 copyFileSync(path.join(REPO, 'tests/tools/studio-layout-installeer.mjs'), path.join(tmp, 'tests/tools/studio-layout-installeer.mjs'))
 const installeer = (layout, naam) => {
@@ -66,6 +66,13 @@ const data = await import(pathToFileURL(path.join(tmp, 'studio-layouts.js')).hre
 assert.deepEqual(data.STUDIO_LAYOUTS.map(l => [l.id, l.store, l.titel, l.h]), [['l1', 'layout-video-en-nieuws', 'Video en nieuws', 6], ['l2', 'layout-muziek-berichten', 'Muziek & berichten', 3]])
 assert.deepEqual(data.STUDIO_LAYOUTS[0].vakken, goed.vakken)
 console.log('PASS: het installatie-script zet layouts in de app (l1, l2) en weigert dubbele of foute')
+// 26 nov 2026: een id van een verwijderde layout (l1 = Nu.nl) wordt nooit opnieuw gebruikt, anders krijgt wie mix_l1 nog had de nieuwe
+{ const bron = lees('studio-layouts.js'); assert.match(bron, /export const VERVALLEN_LAYOUTS = \[[^\]]*'l1'/)
+  writeFileSync(path.join(tmp, 'studio-layouts.js'), bron.replace(/export const STUDIO_LAYOUTS = [\s\S]*$/, 'export const STUDIO_LAYOUTS = []\n'))
+  const r2 = installeer(goed, 'weg.json'); assert.equal(r2.status, 0, r2.stderr); assert.match(r2.stdout, /als l2 in de app/, 'l1 is van Nu.nl geweest: niet opnieuw gebruiken')
+  writeFileSync(path.join(tmp, 'studio-layouts.js'), bron.replace(/export const VERVALLEN_LAYOUTS = .*\n/, 'export const VERVALLEN_LAYOUTS = []\n').replace(/export const STUDIO_LAYOUTS = [\s\S]*$/, 'export const STUDIO_LAYOUTS = [\n' + data.STUDIO_LAYOUTS.map(l => '  ' + JSON.stringify(l) + ',').join('\n') + '\n]\n')) }
+assert.match(lees('index.html'), /const VERVALLEN_WIDGETS = new Set\(\[[^\]]*'mix_l1'/, 'Home toont de oude Nu.nl-widget niet meer')
+console.log('PASS: het id van de verwijderde Nu.nl-layout (l1) wordt niet opnieuw gebruikt en Home toont mix_l1 niet')
 
 // ── 3. layoutVan, mixWidgetDef en de aansluiting ──
 assert.equal(L.layoutVan('mix_l1', data.STUDIO_LAYOUTS).titel, 'Video en nieuws')

@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=153"></script>
+<script src="taal.js?v=162"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -216,6 +216,8 @@ async function wisFotoUitDB(id){try{const db=await openDB();return new Promise((
     <button type="button" class="beta-label" id="betaLabel" onclick="window.openFibroTerugmelden()" aria-label="Beta: fout of idee melden" data-t-attr="aria-label" data-t>beta</button>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
+    <!-- 26 nov 2026 (Marcel): ➕ = iemand uitnodigen via het deelmenu (uitnodigen.js; link voor één persoon, 1 dag geldig) -->
+    <button id="uitnodigBtn" type="button" title="Vriend uitnodigen" aria-label="Vriend uitnodigen" data-t-attr="title,aria-label" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.08);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.7);padding:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
     <button id="uitlogBtn" onclick="window.uitloggen()" title="Uitloggen" data-t-attr="title" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.08);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.7);padding:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
     <button id="menuBtn" onclick="window.openMenu()" title="Menu" aria-label="Menu" aria-haspopup="true" aria-expanded="false" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.08);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.7);padding:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     <div class="top-av" id="topAvatar" onclick="window.location.href='profiel.html'" style="display:none">👤</div>
@@ -303,6 +305,7 @@ window.addEventListener('pageshow', function (e) { if (e.persisted) window.werkO
 })()
 </script>
 
+<div id="start-kaart-slot"></div>
 <div id="home-sectie"></div>
 <div id="profiel-sectie-label" class="sectie-label" style="display:none" data-t>Jouw profiel</div>
 <div id="profiel-sectie"></div>
@@ -335,7 +338,7 @@ window.addEventListener('pageshow', function (e) { if (e.persisted) window.werkO
 </div>
 
 <script type="module">
-import { laadThema } from './thema.js?v=238'
+import { laadThema } from './thema.js?v=239'
 import { pasBlokstijlToe } from './blokstijl.js?v=95'
 import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=95'
 import { startHeartbeat } from './heartbeat.js?v=118'
@@ -354,7 +357,8 @@ import { isBelregel, belregelTekst } from './belregel.js?v=152'
 import { maakSpelVersieLangDruk } from './spelversie-langdruk.js?v=1'
 import { koppelSpelIcoonFallback } from './spelicoon.js?v=12'
 koppelSpelIcoonFallback()
-import { openSpelMetTitel } from './titelscherm.js?v=19' // v252: titelscherm met muziek meteen bij je tik
+import { openSpelMetTitel } from './titelscherm.js?v=20' // v252: titelscherm met muziek meteen bij je tik
+import { maakStartKaart } from './startkaart.js?v=1' // 26 nov 2026: de kaart 'Speel met een vriend' voor wie nog niet samen speelde
 import { PUSH_SOORTEN, pushAan, haalPushKeuzes, wisselPush, uitlegPush } from './pushmeldingen.js?v=7' // v266
 pasBlokstijlToe()
 
@@ -445,13 +449,14 @@ const PROFIEL_DEFS = [
   { id:'radio',          icon:'📻', titel:'Radio',                w:4, h:3 }, // 18 nov 2026: radio.js
   { id:'rss',            icon:'📰', titel:'RSS-feed',             w:4, h:3 }, // 19 nov 2026: rsswidget.js
   { id:'mastodon',       icon:'🐘', titel:'Mastodon',             w:4, h:3 }, // 19 nov 2026: mastodon.js
+  { id:'scorebord',      icon:'🏆', titel:'Scorebord',            w:4, h:3 }, // 26 nov 2026: scorebordwidget.js (alleen op je eigen Home)
   { id:'afteltimer',     icon:'⏳', titel:'Afteltimer',           w:4, h:2 },
   { id:'opteltimer',     icon:'⏱', titel:'Opteltimer',           w:4, h:2 },
   { id:'gastenboek',     icon:'📖', titel:'Gastenboek',           w:4, h:4 },
 ]
 
 // 25 nov 2026: widgets die weg zijn (niet voor commercieel gebruik): staan ze nog op Home, dan niet meer tonen
-const VERVALLEN_WIDGETS = new Set(['weer']) // weer: Open-Meteo is gratis alleen niet-commercieel
+const VERVALLEN_WIDGETS = new Set(['weer', 'mix_l1']) // weer: Open-Meteo is gratis alleen niet-commercieel; mix_l1: de Nu.nl-layout (26 nov 2026, NU.nl staat commercieel gebruik niet toe)
 function laadLayout(pagina) {
   const key = pagina === 'home' ? WK_HOME : WK_PROFIEL
   const defs = pagina === 'home' ? HOME_DEFS : PROFIEL_DEFS
@@ -670,7 +675,7 @@ function renderProfiel(id, c) {
     // v171: een sticker als mood (moodsticker.js): tik = beweging en geluid
     const sticker = /^fxsticker:((?:f\d+|e[12])-(?:0[1-9]|1[0-2]))$/.exec(emoji)
     c.innerHTML = `<div style="display:flex;align-items:center;gap:10px"><span class="mood-plek" style="font-size:28px;line-height:1">${sticker ? '' : escH(emoji)}</span><span style="font-size:14px">${escH(tekst)}</span></div>`
-    if (sticker) import('./moodsticker.js?v=242').then(m => m.tekenMoodSticker(c.querySelector('.mood-plek'), sticker[1], { uid: window._uid })).catch(e => console.warn('[moodsticker]', e))
+    if (sticker) import('./moodsticker.js?v=244').then(m => m.tekenMoodSticker(c.querySelector('.mood-plek'), sticker[1], { uid: window._uid })).catch(e => console.warn('[moodsticker]', e))
 
   } else if (id === 'muziek') {
     renderMuziekPlayer(c)
@@ -719,6 +724,8 @@ function renderProfiel(id, c) {
     renderRss(c, window._uid)
   } else if (id === 'mastodon') {
     renderMastodon(c, window._uid)
+  } else if (id === 'scorebord') {
+    renderScorebord(c, window._uid) // 26 nov 2026
   } else if (id === 'afteltimer') {
     renderAftel(c, window._uid)
   } else if (id === 'opteltimer') {
@@ -731,7 +738,7 @@ function renderProfiel(id, c) {
     renderSpelWidget(c, id.slice(5))
   } else if (id.startsWith('sticker_')) {
     // v157: sticker als widget (Profiel > Stickers): tik = beweging en geluid. Pas laden als hij er staat.
-    import('./stickerwidget.js?v=242').then(m => m.tekenStickerWidget(c, id, { uid: window._uid })).catch(e => console.warn('[stickerwidget]', e))
+    import('./stickerwidget.js?v=244').then(m => m.tekenStickerWidget(c, id, { uid: window._uid })).catch(e => console.warn('[stickerwidget]', e))
   }
 }
 
@@ -1704,7 +1711,7 @@ async function renderQuiz(c, uid) {
   let quiz = null
   try { quiz = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
   let Q
-  try { Q = await import('./quiz.js?v=11') } catch (e) { console.warn('[quiz]', e); return }
+  try { Q = await import('./quiz.js?v=13') } catch (e) { console.warn('[quiz]', e); return }
   Q.tekenQuizWidget(c, {
     quiz, eigen: true,
     achtergrond: () => laadUitDB('widgetbg_quiz_' + uid),
@@ -1751,7 +1758,7 @@ async function renderPeertube(c, uid) {
 // ════════════════════════════════
 async function renderMix(c, id, uid) {
   let L
-  try { L = await import('./layouts.js?v=5') } catch (e) { console.warn('[layout]', e); return }
+  try { L = await import('./layouts.js?v=6') } catch (e) { console.warn('[layout]', e); return }
   const layout = L.layoutVan(id)
   if (!layout) { c.innerHTML = '<div class="wi-icon">🧩</div>'; return }
   const teken = { peertube: renderPeertube, muziekwidget: renderMuziekwidget, radio: renderRadio, rss: renderRss, mastodon: renderMastodon }
@@ -1869,7 +1876,7 @@ async function renderRadio(c, uid) {
   let cfg = null
   try { cfg = JSON.parse(localStorage.getItem(key) || 'null') } catch (e) {}
   let R
-  try { R = await import('./radio.js?v=5') } catch (e) { console.warn('[radio]', e); return }
+  try { R = await import('./radio.js?v=6') } catch (e) { console.warn('[radio]', e); return }
   R.tekenRadioWidget(c, {
     cfg, eigen: true,
     bewaar: nieuw => {
@@ -1910,6 +1917,16 @@ async function renderRss(c, uid) {
       renderRss(c, uid)
     },
   })
+}
+
+// ════════════════════════════════
+// SCOREBORD (26 nov 2026, Marcel, scorebordwidget.js): al je spellen op een rij, jouw beste score naast die van je
+// beste vriend. Tik op een spel: het opent met het titelscherm, net als een spelwidget. Alleen hier (je eigen Home).
+// ════════════════════════════════
+async function renderScorebord(c, uid) {
+  let W
+  try { W = await import('./scorebordwidget.js?v=1') } catch (e) { console.warn('[scorebord]', e); return }
+  W.tekenScorebordWidget(c, { supabase, uid, T, open: spel => openSpelMetTitel(spel, 'spel.html?spel=' + encodeURIComponent(spel)) })
 }
 
 // ════════════════════════════════
@@ -3181,6 +3198,20 @@ init().then(() => {
   // v267: een nieuw account krijgt bij de eerste start Mood, foto's, Four in a Row, een sticker en het gastenboek
   // (standaardwidgets.js). Wie al een indeling heeft (of alles uitzette) houdt die.
   try { if (zetStandaardWidgets(localStorage, _widgetUid())) console.log('[widgets] standaard-widgets klaargezet') } catch (e) {}
+  // 26 nov 2026: de kaart 'Speel met een vriend' (startkaart.js): alleen tot je een uitnodiging voor een spel verstuurde
+  ;(async () => {
+    try {
+      const slot = document.getElementById('start-kaart-slot'), uid = window._uid
+      if (!slot || !uid) return
+      const { count, error } = await supabase.from('friendships').select('id', { count: 'exact', head: true })
+        .or(`user_id.eq.${uid},friend_id.eq.${uid}`).eq('status', 'accepted')
+      if (error) return
+      const kaart = maakStartKaart({ uid, vrienden: count || 0, ls: localStorage, T,
+        open: spel => openSpelMetTitel(spel, 'spel.html?spel=' + encodeURIComponent(spel)),
+        naarVrienden: () => { window.location.href = 'vrienden.html' } })
+      if (kaart) slot.appendChild(kaart)
+    } catch (e) { console.warn('[startkaart]', e) }
+  })()
   // HOME WIDGETS
   const homeLayout = laadLayout('home')
   const homeActief = homeLayout.filter(w => w.aan)
@@ -3311,6 +3342,7 @@ if ('serviceWorker' in navigator) {
 <script type="module" src="geluidregelaar.js?v=182"></script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
 <script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=207"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { deelUitnodiging, bereidVoor } from "./uitnodigen.js?v=1"; bereidVoor(); document.getElementById("uitnodigBtn").onclick = () => deelUitnodiging()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=172"; startOngelezen()</script>
 <script type="module">import { checkTimers } from "./timer-melding.js?v=188"; setTimeout(checkTimers,4000)</script>
 <script src="./fotoviewer.js?v=9"></script>

@@ -1,4 +1,4 @@
-import { maakSchaakTaal } from './schaak-taal.js?v=13'
+import { maakSchaakTaal } from './schaak-taal.js?v=15'
 import { stukSVG, registreerSlag, veroverdePunten, STUKPUNTEN } from './schaak-stukken.js?v=1'
 import { schaakFen } from './schaak-ultra-engine.js?v=1'
 import { schaakNotatie, maakUltraEvaluatieHistorie } from './schaak-ultra-historie.js?v=1'
@@ -1681,11 +1681,13 @@ export function start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
     if (Schaak.isSchaakmat(staat, volgendeKleur)) {
       gameOver = true
       mat = true
+      try { window.fibroSoloUitslag?.(volgendeKleur !== mijnKleur ? 'winst' : 'verlies') } catch (e) {} // 26 nov 2026: scorebord (alleen tegen de computer, spel.html)
       statusBericht = null
       statusEl.textContent = ''
       opnieuwBtn.style.display = 'block'
     } else if (Schaak.isPat(staat, volgendeKleur)) {
       gameOver = true
+      try { window.fibroSoloUitslag?.('gelijk') } catch (e) {} // 26 nov 2026: scorebord (alleen tegen de computer, spel.html)
       toonStatus('🤝 Pat — remise!')
       opnieuwBtn.style.display = 'block'
     } else if (Schaak.staatInSchaak(staat, volgendeKleur)) {

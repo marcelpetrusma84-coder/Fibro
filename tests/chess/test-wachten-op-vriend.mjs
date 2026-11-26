@@ -114,7 +114,7 @@ function network() {
   globalThis.window = {}
   new Function('window', readFileSync(new URL('../../taal-en.js', import.meta.url), 'utf8'))(globalThis.window)
   const EN = globalThis.window.FIBRO_EN
-  for (const k of ['⏳ Wachten tot {naam} in het spel zit...', '{naam} is er na 2 minuten nog niet. Probeer het later opnieuw, of wacht nog even.', 'Sluiten', 'Annuleren', 'Verbinding herstellen; je spel blijft open.', 'Wachten op internet; je spel blijft open.'])
+  for (const k of ['⏳ Wachten tot {naam} in het spel zit...', '{naam} is er na 2 minuten nog niet. Probeer het later opnieuw, of wacht nog even.', '🤖 Tegen de computer', '💬 Naar de chat', '{naam} is nu niet online. Ga je weg, dan krijgt {naam} een bericht dat je wilde spelen.', '{naam} is er na 2 minuten nog niet. Ga je weg, dan krijgt {naam} een bericht dat je wilde spelen.', 'Sluiten', 'Annuleren', 'Verbinding herstellen; je spel blijft open.', 'Wachten op internet; je spel blijft open.'])
     assert.ok(Object.prototype.hasOwnProperty.call(EN, k), 'Engels voor ' + k)
   delete globalThis.window
 }

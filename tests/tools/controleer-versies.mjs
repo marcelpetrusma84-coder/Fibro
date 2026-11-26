@@ -29,11 +29,23 @@ for (const f of alle) {
 const veranderd = git('diff', '--name-status', basis + '...' + kop).split('\n').filter(Boolean).map(r => r.split('\t'))
 const diff = git('diff', '-U0', basis + '...' + kop)
 const toegevoegd = diff.split('\n').filter(r => r.startsWith('+') && !r.startsWith('+++')).join('\n')
+// 26 nov 2026: welke nummers had een bestand al op de basis? Een nieuw nummer moet echt nieuw zijn. Eerder telde elke
+// toegevoegde regel met '<naam>?v=', ook een nieuw bestand dat het oude nummer gebruikte (zo bleef
+// neon-raiders-scoreboard.js in #279 op v5 staan terwijl het veranderde).
+function nummers(rev, naam) {
+  const uit = new Set()
+  let lijst = []
+  try { lijst = git('grep', '-h', '-o', '-E', naam + '\\?v=[A-Za-z0-9._-]+', rev, '--', '*.js', '*.html', '*.css', '*.mjs').split('\n') } catch (e) {}
+  for (const r of lijst) { const m = r.match(/\?v=([\w.-]+)/); if (m) uit.add(m[1]) }
+  return uit
+}
 const fout = []
 for (const [stand, f] of veranderd) {
   if (stand !== 'M' || SLA_OVER.test(f) || NOOIT.has(f) || !metVersie.has(f)) continue
   const naam = path.posix.basename(f).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  if (!new RegExp(naam + '\\?v=').test(toegevoegd)) fout.push(f)
+  if (!new RegExp(naam + '\\?v=').test(toegevoegd)) { fout.push(f); continue }
+  const oud = nummers(basis, naam), nu = nummers(kop, naam)
+  if (![...nu].some(v => !oud.has(v))) fout.push(f)   // alleen oude nummers: telefoons houden de oude kopie
 }
 if (fout.length) {
   console.log('FOUT: deze bestanden zijn veranderd, maar hun ?v=-nummer niet. Telefoons blijven dan de oude kopie gebruiken.')

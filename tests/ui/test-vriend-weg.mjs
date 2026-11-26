@@ -28,14 +28,15 @@ const { SCHAAK_EN } = await import('../../schaak-taal-en.js')
 for (const k of ['⏳ Wachten tot {naam} in het spel zit...', '{naam} is er na 2 minuten nog niet. Probeer het later opnieuw, of wacht nog even.',
   'Verbinding herstellen; je spel blijft open.', 'Wachten op internet; je spel blijft open.', 'Wachten op je vriend; je spel blijft open.',
   'Spel met je vriend openen…', '{naam} heeft het spel verlaten.', '{naam} reageert al 2 minuten niet. Misschien is {naam} weg.', 'Blijven wachten',
-  'Annuleren', 'Sluiten'])
+  'Annuleren', 'Sluiten',
+  '🤖 Tegen de computer', '💬 Naar de chat', '{naam} is nu niet online. Ga je weg, dan krijgt {naam} een bericht dat je wilde spelen.', '{naam} is er na 2 minuten nog niet. Ga je weg, dan krijgt {naam} een bericht dat je wilde spelen.'])
   assert.ok(Object.hasOwn(SCHAAK_EN, k), 'schaak-Engels voor ' + k)
 const scherm = deel('function toonSpelWachtscherm()', '// v244: hoor je al 2 minuten niets')
 assert.doesNotMatch(scherm, /[^l]T\('/, 'het wachtscherm gebruikt overal spelT')
 assert.match(chat, /toonSpelMelding\(spelT\('\{naam\} heeft het spel verlaten\.'/)
 // nieuwe schaakteksten: verse versies, zodat iedereen ze ophaalt
-assert.match(readFileSync(new URL('../../schaak-taal.js', import.meta.url), 'utf8'), /schaak-taal-en\.js\?v=13/)
-assert.match(chat, /schaak-taal\.js\?v=13/)
+assert.match(readFileSync(new URL('../../schaak-taal.js', import.meta.url), 'utf8'), /schaak-taal-en\.js\?v=15/)
+assert.match(chat, /schaak-taal\.js\?v=15/)
 
 // de app-taal (Engels) heeft ook de nieuwe teksten
 globalThis.window = {}

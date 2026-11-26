@@ -1,3 +1,10 @@
+// v162 (26 nov 2026): taal-en.js?v=162 (Koningsjacht van Tijn: scorecategorieën en ruimteschip, samengevoegd met main).
+// v161 (26 nov 2026): taal-en.js?v=161 (de widget Scorebord op Home).
+// v160 (26 nov 2026): taal-en.js?v=160 (een scorebord bij elk spel: 🏆 Scores, keer gewonnen per niveau).
+// v159 (26 nov 2026): taal-en.js?v=159 (wachtkamer met een uitweg: tegen de computer of naar de chat, als je vriend er niet is).
+// v158 (26 nov 2026): taal-en.js?v=158 (uitnodigen: ➕ op Home en 📤 Delen in een spel; melding als de link niet bewaard kon worden).
+// v154 (26 nov 2026): taal-en.js?v=154 (Spel laden... als je vanaf Home met een spel de chat binnenkomt).
+// v153 (26 nov 2026): taal-en.js?v=153 (samen spelen vanaf Home: tegen een vriend of met een groep; Mollen meppen in de wachtkamer).
 // v150 (25 nov 2026): taal-en.js?v=150 (kant-en-klare widgets: feeds kiezen).
 // v149 (25 nov 2026): taal-en.js?v=149 (widget-layouts uit Stekky Studio).
 // v148 (24 nov 2026): taal-en.js?v=148 (Stekky Studio in het menu voor moderators).
@@ -166,7 +173,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=153', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=162', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

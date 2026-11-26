@@ -238,6 +238,7 @@ export function start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
     const winnaar = checkWinnaar()
     if (winnaar) {
       gameOver = true
+      try { window.fibroSoloUitslag?.(winnaar === 'gelijk' ? 'gelijk' : winnaar === mijnKleur ? 'winst' : 'verlies') } catch (e) {} // 26 nov 2026: scorebord (alleen tegen de computer, spel.html)
       const lijn = winLijn
       winLijn = []  // eerst laten vallen, daarna oplichten
       toonScore()

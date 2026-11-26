@@ -11,7 +11,7 @@
 //   { id: 'f1', stickers: [ { nr: '01', naam: ['Grote ogen', 'Big eyes'], b: 'groei', g: 'boing' }, ... ] }
 // In een bericht gaat alleen '<vel>-<nr>' mee (bijv. fxsticker:f1-01); het plaatje staat op elk toestel.
 
-import { STUDIO_VELLEN } from './studio-pakketten.js?v=5'   // 23 nov 2026: vellen die met Stekky Studio zijn gemaakt
+import { STUDIO_VELLEN } from './studio-pakketten.js?v=7'   // 23 nov 2026: vellen die met Stekky Studio zijn gemaakt
 
 export const FIBRO_VELLEN = [
   // 30 okt 2026: emoji-gezichtjes (id f6), op verzoek van Marcel VOORAAN: dit is 'Vel 1' in de stickerkeuze en

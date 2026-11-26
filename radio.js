@@ -1,6 +1,6 @@
 // radio.js (v5, 19 nov 2026: het spelertje op het vergrendelscherm (vergrendelscherm.js); v4: vier skins erbij (radioskins.js v2); v3: skins van Marcel, zie radioskins.js; v2: pijltjes ‹ › om te zappen; Klaar vast bovenaan) - de radio-widget: internetradio op je profiel, in een vintage radio.
 //
-// In gewone woorden: je zet tot 6 zenders op je radio (zoeken in Radio Browser, een open database met tienduizenden
+// In gewone woorden: je zet tot 4 zenders op je radio (zoeken in Radio Browser, een open database met tienduizenden
 // zenders, of zelf een stream-link plakken). Op je profiel (en bij je vrienden) staat een ouderwetse radio met een
 // gloeiend schermpje, een zenderschaal, voorkeuzeknoppen 1 tot 6, pijltjes ‹ › om te zappen en een draaiknop. Pas als iemand op ▶ tikt, maakt
 // zijn toestel verbinding met de zender. Er is geen embed: de stream speelt in een gewone <audio>.
@@ -10,12 +10,12 @@
 //  - wat van een vriend komt gaat door normaliseer(): https, geen inlog, geen adressen in je eigen netwerk.
 //  - speelt de radio, dan is je profielmuziek stil ('fibro-spel-open' / 'fibro-spel-dicht', zie profielmuziek.js).
 //
-// Opslag: localStorage 'radio_<uid>' = JSON { zenders: [{ naam, url, land }], skin } (hoogstens 6 zenders; skin is
+// Opslag: localStorage 'radio_<uid>' = JSON { zenders: [{ naam, url, land }], skin } (hoogstens 4 zenders; skin is
 // een naam uit radioskins.js, of niets voor de gewone paarse radio). Vrienden krijgen hem via sync.js ('klein:radio').
 //
 // v3 (19 nov 2026): skins. Het plaatje van de skin (uit de app zelf, radioskins/) is de achtergrond; daaroverheen het
 // schermpje met de echte zender, een naaldje dat meeloopt, en onzichtbare knoppen precies op de getekende knoppen
-// (‹ ›, 1-4, ▶ en de draaiknop, die meedraait). Zender 5 en 6 bereik je met ‹ › of de draaiknop.
+// (‹ ›, 1-4, ▶ en de draaiknop, die meedraait). De radio heeft vier zenders, net zoveel als de knoppen op de skin.
 //
 // Gebruik:
 //   normaliseer(cfg)                     -> { zenders } of null
@@ -34,11 +34,11 @@ Object.assign(window.FIBRO_EN ||= {}, {
   'Radio': 'Radio', 'Nog geen zender': 'No station yet', '📻 Zenders kiezen': '📻 Choose stations', '✏️ Zenders': '✏️ Stations',
   'Zender {n} van {totaal}': 'Station {n} of {totaal}', 'Aan': 'On', 'Uit': 'Off', 'Andere zender': 'Next station',
   'Pas als je op ▶ tikt, maakt je toestel verbinding met {host}.': 'Only when you tap ▶ does your device connect to {host}.',
-  'Verbinden…': 'Connecting…', 'Je luistert via {host}.': 'You are listening via {host}.', 'Deze zender speelt nu niet.': 'This station is not playing right now.',
+  'Lege plek': 'Empty slot', 'Verbinden…': 'Connecting…', 'Je luistert via {host}.': 'You are listening via {host}.', 'Deze zender speelt nu niet.': 'This station is not playing right now.',
   'Jouw zenders ({n}/{max})': 'Your stations ({n}/{max})', 'Nog geen zenders. Zoek er hieronder een.': 'No stations yet. Search for one below.',
   'Zoek een zender': 'Search for a station', '🔍 Zoeken': '🔍 Search', 'Zoeken…': 'Searching…', 'Niets gevonden.': 'Nothing found.',
   'Zoeken lukt nu niet. Probeer het later nog eens.': 'Searching does not work right now. Please try again later.',
-  '📌 Vastzetten': '📌 Pin', 'Je radio is vol (6 zenders).': 'Your radio is full (6 stations).', 'Staat er al op.': 'Already on it.',
+  '📌 Vastzetten': '📌 Pin', 'Je radio is vol (4 zenders).': 'Your radio is full (4 stations).', 'Staat er al op.': 'Already on it.',
   'Eigen stream-link (https)': 'Your own stream link (https)', 'Naam van de zender': 'Station name', '➕ Toevoegen': '➕ Add',
   'Klaar ✓': 'Done ✓', 'Annuleren': 'Cancel', 'Weghalen': 'Remove',
   'Alleen https-links kunnen (http werkt niet in de app).': 'Only https links work (http does not work in the app).',
@@ -48,7 +48,7 @@ Object.assign(window.FIBRO_EN ||= {}, {
 })
 const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 
-export const MAX_ZENDERS = 6
+export const MAX_ZENDERS = 4 // 26 nov 2026: vier, net als de vier voorkeuzeknoppen op elke skin (radioskins.js)
 // De servers van Radio Browser (ook in connect-src van index.html). We proberen ze in willekeurige volgorde.
 export const ZOEK_SERVERS = ['de1.api.radio-browser.info', 'de2.api.radio-browser.info', 'nl1.api.radio-browser.info', 'at1.api.radio-browser.info']
 // Snelle zoekknoppen (een functie: de teksten worden vertaald op het moment dat ze getekend worden)
@@ -164,6 +164,7 @@ const CSS = `
 .rd-onder{display:flex;align-items:center;gap:8px}
 .rd-presets{display:flex;gap:5px;flex:1;flex-wrap:wrap}
 .rd-preset{min-width:27px;height:27px;padding:0 4px;border-radius:6px;border:none;background:#e8dcc8;color:#2a1240;font-weight:800;font-size:12px;box-shadow:0 3px 0 #8a7a62;cursor:pointer;font-family:inherit}
+.rd-preset:disabled{opacity:.35;cursor:default}
 .rd-preset[aria-pressed="true"]{transform:translateY(2px);box-shadow:0 1px 0 #8a7a62;background:#ffcf8a}
 .rd-aan{width:42px;height:42px;flex:none;border-radius:50%;border:none;background:#8b3fd1;color:#fff;font-size:16px;box-shadow:0 3px 0 #4b1f75;cursor:pointer}
 .rd-aan[aria-pressed="true"]{background:#c0392b;box-shadow:0 3px 0 #6d1f17}
@@ -325,12 +326,15 @@ export function tekenRadioWidget(c, { cfg = null, eigen = false, bewaar = null, 
     paneel.append(zap, schaal)
     boven.append(el('div', 'rd-luidspreker'), paneel)
     const onder = el('div', 'rd-onder'), presets = el('div', 'rd-presets')
-    v.zenders.forEach((x, i) => {
+    // 26 nov 2026: altijd vier knoppen, ook met minder zenders (zoals op de skins); een lege plek is uitgeschakeld
+    for (let i = 0; i < MAX_ZENDERS; i++) {
+      const x = v.zenders[i]
       const b = el('button', 'rd-preset', String(i + 1))
-      b.type = 'button'; b.title = x.naam; b.setAttribute('aria-label', x.naam)
-      b.onclick = stop(() => kies(i))
+      b.type = 'button'; b.title = x ? x.naam : ''; b.setAttribute('aria-label', x ? x.naam : T('Lege plek'))
+      b.disabled = !x
+      if (x) b.onclick = stop(() => kies(i))
       presets.appendChild(b)
-    })
+    }
     const knop = el('button', 'rd-aan', '▶')
     knop.type = 'button'
     knop.onclick = stop(() => { if (aan) { uitzetten(); werkBij() } else speel() })
@@ -526,7 +530,7 @@ export function tekenRadioWidget(c, { cfg = null, eigen = false, bewaar = null, 
         pin.type = 'button'
         pin.onclick = stop(() => {
           if (lijst.some(y => y.url === x.url)) { melding.textContent = T('Staat er al op.'); return }
-          if (lijst.length >= MAX_ZENDERS) { melding.textContent = T('Je radio is vol (6 zenders).'); return }
+          if (lijst.length >= MAX_ZENDERS) { melding.textContent = T('Je radio is vol (4 zenders).'); return }
           lijst.push({ naam: x.naam, url: x.url, land: x.land }); melding.textContent = ''; tekenMijn()
         })
         rij.append(tekstje, info, pin)
@@ -547,7 +551,7 @@ export function tekenRadioWidget(c, { cfg = null, eigen = false, bewaar = null, 
       const r = zenderUitLink(link.value, naamVeld.value)
       if (r.fout) { melding.textContent = r.fout; return }
       if (lijst.some(y => y.url === r.url)) { melding.textContent = T('Staat er al op.'); return }
-      if (lijst.length >= MAX_ZENDERS) { melding.textContent = T('Je radio is vol (6 zenders).'); return }
+      if (lijst.length >= MAX_ZENDERS) { melding.textContent = T('Je radio is vol (4 zenders).'); return }
       lijst.push(r); link.value = ''; naamVeld.value = ''; melding.textContent = ''; tekenMijn()
     })
     for (const x of [link, naamVeld]) { x.onclick = e => e.stopPropagation(); x.onkeydown = e => e.stopPropagation() }

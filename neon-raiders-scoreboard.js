@@ -19,13 +19,16 @@ export function scoreDatum(value, locale = 'nl-NL') {
 
 export function maakNeonScorebord({ host = document.body, service, T = globalThis.T || fallbackT,
   title = 'Neon Raiders scores', brand = 'NEON RAIDERS', formatScore, formatDetail,
-  filterOptions = [], isActief = () => true, onOpen = () => {}, onClose = () => {} } = {}) {
+  filterOptions = [], isActief = () => true, onOpen = () => {}, onClose = () => {},
+  // 26 nov 2026 (scoreborden voor alle spellen, spelscores.js): andere kopjes, zonder Stekky-record, en een eigen
+  // zin bovenaan. Zonder deze opties blijft alles zoals het was (Neon Raiders, Koningsjacht).
+  kolommen = null, zonderRecord = false, statusOnline = null, stijl = '' } = {}) {
   if (!service || typeof service.loadBoards !== 'function') throw new TypeError('Score service ontbreekt')
   const doc = host.ownerDocument || document
   if (!doc.getElementById('nr-scoreboard-css')) {
     const link = doc.createElement('link')
     link.id = 'nr-scoreboard-css'; link.rel = 'stylesheet'
-    link.href = new URL('./neon-raiders-scoreboard.css?v=4', import.meta.url).href
+    link.href = new URL('./neon-raiders-scoreboard.css?v=5', import.meta.url).href
     doc.head.appendChild(link)
   }
   const element = (tag, className, text) => {
@@ -35,6 +38,8 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
     return node
   }
   const dialog = element('dialog', 'nr-scoreboard')
+  // 26 nov 2026: een stijl uit Stekky Studio (goud, paars, roze, groen; neon = standaard), zie neon-raiders-scoreboard.css
+  if (/^[a-z]{1,12}$/.test(stijl) && stijl !== 'neon') dialog.classList.add('sb-stijl-' + stijl)
   dialog.setAttribute('aria-label', T(title))
   const header = element('header', 'nr-sb-header')
   const heading = element('div')
@@ -78,8 +83,8 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
     section.appendChild(list); columns.appendChild(section)
     return list
   }
-  const personalList = column(T('Jouw top 10'), T('Jouw beste rondes'), 'personal')
-  const friendsList = column(T('Vrienden top 10'), T('Jij en je vrienden'), 'friends')
+  const personalList = column(...(kolommen?.personal || [T('Jouw top 10'), T('Jouw beste rondes')]), 'personal')
+  const friendsList = column(...(kolommen?.friends || [T('Vrienden top 10'), T('Jij en je vrienden')]), 'friends')
   const globalPanel = element('section', 'nr-sb-global')
   const globalLabel = element('h3', '', T('Hoogste score op Stekky'))
   const globalScore = element('strong', 'nr-sb-global-score', '—')
@@ -90,6 +95,7 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
   const refreshButton = element('button', 'nr-sb-refresh', T('Vernieuwen'))
   refreshButton.type = 'button'; footer.appendChild(refreshButton)
   dialog.append(header, ...(filterBar ? [filterBar] : []), status, columns, globalPanel, footer)
+  if (zonderRecord) { globalPanel.hidden = true; globalPanel.style.display = 'none' } // de css zet display, dus hidden alleen is niet genoeg
   host.appendChild(dialog)
 
   let destroyed = false, generation = 0, isOpen = false, returnFocus = null, lastBoards = null
@@ -130,7 +136,8 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
         const name = element('span', 'nr-sb-name', row.name || (row.isSelf ? T('Jij') : T('Vriend')))
         body.appendChild(name)
       }
-      body.appendChild(dateNode(row.playedAt))
+      // row.regel: een eigen regel in plaats van de datum (bijv. 'Normaal' bij het aantal keer gewonnen per niveau)
+      body.appendChild(typeof row.regel === 'string' ? element('span', 'nr-sb-date', row.regel) : dateNode(row.playedAt))
       const result = element('div', 'nr-sb-result')
       result.append(element('strong', 'nr-sb-points', number(row.score)), levelNode(row))
       item.append(rank, body, result)
@@ -153,7 +160,7 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
     } else {
       globalDetail.textContent = online ? T('Nog geen Stekky-record.') : T('Het Stekky-record verschijnt zodra je online lijst beschikbaar is.')
     }
-    status.textContent = online ? T('De tien hoogste scores, met de beste score bovenaan.')
+    status.textContent = online ? (statusOnline || T('De tien hoogste scores, met de beste score bovenaan.'))
       : boards.status === 'setup' ? T('Jouw scores worden bewaard. De gedeelde scorelijsten worden nog klaargezet.')
       : boards.status === 'local' ? T('Jouw scores staan op dit apparaat. Log in voor de gedeelde scorelijsten.')
       : T('Jouw scores blijven bewaard. De online lijsten worden vernieuwd zodra je verbinding terug is.')

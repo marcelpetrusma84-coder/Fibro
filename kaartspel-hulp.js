@@ -542,7 +542,7 @@ const STIJL = `
 .kt-hout .kt-status,.kt-casino .kt-status{text-shadow:0 1px 3px #000,0 0 8px #000}
 /* v9: groen casinolaken: vilt met een zacht licht in het midden en een donkere rand */
 .kt-tafel.kt-casino{background:radial-gradient(ellipse at 50% 46%,#ffffff14 0%,#0000 40%,#00000059 78%,#000000b3 100%),repeating-linear-gradient(45deg,#ffffff05 0 2px,#0000 2px 5px),repeating-linear-gradient(-45deg,#00000008 0 2px,#0000 2px 6px),radial-gradient(ellipse at 50% 46%,#22894c 0%,#17693a 55%,#0d4426 100%) #17693a}
-.kt-tafelrij{display:flex;gap:12px;justify-content:center;margin-top:8px}
+.kt-tafelrij{display:flex;gap:12px;margin-top:8px}
 .kt-tafelvoorbeeld{display:block;width:78px;height:52px;border-radius:8px;box-shadow:inset 0 0 0 2px #ffffff22,0 2px 6px #0008}
 .kt-svg{display:block;width:100%;height:100%}
 .kt-img{object-fit:fill;pointer-events:none;-webkit-user-drag:none;user-select:none;border-radius:7%}
@@ -644,11 +644,18 @@ const STIJL = `
 .kt-eindetitel{font-size:26px;font-weight:900}
 .kt-eindesub{font-size:14px;opacity:.85}
 .kt-keuze{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0009;z-index:501}
-.kt-keuzekaart{padding:18px;border-radius:18px;background:#24103d;border:1px solid #c084fc;text-align:center}
+.kt-keuzekaart{padding:18px;border-radius:18px;background:#24103d;border:1px solid #c084fc;text-align:center;max-width:calc(100% - 16px);max-height:calc(100% - 16px);overflow-y:auto;overscroll-behavior:contain}
 .kt-keuzerij{display:grid;grid-template-columns:repeat(auto-fit,minmax(62px,62px));justify-content:center;gap:10px;margin:12px auto 0}
 .kt-keuzerij button{width:62px;height:62px;border-radius:14px;border:2px solid #ffffff33;background:#fffdf9;font-size:36px;cursor:pointer;line-height:1}
 .kt-keuzerij button:focus-visible{outline:3px solid #fff;outline-offset:3px}
-.kt-stijlrij{display:flex;gap:12px;justify-content:center;margin-top:12px}
+.kt-stijlrij{display:flex;gap:12px;margin-top:12px}
+/* v20 (26 nov 2026): passen niet alle kaarten of tafels op het scherm, dan veeg je de rij opzij. Passen ze wel, dan staan ze
+   in het midden (de automatische marge links en rechts). Daarom geen justify-content:center: daarmee kun je bij een
+   scrollende rij het linkerdeel niet meer bereiken. */
+.kt-stijlrij,.kt-tafelrij{position:relative;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;scroll-padding:0 10px;padding:6px 10px 10px;scrollbar-width:thin;scrollbar-color:#c084fc66 transparent}
+.kt-stijlrij>*,.kt-tafelrij>*{flex:0 0 auto;scroll-snap-align:center}
+.kt-stijlrij>:first-child,.kt-tafelrij>:first-child{margin-left:auto}
+.kt-stijlrij>:last-child,.kt-tafelrij>:last-child{margin-right:auto}
 .kt-stijlkeuze{display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px;border-radius:14px;border:2px solid #ffffff22;background:#ffffff10;color:#fff;font:inherit;font-weight:700;cursor:pointer}
 .kt-stijlkeuze[aria-pressed=true]{border-color:#c084fc;background:#8b3fd140;box-shadow:0 0 14px #8b3fd1aa}
 .kt-stijlvoorbeeld{display:flex}
@@ -1067,6 +1074,11 @@ export function maakKaartTafel(container, opties = {}) {
     d.querySelector('.kt-keuzekaart > .kt-knop').onclick = () => d.remove()
     d.addEventListener('click', e => { if (e.target === d) d.remove() })
     el.appendChild(d)
+    // v20: wat nu gekozen is, staat meteen in beeld (ook als de rij langer is dan het scherm)
+    for (const rij of d.querySelectorAll('.kt-stijlrij, .kt-tafelrij')) {
+      const b = rij.querySelector('[aria-pressed=true]')
+      if (b && rij.scrollWidth > rij.clientWidth) rij.scrollLeft = b.offsetLeft - (rij.clientWidth - b.offsetWidth) / 2
+    }
   }
   if (!vast) $('.kt-stijlknop').onclick = () => { audio(); kiesKaartStijl() }
   function nieuweStijl() {
@@ -1488,6 +1500,9 @@ export function maakKaartTafel(container, opties = {}) {
   }
 
   function einde({ titel, sub, gewonnen, opnieuw }) {
+    // 26 nov 2026: scorebord (alleen tegen de computer, spel.html). Staat het eindscherm er al, dan is dit hetzelfde
+    // potje nog een keer getekend: niet nog een keer tellen.
+    if (!el.querySelector('.kt-einde')) { try { window.fibroSoloUitslag?.(gewonnen ? 'winst' : 'verlies') } catch (e) {} }
     el.querySelector('.kt-einde')?.remove()
     beurtKlok(null)
     if (gewonnen) { kaartGeluid.win(); haptiek([30, 50, 30, 50, 60]) } else kaartGeluid.verlies()

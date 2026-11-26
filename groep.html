@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=153"></script>
+<script src="taal.js?v=162"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -470,18 +470,18 @@ button { font-family:inherit; }
   import { haalPrivateKeyOp, eigenPubliekeSleutel } from './crypto.js?v=182'
   import { versleutelGroepsbericht, openGroepsbericht, MAX_LEDEN } from './groepsleutel.js?v=2'
   import { maakFoto, verstuurMedia, maakOntvanger, bewaarMedia, leesMedia, ruimOp, nieuwId, marker, MARKER, MAX_BYTES } from './groepmedia.js?v=1'
-  import { speel as speelFx } from './stickerfx.js?v=240'
+  import { speel as speelFx } from './stickerfx.js?v=242'
   import { isCode as isEigenCode, leesFx, zoekEigenSticker, fxCode, stickerPakket } from './eigenstickers.js?v=162'
   import { kanOpnemen, neemOp, maakSpeler, tijdTekst as spraakTijd } from './spraak.js?v=2'
   import { maakGroepGesprek, MAX_BELLERS, MAX_BEELD } from './groepbellen.js?v=5'
   import { maakGroepMuziek } from './groepmuziek.js?v=1'
   import { maakPiano, speelDeuntje, leesDeuntje, lengteMs } from './groeppiano.js?v=1'
-  import { maakGroepKaartspel } from './groepkaartspel.js?v=4' // 25 nov 2026: kaartspellen met de groep (multiplayer stap 2)
+  import { maakGroepKaartspel } from './groepkaartspel.js?v=6' // 25 nov 2026: kaartspellen met de groep (multiplayer stap 2)
   import { maakGroepBord, tekenLijn, KLEUREN as BORD_KLEUREN, DIKTES as BORD_DIKTES, ACHTERGROND as BORD_ACHTERGROND } from './groepbord.js?v=2'
   import { houOpen } from './lijntjes.js?v=1'
   import { haalVriendFotos, geldigeFoto } from './vriendfotos.js?v=2'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
-  import { zoekSticker } from './stickervellen.js?v=242'
+  import { zoekSticker } from './stickervellen.js?v=244'
 
   const T = window.T || ((s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
   const $ = id => document.getElementById(id)
@@ -1267,7 +1267,16 @@ button { font-family:inherit; }
       for (let i = 0; i < 40; i++) {
         const k = lijn?.kanaal?.()
         // 17 nov 2026: ook wat er binnenkwam tussen het laden en het openen van het kanaal (dat ging verloren)
-        if (k && k.state === 'joined') { haalGemist().catch(() => {}); try { kaartspel?.hallo() } catch (e) {} break }
+        if (k && k.state === 'joined') {
+          haalGemist().catch(() => {}); try { kaartspel?.hallo() } catch (e) {}
+          // 26 nov 2026: groep.html?id=...&spel=... (vanaf Home, samenspelen.js): meteen de wachtkamer voor dat spel
+          const startSpel = new URLSearchParams(location.search).get('spel')
+          if (startSpel) {
+            try { kaartspel?.open(startSpel) } catch (e) { console.warn('[groep] spel openen', e) }
+            history.replaceState(null, '', 'groep.html?id=' + encodeURIComponent(groep.id))
+          }
+          break
+        }
         await new Promise(ok => setTimeout(ok, 500))
       }
     })()
@@ -1539,7 +1548,7 @@ button { font-family:inherit; }
     const r = $('stickerRaster')
     if (!stickerKeuze) {
       try {
-        const [{ maakStickerkeuze }, fx] = await Promise.all([import('./stickerkeuze.js?v=243'), import('./stickerfx.js?v=240')])
+        const [{ maakStickerkeuze }, fx] = await Promise.all([import('./stickerkeuze.js?v=245'), import('./stickerfx.js?v=242')])
         stickerKeuze = maakStickerkeuze(r, { uid: () => ik, onKies: async st => {
           if (!st) return
           fx.speelGeluid(st.g)

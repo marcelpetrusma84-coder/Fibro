@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=153"></script>
+<script src="taal.js?v=162"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -465,6 +465,19 @@ window.veiligeUrl = function(v){
     <video id="lokaalMedia" autoplay playsinline muted></video><div class="spel-video-wachten" id="spelVideoEigenWachten">Je camera staat uit</div><span class="video-etiket">Jij</span>
   </div>
 </div>
+<script>
+// 26 nov 2026 (Marcel): kom je met een spel binnen (chat.html?spelVriend=...&spelType=..., bijvoorbeeld vanaf Home), dan
+// meteen het spelscherm in plaats van eerst even de chat. speelMee haalt 'Spel laden...' weg zodra het spel opent.
+(() => { try {
+  const q = new URLSearchParams(location.search)
+  if (!q.get('spelVriend') || !q.get('spelType') || !q.get('sessieId')) return
+  const o = document.getElementById('spelOverlay'), l = document.createElement('div')
+  l.id = 'spelLaden'; l.setAttribute('role', 'status'); l.style.cssText = 'color:#fff;font-size:15px;font-weight:600'
+  l.textContent = window.T ? T('Spel laden...') : 'Spel laden...'
+  document.getElementById('spelInhoud').appendChild(l); o.classList.add('open')
+  setTimeout(() => { if (l.isConnected) { l.remove(); o.classList.remove('open') } }, 15000) // vangnet: nooit blijven hangen
+} catch (e) {} })()
+</script>
 
 <script src="beltoon.js?v=11"></script>
 <script type="module">
@@ -472,7 +485,7 @@ window.veiligeUrl = function(v){
   koppelSpelIcoonFallback()
 </script>
 <script type="module">
-  import { laadThema } from './thema.js?v=238'
+  import { laadThema } from './thema.js?v=239'
   import { pasBlokstijlToe } from './blokstijl.js?v=95'
   import { laadWallpaper } from './wallpaper.js?v=95'
   import { supabase } from './supabase.js?v=95'
@@ -496,23 +509,26 @@ window.veiligeUrl = function(v){
   import { initP2pFoto, stuurFotoP2P, isVriendOnline, sluitAlleP2pVerbindingen } from './p2pfoto.js?v=149'
   import { initBellen, belOp, weigerooproep, accepteerOproep, hangOp, toggleMic, zetMic, toggleCamera, schakelVideo, isVideoActiefLokaal, getMediaStatus, hervatGeluid, activeerMicrofoon, bouwFilterKnop, zetGesprekInfo } from './bellen.js?v=166'
   import { isBelregel, isGemist, belregelTekst } from './belregel.js?v=152'
-  import { maakStickerkeuze } from './stickerkeuze.js?v=243'
+  import { maakStickerkeuze } from './stickerkeuze.js?v=245'
   import { isCode as isEigenCode, zoekEigenSticker, zoekVriendSticker, vriendStickerSleutel, fxCode, leesFx, stickerPakket, bewaarVriendSticker, zoekWeg } from './eigenstickers.js?v=162'
-  import { zoekSticker } from './stickervellen.js?v=242'
-  import { speel as speelFx, speelGeluid as speelFxGeluid, naamVan as fxNaam } from './stickerfx.js?v=240'
+  import { zoekSticker } from './stickervellen.js?v=244'
+  import { speel as speelFx, speelGeluid as speelFxGeluid, naamVan as fxNaam } from './stickerfx.js?v=242'
   import { stuurRapport } from './rapport.js?v=96'
   import * as Schaak from './schaak.js?v=95'
   import { maakSpelMenu } from './spelmenu.js?v=1' // 11 nov 2026: hamburgermenu rechtsboven in elk spel (pauze, geluid, microfoon, camera, menu, verlaten)
   import { startSpelBerichtInChat } from './spelbericht.js?v=2'
   import { STUDIO_SPELLEN, studioSpel, spelBestand as studioBestand, spelIcoon as studioIcoon } from './studio-spellen.js?v=6' // 25 nov 2026: spellen uit Stekky Studio
-  import { gameAan, mijnDownloads } from './store.js?v=35' // 11 nov 2026: spellen uit de Store // 11 nov 2026: berichten van andere vrienden linksboven in het spel
+  import { kanMetVriend } from './samenspelen.js?v=2' // 26 nov 2026: uitdaging na een uitnodiging met een spel
+  import { kanSpelMeesturen } from './uitnodigen.js?v=1' // 26 nov 2026: welke spellen ook tegen de computer kunnen (spel.html)
+  import { molKnop } from './mollenmeppen.js?v=2' // 26 nov 2026: Mollen meppen op het wachtscherm, tot je vriend er is
+  import { gameAan, mijnDownloads } from './store.js?v=41' // 11 nov 2026: spellen uit de Store // 11 nov 2026: berichten van andere vrienden linksboven in het spel
   import * as Bordgeluid from './bordgeluid.js?v=203'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { nieuweSpelSessie, isNieuwsteSpelSessie } from './spelsessie.js?v=1'
-  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=13'
-  import { mountChessLayout } from './chess-layout.js?v=13'
+  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=15'
+  import { mountChessLayout } from './chess-layout.js?v=15'
   import { maakSpelVerbinding } from './spelverbinding.js?v=2'
   import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=2'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=2'
@@ -531,7 +547,7 @@ window.veiligeUrl = function(v){
   // wacht het spel er even op.
   let titelModule = null
   const laadTitelscherm = () => titelModule ? Promise.resolve(titelModule)
-    : laadModule('./titelscherm.js?v=19').then(m => (titelModule = m))
+    : laadModule('./titelscherm.js?v=20').then(m => (titelModule = m))
   const laadRustig = f => ('requestIdleCallback' in window ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 2500))
   laadRustig(() => laadTitelscherm().catch(() => {}))
   pasBlokstijlToe()
@@ -881,6 +897,17 @@ window.veiligeUrl = function(v){
     if (directVriend) {
       const v = (window._vriendenData || []).find(x => x.id === directVriend)
       if (v) await openChat(v.id, vriendWeergaveNaam(v), v.avatar_url || '\u{1F464}', v.public_key || '')
+      // 26 nov 2026 (Marcel): net vriend geworden via een uitnodiging mét een spel (invite.html zet fibro_uitdaag_<ik>)?
+      // Dan meteen dat spel met wie je uitnodigde: hij krijgt de uitdaging (melding en bericht), jij komt in de
+      // wachtkamer. Alleen het eerste uur, alleen met die vriend, en maar één keer (de markering gaat meteen weg).
+      try {
+        const sleutel = 'fibro_uitdaag_' + huidigeUser.id
+        const u = JSON.parse(localStorage.getItem(sleutel) || 'null')
+        if (u) localStorage.removeItem(sleutel)
+        const vers = u && typeof u.t === 'number' && Date.now() - u.t >= 0 && Date.now() - u.t < 60 * 60 * 1000
+        if (vers && u.id === directVriend && geselecteerdeVriend?.id === directVriend && kanMetVriend(String(u.spel)))
+          setTimeout(() => window.startSpel(String(u.spel)), 400)
+      } catch (e) {}
     }
     const spelVriend = urlParams.get('spelVriend')
     const spelType   = urlParams.get('spelType')
@@ -891,10 +918,13 @@ window.veiligeUrl = function(v){
     if (spelVriend && spelType && sessieId) {
       // Open chat met die vriend en start het spel
       const vriend = (window._vriendenData || []).find(v => v.id === spelVriend)
+      // 26 nov 2026: titel=1 = het titelscherm stond al op Home (spel.html); niet nog een keer
+      const zonderTitel = urlParams.get('titel') === '1'
+      const ruimLadenOp = () => { const l = document.getElementById('spelLaden'); if (l) { l.remove(); if (!spelActief) document.getElementById('spelOverlay').classList.remove('open') } }
       if (vriend) {
         await openChat(vriend.id, vriendWeergaveNaam(vriend), vriend.avatar_url || '👤', vriend.public_key || '')
-        setTimeout(() => speelMee(spelType, sessieId, starterId || spelVriend, invitedPlayers), 800)
-      }
+        setTimeout(() => Promise.resolve(speelMee(spelType, sessieId, starterId || spelVriend, invitedPlayers, { zonderTitel })).finally(ruimLadenOp), 800)
+      } else ruimLadenOp()
       // Verwijder URL params zodat herlaad niet opnieuw triggert
       window.history.replaceState({}, '', 'chat.html')
     }
@@ -3021,16 +3051,16 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // te doen zodra een spel gekozen is, staat het klaar tegen de tijd dat de
   // ander accepteert. Spellen die nog in chat.html zitten hoeven niets.
   const SPEL_BESTAND = {
-    botkaaseiren: './bke-ui.js?v=239',
-    dammen: './dammen-ui.js?v=151',
-    pong: './pong-ui.js?v=242',
-    vieroprij: './vieroprij-ui.js?v=240',
-    pesten: './pesten-ui.js?v=18',
-    toepen: './toepen-ui.js?v=16',
-    eenentwintigen: './eenentwintigen-ui.js?v=17',
-    koningsjacht: './koningsjacht-ui.js?v=51',
-    schaken: './schaken-ui.js?v=275',
-    schakendrie: './schaken-drie-ui.js?v=43',
+    botkaaseiren: './bke-ui.js?v=240',
+    dammen: './dammen-ui.js?v=152',
+    pong: './pong-ui.js?v=243',
+    vieroprij: './vieroprij-ui.js?v=241',
+    pesten: './pesten-ui.js?v=20',
+    toepen: './toepen-ui.js?v=18',
+    eenentwintigen: './eenentwintigen-ui.js?v=19',
+    koningsjacht: './koningsjacht-ui.js?v=54',
+    schaken: './schaken-ui.js?v=278',
+    schakendrie: './schaken-drie-ui.js?v=45',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=151',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -3086,7 +3116,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   // Accepteer uitnodiging → open het spel
-  window.speelMee = async function(spelType, sessieId, starterId, players = null) {
+  window.speelMee = async function(spelType, sessieId, starterId, players = null, opties = {}) {
     if (!huidigeUser || !geselecteerdeVriend?.id) return
     const beschikbaar = ['botkaaseiren', 'vieroprij', 'pesten', 'toepen', 'eenentwintigen', 'koningsjacht', 'schaken', 'schakendrie', 'dammen', 'pong', 'flappybird', 'swarm', 'breakout', 'endlessrunner', 'pacman', 'pinball', 'shmup', ...STUDIO_SPELLEN.filter(s => s.met.vriend).map(s => s.id)]
     if (!beschikbaar.includes(spelType)) {
@@ -3095,6 +3125,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     }
 
     sluitSpelUitnodiging()
+    document.getElementById('spelLaden')?.remove() // 26 nov 2026: 'Spel laden...' (kwam je met een spel binnen)
 
     if (!sessieId) sessieId = Date.now().toString(36)
     if (!isNieuwsteSpelSessie(huidigeUser?.id, geselecteerdeVriend?.id, sessieId)) return
@@ -3133,7 +3164,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     // v251: eerst het titelscherm (bewegend plaatje en muziek). Ondertussen wordt al op je vriend gewacht;
     // het spel begint pas als je het titelscherm hebt weggetikt én je vriend er is. Niet bij schaken met drie: daar
     // kom je vanuit een schaakspel dat al open was.
-    const titel = titelModule || await laadTitelscherm().catch(() => null)
+    // 26 nov 2026: opties.zonderTitel = je zag het titelscherm al op Home (spel.html); dan niet nog een keer
+    const titel = opties?.zonderTitel ? null : (titelModule || await laadTitelscherm().catch(() => null))
     const titelKlaar = titel && titel.heeftTitelscherm(spelType) && spelType !== 'schakendrie' ? titel.toonTitelscherm({ spelId: spelType, naam: SPEL_INFO[spelType]?.naam || spelType }) : Promise.resolve(true)
 
     benIkSpeler1 = spelType === 'schakendrie' ? players[0] === huidigeUser.id : (starterId ? (starterId === huidigeUser.id) : (huidigeUser.id < spelTegenstander.id))
@@ -3609,6 +3641,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   let spelWachtKlaar = null
   let spelWachtTimer = null
   const SPEL_WACHT_MAX = 2 * 60 * 1000 // v242: twee minuten
+  const SPEL_WACHT_OFFLINE = 20 * 1000 // 26 nov 2026: na 20 s kijken of je vriend wel online is
   function toonSpelWachtscherm() {
     const inhoud = document.getElementById('spelInhoud')
     if (!inhoud) return
@@ -3635,15 +3668,42 @@ console.timeLog('[chat] berichten', 'opgehaald')
     knop.style.cssText = 'background:#ffffff1f;border:1px solid #ffffff44;border-radius:10px;padding:9px 22px;color:#fff;font-weight:600;cursor:pointer;'
     knop.onclick = () => window.sluitSpel()
     scherm.append(draai, tekst, extra, knop)
+    molKnop(scherm); scherm.append(knop) // 26 nov 2026: Mollen meppen terwijl je wacht (stopt vanzelf als het wachtscherm weggaat); Annuleren onderaan
     inhoud.appendChild(scherm)
     // v242: na twee minuten zeggen dat de vriend er nog niet is. Het wachten gaat door: komt hij alsnog, dan begint het spel.
-    clearTimeout(spelWachtTimer)
-    spelWachtTimer = setTimeout(() => {
+    // 26 nov 2026 (Marcel): niemand zit vast in een lege wachtkamer. Dan een uitweg: 🤖 tegen de computer (als dat spel
+    // dat kan) of 💬 naar de chat. Ga je weg, dan krijgt je vriend een bericht dat je wilde spelen (spelPushBijWeggaan:
+    // 'spel-gemist'). Weet de app al na 20 s dat de vriend die je uitdaagde niet online is, dan meteen.
+    const toonUitweg = zin => {
       if (document.getElementById('spelWachtscherm') !== scherm) return
-      tekst.textContent = spelT('{naam} is er na 2 minuten nog niet. Probeer het later opnieuw, of wacht nog even.', { naam: spelVriendUsername() })
+      if (scherm.querySelector('.spel-wacht-uitweg')) return
+      tekst.textContent = zin
       draai.style.animationPlayState = 'paused'
-      knop.textContent = spelT('Sluiten')
-    }, SPEL_WACHT_MAX)
+      const rij = document.createElement('div')
+      rij.className = 'spel-wacht-uitweg'
+      rij.style.cssText = 'display:flex;flex-direction:column;gap:8px;width:100%'
+      const spel = spelActief
+      if (spel && kanSpelMeesturen(spel)) {
+        const pc = document.createElement('button')
+        pc.type = 'button'; pc.className = 'spel-wacht-computer'
+        pc.textContent = spelT('🤖 Tegen de computer')
+        pc.style.cssText = 'background:#8b3fd1;border:1px solid #c084fc;border-radius:10px;padding:10px 18px;color:#fff;font-weight:700;cursor:pointer;'
+        pc.onclick = () => { window.sluitSpel(); location.href = 'spel.html?spel=' + encodeURIComponent(spel) + '&titel=1' }
+        rij.append(pc)
+      }
+      knop.textContent = spelT('💬 Naar de chat')
+      rij.append(knop)
+      scherm.append(rij)
+    }
+    const zin = soort => spelT(soort === 'offline'
+      ? '{naam} is nu niet online. Ga je weg, dan krijgt {naam} een bericht dat je wilde spelen.'
+      : '{naam} is er na 2 minuten nog niet. Ga je weg, dan krijgt {naam} een bericht dat je wilde spelen.', { naam: spelVriendUsername() })
+    clearTimeout(spelWachtTimer)
+    spelWachtTimer = setTimeout(() => toonUitweg(zin('laat')), SPEL_WACHT_MAX)
+    setTimeout(() => {
+      const id = String(spelTegenstander?.id || '')
+      if (id && spelUitnodiger === huidigeUser?.id && bekendeOnlineStatus.has(id) && !onlineVrienden.has(id)) toonUitweg(zin('offline'))
+    }, SPEL_WACHT_OFFLINE)
   }
 
   // v244: hoor je al 2 minuten niets van je vriend (status 'waiting': zijn app stuurt niets meer, bijvoorbeeld omdat hij
@@ -3804,13 +3864,13 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Boter-Kaas-Eieren ───
   async function startBotKaasEieren() {
-    const m = await laadModule('./bke-ui.js?v=239')
+    const m = await laadModule('./bke-ui.js?v=240')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
 
   // ─── Pesten (kaartspel, 11 nov 2026) ───
   async function startPesten() {
-    const m = await laadModule('./pesten-ui.js?v=18')
+    const m = await laadModule('./pesten-ui.js?v=20')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
   // ─── Toepen en Black Jack (kaartspellen uit de Store, 11 nov 2026): hetzelfde als Pesten ───
@@ -3821,7 +3881,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Vier op een rij ───
   async function startVierOpEenRij() {
-    const m = await laadModule('./vieroprij-ui.js?v=240')
+    const m = await laadModule('./vieroprij-ui.js?v=241')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
 
@@ -3990,7 +4050,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await laadModule('./schaken-ui.js?v=275')
+    const m = await laadModule('./schaken-ui.js?v=278')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: fibroChessTest?.active ? schaakT('Testspeler · Zwart') : spelVriendUsername(), testMode:Boolean(fibroChessTest?.active), onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer : nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
     // v270: tegen een vriend staan de webcams als twee rondjes naast elkaar boven het bord, net als bij dammen.
@@ -4000,7 +4060,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   async function startSchakenDrie(players) {
-    const m = await laadModule('./schaken-drie-ui.js?v=43')
+    const m = await laadModule('./schaken-drie-ui.js?v=45')
     const testMode = Boolean(fibroChessTest?.active)
     const controller = m.start({ Bordgeluid, gameChannel:testMode ? null : spelKanaal, players, userId:testMode ? 'fibro-test-you' : huidigeUser.id, localPreview:testMode, testMode, testStream:fibroChessTest?.stream || null, onTestCameraChange:stream => { if (fibroChessTest?.active) fibroChessTest.stream = stream }, onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null })
     spelSchaakDrieController = controller
@@ -4013,13 +4073,13 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ─── Dammen (internationaal, 10x10) ───
   // v3 nov (sneller): dammen pas laden als je het speelt, zoals de andere spellen
   async function startDammen() {
-    const [Dammen, DammenUI] = await Promise.all([laadModule('./dammen.js?v=95'), laadModule('./dammen-ui.js?v=151')])
+    const [Dammen, DammenUI] = await Promise.all([laadModule('./dammen.js?v=95'), laadModule('./dammen-ui.js?v=152')])
     DammenUI.start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
 
   // ─── Pong ───
   async function startPong() {
-    const m = await laadModule('./pong-ui.js?v=242')
+    const m = await laadModule('./pong-ui.js?v=243')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'pong' && !spelGestopt })
   }
 

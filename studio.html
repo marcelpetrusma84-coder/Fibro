@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#1a0a2e">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
-<script src="taal.js?v=153"></script>
+<script src="taal.js?v=162"></script>
 <script src="appslot.js?v=3"></script>
 <title>Stekky Studio</title>
 <link href="lettertypen/basis.css?v=1" rel="stylesheet">
@@ -176,6 +176,15 @@ textarea#promptTekst { width:100%; min-height:300px; margin-top:12px; line-heigh
     <p class="uitleg" style="margin-top:8px">Beschrijf een nieuw spel: de naam, het icoon, de spelregels en wat erin moet zitten. De Studio maakt er een spelbestand van. Geef dat aan Claude: dan staat het spel meteen overal in de app (Store, spelmenu, Home) met een werkend beginspel, en bouwt Claude daarna de echte regels.</p>
   </details>
 
+  <!-- 26 nov 2026 (Marcel): de scoreborden van de spellen (studio-scorebord-ui.js, scoreborden.js) -->
+  <details class="promptblok" id="scoreBlok">
+    <summary>🏆 Scoreborden</summary>
+    <p class="uitleg" style="margin-top:8px">Kies per spel of er een scorebord is (de knop 🏆 Scores op het startscherm), welke stijl het heeft en eventueel een eigen titel. Met 👁 Voorbeeld zie je het scorebord met voorbeeldscores. Daarna maakt de Studio er een bestand van. Geef dat aan Claude of Tijn: dan staat het in de app na "Merge".</p>
+    <div id="sbLijst"></div>
+    <div class="rij" style="margin-top:14px"><button type="button" class="knop" id="sbMaak">🏆 Scorebordenbestand maken</button></div>
+    <div class="melding" id="sbMelding" aria-live="polite"></div>
+  </details>
+
   <!-- 25 nov 2026: eigen speelkaarten uit een paar platen (studio-kaarten-ui.js, kaartmaker.js) -->
   <details class="promptblok" id="kaartBlok">
     <summary>🃏 Speelkaarten maken</summary>
@@ -184,10 +193,11 @@ textarea#promptTekst { width:100%; min-height:300px; margin-top:12px; line-heigh
 </main>
 
 <script type="module">
-import './studio-ui.js?v=6'
-import './studio-layout-ui.js?v=5'
+import './studio-ui.js?v=8'
+import './studio-layout-ui.js?v=6'
 import './studio-spel-ui.js?v=7'
 import './studio-kaarten-ui.js?v=1'
+import './studio-scorebord-ui.js?v=2'
 </script>
 </body>
 </html>

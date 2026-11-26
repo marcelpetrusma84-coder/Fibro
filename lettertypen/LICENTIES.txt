@@ -396,3 +396,9 @@ Apache License
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+Lettertype-pakket Kerst uit de Stekky Store (26-11-2026, Fontsource 5.3.0):
+- Festive (OFL-1.1): Copyright 2015 The Festive Pro Project Authors (https://github.com/googlefonts/festive)
+- Kavoon (OFL-1.1): Copyright (c) 2011-2012, Sorkin Type Co (www.sorkintype.com) with Reserved Font Name 'Kavoon'
+- Mystery Quest (OFL-1.1): Copyright (c) 2012 by Font Diner, Inc DBA Sideshow (diner@fontdiner.com) with Reseved Font Name "Mystery Quest"
+- Snowburst One (OFL-1.1): Copyright (c) 2011-2012, Sorkin Type Co (www.sorkintype.com) with Reserved Font Name 'Snowburst'

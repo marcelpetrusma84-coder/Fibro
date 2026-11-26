@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://lichess.org/api/cloud-eval https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
-<script src="taal.js?v=153"></script>
+<script src="taal.js?v=162"></script>
 <script src="appslot.js?v=3"></script>
 <script src="controller.js?v=2"></script>
 <!-- v275: een spreekwolkje bovenin het spel als je een berichtje krijgt -->
@@ -39,6 +39,12 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 .niveau-btn.gekozen { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a0a2e; border:none; }
 .niveau-btn.levels { background:#050510; border:2px solid #00f0ff; color:#00f0ff; box-shadow:0 0 14px rgba(0,240,255,0.35); }
 .niveau-btn.vriend { margin-top:4px; background:linear-gradient(135deg,#20b9ad,#42d392); border:1px solid rgba(182,255,227,0.58); color:#05231c; box-shadow:0 7px 20px rgba(34,197,148,0.22); }
+.niveau-btn[hidden] { display:none; }
+/* 26 nov 2026 (Marcel): 📤 Delen = een uitnodiging voor één persoon met dit spel erbij; rustiger dan de speelknoppen */
+.niveau-btn.deel { margin-top:4px; background:transparent; border:1px solid rgba(192,132,252,0.55); color:#c084fc; box-shadow:none; }
+/* 26 nov 2026 (Marcel): 🏆 Scores = het scorebord van dit spel (spelscores.js) */
+.niveau-btn.scores { margin-top:4px; background:transparent; border:1px solid rgba(250,204,21,0.5); color:#fde68a; box-shadow:none; }
+.niveau-btn.groep { margin-top:4px; background:#8b3fd1; border:1px solid #c084fc; color:#fff; box-shadow:0 7px 20px rgba(139,63,209,0.3); }
 .niveau-btn:active { transform:scale(0.96); }
 .niveau-btn.ultra { border:1px solid #a0f6e8; background:linear-gradient(140deg,#314b62,#273047 65%,#1c5454); box-shadow:inset 0 1px #ffffff38,0 4px 0 #101d2c,0 9px 24px #51e9da20; color:#e5fff9; }
 .niveau-bron { display:block; margin-top:4px; font-size:10px; font-weight:500; color:#b3e5df; letter-spacing:.04em; }
@@ -66,12 +72,18 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 <script type="module">
   import { maakSpelMenu, isGepauzeerd } from './spelmenu.js?v=1' // 11 nov 2026: als eerste, voor de pauze- en geluidskranen
   import * as Bordgeluid from './bordgeluid.js?v=203'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=315'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=320'
   import { supabase } from './supabase.js?v=95'
   import { startSpelUitnodigingLuisteraar } from './speluitnodiging.js?v=207'
-  import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=13'
+  import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=15'
   import { nieuweSpelSessie } from './spelsessie.js?v=1'
-  import { toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek } from './titelscherm.js?v=19' // v251: titelscherm met muziek
+  import { markeerKlaar } from './startkaart.js?v=1'
+  import { kanMetVriend, kanMetGroep, groepAdres } from './samenspelen.js?v=2' // 26 nov 2026: vanaf Home ook met een vriend of een groep
+  import { toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek } from './titelscherm.js?v=20' // v251: titelscherm met muziek
+  import { deelUitnodiging, bereidVoor, kanSpelMeesturen } from './uitnodigen.js?v=1' // 26 nov 2026: 📤 Delen (Marcel)
+  import { scoreSoort, scorebordInstelling } from './scorespellen.js?v=2' // 26 nov 2026: een scorebord bij elk spel (Marcel)
+  import { maakSpelScoreService } from './spelscores.js?v=1'
+  import { maakNeonScorebord } from './neon-raiders-scoreboard.js?v=7'
 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   const inhoud = document.getElementById('spelInhoud')
@@ -136,12 +148,50 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     paginaTaal.subscribe(vertaalPagina)
     vertaalPagina()
   }
+  // 26 nov 2026 (Marcel): een scorebord bij elk spel. Spellen met punten bewaren elk potje (solo.nieuweScore); spellen
+  // zonder punten melden aan het eind of je won (window.fibroSoloUitslag, alleen hier: in de chat bestaat het niet).
+  const scoreSoortHier = scoreSoort(spelId)
+  let scoreDienst = null, scorebord = null, inLevels = false, huidigNiveau = ''
+  try { if (scoreSoortHier) scoreDienst = maakSpelScoreService({ supabase, spel: spelId, soort: scoreSoortHier }) } catch (e) { scoreDienst = null }
+  window.fibroSoloUitslag = uitslag => {
+    if (!scoreDienst || scoreSoortHier !== 'winst' || !gestart || !['winst', 'verlies', 'gelijk'].includes(uitslag)) return
+    scoreDienst.bewaar({ gewonnen: uitslag === 'winst', niveau: huidigNiveau }).catch(() => {})
+  }
+  const NIVEAU_NAAM = { makkelijk: 'Makkelijk', normaal: 'Normaal', moeilijk: 'Moeilijk', expert: 'Expert', ultra: 'Ultra' }
+  const NIVEAU_VOLGORDE = ['makkelijk', 'normaal', 'moeilijk', 'expert', 'ultra']
+  function openScorebord() {
+    if (!scoreDienst) return
+    if (!scorebord) {
+      const winst = scoreSoortHier === 'winst'
+      const niveauTekst = nv => NIVEAU_NAAM[nv] ? T(NIVEAU_NAAM[nv]) : ''
+      // Bij 'winst': per niveau een regel (Makkelijk, Normaal, ...) in de vaste volgorde, met 'van 20 potjes' erbij
+      const dienst = winst ? { loadBoards: async () => {
+        const b = await scoreDienst.loadBoards()
+        const per = (b.personal || []).map(r => ({ ...r, regel: niveauTekst(r.niveau) || T('Tegen de computer') }))
+          .sort((x, y) => NIVEAU_VOLGORDE.indexOf(x.niveau) - NIVEAU_VOLGORDE.indexOf(y.niveau))
+        return { ...b, personal: per }
+      } } : scoreDienst
+      const inst = scorebordInstelling(spelId) // stijl en titel uit Stekky Studio (scoreborden.js)
+      scorebord = maakNeonScorebord({ host: document.body, service: dienst, T, stijl: inst.stijl,
+        title: spelNaam() + ' scores', brand: String(inst.titel || spelNaam()).toUpperCase(),
+        formatScore: winst ? n => T('{n}× gewonnen', { n: Math.max(0, Math.floor(Number(n) || 0)) }) : undefined,
+        formatDetail: winst ? r => (r.gespeeld === 1 ? T('van 1 potje') : T('van {n} potjes', { n: r.gespeeld || 0 })) : r => niveauTekst(r.niveau),
+        kolommen: winst ? { personal: [T('Jouw overwinningen'), T('Per niveau, tegen de computer')],
+          friends: [T('Vrienden top 10'), T('Wie won het vaakst?')] } : null,
+        zonderRecord: winst,
+        statusOnline: winst ? T('Hoe vaak jij en je vrienden wonnen, de meeste bovenaan.') : null })
+    }
+    scorebord.open()
+  }
+
   const recordSleutel = 'fibro_record_' + spelId + '_' + accountId()
   const solo = {
     record() { try { return parseInt(localStorage.getItem(recordSleutel), 10) || 0 } catch (e) { return 0 } },
     // Geeft true als dit een nieuw record is (en bewaart het dan).
     nieuweScore(n) {
       n = Math.floor(Number(n)) || 0
+      // 26 nov 2026: elk afgelopen potje gaat naar het scorebord (niet de levels van Neo Paddle: dat is een ander spel)
+      if (scoreDienst && scoreSoortHier === 'punten' && !inLevels) scoreDienst.bewaar({ score: Math.max(0, n) }).catch(() => {})
       if (n <= solo.record()) return false
       try { localStorage.setItem(recordSleutel, String(n)) } catch (e) {}
       return true
@@ -177,8 +227,37 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
         <div class="niveau-naam">${esc(spelNaam())}</div>
         <div class="niveau-sub">${spelT('Jouw record: {n}', { n: solo.record() })}</div>
         <button class="niveau-btn gekozen" id="startKnop">▶ Start</button>
+        ${samenKnoppen()}
       </div>`
     document.getElementById('startKnop').onclick = () => start('normaal')
+    koppelSamenKnoppen()
+  }
+
+  // 26 nov 2026 (Marcel): ook vanaf Home iemand uitnodigen. Tegen een vriend = uitnodiging + naar de chat (zoals schaken
+  // al kon); met een groep = naar de groepschat, waar de wachtkamer meteen openstaat (samenspelen.js).
+  function samenKnoppen() {
+    return (spelId !== 'schaken' && kanMetVriend(spelId) ? `<button class="niveau-btn vriend" id="vriendKnop" type="button">${esc(spelT('👤 Tegen een vriend'))}</button>` : '')
+      + (kanMetGroep(spelId) ? `<button class="niveau-btn groep" id="groepKnop" type="button">${esc(spelT('👥 Met een groep'))}</button>` : '')
+      // 26 nov 2026 (Marcel): 📤 Delen; pas zichtbaar als je een account hebt (alleen dan kun je uitnodigen)
+      + (kanSpelMeesturen(spelId) ? `<button class="niveau-btn deel" id="deelKnop" type="button" hidden>${esc(T('📤 Delen'))}</button>` : '')
+      + (scoreDienst ? `<button class="niveau-btn scores" id="scoreKnop" type="button">${esc(T('🏆 Scores'))}</button>` : '')
+  }
+  function koppelSamenKnoppen() {
+    const vriendKnop = document.getElementById('vriendKnop')
+    if (vriendKnop) vriendKnop.onclick = kiesVriendVoorSchaken
+    const groepKnop = document.getElementById('groepKnop')
+    if (groepKnop) groepKnop.onclick = kiesGroep
+    const scoreKnop = document.getElementById('scoreKnop')
+    if (scoreKnop) scoreKnop.onclick = () => openScorebord()
+    const deelKnop = document.getElementById('deelKnop')
+    if (deelKnop) {
+      deelKnop.onclick = () => deelUitnodiging({ spelId, spelNaam: spelNaam() })
+      bereidVoor().then(ik => { if (ik) deelKnop.hidden = false }).catch(() => {})
+    }
+  }
+  function gaNaar(adres) {
+    if (ingebed) window.parent.postMessage({ fibro: 'ga-naar', adres }, location.origin)
+    else location.href = adres
   }
 
   function kiesNiveau() {
@@ -195,6 +274,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
         <div class="niveau-sub">${spelT('Tegen de computer. Kies een niveau:')}</div>
         ${niveaus.map(n => `<button class="niveau-btn${n === vorige ? ' gekozen' : ''}${n === 'ultra' ? ' ultra' : ''}" data-niveau="${n}">${NAMEN[n]}${n === 'ultra' ? '<span class="niveau-bron">Lichess + Stockfish 19</span>' : ''}</button>`).join('')}
         ${spelId === 'schaken' ? `<button class="niveau-btn vriend" id="vriendKnop" type="button">${spelT('♟ Tegen een vriend')}</button>` : ''}
+        ${samenKnoppen()}
         ${spel.levels ? `<div class="niveau-sub" style="margin-top:10px">${spelT('Of speel alleen de levels:')}</div><button class="niveau-btn levels" id="levelsKnop" type="button">${spelT('🧱 Levels')}</button>` : ''}
       </div>`
     inhoud.querySelectorAll('.niveau-btn').forEach(knop => {
@@ -204,14 +284,14 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
         start(niveau)
       }
     })
-    const vriendKnop = document.getElementById('vriendKnop')
-    if (vriendKnop) vriendKnop.onclick = kiesVriendVoorSchaken
+    koppelSamenKnoppen()
     const levelsKnop = document.getElementById('levelsKnop')
     if (levelsKnop) levelsKnop.onclick = startLevels
   }
 
   // 30 okt 2026: Neo Paddle heeft ook levels voor alleen (alle blokjes weg). Zonder computer en zonder kanaal.
   async function startLevels() {
+    inLevels = true
     stopTitelMuziek()
     inhoud.innerHTML = '<div class="melding">' + spelT('Laden...') + '</div>'
     try {
@@ -223,7 +303,8 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     }
   }
 
-  async function kiesVriendVoorSchaken() {
+  // Een keuzevenster onderin (vriend of groep kiezen). Geeft { modal, lijst } terug.
+  function keuzeVenster(titelTekst, subTekst, laadTekst) {
     const modal = document.createElement('div')
     modal.className = 'vriend-modal'
     const kaart = document.createElement('section')
@@ -233,16 +314,24 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
     const kop = document.createElement('div')
     kop.className = 'vriend-kop'
     const tekst = document.createElement('div')
-    const titel = document.createElement('h2'); titel.textContent = spelT('Spelen tegen een vriend')
-    const sub = document.createElement('p'); sub.textContent = spelT('Kies een vriend om uit te nodigen voor schaken.'); sub.style.cssText = 'margin-top:5px;color:rgba(255,255,255,.65);font-size:13px;line-height:1.4'
+    const titel = document.createElement('h2'); titel.textContent = titelTekst
+    const sub = document.createElement('p'); sub.textContent = subTekst; sub.style.cssText = 'margin-top:5px;color:rgba(255,255,255,.65);font-size:13px;line-height:1.4'
     tekst.append(titel, sub)
     const sluit = document.createElement('button'); sluit.className = 'vriend-sluit'; sluit.type = 'button'; sluit.textContent = '×'; sluit.setAttribute('aria-label', spelT('Sluiten'))
     sluit.onclick = () => modal.remove()
     kop.append(tekst, sluit)
     const lijst = document.createElement('div')
-    lijst.textContent = spelT('Vrienden laden…'); lijst.style.cssText = 'color:rgba(255,255,255,.7);padding:10px 0;font-size:14px'
+    lijst.textContent = laadTekst; lijst.style.cssText = 'color:rgba(255,255,255,.7);padding:10px 0;font-size:14px'
     kaart.append(kop, lijst); modal.append(kaart); document.body.append(modal)
     modal.onclick = event => { if (event.target === modal) modal.remove() }
+    return { modal, lijst }
+  }
+
+  // Een vriend uitnodigen (eerst alleen schaken; 26 nov 2026: elk spel dat met een vriend kan, samenspelen.js)
+  async function kiesVriendVoorSchaken() {
+    const { lijst } = keuzeVenster(spelT('Spelen tegen een vriend'),
+      spelId === 'schaken' ? spelT('Kies een vriend om uit te nodigen voor schaken.') : spelT('Kies een vriend om uit te nodigen voor {spel}.', { spel: spelNaam() }),
+      spelT('Vrienden laden…'))
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { lijst.textContent = spelT('Log in om een vriend uit te nodigen.'); return }
@@ -268,25 +357,46 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 
   async function verstuurSchaakUitnodiging(vriend, lijst) {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user || !vriend?.id) return
-    lijst.textContent = spelT('Uitnodiging voor schaken versturen…')
+    if (!user || !vriend?.id || !kanMetVriend(spelId)) return
+    lijst.textContent = spelId === 'schaken' ? spelT('Uitnodiging voor schaken versturen…') : spelT('Uitnodiging voor {spel} versturen…', { spel: spelNaam() })
     const [{ data: profiel }, sessieId] = await Promise.all([
       supabase.from('profiles').select('username,avatar_url,avatar_data').eq('id', user.id).single(),
       Promise.resolve(nieuweSpelSessie())
     ])
     const kanaal = supabase.channel('speluitnodiging-' + vriend.id, { config: { private: true } })
     const verstuurd = await kanaal.send({ type: 'broadcast', event: 'speluitnodiging', payload: {
-      van: user.id, vanNaam: profiel?.username || spelT('Vriend'), vanAvatar: profiel?.avatar_data || profiel?.avatar_url || '♟️', spelType: 'schaken', sessieId
+      van: user.id, vanNaam: profiel?.username || spelT('Vriend'), vanAvatar: profiel?.avatar_data || profiel?.avatar_url || spel.icon || '🎮', spelType: spelId, sessieId
     } })
     supabase.removeChannel(kanaal)
     if (verstuurd !== 'ok') { lijst.textContent = spelT('De uitnodiging kon niet verstuurd worden. Probeer het opnieuw.'); return }
-    const { data: uitnodiging } = await supabase.from('messages').insert({ sender_id:user.id, receiver_id:vriend.id, content:'spelinvite:schaken:' + user.id + ':' + sessieId }).select('id').single()
+    const { data: uitnodiging } = await supabase.from('messages').insert({ sender_id:user.id, receiver_id:vriend.id, content:'spelinvite:' + spelId + ':' + user.id + ':' + sessieId }).select('id').single()
     // v3 nov: pushmelding 'daagt je uit' (stuur-push leest het spel uit het bericht)
     if (uitnodiging?.id) fetch('https://qmgatbphiplrfxrljtbe.supabase.co/functions/v1/stuur-push', { method:'POST', keepalive:true,
       headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ message_id: uitnodiging.id }) }).catch(() => {})
-    const q = new URLSearchParams({ spelVriend:vriend.id, spelType:'schaken', sessieId, starterId:user.id })
-    if (ingebed) window.parent.postMessage({ fibro: 'ga-naar', adres: 'chat.html?' + q.toString() }, location.origin)
-    else location.href = 'chat.html?' + q.toString()
+    try { markeerKlaar(localStorage, user.id) } catch (e) {} // 26 nov 2026: de kaart 'Speel met een vriend' op Home is niet meer nodig
+    // titel=1: het titelscherm stond hier al; de chat laat het dan niet nog een keer zien (26 nov 2026)
+    const q = new URLSearchParams({ spelVriend:vriend.id, spelType:spelId, sessieId, starterId:user.id, titel:'1' })
+    gaNaar('chat.html?' + q.toString())
+  }
+
+  // 26 nov 2026: met een groep spelen. Kies een van je groepen; de groepschat opent met de wachtkamer voor dit spel.
+  async function kiesGroep() {
+    const { lijst } = keuzeVenster(spelT('Spelen met een groep'), spelT('Kies een groep. De groep krijgt een uitnodiging voor {spel}.', { spel: spelNaam() }), spelT('Groepen laden…'))
+    let groepen = null
+    try { const { data, error } = await supabase.rpc('mijn_groepen'); if (!error && Array.isArray(data)) groepen = data } catch (e) {}
+    if (!groepen) { lijst.textContent = spelT('Je groepen konden niet geladen worden. Probeer het opnieuw.'); return }
+    const geldig = groepen.filter(g => groepAdres(g.id, spelId))
+    if (!geldig.length) { lijst.textContent = spelT('Je zit nog niet in een groep. Maak er een in de chat met + Groep.'); return }
+    lijst.textContent = ''
+    for (const g of geldig) {
+      const knop = document.createElement('button'); knop.className = 'vriend-rij'; knop.type = 'button'; knop.dataset.groep = g.id
+      const avatar = document.createElement('span'); avatar.className = 'vriend-avatar'; avatar.textContent = '👥'
+      const naam = document.createElement('span'); naam.textContent = String(g.naam || spelT('Groep')); naam.style.cssText = 'font-weight:650;flex:1'
+      const pijl = document.createElement('span'); pijl.textContent = spelT('Uitnodigen ›'); pijl.style.cssText = 'color:#c084fc;font-size:12px'
+      knop.append(avatar, naam, pijl)
+      knop.onclick = () => gaNaar(groepAdres(g.id, spelId))
+      lijst.append(knop)
+    }
   }
 
   // Toont rechts naast de titel hoeveel beeldjes per seconde de telefoon haalt.
@@ -307,7 +417,8 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
   }
 
   async function start(niveau) {
-    spelStart(spelId)   // v253: bij spellen met een eigen menu speelt de muziek door
+    spelStart(spelId)
+    huidigNiveau = spel.arcade || spel.zonderKanaal ? '' : String(niveau || '') // 26 nov 2026: voor het scorebord   // v253: bij spellen met een eigen menu speelt de muziek door
     inhoud.innerHTML = '<div class="melding">' + spelT('Laden...') + '</div>'
     try {
       const m = await import(spel.bestand)

@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=158"></script>
+<script src="taal.js?v=159"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -518,6 +518,8 @@ window.veiligeUrl = function(v){
   import { maakSpelMenu } from './spelmenu.js?v=1' // 11 nov 2026: hamburgermenu rechtsboven in elk spel (pauze, geluid, microfoon, camera, menu, verlaten)
   import { startSpelBerichtInChat } from './spelbericht.js?v=2'
   import { STUDIO_SPELLEN, studioSpel, spelBestand as studioBestand, spelIcoon as studioIcoon } from './studio-spellen.js?v=6' // 25 nov 2026: spellen uit Stekky Studio
+  import { kanMetVriend } from './samenspelen.js?v=2' // 26 nov 2026: uitdaging na een uitnodiging met een spel
+  import { kanSpelMeesturen } from './uitnodigen.js?v=1' // 26 nov 2026: welke spellen ook tegen de computer kunnen (spel.html)
   import { molKnop } from './mollenmeppen.js?v=2' // 26 nov 2026: Mollen meppen op het wachtscherm, tot je vriend er is
   import { gameAan, mijnDownloads } from './store.js?v=40' // 11 nov 2026: spellen uit de Store // 11 nov 2026: berichten van andere vrienden linksboven in het spel
   import * as Bordgeluid from './bordgeluid.js?v=203'
@@ -525,8 +527,8 @@ window.veiligeUrl = function(v){
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
   import { bewaardeSessieZonderInternet } from './offline.js?v=146'
   import { nieuweSpelSessie, isNieuwsteSpelSessie } from './spelsessie.js?v=1'
-  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=14'
-  import { mountChessLayout } from './chess-layout.js?v=14'
+  import { maakSchaakTaal, schaakT, leesSchaakTaal } from './schaak-taal.js?v=15'
+  import { mountChessLayout } from './chess-layout.js?v=15'
   import { maakSpelVerbinding } from './spelverbinding.js?v=2'
   import { isFibroTestCommand, maakSchaakTestKanaal } from './schaak-testmodus.js?v=2'
   import { slotKnopHtml, koppelSlotjes } from './slotuitleg.js?v=2'
@@ -895,6 +897,17 @@ window.veiligeUrl = function(v){
     if (directVriend) {
       const v = (window._vriendenData || []).find(x => x.id === directVriend)
       if (v) await openChat(v.id, vriendWeergaveNaam(v), v.avatar_url || '\u{1F464}', v.public_key || '')
+      // 26 nov 2026 (Marcel): net vriend geworden via een uitnodiging mét een spel (invite.html zet fibro_uitdaag_<ik>)?
+      // Dan meteen dat spel met wie je uitnodigde: hij krijgt de uitdaging (melding en bericht), jij komt in de
+      // wachtkamer. Alleen het eerste uur, alleen met die vriend, en maar één keer (de markering gaat meteen weg).
+      try {
+        const sleutel = 'fibro_uitdaag_' + huidigeUser.id
+        const u = JSON.parse(localStorage.getItem(sleutel) || 'null')
+        if (u) localStorage.removeItem(sleutel)
+        const vers = u && typeof u.t === 'number' && Date.now() - u.t >= 0 && Date.now() - u.t < 60 * 60 * 1000
+        if (vers && u.id === directVriend && geselecteerdeVriend?.id === directVriend && kanMetVriend(String(u.spel)))
+          setTimeout(() => window.startSpel(String(u.spel)), 400)
+      } catch (e) {}
     }
     const spelVriend = urlParams.get('spelVriend')
     const spelType   = urlParams.get('spelType')
@@ -3046,8 +3059,8 @@ console.timeLog('[chat] berichten', 'opgehaald')
     toepen: './toepen-ui.js?v=16',
     eenentwintigen: './eenentwintigen-ui.js?v=17',
     koningsjacht: './koningsjacht-ui.js?v=51',
-    schaken: './schaken-ui.js?v=276',
-    schakendrie: './schaken-drie-ui.js?v=44',
+    schaken: './schaken-ui.js?v=277',
+    schakendrie: './schaken-drie-ui.js?v=45',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=151',
     spaceinvaders: './invaders-ui.js?v=147',
@@ -3628,6 +3641,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   let spelWachtKlaar = null
   let spelWachtTimer = null
   const SPEL_WACHT_MAX = 2 * 60 * 1000 // v242: twee minuten
+  const SPEL_WACHT_OFFLINE = 20 * 1000 // 26 nov 2026: na 20 s kijken of je vriend wel online is
   function toonSpelWachtscherm() {
     const inhoud = document.getElementById('spelInhoud')
     if (!inhoud) return
@@ -3657,13 +3671,39 @@ console.timeLog('[chat] berichten', 'opgehaald')
     molKnop(scherm); scherm.append(knop) // 26 nov 2026: Mollen meppen terwijl je wacht (stopt vanzelf als het wachtscherm weggaat); Annuleren onderaan
     inhoud.appendChild(scherm)
     // v242: na twee minuten zeggen dat de vriend er nog niet is. Het wachten gaat door: komt hij alsnog, dan begint het spel.
-    clearTimeout(spelWachtTimer)
-    spelWachtTimer = setTimeout(() => {
+    // 26 nov 2026 (Marcel): niemand zit vast in een lege wachtkamer. Dan een uitweg: 🤖 tegen de computer (als dat spel
+    // dat kan) of 💬 naar de chat. Ga je weg, dan krijgt je vriend een bericht dat je wilde spelen (spelPushBijWeggaan:
+    // 'spel-gemist'). Weet de app al na 20 s dat de vriend die je uitdaagde niet online is, dan meteen.
+    const toonUitweg = zin => {
       if (document.getElementById('spelWachtscherm') !== scherm) return
-      tekst.textContent = spelT('{naam} is er na 2 minuten nog niet. Probeer het later opnieuw, of wacht nog even.', { naam: spelVriendUsername() })
+      if (scherm.querySelector('.spel-wacht-uitweg')) return
+      tekst.textContent = zin
       draai.style.animationPlayState = 'paused'
-      knop.textContent = spelT('Sluiten')
-    }, SPEL_WACHT_MAX)
+      const rij = document.createElement('div')
+      rij.className = 'spel-wacht-uitweg'
+      rij.style.cssText = 'display:flex;flex-direction:column;gap:8px;width:100%'
+      const spel = spelActief
+      if (spel && kanSpelMeesturen(spel)) {
+        const pc = document.createElement('button')
+        pc.type = 'button'; pc.className = 'spel-wacht-computer'
+        pc.textContent = spelT('🤖 Tegen de computer')
+        pc.style.cssText = 'background:#8b3fd1;border:1px solid #c084fc;border-radius:10px;padding:10px 18px;color:#fff;font-weight:700;cursor:pointer;'
+        pc.onclick = () => { window.sluitSpel(); location.href = 'spel.html?spel=' + encodeURIComponent(spel) + '&titel=1' }
+        rij.append(pc)
+      }
+      knop.textContent = spelT('💬 Naar de chat')
+      rij.append(knop)
+      scherm.append(rij)
+    }
+    const zin = soort => spelT(soort === 'offline'
+      ? '{naam} is nu niet online. Ga je weg, dan krijgt {naam} een bericht dat je wilde spelen.'
+      : '{naam} is er na 2 minuten nog niet. Ga je weg, dan krijgt {naam} een bericht dat je wilde spelen.', { naam: spelVriendUsername() })
+    clearTimeout(spelWachtTimer)
+    spelWachtTimer = setTimeout(() => toonUitweg(zin('laat')), SPEL_WACHT_MAX)
+    setTimeout(() => {
+      const id = String(spelTegenstander?.id || '')
+      if (id && spelUitnodiger === huidigeUser?.id && bekendeOnlineStatus.has(id) && !onlineVrienden.has(id)) toonUitweg(zin('offline'))
+    }, SPEL_WACHT_OFFLINE)
   }
 
   // v244: hoor je al 2 minuten niets van je vriend (status 'waiting': zijn app stuurt niets meer, bijvoorbeeld omdat hij
@@ -4010,7 +4050,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await laadModule('./schaken-ui.js?v=276')
+    const m = await laadModule('./schaken-ui.js?v=277')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: fibroChessTest?.active ? schaakT('Testspeler · Zwart') : spelVriendUsername(), testMode:Boolean(fibroChessTest?.active), onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer : nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
     // v270: tegen een vriend staan de webcams als twee rondjes naast elkaar boven het bord, net als bij dammen.
@@ -4020,7 +4060,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
   }
 
   async function startSchakenDrie(players) {
-    const m = await laadModule('./schaken-drie-ui.js?v=44')
+    const m = await laadModule('./schaken-drie-ui.js?v=45')
     const testMode = Boolean(fibroChessTest?.active)
     const controller = m.start({ Bordgeluid, gameChannel:testMode ? null : spelKanaal, players, userId:testMode ? 'fibro-test-you' : huidigeUser.id, localPreview:testMode, testMode, testStream:fibroChessTest?.stream || null, onTestCameraChange:stream => { if (fibroChessTest?.active) fibroChessTest.stream = stream }, onReturnToTwoPlayer:testMode ? returnToFibroTwoPlayerTest : null })
     spelSchaakDrieController = controller

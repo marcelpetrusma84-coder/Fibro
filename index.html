@@ -453,7 +453,7 @@ const PROFIEL_DEFS = [
 ]
 
 // 25 nov 2026: widgets die weg zijn (niet voor commercieel gebruik): staan ze nog op Home, dan niet meer tonen
-const VERVALLEN_WIDGETS = new Set(['weer']) // weer: Open-Meteo is gratis alleen niet-commercieel
+const VERVALLEN_WIDGETS = new Set(['weer', 'mix_l1']) // weer: Open-Meteo is gratis alleen niet-commercieel; mix_l1: de Nu.nl-layout (26 nov 2026, NU.nl staat commercieel gebruik niet toe)
 function laadLayout(pagina) {
   const key = pagina === 'home' ? WK_HOME : WK_PROFIEL
   const defs = pagina === 'home' ? HOME_DEFS : PROFIEL_DEFS

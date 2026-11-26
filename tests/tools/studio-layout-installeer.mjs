@@ -26,11 +26,13 @@ const fouten = valideerLayout(layout)
 if (fouten.length) { console.error('De layout klopt niet:\n  - ' + fouten.join('\n  - ')); process.exit(1) }
 
 const dataPad = path.join(HOOFD, 'studio-layouts.js')
-const nu = (await import(pathToFileURL(dataPad).href + '?x=' + Date.now())).STUDIO_LAYOUTS
+const dataMod = await import(pathToFileURL(dataPad).href + '?x=' + Date.now())
+const nu = dataMod.STUDIO_LAYOUTS
+const weg = dataMod.VERVALLEN_LAYOUTS || [] // 26 nov 2026: ids van verwijderde layouts (l1 = Nu.nl) nooit opnieuw gebruiken
 const store = 'layout-' + slug(layout.titel)
 if (nu.some(l => l.store === store)) { console.error('Deze layout staat al in de app (' + store + ').'); process.exit(1) }
 if (new RegExp("id: '" + store + "'").test(readFileSync(path.join(HOOFD, 'store.js'), 'utf8'))) { console.error('Dit id bestaat al: ' + store); process.exit(1) }
-const id = 'l' + (Math.max(0, ...nu.map(l => Number(String(l.id).slice(1)) || 0)) + 1)
+const id = 'l' + (Math.max(0, ...[...nu.map(l => l.id), ...weg].map(x => Number(String(x).slice(1)) || 0)) + 1)
 const nieuw = { id, store, titel: layout.titel.trim(), uitleg: layout.uitleg.map(t => t.trim()), h: layout.h,
   vakken: layout.vakken.map(v => Object.assign({ soort: v.soort, x: v.x, y: v.y, w: v.w, h: v.h }, v.weergave ? { weergave: v.weergave } : {}, v.inhoud ? { inhoud: v.inhoud } : {})) } // ook de weergave en kant-en-klare inhoud // 25 nov 2026: ook kant-en-klare inhoud
 

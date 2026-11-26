@@ -71,6 +71,23 @@ def veeg(pg, id):
     for i in range(1, 9): pg.mouse.move(x, y - 26 * i); time.sleep(0.012)
     pg.mouse.up()
 def knop(pg, naam): pg.click('.kt-knop[data-naam=%s]' % naam)
+# 26 nov 2026 (#264): op GitHub wachtte de dubbelklik op de bierpul 30 s en kwam er alleen "Timeout" uit. Nu stopt hij na
+# 5 s en laat hij zien wat er in de weg ligt: de volledige Playwright-melding en wat er bovenop het midden van de pul ligt.
+PUL_AFDEK = """() => { const p = document.querySelector('.kj-scene-bier-ik'); if (!p) return 'geen pul'
+    const r = p.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2
+    const naam = e => e.tagName.toLowerCase() + (e.className && typeof e.className === 'string' ? '.' + e.className.trim().split(/\\s+/).join('.') : '')
+      + (e.dataset && e.dataset.id ? '[' + e.dataset.id + ']' : '')
+    const s = getComputedStyle(p)
+    return { pul: [r.left, r.top, r.width, r.height].map(Math.round), zichtbaar: s.visibility + ' ' + s.display + ' ' + s.pointerEvents,
+      bovenop: document.elementsFromPoint(x, y).slice(0, 6).map(e => (p.contains(e) ? 'PUL:' : '') + naam(e)) } }"""
+def pul(pg):
+    try: pg.dblclick('.kj-scene-bier-ik', timeout=5000)
+    except Exception as e:
+        try: afdek = pg.evaluate(PUL_AFDEK)
+        except Exception as e2: afdek = 'onbekend (%s)' % e2
+        print('PUL-DIAGNOSE (wat ligt er op de bierpul):', afdek)
+        print('PUL-DIAGNOSE (volledige fout):', str(e))
+        raise
 
 def nieuwe_pagina(ctx, taal='nl'):
     pg = ctx.new_page()
@@ -124,7 +141,7 @@ try:
           e.dispatchEvent(new PointerEvent('pointerdown', p)); window.dispatchEvent(new PointerEvent('pointerup', p)); }""")
         check(pg.get_attribute('.kj-scene-bier-ik', 'aria-valuenow') == '25', 'M: tik op eigen pul verandert de inhoud')
         pg.eval_on_selector('.kj-scene-bier-ik', "e => e.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }))")
-        pg.dblclick('.kj-scene-bier-ik')
+        pul(pg)
         check(pg.get_attribute('.kj-scene-bier-ik', 'aria-valuenow') == '100' and pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#3', 'M: dubbelklik schenkt een nieuwe volle pul met oplopend nummer')
         check(wacht(pg, "() => document.querySelector('.kj-scene-bier-ik .kj-scene-bier-nummer').hidden", 4000), 'M: pulnummer verdwijnt na twee seconden')
         pg.reload(); pg.wait_for_selector('.kj-start-instellingen')
@@ -176,21 +193,21 @@ try:
         check(pg.evaluate("() => !!JSON.parse(localStorage.getItem('fibro_koningsjacht_stand'))"), 'B: het spel staat bewaard')
         # De menuteller erft niet mee naar een nieuwe partij; hervatten houdt de partij-teller wel.
         pg.click('.kt-knop[data-naam=instellingen]'); pg.check('[data-instelling=bierpul]'); pg.click('.kj-instellingen-sluit')
-        pg.dblclick('.kj-scene-bier-ik')
+        pul(pg)
         check(pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#2', 'O: een nieuwe solopartij begint weer bij de eerste pul')
-        pg.dblclick('.kj-scene-bier-ik')
+        pul(pg)
         check(pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#3', 'O: de tweede bijvulling is pul #3')
         pg.reload(); pg.wait_for_selector('.kj-verder'); pg.click('.kj-verder')
         check(wacht(pg, KLAAR), 'O: dezelfde solopartij kan worden hervat')
-        pg.dblclick('.kj-scene-bier-ik')
+        pul(pg)
         check(pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#4', 'O: hervatten behoudt de vorige partij-teller')
-        for _ in range(6): pg.dblclick('.kj-scene-bier-ik')
+        for _ in range(6): pul(pg)
         check(pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#10' and pg.locator('.kj-kaars[data-slijtage="9"]').count() == 2, 'P: bij pul #10 zijn beide kaarsen bijna op')
         check(pg.evaluate("""() => [...document.querySelectorAll('.kj-slijtage-druppels svg')].every(e => {
           const r = e.getBoundingClientRect(), k = e.closest('.kj-kaars').getBoundingClientRect()
           return getComputedStyle(e).display !== 'none' && r.width >= k.width * .95 && r.height >= k.height * .95
         })"""), 'P: het druipende kaarsvet is zichtbaar en heeft de maat van de kandelaar')
-        pg.dblclick('.kj-scene-bier-ik')
+        pul(pg)
         check(pg.locator('.kj-kaars[data-slijtage="9"]').count() == 2, 'P: na pul #10 blijven beide kaarsen branden op dezelfde korte stand')
         pg.click('.kt-knop[data-naam=instellingen]'); pg.check('.kj-instellingen input[data-scene=modern]')
         check(pg.get_attribute('.kj-links .kj-kandelaar', 'src').endswith('candle-modern-left-empty.png') and pg.get_attribute('.kj-rechts .kj-kandelaar', 'src').endswith('candle-modern-right-empty.png'), 'P: ook de moderne houders tonen de verbruikte kaarsen')
@@ -306,6 +323,7 @@ try:
         b.close()
 except Exception as e:
     check(False, 'proef afgebroken: ' + str(e).split('\n')[0])
+    print(str(e))  # de hele melding: daaronder staat wat Playwright tegenhield
 finally:
     srv.terminate()
 print('\n%d fout(en)' % len(fout))

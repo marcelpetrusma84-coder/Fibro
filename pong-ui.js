@@ -681,6 +681,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, isActief }) {
       gameOver = true
       controleerLevel()
       const winnaar = mijnScore >= WIN_SCORE
+      try { window.fibroSoloUitslag?.(winnaar ? 'winst' : 'verlies') } catch (e) {} // 26 nov 2026: scorebord (alleen tegen de computer, spel.html)
       statusEl.textContent = winnaar ? T('🎉 Jij wint!') : T('😢 {naam} wint!', { naam: vriendNaam })
       opnieuwBtn.style.display = 'block'
       if (benIkHost && anderVersie >= 2) andereBtn.style.display = 'block'

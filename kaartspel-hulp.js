@@ -1474,6 +1474,9 @@ export function maakKaartTafel(container, opties = {}) {
   }
 
   function einde({ titel, sub, gewonnen, opnieuw }) {
+    // 26 nov 2026: scorebord (alleen tegen de computer, spel.html). Staat het eindscherm er al, dan is dit hetzelfde
+    // potje nog een keer getekend: niet nog een keer tellen.
+    if (!el.querySelector('.kt-einde')) { try { window.fibroSoloUitslag?.(gewonnen ? 'winst' : 'verlies') } catch (e) {} }
     el.querySelector('.kt-einde')?.remove()
     beurtKlok(null)
     if (gewonnen) { kaartGeluid.win(); tril([30, 50, 30, 50, 60]) } else kaartGeluid.verlies()

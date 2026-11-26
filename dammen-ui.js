@@ -436,6 +436,7 @@ export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         if (Dammen.heeftGeenZetten(staat, staat.aanZet)) {
             gameOver = true
             const ikWin = staat.aanZet !== mijnKleur
+            try { window.fibroSoloUitslag?.(ikWin ? 'winst' : 'verlies') } catch (e) {} // 26 nov 2026: scorebord (alleen tegen de computer, spel.html)
             uitslag = ikWin
                 ? (solo ? T('🎉 Jij wint van de computer!') : T('🎉 Jij wint — {naam} kan niet meer zetten!', { naam }))
                 : (solo ? T('😢 De computer wint. Probeer het nog eens!') : T('😢 {naam} wint!', { naam }))
@@ -444,6 +445,7 @@ export function start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam
         }
         if (stil >= 50 || (herhaling.get(sleutel()) || 0) >= 3) {
             gameOver = true
+            try { window.fibroSoloUitslag?.('gelijk') } catch (e) {} // 26 nov 2026: scorebord (alleen tegen de computer, spel.html)
             uitslag = stil >= 50 ? T('🤝 Remise: 25 zetten na elkaar alleen met dammen, zonder te slaan.') : T('🤝 Remise: drie keer dezelfde stand.')
             setTimeout(() => geluid.remise(), 450)
             return true

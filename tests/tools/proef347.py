@@ -121,7 +121,7 @@ try:
         zichtbaar = wacht(pg, "() => { const k = document.getElementById('deelKnop'); return k && !k.hidden && k.offsetWidth > 0 }")
         check(zichtbaar, 'D: in Eenendertigen staat een knop 📤 Delen')
         volgorde = pg.evaluate("() => [...document.querySelectorAll('.niveau-kaart .niveau-btn')].map(b => b.id || b.dataset.niveau)")
-        check(volgorde[-1:] == ['deelKnop'] and 'groepKnop' in volgorde and volgorde.index('groepKnop') < volgorde.index('deelKnop'), 'D: onder "Met een groep" (%s)' % volgorde)
+        check('deelKnop' in volgorde and 'groepKnop' in volgorde and volgorde.index('deelKnop') == volgorde.index('groepKnop') + 1, 'D: direct onder "Met een groep" (%s)' % volgorde)
         if zichtbaar:
             pg.click('#deelKnop')
             check(wacht(pg, "() => window.__gedeeld && window.__gedeeld.length === 1", 6000), 'D: Delen opent het deelmenu')

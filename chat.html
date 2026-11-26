@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=159"></script>
+<script src="taal.js?v=160"></script>
 <script src="appslot.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
 <script src="controller.js?v=2"></script>
@@ -3051,15 +3051,15 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // te doen zodra een spel gekozen is, staat het klaar tegen de tijd dat de
   // ander accepteert. Spellen die nog in chat.html zitten hoeven niets.
   const SPEL_BESTAND = {
-    botkaaseiren: './bke-ui.js?v=239',
-    dammen: './dammen-ui.js?v=151',
-    pong: './pong-ui.js?v=242',
-    vieroprij: './vieroprij-ui.js?v=240',
-    pesten: './pesten-ui.js?v=18',
-    toepen: './toepen-ui.js?v=16',
-    eenentwintigen: './eenentwintigen-ui.js?v=17',
-    koningsjacht: './koningsjacht-ui.js?v=51',
-    schaken: './schaken-ui.js?v=277',
+    botkaaseiren: './bke-ui.js?v=240',
+    dammen: './dammen-ui.js?v=152',
+    pong: './pong-ui.js?v=243',
+    vieroprij: './vieroprij-ui.js?v=241',
+    pesten: './pesten-ui.js?v=19',
+    toepen: './toepen-ui.js?v=17',
+    eenentwintigen: './eenentwintigen-ui.js?v=18',
+    koningsjacht: './koningsjacht-ui.js?v=52',
+    schaken: './schaken-ui.js?v=278',
     schakendrie: './schaken-drie-ui.js?v=45',
     flappybird: './flappy-ui.js?v=147',
     breakout: './blockit-ui.js?v=151',
@@ -3864,13 +3864,13 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Boter-Kaas-Eieren ───
   async function startBotKaasEieren() {
-    const m = await laadModule('./bke-ui.js?v=239')
+    const m = await laadModule('./bke-ui.js?v=240')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
 
   // ─── Pesten (kaartspel, 11 nov 2026) ───
   async function startPesten() {
-    const m = await laadModule('./pesten-ui.js?v=18')
+    const m = await laadModule('./pesten-ui.js?v=19')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
   // ─── Toepen en Black Jack (kaartspellen uit de Store, 11 nov 2026): hetzelfde als Pesten ───
@@ -3881,7 +3881,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Vier op een rij ───
   async function startVierOpEenRij() {
-    const m = await laadModule('./vieroprij-ui.js?v=240')
+    const m = await laadModule('./vieroprij-ui.js?v=241')
     m.start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
 
@@ -4050,7 +4050,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
 
   // ─── Schaken ───
   async function startSchaken() {
-    const m = await laadModule('./schaken-ui.js?v=277')
+    const m = await laadModule('./schaken-ui.js?v=278')
     m.start({ Schaak, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: fibroChessTest?.active ? schaakT('Testspeler · Zwart') : spelVriendUsername(), testMode:Boolean(fibroChessTest?.active), onInviteThird:fibroChessTest?.active ? joinFibroTestAsThirdPlayer : nodigDerdeSchaakSpelerUit })
     spelCameraLayout?.destroy()
     // v270: tegen een vriend staan de webcams als twee rondjes naast elkaar boven het bord, net als bij dammen.
@@ -4073,13 +4073,13 @@ console.timeLog('[chat] berichten', 'opgehaald')
   // ─── Dammen (internationaal, 10x10) ───
   // v3 nov (sneller): dammen pas laden als je het speelt, zoals de andere spellen
   async function startDammen() {
-    const [Dammen, DammenUI] = await Promise.all([laadModule('./dammen.js?v=95'), laadModule('./dammen-ui.js?v=151')])
+    const [Dammen, DammenUI] = await Promise.all([laadModule('./dammen.js?v=95'), laadModule('./dammen-ui.js?v=152')])
     DammenUI.start({ Dammen, Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername() })
   }
 
   // ─── Pong ───
   async function startPong() {
-    const m = await laadModule('./pong-ui.js?v=242')
+    const m = await laadModule('./pong-ui.js?v=243')
     m.start({ spelKanaal, benIkSpeler1, vriendNaam: spelVriendUsername(), isActief: () => spelActief === 'pong' && !spelGestopt })
   }
 

@@ -45,3 +45,23 @@
 @media(max-width:580px){.nr-scoreboard{border-radius:16px}.nr-sb-header{padding:18px 16px 6px}.nr-sb-status{padding-inline:16px;font-size:12px;margin-bottom:16px}.nr-sb-columns{grid-template-columns:minmax(0,1fr);padding-inline:16px;gap:16px}.nr-sb-column{padding:15px 14px 5px}.nr-sb-row{grid-template-columns:22px minmax(0,1fr) auto;min-height:51px}.nr-sb-points{font-size:18px}.nr-sb-date{font-size:12px}.nr-sb-global{margin:16px 16px 0;padding:14px;grid-template-columns:minmax(0,1fr)}.nr-sb-global-score{grid-column:1;grid-row:auto;font-size:32px}.nr-sb-global-detail{grid-row:3}.nr-sb-footer{padding:16px;gap:10px}.nr-sb-footer p{max-width:24ch}}
 @media(prefers-reduced-transparency:reduce){.nr-scoreboard{background:#100d22}.nr-scoreboard::backdrop{backdrop-filter:none;background:#040210e8}}
 @media(prefers-contrast:more){.nr-scoreboard{border:2px solid #fff}.nr-sb-column,.nr-sb-global{border-color:currentColor}.nr-sb-date,.nr-sb-time,.nr-sb-footer p,.nr-sb-status,.nr-sb-subtitle{color:#e1eaff}}
+/* 26 nov 2026: stijlen per spel uit Stekky Studio (scoreborden.js). Neon (hierboven) is de standaard. */
+.nr-scoreboard.sb-stijl-goud{--nr-sb-cyan:#ffd36b;--nr-sb-pink:#ffb37a;border-color:#ffd36b99}
+.sb-stijl-goud .nr-sb-column{border-color:#ffd36b4a;background:linear-gradient(150deg,#ffd36b10,#07081766)}
+.sb-stijl-goud .nr-sb-friends{border-color:#ffb37a4a;background:linear-gradient(150deg,#ffb37a10,#07081766)}
+.sb-stijl-goud .nr-sb-level{border-color:#ffd36b44;background:#ffd36b10;color:#ffe7ad}
+.sb-stijl-goud .nr-sb-friends .nr-sb-level{border-color:#ffb37a44;background:#ffb37a10;color:#ffd2b0}
+.nr-scoreboard.sb-stijl-paars{--nr-sb-cyan:#c084fc;--nr-sb-pink:#f0abfc;border-color:#c084fc99}
+.sb-stijl-paars .nr-sb-column{border-color:#c084fc55;background:linear-gradient(150deg,#8b3fd122,#1a0a2e99)}
+.sb-stijl-paars .nr-sb-friends{border-color:#f0abfc4a;background:linear-gradient(150deg,#f0abfc12,#1a0a2e99)}
+.sb-stijl-paars .nr-sb-level{border-color:#c084fc44;background:#c084fc12;color:#e3c6ff}
+.sb-stijl-paars .nr-sb-friends .nr-sb-level{border-color:#f0abfc44;background:#f0abfc10;color:#f8d4fd}
+.nr-scoreboard.sb-stijl-roze{--nr-sb-cyan:#ff7eb6;--nr-sb-pink:#ffb4d6;border-color:#ff7eb699}
+.sb-stijl-roze .nr-sb-column{border-color:#ff7eb64a;background:linear-gradient(150deg,#ff7eb612,#07081766)}
+.sb-stijl-roze .nr-sb-friends{border-color:#ffb4d64a}
+.sb-stijl-roze .nr-sb-level{border-color:#ff7eb644;background:#ff7eb610;color:#ffc6de}
+.nr-scoreboard.sb-stijl-groen{--nr-sb-cyan:#6ee7a0;--nr-sb-pink:#b4f07a;border-color:#6ee7a099}
+.sb-stijl-groen .nr-sb-column{border-color:#6ee7a04a;background:linear-gradient(150deg,#6ee7a010,#07081766)}
+.sb-stijl-groen .nr-sb-friends{border-color:#b4f07a4a;background:linear-gradient(150deg,#b4f07a10,#07081766)}
+.sb-stijl-groen .nr-sb-level{border-color:#6ee7a044;background:#6ee7a010;color:#c4f6d8}
+.sb-stijl-groen .nr-sb-friends .nr-sb-level{border-color:#b4f07a44;background:#b4f07a10;color:#ddf8c0}

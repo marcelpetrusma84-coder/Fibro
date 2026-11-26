@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qmgatbphiplrfxrljtbe.supabase.co; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://lichess.org/api/cloud-eval https://qmgatbphiplrfxrljtbe.supabase.co wss://qmgatbphiplrfxrljtbe.supabase.co data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
-<script src="taal.js?v=160"></script>
+<script src="taal.js?v=161"></script>
 <script src="appslot.js?v=3"></script>
 <script src="controller.js?v=2"></script>
 <!-- v275: een spreekwolkje bovenin het spel als je een berichtje krijgt -->
@@ -72,7 +72,7 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
 <script type="module">
   import { maakSpelMenu, isGepauzeerd } from './spelmenu.js?v=1' // 11 nov 2026: als eerste, voor de pauze- en geluidskranen
   import * as Bordgeluid from './bordgeluid.js?v=203'
-  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=318'
+  import { SOLO_SPELLEN, NIVEAUS, maakSoloKanaal } from './solo.js?v=319'
   import { supabase } from './supabase.js?v=95'
   import { startSpelUitnodigingLuisteraar } from './speluitnodiging.js?v=207'
   import { maakSchaakTaal, schaakT } from './schaak-taal.js?v=15'
@@ -81,9 +81,9 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
   import { kanMetVriend, kanMetGroep, groepAdres } from './samenspelen.js?v=2' // 26 nov 2026: vanaf Home ook met een vriend of een groep
   import { toonTitelscherm, stopTitelMuziek, spelStart, menuMuziek } from './titelscherm.js?v=20' // v251: titelscherm met muziek
   import { deelUitnodiging, bereidVoor, kanSpelMeesturen } from './uitnodigen.js?v=1' // 26 nov 2026: 📤 Delen (Marcel)
-  import { scoreSoort } from './scorespellen.js?v=1' // 26 nov 2026: een scorebord bij elk spel (Marcel)
+  import { scoreSoort, scorebordInstelling } from './scorespellen.js?v=2' // 26 nov 2026: een scorebord bij elk spel (Marcel)
   import { maakSpelScoreService } from './spelscores.js?v=1'
-  import { maakNeonScorebord } from './neon-raiders-scoreboard.js?v=5'
+  import { maakNeonScorebord } from './neon-raiders-scoreboard.js?v=6'
 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   const inhoud = document.getElementById('spelInhoud')
@@ -171,8 +171,9 @@ body { background:#08040f; color:var(--text); font-family:'DM Sans',system-ui,sa
           .sort((x, y) => NIVEAU_VOLGORDE.indexOf(x.niveau) - NIVEAU_VOLGORDE.indexOf(y.niveau))
         return { ...b, personal: per }
       } } : scoreDienst
-      scorebord = maakNeonScorebord({ host: document.body, service: dienst, T,
-        title: spelNaam() + ' scores', brand: String(spelNaam()).toUpperCase(),
+      const inst = scorebordInstelling(spelId) // stijl en titel uit Stekky Studio (scoreborden.js)
+      scorebord = maakNeonScorebord({ host: document.body, service: dienst, T, stijl: inst.stijl,
+        title: spelNaam() + ' scores', brand: String(inst.titel || spelNaam()).toUpperCase(),
         formatScore: winst ? n => T('{n}× gewonnen', { n: Math.max(0, Math.floor(Number(n) || 0)) }) : undefined,
         formatDetail: winst ? r => (r.gespeeld === 1 ? T('van 1 potje') : T('van {n} potjes', { n: r.gespeeld || 0 })) : r => niveauTekst(r.niveau),
         kolommen: winst ? { personal: [T('Jouw overwinningen'), T('Per niveau, tegen de computer')],

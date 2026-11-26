@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=160"></script>
+<script src="taal.js?v=161"></script>
 <script src="appslot.js?v=3"></script>
 <script src="apk.js?v=3"></script>
 <script src="verbinding.js?v=3"></script>
@@ -449,6 +449,7 @@ const PROFIEL_DEFS = [
   { id:'radio',          icon:'📻', titel:'Radio',                w:4, h:3 }, // 18 nov 2026: radio.js
   { id:'rss',            icon:'📰', titel:'RSS-feed',             w:4, h:3 }, // 19 nov 2026: rsswidget.js
   { id:'mastodon',       icon:'🐘', titel:'Mastodon',             w:4, h:3 }, // 19 nov 2026: mastodon.js
+  { id:'scorebord',      icon:'🏆', titel:'Scorebord',            w:4, h:3 }, // 26 nov 2026: scorebordwidget.js (alleen op je eigen Home)
   { id:'afteltimer',     icon:'⏳', titel:'Afteltimer',           w:4, h:2 },
   { id:'opteltimer',     icon:'⏱', titel:'Opteltimer',           w:4, h:2 },
   { id:'gastenboek',     icon:'📖', titel:'Gastenboek',           w:4, h:4 },
@@ -723,6 +724,8 @@ function renderProfiel(id, c) {
     renderRss(c, window._uid)
   } else if (id === 'mastodon') {
     renderMastodon(c, window._uid)
+  } else if (id === 'scorebord') {
+    renderScorebord(c, window._uid) // 26 nov 2026
   } else if (id === 'afteltimer') {
     renderAftel(c, window._uid)
   } else if (id === 'opteltimer') {
@@ -1914,6 +1917,16 @@ async function renderRss(c, uid) {
       renderRss(c, uid)
     },
   })
+}
+
+// ════════════════════════════════
+// SCOREBORD (26 nov 2026, Marcel, scorebordwidget.js): al je spellen op een rij, jouw beste score naast die van je
+// beste vriend. Tik op een spel: het opent met het titelscherm, net als een spelwidget. Alleen hier (je eigen Home).
+// ════════════════════════════════
+async function renderScorebord(c, uid) {
+  let W
+  try { W = await import('./scorebordwidget.js?v=1') } catch (e) { console.warn('[scorebord]', e); return }
+  W.tekenScorebordWidget(c, { supabase, uid, T, open: spel => openSpelMetTitel(spel, 'spel.html?spel=' + encodeURIComponent(spel)) })
 }
 
 // ════════════════════════════════

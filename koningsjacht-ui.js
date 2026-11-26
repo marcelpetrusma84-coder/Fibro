@@ -28,7 +28,7 @@ import { maakKoningsjachtScene } from './koningsjacht-scene.js?v=14'
 import { zetKaarsSlijtage } from './koningsjacht-kaarsen.js?v=1'
 import { verbindBierpul, herstelBierPartij } from './koningsjacht-bier.js?v=2'
 import { maakKoningsjachtScoreService } from './koningsjacht-scores.js?v=1'
-import { maakKoningsjachtScorebord } from './koningsjacht-scoreboard.js?v=2'
+import { maakKoningsjachtScorebord } from './koningsjacht-scoreboard.js?v=3'
 import { maakScorePartij } from './koningsjacht-score-partij.js?v=1'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)

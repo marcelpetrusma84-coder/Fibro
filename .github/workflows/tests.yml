@@ -194,6 +194,9 @@ jobs:
       - name: "Scorebord bij elk spel: 🏆 Scores, potjes naar Supabase, vrienden top 10 (proef349)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef349.py .
+      - name: "Scorebord-widget op Home en Scoreborden in Stekky Studio (proef350)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef350.py .
       - name: "Kaartspellen: de Vrolijke kaarten (standaard, plaatjes laden, Engels)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef312.py .

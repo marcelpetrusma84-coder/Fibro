@@ -22,13 +22,13 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
   isActief = () => true, onOpen = () => {}, onClose = () => {},
   // 26 nov 2026 (scoreborden voor alle spellen, spelscores.js): andere kopjes, zonder Stekky-record, en een eigen
   // zin bovenaan. Zonder deze opties blijft alles zoals het was (Neon Raiders, Koningsjacht).
-  kolommen = null, zonderRecord = false, statusOnline = null } = {}) {
+  kolommen = null, zonderRecord = false, statusOnline = null, stijl = '' } = {}) {
   if (!service || typeof service.loadBoards !== 'function') throw new TypeError('Score service ontbreekt')
   const doc = host.ownerDocument || document
   if (!doc.getElementById('nr-scoreboard-css')) {
     const link = doc.createElement('link')
     link.id = 'nr-scoreboard-css'; link.rel = 'stylesheet'
-    link.href = new URL('./neon-raiders-scoreboard.css?v=3', import.meta.url).href
+    link.href = new URL('./neon-raiders-scoreboard.css?v=4', import.meta.url).href
     doc.head.appendChild(link)
   }
   const element = (tag, className, text) => {
@@ -38,6 +38,8 @@ export function maakNeonScorebord({ host = document.body, service, T = globalThi
     return node
   }
   const dialog = element('dialog', 'nr-scoreboard')
+  // 26 nov 2026: een stijl uit Stekky Studio (goud, paars, roze, groen; neon = standaard), zie neon-raiders-scoreboard.css
+  if (/^[a-z]{1,12}$/.test(stijl) && stijl !== 'neon') dialog.classList.add('sb-stijl-' + stijl)
   dialog.setAttribute('aria-label', T(title))
   const header = element('header', 'nr-sb-header')
   const heading = element('div')

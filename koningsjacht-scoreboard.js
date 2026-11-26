@@ -1,4 +1,4 @@
-import { maakNeonScorebord } from './neon-raiders-scoreboard.js?v=5'
+import { maakNeonScorebord } from './neon-raiders-scoreboard.js?v=6'
 
 const NIVEAUS = ['', 'Schildknaap', 'Ridder', 'Koning']
 const MODI = { solo: 'Alleen', samen: 'Samen', wedstrijd: 'Wedstrijd', duel: 'Duel', beleg: 'Belegering' }

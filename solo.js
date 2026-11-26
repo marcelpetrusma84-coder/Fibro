@@ -529,7 +529,7 @@ export const SOLO_SPELLEN = {
   toepen:       { naam: 'Toepen',        icon: '✊', bestand: './toepen-ui.js?v=17',     bot: toepenBot, store: true },          // 11 nov 2026: kaartspel uit de Store
   eenentwintigen: { naam: 'Black Jack', icon: '♠️', bestand: './eenentwintigen-ui.js?v=18', bot: eenentwintigenBot, store: true },   // 11 nov 2026: kaartspel uit de Store
   // 13 nov 2026: Koningsjacht, alleen tegen het kasteel (geen computerspeler en geen spelkanaal), uit de Store; met een vriend in de chat
-  koningsjacht: { naam: 'Koningsjacht', icon: '👑', bestand: './koningsjacht-ui.js?v=52', zonderKanaal: true, store: true },
+  koningsjacht: { naam: 'Koningsjacht', icon: '👑', bestand: './koningsjacht-ui.js?v=53', zonderKanaal: true, store: true },
   schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=278',  niveaus:[...NIVEAUS, 'ultra'], bot: opties => opties.niveau === 'ultra' ? schaakUltraBot(opties) : schaakBot(opties), motor: './schaak.js?v=95', motorNaam: 'Schaak' },
   dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=152',   niveaus:[...NIVEAUS, 'expert'], bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
   // 30 okt 2026: Neo Paddle v2 (blokjes en power-ups) en levels voor alleen (spel.html toont een knop 🧱 Levels).
@@ -552,7 +552,7 @@ export const SOLO_SPELLEN = {
   // Let op: versie 194 van dit bestand was al gebruikt (de schaak-PR van valentijnpeters, 21 okt 2026); daarom laadt
   // spel.html in v193 versie 193 en in v194 versie 195. v195 (schaken weer in twee talen): versie 196. Een volgende
   // aanpassing aan solo.js neemt 197 of hoger.
-  shmup:        { naam: 'Neon Raiders',  icon: '🚀', bestand: './neon-raiders-ui.js?v=226', zonderKanaal: true, arcade: true },
+  shmup:        { naam: 'Neon Raiders',  icon: '🚀', bestand: './neon-raiders-ui.js?v=227', zonderKanaal: true, arcade: true },
 }
 // 25 nov 2026: spellen uit Stekky Studio (studio-spellen.js) met 'tegen de computer'. De computerspeler staat in <id>.js
 // (export bot) en wordt pas opgehaald als je speelt. Alleen via de Store, net als de kaartspellen.

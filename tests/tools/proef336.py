@@ -1,6 +1,6 @@
 # proef336 (25 nov 2026, Marcel): wat niet commercieel gebruikt mag worden is weg uit de app.
 #  A. Store > Widgets: geen Weer (Open-Meteo), de muziek-widget heet Funkwhale (zonder Bandcamp), Koningsjacht zonder "Regicide"
-#  B. Home met een oude weer-widget en een oude weer-instelling: de widget staat er niet meer en niemand vraagt Open-Meteo iets
+#  B. Home met een oude weer-widget en een oude Nu.nl-widget (mix_l1) en een oude weer-instelling: de widget staat er niet meer en niemand vraagt Open-Meteo iets
 #  C. Profiel > Widgets: geen rij voor Weer; Opslaan haalt de weer-widget uit je Home
 #  D. geen paginafouten
 # python3 -I proef336.py <map>
@@ -65,7 +65,8 @@ try:
           localStorage.setItem('weer_' + uid, JSON.stringify({ plaats: { naam: 'Utrecht', lat: 52.09, lon: 5.12 } }))
           localStorage.setItem('fibro_widgets_profiel_' + uid, JSON.stringify([
             { id: 'mood', icon: '😊', titel: 'Mood', w: 4, h: 1, volgorde: 0, aan: true },
-            { id: 'weer', icon: '🌤️', titel: 'Weer', w: 4, h: 3, volgorde: 1, aan: true }])) }""", UID)
+            { id: 'weer', icon: '🌤️', titel: 'Weer', w: 4, h: 3, volgorde: 1, aan: true },
+            { id: 'mix_l1', icon: '🧩', titel: 'Nu.nl', w: 4, h: 4, volgorde: 2, aan: true }])) }""", UID)
 
         # ── A ──
         pg.goto(BASIS + 'store.html'); pg.wait_for_selector('#inhoud', state='visible', timeout=15000)
@@ -84,6 +85,7 @@ try:
         check(wacht(pg, "() => !!document.querySelector('.widget-blok[data-id=mood]')", 15000), 'B: Home is geladen')
         time.sleep(1.5)
         check(pg.locator('.widget-blok[data-id=weer]').count() == 0, 'B: de oude weer-widget staat er niet meer')
+        check(pg.locator('.widget-blok[data-id=mix_l1]').count() == 0, 'B: de oude Nu.nl-widget (mix_l1) staat er niet meer')
         check(not any('open-meteo' in u for u in buiten[n:]), 'B: Open-Meteo is niets gevraagd (%s)' % [u for u in buiten[n:] if 'meteo' in u][:2])
 
         # ── C ──

@@ -2,8 +2,8 @@
 # In een kopie van de app (alleen studio-layouts.js is echt een kopie; de rest verwijst naar de echte map).
 #  A. Studio (moderator): sjabloon "Groot boven, twee eronder", wat er in elk vak komt; twee keer dezelfde soort = melding;
 #     zonder naam geen bestand; met naam: een layoutbestand (naam.stekkylayout.json) dat klopt
-#  B. het installatie-script zet het bestand in de app (l1)
-#  C. Store > Widgets: de layout staat erin met een plaatje van de vakken; downloaden = op Home (mix_l1, 4 breed, 6 hoog)
+#  B. het installatie-script zet het bestand in de app (l2: l1 was Nu.nl en wordt niet opnieuw gebruikt)
+#  C. Store > Widgets: de layout staat erin met een plaatje van de vakken; downloaden = op Home (mix_l2, 4 breed, 6 hoog)
 #  D. Home: één widget met drie vakken (PeerTube groot boven, muziek en RSS eronder naast elkaar), elk vak is de
 #     gewone widget ("Nog geen video" met "Video kiezen"); niets steekt uit; geen paginafouten
 # python3 -I proef333.py <map>
@@ -88,7 +88,7 @@ try:
 
         # B. installeren
         r = subprocess.run(['node', os.path.join(MAP, 'tests/tools/studio-layout-installeer.mjs'), bestand, '--map', app, '--zonder-versies'], capture_output=True, text=True)
-        check(r.returncode == 0 and 'mix_l1' in r.stdout, 'B geïnstalleerd: %s' % (r.stdout.strip() or r.stderr.strip())[:100])
+        check(r.returncode == 0 and 'mix_l2' in r.stdout, 'B geïnstalleerd: %s' % (r.stdout.strip() or r.stderr.strip())[:100])
 
         # C. Store
         STAND['moderator'] = False
@@ -103,12 +103,12 @@ try:
             pg.click(ITEM + ' .knop')
             check(wacht(pg, "() => document.querySelector('%s .knop').textContent.includes('Gedownload')" % ITEM), 'C gedownload')
             home = json.loads(pg.evaluate("localStorage.getItem('fibro_widgets_profiel_%s')" % UID) or '[]')
-            mix = [w for w in home if w.get('id') == 'mix_l1']
+            mix = [w for w in home if w.get('id') == 'mix_l2']
             check(mix and mix[0].get('aan') and mix[0].get('w') == 4 and mix[0].get('h') == 6 and mix[0].get('titel') == 'Video en nieuws', 'C op Home gezet: %s' % mix)
 
             # D. Home
             pg.goto(BASIS + 'index.html')
-            B = '.widget-blok[data-id="mix_l1"]'
+            B = '.widget-blok[data-id="mix_l2"]'
             check(wacht(pg, "() => document.querySelectorAll('%s .mix-vak').length === 3" % B, 15000), 'D op Home: één widget met drie vakken')
             soorten = pg.evaluate("() => [...document.querySelectorAll('%s .mix-vak')].map(v => v.dataset.soort)" % B)
             check(soorten == ['peertube', 'muziekwidget', 'rss'], 'D de juiste widgets in de vakken (%s)' % soorten)

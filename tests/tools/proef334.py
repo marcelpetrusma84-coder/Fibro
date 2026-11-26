@@ -127,7 +127,7 @@ try:
 
         # D. Home: het video-vak
         pg.goto(BASIS + 'index.html')
-        B = '.widget-blok[data-id="mix_l1"]'
+        B = '.widget-blok[data-id="mix_l2"]'
         PTV = B + ' .mix-vak[data-soort=peertube]'
         check(wacht(pg, "() => !!document.querySelector('%s .pt-video')" % PTV, 15000), 'D het video-vak laat de nieuwste Gaming-video zien')
         check(PT and 'categoryOneOf=7' in PT[0] and 'isLocal=true' in PT[0] and 'nsfw=false' in PT[0], 'D alleen Gaming, eigen video\'s, geen 18+')
@@ -149,7 +149,7 @@ try:
         pg.click(RV + ' .mix-klaar')
         check(wacht(pg, "() => [...document.querySelectorAll('%s .rs-kop')].some(e => e.textContent.startsWith('Sport'))" % RV, 10000) and RSS[voor:] == [NU[1][1]], 'E alleen Sport: alleen Sport opgehaald (%s)' % RSS[voor:])
         mix = json.loads(pg.evaluate("localStorage.getItem('mix_%s')" % UID) or '{}')
-        check([f['naam'] for f in mix.get('l1:rss', {}).get('feeds', [])] == ['Sport'] and mix.get('l1:peertube', {}).get('videos'), 'E alles staat in mix_<uid> (%s)' % list(mix))
+        check([f['naam'] for f in mix.get('l2:rss', {}).get('feeds', [])] == ['Sport'] and mix.get('l2:peertube', {}).get('videos'), 'E alles staat in mix_<uid> (%s)' % list(mix))
         check(pg.evaluate("localStorage.getItem('rss_%s')" % UID) is None and pg.evaluate("localStorage.getItem('peertube_%s')" % UID) is None, 'E de gewone RSS- en PeerTube-widget blijven leeg (eigen inhoud)')
         ctx.close()
         check(not fouten, 'geen paginafouten (%s)' % fouten[:3])

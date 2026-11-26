@@ -414,6 +414,11 @@ export const SCHAAK_EN = Object.freeze({
   // v244: wachtscherm, verbinding en vriend weg (chat.html)
   "⏳ Wachten tot {naam} in het spel zit...": "⏳ Waiting for {naam} to join the game...",
   "{naam} is er na 2 minuten nog niet. Probeer het later opnieuw, of wacht nog even.": "{naam} still hasn't joined after 2 minutes. Try again later, or wait a little longer.",
+  // 26 nov 2026: wachtkamer met een uitweg (niemand er? tegen de computer of naar de chat)
+  "🤖 Tegen de computer": "🤖 Against the computer",
+  "💬 Naar de chat": "💬 Go to the chat",
+  "{naam} is nu niet online. Ga je weg, dan krijgt {naam} een bericht dat je wilde spelen.": "{naam} is not online right now. If you leave, {naam} gets a message that you wanted to play.",
+  "{naam} is er na 2 minuten nog niet. Ga je weg, dan krijgt {naam} een bericht dat je wilde spelen.": "{naam} still isn't here after 2 minutes. If you leave, {naam} gets a message that you wanted to play.",
   "Spel met je vriend openen…": "Joining your friend's game…",
   "Verbinding herstellen; je spel blijft open.": "Reconnecting — your game stays open.",
   "Wachten op internet; je spel blijft open.": "Waiting for internet — your game stays open.",

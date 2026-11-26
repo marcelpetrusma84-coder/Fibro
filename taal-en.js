@@ -1330,6 +1330,10 @@ window.FIBRO_EN = {
   "{naam} reageert al 2 minuten niet. Misschien is {naam} weg.": "{naam} hasn't responded for 2 minutes. {naam} may have left.",
   "Blijven wachten": "Keep waiting",
   "{naam} is er na 2 minuten nog niet. Probeer het later opnieuw, of wacht nog even.": "{naam} still hasn't joined after 2 minutes. Try again later, or wait a little longer.",
+  // 26 nov 2026: wachtkamer met een uitweg (niemand er? tegen de computer of naar de chat)
+  "💬 Naar de chat": "💬 Go to the chat",
+  "{naam} is nu niet online. Ga je weg, dan krijgt {naam} een bericht dat je wilde spelen.": "{naam} is not online right now. If you leave, {naam} gets a message that you wanted to play.",
+  "{naam} is er na 2 minuten nog niet. Ga je weg, dan krijgt {naam} een bericht dat je wilde spelen.": "{naam} still isn't here after 2 minutes. If you leave, {naam} gets a message that you wanted to play.",
   "Kies een spelvorm": "Choose a game mode",
   "Blokjes": "Blocks",
   "7 levels met obstakels": "7 levels with obstacles",

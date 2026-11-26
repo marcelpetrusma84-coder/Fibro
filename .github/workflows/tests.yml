@@ -188,6 +188,9 @@ jobs:
       - name: "Uitnodigen: ➕ op Home en 📤 Delen in een spel, via het deelmenu (proef347)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef347.py .
+      - name: "Uitnodiging met een spel: samen naar de wachtkamer, en een uitweg als niemand komt (proef348)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef348.py .
       - name: "Kaartspellen: de Vrolijke kaarten (standaard, plaatjes laden, Engels)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef312.py .

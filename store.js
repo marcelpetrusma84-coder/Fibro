@@ -73,7 +73,7 @@ export const STORE_WIDGETS = [
   { id: 'muziekwidget', soort: 'widget', titel: 'Funkwhale', widget: 'muziekwidget', homeIcoon: '\u{1F3A7}', w: 4, h: 3,
     uitleg: 'Zet een album of nummer van Funkwhale op je profiel: vrij gelicentieerde muziek. Je vrienden zien eerst een kaartje; pas als iemand op luisteren tikt, maakt zijn toestel verbinding met Funkwhale. Geen reclame.' },
   { id: 'radio', soort: 'widget', titel: 'Radio', widget: 'radio', homeIcoon: '\u{1F4FB}', w: 4, h: 3,
-    uitleg: 'Een ouderwetse radio op je profiel, met tot 6 zenders van over de hele wereld: zoek op naam, land of muzieksoort, of plak je eigen stream-link. Pas als iemand op afspelen tikt, maakt zijn toestel verbinding met de zender.' },
+    uitleg: 'Een ouderwetse radio op je profiel, met tot 4 zenders van over de hele wereld: zoek op naam, land of muzieksoort, of plak je eigen stream-link. Pas als iemand op afspelen tikt, maakt zijn toestel verbinding met de zender.' },
   { id: 'rss', soort: 'widget', titel: 'RSS-feed', widget: 'rss', homeIcoon: '\u{1F4F0}', w: 4, h: 3,
     uitleg: 'De nieuwste koppen van je favoriete sites op je profiel, van tot 3 RSS-feeds. De server van Stekky haalt de koppen op, niet je toestel; daarna stuurt je toestel ze naar je vrienden. Pas als iemand op een kop tikt, opent het artikel op de site zelf.' },
   { id: 'mastodon', soort: 'widget', titel: 'Mastodon', widget: 'mastodon', homeIcoon: '\u{1F418}', w: 4, h: 3,

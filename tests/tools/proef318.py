@@ -117,7 +117,7 @@ try:
         check('https' in pg.inner_text(B + ' .rd-melding'), 'C: een http-link wordt geweigerd')
         pg.fill(B + ' .rd-link', 'https://mijn.nepradio.nl/live')
         pg.click(B + ' .rd-erbij')
-        check('Jouw zenders (3/6)' in pg.inner_text(B), 'C: drie zenders op de radio')
+        check('Jouw zenders (3/4)' in pg.inner_text(B), 'C: drie zenders op de radio')
         pg.locator(B).screenshot(path='/tmp/radio-bewerk.png')
         boven = pg.evaluate("() => { const r = document.querySelector('%s .rd-radio'), k = r.querySelector('.rd-klaar'), u = r.querySelector('.rd-uitkomst'); return k.getBoundingClientRect().top < u.getBoundingClientRect().top }" % B)
         check(boven, 'G: Klaar ✓ staat boven de zoekresultaten')

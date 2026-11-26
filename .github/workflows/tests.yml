@@ -305,3 +305,6 @@ jobs:
       - name: "Vanaf Home met een vriend: meteen het spel, geen tweede titelscherm (proef343)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef343.py .
+      - name: "Home: de kaart Speel met een vriend (proef344)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef344.py .

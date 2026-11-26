@@ -1,6 +1,6 @@
 # proef342 (26 nov 2026, Marcel): Mollen meppen, de mini-game in de wachtkamer (mollenmeppen.js).
 #  A. de knop "🔨 Mollen meppen terwijl je wacht" zet een raster van 4x4 neer en start een ronde
-#  B. er komen mollen; een mol aantikken = een punt (en hij gaat omlaag); tikken op een leeg gat = niets
+#  B. er komen mollen; een mol aantikken = een punt (en hij gaat omlaag) en een geluidje dat echt start; leeg gat = niets
 #  C. na 30 seconden: "Nieuw record", het record wordt onthouden; nog een ronde met minder = geen nieuw record
 #  D. haal je het wachtscherm weg, dan stopt het vanzelf
 #  E. de wachtkamer van een groepsspel: de knop staat erin; het spelletje blijft lopen als de wachtkamer opnieuw getekend
@@ -35,7 +35,12 @@ try:
         pg.evaluate("""async () => {
             document.body.innerHTML = '<div id="wachtscherm"></div>'
             await import('./taal.js').catch(() => {})
-            window.__M = await import('./mollenmeppen.js?v=1')
+            // 26 nov 2026: echt geluid? Tel de toontjes die echt beginnen (start) en de fouten (zoals stop vóór start)
+            window.__toon = { start: 0, fout: [] }
+            const O = OscillatorNode.prototype, start = O.start, stop = O.stop
+            O.start = function (...a) { try { const r = start.apply(this, a); this.__gestart = true; window.__toon.start++; return r } catch (e) { window.__toon.fout.push('start: ' + e.message); throw e } }
+            O.stop = function (...a) { if (!this.__gestart) window.__toon.fout.push('stop voor start'); try { return stop.apply(this, a) } catch (e) { window.__toon.fout.push('stop: ' + e.name); throw e } }
+            window.__M = await import('./mollenmeppen.js?v=2')
             window.__klok = 0
             const echt = window.__M.maakMollenMeppen
             window.__houder = document.getElementById('wachtscherm')
@@ -63,6 +68,8 @@ try:
             geraakt += 1
             check(pg.evaluate("n => document.querySelector('.mol-gat[data-nr=\"' + n + '\"]').classList.contains('raak')", nr), 'B: geraakte mol %d gaat omlaag (💫)' % geraakt)
         check(geraakt >= 3 and pg.evaluate("() => window.__mol.score") == geraakt, 'B: elke geraakte mol is een punt (%d)' % geraakt)
+        toon = pg.evaluate("() => window.__toon")
+        check(toon['start'] >= geraakt and not toon['fout'], 'B: elke geraakte mol maakt echt een geluidje (%s)' % toon)
         check('⭐ %d' % geraakt in pg.inner_text('.mol-score'), 'B: de score staat bovenin')
         # C
         pg.evaluate("window.__klok = 31000")
@@ -88,7 +95,7 @@ try:
             q.evaluate("""async ([ik, ids]) => {
                 document.body.innerHTML = ''
                 await import('./taal.js').catch(() => {})
-                const { maakGroepKaartspel } = await import('./groepkaartspel.js?v=4')
+                const { maakGroepKaartspel } = await import('./groepkaartspel.js?v=5')
                 const bc = new BroadcastChannel('groep-proef342')
                 const leden = Object.entries(ids).map(([username, id]) => ({ id, username }))
                 const kanaal = { send(b) { bc.postMessage(b); return Promise.resolve('ok') } }

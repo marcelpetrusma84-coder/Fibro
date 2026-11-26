@@ -8,6 +8,8 @@
 #  F. Bram verlaat het spel: de computer neemt zijn zetel over; daarna stopt Marcel: Tijn ziet "Het spel is gestopt."
 #  G. iemand die geen lid is, kan niets sturen; geen paginafouten
 #  H. (25 nov 2026) een nieuw spel geeft een pushmelding (meldPush); wie de groep later opent (via die melding) ziet de uitnodiging toch
+#  (26 nov 2026) de testbrowser schudt met een vaste volgorde: met echt toeval kreeg iemand soms (±1 op 50) bij het delen
+#  meteen 31, dan was de ronde direct klaar en faalde D ("Marcel begint"). Het spel zelf is niet veranderd.
 # python3 -I proef340.py <map>
 import functools, http.server, json, os, sys, threading, time
 from playwright.sync_api import sync_playwright
@@ -40,6 +42,17 @@ def ruil(pg):
     h, t = pg.evaluate(HAND)[0], pg.evaluate(TAFEL)[0]
     kies(pg, h); pg.click('.eed-tk[data-id="%s"]' % t)
     return h, t
+# Vast schudden: elke nieuwe ronde in de testbrowser deelt met zaad 1 (bij 2, 3 en 4 spelers heeft dan niemand meteen 31,
+# en met één ruil kan ook niemand 31 halen). Alleen eenendertigen.js, en alleen in deze proef.
+VAST = []
+def vast_schudden(route):
+    r = route.fetch(); js = r.text()
+    stukken = ('export function nieuwSpel({ begint = 1, spelers = 2, rng = Math.random } = {})', 'export function volgendeRonde(oud, rng = Math.random)')
+    for s in stukken:
+        if s in js: js = js.replace(s, s.replace('rng = Math.random', 'rng = __vastSchudden()')); VAST.append(s[16:28])
+    js = 'const __vastSchudden = () => { let z = 1; return () => (z = (z * 16807) % 2147483647) / 2147483647 }\n' + js
+    route.fulfill(response=r, body=js)
+
 def lid(ctx, naam):
     q = ctx.new_page()
     q.on('pageerror', lambda e: fouten.append('%s: %s' % (naam, str(e)[:300])))
@@ -66,6 +79,7 @@ try:
     with sync_playwright() as p:
         browser = p.chromium.launch(args=['--no-proxy-server'])
         ctx = browser.new_context(viewport={'width': 420, 'height': 860}, service_workers='block')
+        ctx.route('**/eenendertigen.js*', vast_schudden)
         marcel, tijn, bram = lid(ctx, 'Marcel'), lid(ctx, 'Tijn'), lid(ctx, 'Bram')
 
         # ── A ──
@@ -94,6 +108,7 @@ try:
         check(marcel.locator('.gk-laag').count() == 0 and tijn.locator('.gk-laag').count() == 0, 'C de wachtkamer is dicht')
 
         # ── D ──
+        check(len(set(VAST)) == 2, 'D (proef) de kaarten worden vast geschud (%s)' % sorted(set(VAST)))
         check(wacht(marcel, MIJN, 10000), 'D Marcel begint')
         h, t = ruil(marcel)
         check(wacht(tijn, "() => (%s)().includes('%s')" % (TAFEL, h), 8000), 'D Tijn ziet de nieuwe tafel')

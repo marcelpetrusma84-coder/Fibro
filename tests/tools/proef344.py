@@ -1,124 +1,94 @@
-# proef344 (26 nov 2026): "Kies je kaarten" past op een smalle telefoon; de rij kaarten (en tafels) kun je opzij vegen.
-# Marcel zag op zijn iPhone dat Stekky links en Vrolijk rechts van het scherm afvielen, zonder dat je kon scrollen.
-#  A. het keuzevenster valt niet buiten het scherm (390 breed, zoals een iPhone)
-#  B. de rij kaarten is te breed, dus scrollbaar; wat nu gekozen is (Vrolijk) staat meteen helemaal in beeld
-#  C. met een veeg (touch) en met het muiswiel kom je bij de eerste en de laatste kaart, en die staan dan helemaal in beeld
-#  D. de twee tafels passen wel: allebei in beeld, netjes in het midden
-#  E. na het vegen kun je gewoon kiezen (Perkament): de keuze gaat dicht en is bewaard
-#  F. ook op een heel smal scherm (320 breed) valt het venster niet buiten beeld; geen paginafouten
-# python3 -I proef344.py <map> [schermafdruk.png]
-import sys, os, time, socket, subprocess, tempfile, re
+# proef344 (26 nov 2026, Marcel): de kaart "Speel met een vriend" bovenaan Home (startkaart.js).
+#  A. een nieuw account met een vriend: de kaart staat er met Four in a Row, Tic-Tac-Toe en Chess
+#  B. een spel aantikken: eerst het titelscherm, dan opent dat spel (spel.html?spel=...)
+#  C. het kruisje haalt de kaart weg, ook na opnieuw laden
+#  D. is er een uitnodiging verstuurd (de markering uit spel.html), dan komt de kaart niet meer terug
+#  E. een account zonder vrienden: "Nodig eerst een vriend uit" met een knop naar Vrienden
+# Op de oude versie mislukt A (er was geen kaart).
+# python3 -I proef344.py <map>
+import sys, os, re, json, time, base64, functools, http.server, threading
 from playwright.sync_api import sync_playwright
 MAP = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
-FOTO = sys.argv[2] if len(sys.argv) > 2 else None
 fout = []
-def check(ok, wat, extra=''):
-    print(('OK   ' if ok else 'FOUT ') + wat + (('  | ' + str(extra)) if extra != '' else ''))
+def check(ok, wat):
+    print(('OK   ' if ok else 'FOUT ') + wat)
     if not ok: fout.append(wat)
-
-www = tempfile.mkdtemp(prefix='proef344_'); os.symlink(MAP, os.path.join(www, 'Fibro'))
-s = socket.socket(); s.bind(('127.0.0.1', 0)); poort = s.getsockname()[1]; s.close()
-srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(poort), '--bind', '127.0.0.1', '--directory', www], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); time.sleep(0.8)
-BASIS = 'http://127.0.0.1:%d/Fibro/' % poort
+class H(http.server.SimpleHTTPRequestHandler):
+    def translate_path(self, p): return super().translate_path(p.removeprefix('/Fibro'))
+    def log_message(self, *a): pass
+srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(H, directory=MAP)); threading.Thread(target=srv.serve_forever, daemon=True).start()
+BASIS = 'http://127.0.0.1:%d/Fibro/' % srv.server_port
+UID = 'aaaaaaaa-0000-4000-8000-000000000001'
+def b64(d): return base64.urlsafe_b64encode(json.dumps(d).encode()).decode().rstrip('=')
+jwt = b64({'alg': 'HS256', 'typ': 'JWT'}) + '.' + b64({'sub': UID, 'role': 'authenticated', 'exp': int(time.time()) + 7200, 'aud': 'authenticated'}) + '.x'
+user = {'id': UID, 'aud': 'authenticated', 'role': 'authenticated', 'email': 'nieuw@x.nl', 'created_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'user_metadata': {'username': 'Nieuweling'}, 'app_metadata': {}}
+sessie = {'access_token': jwt, 'refresh_token': 'r', 'token_type': 'bearer', 'expires_in': 7200, 'expires_at': int(time.time()) + 7200, 'user': user}
+VRIENDEN = [1]
+def supabase(route):
+    u = route.request.url
+    if '/auth/v1/user' in u: return route.fulfill(status=200, json=user)
+    if '/rest/v1/friendships' in u:
+        n = VRIENDEN[0]
+        return route.fulfill(status=200, json=[], headers={'content-range': ('0-0/%d' % n) if n else '*/0', 'access-control-allow-origin': '*', 'access-control-expose-headers': 'content-range'})
+    if '/rest/v1/profiles' in u: return route.fulfill(status=200, json=[{'id': UID, 'username': 'Nieuweling', 'public_key': 'x'}])
+    return route.fulfill(status=200, json=[])
 fouten = []
-RUST = "!document.querySelector('.kt-laag .kt-vlieg')"
-MIJN_BEURT = "() => !document.querySelector('.kt-einde') && !!document.querySelector('.kt-tafel.kt-mijnbeurt') && " + RUST
-
-def wacht(pg, js, ms=15000):
+def open_home(ctx):
+    pg = ctx.new_page(); pg.on('pageerror', lambda e: fouten.append(str(e)[:200])); pg.on('dialog', lambda d: d.dismiss())
+    pg.goto(BASIS + 'index.html')
+    try: pg.get_by_text('Later (via Profiel bewerken)').click(timeout=4000)
+    except Exception: pass
+    return pg
+def wacht(pg, js, ms=8000):
     try: pg.wait_for_function(js, timeout=ms); return True
     except Exception: return False
-
-# Per rij: hoe breed, of hij scrolt, en per knop of hij helemaal binnen de rij in beeld staat
-RIJ = """sel => { const r = document.querySelector(sel); if (!r) return null; const rr = r.getBoundingClientRect()
-  return { scrollW: r.scrollWidth, clientW: r.clientWidth, links: r.scrollLeft, overflow: getComputedStyle(r).overflowX,
-    knoppen: [...r.children].map(b => { const k = b.getBoundingClientRect()
-      return { id: b.dataset.stijl || b.dataset.ondergrond, aan: b.getAttribute('aria-pressed') === 'true',
-        inBeeld: k.left >= rr.left - 1 && k.right <= rr.right + 1 && k.left >= -1 && k.right <= innerWidth + 1, links: k.left - rr.left, rechts: rr.right - k.right } }) } }"""
-VAK = "() => { const k = document.querySelector('.kt-stijlkeus .kt-keuzekaart').getBoundingClientRect(); return [k.left, k.right, innerWidth] }"
-
-def open_keuze(ctx, breed):
-    pg = ctx.new_page()
-    pg.set_viewport_size({'width': breed, 'height': 844})
-    pg.on('pageerror', lambda e: fouten.append(str(e)[:300])); pg.on('dialog', lambda d: d.dismiss())
-    pg.goto(BASIS + 'manifest.json')
-    pg.evaluate("() => { localStorage.setItem('fibro_taal', 'nl'); localStorage.setItem('fibro_solo_niveau_pesten', 'makkelijk') }")
-    pg.goto(BASIS + 'spel.html?spel=pesten&titel=1')
-    pg.wait_for_selector('.niveau-btn[data-niveau=makkelijk]', timeout=10000)
-    pg.click('.niveau-btn[data-niveau=makkelijk]')
-    wacht(pg, MIJN_BEURT)
-    pg.click('.kt-stijlknop')
-    pg.wait_for_selector('.kt-stijlkeus .kt-stijlrij', timeout=5000)
-    time.sleep(0.2)
-    return pg
-
-def veeg(pg, sel, dx):
-    """Een echte vinger-veeg over de rij: dx < 0 = vinger naar links, dus verder naar rechts in de rij."""
-    x, y = pg.eval_on_selector(sel, "e => { const r = e.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2] }")
-    cdp = pg.context.new_cdp_session(pg)
-    stap = dx / 15
-    cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': x, 'y': y}]})
-    for i in range(1, 16):
-        cdp.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': x + stap * i, 'y': y}]}); time.sleep(0.016)
-    cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
-    time.sleep(0.6)
-
 try:
     with sync_playwright() as p:
-        br = p.chromium.launch(args=['--no-proxy-server'])
-        ctx = br.new_context(service_workers='block', locale='nl-NL', has_touch=True, is_mobile=True, device_scale_factor=3, reduced_motion='reduce')
-        ctx.route('**/*supabase.co/**', lambda r: r.fulfill(status=200, json=[]))
+        b = p.chromium.launch(args=['--no-proxy-server'])
+        ctx = b.new_context(service_workers='block', viewport={'width': 390, 'height': 844}, locale='nl-NL', has_touch=True)
         ctx.route(re.compile(r'^https?://(?!127\.0\.0\.1).*'), lambda r: r.fulfill(status=204, body=''))
-
-        pg = open_keuze(ctx, 390)
+        ctx.route('**/*supabase.co/**', supabase)
+        s0 = ctx.new_page(); s0.goto(BASIS + 'manifest.json')
+        s0.evaluate("([s]) => { localStorage.setItem('fibro_taal', 'nl'); localStorage.setItem('sb-qmgatbphiplrfxrljtbe-auth-token', JSON.stringify(s)) }", [sessie]); s0.close()
         # A
-        l, r, w = pg.evaluate(VAK)
-        check(l >= 0 and r <= w, 'A: het keuzevenster valt niet buiten het scherm (390 breed)', [round(l), round(r), w])
+        pg = open_home(ctx)
+        check(wacht(pg, "() => !!document.querySelector('.start-kaart')"), 'A: de kaart "Speel met een vriend" staat op Home')
+        namen = pg.evaluate("() => [...document.querySelectorAll('.start-kaart-spel')].map(b => b.dataset.spel)")
+        check(namen == ['vieroprij', 'botkaaseiren', 'schaken'], 'A: Four in a Row, Tic-Tac-Toe en Chess (%s)' % namen)
+        check('Speel met een vriend' in pg.inner_text('.start-kaart'), 'A: met de kop')
         # B
-        rij = pg.evaluate(RIJ, '.kt-stijlrij')
-        check(rij['scrollW'] > rij['clientW'] + 20 and rij['overflow'] in ('auto', 'scroll'), 'B: de rij kaarten is breder dan het scherm en scrollbaar',
-              (rij['scrollW'], rij['clientW'], rij['overflow']))
-        if FOTO: pg.screenshot(path=FOTO)
-        aan = [k for k in rij['knoppen'] if k['aan']]
-        check(len(aan) == 1 and aan[0]['id'] == 'vrolijk' and aan[0]['inBeeld'], 'B: Vrolijk (gekozen) staat meteen helemaal in beeld', aan)
-        # C: vegen naar het begin en naar het eind
-        veeg(pg, '.kt-stijlrij', 300)
-        rij = pg.evaluate(RIJ, '.kt-stijlrij')
-        check(rij['links'] <= 1 and rij['knoppen'][0]['inBeeld'], 'C: met een veeg naar rechts zie je de eerste kaart (Stekky) helemaal',
-              (rij['links'], rij['knoppen'][0]))
-        veeg(pg, '.kt-stijlrij', -300)
-        rij = pg.evaluate(RIJ, '.kt-stijlrij')
-        check(rij['links'] > 20 and rij['knoppen'][-1]['inBeeld'], 'C: met een veeg naar links zie je de laatste kaart helemaal',
-              (rij['links'], rij['knoppen'][-1]))
-        bx = pg.eval_on_selector('.kt-stijlrij', "e => { const r = e.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2] }")
-        pg.mouse.move(bx[0], bx[1]); pg.mouse.wheel(-3000, 0); time.sleep(0.5)
-        check(pg.evaluate(RIJ, '.kt-stijlrij')['links'] <= 1, 'C: het muiswiel (opzij) scrolt de rij ook')
+        pg.click('.start-kaart-spel[data-spel="vieroprij"]')
+        check(wacht(pg, "() => !!document.querySelector('.fibro-titelscherm')", 6000), 'B: eerst het titelscherm van Four in a Row (zoals bij elk spel op Home)')
+        try: pg.locator('.fibro-titelscherm').click(position={'x': 150, 'y': 400}, timeout=3000)
+        except Exception: pass
+        check(wacht(pg, "() => [...document.querySelectorAll('iframe')].some(f => /spel\\.html\\?spel=vieroprij/.test(f.src))", 8000), 'B: na een tik opent het spel (spel.html?spel=vieroprij)')
+        pg.close()
+        # C
+        pg = open_home(ctx); wacht(pg, "() => !!document.querySelector('.start-kaart')")
+        pg.click('.start-kaart-sluit')
+        check(pg.locator('.start-kaart').count() == 0, 'C: het kruisje haalt de kaart weg')
+        pg.reload(); time.sleep(2.5)
+        check(pg.locator('.start-kaart').count() == 0, 'C: na opnieuw laden blijft hij weg')
+        pg.close()
         # D
-        t = pg.evaluate(RIJ, '.kt-tafelrij')
-        midden = t and abs(t['knoppen'][0]['links'] - t['knoppen'][-1]['rechts']) <= 4
-        check(t and len(t['knoppen']) == 2 and all(k['inBeeld'] for k in t['knoppen']) and t['scrollW'] <= t['clientW'] + 1 and midden,
-              'D: de twee tafels passen en staan in het midden', t and [(k['id'], round(k['links']), round(k['rechts'])) for k in t['knoppen']])
-        # E: kiezen na het vegen
-        pg.eval_on_selector('.kt-stijlkeuze[data-stijl=perkament]', "e => e.scrollIntoView({ inline: 'center', block: 'nearest' })")
-        time.sleep(0.3)
-        pg.tap('.kt-stijlkeuze[data-stijl=perkament]')
-        check(wacht(pg, "() => !document.querySelector('.kt-stijlkeus')", 3000), 'E: na het kiezen gaat de keuze dicht')
-        check(pg.evaluate("() => localStorage.getItem('fibro_kaartstijl')") == 'perkament', 'E: Perkament is bewaard')
+        s1 = ctx.new_page(); s1.goto(BASIS + 'manifest.json'); s1.evaluate("([u]) => localStorage.removeItem('fibro_startkaart_klaar_' + u)", [UID]); s1.close()
+        pg = open_home(ctx); wacht(pg, "() => !!document.querySelector('.start-kaart')")
+        pg.evaluate("async ([u]) => { const m = await import('./startkaart.js?v=1'); m.markeerKlaar(localStorage, u) }", [UID])
+        pg.reload(); time.sleep(2.5)
+        check(pg.locator('.start-kaart').count() == 0, 'D: na een verstuurde uitnodiging komt de kaart niet terug')
         pg.close()
-
-        # F: heel smal scherm
-        pg = open_keuze(ctx, 320)
-        l, r, w = pg.evaluate(VAK)
-        check(l >= 0 and r <= w, 'F: ook op 320 breed valt het venster niet buiten het scherm', [round(l), round(r), w])
-        k = pg.evaluate("() => { const k = document.querySelector('.kt-stijlkeus .kt-keuzekaart').getBoundingClientRect(); return [k.top, k.bottom, innerHeight] }")
-        check(k[0] >= 0 and k[1] <= k[2], 'F: en ook niet boven of onder het scherm', [round(x) for x in k])
+        # E
+        s1 = ctx.new_page(); s1.goto(BASIS + 'manifest.json'); s1.evaluate("([u]) => localStorage.removeItem('fibro_startkaart_klaar_' + u)", [UID]); s1.close()
+        VRIENDEN[0] = 0
+        pg = open_home(ctx)
+        check(wacht(pg, "() => !!document.querySelector('.start-kaart-vrienden')"), 'E: zonder vrienden: "Nodig eerst een vriend uit"')
+        check(pg.locator('.start-kaart-spel').count() == 0, 'E: en geen spelknoppen')
+        pg.click('.start-kaart-vrienden')
+        check(wacht(pg, "() => /vrienden\\.html/.test(location.href)", 8000), 'E: de knop gaat naar Vrienden')
         pg.close()
-        check(not fouten, 'F: geen paginafouten', fouten)
-        br.close()
+        b.close()
+        check(not fouten, 'geen paginafouten %s' % fouten)
 except Exception as e:
-    check(False, 'proef afgebroken: ' + str(e)[:300])
-finally:
-    srv.terminate()
-
-print()
-print('ALLES GOED' if not fout else '%d FOUT: %s' % (len(fout), '; '.join(fout)))
+    check(False, 'proef afgebroken: %s' % str(e).split('\n')[0])
+print('\n%d fout(en)' % len(fout))
 sys.exit(1 if fout else 0)

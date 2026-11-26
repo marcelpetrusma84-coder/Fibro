@@ -115,4 +115,25 @@ levelBoards = {personal:[],friends:[],global:{score:3,level:7,won:true},status:'
 await levels.refresh()
 assert.equal(byClass(levelDialog,'nr-sb-global-detail').textContent,'Level 7 · Uitgespeeld','even an anonymous global win can show completion without identity')
 levels.destroy()
-console.log('PASS: score modal lists, all-board levels/completion and unknown legacy metadata, local dates/times, literal names, anonymous global record, request races, offline cache, Escape/focus and cleanup.')
+
+const filterDoc = documentMock(), filterRequests = []
+const filtered = maakNeonScorebord({
+  host: filterDoc.body, T,
+  service: { async loadBoards(level) { filterRequests.push(level); return {personal:[],friends:[],global:null,status:'local'} } },
+  filterOptions: [{value:3,label:'0 narren'},{value:2,label:'2 narren'},{value:1,label:'4 narren'}]
+})
+const filterDialog = filterDoc.body.children[0]
+await filtered.open()
+assert.equal(filterRequests.at(-1),3,'the default score page is the 0-nar category')
+assert.equal(byClass(filterDialog,'nr-sb-filter-label').textContent,'0 narren')
+walk(filterDialog).filter(node=>(node.className||'').split(' ').includes('nr-sb-filter-arrow'))[1].emit('click')
+await new Promise(resolve=>setImmediate(resolve))
+assert.equal(filterRequests.at(-1),2,'the next arrow queries 2-nar scores')
+assert.equal(byClass(filterDialog,'nr-sb-filter-label').textContent,'2 narren')
+filterDialog.emit('pointerdown',{pointerType:'touch',clientX:250,clientY:200,target:{closest(){return null}}})
+filterDialog.emit('pointerup',{pointerType:'touch',clientX:180,clientY:208,target:{closest(){return null}}})
+await new Promise(resolve=>setImmediate(resolve))
+assert.equal(filterRequests.at(-1),1,'a left swipe advances to the 4-nar page')
+assert.equal(byClass(filterDialog,'nr-sb-filter-label').textContent,'4 narren')
+filtered.destroy()
+console.log('PASS: score modal lists, level metadata, dates/times, privacy, request races, offline cache, focus/cleanup and mobile score-category swipes.')

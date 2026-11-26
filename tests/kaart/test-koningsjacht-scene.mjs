@@ -22,7 +22,11 @@ class Element extends Events {
   constructor(doc) {
     super()
     this.ownerDocument = doc; this.style = new Style(); this.dataset = {}; this.children = []
-    this.classes = new Set(); this.classList = { add: c => this.classes.add(c), remove: c => this.classes.delete(c), contains: c => this.classes.has(c) }
+    this.clientWidth = 390; this.clientHeight = 844
+    this.classes = new Set(); this.classList = {
+      add: c => this.classes.add(c), remove: c => this.classes.delete(c), contains: c => this.classes.has(c),
+      toggle: (c, force) => { const aan = force === undefined ? !this.classes.has(c) : !!force; if (aan) this.classes.add(c); else this.classes.delete(c); return aan }
+    }
     this.isConnected = true
   }
   setAttribute(name, value) { this[name] = String(value) }
@@ -39,7 +43,7 @@ function omgeving({ reduced = false, sensor = false, toestemming } = {}) {
   const motion = new Events(); motion.matches = reduced
   const doc = new Events(); doc.hidden = false; doc.visibilityState = 'visible'
   doc.createElement = () => new Element(doc)
-  const win = new Events(); win.isSecureContext = true; win.matchMedia = () => motion
+  const win = new Events(); win.isSecureContext = true; win.innerWidth = 390; win.matchMedia = () => motion
   win.screen = { orientation: new Events() }; win.screen.orientation.angle = 0
   if (sensor) { win.DeviceOrientationEvent = {}; if (toestemming) win.DeviceOrientationEvent.requestPermission = toestemming }
   const frames = new Map(); let next = 0
@@ -84,8 +88,18 @@ function omgeving({ reduced = false, sensor = false, toestemming } = {}) {
   scene.update({ modernInterior: 'old' })
   assert.match(scene.decorLayer.style.backgroundImage, /spaceship-interior\.png/, 'oud ruimteschip gebruikt het cockpitinterieur')
   scene.update({ modernInterior: 'futuristic' })
-  assert.match(scene.decorLayer.style.backgroundImage, /spaceship-interior-futuristic\.png/, 'futuristisch ruimteschip gebruikt de futuristische cockpit')
+  assert.match(scene.decorLayer.style.backgroundImage, /spaceship-interior-futuristic-panorama\.png/, 'futuristisch ruimteschip gebruikt de brede futuristische panorama-afbeelding')
+  assert.equal(o.root.classList.contains('kj-panorama'), true, 'futuristische cockpit activeert panoramabediening')
+  assert.equal(scene.decorLayer.dataset.panorama, 'aan')
+  const positieVoor = scene.decorLayer.style.backgroundPosition
+  const sleep = (x, extra = {}) => ({ preventDefault() { this.voorkomen = true }, stopPropagation() { this.gestopt = true }, pointerId: 17, pointerType: 'touch', isPrimary: true, button: 0, clientX: x, clientY: 120, target: o.root, composedPath: () => [o.root], ...extra })
+  o.win.emit('pointerdown', sleep(370))
+  const verschuif = sleep(100); o.win.emit('pointermove', verschuif)
+  assert.notEqual(scene.decorLayer.style.backgroundPosition, positieVoor, 'slepen vanaf de schermrand verschuift de cockpit')
+  assert.equal(verschuif.voorkomen, true, 'panoramasleep voorkomt onbedoeld scrollen')
+  o.win.emit('pointerup', sleep(100))
   scene.update({ modernInterior: 'none' })
+  assert.equal(o.root.classList.contains('kj-panorama'), false, 'epoxy schakelt panoramabediening weer uit')
   assert.match(scene.decorLayer.style.backgroundImage, /modern-epoxy-table\.png/, 'epoxytafel blijft als terugvaloptie beschikbaar')
   const glas = eigen.children[0], masker = glas.children[0], vulling = masker.children[0], schuim = vulling.children[0]
   assert.match(glas.children[1].src, /beer-glass-empty\.png/)
@@ -101,6 +115,13 @@ function omgeving({ reduced = false, sensor = false, toestemming } = {}) {
   assert.equal(masker.hidden, true, 'de glazen inhoud blijft beperkt tot modern')
   scene.update({ scene: 'standaard' })
   assert.match(scene.decorLayer.style.backgroundImage, /wood-table\.png/)
+  scene.update({ scene: 'modern', modernInterior: 'old' })
+  assert.equal(scene.decorLayer.dataset.scene, 'modern')
+  assert.match(scene.decorLayer.style.backgroundImage, /spaceship-interior\.png/)
+  const oudeRuimte = scene.decorLayer.style.backgroundImage
+  scene.update({ modernInterior: 'futuristic' })
+  assert.match(scene.decorLayer.style.backgroundImage, /spaceship-interior-futuristic-panorama\.png/)
+  assert.notEqual(scene.decorLayer.style.backgroundImage, oudeRuimte, 'each ship interior setting has its own visible background')
   scene.update({ bierpul: false })
   assert.equal(scene.bierLayer.children[0].hidden, true)
   scene.stop()

@@ -27,6 +27,10 @@ function unique(runs, limit = 10) {
     .map(run => ({ ...run, playedAt: timestamp(run.playedAt), level: levelOf(run.level), mode: modeOf(run.mode), won: run.score === 12 }))
     .sort(compare).filter(run => !seen.has(run.id) && seen.add(run.id)).slice(0, limit)
 }
+function uniquePerLevel(runs) {
+  const valid = unique(runs, MAX_PENDING)
+  return [1, 2, 3].flatMap(level => unique(valid.filter(run => run.level === level)))
+}
 function setupError(error) {
   return ['PGRST202', 'PGRST205', '42883', '42P01'].includes(error?.code)
 }
@@ -56,7 +60,7 @@ export function maakKoningsjachtScoreService({ supabase, storage, now = () => Da
     let persisted
     try { persisted = JSON.parse(storage?.getItem(key) || 'null') } catch {}
     const list = (data, field) => Array.isArray(data?.[field]) ? data[field] : []
-    return { personal: unique([...list(persisted, 'personal'), ...list(cached, 'personal')]),
+    return { personal: uniquePerLevel([...list(persisted, 'personal'), ...list(cached, 'personal')]),
       pending: unique([...list(persisted, 'pending'), ...list(cached, 'pending')].filter(run => UUID.test(run?.id || '')), MAX_PENDING) }
   }
   function write(uid, value) {
@@ -132,25 +136,27 @@ export function maakKoningsjachtScoreService({ supabase, storage, now = () => Da
           level: Math.max(1, Math.min(3, Math.floor(Number(run.level)) || 1)),
           won: run.score === 12, mode: modeOf(run.mode) }
         // Eén ronde heeft één UUID. Opnieuw tonen of een netwerkherhaling telt niet dubbel.
-        state.personal = unique([...state.personal, saved])
+        state.personal = uniquePerLevel([...state.personal, saved])
         if (uid) state.pending = unique([...state.pending, saved], MAX_PENDING)
         const persisted = write(uid, state)
         const status = await flush(uid, state)
         return { savedLocal: persisted, persisted, inMemory: true, synced: status === 'online', status }
       })
     },
-    loadBoards() {
+    loadBoards(level) {
       return serial(async () => {
+        const selectedLevel = levelOf(level)
+        if (!selectedLevel) throw new TypeError('Invalid Koningsjacht score category')
         const uid = await account(), state = read(uid)
         let status = await flush(uid, state)
-        const localResult = (owner, local, mode) => ({ personal: localRuns(owner, local.personal),
+        const localResult = (owner, local, mode) => ({ personal: localRuns(owner, local.personal.filter(run => run.level === selectedLevel)),
           friends: [], global: null, status: mode, durable: write(owner, local) })
         let current = await account()
         if (current !== uid) return localResult(current, read(current), current ? 'offline' : 'local')
         const result = localResult(uid, state, status)
         if (!uid || status !== 'online') return result
         let data, error
-        try { ({ data, error } = await supabase.rpc('koningsjacht_boards')) } catch (failure) { error = failure }
+        try { ({ data, error } = await supabase.rpc('koningsjacht_boards', { p_level: selectedLevel })) } catch (failure) { error = failure }
         current = await account()
         if (current !== uid) return localResult(current, read(current), current ? 'offline' : 'local')
         if (error || !data || typeof data !== 'object') {
@@ -165,10 +171,10 @@ export function maakKoningsjachtScoreService({ supabase, storage, now = () => Da
           return run.level === null && cached?.level != null
             ? { ...run, level: cached.level, won: cached.won === true } : run
         })
-        state.personal = unique([...enriched, ...state.personal])
+        state.personal = uniquePerLevel([...enriched, ...state.personal])
         write(uid, state)
         const ownUsername = ownRows[0]?.username || ''
-        result.personal = localRuns(uid, state.personal, ownUsername)
+        result.personal = localRuns(uid, state.personal.filter(run => run.level === selectedLevel), ownUsername)
         result.friends = unique((Array.isArray(data.friends) ? data.friends : []).map(row => serverRun(row, uid)).filter(Boolean))
         const global = data.global
         if (global && cleanScore(global.score)) {

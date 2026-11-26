@@ -71,6 +71,23 @@ def veeg(pg, id):
     for i in range(1, 9): pg.mouse.move(x, y - 26 * i); time.sleep(0.012)
     pg.mouse.up()
 def knop(pg, naam): pg.click('.kt-knop[data-naam=%s]' % naam)
+# 26 nov 2026 (#264): op GitHub wachtte de dubbelklik op de bierpul 30 s en kwam er alleen "Timeout" uit. Nu stopt hij na
+# 5 s en laat hij zien wat er in de weg ligt: de volledige Playwright-melding en wat er bovenop het midden van de pul ligt.
+PUL_AFDEK = """() => { const p = document.querySelector('.kj-scene-bier-ik'); if (!p) return 'geen pul'
+    const r = p.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2
+    const naam = e => e.tagName.toLowerCase() + (e.className && typeof e.className === 'string' ? '.' + e.className.trim().split(/\\s+/).join('.') : '')
+      + (e.dataset && e.dataset.id ? '[' + e.dataset.id + ']' : '')
+    const s = getComputedStyle(p)
+    return { pul: [r.left, r.top, r.width, r.height].map(Math.round), zichtbaar: s.visibility + ' ' + s.display + ' ' + s.pointerEvents,
+      bovenop: document.elementsFromPoint(x, y).slice(0, 6).map(e => (p.contains(e) ? 'PUL:' : '') + naam(e)) } }"""
+def pul(pg):
+    try: pg.dblclick('.kj-scene-bier-ik', timeout=5000)
+    except Exception as e:
+        try: afdek = pg.evaluate(PUL_AFDEK)
+        except Exception as e2: afdek = 'onbekend (%s)' % e2
+        print('PUL-DIAGNOSE (wat ligt er op de bierpul):', afdek)
+        print('PUL-DIAGNOSE (volledige fout):', str(e))
+        raise
 
 def nieuwe_pagina(ctx, taal='nl'):
     pg = ctx.new_page()
@@ -117,21 +134,21 @@ try:
         check(pg.input_value('#kj-bier-inhoud') == '100' and pg.get_attribute('.kj-scene-bier-ik', 'aria-valuenow') == '100', 'M: nieuwe pul is weer vol')
         check(pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#2', 'M: oude voorkeurenteller 999 wordt genegeerd: eerste bijvulling is pul #2')
         check(pg.evaluate("() => !Object.hasOwn(JSON.parse(localStorage.getItem('fibro_koningsjacht_instellingen')), 'bierRonde')"), 'M: pulnummer staat niet meer in de algemene voorkeuren')
-        pg.check('[data-scene=middeleeuws]'); pg.uncheck('[data-instelling=flikkeren]')
+        pg.check('.kj-instellingen input[data-scene=middeleeuws]'); pg.uncheck('[data-instelling=flikkeren]')
         pg.click('.kj-instellingen-sluit')
         pg.eval_on_selector('.kj-scene-bier-ik', """e => { const r = e.querySelector('img').getBoundingClientRect();
           const p = { bubbles: true, pointerId: 42, pointerType: 'touch', isPrimary: true, button: 0, clientY: r.top + r.height * .75 };
           e.dispatchEvent(new PointerEvent('pointerdown', p)); window.dispatchEvent(new PointerEvent('pointerup', p)); }""")
         check(pg.get_attribute('.kj-scene-bier-ik', 'aria-valuenow') == '25', 'M: tik op eigen pul verandert de inhoud')
         pg.eval_on_selector('.kj-scene-bier-ik', "e => e.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }))")
-        pg.dblclick('.kj-scene-bier-ik')
+        pul(pg)
         check(pg.get_attribute('.kj-scene-bier-ik', 'aria-valuenow') == '100' and pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#3', 'M: dubbelklik schenkt een nieuwe volle pul met oplopend nummer')
         check(wacht(pg, "() => document.querySelector('.kj-scene-bier-ik .kj-scene-bier-nummer').hidden", 4000), 'M: pulnummer verdwijnt na twee seconden')
         pg.reload(); pg.wait_for_selector('.kj-start-instellingen')
         pg.click('.kj-start-instellingen')
-        check(pg.is_checked('[data-scene=middeleeuws]') and not pg.is_checked('[data-instelling=flikkeren]') and pg.input_value('#kj-bier-inhoud') == '100', 'M: scene, flikkeren en vulling zijn bewaard')
+        check(pg.is_checked('.kj-instellingen input[data-scene=middeleeuws]') and not pg.is_checked('[data-instelling=flikkeren]') and pg.input_value('#kj-bier-inhoud') == '100', 'M: scene, flikkeren en vulling zijn bewaard')
         check(pg.evaluate("() => getComputedStyle(document.querySelector('.kj-scene-decor')).backgroundImage.includes('medieval-scene.png')"), 'M: echte middeleeuwse achtergrond')
-        pg.uncheck('[data-instelling=bierpul]'); pg.check('[data-scene=standaard]'); pg.check('[data-instelling=flikkeren]')
+        pg.uncheck('[data-instelling=bierpul]'); pg.check('.kj-instellingen input[data-scene=standaard]'); pg.check('[data-instelling=flikkeren]')
         pg.click('.kj-instellingen-sluit')
         check(pg.evaluate("() => import('./koningsjacht-geluid.js?v=4').then(m => m.geluidStaat())") == 'running', 'K: na een tik staat het geluid open (nodig op de iPhone)')
         check(pg.get_attribute('.kj-muziek', 'aria-pressed') == 'false', 'K: de muziek staat eerst uit')
@@ -154,14 +171,14 @@ try:
         hand_voor = pg.evaluate(HAND)
         kies(pg, hand_voor[0])
         gekozen_voor = pg.evaluate("() => [...document.querySelectorAll('.kt-hand .kt-gekozen')].map(e => e.dataset.id)")
-        pg.click('.kt-knop[data-naam=instellingen]'); pg.check('[data-scene=modern]')
+        pg.click('.kt-knop[data-naam=instellingen]'); pg.check('.kj-instellingen input[data-scene=modern]')
         check(pg.evaluate("() => getComputedStyle(document.querySelector('.kj-scene-decor')).backgroundImage.includes('modern-epoxy-table.png')"), 'N: moderne epoxytafel')
         check(pg.get_attribute('.kj-links .kj-kandelaar', 'src').endswith('candle-modern-left.png') and pg.get_attribute('.kj-rechts .kj-kandelaar', 'src').endswith('candle-modern-right.png'), 'N: verschillende moderne kandelaars links en rechts')
         check(pg.locator('.kt-hand .kt-modern').count() == 8 and pg.evaluate(HAND) == hand_voor, 'N: moderne kaarten zonder nieuwe partij of andere hand')
         check(pg.evaluate("() => [...document.querySelectorAll('.kt-hand .kt-gekozen')].map(e => e.dataset.id)") == gekozen_voor, 'N: selectie blijft bewaard')
-        pg.check('[data-scene=middeleeuws]')
+        pg.check('.kj-instellingen input[data-scene=middeleeuws]')
         check(pg.get_attribute('.kj-links .kj-kandelaar', 'src').endswith('chamberstick.png') and pg.locator('.kt-hand .kt-modern').count() == 0, 'N: middeleeuws herstelt eigen kandelaars en perkament')
-        pg.check('[data-scene=standaard]'); pg.click('.kj-instellingen-sluit')
+        pg.check('.kj-instellingen input[data-scene=standaard]'); pg.click('.kj-instellingen-sluit')
         # De gekozen kaart weer loslaten (zoals een speler zou doen). Een gekozen kaart springt omhoog; lag hij rechts in
         # de hand, dan lag hij over je bierpul en mislukte het dubbelklikken op de pul hieronder (CI, 14 nov 2026).
         kies(pg, hand_voor[0])
@@ -176,28 +193,28 @@ try:
         check(pg.evaluate("() => !!JSON.parse(localStorage.getItem('fibro_koningsjacht_stand'))"), 'B: het spel staat bewaard')
         # De menuteller erft niet mee naar een nieuwe partij; hervatten houdt de partij-teller wel.
         pg.click('.kt-knop[data-naam=instellingen]'); pg.check('[data-instelling=bierpul]'); pg.click('.kj-instellingen-sluit')
-        pg.dblclick('.kj-scene-bier-ik')
+        pul(pg)
         check(pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#2', 'O: een nieuwe solopartij begint weer bij de eerste pul')
-        pg.dblclick('.kj-scene-bier-ik')
+        pul(pg)
         check(pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#3', 'O: de tweede bijvulling is pul #3')
         pg.reload(); pg.wait_for_selector('.kj-verder'); pg.click('.kj-verder')
         check(wacht(pg, KLAAR), 'O: dezelfde solopartij kan worden hervat')
-        pg.dblclick('.kj-scene-bier-ik')
+        pul(pg)
         check(pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#4', 'O: hervatten behoudt de vorige partij-teller')
-        for _ in range(6): pg.dblclick('.kj-scene-bier-ik')
+        for _ in range(6): pul(pg)
         check(pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#10' and pg.locator('.kj-kaars[data-slijtage="9"]').count() == 2, 'P: bij pul #10 zijn beide kaarsen bijna op')
         check(pg.evaluate("""() => [...document.querySelectorAll('.kj-slijtage-druppels svg')].every(e => {
           const r = e.getBoundingClientRect(), k = e.closest('.kj-kaars').getBoundingClientRect()
           return getComputedStyle(e).display !== 'none' && r.width >= k.width * .95 && r.height >= k.height * .95
         })"""), 'P: het druipende kaarsvet is zichtbaar en heeft de maat van de kandelaar')
-        pg.dblclick('.kj-scene-bier-ik')
+        pul(pg)
         check(pg.locator('.kj-kaars[data-slijtage="9"]').count() == 2, 'P: na pul #10 blijven beide kaarsen branden op dezelfde korte stand')
-        pg.click('.kt-knop[data-naam=instellingen]'); pg.check('[data-scene=modern]')
+        pg.click('.kt-knop[data-naam=instellingen]'); pg.check('.kj-instellingen input[data-scene=modern]')
         check(pg.get_attribute('.kj-links .kj-kandelaar', 'src').endswith('candle-modern-left-empty.png') and pg.get_attribute('.kj-rechts .kj-kandelaar', 'src').endswith('candle-modern-right-empty.png'), 'P: ook de moderne houders tonen de verbruikte kaarsen')
         pg.uncheck('[data-instelling=bierpul]')
         check(pg.locator('.kj-kaars[data-slijtage="0"]').count() == 2 and pg.get_attribute('.kj-links .kj-kandelaar', 'src').endswith('candle-modern-left.png') and pg.get_attribute('.kj-rechts .kj-kandelaar', 'src').endswith('candle-modern-right.png'), 'P: zonder bierpul zijn beide oorspronkelijke kaarsen terug')
         check(pg.evaluate("() => [...document.querySelectorAll('.kj-slijtage-druppels,.kj-slijtage-plas,.kj-slijtage-licht')].every(e => e.hidden)"), 'P: zonder bierpul zijn wasdruppels, wasplassen en extra reflecties weg')
-        pg.check('[data-scene=standaard]'); pg.click('.kj-instellingen-sluit')
+        pg.check('.kj-instellingen input[data-scene=standaard]'); pg.click('.kj-instellingen-sluit')
 
         # ════════ C t/m F: een vaste stand ════════
         ok = verder(pg, { 'kasteel': ['hB', 'kB'], 'hand': ['k6', 'k9', 'hA', 's7', 'h3', 'h2', 'r5', 'sA'] })
@@ -302,10 +319,39 @@ try:
         check('New full stein' in pg.text_content('.kj-instellingen-kaart') and 'Move background' in pg.text_content('.kj-instellingen-kaart'), 'M: de nieuwe instellingen zijn ook Engels')
         pg.click('.kj-instellingen-sluit')
         pg.close()
+
+        # ════════ R. smalle telefoons: de balk onderin blijft van je bierpul af (26 nov 2026) ════════
+        # Met ↻ vooraan in de balk werd die op 360 en 375 px drie rijen hoog en lag hij over het midden van je pul (op
+        # GitHub al bij 390 px, door iets bredere letters). ↻ Opnieuw beginnen staat nu onder ⚙️ Instellingen.
+        PUL_VRIJ = """() => { const p = document.querySelector('.kj-scene-bier-ik'), r = p.getBoundingClientRect()
+            const e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+            return e && p.contains(e) ? 'PUL' : (e ? e.className : 'niets') }"""
+        for breed in (360, 375):
+            klein = b.new_context(service_workers='block', locale='nl-NL', viewport={'width': breed, 'height': 844}, has_touch=True, reduced_motion='reduce')
+            klein.route('**/*supabase.co/**', lambda r: r.fulfill(status=200, json=[]))
+            klein.route(re.compile(r'^https?://(?!127\.0\.0\.1).*'), lambda r: r.fulfill(status=204, body=''))
+            pg = nieuwe_pagina(klein)
+            open_spel(pg)
+            pg.click('.kj-start-instellingen')
+            check(not pg.query_selector('.kj-herstart-knop'), 'R%d: op het beginscherm nog geen ↻ Opnieuw beginnen' % breed)
+            pg.check('[data-instelling=bierpul]'); pg.click('.kj-instellingen-sluit')
+            pg.click('.kj-niveau[data-niveau=schildknaap]')
+            check(wacht(pg, KLAAR), 'R%d: een partij is begonnen' % breed)
+            check(not pg.query_selector('.kt-onder [data-naam=herstart]'), 'R%d: geen ↻ meer in de balk onderin' % breed)
+            check(pg.evaluate(PUL_VRIJ) == 'PUL', 'R%d: het midden van je bierpul is vrij (%s)' % (breed, pg.evaluate(PUL_VRIJ)))
+            pul(pg)
+            check(pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#2', 'R%d: dubbeltikken op de pul werkt (pul #2)' % breed)
+            pg.click('.kt-knop[data-naam=instellingen]')
+            check(pg.is_visible('.kj-herstart-knop') and 'Opnieuw beginnen' in pg.text_content('.kj-herstart-knop'), 'R%d: ↻ Opnieuw beginnen staat bij ⚙️ Instellingen' % breed)
+            pg.click('.kj-herstart-knop')
+            check(wacht(pg, "() => !!document.querySelector('.kj-niveau') && !document.querySelector('.kj-instellingen')", 5000), 'R%d: ↻ Opnieuw beginnen = terug naar de niveaukeuze' % breed)
+            check(pg.evaluate("() => localStorage.getItem('fibro_koningsjacht_stand')") is None, 'R%d: de oude partij is weg' % breed)
+            pg.close(); klein.close()
         check(not fouten, 'J: geen paginafouten %s' % fouten[:3])
         b.close()
 except Exception as e:
     check(False, 'proef afgebroken: ' + str(e).split('\n')[0])
+    print(str(e))  # de hele melding: daaronder staat wat Playwright tegenhield
 finally:
     srv.terminate()
 print('\n%d fout(en)' % len(fout))

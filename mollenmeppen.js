@@ -1,4 +1,4 @@
-// mollenmeppen.js (v1, 26 nov 2026, Marcel) - Mollen meppen: een mini-game voor in de wachtkamer, terwijl je wacht tot je
+// mollenmeppen.js (v2, 26 nov 2026, Marcel; v2: het geluid deed het niet) - Mollen meppen: een mini-game voor in de wachtkamer, terwijl je wacht tot je
 // vrienden er zijn (het wachtscherm in de chat en de wachtkamer van een groepsspel).
 //
 // In gewone woorden: een raster van 4 bij 4 holen. Er komen mollen uit; tik er zo veel mogelijk aan in 30 seconden.
@@ -46,13 +46,17 @@ function geluid(soort) {
     const osc = audio.createOscillator(), vol = audio.createGain()
     osc.connect(vol); vol.connect(audio.destination)
     const zet = (f, t) => osc.frequency.exponentialRampToValueAtTime(Math.max(30, f * toon), nu + t)
+    osc.start(nu) // v2 (26 nov 2026): eerst starten, dan pas stop() plannen; andersom gaf een fout en dus geen geluid
     vol.gain.setValueAtTime(0.0001, nu); vol.gain.exponentialRampToValueAtTime(0.22, nu + 0.012)
     if (soort === 'boing') { osc.type = 'sine'; osc.frequency.setValueAtTime(520 * toon, nu); zet(140, 0.32); vol.gain.exponentialRampToValueAtTime(0.0001, nu + 0.36); osc.stop(nu + 0.37) }
     else if (soort === 'piep') { osc.type = 'square'; osc.frequency.setValueAtTime(900 * toon, nu); zet(1500, 0.08); zet(700, 0.16); vol.gain.setValueAtTime(0.08, nu + 0.012); vol.gain.exponentialRampToValueAtTime(0.0001, nu + 0.18); osc.stop(nu + 0.19) }
     else if (soort === 'plop') { osc.type = 'triangle'; osc.frequency.setValueAtTime(260 * toon, nu); zet(620, 0.05); zet(180, 0.14); vol.gain.exponentialRampToValueAtTime(0.0001, nu + 0.16); osc.stop(nu + 0.17) }
     else { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(330 * toon, nu); zet(220, 0.09); zet(300, 0.16); zet(180, 0.24); vol.gain.setValueAtTime(0.07, nu + 0.012); vol.gain.exponentialRampToValueAtTime(0.0001, nu + 0.26); osc.stop(nu + 0.27) }
-    osc.start(nu)
   } catch (e) {}
+}
+// v2: het geluid alvast openzetten bij een tik op een knop (een iPhone wil dat bij een echte tik, niet bij het eerste aanraken)
+function geluidOpen() {
+  try { audio ||= new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume() } catch (e) {}
 }
 export const GELUIDEN = ['boing', 'piep', 'plop', 'kwak']
 
@@ -107,7 +111,7 @@ export function maakMollenMeppen({ nu = () => Date.now(), kans = Math.random } =
     onder.innerHTML = ''
     const r = document.createElement('span'); r.className = 'mol-uitslag'; r.textContent = tekst || T('Record: {n}', { n: leesRecord() })
     const b = document.createElement('button'); b.type = 'button'; b.className = 'mol-knop'; b.textContent = tekst ? T('Nog een keer') : T('▶ Start')
-    b.onclick = start
+    b.onclick = () => { geluidOpen(); start() }
     onder.append(r, b)
   }
   function zet(i, op) {
@@ -167,7 +171,7 @@ export function molKnop(houder, opties) {
   zetStijl()
   const b = document.createElement('button'); b.type = 'button'; b.className = 'mol-start'
   b.textContent = T('🔨 Mollen meppen terwijl je wacht')
-  b.onclick = () => { const m = maakMollenMeppen(opties); b.replaceWith(m.el); m.start(); b._mol = m; houder?.dispatchEvent?.(new CustomEvent('mollen', { detail: m })) }
+  b.onclick = () => { geluidOpen(); const m = maakMollenMeppen(opties); b.replaceWith(m.el); m.start(); b._mol = m; houder?.dispatchEvent?.(new CustomEvent('mollen', { detail: m })) }
   houder?.appendChild(b)
   return b
 }

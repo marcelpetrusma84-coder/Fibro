@@ -21,7 +21,7 @@
 //                             de uitnodiging bovenin (ook als je er eerst niet was).
 import { STUDIO_SPELLEN, studioSpel, spelBestand, spelIcoon } from './studio-spellen.js?v=5'
 import { maakSpelMenu } from './spelmenu.js?v=1'
-import { molKnop } from './mollenmeppen.js?v=1' // 26 nov 2026: Mollen meppen terwijl je in de wachtkamer wacht
+import { molKnop } from './mollenmeppen.js?v=2' // 26 nov 2026: Mollen meppen terwijl je in de wachtkamer wacht
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
 Object.assign(window.FIBRO_EN ||= {}, {

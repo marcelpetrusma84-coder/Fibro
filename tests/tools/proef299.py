@@ -319,6 +319,34 @@ try:
         check('New full stein' in pg.text_content('.kj-instellingen-kaart') and 'Move background' in pg.text_content('.kj-instellingen-kaart'), 'M: de nieuwe instellingen zijn ook Engels')
         pg.click('.kj-instellingen-sluit')
         pg.close()
+
+        # ════════ R. smalle telefoons: de balk onderin blijft van je bierpul af (26 nov 2026) ════════
+        # Met ↻ vooraan in de balk werd die op 360 en 375 px drie rijen hoog en lag hij over het midden van je pul (op
+        # GitHub al bij 390 px, door iets bredere letters). ↻ Opnieuw beginnen staat nu onder ⚙️ Instellingen.
+        PUL_VRIJ = """() => { const p = document.querySelector('.kj-scene-bier-ik'), r = p.getBoundingClientRect()
+            const e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+            return e && p.contains(e) ? 'PUL' : (e ? e.className : 'niets') }"""
+        for breed in (360, 375):
+            klein = b.new_context(service_workers='block', locale='nl-NL', viewport={'width': breed, 'height': 844}, has_touch=True, reduced_motion='reduce')
+            klein.route('**/*supabase.co/**', lambda r: r.fulfill(status=200, json=[]))
+            klein.route(re.compile(r'^https?://(?!127\.0\.0\.1).*'), lambda r: r.fulfill(status=204, body=''))
+            pg = nieuwe_pagina(klein)
+            open_spel(pg)
+            pg.click('.kj-start-instellingen')
+            check(not pg.query_selector('.kj-herstart-knop'), 'R%d: op het beginscherm nog geen ↻ Opnieuw beginnen' % breed)
+            pg.check('[data-instelling=bierpul]'); pg.click('.kj-instellingen-sluit')
+            pg.click('.kj-niveau[data-niveau=schildknaap]')
+            check(wacht(pg, KLAAR), 'R%d: een partij is begonnen' % breed)
+            check(not pg.query_selector('.kt-onder [data-naam=herstart]'), 'R%d: geen ↻ meer in de balk onderin' % breed)
+            check(pg.evaluate(PUL_VRIJ) == 'PUL', 'R%d: het midden van je bierpul is vrij (%s)' % (breed, pg.evaluate(PUL_VRIJ)))
+            pul(pg)
+            check(pg.text_content('.kj-scene-bier-ik .kj-scene-bier-nummer') == '#2', 'R%d: dubbeltikken op de pul werkt (pul #2)' % breed)
+            pg.click('.kt-knop[data-naam=instellingen]')
+            check(pg.is_visible('.kj-herstart-knop') and 'Opnieuw beginnen' in pg.text_content('.kj-herstart-knop'), 'R%d: ↻ Opnieuw beginnen staat bij ⚙️ Instellingen' % breed)
+            pg.click('.kj-herstart-knop')
+            check(wacht(pg, "() => !!document.querySelector('.kj-niveau') && !document.querySelector('.kj-instellingen')", 5000), 'R%d: ↻ Opnieuw beginnen = terug naar de niveaukeuze' % breed)
+            check(pg.evaluate("() => localStorage.getItem('fibro_koningsjacht_stand')") is None, 'R%d: de oude partij is weg' % breed)
+            pg.close(); klein.close()
         check(not fouten, 'J: geen paginafouten %s' % fouten[:3])
         b.close()
 except Exception as e:

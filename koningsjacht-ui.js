@@ -198,6 +198,7 @@ const CSS = `
 .kj-instellingen-kaart{width:min(100%,400px);max-height:min(86dvh,650px);overflow:auto;padding:22px;border:1px solid #e2bb7677;border-radius:20px;background:linear-gradient(145deg,#382519,#1f1512);color:#fff8e8;box-shadow:inset 0 1px #fff3,0 18px 60px #000b;text-align:left;font:15px/1.45 system-ui,sans-serif}
 .kj-instellingen-kop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.kj-instellingen-kop h2{margin:0;font:700 22px Georgia,serif;color:#f7dda6}
 .kj-instellingen-sluit{min-width:44px;min-height:44px;border-radius:12px;border:1px solid #fff4;background:#ffffff14;color:inherit;font:24px/1 sans-serif;cursor:pointer}
+.kj-herstart-knop{display:block;width:100%;min-height:44px;margin-top:16px;padding:10px 14px;border-radius:12px;border:1px solid #e6c68c88;background:#ffffff14;color:inherit;font:600 16px/1.2 system-ui,sans-serif;cursor:pointer}.kj-herstart-knop:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .kj-instellingen-optie{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #ffffff20;cursor:pointer}.kj-instellingen-optie span{flex:1}.kj-instellingen-optie small{display:block;color:#d6c4aa;font-size:12px;margin-top:3px}.kj-instellingen-optie input{width:23px;height:23px;accent-color:#d69a43;flex:none}
 .kj-instellingen-info{font-size:12px;color:#dccaaa;margin-top:10px;min-height:1.4em}
 .kj-bier-inhoud{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 0 14px}.kj-bier-inhoud label{flex:1 1 100%;font-weight:700}.kj-bier-inhoud input{flex:1;min-width:120px;accent-color:#d69a43}.kj-bier-inhoud output{min-width:3.5em;text-align:right;font-variant-numeric:tabular-nums}.kj-bier-vol{min-height:40px;padding:8px 12px;border:1px solid #e6c68c88;border-radius:10px;background:#593717;color:#fff5dd;font:inherit;cursor:pointer}
@@ -480,6 +481,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   function toonInstellingen() {
     if (document.querySelector('.kj-instellingen')) return
     const vorigeFocus = document.activeElement
+    const kanHerstarten = !samenSpel && !afgelopen && !!(tafel?.element?.isConnected && staat && !staat.klaar)
     const scherm = document.createElement('div')
     scherm.className = 'kj-instellingen' + (sceneNaam() === 'modern' ? ' kj-modern' : '') + (ruimteschipActief() ? ' kj-ruimteschip kj-spaceship-interior' : '')
     scherm.innerHTML = '<section class="kj-instellingen-kaart" role="dialog" aria-modal="true" aria-labelledby="kj-instellingen-titel">'
@@ -499,6 +501,7 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
       // kaarttafel (kaartspel-hulp v7): hulp, grote kaarten, trillen; voor alle kaartspellen op dit toestel
       + KAART_INSTELLINGEN.map(i => '<label class="kj-instellingen-optie"><span><b>' + esc(T(i.titel)) + '</b><small>' + esc(T(i.uitleg)) + '</small></span><input type="checkbox" data-kaartinstelling="' + i.sleutel + '"></label>').join('')
       + '<div class="kj-bier-inhoud"><label for="kj-bier-inhoud">' + esc(T('Inhoud van je bierpul')) + '</label><input id="kj-bier-inhoud" type="range" min="0" max="100" step="1"><button type="button" class="kj-bier-vol">' + esc(T('Nieuwe volle pul')) + '</button></div>'
+      + (kanHerstarten ? '<button type="button" class="kj-herstart-knop">↻ ' + esc(T('Opnieuw beginnen')) + '</button>' : '')
       + '<p class="kj-instellingen-info" role="status" aria-live="polite"></p></section>'
     document.body.appendChild(scherm)
     const kaart = scherm.querySelector('.kj-instellingen-kaart')
@@ -514,6 +517,8 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     }
     document.addEventListener('keydown', toetsen)
     scherm.querySelector('.kj-instellingen-sluit').onclick = sluit
+    const herstartKnop = scherm.querySelector('.kj-herstart-knop')
+    if (herstartKnop) herstartKnop.onclick = () => { sluit(); herstartNaarKeuze() }
     scherm.addEventListener('click', e => { if (e.target === scherm) sluit() })
     for (const input of scherm.querySelectorAll('[data-scene]')) input.addEventListener('change', () => {
       if (!input.checked) return
@@ -963,7 +968,8 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
   function tekenKnoppen() {
     if (!tafel || !staat || staat.klaar || afgelopen) { tafel?.knoppen([]); return }
     const lijst = []
-    if (!samenSpel) lijst.push({ naam: 'herstart', tekst: '↻', opKlik: herstartNaarKeuze })
+    // 26 nov 2026: ↻ Opnieuw beginnen staat onder ⚙️ Instellingen. Vooraan in deze balk maakte hij de balk op smalle
+    // telefoons (360-375 px) drie rijen hoog, en dan lag de balk over je bierpul (proef299 R).
     if (!aanMij(staat)) { /* de ander is aan de beurt: alleen muziek, kaarslicht en spelregels */ }
     else if (staat.fase === 'aanval') {
       lijst.push({ naam: 'aanval', tekst: '⚔️ ' + T('Aanvallen'), nadruk: K.magAanvallen(staat, selectie), opKlik: () => valAan(selectie) })
@@ -978,8 +984,6 @@ export function start({ spelKanaal = null, benIkSpeler1 = true, vriendNaam = '',
     lijst.push({ naam: 'regels', tekst: '📜', opKlik: toonRegels })
     lijst.push({ naam: 'scores', tekst: '🏆', opKlik: toonScores })
     tafel.knoppen(lijst)
-    const herstartKnop = tafel.element.querySelector('[data-naam="herstart"]')
-    if (herstartKnop) { herstartKnop.setAttribute('aria-label', T('Opnieuw beginnen')); herstartKnop.title = T('Opnieuw beginnen') }
     const instellingenKnop = tafel.element.querySelector('[data-naam="instellingen"]')
     if (instellingenKnop) { instellingenKnop.setAttribute('aria-label', T('Instellingen')); instellingenKnop.title = T('Instellingen') }
     const scoresKnop = tafel.element.querySelector('[data-naam="scores"]')

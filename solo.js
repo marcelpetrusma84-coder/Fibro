@@ -529,7 +529,7 @@ export const SOLO_SPELLEN = {
   toepen:       { naam: 'Toepen',        icon: '✊', bestand: './toepen-ui.js?v=18',     bot: toepenBot, store: true },          // 11 nov 2026: kaartspel uit de Store
   eenentwintigen: { naam: 'Black Jack', icon: '♠️', bestand: './eenentwintigen-ui.js?v=19', bot: eenentwintigenBot, store: true },   // 11 nov 2026: kaartspel uit de Store
   // 13 nov 2026: Koningsjacht, alleen tegen het kasteel (geen computerspeler en geen spelkanaal), uit de Store; met een vriend in de chat
-  koningsjacht: { naam: 'Koningsjacht', icon: '👑', bestand: './koningsjacht-ui.js?v=54', zonderKanaal: true, store: true },
+  koningsjacht: { naam: 'Koningsjacht', icon: '👑', bestand: './koningsjacht-ui.js?v=55', zonderKanaal: true, store: true },
   schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=278',  niveaus:[...NIVEAUS, 'ultra'], bot: opties => opties.niveau === 'ultra' ? schaakUltraBot(opties) : schaakBot(opties), motor: './schaak.js?v=95', motorNaam: 'Schaak' },
   dammen:       { naam: 'Draughts',      icon: '⚫', bestand: './dammen-ui.js?v=152',   niveaus:[...NIVEAUS, 'expert'], bot: damBot,    motor: './dammen.js?v=95', motorNaam: 'Dammen' },
   // 30 okt 2026: Neo Paddle v2 (blokjes en power-ups) en levels voor alleen (spel.html toont een knop 🧱 Levels).

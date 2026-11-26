@@ -505,6 +505,7 @@ window.veiligeUrl = function(v){
   import { maakSpelMenu } from './spelmenu.js?v=1' // 11 nov 2026: hamburgermenu rechtsboven in elk spel (pauze, geluid, microfoon, camera, menu, verlaten)
   import { startSpelBerichtInChat } from './spelbericht.js?v=2'
   import { STUDIO_SPELLEN, studioSpel, spelBestand as studioBestand, spelIcoon as studioIcoon } from './studio-spellen.js?v=5' // 25 nov 2026: spellen uit Stekky Studio
+  import { molKnop } from './mollenmeppen.js?v=1' // 26 nov 2026: Mollen meppen op het wachtscherm, tot je vriend er is
   import { gameAan, mijnDownloads } from './store.js?v=36' // 11 nov 2026: spellen uit de Store // 11 nov 2026: berichten van andere vrienden linksboven in het spel
   import * as Bordgeluid from './bordgeluid.js?v=203'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
@@ -3635,6 +3636,7 @@ console.timeLog('[chat] berichten', 'opgehaald')
     knop.style.cssText = 'background:#ffffff1f;border:1px solid #ffffff44;border-radius:10px;padding:9px 22px;color:#fff;font-weight:600;cursor:pointer;'
     knop.onclick = () => window.sluitSpel()
     scherm.append(draai, tekst, extra, knop)
+    molKnop(scherm); scherm.append(knop) // 26 nov 2026: Mollen meppen terwijl je wacht (stopt vanzelf als het wachtscherm weggaat); Annuleren onderaan
     inhoud.appendChild(scherm)
     // v242: na twee minuten zeggen dat de vriend er nog niet is. Het wachten gaat door: komt hij alsnog, dan begint het spel.
     clearTimeout(spelWachtTimer)

@@ -299,3 +299,6 @@ jobs:
       - name: "Samen spelen vanaf Home: tegen een vriend of met een groep (proef341)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef341.py .
+      - name: "Mollen meppen in de wachtkamer: 4x4, punten, record, stopt vanzelf (proef342)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef342.py .

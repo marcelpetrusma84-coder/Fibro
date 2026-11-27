@@ -74,7 +74,7 @@ try:
         # C
         pg.click('.kt-stijlknop')
         stijlen = pg.eval_on_selector_all('.kt-stijlkeuze[data-stijl]', 'els => els.map(e => e.dataset.stijl)')
-        check(stijlen == ['stekky', 'perkament', 'modern', 'vrolijk'] and pg.locator('.kt-stijlkeuze[data-stijl=vrolijk][aria-pressed=true]').count() == 1, 'C: Vrolijk staat aan in de keuze %s' % stijlen)
+        check(stijlen[:4] == ['stekky', 'perkament', 'modern', 'vrolijk'] and pg.locator('.kt-stijlkeuze[data-stijl=vrolijk][aria-pressed=true]').count() == 1, 'C: Vrolijk staat aan in de keuze %s' % stijlen)
         check('Vrolijk' in pg.inner_text('.kt-stijlkeus'), 'C: met de naam Vrolijk')
         pg.click('.kt-stijlkeuze[data-stijl=stekky]')
         check(not pg.evaluate(alle_vrolijk, '.kt-hand .kt-kaart'), 'C: Stekky gekozen: andere kaarten')

@@ -1,4 +1,4 @@
--- Casino-tokens (27 nov 2026, Marcel): speelgeld voor de casinospellen (eerst Black Jack, later poker).
+-- Casino-tokens (27 nov 2026, Marcel): speelgeld voor de casinospellen (Black Jack en Poker Texas Hold'em).
 -- Eenmaal uitvoeren in de Supabase SQL Editor, NA sql/spel-scores.sql (die maakt spel_vriend en spel_speler_zichtbaar).
 -- Herhaalbaar.
 --
@@ -95,7 +95,7 @@ declare
   oud public.casino_inzetten%rowtype;
   s integer;
 begin
-  if p_run_id is null or p_spel is null or p_spel not in ('eenentwintigen')
+  if p_run_id is null or p_spel is null or p_spel not in ('eenentwintigen', 'pokertexasholdem')
      or p_inzet is null or p_inzet < 1 or p_inzet > 100 then
     raise exception 'Invalid bet' using errcode = '22023';
   end if;

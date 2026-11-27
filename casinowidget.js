@@ -4,7 +4,7 @@
 // Waar het vandaan komt: casino_overzicht (sql/casino-tokens.sql, via casino.js). Alleen echte vrienden (van twee
 // kanten), zonder wie geblokkeerd is. Zonder internet of account: een regel dat je online moet zijn.
 // Persoonlijk: alleen op je eigen Home. Op het profiel van een vriend staat hij niet (vriend-profiel.html).
-import { maakCasino, WEEKBEDRAG, MINIMUM } from './casino.js?v=1'
+import { maakCasino, WEEKBEDRAG, MINIMUM } from './casino.js?v=2'
 
 const kort = v => typeof v === 'string' ? v.trim().slice(0, 40) : ''
 

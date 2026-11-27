@@ -11,7 +11,7 @@ import * as P from './pokertexasholdem.js?v=1'
 import { maakKaartTafel, kaartSvg, kaartNaam, REACTIES } from './kaartspel-hulp.js?v=22'
 import { meldGeslagen } from './beurtspel-hulp.js?v=1'
 import { maakGroepSpel } from './groepspel.js?v=2'
-import { verschil, uitbetaling } from './casino.js?v=1'
+import { verschil, uitbetaling } from './casino.js?v=2'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
 Object.assign(window.FIBRO_EN ||= {}, {

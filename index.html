@@ -1938,7 +1938,7 @@ async function renderScorebord(c, uid) {
 // ════════════════════════════════
 async function renderCasino(c, uid) {
   let W
-  try { W = await import('./casinowidget.js?v=1') } catch (e) { console.warn('[casino]', e); return }
+  try { W = await import('./casinowidget.js?v=2') } catch (e) { console.warn('[casino]', e); return }
   W.tekenCasinoWidget(c, { supabase, uid, T, open: spel => openSpelMetTitel(spel, 'spel.html?spel=' + encodeURIComponent(spel)) })
 }
 

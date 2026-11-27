@@ -116,7 +116,8 @@ try:
               and pg.locator('.kt-keuze button', has_text='Minimaal').count() == 1, 'B Raise: kiezen hoeveel (Minimaal ... All-in)')
         pg.locator('.kt-keuze button', has_text='All-in').click()
         einde = False
-        for _ in range(60):
+        eind_tijd = time.time() + 180          # elke hand duurt even (delen, de computer denkt, de uitslag)
+        while time.time() < eind_tijd:
             if pg.evaluate("() => !!document.querySelector('.kt-einde')"): einde = True; break
             if aan_beurt(pg):
                 try:
@@ -126,10 +127,13 @@ try:
                     check_of_call(pg)
             pg.wait_for_timeout(700)
         einde = einde or wacht(pg, "() => !!document.querySelector('.kt-einde')", 20000)
+        if not einde:
+            print('STAAT', pg.evaluate("() => [document.querySelector('.kt-status')?.innerText, document.querySelector('.pk-midden')?.innerText.replace(/\\s+/g, ' '), [...document.querySelectorAll('.kt-knoppen button')].map(b => b.dataset.naam), !!document.querySelector('.kt-keuze'), document.querySelector('.kt-keuze')?.innerText]"))
+            pg.screenshot(path='/tmp/pk-vast.png')
         pg.wait_for_timeout(1200)
         titel = pg.evaluate("() => document.querySelector('.kt-eindetitel')?.textContent || ''")
         sub = pg.evaluate("() => document.querySelector('.kt-eindesub')?.textContent || ''")
-        check(einde, 'B het potje is voorbij (%s)' % titel)
+        check(einde and titel, 'B het potje is voorbij (%s | %s | %s)' % (titel, sub, pg.evaluate("() => document.querySelector('.kt-einde')?.outerHTML.slice(0, 300)")))
         verwacht = 'winst' if 'Jij wint' in titel else 'verlies'
         check(len(UITSLAGEN) == 1 and UITSLAGEN[0].get('p_uitslag') == verwacht and UITSLAGEN[0].get('p_run_id') == INZETTEN[0].get('p_run_id'),
               'B precies één uitslag naar de server: %s (%s)' % (verwacht, UITSLAGEN))

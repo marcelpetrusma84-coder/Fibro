@@ -55,22 +55,41 @@ fout({ kaarten: { ...kaarten, hA: 'data:image/png;base64,AAAA' } }, 'geen goed w
 fout({ kaarten: { ...kaarten, hA: 'data:image/webp;base64,' + 'A'.repeat(300000) } }, 'te groot')
 fout({ soort: 'alles' }, 'harten 2')
 assert.ok(M.valideerKaartset(set, { bestaand: ['ruimtekaarten'] }).some(x => x.includes('al kaarten')))
+// 27 nov 2026: een eigen achtergrondkleur (voor de getekende 2 t/m 10) mag, maar hoeft niet
+assert.equal(set.achtergrond, undefined, 'zonder achtergrond: geen veld')
+const creme = M.maakKaartset({ naam: 'Salon', soort: 'plaatjes', kleur: set.kleur, kaarten, achtergrond: '#E4D7BC' })
+assert.equal(creme.achtergrond, '#e4d7bc'); assert.deepEqual(M.valideerKaartset(creme), [])
+assert.equal(M.maakKaartset({ naam: 'Salon', soort: 'plaatjes', kleur: set.kleur, kaarten, achtergrond: 'creme' }).achtergrond, undefined, 'een foute kleur valt weg')
+fout({ achtergrond: 'url(x)' }, 'achtergrondkleur')
+// 28 nov 2026: een tweede joker mag erbij
+const twee = M.maakKaartset({ naam: 'Salon', soort: 'plaatjes', kleur: set.kleur, kaarten: { ...kaarten, joker2: WEBP } })
+assert.equal(twee.kaarten.joker2, WEBP); assert.deepEqual(M.valideerKaartset(twee), [])
+fout({ kaarten: { ...kaarten, joker3: WEBP } }, 'horen er niet bij')
+fout({ kaarten: { ...kaarten, joker2: 'data:image/png;base64,AAAA' } }, 'geen goed webp')
 console.log('PASS: valideerKaartset houdt foute kaartpakketten tegen')
 
 // ── De kaarttafel tekent zo'n set ──
 const K = await import(pathToFileURL(path.join(REPO, 'kaartspel-hulp.js')).href)
 K.KAARTSTIJLEN.proefset = { naam: 'Proef', map: './kaarten/proefset/', v: 3, studio: 'plaatjes', kleur: { h: '#123456', r: '#654321', k: '#0a0b0c', s: '#abcdef' } }
+assert.match(K.kaartSvg('h5', 'proefset'), /fill="#fffdf9"/, 'zonder eigen achtergrond: wit')
+K.KAARTSTIJLEN.proefcreme = { ...K.KAARTSTIJLEN.proefset, achtergrond: '#e4d7bc' }
+assert.match(K.kaartSvg('h7', 'proefcreme'), /<rect[^>]*fill="#e4d7bc"/, 'met eigen achtergrond: die kleur')
+K.KAARTSTIJLEN.proefraar = { ...K.KAARTSTIJLEN.proefset, achtergrond: '"/><script>' }
+assert.doesNotMatch(K.kaartSvg('h8', 'proefraar'), /script/, 'een rare kleur komt er niet in')
 const h5 = K.kaartSvg('h5', 'proefset')
 assert.match(h5, /^<svg class="kt-svg kt-studio"/, '5: getekend'); assert.match(h5, /#123456/, 'in de kleur van de set'); assert.doesNotMatch(h5, /<img|<image/)
 assert.match(K.kaartSvg('hH', 'proefset'), /src="\.\/kaarten\/proefset\/hH\.webp\?v=3"/, 'heer: het plaatje'); assert.match(K.kaartSvg('hH', 'proefset'), /#123456/, 'met hoekjes in de kleur van de set')
 assert.match(K.kaartSvg('sA', 'proefset'), /proefset\/sA\.webp/); assert.match(K.kaartSvg('J1', 'proefset'), /proefset\/joker\.webp/)
 assert.match(K.achterkantSvg('proefset'), /proefset\/achterkant\.webp/)
+assert.match(K.kaartSvg('J2', 'proefset'), /proefset\/joker\.webp/, 'zonder tweede joker: twee keer dezelfde')
+K.KAARTSTIJLEN.proeftwee = { ...K.KAARTSTIJLEN.proefset, map: './kaarten/proeftwee/', joker2: true }
+assert.match(K.kaartSvg('J1', 'proeftwee'), /proeftwee\/joker\.webp/); assert.match(K.kaartSvg('J2', 'proeftwee'), /proeftwee\/joker2\.webp/, 'met tweede joker: J2 is joker2')
 K.KAARTSTIJLEN.proefalles = { naam: 'Proef', map: './kaarten/proefalles/', v: 1, studio: 'alles', kleur: set.kleur }
 assert.match(K.kaartSvg('h5', 'proefalles'), /proefalles\/h5\.webp/, 'alles: ook 5 is een plaatje')
 assert.match(K.kaartSvg('h5', 'perkament'), /#a3212b/, 'Perkament houdt zijn eigen kleuren')
 const hulp = lees('kaartspel-hulp.js')
 assert.match(hulp, /import \{ STUDIO_KAARTSETS \} from '\.\/studio-kaarten\.js\?v=\d+'/)
-assert.match(hulp, /for \(const s of STUDIO_KAARTSETS\) KAARTSTIJLEN\[s\.id\] = \{ naam: s\.naam\[0\], map: '\.\/kaarten\/' \+ s\.id \+ '\/', v: s\.v, studio: s\.soort, kleur: s\.kleur \}/)
+assert.match(hulp, /for \(const s of STUDIO_KAARTSETS\) KAARTSTIJLEN\[s\.id\] = \{ naam: s\.naam\[0\], map: '\.\/kaarten\/' \+ s\.id \+ '\/', v: s\.v, studio: s\.soort, kleur: s\.kleur, achtergrond: s\.achtergrond, joker2: s\.joker2 === true \}/)
 assert.match(hulp, /KAARTSTIJLEN\[stijl\]\.studio !== 'plaatjes' \|\| STUDIO_PLAATJES\.includes\(w\)/, 'alleen de plaatjes die er zijn alvast ophalen')
 console.log('PASS: de kaarttafel tekent een set uit de Studio (plaatjes en getekende cijferkaarten)')
 
@@ -90,8 +109,15 @@ try {
   assert.deepEqual(readdirSync(path.join(tmp, 'kaarten/ruimtekaarten')).sort(), M.nodig('plaatjes').map(n => n + '.webp').sort())
   assert.ok(readFileSync(path.join(tmp, 'kaarten/ruimtekaarten/hA.webp')).subarray(0, 4).toString() === 'RIFF', 'echte webp-bestanden')
   const D = await import(pathToFileURL(path.join(tmp, 'studio-kaarten.js')).href + '?x=1')
-  assert.deepEqual(D.STUDIO_KAARTSETS, [{ id: 'ruimtekaarten', naam: ['Ruimtekaarten', 'Space cards'], soort: 'plaatjes', kleur: set.kleur, v: 1 }])
+  assert.deepEqual(D.STUDIO_KAARTSETS.at(-1), { id: 'ruimtekaarten', naam: ['Ruimtekaarten', 'Space cards'], soort: 'plaatjes', kleur: set.kleur, v: 1 })
   assert.equal(window.FIBRO_EN['Ruimtekaarten'], 'Space cards')
+  const json2 = path.join(tmp, 'creme.stekkykaarten.json'); writeFileSync(json2, JSON.stringify({ ...set, id: 'cremekaarten', naam: ['Crème', 'Cream'], achtergrond: '#e4d7bc', kaarten: { ...set.kaarten, joker2: WEBP } }))
+  r = draai(json2); assert.equal(r.status, 0, r.stderr)
+  const D2 = await import(pathToFileURL(path.join(tmp, 'studio-kaarten.js')).href + '?x=2')
+  assert.equal(D2.STUDIO_KAARTSETS.at(-1).achtergrond, '#e4d7bc', 'de achtergrond komt mee in de app')
+  assert.equal(D2.STUDIO_KAARTSETS.at(-1).joker2, true, 'de tweede joker ook')
+  assert.ok(existsSync(path.join(tmp, 'kaarten/cremekaarten/joker2.webp')), 'joker2.webp staat erbij')
+  assert.equal(D.STUDIO_KAARTSETS.at(-1).joker2, undefined, 'zonder tweede joker: geen veld')
   r = draai(json); assert.notEqual(r.status, 0); assert.match(r.stderr, /al kaarten/)
   writeFileSync(json, JSON.stringify({ ...set, id: 'tweede', naam: ['Tweede', 'Second'], kaarten: {} })); r = draai(json)
   assert.notEqual(r.status, 0); assert.match(r.stderr, /nog geen plaatje/)

@@ -57,7 +57,7 @@ try:
         pg.click('.kt-stijlknop')
         stijlen = pg.evaluate("() => [...document.querySelectorAll('.kt-stijlkeuze[data-stijl]')].map(b => b.dataset.stijl)")
         tafels = pg.evaluate("() => [...document.querySelectorAll('.kt-ondergrondkeuze')].map(b => b.dataset.ondergrond + (b.getAttribute('aria-pressed') === 'true' ? '*' : ''))")
-        check(stijlen == ['stekky', 'perkament', 'modern', 'vrolijk'], 'B: vier kaartstijlen %s' % stijlen)
+        check(stijlen[:4] == ['stekky', 'perkament', 'modern', 'vrolijk'], 'B: de vier eigen kaartstijlen eerst (daarna die uit de Studio) %s' % stijlen)
         check(tafels == ['casino*', 'hout'], 'B: twee tafels, casino gekozen %s' % tafels)
         check('Groen casino' in pg.inner_text('.kt-stijlkeus') and 'Houten tafel' in pg.inner_text('.kt-stijlkeus'), 'B: met namen')
         if FOTO_MAP: pg.screenshot(path=os.path.join(FOTO_MAP, 'keuze.png'))

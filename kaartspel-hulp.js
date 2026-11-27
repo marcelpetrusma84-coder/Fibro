@@ -44,7 +44,7 @@ import { stapelProfiel, maakStapelFeedback } from './kaart-stapel-feedback.js?v=
 
 import { webcamRuimte } from './beurtspel-hulp.js?v=1'
 import { berekenLeesbareWaaier } from './kaartwaaier.js?v=1'
-import { STUDIO_KAARTSETS } from './studio-kaarten.js?v=1' // 25 nov 2026: eigen speelkaarten uit Stekky Studio (kaartmaker.js)
+import { STUDIO_KAARTSETS } from './studio-kaarten.js?v=2' // 25 nov 2026: eigen speelkaarten uit Stekky Studio (kaartmaker.js)
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
 const isEngels = () => Boolean(window.T && window.T.taal === 'en')
@@ -142,7 +142,7 @@ export const KAARTSTIJLEN = {
 }
 // 25 nov 2026: de speelkaarten uit Stekky Studio. studio = 'plaatjes' (alleen azen, hofkaarten, achterkant en joker; 2 t/m 10
 // worden getekend in de kleuren van de set) of 'alles' (54 plaatjes, zoals Perkament)
-for (const s of STUDIO_KAARTSETS) KAARTSTIJLEN[s.id] = { naam: s.naam[0], map: './kaarten/' + s.id + '/', v: s.v, studio: s.soort, kleur: s.kleur }
+for (const s of STUDIO_KAARTSETS) KAARTSTIJLEN[s.id] = { naam: s.naam[0], map: './kaarten/' + s.id + '/', v: s.v, studio: s.soort, kleur: s.kleur, achtergrond: s.achtergrond, joker2: s.joker2 === true }
 const STANDAARD_STIJL = 'vrolijk'
 // v9: de ondergrond van de tafel (behalve als een spel zelf een ondergrond kiest)
 const ONDERGROND_SLEUTEL = 'fibro_kaartondergrond'
@@ -175,7 +175,7 @@ function laadVooruit(stijl) {
   }
   if (!KAARTSTIJLEN[stijl]?.map) return
   vooruitGeladen.add(stijl)
-  const namen = ['achterkant', 'joker']
+  const namen = ['achterkant', 'joker', ...(KAARTSTIJLEN[stijl].joker2 ? ['joker2'] : [])]
   for (const k of KAART_KLEUREN) for (const w of KAART_WAARDEN) if (KAARTSTIJLEN[stijl].studio !== 'plaatjes' || STUDIO_PLAATJES.includes(w)) namen.push(k + w)
   for (const n of namen) { const i = new Image(); i.decoding = 'async'; i.src = plaatjeUrl(stijl, n) }
 }
@@ -390,7 +390,7 @@ function studioCijferKaart(stijl, id) {
   const { kleur: k, waarde: w } = kaartDelen(id)
   const kleur = KAARTSTIJLEN[stijl].kleur[k] || ZWART
   const svg = '<svg class="kt-svg kt-studio" viewBox="0 0 250 350" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
-    + '<rect x="2" y="2" width="246" height="346" rx="18" fill="#fffdf9" stroke="#d9d2c6" stroke-width="3"/>'
+    + '<rect x="2" y="2" width="246" height="346" rx="18" fill="' + (/^#[0-9a-f]{6}$/.test(KAARTSTIJLEN[stijl].achtergrond || '') ? KAARTSTIJLEN[stijl].achtergrond : '#fffdf9') + '" stroke="#d9d2c6" stroke-width="3"/>'
     + (PITTEN[w] || []).map(([x, y]) => tekenKleur(k, x, y, 46, y > 175, kleur)).join('')
     + hoek(k, w, kleur) + '<g transform="rotate(180 125 175)">' + hoek(k, w, kleur) + '</g></svg>'
   studioCache.set(sleutel, svg)
@@ -400,7 +400,7 @@ export function kaartSvg(id, stijl = kaartStijl()) {
   if (stijl === 'modern') return modernKaart(id)
   if (stijl === 'vrolijk') return vrolijkKaart(id)
   if (KAARTSTIJLEN[stijl]?.studio === 'plaatjes' && !/^J[12]$/.test(id) && !STUDIO_PLAATJES.includes(kaartDelen(id).waarde)) return studioCijferKaart(stijl, id)
-  if (KAARTSTIJLEN[stijl]?.map) return /^J[12]$/.test(id) ? plaatje(stijl, 'joker') : plaatjeMetHoek(stijl, id)
+  if (KAARTSTIJLEN[stijl]?.map) return /^J[12]$/.test(id) ? plaatje(stijl, id === 'J2' && KAARTSTIJLEN[stijl].joker2 ? 'joker2' : 'joker') : plaatjeMetHoek(stijl, id)
   const sleutel = id + (isEngels() ? '|en' : '')
   if (svgCache.has(sleutel)) return svgCache.get(sleutel)
   const { kleur: k, waarde: w } = kaartDelen(id)

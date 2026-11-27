@@ -65,7 +65,7 @@ try:
               'A: 17 nov 2026: zonder keuze de Vrolijke kaarten')
 
         pg.click('.kt-stijlknop')
-        check(pg.locator('.kt-stijlkeus').count() == 1 and pg.locator('.kt-stijlkeuze[data-stijl]').count() == 4, 'B: 🎴 opent de keuze met vier stijlen (17 nov 2026: ook Modern en Vrolijk)')
+        check(pg.locator('.kt-stijlkeus').count() == 1 and pg.locator('.kt-stijlkeuze[data-stijl]').count() >= 4, 'B: 🎴 opent de keuze met vier stijlen (17 nov 2026: ook Modern en Vrolijk)')
         check(pg.locator('.kt-stijlkeuze[data-stijl=vrolijk][aria-pressed=true]').count() == 1, 'B: Vrolijk staat aan')
         check('Perkament' in pg.inner_text('.kt-stijlkeus'), 'B: Perkament staat erbij')
         pg.click('.kt-stijlkeuze[data-stijl=perkament]')

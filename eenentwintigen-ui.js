@@ -6,7 +6,7 @@
 // 27 nov 2026 (Marcel): tegen de computer zet je tokens in (casino.js). spel.html zet window.fibroCasino klaar;
 // in de chat (tegen een vriend) bestaat het niet en speel je zonder inzet.
 import * as P from './eenentwintigen.js?v=1'
-import { maakKaartTafel, REACTIES } from './kaartspel-hulp.js?v=22'
+import { maakKaartTafel, REACTIES } from './kaartspel-hulp.js?v=23'
 import { meldGeslagen } from './beurtspel-hulp.js?v=1'
 import { verschil, uitbetaling } from './casino.js?v=3'
 

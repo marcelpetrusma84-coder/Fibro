@@ -9,7 +9,7 @@
 // Boven de tafel: je punten en de levens. Na een ronde zie je de kaarten van de ander; speler 1 deelt dan vanzelf de
 // volgende ronde. v3: knop "⏭️ Passen" (past iedereen een rondgang, dan 3 nieuwe tafelkaarten). Over het spelkanaal: zie groepspel.js ('actie', 'stand', 'opnieuw', 'vraag-stand', 'weg'), plus 'kaartreactie'.
 import * as P from './eenendertigen.js?v=3'
-import { maakKaartTafel, kaartSvg, kaartNaam, REACTIES } from './kaartspel-hulp.js?v=22'
+import { maakKaartTafel, kaartSvg, kaartNaam, REACTIES } from './kaartspel-hulp.js?v=23'
 import { meldGeslagen } from './beurtspel-hulp.js?v=1'
 import { maakGroepSpel } from './groepspel.js?v=2'
 

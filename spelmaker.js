@@ -47,9 +47,9 @@ export const SPRAAK = {
 export const EXTRAS = [
   { id: 'uitleg', naam: 'Knop ❓ met de spelregels in het spel', standaard: true },
   { id: 'opnieuw', naam: 'Knop ↻ Opnieuw spelen na afloop', standaard: true },
-  { id: 'beurtklok', naam: 'Beurtklok (een rondje dat aftelt)' },
-  { id: 'trillen', naam: 'Trillen als je aan de beurt bent' },
-  { id: 'score', naam: 'Scorebord over meerdere potjes' },
+  { id: 'beurtklok', naam: 'Beurtklok (een rondje dat aftelt)', standaard: true },   // 27 nov 2026: vaste keuzes (CLAUDE.md)
+  { id: 'trillen', naam: 'Trillen als je aan de beurt bent', standaard: true },
+  { id: 'score', naam: 'Scorebord over meerdere potjes', standaard: true },
   { id: 'geluid', naam: 'Geluidjes bij zetten, winnen en verliezen', standaard: true },
   { id: 'animaties', naam: 'Animaties (kaarten of stukken die bewegen)', standaard: true },
   { id: 'hulp', naam: 'Hulp: laten oplichten wat je mag doen', standaard: true },

@@ -18,6 +18,25 @@
   `tests/tools/browsertests.txt`, dan draait hij op GitHub mee (in 4 groepjes tegelijk, `tests/tools/browsertests.py`).
 - Een nieuwe functie of reparatie krijgt bij voorkeur een browsertest die op de oude versie misgaat.
 
+## Vaste keuzes (zonder te vragen)
+Marcel stuurt meestal alleen een idee. Dit geldt dan altijd, tenzij hij iets anders zegt. Twijfel je over iets anders
+(welke spelregels, welke variant), vraag het dan kort.
+- **Elk spel:** in de Stekky Store en op Home; Nederlands én Engels (ook de naam en de uitleg in de Store); de knop ❓ met
+  de spelregels; ↻ Opnieuw spelen na afloop; geluid en trillen; het ☰-spelmenu; een eigen spelicoon (zonder plaatje
+  maak je er een).
+- **Tegen de computer:** altijd, met makkelijk, normaal en moeilijk (behalve een automaat of arcadespel: daar speel je
+  alleen).
+- **Samen:** kaartspellen met 2 tot 6 spelers (tegen de computer, met een vriend én in de groepschat), beurtspellen met
+  z'n tweeën; beurtklok van 30 seconden; reacties (emoji) aan.
+- **Scorebord:** altijd. Winnen tegen de computer telt per niveau; arcade telt punten (top 10).
+- **Casino-tokens:** alleen bij casinospellen (gokken, inzetten, een automaat) en alleen tegen de computer. Betaalt het
+  meer dan 2× uit, dan deelt de server (zoals Video Poker). Tokens zijn speelgeld: nooit te koop en nooit in te wisselen.
+- **Widgets:** in de Store (`widgets.js`). Persoonlijk (jouw scores, jouw tokens) = alleen op je eigen Home.
+- **Uiterlijk:** de kleuren van Stekky (zie Techniek); werkt op een telefoon van 360 px breed; grote knoppen.
+- **Klaar:** tests (Node en een browsertest), nieuwe bouwstenen in BOUWSTENEN.md, een PR met in gewone woorden wat er
+  veranderd is. SQL voor productie: eerst vragen.
+- **Begin met het sjabloon** van de goede soort (BOUWSTENEN.md, "Sjablonen") en met wat er in het pakhuis staat.
+
 ## Het pakhuis (BOUWSTENEN.md)
 - **Lees eerst [BOUWSTENEN.md](BOUWSTENEN.md)** voordat je iets nieuws bouwt. Staat wat je nodig hebt er al, gebruik het
   (of breid het uit, met een test). Bouw niets opnieuw dat er al is.

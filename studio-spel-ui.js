@@ -4,7 +4,7 @@
 // spelbestand van (naam.stekkyspel.json). Dat zet Claude of Tijn in de app met tests/tools/studio-spel-installeer.mjs:
 // dan staat het spel meteen overal (Store, chat, Home), en bouwt Claude de echte regels uit de bouwopdracht.
 // v2 (25 nov 2026): kaartspellen: "Hoeveel spelers?" (2 tot 6). Meer dan 2 = ook in de groepschat en tegen meer computers.
-import { SOORTEN, ONDERDELEN, SPRAAK, EXTRAS, TITELS, DECKS, KAARTEN, MAX_NAAM, MAX_UITLEG, MAX_REGELS, MAX_SPECIAAL, MIN_SPELERS, MAX_SPELERS, maakSpel, valideerSpel, maakId } from './spelmaker.js?v=3'
+import { SOORTEN, ONDERDELEN, SPRAAK, EXTRAS, TITELS, DECKS, KAARTEN, MAX_NAAM, MAX_UITLEG, MAX_REGELS, MAX_SPECIAAL, MIN_SPELERS, MAX_SPELERS, maakSpel, valideerSpel, maakId } from './spelmaker.js?v=4'
 import { STUDIO_SPELLEN } from './studio-spellen.js?v=9'
 
 const $ = id => document.getElementById(id)

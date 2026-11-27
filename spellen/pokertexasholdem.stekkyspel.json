@@ -1,0 +1,44 @@
+{
+  "formaat": "stekky-spel",
+  "versie": 1,
+  "id": "pokertexasholdem",
+  "soort": "kaart",
+  "naam": [
+    "Poker Texas Hold'em",
+    "Poker Texas Hold'em"
+  ],
+  "icoon": "🎲",
+  "uitleg": [
+    "Texas Hold'em tegen de computer, een vriend of je groep: twee eigen kaarten, vijf op tafel, en bluffen maar. Speel met speelfiches, of zet je casino-tokens in.",
+    "Texas Hold'em against the computer, a friend or your group: two cards of your own, five on the table, and bluff away. Play with chips, or bet your casino tokens."
+  ],
+  "regels": "Bij Texas Hold'em krijgt elke speler twee eigen kaarten (hole cards) en liggen er maximaal vijf gemeenschappelijke kaarten (community cards) open op tafel. Je maakt de sterkste combinatie van vijf kaarten met een vrije keuze uit je twee eigen kaarten en de vijf gemeenschappelijke kaarten (je mag dus ook één eigen kaart of zelfs nul eigen kaarten gebruiken).\n\nVerloop van een hand\n1\nPlaats de blinds\nDe speler links van de dealerknop (button) legt de small blind in, de speler ernaast de big blind. Dit zijn verplichte inzetten om potactie op gang te brengen.\n\n2\nDeel de hole cards en speel de pre-flop\nElke speler krijgt twee gesloten kaarten. Daarna volgt de eerste inzetronde (pre-flop), te beginnen bij de speler links van de big blind. Spelers kunnen folden (passen), callen (meegaan met de huidige inzet) of raisen (verhogen).\n\n3\nLeg de flop neer\nDe dealer verbrandt één kaart (face-down) en legt drie open gemeenschappelijke kaarten op tafel (de flop). Daarna volgt een nieuwe inzetronde, beginnend bij de eerste actieve speler links van de dealerknop.\n\n4\nLeg de turn neer\nNa een nieuwe burn card komt de vierde open gemeenschappelijke kaart op tafel (de turn), gevolgd door de derde inzetronde.\n\n5\nLeg de river neer\nNa nog een burn card komt de vijfde en laatste gemeenschappelijke kaart op tafel (de river), gevolgd door de laatste inzetronde.\n\n6\nSpeel de showdown\nBlijven er na de river twee of meer spelers over, dan tonen zij hun kaarten. De speler met de hoogste vijfkartencombinatie wint de pot. Bij een exact gelijke hand wordt de pot gedeeld (split pot).\n\nActies tijdens een inzetronde\nCheck: Geen inzet plaatsen wanneer er in de huidige ronde nog geen inzet is gedaan.\n\nBet: De eerste inzet in een ronde plaatsen.\n\nCall: Hetzelfde bedrag inzetten als de huidige hoogste inzet in die ronde.\n\nRaise: De huidige inzet verhogen. Bij No-Limit Hold'em mag je tot al je chips (all-in) gaan; bij Limit Hold'em liggen de inzet- en verhogingsbedragen vast.\n\nFold: Je hand weggooien en uit de huidige hand stappen; je verliest wat je al hebt ingezet.\n\nHandranglijst (van hoog naar laag)\nRang Hand Voorbeeld Toelichting\n1 Royal flush A♠ K♠ Q♠ J♠ 10♠ Straight flush van 10 tot en met aas in dezelfde kleur\n2 Straight flush 9♥ 8♥ 7♥ 6♥ 5♥ Vijf opeenvolgende kaarten van dezelfde kleur\n3 Four of a kind K♣ K♦ K♥ K♠ 4♣ Vier kaarten van dezelfde waarde\n4 Full house Q♠ Q♥ Q♦ 8♣ 8♠ Three of a kind gecombineerd met een paar\n5 Flush A♦ J♦ 8♦ 6♦ 2♦ Vijf willekeurige kaarten van dezelfde kleur\n6 Straight 10♣ 9♦ 8♥ 7♠ 6♣ Vijf opeenvolgende waarden in gemengde kleuren (aas mag hoog en laag: A-2-3-4-5)\n7 Three of a kind 7♠ 7♥ 7♦ A♣ 3♠ Drie kaarten van dezelfde waarde\n8 Two pair J♠ J♦ 5♥ 5♣ A♦ Twee verschillende paren\n9 One pair 10♥ 10♠ K♦ 9♣ 2♥ Eén paar kaarten van dezelfde waarde\n10 High card A♠ Q♣ 9♦ 6♥ 3♠ Geen van bovenstaande combinaties; hoogste kaart telt\nBij gelijke combinaties (bijvoorbeeld twee spelers met een paar vrouwen) beslissen de kickers—de hoogste losse kaarten die niet onderdeel zijn van de combinatie—wie wint.\n\nMet of zonder tokens (Marcel, 27 nov 2026)\nIedereen begint een potje met 1000 speelfiches; de blinds zijn 10/20 en gaan elke 10 handen omhoog. Je speelt door tot één speler alle fiches heeft (of tot jij geen fiches meer hebt).\nMet tokens (alleen tegen de computer): aan het begin koop je in met 10, 25, 50 of 100 tokens (casino.js). Win je de hele tafel, dan krijg je 2× je inzet terug; ben je eerder af of ga je weg, dan ben je de inzet kwijt.\nZonder tokens: dezelfde speelfiches, je saldo blijft gelijk. Met een vriend of in de groep altijd zonder tokens.",
+  "doel": "",
+  "met": {
+    "spelmenu": true,
+    "vriend": true,
+    "computer": true,
+    "chatbalk": true,
+    "webcam": true,
+    "store": true
+  },
+  "spraak": "vanzelf",
+  "extras": [
+    "uitleg",
+    "opnieuw",
+    "beurtklok",
+    "trillen",
+    "score",
+    "geluid",
+    "animaties",
+    "hulp",
+    "grootstand"
+  ],
+  "titel": "pesten",
+  "kaarten": {
+    "deck": "52",
+    "perSpeler": 2,
+    "spelers": 6,
+    "speciaal": []
+  }
+}

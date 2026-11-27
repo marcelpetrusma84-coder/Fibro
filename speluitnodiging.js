@@ -7,7 +7,7 @@
 import { supabase } from './supabase.js?v=95'
 import { houOpen } from './lijntjes.js?v=1'
 import { isNieuwsteSpelSessie } from './spelsessie.js?v=1'
-import { STUDIO_SPELLEN } from './studio-spellen.js?v=6' // 25 nov 2026: spellen uit Stekky Studio
+import { STUDIO_SPELLEN } from './studio-spellen.js?v=7' // 25 nov 2026: spellen uit Stekky Studio
 
 const SPEL_INFO = {
   botkaaseiren: { icon: '⭕', naam: 'Tic-Tac-Toe' },

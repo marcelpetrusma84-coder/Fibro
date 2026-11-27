@@ -34,7 +34,7 @@ function zetStijl() {
   document.head.append(s)
 }
 
-export async function tekenScorebordWidget(c, { supabase, uid, open = () => {}, T = globalThis.T || (s => s), storage = globalThis.localStorage } = {}) {
+export async function tekenScorebordWidget(c, { supabase, uid, openSpel, open = openSpel || (() => {}), T = globalThis.T || (s => s), storage = globalThis.localStorage } = {}) {
   zetStijl()
   const tt = (s, w) => { try { return T(s, w) } catch (e) { return s } }
   c.replaceChildren()

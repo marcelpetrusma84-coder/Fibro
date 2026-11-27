@@ -38,7 +38,7 @@ function wanneer(tt, volgende, nu) {
   return tt('+{n} over {d} dagen', { n: WEEKBEDRAG, d: dagen })
 }
 
-export async function tekenCasinoWidget(c, { supabase, uid, open = () => {}, T = globalThis.T || (s => s), storage = globalThis.localStorage,
+export async function tekenCasinoWidget(c, { supabase, uid, openSpel, open = openSpel || (() => {}), T = globalThis.T || (s => s), storage = globalThis.localStorage,
   casino, nu = () => Date.now() } = {}) {
   zetStijl()
   const tt = (s, w) => { try { return T(s, w) } catch (e) { return s } }

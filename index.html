@@ -344,6 +344,7 @@ import { startVolgorde, bewaarVolgorde } from './volgorde.js?v=95'
 import { startHeartbeat } from './heartbeat.js?v=118'
 import { meldToestel } from './toestel.js?v=1'
 import { zetStandaardWidgets } from './standaardwidgets.js?v=2' // v267: nieuw account = meteen widgets op Home
+import { homeDefs, lijstWidget, tekenLijstWidget } from './widgets.js?v=1' // 27 nov 2026: widgets uit één lijst (scorebord, casino, ...)
 import * as GB from './gastenboekstijl.js?v=2'
 import { spelIcoonHtml } from './spelicoon.js?v=14' // 30 okt 2026: plaatjes uit de spellen
 import { initSync, lokaleVriendNaam } from './sync.js?v=269'
@@ -449,8 +450,7 @@ const PROFIEL_DEFS = [
   { id:'radio',          icon:'📻', titel:'Radio',                w:4, h:3 }, // 18 nov 2026: radio.js
   { id:'rss',            icon:'📰', titel:'RSS-feed',             w:4, h:3 }, // 19 nov 2026: rsswidget.js
   { id:'mastodon',       icon:'🐘', titel:'Mastodon',             w:4, h:3 }, // 19 nov 2026: mastodon.js
-  { id:'scorebord',      icon:'🏆', titel:'Scorebord',            w:4, h:3 }, // 26 nov 2026: scorebordwidget.js (alleen op je eigen Home)
-  { id:'casino',         icon:'🎰', titel:'Casino',               w:4, h:3 }, // 27 nov 2026: casinowidget.js (alleen op je eigen Home)
+  ...homeDefs(), // 27 nov 2026: de widgets uit widgets.js (Scorebord, Casino, ...): één regel daar = hier in de lijst
   { id:'afteltimer',     icon:'⏳', titel:'Afteltimer',           w:4, h:2 },
   { id:'opteltimer',     icon:'⏱', titel:'Opteltimer',           w:4, h:2 },
   { id:'gastenboek',     icon:'📖', titel:'Gastenboek',           w:4, h:4 },
@@ -725,10 +725,9 @@ function renderProfiel(id, c) {
     renderRss(c, window._uid)
   } else if (id === 'mastodon') {
     renderMastodon(c, window._uid)
-  } else if (id === 'scorebord') {
-    renderScorebord(c, window._uid) // 26 nov 2026
-  } else if (id === 'casino') {
-    renderCasino(c, window._uid) // 27 nov 2026
+  } else if (lijstWidget(id)) {
+    // 27 nov 2026: een widget uit widgets.js tekent zichzelf (Scorebord, Casino, ...)
+    tekenLijstWidget(id, c, { supabase, uid: window._uid, T, openSpel: spel => openSpelMetTitel(spel, 'spel.html?spel=' + encodeURIComponent(spel)) })
   } else if (id === 'afteltimer') {
     renderAftel(c, window._uid)
   } else if (id === 'opteltimer') {
@@ -1920,26 +1919,6 @@ async function renderRss(c, uid) {
       renderRss(c, uid)
     },
   })
-}
-
-// ════════════════════════════════
-// SCOREBORD (26 nov 2026, Marcel, scorebordwidget.js): al je spellen op een rij, jouw beste score naast die van je
-// beste vriend. Tik op een spel: het opent met het titelscherm, net als een spelwidget. Alleen hier (je eigen Home).
-// ════════════════════════════════
-async function renderScorebord(c, uid) {
-  let W
-  try { W = await import('./scorebordwidget.js?v=4') } catch (e) { console.warn('[scorebord]', e); return }
-  W.tekenScorebordWidget(c, { supabase, uid, T, open: spel => openSpelMetTitel(spel, 'spel.html?spel=' + encodeURIComponent(spel)) })
-}
-
-// ════════════════════════════════
-// CASINO (27 nov 2026, Marcel, casinowidget.js): je tokens (elke week 250 erbij, tot -100), je rijkste vrienden en
-// een knop naar Black Jack. Alleen hier (je eigen Home).
-// ════════════════════════════════
-async function renderCasino(c, uid) {
-  let W
-  try { W = await import('./casinowidget.js?v=3') } catch (e) { console.warn('[casino]', e); return }
-  W.tekenCasinoWidget(c, { supabase, uid, T, open: spel => openSpelMetTitel(spel, 'spel.html?spel=' + encodeURIComponent(spel)) })
 }
 
 // ════════════════════════════════

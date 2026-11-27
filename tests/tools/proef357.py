@@ -2,7 +2,8 @@
 #  A. Salon staat bij de kaartstijlen (Kies je kaarten)
 #  B. de 19 plaatjes laden echt en zijn 375 x 525 (azen, boeren, vrouwen, heren, twee jokers, achterkant)
 #     28 nov 2026: de heren, vrouwen en boeren zijn echt 5 : 7 (het plaatje loopt van boven tot onder, geen lege
-#     crème banden); de twee jokers zijn verschillende plaatjes
+#     crème banden); de twee jokers zijn verschillende plaatjes; het grote kleurteken bovenin het lijstje is weg (dubbel
+#     op, want de app zet het teken al in het hoekje)
 #  C. de getekende 2 t/m 10 hebben dezelfde crème achtergrond als de plaatjes (#e4d7bc), niet wit; harten rood, schoppen
 #     donker
 #  D. een rij kaarten op tafel (voor de foto in /tmp/proef357.png); geen paginafouten
@@ -30,6 +31,13 @@ try:
                 ok([n, vol.indexOf(true), 524 - vol.lastIndexOf(true)]) }
             i.src = './kaarten/salon/' + n + '.webp' })))""", [k + w for k in 'hrks' for w in 'HVB'])
         check(all(0 <= boven < 70 and 0 <= onder < 70 for _, boven, onder in banden), 'B de heren, vrouwen en boeren lopen van boven tot onder (%s)' % [b for b in banden if not (0 <= b[1] < 70 and 0 <= b[2] < 70)][:3])
+        tekens = q.evaluate("""async namen => Promise.all(namen.map(n => new Promise(ok => { const i = new Image()
+            i.onload = () => { const c = document.createElement('canvas'); c.width = 375; c.height = 525; const x = c.getContext('2d'); x.drawImage(i, 0, 0)
+                const d = x.getImageData(65, 50, 70, 85).data, rood = 'hr'.includes(n[0]); let a = 0
+                for (let o = 0; o < d.length; o += 4) a += rood ? (d[o] > 140 && d[o + 1] < 90 && d[o + 2] < 90) : (d[o] < 50 && d[o + 1] < 50 && d[o + 2] < 50)
+                ok([n, a / (d.length / 4)]) }
+            i.src = './kaarten/salon/' + n + '.webp' })))""", [k + w for k in 'hrks' for w in 'HVB'])
+        check(all(deel < 0.05 for _, deel in tekens), 'B geen groot kleurteken bovenin het lijstje (%s)' % [t for t in tekens if t[1] >= 0.05][:3])
         j1, j2 = q.evaluate("() => [K.kaartSvg('J1', 'salon'), K.kaartSvg('J2', 'salon')]")
         check('salon/joker.webp' in j1 and 'salon/joker2.webp' in j2, 'B twee verschillende jokers')
         h5, s9 = q.evaluate("() => [K.kaartSvg('h5', 'salon'), K.kaartSvg('s9', 'salon')]")

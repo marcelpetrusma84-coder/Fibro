@@ -9,7 +9,7 @@
 //   plaatjes: alleen <kleur>A/B/V/H, achterkant en joker; 2 tot en met 10 tekent de app met de tekens in 'kleur'.
 
 export const STUDIO_KAARTSETS = [
-  {"id":"salon","naam":["Salon","Salon"],"soort":"plaatjes","kleur":{"h":"#a8262e","r":"#a8262e","k":"#1d1a17","s":"#1d1a17"},"achtergrond":"#e4d7bc","joker2":true,"v":2},
+  {"id":"salon","naam":["Salon","Salon"],"soort":"plaatjes","kleur":{"h":"#a8262e","r":"#a8262e","k":"#1d1a17","s":"#1d1a17"},"achtergrond":"#e4d7bc","joker2":true,"v":3},
 ]
 
 if (typeof window !== 'undefined') {

@@ -176,7 +176,7 @@ export function bouwopdracht(s) {
       '- Het spel loopt via `groepspel.js`: `start({ spelKanaal, spelers, mijnZetel })`. Zetel 1 (wie start) heeft de stand; de computer speelt lege plekken en wie weggaat.',
       '- De anderen als rondjes rond de tafel: `tafel.tegenstanders(...)`, met 🤖 voor de computer.',
       '- Tegen de computer: eerst kiezen tegen hoeveel computers (1 tot ' + (n - 1) + ').',
-      '- Zet `"max": ' + n + '` bij dit spel in studio-spellen.js zodra het met meer spelers werkt: dan staat het in de groepschat onder 🎲 (met pushmelding).', '')
+      '- `"max": ' + n + '` staat al bij dit spel in studio-spellen.js (het beginspel uit sjabloon-kaartspel kan al met de groep): het staat in de groepschat onder 🎲 (met pushmelding). Zorg dat de echte regels ook met ' + n + ' spelers werken.', '')
     if (!s.met.vriend) r.push('## Alleen spelen (een automaat)', '', '- Je speelt alleen: geen niveaus, geen computerspeler, niet in de chat (`zonderKanaal` in studio-spellen.js).',
       '- Met casino-tokens? Zet het spel in `CASINO_SPELLEN` (casino.js) en in de lijst van `casino_inzet` (sql/casino-tokens.sql). Betaalt het meer dan 2× uit, laat dan de server delen en uitbetalen zoals Video Poker (sql/videopoker.sql).', '')
   } else if (s.soort === 'arcade') r.push('## Arcade', '', '- Alleen spelen, met punten en een record (`solo.nieuweScore`, ook naar het scorebord).',

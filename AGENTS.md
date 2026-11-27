@@ -14,7 +14,8 @@
   `deploy-preview-<nr>--stately-llama-4b380e.netlify.app`.
 - Wacht met mergen tot alle controles op GitHub goed zijn (Tests (Node), Browsertests, apk).
 - Tests: `node tests/alle-tests.mjs`. Versiecontrole: `node tests/tools/controleer-versies.mjs origin/main HEAD`
-  (elk veranderd script een hoger `?v=`). Browsertests: `tests/tools/proef*.py`; een nieuwe proef krijgt een regel in
+  (elk veranderd script een hoger `?v=`). Browsertests: `tests/tools/proef*.py`, een nieuwe begint met
+  `tests/tools/proefhulp.py` (zie BOUWSTENEN.md) en krijgt een regel in
   `tests/tools/browsertests.txt`, dan draait hij op GitHub mee (in 4 groepjes tegelijk, `tests/tools/browsertests.py`).
 - Een nieuwe functie of reparatie krijgt bij voorkeur een browsertest die op de oude versie misgaat.
 

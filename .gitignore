@@ -5,3 +5,4 @@
 *.voor-*
 node_modules/
 android/.gradle/
+__pycache__/

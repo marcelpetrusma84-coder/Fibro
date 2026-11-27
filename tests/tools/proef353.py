@@ -12,28 +12,13 @@
 #  F. ❓ = de spelregels; geen paginafouten
 # Op de oude versie mislukt alles (er was geen poker).
 # python3 -I proef353.py <map>
-import sys, os, re, json, time, base64, functools, http.server, threading
+import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from proefhulp import *
 from playwright.sync_api import sync_playwright
-MAP = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
-fout = []
-def check(ok, wat):
-    print(('OK   ' if ok else 'FOUT ') + wat)
-    if not ok: fout.append(wat)
-class H(http.server.SimpleHTTPRequestHandler):
-    def translate_path(self, p): return super().translate_path(p.removeprefix('/Fibro'))
-    def log_message(self, *a): pass
-srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(H, directory=MAP)); threading.Thread(target=srv.serve_forever, daemon=True).start()
-BASIS = 'http://127.0.0.1:%d/Fibro/' % srv.server_port
 UID = 'aaaaaaaa-0000-4000-8000-000000000353'
-def b64(d): return base64.urlsafe_b64encode(json.dumps(d).encode()).decode().rstrip('=')
-jwt = b64({'alg': 'HS256', 'typ': 'JWT'}) + '.' + b64({'sub': UID, 'role': 'authenticated', 'exp': int(time.time()) + 7200, 'aud': 'authenticated'}) + '.x'
-user = {'id': UID, 'aud': 'authenticated', 'role': 'authenticated', 'email': 'marcel@x.nl', 'created_at': '2026-01-01T00:00:00Z', 'user_metadata': {'username': 'Marcel'}}
-sessie = {'access_token': jwt, 'refresh_token': 'r', 'token_type': 'bearer', 'expires_in': 7200, 'expires_at': int(time.time()) + 7200, 'user': user}
 STAND = {'saldo': 230}
 INZETTEN, UITSLAGEN, OPEN = [], [], {}
-def supabase(route):
-    u = route.request.url
-    body = json.loads(route.request.post_data or '{}') if route.request.method == 'POST' else {}
+def supabase(route, u, body):
     if '/rpc/casino_overzicht' in u:
         return route.fulfill(status=200, json={'saldo': STAND['saldo'], 'volgende': '2026-11-30T00:00:00+01:00', 'vrienden': [], 'laatste': []})
     if '/rpc/casino_inzet' in u:
@@ -44,33 +29,13 @@ def supabase(route):
         UITSLAGEN.append(body); n = OPEN.pop(body.get('p_run_id'), 0)
         STAND['saldo'] += {'winst': 2 * n, 'gelijk': n}.get(body.get('p_uitslag'), 0)
         return route.fulfill(status=200, json={'saldo': STAND['saldo']})
-    if '/auth/v1/user' in u: return route.fulfill(status=200, json=user)
-    return route.fulfill(status=200, json=[])
-fouten = []
-def wacht(pg, js, ms=15000):
-    try: pg.wait_for_function(js, timeout=ms); return True
-    except Exception: return False
-RUST = "!document.querySelector('.kt-laag .kt-vlieg')"
-HAND = "() => [...document.querySelectorAll('.kt-hand .kt-kaart')].map(k => k.dataset.id)"
+    if '/auth/v1/user' in u: return route.fulfill(status=200, json=sessie(UID)['user'])
 BORD = "() => [...document.querySelectorAll('.pk-bord .pk-kaart[data-id]')].map(k => k.dataset.id)"
 MIDDEN = "() => document.querySelector('.pk-midden')?.innerText.replace(/\\s+/g, ' ') || ''"
 KNOPPEN = "() => [...document.querySelectorAll('.kt-knoppen button')].map(b => b.dataset.naam || b.textContent)"
-KANAAL = """(ik, naam) => {
-    const bc = new BroadcastChannel(naam), lui = {}
-    bc.onmessage = e => { if (e.data.van !== ik) for (const f of (lui[e.data.event] || [])) f({ payload: e.data.payload }) }
-    return { on(_, f, fn) { (lui[f.event] = lui[f.event] || []).push(fn); return this }, send(m) { bc.postMessage({ van: ik, event: m.event, payload: m.payload }); return Promise.resolve('ok') } }
-}"""
 def speler(ctx, nr, groep=None, kanaal='pk353'):
-    q = ctx.new_page()
-    q.on('pageerror', lambda e: fouten.append('speler %d: %s' % (nr, str(e)[:300])))
-    q.goto(BASIS + 'manifest.json')
-    q.evaluate("localStorage.setItem('fibro_taal', 'nl')")
-    q.evaluate("""async ([nr, maak, groep, kn]) => {
-        document.body.innerHTML = '<div id="spelOverlay"><div id="spelTitelBar"></div><div id="spelInhoud" style="position:fixed;inset:0"></div></div>'
-        await import('./taal.js').catch(() => {})
-        const m = await import('./pokertexasholdem-ui.js?v=1')
-        m.start({ spelKanaal: (0, eval)('(' + maak + ')')(nr, kn), benIkSpeler1: nr === 1, vriendNaam: nr === 1 ? 'Tijn' : 'Marcel', spelers: groep, mijnZetel: nr })
-    }""", [nr, KANAAL, groep, kanaal])
+    q = lege_spelpagina(ctx, 'speler %d' % nr)
+    start_spel(q, 'pokertexasholdem-ui.js?v=1', {'kanaal': [nr, kanaal], 'benIkSpeler1': nr == 1, 'vriendNaam': 'Tijn' if nr == 1 else 'Marcel', 'spelers': groep, 'mijnZetel': nr})
     return q
 def aan_beurt(q): return q.evaluate("() => !!document.querySelector('.kt-knoppen button[data-naam=fold]')")
 def check_of_call(q):
@@ -83,14 +48,12 @@ def check_of_call(q):
 
 try:
     with sync_playwright() as p:
-        b = p.chromium.launch(args=['--no-proxy-server'])
-        ctx = b.new_context(service_workers='block', viewport={'width': 390, 'height': 844}, locale='nl-NL', has_touch=True)
-        ctx.route(re.compile(r'^https?://(?!127\.0\.0\.1).*'), lambda r: r.fulfill(status=204, body=''))
-        ctx.route('**/*supabase.co/**', supabase)
-        s0 = ctx.new_page(); s0.goto(BASIS + 'manifest.json')
-        s0.evaluate("(s) => { localStorage.setItem('fibro_taal', 'nl'); localStorage.setItem('sb-qmgatbphiplrfxrljtbe-auth-token', JSON.stringify(s)) }", sessie); s0.close()
+        b = browser(p)
+        ctx = context(b, has_touch=True)
+        nep_supabase(ctx, supabase)
+        inloggen(ctx, sessie(UID))
         # ── A ── tegen de computer, met tokens
-        pg = ctx.new_page(); pg.on('pageerror', lambda e: fouten.append('solo: ' + str(e)[:300])); pg.on('dialog', lambda d: d.dismiss())
+        pg = nieuwe_pagina(ctx, 'solo')
         pg.goto(BASIS + 'spel.html?spel=pokertexasholdem&titel=1')
         check(wacht(pg, "() => document.querySelectorAll('.niveau-btn[data-niveau]').length === 3", 10000), 'A het startscherm met drie niveaus')
         pg.click('.niveau-btn[data-niveau=normaal]')
@@ -149,7 +112,7 @@ try:
         pg.close(); ctx.close()
 
         # ── D ── met z'n tweeën
-        ctx = b.new_context(viewport={'width': 420, 'height': 860}, service_workers='block')
+        ctx = context(b, 420, 860)
         een, twee = speler(ctx, 1), speler(ctx, 2)
         check(wacht(een, "() => document.querySelectorAll('.kt-hand .kt-kaart').length === 2 && " + RUST) and wacht(twee, "() => document.querySelectorAll('.kt-hand .kt-kaart').length === 2 && " + RUST),
               'D allebei 2 kaarten')
@@ -157,13 +120,13 @@ try:
         check(len(set(h1 + h2)) == 4, 'D niemand dezelfde kaarten (%s %s)' % (h1, h2))
         check(wacht(een, "() => !!document.querySelector('.kt-knoppen button[data-naam=fold]')", 8000) and not aan_beurt(twee)
               and 'Marcel' in twee.inner_text('.kt-status'), 'D speler 1 (de dealer) begint, speler 2 wacht (%s)' % twee.inner_text('.kt-status'))
-        klaar = False
+        rond = False
         for _ in range(40):
-            if all(q.evaluate("() => /Hand 2/.test(document.querySelector('.pk-midden')?.innerText || '')") for q in (een, twee)): klaar = True; break
+            if all(q.evaluate("() => /Hand 2/.test(document.querySelector('.pk-midden')?.innerText || '')") for q in (een, twee)): rond = True; break
             for q in (een, twee):
                 if aan_beurt(q) and q.evaluate("() => " + RUST): check_of_call(q)
             een.wait_for_timeout(600)
-        check(klaar, 'D check/call tot het einde: speler 1 deelt vanzelf hand 2')
+        check(rond, 'D check/call tot het einde: speler 1 deelt vanzelf hand 2')
         twee.wait_for_timeout(800)
         fiches = [q.evaluate("() => [...document.querySelectorAll('.kt-tz-info')].map(e => e.innerText)") for q in (een, twee)]
         mij = [q.evaluate("() => (document.querySelector('.pk-midden').innerText.match(/💰 ([\\d.]+)/) || [])[1]") for q in (een, twee)]
@@ -171,7 +134,7 @@ try:
         ctx.close()
 
         # ── E ── met z'n drieën in de groep
-        ctx = b.new_context(viewport={'width': 420, 'height': 860}, service_workers='block')
+        ctx = context(b, 420, 860)
         groep = [{'naam': 'Marcel'}, {'naam': 'Tijn'}, {'naam': 'Bram'}]
         drie = [speler(ctx, n, groep, 'pk353g') for n in (1, 2, 3)]
         RONDJES = "() => [...document.querySelectorAll('.kt-tz')].map(z => z.querySelector('.kt-tz-naam').textContent.replace('Ⓓ ', ''))"
@@ -193,6 +156,4 @@ try:
         b.close()
 except Exception as e:
     check(False, 'proef liep vast: %s' % e)
-check(not fouten, 'F geen paginafouten (%s)' % fouten[:3])
-print('\n' + ('ALLES GOED' if not fout else '%d FOUT(EN)' % len(fout)))
-sys.exit(1 if fout else 0)
+klaar()

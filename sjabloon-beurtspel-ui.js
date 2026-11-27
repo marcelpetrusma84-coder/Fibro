@@ -16,7 +16,7 @@ const BEGIN = 15
 export function start({ Bordgeluid, spelKanaal, benIkSpeler1, vriendNaam }) {
     const inhoud = document.getElementById('spelInhoud')
     const titel = document.getElementById('spelTitelBar')
-    if (titel) titel.textContent = '🪵 Sticks'
+    if (titel) titel.textContent = '🪵 Sticks' // STUDIO-TITEL
     const ik = benIkSpeler1 ? 1 : 2
     const naam = vriendNaam || T('vriend')
     const solo = Boolean(spelKanaal && spelKanaal.isSolo)

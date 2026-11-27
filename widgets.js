@@ -17,7 +17,7 @@
 // vriend-profiel.html en sync.js; die verhuizen later.
 
 export const WIDGET_LIJST = [
-  { id: 'scorebord', icoon: '\u{1F3C6}', titel: 'Scorebord', titelEn: 'Scoreboard', w: 4, h: 3, bestand: './scorebordwidget.js?v=5', teken: 'tekenScorebordWidget', persoonlijk: true,
+  { id: 'scorebord', icoon: '\u{1F3C6}', titel: 'Scorebord', titelEn: 'Scoreboard', w: 4, h: 3, bestand: './scorebordwidget.js?v=6', teken: 'tekenScorebordWidget', persoonlijk: true,
     uitleg: ['Al je spellen op een rij: jouw beste score naast die van je beste vriend. Wie staat er voor? Tik op een spel om meteen te spelen. Alleen je echte vrienden doen mee, en alleen jij ziet deze widget.',
       'All your games in a row: your best score next to your best friend\'s. Who is ahead? Tap a game to play right away. Only your real friends take part, and only you see this widget.'] },
   { id: 'casino', icoon: '\u{1F3B0}', titel: 'Casino', titelEn: 'Casino', w: 4, h: 3, bestand: './casinowidget.js?v=4', teken: 'tekenCasinoWidget', persoonlijk: true,

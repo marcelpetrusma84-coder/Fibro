@@ -6,7 +6,7 @@
 //
 // Koningsjacht en Neon Raiders hebben al een eigen scorebord (koningsjacht-scores.js, neon-raiders-scores.js).
 // Ghost Tag en Runner & Gunner (punten) en Twin Snakes (keer gewonnen) sinds 26 nov 2026 (avond).
-import { STUDIO_SPELLEN } from './studio-spellen.js?v=8'
+import { STUDIO_SPELLEN } from './studio-spellen.js?v=9'
 import { SCOREBORDEN, STIJLEN } from './scoreborden.js?v=1' // 26 nov 2026: per spel aan/uit en stijl uit Stekky Studio
 
 // 26 nov 2026 (avond, Marcel: "sluit maar aan"): ook Ghost Tag en Runner & Gunner (punten) en Twin Snakes (rondes
@@ -23,7 +23,8 @@ const INFO = {
 
 // Alle spellen die een scorebord kunnen hebben (ook als het in Studio uit staat), met naam, icoon en soort
 export function alleScoreSpellen() {
-  const studio = STUDIO_SPELLEN.filter(s => s.soort === 'kaart').map(s => ({ id: s.id, naam: s.naam[0], icoon: s.icoon, soort: 'winst', studio: true }))
+  const studio = STUDIO_SPELLEN.filter(s => s.soort === 'kaart' || s.soort === 'arcade')   // 27 nov 2026: ook arcade (punten)
+    .map(s => ({ id: s.id, naam: s.naam[0], icoon: s.icoon, soort: s.soort === 'arcade' ? 'punten' : 'winst', studio: true }))
   return [...PUNTEN.map(id => ({ id, naam: INFO[id][0], icoon: INFO[id][1], soort: 'punten' })),
     ...WINST.map(id => ({ id, naam: INFO[id][0], icoon: INFO[id][1], soort: 'winst' })), ...studio]
 }
@@ -44,6 +45,7 @@ export function scoreSoort(spelId) {
   // (scorebord: false in studio-spellen.js).
   const studio = STUDIO_SPELLEN.find(s => s.id === id)
   if (studio && studio.soort === 'kaart' && studio.scorebord !== false) return 'winst'
+  if (studio && studio.soort === 'arcade' && studio.scorebord !== false) return 'punten'   // 27 nov 2026
   return null
 }
 

@@ -2,11 +2,11 @@
 # In een kopie van de app (alleen studio-spellen.js en de map spelicoon zijn echt een kopie; de rest verwijst naar de echte map).
 #  A. Studio (moderator): (v2) "Hoeveel spelers?" 2 tot 6, met uitleg over de groepschat; "Spel maken": de blauwdruk staat erbij; kaartspel kiezen; zonder naam geen bestand; een speciale
 #     kaart erbij; wat er altijd in zit is aangevinkt en vast; met alles ingevuld: een spelbestand dat klopt (met icoon)
-#  B. het installatiescript zet het spel in de app (studio-spellen.js, beginspel, icoon, bouwopdracht)
+#  B. het installatiescript zet het spel in de app (studio-spellen.js, beginspel uit het kaartspel-sjabloon met max 4, icoon, bouwopdracht)
 #  C. Store > Games: het spel staat erin met zijn eigen icoon; downloaden = op Home
 #  D. Home: de spelwidget met het icoon
-#  E. spel.html: het titelscherm (geleend van Pesten) met de eigen naam; dan tegen de computer: niveau kiezen, een zet doen,
-#     de computer zet terug, de eigen naam in de titelbalk
+#  E. spel.html: het titelscherm (geleend van Pesten) met de eigen naam; dan tegen de computer: niveau kiezen, tegen hoeveel
+#     computers, een kaart leggen, de computer legt terug (slag 2), de eigen naam in de titelbalk
 #  F. Profiel > Widgets: het spel heeft een rij bij Spellen; geen paginafouten
 # python3 -I proef337.py <map>
 import sys, os, time, json, socket, subprocess, tempfile, re, shutil
@@ -116,7 +116,8 @@ try:
         check(all(os.path.exists(os.path.join(app, f)) for f in ('kleurenjacht-ui.js', 'kleurenjacht.js', 'spelicoon/kleurenjacht.webp', 'spellen/kleurenjacht.md')), 'B beginspel, icoon en bouwopdracht staan er')
         md = open(os.path.join(app, 'spellen/kleurenjacht.md'), encoding='utf8').read()
         check('## Met meer spelers (2 tot 4)' in md and '"max": 4' in md, 'B de bouwopdracht zegt hoe het met 4 spelers moet')
-        check('"max"' not in open(os.path.join(app, 'studio-spellen.js'), encoding='utf8').read().split('kleurenjacht')[1].split('\n')[0], 'B het beginspel staat nog niet in de groepschat (max komt met de echte regels)')
+        # 27 nov 2026: het beginspel komt uit sjabloon-kaartspel (2 tot 6 spelers), dus het kan meteen in de groepschat
+        check('"max":4' in open(os.path.join(app, 'studio-spellen.js'), encoding='utf8').read().split('kleurenjacht')[1].split('\n')[0], 'B het kaartspel-sjabloon kan al met de groep: max 4')
 
         # ── C. Store ──
         STAND['moderator'] = False
@@ -143,11 +144,15 @@ try:
             pg.goto(BASIS + 'spel.html?spel=kleurenjacht&titel=1')
             check(wacht(pg, "() => document.querySelectorAll('.niveau-btn[data-niveau]').length === 3", 10000), 'E tegen de computer: drie niveaus')
             pg.click('.niveau-btn[data-niveau=moeilijk]')
-            check(wacht(pg, "() => (document.querySelector('.sj-status') || {}).textContent === 'Jouw beurt'", 10000), 'E het beginspel staat klaar: jouw beurt')
+            # 27 nov 2026: het beginspel is het kaartspel-sjabloon (Hoogste kaart): eerst tegen hoeveel computers
+            check(wacht(pg, "() => (document.querySelector('.kt-keuze') || {}).innerText?.includes('Tegen hoeveel computers')", 10000), 'E eerst: tegen hoeveel computers')
+            pg.click('.kt-keuze button[aria-label="1"]')
+            check(wacht(pg, "() => document.querySelectorAll('.kt-hand .kt-kaart').length === 5 && (document.querySelector('.kt-status')?.textContent || '').includes('Leg een kaart') && !document.querySelector('.kt-laag .kt-vlieg')", 15000), 'E het beginspel staat klaar: jouw beurt')
             check('🌈' in pg.inner_text('#spelTitelBar') and 'Kleurenjacht' in pg.inner_text('#spelTitelBar'), 'E de eigen naam in de titelbalk (%s)' % pg.inner_text('#spelTitelBar'))
-            voor = pg.locator('.sj-stokjes > span').count()
-            pg.locator('.sj-knoppen button').first.click()
-            check(wacht(pg, "() => (document.querySelector('.sj-status') || {}).textContent === 'Jouw beurt' && document.querySelectorAll('.sj-stokjes > span').length < %d" % (voor - 1), 8000), 'E de computer zette terug (%d -> %d)' % (voor, pg.locator('.sj-stokjes > span').count()))
+            kaart = pg.locator('.kt-hand .kt-kaart').first
+            doos = kaart.bounding_box()
+            pg.mouse.click(doos['x'] + 12, doos['y'] + doos['height'] / 2); pg.wait_for_timeout(150); pg.mouse.click(doos['x'] + 12, doos['y'] + doos['height'] / 2)
+            check(wacht(pg, "() => (document.querySelector('.sjk-midden')?.innerText || '').includes('Slag 2 van 5')", 10000), 'E de computer legde terug: slag 2')
 
             # ── F. Profiel ──
             pg.goto(BASIS + 'profiel.html')

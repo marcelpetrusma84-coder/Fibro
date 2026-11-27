@@ -4,8 +4,8 @@
 // spelbestand van (naam.stekkyspel.json). Dat zet Claude of Tijn in de app met tests/tools/studio-spel-installeer.mjs:
 // dan staat het spel meteen overal (Store, chat, Home), en bouwt Claude de echte regels uit de bouwopdracht.
 // v2 (25 nov 2026): kaartspellen: "Hoeveel spelers?" (2 tot 6). Meer dan 2 = ook in de groepschat en tegen meer computers.
-import { SOORTEN, ONDERDELEN, SPRAAK, EXTRAS, TITELS, DECKS, KAARTEN, MAX_NAAM, MAX_UITLEG, MAX_REGELS, MAX_SPECIAAL, MIN_SPELERS, MAX_SPELERS, maakSpel, valideerSpel, maakId } from './spelmaker.js?v=2'
-import { STUDIO_SPELLEN } from './studio-spellen.js?v=8'
+import { SOORTEN, ONDERDELEN, SPRAAK, EXTRAS, TITELS, DECKS, KAARTEN, MAX_NAAM, MAX_UITLEG, MAX_REGELS, MAX_SPECIAAL, MIN_SPELERS, MAX_SPELERS, maakSpel, valideerSpel, maakId } from './spelmaker.js?v=3'
+import { STUDIO_SPELLEN } from './studio-spellen.js?v=9'
 
 const $ = id => document.getElementById(id)
 function el(tag, opties = {}, kinderen = []) {
@@ -48,7 +48,7 @@ function bouw() {
   w.append(el('div', { klas: 'vakken', id: 'spSoorten', stijl: 'grid-template-columns:repeat(auto-fill,minmax(200px,1fr))' },
     Object.entries(SOORTEN).map(([id, s]) => el('button', { type: 'button', klas: 'sp-soort' + (stand.soort === id ? ' gekozen' : ''), 'data-soort': id,
       stijl: 'text-align:left;padding:10px;border-radius:12px;border:' + (stand.soort === id ? '2px solid var(--accent)' : '0.5px solid var(--border)') + ';background:var(--card);color:var(--text);cursor:pointer;font:inherit',
-      onclick: () => { lees(); if (stand.soort !== id) { stand.spraak = undefined; stand.titel = undefined } stand.soort = id; bouw() } }, [el('div', { tekst: (id === 'kaart' ? '🃏 ' : '♟️ ') + s.naam, stijl: 'font-weight:700' }), el('div', { tekst: s.uitleg, stijl: 'font-size:12px;color:var(--muted);margin-top:4px' })]))))
+      onclick: () => { lees(); if (stand.soort !== id) { stand.spraak = undefined; stand.titel = undefined } stand.soort = id; bouw() } }, [el('div', { tekst: (id === 'kaart' ? '🃏 ' : id === 'arcade' ? '🕹️ ' : '♟️ ') + s.naam, stijl: 'font-weight:700' }), el('div', { tekst: s.uitleg, stijl: 'font-size:12px;color:var(--muted);margin-top:4px' })]))))
 
   // Naam, icoon, uitleg
   const icoonVeld = el('input', { type: 'text', id: 'spIcoon', maxlength: 8, value: stand.icoon || '🎲', stijl: 'font-size:20px;width:70px', oninput: maakIcoon })
@@ -86,6 +86,9 @@ function bouw() {
     w.append(el('div', { stijl: 'margin-top:10px;font-size:13px;font-weight:600', tekst: 'Speciale kaarten' }), lijst,
       el('button', { type: 'button', klas: 'speel', id: 'spSpeciaalErbij', stijl: 'margin-top:6px', tekst: '➕ Speciale kaart', disabled: stand.speciaal.length >= MAX_SPECIAAL,
         onclick: () => { lees(); stand.speciaal.push({ kaart: 'aas', wat: '' }); bouw() } }))
+  } else if (stand.soort === 'arcade') {
+    // 27 nov 2026: een arcadespel speel je alleen (punten en een record); het beginspel komt uit sjabloon-arcade-ui.js
+    w.append(el('div', { stijl: 'margin-top:8px;font-size:12px;color:var(--muted)', tekst: 'Een arcadespel speel je alleen: met punten, een record en het scorebord (top 10). Besturen met de pijltjes, je vinger of een controller.' }))
   } else {
     w.append(el('div', { klas: 'rij', stijl: 'margin-top:8px' }, [veld('Het bord', el('input', { type: 'text', id: 'spBord', maxlength: 200, value: stand.bord || '', placeholder: 'bijvoorbeeld 8 bij 8 vakjes, elk 12 stukken' }), true)]))
   }
@@ -93,7 +96,7 @@ function bouw() {
   // Wat erin zit
   const met = stand.met || Object.fromEntries(ONDERDELEN.map(o => [o.id, o.vast || o.standaard]))
   w.append(el('div', { stijl: 'margin-top:14px;font-size:13px;font-weight:600', tekst: 'Wat zit erin?' }),
-    el('div', { id: 'spMet' }, ONDERDELEN.map(o => vinkje(o.id, o.naam, met[o.id], o.vast))))
+    el('div', { id: 'spMet' }, ONDERDELEN.filter(o => stand.soort !== 'arcade' || !(o.id === 'vriend' || o.alleenVriend)).map(o => vinkje(o.id, o.naam, met[o.id], o.vast))))   // arcade: alleen spelen
   w.append(el('div', { klas: 'rij', stijl: 'margin-top:8px' }, [
     veld('Spraak met je vriend', el('select', { id: 'spSpraak' }, Object.entries(SPRAAK).map(([id, n]) => el('option', { value: id, selected: (stand.spraak || (stand.soort === 'kaart' ? 'vanzelf' : 'knop')) === id, tekst: n })))),
     veld('Titelscherm en muziek', el('select', { id: 'spTitel' }, Object.entries(TITELS).map(([id, n]) => el('option', { value: id, selected: (stand.titel ?? (stand.soort === 'kaart' ? 'pesten' : 'vieroprij')) === id, tekst: n })))),

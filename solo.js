@@ -10,7 +10,7 @@ import { schaakUltraBot } from './schaak-ultra.js?v=4'
 import { computerStap as pestenComputerStap, doeStap as pestenDoeStap, geldigeStand as pestenGeldig } from './pesten.js?v=2'
 import * as Toepen from './toepen.js?v=1'                   // 11 nov 2026: tweede en derde kaartspel
 import * as Eenentwintigen from './eenentwintigen.js?v=1'
-import { STUDIO_SPELLEN, spelBestand as studioBestand, luieBot } from './studio-spellen.js?v=8' // 25 nov 2026: spellen uit Stekky Studio
+import { STUDIO_SPELLEN, spelBestand as studioBestand, luieBot } from './studio-spellen.js?v=9' // 25 nov 2026: spellen uit Stekky Studio
 
 export const NIVEAUS = ['makkelijk', 'normaal', 'moeilijk']
 
@@ -558,4 +558,4 @@ export const SOLO_SPELLEN = {
 // (export bot) en wordt pas opgehaald als je speelt. Alleen via de Store, net als de kaartspellen.
 for (const s of STUDIO_SPELLEN) if (s.met.computer)
   SOLO_SPELLEN[s.id] = { naam: s.naam[0], icon: s.icoon, bestand: studioBestand(s), bot: luieBot(s), store: true, studio: true,
-    ...(s.zonderKanaal ? { zonderKanaal: true } : {}) }   // 27 nov 2026: Video Poker speel je alleen, zonder niveau en zonder computerspeler
+    ...(s.zonderKanaal ? { zonderKanaal: true } : {}), ...(s.arcade ? { arcade: true } : {}) }   // arcade: startscherm met je record, solo.nieuweScore   // 27 nov 2026: Video Poker speel je alleen, zonder niveau en zonder computerspeler

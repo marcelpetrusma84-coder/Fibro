@@ -7,7 +7,7 @@
 // Midden op tafel: de pot, de blinds en de vijf tafelkaarten. Onderin je twee kaarten en de knoppen Fold, Check/Call,
 // Raise (kies hoeveel) en All-in. Bovenin de anderen met hun fiches en wat ze deden. Na een hand zie je wie wat had en
 // wie de pot krijgt; de gastheer deelt dan vanzelf de volgende hand.
-import * as P from './pokertexasholdem.js?v=1'
+import * as P from './pokertexasholdem.js?v=2'
 import { maakKaartTafel, kaartSvg, kaartNaam, REACTIES } from './kaartspel-hulp.js?v=22'
 import { meldGeslagen } from './beurtspel-hulp.js?v=1'
 import { maakGroepSpel } from './groepspel.js?v=2'

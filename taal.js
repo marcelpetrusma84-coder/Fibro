@@ -1,3 +1,4 @@
+// v164 (27 nov 2026): taal-en.js?v=164 (casino-tokens: het inzetscherm in Black Jack en de widget Casino).
 // v163 (26 nov 2026): taal-en.js?v=163 (Twin Snakes-spelvormen op het scorebord: Classic, Zonder muren).
 // v162 (26 nov 2026): taal-en.js?v=162 (Koningsjacht van Tijn: scorecategorieën en ruimteschip, samengevoegd met main).
 // v161 (26 nov 2026): taal-en.js?v=161 (de widget Scorebord op Home).
@@ -174,7 +175,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=163', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=164', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

@@ -200,6 +200,9 @@ jobs:
       - name: "Scorebord ook bij Ghost Tag, Twin Snakes en Runner & Gunner, en 🏆 in het spelmenu (proef351)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef351.py .
+      - name: "Casino-tokens: widget op Home en inzetten bij Black Jack (proef352)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef352.py .
       - name: "Kaartspellen: de Vrolijke kaarten (standaard, plaatjes laden, Engels)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef312.py .

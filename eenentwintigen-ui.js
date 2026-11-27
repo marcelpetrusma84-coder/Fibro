@@ -3,9 +3,12 @@
 // In gewone woorden: de regels staan in eenentwintigen.js, de tafel in kaartspel-hulp.js. Tik of veeg op de stapel
 // voor een kaart, tik op "Ik blijf" als je genoeg hebt. Aan het eind draait de ander zijn kaarten om (ze vliegen
 // open op tafel). Over het spelkanaal precies zoals Pesten: 'zet', 'vraag-stand'/'stand', 'opnieuw', 'kaartreactie'.
+// 27 nov 2026 (Marcel): tegen de computer zet je tokens in (casino.js). spel.html zet window.fibroCasino klaar;
+// in de chat (tegen een vriend) bestaat het niet en speel je zonder inzet.
 import * as P from './eenentwintigen.js?v=1'
 import { maakKaartTafel, REACTIES } from './kaartspel-hulp.js?v=22'
 import { meldGeslagen } from './beurtspel-hulp.js?v=1'
+import { verschil, uitbetaling } from './casino.js?v=1'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
 const BEURT_SECONDEN = 30
@@ -26,6 +29,9 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam }) {
   let rij = Promise.resolve()
   const score = { [ik]: 0, [hij]: 0 }
   const geteld = new Set()
+  const casino = solo && window.fibroCasino && window.fibroCasino.spel === 'eenentwintigen' ? window.fibroCasino : null
+  let pot = { inzet: 0 }       // de inzet van dit potje: { inzet, runId, saldo } (saldo = na het inzetten)
+  let kiest = false            // het inzetscherm staat open
   let klokVoor = ''
 
   const stuur = (event, payload) => { try { spelKanaal.send({ type: 'broadcast', event, payload }) } catch (e) {} }
@@ -68,6 +74,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam }) {
     let info = pil(T('Jij: {n}', { n: mijn }), mijn > 21 ? '#ff5c7a' : mijn === 21 ? '#86efac' : '')
     if (staat.gestopt[hij] && !staat.klaar) info += pil(T('{naam} blijft', { naam: naamHtml }))
     if (staat.klaar) info += pil(naamHtml + ': ' + P.totaal(staat.handen[hij]), P.totaal(staat.handen[hij]) > 21 ? '#ff5c7a' : '')
+    if (pot.inzet) info += pil('🪙 ' + pot.inzet, '#fde68a')
     tafel.info(info)
   }
 
@@ -80,11 +87,24 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam }) {
   function controleerEinde() {
     if (!staat || !staat.klaar) return
     const gewonnen = staat.winnaar === ik
-    if (!geteld.has(spelId)) { geteld.add(spelId); if (staat.winnaar) score[staat.winnaar]++; if (staat.winnaar === hij) meldGeslagen('ik', 1, { geluid: false }) }
+    if (!geteld.has(spelId)) {
+      geteld.add(spelId); if (staat.winnaar) score[staat.winnaar]++; if (staat.winnaar === hij) meldGeslagen('ik', 1, { geluid: false })
+      // De inzet: de uitslag naar de server (één keer per potje)
+      if (casino && pot.inzet && pot.runId && !pot.uitslag) {
+        pot.uitslag = gewonnen ? 'winst' : staat.winnaar ? 'verlies' : 'gelijk'
+        casino.uitslag(pot.runId, pot.uitslag).catch(() => {})
+      }
+    }
     const a = P.totaal(staat.handen[ik]), b = P.totaal(staat.handen[hij])
+    let tokens = ''
+    if (pot.inzet && pot.uitslag) {
+      const v = verschil(pot.inzet, pot.uitslag)
+      tokens = '  ·  ' + (v > 0 ? T('+{n} tokens', { n: v }) : v < 0 ? T('−{n} tokens', { n: -v }) : T('Inzet terug')) +
+        '  ·  ' + T('Saldo: 🪙 {n}', { n: pot.saldo + uitbetaling(pot.inzet, pot.uitslag) })
+    }
     tafel.einde({ gewonnen,
       titel: gewonnen ? T('🎉 Jij wint!') : staat.winnaar ? T('😢 {naam} wint!', { naam }) : T('🤝 Gelijkspel!'),
-      sub: T('Jij {a} · {naam} {b}', { a, b, naam }) + '  ·  ' + T('Stand: jij {a} - {b} {naam}', { a: score[ik], b: score[hij], naam }),
+      sub: T('Jij {a} · {naam} {b}', { a, b, naam }) + '  ·  ' + T('Stand: jij {a} - {b} {naam}', { a: score[ik], b: score[hij], naam }) + tokens,
       opnieuw: nieuwSpelStarten })
   }
   function naZet(oud) {
@@ -162,7 +182,15 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam }) {
     if (REACTIES.includes(e)) tafel.reactie(e, 'ander')
   })
 
-  function nieuwSpelStarten() {
+  async function nieuwSpelStarten() {
+    if (kiest) return
+    if (casino) {
+      // Eerst je inzet kiezen (zonder internet of account komt er meteen 'zonder inzet' terug)
+      kiest = true
+      tafel.sluitEinde()
+      try { pot = await casino.kiesInzet(tafel.element, { T }) } catch (e) { pot = { inzet: 0 } } finally { kiest = false }
+      if (!tafel.element.isConnected) return
+    }
     const begint = staat ? (staat.begint === 1 ? 2 : 1) : 1
     const id = Math.max(Date.now(), spelId + 1)
     const nieuw = P.nieuwSpel({ begint })

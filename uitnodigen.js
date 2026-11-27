@@ -12,7 +12,7 @@
 // melding dat hij niet werkt.
 import { supabase } from './supabase.js?v=95'
 import { haalPrivateKeyOp, eigenPubliekeSleutel, sleutelVingerafdruk } from './crypto.js?v=182'
-import { STUDIO_SPELLEN } from './studio-spellen.js?v=7'
+import { STUDIO_SPELLEN } from './studio-spellen.js?v=8'
 
 // Hetzelfde adres als in vrienden.html
 const UITNODIGING_ADRES = 'https://marcelpetrusma84-coder.github.io/Fibro/invite.html'

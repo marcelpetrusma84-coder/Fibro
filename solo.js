@@ -10,7 +10,7 @@ import { schaakUltraBot } from './schaak-ultra.js?v=4'
 import { computerStap as pestenComputerStap, doeStap as pestenDoeStap, geldigeStand as pestenGeldig } from './pesten.js?v=2'
 import * as Toepen from './toepen.js?v=1'                   // 11 nov 2026: tweede en derde kaartspel
 import * as Eenentwintigen from './eenentwintigen.js?v=1'
-import { STUDIO_SPELLEN, spelBestand as studioBestand, luieBot } from './studio-spellen.js?v=7' // 25 nov 2026: spellen uit Stekky Studio
+import { STUDIO_SPELLEN, spelBestand as studioBestand, luieBot } from './studio-spellen.js?v=8' // 25 nov 2026: spellen uit Stekky Studio
 
 export const NIVEAUS = ['makkelijk', 'normaal', 'moeilijk']
 
@@ -527,7 +527,7 @@ export const SOLO_SPELLEN = {
   vieroprij:    { naam: 'Four in a Row', icon: '🔴', bestand: './vieroprij-ui.js?v=241', bot: vorBot },
   pesten:       { naam: 'Pesten',        icon: '🃏', bestand: './pesten-ui.js?v=20',     bot: pestenBot, store: true },   // 11 nov 2026: het eerste kaartspel; alleen via de Store (niet meesturen met een uitnodiging)
   toepen:       { naam: 'Toepen',        icon: '✊', bestand: './toepen-ui.js?v=18',     bot: toepenBot, store: true },          // 11 nov 2026: kaartspel uit de Store
-  eenentwintigen: { naam: 'Black Jack', icon: '♠️', bestand: './eenentwintigen-ui.js?v=21', bot: eenentwintigenBot, store: true },   // 11 nov 2026: kaartspel uit de Store
+  eenentwintigen: { naam: 'Black Jack', icon: '♠️', bestand: './eenentwintigen-ui.js?v=22', bot: eenentwintigenBot, store: true },   // 11 nov 2026: kaartspel uit de Store
   // 13 nov 2026: Koningsjacht, alleen tegen het kasteel (geen computerspeler en geen spelkanaal), uit de Store; met een vriend in de chat
   koningsjacht: { naam: 'Koningsjacht', icon: '👑', bestand: './koningsjacht-ui.js?v=55', zonderKanaal: true, store: true },
   schaken:      { naam: 'Chess',         icon: '♟️', bestand: './schaken-ui.js?v=278',  niveaus:[...NIVEAUS, 'ultra'], bot: opties => opties.niveau === 'ultra' ? schaakUltraBot(opties) : schaakBot(opties), motor: './schaak.js?v=95', motorNaam: 'Schaak' },
@@ -557,4 +557,5 @@ export const SOLO_SPELLEN = {
 // 25 nov 2026: spellen uit Stekky Studio (studio-spellen.js) met 'tegen de computer'. De computerspeler staat in <id>.js
 // (export bot) en wordt pas opgehaald als je speelt. Alleen via de Store, net als de kaartspellen.
 for (const s of STUDIO_SPELLEN) if (s.met.computer)
-  SOLO_SPELLEN[s.id] = { naam: s.naam[0], icon: s.icoon, bestand: studioBestand(s), bot: luieBot(s), store: true, studio: true }
+  SOLO_SPELLEN[s.id] = { naam: s.naam[0], icon: s.icoon, bestand: studioBestand(s), bot: luieBot(s), store: true, studio: true,
+    ...(s.zonderKanaal ? { zonderKanaal: true } : {}) }   // 27 nov 2026: Video Poker speel je alleen, zonder niveau en zonder computerspeler

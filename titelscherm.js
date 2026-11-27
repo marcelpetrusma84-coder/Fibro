@@ -16,7 +16,7 @@
 //          Geeft true als je erdoor tikte, false als het scherm van buitenaf weg moest (sluitTitelscherm).
 import { SCENES } from './titelscenes.js?v=8'
 import { speelTitelMuziek as speelMuziek, stopTitelMuziek, muziekAan, zetMuziek } from './titelmuziek.js?v=7'
-import { studioSpel } from './studio-spellen.js?v=7' // 25 nov 2026: spellen uit Stekky Studio: titelscherm en muziek van een ander spel
+import { studioSpel } from './studio-spellen.js?v=8' // 25 nov 2026: spellen uit Stekky Studio: titelscherm en muziek van een ander spel
 // Een spel uit Stekky Studio leent het titelscherm en de muziek van het spel dat in de Studio gekozen is (titel)
 const leen = id => { const s = studioSpel(id); return s ? s.titel : id }
 const speelTitelMuziek = id => speelMuziek(leen(id))

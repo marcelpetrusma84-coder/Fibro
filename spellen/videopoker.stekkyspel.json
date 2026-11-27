@@ -1,0 +1,42 @@
+{
+  "formaat": "stekky-spel",
+  "versie": 1,
+  "id": "videopoker",
+  "soort": "kaart",
+  "naam": [
+    "Video Poker",
+    "Video Poker"
+  ],
+  "icoon": "🎰",
+  "uitleg": [
+    "Jacks or Better tegen de automaat: 5 kaarten, houd wat je wilt en ruil de rest één keer. Een paar boeren of beter betaalt uit, een royal flush 250×. Met of zonder casino-tokens.",
+    "Jacks or Better against the machine: 5 cards, hold what you like and swap the rest once. A pair of jacks or better pays, a royal flush 250×. With or without casino tokens."
+  ],
+  "regels": "Video Poker speel je in je eentje tegen een automaat. De bekendste versie heet Jacks or Better.\n\nZo speel je:\n\nJe zet in: 10, 25, 50 of 100 tokens (of zonder tokens).\nJe krijgt 5 open kaarten.\nJe tikt de kaarten aan die je wilt houden. Je mag alles houden, niets houden of iets ertussenin.\nJe tikt op Ruilen: de kaarten die je niet hield worden één keer vervangen door nieuwe.\nJe eindhand bepaalt wat je wint. Elke ronde is één nieuw potje met een vers geschud kaartspel.\n\nUitbetaling (de gangbare tabel, zet × deze waarde):\n\nHand Uitbetaling\nRoyal flush 250×\nStraight flush 50×\nFour of a kind 25×\nFull house 9×\nFlush 6×\nStraight 4×\nThree of a kind 3×\nTwee paar 2×\nEen paar boeren of hoger (B, V, H, A) 1× (je krijgt je inzet terug)\nAl het andere 0 (je inzet is weg)\n\nEen paar tienen of lager levert dus niets op, vandaar de naam: alleen boeren of beter tellen.\n\nServer (Marcel, 27 nov 2026): met tokens deelt de server de kaarten en betaalt hij uit (sql/videopoker.sql), zodat niemand een hand kan verzinnen. Zonder tokens (of zonder internet) speel je op het toestel, met dezelfde tabel.",
+  "doel": "",
+  "met": {
+    "spelmenu": true,
+    "vriend": false,
+    "computer": true,
+    "chatbalk": false,
+    "webcam": false,
+    "store": true
+  },
+  "spraak": "uit",
+  "extras": [
+    "uitleg",
+    "opnieuw",
+    "trillen",
+    "score",
+    "geluid",
+    "animaties",
+    "hulp"
+  ],
+  "titel": "pesten",
+  "kaarten": {
+    "deck": "52",
+    "perSpeler": 5,
+    "spelers": 2,
+    "speciaal": []
+  }
+}

@@ -16,6 +16,15 @@
   (elk veranderd script een hoger `?v=`). Browsertests: `tests/tools/proef*.py` (draaien ook in CI).
 - Een nieuwe functie of reparatie krijgt bij voorkeur een browsertest die op de oude versie misgaat.
 
+## Het pakhuis (BOUWSTENEN.md)
+- **Lees eerst [BOUWSTENEN.md](BOUWSTENEN.md)** voordat je iets nieuws bouwt. Staat wat je nodig hebt er al, gebruik het
+  (of breid het uit, met een test). Bouw niets opnieuw dat er al is.
+- Iets nieuws gebouwd dat later bruikbaar is? Zet het in BOUWSTENEN.md. Alleen voor één spel of pagina? Dan bij
+  "Alleen voor één onderdeel". `tests/ui/test-bouwstenen.mjs` controleert dat elk script, SQL-bestand, edge function en
+  installeerscript erin staat.
+- Werk je aan iets uit "Dubbel werk", voeg het dan eerst samen tot één bouwsteen.
+- In de PR: onder "Bouwstenen" welke je hergebruikte en welke er nieuw bij kwamen.
+
 ## Techniek
 - GitHub Pages onder `/Fibro/`. PWA met service worker die per `?v=` cachet.
 - Supabase-project `qmgatbphiplrfxrljtbe`. Edge function `stuur-push` (verify_jwt false).

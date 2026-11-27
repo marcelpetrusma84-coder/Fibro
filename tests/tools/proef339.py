@@ -129,7 +129,11 @@ try:
         pg.click('.kt-keuze button[aria-label="1"]')
         check(wacht(pg, MIJN, 15000), 'F jij bent aan de beurt')
         h, t = ruil(pg)
-        check(wacht(pg, "() => (%s)().includes('%s')" % (HAND, t), 5000), 'F geruild')
+        geruild = wacht(pg, "() => (%s)().includes('%s')" % (HAND, t), 5000)
+        if not geruild and wacht(pg, MIJN, 3000):
+            # 27 nov 2026: soms viel de tik nog in het einde van de deelanimatie (dan doet de tafel niets): nog één keer
+            h, t = ruil(pg); geruild = wacht(pg, "() => (%s)().includes('%s')" % (HAND, t), 5000)
+        check(geruild, 'F geruild')
         # Soms heeft iemand meteen 31: dan is de ronde klaar en begint de computer ronde 2 (kloppen mag dan nog niet)
         RONDE2 = "document.querySelector('.eed-midden').innerText.includes('Ronde 2')"
         check(wacht(pg, "() => /computer|Computer/.test(document.querySelector('.kt-status').innerText) || !!document.querySelector('.kt-knoppen button[data-naam=alles]') || " + RONDE2, 8000), 'F de computer is aan de beurt')

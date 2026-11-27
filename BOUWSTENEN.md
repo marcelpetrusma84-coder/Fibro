@@ -201,6 +201,7 @@ Grotere uitleg staat in [BLAUWDRUK-BEURTSPEL.md](BLAUWDRUK-BEURTSPEL.md), [BLAUW
 | `tests/alle-tests.mjs` | Alle Node-tests. |
 | `tests/tools/controleer-versies.mjs`, `tests/tools/verhoog-versies.mjs` | Elk veranderd script een nieuw `?v=`: controleren en ophogen. |
 | `tests/tools/proef*.py` | Browsertests. Kopieer de opzet van een recente (bijv. `proef352.py`: nep-Supabase met `route`, een sessie in localStorage; `proef353.py`: een nagemaakt spelkanaal met `BroadcastChannel` voor 2 of 3 spelers). Gebruik `pg.wait_for_timeout`, geen `time.sleep`. |
+| `tests/tools/browsertests.txt`, `tests/tools/browsertests.py` | De browsertests die op GitHub draaien, in 4 groepjes tegelijk (ongeveer 8 minuten). Een nieuwe proef = een regel erbij. Mislukt een proef, dan draait hij nog één keer; lukt het dan, dan heet hij "wankel" (waarschuwing, maar groen). |
 | `tests/tools/taalcheck.py` | Heeft elke Nederlandse tekst een Engelse vertaling? |
 | `tests/tools/proef46.mjs`, `proef47.mjs`, `proef50.mjs`, `proef77.mjs`, `proef229.mjs`, `proef233.mjs`, `proef235.mjs`, `proef266.mjs`, `proef280.mjs`, `proef314.mjs` | Node-proeven (vooral de pushfunctie en de server). |
 

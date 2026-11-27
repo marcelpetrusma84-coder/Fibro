@@ -75,7 +75,10 @@ try:
         SERVER['sleutels'] = {MARCEL: keys['m']['publicKeyB64'], BRAM: keys['b']['publicKeyB64']}
         lokaal = datetime.datetime.now().astimezone()
         for i, (van, dagen, uur, tekst) in enumerate(plan):
-            if uur is None: t = nu - datetime.timedelta(minutes=30 - i)
+            if uur is None:
+                # 27 nov 2026: vlak na middernacht viel "een half uur geleden" op gisteren (de proef faalde dan); nu altijd vandaag
+                begin_dag = lokaal.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(datetime.timezone.utc)
+                t = max(nu - datetime.timedelta(minutes=30 - i), begin_dag + datetime.timedelta(seconds=i))
             else:
                 d = (lokaal - datetime.timedelta(days=dagen)).replace(hour=int(uur), minute=int(round((uur % 1) * 100)), second=0, microsecond=0)
                 t = d.astimezone(datetime.timezone.utc)

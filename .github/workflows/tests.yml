@@ -203,6 +203,9 @@ jobs:
       - name: "Casino-tokens: widget op Home en inzetten bij Black Jack (proef352)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef352.py .
+      - name: "Poker Texas Hold'em: tegen de computer met en zonder tokens, met z'n tweeën en in de groep (proef353)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef353.py .
       - name: "Kaartspellen: de Vrolijke kaarten (standaard, plaatjes laden, Engels)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef312.py .

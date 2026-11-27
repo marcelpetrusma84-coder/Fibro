@@ -1,10 +1,10 @@
 // casinowidget.js (v1, 27 nov 2026, Marcel) - de widget 🎰 Casino op Home: je tokens, wanneer de volgende 250 komen,
-// je rijkste vrienden en een knop naar Black Jack.
+// je rijkste vrienden en knoppen naar Black Jack en Poker.
 //
 // Waar het vandaan komt: casino_overzicht (sql/casino-tokens.sql, via casino.js). Alleen echte vrienden (van twee
 // kanten), zonder wie geblokkeerd is. Zonder internet of account: een regel dat je online moet zijn.
 // Persoonlijk: alleen op je eigen Home. Op het profiel van een vriend staat hij niet (vriend-profiel.html).
-import { maakCasino, WEEKBEDRAG, MINIMUM } from './casino.js?v=1'
+import { maakCasino, WEEKBEDRAG, MINIMUM } from './casino.js?v=2'
 
 const kort = v => typeof v === 'string' ? v.trim().slice(0, 40) : ''
 
@@ -16,7 +16,8 @@ function zetStijl() {
 .csw-saldo{font-size:28px;font-weight:900;color:#fde68a;font-variant-numeric:tabular-nums;line-height:1.1}
 .csw-saldo.min{color:#ff8fa3}
 .csw-sub{font-size:11px;opacity:.75}
-.csw-speel{flex:none;padding:9px 12px;border:0;border-radius:12px;background:#8b3fd1;color:#fff;font:inherit;font-weight:800;cursor:pointer}
+.csw-knoppen{display:flex;flex-direction:column;gap:5px;flex:none}
+.csw-speel{flex:none;padding:7px 12px;border:0;border-radius:12px;background:#8b3fd1;color:#fff;font:inherit;font-weight:800;cursor:pointer}
 .csw-speel:active{transform:scale(.96)}
 .csw-lijst{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0;padding:0;list-style:none}
 .csw-rij{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:center;padding:5px 2px;border-top:1px solid #ffffff14}
@@ -62,7 +63,12 @@ export async function tekenCasinoWidget(c, { supabase, uid, open = () => {}, T =
   links.append(saldo, sub)
   const speel = document.createElement('button'); speel.type = 'button'; speel.className = 'csw-speel'; speel.textContent = tt('♠️ Black Jack')
   speel.onclick = e => { e.stopPropagation(); open('eenentwintigen') }
-  kop.append(links, speel)
+  // 27 nov 2026: ook Poker
+  const poker = document.createElement('button'); poker.type = 'button'; poker.className = 'csw-speel'; poker.dataset.spel = 'pokertexasholdem'; poker.textContent = tt('🎲 Poker')
+  poker.onclick = e => { e.stopPropagation(); open('pokertexasholdem') }
+  speel.dataset.spel = 'eenentwintigen'
+  const knoppen = document.createElement('div'); knoppen.className = 'csw-knoppen'; knoppen.append(speel, poker)
+  kop.append(links, knoppen)
   doos.append(kop)
 
   if (!ov) {

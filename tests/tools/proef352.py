@@ -101,7 +101,7 @@ try:
         rijen = pg.evaluate("() => [...document.querySelectorAll('.csw-rij')].map(r => ({ ik: r.classList.contains('ik'), tekst: r.innerText.replace(/\\s+/g, ' ') }))")
         check(len(rijen) == 3 and '👑' in rijen[0]['tekst'] and 'Tijntje' in rijen[0]['tekst'] and '520' in rijen[0]['tekst']
               and rijen[1]['ik'] and 'Jij' in rijen[1]['tekst'] and 'bram' in rijen[2]['tekst'], 'A: de rijkste vrienden, Tijntje 👑 bovenaan, Jij gemarkeerd (%s)' % rijen)
-        pg.click('.csw-speel')
+        pg.click('.csw-speel[data-spel=eenentwintigen]')
         check(wacht(pg, "() => !!document.querySelector('.fibro-titelscherm, iframe[src*=\"spel=eenentwintigen\"]') || location.href.includes('spel=eenentwintigen')", 8000),
               'A: ♠️ Black Jack opent het spel')
         pg.close()

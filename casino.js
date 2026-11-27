@@ -17,7 +17,7 @@ export const WEEKBEDRAG = 250
 export const MINIMUM = -100
 export const MAX_INZET = 100
 export const INZETTEN = [10, 25, 50, 100]
-export const CASINO_SPELLEN = ['eenentwintigen']
+export const CASINO_SPELLEN = ['eenentwintigen', 'pokertexasholdem']   // 27 nov 2026: ook Poker (inkopen, de hele tafel winnen = 2×)
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const UITSLAGEN = ['winst', 'verlies', 'gelijk']

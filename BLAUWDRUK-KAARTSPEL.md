@@ -106,6 +106,10 @@ Per plaat staat er een prompt voor Gemini klaar (`maakKaartPrompt` in `kaartmake
 
 Gemaakt via **🎲 Spel maken** (spellen/eenendertigen.md). Regels in `eenendertigen.js` (met `bot` voor tegen de computer, via `studio-spellen.js`), het scherm in `eenendertigen-ui.js`. Piket (32 kaarten), 3 kaarten per speler en 3 open op tafel. Kies een kaart uit je hand en tik op een tafelkaart om te ruilen (of veeg je kaart omhoog en kies een tafelkaart); knoppen "Alle 3 ruilen", "Kloppen" (pas na één rondgang) en ❓. De tafelkaarten en de pilletjes (ronde, punten, levens) staan in een eigen vak midden op tafel (`.eed-midden`), want het info-vak van de tafel laat geen tikken door. Na een ronde deelt speler 1 vanzelf de volgende. Tests: `tests/kaart/test-eenendertigen.mjs` (ook 500 potjes computer tegen computer) en `proef339`.
 
+## Poker Texas Hold'em (uit Stekky Studio, 27 november 2026)
+
+Gemaakt via **🎲 Spel maken** (spellen/pokertexasholdem.md). Regels in `pokertexasholdem.js`, het scherm in `pokertexasholdem-ui.js`; 2 tot 6 spelers zoals Eenendertigen (`groepspel.js`, `"max": 6`). Iedereen begint met 1000 fiches, blinds 10/20 die elke 10 handen omhoog gaan (`BLINDS`); check, call, raise (minstens de vorige verhoging), all-in en fold; zijpotten en gedeelde potten; wie als laatste fiches heeft, wint de tafel. De computer schat zijn kans door de rest van de kaarten een paar honderd keer na te spelen (`winKans`) en verhoogt minder vaak naarmate er al verhoogd is. Midden op tafel (`.pk-midden`): de pot, de blinds, de vijf tafelkaarten en na een hand wie wat had. Tegen de computer kun je casino-tokens inzetten (`casino.js`, één keer per potje; de hele tafel winnen = 2×). Tests: `tests/kaart/test-poker.mjs` en `proef353`.
+
 ## Met meer spelers en met de groep (25 november 2026)
 
 - **`groepspel.js`** (stap 1): 2 tot 6 spelers over één spelkanaal. Wie het spel start is de gastheer en heeft de stand; de anderen sturen hun zet (`actie`), de gastheer stuurt de nieuwe stand (`stand`). De computer speelt lege zetels, wie weggaat (`weg`) en wie zijn beurt laat verlopen. Gaat de gastheer weg, dan stopt het spel bij de anderen (`onGastheerWeg`).

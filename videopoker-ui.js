@@ -50,6 +50,7 @@ function zetStijl() {
 .vp-saldo.min{color:#ff8fa3}
 .vp-wissel{padding:5px 10px;border-radius:999px;border:1px solid #c084fc88;background:transparent;color:#c084fc;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
 .vp-fiches{display:flex;gap:8px}
+.vp-fiches[hidden],.vp-wissel[hidden]{display:none}
 .vp-fiche{width:46px;height:46px;border-radius:50%;border:3px dashed #ffffffaa;background:#8b3fd1;color:#fff;font:inherit;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #4c1d7a}
 .vp-fiche:nth-child(2){background:#0f9f6e}.vp-fiche:nth-child(3){background:#d1453f}.vp-fiche:nth-child(4){background:#1f1f2e}
 .vp-fiche.gekozen{outline:3px solid #facc15;outline-offset:2px}

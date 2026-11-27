@@ -3,7 +3,7 @@
 #     je saldo 🪙 230 en de fiches
 #  B. met tokens: Deel (inzet 25) gaat naar de server (videopoker_deel); je ziet precies de kaarten van de server; tik twee
 #     kaarten aan (HOUDEN) en Ruil: videopoker_ruil met houd = 3; de kaarten van de server, "Three of a kind" licht op in
-#     de tabel, "+75" en het nieuwe saldo 🪙 290
+#     de tabel, "+75" en het nieuwe saldo 🪙 280
 #  C. saldo -90: alleen fiche 10 kan nog (anders onder -100)
 #  D. "Zonder tokens": delen en ruilen op het toestel, niets naar de server; 💡 Tip zet HOUDEN-vinkjes
 #  E. zonder account: meteen zonder tokens, geen knop om te wisselen
@@ -91,7 +91,7 @@ try:
         check(wacht(pg, "() => (%s)().join() === 'hB,sB,rB,k7,h3' && (%s)().includes('+75')" % (KAARTEN, MELDING), 8000), 'B na het ruilen: de kaarten van de server en +75 (%s)' % pg.evaluate(MELDING))
         check(len(RUIL) == 1 and RUIL[0].get('p_houd') == 3 and RUIL[0].get('p_ronde_id') == RID, 'B ruilen met houd = 3 (%s)' % RUIL)
         check(pg.evaluate("() => document.querySelector('.vp-tabel .winst')?.textContent") == 'Three of a kind', 'B Three of a kind licht op in de tabel')
-        check('290' in pg.inner_text('.vp-saldo') and pg.inner_text('.vp-knop[data-naam=hoofd]') == 'Deel', 'B het nieuwe saldo 🪙 290, en weer Deel')
+        check('280' in pg.inner_text('.vp-saldo') and pg.inner_text('.vp-knop[data-naam=hoofd]') == 'Deel', 'B het nieuwe saldo van de server (205 + 75 = 🪙 280), en weer Deel (%s)' % pg.inner_text('.vp-saldo'))
         pg.close()
         # ── C ──
         STAND['saldo'] = -90

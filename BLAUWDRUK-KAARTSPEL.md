@@ -110,6 +110,10 @@ Gemaakt via **🎲 Spel maken** (spellen/eenendertigen.md). Regels in `eenendert
 
 Gemaakt via **🎲 Spel maken** (spellen/pokertexasholdem.md). Regels in `pokertexasholdem.js`, het scherm in `pokertexasholdem-ui.js`; 2 tot 6 spelers zoals Eenendertigen (`groepspel.js`, `"max": 6`). Iedereen begint met 1000 fiches, blinds 10/20 die elke 10 handen omhoog gaan (`BLINDS`); check, call, raise (minstens de vorige verhoging), all-in en fold; zijpotten en gedeelde potten; wie als laatste fiches heeft, wint de tafel. De computer schat zijn kans door de rest van de kaarten een paar honderd keer na te spelen (`winKans`) en verhoogt minder vaak naarmate er al verhoogd is. Midden op tafel (`.pk-midden`): de pot, de blinds, de vijf tafelkaarten en na een hand wie wat had. Tegen de computer kun je casino-tokens inzetten (`casino.js`, één keer per potje; de hele tafel winnen = 2×). Tests: `tests/kaart/test-poker.mjs` en `proef353`.
 
+## Video Poker (uit Stekky Studio, 27 november 2026)
+
+Jacks or Better, alleen tegen de automaat (`"zonderKanaal": true` in `studio-spellen.js`: geen niveaus, geen computerspeler, niet in de chat). Regels en uitbetalingstabel in `videopoker.js`, het scherm in `videopoker-ui.js` (eigen scherm, wel de kaarten van `kaartspel-hulp.js`). **Met tokens deelt de server** (`sql/videopoker.sql`: `videopoker_deel` en `videopoker_ruil`): hij schudt, bewaart 10 kaarten, ruilt, kijkt de hand na (`videopoker_hand`, dezelfde regels als `beoordeel`) en betaalt inzet × de tabel uit. Zo kan niemand een royal flush (250×) verzinnen. Zonder tokens deelt het toestel. 💡 Tip = een eenvoudige strategie (`tip`, ongeveer 99% terug). Tests: `tests/kaart/test-videopoker.mjs` en `proef354`.
+
 ## Met meer spelers en met de groep (25 november 2026)
 
 - **`groepspel.js`** (stap 1): 2 tot 6 spelers over één spelkanaal. Wie het spel start is de gastheer en heeft de stand; de anderen sturen hun zet (`actie`), de gastheer stuurt de nieuwe stand (`stand`). De computer speelt lege zetels, wie weggaat (`weg`) en wie zijn beurt laat verlopen. Gaat de gastheer weg, dan stopt het spel bij de anderen (`onGastheerWeg`).

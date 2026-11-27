@@ -139,7 +139,7 @@ for (const re of [/import \{ STUDIO_SPELLEN, studioSpel, spelBestand as studioBe
   /BEURTSPELLEN\.push\(\.\.\.STUDIO_SPELLEN\.filter\(s => s\.met\.vriend && s\.met\.webcam\)/, /KAARTSPELLEN\.push\(\.\.\.STUDIO_SPELLEN\.filter\(s => s\.met\.vriend && s\.spraak === 'vanzelf'\)/])
   assert.match(chat, re)
 assert.ok(chat.indexOf('BEURTSPELLEN.push(') < chat.indexOf('const CAMERA_RONDJES'), 'de webcamlijst is af voordat de rondjes gemaakt worden')
-assert.match(lees('solo.js'), /for \(const s of STUDIO_SPELLEN\) if \(s\.met\.computer\)\n  SOLO_SPELLEN\[s\.id\] = \{ naam: s\.naam\[0\], icon: s\.icoon, bestand: studioBestand\(s\), bot: luieBot\(s\), store: true, studio: true \}/)
+assert.match(lees('solo.js'), /for \(const s of STUDIO_SPELLEN\) if \(s\.met\.computer\)\n  SOLO_SPELLEN\[s\.id\] = \{ naam: s\.naam\[0\], icon: s\.icoon, bestand: studioBestand\(s\), bot: luieBot\(s\), store: true, studio: true,/)
 assert.match(lees('store.js'), /\.\.\.STUDIO_SPELLEN\.map\(s => \(\{ id: s\.id, soort: 'game', titel: s\.naam\[0\], widget: 'spel_' \+ s\.id/)
 assert.match(lees('profiel.html'), /studioWidgetDef\(n\)\)\.filter\(Boolean\)/)
 assert.match(lees('profiel.html'), /filter\(it=>it&&it\.studio\)/)

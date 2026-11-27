@@ -206,6 +206,9 @@ jobs:
       - name: "Poker Texas Hold'em: tegen de computer met en zonder tokens, met z'n tweeën en in de groep (proef353)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef353.py .
+      - name: "Video Poker: de server deelt en betaalt uit, zonder tokens op het toestel (proef354)"
+        if: ${{ !cancelled() }}
+        run: python -I tests/tools/proef354.py .
       - name: "Kaartspellen: de Vrolijke kaarten (standaard, plaatjes laden, Engels)"
         if: ${{ !cancelled() }}
         run: python -I tests/tools/proef312.py .

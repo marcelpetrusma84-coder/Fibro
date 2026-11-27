@@ -41,10 +41,13 @@ export const PLATEN = {
   ],
 }
 export const nodig = soort => PLATEN[soort].flatMap(p => p.vakken).filter(Boolean)
+// 28 nov 2026: mag erbij, hoeft niet: een tweede joker (anders zijn beide jokers hetzelfde plaatje)
+export const MAG_ERBIJ = ['joker2']
 
 export function kaartNaam(n) {
   if (n === 'achterkant') return 'achterkant'
   if (n === 'joker') return 'joker'
+  if (n === 'joker2') return 'tweede joker'
   return KLEUR_NAAM[n[0]] + ' ' + (WAARDE_NAAM[n.slice(1)] || n.slice(1))
 }
 function kaartEngels(n, soort) {
@@ -79,7 +82,7 @@ export function maakKaartset({ naam, naamEn, soort, kleur, kaarten, achtergrond 
   const n0 = String(naam || '').replace(/\s+/g, ' ').trim().slice(0, MAX_NAAM)
   return { formaat: FORMAAT, versie: 1, id: maakId(n0), naam: [n0, String(naamEn || '').replace(/\s+/g, ' ').trim().slice(0, MAX_NAAM) || n0], soort: s, kleur: k,
     ...(/^#[0-9a-f]{6}$/i.test(achtergrond || '') ? { achtergrond: achtergrond.toLowerCase() } : {}),
-    kaarten: Object.fromEntries(nodig(s).filter(n => kaarten && kaarten[n]).map(n => [n, kaarten[n]])) }
+    kaarten: Object.fromEntries([...nodig(s), ...MAG_ERBIJ].filter(n => kaarten && kaarten[n]).map(n => [n, kaarten[n]])) }
 }
 
 // Klopt het kaartpakket? Geeft een lijst met wat er mis is (leeg = goed).
@@ -101,7 +104,7 @@ export function valideerKaartset(set, { bestaand = [] } = {}) {
   if (SOORTEN[set.soort]) {
     const mist = nodig(set.soort).filter(n => !kaarten[n])
     if (mist.length) f.push('Deze kaarten hebben nog geen plaatje: ' + mist.map(kaartNaam).join(', ') + '.')
-    const over = Object.keys(kaarten).filter(n => !nodig(set.soort).includes(n))
+    const over = Object.keys(kaarten).filter(n => !nodig(set.soort).includes(n) && !MAG_ERBIJ.includes(n))
     if (over.length) f.push('Deze kaarten horen er niet bij: ' + over.join(', ') + '.')
   }
   for (const [n, d] of Object.entries(kaarten))

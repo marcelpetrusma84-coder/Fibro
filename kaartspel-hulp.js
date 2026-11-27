@@ -142,7 +142,7 @@ export const KAARTSTIJLEN = {
 }
 // 25 nov 2026: de speelkaarten uit Stekky Studio. studio = 'plaatjes' (alleen azen, hofkaarten, achterkant en joker; 2 t/m 10
 // worden getekend in de kleuren van de set) of 'alles' (54 plaatjes, zoals Perkament)
-for (const s of STUDIO_KAARTSETS) KAARTSTIJLEN[s.id] = { naam: s.naam[0], map: './kaarten/' + s.id + '/', v: s.v, studio: s.soort, kleur: s.kleur, achtergrond: s.achtergrond }
+for (const s of STUDIO_KAARTSETS) KAARTSTIJLEN[s.id] = { naam: s.naam[0], map: './kaarten/' + s.id + '/', v: s.v, studio: s.soort, kleur: s.kleur, achtergrond: s.achtergrond, joker2: s.joker2 === true }
 const STANDAARD_STIJL = 'vrolijk'
 // v9: de ondergrond van de tafel (behalve als een spel zelf een ondergrond kiest)
 const ONDERGROND_SLEUTEL = 'fibro_kaartondergrond'
@@ -175,7 +175,7 @@ function laadVooruit(stijl) {
   }
   if (!KAARTSTIJLEN[stijl]?.map) return
   vooruitGeladen.add(stijl)
-  const namen = ['achterkant', 'joker']
+  const namen = ['achterkant', 'joker', ...(KAARTSTIJLEN[stijl].joker2 ? ['joker2'] : [])]
   for (const k of KAART_KLEUREN) for (const w of KAART_WAARDEN) if (KAARTSTIJLEN[stijl].studio !== 'plaatjes' || STUDIO_PLAATJES.includes(w)) namen.push(k + w)
   for (const n of namen) { const i = new Image(); i.decoding = 'async'; i.src = plaatjeUrl(stijl, n) }
 }
@@ -400,7 +400,7 @@ export function kaartSvg(id, stijl = kaartStijl()) {
   if (stijl === 'modern') return modernKaart(id)
   if (stijl === 'vrolijk') return vrolijkKaart(id)
   if (KAARTSTIJLEN[stijl]?.studio === 'plaatjes' && !/^J[12]$/.test(id) && !STUDIO_PLAATJES.includes(kaartDelen(id).waarde)) return studioCijferKaart(stijl, id)
-  if (KAARTSTIJLEN[stijl]?.map) return /^J[12]$/.test(id) ? plaatje(stijl, 'joker') : plaatjeMetHoek(stijl, id)
+  if (KAARTSTIJLEN[stijl]?.map) return /^J[12]$/.test(id) ? plaatje(stijl, id === 'J2' && KAARTSTIJLEN[stijl].joker2 ? 'joker2' : 'joker') : plaatjeMetHoek(stijl, id)
   const sleutel = id + (isEngels() ? '|en' : '')
   if (svgCache.has(sleutel)) return svgCache.get(sleutel)
   const { kleur: k, waarde: w } = kaartDelen(id)

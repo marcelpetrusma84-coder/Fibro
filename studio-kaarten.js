@@ -4,11 +4,12 @@
 // In gewone woorden: elke set hier staat vanzelf bij "Kies je kaarten" in elk kaartspel (kaartspel-hulp.js). De plaatjes
 // staan in kaarten/<id>/<kaart>.webp (375 x 525).
 //   { id, naam: [nl, en], soort: 'plaatjes'|'alles', kleur: { h, r, k, s }, achtergrond?: '#rrggbb', v }
+//   joker2 (mag weg): true = er is een tweede jokerplaatje (joker2.webp); anders zijn beide jokers joker.webp
 //   achtergrond (mag weg): de kleur van de kaart onder de getekende 2 tot en met 10 (anders wit)
 //   plaatjes: alleen <kleur>A/B/V/H, achterkant en joker; 2 tot en met 10 tekent de app met de tekens in 'kleur'.
 
 export const STUDIO_KAARTSETS = [
-  {"id":"salon","naam":["Salon","Salon"],"soort":"plaatjes","kleur":{"h":"#a8262e","r":"#a8262e","k":"#1d1a17","s":"#1d1a17"},"achtergrond":"#e4d7bc","v":1},
+  {"id":"salon","naam":["Salon","Salon"],"soort":"plaatjes","kleur":{"h":"#a8262e","r":"#a8262e","k":"#1d1a17","s":"#1d1a17"},"achtergrond":"#e4d7bc","joker2":true,"v":2},
 ]
 
 if (typeof window !== 'undefined') {

@@ -21,7 +21,7 @@ const stop = t => { console.error(t); process.exit(1) }
 
 globalThis.window ||= {}
 const nu = Date.now()
-const { valideerKaartset, nodig } = await import(pathToFileURL(path.join(HOOFD, 'kaartmaker.js')).href + '?x=' + nu)
+const { valideerKaartset, nodig, MAG_ERBIJ } = await import(pathToFileURL(path.join(HOOFD, 'kaartmaker.js')).href + '?x=' + nu)
 const dataPad = path.join(HOOFD, 'studio-kaarten.js')
 const { STUDIO_KAARTSETS } = await import(pathToFileURL(dataPad).href + '?x=' + nu)
 
@@ -34,10 +34,10 @@ if (existsSync(map)) stop('Deze map bestaat al: kaarten/' + set.id)
 
 // 2. De plaatjes
 mkdirSync(map, { recursive: true })
-for (const n of nodig(set.soort)) writeFileSync(path.join(map, n + '.webp'), Buffer.from(set.kaarten[n].split(',')[1], 'base64'))
+for (const n of [...nodig(set.soort), ...MAG_ERBIJ.filter(n => set.kaarten[n])]) writeFileSync(path.join(map, n + '.webp'), Buffer.from(set.kaarten[n].split(',')[1], 'base64'))
 
 // 3. In studio-kaarten.js
-const nieuw = { id: set.id, naam: set.naam, soort: set.soort, kleur: set.kleur, ...(set.achtergrond ? { achtergrond: set.achtergrond } : {}), v: 1 }
+const nieuw = { id: set.id, naam: set.naam, soort: set.soort, kleur: set.kleur, ...(set.achtergrond ? { achtergrond: set.achtergrond } : {}), ...(set.kaarten.joker2 ? { joker2: true } : {}), v: 1 }
 const bron = readFileSync(dataPad, 'utf8')
 const lijst = /export const STUDIO_KAARTSETS = \[[\s\S]*?\]\n/
 if (!lijst.test(bron)) stop('studio-kaarten.js is veranderd: de lijst staat er niet meer zoals verwacht.')

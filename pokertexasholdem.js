@@ -143,7 +143,7 @@ function deel(s, rng = Math.random) {
   for (let r = 0; r < 2; r++) { let z = sb; for (let i = 0; i < levend.length; i++) { s.handen[z].push(s.stapel.pop()); z = volgendeVan(s, z, x => s.fiches[x] > 0) } }
   const leg = (z, b) => { const x = Math.min(b, s.fiches[z]); s.fiches[z] -= x; s.inzet[z] += x }
   leg(sb, klein); leg(bb, groot)
-  s.hoogste = groot; s.minRaise = groot
+  s.hoogste = groot; s.minRaise = groot; s.raises = 0
   s.kleineBlind = sb; s.groteBlind = bb
   s.laatste = { soort: 'deel', wie: 0, kaarten: [] }
   s.aanZet = volgendeVan(s, bb, z => kanHandelen(s, z))
@@ -164,7 +164,7 @@ function rondeKlaar(s) {
 // Na een inzetronde: de inzetten gaan in de pot, de volgende tafelkaart(en), of de uitslag
 function volgendeStraat(s) {
   for (const z of zetels(s)) { s.totaal[z] += s.inzet[z]; s.inzet[z] = 0; s.gehandeld[z] = false }
-  s.hoogste = 0; s.minRaise = s.blinds[1]
+  s.hoogste = 0; s.minRaise = s.blinds[1]; s.raises = 0
   const mee = zetels(s).filter(z => speeltMee(s, z))
   if (mee.length <= 1) { uitslag(s); return }
   const i = STRATEN.indexOf(s.straat)
@@ -290,6 +290,7 @@ export function raise(oud, z, tot) {
   if (verhoging >= s.minRaise) s.minRaise = verhoging
   const eerste = s.hoogste === 0
   s.hoogste = tot
+  s.raises = (s.raises || 0) + 1
   // iedereen moet weer iets doen (behalve wie raisede)
   for (const x2 of zetels(s)) if (x2 !== z) s.gehandeld[x2] = false
   s.laatste = { soort: s.fiches[z] === 0 ? 'allin' : eerste ? 'bet' : 'raise', wie: z, bedrag: x, tot }
@@ -379,10 +380,13 @@ function denk(s, z, niveau, rng) {
     return { soort: 'fold' }
   }
   const moeilijk = niveau === 'moeilijk'
-  const sterk = moeilijk ? 1.5 : 1.7
-  if (magRaisen(s, z) && kracht > sterk && r < (moeilijk ? 0.8 : 0.6)) {
+  // hoe vaker er deze ronde al verhoogd is, hoe sterker je moet zijn om nog eens te verhogen (anders gaan de computers
+  // elkaar eindeloos opjagen)
+  const raises = s.raises || 0
+  const sterk = (moeilijk ? 1.5 : 1.7) + raises * 0.5
+  if (magRaisen(s, z) && kracht > sterk && kans > 0.3 + raises * 0.15 && r < (moeilijk ? 0.8 : 0.6)) {
     // heel sterk: soms all-in, anders flink verhogen
-    if (kracht > 2.4 && s.straat !== 'preflop' && r < 0.25) return { soort: 'allin' }
+    if (kans > 0.8 && s.straat !== 'preflop' && r < 0.3) return { soort: 'allin' }
     return { soort: 'raise', tot: raiseNaar(kracht > 2.2 ? 0.9 : 0.55) }
   }
   if (betalen === 0) {

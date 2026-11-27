@@ -27,7 +27,7 @@ Object.assign(window.FIBRO_EN ||= {}, {
   'Je ligt eruit. Kijk nog even mee!': "You're out. Keep watching!", 'De kaarten worden geschud...': 'Shuffling the cards...',
   'Tegen hoeveel computers wil je spelen?': 'How many computer players?', 'Computer': 'Computer', 'Computer {n}': 'Computer {n}',
   '🎉 Jij wint de tafel!': '🎉 You win the table!', '😢 Je fiches zijn op': '😢 You are out of chips', '😢 {naam} wint de tafel!': '😢 {naam} wins the table!',
-  'Na {n} handen': 'After {n} hands', 'Het spel is gestopt.': 'The game has stopped.', '{naam} heeft het spel verlaten.': '{naam} has left the game.',
+  'Na {n} handen': 'After {n} hands', 'Na 1 hand': 'After 1 hand', 'Het spel is gestopt.': 'The game has stopped.', '{naam} heeft het spel verlaten.': '{naam} has left the game.',
   'Spelregels van Poker': 'Poker rules', 'Fold': 'Fold', 'All-in!': 'All-in!', 'Dealer': 'Dealer',
   'Hoge kaart': 'High card', 'Eén paar': 'One pair', 'Twee paar': 'Two pair', 'Three of a kind': 'Three of a kind', 'Straight': 'Straight', 'Flush': 'Flush',
   'Full house': 'Full house', 'Four of a kind': 'Four of a kind', 'Straight flush': 'Straight flush', 'Royal flush': 'Royal flush',
@@ -300,7 +300,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, spelers: groep, mi
       const v = verschil(pot.inzet, pot.uitslag)
       tokens = '  ·  ' + (v > 0 ? T('+{n} tokens', { n: v }) : T('−{n} tokens', { n: -v })) + '  ·  ' + T('Saldo: 🪙 {n}', { n: pot.saldo + uitbetaling(pot.inzet, pot.uitslag) })
     }
-    const sub = T('Na {n} handen', { n: staat.hand }) + '  ·  ' + P.zetels(staat).map(z => naamVan(z) + ' ' + getal(staat.fiches[z])).join(' · ') + tokens
+    const sub = (staat.hand === 1 ? T('Na 1 hand') : T('Na {n} handen', { n: staat.hand })) + '  ·  ' + P.zetels(staat).map(z => naamVan(z) + ' ' + getal(staat.fiches[z])).join(' · ') + tokens
     tafel.einde({ gewonnen,
       titel: gewonnen ? T('🎉 Jij wint de tafel!') : staat.fiches[ik] === 0 ? T('😢 Je fiches zijn op') : T('😢 {naam} wint de tafel!', { naam: naamVan(staat.winnaar) }),
       sub, opnieuw: spel && spel.gastheer ? nieuwSpelStarten : null })

@@ -37,7 +37,7 @@ mkdirSync(map, { recursive: true })
 for (const n of nodig(set.soort)) writeFileSync(path.join(map, n + '.webp'), Buffer.from(set.kaarten[n].split(',')[1], 'base64'))
 
 // 3. In studio-kaarten.js
-const nieuw = { id: set.id, naam: set.naam, soort: set.soort, kleur: set.kleur, v: 1 }
+const nieuw = { id: set.id, naam: set.naam, soort: set.soort, kleur: set.kleur, ...(set.achtergrond ? { achtergrond: set.achtergrond } : {}), v: 1 }
 const bron = readFileSync(dataPad, 'utf8')
 const lijst = /export const STUDIO_KAARTSETS = \[[\s\S]*?\]\n/
 if (!lijst.test(bron)) stop('studio-kaarten.js is veranderd: de lijst staat er niet meer zoals verwacht.')

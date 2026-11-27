@@ -8,7 +8,7 @@
 //  - Zonder tokens (of zonder internet of account) deelt het toestel zelf, met dezelfde tabel.
 //  - 💡 Tip zet de HOUDEN-vinkjes zoals een eenvoudige strategie het zou doen.
 import * as V from './videopoker.js?v=2'
-import { kaartSvg, achterkantSvg, kaartNaam, zetStijl as zetKaartStijl, kaartGeluid, tril } from './kaartspel-hulp.js?v=22'
+import { kaartSvg, achterkantSvg, kaartNaam, zetStijl as zetKaartStijl, kaartGeluid, tril } from './kaartspel-hulp.js?v=23'
 import { supabase } from './supabase.js?v=95'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)

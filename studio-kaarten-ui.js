@@ -2,9 +2,9 @@
 // Je kiest alleen de plaatjes (18) of alle 54 kaarten, een naam en de kleuren. Per plaat krijg je een prompt voor Gemini;
 // je laadt de platen in (meerdere tegelijk), de Studio knipt ze in kaarten en zet elk plaatje op de goede kaart. Klopt een
 // kaart niet, dan kies je bij die kaart een ander plaatje. Dan maakt de Studio een kaartpakket (naam.stekkykaarten.json).
-import { SOORTEN, PLATEN, KLEUREN, KLEUR_NAAM, STANDAARD_KLEUR, BREED, HOOG, MAX_NAAM, nodig, kaartNaam, maakKaartPrompt, maakKaartset, valideerKaartset } from './kaartmaker.js?v=1'
+import { SOORTEN, PLATEN, KLEUREN, KLEUR_NAAM, STANDAARD_KLEUR, BREED, HOOG, MAX_NAAM, nodig, kaartNaam, maakKaartPrompt, maakKaartset, valideerKaartset } from './kaartmaker.js?v=2'
 import { knipRooster } from './studio-knippen.js?v=1'
-import { STUDIO_KAARTSETS } from './studio-kaarten.js?v=1'
+import { STUDIO_KAARTSETS } from './studio-kaarten.js?v=2'
 
 const $ = id => document.getElementById(id)
 function el(tag, opties = {}, kinderen = []) {

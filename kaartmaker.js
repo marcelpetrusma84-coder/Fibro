@@ -13,6 +13,7 @@
 export const FORMAAT = 'stekky-kaarten'
 export const BREED = 375, HOOG = 525            // zoals de Perkament-kaarten (5 : 7)
 export const MAX_PLAATJE = 150000, MAX_NAAM = 30
+export const STANDAARD_ACHTERGROND = '#fffdf9'   // 27 nov 2026: de kaartkleur van de getekende 2 t/m 10 (een set mag een eigen kleur meegeven)
 export const KLEUREN = ['h', 'r', 'k', 's']
 export const KLEUR_NAAM = { h: 'harten', r: 'ruiten', k: 'klaveren', s: 'schoppen' }
 const KLEUR_EN = { h: 'hearts', r: 'diamonds', k: 'clubs', s: 'spades' }
@@ -71,12 +72,13 @@ export function maakKaartPrompt({ soort = 'plaatjes', nr = 0, stijl = '' } = {})
 }
 
 // Een kaartpakket uit wat er in de Studio is gekozen
-export function maakKaartset({ naam, naamEn, soort, kleur, kaarten }) {
+export function maakKaartset({ naam, naamEn, soort, kleur, kaarten, achtergrond }) {
   const s = SOORTEN[soort] ? soort : 'plaatjes'
   const k = {}
   for (const c of KLEUREN) k[c] = /^#[0-9a-f]{6}$/i.test(kleur && kleur[c]) ? kleur[c].toLowerCase() : STANDAARD_KLEUR[c]
   const n0 = String(naam || '').replace(/\s+/g, ' ').trim().slice(0, MAX_NAAM)
   return { formaat: FORMAAT, versie: 1, id: maakId(n0), naam: [n0, String(naamEn || '').replace(/\s+/g, ' ').trim().slice(0, MAX_NAAM) || n0], soort: s, kleur: k,
+    ...(/^#[0-9a-f]{6}$/i.test(achtergrond || '') ? { achtergrond: achtergrond.toLowerCase() } : {}),
     kaarten: Object.fromEntries(nodig(s).filter(n => kaarten && kaarten[n]).map(n => [n, kaarten[n]])) }
 }
 
@@ -94,6 +96,7 @@ export function valideerKaartset(set, { bestaand = [] } = {}) {
   }
   if (!SOORTEN[set.soort]) f.push('Kies alleen de plaatjes of alle 54 kaarten.')
   if (!set.kleur || KLEUREN.some(k => !/^#[0-9a-f]{6}$/.test(set.kleur[k]))) f.push('De kleuren van harten, ruiten, klaveren en schoppen kloppen niet.')
+  if (set.achtergrond !== undefined && !/^#[0-9a-f]{6}$/.test(set.achtergrond)) f.push('De achtergrondkleur van de kaarten klopt niet.')
   const kaarten = set.kaarten && typeof set.kaarten === 'object' ? set.kaarten : {}
   if (SOORTEN[set.soort]) {
     const mist = nodig(set.soort).filter(n => !kaarten[n])

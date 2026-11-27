@@ -98,3 +98,4 @@ proef344 | 21 | Home: de kaart Speel met een vriend (proef344)
 proef345 | 5 | Radio: altijd vier knoppen (proef345)
 proef355 | 20 | Widgets uit één lijst (widgets.js): Home, Store en het sjabloon
 proef356 | 60 | De sjablonen voor nieuwe spellen: kaartspel met de groep, automaat en arcade
+proef357 | 15 | Speelkaarten Salon

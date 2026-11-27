@@ -9,7 +9,7 @@
 //   - teksten in het Nederlands met de Engelse vertaling hieronder (window.FIBRO_EN).
 // Tokens inzetten (zoals Black Jack en Poker): zie pokertexasholdem-ui.js (casino.js, kiesInzet en uitslag).
 import * as P from './sjabloon-kaartspel.js?v=1'
-import { maakKaartTafel, kaartSvg, kaartNaam, REACTIES } from './kaartspel-hulp.js?v=22'
+import { maakKaartTafel, kaartSvg, kaartNaam, REACTIES } from './kaartspel-hulp.js?v=23'
 import { meldGeslagen } from './beurtspel-hulp.js?v=1'
 import { maakGroepSpel } from './groepspel.js?v=2'
 

@@ -481,7 +481,7 @@ window.veiligeUrl = function(v){
 
 <script src="beltoon.js?v=11"></script>
 <script type="module">
-  import { koppelSpelIcoonFallback } from './spelicoon.js?v=13'
+  import { koppelSpelIcoonFallback } from './spelicoon.js?v=14'
   koppelSpelIcoonFallback()
 </script>
 <script type="module">
@@ -517,11 +517,11 @@ window.veiligeUrl = function(v){
   import * as Schaak from './schaak.js?v=95'
   import { maakSpelMenu } from './spelmenu.js?v=2' // 11 nov 2026: hamburgermenu rechtsboven in elk spel (pauze, geluid, microfoon, camera, menu, verlaten)
   import { startSpelBerichtInChat } from './spelbericht.js?v=2'
-  import { STUDIO_SPELLEN, studioSpel, spelBestand as studioBestand, spelIcoon as studioIcoon } from './studio-spellen.js?v=7' // 25 nov 2026: spellen uit Stekky Studio
-  import { kanMetVriend } from './samenspelen.js?v=3' // 26 nov 2026: uitdaging na een uitnodiging met een spel
-  import { kanSpelMeesturen } from './uitnodigen.js?v=2' // 26 nov 2026: welke spellen ook tegen de computer kunnen (spel.html)
+  import { STUDIO_SPELLEN, studioSpel, spelBestand as studioBestand, spelIcoon as studioIcoon } from './studio-spellen.js?v=8' // 25 nov 2026: spellen uit Stekky Studio
+  import { kanMetVriend } from './samenspelen.js?v=4' // 26 nov 2026: uitdaging na een uitnodiging met een spel
+  import { kanSpelMeesturen } from './uitnodigen.js?v=3' // 26 nov 2026: welke spellen ook tegen de computer kunnen (spel.html)
   import { molKnop } from './mollenmeppen.js?v=2' // 26 nov 2026: Mollen meppen op het wachtscherm, tot je vriend er is
-  import { gameAan, mijnDownloads } from './store.js?v=43' // 11 nov 2026: spellen uit de Store // 11 nov 2026: berichten van andere vrienden linksboven in het spel
+  import { gameAan, mijnDownloads } from './store.js?v=44' // 11 nov 2026: spellen uit de Store // 11 nov 2026: berichten van andere vrienden linksboven in het spel
   import * as Bordgeluid from './bordgeluid.js?v=203'
   import { initReacties, startLangIndrukken, tekenReacties } from './reacties.js?v=181'
   import { geefAntwoordOp, wisAntwoordOp } from './reply.js?v=144'
@@ -547,7 +547,7 @@ window.veiligeUrl = function(v){
   // wacht het spel er even op.
   let titelModule = null
   const laadTitelscherm = () => titelModule ? Promise.resolve(titelModule)
-    : laadModule('./titelscherm.js?v=21').then(m => (titelModule = m))
+    : laadModule('./titelscherm.js?v=22').then(m => (titelModule = m))
   const laadRustig = f => ('requestIdleCallback' in window ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 2500))
   laadRustig(() => laadTitelscherm().catch(() => {}))
   pasBlokstijlToe()

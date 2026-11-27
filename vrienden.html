@@ -741,7 +741,7 @@ startMeldingen()
 <script type="module">
   import { supabase } from './supabase.js?v=95'
   import { haalPrivateKeyOp, eigenPubliekeSleutel, sleutelVingerafdruk } from './crypto.js?v=182'
-  import { STORE_GAMES, bewaardeDownloads } from './store.js?v=43' // 17 nov 2026: gedownloade games meesturen
+  import { STORE_GAMES, bewaardeDownloads } from './store.js?v=44' // 17 nov 2026: gedownloade games meesturen
 
   // v250: zelf kiezen hoe lang de link geldig is (1 uur, 1 dag, 3 dagen of 7 dagen; standaard 3 dagen)
   const DUREN = [3600, 86400, 259200, 604800]
@@ -1126,7 +1126,7 @@ function filterVrienden() {
 
 <script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=212"; startBelLuisteraar()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=208"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=209"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=172"; startOngelezen()</script>
 <script src="swipe.js?v=96"></script>
 <script src="menuschuif.js?v=1"></script>

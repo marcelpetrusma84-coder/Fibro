@@ -1,3 +1,4 @@
+// v166 (27 nov 2026): taal-en.js?v=166 (casino-widget: knop 🎰 Video Poker).
 // v165 (27 nov 2026): taal-en.js?v=165 (casino-widget: knop 🎲 Poker).
 // v164 (27 nov 2026): taal-en.js?v=164 (casino-tokens: het inzetscherm in Black Jack en de widget Casino).
 // v163 (26 nov 2026): taal-en.js?v=163 (Twin Snakes-spelvormen op het scorebord: Classic, Zonder muren).
@@ -176,7 +177,7 @@
   if (html && html.hasAttribute('data-taal')) html.setAttribute('lang', 'en')
   try {
     var hier = (document.currentScript && document.currentScript.src) || location.href
-    document.write('<script src="' + new URL('taal-en.js?v=165', hier).href + '"><\/script>')
+    document.write('<script src="' + new URL('taal-en.js?v=166', hier).href + '"><\/script>')
   } catch (e) {}
 
   function vertaal(el) {

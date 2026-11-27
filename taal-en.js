@@ -1986,6 +1986,7 @@ window.FIBRO_EN = {
   "Nog geen vrienden met tokens. Wie wordt de rijkste?": "No friends with tokens yet. Who will be the richest?",
   "♠️ Black Jack": "♠️ Black Jack",
   "🎲 Poker": "🎲 Poker",
+  "🎰 Video Poker": "🎰 Video Poker",
   // 26 nov 2026: uitnodigen.js (➕ op Home, 📤 Delen in een spel)
   "Let op: de uitnodiging kon niet bewaard worden, dus de link werkt niet. Probeer het opnieuw.": "Note: the invitation could not be saved, so the link won't work. Please try again.",
   "Kopieer deze tekst:": "Copy this text:",

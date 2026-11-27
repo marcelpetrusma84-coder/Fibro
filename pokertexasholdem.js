@@ -21,8 +21,9 @@
 // fase: 'spel' (er wordt gespeeld), 'uitslag' (hand klaar, de volgende moet nog gedeeld), 'klaar' (iemand heeft alles).
 // straat: 'preflop', 'flop', 'turn', 'river'.
 
-export const KLEUREN = ['h', 'r', 'k', 's']
-export const WAARDEN = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'B', 'V', 'H', 'A']
+// 27 nov 2026: de kaarten komen uit de kaartenmotor (kaarten-motor.js, één bouwsteen voor alle kaartspellen)
+import { KLEUREN, WAARDEN, maakDeck, schud, kaartInfo, rang, isKaart as isKaart52 } from './kaarten-motor.js?v=1'
+export { KLEUREN, WAARDEN, maakDeck, schud, kaartInfo, rang }
 export const MIN_SPELERS = 2, MAX_SPELERS = 6
 export const BEGIN_FICHES = 1000
 export const HANDEN_PER_NIVEAU = 10
@@ -30,19 +31,7 @@ export const HANDEN_PER_NIVEAU = 10
 export const BLINDS = [[10, 20], [15, 30], [25, 50], [50, 100], [75, 150], [100, 200], [150, 300], [200, 400], [300, 600], [500, 1000]]
 const STRATEN = ['preflop', 'flop', 'turn', 'river']
 
-export const kaartInfo = id => ({ kleur: id[0], waarde: id.slice(1) })
-export const isKaart = id => typeof id === 'string' && KLEUREN.includes(id[0]) && WAARDEN.includes(id.slice(1))
-export const rang = id => WAARDEN.indexOf(id.slice(1)) + 2   // 2 .. 14 (aas)
-export function maakDeck() {
-  const d = []
-  for (const k of KLEUREN) for (const w of WAARDEN) d.push(k + w)
-  return d
-}
-export function schud(lijst, rng = Math.random) {
-  const a = lijst.slice()
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] }
-  return a
-}
+export const isKaart = id => isKaart52(id)
 const kopie = s => JSON.parse(JSON.stringify(s))
 export const zetels = s => Array.from({ length: s.n }, (_, i) => i + 1)
 export function blindsVoorHand(hand) {

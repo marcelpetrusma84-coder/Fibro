@@ -7,7 +7,7 @@
 //  - Met tokens deelt de SERVER (sql/videopoker.sql): hij schudt, ruilt en betaalt uit. Zo kan niemand een hand verzinnen.
 //  - Zonder tokens (of zonder internet of account) deelt het toestel zelf, met dezelfde tabel.
 //  - 💡 Tip zet de HOUDEN-vinkjes zoals een eenvoudige strategie het zou doen.
-import * as V from './videopoker.js?v=1'
+import * as V from './videopoker.js?v=2'
 import { kaartSvg, achterkantSvg, kaartNaam, zetStijl as zetKaartStijl, kaartGeluid, tril } from './kaartspel-hulp.js?v=22'
 import { supabase } from './supabase.js?v=95'
 

@@ -7,7 +7,7 @@
 //  - Koningsjacht en Neon Raiders hebben hun eigen lijsten (koningsjacht_boards, neon_raiders_boards).
 //  - Zonder internet of zonder account: alleen je eigen scores van dit toestel (spelscores.js bewaart ze).
 // Persoonlijk: alleen op je eigen Home. Op het profiel van een vriend staat hij niet (vriend-profiel.html).
-import { scoreSpelInfo } from './scorespellen.js?v=5'
+import { scoreSpelInfo } from './scorespellen.js?v=6'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const kort = v => typeof v === 'string' ? v.trim().slice(0, 40) : ''

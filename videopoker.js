@@ -9,8 +9,9 @@
 //   - Met tokens doet de SERVER dit (deelt, ruilt en betaalt uit), zodat niemand een hand kan verzinnen
 //     (maakVideoPokerServer). Zonder tokens speelt het toestel zelf (nieuweRonde, ruil).
 
-export const KLEUREN = ['h', 'r', 'k', 's']
-export const WAARDEN = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'B', 'V', 'H', 'A']
+// 27 nov 2026: de kaarten komen uit de kaartenmotor (kaarten-motor.js)
+import { KLEUREN, WAARDEN, maakDeck, schud, rang, isKaart as isKaart52 } from './kaarten-motor.js?v=1'
+export { KLEUREN, WAARDEN, maakDeck, schud, rang }
 export const INZETTEN = [10, 25, 50, 100]
 // De uitbetalingstabel (Jacks or Better 9/6), van hoog naar laag
 export const TABEL = [
@@ -26,18 +27,7 @@ export const TABEL = [
 ]
 export const NIETS = { hand: 'niets', naam: 'Geen winst', maal: 0 }
 
-export const rang = id => WAARDEN.indexOf(id.slice(1)) + 2   // 2 .. 14 (aas)
-export const isKaart = id => typeof id === 'string' && KLEUREN.includes(id[0]) && WAARDEN.includes(id.slice(1))
-export function maakDeck() {
-  const d = []
-  for (const k of KLEUREN) for (const w of WAARDEN) d.push(k + w)
-  return d
-}
-export function schud(lijst, rng = Math.random) {
-  const a = lijst.slice()
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] }
-  return a
-}
+export const isKaart = id => isKaart52(id)
 
 // Wat is deze hand van 5 kaarten waard? Geeft een regel uit TABEL (of NIETS).
 export function beoordeel(kaarten) {

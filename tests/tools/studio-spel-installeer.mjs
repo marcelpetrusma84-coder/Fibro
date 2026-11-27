@@ -3,14 +3,17 @@
 // Wat het doet:
 //   1. Kijkt het bestand na (spelmaker.js valideerSpel), en of het spel er nog niet is.
 //   2. Zet het spelicoon neer (spelicoon/<id>.webp, 128 x 128).
-//   3. Zet een werkend beginspel neer: <id>-ui.js (uit sjabloon-beurtspel-ui.js) en <id>.js (de computerspeler, uit
-//      sjabloon-beurtspel.js). Zo staat het spel meteen overal en kun je het al spelen.
+//   3. Zet een werkend beginspel neer: <id>-ui.js en <id>.js uit het sjabloon dat bij het spel past (27 nov 2026):
+//        beurtspel                     sjabloon-beurtspel(-ui).js  (om de beurt, met z'n tweeën)
+//        kaartspel met een vriend      sjabloon-kaartspel(-ui).js  (2 tot 6 spelers, groepspel.js; "max" komt er vanzelf bij)
+//        kaartspel zonder vriend       sjabloon-automaat(-ui).js   (alleen spelen, zoals Video Poker; "zonderKanaal")
+//        arcadespel                    sjabloon-arcade(-ui).js     (alleen, punten en record; "arcade")
+//      Zo staat het spel meteen overal en kun je het al spelen.
 //   4. Zet het spel in studio-spellen.js. Daarmee staat het vanzelf in de Store, het spelmenu van de chat, spel.html,
 //      Home, Profiel > Widgets, uitnodigingen en (als gekozen) met een titelscherm.
 //   5. Schrijft de bouwopdracht: spellen/<id>.md (alles wat in de Studio is ingevuld) en spellen/<id>.stekkyspel.json.
 //   6. Verhoogt de ?v=-nummers die daardoor omhoog moeten (tests/tools/verhoog-versies.mjs).
-// Meer spelers (kaarten.spelers > 2): de bouwopdracht zegt hoe; `max` in studio-spellen.js komt pas als de echte regels
-// met meer spelers werken (het beginspel kan maar met z'n tweeën), anders zou de groepschat een spel tonen dat dat nog niet kan.
+// Meer spelers (kaarten.spelers > 2): het kaartspel-sjabloon kan dat al (2 tot 6), dus `max` staat er meteen bij.
 // Er wordt niets gepubliceerd: het gaat in een pull request. Daarna bouwt Claude de echte regels (spellen/<id>.md), en
 // Marcel of Tijn zegt "Merge".
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
@@ -27,7 +30,7 @@ const stop = t => { console.error(t); process.exit(1) }
 
 globalThis.window ||= {}
 const nu = Date.now()
-const { valideerSpel, bouwopdracht } = await import(pathToFileURL(path.join(HOOFD, 'spelmaker.js')).href + '?x=' + nu)
+const { valideerSpel, bouwopdracht, sjabloonVoor } = await import(pathToFileURL(path.join(HOOFD, 'spelmaker.js')).href + '?x=' + nu)
 const dataPad = path.join(HOOFD, 'studio-spellen.js')
 const { STUDIO_SPELLEN } = await import(pathToFileURL(dataPad).href + '?x=' + nu)
 
@@ -50,20 +53,27 @@ else {
   catch (e) { stop('Het icoon kon niet naar webp (is python3 met Pillow er?).') }
 }
 
-// 3. Het beginspel
-const kop = (wat) => '// ' + id + wat + ' (25 nov 2026, uit Stekky Studio) - ' + spel.naam[0] + ' ' + spel.icoon + '.\n' +
-  '// BEGINSPEL uit het sjabloon. De echte regels staan in spellen/' + id + '.md: bouw die hier (zie ' +
-  (spel.soort === 'kaart' ? 'BLAUWDRUK-KAARTSPEL.md' : 'BLAUWDRUK-BEURTSPEL.md') + ').\n//\n'
-let ui = readFileSync(path.join(HOOFD, 'sjabloon-beurtspel-ui.js'), 'utf8')
-const titelRegel = "if (titel) titel.textContent = '🪵 Sticks'"
-if (!ui.includes(titelRegel)) stop('Het sjabloon is veranderd: de titelregel staat er niet meer in.')
-ui = kop('-ui.js') + ui.replace(titelRegel, 'if (titel) titel.textContent = ' + JSON.stringify(spel.icoon + ' ') + ' + T(' + JSON.stringify(spel.naam[0]) + ')')
-writeFileSync(path.join(HOOFD, id + '-ui.js'), ui)
-writeFileSync(path.join(HOOFD, id + '.js'), kop('.js') + readFileSync(path.join(HOOFD, 'sjabloon-beurtspel.js'), 'utf8'))
+// 3. Het beginspel uit het passende sjabloon
+const sjabloon = sjabloonVoor(spel)
+const BLAUWDRUK = { beurtspel: 'BLAUWDRUK-BEURTSPEL.md', kaartspel: 'BLAUWDRUK-KAARTSPEL.md', automaat: 'BLAUWDRUK-KAARTSPEL.md', arcade: 'BLAUWDRUK-ARCADE.md' }
+const kop = (wat) => '// ' + id + wat + ' (uit Stekky Studio, sjabloon ' + sjabloon + ') - ' + spel.naam[0] + ' ' + spel.icoon + '.\n' +
+  '// BEGINSPEL uit het sjabloon. De echte regels staan in spellen/' + id + '.md: bouw die hier (zie ' + BLAUWDRUK[sjabloon] + ' en BOUWSTENEN.md).\n//\n'
+let ui = readFileSync(path.join(HOOFD, 'sjabloon-' + sjabloon + '-ui.js'), 'utf8')
+const titelRegel = ui.split('\n').find(r => r.includes('// STUDIO-TITEL'))
+if (!titelRegel) stop('Het sjabloon is veranderd: de titelregel (// STUDIO-TITEL) staat er niet meer in.')
+const inspring = titelRegel.match(/^\s*/)[0]
+ui = ui.replace(titelRegel, inspring + 'if (titel) titel.textContent = ' + JSON.stringify(spel.icoon + ' ') + ' + T(' + JSON.stringify(spel.naam[0]) + ')')
+// de regels van het sjabloon worden de regels van dit spel
+ui = ui.replace(new RegExp("\\./sjabloon-" + sjabloon + "\\.js\\?v=\\d+", 'g'), './' + id + '.js?v=1')
+writeFileSync(path.join(HOOFD, id + '-ui.js'), kop('-ui.js') + ui)
+writeFileSync(path.join(HOOFD, id + '.js'), kop('.js') + readFileSync(path.join(HOOFD, 'sjabloon-' + sjabloon + '.js'), 'utf8'))
 
 // 4. In studio-spellen.js
 const nieuw = { id, soort: spel.soort, naam: spel.naam, icoon: spel.icoon, uitleg: spel.uitleg, v: 1,
   met: { vriend: spel.met.vriend, computer: true, chatbalk: spel.met.chatbalk, webcam: spel.met.webcam }, spraak: spel.spraak, titel: spel.titel }
+if (sjabloon === 'kaartspel' && (spel.kaarten.spelers || 2) > 2) nieuw.max = Math.min(6, spel.kaarten.spelers)
+if (sjabloon === 'automaat') nieuw.zonderKanaal = true
+if (sjabloon === 'arcade') nieuw.arcade = true
 const bron = readFileSync(dataPad, 'utf8')
 const lijst = /export const STUDIO_SPELLEN = \[[\s\S]*?\]\n/
 if (!lijst.test(bron)) stop('studio-spellen.js is veranderd: de lijst staat er niet meer zoals verwacht.')

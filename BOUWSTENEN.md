@@ -29,7 +29,11 @@ Grotere uitleg staat in [BLAUWDRUK-BEURTSPEL.md](BLAUWDRUK-BEURTSPEL.md), [BLAUW
 | `studio-spellen.js` | De lijst van spellen uit Studio. Eén regel = het spel staat overal. Opties: `max` (groep, tot 6), `zonderKanaal` (alleen spelen, geen niveaus), `titel` (titelscherm van een ander spel). |
 | `solo.js` | Tegen de computer (spel.html): `SOLO_SPELLEN`, het nagemaakte spelkanaal `maakSoloKanaal`, en kant-en-klare computerspelers (`kaartspelBot` voor kaartspellen met `computerStap`). |
 | `spel.html` | Het startscherm van een spel (niveaus, ▶ Start, 👤 vriend, 👥 groep, 📤 Delen, 🏆 Scores). Zet ook `window.fibroSoloUitslag`, `window.fibroSoloScore` en `window.fibroCasino` klaar. |
-| `sjabloon-beurtspel-ui.js`, `sjabloon-beurtspel.js` | Het sjabloon voor een nieuw beurtspel (de installer kopieert het). |
+| **Sjablonen: een werkend beginspel per soort** | De installer kiest het vanzelf (`sjabloonVoor` in `spelmaker.js`); zonder Studio kopieer je ze zelf. |
+| `sjabloon-beurtspel-ui.js`, `sjabloon-beurtspel.js` | Beurtspel met z'n tweeën ("Stokjes"): het spelkanaal-protocol, webcamrondjes, computerspeler. |
+| `sjabloon-kaartspel-ui.js`, `sjabloon-kaartspel.js` | Kaartspel voor 2 tot 6 spelers ("Hoogste kaart"): `groepspel.js`, de kaarttafel, tegenstanders, computer, groep, ❓ regels, eindscherm. |
+| `sjabloon-automaat-ui.js`, `sjabloon-automaat.js` | Een automaat die je alleen speelt ("Hoger of lager"), met of zonder casino-tokens (`zonderKanaal`). |
+| `sjabloon-arcade-ui.js`, `sjabloon-arcade.js` | Arcadespel ("Ontwijk"): canvas, toetsen/vinger/controller, pauze, punten, record en scorebord. Uitleg: [BLAUWDRUK-ARCADE.md](BLAUWDRUK-ARCADE.md). |
 | `spelicoon.js` | Het plaatje van een spel (`spelicoon/<id>.webp`), met een terugval als het ontbreekt. |
 | `titelscherm.js`, `titelscenes.js`, `titelstijl.js`, `titelmuziek.js` | Titelscherm met bewegend plaatje en eigen deuntje voor elk spel; `openSpelMetTitel` opent een spel vanaf Home. |
 | `spelmenu.js` | Het ☰-menu in elk spel: pauze, geluid, microfoon, camera, 🏆 Scores, menu, verlaten. `spelgeluidAan()` = mag een spel geluid maken. |
@@ -53,6 +57,7 @@ Grotere uitleg staat in [BLAUWDRUK-BEURTSPEL.md](BLAUWDRUK-BEURTSPEL.md), [BLAUW
 | Bouwsteen | Wat het doet |
 |---|---|
 | `kaartspel-hulp.js` | **De kaarttafel**: kaarten (SVG en plaatjes), kaartstijlen, waaier, stapel, aflegstapel, delen, animaties, beurtklok, effecten, reacties, knoppen, `kiesUit` (keuzevenster), `einde`, tegenstanders als rondjes, instellingen, `kaartGeluid` en `tril`. Ook los te gebruiken: `kaartSvg`, `achterkantSvg`, `kaartNaam`. |
+| `kaarten-motor.js` | **De kaartenmotor**: `maakDeck('52' / '32' / '54' / '104')`, `schud(lijst, rng)`, `kaartInfo`, `isKaart`, `rang` (aas 14), `kleurNaam`. Gebruik deze in elk nieuw kaartspel. |
 | `kaartwaaier.js`, `kaart-stapel-feedback.js` | Hulpjes van de tafel: een leesbare waaier, en de stapel die reageert op je vinger. |
 | `studio-kaarten.js`, `kaartmaker.js` | Eigen kaartsets uit Studio (`kaarten/<id>/`); staan vanzelf bij "Kies je kaarten". |
 | `pokertexasholdem.js` | Pokerrekenwerk dat ook elders past: `besteHand` (beste 5 uit 5-7 kaarten), `score5`, `vergelijk`, `huidigeHand`, `HAND_NAMEN`, `winKans` (kans om te winnen door na te spelen), inzetrondes met zijpotten. |
@@ -214,7 +219,7 @@ Hier is iets meer dan één keer gebouwd. Bij het volgende spel dat het nodig he
 
 | Wat | Waar het dubbel staat | Voorstel |
 |---|---|---|
-| Kaartspel maken en schudden (`maakDeck`, `schud`, `kaartInfo`, `isKaart`) | `pesten.js`, `toepen.js`, `eenentwintigen.js`, `eenendertigen.js`, `koningsjacht.js`, `pokertexasholdem.js`, `videopoker.js` | Eén *kaarten-motor.js* (decks van 32, 52 en 54, schudden met een eigen rng). |
+| Kaartspel maken en schudden (`maakDeck`, `schud`, `kaartInfo`, `isKaart`) | `pesten.js`, `toepen.js`, `eenentwintigen.js`, `eenendertigen.js`, `koningsjacht.js` (Poker, Video Poker en de sjablonen gebruiken al `kaarten-motor.js`) | Deze vijf ook op `kaarten-motor.js` zetten (let op: Pesten heeft jokers, Eenendertigen piket). |
 | Pokerhanden beoordelen | `pokertexasholdem.js` (`besteHand`) en `videopoker.js` (`beoordeel`) | `beoordeel` bouwen op `score5`. |
 | Een toon of ruis maken met Web Audio | `kaartspel-hulp.js`, `bordgeluid.js`, `titelmuziek.js`, `stickerfx.js`, `dammen-geluid.js`, `flappy-geluid.js`, `koningsjacht-geluid.js`, `mollenmeppen.js`, `groeppiano.js` en een paar spellen | Eén *geluidmaker.js* met `toon`, `ruis`, deuntjes en "geluid aan" (via `spelmenu.js`). |
 | Scores op het toestel en dan naar de server | `spelscores.js`, `koningsjacht-scores.js`, `neon-raiders-scores.js` | Koningsjacht en Neon Raiders overzetten op `spelscores.js` als het schema het toelaat. |
@@ -225,7 +230,7 @@ Hier is iets meer dan één keer gebouwd. Bij het volgende spel dat het nodig he
 ## Wat nog ontbreekt
 
 - **Een platformmotor** (springen, botsen, vijanden, camera, levels uit een bestand) en een leveleditor in Studio. `phaser.min.js` staat al in de app; `studio-knippen.js` kan sprites knippen.
-- **De gedeelde *kaarten-motor.js*, *geluidmaker.js* en *hulp.js*** uit de lijst hierboven.
+- **De gedeelde *geluidmaker.js* en *hulp.js*** uit de lijst hierboven.
 
 ---
 

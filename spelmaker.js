@@ -19,6 +19,14 @@ export const MAX_NAAM = 30, MAX_UITLEG = 300, MAX_REGELS = 4000, MAX_REGEL = 200
 export const SOORTEN = {
   beurt: { naam: 'Beurtspel', uitleg: 'Om de beurt een zet, op een bord (zoals Vier op een rij of Dammen).', blauwdruk: 'BLAUWDRUK-BEURTSPEL.md' },
   kaart: { naam: 'Kaartspel', uitleg: 'Met speelkaarten, op de kaarttafel (zoals Pesten of Toepen).', blauwdruk: 'BLAUWDRUK-KAARTSPEL.md' },
+  // 27 nov 2026: arcadespellen (sjabloon-arcade-ui.js): alleen, met punten en een record
+  arcade: { naam: 'Arcadespel', uitleg: 'Snel en in je eentje, met punten en een record (zoals Flapper of Block It).', blauwdruk: 'BLAUWDRUK-ARCADE.md' },
+}
+// Welk sjabloon het beginspel krijgt (tests/tools/studio-spel-installeer.mjs)
+export function sjabloonVoor(s) {
+  if (s.soort === 'arcade') return 'arcade'
+  if (s.soort === 'kaart') return s.met && s.met.vriend ? 'kaartspel' : 'automaat'
+  return 'beurtspel'
 }
 
 // Wat erin zit. vast = zit altijd in elk spel (alleen ter info in de Studio).
@@ -68,13 +76,14 @@ const isTekst = s => typeof s === 'string'
 
 // Een spel uit wat er in de Studio is ingevuld (alles netjes gemaakt; valideerSpel kijkt daarna of het klopt)
 export function maakSpel(v) {
-  const kaart = v.soort === 'kaart'
+  const kaart = v.soort === 'kaart', arcade = v.soort === 'arcade'
   const met = {}
   for (const o of ONDERDELEN) met[o.id] = o.vast ? true : Boolean(v.met && v.met[o.id])
+  if (arcade) met.vriend = false   // een arcadespel speel je alleen
   if (!met.vriend) { met.chatbalk = false; met.webcam = false }
   const spraak0 = SPRAAK[v.spraak] ? v.spraak : 'knop'
   const spel = {
-    formaat: FORMAAT, versie: 1, id: maakId(v.id || v.naam), soort: kaart ? 'kaart' : 'beurt',
+    formaat: FORMAAT, versie: 1, id: maakId(v.id || v.naam), soort: kaart ? 'kaart' : arcade ? 'arcade' : 'beurt',
     naam: [tekst(v.naam, MAX_NAAM), tekst(v.naamEn, MAX_NAAM) || tekst(v.naam, MAX_NAAM)],
     icoon: tekst(v.icoon, 8),
     uitleg: [tekst(v.uitleg, MAX_UITLEG), tekst(v.uitlegEn, MAX_UITLEG)],
@@ -91,7 +100,7 @@ export function maakSpel(v) {
     speciaal: (v.speciaal || []).filter(s => s && tekst(s.wat, MAX_REGEL)).slice(0, MAX_SPECIAAL)
       .map(s => ({ kaart: KAARTEN.includes(s.kaart) ? s.kaart : 'aas', wat: tekst(s.wat, MAX_REGEL) })),
   }
-  else spel.bord = tekst(v.bord, MAX_REGEL)
+  else if (!arcade) spel.bord = tekst(v.bord, MAX_REGEL)
   if (isTekst(v.plaatje) && v.plaatje) spel.plaatje = v.plaatje
   return spel
 }
@@ -104,7 +113,8 @@ export function valideerSpel(s, { bestaand = [] } = {}) {
   const naamGoed = Array.isArray(s.naam) && isTekst(s.naam[0]) && s.naam[0].trim()
   if (naamGoed && !/^[a-z][a-z0-9]{2,19}$/.test(String(s.id || ''))) f.push('De naam moet minstens 3 letters hebben (alleen letters en cijfers, begint met een letter).')
   else if (naamGoed && (GERESERVEERD.includes(s.id) || bestaand.includes(s.id))) f.push('Er is al een spel met deze naam (' + s.id + ').')
-  if (!SOORTEN[s.soort]) f.push('Kies beurtspel of kaartspel.')
+  if (!SOORTEN[s.soort]) f.push('Kies beurtspel, kaartspel of arcadespel.')
+  if (s.soort === 'arcade' && s.met && s.met.vriend) f.push('Een arcadespel speel je alleen (zet "Met een vriend spelen" uit).')
   if (!naamGoed) f.push('De naam van het spel ontbreekt.')
   else if (s.naam.some(n => !isTekst(n) || n.length > MAX_NAAM || /[<>"`\\]/.test(n))) f.push('De naam is te lang of heeft rare tekens.')
   if (!isTekst(s.icoon) || !s.icoon.trim() || s.icoon.length > 8) f.push('Kies een icoon (één emoji).')
@@ -150,7 +160,7 @@ export function bouwopdracht(s) {
   const ja = b => b ? 'ja' : 'nee'
   const r = []
   r.push('# Bouwopdracht: ' + s.naam[0] + ' (' + s.icoon + ')', '')
-  r.push('*Gemaakt in Stekky Studio. Bouw dit spel volgens ' + SOORTEN[s.soort].blauwdruk + '. Het spel staat al overal aangemeld (studio-spellen.js) en heeft een werkend beginspel in `' + s.id + '-ui.js` en een computerspeler in `' + s.id + '.js`. Vervang dat beginspel door de echte regels hieronder.*', '')
+  r.push('*Gemaakt in Stekky Studio. Bouw dit spel volgens ' + SOORTEN[s.soort].blauwdruk + ' en kijk eerst in BOUWSTENEN.md wat er al is. Het spel staat al overal aangemeld (studio-spellen.js) en heeft een werkend beginspel uit `sjabloon-' + sjabloonVoor(s) + '-ui.js` in `' + s.id + '-ui.js` (en `' + s.id + '.js`). Vervang dat beginspel door de echte regels hieronder.*', '')
   r.push('## Wat', '', '- Soort: ' + SOORTEN[s.soort].naam, '- Id: `' + s.id + '`', '- Naam: ' + s.naam[0] + ' (Engels: ' + s.naam[1] + ')',
     '- Store, Nederlands: ' + s.uitleg[0], '- Store, Engels: ' + s.uitleg[1])
   if (s.doel) r.push('- Doel: ' + s.doel)
@@ -167,7 +177,11 @@ export function bouwopdracht(s) {
       '- De anderen als rondjes rond de tafel: `tafel.tegenstanders(...)`, met 🤖 voor de computer.',
       '- Tegen de computer: eerst kiezen tegen hoeveel computers (1 tot ' + (n - 1) + ').',
       '- Zet `"max": ' + n + '` bij dit spel in studio-spellen.js zodra het met meer spelers werkt: dan staat het in de groepschat onder 🎲 (met pushmelding).', '')
-  } else if (s.bord) r.push('## Bord', '', s.bord, '')
+    if (!s.met.vriend) r.push('## Alleen spelen (een automaat)', '', '- Je speelt alleen: geen niveaus, geen computerspeler, niet in de chat (`zonderKanaal` in studio-spellen.js).',
+      '- Met casino-tokens? Zet het spel in `CASINO_SPELLEN` (casino.js) en in de lijst van `casino_inzet` (sql/casino-tokens.sql). Betaalt het meer dan 2× uit, laat dan de server delen en uitbetalen zoals Video Poker (sql/videopoker.sql).', '')
+  } else if (s.soort === 'arcade') r.push('## Arcade', '', '- Alleen spelen, met punten en een record (`solo.nieuweScore`, ook naar het scorebord).',
+      '- Besturen met toetsen, je vinger en een controller (controller.js). Pauze gaat vanzelf via het ☰-menu (requestAnimationFrame).', '')
+  else if (s.bord) r.push('## Bord', '', s.bord, '')
   r.push('## Wat erin zit', '')
   for (const o of ONDERDELEN) r.push('- ' + o.naam + ': ' + ja(s.met[o.id]))
   r.push('- Spraak: ' + SPRAAK[s.spraak], '- Titelscherm: ' + (s.titel ? TITELS[s.titel] : 'geen'), '')

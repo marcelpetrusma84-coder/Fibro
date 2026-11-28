@@ -1,0 +1,42 @@
+{
+  "formaat": "stekky-spel",
+  "versie": 1,
+  "id": "fruitautomaat",
+  "soort": "kaart",
+  "naam": [
+    "Fruitautomaat",
+    "Fruit machine"
+  ],
+  "icoon": "🍒",
+  "uitleg": [
+    "Een klassieke fruitautomaat met drie rollen: kersen, citroenen, bellen en de 7. Drie dezelfde wint, drie zevens 200×. Met of zonder casino-tokens (18+).",
+    "A classic fruit machine with three reels: cherries, lemons, bells and the 7. Three of a kind wins, three sevens 200×. With or without casino tokens (18+)."
+  ],
+  "regels": "Een fruitautomaat met drie rollen. Je speelt alleen.\n\nKies je inzet (10, 25, 50 of 100 tokens, of zonder tokens) en tik op Draai.\nUitbetaling (× je inzet): 7 7 7 = 200, ster ster ster = 60, bel bel bel = 40, druif ×3 = 20, sinaasappel ×3 = 15, citroen ×3 = 12, kers ×3 = 10, twee kersen = 4, een kers op de eerste rol = 1 (inzet terug).\nOp de lange duur krijg je ongeveer 97 van elke 100 tokens terug; de kans op een prijs is ongeveer 1 op 4. Dat staat eerlijk bij de spelregels.\n\nMet tokens draait de SERVER de rollen (sql/casino-volwassen.sql), zoals bij Video Poker, omdat het meer dan 2× uitbetaalt. Zonder tokens draait het toestel, met dezelfde tabel.\nOok een wachtspelletje bij Poker en Black Jack.",
+  "doel": "",
+  "met": {
+    "spelmenu": true,
+    "vriend": false,
+    "computer": true,
+    "chatbalk": false,
+    "webcam": false,
+    "store": true
+  },
+  "spraak": "uit",
+  "extras": [
+    "uitleg",
+    "opnieuw",
+    "trillen",
+    "score",
+    "geluid",
+    "animaties",
+    "hulp"
+  ],
+  "titel": "pesten",
+  "kaarten": {
+    "deck": "52",
+    "perSpeler": 1,
+    "spelers": 2,
+    "speciaal": []
+  }
+}

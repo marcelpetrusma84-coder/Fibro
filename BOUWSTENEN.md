@@ -52,6 +52,7 @@ Grotere uitleg staat in [BLAUWDRUK-BEURTSPEL.md](BLAUWDRUK-BEURTSPEL.md), [BLAUW
 | `beurtspel-hulp.js` | Ruimte voor de webcamrondjes en "geslagen" melden (rode rand, geluid). |
 | `controller.js` | Een spelcomputer-controller (Steam Deck, Xbox, PlayStation) wordt gewoon toetsenbord: elk spel met toetsen werkt meteen. |
 | `mollenmeppen.js` | Mini-game voor in een wachtkamer, terwijl je op vrienden wacht. |
+| `wachtspellen.js` | **Snel een gokje terwijl je wacht** (casinospellen): Hoger of lager en de Fruitautomaat in een wachtkamer (`wachtspelKnoppen`) of als knop op een tafel die doorloopt (`wachtspelKnop`, Poker als je eruit ligt). Tokens alleen als iedereen in de chat 18+ is. |
 
 ### Kaartspellen
 | Bouwsteen | Wat het doet |
@@ -85,7 +86,9 @@ Grotere uitleg staat in [BLAUWDRUK-BEURTSPEL.md](BLAUWDRUK-BEURTSPEL.md), [BLAUW
 |---|---|
 | `casino.js` + `sql/casino-tokens.sql` | Speelgeld: 250 per week, tot -100. `maakCasino().kiesInzet()` = het inzetscherm; `uitslag()` betaalt uit (2×, inzet terug, niets). Server: `casino_bij` (saldo bijwerken) en `casino_ik` (de gewone controles) voor nieuwe casino-functies. |
 | `sql/videopoker.sql` | **Patroon "de server deelt"**: als een uitslag veel waard is, schudt en beoordeelt de server zelf, zodat niemand valsspeelt. |
-| `casinowidget.js` | De widget 🎰 Casino op Home. |
+| `casinowidget.js` | De widget 🎰 Casino op Home (alleen 18+, `alleenVolwassen` in `widgets.js`). |
+| `leeftijd.js` + `sql/casino-volwassen.sql` | **18+**: `benIkVolwassen()` (geboortejaar uit je inlog), `casinoMagHier({ vriend, groep })` (is iedereen in deze chat 18+? alleen ja/nee van de server). De server weigert tokens onder de 18 (`casino_ik`) en zet het geboortejaar één keer vast. Ook: Hoger of lager in `casino_inzet` en `fruitautomaat_draai`. |
+| `fruitautomaat.js` | De Fruitautomaat: gewichten, uitbetalingstabel, `terugKans` (eerlijk uitgerekend) en `maakFruitServer` (de server draait, zoals Video Poker). |
 
 ---
 
@@ -248,6 +251,7 @@ meestal niet nodig.
 - **Tic-Tac-Toe, Four in a Row, Invaders:** `bke-ui.js`, `vieroprij-ui.js`, `invaders-ui.js`.
 - **Pesten, Toepen, Black Jack, Eenendertigen:** `pesten-ui.js`, `toepen-ui.js`, `eenentwintigen-ui.js`, `eenendertigen-ui.js`.
 - **Poker en Video Poker:** `pokertexasholdem-ui.js`, `videopoker-ui.js`.
+- **Hoger of lager en de Fruitautomaat:** `hogerlager.js`, `hogerlager-ui.js`, `fruitautomaat-ui.js` (allebei ook als wachtspelletje: `maakHogerLager`, `maakFruitautomaat`).
 - **Koningsjacht:** `koningsjacht-ui.js`, `koningsjacht-bier.js`, `koningsjacht-eindscene.js`, `koningsjacht-geluid.js`, `koningsjacht-kaarsen.js`, `koningsjacht-scene.js`, `koningsjacht-score-partij.js`, `koningsjacht-scoreboard.js`, `koningsjacht-scores.js`.
 - **Schaken:** `schaak.js`, `schaken-ui.js`, `schaken-drie-ui.js`, `schaak-drie.js`, `schaak-drie-artwork.js`, `schaak-hint-hold.js`, `schaak-hint-uitleg.js`, `schaak-hint-weergave.js`, `schaak-paard-hold.js`, `schaak-paardroutes.js`, `schaak-paardroutes-ui.js`, `schaak-stukken.js`, `schaak-taal.js`, `schaak-taal-en.js`, `schaak-tafelklap.js`, `schaak-testmodus.js`, `schaak-ultra.js`, `schaak-ultra-focus.js`, `schaak-ultra-historie.js`, `schaak-ultra-lichess.js`, `schaak-ultra-swipe.js`, `schaak-wallpaper.js`, `schaak-wallpaper-depth.js`.
 - **Dammen:** `dammen.js`, `dammen-ui.js`, `dammen-computer.js`, `dammen-geluid.js`, `dam-bot.js`.
@@ -262,5 +266,5 @@ Elk bestand in `sql/` hoort bij één onderdeel; de naam zegt waarbij.
 - **Vrienden en blokkeren:** `vriendschap-rechten.sql`, `vriendverzoek-groep.sql`, `vriendverzoek-push.sql`, `uitnodiger-foto.sql`, `uitnodigingen-grens.sql`, `blokkeren.sql`, `blokkade-melding.sql`, `geblokkeerd-regels.sql`, `persoonlijk-blokkeren.sql`, `persoonlijk-blokkeren-2.sql`, `persoonlijk-blokkeren-3.sql`.
 - **Chat en groep:** `berichten-bewaren.sql`, `berichten-verwijderen.sql`, `belregels.sql`, `gelezen-vinkjes.sql`, `ongelezen.sql`, `chat-melding-teller.sql`, `groepen.sql`, `groep-extra.sql`, `groep-geblokkeerd.sql`, `groep-onbekenden.sql`, `realtime-kanalen.sql`, `poll.sql`.
 - **Meldingen:** `pushmeldingen.sql`, `push-vanaf-server.sql`, `contact-push.sql`.
-- **Spellen en Store:** `spel-scores.sql`, `koningsjacht-scores.sql`, `neon-raiders-scores.sql`, `schaken-drie-spelers.sql`, `casino-tokens.sql`, `videopoker.sql`, `stekky-store.sql`, `stekky-store-iedereen.sql`.
+- **Spellen en Store:** `spel-scores.sql`, `koningsjacht-scores.sql`, `neon-raiders-scores.sql`, `schaken-drie-spelers.sql`, `casino-tokens.sql`, `videopoker.sql`, `casino-volwassen.sql`, `stekky-store.sql`, `stekky-store-iedereen.sql`.
 - **Beheer en veiligheid:** `foutmeldingen.sql`, `terugmeldingen.sql`, `controle-alles.sql`, `database-groei.sql`, `fibro-plus-afschermen.sql`, `functies-afgeschermd.sql`, `rechten-ronde2.sql`.

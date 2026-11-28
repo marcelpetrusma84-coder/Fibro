@@ -101,3 +101,4 @@ proef356 | 60 | De sjablonen voor nieuwe spellen: kaartspel met de groep, automa
 proef357 | 15 | Speelkaarten Salon
 proef358 | 30 | Poker: grotere kaarten op tafel
 proef359 | 15 | Profiel > Widgets: Casino (uit widgets.js) staat in de lijst en blijft bij Opslaan
+proef360 | 40 | Hoger of lager en de Fruitautomaat (ook als wachtspelletje); het casino alleen voor 18+

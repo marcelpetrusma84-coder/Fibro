@@ -19,9 +19,10 @@
 //   meldPush(spel, sessie)    (v3, 25 nov 2026) een pushmelding naar de andere leden: "Marcel wil Eenendertigen spelen"
 //                             (stuur-push, type groepspel). Tikken opent de groep; dan zegt de pagina 'hallo' en komt
 //                             de uitnodiging bovenin (ook als je er eerst niet was).
-import { STUDIO_SPELLEN, studioSpel, spelBestand, spelIcoon } from './studio-spellen.js?v=11'
+import { STUDIO_SPELLEN, studioSpel, spelBestand, spelIcoon } from './studio-spellen.js?v=12'
 import { maakSpelMenu } from './spelmenu.js?v=2'
 import { molKnop } from './mollenmeppen.js?v=2' // 26 nov 2026: Mollen meppen terwijl je in de wachtkamer wacht
+import { isCasinoSpel, wachtspelKnoppen } from './wachtspellen.js?v=1' // 28 nov 2026: bij Poker een gokje terwijl je wacht
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
 Object.assign(window.FIBRO_EN ||= {}, {
@@ -68,6 +69,7 @@ export function maakGroepKaartspel({ ik, groepId, kanaal, leden, naamVan, toast 
 
   let lobby = null          // { sessie, spel, host, spelers: [id...], computers }
   let mol = null            // 26 nov 2026: Mollen meppen in de wachtkamer (mollenmeppen.js)
+  let gokje = null          // 28 nov 2026: { sessie, el } Hoger of lager / Fruitautomaat in de wachtkamer van een casinospel (wachtspellen.js)
   let lopend = null         // { sessie, overlay, luisteraars, menu }
   const uitnodigingen = new Map()   // sessie -> { spel, host }
   let balkEl = null, laagEl = null, terugEl = null
@@ -136,7 +138,13 @@ export function maakGroepKaartspel({ ik, groepId, kanaal, leden, naamVan, toast 
     // 26 nov 2026: Mollen meppen terwijl je wacht. De wachtkamer wordt bij elke wijziging opnieuw getekend; een lopend
     // spelletje verhuist mee. Gaat de wachtkamer dicht (het spel begint), dan stopt het vanzelf (mollenmeppen.js).
     const kaart = l.querySelector('.gk-kaart')
-    if (mol && !mol.gestopt) kaart.appendChild(mol.el)
+    // 28 nov 2026 (Marcel): bij een casinospel (Poker) in plaats daarvan Hoger of lager en de Fruitautomaat. Met tokens
+    // alleen als iedereen in de groep 18+ is (de server beslist: casino_mag_hier). Het blok verhuist mee bij opnieuw tekenen.
+    if (isCasinoSpel(lobby.spel)) {
+      if (!gokje || gokje.sessie !== lobby.sessie) gokje = { sessie: lobby.sessie, el: wachtspelKnoppen(null, { groep: groepId }).el }
+      kaart.appendChild(gokje.el)
+    }
+    else if (mol && !mol.gestopt) kaart.appendChild(mol.el)
     else { mol = null; const houder = document.createElement('div'); houder.className = 'gk-mollen'; kaart.appendChild(houder); houder.addEventListener('mollen', e => { mol = e.detail }); molKnop(houder) }
     l.querySelector('.gk-annuleer').onclick = () => { stuur(ikHost ? 'dicht' : 'weg', { sessie: lobby.sessie }); lobby = null; sluitLaag() }
     if (ikHost) {
@@ -176,7 +184,7 @@ export function maakGroepKaartspel({ ik, groepId, kanaal, leden, naamVan, toast 
       onMenu: () => verberg(), onExit: () => verlaat() })
     try {
       const m = await import(spelBestand(s))
-      m.start({ spelKanaal, spelers, mijnZetel })
+      m.start({ spelKanaal, spelers, mijnZetel, groepId })   // groepId: 28 nov 2026, voor de wachtspelletjes (wachtspellen.js)
     } catch (e) { console.error('[groepkaartspel]', e); toast(T('Het spel is gestopt.')); verlaat() }
   }
   // 🏠: terug naar de chat; het spel blijft open (een knop brengt je terug)

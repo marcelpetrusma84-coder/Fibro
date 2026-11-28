@@ -1,4 +1,4 @@
-// casino.js (v1, 27 nov 2026, Marcel) - casino-tokens: speelgeld waarmee je inzet in de casinospellen (eerst Black Jack).
+// casino.js (v2, 27 nov 2026, Marcel) - casino-tokens: speelgeld waarmee je inzet in de casinospellen (eerst Black Jack).
 // De regels staan op de server (sql/casino-tokens.sql); dit bestand praat ermee en tekent het inzetscherm.
 //
 // In gewone woorden:
@@ -7,6 +7,8 @@
 //  - Win je, dan krijg je 2× je inzet terug; gelijkspel = je inzet terug; verlies = niets.
 //  - Zonder internet of zonder account speel je gewoon zonder inzet.
 //  - Lukt het versturen van een uitslag niet (internet weg), dan onthoudt dit toestel hem en probeert het later opnieuw.
+//  - 28 nov 2026: alleen voor 18+ (leeftijd.js). Onder de 18 geeft overzicht() null: dan speel je zonder tokens en zie je
+//    geen inzetscherm. De server weigert het ook (sql/casino-volwassen.sql).
 //
 //   maakCasino({ supabase, spel })
 //     .overzicht()              { saldo, volgende, vrienden, laatste } of null (geen internet / geen account)
@@ -17,7 +19,9 @@ export const WEEKBEDRAG = 250
 export const MINIMUM = -100
 export const MAX_INZET = 100
 export const INZETTEN = [10, 25, 50, 100]
-export const CASINO_SPELLEN = ['eenentwintigen', 'pokertexasholdem', 'videopoker']   // videopoker: alleen het saldo hier, delen en uitbetalen via sql/videopoker.sql   // 27 nov 2026: ook Poker (inkopen, de hele tafel winnen = 2×)
+export const CASINO_SPELLEN = ['eenentwintigen', 'pokertexasholdem', 'videopoker', 'hogerlager', 'fruitautomaat']   // 28 nov 2026: Hoger of lager (2×, hier) en de Fruitautomaat (de server draait: fruitautomaat.js)   // videopoker: alleen het saldo hier, delen en uitbetalen via sql/videopoker.sql   // 27 nov 2026: ook Poker (inkopen, de hele tafel winnen = 2×)
+
+import { benIkVolwassen } from './leeftijd.js?v=1'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const UITSLAGEN = ['winst', 'verlies', 'gelijk']
@@ -31,9 +35,11 @@ export const uitbetaling = (inzet, uitslag) => uitslag === 'winst' ? 2 * inzet :
 export const verschil = (inzet, uitslag) => uitbetaling(inzet, uitslag) - inzet
 
 export function maakCasino({ supabase, spel, storage, uuid = () => globalThis.crypto.randomUUID(),
-  isOnline = () => globalThis.navigator?.onLine !== false } = {}) {
+  isOnline = () => globalThis.navigator?.onLine !== false, volwassen } = {}) {
   if (!CASINO_SPELLEN.includes(spel)) throw new TypeError('Geen casinospel: ' + spel)
   if (storage === undefined) { try { storage = globalThis.localStorage } catch {} }
+  // 28 nov 2026: onder de 18 geen tokens. Onbekend (geen geboortejaar op dit toestel) mag: dan beslist de server.
+  volwassen ||= () => benIkVolwassen({ storage }) !== false
 
   async function account() {
     try { const { data } = await supabase.auth.getSession(); const id = data?.session?.user?.id; return UUID.test(id || '') ? id : null }
@@ -71,7 +77,7 @@ export function maakCasino({ supabase, spel, storage, uuid = () => globalThis.cr
     spel,
     async overzicht() {
       const uid = await account()
-      if (!uid || !isOnline()) return null
+      if (!uid || !isOnline() || !volwassen()) return null
       await verstuurOpen(uid)
       let data, error
       try { ({ data, error } = await supabase.rpc('casino_overzicht')) } catch (f) { error = f }
@@ -89,7 +95,7 @@ export function maakCasino({ supabase, spel, storage, uuid = () => globalThis.cr
     async zetIn(inzet) {
       const fout = reden => Object.assign(new Error(reden), { reden })
       const uid = await account()
-      if (!uid || !isOnline()) throw fout('offline')
+      if (!uid || !isOnline() || !volwassen()) throw fout('offline')
       if (!INZETTEN.includes(inzet)) throw fout('ongeldig')
       const runId = uuid()
       let data, error

@@ -1,10 +1,11 @@
 // casinowidget.js (v1, 27 nov 2026, Marcel) - de widget 🎰 Casino op Home: je tokens, wanneer de volgende 250 komen,
-// je rijkste vrienden en knoppen naar Black Jack, Poker en Video Poker.
+// je rijkste vrienden en knoppen naar Black Jack, Poker, Video Poker, Hoger of lager en de Fruitautomaat (28 nov 2026).
+// Alleen voor 18+ (widgets.js: alleenVolwassen).
 //
 // Waar het vandaan komt: casino_overzicht (sql/casino-tokens.sql, via casino.js). Alleen echte vrienden (van twee
 // kanten), zonder wie geblokkeerd is. Zonder internet of account: een regel dat je online moet zijn.
 // Persoonlijk: alleen op je eigen Home. Op het profiel van een vriend staat hij niet (vriend-profiel.html).
-import { maakCasino, WEEKBEDRAG, MINIMUM } from './casino.js?v=3'
+import { maakCasino, WEEKBEDRAG, MINIMUM } from './casino.js?v=4'
 
 const kort = v => typeof v === 'string' ? v.trim().slice(0, 40) : ''
 
@@ -70,7 +71,13 @@ export async function tekenCasinoWidget(c, { supabase, uid, openSpel, open = ope
   // 27 nov 2026: ook Video Poker
   const vp = document.createElement('button'); vp.type = 'button'; vp.className = 'csw-speel'; vp.dataset.spel = 'videopoker'; vp.textContent = tt('🎰 Video Poker')
   vp.onclick = e => { e.stopPropagation(); open('videopoker') }
-  const knoppen = document.createElement('div'); knoppen.className = 'csw-knoppen'; knoppen.append(speel, poker, vp)
+  // 28 nov 2026: ook Hoger of lager en de Fruitautomaat
+  const extra = [['hogerlager', '🃏 ' + tt('Hoger of lager')], ['fruitautomaat', '🍒 ' + tt('Fruitautomaat')]].map(([id, tekst]) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'csw-speel'; b.dataset.spel = id; b.textContent = tekst
+    b.onclick = e => { e.stopPropagation(); open(id) }
+    return b
+  })
+  const knoppen = document.createElement('div'); knoppen.className = 'csw-knoppen'; knoppen.append(speel, poker, vp, ...extra)
   kop.append(links)
   doos.append(kop, knoppen)
 

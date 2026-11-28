@@ -61,8 +61,8 @@ function zetStijl() {
 .pk-pil{padding:3px 10px;border-radius:999px;background:#000a;border:1px solid #c084fc;font-weight:800;font-size:13px;white-space:nowrap;color:#fff}
 .pk-pil.goud{color:#fde68a;border-color:#facc15aa}
 .pk-pil.pot{font-size:15px;color:#fde68a;border-color:#facc15}
-.pk-bord{display:flex;gap:5px;justify-content:center}
-.pk-kaart{width:50px;aspect-ratio:5/7;border-radius:6px}
+.pk-bord{display:flex;gap:clamp(4px,1.2vw,10px);justify-content:center}
+.pk-kaart{width:clamp(50px,min(17.5vw,13vh),100px);aspect-ratio:5/7;border-radius:7%}   /* 28 nov 2026: groeit mee met het scherm (was 50px) */
 .pk-kaart.leeg{border:2px dashed #ffffff33;background:#ffffff08}
 .pk-kaart.winst{box-shadow:0 0 0 2px #facc15,0 0 14px #facc15b0}
 .pk-uitslag{display:flex;flex-direction:column;gap:4px;width:min(92vw,360px);max-height:30vh;overflow:auto}

@@ -3,7 +3,7 @@
 -- sql/casino-tokens.sql (die maakt casino_saldo, casino_bij en casino_ik). Herhaalbaar.
 --
 -- In gewone woorden:
---  - videopoker_deel: je zet in (10, 25, 50 of 100; je saldo mag niet onder -100). De server schudt een vers spel van
+--  - videopoker_deel: je zet in (5, 10, 25, 50 of 100; je saldo mag niet onder -100). De server schudt een vers spel van
 --    52 kaarten, bewaart de bovenste 10 en stuurt je alleen de eerste 5. Staat er nog een ronde van jou open (je ging
 --    weg voor het ruilen), dan krijg je die terug en gaat er niets af.
 --  - videopoker_ruil: je zegt welke kaarten je houdt (p_houd: een getal, bit 0 = de eerste kaart). De kaarten die je niet
@@ -15,7 +15,7 @@ begin;
 create table if not exists public.videopoker_rondes (
   user_id uuid not null references public.profiles(id) on delete cascade,
   ronde_id uuid not null,
-  inzet integer not null check (inzet in (10, 25, 50, 100)),
+  inzet integer not null check (inzet in (5, 10, 25, 50, 100)),
   kaarten text[] not null check (array_length(kaarten, 1) = 10),
   houd integer check (houd between 0 and 31),
   eind text[],
@@ -80,7 +80,7 @@ declare
   s integer;
   stapel text[];
 begin
-  if p_ronde_id is null or p_inzet is null or p_inzet not in (10, 25, 50, 100) then
+  if p_ronde_id is null or p_inzet is null or p_inzet not in (5, 10, 25, 50, 100) then
     raise exception 'Invalid bet' using errcode = '22023';
   end if;
   s := public.casino_bij(me);   -- zet ook je saldo-rij vast: twee keer tegelijk delen kan niet

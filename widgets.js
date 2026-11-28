@@ -21,12 +21,12 @@
 import { benIkVolwassen } from './leeftijd.js?v=1'
 
 export const WIDGET_LIJST = [
-  { id: 'scorebord', icoon: '\u{1F3C6}', titel: 'Scorebord', titelEn: 'Scoreboard', w: 4, h: 3, bestand: './scorebordwidget.js?v=9', teken: 'tekenScorebordWidget', persoonlijk: true,
+  { id: 'scorebord', icoon: '\u{1F3C6}', titel: 'Scorebord', titelEn: 'Scoreboard', w: 4, h: 3, bestand: './scorebordwidget.js?v=10', teken: 'tekenScorebordWidget', persoonlijk: true,
     uitleg: ['Al je spellen op een rij: jouw beste score naast die van je beste vriend. Wie staat er voor? Tik op een spel om meteen te spelen. Alleen je echte vrienden doen mee, en alleen jij ziet deze widget.',
       'All your games in a row: your best score next to your best friend\'s. Who is ahead? Tap a game to play right away. Only your real friends take part, and only you see this widget.'] },
-  { id: 'casino', icoon: '\u{1F3B0}', titel: 'Casino', titelEn: 'Casino', w: 4, h: 3, bestand: './casinowidget.js?v=5', teken: 'tekenCasinoWidget', persoonlijk: true, alleenVolwassen: true,
-    uitleg: ['Je casino-tokens op Home (18+): elke week krijg je er 250 bij en je kunt tot -100 staan. Zet ze in bij Black Jack, Poker, Video Poker, Hoger of lager en de Fruitautomaat, en kijk wie van je vrienden de rijkste is. Tokens zijn speelgeld: je kunt ze niet kopen of inwisselen.',
-      'Your casino tokens on Home (18+): you get 250 more every week and you can go down to -100. Bet them at Black Jack, Poker, Video Poker, Higher or lower and the Fruit machine, and see which of your friends is the richest. Tokens are play money: you cannot buy or cash them in.'] },
+  { id: 'casino', icoon: '\u{1F3B0}', titel: 'Casino', titelEn: 'Casino', w: 4, h: 3, bestand: './casinowidget.js?v=6', teken: 'tekenCasinoWidget', persoonlijk: true, alleenVolwassen: true,
+    uitleg: ['Je casino-tokens op Home (18+): elke week krijg je er 500 bij en je kunt tot -100 staan. Zet ze in bij Black Jack, Poker, Video Poker, Hoger of lager en de Fruitautomaat, en kijk wie van je vrienden de rijkste is. Tokens zijn speelgeld: je kunt ze niet kopen of inwisselen.',
+      'Your casino tokens on Home (18+): you get 500 more every week and you can go down to -100. Bet them at Black Jack, Poker, Video Poker, Higher or lower and the Fruit machine, and see which of your friends is the richest. Tokens are play money: you cannot buy or cash them in.'] },
 ]
 
 const ID = /^[a-z][a-z0-9_-]{1,30}$/

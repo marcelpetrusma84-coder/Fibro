@@ -2,7 +2,7 @@
 // De regels staan op de server (sql/casino-tokens.sql); dit bestand praat ermee en tekent het inzetscherm.
 //
 // In gewone woorden:
-//  - Elke week krijg je 250 tokens erbij. Je saldo kan zakken tot -100. Hoogstens 100 per potje.
+//  - Elke week krijg je 500 tokens erbij (tot 28 nov 2026: 250). Je saldo kan zakken tot -100. Inzet 5 tot 100 per potje.
 //  - Voordat de kaarten worden gedeeld kies je je inzet (of "Zonder inzet"). De inzet gaat er meteen af.
 //  - Win je, dan krijg je 2× je inzet terug; gelijkspel = je inzet terug; verlies = niets.
 //  - Zonder internet of zonder account speel je gewoon zonder inzet.
@@ -15,10 +15,10 @@
 //     .zetIn(inzet)             { runId, inzet, saldo }  (gooit een fout met .reden: 'te-weinig' of 'offline')
 //     .uitslag(runId, uitslag)  { saldo } of null (later opnieuw)
 //     .kiesInzet(host, { T })   toont het inzetscherm; geeft { inzet, runId, saldo } of { inzet: 0 }
-export const WEEKBEDRAG = 250
+export const WEEKBEDRAG = 500   // 28 nov 2026 (Marcel): was 250
 export const MINIMUM = -100
 export const MAX_INZET = 100
-export const INZETTEN = [10, 25, 50, 100]
+export const INZETTEN = [5, 10, 25, 50, 100]   // 28 nov 2026: ook 5, zodat je bijna altijd nog kunt spelen
 export const CASINO_SPELLEN = ['eenentwintigen', 'pokertexasholdem', 'videopoker', 'hogerlager', 'fruitautomaat']   // 28 nov 2026: Hoger of lager (2×, hier) en de Fruitautomaat (de server draait: fruitautomaat.js)   // videopoker: alleen het saldo hier, delen en uitbetalen via sql/videopoker.sql   // 27 nov 2026: ook Poker (inkopen, de hele tafel winnen = 2×)
 
 import { benIkVolwassen } from './leeftijd.js?v=1'
@@ -127,9 +127,9 @@ function zetStijl() {
 .cas-saldo{font-size:30px;font-weight:900;color:#fde68a;font-variant-numeric:tabular-nums;margin:6px 0 2px}
 .cas-saldo.min{color:#ff8fa3}
 .cas-uitleg{font-size:12px;opacity:.75;line-height:1.4;margin-bottom:14px}
-.cas-rij{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
-.cas-fiche{aspect-ratio:1;border-radius:50%;border:3px dashed #ffffffaa;background:#8b3fd1;color:#fff;font:inherit;font-size:17px;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #4c1d7a,0 6px 14px #0008}
-.cas-fiche:nth-child(2){background:#0f9f6e}.cas-fiche:nth-child(3){background:#d1453f}.cas-fiche:nth-child(4){background:#1f1f2e}
+.cas-rij{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px}
+.cas-fiche{aspect-ratio:1;border-radius:50%;border:3px dashed #ffffffaa;background:#8b3fd1;color:#fff;font:inherit;font-size:15px;padding:0;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #4c1d7a,0 6px 14px #0008}
+.cas-fiche[data-inzet='5']{background:#5b6b86}.cas-fiche[data-inzet='25']{background:#0f9f6e}.cas-fiche[data-inzet='50']{background:#d1453f}.cas-fiche[data-inzet='100']{background:#1f1f2e}
 .cas-fiche:disabled{opacity:.3;cursor:not-allowed}
 .cas-fiche:active:not(:disabled){transform:translateY(2px)}
 .cas-zonder{width:100%;padding:11px 0;border-radius:12px;border:1px solid #c084fc88;background:transparent;color:#c084fc;font:inherit;font-weight:700;cursor:pointer}

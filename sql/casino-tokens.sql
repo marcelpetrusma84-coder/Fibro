@@ -4,15 +4,15 @@
 -- en de Fruitautomaat); dit bestand zet anders de oude casino_ik, casino_inzet en casino_overzicht terug.
 --
 -- In gewone woorden:
---  - Iedereen krijgt elke week 250 tokens erbij (de week begint maandag 00:00, Nederlandse tijd). Wie een paar weken
---    niet speelde, krijgt die weken er allemaal bij. De eerste keer begin je met 250.
+--  - Iedereen krijgt elke week 500 tokens erbij (tot 28 nov 2026: 250) (de week begint maandag 00:00, Nederlandse tijd). Wie een paar weken
+--    niet speelde, krijgt die weken er allemaal bij. De eerste keer begin je met 500.
 --  - Je saldo kan zakken tot -100, niet verder. Een inzet die je onder -100 zou brengen, mag niet.
 --  - Tokens zijn niets waard: je kunt ze niet kopen, niet inwisselen en niet aan iemand geven.
 --  - Alleen deze functies veranderen je saldo, en altijd je eigen saldo (uit je inlog, nooit uit wat de app stuurt):
 --      casino_inzet    je zet in voordat de kaarten worden gedeeld (de inzet gaat er meteen af);
 --      casino_uitslag  na het potje: gewonnen = 2× je inzet terug, gelijkspel = je inzet terug, verloren = niets.
 --    Ga je weg midden in een potje, dan ben je je inzet kwijt (net als in een echt casino).
---  - casino_overzicht: je saldo, wanneer de volgende 250 komen, de rijkste vrienden en je laatste potjes.
+--  - casino_overzicht: je saldo, wanneer de volgende 500 komen, de rijkste vrienden en je laatste potjes.
 --  - Hoogstens 100 per potje en hoogstens 20 potjes per minuut.
 -- Let op: de uitslag tegen de computer komt van je eigen toestel. Wie heel erg zijn best doet, kan dus valsspelen.
 -- Omdat de tokens niets waard zijn, is dat geen ramp; er wordt wel alles bijgehouden (casino_inzetten).
@@ -58,10 +58,10 @@ declare
   nu date := public.casino_deze_week();
   s integer;
 begin
-  insert into public.casino_saldo(user_id, saldo, week) values (me, 250, nu) on conflict (user_id) do nothing;
+  insert into public.casino_saldo(user_id, saldo, week) values (me, 500, nu) on conflict (user_id) do nothing;
   select c.saldo into s from public.casino_saldo c where c.user_id = me for update;
   update public.casino_saldo c
-     set saldo = least(c.saldo::bigint + 250::bigint * ((nu - c.week) / 7), 1000000000)::integer, week = nu, bijgewerkt = now()
+     set saldo = least(c.saldo::bigint + 500::bigint * ((nu - c.week) / 7), 1000000000)::integer, week = nu, bijgewerkt = now()
    where c.user_id = me and c.week < nu
   returning c.saldo into s;
   if s is null then select c.saldo into s from public.casino_saldo c where c.user_id = me; end if;
@@ -162,7 +162,7 @@ begin
   select coalesce(jsonb_agg(to_jsonb(r) order by r.saldo desc, r.user_id), '[]'::jsonb) into vrienden from (
     select * from (
       select c.user_id, p.username,
-             least(c.saldo::bigint + 250::bigint * greatest((nu - c.week) / 7, 0), 1000000000)::integer as saldo
+             least(c.saldo::bigint + 500::bigint * greatest((nu - c.week) / 7, 0), 1000000000)::integer as saldo
       from public.casino_saldo c join public.profiles p on p.id = c.user_id
       where c.user_id <> me and public.spel_vriend(me, c.user_id) and public.spel_speler_zichtbaar(c.user_id)
       order by 3 desc, c.user_id limit 5) v
@@ -171,7 +171,7 @@ begin
   select coalesce(jsonb_agg(to_jsonb(r) order by r.afgerond desc), '[]'::jsonb) into laatste from (
     select i.spel, i.inzet, i.uitslag, i.afgerond from public.casino_inzetten i
     where i.user_id = me and i.uitslag is not null order by i.afgerond desc limit 5) r;
-  return jsonb_build_object('saldo', s, 'weekbedrag', 250, 'minimum', -100, 'max_inzet', 100,
+  return jsonb_build_object('saldo', s, 'weekbedrag', 500, 'minimum', -100, 'max_inzet', 100,
     'volgende', ((nu + 7)::timestamp at time zone 'Europe/Amsterdam'), 'vrienden', vrienden, 'laatste', laatste);
 end;
 $$;

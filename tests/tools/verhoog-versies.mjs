@@ -18,6 +18,23 @@ const bestanden = git('ls-files').split('\n').filter(f => /\.(html|js|css|mjs)$/
 const lees = f => readFileSync(path.join(REPO, f), 'utf8')
 const verhoogd = []
 
+// 28 nov 2026: spellen uit Studio (studio-spellen.js) laden <id>-ui.js en <id>.js met "v" van dat spel
+{
+  const studioV = tekst => { const m = new Map(); for (const x of tekst.matchAll(/\{"id":"([a-z0-9]+)"[^\n]*?"v":(\d+)/g)) m.set(x[1], Number(x[2])); return m }
+  let basisTekst = ''
+  try { basisTekst = git('show', basis + ':studio-spellen.js') } catch (e) {}
+  const vOud = studioV(basisTekst)
+  const veranderd = git('diff', '--name-status', basis).split('\n').filter(Boolean).map(r => r.split('\t')).filter(([s]) => s === 'M').map(([, f]) => f)
+  let tekst = lees('studio-spellen.js')
+  const vNu = studioV(tekst)
+  const ids = new Set(veranderd.filter(f => /^[a-z0-9]+(-ui)?\.js$/.test(f)).map(f => f.replace(/(-ui)?\.js$/, '')))
+  for (const id of ids) {
+    if (!vOud.has(id) || !vNu.has(id) || vNu.get(id) > vOud.get(id)) continue
+    tekst = tekst.replace(new RegExp('(\\{"id":"' + id + '"[^\\n]*?"v":)\\d+'), '$1' + (vOud.get(id) + 1))
+    verhoogd.push('studio-spellen.js: ' + id + ' -> v' + (vOud.get(id) + 1))
+  }
+  if (ids.size) writeFileSync(path.join(REPO, 'studio-spellen.js'), tekst)
+}
 for (let ronde = 0; ronde < 12; ronde++) {
   const veranderd = git('diff', '--name-status', basis).split('\n').filter(Boolean).map(r => r.split('\t')).filter(([s, f]) => s === 'M' && !SLA_OVER.test(f) && !NOOIT.has(f))
   let gedaan = 0

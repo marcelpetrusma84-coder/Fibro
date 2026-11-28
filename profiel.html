@@ -641,10 +641,10 @@ const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','�
 // v173: de oude emoji-stickers (Natuur & Planten, Sfeer & Magie, Muziek & Kunst, Dieren, 'Actieve stickers') en de
 // widget 'Sticker board' zijn weg: ze werden alleen op dit toestel bewaard en nergens getoond.
 import { LETTERTYPES, STORE_LETTERTYPES, laadFont } from './lettertypes.js?v=134'
-import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES, storeWidgetItem } from './store.js?v=49' // v131: Stekky Store
+import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES, storeWidgetItem } from './store.js?v=50' // v131: Stekky Store
 import { mixWidgetDef } from './layouts.js?v=6' // 25 nov 2026: widget-layouts uit Stekky Studio
-import { studioWidgetDef } from './studio-spellen.js?v=12' // 25 nov 2026: spellen uit Stekky Studio
-import { homeDefs, lijstWidget, magZien } from './widgets.js?v=6' // 28 nov 2026: widgets uit één lijst (Casino, Scorebord) staan ook hier
+import { studioWidgetDef } from './studio-spellen.js?v=13' // 25 nov 2026: spellen uit Stekky Studio
+import { homeDefs, lijstWidget, magZien } from './widgets.js?v=7' // 28 nov 2026: widgets uit één lijst (Casino, Scorebord) staan ook hier
 import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=95'
 import { pasAnimatieToe, startOp as startAnimatieOp } from './animatie.js?v=235'
 window.blokAangepast = function(){
@@ -1685,13 +1685,13 @@ startMeldingen()
 
 <script type="module">
 import { vulSpelVersies } from "./spelversies.js?v=28"
-import { koppelSpelIcoonFallback } from './spelicoon.js?v=18'
+import { koppelSpelIcoonFallback } from './spelicoon.js?v=19'
 koppelSpelIcoonFallback()
 vulSpelVersies()
 </script>
 <script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=212"; startBelLuisteraar()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=213"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=214"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=172"; startOngelezen()</script>
 <script>
 /* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */

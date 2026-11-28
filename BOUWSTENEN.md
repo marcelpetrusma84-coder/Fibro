@@ -84,10 +84,10 @@ Grotere uitleg staat in [BLAUWDRUK-BEURTSPEL.md](BLAUWDRUK-BEURTSPEL.md), [BLAUW
 ### Casino-tokens
 | Bouwsteen | Wat het doet |
 |---|---|
-| `casino.js` + `sql/casino-tokens.sql` | Speelgeld: 250 per week, tot -100. `maakCasino().kiesInzet()` = het inzetscherm; `uitslag()` betaalt uit (2×, inzet terug, niets). Server: `casino_bij` (saldo bijwerken) en `casino_ik` (de gewone controles) voor nieuwe casino-functies. |
+| `casino.js` + `sql/casino-tokens.sql` | Speelgeld: 500 per week (28 nov 2026), fiches 5/10/25/50/100, tot -100. `maakCasino().kiesInzet()` = het inzetscherm; `uitslag()` betaalt uit (2×, inzet terug, niets). Server: `casino_bij` (saldo bijwerken) en `casino_ik` (de gewone controles) voor nieuwe casino-functies. |
 | `sql/videopoker.sql` | **Patroon "de server deelt"**: als een uitslag veel waard is, schudt en beoordeelt de server zelf, zodat niemand valsspeelt. |
 | `casinowidget.js` | De widget 🎰 Casino op Home (alleen 18+, `alleenVolwassen` in `widgets.js`). |
-| `leeftijd.js` + `sql/casino-volwassen.sql` | **18+**: `benIkVolwassen()` (geboortejaar uit je inlog), `casinoMagHier({ vriend, groep })` (is iedereen in deze chat 18+? alleen ja/nee van de server). De server weigert tokens onder de 18 (`casino_ik`) en zet het geboortejaar één keer vast. Ook: Hoger of lager in `casino_inzet` en `fruitautomaat_draai`. |
+| `leeftijd.js` + `sql/casino-volwassen.sql` | **18+**: `benIkVolwassen()` (geboortejaar uit je inlog), `casinoMagHier({ vriend, groep })` (is iedereen in deze chat 18+? alleen ja/nee van de server). De server weigert tokens onder de 18 (`casino_ik`) en zet het geboortejaar één keer vast. Ook: `hogerlager_deel`/`hogerlager_raad` (de server deelt, uitbetaling naar de kans), `fruitautomaat_draai`, weekgeld 500 en fiches 5 tot 100. |
 | `fruitautomaat.js` | De Fruitautomaat: gewichten, uitbetalingstabel, `terugKans` (eerlijk uitgerekend) en `maakFruitServer` (de server draait, zoals Video Poker). |
 
 ---

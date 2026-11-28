@@ -8,7 +8,7 @@
 import * as P from './eenentwintigen.js?v=1'
 import { maakKaartTafel, REACTIES } from './kaartspel-hulp.js?v=23'
 import { meldGeslagen } from './beurtspel-hulp.js?v=1'
-import { verschil, uitbetaling } from './casino.js?v=4'
+import { verschil, uitbetaling } from './casino.js?v=5'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
 const BEURT_SECONDEN = 30

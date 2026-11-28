@@ -13,13 +13,13 @@
 //   wachtspelKnoppen(houder, { vriend, groep, supabase })   zet de knoppen in houder; geeft { el }
 //       el = het hele blok: zet het na het opnieuw tekenen gewoon weer terug (een lopend spelletje gaat mee)
 import { casinoMagHier } from './leeftijd.js?v=1'
-import { maakCasino } from './casino.js?v=4'
+import { maakCasino } from './casino.js?v=5'
 
 export const CASINO_WACHT = ['eenentwintigen', 'pokertexasholdem']
 export const isCasinoSpel = id => CASINO_WACHT.includes(id)
 export const WACHTSPELLEN = [
-  { id: 'hogerlager', icoon: '🃏', naam: 'Hoger of lager', bestand: './hogerlager-ui.js?v=1', maak: 'maakHogerLager' },
-  { id: 'fruitautomaat', icoon: '🍒', naam: 'Fruitautomaat', bestand: './fruitautomaat-ui.js?v=1', maak: 'maakFruitautomaat' },
+  { id: 'hogerlager', icoon: '🃏', naam: 'Hoger of lager', bestand: './hogerlager-ui.js?v=2', maak: 'maakHogerLager' },
+  { id: 'fruitautomaat', icoon: '🍒', naam: 'Fruitautomaat', bestand: './fruitautomaat-ui.js?v=2', maak: 'maakFruitautomaat' },
 ]
 const T = (s, v) => (typeof window !== 'undefined' && window.T ? window.T(s, v) : String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v) ? v[k] : m))
 if (typeof window !== 'undefined') Object.assign(window.FIBRO_EN ||= {}, {

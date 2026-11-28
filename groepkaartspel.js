@@ -19,10 +19,10 @@
 //   meldPush(spel, sessie)    (v3, 25 nov 2026) een pushmelding naar de andere leden: "Marcel wil Eenendertigen spelen"
 //                             (stuur-push, type groepspel). Tikken opent de groep; dan zegt de pagina 'hallo' en komt
 //                             de uitnodiging bovenin (ook als je er eerst niet was).
-import { STUDIO_SPELLEN, studioSpel, spelBestand, spelIcoon } from './studio-spellen.js?v=12'
+import { STUDIO_SPELLEN, studioSpel, spelBestand, spelIcoon } from './studio-spellen.js?v=13'
 import { maakSpelMenu } from './spelmenu.js?v=2'
 import { molKnop } from './mollenmeppen.js?v=2' // 26 nov 2026: Mollen meppen terwijl je in de wachtkamer wacht
-import { isCasinoSpel, wachtspelKnoppen } from './wachtspellen.js?v=1' // 28 nov 2026: bij Poker een gokje terwijl je wacht
+import { isCasinoSpel, wachtspelKnoppen } from './wachtspellen.js?v=2' // 28 nov 2026: bij Poker een gokje terwijl je wacht
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
 Object.assign(window.FIBRO_EN ||= {}, {

@@ -59,3 +59,10 @@ Ook een wachtspelletje: in de wachtkamer van Poker en Black Jack (met een vriend
 - alle teksten met `T(...)`, en Engels in `taal-en.js`;
 - een test in `tests/` en een browsertest in `tests/tools/`;
 - de `?v=` van hogerlager-ui.js en hogerlager.js omhoog (en `v` in studio-spellen.js).
+
+## Aanpassing 28 nov 2026 (Marcel)
+
+De uitbetaling hangt nu af van de kans (eerst altijd 2×; met slim kiezen kreeg je dan 150 van de 100 terug):
+uitbetaling = inzet × floor(4947 / winnende kaarten) / 100, dezelfde waarde = verloren. Elke keuze geeft zo op de lange
+duur ongeveer 97 van de 100 terug. Met tokens deelt de server (`hogerlager_deel`, `hogerlager_raad` in
+`sql/casino-volwassen.sql`). Fiches 5, 10, 25, 50 en 100; elke week 500 tokens.

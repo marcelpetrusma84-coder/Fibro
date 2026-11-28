@@ -4,7 +4,7 @@
 #  B. met tokens: Deel (inzet 25) gaat naar de server (videopoker_deel); je ziet precies de kaarten van de server; tik twee
 #     kaarten aan (HOUDEN) en Ruil: videopoker_ruil met houd = 3; de kaarten van de server, "Three of a kind" licht op in
 #     de tabel, "+75" en het nieuwe saldo 🪙 280
-#  C. saldo -90: alleen fiche 10 kan nog (anders onder -100)
+#  C. saldo -90: alleen de fiches 5 en 10 kunnen nog (anders onder -100)
 #  D. "Zonder tokens": delen en ruilen op het toestel, niets naar de server; 💡 Tip zet HOUDEN-vinkjes
 #  E. zonder account: meteen zonder tokens, geen knop om te wisselen
 #  F. de casino-widget op Home heeft een knop 🎰 Video Poker die het spel opent; geen paginafouten
@@ -77,7 +77,7 @@ try:
         check(pg.locator('.niveau-btn[data-niveau]').count() == 0, 'A geen niveaus')
         tabel = pg.evaluate("() => document.querySelector('.vp-tabel').innerText.replace(/\\s+/g, ' ')")
         check('Royal flush 6.250' in tabel and 'Boeren of beter 25' in tabel, 'A de tabel met bedragen bij inzet 25 (%s)' % tabel)
-        check(pg.evaluate(FICHES) == [[10, True], [25, True], [50, True], [100, True]] and pg.locator('.vp-fiche.gekozen[data-inzet="25"]').count() == 1, 'A de fiches, 25 gekozen')
+        check(pg.evaluate(FICHES) == [[5, True], [10, True], [25, True], [50, True], [100, True]] and pg.locator('.vp-fiche.gekozen[data-inzet="25"]').count() == 1, 'A de fiches, 25 gekozen')
         check('Video Poker' in pg.inner_text('#spelTitelBar'), 'A de naam in de titelbalk')
         # ── B ──
         pg.click('.vp-knop[data-naam=hoofd]')
@@ -97,8 +97,8 @@ try:
         STAND['saldo'] = -90
         pg = open_pg(ctx, 'spel.html?spel=videopoker&titel=1')
         wacht(pg, "() => (document.querySelector('.vp-saldo')?.textContent || '').includes('-90')", 12000)
-        check(pg.evaluate(FICHES) == [[10, True], [25, False], [50, False], [100, False]], 'C saldo -90: alleen fiche 10 (%s)' % pg.evaluate(FICHES))
-        check(pg.locator('.vp-knop[data-naam=hoofd]').is_disabled(), 'C met inzet 25 kun je niet delen')
+        check(pg.evaluate(FICHES) == [[5, True], [10, True], [25, False], [50, False], [100, False]], 'C saldo -90: alleen de fiches 5 en 10 (%s)' % pg.evaluate(FICHES))
+        check(pg.locator('.vp-fiche.gekozen[data-inzet="10"]').count() == 1 and not pg.locator('.vp-knop[data-naam=hoofd]').is_disabled(), 'C inzet 25 kan niet meer: de fiche springt naar 10 en je kunt delen (28 nov 2026)')
         # ── D ── zonder tokens
         pg.click('.vp-wissel')
         check('Zonder tokens' in pg.inner_text('.vp-saldo') and pg.locator('.vp-fiches').is_hidden(), 'D zonder tokens: geen fiches')

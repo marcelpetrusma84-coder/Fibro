@@ -1,7 +1,7 @@
 # proef352 (27 nov 2026, Marcel): casino-tokens (casino.js, casinowidget.js, sql/casino-tokens.sql) in Black Jack.
-#  A. Home met de widget 🎰 Casino: je saldo (🪙 230), wanneer de volgende 250 komen, de rijkste vrienden (👑 met de naam
+#  A. Home met de widget 🎰 Casino: je saldo (🪙 230), wanneer de volgende 500 komen (28 nov 2026: was 250), de rijkste vrienden (👑 met de naam
 #     die jij je vriend gaf, "Jij" gemarkeerd); ♠️ Black Jack opent het spel
-#  B. Black Jack tegen de computer met saldo -50: eerst het inzetscherm; 10, 25 en 50 mogen, 100 niet (dan zou je onder
+#  B. Black Jack tegen de computer met saldo -50: eerst het inzetscherm; 5, 10, 25 en 50 mogen, 100 niet (dan zou je onder
 #     -100 komen). Inzet 50 gaat naar de server (casino_inzet), tijdens het potje staat 🪙 50 op tafel; aan het eind
 #     precies één casino_uitslag die past bij wat het spel zegt, en het nieuwe saldo in het eindscherm
 #  C. ↻ Opnieuw spelen: weer het inzetscherm, nu met het saldo van de server; "Zonder inzet spelen" = geen uitslag naar de server
@@ -30,7 +30,7 @@ VOLGENDE = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(time.time() + 3 * 864
 STAND = {'saldo': 230, 'kapot': False}
 INZETTEN, UITSLAGEN, OPEN = [], [], {}
 def overzicht():
-    return {'saldo': STAND['saldo'], 'weekbedrag': 250, 'minimum': -100, 'max_inzet': 100, 'volgende': VOLGENDE, 'laatste': [],
+    return {'saldo': STAND['saldo'], 'weekbedrag': 500, 'minimum': -100, 'max_inzet': 100, 'volgende': VOLGENDE, 'laatste': [],
             'vrienden': [{'user_id': TIJN, 'username': 'tijn_echt', 'saldo': 520}, {'user_id': UID, 'username': 'Marcel', 'saldo': STAND['saldo']},
                          {'user_id': BRAM, 'username': 'bram', 'saldo': 10}]}
 def supabase(route):
@@ -97,7 +97,7 @@ try:
         check(wacht(pg, "() => !!document.querySelector('.csw-saldo') && document.querySelector('.csw-saldo').textContent.includes('230')", 15000),
               'A: de widget Casino staat op Home met je saldo 🪙 230')
         sub = pg.evaluate("() => document.querySelector('.csw-sub')?.textContent || ''")
-        check('+250 over 3 dagen' in sub, 'A: wanneer de volgende 250 komen (%s)' % sub)
+        check('+500 over 3 dagen' in sub, 'A: wanneer de volgende 500 komen (%s)' % sub)
         rijen = pg.evaluate("() => [...document.querySelectorAll('.csw-rij')].map(r => ({ ik: r.classList.contains('ik'), tekst: r.innerText.replace(/\\s+/g, ' ') }))")
         check(len(rijen) == 3 and '👑' in rijen[0]['tekst'] and 'Tijntje' in rijen[0]['tekst'] and '520' in rijen[0]['tekst']
               and rijen[1]['ik'] and 'Jij' in rijen[1]['tekst'] and 'bram' in rijen[2]['tekst'], 'A: de rijkste vrienden, Tijntje 👑 bovenaan, Jij gemarkeerd (%s)' % rijen)
@@ -110,11 +110,11 @@ try:
         pg = open_pg(ctx, 'spel.html?spel=eenentwintigen&titel=1')
         wacht(pg, "() => !!document.querySelector('.niveau-btn[data-niveau]')")
         pg.click('.niveau-btn[data-niveau=normaal]')
-        check(wacht(pg, "() => document.querySelectorAll('.cas-fiche').length === 4", 10000), 'B: eerst het inzetscherm')
+        check(wacht(pg, "() => document.querySelectorAll('.cas-fiche').length === 5", 10000), 'B: eerst het inzetscherm')
         saldo = pg.evaluate("() => document.querySelector('.cas-saldo')?.textContent || ''")
         vrij = pg.evaluate(VRIJ)
         check('-50' in saldo, 'B: met je saldo (%s)' % saldo)
-        check(vrij == [[10, True], [25, True], [50, True], [100, False]], 'B: 10, 25 en 50 mogen, 100 niet (onder -100) (%s)' % vrij)
+        check(vrij == [[5, True], [10, True], [25, True], [50, True], [100, False]], 'B: 5, 10, 25 en 50 mogen, 100 niet (onder -100) (%s)' % vrij)
         check(not pg.evaluate("() => !!document.querySelector('button[data-naam=blijf]')"), 'B: de kaarten worden nog niet gedeeld')
         pg.click('.cas-fiche[data-inzet="50"]')
         check(wacht(pg, "() => !document.querySelector('.cas-inzet')", 8000), 'B: het inzetscherm gaat weg')
@@ -129,7 +129,7 @@ try:
         check(('Saldo: 🪙 %d' % na) in sub, 'B: het nieuwe saldo in het eindscherm (%d) (%s)' % (na, sub))
         # ── C ── opnieuw: weer kiezen, nu zonder inzet
         pg.click('.kt-opnieuw')
-        check(wacht(pg, "() => document.querySelectorAll('.cas-fiche').length === 4", 10000), 'C: ↻ Opnieuw spelen: weer het inzetscherm')
+        check(wacht(pg, "() => document.querySelectorAll('.cas-fiche').length === 5", 10000), 'C: ↻ Opnieuw spelen: weer het inzetscherm')
         saldo = pg.evaluate("() => document.querySelector('.cas-saldo')?.textContent || ''")
         check(str(STAND['saldo']) in saldo, 'C: met het saldo van de server (%s, %s)' % (STAND['saldo'], saldo))
         pg.click('.cas-zonder')

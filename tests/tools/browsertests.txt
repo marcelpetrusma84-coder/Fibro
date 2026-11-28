@@ -100,3 +100,4 @@ proef355 | 20 | Widgets uit één lijst (widgets.js): Home, Store en het sjabloo
 proef356 | 60 | De sjablonen voor nieuwe spellen: kaartspel met de groep, automaat en arcade
 proef357 | 15 | Speelkaarten Salon
 proef358 | 30 | Poker: grotere kaarten op tafel
+proef359 | 15 | Profiel > Widgets: Casino (uit widgets.js) staat in de lijst en blijft bij Opslaan

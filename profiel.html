@@ -15,7 +15,7 @@
 <script src="huisregel.js?v=2"></script>
 <script src="foutmelder.js?v=4"></script>
 <script src="balk-vast.js?v=1"></script>
-<script src="taal.js?v=166"></script>
+<script src="taal.js?v=167"></script>
 <script src="appslot.js?v=3"></script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Vuurwerk': 'Fireworks', 'Onweer': 'Thunderstorm', 'Glitter': 'Glitter' }) // v234: nieuwe animaties</script>
 <script>Object.assign(window.FIBRO_EN ||= {}, { 'Gastenboek zonder lijntjes': 'Guestbook without lines', 'Gewoon in je eigen kleuren, zonder lijntjespapier': 'Plain, in your own colours, without lined paper' }) // v235</script>
@@ -644,6 +644,7 @@ import { LETTERTYPES, STORE_LETTERTYPES, laadFont } from './lettertypes.js?v=134
 import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES, storeWidgetItem } from './store.js?v=48' // v131: Stekky Store
 import { mixWidgetDef } from './layouts.js?v=6' // 25 nov 2026: widget-layouts uit Stekky Studio
 import { studioWidgetDef } from './studio-spellen.js?v=11' // 25 nov 2026: spellen uit Stekky Studio
+import { homeDefs, lijstWidget } from './widgets.js?v=5' // 28 nov 2026: widgets uit één lijst (Casino, Scorebord) staan ook hier
 import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=95'
 import { pasAnimatieToe, startOp as startAnimatieOp } from './animatie.js?v=235'
 window.blokAangepast = function(){
@@ -714,6 +715,26 @@ function bouwLayoutRijen(ids){
     const tg=document.createElement('div');tg.className='toggle '+(actieveWidgets.includes(it.widget)?'on':'off');tg.id='widget-'+it.widget
     tg.onclick=()=>window.toggleWidget(it.widget);tg.appendChild(Object.assign(document.createElement('div'),{className:'toggle-dot'}))
     rij.append(info,weg,tg);naSpel.after(rij);naSpel=rij
+  }
+  // 28 nov 2026: een widget uit widgets.js (Casino, Scorebord, ...) krijgt ook een rij, na Mastodon. Zonder deze rij
+  // stond hij na downloaden wel op Home, maar niet in deze lijst.
+  let naLijst=document.getElementById('widgetRij-mastodon')
+  for(const it of [...ids].map(storeWidgetItem).filter(it=>it&&lijstWidget(it.widget))){
+    if(!naLijst)break
+    if(document.getElementById('widgetRij-'+it.widget)){naLijst=document.getElementById('widgetRij-'+it.widget);continue}
+    const w=lijstWidget(it.widget)
+    const rij=document.createElement('div');rij.className='widget-item';rij.id='widgetRij-'+it.widget;rij.style.display='none'
+    const info=document.createElement('div');info.className='widget-info'
+    const ic=document.createElement('div');ic.className='widget-icon';ic.textContent=w.icoon
+    const tk=document.createElement('div');const nm=document.createElement('div');nm.className='widget-name';nm.textContent=T(w.titel)
+    const ds=document.createElement('div');ds.className='widget-desc';ds.textContent=T(w.persoonlijk?'Uit de Store: alleen op je eigen Home':'Uit de Store')
+    tk.append(nm,ds);info.append(ic,tk)
+    const weg=document.createElement('button');weg.type='button';weg.className='store-verwijder';weg.textContent='🗑'
+    weg.setAttribute('aria-label',T('{naam} verwijderen',{naam:T(w.titel)}));weg.title=weg.getAttribute('aria-label')
+    weg.onclick=()=>window.verwijderStoreSpel(it.id)
+    const tg=document.createElement('div');tg.className='toggle '+(actieveWidgets.includes(it.widget)?'on':'off');tg.id='widget-'+it.widget
+    tg.onclick=()=>window.toggleWidget(it.widget);tg.appendChild(Object.assign(document.createElement('div'),{className:'toggle-dot'}))
+    rij.append(info,weg,tg);naLijst.after(rij);naLijst=rij
   }
 }
 // 11 nov 2026: verwijderen wat je uit de Store hebt (eerst vragen). Games: ook de widget uit (Home en chat).
@@ -1458,7 +1479,7 @@ window.slaAllesOp=async function(){
   wOud.filter(w => w && typeof w.id === 'string').sort((a, b) => (Number(a.volgorde) || 0) - (Number(b.volgorde) || 0))
     .forEach(w => { if (!wPlek.has(w.id)) wPlek.set(w.id, wPlek.size) })
   // v235: 'gastenboek_effen' is geen eigen widget maar een keuze bij het gastenboek (gaat mee naar vrienden)
-  const wDefs = actieveWidgets.map(n => WMAP[n] || stickerWidgetDef(n) || mixWidgetDef(n) || studioWidgetDef(n)).filter(Boolean) // 25 nov 2026: ook layouts (mix_) en Studio-spellen
+  const wDefs = actieveWidgets.map(n => WMAP[n] || stickerWidgetDef(n) || mixWidgetDef(n) || homeDefs().find(d => d.id === n) || studioWidgetDef(n)).filter(Boolean) // 28 nov 2026: ook widgets.js (anders ging Casino bij Opslaan van Home) // 25 nov 2026: ook layouts (mix_) en Studio-spellen
     .map(d => d.id === 'gastenboek' && actieveWidgets.includes('gastenboek_effen') ? { ...d, papier: false } : d)
   const wRang = (d, i) => wPlek.has(d.id) ? wPlek.get(d.id) : wPlek.size + i
   const wLayout = wDefs.map((d, i) => ({ d, r: wRang(d, i) })).sort((a, b) => a.r - b.r).map(({ d }, i) => ({ ...d, volgorde: i, aan: true }))

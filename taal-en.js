@@ -2726,6 +2726,7 @@ window.FIBRO_EN = {
   "PeerTube": "PeerTube",
   "Uit de Store: video van PeerTube, laadt pas na een tik": "From the Store: video from PeerTube, only loads after a tap",
   "Uit de Store: een layout met een paar widgets samen": "From the Store: a layout with a few widgets together",
+  "Uit de Store: alleen op je eigen Home": "From the Store: only on your own Home",
   "Kies hoogstens {n} feeds": "Choose up to {n} feeds",
   "Hoogstens {n} feeds.": "At most {n} feeds.",
   "Vink eerst een feed aan.": "Tick a feed first.",

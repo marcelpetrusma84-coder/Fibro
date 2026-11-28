@@ -111,7 +111,7 @@ Grotere uitleg staat in [BLAUWDRUK-BEURTSPEL.md](BLAUWDRUK-BEURTSPEL.md), [BLAUW
 
 | Bouwsteen | Wat het doet |
 |---|---|
-| **Een widget toevoegen** → `widgets.js` | Eén bestand met een tekenfunctie en **één regel** in `widgets.js`: dan staat hij in de Store en op Home, en (als hij persoonlijk is) niet op het profiel van een vriend. Begin met `sjabloon-widget.js`. Voorbeelden: `scorebordwidget.js`, `casinowidget.js`. (Widgets waarvan de inhoud naar vrienden gaat, zoals foto's en radio, staan nog op de oude manier in `index.html`, `vriend-profiel.html` en `sync.js`.) |
+| **Een widget toevoegen** → `widgets.js` | Eén bestand met een tekenfunctie en **één regel** in `widgets.js`: dan staat hij in de Store, op Home en in Profiel > Widgets (met schakelaar en 🗑), en (als hij persoonlijk is) niet op het profiel van een vriend. Begin met `sjabloon-widget.js`. Voorbeelden: `scorebordwidget.js`, `casinowidget.js`. (Widgets waarvan de inhoud naar vrienden gaat, zoals foto's en radio, staan nog op de oude manier in `index.html`, `vriend-profiel.html` en `sync.js`.) |
 | `store.js` | De Stekky Store: games, widgets, stickers, lettertypes; downloaden, verwijderen, `gameAan`. |
 | `layouts.js`, `studio-layouts.js` | Een widget die een paar andere widgets samen laat zien (uit Studio). |
 | `standaardwidgets.js` | Welke widgets een nieuw account meteen krijgt. |

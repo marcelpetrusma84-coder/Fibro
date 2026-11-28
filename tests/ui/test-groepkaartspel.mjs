@@ -25,7 +25,7 @@ console.log('PASS: de groepschat: knop 🎲, het groepskanaal (gs) en de voice c
 const gk = lees('groepkaartspel.js')
 assert.match(gk, /if \(!p \|\| typeof p !== 'object' \|\| !GELDIG\.test\(String\(p\.van\)\) \|\| p\.van === ik \|\| !lid\(p\.van\)\) return/, 'alleen van leden')
 assert.match(gk, /const MAX = 6/, 'hoogstens 6 spelers')
-assert.match(gk, /m\.start\(\{ spelKanaal, spelers, mijnZetel \}\)/, 'het spel krijgt spelers en mijn zetel')
+assert.match(gk, /m\.start\(\{ spelKanaal, spelers, mijnZetel, groepId \}\)/, 'het spel krijgt spelers, mijn zetel en de groep (28 nov 2026: voor de wachtspelletjes)')
 assert.match(lees('groepspel.js'), /else if \(!gastheer && z === 1 && !gestopt\) \{ try \{ onGastheerWeg\(\) \}/, 'de gastheer weg = het spel stopt')
 console.log('PASS: groepkaartspel: alleen leden, 6 spelers, het spel krijgt de spelers')
 // 25 nov 2026: pushmelding bij een nieuw spel, en wie later binnenkomt ziet de uitnodiging toch (hallo)

@@ -103,7 +103,7 @@ export function start() {
   }
   function tekenBalk() {
     const s = $('.vp-saldo')
-    s.textContent = metTokens ? '🪙 ' + getal(saldo) : T('Zonder tokens')
+    s.textContent = metTokens ? '🪙 ' + getal(saldo) : casino ? T('Zonder tokens') : ''   // 28 nov 2026: onder de 18 niets over tokens
     s.classList.toggle('min', metTokens && saldo < 0)
     const w = $('.vp-wissel')
     w.hidden = saldo === null
@@ -204,7 +204,7 @@ export function start() {
     const d = document.createElement('div'); d.className = 'kt-keuze vp-regels'
     d.innerHTML = '<div class="kt-keuzekaart" role="dialog" aria-modal="true" style="max-width:440px;text-align:left;max-height:80vh;overflow:auto">'
       + '<div style="font-weight:800;font-size:17px;margin-bottom:8px">' + esc(T('Spelregels van Video Poker')) + '</div>'
-      + '<ul style="margin:0 0 12px;padding-left:18px;line-height:1.45;font-size:14px">' + REGELS.map(t => '<li>' + esc(T(t)) + '</li>').join('') + '</ul>'
+      + '<ul style="margin:0 0 12px;padding-left:18px;line-height:1.45;font-size:14px">' + REGELS.filter(t => casino || !/tokens/.test(t)).map(t => '<li>' + esc(T(t)) + '</li>').join('') + '</ul>'
       + '<button type="button" class="kt-knop kt-nadruk">' + esc(T('Terug')) + '</button></div>'
     d.querySelector('button').onclick = () => d.remove()
     doos.appendChild(d)

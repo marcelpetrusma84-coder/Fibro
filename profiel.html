@@ -641,10 +641,10 @@ const avatarEmojis=['🌿','🌸','🎸','📷','🚀','🌙','🦋','🎨','�
 // v173: de oude emoji-stickers (Natuur & Planten, Sfeer & Magie, Muziek & Kunst, Dieren, 'Actieve stickers') en de
 // widget 'Sticker board' zijn weg: ze werden alleen op dit toestel bewaard en nergens getoond.
 import { LETTERTYPES, STORE_LETTERTYPES, laadFont } from './lettertypes.js?v=134'
-import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES, storeWidgetItem } from './store.js?v=48' // v131: Stekky Store
+import { bewaardeDownloads, mijnDownloads, gameWidgets, verwijderDownload, itemVan, STORE_GAMES, storeWidgetItem } from './store.js?v=49' // v131: Stekky Store
 import { mixWidgetDef } from './layouts.js?v=6' // 25 nov 2026: widget-layouts uit Stekky Studio
-import { studioWidgetDef } from './studio-spellen.js?v=11' // 25 nov 2026: spellen uit Stekky Studio
-import { homeDefs, lijstWidget } from './widgets.js?v=5' // 28 nov 2026: widgets uit één lijst (Casino, Scorebord) staan ook hier
+import { studioWidgetDef } from './studio-spellen.js?v=12' // 25 nov 2026: spellen uit Stekky Studio
+import { homeDefs, lijstWidget, magZien } from './widgets.js?v=6' // 28 nov 2026: widgets uit één lijst (Casino, Scorebord) staan ook hier
 import { haalBlokstijl, bewaarBlokstijl, pasBlokstijlToe } from './blokstijl.js?v=95'
 import { pasAnimatieToe, startOp as startAnimatieOp } from './animatie.js?v=235'
 window.blokAangepast = function(){
@@ -719,7 +719,7 @@ function bouwLayoutRijen(ids){
   // 28 nov 2026: een widget uit widgets.js (Casino, Scorebord, ...) krijgt ook een rij, na Mastodon. Zonder deze rij
   // stond hij na downloaden wel op Home, maar niet in deze lijst.
   let naLijst=document.getElementById('widgetRij-mastodon')
-  for(const it of [...ids].map(storeWidgetItem).filter(it=>it&&lijstWidget(it.widget))){
+  for(const it of [...ids].map(storeWidgetItem).filter(it=>it&&lijstWidget(it.widget)&&magZien(lijstWidget(it.widget)))){ // 28 nov 2026: 18+ (Casino) niet onder de 18
     if(!naLijst)break
     if(document.getElementById('widgetRij-'+it.widget)){naLijst=document.getElementById('widgetRij-'+it.widget);continue}
     const w=lijstWidget(it.widget)
@@ -1685,13 +1685,13 @@ startMeldingen()
 
 <script type="module">
 import { vulSpelVersies } from "./spelversies.js?v=28"
-import { koppelSpelIcoonFallback } from './spelicoon.js?v=17'
+import { koppelSpelIcoonFallback } from './spelicoon.js?v=18'
 koppelSpelIcoonFallback()
 vulSpelVersies()
 </script>
 <script type="module">import { startBelLuisteraar } from "./bel-luisteraar.js?v=212"; startBelLuisteraar()</script>
 <script type="module">import { startVriendverzoekLuisteraar } from "./vriendverzoek.js?v=95"; startVriendverzoekLuisteraar()</script>
-<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=212"; startSpelUitnodigingLuisteraar()</script>
+<script type="module">import { startSpelUitnodigingLuisteraar } from "./speluitnodiging.js?v=213"; startSpelUitnodigingLuisteraar()</script>
 <script type="module">import { startOngelezen } from "./ongelezen.js?v=172"; startOngelezen()</script>
 <script>
 /* FIBRO-DIAGNOSE - pop-up uit, staat nu in de console (F12) */

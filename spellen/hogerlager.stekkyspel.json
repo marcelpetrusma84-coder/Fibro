@@ -1,0 +1,42 @@
+{
+  "formaat": "stekky-spel",
+  "versie": 1,
+  "id": "hogerlager",
+  "soort": "kaart",
+  "naam": [
+    "Hoger of lager",
+    "Higher or lower"
+  ],
+  "icoon": "🃏",
+  "uitleg": [
+    "Je ziet een kaart: is de volgende hoger of lager? Snel, simpel en spannend. Ook als wachtspelletje bij Poker en Black Jack. Met of zonder casino-tokens (18+).",
+    "You see a card: is the next one higher or lower? Quick, simple and exciting. Also a waiting game at Poker and Black Jack. With or without casino tokens (18+)."
+  ],
+  "regels": "Hoger of lager speel je alleen, tegen de automaat.\n\nJe ziet een open kaart. Raad of de volgende kaart hoger of lager is. Aas is het hoogst, 2 het laagst.\nGoed geraden = gewonnen. Dezelfde waarde = gelijk (je inzet terug). Fout = verloren.\nMet casino-tokens (alleen 18+): je kiest 10, 25, 50 of 100 en krijgt bij winst je inzet dubbel terug.\n\nOok een wachtspelletje: in de wachtkamer van Poker en Black Jack (met een vriend of in de groepschat) en als je bij Poker uit het spel ligt. Zit er iemand onder de 18 in de chat, dan zonder tokens.",
+  "doel": "",
+  "met": {
+    "spelmenu": true,
+    "vriend": false,
+    "computer": true,
+    "chatbalk": false,
+    "webcam": false,
+    "store": true
+  },
+  "spraak": "uit",
+  "extras": [
+    "uitleg",
+    "opnieuw",
+    "trillen",
+    "score",
+    "geluid",
+    "animaties",
+    "hulp"
+  ],
+  "titel": "pesten",
+  "kaarten": {
+    "deck": "52",
+    "perSpeler": 1,
+    "spelers": 2,
+    "speciaal": []
+  }
+}

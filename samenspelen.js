@@ -7,7 +7,7 @@
 //
 //   kanMetVriend(id)  welke spellen met een vriend kunnen (dezelfde lijst als in chat.html bij speelMee)
 //   kanMetGroep(id)   welke spellen met de groep kunnen (dezelfde regel als groepSpellen in groepkaartspel.js)
-import { STUDIO_SPELLEN } from './studio-spellen.js?v=11'
+import { STUDIO_SPELLEN } from './studio-spellen.js?v=12'
 
 // Met een vriend in de chat (chat.html, speelMee). Driespelerschaak niet: dat is met z'n drieën.
 export const VRIEND_SPELLEN = ['botkaaseiren', 'vieroprij', 'pesten', 'toepen', 'eenentwintigen', 'koningsjacht', 'schaken',

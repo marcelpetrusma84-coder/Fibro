@@ -1,6 +1,7 @@
 -- Casino-tokens (27 nov 2026, Marcel): speelgeld voor de casinospellen (Black Jack en Poker Texas Hold'em).
 -- Eenmaal uitvoeren in de Supabase SQL Editor, NA sql/spel-scores.sql (die maakt spel_vriend en spel_speler_zichtbaar).
--- Herhaalbaar.
+-- Herhaalbaar. Let op (28 nov 2026): voer daarna ALTIJD ook sql/casino-volwassen.sql uit (alleen 18+, Hoger of lager
+-- en de Fruitautomaat); dit bestand zet anders de oude casino_ik, casino_inzet en casino_overzicht terug.
 --
 -- In gewone woorden:
 --  - Iedereen krijgt elke week 250 tokens erbij (de week begint maandag 00:00, Nederlandse tijd). Wie een paar weken

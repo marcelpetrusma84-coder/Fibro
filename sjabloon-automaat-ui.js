@@ -10,7 +10,7 @@
 //   - het scorebord via window.fibroSoloUitslag (spel.html), en ❓ spelregels.
 import * as R from './sjabloon-automaat.js?v=1'
 import { kaartSvg, achterkantSvg, kaartNaam, zetStijl as zetKaartStijl, kaartGeluid, tril } from './kaartspel-hulp.js?v=23'
-import { INZETTEN, MINIMUM, verschil } from './casino.js?v=3'
+import { INZETTEN, MINIMUM, verschil } from './casino.js?v=4'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
 Object.assign(window.FIBRO_EN ||= {}, {

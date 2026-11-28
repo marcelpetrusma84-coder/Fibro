@@ -11,7 +11,10 @@ import * as P from './pokertexasholdem.js?v=2'
 import { maakKaartTafel, kaartSvg, kaartNaam, REACTIES } from './kaartspel-hulp.js?v=23'
 import { meldGeslagen } from './beurtspel-hulp.js?v=1'
 import { maakGroepSpel } from './groepspel.js?v=2'
-import { verschil, uitbetaling } from './casino.js?v=3'
+import { verschil, uitbetaling } from './casino.js?v=4'
+import { benIkVolwassen } from './leeftijd.js?v=1'   // 28 nov 2026: onder de 18 niets over tokens
+const volwassen = benIkVolwassen() !== false
+import { wachtspelKnop } from './wachtspellen.js?v=1'   // 28 nov 2026: lig je eruit in de groep, dan snel een gokje
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
 Object.assign(window.FIBRO_EN ||= {}, {
@@ -75,7 +78,7 @@ function zetStijl() {
 }
 
 // spelers/mijnZetel: met een groep (groepschat of Home); anders met z'n tweeën in de chat, of tegen de computer.
-export function start({ spelKanaal, benIkSpeler1, vriendNaam, spelers: groep, mijnZetel }) {
+export function start({ spelKanaal, benIkSpeler1, vriendNaam, spelers: groep, mijnZetel, groepId = null }) {
   zetStijl()
   const inhoud = document.getElementById('spelInhoud')
   const titel = document.getElementById('spelTitelBar')
@@ -106,6 +109,10 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, spelers: groep, mi
     magSpelen: () => false, onSpeel() {}, onPak() {},
     onReactie: emoji => { if (!solo) spelKanaal.send({ type: 'broadcast', event: 'kaartreactie', payload: { emoji, zetel: ik } }) },
   })
+  // 28 nov 2026 (Marcel): in de groep spelen de anderen door als jij eruit ligt. Dan een knop "🎰 Snel een gokje" met
+  // Hoger of lager en de Fruitautomaat (wachtspellen.js); tokens alleen als iedereen in de groep 18+ is.
+  const gokje = Array.isArray(groep) && groep.length > 2 ? wachtspelKnop(tafel.element, { groep: groepId }) : null
+  const ligtEruit = s => Boolean(s) && s.fase !== 'klaar' && s.fiches[ik] === 0 && (s.fase === 'uitslag' || !mijnHand(s).length)
   const middenEl = document.createElement('div')
   middenEl.className = 'pk-midden'
   tafel.element.querySelector('.kt-midden').appendChild(middenEl)
@@ -199,7 +206,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, spelers: groep, mi
     const d = document.createElement('div'); d.className = 'kt-keuze pk-regels'
     d.innerHTML = '<div class="kt-keuzekaart" role="dialog" aria-modal="true" style="max-width:440px;text-align:left;max-height:80vh;overflow:auto">'
       + '<div style="font-weight:800;font-size:17px;margin-bottom:8px">' + esc(T('Spelregels van Poker')) + '</div>'
-      + '<ul style="margin:0 0 12px;padding-left:18px;line-height:1.45;font-size:14px">' + REGELS.map(t => '<li>' + esc(T(t)) + '</li>').join('') + '</ul>'
+      + '<ul style="margin:0 0 12px;padding-left:18px;line-height:1.45;font-size:14px">' + REGELS.filter(t => volwassen || !/tokens/.test(t)).map(t => '<li>' + esc(T(t)) + '</li>').join('') + '</ul>'
       + '<button type="button" class="kt-knop kt-nadruk">' + esc(T('Terug')) + '</button></div>'
     d.querySelector('button').onclick = () => d.remove()
     tafel.element.appendChild(d)
@@ -307,6 +314,7 @@ export function start({ spelKanaal, benIkSpeler1, vriendNaam, spelers: groep, mi
   }
   function naStand(oud) {
     teken()
+    gokje?.zichtbaar(ligtEruit(staat) && !voorbij(staat))
     if (voorbij(staat)) controleerEinde()
     else if (P.aanDeBeurt(staat, ik) && (!oud || !P.aanDeBeurt(oud, ik) || oud.hand !== staat.hand)) { tafel.geluid.beurt(); tafel.tril(15) }
   }
